@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "version": "${version}",
   "id": "ap2",
-  "entry": "work.lclpnet.ap2.ArcadeParty",
+  "entry": "work.lclpnet.ap2.base.ArcadeParty",
   "dependsOn": [],
   "fabric": {
     "env": ["server"],
