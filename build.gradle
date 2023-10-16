@@ -47,10 +47,8 @@ dependencies {
     modImplementation "xyz.nucleoid:fantasy:${project.fantasy_version}"
 
     pluginImplementation "work.lclpnet.mcserver-api:mcserver-api-kibu:${project.mcserver_api_version}"
+    pluginImplementation "work.lclpnet.plugins:mg-lobby:${project.lobby_version}"
     pluginLocalRuntime "work.lclpnet.plugins:pal:${project.pal_version}"
-
-    /* other Java dependencies */
-    implementation 'com.google.code.findbugs:jsr305:3.0.2'
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
