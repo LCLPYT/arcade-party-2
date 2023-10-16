@@ -6,7 +6,9 @@ import net.minecraft.item.Items;
 import net.minecraft.server.MinecraftServer;
 import org.slf4j.Logger;
 import work.lclpnet.activity.manager.ActivityManager;
+import work.lclpnet.ap2.api.WorldFacade;
 import work.lclpnet.ap2.base.activity.PreparationActivity;
+import work.lclpnet.ap2.impl.WorldFacadeImpl;
 import work.lclpnet.lobby.game.Game;
 import work.lclpnet.lobby.game.GameEnvironment;
 import work.lclpnet.lobby.game.conf.GameConfig;
@@ -25,11 +27,14 @@ import java.util.concurrent.CompletableFuture;
 public class ArcadePartyGame implements Game {
 
     private final Logger logger = ArcadeParty.logger;
+    private final MinecraftGameConfig config;
     private final MapManager mapManager;
 
     public ArcadePartyGame() {
+        config = new MinecraftGameConfig("ap2", "Arcade Party", new ItemStack(Items.GOLD_BLOCK));
+
         try {
-            this.mapManager = getMapManager();
+            this.mapManager = createMapManager();
         } catch (MalformedURLException e) {
             throw new RuntimeException("Failed to setup map repository url", e);
         }
@@ -37,7 +42,7 @@ public class ArcadePartyGame implements Game {
 
     @Override
     public GameConfig getConfig() {
-        return new MinecraftGameConfig("ap2", "Arcade Party", new ItemStack(Items.GOLD_BLOCK));
+        return config;
     }
 
     @Override
@@ -54,12 +59,15 @@ public class ArcadePartyGame implements Game {
     @Override
     public void start(GameEnvironment environment) {
         MinecraftServer server = environment.getServer();
-        ArcadeParty instance = ArcadeParty.getInstance();
+        ArcadeParty arcadeParty = ArcadeParty.getInstance();
 
         WorldContainer worldContainer = new WorldContainer(server);
-        instance.registerUnloadable(worldContainer);
+        arcadeParty.registerUnloadable(worldContainer);
 
-        PreparationActivity preparation = new PreparationActivity(mapManager, worldContainer);
+        WorldFacadeImpl worldFacade = new WorldFacadeImpl(server, mapManager);
+        worldFacade.init(arcadeParty);  // TODO replace with game lifecycle hook registrar
+
+        PreparationActivity preparation = new PreparationActivity(arcadeParty, worldFacade);
 
         load().thenRun(() ->
                         server.submit(() ->
@@ -70,7 +78,7 @@ public class ArcadePartyGame implements Game {
                 });
     }
 
-    private MapManager getMapManager() throws MalformedURLException {
+    private MapManager createMapManager() throws MalformedURLException {
         MapRepository mapRepository = new UrlMapRepository(Path.of("worlds").toUri().toURL(), logger);
 
         return new MapManager(mapRepository, logger);

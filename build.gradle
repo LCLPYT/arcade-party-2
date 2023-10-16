@@ -50,6 +50,8 @@ dependencies {
     pluginImplementation "work.lclpnet.plugins:mg-lobby:${project.lobby_version}"
     pluginLocalRuntime "work.lclpnet.plugins:pal:${project.pal_version}"
 
+    implementation 'org.json:json:20230227'
+
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
     // if you need to test with Minecraft classes, use this too:
