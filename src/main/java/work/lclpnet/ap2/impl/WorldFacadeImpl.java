@@ -1,0 +1,123 @@
+package work.lclpnet.ap2.impl;
+
+import net.fabricmc.fabric.api.networking.v1.PacketSender;
+import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
+import net.minecraft.registry.RegistryKey;
+import net.minecraft.registry.RegistryKeys;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.network.ServerPlayNetworkHandler;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
+import net.minecraft.util.Identifier;
+import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.World;
+import net.minecraft.world.level.storage.LevelStorage;
+import org.apache.commons.io.FileUtils;
+import work.lclpnet.ap2.Prototype;
+import work.lclpnet.ap2.api.WorldFacade;
+import work.lclpnet.kibu.hook.ServerPlayConnectionHooks;
+import work.lclpnet.kibu.plugin.hook.HookRegistrar;
+import work.lclpnet.kibu.world.KibuWorlds;
+import work.lclpnet.kibu.world.mixin.MinecraftServerAccessor;
+import work.lclpnet.lobby.game.map.GameMap;
+import work.lclpnet.lobby.game.map.MapManager;
+import xyz.nucleoid.fantasy.RuntimeWorldHandle;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+
+@Prototype
+public class WorldFacadeImpl implements WorldFacade {
+
+    private final MinecraftServer server;
+    private final MapManager mapManager;
+    private RegistryKey<World> mapKey = null;
+    private Vec3d spawn = null;
+
+    public WorldFacadeImpl(MinecraftServer server, MapManager mapManager) {
+        this.server = server;
+        this.mapManager = mapManager;
+    }
+
+    public void init(HookRegistrar registrar) {
+        registrar.registerHook(ServerPlayConnectionHooks.JOIN, this::onPlayerJoin);
+    }
+
+    private void onPlayerJoin(ServerPlayNetworkHandler serverPlayNetworkHandler, PacketSender packetSender, MinecraftServer server) {
+        if (mapKey == null || spawn == null) return;
+
+        ServerPlayerEntity player = serverPlayNetworkHandler.getPlayer();
+        ServerWorld world = server.getWorld(mapKey);
+
+        if (world == null) {
+            throw new IllegalStateException("World %s is not loaded".formatted(mapKey.getValue()));
+        }
+
+        player.teleport(world, spawn.getX(), spawn.getY(), spawn.getZ(), 0F, 0F);
+    }
+
+    @Override
+    public CompletableFuture<Void> changeMap(Identifier identifier) {
+        var map = mapManager.getMapCollection().getMap(identifier);
+
+        if (map.isEmpty()) {
+            return CompletableFuture.failedFuture(new IllegalStateException("Unknown map %s".formatted(identifier)));
+        }
+
+        var newKey = RegistryKey.of(RegistryKeys.WORLD, identifier);
+
+        if (server.getWorld(newKey) != null) {
+            // need to unload
+            throw new AssertionError("Not implemented");
+        }
+
+        return changeMapToUnloaded(map.get(), newKey);
+    }
+
+    private CompletableFuture<Void> changeMapToUnloaded(GameMap map, RegistryKey<World> newKey) {
+        LevelStorage.Session session = ((MinecraftServerAccessor) server).getSession();
+        Path directory = session.getWorldDirectory(newKey);
+
+        CompletableFuture<Void> future = new CompletableFuture<>();
+
+        CompletableFuture.runAsync(() -> {
+            try {
+                if (Files.exists(directory)) {
+                    FileUtils.forceDelete(directory.toFile());
+                }
+
+                mapManager.pull(map, directory);
+            } catch (IOException e) {
+                throw new CompletionException(e);
+            }
+        }).thenRun(() -> server.submit(() -> {
+            var optHandle = KibuWorlds.getInstance().getWorldManager(server).openPersistentWorld(newKey.getValue());
+
+            if (optHandle.isEmpty()) {
+                future.completeExceptionally(new IllegalStateException("Failed to load map"));
+                return;
+            }
+
+            RuntimeWorldHandle handle = optHandle.get();
+            ServerWorld world = handle.asWorld();
+
+            this.mapKey = newKey;
+            this.spawn = MapUtils.getSpawnPosition(map);
+
+            for (ServerPlayerEntity player : PlayerLookup.all(server)) {
+                player.teleport(world, spawn.getX(), spawn.getY(), spawn.getZ(), Set.of(), 0, 0);
+            }
+        }));
+
+        return future;
+    }
+
+    @Override
+    public void deleteMap() {
+        // TODO implement
+    }
+}
