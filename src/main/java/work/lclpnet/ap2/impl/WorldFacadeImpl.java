@@ -82,9 +82,7 @@ public class WorldFacadeImpl implements WorldFacade {
         LevelStorage.Session session = ((MinecraftServerAccessor) server).getSession();
         Path directory = session.getWorldDirectory(newKey);
 
-        CompletableFuture<Void> future = new CompletableFuture<>();
-
-        CompletableFuture.runAsync(() -> {
+        return CompletableFuture.runAsync(() -> {
             try {
                 if (Files.exists(directory)) {
                     FileUtils.forceDelete(directory.toFile());
@@ -94,15 +92,10 @@ public class WorldFacadeImpl implements WorldFacade {
             } catch (IOException e) {
                 throw new CompletionException(e);
             }
-        }).thenRun(() -> server.submit(() -> {
+        }).thenCompose(nil -> server.submit(() -> {
             var optHandle = KibuWorlds.getInstance().getWorldManager(server).openPersistentWorld(newKey.getValue());
 
-            if (optHandle.isEmpty()) {
-                future.completeExceptionally(new IllegalStateException("Failed to load map"));
-                return;
-            }
-
-            RuntimeWorldHandle handle = optHandle.get();
+            RuntimeWorldHandle handle = optHandle.orElseThrow(() -> new IllegalStateException("Failed to load map"));
             ServerWorld world = handle.asWorld();
 
             this.mapKey = newKey;
@@ -112,8 +105,6 @@ public class WorldFacadeImpl implements WorldFacade {
                 player.teleport(world, spawn.getX(), spawn.getY(), spawn.getZ(), Set.of(), 0, 0);
             }
         }));
-
-        return future;
     }
 
     @Override
