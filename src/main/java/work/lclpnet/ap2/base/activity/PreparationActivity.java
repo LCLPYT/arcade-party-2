@@ -36,7 +36,12 @@ public class PreparationActivity extends ComponentActivity implements Skippable 
     public void start() {
         super.start();
 
-        worldFacade.changeMap(ArcadeParty.identifier("preparation")).thenRun(this::onReady);
+        worldFacade.changeMap(ArcadeParty.identifier("preparation"))
+                .thenRun(this::onReady)
+                .exceptionally(throwable -> {
+                    getLogger().error("Failed to change map", throwable);
+                    return null;
+                });
     }
 
     @Override
