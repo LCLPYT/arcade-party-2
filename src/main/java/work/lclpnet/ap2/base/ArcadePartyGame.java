@@ -2,9 +2,9 @@ package work.lclpnet.ap2.base;
 
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
-import work.lclpnet.lobby.game.Game;
-import work.lclpnet.lobby.game.GameEnvironment;
-import work.lclpnet.lobby.game.GameInstance;
+import work.lclpnet.lobby.game.api.Game;
+import work.lclpnet.lobby.game.api.GameEnvironment;
+import work.lclpnet.lobby.game.api.GameInstance;
 import work.lclpnet.lobby.game.conf.GameConfig;
 import work.lclpnet.lobby.game.conf.MinecraftGameConfig;
 import work.lclpnet.mplugins.ext.PluginUnloader;
