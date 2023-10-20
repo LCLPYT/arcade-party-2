@@ -59,6 +59,15 @@ public class PreparationActivity extends ComponentActivity implements Skippable 
                 .interval(this::tick, 1)
                 .whenComplete(this::startGame);
 
+        component(BuiltinComponents.SCHEDULER).scheduler().timeout(() -> {
+            worldFacade.changeMap(ArcadeParty.identifier("preparation"))
+                    .thenRun(() -> System.out.println("Changed map"))
+                    .exceptionally(throwable -> {
+                        getLogger().error("Failed to change map", throwable);
+                        return null;
+                    });
+        }, 100);
+
         CommandRegistrar commandRegistrar = component(BuiltinComponents.COMMANDS).commands();
 
         new SkipCommand(this).register(commandRegistrar);

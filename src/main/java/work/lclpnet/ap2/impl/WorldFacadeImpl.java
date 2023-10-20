@@ -37,6 +37,7 @@ public class WorldFacadeImpl implements WorldFacade {
     private final MinecraftServer server;
     private final MapManager mapManager;
     private final WorldContainer worldContainer;
+    private final WorldUnloader worldUnloader;
     private RegistryKey<World> mapKey = null;
     private Vec3d spawn = null;
 
@@ -44,10 +45,13 @@ public class WorldFacadeImpl implements WorldFacade {
         this.server = server;
         this.mapManager = mapManager;
         this.worldContainer = worldContainer;
+        this.worldUnloader = new WorldUnloader(server, worldContainer);
     }
 
     public void init(HookRegistrar registrar) {
         registrar.registerHook(ServerPlayConnectionHooks.JOIN, this::onPlayerJoin);
+
+        worldUnloader.init(registrar);
     }
 
     private void onPlayerJoin(ServerPlayNetworkHandler serverPlayNetworkHandler, PacketSender packetSender, MinecraftServer server) {
@@ -74,15 +78,14 @@ public class WorldFacadeImpl implements WorldFacade {
         var newKey = RegistryKey.of(RegistryKeys.WORLD, identifier);
 
         if (server.getWorld(newKey) != null) {
-            // need to unload
-
-            throw new AssertionError("Not implemented");
+            return worldUnloader.unloadMap(newKey)
+                    .thenCompose(nil -> changeToYetUnloadedMap(map.get(), newKey));
         }
 
-        return changeMapToUnloaded(map.get(), newKey);
+        return changeToYetUnloadedMap(map.get(), newKey);
     }
 
-    private CompletableFuture<Void> changeMapToUnloaded(GameMap map, RegistryKey<World> newKey) {
+    private CompletableFuture<Void> changeToYetUnloadedMap(GameMap map, RegistryKey<World> newKey) {
         LevelStorage.Session session = ((MinecraftServerAccessor) server).getSession();
         Path directory = session.getWorldDirectory(newKey);
 
