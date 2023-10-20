@@ -14,6 +14,7 @@ import net.minecraft.world.World;
 import net.minecraft.world.level.storage.LevelStorage;
 import org.apache.commons.io.FileUtils;
 import work.lclpnet.ap2.Prototype;
+import work.lclpnet.ap2.api.MapOptions;
 import work.lclpnet.ap2.api.WorldFacade;
 import work.lclpnet.kibu.hook.ServerPlayConnectionHooks;
 import work.lclpnet.kibu.plugin.hook.HookRegistrar;
@@ -38,6 +39,7 @@ public class WorldFacadeImpl implements WorldFacade {
     private final MapManager mapManager;
     private final WorldContainer worldContainer;
     private final WorldUnloader worldUnloader;
+    private MapOptions mapOptions = null;
     private RegistryKey<World> mapKey = null;
     private Vec3d spawn = null;
 
@@ -68,7 +70,7 @@ public class WorldFacadeImpl implements WorldFacade {
     }
 
     @Override
-    public CompletableFuture<Void> changeMap(Identifier identifier) {
+    public CompletableFuture<Void> changeMap(Identifier identifier, MapOptions options) {
         var map = mapManager.getMapCollection().getMap(identifier);
 
         if (map.isEmpty()) {
@@ -77,15 +79,21 @@ public class WorldFacadeImpl implements WorldFacade {
 
         var newKey = RegistryKey.of(RegistryKeys.WORLD, identifier);
 
-        if (server.getWorld(newKey) != null) {
-            return worldUnloader.unloadMap(newKey)
-                    .thenCompose(nil -> changeToYetUnloadedMap(map.get(), newKey));
+        ServerWorld existingWorld = server.getWorld(newKey);
+
+        if (existingWorld != null) {
+            if (options.isCleanMapRequired()) {
+                return worldUnloader.unloadMap(newKey)
+                        .thenCompose(nil -> changeToYetUnloadedMap(map.get(), newKey, options));
+            }
+
+            return server.submit(() -> onWorldLoaded(map.get(), newKey, existingWorld, options));
         }
 
-        return changeToYetUnloadedMap(map.get(), newKey);
+        return changeToYetUnloadedMap(map.get(), newKey, options);
     }
 
-    private CompletableFuture<Void> changeToYetUnloadedMap(GameMap map, RegistryKey<World> newKey) {
+    private CompletableFuture<Void> changeToYetUnloadedMap(GameMap map, RegistryKey<World> newKey, MapOptions options) {
         LevelStorage.Session session = ((MinecraftServerAccessor) server).getSession();
         Path directory = session.getWorldDirectory(newKey);
 
@@ -108,17 +116,25 @@ public class WorldFacadeImpl implements WorldFacade {
 
             ServerWorld world = handle.asWorld();
 
-            this.mapKey = newKey;
-            this.spawn = MapUtils.getSpawnPosition(map);
-
-            for (ServerPlayerEntity player : PlayerLookup.all(server)) {
-                player.teleport(world, spawn.getX(), spawn.getY(), spawn.getZ(), Set.of(), 0, 0);
-            }
+            onWorldLoaded(map, newKey, world, options);
         }));
     }
 
-    @Override
-    public void deleteMap() {
-        // TODO implement
+    private void onWorldLoaded(GameMap map, RegistryKey<World> newKey, ServerWorld world, MapOptions options) {
+        RegistryKey<World> oldKey = this.mapKey;
+        MapOptions oldOptions = this.mapOptions;
+
+        this.mapKey = newKey;
+        this.mapOptions = options;
+        this.spawn = MapUtils.getSpawnPosition(map);
+
+        for (ServerPlayerEntity player : PlayerLookup.all(server)) {
+            player.teleport(world, spawn.getX(), spawn.getY(), spawn.getZ(), Set.of(), 0, 0);
+        }
+
+        // cleanup current map if requested
+        if (oldKey != null && oldOptions != null && oldOptions.shouldBeDeleted() && !newKey.equals(mapKey)) {
+            worldContainer.getHandle(oldKey).ifPresent(RuntimeWorldHandle::delete);
+        }
     }
 }
