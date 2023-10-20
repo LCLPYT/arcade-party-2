@@ -44,13 +44,15 @@ public class ArcadePartyGameInstance implements GameInstance {
     }
 
     private boolean canStart() {
-        if (ApConstants.DEVELOPMENT) {
-            return true;
-        }
-
         MinecraftServer server = environment.getServer();
 
-        return PlayerLookup.all(server).size() >= 2;
+        int players = PlayerLookup.all(server).size();
+
+        if (ApConstants.DEVELOPMENT) {
+            return players >= 1;
+        }
+
+        return players >= 2;
     }
 
     @Override
