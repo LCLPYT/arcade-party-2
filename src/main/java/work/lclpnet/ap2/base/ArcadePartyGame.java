@@ -7,6 +7,7 @@ import work.lclpnet.lobby.game.GameEnvironment;
 import work.lclpnet.lobby.game.GameInstance;
 import work.lclpnet.lobby.game.conf.GameConfig;
 import work.lclpnet.lobby.game.conf.MinecraftGameConfig;
+import work.lclpnet.mplugins.ext.PluginUnloader;
 
 public class ArcadePartyGame implements Game {
 
@@ -19,6 +20,11 @@ public class ArcadePartyGame implements Game {
     @Override
     public GameConfig getConfig() {
         return config;
+    }
+
+    @Override
+    public PluginUnloader getOwner() {
+        return ArcadeParty.getInstance();
     }
 
     @Override

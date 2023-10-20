@@ -61,11 +61,12 @@ public class ArcadePartyGameInstance implements GameInstance {
         ArcadeParty arcadeParty = ArcadeParty.getInstance();
 
         WorldContainer worldContainer = new WorldContainer(server);
-        arcadeParty.registerUnloadable(worldContainer);
+        worldContainer.init();
+        environment.closeWhenDone(worldContainer);
 
         HookStack hookStack = environment.getHookStack();
 
-        WorldFacadeImpl worldFacade = new WorldFacadeImpl(server, mapManager);
+        WorldFacadeImpl worldFacade = new WorldFacadeImpl(server, mapManager, worldContainer);
         worldFacade.init(hookStack);
 
         PreparationActivity preparation = new PreparationActivity(arcadeParty, worldFacade);

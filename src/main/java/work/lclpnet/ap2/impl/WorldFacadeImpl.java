@@ -21,6 +21,7 @@ import work.lclpnet.kibu.world.KibuWorlds;
 import work.lclpnet.kibu.world.mixin.MinecraftServerAccessor;
 import work.lclpnet.lobby.game.map.GameMap;
 import work.lclpnet.lobby.game.map.MapManager;
+import work.lclpnet.lobby.util.WorldContainer;
 import xyz.nucleoid.fantasy.RuntimeWorldHandle;
 
 import java.io.IOException;
@@ -35,12 +36,14 @@ public class WorldFacadeImpl implements WorldFacade {
 
     private final MinecraftServer server;
     private final MapManager mapManager;
+    private final WorldContainer worldContainer;
     private RegistryKey<World> mapKey = null;
     private Vec3d spawn = null;
 
-    public WorldFacadeImpl(MinecraftServer server, MapManager mapManager) {
+    public WorldFacadeImpl(MinecraftServer server, MapManager mapManager, WorldContainer worldContainer) {
         this.server = server;
         this.mapManager = mapManager;
+        this.worldContainer = worldContainer;
     }
 
     public void init(HookRegistrar registrar) {
@@ -72,6 +75,7 @@ public class WorldFacadeImpl implements WorldFacade {
 
         if (server.getWorld(newKey) != null) {
             // need to unload
+
             throw new AssertionError("Not implemented");
         }
 
@@ -96,6 +100,9 @@ public class WorldFacadeImpl implements WorldFacade {
             var optHandle = KibuWorlds.getInstance().getWorldManager(server).openPersistentWorld(newKey.getValue());
 
             RuntimeWorldHandle handle = optHandle.orElseThrow(() -> new IllegalStateException("Failed to load map"));
+
+            worldContainer.trackHandle(handle);  // automatically unload world, if not done manually
+
             ServerWorld world = handle.asWorld();
 
             this.mapKey = newKey;
