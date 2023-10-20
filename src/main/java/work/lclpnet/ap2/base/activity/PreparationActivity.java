@@ -3,14 +3,14 @@ package work.lclpnet.ap2.base.activity;
 import work.lclpnet.activity.ComponentActivity;
 import work.lclpnet.activity.component.ComponentBundle;
 import work.lclpnet.activity.component.builtin.BuiltinComponents;
-import work.lclpnet.ap2.api.MapOptions;
 import work.lclpnet.ap2.api.Skippable;
-import work.lclpnet.ap2.api.WorldFacade;
 import work.lclpnet.ap2.base.ArcadeParty;
 import work.lclpnet.ap2.base.cmd.SkipCommand;
 import work.lclpnet.kibu.plugin.cmd.CommandRegistrar;
 import work.lclpnet.kibu.plugin.ext.PluginContext;
 import work.lclpnet.kibu.scheduler.api.RunningTask;
+import work.lclpnet.lobby.game.api.MapOptions;
+import work.lclpnet.lobby.game.api.WorldFacade;
 
 public class PreparationActivity extends ComponentActivity implements Skippable {
 
@@ -52,15 +52,6 @@ public class PreparationActivity extends ComponentActivity implements Skippable 
         component(BuiltinComponents.SCHEDULER).scheduler()
                 .interval(this::tick, 1)
                 .whenComplete(this::startGame);
-
-        component(BuiltinComponents.SCHEDULER).scheduler().timeout(() -> {
-            worldFacade.changeMap(ArcadeParty.identifier("preparation"), MapOptions.REUSABLE)
-                    .thenRun(() -> System.out.println("Changed map"))
-                    .exceptionally(throwable -> {
-                        getLogger().error("Failed to change map", throwable);
-                        return null;
-                    });
-        }, 100);
 
         CommandRegistrar commandRegistrar = component(BuiltinComponents.COMMANDS).commands();
 
