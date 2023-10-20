@@ -32,12 +32,12 @@ public class SkipCommand implements KibuCommand {
         ServerCommandSource source = ctx.getSource();
 
         if (skippable.isSkip()) {
-            source.sendMessage(Text.literal("Already skipped"));  // TODO translate
+            source.sendMessage(Text.literal("Already skipped"));
             return 0;
         }
 
         skippable.setSkip(true);
-        source.sendMessage(Text.literal("Skipped the preparation phase"));  // TODO translate
+        source.sendMessage(Text.literal("Skipped the preparation phase"));
 
         return 1;
     }

@@ -3,6 +3,7 @@ package work.lclpnet.ap2.base.activity;
 import work.lclpnet.activity.ComponentActivity;
 import work.lclpnet.activity.component.ComponentBundle;
 import work.lclpnet.activity.component.builtin.BuiltinComponents;
+import work.lclpnet.ap2.api.MapOptions;
 import work.lclpnet.ap2.api.Skippable;
 import work.lclpnet.ap2.api.WorldFacade;
 import work.lclpnet.ap2.base.ArcadeParty;
@@ -36,19 +37,12 @@ public class PreparationActivity extends ComponentActivity implements Skippable 
     public void start() {
         super.start();
 
-        worldFacade.changeMap(ArcadeParty.identifier("preparation"))
+        worldFacade.changeMap(ArcadeParty.identifier("preparation"), MapOptions.REUSABLE)
                 .thenRun(this::onReady)
                 .exceptionally(throwable -> {
                     getLogger().error("Failed to change map", throwable);
                     return null;
                 });
-    }
-
-    @Override
-    public void stop() {
-        super.stop();
-
-        worldFacade.deleteMap();
     }
 
     private void onReady() {
@@ -60,7 +54,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable 
                 .whenComplete(this::startGame);
 
         component(BuiltinComponents.SCHEDULER).scheduler().timeout(() -> {
-            worldFacade.changeMap(ArcadeParty.identifier("preparation"))
+            worldFacade.changeMap(ArcadeParty.identifier("preparation"), MapOptions.REUSABLE)
                     .thenRun(() -> System.out.println("Changed map"))
                     .exceptionally(throwable -> {
                         getLogger().error("Failed to change map", throwable);

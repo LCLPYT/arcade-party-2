@@ -15,12 +15,10 @@ public interface WorldFacade {
      * Newly joining players will be moved to the new map as well.
      * @param identifier The map id.
      */
-    CompletableFuture<Void> changeMap(Identifier identifier);
+    CompletableFuture<Void> changeMap(Identifier identifier, MapOptions options);
 
-    /**
-     * Marks the current map for removal.
-     * When the map is next changed, the old map will be deleted.
-     * If this method is invoked while a map not owned by this facade is active, this does nothing.
-     */
-    void deleteMap();
+
+    default CompletableFuture<Void> changeMap(Identifier identifier) {
+        return changeMap(identifier, MapOptions.TEMPORARY);
+    }
 }
