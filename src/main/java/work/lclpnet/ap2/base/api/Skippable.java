@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.api;
+package work.lclpnet.ap2.base.api;
 
 public interface Skippable {
 

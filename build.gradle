@@ -26,6 +26,18 @@ repositories {
         url "https://repo.lclpnet.work/repository/snapshots"
     }
 
+    exclusiveContent {
+        forRepository {
+            maven {
+                name = "Modrinth"
+                url = "https://api.modrinth.com/maven"
+            }
+        }
+        filter {
+            includeGroup "maven.modrinth"
+        }
+    }
+
     maven {
         url = 'https://maven.nucleoid.xyz/'
     }
@@ -55,6 +67,7 @@ dependencies {
     pluginLocalRuntime "work.lclpnet.plugins:pal:${project.pal_version}"
 
     implementation 'org.json:json:20230227'
+    implementation "maven.modrinth:sqlite-jdbc:3.41.2.1+20230506"
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
