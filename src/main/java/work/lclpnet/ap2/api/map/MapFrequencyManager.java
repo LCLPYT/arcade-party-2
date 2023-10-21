@@ -5,4 +5,6 @@ import net.minecraft.util.Identifier;
 public interface MapFrequencyManager {
 
     long getFrequency(Identifier mapId);
+
+    void setFrequency(Identifier mapId, long frequency);
 }
