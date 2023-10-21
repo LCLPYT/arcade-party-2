@@ -6,6 +6,6 @@
   "dependsOn": [],
   "fabric": {
     "env": ["server"],
-    "requires": ["fabric-api", "kibu", "fantasy"]
+    "requires": ["fabric-api", "kibu", "fantasy", "sqlite-jdbc"]
   }
 }
