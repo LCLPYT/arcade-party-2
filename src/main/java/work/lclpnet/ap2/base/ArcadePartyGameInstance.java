@@ -4,7 +4,12 @@ import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.server.MinecraftServer;
 import org.slf4j.Logger;
 import work.lclpnet.activity.manager.ActivityManager;
+import work.lclpnet.ap2.api.base.GameQueue;
+import work.lclpnet.ap2.api.base.MiniGameManager;
+import work.lclpnet.ap2.api.game.MiniGame;
 import work.lclpnet.ap2.base.activity.PreparationActivity;
+import work.lclpnet.ap2.impl.base.SimpleMiniGameManager;
+import work.lclpnet.ap2.impl.base.VotedGameQueue;
 import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.lobby.game.api.GameEnvironment;
 import work.lclpnet.lobby.game.api.GameInstance;
@@ -19,6 +24,7 @@ import work.lclpnet.lobby.game.start.ConditionGameStarter;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 public class ArcadePartyGameInstance implements GameInstance {
@@ -50,23 +56,30 @@ public class ArcadePartyGameInstance implements GameInstance {
     @Override
     public void start() {
         MinecraftServer server = environment.getServer();
-        ArcadeParty arcadeParty = ArcadeParty.getInstance();
 
         MapManager mapManager = createMapManager();
 
         load(mapManager)
-                .thenCompose(nil -> server.submit(() -> {
-                    WorldFacade worldFacade = environment.getWorldFacade(() -> mapManager);
-
-                    TranslationService translationService = arcadeParty.getTranslationService();
-                    PreparationActivity preparation = new PreparationActivity(arcadeParty, worldFacade, translationService);
-
-                    ActivityManager.getInstance().startActivity(preparation);
-                }))
+                .thenCompose(nil -> server.submit(() -> dispatchGameStart(mapManager)))
                 .exceptionally(throwable -> {
                     logger.error("Failed to load ArcadeParty2", throwable);
                     return null;
                 });
+    }
+
+    private void dispatchGameStart(MapManager mapManager) {
+        WorldFacade worldFacade = environment.getWorldFacade(() -> mapManager);
+        ArcadeParty arcadeParty = ArcadeParty.getInstance();
+
+        TranslationService translationService = arcadeParty.getTranslationService();
+
+        MiniGameManager gameManager = new SimpleMiniGameManager(logger);
+        List<MiniGame> votedGames = List.of();  // TODO get from vote manager and shuffle
+        GameQueue queue = new VotedGameQueue(gameManager, votedGames, 5);
+
+        PreparationActivity preparation = new PreparationActivity(arcadeParty, worldFacade, translationService, queue);
+
+        ActivityManager.getInstance().startActivity(preparation);
     }
 
     private CompletableFuture<Void> load(MapManager mapManager) {

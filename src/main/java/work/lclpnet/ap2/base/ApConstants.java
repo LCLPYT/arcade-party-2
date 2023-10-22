@@ -7,5 +7,8 @@ public final class ApConstants {
     public static final boolean DEVELOPMENT = FabricLoader.getInstance().isDevelopmentEnvironment();
     public static final String ID = "ap2";
 
+    // people
+    public static final String PERSON_LCLP = "LCLP";
+
     private ApConstants() {}
 }
