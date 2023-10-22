@@ -3,7 +3,7 @@
   "version": "${version}",
   "id": "ap2",
   "entry": "work.lclpnet.ap2.base.ArcadeParty",
-  "dependsOn": [],
+  "dependsOn": ["mg-lobby"],
   "fabric": {
     "env": ["server"],
     "requires": ["fabric-api", "kibu", "fantasy", "sqlite-jdbc"]
