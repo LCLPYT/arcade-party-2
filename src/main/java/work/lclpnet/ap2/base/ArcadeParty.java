@@ -5,11 +5,16 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import work.lclpnet.kibu.plugin.ext.KibuPlugin;
+import work.lclpnet.kibu.plugin.ext.TranslatedPlugin;
+import work.lclpnet.kibu.translate.TranslationService;
+import work.lclpnet.translations.loader.translation.SPITranslationLoader;
+import work.lclpnet.translations.loader.translation.TranslationLoader;
 
-public class ArcadeParty extends KibuPlugin {
+public class ArcadeParty extends KibuPlugin implements TranslatedPlugin {
 
     public static final Logger logger = LoggerFactory.getLogger(ApConstants.ID);
     private static ArcadeParty instance;
+    private TranslationService translationService = null;
 
     @Override
     public void loadKibuPlugin() {
@@ -29,5 +34,19 @@ public class ArcadeParty extends KibuPlugin {
 
     public static Identifier identifier(String path) {
         return new Identifier(ApConstants.ID, path);
+    }
+
+    @Override
+    public void injectTranslationService(TranslationService translationService) {
+        this.translationService = translationService;
+    }
+
+    @Override
+    public TranslationLoader createTranslationLoader() {
+        return new SPITranslationLoader(getClass().getClassLoader());
+    }
+
+    public TranslationService getTranslationService() {
+        return translationService;
     }
 }
