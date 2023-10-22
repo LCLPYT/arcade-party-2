@@ -102,13 +102,6 @@ public class PreparationActivity extends ComponentActivity implements Skippable 
     }
 
     private boolean timedLogic(int t) {
-        if (t < GAME_ANNOUNCE_DELAY) return false;
-
-        if (t == GAME_ANNOUNCE_DELAY) {
-            announceNextGame();
-            return false;
-        }
-
         if (gameConditionsNoLongerMatch()) {
             time = 0;
             announceInvalidGame();
@@ -117,8 +110,12 @@ public class PreparationActivity extends ComponentActivity implements Skippable 
             return false;
         }
 
-        return t == PREPARATION_TIME || allPlayersAreReady();
+        if (t == GAME_ANNOUNCE_DELAY) {
+            announceNextGame();
+            return false;
+        }
 
+        return t == PREPARATION_TIME || allPlayersAreReady();
     }
 
     private void startTimer() {
@@ -222,7 +219,5 @@ public class PreparationActivity extends ComponentActivity implements Skippable 
         return skipPreparation;
     }
 
-    public record Args(PluginContext pluginContext, ApContainer container, GameQueue gameQueue) {
-
-    }
+    public record Args(PluginContext pluginContext, ApContainer container, GameQueue gameQueue) {}
 }
