@@ -12,10 +12,13 @@ import work.lclpnet.activity.component.builtin.BossBarComponent;
 import work.lclpnet.activity.component.builtin.BuiltinComponents;
 import work.lclpnet.ap2.api.base.GameQueue;
 import work.lclpnet.ap2.api.game.MiniGame;
+import work.lclpnet.ap2.api.game.MiniGameInstance;
+import work.lclpnet.ap2.base.ApContainer;
 import work.lclpnet.ap2.base.ArcadeParty;
 import work.lclpnet.ap2.base.api.Skippable;
 import work.lclpnet.ap2.base.cmd.SkipCommand;
 import work.lclpnet.ap2.impl.BossBarTimer;
+import work.lclpnet.ap2.impl.game.DefaultMiniGameHandle;
 import work.lclpnet.kibu.plugin.cmd.CommandRegistrar;
 import work.lclpnet.kibu.plugin.ext.PluginContext;
 import work.lclpnet.kibu.scheduler.Ticks;
@@ -35,19 +38,14 @@ public class PreparationActivity extends ComponentActivity implements Skippable 
 
     private static final int INITIAL_DELAY = 60;
     private static final int PREPARATION_TIME = 500;
-    private final WorldFacade worldFacade;
-    private final TranslationService translationService;
-    private final GameQueue gameQueue;
+    private final Args args;
     private int time = 0;
     private boolean skipPreparation = false;
     private MiniGame miniGame = null;
 
-    public PreparationActivity(PluginContext pluginContext, WorldFacade worldFacade,
-                               TranslationService translationService, GameQueue gameQueue) {
-        super(pluginContext);
-        this.worldFacade = worldFacade;
-        this.translationService = translationService;
-        this.gameQueue = gameQueue;
+    public PreparationActivity(Args args) {
+        super(args.pluginContext());
+        this.args = args;
     }
 
     @Override
@@ -61,6 +59,8 @@ public class PreparationActivity extends ComponentActivity implements Skippable 
     @Override
     public void start() {
         super.start();
+
+        WorldFacade worldFacade = args.container().worldFacade();
 
         worldFacade.changeMap(ArcadeParty.identifier("preparation"), MapOptions.REUSABLE)
                 .thenRun(this::onReady)
@@ -129,6 +129,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable 
         Scheduler scheduler = component(BuiltinComponents.SCHEDULER).scheduler();
 
         MinecraftServer server = getServer();
+        TranslationService translationService = args.container().translationService();
 
         var label = translationService.translateText("ap2.prepare.next_game_title");
 
@@ -154,17 +155,27 @@ public class PreparationActivity extends ComponentActivity implements Skippable 
     }
 
     private void startGame() {
-        // TODO change to game activity
+        DefaultMiniGameHandle handle = createGameHandle();
+        handle.init();
+
+        MiniGameInstance instance = miniGame.createInstance(handle);
+        instance.start();
+    }
+
+    private DefaultMiniGameHandle createGameHandle() {
+        return new DefaultMiniGameHandle(miniGame, args);
     }
 
     /**
      * Picks the next game.
      */
     private void pickNextGame() {
-        miniGame = Objects.requireNonNull(gameQueue.pollNextGame(), "Could not determine next game");
+        miniGame = Objects.requireNonNull(args.gameQueue().pollNextGame(), "Could not determine next game");
     }
 
     private void announceNextGame() {
+        TranslationService translationService = args.container().translationService();
+
         for (ServerPlayerEntity player : PlayerLookup.all(getServer())) {
             var gameTitle = translationService.translateText(player, miniGame.getTitleKey()).formatted(AQUA, BOLD);
 
@@ -197,10 +208,6 @@ public class PreparationActivity extends ComponentActivity implements Skippable 
         }
     }
 
-    private void displayGameName() {
-
-    }
-
     /**
      * Check if the game conditions no longer match.
      * @return Whether the game conditions still match.
@@ -229,5 +236,9 @@ public class PreparationActivity extends ComponentActivity implements Skippable 
     @Override
     public boolean isSkip() {
         return skipPreparation;
+    }
+
+    public record Args(PluginContext pluginContext, ApContainer container, GameQueue gameQueue) {
+
     }
 }

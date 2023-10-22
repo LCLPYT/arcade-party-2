@@ -1,15 +1,22 @@
 package work.lclpnet.ap2.base;
 
+import it.unimi.dsi.fastutil.Pair;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.server.MinecraftServer;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import work.lclpnet.activity.manager.ActivityManager;
 import work.lclpnet.ap2.api.base.GameQueue;
 import work.lclpnet.ap2.api.base.MiniGameManager;
 import work.lclpnet.ap2.api.game.MiniGame;
+import work.lclpnet.ap2.api.map.MapFacade;
+import work.lclpnet.ap2.api.map.MapRandomizer;
 import work.lclpnet.ap2.base.activity.PreparationActivity;
 import work.lclpnet.ap2.impl.base.SimpleMiniGameManager;
 import work.lclpnet.ap2.impl.base.VotedGameQueue;
+import work.lclpnet.ap2.impl.map.BalancedMapRandomizer;
+import work.lclpnet.ap2.impl.map.MapFacadeImpl;
+import work.lclpnet.ap2.impl.map.SqliteAsyncMapFrequencyManager;
 import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.lobby.game.api.GameEnvironment;
 import work.lclpnet.lobby.game.api.GameInstance;
@@ -25,6 +32,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 
 public class ArcadePartyGameInstance implements GameInstance {
@@ -59,16 +67,29 @@ public class ArcadePartyGameInstance implements GameInstance {
 
         MapManager mapManager = createMapManager();
 
-        load(mapManager)
-                .thenCompose(nil -> server.submit(() -> dispatchGameStart(mapManager)))
+        WorldFacade worldFacade = environment.getWorldFacade(() -> mapManager);
+        var mapPair = createMapFacade(server, mapManager.getMapCollection(), worldFacade);
+
+        MapFacade mapFacade = mapPair.left();
+        var frequencyManager = mapPair.right();
+
+        environment.closeWhenDone(() -> {
+            try {
+                frequencyManager.close();
+            } catch (Exception e) {
+                logger.error("Failed to close frequency manager", e);
+            }
+        });
+
+        CompletableFuture.allOf(loadMaps(mapManager), loadSqlite(frequencyManager, server))
+                .thenCompose(nil -> server.submit(() -> dispatchGameStart(server, worldFacade, mapFacade)))
                 .exceptionally(throwable -> {
                     logger.error("Failed to load ArcadeParty2", throwable);
                     return null;
                 });
     }
 
-    private void dispatchGameStart(MapManager mapManager) {
-        WorldFacade worldFacade = environment.getWorldFacade(() -> mapManager);
+    private void dispatchGameStart(MinecraftServer server, WorldFacade worldFacade, MapFacade mapFacade) {
         ArcadeParty arcadeParty = ArcadeParty.getInstance();
 
         TranslationService translationService = arcadeParty.getTranslationService();
@@ -77,12 +98,25 @@ public class ArcadePartyGameInstance implements GameInstance {
         List<MiniGame> votedGames = List.of();  // TODO get from vote manager and shuffle
         GameQueue queue = new VotedGameQueue(gameManager, votedGames, 5);
 
-        PreparationActivity preparation = new PreparationActivity(arcadeParty, worldFacade, translationService, queue);
+        ApContainer container = new ApContainer(server, logger, translationService, environment.getHookStack(),
+                environment.getSchedulerStack(), worldFacade, mapFacade);
+
+        var args = new PreparationActivity.Args(arcadeParty, container, queue);
+        PreparationActivity preparation = new PreparationActivity(args);
 
         ActivityManager.getInstance().startActivity(preparation);
     }
 
-    private CompletableFuture<Void> load(MapManager mapManager) {
+    private CompletableFuture<Void> loadSqlite(SqliteAsyncMapFrequencyManager frequencyManager, MinecraftServer server) {
+        return frequencyManager.open(server)
+                .exceptionally(throwable -> {
+                    logger.error("Failed to establish sqlite connection. Fallback to StubMapFrequencyManager", throwable);
+                    return null;
+                });
+    }
+
+    @NotNull
+    private static CompletableFuture<Void> loadMaps(MapManager mapManager) {
         return CompletableFuture.runAsync(() -> {
             MapCollection mapCollection = mapManager.getMapCollection();
 
@@ -93,6 +127,23 @@ public class ArcadePartyGameInstance implements GameInstance {
                 throw new RuntimeException("Failed to load maps of namespace %s".formatted(ApConstants.ID), e);
             }
         });
+    }
+
+    @NotNull
+    private Pair<MapFacade, SqliteAsyncMapFrequencyManager> createMapFacade(
+            MinecraftServer server, MapCollection mapCollection, WorldFacade worldFacade) {
+
+        Path dbPath = Path.of("config")
+                .resolve(ApConstants.ID)
+                .resolve("map_frequencies.sqlite");
+
+        SqliteAsyncMapFrequencyManager frequencyTracker = new SqliteAsyncMapFrequencyManager(dbPath, logger);
+
+        MapRandomizer mapRandomizer = new BalancedMapRandomizer(mapCollection, frequencyTracker, new Random());
+
+        MapFacade mapFacade = new MapFacadeImpl(worldFacade, mapRandomizer, server, logger);
+
+        return Pair.of(mapFacade, frequencyTracker);
     }
 
     private MapManager createMapManager() {
