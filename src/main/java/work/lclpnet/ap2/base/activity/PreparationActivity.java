@@ -10,15 +10,14 @@ import work.lclpnet.activity.ComponentActivity;
 import work.lclpnet.activity.component.ComponentBundle;
 import work.lclpnet.activity.component.builtin.BossBarComponent;
 import work.lclpnet.activity.component.builtin.BuiltinComponents;
+import work.lclpnet.activity.manager.ActivityManager;
 import work.lclpnet.ap2.api.base.GameQueue;
 import work.lclpnet.ap2.api.game.MiniGame;
-import work.lclpnet.ap2.api.game.MiniGameInstance;
 import work.lclpnet.ap2.base.ApContainer;
 import work.lclpnet.ap2.base.ArcadeParty;
 import work.lclpnet.ap2.base.api.Skippable;
 import work.lclpnet.ap2.base.cmd.SkipCommand;
 import work.lclpnet.ap2.impl.BossBarTimer;
-import work.lclpnet.ap2.impl.game.DefaultMiniGameHandle;
 import work.lclpnet.kibu.plugin.cmd.CommandRegistrar;
 import work.lclpnet.kibu.plugin.ext.PluginContext;
 import work.lclpnet.kibu.scheduler.Ticks;
@@ -36,8 +35,8 @@ import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
 public class PreparationActivity extends ComponentActivity implements Skippable {
 
-    private static final int INITIAL_DELAY = 60;
-    private static final int PREPARATION_TIME = 500;
+    private static final int GAME_ANNOUNCE_DELAY = Ticks.seconds(3);
+    private static final int PREPARATION_TIME = Ticks.seconds(25);
     private final Args args;
     private int time = 0;
     private boolean skipPreparation = false;
@@ -73,6 +72,9 @@ public class PreparationActivity extends ComponentActivity implements Skippable 
     private void onReady() {
         showLeaderboard();
         displayGameQueue();
+        pickNextGame();
+        displayGameQueue();
+        startTimer();
 
         component(BuiltinComponents.SCHEDULER).scheduler()
                 .interval(this::tick, 1)
@@ -97,17 +99,12 @@ public class PreparationActivity extends ComponentActivity implements Skippable 
         if (skipPreparation || timedLogic(t)) {
             task.cancel();
         }
-
-        updateTimer();
     }
 
     private boolean timedLogic(int t) {
-        if (t < INITIAL_DELAY) return false;
+        if (t < GAME_ANNOUNCE_DELAY) return false;
 
-        if (t == INITIAL_DELAY) {
-            startTimer();
-            pickNextGame();
-            displayGameQueue();  // update game queue as it could have changed
+        if (t == GAME_ANNOUNCE_DELAY) {
             announceNextGame();
             return false;
         }
@@ -135,12 +132,10 @@ public class PreparationActivity extends ComponentActivity implements Skippable 
 
         BossBarTimer timer = BossBarTimer.builder(translationService, label)
                 .withIdentifier(ArcadeParty.identifier("prepare"))
-                .withDurationTicks(Ticks.seconds(25))
+                .withDurationTicks(PREPARATION_TIME)
                 .build();
 
         timer.addPlayers(PlayerLookup.all(server));
-
-        timer.whenDone(() -> System.out.println("Game start"));
 
         timer.start(bossBars, scheduler);
     }
@@ -150,20 +145,9 @@ public class PreparationActivity extends ComponentActivity implements Skippable 
         return false;
     }
 
-    private void updateTimer() {
-
-    }
-
     private void startGame() {
-        DefaultMiniGameHandle handle = createGameHandle();
-        handle.init();
-
-        MiniGameInstance instance = miniGame.createInstance(handle);
-        instance.start();
-    }
-
-    private DefaultMiniGameHandle createGameHandle() {
-        return new DefaultMiniGameHandle(miniGame, args);
+        MiniGameActivity activity = new MiniGameActivity(miniGame, args);
+        ActivityManager.getInstance().startActivity(activity);
     }
 
     /**
