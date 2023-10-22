@@ -2,10 +2,16 @@ package work.lclpnet.ap2.base.activity;
 
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvents;
+import net.minecraft.text.Text;
 import work.lclpnet.activity.ComponentActivity;
 import work.lclpnet.activity.component.ComponentBundle;
 import work.lclpnet.activity.component.builtin.BossBarComponent;
 import work.lclpnet.activity.component.builtin.BuiltinComponents;
+import work.lclpnet.ap2.api.base.GameQueue;
+import work.lclpnet.ap2.api.game.MiniGame;
 import work.lclpnet.ap2.base.ArcadeParty;
 import work.lclpnet.ap2.base.api.Skippable;
 import work.lclpnet.ap2.base.cmd.SkipCommand;
@@ -15,9 +21,15 @@ import work.lclpnet.kibu.plugin.ext.PluginContext;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.RunningTask;
 import work.lclpnet.kibu.scheduler.api.Scheduler;
+import work.lclpnet.kibu.title.Title;
 import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.lobby.game.api.MapOptions;
 import work.lclpnet.lobby.game.api.WorldFacade;
+
+import java.util.Objects;
+
+import static net.minecraft.util.Formatting.*;
+import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
 public class PreparationActivity extends ComponentActivity implements Skippable {
 
@@ -25,13 +37,17 @@ public class PreparationActivity extends ComponentActivity implements Skippable 
     private static final int PREPARATION_TIME = 500;
     private final WorldFacade worldFacade;
     private final TranslationService translationService;
+    private final GameQueue gameQueue;
     private int time = 0;
     private boolean skipPreparation = false;
+    private MiniGame miniGame = null;
 
-    public PreparationActivity(PluginContext pluginContext, WorldFacade worldFacade, TranslationService translationService) {
+    public PreparationActivity(PluginContext pluginContext, WorldFacade worldFacade,
+                               TranslationService translationService, GameQueue gameQueue) {
         super(pluginContext);
         this.worldFacade = worldFacade;
         this.translationService = translationService;
+        this.gameQueue = gameQueue;
     }
 
     @Override
@@ -99,6 +115,8 @@ public class PreparationActivity extends ComponentActivity implements Skippable 
         if (gameConditionsNoLongerMatch()) {
             time = 0;
             announceInvalidGame();
+            miniGame = null;
+
             return false;
         }
 
@@ -112,7 +130,9 @@ public class PreparationActivity extends ComponentActivity implements Skippable 
 
         MinecraftServer server = getServer();
 
-        BossBarTimer timer = BossBarTimer.builder(translationService, translationService.translateText("ap2.prepare.next_game"))
+        var label = translationService.translateText("ap2.prepare.next_game_title");
+
+        BossBarTimer timer = BossBarTimer.builder(translationService, label)
                 .withIdentifier(ArcadeParty.identifier("prepare"))
                 .withDurationTicks(Ticks.seconds(25))
                 .build();
@@ -139,18 +159,46 @@ public class PreparationActivity extends ComponentActivity implements Skippable 
 
     /**
      * Picks the next game.
-     * If the next game cannot be played, skips the queue until a playable game is found.
-     * When the queue is exhausted, it is complemented by a secondary queue.
      */
     private void pickNextGame() {
-        // TODO implement
+        miniGame = Objects.requireNonNull(gameQueue.pollNextGame(), "Could not determine next game");
     }
 
     private void announceNextGame() {
-        // TODO implement
-//        playStartingJingle();
-//        showTitle();
-//        exlainGame();
+        for (ServerPlayerEntity player : PlayerLookup.all(getServer())) {
+            var gameTitle = translationService.translateText(player, miniGame.getTitleKey()).formatted(AQUA, BOLD);
+
+            // "The next game will be %s"
+            player.sendMessage(translationService.translateText(player, "ap2.prepare.next_game", gameTitle)
+                    .formatted(GRAY));
+
+            var separator = Text.literal("===================================")
+                    .formatted(DARK_GREEN, STRIKETHROUGH, BOLD);
+
+            player.sendMessage(separator);
+
+            var description = translationService.translateText(player, miniGame.getDescriptionKey()).formatted(GREEN);
+
+            player.sendMessage(description);
+
+            var createdBy = translationService.translateText(player, "ap2.prepare.created_by",
+                            styled(miniGame.getAuthor(), YELLOW)).formatted(GRAY, ITALIC);
+
+            player.sendMessage(Text.literal(""));
+            player.sendMessage(createdBy);
+
+            player.sendMessage(separator);
+
+            // TODO animate
+            Title.get(player).title(gameTitle);
+
+            // TODO replace with game jingle
+            player.playSound(SoundEvents.ENTITY_PLAYER_LEVELUP, SoundCategory.PLAYERS, 1, 1);
+        }
+    }
+
+    private void displayGameName() {
+
     }
 
     /**
@@ -158,8 +206,12 @@ public class PreparationActivity extends ComponentActivity implements Skippable 
      * @return Whether the game conditions still match.
      */
     private boolean gameConditionsNoLongerMatch() {
-        // TODO implement
-        return false;
+        if (miniGame == null) {
+            // game wasn't picked yet
+            return false;
+        }
+
+        return !miniGame.canBePlayed();
     }
 
     /**

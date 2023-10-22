@@ -1,3 +1,7 @@
 {
-  "ap2.prepare.next_game": "Nächstes Spiel"
+  "ap2.prepare.next_game_title": "Nächstes Spiel",
+  "ap2.prepare.next_game": "Als Nächstes wird %s gespielt",
+  "ap2.prepare.created_by": "Erstellt von %s",
+  "game.ap2.spleef": "Spleef",
+  "game.ap2.spleef.description": "Bau den Boden unter deinen Gegnern ab, damit sie herunterfallen. Fall aber nicht selber herunter!"
 }

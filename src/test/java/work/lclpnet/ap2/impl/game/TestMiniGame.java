@@ -1,18 +1,17 @@
-package work.lclpnet.ap2.game.spleef;
+package work.lclpnet.ap2.impl.game;
 
 import net.minecraft.util.Identifier;
 import work.lclpnet.ap2.api.game.GameType;
 import work.lclpnet.ap2.api.game.MiniGame;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.MiniGameInstance;
-import work.lclpnet.ap2.base.ApConstants;
 import work.lclpnet.ap2.base.ArcadeParty;
 
-public class SpleefMiniGame implements MiniGame {
+public class TestMiniGame implements MiniGame {
 
     @Override
     public Identifier getId() {
-        return ArcadeParty.identifier("spleef");
+        return ArcadeParty.identifier("test");
     }
 
     @Override
@@ -22,21 +21,21 @@ public class SpleefMiniGame implements MiniGame {
 
     @Override
     public String getAuthor() {
-        return ApConstants.PERSON_LCLP;
+        return "Dev";
     }
 
     @Override
     public boolean canBeFinale() {
-        return true;
+        return false;
     }
 
     @Override
     public boolean canBePlayed() {
-        return true;
+        return false;
     }
 
     @Override
     public MiniGameInstance createInstance(MiniGameHandle gameHandle) {
-        return new SpleefInstance(gameHandle);
+        return null;
     }
 }

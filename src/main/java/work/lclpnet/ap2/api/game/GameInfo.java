@@ -13,4 +13,18 @@ public interface GameInfo {
      * @return The type of the game.
      */
     GameType getType();
+
+    String getAuthor();
+
+    default String getTitleKey() {
+        Identifier id = getId();
+
+        return "game.%s.%s".formatted(id.getNamespace(), id.getPath());
+    }
+
+    default String getDescriptionKey() {
+        Identifier id = getId();
+
+        return "game.%s.%s.description".formatted(id.getNamespace(), id.getPath());
+    }
 }
