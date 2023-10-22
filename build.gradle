@@ -62,13 +62,13 @@ dependencies {
     modImplementation "work.lclpnet.mods.kibu:kibu-plugins:${project.kibu_plugins_version}"
     modImplementation "work.lclpnet.mods:mplugins:${project.mplugins_version}"
     modImplementation "xyz.nucleoid:fantasy:${project.fantasy_version}"
+    modImplementation "maven.modrinth:sqlite-jdbc:3.41.2.1+20230506"
 
     pluginImplementation "work.lclpnet.mcserver-api:mcserver-api-kibu:${project.mcserver_api_version}"
     pluginImplementation "work.lclpnet.plugins:mg-lobby:${project.lobby_version}"
     pluginLocalRuntime "work.lclpnet.plugins:pal:${project.pal_version}"
 
     implementation 'org.json:json:20230227'
-    implementation "maven.modrinth:sqlite-jdbc:3.41.2.1+20230506"
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'

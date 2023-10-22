@@ -1,13 +1,19 @@
 package work.lclpnet.ap2.impl.map;
 
 import net.minecraft.util.Identifier;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.api.map.MapFrequencyManager;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.*;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
 
 /**
@@ -32,6 +38,11 @@ public class SqliteAsyncMapFrequencyManager extends AsyncMapFrequencyManager imp
 
     @Override
     protected void read(Collection<Identifier> mapIds) {
+        if (connection == null) {
+            logger.warn("Sqlite database is not connected");
+            return;
+        }
+
         runReported(() -> {
             //noinspection SqlSourceToSinkFlow
             PreparedStatement statement = connection.prepareStatement("SELECT `%s`, `%s` FROM `%s` WHERE `%s` IN (%s)"
@@ -50,19 +61,32 @@ public class SqliteAsyncMapFrequencyManager extends AsyncMapFrequencyManager imp
                 return;
             }
 
+            Set<Identifier> missing = new HashSet<>(mapIds);
+
             while (result.next()) {
                 String idStr = result.getString(1);
                 long count = result.getLong(2);
 
                 Identifier mapId = new Identifier(idStr);
+                missing.remove(mapId);
 
                 setFrequencyInternal(mapId, count);
+            }
+
+            // fill map values with no data
+            for (Identifier mapId : missing) {
+                setFrequencyInternal(mapId, 0);
             }
         });
     }
 
     @Override
     protected void write(Identifier mapId) {
+        if (connection == null) {
+            logger.warn("Sqlite database is not connected");
+            return;
+        }
+
         runReported(() -> {
             long frequency = getFrequency(mapId);
             if (frequency == 0) return;
@@ -84,17 +108,33 @@ public class SqliteAsyncMapFrequencyManager extends AsyncMapFrequencyManager imp
     }
 
     public CompletableFuture<Void> open() {
-        return CompletableFuture.runAsync(() -> {
-            try {
-                this.openSync();
-            } catch (SQLException e) {
-                throw new RuntimeException(e);
-            }
-        });
+        return open(null);
     }
 
-    private void openSync() throws SQLException {
-        String path = databasePath.toUri().toString();
+    public CompletableFuture<Void> open(@Nullable Executor executor) {
+        Runnable runnable = () -> {
+            try {
+                this.openSync();
+            } catch (SQLException | IOException e) {
+                logger.error("Failed to open sqlite database, map frequency data will not be persisted", e);
+            }
+        };
+
+        if (executor != null) {
+            return CompletableFuture.runAsync(runnable, executor);
+        }
+
+        return CompletableFuture.runAsync(runnable);
+    }
+
+    private void openSync() throws SQLException, IOException {
+        Path dir = databasePath.getParent();
+
+        if (!Files.exists(dir)) {
+            Files.createDirectories(dir);
+        }
+
+        String path = databasePath.toAbsolutePath().toString();
 
         logger.info("Connecting to sqlite database at {}", path);
 
