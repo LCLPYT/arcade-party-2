@@ -1,14 +1,21 @@
 package work.lclpnet.ap2.base.activity;
 
+import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
+import net.minecraft.server.MinecraftServer;
 import work.lclpnet.activity.ComponentActivity;
 import work.lclpnet.activity.component.ComponentBundle;
+import work.lclpnet.activity.component.builtin.BossBarComponent;
 import work.lclpnet.activity.component.builtin.BuiltinComponents;
 import work.lclpnet.ap2.base.ArcadeParty;
 import work.lclpnet.ap2.base.api.Skippable;
 import work.lclpnet.ap2.base.cmd.SkipCommand;
+import work.lclpnet.ap2.impl.BossBarTimer;
 import work.lclpnet.kibu.plugin.cmd.CommandRegistrar;
 import work.lclpnet.kibu.plugin.ext.PluginContext;
+import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.RunningTask;
+import work.lclpnet.kibu.scheduler.api.Scheduler;
+import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.lobby.game.api.MapOptions;
 import work.lclpnet.lobby.game.api.WorldFacade;
 
@@ -17,12 +24,14 @@ public class PreparationActivity extends ComponentActivity implements Skippable 
     private static final int INITIAL_DELAY = 60;
     private static final int PREPARATION_TIME = 500;
     private final WorldFacade worldFacade;
+    private final TranslationService translationService;
     private int time = 0;
     private boolean skipPreparation = false;
 
-    public PreparationActivity(PluginContext pluginContext, WorldFacade worldFacade) {
+    public PreparationActivity(PluginContext pluginContext, WorldFacade worldFacade, TranslationService translationService) {
         super(pluginContext);
         this.worldFacade = worldFacade;
+        this.translationService = translationService;
     }
 
     @Override
@@ -80,6 +89,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable 
         if (t < INITIAL_DELAY) return false;
 
         if (t == INITIAL_DELAY) {
+            startTimer();
             pickNextGame();
             displayGameQueue();  // update game queue as it could have changed
             announceNextGame();
@@ -94,6 +104,24 @@ public class PreparationActivity extends ComponentActivity implements Skippable 
 
         return t == PREPARATION_TIME || allPlayersAreReady();
 
+    }
+
+    private void startTimer() {
+        BossBarComponent bossBars = component(BuiltinComponents.BOSS_BAR);
+        Scheduler scheduler = component(BuiltinComponents.SCHEDULER).scheduler();
+
+        MinecraftServer server = getServer();
+
+        BossBarTimer timer = BossBarTimer.builder(translationService, translationService.translateText("ap2.prepare.next_game"))
+                .withIdentifier(ArcadeParty.identifier("prepare"))
+                .withDurationTicks(Ticks.seconds(25))
+                .build();
+
+        timer.addPlayers(PlayerLookup.all(server));
+
+        timer.whenDone(() -> System.out.println("Game start"));
+
+        timer.start(bossBars, scheduler);
     }
 
     private boolean allPlayersAreReady() {

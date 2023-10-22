@@ -5,6 +5,7 @@ import net.minecraft.server.MinecraftServer;
 import org.slf4j.Logger;
 import work.lclpnet.activity.manager.ActivityManager;
 import work.lclpnet.ap2.base.activity.PreparationActivity;
+import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.lobby.game.api.GameEnvironment;
 import work.lclpnet.lobby.game.api.GameInstance;
 import work.lclpnet.lobby.game.api.GameStarter;
@@ -57,7 +58,8 @@ public class ArcadePartyGameInstance implements GameInstance {
                 .thenCompose(nil -> server.submit(() -> {
                     WorldFacade worldFacade = environment.getWorldFacade(() -> mapManager);
 
-                    PreparationActivity preparation = new PreparationActivity(arcadeParty, worldFacade);
+                    TranslationService translationService = arcadeParty.getTranslationService();
+                    PreparationActivity preparation = new PreparationActivity(arcadeParty, worldFacade, translationService);
 
                     ActivityManager.getInstance().startActivity(preparation);
                 }))

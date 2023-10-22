@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import work.lclpnet.ap2.api.map.MapFacade;
 import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
+import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.lobby.game.api.WorldFacade;
 
 import java.util.Set;
@@ -25,6 +26,8 @@ public interface MiniGameHandle {
     HookRegistrar getHookRegistrar();
 
     TaskScheduler getScheduler();
+
+    TranslationService getTranslations();
 
     void complete(Set<ServerPlayerEntity> winners);
 }
