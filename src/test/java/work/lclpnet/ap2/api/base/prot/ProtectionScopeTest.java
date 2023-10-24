@@ -52,4 +52,26 @@ class ProtectionScopeTest {
         number.set(5);
         assertFalse(intersection.isWithinScope(null));
     }
+
+    @Test
+    void minus() {
+        var number = new AtomicInteger();
+
+        ProtectionScope even = entity -> number.get() % 2 == 0;
+        ProtectionScope divisibleBy3 = entity -> number.get() % 3 == 0;
+
+        ProtectionScope diff = ProtectionScope.minus(even, divisibleBy3);
+
+        number.set(4);
+        assertTrue(diff.isWithinScope(null));
+
+        number.set(3);
+        assertFalse(diff.isWithinScope(null));
+
+        number.set(6);
+        assertFalse(diff.isWithinScope(null));
+
+        number.set(5);
+        assertFalse(diff.isWithinScope(null));
+    }
 }

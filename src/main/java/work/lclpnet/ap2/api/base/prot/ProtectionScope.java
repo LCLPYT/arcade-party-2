@@ -9,6 +9,7 @@ public interface ProtectionScope {
     boolean isWithinScope(Entity entity);
 
     // builtins
+    ProtectionScope EMPTY = entity -> false;
     ProtectionScope GLOBAL = entity -> true;
     ProtectionScope NO_ADMIN = entity -> !(entity instanceof ServerPlayerEntity p) || !p.isCreativeLevelTwoOp();
 
@@ -68,5 +69,13 @@ public interface ProtectionScope {
 
             return true;
         };
+    }
+
+    static ProtectionScope minus(ProtectionScope first, ProtectionScope second) {
+        return entity -> first.isWithinScope(entity) && !second.isWithinScope(entity);
+    }
+
+    static ProtectionScope not(ProtectionScope scope) {
+        return entity -> !scope.isWithinScope(entity);
     }
 }
