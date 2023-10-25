@@ -15,6 +15,10 @@ import java.util.Set;
 public class BuiltinProtectionTypes {
 
     public static final ProtectionType<EntityBlockScope> BREAK_BLOCKS;
+    /**
+     * Block placement protection.
+     * This is not considered, if {@link BuiltinProtectionTypes#USE_ITEM_ON_BLOCK} is already disallowed.
+     */
     public static final ProtectionType<EntityBlockScope> PLACE_BLOCKS;
     public static final ProtectionType<EntityBlockScope> PICKUP_FLUID;
     public static final ProtectionType<EntityBlockScope> PLACE_FLUID;

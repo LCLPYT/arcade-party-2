@@ -49,4 +49,16 @@ public class MutableProtectionConfig implements ProtectionConfig {
 
         return (T) scope;
     }
+
+    @SafeVarargs
+    @Override
+    public final <T> void allow(T scope, ProtectionType<T>... types) {
+        ProtectionConfig.super.allow(scope, types);
+    }
+
+    @SafeVarargs
+    @Override
+    public final <T> void disallow(T scope, ProtectionType<T>... types) {
+        ProtectionConfig.super.disallow(scope, types);
+    }
 }

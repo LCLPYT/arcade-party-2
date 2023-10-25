@@ -12,6 +12,7 @@ import work.lclpnet.activity.component.builtin.BossBarComponent;
 import work.lclpnet.activity.component.builtin.BuiltinComponents;
 import work.lclpnet.activity.manager.ActivityManager;
 import work.lclpnet.ap2.api.base.GameQueue;
+import work.lclpnet.ap2.api.base.prot.scope.EntityBlockScope;
 import work.lclpnet.ap2.api.game.MiniGame;
 import work.lclpnet.ap2.base.ApContainer;
 import work.lclpnet.ap2.base.ArcadeParty;
@@ -33,6 +34,7 @@ import work.lclpnet.lobby.game.api.WorldFacade;
 import java.util.Objects;
 
 import static net.minecraft.util.Formatting.*;
+import static work.lclpnet.ap2.api.base.prot.BuiltinProtectionTypes.*;
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
 public class PreparationActivity extends ComponentActivity implements Skippable {
@@ -51,6 +53,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable 
 
         var config = new MutableProtectionConfig();
         config.disallowAll();
+        config.allow(EntityBlockScope.CREATIVE_OP, BREAK_BLOCKS, PLACE_BLOCKS, USE_ITEM_ON_BLOCK);
 
         protector = new BasicProtector(config);
     }
