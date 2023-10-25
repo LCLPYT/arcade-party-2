@@ -4,16 +4,16 @@ import net.minecraft.entity.Entity;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.world.World;
 
-public interface ProtectionScope {
+public interface ProtectionScope<T> {
 
-    boolean isWithinScope(Entity entity);
+    boolean isWithinScope(T object);
 
     // builtins
-    ProtectionScope EMPTY = entity -> false;
-    ProtectionScope GLOBAL = entity -> true;
-    ProtectionScope NO_ADMIN = entity -> !(entity instanceof ServerPlayerEntity p) || !p.isCreativeLevelTwoOp();
+    ProtectionScope<?> EMPTY = entity -> false;
+    ProtectionScope<?> GLOBAL = entity -> true;
+    ProtectionScope<Entity> NO_ADMIN = entity -> !(entity instanceof ServerPlayerEntity p) || !p.isCreativeLevelTwoOp();
 
-    static ProtectionScope inWorld(World world) {
+    static ProtectionScope<Entity> inWorld(World world) {
         return entity -> entity.getWorld() == world;
     }
 
@@ -28,13 +28,14 @@ public interface ProtectionScope {
      * @param rest Optionally additional scopes.
      * @return A union scope of the given scopes.
      */
-    static ProtectionScope union(ProtectionScope first, ProtectionScope second, ProtectionScope... rest) {
+    @SafeVarargs
+    static <T> ProtectionScope<T> union(ProtectionScope<T> first, ProtectionScope<T> second, ProtectionScope<T>... rest) {
         return entity -> {
             if (first.isWithinScope(entity) || second.isWithinScope(entity)) {
                 return true;
             }
 
-            for (ProtectionScope scope : rest) {
+            for (ProtectionScope<T> scope : rest) {
                 if (scope.isWithinScope(entity)) {
                     return true;
                 }
@@ -55,13 +56,14 @@ public interface ProtectionScope {
      * @param rest Optionally additional scopes.
      * @return A intersection scope of the given scopes.
      */
-    static ProtectionScope intersect(ProtectionScope first, ProtectionScope second, ProtectionScope... rest) {
+    @SafeVarargs
+    static <T> ProtectionScope<T> intersect(ProtectionScope<T> first, ProtectionScope<T> second, ProtectionScope<T>... rest) {
         return entity -> {
             if (!first.isWithinScope(entity) || !second.isWithinScope(entity)) {
                 return false;
             }
 
-            for (ProtectionScope scope : rest) {
+            for (ProtectionScope<T> scope : rest) {
                 if (!scope.isWithinScope(entity)) {
                     return false;
                 }
@@ -71,11 +73,11 @@ public interface ProtectionScope {
         };
     }
 
-    static ProtectionScope minus(ProtectionScope first, ProtectionScope second) {
+    static <T> ProtectionScope<T> minus(ProtectionScope<T> first, ProtectionScope<T> second) {
         return entity -> first.isWithinScope(entity) && !second.isWithinScope(entity);
     }
 
-    static ProtectionScope not(ProtectionScope scope) {
+    static <T> ProtectionScope<T> not(ProtectionScope<T> scope) {
         return entity -> !scope.isWithinScope(entity);
     }
 }

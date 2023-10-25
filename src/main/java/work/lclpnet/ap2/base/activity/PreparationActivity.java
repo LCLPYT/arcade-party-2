@@ -18,6 +18,8 @@ import work.lclpnet.ap2.base.ArcadeParty;
 import work.lclpnet.ap2.base.api.Skippable;
 import work.lclpnet.ap2.base.cmd.SkipCommand;
 import work.lclpnet.ap2.impl.BossBarTimer;
+import work.lclpnet.ap2.impl.base.prot.BasicProtector;
+import work.lclpnet.ap2.impl.base.prot.MutableProtectionConfig;
 import work.lclpnet.kibu.plugin.cmd.CommandRegistrar;
 import work.lclpnet.kibu.plugin.ext.PluginContext;
 import work.lclpnet.kibu.scheduler.Ticks;
@@ -38,6 +40,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable 
     private static final int GAME_ANNOUNCE_DELAY = Ticks.seconds(3);
     private static final int PREPARATION_TIME = Ticks.seconds(25);
     private final Args args;
+    private final BasicProtector protector;
     private int time = 0;
     private boolean skipPreparation = false;
     private MiniGame miniGame = null;
@@ -45,6 +48,11 @@ public class PreparationActivity extends ComponentActivity implements Skippable 
     public PreparationActivity(Args args) {
         super(args.pluginContext());
         this.args = args;
+
+        var config = new MutableProtectionConfig();
+        config.disallowAll();
+
+        protector = new BasicProtector(config);
     }
 
     @Override
@@ -59,6 +67,8 @@ public class PreparationActivity extends ComponentActivity implements Skippable 
     public void start() {
         super.start();
 
+        protector.activate();
+
         WorldFacade worldFacade = args.container().worldFacade();
 
         worldFacade.changeMap(ArcadeParty.identifier("preparation"), MapOptions.REUSABLE)
@@ -67,6 +77,13 @@ public class PreparationActivity extends ComponentActivity implements Skippable 
                     getLogger().error("Failed to change map", throwable);
                     return null;
                 });
+    }
+
+    @Override
+    public void stop() {
+        super.stop();
+
+        protector.unload();
     }
 
     private void onReady() {
