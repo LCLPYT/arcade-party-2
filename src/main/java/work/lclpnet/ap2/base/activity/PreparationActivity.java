@@ -12,15 +12,12 @@ import work.lclpnet.activity.component.builtin.BossBarComponent;
 import work.lclpnet.activity.component.builtin.BuiltinComponents;
 import work.lclpnet.activity.manager.ActivityManager;
 import work.lclpnet.ap2.api.base.GameQueue;
-import work.lclpnet.ap2.api.base.prot.scope.EntityBlockScope;
 import work.lclpnet.ap2.api.game.MiniGame;
 import work.lclpnet.ap2.base.ApContainer;
 import work.lclpnet.ap2.base.ArcadeParty;
 import work.lclpnet.ap2.base.api.Skippable;
 import work.lclpnet.ap2.base.cmd.SkipCommand;
 import work.lclpnet.ap2.impl.BossBarTimer;
-import work.lclpnet.ap2.impl.base.prot.BasicProtector;
-import work.lclpnet.ap2.impl.base.prot.MutableProtectionConfig;
 import work.lclpnet.kibu.plugin.cmd.CommandRegistrar;
 import work.lclpnet.kibu.plugin.ext.PluginContext;
 import work.lclpnet.kibu.scheduler.Ticks;
@@ -30,11 +27,12 @@ import work.lclpnet.kibu.title.Title;
 import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.lobby.game.api.MapOptions;
 import work.lclpnet.lobby.game.api.WorldFacade;
+import work.lclpnet.lobby.game.api.prot.ProtectionConfig;
+import work.lclpnet.lobby.game.util.ProtectorComponent;
 
 import java.util.Objects;
 
 import static net.minecraft.util.Formatting.*;
-import static work.lclpnet.ap2.api.base.prot.BuiltinProtectionTypes.*;
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
 public class PreparationActivity extends ComponentActivity implements Skippable {
@@ -42,7 +40,6 @@ public class PreparationActivity extends ComponentActivity implements Skippable 
     private static final int GAME_ANNOUNCE_DELAY = Ticks.seconds(3);
     private static final int PREPARATION_TIME = Ticks.seconds(25);
     private final Args args;
-    private final BasicProtector protector;
     private int time = 0;
     private boolean skipPreparation = false;
     private MiniGame miniGame = null;
@@ -50,12 +47,6 @@ public class PreparationActivity extends ComponentActivity implements Skippable 
     public PreparationActivity(Args args) {
         super(args.pluginContext());
         this.args = args;
-
-        var config = new MutableProtectionConfig();
-        config.disallowAll();
-        config.allow(EntityBlockScope.CREATIVE_OP, BREAK_BLOCKS, PLACE_BLOCKS, USE_ITEM_ON_BLOCK);
-
-        protector = new BasicProtector(config);
     }
 
     @Override
@@ -63,14 +54,15 @@ public class PreparationActivity extends ComponentActivity implements Skippable 
         componentBundle.add(BuiltinComponents.SCHEDULER)
                 .add(BuiltinComponents.BOSS_BAR)
                 .add(BuiltinComponents.HOOKS)
-                .add(BuiltinComponents.COMMANDS);
+                .add(BuiltinComponents.COMMANDS)
+                .add(ProtectorComponent.KEY);
     }
 
     @Override
     public void start() {
         super.start();
 
-        protector.activate();
+        component(ProtectorComponent.KEY).configure(ProtectionConfig::disallowAll);
 
         WorldFacade worldFacade = args.container().worldFacade();
 
@@ -80,13 +72,6 @@ public class PreparationActivity extends ComponentActivity implements Skippable 
                     getLogger().error("Failed to change map", throwable);
                     return null;
                 });
-    }
-
-    @Override
-    public void stop() {
-        super.stop();
-
-        protector.unload();
     }
 
     private void onReady() {

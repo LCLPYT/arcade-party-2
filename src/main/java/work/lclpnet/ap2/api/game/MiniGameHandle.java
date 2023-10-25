@@ -8,8 +8,10 @@ import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.lobby.game.api.WorldFacade;
+import work.lclpnet.lobby.game.impl.prot.MutableProtectionConfig;
 
 import java.util.Set;
+import java.util.function.Consumer;
 
 public interface MiniGameHandle {
 
@@ -28,6 +30,8 @@ public interface MiniGameHandle {
     TaskScheduler getScheduler();
 
     TranslationService getTranslations();
+
+    void protect(Consumer<MutableProtectionConfig> action);
 
     void complete(Set<ServerPlayerEntity> winners);
 }

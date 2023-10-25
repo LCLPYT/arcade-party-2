@@ -13,14 +13,19 @@ import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.lobby.game.api.WorldFacade;
+import work.lclpnet.lobby.game.impl.prot.BasicProtector;
+import work.lclpnet.lobby.game.impl.prot.MutableProtectionConfig;
 import work.lclpnet.mplugins.ext.Unloadable;
 
 import java.util.Set;
+import java.util.function.Consumer;
 
 public class DefaultMiniGameHandle implements MiniGameHandle, Unloadable {
 
     private final GameInfo info;
     private final PreparationActivity.Args args;
+    private MutableProtectionConfig protectionConfig;
+    private volatile BasicProtector protector = null;
 
     public DefaultMiniGameHandle(GameInfo info, PreparationActivity.Args args) {
         this.info = info;
@@ -75,6 +80,24 @@ public class DefaultMiniGameHandle implements MiniGameHandle, Unloadable {
     }
 
     @Override
+    public synchronized void protect(Consumer<MutableProtectionConfig> action) {
+        if (protector == null) {
+            synchronized (this) {
+                if (protector == null) {
+                    protectionConfig = new MutableProtectionConfig();
+                    protector = new BasicProtector(protectionConfig);
+                }
+            }
+        }
+
+        protector.deactivate();
+
+        action.accept(protectionConfig);
+
+        protector.activate();
+    }
+
+    @Override
     public void complete(Set<ServerPlayerEntity> winners) {
         // TODO track winners
 
@@ -88,5 +111,9 @@ public class DefaultMiniGameHandle implements MiniGameHandle, Unloadable {
 
         container.hookStack().pop();
         container.schedulerStack().pop();
+
+        if (protector != null) {
+            protector.unload();
+        }
     }
 }
