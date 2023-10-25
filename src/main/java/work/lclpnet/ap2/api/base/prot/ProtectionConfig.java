@@ -1,55 +1,46 @@
 package work.lclpnet.ap2.api.base.prot;
 
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public interface ProtectionConfig {
 
-    void allow(ProtectionType type, ProtectionScope scope);
+    <T> void allow(ProtectionType<T> type, T scope);
 
-    void disallow(ProtectionType type, ProtectionScope scope);
+    <T> void disallow(ProtectionType<T> type, T scope);
 
-    ProtectionScope getAllowedScope(ProtectionType type);
+    <T> boolean hasRestrictions(ProtectionType<T> type);
 
-    @NotNull
-    ProtectionScope getDisallowedScope(ProtectionType type);
+    @Nullable
+    <T> T getAllowedScope(ProtectionType<T> type);
 
-    default void allow(ProtectionType type) {
-        allow(type, ProtectionScope.GLOBAL);
+    @Nullable
+    <T> T getDisallowedScope(ProtectionType<T> type);
+
+    default <T> void allow(ProtectionType<T> type) {
+        allow(type, type.getGlobalScope());
     }
 
-    default void disallow(ProtectionType type) {
-        disallow(type, ProtectionScope.GLOBAL);
+    default <T> void disallow(ProtectionType<T> type) {
+        disallow(type, type.getGlobalScope());
     }
 
-    default void allow(ProtectionScope scope, ProtectionType... types) {
-        for (ProtectionType type : types) {
-            allow(type, scope);
+    default void allow(ProtectionType<?>... types) {
+        for (ProtectionType<?> type : types) {
+            allow(type);
         }
     }
 
-    default void allow(ProtectionType... types) {
-        allow(ProtectionScope.GLOBAL, types);
-    }
-
-    default void disallow(ProtectionScope scope, ProtectionType... types) {
-        for (ProtectionType type : types) {
-            disallow(type, scope);
+    default void disallow(ProtectionType<?>... types) {
+        for (ProtectionType<?> type : types) {
+            disallow(type);
         }
     }
 
-    default void disallow(ProtectionType... types) {
-        disallow(ProtectionScope.GLOBAL, types);
-    }
-
-    default void disallowAll(ProtectionScope scope) {
-        disallow(scope, ProtectionType.values());
-    }
-
+    /**
+     * Disallows all builtin protection types from {@link BuiltinProtectionTypes}.
+     */
     default void disallowAll() {
-        disallow(ProtectionType.values());
-    }
-
-    default boolean hasRestrictions(ProtectionType type) {
-        return getDisallowedScope(type) != ProtectionScope.EMPTY;
+        disallow(BuiltinProtectionTypes.getTypes()
+                .toArray(ProtectionType[]::new));
     }
 }
