@@ -36,6 +36,20 @@ public interface ProtectionConfig {
         }
     }
 
+    @SuppressWarnings("unchecked")
+    default <T> void allow(T scope, ProtectionType<T>... types) {
+        for (ProtectionType<T> type : types) {
+            allow(type, scope);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    default <T> void disallow(T scope, ProtectionType<T>... types) {
+        for (ProtectionType<T> type : types) {
+            disallow(type, scope);
+        }
+    }
+
     /**
      * Disallows all builtin protection types from {@link BuiltinProtectionTypes}.
      */
