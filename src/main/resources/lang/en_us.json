@@ -8,9 +8,11 @@
   "ap2.you_won": "You won",
   "ap2.you_lost": "You lost",
   "ap2.results": "Results",
-  "ap2.you_placed": "You placed #%s",
-  "ap2.you_placed_value": "You placed #%s - %s",
+  "ap2.you_placed": "You placed %s",
+  "ap2.you_placed_value": "You placed %s - %s",
+  "ap2.go": "Go!",
   "game.ap2.title": "ArcadeParty",
   "game.ap2.spleef": "Spleef",
-  "game.ap2.spleef.description": "Break the ground beneath your opponents to make them fall. Last one standing wins."
+  "game.ap2.spleef.description": "Break the ground beneath your opponents to make them fall. Last one standing wins.",
+  "game.ap2.shovel": "Spleef Shovel"
 }
