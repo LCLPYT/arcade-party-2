@@ -18,8 +18,11 @@ import work.lclpnet.ap2.base.ApContainer;
 import work.lclpnet.ap2.base.ArcadeParty;
 import work.lclpnet.ap2.base.api.Skippable;
 import work.lclpnet.ap2.base.cmd.SkipCommand;
+import work.lclpnet.ap2.impl.game.PlayerUtil;
+import work.lclpnet.kibu.hook.player.PlayerConnectionHooks;
 import work.lclpnet.kibu.plugin.cmd.CommandRegistrar;
 import work.lclpnet.kibu.plugin.ext.PluginContext;
+import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.RunningTask;
 import work.lclpnet.kibu.scheduler.api.Scheduler;
@@ -80,6 +83,14 @@ public class PreparationActivity extends ComponentActivity implements Skippable 
     }
 
     private void onReady() {
+        PlayerManager playerManager = args.playerManager();
+        playerManager.startPreparation();
+
+        playerManager.getParticipants().forEach(player -> PlayerUtil.resetPlayer(player, PlayerUtil.Preset.DEFAULT));
+
+        HookRegistrar hooks = component(BuiltinComponents.HOOKS).hooks();
+        hooks.registerHook(PlayerConnectionHooks.JOIN, this::onJoin);
+
         showLeaderboard();
         displayGameQueue();
         pickNextGame();
@@ -93,6 +104,14 @@ public class PreparationActivity extends ComponentActivity implements Skippable 
         CommandRegistrar commandRegistrar = component(BuiltinComponents.COMMANDS).commands();
 
         new SkipCommand(this).register(commandRegistrar);
+    }
+
+    private void onJoin(ServerPlayerEntity player) {
+        PlayerManager playerManager = args.playerManager();
+
+        boolean spectator = playerManager.isPermanentSpectator(player) || !playerManager.offer(player);
+
+        PlayerUtil.resetPlayer(player, spectator ? PlayerUtil.Preset.SPECTATOR : PlayerUtil.Preset.DEFAULT);
     }
 
     private void showLeaderboard() {

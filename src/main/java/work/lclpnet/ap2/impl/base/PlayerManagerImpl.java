@@ -7,6 +7,7 @@ import work.lclpnet.ap2.api.base.ParticipantListener;
 import work.lclpnet.ap2.api.base.PlayerManager;
 
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.locks.Lock;
@@ -22,6 +23,7 @@ public class PlayerManagerImpl implements PlayerManager {
     private final ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
     private final Lock readLock = readWriteLock.readLock();
     private final Lock writeLock = readWriteLock.writeLock();
+    private boolean prepare = false;
     private boolean finale = false;
     private ParticipantListener listener = null;
 
@@ -43,7 +45,50 @@ public class PlayerManagerImpl implements PlayerManager {
     }
 
     @Override
-    public void reset() {
+    public boolean offer(ServerPlayerEntity player) {
+        Objects.requireNonNull(player);
+
+        try {
+            readLock.lock();
+
+            if (!prepare || finale) return false;
+        } finally {
+            readLock.unlock();
+        }
+
+        try {
+            writeLock.lock();
+
+            participants.add(player.getUuid());
+            return true;
+        } finally {
+            writeLock.unlock();
+        }
+    }
+
+    @Override
+    public void startPreparation() {
+        setPreparation(true);
+        reset();
+    }
+
+    @Override
+    public void startMiniGame() {
+        setPreparation(false);
+        reset();
+    }
+
+    private void setPreparation(boolean prepare) {
+        try {
+            writeLock.lock();
+
+            this.prepare = prepare;
+        } finally {
+            writeLock.unlock();
+        }
+    }
+
+    private void reset() {
         try {
             writeLock.lock();
 
@@ -78,6 +123,17 @@ public class PlayerManagerImpl implements PlayerManager {
                     .forEach(participants::add);
         } finally {
             writeLock.unlock();
+        }
+    }
+
+    @Override
+    public boolean isPermanentSpectator(ServerPlayerEntity player) {
+        try {
+            readLock.lock();
+
+            return permanentSpectators.contains(player.getUuid());
+        } finally {
+            readLock.unlock();
         }
     }
 
