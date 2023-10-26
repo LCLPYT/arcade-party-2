@@ -14,6 +14,7 @@ import work.lclpnet.activity.manager.ActivityManager;
 import work.lclpnet.ap2.api.base.GameQueue;
 import work.lclpnet.ap2.api.base.PlayerManager;
 import work.lclpnet.ap2.api.game.MiniGame;
+import work.lclpnet.ap2.base.ApConstants;
 import work.lclpnet.ap2.base.ApContainer;
 import work.lclpnet.ap2.base.ArcadeParty;
 import work.lclpnet.ap2.base.api.Skippable;
@@ -86,7 +87,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable 
         PlayerManager playerManager = args.playerManager();
         playerManager.startPreparation();
 
-        playerManager.getParticipants().forEach(player -> PlayerUtil.resetPlayer(player, PlayerUtil.Preset.DEFAULT));
+        playerManager.getAsSet().forEach(player -> PlayerUtil.resetPlayer(player, PlayerUtil.Preset.DEFAULT));
 
         HookRegistrar hooks = component(BuiltinComponents.HOOKS).hooks();
         hooks.registerHook(PlayerConnectionHooks.JOIN, this::onJoin);
@@ -194,7 +195,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable 
             player.sendMessage(translationService.translateText(player, "ap2.prepare.next_game", gameTitle)
                     .formatted(GRAY));
 
-            var separator = Text.literal("===================================")
+            var separator = Text.literal(ApConstants.SEPERATOR)
                     .formatted(DARK_GREEN, STRIKETHROUGH, BOLD);
 
             player.sendMessage(separator);

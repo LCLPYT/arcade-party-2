@@ -32,13 +32,26 @@ public class PlayerManagerImpl implements PlayerManager {
     }
 
     @Override
-    public Set<ServerPlayerEntity> getParticipants() {
+    public Set<ServerPlayerEntity> getAsSet() {
         try {
             readLock.lock();
 
             return PlayerLookup.all(server).stream()
                     .filter(player -> participants.contains(player.getUuid()))
                     .collect(Collectors.toUnmodifiableSet());
+        } finally {
+            readLock.unlock();
+        }
+    }
+
+    @Override
+    public boolean isParticipating(ServerPlayerEntity player) {
+        Objects.requireNonNull(player);
+
+        try {
+            readLock.lock();
+
+            return participants.contains(player.getUuid());
         } finally {
             readLock.unlock();
         }
@@ -160,7 +173,7 @@ public class PlayerManagerImpl implements PlayerManager {
     }
 
     @Override
-    public void removeParticipant(ServerPlayerEntity player) {
+    public void remove(ServerPlayerEntity player) {
         try {
             writeLock.lock();
 

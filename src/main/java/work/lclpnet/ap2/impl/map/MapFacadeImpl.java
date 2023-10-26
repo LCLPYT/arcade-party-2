@@ -1,7 +1,9 @@
 package work.lclpnet.ap2.impl.map;
 
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Identifier;
+import net.minecraft.world.GameRules;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.api.game.MapReady;
 import work.lclpnet.ap2.api.map.MapFacade;
@@ -29,7 +31,8 @@ public class MapFacadeImpl implements MapFacade {
     public CompletableFuture<Void> openRandomMap(Identifier gameId) {
         return mapRandomizer.nextMap(gameId)
                 .thenApply(GameMap::getIdentifier)
-                .thenCompose(worldFacade::changeMap);
+                .thenCompose(worldFacade::changeMap)
+                .thenAccept(this::setupWorld);
     }
 
     @Override
@@ -40,5 +43,9 @@ public class MapFacadeImpl implements MapFacade {
                     logger.error("Failed to open a random map for game {}", gameId, throwable);
                     return null;
                 });
+    }
+
+    private void setupWorld(ServerWorld world) {
+        world.getGameRules().get(GameRules.DO_IMMEDIATE_RESPAWN).set(true, server);
     }
 }
