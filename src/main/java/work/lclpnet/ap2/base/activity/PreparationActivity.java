@@ -12,6 +12,7 @@ import work.lclpnet.activity.component.builtin.BossBarComponent;
 import work.lclpnet.activity.component.builtin.BuiltinComponents;
 import work.lclpnet.activity.manager.ActivityManager;
 import work.lclpnet.ap2.api.base.GameQueue;
+import work.lclpnet.ap2.api.base.PlayerManager;
 import work.lclpnet.ap2.api.game.MiniGame;
 import work.lclpnet.ap2.base.ApContainer;
 import work.lclpnet.ap2.base.ArcadeParty;
@@ -26,9 +27,9 @@ import work.lclpnet.kibu.title.Title;
 import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.lobby.game.api.MapOptions;
 import work.lclpnet.lobby.game.api.WorldFacade;
-import work.lclpnet.lobby.game.api.prot.ProtectionConfig;
 import work.lclpnet.lobby.game.util.BossBarTimer;
 import work.lclpnet.lobby.game.util.ProtectorComponent;
+import work.lclpnet.lobby.game.util.ProtectorUtils;
 
 import java.util.Objects;
 
@@ -62,7 +63,11 @@ public class PreparationActivity extends ComponentActivity implements Skippable 
     public void start() {
         super.start();
 
-        component(ProtectorComponent.KEY).configure(ProtectionConfig::disallowAll);
+        component(ProtectorComponent.KEY).configure(config -> {
+            config.disallowAll();
+
+            ProtectorUtils.allowCreativeOperatorBypass(config);
+        });
 
         WorldFacade worldFacade = args.container().worldFacade();
 
@@ -225,5 +230,6 @@ public class PreparationActivity extends ComponentActivity implements Skippable 
         return skipPreparation;
     }
 
-    public record Args(PluginContext pluginContext, ApContainer container, GameQueue gameQueue) {}
+    public record Args(PluginContext pluginContext, ApContainer container, GameQueue gameQueue,
+                       PlayerManager playerManager) {}
 }

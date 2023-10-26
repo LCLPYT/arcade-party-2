@@ -13,6 +13,7 @@ import work.lclpnet.ap2.api.game.MiniGame;
 import work.lclpnet.ap2.api.map.MapFacade;
 import work.lclpnet.ap2.api.map.MapRandomizer;
 import work.lclpnet.ap2.base.activity.PreparationActivity;
+import work.lclpnet.ap2.impl.base.PlayerManagerImpl;
 import work.lclpnet.ap2.impl.base.SimpleMiniGameManager;
 import work.lclpnet.ap2.impl.base.VotedGameQueue;
 import work.lclpnet.ap2.impl.map.BalancedMapRandomizer;
@@ -115,7 +116,9 @@ public class ArcadePartyGameInstance implements GameInstance {
         ApContainer container = new ApContainer(server, logger, translationService, environment.getHookStack(),
                 environment.getSchedulerStack(), worldFacade, mapFacade);
 
-        var args = new PreparationActivity.Args(arcadeParty, container, queue);
+        PlayerManagerImpl playerManager = new PlayerManagerImpl(server);
+
+        var args = new PreparationActivity.Args(arcadeParty, container, queue, playerManager);
         PreparationActivity preparation = new PreparationActivity(args);
 
         ActivityManager.getInstance().startActivity(preparation);
