@@ -16,7 +16,6 @@ import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 
-import java.util.Random;
 import java.util.Set;
 
 public class SpleefInstance extends DefaultGameInstance {
@@ -39,10 +38,7 @@ public class SpleefInstance extends DefaultGameInstance {
         }, Ticks.seconds(8));
 
         scheduler.timeout(() -> {
-            var players = PlayerLookup.all(server).toArray(ServerPlayerEntity[]::new);
-            ServerPlayerEntity winner = players[new Random().nextInt(players.length)];
-
-            gameHandle.complete(Set.of(winner));
+            gameHandle.complete(Set.of());  // TODO
         }, Ticks.seconds(15));
 
         gameHandle.protect(config -> {
