@@ -52,7 +52,23 @@ public abstract class DefaultGameInstance implements MiniGameInstance, Participa
         MapFacade mapFacade = gameHandle.getMapFacade();
         Identifier gameId = gameHandle.getGameInfo().getId();
 
-        mapFacade.openRandomMap(gameId, this::onReady);
+        mapFacade.openRandomMap(gameId, this::onMapReady);
+    }
+
+    private void onMapReady() {
+        prepare();
+
+        gameHandle.getScheduler().timeout(this::afterInitialDelay, getInitialDelay());
+    }
+
+    private void afterInitialDelay() {
+        gameHandle.getTranslations().translateText("ap2.go").formatted(RED)
+                .acceptEach(PlayerLookup.all(gameHandle.getServer()), (player, text) -> {
+                    Title.get(player).title(text, Text.empty(), 5, 20, 5);
+                    player.playSound(SoundEvents.ENTITY_CHICKEN_EGG, SoundCategory.PLAYERS, 1, 0);
+                });
+
+        ready();
     }
 
     @Override
@@ -241,11 +257,11 @@ public abstract class DefaultGameInstance implements MiniGameInstance, Participa
                 if (extra != null) {
                     RootText translatedExtra = extra.translateFor(player);
                     player.sendMessage(translations.translateText(player, "ap2.you_placed_value",
-                                    styled(playerIndex + 1, YELLOW),
-                                    translatedExtra.formatted(YELLOW)).formatted(GRAY));
+                            styled("#" + (playerIndex + 1), YELLOW),
+                            translatedExtra.formatted(YELLOW)).formatted(GRAY));
                 } else {
                     player.sendMessage(translations.translateText(player, "ap2.you_placed",
-                            styled(playerIndex + 1, YELLOW)).formatted(GRAY));
+                            styled("#" + (playerIndex + 1), YELLOW)).formatted(GRAY));
                 }
             }
 
@@ -253,7 +269,14 @@ public abstract class DefaultGameInstance implements MiniGameInstance, Participa
         }
     }
 
+    protected int getInitialDelay() {
+        int players = gameHandle.getParticipants().getAsSet().size();
+        return Ticks.seconds(5) + players * 10;
+    }
+
     protected abstract DataContainer getData();
 
-    protected abstract void onReady();
+    protected abstract void prepare();
+
+    protected abstract void ready();
 }
