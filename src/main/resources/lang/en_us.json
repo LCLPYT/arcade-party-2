@@ -2,6 +2,7 @@
   "ap2.prepare.next_game_title": "Next Game",
   "ap2.prepare.next_game": "The next game will be %s",
   "ap2.prepare.created_by": "Created by %s",
+  "game.ap2.title": "ArcadeParty",
   "game.ap2.spleef": "Spleef",
   "game.ap2.spleef.description": "Break the ground beneath your opponents to make them fall. Last one standing wins."
 }
