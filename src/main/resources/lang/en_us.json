@@ -1,6 +1,6 @@
 {
   "ap2.prepare.next_game_title": "Next Game",
-  "ap2.prepare.next_game": "The next game will be %s",
+  "ap2.prepare.next_game": "The next game will be...",
   "ap2.prepare.created_by": "Created by %s",
   "ap2.nobody": "Nobody",
   "ap2.won": "won the game",

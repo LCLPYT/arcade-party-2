@@ -140,9 +140,12 @@ public class PreparationActivity extends ComponentActivity implements Skippable 
             return false;
         }
 
-        if (t == GAME_ANNOUNCE_DELAY) {
+        if (t == GAME_ANNOUNCE_DELAY - 40) {
+            // "The next game will be %s"
+            args.container().translationService().translateText("ap2.prepare.next_game").formatted(GRAY)
+                            .sendTo(PlayerLookup.all(getServer()));
+        } else if (t == GAME_ANNOUNCE_DELAY) {
             announceNextGame();
-            return false;
         }
 
         return t == PREPARATION_TIME || allPlayersAreReady();
@@ -188,17 +191,15 @@ public class PreparationActivity extends ComponentActivity implements Skippable 
     private void announceNextGame() {
         TranslationService translationService = args.container().translationService();
 
+        var separator = Text.literal(ApConstants.SEPERATOR)
+                .formatted(DARK_GREEN, STRIKETHROUGH, BOLD);
+
         for (ServerPlayerEntity player : PlayerLookup.all(getServer())) {
-            var gameTitle = translationService.translateText(player, miniGame.getTitleKey()).formatted(AQUA, BOLD);
-
-            // "The next game will be %s"
-            player.sendMessage(translationService.translateText(player, "ap2.prepare.next_game", gameTitle)
-                    .formatted(GRAY));
-
-            var separator = Text.literal(ApConstants.SEPERATOR)
-                    .formatted(DARK_GREEN, STRIKETHROUGH, BOLD);
 
             player.sendMessage(separator);
+
+            var gameTitle = translationService.translateText(player, miniGame.getTitleKey()).formatted(AQUA, BOLD);
+            player.sendMessage(gameTitle);
 
             var description = translationService.translateText(player, miniGame.getDescriptionKey()).formatted(GREEN);
 
