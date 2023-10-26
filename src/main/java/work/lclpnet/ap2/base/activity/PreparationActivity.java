@@ -140,6 +140,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable 
         timer.addPlayers(PlayerLookup.all(server));
 
         timer.start(bossBars, scheduler);
+        bossBars.showOnJoin(timer.getBossBar());
     }
 
     private boolean allPlayersAreReady() {
