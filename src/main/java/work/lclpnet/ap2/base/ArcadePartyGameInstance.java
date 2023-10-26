@@ -38,7 +38,7 @@ import java.util.concurrent.CompletableFuture;
 
 public class ArcadePartyGameInstance implements GameInstance {
 
-    private static int MIN_REQUIRED_PLAYERS = 2;
+    private static final int MIN_REQUIRED_PLAYERS = 2;
     private final Logger logger = ArcadeParty.logger;
     private final GameEnvironment environment;
 

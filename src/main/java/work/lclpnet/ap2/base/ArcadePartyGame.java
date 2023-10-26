@@ -14,7 +14,7 @@ public class ArcadePartyGame implements Game {
     private final MinecraftGameConfig config;
 
     public ArcadePartyGame() {
-        config = new MinecraftGameConfig("ap2", "Arcade Party", new ItemStack(Items.GOLD_BLOCK));
+        config = new MinecraftGameConfig("ap2", new ItemStack(Items.GOLD_BLOCK));
     }
 
     @Override
