@@ -3,6 +3,7 @@ package work.lclpnet.ap2.base;
 import it.unimi.dsi.fastutil.Pair;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.Formatting;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import work.lclpnet.activity.manager.ActivityManager;
@@ -37,6 +38,7 @@ import java.util.concurrent.CompletableFuture;
 
 public class ArcadePartyGameInstance implements GameInstance {
 
+    private static int MIN_REQUIRED_PLAYERS = 2;
     private final Logger logger = ArcadeParty.logger;
     private final GameEnvironment environment;
 
@@ -46,7 +48,19 @@ public class ArcadePartyGameInstance implements GameInstance {
 
     @Override
     public GameStarter createStarter(GameStarter.Args args, GameStarter.Callback callback) {
-        return new ConditionGameStarter(this::canStart, args, callback, environment);
+        ConditionGameStarter starter = new ConditionGameStarter(this::canStart, args, callback, environment);
+
+        ArcadeParty arcadeParty = ArcadeParty.getInstance();
+        TranslationService translations = arcadeParty.getTranslationService();
+
+        var msg = translations.translateText("lobby.game.not_enough_players", MIN_REQUIRED_PLAYERS)
+                .formatted(Formatting.RED);
+
+        starter.setConditionMessage(msg::translateFor);
+
+        starter.setConditionBossBarValue(translations.translateText("lobby.game.waiting_for_players"));
+
+        return starter;
     }
 
     private boolean canStart() {
@@ -58,7 +72,7 @@ public class ArcadePartyGameInstance implements GameInstance {
             return players >= 1;
         }
 
-        return players >= 2;
+        return players >= MIN_REQUIRED_PLAYERS;
     }
 
     @Override
