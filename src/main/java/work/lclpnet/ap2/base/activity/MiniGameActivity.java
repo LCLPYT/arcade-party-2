@@ -58,6 +58,6 @@ public class MiniGameActivity implements Activity {
     }
 
     private void onQuit(ServerPlayerEntity player) {
-        args.playerManager().removeParticipant(player);
+        args.playerManager().remove(player);
     }
 }

@@ -1,46 +1,36 @@
 package work.lclpnet.ap2.game.spleef;
 
-import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.damage.DamageTypes;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
 import net.minecraft.world.World;
+import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
+import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.impl.game.DefaultGameInstance;
-import work.lclpnet.kibu.scheduler.Ticks;
-import work.lclpnet.kibu.scheduler.api.TaskScheduler;
+import work.lclpnet.ap2.impl.game.PlayerUtil;
+import work.lclpnet.ap2.impl.game.data.EliminationDataContainer;
+import work.lclpnet.kibu.hook.player.PlayerDeathCallback;
+import work.lclpnet.kibu.hook.player.PlayerSpawnLocationCallback;
+import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 
-import java.util.Set;
-
 public class SpleefInstance extends DefaultGameInstance {
+
+    private final EliminationDataContainer data = new EliminationDataContainer();
 
     public SpleefInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
     }
 
     @Override
+    protected DataContainer getData() {
+        return data;
+    }
+
+    @Override
     protected void onReady() {
-        MinecraftServer server = gameHandle.getServer();
-
-        TaskScheduler scheduler = gameHandle.getScheduler();
-
-        scheduler.timeout(() -> {
-            for (ServerPlayerEntity player : PlayerLookup.all(server)) {
-                player.playSound(SoundEvents.ENTITY_PLAYER_LEVELUP, SoundCategory.MASTER, 1, 1);
-                player.sendMessage(Text.literal("Spleef has started"));
-            }
-        }, Ticks.seconds(8));
-
-        scheduler.timeout(() -> {
-            gameHandle.complete(Set.of());  // TODO
-        }, Ticks.seconds(15));
-
         gameHandle.protect(config -> {
             config.allow(ProtectionTypes.BREAK_BLOCKS, (entity, pos) -> {
                 World world = entity.getWorld();
@@ -51,15 +41,30 @@ public class SpleefInstance extends DefaultGameInstance {
 
             config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, damageSource) -> damageSource.isOf(DamageTypes.LAVA));
         });
+
+        Participants participants = gameHandle.getParticipants();
+
+        HookRegistrar hooks = gameHandle.getHookRegistrar();
+
+        hooks.registerHook(PlayerDeathCallback.HOOK, (player, damageSource) -> {
+            if (!participants.isParticipating(player)) return;
+
+            data.eliminated(player);
+            participants.remove(player);
+        });
+
+        hooks.registerHook(PlayerSpawnLocationCallback.HOOK, data
+                -> PlayerUtil.resetPlayer(data.getPlayer(), PlayerUtil.Preset.SPECTATOR));
     }
 
     @Override
     public void participantRemoved(ServerPlayerEntity player) {
-        var participants = gameHandle.getParticipants().getParticipants();
+        var participants = gameHandle.getParticipants().getAsSet();
         if (participants.size() > 1) return;
 
-        participants.stream()
-                .findAny()
-                .ifPresentOrElse(gameHandle::complete, gameHandle::completeWithoutWinner);
+        var winner = participants.stream().findAny();
+        winner.ifPresent(data::eliminated);  // the winner also has to be tracked
+
+        win(winner.orElse(null));
     }
 }

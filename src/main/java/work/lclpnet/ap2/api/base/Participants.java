@@ -11,11 +11,17 @@ public interface Participants extends Iterable<ServerPlayerEntity> {
     /**
      * @return The currently participating players.
      */
-    Set<ServerPlayerEntity> getParticipants();
+    Set<ServerPlayerEntity> getAsSet();
+
+    void remove(ServerPlayerEntity player);
 
     @NotNull
     @Override
     default Iterator<ServerPlayerEntity> iterator() {
-        return getParticipants().iterator();
+        return getAsSet().iterator();
+    }
+
+    default boolean isParticipating(ServerPlayerEntity player) {
+        return getAsSet().contains(player);
     }
 }
