@@ -6,16 +6,19 @@ import java.util.Set;
 
 public interface PlayerManager extends Participants {
 
-    /**
-     * Adds every non-permanent spectator to the participants list.
-     */
-    void reset();
+    boolean offer(ServerPlayerEntity player);
+
+    void startPreparation();
+
+    void startMiniGame();
 
     void enterFinale(Set<? extends ServerPlayerEntity> finalists);
 
     void addPermanentSpectator(ServerPlayerEntity player);
 
     void removePermanentSpectator(ServerPlayerEntity player);
+
+    boolean isPermanentSpectator(ServerPlayerEntity player);
 
     void removeParticipant(ServerPlayerEntity player);
 

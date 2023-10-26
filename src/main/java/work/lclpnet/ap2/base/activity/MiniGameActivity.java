@@ -7,6 +7,7 @@ import work.lclpnet.ap2.api.base.PlayerManager;
 import work.lclpnet.ap2.api.game.MiniGame;
 import work.lclpnet.ap2.api.game.MiniGameInstance;
 import work.lclpnet.ap2.impl.game.DefaultMiniGameHandle;
+import work.lclpnet.ap2.impl.game.PlayerUtil;
 import work.lclpnet.kibu.hook.player.PlayerConnectionHooks;
 import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 
@@ -28,7 +29,7 @@ public class MiniGameActivity implements Activity {
 
         PlayerManager playerManager = args.playerManager();
 
-        playerManager.reset();
+        playerManager.startMiniGame();
         registerHooks(args.container().hookStack());
 
         MiniGameInstance instance = miniGame.createInstance(handle);
@@ -48,7 +49,12 @@ public class MiniGameActivity implements Activity {
     }
 
     private void registerHooks(HookRegistrar registrar) {
+        registrar.registerHook(PlayerConnectionHooks.JOIN, this::onJoin);
         registrar.registerHook(PlayerConnectionHooks.QUIT, this::onQuit);
+    }
+
+    private void onJoin(ServerPlayerEntity player) {
+        PlayerUtil.resetPlayer(player, PlayerUtil.Preset.SPECTATOR);
     }
 
     private void onQuit(ServerPlayerEntity player) {
