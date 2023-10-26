@@ -3,13 +3,14 @@ package work.lclpnet.ap2.impl.game;
 import net.minecraft.entity.damage.DamageTypes;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
+import work.lclpnet.ap2.api.base.ParticipantListener;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.MiniGameInstance;
 import work.lclpnet.ap2.api.map.MapFacade;
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks;
 import work.lclpnet.lobby.game.util.ProtectorUtils;
 
-public abstract class DefaultGameInstance implements MiniGameInstance {
+public abstract class DefaultGameInstance implements MiniGameInstance, ParticipantListener {
 
     protected final MiniGameHandle gameHandle;
 
@@ -31,6 +32,11 @@ public abstract class DefaultGameInstance implements MiniGameInstance {
         Identifier gameId = gameHandle.getGameInfo().getId();
 
         mapFacade.openRandomMap(gameId, this::onReady);
+    }
+
+    @Override
+    public ParticipantListener getParticipantListener() {
+        return this;
     }
 
     private void registerDefaultHooks() {

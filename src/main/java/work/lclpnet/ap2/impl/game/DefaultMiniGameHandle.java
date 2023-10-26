@@ -4,6 +4,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import org.slf4j.Logger;
 import work.lclpnet.activity.manager.ActivityManager;
+import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.GameInfo;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.map.MapFacade;
@@ -19,6 +20,7 @@ import work.lclpnet.mplugins.ext.Unloadable;
 
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 public class DefaultMiniGameHandle implements MiniGameHandle, Unloadable {
 
@@ -80,6 +82,11 @@ public class DefaultMiniGameHandle implements MiniGameHandle, Unloadable {
     }
 
     @Override
+    public Participants getParticipants() {
+        return args.playerManager();
+    }
+
+    @Override
     public synchronized void protect(Consumer<MutableProtectionConfig> action) {
         if (protector == null) {
             synchronized (this) {
@@ -100,6 +107,9 @@ public class DefaultMiniGameHandle implements MiniGameHandle, Unloadable {
     @Override
     public void complete(Set<ServerPlayerEntity> winners) {
         // TODO track winners
+        getLogger().info("Winners: {}", winners.stream()
+                .map(ServerPlayerEntity::getEntityName)
+                .collect(Collectors.toSet()));
 
         PreparationActivity activity = new PreparationActivity(args);
         ActivityManager.getInstance().startActivity(activity);

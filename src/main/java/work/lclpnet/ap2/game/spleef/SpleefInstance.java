@@ -52,4 +52,14 @@ public class SpleefInstance extends DefaultGameInstance {
             config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, damageSource) -> damageSource.isOf(DamageTypes.LAVA));
         });
     }
+
+    @Override
+    public void participantRemoved(ServerPlayerEntity player) {
+        var participants = gameHandle.getParticipants().getParticipants();
+        if (participants.size() > 1) return;
+
+        participants.stream()
+                .findAny()
+                .ifPresentOrElse(gameHandle::complete, gameHandle::completeWithoutWinner);
+    }
 }
