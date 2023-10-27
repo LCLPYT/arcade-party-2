@@ -28,24 +28,26 @@ public class MapFacadeImpl implements MapFacade {
     }
 
     @Override
-    public CompletableFuture<Void> openRandomMap(Identifier gameId) {
+    public CompletableFuture<ServerWorld> openRandomMap(Identifier gameId) {
         return mapRandomizer.nextMap(gameId)
                 .thenApply(GameMap::getIdentifier)
                 .thenCompose(worldFacade::changeMap)
-                .thenAccept(this::setupWorld);
+                .thenApply(this::setupWorld);
     }
 
     @Override
     public void openRandomMap(Identifier gameId, MapReady callback) {
         openRandomMap(gameId)
-                .thenCompose(nul -> server.submit(callback::onReady))
+                .thenCompose(world -> server.submit(() -> callback.onReady(world)))
                 .exceptionally(throwable -> {
                     logger.error("Failed to open a random map for game {}", gameId, throwable);
                     return null;
                 });
     }
 
-    private void setupWorld(ServerWorld world) {
+    private ServerWorld setupWorld(ServerWorld world) {
         world.getGameRules().get(GameRules.DO_IMMEDIATE_RESPAWN).set(true, server);
+
+        return world;
     }
 }

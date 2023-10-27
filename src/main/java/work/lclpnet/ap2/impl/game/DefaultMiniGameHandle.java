@@ -2,9 +2,13 @@ package work.lclpnet.ap2.impl.game;
 
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
+import net.minecraft.world.border.WorldBorder;
+import net.minecraft.world.border.WorldBorderListener;
 import org.slf4j.Logger;
 import work.lclpnet.activity.manager.ActivityManager;
 import work.lclpnet.ap2.api.base.Participants;
+import work.lclpnet.ap2.api.base.WorldBorderManager;
 import work.lclpnet.ap2.api.game.GameInfo;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.map.MapFacade;
@@ -22,12 +26,13 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-public class DefaultMiniGameHandle implements MiniGameHandle, Unloadable {
+public class DefaultMiniGameHandle implements MiniGameHandle, Unloadable, WorldBorderManager {
 
     private final GameInfo info;
     private final PreparationActivity.Args args;
     private MutableProtectionConfig protectionConfig;
     private volatile BasicProtector protector = null;
+    private WorldBorderListener worldBorderListener = null;
 
     public DefaultMiniGameHandle(GameInfo info, PreparationActivity.Args args) {
         this.info = info;
@@ -87,6 +92,11 @@ public class DefaultMiniGameHandle implements MiniGameHandle, Unloadable {
     }
 
     @Override
+    public WorldBorderManager getWorldBorderManager() {
+        return this;
+    }
+
+    @Override
     public synchronized void protect(Consumer<MutableProtectionConfig> action) {
         if (protector == null) {
             synchronized (this) {
@@ -124,6 +134,40 @@ public class DefaultMiniGameHandle implements MiniGameHandle, Unloadable {
 
         if (protector != null) {
             protector.unload();
+        }
+    }
+
+    @Override
+    public WorldBorder getWorldBorder() {
+        return getServer().getOverworld().getWorldBorder();
+    }
+
+    @Override
+    public void setupWorldBorder(ServerWorld world) {
+        WorldBorder mainBorder = getServer().getOverworld().getWorldBorder();
+        WorldBorder worldBorder = world.getWorldBorder();
+
+        if (worldBorderListener != null) {
+            mainBorder.removeListener(worldBorderListener);
+        }
+
+        worldBorderListener = new WorldBorderListener.WorldBorderSyncer(worldBorder);
+        mainBorder.addListener(worldBorderListener);
+    }
+
+    @Override
+    public void resetWorldBorder() {
+        WorldBorder worldBorder = getServer().getOverworld().getWorldBorder();
+
+        worldBorder.setCenter(0.5, 0.5);
+        worldBorder.setSize(worldBorder.getMaxRadius());
+        worldBorder.setSafeZone(5);
+        worldBorder.setDamagePerBlock(0.2);
+        worldBorder.setWarningTime(15);
+        worldBorder.setWarningBlocks(5);
+
+        if (worldBorderListener != null) {
+            worldBorder.removeListener(worldBorderListener);
         }
     }
 }

@@ -1,5 +1,6 @@
 package work.lclpnet.ap2.api.map;
 
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Identifier;
 import work.lclpnet.ap2.api.game.MapReady;
 
@@ -13,7 +14,7 @@ public interface MapFacade {
      * @param gameId The game identifier.
      * @return A future that completes if the map was opened.
      */
-    CompletableFuture<Void> openRandomMap(Identifier gameId);
+    CompletableFuture<ServerWorld> openRandomMap(Identifier gameId);
 
     void openRandomMap(Identifier gameId, MapReady onReady);
 }

@@ -3,6 +3,7 @@ package work.lclpnet.ap2.impl.game;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.entity.damage.DamageTypes;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.MutableText;
@@ -34,6 +35,8 @@ import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 public abstract class DefaultGameInstance implements MiniGameInstance, ParticipantListener {
 
     protected final MiniGameHandle gameHandle;
+    @Nullable
+    private ServerWorld world = null;
 
     public DefaultGameInstance(MiniGameHandle gameHandle) {
         this.gameHandle = gameHandle;
@@ -55,7 +58,9 @@ public abstract class DefaultGameInstance implements MiniGameInstance, Participa
         mapFacade.openRandomMap(gameId, this::onMapReady);
     }
 
-    private void onMapReady() {
+    private void onMapReady(ServerWorld world) {
+        this.world = world;
+
         prepare();
 
         gameHandle.getScheduler().timeout(this::afterInitialDelay, getInitialDelay());
@@ -272,6 +277,14 @@ public abstract class DefaultGameInstance implements MiniGameInstance, Participa
     protected int getInitialDelay() {
         int players = gameHandle.getParticipants().getAsSet().size();
         return Ticks.seconds(5) + players * 10;
+    }
+
+    protected final ServerWorld getWorld() {
+        if (world == null) {
+            throw new IllegalStateException("World not loaded yet");
+        }
+
+        return world;
     }
 
     protected abstract DataContainer getData();
