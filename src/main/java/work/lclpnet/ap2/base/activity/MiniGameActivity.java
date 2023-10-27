@@ -46,6 +46,8 @@ public class MiniGameActivity implements Activity {
         }
 
         args.playerManager().bind(null);
+
+        handle.getWorldBorderManager().resetWorldBorder();
     }
 
     private void registerHooks(HookRegistrar registrar) {
