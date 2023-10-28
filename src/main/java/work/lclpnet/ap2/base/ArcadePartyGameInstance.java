@@ -24,14 +24,10 @@ import work.lclpnet.lobby.game.api.GameEnvironment;
 import work.lclpnet.lobby.game.api.GameInstance;
 import work.lclpnet.lobby.game.api.GameStarter;
 import work.lclpnet.lobby.game.api.WorldFacade;
-import work.lclpnet.lobby.game.map.MapCollection;
-import work.lclpnet.lobby.game.map.MapManager;
-import work.lclpnet.lobby.game.map.MapRepository;
-import work.lclpnet.lobby.game.map.UrlMapRepository;
+import work.lclpnet.lobby.game.map.*;
 import work.lclpnet.lobby.game.start.ConditionGameStarter;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Random;
@@ -83,7 +79,7 @@ public class ArcadePartyGameInstance implements GameInstance {
         MapManager mapManager = createMapManager();
 
         WorldFacade worldFacade = environment.getWorldFacade(() -> mapManager);
-        var mapPair = createMapFacade(server, mapManager.getMapCollection(), worldFacade);
+        var mapPair = createMapFacade(server, mapManager, worldFacade);
 
         MapFacade mapFacade = mapPair.left();
         var frequencyManager = mapPair.right();
@@ -135,11 +131,11 @@ public class ArcadePartyGameInstance implements GameInstance {
     @NotNull
     private static CompletableFuture<Void> loadMaps(MapManager mapManager) {
         return CompletableFuture.runAsync(() -> {
-            MapCollection mapCollection = mapManager.getMapCollection();
+            // load mini game maps
 
             try {
-                // load arcade party 2 maps
-                mapCollection.load(ApConstants.ID);
+                // load general arcade party 2 maps
+                mapManager.loadAll(new MapDescriptor(ApConstants.ID, "", ApConstants.MAP_VERSION));
             } catch (IOException e) {
                 throw new RuntimeException("Failed to load maps of namespace %s".formatted(ApConstants.ID), e);
             }
@@ -148,7 +144,7 @@ public class ArcadePartyGameInstance implements GameInstance {
 
     @NotNull
     private Pair<MapFacade, SqliteAsyncMapFrequencyManager> createMapFacade(
-            MinecraftServer server, MapCollection mapCollection, WorldFacade worldFacade) {
+            MinecraftServer server, MapManager mapManager, WorldFacade worldFacade) {
 
         Path dbPath = Path.of("config")
                 .resolve(ApConstants.ID)
@@ -156,7 +152,7 @@ public class ArcadePartyGameInstance implements GameInstance {
 
         SqliteAsyncMapFrequencyManager frequencyTracker = new SqliteAsyncMapFrequencyManager(dbPath, logger);
 
-        MapRandomizer mapRandomizer = new BalancedMapRandomizer(mapCollection, frequencyTracker, new Random());
+        MapRandomizer mapRandomizer = new BalancedMapRandomizer(mapManager, frequencyTracker, new Random());
 
         MapFacade mapFacade = new MapFacadeImpl(worldFacade, mapRandomizer, server, logger);
 
@@ -166,12 +162,10 @@ public class ArcadePartyGameInstance implements GameInstance {
     private MapManager createMapManager() {
         MapRepository mapRepository;
 
-        try {
-            mapRepository = new UrlMapRepository(Path.of("worlds").toUri().toURL(), logger);
-        } catch (MalformedURLException e) {
-            throw new RuntimeException(e);
-        }
+        mapRepository = new UriMapRepository(Path.of("worlds").toUri(), logger);
 
-        return new MapManager(mapRepository, logger);
+        var lookup = new RepositoryMapLookup(mapRepository);
+
+        return new MapManager(lookup);
     }
 }
