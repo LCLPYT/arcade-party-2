@@ -10,6 +10,7 @@ import work.lclpnet.ap2.api.map.MapFacade;
 import work.lclpnet.ap2.api.map.MapRandomizer;
 import work.lclpnet.lobby.game.api.WorldFacade;
 import work.lclpnet.lobby.game.map.GameMap;
+import work.lclpnet.lobby.game.map.MapDescriptor;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -30,7 +31,8 @@ public class MapFacadeImpl implements MapFacade {
     @Override
     public CompletableFuture<ServerWorld> openRandomMap(Identifier gameId) {
         return mapRandomizer.nextMap(gameId)
-                .thenApply(GameMap::getIdentifier)
+                .thenApply(GameMap::getDescriptor)
+                .thenApply(MapDescriptor::getIdentifier)
                 .thenCompose(worldFacade::changeMap)
                 .thenApply(this::setupWorld);
     }
