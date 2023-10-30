@@ -126,7 +126,7 @@ public class SpleefInstance extends DefaultGameInstance {
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
             ItemStack stack = new ItemStack(Items.IRON_SHOVEL);
 
-            stack.setCustomName(translations.translateText(player, "game.ap2.shovel")
+            stack.setCustomName(translations.translateText(player, "game.ap2.spleef.shovel")
                     .styled(style -> style.withItalic(false).withFormatting(Formatting.GOLD)));
 
             ItemStackUtil.setUnbreakable(stack, true);

@@ -10,6 +10,7 @@ public final class ApConstants {
 
     // people
     public static final String PERSON_LCLP = "LCLP";
+    public static final String PERSON_BOPS = "bops";
     public static final String SEPERATOR = "===================================";
 
     private ApConstants() {}
