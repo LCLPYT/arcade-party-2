@@ -97,6 +97,11 @@ public class DefaultMiniGameHandle implements MiniGameHandle, Unloadable, WorldB
     }
 
     @Override
+    public PlayerUtil getPlayerUtil() {
+        return args.container().playerUtil();
+    }
+
+    @Override
     public synchronized void protect(Consumer<MutableProtectionConfig> action) {
         if (protector == null) {
             synchronized (this) {

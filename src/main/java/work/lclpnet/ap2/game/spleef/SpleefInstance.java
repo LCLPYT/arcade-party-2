@@ -13,6 +13,7 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.GameMode;
 import net.minecraft.world.World;
 import net.minecraft.world.border.WorldBorder;
 import work.lclpnet.ap2.api.base.Participants;
@@ -60,8 +61,11 @@ public class SpleefInstance extends DefaultGameInstance {
             participants.remove(player);
         });
 
+        PlayerUtil playerUtil = gameHandle.getPlayerUtil();
+        playerUtil.setDefaultGameMode(GameMode.SURVIVAL);
+
         hooks.registerHook(PlayerSpawnLocationCallback.HOOK, data
-                -> PlayerUtil.resetPlayer(data.getPlayer(), PlayerUtil.Preset.SPECTATOR));
+                -> playerUtil.resetPlayer(data.getPlayer(), PlayerUtil.State.SPECTATOR));
     }
 
     @Override

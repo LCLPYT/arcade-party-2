@@ -16,6 +16,7 @@ import work.lclpnet.ap2.base.activity.PreparationActivity;
 import work.lclpnet.ap2.impl.base.PlayerManagerImpl;
 import work.lclpnet.ap2.impl.base.SimpleMiniGameManager;
 import work.lclpnet.ap2.impl.base.VotedGameQueue;
+import work.lclpnet.ap2.impl.game.PlayerUtil;
 import work.lclpnet.ap2.impl.map.BalancedMapRandomizer;
 import work.lclpnet.ap2.impl.map.MapFacadeImpl;
 import work.lclpnet.ap2.impl.map.SqliteAsyncMapFrequencyManager;
@@ -109,8 +110,10 @@ public class ArcadePartyGameInstance implements GameInstance {
         List<MiniGame> votedGames = List.of();  // TODO get from vote manager and shuffle
         GameQueue queue = new VotedGameQueue(gameManager, votedGames, 5);
 
+        PlayerUtil playerUtil = new PlayerUtil();
+
         ApContainer container = new ApContainer(server, logger, translationService, environment.getHookStack(),
-                environment.getSchedulerStack(), worldFacade, mapFacade);
+                environment.getSchedulerStack(), worldFacade, mapFacade, playerUtil);
 
         PlayerManagerImpl playerManager = new PlayerManagerImpl(server);
 
