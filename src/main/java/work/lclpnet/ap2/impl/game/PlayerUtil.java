@@ -7,6 +7,7 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.GameMode;
 import org.jetbrains.annotations.NotNull;
+import work.lclpnet.ap2.api.base.PlayerManager;
 import work.lclpnet.kibu.access.VelocityModifier;
 import work.lclpnet.kibu.hook.util.PlayerUtils;
 
@@ -16,7 +17,12 @@ import java.util.Optional;
 public class PlayerUtil {
 
     public static final GameMode INITIAL_GAMEMODE = GameMode.ADVENTURE;
+    private final PlayerManager playerManager;
     private GameMode defaultGameMode = INITIAL_GAMEMODE;
+
+    public PlayerUtil(PlayerManager playerManager) {
+        this.playerManager = playerManager;
+    }
 
     public void setDefaultGameMode(@NotNull GameMode defaultGameMode) {
         Objects.requireNonNull(defaultGameMode);
@@ -25,6 +31,15 @@ public class PlayerUtil {
 
     public GameMode getDefaultGameMode() {
         return defaultGameMode;
+    }
+
+    @NotNull
+    public State getState(ServerPlayerEntity player) {
+        return playerManager.isParticipating(player) ? State.DEFAULT : State.SPECTATOR;
+    }
+
+    public void resetPlayer(ServerPlayerEntity player) {
+        resetPlayer(player, getState(player));
     }
 
     public void resetPlayer(ServerPlayerEntity player, State state) {

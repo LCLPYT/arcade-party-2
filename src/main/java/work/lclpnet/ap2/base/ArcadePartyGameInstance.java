@@ -110,12 +110,11 @@ public class ArcadePartyGameInstance implements GameInstance {
         List<MiniGame> votedGames = List.of();  // TODO get from vote manager and shuffle
         GameQueue queue = new VotedGameQueue(gameManager, votedGames, 5);
 
-        PlayerUtil playerUtil = new PlayerUtil();
+        PlayerManagerImpl playerManager = new PlayerManagerImpl(server);
+        PlayerUtil playerUtil = new PlayerUtil(playerManager);
 
         ApContainer container = new ApContainer(server, logger, translationService, environment.getHookStack(),
                 environment.getSchedulerStack(), worldFacade, mapFacade, playerUtil);
-
-        PlayerManagerImpl playerManager = new PlayerManagerImpl(server);
 
         var args = new PreparationActivity.Args(arcadeParty, container, queue, playerManager);
         PreparationActivity preparation = new PreparationActivity(args);

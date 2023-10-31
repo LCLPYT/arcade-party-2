@@ -89,7 +89,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable 
 
         PlayerUtil playerUtil = args.container().playerUtil();
         playerUtil.setDefaultGameMode(PlayerUtil.INITIAL_GAMEMODE);
-        playerManager.getAsSet().forEach(player -> playerUtil.resetPlayer(player, PlayerUtil.State.DEFAULT));
+        playerManager.forEach(playerUtil::resetPlayer);
 
         HookRegistrar hooks = component(BuiltinComponents.HOOKS).hooks();
         hooks.registerHook(PlayerConnectionHooks.JOIN, this::onJoin);
