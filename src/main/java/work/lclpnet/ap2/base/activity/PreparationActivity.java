@@ -87,7 +87,9 @@ public class PreparationActivity extends ComponentActivity implements Skippable 
         PlayerManager playerManager = args.playerManager();
         playerManager.startPreparation();
 
-        playerManager.getAsSet().forEach(player -> PlayerUtil.resetPlayer(player, PlayerUtil.Preset.DEFAULT));
+        PlayerUtil playerUtil = args.container().playerUtil();
+        playerUtil.setDefaultGameMode(PlayerUtil.INITIAL_GAMEMODE);
+        playerManager.forEach(playerUtil::resetPlayer);
 
         HookRegistrar hooks = component(BuiltinComponents.HOOKS).hooks();
         hooks.registerHook(PlayerConnectionHooks.JOIN, this::onJoin);
@@ -112,7 +114,8 @@ public class PreparationActivity extends ComponentActivity implements Skippable 
 
         boolean spectator = playerManager.isPermanentSpectator(player) || !playerManager.offer(player);
 
-        PlayerUtil.resetPlayer(player, spectator ? PlayerUtil.Preset.SPECTATOR : PlayerUtil.Preset.DEFAULT);
+        PlayerUtil.State state = spectator ? PlayerUtil.State.SPECTATOR : PlayerUtil.State.DEFAULT;
+        args.container().playerUtil().resetPlayer(player, state);
     }
 
     private void showLeaderboard() {
