@@ -9,6 +9,7 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
+import net.minecraft.world.GameMode;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.base.ParticipantListener;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
@@ -61,9 +62,17 @@ public abstract class DefaultGameInstance implements MiniGameInstance, Participa
     private void onMapReady(ServerWorld world) {
         this.world = world;
 
+        resetPlayers();
+
         prepare();
 
         gameHandle.getScheduler().timeout(this::afterInitialDelay, getInitialDelay());
+    }
+
+    private void resetPlayers() {
+        PlayerUtil playerUtil = gameHandle.getPlayerUtil();
+
+        PlayerLookup.all(gameHandle.getServer()).forEach(playerUtil::resetPlayer);
     }
 
     private void afterInitialDelay() {
@@ -285,6 +294,10 @@ public abstract class DefaultGameInstance implements MiniGameInstance, Participa
         }
 
         return world;
+    }
+
+    protected final void setDefaultGameMode(GameMode gameMode) {
+        gameHandle.getPlayerUtil().setDefaultGameMode(gameMode);
     }
 
     protected abstract DataContainer getData();

@@ -13,6 +13,7 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.GameMode;
 import net.minecraft.world.World;
 import net.minecraft.world.border.WorldBorder;
 import work.lclpnet.ap2.api.base.Participants;
@@ -40,6 +41,8 @@ public class SpleefInstance extends DefaultGameInstance {
 
     public SpleefInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
+
+        setDefaultGameMode(GameMode.SURVIVAL);
     }
 
     @Override
@@ -60,8 +63,11 @@ public class SpleefInstance extends DefaultGameInstance {
             participants.remove(player);
         });
 
+        PlayerUtil playerUtil = gameHandle.getPlayerUtil();
+        playerUtil.setDefaultGameMode(GameMode.SURVIVAL);
+
         hooks.registerHook(PlayerSpawnLocationCallback.HOOK, data
-                -> PlayerUtil.resetPlayer(data.getPlayer(), PlayerUtil.Preset.SPECTATOR));
+                -> playerUtil.resetPlayer(data.getPlayer()));
     }
 
     @Override
@@ -146,7 +152,7 @@ public class SpleefInstance extends DefaultGameInstance {
         ServerWorld world = getWorld();
         BlockState air = Blocks.AIR.getDefaultState();
 
-        for (BlockPos pos : BlockPos.iterate(x - 1, y - 1, z - 1, x + 1, y, z + 1)) {
+        for (BlockPos pos : BlockPos.iterate(x - 1, y - 2, z - 1, x + 1, y, z + 1)) {
             if (world.getBlockState(pos).isOf(Blocks.SNOW_BLOCK)) {
                 world.setBlockState(pos, air);
             }
