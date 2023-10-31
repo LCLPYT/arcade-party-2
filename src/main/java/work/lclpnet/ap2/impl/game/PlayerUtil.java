@@ -6,15 +6,44 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.GameMode;
+import org.jetbrains.annotations.NotNull;
+import work.lclpnet.ap2.api.base.PlayerManager;
 import work.lclpnet.kibu.access.VelocityModifier;
 import work.lclpnet.kibu.hook.util.PlayerUtils;
 
+import java.util.Objects;
 import java.util.Optional;
 
 public class PlayerUtil {
 
-    public static void resetPlayer(ServerPlayerEntity player, Preset preset) {
-        player.changeGameMode(preset == Preset.DEFAULT ? GameMode.SURVIVAL : GameMode.SPECTATOR);
+    public static final GameMode INITIAL_GAMEMODE = GameMode.ADVENTURE;
+    private final PlayerManager playerManager;
+    private GameMode defaultGameMode = INITIAL_GAMEMODE;
+
+    public PlayerUtil(PlayerManager playerManager) {
+        this.playerManager = playerManager;
+    }
+
+    public void setDefaultGameMode(@NotNull GameMode defaultGameMode) {
+        Objects.requireNonNull(defaultGameMode);
+        this.defaultGameMode = defaultGameMode;
+    }
+
+    public GameMode getDefaultGameMode() {
+        return defaultGameMode;
+    }
+
+    @NotNull
+    public State getState(ServerPlayerEntity player) {
+        return playerManager.isParticipating(player) ? State.DEFAULT : State.SPECTATOR;
+    }
+
+    public void resetPlayer(ServerPlayerEntity player) {
+        resetPlayer(player, getState(player));
+    }
+
+    public void resetPlayer(ServerPlayerEntity player, State state) {
+        player.changeGameMode(state == State.DEFAULT ? defaultGameMode : GameMode.SPECTATOR);
         player.clearStatusEffects();
         player.getInventory().clear();
         PlayerUtils.setCursorStack(player, ItemStack.EMPTY);
@@ -37,7 +66,7 @@ public class PlayerUtil {
         abilities.setFlySpeed(0.05f);
         abilities.setWalkSpeed(0.1f);
 
-        switch (preset) {
+        switch (state) {
             case DEFAULT -> {
                 abilities.flying = false;
                 abilities.allowFlying = false;
@@ -54,10 +83,8 @@ public class PlayerUtil {
         }
     }
 
-    public enum Preset {
+    public enum State {
         DEFAULT,
         SPECTATOR
     }
-
-    private PlayerUtil() {}
 }
