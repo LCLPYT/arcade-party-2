@@ -56,7 +56,7 @@ public class MiniGameActivity implements Activity {
     }
 
     private void onJoin(ServerPlayerEntity player) {
-        PlayerUtil.resetPlayer(player, PlayerUtil.Preset.SPECTATOR);
+        args.container().playerUtil().resetPlayer(player, PlayerUtil.State.SPECTATOR);
     }
 
     private void onQuit(ServerPlayerEntity player) {
