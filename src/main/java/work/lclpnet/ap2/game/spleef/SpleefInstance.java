@@ -64,7 +64,6 @@ public class SpleefInstance extends DefaultGameInstance {
         });
 
         PlayerUtil playerUtil = gameHandle.getPlayerUtil();
-        playerUtil.setDefaultGameMode(GameMode.SURVIVAL);
 
         hooks.registerHook(PlayerSpawnLocationCallback.HOOK, data
                 -> playerUtil.resetPlayer(data.getPlayer()));

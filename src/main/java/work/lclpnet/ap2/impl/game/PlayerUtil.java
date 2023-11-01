@@ -19,6 +19,7 @@ public class PlayerUtil {
     public static final GameMode INITIAL_GAMEMODE = GameMode.ADVENTURE;
     private final PlayerManager playerManager;
     private GameMode defaultGameMode = INITIAL_GAMEMODE;
+    private boolean allowFlight = false;
 
     public PlayerUtil(PlayerManager playerManager) {
         this.playerManager = playerManager;
@@ -31,6 +32,19 @@ public class PlayerUtil {
 
     public GameMode getDefaultGameMode() {
         return defaultGameMode;
+    }
+
+    public void setAllowFlight(boolean allowFlight) {
+        this.allowFlight = allowFlight;
+
+        playerManager.forEach(player -> {
+            player.getAbilities().allowFlying = allowFlight;
+            player.sendAbilitiesUpdate();
+        });
+    }
+
+    public boolean isAllowFlight() {
+        return allowFlight;
     }
 
     @NotNull
@@ -69,7 +83,7 @@ public class PlayerUtil {
         switch (state) {
             case DEFAULT -> {
                 abilities.flying = false;
-                abilities.allowFlying = false;
+                abilities.allowFlying = allowFlight;
                 abilities.invulnerable = false;
             }
             case SPECTATOR -> {
@@ -81,6 +95,11 @@ public class PlayerUtil {
 
             }
         }
+    }
+
+    public void resetToDefaults() {
+        setDefaultGameMode(PlayerUtil.INITIAL_GAMEMODE);
+        setAllowFlight(false);
     }
 
     public enum State {
