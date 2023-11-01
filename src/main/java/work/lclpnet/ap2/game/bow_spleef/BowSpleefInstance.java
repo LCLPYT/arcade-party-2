@@ -30,6 +30,7 @@ import work.lclpnet.kibu.hook.entity.ProjectileHooks;
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks;
 import work.lclpnet.kibu.hook.player.PlayerDeathCallback;
 import work.lclpnet.kibu.hook.player.PlayerSpawnLocationCallback;
+import work.lclpnet.kibu.hook.world.BlockBreakParticleCallback;
 import work.lclpnet.kibu.inv.item.ItemStackUtil;
 import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 import work.lclpnet.kibu.scheduler.Ticks;
@@ -73,7 +74,6 @@ public class BowSpleefInstance extends DefaultGameInstance {
 
     @Override
     protected void ready() {
-
         gameHandle.protect(config -> {
 
             config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, damageSource)
@@ -89,8 +89,6 @@ public class BowSpleefInstance extends DefaultGameInstance {
             return false;
         });
 
-        TranslationService translations = gameHandle.getTranslations();
-
         hooks.registerHook(ProjectileHooks.HIT_BLOCK,(projectile, hit) -> {
             removeBlocks(hit.getBlockPos(), (ServerWorld) projectile.getWorld());
             projectile.discard();
@@ -104,9 +102,13 @@ public class BowSpleefInstance extends DefaultGameInstance {
             return false;
         });
 
-        giveBowsToPlayers(translations);
-        scheduleSuddenDeath();
+        hooks.registerHook(BlockBreakParticleCallback.HOOK, (world, pos, state) -> true);
 
+        TranslationService translations = gameHandle.getTranslations();
+
+        giveBowsToPlayers(translations);
+
+        scheduleSuddenDeath();
     }
 
     @Override
