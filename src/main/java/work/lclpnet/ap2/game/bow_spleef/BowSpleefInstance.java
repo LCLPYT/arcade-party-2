@@ -16,12 +16,12 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.GameMode;
 import net.minecraft.world.border.WorldBorder;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.base.WorldBorderManager;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
+import work.lclpnet.ap2.impl.DoubleJumpHandler;
 import work.lclpnet.ap2.impl.game.DefaultGameInstance;
 import work.lclpnet.ap2.impl.game.PlayerUtil;
 import work.lclpnet.ap2.impl.game.data.EliminationDataContainer;
@@ -43,9 +43,12 @@ public class BowSpleefInstance extends DefaultGameInstance {
     private final EliminationDataContainer data = new EliminationDataContainer();
     private static final int WORLD_BORDER_DELAY = Ticks.seconds(90);
     private static final int WORLD_BORDER_TIME = Ticks.seconds(30);
+    private final DoubleJumpHandler doubleJumpHandler;
 
     public BowSpleefInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
+
+        doubleJumpHandler = new DoubleJumpHandler(gameHandle.getPlayerUtil());
     }
 
     @Override
@@ -65,17 +68,11 @@ public class BowSpleefInstance extends DefaultGameInstance {
 
         hooks.registerHook(PlayerSpawnLocationCallback.HOOK, data
                 -> playerUtil.resetPlayer(data.getPlayer()));
-
-        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
-            player.changeGameMode(GameMode.ADVENTURE);
-        }
-
     }
 
     @Override
     protected void ready() {
         gameHandle.protect(config -> {
-
             config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, damageSource)
                     -> damageSource.getSource() instanceof ProjectileEntity || damageSource.isOf(DamageTypes.OUTSIDE_BORDER));
         });
@@ -103,6 +100,8 @@ public class BowSpleefInstance extends DefaultGameInstance {
         });
 
         hooks.registerHook(BlockBreakParticleCallback.HOOK, (world, pos, state) -> true);
+
+        doubleJumpHandler.init(hooks);
 
         TranslationService translations = gameHandle.getTranslations();
 
