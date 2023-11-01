@@ -13,6 +13,7 @@
   "ap2.go": "Go!",
   "ap2.game.elimated": "%s was eliminated",
   "ap2.game.winner_is": "The winner is...",
+  "ap2.score.points": "%s points",
   "game.ap2.title": "ArcadeParty",
   "game.ap2.spleef": "Spleef",
   "game.ap2.spleef.description": "Break the ground beneath your opponents to make them fall. Last one standing wins.",
