@@ -26,6 +26,7 @@ import work.lclpnet.ap2.impl.game.DefaultGameInstance;
 import work.lclpnet.ap2.impl.game.PlayerUtil;
 import work.lclpnet.ap2.impl.game.data.EliminationDataContainer;
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
+import work.lclpnet.kibu.hook.entity.EntityHealthCallback;
 import work.lclpnet.kibu.hook.entity.ProjectileHooks;
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks;
 import work.lclpnet.kibu.hook.player.PlayerDeathCallback;
@@ -68,16 +69,12 @@ public class BowSpleefInstance extends DefaultGameInstance {
 
         hooks.registerHook(PlayerSpawnLocationCallback.HOOK, data
                 -> playerUtil.resetPlayer(data.getPlayer()));
-    }
 
-    @Override
-    protected void ready() {
-        gameHandle.protect(config -> {
-            config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, damageSource)
-                    -> damageSource.getSource() instanceof ProjectileEntity || damageSource.isOf(DamageTypes.OUTSIDE_BORDER));
-        });
+        // prevent healing
+        hooks.registerHook(EntityHealthCallback.HOOK, (entity, health)
+                -> health > entity.getHealth());
 
-        HookRegistrar hooks = gameHandle.getHookRegistrar();
+        hooks.registerHook(BlockBreakParticleCallback.HOOK, (world, pos, state) -> true);
 
         hooks.registerHook(ServerLivingEntityHooks.ALLOW_DAMAGE, (entity, source, amount) -> {
             if (!source.isOf(DamageTypes.OUT_OF_WORLD)) return true;
@@ -91,15 +88,23 @@ public class BowSpleefInstance extends DefaultGameInstance {
             projectile.discard();
         });
 
-        hooks.registerHook(ServerLivingEntityHooks.ALLOW_DAMAGE,(entity, source, amount) -> {
+        hooks.registerHook(ServerLivingEntityHooks.ALLOW_DAMAGE, (entity, source, amount) -> {
             if (!(source.getSource() instanceof ProjectileEntity projectile)) return true;
 
-            removeBlocks(entity.getBlockPos().down(),(ServerWorld) entity.getWorld());
+            removeBlocks(entity.getBlockPos().down(), (ServerWorld) entity.getWorld());
             projectile.discard();
             return false;
         });
+    }
 
-        hooks.registerHook(BlockBreakParticleCallback.HOOK, (world, pos, state) -> true);
+    @Override
+    protected void ready() {
+        gameHandle.protect(config -> {
+            config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, damageSource)
+                    -> damageSource.getSource() instanceof ProjectileEntity || damageSource.isOf(DamageTypes.OUTSIDE_BORDER));
+        });
+
+        HookRegistrar hooks = gameHandle.getHookRegistrar();
 
         doubleJumpHandler.init(hooks);
 
