@@ -17,20 +17,13 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.border.WorldBorder;
-import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.base.WorldBorderManager;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
-import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.impl.DoubleJumpHandler;
-import work.lclpnet.ap2.impl.game.DefaultGameInstance;
-import work.lclpnet.ap2.impl.game.PlayerUtil;
-import work.lclpnet.ap2.impl.game.data.EliminationDataContainer;
+import work.lclpnet.ap2.impl.game.EliminationGameInstance;
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
-import work.lclpnet.kibu.hook.entity.EntityHealthCallback;
 import work.lclpnet.kibu.hook.entity.ProjectileHooks;
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks;
-import work.lclpnet.kibu.hook.player.PlayerDeathCallback;
-import work.lclpnet.kibu.hook.player.PlayerSpawnLocationCallback;
 import work.lclpnet.kibu.hook.world.BlockBreakParticleCallback;
 import work.lclpnet.kibu.inv.item.ItemStackUtil;
 import work.lclpnet.kibu.plugin.hook.HookRegistrar;
@@ -39,10 +32,9 @@ import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 
-public class BowSpleefInstance extends DefaultGameInstance {
+public class BowSpleefInstance extends EliminationGameInstance {
 
-    private final EliminationDataContainer data = new EliminationDataContainer();
-    private static final int WORLD_BORDER_DELAY = Ticks.seconds(90);
+    private static final int WORLD_BORDER_DELAY = Ticks.seconds(80);
     private static final int WORLD_BORDER_TIME = Ticks.seconds(30);
     private final DoubleJumpHandler doubleJumpHandler;
 
@@ -54,34 +46,12 @@ public class BowSpleefInstance extends DefaultGameInstance {
 
     @Override
     protected void prepare() {
-        Participants participants = gameHandle.getParticipants();
+        useSmoothDeath();
+        useNoHealing();
 
         HookRegistrar hooks = gameHandle.getHookRegistrar();
 
-        hooks.registerHook(PlayerDeathCallback.HOOK, (player, damageSource) -> {
-            if (!participants.isParticipating(player)) return;
-
-            data.eliminated(player);
-            participants.remove(player);
-        });
-
-        PlayerUtil playerUtil = gameHandle.getPlayerUtil();
-
-        hooks.registerHook(PlayerSpawnLocationCallback.HOOK, data
-                -> playerUtil.resetPlayer(data.getPlayer()));
-
-        // prevent healing
-        hooks.registerHook(EntityHealthCallback.HOOK, (entity, health)
-                -> health > entity.getHealth());
-
         hooks.registerHook(BlockBreakParticleCallback.HOOK, (world, pos, state) -> true);
-
-        hooks.registerHook(ServerLivingEntityHooks.ALLOW_DAMAGE, (entity, source, amount) -> {
-            if (!source.isOf(DamageTypes.OUT_OF_WORLD)) return true;
-
-            entity.kill();
-            return false;
-        });
 
         hooks.registerHook(ProjectileHooks.HIT_BLOCK,(projectile, hit) -> {
             removeBlocks(hit.getBlockPos(), (ServerWorld) projectile.getWorld());
@@ -111,24 +81,7 @@ public class BowSpleefInstance extends DefaultGameInstance {
         TranslationService translations = gameHandle.getTranslations();
 
         giveBowsToPlayers(translations);
-
         scheduleSuddenDeath();
-    }
-
-    @Override
-    public void participantRemoved(ServerPlayerEntity player) {
-        var participants = gameHandle.getParticipants().getAsSet();
-        if (participants.size() > 1) return;
-
-        var winner = participants.stream().findAny();
-        winner.ifPresent(data::eliminated);  // the winner also has to be tracked
-
-        win(winner.orElse(null));
-    }
-
-    @Override
-    protected DataContainer getData() {
-        return data;
     }
 
     private void giveBowsToPlayers(TranslationService translations) {
