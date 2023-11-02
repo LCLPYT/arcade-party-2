@@ -16,6 +16,7 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.GameMode;
 import net.minecraft.world.border.WorldBorder;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.base.WorldBorderManager;
@@ -43,7 +44,7 @@ public class BowSpleefInstance extends DefaultGameInstance {
 
     private final EliminationDataContainer data = new EliminationDataContainer();
     private static final int WORLD_BORDER_DELAY = Ticks.seconds(90);
-    private static final int WORLD_BORDER_TIME = Ticks.seconds(30);
+    private static final int WORLD_BORDER_TIME = Ticks.seconds(20);
     private final DoubleJumpHandler doubleJumpHandler;
 
     public BowSpleefInstance(MiniGameHandle gameHandle) {
@@ -78,8 +79,11 @@ public class BowSpleefInstance extends DefaultGameInstance {
 
         hooks.registerHook(ServerLivingEntityHooks.ALLOW_DAMAGE, (entity, source, amount) -> {
             if (!source.isOf(DamageTypes.OUT_OF_WORLD)) return true;
-
-            entity.kill();
+            if (entity instanceof ServerPlayerEntity serverPlayer) {
+                participantRemoved(serverPlayer);
+                serverPlayer.changeGameMode(GameMode.SPECTATOR);
+                data.eliminated(serverPlayer);
+            }
             return false;
         });
 
@@ -99,10 +103,8 @@ public class BowSpleefInstance extends DefaultGameInstance {
 
     @Override
     protected void ready() {
-        gameHandle.protect(config -> {
-            config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, damageSource)
-                    -> damageSource.getSource() instanceof ProjectileEntity || damageSource.isOf(DamageTypes.OUTSIDE_BORDER));
-        });
+        gameHandle.protect(config -> config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, damageSource)
+                -> damageSource.getSource() instanceof ProjectileEntity || damageSource.isOf(DamageTypes.OUTSIDE_BORDER)));
 
         HookRegistrar hooks = gameHandle.getHookRegistrar();
 
@@ -173,30 +175,25 @@ public class BowSpleefInstance extends DefaultGameInstance {
             worldBorder.setSize(50);
             worldBorder.setSafeZone(0);
             worldBorder.setDamagePerBlock(0.8);
-            worldBorder.interpolateSize(worldBorder.getSize(), 3, WORLD_BORDER_TIME * 50L);
+            worldBorder.interpolateSize(worldBorder.getSize(), 4, WORLD_BORDER_TIME * 50L);
 
             for (ServerPlayerEntity player : PlayerLookup.world(getWorld())) {
                 player.playSound(SoundEvents.ENTITY_WITHER_DEATH, SoundCategory.HOSTILE, 1, 0);
             }
         }, WORLD_BORDER_DELAY);
 
-        scheduler.timeout(() -> {
-            for (ServerPlayerEntity player : gameHandle.getParticipants()) {
-                removeBlocksUnder(player);
-            }
-        }, WORLD_BORDER_DELAY + WORLD_BORDER_TIME + Ticks.seconds(10));
+        scheduler.timeout(this::removeBlocksUnder, WORLD_BORDER_DELAY + WORLD_BORDER_TIME + Ticks.seconds(5));
     }
 
-    private void removeBlocksUnder(ServerPlayerEntity player) {
-        BlockPos playerPos = player.getBlockPos();
-        int x = playerPos.getX();
-        int y = playerPos.getY();
-        int z = playerPos.getZ();
+    private void removeBlocksUnder() {
 
         ServerWorld world = getWorld();
+        int x = 0;
+        int y = 70;
+        int z = 0;
         BlockState air = Blocks.AIR.getDefaultState();
 
-        for (BlockPos pos : BlockPos.iterate(x - 1, y - 20, z - 1, x + 1, y, z + 1)) world.setBlockState(pos, air);
         world.playSound(null, x, y, z, SoundEvents.ENTITY_WITHER_DEATH, SoundCategory.AMBIENT, 0.8f, 1f);
+        for (BlockPos pos : BlockPos.iterate(x - 2, y - 30, z - 2, x + 2, y, z + 2)) world.setBlockState(pos, air);
     }
 }
