@@ -12,18 +12,23 @@ import net.minecraft.util.Identifier;
 import net.minecraft.world.GameMode;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.base.ParticipantListener;
+import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.MiniGameInstance;
 import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.game.data.DataEntry;
 import work.lclpnet.ap2.api.map.MapFacade;
 import work.lclpnet.ap2.base.ApConstants;
+import work.lclpnet.kibu.hook.entity.EntityHealthCallback;
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks;
+import work.lclpnet.kibu.hook.player.PlayerSpawnLocationCallback;
+import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.title.Title;
 import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.kibu.translate.text.RootText;
 import work.lclpnet.kibu.translate.text.TranslatedText;
+import work.lclpnet.lobby.game.api.WorldFacade;
 import work.lclpnet.lobby.game.util.ProtectorUtils;
 
 import java.util.HashMap;
@@ -92,16 +97,23 @@ public abstract class DefaultGameInstance implements MiniGameInstance, Participa
     }
 
     private void registerDefaultHooks() {
-        gameHandle.getHookRegistrar().registerHook(ServerLivingEntityHooks.ALLOW_DAMAGE, (entity, source, amount) -> {
+        HookRegistrar hooks = gameHandle.getHookRegistrar();
+        WorldFacade worldFacade = gameHandle.getWorldFacade();
+        PlayerUtil playerUtil = gameHandle.getPlayerUtil();
+
+        hooks.registerHook(ServerLivingEntityHooks.ALLOW_DAMAGE, (entity, source, amount) -> {
             if (!source.isOf(DamageTypes.OUT_OF_WORLD) || !(entity instanceof ServerPlayerEntity player)) return true;
 
             if (player.isSpectator()) {
-                gameHandle.getWorldFacade().teleport(player);
+                worldFacade.teleport(player);
                 return false;
             }
 
             return true;
         });
+
+        hooks.registerHook(PlayerSpawnLocationCallback.HOOK, data
+                -> playerUtil.resetPlayer(data.getPlayer()));
     }
 
     protected void win(@Nullable ServerPlayerEntity player) {
@@ -309,6 +321,44 @@ public abstract class DefaultGameInstance implements MiniGameInstance, Participa
 
     protected final boolean isGameOver() {
         return gameOver;
+    }
+
+    /**
+     * Instantly makes players who would have died spectators and reset them.
+     */
+    protected final void useSmoothDeath() {
+        HookRegistrar hooks = gameHandle.getHookRegistrar();
+        Participants participants = gameHandle.getParticipants();
+        WorldFacade worldFacade = gameHandle.getWorldFacade();
+        PlayerUtil playerUtil = gameHandle.getPlayerUtil();
+        TranslationService translations = gameHandle.getTranslations();
+
+        hooks.registerHook(EntityHealthCallback.HOOK, (entity, health) -> {
+            if (!(entity instanceof ServerPlayerEntity player) || health > 0) return false;
+
+            if (participants.isParticipating(player)) {
+                participants.remove(player);
+
+                translations.translateText("ap2.game.elimated", styled(player.getEntityName(), YELLOW))
+                        .formatted(GRAY)
+                        .sendTo(PlayerLookup.all(gameHandle.getServer()));
+            }
+
+            playerUtil.resetPlayer(player);
+            worldFacade.teleport(player);
+
+            return true;
+        });
+    }
+
+    /**
+     * Disables any form of healing. Damage is still allowed.
+     */
+    protected final void useNoHealing() {
+        HookRegistrar hooks = gameHandle.getHookRegistrar();
+
+        hooks.registerHook(EntityHealthCallback.HOOK, (entity, health)
+                -> health > entity.getHealth());
     }
 
     protected abstract DataContainer getData();

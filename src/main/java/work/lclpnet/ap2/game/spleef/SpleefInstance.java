@@ -16,29 +16,20 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.GameMode;
 import net.minecraft.world.World;
 import net.minecraft.world.border.WorldBorder;
-import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.base.WorldBorderManager;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
-import work.lclpnet.ap2.api.game.data.DataContainer;
-import work.lclpnet.ap2.impl.game.DefaultGameInstance;
-import work.lclpnet.ap2.impl.game.PlayerUtil;
-import work.lclpnet.ap2.impl.game.data.EliminationDataContainer;
+import work.lclpnet.ap2.impl.game.EliminationGameInstance;
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
-import work.lclpnet.kibu.hook.entity.EntityHealthCallback;
-import work.lclpnet.kibu.hook.player.PlayerDeathCallback;
-import work.lclpnet.kibu.hook.player.PlayerSpawnLocationCallback;
 import work.lclpnet.kibu.inv.item.ItemStackUtil;
-import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 
-public class SpleefInstance extends DefaultGameInstance {
+public class SpleefInstance extends EliminationGameInstance {
 
     private static final int WORLD_BORDER_DELAY = Ticks.seconds(40);
     private static final int WORLD_BORDER_TIME = Ticks.seconds(20);
-    private final EliminationDataContainer data = new EliminationDataContainer();
 
     public SpleefInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
@@ -47,31 +38,9 @@ public class SpleefInstance extends DefaultGameInstance {
     }
 
     @Override
-    protected DataContainer getData() {
-        return data;
-    }
-
-    @Override
     protected void prepare() {
-        Participants participants = gameHandle.getParticipants();
-
-        HookRegistrar hooks = gameHandle.getHookRegistrar();
-
-        hooks.registerHook(PlayerDeathCallback.HOOK, (player, damageSource) -> {
-            if (!participants.isParticipating(player)) return;
-
-            data.eliminated(player);
-            participants.remove(player);
-        });
-
-        PlayerUtil playerUtil = gameHandle.getPlayerUtil();
-
-        hooks.registerHook(PlayerSpawnLocationCallback.HOOK, data
-                -> playerUtil.resetPlayer(data.getPlayer()));
-
-        // prevent healing
-        hooks.registerHook(EntityHealthCallback.HOOK, (entity, health)
-                -> health > entity.getHealth());
+        useSmoothDeath();
+        useNoHealing();
     }
 
     @Override
@@ -119,17 +88,6 @@ public class SpleefInstance extends DefaultGameInstance {
                 removeBlocksUnder(player);
             }
         }, WORLD_BORDER_DELAY + WORLD_BORDER_TIME + Ticks.seconds(5));
-    }
-
-    @Override
-    public void participantRemoved(ServerPlayerEntity player) {
-        var participants = gameHandle.getParticipants().getAsSet();
-        if (participants.size() > 1) return;
-
-        var winner = participants.stream().findAny();
-        winner.ifPresent(data::eliminated);  // the winner also has to be tracked
-
-        win(winner.orElse(null));
     }
 
     private void giveShovelsToPlayers(TranslationService translations) {
