@@ -88,12 +88,14 @@ public class BowSpleefInstance extends EliminationGameInstance {
 
             stack.setCustomName(translations.translateText(player, "game.ap2.bow_spleef.bow")
                     .styled(style -> style.withItalic(false).withFormatting(Formatting.GOLD)));
+
             stack.addEnchantment(Enchantments.INFINITY,1);
 
             ItemStackUtil.setUnbreakable(stack, true);
 
             PlayerInventory inventory = player.getInventory();
             inventory.setStack(4, stack);
+
             PlayerInventoryAccess.setSelectedSlot(player, 4);
 
             inventory.setStack(9,new ItemStack(Items.ARROW));
@@ -101,15 +103,22 @@ public class BowSpleefInstance extends EliminationGameInstance {
     }
 
     private void removeBlocks(BlockPos pos, ServerWorld world) {
+        int x = pos.getX();
+        int y = pos.getY();
+        int z = pos.getZ();
+
         for (BlockPos p : BlockPos.iterate(
-                pos.getX()-1,pos.getY()-1,pos.getZ()-1,
-                pos.getX()+1,pos.getY(),pos.getZ()+1)) {
+                x - 1, y - 1, z - 1,
+                x + 1, y, z + 1)) {
 
             world.setBlockState(p, Blocks.AIR.getDefaultState());
         }
-        world.spawnParticles(ParticleTypes.ELECTRIC_SPARK, pos.getX()+0.5,pos.getY(),pos.getZ()+0.5,60,1,0.6,1,0.01);
-        world.spawnParticles(ParticleTypes.FLAME, pos.getX()+0.5,pos.getY(),pos.getZ()+0.5,30,1,0.6,1,0.04);
-        world.playSound(null,pos.getX(),pos.getY(),pos.getZ(), SoundEvents.ENTITY_DRAGON_FIREBALL_EXPLODE, SoundCategory.AMBIENT,0.12f,0f);
+        double cx = x + 0.5;
+        double cz = z + 0.5;
+
+        world.spawnParticles(ParticleTypes.ELECTRIC_SPARK, cx, y, cz, 60, 1, 0.6, 1, 0.01);
+        world.spawnParticles(ParticleTypes.FLAME, cx, y, cz, 30, 1, 0.6, 1, 0.04);
+        world.playSound(null, x, y, z, SoundEvents.ENTITY_DRAGON_FIREBALL_EXPLODE, SoundCategory.AMBIENT, 0.12f, 0f);
     }
 
     private void scheduleSuddenDeath() {
@@ -135,11 +144,10 @@ public class BowSpleefInstance extends EliminationGameInstance {
     }
 
     private void removeBlocksUnder() {
-
         ServerWorld world = getWorld();
-        int x = 0;
-        int y = 70;
-        int z = 0;
+
+        int x = 0, y = 70, z = 0;
+
         BlockState air = Blocks.AIR.getDefaultState();
 
         world.playSound(null, x, y, z, SoundEvents.ENTITY_WITHER_DEATH, SoundCategory.AMBIENT, 0.8f, 1f);
