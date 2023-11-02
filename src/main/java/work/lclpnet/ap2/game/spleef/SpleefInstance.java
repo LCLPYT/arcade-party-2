@@ -24,6 +24,7 @@ import work.lclpnet.ap2.impl.game.DefaultGameInstance;
 import work.lclpnet.ap2.impl.game.PlayerUtil;
 import work.lclpnet.ap2.impl.game.data.EliminationDataContainer;
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
+import work.lclpnet.kibu.hook.entity.EntityHealthCallback;
 import work.lclpnet.kibu.hook.player.PlayerDeathCallback;
 import work.lclpnet.kibu.hook.player.PlayerSpawnLocationCallback;
 import work.lclpnet.kibu.inv.item.ItemStackUtil;
@@ -64,10 +65,13 @@ public class SpleefInstance extends DefaultGameInstance {
         });
 
         PlayerUtil playerUtil = gameHandle.getPlayerUtil();
-        playerUtil.setDefaultGameMode(GameMode.SURVIVAL);
 
         hooks.registerHook(PlayerSpawnLocationCallback.HOOK, data
                 -> playerUtil.resetPlayer(data.getPlayer()));
+
+        // prevent healing
+        hooks.registerHook(EntityHealthCallback.HOOK, (entity, health)
+                -> health > entity.getHealth());
     }
 
     @Override
