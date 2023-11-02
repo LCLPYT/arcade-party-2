@@ -199,5 +199,4 @@ public class BowSpleefInstance extends DefaultGameInstance {
         for (BlockPos pos : BlockPos.iterate(x - 1, y - 20, z - 1, x + 1, y, z + 1)) world.setBlockState(pos, air);
         world.playSound(null, x, y, z, SoundEvents.ENTITY_WITHER_DEATH, SoundCategory.AMBIENT, 0.8f, 1f);
     }
-
 }
