@@ -38,6 +38,7 @@ public abstract class DefaultGameInstance implements MiniGameInstance, Participa
     protected final MiniGameHandle gameHandle;
     @Nullable
     private ServerWorld world = null;
+    private boolean gameOver = false;
 
     public DefaultGameInstance(MiniGameHandle gameHandle) {
         this.gameHandle = gameHandle;
@@ -116,12 +117,18 @@ public abstract class DefaultGameInstance implements MiniGameInstance, Participa
         win(Set.of());
     }
 
-    protected void win(Set<ServerPlayerEntity> winners) {
+    protected synchronized void win(Set<ServerPlayerEntity> winners) {
+        if (this.gameOver) return;
+
+        gameOver = true;
+
         gameHandle.protect(config -> {
             config.disallowAll();
 
             ProtectorUtils.allowCreativeOperatorBypass(config);
         });
+
+        getData().freeze();
 
         announceWinners(winners);
         broadcastTop3();
@@ -298,6 +305,10 @@ public abstract class DefaultGameInstance implements MiniGameInstance, Participa
 
     protected final void setDefaultGameMode(GameMode gameMode) {
         gameHandle.getPlayerUtil().setDefaultGameMode(gameMode);
+    }
+
+    protected final boolean isGameOver() {
+        return gameOver;
     }
 
     protected abstract DataContainer getData();
