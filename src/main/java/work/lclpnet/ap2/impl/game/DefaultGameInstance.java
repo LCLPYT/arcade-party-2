@@ -421,7 +421,7 @@ public abstract class DefaultGameInstance implements MiniGameInstance, Participa
         worldFacade.teleport(player);
     }
 
-    protected final WorldBorder shrinkWorldBorder() {
+    protected final WorldBorder useWorldBorder() {
         if (!(getMap().getProperty("world-border") instanceof JSONObject wbConfig)) {
             throw new IllegalStateException("Object property \"world-border\" not set in map properties");
         }
@@ -439,11 +439,12 @@ public abstract class DefaultGameInstance implements MiniGameInstance, Participa
             centerZ = array.getInt(1);
         }
 
-        int radius = wbConfig.getInt("radius");
+        int radius = wbConfig.getInt("size");
+        if (radius % 2 == 0) radius += 1;
 
         WorldBorder worldBorder = gameHandle.getWorldBorderManager().getWorldBorder();
         worldBorder.setCenter(centerX + 0.5, centerZ + 0.5);
-        worldBorder.setSize(radius + 1);
+        worldBorder.setSize(radius);
         worldBorder.setSafeZone(0);
         worldBorder.setDamagePerBlock(0.8);
 
