@@ -407,11 +407,11 @@ public abstract class DefaultGameInstance implements MiniGameInstance, Participa
         TranslationService translations = gameHandle.getTranslations();
 
         if (participants.isParticipating(player)) {
-            participants.remove(player);
-
             translations.translateText("ap2.game.elimated", styled(player.getEntityName(), YELLOW))
                     .formatted(GRAY)
                     .sendTo(PlayerLookup.all(gameHandle.getServer()));
+
+            participants.remove(player);
         }
 
         WorldFacade worldFacade = gameHandle.getWorldFacade();

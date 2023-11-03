@@ -54,7 +54,16 @@ public class Ap2Config implements JsonConfig {
             source += "/";
         }
 
-        return URI.create(source);
+        URI uri = URI.create(source);
+
+        if (uri.getHost() != null) {
+            return uri;
+        }
+
+        // uri is local path
+        Path path = uri.getScheme() != null ? Path.of(uri) : Path.of(uri.getPath());
+
+        return path.toUri();
     }
 
     private static String uriToString(URI uri) {
@@ -64,18 +73,18 @@ public class Ap2Config implements JsonConfig {
 
         // local path
         Path current = Path.of("").toAbsolutePath();
-        Path lobbyPath;
+        Path sourcePath;
 
         if (uri.getScheme() == null) {
             // uri without scheme
-            lobbyPath = Path.of(uri.toString()).toAbsolutePath();
+            sourcePath = Path.of(uri.toString()).toAbsolutePath();
         } else {
             // file:/// uri
-            lobbyPath = Path.of(uri);
+            sourcePath = Path.of(uri);
         }
 
-        Path relativeLobbySource = current.relativize(lobbyPath);
-        return relativeLobbySource.toString();
+        Path relativeSourceSource = current.relativize(sourcePath);
+        return relativeSourceSource.toString();
     }
 
     public static final JsonConfigFactory<Ap2Config> FACTORY = new JsonConfigFactory<>() {
