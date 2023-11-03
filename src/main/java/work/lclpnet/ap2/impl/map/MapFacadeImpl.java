@@ -1,5 +1,6 @@
 package work.lclpnet.ap2.impl.map;
 
+import it.unimi.dsi.fastutil.Pair;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Identifier;
@@ -10,7 +11,6 @@ import work.lclpnet.ap2.api.map.MapFacade;
 import work.lclpnet.ap2.api.map.MapRandomizer;
 import work.lclpnet.lobby.game.api.WorldFacade;
 import work.lclpnet.lobby.game.map.GameMap;
-import work.lclpnet.lobby.game.map.MapDescriptor;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -29,27 +29,29 @@ public class MapFacadeImpl implements MapFacade {
     }
 
     @Override
-    public CompletableFuture<ServerWorld> openRandomMap(Identifier gameId) {
+    public CompletableFuture<Pair<ServerWorld, GameMap>> openRandomMap(Identifier gameId) {
         return mapRandomizer.nextMap(gameId)
-                .thenApply(GameMap::getDescriptor)
-                .thenApply(MapDescriptor::getIdentifier)
-                .thenCompose(worldFacade::changeMap)
-                .thenApply(this::setupWorld);
+                .thenCompose(map -> {
+                    Identifier id = map.getDescriptor().getIdentifier();
+                    return worldFacade.changeMap(id).thenApply(world -> Pair.of(world, map));
+                })
+                .thenApply(pair -> {
+                    setupWorld(pair.left());
+                    return pair;
+                });
     }
 
     @Override
     public void openRandomMap(Identifier gameId, MapReady callback) {
         openRandomMap(gameId)
-                .thenCompose(world -> server.submit(() -> callback.onReady(world)))
+                .thenCompose(pair -> server.submit(() -> callback.onReady(pair.left(), pair.right())))
                 .exceptionally(throwable -> {
                     logger.error("Failed to open a random map for game {}", gameId, throwable);
                     return null;
                 });
     }
 
-    private ServerWorld setupWorld(ServerWorld world) {
+    private void setupWorld(ServerWorld world) {
         world.getGameRules().get(GameRules.DO_IMMEDIATE_RESPAWN).set(true, server);
-
-        return world;
     }
 }
