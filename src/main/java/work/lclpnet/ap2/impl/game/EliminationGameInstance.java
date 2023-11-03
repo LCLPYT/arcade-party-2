@@ -16,7 +16,6 @@ public abstract class EliminationGameInstance extends DefaultGameInstance {
 
     @Override
     public void participantRemoved(ServerPlayerEntity player) {
-        System.out.println("removed " + player);
         data.eliminated(player);
 
         var participants = gameHandle.getParticipants().getAsSet();
