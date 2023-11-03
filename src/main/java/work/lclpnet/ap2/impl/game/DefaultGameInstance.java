@@ -2,6 +2,7 @@ package work.lclpnet.ap2.impl.game;
 
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.entity.damage.DamageTypes;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -19,11 +20,14 @@ import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.game.data.DataEntry;
 import work.lclpnet.ap2.api.map.MapFacade;
 import work.lclpnet.ap2.base.ApConstants;
+import work.lclpnet.ap2.impl.util.SoundHelper;
 import work.lclpnet.kibu.hook.entity.EntityHealthCallback;
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks;
 import work.lclpnet.kibu.hook.player.PlayerSpawnLocationCallback;
 import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 import work.lclpnet.kibu.scheduler.Ticks;
+import work.lclpnet.kibu.scheduler.api.RunningTask;
+import work.lclpnet.kibu.scheduler.api.SchedulerAction;
 import work.lclpnet.kibu.title.Title;
 import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.kibu.translate.text.RootText;
@@ -142,6 +146,51 @@ public abstract class DefaultGameInstance implements MiniGameInstance, Participa
 
         getData().freeze();
 
+        deferAnnouncement(winners);
+    }
+
+    private void deferAnnouncement(Set<ServerPlayerEntity> winners) {
+        TranslationService translations = gameHandle.getTranslations();
+        MinecraftServer server = gameHandle.getServer();
+
+        for (ServerPlayerEntity player : PlayerLookup.all(server)) {
+            var msg = translations.translateText(player, "ap2.game.winner_is");
+
+            Title.get(player).title(Text.empty(), msg.formatted(DARK_GREEN), 5, 100, 5);
+
+            player.sendMessage(msg.formatted(GRAY));
+        }
+
+        gameHandle.getScheduler().interval(new SchedulerAction() {
+            int t = 0;
+            int i = 0;
+
+            @Override
+            public void run(RunningTask info) {
+                if (t++ == 0) {
+                    i++;
+                    SoundHelper.playSound(server, SoundEvents.BLOCK_NOTE_BLOCK_HAT.value(), SoundCategory.RECORDS, 0.7f, 2f);
+                }
+
+                if (i < 5) {
+                    if (t > 15) {
+                        t = 0;
+                    }
+                }
+                if (i > 4) {
+                    if (t >= 5) {
+                        t = 0;
+                    }
+                    if (i >= 8) {
+                        info.cancel();
+                        announceGameOver(winners);
+                    }
+                }
+            }
+        }, 1);
+    }
+
+    private void announceGameOver(Set<ServerPlayerEntity> winners) {
         announceWinners(winners);
         broadcastTop3();
 

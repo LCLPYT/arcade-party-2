@@ -12,6 +12,7 @@
   "ap2.you_placed_value": "Du bist %s geworden - %s",
   "ap2.go": "Los!",
   "ap2.game.elimated": "%s wurde eliminiert",
+  "ap2.game.winner_is": "Gewonnen hat...",
   "game.ap2.title": "ArcadeParty",
   "game.ap2.spleef": "Spleef",
   "game.ap2.spleef.description": "Baue den Boden unter deinen Gegnern ab, damit sie herunterfallen. Fall aber nicht selber herunter!",
