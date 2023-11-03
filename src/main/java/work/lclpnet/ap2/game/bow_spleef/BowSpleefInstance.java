@@ -17,6 +17,7 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.border.WorldBorder;
+import org.json.JSONArray;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.impl.game.EliminationGameInstance;
 import work.lclpnet.ap2.impl.util.DoubleJumpHandler;
@@ -150,13 +151,17 @@ public class BowSpleefInstance extends EliminationGameInstance {
     private void removeBlocksUnder() {
         ServerWorld world = getWorld();
 
-        int x = 0, y = 70, z = 0;
+        JSONArray spawn = getMap().getProperty("spawn");
+        if (spawn == null) throw new AssertionError();
+        int x = spawn.getInt(0);
+        int y = spawn.getInt(1);
+        int z = spawn.getInt(2);
 
         BlockState air = Blocks.AIR.getDefaultState();
 
         world.playSound(null, x, y, z, SoundEvents.ENTITY_WITHER_DEATH, SoundCategory.AMBIENT, 0.8f, 1f);
 
-        for (BlockPos pos : BlockPos.iterate(x - 3, y - 30, z - 3, x + 3, y, z + 3)) {
+        for (BlockPos pos : BlockPos.iterate(x - 3, y - 30, z - 3, x + 3, y + 10, z + 3)) {
             world.setBlockState(pos, air);
         }
     }
