@@ -18,6 +18,7 @@ import work.lclpnet.ap2.base.ApConstants;
 import work.lclpnet.ap2.base.ApContainer;
 import work.lclpnet.ap2.base.ArcadeParty;
 import work.lclpnet.ap2.base.api.Skippable;
+import work.lclpnet.ap2.base.cmd.ForceGameCommand;
 import work.lclpnet.ap2.base.cmd.SkipCommand;
 import work.lclpnet.ap2.impl.game.PlayerUtil;
 import work.lclpnet.kibu.hook.player.PlayerConnectionHooks;
@@ -107,6 +108,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable 
         CommandRegistrar commandRegistrar = component(BuiltinComponents.COMMANDS).commands();
 
         new SkipCommand(this).register(commandRegistrar);
+        new ForceGameCommand(args.container().miniGames(), this::forceGame).register(commandRegistrar);
     }
 
     private void onJoin(ServerPlayerEntity player) {
@@ -189,6 +191,16 @@ public class PreparationActivity extends ComponentActivity implements Skippable 
      */
     private void pickNextGame() {
         miniGame = Objects.requireNonNull(args.gameQueue().pollNextGame(), "Could not determine next game");
+    }
+
+    private void forceGame(MiniGame miniGame) {
+        Objects.requireNonNull(miniGame);
+
+        if (this.miniGame != null) {
+            args.gameQueue().shiftGame(this.miniGame);
+        }
+
+        this.miniGame = miniGame;
     }
 
     private void announceNextGame() {
