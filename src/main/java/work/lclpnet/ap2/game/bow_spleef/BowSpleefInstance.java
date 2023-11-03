@@ -19,8 +19,8 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.border.WorldBorder;
 import work.lclpnet.ap2.api.base.WorldBorderManager;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
-import work.lclpnet.ap2.impl.DoubleJumpHandler;
 import work.lclpnet.ap2.impl.game.EliminationGameInstance;
+import work.lclpnet.ap2.impl.util.DoubleJumpHandler;
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
 import work.lclpnet.kibu.hook.entity.ProjectileHooks;
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks;
@@ -41,7 +41,7 @@ public class BowSpleefInstance extends EliminationGameInstance {
     public BowSpleefInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
 
-        doubleJumpHandler = new DoubleJumpHandler(gameHandle.getPlayerUtil());
+        doubleJumpHandler = new DoubleJumpHandler(gameHandle.getPlayerUtil(), gameHandle.getScheduler());
     }
 
     @Override
@@ -133,7 +133,7 @@ public class BowSpleefInstance extends EliminationGameInstance {
             worldBorder.setSize(50);
             worldBorder.setSafeZone(0);
             worldBorder.setDamagePerBlock(0.8);
-            worldBorder.interpolateSize(worldBorder.getSize(), 4, WORLD_BORDER_TIME * 50L);
+            worldBorder.interpolateSize(worldBorder.getSize(), 5, WORLD_BORDER_TIME * 50L);
 
             for (ServerPlayerEntity player : PlayerLookup.world(getWorld())) {
                 player.playSound(SoundEvents.ENTITY_WITHER_DEATH, SoundCategory.HOSTILE, 1, 0);
@@ -151,6 +151,9 @@ public class BowSpleefInstance extends EliminationGameInstance {
         BlockState air = Blocks.AIR.getDefaultState();
 
         world.playSound(null, x, y, z, SoundEvents.ENTITY_WITHER_DEATH, SoundCategory.AMBIENT, 0.8f, 1f);
-        for (BlockPos pos : BlockPos.iterate(x - 2, y - 30, z - 2, x + 2, y, z + 2)) world.setBlockState(pos, air);
+
+        for (BlockPos pos : BlockPos.iterate(x - 3, y - 30, z - 3, x + 3, y, z + 3)) {
+            world.setBlockState(pos, air);
+        }
     }
 }
