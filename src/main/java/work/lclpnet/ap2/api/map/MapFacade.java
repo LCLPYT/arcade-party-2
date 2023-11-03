@@ -1,8 +1,10 @@
 package work.lclpnet.ap2.api.map;
 
+import it.unimi.dsi.fastutil.Pair;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Identifier;
 import work.lclpnet.ap2.api.game.MapReady;
+import work.lclpnet.lobby.game.map.GameMap;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -14,7 +16,7 @@ public interface MapFacade {
      * @param gameId The game identifier.
      * @return A future that completes if the map was opened.
      */
-    CompletableFuture<ServerWorld> openRandomMap(Identifier gameId);
+    CompletableFuture<Pair<ServerWorld, GameMap>> openRandomMap(Identifier gameId);
 
     void openRandomMap(Identifier gameId, MapReady onReady);
 }

@@ -11,7 +11,10 @@ import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.GameMode;
+import net.minecraft.world.border.WorldBorder;
 import org.jetbrains.annotations.Nullable;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import work.lclpnet.ap2.api.base.ParticipantListener;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
@@ -33,6 +36,7 @@ import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.kibu.translate.text.RootText;
 import work.lclpnet.kibu.translate.text.TranslatedText;
 import work.lclpnet.lobby.game.api.WorldFacade;
+import work.lclpnet.lobby.game.map.GameMap;
 import work.lclpnet.lobby.game.util.ProtectorUtils;
 
 import java.util.HashMap;
@@ -47,6 +51,8 @@ public abstract class DefaultGameInstance implements MiniGameInstance, Participa
     protected final MiniGameHandle gameHandle;
     @Nullable
     private ServerWorld world = null;
+    @Nullable
+    private GameMap map = null;
     private boolean gameOver = false;
 
     public DefaultGameInstance(MiniGameHandle gameHandle) {
@@ -69,8 +75,9 @@ public abstract class DefaultGameInstance implements MiniGameInstance, Participa
         mapFacade.openRandomMap(gameId, this::onMapReady);
     }
 
-    private void onMapReady(ServerWorld world) {
+    private void onMapReady(ServerWorld world, GameMap map) {
         this.world = world;
+        this.map = map;
 
         resetPlayers();
 
@@ -364,6 +371,14 @@ public abstract class DefaultGameInstance implements MiniGameInstance, Participa
         return world;
     }
 
+    protected final GameMap getMap() {
+        if (map == null) {
+            throw new IllegalStateException("Map not loaded yet");
+        }
+
+        return map;
+    }
+
     protected final void setDefaultGameMode(GameMode gameMode) {
         gameHandle.getPlayerUtil().setDefaultGameMode(gameMode);
     }
@@ -398,6 +413,35 @@ public abstract class DefaultGameInstance implements MiniGameInstance, Participa
 
             return true;
         });
+    }
+
+    protected final WorldBorder shrinkWorldBorder() {
+        if (!(getMap().getProperty("world-border") instanceof JSONObject wbConfig)) {
+            throw new IllegalStateException("Object property \"world-border\" not set in map properties");
+        }
+
+        int centerX = 0, centerZ = 0;
+
+        if (wbConfig.has("center")) {
+            JSONArray array = wbConfig.getJSONArray("center");
+
+            if (array.length() < 2) {
+                throw new IllegalStateException("Center property must have at least two elements");
+            }
+
+            centerX = array.getInt(0);
+            centerZ = array.getInt(1);
+        }
+
+        int radius = wbConfig.getInt("radius");
+
+        WorldBorder worldBorder = gameHandle.getWorldBorderManager().getWorldBorder();
+        worldBorder.setCenter(centerX + 0.5, centerZ + 0.5);
+        worldBorder.setSize(radius + 1);
+        worldBorder.setSafeZone(0);
+        worldBorder.setDamagePerBlock(0.8);
+
+        return worldBorder;
     }
 
     /**

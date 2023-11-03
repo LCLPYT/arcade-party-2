@@ -17,7 +17,6 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.border.WorldBorder;
-import work.lclpnet.ap2.api.base.WorldBorderManager;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.impl.game.EliminationGameInstance;
 import work.lclpnet.ap2.impl.util.DoubleJumpHandler;
@@ -125,14 +124,7 @@ public class BowSpleefInstance extends EliminationGameInstance {
         TaskScheduler scheduler = gameHandle.getScheduler();
 
         scheduler.timeout(() -> {
-            WorldBorderManager manager = gameHandle.getWorldBorderManager();
-            manager.setupWorldBorder(getWorld());
-
-            WorldBorder worldBorder = manager.getWorldBorder();
-            worldBorder.setCenter(0.5, 0.5);
-            worldBorder.setSize(50);
-            worldBorder.setSafeZone(0);
-            worldBorder.setDamagePerBlock(0.8);
+            WorldBorder worldBorder = shrinkWorldBorder();
             worldBorder.interpolateSize(worldBorder.getSize(), 5, WORLD_BORDER_TIME * 50L);
 
             for (ServerPlayerEntity player : PlayerLookup.world(getWorld())) {
