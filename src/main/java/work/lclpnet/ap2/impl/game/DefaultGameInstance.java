@@ -392,27 +392,33 @@ public abstract class DefaultGameInstance implements MiniGameInstance, Participa
      */
     protected final void useSmoothDeath() {
         HookRegistrar hooks = gameHandle.getHookRegistrar();
-        Participants participants = gameHandle.getParticipants();
-        WorldFacade worldFacade = gameHandle.getWorldFacade();
-        PlayerUtil playerUtil = gameHandle.getPlayerUtil();
-        TranslationService translations = gameHandle.getTranslations();
 
         hooks.registerHook(EntityHealthCallback.HOOK, (entity, health) -> {
             if (!(entity instanceof ServerPlayerEntity player) || health > 0) return false;
 
-            if (participants.isParticipating(player)) {
-                participants.remove(player);
-
-                translations.translateText("ap2.game.elimated", styled(player.getEntityName(), YELLOW))
-                        .formatted(GRAY)
-                        .sendTo(PlayerLookup.all(gameHandle.getServer()));
-            }
-
-            playerUtil.resetPlayer(player);
-            worldFacade.teleport(player);
+            eliminate(player);
 
             return true;
         });
+    }
+
+    protected void eliminate(ServerPlayerEntity player) {
+        Participants participants = gameHandle.getParticipants();
+        TranslationService translations = gameHandle.getTranslations();
+
+        if (participants.isParticipating(player)) {
+            participants.remove(player);
+
+            translations.translateText("ap2.game.elimated", styled(player.getEntityName(), YELLOW))
+                    .formatted(GRAY)
+                    .sendTo(PlayerLookup.all(gameHandle.getServer()));
+        }
+
+        WorldFacade worldFacade = gameHandle.getWorldFacade();
+        PlayerUtil playerUtil = gameHandle.getPlayerUtil();
+
+        playerUtil.resetPlayer(player);
+        worldFacade.teleport(player);
     }
 
     protected final WorldBorder shrinkWorldBorder() {
