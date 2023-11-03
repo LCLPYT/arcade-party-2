@@ -75,4 +75,22 @@ class VotedGameQueueTest {
 
         assertEquals(List.of(gameB, gameA, gameA, gameA, gameA), queue.preview().stream().limit(5).toList());
     }
+
+    @Test
+    void shiftGame_otherGames_unmodified() {
+        MiniGameManager manager = mock();
+
+        TestMiniGame gameA = new TestMiniGame();
+        TestMiniGame gameB = new TestMiniGame();
+        TestMiniGame gameC = new TestMiniGame();
+
+        when(manager.getGames())
+                .thenReturn(Set.of(gameA));
+
+        var queue = new VotedGameQueue(manager, List.of(gameB), 5);
+
+        queue.shiftGame(gameC);
+
+        assertEquals(List.of(gameC, gameB, gameA, gameA, gameA), queue.preview().stream().limit(5).toList());
+    }
 }
