@@ -114,7 +114,7 @@ public class ArcadePartyGameInstance implements GameInstance {
         PlayerUtil playerUtil = new PlayerUtil(playerManager);
 
         ApContainer container = new ApContainer(server, logger, translationService, environment.getHookStack(),
-                environment.getSchedulerStack(), worldFacade, mapFacade, playerUtil);
+                environment.getSchedulerStack(), worldFacade, mapFacade, playerUtil, gameManager);
 
         var args = new PreparationActivity.Args(arcadeParty, container, queue, playerManager);
         PreparationActivity preparation = new PreparationActivity(args);

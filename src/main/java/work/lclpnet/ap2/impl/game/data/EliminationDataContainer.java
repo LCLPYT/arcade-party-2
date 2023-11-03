@@ -16,16 +16,25 @@ import java.util.stream.Stream;
 public class EliminationDataContainer implements DataContainer {
 
     private final List<PlayerRef> list = new ArrayList<>();
+    private boolean frozen = false;
 
     public void eliminated(ServerPlayerEntity player) {
         synchronized (this) {
-            list.add(0, PlayerRef.create(player));
+            if (frozen) return;
+
+            PlayerRef ref = PlayerRef.create(player);
+
+            if (list.contains(ref)) return;
+
+            list.add(0, ref);
         }
     }
 
     @Override
     public void delete(ServerPlayerEntity player) {
         synchronized (this) {
+            if (frozen) return;
+
             list.remove(PlayerRef.create(player));  // O(n) should not really be an issue
         }
     }
@@ -38,5 +47,12 @@ public class EliminationDataContainer implements DataContainer {
     @Override
     public Stream<DataEntry> orderedEntries() {
         return list.stream().map(SimpleDataEntry::new);
+    }
+
+    @Override
+    public void freeze() {
+        synchronized (this) {
+            frozen = true;
+        }
     }
 }
