@@ -17,6 +17,7 @@ public class VotedGameQueue implements GameQueue {
     private final MiniGameManager gameManager;
     private final int minimumSize;
     private final Queue<MiniGame> voted = new LinkedList<>(), regular = new LinkedList<>();
+    private final LinkedList<MiniGame> priority = new LinkedList<>();
 
     public VotedGameQueue(MiniGameManager gameManager, Iterable<MiniGame> voted, int minimumSize) {
         this.gameManager = gameManager;
@@ -29,6 +30,10 @@ public class VotedGameQueue implements GameQueue {
     public MiniGame pollNextGame() {
         synchronized (this) {
             ensureMinimumSize();
+
+            if (!priority.isEmpty()) {
+                return priority.poll();
+            }
 
             if (!voted.isEmpty()) {
                 return voted.poll();
@@ -43,10 +48,20 @@ public class VotedGameQueue implements GameQueue {
         synchronized (this) {
             ensureMinimumSize();
 
-            List<MiniGame> preview = new ArrayList<>(voted);
+            List<MiniGame> preview = new ArrayList<>(priority);
+            preview.addAll(voted);
             preview.addAll(regular);
 
             return preview;
+        }
+    }
+
+    @Override
+    public void shiftGame(MiniGame miniGame) {
+        Objects.requireNonNull(miniGame);
+
+        synchronized (this) {
+            priority.addFirst(miniGame);
         }
     }
 

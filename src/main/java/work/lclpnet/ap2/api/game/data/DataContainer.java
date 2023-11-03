@@ -11,4 +11,6 @@ public interface DataContainer {
     DataEntry getEntry(ServerPlayerEntity player);
 
     Stream<? extends DataEntry> orderedEntries();
+
+    void freeze();
 }

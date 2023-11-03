@@ -9,4 +9,6 @@ public interface GameQueue {
     MiniGame pollNextGame();
 
     List<MiniGame> preview();
+
+    void shiftGame(MiniGame miniGame);
 }
