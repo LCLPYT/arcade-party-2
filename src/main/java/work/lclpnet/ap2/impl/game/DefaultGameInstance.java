@@ -2,6 +2,7 @@ package work.lclpnet.ap2.impl.game;
 
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.entity.damage.DamageTypes;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -10,20 +11,32 @@ import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.GameMode;
+import net.minecraft.world.border.WorldBorder;
 import org.jetbrains.annotations.Nullable;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import work.lclpnet.ap2.api.base.ParticipantListener;
+import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.MiniGameInstance;
 import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.game.data.DataEntry;
 import work.lclpnet.ap2.api.map.MapFacade;
 import work.lclpnet.ap2.base.ApConstants;
+import work.lclpnet.ap2.impl.util.SoundHelper;
+import work.lclpnet.kibu.hook.entity.EntityHealthCallback;
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks;
+import work.lclpnet.kibu.hook.player.PlayerSpawnLocationCallback;
+import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 import work.lclpnet.kibu.scheduler.Ticks;
+import work.lclpnet.kibu.scheduler.api.RunningTask;
+import work.lclpnet.kibu.scheduler.api.SchedulerAction;
 import work.lclpnet.kibu.title.Title;
 import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.kibu.translate.text.RootText;
 import work.lclpnet.kibu.translate.text.TranslatedText;
+import work.lclpnet.lobby.game.api.WorldFacade;
+import work.lclpnet.lobby.game.map.GameMap;
 import work.lclpnet.lobby.game.util.ProtectorUtils;
 
 import java.util.HashMap;
@@ -38,6 +51,9 @@ public abstract class DefaultGameInstance implements MiniGameInstance, Participa
     protected final MiniGameHandle gameHandle;
     @Nullable
     private ServerWorld world = null;
+    @Nullable
+    private GameMap map = null;
+    private boolean gameOver = false;
 
     public DefaultGameInstance(MiniGameHandle gameHandle) {
         this.gameHandle = gameHandle;
@@ -59,8 +75,9 @@ public abstract class DefaultGameInstance implements MiniGameInstance, Participa
         mapFacade.openRandomMap(gameId, this::onMapReady);
     }
 
-    private void onMapReady(ServerWorld world) {
+    private void onMapReady(ServerWorld world, GameMap map) {
         this.world = world;
+        this.map = map;
 
         resetPlayers();
 
@@ -91,16 +108,23 @@ public abstract class DefaultGameInstance implements MiniGameInstance, Participa
     }
 
     private void registerDefaultHooks() {
-        gameHandle.getHookRegistrar().registerHook(ServerLivingEntityHooks.ALLOW_DAMAGE, (entity, source, amount) -> {
+        HookRegistrar hooks = gameHandle.getHookRegistrar();
+        WorldFacade worldFacade = gameHandle.getWorldFacade();
+        PlayerUtil playerUtil = gameHandle.getPlayerUtil();
+
+        hooks.registerHook(ServerLivingEntityHooks.ALLOW_DAMAGE, (entity, source, amount) -> {
             if (!source.isOf(DamageTypes.OUT_OF_WORLD) || !(entity instanceof ServerPlayerEntity player)) return true;
 
             if (player.isSpectator()) {
-                gameHandle.getWorldFacade().teleport(player);
+                worldFacade.teleport(player);
                 return false;
             }
 
             return true;
         });
+
+        hooks.registerHook(PlayerSpawnLocationCallback.HOOK, data
+                -> playerUtil.resetPlayer(data.getPlayer()));
     }
 
     protected void win(@Nullable ServerPlayerEntity player) {
@@ -116,13 +140,64 @@ public abstract class DefaultGameInstance implements MiniGameInstance, Participa
         win(Set.of());
     }
 
-    protected void win(Set<ServerPlayerEntity> winners) {
+    protected synchronized void win(Set<ServerPlayerEntity> winners) {
+        if (this.gameOver) return;
+
+        gameOver = true;
+
         gameHandle.protect(config -> {
             config.disallowAll();
 
             ProtectorUtils.allowCreativeOperatorBypass(config);
         });
 
+        getData().freeze();
+
+        deferAnnouncement(winners);
+    }
+
+    private void deferAnnouncement(Set<ServerPlayerEntity> winners) {
+        TranslationService translations = gameHandle.getTranslations();
+        MinecraftServer server = gameHandle.getServer();
+
+        for (ServerPlayerEntity player : PlayerLookup.all(server)) {
+            var msg = translations.translateText(player, "ap2.game.winner_is");
+
+            Title.get(player).title(Text.empty(), msg.formatted(DARK_GREEN), 5, 100, 5);
+
+            player.sendMessage(msg.formatted(GRAY));
+        }
+
+        gameHandle.getScheduler().interval(new SchedulerAction() {
+            int t = 0;
+            int i = 0;
+
+            @Override
+            public void run(RunningTask info) {
+                if (t++ == 0) {
+                    i++;
+                    SoundHelper.playSound(server, SoundEvents.BLOCK_NOTE_BLOCK_HAT.value(), SoundCategory.RECORDS, 0.7f, 2f);
+                }
+
+                if (i < 5) {
+                    if (t > 15) {
+                        t = 0;
+                    }
+                }
+                if (i > 4) {
+                    if (t >= 5) {
+                        t = 0;
+                    }
+                    if (i >= 8) {
+                        info.cancel();
+                        announceGameOver(winners);
+                    }
+                }
+            }
+        }, 1);
+    }
+
+    private void announceGameOver(Set<ServerPlayerEntity> winners) {
         announceWinners(winners);
         broadcastTop3();
 
@@ -296,8 +371,93 @@ public abstract class DefaultGameInstance implements MiniGameInstance, Participa
         return world;
     }
 
+    protected final GameMap getMap() {
+        if (map == null) {
+            throw new IllegalStateException("Map not loaded yet");
+        }
+
+        return map;
+    }
+
     protected final void setDefaultGameMode(GameMode gameMode) {
         gameHandle.getPlayerUtil().setDefaultGameMode(gameMode);
+    }
+
+    protected final boolean isGameOver() {
+        return gameOver;
+    }
+
+    /**
+     * Instantly makes players who would have died spectators and reset them.
+     */
+    protected final void useSmoothDeath() {
+        HookRegistrar hooks = gameHandle.getHookRegistrar();
+
+        hooks.registerHook(EntityHealthCallback.HOOK, (entity, health) -> {
+            if (!(entity instanceof ServerPlayerEntity player) || health > 0) return false;
+
+            eliminate(player);
+
+            return true;
+        });
+    }
+
+    protected void eliminate(ServerPlayerEntity player) {
+        Participants participants = gameHandle.getParticipants();
+        TranslationService translations = gameHandle.getTranslations();
+
+        if (participants.isParticipating(player)) {
+            participants.remove(player);
+
+            translations.translateText("ap2.game.elimated", styled(player.getEntityName(), YELLOW))
+                    .formatted(GRAY)
+                    .sendTo(PlayerLookup.all(gameHandle.getServer()));
+        }
+
+        WorldFacade worldFacade = gameHandle.getWorldFacade();
+        PlayerUtil playerUtil = gameHandle.getPlayerUtil();
+
+        playerUtil.resetPlayer(player);
+        worldFacade.teleport(player);
+    }
+
+    protected final WorldBorder shrinkWorldBorder() {
+        if (!(getMap().getProperty("world-border") instanceof JSONObject wbConfig)) {
+            throw new IllegalStateException("Object property \"world-border\" not set in map properties");
+        }
+
+        int centerX = 0, centerZ = 0;
+
+        if (wbConfig.has("center")) {
+            JSONArray array = wbConfig.getJSONArray("center");
+
+            if (array.length() < 2) {
+                throw new IllegalStateException("Center property must have at least two elements");
+            }
+
+            centerX = array.getInt(0);
+            centerZ = array.getInt(1);
+        }
+
+        int radius = wbConfig.getInt("radius");
+
+        WorldBorder worldBorder = gameHandle.getWorldBorderManager().getWorldBorder();
+        worldBorder.setCenter(centerX + 0.5, centerZ + 0.5);
+        worldBorder.setSize(radius + 1);
+        worldBorder.setSafeZone(0);
+        worldBorder.setDamagePerBlock(0.8);
+
+        return worldBorder;
+    }
+
+    /**
+     * Disables any form of healing. Damage is still allowed.
+     */
+    protected final void useNoHealing() {
+        HookRegistrar hooks = gameHandle.getHookRegistrar();
+
+        hooks.registerHook(EntityHealthCallback.HOOK, (entity, health)
+                -> health > entity.getHealth());
     }
 
     protected abstract DataContainer getData();
