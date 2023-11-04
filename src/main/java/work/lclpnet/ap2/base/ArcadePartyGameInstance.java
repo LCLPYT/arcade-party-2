@@ -123,7 +123,7 @@ public class ArcadePartyGameInstance implements GameInstance {
         GameQueue queue = new VotedGameQueue(gameManager, votedGames, 5);
 
         PlayerManagerImpl playerManager = new PlayerManagerImpl(server);
-        PlayerUtil playerUtil = new PlayerUtil(playerManager);
+        PlayerUtil playerUtil = new PlayerUtil(server, playerManager);
 
         ApContainer container = new ApContainer(server, logger, translationService, environment.getHookStack(),
                 environment.getSchedulerStack(), worldFacade, mapFacade, playerUtil, gameManager);

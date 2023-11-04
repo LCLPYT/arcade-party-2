@@ -1,9 +1,7 @@
 package work.lclpnet.ap2.impl.game;
 
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
-import work.lclpnet.ap2.api.game.data.DataEntry;
 import work.lclpnet.ap2.impl.game.data.EliminationDataContainer;
 
 public abstract class EliminationGameInstance extends DefaultGameInstance {
@@ -25,11 +23,7 @@ public abstract class EliminationGameInstance extends DefaultGameInstance {
         var winner = participants.stream().findAny();
 
         if (winner.isEmpty()) {
-            MinecraftServer server = gameHandle.getServer();
-
-            winner = data.orderedEntries().findFirst()
-                    .map(DataEntry::getPlayer)
-                    .map(ref -> ref.resolve(server));
+            winner = data.getBestPlayer(gameHandle.getServer());
         }
 
         winner.ifPresent(data::eliminated);  // the winner also has to be tracked

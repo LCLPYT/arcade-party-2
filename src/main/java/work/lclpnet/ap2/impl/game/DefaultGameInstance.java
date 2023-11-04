@@ -13,7 +13,9 @@ import net.minecraft.util.Identifier;
 import net.minecraft.world.GameMode;
 import net.minecraft.world.border.WorldBorder;
 import org.jetbrains.annotations.Nullable;
+import org.json.JSONArray;
 import org.json.JSONObject;
+import org.slf4j.Logger;
 import work.lclpnet.ap2.api.base.ParticipantListener;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.base.WorldBorderManager;
@@ -26,6 +28,8 @@ import work.lclpnet.ap2.base.ApConstants;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.SoundHelper;
 import work.lclpnet.ap2.impl.util.Vec2i;
+import work.lclpnet.ap2.impl.util.effect.ApEffect;
+import work.lclpnet.ap2.impl.util.effect.ApEffects;
 import work.lclpnet.kibu.hook.entity.EntityHealthCallback;
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks;
 import work.lclpnet.kibu.hook.player.PlayerSpawnLocationCallback;
@@ -81,11 +85,35 @@ public abstract class DefaultGameInstance implements MiniGameInstance, Participa
         this.world = world;
         this.map = map;
 
+        applyMapEffects();
+
         resetPlayers();
 
         prepare();
 
         gameHandle.getScheduler().timeout(this::afterInitialDelay, getInitialDelay());
+    }
+
+    private void applyMapEffects() {
+        Object prop = getMap().getProperty("effects");
+        if (!(prop instanceof JSONArray array)) return;
+
+        Logger logger = gameHandle.getLogger();
+        PlayerUtil playerUtil = gameHandle.getPlayerUtil();
+
+        for (Object obj : array) {
+            if (!(obj instanceof String str)) {
+                logger.warn("Invalid effect entry of type {}", obj.getClass().getSimpleName());
+                continue;
+            }
+
+            Identifier id = new Identifier(str);
+            ApEffect effect = ApEffects.tryFrom(id);
+
+            if (effect == null) continue;
+
+            playerUtil.enableEffect(effect);
+        }
     }
 
     private void resetPlayers() {
