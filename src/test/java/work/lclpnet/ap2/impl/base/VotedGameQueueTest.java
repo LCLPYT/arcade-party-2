@@ -1,5 +1,8 @@
 package work.lclpnet.ap2.impl.base;
 
+import net.minecraft.Bootstrap;
+import net.minecraft.SharedConstants;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import work.lclpnet.ap2.api.base.MiniGameManager;
 import work.lclpnet.ap2.impl.game.TestMiniGame;
@@ -13,6 +16,12 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 class VotedGameQueueTest {
+
+    @BeforeAll
+    public static void bootstrap() {
+        SharedConstants.createGameVersion();
+        Bootstrap.initialize();
+    }
 
     @Test
     void pollNextGame_noGames_throws() {

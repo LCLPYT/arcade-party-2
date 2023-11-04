@@ -1,5 +1,6 @@
 package work.lclpnet.ap2.api.game;
 
+import net.minecraft.item.ItemStack;
 import net.minecraft.util.Identifier;
 
 public interface GameInfo {
@@ -15,6 +16,8 @@ public interface GameInfo {
     GameType getType();
 
     String getAuthor();
+
+    ItemStack getIcon();
 
     default String getTitleKey() {
         Identifier id = getId();

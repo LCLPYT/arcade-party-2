@@ -147,7 +147,9 @@ public class SqliteAsyncMapFrequencyManager extends AsyncMapFrequencyManager imp
 
     @Override
     public void close() throws Exception {
-        connection.close();
+        if (connection != null) {
+            connection.close();
+        }
     }
 
     private void runReported(SqlTask task) {
