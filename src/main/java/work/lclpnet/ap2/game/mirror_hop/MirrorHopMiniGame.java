@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.game.bow_spleef;
+package work.lclpnet.ap2.game.mirror_hop;
 
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -10,12 +10,11 @@ import work.lclpnet.ap2.api.game.MiniGameInstance;
 import work.lclpnet.ap2.base.ApConstants;
 import work.lclpnet.ap2.base.ArcadeParty;
 
-public class BowSpleefMiniGame implements MiniGame {
-
+public class MirrorHopMiniGame implements MiniGame {
 
     @Override
     public Identifier getId() {
-        return ArcadeParty.identifier("bow_spleef");
+        return ArcadeParty.identifier("mirror_hop");
     }
 
     @Override
@@ -25,12 +24,12 @@ public class BowSpleefMiniGame implements MiniGame {
 
     @Override
     public String getAuthor() {
-        return ApConstants.PERSON_BOPS;
+        return ApConstants.PERSON_LCLP;
     }
 
     @Override
     public ItemStack getIcon() {
-        return new ItemStack(Items.BOW);
+        return new ItemStack(Items.WHITE_STAINED_GLASS);
     }
 
     @Override
@@ -45,6 +44,6 @@ public class BowSpleefMiniGame implements MiniGame {
 
     @Override
     public MiniGameInstance createInstance(MiniGameHandle gameHandle) {
-        return new BowSpleefInstance(gameHandle);
+        return new MirrorHopInstance(gameHandle);
     }
 }

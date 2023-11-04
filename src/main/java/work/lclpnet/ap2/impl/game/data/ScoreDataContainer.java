@@ -57,7 +57,7 @@ public class ScoreDataContainer implements DataContainer {
     public Stream<? extends DataEntry> orderedEntries() {
         return scoreMap.entrySet().stream()
                 .map(playerRefIntegerEntry -> new ScoreDataEntry(playerRefIntegerEntry.getKey(), playerRefIntegerEntry.getValue()))
-                .sorted(Comparator.comparingInt(ScoreDataEntry::score));
+                .sorted(Comparator.comparingInt(ScoreDataEntry::score).reversed());
     }
 
     @Override

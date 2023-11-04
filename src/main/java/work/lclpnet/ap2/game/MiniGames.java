@@ -2,6 +2,7 @@ package work.lclpnet.ap2.game;
 
 import work.lclpnet.ap2.api.game.MiniGame;
 import work.lclpnet.ap2.game.bow_spleef.BowSpleefMiniGame;
+import work.lclpnet.ap2.game.mirror_hop.MirrorHopMiniGame;
 import work.lclpnet.ap2.game.spleef.SpleefMiniGame;
 import work.lclpnet.ap2.game.treasure_hunter.TreasureHunterMinigame;
 
@@ -17,5 +18,6 @@ public class MiniGames {
         games.add(new SpleefMiniGame());
         games.add(new BowSpleefMiniGame());
         games.add(new TreasureHunterMinigame());
+        games.add(new MirrorHopMiniGame());
     }
 }
