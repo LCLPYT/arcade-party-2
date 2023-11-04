@@ -13,11 +13,14 @@
   "ap2.go": "Go!",
   "ap2.game.elimated": "%s was eliminated",
   "ap2.game.winner_is": "The winner is...",
+  "ap2.score.points": "%s points",
   "game.ap2.title": "ArcadeParty",
   "game.ap2.spleef": "Spleef",
   "game.ap2.spleef.description": "Break the ground beneath your opponents to make them fall. Last one standing wins.",
   "game.ap2.spleef.shovel": "Spleef Shovel",
   "game.ap2.bow_spleef.bow": "Spleef Bow",
   "game.ap2.bow_spleef": "Bow Spleef",
-  "game.ap2.bow_spleef.description": "Shoot your bow to break the ground beneath your opponents \nto make them fall. \nUse your double jump to be the last one standing."
+  "game.ap2.bow_spleef.description": "Shoot your bow to break the ground beneath your opponents \nto make them fall. \nUse your double jump to be the last one standing.",
+  "game.ap2.mirror_hop": "Mirror Hop",
+  "game.ap2.mirror_hop.description": "Make your way over the platforms towards the goal. Only one choice is correct!"
 }

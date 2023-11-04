@@ -1,9 +1,12 @@
 package work.lclpnet.ap2.impl.map;
 
 import it.unimi.dsi.fastutil.Pair;
+import net.minecraft.block.BlockState;
 import net.minecraft.util.math.BlockPos;
 import org.json.JSONArray;
+import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.Vec2i;
+import work.lclpnet.kibu.util.BlockStateUtils;
 
 public class MapUtil {
 
@@ -13,7 +16,7 @@ public class MapUtil {
      * @param tuple The json input.
      * @return A {@link Pair} of {@link BlockPos}. The first element is the minimum, the second the maximum.
      */
-    public static Pair<BlockPos, BlockPos> readBox(JSONArray tuple) {
+    public static BlockBox readBox(JSONArray tuple) {
         if (tuple.length() < 2) throw new IllegalArgumentException("Tuple must be of size 2");
 
         JSONArray first = tuple.getJSONArray(0);
@@ -25,10 +28,7 @@ public class MapUtil {
         int x1 = first.getInt(0), y1 = first.getInt(1), z1 = first.getInt(2);
         int x2 = second.getInt(0), y2 = second.getInt(1), z2 = second.getInt(2);
 
-        return Pair.of(
-                new BlockPos(Math.min(x1, x2), Math.min(y1, y2), Math.min(z1, z2)),
-                new BlockPos(Math.max(x1, x2), Math.max(y1, y2), Math.max(z1, z2))
-        );
+        return new BlockBox(x1, y1, z1, x2, y2, z2);
     }
 
     public static BlockPos readBlockPos(JSONArray tuple) {
@@ -41,6 +41,10 @@ public class MapUtil {
         if (tuple.length() < 2) throw new IllegalArgumentException("Tuple must be of size 2");
 
         return new Vec2i(tuple.getInt(0), tuple.getInt(1));
+    }
+
+    public static BlockState readBlockState(String string) {
+        return BlockStateUtils.parse(string);
     }
 
     private MapUtil() {}
