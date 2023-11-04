@@ -13,6 +13,8 @@ import work.lclpnet.ap2.api.game.MiniGame;
 import work.lclpnet.ap2.api.map.MapFacade;
 import work.lclpnet.ap2.api.map.MapRandomizer;
 import work.lclpnet.ap2.base.activity.PreparationActivity;
+import work.lclpnet.ap2.base.config.Ap2Config;
+import work.lclpnet.ap2.base.config.ConfigManager;
 import work.lclpnet.ap2.impl.base.PlayerManagerImpl;
 import work.lclpnet.ap2.impl.base.SimpleMiniGameManager;
 import work.lclpnet.ap2.impl.base.VotedGameQueue;
@@ -77,7 +79,17 @@ public class ArcadePartyGameInstance implements GameInstance {
     public void start() {
         MinecraftServer server = environment.getServer();
 
-        MapManager mapManager = createMapManager();
+        loadConfig()
+                .thenCompose(configManager -> server.submit(() -> this.onConfigLoaded(configManager)))
+                .exceptionally(throwable -> {
+                    logger.info("Failed to load config", throwable);
+                    return null;
+                });
+    }
+
+    private void onConfigLoaded(ConfigManager configManager) {
+        MinecraftServer server = environment.getServer();
+        MapManager mapManager = createMapManager(configManager.getConfig());
 
         WorldFacade worldFacade = environment.getWorldFacade(() -> mapManager);
         var mapPair = createMapFacade(server, mapManager, worldFacade);
@@ -144,6 +156,16 @@ public class ArcadePartyGameInstance implements GameInstance {
         });
     }
 
+    private CompletableFuture<ConfigManager> loadConfig() {
+        Path configPath = Path.of("config")
+                .resolve(ApConstants.ID)
+                .resolve("config.json");
+
+        ConfigManager configManager = new ConfigManager(configPath, logger);
+
+        return configManager.init().thenApply(nil -> configManager);
+    }
+
     @NotNull
     private Pair<MapFacade, SqliteAsyncMapFrequencyManager> createMapFacade(
             MinecraftServer server, MapManager mapManager, WorldFacade worldFacade) {
@@ -161,10 +183,16 @@ public class ArcadePartyGameInstance implements GameInstance {
         return Pair.of(mapFacade, frequencyTracker);
     }
 
-    private MapManager createMapManager() {
-        MapRepository mapRepository;
+    private MapManager createMapManager(Ap2Config config) {
+        var repositories = config.mapsSource.stream()
+                .map(uri -> new UriMapRepository(uri, logger))
+                .toArray(MapRepository[]::new);
 
-        mapRepository = new UriMapRepository(Path.of("worlds").toUri(), logger);
+        if (repositories.length == 0) {
+            throw new IllegalStateException("Map sources not configured");
+        }
+
+        MapRepository mapRepository = new MultiMapRepository(repositories);
 
         var lookup = new RepositoryMapLookup(mapRepository);
 
