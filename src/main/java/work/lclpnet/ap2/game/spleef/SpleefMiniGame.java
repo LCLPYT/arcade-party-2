@@ -1,5 +1,7 @@
 package work.lclpnet.ap2.game.spleef;
 
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.util.Identifier;
 import work.lclpnet.ap2.api.game.GameType;
 import work.lclpnet.ap2.api.game.MiniGame;
@@ -23,6 +25,11 @@ public class SpleefMiniGame implements MiniGame {
     @Override
     public String getAuthor() {
         return ApConstants.PERSON_LCLP;
+    }
+
+    @Override
+    public ItemStack getIcon() {
+        return new ItemStack(Items.IRON_SHOVEL);
     }
 
     @Override
