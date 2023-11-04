@@ -1,5 +1,7 @@
 package work.lclpnet.ap2.game.bow_spleef;
 
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.util.Identifier;
 import work.lclpnet.ap2.api.game.GameType;
 import work.lclpnet.ap2.api.game.MiniGame;
@@ -24,6 +26,11 @@ public class BowSpleefMiniGame implements MiniGame {
     @Override
     public String getAuthor() {
         return ApConstants.PERSON_BOPS;
+    }
+
+    @Override
+    public ItemStack getIcon() {
+        return new ItemStack(Items.BOW);
     }
 
     @Override
