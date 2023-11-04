@@ -17,6 +17,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import work.lclpnet.ap2.api.base.ParticipantListener;
 import work.lclpnet.ap2.api.base.Participants;
+import work.lclpnet.ap2.api.base.WorldBorderManager;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.MiniGameInstance;
 import work.lclpnet.ap2.api.game.data.DataContainer;
@@ -441,6 +442,9 @@ public abstract class DefaultGameInstance implements MiniGameInstance, Participa
 
         int radius = wbConfig.getInt("size");
         if (radius % 2 == 0) radius += 1;
+
+        WorldBorderManager manager = gameHandle.getWorldBorderManager();
+        manager.setupWorldBorder(getWorld());
 
         WorldBorder worldBorder = gameHandle.getWorldBorderManager().getWorldBorder();
         worldBorder.setCenter(centerX + 0.5, centerZ + 0.5);
