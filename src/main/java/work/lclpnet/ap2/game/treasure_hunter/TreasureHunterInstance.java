@@ -15,6 +15,7 @@ import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.impl.game.DefaultGameInstance;
+import work.lclpnet.ap2.impl.game.data.OrderedDataContainer;
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.kibu.inv.item.ItemStackUtil;
@@ -29,6 +30,7 @@ public class TreasureHunterInstance extends DefaultGameInstance {
 
     private final BlockPos mapCenter = new BlockPos(8,-54,8); //add Y from center Variable in map.json
     private final Integer mapDepth = 6;
+    private final OrderedDataContainer data = new OrderedDataContainer();
 
     public TreasureHunterInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
@@ -41,12 +43,11 @@ public class TreasureHunterInstance extends DefaultGameInstance {
 
     @Override
     protected DataContainer getData() {
-        return null;
+        return data;
     }
 
     @Override
     protected void prepare() {
-        ArrayList<ServerPlayerEntity> winner_list = new ArrayList<>();
 
         Participants participants = gameHandle.getParticipants();
 
@@ -58,15 +59,9 @@ public class TreasureHunterInstance extends DefaultGameInstance {
             if (!participants.isParticipating(serverPlayer)) return ActionResult.PASS;
 
             if (!world.getBlockState(hitResult.getBlockPos()).isOf(Blocks.CHEST)) return ActionResult.PASS;
-
-            if (winner_list.isEmpty()) { //doesn't work, win is still called every time
-                win(serverPlayer);
-                winner_list.add(serverPlayer);
-                System.out.print(winner_list);
-                return ActionResult.success(true);
-            }
-
-            return ActionResult.PASS;
+            data.add(serverPlayer);
+            win(serverPlayer);
+            return ActionResult.success(true);
         });
 
         placeChest();
