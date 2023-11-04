@@ -16,14 +16,19 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.GameMode;
 import net.minecraft.world.World;
 import net.minecraft.world.border.WorldBorder;
+import org.json.JSONArray;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.impl.game.EliminationGameInstance;
+import work.lclpnet.ap2.impl.map.MapUtil;
+import work.lclpnet.ap2.impl.util.SoundHelper;
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
 import work.lclpnet.kibu.inv.item.ItemStackUtil;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
+
+import java.util.Objects;
 
 public class SpleefInstance extends EliminationGameInstance {
 
@@ -67,7 +72,7 @@ public class SpleefInstance extends EliminationGameInstance {
         TaskScheduler scheduler = gameHandle.getScheduler();
 
         scheduler.timeout(() -> {
-            WorldBorder worldBorder = shrinkWorldBorder();
+            WorldBorder worldBorder = useWorldBorder();
             worldBorder.interpolateSize(worldBorder.getSize(), 1, WORLD_BORDER_TIME * 50L);
 
             for (ServerPlayerEntity player : PlayerLookup.world(getWorld())) {
@@ -75,11 +80,23 @@ public class SpleefInstance extends EliminationGameInstance {
             }
         }, WORLD_BORDER_DELAY);
 
-        scheduler.timeout(() -> {
-            for (ServerPlayerEntity player : gameHandle.getParticipants()) {
-                removeBlocksUnder(player);
+        scheduler.timeout(this::removeBlocks, WORLD_BORDER_DELAY + WORLD_BORDER_TIME + Ticks.seconds(5));
+    }
+
+    private void removeBlocks() {
+        ServerWorld world = getWorld();
+        BlockState air = Blocks.AIR.getDefaultState();
+
+        JSONArray areaJson = Objects.requireNonNull(getMap().getProperty("snow-area"), "Snow area undefined");
+        var box = MapUtil.readBox(areaJson);
+
+        for (BlockPos pos : BlockPos.iterate(box.first(), box.second())) {
+            if (world.getBlockState(pos).isOf(Blocks.SNOW_BLOCK)) {
+                world.setBlockState(pos, air);
             }
-        }, WORLD_BORDER_DELAY + WORLD_BORDER_TIME + Ticks.seconds(5));
+        }
+
+        SoundHelper.playSound(gameHandle.getServer(), SoundEvents.ENTITY_WITHER_DEATH, SoundCategory.AMBIENT, 0.8f, 1f);
     }
 
     private void giveShovelsToPlayers(TranslationService translations) {
@@ -94,22 +111,6 @@ public class SpleefInstance extends EliminationGameInstance {
             PlayerInventory inventory = player.getInventory();
             inventory.setStack(4, stack);
             PlayerInventoryAccess.setSelectedSlot(player, 4);
-        }
-    }
-
-    private void removeBlocksUnder(ServerPlayerEntity player) {
-        BlockPos playerPos = player.getBlockPos();
-        int x = playerPos.getX();
-        int y = playerPos.getY();
-        int z = playerPos.getZ();
-
-        ServerWorld world = getWorld();
-        BlockState air = Blocks.AIR.getDefaultState();
-
-        for (BlockPos pos : BlockPos.iterate(x - 1, y - 2, z - 1, x + 1, y, z + 1)) {
-            if (world.getBlockState(pos).isOf(Blocks.SNOW_BLOCK)) {
-                world.setBlockState(pos, air);
-            }
         }
     }
 }

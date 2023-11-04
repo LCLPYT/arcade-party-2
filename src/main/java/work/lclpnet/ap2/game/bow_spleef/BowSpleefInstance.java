@@ -20,7 +20,9 @@ import net.minecraft.world.border.WorldBorder;
 import org.json.JSONArray;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.impl.game.EliminationGameInstance;
+import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.DoubleJumpHandler;
+import work.lclpnet.ap2.impl.util.SoundHelper;
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
 import work.lclpnet.kibu.hook.entity.ProjectileHooks;
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks;
@@ -32,6 +34,8 @@ import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
+
+import java.util.Objects;
 
 public class BowSpleefInstance extends EliminationGameInstance {
 
@@ -137,7 +141,7 @@ public class BowSpleefInstance extends EliminationGameInstance {
         TaskScheduler scheduler = gameHandle.getScheduler();
 
         scheduler.timeout(() -> {
-            WorldBorder worldBorder = shrinkWorldBorder();
+            WorldBorder worldBorder = useWorldBorder();
             worldBorder.interpolateSize(worldBorder.getSize(), 5, WORLD_BORDER_TIME * 50L);
 
             for (ServerPlayerEntity player : PlayerLookup.world(getWorld())) {
@@ -151,15 +155,16 @@ public class BowSpleefInstance extends EliminationGameInstance {
     private void removeBlocksUnder() {
         ServerWorld world = getWorld();
 
-        JSONArray spawn = getMap().getProperty("spawn");
-        if (spawn == null) throw new AssertionError();
-        int x = spawn.getInt(0);
-        int y = spawn.getInt(1);
-        int z = spawn.getInt(2);
+        JSONArray spawnJson = Objects.requireNonNull(getMap().getProperty("spawn"), "Spawn not configured");
+        BlockPos spawn = MapUtil.readBlockPos(spawnJson);
+
+        int x = spawn.getX();
+        int y = spawn.getY();
+        int z = spawn.getZ();
 
         BlockState air = Blocks.AIR.getDefaultState();
 
-        world.playSound(null, x, y, z, SoundEvents.ENTITY_WITHER_DEATH, SoundCategory.AMBIENT, 0.8f, 1f);
+        SoundHelper.playSound(gameHandle.getServer(), SoundEvents.ENTITY_WITHER_DEATH, SoundCategory.AMBIENT, 0.8f, 1f);
 
         for (BlockPos pos : BlockPos.iterate(x - 3, y - 30, z - 3, x + 3, y + 10, z + 3)) {
             world.setBlockState(pos, air);
