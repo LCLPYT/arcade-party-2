@@ -13,7 +13,6 @@ import net.minecraft.util.Identifier;
 import net.minecraft.world.GameMode;
 import net.minecraft.world.border.WorldBorder;
 import org.jetbrains.annotations.Nullable;
-import org.json.JSONArray;
 import org.json.JSONObject;
 import work.lclpnet.ap2.api.base.ParticipantListener;
 import work.lclpnet.ap2.api.base.Participants;
@@ -24,7 +23,9 @@ import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.game.data.DataEntry;
 import work.lclpnet.ap2.api.map.MapFacade;
 import work.lclpnet.ap2.base.ApConstants;
+import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.SoundHelper;
+import work.lclpnet.ap2.impl.util.Vec2i;
 import work.lclpnet.kibu.hook.entity.EntityHealthCallback;
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks;
 import work.lclpnet.kibu.hook.player.PlayerSpawnLocationCallback;
@@ -430,14 +431,10 @@ public abstract class DefaultGameInstance implements MiniGameInstance, Participa
         int centerX = 0, centerZ = 0;
 
         if (wbConfig.has("center")) {
-            JSONArray array = wbConfig.getJSONArray("center");
+            Vec2i center = MapUtil.readVec2i(wbConfig.getJSONArray("center"));
 
-            if (array.length() < 2) {
-                throw new IllegalStateException("Center property must have at least two elements");
-            }
-
-            centerX = array.getInt(0);
-            centerZ = array.getInt(1);
+            centerX = center.x();
+            centerZ = center.z();
         }
 
         int radius = wbConfig.getInt("size");
