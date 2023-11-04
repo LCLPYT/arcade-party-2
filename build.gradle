@@ -4,6 +4,7 @@ plugins {
     id 'maven-publish'
     id 'gradle-build-utils' version '1.5.3'
     id 'kibu-plugin-dev' version '0.11.0'
+    id 'com.github.johnrengelman.shadow' version '7.1.2'
 }
 
 Properties props = buildUtils.loadProperties('publish.properties')
@@ -69,6 +70,7 @@ dependencies {
     pluginLocalRuntime "work.lclpnet.plugins:pal:${project.pal_version}"
 
     implementation 'org.json:json:20230227'
+    bundle(implementation('work.lclpnet:json-config4j:1.0.0'))
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
@@ -102,10 +104,14 @@ java {
     targetCompatibility = JavaVersion.VERSION_17
 }
 
-[jar, sourcesJar].each {
+[jar, sourcesJar, shadowJar].each {
     it.from("LICENSE") {
         rename { "${it}_${project.base.archivesName.get()}" }
     }
+}
+
+shadowJar {
+    mergeServiceFiles()
 }
 
 publishing {
@@ -113,7 +119,7 @@ publishing {
         mavenJava(MavenPublication) {
             artifactId = project.base.archivesName.get()
 
-            artifact remapJar
+            artifact remapShadowJar
             artifact remapSourcesJar
 
             pom {
