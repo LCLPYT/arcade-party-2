@@ -67,7 +67,7 @@ public class SpleefInstance extends EliminationGameInstance {
         TaskScheduler scheduler = gameHandle.getScheduler();
 
         scheduler.timeout(() -> {
-            WorldBorder worldBorder = shrinkWorldBorder();
+            WorldBorder worldBorder = useWorldBorder();
             worldBorder.interpolateSize(worldBorder.getSize(), 1, WORLD_BORDER_TIME * 50L);
 
             for (ServerPlayerEntity player : PlayerLookup.world(getWorld())) {
