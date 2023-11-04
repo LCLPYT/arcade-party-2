@@ -1,5 +1,7 @@
 package work.lclpnet.ap2.impl.game;
 
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.util.Identifier;
 import work.lclpnet.ap2.api.game.GameType;
 import work.lclpnet.ap2.api.game.MiniGame;
@@ -22,6 +24,11 @@ public class TestMiniGame implements MiniGame {
     @Override
     public String getAuthor() {
         return "Dev";
+    }
+
+    @Override
+    public ItemStack getIcon() {
+        return new ItemStack(Items.EMERALD);
     }
 
     @Override

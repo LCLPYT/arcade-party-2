@@ -1,6 +1,7 @@
 package work.lclpnet.ap2.impl.map;
 
 import net.minecraft.util.Identifier;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,6 +16,11 @@ import static org.junit.jupiter.api.Assertions.*;
 class SqliteAsyncMapFrequencyManagerTest {
 
     private static final Logger logger = LoggerFactory.getLogger(SqliteAsyncMapFrequencyManagerTest.class);
+
+    @BeforeAll
+    public static void setupJdbc() throws ClassNotFoundException {
+        Class.forName("org.sqlite.JDBC", true, SqliteAsyncMapFrequencyManagerTest.class.getClassLoader());
+    }
 
     @Test
     void open_empty_succeeds() throws Exception {
