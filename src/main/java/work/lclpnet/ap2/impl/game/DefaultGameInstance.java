@@ -75,13 +75,17 @@ public abstract class DefaultGameInstance implements MiniGameInstance, Participa
 
         registerDefaultHooks();
 
+        openMap();
+    }
+
+    protected void openMap() {
         MapFacade mapFacade = gameHandle.getMapFacade();
         Identifier gameId = gameHandle.getGameInfo().getId();
 
         mapFacade.openRandomMap(gameId, this::onMapReady);
     }
 
-    private void onMapReady(ServerWorld world, GameMap map) {
+    protected void onMapReady(ServerWorld world, GameMap map) {
         this.world = world;
         this.map = map;
 
