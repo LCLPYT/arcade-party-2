@@ -1,7 +1,5 @@
 package work.lclpnet.ap2.game.fine_tuning;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Identifier;
@@ -13,6 +11,7 @@ import work.lclpnet.ap2.impl.game.BootstrapMapOptions;
 import work.lclpnet.ap2.impl.game.DefaultGameInstance;
 import work.lclpnet.ap2.impl.game.data.ScoreDataContainer;
 import work.lclpnet.ap2.impl.map.MapUtil;
+import work.lclpnet.ap2.impl.util.StructureUtil;
 import work.lclpnet.kibu.schematic.FabricBlockStateAdapter;
 import work.lclpnet.kibu.schematic.SchematicFormats;
 import work.lclpnet.kibu.structure.BlockStructure;
@@ -90,7 +89,7 @@ public class FineTuningInstance extends DefaultGameInstance {
 
     private void placeStructures(GameMap map, ServerWorld world, BlockStructure structure) {
         BlockPos roomStart = MapUtil.readBlockPos(map.requireProperty("room-start"));
-        BlockPos roomDirection = signum(MapUtil.readBlockPos(map.requireProperty("room-direction")));
+        BlockPos roomDirection = normalize(MapUtil.readBlockPos(map.requireProperty("room-direction")));
 
         final int rooms = gameHandle.getParticipants().getAsSet().size();
         final int width = structure.getWidth(),
@@ -108,12 +107,12 @@ public class FineTuningInstance extends DefaultGameInstance {
                     roomStart.getZ() + i * rz * (length - Math.abs(rz))
             );
 
-            placeStructureAt(structure, world, pos);
+            StructureUtil.placeStructure(structure, world, pos);
         }
     }
 
     @SuppressWarnings("UseCompareMethod")
-    private BlockPos signum(BlockPos blockPos) {
+    private BlockPos normalize(BlockPos blockPos) {
         int x = blockPos.getX(), y = blockPos.getY(), z = blockPos.getZ();
 
         return new BlockPos(
@@ -121,32 +120,5 @@ public class FineTuningInstance extends DefaultGameInstance {
                 (y < 0) ? -1 : ((y == 0) ? 0 : 1),
                 (z < 0) ? -1 : ((z == 0) ? 0 : 1)
         );
-    }
-
-    private void placeStructureAt(BlockStructure structure, ServerWorld world, BlockPos pos) {
-        var origin = structure.getOrigin();
-
-        int ox = origin.getX(), oy = origin.getY(), oz = origin.getZ();
-        int px = pos.getX(), py = pos.getY(), pz = pos.getZ();
-
-        var adapter = FabricBlockStateAdapter.getInstance();
-        BlockState air = Blocks.AIR.getDefaultState();
-
-        BlockPos.Mutable printPos = new BlockPos.Mutable();
-
-        for (var kibuPos : structure.getBlockPositions()) {
-            printPos.set(
-                    kibuPos.getX() - ox + px,
-                    kibuPos.getY() - oy + py,
-                    kibuPos.getZ() - oz + pz
-            );
-
-            var kibuState = structure.getBlockState(kibuPos);
-
-            BlockState state = adapter.revert(kibuState);
-            if (state == null) state = air;
-
-            world.setBlockState(printPos, state, 0);
-        }
     }
 }
