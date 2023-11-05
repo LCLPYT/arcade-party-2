@@ -97,6 +97,12 @@ public class PreparationActivity extends ComponentActivity implements Skippable 
                 });
     }
 
+    @Override
+    public void stop() {
+        args.forceGameCommand.setGameEnforcer(args.gameQueue::setNextGame);
+        super.stop();
+    }
+
     private void onReady() {
         PlayerManager playerManager = args.playerManager();
         playerManager.startPreparation();
@@ -126,7 +132,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable 
         CommandRegistrar commandRegistrar = component(BuiltinComponents.COMMANDS).commands();
 
         new SkipCommand(this).register(commandRegistrar);
-        new ForceGameCommand(args.container().miniGames(), this::forceGame).register(commandRegistrar);
+        args.forceGameCommand.setGameEnforcer(this::forceGame);
     }
 
     private void onJoin(ServerPlayerEntity player) {
@@ -381,5 +387,5 @@ public class PreparationActivity extends ComponentActivity implements Skippable 
     }
 
     public record Args(PluginContext pluginContext, ApContainer container, GameQueue gameQueue,
-                       PlayerManager playerManager) {}
+                       PlayerManager playerManager, ForceGameCommand forceGameCommand) {}
 }
