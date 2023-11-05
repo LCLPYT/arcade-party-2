@@ -1,5 +1,6 @@
 package work.lclpnet.ap2.impl.base;
 
+import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.base.GameQueue;
 import work.lclpnet.ap2.api.base.MiniGameManager;
 import work.lclpnet.ap2.api.game.MiniGame;
@@ -17,6 +18,8 @@ public class VotedGameQueue implements GameQueue {
     private final MiniGameManager gameManager;
     private final int minimumSize;
     private final Queue<MiniGame> voted = new LinkedList<>(), regular = new LinkedList<>();
+    @Nullable
+    private MiniGame forcedNextGame = null;
     private final LinkedList<MiniGame> priority = new LinkedList<>();
 
     public VotedGameQueue(MiniGameManager gameManager, Iterable<MiniGame> voted, int minimumSize) {
@@ -30,6 +33,13 @@ public class VotedGameQueue implements GameQueue {
     public MiniGame pollNextGame() {
         synchronized (this) {
             ensureMinimumSize();
+
+            if (forcedNextGame != null) {
+                MiniGame next = forcedNextGame;
+                forcedNextGame = null;
+
+                return next;
+            }
 
             if (!priority.isEmpty()) {
                 return priority.poll();
@@ -53,6 +63,16 @@ public class VotedGameQueue implements GameQueue {
             preview.addAll(regular);
 
             return preview;
+        }
+    }
+
+    @Override
+    public void setNextGame(MiniGame miniGame) {
+        Objects.requireNonNull(miniGame);
+
+        synchronized (this) {
+            priority.clear();
+            priority.add(miniGame);
         }
     }
 
