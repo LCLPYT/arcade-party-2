@@ -9,7 +9,8 @@ import work.lclpnet.ap2.api.base.MiniGameManager;
 import work.lclpnet.ap2.api.game.MiniGame;
 import work.lclpnet.ap2.game.MiniGames;
 
-import java.util.HashSet;
+import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.Optional;
 import java.util.Set;
 
@@ -19,9 +20,10 @@ import java.util.Set;
 public class SimpleMiniGameManager implements MiniGameManager {
 
     private final BiMap<Identifier, MiniGame> games;
+    private final Set<MiniGame> gameSet;  // use a separate set that is backed by a LinkedHashSet (order preserving)
 
     public SimpleMiniGameManager(Logger logger) {
-        Set<MiniGame> registry = new HashSet<>();
+        Set<MiniGame> registry = new LinkedHashSet<>();
 
         MiniGames.registerGames(registry);
 
@@ -36,11 +38,12 @@ public class SimpleMiniGameManager implements MiniGameManager {
         }
 
         this.games = ImmutableBiMap.copyOf(byId);
+        this.gameSet = Collections.synchronizedSet(registry);
     }
 
     @Override
     public Set<MiniGame> getGames() {
-        return games.values();
+        return gameSet;
     }
 
     @Override
