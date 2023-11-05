@@ -38,7 +38,7 @@ public class SimpleMiniGameManager implements MiniGameManager {
         }
 
         this.games = ImmutableBiMap.copyOf(byId);
-        this.gameSet = Collections.synchronizedSet(registry);
+        this.gameSet = Collections.unmodifiableSet(registry);
     }
 
     @Override
