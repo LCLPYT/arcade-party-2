@@ -13,6 +13,7 @@ import work.lclpnet.ap2.api.game.MiniGame;
 import work.lclpnet.ap2.api.map.MapFacade;
 import work.lclpnet.ap2.api.map.MapRandomizer;
 import work.lclpnet.ap2.base.activity.PreparationActivity;
+import work.lclpnet.ap2.base.cmd.ForceGameCommand;
 import work.lclpnet.ap2.base.config.Ap2Config;
 import work.lclpnet.ap2.base.config.ConfigManager;
 import work.lclpnet.ap2.impl.base.PlayerManagerImpl;
@@ -125,10 +126,13 @@ public class ArcadePartyGameInstance implements GameInstance {
         PlayerManagerImpl playerManager = new PlayerManagerImpl(server);
         PlayerUtil playerUtil = new PlayerUtil(server, playerManager);
 
+        ForceGameCommand forceGameCommand = new ForceGameCommand(gameManager, queue::setNextGame);
+        forceGameCommand.register(environment.getCommandStack());
+
         ApContainer container = new ApContainer(server, logger, translationService, environment.getHookStack(),
                 environment.getSchedulerStack(), worldFacade, mapFacade, playerUtil, gameManager);
 
-        var args = new PreparationActivity.Args(arcadeParty, container, queue, playerManager);
+        var args = new PreparationActivity.Args(arcadeParty, container, queue, playerManager, forceGameCommand);
         PreparationActivity preparation = new PreparationActivity(args);
 
         ActivityManager.getInstance().startActivity(preparation);

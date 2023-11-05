@@ -10,5 +10,7 @@ public interface GameQueue {
 
     List<MiniGame> preview();
 
+    void setNextGame(MiniGame miniGame);
+
     void shiftGame(MiniGame miniGame);
 }
