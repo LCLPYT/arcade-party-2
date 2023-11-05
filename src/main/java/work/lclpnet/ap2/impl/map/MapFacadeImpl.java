@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import work.lclpnet.ap2.api.game.MapReady;
 import work.lclpnet.ap2.api.map.MapFacade;
 import work.lclpnet.ap2.api.map.MapRandomizer;
+import work.lclpnet.lobby.game.api.MapOptions;
 import work.lclpnet.lobby.game.api.WorldFacade;
 import work.lclpnet.lobby.game.map.GameMap;
 
@@ -29,11 +30,11 @@ public class MapFacadeImpl implements MapFacade {
     }
 
     @Override
-    public CompletableFuture<Pair<ServerWorld, GameMap>> openRandomMap(Identifier gameId) {
+    public CompletableFuture<Pair<ServerWorld, GameMap>> openRandomMap(Identifier gameId, MapOptions mapOptions) {
         return mapRandomizer.nextMap(gameId)
                 .thenCompose(map -> {
                     Identifier id = map.getDescriptor().getIdentifier();
-                    return worldFacade.changeMap(id).thenApply(world -> Pair.of(world, map));
+                    return worldFacade.changeMap(id, mapOptions).thenApply(world -> Pair.of(world, map));
                 })
                 .thenApply(pair -> {
                     setupWorld(pair.left());
@@ -42,8 +43,8 @@ public class MapFacadeImpl implements MapFacade {
     }
 
     @Override
-    public void openRandomMap(Identifier gameId, MapReady callback) {
-        openRandomMap(gameId)
+    public void openRandomMap(Identifier gameId, MapOptions options, MapReady callback) {
+        openRandomMap(gameId, options)
                 .thenCompose(pair -> server.submit(() -> callback.onReady(pair.left(), pair.right())))
                 .exceptionally(throwable -> {
                     logger.error("Failed to open a random map for game {}", gameId, throwable);
