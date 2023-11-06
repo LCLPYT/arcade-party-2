@@ -1,13 +1,17 @@
 package work.lclpnet.ap2.game.fine_tuning;
 
+import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.util.ActionResult;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.GameMode;
 import org.json.JSONArray;
 import org.slf4j.Logger;
+import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.map.MapFacade;
@@ -17,6 +21,8 @@ import work.lclpnet.ap2.impl.game.data.ScoreDataContainer;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.MathUtil;
 import work.lclpnet.ap2.impl.util.StructureUtil;
+import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
+import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 import work.lclpnet.kibu.schematic.FabricBlockStateAdapter;
 import work.lclpnet.kibu.schematic.SchematicFormats;
 import work.lclpnet.kibu.structure.BlockStructure;
@@ -34,6 +40,7 @@ public class FineTuningInstance extends DefaultGameInstance {
 
     private final ScoreDataContainer data = new ScoreDataContainer();
     private final Map<UUID, FineTuningRoom> rooms = new HashMap<>();
+    private boolean playersCanInteract = false;
     private BlockPos roomStart;
     private Vec3i roomOffset;
 
@@ -60,11 +67,49 @@ public class FineTuningInstance extends DefaultGameInstance {
     protected void prepare() {
         var noteBlockLocations = readNoteBlockLocations();
         teleportParticipants(noteBlockLocations);
+
+        Participants participants = gameHandle.getParticipants();
+        HookRegistrar hooks = gameHandle.getHookRegistrar();
+
+        hooks.registerHook(PlayerInteractionHooks.USE_BLOCK, (player, world, hand, hitResult) -> {
+            if (!playersCanInteract || !(player instanceof ServerPlayerEntity serverPlayer)
+                || !participants.isParticipating(serverPlayer)) return ActionResult.FAIL;
+
+            BlockPos pos = hitResult.getBlockPos();
+            BlockState state = world.getBlockState(pos);
+
+            if (!state.isOf(Blocks.NOTE_BLOCK)) return ActionResult.FAIL;
+
+            FineTuningRoom room = rooms.get(player.getUuid());
+
+            if (room != null) {
+                room.useNoteBlock(serverPlayer, pos);
+            }
+
+            return ActionResult.FAIL;
+        });
+
+        hooks.registerHook(PlayerInteractionHooks.ATTACK_BLOCK, (player, world, hand, pos, direction) -> {
+            if (!playersCanInteract || !(player instanceof ServerPlayerEntity serverPlayer)
+                || !participants.isParticipating(serverPlayer)) return ActionResult.FAIL;
+
+            BlockState state = world.getBlockState(pos);
+
+            if (!state.isOf(Blocks.NOTE_BLOCK)) return ActionResult.FAIL;
+
+            FineTuningRoom room = rooms.get(player.getUuid());
+
+            if (room != null) {
+                room.playNoteBlock(serverPlayer, pos);
+            }
+
+            return ActionResult.FAIL;
+        });
     }
 
     @Override
     protected void ready() {
-
+        playersCanInteract = true;
     }
 
     @Override
