@@ -3,6 +3,7 @@ package work.lclpnet.ap2.impl.map;
 import it.unimi.dsi.fastutil.Pair;
 import net.minecraft.block.BlockState;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import org.json.JSONArray;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.Vec2i;
@@ -41,6 +42,27 @@ public class MapUtil {
         if (tuple.length() < 2) throw new IllegalArgumentException("Tuple must be of size 2");
 
         return new Vec2i(tuple.getInt(0), tuple.getInt(1));
+    }
+
+    public static int readInt(Number number) {
+        return number.intValue();
+    }
+
+    public static float readFloat(Number number) {
+        return number.floatValue();
+    }
+
+    public static double readDouble(Number number) {
+        return number.doubleValue();
+    }
+
+    /**
+     * Read an angle in degrees.
+     * @param number A number.
+     * @return An angle in degrees between [-180, 180).
+     */
+    public static float readAngle(Number number) {
+        return MathHelper.wrapDegrees(readFloat(number));
     }
 
     public static BlockState readBlockState(String string) {
