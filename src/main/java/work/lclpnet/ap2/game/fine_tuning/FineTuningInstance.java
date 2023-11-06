@@ -41,7 +41,7 @@ public class FineTuningInstance extends DefaultGameInstance {
 
     private final ScoreDataContainer data = new ScoreDataContainer();
     private final Random random = new Random();
-    private final MelodyProvider melodyProvider = new DummyMelodyProvider();
+    private final MelodyProvider melodyProvider = new SimpleMelodyProvider(random, new DummyNotesProvider(), 5);
     private FineTuningSetup setup;
     private Map<UUID, FineTuningRoom> rooms;
     private boolean playersCanInteract = false;
