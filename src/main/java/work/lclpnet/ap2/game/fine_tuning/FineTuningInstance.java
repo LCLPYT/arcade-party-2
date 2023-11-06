@@ -6,6 +6,8 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.GameMode;
+import org.json.JSONArray;
+import org.slf4j.Logger;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.map.MapFacade;
@@ -13,22 +15,26 @@ import work.lclpnet.ap2.impl.game.BootstrapMapOptions;
 import work.lclpnet.ap2.impl.game.DefaultGameInstance;
 import work.lclpnet.ap2.impl.game.data.ScoreDataContainer;
 import work.lclpnet.ap2.impl.map.MapUtil;
+import work.lclpnet.ap2.impl.util.MathUtil;
 import work.lclpnet.ap2.impl.util.StructureUtil;
 import work.lclpnet.kibu.schematic.FabricBlockStateAdapter;
 import work.lclpnet.kibu.schematic.SchematicFormats;
 import work.lclpnet.kibu.structure.BlockStructure;
+import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.kibu.world.mixin.MinecraftServerAccessor;
 import work.lclpnet.lobby.game.map.GameMap;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 public class FineTuningInstance extends DefaultGameInstance {
 
     private final ScoreDataContainer data = new ScoreDataContainer();
-    private BlockPos baseSpawn;
+    private final Map<UUID, FineTuningRoom> rooms = new HashMap<>();
+    private BlockPos roomStart;
     private Vec3i roomOffset;
 
     public FineTuningInstance(MiniGameHandle gameHandle) {
@@ -52,7 +58,8 @@ public class FineTuningInstance extends DefaultGameInstance {
 
     @Override
     protected void prepare() {
-        teleportParticipants();
+        var noteBlockLocations = readNoteBlockLocations();
+        teleportParticipants(noteBlockLocations);
     }
 
     @Override
@@ -94,9 +101,9 @@ public class FineTuningInstance extends DefaultGameInstance {
     }
 
     private void placeStructures(GameMap map, ServerWorld world, BlockStructure structure) {
-        BlockPos roomStart = MapUtil.readBlockPos(map.requireProperty("room-start"));
-        Vec3i roomDirection = normalize(MapUtil.readBlockPos(map.requireProperty("room-direction")));
-        Vec3i spawnOffset = MapUtil.readBlockPos(map.requireProperty("room-player-spawn"));
+        roomStart = MapUtil.readBlockPos(map.requireProperty("room-start"));
+
+        Vec3i roomDirection = MathUtil.normalize(MapUtil.readBlockPos(map.requireProperty("room-direction")));
 
         final int rooms = gameHandle.getParticipants().getAsSet().size();
         final int width = structure.getWidth(),
@@ -106,57 +113,64 @@ public class FineTuningInstance extends DefaultGameInstance {
         int rz = roomDirection.getZ(), rx = roomDirection.getX(), ry = roomDirection.getY();
         int sx = roomStart.getX(), sy = roomStart.getY(), sz = roomStart.getZ();
 
-        baseSpawn = new BlockPos(
-                sx + spawnOffset.getX(),
-                sy + spawnOffset.getY(),
-                sz + spawnOffset.getZ()
-        );
-
-        roomOffset = new Vec3i(
-                rx * (width - Math.abs(rx)),
+        roomOffset = new Vec3i(rx * (width - Math.abs(rx)),
                 ry * (height - Math.abs(ry)),
-                rz * (length - Math.abs(rz))
-        );
+                rz * (length - Math.abs(rz)));
 
-        BlockPos.Mutable pos = new BlockPos.Mutable();
+        var pos = new BlockPos.Mutable();
 
         for (int i = 0; i < rooms; i++) {
-            pos.set(
-                    sx + i * roomOffset.getX(),
+            pos.set(sx + i * roomOffset.getX(),
                     sy + i * roomOffset.getY(),
-                    sz + i * roomOffset.getZ()
-            );
+                    sz + i * roomOffset.getZ());
 
             StructureUtil.placeStructure(structure, world, pos);
         }
     }
 
-    @SuppressWarnings("UseCompareMethod")
-    private BlockPos normalize(BlockPos blockPos) {
-        int x = blockPos.getX(), y = blockPos.getY(), z = blockPos.getZ();
+    private Vec3i[] readNoteBlockLocations() {
+        JSONArray noteBlockLocations = getMap().requireProperty("room-note-blocks");
 
-        return new BlockPos(
-                (x < 0) ? -1 : ((x == 0) ? 0 : 1),
-                (y < 0) ? -1 : ((y == 0) ? 0 : 1),
-                (z < 0) ? -1 : ((z == 0) ? 0 : 1)
-        );
+        if (noteBlockLocations.isEmpty()) {
+            throw new IllegalStateException("There must be at least one note block configured");
+        }
+
+        Logger logger = gameHandle.getLogger();
+
+        List<Vec3i> locations = new ArrayList<>();
+
+        for (Object obj : noteBlockLocations) {
+            if (!(obj instanceof JSONArray tuple)) {
+                logger.warn("Invalid note block location entry of type " + obj.getClass().getSimpleName());
+                continue;
+            }
+
+            locations.add(MapUtil.readBlockPos(tuple));
+        }
+
+        return locations.toArray(Vec3i[]::new);
     }
 
-    private void teleportParticipants() {
-        ServerWorld world = getWorld();
-        float yaw = MapUtil.readAngle(getMap().requireProperty("room-player-yaw"));
+    private void teleportParticipants(Vec3i[] noteBlockLocations) {
+        GameMap map = getMap();
 
-        double sx = baseSpawn.getX() + 0.5, sy = baseSpawn.getY(), sz = baseSpawn.getZ() + 0.5;
-        int ox = roomOffset.getX(), oy = roomOffset.getY(), oz = roomOffset.getZ();
+        Vec3i spawnOffset = MapUtil.readBlockPos(map.requireProperty("room-player-spawn"));
+        float yaw = MapUtil.readAngle(map.requireProperty("room-player-yaw"));
+        Vec3i signOffset = MapUtil.readBlockPos(map.requireProperty("room-sign"));
+
+        ServerWorld world = getWorld();
+        TranslationService translations = gameHandle.getTranslations();
 
         int i = 0;
 
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
-            double x = sx + ox * i, y = sy + oy * i, z = sz + oz * i;
+            BlockPos roomPos = roomStart.add(roomOffset.multiply(i++));
 
-            player.teleport(world, x, y, z, yaw, 0.0F);
+            FineTuningRoom room = new FineTuningRoom(world, roomPos, noteBlockLocations, spawnOffset, yaw, signOffset);
+            room.setSignText(translations.translateText(player, "game.ap2.fine_tuning.replay"));
+            room.teleport(player);
 
-            i++;
+            rooms.put(player.getUuid(), room);
         }
     }
 }
