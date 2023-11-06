@@ -17,6 +17,7 @@ import work.lclpnet.ap2.base.activity.PreparationActivity;
 import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.kibu.translate.TranslationService;
+import work.lclpnet.kibu.translate.bossbar.BossBarProvider;
 import work.lclpnet.lobby.game.api.WorldFacade;
 import work.lclpnet.lobby.game.impl.prot.BasicProtector;
 import work.lclpnet.lobby.game.impl.prot.MutableProtectionConfig;
@@ -30,13 +31,15 @@ public class DefaultMiniGameHandle implements MiniGameHandle, Unloadable, WorldB
 
     private final GameInfo info;
     private final PreparationActivity.Args args;
+    private final BossBarProvider bossBarProvider;
     private MutableProtectionConfig protectionConfig;
     private volatile BasicProtector protector = null;
     private WorldBorderListener worldBorderListener = null;
 
-    public DefaultMiniGameHandle(GameInfo info, PreparationActivity.Args args) {
+    public DefaultMiniGameHandle(GameInfo info, PreparationActivity.Args args, BossBarProvider bossBarProvider) {
         this.info = info;
         this.args = args;
+        this.bossBarProvider = bossBarProvider;
     }
 
     public void init() {
@@ -99,6 +102,11 @@ public class DefaultMiniGameHandle implements MiniGameHandle, Unloadable, WorldB
     @Override
     public PlayerUtil getPlayerUtil() {
         return args.container().playerUtil();
+    }
+
+    @Override
+    public BossBarProvider getBossBarProvider() {
+        return bossBarProvider;
     }
 
     @Override

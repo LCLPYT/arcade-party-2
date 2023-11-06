@@ -16,6 +16,8 @@ import net.minecraft.text.Text;
 import net.minecraft.util.DyeColor;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3i;
+import work.lclpnet.ap2.game.fine_tuning.melody.Melody;
+import work.lclpnet.ap2.game.fine_tuning.melody.Note;
 import work.lclpnet.ap2.impl.util.SoundHelper;
 import work.lclpnet.kibu.translate.text.RootText;
 
@@ -130,5 +132,24 @@ public class FineTuningRoom {
             }
         }
         return index;
+    }
+
+    public void setMelody(Melody melody) {
+        Note[] notes = melody.notes();
+        BlockState state = Blocks.NOTE_BLOCK.getDefaultState()
+                .with(NoteBlock.INSTRUMENT, melody.instrument());
+
+        int i;
+
+        for (i = 0; i < noteBlocks.length; i++) {
+            if (i < notes.length) {
+                this.notes[i] = notes[i].ordinal();
+            } else {
+                this.notes[i] = 0;
+            }
+
+            BlockPos pos = noteBlocks[i];
+            world.setBlockState(pos, state);
+        }
     }
 }
