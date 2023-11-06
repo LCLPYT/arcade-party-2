@@ -10,6 +10,7 @@ import work.lclpnet.ap2.impl.game.PlayerUtil;
 import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.kibu.translate.TranslationService;
+import work.lclpnet.kibu.translate.bossbar.BossBarProvider;
 import work.lclpnet.lobby.game.api.WorldFacade;
 import work.lclpnet.lobby.game.impl.prot.MutableProtectionConfig;
 
@@ -39,6 +40,8 @@ public interface MiniGameHandle {
     WorldBorderManager getWorldBorderManager();
 
     PlayerUtil getPlayerUtil();
+
+    BossBarProvider getBossBarProvider();
 
     void protect(Consumer<MutableProtectionConfig> action);
 

@@ -1,48 +1,52 @@
 package work.lclpnet.ap2.game.fine_tuning;
 
+import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.entity.boss.BossBar;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvents;
+import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3i;
 import net.minecraft.world.GameMode;
-import org.json.JSONArray;
-import org.slf4j.Logger;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.map.MapFacade;
+import work.lclpnet.ap2.game.fine_tuning.melody.*;
 import work.lclpnet.ap2.impl.game.BootstrapMapOptions;
 import work.lclpnet.ap2.impl.game.DefaultGameInstance;
 import work.lclpnet.ap2.impl.game.data.ScoreDataContainer;
-import work.lclpnet.ap2.impl.map.MapUtil;
-import work.lclpnet.ap2.impl.util.MathUtil;
-import work.lclpnet.ap2.impl.util.StructureUtil;
+import work.lclpnet.ap2.impl.util.SoundHelper;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.kibu.plugin.hook.HookRegistrar;
-import work.lclpnet.kibu.schematic.FabricBlockStateAdapter;
-import work.lclpnet.kibu.schematic.SchematicFormats;
-import work.lclpnet.kibu.structure.BlockStructure;
+import work.lclpnet.kibu.scheduler.Ticks;
+import work.lclpnet.kibu.scheduler.api.TaskScheduler;
+import work.lclpnet.kibu.title.Title;
 import work.lclpnet.kibu.translate.TranslationService;
-import work.lclpnet.kibu.world.mixin.MinecraftServerAccessor;
-import work.lclpnet.lobby.game.map.GameMap;
+import work.lclpnet.kibu.translate.bossbar.BossBarProvider;
+import work.lclpnet.lobby.game.util.BossBarTimer;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.*;
-import java.util.concurrent.CompletableFuture;
+import java.util.Arrays;
+import java.util.Map;
+import java.util.Random;
+import java.util.UUID;
 
 public class FineTuningInstance extends DefaultGameInstance {
 
     private final ScoreDataContainer data = new ScoreDataContainer();
-    private final Map<UUID, FineTuningRoom> rooms = new HashMap<>();
+    private final Random random = new Random();
+    private final MelodyProvider melodyProvider = new DummyMelodyProvider();
+    private FineTuningSetup setup;
+    private Map<UUID, FineTuningRoom> rooms;
     private boolean playersCanInteract = false;
-    private BlockPos roomStart;
-    private Vec3i roomOffset;
+    private Melody melody = null;
+    private int melodyNumber = 0;
 
     public FineTuningInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
@@ -60,13 +64,18 @@ public class FineTuningInstance extends DefaultGameInstance {
         MapFacade mapFacade = gameHandle.getMapFacade();
         Identifier gameId = gameHandle.getGameInfo().getId();
 
-        mapFacade.openRandomMap(gameId, new BootstrapMapOptions(this::createRooms), this::onMapReady);
+        mapFacade.openRandomMap(gameId, new BootstrapMapOptions((world, map) -> {
+            setup = new FineTuningSetup(gameHandle, map, world);
+            return setup.createRooms();
+        }), this::onMapReady);
     }
 
     @Override
     protected void prepare() {
-        var noteBlockLocations = readNoteBlockLocations();
-        teleportParticipants(noteBlockLocations);
+        var noteBlockLocations = setup.readNoteBlockLocations();
+        setup.teleportParticipants(noteBlockLocations);
+
+        rooms = setup.getRooms();
 
         Participants participants = gameHandle.getParticipants();
         HookRegistrar hooks = gameHandle.getHookRegistrar();
@@ -109,7 +118,7 @@ public class FineTuningInstance extends DefaultGameInstance {
 
     @Override
     protected void ready() {
-        playersCanInteract = true;
+        beginListen();
     }
 
     @Override
@@ -117,105 +126,105 @@ public class FineTuningInstance extends DefaultGameInstance {
 
     }
 
-    private CompletableFuture<Void> createRooms(ServerWorld world, GameMap map) {
-        String schematicName = map.requireProperty("room-schematic");
-        var session = ((MinecraftServerAccessor) gameHandle.getServer()).getSession();
-        Path storage = session.getWorldDirectory(world.getRegistryKey());
+    private void beginListen() {
+        MinecraftServer server = gameHandle.getServer();
+        TranslationService translations = gameHandle.getTranslations();
 
-        Path path = storage.resolve("schematics").resolve(schematicName);
+        SoundHelper.playSound(server, SoundEvents.BLOCK_NOTE_BLOCK_PLING.value(), SoundCategory.RECORDS, 0.5f, 0f);
 
-        return CompletableFuture.runAsync(() -> {
-            if (!Files.isRegularFile(path)) {
-                throw new IllegalStateException("Schematic does not exist at ".concat(path.toString()));
+        translations.translateText("game.ap2.fine_tuning.listen").formatted(Formatting.DARK_GREEN)
+                .acceptEach(PlayerLookup.all(server), (player, text)
+                        -> Title.get(player).title(Text.empty(), text, 5, 40, 5));
+
+        gameHandle.getScheduler().timeout(this::playNextMelody, 50);
+    }
+
+    private void playNextMelody() {
+        melody = melodyProvider.nextMelody();
+        rooms.values().forEach(room -> room.setMelody(melody));
+
+        playMelody(this::listenAgain);
+    }
+
+    private void playMelody(Runnable onDone) {
+        Participants participants = gameHandle.getParticipants();
+        TaskScheduler scheduler = gameHandle.getScheduler();
+
+        MelodyPlayer task = new MelodyPlayer(note -> {
+            for (ServerPlayerEntity player : participants) {
+                FineTuningRoom room = rooms.get(player.getUuid());
+                if (room == null) continue;
+
+                room.playNote(player, note);
             }
+        }, melody.notes().length);
 
-            var adapter = FabricBlockStateAdapter.getInstance();
-            BlockStructure structure;
+        scheduler.interval(task, 1)
+                .whenComplete(() -> scheduler.timeout(onDone, 30));
+    }
 
-            try (var in = Files.newInputStream(path)) {
-                structure = SchematicFormats.SPONGE_V2.reader().read(in, adapter);
-            } catch (IOException e) {
-                throw new RuntimeException("Failed to read schematic", e);
+    private void listenAgain() {
+        MinecraftServer server = gameHandle.getServer();
+        TranslationService translations = gameHandle.getTranslations();
+
+        SoundHelper.playSound(server, SoundEvents.ENTITY_CHICKEN_EGG, SoundCategory.RECORDS, 0.5f, 0f);
+
+        translations.translateText("game.ap2.fine_tuning.listen_again").formatted(Formatting.DARK_GREEN)
+                .acceptEach(PlayerLookup.all(server), (player, text)
+                        -> Title.get(player).title(Text.empty(), text, 5, 40, 5));
+
+        gameHandle.getScheduler().timeout(() -> playMelody(this::beginTune), 50);
+    }
+
+    private void beginTune() {
+        MinecraftServer server = gameHandle.getServer();
+        TranslationService translations = gameHandle.getTranslations();
+        TaskScheduler scheduler = gameHandle.getScheduler();
+        BossBarProvider bossBarProvider = gameHandle.getBossBarProvider();
+
+        var players = PlayerLookup.all(server);
+
+        translations.translateText("game.ap2.fine_tuning.repeat").formatted(Formatting.DARK_GREEN)
+                .acceptEach(players, (player, text)
+                        -> Title.get(player).title(Text.empty(), text, 5, 40, 5));
+
+        Melody shuffled = shuffledMelody();
+        rooms.values().forEach(room -> room.setMelody(shuffled));
+
+        playersCanInteract = true;
+
+        BossBarTimer timer = BossBarTimer.builder(translations, translations.translateText("game.ap2.fine_tuning.tune"))
+                .withAlertSound(false)
+                .withColor(BossBar.Color.RED)
+                .withDurationTicks(Ticks.seconds(25))
+                .build();
+
+        timer.addPlayers(players);
+        timer.start(bossBarProvider, scheduler);
+
+        timer.whenDone(() -> {
+            playersCanInteract = false;
+
+            if (++melodyNumber == 3) {
+                beginStage();
+            } else {
+                beginListen();
             }
-
-            placeStructures(map, world, structure);
-        }).exceptionally(throwable -> {
-            gameHandle.getLogger().error("Failed to create rooms", throwable);
-            return null;
         });
     }
 
-    private void placeStructures(GameMap map, ServerWorld world, BlockStructure structure) {
-        roomStart = MapUtil.readBlockPos(map.requireProperty("room-start"));
-
-        Vec3i roomDirection = MathUtil.normalize(MapUtil.readBlockPos(map.requireProperty("room-direction")));
-
-        final int rooms = gameHandle.getParticipants().getAsSet().size();
-        final int width = structure.getWidth(),
-                height = structure.getHeight(),
-                length = structure.getWidth();
-
-        int rz = roomDirection.getZ(), rx = roomDirection.getX(), ry = roomDirection.getY();
-        int sx = roomStart.getX(), sy = roomStart.getY(), sz = roomStart.getZ();
-
-        roomOffset = new Vec3i(rx * (width - Math.abs(rx)),
-                ry * (height - Math.abs(ry)),
-                rz * (length - Math.abs(rz)));
-
-        var pos = new BlockPos.Mutable();
-
-        for (int i = 0; i < rooms; i++) {
-            pos.set(sx + i * roomOffset.getX(),
-                    sy + i * roomOffset.getY(),
-                    sz + i * roomOffset.getZ());
-
-            StructureUtil.placeStructure(structure, world, pos);
-        }
+    private void beginStage() {
+        System.out.println("over");
     }
 
-    private Vec3i[] readNoteBlockLocations() {
-        JSONArray noteBlockLocations = getMap().requireProperty("room-note-blocks");
+    private Melody shuffledMelody() {
+        Note[] allNotes = Note.values();
 
-        if (noteBlockLocations.isEmpty()) {
-            throw new IllegalStateException("There must be at least one note block configured");
-        }
+        Note[] shuffledNotes = Arrays.stream(melody.notes())
+                .mapToInt(note -> random.nextInt(allNotes.length))
+                .mapToObj(i -> allNotes[i])
+                .toArray(Note[]::new);
 
-        Logger logger = gameHandle.getLogger();
-
-        List<Vec3i> locations = new ArrayList<>();
-
-        for (Object obj : noteBlockLocations) {
-            if (!(obj instanceof JSONArray tuple)) {
-                logger.warn("Invalid note block location entry of type " + obj.getClass().getSimpleName());
-                continue;
-            }
-
-            locations.add(MapUtil.readBlockPos(tuple));
-        }
-
-        return locations.toArray(Vec3i[]::new);
-    }
-
-    private void teleportParticipants(Vec3i[] noteBlockLocations) {
-        GameMap map = getMap();
-
-        Vec3i spawnOffset = MapUtil.readBlockPos(map.requireProperty("room-player-spawn"));
-        float yaw = MapUtil.readAngle(map.requireProperty("room-player-yaw"));
-        Vec3i signOffset = MapUtil.readBlockPos(map.requireProperty("room-sign"));
-
-        ServerWorld world = getWorld();
-        TranslationService translations = gameHandle.getTranslations();
-
-        int i = 0;
-
-        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
-            BlockPos roomPos = roomStart.add(roomOffset.multiply(i++));
-
-            FineTuningRoom room = new FineTuningRoom(world, roomPos, noteBlockLocations, spawnOffset, yaw, signOffset);
-            room.setSignText(translations.translateText(player, "game.ap2.fine_tuning.replay"));
-            room.teleport(player);
-
-            rooms.put(player.getUuid(), room);
-        }
+        return new Melody(melody.instrument(), shuffledNotes);
     }
 }

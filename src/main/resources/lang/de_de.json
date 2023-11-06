@@ -25,5 +25,9 @@
   "game.ap2.mirror_hop.description": "Bahne dir einen Weg über die Plattformen zum Ziel.\nEs ist immer nur eine Platform richtig!",
   "game.ap2.fine_tuning": "Feinstimmen",
   "game.ap2.fine_tuning.description": "Stimme Notenblöcke so, dass sie eine vorgegebene Melodie nachspielen.\nWer am nächsten dran ist gewinnt!",
-  "game.ap2.fine_tuning.replay": "Wiederholen"
+  "game.ap2.fine_tuning.replay": "Wiederholen",
+  "game.ap2.fine_tuning.listen": "Merk dir die Melodie...",
+  "game.ap2.fine_tuning.listen_again": "Noch einmal...",
+  "game.ap2.fine_tuning.repeat": "Now repeat it!",
+  "game.ap2.fine_tuning.tune": "Stimme deine Notenblöcke"
 }
