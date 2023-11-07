@@ -133,4 +133,17 @@ public class FineTuningRoom {
             world.setBlockState(pos, state);
         }
     }
+
+    public Melody getCurrentMelody() {
+        Instrument instrument = world.getBlockState(noteBlocks[0]).get(NoteBlock.INSTRUMENT);
+        Note[] currentNotes = new Note[notes.length];
+
+        var allNotes = Note.values();
+
+        for (int i = 0; i < currentNotes.length; i++) {
+            currentNotes[i] = allNotes[notes[i]];
+        }
+
+        return new Melody(instrument, currentNotes);
+    }
 }
