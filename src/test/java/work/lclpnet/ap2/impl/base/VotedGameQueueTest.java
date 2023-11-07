@@ -98,7 +98,7 @@ class VotedGameQueueTest {
 
         var queue = new VotedGameQueue(manager, List.of(gameB), 5);
 
-        queue.shiftGame(gameC);
+        queue.setNextGame(gameC);
 
         assertEquals(List.of(gameC, gameB, gameA, gameA, gameA), queue.preview().stream().limit(5).toList());
     }

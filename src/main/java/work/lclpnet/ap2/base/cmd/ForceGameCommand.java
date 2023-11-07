@@ -22,10 +22,14 @@ public class ForceGameCommand implements KibuCommand {
     private static final DynamicCommandExceptionType UNKNOWN_GAME = new DynamicCommandExceptionType(id
             -> Text.literal("Unknown game '%s'".formatted(id)));
     private final MiniGameManager miniGameManager;
-    private final Consumer<MiniGame> gameEnforcer;
+    private Consumer<MiniGame> gameEnforcer;
 
     public ForceGameCommand(MiniGameManager miniGameManager, Consumer<MiniGame> gameEnforcer) {
         this.miniGameManager = miniGameManager;
+        this.gameEnforcer = gameEnforcer;
+    }
+
+    public void setGameEnforcer(Consumer<MiniGame> gameEnforcer) {
         this.gameEnforcer = gameEnforcer;
     }
 
@@ -47,7 +51,7 @@ public class ForceGameCommand implements KibuCommand {
         MiniGame game = miniGameManager.getGame(gameId).orElseThrow(() -> UNKNOWN_GAME.create(gameId));
 
         gameEnforcer.accept(game);
-        ctx.getSource().sendMessage(Text.literal("Forced mini-game \"%s\"".formatted(gameId)));
+        ctx.getSource().sendMessage(Text.literal("Forcing \"%s\" as next game".formatted(gameId)));
 
         return 1;
     }
