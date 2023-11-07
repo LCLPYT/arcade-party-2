@@ -9,6 +9,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.PlayerManager;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
@@ -214,6 +215,19 @@ public class FineTuningInstance extends DefaultGameInstance {
             playersCanInteract = false;
             takeReplayItems();
 
+            PlayerManager playerManager = server.getPlayerManager();
+
+            // TODO loop by last modified order
+            rooms.forEach((uuid, room) -> {
+                ServerPlayerEntity player = playerManager.getPlayer(uuid);
+                if (player == null) return;
+
+                int score = room.calculateScore(melody);
+                System.out.println(player.getEntityName() + " scored " + score);
+                data.addScore(player, score);
+                room.saveMelody();
+            });
+
             if (++melodyNumber == MELODY_COUNT) {
                 beginStage();
             } else {
@@ -246,7 +260,7 @@ public class FineTuningInstance extends DefaultGameInstance {
     }
 
     private void beginStage() {
-        System.out.println("over");
+        data.getBestPlayer(gameHandle.getServer()).ifPresentOrElse(this::win, this::winNobody);
     }
 
     private void addNoteBlockHooks() {

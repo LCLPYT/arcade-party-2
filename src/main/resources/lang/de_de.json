@@ -14,6 +14,7 @@
   "ap2.game.elimated": "%s wurde eliminiert",
   "ap2.game.winner_is": "Gewonnen hat...",
   "ap2.score.points": "%s Punkte",
+  "ap2.score.points_timed": "%s Punkte | als %s",
   "game.ap2.title": "ArcadeParty",
   "game.ap2.spleef": "Spleef",
   "game.ap2.spleef.description": "Baue den Boden unter deinen Gegnern ab, damit sie herunterfallen. Fall aber nicht selber herunter!",
