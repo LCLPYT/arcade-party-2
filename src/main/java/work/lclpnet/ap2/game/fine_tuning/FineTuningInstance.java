@@ -108,11 +108,6 @@ public class FineTuningInstance extends DefaultGameInstance {
         beginListen();
     }
 
-    @Override
-    public void participantRemoved(ServerPlayerEntity player) {
-
-    }
-
     private void beginListen() {
         MinecraftServer server = gameHandle.getServer();
         TranslationService translations = gameHandle.getTranslations();
