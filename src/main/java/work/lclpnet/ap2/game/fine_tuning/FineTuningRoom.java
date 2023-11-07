@@ -3,23 +3,17 @@ package work.lclpnet.ap2.game.fine_tuning;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.NoteBlock;
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.block.entity.SignBlockEntity;
-import net.minecraft.block.entity.SignText;
 import net.minecraft.block.enums.Instrument;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.state.property.Properties;
-import net.minecraft.text.Text;
-import net.minecraft.util.DyeColor;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3i;
 import work.lclpnet.ap2.game.fine_tuning.melody.Melody;
 import work.lclpnet.ap2.game.fine_tuning.melody.Note;
 import work.lclpnet.ap2.impl.util.SoundHelper;
-import work.lclpnet.kibu.translate.text.RootText;
 
 import java.util.Arrays;
 
@@ -29,10 +23,9 @@ public class FineTuningRoom {
     private final BlockPos[] noteBlocks;
     private final BlockPos spawn;
     private final float yaw;
-    private final BlockPos signPos;
     private final int[] notes;
 
-    public FineTuningRoom(ServerWorld world, BlockPos pos, Vec3i[] relNoteBlock, Vec3i relSpawn, float yaw, Vec3i relSign) {
+    public FineTuningRoom(ServerWorld world, BlockPos pos, Vec3i[] relNoteBlock, Vec3i relSpawn, float yaw) {
         this.world = world;
 
         BlockPos[] noteBlocks = new BlockPos[relNoteBlock.length];
@@ -48,7 +41,6 @@ public class FineTuningRoom {
 
         this.spawn = pos.add(relSpawn);
         this.yaw = yaw;
-        this.signPos = pos.add(relSign);
     }
 
     public void teleport(ServerPlayerEntity player) {
@@ -57,24 +49,13 @@ public class FineTuningRoom {
         player.teleport(world, x, y, z, yaw, 0.0F);
     }
 
-    public void setSignText(RootText rootText) {
-        BlockEntity blockEntity = world.getBlockEntity(signPos);
-
-        if (!(blockEntity instanceof SignBlockEntity sign)) return;
-
-        var empty = Text.empty();
-        var lines = new Text[] {empty, rootText, empty, empty};
-        var signText = new SignText(lines, lines, DyeColor.BLACK, true);
-
-        sign.setText(signText, true);
-        sign.setText(signText, false);
-    }
-
     public void useNoteBlock(ServerPlayerEntity player, BlockPos pos) {
         int index = getNoteBlock(pos);
         if (index == -1) return;
 
-        setNote(index, notes[index] + 1);
+        int transpose = player.isSneaking() ? -1 : 1;
+
+        setNote(index, notes[index] + transpose);
 
         playNote(player, index);
     }
@@ -117,7 +98,7 @@ public class FineTuningRoom {
     }
 
     public void setNote(int i, int note) {
-        notes[i] = note % 25;
+        notes[i] = Math.floorMod(note, 25);
     }
 
     private int getNoteBlock(BlockPos pos) {
