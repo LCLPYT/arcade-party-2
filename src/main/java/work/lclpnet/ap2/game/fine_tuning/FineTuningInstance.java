@@ -39,9 +39,10 @@ import java.util.UUID;
 
 public class FineTuningInstance extends DefaultGameInstance {
 
+    private static final int MELODY_COUNT = 3;
     private final ScoreDataContainer data = new ScoreDataContainer();
     private final Random random = new Random();
-    private final MelodyProvider melodyProvider = new SimpleMelodyProvider(random, new DummyNotesProvider(), 5);
+    private final MelodyProvider melodyProvider = new SimpleMelodyProvider(random, new SimpleNotesProvider(random), 5);
     private FineTuningSetup setup;
     private Map<UUID, FineTuningRoom> rooms;
     private boolean playersCanInteract = false;
@@ -134,9 +135,9 @@ public class FineTuningInstance extends DefaultGameInstance {
 
         translations.translateText("game.ap2.fine_tuning.listen").formatted(Formatting.DARK_GREEN)
                 .acceptEach(PlayerLookup.all(server), (player, text)
-                        -> Title.get(player).title(Text.empty(), text, 5, 40, 5));
+                        -> Title.get(player).title(Text.empty(), text, 5, 30, 5));
 
-        gameHandle.getScheduler().timeout(this::playNextMelody, 50);
+        gameHandle.getScheduler().timeout(this::playNextMelody, 40);
     }
 
     private void playNextMelody() {
@@ -160,7 +161,7 @@ public class FineTuningInstance extends DefaultGameInstance {
         }, melody.notes().length);
 
         scheduler.interval(task, 1)
-                .whenComplete(() -> scheduler.timeout(onDone, 30));
+                .whenComplete(() -> scheduler.timeout(onDone, 20));
     }
 
     private void listenAgain() {
@@ -171,9 +172,9 @@ public class FineTuningInstance extends DefaultGameInstance {
 
         translations.translateText("game.ap2.fine_tuning.listen_again").formatted(Formatting.DARK_GREEN)
                 .acceptEach(PlayerLookup.all(server), (player, text)
-                        -> Title.get(player).title(Text.empty(), text, 5, 40, 5));
+                        -> Title.get(player).title(Text.empty(), text, 5, 30, 5));
 
-        gameHandle.getScheduler().timeout(() -> playMelody(this::beginTune), 50);
+        gameHandle.getScheduler().timeout(() -> playMelody(this::beginTune), 40);
     }
 
     private void beginTune() {
@@ -184,11 +185,11 @@ public class FineTuningInstance extends DefaultGameInstance {
 
         var players = PlayerLookup.all(server);
 
-        translations.translateText("game.ap2.fine_tuning.repeat").formatted(Formatting.DARK_GREEN)
+        translations.translateText("game.ap2.fine_tuning.repeat").formatted(Formatting.GREEN)
                 .acceptEach(players, (player, text)
-                        -> Title.get(player).title(Text.empty(), text, 5, 40, 5));
+                        -> Title.get(player).title(Text.empty(), text, 5, 30, 5));
 
-        Melody shuffled = shuffledMelody();
+        Melody shuffled = baseMelody();
         rooms.values().forEach(room -> room.setMelody(shuffled));
 
         playersCanInteract = true;
@@ -196,7 +197,7 @@ public class FineTuningInstance extends DefaultGameInstance {
         BossBarTimer timer = BossBarTimer.builder(translations, translations.translateText("game.ap2.fine_tuning.tune"))
                 .withAlertSound(false)
                 .withColor(BossBar.Color.RED)
-                .withDurationTicks(Ticks.seconds(25))
+                .withDurationTicks(Ticks.seconds(40))
                 .build();
 
         timer.addPlayers(players);
@@ -205,7 +206,7 @@ public class FineTuningInstance extends DefaultGameInstance {
         timer.whenDone(() -> {
             playersCanInteract = false;
 
-            if (++melodyNumber == 3) {
+            if (++melodyNumber == MELODY_COUNT) {
                 beginStage();
             } else {
                 beginListen();
@@ -217,14 +218,10 @@ public class FineTuningInstance extends DefaultGameInstance {
         System.out.println("over");
     }
 
-    private Melody shuffledMelody() {
-        Note[] allNotes = Note.values();
+    private Melody baseMelody() {
+        var notes = new Note[8];
+        Arrays.fill(notes, Note.FIS3);
 
-        Note[] shuffledNotes = Arrays.stream(melody.notes())
-                .mapToInt(note -> random.nextInt(allNotes.length))
-                .mapToObj(i -> allNotes[i])
-                .toArray(Note[]::new);
-
-        return new Melody(melody.instrument(), shuffledNotes);
+        return new Melody(melody.instrument(), notes);
     }
 }

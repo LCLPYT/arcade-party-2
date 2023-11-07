@@ -8,7 +8,7 @@ import java.util.Random;
 public class SimpleMelodyProvider implements MelodyProvider {
 
     private final Instrument[] instruments = new Instrument[] {
-            Instrument.HARP, Instrument.BASS, Instrument.GUITAR, Instrument.FLUTE, Instrument.BELL, Instrument.CHIME,
+            Instrument.HARP, Instrument.GUITAR, Instrument.FLUTE, Instrument.BELL, Instrument.CHIME,
             Instrument.XYLOPHONE, Instrument.COW_BELL, Instrument.IRON_XYLOPHONE, Instrument.COW_BELL,
             Instrument.DIDGERIDOO, Instrument.BIT, Instrument.BANJO, Instrument.PLING
     };

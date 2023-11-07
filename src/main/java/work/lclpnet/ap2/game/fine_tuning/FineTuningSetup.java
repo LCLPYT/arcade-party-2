@@ -13,7 +13,6 @@ import work.lclpnet.ap2.impl.util.StructureUtil;
 import work.lclpnet.kibu.schematic.FabricBlockStateAdapter;
 import work.lclpnet.kibu.schematic.SchematicFormats;
 import work.lclpnet.kibu.structure.BlockStructure;
-import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.kibu.world.mixin.MinecraftServerAccessor;
 import work.lclpnet.lobby.game.map.GameMap;
 
@@ -120,17 +119,13 @@ public class FineTuningSetup {
     void teleportParticipants(Vec3i[] noteBlockLocations) {
         Vec3i spawnOffset = MapUtil.readBlockPos(map.requireProperty("room-player-spawn"));
         float yaw = MapUtil.readAngle(map.requireProperty("room-player-yaw"));
-        Vec3i signOffset = MapUtil.readBlockPos(map.requireProperty("room-sign"));
-
-        TranslationService translations = gameHandle.getTranslations();
 
         int i = 0;
 
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
             BlockPos roomPos = roomStart.add(roomOffset.multiply(i++));
 
-            FineTuningRoom room = new FineTuningRoom(world, roomPos, noteBlockLocations, spawnOffset, yaw, signOffset);
-            room.setSignText(translations.translateText(player, "game.ap2.fine_tuning.replay"));
+            FineTuningRoom room = new FineTuningRoom(world, roomPos, noteBlockLocations, spawnOffset, yaw);
             room.teleport(player);
 
             rooms.put(player.getUuid(), room);
