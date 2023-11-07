@@ -15,7 +15,9 @@ import work.lclpnet.ap2.game.fine_tuning.melody.Melody;
 import work.lclpnet.ap2.game.fine_tuning.melody.Note;
 import work.lclpnet.ap2.impl.util.SoundHelper;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 public class FineTuningRoom {
 
@@ -24,6 +26,7 @@ public class FineTuningRoom {
     private final BlockPos spawn;
     private final float yaw;
     private final int[] notes;
+    private final List<Melody> melodies = new ArrayList<>(3);
 
     public FineTuningRoom(ServerWorld world, BlockPos pos, Vec3i[] relNoteBlock, Vec3i relSpawn, float yaw) {
         this.world = world;
@@ -145,5 +148,21 @@ public class FineTuningRoom {
         }
 
         return new Melody(instrument, currentNotes);
+    }
+
+    public void saveMelody() {
+        melodies.add(getCurrentMelody());
+    }
+
+    public int calculateScore(Melody reference) {
+        final int maxUnitScore = Note.values().length - 1;
+        int score = 0;
+
+        for (int i = 0; i < notes.length; i++) {
+            int diff = Math.abs(reference.notes()[i].ordinal() - notes[i]);
+            score += maxUnitScore - diff;
+        }
+
+        return score;
     }
 }
