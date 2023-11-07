@@ -3,13 +3,14 @@ package work.lclpnet.ap2.game.one_in_the_chamber;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.GameMode;
+import work.lclpnet.ap2.api.game.MiniGameHandle;
 
 import java.util.ArrayList;
 import java.util.Random;
 
 public class OneInTheChamberRespawn {
 
-    public static void respawn(ArrayList<BlockPos> spawnPoints, ServerPlayerEntity player) {
+    public static void respawn(ArrayList<BlockPos> spawnPoints, ServerPlayerEntity player, MiniGameHandle gameHandle) {
 
         Random rand = new Random();
 
@@ -18,7 +19,10 @@ public class OneInTheChamberRespawn {
 
         player.changeGameMode(GameMode.SPECTATOR);
         player.heal(20);
-        player.teleport(randomSpawn.getX() + 0.5,randomSpawn.getY(),randomSpawn.getZ() + 0.5);
-        player.changeGameMode(GameMode.ADVENTURE);
+
+        gameHandle.getScheduler().timeout(() -> {
+            player.teleport(randomSpawn.getX() + 0.5,randomSpawn.getY(),randomSpawn.getZ() + 0.5);
+            player.changeGameMode(GameMode.ADVENTURE);
+        }, 60);
     }
 }

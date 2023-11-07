@@ -140,7 +140,9 @@ public class OneInTheChamberInstance extends DefaultGameInstance {
                 .formatted(GRAY)
                 .sendTo(PlayerLookup.all(gameHandle.getServer()));
 
-        OneInTheChamberRespawn.respawn(spawnPoints, player);
+        getWorld().playSound(null, player.getBlockPos(), SoundEvents.ENTITY_PLAYER_DEATH, SoundCategory.PLAYERS, 0.8f, 0.8f);
+
+        OneInTheChamberRespawn.respawn(spawnPoints, player, gameHandle);
     }
 
     private void giveCrossbowToPlayer(ServerPlayerEntity player) {
