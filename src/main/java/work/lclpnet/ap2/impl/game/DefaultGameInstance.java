@@ -437,7 +437,7 @@ public abstract class DefaultGameInstance implements MiniGameInstance, Participa
         TranslationService translations = gameHandle.getTranslations();
 
         if (participants.isParticipating(player)) {
-            translations.translateText("ap2.game.elimated", styled(player.getEntityName(), YELLOW))
+            translations.translateText("ap2.game.eliminated", styled(player.getEntityName(), YELLOW))
                     .formatted(GRAY)
                     .sendTo(PlayerLookup.all(gameHandle.getServer()));
 
