@@ -66,4 +66,9 @@ public class ScoreDataContainer implements DataContainer {
             frozen = true;
         }
     }
+
+    @Override
+    public void ensureTracked(ServerPlayerEntity player) {
+        addScore(player, 0);
+    }
 }

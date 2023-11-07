@@ -141,6 +141,26 @@ public abstract class DefaultGameInstance implements MiniGameInstance, Participa
         return this;
     }
 
+    @Override
+    public void participantRemoved(ServerPlayerEntity player) {
+        // in this game, this will only be called when a participant quits
+        var participants = gameHandle.getParticipants().getAsSet();
+
+        if (participants.size() > 1) return;
+
+        var winner = participants.stream().findAny();
+
+        DataContainer data = getData();
+
+        if (winner.isEmpty()) {
+            winner = data.getBestPlayer(gameHandle.getServer());
+        }
+
+        winner.ifPresent(data::ensureTracked);  // make sure the winner is tracked
+
+        win(winner.orElse(null));
+    }
+
     private void registerDefaultHooks() {
         HookRegistrar hooks = gameHandle.getHookRegistrar();
         WorldFacade worldFacade = gameHandle.getWorldFacade();
