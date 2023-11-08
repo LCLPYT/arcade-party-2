@@ -16,6 +16,8 @@ public interface DataContainer {
 
     void freeze();
 
+    void ensureTracked(ServerPlayerEntity player);
+
     default Optional<ServerPlayerEntity> getBestPlayer(MinecraftServer server) {
         return orderedEntries().findFirst()
                 .map(DataEntry::getPlayer)

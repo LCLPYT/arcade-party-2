@@ -10,8 +10,10 @@ import work.lclpnet.ap2.impl.game.PlayerUtil;
 import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.kibu.translate.TranslationService;
+import work.lclpnet.kibu.translate.bossbar.BossBarProvider;
 import work.lclpnet.lobby.game.api.WorldFacade;
 import work.lclpnet.lobby.game.impl.prot.MutableProtectionConfig;
+import work.lclpnet.mplugins.ext.Unloadable;
 
 import java.util.Set;
 import java.util.function.Consumer;
@@ -40,7 +42,11 @@ public interface MiniGameHandle {
 
     PlayerUtil getPlayerUtil();
 
+    BossBarProvider getBossBarProvider();
+
     void protect(Consumer<MutableProtectionConfig> action);
+
+    void closeWhenDone(Unloadable unloadable);
 
     void complete(Set<ServerPlayerEntity> winners);
 
