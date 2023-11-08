@@ -43,6 +43,7 @@ public class OneInTheChamberInstance extends DefaultGameInstance {
 
     private final ScoreDataContainer data = new ScoreDataContainer();
     private final ArrayList<BlockPos> spawnPoints = new ArrayList<>();
+    ArrayList<ArrayList<BlockPos>> grid = new ArrayList<>();
     public OneInTheChamberInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
     }
@@ -56,11 +57,10 @@ public class OneInTheChamberInstance extends DefaultGameInstance {
     protected void prepare() {
 
         final GameMap map = getMap();
-        final int gridLength = Objects.requireNonNull(map.getProperty("map_length"), "map size not configured");
-        final int gridWidth = Objects.requireNonNull(map.getProperty("map_width"), "map size not configured");
 
         loadSpawnPoints(map, spawnPoints);
-        drawGrid(map, gridLength, gridWidth);
+        OneInTheChamberRespawn.drawGrid(map, grid);
+        System.out.println(grid);
 
         HookRegistrar hooks = gameHandle.getHookRegistrar();
 
@@ -142,7 +142,7 @@ public class OneInTheChamberInstance extends DefaultGameInstance {
 
         getWorld().playSound(null, player.getBlockPos(), SoundEvents.ENTITY_PLAYER_DEATH, SoundCategory.PLAYERS, 0.8f, 0.8f);
 
-        OneInTheChamberRespawn.respawn(spawnPoints, player, gameHandle);
+        OneInTheChamberRespawn.respawn(spawnPoints, player, gameHandle, grid);
     }
 
     private void giveCrossbowToPlayer(ServerPlayerEntity player) {
@@ -192,33 +192,6 @@ public class OneInTheChamberInstance extends DefaultGameInstance {
         }
     }
 
-    public void drawGrid(GameMap map, int gridLength, int gridWidth) {
-
-        ArrayList<ArrayList<BlockPos>> grid = new ArrayList<>();
-
-        ArrayList<Integer> gridCoords = new ArrayList<>();
-        BlockPos center = MapUtil.readBlockPos(Objects.requireNonNull(map.getProperty("center"), "map center not configured"));
-        int y = center.getY();
-
-        gridCoords.add(center.getX() + gridLength / 6);
-        gridCoords.add(center.getZ() + gridWidth / 6);
-
-        int i = 0;
-
-        while (i <= 2) {
-            int j = 0;
-            while (j <= 2) {
-                ArrayList<BlockPos> section = new ArrayList<>();
-                section.add(0, new BlockPos((gridCoords.get(0) - j * (gridLength / 3)), y, (gridCoords.get(1)) - i * (gridWidth / 3)));
-                section.add(1, new BlockPos((gridCoords.get(0) + gridLength / 3 - j * (gridLength / 3)), y, (gridCoords.get(1) + gridWidth / 3) - i * (gridWidth / 3)));
-                grid.add(section);
-                j += 1;
-            }
-            i += 1;
-        }
-
-        System.out.println(grid);
-    }
     @Override
     public void participantRemoved(ServerPlayerEntity player) {
     }
