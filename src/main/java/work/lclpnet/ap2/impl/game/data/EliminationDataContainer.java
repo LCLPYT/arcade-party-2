@@ -55,4 +55,9 @@ public class EliminationDataContainer implements DataContainer {
             frozen = true;
         }
     }
+
+    @Override
+    public void ensureTracked(ServerPlayerEntity player) {
+        eliminated(player);
+    }
 }

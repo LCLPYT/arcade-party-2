@@ -125,24 +125,6 @@ public class MirrorHopInstance extends DefaultGameInstance {
         removeGate(map, world);
     }
 
-    @Override
-    public void participantRemoved(ServerPlayerEntity player) {
-        // in this game, this will only be called when a participant quits
-        var participants = gameHandle.getParticipants().getAsSet();
-
-        if (participants.size() > 1) return;
-
-        var winner = participants.stream().findAny();
-
-        if (winner.isEmpty()) {
-            winner = data.getBestPlayer(gameHandle.getServer());
-        }
-
-        winner.ifPresent(p -> data.addScore(p, 0));  // make sure the winner is tracked
-
-        win(winner.orElse(null));
-    }
-
     private void playerFell(ServerPlayerEntity player) {
         gameHandle.getWorldFacade().teleport(player);
 
