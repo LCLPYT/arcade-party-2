@@ -53,19 +53,20 @@ public class FineTuningInstance extends DefaultGameInstance {
         setup.teleportParticipants(noteBlockLocations);
 
         rooms = setup.getRooms();
+
+        tuningPhase = new TuningPhase(gameHandle, rooms, data, this::startStagePhase);
+        tuningPhase.init();
     }
 
     @Override
     protected void ready() {
-        tuningPhase = new TuningPhase(gameHandle, rooms, data, this::startStagePhase);
-        tuningPhase.init();
         tuningPhase.beginListen();
     }
 
     private void startStagePhase() {
         tuningPhase.unload();
 
-        StagePhase stagePhase = new StagePhase(gameHandle, data, tuningPhase.getMelodies(), getMap(), getWorld(),
+        StagePhase stagePhase = new StagePhase(gameHandle, data, tuningPhase.getRecords(), getMap(), getWorld(),
                 winner -> winner.ifPresentOrElse(this::win, this::winNobody));
 
         stagePhase.beginStage();

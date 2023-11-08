@@ -58,7 +58,7 @@ public class FakeNoteBlockPlayer {
         SoundHelper.playSound(player, instrument.getSound().value(), SoundCategory.RECORDS, x, y, z, 3f, pitch);
     }
 
-    public static void setMelody(Melody melody, int[] notes, Instrument[] instruments) {
+    public void setMelody(Melody melody) {
         Note[] melodyNotes = melody.notes();
         Instrument instrument = melody.instrument();
 

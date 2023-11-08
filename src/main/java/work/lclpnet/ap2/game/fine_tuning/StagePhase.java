@@ -7,16 +7,19 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
+import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.GameMode;
+import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
+import work.lclpnet.ap2.api.game.data.PlayerRef;
 import work.lclpnet.ap2.game.fine_tuning.melody.FakeNoteBlockPlayer;
 import work.lclpnet.ap2.game.fine_tuning.melody.Melody;
-import work.lclpnet.ap2.game.fine_tuning.melody.MelodyPlayer;
 import work.lclpnet.ap2.game.fine_tuning.melody.Note;
+import work.lclpnet.ap2.game.fine_tuning.melody.PlayMelodyTask;
 import work.lclpnet.ap2.impl.game.PlayerUtil;
 import work.lclpnet.ap2.impl.game.data.ScoreTimeDataContainer;
 import work.lclpnet.ap2.impl.map.MapUtil;
@@ -39,21 +42,22 @@ class StagePhase {
     private final MiniGameHandle gameHandle;
     private final ScoreTimeDataContainer data;
     private final Consumer<Optional<ServerPlayerEntity>> winnerAction;
-    private final Melody[] melodies;
+    private final MelodyRecords records;
     private final GameMap map;
     private final ServerWorld world;
     private BlockPos presenterPos;
+    private float presenterYaw;
     private BlockPos[] presenterNoteBlocks;
     private int[] notes;
     private Instrument[] instruments;
     private FakeNoteBlockPlayer nbPlayer;
     private int melodyNumber = 0;
 
-    public StagePhase(MiniGameHandle gameHandle, ScoreTimeDataContainer data, Melody[] melodies, GameMap map,
+    public StagePhase(MiniGameHandle gameHandle, ScoreTimeDataContainer data, MelodyRecords records, GameMap map,
                       ServerWorld world, Consumer<Optional<ServerPlayerEntity>> winnerAction) {
         this.gameHandle = gameHandle;
         this.data = data;
-        this.melodies = melodies;
+        this.records = records;
         this.map = map;
         this.world = world;
         this.winnerAction = winnerAction;
@@ -78,6 +82,7 @@ class StagePhase {
 
     private void readStageProps() {
         this.presenterPos = MapUtil.readBlockPos(map.requireProperty("presenter-pos"));
+        this.presenterYaw = MapUtil.readAngle(map.requireProperty("presenter-yaw"));
 
         JSONArray json = map.requireProperty("presenter-note-blocks");
         this.presenterNoteBlocks = FineTuningSetup.readNoteBlockLocations(json, gameHandle.getLogger());
@@ -97,14 +102,15 @@ class StagePhase {
 
         SoundHelper.playSound(server, SoundEvents.BLOCK_NOTE_BLOCK_PLING.value(), SoundCategory.RECORDS, 0.5f, 0f);
 
-        translations.translateText("game.ap2.fine_tuning.presentation").formatted(Formatting.AQUA)
+        translations.translateText("game.ap2.fine_tuning.presentation")
+                .formatted(Formatting.DARK_GREEN)
                 .acceptEach(PlayerLookup.all(server), (player, text)
                         -> Title.get(player).title(text, Text.empty(), 5, 30, 5));
 
-        gameHandle.getScheduler().timeout(this::presentNextSong, 40);
+        gameHandle.getScheduler().timeout(this::presentNextMelody, 40);
     }
 
-    private void presentNextSong() {
+    private void presentNextMelody() {
         MinecraftServer server = gameHandle.getServer();
         TranslationService translations = gameHandle.getTranslations();
 
@@ -120,12 +126,16 @@ class StagePhase {
     }
 
     private void playOriginalMelody() {
-        Melody melody = melodies[melodyNumber];
+        Melody melody = records.getMelody(melodyNumber);
+        playMelody(melody, this::beginBestMelody);
+    }
+
+    private void playMelody(Melody melody, Runnable onDone) {
         MinecraftServer server = gameHandle.getServer();
 
         setMelody(melody);
 
-        var melodyPlayer = new MelodyPlayer(note -> {
+        var melodyPlayer = new PlayMelodyTask(note -> {
             for (ServerPlayerEntity player : PlayerLookup.all(server)) {
                 nbPlayer.playAtPlayerPos(player, note);
             }
@@ -134,15 +144,94 @@ class StagePhase {
         TaskScheduler scheduler = gameHandle.getScheduler();
 
         scheduler.interval(melodyPlayer, 1)
-                .whenComplete(() -> scheduler.timeout(this::playBestMelody, Ticks.seconds(2)));
+                .whenComplete(() -> scheduler.timeout(onDone, Ticks.seconds(2)));
+    }
+
+    private void beginBestMelody() {
+        MinecraftServer server = gameHandle.getServer();
+        TranslationService translations = gameHandle.getTranslations();
+
+        SoundHelper.playSound(server, SoundEvents.BLOCK_NOTE_BLOCK_PLING.value(), SoundCategory.RECORDS, 0.5f, 0f);
+
+        translations.translateText("game.ap2.fine_tuning.best_was")
+                .formatted(Formatting.GREEN)
+                .acceptEach(PlayerLookup.all(server), (player, text)
+                        -> Title.get(player).title(Text.empty(), text, 5, 50, 0));
+
+        gameHandle.getScheduler().timeout(this::announceBest, 55);
+    }
+
+    private void announceBest() {
+        var bestMelody = records.getBestMelody(melodyNumber);
+        PlayerRef bestRef = bestMelody.playerRef();
+        MutableText name = Text.literal(bestRef.name()).formatted(Formatting.GREEN);
+
+        MinecraftServer server = gameHandle.getServer();
+        SoundHelper.playSound(server, SoundEvents.UI_LOOM_TAKE_RESULT, SoundCategory.NEUTRAL, 0.5f, 1f);
+
+        ServerPlayerEntity player = announcePlayerAndGet(server, name, bestRef);
+        WorldFacade worldFacade = gameHandle.getWorldFacade();
+
+        gameHandle.getScheduler().timeout(() -> playMelody(bestMelody.melody(), () -> {
+            if (player != null) worldFacade.teleport(player);
+            beginWorstMelody();
+        }), 40);
+    }
+
+    private void beginWorstMelody() {
+        MinecraftServer server = gameHandle.getServer();
+        TranslationService translations = gameHandle.getTranslations();
+
+        SoundHelper.playSound(server, SoundEvents.BLOCK_NOTE_BLOCK_PLING.value(), SoundCategory.RECORDS, 0.5f, 0f);
+
+        translations.translateText("game.ap2.fine_tuning.worst_was")
+                .formatted(Formatting.RED)
+                .acceptEach(PlayerLookup.all(server), (player, text)
+                        -> Title.get(player).title(Text.empty(), text, 5, 30, 5));
+
+        gameHandle.getScheduler().timeout(this::announceWorst, 40);
+    }
+
+    private void announceWorst() {
+        var worstMelody = records.getWorstMelody(melodyNumber);
+        PlayerRef worstRef = worstMelody.playerRef();
+        MutableText name = Text.literal(worstRef.name()).formatted(Formatting.RED);
+
+        MinecraftServer server = gameHandle.getServer();
+        SoundHelper.playSound(server, SoundEvents.UI_LOOM_TAKE_RESULT, SoundCategory.NEUTRAL, 0.5f, 0f);
+
+        ServerPlayerEntity player = announcePlayerAndGet(server, name, worstRef);
+        WorldFacade worldFacade = gameHandle.getWorldFacade();
+
+        gameHandle.getScheduler().timeout(() -> playMelody(worstMelody.melody(), () -> {
+            if (player != null) worldFacade.teleport(player);
+
+            if (++melodyNumber == FineTuningInstance.MELODY_COUNT) {
+                dispatchWin();
+            } else {
+                presentNextMelody();
+            }
+        }), 40);
+    }
+
+    @Nullable
+    private ServerPlayerEntity announcePlayerAndGet(MinecraftServer server, MutableText name, PlayerRef ref) {
+        for (ServerPlayerEntity player : PlayerLookup.all(server)) {
+            Title.get(player).title(name, Text.empty(), 5, 30, 5);
+        }
+
+        ServerPlayerEntity player = server.getPlayerManager().getPlayer(ref.uuid());
+
+        if (player != null) {
+            // TODO block movement
+            player.teleport(world, presenterPos.getX() + 0.5, presenterPos.getY(), presenterPos.getZ(), presenterYaw, 0);
+        }
+
+        return player;
     }
 
     private void setMelody(Melody melody) {
-        FakeNoteBlockPlayer.setMelody(melody, notes, instruments);
-    }
-
-    private void playBestMelody() {
-
+        nbPlayer.setMelody(melody);
     }
 
     private void dispatchWin() {

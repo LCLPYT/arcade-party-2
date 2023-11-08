@@ -1,6 +1,5 @@
 package work.lclpnet.ap2.game.fine_tuning;
 
-import net.minecraft.block.NoteBlock;
 import net.minecraft.block.enums.Instrument;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -10,9 +9,7 @@ import work.lclpnet.ap2.game.fine_tuning.melody.FakeNoteBlockPlayer;
 import work.lclpnet.ap2.game.fine_tuning.melody.Melody;
 import work.lclpnet.ap2.game.fine_tuning.melody.Note;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 
 class FineTuningRoom {
 
@@ -22,7 +19,6 @@ class FineTuningRoom {
     private final float yaw;
     private final int[] notes, tmpNotes;
     private final Instrument[] instruments;
-    private final List<Melody> melodies = new ArrayList<>(3);
     private final FakeNoteBlockPlayer nbPlayer;
     private boolean temporary = false;
 
@@ -43,7 +39,7 @@ class FineTuningRoom {
         this.tmpNotes = new int[noteBlocks.length];
         Arrays.fill(tmpNotes, 0);
 
-        this.instruments = new Instrument[noteBlocks.length];
+        instruments = new Instrument[noteBlocks.length];
         Arrays.fill(instruments, Instrument.HARP);
 
         this.spawn = pos.add(relSpawn);
@@ -113,13 +109,13 @@ class FineTuningRoom {
     }
 
     public void setMelody(Melody melody) {
-        FakeNoteBlockPlayer.setMelody(melody, notes, instruments);
+        nbPlayer.setMelody(melody);
     }
 
     public Melody getCurrentMelody() {
         restoreMelody();
 
-        Instrument instrument = world.getBlockState(noteBlocks[0]).get(NoteBlock.INSTRUMENT);
+        Instrument instrument = instruments[0];
         Note[] currentNotes = new Note[notes.length];
 
         var allNotes = Note.values();
@@ -129,10 +125,6 @@ class FineTuningRoom {
         }
 
         return new Melody(instrument, currentNotes);
-    }
-
-    public void saveMelody() {
-        melodies.add(getCurrentMelody());
     }
 
     public int calculateScore(Melody reference) {

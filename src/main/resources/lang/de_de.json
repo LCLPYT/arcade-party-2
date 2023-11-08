@@ -32,5 +32,7 @@
   "game.ap2.fine_tuning.repeat": "Now repeat it!",
   "game.ap2.fine_tuning.tune": "Stimme deine Notenblöcke",
   "game.ap2.fine_tuning.present_melody": "Melodie %s",
-  "game.ap2.fine_tuning.presentation": "Präsentation"
+  "game.ap2.fine_tuning.presentation": "Präsentation",
+  "game.ap2.fine_tuning.best_was": "am besten war...",
+  "game.ap2.fine_tuning.worst_was": "am schlechtesten war..."
 }
