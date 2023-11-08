@@ -24,7 +24,7 @@ import work.lclpnet.ap2.api.map.MapFacade;
 import work.lclpnet.ap2.game.fine_tuning.melody.*;
 import work.lclpnet.ap2.impl.game.BootstrapMapOptions;
 import work.lclpnet.ap2.impl.game.DefaultGameInstance;
-import work.lclpnet.ap2.impl.game.data.ScoreDataContainer;
+import work.lclpnet.ap2.impl.game.data.ScoreTimeDataContainer;
 import work.lclpnet.ap2.impl.util.SoundHelper;
 import work.lclpnet.ap2.impl.util.heads.PlayerHeadUtil;
 import work.lclpnet.ap2.impl.util.heads.PlayerHeads;
@@ -45,7 +45,7 @@ public class FineTuningInstance extends DefaultGameInstance {
 
     private static final int MELODY_COUNT = 3;
     public static final int REPLAY_COOLDOWN = Ticks.seconds(5);
-    private final ScoreDataContainer data = new ScoreDataContainer();
+    private final ScoreTimeDataContainer data = new ScoreTimeDataContainer();
     private final Random random = new Random();
     private final MelodyProvider melodyProvider = new SimpleMelodyProvider(random, new SimpleNotesProvider(random), 5);
     private final Set<UUID> replaying = new HashSet<>();
