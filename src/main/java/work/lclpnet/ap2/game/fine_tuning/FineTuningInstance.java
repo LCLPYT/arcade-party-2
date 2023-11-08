@@ -223,7 +223,6 @@ public class FineTuningInstance extends DefaultGameInstance {
                 if (player == null) return;
 
                 int score = room.calculateScore(melody);
-                System.out.println(player.getEntityName() + " scored " + score);
                 data.addScore(player, score);
                 room.saveMelody();
             });

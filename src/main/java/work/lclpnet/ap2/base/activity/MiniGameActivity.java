@@ -58,6 +58,8 @@ public class MiniGameActivity extends ComponentActivity {
         args.playerManager().bind(null);
 
         handle.getWorldBorderManager().resetWorldBorder();
+
+        super.stop();
     }
 
     private void registerHooks(HookRegistrar registrar) {
