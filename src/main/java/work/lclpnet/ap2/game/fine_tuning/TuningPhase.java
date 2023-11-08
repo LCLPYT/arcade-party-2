@@ -56,6 +56,7 @@ class TuningPhase implements Unloadable {
     private final Map<UUID, TaskHandle> replaying = new HashMap<>();
     private final LinkedHashSet<UUID> lastInteracted = new LinkedHashSet<>();
     private final HookContainer hooks = new HookContainer();
+    private final Melody[] melodies = new Melody[MELODY_COUNT];
     private boolean playersCanInteract = false;
     private Melody melody = null;
     private int melodyNumber = 0;
@@ -149,6 +150,7 @@ class TuningPhase implements Unloadable {
 
     private void playNextMelody() {
         melody = melodyProvider.nextMelody();
+        melodies[melodyNumber] = melody;
         rooms.values().forEach(room -> room.setMelody(melody));
 
         playMelody(this::listenAgain);
@@ -364,5 +366,9 @@ class TuningPhase implements Unloadable {
     @Override
     public void unload() {
         hooks.unload();
+    }
+
+    public Melody[] getMelodies() {
+        return melodies;
     }
 }
