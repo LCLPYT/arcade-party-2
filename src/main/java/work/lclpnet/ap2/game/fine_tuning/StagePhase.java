@@ -47,9 +47,6 @@ class StagePhase {
     private final ServerWorld world;
     private BlockPos presenterPos;
     private float presenterYaw;
-    private BlockPos[] presenterNoteBlocks;
-    private int[] notes;
-    private Instrument[] instruments;
     private FakeNoteBlockPlayer nbPlayer;
     private int melodyNumber = 0;
 
@@ -85,13 +82,13 @@ class StagePhase {
         this.presenterYaw = MapUtil.readAngle(map.requireProperty("presenter-yaw"));
 
         JSONArray json = map.requireProperty("presenter-note-blocks");
-        this.presenterNoteBlocks = FineTuningSetup.readNoteBlockLocations(json, gameHandle.getLogger());
+        BlockPos[] presenterNoteBlocks = FineTuningSetup.readNoteBlockLocations(json, gameHandle.getLogger());
 
-        this.notes = new int[presenterNoteBlocks.length];
-        Arrays.fill(this.notes, Note.FIS3.ordinal());
+        int[] notes = new int[presenterNoteBlocks.length];
+        Arrays.fill(notes, Note.FIS3.ordinal());
 
-        this.instruments = new Instrument[presenterNoteBlocks.length];
-        Arrays.fill(this.instruments, Instrument.HARP);
+        Instrument[] instruments = new Instrument[presenterNoteBlocks.length];
+        Arrays.fill(instruments, Instrument.HARP);
 
         this.nbPlayer = new FakeNoteBlockPlayer(world, presenterNoteBlocks, notes, instruments);
     }

@@ -17,10 +17,6 @@ public enum Note {
         this.distance = distance;
     }
 
-    public int getDistance() {
-        return distance;
-    }
-
     public Note transpose(int halfSteps) {
         var notes = values();
         int distance = this.distance;
