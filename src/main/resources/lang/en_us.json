@@ -34,5 +34,9 @@
   "game.ap2.fine_tuning.present_melody": "Melody %s",
   "game.ap2.fine_tuning.presentation": "Presentation",
   "game.ap2.fine_tuning.best_was": "best was...",
-  "game.ap2.fine_tuning.worst_was": "worst was..."
+  "game.ap2.fine_tuning.worst_was": "worst was...",
+  "game.ap2.fine_tuning.controls.title": "Controls",
+  "game.ap2.fine_tuning.controls.note_up": "Higher note",
+  "game.ap2.fine_tuning.controls.note_down": "Lower note",
+  "game.ap2.fine_tuning.controls.test": "Test note"
 }
