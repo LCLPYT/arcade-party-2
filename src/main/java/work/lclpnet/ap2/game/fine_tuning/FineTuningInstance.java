@@ -51,6 +51,7 @@ public class FineTuningInstance extends DefaultGameInstance {
     private final Random random = new Random();
     private final MelodyProvider melodyProvider = new SimpleMelodyProvider(random, new SimpleNotesProvider(random), 5);
     private final Map<UUID, TaskHandle> replaying = new HashMap<>();
+    private final LinkedHashSet<UUID> lastInteracted = new LinkedHashSet<>();
     private FineTuningSetup setup;
     private Map<UUID, FineTuningRoom> rooms;
     private boolean playersCanInteract = false;
@@ -148,30 +149,6 @@ public class FineTuningInstance extends DefaultGameInstance {
                 .whenComplete(() -> scheduler.timeout(onDone, 20));
     }
 
-    @Nullable
-    private TaskHandle replayMelody(ServerPlayerEntity player, Runnable onDone) {
-        UUID uuid = player.getUuid();
-        FineTuningRoom room = rooms.get(uuid);
-
-        if (room == null) return null;
-
-        room.setTemporaryMelody(melody);
-
-        TaskScheduler scheduler = gameHandle.getScheduler();
-
-        MelodyPlayer task = new MelodyPlayer(note -> {
-            if (!player.isAlive()) return;
-
-            room.playNote(player, note);
-        }, melody.notes().length);
-
-        return scheduler.interval(task, 1)
-                .whenComplete(() -> {
-                    room.restoreMelody();
-                    onDone.run();
-                });
-    }
-
     private void listenAgain() {
         MinecraftServer server = gameHandle.getServer();
         TranslationService translations = gameHandle.getTranslations();
@@ -220,15 +197,19 @@ public class FineTuningInstance extends DefaultGameInstance {
 
             PlayerManager playerManager = server.getPlayerManager();
 
-            // TODO loop by last modified order
-            rooms.forEach((uuid, room) -> {
+            for (UUID uuid : participantsInteractionOrder()) {
+                FineTuningRoom room = rooms.get(uuid);
+                if (room == null) continue;
+
                 ServerPlayerEntity player = playerManager.getPlayer(uuid);
-                if (player == null) return;
+                if (player == null) continue;
 
                 int score = room.calculateScore(melody);
                 data.addScore(player, score);
                 room.saveMelody();
-            });
+            }
+
+            lastInteracted.clear();
 
             if (++melodyNumber == MELODY_COUNT) {
                 beginStage();
@@ -291,6 +272,7 @@ public class FineTuningInstance extends DefaultGameInstance {
 
                 if (room != null) {
                     room.useNoteBlock(serverPlayer, pos);
+                    markInteraction(serverPlayer);
                 }
             } else {
                 onUseItem(player);
@@ -347,6 +329,30 @@ public class FineTuningInstance extends DefaultGameInstance {
         return true;
     }
 
+    @Nullable
+    private TaskHandle replayMelody(ServerPlayerEntity player, Runnable onDone) {
+        UUID uuid = player.getUuid();
+        FineTuningRoom room = rooms.get(uuid);
+
+        if (room == null) return null;
+
+        room.setTemporaryMelody(melody);
+
+        TaskScheduler scheduler = gameHandle.getScheduler();
+
+        MelodyPlayer task = new MelodyPlayer(note -> {
+            if (!player.isAlive()) return;
+
+            room.playNote(player, note);
+        }, melody.notes().length);
+
+        return scheduler.interval(task, 1)
+                .whenComplete(() -> {
+                    room.restoreMelody();
+                    onDone.run();
+                });
+    }
+
     private Melody baseMelody() {
         var notes = new Note[8];
         Arrays.fill(notes, Note.FIS3);
@@ -361,5 +367,27 @@ public class FineTuningInstance extends DefaultGameInstance {
     private static ActionResult cancel(ServerPlayerEntity player) {
         PlayerUtils.syncPlayerItems(player);
         return ActionResult.FAIL;
+    }
+
+    private void markInteraction(PlayerEntity player) {
+        UUID uuid = player.getUuid();
+        lastInteracted.remove(uuid);
+        lastInteracted.add(uuid);
+    }
+
+    private Iterable<UUID> participantsInteractionOrder() {
+        Participants participants = gameHandle.getParticipants();
+
+        var order = new LinkedHashSet<UUID>(participants.count());
+
+        order.addAll(lastInteracted);
+
+        // complement with players who didn't interact
+
+        for (ServerPlayerEntity player : participants) {
+            order.add(player.getUuid());
+        }
+
+        return order;
     }
 }

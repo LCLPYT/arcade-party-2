@@ -132,8 +132,6 @@ public class FineTuningRoom {
     public void restoreMelody() {
         if (!temporary) return;
 
-        System.out.println("RESTORED");
-
         System.arraycopy(tmpNotes, 0, notes, 0, tmpNotes.length);
         temporary = false;
     }
@@ -186,8 +184,6 @@ public class FineTuningRoom {
             int diff = Math.abs(reference.notes()[i].ordinal() - notes[i]);
             score += maxUnitScore - diff;
         }
-
-        System.out.println(score);
 
         return score;
     }
