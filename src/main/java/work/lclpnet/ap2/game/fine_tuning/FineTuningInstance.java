@@ -2,6 +2,7 @@ package work.lclpnet.ap2.game.fine_tuning;
 
 import net.minecraft.util.Identifier;
 import net.minecraft.world.GameMode;
+import org.json.JSONArray;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.map.MapFacade;
@@ -46,7 +47,9 @@ public class FineTuningInstance extends DefaultGameInstance {
 
     @Override
     protected void prepare() {
-        var noteBlockLocations = setup.readNoteBlockLocations();
+        JSONArray json = getMap().requireProperty("room-note-blocks");
+
+        var noteBlockLocations = FineTuningSetup.readNoteBlockLocations(json, gameHandle.getLogger());
         setup.teleportParticipants(noteBlockLocations);
 
         rooms = setup.getRooms();
@@ -62,7 +65,9 @@ public class FineTuningInstance extends DefaultGameInstance {
     private void startStagePhase() {
         tuningPhase.unload();
 
-        StagePhase stagePhase = new StagePhase(gameHandle, data, winner -> winner.ifPresentOrElse(this::win, this::winNobody));
+        StagePhase stagePhase = new StagePhase(gameHandle, data, tuningPhase.getMelodies(), getMap(), getWorld(),
+                winner -> winner.ifPresentOrElse(this::win, this::winNobody));
+
         stagePhase.beginStage();
     }
 }

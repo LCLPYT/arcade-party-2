@@ -93,16 +93,12 @@ class FineTuningSetup {
         }
     }
 
-    Vec3i[] readNoteBlockLocations() {
-        JSONArray noteBlockLocations = map.requireProperty("room-note-blocks");
-
+    static BlockPos[] readNoteBlockLocations(JSONArray noteBlockLocations, Logger logger) {
         if (noteBlockLocations.isEmpty()) {
             throw new IllegalStateException("There must be at least one note block configured");
         }
 
-        Logger logger = gameHandle.getLogger();
-
-        List<Vec3i> locations = new ArrayList<>();
+        List<BlockPos> locations = new ArrayList<>();
 
         for (Object obj : noteBlockLocations) {
             if (!(obj instanceof JSONArray tuple)) {
@@ -113,7 +109,7 @@ class FineTuningSetup {
             locations.add(MapUtil.readBlockPos(tuple));
         }
 
-        return locations.toArray(Vec3i[]::new);
+        return locations.toArray(BlockPos[]::new);
     }
 
     void teleportParticipants(Vec3i[] noteBlockLocations) {
