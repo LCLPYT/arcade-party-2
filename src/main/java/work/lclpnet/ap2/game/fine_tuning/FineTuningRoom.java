@@ -25,8 +25,9 @@ public class FineTuningRoom {
     private final BlockPos[] noteBlocks;
     private final BlockPos spawn;
     private final float yaw;
-    private final int[] notes;
+    private final int[] notes, tmpNotes;
     private final List<Melody> melodies = new ArrayList<>(3);
+    private boolean temporary = false;
 
     public FineTuningRoom(ServerWorld world, BlockPos pos, Vec3i[] relNoteBlock, Vec3i relSpawn, float yaw) {
         this.world = world;
@@ -41,6 +42,9 @@ public class FineTuningRoom {
 
         this.notes = new int[noteBlocks.length];
         Arrays.fill(notes, 0);
+
+        this.tmpNotes = new int[noteBlocks.length];
+        Arrays.fill(tmpNotes, 0);
 
         this.spawn = pos.add(relSpawn);
         this.yaw = yaw;
@@ -118,6 +122,22 @@ public class FineTuningRoom {
         return index;
     }
 
+    public void setTemporaryMelody(Melody melody) {
+        System.arraycopy(notes, 0, tmpNotes, 0, notes.length);
+        temporary = true;
+
+        setMelody(melody);
+    }
+
+    public void restoreMelody() {
+        if (!temporary) return;
+
+        System.out.println("RESTORED");
+
+        System.arraycopy(tmpNotes, 0, notes, 0, tmpNotes.length);
+        temporary = false;
+    }
+
     public void setMelody(Melody melody) {
         Note[] notes = melody.notes();
         BlockState state = Blocks.NOTE_BLOCK.getDefaultState()
@@ -138,6 +158,8 @@ public class FineTuningRoom {
     }
 
     public Melody getCurrentMelody() {
+        restoreMelody();
+
         Instrument instrument = world.getBlockState(noteBlocks[0]).get(NoteBlock.INSTRUMENT);
         Note[] currentNotes = new Note[notes.length];
 
@@ -155,6 +177,8 @@ public class FineTuningRoom {
     }
 
     public int calculateScore(Melody reference) {
+        restoreMelody();
+
         final int maxUnitScore = Note.values().length - 1;
         int score = 0;
 
@@ -162,6 +186,8 @@ public class FineTuningRoom {
             int diff = Math.abs(reference.notes()[i].ordinal() - notes[i]);
             score += maxUnitScore - diff;
         }
+
+        System.out.println(score);
 
         return score;
     }
