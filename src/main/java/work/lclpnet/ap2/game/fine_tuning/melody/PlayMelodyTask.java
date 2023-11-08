@@ -5,13 +5,13 @@ import work.lclpnet.kibu.scheduler.api.SchedulerAction;
 
 import java.util.function.IntConsumer;
 
-public class MelodyPlayer implements SchedulerAction {
+public class PlayMelodyTask implements SchedulerAction {
 
     private final IntConsumer notePlayer;
     private final int notes;
     private int time = 0;
 
-    public MelodyPlayer(IntConsumer notePlayer, int notes) {
+    public PlayMelodyTask(IntConsumer notePlayer, int notes) {
         this.notePlayer = notePlayer;
         this.notes = notes;
     }

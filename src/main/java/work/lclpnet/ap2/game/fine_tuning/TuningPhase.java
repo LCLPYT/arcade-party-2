@@ -56,7 +56,7 @@ class TuningPhase implements Unloadable {
     private final Map<UUID, TaskHandle> replaying = new HashMap<>();
     private final LinkedHashSet<UUID> lastInteracted = new LinkedHashSet<>();
     private final HookContainer hooks = new HookContainer();
-    private final Melody[] melodies = new Melody[MELODY_COUNT];
+    private final MelodyRecords records = new MelodyRecords();
     private boolean playersCanInteract = false;
     private Melody melody = null;
     private int melodyNumber = 0;
@@ -150,7 +150,7 @@ class TuningPhase implements Unloadable {
 
     private void playNextMelody() {
         melody = melodyProvider.nextMelody();
-        melodies[melodyNumber] = melody;
+        records.recordMelody(melody);
         rooms.values().forEach(room -> room.setMelody(melody));
 
         playMelody(this::listenAgain);
@@ -160,7 +160,7 @@ class TuningPhase implements Unloadable {
         Participants participants = gameHandle.getParticipants();
         TaskScheduler scheduler = gameHandle.getScheduler();
 
-        MelodyPlayer task = new MelodyPlayer(note -> {
+        PlayMelodyTask task = new PlayMelodyTask(note -> {
             for (ServerPlayerEntity player : participants) {
                 FineTuningRoom room = rooms.get(player.getUuid());
                 if (room == null) continue;
@@ -219,21 +219,7 @@ class TuningPhase implements Unloadable {
             takeReplayItems();
             stopReplay();
 
-            PlayerManager playerManager = server.getPlayerManager();
-
-            for (UUID uuid : participantsInteractionOrder()) {
-                FineTuningRoom room = rooms.get(uuid);
-                if (room == null) continue;
-
-                ServerPlayerEntity player = playerManager.getPlayer(uuid);
-                if (player == null) continue;
-
-                int score = room.calculateScore(melody);
-                data.addScore(player, score);
-                room.saveMelody();
-            }
-
-            lastInteracted.clear();
+            evaluateScores(server);
 
             if (++melodyNumber == MELODY_COUNT) {
                 onEnd.run();
@@ -241,6 +227,46 @@ class TuningPhase implements Unloadable {
                 beginListen();
             }
         });
+    }
+
+    private void evaluateScores(MinecraftServer server) {
+        PlayerManager playerManager = server.getPlayerManager();
+
+        int bestScore = Integer.MIN_VALUE, worstScore = Integer.MAX_VALUE;
+        ServerPlayerEntity best = null, worst = null;
+
+        for (UUID uuid : participantsInteractionOrder()) {
+            FineTuningRoom room = rooms.get(uuid);
+            if (room == null) continue;
+
+            ServerPlayerEntity player = playerManager.getPlayer(uuid);
+            if (player == null) continue;
+
+            int score = room.calculateScore(melody);
+
+            data.addScore(player, score);
+
+            if (score > bestScore) {
+                bestScore = score;
+                best = player;
+            }
+
+            if (score <= worstScore) {
+                worstScore = score;
+                worst = player;
+            }
+        }
+
+        lastInteracted.clear();
+
+        if (best == null) return;
+
+        var bestRoom = rooms.get(best.getUuid());
+        var worstRoom = rooms.get(worst.getUuid());
+
+        if (bestRoom == null || worstRoom == null) return;
+
+        records.record(best, bestRoom.getCurrentMelody(), worst, worstRoom.getCurrentMelody());
     }
 
     private void stopReplay() {
@@ -320,7 +346,7 @@ class TuningPhase implements Unloadable {
 
         TaskScheduler scheduler = gameHandle.getScheduler();
 
-        MelodyPlayer task = new MelodyPlayer(note -> {
+        PlayMelodyTask task = new PlayMelodyTask(note -> {
             if (!player.isAlive()) return;
 
             room.playNote(player, note);
@@ -368,7 +394,7 @@ class TuningPhase implements Unloadable {
         hooks.unload();
     }
 
-    public Melody[] getMelodies() {
-        return melodies;
+    public MelodyRecords getRecords() {
+        return records;
     }
 }
