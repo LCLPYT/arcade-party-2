@@ -22,7 +22,7 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
-public class FineTuningSetup {
+class FineTuningSetup {
 
     private final MiniGameHandle gameHandle;
     private final GameMap map;

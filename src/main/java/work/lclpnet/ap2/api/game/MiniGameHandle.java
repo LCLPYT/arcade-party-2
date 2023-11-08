@@ -13,6 +13,7 @@ import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.kibu.translate.bossbar.BossBarProvider;
 import work.lclpnet.lobby.game.api.WorldFacade;
 import work.lclpnet.lobby.game.impl.prot.MutableProtectionConfig;
+import work.lclpnet.mplugins.ext.Unloadable;
 
 import java.util.Set;
 import java.util.function.Consumer;
@@ -44,6 +45,8 @@ public interface MiniGameHandle {
     BossBarProvider getBossBarProvider();
 
     void protect(Consumer<MutableProtectionConfig> action);
+
+    void closeWhenDone(Unloadable unloadable);
 
     void complete(Set<ServerPlayerEntity> winners);
 

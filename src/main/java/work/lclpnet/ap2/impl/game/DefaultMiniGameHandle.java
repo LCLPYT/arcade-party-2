@@ -14,7 +14,7 @@ import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.map.MapFacade;
 import work.lclpnet.ap2.base.ApContainer;
 import work.lclpnet.ap2.base.activity.PreparationActivity;
-import work.lclpnet.kibu.plugin.hook.HookRegistrar;
+import work.lclpnet.kibu.plugin.hook.HookStack;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.kibu.translate.bossbar.BossBarProvider;
@@ -23,6 +23,9 @@ import work.lclpnet.lobby.game.impl.prot.BasicProtector;
 import work.lclpnet.lobby.game.impl.prot.MutableProtectionConfig;
 import work.lclpnet.mplugins.ext.Unloadable;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -35,6 +38,7 @@ public class DefaultMiniGameHandle implements MiniGameHandle, Unloadable, WorldB
     private MutableProtectionConfig protectionConfig;
     private volatile BasicProtector protector = null;
     private WorldBorderListener worldBorderListener = null;
+    private volatile List<Unloadable> closeWhenDone = null;
 
     public DefaultMiniGameHandle(GameInfo info, PreparationActivity.Args args, BossBarProvider bossBarProvider) {
         this.info = info;
@@ -75,7 +79,7 @@ public class DefaultMiniGameHandle implements MiniGameHandle, Unloadable, WorldB
     }
 
     @Override
-    public HookRegistrar getHookRegistrar() {
+    public HookStack getHookRegistrar() {
         return args.container().hookStack();
     }
 
@@ -128,6 +132,21 @@ public class DefaultMiniGameHandle implements MiniGameHandle, Unloadable, WorldB
     }
 
     @Override
+    public void closeWhenDone(Unloadable unloadable) {
+        Objects.requireNonNull(unloadable);
+
+        if (closeWhenDone == null) {
+            synchronized (this) {
+                if (closeWhenDone == null) {
+                    closeWhenDone = new ArrayList<>();
+                }
+            }
+        }
+
+        closeWhenDone.add(unloadable);
+    }
+
+    @Override
     public void complete(Set<ServerPlayerEntity> winners) {
         // TODO track winners
         getLogger().info("Winners: {}", winners.stream()
@@ -147,6 +166,11 @@ public class DefaultMiniGameHandle implements MiniGameHandle, Unloadable, WorldB
 
         if (protector != null) {
             protector.unload();
+        }
+
+        if (closeWhenDone != null) {
+            closeWhenDone.forEach(Unloadable::unload);
+            closeWhenDone.clear();
         }
     }
 

@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class FineTuningRoom {
+class FineTuningRoom {
 
     private final ServerWorld world;
     private final BlockPos[] noteBlocks;
