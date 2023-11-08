@@ -16,19 +16,7 @@ public abstract class EliminationGameInstance extends DefaultGameInstance {
     public void participantRemoved(ServerPlayerEntity player) {
         data.eliminated(player);
 
-        var participants = gameHandle.getParticipants().getAsSet();
-
-        if (participants.size() > 1) return;
-
-        var winner = participants.stream().findAny();
-
-        if (winner.isEmpty()) {
-            winner = data.getBestPlayer(gameHandle.getServer());
-        }
-
-        winner.ifPresent(data::eliminated);  // the winner also has to be tracked
-
-        win(winner.orElse(null));
+        super.participantRemoved(player);
     }
 
     @Override
