@@ -15,15 +15,16 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
-import net.minecraft.util.Formatting;
 import net.minecraft.util.Hand;
 import net.minecraft.util.TypedActionResult;
 import net.minecraft.util.math.BlockPos;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
+import work.lclpnet.ap2.base.ApConstants;
 import work.lclpnet.ap2.game.fine_tuning.melody.*;
 import work.lclpnet.ap2.impl.game.data.ScoreTimeDataContainer;
+import work.lclpnet.ap2.impl.util.BookUtil;
 import work.lclpnet.ap2.impl.util.SoundHelper;
 import work.lclpnet.ap2.impl.util.heads.PlayerHeadUtil;
 import work.lclpnet.ap2.impl.util.heads.PlayerHeads;
@@ -42,6 +43,7 @@ import work.lclpnet.mplugins.ext.Unloadable;
 
 import java.util.*;
 
+import static net.minecraft.util.Formatting.*;
 import static work.lclpnet.ap2.game.fine_tuning.FineTuningInstance.MELODY_COUNT;
 import static work.lclpnet.ap2.game.fine_tuning.FineTuningInstance.REPLAY_COOLDOWN;
 
@@ -141,7 +143,7 @@ class TuningPhase implements Unloadable {
 
         SoundHelper.playSound(server, SoundEvents.BLOCK_NOTE_BLOCK_PLING.value(), SoundCategory.RECORDS, 0.5f, 0f);
 
-        translations.translateText("game.ap2.fine_tuning.listen").formatted(Formatting.DARK_GREEN)
+        translations.translateText("game.ap2.fine_tuning.listen").formatted(DARK_GREEN)
                 .acceptEach(PlayerLookup.all(server), (player, text)
                         -> Title.get(player).title(Text.empty(), text, 5, 30, 5));
 
@@ -179,7 +181,7 @@ class TuningPhase implements Unloadable {
 
         SoundHelper.playSound(server, SoundEvents.ENTITY_CHICKEN_EGG, SoundCategory.RECORDS, 0.5f, 0f);
 
-        translations.translateText("game.ap2.fine_tuning.listen_again").formatted(Formatting.DARK_GREEN)
+        translations.translateText("game.ap2.fine_tuning.listen_again").formatted(DARK_GREEN)
                 .acceptEach(PlayerLookup.all(server), (player, text)
                         -> Title.get(player).title(Text.empty(), text, 5, 30, 5));
 
@@ -194,7 +196,7 @@ class TuningPhase implements Unloadable {
 
         var players = PlayerLookup.all(server);
 
-        translations.translateText("game.ap2.fine_tuning.repeat").formatted(Formatting.GREEN)
+        translations.translateText("game.ap2.fine_tuning.repeat").formatted(GREEN)
                 .acceptEach(players, (player, text)
                         -> Title.get(player).title(Text.empty(), text, 5, 30, 5));
 
@@ -281,7 +283,7 @@ class TuningPhase implements Unloadable {
         for (ServerPlayerEntity player : participants) {
             ItemStack stack = PlayerHeadUtil.getItem(PlayerHeads.GEODE_ARROW_FORWARD);
             stack.setCustomName(translations.translateText(player, "game.ap2.fine_tuning.replay")
-                    .styled(style -> style.withItalic(false).withFormatting(Formatting.YELLOW)));
+                    .styled(style -> style.withItalic(false).withFormatting(YELLOW)));
 
             player.getInventory().setStack(4, stack);
             player.getItemCooldownManager().set(stack.getItem(), REPLAY_COOLDOWN);
@@ -396,5 +398,34 @@ class TuningPhase implements Unloadable {
 
     public MelodyRecords getRecords() {
         return records;
+    }
+
+    public void giveBooks() {
+        TranslationService translations = gameHandle.getTranslations();
+        Participants participants = gameHandle.getParticipants();
+
+        for (ServerPlayerEntity player : participants) {
+            ItemStack stack = new ItemStack(Items.WRITTEN_BOOK);
+
+            String controls = translations.translate(player, "game.ap2.fine_tuning.controls.title");
+
+            BookUtil.builder(controls, ApConstants.PERSON_LCLP)
+                    .addPage(translations.translateText(player, "game.ap2.fine_tuning.controls.note_up")
+                                    .formatted(DARK_BLUE, BOLD).append(":\n"),
+                            Text.keybind("key.use").formatted(DARK_GREEN).append("\n\n"),
+                            translations.translateText(player, "game.ap2.fine_tuning.controls.note_down")
+                                    .formatted(DARK_BLUE, BOLD).append(":\n"),
+                            Text.keybind("key.attack").formatted(DARK_GREEN).append("\n\n"),
+                            translations.translateText(player, "game.ap2.fine_tuning.controls.test")
+                                    .formatted(DARK_BLUE, BOLD).append(":\n"),
+                            Text.keybind("key.sneak").formatted(DARK_GREEN).append(" + ")
+                                    .append(Text.keybind("key.use")))
+                    .toNbt(stack.getOrCreateNbt());
+
+            stack.setCustomName(Text.literal(controls)
+                    .styled(style -> style.withItalic(false).withFormatting(GREEN)));
+
+            player.getInventory().setStack(8, stack);
+        }
     }
 }

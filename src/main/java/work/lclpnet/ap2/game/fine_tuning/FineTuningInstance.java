@@ -55,6 +55,7 @@ public class FineTuningInstance extends DefaultGameInstance {
 
         tuningPhase = new TuningPhase(gameHandle, rooms, data, this::startStagePhase);
         tuningPhase.init();
+        tuningPhase.giveBooks();
     }
 
     @Override
