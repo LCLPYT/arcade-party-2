@@ -24,4 +24,8 @@ public interface Participants extends Iterable<ServerPlayerEntity> {
     default boolean isParticipating(ServerPlayerEntity player) {
         return getAsSet().contains(player);
     }
+
+    default int count() {
+        return getAsSet().size();
+    }
 }
