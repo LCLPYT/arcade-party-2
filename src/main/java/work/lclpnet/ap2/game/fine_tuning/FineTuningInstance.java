@@ -17,6 +17,7 @@ import net.minecraft.text.Text;
 import net.minecraft.util.*;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.GameMode;
+import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
@@ -33,6 +34,7 @@ import work.lclpnet.kibu.hook.player.PlayerInventoryHooks;
 import work.lclpnet.kibu.hook.util.PlayerUtils;
 import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 import work.lclpnet.kibu.scheduler.Ticks;
+import work.lclpnet.kibu.scheduler.api.TaskHandle;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.kibu.title.Title;
 import work.lclpnet.kibu.translate.TranslationService;
@@ -48,7 +50,7 @@ public class FineTuningInstance extends DefaultGameInstance {
     private final ScoreTimeDataContainer data = new ScoreTimeDataContainer();
     private final Random random = new Random();
     private final MelodyProvider melodyProvider = new SimpleMelodyProvider(random, new SimpleNotesProvider(random), 5);
-    private final Set<UUID> replaying = new HashSet<>();
+    private final Map<UUID, TaskHandle> replaying = new HashMap<>();
     private FineTuningSetup setup;
     private Map<UUID, FineTuningRoom> rooms;
     private boolean playersCanInteract = false;
@@ -146,14 +148,14 @@ public class FineTuningInstance extends DefaultGameInstance {
                 .whenComplete(() -> scheduler.timeout(onDone, 20));
     }
 
-    private void playMelodyTo(ServerPlayerEntity player, Runnable onDone) {
+    @Nullable
+    private TaskHandle replayMelody(ServerPlayerEntity player, Runnable onDone) {
         UUID uuid = player.getUuid();
         FineTuningRoom room = rooms.get(uuid);
 
-        if (room == null) return;
+        if (room == null) return null;
 
-        Melody before = room.getCurrentMelody();
-        room.setMelody(melody);
+        room.setTemporaryMelody(melody);
 
         TaskScheduler scheduler = gameHandle.getScheduler();
 
@@ -163,9 +165,9 @@ public class FineTuningInstance extends DefaultGameInstance {
             room.playNote(player, note);
         }, melody.notes().length);
 
-        scheduler.interval(task, 1)
+        return scheduler.interval(task, 1)
                 .whenComplete(() -> {
-                    room.setMelody(before);
+                    room.restoreMelody();
                     onDone.run();
                 });
     }
@@ -214,6 +216,7 @@ public class FineTuningInstance extends DefaultGameInstance {
         timer.whenDone(() -> {
             playersCanInteract = false;
             takeReplayItems();
+            stopReplay();
 
             PlayerManager playerManager = server.getPlayerManager();
 
@@ -233,6 +236,11 @@ public class FineTuningInstance extends DefaultGameInstance {
                 beginListen();
             }
         });
+    }
+
+    private void stopReplay() {
+        replaying.values().forEach(TaskHandle::cancel);
+        replaying.clear();
     }
 
     private void giveReplayItems() {
@@ -271,7 +279,7 @@ public class FineTuningInstance extends DefaultGameInstance {
                 return ActionResult.FAIL;
             }
 
-            if (!canInteract(player) || !participants.isParticipating(serverPlayer)) {
+            if (cannotInteract(player) || !participants.isParticipating(serverPlayer)) {
                 return cancel(serverPlayer);
             }
 
@@ -292,7 +300,7 @@ public class FineTuningInstance extends DefaultGameInstance {
         });
 
         hooks.registerHook(PlayerInteractionHooks.ATTACK_BLOCK, (player, world, hand, pos, direction) -> {
-            if (!canInteract(player) || !(player instanceof ServerPlayerEntity serverPlayer)
+            if (cannotInteract(player) || !(player instanceof ServerPlayerEntity serverPlayer)
                 || !participants.isParticipating(serverPlayer)) return ActionResult.FAIL;
 
             BlockState state = world.getBlockState(pos);
@@ -331,9 +339,10 @@ public class FineTuningInstance extends DefaultGameInstance {
         cooldownManager.set(Items.PLAYER_HEAD, REPLAY_COOLDOWN);
 
         UUID uuid = serverPlayer.getUuid();
-        replaying.add(uuid);
 
-        playMelodyTo(serverPlayer, () -> replaying.remove(uuid));
+        TaskHandle handle = replayMelody(serverPlayer, () -> replaying.remove(uuid));
+
+        replaying.put(uuid, handle);
 
         return true;
     }
@@ -345,8 +354,8 @@ public class FineTuningInstance extends DefaultGameInstance {
         return new Melody(melody.instrument(), notes);
     }
 
-    private boolean canInteract(PlayerEntity player) {
-        return playersCanInteract && !replaying.contains(player.getUuid());
+    private boolean cannotInteract(PlayerEntity player) {
+        return !playersCanInteract || replaying.containsKey(player.getUuid());
     }
 
     private static ActionResult cancel(ServerPlayerEntity player) {
