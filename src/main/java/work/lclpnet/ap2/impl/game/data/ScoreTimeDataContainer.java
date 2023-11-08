@@ -3,6 +3,7 @@ package work.lclpnet.ap2.impl.game.data;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.server.network.ServerPlayerEntity;
+import org.jetbrains.annotations.NotNull;
 import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.game.data.DataEntry;
 import work.lclpnet.ap2.api.game.data.PlayerRef;
@@ -66,8 +67,21 @@ public class ScoreTimeDataContainer implements DataContainer {
     @Override
     public DataEntry getEntry(ServerPlayerEntity player) {
         PlayerRef ref = PlayerRef.create(player);
+
+        return getEntry(ref);
+    }
+
+    @NotNull
+    private DataEntry getEntry(PlayerRef ref) {
         synchronized (this) {
-            return new ScoreDataEntry(ref, score.get(ref));
+            int score = this.score.getInt(ref);
+            int ranking = getTimedRanking0(ref);
+
+            if (ranking == 0) {
+                return new ScoreDataEntry(ref, score);
+            }
+
+            return new ScoreTimeDataEntry(ref, score, ranking);
         }
     }
 
@@ -100,33 +114,38 @@ public class ScoreTimeDataContainer implements DataContainer {
      */
     private int getTimedRanking(PlayerRef ref) {
         synchronized (this) {
-            int playerScore = score.getInt(ref);
-
-            var sameScore = score.object2IntEntrySet().stream()
-                    .filter(e -> e.getIntValue() == playerScore)
-                    .map(Map.Entry::getKey)
-                    .map(PlayerRef::uuid)
-                    .collect(Collectors.toSet());
-
-            int rank = sameScore.size();
-
-            if (rank == 1) {
-                // there is only one player who has this score
-                return 0;
-            }
-
-            UUID playerUuid = ref.uuid();
-
-            for (UUID uuid : lastModified) {
-                if (!sameScore.contains(uuid)) continue;
-
-                if (uuid.equals(playerUuid)) break;
-
-                rank++;
-            }
-
-            return rank;
+            return getTimedRanking0(ref);
         }
+    }
+
+    // requires external synchronization
+    private int getTimedRanking0(PlayerRef ref) {
+        int playerScore = score.getInt(ref);
+
+        var sameScore = score.object2IntEntrySet().stream()
+                .filter(e -> e.getIntValue() == playerScore)
+                .map(Map.Entry::getKey)
+                .map(PlayerRef::uuid)
+                .collect(Collectors.toSet());
+
+        if (sameScore.size() <= 1) {
+            // there is only one player who has this score
+            return 0;
+        }
+
+        int rank = 1;
+
+        UUID playerUuid = ref.uuid();
+
+        for (UUID uuid : lastModified) {
+            if (!sameScore.contains(uuid)) continue;
+
+            if (uuid.equals(playerUuid)) break;
+
+            rank++;
+        }
+
+        return rank;
     }
 
     @Override
