@@ -32,8 +32,8 @@ import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 import work.lclpnet.lobby.game.map.GameMap;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Objects;
-import java.util.Random;
 
 import static net.minecraft.util.Formatting.GRAY;
 import static net.minecraft.util.Formatting.YELLOW;
@@ -43,7 +43,8 @@ public class OneInTheChamberInstance extends DefaultGameInstance {
 
     private final ScoreDataContainer data = new ScoreDataContainer();
     private final ArrayList<BlockPos> spawnPoints = new ArrayList<>();
-    ArrayList<ArrayList<BlockPos>> grid = new ArrayList<>();
+    private final ArrayList<ArrayList<BlockPos>> grid = new ArrayList<>();
+    private final OneInTheChamberRespawn respawn = new OneInTheChamberRespawn();
     public OneInTheChamberInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
     }
@@ -59,7 +60,7 @@ public class OneInTheChamberInstance extends DefaultGameInstance {
         final GameMap map = getMap();
 
         loadSpawnPoints(map, spawnPoints);
-        OneInTheChamberRespawn.drawGrid(map, grid);
+        respawn.drawGrid(map, grid);
         System.out.println(grid);
 
         HookRegistrar hooks = gameHandle.getHookRegistrar();
@@ -116,15 +117,20 @@ public class OneInTheChamberInstance extends DefaultGameInstance {
     @Override
     protected void ready() {
 
-        Random rand = new Random();
+        ArrayList<BlockPos> initialSpawnPoints = new ArrayList<>(spawnPoints);
+
+        BlockPos randomSpawn;
 
         gameHandle.protect(config -> config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, damageSource)
                 -> damageSource.isOf(DamageTypes.ARROW) || damageSource.isOf(DamageTypes.OUTSIDE_BORDER) || damageSource.isOf(DamageTypes.PLAYER_ATTACK)));
 
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
 
-            int randomIndex = rand.nextInt(0, spawnPoints.size() - 1);
-            BlockPos randomSpawn = spawnPoints.get(randomIndex);
+            Collections.shuffle(initialSpawnPoints);
+
+            if(initialSpawnPoints.isEmpty()) break;
+
+            randomSpawn = initialSpawnPoints.remove(0);
 
             player.teleport(randomSpawn.getX() + 0.5,randomSpawn.getY(),randomSpawn.getZ() + 0.5);
 
@@ -142,7 +148,7 @@ public class OneInTheChamberInstance extends DefaultGameInstance {
 
         getWorld().playSound(null, player.getBlockPos(), SoundEvents.ENTITY_PLAYER_DEATH, SoundCategory.PLAYERS, 0.8f, 0.8f);
 
-        OneInTheChamberRespawn.respawn(spawnPoints, player, gameHandle, grid);
+        respawn.respawn(spawnPoints, player, gameHandle, grid);
     }
 
     private void giveCrossbowToPlayer(ServerPlayerEntity player) {
