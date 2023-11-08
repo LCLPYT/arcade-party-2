@@ -21,7 +21,6 @@ public class FineTuningInstance extends DefaultGameInstance {
     private final ScoreTimeDataContainer data = new ScoreTimeDataContainer();
     private FineTuningSetup setup;
     private TuningPhase tuningPhase;
-    private Map<UUID, FineTuningRoom> rooms;
 
     public FineTuningInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
@@ -52,7 +51,7 @@ public class FineTuningInstance extends DefaultGameInstance {
         var noteBlockLocations = FineTuningSetup.readNoteBlockLocations(json, gameHandle.getLogger());
         setup.teleportParticipants(noteBlockLocations);
 
-        rooms = setup.getRooms();
+        Map<UUID, FineTuningRoom> rooms = setup.getRooms();
 
         tuningPhase = new TuningPhase(gameHandle, rooms, data, this::startStagePhase);
         tuningPhase.init();
