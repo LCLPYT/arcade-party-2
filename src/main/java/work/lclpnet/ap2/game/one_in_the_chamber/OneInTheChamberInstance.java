@@ -41,6 +41,7 @@ import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
 public class OneInTheChamberInstance extends DefaultGameInstance {
 
+    int scoreLimit = 20;
     private final ScoreDataContainer data = new ScoreDataContainer();
     private final ArrayList<BlockPos> spawnPoints = new ArrayList<>();
     private final ArrayList<ArrayList<BlockPos>> grid = new ArrayList<>();
@@ -83,7 +84,13 @@ public class OneInTheChamberInstance extends DefaultGameInstance {
 
                 if (ownerEntity instanceof ServerPlayerEntity owner) {
                     giveCrossbowToPlayer(owner);
+
                     data.addScore(owner,1);
+
+                    if (data.getScore(owner) == scoreLimit) {
+                        win(owner);
+                    }
+
                     getWorld().playSound(null, owner.getBlockPos(), SoundEvents.ENTITY_ARROW_HIT_PLAYER, SoundCategory.PLAYERS, 0.8f, 0.8f);
                     projectile.discard();
                     return false;
@@ -106,6 +113,11 @@ public class OneInTheChamberInstance extends DefaultGameInstance {
                 giveSwordToPlayer(player);
 
                 data.addScore(attacker, 1);
+
+                if (data.getScore(attacker) == scoreLimit) {
+                    win(attacker);
+                }
+
                 giveCrossbowToPlayer(attacker);
                 getWorld().playSound(null, attacker.getBlockPos(), SoundEvents.ENTITY_ARROW_HIT_PLAYER, SoundCategory.PLAYERS, 0.8f, 0.8f);
                 return false;
