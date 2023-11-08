@@ -11,7 +11,7 @@
   "ap2.you_placed": "You placed %s",
   "ap2.you_placed_value": "You placed %s - %s",
   "ap2.go": "Go!",
-  "ap2.game.elimated": "%s was eliminated",
+  "ap2.game.eliminated": "%s was eliminated",
   "ap2.game.winner_is": "The winner is...",
   "ap2.score.points": "%s points",
   "ap2.score.points_timed": "%s points | reached #%s",

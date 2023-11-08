@@ -52,4 +52,13 @@ public class OrderedDataContainer implements DataContainer {
             frozen = true;
         }
     }
+
+    @Override
+    public void ensureTracked(ServerPlayerEntity player) {
+        PlayerRef ref = PlayerRef.create(player);
+
+        if (order.contains(ref)) return;
+
+        order.add(ref);
+    }
 }
