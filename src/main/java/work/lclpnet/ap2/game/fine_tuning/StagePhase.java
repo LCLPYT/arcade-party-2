@@ -24,6 +24,7 @@ import work.lclpnet.ap2.impl.game.PlayerUtil;
 import work.lclpnet.ap2.impl.game.data.ScoreTimeDataContainer;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.SoundHelper;
+import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.kibu.title.Title;
@@ -45,6 +46,7 @@ class StagePhase {
     private final MelodyRecords records;
     private final GameMap map;
     private final ServerWorld world;
+    private final SimpleMovementBlocker movementBlocker;
     private BlockPos presenterPos;
     private float presenterYaw;
     private FakeNoteBlockPlayer nbPlayer;
@@ -58,6 +60,8 @@ class StagePhase {
         this.map = map;
         this.world = world;
         this.winnerAction = winnerAction;
+        this.movementBlocker = new SimpleMovementBlocker(gameHandle.getScheduler());
+        this.movementBlocker.setUseStatusEffects(false);
     }
 
     public void beginStage() {
@@ -73,6 +77,8 @@ class StagePhase {
         }
 
         readStageProps();
+
+        movementBlocker.init(gameHandle.getHookRegistrar());
 
         gameHandle.getScheduler().timeout(this::beginSongPresentation, Ticks.seconds(5));
     }
@@ -170,7 +176,11 @@ class StagePhase {
         WorldFacade worldFacade = gameHandle.getWorldFacade();
 
         gameHandle.getScheduler().timeout(() -> playMelody(bestMelody.melody(), () -> {
-            if (player != null) worldFacade.teleport(player);
+            if (player != null) {
+                movementBlocker.enableMovement(player);
+                worldFacade.teleport(player);
+            }
+
             beginWorstMelody();
         }), 40);
     }
@@ -201,7 +211,10 @@ class StagePhase {
         WorldFacade worldFacade = gameHandle.getWorldFacade();
 
         gameHandle.getScheduler().timeout(() -> playMelody(worstMelody.melody(), () -> {
-            if (player != null) worldFacade.teleport(player);
+            if (player != null) {
+                movementBlocker.enableMovement(player);
+                worldFacade.teleport(player);
+            }
 
             if (++melodyNumber == FineTuningInstance.MELODY_COUNT) {
                 dispatchWin();
@@ -220,8 +233,8 @@ class StagePhase {
         ServerPlayerEntity player = server.getPlayerManager().getPlayer(ref.uuid());
 
         if (player != null) {
-            // TODO block movement
             player.teleport(world, presenterPos.getX() + 0.5, presenterPos.getY(), presenterPos.getZ(), presenterYaw, 0);
+            movementBlocker.disableMovement(player);
         }
 
         return player;

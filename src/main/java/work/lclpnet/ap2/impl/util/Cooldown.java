@@ -22,6 +22,7 @@ public class Cooldown {
 
     private final TaskScheduler scheduler;
     private final Map<UUID, TaskHandle> tasks = new HashMap<>();
+    private boolean initialized = false;
     @Nullable
     private Consumer<ServerPlayerEntity> onCooldownOver = null;
 
@@ -29,7 +30,11 @@ public class Cooldown {
         this.scheduler = scheduler;
     }
 
-    public void init(HookRegistrar registrar) {
+    public synchronized void init(HookRegistrar registrar) {
+        if (initialized) return;
+
+        initialized = true;
+
         registrar.registerHook(PlayerConnectionHooks.QUIT, this::resetCooldown);
     }
 
