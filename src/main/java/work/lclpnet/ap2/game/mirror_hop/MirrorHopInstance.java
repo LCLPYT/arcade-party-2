@@ -2,8 +2,11 @@ package work.lclpnet.ap2.game.mirror_hop;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.entity.effect.StatusEffectInstance;
+import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.particle.BlockStateParticleEffect;
 import net.minecraft.particle.ParticleTypes;
+import net.minecraft.scoreboard.Team;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -19,6 +22,7 @@ import work.lclpnet.ap2.impl.game.DefaultGameInstance;
 import work.lclpnet.ap2.impl.game.data.ScoreDataContainer;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.BlockBox;
+import work.lclpnet.ap2.impl.util.ScoreboardManager;
 import work.lclpnet.ap2.impl.util.collision.ChunkedCollisionDetector;
 import work.lclpnet.ap2.impl.util.collision.PlayerMovementObserver;
 import work.lclpnet.ap2.impl.util.effect.ApEffects;
@@ -57,6 +61,13 @@ public class MirrorHopInstance extends DefaultGameInstance {
         choices = MirrorHopChoices.from(getMap(), gameHandle.getLogger());
         choices.randomize(new Random());
         choices.addColliders(collisionDetector);
+
+        ScoreboardManager scoreboardManager = gameHandle.getScoreboardManager();
+
+        Team team = scoreboardManager.createTeam("team");
+        team.setShowFriendlyInvisibles(true);
+
+        scoreboardManager.joinTeam(gameHandle.getParticipants(), team);
     }
 
     @Override
@@ -126,7 +137,12 @@ public class MirrorHopInstance extends DefaultGameInstance {
 
     private void playerFell(ServerPlayerEntity player) {
         gameHandle.getWorldFacade().teleport(player);
-        movementBlocker.disableMovement(player, Ticks.seconds(4));
+
+        int ticks = Ticks.seconds(4);
+        movementBlocker.disableMovement(player, ticks);
+
+        StatusEffectInstance invisibility = new StatusEffectInstance(StatusEffects.INVISIBILITY, ticks, 1, false, false, false);
+        player.addStatusEffect(invisibility);
     }
 
     private static void removeGate(GameMap map, ServerWorld world) {

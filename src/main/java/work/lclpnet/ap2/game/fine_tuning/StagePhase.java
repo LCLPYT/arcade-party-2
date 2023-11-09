@@ -233,7 +233,7 @@ class StagePhase {
         ServerPlayerEntity player = server.getPlayerManager().getPlayer(ref.uuid());
 
         if (player != null) {
-            player.teleport(world, presenterPos.getX() + 0.5, presenterPos.getY(), presenterPos.getZ(), presenterYaw, 0);
+            player.teleport(world, presenterPos.getX() + 0.5, presenterPos.getY(), presenterPos.getZ() + 0.5, presenterYaw, 0);
             movementBlocker.disableMovement(player);
         }
 
