@@ -21,6 +21,7 @@ import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.impl.game.DefaultGameInstance;
 import work.lclpnet.ap2.impl.game.data.ScoreDataContainer;
 import work.lclpnet.ap2.impl.map.MapUtil;
+import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker;
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
 import work.lclpnet.kibu.hook.entity.ProjectileHooks;
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks;
@@ -46,8 +47,11 @@ public class OneInTheChamberInstance extends DefaultGameInstance {
     private final ArrayList<BlockPos> spawnPoints = new ArrayList<>();
     private final ArrayList<ArrayList<BlockPos>> grid = new ArrayList<>();
     private final OneInTheChamberRespawn respawn = new OneInTheChamberRespawn();
+    private final SimpleMovementBlocker movementBlocker;
     public OneInTheChamberInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
+        movementBlocker = new SimpleMovementBlocker(gameHandle.getScheduler());
+        movementBlocker.setUseStatusEffects(false);
     }
 
     @Override
@@ -58,11 +62,30 @@ public class OneInTheChamberInstance extends DefaultGameInstance {
     @Override
     protected void prepare() {
 
+        movementBlocker.init(gameHandle.getHookRegistrar());
+
         final GameMap map = getMap();
 
         loadSpawnPoints(map, spawnPoints);
+
+        ArrayList<BlockPos> initialSpawnPoints = new ArrayList<>(spawnPoints);
+
+        BlockPos randomSpawn;
+
+        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
+
+            Collections.shuffle(initialSpawnPoints);
+
+            if (initialSpawnPoints.isEmpty()) break;
+
+            randomSpawn = initialSpawnPoints.remove(0);
+
+            player.teleport(randomSpawn.getX() + 0.5, randomSpawn.getY(), randomSpawn.getZ() + 0.5);
+
+            movementBlocker.disableMovement(player);
+        }
+
         respawn.drawGrid(map, grid);
-        System.out.println(grid);
 
         HookRegistrar hooks = gameHandle.getHookRegistrar();
 
@@ -76,15 +99,22 @@ public class OneInTheChamberInstance extends DefaultGameInstance {
 
             if (source.getSource() instanceof ProjectileEntity projectile) {
 
-                killPlayer(player);
-                giveCrossbowToPlayer(player);
-                giveSwordToPlayer(player);
-
                 Entity ownerEntity = projectile.getOwner();
 
                 if (ownerEntity instanceof ServerPlayerEntity owner) {
-                    giveCrossbowToPlayer(owner);
 
+                    if (owner == player) {
+                        projectile.discard();
+                        giveCrossbowToPlayer(owner);
+                        return false;
+                    }
+
+                    killPlayer(player);
+                    giveCrossbowToPlayer(player);
+                    giveSwordToPlayer(player);
+
+                    giveCrossbowToPlayer(owner);
+                    owner.heal(20);
                     data.addScore(owner,1);
 
                     if (data.getScore(owner) == scoreLimit) {
@@ -113,6 +143,7 @@ public class OneInTheChamberInstance extends DefaultGameInstance {
                 giveSwordToPlayer(player);
 
                 data.addScore(attacker, 1);
+                attacker.heal(20);
 
                 if (data.getScore(attacker) == scoreLimit) {
                     win(attacker);
@@ -129,25 +160,13 @@ public class OneInTheChamberInstance extends DefaultGameInstance {
     @Override
     protected void ready() {
 
-        ArrayList<BlockPos> initialSpawnPoints = new ArrayList<>(spawnPoints);
-
-        BlockPos randomSpawn;
-
         gameHandle.protect(config -> config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, damageSource)
                 -> damageSource.isOf(DamageTypes.ARROW) || damageSource.isOf(DamageTypes.OUTSIDE_BORDER) || damageSource.isOf(DamageTypes.PLAYER_ATTACK)));
 
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
-
-            Collections.shuffle(initialSpawnPoints);
-
-            if(initialSpawnPoints.isEmpty()) break;
-
-            randomSpawn = initialSpawnPoints.remove(0);
-
-            player.teleport(randomSpawn.getX() + 0.5,randomSpawn.getY(),randomSpawn.getZ() + 0.5);
-
             giveCrossbowToPlayer(player);
             giveSwordToPlayer(player);
+            movementBlocker.enableMovement(player);
         }
     }
 
