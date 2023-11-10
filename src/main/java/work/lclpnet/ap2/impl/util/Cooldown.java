@@ -88,14 +88,14 @@ public class Cooldown {
     }
 
     private void onCooldownOver(ServerPlayerEntity player) {
-        player.sendMessage(Text.empty(), true);
-        player.playSound(SoundEvents.BLOCK_NOTE_BLOCK_PLING.value(), SoundCategory.PLAYERS, 0.2f, 2);
-
         resetCooldown(player);
 
         if (onCooldownOver != null) {
             onCooldownOver.accept(player);
         }
+
+        player.sendMessage(Text.empty(), true);
+        player.playSound(SoundEvents.BLOCK_NOTE_BLOCK_PLING.value(), SoundCategory.PLAYERS, 0.2f, 2);
     }
 
     public void setOnCooldownOver(@Nullable Consumer<ServerPlayerEntity> onCooldownOver) {

@@ -5,6 +5,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Iterator;
 import java.util.Set;
+import java.util.stream.Stream;
 
 public interface Participants extends Iterable<ServerPlayerEntity> {
 
@@ -27,5 +28,9 @@ public interface Participants extends Iterable<ServerPlayerEntity> {
 
     default int count() {
         return getAsSet().size();
+    }
+
+    default Stream<ServerPlayerEntity> stream() {
+        return getAsSet().stream();
     }
 }
