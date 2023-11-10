@@ -38,5 +38,7 @@
   "game.ap2.fine_tuning.controls.title": "Steuerung",
   "game.ap2.fine_tuning.controls.note_up": "Note erhöhen",
   "game.ap2.fine_tuning.controls.note_down": "Note verringern",
-  "game.ap2.fine_tuning.controls.test": "Note testen"
+  "game.ap2.fine_tuning.controls.test": "Note testen",
+  "game.ap2.anvil_fall": "Ambossfall",
+  "game.ap2.anvil_fall.description": "Weiche den herunterfallenden Ambössen aus.\nWenn du getroffen wirst, bist du raus!"
 }
