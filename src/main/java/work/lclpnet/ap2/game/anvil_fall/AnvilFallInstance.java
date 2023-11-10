@@ -11,18 +11,20 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.*;
 import net.minecraft.world.GameRules;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.impl.game.EliminationGameInstance;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.BlockBox;
+import work.lclpnet.kibu.access.VelocityModifier;
 import work.lclpnet.kibu.access.entity.FallingBlockAccess;
+import work.lclpnet.kibu.hook.player.PlayerMoveCallback;
+import work.lclpnet.kibu.hook.util.PositionRotation;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.TaskHandle;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
+import work.lclpnet.lobby.game.map.GameMap;
 
 import java.util.Random;
 
@@ -37,6 +39,8 @@ public class AnvilFallInstance extends EliminationGameInstance {
     private final Random random = new Random();
     private AnvilFallSetup setup;
     private TaskHandle spawnerTask;
+    private BlockBox playArea = null;
+    private Vec3d center;
 
     public AnvilFallInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
@@ -62,6 +66,12 @@ public class AnvilFallInstance extends EliminationGameInstance {
         }));
 
         startAnvilSpawning();
+
+        gameHandle.getHookRegistrar().registerHook(PlayerMoveCallback.HOOK, this::onPlayerMove);
+
+        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
+            repelPlayer(player, player.getPos());
+        }
     }
 
     @Override
@@ -89,9 +99,15 @@ public class AnvilFallInstance extends EliminationGameInstance {
 
     private void scanWorld() {
         ServerWorld world = getWorld();
-        BlockBox box = MapUtil.readBox(getMap().requireProperty("anvil-box"));
+        GameMap map = getMap();
+        BlockBox box = MapUtil.readBox(map.requireProperty("anvil-box"));
 
         setup = AnvilFallSetup.scanWorld(world, box, random);
+
+        playArea = MapUtil.readBox(map.requireProperty("play-area"));
+
+        BlockPos spawn = MapUtil.readBlockPos(map.requireProperty("spawn"));
+        center = new Vec3d(spawn.getX() + 0.5, 0, spawn.getZ() + 0.5);
     }
 
     private void startAnvilSpawning() {
@@ -165,5 +181,23 @@ public class AnvilFallInstance extends EliminationGameInstance {
         FallingBlockAccess.setBlockState(anvil, state);
 
         world.spawnEntity(anvil);
+    }
+
+    private boolean onPlayerMove(ServerPlayerEntity player, PositionRotation from, PositionRotation to) {
+        repelPlayer(player, to);
+
+        return false;
+    }
+
+    private void repelPlayer(ServerPlayerEntity player, Position to) {
+        if (playArea == null || !gameHandle.getParticipants().isParticipating(player)) return;
+
+        Box boundingBox = player.getBoundingBox();
+
+        if (playArea.contains(boundingBox.shrink(1e-9, 0, 1e-9))) return;
+
+        Vec3d vec = new Vec3d(center.getX() - to.getX(), 0.5, center.getZ() - to.getZ());
+        VelocityModifier.setVelocity(player, vec.normalize().multiply(0.5));
+        player.playSound(SoundEvents.ENTITY_ALLAY_HURT, SoundCategory.PLAYERS, 0.5f, 2f);
     }
 }
