@@ -20,6 +20,7 @@ import work.lclpnet.ap2.impl.game.EliminationGameInstance;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.kibu.access.entity.FallingBlockAccess;
+import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.TaskHandle;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 
@@ -27,6 +28,9 @@ import java.util.Random;
 
 public class AnvilFallInstance extends EliminationGameInstance {
 
+    public static final double DIRECT_ANVIL_CHANCE = 0.02;
+    public static final int SPREAD_RADIUS = 8;
+    public static final int ANVIL_INCREASE_INTERVAL = Ticks.seconds(8);
     private final Direction[] directions = new Direction[] {Direction.NORTH, Direction.WEST, Direction.SOUTH, Direction.WEST};
     private final Random random = new Random();
     private AnvilFallSetup setup;
@@ -90,26 +94,18 @@ public class AnvilFallInstance extends EliminationGameInstance {
 
     private void startAnvilSpawning() {
         spawnerTask = gameHandle.getScheduler().interval(new Runnable() {
-            int anvilDelay = 4;
-            int nextAnvil = anvilDelay;
+            int anvilAmount = 1;
             int timer = 0;
 
             @Override
             public void run() {
                 int time = ++timer;
 
-                if (time % 140 == 0) {
-                    anvilDelay--;
+                if (time % ANVIL_INCREASE_INTERVAL == 0) {
+                    anvilAmount++;
                 }
 
-                if (nextAnvil > 0) {
-                    nextAnvil--;
-                    return;
-                }
-
-                nextAnvil = anvilDelay;
-
-                final int count = anvilDelay >= 0 ? 1 : Math.min(Math.abs(anvilDelay), 256);
+                final int count = Math.min(anvilAmount, 256);
 
                 for (int i = 0; i < count; i++) {
                     spawnRandomAnvil();
@@ -119,10 +115,23 @@ public class AnvilFallInstance extends EliminationGameInstance {
     }
 
     private void spawnRandomAnvil() {
-        ServerWorld world = getWorld();
-        BlockPos pos = setup.getRandomPosition();
+        if (isGameOver()) return;
 
-        BlockState state = Blocks.ANVIL.getDefaultState().with(AnvilBlock.FACING, directions[random.nextInt(directions.length)]);
+        ServerWorld world = getWorld();
+
+        // bias position towards a uniformly random chosen participant
+        BlockPos pos = gameHandle.getParticipants().getRandomParticipant(random)
+                .map(player -> {
+                    if (random.nextFloat() < DIRECT_ANVIL_CHANCE) {
+                        return setup.getRandomPositionAt(player.getBlockX(), player.getBlockZ());
+                    }
+
+                    return setup.getRandomPosition(player.getBlockX(), player.getBlockZ(), SPREAD_RADIUS);
+                })
+                .orElseGet(setup::getRandomPosition);
+
+        Direction randomDirection = directions[random.nextInt(directions.length)];
+        BlockState state = Blocks.ANVIL.getDefaultState().with(AnvilBlock.FACING, randomDirection);
 
         FallingBlockEntity anvil = new FallingBlockEntity(EntityType.FALLING_BLOCK, world);
         anvil.setPos(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
