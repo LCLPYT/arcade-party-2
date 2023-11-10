@@ -38,5 +38,7 @@
   "game.ap2.fine_tuning.controls.title": "Controls",
   "game.ap2.fine_tuning.controls.note_up": "Higher note",
   "game.ap2.fine_tuning.controls.note_down": "Lower note",
-  "game.ap2.fine_tuning.controls.test": "Test note"
+  "game.ap2.fine_tuning.controls.test": "Test note",
+  "game.ap2.anvil_fall": "Anvil Fall",
+  "game.ap2.anvil_fall.description": "Dodge the anvils falling from the sky.\nBe the last one remaining!"
 }

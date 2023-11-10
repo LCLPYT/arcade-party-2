@@ -2,6 +2,7 @@ package work.lclpnet.ap2.impl.util;
 
 import it.unimi.dsi.fastutil.Pair;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Position;
 import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.NotNull;
@@ -43,9 +44,7 @@ public class BlockBox implements Pair<BlockPos, BlockPos>, Iterable<BlockPos>, C
     public boolean collidesWith(Position pos) {
         double x = pos.getX(), y = pos.getY(), z = pos.getZ();
 
-        return x >= min.getX() && x < max.getX() + 1
-               && y >= min.getY() && y < max.getY() + 1
-               && z >= min.getZ() && z < max.getZ() + 1;
+        return contains(x, y, z);
     }
 
     @Override
@@ -77,5 +76,15 @@ public class BlockBox implements Pair<BlockPos, BlockPos>, Iterable<BlockPos>, C
                 (min.getY() + max.getY()) * 0.5d,
                 (min.getZ() + max.getZ()) * 0.5d
         );
+    }
+
+    public boolean contains(double x, double y, double z) {
+        return x >= min.getX() && x < max.getX() + 1
+               && y >= min.getY() && y < max.getY() + 1
+               && z >= min.getZ() && z < max.getZ() + 1;
+    }
+
+    public boolean contains(Box box) {
+        return contains(box.minX, box.minY, box.minZ) && contains(box.maxX, box.maxY, box.maxZ);
     }
 }
