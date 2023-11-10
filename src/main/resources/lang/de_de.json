@@ -38,5 +38,7 @@
   "game.ap2.fine_tuning.controls.title": "Steuerung",
   "game.ap2.fine_tuning.controls.note_up": "Note erhöhen",
   "game.ap2.fine_tuning.controls.note_down": "Note verringern",
-  "game.ap2.fine_tuning.controls.test": "Note testen"
+  "game.ap2.fine_tuning.controls.test": "Note testen",
+  "game.ap2.one_in_the_chamber": "Einen im Lauf",
+  "game.ap2.one_in_the_chamber.description": "Deine Armbrust tötet sofort, aber du hast nur einen Schuss! Du erhältst einen neuen Schuss, wenn du jemanden tötest. Es gewinnt der Spieler, der zuerst %s Kills erreicht!"
 }

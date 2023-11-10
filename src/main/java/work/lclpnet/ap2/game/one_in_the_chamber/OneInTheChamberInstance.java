@@ -14,7 +14,7 @@ import net.minecraft.registry.Registries;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.Formatting;
+import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.GameMode;
 import net.minecraft.world.GameRules;
@@ -38,13 +38,12 @@ import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 
 import java.util.Random;
 
-import static net.minecraft.util.Formatting.GRAY;
-import static net.minecraft.util.Formatting.YELLOW;
+import static net.minecraft.util.Formatting.*;
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
 public class OneInTheChamberInstance extends DefaultGameInstance {
 
-    private static final int SCORE_LIMIT = 20;
+    static final int SCORE_LIMIT = 20;
     static final double RESPAWN_SPACING = 20;
     private final ScoreDataContainer data = new ScoreDataContainer();
     private final Random random = new Random();
@@ -101,6 +100,7 @@ public class OneInTheChamberInstance extends DefaultGameInstance {
             BlockPos randomSpawn = respawn.getRandomSpawn();
 
             player.teleport(randomSpawn.getX() + 0.5, randomSpawn.getY(), randomSpawn.getZ() + 0.5);
+            giveCrossbowToPlayer(player);
 
             player.changeGameMode(gameHandle.getPlayerUtil().getDefaultGameMode());
         });
@@ -148,7 +148,7 @@ public class OneInTheChamberInstance extends DefaultGameInstance {
         nbt.put("ChargedProjectiles", nbtList);
 
         stack.setCustomName(TextUtil.getVanillaName(stack)
-                .styled(style -> style.withItalic(false).withFormatting(Formatting.GOLD)));
+                .styled(style -> style.withItalic(false).withFormatting(GOLD)));
 
         ItemStackUtil.setUnbreakable(stack, true);
 
@@ -160,7 +160,7 @@ public class OneInTheChamberInstance extends DefaultGameInstance {
         ItemStack stack = new ItemStack(Items.IRON_SWORD);
 
         stack.setCustomName(TextUtil.getVanillaName(stack)
-                .styled(style -> style.withItalic(false).withFormatting(Formatting.GOLD)));
+                .styled(style -> style.withItalic(false).withFormatting(GOLD)));
 
         ItemStackUtil.setUnbreakable(stack, true);
 
@@ -209,6 +209,11 @@ public class OneInTheChamberInstance extends DefaultGameInstance {
     }
 
     private void onKillGained(ServerPlayerEntity killer) {
+        killer.sendMessage(Text.literal("+1 ").append(TextUtil.getVanillaName(Items.ARROW))
+                .formatted(GOLD), true);
+
+        killer.playSound(SoundEvents.ITEM_CROSSBOW_QUICK_CHARGE_3, SoundCategory.PLAYERS, 1f, 1f);
+
         giveCrossbowToPlayer(killer);
         killer.setHealth(20);
         data.addScore(killer, 1);

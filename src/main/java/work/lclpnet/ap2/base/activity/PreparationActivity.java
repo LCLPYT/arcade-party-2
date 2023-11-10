@@ -240,7 +240,10 @@ public class PreparationActivity extends ComponentActivity implements Skippable 
             var gameTitle = translationService.translateText(player, miniGame.getTitleKey()).formatted(AQUA, BOLD);
             player.sendMessage(gameTitle);
 
-            var description = translationService.translateText(player, miniGame.getDescriptionKey()).formatted(GREEN);
+            String descriptionKey = miniGame.getDescriptionKey();
+            Object[] descArgs = miniGame.getDescriptionArguments();
+
+            var description = translationService.translateText(player, descriptionKey, descArgs).formatted(GREEN);
 
             player.sendMessage(description);
 

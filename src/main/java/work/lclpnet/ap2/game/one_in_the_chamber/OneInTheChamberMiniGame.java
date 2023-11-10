@@ -45,4 +45,9 @@ public class OneInTheChamberMiniGame implements MiniGame {
     public MiniGameInstance createInstance(MiniGameHandle gameHandle) {
         return new OneInTheChamberInstance(gameHandle);
     }
+
+    @Override
+    public Object[] getDescriptionArguments() {
+        return new Object[] {OneInTheChamberInstance.SCORE_LIMIT};
+    }
 }
