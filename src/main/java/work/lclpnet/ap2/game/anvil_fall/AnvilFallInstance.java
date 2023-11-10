@@ -30,7 +30,9 @@ public class AnvilFallInstance extends EliminationGameInstance {
 
     public static final double DIRECT_ANVIL_CHANCE = 0.02;
     public static final int SPREAD_RADIUS = 8;
-    public static final int ANVIL_INCREASE_INTERVAL = Ticks.seconds(8);
+    public static final int INITIAL_DELAY = 5;
+    public static final int INITIAL_DELAY_DECREASE_INTERVAL = Ticks.seconds(2);
+    public static final int INCREASE_INTERVAL = Ticks.seconds(8);
     private final Direction[] directions = new Direction[] {Direction.NORTH, Direction.WEST, Direction.SOUTH, Direction.WEST};
     private final Random random = new Random();
     private AnvilFallSetup setup;
@@ -94,6 +96,8 @@ public class AnvilFallInstance extends EliminationGameInstance {
 
     private void startAnvilSpawning() {
         spawnerTask = gameHandle.getScheduler().interval(new Runnable() {
+            int delay = INITIAL_DELAY;
+            int cooldown = 0;
             int anvilAmount = 1;
             int timer = 0;
 
@@ -101,7 +105,25 @@ public class AnvilFallInstance extends EliminationGameInstance {
             public void run() {
                 int time = ++timer;
 
-                if (time % ANVIL_INCREASE_INTERVAL == 0) {
+                if (delay > 0) {
+                    if (time % INITIAL_DELAY_DECREASE_INTERVAL == 0) {
+                        if (--delay == 0) {
+                            timer = 0;
+                        }
+                    }
+
+                    if (cooldown > 0) {
+                        cooldown--;
+                        return;
+                    }
+
+                    cooldown = delay;
+                    spawnRandomAnvil();
+
+                    return;
+                }
+
+                if (time % INCREASE_INTERVAL == 0) {
                     anvilAmount++;
                 }
 
