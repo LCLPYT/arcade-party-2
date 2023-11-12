@@ -6,6 +6,7 @@ import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.particle.BlockStateParticleEffect;
 import net.minecraft.particle.ParticleTypes;
+import net.minecraft.scoreboard.Team;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -21,10 +22,12 @@ import work.lclpnet.ap2.impl.game.DefaultGameInstance;
 import work.lclpnet.ap2.impl.game.data.ScoreDataContainer;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.BlockBox;
-import work.lclpnet.ap2.impl.util.Cooldown;
+import work.lclpnet.ap2.impl.util.ScoreboardManager;
 import work.lclpnet.ap2.impl.util.collision.ChunkedCollisionDetector;
 import work.lclpnet.ap2.impl.util.collision.PlayerMovementObserver;
 import work.lclpnet.ap2.impl.util.effect.ApEffects;
+import work.lclpnet.ap2.impl.util.movement.CooldownMovementBlocker;
+import work.lclpnet.ap2.impl.util.movement.MovementBlocker;
 import work.lclpnet.kibu.hook.player.PlayerMoveCallback;
 import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 import work.lclpnet.kibu.scheduler.Ticks;
@@ -37,13 +40,13 @@ public class MirrorHopInstance extends DefaultGameInstance {
     private final ScoreDataContainer data = new ScoreDataContainer();
     private final CollisionDetector collisionDetector = new ChunkedCollisionDetector();
     private final PlayerMovementObserver movementObserver = new PlayerMovementObserver(collisionDetector);
-    private final Cooldown movementCooldown;
+    private final MovementBlocker movementBlocker;
     private MirrorHopChoices choices = null;
     private int progress = -1;
 
     public MirrorHopInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
-        movementCooldown = new Cooldown(gameHandle.getScheduler());
+        movementBlocker = new CooldownMovementBlocker(gameHandle.getScheduler());
     }
 
     @Override
@@ -58,6 +61,13 @@ public class MirrorHopInstance extends DefaultGameInstance {
         choices = MirrorHopChoices.from(getMap(), gameHandle.getLogger());
         choices.randomize(new Random());
         choices.addColliders(collisionDetector);
+
+        ScoreboardManager scoreboardManager = gameHandle.getScoreboardManager();
+
+        Team team = scoreboardManager.createTeam("team");
+        team.setShowFriendlyInvisibles(true);
+
+        scoreboardManager.joinTeam(gameHandle.getParticipants(), team);
     }
 
     @Override
@@ -106,6 +116,8 @@ public class MirrorHopInstance extends DefaultGameInstance {
             solidifyPlatform(platform);
         });
 
+        movementBlocker.init(hooks);
+
         Number criticalHeight = getMap().getProperty("critical-height");
 
         if (criticalHeight != null) {
@@ -114,11 +126,9 @@ public class MirrorHopInstance extends DefaultGameInstance {
 
                 if (!(to.getY() >= criticalHeight.floatValue())) {
                     playerFell(player);
-
-                    return false;
                 }
 
-                return movementCooldown.isOnCooldown(player) && from.isDifferentPosition(to) && from.squaredDistanceTo(to) <= 1;
+                return false;
             });
         }
 
@@ -129,13 +139,10 @@ public class MirrorHopInstance extends DefaultGameInstance {
         gameHandle.getWorldFacade().teleport(player);
 
         int ticks = Ticks.seconds(4);
-        var slowness = new StatusEffectInstance(StatusEffects.SLOWNESS, ticks, 255, false, false, true);
-        var noJump = new StatusEffectInstance(StatusEffects.JUMP_BOOST, ticks, 200, false, false, true);
+        movementBlocker.disableMovement(player, ticks);
 
-        player.addStatusEffect(slowness);
-        player.addStatusEffect(noJump);
-
-        movementCooldown.setCooldown(player, ticks);
+        StatusEffectInstance invisibility = new StatusEffectInstance(StatusEffects.INVISIBILITY, ticks, 1, false, false, false);
+        player.addStatusEffect(invisibility);
     }
 
     private static void removeGate(GameMap map, ServerWorld world) {

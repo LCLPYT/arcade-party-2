@@ -14,6 +14,7 @@ import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.map.MapFacade;
 import work.lclpnet.ap2.base.ApContainer;
 import work.lclpnet.ap2.base.activity.PreparationActivity;
+import work.lclpnet.ap2.impl.util.ScoreboardManager;
 import work.lclpnet.kibu.plugin.hook.HookStack;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.kibu.translate.TranslationService;
@@ -39,6 +40,7 @@ public class DefaultMiniGameHandle implements MiniGameHandle, Unloadable, WorldB
     private volatile BasicProtector protector = null;
     private WorldBorderListener worldBorderListener = null;
     private volatile List<Unloadable> closeWhenDone = null;
+    private volatile ScoreboardManager scoreboardManager = null;
 
     public DefaultMiniGameHandle(GameInfo info, PreparationActivity.Args args, BossBarProvider bossBarProvider) {
         this.info = info;
@@ -114,6 +116,19 @@ public class DefaultMiniGameHandle implements MiniGameHandle, Unloadable, WorldB
     }
 
     @Override
+    public ScoreboardManager getScoreboardManager() {
+        if (scoreboardManager != null) return scoreboardManager;
+
+        synchronized (this) {
+            if (scoreboardManager == null) {
+                scoreboardManager = new ScoreboardManager(getServer().getScoreboard());
+            }
+        }
+
+        return scoreboardManager;
+    }
+
+    @Override
     public synchronized void protect(Consumer<MutableProtectionConfig> action) {
         if (protector == null) {
             synchronized (this) {
@@ -171,6 +186,10 @@ public class DefaultMiniGameHandle implements MiniGameHandle, Unloadable, WorldB
         if (closeWhenDone != null) {
             closeWhenDone.forEach(Unloadable::unload);
             closeWhenDone.clear();
+        }
+
+        if (scoreboardManager != null) {
+            scoreboardManager.unload();
         }
     }
 

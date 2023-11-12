@@ -7,6 +7,7 @@ import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.base.WorldBorderManager;
 import work.lclpnet.ap2.api.map.MapFacade;
 import work.lclpnet.ap2.impl.game.PlayerUtil;
+import work.lclpnet.ap2.impl.util.ScoreboardManager;
 import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.kibu.translate.TranslationService;
@@ -43,6 +44,8 @@ public interface MiniGameHandle {
     PlayerUtil getPlayerUtil();
 
     BossBarProvider getBossBarProvider();
+
+    ScoreboardManager getScoreboardManager();
 
     void protect(Consumer<MutableProtectionConfig> action);
 

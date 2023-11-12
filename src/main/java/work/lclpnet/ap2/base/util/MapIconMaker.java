@@ -22,7 +22,10 @@ public class MapIconMaker {
         icon.setCustomName(translations.translateText(player, game.getTitleKey())
                 .styled(style -> style.withItalic(false).withFormatting(AQUA)));
 
-        ItemStackUtil.setLore(icon, wrapText(translations.translateText(player, game.getDescriptionKey())
+        String descriptionKey = game.getDescriptionKey();
+        Object[] descArgs = game.getDescriptionArguments();
+
+        ItemStackUtil.setLore(icon, wrapText(translations.translateText(player, descriptionKey, descArgs)
                 .formatted(GREEN), 24));
 
         return icon;
