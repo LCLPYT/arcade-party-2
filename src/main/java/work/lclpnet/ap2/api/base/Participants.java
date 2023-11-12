@@ -40,4 +40,8 @@ public interface Participants extends Iterable<ServerPlayerEntity> {
 
         return getAsSet().stream().skip(random.nextInt(count)).findFirst();
     }
+
+    default Stream<ServerPlayerEntity> stream() {
+        return getAsSet().stream();
+    }
 }

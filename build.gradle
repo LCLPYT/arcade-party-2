@@ -64,6 +64,7 @@ dependencies {
     modImplementation "work.lclpnet.mods:mplugins:${project.mplugins_version}"
     modImplementation "xyz.nucleoid:fantasy:${project.fantasy_version}"
     modImplementation "maven.modrinth:sqlite-jdbc:3.41.2.1+20230506"
+    modImplementation "work.lclpnet.mods:combat-control:${project.combat_control_version}"
 
     pluginImplementation "work.lclpnet.mcserver-api:mcserver-api-kibu:${project.mcserver_api_version}"
     pluginImplementation "work.lclpnet.plugins:mg-lobby:${project.lobby_version}"

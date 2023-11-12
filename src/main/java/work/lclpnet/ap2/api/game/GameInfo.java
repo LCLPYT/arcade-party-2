@@ -30,4 +30,8 @@ public interface GameInfo {
 
         return "game.%s.%s.description".formatted(id.getNamespace(), id.getPath());
     }
+
+    default Object[] getDescriptionArguments() {
+        return new Object[0];
+    }
 }

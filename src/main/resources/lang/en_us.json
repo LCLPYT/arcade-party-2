@@ -11,7 +11,7 @@
   "ap2.you_placed": "You placed %s",
   "ap2.you_placed_value": "You placed %s - %s",
   "ap2.go": "Go!",
-  "ap2.game.elimated": "%s was eliminated",
+  "ap2.game.eliminated": "%s was eliminated",
   "ap2.game.winner_is": "The winner is...",
   "ap2.score.points": "%s points",
   "ap2.score.points_timed": "%s points | reached #%s",
@@ -39,6 +39,8 @@
   "game.ap2.fine_tuning.controls.note_up": "Higher note",
   "game.ap2.fine_tuning.controls.note_down": "Lower note",
   "game.ap2.fine_tuning.controls.test": "Test note",
+  "game.ap2.one_in_the_chamber": "One in the Chamber",
+  "game.ap2.one_in_the_chamber.description": "Your crossbow one hits, but you only have one shot! Gain another by killing someone. First reaching %s kills wins!",
   "game.ap2.anvil_fall": "Anvil Fall",
   "game.ap2.anvil_fall.description": "Dodge the anvils falling from the sky.\nBe the last one remaining!"
 }

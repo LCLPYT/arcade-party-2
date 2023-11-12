@@ -12,6 +12,8 @@ import net.minecraft.world.GameMode;
 import org.jetbrains.annotations.NotNull;
 import work.lclpnet.ap2.api.base.PlayerManager;
 import work.lclpnet.ap2.impl.util.effect.ApEffect;
+import work.lclpnet.combatctl.api.CombatControl;
+import work.lclpnet.combatctl.api.CombatStyle;
 import work.lclpnet.kibu.access.VelocityModifier;
 import work.lclpnet.kibu.hook.util.PlayerUtils;
 
@@ -26,6 +28,7 @@ public class PlayerUtil {
     private final PlayerManager playerManager;
     private final Set<ApEffect> effects = new ObjectOpenHashSet<>(1);
     private GameMode defaultGameMode = INITIAL_GAMEMODE;
+    private CombatStyle defaultCombatStyle = CombatStyle.OLD;
     private boolean allowFlight = false;
 
     public PlayerUtil(MinecraftServer server, PlayerManager playerManager) {
@@ -40,6 +43,14 @@ public class PlayerUtil {
 
     public GameMode getDefaultGameMode() {
         return defaultGameMode;
+    }
+
+    public void setDefaultCombatStyle(CombatStyle defaultCombatStyle) {
+        this.defaultCombatStyle = defaultCombatStyle;
+    }
+
+    public CombatStyle getDefaultCombatStyle() {
+        return defaultCombatStyle;
     }
 
     public void setAllowFlight(boolean allowFlight) {
@@ -121,6 +132,8 @@ public class PlayerUtil {
         }
 
         effects.forEach(effect -> effect.apply(player));
+
+        CombatControl.get(server).setStyle(player, defaultCombatStyle);
     }
 
     public void resetToDefaults() {
