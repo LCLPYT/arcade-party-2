@@ -198,6 +198,7 @@ public abstract class DefaultGameInstance implements MiniGameInstance, Participa
         if (this.gameOver) return;
 
         gameOver = true;
+        onGameOver();
 
         gameHandle.protect(config -> {
             config.disallowAll();
@@ -513,6 +514,8 @@ public abstract class DefaultGameInstance implements MiniGameInstance, Participa
         hooks.registerHook(EntityHealthCallback.HOOK, (entity, health)
                 -> health > entity.getHealth());
     }
+
+    protected void onGameOver() {}
 
     protected abstract DataContainer getData();
 

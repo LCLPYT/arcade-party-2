@@ -40,5 +40,7 @@
   "game.ap2.fine_tuning.controls.note_down": "Lower note",
   "game.ap2.fine_tuning.controls.test": "Test note",
   "game.ap2.one_in_the_chamber": "One in the Chamber",
-  "game.ap2.one_in_the_chamber.description": "Your crossbow one hits, but you only have one shot! Gain another by killing someone. First reaching %s kills wins!"
+  "game.ap2.one_in_the_chamber.description": "Your crossbow one hits, but you only have one shot! Gain another by killing someone. First reaching %s kills wins!",
+  "game.ap2.anvil_fall": "Anvil Fall",
+  "game.ap2.anvil_fall.description": "Dodge the anvils falling from the sky.\nBe the last one remaining!"
 }

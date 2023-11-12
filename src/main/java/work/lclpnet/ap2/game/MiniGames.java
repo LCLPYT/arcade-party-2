@@ -1,6 +1,7 @@
 package work.lclpnet.ap2.game;
 
 import work.lclpnet.ap2.api.game.MiniGame;
+import work.lclpnet.ap2.game.anvil_fall.AnvilFallMiniGame;
 import work.lclpnet.ap2.game.bow_spleef.BowSpleefMiniGame;
 import work.lclpnet.ap2.game.fine_tuning.FineTuningMiniGame;
 import work.lclpnet.ap2.game.mirror_hop.MirrorHopMiniGame;
@@ -22,5 +23,6 @@ public class MiniGames {
         games.add(new FineTuningMiniGame());
 //        games.add(new TreasureHunterMinigame());
         games.add(new OneInTheChamberMiniGame());
+        games.add(new AnvilFallMiniGame());
     }
 }
