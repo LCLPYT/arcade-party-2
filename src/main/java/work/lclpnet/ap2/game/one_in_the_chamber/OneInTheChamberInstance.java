@@ -72,6 +72,7 @@ public class OneInTheChamberInstance extends DefaultGameInstance {
         GameRules gameRules = getWorld().getGameRules();
         gameRules.get(GameRules.DO_ENTITY_DROPS).set(false, null);
         gameRules.get(GameRules.NATURAL_REGENERATION).set(false, null);
+        gameRules.get(GameRules.ANNOUNCE_ADVANCEMENTS).set(false, null);
 
         JSONArray spawnsJson = getMap().requireProperty("random-spawns");
         respawn.loadSpawnPoints(spawnsJson);
