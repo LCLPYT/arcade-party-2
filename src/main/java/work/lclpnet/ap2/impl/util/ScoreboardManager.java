@@ -1,8 +1,9 @@
 package work.lclpnet.ap2.impl.util;
 
 import net.minecraft.entity.Entity;
-import net.minecraft.scoreboard.ServerScoreboard;
-import net.minecraft.scoreboard.Team;
+import net.minecraft.scoreboard.*;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.text.Text;
 import work.lclpnet.mplugins.ext.Unloadable;
 
 import java.util.HashSet;
@@ -12,6 +13,7 @@ public class ScoreboardManager implements Unloadable {
 
     private final ServerScoreboard scoreboard;
     private final Set<Team> teams = new HashSet<>();
+    private final Set<ScoreboardObjective> objectives = new HashSet<>();
 
     public ScoreboardManager(ServerScoreboard scoreboard) {
         this.scoreboard = scoreboard;
@@ -51,11 +53,48 @@ public class ScoreboardManager implements Unloadable {
         }
     }
 
+    public ScoreboardObjective createObjective(String name, ScoreboardCriterion criterion, Text displayName,
+                                       ScoreboardCriterion.RenderType renderType) {
+        removeObjective(name);
+
+        ScoreboardObjective objective = scoreboard.addObjective(name, criterion, displayName, renderType);
+
+        synchronized (this) {
+            objectives.add(objective);
+        }
+
+        return objective;
+    }
+
+    private void removeObjective(String name) {
+        ScoreboardObjective objective = scoreboard.getObjective(name);
+
+        if (objective == null) return;
+
+        scoreboard.removeObjective(objective);
+
+        synchronized (this) {
+            objectives.remove(objective);
+        }
+    }
+
+    public void setScore(ServerPlayerEntity player, ScoreboardObjective objective, int score) {
+        ScoreboardPlayerScore playerScore = scoreboard.getPlayerScore(player.getEntityName(), objective);
+        playerScore.setScore(score);
+    }
+
+    public void setDisplay(int slot, ScoreboardObjective objective) {
+        scoreboard.setObjectiveSlot(slot, objective);
+    }
+
     @Override
     public void unload() {
         synchronized (this) {
             teams.forEach(scoreboard::removeTeam);
             teams.clear();
+
+            objectives.forEach(scoreboard::removeObjective);
+            objectives.clear();
         }
     }
 }

@@ -11,6 +11,9 @@ import net.minecraft.item.Items;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.registry.Registries;
+import net.minecraft.scoreboard.Scoreboard;
+import net.minecraft.scoreboard.ScoreboardCriterion;
+import net.minecraft.scoreboard.ScoreboardObjective;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
@@ -24,6 +27,7 @@ import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.impl.game.DefaultGameInstance;
 import work.lclpnet.ap2.impl.game.data.ScoreDataContainer;
 import work.lclpnet.ap2.impl.util.Cooldown;
+import work.lclpnet.ap2.impl.util.ScoreboardManager;
 import work.lclpnet.ap2.impl.util.TextUtil;
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker;
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
@@ -50,6 +54,7 @@ public class OneInTheChamberInstance extends DefaultGameInstance {
     private final OneInTheChamberSpawns respawn = new OneInTheChamberSpawns(gameHandle, random);
     private final SimpleMovementBlocker movementBlocker;
     private final Cooldown respawnCooldown;
+    private ScoreboardObjective objective;
 
     public OneInTheChamberInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
@@ -81,13 +86,21 @@ public class OneInTheChamberInstance extends DefaultGameInstance {
         movementBlocker.init(hooks);
         respawnCooldown.init(hooks);
 
+        ScoreboardManager scoreboardManager = gameHandle.getScoreboardManager();
+        objective = scoreboardManager.createObjective("kills", ScoreboardCriterion.DUMMY,
+                Text.literal("Kills").formatted(YELLOW, BOLD), ScoreboardCriterion.RenderType.INTEGER);
+
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
             BlockPos pos = respawn.getRandomSpawn();
 
             player.teleport(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
 
             movementBlocker.disableMovement(player);
+
+            scoreboardManager.setScore(player, objective, 0);
         }
+
+        scoreboardManager.setDisplay(Scoreboard.SIDEBAR_DISPLAY_SLOT_ID, objective);
 
         hooks.registerHook(PlayerInventoryHooks.MODIFY_INVENTORY, event
                 -> !event.player().isCreativeLevelTwoOp());
@@ -219,7 +232,10 @@ public class OneInTheChamberInstance extends DefaultGameInstance {
         killer.setHealth(20);
         data.addScore(killer, 1);
 
-        if (data.getScore(killer) == SCORE_LIMIT) {
+        int newScore = data.getScore(killer);
+        gameHandle.getScoreboardManager().setScore(killer, objective, newScore);
+
+        if (newScore == SCORE_LIMIT) {
             win(killer);
         }
 
