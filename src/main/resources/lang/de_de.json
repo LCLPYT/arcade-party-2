@@ -42,5 +42,7 @@
   "game.ap2.one_in_the_chamber": "Einen im Lauf",
   "game.ap2.one_in_the_chamber.description": "Deine Armbrust tötet sofort, aber du hast nur einen Schuss! Du erhältst einen neuen Schuss, wenn du jemanden tötest. Es gewinnt der Spieler, der zuerst %s Kills erreicht!",
   "game.ap2.anvil_fall": "Ambossfall",
-  "game.ap2.anvil_fall.description": "Weiche den herunterfallenden Ambössen aus.\nWenn du getroffen wirst, bist du raus!"
+  "game.ap2.anvil_fall.description": "Weiche den herunterfallenden Ambössen aus.\nWenn du getroffen wirst, bist du raus!",
+  "game.ap2.treasure_hunter": "Schatzsuche",
+  "game.ap2.treasure_hunter.description": "Suche einen Schatz in einer riesigen Sandgrube. Der erste, der die Kiste findet, gewinnt!"
 }

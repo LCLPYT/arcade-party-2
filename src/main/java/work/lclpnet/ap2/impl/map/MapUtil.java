@@ -5,9 +5,12 @@ import net.minecraft.block.BlockState;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import org.json.JSONArray;
+import org.slf4j.Logger;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.Vec2i;
 import work.lclpnet.kibu.util.BlockStateUtils;
+
+import java.util.*;
 
 public class MapUtil {
 
@@ -66,7 +69,19 @@ public class MapUtil {
     }
 
     public static BlockState readBlockState(String string) {
-        return BlockStateUtils.parse(string);
+        return Objects.requireNonNull(BlockStateUtils.parse(string), "Unknown block state");
+    }
+
+    public static void readBlockStates(JSONArray array, Collection<BlockState> states, Logger logger) {
+        for (Object obj : array) {
+            if (!(obj instanceof String str)) {
+                logger.warn("Invalid block state array entry {}", obj);
+                continue;
+            }
+
+            BlockState state = readBlockState(str);
+            states.add(state);
+        }
     }
 
     private MapUtil() {}
