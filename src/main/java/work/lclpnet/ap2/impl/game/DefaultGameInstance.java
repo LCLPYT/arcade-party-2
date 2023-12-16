@@ -181,7 +181,7 @@ public abstract class DefaultGameInstance implements MiniGameInstance, Participa
                 -> playerUtil.resetPlayer(data.getPlayer()));
     }
 
-    protected void win(@Nullable ServerPlayerEntity player) {
+    public void win(@Nullable ServerPlayerEntity player) {
         if (player == null) {
             winNobody();
             return;
@@ -190,11 +190,11 @@ public abstract class DefaultGameInstance implements MiniGameInstance, Participa
         win(Set.of(player));
     }
 
-    protected void winNobody() {
+    public void winNobody() {
         win(Set.of());
     }
 
-    protected synchronized void win(Set<ServerPlayerEntity> winners) {
+    public synchronized void win(Set<ServerPlayerEntity> winners) {
         if (this.gameOver) return;
 
         gameOver = true;
