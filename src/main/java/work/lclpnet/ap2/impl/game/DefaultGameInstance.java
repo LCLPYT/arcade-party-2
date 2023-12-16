@@ -200,6 +200,8 @@ public abstract class DefaultGameInstance implements MiniGameInstance, Participa
         gameOver = true;
         onGameOver();
 
+        gameHandle.resetScheduler();
+
         gameHandle.protect(config -> {
             config.disallowAll();
 
