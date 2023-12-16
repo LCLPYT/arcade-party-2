@@ -16,6 +16,7 @@ import work.lclpnet.ap2.base.ApContainer;
 import work.lclpnet.ap2.base.activity.PreparationActivity;
 import work.lclpnet.ap2.impl.util.ScoreboardManager;
 import work.lclpnet.kibu.plugin.hook.HookStack;
+import work.lclpnet.kibu.plugin.scheduler.SchedulerStack;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.kibu.translate.bossbar.BossBarProvider;
@@ -86,7 +87,7 @@ public class DefaultMiniGameHandle implements MiniGameHandle, Unloadable, WorldB
     }
 
     @Override
-    public TaskScheduler getScheduler() {
+    public SchedulerStack getScheduler() {
         return args.container().schedulerStack();
     }
 
@@ -126,6 +127,14 @@ public class DefaultMiniGameHandle implements MiniGameHandle, Unloadable, WorldB
         }
 
         return scoreboardManager;
+    }
+
+    @Override
+    public void resetScheduler() {
+        SchedulerStack stack = getScheduler();
+
+        stack.pop();
+        stack.push();
     }
 
     @Override

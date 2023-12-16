@@ -58,8 +58,12 @@ public class TreasureHunterInstance extends DefaultGameInstance {
 
         hooks.registerHook(PlayerInteractionHooks.USE_BLOCK, (player, world, hand, hitResult) -> {
             if (!(player instanceof ServerPlayerEntity serverPlayer) || !participants.isParticipating(serverPlayer)
-                || !world.getBlockState(hitResult.getBlockPos()).isOf(Blocks.CHEST) || isGameOver()) {
+                || !world.getBlockState(hitResult.getBlockPos()).isOf(Blocks.CHEST)) {
                 return ActionResult.PASS;
+            }
+
+            if (isGameOver()) {
+                return ActionResult.FAIL;
             }
 
             player.playSound(SoundEvents.BLOCK_AMETHYST_BLOCK_RESONATE, SoundCategory.BLOCKS, 1.2f, 1.8f);

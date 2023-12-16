@@ -38,7 +38,6 @@ public class AnvilFallInstance extends EliminationGameInstance {
     private final Direction[] directions = new Direction[] {Direction.NORTH, Direction.WEST, Direction.SOUTH, Direction.WEST};
     private final Random random = new Random();
     private AnvilFallSetup setup;
-    private TaskHandle spawnerTask;
     private BlockBox playArea = null;
     private Vec3d center;
 
@@ -74,15 +73,6 @@ public class AnvilFallInstance extends EliminationGameInstance {
         }
     }
 
-    @Override
-    protected void onGameOver() {
-        super.onGameOver();
-
-        if (spawnerTask != null) {
-            spawnerTask.cancel();
-        }
-    }
-
     private void onHitByAnvil(ServerPlayerEntity player) {
         if (!gameHandle.getParticipants().isParticipating(player)) return;
 
@@ -111,7 +101,7 @@ public class AnvilFallInstance extends EliminationGameInstance {
     }
 
     private void startAnvilSpawning() {
-        spawnerTask = gameHandle.getScheduler().interval(new Runnable() {
+        gameHandle.getScheduler().interval(new Runnable() {
             int delay = INITIAL_DELAY;
             int cooldown = 0;
             int anvilAmount = 1;

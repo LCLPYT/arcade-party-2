@@ -47,6 +47,8 @@ public interface MiniGameHandle {
 
     ScoreboardManager getScoreboardManager();
 
+    void resetScheduler();
+
     void protect(Consumer<MutableProtectionConfig> action);
 
     void closeWhenDone(Unloadable unloadable);
