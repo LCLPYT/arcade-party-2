@@ -35,6 +35,8 @@ public interface MiniGameHandle {
 
     TaskScheduler getScheduler();
 
+    TaskScheduler getGameScheduler();
+
     TranslationService getTranslations();
 
     Participants getParticipants();
@@ -47,7 +49,7 @@ public interface MiniGameHandle {
 
     ScoreboardManager getScoreboardManager();
 
-    void resetScheduler();
+    void resetGameScheduler();
 
     void protect(Consumer<MutableProtectionConfig> action);
 

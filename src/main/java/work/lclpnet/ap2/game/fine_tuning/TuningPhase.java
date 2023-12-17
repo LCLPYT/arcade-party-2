@@ -156,7 +156,7 @@ class TuningPhase implements Unloadable {
                 .acceptEach(PlayerLookup.all(server), (player, text)
                         -> Title.get(player).title(Text.empty(), text, 5, 30, 5));
 
-        gameHandle.getScheduler().timeout(this::playNextMelody, 40);
+        gameHandle.getGameScheduler().timeout(this::playNextMelody, 40);
     }
 
     private void playNextMelody() {
@@ -169,7 +169,7 @@ class TuningPhase implements Unloadable {
 
     private void playMelody(Runnable onDone) {
         Participants participants = gameHandle.getParticipants();
-        TaskScheduler scheduler = gameHandle.getScheduler();
+        TaskScheduler scheduler = gameHandle.getGameScheduler();
 
         PlayMelodyTask task = new PlayMelodyTask(note -> {
             for (ServerPlayerEntity player : participants) {
@@ -194,13 +194,13 @@ class TuningPhase implements Unloadable {
                 .acceptEach(PlayerLookup.all(server), (player, text)
                         -> Title.get(player).title(Text.empty(), text, 5, 30, 5));
 
-        gameHandle.getScheduler().timeout(() -> playMelody(this::beginTune), 40);
+        gameHandle.getGameScheduler().timeout(() -> playMelody(this::beginTune), 40);
     }
 
     private void beginTune() {
         MinecraftServer server = gameHandle.getServer();
         TranslationService translations = gameHandle.getTranslations();
-        TaskScheduler scheduler = gameHandle.getScheduler();
+        TaskScheduler scheduler = gameHandle.getGameScheduler();
         BossBarProvider bossBarProvider = gameHandle.getBossBarProvider();
 
         var players = PlayerLookup.all(server);
@@ -355,7 +355,7 @@ class TuningPhase implements Unloadable {
 
         room.setTemporaryMelody(melody);
 
-        TaskScheduler scheduler = gameHandle.getScheduler();
+        TaskScheduler scheduler = gameHandle.getGameScheduler();
 
         PlayMelodyTask task = new PlayMelodyTask(note -> {
             if (!player.isAlive()) return;
