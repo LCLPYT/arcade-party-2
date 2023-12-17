@@ -157,8 +157,6 @@ public abstract class DefaultGameInstance implements MiniGameInstance, Participa
             winner = data.getBestPlayer(gameHandle.getServer());
         }
 
-        winner.ifPresent(data::ensureTracked);  // make sure the winner is tracked
-
         win(winner.orElse(null));
     }
 
@@ -209,7 +207,9 @@ public abstract class DefaultGameInstance implements MiniGameInstance, Participa
             ProtectorUtils.allowCreativeOperatorBypass(config);
         });
 
-        getData().freeze();
+        DataContainer data = getData();
+        winners.forEach(data::ensureTracked);
+        data.freeze();
 
         deferAnnouncement(winners);
     }
