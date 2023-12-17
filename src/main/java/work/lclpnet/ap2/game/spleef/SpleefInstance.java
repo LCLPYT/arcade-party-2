@@ -38,7 +38,7 @@ public class SpleefInstance extends EliminationGameInstance {
     public SpleefInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
 
-        setDefaultGameMode(GameMode.SURVIVAL);
+        useSurvivalMode();
     }
 
     @Override

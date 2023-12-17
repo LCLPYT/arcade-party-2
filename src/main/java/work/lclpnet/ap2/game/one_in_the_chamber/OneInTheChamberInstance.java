@@ -30,6 +30,7 @@ import work.lclpnet.ap2.impl.util.Cooldown;
 import work.lclpnet.ap2.impl.util.ScoreboardManager;
 import work.lclpnet.ap2.impl.util.TextUtil;
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker;
+import work.lclpnet.combatctl.api.CombatStyle;
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
 import work.lclpnet.kibu.hook.entity.ProjectileHooks;
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks;
@@ -65,6 +66,8 @@ public class OneInTheChamberInstance extends DefaultGameInstance {
         movementBlocker.setUseStatusEffects(false);
 
         respawnCooldown = new Cooldown(scheduler);
+
+        useOldCombat();
     }
 
     @Override
