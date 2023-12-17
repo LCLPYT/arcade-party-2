@@ -14,7 +14,7 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.GameMode;
+import net.minecraft.world.GameRules;
 import net.minecraft.world.World;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
@@ -50,6 +50,10 @@ public class TreasureHunterInstance extends DefaultGameInstance {
 
     @Override
     protected void prepare() {
+        GameRules gameRules = getWorld().getGameRules();
+        gameRules.get(GameRules.DO_TILE_DROPS).set(false, null);
+        gameRules.get(GameRules.DO_ENTITY_DROPS).set(false, null);
+
         MapUtil.readBlockStates(getMap().requireProperty("materials"), materials, gameHandle.getLogger());
 
         Participants participants = gameHandle.getParticipants();
