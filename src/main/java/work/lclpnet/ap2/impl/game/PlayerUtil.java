@@ -29,7 +29,7 @@ public class PlayerUtil {
     private final CombatControl combatControl;
     private final Set<ApEffect> effects = new ObjectOpenHashSet<>(1);
     private GameMode defaultGameMode = INITIAL_GAMEMODE;
-    private CombatStyle defaultCombatStyle = CombatStyle.OLD;
+    private CombatStyle defaultCombatStyle = CombatStyle.MODERN;
     private boolean allowFlight = false;
 
     public PlayerUtil(MinecraftServer server, PlayerManager playerManager) {

@@ -40,7 +40,7 @@ public class TreasureHunterInstance extends DefaultGameInstance {
     public TreasureHunterInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
 
-        setDefaultGameMode(GameMode.SURVIVAL);
+        useSurvivalMode();
     }
 
     @Override

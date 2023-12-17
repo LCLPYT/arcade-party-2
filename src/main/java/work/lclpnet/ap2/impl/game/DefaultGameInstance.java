@@ -30,6 +30,7 @@ import work.lclpnet.ap2.impl.util.SoundHelper;
 import work.lclpnet.ap2.impl.util.Vec2i;
 import work.lclpnet.ap2.impl.util.effect.ApEffect;
 import work.lclpnet.ap2.impl.util.effect.ApEffects;
+import work.lclpnet.combatctl.api.CombatStyle;
 import work.lclpnet.kibu.hook.entity.EntityHealthCallback;
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks;
 import work.lclpnet.kibu.hook.player.PlayerSpawnLocationCallback;
@@ -436,8 +437,12 @@ public abstract class DefaultGameInstance implements MiniGameInstance, Participa
         return map;
     }
 
-    protected final void setDefaultGameMode(GameMode gameMode) {
-        gameHandle.getPlayerUtil().setDefaultGameMode(gameMode);
+    protected final void useSurvivalMode() {
+        gameHandle.getPlayerUtil().setDefaultGameMode(GameMode.SURVIVAL);
+    }
+
+    protected final void useOldCombat() {
+        gameHandle.getPlayerUtil().setDefaultCombatStyle(CombatStyle.OLD);
     }
 
     protected final boolean isGameOver() {
