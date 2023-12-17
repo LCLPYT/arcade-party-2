@@ -31,6 +31,7 @@ import work.lclpnet.ap2.base.util.DevGameChooser;
 import work.lclpnet.ap2.base.util.MapIconMaker;
 import work.lclpnet.ap2.impl.game.PlayerUtil;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
+import work.lclpnet.kibu.hook.player.PlayerAdvancementPacketCallback;
 import work.lclpnet.kibu.hook.player.PlayerConnectionHooks;
 import work.lclpnet.kibu.hook.player.PlayerInventoryHooks;
 import work.lclpnet.kibu.inv.type.RestrictedInventory;
@@ -114,6 +115,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable 
         HookRegistrar hooks = component(BuiltinComponents.HOOKS).hooks();
         hooks.registerHook(PlayerConnectionHooks.JOIN, this::onJoin);
         hooks.registerHook(PlayerInventoryHooks.MODIFY_INVENTORY, event -> !event.player().isCreativeLevelTwoOp());
+        hooks.registerHook(PlayerAdvancementPacketCallback.HOOK, (player, packet) -> true);
 
         if (ApConstants.DEVELOPMENT) {
             giveDevelopmentItems(hooks);

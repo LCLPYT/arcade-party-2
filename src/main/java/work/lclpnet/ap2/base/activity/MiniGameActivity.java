@@ -11,6 +11,7 @@ import work.lclpnet.ap2.api.game.MiniGameInstance;
 import work.lclpnet.ap2.base.cmd.DrawCommand;
 import work.lclpnet.ap2.base.cmd.WinCommand;
 import work.lclpnet.ap2.impl.game.DefaultMiniGameHandle;
+import work.lclpnet.kibu.hook.player.PlayerAdvancementPacketCallback;
 import work.lclpnet.kibu.hook.player.PlayerConnectionHooks;
 import work.lclpnet.kibu.plugin.cmd.CommandRegistrar;
 import work.lclpnet.kibu.plugin.hook.HookRegistrar;
@@ -30,7 +31,10 @@ public class MiniGameActivity extends ComponentActivity {
 
     @Override
     protected void registerComponents(ComponentBundle componentBundle) {
-        componentBundle.add(BuiltinComponents.BOSS_BAR).add(BuiltinComponents.COMMANDS);
+        componentBundle
+                .add(BuiltinComponents.BOSS_BAR)
+                .add(BuiltinComponents.COMMANDS)
+                .add(BuiltinComponents.HOOKS);
     }
 
     @Override
@@ -55,6 +59,9 @@ public class MiniGameActivity extends ComponentActivity {
 
         new WinCommand(handle, instance).register(commands);
         new DrawCommand(handle, instance).register(commands);
+
+        HookRegistrar hooks = component(BuiltinComponents.HOOKS).hooks();
+        hooks.registerHook(PlayerAdvancementPacketCallback.HOOK, (player, packet) -> true);
     }
 
     @Override
