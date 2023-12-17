@@ -13,7 +13,6 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.GameMode;
 import net.minecraft.world.World;
 import net.minecraft.world.border.WorldBorder;
 import org.json.JSONArray;
@@ -69,7 +68,7 @@ public class SpleefInstance extends EliminationGameInstance {
     }
 
     private void scheduleSuddenDeath() {
-        TaskScheduler scheduler = gameHandle.getScheduler();
+        TaskScheduler scheduler = gameHandle.getGameScheduler();
 
         scheduler.timeout(() -> {
             WorldBorder worldBorder = useWorldBorder();

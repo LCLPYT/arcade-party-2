@@ -96,7 +96,7 @@ public abstract class DefaultGameInstance implements MiniGameInstance, Participa
 
         prepare();
 
-        gameHandle.getScheduler().timeout(this::afterInitialDelay, getInitialDelay());
+        gameHandle.getGameScheduler().timeout(this::afterInitialDelay, getInitialDelay());
     }
 
     private void applyMapEffects() {
@@ -201,7 +201,7 @@ public abstract class DefaultGameInstance implements MiniGameInstance, Participa
         gameOver = true;
         onGameOver();
 
-        gameHandle.resetScheduler();
+        gameHandle.resetGameScheduler();
 
         gameHandle.protect(config -> {
             config.disallowAll();

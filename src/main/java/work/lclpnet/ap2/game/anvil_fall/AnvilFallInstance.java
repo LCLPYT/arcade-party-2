@@ -22,7 +22,6 @@ import work.lclpnet.kibu.access.entity.FallingBlockAccess;
 import work.lclpnet.kibu.hook.player.PlayerMoveCallback;
 import work.lclpnet.kibu.hook.util.PositionRotation;
 import work.lclpnet.kibu.scheduler.Ticks;
-import work.lclpnet.kibu.scheduler.api.TaskHandle;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 import work.lclpnet.lobby.game.map.GameMap;
 
@@ -101,7 +100,7 @@ public class AnvilFallInstance extends EliminationGameInstance {
     }
 
     private void startAnvilSpawning() {
-        gameHandle.getScheduler().interval(new Runnable() {
+        gameHandle.getGameScheduler().interval(new Runnable() {
             int delay = INITIAL_DELAY;
             int cooldown = 0;
             int anvilAmount = 1;

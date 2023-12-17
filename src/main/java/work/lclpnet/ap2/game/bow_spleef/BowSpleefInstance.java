@@ -138,7 +138,7 @@ public class BowSpleefInstance extends EliminationGameInstance {
     }
 
     private void scheduleSuddenDeath() {
-        TaskScheduler scheduler = gameHandle.getScheduler();
+        TaskScheduler scheduler = gameHandle.getGameScheduler();
 
         scheduler.timeout(() -> {
             WorldBorder worldBorder = useWorldBorder();

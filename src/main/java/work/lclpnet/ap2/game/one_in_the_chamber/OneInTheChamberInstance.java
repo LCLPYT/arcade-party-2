@@ -30,14 +30,12 @@ import work.lclpnet.ap2.impl.util.Cooldown;
 import work.lclpnet.ap2.impl.util.ScoreboardManager;
 import work.lclpnet.ap2.impl.util.TextUtil;
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker;
-import work.lclpnet.combatctl.api.CombatStyle;
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
 import work.lclpnet.kibu.hook.entity.ProjectileHooks;
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks;
 import work.lclpnet.kibu.hook.player.PlayerInventoryHooks;
 import work.lclpnet.kibu.inv.item.ItemStackUtil;
 import work.lclpnet.kibu.plugin.hook.HookRegistrar;
-import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 
@@ -60,12 +58,10 @@ public class OneInTheChamberInstance extends DefaultGameInstance {
     public OneInTheChamberInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
 
-        TaskScheduler scheduler = gameHandle.getScheduler();
-
-        movementBlocker = new SimpleMovementBlocker(scheduler);
+        movementBlocker = new SimpleMovementBlocker(gameHandle.getScheduler());
         movementBlocker.setUseStatusEffects(false);
 
-        respawnCooldown = new Cooldown(scheduler);
+        respawnCooldown = new Cooldown(gameHandle.getGameScheduler());
 
         useOldCombat();
     }

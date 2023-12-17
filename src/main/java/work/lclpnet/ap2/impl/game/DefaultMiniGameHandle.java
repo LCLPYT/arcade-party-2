@@ -42,6 +42,7 @@ public class DefaultMiniGameHandle implements MiniGameHandle, Unloadable, WorldB
     private WorldBorderListener worldBorderListener = null;
     private volatile List<Unloadable> closeWhenDone = null;
     private volatile ScoreboardManager scoreboardManager = null;
+    private TaskScheduler scheduler = null;
 
     public DefaultMiniGameHandle(GameInfo info, PreparationActivity.Args args, BossBarProvider bossBarProvider) {
         this.info = info;
@@ -53,6 +54,10 @@ public class DefaultMiniGameHandle implements MiniGameHandle, Unloadable, WorldB
         ApContainer container = args.container();
 
         container.hookStack().push();
+        container.schedulerStack().push();
+
+        scheduler = container.schedulerStack();
+
         container.schedulerStack().push();
     }
 
@@ -87,7 +92,12 @@ public class DefaultMiniGameHandle implements MiniGameHandle, Unloadable, WorldB
     }
 
     @Override
-    public SchedulerStack getScheduler() {
+    public TaskScheduler getScheduler() {
+        return scheduler;
+    }
+
+    @Override
+    public SchedulerStack getGameScheduler() {
         return args.container().schedulerStack();
     }
 
@@ -130,8 +140,8 @@ public class DefaultMiniGameHandle implements MiniGameHandle, Unloadable, WorldB
     }
 
     @Override
-    public void resetScheduler() {
-        SchedulerStack stack = getScheduler();
+    public void resetGameScheduler() {
+        SchedulerStack stack = getGameScheduler();
 
         stack.pop();
         stack.push();
@@ -186,7 +196,10 @@ public class DefaultMiniGameHandle implements MiniGameHandle, Unloadable, WorldB
         ApContainer container = args.container();
 
         container.hookStack().pop();
-        container.schedulerStack().pop();
+
+        SchedulerStack schedulerStack = container.schedulerStack();
+        schedulerStack.pop();  // game scheduler
+        schedulerStack.pop();  // parent scheduler
 
         if (protector != null) {
             protector.unload();
