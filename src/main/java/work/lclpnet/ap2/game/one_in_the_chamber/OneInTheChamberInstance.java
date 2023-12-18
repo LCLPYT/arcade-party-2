@@ -85,6 +85,8 @@ public class OneInTheChamberInstance extends DefaultGameInstance {
         movementBlocker.init(hooks);
         respawnCooldown.init(hooks);
 
+        useTaskDisplay();
+
         ScoreboardManager scoreboardManager = gameHandle.getScoreboardManager();
         objective = scoreboardManager.createObjective("kills", ScoreboardCriterion.DUMMY,
                 Text.literal("Kills").formatted(YELLOW, BOLD), ScoreboardCriterion.RenderType.INTEGER);

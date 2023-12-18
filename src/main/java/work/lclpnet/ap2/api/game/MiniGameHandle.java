@@ -3,6 +3,7 @@ package work.lclpnet.ap2.api.game;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import org.slf4j.Logger;
+import work.lclpnet.activity.util.BossBarHandler;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.base.WorldBorderManager;
 import work.lclpnet.ap2.api.map.MapFacade;
@@ -46,6 +47,8 @@ public interface MiniGameHandle {
     PlayerUtil getPlayerUtil();
 
     BossBarProvider getBossBarProvider();
+
+    BossBarHandler getBossBarHandler();
 
     ScoreboardManager getScoreboardManager();
 

@@ -34,4 +34,20 @@ public interface GameInfo {
     default Object[] getDescriptionArguments() {
         return new Object[0];
     }
+
+    default String getTaskKey() {
+        Identifier id = getId();
+
+        return "game.%s.%s.task".formatted(id.getNamespace(), id.getPath());
+    }
+
+    default Object[] getTaskArguments() {
+        return new Object[0];
+    }
+
+    default Identifier identifier(String subPath) {
+        Identifier gameId = getId();
+
+        return new Identifier(gameId.getNamespace(), gameId.getPath().concat("/").concat(subPath));
+    }
 }

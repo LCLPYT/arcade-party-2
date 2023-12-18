@@ -7,6 +7,7 @@ import net.minecraft.world.border.WorldBorder;
 import net.minecraft.world.border.WorldBorderListener;
 import org.slf4j.Logger;
 import work.lclpnet.activity.manager.ActivityManager;
+import work.lclpnet.activity.util.BossBarHandler;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.base.WorldBorderManager;
 import work.lclpnet.ap2.api.game.GameInfo;
@@ -37,6 +38,7 @@ public class DefaultMiniGameHandle implements MiniGameHandle, Unloadable, WorldB
     private final GameInfo info;
     private final PreparationActivity.Args args;
     private final BossBarProvider bossBarProvider;
+    private final BossBarHandler bossBarHandler;
     private MutableProtectionConfig protectionConfig;
     private volatile BasicProtector protector = null;
     private WorldBorderListener worldBorderListener = null;
@@ -44,10 +46,11 @@ public class DefaultMiniGameHandle implements MiniGameHandle, Unloadable, WorldB
     private volatile ScoreboardManager scoreboardManager = null;
     private TaskScheduler scheduler = null;
 
-    public DefaultMiniGameHandle(GameInfo info, PreparationActivity.Args args, BossBarProvider bossBarProvider) {
+    public DefaultMiniGameHandle(GameInfo info, PreparationActivity.Args args, BossBarProvider bossBarProvider, BossBarHandler bossBarHandler) {
         this.info = info;
         this.args = args;
         this.bossBarProvider = bossBarProvider;
+        this.bossBarHandler = bossBarHandler;
     }
 
     public void init() {
@@ -124,6 +127,11 @@ public class DefaultMiniGameHandle implements MiniGameHandle, Unloadable, WorldB
     @Override
     public BossBarProvider getBossBarProvider() {
         return bossBarProvider;
+    }
+
+    @Override
+    public BossBarHandler getBossBarHandler() {
+        return bossBarHandler;
     }
 
     @Override
