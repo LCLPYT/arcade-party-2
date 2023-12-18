@@ -47,6 +47,7 @@
   "game.ap2.one_in_the_chamber.task": "Erreiche %s Kills",
   "game.ap2.anvil_fall": "Ambossfall",
   "game.ap2.anvil_fall.description": "Weiche den herunterfallenden Ambössen aus.\nWenn du getroffen wirst, bist du raus!",
+  "game.ap2.anvil_fall.status": "%s Ambösse pro Sekunde",
   "game.ap2.treasure_hunter": "Schatzsuche",
   "game.ap2.treasure_hunter.description": "Suche einen Schatz in einer riesigen Sandgrube. Der erste, der die Kiste findet, gewinnt!",
   "game.ap2.treasure_hunter.task": "Finde den Schatz"
