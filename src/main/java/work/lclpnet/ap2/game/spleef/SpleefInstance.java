@@ -44,6 +44,7 @@ public class SpleefInstance extends EliminationGameInstance {
     protected void prepare() {
         useSmoothDeath();
         useNoHealing();
+        useRemainingPlayersDisplay();
     }
 
     @Override

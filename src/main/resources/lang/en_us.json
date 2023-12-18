@@ -15,6 +15,8 @@
   "ap2.game.winner_is": "The winner is...",
   "ap2.score.points": "%s points",
   "ap2.score.points_timed": "%s points | reached #%s",
+  "ap2.game.remaining": "%s players remaining",
+  "ap2.game.remaining_single": "%s player remaining",
   "game.ap2.title": "ArcadeParty",
   "game.ap2.spleef": "Spleef",
   "game.ap2.spleef.description": "Break the ground beneath your opponents to make them fall. Last one standing wins.",

@@ -53,6 +53,7 @@ public class BowSpleefInstance extends EliminationGameInstance {
     protected void prepare() {
         useSmoothDeath();
         useNoHealing();
+        useRemainingPlayersDisplay();
 
         HookRegistrar hooks = gameHandle.getHookRegistrar();
 
