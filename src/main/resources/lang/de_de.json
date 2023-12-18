@@ -50,5 +50,8 @@
   "game.ap2.anvil_fall.status": "%s Ambösse pro Sekunde",
   "game.ap2.treasure_hunter": "Schatzsuche",
   "game.ap2.treasure_hunter.description": "Suche einen Schatz in einer riesigen Sandgrube. Der erste, der die Kiste findet, gewinnt!",
-  "game.ap2.treasure_hunter.task": "Finde den Schatz"
+  "game.ap2.treasure_hunter.task": "Finde den Schatz",
+  "game.ap2.panda_finder": "Panda Safari",
+  "game.ap2.panda_finder.description": "Finde den Panda aus dem Bild, um einen Punkt zu erhalten. Wer als erstes %s Punkte hat gewinnt!",
+  "game.ap2.panda_finder.find_the_panda": "Find the panda"
 }

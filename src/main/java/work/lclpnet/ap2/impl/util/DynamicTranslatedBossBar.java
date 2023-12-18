@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.api.util;
+package work.lclpnet.ap2.impl.util;
 
 import work.lclpnet.kibu.translate.bossbar.TranslatedBossBar;
 

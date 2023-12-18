@@ -50,5 +50,8 @@
   "game.ap2.anvil_fall.status": "%s anvils per second",
   "game.ap2.treasure_hunter": "Treasure Hunter",
   "game.ap2.treasure_hunter.description": "Search for a treasure in a big pile of sand. First one to find the chest wins!",
-  "game.ap2.treasure_hunter.task": "Find the treasure"
+  "game.ap2.treasure_hunter.task": "Find the treasure",
+  "game.ap2.panda_finder": "Panda Finder",
+  "game.ap2.panda_finder.description": "Find the panda from the picture to get a point. First to find %s points wins!",
+  "game.ap2.panda_finder.find_the_panda": "Find the panda"
 }
