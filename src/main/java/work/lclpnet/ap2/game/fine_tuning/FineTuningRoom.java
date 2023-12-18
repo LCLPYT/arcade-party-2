@@ -54,11 +54,11 @@ class FineTuningRoom {
         player.teleport(world, x, y, z, yaw, 0.0F);
     }
 
-    public void useNoteBlock(ServerPlayerEntity player, BlockPos pos, boolean increase) {
+    public void useNoteBlock(ServerPlayerEntity player, BlockPos pos) {
         int index = getNoteBlock(pos);
         if (index == -1) return;
 
-        int transpose = increase ? 1 : -1;
+        int transpose = player.isSneaking() ? -1 : 1;
 
         setNote(index, notes[index] + transpose);
 
