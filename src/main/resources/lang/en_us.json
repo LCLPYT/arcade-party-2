@@ -15,6 +15,8 @@
   "ap2.game.winner_is": "The winner is...",
   "ap2.score.points": "%s points",
   "ap2.score.points_timed": "%s points | reached #%s",
+  "ap2.game.remaining": "%s players remaining",
+  "ap2.game.remaining_single": "%s player remaining",
   "game.ap2.title": "ArcadeParty",
   "game.ap2.spleef": "Spleef",
   "game.ap2.spleef.description": "Break the ground beneath your opponents to make them fall. Last one standing wins.",
@@ -24,6 +26,7 @@
   "game.ap2.bow_spleef.description": "Shoot your bow to break the ground beneath your opponents \nto make them fall. \nUse your double jump to be the last one standing.",
   "game.ap2.mirror_hop": "Mirror Hop",
   "game.ap2.mirror_hop.description": "Make your way over the platforms towards the goal. Only one platform is correct!",
+  "game.ap2.mirror_hop.task": "Reach the finish line",
   "game.ap2.fine_tuning": "Fine Tuning",
   "game.ap2.fine_tuning.description": "Tune note blocks so that they play a given melody.\nWhoever tunes their note blocks most accurate wins!",
   "game.ap2.fine_tuning.replay": "Replay",
@@ -41,6 +44,11 @@
   "game.ap2.fine_tuning.controls.test": "Test note",
   "game.ap2.one_in_the_chamber": "One in the Chamber",
   "game.ap2.one_in_the_chamber.description": "Your crossbow one hits, but you only have one shot! Gain another by killing someone. First reaching %s kills wins!",
+  "game.ap2.one_in_the_chamber.task": "Reach %s kills",
   "game.ap2.anvil_fall": "Anvil Fall",
-  "game.ap2.anvil_fall.description": "Dodge the anvils falling from the sky.\nBe the last one remaining!"
+  "game.ap2.anvil_fall.description": "Dodge the anvils falling from the sky.\nBe the last one remaining!",
+  "game.ap2.anvil_fall.status": "%s anvils per second",
+  "game.ap2.treasure_hunter": "Treasure Hunter",
+  "game.ap2.treasure_hunter.description": "Search for a treasure in a big pile of sand. First one to find the chest wins!",
+  "game.ap2.treasure_hunter.task": "Find the treasure"
 }

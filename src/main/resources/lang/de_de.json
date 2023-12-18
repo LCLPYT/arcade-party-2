@@ -15,6 +15,8 @@
   "ap2.game.winner_is": "Gewonnen hat...",
   "ap2.score.points": "%s Punkte",
   "ap2.score.points_timed": "%s Punkte | als %s.",
+  "ap2.game.remaining": "%s Spieler übrig",
+  "ap2.game.remaining_single": "%s Spieler übrig",
   "game.ap2.title": "ArcadeParty",
   "game.ap2.spleef": "Spleef",
   "game.ap2.spleef.description": "Baue den Boden unter deinen Gegnern ab, damit sie herunterfallen. Fall aber nicht selber herunter!",
@@ -24,6 +26,7 @@
   "game.ap2.bow_spleef.description": "Schieße mit deinem Bogen um den Boden unter deinen Gegnern \nzu zerstören, damit sie herunterfallen. \nNutze deinen Doppelsprung um nicht herunterzufallen!",
   "game.ap2.mirror_hop": "Spiegelbruch",
   "game.ap2.mirror_hop.description": "Bahne dir einen Weg über die Plattformen zum Ziel.\nEs ist immer nur eine Platform richtig!",
+  "game.ap2.mirror_hop.task": "Erreiche die Ziellinie",
   "game.ap2.fine_tuning": "Feinstimmen",
   "game.ap2.fine_tuning.description": "Stimme Notenblöcke so, dass sie eine vorgegebene Melodie nachspielen.\nWer am nächsten dran ist gewinnt!",
   "game.ap2.fine_tuning.replay": "Wiederholen",
@@ -41,6 +44,11 @@
   "game.ap2.fine_tuning.controls.test": "Note testen",
   "game.ap2.one_in_the_chamber": "Einen im Lauf",
   "game.ap2.one_in_the_chamber.description": "Deine Armbrust tötet sofort, aber du hast nur einen Schuss! Du erhältst einen neuen Schuss, wenn du jemanden tötest. Es gewinnt der Spieler, der zuerst %s Kills erreicht!",
+  "game.ap2.one_in_the_chamber.task": "Erreiche %s Kills",
   "game.ap2.anvil_fall": "Ambossfall",
-  "game.ap2.anvil_fall.description": "Weiche den herunterfallenden Ambössen aus.\nWenn du getroffen wirst, bist du raus!"
+  "game.ap2.anvil_fall.description": "Weiche den herunterfallenden Ambössen aus.\nWenn du getroffen wirst, bist du raus!",
+  "game.ap2.anvil_fall.status": "%s Ambösse pro Sekunde",
+  "game.ap2.treasure_hunter": "Schatzsuche",
+  "game.ap2.treasure_hunter.description": "Suche einen Schatz in einer riesigen Sandgrube. Der erste, der die Kiste findet, gewinnt!",
+  "game.ap2.treasure_hunter.task": "Finde den Schatz"
 }

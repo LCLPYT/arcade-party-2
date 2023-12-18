@@ -26,14 +26,16 @@ public class PlayerUtil {
     public static final GameMode INITIAL_GAMEMODE = GameMode.ADVENTURE;
     private final MinecraftServer server;
     private final PlayerManager playerManager;
+    private final CombatControl combatControl;
     private final Set<ApEffect> effects = new ObjectOpenHashSet<>(1);
     private GameMode defaultGameMode = INITIAL_GAMEMODE;
-    private CombatStyle defaultCombatStyle = CombatStyle.OLD;
+    private CombatStyle defaultCombatStyle = CombatStyle.MODERN;
     private boolean allowFlight = false;
 
     public PlayerUtil(MinecraftServer server, PlayerManager playerManager) {
         this.server = server;
         this.playerManager = playerManager;
+        this.combatControl = CombatControl.get(server);
     }
 
     public void setDefaultGameMode(@NotNull GameMode defaultGameMode) {
@@ -47,6 +49,7 @@ public class PlayerUtil {
 
     public void setDefaultCombatStyle(CombatStyle defaultCombatStyle) {
         this.defaultCombatStyle = defaultCombatStyle;
+        combatControl.setStyle(this.defaultCombatStyle);
     }
 
     public CombatStyle getDefaultCombatStyle() {
@@ -133,7 +136,7 @@ public class PlayerUtil {
 
         effects.forEach(effect -> effect.apply(player));
 
-        CombatControl.get(server).setStyle(player, defaultCombatStyle);
+        combatControl.setStyle(player, defaultCombatStyle);
     }
 
     public void resetToDefaults() {

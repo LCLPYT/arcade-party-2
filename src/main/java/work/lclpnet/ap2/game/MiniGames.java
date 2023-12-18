@@ -7,6 +7,7 @@ import work.lclpnet.ap2.game.fine_tuning.FineTuningMiniGame;
 import work.lclpnet.ap2.game.mirror_hop.MirrorHopMiniGame;
 import work.lclpnet.ap2.game.one_in_the_chamber.OneInTheChamberMiniGame;
 import work.lclpnet.ap2.game.spleef.SpleefMiniGame;
+import work.lclpnet.ap2.game.treasure_hunter.TreasureHunterMinigame;
 
 import java.util.Set;
 
@@ -21,7 +22,7 @@ public class MiniGames {
         games.add(new BowSpleefMiniGame());
         games.add(new MirrorHopMiniGame());
         games.add(new FineTuningMiniGame());
-//        games.add(new TreasureHunterMinigame());
+        games.add(new TreasureHunterMinigame());
         games.add(new OneInTheChamberMiniGame());
         games.add(new AnvilFallMiniGame());
     }

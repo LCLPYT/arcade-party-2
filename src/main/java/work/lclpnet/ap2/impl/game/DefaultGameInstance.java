@@ -1,6 +1,7 @@
 package work.lclpnet.ap2.impl.game;
 
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
+import net.minecraft.entity.boss.BossBar;
 import net.minecraft.entity.damage.DamageTypes;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -9,6 +10,7 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.GameMode;
 import net.minecraft.world.border.WorldBorder;
@@ -19,6 +21,7 @@ import org.slf4j.Logger;
 import work.lclpnet.ap2.api.base.ParticipantListener;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.base.WorldBorderManager;
+import work.lclpnet.ap2.api.game.GameInfo;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.MiniGameInstance;
 import work.lclpnet.ap2.api.game.data.DataContainer;
@@ -30,6 +33,7 @@ import work.lclpnet.ap2.impl.util.SoundHelper;
 import work.lclpnet.ap2.impl.util.Vec2i;
 import work.lclpnet.ap2.impl.util.effect.ApEffect;
 import work.lclpnet.ap2.impl.util.effect.ApEffects;
+import work.lclpnet.combatctl.api.CombatStyle;
 import work.lclpnet.kibu.hook.entity.EntityHealthCallback;
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks;
 import work.lclpnet.kibu.hook.player.PlayerSpawnLocationCallback;
@@ -39,6 +43,7 @@ import work.lclpnet.kibu.scheduler.api.RunningTask;
 import work.lclpnet.kibu.scheduler.api.SchedulerAction;
 import work.lclpnet.kibu.title.Title;
 import work.lclpnet.kibu.translate.TranslationService;
+import work.lclpnet.kibu.translate.bossbar.TranslatedBossBar;
 import work.lclpnet.kibu.translate.text.RootText;
 import work.lclpnet.kibu.translate.text.TranslatedText;
 import work.lclpnet.lobby.game.api.WorldFacade;
@@ -95,7 +100,7 @@ public abstract class DefaultGameInstance implements MiniGameInstance, Participa
 
         prepare();
 
-        gameHandle.getScheduler().timeout(this::afterInitialDelay, getInitialDelay());
+        gameHandle.getGameScheduler().timeout(this::afterInitialDelay, getInitialDelay());
     }
 
     private void applyMapEffects() {
@@ -156,8 +161,6 @@ public abstract class DefaultGameInstance implements MiniGameInstance, Participa
             winner = data.getBestPlayer(gameHandle.getServer());
         }
 
-        winner.ifPresent(data::ensureTracked);  // make sure the winner is tracked
-
         win(winner.orElse(null));
     }
 
@@ -181,7 +184,7 @@ public abstract class DefaultGameInstance implements MiniGameInstance, Participa
                 -> playerUtil.resetPlayer(data.getPlayer()));
     }
 
-    protected void win(@Nullable ServerPlayerEntity player) {
+    public void win(@Nullable ServerPlayerEntity player) {
         if (player == null) {
             winNobody();
             return;
@@ -190,15 +193,17 @@ public abstract class DefaultGameInstance implements MiniGameInstance, Participa
         win(Set.of(player));
     }
 
-    protected void winNobody() {
+    public void winNobody() {
         win(Set.of());
     }
 
-    protected synchronized void win(Set<ServerPlayerEntity> winners) {
+    public synchronized void win(Set<ServerPlayerEntity> winners) {
         if (this.gameOver) return;
 
         gameOver = true;
         onGameOver();
+
+        gameHandle.resetGameScheduler();
 
         gameHandle.protect(config -> {
             config.disallowAll();
@@ -206,7 +211,9 @@ public abstract class DefaultGameInstance implements MiniGameInstance, Participa
             ProtectorUtils.allowCreativeOperatorBypass(config);
         });
 
-        getData().freeze();
+        DataContainer data = getData();
+        winners.forEach(data::ensureTracked);
+        data.freeze();
 
         deferAnnouncement(winners);
     }
@@ -434,8 +441,12 @@ public abstract class DefaultGameInstance implements MiniGameInstance, Participa
         return map;
     }
 
-    protected final void setDefaultGameMode(GameMode gameMode) {
-        gameHandle.getPlayerUtil().setDefaultGameMode(gameMode);
+    protected final void useSurvivalMode() {
+        gameHandle.getPlayerUtil().setDefaultGameMode(GameMode.SURVIVAL);
+    }
+
+    protected final void useOldCombat() {
+        gameHandle.getPlayerUtil().setDefaultCombatStyle(CombatStyle.OLD);
     }
 
     protected final boolean isGameOver() {
@@ -513,6 +524,22 @@ public abstract class DefaultGameInstance implements MiniGameInstance, Participa
 
         hooks.registerHook(EntityHealthCallback.HOOK, (entity, health)
                 -> health > entity.getHealth());
+    }
+
+    protected final void useTaskDisplay() {
+        GameInfo gameInfo = gameHandle.getGameInfo();
+        TranslationService translations = gameHandle.getTranslations();
+        Identifier id = gameInfo.identifier("task");
+
+        TranslatedBossBar bossBar = translations.translateBossBar(id, gameInfo.getTaskKey(), gameInfo.getTaskArguments())
+                .with(gameHandle.getBossBarProvider())
+                .formatted(Formatting.GREEN);
+
+        bossBar.setColor(BossBar.Color.GREEN);
+
+        bossBar.addPlayers(PlayerLookup.all(gameHandle.getServer()));
+
+        gameHandle.getBossBarHandler().showOnJoin(bossBar);
     }
 
     protected void onGameOver() {}

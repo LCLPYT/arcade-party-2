@@ -3,15 +3,20 @@ package work.lclpnet.ap2.base.activity;
 import net.minecraft.server.network.ServerPlayerEntity;
 import work.lclpnet.activity.ComponentActivity;
 import work.lclpnet.activity.component.ComponentBundle;
+import work.lclpnet.activity.component.builtin.BossBarComponent;
 import work.lclpnet.activity.component.builtin.BuiltinComponents;
 import work.lclpnet.ap2.api.base.ParticipantListener;
 import work.lclpnet.ap2.api.base.PlayerManager;
 import work.lclpnet.ap2.api.game.MiniGame;
 import work.lclpnet.ap2.api.game.MiniGameInstance;
+import work.lclpnet.ap2.base.cmd.DrawCommand;
+import work.lclpnet.ap2.base.cmd.WinCommand;
 import work.lclpnet.ap2.impl.game.DefaultMiniGameHandle;
+import work.lclpnet.kibu.hook.player.PlayerAdvancementPacketCallback;
 import work.lclpnet.kibu.hook.player.PlayerConnectionHooks;
+import work.lclpnet.kibu.hook.player.PlayerRecipePacketCallback;
+import work.lclpnet.kibu.plugin.cmd.CommandRegistrar;
 import work.lclpnet.kibu.plugin.hook.HookRegistrar;
-import work.lclpnet.kibu.translate.bossbar.BossBarProvider;
 
 public class MiniGameActivity extends ComponentActivity {
 
@@ -27,14 +32,17 @@ public class MiniGameActivity extends ComponentActivity {
 
     @Override
     protected void registerComponents(ComponentBundle componentBundle) {
-        componentBundle.add(BuiltinComponents.BOSS_BAR);
+        componentBundle
+                .add(BuiltinComponents.BOSS_BAR)
+                .add(BuiltinComponents.COMMANDS)
+                .add(BuiltinComponents.HOOKS);
     }
 
     @Override
     public void start() {
-        BossBarProvider bossBarProvider = component(BuiltinComponents.BOSS_BAR);
+        BossBarComponent bossBars = component(BuiltinComponents.BOSS_BAR);
 
-        handle = new DefaultMiniGameHandle(miniGame, args, bossBarProvider);
+        handle = new DefaultMiniGameHandle(miniGame, args, bossBars, bossBars);
         handle.init();
 
         PlayerManager playerManager = args.playerManager();
@@ -47,6 +55,15 @@ public class MiniGameActivity extends ComponentActivity {
 
         ParticipantListener listener = instance.getParticipantListener();
         playerManager.bind(listener);
+
+        CommandRegistrar commands = component(BuiltinComponents.COMMANDS).commands();
+
+        new WinCommand(handle, instance).register(commands);
+        new DrawCommand(handle, instance).register(commands);
+
+        HookRegistrar hooks = component(BuiltinComponents.HOOKS).hooks();
+        hooks.registerHook(PlayerAdvancementPacketCallback.HOOK, (player, packet) -> true);
+        hooks.registerHook(PlayerRecipePacketCallback.HOOK, (player, packet) -> true);
     }
 
     @Override

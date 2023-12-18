@@ -1,19 +1,25 @@
 package work.lclpnet.ap2.game.anvil_fall;
 
+import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.block.AnvilBlock;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.FallingBlockEntity;
+import net.minecraft.entity.boss.BossBar;
 import net.minecraft.entity.damage.DamageTypes;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
+import net.minecraft.util.Formatting;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.math.*;
 import net.minecraft.world.GameRules;
+import work.lclpnet.ap2.api.game.GameInfo;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
+import work.lclpnet.ap2.api.util.DynamicTranslatedBossBar;
 import work.lclpnet.ap2.impl.game.EliminationGameInstance;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.BlockBox;
@@ -22,7 +28,9 @@ import work.lclpnet.kibu.access.entity.FallingBlockAccess;
 import work.lclpnet.kibu.hook.player.PlayerMoveCallback;
 import work.lclpnet.kibu.hook.util.PositionRotation;
 import work.lclpnet.kibu.scheduler.Ticks;
-import work.lclpnet.kibu.scheduler.api.TaskHandle;
+import work.lclpnet.kibu.translate.TranslationService;
+import work.lclpnet.kibu.translate.bossbar.TranslatedBossBar;
+import work.lclpnet.kibu.translate.text.FormatWrapper;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 import work.lclpnet.lobby.game.map.GameMap;
 
@@ -37,8 +45,8 @@ public class AnvilFallInstance extends EliminationGameInstance {
     public static final int INCREASE_INTERVAL = Ticks.seconds(8);
     private final Direction[] directions = new Direction[] {Direction.NORTH, Direction.WEST, Direction.SOUTH, Direction.WEST};
     private final Random random = new Random();
+    private DynamicTranslatedBossBar amountDisplay = null;
     private AnvilFallSetup setup;
-    private TaskHandle spawnerTask;
     private BlockBox playArea = null;
     private Vec3d center;
 
@@ -65,6 +73,7 @@ public class AnvilFallInstance extends EliminationGameInstance {
             return false;
         }));
 
+        setupBossBar();
         startAnvilSpawning();
 
         gameHandle.getHookRegistrar().registerHook(PlayerMoveCallback.HOOK, this::onPlayerMove);
@@ -74,13 +83,25 @@ public class AnvilFallInstance extends EliminationGameInstance {
         }
     }
 
-    @Override
-    protected void onGameOver() {
-        super.onGameOver();
+    private void setupBossBar() {
+        GameInfo gameInfo = gameHandle.getGameInfo();
+        TranslationService translations = gameHandle.getTranslations();
+        Identifier id = gameInfo.identifier("status");
 
-        if (spawnerTask != null) {
-            spawnerTask.cancel();
-        }
+        String key = "game.ap2.anvil_fall.status";
+        Object[] args = new Object[] {FormatWrapper.styled(0, Formatting.YELLOW)};
+
+        TranslatedBossBar bossBar = translations.translateBossBar(id, key, args)
+                .with(gameHandle.getBossBarProvider())
+                .formatted(Formatting.GREEN);
+
+        amountDisplay = new DynamicTranslatedBossBar(bossBar, key, args);
+
+        bossBar.setColor(BossBar.Color.GREEN);
+
+        bossBar.addPlayers(PlayerLookup.all(gameHandle.getServer()));
+
+        gameHandle.getBossBarHandler().showOnJoin(bossBar);
     }
 
     private void onHitByAnvil(ServerPlayerEntity player) {
@@ -111,11 +132,14 @@ public class AnvilFallInstance extends EliminationGameInstance {
     }
 
     private void startAnvilSpawning() {
-        spawnerTask = gameHandle.getScheduler().interval(new Runnable() {
+        amountDisplay.setArgument(0, FormatWrapper.styled(20 / INITIAL_DELAY, Formatting.YELLOW));
+
+        gameHandle.getGameScheduler().interval(new Runnable() {
             int delay = INITIAL_DELAY;
             int cooldown = 0;
             int anvilAmount = 1;
             int timer = 0;
+            int prevAmount = 0;
 
             @Override
             public void run() {
@@ -134,6 +158,14 @@ public class AnvilFallInstance extends EliminationGameInstance {
                     }
 
                     cooldown = delay;
+
+                    if (delay > 0) {
+                        Object obj = 20 % delay == 0 ? 20 / delay : String.format("%.2f", 20f / delay);
+                        amountDisplay.setArgument(0, FormatWrapper.styled(obj, Formatting.YELLOW));
+                    } else {
+                        amountDisplay.setArgument(0, FormatWrapper.styled(20, Formatting.YELLOW));
+                    }
+
                     spawnRandomAnvil();
 
                     return;
@@ -141,6 +173,11 @@ public class AnvilFallInstance extends EliminationGameInstance {
 
                 if (time % INCREASE_INTERVAL == 0) {
                     anvilAmount++;
+                }
+
+                if (prevAmount != anvilAmount) {
+                    prevAmount = anvilAmount;
+                    amountDisplay.setArgument(0, FormatWrapper.styled(anvilAmount * 20, Formatting.YELLOW));
                 }
 
                 final int count = Math.min(anvilAmount, 256);
