@@ -7,6 +7,7 @@ import net.minecraft.world.border.WorldBorder;
 import net.minecraft.world.border.WorldBorderListener;
 import org.slf4j.Logger;
 import work.lclpnet.activity.manager.ActivityManager;
+import work.lclpnet.activity.util.BossBarHandler;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.base.WorldBorderManager;
 import work.lclpnet.ap2.api.game.GameInfo;
@@ -16,6 +17,7 @@ import work.lclpnet.ap2.base.ApContainer;
 import work.lclpnet.ap2.base.activity.PreparationActivity;
 import work.lclpnet.ap2.impl.util.ScoreboardManager;
 import work.lclpnet.kibu.plugin.hook.HookStack;
+import work.lclpnet.kibu.plugin.scheduler.SchedulerStack;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.kibu.translate.bossbar.BossBarProvider;
@@ -36,22 +38,29 @@ public class DefaultMiniGameHandle implements MiniGameHandle, Unloadable, WorldB
     private final GameInfo info;
     private final PreparationActivity.Args args;
     private final BossBarProvider bossBarProvider;
+    private final BossBarHandler bossBarHandler;
     private MutableProtectionConfig protectionConfig;
     private volatile BasicProtector protector = null;
     private WorldBorderListener worldBorderListener = null;
     private volatile List<Unloadable> closeWhenDone = null;
     private volatile ScoreboardManager scoreboardManager = null;
+    private TaskScheduler scheduler = null;
 
-    public DefaultMiniGameHandle(GameInfo info, PreparationActivity.Args args, BossBarProvider bossBarProvider) {
+    public DefaultMiniGameHandle(GameInfo info, PreparationActivity.Args args, BossBarProvider bossBarProvider, BossBarHandler bossBarHandler) {
         this.info = info;
         this.args = args;
         this.bossBarProvider = bossBarProvider;
+        this.bossBarHandler = bossBarHandler;
     }
 
     public void init() {
         ApContainer container = args.container();
 
         container.hookStack().push();
+        container.schedulerStack().push();
+
+        scheduler = container.schedulerStack();
+
         container.schedulerStack().push();
     }
 
@@ -87,6 +96,11 @@ public class DefaultMiniGameHandle implements MiniGameHandle, Unloadable, WorldB
 
     @Override
     public TaskScheduler getScheduler() {
+        return scheduler;
+    }
+
+    @Override
+    public SchedulerStack getGameScheduler() {
         return args.container().schedulerStack();
     }
 
@@ -116,6 +130,11 @@ public class DefaultMiniGameHandle implements MiniGameHandle, Unloadable, WorldB
     }
 
     @Override
+    public BossBarHandler getBossBarHandler() {
+        return bossBarHandler;
+    }
+
+    @Override
     public ScoreboardManager getScoreboardManager() {
         if (scoreboardManager != null) return scoreboardManager;
 
@@ -126,6 +145,14 @@ public class DefaultMiniGameHandle implements MiniGameHandle, Unloadable, WorldB
         }
 
         return scoreboardManager;
+    }
+
+    @Override
+    public void resetGameScheduler() {
+        SchedulerStack stack = getGameScheduler();
+
+        stack.pop();
+        stack.push();
     }
 
     @Override
@@ -177,7 +204,10 @@ public class DefaultMiniGameHandle implements MiniGameHandle, Unloadable, WorldB
         ApContainer container = args.container();
 
         container.hookStack().pop();
-        container.schedulerStack().pop();
+
+        SchedulerStack schedulerStack = container.schedulerStack();
+        schedulerStack.pop();  // game scheduler
+        schedulerStack.pop();  // parent scheduler
 
         if (protector != null) {
             protector.unload();

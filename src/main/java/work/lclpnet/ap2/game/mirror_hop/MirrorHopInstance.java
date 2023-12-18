@@ -68,6 +68,8 @@ public class MirrorHopInstance extends DefaultGameInstance {
         team.setShowFriendlyInvisibles(true);
 
         scoreboardManager.joinTeam(gameHandle.getParticipants(), team);
+
+        useTaskDisplay();
     }
 
     @Override

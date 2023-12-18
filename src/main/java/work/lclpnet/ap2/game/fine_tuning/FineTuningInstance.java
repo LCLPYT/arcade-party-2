@@ -25,7 +25,7 @@ public class FineTuningInstance extends DefaultGameInstance {
     public FineTuningInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
 
-        setDefaultGameMode(GameMode.SURVIVAL);  // survival is needed to left-click note blocks
+        useSurvivalMode();  // survival is needed to left-click note blocks
     }
 
     @Override

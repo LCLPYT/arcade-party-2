@@ -53,6 +53,8 @@ public class MapFacadeImpl implements MapFacade {
     }
 
     private void setupWorld(ServerWorld world) {
-        world.getGameRules().get(GameRules.DO_IMMEDIATE_RESPAWN).set(true, server);
+        GameRules gameRules = world.getGameRules();
+        gameRules.get(GameRules.DO_IMMEDIATE_RESPAWN).set(true, server);
+        gameRules.get(GameRules.ANNOUNCE_ADVANCEMENTS).set(false, server);
     }
 }

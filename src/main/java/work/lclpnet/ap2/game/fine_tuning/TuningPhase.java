@@ -109,12 +109,8 @@ class TuningPhase implements Unloadable {
                 FineTuningRoom room = rooms.get(player.getUuid());
 
                 if (room != null) {
-                    if (serverPlayer.isSneaking()) {
-                        room.playNoteBlock(serverPlayer, pos);
-                    } else {
-                        room.useNoteBlock(serverPlayer, pos, true);
-                        markInteraction(serverPlayer);
-                    }
+                    room.useNoteBlock(serverPlayer, pos);
+                    markInteraction(serverPlayer);
                 }
             } else {
                 onUseItem(player);
@@ -134,12 +130,7 @@ class TuningPhase implements Unloadable {
             FineTuningRoom room = rooms.get(player.getUuid());
 
             if (room != null) {
-                if (serverPlayer.isSneaking()) {
-                    room.playNoteBlock(serverPlayer, pos);
-                } else {
-                    room.useNoteBlock(serverPlayer, pos, false);
-                    markInteraction(serverPlayer);
-                }
+                room.playNoteBlock(serverPlayer, pos);
             }
 
             return ActionResult.FAIL;
@@ -156,7 +147,7 @@ class TuningPhase implements Unloadable {
                 .acceptEach(PlayerLookup.all(server), (player, text)
                         -> Title.get(player).title(Text.empty(), text, 5, 30, 5));
 
-        gameHandle.getScheduler().timeout(this::playNextMelody, 40);
+        gameHandle.getGameScheduler().timeout(this::playNextMelody, 40);
     }
 
     private void playNextMelody() {
@@ -169,7 +160,7 @@ class TuningPhase implements Unloadable {
 
     private void playMelody(Runnable onDone) {
         Participants participants = gameHandle.getParticipants();
-        TaskScheduler scheduler = gameHandle.getScheduler();
+        TaskScheduler scheduler = gameHandle.getGameScheduler();
 
         PlayMelodyTask task = new PlayMelodyTask(note -> {
             for (ServerPlayerEntity player : participants) {
@@ -194,13 +185,13 @@ class TuningPhase implements Unloadable {
                 .acceptEach(PlayerLookup.all(server), (player, text)
                         -> Title.get(player).title(Text.empty(), text, 5, 30, 5));
 
-        gameHandle.getScheduler().timeout(() -> playMelody(this::beginTune), 40);
+        gameHandle.getGameScheduler().timeout(() -> playMelody(this::beginTune), 40);
     }
 
     private void beginTune() {
         MinecraftServer server = gameHandle.getServer();
         TranslationService translations = gameHandle.getTranslations();
-        TaskScheduler scheduler = gameHandle.getScheduler();
+        TaskScheduler scheduler = gameHandle.getGameScheduler();
         BossBarProvider bossBarProvider = gameHandle.getBossBarProvider();
 
         var players = PlayerLookup.all(server);
@@ -355,7 +346,7 @@ class TuningPhase implements Unloadable {
 
         room.setTemporaryMelody(melody);
 
-        TaskScheduler scheduler = gameHandle.getScheduler();
+        TaskScheduler scheduler = gameHandle.getGameScheduler();
 
         PlayMelodyTask task = new PlayMelodyTask(note -> {
             if (!player.isAlive()) return;
@@ -424,11 +415,11 @@ class TuningPhase implements Unloadable {
                             Text.keybind("key.use").formatted(DARK_GREEN).append("\n\n"),
                             translations.translateText(player, "game.ap2.fine_tuning.controls.note_down")
                                     .formatted(DARK_BLUE, BOLD).append(":\n"),
-                            Text.keybind("key.attack").formatted(DARK_GREEN).append("\n\n"),
+                            Text.keybind("key.sneak").formatted(DARK_GREEN).append(" + ")
+                                    .append(Text.keybind("key.use").append("\n\n")),
                             translations.translateText(player, "game.ap2.fine_tuning.controls.test")
                                     .formatted(DARK_BLUE, BOLD).append(":\n"),
-                            Text.keybind("key.sneak").formatted(DARK_GREEN).append(" + ")
-                                    .append(Text.keybind("key.use")))
+                            Text.keybind("key.attack").formatted(DARK_GREEN))
                     .toNbt(stack.getOrCreateNbt());
 
             stack.setCustomName(Text.literal(controls)
