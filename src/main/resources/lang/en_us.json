@@ -47,6 +47,7 @@
   "game.ap2.one_in_the_chamber.task": "Reach %s kills",
   "game.ap2.anvil_fall": "Anvil Fall",
   "game.ap2.anvil_fall.description": "Dodge the anvils falling from the sky.\nBe the last one remaining!",
+  "game.ap2.anvil_fall.status": "%s anvils per second",
   "game.ap2.treasure_hunter": "Treasure Hunter",
   "game.ap2.treasure_hunter.description": "Search for a treasure in a big pile of sand. First one to find the chest wins!",
   "game.ap2.treasure_hunter.task": "Find the treasure"

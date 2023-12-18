@@ -24,6 +24,11 @@ public class DynamicTranslatedBossBar {
         update();
     }
 
+    public void setArgument(int i, Object argument) {
+        this.arguments[i] = argument;
+        update();
+    }
+
     private void update() {
         bossBar.setTitle(translationKey, arguments);
     }
