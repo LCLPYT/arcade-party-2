@@ -3,6 +3,7 @@ package work.lclpnet.ap2.base.activity;
 import net.minecraft.server.network.ServerPlayerEntity;
 import work.lclpnet.activity.ComponentActivity;
 import work.lclpnet.activity.component.ComponentBundle;
+import work.lclpnet.activity.component.builtin.BossBarComponent;
 import work.lclpnet.activity.component.builtin.BuiltinComponents;
 import work.lclpnet.ap2.api.base.ParticipantListener;
 import work.lclpnet.ap2.api.base.PlayerManager;
@@ -16,7 +17,6 @@ import work.lclpnet.kibu.hook.player.PlayerConnectionHooks;
 import work.lclpnet.kibu.hook.player.PlayerRecipePacketCallback;
 import work.lclpnet.kibu.plugin.cmd.CommandRegistrar;
 import work.lclpnet.kibu.plugin.hook.HookRegistrar;
-import work.lclpnet.kibu.translate.bossbar.BossBarProvider;
 
 public class MiniGameActivity extends ComponentActivity {
 
@@ -40,9 +40,9 @@ public class MiniGameActivity extends ComponentActivity {
 
     @Override
     public void start() {
-        BossBarProvider bossBarProvider = component(BuiltinComponents.BOSS_BAR);
+        BossBarComponent bossBars = component(BuiltinComponents.BOSS_BAR);
 
-        handle = new DefaultMiniGameHandle(miniGame, args, bossBarProvider);
+        handle = new DefaultMiniGameHandle(miniGame, args, bossBars, bossBars);
         handle.init();
 
         PlayerManager playerManager = args.playerManager();

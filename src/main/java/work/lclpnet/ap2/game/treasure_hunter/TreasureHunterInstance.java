@@ -92,6 +92,8 @@ public class TreasureHunterInstance extends DefaultGameInstance {
         });
 
         placeChest();
+
+        useTaskDisplay();
     }
 
     @Override
