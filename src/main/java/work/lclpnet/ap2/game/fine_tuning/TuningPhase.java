@@ -415,11 +415,11 @@ class TuningPhase implements Unloadable {
                             Text.keybind("key.use").formatted(DARK_GREEN).append("\n\n"),
                             translations.translateText(player, "game.ap2.fine_tuning.controls.note_down")
                                     .formatted(DARK_BLUE, BOLD).append(":\n"),
-                            Text.keybind("key.attack").formatted(DARK_GREEN).append("\n\n"),
+                            Text.keybind("key.sneak").formatted(DARK_GREEN).append(" + ")
+                                    .append(Text.keybind("key.use").append("\n\n")),
                             translations.translateText(player, "game.ap2.fine_tuning.controls.test")
                                     .formatted(DARK_BLUE, BOLD).append(":\n"),
-                            Text.keybind("key.sneak").formatted(DARK_GREEN).append(" + ")
-                                    .append(Text.keybind("key.use")))
+                            Text.keybind("key.attack").formatted(DARK_GREEN))
                     .toNbt(stack.getOrCreateNbt());
 
             stack.setCustomName(Text.literal(controls)
