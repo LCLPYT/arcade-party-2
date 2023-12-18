@@ -109,12 +109,8 @@ class TuningPhase implements Unloadable {
                 FineTuningRoom room = rooms.get(player.getUuid());
 
                 if (room != null) {
-                    if (serverPlayer.isSneaking()) {
-                        room.playNoteBlock(serverPlayer, pos);
-                    } else {
-                        room.useNoteBlock(serverPlayer, pos, true);
-                        markInteraction(serverPlayer);
-                    }
+                    room.useNoteBlock(serverPlayer, pos);
+                    markInteraction(serverPlayer);
                 }
             } else {
                 onUseItem(player);
@@ -134,12 +130,7 @@ class TuningPhase implements Unloadable {
             FineTuningRoom room = rooms.get(player.getUuid());
 
             if (room != null) {
-                if (serverPlayer.isSneaking()) {
-                    room.playNoteBlock(serverPlayer, pos);
-                } else {
-                    room.useNoteBlock(serverPlayer, pos, false);
-                    markInteraction(serverPlayer);
-                }
+                room.playNoteBlock(serverPlayer, pos);
             }
 
             return ActionResult.FAIL;
