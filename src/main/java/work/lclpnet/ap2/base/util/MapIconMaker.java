@@ -26,16 +26,22 @@ public class MapIconMaker {
         Object[] descArgs = game.getDescriptionArguments();
 
         ItemStackUtil.setLore(icon, wrapText(translations.translateText(player, descriptionKey, descArgs)
-                .formatted(GREEN), 24));
+                .formatted(GREEN), 32));
 
         return icon;
     }
 
     public static List<Text> wrapText(Text text, int charsPerLine) {
-        List<Text> wrapped = new ArrayList<>();
         Style style = text.getStyle();
 
-        String str = text.getString();
+        return wrapText(text.getString(), charsPerLine).stream()
+                .<Text>map(line -> Text.literal(line).setStyle(style))
+                .toList();
+    }
+
+    public static List<String> wrapText(String str, int charsPerLine) {
+        List<String> wrapped = new ArrayList<>();
+
         String[] words = str.split("\\s+");
 
         StringBuilder builder = new StringBuilder();
@@ -55,17 +61,19 @@ public class MapIconMaker {
             }
 
             if (!builder.isEmpty()) {
-                wrapped.add(Text.literal(builder.toString()).setStyle(style));
+                wrapped.add(builder.toString());
                 builder.setLength(0);
             }
 
-            if (wordLen > charsPerLine) {
-                wrapped.add(Text.literal(word).setStyle(style));
+            if (wordLen <= charsPerLine) {
+                builder.append(word);
+            } else {
+                wrapped.add(word);
             }
         }
 
         if (!builder.isEmpty()) {
-            wrapped.add(Text.literal(builder.toString()).setStyle(style));
+            wrapped.add(builder.toString());
         }
 
         return wrapped;
