@@ -36,7 +36,7 @@ public class PandaFinderMiniGame implements MiniGame {
 
     @Override
     public boolean canBeFinale() {
-        return false;
+        return false;  // can have multiple winners as there is a max round count -> could fix this by bypassing this limit for finales
     }
 
     @Override
@@ -51,6 +51,9 @@ public class PandaFinderMiniGame implements MiniGame {
 
     @Override
     public Object[] getDescriptionArguments() {
-        return new Object[] {FormatWrapper.styled(PandaFinderInstance.MAX_SCORE, Formatting.YELLOW)};
+        return new Object[] {
+                FormatWrapper.styled(PandaFinderInstance.WIN_SCORE, Formatting.YELLOW),
+                FormatWrapper.styled(PandaFinderInstance.MAX_ROUNDS, Formatting.YELLOW)
+        };
     }
 }

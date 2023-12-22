@@ -20,12 +20,12 @@ import java.util.stream.StreamSupport;
 public class SizedSpaceFinder implements SpaceFinder {
 
     private final BlockView blockView;
-    private final float halfWidth, halfHeight, halfLength;
+    private final float halfWidth, height, halfLength;
 
     public SizedSpaceFinder(BlockView blockView, float width, float height, float length) {
         this.blockView = blockView;
         this.halfWidth = width * 0.5f;
-        this.halfHeight = height * 0.5f;
+        this.height = height;
         this.halfLength = length * 0.5f;
     }
 
@@ -53,14 +53,14 @@ public class SizedSpaceFinder implements SpaceFinder {
     }
 
     private boolean hasSpace(double x, double y, double z) {
-        double minX = x - halfWidth, minY = y - halfHeight, minZ = z - halfLength;
-        double maxX = x + halfWidth, maxY = y + halfHeight, maxZ = z + halfLength;
+        double minX = x - halfWidth, minZ = z - halfLength;
+        double maxX = x + halfWidth, maxY = y + height, maxZ = z + halfLength;
 
-        VoxelShape space = VoxelShapes.cuboidUnchecked(minX, minY, minZ, maxX, maxY, maxZ);
+        VoxelShape space = VoxelShapes.cuboidUnchecked(minX, y, minZ, maxX, maxY, maxZ);
 
         return BlockPos.stream(
                 (int) Math.floor(minX),
-                (int) Math.floor(minY),
+                (int) Math.floor(y),
                 (int) Math.floor(minZ),
                 (int) Math.ceil(maxX),
                 (int) Math.ceil(maxY),
