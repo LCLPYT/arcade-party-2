@@ -52,6 +52,16 @@
   "game.ap2.treasure_hunter.description": "Search for a treasure in a big pile of sand. First one to find the chest wins!",
   "game.ap2.treasure_hunter.task": "Find the treasure",
   "game.ap2.panda_finder": "Panda Finder",
-  "game.ap2.panda_finder.description": "Find the panda from the picture to get a point. First to find %s points wins!",
-  "game.ap2.panda_finder.find_the_panda": "Find the panda"
+  "game.ap2.panda_finder.description": "Find a panda from a picture. First player with %s points wins. After %s rounds, the player with the most points wins!",
+  "game.ap2.panda_finder.find_the_panda": "Find the panda",
+  "game.ap2.panda_finder.panda_found": "%s found the panda!",
+  "game.ap2.panda_finder.panda_not_found": "Nobody found the panda.",
+  "game.ap2.panda_finder.find": "Find %s panda!",
+  "game.ap2.panda_finder.find.normal": "a normal",
+  "game.ap2.panda_finder.find.lazy": "a lazy",
+  "game.ap2.panda_finder.find.worried": "a worried",
+  "game.ap2.panda_finder.find.playful": "a playful",
+  "game.ap2.panda_finder.find.brown": "a brown",
+  "game.ap2.panda_finder.find.weak": "a weak",
+  "game.ap2.panda_finder.find.aggressive": "an aggressive"
 }
