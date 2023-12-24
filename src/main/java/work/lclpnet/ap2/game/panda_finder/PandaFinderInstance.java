@@ -3,6 +3,8 @@ package work.lclpnet.ap2.game.panda_finder;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.effect.StatusEffectInstance;
+import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.passive.PandaEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.projectile.FireworkRocketEntity;
@@ -20,6 +22,7 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import org.json.JSONObject;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
@@ -42,6 +45,7 @@ import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.kibu.translate.text.FormatWrapper;
+import work.lclpnet.lobby.game.map.GameMap;
 import work.lclpnet.lobby.game.util.BossBarTimer;
 
 import java.util.Random;
@@ -53,6 +57,7 @@ public class PandaFinderInstance extends DefaultGameInstance {
     private static final int MAX_ROUND_LENGTH_SECONDS = 45;
     private final ScoreDataContainer data = new ScoreDataContainer();
     private final Random random = new Random();
+    private final SpamManager spamManager = new SpamManager();
     private PandaManager pandaManager;
     private BossBarTimer timer = null;
     private int round = 0;
@@ -70,6 +75,7 @@ public class PandaFinderInstance extends DefaultGameInstance {
     @Override
     protected void prepare() {
         scanWorld();
+        readImages();
     }
 
     @Override
@@ -78,10 +84,10 @@ public class PandaFinderInstance extends DefaultGameInstance {
         hooks.registerHook(PlayerInteractionHooks.USE_ENTITY, this::onUseEntity);
         hooks.registerHook(PlayerInteractionHooks.ATTACK_ENTITY, this::onUseEntity);
 
-        next();
+        nextRound();
     }
 
-    private void next() {
+    private void nextRound() {
         pandaManager.next();
 
         var players = PlayerLookup.all(gameHandle.getServer());
@@ -114,22 +120,29 @@ public class PandaFinderInstance extends DefaultGameInstance {
 
         if (!foundManually) {
             // timer ran out
-            gameHandle.getTranslations().translateText("game.ap2.panda_finder.panda_not_found")
-                    .formatted(Formatting.GRAY).sendTo(PlayerLookup.all(gameHandle.getServer()));
+            var players = PlayerLookup.all(gameHandle.getServer());
 
-            next();
+            gameHandle.getTranslations().translateText("game.ap2.panda_finder.panda_not_found")
+                    .formatted(Formatting.GRAY).sendTo(players);
+
+            for (ServerPlayerEntity player : players) {
+                player.playSound(SoundEvents.ENTITY_WITHER_HURT, SoundCategory.PLAYERS, 0.5f, 1f);
+            }
+
+            nextRound();
             return;
         }
 
         foundManually = false;
 
-        gameHandle.getGameScheduler().timeout(this::next, Ticks.seconds(3));
+        gameHandle.getGameScheduler().timeout(this::nextRound, Ticks.seconds(3));
     }
 
     private void scanWorld() {
-        BlockPos start = MapUtil.readBlockPos(getMap().requireProperty("search-start"));
-        BlockBox bounds = MapUtil.readBox(getMap().requireProperty("bounds"));
-        BlockBox exclude = MapUtil.readBox(getMap().requireProperty("search-exclude"));
+        GameMap map = getMap();
+        BlockPos start = MapUtil.readBlockPos(map.requireProperty("search-start"));
+        BlockBox bounds = MapUtil.readBox(map.requireProperty("bounds"));
+        BlockBox exclude = MapUtil.readBox(map.requireProperty("search-exclude"));
 
         ServerWorld world = getWorld();
 
@@ -144,15 +157,38 @@ public class PandaFinderInstance extends DefaultGameInstance {
         SizedSpaceFinder spaceFinder = SizedSpaceFinder.create(world, EntityType.PANDA);
         var spaces = spaceFinder.findSpaces(scanner.scan(start));
 
-        pandaManager = new PandaManager(spaces, random, world);
+        pandaManager = new PandaManager(gameHandle.getLogger(), spaces, random, world, gameHandle.getParticipants());
+    }
+
+    private void readImages() {
+        JSONObject images = getMap().requireProperty("images");
+
+        pandaManager.readImages(images);
     }
 
     private ActionResult onUseEntity(PlayerEntity player, World world, Hand hand, Entity entity, EntityHitResult hitResult) {
-        if (entity instanceof PandaEntity panda && pandaManager.isSearchedPanda(panda) && player instanceof ServerPlayerEntity serverPlayer) {
+        if (!(entity instanceof PandaEntity panda) || !(player instanceof ServerPlayerEntity serverPlayer)
+            || player.hasStatusEffect(StatusEffects.BLINDNESS) || hand != Hand.MAIN_HAND
+            || hitResult != null) return ActionResult.PASS;
+
+        if (spamManager.interact(serverPlayer)) {
+            onCooldownReached(serverPlayer);
+            return ActionResult.PASS;
+        }
+
+        if (pandaManager.isSearchedPanda(panda)) {
             pandaFound(serverPlayer, panda);
         }
 
         return ActionResult.PASS;
+    }
+
+    private void onCooldownReached(ServerPlayerEntity player) {
+        player.sendMessage(gameHandle.getTranslations().translateText(player, "game.ap2.panda_finder.cooldown")
+                .formatted(Formatting.RED));
+
+        player.playSound(SoundEvents.ENTITY_BLAZE_HURT, SoundCategory.HOSTILE, 0.5f, 1.5f);
+        player.addStatusEffect(new StatusEffectInstance(StatusEffects.BLINDNESS, Ticks.seconds(3), 1, false, false));
     }
 
     private void pandaFound(ServerPlayerEntity player, PandaEntity panda) {

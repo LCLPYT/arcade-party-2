@@ -17,6 +17,8 @@
   "ap2.score.points_timed": "%s points | reached #%s",
   "ap2.game.remaining": "%s players remaining",
   "ap2.game.remaining_single": "%s player remaining",
+  "ap2.pvp.shot_by": "%s was shot by %s",
+  "ap2.pvp.killed_by": "%s was killed by %s",
   "game.ap2.title": "ArcadeParty",
   "game.ap2.spleef": "Spleef",
   "game.ap2.spleef.description": "Break the ground beneath your opponents to make them fall. Last one standing wins.",
@@ -63,5 +65,6 @@
   "game.ap2.panda_finder.find.playful": "a playful",
   "game.ap2.panda_finder.find.brown": "a brown",
   "game.ap2.panda_finder.find.weak": "a weak",
-  "game.ap2.panda_finder.find.aggressive": "an aggressive"
+  "game.ap2.panda_finder.find.aggressive": "an aggressive",
+  "game.ap2.panda_finder.cooldown": "Do guess pandas so often!"
 }
