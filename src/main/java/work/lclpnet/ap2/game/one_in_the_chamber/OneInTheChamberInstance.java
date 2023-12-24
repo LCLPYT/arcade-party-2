@@ -21,6 +21,7 @@ import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.GameMode;
 import net.minecraft.world.GameRules;
+import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
@@ -37,6 +38,8 @@ import work.lclpnet.kibu.hook.player.PlayerInventoryHooks;
 import work.lclpnet.kibu.inv.item.ItemStackUtil;
 import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 import work.lclpnet.kibu.translate.TranslationService;
+import work.lclpnet.kibu.translate.text.FormatWrapper;
+import work.lclpnet.kibu.translate.text.TranslatedText;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 
 import java.util.Random;
@@ -133,12 +136,20 @@ public class OneInTheChamberInstance extends DefaultGameInstance {
         }
     }
 
-    private void killPlayer(ServerPlayerEntity player) {
+    private void killPlayer(ServerPlayerEntity player, @Nullable ServerPlayerEntity killer, boolean shot) {
         TranslationService translations = gameHandle.getTranslations();
 
-        translations.translateText("ap2.game.eliminated", styled(player.getEntityName(), YELLOW))
-                .formatted(GRAY)
-                .sendTo(PlayerLookup.all(gameHandle.getServer()));
+        FormatWrapper victim = styled(player.getEntityName(), YELLOW);
+        TranslatedText text;
+
+        if (killer != null) {
+            String key = shot ? "ap2.pvp.shot_by" : "ap2.pvp.killed_by";
+            text = translations.translateText(key, victim, styled(killer.getEntityName(), YELLOW));
+        } else {
+            text = translations.translateText("ap2.game.eliminated", victim);
+        }
+
+        text.formatted(GRAY).sendTo(PlayerLookup.all(gameHandle.getServer()));
 
         getWorld().playSound(null, player.getBlockPos(), SoundEvents.ENTITY_PLAYER_DEATH, SoundCategory.PLAYERS, 0.8f, 0.8f);
 
@@ -201,10 +212,11 @@ public class OneInTheChamberInstance extends DefaultGameInstance {
     }
 
     private void onLethalDamage(DamageSource source, ServerPlayerEntity player) {
-        killPlayer(player);
-
         if (source.getAttacker() instanceof ServerPlayerEntity attacker && player != attacker) {
+            killPlayer(player, attacker, false);
             onKillGained(attacker);
+        } else {
+            killPlayer(player, null, false);
         }
     }
 
@@ -218,7 +230,7 @@ public class OneInTheChamberInstance extends DefaultGameInstance {
             return;
         }
 
-        killPlayer(player);
+        killPlayer(player, owner, true);
 
         onKillGained(owner);
     }
