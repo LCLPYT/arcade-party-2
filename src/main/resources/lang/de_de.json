@@ -63,5 +63,6 @@
   "game.ap2.panda_finder.find.playful": "verspielten",
   "game.ap2.panda_finder.find.brown": "braunen",
   "game.ap2.panda_finder.find.weak": "schwachen",
-  "game.ap2.panda_finder.find.aggressive": "aggressiven"
+  "game.ap2.panda_finder.find.aggressive": "aggressiven",
+  "game.ap2.panda_finder.cooldown": "Rate nicht so viele Pandas!"
 }

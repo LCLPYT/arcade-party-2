@@ -3,8 +3,17 @@ package work.lclpnet.ap2.game.panda_finder;
 
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.passive.PandaEntity;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.util.Hand;
 import net.minecraft.util.math.Vec3d;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.slf4j.Logger;
+import work.lclpnet.ap2.api.base.Participants;
+import work.lclpnet.kibu.map.MapUtil;
 
 import java.util.*;
 
@@ -12,13 +21,20 @@ public class PandaManager {
 
     private static final int PANDA_COUNT = 100;
     private static final int SEARCHED_PANDA_COUNT = 5;
+    private final Logger logger;
     private final List<Vec3d> spawns;
     private final Random random;
     private final ServerWorld world;
+    private final Participants participants;
     private final Set<PandaEntity> pandas = new HashSet<>();
+    private Map<PandaEntity.Gene, List<Integer>> imagesByGene = null;
     private PandaEntity.Gene current = null;
+    private int currentMapId = -1;
 
-    public PandaManager(List<Vec3d> spawns, Random random, ServerWorld world) {
+    public PandaManager(Logger logger, List<Vec3d> spawns, Random random, ServerWorld world, Participants participants) {
+        this.logger = logger;
+        this.participants = participants;
+
         if (spawns.isEmpty()) throw new IllegalArgumentException("Spawn list is empty");
 
         this.spawns = spawns;
@@ -30,9 +46,26 @@ public class PandaManager {
         PandaEntity.Gene[] genes = PandaEntity.Gene.values();
         current = genes[random.nextInt(genes.length)];
 
+        randomizeImage();
+
+        for (ServerPlayerEntity player : participants) {
+            giveImageTo(player);
+        }
+
         clear();
 
         populate();
+    }
+
+    private void randomizeImage() {
+        List<Integer> images = imagesByGene.get(current);
+
+        if (images == null || images.isEmpty()) {
+            logger.error("There are no images for panda gene {}", current);
+            currentMapId = -1;
+        } else {
+            currentMapId = images.get(random.nextInt(images.size()));
+        }
     }
 
     private void populate() {
@@ -66,7 +99,6 @@ public class PandaManager {
 
             panda.setBaby(random.nextFloat() < 0.05);
 
-            System.out.println(pos);
             panda.setPosition(pos);
 
             world.spawnEntity(panda);
@@ -94,5 +126,46 @@ public class PandaManager {
 
     public void setFound() {
         current = null;
+    }
+
+    public void readImages(JSONObject images) {
+        Map<PandaEntity.Gene, List<Integer>> imagesByGene = new HashMap<>();
+
+        for (var key : images.keySet()) {
+            var gene = PandaEntity.Gene.CODEC.byId(key);
+
+            if (gene == null) {
+                logger.warn("Invalid panda gene named '{}'", key);
+                continue;
+            }
+
+            JSONArray array = images.getJSONArray(key);
+            List<Integer> ids = new ArrayList<>(array.length());
+
+            for (Object o : array) {
+                if (!(o instanceof Number number)) {
+                    logger.warn("Invalid integer value '{}'", o);
+                    continue;
+                }
+
+                ids.add(number.intValue());
+            }
+
+            imagesByGene.put(gene, ids);
+        }
+
+        this.imagesByGene = imagesByGene;
+    }
+
+    public void giveImageTo(ServerPlayerEntity player) {
+        if (currentMapId == -1) {
+            player.setStackInHand(Hand.OFF_HAND, ItemStack.EMPTY);
+            return;
+        }
+
+        ItemStack filledMap = new ItemStack(Items.FILLED_MAP);
+        MapUtil.setMapId(filledMap, currentMapId);
+
+        player.setStackInHand(Hand.OFF_HAND, filledMap);
     }
 }
