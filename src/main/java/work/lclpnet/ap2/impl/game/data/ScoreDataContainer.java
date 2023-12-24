@@ -1,18 +1,19 @@
 package work.lclpnet.ap2.impl.game.data;
 
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.game.data.DataEntry;
 import work.lclpnet.ap2.api.game.data.PlayerRef;
 import work.lclpnet.ap2.impl.game.data.entry.ScoreDataEntry;
 
-import java.util.Comparator;
-import java.util.HashMap;
+import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class ScoreDataContainer implements DataContainer {
 
-    private final HashMap<PlayerRef, Integer> scoreMap = new HashMap<>();
+    private final Map<PlayerRef, Integer> scoreMap = new HashMap<>();
 
     private boolean frozen = false;
 
@@ -70,5 +71,23 @@ public class ScoreDataContainer implements DataContainer {
     @Override
     public void ensureTracked(ServerPlayerEntity player) {
         addScore(player, 0);
+    }
+
+    public OptionalInt getBestScore() {
+        return scoreMap.values().stream().mapToInt(i -> i).max();
+    }
+
+    public Set<ServerPlayerEntity> getBestPlayers(MinecraftServer server) {
+        OptionalInt best = getBestScore();
+
+        if (best.isEmpty()) return Set.of();
+
+        final int bestScore = best.getAsInt();
+
+        return scoreMap.keySet().stream()
+                .filter(ref -> scoreMap.get(ref) == bestScore)
+                .map(ref -> ref.resolve(server))
+                .filter(Objects::nonNull)
+                .collect(Collectors.toUnmodifiableSet());
     }
 }
