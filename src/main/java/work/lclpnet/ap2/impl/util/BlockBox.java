@@ -1,12 +1,11 @@
 package work.lclpnet.ap2.impl.util;
 
 import it.unimi.dsi.fastutil.Pair;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Position;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.*;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.util.Collider;
+import work.lclpnet.ap2.impl.util.math.Matrix4i;
 
 import java.util.Iterator;
 import java.util.Objects;
@@ -57,6 +56,10 @@ public class BlockBox implements Pair<BlockPos, BlockPos>, Iterable<BlockPos>, C
         return max;
     }
 
+    public BlockBox transform(Matrix4i mat4) {
+        return new BlockBox(mat4.transform(min), mat4.transform(max));
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -68,6 +71,26 @@ public class BlockBox implements Pair<BlockPos, BlockPos>, Iterable<BlockPos>, C
     @Override
     public int hashCode() {
         return Objects.hash(min, max);
+    }
+
+    @Override
+    public String toString() {
+        return "BlockBox{" +
+                "min=" + min +
+                ", max=" + max +
+                '}';
+    }
+
+    @Nullable
+    public Direction getTangentSurface(int x, int y, int z) {
+        if (x == min.getX()) return Direction.WEST;
+        if (x == max.getX()) return Direction.EAST;
+        if (z == min.getZ()) return Direction.NORTH;
+        if (z == max.getZ()) return Direction.SOUTH;
+        if (y == min.getY()) return Direction.DOWN;
+        if (y == max.getY()) return Direction.UP;
+
+        return null;
     }
 
     public Vec3d getCenter() {

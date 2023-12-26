@@ -66,5 +66,7 @@
   "game.ap2.panda_finder.find.brown": "a brown",
   "game.ap2.panda_finder.find.weak": "a weak",
   "game.ap2.panda_finder.find.aggressive": "an aggressive",
-  "game.ap2.panda_finder.cooldown": "Do guess pandas so often!"
+  "game.ap2.panda_finder.cooldown": "Do guess pandas so often!",
+  "game.ap2.jump_and_run": "Jump 'n' Run",
+  "game.ap2.jump_and_run.description": "Complete a randomly generated jump 'n' run. If you make it first, you win!"
 }

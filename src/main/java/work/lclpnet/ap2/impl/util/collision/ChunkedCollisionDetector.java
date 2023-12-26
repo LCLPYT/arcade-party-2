@@ -10,7 +10,7 @@ import net.minecraft.util.math.Position;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.util.Collider;
 import work.lclpnet.ap2.api.util.CollisionDetector;
-import work.lclpnet.ap2.impl.util.Vec2i;
+import work.lclpnet.ap2.impl.util.math.Vec2i;
 
 import java.util.Iterator;
 import java.util.Objects;

@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.impl.util;
+package work.lclpnet.ap2.impl.util.math;
 
 public class Vec2i {
 
