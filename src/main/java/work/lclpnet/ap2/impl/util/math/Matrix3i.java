@@ -7,6 +7,7 @@ import java.util.Arrays;
 
 public class Matrix3i {
 
+    public static final Matrix3i IDENTITY = new Matrix3i();
     public final int[] elements;
 
     public Matrix3i(int[] elements) {

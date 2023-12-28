@@ -4,18 +4,20 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3i;
 import org.jetbrains.annotations.Nullable;
+import work.lclpnet.ap2.api.util.Printable;
 import work.lclpnet.ap2.impl.util.math.Matrix3i;
 import work.lclpnet.kibu.schematic.FabricBlockStateAdapter;
 import work.lclpnet.kibu.structure.BlockStructure;
 
 public class StructureUtil {
 
-    public static void placeStructure(BlockStructure structure, ServerWorld world, BlockPos pos) {
+    public static void placeStructure(BlockStructure structure, ServerWorld world, Vec3i pos) {
         placeStructure(structure, world, pos, null);
     }
 
-    public static void placeStructure(BlockStructure structure, ServerWorld world, BlockPos pos, @Nullable Matrix3i transformation) {
+    public static void placeStructure(BlockStructure structure, ServerWorld world, Vec3i pos, @Nullable Matrix3i transformation) {
         var origin = structure.getOrigin();
 
         int ox = origin.getX(), oy = origin.getY(), oz = origin.getZ();
@@ -43,6 +45,10 @@ public class StructureUtil {
 
             world.setBlockState(printPos, state, 0);
         }
+    }
+
+    public static void placeStructure(Printable printable, ServerWorld world) {
+        placeStructure(printable.getStructure(), world, printable.getPrintOffset(), printable.getPrintMatrix());
     }
 
     public static BlockBox getBounds(BlockStructure structure) {

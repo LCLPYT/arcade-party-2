@@ -73,7 +73,7 @@ class FineTuningSetup {
         final int rooms = gameHandle.getParticipants().getAsSet().size();
         final int width = structure.getWidth(),
                 height = structure.getHeight(),
-                length = structure.getWidth();
+                length = structure.getLength();
 
         int rz = roomDirection.getZ(), rx = roomDirection.getX(), ry = roomDirection.getY();
         int sx = roomStart.getX(), sy = roomStart.getY(), sz = roomStart.getZ();

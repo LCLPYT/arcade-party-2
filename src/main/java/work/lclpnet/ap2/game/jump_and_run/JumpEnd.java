@@ -5,7 +5,8 @@ import net.minecraft.util.math.Direction;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.StructureUtil;
-import work.lclpnet.kibu.mc.BuiltinBlockState;
+import work.lclpnet.kibu.mc.BuiltinKibuBlockState;
+import work.lclpnet.kibu.mc.KibuBlockPos;
 import work.lclpnet.kibu.structure.BlockStructure;
 
 public class JumpEnd {
@@ -75,20 +76,20 @@ public class JumpEnd {
         if (exit == null) throw new IllegalStateException("Exit not found");
 
         if (spawn != null) {
-            structure.setBlockState(new work.lclpnet.kibu.mc.BlockPos(
+            structure.setBlockState(new KibuBlockPos(
                     spawn.getX() + ox,
                     spawn.getY() + oy,
                     spawn.getZ() + oz
-            ), BuiltinBlockState.AIR);
+            ), BuiltinKibuBlockState.AIR);
         }
 
         BlockPos exitPos = exit.pos();
 
-        structure.setBlockState(new work.lclpnet.kibu.mc.BlockPos(
+        structure.setBlockState(new KibuBlockPos(
                 exitPos.getX() + ox,
                 exitPos.getY() + oy,
                 exitPos.getZ() + oz
-        ), BuiltinBlockState.AIR);
+        ), BuiltinKibuBlockState.AIR);
 
         return new JumpEnd(structure, bounds, spawn, exit);
     }

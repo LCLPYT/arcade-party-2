@@ -1,6 +1,7 @@
 package work.lclpnet.ap2.game.jump_and_run;
 
 import net.minecraft.util.math.Vec3i;
+import work.lclpnet.ap2.api.util.Printable;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.StructureUtil;
 import work.lclpnet.ap2.impl.util.math.Matrix3i;
@@ -9,20 +10,24 @@ import work.lclpnet.kibu.structure.BlockStructure;
 
 import java.util.Objects;
 
-public final class OrientedPart {
+public final class OrientedPart implements Printable {
 
     private final BlockStructure structure;
     private final Vec3i offset;
     private final int rotation;
     private final BlockBox bounds;
     private final Connector in, out;
+    private final Matrix3i matrix;
 
     public OrientedPart(BlockStructure structure, Vec3i offset, int rotation, Connector in, Connector out) {
         this.structure = structure;
         this.offset = offset;
         this.rotation = rotation;
 
-        Matrix4i mat4 = new Matrix4i(Matrix3i.makeRotationY(rotation)).translate(offset);
+        this.matrix = Matrix3i.makeRotationY(rotation);
+
+        Matrix4i mat4 = new Matrix4i(matrix).translate(offset);
+
         this.bounds = StructureUtil.getBounds(structure).transform(mat4);
         this.in = in != null ? in.transform(mat4) : null;
         this.out = out != null ? out.transform(mat4) : null;
@@ -75,4 +80,22 @@ public final class OrientedPart {
                 "rotation=" + rotation + ']';
     }
 
+    @Override
+    public BlockStructure getStructure() {
+        return structure;
+    }
+
+    @Override
+    public Vec3i getPrintOffset() {
+        return offset;
+    }
+
+    @Override
+    public Matrix3i getPrintMatrix() {
+        return matrix;
+    }
+
+    public JumpPart asJumpPart() {
+        return new JumpPart(this, bounds);
+    }
 }

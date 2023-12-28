@@ -5,7 +5,8 @@ import net.minecraft.util.math.Direction;
 import org.jetbrains.annotations.NotNull;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.StructureUtil;
-import work.lclpnet.kibu.mc.BuiltinBlockState;
+import work.lclpnet.kibu.mc.BuiltinKibuBlockState;
+import work.lclpnet.kibu.mc.KibuBlockPos;
 import work.lclpnet.kibu.structure.BlockStructure;
 
 public class JumpRoom {
@@ -78,17 +79,17 @@ public class JumpRoom {
 
         BlockPos entryPos = entry.pos(), exitPos = exit.pos();
 
-        structure.setBlockState(new work.lclpnet.kibu.mc.BlockPos(
+        structure.setBlockState(new KibuBlockPos(
                 entryPos.getX() + ox,
                 entryPos.getY() + oy,
                 entryPos.getZ() + oz
-        ), BuiltinBlockState.AIR);
+        ), BuiltinKibuBlockState.AIR);
 
-        structure.setBlockState(new work.lclpnet.kibu.mc.BlockPos(
+        structure.setBlockState(new KibuBlockPos(
                 exitPos.getX() + ox,
                 exitPos.getY() + oy,
                 exitPos.getZ() + oz
-        ), BuiltinBlockState.AIR);
+        ), BuiltinKibuBlockState.AIR);
 
         return new Connectors(entry, exit);
     }
