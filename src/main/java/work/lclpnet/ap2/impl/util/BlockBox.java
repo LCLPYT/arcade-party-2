@@ -110,4 +110,10 @@ public class BlockBox implements Pair<BlockPos, BlockPos>, Iterable<BlockPos>, C
     public boolean contains(Box box) {
         return contains(box.minX, box.minY, box.minZ) && contains(box.maxX, box.maxY, box.maxZ);
     }
+
+    public boolean collidesWith(BlockBox other) {
+        return this.max.getX() >= other.min.getX() && other.max.getX() >= this.min.getX()
+               && this.max.getY() >= other.min.getY() && other.max.getY() >= this.min.getY()
+               && this.max.getZ() >= other.min.getZ() && other.max.getZ() >= this.min.getZ();
+    }
 }
