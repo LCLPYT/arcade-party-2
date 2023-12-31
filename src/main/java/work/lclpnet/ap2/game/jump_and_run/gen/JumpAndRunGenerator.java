@@ -27,11 +27,14 @@ public class JumpAndRunGenerator {
     private final float maxTotal;
     private final Random random;
     private final Logger logger;
+    private final int minHeight, maxHeight;
 
-    public JumpAndRunGenerator(float maxTotal, Random random, Logger logger) {
+    public JumpAndRunGenerator(float maxTotal, Random random, Logger logger, int minHeight, int maxHeight) {
         this.maxTotal = maxTotal;
         this.random = random;
         this.logger = logger;
+        this.minHeight = minHeight;
+        this.maxHeight = maxHeight;
     }
 
     public JumpAndRun generate(JumpAndRunSetup.Parts parts, BlockPos spawnPos) {
@@ -142,21 +145,25 @@ public class JumpAndRunGenerator {
         for (JumpRoom room : rooms) {
             // check if the room itself can be put at the last connector
             OrientedPart part = createPart(room, connector);
-            if (shape.hasCollisions(part.getBounds())) continue;
+            if (isBoxInvalid(part.getBounds(), shape)) continue;
 
             // check if the bridge to the next room can fit
             Connector out = part.getOut();
-            if (shape.hasCollisions(getBridgeBounds(out))) continue;
+            if (isBoxInvalid(getBridgeBounds(out), shape)) continue;
 
             // check if the end room would fit after the bridge
             OrientedPart nextPart = createEnd(endRoom, out);
-            if (shape.hasCollisions(nextPart.getBounds())) continue;
+            if (isBoxInvalid(nextPart.getBounds(), shape)) continue;
 
             // room can fit
             possible.add(new PossibleRoom(room, part));
         }
 
         return possible;
+    }
+
+    private boolean isBoxInvalid(BlockBox box, BoxCollisionDetector shape) {
+        return box.getMin().getY() < minHeight || box.getMax().getY() > maxHeight || shape.hasCollisions(box);
     }
 
     private static OrientedPart createPart(JumpRoom room, Connector connector) {

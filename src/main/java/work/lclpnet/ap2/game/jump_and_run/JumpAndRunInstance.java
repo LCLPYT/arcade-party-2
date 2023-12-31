@@ -33,7 +33,7 @@ public class JumpAndRunInstance extends DefaultGameInstance {
         Identifier gameId = gameHandle.getGameInfo().getId();
 
         mapFacade.openRandomMap(gameId, new BootstrapMapOptions((world, map) -> {
-            setup = new JumpAndRunSetup(gameHandle, map, world);
+            setup = new JumpAndRunSetup(gameHandle, map, world, 4.0f);  // time in minutes
             return setup.setup().thenAccept(jumpAndRun -> this.jumpAndRun = jumpAndRun);
         }), this::onMapReady);
     }

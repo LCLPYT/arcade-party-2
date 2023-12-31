@@ -30,12 +30,12 @@ public class JumpAndRunSetup {
     private final JumpAndRunGenerator generator;
     private final JumpAndRunPlacer placer;
 
-    public JumpAndRunSetup(MiniGameHandle gameHandle, GameMap map, ServerWorld world) {
+    public JumpAndRunSetup(MiniGameHandle gameHandle, GameMap map, ServerWorld world, float targetMinutes) {
         this.gameHandle = gameHandle;
         this.map = map;
         this.world = world;
         this.logger = gameHandle.getLogger();
-        this.generator = new JumpAndRunGenerator(4.5f, new Random(), logger);  // time in minutes
+        this.generator = new JumpAndRunGenerator(targetMinutes, new Random(), logger, world.getBottomY(), world.getTopY() - 1);
         this.placer = new JumpAndRunPlacer(world);
     }
 
