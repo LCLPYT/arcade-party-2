@@ -4,7 +4,7 @@ import net.minecraft.util.math.Vec3i;
 import work.lclpnet.ap2.api.util.Printable;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.StructureUtil;
-import work.lclpnet.ap2.impl.util.math.Matrix4i;
+import work.lclpnet.ap2.impl.util.math.AffineMatrix;
 import work.lclpnet.kibu.structure.BlockStructure;
 import work.lclpnet.kibu.util.math.Matrix3i;
 
@@ -26,7 +26,7 @@ public final class OrientedPart implements Printable {
 
         this.matrix = Matrix3i.makeRotationY(rotation);
 
-        Matrix4i mat4 = new Matrix4i(matrix).translate(offset);
+        AffineMatrix mat4 = new AffineMatrix(matrix).translate(offset);
 
         this.bounds = StructureUtil.getBounds(structure).transform(mat4);
         this.in = in != null ? in.transform(mat4) : null;

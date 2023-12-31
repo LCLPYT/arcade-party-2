@@ -39,6 +39,10 @@ public class JumpRoom {
         return connectors;
     }
 
+    public boolean isStraight() {
+        return connectors.entrance().direction() == connectors.exit().direction();
+    }
+
     public static Partial from(BlockStructure structure) {
         BlockBox bounds = StructureUtil.getBounds(structure);
 
