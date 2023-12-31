@@ -2,6 +2,7 @@ package work.lclpnet.ap2.impl.util.math;
 
 import net.minecraft.util.math.Vec3i;
 import org.junit.jupiter.api.Test;
+import work.lclpnet.kibu.util.math.Matrix3i;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 

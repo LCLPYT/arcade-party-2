@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.game.jump_and_run;
+package work.lclpnet.ap2.game.jump_and_run.gen;
 
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;

@@ -2,6 +2,7 @@ package work.lclpnet.ap2.impl.util.math;
 
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3i;
+import work.lclpnet.kibu.util.math.Matrix3i;
 
 import java.util.Arrays;
 

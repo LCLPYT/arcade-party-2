@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.game.jump_and_run;
+package work.lclpnet.ap2.game.jump_and_run.gen;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -12,11 +12,11 @@ import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.StructurePrintable;
 import work.lclpnet.ap2.impl.util.collision.ChunkedCollisionDetector;
 import work.lclpnet.ap2.impl.util.collision.StackCollisionDetector;
-import work.lclpnet.ap2.impl.util.math.Matrix3i;
 import work.lclpnet.kibu.schematic.FabricBlockStateAdapter;
 import work.lclpnet.kibu.schematic.FabricStructureWrapper;
 import work.lclpnet.kibu.structure.BlockStructure;
 import work.lclpnet.kibu.structure.SimpleBlockStructure;
+import work.lclpnet.kibu.util.math.Matrix3i;
 
 import java.util.*;
 
