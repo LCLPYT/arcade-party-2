@@ -41,12 +41,14 @@ public class JumpAndRunInstance extends DefaultGameInstance {
 
     private final ScoreTimeDataContainer data = new ScoreTimeDataContainer();
     private final CollisionDetector collisionDetector = new ChunkedCollisionDetector();
-    private final PlayerMovementObserver movementObserver = new PlayerMovementObserver(collisionDetector);
+    private final PlayerMovementObserver movementObserver;
     private final List<BlockPos> gateBlocks = new ArrayList<>();
     private JumpAndRun jumpAndRun;
+    private CheckpointManager checkpoints;
 
     public JumpAndRunInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
+        movementObserver = new PlayerMovementObserver(collisionDetector, gameHandle.getParticipants()::isParticipating);
     }
 
     @Override
@@ -87,7 +89,7 @@ public class JumpAndRunInstance extends DefaultGameInstance {
             int roomIndex = i;
 
             movementObserver.whenEntering(room, player -> {
-                if (isGameOver() || !participants.isParticipating(player)) return;
+                if (isGameOver()) return;
 
                 enterRoom(player, roomIndex);
             });
@@ -106,6 +108,10 @@ public class JumpAndRunInstance extends DefaultGameInstance {
         useScoreboardStatsSync(objective);
 
         scoreboardManager.setDisplay(Scoreboard.LIST_DISPLAY_SLOT_ID, objective);
+
+        checkpoints = new CheckpointManager(jumpAndRun.checkpoints());
+        checkpoints.init(collisionDetector, movementObserver);
+        checkpoints.whenCheckpointReached(this::onCheckpointReached);
     }
 
     @Override
@@ -151,5 +157,13 @@ public class JumpAndRunInstance extends DefaultGameInstance {
         if (isGameOver() || room < jumpAndRun.rooms().size() - 1) return;
 
         win(player);
+    }
+
+    private void onCheckpointReached(ServerPlayerEntity player) {
+        var msg = gameHandle.getTranslations().translateText(player, "game.ap2.jump_and_run.reached_checkpoint")
+                .formatted(Formatting.GREEN);
+
+        player.sendMessage(msg, true);
+        player.playSound(SoundEvents.BLOCK_RESPAWN_ANCHOR_SET_SPAWN, SoundCategory.BLOCKS, 0.4f, 1f);
     }
 }

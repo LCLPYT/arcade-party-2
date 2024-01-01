@@ -69,5 +69,6 @@
   "game.ap2.panda_finder.cooldown": "Do guess pandas so often!",
   "game.ap2.jump_and_run": "Jump 'n' Run",
   "game.ap2.jump_and_run.description": "Complete a randomly generated jump 'n' run. If you make it first, you win!",
-  "game.ap2.jump_and_run.reached_room": "Congratulations, you reached room %s"
+  "game.ap2.jump_and_run.reached_room": "Congratulations, you reached room %s",
+  "game.ap2.jump_and_run.reached_checkpoint": "Checkpoint reached"
 }

@@ -16,27 +16,34 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 public class PlayerMovementObserver {
 
     private final CollisionDetector collisionDetector;
+    private final Predicate<ServerPlayerEntity> predicate;
     private final Map<UUID, Entry> entries = new HashMap<>();
     private final Map<Collider, Consumer<ServerPlayerEntity>> regionEnter = new HashMap<>();
     private final Map<Collider, Consumer<ServerPlayerEntity>> regionLeave = new HashMap<>();
     private BiConsumer<ServerPlayerEntity, Collider> onEnter = null, onLeave = null;
 
-    public PlayerMovementObserver(CollisionDetector collisionDetector) {
+    public PlayerMovementObserver(CollisionDetector collisionDetector, Predicate<ServerPlayerEntity> predicate) {
         this.collisionDetector = collisionDetector;
+        this.predicate = predicate;
     }
 
     public void init(HookRegistrar registrar, MinecraftServer server) {
         registrar.registerHook(PlayerMoveCallback.HOOK, (player, from, to) -> {
-            onMove(player, to);
+            if (predicate.test(player)) {
+                onMove(player, to);
+            }
             return false;
         });
 
         for (ServerPlayerEntity player : PlayerLookup.all(server)) {
-            onMove(player, player.getPos());
+            if (predicate.test(player)) {
+                onMove(player, player.getPos());
+            }
         }
     }
 

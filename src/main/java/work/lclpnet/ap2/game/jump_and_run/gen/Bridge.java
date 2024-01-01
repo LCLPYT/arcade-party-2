@@ -51,6 +51,6 @@ public class Bridge implements Printable {
         Vector3f vec = direction.getUnitVector();
         double yaw = Math.atan2(vec.x, vec.z);
 
-        return new Checkpoint(spawn, (float) Math.toDegrees(yaw));
+        return new Checkpoint(spawn, (float) Math.toDegrees(yaw), bounds);
     }
 }
