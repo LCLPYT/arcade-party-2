@@ -10,14 +10,13 @@ import work.lclpnet.ap2.game.jump_and_run.gen.Checkpoint;
 import work.lclpnet.ap2.impl.util.collision.PlayerMovementObserver;
 
 import java.util.*;
-import java.util.function.Consumer;
 
 public class CheckpointManager {
 
     private final List<Checkpoint> checkpoints;
     private final Object2IntMap<Checkpoint> checkpointIndices;
     private final Map<UUID, Checkpoint> playerCheckpoints = new HashMap<>();
-    private final List<Consumer<ServerPlayerEntity>> listeners = new ArrayList<>();
+    private final List<Listener> listeners = new ArrayList<>();
 
     public CheckpointManager(List<Checkpoint> checkpoints) {
         if (checkpoints.isEmpty()) throw new IllegalStateException("Checkpoints must not be empty");
@@ -64,10 +63,14 @@ public class CheckpointManager {
     private void onEnterCheckpoint(ServerPlayerEntity player, int index) {
         if (!grantCheckpoint(player, index)) return;
 
-        listeners.forEach(listener -> listener.accept(player));
+        listeners.forEach(listener -> listener.accept(player, index));
     }
 
-    public void whenCheckpointReached(Consumer<ServerPlayerEntity> action) {
+    public void whenCheckpointReached(Listener action) {
         listeners.add(Objects.requireNonNull(action));
+    }
+
+    public interface Listener {
+        void accept(ServerPlayerEntity player, int checkpoint);
     }
 }

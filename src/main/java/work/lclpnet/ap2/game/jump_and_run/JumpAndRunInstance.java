@@ -154,16 +154,23 @@ public class JumpAndRunInstance extends DefaultGameInstance {
 
         player.sendMessage(msg);
 
+        int checkpointOffset = jumpAndRun.getCheckpointOffset(room);
+        checkpoints.grantCheckpoint(player, checkpointOffset);
+
         if (isGameOver() || room < jumpAndRun.rooms().size() - 1) return;
 
         win(player);
     }
 
-    private void onCheckpointReached(ServerPlayerEntity player) {
+    private void onCheckpointReached(ServerPlayerEntity player, int checkpoint) {
         var msg = gameHandle.getTranslations().translateText(player, "game.ap2.jump_and_run.reached_checkpoint")
                 .formatted(Formatting.GREEN);
 
         player.sendMessage(msg, true);
         player.playSound(SoundEvents.BLOCK_RESPAWN_ANCHOR_SET_SPAWN, SoundCategory.BLOCKS, 0.4f, 1f);
+
+        int room = jumpAndRun.getRoomOfCheckpoint(checkpoint);
+
+        enterRoom(player, room);
     }
 }
