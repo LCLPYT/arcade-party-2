@@ -44,7 +44,7 @@ public class CheckpointManager {
         Checkpoint checkpoint = checkpoints.get(grant);
         playerCheckpoints.put(uuid, checkpoint);
 
-        return true;
+        return grant > 0;
     }
 
     public void init(CollisionDetector collisionDetector, PlayerMovementObserver movementObserver) {

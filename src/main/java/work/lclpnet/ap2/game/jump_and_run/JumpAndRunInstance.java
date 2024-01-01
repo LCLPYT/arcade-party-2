@@ -2,6 +2,7 @@ package work.lclpnet.ap2.game.jump_and_run;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.entity.boss.BossBar;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.scoreboard.Scoreboard;
@@ -13,12 +14,15 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
+import net.minecraft.util.ActionResult;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.TypedActionResult;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.GameRules;
 import work.lclpnet.ap2.api.base.Participants;
+import work.lclpnet.ap2.api.game.GameInfo;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.map.MapFacade;
@@ -31,14 +35,18 @@ import work.lclpnet.ap2.impl.game.DefaultGameInstance;
 import work.lclpnet.ap2.impl.game.data.ScoreTimeDataContainer;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.ScoreboardManager;
+import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedPlayerBossBar;
 import work.lclpnet.ap2.impl.util.collision.ChunkedCollisionDetector;
 import work.lclpnet.ap2.impl.util.collision.PlayerMovementObserver;
 import work.lclpnet.ap2.impl.util.heads.PlayerHeadUtil;
 import work.lclpnet.ap2.impl.util.heads.PlayerHeads;
+import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
+import work.lclpnet.kibu.hook.player.PlayerConnectionHooks;
 import work.lclpnet.kibu.hook.player.PlayerMoveCallback;
 import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 import work.lclpnet.kibu.translate.TranslationService;
+import work.lclpnet.kibu.translate.bossbar.BossBarProvider;
 import work.lclpnet.kibu.translate.text.FormatWrapper;
 
 import java.util.ArrayList;
@@ -55,6 +63,7 @@ public class JumpAndRunInstance extends DefaultGameInstance {
     private final List<BlockPos> gateBlocks = new ArrayList<>();
     private JumpAndRun jumpAndRun;
     private CheckpointManager checkpoints;
+    private DynamicTranslatedPlayerBossBar bossBar;
 
     public JumpAndRunInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
@@ -120,6 +129,8 @@ public class JumpAndRunInstance extends DefaultGameInstance {
         checkpoints = new CheckpointManager(jumpAndRun.checkpoints());
         checkpoints.init(collisionDetector, movementObserver);
         checkpoints.whenCheckpointReached(this::onCheckpointReached);
+
+        setupBossBars();
     }
 
     @Override
@@ -157,7 +168,46 @@ public class JumpAndRunInstance extends DefaultGameInstance {
             return TypedActionResult.success(ItemStack.EMPTY, true);
         });
 
+        hooks.registerHook(PlayerInteractionHooks.USE_BLOCK, (player, world1, hand, hitResult) -> {
+            if (isGameOver() || !(player instanceof ServerPlayerEntity serverPlayer)
+                || !participants.isParticipating(serverPlayer)) {
+                return ActionResult.PASS;
+            }
+
+            ItemStack stack = player.getStackInHand(hand);
+
+            if (!stack.isOf(Items.PLAYER_HEAD)) {
+                return ActionResult.PASS;
+            }
+
+            resetPlayerToCheckpoint(serverPlayer);
+            return ActionResult.SUCCESS;
+        });
+
         giveResetItemsToPlayers();
+    }
+
+    private void setupBossBars() {
+        GameInfo gameInfo = gameHandle.getGameInfo();
+        TranslationService translations = gameHandle.getTranslations();
+        BossBarProvider provider = gameHandle.getBossBarProvider();
+
+        Identifier id = gameInfo.identifier("task");
+        Object[] args = new Object[] {
+                FormatWrapper.styled(0, YELLOW),
+                FormatWrapper.styled(jumpAndRun.rooms().size() - 2, YELLOW)
+        };
+
+        bossBar = new DynamicTranslatedPlayerBossBar(id, gameInfo.getTaskKey(), args, translations, provider)
+                .formatted(Formatting.GREEN);
+
+        bossBar.setColor(BossBar.Color.GREEN);
+
+        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
+            bossBar.add(player);
+        }
+
+        gameHandle.getHookRegistrar().registerHook(PlayerConnectionHooks.QUIT, bossBar::remove);
     }
 
     private void giveResetItemsToPlayers() {
@@ -169,7 +219,8 @@ public class JumpAndRunInstance extends DefaultGameInstance {
             var name = translations.translateText(player, "game.ap2.jump_and_run.reset").formatted(Formatting.RED);
             stack.setCustomName(name.styled(style -> style.withItalic(false)));
 
-            player.getInventory().setStack(4, stack);
+            player.getInventory().setStack(8, stack);
+            PlayerInventoryAccess.setSelectedSlot(player, 4);
         }
     }
 
@@ -200,6 +251,12 @@ public class JumpAndRunInstance extends DefaultGameInstance {
         if (room <= data.getScore(player)) return;
 
         data.setScore(player, room);
+
+        int checkpointOffset = jumpAndRun.getCheckpointOffset(room);
+        checkpoints.grantCheckpoint(player, checkpointOffset);
+
+        if (room <= 1) return;
+
         player.playSound(SoundEvents.ENTITY_PLAYER_LEVELUP, SoundCategory.PLAYERS, 0.5f, 2f);
 
         var msg = gameHandle.getTranslations().translateText(player, "game.ap2.jump_and_run.reached_room",
@@ -208,8 +265,14 @@ public class JumpAndRunInstance extends DefaultGameInstance {
 
         player.sendMessage(msg);
 
-        int checkpointOffset = jumpAndRun.getCheckpointOffset(room);
-        checkpoints.grantCheckpoint(player, checkpointOffset);
+        int maxRooms = jumpAndRun.rooms().size() - 2;
+        int canonicalRoom = MathHelper.clamp(room, 1, maxRooms);
+
+        bossBar.setArgument(player, 0, FormatWrapper.styled(canonicalRoom, YELLOW));
+
+        if (maxRooms > 0) {
+            bossBar.getBossBar(player).setPercent((float) (room - 1) / maxRooms);
+        }
 
         if (isGameOver() || room < jumpAndRun.rooms().size() - 1) return;
 
