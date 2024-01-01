@@ -9,7 +9,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.impl.util.BlockBox;
-import work.lclpnet.ap2.impl.util.StructurePrintable;
 import work.lclpnet.ap2.impl.util.collision.BoxCollisionDetector;
 import work.lclpnet.kibu.schematic.FabricBlockStateAdapter;
 import work.lclpnet.kibu.schematic.FabricStructureWrapper;
@@ -46,8 +45,8 @@ public class JumpAndRunGenerator {
 
         // start bridge
         Connector startConnector = start.getOut();
-        JumpPart endBridge = makeBridge(startConnector);
-        shape.add(endBridge.bounds());
+        JumpPart startBridge = makeBridge(startConnector);
+        shape.add(startBridge.bounds());
 
         // subsequent rooms and their bridges
         List<JumpPart> rooms = createRooms(parts, startConnector, shape);
@@ -55,10 +54,26 @@ public class JumpAndRunGenerator {
         // combine everything
         List<JumpPart> combined = new ArrayList<>();
         combined.add(start.asJumpPart());
-        combined.add(endBridge);
+        combined.add(startBridge);
         combined.addAll(rooms);
 
-        return new JumpAndRun(combined);
+        List<BlockBox> roomBounds = combined.stream()
+                .map(part -> part.printable() instanceof OrientedPart roomPart ? roomPart.getBounds() : null)
+                .filter(Objects::nonNull)
+                .toList();
+
+        List<Checkpoint> checkpoints = combined.stream()
+                .map(part -> part.printable() instanceof Bridge bridge ? bridge.asCheckpoint() : null)
+                .filter(Objects::nonNull)
+                .toList();
+
+        BlockBox gate = combined.stream()
+                .map(part -> part.printable() instanceof Bridge bridge ? bridge.getBounds() : null)
+                .filter(Objects::nonNull)
+                .findFirst()
+                .orElseThrow();
+
+        return new JumpAndRun(combined, roomBounds, checkpoints, gate);
     }
 
     @NotNull
@@ -243,10 +258,11 @@ public class JumpAndRunGenerator {
         buildAxis(bridgePos, up, side2, sideState, sideState, blocks);
 
         BlockStructure structure = makeStructure(blocks);
-        StructurePrintable printable = new StructurePrintable(structure);
         BlockBox bounds = getBridgeBounds(connector);
 
-        return new JumpPart(printable, bounds);
+        Bridge bridge = new Bridge(structure, bounds, pos.down().add(vec), dir);
+
+        return bridge.asJumpPart();
     }
 
     @NotNull

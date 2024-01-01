@@ -68,5 +68,6 @@
   "game.ap2.panda_finder.find.aggressive": "aggressiven",
   "game.ap2.panda_finder.cooldown": "Rate nicht so viele Pandas!",
   "game.ap2.jump_and_run": "Jump 'n' Run",
-  "game.ap2.jump_and_run.description": "Erreiche zuerst das Ziel in einem zufällig generierten Jump 'n' Run!"
+  "game.ap2.jump_and_run.description": "Erreiche zuerst das Ziel in einem zufällig generierten Jump 'n' Run!",
+  "game.ap2.jump_and_run.reached_room": "Glückwunsch! Du hast den %s Raum erreicht"
 }
