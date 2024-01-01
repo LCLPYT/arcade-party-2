@@ -7,7 +7,6 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.ChunkSectionPos;
 import net.minecraft.util.math.Position;
-import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.util.Collider;
 import work.lclpnet.ap2.api.util.CollisionDetector;
 import work.lclpnet.ap2.impl.util.math.Vec2i;
@@ -43,13 +42,14 @@ public class ChunkedCollisionDetector implements CollisionDetector {
     }
 
     @Override
-    @Nullable
-    public Collider getCollision(Position pos) {
+    public void updateCollisions(Position pos, CollisionInfo info) {
+        info.reset();
+
         Region region = regions.get(hashPos(pos.getX(), pos.getZ()));
 
-        if (region == null) return null;
+        if (region == null) return;
 
-        return region.getCollision(pos);
+        region.updateCollisions(pos, info);
     }
 
     private static long hashPos(double x, double z) {
@@ -96,15 +96,13 @@ public class ChunkedCollisionDetector implements CollisionDetector {
     }
 
     protected record Region(Set<Collider> colliders) {
-        @Nullable
-        public Collider getCollision(Position pos) {
+
+        public void updateCollisions(Position pos, CollisionInfo info) {
             for (Collider collider : colliders) {
                 if (collider.collidesWith(pos)) {
-                    return collider;
+                    info.add(collider);
                 }
             }
-
-            return null;
         }
 
         static Region create() {

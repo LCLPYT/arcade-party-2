@@ -15,6 +15,7 @@ import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.GameRules;
+import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.map.MapFacade;
@@ -73,6 +74,8 @@ public class JumpAndRunInstance extends DefaultGameInstance {
         gameRules.get(GameRules.RANDOM_TICK_SPEED).set(0, server);
         gameRules.get(GameRules.DO_DAYLIGHT_CYCLE).set(false, server);
 
+        Participants participants = gameHandle.getParticipants();
+
         // setup room listeners
         var rooms = jumpAndRun.rooms();
 
@@ -83,7 +86,11 @@ public class JumpAndRunInstance extends DefaultGameInstance {
 
             int roomIndex = i;
 
-            movementObserver.whenEntering(room, player -> enterRoom(player, roomIndex));
+            movementObserver.whenEntering(room, player -> {
+                if (isGameOver() || !participants.isParticipating(player)) return;
+
+                enterRoom(player, roomIndex);
+            });
         }
 
         movementObserver.init(gameHandle.getHookRegistrar(), gameHandle.getServer());
