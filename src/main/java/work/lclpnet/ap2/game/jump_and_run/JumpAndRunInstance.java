@@ -194,7 +194,7 @@ public class JumpAndRunInstance extends DefaultGameInstance {
 
         Identifier id = gameInfo.identifier("task");
         Object[] args = new Object[] {
-                FormatWrapper.styled(0, YELLOW),
+                FormatWrapper.styled(1, YELLOW),
                 FormatWrapper.styled(jumpAndRun.rooms().size() - 2, YELLOW)
         };
 
