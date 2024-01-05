@@ -3,11 +3,11 @@ package work.lclpnet.ap2.game.jump_and_run.gen;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3i;
-import work.lclpnet.ap2.impl.util.math.AffineMatrix;
+import work.lclpnet.ap2.impl.util.math.AffineIntMatrix;
 
 public record Connector(BlockPos pos, Direction direction) {
 
-    public Connector transform(AffineMatrix mat4) {
+    public Connector transform(AffineIntMatrix mat4) {
         Vec3i vec = mat4.transformVector(this.direction.getVector());
         Direction dir = Direction.fromVector(vec.getX(), vec.getY(), vec.getZ());
 

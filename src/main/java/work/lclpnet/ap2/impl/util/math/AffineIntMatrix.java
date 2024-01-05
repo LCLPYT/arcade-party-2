@@ -1,27 +1,28 @@
 package work.lclpnet.ap2.impl.util.math;
 
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3i;
 import work.lclpnet.kibu.util.math.Matrix3i;
 
 import java.util.Arrays;
 
-public class AffineMatrix {
+public class AffineIntMatrix {
 
     public final int[] elements;
 
-    public AffineMatrix(int[] elements) {
+    public AffineIntMatrix(int[] elements) {
         if (elements.length != 12) throw new IllegalArgumentException("Invalid elements size");
         this.elements = elements;
     }
 
-    public AffineMatrix() {
+    public AffineIntMatrix() {
         elements = new int[12];
         elements[1] = elements[2] = elements[3] = elements[4] = elements[6] = elements[7] = elements[8] = elements[9] = elements[11] = 0;
         elements[0] = elements[5] = elements[10] = 1;
     }
 
-    public AffineMatrix(Matrix3i matrix3) {
+    public AffineIntMatrix(Matrix3i matrix3) {
         elements = new int[12];
 
         int[] me = matrix3.elements;
@@ -65,6 +66,15 @@ public class AffineMatrix {
         return vec;
     }
 
+    public Vec3d transformVector(double x, double y, double z) {
+        // vectors have w=0 in homogeneous coordinates
+        return new Vec3d(
+                elements[0] * x + elements[1] * y + elements[2] * z,
+                elements[4] * x + elements[5] * y + elements[6] * z,
+                elements[8] * x + elements[9] * y + elements[10] * z
+        );
+    }
+
     public BlockPos transformVector(Vec3i vec) {
         return transformVector(vec.getX(), vec.getY(), vec.getZ());
     }
@@ -73,25 +83,37 @@ public class AffineMatrix {
         return transform(pos.getX(), pos.getY(), pos.getZ());
     }
 
-    public AffineMatrix multiply(AffineMatrix other) {
-        AffineMatrix dest = new AffineMatrix();
+    public AffineIntMatrix multiply(AffineIntMatrix other) {
+        AffineIntMatrix dest = new AffineIntMatrix();
         multiply(this, other, dest);
         return dest;
     }
 
-    public AffineMatrix translate(Vec3i translation) {
+    public AffineIntMatrix translate(Vec3i translation) {
         return translate(translation.getX(), translation.getY(), translation.getZ());
     }
 
-    public AffineMatrix translate(int x, int y, int z) {
+    public AffineIntMatrix translate(int x, int y, int z) {
         return makeTranslation(x, y, z).multiply(this);
+    }
+
+    /**
+     * Gets the linear part of the affine transformation (scale, rotate and shear) as 3x3 matrix.
+     * @return The linear part of this transformation, without translation.
+     */
+    public Matrix3i linearPart() {
+        return new Matrix3i(new int[] {
+                elements[0], elements[1], elements[2],
+                elements[4], elements[5], elements[6],
+                elements[8], elements[9], elements[10]
+        });
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        AffineMatrix affineMatrix = (AffineMatrix) o;
+        AffineIntMatrix affineMatrix = (AffineIntMatrix) o;
         return Arrays.equals(elements, affineMatrix.elements);
     }
 
@@ -109,7 +131,7 @@ public class AffineMatrix {
         );
     }
 
-    public static void multiply(AffineMatrix left, AffineMatrix right, AffineMatrix dest) {
+    public static void multiply(AffineIntMatrix left, AffineIntMatrix right, AffineIntMatrix dest) {
         // 4th-row is implicitly [0, 0, 0, 1]
         for (int row = 0; row < 3; row++) {
             int rowOffset = row * 4;
@@ -126,8 +148,8 @@ public class AffineMatrix {
         }
     }
 
-    public static AffineMatrix makeTranslation(int x, int y, int z) {
-        return new AffineMatrix(new int[] {
+    public static AffineIntMatrix makeTranslation(int x, int y, int z) {
+        return new AffineIntMatrix(new int[] {
                 1, 0, 0, x,
                 0, 1, 0, y,
                 0, 0, 1, z

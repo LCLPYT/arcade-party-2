@@ -2,6 +2,7 @@ package work.lclpnet.ap2.game.jump_and_run.gen;
 
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.Vec3i;
 import org.jetbrains.annotations.NotNull;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.StructureUtil;
@@ -9,18 +10,25 @@ import work.lclpnet.kibu.mc.BuiltinKibuBlockState;
 import work.lclpnet.kibu.mc.KibuBlockPos;
 import work.lclpnet.kibu.structure.BlockStructure;
 
+import java.util.List;
+
 public class JumpRoom {
 
     private final float value;
     private final BlockStructure structure;
     private final BlockBox bounds;
     private final Connectors connectors;
+    private final JumpAssistance assistance;
+    private final List<Checkpoint> checkpoints;
 
-    public JumpRoom(float value, BlockStructure structure, BlockBox bounds, Connectors connectors) {
+    public JumpRoom(float value, BlockStructure structure, BlockBox bounds, Connectors connectors,
+                    JumpAssistance assistance, List<Checkpoint> checkpoints) {
         this.value = value;
         this.structure = structure;
         this.bounds = bounds;
         this.connectors = connectors;
+        this.assistance = assistance;
+        this.checkpoints = checkpoints;
     }
 
     public float getValue() {
@@ -48,7 +56,18 @@ public class JumpRoom {
 
         Connectors connectors = findConnectors(structure, bounds);
 
-        return (value) -> new JumpRoom(value, structure, bounds, connectors);
+        return (value, assistance, checkpoints) -> {
+            var orig = structure.getOrigin();
+            Vec3i origin = new Vec3i(orig.getX(), orig.getY(), orig.getZ());
+
+            var relativeAssistance = assistance.relativize(origin);
+
+            var relativeCheckpoints = checkpoints.stream()
+                    .map(checkpoint -> checkpoint.relativize(origin))
+                    .toList();
+
+            return new JumpRoom(value, structure, bounds, connectors, relativeAssistance, relativeCheckpoints);
+        };
     }
 
     @NotNull
@@ -98,9 +117,13 @@ public class JumpRoom {
         return new Connectors(entry, exit);
     }
 
+    public RoomData createData() {
+        return new RoomData(value, assistance, checkpoints);
+    }
+
     public record Connectors(Connector entrance, Connector exit) {}
 
     public interface Partial {
-        JumpRoom with(float value);
+        JumpRoom with(float value, JumpAssistance assistance, List<Checkpoint> checkpoints);
     }
 }

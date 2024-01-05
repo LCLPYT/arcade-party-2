@@ -1,10 +1,12 @@
 package work.lclpnet.ap2.game.jump_and_run;
 
+import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.boss.BossBar;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.particle.ParticleTypes;
 import net.minecraft.scoreboard.Scoreboard;
 import net.minecraft.scoreboard.ScoreboardCriterion;
 import net.minecraft.scoreboard.ScoreboardObjective;
@@ -27,9 +29,7 @@ import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.map.MapFacade;
 import work.lclpnet.ap2.api.util.CollisionDetector;
-import work.lclpnet.ap2.game.jump_and_run.gen.Checkpoint;
-import work.lclpnet.ap2.game.jump_and_run.gen.JumpAndRun;
-import work.lclpnet.ap2.game.jump_and_run.gen.JumpAndRunSetup;
+import work.lclpnet.ap2.game.jump_and_run.gen.*;
 import work.lclpnet.ap2.impl.game.BootstrapMapOptions;
 import work.lclpnet.ap2.impl.game.DefaultGameInstance;
 import work.lclpnet.ap2.impl.game.data.ScoreTimeDataContainer;
@@ -45,6 +45,7 @@ import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.kibu.hook.player.PlayerConnectionHooks;
 import work.lclpnet.kibu.hook.player.PlayerMoveCallback;
 import work.lclpnet.kibu.plugin.hook.HookRegistrar;
+import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.kibu.translate.bossbar.BossBarProvider;
 import work.lclpnet.kibu.translate.text.FormatWrapper;
@@ -57,6 +58,8 @@ import static net.minecraft.util.Formatting.YELLOW;
 
 public class JumpAndRunInstance extends DefaultGameInstance {
 
+    private static final int ASSISTANCE_TICKS_BASE = Ticks.seconds(90);  // time after which assistance is provided
+    private static final float TARGET_MINUTES = 4.0f;  // target completion time of the jump and run (approximate)
     private final ScoreTimeDataContainer data = new ScoreTimeDataContainer();
     private final CollisionDetector collisionDetector = new ChunkedCollisionDetector();
     private final PlayerMovementObserver movementObserver;
@@ -64,6 +67,7 @@ public class JumpAndRunInstance extends DefaultGameInstance {
     private JumpAndRun jumpAndRun;
     private CheckpointManager checkpoints;
     private DynamicTranslatedPlayerBossBar bossBar;
+    private int reachedRoom = 0;
 
     public JumpAndRunInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
@@ -82,7 +86,7 @@ public class JumpAndRunInstance extends DefaultGameInstance {
 
         mapFacade.openRandomMap(gameId, new BootstrapMapOptions((world, map) -> {
             world.setTimeOfDay(4000);
-            var setup = new JumpAndRunSetup(gameHandle, map, world, 4.0f);  // time in minutes
+            var setup = new JumpAndRunSetup(gameHandle, map, world, TARGET_MINUTES);
             return setup.setup().thenAccept(jumpAndRun -> this.jumpAndRun = jumpAndRun);
         }), this::onMapReady);
     }
@@ -99,7 +103,7 @@ public class JumpAndRunInstance extends DefaultGameInstance {
         var rooms = jumpAndRun.rooms();
 
         for (int i = 0, roomsSize = rooms.size(); i < roomsSize; i++) {
-            BlockBox room = rooms.get(i);
+            BlockBox room = rooms.get(i).bounds();
 
             collisionDetector.add(room);
 
@@ -248,6 +252,8 @@ public class JumpAndRunInstance extends DefaultGameInstance {
     }
 
     private void enterRoom(ServerPlayerEntity player, int room) {
+        delayAssistance(room);
+
         if (room <= data.getScore(player)) return;
 
         data.setScore(player, room);
@@ -298,5 +304,59 @@ public class JumpAndRunInstance extends DefaultGameInstance {
         player.teleport(getWorld(), pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, checkpoint.yaw(), 0f);
 
         player.setFireTicks(0);
+    }
+
+    private void delayAssistance(int room) {
+        synchronized (this) {
+            if (room <= reachedRoom) return;
+
+            reachedRoom = room;
+        }
+
+        List<RoomInfo> rooms = jumpAndRun.rooms();
+        if (room < 0 || room >= rooms.size()) return;
+
+        RoomInfo info = rooms.get(room);
+        if (info == null) return;
+
+        RoomData data = info.data();
+        if (data == null) return;
+
+        if (data.assistance().blocks().isEmpty()) return;
+
+        float weight = 1f + (data.value() - 1f) * 0.5f;
+        int timeout = Math.max(ASSISTANCE_TICKS_BASE, Math.round(ASSISTANCE_TICKS_BASE * weight));
+        gameHandle.getGameScheduler().timeout(() -> placeAssistance(info), timeout);
+    }
+
+    private void placeAssistance(RoomInfo room) {
+        RoomData data = room.data();
+        if (data == null) return;
+
+        JumpAssistance assistance = data.assistance();
+        ServerWorld world = getWorld();
+
+        for (var block : assistance.blocks()) {
+            BlockPos pos = block.left();
+            BlockState state = block.right();
+
+            world.setBlockState(pos, state);
+            world.spawnParticles(ParticleTypes.CLOUD, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5,
+                    5, 0.3, 0.3, 0.3, 0.1);
+        }
+
+        BlockBox bounds = room.bounds();
+        TranslationService translations = gameHandle.getTranslations();
+
+        for (ServerPlayerEntity player : PlayerLookup.all(gameHandle.getServer())) {
+            if (!bounds.contains(player.getX(), player.getY(), player.getZ())) continue;
+
+            player.playSound(SoundEvents.BLOCK_BELL_USE, SoundCategory.BLOCKS, 1f, 1.7f);
+
+            var msg = translations.translateText(player, "game.ap2.jump_and_run.assistance")
+                    .formatted(Formatting.GRAY);
+
+            player.sendMessage(msg);
+        }
     }
 }

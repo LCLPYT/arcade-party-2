@@ -72,5 +72,6 @@
   "game.ap2.jump_and_run.task": "Complete the Jump 'n' Run %s/%s",
   "game.ap2.jump_and_run.reached_room": "Congratulations, you reached room %s",
   "game.ap2.jump_and_run.reached_checkpoint": "Checkpoint reached",
-  "game.ap2.jump_and_run.reset": "Reset"
+  "game.ap2.jump_and_run.reset": "Reset",
+  "game.ap2.jump_and_run.assistance": "This room has been simplified so that you can make better progress"
 }

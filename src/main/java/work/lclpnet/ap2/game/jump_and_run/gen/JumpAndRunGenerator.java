@@ -8,6 +8,7 @@ import net.minecraft.util.math.Vec3i;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
+import work.lclpnet.ap2.api.util.Printable;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.collision.BoxCollisionDetector;
 import work.lclpnet.kibu.schematic.FabricBlockStateAdapter;
@@ -18,6 +19,7 @@ import work.lclpnet.kibu.util.math.Matrix3i;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static net.minecraft.block.HorizontalFacingBlock.FACING;
 
@@ -57,13 +59,30 @@ public class JumpAndRunGenerator {
         combined.add(startBridge);
         combined.addAll(rooms);
 
-        List<BlockBox> roomBounds = combined.stream()
-                .map(part -> part.printable() instanceof OrientedPart roomPart ? roomPart.getBounds() : null)
+        List<RoomInfo> roomData = combined.stream()
+                .map(part -> part.printable() instanceof OrientedPart roomPart ? roomPart.getInfo() : null)
                 .filter(Objects::nonNull)
                 .toList();
 
         List<Checkpoint> checkpoints = combined.stream()
-                .map(part -> part.printable() instanceof Bridge bridge ? bridge.asCheckpoint() : null)
+                .flatMap(part -> {
+                    Printable printable = part.printable();
+
+                    if (printable instanceof Bridge bridge) {
+                        return Stream.of(bridge.asCheckpoint());
+                    }
+
+                    if (printable instanceof OrientedPart orientedPart) {
+                        RoomInfo info = orientedPart.getInfo();
+                        RoomData data = info.data();
+
+                        if (data == null) return Stream.empty();
+
+                        return data.checkpoints().stream();
+                    }
+
+                    return Stream.empty();
+                })
                 .filter(Objects::nonNull)
                 .toList();
 
@@ -73,7 +92,7 @@ public class JumpAndRunGenerator {
                 .findFirst()
                 .orElseThrow();
 
-        return new JumpAndRun(combined, roomBounds, checkpoints, gate);
+        return new JumpAndRun(combined, roomData, checkpoints, gate);
     }
 
     @NotNull
@@ -198,7 +217,9 @@ public class JumpAndRunGenerator {
         Vec3i bridgeOffset = direction.getVector().multiply(2);
         BlockPos entranceOffset = pos.subtract(rotatedEntrance).add(bridgeOffset);
 
-        return new OrientedPart(room.getStructure(), entranceOffset, rotation, entrance, connectors.exit());
+        RoomData data = room.createData();
+
+        return new OrientedPart(room.getStructure(), entranceOffset, rotation, entrance, connectors.exit(), data);
     }
 
     @NotNull
@@ -213,7 +234,7 @@ public class JumpAndRunGenerator {
         Vec3i rotatedSpawn = rotationMatrix.transform(spawn);
         BlockPos startOffset = spawnPos.subtract(rotatedSpawn);
 
-        return new OrientedPart(startStruct, startOffset, rotation, null, startRoom.getExit());
+        return new OrientedPart(startStruct, startOffset, rotation, null, startRoom.getExit(), null);
     }
 
     @NotNull
@@ -232,7 +253,7 @@ public class JumpAndRunGenerator {
         Vec3i bridgeOffset = connector.direction().getVector().multiply(2);
         BlockPos endOffset = connector.pos().subtract(rotatedExit).add(bridgeOffset);
 
-        return new OrientedPart(endStruct, endOffset, rotation, null, exit);
+        return new OrientedPart(endStruct, endOffset, rotation, null, exit, null);
     }
 
     @NotNull

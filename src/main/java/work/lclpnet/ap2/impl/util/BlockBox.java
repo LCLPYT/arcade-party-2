@@ -5,7 +5,7 @@ import net.minecraft.util.math.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.util.Collider;
-import work.lclpnet.ap2.impl.util.math.AffineMatrix;
+import work.lclpnet.ap2.impl.util.math.AffineIntMatrix;
 
 import java.util.Iterator;
 import java.util.Objects;
@@ -56,7 +56,7 @@ public class BlockBox implements Pair<BlockPos, BlockPos>, Iterable<BlockPos>, C
         return max;
     }
 
-    public BlockBox transform(AffineMatrix mat4) {
+    public BlockBox transform(AffineIntMatrix mat4) {
         return new BlockBox(mat4.transform(min), mat4.transform(max));
     }
 

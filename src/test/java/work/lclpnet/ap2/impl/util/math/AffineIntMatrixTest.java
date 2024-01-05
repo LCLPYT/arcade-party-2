@@ -6,11 +6,11 @@ import work.lclpnet.kibu.util.math.Matrix3i;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class AffineMatrixTest {
+class AffineIntMatrixTest {
 
     @Test
     void identity() {
-        AffineMatrix identity = new AffineMatrix();
+        AffineIntMatrix identity = new AffineIntMatrix();
         assertEquals(new Vec3i(1, 2, 3), identity.transform(1, 2, 3));
         assertEquals(new Vec3i(-1, -2, -3), identity.transform(-1, -2, -3));
     }
@@ -23,19 +23,19 @@ class AffineMatrixTest {
                 7, 8, 9
         });
 
-        assertEquals(new AffineMatrix(new int[] {
+        assertEquals(new AffineIntMatrix(new int[] {
                 1, 2, 3, 0,
                 4, 5, 6, 0,
                 7, 8, 9, 0
-        }), new AffineMatrix(mat3));
+        }), new AffineIntMatrix(mat3));
     }
 
     @Test
     void multiply() {
-        AffineMatrix rotation = new AffineMatrix(Matrix3i.makeRotationY(1));
-        AffineMatrix translation = AffineMatrix.makeTranslation(2, 2, 2);
+        AffineIntMatrix rotation = new AffineIntMatrix(Matrix3i.makeRotationY(1));
+        AffineIntMatrix translation = AffineIntMatrix.makeTranslation(2, 2, 2);
 
-        assertEquals(new AffineMatrix(new int[] {
+        assertEquals(new AffineIntMatrix(new int[] {
             0, 0, 1, 2,
             0, 1, 0, 2,
             -1, 0, 0, -2
@@ -50,19 +50,19 @@ class AffineMatrixTest {
                 9, 10, 11, 12
         };
 
-        assertEquals(new AffineMatrix(new int[] {
+        assertEquals(new AffineIntMatrix(new int[] {
                 38, 44, 50, 60,
                 98, 116, 134, 160,
                 158, 188, 218, 260
-        }), new AffineMatrix(elements).multiply(new AffineMatrix(elements)));
+        }), new AffineIntMatrix(elements).multiply(new AffineIntMatrix(elements)));
     }
 
     @Test
     void translate() {
-        AffineMatrix rotation = new AffineMatrix(Matrix3i.makeRotationY(1));
-        AffineMatrix composed = rotation.translate(2, 2, 2);
+        AffineIntMatrix rotation = new AffineIntMatrix(Matrix3i.makeRotationY(1));
+        AffineIntMatrix composed = rotation.translate(2, 2, 2);
 
-        assertEquals(new AffineMatrix(new int[] {
+        assertEquals(new AffineIntMatrix(new int[] {
                 0, 0, 1, 2,
                 0, 1, 0, 2,
                 -1, 0, 0, 2
@@ -71,7 +71,7 @@ class AffineMatrixTest {
 
     @Test
     void transform() {
-        AffineMatrix mat = new AffineMatrix(new int[] {
+        AffineIntMatrix mat = new AffineIntMatrix(new int[] {
                 0, 0, 1, 2,
                 0, 1, 0, 2,
                 -1, 0, 0, 2

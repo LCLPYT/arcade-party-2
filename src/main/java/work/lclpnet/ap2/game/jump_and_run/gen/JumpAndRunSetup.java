@@ -97,15 +97,53 @@ public class JumpAndRunSetup {
             String id = json.getString("id");
             float value = json.getNumber("value").floatValue();
 
-            readRoom(id, value, schematicsDir).ifPresent(jumpRooms::add);
+            JumpAssistance assistance;
+
+            if (json.has("assist")) {
+                JSONArray array = json.getJSONArray("assist");
+                assistance = JumpAssistance.fromJson(array, logger);
+            } else {
+                assistance = JumpAssistance.EMPTY;
+            }
+
+            List<Checkpoint> checkpoints;
+
+            if (json.has("checkpoints")) {
+                JSONArray array = json.getJSONArray("checkpoints");
+                checkpoints = readCheckpoints(array);
+            } else {
+                checkpoints = List.of();
+            }
+
+            readRoom(id, schematicsDir)
+                    .map(partial -> partial.with(value, assistance, checkpoints))
+                    .ifPresent(jumpRooms::add);
         }
+
         return jumpRooms;
     }
 
-    private Optional<JumpRoom> readRoom(String id, float value, Path schematicsDir) {
+    @NotNull
+    private List<Checkpoint> readCheckpoints(JSONArray array) {
+        List<Checkpoint> checkpoints = new ArrayList<>(array.length());
+
+        for (Object entry : array) {
+            if (!(entry instanceof JSONObject obj)) {
+                logger.warn("Invalid array entry {}", entry);
+                continue;
+            }
+
+            Checkpoint checkpoint = Checkpoint.fromJson(obj);
+            checkpoints.add(checkpoint);
+        }
+
+        return checkpoints;
+    }
+
+    private Optional<JumpRoom.Partial> readRoom(String id, Path schematicsDir) {
         return readStructure(id, schematicsDir).map(structure -> {
             try {
-                return JumpRoom.from(structure).with(value);
+                return JumpRoom.from(structure);
             } catch (Throwable t) {
                 logger.error("Invalid room schematic '{}'", id, t);
                 return null;

@@ -49,7 +49,7 @@ public class Bridge implements Printable {
 
     public Checkpoint asCheckpoint() {
         Vector3f vec = direction.getUnitVector();
-        double yaw = Math.atan2(vec.x, vec.z);
+        double yaw = Math.atan2(-vec.x, vec.z);
 
         return new Checkpoint(spawn, (float) Math.toDegrees(yaw), bounds);
     }

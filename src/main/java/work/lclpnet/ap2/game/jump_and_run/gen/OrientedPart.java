@@ -1,10 +1,11 @@
 package work.lclpnet.ap2.game.jump_and_run.gen;
 
 import net.minecraft.util.math.Vec3i;
+import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.util.Printable;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.StructureUtil;
-import work.lclpnet.ap2.impl.util.math.AffineMatrix;
+import work.lclpnet.ap2.impl.util.math.AffineIntMatrix;
 import work.lclpnet.kibu.structure.BlockStructure;
 import work.lclpnet.kibu.util.math.Matrix3i;
 
@@ -17,20 +18,23 @@ public final class OrientedPart implements Printable {
     private final int rotation;
     private final BlockBox bounds;
     private final Connector in, out;
+    private final RoomInfo info;
     private final Matrix3i matrix;
 
-    public OrientedPart(BlockStructure structure, Vec3i offset, int rotation, Connector in, Connector out) {
+    public OrientedPart(BlockStructure structure, Vec3i offset, int rotation, Connector in, Connector out, @Nullable RoomData data) {
         this.structure = structure;
         this.offset = offset;
         this.rotation = rotation;
-
         this.matrix = Matrix3i.makeRotationY(rotation);
 
-        AffineMatrix mat4 = new AffineMatrix(matrix).translate(offset);
+        AffineIntMatrix mat4 = new AffineIntMatrix(matrix).translate(offset);
 
         this.bounds = StructureUtil.getBounds(structure).transform(mat4);
         this.in = in != null ? in.transform(mat4) : null;
         this.out = out != null ? out.transform(mat4) : null;
+
+        RoomData transformedData = data != null ? data.transform(mat4) : null;
+        this.info = new RoomInfo(bounds, transformedData);
     }
 
     public BlockBox getBounds() {
@@ -55,6 +59,10 @@ public final class OrientedPart implements Printable {
 
     public Connector getOut() {
         return out;
+    }
+
+    public RoomInfo getInfo() {
+        return info;
     }
 
     @Override
