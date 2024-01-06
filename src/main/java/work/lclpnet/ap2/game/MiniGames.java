@@ -9,6 +9,7 @@ import work.lclpnet.ap2.game.mirror_hop.MirrorHopMiniGame;
 import work.lclpnet.ap2.game.one_in_the_chamber.OneInTheChamberMiniGame;
 import work.lclpnet.ap2.game.panda_finder.PandaFinderMiniGame;
 import work.lclpnet.ap2.game.spleef.SpleefMiniGame;
+import work.lclpnet.ap2.game.tnt_run.TntRunMiniGame;
 import work.lclpnet.ap2.game.treasure_hunter.TreasureHunterMinigame;
 
 import java.util.Set;
@@ -29,5 +30,6 @@ public class MiniGames {
         games.add(new AnvilFallMiniGame());
         games.add(new PandaFinderMiniGame());
         games.add(new JumpAndRunMiniGame());
+        games.add(new TntRunMiniGame());
     }
 }

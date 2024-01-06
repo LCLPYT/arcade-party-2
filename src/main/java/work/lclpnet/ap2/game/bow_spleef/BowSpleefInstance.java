@@ -26,7 +26,6 @@ import work.lclpnet.ap2.impl.util.SoundHelper;
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
 import work.lclpnet.kibu.hook.entity.ProjectileHooks;
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks;
-import work.lclpnet.kibu.hook.player.PlayerMoveCallback;
 import work.lclpnet.kibu.hook.world.BlockBreakParticleCallback;
 import work.lclpnet.kibu.inv.item.ItemStackUtil;
 import work.lclpnet.kibu.plugin.hook.HookRegistrar;
@@ -72,16 +71,7 @@ public class BowSpleefInstance extends EliminationGameInstance {
             return false;
         });
 
-        Number criticalHeight = getMap().getProperty("critical-height");
-
-        if (criticalHeight != null) {
-            hooks.registerHook(PlayerMoveCallback.HOOK, (player, from, to) -> {
-                if (to.getY() >= criticalHeight.floatValue()) return false;
-
-                eliminate(player);
-                return false;
-            });
-        }
+        commons().whenBelowCriticalHeight().then(this::eliminate);
     }
 
     @Override

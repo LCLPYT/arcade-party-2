@@ -49,7 +49,7 @@ import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
 public class OneInTheChamberInstance extends DefaultGameInstance {
 
-    static final int SCORE_LIMIT = 20;
+    static final int SCORE_LIMIT = 15;
     static final double RESPAWN_SPACING = 20;
     private final ScoreDataContainer data = new ScoreDataContainer();
     private final Random random = new Random();
