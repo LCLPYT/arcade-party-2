@@ -22,12 +22,12 @@ import work.lclpnet.ap2.impl.game.DefaultGameInstance;
 import work.lclpnet.ap2.impl.game.data.ScoreDataContainer;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.BlockBox;
-import work.lclpnet.ap2.impl.util.ScoreboardManager;
 import work.lclpnet.ap2.impl.util.collision.ChunkedCollisionDetector;
 import work.lclpnet.ap2.impl.util.collision.PlayerMovementObserver;
 import work.lclpnet.ap2.impl.util.effect.ApEffects;
 import work.lclpnet.ap2.impl.util.movement.CooldownMovementBlocker;
 import work.lclpnet.ap2.impl.util.movement.MovementBlocker;
+import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.kibu.hook.player.PlayerMoveCallback;
 import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 import work.lclpnet.kibu.scheduler.Ticks;
@@ -63,7 +63,7 @@ public class MirrorHopInstance extends DefaultGameInstance {
         choices.randomize(new Random());
         choices.addColliders(collisionDetector);
 
-        ScoreboardManager scoreboardManager = gameHandle.getScoreboardManager();
+        CustomScoreboardManager scoreboardManager = gameHandle.getScoreboardManager();
 
         Team team = scoreboardManager.createTeam("team");
         team.setShowFriendlyInvisibles(true);

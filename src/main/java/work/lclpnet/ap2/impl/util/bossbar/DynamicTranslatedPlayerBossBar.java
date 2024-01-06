@@ -10,8 +10,11 @@ import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.util.bossbar.PlayerBossBar;
+import work.lclpnet.kibu.hook.player.PlayerConnectionHooks;
+import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.kibu.translate.bossbar.BossBarProvider;
+import work.lclpnet.kibu.translate.hook.LanguageChangedCallback;
 import work.lclpnet.kibu.translate.text.RootText;
 
 import java.util.*;
@@ -39,6 +42,11 @@ public class DynamicTranslatedPlayerBossBar implements PlayerBossBar {
         this.arguments = arguments;
         this.translations = translations;
         this.bossBarProvider = bossBarProvider;
+    }
+
+    public void init(HookRegistrar hooks) {
+        hooks.registerHook(PlayerConnectionHooks.QUIT, this::remove);
+        hooks.registerHook(LanguageChangedCallback.HOOK, (player, language, reason) -> update(player));
     }
 
     private ServerBossBar createBossBar(ServerPlayerEntity player) {
@@ -104,6 +112,13 @@ public class DynamicTranslatedPlayerBossBar implements PlayerBossBar {
         if (entry == null) return;
 
         entry.arguments[i] = argument;
+        update(player, entry);
+    }
+
+    private void update(ServerPlayerEntity player) {
+        Entry entry = getEntry(player);
+        if (entry == null) return;
+
         update(player, entry);
     }
 

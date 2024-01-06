@@ -11,7 +11,10 @@ import work.lclpnet.ap2.api.game.MiniGame;
 import work.lclpnet.ap2.api.game.MiniGameInstance;
 import work.lclpnet.ap2.base.cmd.DrawCommand;
 import work.lclpnet.ap2.base.cmd.WinCommand;
+import work.lclpnet.ap2.impl.activity.ArcadePartyComponents;
+import work.lclpnet.ap2.impl.activity.ScoreboardComponent;
 import work.lclpnet.ap2.impl.game.DefaultMiniGameHandle;
+import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.kibu.hook.player.PlayerAdvancementPacketCallback;
 import work.lclpnet.kibu.hook.player.PlayerConnectionHooks;
 import work.lclpnet.kibu.hook.player.PlayerRecipePacketCallback;
@@ -35,14 +38,20 @@ public class MiniGameActivity extends ComponentActivity {
         componentBundle
                 .add(BuiltinComponents.BOSS_BAR)
                 .add(BuiltinComponents.COMMANDS)
-                .add(BuiltinComponents.HOOKS);
+                .add(BuiltinComponents.HOOKS)
+                .add(ArcadePartyComponents.SCORE_BOARD);
     }
 
     @Override
     public void start() {
+        super.start();
+
         BossBarComponent bossBars = component(BuiltinComponents.BOSS_BAR);
 
-        handle = new DefaultMiniGameHandle(miniGame, args, bossBars, bossBars);
+        ScoreboardComponent scoreboardComponent = component(ArcadePartyComponents.SCORE_BOARD);
+        CustomScoreboardManager scoreboard = scoreboardComponent.scoreboardManager(args.container()::translationService);
+
+        handle = new DefaultMiniGameHandle(miniGame, args, bossBars, bossBars, scoreboard);
         handle.init();
 
         PlayerManager playerManager = args.playerManager();

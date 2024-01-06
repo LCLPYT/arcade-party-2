@@ -30,8 +30,10 @@ import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.game.data.DataEntry;
 import work.lclpnet.ap2.api.map.MapFacade;
 import work.lclpnet.ap2.base.ApConstants;
+import work.lclpnet.ap2.base.ArcadeParty;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.SoundHelper;
+import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedPlayerBossBar;
 import work.lclpnet.ap2.impl.util.effect.ApEffect;
 import work.lclpnet.ap2.impl.util.effect.ApEffects;
 import work.lclpnet.ap2.impl.util.math.Vec2i;
@@ -45,6 +47,7 @@ import work.lclpnet.kibu.scheduler.api.RunningTask;
 import work.lclpnet.kibu.scheduler.api.SchedulerAction;
 import work.lclpnet.kibu.title.Title;
 import work.lclpnet.kibu.translate.TranslationService;
+import work.lclpnet.kibu.translate.bossbar.BossBarProvider;
 import work.lclpnet.kibu.translate.bossbar.TranslatedBossBar;
 import work.lclpnet.kibu.translate.text.RootText;
 import work.lclpnet.kibu.translate.text.TranslatedText;
@@ -557,6 +560,29 @@ public abstract class DefaultGameInstance implements MiniGameInstance, Participa
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
             data.ensureTracked(player);
         }
+    }
+
+    protected final DynamicTranslatedPlayerBossBar usePlayerDynamicTaskDisplay(Object... args) {
+        GameInfo gameInfo = gameHandle.getGameInfo();
+        Identifier id = ArcadeParty.identifier("task");
+        String key = gameInfo.getTaskKey();
+
+        TranslationService translations = gameHandle.getTranslations();
+        BossBarProvider provider = gameHandle.getBossBarProvider();
+
+        var bossBar = new DynamicTranslatedPlayerBossBar(id, key, args, translations, provider)
+                .formatted(Formatting.GREEN);
+
+        bossBar.setColor(BossBar.Color.GREEN);
+        bossBar.setPercent(1f);
+
+        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
+            bossBar.add(player);
+        }
+
+        bossBar.init(gameHandle.getHookRegistrar());
+
+        return bossBar;
     }
 
     protected void onGameOver() {}

@@ -51,9 +51,6 @@ public class PandaFinderMiniGame implements MiniGame {
 
     @Override
     public Object[] getDescriptionArguments() {
-        return new Object[] {
-                FormatWrapper.styled(PandaFinderInstance.WIN_SCORE, Formatting.YELLOW),
-                FormatWrapper.styled(PandaFinderInstance.MAX_ROUNDS, Formatting.YELLOW)
-        };
+        return new Object[] { FormatWrapper.styled(PandaFinderInstance.WIN_SCORE, Formatting.YELLOW) };
     }
 }

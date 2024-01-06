@@ -30,11 +30,17 @@ public class ScoreDataContainer implements DataContainer, IntScoreEventSource {
     }
 
     public void addScore(ServerPlayerEntity player, int add) {
+        int score;
+
         synchronized (this) {
             if (frozen) return;
             PlayerRef key = PlayerRef.create(player);
-            scoreMap.put(key, scoreMap.computeIfAbsent(key, playerRef -> 0) + add);
+
+            score = scoreMap.computeIfAbsent(key, playerRef -> 0) + add;
+            scoreMap.put(key, score);
         }
+
+        listeners.forEach(listener -> listener.accept(player, score));
     }
 
     public int getScore(ServerPlayerEntity player) {
