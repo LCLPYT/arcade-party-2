@@ -1,0 +1,348 @@
+package work.lclpnet.ap2.impl.util.scoreboard;
+
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
+import net.minecraft.network.packet.s2c.play.ScoreboardDisplayS2CPacket;
+import net.minecraft.network.packet.s2c.play.ScoreboardObjectiveUpdateS2CPacket;
+import net.minecraft.network.packet.s2c.play.ScoreboardPlayerUpdateS2CPacket;
+import net.minecraft.scoreboard.ScoreboardCriterion;
+import net.minecraft.scoreboard.ScoreboardObjective;
+import net.minecraft.scoreboard.ServerScoreboard;
+import net.minecraft.server.PlayerManager;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.text.Style;
+import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import work.lclpnet.ap2.api.util.scoreboard.CustomScoreboardObjective;
+import work.lclpnet.kibu.translate.TranslationService;
+import work.lclpnet.kibu.translate.text.RootText;
+import work.lclpnet.mplugins.ext.Unloadable;
+
+import java.util.*;
+import java.util.function.Consumer;
+import java.util.function.UnaryOperator;
+
+public class TranslatedScoreboardObjective implements CustomScoreboardObjective, Unloadable {
+
+    private final TranslationService translations;
+    private final PlayerManager playerManager;
+    private final String name;
+    private final ScoreboardCriterion.RenderType renderType;
+    private final Map<Objective, Set<UUID>> objectivePlayers = new HashMap<>();
+    private final Map<String, Objective> localizedObjectives = new HashMap<>();
+    private final Map<UUID, String> players = new HashMap<>();
+    private final Object2IntMap<String> scores = new Object2IntOpenHashMap<>();
+    private String translationKey;
+    private Object[] args;
+    private int slot = -1;
+    private Style style = Style.EMPTY;
+
+    public TranslatedScoreboardObjective(TranslationService translations, PlayerManager playerManager, String name,
+                                         ScoreboardCriterion.RenderType renderType, String translationKey, Object[] args) {
+        this.translations = translations;
+        this.playerManager = playerManager;
+        this.name = name;
+        this.renderType = renderType;
+        this.translationKey = translationKey;
+        this.args = args;
+    }
+
+    public void addPlayer(ServerPlayerEntity player) {
+        final String language = translations.getLanguage(player);
+        final UUID uuid = player.getUuid();
+
+        final String oldLanguage = players.get(uuid);
+
+        // check if language did change
+        if (language.equals(oldLanguage)) return;
+
+        if (oldLanguage != null) {
+            // the language changed, remove the player from the old boss bar
+            removePlayer(player);
+        }
+
+        Objective objective = getLocalizedObjective(language);
+
+        objectivePlayers.computeIfAbsent(objective, ignored -> new HashSet<>()).add(uuid);
+
+        syncAddObjective(player, objective);
+        syncDisplay(player, objective, slot);
+        syncScores(objective, player);
+
+        players.put(uuid, language);
+    }
+
+    public void removePlayer(ServerPlayerEntity player) {
+        UUID uuid = player.getUuid();
+        String lang = players.remove(uuid);
+        if (lang == null) return;
+
+        Objective objective = localizedObjectives.get(lang);
+
+        if (objective == null) return;
+
+        syncDisplay(player, null, slot);
+        syncRemoveObjective(player, objective);
+
+        Set<UUID> uuids = objectivePlayers.get(objective);
+        uuids.remove(uuid);
+    }
+
+    public void updatePlayerLanguage(ServerPlayerEntity player) {
+        if (!players.containsKey(player.getUuid())) return;
+
+        // adding the player will update the language
+        addPlayer(player);
+    }
+
+    @NotNull
+    private Objective getLocalizedObjective(String language) {
+        return localizedObjectives.computeIfAbsent(language, this::createLocalizedObjective);
+    }
+
+    @NotNull
+    private Objective createLocalizedObjective(String language) {
+        Text localizedTitle = getLocalizedTitle(language);
+
+        String suffix = language.replaceAll("[^a-zA-Z0-9._-]", "");  // remove invalid characters
+        String localizedName = name + "_" + (suffix);
+
+        return new Objective(localizedName, localizedTitle, renderType);
+    }
+
+    @NotNull
+    private Text getLocalizedTitle(String language) {
+        RootText rootText = translations.translateText(language, translationKey, args);
+        rootText.setStyle(style);
+
+        return rootText;
+    }
+
+    public void setDisplayName(String translationKey, Object... args) {
+        this.translationKey = translationKey;
+        this.args = args;
+
+        for (var entry : localizedObjectives.entrySet()) {
+            Text localizedTitle = getLocalizedTitle(entry.getKey());
+
+            Objective objective = entry.getValue();
+            objective.setDisplay(localizedTitle);
+
+            Set<UUID> uuids = objectivePlayers.get(objective);
+
+            for (UUID uuid : uuids) {
+                ServerPlayerEntity player = playerManager.getPlayer(uuid);
+                if (player == null) continue;
+
+                syncUpdateObjective(player, objective);
+            }
+        }
+    }
+
+    private void updateObjectives(Consumer<Objective> action) {
+        for (var objective : localizedObjectives.values()) {
+            action.accept(objective);
+        }
+    }
+
+    public Style getStyle() {
+        return style;
+    }
+
+    public void setStyle(Style style) {
+        this.style = style;
+    }
+
+    /**
+     * Updates the style of the title text.
+     *
+     * @see #getStyle()
+     * @see #setStyle(Style)
+     *
+     * @param styleUpdater the style updater
+     */
+    public TranslatedScoreboardObjective styled(UnaryOperator<Style> styleUpdater) {
+        this.setStyle(styleUpdater.apply(this.getStyle()));
+        return this;
+    }
+
+    /**
+     * Fills the absent parts of the title text's style with definitions from {@code styleOverride}.
+     *
+     * @see Style#withParent(Style)
+     *
+     * @param styleOverride the style that provides definitions for absent definitions in the title text's style
+     */
+    public TranslatedScoreboardObjective fillStyle(Style styleOverride) {
+        this.setStyle(styleOverride.withParent(this.getStyle()));
+        return this;
+    }
+
+    /**
+     * Adds some formattings to the title text's style.
+     *
+     * @param formattings an array of formattings
+     */
+    public TranslatedScoreboardObjective formatted(Formatting... formattings) {
+        this.setStyle(this.getStyle().withFormatting(formattings));
+        return this;
+    }
+
+    /**
+     * Add a formatting to the title text's style.
+     *
+     * @param formatting a formatting
+     */
+    public TranslatedScoreboardObjective formatted(Formatting formatting) {
+        this.setStyle(this.getStyle().withFormatting(formatting));
+        return this;
+    }
+
+    public void setSlot(int slot) {
+        if (slot == this.slot) return;
+
+        int prevSlot = this.slot;
+        this.slot = slot;
+
+        for (var entry : players.entrySet()) {
+            ServerPlayerEntity player = playerManager.getPlayer(entry.getKey());
+
+            if (player == null) continue;
+
+            if (prevSlot >= 0) {
+                syncDisplay(player, null, prevSlot);
+            }
+
+            if (slot < 0) continue;  // hidden
+
+            String lang = entry.getValue();
+            Objective objective = localizedObjectives.get(lang);
+
+            if (objective == null) continue;
+
+            syncDisplay(player, objective, slot);
+        }
+    }
+
+    private void syncDisplay(ServerPlayerEntity player, @Nullable Objective objective, int slot) {
+        if (slot < 0) return;
+
+        // could be that ScoreboardObjectiveUpdateS2CPacket with ScoreboardObjectiveUpdateS2CPacket.REMOVE_MODE has to be sent
+        var packet = new ScoreboardDisplayS2CPacket(slot, objective != null ? objective.vanillaObjective() : null);
+        player.networkHandler.sendPacket(packet);
+    }
+
+    @Override
+    public int getScore(String playerName) {
+        return scores.getOrDefault(playerName, 0);
+    }
+
+    @Override
+    public void setScore(String playerName, int score) {
+        scores.put(playerName, score);
+
+        updateObjectives(objective -> syncScore(objective, playerName, score));
+    }
+
+    private void syncAddObjective(ServerPlayerEntity player, Objective objective) {
+        var packet = new ScoreboardObjectiveUpdateS2CPacket(objective.vanillaObjective(), ScoreboardObjectiveUpdateS2CPacket.ADD_MODE);
+        player.networkHandler.sendPacket(packet);
+    }
+
+    private void syncRemoveObjective(ServerPlayerEntity player, Objective objective) {
+        var packet = new ScoreboardObjectiveUpdateS2CPacket(objective.vanillaObjective(), ScoreboardObjectiveUpdateS2CPacket.REMOVE_MODE);
+        player.networkHandler.sendPacket(packet);
+    }
+
+    private void syncUpdateObjective(ServerPlayerEntity player, Objective objective) {
+        var packet = new ScoreboardObjectiveUpdateS2CPacket(objective.vanillaObjective(), ScoreboardObjectiveUpdateS2CPacket.UPDATE_MODE);
+        player.networkHandler.sendPacket(packet);
+    }
+
+    private void syncScores(Objective objective, ServerPlayerEntity player) {
+        scores.forEach((playerName, score) -> {
+            var packet = new ScoreboardPlayerUpdateS2CPacket(ServerScoreboard.UpdateMode.CHANGE, objective.name(),
+                    playerName, score);
+
+            player.networkHandler.sendPacket(packet);
+        });
+    }
+
+    private void syncScore(Objective objective, String playerName, int score) {
+        Set<UUID> uuids = objectivePlayers.get(objective);
+        if (uuids == null) return;
+
+        var packet = new ScoreboardPlayerUpdateS2CPacket(ServerScoreboard.UpdateMode.CHANGE, objective.name(),
+                playerName, score);
+
+        for (UUID uuid : uuids) {
+            ServerPlayerEntity player = playerManager.getPlayer(uuid);
+            if (player == null) continue;
+
+            player.networkHandler.sendPacket(packet);
+        }
+    }
+
+    @Override
+    public void unload() {
+        objectivePlayers.forEach((objective, uuids) -> {
+            for (UUID uuid : uuids) {
+                ServerPlayerEntity player = playerManager.getPlayer(uuid);
+                if (player == null) continue;
+
+                syncRemoveObjective(player, objective);
+            }
+        });
+    }
+    private static final class Objective {
+
+        private final String name;
+        private Text display;
+        private final ScoreboardObjective vanillaObjective;
+
+        private Objective(String name, Text display, ScoreboardCriterion.RenderType renderType) {
+            this.name = name;
+            this.display = display;
+            this.vanillaObjective = new ScoreboardObjective(null, name, ScoreboardCriterion.DUMMY, display, renderType);
+        }
+
+        ScoreboardObjective vanillaObjective() {
+            return vanillaObjective;
+        }
+
+        public String name() {
+            return name;
+        }
+
+        public Text display() {
+            return display;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == this) return true;
+            if (obj == null || obj.getClass() != this.getClass()) return false;
+            var that = (Objective) obj;
+            return Objects.equals(this.name, that.name) &&
+                   Objects.equals(this.display, that.display);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(name, display);
+        }
+
+        @Override
+        public String toString() {
+            return "Objective[" +
+                   "name=" + name + ", " +
+                   "display=" + display + ']';
+        }
+
+        public void setDisplay(Text display) {
+            this.display = Objects.requireNonNull(display);
+        }
+    }
+}

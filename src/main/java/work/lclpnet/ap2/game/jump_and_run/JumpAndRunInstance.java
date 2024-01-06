@@ -3,7 +3,6 @@ package work.lclpnet.ap2.game.jump_and_run;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
-import net.minecraft.entity.boss.BossBar;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.particle.ParticleTypes;
@@ -24,7 +23,6 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.GameRules;
 import work.lclpnet.ap2.api.base.Participants;
-import work.lclpnet.ap2.api.game.GameInfo;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.map.MapFacade;
@@ -34,27 +32,25 @@ import work.lclpnet.ap2.impl.game.BootstrapMapOptions;
 import work.lclpnet.ap2.impl.game.DefaultGameInstance;
 import work.lclpnet.ap2.impl.game.data.ScoreTimeDataContainer;
 import work.lclpnet.ap2.impl.util.BlockBox;
-import work.lclpnet.ap2.impl.util.ScoreboardManager;
 import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedPlayerBossBar;
 import work.lclpnet.ap2.impl.util.collision.ChunkedCollisionDetector;
 import work.lclpnet.ap2.impl.util.collision.PlayerMovementObserver;
 import work.lclpnet.ap2.impl.util.heads.PlayerHeadUtil;
 import work.lclpnet.ap2.impl.util.heads.PlayerHeads;
+import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
-import work.lclpnet.kibu.hook.player.PlayerConnectionHooks;
 import work.lclpnet.kibu.hook.player.PlayerMoveCallback;
 import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.translate.TranslationService;
-import work.lclpnet.kibu.translate.bossbar.BossBarProvider;
-import work.lclpnet.kibu.translate.text.FormatWrapper;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static net.minecraft.util.Formatting.BOLD;
 import static net.minecraft.util.Formatting.YELLOW;
+import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
 public class JumpAndRunInstance extends DefaultGameInstance {
 
@@ -122,7 +118,7 @@ public class JumpAndRunInstance extends DefaultGameInstance {
         closeGate();
 
         // add scoreboard
-        ScoreboardManager scoreboardManager = gameHandle.getScoreboardManager();
+        CustomScoreboardManager scoreboardManager = gameHandle.getScoreboardManager();
         ScoreboardObjective objective = scoreboardManager.createObjective("points", ScoreboardCriterion.DUMMY,
                 Text.literal("Points").formatted(YELLOW, BOLD), ScoreboardCriterion.RenderType.INTEGER);
 
@@ -134,7 +130,8 @@ public class JumpAndRunInstance extends DefaultGameInstance {
         checkpoints.init(collisionDetector, movementObserver);
         checkpoints.whenCheckpointReached(this::onCheckpointReached);
 
-        setupBossBars();
+        bossBar = usePlayerDynamicTaskDisplay(styled(1, YELLOW), styled(jumpAndRun.rooms().size() - 2, YELLOW));
+        bossBar.setPercent(0);
     }
 
     @Override
@@ -191,29 +188,6 @@ public class JumpAndRunInstance extends DefaultGameInstance {
         giveResetItemsToPlayers();
     }
 
-    private void setupBossBars() {
-        GameInfo gameInfo = gameHandle.getGameInfo();
-        TranslationService translations = gameHandle.getTranslations();
-        BossBarProvider provider = gameHandle.getBossBarProvider();
-
-        Identifier id = gameInfo.identifier("task");
-        Object[] args = new Object[] {
-                FormatWrapper.styled(1, YELLOW),
-                FormatWrapper.styled(jumpAndRun.rooms().size() - 2, YELLOW)
-        };
-
-        bossBar = new DynamicTranslatedPlayerBossBar(id, gameInfo.getTaskKey(), args, translations, provider)
-                .formatted(Formatting.GREEN);
-
-        bossBar.setColor(BossBar.Color.GREEN);
-
-        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
-            bossBar.add(player);
-        }
-
-        gameHandle.getHookRegistrar().registerHook(PlayerConnectionHooks.QUIT, bossBar::remove);
-    }
-
     private void giveResetItemsToPlayers() {
         TranslationService translations = gameHandle.getTranslations();
 
@@ -266,7 +240,7 @@ public class JumpAndRunInstance extends DefaultGameInstance {
         player.playSound(SoundEvents.ENTITY_PLAYER_LEVELUP, SoundCategory.PLAYERS, 0.5f, 2f);
 
         var msg = gameHandle.getTranslations().translateText(player, "game.ap2.jump_and_run.reached_room",
-                        FormatWrapper.styled("#" + room, Formatting.YELLOW))
+                        styled("#" + room, Formatting.YELLOW))
                 .formatted(Formatting.GREEN);
 
         player.sendMessage(msg);
@@ -274,7 +248,7 @@ public class JumpAndRunInstance extends DefaultGameInstance {
         int maxRooms = jumpAndRun.rooms().size() - 2;
         int canonicalRoom = MathHelper.clamp(room, 1, maxRooms);
 
-        bossBar.setArgument(player, 0, FormatWrapper.styled(canonicalRoom, YELLOW));
+        bossBar.setArgument(player, 0, styled(canonicalRoom, YELLOW));
 
         if (maxRooms > 0) {
             bossBar.getBossBar(player).setPercent((float) (room - 1) / maxRooms);
