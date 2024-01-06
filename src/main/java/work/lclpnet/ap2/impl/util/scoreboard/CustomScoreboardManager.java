@@ -1,23 +1,43 @@
-package work.lclpnet.ap2.impl.util;
+package work.lclpnet.ap2.impl.util.scoreboard;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.scoreboard.*;
+import net.minecraft.server.PlayerManager;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import work.lclpnet.ap2.api.event.IntScoreEventSource;
+import work.lclpnet.ap2.api.util.scoreboard.CustomScoreboard;
+import work.lclpnet.ap2.api.util.scoreboard.CustomScoreboardObjective;
+import work.lclpnet.kibu.plugin.hook.HookRegistrar;
+import work.lclpnet.kibu.translate.TranslationService;
+import work.lclpnet.kibu.translate.hook.LanguageChangedCallback;
+import work.lclpnet.kibu.translate.util.WeakList;
 import work.lclpnet.mplugins.ext.Unloadable;
 
 import java.util.HashSet;
 import java.util.Set;
 
-public class ScoreboardManager implements Unloadable {
+public class CustomScoreboardManager implements Unloadable, CustomScoreboard {
 
     private final ServerScoreboard scoreboard;
+    private final TranslationService translations;
+    private final PlayerManager playerManager;
     private final Set<Team> teams = new HashSet<>();
     private final Set<ScoreboardObjective> objectives = new HashSet<>();
+    private final WeakList<TranslatedScoreboardObjective> translatedObjectives = new WeakList<>();
 
-    public ScoreboardManager(ServerScoreboard scoreboard) {
+    public CustomScoreboardManager(ServerScoreboard scoreboard, TranslationService translations, PlayerManager playerManager) {
         this.scoreboard = scoreboard;
+        this.translations = translations;
+        this.playerManager = playerManager;
+    }
+
+    public void init(HookRegistrar hookRegistrar) {
+        hookRegistrar.registerHook(LanguageChangedCallback.HOOK, (player, language, reason) -> {
+            for (TranslatedScoreboardObjective bossBar : translatedObjectives) {
+                bossBar.updatePlayerLanguage(player);
+            }
+        });
     }
 
     public void joinTeam(Entity player, Team team) {
@@ -54,8 +74,9 @@ public class ScoreboardManager implements Unloadable {
         }
     }
 
+    @Override
     public ScoreboardObjective createObjective(String name, ScoreboardCriterion criterion, Text displayName,
-                                       ScoreboardCriterion.RenderType renderType) {
+                                               ScoreboardCriterion.RenderType renderType) {
         removeObjective(name);
 
         ScoreboardObjective objective = scoreboard.addObjective(name, criterion, displayName, renderType);
@@ -65,6 +86,11 @@ public class ScoreboardManager implements Unloadable {
         }
 
         return objective;
+    }
+
+    @Override
+    public ScoreboardPlayerScore getPlayerScore(String playerName, ScoreboardObjective objective) {
+        return scoreboard.getPlayerScore(playerName, objective);
     }
 
     private void removeObjective(String name) {
@@ -94,11 +120,26 @@ public class ScoreboardManager implements Unloadable {
         source.register((player, score) -> setScore(player, objective, score));
     }
 
+    public void sync(CustomScoreboardObjective objective, IntScoreEventSource source) {
+        source.register(objective::setScore);
+    }
+
+    public TranslatedScoreboardObjective translateObjective(String name, ScoreboardCriterion.RenderType renderType,
+                                                            String translationKey, Object... args) {
+        var objective = new TranslatedScoreboardObjective(translations, this, playerManager, name, renderType, translationKey, args);
+
+        translatedObjectives.add(objective);
+
+        return objective;
+    }
+
     @Override
     public void unload() {
         synchronized (this) {
             teams.forEach(scoreboard::removeTeam);
             teams.clear();
+
+            translatedObjectives.forEach(Unloadable::unload);
 
             objectives.forEach(scoreboard::removeObjective);
             objectives.clear();

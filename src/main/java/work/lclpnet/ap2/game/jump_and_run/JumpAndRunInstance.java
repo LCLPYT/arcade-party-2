@@ -34,12 +34,12 @@ import work.lclpnet.ap2.impl.game.BootstrapMapOptions;
 import work.lclpnet.ap2.impl.game.DefaultGameInstance;
 import work.lclpnet.ap2.impl.game.data.ScoreTimeDataContainer;
 import work.lclpnet.ap2.impl.util.BlockBox;
-import work.lclpnet.ap2.impl.util.ScoreboardManager;
 import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedPlayerBossBar;
 import work.lclpnet.ap2.impl.util.collision.ChunkedCollisionDetector;
 import work.lclpnet.ap2.impl.util.collision.PlayerMovementObserver;
 import work.lclpnet.ap2.impl.util.heads.PlayerHeadUtil;
 import work.lclpnet.ap2.impl.util.heads.PlayerHeads;
+import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.kibu.hook.player.PlayerConnectionHooks;
@@ -122,7 +122,7 @@ public class JumpAndRunInstance extends DefaultGameInstance {
         closeGate();
 
         // add scoreboard
-        ScoreboardManager scoreboardManager = gameHandle.getScoreboardManager();
+        CustomScoreboardManager scoreboardManager = gameHandle.getScoreboardManager();
         ScoreboardObjective objective = scoreboardManager.createObjective("points", ScoreboardCriterion.DUMMY,
                 Text.literal("Points").formatted(YELLOW, BOLD), ScoreboardCriterion.RenderType.INTEGER);
 

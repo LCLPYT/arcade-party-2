@@ -11,6 +11,8 @@ import net.minecraft.entity.projectile.FireworkRocketEntity;
 import net.minecraft.item.FireworkRocketItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.scoreboard.Scoreboard;
+import net.minecraft.scoreboard.ScoreboardCriterion;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -21,7 +23,6 @@ import net.minecraft.util.Formatting;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
 import org.json.JSONObject;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
@@ -33,6 +34,8 @@ import work.lclpnet.ap2.impl.game.DefaultGameInstance;
 import work.lclpnet.ap2.impl.game.data.ScoreDataContainer;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.BlockBox;
+import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
+import work.lclpnet.ap2.impl.util.scoreboard.TranslatedScoreboardObjective;
 import work.lclpnet.ap2.impl.util.world.BfsWorldScanner;
 import work.lclpnet.ap2.impl.util.world.NotOccupiedBlockPredicate;
 import work.lclpnet.ap2.impl.util.world.SimpleAdjacentBlocks;
@@ -60,7 +63,6 @@ public class PandaFinderInstance extends DefaultGameInstance {
     private final SpamManager spamManager = new SpamManager();
     private PandaManager pandaManager;
     private BossBarTimer timer = null;
-    private int round = 0;
     private boolean foundManually = false;
 
     public PandaFinderInstance(MiniGameHandle gameHandle) {
@@ -81,10 +83,36 @@ public class PandaFinderInstance extends DefaultGameInstance {
     @Override
     protected void ready() {
         HookRegistrar hooks = gameHandle.getHookRegistrar();
-        hooks.registerHook(PlayerInteractionHooks.USE_ENTITY, this::onUseEntity);
-        hooks.registerHook(PlayerInteractionHooks.ATTACK_ENTITY, this::onUseEntity);
+
+        hooks.registerHook(PlayerInteractionHooks.USE_ENTITY, (player, world, hand, entity, hitResult) -> {
+            onUseEntity(player, hand, entity, hitResult);
+            return ActionResult.PASS;
+        });
+
+        hooks.registerHook(PlayerInteractionHooks.ATTACK_ENTITY, (player, world, hand, entity, hitResult) -> {
+            onUseEntity(player, hand, entity, hitResult);
+            return ActionResult.PASS;
+        });
+
+        setupScoreboard();
 
         nextRound();
+    }
+
+    private void setupScoreboard() {
+        CustomScoreboardManager scoreboardManager = gameHandle.getScoreboardManager();
+
+        TranslatedScoreboardObjective objective = scoreboardManager.translateObjective("score",
+                        ScoreboardCriterion.RenderType.INTEGER, "ap2.score")
+                .formatted(Formatting.YELLOW, Formatting.BOLD);
+
+        objective.setSlot(Scoreboard.SIDEBAR_DISPLAY_SLOT_ID);
+
+        for (ServerPlayerEntity player : PlayerLookup.all(gameHandle.getServer())) {
+            objective.addPlayer(player);
+        }
+
+        scoreboardManager.sync(objective, data);
     }
 
     private void nextRound() {
@@ -108,11 +136,9 @@ public class PandaFinderInstance extends DefaultGameInstance {
     }
 
     private void onRoundOver() {
-        round++;
-
         int maxScore = data.getBestScore().orElse(0);
 
-        if (maxScore >= WIN_SCORE || round >= MAX_ROUNDS) {
+        if (maxScore >= WIN_SCORE) {
             var winners = data.getBestPlayers(gameHandle.getServer());
             win(winners);
             return;
@@ -166,21 +192,19 @@ public class PandaFinderInstance extends DefaultGameInstance {
         pandaManager.readImages(images);
     }
 
-    private ActionResult onUseEntity(PlayerEntity player, World world, Hand hand, Entity entity, EntityHitResult hitResult) {
+    private void onUseEntity(PlayerEntity player, Hand hand, Entity entity, EntityHitResult hitResult) {
         if (!(entity instanceof PandaEntity panda) || !(player instanceof ServerPlayerEntity serverPlayer)
             || player.hasStatusEffect(StatusEffects.BLINDNESS) || hand != Hand.MAIN_HAND
-            || hitResult != null) return ActionResult.PASS;
+            || hitResult != null) return;
 
         if (spamManager.interact(serverPlayer)) {
             onCooldownReached(serverPlayer);
-            return ActionResult.PASS;
+            return;
         }
 
-        if (pandaManager.isSearchedPanda(panda)) {
-            pandaFound(serverPlayer, panda);
-        }
+        if (!pandaManager.isSearchedPanda(panda)) return;
 
-        return ActionResult.PASS;
+        pandaFound(serverPlayer, panda);
     }
 
     private void onCooldownReached(ServerPlayerEntity player) {

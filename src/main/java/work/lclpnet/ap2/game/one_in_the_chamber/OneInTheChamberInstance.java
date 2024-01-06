@@ -28,9 +28,9 @@ import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.impl.game.DefaultGameInstance;
 import work.lclpnet.ap2.impl.game.data.ScoreDataContainer;
 import work.lclpnet.ap2.impl.util.Cooldown;
-import work.lclpnet.ap2.impl.util.ScoreboardManager;
 import work.lclpnet.ap2.impl.util.TextUtil;
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker;
+import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
 import work.lclpnet.kibu.hook.entity.ProjectileHooks;
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks;
@@ -89,7 +89,7 @@ public class OneInTheChamberInstance extends DefaultGameInstance {
 
         useTaskDisplay();
 
-        ScoreboardManager scoreboardManager = gameHandle.getScoreboardManager();
+        CustomScoreboardManager scoreboardManager = gameHandle.getScoreboardManager();
         ScoreboardObjective objective = scoreboardManager.createObjective("kills", ScoreboardCriterion.DUMMY,
                 Text.literal("Kills").formatted(YELLOW, BOLD), ScoreboardCriterion.RenderType.INTEGER);
 

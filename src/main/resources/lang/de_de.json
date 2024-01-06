@@ -8,6 +8,7 @@
   "ap2.you_won": "Du hast gewonnen",
   "ap2.you_lost": "Du hast verloren",
   "ap2.results": "Ergebnisse",
+  "ap2.score": "Punktestand",
   "ap2.you_placed": "Du bist %s geworden",
   "ap2.you_placed_value": "Du bist %s geworden - %s",
   "ap2.go": "Los!",

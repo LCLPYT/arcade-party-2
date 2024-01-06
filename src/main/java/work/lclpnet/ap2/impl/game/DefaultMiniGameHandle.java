@@ -15,7 +15,7 @@ import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.map.MapFacade;
 import work.lclpnet.ap2.base.ApContainer;
 import work.lclpnet.ap2.base.activity.PreparationActivity;
-import work.lclpnet.ap2.impl.util.ScoreboardManager;
+import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.kibu.plugin.hook.HookStack;
 import work.lclpnet.kibu.plugin.scheduler.SchedulerStack;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
@@ -43,7 +43,7 @@ public class DefaultMiniGameHandle implements MiniGameHandle, Unloadable, WorldB
     private volatile BasicProtector protector = null;
     private WorldBorderListener worldBorderListener = null;
     private volatile List<Unloadable> closeWhenDone = null;
-    private volatile ScoreboardManager scoreboardManager = null;
+    private volatile CustomScoreboardManager scoreboardManager = null;
     private TaskScheduler scheduler = null;
 
     public DefaultMiniGameHandle(GameInfo info, PreparationActivity.Args args, BossBarProvider bossBarProvider, BossBarHandler bossBarHandler) {
@@ -135,12 +135,14 @@ public class DefaultMiniGameHandle implements MiniGameHandle, Unloadable, WorldB
     }
 
     @Override
-    public ScoreboardManager getScoreboardManager() {
+    public CustomScoreboardManager getScoreboardManager() {
         if (scoreboardManager != null) return scoreboardManager;
 
         synchronized (this) {
             if (scoreboardManager == null) {
-                scoreboardManager = new ScoreboardManager(getServer().getScoreboard());
+                MinecraftServer server = getServer();
+                scoreboardManager = new CustomScoreboardManager(server.getScoreboard(), getTranslations(), server.getPlayerManager());
+                scoreboardManager.init(getHookRegistrar());
             }
         }
 

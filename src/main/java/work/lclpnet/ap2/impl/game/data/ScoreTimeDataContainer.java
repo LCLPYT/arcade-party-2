@@ -36,12 +36,17 @@ public class ScoreTimeDataContainer implements DataContainer, IntScoreEventSourc
     }
 
     public void addScore(ServerPlayerEntity player, int add) {
+        int score;
+
         synchronized (this) {
             if (frozen) return;
             PlayerRef key = PlayerRef.create(player);
-            score.put(key, score.computeIfAbsent(key, playerRef -> 0) + add);
+            score = this.score.computeIfAbsent(key, playerRef -> 0) + add;
+            this.score.put(key, score);
             touchInternal(player);
         }
+
+        listeners.forEach(listener -> listener.accept(player, score));
     }
 
     public int getScore(ServerPlayerEntity player) {
