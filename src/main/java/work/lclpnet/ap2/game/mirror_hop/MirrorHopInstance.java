@@ -28,7 +28,6 @@ import work.lclpnet.ap2.impl.util.effect.ApEffects;
 import work.lclpnet.ap2.impl.util.movement.CooldownMovementBlocker;
 import work.lclpnet.ap2.impl.util.movement.MovementBlocker;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
-import work.lclpnet.kibu.hook.player.PlayerMoveCallback;
 import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.lobby.game.map.GameMap;
@@ -120,19 +119,7 @@ public class MirrorHopInstance extends DefaultGameInstance {
 
         movementBlocker.init(hooks);
 
-        Number criticalHeight = getMap().getProperty("critical-height");
-
-        if (criticalHeight != null) {
-            hooks.registerHook(PlayerMoveCallback.HOOK, (player, from, to) -> {
-                if (!participants.isParticipating(player)) return false;
-
-                if (!(to.getY() >= criticalHeight.floatValue())) {
-                    playerFell(player);
-                }
-
-                return false;
-            });
-        }
+        commons().whenBelowCriticalHeight().then(this::playerFell);
 
         removeGate(map, world);
     }
