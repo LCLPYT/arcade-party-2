@@ -5,6 +5,8 @@ import org.junit.jupiter.api.Test;
 import work.lclpnet.ap2.api.util.Collider;
 import work.lclpnet.ap2.impl.util.BlockBox;
 
+import java.util.Set;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class ChunkedCollisionDetectorTest {
@@ -96,7 +98,7 @@ class ChunkedCollisionDetectorTest {
         BlockBox box = new BlockBox(1, 0, 1, 1, 0, 1);
         detector.add(box);
 
-        assertSame(box, detector.getCollision(new Vec3d(1.5, 0, 1.5)));
+        assertEquals(Set.of(box), detector.getCollisions(new Vec3d(1.5, 0, 1.5)));
     }
 
     @Test
@@ -106,7 +108,7 @@ class ChunkedCollisionDetectorTest {
         BlockBox box = new BlockBox(1, 0, 1, 1, 0, 1);
         detector.add(box);
 
-        assertNull(detector.getCollision(new Vec3d(1.5, 1.5, 1.5)));
+        assertEquals(Set.of(), detector.getCollisions(new Vec3d(1.5, 1.5, 1.5)));
     }
 
     @Test
@@ -116,9 +118,28 @@ class ChunkedCollisionDetectorTest {
         BlockBox box = new BlockBox(1, 0, 1, 18, 17, 2);
         detector.add(box);
 
-        assertSame(box, detector.getCollision(new Vec3d(5, 5, 1)));
-        assertSame(box, detector.getCollision(new Vec3d(17, 5, 1)));
-        assertNull(detector.getCollision(new Vec3d(0, 0, 0)));
+        assertEquals(Set.of(box), detector.getCollisions(new Vec3d(5, 5, 1)));
+        assertEquals(Set.of(box), detector.getCollisions(new Vec3d(17, 5, 1)));
+        assertEquals(Set.of(), detector.getCollisions(new Vec3d(0, 0, 0)));
+    }
+
+    @Test
+    void getCollisions_multiple() {
+        var detector = new ChunkedCollisionDetector();
+
+        BlockBox fst = new BlockBox(0, 0, 0, 7, 7, 7);
+        BlockBox snd = new BlockBox(4, 4, 4, 6, 6, 6);
+        BlockBox trd = new BlockBox(6, 6, 6, 10, 10, 10);
+
+        detector.add(fst);
+        detector.add(snd);
+        detector.add(trd);
+
+        assertEquals(Set.of(fst), detector.getCollisions(new Vec3d(1, 1, 1)));
+        assertEquals(Set.of(fst, snd), detector.getCollisions(new Vec3d(5, 5, 5)));
+        assertEquals(Set.of(fst, snd, trd), detector.getCollisions(new Vec3d(6, 6, 6)));
+        assertEquals(Set.of(fst, trd), detector.getCollisions(new Vec3d(7, 7, 7)));
+        assertEquals(Set.of(trd), detector.getCollisions(new Vec3d(8, 8, 8)));
     }
 
     private boolean addedToAll(ChunkedCollisionDetector detector, Collider collider) {

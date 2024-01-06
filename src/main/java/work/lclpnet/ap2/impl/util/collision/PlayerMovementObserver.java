@@ -13,48 +13,56 @@ import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.WeakHashMap;
+import java.util.UUID;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 public class PlayerMovementObserver {
 
     private final CollisionDetector collisionDetector;
-    private final WeakHashMap<ServerPlayerEntity, Collider> currentRegion = new WeakHashMap<>();
+    private final Predicate<ServerPlayerEntity> predicate;
+    private final Map<UUID, Entry> entries = new HashMap<>();
     private final Map<Collider, Consumer<ServerPlayerEntity>> regionEnter = new HashMap<>();
     private final Map<Collider, Consumer<ServerPlayerEntity>> regionLeave = new HashMap<>();
     private BiConsumer<ServerPlayerEntity, Collider> onEnter = null, onLeave = null;
 
-    public PlayerMovementObserver(CollisionDetector collisionDetector) {
+    public PlayerMovementObserver(CollisionDetector collisionDetector, Predicate<ServerPlayerEntity> predicate) {
         this.collisionDetector = collisionDetector;
+        this.predicate = predicate;
     }
 
     public void init(HookRegistrar registrar, MinecraftServer server) {
         registrar.registerHook(PlayerMoveCallback.HOOK, (player, from, to) -> {
-            onMove(player, to);
+            if (predicate.test(player)) {
+                onMove(player, to);
+            }
             return false;
         });
 
         for (ServerPlayerEntity player : PlayerLookup.all(server)) {
-            onMove(player, player.getPos());
+            if (predicate.test(player)) {
+                onMove(player, player.getPos());
+            }
         }
     }
 
     private void onMove(ServerPlayerEntity player, Position pos) {
-        Collider region = collisionDetector.getCollision(pos);
-        Collider lastRegion = currentRegion.get(player);
+        Entry entry = entries.computeIfAbsent(player.getUuid(), uuid -> new Entry());
 
-        if (lastRegion == region) return;
+        collisionDetector.updateCollisions(pos, entry.current);
 
-        currentRegion.put(player, region);
+        if (entry.last.equals(entry.current)) return;
 
-        if (lastRegion != null) {
-            onLeave(player, lastRegion);
+        for (var left : entry.last.diff(entry.current)) {
+            onLeave(player, left);
         }
 
-        if (region != null) {
-            onEnter(player, region);
+        for (var entered : entry.current.diff(entry.last)) {
+            onEnter(player, entered);
         }
+
+        entry.last.set(entry.current);
     }
 
     private void onEnter(ServerPlayerEntity player, @NotNull Collider region) {
@@ -107,5 +115,9 @@ public class PlayerMovementObserver {
         collisionDetector.add(region);
 
         regionLeave.put(region, action);
+    }
+
+    private static class Entry {
+        final CollisionInfo current = new CollisionInfo(1), last = new CollisionInfo(1);
     }
 }

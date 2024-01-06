@@ -4,6 +4,7 @@ import work.lclpnet.ap2.api.game.MiniGame;
 import work.lclpnet.ap2.game.anvil_fall.AnvilFallMiniGame;
 import work.lclpnet.ap2.game.bow_spleef.BowSpleefMiniGame;
 import work.lclpnet.ap2.game.fine_tuning.FineTuningMiniGame;
+import work.lclpnet.ap2.game.jump_and_run.JumpAndRunMiniGame;
 import work.lclpnet.ap2.game.mirror_hop.MirrorHopMiniGame;
 import work.lclpnet.ap2.game.one_in_the_chamber.OneInTheChamberMiniGame;
 import work.lclpnet.ap2.game.panda_finder.PandaFinderMiniGame;
@@ -27,5 +28,6 @@ public class MiniGames {
         games.add(new OneInTheChamberMiniGame());
         games.add(new AnvilFallMiniGame());
         games.add(new PandaFinderMiniGame());
+        games.add(new JumpAndRunMiniGame());
     }
 }

@@ -56,7 +56,6 @@ public class OneInTheChamberInstance extends DefaultGameInstance {
     private final OneInTheChamberSpawns respawn = new OneInTheChamberSpawns(gameHandle, random);
     private final SimpleMovementBlocker movementBlocker;
     private final Cooldown respawnCooldown;
-    private ScoreboardObjective objective;
 
     public OneInTheChamberInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
@@ -91,8 +90,12 @@ public class OneInTheChamberInstance extends DefaultGameInstance {
         useTaskDisplay();
 
         ScoreboardManager scoreboardManager = gameHandle.getScoreboardManager();
-        objective = scoreboardManager.createObjective("kills", ScoreboardCriterion.DUMMY,
+        ScoreboardObjective objective = scoreboardManager.createObjective("kills", ScoreboardCriterion.DUMMY,
                 Text.literal("Kills").formatted(YELLOW, BOLD), ScoreboardCriterion.RenderType.INTEGER);
+
+        useScoreboardStatsSync(objective);
+
+        scoreboardManager.setDisplay(Scoreboard.SIDEBAR_DISPLAY_SLOT_ID, objective);
 
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
             BlockPos pos = respawn.getRandomSpawn();
@@ -100,11 +103,7 @@ public class OneInTheChamberInstance extends DefaultGameInstance {
             player.teleport(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
 
             movementBlocker.disableMovement(player);
-
-            scoreboardManager.setScore(player, objective, 0);
         }
-
-        scoreboardManager.setDisplay(Scoreboard.SIDEBAR_DISPLAY_SLOT_ID, objective);
 
         hooks.registerHook(PlayerInventoryHooks.MODIFY_INVENTORY, event
                 -> !event.player().isCreativeLevelTwoOp());
@@ -246,7 +245,6 @@ public class OneInTheChamberInstance extends DefaultGameInstance {
         data.addScore(killer, 1);
 
         int newScore = data.getScore(killer);
-        gameHandle.getScoreboardManager().setScore(killer, objective, newScore);
 
         if (newScore == SCORE_LIMIT) {
             win(killer);

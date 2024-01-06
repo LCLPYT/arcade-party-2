@@ -156,7 +156,7 @@ public class BowSpleefInstance extends EliminationGameInstance {
     private void removeBlocksUnder() {
         ServerWorld world = getWorld();
 
-        JSONArray spawnJson = Objects.requireNonNull(getMap().getProperty("spawn"), "Spawn not configured");
+        JSONArray spawnJson = Objects.requireNonNull(getMap().getProperty("pos"), "Spawn not configured");
         BlockPos spawn = MapUtil.readBlockPos(spawnJson);
 
         int x = spawn.getX();

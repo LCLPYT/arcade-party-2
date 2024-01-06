@@ -22,7 +22,7 @@ import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.impl.game.EliminationGameInstance;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.BlockBox;
-import work.lclpnet.ap2.impl.util.DynamicTranslatedBossBar;
+import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedBossBar;
 import work.lclpnet.kibu.access.VelocityModifier;
 import work.lclpnet.kibu.access.entity.FallingBlockAccess;
 import work.lclpnet.kibu.hook.player.PlayerMoveCallback;
@@ -127,7 +127,7 @@ public class AnvilFallInstance extends EliminationGameInstance {
 
         playArea = MapUtil.readBox(map.requireProperty("play-area"));
 
-        BlockPos spawn = MapUtil.readBlockPos(map.requireProperty("spawn"));
+        BlockPos spawn = MapUtil.readBlockPos(map.requireProperty("pos"));
         center = new Vec3d(spawn.getX() + 0.5, 0, spawn.getZ() + 0.5);
     }
 

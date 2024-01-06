@@ -4,6 +4,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.scoreboard.*;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
+import work.lclpnet.ap2.api.event.IntScoreEventSource;
 import work.lclpnet.mplugins.ext.Unloadable;
 
 import java.util.HashSet;
@@ -79,12 +80,18 @@ public class ScoreboardManager implements Unloadable {
     }
 
     public void setScore(ServerPlayerEntity player, ScoreboardObjective objective, int score) {
+        if (!objectives.contains(objective)) return;  // objective is not associated with this instance
+
         ScoreboardPlayerScore playerScore = scoreboard.getPlayerScore(player.getEntityName(), objective);
         playerScore.setScore(score);
     }
 
     public void setDisplay(int slot, ScoreboardObjective objective) {
         scoreboard.setObjectiveSlot(slot, objective);
+    }
+
+    public void sync(ScoreboardObjective objective, IntScoreEventSource source) {
+        source.register((player, score) -> setScore(player, objective, score));
     }
 
     @Override

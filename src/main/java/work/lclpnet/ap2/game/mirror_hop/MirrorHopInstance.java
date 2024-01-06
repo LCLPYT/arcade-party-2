@@ -39,13 +39,14 @@ public class MirrorHopInstance extends DefaultGameInstance {
 
     private final ScoreDataContainer data = new ScoreDataContainer();
     private final CollisionDetector collisionDetector = new ChunkedCollisionDetector();
-    private final PlayerMovementObserver movementObserver = new PlayerMovementObserver(collisionDetector);
+    private final PlayerMovementObserver movementObserver;
     private final MovementBlocker movementBlocker;
     private MirrorHopChoices choices = null;
     private int progress = -1;
 
     public MirrorHopInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
+        movementObserver = new PlayerMovementObserver(collisionDetector, gameHandle.getParticipants()::isParticipating);
         movementBlocker = new CooldownMovementBlocker(gameHandle.getScheduler());
     }
 
@@ -85,7 +86,7 @@ public class MirrorHopInstance extends DefaultGameInstance {
         movementObserver.init(hooks, server);
 
         movementObserver.whenEntering(goal, player -> {
-            if (!participants.isParticipating(player) || isGameOver()) return;
+            if (isGameOver()) return;
 
             data.addScore(player, 1);
 
@@ -93,8 +94,7 @@ public class MirrorHopInstance extends DefaultGameInstance {
         });
 
         movementObserver.setRegionEnterListener((player, collider) -> {
-            if (!(participants.isParticipating(player))
-                || !(collider instanceof MirrorHopChoices.Platform platform)) return;
+            if (!(collider instanceof MirrorHopChoices.Platform platform)) return;
 
             int idx = choices.getChoiceIndex(platform);
             if (idx == -1) return;

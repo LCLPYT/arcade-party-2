@@ -4,6 +4,8 @@ import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.server.network.ServerPlayerEntity;
 import org.jetbrains.annotations.NotNull;
+import work.lclpnet.ap2.api.event.IntScoreEvent;
+import work.lclpnet.ap2.api.event.IntScoreEventSource;
 import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.game.data.DataEntry;
 import work.lclpnet.ap2.api.game.data.PlayerRef;
@@ -11,17 +13,15 @@ import work.lclpnet.ap2.impl.game.data.entry.ScoreDataEntry;
 import work.lclpnet.ap2.impl.game.data.entry.ScoreTimeDataEntry;
 import work.lclpnet.ap2.impl.game.data.entry.ScoreView;
 
-import java.util.Comparator;
-import java.util.LinkedHashSet;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class ScoreTimeDataContainer implements DataContainer {
+public class ScoreTimeDataContainer implements DataContainer, IntScoreEventSource {
 
     private final Object2IntMap<PlayerRef> score = new Object2IntOpenHashMap<>();
     private final LinkedHashSet<UUID> lastModified = new LinkedHashSet<>();
+    private final List<IntScoreEvent> listeners = new ArrayList<>();
 
     private boolean frozen = false;
 
@@ -31,6 +31,8 @@ public class ScoreTimeDataContainer implements DataContainer {
             this.score.put(PlayerRef.create(player), score);
             touchInternal(player);
         }
+
+        listeners.forEach(listener -> listener.accept(player, score));
     }
 
     public void addScore(ServerPlayerEntity player, int add) {
@@ -158,5 +160,10 @@ public class ScoreTimeDataContainer implements DataContainer {
     @Override
     public void ensureTracked(ServerPlayerEntity player) {
         addScore(player, 0);
+    }
+
+    @Override
+    public void register(IntScoreEvent listener) {
+        listeners.add(Objects.requireNonNull(listener));
     }
 }

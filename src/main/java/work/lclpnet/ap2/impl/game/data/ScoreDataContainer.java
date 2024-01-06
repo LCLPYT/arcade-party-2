@@ -2,6 +2,8 @@ package work.lclpnet.ap2.impl.game.data;
 
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
+import work.lclpnet.ap2.api.event.IntScoreEvent;
+import work.lclpnet.ap2.api.event.IntScoreEventSource;
 import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.game.data.DataEntry;
 import work.lclpnet.ap2.api.game.data.PlayerRef;
@@ -11,9 +13,10 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class ScoreDataContainer implements DataContainer {
+public class ScoreDataContainer implements DataContainer, IntScoreEventSource {
 
     private final Map<PlayerRef, Integer> scoreMap = new HashMap<>();
+    private final List<IntScoreEvent> listeners = new ArrayList<>();
 
     private boolean frozen = false;
 
@@ -22,6 +25,8 @@ public class ScoreDataContainer implements DataContainer {
             if (frozen) return;
             scoreMap.put(PlayerRef.create(player), score);
         }
+
+        listeners.forEach(listener -> listener.accept(player, score));
     }
 
     public void addScore(ServerPlayerEntity player, int add) {
@@ -89,5 +94,10 @@ public class ScoreDataContainer implements DataContainer {
                 .map(ref -> ref.resolve(server))
                 .filter(Objects::nonNull)
                 .collect(Collectors.toUnmodifiableSet());
+    }
+
+    @Override
+    public void register(IntScoreEvent listener) {
+        listeners.add(Objects.requireNonNull(listener));
     }
 }
