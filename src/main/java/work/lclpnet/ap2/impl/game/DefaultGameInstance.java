@@ -3,6 +3,7 @@ package work.lclpnet.ap2.impl.game;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.entity.boss.BossBar;
 import net.minecraft.entity.damage.DamageTypes;
+import net.minecraft.scoreboard.ScoreboardObjective;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -21,6 +22,7 @@ import org.slf4j.Logger;
 import work.lclpnet.ap2.api.base.ParticipantListener;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.base.WorldBorderManager;
+import work.lclpnet.ap2.api.event.IntScoreEventSource;
 import work.lclpnet.ap2.api.game.GameInfo;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.MiniGameInstance;
@@ -30,9 +32,9 @@ import work.lclpnet.ap2.api.map.MapFacade;
 import work.lclpnet.ap2.base.ApConstants;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.SoundHelper;
-import work.lclpnet.ap2.impl.util.Vec2i;
 import work.lclpnet.ap2.impl.util.effect.ApEffect;
 import work.lclpnet.ap2.impl.util.effect.ApEffects;
+import work.lclpnet.ap2.impl.util.math.Vec2i;
 import work.lclpnet.combatctl.api.CombatStyle;
 import work.lclpnet.kibu.hook.entity.EntityHealthCallback;
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks;
@@ -540,6 +542,21 @@ public abstract class DefaultGameInstance implements MiniGameInstance, Participa
         bossBar.addPlayers(PlayerLookup.all(gameHandle.getServer()));
 
         gameHandle.getBossBarHandler().showOnJoin(bossBar);
+    }
+
+    protected final void useScoreboardStatsSync(ScoreboardObjective objective) {
+        DataContainer data = getData();
+
+        if (!(data instanceof IntScoreEventSource source)) {
+            throw new UnsupportedOperationException("Data container not supported (IntScoreEventSource not implemented)");
+        }
+
+        gameHandle.getScoreboardManager().sync(objective, source);
+
+        // initialize scores
+        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
+            data.ensureTracked(player);
+        }
     }
 
     protected void onGameOver() {}

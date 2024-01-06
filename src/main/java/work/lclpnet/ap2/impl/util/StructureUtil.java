@@ -1,39 +1,35 @@
 package work.lclpnet.ap2.impl.util;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
-import work.lclpnet.kibu.schematic.FabricBlockStateAdapter;
+import net.minecraft.util.math.Vec3i;
+import work.lclpnet.ap2.api.util.Printable;
 import work.lclpnet.kibu.structure.BlockStructure;
+import work.lclpnet.kibu.util.StructureWriter;
+import work.lclpnet.kibu.util.math.Matrix3i;
+
+import java.util.EnumSet;
+
+import static work.lclpnet.kibu.util.StructureWriter.Option.*;
 
 public class StructureUtil {
 
-    public static void placeStructure(BlockStructure structure, ServerWorld world, BlockPos pos) {
-        var origin = structure.getOrigin();
+    public static final EnumSet<StructureWriter.Option> FAST_NO_VIEWERS = EnumSet.of(SKIP_AIR, FORCE_STATE, SKIP_PLAYER_SYNC, SKIP_DROPS);
 
-        int ox = origin.getX(), oy = origin.getY(), oz = origin.getZ();
-        int px = pos.getX(), py = pos.getY(), pz = pos.getZ();
+    public static void placeStructureFast(Printable printable, ServerWorld world) {
+        BlockStructure structure = printable.getStructure();
+        Vec3i pos = printable.getPrintOffset();
 
-        var adapter = FabricBlockStateAdapter.getInstance();
-        BlockState air = Blocks.AIR.getDefaultState();
+        StructureWriter.placeStructure(structure, world, pos, printable.getPrintMatrix(), FAST_NO_VIEWERS);
+    }
 
-        BlockPos.Mutable printPos = new BlockPos.Mutable();
+    public static void placeStructureFast(BlockStructure structure, ServerWorld world, BlockPos.Mutable pos) {
+        StructureWriter.placeStructure(structure, world, pos, Matrix3i.IDENTITY, FAST_NO_VIEWERS);
+    }
 
-        for (var kibuPos : structure.getBlockPositions()) {
-            printPos.set(
-                    kibuPos.getX() - ox + px,
-                    kibuPos.getY() - oy + py,
-                    kibuPos.getZ() - oz + pz
-            );
-
-            var kibuState = structure.getBlockState(kibuPos);
-
-            BlockState state = adapter.revert(kibuState);
-            if (state == null) state = air;
-
-            world.setBlockState(printPos, state, 0);
-        }
+    public static BlockBox getBounds(BlockStructure structure) {
+        return new BlockBox(0, 0, 0,
+                structure.getWidth() - 1, structure.getHeight() - 1, structure.getLength() - 1);
     }
 
     private StructureUtil() {}

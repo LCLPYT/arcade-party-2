@@ -34,8 +34,20 @@ public interface MiniGameHandle {
 
     HookRegistrar getHookRegistrar();
 
+    /**
+     * Get the mini-game root scheduler.
+     * This scheduler is stopped when the mini-game terminates and can be used for every important scheduler task.
+     * Game-logic related tasks should be scheduled with the game scheduler instead, as it is stopped when someone wins.
+     * @return The root scheduler for this mini-game.
+     */
     TaskScheduler getScheduler();
 
+    /**
+     * Get the game scheduler, which is a child of the game root scheduler (obtained by {@link #getScheduler()}).
+     * This scheduler can be reset and is automatically stopped, the moment someone wins the game.
+     * In contrast, the game root scheduler is only stopped when the mini-game terminates.
+     * @return The game scheduler for game logic.
+     */
     TaskScheduler getGameScheduler();
 
     TranslationService getTranslations();

@@ -7,10 +7,11 @@ import net.minecraft.util.math.MathHelper;
 import org.json.JSONArray;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.impl.util.BlockBox;
-import work.lclpnet.ap2.impl.util.Vec2i;
+import work.lclpnet.ap2.impl.util.math.Vec2i;
 import work.lclpnet.kibu.util.BlockStateUtils;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Objects;
 
 public class MapUtil {
 

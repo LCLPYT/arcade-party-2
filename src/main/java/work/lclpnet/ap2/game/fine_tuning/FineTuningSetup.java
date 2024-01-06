@@ -73,7 +73,7 @@ class FineTuningSetup {
         final int rooms = gameHandle.getParticipants().getAsSet().size();
         final int width = structure.getWidth(),
                 height = structure.getHeight(),
-                length = structure.getWidth();
+                length = structure.getLength();
 
         int rz = roomDirection.getZ(), rx = roomDirection.getX(), ry = roomDirection.getY();
         int sx = roomStart.getX(), sy = roomStart.getY(), sz = roomStart.getZ();
@@ -89,7 +89,7 @@ class FineTuningSetup {
                     sy + i * roomOffset.getY(),
                     sz + i * roomOffset.getZ());
 
-            StructureUtil.placeStructure(structure, world, pos);
+            StructureUtil.placeStructureFast(structure, world, pos);
         }
     }
 
@@ -113,7 +113,7 @@ class FineTuningSetup {
     }
 
     void teleportParticipants(Vec3i[] noteBlockLocations) {
-        Vec3i spawnOffset = MapUtil.readBlockPos(map.requireProperty("room-player-spawn"));
+        Vec3i spawnOffset = MapUtil.readBlockPos(map.requireProperty("room-player-pos"));
         float yaw = MapUtil.readAngle(map.requireProperty("room-player-yaw"));
 
         int i = 0;
