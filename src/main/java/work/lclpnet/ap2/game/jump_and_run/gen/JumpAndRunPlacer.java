@@ -13,7 +13,7 @@ public class JumpAndRunPlacer {
 
     public void place(JumpAndRun jumpAndRun) {
         for (JumpPart part : jumpAndRun.parts()) {
-            StructureUtil.placeStructure(part.printable(), world);
+            StructureUtil.placeStructureFast(part.printable(), world);
         }
     }
 }

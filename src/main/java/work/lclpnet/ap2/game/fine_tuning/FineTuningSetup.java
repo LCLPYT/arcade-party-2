@@ -9,10 +9,10 @@ import org.slf4j.Logger;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.MathUtil;
+import work.lclpnet.ap2.impl.util.StructureUtil;
 import work.lclpnet.kibu.schematic.FabricBlockStateAdapter;
 import work.lclpnet.kibu.schematic.SchematicFormats;
 import work.lclpnet.kibu.structure.BlockStructure;
-import work.lclpnet.kibu.util.StructureWriter;
 import work.lclpnet.kibu.world.mixin.MinecraftServerAccessor;
 import work.lclpnet.lobby.game.map.GameMap;
 
@@ -89,7 +89,7 @@ class FineTuningSetup {
                     sy + i * roomOffset.getY(),
                     sz + i * roomOffset.getZ());
 
-            StructureWriter.placeStructure(structure, world, pos);
+            StructureUtil.placeStructureFast(structure, world, pos);
         }
     }
 
