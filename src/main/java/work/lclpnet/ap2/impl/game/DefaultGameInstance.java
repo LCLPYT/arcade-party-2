@@ -70,6 +70,8 @@ public abstract class DefaultGameInstance implements MiniGameInstance, Participa
     @Nullable
     private GameMap map = null;
     private boolean gameOver = false;
+    @Nullable
+    private volatile GameCommons commons = null;
 
     public DefaultGameInstance(MiniGameHandle gameHandle) {
         this.gameHandle = gameHandle;
@@ -583,6 +585,18 @@ public abstract class DefaultGameInstance implements MiniGameInstance, Participa
         bossBar.init(gameHandle.getHookRegistrar());
 
         return bossBar;
+    }
+
+    protected final GameCommons commons() {
+        if (commons != null) return commons;
+
+        synchronized (this) {
+            if (commons != null) return commons;
+
+            commons = new GameCommons(gameHandle, getMap());
+        }
+
+        return commons;
     }
 
     protected void onGameOver() {}

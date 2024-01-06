@@ -73,5 +73,7 @@
   "game.ap2.jump_and_run.reached_room": "Congratulations, you reached room %s",
   "game.ap2.jump_and_run.reached_checkpoint": "Checkpoint reached",
   "game.ap2.jump_and_run.reset": "Reset",
-  "game.ap2.jump_and_run.assistance": "This room has been simplified so that you can make better progress"
+  "game.ap2.jump_and_run.assistance": "This room has been simplified so that you can make better progress",
+  "game.ap2.tnt_run": "TNT Run",
+  "game.ap2.tnt_run.description": "The blocks beneath your feet are disappearing. Prevent yourself from falling by running away!"
 }

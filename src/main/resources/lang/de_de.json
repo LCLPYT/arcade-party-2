@@ -73,5 +73,7 @@
   "game.ap2.jump_and_run.reached_room": "Glückwunsch! Du hast den %s Raum erreicht",
   "game.ap2.jump_and_run.reached_checkpoint": "Checkpoint erreicht",
   "game.ap2.jump_and_run.reset": "Zurücksetzen",
-  "game.ap2.jump_and_run.assistance": "Dieser Raum wurde vereinfacht, damit du besser voran kommst"
+  "game.ap2.jump_and_run.assistance": "Dieser Raum wurde vereinfacht, damit du besser voran kommst",
+  "game.ap2.tnt_run": "TNT-Lauf",
+  "game.ap2.tnt_run.description": "Der Boden unter deinen Füßen verschwindet. Bleib nicht stehen und falle nicht herunter!"
 }
