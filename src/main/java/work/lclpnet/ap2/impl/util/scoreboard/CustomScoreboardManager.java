@@ -6,8 +6,8 @@ import net.minecraft.server.PlayerManager;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import work.lclpnet.ap2.api.event.IntScoreEventSource;
-import work.lclpnet.ap2.api.util.scoreboard.CustomScoreboard;
 import work.lclpnet.ap2.api.util.scoreboard.CustomScoreboardObjective;
+import work.lclpnet.kibu.hook.player.PlayerConnectionHooks;
 import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.kibu.translate.hook.LanguageChangedCallback;
@@ -17,7 +17,7 @@ import work.lclpnet.mplugins.ext.Unloadable;
 import java.util.HashSet;
 import java.util.Set;
 
-public class CustomScoreboardManager implements Unloadable, CustomScoreboard {
+public class CustomScoreboardManager implements Unloadable {
 
     private final ServerScoreboard scoreboard;
     private final TranslationService translations;
@@ -34,8 +34,14 @@ public class CustomScoreboardManager implements Unloadable, CustomScoreboard {
 
     public void init(HookRegistrar hookRegistrar) {
         hookRegistrar.registerHook(LanguageChangedCallback.HOOK, (player, language, reason) -> {
-            for (TranslatedScoreboardObjective bossBar : translatedObjectives) {
-                bossBar.updatePlayerLanguage(player);
+            for (TranslatedScoreboardObjective objective : translatedObjectives) {
+                objective.updatePlayerLanguage(player);
+            }
+        });
+
+        hookRegistrar.registerHook(PlayerConnectionHooks.JOIN, player -> {
+            for (TranslatedScoreboardObjective objective : translatedObjectives) {
+                objective.addPlayer(player);
             }
         });
     }
@@ -74,7 +80,6 @@ public class CustomScoreboardManager implements Unloadable, CustomScoreboard {
         }
     }
 
-    @Override
     public ScoreboardObjective createObjective(String name, ScoreboardCriterion criterion, Text displayName,
                                                ScoreboardCriterion.RenderType renderType) {
         removeObjective(name);
@@ -86,11 +91,6 @@ public class CustomScoreboardManager implements Unloadable, CustomScoreboard {
         }
 
         return objective;
-    }
-
-    @Override
-    public ScoreboardPlayerScore getPlayerScore(String playerName, ScoreboardObjective objective) {
-        return scoreboard.getPlayerScore(playerName, objective);
     }
 
     private void removeObjective(String name) {
@@ -126,7 +126,7 @@ public class CustomScoreboardManager implements Unloadable, CustomScoreboard {
 
     public TranslatedScoreboardObjective translateObjective(String name, ScoreboardCriterion.RenderType renderType,
                                                             String translationKey, Object... args) {
-        var objective = new TranslatedScoreboardObjective(translations, this, playerManager, name, renderType, translationKey, args);
+        var objective = new TranslatedScoreboardObjective(translations, playerManager, name, renderType, translationKey, args);
 
         translatedObjectives.add(objective);
 

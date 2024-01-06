@@ -34,6 +34,7 @@ import work.lclpnet.ap2.impl.game.DefaultGameInstance;
 import work.lclpnet.ap2.impl.game.data.ScoreDataContainer;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.BlockBox;
+import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedPlayerBossBar;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.ap2.impl.util.scoreboard.TranslatedScoreboardObjective;
 import work.lclpnet.ap2.impl.util.world.BfsWorldScanner;
@@ -47,23 +48,21 @@ import work.lclpnet.kibu.inv.item.FireworkUtil;
 import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.translate.TranslationService;
-import work.lclpnet.kibu.translate.text.FormatWrapper;
 import work.lclpnet.lobby.game.map.GameMap;
-import work.lclpnet.lobby.game.util.BossBarTimer;
 
 import java.util.Random;
 
+import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
+
 public class PandaFinderInstance extends DefaultGameInstance {
 
-    public static final int MAX_ROUNDS = 5;
-    public static final int WIN_SCORE = (int) Math.ceil(MAX_ROUNDS * 0.5f);
+    public static final int WIN_SCORE = 3;
     private static final int MAX_ROUND_LENGTH_SECONDS = 45;
     private final ScoreDataContainer data = new ScoreDataContainer();
     private final Random random = new Random();
     private final SpamManager spamManager = new SpamManager();
     private PandaManager pandaManager;
-    private BossBarTimer timer = null;
-    private boolean foundManually = false;
+    private DynamicTranslatedPlayerBossBar bossBar;
 
     public PandaFinderInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
@@ -96,6 +95,8 @@ public class PandaFinderInstance extends DefaultGameInstance {
 
         setupScoreboard();
 
+        bossBar = usePlayerDynamicTaskDisplay(styled(0, Formatting.YELLOW), styled(3, Formatting.YELLOW));
+
         nextRound();
     }
 
@@ -123,16 +124,8 @@ public class PandaFinderInstance extends DefaultGameInstance {
         TranslationService translations = gameHandle.getTranslations();
 
         pandaManager.getLocalizedPandaGene().ifPresent(key -> translations.translateText("game.ap2.panda_finder.find",
-                        FormatWrapper.styled(translations.translateText(key), Formatting.YELLOW))
+                        styled(translations.translateText(key), Formatting.YELLOW))
                 .formatted(Formatting.GREEN).sendTo(players));
-
-        timer = BossBarTimer.builder(translations, translations.translateText("game.ap2.panda_finder.find_the_panda"))
-                .withDurationTicks(Ticks.seconds(MAX_ROUND_LENGTH_SECONDS))
-                .build();
-
-        timer.addPlayers(players);
-        timer.whenDone(this::onRoundOver);
-        timer.start(gameHandle.getBossBarProvider(), gameHandle.getGameScheduler());
     }
 
     private void onRoundOver() {
@@ -143,23 +136,6 @@ public class PandaFinderInstance extends DefaultGameInstance {
             win(winners);
             return;
         }
-
-        if (!foundManually) {
-            // timer ran out
-            var players = PlayerLookup.all(gameHandle.getServer());
-
-            gameHandle.getTranslations().translateText("game.ap2.panda_finder.panda_not_found")
-                    .formatted(Formatting.GRAY).sendTo(players);
-
-            for (ServerPlayerEntity player : players) {
-                player.playSound(SoundEvents.ENTITY_WITHER_HURT, SoundCategory.PLAYERS, 0.5f, 1f);
-            }
-
-            nextRound();
-            return;
-        }
-
-        foundManually = false;
 
         gameHandle.getGameScheduler().timeout(this::nextRound, Ticks.seconds(3));
     }
@@ -216,10 +192,10 @@ public class PandaFinderInstance extends DefaultGameInstance {
     }
 
     private void pandaFound(ServerPlayerEntity player, PandaEntity panda) {
-        foundManually = true;
         pandaManager.setFound();
 
         data.addScore(player, 1);
+        bossBar.setArgument(player, 0, styled(data.getScore(player), Formatting.YELLOW));
 
         TranslationService translations = gameHandle.getTranslations();
         MinecraftServer server = gameHandle.getServer();
@@ -227,7 +203,7 @@ public class PandaFinderInstance extends DefaultGameInstance {
         var players = PlayerLookup.all(server);
 
         translations.translateText("game.ap2.panda_finder.panda_found",
-                        FormatWrapper.styled(player.getEntityName(), Formatting.YELLOW))
+                        styled(player.getEntityName(), Formatting.YELLOW))
                 .formatted(Formatting.GRAY).sendTo(players);
 
         Participants participants = gameHandle.getParticipants();
@@ -249,8 +225,6 @@ public class PandaFinderInstance extends DefaultGameInstance {
         world.spawnEntity(firework);
         FireworkEntityAccess.explode(firework);
 
-        if (timer != null) {
-            timer.stop();
-        }
+        onRoundOver();
     }
 }

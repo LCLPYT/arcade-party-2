@@ -39,18 +39,20 @@ public class DefaultMiniGameHandle implements MiniGameHandle, Unloadable, WorldB
     private final PreparationActivity.Args args;
     private final BossBarProvider bossBarProvider;
     private final BossBarHandler bossBarHandler;
+    private final CustomScoreboardManager scoreboardManager;
     private MutableProtectionConfig protectionConfig;
     private volatile BasicProtector protector = null;
     private WorldBorderListener worldBorderListener = null;
     private volatile List<Unloadable> closeWhenDone = null;
-    private volatile CustomScoreboardManager scoreboardManager = null;
     private TaskScheduler scheduler = null;
 
-    public DefaultMiniGameHandle(GameInfo info, PreparationActivity.Args args, BossBarProvider bossBarProvider, BossBarHandler bossBarHandler) {
+    public DefaultMiniGameHandle(GameInfo info, PreparationActivity.Args args, BossBarProvider bossBarProvider,
+                                 BossBarHandler bossBarHandler, CustomScoreboardManager scoreboardManager) {
         this.info = info;
         this.args = args;
         this.bossBarProvider = bossBarProvider;
         this.bossBarHandler = bossBarHandler;
+        this.scoreboardManager = scoreboardManager;
     }
 
     public void init() {
@@ -136,16 +138,6 @@ public class DefaultMiniGameHandle implements MiniGameHandle, Unloadable, WorldB
 
     @Override
     public CustomScoreboardManager getScoreboardManager() {
-        if (scoreboardManager != null) return scoreboardManager;
-
-        synchronized (this) {
-            if (scoreboardManager == null) {
-                MinecraftServer server = getServer();
-                scoreboardManager = new CustomScoreboardManager(server.getScoreboard(), getTranslations(), server.getPlayerManager());
-                scoreboardManager.init(getHookRegistrar());
-            }
-        }
-
         return scoreboardManager;
     }
 
@@ -218,10 +210,6 @@ public class DefaultMiniGameHandle implements MiniGameHandle, Unloadable, WorldB
         if (closeWhenDone != null) {
             closeWhenDone.forEach(Unloadable::unload);
             closeWhenDone.clear();
-        }
-
-        if (scoreboardManager != null) {
-            scoreboardManager.unload();
         }
     }
 
