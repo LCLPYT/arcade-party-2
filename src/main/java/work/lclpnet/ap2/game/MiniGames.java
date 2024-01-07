@@ -2,6 +2,7 @@ package work.lclpnet.ap2.game;
 
 import work.lclpnet.ap2.api.game.MiniGame;
 import work.lclpnet.ap2.game.anvil_fall.AnvilFallMiniGame;
+import work.lclpnet.ap2.game.block_dissolve.BlockDissolveMiniGame;
 import work.lclpnet.ap2.game.bow_spleef.BowSpleefMiniGame;
 import work.lclpnet.ap2.game.fine_tuning.FineTuningMiniGame;
 import work.lclpnet.ap2.game.hot_potato.HotPotatoMiniGame;
@@ -33,5 +34,6 @@ public class MiniGames {
         games.add(new JumpAndRunMiniGame());
         games.add(new TntRunMiniGame());
         games.add(new HotPotatoMiniGame());
+        games.add(new BlockDissolveMiniGame());
     }
 }

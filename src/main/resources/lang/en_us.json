@@ -80,5 +80,7 @@
   "game.ap2.hot_potato.description": "A random player will receive the hot potato. The potato can be given to other players. After %s seconds, the player with the hot potato is eliminated.",
   "game.ap2.hot_potato.item": "Hot Potato",
   "game.ap2.hot_potato.title": "You",
-  "game.ap2.hot_potato.subtitle": "are the hot potato"
+  "game.ap2.hot_potato.subtitle": "are the hot potato",
+  "game.ap2.block_dissolve": "Block Dissolve",
+  "game.ap2.block_dissolve.description": "The world is slowly crumbling. Use snowballs to knock players of the map. Last one standing wins!"
 }
