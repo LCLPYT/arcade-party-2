@@ -182,7 +182,7 @@ public class OneInTheChamberInstance extends DefaultGameInstance {
     }
 
     private void giveSwordToPlayer(ServerPlayerEntity player) {
-        ItemStack stack = new ItemStack(Items.IRON_SWORD);
+        ItemStack stack = new ItemStack(Items.STONE_SWORD);
 
         stack.setCustomName(TextUtil.getVanillaName(stack)
                 .styled(style -> style.withItalic(false).withFormatting(GOLD)));

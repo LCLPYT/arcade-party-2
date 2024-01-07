@@ -29,7 +29,7 @@ import java.util.Random;
 
 public class BlockDissolveInstance extends EliminationGameInstance {
 
-    public static final int SNOWBALL_SECONDS = 7;
+    public static final int SNOWBALL_SECONDS = 6;
     private static final int MAX_SNOWBALLS = 6, WARNING_DELAY_TICKS = 70, WARNING_PERIOD_TICKS = 5, WARNING_AMOUNT = 100;
     private final LongList markedBlocks = new LongArrayList();
     private final Random random = new Random();
@@ -55,10 +55,8 @@ public class BlockDissolveInstance extends EliminationGameInstance {
     protected void ready() {
         commons().whenBelowCriticalHeight().then(this::eliminate);
 
-        gameHandle.protect(config -> config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, source) -> {
-            System.out.println("damage by " + source);
-            return source.getSource() instanceof ProjectileEntity;
-        }));
+        gameHandle.protect(config -> config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, source)
+                -> source.getSource() instanceof ProjectileEntity));
 
         startDissolve();
     }
