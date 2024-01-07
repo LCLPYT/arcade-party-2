@@ -75,5 +75,10 @@
   "game.ap2.jump_and_run.reset": "Zurücksetzen",
   "game.ap2.jump_and_run.assistance": "Dieser Raum wurde vereinfacht, damit du besser voran kommst",
   "game.ap2.tnt_run": "TNT-Lauf",
-  "game.ap2.tnt_run.description": "Der Boden unter deinen Füßen verschwindet. Bleib nicht stehen und falle nicht herunter!"
+  "game.ap2.tnt_run.description": "Der Boden unter deinen Füßen verschwindet. Bleib nicht stehen und falle nicht herunter!",
+  "game.ap2.hot_potato": "Heiße Kartoffel",
+  "game.ap2.hot_potato.description": "Ein zufälliger Spieler erhält die heiße Kartoffel. Die Kartoffel kann an andere Spieler weiter gegeben werden. Nach %s Sekunden fliegt der Spieler mit der heißen Kartoffel raus!",
+  "game.ap2.hot_potato.item": "Heiße Kartoffel",
+  "game.ap2.hot_potato.title": "Du",
+  "game.ap2.hot_potato.subtitle": "bist die heiße Kartoffel"
 }

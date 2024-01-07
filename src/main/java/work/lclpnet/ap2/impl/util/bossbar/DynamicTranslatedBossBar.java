@@ -32,4 +32,8 @@ public class DynamicTranslatedBossBar {
     private void update() {
         bossBar.setTitle(translationKey, arguments);
     }
+
+    public TranslatedBossBar getBossBar() {
+        return bossBar;
+    }
 }

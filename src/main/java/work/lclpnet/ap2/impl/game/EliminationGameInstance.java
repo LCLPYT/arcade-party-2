@@ -41,7 +41,7 @@ public abstract class EliminationGameInstance extends DefaultGameInstance {
         return data;
     }
 
-    protected final void useRemainingPlayersDisplay() {
+    protected final DynamicTranslatedBossBar useRemainingPlayersDisplay() {
         GameInfo gameInfo = gameHandle.getGameInfo();
         TranslationService translations = gameHandle.getTranslations();
         Identifier id = gameInfo.identifier("remaining");
@@ -59,6 +59,8 @@ public abstract class EliminationGameInstance extends DefaultGameInstance {
         bossBar.addPlayers(PlayerLookup.all(gameHandle.getServer()));
 
         gameHandle.getBossBarHandler().showOnJoin(bossBar);
+
+        return remainingDisplay;
     }
 
     private Pair<String, Object[]> remainingTitle() {
