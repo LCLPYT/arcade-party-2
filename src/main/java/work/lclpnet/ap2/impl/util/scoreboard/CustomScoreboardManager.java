@@ -44,10 +44,23 @@ public class CustomScoreboardManager implements Unloadable {
                 objective.addPlayer(player);
             }
         });
+
+        hookRegistrar.registerHook(PlayerConnectionHooks.QUIT, player -> {
+            Team team = scoreboard.getPlayerTeam(player.getEntityName());
+            if (team != null) leaveTeam(player, team);
+        });
     }
 
-    public void joinTeam(Entity player, Team team) {
-        scoreboard.addPlayerToTeam(player.getEntityName(), team);
+    public void joinTeam(Entity entity, Team team) {
+        scoreboard.addPlayerToTeam(entity.getEntityName(), team);
+    }
+
+    public void leaveTeam(Entity entity, Team team) {
+        String entityName = entity.getEntityName();
+
+        if (scoreboard.getPlayerTeam(entityName) != team) return;
+
+        scoreboard.removePlayerFromTeam(entityName, team);
     }
 
     public void joinTeam(Iterable<? extends Entity> players, Team team) {
