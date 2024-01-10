@@ -17,6 +17,7 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.GameRules;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.impl.game.EliminationGameInstance;
 import work.lclpnet.ap2.impl.map.MapUtil;
@@ -43,6 +44,12 @@ public class BlockDissolveInstance extends EliminationGameInstance {
 
     @Override
     protected void prepare() {
+        MinecraftServer server = gameHandle.getServer();
+        GameRules gameRules = getWorld().getGameRules();
+
+        gameRules.get(GameRules.RANDOM_TICK_SPEED).set(0, server);
+        gameRules.get(GameRules.DO_VINES_SPREAD).set(false, server);
+
         useNoHealing();
         useOldCombat();
         useSmoothDeath();
