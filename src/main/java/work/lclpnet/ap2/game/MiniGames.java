@@ -4,6 +4,7 @@ import work.lclpnet.ap2.api.game.MiniGame;
 import work.lclpnet.ap2.game.anvil_fall.AnvilFallMiniGame;
 import work.lclpnet.ap2.game.block_dissolve.BlockDissolveMiniGame;
 import work.lclpnet.ap2.game.bow_spleef.BowSpleefMiniGame;
+import work.lclpnet.ap2.game.cozy_campfire.CozyCampfireMiniGame;
 import work.lclpnet.ap2.game.fine_tuning.FineTuningMiniGame;
 import work.lclpnet.ap2.game.hot_potato.HotPotatoMiniGame;
 import work.lclpnet.ap2.game.jump_and_run.JumpAndRunMiniGame;
@@ -35,5 +36,6 @@ public class MiniGames {
         games.add(new TntRunMiniGame());
         games.add(new HotPotatoMiniGame());
         games.add(new BlockDissolveMiniGame());
+        games.add(new CozyCampfireMiniGame());
     }
 }
