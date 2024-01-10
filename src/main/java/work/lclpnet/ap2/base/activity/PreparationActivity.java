@@ -66,7 +66,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
     private final Args args;
     private int time = 0;
     private boolean skipPreparation = false;
-    private boolean noDelay = false;
+    private boolean gameForced = false;
     private MiniGame miniGame = null;
     private TaskHandle taskHandle = null;
     private BossBarTimer bossBarTimer = null;
@@ -142,7 +142,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
 
     private void prepareNextMiniGame() {
         if (miniGame == null) {
-            pickNextGame();
+            miniGame = pickNextGame();
         }
 
         displayGameQueue();
@@ -185,7 +185,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
             return true;
         }
 
-        if (noDelay) {
+        if (gameForced) {
             if (t == 0) {
                 announceNextGame();
             }
@@ -249,8 +249,24 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
     /**
      * Picks the next game.
      */
-    private void pickNextGame() {
-        miniGame = Objects.requireNonNull(args.gameQueue().pollNextGame(), "Could not determine next game");
+    private MiniGame pickNextGame() {
+        GameQueue queue = args.gameQueue();
+
+        if (gameForced) {
+            return Objects.requireNonNull(queue.pollNextGame(), "Could not determine next game");
+        }
+
+        final int maxTries = args.container().miniGames().getGames().size();  // cycle through every registered game once
+
+        for (int tries = 0; tries < maxTries; tries++) {
+            MiniGame game = Objects.requireNonNull(queue.pollNextGame(), "Next game from queue is null");
+
+            if (game.canBePlayed(this)) {
+                return game;
+            }
+        }
+
+        throw new IllegalStateException("No game was found that can be played");
     }
 
     private void forceGame(MiniGame miniGame) {
@@ -268,7 +284,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
 
         reset();
 
-        noDelay = true;
+        gameForced = true;
     }
 
     private void reset() {
@@ -277,7 +293,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
 
         this.time = 0;
         this.miniGame = null;
-        this.noDelay = false;
+        this.gameForced = false;
     }
 
     private void announceNextGame() {

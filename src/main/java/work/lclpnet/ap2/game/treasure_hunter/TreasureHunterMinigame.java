@@ -35,7 +35,7 @@ public class TreasureHunterMinigame implements MiniGame {
 
     @Override
     public boolean canBePlayed(GameStartContext context) {
-        return context.getParticipantCount() >= 2;
+        return true;
     }
 
     @Override
