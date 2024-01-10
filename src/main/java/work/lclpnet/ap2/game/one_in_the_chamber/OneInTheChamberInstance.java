@@ -126,7 +126,8 @@ public class OneInTheChamberInstance extends DefaultGameInstance {
     @Override
     protected void ready() {
         gameHandle.protect(config -> config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, damageSource)
-                -> damageSource.isOf(DamageTypes.ARROW) || damageSource.isOf(DamageTypes.PLAYER_ATTACK)));
+                -> entity instanceof ServerPlayerEntity &&
+                   (damageSource.isOf(DamageTypes.ARROW) || damageSource.isOf(DamageTypes.PLAYER_ATTACK))));
 
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
             giveCrossbowToPlayer(player);

@@ -20,6 +20,7 @@ import work.lclpnet.activity.component.builtin.BuiltinComponents;
 import work.lclpnet.activity.manager.ActivityManager;
 import work.lclpnet.ap2.api.base.GameQueue;
 import work.lclpnet.ap2.api.base.PlayerManager;
+import work.lclpnet.ap2.api.game.GameStartContext;
 import work.lclpnet.ap2.api.game.MiniGame;
 import work.lclpnet.ap2.base.ApConstants;
 import work.lclpnet.ap2.base.ApContainer;
@@ -42,6 +43,7 @@ import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.RunningTask;
 import work.lclpnet.kibu.scheduler.api.Scheduler;
+import work.lclpnet.kibu.scheduler.api.TaskHandle;
 import work.lclpnet.kibu.title.Title;
 import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.lobby.game.api.MapOptions;
@@ -51,11 +53,12 @@ import work.lclpnet.lobby.game.util.ProtectorComponent;
 import work.lclpnet.lobby.game.util.ProtectorUtils;
 
 import java.util.Objects;
+import java.util.Set;
 
 import static net.minecraft.util.Formatting.*;
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
-public class PreparationActivity extends ComponentActivity implements Skippable {
+public class PreparationActivity extends ComponentActivity implements Skippable, GameStartContext {
 
     private static final int GAME_ANNOUNCE_DELAY = Ticks.seconds(3);
     private static final int PREPARATION_TIME = Ticks.seconds(25);
@@ -63,7 +66,10 @@ public class PreparationActivity extends ComponentActivity implements Skippable 
     private final Args args;
     private int time = 0;
     private boolean skipPreparation = false;
+    private boolean noDelay = false;
     private MiniGame miniGame = null;
+    private TaskHandle taskHandle = null;
+    private BossBarTimer bossBarTimer = null;
 
     public PreparationActivity(Args args) {
         super(args.pluginContext());
@@ -125,18 +131,25 @@ public class PreparationActivity extends ComponentActivity implements Skippable 
 
         showLeaderboard();
         displayGameQueue();
-        pickNextGame();
-        displayGameQueue();
-        startTimer();
-
-        component(BuiltinComponents.SCHEDULER).scheduler()
-                .interval(this::tick, 1)
-                .whenComplete(this::startGame);
+        prepareNextMiniGame();
 
         CommandRegistrar commandRegistrar = component(BuiltinComponents.COMMANDS).commands();
 
         new SkipCommand(this).register(commandRegistrar);
+
         args.forceGameCommand.setGameEnforcer(this::forceGame);
+    }
+
+    private void prepareNextMiniGame() {
+        if (miniGame == null) {
+            pickNextGame();
+        }
+
+        displayGameQueue();
+        startTimer().whenDone(this::onTimerEnded);
+
+        taskHandle = component(BuiltinComponents.SCHEDULER).scheduler()
+                .interval(this::tick, 1);
     }
 
     private void onJoin(ServerPlayerEntity player) {
@@ -161,30 +174,35 @@ public class PreparationActivity extends ComponentActivity implements Skippable 
 
         if (skipPreparation || timedLogic(t)) {
             task.cancel();
+            bossBarTimer.stop();
         }
     }
 
     private boolean timedLogic(int t) {
         if (gameConditionsNoLongerMatch()) {
-            time = 0;
             announceInvalidGame();
-            miniGame = null;
-
-            return false;
+            reset();
+            return true;
         }
 
-        if (t == GAME_ANNOUNCE_DELAY - 40) {
-            // "The next game will be %s"
-            args.container().translationService().translateText("ap2.prepare.next_game").formatted(GRAY)
-                            .sendTo(PlayerLookup.all(getServer()));
-        } else if (t == GAME_ANNOUNCE_DELAY) {
-            announceNextGame();
+        if (noDelay) {
+            if (t == 0) {
+                announceNextGame();
+            }
+        } else {
+            if (t == GAME_ANNOUNCE_DELAY - 40) {
+                // "The next game will be %s"
+                args.container().translationService().translateText("ap2.prepare.next_game").formatted(GRAY)
+                        .sendTo(PlayerLookup.all(getServer()));
+            } else if (t == GAME_ANNOUNCE_DELAY) {
+                announceNextGame();
+            }
         }
 
         return t == PREPARATION_TIME || allPlayersAreReady();
     }
 
-    private void startTimer() {
+    private BossBarTimer startTimer() {
         BossBarComponent bossBars = component(BuiltinComponents.BOSS_BAR);
         Scheduler scheduler = component(BuiltinComponents.SCHEDULER).scheduler();
 
@@ -193,15 +211,18 @@ public class PreparationActivity extends ComponentActivity implements Skippable 
 
         var label = translationService.translateText("ap2.prepare.next_game_title");
 
-        BossBarTimer timer = BossBarTimer.builder(translationService, label)
+        bossBarTimer = BossBarTimer.builder(translationService, label)
                 .withIdentifier(ArcadeParty.identifier("prepare"))
                 .withDurationTicks(PREPARATION_TIME)
                 .build();
 
-        timer.addPlayers(PlayerLookup.all(server));
+        bossBarTimer.addPlayers(PlayerLookup.all(server));
 
-        timer.start(bossBars, scheduler);
-        bossBars.showOnJoin(timer.getBossBar());
+        bossBarTimer.start(bossBars, scheduler);
+
+        bossBars.showOnJoin(bossBarTimer.getBossBar());
+
+        return bossBarTimer;
     }
 
     private boolean allPlayersAreReady() {
@@ -209,7 +230,18 @@ public class PreparationActivity extends ComponentActivity implements Skippable 
         return false;
     }
 
+    private void onTimerEnded() {
+        if (miniGame == null) {
+            prepareNextMiniGame();
+            return;
+        }
+
+        startGame();
+    }
+
     private void startGame() {
+        Objects.requireNonNull(miniGame, "Mini-Game is not set");
+
         MiniGameActivity activity = new MiniGameActivity(miniGame, args);
         ActivityManager.getInstance().startActivity(activity);
     }
@@ -222,13 +254,30 @@ public class PreparationActivity extends ComponentActivity implements Skippable 
     }
 
     private void forceGame(MiniGame miniGame) {
-        Objects.requireNonNull(miniGame);
+        Objects.requireNonNull(miniGame, "Tried to force null mini-game");
+
+        if (this.miniGame == miniGame) return;
+
+        GameQueue queue = args.gameQueue();
 
         if (this.miniGame != null) {
-            args.gameQueue().shiftGame(this.miniGame);
+            queue.shiftGame(this.miniGame);
         }
 
-        this.miniGame = miniGame;
+        queue.shiftGame(miniGame);
+
+        reset();
+
+        noDelay = true;
+    }
+
+    private void reset() {
+        if (taskHandle != null) taskHandle.cancel();
+        if (bossBarTimer != null) bossBarTimer.stop();
+
+        this.time = 0;
+        this.miniGame = null;
+        this.noDelay = false;
     }
 
     private void announceNextGame() {
@@ -252,7 +301,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable 
             player.sendMessage(description);
 
             var createdBy = translationService.translateText(player, "ap2.prepare.created_by",
-                            styled(miniGame.getAuthor(), YELLOW)).formatted(GRAY, ITALIC);
+                    styled(miniGame.getAuthor(), YELLOW)).formatted(GRAY, ITALIC);
 
             player.sendMessage(Text.literal(""));
             player.sendMessage(createdBy);
@@ -277,14 +326,22 @@ public class PreparationActivity extends ComponentActivity implements Skippable 
             return false;
         }
 
-        return !miniGame.canBePlayed();
+        return !miniGame.canBePlayed(this);
     }
 
     /**
      * Announces that the current game is no longer valid and that a new game will be picked.
      */
     private void announceInvalidGame() {
-        // TODO implement
+        TranslationService translations = args.container().translationService();
+
+        var gameTitle = translations.translateText(miniGame.getTitleKey()).formatted(YELLOW);
+        var msg = translations.translateText("ap2.prepare.game_cannot_be_played", gameTitle).formatted(RED);
+
+        msg.acceptEach(PlayerLookup.all(getServer()), (player, text) -> {
+            player.sendMessage(text);
+            player.playSound(SoundEvents.ENTITY_WITHER_HURT, SoundCategory.PLAYERS, 0.4f, 0.9f);
+        });
     }
 
     @Override
@@ -391,6 +448,11 @@ public class PreparationActivity extends ComponentActivity implements Skippable 
         gameChooser.registerInventory(inv, games);
 
         inv.open(player);
+    }
+
+    @Override
+    public Set<ServerPlayerEntity> getParticipants() {
+        return args.playerManager().getAsSet();
     }
 
     public record Args(PluginContext pluginContext, ApContainer container, GameQueue gameQueue,
