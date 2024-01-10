@@ -66,7 +66,7 @@
   "game.ap2.panda_finder.find.brown": "a brown",
   "game.ap2.panda_finder.find.weak": "a weak",
   "game.ap2.panda_finder.find.aggressive": "an aggressive",
-  "game.ap2.panda_finder.cooldown": "Do guess pandas so often!",
+  "game.ap2.panda_finder.cooldown": "Do not guess pandas so often!",
   "game.ap2.jump_and_run": "Jump 'n' Run",
   "game.ap2.jump_and_run.description": "Complete a randomly generated jump 'n' run. If you make it first, you win!",
   "game.ap2.jump_and_run.task": "Complete the Jump 'n' Run %s/%s",
@@ -80,5 +80,7 @@
   "game.ap2.hot_potato.description": "A random player will receive the hot potato. The potato can be given to other players. After %s seconds, the player with the hot potato is eliminated.",
   "game.ap2.hot_potato.item": "Hot Potato",
   "game.ap2.hot_potato.title": "You",
-  "game.ap2.hot_potato.subtitle": "are the hot potato"
+  "game.ap2.hot_potato.subtitle": "are the hot potato",
+  "game.ap2.block_dissolve": "Block Dissolve",
+  "game.ap2.block_dissolve.description": "The world is slowly crumbling. Use snowballs to knock players of the map. Last one standing wins!"
 }

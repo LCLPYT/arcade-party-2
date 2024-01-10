@@ -80,5 +80,7 @@
   "game.ap2.hot_potato.description": "Ein zufälliger Spieler erhält die heiße Kartoffel. Die Kartoffel kann an andere Spieler weiter gegeben werden. Nach %s Sekunden fliegt der Spieler mit der heißen Kartoffel raus!",
   "game.ap2.hot_potato.item": "Heiße Kartoffel",
   "game.ap2.hot_potato.title": "Du",
-  "game.ap2.hot_potato.subtitle": "bist die heiße Kartoffel"
+  "game.ap2.hot_potato.subtitle": "bist die heiße Kartoffel",
+  "game.ap2.block_dissolve": "Bröckelnde Welt",
+  "game.ap2.block_dissolve.description": "The Welt löst sich langsam auf. Werfe andere Spieler mit Schneebällen ab, damit sie herunterfallen. Der letzte Spieler gewinnt!"
 }

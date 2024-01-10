@@ -127,7 +127,7 @@ public class AnvilFallInstance extends EliminationGameInstance {
 
         playArea = MapUtil.readBox(map.requireProperty("play-area"));
 
-        BlockPos spawn = MapUtil.readBlockPos(map.requireProperty("pos"));
+        BlockPos spawn = MapUtil.readBlockPos(map.requireProperty("spawn"));
         center = new Vec3d(spawn.getX() + 0.5, 0, spawn.getZ() + 0.5);
     }
 

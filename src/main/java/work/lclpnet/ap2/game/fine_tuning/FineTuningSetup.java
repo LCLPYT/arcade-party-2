@@ -113,7 +113,7 @@ class FineTuningSetup {
     }
 
     void teleportParticipants(Vec3i[] noteBlockLocations) {
-        Vec3i spawnOffset = MapUtil.readBlockPos(map.requireProperty("room-player-pos"));
+        Vec3i spawnOffset = MapUtil.readBlockPos(map.requireProperty("room-player-spawn"));
         float yaw = MapUtil.readAngle(map.requireProperty("room-player-yaw"));
 
         int i = 0;
