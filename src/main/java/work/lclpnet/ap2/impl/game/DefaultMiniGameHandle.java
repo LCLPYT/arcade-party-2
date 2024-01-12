@@ -12,6 +12,7 @@ import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.base.WorldBorderManager;
 import work.lclpnet.ap2.api.game.GameInfo;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
+import work.lclpnet.ap2.api.game.team.TeamConfig;
 import work.lclpnet.ap2.api.map.MapFacade;
 import work.lclpnet.ap2.base.ApContainer;
 import work.lclpnet.ap2.base.activity.PreparationActivity;
@@ -26,10 +27,7 @@ import work.lclpnet.lobby.game.impl.prot.BasicProtector;
 import work.lclpnet.lobby.game.impl.prot.MutableProtectionConfig;
 import work.lclpnet.mplugins.ext.Unloadable;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -139,6 +137,11 @@ public class DefaultMiniGameHandle implements MiniGameHandle, Unloadable, WorldB
     @Override
     public CustomScoreboardManager getScoreboardManager() {
         return scoreboardManager;
+    }
+
+    @Override
+    public Optional<TeamConfig> getTeamConfig() {
+        return Optional.empty();
     }
 
     @Override

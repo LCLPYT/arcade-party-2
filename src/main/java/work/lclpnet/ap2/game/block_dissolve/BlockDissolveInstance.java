@@ -40,6 +40,7 @@ public class BlockDissolveInstance extends EliminationGameInstance {
 
     public BlockDissolveInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
+        useOldCombat();
     }
 
     @Override
@@ -51,7 +52,6 @@ public class BlockDissolveInstance extends EliminationGameInstance {
         gameRules.get(GameRules.DO_VINES_SPREAD).set(false, server);
 
         useNoHealing();
-        useOldCombat();
         useSmoothDeath();
         useRemainingPlayersDisplay();
 

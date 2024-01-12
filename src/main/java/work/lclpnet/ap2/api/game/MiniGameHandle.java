@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import work.lclpnet.activity.util.BossBarHandler;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.base.WorldBorderManager;
+import work.lclpnet.ap2.api.game.team.TeamConfig;
 import work.lclpnet.ap2.api.map.MapFacade;
 import work.lclpnet.ap2.impl.game.PlayerUtil;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
@@ -17,6 +18,7 @@ import work.lclpnet.lobby.game.api.WorldFacade;
 import work.lclpnet.lobby.game.impl.prot.MutableProtectionConfig;
 import work.lclpnet.mplugins.ext.Unloadable;
 
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -63,6 +65,8 @@ public interface MiniGameHandle {
     BossBarHandler getBossBarHandler();
 
     CustomScoreboardManager getScoreboardManager();
+
+    Optional<TeamConfig> getTeamConfig();
 
     void resetGameScheduler();
 

@@ -14,6 +14,7 @@
   "ap2.you_placed_value": "You placed %s - %s",
   "ap2.go": "Go!",
   "ap2.game.eliminated": "%s was eliminated",
+  "ap2.game.team_eliminated": "%s was eliminated",
   "ap2.game.winner_is": "The winner is...",
   "ap2.score.points": "%s points",
   "ap2.score.points_timed": "%s points | reached #%s",
@@ -21,6 +22,8 @@
   "ap2.game.remaining_single": "%s player remaining",
   "ap2.pvp.shot_by": "%s was shot by %s",
   "ap2.pvp.killed_by": "%s was killed by %s",
+  "ap2.team.red": "Team Red",
+  "ap2.team.blue": "Team Blue",
   "game.ap2.title": "ArcadeParty",
   "game.ap2.spleef": "Spleef",
   "game.ap2.spleef.description": "Break the ground beneath your opponents to make them fall. Last one standing wins.",
@@ -83,5 +86,7 @@
   "game.ap2.hot_potato.title": "You",
   "game.ap2.hot_potato.subtitle": "are the hot potato",
   "game.ap2.block_dissolve": "Block Dissolve",
-  "game.ap2.block_dissolve.description": "The world is slowly crumbling. Use snowballs to knock players of the map. Last one standing wins!"
+  "game.ap2.block_dissolve.description": "The world is slowly crumbling. Use snowballs to knock players of the map. Last one standing wins!",
+  "game.ap2.cozy_campfire": "Cozy Campfire",
+  "game.ap2.cozy_campfire.description": "Your team has a campfire which mustn't burn out. Refill it with burnable items from the map! If your campfire burns out, you lose!"
 }

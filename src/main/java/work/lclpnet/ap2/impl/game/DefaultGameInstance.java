@@ -10,15 +10,13 @@ import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.base.ParticipantListener;
-import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.event.IntScoreEventSource;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.game.data.DataEntry;
+import work.lclpnet.ap2.api.util.scoreboard.CustomScoreboardObjective;
 import work.lclpnet.ap2.base.ApConstants;
 import work.lclpnet.ap2.impl.util.SoundHelper;
-import work.lclpnet.kibu.hook.entity.EntityHealthCallback;
-import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.RunningTask;
 import work.lclpnet.kibu.scheduler.api.SchedulerAction;
@@ -26,12 +24,12 @@ import work.lclpnet.kibu.title.Title;
 import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.kibu.translate.text.RootText;
 import work.lclpnet.kibu.translate.text.TranslatedText;
-import work.lclpnet.lobby.game.api.WorldFacade;
 import work.lclpnet.lobby.game.util.ProtectorUtils;
 
 import java.util.HashMap;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 import static net.minecraft.util.Formatting.*;
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
@@ -307,48 +305,22 @@ public abstract class DefaultGameInstance extends BaseGameInstance implements Pa
         return gameOver;
     }
 
-    /**
-     * Instantly makes players who would have died spectators and reset them.
-     */
-    protected final void useSmoothDeath() {
-        HookRegistrar hooks = gameHandle.getHookRegistrar();
-
-        hooks.registerHook(EntityHealthCallback.HOOK, (entity, health) -> {
-            if (!(entity instanceof ServerPlayerEntity player) || health > 0) return false;
-
-            eliminate(player);
-
-            return true;
-        });
-    }
-
-    protected void eliminate(ServerPlayerEntity player) {
-        Participants participants = gameHandle.getParticipants();
-        TranslationService translations = gameHandle.getTranslations();
-
-        if (participants.isParticipating(player)) {
-            translations.translateText("ap2.game.eliminated", styled(player.getEntityName(), YELLOW))
-                    .formatted(GRAY)
-                    .sendTo(PlayerLookup.all(gameHandle.getServer()));
-
-            participants.remove(player);
-        }
-
-        WorldFacade worldFacade = gameHandle.getWorldFacade();
-        PlayerUtil playerUtil = gameHandle.getPlayerUtil();
-
-        playerUtil.resetPlayer(player);
-        worldFacade.teleport(player);
-    }
-
     protected final void useScoreboardStatsSync(ScoreboardObjective objective) {
+        setupScoreboardSync(source -> gameHandle.getScoreboardManager().sync(objective, source));
+    }
+
+    protected final void useScoreboardStatsSync(CustomScoreboardObjective objective) {
+        setupScoreboardSync(source -> gameHandle.getScoreboardManager().sync(objective, source));
+    }
+
+    private void setupScoreboardSync(Consumer<IntScoreEventSource> sourceConsumer) {
         DataContainer data = getData();
 
         if (!(data instanceof IntScoreEventSource source)) {
             throw new UnsupportedOperationException("Data container not supported (IntScoreEventSource not implemented)");
         }
 
-        gameHandle.getScoreboardManager().sync(objective, source);
+        sourceConsumer.accept(source);
 
         // initialize scores
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {

@@ -81,7 +81,7 @@ public class CustomScoreboardManager implements Unloadable {
         return team;
     }
 
-    private void removeTeam(String name) {
+    public void removeTeam(String name) {
         Team team = scoreboard.getTeam(name);
 
         if (team == null) return;

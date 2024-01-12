@@ -57,7 +57,6 @@ import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 public class PandaFinderInstance extends DefaultGameInstance {
 
     public static final int WIN_SCORE = 3;
-    private static final int MAX_ROUND_LENGTH_SECONDS = 45;
     private final ScoreDataContainer data = new ScoreDataContainer();
     private final Random random = new Random();
     private final SpamManager spamManager = new SpamManager();
@@ -113,7 +112,7 @@ public class PandaFinderInstance extends DefaultGameInstance {
             objective.addPlayer(player);
         }
 
-        scoreboardManager.sync(objective, data);
+        useScoreboardStatsSync(objective);
     }
 
     private void nextRound() {
