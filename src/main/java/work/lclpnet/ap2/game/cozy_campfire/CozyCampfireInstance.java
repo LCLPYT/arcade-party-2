@@ -11,6 +11,7 @@ import net.minecraft.item.BlockItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.item.trim.ArmorTrimMaterials;
 import net.minecraft.loot.context.LootContextParameterSet;
 import net.minecraft.loot.context.LootContextParameters;
 import net.minecraft.registry.Registries;
@@ -28,6 +29,7 @@ import work.lclpnet.ap2.api.game.team.TeamKey;
 import work.lclpnet.ap2.api.game.team.TeamManager;
 import work.lclpnet.ap2.impl.game.TeamEliminationGameInstance;
 import work.lclpnet.ap2.impl.game.team.ApTeamKeys;
+import work.lclpnet.ap2.impl.util.ItemStackHelper;
 import work.lclpnet.kibu.hook.util.PlayerUtils;
 import work.lclpnet.kibu.inv.item.ItemStackUtil;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
@@ -65,6 +67,10 @@ public class CozyCampfireInstance extends TeamEliminationGameInstance {
         teleportToTeamSpawns();
 
         registerFuel();
+
+        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
+            giveItems(player);
+        }
     }
 
     private void setupGameRules() {
@@ -82,8 +88,7 @@ public class CozyCampfireInstance extends TeamEliminationGameInstance {
         if (random.nextFloat() <= DAY_TIME_CHANCE) {
             world.setTimeOfDay(6000);
         } else {
-            int moonPhase = random.nextInt(8);
-            world.setTimeOfDay(18000 + moonPhase * 24000);
+            world.setTimeOfDay(18000);
         }
 
         if (random.nextFloat() <= CLEAR_WEATHER_CHANCE) {
@@ -167,10 +172,6 @@ public class CozyCampfireInstance extends TeamEliminationGameInstance {
                 return true;
             });
         });
-
-        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
-            giveItems(player);
-        }
     }
 
     private boolean isFuel(ServerPlayerEntity player, BlockPos pos) {
@@ -218,20 +219,33 @@ public class CozyCampfireInstance extends TeamEliminationGameInstance {
         ItemStackUtil.setUnbreakable(hoe, true);
         inventory.setStack(4, hoe);
 
+        var trimPattern = ItemStackHelper.getRandomTrimPattern(getWorld().getRegistryManager(), random);
+        var trimMaterial = getTeamManager().getTeam(player)
+                .map(team -> team.getKey().equals(TEAM_RED) ? ArmorTrimMaterials.REDSTONE : ArmorTrimMaterials.LAPIS)
+                .orElse(ArmorTrimMaterials.IRON);
+
         ItemStack helmet = new ItemStack(Items.IRON_HELMET);
         ItemStackUtil.setUnbreakable(helmet, true);
+        ItemStackHelper.setArmorTrim(helmet, trimPattern, trimMaterial);
+        helmet.addHideFlag(ItemStack.TooltipSection.UPGRADES);
         player.equipStack(EquipmentSlot.HEAD, helmet);
 
         ItemStack chestPlate = new ItemStack(Items.IRON_CHESTPLATE);
         ItemStackUtil.setUnbreakable(chestPlate, true);
+        ItemStackHelper.setArmorTrim(chestPlate, trimPattern, trimMaterial);
+        chestPlate.addHideFlag(ItemStack.TooltipSection.UPGRADES);
         player.equipStack(EquipmentSlot.CHEST, chestPlate);
 
         ItemStack leggings = new ItemStack(Items.IRON_LEGGINGS);
         ItemStackUtil.setUnbreakable(leggings, true);
+        ItemStackHelper.setArmorTrim(leggings, trimPattern, trimMaterial);
+        leggings.addHideFlag(ItemStack.TooltipSection.UPGRADES);
         player.equipStack(EquipmentSlot.LEGS, leggings);
 
         ItemStack boots = new ItemStack(Items.IRON_BOOTS);
         ItemStackUtil.setUnbreakable(boots, true);
+        ItemStackHelper.setArmorTrim(boots, trimPattern, trimMaterial);
+        boots.addHideFlag(ItemStack.TooltipSection.UPGRADES);
         player.equipStack(EquipmentSlot.FEET, boots);
     }
 }
