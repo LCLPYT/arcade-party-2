@@ -17,6 +17,7 @@ import net.minecraft.loot.context.LootContextParameterSet;
 import net.minecraft.loot.context.LootContextParameters;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.RegistryKey;
+import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.registry.tag.ItemTags;
 import net.minecraft.registry.tag.TagKey;
 import net.minecraft.scoreboard.AbstractTeam;
@@ -204,6 +205,7 @@ public class CozyCampfireInstance extends TeamEliminationGameInstance {
                 .forEach(breakableBlocks::add);
 
         breakableBlocks.add(Blocks.FIRE);
+        breakableBlocks.add(Blocks.POWDER_SNOW);
     }
 
     private void addFuel(TagKey<Item> tag, int time) {
@@ -219,6 +221,15 @@ public class CozyCampfireInstance extends TeamEliminationGameInstance {
     private boolean isFuel(ServerPlayerEntity player, BlockPos pos) {
         ServerWorld world = getWorld();
         BlockState state = world.getBlockState(pos);
+
+        if (state.isIn(BlockTags.CAMPFIRES)) {
+            double x = pos.getX() + 0.5, y = pos.getY() + 0.5, z = pos.getZ() + 0.5;
+
+            // prevent breaking campfires in bases
+            if (bases.values().stream().anyMatch(base -> base.isInside(x, y, z))) {
+                return false;
+            }
+        }
 
         if (breakableBlocks.contains(state.getBlock())) return true;
 
