@@ -5,6 +5,7 @@ import net.minecraft.server.PlayerManager;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.base.ParticipantListener;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.team.*;
@@ -14,11 +15,15 @@ import work.lclpnet.kibu.hook.util.PositionRotation;
 import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.lobby.game.map.MapUtils;
 
+import java.util.Collections;
+import java.util.Map;
+
 import static net.minecraft.util.Formatting.GRAY;
 
 public abstract class DefaultTeamGameInstance extends BaseGameInstance implements ParticipantListener, TeamEliminatedListener {
 
     private volatile SimpleTeamManager teamManager = null;
+    private volatile Map<String, PositionRotation> teamSpawns = null;
 
     public DefaultTeamGameInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
@@ -84,12 +89,20 @@ public abstract class DefaultTeamGameInstance extends BaseGameInstance implement
         return teamManager;
     }
 
+    protected final Team getTeam(ServerPlayerEntity player) {
+        return getTeamManager().getTeam(player).orElseThrow();
+    }
+
     protected final void teleportToTeamSpawns() {
         ServerWorld world = getWorld();
-        var spawns = MapUtils.getNamedSpawnPositionsAndRotation(getMap());
 
         for (Team team : teamManager.getTeams()) {
-            PositionRotation spawn = spawns.get(team.getKey().id());
+            PositionRotation spawn = getSpawn(team);
+
+            if (spawn == null) {
+                gameHandle.getLogger().error("No spawn configured for team {} in map {}", team.getKey().id(), getMap().getDescriptor().getIdentifier());
+                continue;
+            }
 
             double x = spawn.getX(), y = spawn.getY(), z = spawn.getZ();
             float yaw = spawn.getYaw(), pitch = spawn.getPitch();
@@ -98,5 +111,25 @@ public abstract class DefaultTeamGameInstance extends BaseGameInstance implement
                 player.teleport(world, x, y, z, yaw, pitch);
             }
         }
+    }
+
+    @Nullable
+    protected final PositionRotation getSpawn(Team team) {
+        return getSpawns().get(team.getKey().id());
+    }
+
+    private Map<String, PositionRotation> getSpawns() {
+        if (teamSpawns != null) {
+            return teamSpawns;
+        }
+
+        synchronized (this) {
+            if (teamSpawns != null) return teamSpawns;
+
+            var spawns = MapUtils.getNamedSpawnPositionsAndRotation(getMap());
+            teamSpawns = Collections.unmodifiableMap(spawns);
+        }
+
+        return teamSpawns;
     }
 }

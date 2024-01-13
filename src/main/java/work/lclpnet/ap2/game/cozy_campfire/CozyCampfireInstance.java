@@ -12,9 +12,11 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.item.trim.ArmorTrimMaterials;
+import net.minecraft.item.trim.ArmorTrimPattern;
 import net.minecraft.loot.context.LootContextParameterSet;
 import net.minecraft.loot.context.LootContextParameters;
 import net.minecraft.registry.Registries;
+import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.tag.ItemTags;
 import net.minecraft.registry.tag.TagKey;
 import net.minecraft.scoreboard.AbstractTeam;
@@ -24,14 +26,22 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.GameRules;
+import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
+import work.lclpnet.ap2.api.game.team.Team;
 import work.lclpnet.ap2.api.game.team.TeamKey;
 import work.lclpnet.ap2.api.game.team.TeamManager;
+import work.lclpnet.ap2.game.cozy_campfire.setup.CozyCampfireBase;
+import work.lclpnet.ap2.game.cozy_campfire.setup.CozyCampfireSetup;
 import work.lclpnet.ap2.impl.game.TeamEliminationGameInstance;
 import work.lclpnet.ap2.impl.game.team.ApTeamKeys;
 import work.lclpnet.ap2.impl.util.ItemStackHelper;
+import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks;
+import work.lclpnet.kibu.hook.player.PlayerSpawnLocationCallback;
 import work.lclpnet.kibu.hook.util.PlayerUtils;
+import work.lclpnet.kibu.hook.util.PositionRotation;
 import work.lclpnet.kibu.inv.item.ItemStackUtil;
+import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 
 import java.util.*;
@@ -42,7 +52,9 @@ public class CozyCampfireInstance extends TeamEliminationGameInstance {
     public static final TeamKey TEAM_RED = ApTeamKeys.RED, TEAM_BLUE = ApTeamKeys.BLUE;
     private final Map<Item, Integer> fuel = new HashMap<>();
     private final Set<Block> breakableBlocks = new HashSet<>();
+    private final Map<UUID, RegistryKey<ArmorTrimPattern>> patterns = new HashMap<>();
     private final Random random = new Random();
+    private Map<Team, CozyCampfireBase> bases;
 
     public CozyCampfireInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
@@ -68,9 +80,81 @@ public class CozyCampfireInstance extends TeamEliminationGameInstance {
 
         registerFuel();
 
+        readMapData();
+
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
             giveItems(player);
         }
+
+        HookRegistrar hooks = gameHandle.getHookRegistrar();
+        hooks.registerHook(PlayerSpawnLocationCallback.HOOK, this::onSpawnLocation);
+        hooks.registerHook(ServerLivingEntityHooks.ALLOW_DEATH, (entity, damageSource, damageAmount) -> {
+            if (entity instanceof ServerPlayerEntity player) {
+                onDeath(player);
+            }
+
+            return true;
+        });
+    }
+
+    @Override
+    protected void ready() {
+        Participants participants = gameHandle.getParticipants();
+
+        gameHandle.protect(config -> {
+            config.allow(ProtectionTypes.PICKUP_ITEM, ProtectionTypes.SWAP_HAND_ITEMS, ProtectionTypes.PICKUP_PROJECTILE);
+
+            config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, damageSource) ->
+                    entity instanceof ServerPlayerEntity player && participants.isParticipating(player) && !isInBase(player));
+
+            config.allow(ProtectionTypes.BREAK_BLOCKS, (entity, pos) -> {
+                if (!(entity instanceof ServerPlayerEntity player)) return false;
+
+                return isFuel(player, pos);
+            });
+
+            config.allow(ProtectionTypes.BLOCK_ITEM_DROP, (world, blockPos, itemStack) -> isFuel(itemStack));
+
+            config.allow(ProtectionTypes.DROP_ITEM, (player, slot, inInventory) -> {
+                if (inInventory || slot < 0 || slot > 8) return true;
+
+                // drop hot-bar item via the drop key while not in inventory
+                ItemStack stack = player.getInventory().getStack(slot);
+
+                return isFuel(stack);
+            });
+
+            config.allow(ProtectionTypes.MODIFY_INVENTORY, clickEvent -> {
+                final int slot = clickEvent.slot();
+
+                // disable armor interaction
+                if (slot >= 5 && slot <= 8) {
+                    return false;
+                }
+
+                // prevent dropping non-fuel items
+                if (clickEvent.isDropAction()) {
+                    ItemStack cursorStack = PlayerUtils.getCursorStack(clickEvent.player());
+                    return isFuel(cursorStack);
+                }
+
+                return true;
+            });
+        });
+    }
+
+    private boolean isInBase(ServerPlayerEntity player) {
+        Team team = getTeam(player);
+        CozyCampfireBase base = getBase(team);
+
+        return base.isInside(player.getX(), player.getY(), player.getZ());
+    }
+
+    private void readMapData() {
+        TeamManager teamManager = getTeamManager();
+
+        CozyCampfireSetup setup = new CozyCampfireSetup(getMap(), gameHandle.getLogger());
+        bases = setup.readBases(teamManager.getTeams());
     }
 
     private void setupGameRules() {
@@ -132,48 +216,6 @@ public class CozyCampfireInstance extends TeamEliminationGameInstance {
         }
     }
 
-    @Override
-    protected void ready() {
-        gameHandle.protect(config -> {
-            config.allow(ProtectionTypes.PICKUP_ITEM, ProtectionTypes.SWAP_HAND_ITEMS, ProtectionTypes.PICKUP_PROJECTILE);
-            config.disallow(ProtectionTypes.ITEM_FRAME_REMOVE_ITEM);
-
-            config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, damageSource) -> entity instanceof ServerPlayerEntity);
-
-            config.allow(ProtectionTypes.BREAK_BLOCKS, (entity, pos) -> {
-                if (!(entity instanceof ServerPlayerEntity player)) return false;
-
-                return isFuel(player, pos);
-            });
-
-            config.allow(ProtectionTypes.BLOCK_ITEM_DROP, (world, blockPos, itemStack) -> isFuel(itemStack));
-
-            config.allow(ProtectionTypes.DROP_ITEM, (playerEntity, i) -> {
-                ItemStack toDrop = playerEntity.getInventory().getStack(i);
-                System.out.println(toDrop);
-
-                return true;
-            });
-
-            config.allow(ProtectionTypes.MODIFY_INVENTORY, clickEvent -> {
-                // disable armor interaction
-                final int slot = clickEvent.slot();
-
-                if (slot >= 5 && slot <= 8) {
-                    return false;
-                }
-
-                // prevent dropping non-fuel items
-                if (clickEvent.isDropAction()) {
-                    ItemStack cursorStack = PlayerUtils.getCursorStack(clickEvent.player());
-                    return isFuel(cursorStack);
-                }
-
-                return true;
-            });
-        });
-    }
-
     private boolean isFuel(ServerPlayerEntity player, BlockPos pos) {
         ServerWorld world = getWorld();
         BlockState state = world.getBlockState(pos);
@@ -219,7 +261,7 @@ public class CozyCampfireInstance extends TeamEliminationGameInstance {
         ItemStackUtil.setUnbreakable(hoe, true);
         inventory.setStack(4, hoe);
 
-        var trimPattern = ItemStackHelper.getRandomTrimPattern(getWorld().getRegistryManager(), random);
+        var trimPattern = patterns.computeIfAbsent(player.getUuid(), uuid -> ItemStackHelper.getRandomTrimPattern(getWorld().getRegistryManager(), random));
         var trimMaterial = getTeamManager().getTeam(player)
                 .map(team -> team.getKey().equals(TEAM_RED) ? ArmorTrimMaterials.REDSTONE : ArmorTrimMaterials.LAPIS)
                 .orElse(ArmorTrimMaterials.IRON);
@@ -247,5 +289,40 @@ public class CozyCampfireInstance extends TeamEliminationGameInstance {
         ItemStackHelper.setArmorTrim(boots, trimPattern, trimMaterial);
         boots.addHideFlag(ItemStack.TooltipSection.UPGRADES);
         player.equipStack(EquipmentSlot.FEET, boots);
+    }
+
+    private void onSpawnLocation(PlayerSpawnLocationCallback.LocationData data) {
+        if (data.isJoin()) return;
+
+        ServerPlayerEntity player = data.getPlayer();
+
+        Team team = getTeamManager().getTeam(player).orElse(null);
+        if (team == null) return;
+
+        PositionRotation spawn = getSpawn(team);
+        if (spawn == null) return;
+
+        data.setPosition(new Vec3d(spawn.getX(), spawn.getY(), spawn.getZ()));
+        data.setYaw(spawn.getYaw());
+        data.setPitch(spawn.getPitch());
+
+        giveItems(player);
+    }
+
+    private void onDeath(ServerPlayerEntity player) {
+        PlayerInventory inventory = player.getInventory();
+
+        // remove non-fuel items so that they won't be dropped
+        for (int i = 0; i < inventory.size(); ++i) {
+            ItemStack stack = inventory.getStack(i);
+
+            if (isFuel(stack)) continue;
+
+            inventory.removeStack(i);
+        }
+    }
+
+    private CozyCampfireBase getBase(Team team) {
+        return Objects.requireNonNull(bases.get(team), "Base not configured for team " + team.getKey().id());
     }
 }
