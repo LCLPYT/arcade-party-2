@@ -97,7 +97,7 @@ public class CustomScoreboardManager implements Unloadable {
 
     public ScoreboardObjective createObjective(String name, ScoreboardCriterion criterion, Text displayName,
                                                ScoreboardCriterion.RenderType renderType) {
-        return createObjective(name, criterion, displayName, renderType, StyledNumberFormat.EMPTY);
+        return createObjective(name, criterion, displayName, renderType, StyledNumberFormat.RED);
     }
 
     public ScoreboardObjective createObjective(String name, ScoreboardCriterion criterion, Text displayName,

@@ -38,6 +38,7 @@ import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.kibu.title.Title;
 import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.kibu.translate.bossbar.BossBarProvider;
+import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 import work.lclpnet.lobby.game.util.BossBarTimer;
 import work.lclpnet.mplugins.ext.Unloadable;
 
@@ -88,6 +89,11 @@ class TuningPhase implements Unloadable {
             onUseItem(player);
             return ActionResult.PASS;
         });
+        
+        gameHandle.protect(config -> config.allow(ProtectionTypes.USE_BLOCK, (entity, pos) -> {
+            BlockState state = entity.getWorld().getBlockState(pos);
+            return state.isOf(Blocks.NOTE_BLOCK);
+        }));
     }
 
     private void addNoteBlockHooks() {
