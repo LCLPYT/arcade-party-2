@@ -4,15 +4,15 @@ import net.minecraft.server.network.ServerPlayerEntity;
 
 public interface CustomScoreboardObjective {
 
-    int getScore(String playerName);
+    int getScore(String scoreHolder);
 
-    void setScore(String playerName, int score);
+    void setScore(String scoreHolder, int score);
 
     default int getScore(ServerPlayerEntity player) {
-        return getScore(player.getEntityName());
+        return getScore(player.getNameForScoreboard());
     }
 
     default void setScore(ServerPlayerEntity player, int score) {
-        setScore(player.getEntityName(), score);
+        setScore(player.getNameForScoreboard(), score);
     }
 }

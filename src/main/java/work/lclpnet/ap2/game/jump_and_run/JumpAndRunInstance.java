@@ -6,8 +6,8 @@ import net.minecraft.block.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.particle.ParticleTypes;
-import net.minecraft.scoreboard.Scoreboard;
 import net.minecraft.scoreboard.ScoreboardCriterion;
+import net.minecraft.scoreboard.ScoreboardDisplaySlot;
 import net.minecraft.scoreboard.ScoreboardObjective;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -124,7 +124,7 @@ public class JumpAndRunInstance extends DefaultGameInstance {
 
         useScoreboardStatsSync(objective);
 
-        scoreboardManager.setDisplay(Scoreboard.LIST_DISPLAY_SLOT_ID, objective);
+        scoreboardManager.setDisplay(ScoreboardDisplaySlot.LIST, objective);
 
         checkpoints = new CheckpointManager(jumpAndRun.checkpoints());
         checkpoints.init(collisionDetector, movementObserver);

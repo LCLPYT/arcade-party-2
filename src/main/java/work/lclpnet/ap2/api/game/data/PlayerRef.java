@@ -34,6 +34,6 @@ public record PlayerRef(UUID uuid, String name) {
     }
 
     public static PlayerRef create(ServerPlayerEntity player) {
-        return new PlayerRef(player.getUuid(), player.getEntityName());
+        return new PlayerRef(player.getUuid(), player.getNameForScoreboard());
     }
 }

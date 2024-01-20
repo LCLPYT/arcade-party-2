@@ -290,7 +290,7 @@ public abstract class DefaultGameInstance implements MiniGameInstance, Participa
         TranslatedText won = translations.translateText("ap2.won").formatted(DARK_GREEN);
 
         ServerPlayerEntity winner = winners.iterator().next();
-        var winnerName = Text.literal(winner.getEntityName()).formatted(AQUA);
+        var winnerName = Text.literal(winner.getNameForScoreboard()).formatted(AQUA);
 
         for (ServerPlayerEntity player : PlayerLookup.all(gameHandle.getServer())) {
             if (player == winner) {
@@ -480,7 +480,7 @@ public abstract class DefaultGameInstance implements MiniGameInstance, Participa
         TranslationService translations = gameHandle.getTranslations();
 
         if (participants.isParticipating(player)) {
-            translations.translateText("ap2.game.eliminated", styled(player.getEntityName(), YELLOW))
+            translations.translateText("ap2.game.eliminated", styled(player.getNameForScoreboard(), YELLOW))
                     .formatted(GRAY)
                     .sendTo(PlayerLookup.all(gameHandle.getServer()));
 
