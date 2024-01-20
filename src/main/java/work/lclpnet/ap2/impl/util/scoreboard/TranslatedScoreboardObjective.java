@@ -28,7 +28,7 @@ import java.util.function.UnaryOperator;
 
 public class TranslatedScoreboardObjective implements CustomScoreboardObjective, Unloadable {
 
-    private static final Entry DEFAULT_ENTRY = new Entry(null, StyledNumberFormat.EMPTY);
+    private static final Entry DEFAULT_ENTRY = new Entry(null, StyledNumberFormat.RED);
     private final TranslationService translations;
     private final PlayerManager playerManager;
     private final String name;
