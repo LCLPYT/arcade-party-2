@@ -50,7 +50,7 @@ public class DynamicTranslatedPlayerBossBar implements PlayerBossBar {
     }
 
     private ServerBossBar createBossBar(ServerPlayerEntity player) {
-        Identifier suffixedId = id.withSuffixedPath("/" + player.getEntityName().toLowerCase(Locale.ROOT));
+        Identifier suffixedId = id.withSuffixedPath("/" + player.getNameForScoreboard().toLowerCase(Locale.ROOT));
         RootText title = translations.translateText(player, translationKey, arguments).setStyle(titleStyle);
 
         CommandBossBar bossBar = bossBarProvider.createBossBar(suffixedId, title);

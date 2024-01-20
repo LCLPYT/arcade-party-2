@@ -11,8 +11,8 @@ import net.minecraft.item.Items;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.registry.Registries;
-import net.minecraft.scoreboard.Scoreboard;
 import net.minecraft.scoreboard.ScoreboardCriterion;
+import net.minecraft.scoreboard.ScoreboardDisplaySlot;
 import net.minecraft.scoreboard.ScoreboardObjective;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.sound.SoundCategory;
@@ -95,7 +95,7 @@ public class OneInTheChamberInstance extends DefaultGameInstance {
 
         useScoreboardStatsSync(objective);
 
-        scoreboardManager.setDisplay(Scoreboard.SIDEBAR_DISPLAY_SLOT_ID, objective);
+        scoreboardManager.setDisplay(ScoreboardDisplaySlot.SIDEBAR, objective);
 
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
             BlockPos pos = respawn.getRandomSpawn();
@@ -139,12 +139,12 @@ public class OneInTheChamberInstance extends DefaultGameInstance {
     private void killPlayer(ServerPlayerEntity player, @Nullable ServerPlayerEntity killer, boolean shot) {
         TranslationService translations = gameHandle.getTranslations();
 
-        FormatWrapper victim = styled(player.getEntityName(), YELLOW);
+        FormatWrapper victim = styled(player.getNameForScoreboard(), YELLOW);
         TranslatedText text;
 
         if (killer != null) {
             String key = shot ? "ap2.pvp.shot_by" : "ap2.pvp.killed_by";
-            text = translations.translateText(key, victim, styled(killer.getEntityName(), YELLOW));
+            text = translations.translateText(key, victim, styled(killer.getNameForScoreboard(), YELLOW));
         } else {
             text = translations.translateText("ap2.game.eliminated", victim);
         }

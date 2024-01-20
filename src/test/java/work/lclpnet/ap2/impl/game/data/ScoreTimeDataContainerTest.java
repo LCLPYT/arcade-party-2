@@ -82,7 +82,7 @@ class ScoreTimeDataContainerTest {
         when(player.getUuid())
                 .thenReturn(UUID.randomUUID());
 
-        when(player.getEntityName())
+        when(player.getNameForScoreboard())
                 .thenReturn(name);
 
         return player;

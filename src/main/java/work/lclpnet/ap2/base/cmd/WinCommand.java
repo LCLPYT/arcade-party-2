@@ -64,10 +64,10 @@ public class WinCommand implements KibuCommand {
 
         if (count == 1) {
             ServerPlayerEntity winner = players.iterator().next();
-            source.sendMessage(Text.literal("Made %s the winner of the current mini game".formatted(winner.getEntityName())));
+            source.sendMessage(Text.literal("Made %s the winner of the current mini game".formatted(winner.getNameForScoreboard())));
         } else {
             String names = players.stream()
-                    .map(PlayerEntity::getEntityName)
+                    .map(PlayerEntity::getNameForScoreboard)
                     .collect(Collectors.joining(", "));
 
             source.sendMessage(Text.literal("Made %s the winners of the current mini game".formatted(names)));
