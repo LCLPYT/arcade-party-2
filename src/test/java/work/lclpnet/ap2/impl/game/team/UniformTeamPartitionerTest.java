@@ -129,7 +129,7 @@ class UniformTeamPartitionerTest {
         UUID uuid = UUID.randomUUID();
 
         when(player.getUuid()).thenReturn(uuid);
-        when(player.getEntityName()).thenReturn(name);
+        when(player.getNameForScoreboard()).thenReturn(name);
 
         return player;
     }

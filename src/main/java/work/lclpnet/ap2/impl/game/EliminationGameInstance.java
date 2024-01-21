@@ -100,7 +100,7 @@ public abstract class EliminationGameInstance extends DefaultGameInstance {
         TranslationService translations = gameHandle.getTranslations();
 
         if (participants.isParticipating(player)) {
-            translations.translateText("ap2.game.eliminated", styled(player.getEntityName(), YELLOW))
+            translations.translateText("ap2.game.eliminated", styled(player.getNameForScoreboard(), YELLOW))
                     .formatted(GRAY)
                     .sendTo(PlayerLookup.all(gameHandle.getServer()));
 

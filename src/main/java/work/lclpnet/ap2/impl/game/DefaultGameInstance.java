@@ -164,7 +164,7 @@ public abstract class DefaultGameInstance extends BaseGameInstance implements Pa
         TranslatedText won = translations.translateText("ap2.won").formatted(DARK_GREEN);
 
         ServerPlayerEntity winner = winners.iterator().next();
-        var winnerName = Text.literal(winner.getEntityName()).formatted(AQUA);
+        var winnerName = Text.literal(winner.getNameForScoreboard()).formatted(AQUA);
 
         for (ServerPlayerEntity player : PlayerLookup.all(gameHandle.getServer())) {
             if (player == winner) {
