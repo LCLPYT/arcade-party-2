@@ -6,9 +6,10 @@ import net.minecraft.block.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.particle.ParticleTypes;
-import net.minecraft.scoreboard.Scoreboard;
 import net.minecraft.scoreboard.ScoreboardCriterion;
+import net.minecraft.scoreboard.ScoreboardDisplaySlot;
 import net.minecraft.scoreboard.ScoreboardObjective;
+import net.minecraft.scoreboard.number.StyledNumberFormat;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -120,11 +121,12 @@ public class JumpAndRunInstance extends DefaultGameInstance {
         // add scoreboard
         CustomScoreboardManager scoreboardManager = gameHandle.getScoreboardManager();
         ScoreboardObjective objective = scoreboardManager.createObjective("points", ScoreboardCriterion.DUMMY,
-                Text.literal("Points").formatted(YELLOW, BOLD), ScoreboardCriterion.RenderType.INTEGER);
+                Text.literal("Points").formatted(YELLOW, BOLD), ScoreboardCriterion.RenderType.INTEGER,
+                StyledNumberFormat.YELLOW);
 
         useScoreboardStatsSync(objective);
 
-        scoreboardManager.setDisplay(Scoreboard.LIST_DISPLAY_SLOT_ID, objective);
+        scoreboardManager.setDisplay(ScoreboardDisplaySlot.LIST, objective);
 
         checkpoints = new CheckpointManager(jumpAndRun.checkpoints());
         checkpoints.init(collisionDetector, movementObserver);

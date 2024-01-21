@@ -189,7 +189,7 @@ public class DefaultMiniGameHandle implements MiniGameHandle, Unloadable, WorldB
     public void complete(Set<ServerPlayerEntity> winners) {
         // TODO track winners
         getLogger().info("Winners: {}", winners.stream()
-                .map(ServerPlayerEntity::getEntityName)
+                .map(ServerPlayerEntity::getNameForScoreboard)
                 .collect(Collectors.toSet()));
 
         PreparationActivity activity = new PreparationActivity(args);

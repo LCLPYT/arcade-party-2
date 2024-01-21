@@ -2,6 +2,8 @@ package work.lclpnet.ap2.impl.util.scoreboard;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.scoreboard.*;
+import net.minecraft.scoreboard.number.NumberFormat;
+import net.minecraft.scoreboard.number.StyledNumberFormat;
 import net.minecraft.server.PlayerManager;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
@@ -46,21 +48,21 @@ public class CustomScoreboardManager implements Unloadable {
         });
 
         hookRegistrar.registerHook(PlayerConnectionHooks.QUIT, player -> {
-            Team team = scoreboard.getPlayerTeam(player.getEntityName());
+            Team team = scoreboard.getScoreHolderTeam(player.getNameForScoreboard());
             if (team != null) leaveTeam(player, team);
         });
     }
 
     public void joinTeam(Entity entity, Team team) {
-        scoreboard.addPlayerToTeam(entity.getEntityName(), team);
+        scoreboard.addScoreHolderToTeam(entity.getNameForScoreboard(), team);
     }
 
     public void leaveTeam(Entity entity, Team team) {
-        String entityName = entity.getEntityName();
+        String entityName = entity.getNameForScoreboard();
 
-        if (scoreboard.getPlayerTeam(entityName) != team) return;
+        if (scoreboard.getScoreHolderTeam(entityName) != team) return;
 
-        scoreboard.removePlayerFromTeam(entityName, team);
+        scoreboard.removeScoreHolderFromTeam(entityName, team);
     }
 
     public void joinTeam(Iterable<? extends Entity> players, Team team) {
@@ -95,9 +97,15 @@ public class CustomScoreboardManager implements Unloadable {
 
     public ScoreboardObjective createObjective(String name, ScoreboardCriterion criterion, Text displayName,
                                                ScoreboardCriterion.RenderType renderType) {
+        return createObjective(name, criterion, displayName, renderType, StyledNumberFormat.RED);
+    }
+
+    public ScoreboardObjective createObjective(String name, ScoreboardCriterion criterion, Text displayName,
+                                               ScoreboardCriterion.RenderType renderType, NumberFormat numberFormat) {
         removeObjective(name);
 
-        ScoreboardObjective objective = scoreboard.addObjective(name, criterion, displayName, renderType);
+        ScoreboardObjective objective = scoreboard.addObjective(name, criterion, displayName, renderType,
+                true, numberFormat);
 
         synchronized (this) {
             objectives.add(objective);
@@ -107,7 +115,7 @@ public class CustomScoreboardManager implements Unloadable {
     }
 
     private void removeObjective(String name) {
-        ScoreboardObjective objective = scoreboard.getObjective(name);
+        ScoreboardObjective objective = scoreboard.getNullableObjective(name);
 
         if (objective == null) return;
 
@@ -121,11 +129,11 @@ public class CustomScoreboardManager implements Unloadable {
     public void setScore(ServerPlayerEntity player, ScoreboardObjective objective, int score) {
         if (!objectives.contains(objective)) return;  // objective is not associated with this instance
 
-        ScoreboardPlayerScore playerScore = scoreboard.getPlayerScore(player.getEntityName(), objective);
+        ScoreAccess playerScore = scoreboard.getOrCreateScore(player, objective);
         playerScore.setScore(score);
     }
 
-    public void setDisplay(int slot, ScoreboardObjective objective) {
+    public void setDisplay(ScoreboardDisplaySlot slot, ScoreboardObjective objective) {
         scoreboard.setObjectiveSlot(slot, objective);
     }
 

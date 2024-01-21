@@ -4,10 +4,12 @@ import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.network.packet.s2c.play.ScoreboardDisplayS2CPacket;
 import net.minecraft.network.packet.s2c.play.ScoreboardObjectiveUpdateS2CPacket;
-import net.minecraft.network.packet.s2c.play.ScoreboardPlayerUpdateS2CPacket;
+import net.minecraft.network.packet.s2c.play.ScoreboardScoreUpdateS2CPacket;
 import net.minecraft.scoreboard.ScoreboardCriterion;
+import net.minecraft.scoreboard.ScoreboardDisplaySlot;
 import net.minecraft.scoreboard.ScoreboardObjective;
-import net.minecraft.scoreboard.ServerScoreboard;
+import net.minecraft.scoreboard.number.NumberFormat;
+import net.minecraft.scoreboard.number.StyledNumberFormat;
 import net.minecraft.server.PlayerManager;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Style;
@@ -26,6 +28,7 @@ import java.util.function.UnaryOperator;
 
 public class TranslatedScoreboardObjective implements CustomScoreboardObjective, Unloadable {
 
+    private static final Entry DEFAULT_ENTRY = new Entry(null, StyledNumberFormat.RED);
     private final TranslationService translations;
     private final PlayerManager playerManager;
     private final String name;
@@ -34,9 +37,10 @@ public class TranslatedScoreboardObjective implements CustomScoreboardObjective,
     private final Map<String, Objective> localizedObjectives = new HashMap<>();
     private final Map<UUID, String> players = new HashMap<>();
     private final Object2IntMap<String> scores = new Object2IntOpenHashMap<>();
+    private final Map<String, Entry> entries = new HashMap<>();
     private String translationKey;
     private Object[] args;
-    private int slot = -1;
+    private ScoreboardDisplaySlot slot = null;
     private Style style = Style.EMPTY;
 
     public TranslatedScoreboardObjective(TranslationService translations, PlayerManager playerManager, String name,
@@ -200,10 +204,10 @@ public class TranslatedScoreboardObjective implements CustomScoreboardObjective,
         return this;
     }
 
-    public void setSlot(int slot) {
+    public void setSlot(@Nullable ScoreboardDisplaySlot slot) {
         if (slot == this.slot) return;
 
-        int prevSlot = this.slot;
+        ScoreboardDisplaySlot prevSlot = this.slot;
         this.slot = slot;
 
         for (var entry : players.entrySet()) {
@@ -211,11 +215,11 @@ public class TranslatedScoreboardObjective implements CustomScoreboardObjective,
 
             if (player == null) continue;
 
-            if (prevSlot >= 0) {
+            if (prevSlot != null) {
                 syncDisplay(player, null, prevSlot);
             }
 
-            if (slot < 0) continue;  // hidden
+            if (slot == null) continue;  // hidden
 
             String lang = entry.getValue();
             Objective objective = localizedObjectives.get(lang);
@@ -226,24 +230,22 @@ public class TranslatedScoreboardObjective implements CustomScoreboardObjective,
         }
     }
 
-    private void syncDisplay(ServerPlayerEntity player, @Nullable Objective objective, int slot) {
-        if (slot < 0) return;
-
+    private void syncDisplay(ServerPlayerEntity player, @Nullable Objective objective, ScoreboardDisplaySlot slot) {
         // could be that ScoreboardObjectiveUpdateS2CPacket with ScoreboardObjectiveUpdateS2CPacket.REMOVE_MODE has to be sent
         var packet = new ScoreboardDisplayS2CPacket(slot, objective != null ? objective.vanillaObjective() : null);
         player.networkHandler.sendPacket(packet);
     }
 
     @Override
-    public int getScore(String playerName) {
-        return scores.getOrDefault(playerName, 0);
+    public int getScore(String scoreHolder) {
+        return scores.getOrDefault(scoreHolder, 0);
     }
 
     @Override
-    public void setScore(String playerName, int score) {
-        scores.put(playerName, score);
+    public void setScore(String scoreHolder, int score) {
+        scores.put(scoreHolder, score);
 
-        updateObjectives(objective -> syncScore(objective, playerName, score));
+        updateObjectives(objective -> syncScore(objective, scoreHolder, score));
     }
 
     private void syncAddObjective(ServerPlayerEntity player, Objective objective) {
@@ -261,21 +263,41 @@ public class TranslatedScoreboardObjective implements CustomScoreboardObjective,
         player.networkHandler.sendPacket(packet);
     }
 
+    public void setDisplayName(String scoreHolder, @Nullable Text display) {
+        Entry entry = getEntry(scoreHolder);
+        entries.put(scoreHolder, entry.withDisplay(display));
+    }
+
+    public void setNumberFormat(String scoreHolder, NumberFormat numberFormat) {
+        Entry entry = getEntry(scoreHolder);
+        entries.put(scoreHolder, entry.withNumberFormat(numberFormat));
+    }
+
+    private Entry getEntry(String scoreHolder) {
+        return entries.getOrDefault(scoreHolder, DEFAULT_ENTRY);
+    }
+
     private void syncScores(Objective objective, ServerPlayerEntity player) {
-        scores.forEach((playerName, score) -> {
-            var packet = new ScoreboardPlayerUpdateS2CPacket(ServerScoreboard.UpdateMode.CHANGE, objective.name(),
-                    playerName, score);
+        scores.forEach((scoreHolder, score) -> {
+            var entry = getEntry(scoreHolder);
+            Text display = entry.display();
+            NumberFormat format = entry.numberFormat();
+
+            var packet = new ScoreboardScoreUpdateS2CPacket(scoreHolder, objective.name(), score, display, format);
 
             player.networkHandler.sendPacket(packet);
         });
     }
 
-    private void syncScore(Objective objective, String playerName, int score) {
+    private void syncScore(Objective objective, String scoreHolder, int score) {
         Set<UUID> uuids = objectivePlayers.get(objective);
         if (uuids == null) return;
 
-        var packet = new ScoreboardPlayerUpdateS2CPacket(ServerScoreboard.UpdateMode.CHANGE, objective.name(),
-                playerName, score);
+        var entry = getEntry(scoreHolder);
+        Text display = entry.display();
+        NumberFormat format = entry.numberFormat();
+
+        var packet = new ScoreboardScoreUpdateS2CPacket(scoreHolder, objective.name(), score, display, format);
 
         for (UUID uuid : uuids) {
             ServerPlayerEntity player = playerManager.getPlayer(uuid);
@@ -305,7 +327,11 @@ public class TranslatedScoreboardObjective implements CustomScoreboardObjective,
         private Objective(String name, Text display, ScoreboardCriterion.RenderType renderType) {
             this.name = name;
             this.display = display;
-            this.vanillaObjective = new ScoreboardObjective(null, name, ScoreboardCriterion.DUMMY, display, renderType);
+
+            var format = DEFAULT_ENTRY.numberFormat();
+
+            this.vanillaObjective = new ScoreboardObjective(null, name, ScoreboardCriterion.DUMMY, display,
+                    renderType, false, format);
         }
 
         ScoreboardObjective vanillaObjective() {
@@ -343,6 +369,17 @@ public class TranslatedScoreboardObjective implements CustomScoreboardObjective,
 
         public void setDisplay(Text display) {
             this.display = Objects.requireNonNull(display);
+        }
+    }
+
+    private record Entry(@Nullable Text display, NumberFormat numberFormat) {
+
+        public Entry withDisplay(@Nullable Text display) {
+            return new Entry(display, this.numberFormat);
+        }
+
+        public Entry withNumberFormat(NumberFormat numberFormat) {
+            return new Entry(this.display, numberFormat);
         }
     }
 }

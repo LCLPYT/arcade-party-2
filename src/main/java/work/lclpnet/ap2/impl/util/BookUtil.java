@@ -45,7 +45,7 @@ public class BookUtil {
             NbtList pagesNbt = new NbtList();
 
             for (Text page : pages) {
-                String json = Text.Serializer.toJson(page);
+                String json = Text.Serialization.toJsonString(page);
                 pagesNbt.add(NbtString.of(json));
             }
 

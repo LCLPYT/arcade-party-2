@@ -11,8 +11,8 @@ import net.minecraft.entity.projectile.FireworkRocketEntity;
 import net.minecraft.item.FireworkRocketItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
-import net.minecraft.scoreboard.Scoreboard;
 import net.minecraft.scoreboard.ScoreboardCriterion;
+import net.minecraft.scoreboard.ScoreboardDisplaySlot;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -106,7 +106,7 @@ public class PandaFinderInstance extends DefaultGameInstance {
                         ScoreboardCriterion.RenderType.INTEGER, "ap2.score")
                 .formatted(Formatting.YELLOW, Formatting.BOLD);
 
-        objective.setSlot(Scoreboard.SIDEBAR_DISPLAY_SLOT_ID);
+        objective.setSlot(ScoreboardDisplaySlot.SIDEBAR);
 
         for (ServerPlayerEntity player : PlayerLookup.all(gameHandle.getServer())) {
             objective.addPlayer(player);
@@ -202,7 +202,7 @@ public class PandaFinderInstance extends DefaultGameInstance {
         var players = PlayerLookup.all(server);
 
         translations.translateText("game.ap2.panda_finder.panda_found",
-                        styled(player.getEntityName(), Formatting.YELLOW))
+                        styled(player.getNameForScoreboard(), Formatting.YELLOW))
                 .formatted(Formatting.GRAY).sendTo(players);
 
         Participants participants = gameHandle.getParticipants();
