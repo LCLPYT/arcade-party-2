@@ -2,7 +2,6 @@ package work.lclpnet.ap2.game.mirror_hop;
 
 import com.google.common.collect.ImmutableList;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Position;
 import org.json.JSONArray;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.api.util.Collider;
@@ -142,9 +141,7 @@ public class MirrorHopChoices {
         }
 
         @Override
-        public boolean collidesWith(Position pos) {
-            double x = pos.getX(), y = pos.getY(), z = pos.getZ();
-
+        public boolean collidesWith(double x, double y, double z) {
             return x >= minBx && x < maxBx
                    && y >= minBy && y < maxBy
                    && z >= minBz && z < maxBz;

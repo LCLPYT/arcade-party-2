@@ -50,4 +50,8 @@ public interface TeamManager {
                 .filter(this::isParticipating)
                 .collect(Collectors.toUnmodifiableSet());
     }
+
+    default boolean isTeamMember(ServerPlayerEntity player, Team team) {
+        return getTeam(player).map(team::equals).orElse(false);
+    }
 }

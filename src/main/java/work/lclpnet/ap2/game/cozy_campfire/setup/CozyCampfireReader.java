@@ -13,12 +13,12 @@ import work.lclpnet.lobby.game.map.GameMap;
 
 import java.util.*;
 
-public class CozyCampfireSetup {
+public class CozyCampfireReader {
 
     private final GameMap map;
     private final Logger logger;
 
-    public CozyCampfireSetup(GameMap map, Logger logger) {
+    public CozyCampfireReader(GameMap map, Logger logger) {
         this.map = map;
         this.logger = logger;
     }

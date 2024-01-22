@@ -88,5 +88,6 @@
   "game.ap2.block_dissolve": "Block Dissolve",
   "game.ap2.block_dissolve.description": "The world is slowly crumbling. Use snowballs to knock players of the map. Last one standing wins!",
   "game.ap2.cozy_campfire": "Cozy Campfire",
-  "game.ap2.cozy_campfire.description": "Your team has a campfire which mustn't burn out. Refill it with burnable items from the map! If your campfire burns out, you lose!"
+  "game.ap2.cozy_campfire.description": "Your team has a campfire which mustn't burn out. Refill it with burnable items from the map! If your campfire burns out, you lose!",
+  "game.ap2.cozy_campfire.base_of": "Base of %s"
 }

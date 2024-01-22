@@ -18,7 +18,6 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
 import net.minecraft.util.TypedActionResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
@@ -26,10 +25,8 @@ import net.minecraft.world.GameRules;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
-import work.lclpnet.ap2.api.map.MapFacade;
 import work.lclpnet.ap2.api.util.CollisionDetector;
 import work.lclpnet.ap2.game.jump_and_run.gen.*;
-import work.lclpnet.ap2.impl.game.BootstrapMapOptions;
 import work.lclpnet.ap2.impl.game.DefaultGameInstance;
 import work.lclpnet.ap2.impl.game.data.ScoreTimeDataContainer;
 import work.lclpnet.ap2.impl.util.BlockBox;
@@ -45,9 +42,11 @@ import work.lclpnet.kibu.hook.player.PlayerMoveCallback;
 import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.translate.TranslationService;
+import work.lclpnet.lobby.game.map.GameMap;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 import static net.minecraft.util.Formatting.BOLD;
 import static net.minecraft.util.Formatting.YELLOW;
@@ -77,15 +76,12 @@ public class JumpAndRunInstance extends DefaultGameInstance {
     }
 
     @Override
-    protected void openMap() {
-        MapFacade mapFacade = gameHandle.getMapFacade();
-        Identifier gameId = gameHandle.getGameInfo().getId();
+    protected CompletableFuture<Void> createWorldBootstrap(ServerWorld world, GameMap map) {
+        world.setTimeOfDay(4000);
 
-        mapFacade.openRandomMap(gameId, new BootstrapMapOptions((world, map) -> {
-            world.setTimeOfDay(4000);
-            var setup = new JumpAndRunSetup(gameHandle, map, world, TARGET_MINUTES);
-            return setup.setup().thenAccept(jumpAndRun -> this.jumpAndRun = jumpAndRun);
-        }), this::onMapReady);
+        JumpAndRunSetup setup = new JumpAndRunSetup(gameHandle, map, world, TARGET_MINUTES);
+
+        return setup.setup().thenAccept(jumpAndRun -> this.jumpAndRun = jumpAndRun);
     }
 
     @Override

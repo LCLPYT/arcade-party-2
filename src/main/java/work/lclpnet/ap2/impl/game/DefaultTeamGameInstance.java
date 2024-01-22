@@ -20,7 +20,8 @@ import java.util.Map;
 
 import static net.minecraft.util.Formatting.GRAY;
 
-public abstract class DefaultTeamGameInstance extends BaseGameInstance implements ParticipantListener, TeamEliminatedListener {
+public abstract class DefaultTeamGameInstance extends BaseGameInstance implements ParticipantListener,
+        TeamEliminatedListener, TeamSpawnAccess {
 
     private volatile SimpleTeamManager teamManager = null;
     private volatile Map<String, PositionRotation> teamSpawns = null;
@@ -93,7 +94,7 @@ public abstract class DefaultTeamGameInstance extends BaseGameInstance implement
         return getTeamManager().getTeam(player).orElseThrow();
     }
 
-    protected final void teleportToTeamSpawns() {
+    protected final void teleportTeamsToSpawns() {
         ServerWorld world = getWorld();
 
         for (Team team : teamManager.getTeams()) {
@@ -114,7 +115,7 @@ public abstract class DefaultTeamGameInstance extends BaseGameInstance implement
     }
 
     @Nullable
-    protected final PositionRotation getSpawn(Team team) {
+    public final PositionRotation getSpawn(Team team) {
         return getSpawns().get(team.getKey().id());
     }
 

@@ -1,18 +1,17 @@
 package work.lclpnet.ap2.game.fine_tuning;
 
-import net.minecraft.util.Identifier;
-import net.minecraft.world.GameMode;
+import net.minecraft.server.world.ServerWorld;
 import org.json.JSONArray;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
-import work.lclpnet.ap2.api.map.MapFacade;
-import work.lclpnet.ap2.impl.game.BootstrapMapOptions;
 import work.lclpnet.ap2.impl.game.DefaultGameInstance;
 import work.lclpnet.ap2.impl.game.data.ScoreTimeDataContainer;
 import work.lclpnet.kibu.scheduler.Ticks;
+import work.lclpnet.lobby.game.map.GameMap;
 
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 public class FineTuningInstance extends DefaultGameInstance {
 
@@ -34,14 +33,9 @@ public class FineTuningInstance extends DefaultGameInstance {
     }
 
     @Override
-    protected void openMap() {
-        MapFacade mapFacade = gameHandle.getMapFacade();
-        Identifier gameId = gameHandle.getGameInfo().getId();
-
-        mapFacade.openRandomMap(gameId, new BootstrapMapOptions((world, map) -> {
-            setup = new FineTuningSetup(gameHandle, map, world);
-            return setup.createRooms();
-        }), this::onMapReady);
+    protected CompletableFuture<Void> createWorldBootstrap(ServerWorld world, GameMap gameMap) {
+        setup = new FineTuningSetup(gameHandle, gameMap, world);
+        return setup.createRooms();
     }
 
     @Override

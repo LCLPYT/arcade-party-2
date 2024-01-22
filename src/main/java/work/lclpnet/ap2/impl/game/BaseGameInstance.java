@@ -41,6 +41,8 @@ import work.lclpnet.lobby.game.api.WorldFacade;
 import work.lclpnet.lobby.game.map.GameMap;
 import work.lclpnet.lobby.game.util.ProtectorUtils;
 
+import java.util.concurrent.CompletableFuture;
+
 import static net.minecraft.util.Formatting.RED;
 
 public abstract class BaseGameInstance implements MiniGameInstance {
@@ -74,8 +76,14 @@ public abstract class BaseGameInstance implements MiniGameInstance {
         MapFacade mapFacade = gameHandle.getMapFacade();
         Identifier gameId = gameHandle.getGameInfo().getId();
 
-        mapFacade.openRandomMap(gameId, this::onMapReady);
+        mapFacade.openRandomMap(gameId, new BootstrapMapOptions(this::createWorldBootstrap), this::onMapReady);
     }
+
+    protected CompletableFuture<Void> createWorldBootstrap(ServerWorld world, GameMap map) {
+        return CompletableFuture.runAsync(() -> bootstrapWorld(world, map));
+    }
+
+    protected void bootstrapWorld(ServerWorld world, GameMap map) {}
 
     protected void onMapReady(ServerWorld world, GameMap map) {
         this.world = world;

@@ -88,5 +88,6 @@
   "game.ap2.block_dissolve": "Bröckelnde Welt",
   "game.ap2.block_dissolve.description": "The Welt löst sich langsam auf. Werfe andere Spieler mit Schneebällen ab, damit sie herunterfallen. Der letzte Spieler gewinnt!",
   "game.ap2.cozy_campfire": "Knisterndes Lagerfeuer",
-  "game.ap2.cozy_campfire.description": "Dein Team hat ein Lagerfeuer welches nicht ausbrennen darf. Lege immer weiter Brennmaterial nach, um nicht zu verlieren!"
+  "game.ap2.cozy_campfire.description": "Dein Team hat ein Lagerfeuer welches nicht ausbrennen darf. Lege immer weiter Brennmaterial nach, um nicht zu verlieren!",
+  "game.ap2.cozy_campfire.base_of": "Basis von %s"
 }
