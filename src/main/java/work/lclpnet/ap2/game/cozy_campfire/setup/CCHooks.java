@@ -1,12 +1,17 @@
 package work.lclpnet.ap2.game.cozy_campfire.setup;
 
+import net.minecraft.block.BlockState;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
+import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
+import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.team.Team;
 import work.lclpnet.ap2.api.game.team.TeamManager;
@@ -23,7 +28,7 @@ import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.lobby.game.api.prot.ProtectionConfig;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 
-public class CozyCampfireHooks {
+public class CCHooks {
 
     private final Participants participants;
     private final TeamManager teamManager;
@@ -31,8 +36,8 @@ public class CozyCampfireHooks {
     private final TranslationService translations;
     private final Args args;
 
-    public CozyCampfireHooks(Participants participants, TeamManager teamManager, TeamSpawnAccess spawnAccess,
-                             TranslationService translations, Args args) {
+    public CCHooks(Participants participants, TeamManager teamManager, TeamSpawnAccess spawnAccess,
+                   TranslationService translations, Args args) {
         this.participants = participants;
         this.teamManager = teamManager;
         this.spawnAccess = spawnAccess;
@@ -41,8 +46,8 @@ public class CozyCampfireHooks {
     }
 
     public void configure(ProtectionConfig config) {
-        CozyCampfireFuel fuel = args.fuel();
-        CozyCampfireBaseManager baseManager = args.baseManager();
+        CCFuel fuel = args.fuel();
+        CCBaseManager baseManager = args.baseManager();
 
         config.allow(ProtectionTypes.PICKUP_ITEM, ProtectionTypes.SWAP_HAND_ITEMS, ProtectionTypes.PICKUP_PROJECTILE);
 
@@ -82,6 +87,27 @@ public class CozyCampfireHooks {
 
             return true;
         });
+
+        config.allow(ProtectionTypes.USE_BLOCK, (entity, pos) -> {
+            onUseBlock(entity, pos, baseManager);
+
+            return false;
+        });
+    }
+
+    private void onUseBlock(Entity entity, BlockPos pos, CCBaseManager baseManager) {
+        if (!(entity instanceof ServerPlayerEntity player)) return;
+
+        BlockState state = entity.getWorld().getBlockState(pos);
+        if (!state.isIn(BlockTags.CAMPFIRES)) return;
+
+        ItemStack stack = getHeldFuel(player);
+        if (stack == null || stack.isEmpty()) return;
+
+        Team team = baseManager.getCampfireTeam(pos).orElse(null);
+        if (team == null || !teamManager.isTeamMember(player, team)) return;
+
+        args.fuelListener().onAddFuel(player, pos, team, stack);
     }
 
     public void register(HookRegistrar hooks) {
@@ -97,7 +123,7 @@ public class CozyCampfireHooks {
 
     public void configureBaseRegionEvents(CollisionDetector collisions, PlayerMovementObserver observer) {
         for (var entry : args.baseManager().getBases().entrySet()) {
-            CozyCampfireBase base = entry.getValue();
+            CCBase base = entry.getValue();
             Collider bounds = base.getBounds();
 
             collisions.add(bounds);
@@ -107,6 +133,22 @@ public class CozyCampfireHooks {
             observer.whenEntering(bounds, player -> onEnterBaseOf(player, team));
             observer.whenLeaving(bounds, player -> onLeaveBaseOf(player, team));
         }
+    }
+
+    @Nullable
+    private ItemStack getHeldFuel(ServerPlayerEntity player) {
+        CCFuel fuel = args.fuel();
+        ItemStack stack = player.getMainHandStack();
+
+        if (fuel.isFuel(stack)) return stack;
+
+        if (!stack.isEmpty()) return null;
+
+        stack = player.getOffHandStack();
+
+        if (fuel.isFuel(stack)) return stack;
+
+        return null;
     }
 
     private void onSpawnLocation(PlayerSpawnLocationCallback.LocationData data) {
@@ -130,7 +172,7 @@ public class CozyCampfireHooks {
     private void onDeath(ServerPlayerEntity player) {
         PlayerInventory inventory = player.getInventory();
 
-        CozyCampfireFuel fuel = args.fuel();
+        CCFuel fuel = args.fuel();
 
         // remove non-fuel items so that they won't be dropped
         for (int i = 0; i < inventory.size(); ++i) {
@@ -164,5 +206,5 @@ public class CozyCampfireHooks {
         player.playSound(SoundEvents.ENTITY_BREEZE_LAND, SoundCategory.PLAYERS, 0.5f, 0.8f);
     }
 
-    public record Args(CozyCampfireFuel fuel, CozyCampfireBaseManager baseManager, CozyCampfireKitManager kitManager) {}
+    public record Args(CCFuel fuel, CCBaseManager baseManager, CCKitManager kitManager, CCFuelListener fuelListener) {}
 }

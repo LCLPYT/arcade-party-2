@@ -52,6 +52,8 @@ public interface TeamManager {
     }
 
     default boolean isTeamMember(ServerPlayerEntity player, Team team) {
-        return getTeam(player).map(team::equals).orElse(false);
+        return getTeam(player)
+                .map(t -> t.equals(team))
+                .orElseGet(() -> team != null);
     }
 }

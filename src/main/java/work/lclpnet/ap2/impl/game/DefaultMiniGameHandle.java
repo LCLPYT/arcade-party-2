@@ -43,6 +43,7 @@ public class DefaultMiniGameHandle implements MiniGameHandle, Unloadable, WorldB
     private WorldBorderListener worldBorderListener = null;
     private volatile List<Unloadable> closeWhenDone = null;
     private TaskScheduler scheduler = null;
+    private boolean ended = false;
 
     public DefaultMiniGameHandle(GameInfo info, PreparationActivity.Args args, BossBarProvider bossBarProvider,
                                  BossBarHandler bossBarHandler, CustomScoreboardManager scoreboardManager) {
@@ -186,7 +187,10 @@ public class DefaultMiniGameHandle implements MiniGameHandle, Unloadable, WorldB
     }
 
     @Override
-    public void complete(Set<ServerPlayerEntity> winners) {
+    public synchronized void complete(Set<ServerPlayerEntity> winners) {
+        if (ended) return;
+        ended = true;
+
         // TODO track winners
         getLogger().info("Winners: {}", winners.stream()
                 .map(ServerPlayerEntity::getNameForScoreboard)

@@ -19,14 +19,14 @@ import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
 
-public class CozyCampfireKitManager {
+public class CCKitManager {
 
     private final TeamManager teamManager;
     private final ServerWorld world;
     private final Random random;
     private final Map<UUID, RegistryKey<ArmorTrimPattern>> patterns = new HashMap<>();
 
-    public CozyCampfireKitManager(TeamManager teamManager, ServerWorld world, Random random) {
+    public CCKitManager(TeamManager teamManager, ServerWorld world, Random random) {
         this.teamManager = teamManager;
         this.world = world;
         this.random = random;

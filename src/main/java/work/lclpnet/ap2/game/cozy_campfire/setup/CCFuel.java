@@ -12,29 +12,29 @@ import net.minecraft.item.Items;
 import net.minecraft.loot.context.LootContextParameterSet;
 import net.minecraft.loot.context.LootContextParameters;
 import net.minecraft.registry.Registries;
-import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.registry.tag.ItemTags;
 import net.minecraft.registry.tag.TagKey;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 
 import java.util.*;
 
-public class CozyCampfireFuel {
+public class CCFuel {
 
     private final Set<Block> breakableBlocks = new HashSet<>();
     private final Map<Item, Integer> fuel = new HashMap<>();
     private final ServerWorld world;
-    private final CozyCampfireBaseManager baseManager;
+    private final CCBaseManager baseManager;
 
-    public CozyCampfireFuel(ServerWorld world, CozyCampfireBaseManager baseManager) {
+    public CCFuel(ServerWorld world, CCBaseManager baseManager) {
         this.world = world;
         this.baseManager = baseManager;
     }
 
-    public void registerFuel() {
+    public void registerFuel(int fuelPerSecond) {
         // vanilla materials
         fuel.putAll(AbstractFurnaceBlockEntity.createFuelTimeMap());
 
@@ -56,6 +56,8 @@ public class CozyCampfireFuel {
 
         breakableBlocks.add(Blocks.FIRE);
         breakableBlocks.add(Blocks.POWDER_SNOW);
+
+        transform(fuelPerSecond);
     }
 
     private void addFuel(TagKey<Item> tag, int time) {
@@ -68,17 +70,26 @@ public class CozyCampfireFuel {
         }
     }
 
+    private void transform(int fuelPerSecond) {
+        int lowerBound = fuelPerSecond /  2;  // at least half a second
+        int upperBound = fuelPerSecond * 10;  // at most 10 seconds
+
+        fuel.forEach((item, value) -> {
+            int clamped = MathHelper.clamp(value, lowerBound, upperBound);
+
+            fuel.put(item, clamped);
+        });
+    }
+
     public boolean isFuel(ServerPlayerEntity player, BlockPos pos) {
-        BlockState state = world.getBlockState(pos);
+        double x = pos.getX() + 0.5, y = pos.getY() + 0.5, z = pos.getZ() + 0.5;
 
-        if (state.isIn(BlockTags.CAMPFIRES)) {
-            double x = pos.getX() + 0.5, y = pos.getY() + 0.5, z = pos.getZ() + 0.5;
-
-            // prevent breaking campfires in bases
-            if (baseManager.isInAnyBase(x, y, z)) {
-                return false;
-            }
+        // prevent breaking fuel blocks in bases
+        if (baseManager.isInAnyBase(x, y, z)) {
+            return false;
         }
+
+        BlockState state = world.getBlockState(pos);
 
         if (breakableBlocks.contains(state.getBlock())) return true;
 
@@ -96,5 +107,9 @@ public class CozyCampfireFuel {
 
     public boolean isFuel(ItemStack stack) {
         return fuel.containsKey(stack.getItem());
+    }
+
+    public int getValue(ItemStack stack) {
+        return fuel.getOrDefault(stack.getItem(), 0) * stack.getCount();
     }
 }

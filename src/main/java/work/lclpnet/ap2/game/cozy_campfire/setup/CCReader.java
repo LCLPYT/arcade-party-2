@@ -13,20 +13,20 @@ import work.lclpnet.lobby.game.map.GameMap;
 
 import java.util.*;
 
-public class CozyCampfireReader {
+public class CCReader {
 
     private final GameMap map;
     private final Logger logger;
 
-    public CozyCampfireReader(GameMap map, Logger logger) {
+    public CCReader(GameMap map, Logger logger) {
         this.map = map;
         this.logger = logger;
     }
 
-    public Map<Team, CozyCampfireBase> readBases(Set<Team> teams) {
+    public Map<Team, CCBase> readBases(Set<Team> teams) {
         JSONObject basesJson = map.requireProperty("bases");
 
-        Map<Team, CozyCampfireBase> bases = new HashMap<>();
+        Map<Team, CCBase> bases = new HashMap<>();
 
         for (Team team : teams) {
             String id = team.getKey().id();
@@ -39,7 +39,7 @@ public class CozyCampfireReader {
 
             JSONObject json = basesJson.getJSONObject(id);
 
-            CozyCampfireBase base = readBase(json, id, mapId);
+            CCBase base = readBase(json, id, mapId);
 
             if (base == null) continue;
 
@@ -50,7 +50,7 @@ public class CozyCampfireReader {
     }
 
     @Nullable
-    private CozyCampfireBase readBase(JSONObject json, String teamId, Identifier mapId) {
+    private CCBase readBase(JSONObject json, String teamId, Identifier mapId) {
         if (!json.has("bounds")) {
             logger.error("Base of team {} in map {} does not contain property 'bounds'", teamId, mapId);
             return null;
@@ -80,6 +80,6 @@ public class CozyCampfireReader {
 
         UUID entityUuid = UUID.fromString(json.getString("entity"));
 
-        return new CozyCampfireBase(bounds, campfirePos, entityUuid);
+        return new CCBase(bounds, campfirePos, entityUuid);
     }
 }
