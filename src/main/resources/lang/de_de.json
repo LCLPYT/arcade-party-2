@@ -91,5 +91,6 @@
   "game.ap2.cozy_campfire.description": "Dein Team hat ein Lagerfeuer welches nicht ausbrennen darf. Lege immer weiter Brennmaterial nach, um nicht zu verlieren!",
   "game.ap2.cozy_campfire.task": "Brennstoff-Vorrat %s",
   "game.ap2.cozy_campfire.base_of": "Basis von %s",
-  "game.ap2.cozy_campfire.time": "%d:%02d"
+  "game.ap2.cozy_campfire.time": "%d:%02d",
+  "game.ap2.cozy_campfire.fuel_added": "+ %.2f Sekunden"
 }

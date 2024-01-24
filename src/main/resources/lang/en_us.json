@@ -91,5 +91,6 @@
   "game.ap2.cozy_campfire.description": "Your team has a campfire which mustn't burn out. Refill it with burnable items from the map! If your campfire burns out, you lose!",
   "game.ap2.cozy_campfire.task": "Campfire fuel %s",
   "game.ap2.cozy_campfire.base_of": "Base of %s",
-  "game.ap2.cozy_campfire.time": "%d:%02d"
+  "game.ap2.cozy_campfire.time": "%d:%02d",
+  "game.ap2.cozy_campfire.fuel_added": "+ %.2f seconds"
 }

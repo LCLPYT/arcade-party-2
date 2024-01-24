@@ -3,12 +3,15 @@ package work.lclpnet.ap2.game.cozy_campfire.setup;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.entity.vehicle.BoatEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
+import net.minecraft.util.ActionResult;
+import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.Nullable;
@@ -19,6 +22,7 @@ import work.lclpnet.ap2.api.game.team.TeamSpawnAccess;
 import work.lclpnet.ap2.api.util.Collider;
 import work.lclpnet.ap2.api.util.CollisionDetector;
 import work.lclpnet.ap2.impl.util.collision.PlayerMovementObserver;
+import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks;
 import work.lclpnet.kibu.hook.player.PlayerSpawnLocationCallback;
 import work.lclpnet.kibu.hook.util.PlayerUtils;
@@ -51,8 +55,13 @@ public class CCHooks {
 
         config.allow(ProtectionTypes.PICKUP_ITEM, ProtectionTypes.SWAP_HAND_ITEMS, ProtectionTypes.PICKUP_PROJECTILE);
 
-        config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, damageSource) ->
-                entity instanceof ServerPlayerEntity player && participants.isParticipating(player) && !baseManager.isInBase(player));
+        config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, damageSource) -> {
+            if (entity instanceof ServerPlayerEntity player) {
+                return participants.isParticipating(player) && !baseManager.isInBase(player);
+            }
+
+            return entity instanceof BoatEntity;  // allow damaging boats
+        });
 
         config.allow(ProtectionTypes.BREAK_BLOCKS, (entity, pos) -> {
             if (!(entity instanceof ServerPlayerEntity player)) return false;
@@ -89,35 +98,29 @@ public class CCHooks {
         });
 
         config.allow(ProtectionTypes.USE_BLOCK, (entity, pos) -> {
-            onUseBlock(entity, pos, baseManager);
+            onUseBlock(entity, pos);
 
             return false;
         });
     }
 
-    private void onUseBlock(Entity entity, BlockPos pos, CCBaseManager baseManager) {
-        if (!(entity instanceof ServerPlayerEntity player)) return;
-
-        BlockState state = entity.getWorld().getBlockState(pos);
-        if (!state.isIn(BlockTags.CAMPFIRES)) return;
-
-        ItemStack stack = getHeldFuel(player);
-        if (stack == null || stack.isEmpty()) return;
-
-        Team team = baseManager.getCampfireTeam(pos).orElse(null);
-        if (team == null || !teamManager.isTeamMember(player, team)) return;
-
-        args.fuelListener().onAddFuel(player, pos, team, stack);
-    }
-
     public void register(HookRegistrar hooks) {
         hooks.registerHook(PlayerSpawnLocationCallback.HOOK, this::onSpawnLocation);
+
         hooks.registerHook(ServerLivingEntityHooks.ALLOW_DEATH, (entity, damageSource, damageAmount) -> {
             if (entity instanceof ServerPlayerEntity player) {
                 onDeath(player);
             }
 
             return true;
+        });
+
+        hooks.registerHook(PlayerInteractionHooks.USE_ENTITY, (player, world, hand, entity, hitResult) -> {
+            if (player instanceof ServerPlayerEntity serverPlayer) {
+                onUseEntity(serverPlayer, hand, entity);
+            }
+
+            return ActionResult.FAIL;
         });
     }
 
@@ -133,6 +136,34 @@ public class CCHooks {
             observer.whenEntering(bounds, player -> onEnterBaseOf(player, team));
             observer.whenLeaving(bounds, player -> onLeaveBaseOf(player, team));
         }
+    }
+
+    private void onUseEntity(ServerPlayerEntity player, Hand hand, Entity entity) {
+        ItemStack stack = player.getStackInHand(hand);
+        if (!args.fuel().isFuel(stack)) return;
+
+        Team team = args.baseManager().getEntityTeam(entity).orElse(null);
+        if (team == null || !teamManager.isTeamMember(player, team)) return;
+
+        CCBase base = args.baseManager().getBase(team).orElseThrow();
+        BlockPos pos = base.getCampfirePos();
+
+        args.fuelListener().onAddFuel(player, pos, team, stack);
+    }
+
+    private void onUseBlock(Entity entity, BlockPos pos) {
+        if (!(entity instanceof ServerPlayerEntity player)) return;
+
+        BlockState state = entity.getWorld().getBlockState(pos);
+        if (!state.isIn(BlockTags.CAMPFIRES)) return;
+
+        ItemStack stack = getHeldFuel(player);
+        if (stack == null || stack.isEmpty()) return;
+
+        Team team = args.baseManager().getCampfireTeam(pos).orElse(null);
+        if (team == null || !teamManager.isTeamMember(player, team)) return;
+
+        args.fuelListener().onAddFuel(player, pos, team, stack);
     }
 
     @Nullable

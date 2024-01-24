@@ -1,5 +1,6 @@
 package work.lclpnet.ap2.game.cozy_campfire.setup;
 
+import net.minecraft.entity.Entity;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.math.BlockPos;
 import work.lclpnet.ap2.api.game.team.Team;
@@ -36,6 +37,10 @@ public class CCBaseManager {
         return base.isInside(player.getX(), player.getY(), player.getZ());
     }
 
+    public Optional<CCBase> getBase(Team team) {
+        return Optional.ofNullable(bases.get(team));
+    }
+
     public Map<Team, CCBase> getBases() {
         return bases;
     }
@@ -43,6 +48,13 @@ public class CCBaseManager {
     public Optional<Team> getCampfireTeam(BlockPos pos) {
         return bases.entrySet().stream()
                 .filter(entry -> entry.getValue().getCampfirePos().equals(pos))
+                .map(Map.Entry::getKey)
+                .findAny();
+    }
+
+    public Optional<Team> getEntityTeam(Entity entity) {
+        return bases.entrySet().stream()
+                .filter(entry -> entry.getValue().isEntity(entity))
                 .map(Map.Entry::getKey)
                 .findAny();
     }

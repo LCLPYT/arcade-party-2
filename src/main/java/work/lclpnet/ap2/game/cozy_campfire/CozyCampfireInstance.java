@@ -33,6 +33,8 @@ import work.lclpnet.lobby.game.map.GameMap;
 import java.util.Random;
 import java.util.Set;
 
+import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
+
 public class CozyCampfireInstance extends TeamEliminationGameInstance {
 
     private static final float DAY_TIME_CHANCE = 0.25f, CLEAR_WEATHER_CHANCE = 0.6f, THUNDER_CHANCE = 0.05f;
@@ -215,6 +217,21 @@ public class CozyCampfireInstance extends TeamEliminationGameInstance {
         fuel.set(fuel.count + value);
 
         updateBossBar(team, fuel);
+
+        notifyTeamMembers(team, value);
+    }
+
+    private void notifyTeamMembers(Team team, int value) {
+        TranslationService translations = gameHandle.getTranslations();
+
+        var msg = translations.translateText("game.ap2.cozy_campfire.fuel_added",
+                        styled((float) value / fuelPerSecond, Formatting.YELLOW))
+                .formatted(Formatting.GREEN);
+
+        for (ServerPlayerEntity player : team.getPlayers()) {
+            player.sendMessage(msg.translateFor(player), true);
+            player.playSound(SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, SoundCategory.PLAYERS, 0.2f, 1.8f);
+        }
     }
 
     private static class CampfireFuel {
