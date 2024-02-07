@@ -102,6 +102,8 @@ public class CCHooks {
 
             return false;
         });
+
+        config.allow(ProtectionTypes.ENTITY_ITEM_DROP, (entity, itemEntity) -> fuel.isFuel(itemEntity.getStack()));
     }
 
     public void register(HookRegistrar hooks) {
