@@ -10,6 +10,7 @@ import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.GameInfo;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.impl.game.data.EliminationDataContainer;
+import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedBossBar;
 import work.lclpnet.kibu.hook.entity.EntityHealthCallback;
 import work.lclpnet.kibu.plugin.hook.HookRegistrar;
@@ -24,7 +25,7 @@ import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
 public abstract class EliminationGameInstance extends DefaultGameInstance {
 
-    private final EliminationDataContainer data = new EliminationDataContainer();
+    private final EliminationDataContainer<ServerPlayerEntity, PlayerRef> data = new EliminationDataContainer<>(PlayerRef::create);
     private DynamicTranslatedBossBar remainingDisplay = null;
 
     public EliminationGameInstance(MiniGameHandle gameHandle) {
@@ -45,7 +46,7 @@ public abstract class EliminationGameInstance extends DefaultGameInstance {
     }
 
     @Override
-    protected EliminationDataContainer getData() {
+    protected EliminationDataContainer<ServerPlayerEntity, PlayerRef> getData() {
         return data;
     }
 

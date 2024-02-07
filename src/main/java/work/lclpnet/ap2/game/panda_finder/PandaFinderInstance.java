@@ -32,6 +32,7 @@ import work.lclpnet.ap2.api.util.world.BlockPredicate;
 import work.lclpnet.ap2.api.util.world.WorldScanner;
 import work.lclpnet.ap2.impl.game.DefaultGameInstance;
 import work.lclpnet.ap2.impl.game.data.ScoreDataContainer;
+import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedPlayerBossBar;
@@ -57,7 +58,7 @@ import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 public class PandaFinderInstance extends DefaultGameInstance {
 
     public static final int WIN_SCORE = 3;
-    private final ScoreDataContainer data = new ScoreDataContainer();
+    private final ScoreDataContainer<ServerPlayerEntity, PlayerRef> data = new ScoreDataContainer<>(PlayerRef::create);
     private final Random random = new Random();
     private final SpamManager spamManager = new SpamManager();
     private PandaManager pandaManager;
@@ -68,7 +69,7 @@ public class PandaFinderInstance extends DefaultGameInstance {
     }
 
     @Override
-    protected DataContainer getData() {
+    protected DataContainer<ServerPlayerEntity, PlayerRef> getData() {
         return data;
     }
 
@@ -112,7 +113,7 @@ public class PandaFinderInstance extends DefaultGameInstance {
             objective.addPlayer(player);
         }
 
-        useScoreboardStatsSync(objective);
+        useScoreboardStatsSync(data, objective);
     }
 
     private void nextRound() {
@@ -131,7 +132,7 @@ public class PandaFinderInstance extends DefaultGameInstance {
         int maxScore = data.getBestScore().orElse(0);
 
         if (maxScore >= WIN_SCORE) {
-            var winners = data.getBestPlayers(gameHandle.getServer());
+            var winners = data.getBestSubjects(resolver);
             win(winners);
             return;
         }

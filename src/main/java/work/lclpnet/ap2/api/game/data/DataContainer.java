@@ -1,26 +1,23 @@
 package work.lclpnet.ap2.api.game.data;
 
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-
 import java.util.Optional;
 import java.util.stream.Stream;
 
-public interface DataContainer {
+public interface DataContainer<T, Ref extends SubjectRef> {
 
-    void delete(ServerPlayerEntity player);
+    void delete(T subject);
 
-    DataEntry getEntry(ServerPlayerEntity player);
+    DataEntry<Ref> getEntry(T subject);
 
-    Stream<? extends DataEntry> orderedEntries();
+    Stream<? extends DataEntry<Ref>> orderedEntries();
 
     void freeze();
 
-    void ensureTracked(ServerPlayerEntity player);
+    void ensureTracked(T subject);
 
-    default Optional<ServerPlayerEntity> getBestPlayer(MinecraftServer server) {
+    default Optional<T> getBestSubject(SubjectRefResolver<T, Ref> resolver) {
         return orderedEntries().findFirst()
-                .map(DataEntry::getPlayer)
-                .map(ref -> ref.resolve(server));
+                .map(DataEntry::subject)
+                .map(resolver::resolve);
     }
 }

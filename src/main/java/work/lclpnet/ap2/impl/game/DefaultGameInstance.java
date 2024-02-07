@@ -8,17 +8,21 @@ import work.lclpnet.ap2.api.event.IntScoreEventSource;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.util.scoreboard.CustomScoreboardObjective;
+import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
+import work.lclpnet.ap2.impl.game.data.type.PlayerRefResolver;
 import work.lclpnet.lobby.game.util.ProtectorUtils;
 
 import java.util.Set;
-import java.util.function.Consumer;
 
 public abstract class DefaultGameInstance extends BaseGameInstance implements ParticipantListener {
 
+    protected final PlayerRefResolver resolver;
     private boolean gameOver = false;
 
     public DefaultGameInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
+
+        this.resolver = new PlayerRefResolver(gameHandle.getServer().getPlayerManager());
     }
 
     @Override
@@ -35,10 +39,10 @@ public abstract class DefaultGameInstance extends BaseGameInstance implements Pa
 
         var winner = participants.stream().findAny();
 
-        DataContainer data = getData();
+        var data = getData();
 
         if (winner.isEmpty()) {
-            winner = data.getBestPlayer(gameHandle.getServer());
+            winner = data.getBestSubject(resolver);
         }
 
         win(winner.orElse(null));
@@ -71,11 +75,11 @@ public abstract class DefaultGameInstance extends BaseGameInstance implements Pa
             ProtectorUtils.allowCreativeOperatorBypass(config);
         });
 
-        DataContainer data = getData();
+        var data = getData();
         winners.forEach(data::ensureTracked);
         data.freeze();
 
-        WinSequence winSequence = new WinSequence(gameHandle, data);
+        var winSequence = new WinSequence<>(gameHandle, data, PlayerRef::create);
         winSequence.start(winners);
     }
 
@@ -83,22 +87,20 @@ public abstract class DefaultGameInstance extends BaseGameInstance implements Pa
         return gameOver;
     }
 
-    protected final void useScoreboardStatsSync(ScoreboardObjective objective) {
-        setupScoreboardSync(source -> gameHandle.getScoreboardManager().sync(objective, source));
+    protected final void useScoreboardStatsSync(IntScoreEventSource<ServerPlayerEntity> source, ScoreboardObjective objective) {
+        gameHandle.getScoreboardManager().sync(objective, source);
+
+        initScores();
     }
 
-    protected final void useScoreboardStatsSync(CustomScoreboardObjective objective) {
-        setupScoreboardSync(source -> gameHandle.getScoreboardManager().sync(objective, source));
+    protected final void useScoreboardStatsSync(IntScoreEventSource<ServerPlayerEntity> source, CustomScoreboardObjective objective) {
+        gameHandle.getScoreboardManager().sync(objective, source);
+
+        initScores();
     }
 
-    private void setupScoreboardSync(Consumer<IntScoreEventSource> sourceConsumer) {
-        DataContainer data = getData();
-
-        if (!(data instanceof IntScoreEventSource source)) {
-            throw new UnsupportedOperationException("Data container not supported (IntScoreEventSource not implemented)");
-        }
-
-        sourceConsumer.accept(source);
+    protected final void initScores() {
+        var data = getData();
 
         // initialize scores
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
@@ -108,7 +110,7 @@ public abstract class DefaultGameInstance extends BaseGameInstance implements Pa
 
     protected void onGameOver() {}
 
-    protected abstract DataContainer getData();
+    protected abstract DataContainer<ServerPlayerEntity, PlayerRef> getData();
 
     protected abstract void prepare();
 

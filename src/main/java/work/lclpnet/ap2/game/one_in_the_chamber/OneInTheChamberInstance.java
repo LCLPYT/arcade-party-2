@@ -27,6 +27,7 @@ import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.impl.game.DefaultGameInstance;
 import work.lclpnet.ap2.impl.game.data.ScoreDataContainer;
+import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.util.Cooldown;
 import work.lclpnet.ap2.impl.util.TextUtil;
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker;
@@ -51,7 +52,7 @@ public class OneInTheChamberInstance extends DefaultGameInstance {
 
     static final int SCORE_LIMIT = 15;
     static final double RESPAWN_SPACING = 20;
-    private final ScoreDataContainer data = new ScoreDataContainer();
+    private final ScoreDataContainer<ServerPlayerEntity, PlayerRef> data = new ScoreDataContainer<>(PlayerRef::create);
     private final Random random = new Random();
     private final OneInTheChamberSpawns respawn = new OneInTheChamberSpawns(gameHandle, random);
     private final SimpleMovementBlocker movementBlocker;
@@ -69,7 +70,7 @@ public class OneInTheChamberInstance extends DefaultGameInstance {
     }
 
     @Override
-    protected DataContainer getData() {
+    protected DataContainer<ServerPlayerEntity, PlayerRef> getData() {
         return data;
     }
 
@@ -93,7 +94,7 @@ public class OneInTheChamberInstance extends DefaultGameInstance {
         ScoreboardObjective objective = scoreboardManager.createObjective("kills", ScoreboardCriterion.DUMMY,
                 Text.literal("Kills").formatted(YELLOW, BOLD), ScoreboardCriterion.RenderType.INTEGER);
 
-        useScoreboardStatsSync(objective);
+        useScoreboardStatsSync(data, objective);
 
         scoreboardManager.setDisplay(ScoreboardDisplaySlot.SIDEBAR, objective);
 

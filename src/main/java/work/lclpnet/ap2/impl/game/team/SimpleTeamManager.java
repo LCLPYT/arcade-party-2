@@ -167,7 +167,7 @@ public class SimpleTeamManager implements TeamManager {
     }
 
     public void init(HookRegistrar hooks) {
-        // move player back into the minecraft team, as they are automatically removed when quitting by the CustomScoreboardManager
+        // move subject back into the minecraft team, as they are automatically removed when quitting by the CustomScoreboardManager
         hooks.registerHook(PlayerConnectionHooks.JOIN, player -> {
             Team team = playerTeams.get(player.getUuid());
 

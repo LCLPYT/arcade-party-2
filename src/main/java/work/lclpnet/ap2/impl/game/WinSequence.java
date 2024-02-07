@@ -6,10 +6,13 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.MutableText;
+import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.game.data.DataEntry;
+import work.lclpnet.ap2.api.game.data.SubjectRef;
+import work.lclpnet.ap2.api.game.data.SubjectRefFactory;
 import work.lclpnet.ap2.base.ApConstants;
 import work.lclpnet.ap2.impl.util.SoundHelper;
 import work.lclpnet.kibu.scheduler.Ticks;
@@ -21,20 +24,24 @@ import work.lclpnet.kibu.translate.text.RootText;
 import work.lclpnet.kibu.translate.text.TranslatedText;
 
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 
 import static net.minecraft.util.Formatting.*;
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
-public class WinSequence {
+public class WinSequence<T, Ref extends SubjectRef> {
 
     private final MiniGameHandle gameHandle;
-    private final DataContainer data;
+    private final DataContainer<T, Ref> data;
+    private final SubjectRefFactory<ServerPlayerEntity, Ref> refs;
 
-    public WinSequence(MiniGameHandle gameHandle, DataContainer data) {
+    public WinSequence(MiniGameHandle gameHandle, DataContainer<T, Ref> data,
+                       SubjectRefFactory<ServerPlayerEntity, Ref> refs) {
         this.gameHandle = gameHandle;
         this.data = data;
+        this.refs = refs;
     }
 
     public void start(Set<ServerPlayerEntity> winners) {
@@ -159,81 +166,99 @@ public class WinSequence {
 
     private void broadcastTop3() {
         var order = data.orderedEntries().toList();
-        var placement = new HashMap<UUID, Integer>();
+        var placement = new HashMap<Ref, Integer>();
 
         for (int i = 0; i < order.size(); i++) {
-            DataEntry entry = order.get(i);
-            placement.put(entry.getPlayer().uuid(), i);
+            var entry = order.get(i);
+            placement.put(entry.subject(), i);
         }
 
+        for (ServerPlayerEntity player : PlayerLookup.all(gameHandle.getServer())) {
+            sendTop3(player, order, placement);
+        }
+    }
+
+    private void sendTop3(ServerPlayerEntity player, List<? extends DataEntry<Ref>> order, Map<Ref, Integer> placement) {
         TranslationService translations = gameHandle.getTranslations();
+        String results = translations.translate(player, "ap2.results");
+        int len = results.length() + 2;
+
+        var resultsText = Text.literal(results).formatted(GREEN);
 
         var sep = Text.literal(ApConstants.SEPERATOR).formatted(DARK_GREEN, STRIKETHROUGH, BOLD);
         int sepLength = ApConstants.SEPERATOR.length();
-
         var sepSm = Text.literal("-".repeat(sepLength)).formatted(DARK_GRAY, STRIKETHROUGH);
 
-        for (ServerPlayerEntity player : PlayerLookup.all(gameHandle.getServer())) {
-            String results = translations.translate(player, "ap2.results");
-            int len = results.length() + 2;
+        sendUpperSeparator(player, len, sepLength, resultsText);
 
-            var resultsText = Text.literal(results).formatted(GREEN);
+        for (int i = 0; i < 3; i++) {
+            if (order.size() <= i) break;
 
-            if (len - 1 >= sepLength) {
-                player.sendMessage(resultsText);
-            } else {
-                int times = (sepLength - len) / 2;
-                String sepShort = "=".repeat(times);
+            var entry = order.get(i);
+            var text = entry.toText(translations);
 
-                var msg = Text.empty()
-                        .append(Text.literal(sepShort).formatted(DARK_GREEN, STRIKETHROUGH, BOLD))
-                        .append(Text.literal("[").formatted(DARK_GREEN, BOLD))
-                        .append(resultsText.formatted(BOLD))
-                        .append(Text.literal("]").formatted(DARK_GREEN, BOLD))
-                        .append(Text.literal(sepShort + (sepLength - 2 * times - len > 0 ? "=" : ""))
-                                .formatted(DARK_GREEN, STRIKETHROUGH, BOLD));
+            Text subjectName = entry.subject().getName();
+            Style style = subjectName.getStyle();
 
-                player.sendMessage(msg);
+            if (style.getColor() == null) {
+                subjectName = subjectName.copy().formatted(GRAY);
             }
 
-            for (int i = 0; i < 3; i++) {
-                if (order.size() <= i) break;
+            MutableText msg = Text.literal("#%s ".formatted(i + 1)).formatted(YELLOW)
+                    .append(subjectName);
 
-                DataEntry entry = order.get(i);
-                var text = entry.toText(translations);
-
-                MutableText msg = Text.literal("#%s ".formatted(i + 1)).formatted(YELLOW)
-                        .append(Text.literal(entry.getPlayer().name()).formatted(GRAY));
-
-                if (text != null) {
-                    msg.append(" ").append(text.translateFor(player));
-                }
-
-                player.sendMessage(msg);
+            if (text != null) {
+                msg.append(" ").append(text.translateFor(player));
             }
 
-            UUID uuid = player.getUuid();
+            player.sendMessage(msg);
+        }
 
-            if (placement.containsKey(uuid)) {
-                player.sendMessage(sepSm);
+        var ownRef = refs.create(player);
 
-                int playerIndex = placement.get(uuid);
-                DataEntry entry = order.get(playerIndex);
+        if (ownRef != null && placement.containsKey(ownRef)) {
+            int playerIndex = placement.get(ownRef);
+            DataEntry<Ref> entry = order.get(playerIndex);
 
-                var extra = entry.toText(translations);
+            sendOwnScore(player, entry, playerIndex + 1, sepSm);
+        }
 
-                if (extra != null) {
-                    RootText translatedExtra = extra.translateFor(player);
-                    player.sendMessage(translations.translateText(player, "ap2.you_placed_value",
-                            styled("#" + (playerIndex + 1), YELLOW),
-                            translatedExtra.formatted(YELLOW)).formatted(GRAY));
-                } else {
-                    player.sendMessage(translations.translateText(player, "ap2.you_placed",
-                            styled("#" + (playerIndex + 1), YELLOW)).formatted(GRAY));
-                }
-            }
+        player.sendMessage(sep);
+    }
 
-            player.sendMessage(sep);
+    private void sendUpperSeparator(ServerPlayerEntity player, int len, int sepLength, MutableText resultsText) {
+        if (len - 1 >= sepLength) {
+            player.sendMessage(resultsText);
+        } else {
+            int times = (sepLength - len) / 2;
+            String sepShort = "=".repeat(times);
+
+            var msg = Text.empty()
+                    .append(Text.literal(sepShort).formatted(DARK_GREEN, STRIKETHROUGH, BOLD))
+                    .append(Text.literal("[").formatted(DARK_GREEN, BOLD))
+                    .append(resultsText.formatted(BOLD))
+                    .append(Text.literal("]").formatted(DARK_GREEN, BOLD))
+                    .append(Text.literal(sepShort + (sepLength - 2 * times - len > 0 ? "=" : ""))
+                            .formatted(DARK_GREEN, STRIKETHROUGH, BOLD));
+
+            player.sendMessage(msg);
+        }
+    }
+
+    private void sendOwnScore(ServerPlayerEntity player, DataEntry<Ref> entry, int ranking, MutableText sepSm) {
+        TranslationService translations = gameHandle.getTranslations();
+        player.sendMessage(sepSm);
+
+        var extra = entry.toText(translations);
+
+        if (extra != null) {
+            RootText translatedExtra = extra.translateFor(player);
+            player.sendMessage(translations.translateText(player, "ap2.you_placed_value",
+                    styled("#" + ranking, YELLOW),
+                    translatedExtra.formatted(YELLOW)).formatted(GRAY));
+        } else {
+            player.sendMessage(translations.translateText(player, "ap2.you_placed",
+                    styled("#" + ranking, YELLOW)).formatted(GRAY));
         }
     }
 }
