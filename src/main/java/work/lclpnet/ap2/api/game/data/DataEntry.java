@@ -4,9 +4,9 @@ import org.jetbrains.annotations.Nullable;
 import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.kibu.translate.text.TranslatedText;
 
-public interface DataEntry {
+public interface DataEntry<Ref extends SubjectRef> {
 
-    PlayerRef getPlayer();
+    Ref subject();
 
     @Nullable
     TranslatedText toText(TranslationService translationService);

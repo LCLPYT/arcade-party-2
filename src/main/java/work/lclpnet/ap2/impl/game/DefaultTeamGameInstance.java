@@ -8,7 +8,13 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.base.ParticipantListener;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
+import work.lclpnet.ap2.api.game.WinManagerAccess;
+import work.lclpnet.ap2.api.game.WinManagerView;
+import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.game.team.*;
+import work.lclpnet.ap2.impl.game.data.type.TeamGameWinners;
+import work.lclpnet.ap2.impl.game.data.type.TeamRef;
+import work.lclpnet.ap2.impl.game.data.type.TeamRefResolver;
 import work.lclpnet.ap2.impl.game.team.SimpleTeamManager;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.kibu.hook.util.PositionRotation;
@@ -17,17 +23,21 @@ import work.lclpnet.lobby.game.map.MapUtils;
 
 import java.util.Collections;
 import java.util.Map;
+import java.util.Set;
 
 import static net.minecraft.util.Formatting.GRAY;
 
 public abstract class DefaultTeamGameInstance extends BaseGameInstance implements ParticipantListener,
-        TeamEliminatedListener, TeamSpawnAccess {
+        TeamEliminatedListener, TeamSpawnAccess, WinManagerView {
 
+    private volatile TeamRefResolver resolver = null;
     private volatile SimpleTeamManager teamManager = null;
     private volatile Map<String, PositionRotation> teamSpawns = null;
+    protected final WinManager<Team, TeamRef> winManager;
 
     public DefaultTeamGameInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
+        this.winManager = new WinManager<>(gameHandle, this::getData, this::createReferenceFor, this::createWinners);
     }
 
     @Override
@@ -61,13 +71,15 @@ public abstract class DefaultTeamGameInstance extends BaseGameInstance implement
 
         if (participatingTeams.size() > 1) return;
 
-        var winningTeam = participatingTeams.stream().findAny();
+        var winner = participatingTeams.stream().findAny();
 
-        // TODO if winningTeam is empty, try to get the winning team from the data container
+        var data = getData();
 
-        // TODO implement proper winning effects
+        if (winner.isEmpty()) {
+            winner = data.getBestSubject(getResolver());
+        }
 
-        winningTeam.map(Team::getPlayers).ifPresentOrElse(gameHandle::complete, gameHandle::completeWithoutWinner);
+        winManager.win(winner.orElse(null));
     }
 
     @NotNull
@@ -90,8 +102,18 @@ public abstract class DefaultTeamGameInstance extends BaseGameInstance implement
         return teamManager;
     }
 
-    protected final Team getTeam(ServerPlayerEntity player) {
-        return getTeamManager().getTeam(player).orElseThrow();
+    @NotNull
+    protected final TeamRefResolver getResolver() {
+        if (resolver != null) return resolver;
+
+        synchronized (this) {
+            if (resolver != null) return resolver;
+
+            TeamManager teamManager = getTeamManager();
+            resolver = new TeamRefResolver(teamManager);
+        }
+
+        return resolver;
     }
 
     protected final void teleportTeamsToSpawns() {
@@ -133,4 +155,26 @@ public abstract class DefaultTeamGameInstance extends BaseGameInstance implement
 
         return teamSpawns;
     }
+
+    protected final TeamRef createReference(Team team) {
+        return new TeamRef(team.getKey(), gameHandle.getTranslations());
+    }
+
+    @Nullable
+    protected final TeamRef createReferenceFor(ServerPlayerEntity player) {
+        var team = teamManager.getTeam(player);
+
+        return team.map(this::createReference).orElse(null);
+    }
+
+    private TeamGameWinners createWinners(Set<Team> winners) {
+        return new TeamGameWinners(winners, gameHandle.getTranslations());
+    }
+
+    @Override
+    public WinManagerAccess getWinManagerAccess() {
+        return new WinManagerAccessImpl<>(winManager, getTeamManager()::getTeam);
+    }
+
+    protected abstract DataContainer<Team, TeamRef> getData();
 }
