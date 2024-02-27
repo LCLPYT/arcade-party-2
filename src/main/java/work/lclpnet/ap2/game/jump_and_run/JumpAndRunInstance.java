@@ -104,7 +104,7 @@ public class JumpAndRunInstance extends DefaultGameInstance {
             int roomIndex = i;
 
             movementObserver.whenEntering(room, player -> {
-                if (isGameOver()) return;
+                if (winManager.isGameOver()) return;
 
                 enterRoom(player, roomIndex);
             });
@@ -153,7 +153,7 @@ public class JumpAndRunInstance extends DefaultGameInstance {
         });
 
         hooks.registerHook(PlayerInteractionHooks.USE_ITEM, (player, world1, hand) -> {
-            if (isGameOver() || !(player instanceof ServerPlayerEntity serverPlayer)
+            if (winManager.isGameOver() || !(player instanceof ServerPlayerEntity serverPlayer)
                 || !participants.isParticipating(serverPlayer)) {
                 return TypedActionResult.pass(ItemStack.EMPTY);
             }
@@ -169,7 +169,7 @@ public class JumpAndRunInstance extends DefaultGameInstance {
         });
 
         hooks.registerHook(PlayerInteractionHooks.USE_BLOCK, (player, world1, hand, hitResult) -> {
-            if (isGameOver() || !(player instanceof ServerPlayerEntity serverPlayer)
+            if (winManager.isGameOver() || !(player instanceof ServerPlayerEntity serverPlayer)
                 || !participants.isParticipating(serverPlayer)) {
                 return ActionResult.PASS;
             }
@@ -253,9 +253,9 @@ public class JumpAndRunInstance extends DefaultGameInstance {
             bossBar.getBossBar(player).setPercent((float) (room - 1) / maxRooms);
         }
 
-        if (isGameOver() || room < jumpAndRun.rooms().size() - 1) return;
+        if (winManager.isGameOver() || room < jumpAndRun.rooms().size() - 1) return;
 
-        win(player);
+        winManager.win(player);
     }
 
     private void onCheckpointReached(ServerPlayerEntity player, int checkpoint) {

@@ -84,11 +84,11 @@ public class MirrorHopInstance extends DefaultGameInstance {
         movementObserver.init(hooks, server);
 
         movementObserver.whenEntering(goal, player -> {
-            if (isGameOver()) return;
+            if (winManager.isGameOver()) return;
 
             data.addScore(player, 1);
 
-            win(player);
+            winManager.win(player);
         });
 
         movementObserver.setRegionEnterListener((player, collider) -> {

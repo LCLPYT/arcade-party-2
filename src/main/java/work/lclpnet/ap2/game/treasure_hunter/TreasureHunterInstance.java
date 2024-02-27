@@ -67,7 +67,7 @@ public class TreasureHunterInstance extends DefaultGameInstance {
                 return ActionResult.PASS;
             }
 
-            if (isGameOver()) {
+            if (winManager.isGameOver()) {
                 return ActionResult.FAIL;
             }
 
@@ -75,7 +75,7 @@ public class TreasureHunterInstance extends DefaultGameInstance {
             player.playSound(SoundEvents.BLOCK_CHEST_LOCKED, SoundCategory.BLOCKS, 0.2f, 0.5f);
 
             data.add(serverPlayer);
-            win(serverPlayer);
+            winManager.win(serverPlayer);
 
             return ActionResult.success(true);
         });

@@ -6,13 +6,9 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.MutableText;
-import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
-import work.lclpnet.ap2.api.game.data.DataContainer;
-import work.lclpnet.ap2.api.game.data.DataEntry;
-import work.lclpnet.ap2.api.game.data.SubjectRef;
-import work.lclpnet.ap2.api.game.data.SubjectRefFactory;
+import work.lclpnet.ap2.api.game.data.*;
 import work.lclpnet.ap2.base.ApConstants;
 import work.lclpnet.ap2.impl.util.SoundHelper;
 import work.lclpnet.kibu.scheduler.Ticks;
@@ -26,7 +22,6 @@ import work.lclpnet.kibu.translate.text.TranslatedText;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import static net.minecraft.util.Formatting.*;
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
@@ -35,16 +30,15 @@ public class WinSequence<T, Ref extends SubjectRef> {
 
     private final MiniGameHandle gameHandle;
     private final DataContainer<T, Ref> data;
-    private final SubjectRefFactory<ServerPlayerEntity, Ref> refs;
+    private final PlayerSubjectRefFactory<Ref> refs;
 
-    public WinSequence(MiniGameHandle gameHandle, DataContainer<T, Ref> data,
-                       SubjectRefFactory<ServerPlayerEntity, Ref> refs) {
+    public WinSequence(MiniGameHandle gameHandle, DataContainer<T, Ref> data, PlayerSubjectRefFactory<Ref> refs) {
         this.gameHandle = gameHandle;
         this.data = data;
         this.refs = refs;
     }
 
-    public void start(Set<ServerPlayerEntity> winners) {
+    public void start(GameWinners<Ref> winners) {
         TranslationService translations = gameHandle.getTranslations();
         MinecraftServer server = gameHandle.getServer();
 
@@ -85,37 +79,45 @@ public class WinSequence<T, Ref extends SubjectRef> {
         }, 1);
     }
 
-    private void announceGameOver(Set<ServerPlayerEntity> winners) {
+    private void announceGameOver(GameWinners<Ref> winners) {
         announceWinners(winners);
         broadcastTop3();
 
-        gameHandle.getScheduler().timeout(() -> gameHandle.complete(winners), Ticks.seconds(7));
+        gameHandle.getScheduler().timeout(() -> gameHandle.complete(winners.getPlayers()), Ticks.seconds(7));
     }
 
-    private void announceWinners(Set<ServerPlayerEntity> winners) {
-        if (winners.size() <= 1) {
-            if (winners.isEmpty()) {
-                announceDraw();
-            } else {
-                announceWinner(winners);
-            }
-        } else {
-            announceFallback(winners);
+    private void announceWinners(GameWinners<Ref> winners) {
+        var subjects = winners.getSubjects();
+
+        if (subjects.size() > 1) {
+            announceMultipleWinners(winners);
+            return;
         }
+
+        if (subjects.isEmpty()) {
+            announceDraw();
+            return;
+        }
+
+        Ref winner = winners.getSubjects().iterator().next();
+        announceWinner(winner);
     }
 
-    private void announceWinner(Set<ServerPlayerEntity> winners) {
+    private void announceWinner(Ref winner) {
         TranslationService translations = gameHandle.getTranslations();
         TranslatedText won = translations.translateText("ap2.won").formatted(DARK_GREEN);
-
-        ServerPlayerEntity winner = winners.iterator().next();
-        var winnerName = Text.literal(winner.getNameForScoreboard()).formatted(AQUA);
 
         for (ServerPlayerEntity player : PlayerLookup.all(gameHandle.getServer())) {
             if (player == winner) {
                 playWinSound(player);
             } else {
                 playLooseSound(player);
+            }
+
+            Text winnerName = winner.getNameFor(player);
+
+            if (winnerName.getStyle().getColor() == null) {
+                winnerName = winnerName.copy().formatted(AQUA);
             }
 
             Title.get(player).title(winnerName, won.translateFor(player), 5, 100, 5);
@@ -134,25 +136,27 @@ public class WinSequence<T, Ref extends SubjectRef> {
         }
     }
 
-    private void announceFallback(Set<ServerPlayerEntity> winners) {
+    private void announceMultipleWinners(GameWinners<Ref> winners) {
         TranslationService translations = gameHandle.getTranslations();
 
-        TranslatedText game_over = translations.translateText("ap2.game_over").formatted(AQUA);
-        TranslatedText you_won = translations.translateText("ap2.you_won").formatted(DARK_GREEN);
-        TranslatedText you_lost = translations.translateText("ap2.you_lost").formatted(DARK_RED);
+        TranslatedText gameOver = translations.translateText("ap2.game_over").formatted(AQUA);
+        TranslatedText youWon = translations.translateText("ap2.you_won").formatted(DARK_GREEN);
+        TranslatedText youLost = translations.translateText("ap2.you_lost").formatted(DARK_RED);
+
+        var winningPlayers = winners.getPlayers();
 
         for (ServerPlayerEntity player : PlayerLookup.all(gameHandle.getServer())) {
             TranslatedText subtitle;
 
-            if (winners.contains(player)) {
-                subtitle = you_won;
+            if (winningPlayers.contains(player)) {
+                subtitle = youWon;
                 playWinSound(player);
             } else {
-                subtitle = you_lost;
+                subtitle = youLost;
                 playLooseSound(player);
             }
 
-            Title.get(player).title(game_over.translateFor(player), subtitle.translateFor(player), 5, 100, 5);
+            Title.get(player).title(gameOver.translateFor(player), subtitle.translateFor(player), 5, 100, 5);
         }
     }
 
@@ -197,10 +201,9 @@ public class WinSequence<T, Ref extends SubjectRef> {
             var entry = order.get(i);
             var text = entry.toText(translations);
 
-            Text subjectName = entry.subject().getName();
-            Style style = subjectName.getStyle();
+            Text subjectName = entry.subject().getNameFor(player);
 
-            if (style.getColor() == null) {
+            if (subjectName.getStyle().getColor() == null) {
                 subjectName = subjectName.copy().formatted(GRAY);
             }
 
@@ -229,20 +232,21 @@ public class WinSequence<T, Ref extends SubjectRef> {
     private void sendUpperSeparator(ServerPlayerEntity player, int len, int sepLength, MutableText resultsText) {
         if (len - 1 >= sepLength) {
             player.sendMessage(resultsText);
-        } else {
-            int times = (sepLength - len) / 2;
-            String sepShort = "=".repeat(times);
-
-            var msg = Text.empty()
-                    .append(Text.literal(sepShort).formatted(DARK_GREEN, STRIKETHROUGH, BOLD))
-                    .append(Text.literal("[").formatted(DARK_GREEN, BOLD))
-                    .append(resultsText.formatted(BOLD))
-                    .append(Text.literal("]").formatted(DARK_GREEN, BOLD))
-                    .append(Text.literal(sepShort + (sepLength - 2 * times - len > 0 ? "=" : ""))
-                            .formatted(DARK_GREEN, STRIKETHROUGH, BOLD));
-
-            player.sendMessage(msg);
+            return;
         }
+
+        int times = (sepLength - len) / 2;
+        String sepShort = "=".repeat(times);
+
+        var msg = Text.empty()
+                .append(Text.literal(sepShort).formatted(DARK_GREEN, STRIKETHROUGH, BOLD))
+                .append(Text.literal("[").formatted(DARK_GREEN, BOLD))
+                .append(resultsText.formatted(BOLD))
+                .append(Text.literal("]").formatted(DARK_GREEN, BOLD))
+                .append(Text.literal(sepShort + (sepLength - 2 * times - len > 0 ? "=" : ""))
+                        .formatted(DARK_GREEN, STRIKETHROUGH, BOLD));
+
+        player.sendMessage(msg);
     }
 
     private void sendOwnScore(ServerPlayerEntity player, DataEntry<Ref> entry, int ranking, MutableText sepSm) {
@@ -251,14 +255,15 @@ public class WinSequence<T, Ref extends SubjectRef> {
 
         var extra = entry.toText(translations);
 
-        if (extra != null) {
-            RootText translatedExtra = extra.translateFor(player);
-            player.sendMessage(translations.translateText(player, "ap2.you_placed_value",
-                    styled("#" + ranking, YELLOW),
-                    translatedExtra.formatted(YELLOW)).formatted(GRAY));
-        } else {
+        if (extra == null) {
             player.sendMessage(translations.translateText(player, "ap2.you_placed",
                     styled("#" + ranking, YELLOW)).formatted(GRAY));
+            return;
         }
+
+        RootText translatedExtra = extra.translateFor(player);
+        player.sendMessage(translations.translateText(player, "ap2.you_placed_value",
+                styled("#" + ranking, YELLOW),
+                translatedExtra.formatted(YELLOW)).formatted(GRAY));
     }
 }

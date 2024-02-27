@@ -133,7 +133,7 @@ public class PandaFinderInstance extends DefaultGameInstance {
 
         if (maxScore >= WIN_SCORE) {
             var winners = data.getBestSubjects(resolver);
-            win(winners);
+            winManager.win(winners);
             return;
         }
 

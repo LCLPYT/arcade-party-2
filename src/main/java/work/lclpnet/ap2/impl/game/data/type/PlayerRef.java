@@ -23,7 +23,7 @@ public record PlayerRef(UUID uuid, String name) implements SubjectRef {
     }
 
     @Override
-    public Text getName() {
+    public Text getNameFor(ServerPlayerEntity viewer) {
         return Text.literal(name);
     }
 

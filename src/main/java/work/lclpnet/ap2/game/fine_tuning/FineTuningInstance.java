@@ -63,7 +63,7 @@ public class FineTuningInstance extends DefaultGameInstance {
         tuningPhase.unload();
 
         StagePhase stagePhase = new StagePhase(gameHandle, data, resolver, tuningPhase.getRecords(), getMap(),
-                getWorld(), winner -> winner.ifPresentOrElse(this::win, this::winNobody));
+                getWorld(), winner -> winner.ifPresentOrElse(winManager::win, winManager::winNobody));
 
         stagePhase.beginStage();
     }

@@ -249,7 +249,7 @@ public class OneInTheChamberInstance extends DefaultGameInstance {
         int newScore = data.getScore(killer);
 
         if (newScore == SCORE_LIMIT) {
-            win(killer);
+            winManager.win(killer);
         }
 
         killer.playSound(SoundEvents.ENTITY_ARROW_HIT_PLAYER, SoundCategory.PLAYERS, 0.8f, 0.8f);
