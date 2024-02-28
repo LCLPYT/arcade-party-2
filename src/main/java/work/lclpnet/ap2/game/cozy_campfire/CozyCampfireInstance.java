@@ -42,7 +42,7 @@ public class CozyCampfireInstance extends TeamEliminationGameInstance {
     private final Random random = new Random();
     private final CollisionDetector collisionDetector = new ChunkedCollisionDetector();
     private final PlayerMovementObserver movementObserver;
-    private final TeamStorage<CampfireFuel> campfireFuel = TeamStorage.create(() -> new CampfireFuel(this.startingFuel));
+    private final TeamStorage<CampfireFuel> campfireFuel = TeamStorage.create(this::createCampfireFuel);
     private CCHooks hookSetup;
     private CCFuel fuel;
     private DynamicTranslatedTeamBossBar bossBar;
@@ -100,7 +100,8 @@ public class CozyCampfireInstance extends TeamEliminationGameInstance {
 
         setupMovementObserver(hookSetup);
 
-        DynamicTranslatedPlayerBossBar playerBossBar = usePlayerDynamicTaskDisplay(getTimeArgument(startingFuel));
+        Object time = getTimeArgument(startingFuel, 1);  // startingFuel is defined for a single one player
+        DynamicTranslatedPlayerBossBar playerBossBar = usePlayerDynamicTaskDisplay(time);
         bossBar = new DynamicTranslatedTeamBossBar(playerBossBar, teamManager);
     }
 
@@ -167,9 +168,10 @@ public class CozyCampfireInstance extends TeamEliminationGameInstance {
         }
     }
 
-    private Object getTimeArgument(int fuel) {
-        int minutes = fuel / fuelPerMinute;
-        int seconds = fuel % fuelPerMinute / fuelPerSecond;
+    private Object getTimeArgument(int fuel, int players) {
+        int normalizedFuel = fuel / players;
+        int minutes = normalizedFuel / fuelPerMinute;
+        int seconds = normalizedFuel % fuelPerMinute / fuelPerSecond;
 
         return gameHandle.getTranslations().translateText("game.ap2.cozy_campfire.time", minutes, seconds)
                 .formatted(Formatting.YELLOW);
@@ -184,7 +186,9 @@ public class CozyCampfireInstance extends TeamEliminationGameInstance {
     private void everySecond() {
         for (Team team : getTeamManager().getTeams()) {
             CampfireFuel fuel = campfireFuel.getOrCreate(team);
-            fuel.set(fuel.count - fuelPerSecond);
+
+            int fuelConsumption = fuelPerSecond * team.getPlayerCount();
+            fuel.set(fuel.count - fuelConsumption);
 
             updateBossBar(team, fuel);
 
@@ -195,7 +199,8 @@ public class CozyCampfireInstance extends TeamEliminationGameInstance {
     }
 
     private void updateBossBar(Team team, CampfireFuel fuel) {
-        bossBar.setArgument(team, 0, getTimeArgument(fuel.count));
+        Object time = getTimeArgument(fuel.count, team.getPlayerCount());
+        bossBar.setArgument(team, 0, time);
         bossBar.setPercent(team, fuel.percent());
     }
 
@@ -232,6 +237,10 @@ public class CozyCampfireInstance extends TeamEliminationGameInstance {
             player.sendMessage(msg.translateFor(player), true);
             player.playSound(SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, SoundCategory.PLAYERS, 0.2f, 1.8f);
         }
+    }
+
+    private CampfireFuel createCampfireFuel(Team team) {
+        return new CampfireFuel(this.startingFuel * team.getPlayerCount());
     }
 
     private static class CampfireFuel {

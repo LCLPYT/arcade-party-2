@@ -22,6 +22,7 @@
   "ap2.game.remaining_single": "%s player remaining",
   "ap2.pvp.shot_by": "%s was shot by %s",
   "ap2.pvp.killed_by": "%s was killed by %s",
+  "ap2.your_team": "Your Team",
   "ap2.team.red": "Team Red",
   "ap2.team.blue": "Team Blue",
   "game.ap2.title": "ArcadeParty",

@@ -106,15 +106,22 @@ public class WinSequence<T, Ref extends SubjectRef> {
     private void announceWinner(Ref winner) {
         TranslationService translations = gameHandle.getTranslations();
         TranslatedText won = translations.translateText("ap2.won").formatted(DARK_GREEN);
+        TranslatedText yourTeam = translations.translateText("ap2.your_team");
 
         for (ServerPlayerEntity player : PlayerLookup.all(gameHandle.getServer())) {
-            if (player == winner) {
+            var ref = refs.create(player);
+
+            Text winnerName;
+
+            if (winner.equals(ref)) {
                 playWinSound(player);
+
+                winnerName = yourTeam.translateFor(player);
             } else {
                 playLooseSound(player);
-            }
 
-            Text winnerName = winner.getNameFor(player);
+                winnerName = winner.getNameFor(player);
+            }
 
             if (winnerName.getStyle().getColor() == null) {
                 winnerName = winnerName.copy().formatted(AQUA);

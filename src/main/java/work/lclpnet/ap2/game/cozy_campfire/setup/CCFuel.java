@@ -70,8 +70,8 @@ public class CCFuel {
     }
 
     private void transform(int fuelPerSecond) {
-        int lowerBound = fuelPerSecond /  2;  // at least half a second
-        int upperBound = fuelPerSecond * 10;  // at most 10 seconds
+        int lowerBound = fuelPerSecond / 4;  // at least 0.25 seconds
+        int upperBound = fuelPerSecond * 4;  // at most 4 seconds
 
         fuel.forEach((item, value) -> {
             int clamped = MathHelper.clamp(value, lowerBound, upperBound);
