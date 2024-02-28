@@ -1,75 +1,78 @@
 package work.lclpnet.ap2.impl.game.data;
 
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
 import work.lclpnet.ap2.api.event.IntScoreEvent;
 import work.lclpnet.ap2.api.event.IntScoreEventSource;
-import work.lclpnet.ap2.api.game.data.DataContainer;
-import work.lclpnet.ap2.api.game.data.DataEntry;
-import work.lclpnet.ap2.api.game.data.PlayerRef;
+import work.lclpnet.ap2.api.game.data.*;
 import work.lclpnet.ap2.impl.game.data.entry.ScoreDataEntry;
+import work.lclpnet.ap2.impl.game.data.entry.ScoreView;
 
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class ScoreDataContainer implements DataContainer, IntScoreEventSource {
+public class ScoreDataContainer<T, Ref extends SubjectRef> implements DataContainer<T, Ref>, IntScoreEventSource<T> {
 
-    private final Map<PlayerRef, Integer> scoreMap = new HashMap<>();
-    private final List<IntScoreEvent> listeners = new ArrayList<>();
+    private final SubjectRefFactory<T, Ref> refs;
+    private final Map<Ref, Integer> scoreMap = new HashMap<>();
+    private final List<IntScoreEvent<T>> listeners = new ArrayList<>();
 
     private boolean frozen = false;
 
-    public void setScore(ServerPlayerEntity player, int score) {
-        synchronized (this) {
-            if (frozen) return;
-            scoreMap.put(PlayerRef.create(player), score);
-        }
+    public ScoreDataContainer(SubjectRefFactory<T, Ref> refs) {
+        this.refs = refs;
 
-        listeners.forEach(listener -> listener.accept(player, score));
     }
 
-    public void addScore(ServerPlayerEntity player, int add) {
+    public void setScore(T subject, int score) {
+        synchronized (this) {
+            if (frozen) return;
+            scoreMap.put(refs.create(subject), score);
+        }
+
+        listeners.forEach(listener -> listener.accept(subject, score));
+    }
+
+    public void addScore(T subject, int add) {
         int score;
 
         synchronized (this) {
             if (frozen) return;
-            PlayerRef key = PlayerRef.create(player);
+            Ref key = refs.create(subject);
 
-            score = scoreMap.computeIfAbsent(key, playerRef -> 0) + add;
+            score = scoreMap.computeIfAbsent(key, ref -> 0) + add;
             scoreMap.put(key, score);
         }
 
-        listeners.forEach(listener -> listener.accept(player, score));
+        listeners.forEach(listener -> listener.accept(subject, score));
     }
 
-    public int getScore(ServerPlayerEntity player) {
+    public int getScore(T subject) {
         synchronized (this) {
-            return scoreMap.computeIfAbsent(PlayerRef.create(player), playerRef -> 0);
+            return scoreMap.computeIfAbsent(refs.create(subject), ref -> 0);
         }
     }
 
     @Override
-    public void delete(ServerPlayerEntity player) {
+    public void delete(T subject) {
         synchronized (this) {
             if (frozen) return;
-            scoreMap.remove(PlayerRef.create(player));
+            scoreMap.remove(refs.create(subject));
         }
     }
 
     @Override
-    public DataEntry getEntry(ServerPlayerEntity player) {
-        PlayerRef ref = PlayerRef.create(player);
+    public DataEntry<Ref> getEntry(T subject) {
+        Ref ref = refs.create(subject);
         synchronized (this) {
-            return new ScoreDataEntry(ref, scoreMap.get(ref));
+            return new ScoreDataEntry<>(ref, scoreMap.get(ref));
         }
     }
 
     @Override
-    public Stream<? extends DataEntry> orderedEntries() {
+    public Stream<? extends DataEntry<Ref>> orderedEntries() {
         return scoreMap.entrySet().stream()
-                .map(e -> new ScoreDataEntry(e.getKey(), e.getValue()))
-                .sorted(Comparator.comparingInt(ScoreDataEntry::score).reversed());
+                .map(e -> new ScoreDataEntry<>(e.getKey(), e.getValue()))
+                .sorted(Comparator.comparingInt(ScoreView::score).reversed());
     }
 
     @Override
@@ -80,15 +83,15 @@ public class ScoreDataContainer implements DataContainer, IntScoreEventSource {
     }
 
     @Override
-    public void ensureTracked(ServerPlayerEntity player) {
-        addScore(player, 0);
+    public void ensureTracked(T subject) {
+        addScore(subject, 0);
     }
 
     public OptionalInt getBestScore() {
         return scoreMap.values().stream().mapToInt(i -> i).max();
     }
 
-    public Set<ServerPlayerEntity> getBestPlayers(MinecraftServer server) {
+    public Set<T> getBestSubjects(SubjectRefResolver<T, Ref> resolver) {
         OptionalInt best = getBestScore();
 
         if (best.isEmpty()) return Set.of();
@@ -97,13 +100,13 @@ public class ScoreDataContainer implements DataContainer, IntScoreEventSource {
 
         return scoreMap.keySet().stream()
                 .filter(ref -> scoreMap.get(ref) == bestScore)
-                .map(ref -> ref.resolve(server))
+                .map(resolver::resolve)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toUnmodifiableSet());
     }
 
     @Override
-    public void register(IntScoreEvent listener) {
+    public void register(IntScoreEvent<T> listener) {
         listeners.add(Objects.requireNonNull(listener));
     }
 }

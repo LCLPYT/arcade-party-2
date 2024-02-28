@@ -1,6 +1,6 @@
 package work.lclpnet.ap2.api.event;
 
-public interface IntScoreEventSource {
+public interface IntScoreEventSource<Type> {
 
-    void register(IntScoreEvent listener);
+    void register(IntScoreEvent<Type> listener);
 }

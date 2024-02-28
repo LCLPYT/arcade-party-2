@@ -14,12 +14,12 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
-import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.util.CollisionDetector;
 import work.lclpnet.ap2.impl.game.DefaultGameInstance;
 import work.lclpnet.ap2.impl.game.data.ScoreDataContainer;
+import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.collision.ChunkedCollisionDetector;
@@ -36,7 +36,7 @@ import java.util.Random;
 
 public class MirrorHopInstance extends DefaultGameInstance {
 
-    private final ScoreDataContainer data = new ScoreDataContainer();
+    private final ScoreDataContainer<ServerPlayerEntity, PlayerRef> data = new ScoreDataContainer<>(PlayerRef::create);
     private final CollisionDetector collisionDetector = new ChunkedCollisionDetector();
     private final PlayerMovementObserver movementObserver;
     private final MovementBlocker movementBlocker;
@@ -50,7 +50,7 @@ public class MirrorHopInstance extends DefaultGameInstance {
     }
 
     @Override
-    protected DataContainer getData() {
+    protected DataContainer<ServerPlayerEntity, PlayerRef> getData() {
         return data;
     }
 
@@ -77,7 +77,6 @@ public class MirrorHopInstance extends DefaultGameInstance {
         GameMap map = getMap();
         ServerWorld world = getWorld();
         HookRegistrar hooks = gameHandle.getHookRegistrar();
-        Participants participants = gameHandle.getParticipants();
         MinecraftServer server = gameHandle.getServer();
 
         BlockBox goal = MapUtil.readBox(map.requireProperty("goal"));
@@ -85,11 +84,11 @@ public class MirrorHopInstance extends DefaultGameInstance {
         movementObserver.init(hooks, server);
 
         movementObserver.whenEntering(goal, player -> {
-            if (isGameOver()) return;
+            if (winManager.isGameOver()) return;
 
             data.addScore(player, 1);
 
-            win(player);
+            winManager.win(player);
         });
 
         movementObserver.setRegionEnterListener((player, collider) -> {

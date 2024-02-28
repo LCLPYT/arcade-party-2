@@ -15,13 +15,14 @@ import net.minecraft.world.GameMode;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
-import work.lclpnet.ap2.api.game.data.PlayerRef;
 import work.lclpnet.ap2.game.fine_tuning.melody.FakeNoteBlockPlayer;
 import work.lclpnet.ap2.game.fine_tuning.melody.Melody;
 import work.lclpnet.ap2.game.fine_tuning.melody.Note;
 import work.lclpnet.ap2.game.fine_tuning.melody.PlayMelodyTask;
 import work.lclpnet.ap2.impl.game.PlayerUtil;
 import work.lclpnet.ap2.impl.game.data.ScoreTimeDataContainer;
+import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
+import work.lclpnet.ap2.impl.game.data.type.PlayerRefResolver;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.SoundHelper;
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker;
@@ -41,7 +42,8 @@ import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 class StagePhase {
 
     private final MiniGameHandle gameHandle;
-    private final ScoreTimeDataContainer data;
+    private final ScoreTimeDataContainer<ServerPlayerEntity, PlayerRef> data;
+    private final PlayerRefResolver resolver;
     private final Consumer<Optional<ServerPlayerEntity>> winnerAction;
     private final MelodyRecords records;
     private final GameMap map;
@@ -52,10 +54,12 @@ class StagePhase {
     private FakeNoteBlockPlayer nbPlayer;
     private int melodyNumber = 0;
 
-    public StagePhase(MiniGameHandle gameHandle, ScoreTimeDataContainer data, MelodyRecords records, GameMap map,
-                      ServerWorld world, Consumer<Optional<ServerPlayerEntity>> winnerAction) {
+    public StagePhase(MiniGameHandle gameHandle, ScoreTimeDataContainer<ServerPlayerEntity, PlayerRef> data,
+                      PlayerRefResolver resolver, MelodyRecords records, GameMap map, ServerWorld world,
+                      Consumer<Optional<ServerPlayerEntity>> winnerAction) {
         this.gameHandle = gameHandle;
         this.data = data;
+        this.resolver = resolver;
         this.records = records;
         this.map = map;
         this.world = world;
@@ -245,6 +249,6 @@ class StagePhase {
     }
 
     private void dispatchWin() {
-        winnerAction.accept(data.getBestPlayer(gameHandle.getServer()));
+        winnerAction.accept(data.getBestSubject(resolver));
     }
 }

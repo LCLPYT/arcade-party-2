@@ -6,17 +6,26 @@ import net.minecraft.entity.boss.BossBar;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
+import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.GameInfo;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.impl.game.data.EliminationDataContainer;
+import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedBossBar;
+import work.lclpnet.kibu.hook.entity.EntityHealthCallback;
+import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.kibu.translate.bossbar.TranslatedBossBar;
 import work.lclpnet.kibu.translate.text.FormatWrapper;
+import work.lclpnet.lobby.game.api.WorldFacade;
+
+import static net.minecraft.util.Formatting.GRAY;
+import static net.minecraft.util.Formatting.YELLOW;
+import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
 public abstract class EliminationGameInstance extends DefaultGameInstance {
 
-    private final EliminationDataContainer data = new EliminationDataContainer();
+    private final EliminationDataContainer<ServerPlayerEntity, PlayerRef> data = new EliminationDataContainer<>(PlayerRef::create);
     private DynamicTranslatedBossBar remainingDisplay = null;
 
     public EliminationGameInstance(MiniGameHandle gameHandle) {
@@ -37,7 +46,7 @@ public abstract class EliminationGameInstance extends DefaultGameInstance {
     }
 
     @Override
-    protected EliminationDataContainer getData() {
+    protected EliminationDataContainer<ServerPlayerEntity, PlayerRef> getData() {
         return data;
     }
 
@@ -70,5 +79,39 @@ public abstract class EliminationGameInstance extends DefaultGameInstance {
         Object[] args = new Object[] {FormatWrapper.styled(remaining, Formatting.YELLOW)};
 
         return Pair.of(key, args);
+    }
+
+    /**
+     * Instantly makes players who would have died spectators and reset them.
+     */
+    protected final void useSmoothDeath() {
+        HookRegistrar hooks = gameHandle.getHookRegistrar();
+
+        hooks.registerHook(EntityHealthCallback.HOOK, (entity, health) -> {
+            if (!(entity instanceof ServerPlayerEntity player) || health > 0) return false;
+
+            eliminate(player);
+
+            return true;
+        });
+    }
+
+    protected void eliminate(ServerPlayerEntity player) {
+        Participants participants = gameHandle.getParticipants();
+        TranslationService translations = gameHandle.getTranslations();
+
+        if (participants.isParticipating(player)) {
+            translations.translateText("ap2.game.eliminated", styled(player.getNameForScoreboard(), YELLOW))
+                    .formatted(GRAY)
+                    .sendTo(PlayerLookup.all(gameHandle.getServer()));
+
+            participants.remove(player);
+        }
+
+        WorldFacade worldFacade = gameHandle.getWorldFacade();
+        PlayerUtil playerUtil = gameHandle.getPlayerUtil();
+
+        playerUtil.resetPlayer(player);
+        worldFacade.teleport(player);
     }
 }

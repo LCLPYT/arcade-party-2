@@ -1,7 +1,6 @@
 package work.lclpnet.ap2.impl.util.collision;
 
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
 import org.junit.jupiter.api.Test;
 import work.lclpnet.ap2.impl.util.BlockBox;
 
@@ -14,11 +13,11 @@ class UnionColliderTest {
         var shape = UnionCollider.union(new BlockBox(0, 0, 0, 1, 1, 1),
                 new BlockBox(1, 1, 1, 2, 2, 2));
 
-        assertTrue(shape.collidesWith(new Vec3d(0, 0, 0)));
-        assertTrue(shape.collidesWith(new Vec3d(1, 1, 1)));
-        assertTrue(shape.collidesWith(new Vec3d(2, 2, 2)));
-        assertFalse(shape.collidesWith(new Vec3d(0, 2, 2)));
-        assertFalse(shape.collidesWith(new Vec3d(2, 2, 0)));
+        assertTrue(shape.collidesWith(0, 0, 0));
+        assertTrue(shape.collidesWith(1, 1, 1));
+        assertTrue(shape.collidesWith(2, 2, 2));
+        assertFalse(shape.collidesWith(0, 2, 2));
+        assertFalse(shape.collidesWith(2, 2, 0));
     }
 
     @Test

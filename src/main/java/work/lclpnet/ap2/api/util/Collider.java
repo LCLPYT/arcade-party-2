@@ -5,9 +5,17 @@ import net.minecraft.util.math.Position;
 
 public interface Collider {
 
-    boolean collidesWith(Position pos);
+    boolean collidesWith(double x, double y, double z);
 
     BlockPos getMin();
 
     BlockPos getMax();
+
+    default boolean collidesWith(Position pos) {
+        return collidesWith(pos.getX(), pos.getY(), pos.getZ());
+    }
+
+    default boolean collidesWith(BlockPos pos) {
+        return collidesWith(pos.getX(), pos.getY(), pos.getZ());
+    }
 }

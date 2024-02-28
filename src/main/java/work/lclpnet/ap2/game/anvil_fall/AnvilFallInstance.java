@@ -190,7 +190,7 @@ public class AnvilFallInstance extends EliminationGameInstance {
     }
 
     private void spawnRandomAnvil() {
-        if (isGameOver()) return;
+        if (winManager.isGameOver()) return;
 
         ServerWorld world = getWorld();
 

@@ -24,6 +24,7 @@ import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.base.ApConstants;
 import work.lclpnet.ap2.game.fine_tuning.melody.*;
 import work.lclpnet.ap2.impl.game.data.ScoreTimeDataContainer;
+import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.util.BookUtil;
 import work.lclpnet.ap2.impl.util.SoundHelper;
 import work.lclpnet.ap2.impl.util.heads.PlayerHeadUtil;
@@ -52,7 +53,7 @@ class TuningPhase implements Unloadable {
 
     private final MiniGameHandle gameHandle;
     private final Map<UUID, FineTuningRoom> rooms;
-    private final ScoreTimeDataContainer data;
+    private final ScoreTimeDataContainer<ServerPlayerEntity, PlayerRef> data;
     private final Runnable onEnd;
     private final Random random = new Random();
     private final MelodyProvider melodyProvider = new SimpleMelodyProvider(random, new SimpleNotesProvider(random), 5);
@@ -64,7 +65,8 @@ class TuningPhase implements Unloadable {
     private Melody melody = null;
     private int melodyNumber = 0;
 
-    public TuningPhase(MiniGameHandle gameHandle, Map<UUID, FineTuningRoom> rooms, ScoreTimeDataContainer data, Runnable onEnd) {
+    public TuningPhase(MiniGameHandle gameHandle, Map<UUID, FineTuningRoom> rooms,
+                       ScoreTimeDataContainer<ServerPlayerEntity, PlayerRef> data, Runnable onEnd) {
         this.gameHandle = gameHandle;
         this.rooms = rooms;
         this.data = data;

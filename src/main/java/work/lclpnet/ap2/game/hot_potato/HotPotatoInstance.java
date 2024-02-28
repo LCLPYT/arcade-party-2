@@ -16,6 +16,7 @@ import net.minecraft.util.Formatting;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.GameMode;
 import work.lclpnet.ap2.api.base.Participants;
+import work.lclpnet.ap2.api.game.GameOverListener;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.impl.game.EliminationGameInstance;
 import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedBossBar;
@@ -36,7 +37,7 @@ import work.lclpnet.kibu.translate.bossbar.TranslatedBossBar;
 
 import java.util.Random;
 
-public class HotPotatoInstance extends EliminationGameInstance {
+public class HotPotatoInstance extends EliminationGameInstance implements GameOverListener {
 
     public static final int DURATION_SECONDS = 20;
     private final Random random = new Random();
@@ -51,6 +52,8 @@ public class HotPotatoInstance extends EliminationGameInstance {
 
     @Override
     protected void prepare() {
+        winManager.addListener(this);
+
         dynamicBossBar = useRemainingPlayersDisplay();
 
         CustomScoreboardManager scoreboardManager = gameHandle.getScoreboardManager();
@@ -84,7 +87,7 @@ public class HotPotatoInstance extends EliminationGameInstance {
 
     private void nextRound() {
         if (!markRandomPlayer()) {
-            winNobody();
+            winManager.winNobody();
             return;
         }
 
@@ -123,7 +126,7 @@ public class HotPotatoInstance extends EliminationGameInstance {
     }
 
     private void onRoundOver() {
-        if (isGameOver()) return;
+        if (winManager.isGameOver()) return;
 
         gameHandle.getGameScheduler().timeout(this::nextRound, Ticks.seconds(3));
     }
@@ -153,9 +156,7 @@ public class HotPotatoInstance extends EliminationGameInstance {
     }
 
     @Override
-    protected void onGameOver() {
-        super.onGameOver();
-
+    public void onGameOver() {
         dynamicBossBar.getBossBar().setPercent(1f);
 
         if (markedPlayer != null) {

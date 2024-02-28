@@ -83,7 +83,7 @@ public class CustomScoreboardManager implements Unloadable {
         return team;
     }
 
-    private void removeTeam(String name) {
+    public void removeTeam(String name) {
         Team team = scoreboard.getTeam(name);
 
         if (team == null) return;
@@ -137,11 +137,11 @@ public class CustomScoreboardManager implements Unloadable {
         scoreboard.setObjectiveSlot(slot, objective);
     }
 
-    public void sync(ScoreboardObjective objective, IntScoreEventSource source) {
+    public void sync(ScoreboardObjective objective, IntScoreEventSource<ServerPlayerEntity> source) {
         source.register((player, score) -> setScore(player, objective, score));
     }
 
-    public void sync(CustomScoreboardObjective objective, IntScoreEventSource source) {
+    public void sync(CustomScoreboardObjective objective, IntScoreEventSource<ServerPlayerEntity> source) {
         source.register(objective::setScore);
     }
 

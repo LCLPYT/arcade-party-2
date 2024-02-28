@@ -1,7 +1,10 @@
 package work.lclpnet.ap2.impl.util;
 
 import it.unimi.dsi.fastutil.Pair;
-import net.minecraft.util.math.*;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Box;
+import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.util.Collider;
@@ -40,9 +43,7 @@ public class BlockBox implements Pair<BlockPos, BlockPos>, Iterable<BlockPos>, C
     }
 
     @Override
-    public boolean collidesWith(Position pos) {
-        double x = pos.getX(), y = pos.getY(), z = pos.getZ();
-
+    public boolean collidesWith(double x, double y, double z) {
         return contains(x, y, z);
     }
 

@@ -1,24 +1,13 @@
-package work.lclpnet.ap2.api.game.data;
+package work.lclpnet.ap2.impl.game.data.type;
 
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.PlayerManager;
 import net.minecraft.server.network.ServerPlayerEntity;
-import org.jetbrains.annotations.Nullable;
+import net.minecraft.text.Text;
+import work.lclpnet.ap2.api.game.data.SubjectRef;
 
 import java.util.Objects;
 import java.util.UUID;
 
-public record PlayerRef(UUID uuid, String name) {
-
-    @Nullable
-    public ServerPlayerEntity resolve(MinecraftServer server) {
-        return resolve(server.getPlayerManager());
-    }
-
-    @Nullable
-    public ServerPlayerEntity resolve(PlayerManager playerManager) {
-        return playerManager.getPlayer(uuid);
-    }
+public record PlayerRef(UUID uuid, String name) implements SubjectRef {
 
     @Override
     public boolean equals(Object o) {
@@ -31,6 +20,11 @@ public record PlayerRef(UUID uuid, String name) {
     @Override
     public int hashCode() {
         return Objects.hash(uuid);
+    }
+
+    @Override
+    public Text getNameFor(ServerPlayerEntity viewer) {
+        return Text.literal(name);
     }
 
     public static PlayerRef create(ServerPlayerEntity player) {
