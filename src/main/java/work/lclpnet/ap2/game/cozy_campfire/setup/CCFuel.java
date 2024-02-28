@@ -55,7 +55,6 @@ public class CCFuel {
                 .forEach(breakableBlocks::add);
 
         breakableBlocks.add(Blocks.FIRE);
-        breakableBlocks.add(Blocks.POWDER_SNOW);
 
         transform(fuelPerSecond);
     }

@@ -2,6 +2,7 @@ package work.lclpnet.ap2.game.cozy_campfire.setup;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.damage.DamageTypes;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.entity.vehicle.BoatEntity;
 import net.minecraft.item.ItemStack;
@@ -123,6 +124,15 @@ public class CCHooks {
             }
 
             return ActionResult.FAIL;
+        });
+
+        hooks.registerHook(ServerLivingEntityHooks.ALLOW_DAMAGE, (entity, source, amount) -> {
+            if (source.isOf(DamageTypes.FREEZE) && amount < Float.MAX_VALUE) {
+                entity.damage(entity.getDamageSources().freeze(), Float.MAX_VALUE);
+                return false;
+            }
+
+            return true;
         });
     }
 
