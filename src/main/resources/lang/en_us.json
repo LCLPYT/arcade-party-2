@@ -93,5 +93,13 @@
   "game.ap2.cozy_campfire.task": "Campfire fuel %s",
   "game.ap2.cozy_campfire.base_of": "Base of %s",
   "game.ap2.cozy_campfire.time": "%d:%02d",
-  "game.ap2.cozy_campfire.fuel_added": "+ %.2f seconds"
+  "game.ap2.cozy_campfire.fuel_added": "+ %.2f seconds",
+  "game.ap2.mining_battle": "Mining Battle",
+  "game.ap2.mining_battle.description": "Mine as much ores as possible! There are also special blocks with extra effects.",
+  "game.ap2.mining_battle.task": "Mine ores",
+  "game.ap2.mining_battle.weakened": "You weakened the other players!",
+  "game.ap2.mining_battle.weakened_by": "%s has weakened you!",
+  "game.ap2.mining_battle.haste": "You gained the haste status effect!",
+  "game.ap2.mining_battle.gain_point": "+%s point",
+  "game.ap2.mining_battle.gain_points": "+%s points"
 }

@@ -10,6 +10,7 @@ import net.minecraft.text.Text;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.*;
 import work.lclpnet.ap2.base.ApConstants;
+import work.lclpnet.ap2.impl.game.data.type.TeamRef;
 import work.lclpnet.ap2.impl.util.SoundHelper;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.RunningTask;
@@ -106,21 +107,20 @@ public class WinSequence<T, Ref extends SubjectRef> {
     private void announceWinner(Ref winner) {
         TranslationService translations = gameHandle.getTranslations();
         TranslatedText won = translations.translateText("ap2.won").formatted(DARK_GREEN);
-        TranslatedText yourTeam = translations.translateText("ap2.your_team");
 
         for (ServerPlayerEntity player : PlayerLookup.all(gameHandle.getServer())) {
             var ref = refs.create(player);
 
-            Text winnerName;
+            Text winnerName = winner.getNameFor(player);
 
             if (winner.equals(ref)) {
                 playWinSound(player);
 
-                winnerName = yourTeam.translateFor(player);
+                if (winner instanceof TeamRef) {
+                    winnerName = translations.translateText("ap2.your_team").translateFor(player);
+                }
             } else {
                 playLooseSound(player);
-
-                winnerName = winner.getNameFor(player);
             }
 
             if (winnerName.getStyle().getColor() == null) {
