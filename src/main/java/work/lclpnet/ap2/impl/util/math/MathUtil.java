@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.impl.util;
+package work.lclpnet.ap2.impl.util.math;
 
 import net.minecraft.util.math.Vec3i;
 

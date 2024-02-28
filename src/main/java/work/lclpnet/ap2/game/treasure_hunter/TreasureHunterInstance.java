@@ -21,6 +21,7 @@ import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.impl.game.DefaultGameInstance;
 import work.lclpnet.ap2.impl.game.data.OrderedDataContainer;
+import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
@@ -34,7 +35,7 @@ import java.util.*;
 public class TreasureHunterInstance extends DefaultGameInstance {
 
     private final Random rand = new Random();
-    private final OrderedDataContainer data = new OrderedDataContainer();
+    private final OrderedDataContainer<ServerPlayerEntity, PlayerRef> data = new OrderedDataContainer<>(PlayerRef::create);
     private final Set<BlockState> materials = new HashSet<>();
 
     public TreasureHunterInstance(MiniGameHandle gameHandle) {
@@ -44,7 +45,7 @@ public class TreasureHunterInstance extends DefaultGameInstance {
     }
 
     @Override
-    protected DataContainer getData() {
+    protected DataContainer<ServerPlayerEntity, PlayerRef> getData() {
         return data;
     }
 
@@ -66,7 +67,7 @@ public class TreasureHunterInstance extends DefaultGameInstance {
                 return ActionResult.PASS;
             }
 
-            if (isGameOver()) {
+            if (winManager.isGameOver()) {
                 return ActionResult.FAIL;
             }
 
@@ -74,7 +75,7 @@ public class TreasureHunterInstance extends DefaultGameInstance {
             player.playSound(SoundEvents.BLOCK_CHEST_LOCKED, SoundCategory.BLOCKS, 0.2f, 0.5f);
 
             data.add(serverPlayer);
-            win(serverPlayer);
+            winManager.win(serverPlayer);
 
             return ActionResult.success(true);
         });

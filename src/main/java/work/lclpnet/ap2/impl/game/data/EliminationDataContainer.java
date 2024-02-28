@@ -1,9 +1,9 @@
 package work.lclpnet.ap2.impl.game.data;
 
-import net.minecraft.server.network.ServerPlayerEntity;
 import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.game.data.DataEntry;
-import work.lclpnet.ap2.api.game.data.PlayerRef;
+import work.lclpnet.ap2.api.game.data.SubjectRef;
+import work.lclpnet.ap2.api.game.data.SubjectRefFactory;
 import work.lclpnet.ap2.impl.game.data.entry.SimpleDataEntry;
 
 import java.util.ArrayList;
@@ -13,16 +13,21 @@ import java.util.stream.Stream;
 /**
  * A data container for last one standing game modes.
  */
-public class EliminationDataContainer implements DataContainer {
+public class EliminationDataContainer<T, Ref extends SubjectRef> implements DataContainer<T, Ref> {
 
-    private final List<PlayerRef> list = new ArrayList<>();
+    private final SubjectRefFactory<T, Ref> refs;
+    private final List<Ref> list = new ArrayList<>();
     private boolean frozen = false;
 
-    public void eliminated(ServerPlayerEntity player) {
+    public EliminationDataContainer(SubjectRefFactory<T, Ref> refs) {
+        this.refs = refs;
+    }
+
+    public void eliminated(T subject) {
         synchronized (this) {
             if (frozen) return;
 
-            PlayerRef ref = PlayerRef.create(player);
+            Ref ref = refs.create(subject);
 
             if (list.contains(ref)) return;
 
@@ -31,21 +36,21 @@ public class EliminationDataContainer implements DataContainer {
     }
 
     @Override
-    public void delete(ServerPlayerEntity player) {
+    public void delete(T subject) {
         synchronized (this) {
             if (frozen) return;
 
-            list.remove(PlayerRef.create(player));  // O(n) should not really be an issue
+            list.remove(refs.create(subject));  // O(n) should not really be an issue
         }
     }
 
     @Override
-    public DataEntry getEntry(ServerPlayerEntity player) {
-        return new SimpleDataEntry(PlayerRef.create(player));
+    public DataEntry<Ref> getEntry(T subject) {
+        return new SimpleDataEntry<>(refs.create(subject));
     }
 
     @Override
-    public Stream<DataEntry> orderedEntries() {
+    public Stream<DataEntry<Ref>> orderedEntries() {
         return list.stream().map(SimpleDataEntry::new);
     }
 
@@ -57,7 +62,7 @@ public class EliminationDataContainer implements DataContainer {
     }
 
     @Override
-    public void ensureTracked(ServerPlayerEntity player) {
-        eliminated(player);
+    public void ensureTracked(T subject) {
+        eliminated(subject);
     }
 }

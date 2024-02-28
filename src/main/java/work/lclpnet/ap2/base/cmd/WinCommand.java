@@ -11,7 +11,8 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.MiniGameInstance;
-import work.lclpnet.ap2.impl.game.DefaultGameInstance;
+import work.lclpnet.ap2.api.game.WinManagerAccess;
+import work.lclpnet.ap2.api.game.WinManagerView;
 import work.lclpnet.kibu.plugin.cmd.CommandRegistrar;
 import work.lclpnet.kibu.plugin.cmd.KibuCommand;
 
@@ -46,8 +47,9 @@ public class WinCommand implements KibuCommand {
 
         ctx.getSource().sendMessage(Text.literal("Made yourself the winner of the current mini game"));
 
-        if (miniGame instanceof DefaultGameInstance defaultInstance) {
-            defaultInstance.win(player);
+        if (miniGame instanceof WinManagerView view) {
+            WinManagerAccess winManagerAccess = view.getWinManagerAccess();
+            winManagerAccess.win(player);
         } else {
             gameHandle.complete(player);
         }
@@ -73,8 +75,9 @@ public class WinCommand implements KibuCommand {
             source.sendMessage(Text.literal("Made %s the winners of the current mini game".formatted(names)));
         }
 
-        if (miniGame instanceof DefaultGameInstance defaultInstance) {
-            defaultInstance.win(players);
+        if (miniGame instanceof WinManagerView view) {
+            WinManagerAccess winManagerAccess = view.getWinManagerAccess();
+            winManagerAccess.win(players);
         } else {
             gameHandle.complete(players);
         }

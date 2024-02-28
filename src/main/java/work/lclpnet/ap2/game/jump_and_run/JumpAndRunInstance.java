@@ -18,7 +18,6 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
 import net.minecraft.util.TypedActionResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
@@ -26,12 +25,11 @@ import net.minecraft.world.GameRules;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
-import work.lclpnet.ap2.api.map.MapFacade;
 import work.lclpnet.ap2.api.util.CollisionDetector;
 import work.lclpnet.ap2.game.jump_and_run.gen.*;
-import work.lclpnet.ap2.impl.game.BootstrapMapOptions;
 import work.lclpnet.ap2.impl.game.DefaultGameInstance;
 import work.lclpnet.ap2.impl.game.data.ScoreTimeDataContainer;
+import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedPlayerBossBar;
 import work.lclpnet.ap2.impl.util.collision.ChunkedCollisionDetector;
@@ -45,9 +43,11 @@ import work.lclpnet.kibu.hook.player.PlayerMoveCallback;
 import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.translate.TranslationService;
+import work.lclpnet.lobby.game.map.GameMap;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 import static net.minecraft.util.Formatting.BOLD;
 import static net.minecraft.util.Formatting.YELLOW;
@@ -57,7 +57,7 @@ public class JumpAndRunInstance extends DefaultGameInstance {
 
     private static final int ASSISTANCE_TICKS_BASE = Ticks.seconds(90);  // time after which assistance is provided
     private static final float TARGET_MINUTES = 4.0f;  // target completion time of the jump and run (approximate)
-    private final ScoreTimeDataContainer data = new ScoreTimeDataContainer();
+    private final ScoreTimeDataContainer<ServerPlayerEntity, PlayerRef> data = new ScoreTimeDataContainer<>(PlayerRef::create);
     private final CollisionDetector collisionDetector = new ChunkedCollisionDetector();
     private final PlayerMovementObserver movementObserver;
     private final List<BlockPos> gateBlocks = new ArrayList<>();
@@ -72,20 +72,17 @@ public class JumpAndRunInstance extends DefaultGameInstance {
     }
 
     @Override
-    protected DataContainer getData() {
+    protected DataContainer<ServerPlayerEntity, PlayerRef> getData() {
         return data;
     }
 
     @Override
-    protected void openMap() {
-        MapFacade mapFacade = gameHandle.getMapFacade();
-        Identifier gameId = gameHandle.getGameInfo().getId();
+    protected CompletableFuture<Void> createWorldBootstrap(ServerWorld world, GameMap map) {
+        world.setTimeOfDay(4000);
 
-        mapFacade.openRandomMap(gameId, new BootstrapMapOptions((world, map) -> {
-            world.setTimeOfDay(4000);
-            var setup = new JumpAndRunSetup(gameHandle, map, world, TARGET_MINUTES);
-            return setup.setup().thenAccept(jumpAndRun -> this.jumpAndRun = jumpAndRun);
-        }), this::onMapReady);
+        JumpAndRunSetup setup = new JumpAndRunSetup(gameHandle, map, world, TARGET_MINUTES);
+
+        return setup.setup().thenAccept(jumpAndRun -> this.jumpAndRun = jumpAndRun);
     }
 
     @Override
@@ -107,7 +104,7 @@ public class JumpAndRunInstance extends DefaultGameInstance {
             int roomIndex = i;
 
             movementObserver.whenEntering(room, player -> {
-                if (isGameOver()) return;
+                if (winManager.isGameOver()) return;
 
                 enterRoom(player, roomIndex);
             });
@@ -124,7 +121,7 @@ public class JumpAndRunInstance extends DefaultGameInstance {
                 Text.literal("Points").formatted(YELLOW, BOLD), ScoreboardCriterion.RenderType.INTEGER,
                 StyledNumberFormat.YELLOW);
 
-        useScoreboardStatsSync(objective);
+        useScoreboardStatsSync(data, objective);
 
         scoreboardManager.setDisplay(ScoreboardDisplaySlot.LIST, objective);
 
@@ -156,7 +153,7 @@ public class JumpAndRunInstance extends DefaultGameInstance {
         });
 
         hooks.registerHook(PlayerInteractionHooks.USE_ITEM, (player, world1, hand) -> {
-            if (isGameOver() || !(player instanceof ServerPlayerEntity serverPlayer)
+            if (winManager.isGameOver() || !(player instanceof ServerPlayerEntity serverPlayer)
                 || !participants.isParticipating(serverPlayer)) {
                 return TypedActionResult.pass(ItemStack.EMPTY);
             }
@@ -172,7 +169,7 @@ public class JumpAndRunInstance extends DefaultGameInstance {
         });
 
         hooks.registerHook(PlayerInteractionHooks.USE_BLOCK, (player, world1, hand, hitResult) -> {
-            if (isGameOver() || !(player instanceof ServerPlayerEntity serverPlayer)
+            if (winManager.isGameOver() || !(player instanceof ServerPlayerEntity serverPlayer)
                 || !participants.isParticipating(serverPlayer)) {
                 return ActionResult.PASS;
             }
@@ -256,9 +253,9 @@ public class JumpAndRunInstance extends DefaultGameInstance {
             bossBar.getBossBar(player).setPercent((float) (room - 1) / maxRooms);
         }
 
-        if (isGameOver() || room < jumpAndRun.rooms().size() - 1) return;
+        if (winManager.isGameOver() || room < jumpAndRun.rooms().size() - 1) return;
 
-        win(player);
+        winManager.win(player);
     }
 
     private void onCheckpointReached(ServerPlayerEntity player, int checkpoint) {

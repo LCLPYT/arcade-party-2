@@ -1,7 +1,6 @@
 package work.lclpnet.ap2.impl.util.collision;
 
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Position;
 import work.lclpnet.ap2.api.util.Collider;
 
 public class UnionCollider implements Collider {
@@ -34,9 +33,9 @@ public class UnionCollider implements Collider {
     }
 
     @Override
-    public boolean collidesWith(Position pos) {
+    public boolean collidesWith(double x, double y, double z) {
         for (Collider child : children) {
-            if (child.collidesWith(pos)) {
+            if (child.collidesWith(x, y, z)) {
                 return true;
             }
         }

@@ -11,6 +11,8 @@ import net.minecraft.util.math.BlockPos;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.impl.game.EliminationGameInstance;
+import work.lclpnet.kibu.hook.world.BlockBreakParticleCallback;
+import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 
 public class TntRunInstance extends EliminationGameInstance {
 
@@ -28,6 +30,10 @@ public class TntRunInstance extends EliminationGameInstance {
         useSmoothDeath();
         useNoHealing();
         useRemainingPlayersDisplay();
+
+        HookRegistrar hooks = gameHandle.getHookRegistrar();
+
+        hooks.registerHook(BlockBreakParticleCallback.HOOK, (world, pos, state) -> true);
     }
 
     @Override
@@ -78,12 +84,16 @@ public class TntRunInstance extends EliminationGameInstance {
             for (int dz = -1; dz < 2; dz++) {
                 pos.set(x + BLOCK_MARGIN * dx, y, z + BLOCK_MARGIN * dz);
 
-                if (world.getBlockState(pos).isAir() || removal.containsKey(pos)) continue;
+                BlockState state = world.getBlockState(pos);
+
+                if (state.isAir() || removal.containsKey(pos)) continue;
 
                 // mark for removal
                 removal.put(pos.toImmutable(), BREAK_TICKS);
 
-                world.setBlockState(pos, MARKED_STATE);
+                if (!state.getCollisionShape(world, pos).isEmpty()) {
+                    world.setBlockState(pos, MARKED_STATE);
+                }
             }
         }
     }

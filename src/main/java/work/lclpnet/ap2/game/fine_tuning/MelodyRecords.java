@@ -1,8 +1,8 @@
 package work.lclpnet.ap2.game.fine_tuning;
 
 import net.minecraft.server.network.ServerPlayerEntity;
-import work.lclpnet.ap2.api.game.data.PlayerRef;
 import work.lclpnet.ap2.game.fine_tuning.melody.Melody;
+import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 
 import java.util.ArrayList;
 import java.util.List;

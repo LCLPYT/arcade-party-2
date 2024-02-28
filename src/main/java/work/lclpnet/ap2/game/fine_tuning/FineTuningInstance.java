@@ -1,24 +1,25 @@
 package work.lclpnet.ap2.game.fine_tuning;
 
-import net.minecraft.util.Identifier;
-import net.minecraft.world.GameMode;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
 import org.json.JSONArray;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
-import work.lclpnet.ap2.api.map.MapFacade;
-import work.lclpnet.ap2.impl.game.BootstrapMapOptions;
 import work.lclpnet.ap2.impl.game.DefaultGameInstance;
 import work.lclpnet.ap2.impl.game.data.ScoreTimeDataContainer;
+import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.kibu.scheduler.Ticks;
+import work.lclpnet.lobby.game.map.GameMap;
 
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 public class FineTuningInstance extends DefaultGameInstance {
 
     static final int MELODY_COUNT = 3;
     static final int REPLAY_COOLDOWN = Ticks.seconds(5);
-    private final ScoreTimeDataContainer data = new ScoreTimeDataContainer();
+    private final ScoreTimeDataContainer<ServerPlayerEntity, PlayerRef> data = new ScoreTimeDataContainer<>(PlayerRef::create);
     private FineTuningSetup setup;
     private TuningPhase tuningPhase;
 
@@ -29,19 +30,14 @@ public class FineTuningInstance extends DefaultGameInstance {
     }
 
     @Override
-    protected DataContainer getData() {
+    protected DataContainer<ServerPlayerEntity, PlayerRef> getData() {
         return data;
     }
 
     @Override
-    protected void openMap() {
-        MapFacade mapFacade = gameHandle.getMapFacade();
-        Identifier gameId = gameHandle.getGameInfo().getId();
-
-        mapFacade.openRandomMap(gameId, new BootstrapMapOptions((world, map) -> {
-            setup = new FineTuningSetup(gameHandle, map, world);
-            return setup.createRooms();
-        }), this::onMapReady);
+    protected CompletableFuture<Void> createWorldBootstrap(ServerWorld world, GameMap gameMap) {
+        setup = new FineTuningSetup(gameHandle, gameMap, world);
+        return setup.createRooms();
     }
 
     @Override
@@ -66,8 +62,8 @@ public class FineTuningInstance extends DefaultGameInstance {
     private void startStagePhase() {
         tuningPhase.unload();
 
-        StagePhase stagePhase = new StagePhase(gameHandle, data, tuningPhase.getRecords(), getMap(), getWorld(),
-                winner -> winner.ifPresentOrElse(this::win, this::winNobody));
+        StagePhase stagePhase = new StagePhase(gameHandle, data, resolver, tuningPhase.getRecords(), getMap(),
+                getWorld(), winner -> winner.ifPresentOrElse(winManager::win, winManager::winNobody));
 
         stagePhase.beginStage();
     }

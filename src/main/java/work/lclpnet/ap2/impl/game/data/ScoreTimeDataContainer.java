@@ -2,13 +2,13 @@ package work.lclpnet.ap2.impl.game.data;
 
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
-import net.minecraft.server.network.ServerPlayerEntity;
 import org.jetbrains.annotations.NotNull;
 import work.lclpnet.ap2.api.event.IntScoreEvent;
 import work.lclpnet.ap2.api.event.IntScoreEventSource;
 import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.game.data.DataEntry;
-import work.lclpnet.ap2.api.game.data.PlayerRef;
+import work.lclpnet.ap2.api.game.data.SubjectRef;
+import work.lclpnet.ap2.api.game.data.SubjectRefFactory;
 import work.lclpnet.ap2.impl.game.data.entry.ScoreDataEntry;
 import work.lclpnet.ap2.impl.game.data.entry.ScoreTimeDataEntry;
 import work.lclpnet.ap2.impl.game.data.entry.ScoreView;
@@ -17,96 +17,101 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class ScoreTimeDataContainer implements DataContainer, IntScoreEventSource {
+public class ScoreTimeDataContainer<T, Ref extends SubjectRef> implements DataContainer<T, Ref>, IntScoreEventSource<T> {
 
-    private final Object2IntMap<PlayerRef> score = new Object2IntOpenHashMap<>();
-    private final LinkedHashSet<UUID> lastModified = new LinkedHashSet<>();
-    private final List<IntScoreEvent> listeners = new ArrayList<>();
+    private final SubjectRefFactory<T, Ref> refs;
+    private final Object2IntMap<Ref> score = new Object2IntOpenHashMap<>();
+    private final LinkedHashSet<Ref> lastModified = new LinkedHashSet<>();
+    private final List<IntScoreEvent<T>> listeners = new ArrayList<>();
 
     private boolean frozen = false;
 
-    public void setScore(ServerPlayerEntity player, int score) {
-        synchronized (this) {
-            if (frozen) return;
-            this.score.put(PlayerRef.create(player), score);
-            touchInternal(player);
-        }
-
-        listeners.forEach(listener -> listener.accept(player, score));
+    public ScoreTimeDataContainer(SubjectRefFactory<T, Ref> refs) {
+        this.refs = refs;
     }
 
-    public void addScore(ServerPlayerEntity player, int add) {
+    public void setScore(T subject, int score) {
+        synchronized (this) {
+            if (frozen) return;
+            this.score.put(refs.create(subject), score);
+            touchInternal(subject);
+        }
+
+        listeners.forEach(listener -> listener.accept(subject, score));
+    }
+
+    public void addScore(T subject, int add) {
         int score;
 
         synchronized (this) {
             if (frozen) return;
-            PlayerRef key = PlayerRef.create(player);
-            score = this.score.computeIfAbsent(key, playerRef -> 0) + add;
+            Ref key = refs.create(subject);
+            score = this.score.computeIfAbsent(key, ref -> 0) + add;
             this.score.put(key, score);
-            touchInternal(player);
+            touchInternal(subject);
         }
 
-        listeners.forEach(listener -> listener.accept(player, score));
+        listeners.forEach(listener -> listener.accept(subject, score));
     }
 
-    public int getScore(ServerPlayerEntity player) {
+    public int getScore(T subject) {
         synchronized (this) {
-            return score.computeIfAbsent(PlayerRef.create(player), playerRef -> 0);
+            return score.computeIfAbsent(refs.create(subject), ref -> 0);
         }
     }
 
     // requires external synchronization
-    private void touchInternal(ServerPlayerEntity player) {
-        UUID uuid = player.getUuid();
+    private void touchInternal(T subject) {
+        Ref ref = refs.create(subject);
 
-        lastModified.remove(uuid);
-        lastModified.add(uuid);
+        lastModified.remove(ref);
+        lastModified.add(ref);
     }
 
     @Override
-    public void delete(ServerPlayerEntity player) {
+    public void delete(T subject) {
         synchronized (this) {
             if (frozen) return;
-            score.removeInt(PlayerRef.create(player));
+            score.removeInt(refs.create(subject));
         }
     }
 
     @Override
-    public DataEntry getEntry(ServerPlayerEntity player) {
-        PlayerRef ref = PlayerRef.create(player);
+    public DataEntry<Ref> getEntry(T subject) {
+        Ref ref = refs.create(subject);
 
-        return getEntry(ref);
+        return getEntry0(ref);
     }
 
     @NotNull
-    private DataEntry getEntry(PlayerRef ref) {
+    private DataEntry<Ref> getEntry0(Ref ref) {
         synchronized (this) {
             int score = this.score.getInt(ref);
             int ranking = getTimedRanking0(ref);
 
             if (ranking == 0) {
-                return new ScoreDataEntry(ref, score);
+                return new ScoreDataEntry<>(ref, score);
             }
 
-            return new ScoreTimeDataEntry(ref, score, ranking);
+            return new ScoreTimeDataEntry<>(ref, score, ranking);
         }
     }
 
     @Override
-    public Stream<? extends DataEntry> orderedEntries() {
+    public Stream<? extends DataEntry<Ref>> orderedEntries() {
         return score.object2IntEntrySet().stream()
                 .map(e -> {
-                    PlayerRef ref = e.getKey();
+                    Ref ref = e.getKey();
                     int ranking = getTimedRanking(ref);
 
                     if (ranking == 0) {
-                        return new ScoreDataEntry(ref, e.getIntValue());
+                        return new ScoreDataEntry<>(ref, e.getIntValue());
                     }
 
-                    return new ScoreTimeDataEntry(ref, e.getIntValue(), ranking);
+                    return new ScoreTimeDataEntry<>(ref, e.getIntValue(), ranking);
                 })
                 .sorted(Comparator.comparingInt(ScoreView::score).reversed().thenComparingInt(x -> {
-                    if (x instanceof ScoreTimeDataEntry scoreTime) {
+                    if (x instanceof ScoreTimeDataEntry<?> scoreTime) {
                         return scoreTime.ranking();
                     }
 
@@ -115,39 +120,36 @@ public class ScoreTimeDataContainer implements DataContainer, IntScoreEventSourc
     }
 
     /**
-     * Get the ranking among players with the same score.
-     * @param ref The player reference.
+     * Get the ranking among subjects with the same score.
+     * @param ref The subject reference.
      * @return The ranking, or 0 if the score is unique.
      */
-    private int getTimedRanking(PlayerRef ref) {
+    private int getTimedRanking(Ref ref) {
         synchronized (this) {
             return getTimedRanking0(ref);
         }
     }
 
     // requires external synchronization
-    private int getTimedRanking0(PlayerRef ref) {
-        int playerScore = score.getInt(ref);
+    private int getTimedRanking0(Ref ref) {
+        int subjectScore = score.getInt(ref);
 
         var sameScore = score.object2IntEntrySet().stream()
-                .filter(e -> e.getIntValue() == playerScore)
+                .filter(e -> e.getIntValue() == subjectScore)
                 .map(Map.Entry::getKey)
-                .map(PlayerRef::uuid)
                 .collect(Collectors.toSet());
 
         if (sameScore.size() <= 1) {
-            // there is only one player who has this score
+            // there is only one subject who has this score
             return 0;
         }
 
         int rank = 1;
 
-        UUID playerUuid = ref.uuid();
+        for (Ref other : lastModified) {
+            if (!sameScore.contains(other)) continue;
 
-        for (UUID uuid : lastModified) {
-            if (!sameScore.contains(uuid)) continue;
-
-            if (uuid.equals(playerUuid)) break;
+            if (other.equals(ref)) break;
 
             rank++;
         }
@@ -163,12 +165,12 @@ public class ScoreTimeDataContainer implements DataContainer, IntScoreEventSourc
     }
 
     @Override
-    public void ensureTracked(ServerPlayerEntity player) {
-        addScore(player, 0);
+    public void ensureTracked(T subject) {
+        addScore(subject, 0);
     }
 
     @Override
-    public void register(IntScoreEvent listener) {
+    public void register(IntScoreEvent<T> listener) {
         listeners.add(Objects.requireNonNull(listener));
     }
 }
