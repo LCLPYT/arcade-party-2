@@ -93,5 +93,13 @@
   "game.ap2.cozy_campfire.task": "Brennstoff-Vorrat %s",
   "game.ap2.cozy_campfire.base_of": "Basis von %s",
   "game.ap2.cozy_campfire.time": "%d:%02d",
-  "game.ap2.cozy_campfire.fuel_added": "+ %.2f Sekunden"
+  "game.ap2.cozy_campfire.fuel_added": "+ %.2f Sekunden",
+  "game.ap2.mining_battle": "Erzfieber",
+  "game.ap2.mining_battle.description": "Baue möglichst viele Erze ab, um am meisten Punkte zu bekommen. Es gibt auch spezielle Blöcke mit extra Effekten.",
+  "game.ap2.mining_battle.task": "Baue Erz ab",
+  "game.ap2.mining_battle.weakened": "Du hast die anderen Spieler geschwächt!",
+  "game.ap2.mining_battle.weakened_by": "%s hat dich geschwächt!",
+  "game.ap2.mining_battle.haste": "Du hast den Statuseffekt Eile erhalten!",
+  "game.ap2.mining_battle.gain_point": "+%s Punkt (%s)",
+  "game.ap2.mining_battle.gain_points": "+%s Punkte (%s)"
 }
