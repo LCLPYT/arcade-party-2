@@ -59,7 +59,7 @@ public class MiningBattleOre {
         registerOre(DIAMOND_BLOCK, 5, 0.005f);
         registerOre(RAW_GOLD_BLOCK, 5, 0.005f);
         registerOre(AMETHYST_BLOCK, 0, 0.003F);
-        registerOre(POLISHED_GRANITE, 0, 0.005F);
+        registerOre(POLISHED_GRANITE, 0, 0.009F);
         registerOre(TNT, 0, 0.005F);
     }
 

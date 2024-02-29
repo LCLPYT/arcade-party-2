@@ -114,7 +114,9 @@ public class MiningBattleInstance extends DefaultGameInstance {
 
         String key = points == 1 ? "game.ap2.mining_battle.gain_point" : "game.ap2.mining_battle.gain_points";
 
-        var msg = gameHandle.getTranslations().translateText(player, key, styled(points, Formatting.YELLOW))
+        var msg = gameHandle.getTranslations().translateText(player, key,
+                        styled(points, Formatting.YELLOW),
+                        styled(data.getScore(player), Formatting.AQUA))
                 .formatted(Formatting.GREEN);
 
         player.sendMessage(msg, true);

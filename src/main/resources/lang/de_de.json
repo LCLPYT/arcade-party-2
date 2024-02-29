@@ -100,6 +100,6 @@
   "game.ap2.mining_battle.weakened": "Du hast die anderen Spieler geschwächt!",
   "game.ap2.mining_battle.weakened_by": "%s hat dich geschwächt!",
   "game.ap2.mining_battle.haste": "Du hast den Statuseffekt Eile erhalten!",
-  "game.ap2.mining_battle.gain_point": "+%s Punkt",
-  "game.ap2.mining_battle.gain_points": "+%s Punkte"
+  "game.ap2.mining_battle.gain_point": "+%s Punkt (%s)",
+  "game.ap2.mining_battle.gain_points": "+%s Punkte (%s)"
 }

@@ -100,6 +100,6 @@
   "game.ap2.mining_battle.weakened": "You weakened the other players!",
   "game.ap2.mining_battle.weakened_by": "%s has weakened you!",
   "game.ap2.mining_battle.haste": "You gained the haste status effect!",
-  "game.ap2.mining_battle.gain_point": "+%s point",
-  "game.ap2.mining_battle.gain_points": "+%s points"
+  "game.ap2.mining_battle.gain_point": "+%s point (%s)",
+  "game.ap2.mining_battle.gain_points": "+%s points (%s)"
 }
