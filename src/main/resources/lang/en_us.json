@@ -101,5 +101,8 @@
   "game.ap2.mining_battle.weakened_by": "%s has weakened you!",
   "game.ap2.mining_battle.haste": "You gained the haste status effect!",
   "game.ap2.mining_battle.gain_point": "+%s point (%s)",
-  "game.ap2.mining_battle.gain_points": "+%s points (%s)"
+  "game.ap2.mining_battle.gain_points": "+%s points (%s)",
+  "game.ap2.knockout": "Knockout",
+  "game.ap2.knockout.description": "Punch your enemies into the void. The knock-back gets increasingly stronger the more a player is hit.",
+  "game.ap2.knockout.charge": "Charge: %s"
 }

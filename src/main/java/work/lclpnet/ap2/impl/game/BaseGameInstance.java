@@ -11,22 +11,17 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.GameMode;
-import net.minecraft.world.border.WorldBorder;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
-import org.json.JSONObject;
 import org.slf4j.Logger;
-import work.lclpnet.ap2.api.base.WorldBorderManager;
 import work.lclpnet.ap2.api.game.GameInfo;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.MiniGameInstance;
 import work.lclpnet.ap2.api.map.MapFacade;
 import work.lclpnet.ap2.base.ArcadeParty;
-import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedPlayerBossBar;
 import work.lclpnet.ap2.impl.util.effect.ApEffect;
 import work.lclpnet.ap2.impl.util.effect.ApEffects;
-import work.lclpnet.ap2.impl.util.math.Vec2i;
 import work.lclpnet.combatctl.api.CombatStyle;
 import work.lclpnet.kibu.hook.entity.EntityHealthCallback;
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks;
@@ -184,35 +179,6 @@ public abstract class BaseGameInstance implements MiniGameInstance {
         gameHandle.getPlayerUtil().setDefaultCombatStyle(CombatStyle.OLD);
     }
 
-    protected final WorldBorder useWorldBorder() {
-        if (!(getMap().getProperty("world-border") instanceof JSONObject wbConfig)) {
-            throw new IllegalStateException("Object property \"world-border\" not set in map properties");
-        }
-
-        int centerX = 0, centerZ = 0;
-
-        if (wbConfig.has("center")) {
-            Vec2i center = MapUtil.readVec2i(wbConfig.getJSONArray("center"));
-
-            centerX = center.x();
-            centerZ = center.z();
-        }
-
-        int radius = wbConfig.getInt("size");
-        if (radius % 2 == 0) radius += 1;
-
-        WorldBorderManager manager = gameHandle.getWorldBorderManager();
-        manager.setupWorldBorder(getWorld());
-
-        WorldBorder worldBorder = gameHandle.getWorldBorderManager().getWorldBorder();
-        worldBorder.setCenter(centerX + 0.5, centerZ + 0.5);
-        worldBorder.setSize(radius);
-        worldBorder.setSafeZone(0);
-        worldBorder.setDamagePerBlock(0.8);
-
-        return worldBorder;
-    }
-
     /**
      * Disables any form of healing. Damage is still allowed.
      */
@@ -268,7 +234,7 @@ public abstract class BaseGameInstance implements MiniGameInstance {
         synchronized (this) {
             if (commons != null) return commons;
 
-            commons = new GameCommons(gameHandle, getMap());
+            commons = new GameCommons(gameHandle, getMap(), getWorld());
         }
 
         return commons;

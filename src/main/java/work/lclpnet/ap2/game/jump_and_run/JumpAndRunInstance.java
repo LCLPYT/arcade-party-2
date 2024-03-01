@@ -43,6 +43,7 @@ import work.lclpnet.kibu.hook.player.PlayerMoveCallback;
 import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.translate.TranslationService;
+import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 import work.lclpnet.lobby.game.map.GameMap;
 
 import java.util.ArrayList;
@@ -136,6 +137,11 @@ public class JumpAndRunInstance extends DefaultGameInstance {
     @Override
     protected void ready() {
         openGate();
+
+        gameHandle.protect(config -> config.allow(ProtectionTypes.USE_BLOCK, (entity, pos) -> {
+            BlockState state = entity.getWorld().getBlockState(pos);
+            return state.isOf(Blocks.SHULKER_BOX);
+        }));
 
         Participants participants = gameHandle.getParticipants();
         HookRegistrar hooks = gameHandle.getHookRegistrar();
