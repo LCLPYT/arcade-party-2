@@ -17,8 +17,11 @@ import org.slf4j.Logger;
 import work.lclpnet.ap2.api.game.GameInfo;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.MiniGameInstance;
+import work.lclpnet.ap2.api.map.MapBootstrap;
+import work.lclpnet.ap2.api.map.MapBootstrapFunction;
 import work.lclpnet.ap2.api.map.MapFacade;
 import work.lclpnet.ap2.base.ArcadeParty;
+import work.lclpnet.ap2.impl.map.AsyncMapBootstrap;
 import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedPlayerBossBar;
 import work.lclpnet.ap2.impl.util.effect.ApEffect;
 import work.lclpnet.ap2.impl.util.effect.ApEffects;
@@ -35,8 +38,6 @@ import work.lclpnet.kibu.translate.bossbar.TranslatedBossBar;
 import work.lclpnet.lobby.game.api.WorldFacade;
 import work.lclpnet.lobby.game.map.GameMap;
 import work.lclpnet.lobby.game.util.ProtectorUtils;
-
-import java.util.concurrent.CompletableFuture;
 
 import static net.minecraft.util.Formatting.RED;
 
@@ -71,14 +72,23 @@ public abstract class BaseGameInstance implements MiniGameInstance {
         MapFacade mapFacade = gameHandle.getMapFacade();
         Identifier gameId = gameHandle.getGameInfo().getId();
 
-        mapFacade.openRandomMap(gameId, new BootstrapMapOptions(this::createWorldBootstrap), this::onMapReady);
+        MapBootstrap bootstrap = getMapBootstrap();
+        mapFacade.openRandomMap(gameId, new BootstrapMapOptions(bootstrap::createWorldBootstrap), this::onMapReady);
     }
 
-    protected CompletableFuture<Void> createWorldBootstrap(ServerWorld world, GameMap map) {
-        return CompletableFuture.runAsync(() -> bootstrapWorld(world, map));
-    }
+    protected MapBootstrap getMapBootstrap() {
+        // if a child class implements the MapBootstrap interface directly
+        if (this instanceof MapBootstrap bootstrap) {
+            return bootstrap;
+        }
 
-    protected void bootstrapWorld(ServerWorld world, GameMap map) {}
+        // if a child class implements the MapBootstrapFunction interface
+        if (this instanceof MapBootstrapFunction fun) {
+            return new AsyncMapBootstrap(fun);
+        }
+
+        return MapBootstrap.NONE;
+    }
 
     protected void onMapReady(ServerWorld world, GameMap map) {
         this.world = world;

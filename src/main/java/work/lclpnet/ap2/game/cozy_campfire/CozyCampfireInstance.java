@@ -17,6 +17,7 @@ import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.team.Team;
 import work.lclpnet.ap2.api.game.team.TeamKey;
 import work.lclpnet.ap2.api.game.team.TeamManager;
+import work.lclpnet.ap2.api.map.MapBootstrapFunction;
 import work.lclpnet.ap2.api.util.CollisionDetector;
 import work.lclpnet.ap2.game.cozy_campfire.setup.*;
 import work.lclpnet.ap2.impl.game.TeamEliminationGameInstance;
@@ -35,7 +36,7 @@ import java.util.Set;
 
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
-public class CozyCampfireInstance extends TeamEliminationGameInstance {
+public class CozyCampfireInstance extends TeamEliminationGameInstance implements MapBootstrapFunction {
 
     private static final float DAY_TIME_CHANCE = 0.25f, CLEAR_WEATHER_CHANCE = 0.6f, THUNDER_CHANCE = 0.05f;
     public static final TeamKey TEAM_RED = ApTeamKeys.RED, TEAM_BLUE = ApTeamKeys.BLUE;
@@ -60,7 +61,7 @@ public class CozyCampfireInstance extends TeamEliminationGameInstance {
     }
 
     @Override
-    protected void bootstrapWorld(ServerWorld world, GameMap map) {
+    public void bootstrapWorld(ServerWorld world, GameMap map) {
         setupGameRules(world);
         randomizeWorldConditions(world);
     }

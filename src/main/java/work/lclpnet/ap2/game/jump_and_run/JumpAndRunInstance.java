@@ -25,6 +25,7 @@ import net.minecraft.world.GameRules;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
+import work.lclpnet.ap2.api.map.MapBootstrap;
 import work.lclpnet.ap2.api.util.CollisionDetector;
 import work.lclpnet.ap2.game.jump_and_run.gen.*;
 import work.lclpnet.ap2.impl.game.DefaultGameInstance;
@@ -54,7 +55,7 @@ import static net.minecraft.util.Formatting.BOLD;
 import static net.minecraft.util.Formatting.YELLOW;
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
-public class JumpAndRunInstance extends DefaultGameInstance {
+public class JumpAndRunInstance extends DefaultGameInstance implements MapBootstrap {
 
     private static final int ASSISTANCE_TICKS_BASE = Ticks.seconds(90);  // time after which assistance is provided
     private static final float TARGET_MINUTES = 4.0f;  // target completion time of the jump and run (approximate)
@@ -78,7 +79,7 @@ public class JumpAndRunInstance extends DefaultGameInstance {
     }
 
     @Override
-    protected CompletableFuture<Void> createWorldBootstrap(ServerWorld world, GameMap map) {
+    public CompletableFuture<Void> createWorldBootstrap(ServerWorld world, GameMap map) {
         world.setTimeOfDay(4000);
 
         JumpAndRunSetup setup = new JumpAndRunSetup(gameHandle, map, world, TARGET_MINUTES);
