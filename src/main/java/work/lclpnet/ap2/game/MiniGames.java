@@ -8,6 +8,7 @@ import work.lclpnet.ap2.game.cozy_campfire.CozyCampfireMiniGame;
 import work.lclpnet.ap2.game.fine_tuning.FineTuningMiniGame;
 import work.lclpnet.ap2.game.hot_potato.HotPotatoMiniGame;
 import work.lclpnet.ap2.game.jump_and_run.JumpAndRunMiniGame;
+import work.lclpnet.ap2.game.knockout.KnockoutMiniGame;
 import work.lclpnet.ap2.game.mining_battle.MiningBattleMiniGame;
 import work.lclpnet.ap2.game.mirror_hop.MirrorHopMiniGame;
 import work.lclpnet.ap2.game.one_in_the_chamber.OneInTheChamberMiniGame;
@@ -39,5 +40,6 @@ public class MiniGames {
         games.add(new BlockDissolveMiniGame());
         games.add(new CozyCampfireMiniGame());
         games.add(new MiningBattleMiniGame());
+        games.add(new KnockoutMiniGame());
     }
 }

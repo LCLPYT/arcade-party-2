@@ -1,6 +1,5 @@
 package work.lclpnet.ap2.game.spleef;
 
-import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.damage.DamageTypes;
@@ -14,7 +13,6 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-import net.minecraft.world.border.WorldBorder;
 import org.json.JSONArray;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.impl.game.EliminationGameInstance;
@@ -23,7 +21,6 @@ import work.lclpnet.ap2.impl.util.SoundHelper;
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
 import work.lclpnet.kibu.inv.item.ItemStackUtil;
 import work.lclpnet.kibu.scheduler.Ticks;
-import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 
@@ -65,22 +62,8 @@ public class SpleefInstance extends EliminationGameInstance {
 
         giveShovelsToPlayers(translations);
 
-        scheduleSuddenDeath();
-    }
-
-    private void scheduleSuddenDeath() {
-        TaskScheduler scheduler = gameHandle.getGameScheduler();
-
-        scheduler.timeout(() -> {
-            WorldBorder worldBorder = useWorldBorder();
-            worldBorder.interpolateSize(worldBorder.getSize(), 1, WORLD_BORDER_TIME * 50L);
-
-            for (ServerPlayerEntity player : PlayerLookup.world(getWorld())) {
-                player.playSound(SoundEvents.ENTITY_WITHER_DEATH, SoundCategory.HOSTILE, 1, 0);
-            }
-        }, WORLD_BORDER_DELAY);
-
-        scheduler.timeout(this::removeBlocks, WORLD_BORDER_DELAY + WORLD_BORDER_TIME + Ticks.seconds(5));
+        commons().scheduleWorldBorderShrink(WORLD_BORDER_DELAY, WORLD_BORDER_TIME, Ticks.seconds(5))
+                .then(this::removeBlocks);
     }
 
     private void removeBlocks() {

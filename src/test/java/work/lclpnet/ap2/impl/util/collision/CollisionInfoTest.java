@@ -4,6 +4,8 @@ import org.junit.jupiter.api.Test;
 import work.lclpnet.ap2.api.util.Collider;
 
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -110,9 +112,10 @@ class CollisionInfoTest {
         bar.add(c);
         bar.add(d);
 
-        var diff = StreamSupport.stream(foo.diff(bar).spliterator(), false).toList();
+        var diff = StreamSupport.stream(foo.diff(bar).spliterator(), false)
+                .collect(Collectors.toSet());  // order is undefined, only check elements
 
-        assertEquals(List.of(a, b), diff);
+        assertEquals(Set.of(a, b), diff);
     }
 
     @Test

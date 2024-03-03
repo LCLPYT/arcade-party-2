@@ -5,6 +5,7 @@ import net.minecraft.server.world.ServerWorld;
 import org.json.JSONArray;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
+import work.lclpnet.ap2.api.map.MapBootstrap;
 import work.lclpnet.ap2.impl.game.DefaultGameInstance;
 import work.lclpnet.ap2.impl.game.data.ScoreTimeDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
@@ -15,7 +16,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
-public class FineTuningInstance extends DefaultGameInstance {
+public class FineTuningInstance extends DefaultGameInstance implements MapBootstrap {
 
     static final int MELODY_COUNT = 3;
     static final int REPLAY_COOLDOWN = Ticks.seconds(5);
@@ -35,7 +36,7 @@ public class FineTuningInstance extends DefaultGameInstance {
     }
 
     @Override
-    protected CompletableFuture<Void> createWorldBootstrap(ServerWorld world, GameMap gameMap) {
+    public CompletableFuture<Void> createWorldBootstrap(ServerWorld world, GameMap gameMap) {
         setup = new FineTuningSetup(gameHandle, gameMap, world);
         return setup.createRooms();
     }

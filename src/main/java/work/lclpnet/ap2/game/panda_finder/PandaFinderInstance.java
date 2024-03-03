@@ -153,7 +153,7 @@ public class PandaFinderInstance extends DefaultGameInstance {
             return bounds.contains(x, y, z) && !exclude.contains(x, y, z);
         });
 
-        AdjacentBlocks adjacent = new SimpleAdjacentBlocks(predicate);
+        AdjacentBlocks adjacent = new SimpleAdjacentBlocks(predicate, 1);
         WorldScanner scanner = new BfsWorldScanner(adjacent);
 
         SizedSpaceFinder spaceFinder = SizedSpaceFinder.create(world, EntityType.PANDA);

@@ -1,9 +1,6 @@
 package work.lclpnet.ap2.game.mining_battle;
 
-import it.unimi.dsi.fastutil.longs.LongArrayList;
-import it.unimi.dsi.fastutil.longs.LongList;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
-import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.boss.BossBar;
@@ -16,15 +13,17 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
 import net.minecraft.world.GameRules;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
+import work.lclpnet.ap2.api.map.MapBootstrap;
+import work.lclpnet.ap2.api.map.MapBootstrapFunction;
 import work.lclpnet.ap2.impl.game.DefaultGameInstance;
 import work.lclpnet.ap2.impl.game.data.ScoreTimeDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.map.MapUtil;
+import work.lclpnet.ap2.impl.map.ServerThreadMapBootstrap;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.TextUtil;
 import work.lclpnet.kibu.hook.world.BlockModificationHooks;
@@ -42,7 +41,7 @@ import java.util.Set;
 
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
-public class MiningBattleInstance extends DefaultGameInstance {
+public class MiningBattleInstance extends DefaultGameInstance implements MapBootstrapFunction {
 
     private static final int DURATION_SECONDS = 60;
     private final ScoreTimeDataContainer<ServerPlayerEntity, PlayerRef> data = new ScoreTimeDataContainer<>(PlayerRef::create);
@@ -59,13 +58,19 @@ public class MiningBattleInstance extends DefaultGameInstance {
     }
 
     @Override
-    protected void bootstrapWorld(ServerWorld world, GameMap map) {
+    protected MapBootstrap getMapBootstrap() {
+        // run the bootstrap on the server thread, because the scanWorld method of the ore generator will run faster
+        return new ServerThreadMapBootstrap(this);
+    }
+
+    @Override
+    public void bootstrapWorld(ServerWorld world, GameMap map) {
         GameRules gameRules = world.getGameRules();
         MinecraftServer server = gameHandle.getServer();
 
         gameRules.get(GameRules.DO_TILE_DROPS).set(false, server);
 
-        generateOre(world, map);
+        placeOres(world, map);
     }
 
     @Override
@@ -107,6 +112,17 @@ public class MiningBattleInstance extends DefaultGameInstance {
         timer.start(gameHandle.getBossBarProvider(), gameHandle.getGameScheduler());
 
         timer.whenDone(this::onTimerDone);
+    }
+
+    private void placeOres(ServerWorld world, GameMap map) {
+        ore.init();
+
+        box = MapUtil.readBox(map.requireProperty("mining-box"));
+
+        material.clear();
+        MapUtil.readBlockStates(map.requireProperty("material"), material, gameHandle.getLogger());
+
+        new MiningBattleGenerator(ore, box, material).generateOre(world);
     }
 
     private void onGainPoints(ServerPlayerEntity player, int points) {
@@ -151,51 +167,6 @@ public class MiningBattleInstance extends DefaultGameInstance {
 
             player.getInventory().setStack(4, pickaxe);
         }
-    }
-
-    private void generateOre(ServerWorld world, GameMap map) {
-        ore.init();
-
-        box = MapUtil.readBox(map.requireProperty("mining-box"));
-
-        material.clear();
-        MapUtil.readBlockStates(map.requireProperty("material"), material, gameHandle.getLogger());
-
-        var rel = new BlockPos.Mutable();
-
-        LongList positions = new LongArrayList();
-
-        for (BlockPos pos : box) {
-            BlockState state = world.getBlockState(pos);
-
-            if (!material.contains(state) || isExposed(world, pos, rel)) continue;
-
-            positions.add(pos.asLong());
-        }
-
-        for (long packed : positions) {
-            BlockState newState = ore.getRandomState();
-
-            if (newState == null) continue;
-
-            rel.set(BlockPos.unpackLongX(packed), BlockPos.unpackLongY(packed), BlockPos.unpackLongZ(packed));
-
-            world.setBlockState(rel, newState, Block.FORCE_STATE | Block.SKIP_DROPS);
-        }
-    }
-
-    private boolean isExposed(ServerWorld world, BlockPos pos, BlockPos.Mutable rel) {
-        final int x = pos.getX(), y = pos.getY(), z = pos.getZ();
-
-        for (Direction dir : Direction.values()) {
-            rel.set(x + dir.getOffsetX(), y + dir.getOffsetY(), z + dir.getOffsetZ());
-
-            BlockState state = world.getBlockState(rel);
-
-            if (!state.isOpaqueFullCube(world, rel)) return true;
-        }
-
-        return false;
     }
 
     private boolean isOutsideMiningArea(BlockPos pos) {

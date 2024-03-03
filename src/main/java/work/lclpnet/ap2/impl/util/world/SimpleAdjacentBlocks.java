@@ -15,9 +15,11 @@ import java.util.Iterator;
 public class SimpleAdjacentBlocks implements AdjacentBlocks {
 
     private final BlockPredicate predicate;
+    private final int verticalStep;
 
-    public SimpleAdjacentBlocks(BlockPredicate predicate) {
+    public SimpleAdjacentBlocks(BlockPredicate predicate, int verticalStep) {
         this.predicate = predicate;
+        this.verticalStep = verticalStep;
     }
 
     @Override
@@ -77,11 +79,15 @@ public class SimpleAdjacentBlocks implements AdjacentBlocks {
             private boolean invalid() {
                 if (predicate.test(current)) return false;
 
-                current.setY(y + 1);
-                if (predicate.test(current)) return false;
+                for (int j = 1; j <= verticalStep; j++) {
+                    current.setY(y + j);
+                    if (predicate.test(current)) return false;
 
-                current.setY(y - 1);
-                return !predicate.test(current);
+                    current.setY(y - j);
+                    if (predicate.test(current)) return false;
+                }
+
+                return true;
             }
         };
     }

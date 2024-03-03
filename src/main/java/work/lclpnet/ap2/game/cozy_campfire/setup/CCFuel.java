@@ -40,7 +40,7 @@ public class CCFuel {
 
         // custom materials
         addFuel(ItemTags.LEAVES, 50);
-        addFuel(ItemTags.BEDS, 400);
+        addFuel(ItemTags.BEDS, 2200);
         fuel.put(Items.VINE, 40);
         fuel.put(Items.BEEHIVE, 250);
         fuel.put(Items.BOOKSHELF, 400);
