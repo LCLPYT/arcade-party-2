@@ -17,6 +17,7 @@ import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.impl.game.EliminationGameInstance;
 import work.lclpnet.kibu.access.VelocityModifier;
 import work.lclpnet.kibu.hook.entity.EntityDamageCallback;
+import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 
 import java.util.UUID;
@@ -27,6 +28,7 @@ public class KnockoutInstance extends EliminationGameInstance {
 
     private static final double CHARGE_INCREMENT = 0.075, CRITICAL_THRESHOLD = 2.5;
     private final Object2DoubleMap<UUID> charge = new Object2DoubleArrayMap<>();
+    private KnockoutWorldCrumble crumble = null;
 
     public KnockoutInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
@@ -37,6 +39,9 @@ public class KnockoutInstance extends EliminationGameInstance {
     @Override
     protected void prepare() {
         commons().whenBelowCriticalHeight().then(this::eliminate);
+
+        crumble = new KnockoutWorldCrumble(getWorld(), getMap());
+        crumble.init();
     }
 
     @Override
@@ -52,6 +57,13 @@ public class KnockoutInstance extends EliminationGameInstance {
 
             return false;
         });
+
+        int delaySeconds = crumble.getDelaySeconds();
+        gameHandle.getGameScheduler().timeout(this::beginCrumble, Ticks.seconds(delaySeconds));
+    }
+
+    private void beginCrumble() {
+        crumble.start(gameHandle.getGameScheduler());
     }
 
     private boolean canDamage(Entity entity, DamageSource source) {
