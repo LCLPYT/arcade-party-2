@@ -2,6 +2,7 @@ package work.lclpnet.ap2.impl.game;
 
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
+import net.minecraft.entity.attribute.EntityAttributeInstance;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.player.PlayerAbilities;
 import net.minecraft.item.ItemStack;
@@ -116,7 +117,7 @@ public class PlayerUtil {
 
         PlayerAbilities abilities = player.getAbilities();
         abilities.setFlySpeed(0.05f);
-        abilities.setWalkSpeed(0.1f);
+        modifyWalkSpeed(player, 0.1f, false);
 
         switch (state) {
             case DEFAULT -> {
@@ -134,9 +135,29 @@ public class PlayerUtil {
             }
         }
 
+        player.sendAbilitiesUpdate();
+
         effects.forEach(effect -> effect.apply(player));
 
         combatControl.setStyle(player, defaultCombatStyle);
+    }
+
+    public static void modifyWalkSpeed(ServerPlayerEntity player, float value) {
+        modifyWalkSpeed(player, value, true);
+    }
+
+    public static void modifyWalkSpeed(ServerPlayerEntity player, float value, boolean update) {
+        player.getAbilities().setWalkSpeed(value);
+
+        EntityAttributeInstance attribute = player.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED);
+
+        if (attribute != null) {
+            attribute.setBaseValue(value);
+        }
+
+        if (update) {
+            player.sendAbilitiesUpdate();
+        }
     }
 
     public void resetToDefaults() {

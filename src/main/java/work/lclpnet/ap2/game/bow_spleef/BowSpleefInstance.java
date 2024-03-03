@@ -1,6 +1,5 @@
 package work.lclpnet.ap2.game.bow_spleef;
 
-import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.enchantment.Enchantments;
@@ -16,7 +15,6 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.border.WorldBorder;
 import org.json.JSONArray;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.impl.game.EliminationGameInstance;
@@ -30,7 +28,6 @@ import work.lclpnet.kibu.hook.world.BlockBreakParticleCallback;
 import work.lclpnet.kibu.inv.item.ItemStackUtil;
 import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 import work.lclpnet.kibu.scheduler.Ticks;
-import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 
@@ -86,7 +83,9 @@ public class BowSpleefInstance extends EliminationGameInstance {
         TranslationService translations = gameHandle.getTranslations();
 
         giveBowsToPlayers(translations);
-        scheduleSuddenDeath();
+
+        commons().scheduleWorldBorderShrink(WORLD_BORDER_DELAY, WORLD_BORDER_TIME, Ticks.seconds(5))
+                .then(this::removeBlocksUnder);
     }
 
     private void giveBowsToPlayers(TranslationService translations) {
@@ -126,21 +125,6 @@ public class BowSpleefInstance extends EliminationGameInstance {
         world.spawnParticles(ParticleTypes.ELECTRIC_SPARK, cx, y, cz, 60, 1, 0.6, 1, 0.01);
         world.spawnParticles(ParticleTypes.FLAME, cx, y, cz, 30, 1, 0.6, 1, 0.04);
         world.playSound(null, x, y, z, SoundEvents.ENTITY_DRAGON_FIREBALL_EXPLODE, SoundCategory.AMBIENT, 0.12f, 0f);
-    }
-
-    private void scheduleSuddenDeath() {
-        TaskScheduler scheduler = gameHandle.getGameScheduler();
-
-        scheduler.timeout(() -> {
-            WorldBorder worldBorder = useWorldBorder();
-            worldBorder.interpolateSize(worldBorder.getSize(), 5, WORLD_BORDER_TIME * 50L);
-
-            for (ServerPlayerEntity player : PlayerLookup.world(getWorld())) {
-                player.playSound(SoundEvents.ENTITY_WITHER_DEATH, SoundCategory.HOSTILE, 1, 0);
-            }
-        }, WORLD_BORDER_DELAY);
-
-        scheduler.timeout(this::removeBlocksUnder, WORLD_BORDER_DELAY + WORLD_BORDER_TIME + Ticks.seconds(5));
     }
 
     private void removeBlocksUnder() {

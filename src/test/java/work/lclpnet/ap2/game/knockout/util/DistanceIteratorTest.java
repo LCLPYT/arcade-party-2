@@ -1,0 +1,64 @@
+package work.lclpnet.ap2.game.knockout.util;
+
+import net.minecraft.util.math.BlockPos;
+import org.junit.jupiter.api.Test;
+
+import java.util.ArrayList;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+class DistanceIteratorTest {
+
+    @Test
+    void distanceIterator() {
+        short[][] distances = new short[][] {
+                {3, 2, 2, 2, 3},
+                {2, 1, 1, 1, 2},
+                {2, 1, 0, 1, 2},
+                {2, 1, 1, 1, 2},
+                {3, 2, 2, 2, 3}
+        };
+
+        var it = new DistanceIterator(2, 0, 0, 0, 1, distances, 2);
+
+        var list = new ArrayList<BlockPos>(24);
+
+        while (it.hasNext()) {
+            list.add(it.next().toImmutable());
+        }
+
+        assertEquals(24, list.size());
+
+        var expected = new ArrayList<BlockPos>(24);
+        expected.add(new BlockPos(-1, 0, -2));
+        expected.add(new BlockPos(-1, 1, -2));
+        expected.add(new BlockPos(0, 0, -2));
+        expected.add(new BlockPos(0, 1, -2));
+        expected.add(new BlockPos(1, 0, -2));
+        expected.add(new BlockPos(1, 1, -2));
+
+        expected.add(new BlockPos(-2, 0, -1));
+        expected.add(new BlockPos(-2, 1, -1));
+        expected.add(new BlockPos(2, 0, -1));
+        expected.add(new BlockPos(2, 1, -1));
+
+        expected.add(new BlockPos(-2, 0, 0));
+        expected.add(new BlockPos(-2, 1, 0));
+        expected.add(new BlockPos(2, 0, 0));
+        expected.add(new BlockPos(2, 1, 0));
+
+        expected.add(new BlockPos(-2, 0, 1));
+        expected.add(new BlockPos(-2, 1, 1));
+        expected.add(new BlockPos(2, 0, 1));
+        expected.add(new BlockPos(2, 1, 1));
+
+        expected.add(new BlockPos(-1, 0, 2));
+        expected.add(new BlockPos(-1, 1, 2));
+        expected.add(new BlockPos(0, 0, 2));
+        expected.add(new BlockPos(0, 1, 2));
+        expected.add(new BlockPos(1, 0, 2));
+        expected.add(new BlockPos(1, 1, 2));
+
+        assertEquals(expected, list);
+    }
+}
