@@ -1,6 +1,9 @@
 package work.lclpnet.ap2.base.config;
 
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.SetMultimap;
+import net.minecraft.util.Identifier;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import work.lclpnet.config.json.JsonConfig;
@@ -8,27 +11,33 @@ import work.lclpnet.config.json.JsonConfigFactory;
 
 import java.net.URI;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.List;
 
 public class Ap2Config implements JsonConfig {
 
     public List<URI> mapsSource = List.of(URI.create("https://maps.lclpnet.work/release/"));
+    public SetMultimap<Identifier, URI> songSources = HashMultimap.create();
 
     public Ap2Config() {}
 
     public Ap2Config(JSONObject json) {
         if (json.has("maps_source")) {
-            JSONArray order = json.getJSONArray("maps_source");
+            this.mapsSource = readUriList(json, "maps_source");
+        }
 
-            var builder = ImmutableList.<URI>builder();
+        if (json.has("song_sources")) {
+            JSONObject songSources = json.getJSONObject("song_sources");
 
-            for (Object obj : order) {
-                if (!(obj instanceof String str)) continue;
+            for (String key : songSources.keySet()) {
+                Identifier tag = Identifier.tryParse(key);
 
-                builder.add(stringToUri(str));
+                if (tag == null) continue;
+
+                List<URI> uris = readUriList(songSources, key);
+
+                this.songSources.putAll(tag, uris);
             }
-
-            this.mapsSource = builder.build();
         }
     }
 
@@ -36,15 +45,41 @@ public class Ap2Config implements JsonConfig {
     public JSONObject toJson() {
         JSONObject json = new JSONObject();
 
+        writeUriList(json, "maps_source", mapsSource);
+
+        JSONObject songSources = new JSONObject();
+
+        for (Identifier tag : this.songSources.keySet()) {
+            writeUriList(songSources, tag.toString(), this.songSources.get(tag));
+        }
+
+        json.put("song_sources", songSources);
+
+        return json;
+    }
+
+    private static void writeUriList(JSONObject json, String key, Collection<? extends URI> uriList) {
         JSONArray order = new JSONArray();
 
-        for (URI uri : mapsSource) {
+        for (URI uri : uriList) {
             order.put(uriToString(uri));
         }
 
-        json.put("maps_source", order);
+        json.put(key, order);
+    }
 
-        return json;
+    private static List<URI> readUriList(JSONObject json, String key) {
+        JSONArray order = json.getJSONArray(key);
+
+        var builder = ImmutableList.<URI>builder();
+
+        for (Object obj : order) {
+            if (!(obj instanceof String str)) continue;
+
+            builder.add(stringToUri(str));
+        }
+
+        return builder.build();
     }
 
     private static URI stringToUri(String str) {
