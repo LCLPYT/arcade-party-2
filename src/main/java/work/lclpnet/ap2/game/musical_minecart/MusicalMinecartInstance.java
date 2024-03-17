@@ -12,7 +12,9 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.Nullable;
+import org.json.JSONArray;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.util.music.ConfiguredSong;
@@ -24,6 +26,7 @@ import work.lclpnet.ap2.impl.util.SoundHelper;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.kibu.translate.TranslationService;
+import work.lclpnet.lobby.game.map.GameMap;
 import work.lclpnet.notica.Notica;
 import work.lclpnet.notica.api.CheckedSong;
 import work.lclpnet.notica.api.SongHandle;
@@ -40,10 +43,11 @@ public class MusicalMinecartInstance extends EliminationGameInstance {
             MIN_DELAY_TICKS = Ticks.seconds(10),
             MAX_DELAY_TICKS = Ticks.seconds(20),
             ELIMINATION_DELAY_TICKS = Ticks.seconds(9),
-            NEXT_SONG_DELAY_TICKS = Ticks.seconds(2);
+            NEXT_SONG_DELAY_TICKS = Ticks.seconds(2),
+            PARTICLE_AMOUNT = 2;
     private final MMSongs songManager;
     private final Random random = new Random();
-    private BlockBox bounds = null;
+    private BlockBox bounds = null, particleBox = null;
     @Nullable
     private SongHandle songHandle = null;
     private final Set<MinecartEntity> minecartEntities = new HashSet<>();
@@ -59,7 +63,14 @@ public class MusicalMinecartInstance extends EliminationGameInstance {
 
     @Override
     protected void prepare() {
-        bounds = MapUtil.readBox(getMap().requireProperty("bounds"));
+        GameMap map = getMap();
+
+        bounds = MapUtil.readBox(map.requireProperty("bounds"));
+
+        if (map.hasProperty("particle", JSONArray.class)) {
+            particleBox = MapUtil.readBox(map.requireProperty("particle"));
+        }
+
         songManager.init();
 
         useRemainingPlayersDisplay();
@@ -68,6 +79,8 @@ public class MusicalMinecartInstance extends EliminationGameInstance {
     @Override
     protected void ready() {
         nextSong();
+
+        gameHandle.getGameScheduler().interval(this::tickParticle, 7);
     }
 
     private void nextSong() {
@@ -135,7 +148,7 @@ public class MusicalMinecartInstance extends EliminationGameInstance {
         ServerWorld world = getWorld();
 
         for (int i = 0; i < count; i++) {
-            bounds.getRandomPosition(pos, random);
+            bounds.getRandomBlockPos(pos, random);
 
             MinecartEntity minecart = new MinecartEntity(EntityType.MINECART, world);
             minecart.setPos(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
@@ -179,5 +192,18 @@ public class MusicalMinecartInstance extends EliminationGameInstance {
         }, passDelay);
 
         scheduler.timeout(this::nextSong, NEXT_SONG_DELAY_TICKS);
+    }
+
+    private void tickParticle() {
+        if (particleBox == null || songHandle == null) return;
+
+        ServerWorld world = getWorld();
+
+        for (int i = 0; i < PARTICLE_AMOUNT; i++) {
+            Vec3d pos = particleBox.getRandomPos(random);
+
+            world.spawnParticles(ParticleTypes.NOTE, pos.getX(), pos.getY(), pos.getZ(), 10,
+                    3, 2, 3, 1);
+        }
     }
 }
