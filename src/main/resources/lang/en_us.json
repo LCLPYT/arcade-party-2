@@ -104,5 +104,11 @@
   "game.ap2.mining_battle.gain_points": "+%s points (%s)",
   "game.ap2.knockout": "Knockout",
   "game.ap2.knockout.description": "Punch your enemies into the void. The knock-back gets increasingly stronger the more a player is hit.",
-  "game.ap2.knockout.charge": "Charge: %s"
+  "game.ap2.knockout.charge": "Charge: %s",
+  "game.ap2.musical_minecart": "Musical Minecart",
+  "game.ap2.musical_minecart.description": "Enter a minecart when the music stops playing, in order to survive. Last player standing wins.",
+  "game.ap2.musical_minecart.deadline": "Enter a minecart now!",
+  "game.ap2.musical_minecart.format.from": "%s from %s",
+  "game.ap2.musical_minecart.format.by": "%s by %s",
+  "game.ap2.musical_minecart.format.by_original": "%s by %s [%s]"
 }

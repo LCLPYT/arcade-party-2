@@ -2,31 +2,38 @@ package work.lclpnet.ap2.game.musical_minecart;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
-import work.lclpnet.ap2.api.util.music.ConfiguredSong;
-import work.lclpnet.ap2.api.util.music.LoadableSong;
-import work.lclpnet.ap2.api.util.music.SongCache;
-import work.lclpnet.ap2.api.util.music.SongManager;
+import work.lclpnet.ap2.api.util.music.*;
 import work.lclpnet.ap2.base.ArcadeParty;
 import work.lclpnet.ap2.impl.util.WeightedList;
 import work.lclpnet.ap2.impl.util.music.MapSongCache;
+import work.lclpnet.kibu.translate.TranslationService;
+import work.lclpnet.notica.api.data.SongMeta;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+
+import static net.minecraft.util.Formatting.*;
+import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
 public class MMSongs {
 
     private static final Identifier MUSICAL_MINECART_TAG = ArcadeParty.identifier("musical_minecart");
     private final SongManager songManager;
+    private final TranslationService translations;
     private final Random random;
     private final Logger logger;
     private final Set<WeightedList<LoadableSong>> songs = new HashSet<>();
     private final List<WeightedList<LoadableSong>> queue = new ArrayList<>();
     private final SongCache cache = new MapSongCache();
 
-    public MMSongs(SongManager songManager, Random random, Logger logger) {
+    public MMSongs(SongManager songManager, TranslationService translations, Random random, Logger logger) {
         this.songManager = songManager;
+        this.translations = translations;
         this.random = random;
         this.logger = logger;
     }
@@ -76,5 +83,39 @@ public class MMSongs {
         queue.clear();
         queue.addAll(songs);
         Collections.shuffle(queue, random);
+    }
+
+    @Nullable
+    public Text getSongTitle(ServerPlayerEntity player, SongInfo info, SongMeta meta) {
+        String name = meta.name();
+
+        if (name.isBlank()) {
+            return null;
+        }
+
+        String from = info.from();
+
+        if (!from.isBlank()) {
+            return translations.translateText(player, "game.ap2.musical_minecart.format.from",
+                    styled(name, YELLOW), styled(from, AQUA)).formatted(GREEN);
+        }
+
+        String originalAuthor = meta.originalAuthor();
+        String author = meta.author();
+
+        boolean hasAuthor = !author.isBlank();
+        boolean hasOrigAuthor = !originalAuthor.isBlank();
+
+        if (hasAuthor && hasOrigAuthor) {
+            return translations.translateText(player, "game.ap2.musical_minecart.format.by_original",
+                    styled(name, YELLOW), styled(author, AQUA), styled(originalAuthor, DARK_AQUA)).formatted(GREEN);
+        }
+
+        if (!hasAuthor && !hasOrigAuthor) {
+            return Text.literal(name).formatted(YELLOW);
+        }
+
+        return translations.translateText(player, "game.ap2.musical_minecart.format.by",
+                styled(name, YELLOW), styled(hasAuthor ? author : originalAuthor, AQUA)).formatted(GREEN);
     }
 }

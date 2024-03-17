@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import work.lclpnet.ap2.api.util.music.ConfiguredSong;
 import work.lclpnet.ap2.api.util.music.LoadableSong;
 import work.lclpnet.ap2.api.util.music.SongCache;
+import work.lclpnet.ap2.api.util.music.SongInfo;
 import work.lclpnet.notica.api.CheckedSong;
 import work.lclpnet.notica.util.ServerSongLoader;
 
@@ -20,13 +21,15 @@ public class PathLoadableSong implements LoadableSong {
     private final float volume;
     private final int startTick;
     private final float weight;
+    private final SongInfo info;
 
-    public PathLoadableSong(Path path, Identifier id, float volume, int startTick, float weight) {
+    public PathLoadableSong(Path path, Identifier id, float volume, int startTick, float weight, SongInfo info) {
         this.path = path;
         this.id = id;
         this.volume = volume;
         this.startTick = startTick;
         this.weight = weight;
+        this.info = info;
     }
 
     @Override
@@ -34,7 +37,7 @@ public class PathLoadableSong implements LoadableSong {
         CheckedSong cached = cache.getCachedSong(path);
 
         if (cached != null) {
-            return CompletableFuture.completedFuture(new ConfiguredSong(cached, volume, startTick, weight));
+            return CompletableFuture.completedFuture(new ConfiguredSong(cached, volume, startTick, weight, info));
         }
 
         return CompletableFuture.supplyAsync(() -> {
@@ -49,7 +52,7 @@ public class PathLoadableSong implements LoadableSong {
 
             cache.cacheSong(path, song);
 
-            return new ConfiguredSong(song, volume, startTick, weight);
+            return new ConfiguredSong(song, volume, startTick, weight, info);
         });
     }
 
@@ -61,5 +64,10 @@ public class PathLoadableSong implements LoadableSong {
     @Override
     public float getWeight() {
         return weight;
+    }
+
+    @Override
+    public SongInfo getInfo() {
+        return info;
     }
 }

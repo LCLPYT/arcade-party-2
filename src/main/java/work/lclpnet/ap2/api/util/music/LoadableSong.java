@@ -16,4 +16,6 @@ public interface LoadableSong {
     Identifier getId();
 
     float getWeight();
+
+    SongInfo getInfo();
 }

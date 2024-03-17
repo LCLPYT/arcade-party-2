@@ -10,6 +10,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.api.util.music.LoadableSong;
+import work.lclpnet.ap2.api.util.music.SongInfo;
 import work.lclpnet.ap2.api.util.music.SongManager;
 import work.lclpnet.notica.util.SongUtils;
 
@@ -60,7 +61,7 @@ public class SongManagerImpl implements SongManager {
         - if the file is called "config.json" read the config
          */
 
-        SetMultimap<String, SongConfig> songConfigs = null;
+        BundleConfig bundleConfig = null;
         Map<String, Path> songFiles = new HashMap<>();
 
         try (var in = new TarArchiveInputStream(new XZCompressorInputStream(url.openStream()))) {
@@ -73,7 +74,7 @@ public class SongManagerImpl implements SongManager {
                 String str = fileName.toString();
 
                 if (str.equals("config.json")) {
-                    songConfigs = readConfig(in);
+                    bundleConfig = readConfig(in);
                     continue;
                 }
 
@@ -96,15 +97,18 @@ public class SongManagerImpl implements SongManager {
             }
         }
 
-        if (songConfigs == null) {
+        if (bundleConfig == null) {
             logger.warn("Song index is undefined, fallback to default values: volume=1.0, start=0");
-            songConfigs = HashMultimap.create();
+            bundleConfig = new BundleConfig(HashMultimap.create(), new HashMap<>());
         }
 
         /*
         - each song file can have several configs, representing different versions (or sections) of the song
         - if a song does not have a config, the default values are used
          */
+
+        var songConfigs = bundleConfig.songs();
+        var songInfos = bundleConfig.info();
 
         for (var file : songFiles.entrySet()) {
             String name = file.getKey();
@@ -115,11 +119,13 @@ public class SongManagerImpl implements SongManager {
                 configs = Set.of(SongConfig.DEFAULT);
             }
 
+            SongInfo info = songInfos.getOrDefault(name, SongInfo.EMPTY);
+
             Path path = file.getValue();
             Identifier songId = reserveSongId(SongUtils.createSongId(path));
 
             for (SongConfig config : configs) {
-                songs.put(tag, config.toLoadable(path, songId));
+                songs.put(tag, config.toLoadable(path, songId, info));
             }
         }
     }
@@ -148,14 +154,46 @@ public class SongManagerImpl implements SongManager {
         throw new IllegalStateException("generateUniqueSongId: Maximum tries exceeded");
     }
 
-    private static SetMultimap<String, SongConfig> readConfig(InputStream in) throws IOException {
+    private static BundleConfig readConfig(InputStream in) throws IOException {
         byte[] bytes = in.readAllBytes();
         String content = new String(bytes, StandardCharsets.UTF_8);
 
         JSONObject json = new JSONObject(content);
 
-        SetMultimap<String, SongConfig> index = HashMultimap.create();
+        SetMultimap<String, SongConfig> configs = HashMultimap.create();
 
+        if (json.has("songs")) {
+            readSongConfigs(json, configs);
+        }
+
+        Map<String, SongInfo> songInfo = new HashMap<>();
+
+        if (json.has("info")) {
+            readSongInfos(json, songInfo);
+        }
+
+        return new BundleConfig(configs, songInfo);
+    }
+
+    private static void readSongInfos(JSONObject json, Map<String, SongInfo> songInfo) {
+        JSONObject infoObj = json.getJSONObject("info");
+
+        for (String key : infoObj.keySet()) {
+            Object val = infoObj.get(key);
+
+            if (!(val instanceof JSONObject info)) continue;
+
+            String from = null;
+
+            if (info.has("from")) {
+                from = info.getString("from").trim();
+            }
+
+            songInfo.put(key, new SongInfo(from));
+        }
+    }
+
+    private static void readSongConfigs(JSONObject json, SetMultimap<String, SongConfig> configs) {
         JSONArray songs = json.getJSONArray("songs");
 
         for (Object entry : songs) {
@@ -179,17 +217,17 @@ public class SongManagerImpl implements SongManager {
                 cfg = new SongConfig(volume, startTick, weight);
             }
 
-            index.put(file, cfg);
+            configs.put(file, cfg);
         }
-
-        return index;
     }
+
+    private record BundleConfig(SetMultimap<String, SongConfig> songs, Map<String, SongInfo> info) {}
 
     private record SongConfig(float volume, int startTick, float weight) {
         public static final SongConfig DEFAULT = new SongConfig(1.0f, 0, 1.0f);
 
-        public PathLoadableSong toLoadable(Path path, Identifier songId) {
-            return new PathLoadableSong(path, songId, volume, startTick, weight);
+        public PathLoadableSong toLoadable(Path path, Identifier songId, SongInfo info) {
+            return new PathLoadableSong(path, songId, volume, startTick, weight, info);
         }
     }
 }

@@ -12,6 +12,7 @@ import work.lclpnet.ap2.impl.util.math.AffineIntMatrix;
 
 import java.util.Iterator;
 import java.util.Objects;
+import java.util.Random;
 
 public class BlockBox implements Pair<BlockPos, BlockPos>, Iterable<BlockPos>, Collider {
 
@@ -116,5 +117,16 @@ public class BlockBox implements Pair<BlockPos, BlockPos>, Iterable<BlockPos>, C
         return this.max.getX() >= other.min.getX() && other.max.getX() >= this.min.getX()
                && this.max.getY() >= other.min.getY() && other.max.getY() >= this.min.getY()
                && this.max.getZ() >= other.min.getZ() && other.max.getZ() >= this.min.getZ();
+    }
+
+    public void getRandomPosition(BlockPos.Mutable pos, Random random) {
+        int minX = min.getX(), minY = min.getY(), minZ = min.getZ();
+        int maxX = max.getX(), maxY = max.getY(), maxZ = max.getZ();
+
+        int x = minX + random.nextInt(maxX - minX + 1);
+        int y = minY + random.nextInt(maxY - minY + 1);
+        int z = minZ + random.nextInt(maxZ - minZ + 1);
+
+        pos.set(x, y, z);
     }
 }
