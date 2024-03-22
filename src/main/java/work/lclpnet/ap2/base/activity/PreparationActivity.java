@@ -14,6 +14,7 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.TypedActionResult;
+import org.slf4j.Logger;
 import work.lclpnet.activity.ComponentActivity;
 import work.lclpnet.activity.component.ComponentBundle;
 import work.lclpnet.activity.component.builtin.BossBarComponent;
@@ -23,6 +24,8 @@ import work.lclpnet.ap2.api.base.GameQueue;
 import work.lclpnet.ap2.api.base.PlayerManager;
 import work.lclpnet.ap2.api.game.GameStartContext;
 import work.lclpnet.ap2.api.game.MiniGame;
+import work.lclpnet.ap2.api.util.music.SongCache;
+import work.lclpnet.ap2.api.util.music.SongManager;
 import work.lclpnet.ap2.base.ApConstants;
 import work.lclpnet.ap2.base.ApContainer;
 import work.lclpnet.ap2.base.ArcadeParty;
@@ -32,6 +35,7 @@ import work.lclpnet.ap2.base.cmd.SkipCommand;
 import work.lclpnet.ap2.base.util.DevGameChooser;
 import work.lclpnet.ap2.base.util.MapIconMaker;
 import work.lclpnet.ap2.impl.game.PlayerUtil;
+import work.lclpnet.ap2.impl.util.music.MusicHelper;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.kibu.hook.player.PlayerAdvancementPacketCallback;
 import work.lclpnet.kibu.hook.player.PlayerConnectionHooks;
@@ -64,6 +68,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
     public static final Identifier ARCADE_PARTY_GAME_TAG = ArcadeParty.identifier("game");
     private static final int GAME_ANNOUNCE_DELAY = Ticks.seconds(3);
     private static final int PREPARATION_TIME = Ticks.seconds(25);
+    private static final Identifier GAME_SONG_ID = ArcadeParty.identifier("ap2_game");
     private final DevGameChooser gameChooser = new DevGameChooser();
     private final Args args;
     private int time = 0;
@@ -304,7 +309,21 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
         var separator = Text.literal(ApConstants.SEPERATOR)
                 .formatted(DARK_GREEN, STRIKETHROUGH, BOLD);
 
-        for (ServerPlayerEntity player : PlayerLookup.all(getServer())) {
+        MinecraftServer server = getServer();
+
+        SongManager songManager = args.container.songManager();
+        var song = songManager.getSong(PreparationActivity.ARCADE_PARTY_GAME_TAG, GAME_SONG_ID);
+
+        boolean soundFallback = song.isEmpty();
+        Logger logger = args.container().logger();
+
+        if (soundFallback) {
+            logger.warn("Sound {} wasn't found, fallback to default sound", GAME_SONG_ID);
+        }
+
+        var players = PlayerLookup.all(server);
+
+        for (ServerPlayerEntity player : players) {
 
             player.sendMessage(separator);
 
@@ -329,8 +348,13 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
             // TODO animate
             Title.get(player).title(gameTitle);
 
-            // TODO replace with game jingle
-            player.playSound(SoundEvents.ENTITY_PLAYER_LEVELUP, SoundCategory.PLAYERS, 1, 1);
+            if (soundFallback) {
+                player.playSound(SoundEvents.ENTITY_PLAYER_LEVELUP, SoundCategory.PLAYERS, 1, 1);
+            }
+        }
+
+        if (!soundFallback) {
+            MusicHelper.playSong(song.get(), 0.4f, players, server, args.sharedSongCache(), logger);
         }
     }
 
@@ -474,5 +498,5 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
     }
 
     public record Args(PluginContext pluginContext, ApContainer container, GameQueue gameQueue,
-                       PlayerManager playerManager, ForceGameCommand forceGameCommand) {}
+                       PlayerManager playerManager, ForceGameCommand forceGameCommand, SongCache sharedSongCache) {}
 }

@@ -49,10 +49,6 @@ public class MMSongs {
         var weightedSong = queue.remove(0);
         LoadableSong loadable = weightedSong.getRandomElement(random);
 
-        if (loadable == null) {
-            return CompletableFuture.failedFuture(new NoSuchElementException("Failed to get random song"));
-        }
-
         return loadable.load(cache, logger);
     }
 

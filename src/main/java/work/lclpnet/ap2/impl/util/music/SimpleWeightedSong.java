@@ -1,5 +1,6 @@
 package work.lclpnet.ap2.impl.util.music;
 
+import org.jetbrains.annotations.NotNull;
 import work.lclpnet.ap2.api.util.music.LoadableSong;
 import work.lclpnet.ap2.api.util.music.WeightedSong;
 import work.lclpnet.ap2.impl.util.WeightedList;
@@ -26,9 +27,14 @@ public class SimpleWeightedSong implements WeightedSong {
         }
     }
 
+    @NotNull
     @Override
     public LoadableSong getRandomElement(Random random) {
-        return weightedSongs.getRandomElement(random);
+        LoadableSong elem = weightedSongs.getRandomElement(random);
+
+        assert elem != null;  // cannot be null, if size > 0
+
+        return elem;
     }
 
     @Override
