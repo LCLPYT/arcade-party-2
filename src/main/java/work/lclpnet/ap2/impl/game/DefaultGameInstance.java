@@ -35,19 +35,7 @@ public abstract class DefaultGameInstance extends BaseGameInstance implements Pa
     @Override
     public void participantRemoved(ServerPlayerEntity player) {
         // this will be called when a participant quits
-        var participants = gameHandle.getParticipants().getAsSet();
-
-        if (participants.size() > 1) return;
-
-        var winner = participants.stream().findAny();
-
-        var data = getData();
-
-        if (winner.isEmpty()) {
-            winner = data.getBestSubject(resolver);
-        }
-
-        winManager.win(winner.orElse(null));
+        winManager.checkForWinner(gameHandle.getParticipants().stream(), resolver);
     }
 
     protected final void useScoreboardStatsSync(IntScoreEventSource<ServerPlayerEntity> source, ScoreboardObjective objective) {

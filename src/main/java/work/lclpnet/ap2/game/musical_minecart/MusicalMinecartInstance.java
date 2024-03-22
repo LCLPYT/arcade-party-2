@@ -168,6 +168,8 @@ public class MusicalMinecartInstance extends EliminationGameInstance {
         ServerWorld world = getWorld();
         Participants participants = gameHandle.getParticipants();
 
+        Set<ServerPlayerEntity> toEliminate = new HashSet<>();
+
         for (ServerPlayerEntity player : participants) {
             if (player.getVehicle() instanceof MinecartEntity) continue;
 
@@ -176,8 +178,10 @@ public class MusicalMinecartInstance extends EliminationGameInstance {
             world.playSound(null, x, y, z, SoundEvents.ENTITY_GENERIC_EXPLODE, SoundCategory.PLAYERS, 1f, 0f);
             world.spawnParticles(ParticleTypes.LAVA, x, y, z, 100, 0.5, 0.5, 0.5, 0.2);
 
-            eliminate(player);
+            toEliminate.add(player);
         }
+
+        eliminateAll(toEliminate);
 
         if (winManager.isGameOver() || participants.count() == 0) return;
 

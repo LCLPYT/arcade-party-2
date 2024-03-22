@@ -10,6 +10,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 
+/**
+ * A data container that keeps the order the subjects were added.
+ * The first added subject is the winner.
+ */
 public class OrderedDataContainer<T, Ref extends SubjectRef> implements DataContainer<T, Ref> {
 
     private final SubjectRefFactory<T, Ref> refs;

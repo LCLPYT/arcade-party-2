@@ -1,6 +1,5 @@
 package work.lclpnet.ap2.impl.game;
 
-import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.server.PlayerManager;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -18,14 +17,11 @@ import work.lclpnet.ap2.impl.game.data.type.TeamRefResolver;
 import work.lclpnet.ap2.impl.game.team.SimpleTeamManager;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.kibu.hook.util.PositionRotation;
-import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.lobby.game.map.MapUtils;
 
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
-
-import static net.minecraft.util.Formatting.GRAY;
 
 public abstract class DefaultTeamGameInstance extends BaseGameInstance implements ParticipantListener,
         TeamEliminatedListener, TeamSpawnAccess, WinManagerView {
@@ -59,27 +55,7 @@ public abstract class DefaultTeamGameInstance extends BaseGameInstance implement
 
     @Override
     public void teamEliminated(Team team) {
-        TranslationService translations = gameHandle.getTranslations();
-        TeamKey key = team.getKey();
-        var displayName = translations.translateText(key.getTranslationKey()).formatted(key.colorFormat());
-
-        translations.translateText("ap2.game.team_eliminated", displayName)
-                .formatted(GRAY)
-                .sendTo(PlayerLookup.all(gameHandle.getServer()));
-
-        var participatingTeams = teamManager.getParticipatingTeams();
-
-        if (participatingTeams.size() > 1) return;
-
-        var winner = participatingTeams.stream().findAny();
-
-        var data = getData();
-
-        if (winner.isEmpty()) {
-            winner = data.getBestSubject(getResolver());
-        }
-
-        winManager.win(winner.orElse(null));
+        winManager.checkForWinner(teamManager.getParticipatingTeams().stream(), getResolver());
     }
 
     @NotNull

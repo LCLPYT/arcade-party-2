@@ -146,9 +146,11 @@ public class WinSequence<T, Ref extends SubjectRef> {
     private void announceMultipleWinners(GameWinners<Ref> winners) {
         TranslationService translations = gameHandle.getTranslations();
 
+        boolean teams = winners.getSubjects().iterator().next() instanceof TeamRef;
+
         TranslatedText gameOver = translations.translateText("ap2.game_over").formatted(AQUA);
-        TranslatedText youWon = translations.translateText("ap2.you_won").formatted(DARK_GREEN);
-        TranslatedText youLost = translations.translateText("ap2.you_lost").formatted(DARK_RED);
+        TranslatedText youWon = translations.translateText(teams ? "ap2.your_team_won" : "ap2.you_won").formatted(DARK_GREEN);
+        TranslatedText youLost = translations.translateText(teams ? "ap2.your_team_lost" : "ap2.you_lost").formatted(DARK_RED);
 
         var winningPlayers = winners.getPlayers();
 
@@ -178,18 +180,31 @@ public class WinSequence<T, Ref extends SubjectRef> {
     private void broadcastTop3() {
         var order = data.orderedEntries().toList();
         var placement = new HashMap<Ref, Integer>();
+        var entryByRef = new HashMap<Ref, DataEntry<Ref>>();
 
-        for (int i = 0; i < order.size(); i++) {
-            var entry = order.get(i);
-            placement.put(entry.subject(), i);
+        int rank = 1;
+        DataEntry<Ref> lastEntry = null;
+
+        for (DataEntry<Ref> entry : order) {
+            if (lastEntry != null && !entry.scoreEquals(lastEntry)) {
+                rank++;
+            }
+
+            lastEntry = entry;
+
+            Ref ref = entry.subject();
+
+            placement.put(ref, rank);
+            entryByRef.put(ref, entry);
         }
 
         for (ServerPlayerEntity player : PlayerLookup.all(gameHandle.getServer())) {
-            sendTop3(player, order, placement);
+            sendTop3(player, order, placement, entryByRef);
         }
     }
 
-    private void sendTop3(ServerPlayerEntity player, List<? extends DataEntry<Ref>> order, Map<Ref, Integer> placement) {
+    private void sendTop3(ServerPlayerEntity player, List<? extends DataEntry<Ref>> order, Map<Ref, Integer> placement,
+                          HashMap<Ref, DataEntry<Ref>> entries) {
         TranslationService translations = gameHandle.getTranslations();
         String results = translations.translate(player, "ap2.results");
         int len = results.length() + 2;
@@ -202,19 +217,25 @@ public class WinSequence<T, Ref extends SubjectRef> {
 
         sendUpperSeparator(player, len, sepLength, resultsText);
 
+        int maxRank = 1;
+
         for (int i = 0; i < 3; i++) {
             if (order.size() <= i) break;
 
             var entry = order.get(i);
             var text = entry.toText(translations);
 
-            Text subjectName = entry.subject().getNameFor(player);
+            Ref subject = entry.subject();
+            Text subjectName = subject.getNameFor(player);
 
             if (subjectName.getStyle().getColor() == null) {
                 subjectName = subjectName.copy().formatted(GRAY);
             }
 
-            MutableText msg = Text.literal("#%s ".formatted(i + 1)).formatted(YELLOW)
+            int rank = placement.getOrDefault(subject, maxRank++);
+            maxRank = Math.max(maxRank, rank);
+
+            MutableText msg = Text.literal("#%s ".formatted(rank)).formatted(YELLOW)
                     .append(subjectName);
 
             if (text != null) {
@@ -228,9 +249,9 @@ public class WinSequence<T, Ref extends SubjectRef> {
 
         if (ownRef != null && placement.containsKey(ownRef)) {
             int playerIndex = placement.get(ownRef);
-            DataEntry<Ref> entry = order.get(playerIndex);
+            DataEntry<Ref> entry = entries.get(ownRef);
 
-            sendOwnScore(player, entry, playerIndex + 1, sepSm);
+            sendOwnScore(player, entry, playerIndex, sepSm);
         }
 
         player.sendMessage(sep);
