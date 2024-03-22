@@ -32,6 +32,7 @@ import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.lobby.game.map.GameMap;
 
+import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
 
@@ -45,6 +46,7 @@ public class CozyCampfireInstance extends TeamEliminationGameInstance implements
     private final CollisionDetector collisionDetector = new ChunkedCollisionDetector();
     private final PlayerMovementObserver movementObserver;
     private final TeamStorage<CampfireFuel> campfireFuel = TeamStorage.create(this::createCampfireFuel);
+    private final Set<Team> toEliminate = new HashSet<>();
     private CCHooks hookSetup;
     private CCFuel fuel;
     private DynamicTranslatedTeamBossBar bossBar;
@@ -203,6 +205,8 @@ public class CozyCampfireInstance extends TeamEliminationGameInstance implements
     }
 
     private void everySecond() {
+        toEliminate.clear();
+
         for (Team team : getTeamManager().getTeams()) {
             CampfireFuel fuel = campfireFuel.getOrCreate(team);
 
@@ -212,9 +216,11 @@ public class CozyCampfireInstance extends TeamEliminationGameInstance implements
             updateBossBar(team, fuel);
 
             if (fuel.count <= 0) {
-                eliminate(team);
+                toEliminate.add(team);
             }
         }
+
+        eliminateAll(toEliminate);
     }
 
     private int getFuelConsumption(Team team) {

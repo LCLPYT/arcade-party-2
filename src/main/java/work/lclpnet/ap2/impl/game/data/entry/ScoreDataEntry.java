@@ -12,4 +12,13 @@ public record ScoreDataEntry<Ref extends SubjectRef>(Ref subject, int score) imp
     public @Nullable TranslatedText toText(TranslationService translationService) {
         return translationService.translateText("ap2.score.points",score);
     }
+
+    @Override
+    public boolean scoreEquals(DataEntry<Ref> _other) {
+        if ((_other instanceof ScoreDataEntry<Ref> other)) {
+            return score == other.score;
+        }
+
+        return false;
+    }
 }
