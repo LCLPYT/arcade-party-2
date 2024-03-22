@@ -20,4 +20,13 @@ public interface DataContainer<T, Ref extends SubjectRef> {
                 .map(DataEntry::subject)
                 .map(resolver::resolve);
     }
+
+    default Stream<T> getEqualScoreSubjects(T player, SubjectRefResolver<T, Ref> resolver) {
+        DataEntry<Ref> entry = getEntry(player);
+
+        return orderedEntries()
+                .filter(entry::scoreEquals)
+                .map(DataEntry::subject)
+                .map(resolver::resolve);
+    }
 }

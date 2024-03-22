@@ -19,6 +19,9 @@ import work.lclpnet.kibu.translate.bossbar.TranslatedBossBar;
 import work.lclpnet.kibu.translate.text.FormatWrapper;
 import work.lclpnet.lobby.game.api.WorldFacade;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import static net.minecraft.util.Formatting.GRAY;
 import static net.minecraft.util.Formatting.YELLOW;
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
@@ -34,6 +37,7 @@ public abstract class EliminationGameInstance extends DefaultGameInstance {
 
     @Override
     public void participantRemoved(ServerPlayerEntity player) {
+        // make sure the player is tracked as eliminated
         data.eliminated(player);
 
         if (remainingDisplay != null) {
@@ -94,6 +98,36 @@ public abstract class EliminationGameInstance extends DefaultGameInstance {
 
             return true;
         });
+    }
+
+    protected synchronized void eliminateAll(Iterable<? extends ServerPlayerEntity> players) {
+        Participants participants = gameHandle.getParticipants();
+        TranslationService translations = gameHandle.getTranslations();
+
+        Set<ServerPlayerEntity> toEliminate = new HashSet<>();
+
+        for (ServerPlayerEntity player : players) {
+            if (!participants.isParticipating(player)) continue;
+
+            toEliminate.add(player);
+
+            translations.translateText("ap2.game.eliminated", styled(player.getNameForScoreboard(), YELLOW))
+                    .formatted(GRAY)
+                    .sendTo(PlayerLookup.all(gameHandle.getServer()));
+        }
+
+        // mark all players as eliminated at the same moment
+        data.allEliminated(toEliminate);
+
+        WorldFacade worldFacade = gameHandle.getWorldFacade();
+        PlayerUtil playerUtil = gameHandle.getPlayerUtil();
+
+        for (ServerPlayerEntity player : toEliminate) {
+            participants.remove(player);
+
+            playerUtil.resetPlayer(player);
+            worldFacade.teleport(player);
+        }
     }
 
     protected void eliminate(ServerPlayerEntity player) {

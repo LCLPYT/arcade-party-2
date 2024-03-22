@@ -8,6 +8,8 @@
   "ap2.game_over": "Spiel vorbei",
   "ap2.you_won": "Du hast gewonnen",
   "ap2.you_lost": "Du hast verloren",
+  "ap2.your_team_won": "Dein Team hat gewonnen",
+  "ap2.your_team_lost": "Dein Team hat verloren",
   "ap2.results": "Ergebnisse",
   "ap2.score": "Punktestand",
   "ap2.you_placed": "Du bist %s geworden",
@@ -17,7 +19,7 @@
   "ap2.game.team_eliminated": "%s wurde eliminiert",
   "ap2.game.winner_is": "Gewonnen hat...",
   "ap2.score.points": "%s Punkte",
-  "ap2.score.points_timed": "%s Punkte | als %s.",
+  "ap2.score.points_timed": "%s Punkte (als %ser)",
   "ap2.game.remaining": "%s Spieler übrig",
   "ap2.game.remaining_single": "%s Spieler übrig",
   "ap2.pvp.shot_by": "%s wurde von %s erschossen",
@@ -104,5 +106,11 @@
   "game.ap2.mining_battle.gain_points": "+%s Punkte (%s)",
   "game.ap2.knockout": "Knockout",
   "game.ap2.knockout.description": "Schlage deine Gegner von der Map. Je mehr ein Spieler nehmen umso mehr Rückstoß The knock-back gets increasingly stronger the more a player is hit.",
-  "game.ap2.knockout.charge": "Schaden: %s"
+  "game.ap2.knockout.charge": "Schaden: %s",
+  "game.ap2.musical_minecart": "Musiklore",
+  "game.ap2.musical_minecart.description": "Setze dich in eine Lore, sobald die Musik aufhört zu spielen. Spieler die nicht in einer Lore sitzen, fliegen raus!",
+  "game.ap2.musical_minecart.deadline": "Setz dich in eine Lore!",
+  "game.ap2.musical_minecart.format.from": "%s aus %s",
+  "game.ap2.musical_minecart.format.by": "%s von %s",
+  "game.ap2.musical_minecart.format.by_original": "%s von %s [%s]"
 }

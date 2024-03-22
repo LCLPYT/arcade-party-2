@@ -17,6 +17,11 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+/**
+ * A score container that orders the subjects by their integer score, like {@link ScoreDataContainer},
+ * but the order in which the scores who reached is saved.
+ * In case two subjects have the same score, the subject who reached the score first is ranked higher.
+ */
 public class ScoreTimeDataContainer<T, Ref extends SubjectRef> implements DataContainer<T, Ref>, IntScoreEventSource<T> {
 
     private final SubjectRefFactory<T, Ref> refs;

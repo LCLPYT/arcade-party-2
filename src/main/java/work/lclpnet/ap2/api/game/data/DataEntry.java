@@ -10,4 +10,6 @@ public interface DataEntry<Ref extends SubjectRef> {
 
     @Nullable
     TranslatedText toText(TranslationService translationService);
+
+    boolean scoreEquals(DataEntry<Ref> other);
 }

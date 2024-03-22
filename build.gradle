@@ -65,6 +65,7 @@ dependencies {
     modImplementation "xyz.nucleoid:fantasy:${project.fantasy_version}"
     modImplementation "maven.modrinth:sqlite-jdbc:3.41.2.1+20230506"
     modImplementation "work.lclpnet.mods:combat-control:${project.combat_control_version}"
+    modImplementation "work.lclpnet.mods:notica:${project.notica_version}"
 
     pluginImplementation "work.lclpnet.mcserver-api:mcserver-api-kibu:${project.mcserver_api_version}"
     pluginImplementation "work.lclpnet.plugins:mg-lobby:${project.lobby_version}"
@@ -72,6 +73,7 @@ dependencies {
 
     implementation 'org.json:json:20231013'
     bundle(implementation('work.lclpnet:json-config4j:1.0.0'))
+    bundle(implementation('org.apache.commons:commons-compress:1.26.1'))
 
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'

@@ -8,6 +8,8 @@
   "ap2.game_over": "Game Over",
   "ap2.you_won": "You won",
   "ap2.you_lost": "You lost",
+  "ap2.your_team_won": "Your team won",
+  "ap2.your_team_lost": "Your team lost",
   "ap2.results": "Results",
   "ap2.score": "Score",
   "ap2.you_placed": "You placed %s",
@@ -17,7 +19,7 @@
   "ap2.game.team_eliminated": "%s was eliminated",
   "ap2.game.winner_is": "The winner is...",
   "ap2.score.points": "%s points",
-  "ap2.score.points_timed": "%s points | reached #%s",
+  "ap2.score.points_timed": "%s points (#%s)",
   "ap2.game.remaining": "%s players remaining",
   "ap2.game.remaining_single": "%s player remaining",
   "ap2.pvp.shot_by": "%s was shot by %s",
@@ -104,5 +106,11 @@
   "game.ap2.mining_battle.gain_points": "+%s points (%s)",
   "game.ap2.knockout": "Knockout",
   "game.ap2.knockout.description": "Punch your enemies into the void. The knock-back gets increasingly stronger the more a player is hit.",
-  "game.ap2.knockout.charge": "Charge: %s"
+  "game.ap2.knockout.charge": "Charge: %s",
+  "game.ap2.musical_minecart": "Musical Minecart",
+  "game.ap2.musical_minecart.description": "Enter a minecart when the music stops playing, in order to survive. Last player standing wins.",
+  "game.ap2.musical_minecart.deadline": "Enter a minecart now!",
+  "game.ap2.musical_minecart.format.from": "%s from %s",
+  "game.ap2.musical_minecart.format.by": "%s by %s",
+  "game.ap2.musical_minecart.format.by_original": "%s by %s [%s]"
 }

@@ -10,6 +10,11 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+/**
+ * A data container that orders the subjects by their integer score.
+ * The scores can still be updated after a subject was added.
+ * The subject with the highest score is the winner.
+ */
 public class ScoreDataContainer<T, Ref extends SubjectRef> implements DataContainer<T, Ref>, IntScoreEventSource<T> {
 
     private final SubjectRefFactory<T, Ref> refs;

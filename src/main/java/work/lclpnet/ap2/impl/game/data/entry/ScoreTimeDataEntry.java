@@ -12,4 +12,13 @@ public record ScoreTimeDataEntry<Ref extends SubjectRef>(Ref subject, int score,
     public @Nullable TranslatedText toText(TranslationService translationService) {
         return translationService.translateText("ap2.score.points_timed", score, ranking);
     }
+
+    @Override
+    public boolean scoreEquals(DataEntry<Ref> _other) {
+        if ((_other instanceof ScoreTimeDataEntry<Ref> other)) {
+            return score == other.score && ranking == other.ranking;
+        }
+
+        return false;
+    }
 }

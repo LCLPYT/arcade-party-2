@@ -4,6 +4,7 @@ import it.unimi.dsi.fastutil.Pair;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.Formatting;
+import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import work.lclpnet.activity.manager.ActivityManager;
@@ -12,6 +13,7 @@ import work.lclpnet.ap2.api.base.MiniGameManager;
 import work.lclpnet.ap2.api.game.MiniGame;
 import work.lclpnet.ap2.api.map.MapFacade;
 import work.lclpnet.ap2.api.map.MapRandomizer;
+import work.lclpnet.ap2.api.util.music.SongManager;
 import work.lclpnet.ap2.base.activity.PreparationActivity;
 import work.lclpnet.ap2.base.cmd.ForceGameCommand;
 import work.lclpnet.ap2.base.config.Ap2Config;
@@ -23,6 +25,7 @@ import work.lclpnet.ap2.impl.game.PlayerUtil;
 import work.lclpnet.ap2.impl.map.BalancedMapRandomizer;
 import work.lclpnet.ap2.impl.map.MapFacadeImpl;
 import work.lclpnet.ap2.impl.map.SqliteAsyncMapFrequencyManager;
+import work.lclpnet.ap2.impl.util.music.SongManagerImpl;
 import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.lobby.game.api.GameEnvironment;
 import work.lclpnet.lobby.game.api.GameInstance;
@@ -32,6 +35,7 @@ import work.lclpnet.lobby.game.map.*;
 import work.lclpnet.lobby.game.start.ConditionGameStarter;
 
 import java.io.IOException;
+import java.net.URI;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Random;
@@ -90,7 +94,8 @@ public class ArcadePartyGameInstance implements GameInstance {
 
     private void onConfigLoaded(ConfigManager configManager) {
         MinecraftServer server = environment.getServer();
-        MapManager mapManager = createMapManager(configManager.getConfig());
+        Ap2Config config = configManager.getConfig();
+        MapManager mapManager = createMapManager(config);
 
         WorldFacade worldFacade = environment.getWorldFacade(() -> mapManager);
         var mapPair = createMapFacade(server, mapManager, worldFacade);
@@ -106,15 +111,23 @@ public class ArcadePartyGameInstance implements GameInstance {
             }
         });
 
-        CompletableFuture.allOf(loadMaps(mapManager), loadSqlite(frequencyManager, server))
-                .thenCompose(nil -> server.submit(() -> dispatchGameStart(server, worldFacade, mapFacade)))
+        ArcadeParty arcadeParty = ArcadeParty.getInstance();
+        Path cacheDir = arcadeParty.getCacheDirectory();
+        Path songsDir = cacheDir.resolve("songs");
+
+        SongManagerImpl songManager = new SongManagerImpl(songsDir);
+
+        CompletableFuture.allOf(loadMaps(mapManager), loadSqlite(frequencyManager, server), loadSongs(songManager, config))
+                .thenCompose(nil -> server.submit(() -> dispatchGameStart(server, worldFacade, mapFacade, songManager)))
                 .exceptionally(throwable -> {
                     logger.error("Failed to load ArcadeParty2", throwable);
                     return null;
                 });
     }
 
-    private void dispatchGameStart(MinecraftServer server, WorldFacade worldFacade, MapFacade mapFacade) {
+    private void dispatchGameStart(MinecraftServer server, WorldFacade worldFacade, MapFacade mapFacade,
+                                   SongManager songManager) {
+
         ArcadeParty arcadeParty = ArcadeParty.getInstance();
 
         TranslationService translationService = arcadeParty.getTranslationService();
@@ -130,12 +143,32 @@ public class ArcadePartyGameInstance implements GameInstance {
         forceGameCommand.register(environment.getCommandStack());
 
         ApContainer container = new ApContainer(server, logger, translationService, environment.getHookStack(),
-                environment.getSchedulerStack(), worldFacade, mapFacade, playerUtil, gameManager);
+                environment.getSchedulerStack(), worldFacade, mapFacade, playerUtil, gameManager, songManager);
 
         var args = new PreparationActivity.Args(arcadeParty, container, queue, playerManager, forceGameCommand);
         PreparationActivity preparation = new PreparationActivity(args);
 
         ActivityManager.getInstance().startActivity(preparation);
+    }
+
+    private CompletableFuture<Void> loadSongs(SongManagerImpl songManager, Ap2Config config) {
+        return CompletableFuture.runAsync(() -> {
+            int i = 0;
+
+            for (var entry : config.songSources.entries()) {
+                Identifier tag = entry.getKey();
+                URI uri = entry.getValue();
+
+                try {
+                    songManager.loadBundleSync(tag, uri, i++, logger);
+                } catch (IOException e) {
+                    logger.error("Failed to load song bundle with tag {} from {}", tag, uri, e);
+                }
+            }
+        }).exceptionally(err -> {
+            logger.error("Failed to load songs", err);
+            return null;
+        });
     }
 
     private CompletableFuture<Void> loadSqlite(SqliteAsyncMapFrequencyManager frequencyManager, MinecraftServer server) {
