@@ -12,6 +12,7 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.TypedActionResult;
 import work.lclpnet.activity.ComponentActivity;
 import work.lclpnet.activity.component.ComponentBundle;
@@ -60,6 +61,7 @@ import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
 public class PreparationActivity extends ComponentActivity implements Skippable, GameStartContext {
 
+    public static final Identifier ARCADE_PARTY_GAME_TAG = ArcadeParty.identifier("game");
     private static final int GAME_ANNOUNCE_DELAY = Ticks.seconds(3);
     private static final int PREPARATION_TIME = Ticks.seconds(25);
     private final DevGameChooser gameChooser = new DevGameChooser();

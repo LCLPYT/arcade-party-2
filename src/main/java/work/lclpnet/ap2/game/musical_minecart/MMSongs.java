@@ -1,7 +1,5 @@
 package work.lclpnet.ap2.game.musical_minecart;
 
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Multimap;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
@@ -9,7 +7,6 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.api.util.music.*;
 import work.lclpnet.ap2.base.ArcadeParty;
-import work.lclpnet.ap2.impl.util.WeightedList;
 import work.lclpnet.ap2.impl.util.music.MapSongCache;
 import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.notica.api.data.SongMeta;
@@ -27,8 +24,8 @@ public class MMSongs {
     private final TranslationService translations;
     private final Random random;
     private final Logger logger;
-    private final Set<WeightedList<LoadableSong>> songs = new HashSet<>();
-    private final List<WeightedList<LoadableSong>> queue = new ArrayList<>();
+    private final Set<WeightedSong> songs = new HashSet<>();
+    private final List<WeightedSong> queue = new ArrayList<>();
     private final SongCache cache = new MapSongCache();
 
     public MMSongs(SongManager songManager, TranslationService translations, Random random, Logger logger) {
@@ -39,27 +36,9 @@ public class MMSongs {
     }
 
     public void init() {
-        Set<LoadableSong> loadableSongs = songManager.getSongs(MUSICAL_MINECART_TAG);
-        Multimap<Identifier, LoadableSong> byActualSong = ArrayListMultimap.create();
+        Set<WeightedSong> songs = songManager.getSongs(MUSICAL_MINECART_TAG);
 
-        // group by id
-        for (LoadableSong loadable : loadableSongs) {
-            byActualSong.put(loadable.getId(), loadable);
-        }
-
-        for (Identifier songId : byActualSong.keySet()) {
-            var configuredSongs = byActualSong.get(songId);
-
-            if (configuredSongs.isEmpty()) continue;
-
-            WeightedList<LoadableSong> weighted = new WeightedList<>();
-
-            for (LoadableSong loadable : configuredSongs) {
-                weighted.add(loadable, loadable.getWeight());
-            }
-
-            songs.add(weighted);
-        }
+        this.songs.addAll(songs);
     }
 
     public CompletableFuture<ConfiguredSong> getNextSong() {

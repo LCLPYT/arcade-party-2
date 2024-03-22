@@ -7,6 +7,7 @@ import net.minecraft.util.Identifier;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import work.lclpnet.ap2.base.ArcadeParty;
+import work.lclpnet.ap2.base.activity.PreparationActivity;
 import work.lclpnet.ap2.game.musical_minecart.MMSongs;
 import work.lclpnet.config.json.JsonConfig;
 import work.lclpnet.config.json.JsonConfigFactory;
@@ -52,10 +53,15 @@ public class Ap2Config implements JsonConfig {
 
     private void setDefaults() {
         // set defaults that cannot be set in the initializer
-        if (!songSources.containsKey(MMSongs.MUSICAL_MINECART_TAG) || songSources.get(MMSongs.MUSICAL_MINECART_TAG).isEmpty()) {
+        putDefaultSongSourceUrl(MMSongs.MUSICAL_MINECART_TAG, "https://lclpnet.work/dl/ap2-musical-minecart-songs");
+        putDefaultSongSourceUrl(PreparationActivity.ARCADE_PARTY_GAME_TAG, "https://lclpnet.work/dl/ap2-game-sounds");
+    }
+
+    private void putDefaultSongSourceUrl(Identifier id, String sourceUrl) {
+        if (!songSources.containsKey(id) || songSources.get(id).isEmpty()) {
             try {
-                URL url = new URL("https://lclpnet.work/dl/ap2-songs");
-                songSources.put(MMSongs.MUSICAL_MINECART_TAG, url.toURI());
+                URL url = new URL(sourceUrl);
+                songSources.put(id, url.toURI());
             } catch (MalformedURLException | URISyntaxException err) {
                 ArcadeParty.logger.error("Failed to set default song source", err);
             }
