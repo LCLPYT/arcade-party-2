@@ -10,11 +10,14 @@ import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.translations.loader.translation.SPITranslationLoader;
 import work.lclpnet.translations.loader.translation.TranslationLoader;
 
+import java.nio.file.Path;
+
 public class ArcadeParty extends KibuPlugin implements TranslatedPlugin {
 
     public static final Logger logger = LoggerFactory.getLogger(ApConstants.ID);
     private static ArcadeParty instance;
     private TranslationService translationService = null;
+    private final Path cacheDirectory = Path.of(".cache", ApConstants.ID);
 
     @Override
     public void loadKibuPlugin() {
@@ -48,5 +51,9 @@ public class ArcadeParty extends KibuPlugin implements TranslatedPlugin {
 
     public TranslationService getTranslationService() {
         return translationService;
+    }
+
+    public Path getCacheDirectory() {
+        return cacheDirectory;
     }
 }

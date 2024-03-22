@@ -6,7 +6,7 @@ import work.lclpnet.ap2.api.game.data.SubjectRef;
 import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.kibu.translate.text.TranslatedText;
 
-public record SimpleDataEntry<Ref extends SubjectRef>(Ref subject) implements DataEntry<Ref> {
+public record SimpleOrderDataEntry<Ref extends SubjectRef>(Ref subject, int order) implements DataEntry<Ref> {
 
     @Nullable
     @Override
@@ -15,7 +15,11 @@ public record SimpleDataEntry<Ref extends SubjectRef>(Ref subject) implements Da
     }
 
     @Override
-    public boolean scoreEquals(DataEntry<Ref> other) {
+    public boolean scoreEquals(DataEntry<Ref> _other) {
+        if (_other instanceof SimpleOrderDataEntry<Ref> other) {
+            return order == other.order;
+        }
+
         return false;
     }
 }

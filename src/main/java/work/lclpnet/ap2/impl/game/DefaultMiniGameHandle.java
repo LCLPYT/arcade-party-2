@@ -14,6 +14,7 @@ import work.lclpnet.ap2.api.game.GameInfo;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.team.TeamConfig;
 import work.lclpnet.ap2.api.map.MapFacade;
+import work.lclpnet.ap2.api.util.music.SongManager;
 import work.lclpnet.ap2.base.ApContainer;
 import work.lclpnet.ap2.base.activity.PreparationActivity;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
@@ -26,6 +27,8 @@ import work.lclpnet.lobby.game.api.WorldFacade;
 import work.lclpnet.lobby.game.impl.prot.BasicProtector;
 import work.lclpnet.lobby.game.impl.prot.MutableProtectionConfig;
 import work.lclpnet.mplugins.ext.Unloadable;
+import work.lclpnet.notica.Notica;
+import work.lclpnet.notica.api.SongHandle;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -146,6 +149,11 @@ public class DefaultMiniGameHandle implements MiniGameHandle, Unloadable, WorldB
     }
 
     @Override
+    public SongManager getSongManager() {
+        return args.container().songManager();
+    }
+
+    @Override
     public void resetGameScheduler() {
         SchedulerStack stack = getGameScheduler();
 
@@ -218,6 +226,8 @@ public class DefaultMiniGameHandle implements MiniGameHandle, Unloadable, WorldB
             closeWhenDone.forEach(Unloadable::unload);
             closeWhenDone.clear();
         }
+
+        Notica.getInstance(getServer()).getPlayingSongs().forEach(SongHandle::stop);
     }
 
     @Override
