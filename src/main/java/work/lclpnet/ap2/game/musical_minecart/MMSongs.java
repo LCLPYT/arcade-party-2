@@ -22,7 +22,7 @@ import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
 public class MMSongs {
 
-    private static final Identifier MUSICAL_MINECART_TAG = ArcadeParty.identifier("musical_minecart");
+    public static final Identifier MUSICAL_MINECART_TAG = ArcadeParty.identifier("musical_minecart");
     private final SongManager songManager;
     private final TranslationService translations;
     private final Random random;

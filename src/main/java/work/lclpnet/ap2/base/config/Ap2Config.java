@@ -6,10 +6,15 @@ import com.google.common.collect.SetMultimap;
 import net.minecraft.util.Identifier;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import work.lclpnet.ap2.base.ArcadeParty;
+import work.lclpnet.ap2.game.musical_minecart.MMSongs;
 import work.lclpnet.config.json.JsonConfig;
 import work.lclpnet.config.json.JsonConfigFactory;
 
+import java.net.MalformedURLException;
 import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
@@ -19,7 +24,9 @@ public class Ap2Config implements JsonConfig {
     public List<URI> mapsSource = List.of(URI.create("https://maps.lclpnet.work/release/"));
     public SetMultimap<Identifier, URI> songSources = HashMultimap.create();
 
-    public Ap2Config() {}
+    public Ap2Config() {
+        setDefaults();
+    }
 
     public Ap2Config(JSONObject json) {
         if (json.has("maps_source")) {
@@ -37,6 +44,20 @@ public class Ap2Config implements JsonConfig {
                 List<URI> uris = readUriList(songSources, key);
 
                 this.songSources.putAll(tag, uris);
+            }
+        }
+
+        setDefaults();
+    }
+
+    private void setDefaults() {
+        // set defaults that cannot be set in the initializer
+        if (!songSources.containsKey(MMSongs.MUSICAL_MINECART_TAG) || songSources.get(MMSongs.MUSICAL_MINECART_TAG).isEmpty()) {
+            try {
+                URL url = new URL("https://lclpnet.work/dl/ap2-songs");
+                songSources.put(MMSongs.MUSICAL_MINECART_TAG, url.toURI());
+            } catch (MalformedURLException | URISyntaxException err) {
+                ArcadeParty.logger.error("Failed to set default song source", err);
             }
         }
     }
