@@ -12,7 +12,9 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.TypedActionResult;
+import org.slf4j.Logger;
 import work.lclpnet.activity.ComponentActivity;
 import work.lclpnet.activity.component.ComponentBundle;
 import work.lclpnet.activity.component.builtin.BossBarComponent;
@@ -22,6 +24,8 @@ import work.lclpnet.ap2.api.base.GameQueue;
 import work.lclpnet.ap2.api.base.PlayerManager;
 import work.lclpnet.ap2.api.game.GameStartContext;
 import work.lclpnet.ap2.api.game.MiniGame;
+import work.lclpnet.ap2.api.util.music.SongCache;
+import work.lclpnet.ap2.api.util.music.SongManager;
 import work.lclpnet.ap2.base.ApConstants;
 import work.lclpnet.ap2.base.ApContainer;
 import work.lclpnet.ap2.base.ArcadeParty;
@@ -31,6 +35,9 @@ import work.lclpnet.ap2.base.cmd.SkipCommand;
 import work.lclpnet.ap2.base.util.DevGameChooser;
 import work.lclpnet.ap2.base.util.MapIconMaker;
 import work.lclpnet.ap2.impl.game.PlayerUtil;
+import work.lclpnet.ap2.impl.util.music.MusicHelper;
+import work.lclpnet.ap2.impl.util.title.AnimatedTitle;
+import work.lclpnet.ap2.impl.util.title.NextGameTitleAnimation;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.kibu.hook.player.PlayerAdvancementPacketCallback;
 import work.lclpnet.kibu.hook.player.PlayerConnectionHooks;
@@ -44,7 +51,7 @@ import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.RunningTask;
 import work.lclpnet.kibu.scheduler.api.Scheduler;
 import work.lclpnet.kibu.scheduler.api.TaskHandle;
-import work.lclpnet.kibu.title.Title;
+import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.lobby.game.api.MapOptions;
 import work.lclpnet.lobby.game.api.WorldFacade;
@@ -60,8 +67,10 @@ import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
 public class PreparationActivity extends ComponentActivity implements Skippable, GameStartContext {
 
+    public static final Identifier ARCADE_PARTY_GAME_TAG = ArcadeParty.identifier("game");
     private static final int GAME_ANNOUNCE_DELAY = Ticks.seconds(3);
     private static final int PREPARATION_TIME = Ticks.seconds(25);
+    private static final Identifier GAME_SONG_ID = ArcadeParty.identifier("ap2_game");
     private final DevGameChooser gameChooser = new DevGameChooser();
     private final Args args;
     private int time = 0;
@@ -70,6 +79,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
     private MiniGame miniGame = null;
     private TaskHandle taskHandle = null;
     private BossBarTimer bossBarTimer = null;
+    private AnimatedTitle animatedTitle = null;
 
     public PreparationActivity(Args args) {
         super(args.pluginContext());
@@ -297,26 +307,44 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
     }
 
     private void announceNextGame() {
-        TranslationService translationService = args.container().translationService();
+        TranslationService translations = args.container().translationService();
+        MinecraftServer server = getServer();
+        SongManager songManager = args.container.songManager();
+        Logger logger = args.container().logger();
+        TaskScheduler scheduler = component(BuiltinComponents.SCHEDULER).scheduler();
 
-        var separator = Text.literal(ApConstants.SEPERATOR)
-                .formatted(DARK_GREEN, STRIKETHROUGH, BOLD);
+        var song = songManager.getSong(PreparationActivity.ARCADE_PARTY_GAME_TAG, GAME_SONG_ID);
+        boolean soundFallback = song.isEmpty();
 
-        for (ServerPlayerEntity player : PlayerLookup.all(getServer())) {
+        if (soundFallback) {
+            logger.warn("Sound {} wasn't found, fallback to default sound", GAME_SONG_ID);
+        }
 
+        if (animatedTitle != null) {
+            animatedTitle.stop();
+        }
+
+        animatedTitle = new AnimatedTitle();
+
+        var playedNextMsg = translations.translateText("ap2.prepare.will_be_played_next").formatted(GREEN);
+        var separator = Text.literal(ApConstants.SEPERATOR).formatted(DARK_GREEN, STRIKETHROUGH, BOLD);
+
+        var players = PlayerLookup.all(server);
+
+        for (ServerPlayerEntity player : players) {
             player.sendMessage(separator);
 
-            var gameTitle = translationService.translateText(player, miniGame.getTitleKey()).formatted(AQUA, BOLD);
+            var gameTitle = translations.translateText(player, miniGame.getTitleKey()).formatted(AQUA, BOLD);
             player.sendMessage(gameTitle);
 
             String descriptionKey = miniGame.getDescriptionKey();
             Object[] descArgs = miniGame.getDescriptionArguments();
 
-            var description = translationService.translateText(player, descriptionKey, descArgs).formatted(GREEN);
+            var description = translations.translateText(player, descriptionKey, descArgs).formatted(GREEN);
 
             player.sendMessage(description);
 
-            var createdBy = translationService.translateText(player, "ap2.prepare.created_by",
+            var createdBy = translations.translateText(player, "ap2.prepare.created_by",
                     styled(miniGame.getAuthor(), YELLOW)).formatted(GRAY, ITALIC);
 
             player.sendMessage(Text.literal(""));
@@ -324,11 +352,17 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
 
             player.sendMessage(separator);
 
-            // TODO animate
-            Title.get(player).title(gameTitle);
+            animatedTitle.add(new NextGameTitleAnimation(player, gameTitle, playedNextMsg.translateFor(player)));
 
-            // TODO replace with game jingle
-            player.playSound(SoundEvents.ENTITY_PLAYER_LEVELUP, SoundCategory.PLAYERS, 1, 1);
+            if (soundFallback) {
+                player.playSound(SoundEvents.ENTITY_PLAYER_LEVELUP, SoundCategory.PLAYERS, 1, 1);
+            }
+        }
+
+        animatedTitle.start(scheduler, 2);
+
+        if (!soundFallback) {
+            MusicHelper.playSong(song.get(), 0.4f, players, server, args.sharedSongCache(), logger);
         }
     }
 
@@ -472,5 +506,5 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
     }
 
     public record Args(PluginContext pluginContext, ApContainer container, GameQueue gameQueue,
-                       PlayerManager playerManager, ForceGameCommand forceGameCommand) {}
+                       PlayerManager playerManager, ForceGameCommand forceGameCommand, SongCache sharedSongCache) {}
 }

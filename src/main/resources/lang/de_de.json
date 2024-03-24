@@ -3,6 +3,7 @@
   "ap2.prepare.next_game": "Als Nächstes wird gespielt...",
   "ap2.prepare.created_by": "Erstellt von %s",
   "ap2.prepare.game_cannot_be_played": "Leider kann %s im Moment nicht gespielt werden... Daher wird es übersprungen.",
+  "ap2.prepare.will_be_played_next": "wird als nächstes gespielt",
   "ap2.nobody": "Niemand",
   "ap2.won": "hat gewonnen",
   "ap2.game_over": "Spiel vorbei",
