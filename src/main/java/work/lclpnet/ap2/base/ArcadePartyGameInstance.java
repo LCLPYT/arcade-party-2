@@ -13,6 +13,7 @@ import work.lclpnet.ap2.api.base.MiniGameManager;
 import work.lclpnet.ap2.api.game.MiniGame;
 import work.lclpnet.ap2.api.map.MapFacade;
 import work.lclpnet.ap2.api.map.MapRandomizer;
+import work.lclpnet.ap2.api.util.music.SongCache;
 import work.lclpnet.ap2.api.util.music.SongManager;
 import work.lclpnet.ap2.base.activity.PreparationActivity;
 import work.lclpnet.ap2.base.cmd.ForceGameCommand;
@@ -25,6 +26,7 @@ import work.lclpnet.ap2.impl.game.PlayerUtil;
 import work.lclpnet.ap2.impl.map.BalancedMapRandomizer;
 import work.lclpnet.ap2.impl.map.MapFacadeImpl;
 import work.lclpnet.ap2.impl.map.SqliteAsyncMapFrequencyManager;
+import work.lclpnet.ap2.impl.util.music.MapSongCache;
 import work.lclpnet.ap2.impl.util.music.SongManagerImpl;
 import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.lobby.game.api.GameEnvironment;
@@ -145,7 +147,9 @@ public class ArcadePartyGameInstance implements GameInstance {
         ApContainer container = new ApContainer(server, logger, translationService, environment.getHookStack(),
                 environment.getSchedulerStack(), worldFacade, mapFacade, playerUtil, gameManager, songManager);
 
-        var args = new PreparationActivity.Args(arcadeParty, container, queue, playerManager, forceGameCommand);
+        SongCache songCache = new MapSongCache();
+
+        var args = new PreparationActivity.Args(arcadeParty, container, queue, playerManager, forceGameCommand, songCache);
         PreparationActivity preparation = new PreparationActivity(args);
 
         ActivityManager.getInstance().startActivity(preparation);

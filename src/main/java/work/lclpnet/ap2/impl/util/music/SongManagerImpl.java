@@ -1,17 +1,22 @@
 package work.lclpnet.ap2.impl.util.music;
 
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.SetMultimap;
 import net.minecraft.util.Identifier;
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.compressors.xz.XZCompressorInputStream;
+import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.api.util.music.LoadableSong;
 import work.lclpnet.ap2.api.util.music.SongInfo;
 import work.lclpnet.ap2.api.util.music.SongManager;
+import work.lclpnet.ap2.api.util.music.WeightedSong;
+import work.lclpnet.ap2.base.ArcadeParty;
 import work.lclpnet.notica.util.SongUtils;
 
 import java.io.IOException;
@@ -21,15 +26,12 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class SongManagerImpl implements SongManager {
 
     private final Path dir;
-    private final SetMultimap<Identifier, LoadableSong> songs = HashMultimap.create();
+    private final Map<Identifier, BiMap<Identifier, WeightedSong>> songByTag = new HashMap<>();
     private final Set<Identifier> songIds = new HashSet<>();
 
     public SongManagerImpl(Path dir) {
@@ -37,8 +39,25 @@ public class SongManagerImpl implements SongManager {
     }
 
     @Override
-    public Set<LoadableSong> getSongs(Identifier tag) {
-        return songs.get(tag);
+    public Set<WeightedSong> getSongs(Identifier tag) {
+        var songs = songByTag.get(tag);
+
+        if (songs == null) {
+            return Set.of();
+        }
+
+        return songs.values();
+    }
+
+    @Override
+    public Optional<WeightedSong> getSong(Identifier tag, Identifier id) {
+        var songs = songByTag.get(tag);
+
+        if (songs == null) {
+            return Optional.empty();
+        }
+
+        return Optional.ofNullable(songs.get(id));
     }
 
     public void loadBundleSync(Identifier tag, URI uri, int index, Logger logger) throws IOException {
@@ -98,7 +117,7 @@ public class SongManagerImpl implements SongManager {
         }
 
         if (bundleConfig == null) {
-            logger.warn("Song index is undefined, fallback to default values: volume=1.0, start=0");
+            logger.debug("Song index is undefined, fallback to default values: volume=1.0, start=0");
             bundleConfig = new BundleConfig(HashMultimap.create(), new HashMap<>());
         }
 
@@ -122,12 +141,25 @@ public class SongManagerImpl implements SongManager {
             SongInfo info = songInfos.getOrDefault(name, SongInfo.EMPTY);
 
             Path path = file.getValue();
-            Identifier songId = reserveSongId(SongUtils.createSongId(path));
+            Identifier songId = reserveSongId(getSongId(path));
+
+            Set<LoadableSong> loadableSongs = new HashSet<>();
 
             for (SongConfig config : configs) {
-                songs.put(tag, config.toLoadable(path, songId, info));
+                loadableSongs.add(config.toLoadable(path, songId, info));
             }
+
+            var songs = songByTag.computeIfAbsent(tag, t -> HashBiMap.create());
+
+            SimpleWeightedSong weightedSong = new SimpleWeightedSong(loadableSongs);
+            songs.put(songId, weightedSong);
         }
+    }
+
+    @NotNull
+    private static Identifier getSongId(Path path) {
+        Identifier noticaSongId = SongUtils.createSongId(path);
+        return ArcadeParty.identifier(noticaSongId.getPath());
     }
 
     private synchronized Identifier reserveSongId(Identifier base) {
