@@ -8,11 +8,13 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
+import net.minecraft.util.ActionResult;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.GameMode;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.api.game.GameInfo;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
@@ -25,8 +27,10 @@ import work.lclpnet.ap2.impl.map.AsyncMapBootstrap;
 import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedPlayerBossBar;
 import work.lclpnet.ap2.impl.util.effect.ApEffect;
 import work.lclpnet.ap2.impl.util.effect.ApEffects;
+import work.lclpnet.ap2.impl.util.property.ApMapProperties;
 import work.lclpnet.combatctl.api.CombatStyle;
 import work.lclpnet.kibu.hook.entity.EntityHealthCallback;
+import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks;
 import work.lclpnet.kibu.hook.player.PlayerSpawnLocationCallback;
 import work.lclpnet.kibu.plugin.hook.HookRegistrar;
@@ -44,6 +48,7 @@ import static net.minecraft.util.Formatting.RED;
 public abstract class BaseGameInstance implements MiniGameInstance {
 
     protected final MiniGameHandle gameHandle;
+    protected final ApMapProperties mapProperties = new ApMapProperties();
     @Nullable
     private ServerWorld world = null;
     @Nullable
@@ -95,12 +100,33 @@ public abstract class BaseGameInstance implements MiniGameInstance {
         this.map = map;
 
         applyMapEffects();
+        loadMapProperties();
 
         resetPlayers();
 
         prepare();
 
         gameHandle.getGameScheduler().timeout(this::afterInitialDelay, getInitialDelay());
+    }
+
+    private void loadMapProperties() {
+        Object prop = getMap().getProperty("properties");
+        if (!(prop instanceof JSONObject config)) return;
+
+        Logger logger = gameHandle.getLogger();
+
+        for (String key : config.keySet()) {
+            Identifier id = Identifier.tryParse(key);
+
+            if (id == null) {
+                logger.warn("Invalid map property identifier {}", key);
+                continue;
+            }
+
+            Object obj = config.get(key);
+
+            mapProperties.set(id, obj);
+        }
     }
 
     private void applyMapEffects() {
@@ -158,6 +184,14 @@ public abstract class BaseGameInstance implements MiniGameInstance {
         });
 
         hooks.registerHook(PlayerSpawnLocationCallback.HOOK, data -> playerUtil.resetPlayer(data.getPlayer()));
+
+        hooks.registerHook(PlayerInteractionHooks.USE_BLOCK, (player, world1, hand, hitResult) -> {
+            if (mapProperties.getBoolean(ApMapProperties.ALLOW_BLOCK_INTERACTION, true)) {
+                return ActionResult.PASS;
+            }
+
+            return ActionResult.FAIL;
+        });
     }
 
     protected int getInitialDelay() {

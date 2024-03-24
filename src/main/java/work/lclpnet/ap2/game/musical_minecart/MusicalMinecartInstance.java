@@ -45,6 +45,7 @@ public class MusicalMinecartInstance extends EliminationGameInstance {
             ELIMINATION_DELAY_TICKS = Ticks.seconds(9),
             NEXT_SONG_DELAY_TICKS = Ticks.seconds(2),
             PARTICLE_AMOUNT = 2;
+    private static final float MUSIC_VOLUME = 0.75f;
     private final MMSongs songManager;
     private final Random random = new Random();
     private BlockBox bounds = null, particleBox = null;
@@ -101,7 +102,7 @@ public class MusicalMinecartInstance extends EliminationGameInstance {
         CheckedSong song = config.song();
 
         Notica notica = Notica.getInstance(server);
-        songHandle = notica.playSong(song, config.volume(), config.startTick(), players);
+        songHandle = notica.playSong(song, config.volume() * MUSIC_VOLUME, config.startTick(), players);
 
         long delay = MIN_DELAY_TICKS + random.nextInt(MAX_DELAY_TICKS - MIN_DELAY_TICKS + 1);
         gameHandle.getGameScheduler().timeout(this::stopMusic, delay);
