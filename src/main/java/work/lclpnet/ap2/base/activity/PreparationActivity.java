@@ -26,6 +26,7 @@ import work.lclpnet.ap2.api.game.GameStartContext;
 import work.lclpnet.ap2.api.game.MiniGame;
 import work.lclpnet.ap2.api.util.music.SongCache;
 import work.lclpnet.ap2.api.util.music.SongManager;
+import work.lclpnet.ap2.api.util.music.SongWrapper;
 import work.lclpnet.ap2.base.ApConstants;
 import work.lclpnet.ap2.base.ApContainer;
 import work.lclpnet.ap2.base.ArcadeParty;
@@ -80,6 +81,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
     private TaskHandle taskHandle = null;
     private BossBarTimer bossBarTimer = null;
     private AnimatedTitle animatedTitle = null;
+    private SongWrapper song = null;
 
     public PreparationActivity(Args args) {
         super(args.pluginContext());
@@ -252,6 +254,14 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
     private void startGame() {
         Objects.requireNonNull(miniGame, "Mini-Game is not set");
 
+        if (animatedTitle != null) {
+            animatedTitle.stop();
+        }
+
+        if (song != null) {
+            song.stop();
+        }
+
         MiniGameActivity activity = new MiniGameActivity(miniGame, args);
         ActivityManager.getInstance().startActivity(activity);
     }
@@ -362,7 +372,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
         animatedTitle.start(scheduler, 2);
 
         if (!soundFallback) {
-            MusicHelper.playSong(song.get(), 0.4f, players, server, args.sharedSongCache(), logger);
+            this.song = MusicHelper.playSong(song.get(), 0.4f, players, server, args.sharedSongCache(), logger);
         }
     }
 
