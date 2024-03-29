@@ -113,5 +113,7 @@
   "game.ap2.musical_minecart.deadline": "Enter a minecart now!",
   "game.ap2.musical_minecart.format.from": "%s from %s",
   "game.ap2.musical_minecart.format.by": "%s by %s",
-  "game.ap2.musical_minecart.format.by_original": "%s by %s [%s]"
+  "game.ap2.musical_minecart.format.by_original": "%s by %s [%s]",
+  "game.ap2.guess_it": "Guess It",
+  "game.ap2.guess_it.description": "You will be asked several quizzes. The closer you get to the answer, the more points you receive."
 }
