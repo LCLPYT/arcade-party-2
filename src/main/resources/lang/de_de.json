@@ -115,5 +115,13 @@
   "game.ap2.musical_minecart.format.by": "%s von %s",
   "game.ap2.musical_minecart.format.by_original": "%s von %s [%s]",
   "game.ap2.guess_it": "Ratespiel",
-  "game.ap2.guess_it.description": "Du bekommst verschiedene Schätz- oder Wissensfragen. Je näher du an der Antwort liegst, desto mehr Punkte erhältst du."
+  "game.ap2.guess_it.description": "Du bekommst verschiedene Schätz- oder Wissensfragen. Je näher du an der Antwort liegst, desto mehr Punkte erhältst du.",
+  "game.ap2.guess_it.prepare.calculate": "Berechne...",
+  "game.ap2.guess_it.input.int": "Deine Eingabe '%s' ist keine gültige ganze Zahl.",
+  "game.ap2.guess_it.answer": "Gib deine Antwort",
+  "game.ap2.guess_it.gain_points": "+%s Punkte",
+  "game.ap2.guess_it.guessed": "Du hast %s geantwortet",
+  "game.ap2.guess_it.already_answered": "Diese Frage kann nur einmal beantwortet werden.",
+  "game.ap2.guess_it.calculate.exercise": "Berechne %s (ein Versuch):",
+  "game.ap2.guess_it.calculate.solution": "Die richtige Antwort war %s"
 }
