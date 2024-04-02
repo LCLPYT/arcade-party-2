@@ -1,16 +1,16 @@
 package work.lclpnet.ap2.game.guess_it.data;
 
 import net.minecraft.server.network.ServerPlayerEntity;
+import org.jetbrains.annotations.Nullable;
 
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
-import java.util.stream.Stream;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class ChallengeResult {
 
     private final Map<UUID, Integer> pointsGained = new HashMap<>();
+    private Object correctAnswer = null;
 
     public void grant(ServerPlayerEntity player, int points) {
         pointsGained.put(player.getUuid(), points);
@@ -20,13 +20,62 @@ public class ChallengeResult {
         return pointsGained.getOrDefault(player.getUuid(), 0);
     }
 
-    public Stream<Map.Entry<UUID, Integer>> orderedEntries() {
-        return pointsGained.entrySet().stream()
-                .filter(e -> e.getValue() > 0)
-                .sorted(Comparator.<Map.Entry<UUID, Integer>>comparingInt(Map.Entry::getValue).reversed());
-    }
-
     public void clear() {
         pointsGained.clear();
+        this.correctAnswer = null;
+    }
+
+    public void setCorrectAnswer(Object correctAnswer) {
+        this.correctAnswer = correctAnswer;
+    }
+
+    @Nullable
+    public Object getCorrectAnswer() {
+        return correctAnswer;
+    }
+
+    public void grantClosest3(Collection<ServerPlayerEntity> participants, int correctResult,
+                              Function<ServerPlayerEntity, OptionalInt> valueFunction) {
+        grantClosest3Diff(participants, player -> {
+            var value = valueFunction.apply(player);
+
+            if (value.isEmpty()) return OptionalInt.empty();
+
+            return OptionalInt.of(Math.abs(correctResult - value.getAsInt()));
+        });
+    }
+
+    public void grantClosest3Diff(Collection<ServerPlayerEntity> participants, Function<ServerPlayerEntity, OptionalInt> diffFunction) {
+        Map<ServerPlayerEntity, Integer> absPlayerDiff = new HashMap<>(participants.size());
+
+        // collect absolute difference to correct result for every player
+        for (ServerPlayerEntity player : participants) {
+            OptionalInt diff = diffFunction.apply(player);
+
+            if (diff.isPresent()) {
+                absPlayerDiff.put(player, diff.getAsInt());
+            }
+        }
+
+        // group by difference, sort by least off, select best 3
+        var ordered = absPlayerDiff.entrySet().stream()
+                .collect(Collectors.groupingBy(Map.Entry::getValue))
+                .entrySet().stream()
+                .sorted(Comparator.comparingInt(Map.Entry::getKey))
+                .limit(3)
+                .toList();
+
+        // grant best 3 groups points based on their collective difference
+        for (int i = 0; i < ordered.size(); i++) {
+            var playerEntries = ordered.get(i).getValue();
+
+            int points = 3 - i;
+
+            for (var playerEntry : playerEntries) {
+                ServerPlayerEntity player = playerEntry.getKey();
+
+                grant(player, points);
+            }
+        }
     }
 }

@@ -117,11 +117,14 @@
   "game.ap2.guess_it": "Guess It",
   "game.ap2.guess_it.description": "You will be asked several quizzes. The closer you get to the answer, the more points you receive.",
   "game.ap2.guess_it.prepare.calculate": "Calculate...",
+  "game.ap2.guess_it.prepare.estimate": "Estimate...",
   "game.ap2.guess_it.input.int": "Your input '%s' is not not a valid integer.",
+  "game.ap2.guess_it.input.daytime": "Your input '%s' is not not a valid time. Try 13:30 or 1:30 pm",
   "game.ap2.guess_it.answer": "Submit your answer",
   "game.ap2.guess_it.gain_points": "+%s points",
   "game.ap2.guess_it.guessed": "You answered %s",
   "game.ap2.guess_it.already_answered": "This quiz can only be answered once.",
+  "game.ap2.guess_it.solution": "The correct answer was %s",
   "game.ap2.guess_it.calculate.exercise": "Calculate %s (one try):",
-  "game.ap2.guess_it.calculate.solution": "The correct answer was %s"
+  "game.ap2.guess_it.daytime.guess": "What is the current time of day? e.g. 18:00 or 6 pm:"
 }

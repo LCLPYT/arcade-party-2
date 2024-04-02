@@ -3,8 +3,6 @@ package work.lclpnet.ap2.game.guess_it.challenge;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Formatting;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.game.guess_it.data.*;
@@ -12,11 +10,11 @@ import work.lclpnet.ap2.game.guess_it.math.Expression;
 import work.lclpnet.ap2.game.guess_it.math.Term;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.translate.TranslationService;
-import work.lclpnet.kibu.translate.text.RootText;
 
 import java.util.Random;
 
-import static net.minecraft.util.Formatting.*;
+import static net.minecraft.util.Formatting.BOLD;
+import static net.minecraft.util.Formatting.YELLOW;
 import static work.lclpnet.ap2.game.guess_it.math.Term.*;
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
@@ -36,7 +34,7 @@ public class MathsChallenge implements Challenge {
 
     @Override
     public String getPreparationKey() {
-        return GuessItConstants.PREPARE_CALCULATION;
+        return GuessItConstants.PREPARE_CALCULATE;
     }
 
     @Override
@@ -55,46 +53,27 @@ public class MathsChallenge implements Challenge {
         Expression term = randomTerm();
         correctAnswer = term.evaluate();
 
-        var msg = translations.translateText("game.ap2.guess_it.calculate.exercise", styled(term.stringify(), YELLOW))
-                .formatted(Formatting.DARK_GREEN, BOLD);
-
-        for (ServerPlayerEntity player : PlayerLookup.world(world)) {
-            player.sendMessage(msg.translateFor(player));
-        }
+        translations.translateText("game.ap2.guess_it.calculate.exercise", styled(term.stringify(), YELLOW))
+                .formatted(Formatting.DARK_GREEN, BOLD)
+                .sendTo(PlayerLookup.world(world));
     }
 
     @Override
     public void evaluate(PlayerChoices choices, ChallengeResult result) {
-        TranslationService translations = gameHandle.getTranslations();
-
-        var msg = translations.translateText("game.ap2.guess_it.calculate.solution", styled(correctAnswer, YELLOW));
+        result.setCorrectAnswer(correctAnswer);
 
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
-            RootText playerMsg = msg.translateFor(player);
             var optChoice = choices.getInt(player);
 
-            if (optChoice.isPresent()) {
-                int i = optChoice.getAsInt();
+            if (optChoice.isEmpty()) continue;
 
-                // 3 points, if the answer is correct
-                if (i == correctAnswer) {
-                    result.grant(player, 3);
-                    player.playSound(SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, SoundCategory.PLAYERS, 0.5f, 1.5f);
-                    player.sendMessage(playerMsg.formatted(GREEN));
-                    continue;
-                }
+            int i = optChoice.getAsInt();
+
+            // 3 points, if the answer is correct
+            if (i == correctAnswer) {
+                result.grant(player, 3);
             }
-
-
-            result.grant(player, 0);
-            player.playSound(SoundEvents.ENTITY_WITHER_HURT, SoundCategory.PLAYERS, 0.3f, 1.3f);
-            player.sendMessage(playerMsg.formatted(RED));
         }
-    }
-
-    @Override
-    public void destroy() {
-
     }
 
     private Expression randomTerm() {
@@ -104,7 +83,7 @@ public class MathsChallenge implements Challenge {
                 add(range(1, 100), sub(range(50, 200), range(50, 200))),        // a + b - c
                 add(range(1, 250), mul(range(2, 10), range(2, 10))),            // a + b * c
                 sub(range(-100, 100), range(1, 100)),                           // a - b
-                sub(range(-100, 100), mul(range(0, 50), range(0, 5))),          // a - b * c
+                sub(range(-100, 100), mul(range(0, 20), range(0, 5))),          // a - b * c
                 mul(range(1, 10), add(range(-10, 20), range(1, 10))),           // a * (b + c)
                 mul(range(1, 5), mul(range(2, 10), range(2, 4))),               // a * b * c
                 divCommon(5, 20, 2, 10),                 // a / b

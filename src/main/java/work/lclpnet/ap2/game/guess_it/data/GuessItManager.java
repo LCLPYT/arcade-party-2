@@ -3,6 +3,7 @@ package work.lclpnet.ap2.game.guess_it.data;
 import net.minecraft.server.world.ServerWorld;
 import org.jetbrains.annotations.NotNull;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
+import work.lclpnet.ap2.game.guess_it.challenge.DayTimeChallenge;
 import work.lclpnet.ap2.game.guess_it.challenge.MathsChallenge;
 
 import java.util.*;
@@ -17,6 +18,7 @@ public class GuessItManager {
         this.random = random;
 
         challenges.add(new MathsChallenge(gameHandle, world, random));
+        challenges.add(new DayTimeChallenge(gameHandle, world, random));
     }
 
     @NotNull

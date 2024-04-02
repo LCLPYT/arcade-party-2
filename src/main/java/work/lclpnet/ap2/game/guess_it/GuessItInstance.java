@@ -17,6 +17,7 @@ import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.kibu.title.Title;
 import work.lclpnet.kibu.translate.TranslationService;
+import work.lclpnet.kibu.translate.text.TranslatedText;
 import work.lclpnet.lobby.game.util.BossBarTimer;
 
 import java.util.Objects;
@@ -82,6 +83,8 @@ public class GuessItInstance extends DefaultGameInstance {
             player.playSound(SoundEvents.BLOCK_END_PORTAL_FRAME_FILL, SoundCategory.NEUTRAL, 1f, 0.5f);
         }
 
+        challenge.prepare();
+
         gameHandle.getGameScheduler().timeout(this::beginChallenge, PREPARATION_TICKS);
     }
 
@@ -121,6 +124,13 @@ public class GuessItInstance extends DefaultGameInstance {
         result.clear();
         challenge.evaluate(choices, result);
 
+        Object correctAnswer = result.getCorrectAnswer();
+        TranslatedText solutionMsg = null;
+
+        if (correctAnswer != null) {
+            solutionMsg = translations.translateText("game.ap2.guess_it.solution", styled(correctAnswer, YELLOW));
+        }
+
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
             int points = result.getPointsGained(player);
 
@@ -130,6 +140,20 @@ public class GuessItInstance extends DefaultGameInstance {
 
             if (points > 0) {
                 data.addScore(player, points);
+
+                player.playSound(SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, SoundCategory.PLAYERS, 0.5f, 1.5f);
+
+                if (solutionMsg != null) {
+                    player.sendMessage(solutionMsg.translateFor(player).formatted(GREEN));
+                }
+
+                continue;
+            }
+
+            player.playSound(SoundEvents.ENTITY_WITHER_HURT, SoundCategory.PLAYERS, 0.3f, 1.3f);
+
+            if (solutionMsg != null) {
+                player.sendMessage(solutionMsg.translateFor(player).formatted(RED));
             }
         }
 

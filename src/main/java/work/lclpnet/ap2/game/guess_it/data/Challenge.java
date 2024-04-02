@@ -10,5 +10,7 @@ public interface Challenge {
 
     void evaluate(PlayerChoices choices, ChallengeResult result);
 
-    void destroy();
+    default void destroy() {}
+
+    default void prepare() {}
 }

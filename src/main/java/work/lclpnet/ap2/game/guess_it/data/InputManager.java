@@ -8,6 +8,7 @@ import net.minecraft.sound.SoundEvents;
 import work.lclpnet.kibu.hook.ServerMessageHooks;
 import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 import work.lclpnet.kibu.translate.TranslationService;
+import work.lclpnet.kibu.translate.text.TranslatedText;
 
 import static net.minecraft.util.Formatting.*;
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
@@ -41,9 +42,15 @@ public class InputManager implements InputInterface {
 
             String content = signedMessage.signedBody().content();
 
-            inputValue.validate(content).ifPresentOrElse(
-                    errMsg -> player.sendMessage(errMsg.translateFor(player)),
-                    ()     -> onAnswer(player, content));
+            var res = inputValue.validate(content);
+            TranslatedText err = res.right();
+
+            if (err != null) {
+                player.sendMessage(err.translateFor(player));
+            } else {
+                String input = res.left();
+                onAnswer(player, input);
+            }
         }
     }
 
