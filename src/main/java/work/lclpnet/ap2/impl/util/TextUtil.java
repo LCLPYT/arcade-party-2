@@ -1,5 +1,6 @@
 package work.lclpnet.ap2.impl.util;
 
+import net.minecraft.entity.EntityType;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.text.MutableText;
@@ -13,6 +14,10 @@ public class TextUtil {
 
     public static MutableText getVanillaName(ItemStack stack) {
         return getVanillaName(stack.getItem());
+    }
+
+    public static MutableText getVanillaName(EntityType<?> entityType) {
+        return Text.translatable(entityType.getTranslationKey());
     }
 
     private TextUtil() {}

@@ -7,19 +7,24 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
+import net.minecraft.util.math.BlockPos;
+import org.json.JSONObject;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.game.guess_it.data.*;
 import work.lclpnet.ap2.impl.game.DefaultGameInstance;
 import work.lclpnet.ap2.impl.game.data.ScoreDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
+import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.kibu.title.Title;
 import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.kibu.translate.text.TranslatedText;
 import work.lclpnet.lobby.game.util.BossBarTimer;
+import work.lclpnet.lobby.util.ResetWorldModifier;
 
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Random;
 
@@ -36,6 +41,7 @@ public class GuessItInstance extends DefaultGameInstance {
     private final ChallengeResult result;
     private GuessItManager manager = null;
     private Challenge challenge = null;
+    private ResetWorldModifier modifier;
 
     public GuessItInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
@@ -55,7 +61,18 @@ public class GuessItInstance extends DefaultGameInstance {
         ServerWorld world = getWorld();
         Random random = new Random();
 
-        manager = new GuessItManager(gameHandle, world, random);
+        Stage stage = readStage();
+
+        modifier = new ResetWorldModifier(world, gameHandle.getHookRegistrar());
+        manager = new GuessItManager(gameHandle, world, random, stage, modifier);
+
+        // make participants invulnerable, so that they won't be targeted by mobs
+        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
+            player.getAbilities().invulnerable = true;
+            player.sendAbilitiesUpdate();
+        }
+
+        // TODO add hook for MobEntity::isAffectedByDaylight
     }
 
     @Override
@@ -65,7 +82,24 @@ public class GuessItInstance extends DefaultGameInstance {
         prepareNextChallenge();
     }
 
+    private Stage readStage() {
+        JSONObject area = getMap().requireProperty("area");
+        String type = area.getString("type").toLowerCase(Locale.ROOT);
+
+        if (type.equals(CylinderStage.TYPE)) {
+            BlockPos origin = MapUtil.readBlockPos(area.getJSONArray("origin"));
+            int radius = area.getInt("radius");
+            int height = area.getInt("height");
+
+            return new CylinderStage(origin, radius, height);
+        }
+
+        throw new IllegalStateException("Unknown area type " + type);
+    }
+
     private void prepareNextChallenge() {
+        modifier.undo();
+
         if (challenge != null) {
             challenge.destroy();
         }
