@@ -16,6 +16,11 @@ import work.lclpnet.ap2.impl.game.DefaultGameInstance;
 import work.lclpnet.ap2.impl.game.data.ScoreDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.map.MapUtil;
+import work.lclpnet.kibu.hook.entity.AffectedByDaylightCallback;
+import work.lclpnet.kibu.hook.entity.EntityConvertCallback;
+import work.lclpnet.kibu.hook.entity.EntityTargetCallback;
+import work.lclpnet.kibu.hook.entity.EntityTeleportCallback;
+import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.kibu.title.Title;
@@ -47,7 +52,7 @@ public class GuessItInstance extends DefaultGameInstance {
         super(gameHandle);
 
         choices = new PlayerChoices();
-        inputManager = new InputManager(choices, gameHandle.getTranslations());
+        inputManager = new InputManager(choices, gameHandle.getTranslations(), gameHandle.getParticipants());
         result = new ChallengeResult();
     }
 
@@ -63,7 +68,9 @@ public class GuessItInstance extends DefaultGameInstance {
 
         Stage stage = readStage();
 
-        modifier = new ResetWorldModifier(world, gameHandle.getHookRegistrar());
+        HookRegistrar hooks = gameHandle.getHookRegistrar();
+
+        modifier = new ResetWorldModifier(world, hooks);
         manager = new GuessItManager(gameHandle, world, random, stage, modifier);
 
         // make participants invulnerable, so that they won't be targeted by mobs
@@ -72,7 +79,17 @@ public class GuessItInstance extends DefaultGameInstance {
             player.sendAbilitiesUpdate();
         }
 
-        // TODO add hook for MobEntity::isAffectedByDaylight
+        // ignore daylight affection for undead mobs
+        hooks.registerHook(AffectedByDaylightCallback.HOOK, entity -> true);
+
+        // prevent entity conversion, e.g. piglin -> zombified piglin
+        hooks.registerHook(EntityConvertCallback.HOOK, (entity, type) -> true);
+
+        // prevent entity teleportation
+        hooks.registerHook(EntityTeleportCallback.HOOK, (entity, x, y, z) -> true);
+
+        // prevent entity targeting
+        hooks.registerHook(EntityTargetCallback.HOOK, (entity, target) -> true);
     }
 
     @Override

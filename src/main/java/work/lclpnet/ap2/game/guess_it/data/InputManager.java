@@ -5,6 +5,7 @@ import net.minecraft.network.message.SignedMessage;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
+import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.kibu.hook.ServerMessageHooks;
 import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 import work.lclpnet.kibu.translate.TranslationService;
@@ -17,11 +18,13 @@ public class InputManager implements InputInterface {
 
     private final PlayerChoices choices;
     private final TranslationService translations;
+    private final Participants participants;
     private InputValue inputValue = null;
 
-    public InputManager(PlayerChoices choices, TranslationService translations) {
+    public InputManager(PlayerChoices choices, TranslationService translations, Participants participants) {
         this.choices = choices;
         this.translations = translations;
+        this.participants = participants;
     }
 
     public void init(HookRegistrar hooks) {
@@ -32,6 +35,8 @@ public class InputManager implements InputInterface {
     }
 
     private void onChat(SignedMessage signedMessage, ServerPlayerEntity player, MessageType.Parameters parameters) {
+        if (!participants.isParticipating(player)) return;
+
         if (inputValue != null) {
             if (inputValue.isOnce() && hasAnswered(player)) {
                 var msg = translations.translateText(player, "game.ap2.guess_it.already_answered").formatted(RED);

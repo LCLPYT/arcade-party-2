@@ -126,5 +126,6 @@
   "game.ap2.guess_it.already_answered": "Diese Frage kann nur einmal beantwortet werden.",
   "game.ap2.guess_it.solution": "Die richtige Antwort war %s",
   "game.ap2.guess_it.calculate.exercise": "Berechne %s (ein Versuch):",
-  "game.ap2.guess_it.daytime.guess": "Was ist die aktuelle Tageszeit? z.B. 18:00 oder 9:00:"
+  "game.ap2.guess_it.daytime.guess": "Was ist die aktuelle Tageszeit? z.B. 18:00 oder 9:00:",
+  "game.ap2.guess_it.mob.guess": "Wie viele Einheiten vom Typ %s befinden sich in der Arena?"
 }

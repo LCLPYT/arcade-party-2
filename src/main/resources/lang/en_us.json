@@ -126,5 +126,6 @@
   "game.ap2.guess_it.already_answered": "This quiz can only be answered once.",
   "game.ap2.guess_it.solution": "The correct answer was %s",
   "game.ap2.guess_it.calculate.exercise": "Calculate %s (one try):",
-  "game.ap2.guess_it.daytime.guess": "What is the current time of day? e.g. 18:00 or 6 pm:"
+  "game.ap2.guess_it.daytime.guess": "What is the current time of day? e.g. 18:00 or 6 pm:",
+  "game.ap2.guess_it.mob.guess": "How many entities of type %s are there in the arena?"
 }

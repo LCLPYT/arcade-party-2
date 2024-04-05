@@ -1,35 +1,28 @@
 package work.lclpnet.ap2.game.guess_it.challenge;
 
+import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
-import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.entity.VariantHolder;
-import net.minecraft.entity.mob.*;
-import net.minecraft.entity.passive.*;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.nbt.NbtCompound;
 import net.minecraft.registry.Registries;
-import net.minecraft.registry.Registry;
-import net.minecraft.registry.tag.ItemTags;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.text.Text;
-import net.minecraft.util.DyeColor;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.village.VillagerData;
-import net.minecraft.village.VillagerDataContainer;
-import org.jetbrains.annotations.NotNull;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.game.guess_it.data.*;
+import work.lclpnet.ap2.game.guess_it.util.MobSpawner;
+import work.lclpnet.ap2.impl.util.TextUtil;
 import work.lclpnet.ap2.impl.util.world.SizedSpaceFinder;
 import work.lclpnet.kibu.scheduler.Ticks;
+import work.lclpnet.kibu.translate.TranslationService;
+import work.lclpnet.kibu.translate.text.FormatWrapper;
 import work.lclpnet.lobby.util.WorldModifier;
 
 import java.util.*;
 
+import static net.minecraft.util.Formatting.*;
+
 public class MobCountSingleChallenge implements Challenge {
 
-    private static int DURATION_TICKS = Ticks.seconds(16);
+    private static final int DURATION_TICKS = Ticks.seconds(16);
     private final MiniGameHandle gameHandle;
     private final ServerWorld world;
     private final Random random;
@@ -57,9 +50,11 @@ public class MobCountSingleChallenge implements Challenge {
 
     @Override
     public void begin(InputInterface input) {
-        input.expectInput().validateInt(gameHandle.getTranslations());
+        TranslationService translations = gameHandle.getTranslations();
 
-        var type = selectEntityType();
+        input.expectInput().validateInt(translations);
+
+        var type = selectRandomEntityType();
 
         amount = getRandomAmount(type);
 
@@ -70,42 +65,28 @@ public class MobCountSingleChallenge implements Challenge {
             throw new IllegalStateException("There are no spaces that support " + Registries.ENTITY_TYPE.getId(type));
         }
 
+        MobSpawner spawner = new MobSpawner(world, random);
+
         for (int i = 0; i < amount; i++) {
             Vec3d pos = spaces.get(random.nextInt(spaces.size()));
-            spawnMob(type, pos);
+            spawner.spawnEntity(type, pos, modifier);
         }
+
+        var entityName = TextUtil.getVanillaName(type).formatted(YELLOW);
+
+        translations.translateText("game.ap2.guess_it.mob.guess", entityName, YELLOW)
+                .formatted(DARK_GREEN, BOLD)
+                .sendTo(PlayerLookup.world(world));
     }
 
     @Override
     public void evaluate(PlayerChoices choices, ChallengeResult result) {
+        result.setCorrectAnswer(amount);
+
         result.grantClosest3(gameHandle.getParticipants().getAsSet(), amount, choices::getInt);
     }
 
-    private int getRandomAmount(EntityType<?> type) {
-        if (type == EntityType.WARDEN || type == EntityType.ELDER_GUARDIAN || type == EntityType.RAVAGER || type == EntityType.WITHER) {
-            return 12 + random.nextInt(20);
-        }
-
-        if (type == EntityType.CAMEL || type == EntityType.IRON_GOLEM || type == EntityType.SNIFFER) {
-            return 22 + random.nextInt(54);
-        }
-
-        return 31 + random.nextInt(102);
-    }
-
-    private void spawnMob(EntityType<?> type, Vec3d pos) {
-        Entity entity = type.create(world);
-
-        if (entity == null) return;
-
-        entity.setPosition(pos);
-
-        modifyEntity(entity);
-
-        modifier.spawnEntity(entity);
-    }
-
-    private EntityType<?> selectEntityType() {
+    private EntityType<?> selectRandomEntityType() {
         Set<EntityType<?>> types = Set.of(
                 EntityType.ALLAY, EntityType.RABBIT, EntityType.AXOLOTL, EntityType.BAT, EntityType.BEE,
                 EntityType.BLAZE, EntityType.CAMEL, EntityType.CAT, EntityType.CHICKEN, EntityType.COW,
@@ -132,178 +113,19 @@ public class MobCountSingleChallenge implements Challenge {
                 .orElseThrow();
     }
 
-    private void modifyEntity(Entity entity) {
-        if (random.nextFloat() < 0.005) {
-            entity.setCustomName(Text.literal("Dinnerbone"));
+    private int getRandomAmount(EntityType<?> type) {
+        if (type == EntityType.WARDEN || type == EntityType.ELDER_GUARDIAN || type == EntityType.RAVAGER || type == EntityType.WITHER) {
+            return 12 + random.nextInt(20);
         }
 
-        if (entity instanceof MobEntity mob) {
-            if (random.nextFloat() < 0.045) {
-                mob.setBaby(true);
-            }
+        if (type == EntityType.CAMEL || type == EntityType.IRON_GOLEM || type == EntityType.SNIFFER) {
+            return 22 + random.nextInt(54);
         }
 
-        if (entity instanceof AbstractHorseEntity horse) {
-            if (random.nextFloat() < 0.05f) {
-                horse.saddle(null);
-            }
+        if (type == EntityType.GUARDIAN || type == EntityType.HOGLIN || type == EntityType.ZOGLIN) {
+            return 27 + random.nextInt(78);
         }
 
-        // prevent zombies from burning by equipping an item on the head (could also override burnsInDaylight, like husk)
-        if (entity instanceof ZombieEntity zombie) {
-            zombie.equipStack(EquipmentSlot.HEAD, new ItemStack(Items.BIRCH_BUTTON));
-        }
-
-        if (entity instanceof AxolotlEntity axolotl) {
-            randomizeVariant(axolotl, AxolotlEntity.Variant.values());
-        }
-        else if (entity instanceof RabbitEntity rabbit) {
-            if (random.nextFloat() < 0.125f) {  // 1 / 8 chance
-                rabbit.setCustomName(Text.literal("Toast"));
-            } else {
-                randomizeVariant(rabbit, RabbitEntity.RabbitType.values());
-            }
-        }
-        else if (entity instanceof CatEntity cat) {
-            randomizeVariant(cat, Registries.CAT_VARIANT);
-        }
-        else if (entity instanceof SheepEntity sheep) {
-            if (random.nextFloat() < 0.01f) {
-                sheep.setSheared(true);
-            }
-
-            if (random.nextFloat() < 0.01f) {
-                sheep.setCustomName(Text.literal("jeb_"));
-            } else {
-                sheep.setColor(randomElement(DyeColor.values()));
-            }
-        }
-        else if (entity instanceof DonkeyEntity donkey) {
-            if (random.nextFloat() < 0.04f) {
-                donkey.setHasChest(true);
-            }
-        }
-        else if (entity instanceof FoxEntity fox) {
-            randomizeVariant(fox, FoxEntity.Type.values());
-        }
-        else if (entity instanceof FrogEntity frog) {
-            randomizeVariant(frog, Registries.FROG_VARIANT);
-        }
-        else if (entity instanceof GoatEntity goat) {
-            if (random.nextFloat() < 0.05f) {
-                goat.setScreaming(true);
-            }
-        }
-        else if (entity instanceof HorseEntity horse) {
-            randomizeVariant(horse, HorseColor.values());
-        }
-        else if (entity instanceof LlamaEntity llama) {
-            randomizeVariant(llama, LlamaEntity.Variant.values());
-
-            if (!(entity instanceof TraderLlamaEntity) && random.nextFloat() < 0.6) {
-                Registries.ITEM.getEntryList(ItemTags.WOOL_CARPETS).flatMap(e -> {
-                    int n = e.size();
-
-                    if (n == 0) return Optional.empty();
-
-                    return e.stream().skip(random.nextInt(n)).findFirst();
-                }).ifPresent(item -> {
-                    NbtCompound nbt = new NbtCompound();
-                    llama.writeCustomDataToNbt(nbt);
-
-                    NbtCompound carpetNbt = new ItemStack(item).writeNbt(new NbtCompound());
-                    nbt.put("DecorItem", carpetNbt);
-                    llama.readCustomDataFromNbt(nbt);
-                });
-            }
-        }
-        else if (entity instanceof SlimeEntity slime) {
-            slime.setSize(random.nextInt(5), false);
-        }
-        else if (entity instanceof MooshroomEntity mooshroom) {
-            randomizeVariant(mooshroom, MooshroomEntity.Type.values());
-        }
-        else if (entity instanceof MuleEntity mule) {
-            if (random.nextFloat() < 0.04f) {
-                mule.setHasChest(true);
-            }
-        }
-        else if (entity instanceof PandaEntity panda) {
-            PandaEntity.Gene gene = randomElement(PandaEntity.Gene.values());
-            panda.setMainGene(gene);
-            panda.setHiddenGene(gene);
-        }
-        else if (entity instanceof ParrotEntity parrot) {
-            randomizeVariant(parrot, ParrotEntity.Variant.values());
-        }
-        else if (entity instanceof PhantomEntity phantom) {
-            if (random.nextFloat() < 0.35f) {
-                phantom.setPhantomSize(random.nextInt(4));
-            }
-        }
-        else if (entity instanceof ShulkerEntity shulker) {
-            if (random.nextFloat() < 0.9411765f) {  // 1 / 17 chance to be default color
-                shulker.setVariant(Optional.of(randomElement(DyeColor.values())));
-            }
-        }
-        else if (entity instanceof VillagerDataContainer villager) {
-            var types = getRegistryEntries(Registries.VILLAGER_TYPE);
-            var professions = getRegistryEntries(Registries.VILLAGER_PROFESSION);
-
-            villager.setVillagerData(new VillagerData(randomElement(types), randomElement(professions), 2));
-        }
-        else if (entity instanceof SnowGolemEntity snowGolem) {
-            if (random.nextFloat() < 0.5) {
-                snowGolem.setHasPumpkin(false);
-            }
-        }
-        else if (entity instanceof TropicalFishEntity tropicalFish) {
-            tropicalFish.setVariant(randomElement(TropicalFishEntity.Variety.values()));
-        }
-        else if (entity instanceof AbstractPiglinEntity piglin) {
-            piglin.setImmuneToZombification(true);
-        }
-        else if (entity instanceof VexEntity vex) {
-            vex.noClip = false;
-        }
-    }
-
-    private <T> void randomizeVariant(VariantHolder<T> holder, Registry<T> registry) {
-        var variants = getRegistryEntries(registry);
-
-        randomizeVariant(holder, variants);
-    }
-
-    @NotNull
-    private static <T> List<T> getRegistryEntries(Registry<T> registry) {
-        return registry.getEntrySet().stream()
-                .map(Map.Entry::getValue)
-                .toList();
-    }
-
-    private <T> void randomizeVariant(VariantHolder<T> holder, List<T> variants) {
-        T variant = randomElement(variants);
-        holder.setVariant(variant);
-    }
-
-    private <T> void randomizeVariant(VariantHolder<T> holder, T[] variants) {
-        T variant = randomElement(variants);
-        holder.setVariant(variant);
-    }
-
-    private <T> T randomElement(List<T> variants) {
-        if (variants.isEmpty()) {
-            throw new IllegalStateException("Empty variants");
-        }
-
-        return variants.get(random.nextInt(variants.size()));
-    }
-
-    private <T> T randomElement(T[] variants) {
-        if (variants.length == 0) {
-            throw new IllegalStateException("Empty variants");
-        }
-
-        return variants[random.nextInt(variants.length)];
+        return 31 + random.nextInt(102);
     }
 }
