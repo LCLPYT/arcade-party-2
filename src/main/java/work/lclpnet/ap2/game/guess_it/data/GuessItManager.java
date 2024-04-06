@@ -15,14 +15,15 @@ public class GuessItManager {
     private final List<Challenge> queue = new ArrayList<>();
 
     public GuessItManager(MiniGameHandle gameHandle, ServerWorld world, Random random, Stage stage,
-                          WorldModifier modifier) {
+                          WorldModifier modifier, SoundSubtitles soundSubtitles) {
         this.random = random;
 
-        challenges.add(new MathsChallenge(gameHandle, world, random));
-        challenges.add(new DayTimeChallenge(gameHandle, world, random));
-        challenges.add(new MobCountSingleChallenge(gameHandle, world, random, stage, modifier));
-        challenges.add(new MobCountMultiChallenge(gameHandle, world, random, stage, modifier));
-        challenges.add(new DistinctMobCountChallenge(gameHandle, world, random, stage, modifier));
+//        challenges.add(new MathsChallenge(gameHandle, world, random));
+//        challenges.add(new DayTimeChallenge(gameHandle, world, random));
+//        challenges.add(new MobCountSingleChallenge(gameHandle, world, random, stage, modifier));
+//        challenges.add(new MobCountMultiChallenge(gameHandle, world, random, stage, modifier));
+//        challenges.add(new DistinctMobCountChallenge(gameHandle, world, random, stage, modifier));
+        challenges.add(new SoundChallenge(gameHandle, world, random, soundSubtitles));
     }
 
     @NotNull

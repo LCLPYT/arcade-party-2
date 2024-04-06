@@ -1,5 +1,6 @@
 package work.lclpnet.ap2.game.guess_it.data;
 
+import com.mojang.datafixers.types.Func;
 import net.minecraft.server.network.ServerPlayerEntity;
 import org.jetbrains.annotations.Nullable;
 
@@ -32,6 +33,22 @@ public class ChallengeResult {
     @Nullable
     public Object getCorrectAnswer() {
         return correctAnswer;
+    }
+
+    public void grantIfCorrect(Iterable<ServerPlayerEntity> participants, int correctResult,
+                          Function<ServerPlayerEntity, OptionalInt> choiceFunction) {
+        for (ServerPlayerEntity player : participants) {
+            var optChoice = choiceFunction.apply(player);
+
+            if (optChoice.isEmpty()) continue;
+
+            int i = optChoice.getAsInt();
+
+            // 3 points, if the answer is correct
+            if (i == correctResult) {
+                grant(player, 3);
+            }
+        }
     }
 
     public void grantClosest3(Collection<ServerPlayerEntity> participants, int correctResult,

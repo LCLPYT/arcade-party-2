@@ -61,19 +61,7 @@ public class MathsChallenge implements Challenge {
     @Override
     public void evaluate(PlayerChoices choices, ChallengeResult result) {
         result.setCorrectAnswer(correctAnswer);
-
-        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
-            var optChoice = choices.getInt(player);
-
-            if (optChoice.isEmpty()) continue;
-
-            int i = optChoice.getAsInt();
-
-            // 3 points, if the answer is correct
-            if (i == correctAnswer) {
-                result.grant(player, 3);
-            }
-        }
+        result.grantIfCorrect(gameHandle.getParticipants(), correctAnswer, choices::getInt);
     }
 
     private Expression randomTerm() {

@@ -11,6 +11,7 @@ import net.minecraft.util.math.BlockPos;
 import org.json.JSONObject;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
+import work.lclpnet.ap2.api.map.MapBootstrap;
 import work.lclpnet.ap2.game.guess_it.data.*;
 import work.lclpnet.ap2.impl.game.DefaultGameInstance;
 import work.lclpnet.ap2.impl.game.data.ScoreDataContainer;
@@ -23,33 +24,35 @@ import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.kibu.title.Title;
 import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.kibu.translate.text.TranslatedText;
+import work.lclpnet.lobby.game.map.GameMap;
 import work.lclpnet.lobby.game.util.BossBarTimer;
 import work.lclpnet.lobby.util.ResetWorldModifier;
 
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Random;
+import java.util.concurrent.CompletableFuture;
 
 import static net.minecraft.util.Formatting.*;
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
-public class GuessItInstance extends DefaultGameInstance {
+public class GuessItInstance extends DefaultGameInstance implements MapBootstrap {
 
     private static final int PREPARATION_TICKS = Ticks.seconds(3);
     private static final int DELAY_TICKS = Ticks.seconds(5);
     private final ScoreDataContainer<ServerPlayerEntity, PlayerRef> data = new ScoreDataContainer<>(PlayerRef::create);
     private final PlayerChoices choices;
-    private final InputManager inputManager;
     private final ChallengeResult result;
+    private InputManager inputManager;
     private GuessItManager manager = null;
     private Challenge challenge = null;
-    private ResetWorldModifier modifier;
+    private SoundSubtitles soundSubtitles = null;
+    private ResetWorldModifier modifier = null;
 
     public GuessItInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
 
         choices = new PlayerChoices();
-        inputManager = new InputManager(choices, gameHandle.getTranslations(), gameHandle.getParticipants());
         result = new ChallengeResult();
     }
 
@@ -61,14 +64,13 @@ public class GuessItInstance extends DefaultGameInstance {
     @Override
     protected void prepare() {
         ServerWorld world = getWorld();
+        HookRegistrar hooks = gameHandle.getHookRegistrar();
         Random random = new Random();
-
         Stage stage = readStage();
 
-        HookRegistrar hooks = gameHandle.getHookRegistrar();
-
+        inputManager = new InputManager(choices, gameHandle.getTranslations(), gameHandle.getParticipants(), world);
         modifier = new ResetWorldModifier(world, hooks);
-        manager = new GuessItManager(gameHandle, world, random, stage, modifier);
+        manager = new GuessItManager(gameHandle, world, random, stage, modifier, soundSubtitles);
 
         // make participants invulnerable, so that they won't be targeted by mobs
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
@@ -217,5 +219,10 @@ public class GuessItInstance extends DefaultGameInstance {
         inputManager.reset();
 
         gameHandle.getGameScheduler().timeout(this::prepareNextChallenge, DELAY_TICKS);
+    }
+
+    @Override
+    public CompletableFuture<Void> createWorldBootstrap(ServerWorld world, GameMap map) {
+        return SoundSubtitles.load().thenAccept(sub -> soundSubtitles = sub);
     }
 }

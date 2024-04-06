@@ -33,6 +33,19 @@ public class PlayerChoices {
         }
     }
 
+    public OptionalInt getOption(ServerPlayerEntity player) {
+        String in = choices.get(player.getUuid());
+
+        if (in == null || in.length() != 1) {
+            return OptionalInt.empty();
+        }
+
+        char c = in.charAt(0);
+        int option = c - 'A';
+
+        return OptionalInt.of(option);
+    }
+
     public void clear() {
         choices.clear();
     }
