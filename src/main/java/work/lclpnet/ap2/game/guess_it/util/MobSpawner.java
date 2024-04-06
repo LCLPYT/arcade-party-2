@@ -2,28 +2,29 @@ package work.lclpnet.ap2.game.guess_it.util;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
-import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.VariantHolder;
+import net.minecraft.entity.ai.brain.MemoryModuleType;
 import net.minecraft.entity.mob.*;
 import net.minecraft.entity.passive.*;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.nbt.NbtCompound;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
-import net.minecraft.registry.tag.ItemTags;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
 import net.minecraft.util.DyeColor;
+import net.minecraft.util.Unit;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.village.VillagerData;
 import net.minecraft.village.VillagerDataContainer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.kibu.access.entity.*;
+import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.lobby.util.WorldModifier;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Random;
 
 public class MobSpawner {
 
@@ -62,6 +63,8 @@ public class MobSpawner {
         }
 
         if (entity instanceof MobEntity mob) {
+            mob.setPersistent();
+
             if (random.nextFloat() < 0.045) {
                 mob.setBaby(true);
             }
@@ -168,6 +171,11 @@ public class MobSpawner {
         } else if (entity instanceof VexEntity vex) {
             //noinspection UnstableApiUsage
             VexEntityAccess.setForceClipping(vex, true);
+        } else if (entity instanceof WardenEntity warden) {
+            // prevent warden from digging into the ground
+            var brain = warden.getBrain();
+//            warden.setPersistent();
+            brain.remember(MemoryModuleType.DIG_COOLDOWN, Unit.INSTANCE, Ticks.minutes(10));
         }
     }
 

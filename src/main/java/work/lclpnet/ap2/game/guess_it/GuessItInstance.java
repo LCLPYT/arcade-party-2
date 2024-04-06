@@ -16,10 +16,7 @@ import work.lclpnet.ap2.impl.game.DefaultGameInstance;
 import work.lclpnet.ap2.impl.game.data.ScoreDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.map.MapUtil;
-import work.lclpnet.kibu.hook.entity.AffectedByDaylightCallback;
-import work.lclpnet.kibu.hook.entity.EntityConvertCallback;
-import work.lclpnet.kibu.hook.entity.EntityTargetCallback;
-import work.lclpnet.kibu.hook.entity.EntityTeleportCallback;
+import work.lclpnet.kibu.hook.entity.*;
 import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
@@ -90,6 +87,15 @@ public class GuessItInstance extends DefaultGameInstance {
 
         // prevent entity targeting
         hooks.registerHook(EntityTargetCallback.HOOK, (entity, target) -> true);
+
+        // prevent mobs from applying effects to players
+        hooks.registerHook(EntityStatusEffectCallback.HOOK, (entity, effect, source) -> entity instanceof ServerPlayerEntity && source != null);
+
+        // prevent wither shooting skulls
+        hooks.registerHook(WitherShootCallback.HOOK, (wither, targetX, targetY, targetZ) -> true);
+
+        // prevent boss mobs from creating boss bars for players
+        hooks.registerHook(EntityBossBarCallback.HOOK, (entity, bossBar, player) -> true);
     }
 
     @Override
