@@ -2,7 +2,6 @@ package work.lclpnet.ap2.game.guess_it.challenge;
 
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.entity.EntityType;
-import net.minecraft.registry.Registries;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.Vec3d;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
@@ -10,18 +9,19 @@ import work.lclpnet.ap2.game.guess_it.data.*;
 import work.lclpnet.ap2.game.guess_it.util.MobRandomizer;
 import work.lclpnet.ap2.game.guess_it.util.MobSpawner;
 import work.lclpnet.ap2.impl.util.TextUtil;
-import work.lclpnet.ap2.impl.util.world.SizedSpaceFinder;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.lobby.util.WorldModifier;
 
-import java.util.*;
+import java.util.List;
+import java.util.Random;
 
 import static net.minecraft.util.Formatting.*;
 
-public class MobCountSingleChallenge implements Challenge {
+public class MobCountMultiChallenge implements Challenge {
 
     private static final int DURATION_TICKS = Ticks.seconds(16);
+    static final int MIN_BUDGET = 43, RANDOM_BUDGET = 97;
     private final MiniGameHandle gameHandle;
     private final ServerWorld world;
     private final Random random;
@@ -29,7 +29,7 @@ public class MobCountSingleChallenge implements Challenge {
     private final WorldModifier modifier;
     private int amount = 0;
 
-    public MobCountSingleChallenge(MiniGameHandle gameHandle, ServerWorld world, Random random, Stage stage, WorldModifier modifier) {
+    public MobCountMultiChallenge(MiniGameHandle gameHandle, ServerWorld world, Random random, Stage stage, WorldModifier modifier) {
         this.gameHandle = gameHandle;
         this.world = world;
         this.random = random;
@@ -53,26 +53,47 @@ public class MobCountSingleChallenge implements Challenge {
 
         input.expectInput().validateInt(translations);
 
-        var randomizer = new MobRandomizer();
-        var type = randomizer.selectRandomEntityType(random);
+        int budget = MIN_BUDGET + random.nextInt(RANDOM_BUDGET);
+        amount = random.nextInt((int) Math.floor(budget * 0.2));
+        budget -= amount;
 
-        amount = getRandomAmount(type);
+        var types = MobRandomizer.getDefaultTypes();
+        int typeCount = types.size();
 
-        SizedSpaceFinder spaceFinder = SizedSpaceFinder.create(world, type);
-        List<Vec3d> spaces = spaceFinder.findSpaces(stage.iterateGroundPositions());
-
-        if (spaces.isEmpty()) {
-            throw new IllegalStateException("There are no spaces that support " + Registries.ENTITY_TYPE.getId(type));
+        if (typeCount < 2) {
+            throw new IllegalStateException("There must be at least two entity types");
         }
 
+        List<Vec3d> spaces = MobSpawner.findSpawns(world, types).findSpaces(stage.iterateGroundPositions());
+
+        if (spaces.isEmpty()) {
+            throw new IllegalStateException("No spawn spaces found");
+        }
+
+        var searched = types.stream().skip(random.nextInt(typeCount)).findFirst().orElseThrow();
+        types.remove(searched);
+
+        types = MobRandomizer.trimTypes(types, random, 10);
+
+        MobRandomizer randomizer = new MobRandomizer(types);
         MobSpawner spawner = new MobSpawner(world, random);
 
         for (int i = 0; i < amount; i++) {
-            Vec3d pos = spaces.get(random.nextInt(spaces.size()));
-            spawner.spawnEntity(type, pos, modifier);
+            Vec3d spawn = spaces.get(random.nextInt(spaces.size()));
+            spawner.spawnEntity(searched, spawn, modifier);
         }
 
-        var entityName = TextUtil.getVanillaName(type).formatted(YELLOW);
+        while (budget > 0) {
+            var type = randomizer.selectRandomEntityType(random);
+            int cost = getCost(type);
+
+            budget -= cost;
+
+            Vec3d spawn = spaces.get(random.nextInt(spaces.size()));
+            spawner.spawnEntity(type, spawn, modifier);
+        }
+
+        var entityName = TextUtil.getVanillaName(searched).formatted(YELLOW);
 
         translations.translateText("game.ap2.guess_it.mob.guess", entityName, YELLOW)
                 .formatted(DARK_GREEN, BOLD)
@@ -86,19 +107,19 @@ public class MobCountSingleChallenge implements Challenge {
         result.grantClosest3(gameHandle.getParticipants().getAsSet(), amount, choices::getInt);
     }
 
-    private int getRandomAmount(EntityType<?> type) {
+    static int getCost(EntityType<?> type) {
         if (type == EntityType.WARDEN || type == EntityType.ELDER_GUARDIAN || type == EntityType.RAVAGER || type == EntityType.WITHER) {
-            return 12 + random.nextInt(20);
+            return 5;
         }
 
         if (type == EntityType.CAMEL || type == EntityType.IRON_GOLEM || type == EntityType.SNIFFER) {
-            return 22 + random.nextInt(54);
+            return 3;
         }
 
         if (type == EntityType.GUARDIAN || type == EntityType.HOGLIN || type == EntityType.ZOGLIN) {
-            return 27 + random.nextInt(78);
+            return 2;
         }
 
-        return 31 + random.nextInt(102);
+        return 1;
     }
 }

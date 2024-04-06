@@ -1,27 +1,25 @@
 package work.lclpnet.ap2.game.guess_it.challenge;
 
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
-import net.minecraft.entity.EntityType;
-import net.minecraft.registry.Registries;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.Vec3d;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.game.guess_it.data.*;
 import work.lclpnet.ap2.game.guess_it.util.MobRandomizer;
 import work.lclpnet.ap2.game.guess_it.util.MobSpawner;
-import work.lclpnet.ap2.impl.util.TextUtil;
-import work.lclpnet.ap2.impl.util.world.SizedSpaceFinder;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.lobby.util.WorldModifier;
 
-import java.util.*;
+import java.util.List;
+import java.util.Random;
 
-import static net.minecraft.util.Formatting.*;
+import static net.minecraft.util.Formatting.BOLD;
+import static net.minecraft.util.Formatting.DARK_GREEN;
 
-public class MobCountSingleChallenge implements Challenge {
+public class DistinctMobCountChallenge implements Challenge {
 
-    private static final int DURATION_TICKS = Ticks.seconds(16);
+    private static final int DURATION_TICKS = Ticks.seconds(21);
     private final MiniGameHandle gameHandle;
     private final ServerWorld world;
     private final Random random;
@@ -29,7 +27,7 @@ public class MobCountSingleChallenge implements Challenge {
     private final WorldModifier modifier;
     private int amount = 0;
 
-    public MobCountSingleChallenge(MiniGameHandle gameHandle, ServerWorld world, Random random, Stage stage, WorldModifier modifier) {
+    public DistinctMobCountChallenge(MiniGameHandle gameHandle, ServerWorld world, Random random, Stage stage, WorldModifier modifier) {
         this.gameHandle = gameHandle;
         this.world = world;
         this.random = random;
@@ -53,28 +51,34 @@ public class MobCountSingleChallenge implements Challenge {
 
         input.expectInput().validateInt(translations);
 
-        var randomizer = new MobRandomizer();
-        var type = randomizer.selectRandomEntityType(random);
+        var types = MobRandomizer.getDefaultTypes();
+        int minAmount = 4;
+        amount = minAmount + random.nextInt(Math.min(9, types.size() - minAmount + 1));
 
-        amount = getRandomAmount(type);
+        types = MobRandomizer.trimTypes(types, random, amount);
 
-        SizedSpaceFinder spaceFinder = SizedSpaceFinder.create(world, type);
-        List<Vec3d> spaces = spaceFinder.findSpaces(stage.iterateGroundPositions());
+        List<Vec3d> spaces = MobSpawner.findSpawns(world, types).findSpaces(stage.iterateGroundPositions());
 
         if (spaces.isEmpty()) {
-            throw new IllegalStateException("There are no spaces that support " + Registries.ENTITY_TYPE.getId(type));
+            throw new IllegalStateException("No spawn spaces found");
         }
 
+        MobRandomizer randomizer = new MobRandomizer(types);
         MobSpawner spawner = new MobSpawner(world, random);
 
-        for (int i = 0; i < amount; i++) {
+        int budget = MobCountMultiChallenge.MIN_BUDGET + random.nextInt(MobCountMultiChallenge.RANDOM_BUDGET);
+
+        while (budget > 0) {
+            var type = randomizer.selectRandomEntityType(random);
+            int cost = MobCountMultiChallenge.getCost(type);
+
+            budget -= cost;
+
             Vec3d pos = spaces.get(random.nextInt(spaces.size()));
             spawner.spawnEntity(type, pos, modifier);
         }
 
-        var entityName = TextUtil.getVanillaName(type).formatted(YELLOW);
-
-        translations.translateText("game.ap2.guess_it.mob.guess", entityName, YELLOW)
+        translations.translateText("game.ap2.guess_it.mob_types.guess")
                 .formatted(DARK_GREEN, BOLD)
                 .sendTo(PlayerLookup.world(world));
     }
@@ -84,21 +88,5 @@ public class MobCountSingleChallenge implements Challenge {
         result.setCorrectAnswer(amount);
 
         result.grantClosest3(gameHandle.getParticipants().getAsSet(), amount, choices::getInt);
-    }
-
-    private int getRandomAmount(EntityType<?> type) {
-        if (type == EntityType.WARDEN || type == EntityType.ELDER_GUARDIAN || type == EntityType.RAVAGER || type == EntityType.WITHER) {
-            return 12 + random.nextInt(20);
-        }
-
-        if (type == EntityType.CAMEL || type == EntityType.IRON_GOLEM || type == EntityType.SNIFFER) {
-            return 22 + random.nextInt(54);
-        }
-
-        if (type == EntityType.GUARDIAN || type == EntityType.HOGLIN || type == EntityType.ZOGLIN) {
-            return 27 + random.nextInt(78);
-        }
-
-        return 31 + random.nextInt(102);
     }
 }

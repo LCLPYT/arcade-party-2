@@ -127,5 +127,6 @@
   "game.ap2.guess_it.solution": "The correct answer was %s",
   "game.ap2.guess_it.calculate.exercise": "Calculate %s (one try):",
   "game.ap2.guess_it.daytime.guess": "What is the current time of day? e.g. 18:00 or 6 pm:",
-  "game.ap2.guess_it.mob.guess": "How many entities of type %s are there in the arena?"
+  "game.ap2.guess_it.mob.guess": "How many entities of type %s are there in the arena?",
+  "game.ap2.guess_it.mob_types.guess": "How many different types of entities are there in the arena?"
 }

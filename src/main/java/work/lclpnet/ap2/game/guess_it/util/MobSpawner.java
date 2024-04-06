@@ -17,14 +17,12 @@ import net.minecraft.village.VillagerData;
 import net.minecraft.village.VillagerDataContainer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import work.lclpnet.ap2.impl.util.world.SizedSpaceFinder;
 import work.lclpnet.kibu.access.entity.*;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.lobby.util.WorldModifier;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Random;
+import java.util.*;
 
 public class MobSpawner {
 
@@ -216,5 +214,12 @@ public class MobSpawner {
         return registry.getEntrySet().stream()
                 .map(Map.Entry::getValue)
                 .toList();
+    }
+
+    public static SizedSpaceFinder findSpawns(ServerWorld world, Set<EntityType<?>> types) {
+        float maxWidth = (float) types.stream().mapToDouble(type -> type.getDimensions().width).max().orElse(1);
+        float maxHeight = (float) types.stream().mapToDouble(type -> type.getDimensions().height).max().orElse(2);
+
+        return new SizedSpaceFinder(world, maxWidth, maxHeight, maxWidth);
     }
 }
