@@ -25,7 +25,7 @@ import static net.minecraft.util.Formatting.DARK_GREEN;
 
 public class SoundChallenge implements Challenge {
 
-    private static final int DURATION_TICKS = Ticks.seconds(20);
+    private static final int DURATION_TICKS = Ticks.seconds(14);
     private static final int SOUND_DELAY_TICKS = 30;
     private static final int REPEAT_DELAY_TICKS = Ticks.seconds(4);
     private final MiniGameHandle gameHandle;

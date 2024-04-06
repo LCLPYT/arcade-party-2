@@ -123,6 +123,7 @@
   "game.ap2.guess_it.input.daytime": "Deine Eingabe '%s' ist keine gültige Zeitangabe. Versuche z.B. 13:30 oder 4:00",
   "game.ap2.guess_it.input.option": "Deine Eingabe '%s' ist keine gültige Option. Versuche einen Buchstaben %s-%s.",
   "game.ap2.guess_it.answer": "Gib deine Antwort",
+  "game.ap2.guess_it.hover_option": "Klicke um Antwort %s auszuwählen",
   "game.ap2.guess_it.gain_points": "+%s Punkte",
   "game.ap2.guess_it.guessed": "Du hast %s geantwortet",
   "game.ap2.guess_it.already_answered": "Diese Frage kann nur einmal beantwortet werden.",

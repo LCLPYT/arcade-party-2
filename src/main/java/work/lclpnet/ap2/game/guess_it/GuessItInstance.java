@@ -9,6 +9,7 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 import org.json.JSONObject;
+import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.map.MapBootstrap;
@@ -65,18 +66,15 @@ public class GuessItInstance extends DefaultGameInstance implements MapBootstrap
     protected void prepare() {
         ServerWorld world = getWorld();
         HookRegistrar hooks = gameHandle.getHookRegistrar();
+        Participants participants = gameHandle.getParticipants();
         Random random = new Random();
         Stage stage = readStage();
 
-        inputManager = new InputManager(choices, gameHandle.getTranslations(), gameHandle.getParticipants(), world);
+        inputManager = new InputManager(choices, gameHandle.getTranslations(), participants, world);
         modifier = new ResetWorldModifier(world, hooks);
         manager = new GuessItManager(gameHandle, world, random, stage, modifier, soundSubtitles);
 
-        // make participants invulnerable, so that they won't be targeted by mobs
-        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
-            player.getAbilities().invulnerable = true;
-            player.sendAbilitiesUpdate();
-        }
+        new AnswerCommand(participants, inputManager).register(gameHandle.getCommandRegistrar());
 
         // ignore daylight affection for undead mobs
         hooks.registerHook(AffectedByDaylightCallback.HOOK, entity -> true);

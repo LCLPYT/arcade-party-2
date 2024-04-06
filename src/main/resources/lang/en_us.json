@@ -123,6 +123,7 @@
   "game.ap2.guess_it.input.daytime": "Your input '%s' is not not a valid time. Try 13:30 or 1:30 pm",
   "game.ap2.guess_it.input.option": "Your input '%s' is not not a valid option. Input a letter %s-%s.",
   "game.ap2.guess_it.answer": "Submit your answer",
+  "game.ap2.guess_it.hover_option": "Click to select answer %s",
   "game.ap2.guess_it.gain_points": "+%s points",
   "game.ap2.guess_it.guessed": "You answered %s",
   "game.ap2.guess_it.already_answered": "This quiz can only be answered once.",
@@ -131,6 +132,6 @@
   "game.ap2.guess_it.daytime.guess": "What is the current time of day? e.g. 18:00 or 6 pm:",
   "game.ap2.guess_it.mob.guess": "How many entities of type %s are there in the arena?",
   "game.ap2.guess_it.mob_types.guess": "How many different types of entities are there in the arena?",
-  "game.ap2.guess_it.sound.guess": "Which sound is this?",
+  "game.ap2.guess_it.sound.guess": "What sound is this?",
   "game.ap2.guess_it.again": "One more time"
 }

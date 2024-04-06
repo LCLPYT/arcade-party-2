@@ -8,6 +8,8 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
+import net.minecraft.text.ClickEvent;
+import net.minecraft.text.HoverEvent;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.base.Participants;
@@ -43,6 +45,11 @@ public class InputManager implements InputInterface {
     }
 
     private void onChat(SignedMessage signedMessage, ServerPlayerEntity player, MessageType.Parameters parameters) {
+        String input = signedMessage.signedBody().content();
+        input(player, input);
+    }
+
+    public void input(ServerPlayerEntity player, String input) {
         if (!participants.isParticipating(player)) return;
 
         Pair<String, @Nullable TranslatedText> res;
@@ -55,11 +62,9 @@ public class InputManager implements InputInterface {
                 return;
             }
 
-            String content = signedMessage.signedBody().content();
-            res = inputValue.validate(content);
+            res = inputValue.validate(input);
         } else if (optionValue != null) {
-            String content = signedMessage.signedBody().content();
-            res = optionValue.validate(content);
+            res = optionValue.validate(input);
         } else {
             return;
         }
@@ -71,8 +76,8 @@ public class InputManager implements InputInterface {
             return;
         }
 
-        String input = res.left();
-        onAnswer(player, input);
+        String transformedInput = res.left();
+        onAnswer(player, transformedInput);
     }
 
     private void onAnswer(ServerPlayerEntity player, String input) {
@@ -110,10 +115,18 @@ public class InputManager implements InputInterface {
         char letter = 'A';
 
         for (Text option : options) {
-            Text msg = Text.literal(letter + ") ").formatted(YELLOW)
-                    .append(option.copy().formatted(AQUA));
+            ClickEvent clickEvent = new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/answer " + letter);
 
             for (ServerPlayerEntity player : players) {
+                var hoverMsg = translations.translateText(player, "game.ap2.guess_it.hover_option", styled(letter, YELLOW))
+                        .formatted(GREEN);
+
+                HoverEvent hoverEvent = new HoverEvent(HoverEvent.Action.SHOW_TEXT, hoverMsg);
+
+                Text msg = Text.literal(letter + ") ").formatted(YELLOW)
+                        .append(option.copy().formatted(AQUA))
+                        .styled(style -> style.withClickEvent(clickEvent).withHoverEvent(hoverEvent));
+
                 player.sendMessage(msg);
             }
 
