@@ -1,7 +1,5 @@
 package work.lclpnet.ap2.game.guess_it.challenge;
 
-import it.unimi.dsi.fastutil.ints.IntArraySet;
-import it.unimi.dsi.fastutil.ints.IntSet;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.network.packet.s2c.play.StopSoundS2CPacket;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -12,12 +10,12 @@ import net.minecraft.text.Text;
 import net.minecraft.util.math.MathHelper;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.game.guess_it.data.*;
+import work.lclpnet.ap2.game.guess_it.util.OptionMaker;
 import work.lclpnet.ap2.impl.util.TextUtil;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.title.Title;
 import work.lclpnet.kibu.translate.TranslationService;
 
-import java.util.Arrays;
 import java.util.Random;
 
 import static net.minecraft.util.Formatting.BOLD;
@@ -62,29 +60,13 @@ public class SoundChallenge implements Challenge {
                 .sendTo(PlayerLookup.world(world));
 
         var soundEvents = soundSubtitles.getSoundEvents();
-        int soundCount = soundEvents.size();
-        final int optionCount = 4;
+        var soundOptions = OptionMaker.createOptions(soundEvents, 4, random);
 
-        if (soundCount < optionCount) {
-            throw new IllegalStateException("Less than four sounds found");
-        }
-
-        IntSet indices = new IntArraySet(optionCount);
-
-        while (indices.size() < optionCount) {
-            int i = random.nextInt(soundCount);
-            indices.add(i);
-        }
-
-        var soundOptions = indices.intStream()
-                .mapToObj(soundEvents::get)
-                .toArray(SoundEvent[]::new);
-
-        correctOption = random.nextInt(soundOptions.length);
-        correct = soundOptions[correctOption];
+        correctOption = random.nextInt(soundOptions.size());
+        correct = soundOptions.get(correctOption);
         randomizePitch();
 
-        var options = Arrays.stream(soundOptions)
+        var options = soundOptions.stream()
                 .map(TextUtil::getVanillaName)
                 .toArray(Text[]::new);
 

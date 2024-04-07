@@ -65,8 +65,8 @@ public class CakeBitesChallenge implements Challenge {
     }
 
     private void createCake() {
-        var cake = new DisplayEntity.BlockDisplayEntity(EntityType.BLOCK_DISPLAY, world);
-        DisplayEntityAccess.setBlockState(cake, Blocks.CAKE.getDefaultState().with(CakeBlock.BITES, amount));
+        var display = new DisplayEntity.BlockDisplayEntity(EntityType.BLOCK_DISPLAY, world);
+        DisplayEntityAccess.setBlockState(display, Blocks.CAKE.getDefaultState().with(CakeBlock.BITES, amount));
 
         float scale = 7;
 
@@ -77,16 +77,16 @@ public class CakeBitesChallenge implements Challenge {
                 0, 0, 0, 1
         ));
 
-        DisplayEntityAccess.setTransformation(cake, transformation);
+        DisplayEntityAccess.setTransformation(display, transformation);
 
         BlockPos origin = stage.getOrigin();
         double x = origin.getX() + 0.5 - scale * 0.5;
         double y = origin.getY();
         double z = origin.getZ() + 0.5 - scale * 0.5;
 
-        cake.setPos(x, y, z);
+        display.setPos(x, y, z);
 
-        modifier.spawnEntity(cake);
+        modifier.spawnEntity(display);
     }
 
     @Override

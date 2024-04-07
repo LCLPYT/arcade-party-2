@@ -119,6 +119,7 @@
   "game.ap2.guess_it.prepare.calculate": "Calculate...",
   "game.ap2.guess_it.prepare.estimate": "Estimate...",
   "game.ap2.guess_it.prepare.listen": "Listen carefully...",
+  "game.ap2.guess_it.prepare.guess": "Guess...",
   "game.ap2.guess_it.input.int": "Your input '%s' is not not a valid integer.",
   "game.ap2.guess_it.input.daytime": "Your input '%s' is not not a valid time. Try 13:30 or 1:30 pm",
   "game.ap2.guess_it.input.option": "Your input '%s' is not not a valid option. Input a letter %s-%s.",
@@ -134,5 +135,6 @@
   "game.ap2.guess_it.mob_types.guess": "How many different types of entities are there in the arena?",
   "game.ap2.guess_it.sound.guess": "What sound is this?",
   "game.ap2.guess_it.again": "One more time",
-  "game.ap2.guess_it.cake_bites": "How many pieces were eaten from this cake?"
+  "game.ap2.guess_it.cake_bites": "How many pieces were eaten from this cake?",
+  "game.ap2.guess_it.potion_type": "What type of potion is that?"
 }

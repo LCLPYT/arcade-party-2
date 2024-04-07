@@ -9,15 +9,16 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 public class SoundSubtitles {
 
-    private final List<SoundEvent> soundEvents;
+    private final Set<SoundEvent> soundEvents;
 
     public SoundSubtitles(Set<SoundEvent> soundEvents) {
-        this.soundEvents = List.copyOf(soundEvents);
+        this.soundEvents = soundEvents;
     }
 
     public static CompletableFuture<SoundSubtitles> load() {
@@ -71,7 +72,7 @@ public class SoundSubtitles {
         return soundEvents;
     }
 
-    public List<SoundEvent> getSoundEvents() {
+    public Set<SoundEvent> getSoundEvents() {
         return soundEvents;
     }
 }

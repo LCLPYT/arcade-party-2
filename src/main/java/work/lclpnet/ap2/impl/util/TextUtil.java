@@ -14,7 +14,8 @@ public class TextUtil {
     }
 
     public static MutableText getVanillaName(ItemStack stack) {
-        return getVanillaName(stack.getItem());
+        Item item = stack.getItem();
+        return Text.translatable(item.getTranslationKey(stack));
     }
 
     public static MutableText getVanillaName(EntityType<?> entityType) {
