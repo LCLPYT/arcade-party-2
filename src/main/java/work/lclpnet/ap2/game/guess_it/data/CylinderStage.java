@@ -25,6 +25,11 @@ public class CylinderStage implements Stage {
     }
 
     @Override
+    public BlockPos getOrigin() {
+        return origin;
+    }
+
+    @Override
     public Iterator<BlockPos> iterateGroundPositions() {
         return new FilterIterator<>(groundBounds.iterator(), this::contains);
     }

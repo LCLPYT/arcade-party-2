@@ -133,5 +133,6 @@
   "game.ap2.guess_it.mob.guess": "Wie viele Einheiten vom Typ %s befinden sich in der Arena?",
   "game.ap2.guess_it.mob_types.guess": "Wie viele verschiedene Arten von Monstern befinden sich in der Arena?",
   "game.ap2.guess_it.sound.guess": "Welches Geräusch ist das?",
-  "game.ap2.guess_it.again": "Noch einmal"
+  "game.ap2.guess_it.again": "Noch einmal",
+  "game.ap2.guess_it.cake_bites": "Wie viele Stücke wurden von diesem Kuchen gegessen?"
 }

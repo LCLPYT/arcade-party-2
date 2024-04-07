@@ -113,7 +113,6 @@ public class GuessItInstance extends DefaultGameInstance implements MapBootstrap
             BlockPos origin = MapUtil.readBlockPos(area.getJSONArray("origin"));
             int radius = area.getInt("radius");
             int height = area.getInt("height");
-
             return new CylinderStage(origin, radius, height);
         }
 

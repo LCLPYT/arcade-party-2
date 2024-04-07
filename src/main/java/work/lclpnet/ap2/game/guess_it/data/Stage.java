@@ -6,5 +6,7 @@ import java.util.Iterator;
 
 public interface Stage {
 
+    BlockPos getOrigin();
+
     Iterator<BlockPos> iterateGroundPositions();
 }

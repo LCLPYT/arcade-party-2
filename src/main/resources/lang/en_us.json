@@ -133,5 +133,6 @@
   "game.ap2.guess_it.mob.guess": "How many entities of type %s are there in the arena?",
   "game.ap2.guess_it.mob_types.guess": "How many different types of entities are there in the arena?",
   "game.ap2.guess_it.sound.guess": "What sound is this?",
-  "game.ap2.guess_it.again": "One more time"
+  "game.ap2.guess_it.again": "One more time",
+  "game.ap2.guess_it.cake_bites": "How many pieces were eaten from this cake?"
 }
