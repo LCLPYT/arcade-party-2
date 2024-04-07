@@ -53,7 +53,7 @@ public class GuessItInstance extends DefaultGameInstance implements MapBootstrap
     public GuessItInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
 
-        choices = new PlayerChoices();
+        choices = new PlayerChoices(gameHandle.getTranslations());
         result = new ChallengeResult();
     }
 

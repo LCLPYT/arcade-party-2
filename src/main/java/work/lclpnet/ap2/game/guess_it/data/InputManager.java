@@ -62,7 +62,7 @@ public class InputManager implements InputInterface {
                 return;
             }
 
-            res = inputValue.validate(input);
+            res = inputValue.validate(input, player);
         } else if (optionValue != null) {
             res = optionValue.validate(input);
         } else {

@@ -3,7 +3,8 @@ package work.lclpnet.ap2.game.guess_it.data;
 import net.minecraft.server.world.ServerWorld;
 import org.jetbrains.annotations.NotNull;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
-import work.lclpnet.ap2.game.guess_it.challenge.PotionTypeChallenge;
+import work.lclpnet.ap2.game.guess_it.challenge.FoodAmountChallenge;
+import work.lclpnet.ap2.game.guess_it.util.GuessItDisplay;
 import work.lclpnet.lobby.util.WorldModifier;
 
 import java.util.*;
@@ -18,6 +19,8 @@ public class GuessItManager {
                           WorldModifier modifier, SoundSubtitles soundSubtitles) {
         this.random = random;
 
+        GuessItDisplay display = new GuessItDisplay(world, modifier, stage);
+
 //        challenges.add(new MathsChallenge(gameHandle, world, random));
 //        challenges.add(new DayTimeChallenge(gameHandle, world, random));
 //        challenges.add(new MobCountSingleChallenge(gameHandle, world, random, stage, modifier));
@@ -25,7 +28,8 @@ public class GuessItManager {
 //        challenges.add(new DistinctMobCountChallenge(gameHandle, world, random, stage, modifier));
 //        challenges.add(new SoundChallenge(gameHandle, world, random, soundSubtitles));
 //        challenges.add(new CakeBitesChallenge(gameHandle, world, random, stage, modifier));
-        challenges.add(new PotionTypeChallenge(gameHandle, world, random, stage, modifier));
+//        challenges.add(new PotionTypeChallenge(gameHandle, world, random, display));
+        challenges.add(new FoodAmountChallenge(gameHandle, world, random, display));
     }
 
     @NotNull

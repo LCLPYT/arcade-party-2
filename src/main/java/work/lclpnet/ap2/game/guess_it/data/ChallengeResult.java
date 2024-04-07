@@ -1,6 +1,5 @@
 package work.lclpnet.ap2.game.guess_it.data;
 
-import com.mojang.datafixers.types.Func;
 import net.minecraft.server.network.ServerPlayerEntity;
 import org.jetbrains.annotations.Nullable;
 

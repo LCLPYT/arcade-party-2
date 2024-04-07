@@ -67,7 +67,7 @@ public class DayTimeChallenge implements Challenge, SchedulerAction {
     public void begin(InputInterface input) {
         TranslationService translations = gameHandle.getTranslations();
 
-        input.expectInput().validate(MinecraftDayTime::dayTimeValue,
+        input.expectInput().validate((str, player) -> MinecraftDayTime.dayTimeValue(str),
                 str -> translations.translateText("game.ap2.guess_it.input.daytime", styled(str, YELLOW)).formatted(RED));
 
         translations.translateText("game.ap2.guess_it.daytime.guess")

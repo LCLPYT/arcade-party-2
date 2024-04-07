@@ -121,6 +121,7 @@
   "game.ap2.guess_it.prepare.listen": "Höre genau hin...",
   "game.ap2.guess_it.prepare.guess": "Rate...",
   "game.ap2.guess_it.input.int": "Deine Eingabe '%s' ist keine gültige ganze Zahl.",
+  "game.ap2.guess_it.input.float": "Deine Eingabe '%s' ist keine gültige Dezimalzahl.",
   "game.ap2.guess_it.input.daytime": "Deine Eingabe '%s' ist keine gültige Zeitangabe. Versuche z.B. 13:30 oder 4:00",
   "game.ap2.guess_it.input.option": "Deine Eingabe '%s' ist keine gültige Option. Versuche einen Buchstaben %s-%s.",
   "game.ap2.guess_it.answer": "Gib deine Antwort",
@@ -136,5 +137,6 @@
   "game.ap2.guess_it.sound.guess": "Welches Geräusch ist das?",
   "game.ap2.guess_it.again": "Noch einmal",
   "game.ap2.guess_it.cake_bites": "Wie viele Stücke wurden von diesem Kuchen gegessen?",
-  "game.ap2.guess_it.potion_type": "Was für ein Trank ist das?"
+  "game.ap2.guess_it.potion_type": "Was für ein Trank ist das?",
+  "game.ap2.guess_it.food_amount": "Wie viel Hunger stellt dieses Essen wieder her?"
 }

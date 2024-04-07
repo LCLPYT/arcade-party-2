@@ -121,6 +121,7 @@
   "game.ap2.guess_it.prepare.listen": "Listen carefully...",
   "game.ap2.guess_it.prepare.guess": "Guess...",
   "game.ap2.guess_it.input.int": "Your input '%s' is not not a valid integer.",
+  "game.ap2.guess_it.input.float": "Your input '%s' is not not a valid decimal number.",
   "game.ap2.guess_it.input.daytime": "Your input '%s' is not not a valid time. Try 13:30 or 1:30 pm",
   "game.ap2.guess_it.input.option": "Your input '%s' is not not a valid option. Input a letter %s-%s.",
   "game.ap2.guess_it.answer": "Submit your answer",
@@ -136,5 +137,6 @@
   "game.ap2.guess_it.sound.guess": "What sound is this?",
   "game.ap2.guess_it.again": "One more time",
   "game.ap2.guess_it.cake_bites": "How many pieces were eaten from this cake?",
-  "game.ap2.guess_it.potion_type": "What type of potion is that?"
+  "game.ap2.guess_it.potion_type": "What type of potion is that?",
+  "game.ap2.guess_it.food_amount": "How much hunger does this food restore?"
 }
