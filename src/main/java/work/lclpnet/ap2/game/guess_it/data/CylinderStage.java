@@ -10,18 +10,22 @@ public class CylinderStage implements Stage {
 
     public static final String TYPE = "cylinder";
     private final BlockPos origin;
+    private final int radius;
     private final int radiusSq;
     private final int height;
     private final BlockBox groundBounds;
+    private final BlockPos center;
 
     public CylinderStage(BlockPos origin, int radius, int height) {
         if (radius <= 0) throw new IllegalArgumentException("Radius must be positive");
         if (height <= 0) throw new IllegalArgumentException("Height must be positive");
 
         this.origin = origin;
+        this.radius = radius;
         this.radiusSq = radius * radius;
         this.height = height;
         this.groundBounds = new BlockBox(origin.add(-radius, 0, -radius), origin.add(radius, 0, radius));
+        this.center = origin.add(0, height / 2, 0);
     }
 
     @Override
@@ -32,6 +36,21 @@ public class CylinderStage implements Stage {
     @Override
     public Iterator<BlockPos> iterateGroundPositions() {
         return new FilterIterator<>(groundBounds.iterator(), this::contains);
+    }
+
+    @Override
+    public BlockPos getCenter() {
+        return center;
+    }
+
+    @Override
+    public int getRadius() {
+        return radius;
+    }
+
+    @Override
+    public int getHeight() {
+        return height;
     }
 
     private boolean contains(BlockPos pos) {

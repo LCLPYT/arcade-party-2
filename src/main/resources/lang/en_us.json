@@ -139,5 +139,8 @@
   "game.ap2.guess_it.cake_bites": "How many pieces were eaten from this cake?",
   "game.ap2.guess_it.potion_type": "What type of potion is that?",
   "game.ap2.guess_it.food_amount": "How much hunger does this food restore?",
-  "game.ap2.guess_it.armor_trim": "What type of armor trim is that?"
+  "game.ap2.guess_it.armor_trim": "What type of armor trim is that?",
+  "game.ap2.guess_it.shape.sphere": "How many blocks are there in this sphere?",
+  "game.ap2.guess_it.shape.cube": "How many blocks are there in this cube?",
+  "game.ap2.guess_it.shape.cone": "How many blocks are there in this cone?"
 }

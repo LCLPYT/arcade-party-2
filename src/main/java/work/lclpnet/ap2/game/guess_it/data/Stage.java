@@ -9,4 +9,10 @@ public interface Stage {
     BlockPos getOrigin();
 
     Iterator<BlockPos> iterateGroundPositions();
+
+    BlockPos getCenter();
+
+    int getRadius();
+
+    int getHeight();
 }
