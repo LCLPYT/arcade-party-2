@@ -15,4 +15,6 @@ public interface Stage {
     int getRadius();
 
     int getHeight();
+
+    boolean contains(BlockPos pos);
 }

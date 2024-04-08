@@ -53,7 +53,8 @@ public class CylinderStage implements Stage {
         return height;
     }
 
-    private boolean contains(BlockPos pos) {
+    @Override
+    public boolean contains(BlockPos pos) {
         int y = pos.getY();
         int oy = origin.getY();
 

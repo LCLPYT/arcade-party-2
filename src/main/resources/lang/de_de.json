@@ -144,5 +144,6 @@
   "game.ap2.guess_it.shape.cube": "Aus wie vielen Blöcken besteht dieser Würfel?",
   "game.ap2.guess_it.shape.cone": "Aus wie vielen Blöcken besteht dieser Kegel?",
   "game.ap2.guess_it.music_disc": "Welche Schallplatte ist das?",
-  "game.ap2.guess_it.area": "Welche Fläche ist die Größte?"
+  "game.ap2.guess_it.area": "Welche Fläche ist die Größte?",
+  "game.ap2.guess_it.minecart": "Wie viele Sekunden wird es dauern, bis die Lore am Ziel ankommt?"
 }

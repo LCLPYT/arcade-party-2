@@ -29,6 +29,7 @@ public class InputManager implements InputInterface {
     private final ServerWorld world;
     private InputValue inputValue = null;
     private OptionValue optionValue = null;
+    private boolean locked = false;
 
     public InputManager(PlayerChoices choices, TranslationService translations, Participants participants, ServerWorld world) {
         this.choices = choices;
@@ -50,7 +51,7 @@ public class InputManager implements InputInterface {
     }
 
     public void input(ServerPlayerEntity player, String input) {
-        if (!participants.isParticipating(player)) return;
+        if (!participants.isParticipating(player) || locked) return;
 
         Pair<String, @Nullable TranslatedText> res;
 
@@ -134,10 +135,15 @@ public class InputManager implements InputInterface {
         }
     }
 
+    public void setLocked(boolean locked) {
+        this.locked = locked;
+    }
+
     public void reset() {
         inputValue = null;
         optionValue = null;
         choices.clear();
+        locked = false;
     }
 }
 

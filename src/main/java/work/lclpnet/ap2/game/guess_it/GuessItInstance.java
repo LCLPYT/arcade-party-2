@@ -168,8 +168,18 @@ public class GuessItInstance extends DefaultGameInstance implements MapBootstrap
                 .build();
 
         timer.addPlayers(players);
-        timer.whenDone(this::evaluateChallenge);
+        timer.whenDone(this::onTimerOver);
         timer.start(gameHandle.getBossBarProvider(), scheduler);
+    }
+
+    private void onTimerOver() {
+        if (challenge instanceof LongerChallenge longerChallenge) {
+            inputManager.setLocked(true);
+            longerChallenge.evaluateDeferred(this::evaluateChallenge);
+            return;
+        }
+
+        this.evaluateChallenge();
     }
 
     private void evaluateChallenge() {

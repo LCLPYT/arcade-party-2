@@ -43,8 +43,8 @@ public class MobSpawner {
     }
 
     @Nullable
-    public Entity createEntity(EntityType<?> type, Vec3d pos) {
-        Entity entity = type.create(world);
+    public <T extends Entity> T createEntity(EntityType<T> type, Vec3d pos) {
+        T entity = type.create(world);
 
         if (entity == null) return null;
 
