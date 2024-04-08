@@ -8,7 +8,7 @@ public interface Stage {
 
     BlockPos getOrigin();
 
-    Iterator<BlockPos> iterateGroundPositions();
+    Iterator<BlockPos> groundPositionIterator();
 
     BlockPos getCenter();
 

@@ -1,5 +1,7 @@
 package work.lclpnet.ap2.impl.util;
 
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockState;
 import net.minecraft.entity.EntityType;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -19,6 +21,14 @@ public class TextUtil {
     public static MutableText getVanillaName(ItemStack stack) {
         Item item = stack.getItem();
         return Text.translatable(item.getTranslationKey(stack));
+    }
+
+    public static MutableText getVanillaName(Block block) {
+        return Text.translatable(block.getTranslationKey());
+    }
+
+    public static MutableText getVanillaName(BlockState state) {
+        return getVanillaName(state.getBlock());
     }
 
     public static MutableText getVanillaName(EntityType<?> entityType) {

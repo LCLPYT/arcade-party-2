@@ -57,7 +57,7 @@ public class DistinctMobCountChallenge implements Challenge {
 
         types = MobRandomizer.trimTypes(types, random, amount);
 
-        List<Vec3d> spaces = MobSpawner.findSpawns(world, types).findSpaces(stage.iterateGroundPositions());
+        List<Vec3d> spaces = MobSpawner.findSpawns(world, types).findSpaces(stage.groundPositionIterator());
 
         if (spaces.isEmpty()) {
             throw new IllegalStateException("No spawn spaces found");

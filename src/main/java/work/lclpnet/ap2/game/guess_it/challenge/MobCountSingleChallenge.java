@@ -15,7 +15,8 @@ import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.lobby.util.WorldModifier;
 
-import java.util.*;
+import java.util.List;
+import java.util.Random;
 
 import static net.minecraft.util.Formatting.*;
 
@@ -59,7 +60,7 @@ public class MobCountSingleChallenge implements Challenge {
         amount = getRandomAmount(type);
 
         SizedSpaceFinder spaceFinder = SizedSpaceFinder.create(world, type);
-        List<Vec3d> spaces = spaceFinder.findSpaces(stage.iterateGroundPositions());
+        List<Vec3d> spaces = spaceFinder.findSpaces(stage.groundPositionIterator());
 
         if (spaces.isEmpty()) {
             throw new IllegalStateException("There are no spaces that support " + Registries.ENTITY_TYPE.getId(type));

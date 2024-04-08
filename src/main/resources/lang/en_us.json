@@ -143,5 +143,6 @@
   "game.ap2.guess_it.shape.sphere": "How many blocks are there in this sphere?",
   "game.ap2.guess_it.shape.cube": "How many blocks are there in this cube?",
   "game.ap2.guess_it.shape.cone": "How many blocks are there in this cone?",
-  "game.ap2.guess_it.music_disc": "Which music disc is this?"
+  "game.ap2.guess_it.music_disc": "Which music disc is this?",
+  "game.ap2.guess_it.area": "Which area is the biggest?"
 }

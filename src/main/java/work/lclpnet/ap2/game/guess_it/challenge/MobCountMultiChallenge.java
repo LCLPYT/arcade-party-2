@@ -64,7 +64,7 @@ public class MobCountMultiChallenge implements Challenge {
             throw new IllegalStateException("There must be at least two entity types");
         }
 
-        List<Vec3d> spaces = MobSpawner.findSpawns(world, types).findSpaces(stage.iterateGroundPositions());
+        List<Vec3d> spaces = MobSpawner.findSpawns(world, types).findSpaces(stage.groundPositionIterator());
 
         if (spaces.isEmpty()) {
             throw new IllegalStateException("No spawn spaces found");
