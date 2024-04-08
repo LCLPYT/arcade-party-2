@@ -142,5 +142,6 @@
   "game.ap2.guess_it.armor_trim": "Welcher Rüstungsbesatz ist das?",
   "game.ap2.guess_it.shape.sphere": "Aus wie vielen Blöcken besteht diese Kugel?",
   "game.ap2.guess_it.shape.cube": "Aus wie vielen Blöcken besteht dieser Würfel?",
-  "game.ap2.guess_it.shape.cone": "Aus wie vielen Blöcken besteht dieser Kegel?"
+  "game.ap2.guess_it.shape.cone": "Aus wie vielen Blöcken besteht dieser Kegel?",
+  "game.ap2.guess_it.music_disc": "Welche Schallplatte ist das?"
 }
