@@ -27,6 +27,7 @@ import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.ap2.impl.util.scoreboard.ScoreHandle;
 import work.lclpnet.ap2.impl.util.scoreboard.ScoreboardLayout;
 import work.lclpnet.kibu.hook.entity.*;
+import work.lclpnet.kibu.hook.util.PositionRotation;
 import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
@@ -34,9 +35,11 @@ import work.lclpnet.kibu.title.Title;
 import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.kibu.translate.text.TranslatedText;
 import work.lclpnet.lobby.game.map.GameMap;
+import work.lclpnet.lobby.game.map.MapUtils;
 import work.lclpnet.lobby.game.util.BossBarTimer;
 import work.lclpnet.lobby.util.ResetWorldModifier;
 
+import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Random;
@@ -51,6 +54,7 @@ public class GuessItInstance extends DefaultGameInstance implements MapBootstrap
     private static final int DELAY_TICKS = Ticks.seconds(5);
     private static final int MIN_ROUNDS = 8, MAX_ROUNDS = 14;
     private final ScoreDataContainer<ServerPlayerEntity, PlayerRef> data = new ScoreDataContainer<>(PlayerRef::create);
+    private final Random random = new Random();
     private final PlayerChoices choices;
     private final ChallengeResult result;
     private ChallengeMessengerImpl messenger;
@@ -80,7 +84,6 @@ public class GuessItInstance extends DefaultGameInstance implements MapBootstrap
         ServerWorld world = getWorld();
         HookRegistrar hooks = gameHandle.getHookRegistrar();
         Participants participants = gameHandle.getParticipants();
-        Random random = new Random();
         Stage stage = readStage();
 
         rounds = MIN_ROUNDS + random.nextInt(MAX_ROUNDS - MIN_ROUNDS + 1);
@@ -114,6 +117,8 @@ public class GuessItInstance extends DefaultGameInstance implements MapBootstrap
 
         // prevent boss mobs from creating boss bars for players
         hooks.registerHook(EntityBossBarCallback.HOOK, (entity, bossBar, player) -> true);
+
+        teleportRandom();
     }
 
     @Override
@@ -121,6 +126,19 @@ public class GuessItInstance extends DefaultGameInstance implements MapBootstrap
         inputManager.init(gameHandle.getHookRegistrar());
 
         prepareNextChallenge();
+    }
+
+    private void teleportRandom() {
+        List<PositionRotation> spawns = MapUtils.getSpawnPositionsAndRotation(getMap());
+
+        if (spawns.isEmpty()) return;
+
+        ServerWorld world = getWorld();
+
+        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
+            PositionRotation spawn = spawns.get(random.nextInt(spawns.size()));
+            player.teleport(world, spawn.getX(), spawn.getY(), spawn.getZ(), spawn.getYaw(), spawn.getPitch());
+        }
     }
 
     private void setupScoreboard() {
