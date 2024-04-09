@@ -8,6 +8,7 @@ import net.minecraft.network.packet.s2c.play.ScoreboardScoreUpdateS2CPacket;
 import net.minecraft.scoreboard.ScoreboardCriterion;
 import net.minecraft.scoreboard.ScoreboardDisplaySlot;
 import net.minecraft.scoreboard.ScoreboardObjective;
+import net.minecraft.scoreboard.number.BlankNumberFormat;
 import net.minecraft.scoreboard.number.NumberFormat;
 import net.minecraft.scoreboard.number.StyledNumberFormat;
 import net.minecraft.server.PlayerManager;
@@ -20,15 +21,16 @@ import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.util.scoreboard.CustomScoreboardObjective;
 import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.kibu.translate.text.RootText;
+import work.lclpnet.kibu.translate.text.TextTranslatable;
 import work.lclpnet.mplugins.ext.Unloadable;
 
 import java.util.*;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
 public class TranslatedScoreboardObjective implements CustomScoreboardObjective, Unloadable {
 
-    private static final Entry DEFAULT_ENTRY = new Entry(null, StyledNumberFormat.RED);
     private final TranslationService translations;
     private final PlayerManager playerManager;
     private final String name;
@@ -38,10 +40,14 @@ public class TranslatedScoreboardObjective implements CustomScoreboardObjective,
     private final Map<UUID, String> players = new HashMap<>();
     private final Object2IntMap<String> scores = new Object2IntOpenHashMap<>();
     private final Map<String, Entry> entries = new HashMap<>();
+    private final ScoreboardLayout layout = new ScoreboardLayout();
+    private Entry defaultEntry = new Entry(null, null, StyledNumberFormat.RED);
     private String translationKey;
     private Object[] args;
     private ScoreboardDisplaySlot slot = null;
     private Style style = Style.EMPTY;
+    @Nullable
+    private Function<String, @Nullable Text> displayFunction = null;
 
     public TranslatedScoreboardObjective(TranslationService translations, PlayerManager playerManager, String name,
                                          ScoreboardCriterion.RenderType renderType, String translationKey, Object[] args) {
@@ -124,7 +130,7 @@ public class TranslatedScoreboardObjective implements CustomScoreboardObjective,
         return rootText;
     }
 
-    public void setDisplayName(String translationKey, Object... args) {
+    public void setTitle(String translationKey, Object... args) {
         this.translationKey = translationKey;
         this.args = args;
 
@@ -263,24 +269,54 @@ public class TranslatedScoreboardObjective implements CustomScoreboardObjective,
         player.networkHandler.sendPacket(packet);
     }
 
+    @Override
     public void setDisplayName(String scoreHolder, @Nullable Text display) {
         Entry entry = getEntry(scoreHolder);
         entries.put(scoreHolder, entry.withDisplay(display));
+        syncEntry(scoreHolder);
     }
 
+    public void setDisplayName(String scoreHolder, @Nullable TextTranslatable display) {
+        Entry entry = getEntry(scoreHolder);
+        entries.put(scoreHolder, entry.withTranslatedDisplay(display));
+        syncEntry(scoreHolder);
+    }
+
+    @Override
     public void setNumberFormat(String scoreHolder, NumberFormat numberFormat) {
         Entry entry = getEntry(scoreHolder);
         entries.put(scoreHolder, entry.withNumberFormat(numberFormat));
+        syncEntry(scoreHolder);
+    }
+
+    public void setDisplayName(@Nullable Function<String, @Nullable Text> displayFunction) {
+        this.displayFunction = displayFunction;
+    }
+
+    public void setNumberFormat(NumberFormat numberFormat) {
+        defaultEntry = defaultEntry.withNumberFormat(numberFormat);
     }
 
     private Entry getEntry(String scoreHolder) {
-        return entries.getOrDefault(scoreHolder, DEFAULT_ENTRY);
+        if (displayFunction == null) {
+            return entries.getOrDefault(scoreHolder, defaultEntry);
+        }
+
+        return entries.computeIfAbsent(scoreHolder, s -> {
+            Text display = displayFunction.apply(scoreHolder);
+            return defaultEntry.withDisplay(display);
+        });
+    }
+
+    private void syncEntry(String scoreHolder) {
+        int score = getScore(scoreHolder);
+        updateObjectives(objective -> syncScore(objective, scoreHolder, score));
     }
 
     private void syncScores(Objective objective, ServerPlayerEntity player) {
         scores.forEach((scoreHolder, score) -> {
             var entry = getEntry(scoreHolder);
-            Text display = entry.display();
+            Text display = getScoreHolderDisplay(entry, player);
             NumberFormat format = entry.numberFormat();
 
             var packet = new ScoreboardScoreUpdateS2CPacket(scoreHolder, objective.name(), score, display, format);
@@ -294,17 +330,72 @@ public class TranslatedScoreboardObjective implements CustomScoreboardObjective,
         if (uuids == null) return;
 
         var entry = getEntry(scoreHolder);
-        Text display = entry.display();
         NumberFormat format = entry.numberFormat();
-
-        var packet = new ScoreboardScoreUpdateS2CPacket(scoreHolder, objective.name(), score, display, format);
 
         for (UUID uuid : uuids) {
             ServerPlayerEntity player = playerManager.getPlayer(uuid);
             if (player == null) continue;
 
+            Text display = getScoreHolderDisplay(entry, player);
+
+            var packet = new ScoreboardScoreUpdateS2CPacket(scoreHolder, objective.name(), score, display, format);
+
             player.networkHandler.sendPacket(packet);
         }
+    }
+
+    @Nullable
+    private Text getScoreHolderDisplay(Entry entry, ServerPlayerEntity viewer) {
+        Text display = entry.display();
+        TextTranslatable translatedDisplay = entry.translatedDisplay();
+
+        if (translatedDisplay == null) {
+            return display;
+        }
+
+        String language = translations.getLanguage(viewer);
+
+        return translatedDisplay.translateTo(language);
+    }
+
+    public ScoreHandle createText(Text text) {
+        return createText(text, ScoreboardLayout.TOP);
+    }
+
+    public ScoreHandle createText(Text text, int position) {
+        ScoreHandle handle = createHandle(position);
+        handle.setDisplay(text);
+
+        return handle;
+    }
+
+    public ScoreHandle createText(TextTranslatable text) {
+        return createText(text, ScoreboardLayout.TOP);
+    }
+
+    public ScoreHandle createText(TextTranslatable text, int position) {
+        ScoreHandle handle = createHandle(position);
+        handle.setDisplay(text);
+
+        return handle;
+    }
+
+    private @NotNull ScoreHandle createHandle(int position) {
+        String holder = UUID.randomUUID().toString();
+        ScoreHandle handle = new ScoreHandle(holder, this);
+
+        switch (position) {
+            case ScoreboardLayout.TOP -> layout.addTop(handle);
+            case ScoreboardLayout.BOTTOM -> layout.addBottom(handle);
+            default -> {}
+        }
+
+        handle.setNumberFormat(BlankNumberFormat.INSTANCE);
+        return handle;
+    }
+
+    public void createNewline(int position) {
+        createText(Text.empty(), position);
     }
 
     @Override
@@ -318,7 +409,8 @@ public class TranslatedScoreboardObjective implements CustomScoreboardObjective,
             }
         });
     }
-    private static final class Objective {
+
+    private final class Objective {
 
         private final String name;
         private Text display;
@@ -328,7 +420,7 @@ public class TranslatedScoreboardObjective implements CustomScoreboardObjective,
             this.name = name;
             this.display = display;
 
-            var format = DEFAULT_ENTRY.numberFormat();
+            var format = defaultEntry.numberFormat();
 
             this.vanillaObjective = new ScoreboardObjective(null, name, ScoreboardCriterion.DUMMY, display,
                     renderType, false, format);
@@ -372,14 +464,18 @@ public class TranslatedScoreboardObjective implements CustomScoreboardObjective,
         }
     }
 
-    private record Entry(@Nullable Text display, NumberFormat numberFormat) {
+    private record Entry(@Nullable Text display, @Nullable TextTranslatable translatedDisplay, NumberFormat numberFormat) {
 
         public Entry withDisplay(@Nullable Text display) {
-            return new Entry(display, this.numberFormat);
+            return new Entry(display, null, this.numberFormat);
+        }
+
+        public Entry withTranslatedDisplay(@Nullable TextTranslatable display) {
+            return new Entry(null, display, this.numberFormat);
         }
 
         public Entry withNumberFormat(NumberFormat numberFormat) {
-            return new Entry(this.display, numberFormat);
+            return new Entry(this.display, this.translatedDisplay, numberFormat);
         }
     }
 }

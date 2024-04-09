@@ -116,6 +116,7 @@
   "game.ap2.musical_minecart.format.by_original": "%s von %s [%s]",
   "game.ap2.guess_it": "Ratespiel",
   "game.ap2.guess_it.description": "Du bekommst verschiedene Schätz- oder Wissensfragen. Je näher du an der Antwort liegst, desto mehr Punkte erhältst du.",
+  "game.ap2.guess_it.round": "Runde",
   "game.ap2.guess_it.prepare.calculate": "Berechne...",
   "game.ap2.guess_it.prepare.estimate": "Schätze...",
   "game.ap2.guess_it.prepare.listen": "Höre genau hin...",

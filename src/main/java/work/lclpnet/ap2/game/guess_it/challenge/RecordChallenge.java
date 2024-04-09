@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 
 public class RecordChallenge implements Challenge {
 
-    private static final int DURATION_TICKS = Ticks.seconds(20);
+    private static final int DURATION_TICKS = Ticks.seconds(15);
     private final MiniGameHandle gameHandle;
     private final ServerWorld world;
     private final Random random;

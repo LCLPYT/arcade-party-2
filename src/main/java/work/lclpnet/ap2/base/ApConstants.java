@@ -11,7 +11,10 @@ public final class ApConstants {
     // people
     public static final String PERSON_LCLP = "LCLP";
     public static final String PERSON_BOPS = "bops";
-    public static final String SEPERATOR = "===================================";
+
+    // other
+    public static final String SEPARATOR = "===================================";
+    public static final String SCOREBOARD_SEPARATOR = "==============";
 
     private ApConstants() {}
 }

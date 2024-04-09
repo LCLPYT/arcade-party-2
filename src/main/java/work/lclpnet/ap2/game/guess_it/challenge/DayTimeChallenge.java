@@ -31,7 +31,7 @@ public class DayTimeChallenge implements Challenge, SchedulerAction {
 
     private static final int
             ANIMATION_DURATION_TICKS = Ticks.seconds(2),
-            DURATION_TICKS = Ticks.seconds(15);
+            DURATION_TICKS = Ticks.seconds(20);
     private final MiniGameHandle gameHandle;
     private final ServerWorld world;
     private final Random random;
