@@ -4,6 +4,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.trim.ArmorTrimMaterial;
 import net.minecraft.item.trim.ArmorTrimPattern;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.potion.Potion;
 import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
@@ -30,5 +31,10 @@ public class ItemStackHelper {
         int idx = random.nextInt(keys.size());
 
         return keys.stream().skip(idx).findFirst().orElseThrow(() -> new NoSuchElementException("No trim pattern found"));
+    }
+
+    public static void setPotion(ItemStack stack, RegistryKey<Potion> potion) {
+        NbtCompound nbt = stack.getOrCreateNbt();
+        nbt.putString("Potion", potion.getValue().toString());
     }
 }

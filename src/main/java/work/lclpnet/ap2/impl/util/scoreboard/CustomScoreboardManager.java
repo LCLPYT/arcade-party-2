@@ -145,6 +145,10 @@ public class CustomScoreboardManager implements Unloadable {
         source.register(objective::setScore);
     }
 
+    public TranslatedScoreboardObjective translateObjective(String name, String translationKey, Object... args) {
+        return translateObjective(name, ScoreboardCriterion.RenderType.INTEGER, translationKey, args);
+    }
+
     public TranslatedScoreboardObjective translateObjective(String name, ScoreboardCriterion.RenderType renderType,
                                                             String translationKey, Object... args) {
         var objective = new TranslatedScoreboardObjective(translations, playerManager, name, renderType, translationKey, args);

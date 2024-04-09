@@ -11,6 +11,7 @@ import work.lclpnet.ap2.api.map.MapFacade;
 import work.lclpnet.ap2.api.util.music.SongManager;
 import work.lclpnet.ap2.impl.game.PlayerUtil;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
+import work.lclpnet.kibu.plugin.cmd.CommandRegistrar;
 import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.kibu.translate.TranslationService;
@@ -36,6 +37,8 @@ public interface MiniGameHandle {
     MapFacade getMapFacade();
 
     HookRegistrar getHookRegistrar();
+
+    CommandRegistrar getCommandRegistrar();
 
     /**
      * Get the mini-game root scheduler.

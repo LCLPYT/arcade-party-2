@@ -211,8 +211,8 @@ public class WinSequence<T, Ref extends SubjectRef> {
 
         var resultsText = Text.literal(results).formatted(GREEN);
 
-        var sep = Text.literal(ApConstants.SEPERATOR).formatted(DARK_GREEN, STRIKETHROUGH, BOLD);
-        int sepLength = ApConstants.SEPERATOR.length();
+        var sep = Text.literal(ApConstants.SEPARATOR).formatted(DARK_GREEN, STRIKETHROUGH, BOLD);
+        int sepLength = ApConstants.SEPARATOR.length();
         var sepSm = Text.literal("-".repeat(sepLength)).formatted(DARK_GRAY, STRIKETHROUGH);
 
         sendUpperSeparator(player, len, sepLength, resultsText);
