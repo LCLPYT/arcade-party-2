@@ -290,6 +290,10 @@ public class MinecartChallenge implements Challenge, LongerChallenge, SchedulerA
             BlockPos buffer = start.offset(direction);
             open.add(buffer);
 
+            // block possible tracks besides the first track
+            closed.add(start.offset(direction.rotateYClockwise()));
+            closed.add(start.offset(direction.rotateYCounterclockwise()));
+
             // ensure that there is buffer space in the other direction
             buffer = start.offset(direction.getOpposite());
             closed.add(buffer);
