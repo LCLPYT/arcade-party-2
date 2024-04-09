@@ -21,19 +21,19 @@ public class GuessItManager {
 
         GuessItDisplay display = new GuessItDisplay(world, modifier, stage);
 
-        challenges.add(new MathsChallenge(gameHandle, world, random));
+        challenges.add(new MathsChallenge(gameHandle, random));
         challenges.add(new DayTimeChallenge(gameHandle, world, random));
         challenges.add(new MobCountSingleChallenge(gameHandle, world, random, stage, modifier));
         challenges.add(new MobCountMultiChallenge(gameHandle, world, random, stage, modifier));
         challenges.add(new DistinctMobCountChallenge(gameHandle, world, random, stage, modifier));
         challenges.add(new SoundChallenge(gameHandle, world, random, soundSubtitles));
         challenges.add(new CakeBitesChallenge(gameHandle, world, random, stage, modifier));
-        challenges.add(new PotionTypeChallenge(gameHandle, world, random, display));
-        challenges.add(new FoodAmountChallenge(gameHandle, world, random, display));
+        challenges.add(new PotionTypeChallenge(gameHandle, random, display));
+        challenges.add(new FoodAmountChallenge(gameHandle, random, display));
         challenges.add(new ArmorTrimChallenge(gameHandle, world, random, stage, modifier));
-        challenges.add(new BlockCountChallenge(gameHandle, world, random, stage, modifier));
+        challenges.add(new BlockCountChallenge(gameHandle, random, stage, modifier));
         challenges.add(new RecordChallenge(gameHandle, world, random, display));
-        challenges.add(new AreaChallenge(gameHandle, world, random, stage, modifier));
+        challenges.add(new AreaChallenge(gameHandle, random, stage, modifier));
         challenges.add(new MinecartChallenge(gameHandle, world, random, stage, modifier));
     }
 

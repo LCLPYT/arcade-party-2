@@ -1,6 +1,5 @@
 package work.lclpnet.ap2.game.guess_it.challenge;
 
-import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.CakeBlock;
 import net.minecraft.entity.EntityType;
@@ -17,9 +16,6 @@ import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.lobby.util.WorldModifier;
 
 import java.util.Random;
-
-import static net.minecraft.util.Formatting.BOLD;
-import static net.minecraft.util.Formatting.DARK_GREEN;
 
 public class CakeBitesChallenge implements Challenge {
 
@@ -50,18 +46,15 @@ public class CakeBitesChallenge implements Challenge {
     }
 
     @Override
-    public void begin(InputInterface input) {
+    public void begin(InputInterface input, ChallengeMessenger messenger) {
         TranslationService translations = gameHandle.getTranslations();
+        messenger.task(translations.translateText("game.ap2.guess_it.cake_bites"));
 
         input.expectInput().validateInt(translations);
 
         amount = random.nextInt(7);
 
         createCake();
-
-        translations.translateText("game.ap2.guess_it.cake_bites")
-                .formatted(DARK_GREEN, BOLD)
-                .sendTo(PlayerLookup.world(world));
     }
 
     private void createCake() {

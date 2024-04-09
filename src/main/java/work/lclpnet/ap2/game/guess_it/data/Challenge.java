@@ -6,7 +6,7 @@ public interface Challenge {
 
     int getDurationTicks();
 
-    void begin(InputInterface input);
+    void begin(InputInterface input, ChallengeMessenger messenger);
 
     void evaluate(PlayerChoices choices, ChallengeResult result);
 

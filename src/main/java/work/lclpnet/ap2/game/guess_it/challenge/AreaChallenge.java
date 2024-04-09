@@ -1,10 +1,8 @@
 package work.lclpnet.ap2.game.guess_it.challenge;
 
-import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.util.DyeColor;
@@ -17,6 +15,7 @@ import work.lclpnet.ap2.impl.util.BlockHelper;
 import work.lclpnet.ap2.impl.util.TextUtil;
 import work.lclpnet.ap2.impl.util.world.SimpleAdjacentBlocks;
 import work.lclpnet.kibu.scheduler.Ticks;
+import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.lobby.util.WorldModifier;
 
 import java.util.*;
@@ -24,22 +23,17 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 
-import static net.minecraft.util.Formatting.BOLD;
-import static net.minecraft.util.Formatting.DARK_GREEN;
-
 public class AreaChallenge implements Challenge {
 
     private static final int DURATION_TICKS = Ticks.seconds(16);
     private final MiniGameHandle gameHandle;
-    private final ServerWorld world;
     private final Random random;
     private final Stage stage;
     private final WorldModifier modifier;
     private Areas areas = null;
 
-    public AreaChallenge(MiniGameHandle gameHandle, ServerWorld world, Random random, Stage stage, WorldModifier modifier) {
+    public AreaChallenge(MiniGameHandle gameHandle, Random random, Stage stage, WorldModifier modifier) {
         this.gameHandle = gameHandle;
-        this.world = world;
         this.random = random;
         this.stage = stage;
         this.modifier = modifier;
@@ -56,10 +50,9 @@ public class AreaChallenge implements Challenge {
     }
 
     @Override
-    public void begin(InputInterface input) {
-        gameHandle.getTranslations().translateText("game.ap2.guess_it.area")
-                .formatted(DARK_GREEN, BOLD)
-                .sendTo(PlayerLookup.world(world));
+    public void begin(InputInterface input, ChallengeMessenger messenger) {
+        TranslationService translations = gameHandle.getTranslations();
+        messenger.task(translations.translateText("game.ap2.guess_it.area"));
 
         var opts = OptionMaker.createOptions(Set.of(DyeColor.values()), 4, random);
 

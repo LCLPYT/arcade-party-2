@@ -1,6 +1,5 @@
 package work.lclpnet.ap2.game.guess_it.challenge;
 
-import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.item.Item;
@@ -9,7 +8,6 @@ import net.minecraft.item.Items;
 import net.minecraft.potion.Potion;
 import net.minecraft.potion.Potions;
 import net.minecraft.registry.Registries;
-import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.game.guess_it.data.*;
@@ -25,22 +23,17 @@ import java.util.Random;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static net.minecraft.util.Formatting.BOLD;
-import static net.minecraft.util.Formatting.DARK_GREEN;
-
 public class PotionTypeChallenge implements Challenge {
 
     private static final int DURATION_TICKS = Ticks.seconds(16);
     private final MiniGameHandle gameHandle;
-    private final ServerWorld world;
     private final Random random;
     private final GuessItDisplay display;
     private ItemStack correct = null;
     private int correctOption = -1;
 
-    public PotionTypeChallenge(MiniGameHandle gameHandle, ServerWorld world, Random random, GuessItDisplay display) {
+    public PotionTypeChallenge(MiniGameHandle gameHandle, Random random, GuessItDisplay display) {
         this.gameHandle = gameHandle;
-        this.world = world;
         this.random = random;
         this.display = display;
     }
@@ -56,8 +49,9 @@ public class PotionTypeChallenge implements Challenge {
     }
 
     @Override
-    public void begin(InputInterface input) {
+    public void begin(InputInterface input, ChallengeMessenger messenger) {
         TranslationService translations = gameHandle.getTranslations();
+        messenger.task(translations.translateText("game.ap2.guess_it.potion_type"));
 
         var potions = getPotions();
 
@@ -83,10 +77,6 @@ public class PotionTypeChallenge implements Challenge {
         correct = options.get(correctOption);
 
         display.displayItem(correct);
-
-        translations.translateText("game.ap2.guess_it.potion_type")
-                .formatted(DARK_GREEN, BOLD)
-                .sendTo(PlayerLookup.world(world));
 
         input.expectSelection(options.stream()
                 .map(TextUtil::getVanillaName)

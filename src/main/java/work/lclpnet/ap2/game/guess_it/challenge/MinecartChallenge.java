@@ -1,6 +1,5 @@
 package work.lclpnet.ap2.game.guess_it.challenge;
 
-import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.block.*;
 import net.minecraft.block.enums.RailShape;
 import net.minecraft.entity.Entity;
@@ -32,8 +31,6 @@ import work.lclpnet.lobby.util.WorldModifier;
 
 import java.util.*;
 
-import static net.minecraft.util.Formatting.BOLD;
-import static net.minecraft.util.Formatting.DARK_GREEN;
 import static net.minecraft.util.math.Direction.*;
 
 public class MinecartChallenge implements Challenge, LongerChallenge, SchedulerAction {
@@ -72,14 +69,11 @@ public class MinecartChallenge implements Challenge, LongerChallenge, SchedulerA
     }
 
     @Override
-    public void begin(InputInterface input) {
+    public void begin(InputInterface input, ChallengeMessenger messenger) {
         TranslationService translations = gameHandle.getTranslations();
+        messenger.task(translations.translateText("game.ap2.guess_it.minecart"));
 
         input.expectInput().validateFloat(translations, 3);
-
-        translations.translateText("game.ap2.guess_it.minecart")
-                .formatted(DARK_GREEN, BOLD)
-                .sendTo(PlayerLookup.world(world));
 
         generateTracks();
     }

@@ -23,9 +23,6 @@ import java.util.Random;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static net.minecraft.util.Formatting.BOLD;
-import static net.minecraft.util.Formatting.DARK_GREEN;
-
 public class RecordChallenge implements Challenge {
 
     private static final int DURATION_TICKS = Ticks.seconds(20);
@@ -54,12 +51,9 @@ public class RecordChallenge implements Challenge {
     }
 
     @Override
-    public void begin(InputInterface input) {
+    public void begin(InputInterface input, ChallengeMessenger messenger) {
         TranslationService translations = gameHandle.getTranslations();
-
-        translations.translateText("game.ap2.guess_it.music_disc")
-                .formatted(DARK_GREEN, BOLD)
-                .sendTo(PlayerLookup.world(world));
+        messenger.task(translations.translateText("game.ap2.guess_it.music_disc"));
 
         var discs = getMusicDiscs();
         var opts = OptionMaker.createOptions(discs, 4, random);

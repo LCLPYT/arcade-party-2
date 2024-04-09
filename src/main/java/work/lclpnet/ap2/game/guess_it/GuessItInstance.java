@@ -44,6 +44,7 @@ public class GuessItInstance extends DefaultGameInstance implements MapBootstrap
     private final ScoreDataContainer<ServerPlayerEntity, PlayerRef> data = new ScoreDataContainer<>(PlayerRef::create);
     private final PlayerChoices choices;
     private final ChallengeResult result;
+    private ChallengeMessengerImpl messenger;
     private InputManager inputManager;
     private GuessItManager manager = null;
     private Challenge challenge = null;
@@ -70,7 +71,8 @@ public class GuessItInstance extends DefaultGameInstance implements MapBootstrap
         Random random = new Random();
         Stage stage = readStage();
 
-        inputManager = new InputManager(choices, gameHandle.getTranslations(), participants, world);
+        messenger = new ChallengeMessengerImpl(world, gameHandle.getTranslations());
+        inputManager = new InputManager(choices, gameHandle.getTranslations(), participants, messenger);
         modifier = new ResetWorldModifier(world, hooks);
         manager = new GuessItManager(gameHandle, world, random, stage, modifier, soundSubtitles);
 
@@ -157,7 +159,9 @@ public class GuessItInstance extends DefaultGameInstance implements MapBootstrap
             player.playSound(SoundEvents.ENTITY_BREEZE_SHOOT, SoundCategory.NEUTRAL, 1f, 0.5f);
         }
 
-        challenge.begin(inputManager);
+        messenger.reset();
+        challenge.begin(inputManager, messenger);
+        messenger.send();
 
         int durationTicks = challenge.getDurationTicks();
 

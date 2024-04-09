@@ -1,11 +1,9 @@
 package work.lclpnet.ap2.game.guess_it.challenge;
 
-import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.item.FoodComponent;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.Registries;
-import net.minecraft.server.world.ServerWorld;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.game.guess_it.data.*;
 import work.lclpnet.ap2.game.guess_it.util.GuessItDisplay;
@@ -17,21 +15,16 @@ import java.util.OptionalInt;
 import java.util.Random;
 import java.util.stream.Collectors;
 
-import static net.minecraft.util.Formatting.BOLD;
-import static net.minecraft.util.Formatting.DARK_GREEN;
-
 public class FoodAmountChallenge implements Challenge {
 
     private static final int DURATION_TICKS = Ticks.seconds(17);
     private final MiniGameHandle gameHandle;
-    private final ServerWorld world;
     private final Random random;
     private final GuessItDisplay display;
     private int amount = 0;
 
-    public FoodAmountChallenge(MiniGameHandle gameHandle, ServerWorld world, Random random, GuessItDisplay display) {
+    public FoodAmountChallenge(MiniGameHandle gameHandle, Random random, GuessItDisplay display) {
         this.gameHandle = gameHandle;
-        this.world = world;
         this.random = random;
         this.display = display;
     }
@@ -47,8 +40,9 @@ public class FoodAmountChallenge implements Challenge {
     }
 
     @Override
-    public void begin(InputInterface input) {
+    public void begin(InputInterface input, ChallengeMessenger messenger) {
         TranslationService translations = gameHandle.getTranslations();
+        messenger.task(translations.translateText("game.ap2.guess_it.food_amount"));
 
         input.expectInput().validateFloat(translations, 1);
 
@@ -64,10 +58,6 @@ public class FoodAmountChallenge implements Challenge {
         amount = foodComponent.getHunger();
 
         display.displayItem(stack);
-
-        translations.translateText("game.ap2.guess_it.food_amount")
-                .formatted(DARK_GREEN, BOLD)
-                .sendTo(PlayerLookup.world(world));
     }
 
     @Override

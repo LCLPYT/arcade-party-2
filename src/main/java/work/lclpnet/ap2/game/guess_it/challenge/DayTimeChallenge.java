@@ -23,7 +23,8 @@ import work.lclpnet.kibu.translate.TranslationService;
 import java.util.OptionalInt;
 import java.util.Random;
 
-import static net.minecraft.util.Formatting.*;
+import static net.minecraft.util.Formatting.RED;
+import static net.minecraft.util.Formatting.YELLOW;
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
 public class DayTimeChallenge implements Challenge, SchedulerAction {
@@ -64,15 +65,12 @@ public class DayTimeChallenge implements Challenge, SchedulerAction {
     }
 
     @Override
-    public void begin(InputInterface input) {
+    public void begin(InputInterface input, ChallengeMessenger messenger) {
         TranslationService translations = gameHandle.getTranslations();
+        messenger.task(translations.translateText("game.ap2.guess_it.daytime.guess"));
 
         input.expectInput().validate((str, player) -> MinecraftDayTime.dayTimeValue(str),
                 str -> translations.translateText("game.ap2.guess_it.input.daytime", styled(str, YELLOW)).formatted(RED));
-
-        translations.translateText("game.ap2.guess_it.daytime.guess")
-                .formatted(DARK_GREEN, BOLD)
-                .sendTo(PlayerLookup.world(world));
 
         var packet = new PlayerSpawnPositionS2CPacket(BlockPos.ORIGIN.north(10000), 0);
 

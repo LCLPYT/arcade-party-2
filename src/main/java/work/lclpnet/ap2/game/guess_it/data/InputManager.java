@@ -1,15 +1,11 @@
 package work.lclpnet.ap2.game.guess_it.data;
 
 import it.unimi.dsi.fastutil.Pair;
-import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.network.message.MessageType;
 import net.minecraft.network.message.SignedMessage;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.ClickEvent;
-import net.minecraft.text.HoverEvent;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.base.Participants;
@@ -26,16 +22,16 @@ public class InputManager implements InputInterface {
     private final PlayerChoices choices;
     private final TranslationService translations;
     private final Participants participants;
-    private final ServerWorld world;
+    private final ChallengeMessenger messenger;
     private InputValue inputValue = null;
     private OptionValue optionValue = null;
     private boolean locked = false;
 
-    public InputManager(PlayerChoices choices, TranslationService translations, Participants participants, ServerWorld world) {
+    public InputManager(PlayerChoices choices, TranslationService translations, Participants participants, ChallengeMessenger messenger) {
         this.choices = choices;
         this.translations = translations;
         this.participants = participants;
-        this.world = world;
+        this.messenger = messenger;
     }
 
     public void init(HookRegistrar hooks) {
@@ -106,33 +102,9 @@ public class InputManager implements InputInterface {
     @Override
     public void expectSelection(Text... options) {
         reset();
-        sendOptions(options);
+        messenger.options(options);
 
         optionValue = new OptionValue(translations, options.length);
-    }
-
-    private void sendOptions(Text[] options) {
-        var players = PlayerLookup.world(world);
-        char letter = 'A';
-
-        for (Text option : options) {
-            ClickEvent clickEvent = new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/answer " + letter);
-
-            for (ServerPlayerEntity player : players) {
-                var hoverMsg = translations.translateText(player, "game.ap2.guess_it.hover_option", styled(letter, YELLOW))
-                        .formatted(GREEN);
-
-                HoverEvent hoverEvent = new HoverEvent(HoverEvent.Action.SHOW_TEXT, hoverMsg);
-
-                Text msg = Text.literal(letter + ") ").formatted(YELLOW)
-                        .append(option.copy().formatted(AQUA))
-                        .styled(style -> style.withClickEvent(clickEvent).withHoverEvent(hoverEvent));
-
-                player.sendMessage(msg);
-            }
-
-            letter++;
-        }
     }
 
     public void setLocked(boolean locked) {

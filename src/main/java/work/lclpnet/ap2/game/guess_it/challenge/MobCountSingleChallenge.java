@@ -1,6 +1,5 @@
 package work.lclpnet.ap2.game.guess_it.challenge;
 
-import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.entity.EntityType;
 import net.minecraft.registry.Registries;
 import net.minecraft.server.world.ServerWorld;
@@ -18,7 +17,7 @@ import work.lclpnet.lobby.util.WorldModifier;
 import java.util.List;
 import java.util.Random;
 
-import static net.minecraft.util.Formatting.*;
+import static net.minecraft.util.Formatting.YELLOW;
 
 public class MobCountSingleChallenge implements Challenge {
 
@@ -49,7 +48,7 @@ public class MobCountSingleChallenge implements Challenge {
     }
 
     @Override
-    public void begin(InputInterface input) {
+    public void begin(InputInterface input, ChallengeMessenger messenger) {
         TranslationService translations = gameHandle.getTranslations();
 
         input.expectInput().validateInt(translations);
@@ -75,9 +74,7 @@ public class MobCountSingleChallenge implements Challenge {
 
         var entityName = TextUtil.getVanillaName(type).formatted(YELLOW);
 
-        translations.translateText("game.ap2.guess_it.mob.guess", entityName, YELLOW)
-                .formatted(DARK_GREEN, BOLD)
-                .sendTo(PlayerLookup.world(world));
+        messenger.task(translations.translateText("game.ap2.guess_it.mob.guess", entityName, YELLOW));
     }
 
     @Override

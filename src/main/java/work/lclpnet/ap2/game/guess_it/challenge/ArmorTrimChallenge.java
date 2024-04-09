@@ -1,6 +1,5 @@
 package work.lclpnet.ap2.game.guess_it.challenge;
 
-import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.mob.GiantEntity;
@@ -26,9 +25,6 @@ import work.lclpnet.lobby.util.WorldModifier;
 import java.util.Objects;
 import java.util.Random;
 import java.util.Set;
-
-import static net.minecraft.util.Formatting.BOLD;
-import static net.minecraft.util.Formatting.DARK_GREEN;
 
 public class ArmorTrimChallenge implements Challenge {
 
@@ -62,12 +58,9 @@ public class ArmorTrimChallenge implements Challenge {
     }
 
     @Override
-    public void begin(InputInterface input) {
+    public void begin(InputInterface input, ChallengeMessenger messenger) {
         TranslationService translations = gameHandle.getTranslations();
-
-        translations.translateText("game.ap2.guess_it.armor_trim")
-                .formatted(DARK_GREEN, BOLD)
-                .sendTo(PlayerLookup.world(world));
+        messenger.task(translations.translateText("game.ap2.guess_it.armor_trim"));
 
         var patterns = getTrimPatterns();
         var opts = OptionMaker.createOptions(patterns, 4, random);

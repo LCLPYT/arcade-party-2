@@ -1,6 +1,5 @@
 package work.lclpnet.ap2.game.guess_it.challenge;
 
-import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.Vec3d;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
@@ -13,9 +12,6 @@ import work.lclpnet.lobby.util.WorldModifier;
 
 import java.util.List;
 import java.util.Random;
-
-import static net.minecraft.util.Formatting.BOLD;
-import static net.minecraft.util.Formatting.DARK_GREEN;
 
 public class DistinctMobCountChallenge implements Challenge {
 
@@ -46,8 +42,9 @@ public class DistinctMobCountChallenge implements Challenge {
     }
 
     @Override
-    public void begin(InputInterface input) {
+    public void begin(InputInterface input, ChallengeMessenger messenger) {
         TranslationService translations = gameHandle.getTranslations();
+        messenger.task(translations.translateText("game.ap2.guess_it.mob_types.guess"));
 
         input.expectInput().validateInt(translations);
 
@@ -77,10 +74,6 @@ public class DistinctMobCountChallenge implements Challenge {
             Vec3d pos = spaces.get(random.nextInt(spaces.size()));
             spawner.spawnEntity(type, pos, modifier);
         }
-
-        translations.translateText("game.ap2.guess_it.mob_types.guess")
-                .formatted(DARK_GREEN, BOLD)
-                .sendTo(PlayerLookup.world(world));
     }
 
     @Override

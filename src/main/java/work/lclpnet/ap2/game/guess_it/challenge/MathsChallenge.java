@@ -1,9 +1,5 @@
 package work.lclpnet.ap2.game.guess_it.challenge;
 
-import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.Formatting;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.game.guess_it.data.*;
 import work.lclpnet.ap2.game.guess_it.math.Expression;
@@ -13,7 +9,6 @@ import work.lclpnet.kibu.translate.TranslationService;
 
 import java.util.Random;
 
-import static net.minecraft.util.Formatting.BOLD;
 import static net.minecraft.util.Formatting.YELLOW;
 import static work.lclpnet.ap2.game.guess_it.math.Term.*;
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
@@ -22,13 +17,11 @@ public class MathsChallenge implements Challenge {
 
     private static final int DURATION_TICKS = Ticks.seconds(20);
     private final MiniGameHandle gameHandle;
-    private final ServerWorld world;
     private final Random random;
     private int correctAnswer = 0;
 
-    public MathsChallenge(MiniGameHandle gameHandle, ServerWorld world, Random random) {
+    public MathsChallenge(MiniGameHandle gameHandle, Random random) {
         this.gameHandle = gameHandle;
-        this.world = world;
         this.random = random;
     }
 
@@ -43,7 +36,7 @@ public class MathsChallenge implements Challenge {
     }
 
     @Override
-    public void begin(InputInterface input) {
+    public void begin(InputInterface input, ChallengeMessenger messenger) {
         TranslationService translations = gameHandle.getTranslations();
 
         input.expectInput()
@@ -53,9 +46,7 @@ public class MathsChallenge implements Challenge {
         Expression term = randomTerm();
         correctAnswer = term.evaluate();
 
-        translations.translateText("game.ap2.guess_it.calculate.exercise", styled(term.stringify(), YELLOW))
-                .formatted(Formatting.DARK_GREEN, BOLD)
-                .sendTo(PlayerLookup.world(world));
+        messenger.task(translations.translateText("game.ap2.guess_it.calculate.exercise", styled(term.stringify(), YELLOW)));
     }
 
     @Override

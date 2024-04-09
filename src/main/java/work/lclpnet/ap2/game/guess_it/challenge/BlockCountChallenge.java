@@ -1,9 +1,7 @@
 package work.lclpnet.ap2.game.guess_it.challenge;
 
-import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
-import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.NotNull;
@@ -18,14 +16,10 @@ import work.lclpnet.lobby.util.WorldModifier;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static net.minecraft.util.Formatting.BOLD;
-import static net.minecraft.util.Formatting.DARK_GREEN;
-
 public class BlockCountChallenge implements Challenge, SchedulerAction {
 
     private static final int DURATION_TICKS = Ticks.seconds(20);
     private final MiniGameHandle gameHandle;
-    private final ServerWorld world;
     private final Random random;
     private final Stage stage;
     private final WorldModifier modifier;
@@ -37,9 +31,8 @@ public class BlockCountChallenge implements Challenge, SchedulerAction {
     private BlockState state = null;
     private Shape shape = null;
 
-    public BlockCountChallenge(MiniGameHandle gameHandle, ServerWorld world, Random random, Stage stage, WorldModifier modifier) {
+    public BlockCountChallenge(MiniGameHandle gameHandle, Random random, Stage stage, WorldModifier modifier) {
         this.gameHandle = gameHandle;
-        this.world = world;
         this.random = random;
         this.stage = stage;
         this.modifier = modifier;
@@ -100,14 +93,11 @@ public class BlockCountChallenge implements Challenge, SchedulerAction {
     }
 
     @Override
-    public void begin(InputInterface input) {
+    public void begin(InputInterface input, ChallengeMessenger messenger) {
         TranslationService translations = gameHandle.getTranslations();
+        messenger.task(translations.translateText("game.ap2.guess_it.shape." + shape.name().toLowerCase(Locale.ROOT)));
 
         input.expectInput().validateInt(translations);
-
-        translations.translateText("game.ap2.guess_it.shape." + shape.name().toLowerCase(Locale.ROOT))
-                .formatted(DARK_GREEN, BOLD)
-                .sendTo(PlayerLookup.world(world));
     }
 
     @Override

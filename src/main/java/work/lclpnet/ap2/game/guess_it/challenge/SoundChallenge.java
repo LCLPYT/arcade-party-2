@@ -52,12 +52,9 @@ public class SoundChallenge implements Challenge {
     }
 
     @Override
-    public void begin(InputInterface input) {
+    public void begin(InputInterface input, ChallengeMessenger messenger) {
         TranslationService translations = gameHandle.getTranslations();
-
-        translations.translateText("game.ap2.guess_it.sound.guess")
-                .formatted(DARK_GREEN, BOLD)
-                .sendTo(PlayerLookup.world(world));
+        messenger.task(translations.translateText("game.ap2.guess_it.sound.guess"));
 
         var soundEvents = soundSubtitles.getSoundEvents();
         var soundOptions = OptionMaker.createOptions(soundEvents, 4, random);
