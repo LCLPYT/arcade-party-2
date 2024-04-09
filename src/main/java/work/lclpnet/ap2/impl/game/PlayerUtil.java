@@ -10,6 +10,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.GameMode;
+import net.minecraft.world.World;
 import org.jetbrains.annotations.NotNull;
 import work.lclpnet.ap2.api.base.PlayerManager;
 import work.lclpnet.ap2.impl.util.effect.ApEffect;
@@ -114,6 +115,12 @@ public class PlayerUtil {
                 .ifPresent(attribute -> attribute.setBaseValue(20));
 
         player.dismountVehicle();
+
+        MinecraftServer server = player.getServer();
+
+        if (server != null) {
+            player.setSpawnPoint(World.OVERWORLD, null, 0f, true, false);
+        }
 
         PlayerAbilities abilities = player.getAbilities();
         abilities.setFlySpeed(0.05f);

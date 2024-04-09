@@ -145,7 +145,8 @@ public class ArcadePartyGameInstance implements GameInstance {
         forceGameCommand.register(environment.getCommandStack());
 
         ApContainer container = new ApContainer(server, logger, translationService, environment.getHookStack(),
-                environment.getSchedulerStack(), worldFacade, mapFacade, playerUtil, gameManager, songManager);
+                environment.getCommandStack(), environment.getSchedulerStack(), worldFacade, mapFacade, playerUtil,
+                gameManager, songManager);
 
         SongCache songCache = new MapSongCache();
 

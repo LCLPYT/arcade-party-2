@@ -1,5 +1,6 @@
 package work.lclpnet.ap2.api.game.data;
 
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -27,6 +28,7 @@ public interface DataContainer<T, Ref extends SubjectRef> {
         return orderedEntries()
                 .filter(entry::scoreEquals)
                 .map(DataEntry::subject)
-                .map(resolver::resolve);
+                .map(resolver::resolve)
+                .filter(Objects::nonNull);
     }
 }

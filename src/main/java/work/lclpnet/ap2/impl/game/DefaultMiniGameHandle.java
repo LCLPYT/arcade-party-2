@@ -18,6 +18,7 @@ import work.lclpnet.ap2.api.util.music.SongManager;
 import work.lclpnet.ap2.base.ApContainer;
 import work.lclpnet.ap2.base.activity.PreparationActivity;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
+import work.lclpnet.kibu.plugin.cmd.CommandRegistrar;
 import work.lclpnet.kibu.plugin.hook.HookStack;
 import work.lclpnet.kibu.plugin.scheduler.SchedulerStack;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
@@ -61,6 +62,7 @@ public class DefaultMiniGameHandle implements MiniGameHandle, Unloadable, WorldB
         ApContainer container = args.container();
 
         container.hookStack().push();
+        container.commandStack().push();
         container.schedulerStack().push();
 
         scheduler = container.schedulerStack();
@@ -96,6 +98,11 @@ public class DefaultMiniGameHandle implements MiniGameHandle, Unloadable, WorldB
     @Override
     public HookStack getHookRegistrar() {
         return args.container().hookStack();
+    }
+
+    @Override
+    public CommandRegistrar getCommandRegistrar() {
+        return args.container().commandStack();
     }
 
     @Override
@@ -213,6 +220,7 @@ public class DefaultMiniGameHandle implements MiniGameHandle, Unloadable, WorldB
         ApContainer container = args.container();
 
         container.hookStack().pop();
+        container.commandStack().pop();
 
         SchedulerStack schedulerStack = container.schedulerStack();
         schedulerStack.pop();  // game scheduler

@@ -337,7 +337,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
         animatedTitle = new AnimatedTitle();
 
         var playedNextMsg = translations.translateText("ap2.prepare.will_be_played_next").formatted(GREEN);
-        var separator = Text.literal(ApConstants.SEPERATOR).formatted(DARK_GREEN, STRIKETHROUGH, BOLD);
+        var separator = Text.literal(ApConstants.SEPARATOR).formatted(DARK_GREEN, STRIKETHROUGH, BOLD);
 
         var players = PlayerLookup.all(server);
 
