@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.game.jump_and_run;
+package work.lclpnet.ap2.impl.util.checkpoint;
 
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
@@ -6,8 +6,7 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.math.MathHelper;
 import work.lclpnet.ap2.api.util.Collider;
 import work.lclpnet.ap2.api.util.CollisionDetector;
-import work.lclpnet.ap2.game.jump_and_run.gen.Checkpoint;
-import work.lclpnet.ap2.impl.util.collision.PlayerMovementObserver;
+import work.lclpnet.ap2.api.util.collision.MovementObserver;
 
 import java.util.*;
 
@@ -47,7 +46,7 @@ public class CheckpointManager {
         return grant > 0;
     }
 
-    public void init(CollisionDetector collisionDetector, PlayerMovementObserver movementObserver) {
+    public void init(CollisionDetector collisionDetector, MovementObserver movementObserver) {
         for (int i = 0, checkpointsSize = checkpoints.size(); i < checkpointsSize; i++) {
             Checkpoint checkpoint = checkpoints.get(i);
             Collider checkpointBounds = checkpoint.bounds();

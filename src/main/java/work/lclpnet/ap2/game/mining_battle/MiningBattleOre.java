@@ -191,7 +191,7 @@ public class MiningBattleOre {
             other.removeStatusEffect(StatusEffects.MINING_FATIGUE);
             other.addStatusEffect(new StatusEffectInstance(StatusEffects.MINING_FATIGUE, 150, 0), player);
 
-            other.sendMessage(otherMsg.translateFor(player));
+            other.sendMessage(otherMsg.translateFor(other));
         }
     }
 
