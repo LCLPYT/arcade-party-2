@@ -256,7 +256,7 @@ public class RedLightGreenLightInstance extends DefaultGameInstance implements R
         var ctx = new RayCaster.GenericRaycastContext(pos, pos.subtract(0, 10, 0), RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE);
         BlockHitResult hit = RayCaster.rayCastBlockCollision(world, ctx);
 
-        return hit.getPos().getY();
+        return ((int) Math.round(hit.getPos().getY() * 20)) / 20d;
     }
 
     private void onGoalReached(ServerPlayerEntity player) {
