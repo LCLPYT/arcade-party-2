@@ -159,5 +159,6 @@
   "game.ap2.red_light_green_light.timeout": "The game was ended because the participants took to long...",
   "game.ap2.red_light_green_light.go": "Go!",
   "game.ap2.red_light_green_light.warn": "Careful...",
-  "game.ap2.red_light_green_light.stop": "Stop!"
+  "game.ap2.red_light_green_light.stop": "Stop!",
+  "game.ap2.red_light_green_light.moved": "You moved! You were reset as a punishment."
 }

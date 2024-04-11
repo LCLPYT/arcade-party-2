@@ -8,12 +8,15 @@ import net.minecraft.entity.projectile.FireworkRocketEntity;
 import net.minecraft.item.FireworkRocketItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
+import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.RaycastContext;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
@@ -23,6 +26,7 @@ import work.lclpnet.ap2.impl.game.data.OrderedDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.BlockBox;
+import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker;
 import work.lclpnet.kibu.access.entity.FireworkEntityAccess;
 import work.lclpnet.kibu.hook.player.PlayerMoveCallback;
 import work.lclpnet.kibu.hook.util.PositionRotation;
@@ -35,6 +39,7 @@ import work.lclpnet.kibu.translate.bossbar.TranslatedBossBar;
 import work.lclpnet.kibu.translate.text.RootText;
 import work.lclpnet.lobby.game.map.GameMap;
 import work.lclpnet.lobby.game.map.MapUtils;
+import work.lclpnet.lobby.util.RayCaster;
 
 import java.util.*;
 
@@ -43,23 +48,27 @@ import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
 public class RedLightGreenLightInstance extends DefaultGameInstance implements Runnable {
 
-    private static final int STOP_MIN_TICKS = 30, STOP_MAX_TICKS = 80;
-    private static final int WARN_MIN_TICKS = 15, WARN_MAX_TICKS = 40;
+    private static final int STOP_MIN_TICKS = 60, STOP_MAX_TICKS = 90;
+    private static final int WARN_MIN_TICKS = 35, WARN_MAX_TICKS = 65;
     private static final int GO_MIN_TICKS = 60, GO_MAX_TICKS = 120;
-    private static final int MAX_GAME_TIME_TICKS = Ticks.minutes(3);
+    private static final int MAX_GAME_TIME_TICKS = Ticks.minutes(7);
+    private final SimpleMovementBlocker movementBlocker;
     private final OrderedDataContainer<ServerPlayerEntity, PlayerRef> data = new OrderedDataContainer<>(PlayerRef::create);
     private final Random random = new Random();
     private final Set<UUID> inGoal = new HashSet<>();
+    private final Set<UUID> moved = new HashSet<>();
     private final List<TrafficLight> trafficLights = new ArrayList<>();
+    private MovementTracker tracker = null;
     private TranslatedBossBar taskBar = null;
     private BlockBox goal;
-    private int nextStop = 0;
-    private int nextWarn = 0;
-    private int nextGo = 0;
+    private int timer = 0;
+    private int warn = 0;
+    private int go = 0;
     private int absTime = 0;
 
     public RedLightGreenLightInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
+        movementBlocker = new SimpleMovementBlocker(gameHandle.getGameScheduler());
     }
 
     @Override
@@ -75,6 +84,8 @@ public class RedLightGreenLightInstance extends DefaultGameInstance implements R
         ServerWorld world = getWorld();
 
         goal = MapUtil.readBox(map.requireProperty("goal"));
+        tracker = new MovementTracker(goal);
+
         BlockBox spawnArea = MapUtil.readBox(map.requireProperty("spawn-area"));
         float yaw = MapUtils.getSpawnYaw(map);
 
@@ -85,12 +96,17 @@ public class RedLightGreenLightInstance extends DefaultGameInstance implements R
 
         readTrafficLights();
         setTrafficLightStatus(EnumSet.noneOf(TrafficLight.Status.class));
+
+        movementBlocker.init(gameHandle.getHookRegistrar());
     }
 
     @Override
     protected void ready() {
-        PlayerMoveCallback.HOOK.register((player, from, to) -> {
-            this.onMove(player, to);
+        gameHandle.getHookRegistrar().registerHook(PlayerMoveCallback.HOOK, (player, from, to) -> {
+            if (from.squaredDistanceTo(to) > 1e-3) {
+                this.onMove(player, to);
+            }
+
             return false;
         });
 
@@ -116,6 +132,18 @@ public class RedLightGreenLightInstance extends DefaultGameInstance implements R
     }
 
     private void setStatus(TrafficLight.Status status) {
+        if (status == TrafficLight.Status.GREEN) {
+            for (UUID uuid : moved) {
+                ServerPlayerEntity player = gameHandle.getServer().getPlayerManager().getPlayer(uuid);
+
+                if (player == null) continue;
+
+                movementBlocker.enableMovement(player);
+            }
+
+            moved.clear();
+        }
+
         setTrafficLightStatus(EnumSet.of(status));
 
         taskBar.setColor(switch (status) {
@@ -176,6 +204,51 @@ public class RedLightGreenLightInstance extends DefaultGameInstance implements R
             onGoalReached(player);
             return;
         }
+
+        if (timer > 0) {
+            tracker.track(player);
+            return;
+        }
+
+        // moved while stopped, check if the player is already tracked as "moved"
+        if (!moved.add(player.getUuid())) return;
+
+        punish(player);
+    }
+
+    private void punish(ServerPlayerEntity player) {
+        ServerWorld world = getWorld();
+
+        double x = player.getX(), y = player.getY(), z = player.getZ();
+        world.spawnParticles(ParticleTypes.CRIT, x, y, z, 100, 0.1, 0.1, 0.1, 1);
+
+        // find a suitable position to reset the player to
+        Vec3d pos = tracker.getMostDistantPos(player);
+
+        if (pos != null) {
+            world.playSound(player, x, y, z, SoundEvents.ENTITY_ZOMBIE_ATTACK_WOODEN_DOOR, SoundCategory.PLAYERS, 0.5f, 1f);
+
+            x = pos.getX();
+            y = findSuitableY(world, pos);
+            z = pos.getZ();
+
+            player.teleport(world, x, y, z, player.getYaw(), player.getPitch());
+            player.playSound(SoundEvents.ENTITY_ZOMBIE_ATTACK_WOODEN_DOOR, SoundCategory.PLAYERS, 0.5f, 1f);
+        } else {
+            world.playSound(null, player.getBlockPos(), SoundEvents.ENTITY_ZOMBIE_ATTACK_WOODEN_DOOR, SoundCategory.PLAYERS, 0.5f, 1f);
+        }
+
+        movementBlocker.disableMovement(player);
+
+        var msg = gameHandle.getTranslations().translateText(player, "game.ap2.red_light_green_light.moved").formatted(RED);
+        player.sendMessage(msg);
+    }
+
+    private double findSuitableY(ServerWorld world, Vec3d pos) {
+        var ctx = new RayCaster.GenericRaycastContext(pos, pos.subtract(0, 10, 0), RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE);
+        BlockHitResult hit = RayCaster.rayCastBlockCollision(world, ctx);
+
+        return hit.getPos().getY();
     }
 
     private void onGoalReached(ServerPlayerEntity player) {
@@ -212,12 +285,12 @@ public class RedLightGreenLightInstance extends DefaultGameInstance implements R
     }
 
     private void scheduleNextStop() {
-        nextStop = STOP_MIN_TICKS + random.nextInt(STOP_MAX_TICKS - STOP_MIN_TICKS + 1);
+        timer = STOP_MIN_TICKS + random.nextInt(STOP_MAX_TICKS - STOP_MIN_TICKS + 1);
 
         int randomNextWarn = WARN_MIN_TICKS + random.nextInt(WARN_MAX_TICKS - WARN_MIN_TICKS + 1);
-        nextWarn = Math.max(1, Math.min(nextStop - WARN_MIN_TICKS, randomNextWarn));
+        warn = Math.max(1, Math.min(timer - WARN_MIN_TICKS, randomNextWarn));
 
-        nextGo = GO_MIN_TICKS + random.nextInt(GO_MAX_TICKS - GO_MIN_TICKS + 1);
+        go = GO_MIN_TICKS + random.nextInt(GO_MAX_TICKS - GO_MIN_TICKS + 1);
     }
 
     @Override
@@ -234,10 +307,10 @@ public class RedLightGreenLightInstance extends DefaultGameInstance implements R
             return;
         }
 
-        int relTime = nextStop--;
+        int relTime = timer--;
 
         if (relTime < 0) {
-            if (relTime == -nextGo) {
+            if (relTime == -go) {
                 scheduleNextStop();
                 setStatus(TrafficLight.Status.GREEN);
             }
@@ -249,7 +322,7 @@ public class RedLightGreenLightInstance extends DefaultGameInstance implements R
             return;
         }
 
-        if (relTime == nextWarn) {
+        if (relTime == warn) {
             setStatus(TrafficLight.Status.YELLOW);
         }
     }
