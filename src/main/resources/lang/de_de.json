@@ -153,5 +153,12 @@
   "game.ap2.pig_race.task": "Erreiche das Ziel",
   "game.ap2.pig_race.boost": "Anschub",
   "game.ap2.red_light_green_light": "Rotes Licht Grünes Licht",
-  "game.ap2.red_light_green_light.description": "Erreiche möglichst schnell das Ziel. Du darfst dich nur bewegen, wenn es dir erlaubt wird!"
+  "game.ap2.red_light_green_light.description": "Erreiche möglichst schnell das Ziel. Du darfst dich nur bewegen, wenn es dir erlaubt wird!",
+  "game.ap2.red_light_green_light.task": "Erreiche das Ziel",
+  "game.ap2.red_light_green_light.goal": "Glückwunsch, du hast das Ziel erreicht!",
+  "game.ap2.red_light_green_light.goal_remain": "Glückwunsch, du hast das Ziel erreicht! Das Spiel endet, wenn %s Spieler im Ziel sind.",
+  "game.ap2.red_light_green_light.timeout": "Das Spiel wurde beendet, weil die Teilnehmer zu lange gebraucht haben...",
+  "game.ap2.red_light_green_light.go": "Los!",
+  "game.ap2.red_light_green_light.warn": "Achtung...",
+  "game.ap2.red_light_green_light.stop": "Stopp!"
 }

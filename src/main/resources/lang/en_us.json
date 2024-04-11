@@ -152,5 +152,12 @@
   "game.ap2.pig_race.task": "Reach the goal",
   "game.ap2.pig_race.boost": "Boost",
   "game.ap2.red_light_green_light": "Red Light Green Light",
-  "game.ap2.red_light_green_light.description": "Run towards the finish line. You may only move if you are commanded to do so!"
+  "game.ap2.red_light_green_light.description": "Run towards the finish line. You may only move if you are commanded to do so!",
+  "game.ap2.red_light_green_light.task": "Reach the goal",
+  "game.ap2.red_light_green_light.goal": "Congratulations, you have reached the goal!",
+  "game.ap2.red_light_green_light.goal_remain": "Congratulations, you have reached the goal! The game will end when %s players reached the goal.",
+  "game.ap2.red_light_green_light.timeout": "The game was ended because the participants took to long...",
+  "game.ap2.red_light_green_light.go": "Go!",
+  "game.ap2.red_light_green_light.warn": "Careful...",
+  "game.ap2.red_light_green_light.stop": "Stop!"
 }
