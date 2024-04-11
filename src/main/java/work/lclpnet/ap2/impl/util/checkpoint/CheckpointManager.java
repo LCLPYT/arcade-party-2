@@ -69,6 +69,10 @@ public class CheckpointManager {
         listeners.add(Objects.requireNonNull(action));
     }
 
+    public List<Checkpoint> getCheckpoints() {
+        return checkpoints;
+    }
+
     public interface Listener {
         void accept(ServerPlayerEntity player, int checkpoint);
     }

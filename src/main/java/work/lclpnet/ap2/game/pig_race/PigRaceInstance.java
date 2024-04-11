@@ -103,7 +103,6 @@ public class PigRaceInstance extends DefaultGameInstance {
 
         teleportPlayers(spawnBounds);
         setupCheckpoints(spawnBounds, goal);
-        movementObserver.whenEntering(goal.bounds(), winManager::win);
 
         movementObserver.init(gameHandle.getGameScheduler(), gameHandle.getServer());
     }
@@ -118,16 +117,15 @@ public class PigRaceInstance extends DefaultGameInstance {
         CheckpointHelper.setupResetItem(hooks, winManager::isGameOver, participants::isParticipating)
                 .then(this::resetPlayerToCheckpoint);
 
-        // reset players who have fallen into the lava
+        // reset players who have fallen into the lava / water
         gameHandle.getGameScheduler().interval(() -> {
             for (ServerPlayerEntity player : participants) {
-                if (player.isSubmergedInWater()) {
-                    resetPlayerToCheckpoint(player);
-                    continue;
-                }
-
                 Entity vehicle = player.getVehicle();
                 if (vehicle == null) continue;
+
+                if (vehicle.isSubmergedInWater()) {
+                    resetPlayerToCheckpoint(player);
+                }
 
                 BlockPos pos = vehicle.getBlockPos();
                 BlockState state = player.getServerWorld().getBlockState(pos);
@@ -185,7 +183,15 @@ public class PigRaceInstance extends DefaultGameInstance {
 
         CheckpointHelper.notifyWhenReached(checkpointManager, gameHandle.getTranslations());
 
-        checkpointManager.whenCheckpointReached(data::setScore);
+        checkpointManager.whenCheckpointReached(this::onReachedCheckpoint);
+    }
+
+    private void onReachedCheckpoint(ServerPlayerEntity player, int checkpoint) {
+        data.setScore(player, checkpoint);
+
+        if (checkpoint >= checkpointManager.getCheckpoints().size() - 1) {
+            winManager.win(player);
+        }
     }
 
     private void openGate() {
