@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.game.jump_and_run.gen;
+package work.lclpnet.ap2.impl.util.checkpoint;
 
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;

@@ -29,6 +29,8 @@
   "ap2.team.red": "Team Red",
   "ap2.team.blue": "Team Blue",
   "game.ap2.title": "ArcadeParty",
+  "game.ap2.reached_checkpoint": "Checkpoint reached",
+  "game.ap2.reset": "Reset",
   "game.ap2.spleef": "Spleef",
   "game.ap2.spleef.description": "Break the ground beneath your opponents to make them fall. Last one standing wins.",
   "game.ap2.spleef.shovel": "Spleef Shovel",
@@ -79,8 +81,6 @@
   "game.ap2.jump_and_run.description": "Complete a randomly generated jump 'n' run. If you make it first, you win!",
   "game.ap2.jump_and_run.task": "Complete the Jump 'n' Run %s/%s",
   "game.ap2.jump_and_run.reached_room": "Congratulations, you reached room %s",
-  "game.ap2.jump_and_run.reached_checkpoint": "Checkpoint reached",
-  "game.ap2.jump_and_run.reset": "Reset",
   "game.ap2.jump_and_run.assistance": "This room has been simplified so that you can make better progress",
   "game.ap2.tnt_run": "TNT Run",
   "game.ap2.tnt_run.description": "The blocks beneath your feet are disappearing. Prevent yourself from falling by running away!",
@@ -146,5 +146,9 @@
   "game.ap2.guess_it.shape.cone": "How many blocks are there in this cone?",
   "game.ap2.guess_it.music_disc": "Which music disc is this?",
   "game.ap2.guess_it.area": "Which area is the biggest?",
-  "game.ap2.guess_it.minecart": "How many seconds will pass until the minecart reaches the goal?"
+  "game.ap2.guess_it.minecart": "How many seconds will pass until the minecart reaches the goal?",
+  "game.ap2.pig_race": "Pig Race",
+  "game.ap2.pig_race.description": "Race for the finish line while riding on a pig.",
+  "game.ap2.pig_race.task": "Reach the goal",
+  "game.ap2.pig_race.boost": "Boost"
 }

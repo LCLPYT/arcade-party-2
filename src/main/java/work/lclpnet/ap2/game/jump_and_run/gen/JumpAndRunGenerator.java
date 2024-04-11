@@ -10,6 +10,7 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.api.util.Printable;
 import work.lclpnet.ap2.impl.util.BlockBox;
+import work.lclpnet.ap2.impl.util.checkpoint.Checkpoint;
 import work.lclpnet.ap2.impl.util.collision.BoxCollisionDetector;
 import work.lclpnet.kibu.schematic.FabricBlockStateAdapter;
 import work.lclpnet.kibu.schematic.FabricStructureWrapper;

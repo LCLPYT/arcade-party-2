@@ -48,7 +48,7 @@ public class SoundChallenge implements Challenge {
 
     @Override
     public int getDurationTicks() {
-        return DURATION_TICKS + 2 * SOUND_DELAY_TICKS + REPEAT_DELAY_TICKS;
+        return DURATION_TICKS + SOUND_DELAY_TICKS + REPEAT_DELAY_TICKS;
     }
 
     @Override
@@ -69,7 +69,7 @@ public class SoundChallenge implements Challenge {
 
         input.expectSelection(options);
 
-        gameHandle.getGameScheduler().timeout(this::playFirst, SOUND_DELAY_TICKS);
+        playFirst();
     }
 
     @Override
@@ -119,5 +119,10 @@ public class SoundChallenge implements Challenge {
         for (ServerPlayerEntity player : PlayerLookup.world(world)) {
             player.networkHandler.sendPacket(packet);
         }
+    }
+
+    @Override
+    public boolean shouldPlayBeginSound() {
+        return false;
     }
 }

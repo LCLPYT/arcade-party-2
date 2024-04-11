@@ -12,6 +12,7 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.GameRules;
 import org.json.JSONObject;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
@@ -85,6 +86,9 @@ public class GuessItInstance extends DefaultGameInstance implements MapBootstrap
         HookRegistrar hooks = gameHandle.getHookRegistrar();
         Participants participants = gameHandle.getParticipants();
         Stage stage = readStage();
+
+        GameRules gameRules = world.getGameRules();
+        gameRules.get(GameRules.REDUCED_DEBUG_INFO).set(true, gameHandle.getServer());
 
         rounds = MIN_ROUNDS + random.nextInt(MAX_ROUNDS - MIN_ROUNDS + 1);
 
@@ -228,8 +232,10 @@ public class GuessItInstance extends DefaultGameInstance implements MapBootstrap
 
         var players = PlayerLookup.world(world);
 
-        for (ServerPlayerEntity player : players) {
-            player.playSound(SoundEvents.ENTITY_BREEZE_SHOOT, SoundCategory.NEUTRAL, 1f, 0.5f);
+        if (challenge.shouldPlayBeginSound()) {
+            for (ServerPlayerEntity player : players) {
+                player.playSound(SoundEvents.ENTITY_BREEZE_SHOOT, SoundCategory.NEUTRAL, 1f, 0.5f);
+            }
         }
 
         messenger.reset();

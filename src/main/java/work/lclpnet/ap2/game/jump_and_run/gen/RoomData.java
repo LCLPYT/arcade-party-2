@@ -1,5 +1,6 @@
 package work.lclpnet.ap2.game.jump_and_run.gen;
 
+import work.lclpnet.ap2.impl.util.checkpoint.Checkpoint;
 import work.lclpnet.ap2.impl.util.math.AffineIntMatrix;
 
 import java.util.List;
