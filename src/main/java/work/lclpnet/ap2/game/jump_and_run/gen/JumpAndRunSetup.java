@@ -7,6 +7,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
+import work.lclpnet.ap2.impl.util.checkpoint.Checkpoint;
 import work.lclpnet.kibu.schematic.FabricBlockStateAdapter;
 import work.lclpnet.kibu.schematic.SchematicFormats;
 import work.lclpnet.kibu.schematic.api.SchematicReader;

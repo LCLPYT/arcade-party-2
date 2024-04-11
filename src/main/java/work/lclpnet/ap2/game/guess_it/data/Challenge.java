@@ -13,4 +13,8 @@ public interface Challenge {
     default void destroy() {}
 
     default void prepare() {}
+
+    default boolean shouldPlayBeginSound() {
+        return true;
+    }
 }
