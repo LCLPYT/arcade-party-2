@@ -24,7 +24,7 @@ public class WinManager<T, Ref extends SubjectRef> {
             hook.onGameOver();
         }
     });
-    private boolean gameOver = false;
+    private volatile boolean gameOver = false;
 
     public WinManager(MiniGameHandle gameHandle, Supplier<DataContainer<T, Ref>> dataSupplier,
                       PlayerSubjectRefFactory<Ref> refs, GameWinnersFactory<T, Ref> winnersFactory) {
