@@ -42,6 +42,6 @@ class MovementListener implements HookListenerModule {
     }
 
     private boolean onPlayerMove(ServerPlayerEntity player, PositionRotation from, PositionRotation to) {
-        return blocker.isMovementDisabled(player) && from.isDifferentPosition(to) && from.squaredDistanceTo(to) <= 1;
+        return blocker.isMovementDisabled(player) && from.squaredDistanceTo(to) > 1e-3 && from.squaredDistanceTo(to) <= 1;
     }
 }

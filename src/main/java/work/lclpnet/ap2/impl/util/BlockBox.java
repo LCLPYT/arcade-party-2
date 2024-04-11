@@ -1,10 +1,7 @@
 package work.lclpnet.ap2.impl.util;
 
 import it.unimi.dsi.fastutil.Pair;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.util.Collider;
@@ -58,6 +55,18 @@ public class BlockBox implements Pair<BlockPos, BlockPos>, Iterable<BlockPos>, C
         return max;
     }
 
+    public int getWidth() {
+        return max.getX() - min.getX();
+    }
+
+    public int getHeight() {
+        return max.getY() - min.getY();
+    }
+
+    public int getLength() {
+        return max.getZ() - min.getZ();
+    }
+
     public BlockBox transform(AffineIntMatrix mat4) {
         return new BlockBox(mat4.transform(min), mat4.transform(max));
     }
@@ -78,9 +87,9 @@ public class BlockBox implements Pair<BlockPos, BlockPos>, Iterable<BlockPos>, C
     @Override
     public String toString() {
         return "BlockBox{" +
-                "min=" + min +
-                ", max=" + max +
-                '}';
+               "min=" + min +
+               ", max=" + max +
+               '}';
     }
 
     @Nullable
@@ -107,6 +116,10 @@ public class BlockBox implements Pair<BlockPos, BlockPos>, Iterable<BlockPos>, C
         return x >= min.getX() && x < max.getX() + 1
                && y >= min.getY() && y < max.getY() + 1
                && z >= min.getZ() && z < max.getZ() + 1;
+    }
+
+    public boolean contains(Position pos) {
+        return contains(pos.getX(), pos.getY(), pos.getZ());
     }
 
     public boolean contains(Box box) {
@@ -139,5 +152,21 @@ public class BlockBox implements Pair<BlockPos, BlockPos>, Iterable<BlockPos>, C
         double z = minZ + random.nextDouble(maxZ - minZ + 1);
 
         return new Vec3d(x, y, z);
+    }
+
+    public double squaredDistanceTo(Vec3d pos) {
+        return getClosestPoint(pos).squaredDistanceTo(pos);
+    }
+
+    public Vec3d getClosestPoint(Position pos) {
+        return getClosestPoint(pos.getX(), pos.getY(), pos.getZ());
+    }
+
+    public Vec3d getClosestPoint(double x, double y, double z) {
+        return new Vec3d(
+                Math.max(Math.min(x, max.getX()), min.getX()),
+                Math.max(Math.min(y, max.getY()), min.getY()),
+                Math.max(Math.min(z, max.getZ()), min.getZ())
+        );
     }
 }
