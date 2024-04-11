@@ -9,6 +9,8 @@ import net.minecraft.item.FireworkRocketItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.particle.ParticleTypes;
+import net.minecraft.scoreboard.AbstractTeam;
+import net.minecraft.scoreboard.Team;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -27,6 +29,7 @@ import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker;
+import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.kibu.access.entity.FireworkEntityAccess;
 import work.lclpnet.kibu.hook.player.PlayerMoveCallback;
 import work.lclpnet.kibu.hook.util.PositionRotation;
@@ -51,7 +54,7 @@ public class RedLightGreenLightInstance extends DefaultGameInstance implements R
     private static final int STOP_MIN_TICKS = 60, STOP_MAX_TICKS = 90;
     private static final int WARN_MIN_TICKS = 35, WARN_MAX_TICKS = 65;
     private static final int GO_MIN_TICKS = 60, GO_MAX_TICKS = 120;
-    private static final int MAX_GAME_TIME_TICKS = Ticks.minutes(7);
+    private static final int MAX_GAME_TIME_TICKS = Ticks.minutes(6);
     private final SimpleMovementBlocker movementBlocker;
     private final OrderedDataContainer<ServerPlayerEntity, PlayerRef> data = new OrderedDataContainer<>(PlayerRef::create);
     private final Random random = new Random();
@@ -98,6 +101,11 @@ public class RedLightGreenLightInstance extends DefaultGameInstance implements R
         setTrafficLightStatus(EnumSet.noneOf(TrafficLight.Status.class));
 
         movementBlocker.init(gameHandle.getHookRegistrar());
+
+        CustomScoreboardManager scoreboardManager = gameHandle.getScoreboardManager();
+        Team team = scoreboardManager.createTeam("team");
+        team.setCollisionRule(AbstractTeam.CollisionRule.NEVER);
+        scoreboardManager.joinTeam(gameHandle.getParticipants(), team);
     }
 
     @Override
