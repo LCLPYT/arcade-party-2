@@ -29,10 +29,9 @@ import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker;
+import work.lclpnet.ap2.impl.util.movement.TickMovementDetector;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.kibu.access.entity.FireworkEntityAccess;
-import work.lclpnet.kibu.hook.player.PlayerMoveCallback;
-import work.lclpnet.kibu.hook.util.PositionRotation;
 import work.lclpnet.kibu.inv.item.FireworkExplosion;
 import work.lclpnet.kibu.inv.item.FireworkUtil;
 import work.lclpnet.kibu.scheduler.Ticks;
@@ -52,7 +51,7 @@ import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 public class RedLightGreenLightInstance extends DefaultGameInstance implements Runnable {
 
     private static final int STOP_MIN_TICKS = 60, STOP_MAX_TICKS = 90;
-    private static final int WARN_MIN_TICKS = 35, WARN_MAX_TICKS = 65;
+    private static final int WARN_MIN_TICKS = 35, WARN_MAX_TICKS = 75;
     private static final int GO_MIN_TICKS = 60, GO_MAX_TICKS = 120;
     private static final int MAX_GAME_TIME_TICKS = Ticks.minutes(6);
     private final SimpleMovementBlocker movementBlocker;
@@ -110,13 +109,9 @@ public class RedLightGreenLightInstance extends DefaultGameInstance implements R
 
     @Override
     protected void ready() {
-        gameHandle.getHookRegistrar().registerHook(PlayerMoveCallback.HOOK, (player, from, to) -> {
-            if (from.squaredDistanceTo(to) > 1e-3) {
-                this.onMove(player, to);
-            }
-
-            return false;
-        });
+        TickMovementDetector detector = new TickMovementDetector(gameHandle::getParticipants);
+        detector.register(this::onMove);
+        detector.init(gameHandle.getGameScheduler(), gameHandle.getHookRegistrar());
 
         openGate();
         scheduleNextStop();
@@ -203,12 +198,14 @@ public class RedLightGreenLightInstance extends DefaultGameInstance implements R
         }
     }
 
-    private void onMove(ServerPlayerEntity player, PositionRotation to) {
+    private void onMove(ServerPlayerEntity player) {
         if (winManager.isGameOver()
             || !gameHandle.getParticipants().isParticipating(player)
             || inGoal.contains(player.getUuid())) return;
 
-        if (goal.collidesWith(to)) {
+        double x = player.getX(), y = player.getY(), z = player.getZ();
+
+        if (goal.collidesWith(x, y, z)) {
             onGoalReached(player);
             return;
         }
