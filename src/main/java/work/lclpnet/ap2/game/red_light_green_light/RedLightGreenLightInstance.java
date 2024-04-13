@@ -29,17 +29,15 @@ import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker;
+import work.lclpnet.ap2.impl.util.movement.TickMovementDetector;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.kibu.access.entity.FireworkEntityAccess;
-import work.lclpnet.kibu.hook.player.PlayerMoveCallback;
-import work.lclpnet.kibu.hook.util.PositionRotation;
 import work.lclpnet.kibu.inv.item.FireworkExplosion;
 import work.lclpnet.kibu.inv.item.FireworkUtil;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.title.Title;
 import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.kibu.translate.bossbar.TranslatedBossBar;
-import work.lclpnet.kibu.translate.text.RootText;
 import work.lclpnet.lobby.game.map.GameMap;
 import work.lclpnet.lobby.game.map.MapUtils;
 import work.lclpnet.lobby.util.RayCaster;
@@ -52,9 +50,9 @@ import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 public class RedLightGreenLightInstance extends DefaultGameInstance implements Runnable {
 
     private static final int STOP_MIN_TICKS = 60, STOP_MAX_TICKS = 90;
-    private static final int WARN_MIN_TICKS = 35, WARN_MAX_TICKS = 65;
+    private static final int WARN_MIN_TICKS = 35, WARN_MAX_TICKS = 75;
     private static final int GO_MIN_TICKS = 60, GO_MAX_TICKS = 120;
-    private static final int MAX_GAME_TIME_TICKS = Ticks.minutes(6);
+    private static final int END_TIME_SECONDS = 15;
     private final SimpleMovementBlocker movementBlocker;
     private final OrderedDataContainer<ServerPlayerEntity, PlayerRef> data = new OrderedDataContainer<>(PlayerRef::create);
     private final Random random = new Random();
@@ -67,7 +65,7 @@ public class RedLightGreenLightInstance extends DefaultGameInstance implements R
     private int timer = 0;
     private int warn = 0;
     private int go = 0;
-    private int absTime = 0;
+    private int gameEnd = -1;
 
     public RedLightGreenLightInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
@@ -110,13 +108,9 @@ public class RedLightGreenLightInstance extends DefaultGameInstance implements R
 
     @Override
     protected void ready() {
-        gameHandle.getHookRegistrar().registerHook(PlayerMoveCallback.HOOK, (player, from, to) -> {
-            if (from.squaredDistanceTo(to) > 1e-3) {
-                this.onMove(player, to);
-            }
-
-            return false;
-        });
+        TickMovementDetector detector = new TickMovementDetector(gameHandle::getParticipants);
+        detector.register(this::onMove);
+        detector.init(gameHandle.getGameScheduler(), gameHandle.getHookRegistrar());
 
         openGate();
         scheduleNextStop();
@@ -203,12 +197,14 @@ public class RedLightGreenLightInstance extends DefaultGameInstance implements R
         }
     }
 
-    private void onMove(ServerPlayerEntity player, PositionRotation to) {
+    private void onMove(ServerPlayerEntity player) {
         if (winManager.isGameOver()
             || !gameHandle.getParticipants().isParticipating(player)
             || inGoal.contains(player.getUuid())) return;
 
-        if (goal.collidesWith(to)) {
+        double x = player.getX(), y = player.getY(), z = player.getZ();
+
+        if (goal.collidesWith(x, y, z)) {
             onGoalReached(player);
             return;
         }
@@ -276,19 +272,17 @@ public class RedLightGreenLightInstance extends DefaultGameInstance implements R
         FireworkEntityAccess.explode(firework);
 
         TranslationService translations = gameHandle.getTranslations();
-        int requiredForOver = Math.min(3, gameHandle.getParticipants().count());
 
-        if (inGoal.size() >= requiredForOver) {
-            RootText msg = translations.translateText(player, "game.ap2.red_light_green_light.goal").formatted(GREEN);
-            player.sendMessage(msg);
-
+        if (inGoal.size() >= gameHandle.getParticipants().count()) {
             winManager.win(data.getBestSubject(resolver).orElse(null));
         } else {
-            var msg = translations.translateText(player, "game.ap2.red_light_green_light.goal_remain",
-                    styled(requiredForOver, YELLOW))
-                    .formatted(GREEN);
+            translations.translateText("game.ap2.red_light_green_light.goal",
+                            styled(player.getNameForScoreboard(), YELLOW),
+                            styled(END_TIME_SECONDS, YELLOW))
+                    .formatted(GREEN)
+                    .sendTo(PlayerLookup.world(world));
 
-            player.sendMessage(msg);
+            gameEnd = Ticks.seconds(END_TIME_SECONDS);
         }
     }
 
@@ -303,16 +297,18 @@ public class RedLightGreenLightInstance extends DefaultGameInstance implements R
 
     @Override
     public void run() {
-        if (absTime++ >= MAX_GAME_TIME_TICKS) {
-            ServerWorld world = getWorld();
-            TranslationService translations = gameHandle.getTranslations();
+        if (gameEnd >= 0) {
+            int ticksUntilEnd = gameEnd--;
 
-            translations.translateText("game.ap2.red_light_green_light.timeout")
-                    .formatted(RED)
-                    .sendTo(PlayerLookup.world(world));
+            if (ticksUntilEnd % 20 == 0) {
+                taskBar.setPercent(ticksUntilEnd / 20f / END_TIME_SECONDS);
+            }
 
-            winManager.win(data.getBestSubject(resolver).orElse(null));
-            return;
+            if (ticksUntilEnd == 0) {
+                gradePlayers();
+                winManager.win(data.getBestSubject(resolver).orElse(null));
+                return;
+            }
         }
 
         int relTime = timer--;
@@ -333,5 +329,13 @@ public class RedLightGreenLightInstance extends DefaultGameInstance implements R
         if (relTime == warn) {
             setStatus(TrafficLight.Status.YELLOW);
         }
+    }
+
+    private void gradePlayers() {
+        // grade players who are not yet in the goal by their distance to the goal
+        gameHandle.getParticipants().stream()
+                .filter(player -> !inGoal.contains(player.getUuid()))
+                .sorted(Comparator.comparingDouble(player -> goal.squaredDistanceTo(player.getPos())))
+                .forEachOrdered(data::add);
     }
 }
