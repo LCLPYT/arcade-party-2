@@ -104,7 +104,7 @@ public class PigRaceInstance extends DefaultGameInstance {
         teleportPlayers(spawnBounds);
         setupCheckpoints(spawnBounds, goal);
 
-        movementObserver.init(gameHandle.getGameScheduler(), gameHandle.getServer());
+        movementObserver.init(gameHandle.getGameScheduler(), hooks, gameHandle.getServer());
     }
 
     @Override
