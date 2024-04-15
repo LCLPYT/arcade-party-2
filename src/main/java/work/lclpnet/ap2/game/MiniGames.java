@@ -17,6 +17,7 @@ import work.lclpnet.ap2.game.one_in_the_chamber.OneInTheChamberMiniGame;
 import work.lclpnet.ap2.game.panda_finder.PandaFinderMiniGame;
 import work.lclpnet.ap2.game.pig_race.PigRaceMiniGame;
 import work.lclpnet.ap2.game.red_light_green_light.RedLightGreenLightMiniGame;
+import work.lclpnet.ap2.game.snowball_fight.SnowballFightMiniGame;
 import work.lclpnet.ap2.game.spleef.SpleefMiniGame;
 import work.lclpnet.ap2.game.tnt_run.TntRunMiniGame;
 import work.lclpnet.ap2.game.treasure_hunter.TreasureHunterMinigame;
@@ -49,5 +50,6 @@ public class MiniGames {
         games.add(new GuessItMiniGame());
         games.add(new PigRaceMiniGame());
         games.add(new RedLightGreenLightMiniGame());
+        games.add(new SnowballFightMiniGame());
     }
 }

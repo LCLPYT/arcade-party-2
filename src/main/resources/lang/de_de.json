@@ -30,6 +30,7 @@
   "ap2.team.blue": "Team Blau",
   "game.ap2.title": "ArcadeParty",
   "game.ap2.reached_checkpoint": "Checkpoint erreicht",
+  "game.ap2.reset": "Zurücksetzen",
   "game.ap2.spleef": "Spleef",
   "game.ap2.spleef.description": "Baue den Boden unter deinen Gegnern ab, damit sie herunterfallen. Fall aber nicht selber herunter!",
   "game.ap2.spleef.shovel": "Spleef-Schaufel",
@@ -80,8 +81,6 @@
   "game.ap2.jump_and_run.description": "Erreiche zuerst das Ziel in einem zufällig generierten Jump 'n' Run!",
   "game.ap2.jump_and_run.task": "Schaffe das Jump 'n' Run %s/%s",
   "game.ap2.jump_and_run.reached_room": "Glückwunsch! Du hast den %s Raum erreicht",
-  "game.ap2.jump_and_run.reached_checkpoint": "Checkpoint erreicht",
-  "game.ap2.jump_and_run.reset": "Zurücksetzen",
   "game.ap2.jump_and_run.assistance": "Dieser Raum wurde vereinfacht, damit du besser voran kommst",
   "game.ap2.tnt_run": "TNT-Lauf",
   "game.ap2.tnt_run.description": "Der Boden unter deinen Füßen verschwindet. Bleib nicht stehen und falle nicht herunter!",
@@ -159,5 +158,7 @@
   "game.ap2.red_light_green_light.go": "Los!",
   "game.ap2.red_light_green_light.warn": "Achtung...",
   "game.ap2.red_light_green_light.stop": "Stopp!",
-  "game.ap2.red_light_green_light.moved": "Du hast dich bewegt! Als Bestrafung wurdest du zurückgesetzt."
+  "game.ap2.red_light_green_light.moved": "Du hast dich bewegt! Als Bestrafung wurdest du zurückgesetzt.",
+  "game.ap2.snowball_fight": "Schneeballschlacht",
+  "game.ap2.snowball_fight.description": "Treffe deine Gegner mit Schneebällen. Der letzte Überlebende gewinnt!"
 }
