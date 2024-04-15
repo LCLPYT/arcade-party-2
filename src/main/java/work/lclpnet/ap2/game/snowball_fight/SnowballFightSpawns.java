@@ -51,14 +51,16 @@ public class SnowballFightSpawns {
 
         List<Vec3d> spaced = new ArrayList<>();
         var spawnsByDistance = new Object2DoubleOpenHashMap<Vec3d>(spawns.size());
+        boolean distanceDirty = false;
 
         for (Vec3d spawn : spawns) {
             spawnsByDistance.put(spawn, Double.MAX_VALUE);
         }
 
         for (int i = 0; i < count; i++) {
-            if (!spaced.isEmpty()) {
+            if (distanceDirty) {
                 updateDistances(spawnsByDistance, spaced);
+                distanceDirty = false;
             }
 
             var distantSpawns = spawnsByDistance.object2DoubleEntrySet().stream()
@@ -70,22 +72,27 @@ public class SnowballFightSpawns {
 
             Vec3d spawn = distantSpawns[random.nextInt(distantSpawns.length)];
             spaced.add(spawn);
+
+            distanceDirty = true;
         }
 
         if (spaced.size() >= count) {
             return spaced;
         }
 
-        // fill remaining space with the least crowded spawns (allow duplicates)
-        var leastCrowded = spawnsByDistance.object2DoubleEntrySet().stream()
-                .sorted(Comparator.<Object2DoubleMap.Entry<Vec3d>>comparingDouble(Object2DoubleMap.Entry::getDoubleValue).reversed())
-                .map(Map.Entry::getKey)
-                .toArray(Vec3d[]::new);
-
+        // fill remaining space with the least crowded spawns
         for (int i = spaced.size(); i < count; i++) {
-            int spawnIndex = i % leastCrowded.length;
-            Vec3d spawn = leastCrowded[spawnIndex];
-            spaced.add(spawn);
+            if (distanceDirty) {
+                updateDistances(spawnsByDistance, spaced);
+            }
+
+            var leastCrowded = spawnsByDistance.object2DoubleEntrySet().stream()
+                    .max(Comparator.comparingDouble(Object2DoubleMap.Entry::getDoubleValue))
+                    .map(Map.Entry::getKey)
+                    .orElseThrow();
+
+            spaced.add(leastCrowded);
+            distanceDirty = true;
         }
 
         return spaced;
