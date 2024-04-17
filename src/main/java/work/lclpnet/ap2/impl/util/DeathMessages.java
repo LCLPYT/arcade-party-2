@@ -56,7 +56,7 @@ public class DeathMessages {
     }
 
     public TranslatedText shotBy(ServerPlayerEntity victim, ServerPlayerEntity killer) {
-        return root(SHOT_BY, victim, killer);
+        return root(SHOT_BY, wrap(victim), wrap(killer));
     }
 
     public TranslatedText eliminated(Team team) {

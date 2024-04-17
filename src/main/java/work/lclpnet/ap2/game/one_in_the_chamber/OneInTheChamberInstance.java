@@ -39,7 +39,6 @@ import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks;
 import work.lclpnet.kibu.hook.player.PlayerInventoryHooks;
 import work.lclpnet.kibu.inv.item.ItemStackUtil;
 import work.lclpnet.kibu.plugin.hook.HookRegistrar;
-import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.kibu.translate.text.TranslatedText;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 
@@ -137,7 +136,6 @@ public class OneInTheChamberInstance extends DefaultGameInstance {
     }
 
     private void killPlayer(ServerPlayerEntity player, @Nullable ServerPlayerEntity killer, boolean shot) {
-        TranslationService translations = gameHandle.getTranslations();
         DeathMessages deathMessages = gameHandle.getDeathMessages();
 
         TranslatedText text;

@@ -5,6 +5,8 @@ import net.minecraft.block.Blocks;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.entity.projectile.ProjectileEntity;
 import net.minecraft.entity.projectile.thrown.SnowballEntity;
 import net.minecraft.item.ItemStack;
@@ -15,13 +17,16 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
+import net.minecraft.util.TypedActionResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.impl.game.EliminationGameInstance;
+import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks;
+import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 import work.lclpnet.lobby.game.map.GameMap;
 
@@ -66,13 +71,25 @@ public class SnowballFightInstance extends EliminationGameInstance {
                     && damageSource.getSource() instanceof ProjectileEntity && damageSource.getAttacker() != entity);
         });
 
-        gameHandle.getHookRegistrar().registerHook(ServerLivingEntityHooks.ALLOW_DAMAGE, (entity, source, amount) -> {
+        HookRegistrar hooks = gameHandle.getHookRegistrar();
+
+        hooks.registerHook(ServerLivingEntityHooks.ALLOW_DAMAGE, (entity, source, amount) -> {
             if (source.getSource() instanceof SnowballEntity && Math.abs(amount) < 1e-4f) {
                 entity.damage(source, SNOWBALL_DAMAGE);
                 return false;
             }
 
             return true;
+        });
+
+        hooks.registerHook(PlayerInteractionHooks.USE_ITEM, (player, world, hand) -> {
+            ItemStack stack = player.getStackInHand(hand);
+
+            if (stack.isOf(Items.SNOWBALL) && stack.getCount() == 1) {
+                onDepleteStack(player);
+            }
+
+            return TypedActionResult.pass(ItemStack.EMPTY);
         });
 
         for (ServerPlayerEntity player : participants) {
@@ -98,6 +115,25 @@ public class SnowballFightInstance extends EliminationGameInstance {
         }
 
         super.eliminate(player, source);
+    }
+
+    private static void onDepleteStack(PlayerEntity player) {
+        PlayerInventory inventory = player.getInventory();
+
+        int selected = inventory.selectedSlot;
+        int size = inventory.size();
+
+        for (int i = 0; i < size; i++) {
+            if (i == selected) continue;
+
+            ItemStack stack = inventory.getStack(i);
+            if (!stack.isOf(Items.SNOWBALL)) continue;
+
+            inventory.setStack(i, ItemStack.EMPTY);
+            stack.increment(1);
+            inventory.setStack(selected, stack);
+            break;
+        }
     }
 
     private void teleportPlayers() {
