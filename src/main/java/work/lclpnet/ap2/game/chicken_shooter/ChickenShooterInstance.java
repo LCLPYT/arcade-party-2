@@ -66,6 +66,7 @@ public class ChickenShooterInstance extends DefaultGameInstance implements Runna
     public ChickenShooterInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
     }
+
     @Override
     protected ScoreTimeDataContainer<ServerPlayerEntity, PlayerRef> getData() {
         return data;
@@ -80,6 +81,9 @@ public class ChickenShooterInstance extends DefaultGameInstance implements Runna
         gameRules.get(GameRules.DO_ENTITY_DROPS).set(false, null);
         gameRules.get(GameRules.ANNOUNCE_ADVANCEMENTS).set(false, null);
 
+        despawnHeight = getMap().requireProperty("despawn-height");
+
+        //hooks
         HookRegistrar hooks = gameHandle.getHookRegistrar();
 
         hooks.registerHook(ServerLivingEntityHooks.ALLOW_DAMAGE, (entity, source, amount) -> {
@@ -108,9 +112,10 @@ public class ChickenShooterInstance extends DefaultGameInstance implements Runna
             return false;
         });
 
-        hooks.registerHook(ProjectileHooks.HIT_BLOCK,(projectile, hit)
+        hooks.registerHook(ProjectileHooks.HIT_BLOCK, (projectile, hit)
                 -> projectile.discard());
 
+        //Setup Scoreboard
         CustomScoreboardManager scoreboardManager = gameHandle.getScoreboardManager();
 
         var objective = scoreboardManager.translateObjective("score", "game.ap2.chicken_shooter.points")
@@ -123,8 +128,63 @@ public class ChickenShooterInstance extends DefaultGameInstance implements Runna
         for (ServerPlayerEntity player : PlayerLookup.all(gameHandle.getServer())) {
             objective.addPlayer(player);
         }
+    }
 
-        despawnHeight = getMap().requireProperty("despawn-height");
+    @Override
+    protected void ready() {
+        gameHandle.protect(config -> config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, damageSource)
+                -> damageSource.getSource() instanceof ProjectileEntity && entity instanceof ChickenEntity));
+
+        TranslationService translations = gameHandle.getTranslations();
+        giveBowsToPlayers(translations);
+
+        chickenSpawner();
+
+        //Timer and game end
+        var subject = translations.translateText(gameHandle.getGameInfo().getTaskKey());
+
+        BossBarTimer timer = BossBarTimer.builder(translations, subject)
+                .withAlertSound(false)
+                .withColor(BossBar.Color.RED)
+                .withDurationTicks(Ticks.seconds(duration_seconds))
+                .build();
+
+        timer.addPlayers(PlayerLookup.all(gameHandle.getServer()));
+        timer.start(gameHandle.getBossBarProvider(), gameHandle.getGameScheduler());
+
+        timer.whenDone(this::onTimerDone);
+    }
+
+    private void chickenSpawner() {
+        JSONArray spawnBounds = getMap().requireProperty("spawn-bounds");
+        chickenBox = MapUtil.readBox(spawnBounds);
+        gameHandle.getGameScheduler().interval(this, 1);
+    }
+
+    private void spawnChicken() {
+        ServerWorld world = getWorld();
+        BlockPos.Mutable randomPos = new BlockPos.Mutable();
+        chickenBox.getRandomBlockPos(randomPos, random);
+
+        ChickenEntity chicken = new ChickenEntity(EntityType.CHICKEN, world);
+
+        if (random.nextFloat() < BABY_CHANCE) chicken.setBaby(true);
+        else {
+            if (random.nextFloat() < TNT_CHANCE) spawnTNT(chicken, world);
+        }
+
+        chicken.setPos(randomPos.getX() + 0.5, randomPos.getY(), randomPos.getZ() + 0.5);
+        world.spawnEntity(chicken);
+
+        chickenSet.add(chicken);
+    }
+
+
+    private void spawnTNT(ChickenEntity chicken, ServerWorld world) {
+        TntEntity tnt = new TntEntity(EntityType.TNT, world);
+        tnt.setFuse(Integer.MAX_VALUE);
+        tnt.startRiding(chicken, true);
+        world.spawnEntity(tnt);
     }
 
     private int killChicken(ChickenEntity chicken, ServerPlayerEntity attacker, ServerWorld world) {
@@ -172,62 +232,6 @@ public class ChickenShooterInstance extends DefaultGameInstance implements Runna
         return score;
     }
 
-    @Override
-    protected void ready() {
-        gameHandle.protect(config -> config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, damageSource)
-                -> damageSource.getSource() instanceof ProjectileEntity && entity instanceof ChickenEntity));
-
-        TranslationService translations = gameHandle.getTranslations();
-        giveBowsToPlayers(translations);
-
-        chickenSpawner();
-
-        var subject = translations.translateText(gameHandle.getGameInfo().getTaskKey());
-
-        BossBarTimer timer = BossBarTimer.builder(translations, subject)
-                .withAlertSound(false)
-                .withColor(BossBar.Color.RED)
-                .withDurationTicks(Ticks.seconds(duration_seconds))
-                .build();
-
-        timer.addPlayers(PlayerLookup.all(gameHandle.getServer()));
-        timer.start(gameHandle.getBossBarProvider(), gameHandle.getGameScheduler());
-
-        timer.whenDone(this::onTimerDone);
-    }
-
-    private void chickenSpawner() {
-        JSONArray spawnBounds = getMap().requireProperty("spawn-bounds");
-        chickenBox = MapUtil.readBox(spawnBounds);
-        gameHandle.getGameScheduler().interval(this, 1);
-    }
-
-    private void spawnChicken() {
-        ServerWorld world = getWorld();
-        BlockPos.Mutable randomPos = new BlockPos.Mutable();
-        chickenBox.getRandomBlockPos(randomPos, random);
-
-        ChickenEntity chicken = new ChickenEntity(EntityType.CHICKEN, world);
-
-        if (random.nextFloat() < BABY_CHANCE) chicken.setBaby(true);
-        else {
-            if (random.nextFloat() < TNT_CHANCE) spawnTNT(chicken, world);
-        }
-
-        chicken.setPos(randomPos.getX()+0.5, randomPos.getY(), randomPos.getZ()+0.5);
-        world.spawnEntity(chicken);
-
-        chickenSet.add(chicken);
-    }
-
-
-    private void spawnTNT(ChickenEntity chicken, ServerWorld world) {
-        TntEntity tnt = new TntEntity(EntityType.TNT, world);
-        tnt.setFuse(Integer.MAX_VALUE);
-        tnt.startRiding(chicken, true);
-        world.spawnEntity(tnt);
-    }
-
     private void giveBowsToPlayers(TranslationService translations) {
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
             ItemStack stack = new ItemStack(Items.BOW);
@@ -235,7 +239,7 @@ public class ChickenShooterInstance extends DefaultGameInstance implements Runna
             stack.setCustomName(translations.translateText(player, "game.ap2.chicken_shooter.bow")
                     .styled(style -> style.withItalic(false).withFormatting(Formatting.GOLD)));
 
-            stack.addEnchantment(Enchantments.INFINITY,1);
+            stack.addEnchantment(Enchantments.INFINITY, 1);
 
             ItemStackUtil.setUnbreakable(stack, true);
 
@@ -244,7 +248,7 @@ public class ChickenShooterInstance extends DefaultGameInstance implements Runna
 
             PlayerInventoryAccess.setSelectedSlot(player, 4);
 
-            inventory.setStack(9,new ItemStack(Items.ARROW));
+            inventory.setStack(9, new ItemStack(Items.ARROW));
         }
     }
 
