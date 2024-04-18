@@ -146,5 +146,7 @@
   "game.ap2.guess_it.shape.cone": "Aus wie vielen Blöcken besteht dieser Kegel?",
   "game.ap2.guess_it.music_disc": "Welche Schallplatte ist das?",
   "game.ap2.guess_it.area": "Welche Fläche ist die Größte?",
-  "game.ap2.guess_it.minecart": "Wie viele Sekunden wird es dauern, bis die Lore am Ziel ankommt?"
+  "game.ap2.guess_it.minecart": "Wie viele Sekunden wird es dauern, bis die Lore am Ziel ankommt?",
+  "game.ap2.chicken_shooter": "Hühnchen-Schießstand",
+  "game.ap2.chicken_shooter.bow": "Hühnchen-Bogen"
 }
