@@ -93,6 +93,9 @@
   "game.ap2.hot_potato.subtitle": "bist die heiße Kartoffel",
   "game.ap2.block_dissolve": "Bröckelnde Welt",
   "game.ap2.block_dissolve.description": "The Welt löst sich langsam auf. Werfe andere Spieler mit Schneebällen ab, damit sie herunterfallen. Der letzte Spieler gewinnt!",
+  "game.ap2.chicken_shooter": "Hühnchen-Schießstand",
+  "game.ap2.chicken_shooter.points": "Punkte",
+  "game.ap2.chicken_shooter.bow": "Hühnchen-Bogen",
   "game.ap2.cozy_campfire": "Knisterndes Lagerfeuer",
   "game.ap2.cozy_campfire.description": "Dein Team hat ein Lagerfeuer welches nicht ausbrennen darf. Lege immer weiter Brennmaterial nach, um nicht zu verlieren!",
   "game.ap2.cozy_campfire.task": "Brennstoff-Vorrat %s",
@@ -146,7 +149,5 @@
   "game.ap2.guess_it.shape.cone": "Aus wie vielen Blöcken besteht dieser Kegel?",
   "game.ap2.guess_it.music_disc": "Welche Schallplatte ist das?",
   "game.ap2.guess_it.area": "Welche Fläche ist die Größte?",
-  "game.ap2.guess_it.minecart": "Wie viele Sekunden wird es dauern, bis die Lore am Ziel ankommt?",
-  "game.ap2.chicken_shooter": "Hühnchen-Schießstand",
-  "game.ap2.chicken_shooter.bow": "Hühnchen-Bogen"
+  "game.ap2.guess_it.minecart": "Wie viele Sekunden wird es dauern, bis die Lore am Ziel ankommt?"
 }
