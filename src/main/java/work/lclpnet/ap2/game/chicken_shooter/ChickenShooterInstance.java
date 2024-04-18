@@ -23,9 +23,8 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.GameRules;
 import org.json.JSONArray;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
-import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.impl.game.DefaultGameInstance;
-import work.lclpnet.ap2.impl.game.data.ScoreDataContainer;
+import work.lclpnet.ap2.impl.game.data.ScoreTimeDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.BlockBox;
@@ -58,7 +57,7 @@ public class ChickenShooterInstance extends DefaultGameInstance implements Runna
     private BlockBox chickenBox = null;
     private int despawnHeight = 0;
     private int time = 0;
-    private final ScoreDataContainer<ServerPlayerEntity, PlayerRef> data = new ScoreDataContainer<>(PlayerRef::create);
+    private final ScoreTimeDataContainer<ServerPlayerEntity, PlayerRef> data = new ScoreTimeDataContainer<>(PlayerRef::create);
 
     private final Set<ChickenEntity> chickenSet = new HashSet<>();
 
@@ -66,7 +65,7 @@ public class ChickenShooterInstance extends DefaultGameInstance implements Runna
         super(gameHandle);
     }
     @Override
-    protected DataContainer<ServerPlayerEntity, PlayerRef> getData() {
+    protected ScoreTimeDataContainer<ServerPlayerEntity, PlayerRef> getData() {
         return data;
     }
 
