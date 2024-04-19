@@ -13,10 +13,16 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.particle.BlockStateParticleEffect;
 import net.minecraft.particle.ParticleTypes;
+import net.minecraft.scoreboard.ScoreboardCriterion;
+import net.minecraft.scoreboard.ScoreboardDisplaySlot;
+import net.minecraft.scoreboard.ScoreboardObjective;
+import net.minecraft.scoreboard.number.FixedNumberFormat;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
+import net.minecraft.text.MutableText;
+import net.minecraft.text.Text;
 import net.minecraft.util.TypedActionResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
@@ -24,6 +30,8 @@ import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.impl.game.EliminationGameInstance;
+import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
+import work.lclpnet.kibu.hook.entity.EntityHealthCallback;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks;
 import work.lclpnet.kibu.plugin.hook.HookRegistrar;
@@ -37,6 +45,7 @@ public class SnowballFightInstance extends EliminationGameInstance {
 
     private static final float SNOWBALL_DAMAGE = 0.75f;
     private static final int SNOWBALL_AMOUNT = 3, SNOWBALL_BIG_AMOUNT = 5;
+    private ScoreboardObjective healthObjective = null;
 
     public SnowballFightInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
@@ -50,12 +59,15 @@ public class SnowballFightInstance extends EliminationGameInstance {
         useNoHealing();
         useSmoothDeath();
 
+        setupScoreboard();
         teleportPlayers();
     }
 
     @Override
     protected void ready() {
         Participants participants = gameHandle.getParticipants();
+        CustomScoreboardManager manager = gameHandle.getScoreboardManager();
+        HookRegistrar hooks = gameHandle.getHookRegistrar();
 
         gameHandle.protect(config -> {
             config.allow(ProtectionTypes.BREAK_BLOCKS, (entity, pos) -> {
@@ -70,8 +82,6 @@ public class SnowballFightInstance extends EliminationGameInstance {
                     entity instanceof ServerPlayerEntity damaged && participants.isParticipating(damaged)
                     && damageSource.getSource() instanceof ProjectileEntity && damageSource.getAttacker() != entity);
         });
-
-        HookRegistrar hooks = gameHandle.getHookRegistrar();
 
         hooks.registerHook(ServerLivingEntityHooks.ALLOW_DAMAGE, (entity, source, amount) -> {
             if (source.getSource() instanceof SnowballEntity && Math.abs(amount) < 1e-4f) {
@@ -92,9 +102,55 @@ public class SnowballFightInstance extends EliminationGameInstance {
             return TypedActionResult.pass(ItemStack.EMPTY);
         });
 
+        hooks.registerHook(EntityHealthCallback.HOOK, (entity, health) -> {
+            float oldHealth = entity.getHealth();
+
+            if (entity instanceof ServerPlayerEntity player && participants.isParticipating(player) && health < oldHealth) {
+                // update the scoreboard
+                manager.setScore(player, healthObjective, (int) Math.ceil(health));
+                manager.setNumberFormat(player, healthObjective, new FixedNumberFormat(healthText(health)));
+            }
+
+            return false;
+        });
+
         for (ServerPlayerEntity player : participants) {
             player.addStatusEffect(new StatusEffectInstance(StatusEffects.HASTE, Integer.MAX_VALUE, 20, false, false, false));
         }
+    }
+
+    private void setupScoreboard() {
+        CustomScoreboardManager manager = gameHandle.getScoreboardManager();
+
+        healthObjective = manager.createObjective("health_name", ScoreboardCriterion.DUMMY, Text.empty(), ScoreboardCriterion.RenderType.HEARTS);
+        healthObjective.setDisplayAutoUpdate(false);
+        manager.setDisplay(ScoreboardDisplaySlot.BELOW_NAME, healthObjective);
+        manager.setDisplay(ScoreboardDisplaySlot.LIST, healthObjective);
+
+        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
+            float health = player.getHealth();
+            manager.setNumberFormat(player, healthObjective, new FixedNumberFormat(healthText(health)));
+            manager.setScore(player, healthObjective, (int) Math.ceil(health));
+        }
+    }
+
+    private Text healthText(float health) {
+        int hearts = Math.max(0, Math.min(20, (int) Math.ceil(health)));
+        boolean half = hearts % 2 == 1;
+        hearts >>= 1;
+
+        MutableText text = Text.literal(" " + "♥".repeat(hearts)).withColor(0xff1313);
+
+        if (half) {
+            text.append(Text.literal("♡").withColor(0xff1313));
+            hearts += 1;
+        }
+
+        if (hearts < 10) {
+            text.append(Text.literal("♡".repeat(10 - hearts)).withColor(0x282828));
+        }
+
+        return text;
     }
 
     @Override
