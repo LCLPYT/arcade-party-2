@@ -7,6 +7,7 @@ import net.minecraft.scoreboard.number.StyledNumberFormat;
 import net.minecraft.server.PlayerManager;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
+import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.event.IntScoreEventSource;
 import work.lclpnet.ap2.api.util.scoreboard.CustomScoreboardObjective;
 import work.lclpnet.kibu.hook.player.PlayerConnectionHooks;
@@ -126,11 +127,35 @@ public class CustomScoreboardManager implements Unloadable {
         }
     }
 
-    public void setScore(ServerPlayerEntity player, ScoreboardObjective objective, int score) {
-        if (!objectives.contains(objective)) return;  // objective is not associated with this instance
+    public void setScore(ScoreHolder player, ScoreboardObjective objective, int score) {
+        ScoreAccess playerScore = getOrCreateScore(player, objective);
 
-        ScoreAccess playerScore = scoreboard.getOrCreateScore(player, objective);
+        if (playerScore == null) return;
+
         playerScore.setScore(score);
+    }
+
+    public void setNumberFormat(ScoreHolder holder, ScoreboardObjective objective, @Nullable NumberFormat format) {
+        ScoreAccess playerScore = getOrCreateScore(holder, objective);
+
+        if (playerScore == null) return;
+
+        playerScore.setNumberFormat(format);
+    }
+
+    public void setDisplayText(ScoreHolder holder, ScoreboardObjective objective, @Nullable Text text) {
+        ScoreAccess playerScore = getOrCreateScore(holder, objective);
+
+        if (playerScore == null) return;
+
+        playerScore.setDisplayText(text);
+    }
+
+    @Nullable
+    public ScoreAccess getOrCreateScore(ScoreHolder holder, ScoreboardObjective objective) {
+        if (!objectives.contains(objective)) return null;  // objective is not associated with this instance
+
+        return scoreboard.getOrCreateScore(holder, objective);
     }
 
     public void setDisplay(ScoreboardDisplaySlot slot, ScoreboardObjective objective) {
