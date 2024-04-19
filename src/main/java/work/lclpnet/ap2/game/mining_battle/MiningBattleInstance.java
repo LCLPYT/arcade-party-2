@@ -1,9 +1,7 @@
 package work.lclpnet.ap2.game.mining_battle;
 
-import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.block.BlockState;
 import net.minecraft.enchantment.Enchantments;
-import net.minecraft.entity.boss.BossBar;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.server.MinecraftServer;
@@ -29,17 +27,13 @@ import work.lclpnet.ap2.impl.util.TextUtil;
 import work.lclpnet.kibu.hook.world.BlockModificationHooks;
 import work.lclpnet.kibu.inv.item.ItemStackUtil;
 import work.lclpnet.kibu.plugin.hook.HookRegistrar;
-import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 import work.lclpnet.lobby.game.map.GameMap;
-import work.lclpnet.lobby.game.util.BossBarTimer;
 
 import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
-
-import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
 public class MiningBattleInstance extends DefaultGameInstance implements MapBootstrapFunction {
 
@@ -99,19 +93,9 @@ public class MiningBattleInstance extends DefaultGameInstance implements MapBoot
         });
 
         TranslationService translations = gameHandle.getTranslations();
-
         var subject = translations.translateText(gameHandle.getGameInfo().getTaskKey());
 
-        BossBarTimer timer = BossBarTimer.builder(translations, subject)
-                .withAlertSound(false)
-                .withColor(BossBar.Color.RED)
-                .withDurationTicks(Ticks.seconds(DURATION_SECONDS))
-                .build();
-
-        timer.addPlayers(PlayerLookup.all(gameHandle.getServer()));
-        timer.start(gameHandle.getBossBarProvider(), gameHandle.getGameScheduler());
-
-        timer.whenDone(this::onTimerDone);
+        commons().createTimer(subject, DURATION_SECONDS).whenDone(this::onTimerDone);
     }
 
     private void placeOres(ServerWorld world, GameMap map) {
@@ -126,16 +110,7 @@ public class MiningBattleInstance extends DefaultGameInstance implements MapBoot
     }
 
     private void onGainPoints(ServerPlayerEntity player, int points) {
-        data.addScore(player, points);
-
-        String key = points == 1 ? "ap2.gain_point" : "ap2.gain_points";
-
-        var msg = gameHandle.getTranslations().translateText(player, key,
-                        styled(points, Formatting.YELLOW),
-                        styled(data.getScore(player), Formatting.AQUA))
-                .formatted(Formatting.GREEN);
-
-        player.sendMessage(msg, true);
+        commons().addScore(player, points, data);
 
         if (points <= 1) {
             player.playSound(SoundEvents.BLOCK_ENCHANTMENT_TABLE_USE, SoundCategory.BLOCKS, 0.5f, 2f);
