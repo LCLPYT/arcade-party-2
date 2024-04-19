@@ -34,6 +34,7 @@ import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
+import work.lclpnet.kibu.hook.entity.ProjectileCanHitCallback;
 import work.lclpnet.kibu.hook.entity.ProjectileHooks;
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks;
 import work.lclpnet.kibu.inv.item.ItemStackUtil;
@@ -103,6 +104,9 @@ public class ChickenShooterInstance extends DefaultGameInstance implements Runna
         });
 
         hooks.registerHook(ProjectileHooks.HIT_BLOCK, (projectile, hit) -> projectile.discard());
+
+        // projectiles can only hit chickens (will pass through players)
+        hooks.registerHook(ProjectileCanHitCallback.HOOK, (projectile, entity) -> entity instanceof ChickenEntity);
 
         // Setup Scoreboard
         CustomScoreboardManager scoreboardManager = gameHandle.getScoreboardManager();
