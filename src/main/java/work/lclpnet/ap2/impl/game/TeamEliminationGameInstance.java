@@ -1,6 +1,7 @@
 package work.lclpnet.ap2.impl.game;
 
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
@@ -10,6 +11,7 @@ import work.lclpnet.ap2.api.game.team.TeamKey;
 import work.lclpnet.ap2.api.game.team.TeamManager;
 import work.lclpnet.ap2.impl.game.data.EliminationDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.TeamRef;
+import work.lclpnet.ap2.impl.util.DeathMessages;
 import work.lclpnet.kibu.hook.entity.EntityHealthCallback;
 import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 import work.lclpnet.kibu.translate.TranslationService;
@@ -45,12 +47,12 @@ public abstract class TeamEliminationGameInstance extends DefaultTeamGameInstanc
 
     protected void eliminate(ServerPlayerEntity player) {
         Participants participants = gameHandle.getParticipants();
-        TranslationService translations = gameHandle.getTranslations();
 
         if (participants.isParticipating(player)) {
-            translations.translateText("ap2.game.eliminated", player.getDisplayName())
-                    .formatted(GRAY)
-                    .sendTo(PlayerLookup.all(gameHandle.getServer()));
+            DeathMessages deathMessages = gameHandle.getDeathMessages();
+            MinecraftServer server = gameHandle.getServer();
+
+            deathMessages.eliminated(player).sendTo(PlayerLookup.all(server));
 
             participants.remove(player);
         }
@@ -70,13 +72,10 @@ public abstract class TeamEliminationGameInstance extends DefaultTeamGameInstanc
         TeamManager teamManager = getTeamManager();
 
         if (teamManager.isParticipating(team)) {
-            TranslationService translations = gameHandle.getTranslations();
-            TeamKey key = team.getKey();
-            var displayName = translations.translateText(key.getTranslationKey()).formatted(key.colorFormat());
+            DeathMessages deathMessages = gameHandle.getDeathMessages();
+            MinecraftServer server = gameHandle.getServer();
 
-            translations.translateText("ap2.game.team_eliminated", displayName)
-                    .formatted(GRAY)
-                    .sendTo(PlayerLookup.all(gameHandle.getServer()));
+            deathMessages.eliminated(team).sendTo(PlayerLookup.all(server));
 
             teamManager.setTeamEliminated(team);
         }

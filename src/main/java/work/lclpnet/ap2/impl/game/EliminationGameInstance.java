@@ -3,15 +3,21 @@ package work.lclpnet.ap2.impl.game;
 import it.unimi.dsi.fastutil.Pair;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.entity.boss.BossBar;
+import net.minecraft.entity.damage.DamageRecord;
+import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
+import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.GameInfo;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.impl.game.data.EliminationDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
+import work.lclpnet.ap2.impl.util.DeathMessages;
 import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedBossBar;
+import work.lclpnet.kibu.access.misc.DamageTrackerAccess;
 import work.lclpnet.kibu.hook.entity.EntityHealthCallback;
 import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 import work.lclpnet.kibu.translate.TranslationService;
@@ -20,16 +26,14 @@ import work.lclpnet.kibu.translate.text.FormatWrapper;
 import work.lclpnet.lobby.game.api.WorldFacade;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
-
-import static net.minecraft.util.Formatting.GRAY;
-import static net.minecraft.util.Formatting.YELLOW;
-import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
 public abstract class EliminationGameInstance extends DefaultGameInstance {
 
     private final EliminationDataContainer<ServerPlayerEntity, PlayerRef> data = new EliminationDataContainer<>(PlayerRef::create);
     private DynamicTranslatedBossBar remainingDisplay = null;
+    private boolean eliminatedMessages = true;
 
     public EliminationGameInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
@@ -94,15 +98,29 @@ public abstract class EliminationGameInstance extends DefaultGameInstance {
         hooks.registerHook(EntityHealthCallback.HOOK, (entity, health) -> {
             if (!(entity instanceof ServerPlayerEntity player) || health > 0) return false;
 
-            eliminate(player);
+            List<DamageRecord> recentDamage = DamageTrackerAccess.getRecentDamage(entity);
+
+            int size = recentDamage.size();
+
+            if (size == 0) {
+                eliminate(player);
+            } else {
+                DamageRecord damageRecord = recentDamage.get(size - 1);
+                eliminate(player, damageRecord.damageSource());
+            }
 
             return true;
         });
     }
 
+    protected final void disableEliminationMessages() {
+        eliminatedMessages = false;
+    }
+
     protected synchronized void eliminateAll(Iterable<? extends ServerPlayerEntity> players) {
         Participants participants = gameHandle.getParticipants();
-        TranslationService translations = gameHandle.getTranslations();
+        DeathMessages deathMessages = gameHandle.getDeathMessages();
+        MinecraftServer server = gameHandle.getServer();
 
         Set<ServerPlayerEntity> toEliminate = new HashSet<>();
 
@@ -111,9 +129,9 @@ public abstract class EliminationGameInstance extends DefaultGameInstance {
 
             toEliminate.add(player);
 
-            translations.translateText("ap2.game.eliminated", styled(player.getNameForScoreboard(), YELLOW))
-                    .formatted(GRAY)
-                    .sendTo(PlayerLookup.all(gameHandle.getServer()));
+            if (eliminatedMessages) {
+                deathMessages.eliminated(player).sendTo(PlayerLookup.all(server));
+            }
         }
 
         // mark all players as eliminated at the same moment
@@ -131,13 +149,19 @@ public abstract class EliminationGameInstance extends DefaultGameInstance {
     }
 
     protected void eliminate(ServerPlayerEntity player) {
+        eliminate(player, null);
+    }
+
+    protected void eliminate(ServerPlayerEntity player, @Nullable DamageSource source) {
         Participants participants = gameHandle.getParticipants();
-        TranslationService translations = gameHandle.getTranslations();
 
         if (participants.isParticipating(player)) {
-            translations.translateText("ap2.game.eliminated", styled(player.getNameForScoreboard(), YELLOW))
-                    .formatted(GRAY)
-                    .sendTo(PlayerLookup.all(gameHandle.getServer()));
+            if (eliminatedMessages) {
+                DeathMessages deathMessages = gameHandle.getDeathMessages();
+                MinecraftServer server = gameHandle.getServer();
+
+                deathMessages.getDeathMessage(player, source).sendTo(PlayerLookup.all(server));
+            }
 
             participants.remove(player);
         }
