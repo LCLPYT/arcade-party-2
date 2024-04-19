@@ -17,6 +17,7 @@ import work.lclpnet.ap2.api.map.MapFacade;
 import work.lclpnet.ap2.api.util.music.SongManager;
 import work.lclpnet.ap2.base.ApContainer;
 import work.lclpnet.ap2.base.activity.PreparationActivity;
+import work.lclpnet.ap2.impl.util.DeathMessages;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.kibu.plugin.cmd.CommandRegistrar;
 import work.lclpnet.kibu.plugin.hook.HookStack;
@@ -48,6 +49,7 @@ public class DefaultMiniGameHandle implements MiniGameHandle, Unloadable, WorldB
     private volatile List<Unloadable> closeWhenDone = null;
     private TaskScheduler scheduler = null;
     private boolean ended = false;
+    private volatile DeathMessages deathMessages = null;
 
     public DefaultMiniGameHandle(GameInfo info, PreparationActivity.Args args, BossBarProvider bossBarProvider,
                                  BossBarHandler bossBarHandler, CustomScoreboardManager scoreboardManager) {
@@ -158,6 +160,21 @@ public class DefaultMiniGameHandle implements MiniGameHandle, Unloadable, WorldB
     @Override
     public SongManager getSongManager() {
         return args.container().songManager();
+    }
+
+    @Override
+    public DeathMessages getDeathMessages() {
+        if (deathMessages != null) {
+            return deathMessages;
+        }
+
+        synchronized (this) {
+            if (deathMessages == null) {
+                deathMessages = new DeathMessages(getTranslations());
+            }
+        }
+
+        return deathMessages;
     }
 
     @Override

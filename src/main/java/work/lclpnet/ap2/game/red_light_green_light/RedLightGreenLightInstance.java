@@ -275,7 +275,7 @@ public class RedLightGreenLightInstance extends DefaultGameInstance implements R
 
         if (inGoal.size() >= gameHandle.getParticipants().count()) {
             winManager.win(data.getBestSubject(resolver).orElse(null));
-        } else {
+        } else if (gameEnd == -1) {
             translations.translateText("game.ap2.red_light_green_light.goal",
                             styled(player.getNameForScoreboard(), YELLOW),
                             styled(END_TIME_SECONDS, YELLOW))

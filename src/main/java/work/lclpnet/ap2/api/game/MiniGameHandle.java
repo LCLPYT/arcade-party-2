@@ -10,6 +10,7 @@ import work.lclpnet.ap2.api.game.team.TeamConfig;
 import work.lclpnet.ap2.api.map.MapFacade;
 import work.lclpnet.ap2.api.util.music.SongManager;
 import work.lclpnet.ap2.impl.game.PlayerUtil;
+import work.lclpnet.ap2.impl.util.DeathMessages;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.kibu.plugin.cmd.CommandRegistrar;
 import work.lclpnet.kibu.plugin.hook.HookRegistrar;
@@ -73,6 +74,8 @@ public interface MiniGameHandle {
     Optional<TeamConfig> getTeamConfig();
 
     SongManager getSongManager();
+
+    DeathMessages getDeathMessages();
 
     void resetGameScheduler();
 

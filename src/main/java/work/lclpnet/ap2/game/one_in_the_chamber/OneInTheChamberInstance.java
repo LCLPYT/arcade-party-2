@@ -29,6 +29,7 @@ import work.lclpnet.ap2.impl.game.DefaultGameInstance;
 import work.lclpnet.ap2.impl.game.data.ScoreDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.util.Cooldown;
+import work.lclpnet.ap2.impl.util.DeathMessages;
 import work.lclpnet.ap2.impl.util.TextUtil;
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
@@ -38,15 +39,12 @@ import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks;
 import work.lclpnet.kibu.hook.player.PlayerInventoryHooks;
 import work.lclpnet.kibu.inv.item.ItemStackUtil;
 import work.lclpnet.kibu.plugin.hook.HookRegistrar;
-import work.lclpnet.kibu.translate.TranslationService;
-import work.lclpnet.kibu.translate.text.FormatWrapper;
 import work.lclpnet.kibu.translate.text.TranslatedText;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 
 import java.util.Random;
 
 import static net.minecraft.util.Formatting.*;
-import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
 public class OneInTheChamberInstance extends DefaultGameInstance {
 
@@ -138,16 +136,14 @@ public class OneInTheChamberInstance extends DefaultGameInstance {
     }
 
     private void killPlayer(ServerPlayerEntity player, @Nullable ServerPlayerEntity killer, boolean shot) {
-        TranslationService translations = gameHandle.getTranslations();
+        DeathMessages deathMessages = gameHandle.getDeathMessages();
 
-        FormatWrapper victim = styled(player.getNameForScoreboard(), YELLOW);
         TranslatedText text;
 
         if (killer != null) {
-            String key = shot ? "ap2.pvp.shot_by" : "ap2.pvp.killed_by";
-            text = translations.translateText(key, victim, styled(killer.getNameForScoreboard(), YELLOW));
+            text = shot ? deathMessages.shotBy(player, killer) : deathMessages.killedBy(player, killer);
         } else {
-            text = translations.translateText("ap2.game.eliminated", victim);
+            text = deathMessages.eliminated(player);
         }
 
         text.formatted(GRAY).sendTo(PlayerLookup.all(gameHandle.getServer()));

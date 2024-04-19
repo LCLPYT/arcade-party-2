@@ -118,6 +118,10 @@ public class BlockBox implements Pair<BlockPos, BlockPos>, Iterable<BlockPos>, C
                && z >= min.getZ() && z < max.getZ() + 1;
     }
 
+    public boolean contains(Vec3i pos) {
+        return contains(pos.getX(), pos.getY(), pos.getZ());
+    }
+
     public boolean contains(Position pos) {
         return contains(pos.getX(), pos.getY(), pos.getZ());
     }

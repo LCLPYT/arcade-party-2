@@ -161,5 +161,7 @@
   "game.ap2.red_light_green_light.go": "Go!",
   "game.ap2.red_light_green_light.warn": "Careful...",
   "game.ap2.red_light_green_light.stop": "Stop!",
-  "game.ap2.red_light_green_light.moved": "You moved! You were reset as a punishment."
+  "game.ap2.red_light_green_light.moved": "You moved! You were reset as a punishment.",
+  "game.ap2.snowball_fight": "Snowball Fight",
+  "game.ap2.snowball_fight.description": "Collect snow from the ground. Hit your opponents with the snowballs. Last one standing wins!"
 }
