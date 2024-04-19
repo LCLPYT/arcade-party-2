@@ -4,7 +4,6 @@ import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.scoreboard.ScoreboardCriterion;
 import net.minecraft.scoreboard.ScoreboardDisplaySlot;
@@ -16,9 +15,7 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
-import net.minecraft.util.ActionResult;
 import net.minecraft.util.Formatting;
-import net.minecraft.util.TypedActionResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.GameRules;
@@ -33,14 +30,15 @@ import work.lclpnet.ap2.impl.game.data.ScoreTimeDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedPlayerBossBar;
+import work.lclpnet.ap2.impl.util.checkpoint.Checkpoint;
+import work.lclpnet.ap2.impl.util.checkpoint.CheckpointHelper;
+import work.lclpnet.ap2.impl.util.checkpoint.CheckpointManager;
 import work.lclpnet.ap2.impl.util.collision.ChunkedCollisionDetector;
 import work.lclpnet.ap2.impl.util.collision.PlayerMovementObserver;
 import work.lclpnet.ap2.impl.util.heads.PlayerHeadUtil;
 import work.lclpnet.ap2.impl.util.heads.PlayerHeads;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
-import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
-import work.lclpnet.kibu.hook.player.PlayerMoveCallback;
 import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.translate.TranslationService;
@@ -130,6 +128,7 @@ public class JumpAndRunInstance extends DefaultGameInstance implements MapBootst
         checkpoints = new CheckpointManager(jumpAndRun.checkpoints());
         checkpoints.init(collisionDetector, movementObserver);
         checkpoints.whenCheckpointReached(this::onCheckpointReached);
+        CheckpointHelper.notifyWhenReached(checkpoints, gameHandle.getTranslations());
 
         bossBar = usePlayerDynamicTaskDisplay(styled(1, YELLOW), styled(jumpAndRun.rooms().size() - 2, YELLOW));
         bossBar.setPercent(0);
@@ -147,49 +146,11 @@ public class JumpAndRunInstance extends DefaultGameInstance implements MapBootst
         Participants participants = gameHandle.getParticipants();
         HookRegistrar hooks = gameHandle.getHookRegistrar();
 
-        ServerWorld world = getWorld();
+        CheckpointHelper.setupResetItem(hooks, winManager::isGameOver, participants::isParticipating)
+                .then(this::resetPlayerToCheckpoint);
 
-        hooks.registerHook(PlayerMoveCallback.HOOK, (player, from, to) -> {
-            if (!participants.isParticipating(player)) return false;
-
-            BlockState state = world.getBlockState(player.getBlockPos());
-            if (!state.isOf(Blocks.LAVA)) return false;
-
-            resetPlayerToCheckpoint(player);
-            return false;
-        });
-
-        hooks.registerHook(PlayerInteractionHooks.USE_ITEM, (player, world1, hand) -> {
-            if (winManager.isGameOver() || !(player instanceof ServerPlayerEntity serverPlayer)
-                || !participants.isParticipating(serverPlayer)) {
-                return TypedActionResult.pass(ItemStack.EMPTY);
-            }
-
-            ItemStack stack = player.getStackInHand(hand);
-
-            if (!stack.isOf(Items.PLAYER_HEAD)) {
-                return TypedActionResult.pass(ItemStack.EMPTY);
-            }
-
-            resetPlayerToCheckpoint(serverPlayer);
-            return TypedActionResult.success(ItemStack.EMPTY, true);
-        });
-
-        hooks.registerHook(PlayerInteractionHooks.USE_BLOCK, (player, world1, hand, hitResult) -> {
-            if (winManager.isGameOver() || !(player instanceof ServerPlayerEntity serverPlayer)
-                || !participants.isParticipating(serverPlayer)) {
-                return ActionResult.PASS;
-            }
-
-            ItemStack stack = player.getStackInHand(hand);
-
-            if (!stack.isOf(Items.PLAYER_HEAD)) {
-                return ActionResult.PASS;
-            }
-
-            resetPlayerToCheckpoint(serverPlayer);
-            return ActionResult.SUCCESS;
-        });
+        CheckpointHelper.whenFallingIntoLava(hooks, participants::isParticipating)
+                .then(this::resetPlayerToCheckpoint);
 
         giveResetItemsToPlayers();
     }
@@ -200,7 +161,7 @@ public class JumpAndRunInstance extends DefaultGameInstance implements MapBootst
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
             ItemStack stack = PlayerHeadUtil.getItem(PlayerHeads.REDSTONE_BLOCK_REFRESH);
 
-            var name = translations.translateText(player, "game.ap2.jump_and_run.reset").formatted(Formatting.RED);
+            var name = translations.translateText(player, "game.ap2.reset").formatted(Formatting.RED);
             stack.setCustomName(name.styled(style -> style.withItalic(false)));
 
             player.getInventory().setStack(8, stack);
@@ -266,12 +227,6 @@ public class JumpAndRunInstance extends DefaultGameInstance implements MapBootst
     }
 
     private void onCheckpointReached(ServerPlayerEntity player, int checkpoint) {
-        var msg = gameHandle.getTranslations().translateText(player, "game.ap2.jump_and_run.reached_checkpoint")
-                .formatted(Formatting.GREEN);
-
-        player.sendMessage(msg, true);
-        player.playSound(SoundEvents.BLOCK_RESPAWN_ANCHOR_SET_SPAWN, SoundCategory.BLOCKS, 0.4f, 1f);
-
         int room = jumpAndRun.getRoomOfCheckpoint(checkpoint);
 
         enterRoom(player, room);
