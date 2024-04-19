@@ -6,6 +6,7 @@ import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.particle.BlockStateParticleEffect;
 import net.minecraft.particle.ParticleTypes;
+import net.minecraft.scoreboard.AbstractTeam;
 import net.minecraft.scoreboard.Team;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -66,6 +67,7 @@ public class MirrorHopInstance extends DefaultGameInstance {
 
         Team team = scoreboardManager.createTeam("team");
         team.setShowFriendlyInvisibles(true);
+        team.setCollisionRule(AbstractTeam.CollisionRule.NEVER);
 
         scoreboardManager.joinTeam(gameHandle.getParticipants(), team);
 

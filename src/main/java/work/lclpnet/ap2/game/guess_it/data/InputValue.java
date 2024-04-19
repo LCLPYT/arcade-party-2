@@ -6,8 +6,6 @@ import org.jetbrains.annotations.Nullable;
 import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.kibu.translate.text.TranslatedText;
 
-import java.text.NumberFormat;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -63,18 +61,18 @@ public class InputValue {
     }
 
     private static Optional<String> floatValue(String s, ServerPlayerEntity player, TranslationService translations, int precision) {
-        Locale locale = translations.getLocale(player);
-        NumberFormat format = NumberFormat.getInstance(locale);
+        s = s.replace(',', '.');
 
         float f;
 
         try {
-            f = format.parse(s).floatValue();
-        } catch (ParseException e) {
+            f = Float.parseFloat(s);
+        } catch (NumberFormatException e) {
             return Optional.empty();
         }
 
         String fmt = "%." + Math.max(0, Math.min(7, precision)) + "f";
+        Locale locale = translations.getLocale(player);
         String str = String.format(locale, fmt, f);
 
         return Optional.of(str);

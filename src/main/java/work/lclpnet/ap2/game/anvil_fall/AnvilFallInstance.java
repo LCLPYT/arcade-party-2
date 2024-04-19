@@ -9,6 +9,8 @@ import net.minecraft.entity.FallingBlockEntity;
 import net.minecraft.entity.boss.BossBar;
 import net.minecraft.entity.damage.DamageTypes;
 import net.minecraft.particle.ParticleTypes;
+import net.minecraft.scoreboard.AbstractTeam;
+import net.minecraft.scoreboard.Team;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -23,6 +25,7 @@ import work.lclpnet.ap2.impl.game.EliminationGameInstance;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedBossBar;
+import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.kibu.access.VelocityModifier;
 import work.lclpnet.kibu.access.entity.FallingBlockAccess;
 import work.lclpnet.kibu.hook.player.PlayerMoveCallback;
@@ -61,6 +64,13 @@ public class AnvilFallInstance extends EliminationGameInstance {
         gameRules.get(GameRules.FALL_DAMAGE).set(true, null);
 
         scanWorld();
+
+        CustomScoreboardManager scoreboardManager = gameHandle.getScoreboardManager();
+
+        Team team = scoreboardManager.createTeam("team");
+        team.setCollisionRule(AbstractTeam.CollisionRule.NEVER);
+
+        scoreboardManager.joinTeam(gameHandle.getParticipants(), team);
     }
 
     @Override

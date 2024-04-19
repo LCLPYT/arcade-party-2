@@ -48,17 +48,13 @@ public class GameCommons {
         HookRegistrar hooks = gameHandle.getHookRegistrar();
         Participants participants = gameHandle.getParticipants();
 
-        var hook = HookFactory.createArrayBacked(PlayerAction.class, callbacks -> player -> {
-            for (PlayerAction callback : callbacks) {
-                callback.onAction(player);
-            }
-        });
+        var hook = PlayerAction.createHook();
 
         hooks.registerHook(PlayerMoveCallback.HOOK, (player, from, to) -> {
             if (!participants.isParticipating(player)) return false;
 
             if (!(to.getY() >= minY)) {
-                hook.invoker().onAction(player);
+                hook.invoker().act(player);
             }
 
             return false;

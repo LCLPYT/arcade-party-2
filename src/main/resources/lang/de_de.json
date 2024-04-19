@@ -31,6 +31,7 @@
   "ap2.team.red": "Team Rot",
   "ap2.team.blue": "Team Blau",
   "game.ap2.title": "ArcadeParty",
+  "game.ap2.reached_checkpoint": "Checkpoint erreicht",
   "game.ap2.spleef": "Spleef",
   "game.ap2.spleef.description": "Baue den Boden unter deinen Gegnern ab, damit sie herunterfallen. Fall aber nicht selber herunter!",
   "game.ap2.spleef.shovel": "Spleef-Schaufel",
@@ -149,5 +150,17 @@
   "game.ap2.guess_it.shape.cone": "Aus wie vielen Blöcken besteht dieser Kegel?",
   "game.ap2.guess_it.music_disc": "Welche Schallplatte ist das?",
   "game.ap2.guess_it.area": "Welche Fläche ist die Größte?",
-  "game.ap2.guess_it.minecart": "Wie viele Sekunden wird es dauern, bis die Lore am Ziel ankommt?"
+  "game.ap2.guess_it.minecart": "Wie viele Sekunden wird es dauern, bis die Lore am Ziel ankommt?",
+  "game.ap2.pig_race": "Schweinerennen",
+  "game.ap2.pig_race.description": "Erreiche als erster das Ziel. Jeder Spieler reitet auf einem Schwein.",
+  "game.ap2.pig_race.task": "Erreiche das Ziel",
+  "game.ap2.pig_race.boost": "Anschub",
+  "game.ap2.red_light_green_light": "Ampelrennen",
+  "game.ap2.red_light_green_light.description": "Erreiche möglichst schnell das Ziel. Du darfst dich nur bewegen, wenn es dir erlaubt wird!",
+  "game.ap2.red_light_green_light.task": "Erreiche das Ziel",
+  "game.ap2.red_light_green_light.goal": "%s hat das Ziel erreicht. Das Spiel endet in %s Sekunden und du wirst dann je nach Distanz zum Ziel eingestuft.",
+  "game.ap2.red_light_green_light.go": "Los!",
+  "game.ap2.red_light_green_light.warn": "Achtung...",
+  "game.ap2.red_light_green_light.stop": "Stopp!",
+  "game.ap2.red_light_green_light.moved": "Du hast dich bewegt! Als Bestrafung wurdest du zurückgesetzt."
 }

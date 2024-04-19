@@ -233,7 +233,7 @@ public abstract class BaseGameInstance implements MiniGameInstance {
                 -> health > entity.getHealth());
     }
 
-    protected final void useTaskDisplay() {
+    protected final TranslatedBossBar useTaskDisplay() {
         GameInfo gameInfo = gameHandle.getGameInfo();
         TranslationService translations = gameHandle.getTranslations();
         Identifier id = gameInfo.identifier("task");
@@ -247,6 +247,8 @@ public abstract class BaseGameInstance implements MiniGameInstance {
         bossBar.addPlayers(PlayerLookup.all(gameHandle.getServer()));
 
         gameHandle.getBossBarHandler().showOnJoin(bossBar);
+
+        return bossBar;
     }
 
     protected final DynamicTranslatedPlayerBossBar usePlayerDynamicTaskDisplay(Object... args) {

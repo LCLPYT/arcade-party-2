@@ -6,6 +6,7 @@ import net.minecraft.util.math.Vec3i;
 import org.jetbrains.annotations.NotNull;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.StructureUtil;
+import work.lclpnet.ap2.impl.util.checkpoint.Checkpoint;
 import work.lclpnet.kibu.mc.BuiltinKibuBlockState;
 import work.lclpnet.kibu.mc.KibuBlockPos;
 import work.lclpnet.kibu.structure.BlockStructure;
