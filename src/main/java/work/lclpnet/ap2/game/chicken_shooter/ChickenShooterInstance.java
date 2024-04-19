@@ -49,19 +49,18 @@ import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
 public class ChickenShooterInstance extends DefaultGameInstance implements Runnable {
 
-    private final Random random = new Random();
     private static final double BABY_CHANCE = 0.07;
     private static final double TNT_CHANCE = 0.07;
     private static final double TNT_RADIUS = 6;
     private static final int MIN_DURATION = 40;
     private static final int MAX_DURATION = 60;
+    private final Random random = new Random();
     private final int duration_seconds = MIN_DURATION + random.nextInt(MAX_DURATION - MIN_DURATION + 1);
+    private final ScoreTimeDataContainer<ServerPlayerEntity, PlayerRef> data = new ScoreTimeDataContainer<>(PlayerRef::create);
+    private final Set<ChickenEntity> chickenSet = new HashSet<>();
     private BlockBox chickenBox = null;
     private int despawnHeight = 0;
     private int time = 0;
-    private final ScoreTimeDataContainer<ServerPlayerEntity, PlayerRef> data = new ScoreTimeDataContainer<>(PlayerRef::create);
-
-    private final Set<ChickenEntity> chickenSet = new HashSet<>();
 
     public ChickenShooterInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
@@ -278,5 +277,4 @@ public class ChickenShooterInstance extends DefaultGameInstance implements Runna
     private void onTimerDone() {
         winManager.win(data.getBestSubject(resolver).orElse(null));
     }
-
 }
