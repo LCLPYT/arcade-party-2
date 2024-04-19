@@ -4,7 +4,6 @@ import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.TntEntity;
-import net.minecraft.entity.boss.BossBar;
 import net.minecraft.entity.passive.ChickenEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.entity.projectile.ProjectileEntity;
@@ -35,17 +34,14 @@ import work.lclpnet.kibu.hook.entity.ProjectileHooks;
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks;
 import work.lclpnet.kibu.inv.item.ItemStackUtil;
 import work.lclpnet.kibu.plugin.hook.HookRegistrar;
-import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
-import work.lclpnet.lobby.game.util.BossBarTimer;
 
 import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
 
 import static net.minecraft.util.Formatting.YELLOW;
-import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
 public class ChickenShooterInstance extends DefaultGameInstance implements Runnable {
 
@@ -55,7 +51,7 @@ public class ChickenShooterInstance extends DefaultGameInstance implements Runna
     private static final int MIN_DURATION = 40;
     private static final int MAX_DURATION = 60;
     private final Random random = new Random();
-    private final int duration_seconds = MIN_DURATION + random.nextInt(MAX_DURATION - MIN_DURATION + 1);
+    private final int durationSeconds = MIN_DURATION + random.nextInt(MAX_DURATION - MIN_DURATION + 1);
     private final ScoreTimeDataContainer<ServerPlayerEntity, PlayerRef> data = new ScoreTimeDataContainer<>(PlayerRef::create);
     private final Set<ChickenEntity> chickenSet = new HashSet<>();
     private BlockBox chickenBox = null;
@@ -97,16 +93,7 @@ public class ChickenShooterInstance extends DefaultGameInstance implements Runna
             attacker.playSound(SoundEvents.ENTITY_ARROW_HIT_PLAYER, SoundCategory.PLAYERS, 0.8f, 0.8f);
             int score = killChicken(chicken, attacker, world);
 
-            data.addScore(attacker, score);
-
-            String key = score == 1 ? "ap2.gain_point" : "ap2.gain_points";
-
-            var msg = gameHandle.getTranslations().translateText(attacker, key,
-                            styled(score, Formatting.YELLOW),
-                            styled(data.getScore(attacker), Formatting.AQUA))
-                    .formatted(Formatting.GREEN);
-
-            attacker.sendMessage(msg, true);
+            commons().addScore(attacker, score, data);
 
             return false;
         });
@@ -142,16 +129,7 @@ public class ChickenShooterInstance extends DefaultGameInstance implements Runna
         //Timer and game end
         var subject = translations.translateText("game.ap2.chicken_shooter.task");
 
-        BossBarTimer timer = BossBarTimer.builder(translations, subject)
-                .withAlertSound(false)
-                .withColor(BossBar.Color.RED)
-                .withDurationTicks(Ticks.seconds(duration_seconds))
-                .build();
-
-        timer.addPlayers(PlayerLookup.all(gameHandle.getServer()));
-        timer.start(gameHandle.getBossBarProvider(), gameHandle.getGameScheduler());
-
-        timer.whenDone(this::onTimerDone);
+        commons().createTimer(subject, durationSeconds).whenDone(this::onTimerDone);
     }
 
     private void chickenSpawner() {
@@ -235,12 +213,11 @@ public class ChickenShooterInstance extends DefaultGameInstance implements Runna
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
             ItemStack stack = new ItemStack(Items.BOW);
 
+            stack.addEnchantment(Enchantments.INFINITY, 1);
+            ItemStackUtil.setUnbreakable(stack, true);
+
             stack.setCustomName(translations.translateText(player, "game.ap2.chicken_shooter.bow")
                     .styled(style -> style.withItalic(false).withFormatting(Formatting.GOLD)));
-
-            stack.addEnchantment(Enchantments.INFINITY, 1);
-
-            ItemStackUtil.setUnbreakable(stack, true);
 
             PlayerInventory inventory = player.getInventory();
             inventory.setStack(4, stack);

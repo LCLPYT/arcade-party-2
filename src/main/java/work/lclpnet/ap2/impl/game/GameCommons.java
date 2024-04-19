@@ -1,15 +1,18 @@
 package work.lclpnet.ap2.impl.game;
 
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
+import net.minecraft.entity.boss.BossBar;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
+import net.minecraft.util.Formatting;
 import net.minecraft.world.border.WorldBorder;
 import org.json.JSONObject;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.base.WorldBorderManager;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
+import work.lclpnet.ap2.api.game.sink.IntDataSink;
 import work.lclpnet.ap2.api.util.action.Action;
 import work.lclpnet.ap2.api.util.action.PlayerAction;
 import work.lclpnet.ap2.impl.map.MapUtil;
@@ -17,10 +20,15 @@ import work.lclpnet.ap2.impl.util.math.Vec2i;
 import work.lclpnet.kibu.hook.HookFactory;
 import work.lclpnet.kibu.hook.player.PlayerMoveCallback;
 import work.lclpnet.kibu.plugin.hook.HookRegistrar;
+import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
+import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.lobby.game.map.GameMap;
+import work.lclpnet.lobby.game.util.BossBarTimer;
 
 import java.util.Objects;
+
+import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
 public class GameCommons {
 
@@ -117,5 +125,33 @@ public class GameCommons {
         worldBorder.setDamagePerBlock(0.8);
 
         return worldBorder;
+    }
+
+    public BossBarTimer createTimer(Object subject, int durationSeconds) {
+        TranslationService translations = gameHandle.getTranslations();
+
+        BossBarTimer timer = BossBarTimer.builder(translations, subject)
+                .withAlertSound(false)
+                .withColor(BossBar.Color.RED)
+                .withDurationTicks(Ticks.seconds(durationSeconds))
+                .build();
+
+        timer.addPlayers(PlayerLookup.all(gameHandle.getServer()));
+        timer.start(gameHandle.getBossBarProvider(), gameHandle.getGameScheduler());
+
+        return timer;
+    }
+
+    public void addScore(ServerPlayerEntity player, int score, IntDataSink<ServerPlayerEntity> data) {
+        data.addScore(player, score);
+
+        String key = score == 1 ? "ap2.gain_point" : "ap2.gain_points";
+
+        var msg = gameHandle.getTranslations().translateText(player, key,
+                        styled(score, Formatting.YELLOW),
+                        styled(data.getScore(player), Formatting.AQUA))
+                .formatted(Formatting.GREEN);
+
+        player.sendMessage(msg, true);
     }
 }

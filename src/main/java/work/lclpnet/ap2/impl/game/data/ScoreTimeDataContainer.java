@@ -9,6 +9,7 @@ import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.game.data.DataEntry;
 import work.lclpnet.ap2.api.game.data.SubjectRef;
 import work.lclpnet.ap2.api.game.data.SubjectRefFactory;
+import work.lclpnet.ap2.api.game.sink.IntDataSink;
 import work.lclpnet.ap2.impl.game.data.entry.ScoreDataEntry;
 import work.lclpnet.ap2.impl.game.data.entry.ScoreTimeDataEntry;
 import work.lclpnet.ap2.impl.game.data.entry.ScoreView;
@@ -22,7 +23,7 @@ import java.util.stream.Stream;
  * but the order in which the scores who reached is saved.
  * In case two subjects have the same score, the subject who reached the score first is ranked higher.
  */
-public class ScoreTimeDataContainer<T, Ref extends SubjectRef> implements DataContainer<T, Ref>, IntScoreEventSource<T> {
+public class ScoreTimeDataContainer<T, Ref extends SubjectRef> implements DataContainer<T, Ref>, IntScoreEventSource<T>, IntDataSink<T> {
 
     private final SubjectRefFactory<T, Ref> refs;
     private final Object2IntMap<Ref> score = new Object2IntOpenHashMap<>();
@@ -45,6 +46,7 @@ public class ScoreTimeDataContainer<T, Ref extends SubjectRef> implements DataCo
         listeners.forEach(listener -> listener.accept(subject, score));
     }
 
+    @Override
     public void addScore(T subject, int add) {
         int score;
 
@@ -59,6 +61,7 @@ public class ScoreTimeDataContainer<T, Ref extends SubjectRef> implements DataCo
         listeners.forEach(listener -> listener.accept(subject, score));
     }
 
+    @Override
     public int getScore(T subject) {
         synchronized (this) {
             return score.computeIfAbsent(refs.create(subject), ref -> 0);
