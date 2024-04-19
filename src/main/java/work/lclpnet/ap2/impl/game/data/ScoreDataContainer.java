@@ -3,6 +3,7 @@ package work.lclpnet.ap2.impl.game.data;
 import work.lclpnet.ap2.api.event.IntScoreEvent;
 import work.lclpnet.ap2.api.event.IntScoreEventSource;
 import work.lclpnet.ap2.api.game.data.*;
+import work.lclpnet.ap2.api.game.sink.IntDataSink;
 import work.lclpnet.ap2.impl.game.data.entry.ScoreDataEntry;
 import work.lclpnet.ap2.impl.game.data.entry.ScoreView;
 
@@ -15,7 +16,7 @@ import java.util.stream.Stream;
  * The scores can still be updated after a subject was added.
  * The subject with the highest score is the winner.
  */
-public class ScoreDataContainer<T, Ref extends SubjectRef> implements DataContainer<T, Ref>, IntScoreEventSource<T> {
+public class ScoreDataContainer<T, Ref extends SubjectRef> implements DataContainer<T, Ref>, IntScoreEventSource<T>, IntDataSink<T> {
 
     private final SubjectRefFactory<T, Ref> refs;
     private final Map<Ref, Integer> scoreMap = new HashMap<>();
@@ -37,6 +38,7 @@ public class ScoreDataContainer<T, Ref extends SubjectRef> implements DataContai
         listeners.forEach(listener -> listener.accept(subject, score));
     }
 
+    @Override
     public void addScore(T subject, int add) {
         int score;
 
@@ -51,6 +53,7 @@ public class ScoreDataContainer<T, Ref extends SubjectRef> implements DataContai
         listeners.forEach(listener -> listener.accept(subject, score));
     }
 
+    @Override
     public int getScore(T subject) {
         synchronized (this) {
             return scoreMap.computeIfAbsent(refs.create(subject), ref -> 0);

@@ -4,14 +4,17 @@ import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.TntEntity;
-import net.minecraft.entity.boss.BossBar;
+import net.minecraft.entity.effect.StatusEffectInstance;
+import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.passive.ChickenEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.entity.projectile.ProjectileEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.particle.ParticleTypes;
+import net.minecraft.scoreboard.AbstractTeam;
 import net.minecraft.scoreboard.ScoreboardDisplaySlot;
+import net.minecraft.scoreboard.Team;
 import net.minecraft.scoreboard.number.StyledNumberFormat;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -31,37 +34,34 @@ import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
+import work.lclpnet.kibu.hook.entity.ProjectileCanHitCallback;
 import work.lclpnet.kibu.hook.entity.ProjectileHooks;
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks;
 import work.lclpnet.kibu.inv.item.ItemStackUtil;
 import work.lclpnet.kibu.plugin.hook.HookRegistrar;
-import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
-import work.lclpnet.lobby.game.util.BossBarTimer;
 
 import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
 
 import static net.minecraft.util.Formatting.YELLOW;
-import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
 public class ChickenShooterInstance extends DefaultGameInstance implements Runnable {
 
-    private final Random random = new Random();
     private static final double BABY_CHANCE = 0.07;
     private static final double TNT_CHANCE = 0.07;
     private static final double TNT_RADIUS = 6;
     private static final int MIN_DURATION = 40;
     private static final int MAX_DURATION = 60;
-    private final int duration_seconds = MIN_DURATION + random.nextInt(MAX_DURATION - MIN_DURATION + 1);
+    private final Random random = new Random();
+    private final int durationSeconds = MIN_DURATION + random.nextInt(MAX_DURATION - MIN_DURATION + 1);
+    private final ScoreTimeDataContainer<ServerPlayerEntity, PlayerRef> data = new ScoreTimeDataContainer<>(PlayerRef::create);
+    private final Set<ChickenEntity> chickenSet = new HashSet<>();
     private BlockBox chickenBox = null;
     private int despawnHeight = 0;
     private int time = 0;
-    private final ScoreTimeDataContainer<ServerPlayerEntity, PlayerRef> data = new ScoreTimeDataContainer<>(PlayerRef::create);
-
-    private final Set<ChickenEntity> chickenSet = new HashSet<>();
 
     public ChickenShooterInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
@@ -74,7 +74,6 @@ public class ChickenShooterInstance extends DefaultGameInstance implements Runna
 
     @Override
     protected void prepare() {
-
         ServerWorld world = getWorld();
 
         GameRules gameRules = world.getGameRules();
@@ -83,39 +82,33 @@ public class ChickenShooterInstance extends DefaultGameInstance implements Runna
 
         despawnHeight = getMap().requireProperty("despawn-height");
 
-        //hooks
+        // hooks
         HookRegistrar hooks = gameHandle.getHookRegistrar();
 
         hooks.registerHook(ServerLivingEntityHooks.ALLOW_DAMAGE, (entity, source, amount) -> {
-
             if (!(source.getSource() instanceof ProjectileEntity projectile)
-                    || !(entity instanceof ChickenEntity chicken)) return false;
+                || !(entity instanceof ChickenEntity chicken)) return false;
 
             projectile.discard();
 
             if (winManager.isGameOver() || !(source.getAttacker() instanceof ServerPlayerEntity attacker)) return false;
 
-            attacker.playSound(SoundEvents.ENTITY_ARROW_HIT_PLAYER, SoundCategory.PLAYERS, 0.8f, 0.8f);
+            float pitch = chicken.isBaby() ? 1.4f : 0.8f;
+            attacker.playSound(SoundEvents.ENTITY_ARROW_HIT_PLAYER, SoundCategory.PLAYERS, 0.8f, pitch);
+
             int score = killChicken(chicken, attacker, world);
 
-            data.addScore(attacker, score);
-
-            String key = score == 1 ? "ap2.gain_point" : "ap2.gain_points";
-
-            var msg = gameHandle.getTranslations().translateText(attacker, key,
-                            styled(score, Formatting.YELLOW),
-                            styled(data.getScore(attacker), Formatting.AQUA))
-                    .formatted(Formatting.GREEN);
-
-            attacker.sendMessage(msg, true);
+            commons().addScore(attacker, score, data);
 
             return false;
         });
 
-        hooks.registerHook(ProjectileHooks.HIT_BLOCK, (projectile, hit)
-                -> projectile.discard());
+        hooks.registerHook(ProjectileHooks.HIT_BLOCK, (projectile, hit) -> projectile.discard());
 
-        //Setup Scoreboard
+        // projectiles can only hit chickens (will pass through players)
+        hooks.registerHook(ProjectileCanHitCallback.HOOK, (projectile, entity) -> entity instanceof ChickenEntity);
+
+        // Setup Scoreboard
         CustomScoreboardManager scoreboardManager = gameHandle.getScoreboardManager();
 
         var objective = scoreboardManager.translateObjective("score", "game.ap2.chicken_shooter.points")
@@ -127,6 +120,15 @@ public class ChickenShooterInstance extends DefaultGameInstance implements Runna
 
         for (ServerPlayerEntity player : PlayerLookup.all(gameHandle.getServer())) {
             objective.addPlayer(player);
+        }
+
+        Team team = scoreboardManager.createTeam("team");
+        team.setShowFriendlyInvisibles(true);
+        team.setCollisionRule(AbstractTeam.CollisionRule.NEVER);
+
+        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
+            scoreboardManager.joinTeam(player, team);
+            player.addStatusEffect(new StatusEffectInstance(StatusEffects.INVISIBILITY, Integer.MAX_VALUE, 1, false, false, false));
         }
     }
 
@@ -140,19 +142,10 @@ public class ChickenShooterInstance extends DefaultGameInstance implements Runna
 
         chickenSpawner();
 
-        //Timer and game end
+        // Timer and game end
         var subject = translations.translateText("game.ap2.chicken_shooter.task");
 
-        BossBarTimer timer = BossBarTimer.builder(translations, subject)
-                .withAlertSound(false)
-                .withColor(BossBar.Color.RED)
-                .withDurationTicks(Ticks.seconds(duration_seconds))
-                .build();
-
-        timer.addPlayers(PlayerLookup.all(gameHandle.getServer()));
-        timer.start(gameHandle.getBossBarProvider(), gameHandle.getGameScheduler());
-
-        timer.whenDone(this::onTimerDone);
+        commons().createTimer(subject, durationSeconds).whenDone(this::onTimerDone);
     }
 
     private void chickenSpawner() {
@@ -168,9 +161,10 @@ public class ChickenShooterInstance extends DefaultGameInstance implements Runna
 
         ChickenEntity chicken = new ChickenEntity(EntityType.CHICKEN, world);
 
-        if (random.nextFloat() < BABY_CHANCE) chicken.setBaby(true);
-        else {
-            if (random.nextFloat() < TNT_CHANCE) spawnTNT(chicken, world);
+        if (random.nextFloat() < BABY_CHANCE) {
+            chicken.setBaby(true);
+        } else if (random.nextFloat() < TNT_CHANCE) {
+            spawnTNT(chicken, world);
         }
 
         chicken.setPos(randomPos.getX() + 0.5, randomPos.getY(), randomPos.getZ() + 0.5);
@@ -188,7 +182,6 @@ public class ChickenShooterInstance extends DefaultGameInstance implements Runna
     }
 
     private int killChicken(ChickenEntity chicken, ServerPlayerEntity attacker, ServerWorld world) {
-
         int score = 0;
 
         double x = chicken.getX();
@@ -213,7 +206,6 @@ public class ChickenShooterInstance extends DefaultGameInstance implements Runna
     }
 
     private int tntExplode(ChickenEntity chicken, TntEntity tnt, ServerWorld world, ServerPlayerEntity attacker, double x, double y, double z) {
-
         world.spawnParticles(ParticleTypes.EXPLOSION, x, y, z, 4, 0.5, 0.5, 0.5, 1);
         attacker.playSound(SoundEvents.ENTITY_TNT_PRIMED, SoundCategory.PLAYERS, 0.8f, 1.8f);
         attacker.playSound(SoundEvents.ENTITY_GENERIC_EXPLODE, SoundCategory.PLAYERS, 0.8f, 0.7f);
@@ -222,6 +214,7 @@ public class ChickenShooterInstance extends DefaultGameInstance implements Runna
 
         int score = 0;
         var affected = world.getEntitiesByType(TypeFilter.instanceOf(ChickenEntity.class), chickenEntity -> tntPos.isInRange(chickenEntity.getPos(), TNT_RADIUS));
+
         for (ChickenEntity c : affected) {
             if (c == chicken) continue;
             score += killChicken(c, attacker, world);
@@ -236,12 +229,11 @@ public class ChickenShooterInstance extends DefaultGameInstance implements Runna
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
             ItemStack stack = new ItemStack(Items.BOW);
 
+            stack.addEnchantment(Enchantments.INFINITY, 1);
+            ItemStackUtil.setUnbreakable(stack, true);
+
             stack.setCustomName(translations.translateText(player, "game.ap2.chicken_shooter.bow")
                     .styled(style -> style.withItalic(false).withFormatting(Formatting.GOLD)));
-
-            stack.addEnchantment(Enchantments.INFINITY, 1);
-
-            ItemStackUtil.setUnbreakable(stack, true);
 
             PlayerInventory inventory = player.getInventory();
             inventory.setStack(4, stack);
@@ -257,20 +249,24 @@ public class ChickenShooterInstance extends DefaultGameInstance implements Runna
         if (time % 10 == 0) {
             spawnChicken();
         }
+
         time++;
 
         chickenSet.removeIf(chicken -> {
-
             double x = chicken.getX() + 0.5;
             double y = chicken.getY();
             double z = chicken.getZ() + 0.5;
 
             if (y < despawnHeight) {
-                if (chicken.getFirstPassenger() instanceof TntEntity tnt) tnt.discard();
+                if (chicken.getFirstPassenger() instanceof TntEntity tnt) {
+                    tnt.discard();
+                }
+
                 chicken.discard();
                 getWorld().spawnParticles(ParticleTypes.CLOUD, x, y, z, 3, 0.2, 0.2, 0.2, 0.02);
                 return true;
             }
+
             return false;
         });
     }
@@ -278,5 +274,4 @@ public class ChickenShooterInstance extends DefaultGameInstance implements Runna
     private void onTimerDone() {
         winManager.win(data.getBestSubject(resolver).orElse(null));
     }
-
 }
