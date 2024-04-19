@@ -4,13 +4,17 @@ import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.TntEntity;
+import net.minecraft.entity.effect.StatusEffectInstance;
+import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.passive.ChickenEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.entity.projectile.ProjectileEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.particle.ParticleTypes;
+import net.minecraft.scoreboard.AbstractTeam;
 import net.minecraft.scoreboard.ScoreboardDisplaySlot;
+import net.minecraft.scoreboard.Team;
 import net.minecraft.scoreboard.number.StyledNumberFormat;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -81,7 +85,6 @@ public class ChickenShooterInstance extends DefaultGameInstance implements Runna
         HookRegistrar hooks = gameHandle.getHookRegistrar();
 
         hooks.registerHook(ServerLivingEntityHooks.ALLOW_DAMAGE, (entity, source, amount) -> {
-
             if (!(source.getSource() instanceof ProjectileEntity projectile)
                 || !(entity instanceof ChickenEntity chicken)) return false;
 
@@ -89,7 +92,9 @@ public class ChickenShooterInstance extends DefaultGameInstance implements Runna
 
             if (winManager.isGameOver() || !(source.getAttacker() instanceof ServerPlayerEntity attacker)) return false;
 
-            attacker.playSound(SoundEvents.ENTITY_ARROW_HIT_PLAYER, SoundCategory.PLAYERS, 0.8f, 0.8f);
+            float pitch = chicken.isBaby() ? 1.4f : 0.8f;
+            attacker.playSound(SoundEvents.ENTITY_ARROW_HIT_PLAYER, SoundCategory.PLAYERS, 0.8f, pitch);
+
             int score = killChicken(chicken, attacker, world);
 
             commons().addScore(attacker, score, data);
@@ -97,8 +102,7 @@ public class ChickenShooterInstance extends DefaultGameInstance implements Runna
             return false;
         });
 
-        hooks.registerHook(ProjectileHooks.HIT_BLOCK, (projectile, hit)
-                -> projectile.discard());
+        hooks.registerHook(ProjectileHooks.HIT_BLOCK, (projectile, hit) -> projectile.discard());
 
         // Setup Scoreboard
         CustomScoreboardManager scoreboardManager = gameHandle.getScoreboardManager();
@@ -112,6 +116,15 @@ public class ChickenShooterInstance extends DefaultGameInstance implements Runna
 
         for (ServerPlayerEntity player : PlayerLookup.all(gameHandle.getServer())) {
             objective.addPlayer(player);
+        }
+
+        Team team = scoreboardManager.createTeam("team");
+        team.setShowFriendlyInvisibles(true);
+        team.setCollisionRule(AbstractTeam.CollisionRule.NEVER);
+
+        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
+            scoreboardManager.joinTeam(player, team);
+            player.addStatusEffect(new StatusEffectInstance(StatusEffects.INVISIBILITY, Integer.MAX_VALUE, 1, false, false, false));
         }
     }
 
