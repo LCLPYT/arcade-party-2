@@ -50,8 +50,8 @@ import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 public class ChickenShooterInstance extends DefaultGameInstance implements Runnable {
 
     private final Random random = new Random();
-    private static final double BABY_CHANCE = 0.05;
-    private static final double TNT_CHANCE = 1;
+    private static final double BABY_CHANCE = 0.07;
+    private static final double TNT_CHANCE = 0.07;
     private static final double TNT_RADIUS = 6;
     private static final int MIN_DURATION = 40;
     private static final int MAX_DURATION = 60;
@@ -141,7 +141,7 @@ public class ChickenShooterInstance extends DefaultGameInstance implements Runna
         chickenSpawner();
 
         //Timer and game end
-        var subject = translations.translateText(gameHandle.getGameInfo().getTaskKey());
+        var subject = translations.translateText("game.ap2.chicken_shooter.task");
 
         BossBarTimer timer = BossBarTimer.builder(translations, subject)
                 .withAlertSound(false)
@@ -280,4 +280,3 @@ public class ChickenShooterInstance extends DefaultGameInstance implements Runna
     }
 
 }
-

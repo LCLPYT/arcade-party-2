@@ -94,6 +94,8 @@
   "game.ap2.block_dissolve": "Block Dissolve",
   "game.ap2.block_dissolve.description": "The world is slowly crumbling. Use snowballs to knock players of the map. Last one standing wins!",
   "game.ap2.chicken_shooter": "Chicken Shooter",
+  "game.ap2.chicken_shooter.description": "Shoot as many chickens as possible!\nBaby chickens award more points,\ntnt chickens take out chickens around them!",
+  "game.ap2.chicken_shooter.task": "Shoot the chickens!",
   "game.ap2.chicken_shooter.points": "Points",
   "game.ap2.chicken_shooter.bow": "Chicken Bow",
   "game.ap2.cozy_campfire": "Cozy Campfire",
