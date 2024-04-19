@@ -69,7 +69,6 @@ public class ChickenShooterInstance extends DefaultGameInstance implements Runna
 
     @Override
     protected void prepare() {
-
         ServerWorld world = getWorld();
 
         GameRules gameRules = world.getGameRules();
@@ -78,13 +77,13 @@ public class ChickenShooterInstance extends DefaultGameInstance implements Runna
 
         despawnHeight = getMap().requireProperty("despawn-height");
 
-        //hooks
+        // hooks
         HookRegistrar hooks = gameHandle.getHookRegistrar();
 
         hooks.registerHook(ServerLivingEntityHooks.ALLOW_DAMAGE, (entity, source, amount) -> {
 
             if (!(source.getSource() instanceof ProjectileEntity projectile)
-                    || !(entity instanceof ChickenEntity chicken)) return false;
+                || !(entity instanceof ChickenEntity chicken)) return false;
 
             projectile.discard();
 
@@ -101,7 +100,7 @@ public class ChickenShooterInstance extends DefaultGameInstance implements Runna
         hooks.registerHook(ProjectileHooks.HIT_BLOCK, (projectile, hit)
                 -> projectile.discard());
 
-        //Setup Scoreboard
+        // Setup Scoreboard
         CustomScoreboardManager scoreboardManager = gameHandle.getScoreboardManager();
 
         var objective = scoreboardManager.translateObjective("score", "game.ap2.chicken_shooter.points")
@@ -126,7 +125,7 @@ public class ChickenShooterInstance extends DefaultGameInstance implements Runna
 
         chickenSpawner();
 
-        //Timer and game end
+        // Timer and game end
         var subject = translations.translateText("game.ap2.chicken_shooter.task");
 
         commons().createTimer(subject, durationSeconds).whenDone(this::onTimerDone);
@@ -145,9 +144,10 @@ public class ChickenShooterInstance extends DefaultGameInstance implements Runna
 
         ChickenEntity chicken = new ChickenEntity(EntityType.CHICKEN, world);
 
-        if (random.nextFloat() < BABY_CHANCE) chicken.setBaby(true);
-        else {
-            if (random.nextFloat() < TNT_CHANCE) spawnTNT(chicken, world);
+        if (random.nextFloat() < BABY_CHANCE) {
+            chicken.setBaby(true);
+        } else if (random.nextFloat() < TNT_CHANCE) {
+            spawnTNT(chicken, world);
         }
 
         chicken.setPos(randomPos.getX() + 0.5, randomPos.getY(), randomPos.getZ() + 0.5);
@@ -165,7 +165,6 @@ public class ChickenShooterInstance extends DefaultGameInstance implements Runna
     }
 
     private int killChicken(ChickenEntity chicken, ServerPlayerEntity attacker, ServerWorld world) {
-
         int score = 0;
 
         double x = chicken.getX();
@@ -190,7 +189,6 @@ public class ChickenShooterInstance extends DefaultGameInstance implements Runna
     }
 
     private int tntExplode(ChickenEntity chicken, TntEntity tnt, ServerWorld world, ServerPlayerEntity attacker, double x, double y, double z) {
-
         world.spawnParticles(ParticleTypes.EXPLOSION, x, y, z, 4, 0.5, 0.5, 0.5, 1);
         attacker.playSound(SoundEvents.ENTITY_TNT_PRIMED, SoundCategory.PLAYERS, 0.8f, 1.8f);
         attacker.playSound(SoundEvents.ENTITY_GENERIC_EXPLODE, SoundCategory.PLAYERS, 0.8f, 0.7f);
@@ -199,6 +197,7 @@ public class ChickenShooterInstance extends DefaultGameInstance implements Runna
 
         int score = 0;
         var affected = world.getEntitiesByType(TypeFilter.instanceOf(ChickenEntity.class), chickenEntity -> tntPos.isInRange(chickenEntity.getPos(), TNT_RADIUS));
+
         for (ChickenEntity c : affected) {
             if (c == chicken) continue;
             score += killChicken(c, attacker, world);
@@ -233,20 +232,24 @@ public class ChickenShooterInstance extends DefaultGameInstance implements Runna
         if (time % 10 == 0) {
             spawnChicken();
         }
+
         time++;
 
         chickenSet.removeIf(chicken -> {
-
             double x = chicken.getX() + 0.5;
             double y = chicken.getY();
             double z = chicken.getZ() + 0.5;
 
             if (y < despawnHeight) {
-                if (chicken.getFirstPassenger() instanceof TntEntity tnt) tnt.discard();
+                if (chicken.getFirstPassenger() instanceof TntEntity tnt) {
+                    tnt.discard();
+                }
+
                 chicken.discard();
                 getWorld().spawnParticles(ParticleTypes.CLOUD, x, y, z, 3, 0.2, 0.2, 0.2, 0.02);
                 return true;
             }
+
             return false;
         });
     }
