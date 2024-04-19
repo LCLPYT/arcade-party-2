@@ -128,7 +128,7 @@ public class MiningBattleInstance extends DefaultGameInstance implements MapBoot
     private void onGainPoints(ServerPlayerEntity player, int points) {
         data.addScore(player, points);
 
-        String key = points == 1 ? "game.ap2.mining_battle.gain_point" : "game.ap2.mining_battle.gain_points";
+        String key = points == 1 ? "ap2.gain_point" : "ap2.gain_points";
 
         var msg = gameHandle.getTranslations().translateText(player, key,
                         styled(points, Formatting.YELLOW),
