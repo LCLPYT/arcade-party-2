@@ -165,5 +165,7 @@
   "game.ap2.red_light_green_light.stop": "Stop!",
   "game.ap2.red_light_green_light.moved": "You moved! You were reset as a punishment.",
   "game.ap2.snowball_fight": "Snowball Fight",
-  "game.ap2.snowball_fight.description": "Collect snow from the ground. Hit your opponents with the snowballs. Last one standing wins!"
+  "game.ap2.snowball_fight.description": "Collect snow from the ground. Hit your opponents with the snowballs. Last one standing wins!",
+  "game.ap2.speed_builders": "Speed Builders",
+  "game.ap2.speed_builders.description": "Build a structure as quickly as possible. Each round, the player whose building is the least similar to the original is eliminated."
 }

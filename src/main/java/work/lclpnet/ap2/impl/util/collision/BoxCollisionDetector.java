@@ -51,4 +51,11 @@ public class BoxCollisionDetector {
             return stack.peek();
         }
     }
+
+    public void reset() {
+        synchronized (this) {
+            stack.clear();
+            boxes.clear();
+        }
+    }
 }
