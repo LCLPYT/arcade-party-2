@@ -2,6 +2,7 @@ package work.lclpnet.ap2.game.speed_builders;
 
 import net.minecraft.server.PlayerManager;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.util.math.BlockPos;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.game.speed_builders.data.SbIsland;
 
@@ -29,5 +30,15 @@ public class SpeedBuildersManager {
                 action.accept(island, player);
             }
         });
+    }
+
+    public boolean isBuildingPhase() {
+        return true;
+    }
+
+    public boolean isWithinBuildingArea(ServerPlayerEntity player, BlockPos pos) {
+        SbIsland island = islands.get(player.getUuid());
+
+        return island != null && island.isWithinBuildingArea(pos);
     }
 }
