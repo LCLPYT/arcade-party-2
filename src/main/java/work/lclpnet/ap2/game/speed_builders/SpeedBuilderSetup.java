@@ -13,8 +13,6 @@ import work.lclpnet.ap2.game.speed_builders.data.SbIsland;
 import work.lclpnet.ap2.game.speed_builders.data.SbIslandData;
 import work.lclpnet.ap2.game.speed_builders.data.SbIslandProto;
 import work.lclpnet.ap2.game.speed_builders.data.SbModule;
-import work.lclpnet.ap2.impl.util.StructureUtil;
-import work.lclpnet.ap2.impl.util.math.Vec2i;
 import work.lclpnet.ap2.impl.util.world.CircleStructureGenerator;
 import work.lclpnet.kibu.mc.BlockStateAdapter;
 import work.lclpnet.kibu.schematic.FabricBlockStateAdapter;
@@ -59,12 +57,7 @@ public class SpeedBuilderSetup {
             throw new IllegalStateException("No island prototypes available");
         }
 
-        double largestTangentDistance = CircleStructureGenerator.computeLargestTangentDistance(islandProtos.stream()
-                .map(SbIslandProto::structure)
-                .toList());
-
         int count = participants.count();
-        int minRadius = CircleStructureGenerator.calculateRadius(count, largestTangentDistance + ISLAND_SPACING);
 
         List<SbIslandData> islandData = new ArrayList<>(count);
         List<BlockStructure> structures = new ArrayList<>(count);
@@ -78,13 +71,9 @@ public class SpeedBuilderSetup {
             structures.add(island.structure());
         }
 
-        // offsets are relative to the origin
-        Vec2i[] offsets = CircleStructureGenerator.generateHorizontalOffsets(structures, minRadius);
-
         Map<UUID, SbIsland> islandMapping = new HashMap<>(count);
 
-        for (int i = 0; i < count; i++) {
-            BlockStructure structure = structures.get(i);
+        CircleStructureGenerator.placeStructures(structures, world, ISLAND_SPACING, (i, structure, circleOffset) -> {
             SbIslandData data = islandData.get(i);
 
             var absSpawn = data.spawn();
@@ -92,19 +81,19 @@ public class SpeedBuilderSetup {
             BlockPos origin = new BlockPos(kibuOrigin.getX(), kibuOrigin.getY(), kibuOrigin.getZ());
             BlockPos spawn = absSpawn.subtract(origin);
 
-            Vec2i offset = offsets[i];
-            int x = offset.x();
+            int x = circleOffset.x();
             int y = SPAWN_Y - spawn.getY();
-            int z = offset.z();
+            int z = circleOffset.z();
 
             BlockPos pos = new BlockPos(x, y, z);
-            StructureUtil.placeStructureFast(structure, world, pos);
 
             SbIsland island = new SbIsland(data, origin, pos);
             UUID uuid = players.get(i);
 
             islandMapping.put(uuid, island);
-        }
+
+            return pos;
+        });
 
         return islandMapping;
     }

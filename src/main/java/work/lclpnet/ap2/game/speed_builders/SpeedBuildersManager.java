@@ -19,7 +19,7 @@ public class SpeedBuildersManager {
         this.gameHandle = gameHandle;
     }
 
-    public void each(BiConsumer<SbIsland, ServerPlayerEntity> action) {
+    public void eachIsland(BiConsumer<SbIsland, ServerPlayerEntity> action) {
         PlayerManager playerManager = gameHandle.getServer().getPlayerManager();
 
         islands.forEach((uuid, island) -> {

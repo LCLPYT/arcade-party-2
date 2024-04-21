@@ -37,7 +37,7 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
 
     @Override
     protected void prepare() {
-        manager.each(SbIsland::teleport);
+        manager.eachIsland(SbIsland::teleport);
     }
 
     @Override

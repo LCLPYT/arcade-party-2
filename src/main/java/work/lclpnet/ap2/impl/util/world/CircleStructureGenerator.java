@@ -1,5 +1,7 @@
 package work.lclpnet.ap2.impl.util.world;
 
+import net.minecraft.server.world.ServerWorld;
+import net.minecraft.util.math.BlockPos;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.StructureUtil;
 import work.lclpnet.ap2.impl.util.collision.BoxCollisionDetector;
@@ -12,6 +14,23 @@ import java.util.List;
 import static java.lang.Math.*;
 
 public class CircleStructureGenerator {
+
+    public static void placeStructures(List<BlockStructure> structures, ServerWorld world, double spacing, PositionFunction position) {
+        double largestTangentDistance = CircleStructureGenerator.computeLargestTangentDistance(structures);
+        int count = structures.size();
+        int minRadius = CircleStructureGenerator.calculateRadius(count, largestTangentDistance + spacing);
+
+        // offsets are relative to the origin
+        Vec2i[] offsets = CircleStructureGenerator.generateHorizontalOffsets(structures, minRadius);
+
+        for (int i = 0; i < count; i++) {
+            BlockStructure structure = structures.get(i);
+            Vec2i offset = offsets[i];
+            BlockPos pos = position.compute(i, structure, offset);
+
+            StructureUtil.placeStructureFast(structure, world, pos);
+        }
+    }
 
     /**
      * Compute the largest possible distance between two tangent structures of a given structure list.
@@ -68,16 +87,13 @@ public class CircleStructureGenerator {
     }
 
     public static Vec2i[] generateHorizontalOffsets(List<BlockStructure> structures, int minRadius) {
-        // the idea of the algorithm is the following:
-        // 1. set current radius = minimum radius, searching = false
-        // 2. try to place every structure evenly on a circle with the current radius
-        // 3. set collisions = whether there are collisions between the structures
-        // 4. if collisions || searching, goto 5. otherwise terminate with the offsets
-        // 5. set searching = true
-        // 6. if collisions, set prevRadius = radius, radius = 2 * radius then goto 2. otherwise goto 7
-        // 7. set tmp = radius, radius = (radius + prevRadius) / 2, prevRadius = tmp
-        // 8. if radius == prevRadius, terminate with offsets
-        // 9. goto 2
+        /*
+        The idea of the algorithm is the following:
+        - start with the min radius
+        - place every structure evenly on a circle
+        - find a radius that has no collisions and a radius without collisions
+        - perform bisection to find the minimal radius that has no collisions
+        */
 
         final int count = structures.size();
         final double angularStep = 2 * PI / count;
@@ -89,8 +105,8 @@ public class CircleStructureGenerator {
         }
 
         int radius = minRadius;
-        boolean searching = false;
-        boolean lastWasFine = false;
+        int left = radius;
+        int right = radius;
 
         next: while (true) {
             collisionDetector.reset();
@@ -110,29 +126,45 @@ public class CircleStructureGenerator {
                 BlockBox bounds = StructureUtil.getBounds(structure).transform(AffineIntMatrix.makeTranslation(x, 0, z));
 
                 if (!collisionDetector.add(bounds)) {
-                    // there are collisions, check if the last iteration was fine
-                    if (lastWasFine) {
-                        // we have found the best solution
-                        radius = (radius << 2) / 3;
-                        searching = false;
+                    // there are collisions
+                    left = radius;
+
+                    if (left < right) {
+                        // prevent infinite loop
+                        if (left == right - 1) {
+                            left = right;
+                        }
+
+                        radius = (left + right) / 2;
                     } else {
-                        // double the radius and search for better solution
-                        radius <<= 1;
-                        searching = true;
+                        if (radius <= 0) {
+                            radius = 1;
+                        } else {
+                            radius *= 2;
+                        }
                     }
 
                     continue next;
                 }
             }
 
-            // there were no collisions, check if we are not searching for a better solution, we are done
-            if (!searching) {
+            // there were no collisions
+            if (left == right) {
                 return offsets;
             }
 
-            // the radius was doubled in the last iteration, now choose 3/4 of the current radius
-            lastWasFine = true;
-            radius = 3 * radius >> 2;
+            right = radius;
+
+            // prevent infinite loop
+            if (left == right - 1) {
+                return offsets;
+            }
+
+            radius = (left + right) / 2;
         }
+    }
+
+    public interface PositionFunction {
+        BlockPos compute(int index, BlockStructure structure, Vec2i circleOffset);
     }
 }
