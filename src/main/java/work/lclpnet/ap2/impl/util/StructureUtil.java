@@ -15,6 +15,8 @@ public class StructureUtil {
 
     public static final EnumSet<StructureWriter.Option> FAST_NO_VIEWERS = EnumSet.of(SKIP_AIR, FORCE_STATE, SKIP_PLAYER_SYNC, SKIP_DROPS);
 
+    private StructureUtil() {}
+
     public static void placeStructureFast(Printable printable, ServerWorld world) {
         BlockStructure structure = printable.getStructure();
         Vec3i pos = printable.getPrintOffset();
@@ -30,6 +32,4 @@ public class StructureUtil {
         return new BlockBox(0, 0, 0,
                 structure.getWidth() - 1, structure.getHeight() - 1, structure.getLength() - 1);
     }
-
-    private StructureUtil() {}
 }

@@ -1,16 +1,28 @@
 package work.lclpnet.ap2.game.speed_builders.data;
 
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3i;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.math.AffineIntMatrix;
+import work.lclpnet.kibu.structure.BlockStructure;
+import work.lclpnet.kibu.util.StructureWriter;
+import work.lclpnet.kibu.util.math.Matrix3i;
+
+import java.util.EnumSet;
+
+import static work.lclpnet.kibu.util.StructureWriter.Option.*;
 
 public class SbIsland {
 
     private final SbIslandData data;
     private final BlockPos spawnWorldPos;
     private final BlockBox buildingArea;
+    private final BlockBox previewArea;
 
     /**
      * Constructor.
@@ -24,12 +36,20 @@ public class SbIsland {
         BlockPos relSpawn = data.spawn().subtract(origin);
         this.spawnWorldPos = offset.add(relSpawn);
 
-        AffineIntMatrix mat4 = AffineIntMatrix.makeTranslation(
+        AffineIntMatrix buildingAreaTranslation = AffineIntMatrix.makeTranslation(
                 offset.getX() - origin.getX(),
                 offset.getY() - origin.getY(),
                 offset.getZ() - origin.getZ());
 
-        this.buildingArea = data.buildArea().transform(mat4);
+        this.buildingArea = data.buildArea().transform(buildingAreaTranslation);
+
+        Vec3i previewOffset = data.previewOffset();
+        AffineIntMatrix previewAreaTranslation = AffineIntMatrix.makeTranslation(
+                previewOffset.getX(),
+                previewOffset.getY(),
+                previewOffset.getZ());
+
+        this.previewArea = this.buildingArea.transform(previewAreaTranslation);
     }
 
     public void teleport(ServerPlayerEntity player) {
@@ -41,5 +61,52 @@ public class SbIsland {
 
     public boolean isWithinBuildingArea(BlockPos pos) {
         return buildingArea.contains(pos);
+    }
+
+    public boolean supports(SbModule module) {
+        BlockBox buildArea = data.buildArea();
+        BlockStructure structure = module.structure();
+
+        return buildArea.getWidth() == structure.getWidth() && buildArea.getLength() == structure.getLength() && structure.getHeight() <= buildArea.getHeight();
+    }
+
+    public void placeModulePreview(SbModule module, ServerWorld world) {
+        clear(previewArea, world);
+
+        BlockStructure structure = module.structure();
+
+        var options = EnumSet.of(FORCE_STATE, SKIP_AIR, SKIP_DROPS, SKIP_BLOCK_ENTITIES);
+        StructureWriter.placeStructure(structure, world, previewArea.getMin().down(), Matrix3i.IDENTITY, options);
+    }
+
+    public void copyPreviewFloorToBuildArea(ServerWorld world) {
+        BlockPos from = buildingArea.getMin().down();
+        BlockPos to = buildingArea.getMax().down(buildingArea.getHeight());
+        Vec3i previewOffset = data.previewOffset();
+        BlockPos.Mutable pointer = new BlockPos.Mutable();
+        int flags = Block.FORCE_STATE | Block.SKIP_DROPS | Block.NOTIFY_LISTENERS;
+
+        for (BlockPos pos : BlockPos.iterate(from, to)) {
+            pointer.set(
+                    pos.getX() + previewOffset.getX(),
+                    pos.getY() + previewOffset.getY(),
+                    pos.getZ() + previewOffset.getZ());
+
+            BlockState state = world.getBlockState(pointer);
+            world.setBlockState(pos, state, flags);
+        }
+    }
+
+    public void clearBuildingArea(ServerWorld world) {
+        clear(buildingArea, world);
+    }
+
+    private void clear(BlockBox box, ServerWorld world) {
+        BlockState air = Blocks.AIR.getDefaultState();
+        int flags = Block.FORCE_STATE | Block.SKIP_DROPS | Block.NOTIFY_LISTENERS;
+
+        for (BlockPos pos : box) {
+            world.setBlockState(pos, air, flags);
+        }
     }
 }

@@ -3,6 +3,7 @@ package work.lclpnet.ap2.game.speed_builders;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3i;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -13,6 +14,7 @@ import work.lclpnet.ap2.game.speed_builders.data.SbIsland;
 import work.lclpnet.ap2.game.speed_builders.data.SbIslandData;
 import work.lclpnet.ap2.game.speed_builders.data.SbIslandProto;
 import work.lclpnet.ap2.game.speed_builders.data.SbModule;
+import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.world.CircleStructureGenerator;
 import work.lclpnet.kibu.mc.BlockStateAdapter;
 import work.lclpnet.kibu.schematic.FabricBlockStateAdapter;
@@ -45,9 +47,18 @@ public class SpeedBuilderSetup {
 
     public CompletableFuture<Void> setup(GameMap map, ServerWorld world) {
         return loadAvailableIslands(map, world)
-                .thenAccept(islands -> this.islandProtos = List.copyOf(islands))
-                .thenComposeAsync(islands -> loadModules(world))
+                .thenApply(islands -> this.islandProtos = List.copyOf(islands))
+                .thenComposeAsync(islands -> loadModules(world, buildDimensions(islands)))
                 .thenAccept(modules -> this.modules = List.copyOf(modules));
+    }
+
+    private Vec3i buildDimensions(List<SbIslandProto> islands) {
+        if (islands.isEmpty()) return Vec3i.ZERO;
+
+        SbIslandProto proto = islands.get(0);
+        BlockBox buildArea = proto.data().buildArea();
+
+        return new Vec3i(buildArea.getWidth(), buildArea.getHeight(), buildArea.getLength());
     }
 
     public Map<UUID, SbIsland> createIslands(Participants participants, ServerWorld world) {
@@ -98,6 +109,10 @@ public class SpeedBuilderSetup {
         return islandMapping;
     }
 
+    public List<SbModule> getModules() {
+        return modules;
+    }
+
     private CompletableFuture<Set<SbIslandProto>> loadAvailableIslands(GameMap map, ServerWorld world) {
         JSONArray islandsArray = map.requireProperty("islands");
 
@@ -110,6 +125,7 @@ public class SpeedBuilderSetup {
             }
 
             Set<SbIslandProto> islands = new HashSet<>(islandsArray.length());
+            int width = -1, height = -1, length = -1;
 
             for (Object obj : islandsArray) {
                 if (!(obj instanceof JSONObject jsonObj)) {
@@ -126,6 +142,22 @@ public class SpeedBuilderSetup {
                     continue;
                 }
 
+                BlockBox buildArea = data.buildArea();
+
+                // ensure the build areas are compatible; the first island defines the dimensions
+                if (width == -1 && height == -1 && length == -1) {
+                    width = buildArea.getWidth();
+                    height = buildArea.getHeight();
+                    length = buildArea.getLength();
+                } else if (width != buildArea.getWidth() || length != buildArea.getLength()) {
+                    logger.warn("Incompatible build area dimensions. The first island defined {}x{} but island '{}' defines {}x{}",
+                            width, length, data.id(), buildArea.getWidth(), buildArea.getLength());
+                    continue;
+                } else if (buildArea.getHeight() < height) {
+                    logger.warn("Build area height of island {} is too small: {}. The first island defined height {}", data.id(), buildArea.getHeight(), height);
+                    continue;
+                }
+
                 Path path = dir.resolve(data.id() + ".schem");
                 BlockStructure structure = loadSchematic(path);
 
@@ -138,7 +170,7 @@ public class SpeedBuilderSetup {
         });
     }
 
-    private CompletableFuture<Set<SbModule>> loadModules(ServerWorld world) {
+    private CompletableFuture<Set<SbModule>> loadModules(ServerWorld world, Vec3i dimensions) {
         Path dir = getWorldDirectory(world).resolve("schematics").resolve("module");
 
         return CompletableFuture.supplyAsync(() -> {
@@ -148,6 +180,17 @@ public class SpeedBuilderSetup {
                         .filter(Files::isRegularFile)
                         .map(this::loadModule)
                         .filter(Objects::nonNull)
+                        .filter(module -> {
+                            if (!module.isCompatibleWith(dimensions)) {
+                                BlockStructure structure = module.structure();
+                                logger.warn("Dimensions of module {} ({}x{}x{}) are not compatible with the island dimensions ({}x{}x{})",
+                                        module.id(), structure.getWidth(), structure.getHeight(), structure.getLength(),
+                                        dimensions.getX(), dimensions.getY(), dimensions.getZ());
+                                return false;
+                            }
+
+                            return true;
+                        })
                         .collect(Collectors.toSet());
             } catch (IOException e) {
                 logger.error("Failed to read module directory", e);
@@ -162,7 +205,14 @@ public class SpeedBuilderSetup {
 
         if (structure == null) return null;
 
-        return new SbModule(structure);
+        String id = path.getFileName().getFileName().toString();
+        int idx = id.lastIndexOf('.');
+
+        if (idx >= 0) {
+            id = id.substring(0, idx);
+        }
+
+        return new SbModule(id, structure);
     }
 
     @Nullable

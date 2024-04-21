@@ -15,6 +15,7 @@ import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.map.MapBootstrap;
 import work.lclpnet.ap2.game.speed_builders.data.SbIsland;
+import work.lclpnet.ap2.game.speed_builders.data.SbModule;
 import work.lclpnet.ap2.impl.game.EliminationGameInstance;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.kibu.plugin.hook.HookRegistrar;
@@ -46,7 +47,7 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
 
             var islands = setup.createIslands(participants, world);
 
-            manager = new SpeedBuildersManager(islands, gameHandle);
+            manager = new SpeedBuildersManager(islands, setup.getModules(), gameHandle, world, random);
         });
     }
 
@@ -80,6 +81,8 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
 
             return ActionResult.PASS;
         });
+
+        nextRound();
     }
 
     private void destroyBlock(World world, BlockPos pos, ServerPlayerEntity player) {
@@ -102,5 +105,11 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
         return manager.isBuildingPhase() &&
                gameHandle.getParticipants().isParticipating(player) &&
                manager.isWithinBuildingArea(player, pos);
+    }
+
+    private void nextRound() {
+        SbModule module = manager.nextModule();
+        manager.setModule(module);
+        manager.setBuildingPhase(true);
     }
 }
