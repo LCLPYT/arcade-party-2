@@ -3,12 +3,17 @@ package work.lclpnet.ap2.game.speed_builders.data;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.mob.MobEntity;
+import net.minecraft.scoreboard.Team;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.util.TypeFilter;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3i;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.math.AffineIntMatrix;
+import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.kibu.mc.KibuBlockPos;
 import work.lclpnet.kibu.mc.KibuBlockState;
 import work.lclpnet.kibu.schematic.FabricBlockStateAdapter;
@@ -73,13 +78,25 @@ public class SbIsland {
         return buildArea.getWidth() == structure.getWidth() && buildArea.getLength() == structure.getLength() && structure.getHeight() <= buildArea.getHeight();
     }
 
-    public void placeModulePreview(SbModule module, ServerWorld world) {
+    public void placeModulePreview(SbModule module, ServerWorld world, Team team, CustomScoreboardManager scoreboardManager) {
         clear(previewArea, world);
 
         BlockStructure structure = module.structure();
 
         var options = EnumSet.of(FORCE_STATE, SKIP_AIR, SKIP_DROPS, SKIP_BLOCK_ENTITIES);
         StructureWriter.placeStructure(structure, world, previewArea.getMin().down(), Matrix3i.IDENTITY, options);
+
+        var entities = world.getEntitiesByType(TypeFilter.instanceOf(MobEntity.class), previewArea.toBox(), entity -> true);
+
+        for (MobEntity entity : entities) {
+            entity.setNoGravity(true);
+            entity.setSilent(true);
+            entity.setAiDisabled(true);
+            entity.setPersistent();
+            entity.setInvulnerable(true);
+
+            scoreboardManager.joinTeam(entity, team);
+        }
     }
 
     public void copyPreviewFloorToBuildArea(ServerWorld world) {
@@ -110,6 +127,12 @@ public class SbIsland {
 
         for (BlockPos pos : box) {
             world.setBlockState(pos, air, flags);
+        }
+
+        var entities = world.getEntitiesByType(TypeFilter.instanceOf(Entity.class), box.toBox(), entity -> !(entity instanceof ServerPlayerEntity));
+
+        for (Entity entity : entities) {
+            entity.discard();
         }
     }
 

@@ -173,4 +173,9 @@ public class BlockBox implements Pair<BlockPos, BlockPos>, Iterable<BlockPos>, C
                 Math.max(Math.min(z, max.getZ()), min.getZ())
         );
     }
+
+    public Box toBox() {
+        return new Box(min.getX(), min.getY(), min.getZ(),
+                max.getX() + 1, max.getY() + 1, max.getZ() + 1);
+    }
 }

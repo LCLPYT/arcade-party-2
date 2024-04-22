@@ -1,19 +1,23 @@
 package work.lclpnet.ap2.game.speed_builders;
 
-import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
-import net.minecraft.item.Item;
+import net.minecraft.block.enums.BedPart;
+import net.minecraft.block.enums.DoubleBlockHalf;
+import net.minecraft.block.enums.SlabType;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
+import net.minecraft.scoreboard.Team;
 import net.minecraft.server.PlayerManager;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.state.property.Properties;
 import net.minecraft.util.math.BlockPos;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.game.speed_builders.data.SbIsland;
 import work.lclpnet.ap2.game.speed_builders.data.SbModule;
+import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
+import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
 import work.lclpnet.kibu.mc.KibuBlockPos;
 import work.lclpnet.kibu.mc.KibuBlockState;
 import work.lclpnet.kibu.schematic.FabricBlockStateAdapter;
@@ -33,6 +37,7 @@ public class SpeedBuildersManager {
     private final List<SbModule> queue = new ArrayList<>();
     private boolean buildingPhase = false;
     private SbModule currentModule = null;
+    private Team team = null;
 
     public SpeedBuildersManager(Map<UUID, SbIsland> islands, List<SbModule> modules, MiniGameHandle gameHandle, ServerWorld world, Random random) {
         this.islands = islands;
@@ -70,6 +75,8 @@ public class SpeedBuildersManager {
     }
 
     public synchronized void setModule(SbModule module) {
+        CustomScoreboardManager scoreboardManager = gameHandle.getScoreboardManager();
+
         for (SbIsland island : islands.values()) {
             if (!island.supports(module)) {
                 logger.error("Module {} is incompatible with island {}", module, island);
@@ -77,7 +84,7 @@ public class SpeedBuildersManager {
             }
 
             island.clearBuildingArea(world);
-            island.placeModulePreview(module, world);
+            island.placeModulePreview(module, world, team, scoreboardManager);
             island.copyPreviewFloorToBuildArea(world);
         }
 
@@ -95,7 +102,10 @@ public class SpeedBuildersManager {
             throw new IllegalStateException("There are no modules defined");
         }
 
-        return queue.remove(0);
+        return queue.stream()
+                .filter(module -> module.id().equals("sb_mine"))
+                .findAny()
+                .orElseGet(() -> queue.remove(0));
     }
 
     private List<ItemStack> getCraftingMaterials() {
@@ -123,16 +133,20 @@ public class SpeedBuildersManager {
         List<ItemStack> stacks = new ArrayList<>();
 
         states.forEach((state, count) -> {
-            Block block = state.getBlock();
-            Item item = block.asItem();
+            ItemStack stack = getMaterialStack(state);
 
-            if (item == Items.AIR) return;
+            if (stack.isEmpty()) return;
 
-            int maxCount = item.getMaxCount();
+            count *= stack.getCount();
+            stack.setCount(1);
+
+            int maxCount = stack.getMaxCount();
 
             while (count > 0) {
                 int decrement = Math.min(count, maxCount);
-                stacks.add(new ItemStack(item, decrement));
+
+                stacks.add(stack.copyWithCount(decrement));
+
                 count -= decrement;
             }
         });
@@ -147,6 +161,8 @@ public class SpeedBuildersManager {
             for (ItemStack stack : stacks) {
                 player.getInventory().insertStack(stack.copy());
             }
+
+            PlayerInventoryAccess.setSelectedSlot(player, 0);
         }
     }
 
@@ -171,5 +187,45 @@ public class SpeedBuildersManager {
         }
 
         return scores;
+    }
+
+    public ItemStack getSourceStack(BlockState state) {
+        var properties = state.getProperties();
+
+        if (properties.contains(Properties.SLAB_TYPE)) {
+            SlabType slabType = state.get(Properties.SLAB_TYPE);
+
+            if (slabType == SlabType.DOUBLE) {
+                return new ItemStack(state.getBlock().asItem(), 2);
+            }
+        }
+
+        return new ItemStack(state.getBlock().asItem());
+    }
+
+    public ItemStack getMaterialStack(BlockState state) {
+        var properties = state.getProperties();
+
+        if (properties.contains(Properties.DOUBLE_BLOCK_HALF)) {
+            DoubleBlockHalf half = state.get(Properties.DOUBLE_BLOCK_HALF);
+
+            if (half == DoubleBlockHalf.UPPER) {
+                return ItemStack.EMPTY;
+            }
+        }
+
+        if (properties.contains(Properties.BED_PART)) {
+            BedPart part = state.get(Properties.BED_PART);
+
+            if (part == BedPart.HEAD) {
+                return ItemStack.EMPTY;
+            }
+        }
+
+        return getSourceStack(state);
+    }
+
+    public void setTeam(Team team) {
+        this.team = team;
     }
 }
