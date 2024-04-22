@@ -111,5 +111,6 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
         SbModule module = manager.nextModule();
         manager.setModule(module);
         manager.setBuildingPhase(true);
+        manager.giveBuildingMaterials(gameHandle.getParticipants());
     }
 }
