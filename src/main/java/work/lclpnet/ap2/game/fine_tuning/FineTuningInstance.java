@@ -50,7 +50,7 @@ public class FineTuningInstance extends DefaultGameInstance implements MapBootst
 
         Map<UUID, FineTuningRoom> rooms = setup.getRooms();
 
-        tuningPhase = new TuningPhase(gameHandle, rooms, data, this::startStagePhase);
+        tuningPhase = new TuningPhase(gameHandle, rooms, data, this::startStagePhase, commons());
         tuningPhase.init();
         tuningPhase.giveBooks();
     }

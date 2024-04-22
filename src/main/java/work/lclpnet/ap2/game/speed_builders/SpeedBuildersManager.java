@@ -149,4 +149,27 @@ public class SpeedBuildersManager {
             }
         }
     }
+
+    public Map<ServerPlayerEntity, Integer> evaluate() {
+        if (currentModule == null) {
+            return Map.of();
+        }
+
+        PlayerManager playerManager = gameHandle.getServer().getPlayerManager();
+        Map<ServerPlayerEntity, Integer> scores = new HashMap<>();
+
+        for (var entry : islands.entrySet()) {
+            UUID uuid = entry.getKey();
+            ServerPlayerEntity player = playerManager.getPlayer(uuid);
+
+            if (player == null) continue;
+
+            SbIsland island = entry.getValue();
+            int score = island.evaluate(world, currentModule);
+
+            scores.put(player, score);
+        }
+
+        return scores;
+    }
 }

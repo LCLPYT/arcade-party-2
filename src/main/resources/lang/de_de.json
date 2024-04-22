@@ -167,5 +167,12 @@
   "game.ap2.snowball_fight": "Schneeballschlacht",
   "game.ap2.snowball_fight.description": "Sammle Schnee vom Boden. Treffe deine Gegner mit den Schneebällen. Der letzte Überlebende gewinnt!",
   "game.ap2.speed_builders": "Schnellbauen",
-  "game.ap2.speed_builders.description": "Baue so schnell wie möglich Bauwerke nach. Jede Runde fliegt der Spieler raus, dessen Bauwerk am wenigsten dem Original gleicht."
+  "game.ap2.speed_builders.description": "Baue so schnell wie möglich Bauwerke nach. Jede Runde fliegt der Spieler raus, dessen Bauwerk am wenigsten dem Original gleicht.",
+  "game.ap2.speed_builders.look": "Schau dir dieses Bauwerk an...",
+  "game.ap2.speed_builders.copy": "Jetzt baue es nach!",
+  "game.ap2.speed_builders.label": "Baue die Struktur nach",
+  "game.ap2.speed_builders.time_up": "Die Zeit ist um!",
+  "game.ap2.speed_builders.grade": "Egon wird nun urteilen...",
+  "game.ap2.speed_builders.judgement": "Egon hat geurteilt.",
+  "game.ap2.speed_builders.will_eliminate": "fliegt raus!"
 }

@@ -9,6 +9,9 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3i;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.math.AffineIntMatrix;
+import work.lclpnet.kibu.mc.KibuBlockPos;
+import work.lclpnet.kibu.mc.KibuBlockState;
+import work.lclpnet.kibu.schematic.FabricBlockStateAdapter;
 import work.lclpnet.kibu.structure.BlockStructure;
 import work.lclpnet.kibu.util.StructureWriter;
 import work.lclpnet.kibu.util.math.Matrix3i;
@@ -108,5 +111,42 @@ public class SbIsland {
         for (BlockPos pos : box) {
             world.setBlockState(pos, air, flags);
         }
+    }
+
+    public int evaluate(ServerWorld world, SbModule module) {
+        BlockStructure structure = module.structure();
+        KibuBlockPos origin = structure.getOrigin();
+        final int ox = origin.getX(), oy = origin.getY(), oz = origin.getZ();
+
+        BlockPos min = buildingArea.getMin();
+        final int mx = min.getX(), my = min.getY(), mz = min.getZ();
+
+        BlockPos.Mutable pointer = new BlockPos.Mutable();
+        FabricBlockStateAdapter adapter = FabricBlockStateAdapter.getInstance();
+
+        // each block that of the structure that is present in the build area is awarded with one point
+        int score = 0;
+
+        for (KibuBlockPos pos : structure.getBlockPositions()) {
+            int ry = pos.getY() - oy;
+
+            // do not grade the floor
+            if (ry == 0) continue;
+
+            int rx = pos.getX() - ox;
+            int rz = pos.getZ() - oz;
+
+            pointer.set(mx + rx, my + ry, mz + rz);
+
+            KibuBlockState kibuState = structure.getBlockState(pos);
+            BlockState expected = adapter.revert(kibuState);
+            BlockState actual = world.getBlockState(pointer);
+
+            if (actual.equals(expected)) {
+                score++;
+            }
+        }
+
+        return score;
     }
 }

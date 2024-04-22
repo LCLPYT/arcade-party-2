@@ -19,14 +19,21 @@ import work.lclpnet.ap2.game.speed_builders.data.SbModule;
 import work.lclpnet.ap2.impl.game.EliminationGameInstance;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.kibu.plugin.hook.HookRegistrar;
+import work.lclpnet.kibu.scheduler.Ticks;
+import work.lclpnet.kibu.translate.TranslationService;
+import work.lclpnet.kibu.translate.text.TranslatedText;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 import work.lclpnet.lobby.game.map.GameMap;
+import work.lclpnet.lobby.game.util.BossBarTimer;
 
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 
 public class SpeedBuildersInstance extends EliminationGameInstance implements MapBootstrap {
 
+    private static final int BUILD_DURATION_SECONDS = 30;
+    private static final int LOOK_DURATION_TICKS = Ticks.seconds(10);
+    private static final int JUDGE_DURATION_TICKS = Ticks.seconds(6);
     private final Random random;
     private final SpeedBuilderSetup setup;
     private SpeedBuildersManager manager = null;
@@ -110,7 +117,39 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
     private void nextRound() {
         SbModule module = manager.nextModule();
         manager.setModule(module);
+
+        commons().announceSubtitle("game.ap2.speed_builders.look");
+
+        gameHandle.getGameScheduler().timeout(this::startBuilding, LOOK_DURATION_TICKS);
+    }
+
+    private void startBuilding() {
+        commons().announceSubtitle("game.ap2.speed_builders.copy");
+
         manager.setBuildingPhase(true);
         manager.giveBuildingMaterials(gameHandle.getParticipants());
+
+        TranslationService translations = gameHandle.getTranslations();
+
+        TranslatedText label = translations.translateText("game.ap2.speed_builders.label");
+        BossBarTimer timer = commons().createTimer(label, BUILD_DURATION_SECONDS);
+
+        timer.whenDone(this::onRoundOver);
+    }
+
+    private void onRoundOver() {
+        commons().announce("game.ap2.speed_builders.time_up", "game.ap2.speed_builders.grade");
+
+        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
+            player.getInventory().clear();
+        }
+
+        manager.setBuildingPhase(false);
+
+        gameHandle.getGameScheduler().timeout(this::eliminateWorst, JUDGE_DURATION_TICKS);
+    }
+
+    private void eliminateWorst() {
+        nextRound();
     }
 }
