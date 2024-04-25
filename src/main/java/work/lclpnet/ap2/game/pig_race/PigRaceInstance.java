@@ -74,7 +74,7 @@ public class PigRaceInstance extends DefaultGameInstance {
         hooks.registerHook(EntityDismountCallback.HOOK, (entity, vehicle) -> entity instanceof ServerPlayerEntity);
 
         // prevent mounting other entities while on another vehicle
-        hooks.registerHook(EntityMountCallback.HOOK, (entity, vehicle) -> {
+        hooks.registerHook(EntityMountCallback.HOOK, (entity, vehicle, force) -> {
             Entity oldVehicle = entity.getVehicle();
             return entity instanceof ServerPlayerEntity && oldVehicle != null && oldVehicle.isAlive();
         });
