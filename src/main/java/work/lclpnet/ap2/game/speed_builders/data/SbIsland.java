@@ -22,6 +22,7 @@ import work.lclpnet.kibu.util.StructureWriter;
 import work.lclpnet.kibu.util.math.Matrix3i;
 
 import java.util.EnumSet;
+import java.util.List;
 
 import static work.lclpnet.kibu.util.StructureWriter.Option.*;
 
@@ -86,17 +87,28 @@ public class SbIsland {
         var options = EnumSet.of(FORCE_STATE, SKIP_AIR, SKIP_DROPS, SKIP_BLOCK_ENTITIES);
         StructureWriter.placeStructure(structure, world, previewArea.getMin().down(), Matrix3i.IDENTITY, options);
 
-        var entities = world.getEntitiesByType(TypeFilter.instanceOf(MobEntity.class), previewArea.toBox(), entity -> true);
+        var entities = getPreviewEntities(world);
 
-        for (MobEntity entity : entities) {
+        for (Entity entity : entities) {
+            if (entity instanceof MobEntity mob) {
+                mob.setAiDisabled(true);
+                mob.setPersistent();
+            }
+
             entity.setNoGravity(true);
             entity.setSilent(true);
-            entity.setAiDisabled(true);
-            entity.setPersistent();
             entity.setInvulnerable(true);
 
             scoreboardManager.joinTeam(entity, team);
         }
+    }
+
+    private List<? extends Entity> getEntities(ServerWorld world, BlockBox box) {
+        return world.getEntitiesByType(TypeFilter.instanceOf(Entity.class), box.toBox(), entity -> !(entity instanceof ServerPlayerEntity));
+    }
+
+    public List<? extends Entity> getPreviewEntities(ServerWorld world) {
+        return getEntities(world, previewArea);
     }
 
     public void copyPreviewFloorToBuildArea(ServerWorld world) {
@@ -129,7 +141,7 @@ public class SbIsland {
             world.setBlockState(pos, air, flags);
         }
 
-        var entities = world.getEntitiesByType(TypeFilter.instanceOf(Entity.class), box.toBox(), entity -> !(entity instanceof ServerPlayerEntity));
+        var entities = getEntities(world, box);
 
         for (Entity entity : entities) {
             entity.discard();

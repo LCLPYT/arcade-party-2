@@ -38,6 +38,7 @@ import work.lclpnet.ap2.game.speed_builders.data.SbModule;
 import work.lclpnet.ap2.impl.game.EliminationGameInstance;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.kibu.behaviour.world.ServerWorldBehaviour;
+import work.lclpnet.kibu.hook.entity.ItemFrameRemoveItemCallback;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.kibu.hook.world.BlockModificationHooks;
 import work.lclpnet.kibu.plugin.hook.HookRegistrar;
@@ -58,6 +59,7 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
     private static final int JUDGE_DURATION_TICKS = Ticks.seconds(6);
     private final Random random;
     private final SpeedBuilderSetup setup;
+    private final SpeedBuilderItems items;
     private SpeedBuildersManager manager = null;
 
     public SpeedBuildersInstance(MiniGameHandle gameHandle) {
@@ -65,6 +67,7 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
 
         random = new Random();
         setup = new SpeedBuilderSetup(random, gameHandle.getLogger());
+        items = new SpeedBuilderItems();
 
         useSurvivalMode();
     }
@@ -115,12 +118,34 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
     protected void ready() {
         gameHandle.protect(config -> {
             config.allow((entity, pos) -> entity instanceof ServerPlayerEntity player && canModify(player, pos),
-                    ProtectionTypes.PLACE_BLOCKS, ProtectionTypes.BREAK_BLOCKS, ProtectionTypes.USE_BLOCK, ProtectionTypes.PLACE_FLUID);
+                    ProtectionTypes.PLACE_BLOCKS, ProtectionTypes.BREAK_BLOCKS, ProtectionTypes.USE_BLOCK,
+                    ProtectionTypes.PLACE_FLUID, ProtectionTypes.EAT_CAKE, ProtectionTypes.COMPOSTER,
+                    ProtectionTypes.CHARGE_RESPAWN_ANCHOR, ProtectionTypes.EXTINGUISH_CANDLE,
+                    ProtectionTypes.PICKUP_FLUID);
+
+            config.allow((player, itemFrame) -> player instanceof ServerPlayerEntity serverPlayer && canModify(serverPlayer, itemFrame.getBlockPos()),
+                    ProtectionTypes.ITEM_FRAME_SET_ITEM, ProtectionTypes.ITEM_FRAME_ROTATE_ITEM,
+                    ProtectionTypes.ITEM_FRAME_REMOVE_ITEM);
 
             config.allow(ProtectionTypes.USE_ITEM_ON_BLOCK,
                     (entity, pos) -> entity instanceof ServerPlayerEntity player && canModify(player, pos.up()));
 
             config.allow(ProtectionTypes.MODIFY_INVENTORY);
+
+            config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, source) -> {
+                if (entity instanceof ServerPlayerEntity ||
+                    !(source.getAttacker() instanceof ServerPlayerEntity player) ||
+                    !canModify(player, entity.getBlockPos())) return false;
+
+                ItemStack stack = items.getEntitySummon(entity);
+
+                // remove the entity when a player hit it
+                entity.discard();
+
+                giveStack(player, stack);
+
+                return false;
+            });
         });
 
         HookRegistrar hooks = gameHandle.getHookRegistrar();
@@ -147,6 +172,16 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
             }
 
             return true;
+        });
+
+        hooks.registerHook(ItemFrameRemoveItemCallback.HOOK, (itemFrame, attacker) -> {
+            ItemStack stack = itemFrame.getHeldItemStack();
+
+            if (attacker instanceof ServerPlayerEntity player && !stack.isEmpty()) {
+                giveStack(player, stack.copy());
+            }
+
+            return false;  // do not cancel, so the item frame is destroyed etc.
         });
 
         nextRound();
@@ -193,10 +228,14 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
     }
 
     private void giveSourceItem(ServerPlayerEntity player, BlockState state) {
-        ItemStack stack = manager.getSourceStack(state);
+        ItemStack stack = items.getSourceStack(state);
 
         if (stack.isEmpty()) return;
 
+        giveStack(player, stack);
+    }
+
+    private void giveStack(ServerPlayerEntity player, ItemStack stack) {
         PlayerInventory inventory = player.getInventory();
 
         if (inventory.getOccupiedSlotWithRoomForStack(stack) == -1 && player.getMainHandStack().isEmpty()) {
@@ -215,6 +254,7 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
     private void nextRound() {
         SbModule module = manager.nextModule();
         manager.setModule(module);
+        items.setModule(module);
 
         commons().announceSubtitle("game.ap2.speed_builders.look");
 
@@ -225,7 +265,7 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
         commons().announceSubtitle("game.ap2.speed_builders.copy");
 
         manager.setBuildingPhase(true);
-        manager.giveBuildingMaterials(gameHandle.getParticipants());
+        items.giveBuildingMaterials(gameHandle.getParticipants(), manager.getPreviewEntities());
 
         TranslationService translations = gameHandle.getTranslations();
 

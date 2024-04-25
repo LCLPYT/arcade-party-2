@@ -18,7 +18,11 @@ import net.minecraft.village.VillagerDataContainer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.impl.util.world.SizedSpaceFinder;
-import work.lclpnet.kibu.access.entity.*;
+import work.lclpnet.kibu.access.entity.GoatEntityAccess;
+import work.lclpnet.kibu.access.entity.HorseEntityAccess;
+import work.lclpnet.kibu.access.entity.LlamaEntityAccess;
+import work.lclpnet.kibu.access.entity.TropicalFishEntityAccess;
+import work.lclpnet.kibu.behaviour.entity.VexEntityBehaviour;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.lobby.util.WorldModifier;
 
@@ -167,12 +171,10 @@ public class MobSpawner {
         } else if (entity instanceof AbstractPiglinEntity piglin) {
             piglin.setImmuneToZombification(true);
         } else if (entity instanceof VexEntity vex) {
-            //noinspection UnstableApiUsage
-            VexEntityAccess.setForceClipping(vex, true);
+            VexEntityBehaviour.setForceClipping(vex, true);
         } else if (entity instanceof WardenEntity warden) {
             // prevent warden from digging into the ground
             var brain = warden.getBrain();
-//            warden.setPersistent();
             brain.remember(MemoryModuleType.DIG_COOLDOWN, Unit.INSTANCE, Ticks.minutes(10));
         }
     }
