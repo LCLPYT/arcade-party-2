@@ -2,19 +2,34 @@ package work.lclpnet.ap2.game.speed_builders;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
+import net.minecraft.block.FluidFillable;
 import net.minecraft.entity.player.PlayerAbilities;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.fluid.FlowableFluid;
+import net.minecraft.fluid.Fluid;
+import net.minecraft.fluid.Fluids;
 import net.minecraft.item.ItemStack;
+import net.minecraft.registry.Registries;
+import net.minecraft.registry.entry.RegistryEntry;
+import net.minecraft.registry.tag.FluidTags;
 import net.minecraft.scoreboard.AbstractTeam;
 import net.minecraft.scoreboard.Team;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvent;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.GameRules;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldAccess;
 import net.minecraft.world.WorldEvents;
+import net.minecraft.world.event.GameEvent;
+import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.map.MapBootstrap;
@@ -22,7 +37,9 @@ import work.lclpnet.ap2.game.speed_builders.data.SbIsland;
 import work.lclpnet.ap2.game.speed_builders.data.SbModule;
 import work.lclpnet.ap2.impl.game.EliminationGameInstance;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
+import work.lclpnet.kibu.behaviour.world.ServerWorldBehaviour;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
+import work.lclpnet.kibu.hook.world.BlockModificationHooks;
 import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.translate.TranslationService;
@@ -67,6 +84,9 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
     protected void prepare() {
         setupGameRules();
 
+        ServerWorld world = getWorld();
+        ServerWorldBehaviour.setFluidTicksEnabled(world, false);
+
         manager.eachIsland(SbIsland::teleport);
 
         CustomScoreboardManager scoreboardManager = gameHandle.getScoreboardManager();
@@ -95,7 +115,7 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
     protected void ready() {
         gameHandle.protect(config -> {
             config.allow((entity, pos) -> entity instanceof ServerPlayerEntity player && canModify(player, pos),
-                    ProtectionTypes.PLACE_BLOCKS, ProtectionTypes.BREAK_BLOCKS, ProtectionTypes.USE_BLOCK);
+                    ProtectionTypes.PLACE_BLOCKS, ProtectionTypes.BREAK_BLOCKS, ProtectionTypes.USE_BLOCK, ProtectionTypes.PLACE_FLUID);
 
             config.allow(ProtectionTypes.USE_ITEM_ON_BLOCK,
                     (entity, pos) -> entity instanceof ServerPlayerEntity player && canModify(player, pos.up()));
@@ -121,7 +141,41 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
             return true;
         });
 
+        hooks.registerHook(BlockModificationHooks.PLACE_FLUID, (world, pos, entity, fluid) -> {
+            if (entity instanceof ServerPlayerEntity player && canModify(player, pos)) {
+                placeFluid(world, player, pos, fluid);
+            }
+
+            return true;
+        });
+
         nextRound();
+    }
+
+    private void placeFluid(World world, ServerPlayerEntity player, BlockPos pos, Fluid fluid) {
+        if (!(fluid instanceof FlowableFluid flowableFluid)) return;
+
+        BlockState state = world.getBlockState(pos);
+
+        if (state.getBlock() instanceof FluidFillable fluidFillable && fluid == Fluids.WATER) {
+            fluidFillable.tryFillWithFluid(world, pos, state, flowableFluid.getStill(false));
+            this.playEmptyingSound(player, world, pos, fluid);
+            return;
+        } else if (!state.isAir()) {
+            return;
+        }
+
+        if (world.setBlockState(pos, fluid.getDefaultState().getBlockState(), Block.NOTIFY_ALL_AND_REDRAW)) {
+            this.playEmptyingSound(player, world, pos, fluid);
+        }
+    }
+
+    private void playEmptyingSound(@Nullable PlayerEntity player, WorldAccess world, BlockPos pos, Fluid fluid) {
+        RegistryEntry<Fluid> entry = Registries.FLUID.getEntry(fluid);
+
+        SoundEvent soundEvent = entry != null && entry.isIn(FluidTags.LAVA) ? SoundEvents.ITEM_BUCKET_EMPTY_LAVA : SoundEvents.ITEM_BUCKET_EMPTY;
+        world.playSound(player, pos, soundEvent, SoundCategory.BLOCKS, 1.0f, 1.0f);
+        world.emitGameEvent(player, GameEvent.FLUID_PLACE, pos);
     }
 
     private void destroyBlock(World world, BlockPos pos, ServerPlayerEntity player) {
@@ -132,7 +186,7 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
 
             world.syncWorldEvent(null, WorldEvents.BLOCK_BROKEN, pos, Block.getRawIdFromState(state));
 
-            if (!world.removeBlock(pos, false)) return;
+            if (!world.setBlockState(pos, Blocks.AIR.getDefaultState())) return;
 
             giveSourceItem(player, state);
         }, 1);

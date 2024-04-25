@@ -5,6 +5,7 @@ import net.minecraft.block.enums.BedPart;
 import net.minecraft.block.enums.DoubleBlockHalf;
 import net.minecraft.block.enums.SlabType;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.scoreboard.Team;
 import net.minecraft.server.PlayerManager;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -103,7 +104,7 @@ public class SpeedBuildersManager {
         }
 
         return queue.stream()
-                .filter(module -> module.id().equals("sb_mine"))
+                .filter(module -> module.id().equals("sb_copper"))  // TODO remove
                 .findAny()
                 .orElseGet(() -> queue.remove(0));
     }
@@ -118,6 +119,7 @@ public class SpeedBuildersManager {
         int originY = structure.getOrigin().getY();
 
         Map<BlockState, Integer> states = new HashMap<>();
+        boolean waterRequired = false;
 
         for (KibuBlockPos pos : structure.getBlockPositions()) {
             if (pos.getY() - originY == 0) continue;
@@ -126,6 +128,12 @@ public class SpeedBuildersManager {
             BlockState state = adapter.revert(kibuState);
 
             if (state == null) continue;
+
+            if (!waterRequired && state.getProperties().contains(Properties.WATERLOGGED)) {
+                if (state.get(Properties.WATERLOGGED)) {
+                    waterRequired = true;
+                }
+            }
 
             states.compute(state, (_state, prev) -> prev == null ? 1 : prev + 1);
         }
@@ -150,6 +158,10 @@ public class SpeedBuildersManager {
                 count -= decrement;
             }
         });
+
+        if (waterRequired) {
+            stacks.add(new ItemStack(Items.WATER_BUCKET));
+        }
 
         return stacks;
     }

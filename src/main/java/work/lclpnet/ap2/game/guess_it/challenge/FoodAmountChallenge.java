@@ -47,9 +47,7 @@ public class FoodAmountChallenge implements Challenge {
         input.expectInput().validateFloat(translations, 1);
 
         Item food = selectRandomFood();
-        ItemStack stack = new ItemStack(food);
-
-        FoodComponent foodComponent = food.getFoodComponent(stack);
+        FoodComponent foodComponent = food.getFoodComponent();
 
         if (foodComponent == null) {
             throw new IllegalStateException("Item has no food component");
@@ -57,6 +55,7 @@ public class FoodAmountChallenge implements Challenge {
 
         amount = foodComponent.getHunger();
 
+        ItemStack stack = new ItemStack(food);
         display.displayItem(stack);
     }
 
