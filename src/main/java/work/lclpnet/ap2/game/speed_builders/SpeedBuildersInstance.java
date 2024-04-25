@@ -13,6 +13,7 @@ import net.minecraft.fluid.Fluids;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.entry.RegistryEntry;
+import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.registry.tag.FluidTags;
 import net.minecraft.scoreboard.AbstractTeam;
 import net.minecraft.scoreboard.Team;
@@ -182,6 +183,17 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
             }
 
             return false;  // do not cancel, so the item frame is destroyed etc.
+        });
+
+        hooks.registerHook(PlayerInteractionHooks.USE_BLOCK, (player, world, hand, hitResult) -> {
+            BlockPos pos = hitResult.getBlockPos();
+            BlockState state = world.getBlockState(pos);
+
+            if (state.isIn(BlockTags.BUTTONS)) {
+                return ActionResult.FAIL;
+            }
+
+            return ActionResult.PASS;
         });
 
         nextRound();

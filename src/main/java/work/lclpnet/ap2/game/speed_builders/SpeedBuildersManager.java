@@ -92,10 +92,7 @@ public class SpeedBuildersManager {
             throw new IllegalStateException("There are no modules defined");
         }
 
-        return queue.stream()
-                .filter(module -> module.id().equals("sb_mine"))  // TODO remove
-                .findAny()
-                .orElseGet(() -> queue.remove(0));
+        return queue.remove(0);
     }
 
     public Map<ServerPlayerEntity, Integer> evaluate() {
