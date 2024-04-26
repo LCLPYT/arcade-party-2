@@ -172,7 +172,8 @@
   "game.ap2.speed_builders.copy": "Now copy the structure!",
   "game.ap2.speed_builders.label": "Copy the structure",
   "game.ap2.speed_builders.time_up": "Time is up!",
-  "game.ap2.speed_builders.grade": "Egon will now judge...",
-  "game.ap2.speed_builders.judgement": "Egon has judged.",
+  "game.ap2.speed_builders.grade": "Aelos will now judge...",
+  "game.ap2.speed_builders.judgement": "Aelos has judged.",
+  "game.ap2.speed_builders.impressed": "Aelos is impressed.",
   "game.ap2.speed_builders.will_eliminate": "will be eliminated!"
 }

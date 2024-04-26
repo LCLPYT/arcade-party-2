@@ -10,11 +10,11 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.api.base.Participants;
-import work.lclpnet.ap2.game.speed_builders.data.SbIsland;
-import work.lclpnet.ap2.game.speed_builders.data.SbIslandData;
-import work.lclpnet.ap2.game.speed_builders.data.SbIslandProto;
-import work.lclpnet.ap2.game.speed_builders.data.SbModule;
+import work.lclpnet.ap2.game.speed_builders.data.*;
+import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.BlockBox;
+import work.lclpnet.ap2.impl.util.StructureUtil;
+import work.lclpnet.ap2.impl.util.math.Vec2i;
 import work.lclpnet.ap2.impl.util.world.CircleStructureGenerator;
 import work.lclpnet.kibu.mc.BlockStateAdapter;
 import work.lclpnet.kibu.schematic.FabricBlockStateAdapter;
@@ -31,14 +31,18 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
+import static java.lang.Math.pow;
+import static java.lang.Math.sqrt;
+
 public class SpeedBuilderSetup {
 
-    private static final double ISLAND_SPACING = 10;
+    private static final double ISLAND_SPACING = 2.0;
     private static final int SPAWN_Y = 64;
     private final Random random;
     private final Logger logger;
     private List<SbModule> modules = null;
     private List<SbIslandProto> islandProtos = null;
+    private CenterIsland centerIsland = null;
 
     public SpeedBuilderSetup(Random random, Logger logger) {
         this.random = random;
@@ -48,11 +52,13 @@ public class SpeedBuilderSetup {
     public CompletableFuture<Void> setup(GameMap map, ServerWorld world) {
         return loadAvailableIslands(map, world)
                 .thenApply(islands -> this.islandProtos = List.copyOf(islands))
-                .thenComposeAsync(islands -> loadModules(world, buildDimensions(islands)))
-                .thenAccept(modules -> this.modules = List.copyOf(modules));
+                .thenComposeAsync(islands -> loadModules(world, buildAreaDimensions(islands)))
+                .thenAccept(modules -> this.modules = List.copyOf(modules))
+                .thenComposeAsync(nil -> loadCenterIsland(map, world))
+                .thenAccept(centerIsland -> this.centerIsland = centerIsland);
     }
 
-    private Vec3i buildDimensions(List<SbIslandProto> islands) {
+    private Vec3i buildAreaDimensions(List<SbIslandProto> islands) {
         if (islands.isEmpty()) return Vec3i.ZERO;
 
         SbIslandProto proto = islands.get(0);
@@ -62,14 +68,20 @@ public class SpeedBuilderSetup {
     }
 
     public Map<UUID, SbIsland> createIslands(Participants participants, ServerWorld world) {
+        // preconditions
         Objects.requireNonNull(islandProtos, "Island prototypes must be loaded");
+        Objects.requireNonNull(centerIsland, "Center island must be loaded");
 
         if (islandProtos.isEmpty()) {
             throw new IllegalStateException("No island prototypes available");
         }
 
+        // place center island
+        placeCenterIsland(world);
+
         int count = participants.count();
 
+        // select island for each player
         List<SbIslandData> islandData = new ArrayList<>(count);
         List<BlockStructure> structures = new ArrayList<>(count);
         List<UUID> players = new ArrayList<>(count);
@@ -82,9 +94,14 @@ public class SpeedBuilderSetup {
             structures.add(island.structure());
         }
 
+        // generate circular positions for islands
+        int minRadius = getMinRadius(structures);
+        Vec2i[] offsets = CircleStructureGenerator.generateHorizontalOffsets(structures, minRadius);
+
+        // place islands and collect the player mapping
         Map<UUID, SbIsland> islandMapping = new HashMap<>(count);
 
-        CircleStructureGenerator.placeStructures(structures, world, ISLAND_SPACING, (i, structure, circleOffset) -> {
+        CircleStructureGenerator.placeStructures(structures, world, offsets, (i, structure, circleOffset) -> {
             SbIslandData data = islandData.get(i);
 
             var absSpawn = data.spawn();
@@ -107,6 +124,26 @@ public class SpeedBuilderSetup {
         });
 
         return islandMapping;
+    }
+
+    private void placeCenterIsland(ServerWorld world) {
+        BlockStructure structure = centerIsland.structure();
+
+        BlockPos pos = new BlockPos(
+                -structure.getWidth() / 2,
+                SPAWN_Y - centerIsland.spawn().getY() + structure.getOrigin().getY(),
+                -structure.getLength() / 2);
+
+        StructureUtil.placeStructureFast(structure, world, pos);
+    }
+
+    private int getMinRadius(List<BlockStructure> structures) {
+        BlockStructure structure = centerIsland.structure();
+
+        double centerIslandRadius = sqrt(pow(structure.getWidth(), 2) + pow(structure.getLength(), 2)) * 0.5;
+        double largestIslandRadius = CircleStructureGenerator.computeLargestTangentDistance(structures) * 0.5;
+
+        return (int) Math.ceil(centerIslandRadius + ISLAND_SPACING + largestIslandRadius);
     }
 
     public List<SbModule> getModules() {
@@ -167,6 +204,24 @@ public class SpeedBuilderSetup {
             }
 
             return islands;
+        });
+    }
+
+    private CompletableFuture<@Nullable CenterIsland> loadCenterIsland(GameMap map, ServerWorld world) {
+        JSONObject json = map.requireProperty("center-island");
+        String id = json.getString("id");
+
+        Path path = getWorldDirectory(world).resolve("schematics").resolve(id + ".schem");
+        BlockPos spawn = MapUtil.readBlockPos(json.getJSONArray("spawn"));
+
+        return CompletableFuture.supplyAsync(() -> {
+            BlockStructure structure = loadSchematic(path);
+
+            if (structure == null) {
+                return null;
+            }
+
+            return new CenterIsland(structure, spawn);
         });
     }
 

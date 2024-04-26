@@ -23,6 +23,12 @@ public class CircleStructureGenerator {
         // offsets are relative to the origin
         Vec2i[] offsets = CircleStructureGenerator.generateHorizontalOffsets(structures, minRadius);
 
+        placeStructures(structures, world, offsets, position);
+    }
+
+    public static void placeStructures(List<BlockStructure> structures, ServerWorld world, Vec2i[] offsets, PositionFunction position) {
+        int count = structures.size();
+
         for (int i = 0; i < count; i++) {
             BlockStructure structure = structures.get(i);
             Vec2i offset = offsets[i];
@@ -86,7 +92,7 @@ public class CircleStructureGenerator {
         return (int) ceil(radius);
     }
 
-    public static Vec2i[] generateHorizontalOffsets(List<BlockStructure> structures, int minRadius) {
+    public static Vec2i[] generateHorizontalOffsets(List<BlockStructure> structures, final int minRadius) {
         /*
         The idea of the algorithm is the following:
         - start with the min radius
@@ -105,8 +111,8 @@ public class CircleStructureGenerator {
         }
 
         int radius = minRadius;
-        int left = radius;
-        int right = radius;
+        int left = -1;
+        int right = -1;
 
         next: while (true) {
             collisionDetector.reset();
@@ -148,18 +154,20 @@ public class CircleStructureGenerator {
                 }
             }
 
-            // there were no collisions
-            if (left == right) {
-                return offsets;
-            }
-
             right = radius;
 
-            // prevent infinite loop
-            if (left == right - 1) {
+            // check if we have found a collision radius yet
+            if (left == -1 && radius > minRadius) {
+                radius = Math.max(minRadius, radius / 2);
+                continue;
+            }
+
+            // there were no collisions, check if we found the best radius
+            if (left == right || left == right - 1 || radius == minRadius) {
                 return offsets;
             }
 
+            // perform bisection by jumping to the middle of the two boundaries
             radius = (left + right) / 2;
         }
     }
