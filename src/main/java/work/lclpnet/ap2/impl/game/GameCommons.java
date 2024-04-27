@@ -2,16 +2,12 @@ package work.lclpnet.ap2.impl.game;
 
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.entity.boss.BossBar;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.world.border.WorldBorder;
-import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.base.WorldBorderManager;
@@ -20,23 +16,18 @@ import work.lclpnet.ap2.api.game.sink.IntDataSink;
 import work.lclpnet.ap2.api.util.action.Action;
 import work.lclpnet.ap2.api.util.action.PlayerAction;
 import work.lclpnet.ap2.impl.map.MapUtil;
-import work.lclpnet.ap2.impl.util.SoundHelper;
 import work.lclpnet.ap2.impl.util.math.Vec2i;
 import work.lclpnet.kibu.hook.HookFactory;
 import work.lclpnet.kibu.hook.player.PlayerMoveCallback;
 import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
-import work.lclpnet.kibu.title.Title;
 import work.lclpnet.kibu.translate.TranslationService;
-import work.lclpnet.kibu.translate.text.TranslatedText;
 import work.lclpnet.lobby.game.map.GameMap;
 import work.lclpnet.lobby.game.util.BossBarTimer;
 
 import java.util.Objects;
 
-import static net.minecraft.util.Formatting.AQUA;
-import static net.minecraft.util.Formatting.DARK_GREEN;
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
 public class GameCommons {
@@ -44,6 +35,7 @@ public class GameCommons {
     private final MiniGameHandle gameHandle;
     private final GameMap map;
     private final ServerWorld world;
+    private volatile Announcer announcer = null;
 
     public GameCommons(MiniGameHandle gameHandle, GameMap map, ServerWorld world) {
         this.gameHandle = gameHandle;
@@ -164,40 +156,17 @@ public class GameCommons {
         player.sendMessage(msg, true);
     }
 
-    public void announceSubtitle(String translationKey) {
-        announce(null, translationKey, SoundEvents.BLOCK_NOTE_BLOCK_PLING.value(), SoundCategory.RECORDS, 0.5f, 0f);
-    }
-
-    public void announceSubtitle(String translationKey, SoundEvent sound, SoundCategory category, float volume, float pitch) {
-        announce(null, translationKey, sound, category, volume, pitch);
-    }
-
-    public void announce(@Nullable String titleKey, @Nullable String subtitleKey) {
-        announce(titleKey, subtitleKey, SoundEvents.BLOCK_NOTE_BLOCK_PLING.value(), SoundCategory.RECORDS, 0.5f, 0f);
-    }
-
-    public void announce(@Nullable String titleKey, @Nullable String subtitleKey, SoundEvent sound,
-                         SoundCategory category, float volume, float pitch) {
-
-        TranslationService translations = gameHandle.getTranslations();
-        TranslatedText title = titleKey != null ? translations.translateText(titleKey).formatted(AQUA) : null;
-        TranslatedText subtitle = subtitleKey != null ? translations.translateText(subtitleKey).formatted(DARK_GREEN) : null;
-
-        announce(title, subtitle, sound, category, volume, pitch);
-    }
-
-    public void announce(@Nullable TranslatedText title, @Nullable TranslatedText subtitle, SoundEvent sound,
-                                 SoundCategory category, float volume, float pitch) {
-
-        MinecraftServer server = gameHandle.getServer();
-
-        SoundHelper.playSound(server, sound, category, volume, pitch);
-
-        for (ServerPlayerEntity player : PlayerLookup.all(server)) {
-            Text titleText = title != null ? title.translateFor(player) : Text.empty();
-            Text subTitleText = subtitle != null ? subtitle.translateFor(player) : Text.empty();
-
-            Title.get(player).title(titleText, subTitleText, 5, 30, 5);
+    public Announcer announcer() {
+        if (announcer != null) {
+            return announcer;
         }
+
+        synchronized (this) {
+            if (announcer == null) {
+                announcer = new Announcer(gameHandle.getTranslations(), gameHandle.getServer());
+            }
+        }
+
+        return announcer;
     }
 }

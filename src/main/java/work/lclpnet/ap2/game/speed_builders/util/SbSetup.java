@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.game.speed_builders;
+package work.lclpnet.ap2.game.speed_builders.util;
 
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -14,6 +14,7 @@ import work.lclpnet.ap2.game.speed_builders.data.*;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.StructureUtil;
+import work.lclpnet.ap2.impl.util.math.AffineIntMatrix;
 import work.lclpnet.ap2.impl.util.math.Vec2i;
 import work.lclpnet.ap2.impl.util.world.CircleStructureGenerator;
 import work.lclpnet.kibu.mc.BlockStateAdapter;
@@ -34,7 +35,7 @@ import java.util.stream.Collectors;
 import static java.lang.Math.pow;
 import static java.lang.Math.sqrt;
 
-public class SpeedBuilderSetup {
+public class SbSetup {
 
     private static final double ISLAND_SPACING = 2.0;
     private static final int SPAWN_Y = 64;
@@ -44,7 +45,7 @@ public class SpeedBuilderSetup {
     private List<SbIslandProto> islandProtos = null;
     private CenterIsland centerIsland = null;
 
-    public SpeedBuilderSetup(Random random, Logger logger) {
+    public SbSetup(Random random, Logger logger) {
         this.random = random;
         this.logger = logger;
     }
@@ -114,8 +115,9 @@ public class SpeedBuilderSetup {
             int z = circleOffset.z();
 
             BlockPos pos = new BlockPos(x, y, z);
+            BlockBox bounds = StructureUtil.getBounds(structure).transform(AffineIntMatrix.makeTranslation(x, y, z));
 
-            SbIsland island = new SbIsland(data, origin, pos);
+            SbIsland island = new SbIsland(data, origin, pos, bounds);
             UUID uuid = players.get(i);
 
             islandMapping.put(uuid, island);

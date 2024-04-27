@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.game.speed_builders;
+package work.lclpnet.ap2.game.speed_builders.util;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.block.enums.BedPart;
@@ -25,7 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class SpeedBuilderItems {
+public class SbItems {
 
     @Nullable
     private SbModule module = null;

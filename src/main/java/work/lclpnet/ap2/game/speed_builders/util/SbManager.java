@@ -1,6 +1,11 @@
-package work.lclpnet.ap2.game.speed_builders;
+package work.lclpnet.ap2.game.speed_builders.util;
 
+import it.unimi.dsi.fastutil.objects.Object2LongMap;
+import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.scoreboard.Team;
 import net.minecraft.server.PlayerManager;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -16,7 +21,7 @@ import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import java.util.*;
 import java.util.function.BiConsumer;
 
-public class SpeedBuildersManager {
+public class SbManager {
 
     private final Map<UUID, SbIsland> islands;
     private final List<SbModule> modules;
@@ -25,11 +30,12 @@ public class SpeedBuildersManager {
     private final Logger logger;
     private final Random random;
     private final List<SbModule> queue = new ArrayList<>();
+    private final Object2LongMap<UUID> lastEdited = new Object2LongOpenHashMap<>();
     private boolean buildingPhase = false;
     private SbModule currentModule = null;
     private Team team = null;
 
-    public SpeedBuildersManager(Map<UUID, SbIsland> islands, List<SbModule> modules, MiniGameHandle gameHandle, ServerWorld world, Random random) {
+    public SbManager(Map<UUID, SbIsland> islands, List<SbModule> modules, MiniGameHandle gameHandle, ServerWorld world, Random random) {
         this.islands = islands;
         this.modules = Collections.unmodifiableList(modules);
         this.gameHandle = gameHandle;
@@ -95,7 +101,22 @@ public class SpeedBuildersManager {
         return queue.remove(0);
     }
 
-    public Map<ServerPlayerEntity, Integer> evaluate() {
+    public Optional<ServerPlayerEntity> getWorstPlayer() {
+        var evaluation = evaluate();
+        var minScore = evaluation.values().stream().mapToInt(Integer::intValue).min().orElse(0);
+
+        return evaluation.entrySet().stream()
+                // find players with minScore
+                .filter(entry -> entry.getValue() == minScore)
+                // sort by last edited
+                .sorted(Comparator.<Map.Entry<ServerPlayerEntity, Integer>>comparingLong(entry ->
+                        lastEdited.getOrDefault(entry.getKey().getUuid(), Long.MAX_VALUE)).reversed())
+                // map to actual player
+                .map(Map.Entry::getKey)
+                .findFirst();
+    }
+
+    private Map<ServerPlayerEntity, Integer> evaluate() {
         if (currentModule == null) {
             return Map.of();
         }
@@ -130,5 +151,33 @@ public class SpeedBuildersManager {
 
     public void setTeam(Team team) {
         this.team = team;
+    }
+
+    public void onEdit(ServerPlayerEntity player) {
+        if (currentModule == null) return;
+
+        lastEdited.put(player.getUuid(), System.currentTimeMillis());
+
+        // check if the player's used all the materials
+        PlayerInventory inventory = player.getInventory();
+
+        for (int i = 0, size = inventory.size(); i < size; i++) {
+            ItemStack stack = inventory.getStack(i);
+
+            if (stack.isEmpty() || stack.isOf(Items.WATER_BUCKET) || stack.isOf(Items.LAVA_BUCKET)) continue;
+
+            return;
+        }
+
+        // the player used all the materials, check if the building is complete
+        SbIsland island = islands.get(player.getUuid());
+
+        if (island == null || !island.isCompleted(world, currentModule)) return;
+
+        System.out.println(player.getNameForScoreboard() + " completed the module");
+    }
+
+    public Optional<SbIsland> getIsland(ServerPlayerEntity player) {
+        return Optional.ofNullable(islands.get(player.getUuid()));
     }
 }

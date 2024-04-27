@@ -10,6 +10,7 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.TypeFilter;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3i;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.math.AffineIntMatrix;
@@ -32,14 +33,17 @@ public class SbIsland {
     private final BlockPos spawnWorldPos;
     private final BlockBox buildingArea;
     private final BlockBox previewArea;
+    private final BlockBox bounds;
 
     /**
      * Constructor.
-     * @param data The island data.
+     *
+     * @param data   The island data.
      * @param origin The origin of the schematic, used to calculate relative data.
      * @param offset The offset the island structure is placed at in world coordinates.
+     * @param bounds The island bounds in world space.
      */
-    public SbIsland(SbIslandData data, BlockPos origin, BlockPos offset) {
+    public SbIsland(SbIslandData data, BlockPos origin, BlockPos offset, BlockBox bounds) {
         this.data = data;
 
         BlockPos relSpawn = data.spawn().subtract(origin);
@@ -59,6 +63,7 @@ public class SbIsland {
                 previewOffset.getZ());
 
         this.previewArea = this.buildingArea.transform(previewAreaTranslation);
+        this.bounds = bounds;
     }
 
     public void teleport(ServerPlayerEntity player) {
@@ -183,5 +188,22 @@ public class SbIsland {
         }
 
         return score;
+    }
+
+    public boolean isCompleted(ServerWorld world, SbModule module) {
+        int score = evaluate(world, module);
+
+        return score >= module.getMaxScore();
+    }
+
+    public Vec3d getCenter() {
+        Vec3d buildingCenter = buildingArea.getCenter();
+        Vec3d previewCenter = previewArea.getCenter();
+
+        return buildingCenter.add(previewCenter).multiply(0.5);
+    }
+
+    public boolean isWithinBounds(BlockPos pos) {
+        return bounds.contains(pos);
     }
 }
