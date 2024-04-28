@@ -158,7 +158,7 @@ public class GameCommons {
 
     public Announcer announcer() {
         if (announcer != null) {
-            return announcer;
+            return announcer.withDefaults();
         }
 
         synchronized (this) {
@@ -167,6 +167,6 @@ public class GameCommons {
             }
         }
 
-        return announcer;
+        return announcer.withDefaults();
     }
 }

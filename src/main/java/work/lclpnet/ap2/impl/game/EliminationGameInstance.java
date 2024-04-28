@@ -34,6 +34,7 @@ public abstract class EliminationGameInstance extends DefaultGameInstance {
     private final EliminationDataContainer<ServerPlayerEntity, PlayerRef> data = new EliminationDataContainer<>(PlayerRef::create);
     private DynamicTranslatedBossBar remainingDisplay = null;
     private boolean eliminatedMessages = true;
+    private boolean teleportEliminated = true;
 
     public EliminationGameInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
@@ -114,7 +115,11 @@ public abstract class EliminationGameInstance extends DefaultGameInstance {
     }
 
     protected final void disableEliminationMessages() {
-        eliminatedMessages = false;
+        this.eliminatedMessages = false;
+    }
+
+    protected final void disableTeleportEliminated() {
+        this.teleportEliminated = false;
     }
 
     protected synchronized void eliminateAll(Iterable<? extends ServerPlayerEntity> players) {
@@ -170,6 +175,9 @@ public abstract class EliminationGameInstance extends DefaultGameInstance {
         PlayerUtil playerUtil = gameHandle.getPlayerUtil();
 
         playerUtil.resetPlayer(player);
-        worldFacade.teleport(player);
+
+        if (teleportEliminated) {
+            worldFacade.teleport(player);
+        }
     }
 }

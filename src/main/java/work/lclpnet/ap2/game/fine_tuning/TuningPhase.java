@@ -179,7 +179,9 @@ class TuningPhase implements Unloadable {
     }
 
     private void listenAgain() {
-        commons.announcer().announceSubtitle("game.ap2.fine_tuning.listen_again", SoundEvents.ENTITY_CHICKEN_EGG, SoundCategory.RECORDS, 0.5f, 0f);
+        commons.announcer()
+                .withSound(SoundEvents.ENTITY_CHICKEN_EGG, SoundCategory.RECORDS, 0.5f, 0f)
+                .announceSubtitle("game.ap2.fine_tuning.listen_again");
 
         gameHandle.getGameScheduler().timeout(() -> playMelody(this::beginTune), 40);
     }

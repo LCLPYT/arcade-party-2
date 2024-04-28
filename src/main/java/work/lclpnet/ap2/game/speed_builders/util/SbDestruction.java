@@ -1,55 +1,66 @@
 package work.lclpnet.ap2.game.speed_builders.util;
 
+import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.FallingBlockEntity;
 import net.minecraft.particle.ParticleTypes;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.explosion.Explosion;
 import work.lclpnet.ap2.game.speed_builders.data.SbIsland;
+import work.lclpnet.ap2.impl.util.ParticleHelper;
+import work.lclpnet.ap2.impl.util.SoundHelper;
 import work.lclpnet.kibu.access.VelocityModifier;
 import work.lclpnet.kibu.access.entity.FallingBlockAccess;
 
+import java.util.Random;
+
 public class SbDestruction {
 
-    private static final int MAX_ENTITIES = 300;
+    private static final float LAUNCHED_PERCENTAGE = 0.36f;
     private final ServerWorld world;
+    private final Random random;
 
-    public SbDestruction(ServerWorld world) {
+    public SbDestruction(ServerWorld world, Random random) {
         this.world = world;
+        this.random = random;
     }
 
     public void destroyIsland(SbIsland island) {
         Vec3d center = island.getCenter();
 
+        double x = center.getX(), z = center.getZ(), y = center.getY();
+
         Explosion explosion = new Explosion(world, null, null, null,
-                center.getX(), center.getY(), center.getZ(), 20, false,
+                x, y, z, 20, false,
                 Explosion.DestructionType.KEEP, ParticleTypes.EXPLOSION, ParticleTypes.EXPLOSION_EMITTER,
                 SoundEvents.ENTITY_GENERIC_EXPLODE);
 
         explosion.collectBlocksAndDamageEntities();
 
-        int flags = Block.FORCE_STATE | Block.NOTIFY_LISTENERS | Block.SKIP_DROPS;
+        addEffects(center);
+
         Vec3d from = new Vec3d(0, 64, 0);
         Vec3d velocity = center.add(0, 4, 0).subtract(from).normalize();
-
-        int entities = 0;
+        int flags = Block.FORCE_STATE | Block.NOTIFY_LISTENERS | Block.SKIP_DROPS;
 
         for (BlockPos pos : explosion.getAffectedBlocks()) {
             if (!island.isWithinBounds(pos)) continue;
 
             BlockState state = world.getBlockState(pos);
 
+            if (state.isAir()) continue;
+
             world.setBlockState(pos, Blocks.AIR.getDefaultState(), flags);
 
-            if (entities >= MAX_ENTITIES) continue;
-
-            entities++;
+            if (random.nextFloat() >= LAUNCHED_PERCENTAGE) continue;
 
             FallingBlockEntity fallingBlock = new FallingBlockEntity(EntityType.FALLING_BLOCK, world);
             fallingBlock.setPos(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
@@ -61,6 +72,29 @@ public class SbDestruction {
             VelocityModifier.setVelocity(fallingBlock, velocity);
 
             world.spawnEntity(fallingBlock);
+        }
+    }
+
+    private void addEffects(Vec3d pos) {
+        double x = pos.getX(), z = pos.getZ(), y = pos.getY();
+
+        ParticleHelper.spawnForceParticle(ParticleTypes.GUST, x, y, z, 300,
+                7, 7, 7, 0, PlayerLookup.world(world));
+
+        ParticleHelper.spawnForceParticle(ParticleTypes.GUST_EMITTER, x, y, z, 30,
+                10, 10, 10, 0, PlayerLookup.world(world));
+
+        ParticleHelper.spawnForceParticle(ParticleTypes.CLOUD, x, y, z, 200,
+                1, 1, 1, 1, PlayerLookup.world(world));
+
+        for (ServerPlayerEntity player : PlayerLookup.around(world, pos, 32)) {
+            Vec3d eyePos = player.getEyePos();
+            Vec3d soundPos = eyePos.add(pos.subtract(eyePos).normalize().multiply(8));
+
+            double sx = soundPos.getX(), sy = soundPos.getY(), sz = soundPos.getZ();
+
+            SoundHelper.playSound(player, SoundEvents.ENTITY_GENERIC_EXPLODE, SoundCategory.PLAYERS, sx, sy, sz, 1, 1.2f);
+            SoundHelper.playSound(player, SoundEvents.ENTITY_GENERIC_EXPLODE, SoundCategory.PLAYERS, sx, sy, sz, 0.5f, 0.5f);
         }
     }
 }

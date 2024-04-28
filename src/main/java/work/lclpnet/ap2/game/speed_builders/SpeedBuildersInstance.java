@@ -42,7 +42,7 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
             LOOK_DURATION_TICKS = Ticks.seconds(10),
             JUDGE_DURATION_TICKS = Ticks.seconds(6),
             JUDGE_ANNOUNCEMENT_TICKS = Ticks.seconds(3),
-            DESTROY_DELAY_TICKS = Ticks.seconds(3);
+            DESTROY_DELAY_TICKS = Ticks.seconds(4);
     private final Random random;
     private final SbSetup setup;
     private final SbItems items;
@@ -57,6 +57,7 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
         items = new SbItems();
 
         useSurvivalMode();
+        disableTeleportEliminated();
     }
 
     @Override
@@ -67,7 +68,7 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
             var islands = setup.createIslands(participants, world);
 
             manager = new SbManager(islands, setup.getModules(), gameHandle, world, random);
-            destruction = new SbDestruction(world);
+            destruction = new SbDestruction(world, random);
         });
     }
 
@@ -137,7 +138,9 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
 
     private void onRoundOver() {
         Announcer announcer = commons().announcer();
-        announcer.announce("game.ap2.speed_builders.time_up", null, SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, SoundCategory.AMBIENT, 1, 1.2f);
+
+        announcer.withTimes(5, 50, 0)
+                .announce("game.ap2.speed_builders.time_up", null);
 
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
             player.getInventory().clear();
@@ -146,13 +149,11 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
         manager.setBuildingPhase(false);
 
         TaskScheduler scheduler = gameHandle.getGameScheduler();
-        scheduler.timeout(() -> {
-            announcer.announceWithoutSound("game.ap2.speed_builders.time_up", "game.ap2.speed_builders.grade", 0, 30, 5);
 
-            for (ServerPlayerEntity player : PlayerLookup.all(gameHandle.getServer())) {
-                player.playSound(SoundEvents.ENTITY_BREEZE_INHALE, SoundCategory.AMBIENT, 1, 1.2f);
-            }
-        }, 40);
+        scheduler.timeout(() -> announcer.silent()
+                .withTimes(0, 35, 5)
+                .announce("game.ap2.speed_builders.time_up", "game.ap2.speed_builders.grade"), 40);
+
         scheduler.timeout(this::announceJudgementDone, JUDGE_DURATION_TICKS);
     }
 
@@ -177,7 +178,7 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
         MinecraftServer server = gameHandle.getServer();
 
         for (ServerPlayerEntity player : PlayerLookup.all(server)) {
-            Title.get(player).title(title, subtitle.translateFor(player), 5, 30, 5);
+            Title.get(player).title(title, subtitle.translateFor(player), 5, 50, 5);
             player.playSound(SoundEvents.ENTITY_BREEZE_HURT, SoundCategory.PLAYERS, 1f, 0.5f);
         }
 
