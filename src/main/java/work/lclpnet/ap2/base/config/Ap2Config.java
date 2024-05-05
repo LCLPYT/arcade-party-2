@@ -12,10 +12,7 @@ import work.lclpnet.ap2.game.musical_minecart.MMSongs;
 import work.lclpnet.config.json.JsonConfig;
 import work.lclpnet.config.json.JsonConfigFactory;
 
-import java.net.MalformedURLException;
 import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
@@ -60,9 +57,9 @@ public class Ap2Config implements JsonConfig {
     private void putDefaultSongSourceUrl(Identifier id, String sourceUrl) {
         if (!songSources.containsKey(id) || songSources.get(id).isEmpty()) {
             try {
-                URL url = new URL(sourceUrl);
-                songSources.put(id, url.toURI());
-            } catch (MalformedURLException | URISyntaxException err) {
+                URI uri = URI.create(sourceUrl);
+                songSources.put(id, uri);
+            } catch (IllegalArgumentException err) {
                 ArcadeParty.logger.error("Failed to set default song source", err);
             }
         }

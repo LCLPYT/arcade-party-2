@@ -102,7 +102,7 @@ public class BlockDissolveInstance extends EliminationGameInstance {
 
             if (warningTimer % WARNING_PERIOD_TICKS == 0) {
                 for (ServerPlayerEntity player : PlayerLookup.all(server)) {
-                    player.playSound(SoundEvents.BLOCK_NOTE_BLOCK_PLING.value(), SoundCategory.BLOCKS, 1f, 0f);
+                    player.playSoundToPlayer(SoundEvents.BLOCK_NOTE_BLOCK_PLING.value(), SoundCategory.BLOCKS, 1f, 0f);
                 }
             }
 
@@ -111,7 +111,7 @@ public class BlockDissolveInstance extends EliminationGameInstance {
                 warningTimer = 0;
 
                 for (ServerPlayerEntity player : PlayerLookup.all(server)) {
-                    player.playSound(SoundEvents.ENTITY_WITHER_BREAK_BLOCK, SoundCategory.BLOCKS, 1f, 0f);
+                    player.playSoundToPlayer(SoundEvents.ENTITY_WITHER_BREAK_BLOCK, SoundCategory.BLOCKS, 1f, 0f);
                 }
 
                 for (int i = 0; i < WARNING_AMOUNT; i++) {
@@ -212,6 +212,6 @@ public class BlockDissolveInstance extends EliminationGameInstance {
         }
 
         inventory.setStack(0, stack);
-        player.playSound(SoundEvents.ENTITY_ITEM_PICKUP, SoundCategory.PLAYERS, 0.6f, 2f);
+        player.playSoundToPlayer(SoundEvents.ENTITY_ITEM_PICKUP, SoundCategory.PLAYERS, 0.6f, 2f);
     }
 }

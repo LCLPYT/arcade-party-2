@@ -1,6 +1,10 @@
 package work.lclpnet.ap2.game.panda_finder;
 
+import it.unimi.dsi.fastutil.ints.IntList;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
+import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.FireworkExplosionComponent;
+import net.minecraft.component.type.FireworksComponent;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.effect.StatusEffectInstance;
@@ -8,7 +12,6 @@ import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.passive.PandaEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.projectile.FireworkRocketEntity;
-import net.minecraft.item.FireworkRocketItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.scoreboard.ScoreboardCriterion;
@@ -44,13 +47,12 @@ import work.lclpnet.ap2.impl.util.world.SimpleAdjacentBlocks;
 import work.lclpnet.ap2.impl.util.world.SizedSpaceFinder;
 import work.lclpnet.kibu.access.entity.FireworkEntityAccess;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
-import work.lclpnet.kibu.inv.item.FireworkExplosion;
-import work.lclpnet.kibu.inv.item.FireworkUtil;
 import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.lobby.game.map.GameMap;
 
+import java.util.List;
 import java.util.Random;
 
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
@@ -187,7 +189,7 @@ public class PandaFinderInstance extends DefaultGameInstance {
         player.sendMessage(gameHandle.getTranslations().translateText(player, "game.ap2.panda_finder.cooldown")
                 .formatted(Formatting.RED));
 
-        player.playSound(SoundEvents.ENTITY_BLAZE_HURT, SoundCategory.HOSTILE, 0.5f, 1.5f);
+        player.playSoundToPlayer(SoundEvents.ENTITY_BLAZE_HURT, SoundCategory.HOSTILE, 0.5f, 1.5f);
         player.addStatusEffect(new StatusEffectInstance(StatusEffects.BLINDNESS, Ticks.seconds(3), 1, false, false));
     }
 
@@ -210,15 +212,15 @@ public class PandaFinderInstance extends DefaultGameInstance {
 
         for (ServerPlayerEntity serverPlayer : players) {
             if (participants.isParticipating(serverPlayer) && serverPlayer != player) {
-                serverPlayer.playSound(SoundEvents.ENTITY_WITHER_HURT, SoundCategory.PLAYERS, 0.5f, 1f);
+                serverPlayer.playSoundToPlayer(SoundEvents.ENTITY_WITHER_HURT, SoundCategory.PLAYERS, 0.5f, 1f);
             } else {
-                serverPlayer.playSound(SoundEvents.ENTITY_PLAYER_LEVELUP, SoundCategory.PLAYERS, 0.5f, 1f);
+                serverPlayer.playSoundToPlayer(SoundEvents.ENTITY_PLAYER_LEVELUP, SoundCategory.PLAYERS, 0.5f, 1f);
             }
         }
 
         ItemStack rocket = new ItemStack(Items.FIREWORK_ROCKET);
-        FireworkUtil.setExplosions(rocket, new FireworkExplosion(FireworkRocketItem.Type.SMALL_BALL, false, false,
-                new int[] {0xff0000}, new int[0]));
+        FireworkExplosionComponent explosion = new FireworkExplosionComponent(FireworkExplosionComponent.Type.SMALL_BALL, IntList.of(0xff0000), IntList.of(), false, false);
+        rocket.set(DataComponentTypes.FIREWORKS, new FireworksComponent(1, List.of(explosion)));
 
         ServerWorld world = getWorld();
         FireworkRocketEntity firework = new FireworkRocketEntity(world, panda.getX(), panda.getY(), panda.getZ(), rocket);

@@ -1,5 +1,6 @@
 package work.lclpnet.ap2.base.util;
 
+import net.minecraft.component.DataComponentTypes;
 import net.minecraft.item.ItemStack;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Style;
@@ -19,7 +20,7 @@ public class MapIconMaker {
     public static ItemStack createIcon(MiniGame game, ServerPlayerEntity player, TranslationService translations) {
         ItemStack icon = game.getIcon();
 
-        icon.setCustomName(translations.translateText(player, game.getTitleKey())
+        icon.set(DataComponentTypes.CUSTOM_NAME, translations.translateText(player, game.getTitleKey())
                 .styled(style -> style.withItalic(false).withFormatting(AQUA)));
 
         String descriptionKey = game.getDescriptionKey();

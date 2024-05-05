@@ -1,13 +1,15 @@
 package work.lclpnet.ap2.impl.util;
 
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtList;
-import net.minecraft.nbt.NbtString;
+import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.WrittenBookContentComponent;
+import net.minecraft.item.ItemStack;
 import net.minecraft.text.MutableText;
+import net.minecraft.text.RawFilteredPair;
 import net.minecraft.text.Text;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 public class BookUtil {
 
@@ -38,18 +40,14 @@ public class BookUtil {
             return this;
         }
 
-        public void toNbt(NbtCompound nbt) {
-            nbt.putString("title", title);
-            nbt.putString("author", author);
+        public void applyTo(ItemStack stack) {
+            var titlePair = new RawFilteredPair<>(title, Optional.empty());
 
-            NbtList pagesNbt = new NbtList();
+            var pagePairs = pages.stream()
+                    .map(page -> new RawFilteredPair<>(page, Optional.empty()))
+                    .toList();
 
-            for (Text page : pages) {
-                String json = Text.Serialization.toJsonString(page);
-                pagesNbt.add(NbtString.of(json));
-            }
-
-            nbt.put("pages", pagesNbt);
+            stack.set(DataComponentTypes.WRITTEN_BOOK_CONTENT, new WrittenBookContentComponent(titlePair, author, 0, pagePairs, true));
         }
     }
 }

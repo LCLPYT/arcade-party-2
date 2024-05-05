@@ -2,6 +2,8 @@ package work.lclpnet.ap2.game.spleef;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.UnbreakableComponent;
 import net.minecraft.entity.damage.DamageTypes;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
@@ -19,7 +21,6 @@ import work.lclpnet.ap2.impl.game.EliminationGameInstance;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.SoundHelper;
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
-import work.lclpnet.kibu.inv.item.ItemStackUtil;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
@@ -86,10 +87,10 @@ public class SpleefInstance extends EliminationGameInstance {
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
             ItemStack stack = new ItemStack(Items.IRON_SHOVEL);
 
-            stack.setCustomName(translations.translateText(player, "game.ap2.spleef.shovel")
+            stack.set(DataComponentTypes.CUSTOM_NAME, translations.translateText(player, "game.ap2.spleef.shovel")
                     .styled(style -> style.withItalic(false).withFormatting(Formatting.GOLD)));
 
-            ItemStackUtil.setUnbreakable(stack, true);
+            stack.set(DataComponentTypes.UNBREAKABLE, new UnbreakableComponent(false));
 
             PlayerInventory inventory = player.getInventory();
             inventory.setStack(4, stack);

@@ -29,7 +29,7 @@ public class CheckpointHelper {
             var msg = translations.translateText(player, "game.ap2.reached_checkpoint").formatted(Formatting.GREEN);
 
             player.sendMessage(msg, true);
-            player.playSound(SoundEvents.BLOCK_RESPAWN_ANCHOR_SET_SPAWN, SoundCategory.BLOCKS, 0.4f, 1f);
+            player.playSoundToPlayer(SoundEvents.BLOCK_RESPAWN_ANCHOR_SET_SPAWN, SoundCategory.BLOCKS, 0.4f, 1f);
         });
     }
 

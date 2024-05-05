@@ -76,8 +76,8 @@ public class SizedSpaceFinder implements SpaceFinder {
     public static SizedSpaceFinder create(BlockView blockView, EntityType<?> entityType) {
         EntityDimensions dimensions = entityType.getDimensions();
 
-        int width = (int) Math.ceil(dimensions.width);
-        int height = (int) Math.ceil(dimensions.height);
+        int width = (int) Math.ceil(dimensions.width());
+        int height = (int) Math.ceil(dimensions.height());
 
         return new SizedSpaceFinder(blockView, width, height, width);
     }

@@ -245,6 +245,6 @@ public class AnvilFallInstance extends EliminationGameInstance {
 
         Vec3d vec = new Vec3d(center.getX() - to.getX(), 0.5, center.getZ() - to.getZ());
         VelocityModifier.setVelocity(player, vec.normalize().multiply(0.5));
-        player.playSound(SoundEvents.ENTITY_ALLAY_HURT, SoundCategory.PLAYERS, 0.5f, 2f);
+        player.playSoundToPlayer(SoundEvents.ENTITY_ALLAY_HURT, SoundCategory.PLAYERS, 0.5f, 2f);
     }
 }

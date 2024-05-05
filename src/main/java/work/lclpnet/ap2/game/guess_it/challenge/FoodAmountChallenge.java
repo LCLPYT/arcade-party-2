@@ -1,6 +1,7 @@
 package work.lclpnet.ap2.game.guess_it.challenge;
 
-import net.minecraft.item.FoodComponent;
+import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.FoodComponent;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.Registries;
@@ -49,13 +50,13 @@ public class FoodAmountChallenge implements Challenge {
         Item food = selectRandomFood();
         ItemStack stack = new ItemStack(food);
 
-        FoodComponent foodComponent = food.getFoodComponent(stack);
+        FoodComponent foodComponent = food.getComponents().get(DataComponentTypes.FOOD);
 
         if (foodComponent == null) {
             throw new IllegalStateException("Item has no food component");
         }
 
-        amount = foodComponent.getHunger();
+        amount = foodComponent.nutrition();
 
         display.displayItem(stack);
     }
@@ -71,7 +72,7 @@ public class FoodAmountChallenge implements Challenge {
 
     private Item selectRandomFood() {
         var food = Registries.ITEM.stream()
-                .filter(Item::isFood)
+                .filter(item -> item.getComponents().contains(DataComponentTypes.FOOD))
                 .collect(Collectors.toSet());
 
         return food.stream().skip(random.nextInt(food.size())).findFirst().orElseThrow();

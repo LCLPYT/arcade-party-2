@@ -264,7 +264,7 @@ public class CozyCampfireInstance extends TeamEliminationGameInstance implements
 
         for (ServerPlayerEntity player : team.getPlayers()) {
             player.sendMessage(msg.translateFor(player), true);
-            player.playSound(SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, SoundCategory.PLAYERS, 0.2f, 1.8f);
+            player.playSoundToPlayer(SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, SoundCategory.PLAYERS, 0.2f, 1.8f);
         }
     }
 

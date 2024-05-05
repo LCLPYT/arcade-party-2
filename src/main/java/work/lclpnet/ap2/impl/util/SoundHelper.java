@@ -12,7 +12,7 @@ public class SoundHelper {
 
     public static void playSound(MinecraftServer server, SoundEvent sound, SoundCategory category, float volume, float pitch) {
         for (ServerPlayerEntity player : PlayerLookup.all(server)) {
-            player.playSound(sound, category, volume, pitch);
+            player.playSoundToPlayer(sound, category, volume, pitch);
         }
     }
 

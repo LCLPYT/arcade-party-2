@@ -95,7 +95,7 @@ public class Cooldown {
         }
 
         player.sendMessage(Text.empty(), true);
-        player.playSound(SoundEvents.BLOCK_NOTE_BLOCK_PLING.value(), SoundCategory.PLAYERS, 0.2f, 2);
+        player.playSoundToPlayer(SoundEvents.BLOCK_NOTE_BLOCK_PLING.value(), SoundCategory.PLAYERS, 0.2f, 2);
     }
 
     public void setOnCooldownOver(@Nullable Consumer<ServerPlayerEntity> onCooldownOver) {

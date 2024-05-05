@@ -7,9 +7,11 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.trim.ArmorTrimPattern;
 import net.minecraft.registry.RegistryKey;
+import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
 
 public class TextUtil {
@@ -39,8 +41,9 @@ public class TextUtil {
         return Text.translatable("subtitles." + soundEvent.getId().getPath());
     }
 
-    public static MutableText getVanillaName(RegistryKey<ArmorTrimPattern> pattern) {
-        return Text.translatable(Util.createTranslationKey("trim_pattern", pattern.getValue()));
+    public static MutableText getVanillaName(RegistryEntry<ArmorTrimPattern> pattern) {
+        Identifier id = pattern.getKey().map(RegistryKey::getValue).orElse(null);
+        return Text.translatable(Util.createTranslationKey("trim_pattern", id));
     }
 
     private TextUtil() {}

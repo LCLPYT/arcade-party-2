@@ -3,6 +3,7 @@ package work.lclpnet.ap2.game.fine_tuning;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.component.DataComponentTypes;
 import net.minecraft.entity.boss.BossBar;
 import net.minecraft.entity.player.ItemCooldownManager;
 import net.minecraft.entity.player.PlayerEntity;
@@ -290,7 +291,7 @@ class TuningPhase implements Unloadable {
 
         for (ServerPlayerEntity player : participants) {
             ItemStack stack = PlayerHeadUtil.getItem(PlayerHeads.GEODE_ARROW_FORWARD);
-            stack.setCustomName(translations.translateText(player, "game.ap2.fine_tuning.replay")
+            stack.set(DataComponentTypes.CUSTOM_NAME, translations.translateText(player, "game.ap2.fine_tuning.replay")
                     .styled(style -> style.withItalic(false).withFormatting(YELLOW)));
 
             player.getInventory().setStack(4, stack);
@@ -428,9 +429,9 @@ class TuningPhase implements Unloadable {
                             translations.translateText(player, "game.ap2.fine_tuning.controls.test")
                                     .formatted(DARK_BLUE, BOLD).append(":\n"),
                             Text.keybind("key.attack").formatted(DARK_GREEN))
-                    .toNbt(stack.getOrCreateNbt());
+                    .applyTo(stack);
 
-            stack.setCustomName(Text.literal(controls)
+            stack.set(DataComponentTypes.CUSTOM_NAME, Text.literal(controls)
                     .styled(style -> style.withItalic(false).withFormatting(GREEN)));
 
             player.getInventory().setStack(8, stack);

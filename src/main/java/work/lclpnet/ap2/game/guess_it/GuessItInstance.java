@@ -215,7 +215,7 @@ public class GuessItInstance extends DefaultGameInstance implements MapBootstrap
         // send preparation title
         for (ServerPlayerEntity player : PlayerLookup.world(world)) {
             Title.get(player).title(Text.empty(), prepareMsg.translateFor(player));
-            player.playSound(SoundEvents.BLOCK_END_PORTAL_FRAME_FILL, SoundCategory.NEUTRAL, 1f, 0.5f);
+            player.playSoundToPlayer(SoundEvents.BLOCK_END_PORTAL_FRAME_FILL, SoundCategory.NEUTRAL, 1f, 0.5f);
         }
 
         challenge.prepare();
@@ -234,7 +234,7 @@ public class GuessItInstance extends DefaultGameInstance implements MapBootstrap
 
         if (challenge.shouldPlayBeginSound()) {
             for (ServerPlayerEntity player : players) {
-                player.playSound(SoundEvents.ENTITY_BREEZE_SHOOT, SoundCategory.NEUTRAL, 1f, 0.5f);
+                player.playSoundToPlayer(SoundEvents.ENTITY_BREEZE_SHOOT, SoundCategory.NEUTRAL, 1f, 0.5f);
             }
         }
 
@@ -290,7 +290,7 @@ public class GuessItInstance extends DefaultGameInstance implements MapBootstrap
             if (points > 0) {
                 data.addScore(player, points);
 
-                player.playSound(SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, SoundCategory.PLAYERS, 0.5f, 1.5f);
+                player.playSoundToPlayer(SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, SoundCategory.PLAYERS, 0.5f, 1.5f);
 
                 if (solutionMsg != null) {
                     player.sendMessage(solutionMsg.translateFor(player).formatted(GREEN));
@@ -299,7 +299,7 @@ public class GuessItInstance extends DefaultGameInstance implements MapBootstrap
                 continue;
             }
 
-            player.playSound(SoundEvents.ENTITY_WITHER_HURT, SoundCategory.PLAYERS, 0.3f, 1.3f);
+            player.playSoundToPlayer(SoundEvents.ENTITY_WITHER_HURT, SoundCategory.PLAYERS, 0.3f, 1.3f);
 
             if (solutionMsg != null) {
                 player.sendMessage(solutionMsg.translateFor(player).formatted(RED));

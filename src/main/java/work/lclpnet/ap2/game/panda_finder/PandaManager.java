@@ -1,6 +1,8 @@
 package work.lclpnet.ap2.game.panda_finder;
 
 
+import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.MapIdComponent;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.passive.PandaEntity;
 import net.minecraft.item.ItemStack;
@@ -13,7 +15,6 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.api.base.Participants;
-import work.lclpnet.kibu.map.MapUtil;
 
 import java.util.*;
 
@@ -164,7 +165,7 @@ public class PandaManager {
         }
 
         ItemStack filledMap = new ItemStack(Items.FILLED_MAP);
-        MapUtil.setMapId(filledMap, currentMapId);
+        filledMap.set(DataComponentTypes.MAP_ID, new MapIdComponent(currentMapId));
 
         player.setStackInHand(Hand.OFF_HAND, filledMap);
     }

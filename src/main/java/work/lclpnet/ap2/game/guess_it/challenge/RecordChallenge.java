@@ -64,7 +64,7 @@ public class RecordChallenge implements Challenge {
         display.displayItem(new ItemStack(correct));
 
         for (ServerPlayerEntity player : PlayerLookup.world(world)) {
-            player.playSound(correct.getSound(), SoundCategory.RECORDS, 0.5f, 1f);
+            player.playSoundToPlayer(correct.getSound(), SoundCategory.RECORDS, 0.5f, 1f);
         }
 
         input.expectSelection(opts.stream()

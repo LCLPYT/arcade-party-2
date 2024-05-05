@@ -109,7 +109,7 @@ public class SoundChallenge implements Challenge {
 
     private void playSound() {
         for (ServerPlayerEntity player : PlayerLookup.world(world)) {
-            player.playSound(correct, SoundCategory.MASTER, 1f, pitch);
+            player.playSoundToPlayer(correct, SoundCategory.MASTER, 1f, pitch);
         }
     }
 
