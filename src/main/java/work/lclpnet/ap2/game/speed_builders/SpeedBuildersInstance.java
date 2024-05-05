@@ -37,7 +37,7 @@ import java.util.concurrent.CompletableFuture;
 
 public class SpeedBuildersInstance extends EliminationGameInstance implements MapBootstrap {
 
-    private static final int BUILD_DURATION_SECONDS = 30;
+    private static final int BUILD_DURATION_SECONDS = 60;
     private static final int
             LOOK_DURATION_TICKS = Ticks.seconds(10),
             JUDGE_DURATION_TICKS = Ticks.seconds(6),

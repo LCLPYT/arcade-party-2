@@ -100,6 +100,7 @@ public class SbConfiguration {
         hooks.registerHook(BlockModificationHooks.PLACE_FLUID, (world, pos, entity, fluid) -> {
             if (entity instanceof ServerPlayerEntity player && canModify(player, pos)) {
                 placeFluid(world, player, pos, fluid);
+                manager.onEdit(player);
             }
 
             return true;
@@ -124,6 +125,14 @@ public class SbConfiguration {
             }
 
             return ActionResult.PASS;
+        });
+
+        hooks.registerHook(BlockModificationHooks.PLACE_BLOCK, (world, pos, entity, newState) -> {
+            if (entity instanceof ServerPlayerEntity player) {
+                manager.onEdit(player);
+            }
+
+            return false;
         });
     }
 

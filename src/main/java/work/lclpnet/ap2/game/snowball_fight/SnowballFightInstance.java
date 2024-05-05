@@ -35,6 +35,7 @@ import work.lclpnet.kibu.hook.entity.EntityHealthCallback;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks;
 import work.lclpnet.kibu.plugin.hook.HookRegistrar;
+import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 import work.lclpnet.lobby.game.map.GameMap;
 
@@ -43,6 +44,8 @@ import java.util.Random;
 
 public class SnowballFightInstance extends EliminationGameInstance {
 
+    private static final int WORLD_BORDER_DELAY = Ticks.minutes(2);
+    private static final int WORLD_BORDER_TIME = Ticks.seconds(20);
     private static final float SNOWBALL_DAMAGE = 0.75f;
     private static final int SNOWBALL_AMOUNT = 3, SNOWBALL_BIG_AMOUNT = 5;
     private ScoreboardObjective healthObjective = null;
@@ -117,6 +120,8 @@ public class SnowballFightInstance extends EliminationGameInstance {
         for (ServerPlayerEntity player : participants) {
             player.addStatusEffect(new StatusEffectInstance(StatusEffects.HASTE, Integer.MAX_VALUE, 20, false, false, false));
         }
+
+        commons().scheduleWorldBorderShrink(WORLD_BORDER_DELAY, WORLD_BORDER_TIME, Ticks.seconds(5));
     }
 
     private void setupScoreboard() {
