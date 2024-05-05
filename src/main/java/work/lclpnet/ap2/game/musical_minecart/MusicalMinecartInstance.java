@@ -179,7 +179,7 @@ public class MusicalMinecartInstance extends EliminationGameInstance {
 
             double x = player.getX(), y = player.getY(), z = player.getZ();
 
-            world.playSound(null, x, y, z, SoundEvents.ENTITY_GENERIC_EXPLODE, SoundCategory.PLAYERS, 1f, 0f);
+            world.playSound(null, x, y, z, SoundEvents.ENTITY_GENERIC_EXPLODE.value(), SoundCategory.PLAYERS, 1f, 0f);
             world.spawnParticles(ParticleTypes.LAVA, x, y, z, 100, 0.5, 0.5, 0.5, 0.2);
 
             toEliminate.add(player);
@@ -195,7 +195,7 @@ public class MusicalMinecartInstance extends EliminationGameInstance {
 
         scheduler.timeout(() -> {
             for (ServerPlayerEntity player : participants) {
-                player.playSound(SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, SoundCategory.NEUTRAL, 0.5f, 1f);
+                player.playSoundToPlayer(SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, SoundCategory.NEUTRAL, 0.5f, 1f);
             }
         }, passDelay);
 

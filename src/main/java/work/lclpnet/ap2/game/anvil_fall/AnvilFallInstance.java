@@ -170,7 +170,7 @@ public class AnvilFallInstance extends EliminationGameInstance {
                     cooldown = delay;
 
                     if (delay > 0) {
-                        Object obj = 20 % delay == 0 ? 20 / delay : String.format("%.2f", 20f / delay);
+                        Object obj = 20 % delay == 0 ? 20 / delay : "%.2f".formatted(20f / delay);
                         amountDisplay.setArgument(0, FormatWrapper.styled(obj, Formatting.YELLOW));
                     } else {
                         amountDisplay.setArgument(0, FormatWrapper.styled(20, Formatting.YELLOW));
@@ -245,6 +245,6 @@ public class AnvilFallInstance extends EliminationGameInstance {
 
         Vec3d vec = new Vec3d(center.getX() - to.getX(), 0.5, center.getZ() - to.getZ());
         VelocityModifier.setVelocity(player, vec.normalize().multiply(0.5));
-        player.playSound(SoundEvents.ENTITY_ALLAY_HURT, SoundCategory.PLAYERS, 0.5f, 2f);
+        player.playSoundToPlayer(SoundEvents.ENTITY_ALLAY_HURT, SoundCategory.PLAYERS, 0.5f, 2f);
     }
 }

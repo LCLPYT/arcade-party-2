@@ -161,7 +161,7 @@ public abstract class BaseGameInstance implements MiniGameInstance {
         gameHandle.getTranslations().translateText("ap2.go").formatted(RED)
                 .acceptEach(PlayerLookup.all(gameHandle.getServer()), (player, text) -> {
                     Title.get(player).title(text, Text.empty(), 5, 20, 5);
-                    player.playSound(SoundEvents.ENTITY_CHICKEN_EGG, SoundCategory.PLAYERS, 1, 0);
+                    player.playSoundToPlayer(SoundEvents.ENTITY_CHICKEN_EGG, SoundCategory.PLAYERS, 1, 0);
                 });
 
         ready();

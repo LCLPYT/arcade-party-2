@@ -2,6 +2,8 @@ package work.lclpnet.ap2.game.pig_race;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.UnbreakableComponent;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.passive.PigEntity;
@@ -36,7 +38,6 @@ import work.lclpnet.kibu.hook.ServerPlayConnectionHooks;
 import work.lclpnet.kibu.hook.entity.EntityDismountCallback;
 import work.lclpnet.kibu.hook.entity.EntityMountCallback;
 import work.lclpnet.kibu.hook.player.PlayerTeleportedCallback;
-import work.lclpnet.kibu.inv.item.ItemStackUtil;
 import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.lobby.game.map.GameMap;
@@ -233,8 +234,8 @@ public class PigRaceInstance extends DefaultGameInstance {
         TranslationService translations = gameHandle.getTranslations();
 
         ItemStack stick = new ItemStack(Items.CARROT_ON_A_STICK);
-        ItemStackUtil.setUnbreakable(stick, true);
-        stick.setCustomName(translations.translateText(player, "game.ap2.pig_race.boost")
+        stick.set(DataComponentTypes.UNBREAKABLE, new UnbreakableComponent(false));
+        stick.set(DataComponentTypes.CUSTOM_NAME, translations.translateText(player, "game.ap2.pig_race.boost")
                 .styled(style -> style.withItalic(false).withFormatting(Formatting.GOLD)));
 
         player.getInventory().setStack(4, stick);
@@ -244,7 +245,7 @@ public class PigRaceInstance extends DefaultGameInstance {
         TranslationService translations = gameHandle.getTranslations();
 
         ItemStack reset = PlayerHeadUtil.getItem(PlayerHeads.REDSTONE_BLOCK_REFRESH);
-        reset.setCustomName(translations.translateText(player, "game.ap2.reset").formatted(Formatting.RED)
+        reset.set(DataComponentTypes.CUSTOM_NAME, translations.translateText(player, "game.ap2.reset").formatted(Formatting.RED)
                 .styled(style -> style.withItalic(false)));
 
         player.getInventory().setStack(8, reset);

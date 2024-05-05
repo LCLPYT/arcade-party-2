@@ -164,7 +164,7 @@ public class MiningBattleOre {
     private void giveHaste(ServerPlayerEntity player) {
         player.removeStatusEffect(StatusEffects.HASTE);
         player.addStatusEffect(new StatusEffectInstance(StatusEffects.HASTE, 100, 0));
-        player.playSound(SoundEvents.BLOCK_BELL_RESONATE, SoundCategory.BLOCKS, 0.5f, 2f);
+        player.playSoundToPlayer(SoundEvents.BLOCK_BELL_RESONATE, SoundCategory.BLOCKS, 0.5f, 2f);
 
         var msg = gameHandle.getTranslations().translateText(player, "game.ap2.mining_battle.haste")
                 .formatted(Formatting.GREEN);

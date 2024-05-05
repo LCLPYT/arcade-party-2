@@ -8,14 +8,16 @@ import net.minecraft.entity.mob.*;
 import net.minecraft.entity.passive.*;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
+import net.minecraft.registry.RegistryKeys;
+import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
 import net.minecraft.util.DyeColor;
 import net.minecraft.util.Unit;
+import net.minecraft.util.collection.IndexedIterable;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.village.VillagerData;
 import net.minecraft.village.VillagerDataContainer;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.impl.util.world.SizedSpaceFinder;
 import work.lclpnet.kibu.access.entity.GoatEntityAccess;
@@ -26,7 +28,9 @@ import work.lclpnet.kibu.behaviour.entity.VexEntityBehaviour;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.lobby.util.WorldModifier;
 
-import java.util.*;
+import java.util.Optional;
+import java.util.Random;
+import java.util.Set;
 
 public class MobSpawner {
 
@@ -154,10 +158,10 @@ public class MobSpawner {
                 shulker.setVariant(Optional.of(randomElement(DyeColor.values())));
             }
         } else if (entity instanceof VillagerDataContainer villager) {
-            var types = getRegistryEntries(Registries.VILLAGER_TYPE);
-            var professions = getRegistryEntries(Registries.VILLAGER_PROFESSION);
+            var types = Registries.VILLAGER_TYPE.getIndexedEntries();
+            var professions = Registries.VILLAGER_PROFESSION.getIndexedEntries();
 
-            villager.setVillagerData(new VillagerData(randomElement(types), randomElement(professions), 2));
+            villager.setVillagerData(new VillagerData(randomElement(types).value(), randomElement(professions).value(), 2));
         } else if (entity instanceof SnowGolemEntity snowGolem) {
             if (random.nextFloat() < 0.5) {
                 snowGolem.setHasPumpkin(false);
@@ -176,16 +180,22 @@ public class MobSpawner {
             // prevent warden from digging into the ground
             var brain = warden.getBrain();
             brain.remember(MemoryModuleType.DIG_COOLDOWN, Unit.INSTANCE, Ticks.minutes(10));
+        } else if (entity instanceof WolfEntity wolf) {
+            randomizeVariant(wolf, world.getRegistryManager().get(RegistryKeys.WOLF_VARIANT));
+        } else if (entity instanceof BoggedEntity bogged) {
+            if (random.nextFloat() < 0.2) {
+                bogged.setSheared(true);
+            }
         }
     }
 
-    private <T> void randomizeVariant(VariantHolder<T> holder, Registry<T> registry) {
-        var variants = getRegistryEntries(registry);
+    private <T> void randomizeVariant(VariantHolder<RegistryEntry<T>> holder, Registry<T> registry) {
+        var variants = registry.getIndexedEntries();
 
         randomizeVariant(holder, variants);
     }
 
-    private <T> void randomizeVariant(VariantHolder<T> holder, List<T> variants) {
+    private <T> void randomizeVariant(VariantHolder<T> holder, IndexedIterable<T> variants) {
         T variant = randomElement(variants);
         holder.setVariant(variant);
     }
@@ -195,8 +205,8 @@ public class MobSpawner {
         holder.setVariant(variant);
     }
 
-    private <T> T randomElement(List<T> variants) {
-        if (variants.isEmpty()) {
+    private <T> T randomElement(IndexedIterable<T> variants) {
+        if (variants.size() <= 0) {
             throw new IllegalStateException("Empty variants");
         }
 
@@ -211,16 +221,9 @@ public class MobSpawner {
         return variants[random.nextInt(variants.length)];
     }
 
-    @NotNull
-    private static <T> List<T> getRegistryEntries(Registry<T> registry) {
-        return registry.getEntrySet().stream()
-                .map(Map.Entry::getValue)
-                .toList();
-    }
-
     public static SizedSpaceFinder findSpawns(ServerWorld world, Set<EntityType<?>> types) {
-        float maxWidth = (float) types.stream().mapToDouble(type -> type.getDimensions().width).max().orElse(1);
-        float maxHeight = (float) types.stream().mapToDouble(type -> type.getDimensions().height).max().orElse(2);
+        float maxWidth = (float) types.stream().mapToDouble(type -> type.getDimensions().width()).max().orElse(1);
+        float maxHeight = (float) types.stream().mapToDouble(type -> type.getDimensions().height()).max().orElse(2);
 
         return new SizedSpaceFinder(world, maxWidth, maxHeight, maxWidth);
     }

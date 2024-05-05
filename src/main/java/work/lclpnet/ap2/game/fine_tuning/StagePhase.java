@@ -65,7 +65,7 @@ class StagePhase {
         this.world = world;
         this.winnerAction = winnerAction;
         this.movementBlocker = new SimpleMovementBlocker(gameHandle.getScheduler());
-        this.movementBlocker.setUseStatusEffects(false);
+        this.movementBlocker.setModifyAttributes(false);
     }
 
     public void beginStage() {

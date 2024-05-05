@@ -55,7 +55,7 @@ public class InputManager implements InputInterface {
             if (inputValue.isOnce() && hasAnswered(player)) {
                 var msg = translations.translateText(player, "game.ap2.guess_it.already_answered").formatted(RED);
                 player.sendMessage(msg);
-                player.playSound(SoundEvents.ENTITY_BLAZE_HURT, SoundCategory.PLAYERS, 0.5f, 0f);
+                player.playSoundToPlayer(SoundEvents.ENTITY_BLAZE_HURT, SoundCategory.PLAYERS, 0.5f, 0f);
                 return;
             }
 
@@ -81,7 +81,7 @@ public class InputManager implements InputInterface {
         choices.set(player, input);
 
         var msg = translations.translateText(player, "game.ap2.guess_it.guessed", styled(input, YELLOW)).formatted(GREEN);
-        player.playSound(SoundEvents.BLOCK_NOTE_BLOCK_PLING.value(), SoundCategory.PLAYERS, 0.75f, 1.5f);
+        player.playSoundToPlayer(SoundEvents.BLOCK_NOTE_BLOCK_PLING.value(), SoundCategory.PLAYERS, 0.75f, 1.5f);
 
         player.sendMessage(msg);
     }

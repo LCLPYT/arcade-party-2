@@ -2,17 +2,10 @@ package work.lclpnet.ap2.impl.util.effect;
 
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
+import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.server.network.ServerPlayerEntity;
 
-public class PotionApEffect implements ApEffect {
-
-    private final StatusEffect effect;
-    private final int amplifier;
-
-    public PotionApEffect(StatusEffect effect, int amplifier) {
-        this.effect = effect;
-        this.amplifier = amplifier;
-    }
+public record PotionApEffect(RegistryEntry<StatusEffect> effect, int amplifier) implements ApEffect {
 
     @Override
     public void apply(ServerPlayerEntity player) {

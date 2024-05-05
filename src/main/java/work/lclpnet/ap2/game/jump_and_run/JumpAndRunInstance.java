@@ -3,6 +3,7 @@ package work.lclpnet.ap2.game.jump_and_run;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.component.DataComponentTypes;
 import net.minecraft.item.ItemStack;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.scoreboard.*;
@@ -165,7 +166,7 @@ public class JumpAndRunInstance extends DefaultGameInstance implements MapBootst
             ItemStack stack = PlayerHeadUtil.getItem(PlayerHeads.REDSTONE_BLOCK_REFRESH);
 
             var name = translations.translateText(player, "game.ap2.reset").formatted(Formatting.RED);
-            stack.setCustomName(name.styled(style -> style.withItalic(false)));
+            stack.set(DataComponentTypes.CUSTOM_NAME, name.styled(style -> style.withItalic(false)));
 
             player.getInventory().setStack(8, stack);
             PlayerInventoryAccess.setSelectedSlot(player, 4);
@@ -207,7 +208,7 @@ public class JumpAndRunInstance extends DefaultGameInstance implements MapBootst
 
         if (room <= 1) return;
 
-        player.playSound(SoundEvents.ENTITY_PLAYER_LEVELUP, SoundCategory.PLAYERS, 0.5f, 2f);
+        player.playSoundToPlayer(SoundEvents.ENTITY_PLAYER_LEVELUP, SoundCategory.PLAYERS, 0.5f, 2f);
 
         var msg = gameHandle.getTranslations().translateText(player, "game.ap2.jump_and_run.reached_room",
                         styled("#" + room, Formatting.YELLOW))
@@ -289,7 +290,7 @@ public class JumpAndRunInstance extends DefaultGameInstance implements MapBootst
         for (ServerPlayerEntity player : PlayerLookup.all(gameHandle.getServer())) {
             if (!bounds.contains(player.getX(), player.getY(), player.getZ())) continue;
 
-            player.playSound(SoundEvents.BLOCK_BELL_USE, SoundCategory.BLOCKS, 1f, 1.7f);
+            player.playSoundToPlayer(SoundEvents.BLOCK_BELL_USE, SoundCategory.BLOCKS, 1f, 1.7f);
 
             var msg = translations.translateText(player, "game.ap2.jump_and_run.assistance")
                     .formatted(Formatting.GRAY);

@@ -1,5 +1,7 @@
 package work.lclpnet.ap2.game.guess_it.challenge;
 
+import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.PotionContentsComponent;
 import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.item.Item;
@@ -8,12 +10,12 @@ import net.minecraft.item.Items;
 import net.minecraft.potion.Potion;
 import net.minecraft.potion.Potions;
 import net.minecraft.registry.Registries;
+import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.text.Text;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.game.guess_it.data.*;
 import work.lclpnet.ap2.game.guess_it.util.GuessItDisplay;
 import work.lclpnet.ap2.game.guess_it.util.OptionMaker;
-import work.lclpnet.ap2.impl.util.ItemStackHelper;
 import work.lclpnet.ap2.impl.util.TextUtil;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.translate.TranslationService;
@@ -66,8 +68,8 @@ public class PotionTypeChallenge implements Challenge {
                 .map(potion -> {
                     ItemStack stack = new ItemStack(item);
 
-                    var potionKey = Registries.POTION.getKey(potion).orElseThrow();
-                    ItemStackHelper.setPotion(stack, potionKey);
+                    var potionEntry = Registries.POTION.getEntry(potion);
+                    stack.set(DataComponentTypes.POTION_CONTENTS, new PotionContentsComponent(potionEntry));
 
                     return stack;
                 })
@@ -86,14 +88,13 @@ public class PotionTypeChallenge implements Challenge {
     private static Set<Potion> getPotions() {
         var allPotions = Registries.POTION.stream().collect(Collectors.toSet());
 
-        allPotions.remove(Potions.AWKWARD);
-        allPotions.remove(Potions.MUNDANE);
-        allPotions.remove(Potions.THICK);
-        allPotions.remove(Potions.WATER);
-        allPotions.remove(Potions.EMPTY);
+        allPotions.remove(Potions.AWKWARD.value());
+        allPotions.remove(Potions.MUNDANE.value());
+        allPotions.remove(Potions.THICK.value());
+        allPotions.remove(Potions.WATER.value());
 
         // filter multiple length of the same status effect
-        Set<Set<StatusEffect>> effects = new HashSet<>();
+        Set<Set<RegistryEntry<StatusEffect>>> effects = new HashSet<>();
 
         var it = allPotions.iterator();
 

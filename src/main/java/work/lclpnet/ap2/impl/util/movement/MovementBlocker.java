@@ -13,7 +13,7 @@ public interface MovementBlocker {
 
     boolean isMovementDisabled(ServerPlayerEntity player);
 
-    void setUseStatusEffects(boolean useStatusEffects);
+    void setModifyAttributes(boolean modifyAttributes);
 
     boolean isUsingStatusEffects();
 }

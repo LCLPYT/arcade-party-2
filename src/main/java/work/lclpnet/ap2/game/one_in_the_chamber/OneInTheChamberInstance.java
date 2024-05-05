@@ -1,6 +1,9 @@
 package work.lclpnet.ap2.game.one_in_the_chamber;
 
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
+import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.ChargedProjectilesComponent;
+import net.minecraft.component.type.UnbreakableComponent;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.damage.DamageTypes;
@@ -8,9 +11,6 @@ import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.entity.projectile.ProjectileEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtList;
-import net.minecraft.registry.Registries;
 import net.minecraft.scoreboard.ScoreboardCriterion;
 import net.minecraft.scoreboard.ScoreboardDisplaySlot;
 import net.minecraft.scoreboard.ScoreboardObjective;
@@ -37,7 +37,6 @@ import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
 import work.lclpnet.kibu.hook.entity.ProjectileHooks;
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks;
 import work.lclpnet.kibu.hook.player.PlayerInventoryHooks;
-import work.lclpnet.kibu.inv.item.ItemStackUtil;
 import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 import work.lclpnet.kibu.translate.text.TranslatedText;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
@@ -60,7 +59,7 @@ public class OneInTheChamberInstance extends DefaultGameInstance {
         super(gameHandle);
 
         movementBlocker = new SimpleMovementBlocker(gameHandle.getScheduler());
-        movementBlocker.setUseStatusEffects(false);
+        movementBlocker.setModifyAttributes(false);
 
         respawnCooldown = new Cooldown(gameHandle.getGameScheduler());
 
@@ -158,22 +157,12 @@ public class OneInTheChamberInstance extends DefaultGameInstance {
 
     private void giveCrossbowToPlayer(ServerPlayerEntity player) {
         ItemStack stack = new ItemStack(Items.CROSSBOW);
+        stack.set(DataComponentTypes.CHARGED_PROJECTILES, ChargedProjectilesComponent.of(new ItemStack(Items.ARROW)));
 
-        NbtCompound nbt = stack.getOrCreateNbt();
-        NbtList nbtList = new NbtList();
-        NbtCompound arrow = new NbtCompound();
-
-        arrow.putInt("Count", 1);
-        arrow.putString("id", Registries.ITEM.getId(Items.ARROW).toString());
-        nbtList.add(arrow);
-
-        nbt.putBoolean("Charged", true);
-        nbt.put("ChargedProjectiles", nbtList);
-
-        stack.setCustomName(TextUtil.getVanillaName(stack)
+        stack.set(DataComponentTypes.CUSTOM_NAME, TextUtil.getVanillaName(stack)
                 .styled(style -> style.withItalic(false).withFormatting(GOLD)));
 
-        ItemStackUtil.setUnbreakable(stack, true);
+        stack.set(DataComponentTypes.UNBREAKABLE, new UnbreakableComponent(false));
 
         PlayerInventory inventory = player.getInventory();
         inventory.setStack(1, stack);
@@ -182,10 +171,10 @@ public class OneInTheChamberInstance extends DefaultGameInstance {
     private void giveSwordToPlayer(ServerPlayerEntity player) {
         ItemStack stack = new ItemStack(Items.STONE_SWORD);
 
-        stack.setCustomName(TextUtil.getVanillaName(stack)
+        stack.set(DataComponentTypes.CUSTOM_NAME, TextUtil.getVanillaName(stack)
                 .styled(style -> style.withItalic(false).withFormatting(GOLD)));
 
-        ItemStackUtil.setUnbreakable(stack, true);
+        stack.set(DataComponentTypes.UNBREAKABLE, new UnbreakableComponent(false));
 
         PlayerInventory inventory = player.getInventory();
         inventory.setStack(0, stack);
@@ -236,7 +225,7 @@ public class OneInTheChamberInstance extends DefaultGameInstance {
         killer.sendMessage(Text.literal("+1 ").append(TextUtil.getVanillaName(Items.ARROW))
                 .formatted(GOLD), true);
 
-        killer.playSound(SoundEvents.ITEM_CROSSBOW_QUICK_CHARGE_3, SoundCategory.PLAYERS, 1f, 1f);
+        killer.playSoundToPlayer(SoundEvents.ITEM_CROSSBOW_QUICK_CHARGE_3, SoundCategory.PLAYERS, 1f, 1f);
 
         giveCrossbowToPlayer(killer);
         killer.setHealth(20);
@@ -248,6 +237,6 @@ public class OneInTheChamberInstance extends DefaultGameInstance {
             winManager.win(killer);
         }
 
-        killer.playSound(SoundEvents.ENTITY_ARROW_HIT_PLAYER, SoundCategory.PLAYERS, 0.8f, 0.8f);
+        killer.playSoundToPlayer(SoundEvents.ENTITY_ARROW_HIT_PLAYER, SoundCategory.PLAYERS, 0.8f, 0.8f);
     }
 }

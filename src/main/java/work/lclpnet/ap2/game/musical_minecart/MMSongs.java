@@ -46,7 +46,7 @@ public class MMSongs {
             populateQueue();
         }
 
-        var weightedSong = queue.remove(0);
+        var weightedSong = queue.removeFirst();
         LoadableSong loadable = weightedSong.getRandomElement(random);
 
         return loadable.load(cache, logger);

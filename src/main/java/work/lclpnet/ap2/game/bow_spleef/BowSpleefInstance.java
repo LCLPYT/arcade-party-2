@@ -2,6 +2,8 @@ package work.lclpnet.ap2.game.bow_spleef;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.UnbreakableComponent;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.damage.DamageTypes;
 import net.minecraft.entity.player.PlayerInventory;
@@ -25,7 +27,6 @@ import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
 import work.lclpnet.kibu.hook.entity.ProjectileHooks;
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks;
 import work.lclpnet.kibu.hook.world.BlockBreakParticleCallback;
-import work.lclpnet.kibu.inv.item.ItemStackUtil;
 import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.translate.TranslationService;
@@ -92,12 +93,12 @@ public class BowSpleefInstance extends EliminationGameInstance {
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
             ItemStack stack = new ItemStack(Items.BOW);
 
-            stack.setCustomName(translations.translateText(player, "game.ap2.bow_spleef.bow")
+            stack.set(DataComponentTypes.CUSTOM_NAME, translations.translateText(player, "game.ap2.bow_spleef.bow")
                     .styled(style -> style.withItalic(false).withFormatting(Formatting.GOLD)));
 
             stack.addEnchantment(Enchantments.INFINITY,1);
 
-            ItemStackUtil.setUnbreakable(stack, true);
+            stack.set(DataComponentTypes.UNBREAKABLE, new UnbreakableComponent(false));
 
             PlayerInventory inventory = player.getInventory();
             inventory.setStack(4, stack);

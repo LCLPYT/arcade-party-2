@@ -1,62 +1,62 @@
 package work.lclpnet.ap2.impl.util;
 
+import net.minecraft.item.ArmorMaterial;
 import net.minecraft.item.ArmorMaterials;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
+import net.minecraft.registry.entry.RegistryEntry;
 import org.jetbrains.annotations.Nullable;
 
 public class ItemHelper {
 
     private ItemHelper() {}
 
-    public static Item getHelmet(ArmorMaterials material) {
-        return switch (material) {
-            case LEATHER -> Items.LEATHER_HELMET;
-            case CHAIN -> Items.CHAINMAIL_HELMET;
-            case IRON -> Items.IRON_HELMET;
-            case GOLD -> Items.GOLDEN_HELMET;
-            case DIAMOND -> Items.DIAMOND_HELMET;
-            case TURTLE -> Items.TURTLE_HELMET;
-            case NETHERITE -> Items.NETHERITE_HELMET;
-        };
+    @Nullable
+    public static Item getHelmet(RegistryEntry<ArmorMaterial> material) {
+        if (material == ArmorMaterials.LEATHER) return Items.LEATHER_HELMET;
+        if (material == ArmorMaterials.CHAIN) return Items.CHAINMAIL_HELMET;
+        if (material == ArmorMaterials.IRON) return Items.IRON_HELMET;
+        if (material == ArmorMaterials.GOLD) return Items.GOLDEN_HELMET;
+        if (material == ArmorMaterials.DIAMOND) return Items.DIAMOND_HELMET;
+        if (material == ArmorMaterials.TURTLE) return Items.TURTLE_HELMET;
+        if (material == ArmorMaterials.NETHERITE) return Items.NETHERITE_HELMET;
+
+        return null;
     }
 
     @Nullable
-    public static Item getChestPlate(ArmorMaterials material) {
-        return switch (material) {
-            case LEATHER -> Items.LEATHER_CHESTPLATE;
-            case CHAIN -> Items.CHAINMAIL_CHESTPLATE;
-            case IRON -> Items.IRON_CHESTPLATE;
-            case GOLD -> Items.GOLDEN_CHESTPLATE;
-            case DIAMOND -> Items.DIAMOND_CHESTPLATE;
-            case TURTLE -> null;
-            case NETHERITE -> Items.NETHERITE_CHESTPLATE;
-        };
+    public static Item getChestPlate(RegistryEntry<ArmorMaterial> material) {
+        if (material == ArmorMaterials.LEATHER) return Items.LEATHER_CHESTPLATE;
+        if (material == ArmorMaterials.CHAIN) return Items.CHAINMAIL_CHESTPLATE;
+        if (material == ArmorMaterials.IRON) return Items.IRON_CHESTPLATE;
+        if (material == ArmorMaterials.GOLD) return Items.GOLDEN_CHESTPLATE;
+        if (material == ArmorMaterials.DIAMOND) return Items.DIAMOND_CHESTPLATE;
+        if (material == ArmorMaterials.NETHERITE) return Items.NETHERITE_CHESTPLATE;
+
+        return null;
     }
 
     @Nullable
-    public static Item getLeggings(ArmorMaterials material) {
-        return switch (material) {
-            case LEATHER -> Items.LEATHER_LEGGINGS;
-            case CHAIN -> Items.CHAINMAIL_LEGGINGS;
-            case IRON -> Items.IRON_LEGGINGS;
-            case GOLD -> Items.GOLDEN_LEGGINGS;
-            case DIAMOND -> Items.DIAMOND_LEGGINGS;
-            case TURTLE -> null;
-            case NETHERITE -> Items.NETHERITE_LEGGINGS;
-        };
+    public static Item getLeggings(RegistryEntry<ArmorMaterial> material) {
+        if (material == ArmorMaterials.LEATHER) return Items.LEATHER_LEGGINGS;
+        if (material == ArmorMaterials.CHAIN) return Items.CHAINMAIL_LEGGINGS;
+        if (material == ArmorMaterials.IRON) return Items.IRON_LEGGINGS;
+        if (material == ArmorMaterials.GOLD) return Items.GOLDEN_LEGGINGS;
+        if (material == ArmorMaterials.DIAMOND) return Items.DIAMOND_LEGGINGS;
+        if (material == ArmorMaterials.NETHERITE) return Items.NETHERITE_LEGGINGS;
+
+        return null;
     }
 
     @Nullable
-    public static Item getBoots(ArmorMaterials material) {
-        return switch (material) {
-            case LEATHER -> Items.LEATHER_BOOTS;
-            case CHAIN -> Items.CHAINMAIL_BOOTS;
-            case IRON -> Items.IRON_BOOTS;
-            case GOLD -> Items.GOLDEN_BOOTS;
-            case DIAMOND -> Items.DIAMOND_BOOTS;
-            case TURTLE -> null;
-            case NETHERITE -> Items.NETHERITE_BOOTS;
-        };
+    public static Item getBoots(RegistryEntry<ArmorMaterial> material) {
+        if (material == ArmorMaterials.LEATHER) return Items.LEATHER_BOOTS;
+        if (material == ArmorMaterials.CHAIN) return Items.CHAINMAIL_BOOTS;
+        if (material == ArmorMaterials.IRON) return Items.IRON_BOOTS;
+        if (material == ArmorMaterials.GOLD) return Items.GOLDEN_BOOTS;
+        if (material == ArmorMaterials.DIAMOND) return Items.DIAMOND_BOOTS;
+        if (material == ArmorMaterials.NETHERITE) return Items.NETHERITE_BOOTS;
+
+        return null;
     }
 }

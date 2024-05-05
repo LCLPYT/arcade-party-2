@@ -1,8 +1,8 @@
 package work.lclpnet.ap2.impl.util.movement;
 
-import net.minecraft.entity.effect.StatusEffectInstance;
-import net.minecraft.entity.effect.StatusEffects;
+import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.server.network.ServerPlayerEntity;
+import work.lclpnet.ap2.impl.game.PlayerUtil;
 import work.lclpnet.kibu.hook.player.PlayerConnectionHooks;
 import work.lclpnet.kibu.hook.player.PlayerMoveCallback;
 import work.lclpnet.kibu.hook.util.PositionRotation;
@@ -18,17 +18,14 @@ class MovementListener implements HookListenerModule {
         this.blocker = blocker;
     }
 
-    static void addStatusEffects(ServerPlayerEntity player, int duration) {
-        var slowness = new StatusEffectInstance(StatusEffects.SLOWNESS, duration, 255, false, false, true);
-        var noJump = new StatusEffectInstance(StatusEffects.JUMP_BOOST, duration, 200, false, false, true);
-
-        player.addStatusEffect(slowness);
-        player.addStatusEffect(noJump);
+    static void modifyAttributes(ServerPlayerEntity player) {
+        PlayerUtil.setAttribute(player, EntityAttributes.GENERIC_MOVEMENT_SPEED, 0);
+        PlayerUtil.setAttribute(player, EntityAttributes.GENERIC_JUMP_STRENGTH, 0);
     }
 
-    static void removeStatusEffects(ServerPlayerEntity player) {
-        player.removeStatusEffect(StatusEffects.SLOWNESS);
-        player.removeStatusEffect(StatusEffects.JUMP_BOOST);
+    static void resetAttributes(ServerPlayerEntity player) {
+        PlayerUtil.resetAttribute(player, EntityAttributes.GENERIC_MOVEMENT_SPEED);
+        PlayerUtil.resetAttribute(player, EntityAttributes.GENERIC_JUMP_STRENGTH);
     }
 
     @Override

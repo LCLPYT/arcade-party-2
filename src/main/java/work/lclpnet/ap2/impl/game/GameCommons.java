@@ -90,11 +90,11 @@ public class GameCommons {
             worldBorder.interpolateSize(worldBorder.getSize(), 5, durationTicks * 50L);
 
             for (ServerPlayerEntity player : PlayerLookup.world(world)) {
-                player.playSound(SoundEvents.ENTITY_WITHER_DEATH, SoundCategory.HOSTILE, 1, 0);
+                player.playSoundToPlayer(SoundEvents.ENTITY_WITHER_DEATH, SoundCategory.HOSTILE, 1, 0);
             }
         }, delayTicks);
 
-        scheduler.timeout(hook.invoker(), delayTicks + durationTicks + finalDelayTicks);
+        scheduler.timeout(() -> hook.invoker().run(), delayTicks + durationTicks + finalDelayTicks);
 
         return Action.create(hook);
     }

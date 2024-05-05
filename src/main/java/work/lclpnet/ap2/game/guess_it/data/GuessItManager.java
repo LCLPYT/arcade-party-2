@@ -48,6 +48,6 @@ public class GuessItManager {
             Collections.shuffle(queue, random);
         }
 
-        return queue.remove(0);
+        return queue.removeFirst();
     }
 }

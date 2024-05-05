@@ -1,16 +1,20 @@
 package work.lclpnet.ap2.game.guess_it.challenge;
 
+import net.minecraft.component.DataComponentTypes;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.mob.GiantEntity;
+import net.minecraft.item.ArmorMaterial;
 import net.minecraft.item.ArmorMaterials;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.trim.ArmorTrim;
 import net.minecraft.item.trim.ArmorTrimMaterial;
 import net.minecraft.item.trim.ArmorTrimPattern;
-import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
+import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
+import net.minecraft.util.collection.IndexedIterable;
 import net.minecraft.util.math.Vec3d;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.game.guess_it.data.*;
@@ -24,7 +28,6 @@ import work.lclpnet.lobby.util.WorldModifier;
 
 import java.util.Objects;
 import java.util.Random;
-import java.util.Set;
 
 public class ArmorTrimChallenge implements Challenge {
 
@@ -34,9 +37,9 @@ public class ArmorTrimChallenge implements Challenge {
     private final Random random;
     private final Stage stage;
     private final WorldModifier modifier;
-    private RegistryKey<ArmorTrimPattern> correct = null;
-    private RegistryKey<ArmorTrimMaterial> material = null;
-    private ArmorMaterials armorMaterial = null;
+    private RegistryEntry<ArmorTrimPattern> correct = null;
+    private RegistryEntry<ArmorTrimMaterial> material = null;
+    private RegistryEntry<ArmorMaterial> armorMaterial = null;
     private int correctOption = -1;
 
     public ArmorTrimChallenge(MiniGameHandle gameHandle, ServerWorld world, Random random, Stage stage, WorldModifier modifier) {
@@ -69,7 +72,7 @@ public class ArmorTrimChallenge implements Challenge {
 
         correct = opts.get(correctOption);
 
-        material = selectRandomTrimMaterial();
+        material = ItemStackHelper.getRandomTrimMaterial(world.getRegistryManager(), random);
 
         armorMaterial = switch (random.nextInt(6)) {
             case 0 -> ArmorMaterials.LEATHER;
@@ -111,36 +114,26 @@ public class ArmorTrimChallenge implements Challenge {
         giant.setHeadYaw(yaw);
         giant.setPos(pos.getX(), pos.getY(), pos.getZ());
 
-        ItemStack helmet = new ItemStack(ItemHelper.getHelmet(armorMaterial));
-        ItemStackHelper.setArmorTrim(helmet, correct, material);
+        ItemStack helmet = new ItemStack(Objects.requireNonNull(ItemHelper.getHelmet(armorMaterial)));
+        helmet.set(DataComponentTypes.TRIM, new ArmorTrim(material, correct, false));
         giant.equipStack(EquipmentSlot.HEAD, helmet);
 
         ItemStack chestPlate = new ItemStack(Objects.requireNonNull(ItemHelper.getChestPlate(armorMaterial)));
-        ItemStackHelper.setArmorTrim(chestPlate, correct, material);
+        chestPlate.set(DataComponentTypes.TRIM, new ArmorTrim(material, correct, false));
         giant.equipStack(EquipmentSlot.CHEST, chestPlate);
 
         ItemStack leggings = new ItemStack(Objects.requireNonNull(ItemHelper.getLeggings(armorMaterial)));
-        ItemStackHelper.setArmorTrim(leggings, correct, material);
+        leggings.set(DataComponentTypes.TRIM, new ArmorTrim(material, correct, false));
         giant.equipStack(EquipmentSlot.LEGS, leggings);
 
         ItemStack boots = new ItemStack(Objects.requireNonNull(ItemHelper.getBoots(armorMaterial)));
-        ItemStackHelper.setArmorTrim(boots, correct, material);
+        boots.set(DataComponentTypes.TRIM, new ArmorTrim(material, correct, false));
         giant.equipStack(EquipmentSlot.FEET, boots);
 
         modifier.spawnEntity(giant);
     }
 
-    private RegistryKey<ArmorTrimMaterial> selectRandomTrimMaterial() {
-        var keys = world.getRegistryManager().get(RegistryKeys.TRIM_MATERIAL).getKeys();
-
-        if (keys.isEmpty()) {
-            throw new IllegalStateException("No trim materials found");
-        }
-
-        return keys.stream().skip(random.nextInt(keys.size())).findFirst().orElseThrow();
-    }
-
-    private Set<RegistryKey<ArmorTrimPattern>> getTrimPatterns() {
-        return world.getRegistryManager().get(RegistryKeys.TRIM_PATTERN).getKeys();
+    private IndexedIterable<RegistryEntry<ArmorTrimPattern>> getTrimPatterns() {
+        return world.getRegistryManager().get(RegistryKeys.TRIM_PATTERN).getIndexedEntries();
     }
 }

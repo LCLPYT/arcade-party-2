@@ -2,9 +2,9 @@ package work.lclpnet.ap2.game.snowball_fight;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.entity.attribute.EntityAttributeInstance;
+import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.effect.StatusEffectInstance;
-import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.entity.projectile.ProjectileEntity;
@@ -47,7 +47,6 @@ public class SnowballFightInstance extends EliminationGameInstance {
     private static final int WORLD_BORDER_DELAY = Ticks.minutes(2);
     private static final int WORLD_BORDER_TIME = Ticks.seconds(20);
     private static final float SNOWBALL_DAMAGE = 0.75f;
-    private static final int SNOWBALL_AMOUNT = 3, SNOWBALL_BIG_AMOUNT = 5;
     private ScoreboardObjective healthObjective = null;
 
     public SnowballFightInstance(MiniGameHandle gameHandle) {
@@ -118,7 +117,11 @@ public class SnowballFightInstance extends EliminationGameInstance {
         });
 
         for (ServerPlayerEntity player : participants) {
-            player.addStatusEffect(new StatusEffectInstance(StatusEffects.HASTE, Integer.MAX_VALUE, 20, false, false, false));
+            EntityAttributeInstance attribute = player.getAttributeInstance(EntityAttributes.PLAYER_BLOCK_BREAK_SPEED);
+
+            if (attribute != null) {
+                attribute.setBaseValue(100);
+            }
         }
 
         commons().scheduleWorldBorderShrink(WORLD_BORDER_DELAY, WORLD_BORDER_TIME, Ticks.seconds(5));
@@ -224,10 +227,8 @@ public class SnowballFightInstance extends EliminationGameInstance {
     private void onBreakBlock(ServerPlayerEntity player, BlockPos pos) {
         BlockState state = player.getServerWorld().getBlockState(pos);
 
-        if (state.isOf(Blocks.SNOW)) {
-            player.getInventory().insertStack(new ItemStack(Items.SNOWBALL, SNOWBALL_AMOUNT));
-        } else if (state.isOf(Blocks.SNOW_BLOCK) || state.isOf(Blocks.POWDER_SNOW)) {
-            player.getInventory().insertStack(new ItemStack(Items.SNOWBALL, SNOWBALL_BIG_AMOUNT));
+        if (state.isOf(Blocks.SNOW) || state.isOf(Blocks.SNOW_BLOCK) || state.isOf(Blocks.POWDER_SNOW)) {
+            player.getInventory().insertStack(new ItemStack(Items.SNOWBALL, 1));
         }
     }
 }

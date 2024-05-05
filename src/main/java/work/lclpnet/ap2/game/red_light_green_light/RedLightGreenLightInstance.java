@@ -1,11 +1,14 @@
 package work.lclpnet.ap2.game.red_light_green_light;
 
+import it.unimi.dsi.fastutil.ints.IntList;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.FireworkExplosionComponent;
+import net.minecraft.component.type.FireworksComponent;
 import net.minecraft.entity.boss.BossBar;
 import net.minecraft.entity.projectile.FireworkRocketEntity;
-import net.minecraft.item.FireworkRocketItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.particle.ParticleTypes;
@@ -32,8 +35,6 @@ import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker;
 import work.lclpnet.ap2.impl.util.movement.TickMovementDetector;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.kibu.access.entity.FireworkEntityAccess;
-import work.lclpnet.kibu.inv.item.FireworkExplosion;
-import work.lclpnet.kibu.inv.item.FireworkUtil;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.title.Title;
 import work.lclpnet.kibu.translate.TranslationService;
@@ -170,9 +171,9 @@ public class RedLightGreenLightInstance extends DefaultGameInstance implements R
 
         for (ServerPlayerEntity player : PlayerLookup.world(world)) {
             switch (status) {
-                case RED -> player.playSound(SoundEvents.ENTITY_BREEZE_SHOOT, SoundCategory.NEUTRAL, 1f, 0.5f);
-                case YELLOW -> player.playSound(SoundEvents.BLOCK_NOTE_BLOCK_PLING.value(), SoundCategory.PLAYERS, 1f, 0.5f);
-                case GREEN -> player.playSound(SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, SoundCategory.NEUTRAL, 1f, 1f);
+                case RED -> player.playSoundToPlayer(SoundEvents.ENTITY_BREEZE_SHOOT, SoundCategory.NEUTRAL, 1f, 0.5f);
+                case YELLOW -> player.playSoundToPlayer(SoundEvents.BLOCK_NOTE_BLOCK_PLING.value(), SoundCategory.PLAYERS, 1f, 0.5f);
+                case GREEN -> player.playSoundToPlayer(SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, SoundCategory.NEUTRAL, 1f, 1f);
             }
 
             Title.get(player).title(msg.translateFor(player));
@@ -237,7 +238,7 @@ public class RedLightGreenLightInstance extends DefaultGameInstance implements R
             z = pos.getZ();
 
             player.teleport(world, x, y, z, player.getYaw(), player.getPitch());
-            player.playSound(SoundEvents.ENTITY_ZOMBIE_ATTACK_WOODEN_DOOR, SoundCategory.PLAYERS, 0.5f, 1f);
+            player.playSoundToPlayer(SoundEvents.ENTITY_ZOMBIE_ATTACK_WOODEN_DOOR, SoundCategory.PLAYERS, 0.5f, 1f);
         } else {
             world.playSound(null, player.getBlockPos(), SoundEvents.ENTITY_ZOMBIE_ATTACK_WOODEN_DOOR, SoundCategory.PLAYERS, 0.5f, 1f);
         }
@@ -259,11 +260,10 @@ public class RedLightGreenLightInstance extends DefaultGameInstance implements R
         data.add(player);
         inGoal.add(player.getUuid());
 
-        FireworkExplosion explosion = new FireworkExplosion(FireworkRocketItem.Type.LARGE_BALL, true, false, new int[] {0x20FF4D}, new int[] {0x1E7220});
+        FireworkExplosionComponent explosion = new FireworkExplosionComponent(FireworkExplosionComponent.Type.LARGE_BALL, IntList.of(0x20FF4D), IntList.of(0x1E7220), false, true);
 
         ItemStack rocket = new ItemStack(Items.FIREWORK_ROCKET);
-        FireworkUtil.setExplosions(rocket, explosion);
-        FireworkUtil.setFlight(rocket, (byte) 1);
+        rocket.set(DataComponentTypes.FIREWORKS, new FireworksComponent(1, List.of(explosion)));
 
         ServerWorld world = getWorld();
         FireworkRocketEntity firework = new FireworkRocketEntity(world, player.getX(), player.getY(), player.getZ(), rocket);
