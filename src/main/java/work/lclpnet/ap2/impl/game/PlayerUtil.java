@@ -2,10 +2,12 @@ package work.lclpnet.ap2.impl.game;
 
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
+import net.minecraft.entity.attribute.EntityAttribute;
 import net.minecraft.entity.attribute.EntityAttributeInstance;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.player.PlayerAbilities;
 import net.minecraft.item.ItemStack;
+import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.math.Vec3d;
@@ -20,7 +22,6 @@ import work.lclpnet.kibu.access.VelocityModifier;
 import work.lclpnet.kibu.hook.util.PlayerUtils;
 
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 
 public class PlayerUtil {
@@ -111,8 +112,7 @@ public class PlayerUtil {
         player.setOnFire(false);
         VelocityModifier.setVelocity(player, Vec3d.ZERO);
 
-        Optional.ofNullable(player.getAttributeInstance(EntityAttributes.GENERIC_MAX_HEALTH))
-                .ifPresent(attribute -> attribute.setBaseValue(20));
+        resetAttributes(player);
 
         player.dismountVehicle();
 
@@ -147,6 +147,38 @@ public class PlayerUtil {
         effects.forEach(effect -> effect.apply(player));
 
         combatControl.setStyle(player, defaultCombatStyle);
+    }
+
+    private void resetAttributes(ServerPlayerEntity player) {
+        resetAttribute(player, EntityAttributes.GENERIC_ARMOR);
+        resetAttribute(player, EntityAttributes.GENERIC_ARMOR_TOUGHNESS);
+        resetAttribute(player, EntityAttributes.GENERIC_ATTACK_DAMAGE);
+        resetAttribute(player, EntityAttributes.GENERIC_ATTACK_KNOCKBACK);
+        resetAttribute(player, EntityAttributes.GENERIC_ATTACK_SPEED);
+        resetAttribute(player, EntityAttributes.GENERIC_FLYING_SPEED);
+        resetAttribute(player, EntityAttributes.GENERIC_FOLLOW_RANGE);
+        resetAttribute(player, EntityAttributes.GENERIC_KNOCKBACK_RESISTANCE);
+        resetAttribute(player, EntityAttributes.GENERIC_LUCK);
+        resetAttribute(player, EntityAttributes.GENERIC_MAX_ABSORPTION);
+        resetAttribute(player, EntityAttributes.GENERIC_MAX_HEALTH);
+        resetAttribute(player, EntityAttributes.GENERIC_MOVEMENT_SPEED);
+        resetAttribute(player, EntityAttributes.GENERIC_SCALE);
+        resetAttribute(player, EntityAttributes.GENERIC_STEP_HEIGHT);
+        resetAttribute(player, EntityAttributes.GENERIC_JUMP_STRENGTH);
+        resetAttribute(player, EntityAttributes.PLAYER_BLOCK_INTERACTION_RANGE);
+        resetAttribute(player, EntityAttributes.PLAYER_ENTITY_INTERACTION_RANGE);
+        resetAttribute(player, EntityAttributes.PLAYER_BLOCK_BREAK_SPEED);
+        resetAttribute(player, EntityAttributes.GENERIC_GRAVITY);
+        resetAttribute(player, EntityAttributes.GENERIC_SAFE_FALL_DISTANCE);
+        resetAttribute(player, EntityAttributes.GENERIC_FALL_DAMAGE_MULTIPLIER);
+    }
+
+    private void resetAttribute(ServerPlayerEntity player, RegistryEntry<EntityAttribute> attribute) {
+        EntityAttributeInstance instance = player.getAttributeInstance(attribute);
+
+        if (instance == null) return;
+
+        instance.setBaseValue(attribute.value().getDefaultValue());
     }
 
     public static void modifyWalkSpeed(ServerPlayerEntity player, float value) {
