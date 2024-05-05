@@ -18,7 +18,7 @@ class StopWatchTest {
         var sections = stopWatch.getSections();
         assertEquals(1, sections.size());
 
-        var section = sections.get(0);
+        var section = sections.getFirst();
         assertEquals("test", section.name());
         assertEquals(5e-2, section.nanoSeconds() * 1e-9, 2e-2);  // tolerance of 20ms deviation
     }

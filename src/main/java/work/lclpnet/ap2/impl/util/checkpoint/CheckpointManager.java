@@ -29,7 +29,7 @@ public class CheckpointManager {
     }
 
     public Checkpoint getCheckpoint(ServerPlayerEntity player) {
-        return playerCheckpoints.computeIfAbsent(player.getUuid(), uuid -> checkpoints.get(0));
+        return playerCheckpoints.computeIfAbsent(player.getUuid(), uuid -> checkpoints.getFirst());
     }
 
     public boolean grantCheckpoint(ServerPlayerEntity player, int grant) {

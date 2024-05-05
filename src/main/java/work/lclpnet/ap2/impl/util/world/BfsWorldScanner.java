@@ -30,7 +30,7 @@ public class BfsWorldScanner implements WorldScanner {
 
             @Override
             public BlockPos next() {
-                BlockPos current = queue.remove(0);
+                BlockPos current = queue.removeFirst();
 
                 advance(current);
 

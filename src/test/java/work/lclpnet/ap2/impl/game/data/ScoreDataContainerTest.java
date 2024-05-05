@@ -26,7 +26,7 @@ class ScoreDataContainerTest {
         var order = container.orderedEntries().toList();
 
         assertEquals(3, order.size());
-        assertEquals("Player_C", order.get(0).subject().name());
+        assertEquals("Player_C", order.getFirst().subject().name());
         assertEquals("Player_A", order.get(1).subject().name());
         assertEquals("Player_B", order.get(2).subject().name());
     }

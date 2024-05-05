@@ -100,7 +100,7 @@ public class KnockoutInstance extends EliminationGameInstance {
         }
 
         var msg = gameHandle.getTranslations().translateText(player, "game.ap2.knockout.charge",
-                        styled(String.format("%.2f", power * 100), chargeColor))
+                        styled("%.2f".formatted(power * 100), chargeColor))
                 .formatted(Formatting.GOLD, Formatting.BOLD);
 
         player.sendMessage(msg, true);

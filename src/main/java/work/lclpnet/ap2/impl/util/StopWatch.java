@@ -50,9 +50,9 @@ public class StopWatch {
         for (int i = 1; i <= sections.size(); i++) {
             Section section = sections.get(i - 1);
             names[i] = section.name();
-            nanos[i] = String.format("%.3E", (double) section.nanoSeconds());
-            millis[i] = String.format("%.0f", section.milliSeconds());
-            seconds[i] = String.format("%.3f", section.seconds());
+            nanos[i] = "%.3E".formatted((double) section.nanoSeconds());
+            millis[i] = "%.0f".formatted(section.milliSeconds());
+            seconds[i] = "%.3f".formatted(section.seconds());
         }
 
         // find column width
@@ -62,10 +62,10 @@ public class StopWatch {
         int secondsWidth = Arrays.stream(seconds).mapToInt(String::length).max().orElse(0);
 
         for (int i = 0; i < n; i++) {
-            String name = String.format("%" + namesWidth + "s", names[i]);
-            String nano = String.format("%-" + nanosWidth + "s", nanos[i]);
-            String milli = String.format("%-" + millisWidth + "s", millis[i]);
-            String second = String.format("%-" + secondsWidth + "s", seconds[i]);
+            String name = ("%" + namesWidth + "s").formatted(names[i]);
+            String nano = ("%-" + nanosWidth + "s").formatted(nanos[i]);
+            String milli = ("%-" + millisWidth + "s").formatted(millis[i]);
+            String second = ("%-" + secondsWidth + "s").formatted(seconds[i]);
             out.printf("%s %s %s %s%n", name, second, milli, nano);
 
             if (i == 0) {

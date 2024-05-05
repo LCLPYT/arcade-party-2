@@ -170,7 +170,7 @@ public class AnvilFallInstance extends EliminationGameInstance {
                     cooldown = delay;
 
                     if (delay > 0) {
-                        Object obj = 20 % delay == 0 ? 20 / delay : String.format("%.2f", 20f / delay);
+                        Object obj = 20 % delay == 0 ? 20 / delay : "%.2f".formatted(20f / delay);
                         amountDisplay.setArgument(0, FormatWrapper.styled(obj, Formatting.YELLOW));
                     } else {
                         amountDisplay.setArgument(0, FormatWrapper.styled(20, Formatting.YELLOW));
