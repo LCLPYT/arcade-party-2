@@ -14,7 +14,7 @@ public class PlayerHeadUtil {
 
     public static ItemStack getItem(UUID uuid, String texture) {
         PropertyMap properties = new PropertyMap();
-        properties.put("textures", new Property("value", texture));
+        properties.put("textures", new Property("textures", texture));
 
         ItemStack stack = new ItemStack(Items.PLAYER_HEAD);
         stack.set(DataComponentTypes.PROFILE, new ProfileComponent(Optional.empty(), Optional.of(uuid), properties));
