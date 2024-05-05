@@ -27,7 +27,7 @@ public class SimpleMovementBlocker implements MovementBlocker {
 
     public void disableMovement(ServerPlayerEntity player) {
         if (useStatusEffects) {
-            MovementListener.addStatusEffects(player, -1);
+            MovementListener.modifyAttributes(player);
         }
 
         TaskHandle prev = blocked.put(player.getUuid(), null);
@@ -43,7 +43,7 @@ public class SimpleMovementBlocker implements MovementBlocker {
         }
 
         if (useStatusEffects) {
-            MovementListener.addStatusEffects(player, durationTicks);
+            MovementListener.modifyAttributes(player);
         }
 
         TaskHandle task = scheduler.timeout(() -> enableMovement(player), durationTicks);
@@ -54,7 +54,7 @@ public class SimpleMovementBlocker implements MovementBlocker {
 
     @Override
     public void enableMovement(ServerPlayerEntity player) {
-        MovementListener.removeStatusEffects(player);
+        MovementListener.resetAttributes(player);
 
         TaskHandle task = blocked.remove(player.getUuid());
 
@@ -67,8 +67,8 @@ public class SimpleMovementBlocker implements MovementBlocker {
     }
 
     @Override
-    public void setUseStatusEffects(boolean useStatusEffects) {
-        this.useStatusEffects = useStatusEffects;
+    public void setModifyAttributes(boolean modifyAttributes) {
+        this.useStatusEffects = modifyAttributes;
     }
 
     @Override

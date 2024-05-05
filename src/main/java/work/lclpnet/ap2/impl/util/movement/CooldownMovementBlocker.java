@@ -9,7 +9,7 @@ public class CooldownMovementBlocker implements MovementBlocker {
 
     private final Cooldown cooldown;
     private final MovementListener movement = new MovementListener(this);
-    private boolean useStatusEffects = true;
+    private boolean modifyAttributes = true;
 
     public CooldownMovementBlocker(TaskScheduler scheduler) {
         this.cooldown = new Cooldown(scheduler);
@@ -30,8 +30,8 @@ public class CooldownMovementBlocker implements MovementBlocker {
     public void disableMovement(ServerPlayerEntity player, int durationTicks) {
         if (durationTicks <= 0) return;
 
-        if (useStatusEffects) {
-            MovementListener.addStatusEffects(player, durationTicks);
+        if (modifyAttributes) {
+            MovementListener.modifyAttributes(player);
         }
 
         cooldown.setCooldown(player, durationTicks);
@@ -43,18 +43,18 @@ public class CooldownMovementBlocker implements MovementBlocker {
     }
 
     @Override
-    public void setUseStatusEffects(boolean useStatusEffects) {
-        this.useStatusEffects = useStatusEffects;
+    public void setModifyAttributes(boolean modifyAttributes) {
+        this.modifyAttributes = modifyAttributes;
     }
 
     @Override
     public boolean isUsingStatusEffects() {
-        return useStatusEffects;
+        return modifyAttributes;
     }
 
     private void onCooldownOver(ServerPlayerEntity player) {
-        if (useStatusEffects) {
-            MovementListener.removeStatusEffects(player);
+        if (modifyAttributes) {
+            MovementListener.resetAttributes(player);
         }
     }
 }

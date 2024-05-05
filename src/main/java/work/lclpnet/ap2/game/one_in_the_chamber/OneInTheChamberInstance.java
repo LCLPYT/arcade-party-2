@@ -59,7 +59,7 @@ public class OneInTheChamberInstance extends DefaultGameInstance {
         super(gameHandle);
 
         movementBlocker = new SimpleMovementBlocker(gameHandle.getScheduler());
-        movementBlocker.setUseStatusEffects(false);
+        movementBlocker.setModifyAttributes(false);
 
         respawnCooldown = new Cooldown(gameHandle.getGameScheduler());
 
