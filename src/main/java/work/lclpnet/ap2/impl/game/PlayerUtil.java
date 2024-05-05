@@ -173,12 +173,21 @@ public class PlayerUtil {
         resetAttribute(player, EntityAttributes.GENERIC_FALL_DAMAGE_MULTIPLIER);
     }
 
-    private void resetAttribute(ServerPlayerEntity player, RegistryEntry<EntityAttribute> attribute) {
+    public static void resetAttribute(ServerPlayerEntity player, RegistryEntry<EntityAttribute> attribute) {
+        if (attribute == EntityAttributes.GENERIC_MOVEMENT_SPEED) {
+            setAttribute(player, attribute, player.getAbilities().getWalkSpeed());
+            return;
+        }
+
+        setAttribute(player, attribute, attribute.value().getDefaultValue());
+    }
+
+    public static void setAttribute(ServerPlayerEntity player, RegistryEntry<EntityAttribute> attribute, double value) {
         EntityAttributeInstance instance = player.getAttributeInstance(attribute);
 
         if (instance == null) return;
 
-        instance.setBaseValue(attribute.value().getDefaultValue());
+        instance.setBaseValue(value);
     }
 
     public static void modifyWalkSpeed(ServerPlayerEntity player, float value) {
