@@ -59,15 +59,15 @@ class ScoreTimeDataContainerTest {
         container.setScore(playerB, 10);
 
         var order = container.orderedEntries().toList();
-        assertEquals(playerC, order.get(0).subject().name());
+        assertEquals(playerC, order.getFirst().subject().name());
         assertEquals(playerB, order.get(1).subject().name());
         assertEquals(playerA, order.get(2).subject().name());
 
-        assertInstanceOf(ScoreTimeDataEntry.class, order.get(0));
+        assertInstanceOf(ScoreTimeDataEntry.class, order.getFirst());
         assertInstanceOf(ScoreTimeDataEntry.class, order.get(1));
         assertInstanceOf(ScoreDataEntry.class, order.get(2));
 
-        assertEquals(1, ((ScoreTimeDataEntry<StringRef>) order.get(0)).ranking());
+        assertEquals(1, ((ScoreTimeDataEntry<StringRef>) order.getFirst()).ranking());
         assertEquals(2, ((ScoreTimeDataEntry<StringRef>) order.get(1)).ranking());
     }
 }

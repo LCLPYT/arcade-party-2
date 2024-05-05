@@ -60,7 +60,7 @@ class AnvilFallSetupTest {
 
             for (int x = 0; x < width; x++) {
                 if (!builder.isEmpty()) builder.append(" ");
-                builder.append(String.format("%02d", matrix[z * width + x]));
+                builder.append("%02d".formatted(matrix[z * width + x]));
             }
 
             System.out.println(builder);
