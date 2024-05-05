@@ -8,6 +8,7 @@ import net.minecraft.entity.mob.*;
 import net.minecraft.entity.passive.*;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
+import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
@@ -180,6 +181,12 @@ public class MobSpawner {
             var brain = warden.getBrain();
 //            warden.setPersistent();
             brain.remember(MemoryModuleType.DIG_COOLDOWN, Unit.INSTANCE, Ticks.minutes(10));
+        } else if (entity instanceof WolfEntity wolf) {
+            randomizeVariant(wolf, world.getRegistryManager().get(RegistryKeys.WOLF_VARIANT));
+        } else if (entity instanceof BoggedEntity bogged) {
+            if (random.nextFloat() < 0.2) {
+                bogged.setSheared(true);
+            }
         }
     }
 
