@@ -1,29 +1,23 @@
 package work.lclpnet.ap2.impl.util.heads;
 
+import com.mojang.authlib.properties.Property;
+import com.mojang.authlib.properties.PropertyMap;
+import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.ProfileComponent;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtList;
 
+import java.util.Optional;
 import java.util.UUID;
 
 public class PlayerHeadUtil {
 
     public static ItemStack getItem(UUID uuid, String texture) {
+        PropertyMap properties = new PropertyMap();
+        properties.put("textures", new Property("value", texture));
+
         ItemStack stack = new ItemStack(Items.PLAYER_HEAD);
-
-        NbtCompound nbt = stack.getOrCreateSubNbt("SkullOwner");
-        nbt.putUuid("Id", uuid);
-
-        NbtCompound properties = new NbtCompound();
-        NbtList textures = new NbtList();
-        NbtCompound entry = new NbtCompound();
-
-        entry.putString("Value", texture);
-
-        textures.add(entry);
-        properties.put("textures", textures);
-        nbt.put("Properties", properties);
+        stack.set(DataComponentTypes.PROFILE, new ProfileComponent(Optional.empty(), Optional.of(uuid), properties));
 
         return stack;
     }

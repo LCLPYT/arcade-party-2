@@ -1,6 +1,8 @@
 package work.lclpnet.ap2.game.chicken_shooter;
 
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
+import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.UnbreakableComponent;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.TntEntity;
@@ -37,7 +39,6 @@ import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
 import work.lclpnet.kibu.hook.entity.ProjectileCanHitCallback;
 import work.lclpnet.kibu.hook.entity.ProjectileHooks;
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks;
-import work.lclpnet.kibu.inv.item.ItemStackUtil;
 import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
@@ -94,7 +95,7 @@ public class ChickenShooterInstance extends DefaultGameInstance implements Runna
             if (winManager.isGameOver() || !(source.getAttacker() instanceof ServerPlayerEntity attacker)) return false;
 
             float pitch = chicken.isBaby() ? 1.4f : 0.8f;
-            attacker.playSound(SoundEvents.ENTITY_ARROW_HIT_PLAYER, SoundCategory.PLAYERS, 0.8f, pitch);
+            attacker.playSoundToPlayer(SoundEvents.ENTITY_ARROW_HIT_PLAYER, SoundCategory.PLAYERS, 0.8f, pitch);
 
             int score = killChicken(chicken, attacker, world);
 
@@ -207,8 +208,8 @@ public class ChickenShooterInstance extends DefaultGameInstance implements Runna
 
     private int tntExplode(ChickenEntity chicken, TntEntity tnt, ServerWorld world, ServerPlayerEntity attacker, double x, double y, double z) {
         world.spawnParticles(ParticleTypes.EXPLOSION, x, y, z, 4, 0.5, 0.5, 0.5, 1);
-        attacker.playSound(SoundEvents.ENTITY_TNT_PRIMED, SoundCategory.PLAYERS, 0.8f, 1.8f);
-        attacker.playSound(SoundEvents.ENTITY_GENERIC_EXPLODE, SoundCategory.PLAYERS, 0.8f, 0.7f);
+        attacker.playSoundToPlayer(SoundEvents.ENTITY_TNT_PRIMED, SoundCategory.PLAYERS, 0.8f, 1.8f);
+        attacker.playSoundToPlayer(SoundEvents.ENTITY_GENERIC_EXPLODE.value(), SoundCategory.PLAYERS, 0.8f, 0.7f);
 
         Vec3d tntPos = tnt.getPos();
 
@@ -230,9 +231,8 @@ public class ChickenShooterInstance extends DefaultGameInstance implements Runna
             ItemStack stack = new ItemStack(Items.BOW);
 
             stack.addEnchantment(Enchantments.INFINITY, 1);
-            ItemStackUtil.setUnbreakable(stack, true);
-
-            stack.setCustomName(translations.translateText(player, "game.ap2.chicken_shooter.bow")
+            stack.set(DataComponentTypes.UNBREAKABLE, new UnbreakableComponent(false));
+            stack.set(DataComponentTypes.CUSTOM_NAME, translations.translateText(player, "game.ap2.chicken_shooter.bow")
                     .styled(style -> style.withItalic(false).withFormatting(Formatting.GOLD)));
 
             PlayerInventory inventory = player.getInventory();

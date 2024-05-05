@@ -1,6 +1,7 @@
 package work.lclpnet.ap2.base.activity;
 
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
+import net.minecraft.component.DataComponentTypes;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.item.ItemStack;
@@ -365,7 +366,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
             animatedTitle.add(new NextGameTitleAnimation(player, gameTitle, playedNextMsg.translateFor(player)));
 
             if (soundFallback) {
-                player.playSound(SoundEvents.ENTITY_PLAYER_LEVELUP, SoundCategory.PLAYERS, 1, 1);
+                player.playSoundToPlayer(SoundEvents.ENTITY_PLAYER_LEVELUP, SoundCategory.PLAYERS, 1, 1);
             }
         }
 
@@ -400,7 +401,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
 
         msg.acceptEach(PlayerLookup.all(getServer()), (player, text) -> {
             player.sendMessage(text);
-            player.playSound(SoundEvents.ENTITY_WITHER_HURT, SoundCategory.PLAYERS, 0.4f, 0.9f);
+            player.playSoundToPlayer(SoundEvents.ENTITY_WITHER_HURT, SoundCategory.PLAYERS, 0.4f, 0.9f);
         });
     }
 
@@ -421,10 +422,10 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
             if (server.getPermissionLevel(player.getGameProfile()) < 2) continue;
 
             ItemStack selector = new ItemStack(Items.TOTEM_OF_UNDYING);
-            selector.setCustomName(Text.literal("Select Game").styled(style -> style.withItalic(false).withFormatting(YELLOW)));
+            selector.set(DataComponentTypes.CUSTOM_NAME, Text.literal("Select Game").styled(style -> style.withItalic(false).withFormatting(YELLOW)));
 
             ItemStack skip = new ItemStack(Items.EMERALD_BLOCK);
-            skip.setCustomName(Text.literal("Skip Preparation").styled(style -> style.withItalic(false).withFormatting(GREEN)));
+            skip.set(DataComponentTypes.CUSTOM_NAME, Text.literal("Skip Preparation").styled(style -> style.withItalic(false).withFormatting(GREEN)));
 
             PlayerInventory inventory = player.getInventory();
             inventory.setStack(0, selector);
@@ -480,7 +481,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
 
         player.closeHandledScreen();
         player.sendMessage(Text.literal("Forcing mini-game \"%s\"".formatted(game.getId())));
-        player.playSound(SoundEvents.BLOCK_NOTE_BLOCK_PLING.value(), SoundCategory.PLAYERS, 0.5f, 2f);
+        player.playSoundToPlayer(SoundEvents.BLOCK_NOTE_BLOCK_PLING.value(), SoundCategory.PLAYERS, 0.5f, 2f);
     }
 
     private void openGamePicker(ServerPlayerEntity player) {

@@ -2,6 +2,8 @@ package work.lclpnet.ap2.game.treasure_hunter;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.UnbreakableComponent;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -26,7 +28,6 @@ import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
-import work.lclpnet.kibu.inv.item.ItemStackUtil;
 import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 
@@ -71,8 +72,8 @@ public class TreasureHunterInstance extends DefaultGameInstance {
                 return ActionResult.FAIL;
             }
 
-            player.playSound(SoundEvents.BLOCK_AMETHYST_BLOCK_RESONATE, SoundCategory.BLOCKS, 1.2f, 1.8f);
-            player.playSound(SoundEvents.BLOCK_CHEST_LOCKED, SoundCategory.BLOCKS, 0.2f, 0.5f);
+            player.playSoundToPlayer(SoundEvents.BLOCK_AMETHYST_BLOCK_RESONATE, SoundCategory.BLOCKS, 1.2f, 1.8f);
+            player.playSoundToPlayer(SoundEvents.BLOCK_CHEST_LOCKED, SoundCategory.BLOCKS, 0.2f, 0.5f);
 
             data.add(serverPlayer);
             winManager.win(serverPlayer);
@@ -127,7 +128,7 @@ public class TreasureHunterInstance extends DefaultGameInstance {
 
     private void giveCoin(PlayerEntity player) {
         // TODO actually give the player the coin
-        player.playSound(SoundEvents.ENTITY_ARROW_HIT_PLAYER, SoundCategory.BLOCKS, 0.7f, 1.55f);
+        player.playSoundToPlayer(SoundEvents.ENTITY_ARROW_HIT_PLAYER, SoundCategory.BLOCKS, 0.7f, 1.55f);
     }
 
     private void giveShovelsToPlayers() {
@@ -135,7 +136,7 @@ public class TreasureHunterInstance extends DefaultGameInstance {
             ItemStack stack = new ItemStack(Items.IRON_SHOVEL);
 
             stack.addEnchantment(Enchantments.EFFICIENCY, 4);
-            ItemStackUtil.setUnbreakable(stack, true);
+            stack.set(DataComponentTypes.UNBREAKABLE, new UnbreakableComponent(false));
 
             PlayerInventory inventory = player.getInventory();
             inventory.setStack(4, stack);

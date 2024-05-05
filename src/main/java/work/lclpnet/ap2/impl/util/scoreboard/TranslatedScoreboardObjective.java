@@ -319,7 +319,7 @@ public class TranslatedScoreboardObjective implements CustomScoreboardObjective,
             Text display = getScoreHolderDisplay(entry, player);
             NumberFormat format = entry.numberFormat();
 
-            var packet = new ScoreboardScoreUpdateS2CPacket(scoreHolder, objective.name(), score, display, format);
+            var packet = new ScoreboardScoreUpdateS2CPacket(scoreHolder, objective.name(), score, Optional.ofNullable(display), Optional.ofNullable(format));
 
             player.networkHandler.sendPacket(packet);
         });
@@ -338,7 +338,7 @@ public class TranslatedScoreboardObjective implements CustomScoreboardObjective,
 
             Text display = getScoreHolderDisplay(entry, player);
 
-            var packet = new ScoreboardScoreUpdateS2CPacket(scoreHolder, objective.name(), score, display, format);
+            var packet = new ScoreboardScoreUpdateS2CPacket(scoreHolder, objective.name(), score, Optional.ofNullable(display), Optional.ofNullable(format));
 
             player.networkHandler.sendPacket(packet);
         }

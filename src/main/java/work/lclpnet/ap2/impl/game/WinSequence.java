@@ -170,11 +170,11 @@ public class WinSequence<T, Ref extends SubjectRef> {
     }
 
     private static void playWinSound(ServerPlayerEntity player) {
-        player.playSound(SoundEvents.ENTITY_PLAYER_LEVELUP, SoundCategory.PLAYERS, 1, 0);
+        player.playSoundToPlayer(SoundEvents.ENTITY_PLAYER_LEVELUP, SoundCategory.PLAYERS, 1, 0);
     }
 
     private static void playLooseSound(ServerPlayerEntity player) {
-        player.playSound(SoundEvents.ENTITY_BLAZE_DEATH, SoundCategory.PLAYERS, 1, 1);
+        player.playSoundToPlayer(SoundEvents.ENTITY_BLAZE_DEATH, SoundCategory.PLAYERS, 1, 1);
     }
 
     private void broadcastTop3() {

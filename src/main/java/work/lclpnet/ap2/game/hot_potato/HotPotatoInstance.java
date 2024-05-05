@@ -1,10 +1,13 @@
 package work.lclpnet.ap2.game.hot_potato;
 
+import it.unimi.dsi.fastutil.ints.IntList;
+import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.FireworkExplosionComponent;
+import net.minecraft.component.type.FireworksComponent;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.projectile.FireworkRocketEntity;
-import net.minecraft.item.FireworkRocketItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.particle.ParticleTypes;
@@ -24,8 +27,6 @@ import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.kibu.access.entity.FireworkEntityAccess;
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
-import work.lclpnet.kibu.inv.item.FireworkExplosion;
-import work.lclpnet.kibu.inv.item.FireworkUtil;
 import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.RunningTask;
@@ -35,6 +36,7 @@ import work.lclpnet.kibu.title.Title;
 import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.kibu.translate.bossbar.TranslatedBossBar;
 
+import java.util.List;
 import java.util.Random;
 
 public class HotPotatoInstance extends EliminationGameInstance implements GameOverListener {
@@ -110,11 +112,11 @@ public class HotPotatoInstance extends EliminationGameInstance implements GameOv
                 bossBar.setPercent(MathHelper.clamp((float) i / DURATION_SECONDS, 0f, 1f));
 
                 if (i > 0) {
-                    spawnFirework(new FireworkExplosion(FireworkRocketItem.Type.SMALL_BALL, false, false, new int[] {0xff0000}, new int[0]), 1);
+                    spawnFirework(new FireworkExplosionComponent(FireworkExplosionComponent.Type.SMALL_BALL, IntList.of(0xff0000), IntList.of(), false, false), 1);
                     return;
                 }
 
-                spawnFirework(new FireworkExplosion(FireworkRocketItem.Type.LARGE_BALL, true, false, new int[] {0xff0000}, new int[] {0xfff200}), 0);
+                spawnFirework(new FireworkExplosionComponent(FireworkExplosionComponent.Type.LARGE_BALL, IntList.of(0xff0000), IntList.of(0xfff200), false, true), 0);
 
                 info.cancel();
 
@@ -176,7 +178,7 @@ public class HotPotatoInstance extends EliminationGameInstance implements GameOv
         world.spawnParticles(ParticleTypes.FLAME, x, y, z, 2, 0.2, 0.2, 0.2, 0.1);
     }
 
-    private void spawnFirework(FireworkExplosion explosion, int delay) {
+    private void spawnFirework(FireworkExplosionComponent explosion, int delay) {
         if (markedPlayer == null || markedPlayer.isDisconnected()) return;
 
         double x = markedPlayer.getX(), y = markedPlayer.getY(), z = markedPlayer.getZ();
@@ -184,8 +186,7 @@ public class HotPotatoInstance extends EliminationGameInstance implements GameOv
         ServerWorld world = getWorld();
 
         ItemStack rocket = new ItemStack(Items.FIREWORK_ROCKET);
-        FireworkUtil.setExplosions(rocket, explosion);
-        FireworkUtil.setFlight(rocket, (byte) 1);
+        rocket.set(DataComponentTypes.FIREWORKS, new FireworksComponent(1, List.of(explosion)));
 
         FireworkRocketEntity firework = new FireworkRocketEntity(world, x, y + 3, z, rocket);
         world.spawnEntity(firework);
@@ -223,7 +224,7 @@ public class HotPotatoInstance extends EliminationGameInstance implements GameOv
 
         ItemStack stack = new ItemStack(Items.BAKED_POTATO);
 
-        stack.setCustomName(translations.translateText(player, "game.ap2.hot_potato.item")
+        stack.set(DataComponentTypes.CUSTOM_NAME, translations.translateText(player, "game.ap2.hot_potato.item")
                 .styled(style -> style.withColor(0xff0000).withItalic(false)));
 
         player.getInventory().setStack(4, stack);

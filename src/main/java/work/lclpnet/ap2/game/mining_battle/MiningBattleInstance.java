@@ -1,6 +1,8 @@
 package work.lclpnet.ap2.game.mining_battle;
 
 import net.minecraft.block.BlockState;
+import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.UnbreakableComponent;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -25,7 +27,6 @@ import work.lclpnet.ap2.impl.map.ServerThreadMapBootstrap;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.TextUtil;
 import work.lclpnet.kibu.hook.world.BlockModificationHooks;
-import work.lclpnet.kibu.inv.item.ItemStackUtil;
 import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
@@ -113,15 +114,15 @@ public class MiningBattleInstance extends DefaultGameInstance implements MapBoot
         commons().addScore(player, points, data);
 
         if (points <= 1) {
-            player.playSound(SoundEvents.BLOCK_ENCHANTMENT_TABLE_USE, SoundCategory.BLOCKS, 0.5f, 2f);
+            player.playSoundToPlayer(SoundEvents.BLOCK_ENCHANTMENT_TABLE_USE, SoundCategory.BLOCKS, 0.5f, 2f);
         } else if (points == 2) {
-            player.playSound(SoundEvents.BLOCK_BREWING_STAND_BREW, SoundCategory.BLOCKS, 0.5f, 2f);
+            player.playSoundToPlayer(SoundEvents.BLOCK_BREWING_STAND_BREW, SoundCategory.BLOCKS, 0.5f, 2f);
         } else if (points < 5) {
-            player.playSound(SoundEvents.BLOCK_END_PORTAL_SPAWN, SoundCategory.BLOCKS, 0.3f, 1f);
+            player.playSoundToPlayer(SoundEvents.BLOCK_END_PORTAL_SPAWN, SoundCategory.BLOCKS, 0.3f, 1f);
         } else {
-            player.playSound(SoundEvents.ENTITY_EVOKER_CAST_SPELL, SoundCategory.BLOCKS, 0.5f, 1f);
-            player.playSound(SoundEvents.ENTITY_WITHER_SPAWN, SoundCategory.BLOCKS, 0.325f, 1.2f);
-            player.playSound(SoundEvents.BLOCK_END_PORTAL_SPAWN, SoundCategory.BLOCKS, 0.225f, 0f);
+            player.playSoundToPlayer(SoundEvents.ENTITY_EVOKER_CAST_SPELL, SoundCategory.BLOCKS, 0.5f, 1f);
+            player.playSoundToPlayer(SoundEvents.ENTITY_WITHER_SPAWN, SoundCategory.BLOCKS, 0.325f, 1.2f);
+            player.playSoundToPlayer(SoundEvents.BLOCK_END_PORTAL_SPAWN, SoundCategory.BLOCKS, 0.225f, 0f);
         }
     }
 
@@ -134,9 +135,9 @@ public class MiningBattleInstance extends DefaultGameInstance implements MapBoot
             ItemStack pickaxe = new ItemStack(Items.DIAMOND_PICKAXE);
             pickaxe.addEnchantment(Enchantments.EFFICIENCY, 3);
 
-            ItemStackUtil.setUnbreakable(pickaxe, true);
+            pickaxe.set(DataComponentTypes.UNBREAKABLE, new UnbreakableComponent(false));
 
-            pickaxe.setCustomName(TextUtil.getVanillaName(pickaxe).styled(style -> style
+            pickaxe.set(DataComponentTypes.CUSTOM_NAME, TextUtil.getVanillaName(pickaxe).styled(style -> style
                     .withFormatting(Formatting.GOLD)
                     .withItalic(false)));
 

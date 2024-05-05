@@ -239,14 +239,14 @@ public class CCHooks {
                 .append("⚠").styled(style -> style.withColor(0xff0000));
 
         player.sendMessage(msg, true);
-        player.playSound(SoundEvents.ENTITY_BREEZE_LAND, SoundCategory.PLAYERS, 0.5f, 1.2f);
+        player.playSoundToPlayer(SoundEvents.ENTITY_BREEZE_LAND, SoundCategory.PLAYERS, 0.5f, 1.2f);
     }
 
     private void onLeaveBaseOf(ServerPlayerEntity player, Team team) {
         if (teamManager.isTeamMember(player, team)) return;
 
         // player leaves the base of another team
-        player.playSound(SoundEvents.ENTITY_BREEZE_LAND, SoundCategory.PLAYERS, 0.5f, 0.8f);
+        player.playSoundToPlayer(SoundEvents.ENTITY_BREEZE_LAND, SoundCategory.PLAYERS, 0.5f, 0.8f);
     }
 
     public record Args(CCFuel fuel, CCBaseManager baseManager, CCKitManager kitManager, CCFuelListener fuelListener) {}

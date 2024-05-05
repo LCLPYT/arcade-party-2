@@ -1,13 +1,16 @@
 package work.lclpnet.ap2.game.guess_it.challenge;
 
+import it.unimi.dsi.fastutil.ints.IntList;
 import net.minecraft.block.*;
 import net.minecraft.block.enums.RailShape;
+import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.FireworkExplosionComponent;
+import net.minecraft.component.type.FireworksComponent;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.passive.VillagerEntity;
 import net.minecraft.entity.projectile.FireworkRocketEntity;
 import net.minecraft.entity.vehicle.MinecartEntity;
-import net.minecraft.item.FireworkRocketItem;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.server.world.ServerWorld;
@@ -20,8 +23,6 @@ import work.lclpnet.ap2.game.guess_it.data.*;
 import work.lclpnet.ap2.game.guess_it.util.MobSpawner;
 import work.lclpnet.ap2.impl.util.world.SimpleAdjacentBlocks;
 import work.lclpnet.kibu.access.entity.FireworkEntityAccess;
-import work.lclpnet.kibu.inv.item.FireworkExplosion;
-import work.lclpnet.kibu.inv.item.FireworkUtil;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.RunningTask;
 import work.lclpnet.kibu.scheduler.api.SchedulerAction;
@@ -118,11 +119,10 @@ public class MinecartChallenge implements Challenge, LongerChallenge, SchedulerA
         entity.getPassengersDeep().forEach(Entity::discard);
         entity.discard();
 
-        FireworkExplosion explosion = new FireworkExplosion(FireworkRocketItem.Type.SMALL_BALL, false, false, new int[] {0xff0000}, new int[0]);
+        FireworkExplosionComponent explosion = new FireworkExplosionComponent(FireworkExplosionComponent.Type.SMALL_BALL, IntList.of(0xff0000), IntList.of(), false, false);
 
         ItemStack rocket = new ItemStack(Items.FIREWORK_ROCKET);
-        FireworkUtil.setExplosions(rocket, explosion);
-        FireworkUtil.setFlight(rocket, (byte) 1);
+        rocket.set(DataComponentTypes.FIREWORKS, new FireworksComponent(1, List.of(explosion)));
 
         FireworkRocketEntity firework = new FireworkRocketEntity(world, entity.getX(), entity.getY(), entity.getZ(), rocket);
         world.spawnEntity(firework);
