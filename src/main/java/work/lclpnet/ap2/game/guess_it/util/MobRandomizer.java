@@ -38,14 +38,15 @@ public class MobRandomizer {
                 EntityType.HUSK, EntityType.SKELETON, EntityType.ZOMBIE, EntityType.ZOMBIE_VILLAGER,
                 EntityType.IRON_GOLEM, EntityType.LLAMA, EntityType.SLIME, EntityType.MAGMA_CUBE,
                 EntityType.MOOSHROOM, EntityType.MULE, EntityType.OCELOT, EntityType.PANDA, EntityType.PARROT,
-                EntityType.PHANTOM, EntityType.PIGLIN, EntityType.PIGLIN_BRUTE, EntityType.PILLAGER, EntityType.POLAR_BEAR,
-                EntityType.RAVAGER, EntityType.ZOMBIE_HORSE, EntityType.SKELETON_HORSE, EntityType.WITHER_SKELETON,
-                EntityType.ZOMBIFIED_PIGLIN, EntityType.WOLF, EntityType.SHULKER, EntityType.SILVERFISH,
-                EntityType.WANDERING_TRADER, EntityType.VILLAGER, EntityType.VINDICATOR, EntityType.VEX, EntityType.TURTLE,
-                EntityType.TRADER_LLAMA, EntityType.STRIDER, EntityType.STRAY, EntityType.SNOW_GOLEM, EntityType.SNIFFER,
-                EntityType.DOLPHIN, EntityType.COD, EntityType.SALMON, EntityType.SQUID, EntityType.GLOW_SQUID,
-                EntityType.PUFFERFISH, EntityType.WITCH, EntityType.WARDEN, EntityType.ZOGLIN, EntityType.WITHER,
-                EntityType.TROPICAL_FISH
+                EntityType.PHANTOM, EntityType.PIGLIN, EntityType.PIGLIN_BRUTE, EntityType.PILLAGER,
+                EntityType.POLAR_BEAR, EntityType.RAVAGER, EntityType.ZOMBIE_HORSE, EntityType.SKELETON_HORSE,
+                EntityType.WITHER_SKELETON, EntityType.ZOMBIFIED_PIGLIN, EntityType.WOLF, EntityType.SHULKER,
+                EntityType.SILVERFISH, EntityType.WANDERING_TRADER, EntityType.VILLAGER, EntityType.VINDICATOR,
+                EntityType.VEX, EntityType.TURTLE, EntityType.TRADER_LLAMA, EntityType.STRIDER, EntityType.STRAY,
+                EntityType.SNOW_GOLEM, EntityType.SNIFFER, EntityType.DOLPHIN, EntityType.COD, EntityType.SALMON,
+                EntityType.SQUID, EntityType.GLOW_SQUID, EntityType.PUFFERFISH, EntityType.WITCH, EntityType.WARDEN,
+                EntityType.ZOGLIN, EntityType.WITHER, EntityType.TROPICAL_FISH, EntityType.ARMADILLO, EntityType.BREEZE,
+                EntityType.BOGGED, EntityType.TADPOLE
         ));
     }
 

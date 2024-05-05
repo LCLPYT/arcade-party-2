@@ -73,7 +73,7 @@ public class BlockCountChallenge implements Challenge, SchedulerAction {
                 .mapToInt(Integer::intValue)
                 .max().orElse(-1);
 
-        state = switch (random.nextInt(10)) {
+        state = switch (random.nextInt(11)) {
             case 0 -> Blocks.DIAMOND_BLOCK.getDefaultState();
             case 1 -> Blocks.GOLD_BLOCK.getDefaultState();
             case 2 -> Blocks.EMERALD_BLOCK.getDefaultState();
@@ -84,6 +84,7 @@ public class BlockCountChallenge implements Challenge, SchedulerAction {
             case 7 -> Blocks.AMETHYST_BLOCK.getDefaultState();
             case 8 -> Blocks.NETHERITE_BLOCK.getDefaultState();
             case 9 -> Blocks.SMOOTH_QUARTZ.getDefaultState();
+            case 10 -> Blocks.POLISHED_TUFF.getDefaultState();
             default -> throw new IllegalStateException();
         };
 
