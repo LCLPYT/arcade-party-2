@@ -10,6 +10,7 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.TypeFilter;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3i;
 import work.lclpnet.ap2.impl.util.BlockBox;
@@ -197,8 +198,8 @@ public class SbIsland {
     }
 
     public Vec3d getCenter() {
-        Vec3d buildingCenter = buildingArea.getCenter();
-        Vec3d previewCenter = previewArea.getCenter();
+        Vec3d buildingCenter = buildingArea.getCenter().withAxis(Direction.Axis.Y, buildingArea.getMin().getY());
+        Vec3d previewCenter = previewArea.getCenter().withAxis(Direction.Axis.Y, previewArea.getMin().getY());
 
         return buildingCenter.add(previewCenter).multiply(0.5);
     }

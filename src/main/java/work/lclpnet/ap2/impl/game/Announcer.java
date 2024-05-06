@@ -84,7 +84,7 @@ public class Announcer {
 
             if (sound == null) continue;
 
-            player.playSound(sound, category, volume, pitch);
+            player.playSoundToPlayer(sound, category, volume, pitch);
         }
     }
 }

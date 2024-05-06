@@ -13,6 +13,7 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
+import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.game.speed_builders.data.SbIsland;
 import work.lclpnet.ap2.game.speed_builders.data.SbModule;
@@ -72,8 +73,16 @@ public class SbManager {
 
     public synchronized void setModule(SbModule module) {
         CustomScoreboardManager scoreboardManager = gameHandle.getScoreboardManager();
+        PlayerManager playerManager = gameHandle.getServer().getPlayerManager();
+        Participants participants = gameHandle.getParticipants();
 
-        for (SbIsland island : islands.values()) {
+        for (var entry : islands.entrySet()) {
+            ServerPlayerEntity player = playerManager.getPlayer(entry.getKey());
+
+            if (player == null || !participants.isParticipating(player)) continue;
+
+            SbIsland island = entry.getValue();
+
             if (!island.supports(module)) {
                 logger.error("Module {} is incompatible with island {}", module, island);
                 continue;
@@ -98,7 +107,7 @@ public class SbManager {
             throw new IllegalStateException("There are no modules defined");
         }
 
-        return queue.remove(0);
+        return queue.removeFirst();
     }
 
     public Optional<ServerPlayerEntity> getWorstPlayer() {

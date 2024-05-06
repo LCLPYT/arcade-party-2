@@ -1,16 +1,22 @@
 package work.lclpnet.ap2.game.speed_builders;
 
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
+import net.minecraft.entity.mob.BreezeEntity;
 import net.minecraft.entity.player.PlayerAbilities;
+import net.minecraft.entity.projectile.BreezeWindChargeEntity;
+import net.minecraft.entity.projectile.ProjectileEntity;
 import net.minecraft.scoreboard.AbstractTeam;
 import net.minecraft.scoreboard.Team;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.PlayerManager;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
+import net.minecraft.util.hit.BlockHitResult;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.GameRules;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.base.Participants;
@@ -22,7 +28,9 @@ import work.lclpnet.ap2.game.speed_builders.util.*;
 import work.lclpnet.ap2.impl.game.Announcer;
 import work.lclpnet.ap2.impl.game.EliminationGameInstance;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
+import work.lclpnet.kibu.access.VelocityModifier;
 import work.lclpnet.kibu.behaviour.world.ServerWorldBehaviour;
+import work.lclpnet.kibu.hook.entity.ProjectileHooks;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.kibu.title.Title;
@@ -37,7 +45,7 @@ import java.util.concurrent.CompletableFuture;
 
 public class SpeedBuildersInstance extends EliminationGameInstance implements MapBootstrap {
 
-    private static final int BUILD_DURATION_SECONDS = 60;
+    private static final int BUILD_DURATION_SECONDS = 10;
     private static final int
             LOOK_DURATION_TICKS = Ticks.seconds(10),
             JUDGE_DURATION_TICKS = Ticks.seconds(6),
@@ -48,6 +56,9 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
     private final SbItems items;
     private SbDestruction destruction = null;
     private SbManager manager = null;
+    private SbIsland islandToDestroy = null;
+    private UUID playerToEliminate = null;
+    private BreezeEntity aelos = null;
 
     public SpeedBuildersInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
@@ -67,8 +78,10 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
 
             var islands = setup.createIslands(participants, world);
 
+            aelos = setup.getAelos();
+
             manager = new SbManager(islands, setup.getModules(), gameHandle, world, random);
-            destruction = new SbDestruction(world, random);
+            destruction = new SbDestruction(world, random, aelos);
         });
     }
 
@@ -98,9 +111,11 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
 
     @Override
     protected void ready() {
-        SbConfiguration config = new SbConfiguration(gameHandle, manager, items);
+        SbConfiguration config = new SbConfiguration(gameHandle, manager, items, destruction);
         config.configureProtection();
         config.registerHooks();
+
+        gameHandle.getHookRegistrar().registerHook(ProjectileHooks.HIT_BLOCK, this::onHitBlock);
 
         nextRound();
     }
@@ -179,21 +194,95 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
 
         for (ServerPlayerEntity player : PlayerLookup.all(server)) {
             Title.get(player).title(title, subtitle.translateFor(player), 5, 50, 5);
-            player.playSound(SoundEvents.ENTITY_BREEZE_HURT, SoundCategory.PLAYERS, 1f, 0.5f);
+            player.playSoundToPlayer(SoundEvents.ENTITY_BREEZE_HURT, SoundCategory.PLAYERS, 1f, 0.5f);
         }
 
-        gameHandle.getGameScheduler().timeout(() -> destroyIsland(worst.getUuid()), DESTROY_DELAY_TICKS);
+        gameHandle.getGameScheduler().timeout(() -> fireChargeTowardsPlayerIsland(worst.getUuid()), DESTROY_DELAY_TICKS);
     }
 
-    private void destroyIsland(@Nullable UUID worstUuid) {
+    private void fireChargeTowardsPlayerIsland(UUID worstUuid) {
         ServerPlayerEntity worst = gameHandle.getServer().getPlayerManager().getPlayer(worstUuid);
 
-        if (worst != null) {
-            manager.getIsland(worst).ifPresent(destruction::destroyIsland);
-            eliminate(worst);
-
-            if (winManager.isGameOver()) return;
+        if (worst == null) {
+            nextRoundOrGameOver();
+            return;
         }
+
+        var optIsland = manager.getIsland(worst);
+
+        if (optIsland.isEmpty()) {
+            eliminate(worst);
+            nextRoundOrGameOver();
+            return;
+        }
+
+        SbIsland island = optIsland.get();
+
+        islandToDestroy = island;
+        playerToEliminate = worstUuid;
+
+        destruction.fireProjectile(island);
+
+        // make sure the island is destroyed, if the projectile somehow misses ¯\_(ツ)_/¯
+        gameHandle.getGameScheduler().timeout(() -> {
+            destroyIsland(null);
+        }, Ticks.seconds(10));
+    }
+
+    private void onHitBlock(ProjectileEntity projectile, BlockHitResult hit) {
+        if (!(projectile instanceof BreezeWindChargeEntity) || islandToDestroy == null) return;
+
+        destroyIsland(projectile);
+    }
+
+    private void destroyIsland(@Nullable ProjectileEntity projectile) {
+        if (islandToDestroy == null) return;  // the island was already destroyed
+
+        Vec3d impactPos;
+        Vec3d velocity;
+
+        if (projectile != null) {
+            impactPos = projectile.getPos();
+            velocity = projectile.getVelocity().normalize();
+        } else {
+            impactPos = islandToDestroy.getCenter();
+            velocity = impactPos.subtract(SbDestruction.getChargePos(aelos)).normalize();
+        }
+
+        destruction.destroyIsland(islandToDestroy, impactPos, velocity);
+
+        islandToDestroy = null;
+
+        PlayerManager playerManager = gameHandle.getServer().getPlayerManager();
+        ServerPlayerEntity player = playerManager.getPlayer(playerToEliminate);
+
+        if (player == null) {
+            nextRoundOrGameOver();
+            return;
+        }
+
+        player.getAbilities().flying = false;
+        player.getAbilities().allowFlying = false;
+        player.sendAbilitiesUpdate();
+
+        VelocityModifier.setVelocity(player, velocity.add(0, 1.5, 0).normalize().multiply(3));
+
+        gameHandle.getGameScheduler().timeout(() -> {
+            ServerPlayerEntity futurePlayer = playerManager.getPlayer(playerToEliminate);
+
+            if (futurePlayer != null) {
+                eliminate(futurePlayer);
+            }
+
+            nextRoundOrGameOver();
+        }, Ticks.seconds(2));
+    }
+
+    private void nextRoundOrGameOver() {
+        if (winManager.isGameOver()) return;
+
+        islandToDestroy = null;
+        playerToEliminate = null;
 
         if (gameHandle.getParticipants().count() > 1) {
             nextRound();

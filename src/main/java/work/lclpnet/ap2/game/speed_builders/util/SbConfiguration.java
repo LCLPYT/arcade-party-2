@@ -37,11 +37,13 @@ public class SbConfiguration {
     private final MiniGameHandle gameHandle;
     private final SbManager manager;
     private final SbItems items;
+    private final SbDestruction destruction;
 
-    public SbConfiguration(MiniGameHandle gameHandle, SbManager manager, SbItems items) {
+    public SbConfiguration(MiniGameHandle gameHandle, SbManager manager, SbItems items, SbDestruction destruction) {
         this.gameHandle = gameHandle;
         this.manager = manager;
         this.items = items;
+        this.destruction = destruction;
     }
 
     public void configureProtection() {

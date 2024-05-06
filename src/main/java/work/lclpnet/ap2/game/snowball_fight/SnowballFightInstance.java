@@ -5,6 +5,7 @@ import net.minecraft.block.Blocks;
 import net.minecraft.entity.attribute.EntityAttributeInstance;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.entity.damage.DamageTypes;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.entity.projectile.ProjectileEntity;
@@ -81,6 +82,7 @@ public class SnowballFightInstance extends EliminationGameInstance {
             });
 
             config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, damageSource) ->
+                    damageSource.isOf(DamageTypes.OUTSIDE_BORDER) ||
                     entity instanceof ServerPlayerEntity damaged && participants.isParticipating(damaged)
                     && damageSource.getSource() instanceof ProjectileEntity && damageSource.getAttacker() != entity);
         });

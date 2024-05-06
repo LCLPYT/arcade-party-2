@@ -1,5 +1,9 @@
 package work.lclpnet.ap2.game.speed_builders.util;
 
+import net.minecraft.entity.EntityType;
+import net.minecraft.entity.attribute.EntityAttributeInstance;
+import net.minecraft.entity.attribute.EntityAttributes;
+import net.minecraft.entity.mob.BreezeEntity;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
@@ -18,6 +22,7 @@ import work.lclpnet.ap2.impl.util.math.AffineIntMatrix;
 import work.lclpnet.ap2.impl.util.math.Vec2i;
 import work.lclpnet.ap2.impl.util.world.CircleStructureGenerator;
 import work.lclpnet.kibu.mc.BlockStateAdapter;
+import work.lclpnet.kibu.mc.KibuBlockPos;
 import work.lclpnet.kibu.schematic.FabricBlockStateAdapter;
 import work.lclpnet.kibu.schematic.SchematicFormats;
 import work.lclpnet.kibu.schematic.api.SchematicReader;
@@ -44,6 +49,7 @@ public class SbSetup {
     private List<SbModule> modules = null;
     private List<SbIslandProto> islandProtos = null;
     private CenterIsland centerIsland = null;
+    private BreezeEntity aelos = null;
 
     public SbSetup(Random random, Logger logger) {
         this.random = random;
@@ -62,7 +68,7 @@ public class SbSetup {
     private Vec3i buildAreaDimensions(List<SbIslandProto> islands) {
         if (islands.isEmpty()) return Vec3i.ZERO;
 
-        SbIslandProto proto = islands.get(0);
+        SbIslandProto proto = islands.getFirst();
         BlockBox buildArea = proto.data().buildArea();
 
         return new Vec3i(buildArea.getWidth(), buildArea.getHeight(), buildArea.getLength());
@@ -131,12 +137,35 @@ public class SbSetup {
     private void placeCenterIsland(ServerWorld world) {
         BlockStructure structure = centerIsland.structure();
 
+        BlockPos structSpawn = centerIsland.spawn();
+        KibuBlockPos origin = structure.getOrigin();
+
         BlockPos pos = new BlockPos(
                 -structure.getWidth() / 2,
-                SPAWN_Y - centerIsland.spawn().getY() + structure.getOrigin().getY(),
+                SPAWN_Y - structSpawn.getY() + origin.getY(),
                 -structure.getLength() / 2);
 
         StructureUtil.placeStructureFast(structure, world, pos);
+
+        BlockPos spawn = structSpawn.add(
+                pos.getX() - origin.getX(),
+                pos.getY() - origin.getY(),
+                pos.getZ() - origin.getZ());
+
+        BreezeEntity breeze = new BreezeEntity(EntityType.BREEZE, world);
+        breeze.setPos(spawn.getX() + 0.5, spawn.getY(), spawn.getZ() + 0.5);
+        breeze.setAiDisabled(true);
+        breeze.setPersistent();
+
+        EntityAttributeInstance instance = breeze.getAttributeInstance(EntityAttributes.GENERIC_SCALE);
+
+        if (instance != null) {
+            instance.setBaseValue(10);
+        }
+
+        world.spawnEntity(breeze);
+
+        aelos = breeze;
     }
 
     private int getMinRadius(List<BlockStructure> structures) {
@@ -149,7 +178,11 @@ public class SbSetup {
     }
 
     public List<SbModule> getModules() {
-        return modules;
+        return Objects.requireNonNull(modules, "Modules not loaded yet");
+    }
+
+    public BreezeEntity getAelos() {
+        return Objects.requireNonNull(aelos, "Aelos not created yet");
     }
 
     private CompletableFuture<Set<SbIslandProto>> loadAvailableIslands(GameMap map, ServerWorld world) {

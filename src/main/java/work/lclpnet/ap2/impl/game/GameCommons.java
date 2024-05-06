@@ -85,9 +85,11 @@ public class GameCommons {
             }
         });
 
+        WorldBorderConfig config = readWorldBorderConfig();
+
         scheduler.timeout(() -> {
-            WorldBorder worldBorder = shrinkWorldBorder();
-            worldBorder.interpolateSize(worldBorder.getSize(), 5, durationTicks * 50L);
+            WorldBorder worldBorder = setupWorldBorder(config);
+            worldBorder.interpolateSize(worldBorder.getSize(), config.minRadius(), durationTicks * 50L);
 
             for (ServerPlayerEntity player : PlayerLookup.world(world)) {
                 player.playSoundToPlayer(SoundEvents.ENTITY_WITHER_DEATH, SoundCategory.HOSTILE, 1, 0);
@@ -99,7 +101,7 @@ public class GameCommons {
         return Action.create(hook);
     }
 
-    public WorldBorder shrinkWorldBorder() {
+    public WorldBorderConfig readWorldBorderConfig() {
         if (!(map.getProperty("world-border") instanceof JSONObject wbConfig)) {
             throw new IllegalStateException("Object property \"world-border\" not set in map properties");
         }
@@ -113,15 +115,32 @@ public class GameCommons {
             centerZ = center.z();
         }
 
-        int radius = wbConfig.getInt("size");
-        if (radius % 2 == 0) radius += 1;
+        int minRadius = 5;
 
+        if (wbConfig.has("min-size")) {
+            minRadius = wbConfig.getInt("min-size");
+
+            if (minRadius % 2 == 0) {
+                minRadius += 1;
+            }
+        }
+
+        int maxRadius = wbConfig.getInt("size");
+
+        if (maxRadius % 2 == 0) {
+            maxRadius += 1;
+        }
+
+        return new WorldBorderConfig(centerX, centerZ, maxRadius, minRadius);
+    }
+
+    public WorldBorder setupWorldBorder(WorldBorderConfig config) {
         WorldBorderManager manager = gameHandle.getWorldBorderManager();
         manager.setupWorldBorder(world);
 
         WorldBorder worldBorder = gameHandle.getWorldBorderManager().getWorldBorder();
-        worldBorder.setCenter(centerX + 0.5, centerZ + 0.5);
-        worldBorder.setSize(radius);
+        worldBorder.setCenter(config.centerX() + 0.5, config.centerZ() + 0.5);
+        worldBorder.setSize(config.maxRadius());
         worldBorder.setSafeZone(0);
         worldBorder.setDamagePerBlock(0.8);
 
@@ -169,4 +188,6 @@ public class GameCommons {
 
         return announcer.withDefaults();
     }
+
+    public record WorldBorderConfig(int centerX, int centerZ, int maxRadius, int minRadius) {}
 }
