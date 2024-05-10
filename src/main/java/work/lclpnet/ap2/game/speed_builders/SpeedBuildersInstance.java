@@ -1,6 +1,7 @@
 package work.lclpnet.ap2.game.speed_builders;
 
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
+import net.minecraft.entity.boss.BossBar;
 import net.minecraft.entity.mob.BreezeEntity;
 import net.minecraft.entity.player.PlayerAbilities;
 import net.minecraft.entity.projectile.BreezeWindChargeEntity;
@@ -45,9 +46,9 @@ import java.util.concurrent.CompletableFuture;
 
 public class SpeedBuildersInstance extends EliminationGameInstance implements MapBootstrap {
 
-    private static final int BUILD_DURATION_SECONDS = 10;
+    private static final int BUILD_DURATION_SECONDS = 45;
     private static final int
-            LOOK_DURATION_TICKS = Ticks.seconds(10),
+            LOOK_DURATION_SECONDS = 8,
             JUDGE_DURATION_TICKS = Ticks.seconds(6),
             JUDGE_ANNOUNCEMENT_TICKS = Ticks.seconds(3),
             DESTROY_DELAY_TICKS = Ticks.seconds(4);
@@ -59,6 +60,8 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
     private SbIsland islandToDestroy = null;
     private UUID playerToEliminate = null;
     private BreezeEntity aelos = null;
+    private BossBarTimer timer = null;
+    private int timerTransaction = 0;
 
     public SpeedBuildersInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
@@ -80,7 +83,7 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
 
             aelos = setup.getAelos();
 
-            manager = new SbManager(islands, setup.getModules(), gameHandle, world, random);
+            manager = new SbManager(islands, setup.getModules(), gameHandle, world, random, this::allPlayersCompleted);
             destruction = new SbDestruction(world, random, aelos);
         });
     }
@@ -111,11 +114,13 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
 
     @Override
     protected void ready() {
-        SbConfiguration config = new SbConfiguration(gameHandle, manager, items, destruction);
+        SbConfiguration config = new SbConfiguration(gameHandle, manager, items);
         config.configureProtection();
         config.registerHooks();
 
         gameHandle.getHookRegistrar().registerHook(ProjectileHooks.HIT_BLOCK, this::onHitBlock);
+
+        gameHandle.getGameScheduler().interval(manager::tick, 1);
 
         nextRound();
     }
@@ -129,12 +134,24 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
 
     private void nextRound() {
         SbModule module = manager.nextModule();
+        manager.reset();
         manager.setModule(module);
         items.setModule(module);
 
         commons().announcer().announceSubtitle("game.ap2.speed_builders.look");
 
-        gameHandle.getGameScheduler().timeout(this::startBuilding, LOOK_DURATION_TICKS);
+        TranslationService translations = gameHandle.getTranslations();
+
+        TranslatedText label = translations.translateText("game.ap2.speed_builders.prepare_label");
+        timer = commons().createTimer(label, LOOK_DURATION_SECONDS, BossBar.Color.YELLOW);
+
+        int transaction = timerTransaction;
+
+        timer.whenDone(() -> {
+            if (this.timerTransaction == transaction) {
+                startBuilding();
+            }
+        });
     }
 
     private void startBuilding() {
@@ -146,22 +163,29 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
         TranslationService translations = gameHandle.getTranslations();
 
         TranslatedText label = translations.translateText("game.ap2.speed_builders.label");
-        BossBarTimer timer = commons().createTimer(label, BUILD_DURATION_SECONDS);
+        timer = commons().createTimer(label, BUILD_DURATION_SECONDS);
 
-        timer.whenDone(this::onRoundOver);
+        int transaction = timerTransaction;
+
+        timer.whenDone(() -> {
+            if (this.timerTransaction == transaction) {
+                onRoundOver();
+            }
+        });
     }
 
     private void onRoundOver() {
+        if (manager.allIslandsComplete()) {
+            allPlayersCompleted();
+            return;
+        }
+
+        onLeaveBuildingPhase();
+
         Announcer announcer = commons().announcer();
 
         announcer.withTimes(5, 50, 0)
                 .announce("game.ap2.speed_builders.time_up", null);
-
-        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
-            player.getInventory().clear();
-        }
-
-        manager.setBuildingPhase(false);
 
         TaskScheduler scheduler = gameHandle.getGameScheduler();
 
@@ -170,6 +194,14 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
                 .announce("game.ap2.speed_builders.time_up", "game.ap2.speed_builders.grade"), 40);
 
         scheduler.timeout(this::announceJudgementDone, JUDGE_DURATION_TICKS);
+    }
+
+    private void onLeaveBuildingPhase() {
+        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
+            player.getInventory().clear();
+        }
+
+        manager.setBuildingPhase(false);
     }
 
     private void announceJudgementDone() {
@@ -296,5 +328,21 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
         } else {
             winManager.winNobody();
         }
+    }
+
+    private void allPlayersCompleted() {
+        timerTransaction++;
+
+        if (timer != null) {
+            timer.stop();
+        }
+
+        onLeaveBuildingPhase();
+
+        commons().announcer()
+                .withSound(SoundEvents.ENTITY_BREEZE_IDLE_AIR, SoundCategory.HOSTILE, 1f, 1.2f)
+                .announceSubtitle("game.ap2.speed_builders.impressed");
+
+        gameHandle.getGameScheduler().timeout(this::nextRoundOrGameOver, Ticks.seconds(3));
     }
 }

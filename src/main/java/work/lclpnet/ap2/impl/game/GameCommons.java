@@ -148,11 +148,15 @@ public class GameCommons {
     }
 
     public BossBarTimer createTimer(Object subject, int durationSeconds) {
+        return createTimer(subject, durationSeconds, BossBar.Color.RED);
+    }
+
+    public BossBarTimer createTimer(Object subject, int durationSeconds, BossBar.Color color) {
         TranslationService translations = gameHandle.getTranslations();
 
         BossBarTimer timer = BossBarTimer.builder(translations, subject)
                 .withAlertSound(false)
-                .withColor(BossBar.Color.RED)
+                .withColor(color)
                 .withDurationTicks(Ticks.seconds(durationSeconds))
                 .build();
 

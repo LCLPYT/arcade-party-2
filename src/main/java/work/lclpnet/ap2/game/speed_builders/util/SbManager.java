@@ -10,6 +10,9 @@ import net.minecraft.scoreboard.Team;
 import net.minecraft.server.PlayerManager;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvents;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -30,19 +33,24 @@ public class SbManager {
     private final ServerWorld world;
     private final Logger logger;
     private final Random random;
+    private final Runnable allPlayersCompleted;
     private final List<SbModule> queue = new ArrayList<>();
     private final Object2LongMap<UUID> lastEdited = new Object2LongOpenHashMap<>();
+    private final Set<UUID> edited = new HashSet<>();
+    private final Set<UUID> completed = new HashSet<>();
     private boolean buildingPhase = false;
     private SbModule currentModule = null;
     private Team team = null;
 
-    public SbManager(Map<UUID, SbIsland> islands, List<SbModule> modules, MiniGameHandle gameHandle, ServerWorld world, Random random) {
+    public SbManager(Map<UUID, SbIsland> islands, List<SbModule> modules, MiniGameHandle gameHandle, ServerWorld world,
+                     Random random, Runnable allPlayersCompleted) {
         this.islands = islands;
         this.modules = Collections.unmodifiableList(modules);
         this.gameHandle = gameHandle;
         this.logger = gameHandle.getLogger();
         this.world = world;
         this.random = random;
+        this.allPlayersCompleted = allPlayersCompleted;
     }
 
     public void eachIsland(BiConsumer<SbIsland, ServerPlayerEntity> action) {
@@ -57,8 +65,8 @@ public class SbManager {
         });
     }
 
-    public boolean isBuildingPhase() {
-        return buildingPhase;
+    public boolean canModify(ServerPlayerEntity player) {
+        return buildingPhase && !completed.contains(player.getUuid());
     }
 
     public void setBuildingPhase(boolean buildingPhase) {
@@ -167,6 +175,26 @@ public class SbManager {
 
         lastEdited.put(player.getUuid(), System.currentTimeMillis());
 
+        edited.add(player.getUuid());
+    }
+
+    public void tick() {
+        if (edited.isEmpty()) return;
+
+        PlayerManager playerManager = gameHandle.getServer().getPlayerManager();
+
+        for (UUID uuid : edited) {
+            ServerPlayerEntity player = playerManager.getPlayer(uuid);
+
+            if (player == null) continue;
+
+            onEdited(player);
+        }
+
+        edited.clear();
+    }
+
+    private void onEdited(ServerPlayerEntity player) {
         // check if the player's used all the materials
         PlayerInventory inventory = player.getInventory();
 
@@ -183,10 +211,49 @@ public class SbManager {
 
         if (island == null || !island.isCompleted(world, currentModule)) return;
 
-        System.out.println(player.getNameForScoreboard() + " completed the module");
+        completed.add(player.getUuid());
+
+        player.playSoundToPlayer(SoundEvents.ENTITY_PLAYER_LEVELUP, SoundCategory.PLAYERS, 0.75f, 1.1f);
+
+        var msg = gameHandle.getTranslations().translateText(player, "game.ap2.speed_builders.completed")
+                .formatted(Formatting.GREEN);
+
+        player.sendMessage(msg);
+
+        checkOverallCompletion();
+    }
+
+    private void checkOverallCompletion() {
+        if (completed.size() >= gameHandle.getParticipants().count()) {
+            allPlayersCompleted.run();
+        }
     }
 
     public Optional<SbIsland> getIsland(ServerPlayerEntity player) {
         return Optional.ofNullable(islands.get(player.getUuid()));
+    }
+
+    public boolean allIslandsComplete() {
+        PlayerManager playerManager = gameHandle.getServer().getPlayerManager();
+
+        return islands.entrySet().stream().allMatch(entry -> {
+            UUID uuid = entry.getKey();
+            ServerPlayerEntity player = playerManager.getPlayer(uuid);
+
+            if (player == null) {
+                // do not count offline players
+                return true;
+            }
+
+            SbIsland island = entry.getValue();
+
+            return island.isCompleted(world, currentModule);
+        });
+    }
+
+    public void reset() {
+        this.completed.clear();
+        this.lastEdited.clear();
+        this.edited.clear();
     }
 }

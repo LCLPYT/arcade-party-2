@@ -4,10 +4,15 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.decoration.ItemFrameEntity;
 import net.minecraft.entity.mob.MobEntity;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.registry.Registries;
 import net.minecraft.scoreboard.Team;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.TypeFilter;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
@@ -16,8 +21,11 @@ import net.minecraft.util.math.Vec3i;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.math.AffineIntMatrix;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
+import work.lclpnet.kibu.jnbt.CompoundTag;
 import work.lclpnet.kibu.mc.KibuBlockPos;
 import work.lclpnet.kibu.mc.KibuBlockState;
+import work.lclpnet.kibu.mc.KibuEntity;
+import work.lclpnet.kibu.nbt.FabricNbtConversion;
 import work.lclpnet.kibu.schematic.FabricBlockStateAdapter;
 import work.lclpnet.kibu.structure.BlockStructure;
 import work.lclpnet.kibu.util.StructureWriter;
@@ -177,7 +185,7 @@ public class SbIsland {
             int rx = pos.getX() - ox;
             int rz = pos.getZ() - oz;
 
-            pointer.set(mx + rx, my + ry, mz + rz);
+            pointer.set(mx + rx, my + ry - 1, mz + rz);
 
             KibuBlockState kibuState = structure.getBlockState(pos);
             BlockState expected = adapter.revert(kibuState);
@@ -185,6 +193,59 @@ public class SbIsland {
 
             if (actual.equals(expected)) {
                 score++;
+            }
+        }
+
+        var presentEntities = getEntities(world, buildingArea);
+
+        next: for (KibuEntity entity : structure.getEntities()) {
+            int rx = (int) Math.floor(entity.getX() - ox);
+            int ry = (int) Math.floor(entity.getY() - oy);
+            int rz = (int) Math.floor(entity.getZ() - oz);
+
+            pointer.set(mx + rx, my + ry - 1, mz + rz);
+
+            Identifier identifier = Identifier.tryParse(entity.getId());
+
+            if (identifier == null) {
+                // invalid entity, treat as correct
+                score++;
+                continue;
+            }
+
+            // O(n^2) should be okay since the number of entities is generally really low
+            for (Entity en : presentEntities) {
+                if (!pointer.equals(en.getBlockPos())) continue;
+
+                Identifier id = Registries.ENTITY_TYPE.getId(en.getType());
+
+                if (!identifier.equals(id)) continue;
+
+                // the correct entity type is at the required position
+
+                if (en instanceof ItemFrameEntity itemFrame) {
+                    // item frames must contain the correct item as well
+                    CompoundTag kibuNbt = entity.getExtraNbt();
+
+                    if (!kibuNbt.contains("Item")) continue next;  // incorrect item frame
+
+                    CompoundTag kibuItem = kibuNbt.getCompound("Item");
+
+                    if (kibuItem == null) continue next;  // incorrect item frame
+
+                    NbtCompound item = FabricNbtConversion.convert(kibuItem, NbtCompound.class);
+
+                    ItemStack expected = ItemStack.fromNbtOrEmpty(world.getRegistryManager(), item);
+                    ItemStack actual = itemFrame.getHeldItemStack();
+
+                    if ((!expected.isEmpty() || !actual.isEmpty()) && !actual.isOf(expected.getItem())) {
+                        continue next;  // incorrect item frame
+                    }
+                }
+
+                score++;
+
+                break;
             }
         }
 

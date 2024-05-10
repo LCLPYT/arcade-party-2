@@ -1,15 +1,13 @@
 package work.lclpnet.ap2.game.speed_builders.util;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.FluidFillable;
+import net.minecraft.block.*;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.fluid.FlowableFluid;
 import net.minecraft.fluid.Fluid;
 import net.minecraft.fluid.Fluids;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.registry.tag.BlockTags;
@@ -19,6 +17,7 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.ActionResult;
+import net.minecraft.util.ItemActionResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldAccess;
@@ -26,6 +25,7 @@ import net.minecraft.world.WorldEvents;
 import net.minecraft.world.event.GameEvent;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
+import work.lclpnet.kibu.hook.entity.ItemFramePutItemCallback;
 import work.lclpnet.kibu.hook.entity.ItemFrameRemoveItemCallback;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.kibu.hook.world.BlockModificationHooks;
@@ -37,13 +37,11 @@ public class SbConfiguration {
     private final MiniGameHandle gameHandle;
     private final SbManager manager;
     private final SbItems items;
-    private final SbDestruction destruction;
 
-    public SbConfiguration(MiniGameHandle gameHandle, SbManager manager, SbItems items, SbDestruction destruction) {
+    public SbConfiguration(MiniGameHandle gameHandle, SbManager manager, SbItems items) {
         this.gameHandle = gameHandle;
         this.manager = manager;
         this.items = items;
-        this.destruction = destruction;
     }
 
     public void configureProtection() {
@@ -126,6 +124,10 @@ public class SbConfiguration {
                 return ActionResult.FAIL;
             }
 
+            if (player instanceof ServerPlayerEntity serverPlayer) {
+                manager.onEdit(serverPlayer);
+            }
+
             return ActionResult.PASS;
         });
 
@@ -136,6 +138,37 @@ public class SbConfiguration {
 
             return false;
         });
+
+        hooks.registerHook(BlockModificationHooks.USE_ITEM_ON_BLOCK, ctx -> {
+            PlayerEntity player = ctx.getPlayer();
+
+            if (player instanceof ServerPlayerEntity serverPlayer) {
+                BlockPos pos = ctx.getBlockPos();
+                World world = ctx.getWorld();
+                BlockState state = world.getBlockState(pos);
+
+                ItemStack stack = ctx.getStack();
+
+                if (stack.isOf(Items.WATER_BUCKET) && (state.isOf(Blocks.CAULDRON) || state.isOf(Blocks.WATER_CAULDRON))) {
+                    world.setBlockState(pos, Blocks.WATER_CAULDRON.getDefaultState().with(LeveledCauldronBlock.LEVEL, LeveledCauldronBlock.MAX_LEVEL));
+                    world.playSound(null, pos, SoundEvents.ITEM_BUCKET_EMPTY, SoundCategory.BLOCKS, 1.0f, 1.0f);
+                    manager.onEdit(serverPlayer);
+                    return ItemActionResult.FAIL;
+                } else if (stack.isOf(Items.ITEM_FRAME) || stack.isOf(Items.GLOW_ITEM_FRAME)) {
+                    manager.onEdit(serverPlayer);
+                    return null;
+                }
+            }
+
+            return null;
+        });
+
+        hooks.registerHook(ItemFramePutItemCallback.HOOK, (itemFrame, stack, player, hand) -> {
+            if (player instanceof ServerPlayerEntity serverPlayer) {
+                manager.onEdit(serverPlayer);
+            }
+            return false;
+        });
     }
 
     private void placeFluid(World world, ServerPlayerEntity player, BlockPos pos, Fluid fluid) {
@@ -144,15 +177,15 @@ public class SbConfiguration {
         BlockState state = world.getBlockState(pos);
 
         if (state.getBlock() instanceof FluidFillable fluidFillable && fluid == Fluids.WATER) {
-            fluidFillable.tryFillWithFluid(world, pos, state, flowableFluid.getStill(false));
-            this.playEmptyingSound(player, world, pos, fluid);
-            return;
-        } else if (!state.isAir()) {
-            return;
-        }
-
-        if (world.setBlockState(pos, fluid.getDefaultState().getBlockState(), Block.NOTIFY_ALL_AND_REDRAW)) {
-            this.playEmptyingSound(player, world, pos, fluid);
+            if (fluidFillable.tryFillWithFluid(world, pos, state, flowableFluid.getStill(false))) {
+                this.playEmptyingSound(player, world, pos, fluid);
+                manager.onEdit(player);
+            }
+        } else if (state.isAir()) {
+            if (world.setBlockState(pos, fluid.getDefaultState().getBlockState(), Block.NOTIFY_ALL_AND_REDRAW)) {
+                this.playEmptyingSound(player, world, pos, fluid);
+                manager.onEdit(player);
+            }
         }
     }
 
@@ -197,7 +230,7 @@ public class SbConfiguration {
     }
 
     private boolean canModify(ServerPlayerEntity player, BlockPos pos) {
-        return manager.isBuildingPhase() &&
+        return manager.canModify(player) &&
                gameHandle.getParticipants().isParticipating(player) &&
                manager.isWithinBuildingArea(player, pos);
     }

@@ -48,6 +48,11 @@ public class CCFuel {
         fuel.put(Items.TARGET, 160);
         addFuel(ItemTags.WOODEN_DOORS, 350);
 
+        // adjust vanilla values
+        fuel.put(Items.CHARCOAL, 530);
+        fuel.put(Items.COAL, 530);
+        fuel.put(Items.DRIED_KELP_BLOCK, fuelPerSecond * 4);
+
         fuel.keySet().stream()
                 .map(item -> item instanceof BlockItem bi ? bi : null)
                 .filter(Objects::nonNull)
@@ -70,7 +75,7 @@ public class CCFuel {
     }
 
     private void transform(int fuelPerSecond) {
-        int lowerBound = fuelPerSecond / 4;  // at least 0.25 seconds
+        int lowerBound = fuelPerSecond / 2;  // at least 0.5 seconds
         int upperBound = fuelPerSecond * 5;  // at most 5 seconds
 
         fuel.forEach((item, value) -> {

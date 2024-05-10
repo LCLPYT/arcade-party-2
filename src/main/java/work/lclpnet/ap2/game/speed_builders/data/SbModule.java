@@ -11,6 +11,6 @@ public record SbModule(String id, BlockStructure structure) {
 
     public int getMaxScore() {
         // one point per block in cuboid (excluding the floor)
-        return structure.getWidth() * structure.getLength() * (structure.getHeight() - 1);
+        return structure.getWidth() * structure.getLength() * (structure.getHeight() - 1) + structure.getEntities().size();
     }
 }

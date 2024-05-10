@@ -1,6 +1,7 @@
 package work.lclpnet.ap2.game.speed_builders.util;
 
 import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
 import net.minecraft.block.enums.BedPart;
 import net.minecraft.block.enums.DoubleBlockHalf;
 import net.minecraft.block.enums.SlabType;
@@ -82,8 +83,9 @@ public class SbItems {
 
             if (state == null) continue;
 
-            if (!waterRequired && state.getProperties().contains(Properties.WATERLOGGED)) {
-                if (state.get(Properties.WATERLOGGED)) {
+            if (!waterRequired) {
+                if ((state.getProperties().contains(Properties.WATERLOGGED) && state.get(Properties.WATERLOGGED))
+                    || state.isOf(Blocks.WATER_CAULDRON)) {
                     waterRequired = true;
                 }
             }
