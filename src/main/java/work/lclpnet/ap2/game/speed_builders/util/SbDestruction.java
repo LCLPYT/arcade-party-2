@@ -4,9 +4,10 @@ import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.command.argument.EntityAnchorArgumentType;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.FallingBlockEntity;
-import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.mob.BreezeEntity;
 import net.minecraft.entity.projectile.BreezeWindChargeEntity;
 import net.minecraft.particle.ParticleTypes;
@@ -24,21 +25,41 @@ import work.lclpnet.kibu.access.VelocityModifier;
 import work.lclpnet.kibu.access.entity.FallingBlockAccess;
 
 import java.util.Random;
+import java.util.UUID;
 
 public class SbDestruction {
 
     private static final float LAUNCHED_PERCENTAGE = 0.4f;
     private final ServerWorld world;
     private final Random random;
-    private final BreezeEntity aelos;
+    private final UUID aelosId;
 
-    public SbDestruction(ServerWorld world, Random random, BreezeEntity aelos) {
+    public SbDestruction(ServerWorld world, Random random, UUID aelosId) {
         this.world = world;
         this.random = random;
-        this.aelos = aelos;
+        this.aelosId = aelosId;
+    }
+
+    private BreezeEntity aelos() {
+        Entity entity = world.getEntity(aelosId);
+
+        if (entity instanceof BreezeEntity breeze) {
+            return breeze;
+        }
+
+        throw new IllegalStateException("Aelos not found");
+    }
+
+    public void setAelosLookingTowards(SbIsland island) {
+        BreezeEntity aelos = aelos();
+        Vec3d center = island.getCenter();
+
+        aelos.lookAt(EntityAnchorArgumentType.EntityAnchor.EYES, center);
     }
 
     public BreezeWindChargeEntity fireProjectile(SbIsland island) {
+        BreezeEntity aelos = aelos();
+
         Vec3d center = island.getCenter();
         Vec3d chargePos = getChargePos(aelos);
         Vec3d dir = center.subtract(chargePos);
@@ -116,9 +137,6 @@ public class SbDestruction {
     }
 
     public static Vec3d getChargePos(BreezeEntity aelos) {
-        return new Vec3d(
-                aelos.getX(),
-                aelos.getY() + aelos.getHeight() * aelos.getAttributeValue(EntityAttributes.GENERIC_SCALE) * 0.5,
-                aelos.getZ());
+        return new Vec3d(aelos.getX(), aelos.getBodyY(0.5), aelos.getZ());
     }
 }

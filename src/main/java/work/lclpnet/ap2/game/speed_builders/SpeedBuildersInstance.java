@@ -1,6 +1,7 @@
 package work.lclpnet.ap2.game.speed_builders;
 
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.boss.BossBar;
 import net.minecraft.entity.mob.BreezeEntity;
 import net.minecraft.entity.player.PlayerAbilities;
@@ -60,7 +61,7 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
     private SbManager manager = null;
     private SbIsland islandToDestroy = null;
     private UUID playerToEliminate = null;
-    private BreezeEntity aelos = null;
+    private UUID aelosId = null;
     private BossBarTimer timer = null;
     private int timerTransaction = 0;
 
@@ -82,10 +83,10 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
 
             var islands = setup.createIslands(participants, world);
 
-            aelos = setup.getAelos();
+            aelosId = setup.getAelosId();
 
             manager = new SbManager(islands, setup.getModules(), gameHandle, world, random, this::allPlayersCompleted);
-            destruction = new SbDestruction(world, random, aelos);
+            destruction = new SbDestruction(world, random, aelosId);
         });
     }
 
@@ -232,6 +233,8 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
             player.playSoundToPlayer(SoundEvents.ENTITY_BREEZE_HURT, SoundCategory.PLAYERS, 1f, 0.5f);
         }
 
+        manager.getIsland(worst).ifPresent(destruction::setAelosLookingTowards);
+
         gameHandle.getGameScheduler().timeout(() -> fireChargeTowardsPlayerIsland(worst.getUuid()), DESTROY_DELAY_TICKS);
     }
 
@@ -296,7 +299,13 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
             velocity = projectile.getVelocity().normalize();
         } else {
             impactPos = islandToDestroy.getCenter();
-            velocity = impactPos.subtract(SbDestruction.getChargePos(aelos)).normalize();
+            Entity entity = getWorld().getEntity(aelosId);
+
+            if (entity instanceof BreezeEntity breeze) {
+                velocity = impactPos.subtract(SbDestruction.getChargePos(breeze)).normalize();
+            } else {
+                velocity = impactPos.normalize();
+            }
         }
 
         destruction.destroyIsland(islandToDestroy, impactPos, velocity);

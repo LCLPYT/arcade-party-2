@@ -49,7 +49,7 @@ public class SbSetup {
     private List<SbModule> modules = null;
     private List<SbIslandProto> islandProtos = null;
     private CenterIsland centerIsland = null;
-    private BreezeEntity aelos = null;
+    private UUID aelosId = null;
 
     public SbSetup(Random random, Logger logger) {
         this.random = random;
@@ -156,6 +156,7 @@ public class SbSetup {
         breeze.setPos(spawn.getX() + 0.5, spawn.getY(), spawn.getZ() + 0.5);
         breeze.setAiDisabled(true);
         breeze.setPersistent();
+        breeze.setYaw(0);
 
         EntityAttributeInstance instance = breeze.getAttributeInstance(EntityAttributes.GENERIC_SCALE);
 
@@ -165,7 +166,7 @@ public class SbSetup {
 
         world.spawnEntity(breeze);
 
-        aelos = breeze;
+        aelosId = breeze.getUuid();
     }
 
     private int getMinRadius(List<BlockStructure> structures) {
@@ -181,8 +182,8 @@ public class SbSetup {
         return Objects.requireNonNull(modules, "Modules not loaded yet");
     }
 
-    public BreezeEntity getAelos() {
-        return Objects.requireNonNull(aelos, "Aelos not created yet");
+    public UUID getAelosId() {
+        return Objects.requireNonNull(aelosId, "Aelos not created yet");
     }
 
     private CompletableFuture<Set<SbIslandProto>> loadAvailableIslands(GameMap map, ServerWorld world) {
@@ -302,9 +303,7 @@ public class SbSetup {
             id = id.substring(0, idx);
         }
 
-        SbModule module = new SbModule(id, structure);
-        System.out.println(id + " -> " + module.getComplexity());
-        return module;
+        return new SbModule(id, structure);
     }
 
     @Nullable
