@@ -6,6 +6,7 @@ import net.minecraft.entity.mob.BreezeEntity;
 import net.minecraft.entity.player.PlayerAbilities;
 import net.minecraft.entity.projectile.BreezeWindChargeEntity;
 import net.minecraft.entity.projectile.ProjectileEntity;
+import net.minecraft.particle.ParticleTypes;
 import net.minecraft.scoreboard.AbstractTeam;
 import net.minecraft.scoreboard.Team;
 import net.minecraft.server.MinecraftServer;
@@ -28,6 +29,7 @@ import work.lclpnet.ap2.game.speed_builders.data.SbModule;
 import work.lclpnet.ap2.game.speed_builders.util.*;
 import work.lclpnet.ap2.impl.game.Announcer;
 import work.lclpnet.ap2.impl.game.EliminationGameInstance;
+import work.lclpnet.ap2.impl.util.ParticleHelper;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.kibu.access.VelocityModifier;
 import work.lclpnet.kibu.behaviour.world.ServerWorldBehaviour;
@@ -46,9 +48,8 @@ import java.util.concurrent.CompletableFuture;
 
 public class SpeedBuildersInstance extends EliminationGameInstance implements MapBootstrap {
 
-    private static final int BUILD_DURATION_SECONDS = 45;
     private static final int
-            LOOK_DURATION_SECONDS = 8,
+            LOOK_DURATION_SECONDS = 10,
             JUDGE_DURATION_TICKS = Ticks.seconds(6),
             JUDGE_ANNOUNCEMENT_TICKS = Ticks.seconds(3),
             DESTROY_DELAY_TICKS = Ticks.seconds(4);
@@ -163,7 +164,7 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
         TranslationService translations = gameHandle.getTranslations();
 
         TranslatedText label = translations.translateText("game.ap2.speed_builders.label");
-        timer = commons().createTimer(label, BUILD_DURATION_SECONDS);
+        timer = commons().createTimer(label, manager.getBuildingDurationTicks());
 
         int transaction = timerTransaction;
 
@@ -179,6 +180,8 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
             allPlayersCompleted();
             return;
         }
+
+        manager.resetSuccessiveCompletion();
 
         onLeaveBuildingPhase();
 
@@ -253,10 +256,25 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
         islandToDestroy = island;
         playerToEliminate = worstUuid;
 
-        destruction.fireProjectile(island);
+        BreezeWindChargeEntity charge = destruction.fireProjectile(island);
+
+        ServerWorld world = getWorld();
+
+        gameHandle.getGameScheduler().interval(task -> {
+            if (!charge.isAlive()) {
+                task.cancel();
+                return;
+            }
+
+            ParticleHelper.spawnForceParticle(ParticleTypes.FIREWORK, charge.getX(), charge.getY(), charge.getZ(), 50, 0, 0, 0, 0.25f, world.getPlayers());
+        }, 1);
 
         // make sure the island is destroyed, if the projectile somehow misses ¯\_(ツ)_/¯
         gameHandle.getGameScheduler().timeout(() -> {
+            if (charge.isAlive()) {
+                charge.discard();
+            }
+
             destroyIsland(null);
         }, Ticks.seconds(10));
     }
@@ -331,6 +349,8 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
     }
 
     private void allPlayersCompleted() {
+        manager.incrementSuccessiveCompletion();
+
         timerTransaction++;
 
         if (timer != null) {

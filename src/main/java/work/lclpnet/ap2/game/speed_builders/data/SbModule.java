@@ -13,4 +13,9 @@ public record SbModule(String id, BlockStructure structure) {
         // one point per block in cuboid (excluding the floor)
         return structure.getWidth() * structure.getLength() * (structure.getHeight() - 1) + structure.getEntities().size();
     }
+
+    public int getComplexity() {
+        int groundBlockCount = structure.getWidth() * structure.getLength();
+        return structure.getBlockCount() + structure.getEntities().size() - groundBlockCount;
+    }
 }

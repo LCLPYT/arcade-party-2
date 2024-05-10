@@ -27,7 +27,7 @@ import java.util.Random;
 
 public class SbDestruction {
 
-    private static final float LAUNCHED_PERCENTAGE = 0.36f;
+    private static final float LAUNCHED_PERCENTAGE = 0.4f;
     private final ServerWorld world;
     private final Random random;
     private final BreezeEntity aelos;
@@ -38,7 +38,7 @@ public class SbDestruction {
         this.aelos = aelos;
     }
 
-    public void fireProjectile(SbIsland island) {
+    public BreezeWindChargeEntity fireProjectile(SbIsland island) {
         Vec3d center = island.getCenter();
         Vec3d chargePos = getChargePos(aelos);
         Vec3d dir = center.subtract(chargePos);
@@ -50,6 +50,8 @@ public class SbDestruction {
         world.spawnEntity(charge);
 
         SoundHelper.playSound(aelos.getServer(), SoundEvents.ENTITY_BREEZE_SHOOT, SoundCategory.HOSTILE, 1.5f, 1.0f);
+
+        return charge;
     }
 
     public void destroyIsland(SbIsland island, Vec3d impactPos, Vec3d velocity) {

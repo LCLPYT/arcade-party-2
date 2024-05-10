@@ -27,6 +27,9 @@ import java.util.function.BiConsumer;
 
 public class SbManager {
 
+    private static final int BASE_BUILD_DURATION_SECONDS = 45;
+    private static final int MIN_BUILD_DURATION_SECONDS = 5;
+    private static final int SUCCESSIVE_COMPLETION_REDUCTION_SECONDS = 4;
     private final Map<UUID, SbIsland> islands;
     private final List<SbModule> modules;
     private final MiniGameHandle gameHandle;
@@ -41,6 +44,7 @@ public class SbManager {
     private boolean buildingPhase = false;
     private SbModule currentModule = null;
     private Team team = null;
+    private int successiveCompletion = 0;
 
     public SbManager(Map<UUID, SbIsland> islands, List<SbModule> modules, MiniGameHandle gameHandle, ServerWorld world,
                      Random random, Runnable allPlayersCompleted) {
@@ -251,9 +255,29 @@ public class SbManager {
         });
     }
 
+    public void incrementSuccessiveCompletion() {
+        successiveCompletion++;
+    }
+
+    public void resetSuccessiveCompletion() {
+        successiveCompletion = 0;
+    }
+
     public void reset() {
         this.completed.clear();
         this.lastEdited.clear();
         this.edited.clear();
+    }
+
+    public int getBuildingDurationTicks() {
+        if (currentModule == null) {
+            return BASE_BUILD_DURATION_SECONDS;
+        }
+
+        int complexity = currentModule.getComplexity();
+        int bonusTime = Math.max(0, complexity - 64) / 3;
+        int reduction = Math.max(0, successiveCompletion * SUCCESSIVE_COMPLETION_REDUCTION_SECONDS);
+
+        return Math.max(MIN_BUILD_DURATION_SECONDS, BASE_BUILD_DURATION_SECONDS + bonusTime - reduction);
     }
 }

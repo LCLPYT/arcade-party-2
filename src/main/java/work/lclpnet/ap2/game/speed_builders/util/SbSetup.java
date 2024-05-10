@@ -302,7 +302,9 @@ public class SbSetup {
             id = id.substring(0, idx);
         }
 
-        return new SbModule(id, structure);
+        SbModule module = new SbModule(id, structure);
+        System.out.println(id + " -> " + module.getComplexity());
+        return module;
     }
 
     @Nullable
