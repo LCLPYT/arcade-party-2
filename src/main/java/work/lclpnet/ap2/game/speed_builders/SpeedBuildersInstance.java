@@ -112,6 +112,8 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
 
             scoreboardManager.joinTeam(player, team);
         }
+
+        gameHandle.getScheduler().interval(manager::tick, 1);
     }
 
     @Override
@@ -121,8 +123,6 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
         config.registerHooks();
 
         gameHandle.getHookRegistrar().registerHook(ProjectileHooks.HIT_BLOCK, this::onHitBlock);
-
-        gameHandle.getGameScheduler().interval(manager::tick, 1);
 
         nextRound();
     }

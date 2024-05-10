@@ -183,11 +183,19 @@ public class SbManager {
     }
 
     public void tick() {
+        checkPlayerPositions();
+        processEdits();
+    }
+
+    private void processEdits() {
         if (edited.isEmpty()) return;
 
+        Participants participants = gameHandle.getParticipants();
         PlayerManager playerManager = gameHandle.getServer().getPlayerManager();
 
         for (UUID uuid : edited) {
+            if (!participants.isParticipating(uuid)) continue;
+
             ServerPlayerEntity player = playerManager.getPlayer(uuid);
 
             if (player == null) continue;
@@ -196,6 +204,27 @@ public class SbManager {
         }
 
         edited.clear();
+    }
+
+    private void checkPlayerPositions() {
+        Participants participants = gameHandle.getParticipants();
+        PlayerManager playerManager = gameHandle.getServer().getPlayerManager();
+
+        for (var entry : islands.entrySet()) {
+            UUID uuid = entry.getKey();
+
+            if (!participants.isParticipating(uuid)) continue;
+
+            ServerPlayerEntity player = playerManager.getPlayer(uuid);
+
+            if (player == null || !player.getAbilities().allowFlying) continue;
+
+            SbIsland island = entry.getValue();
+
+            if (island.getMovementBounds().contains(player.getPos())) continue;
+
+            island.teleport(player);
+        }
     }
 
     private void onEdited(ServerPlayerEntity player) {

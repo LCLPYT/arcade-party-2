@@ -43,6 +43,7 @@ public class SbIsland {
     private final BlockBox buildingArea;
     private final BlockBox previewArea;
     private final BlockBox bounds;
+    private final BlockBox movementBounds;
 
     /**
      * Constructor.
@@ -73,6 +74,7 @@ public class SbIsland {
 
         this.previewArea = this.buildingArea.transform(previewAreaTranslation);
         this.bounds = bounds;
+        this.movementBounds = new BlockBox(bounds.getMin().add(-4, 0, -4), bounds.getMax().add(4, 10, 4));
     }
 
     public void teleport(ServerPlayerEntity player) {
@@ -265,7 +267,11 @@ public class SbIsland {
         return buildingCenter.add(previewCenter).multiply(0.5);
     }
 
-    public boolean isWithinBounds(BlockPos pos) {
-        return bounds.contains(pos);
+    public BlockBox getBounds() {
+        return bounds;
+    }
+
+    public BlockBox getMovementBounds() {
+        return movementBounds;
     }
 }

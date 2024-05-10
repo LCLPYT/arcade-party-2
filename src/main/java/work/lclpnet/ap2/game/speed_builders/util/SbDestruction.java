@@ -90,7 +90,7 @@ public class SbDestruction {
         int flags = Block.FORCE_STATE | Block.NOTIFY_LISTENERS | Block.SKIP_DROPS;
 
         for (BlockPos pos : explosion.getAffectedBlocks()) {
-            if (!island.isWithinBounds(pos)) continue;
+            if (!island.getBounds().contains(pos)) continue;
 
             BlockState state = world.getBlockState(pos);
 
