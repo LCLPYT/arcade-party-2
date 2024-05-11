@@ -3,10 +3,7 @@ package work.lclpnet.ap2.api.base;
 import net.minecraft.server.network.ServerPlayerEntity;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Iterator;
-import java.util.Optional;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Stream;
 
 public interface Participants extends Iterable<ServerPlayerEntity> {
@@ -18,6 +15,8 @@ public interface Participants extends Iterable<ServerPlayerEntity> {
 
     void remove(ServerPlayerEntity player);
 
+    boolean isParticipating(UUID uuid);
+
     @NotNull
     @Override
     default Iterator<ServerPlayerEntity> iterator() {
@@ -25,7 +24,7 @@ public interface Participants extends Iterable<ServerPlayerEntity> {
     }
 
     default boolean isParticipating(ServerPlayerEntity player) {
-        return getAsSet().contains(player);
+        return isParticipating(player.getUuid());
     }
 
     default int count() {

@@ -26,6 +26,7 @@ import work.lclpnet.ap2.impl.util.SoundHelper;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.kibu.translate.TranslationService;
+import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 import work.lclpnet.lobby.game.map.GameMap;
 import work.lclpnet.notica.Notica;
 import work.lclpnet.notica.api.CheckedSong;
@@ -75,6 +76,8 @@ public class MusicalMinecartInstance extends EliminationGameInstance {
         songManager.init();
 
         useRemainingPlayersDisplay();
+
+        gameHandle.protect(config -> config.allow(ProtectionTypes.MOUNT));
     }
 
     @Override

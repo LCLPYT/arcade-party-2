@@ -45,13 +45,13 @@ public class PlayerManagerImpl implements PlayerManager {
     }
 
     @Override
-    public boolean isParticipating(ServerPlayerEntity player) {
-        Objects.requireNonNull(player);
+    public boolean isParticipating(UUID uuid) {
+        Objects.requireNonNull(uuid);
 
         try {
             readLock.lock();
 
-            return participants.contains(player.getUuid());
+            return participants.contains(uuid);
         } finally {
             readLock.unlock();
         }

@@ -5,6 +5,7 @@ import net.minecraft.block.Blocks;
 import net.minecraft.entity.attribute.EntityAttributeInstance;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.entity.damage.DamageTypes;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.entity.projectile.ProjectileEntity;
@@ -35,6 +36,7 @@ import work.lclpnet.kibu.hook.entity.EntityHealthCallback;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks;
 import work.lclpnet.kibu.plugin.hook.HookRegistrar;
+import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 import work.lclpnet.lobby.game.map.GameMap;
 
@@ -43,6 +45,8 @@ import java.util.Random;
 
 public class SnowballFightInstance extends EliminationGameInstance {
 
+    private static final int WORLD_BORDER_DELAY = Ticks.minutes(2);
+    private static final int WORLD_BORDER_TIME = Ticks.seconds(20);
     private static final float SNOWBALL_DAMAGE = 0.75f;
     private ScoreboardObjective healthObjective = null;
 
@@ -78,6 +82,7 @@ public class SnowballFightInstance extends EliminationGameInstance {
             });
 
             config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, damageSource) ->
+                    damageSource.isOf(DamageTypes.OUTSIDE_BORDER) ||
                     entity instanceof ServerPlayerEntity damaged && participants.isParticipating(damaged)
                     && damageSource.getSource() instanceof ProjectileEntity && damageSource.getAttacker() != entity);
         });
@@ -120,6 +125,8 @@ public class SnowballFightInstance extends EliminationGameInstance {
                 attribute.setBaseValue(100);
             }
         }
+
+        commons().scheduleWorldBorderShrink(WORLD_BORDER_DELAY, WORLD_BORDER_TIME, Ticks.seconds(5));
     }
 
     private void setupScoreboard() {
