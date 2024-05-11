@@ -28,10 +28,14 @@ class FineTuningSetup {
     }
 
     CompletableFuture<Void> createRooms() {
-        var generator = new StackedRoomGenerator<>(world, map, StackedRoomGenerator.Coordinates.RELATIVE,
-                FineTuningRoom::new, gameHandle.getLogger());
+        var generator = new StackedRoomGenerator<>(world, map, StackedRoomGenerator.Coordinates.RELATIVE, FineTuningRoom::new);
 
-        return generator.generate(gameHandle.getParticipants()).thenAccept(this.rooms::putAll);
+        return generator.generate(gameHandle.getParticipants())
+                .thenAccept(this.rooms::putAll)
+                .exceptionally(throwable -> {
+                    gameHandle.getLogger().error("Failed to create rooms", throwable);
+                    return null;
+                });
     }
 
     static BlockPos[] readNoteBlockLocations(JSONArray noteBlockLocations, Logger logger) {

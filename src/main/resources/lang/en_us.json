@@ -177,5 +177,8 @@
   "game.ap2.speed_builders.judgement": "Aelos has judged.",
   "game.ap2.speed_builders.impressed": "Aelos is impressed.",
   "game.ap2.speed_builders.will_eliminate": "will be eliminated!",
-  "game.ap2.speed_builders.completed": "Congratulations! You completed the module."
+  "game.ap2.speed_builders.completed": "Congratulations! You completed the module.",
+  "game.ap2.mimicry": "Mimicry",
+  "game.ap2.mimicry.description": "Repeat a sequence of button presses in the correct order. If you make a mistake, you are eliminated.",
+  "game.ap2.task": "Repeat the sequence"
 }

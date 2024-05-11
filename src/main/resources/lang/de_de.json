@@ -177,5 +177,8 @@
   "game.ap2.speed_builders.judgement": "Aelos hat geurteilt.",
   "game.ap2.speed_builders.impressed": "Aelos ist beeindruckt.",
   "game.ap2.speed_builders.will_eliminate": "fliegt raus!",
-  "game.ap2.speed_builders.completed": "Glückwunsch! Du hast das Bauwerk fertiggestellt."
+  "game.ap2.speed_builders.completed": "Glückwunsch! Du hast das Bauwerk fertiggestellt.",
+  "game.ap2.mimicry": "Nachahmen",
+  "game.ap2.mimicry.description": "Drücke Knöpfe in einer vorgegebenen Reihenfolge. Wenn du einen Fehler machst, fliegst du raus!",
+  "game.ap2.task": "Wiederhole die Reihenfolge"
 }

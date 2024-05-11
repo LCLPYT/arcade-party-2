@@ -4,7 +4,6 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3i;
-import org.slf4j.Logger;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.StructureUtil;
@@ -35,14 +34,12 @@ public class StackedRoomGenerator<T> {
     private final GameMap map;
     private final Coordinates coordinates;
     private final RoomFactory<T> roomFactory;
-    private final Logger logger;
 
-    public StackedRoomGenerator(ServerWorld world, GameMap map, Coordinates coordinates, RoomFactory<T> roomFactory, Logger logger) {
+    public StackedRoomGenerator(ServerWorld world, GameMap map, Coordinates coordinates, RoomFactory<T> roomFactory) {
         this.world = world;
         this.map = map;
         this.coordinates = coordinates;
         this.roomFactory = roomFactory;
-        this.logger = logger;
     }
 
     /**
@@ -59,11 +56,7 @@ public class StackedRoomGenerator<T> {
 
         return readSchematic(path)
                 .thenApply(structure -> placeStructures(map, world, participants.count(), structure))
-                .thenApply(data -> assignRooms(participants, data))
-                .exceptionally(throwable -> {
-                    logger.error("Failed to create rooms", throwable);
-                    return null;
-                });
+                .thenApply(data -> assignRooms(participants, data));
     }
 
     private CompletableFuture<BlockStructure> readSchematic(Path path) {
@@ -118,7 +111,7 @@ public class StackedRoomGenerator<T> {
         if (coordinates == Coordinates.ABSOLUTE) {
             // spawnOffset is given in absolute schematic coordinates => relativize them
             KibuBlockPos origin = data.structure().getOrigin();
-            spawnOffset.add(-origin.getX(), -origin.getY(), -origin.getZ());
+            spawnOffset = spawnOffset.add(-origin.getX(), -origin.getY(), -origin.getZ());
         }
 
         int i = 0;
