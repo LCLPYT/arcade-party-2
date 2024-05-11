@@ -100,7 +100,7 @@ class StagePhase {
         Instrument[] instruments = new Instrument[presenterNoteBlocks.length];
         Arrays.fill(instruments, Instrument.HARP);
 
-        this.nbPlayer = new FakeNoteBlockPlayer(world, presenterNoteBlocks, notes, instruments);
+        this.nbPlayer = new FakeNoteBlockPlayer(presenterNoteBlocks, notes, instruments);
     }
 
     private void beginSongPresentation() {
