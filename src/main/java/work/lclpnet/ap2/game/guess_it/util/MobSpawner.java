@@ -179,7 +179,6 @@ public class MobSpawner {
         } else if (entity instanceof WardenEntity warden) {
             // prevent warden from digging into the ground
             var brain = warden.getBrain();
-//            warden.setPersistent();
             brain.remember(MemoryModuleType.DIG_COOLDOWN, Unit.INSTANCE, Ticks.minutes(10));
         } else if (entity instanceof WolfEntity wolf) {
             randomizeVariant(wolf, world.getRegistryManager().get(RegistryKeys.WOLF_VARIANT));

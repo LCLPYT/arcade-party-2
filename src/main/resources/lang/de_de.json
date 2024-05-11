@@ -165,5 +165,17 @@
   "game.ap2.red_light_green_light.stop": "Stopp!",
   "game.ap2.red_light_green_light.moved": "Du hast dich bewegt! Als Bestrafung wurdest du zurückgesetzt.",
   "game.ap2.snowball_fight": "Schneeballschlacht",
-  "game.ap2.snowball_fight.description": "Sammle Schnee vom Boden. Treffe deine Gegner mit den Schneebällen. Der letzte Überlebende gewinnt!"
+  "game.ap2.snowball_fight.description": "Sammle Schnee vom Boden. Treffe deine Gegner mit den Schneebällen. Der letzte Überlebende gewinnt!",
+  "game.ap2.speed_builders": "Schnellbauen",
+  "game.ap2.speed_builders.description": "Baue so schnell wie möglich Bauwerke nach. Jede Runde fliegt der Spieler raus, dessen Bauwerk am wenigsten dem Original gleicht.",
+  "game.ap2.speed_builders.look": "Schau dir dieses Bauwerk an...",
+  "game.ap2.speed_builders.copy": "Jetzt baue es nach!",
+  "game.ap2.speed_builders.prepare_label": "Bereite dich vor",
+  "game.ap2.speed_builders.label": "Baue die Struktur nach",
+  "game.ap2.speed_builders.time_up": "Die Zeit ist um!",
+  "game.ap2.speed_builders.grade": "Aelos wird nun urteilen...",
+  "game.ap2.speed_builders.judgement": "Aelos hat geurteilt.",
+  "game.ap2.speed_builders.impressed": "Aelos ist beeindruckt.",
+  "game.ap2.speed_builders.will_eliminate": "fliegt raus!",
+  "game.ap2.speed_builders.completed": "Glückwunsch! Du hast das Bauwerk fertiggestellt."
 }

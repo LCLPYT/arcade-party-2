@@ -56,15 +56,15 @@ public class BlockBox implements Pair<BlockPos, BlockPos>, Iterable<BlockPos>, C
     }
 
     public int getWidth() {
-        return max.getX() - min.getX();
+        return max.getX() - min.getX() + 1;
     }
 
     public int getHeight() {
-        return max.getY() - min.getY();
+        return max.getY() - min.getY() + 1;
     }
 
     public int getLength() {
-        return max.getZ() - min.getZ();
+        return max.getZ() - min.getZ() + 1;
     }
 
     public BlockBox transform(AffineIntMatrix mat4) {
@@ -172,5 +172,10 @@ public class BlockBox implements Pair<BlockPos, BlockPos>, Iterable<BlockPos>, C
                 Math.max(Math.min(y, max.getY()), min.getY()),
                 Math.max(Math.min(z, max.getZ()), min.getZ())
         );
+    }
+
+    public Box toBox() {
+        return new Box(min.getX(), min.getY(), min.getZ(),
+                max.getX() + 1, max.getY() + 1, max.getZ() + 1);
     }
 }

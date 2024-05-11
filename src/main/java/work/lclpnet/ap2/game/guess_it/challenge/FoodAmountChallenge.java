@@ -48,8 +48,6 @@ public class FoodAmountChallenge implements Challenge {
         input.expectInput().validateFloat(translations, 1);
 
         Item food = selectRandomFood();
-        ItemStack stack = new ItemStack(food);
-
         FoodComponent foodComponent = food.getComponents().get(DataComponentTypes.FOOD);
 
         if (foodComponent == null) {
@@ -58,6 +56,7 @@ public class FoodAmountChallenge implements Challenge {
 
         amount = foodComponent.nutrition();
 
+        ItemStack stack = new ItemStack(food);
         display.displayItem(stack);
     }
 

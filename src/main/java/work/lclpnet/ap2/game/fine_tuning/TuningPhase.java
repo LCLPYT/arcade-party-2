@@ -24,10 +24,10 @@ import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.base.ApConstants;
 import work.lclpnet.ap2.game.fine_tuning.melody.*;
+import work.lclpnet.ap2.impl.game.GameCommons;
 import work.lclpnet.ap2.impl.game.data.ScoreTimeDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.util.BookUtil;
-import work.lclpnet.ap2.impl.util.SoundHelper;
 import work.lclpnet.ap2.impl.util.heads.PlayerHeadUtil;
 import work.lclpnet.ap2.impl.util.heads.PlayerHeads;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
@@ -56,6 +56,7 @@ class TuningPhase implements Unloadable {
     private final Map<UUID, FineTuningRoom> rooms;
     private final ScoreTimeDataContainer<ServerPlayerEntity, PlayerRef> data;
     private final Runnable onEnd;
+    private final GameCommons commons;
     private final Random random = new Random();
     private final MelodyProvider melodyProvider = new SimpleMelodyProvider(random, new SimpleNotesProvider(random), 5);
     private final Map<UUID, TaskHandle> replaying = new HashMap<>();
@@ -67,11 +68,12 @@ class TuningPhase implements Unloadable {
     private int melodyNumber = 0;
 
     public TuningPhase(MiniGameHandle gameHandle, Map<UUID, FineTuningRoom> rooms,
-                       ScoreTimeDataContainer<ServerPlayerEntity, PlayerRef> data, Runnable onEnd) {
+                       ScoreTimeDataContainer<ServerPlayerEntity, PlayerRef> data, Runnable onEnd, GameCommons commons) {
         this.gameHandle = gameHandle;
         this.rooms = rooms;
         this.data = data;
         this.onEnd = onEnd;
+        this.commons = commons;
     }
 
     public void init() {
@@ -147,14 +149,7 @@ class TuningPhase implements Unloadable {
     }
 
     public void beginListen() {
-        MinecraftServer server = gameHandle.getServer();
-        TranslationService translations = gameHandle.getTranslations();
-
-        SoundHelper.playSound(server, SoundEvents.BLOCK_NOTE_BLOCK_PLING.value(), SoundCategory.RECORDS, 0.5f, 0f);
-
-        translations.translateText("game.ap2.fine_tuning.listen").formatted(DARK_GREEN)
-                .acceptEach(PlayerLookup.all(server), (player, text)
-                        -> Title.get(player).title(Text.empty(), text, 5, 30, 5));
+        commons.announcer().announceSubtitle("game.ap2.fine_tuning.listen");
 
         gameHandle.getGameScheduler().timeout(this::playNextMelody, 40);
     }
@@ -185,14 +180,9 @@ class TuningPhase implements Unloadable {
     }
 
     private void listenAgain() {
-        MinecraftServer server = gameHandle.getServer();
-        TranslationService translations = gameHandle.getTranslations();
-
-        SoundHelper.playSound(server, SoundEvents.ENTITY_CHICKEN_EGG, SoundCategory.RECORDS, 0.5f, 0f);
-
-        translations.translateText("game.ap2.fine_tuning.listen_again").formatted(DARK_GREEN)
-                .acceptEach(PlayerLookup.all(server), (player, text)
-                        -> Title.get(player).title(Text.empty(), text, 5, 30, 5));
+        commons.announcer()
+                .withSound(SoundEvents.ENTITY_CHICKEN_EGG, SoundCategory.RECORDS, 0.5f, 0f)
+                .announceSubtitle("game.ap2.fine_tuning.listen_again");
 
         gameHandle.getGameScheduler().timeout(() -> playMelody(this::beginTune), 40);
     }
