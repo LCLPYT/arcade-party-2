@@ -137,6 +137,6 @@ public class SbDestruction {
     }
 
     public static Vec3d getChargePos(BreezeEntity aelos) {
-        return new Vec3d(aelos.getX(), aelos.getBodyY(0.5), aelos.getZ());
+        return new Vec3d(aelos.getX(), aelos.getBodyY(0.8), aelos.getZ());
     }
 }
