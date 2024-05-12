@@ -46,24 +46,24 @@ public class BlockBox implements Pair<BlockPos, BlockPos>, Iterable<BlockPos>, C
     }
 
     @Override
-    public BlockPos getMin() {
+    public BlockPos min() {
         return min;
     }
 
     @Override
-    public BlockPos getMax() {
+    public BlockPos max() {
         return max;
     }
 
-    public int getWidth() {
+    public int width() {
         return max.getX() - min.getX() + 1;
     }
 
-    public int getHeight() {
+    public int height() {
         return max.getY() - min.getY() + 1;
     }
 
-    public int getLength() {
+    public int length() {
         return max.getZ() - min.getZ() + 1;
     }
 
@@ -86,14 +86,11 @@ public class BlockBox implements Pair<BlockPos, BlockPos>, Iterable<BlockPos>, C
 
     @Override
     public String toString() {
-        return "BlockBox{" +
-               "min=" + min +
-               ", max=" + max +
-               '}';
+        return "BlockBox{min=%s, max=%s}".formatted(min, max);
     }
 
     @Nullable
-    public Direction getTangentSurface(int x, int y, int z) {
+    public Direction tangentSurface(int x, int y, int z) {
         if (x == min.getX()) return Direction.WEST;
         if (x == max.getX()) return Direction.EAST;
         if (z == min.getZ()) return Direction.NORTH;
@@ -108,8 +105,7 @@ public class BlockBox implements Pair<BlockPos, BlockPos>, Iterable<BlockPos>, C
         return new Vec3d(
                 (min.getX() + max.getX()) * 0.5d,
                 (min.getY() + max.getY()) * 0.5d,
-                (min.getZ() + max.getZ()) * 0.5d
-        );
+                (min.getZ() + max.getZ()) * 0.5d);
     }
 
     public boolean contains(double x, double y, double z) {
@@ -136,7 +132,7 @@ public class BlockBox implements Pair<BlockPos, BlockPos>, Iterable<BlockPos>, C
                && this.max.getZ() >= other.min.getZ() && other.max.getZ() >= this.min.getZ();
     }
 
-    public void getRandomBlockPos(BlockPos.Mutable pos, Random random) {
+    public void randomBlockPos(BlockPos.Mutable pos, Random random) {
         int minX = min.getX(), minY = min.getY(), minZ = min.getZ();
         int maxX = max.getX(), maxY = max.getY(), maxZ = max.getZ();
 
@@ -147,7 +143,7 @@ public class BlockBox implements Pair<BlockPos, BlockPos>, Iterable<BlockPos>, C
         pos.set(x, y, z);
     }
 
-    public Vec3d getRandomPos(Random random) {
+    public Vec3d randomPos(Random random) {
         int minX = min.getX(), minY = min.getY(), minZ = min.getZ();
         int maxX = max.getX(), maxY = max.getY(), maxZ = max.getZ();
 
@@ -159,23 +155,63 @@ public class BlockBox implements Pair<BlockPos, BlockPos>, Iterable<BlockPos>, C
     }
 
     public double squaredDistanceTo(Vec3d pos) {
-        return getClosestPoint(pos).squaredDistanceTo(pos);
+        return closestPoint(pos).squaredDistanceTo(pos);
     }
 
-    public Vec3d getClosestPoint(Position pos) {
-        return getClosestPoint(pos.getX(), pos.getY(), pos.getZ());
+    public Vec3d closestPoint(Position pos) {
+        return closestPoint(pos.getX(), pos.getY(), pos.getZ());
     }
 
-    public Vec3d getClosestPoint(double x, double y, double z) {
+    public Vec3d closestPoint(double x, double y, double z) {
         return new Vec3d(
                 Math.max(Math.min(x, max.getX()), min.getX()),
                 Math.max(Math.min(y, max.getY()), min.getY()),
-                Math.max(Math.min(z, max.getZ()), min.getZ())
-        );
+                Math.max(Math.min(z, max.getZ()), min.getZ()));
     }
 
     public Box toBox() {
         return new Box(min.getX(), min.getY(), min.getZ(),
                 max.getX() + 1, max.getY() + 1, max.getZ() + 1);
+    }
+
+    public int volume() {
+        return width() * length() * height();
+    }
+
+    /**
+     * Get a BlockPos inside the box by an index, ordering by Y, then Z and then X.
+     * @param i The ordered index.
+     * @return The BlockPos at that index by YZX order.
+     */
+    public BlockPos indexToPosYZX(int i) {
+        int volume = volume();
+
+        if (i < 0 || i >= volume) {
+            throw new IndexOutOfBoundsException("Index %d is outside the box (size=%d)".formatted(i, volume));
+        }
+
+        int width = width(), length = length();
+        int area = width * length;
+
+        int x = i % width;
+        int y = i / area;
+        int z = (i / width) % length;
+
+        return min.add(x, y, z);
+    }
+
+    public int posToIndexYZX(BlockPos pos) {
+        if (!contains(pos)) {
+            return -1;
+        }
+
+        int rx = pos.getX() - min.getX();
+        int ry = pos.getY() - min.getY();
+        int rz = pos.getZ() - min.getZ();
+
+        int width = width(), length = length();
+        int area = width * length;
+
+        return rx + rz * width + ry * area;
     }
 }

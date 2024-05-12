@@ -158,7 +158,7 @@ public class ChickenShooterInstance extends DefaultGameInstance implements Runna
     private void spawnChicken() {
         ServerWorld world = getWorld();
         BlockPos.Mutable randomPos = new BlockPos.Mutable();
-        chickenBox.getRandomBlockPos(randomPos, random);
+        chickenBox.randomBlockPos(randomPos, random);
 
         ChickenEntity chicken = new ChickenEntity(EntityType.CHICKEN, world);
 

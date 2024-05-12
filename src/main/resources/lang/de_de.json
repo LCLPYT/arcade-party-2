@@ -180,5 +180,9 @@
   "game.ap2.speed_builders.completed": "Glückwunsch! Du hast das Bauwerk fertiggestellt.",
   "game.ap2.mimicry": "Nachahmen",
   "game.ap2.mimicry.description": "Drücke Knöpfe in einer vorgegebenen Reihenfolge. Wenn du einen Fehler machst, fliegst du raus!",
-  "game.ap2.task": "Wiederhole die Reihenfolge"
+  "game.ap2.mimicry.task": "Wiederhole die Reihenfolge",
+  "game.ap2.mimicry.attention": "Achtung...",
+  "game.ap2.mimicry.repeat": "Nun wiederhole es",
+  "game.ap2.mimicry.wrong_button": "Deine Reihenfolge ist leider falsch.",
+  "game.ap2.mimicry.correct": "Deine Reihenfolge ist korrekt!"
 }

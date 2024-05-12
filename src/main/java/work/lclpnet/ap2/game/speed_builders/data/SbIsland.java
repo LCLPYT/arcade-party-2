@@ -74,7 +74,7 @@ public class SbIsland {
 
         this.previewArea = this.buildingArea.transform(previewAreaTranslation);
         this.bounds = bounds;
-        this.movementBounds = new BlockBox(bounds.getMin().add(-4, 0, -4), bounds.getMax().add(4, 10, 4));
+        this.movementBounds = new BlockBox(bounds.min().add(-4, 0, -4), bounds.max().add(4, 10, 4));
     }
 
     public void teleport(ServerPlayerEntity player) {
@@ -92,7 +92,7 @@ public class SbIsland {
         BlockBox buildArea = data.buildArea();
         BlockStructure structure = module.structure();
 
-        return buildArea.getWidth() == structure.getWidth() && buildArea.getLength() == structure.getLength() && structure.getHeight() <= buildArea.getHeight();
+        return buildArea.width() == structure.getWidth() && buildArea.length() == structure.getLength() && structure.getHeight() <= buildArea.height();
     }
 
     public void placeModulePreview(SbModule module, ServerWorld world, Team team, CustomScoreboardManager scoreboardManager) {
@@ -101,7 +101,7 @@ public class SbIsland {
         BlockStructure structure = module.structure();
 
         var options = EnumSet.of(FORCE_STATE, SKIP_AIR, SKIP_DROPS, SKIP_BLOCK_ENTITIES);
-        StructureWriter.placeStructure(structure, world, previewArea.getMin().down(), Matrix3i.IDENTITY, options);
+        StructureWriter.placeStructure(structure, world, previewArea.min().down(), Matrix3i.IDENTITY, options);
 
         var entities = getPreviewEntities(world);
 
@@ -128,8 +128,8 @@ public class SbIsland {
     }
 
     public void copyPreviewFloorToBuildArea(ServerWorld world) {
-        BlockPos from = buildingArea.getMin().down();
-        BlockPos to = buildingArea.getMax().down(buildingArea.getHeight());
+        BlockPos from = buildingArea.min().down();
+        BlockPos to = buildingArea.max().down(buildingArea.height());
         Vec3i previewOffset = data.previewOffset();
         BlockPos.Mutable pointer = new BlockPos.Mutable();
         int flags = Block.FORCE_STATE | Block.SKIP_DROPS | Block.NOTIFY_LISTENERS;
@@ -169,7 +169,7 @@ public class SbIsland {
         KibuBlockPos origin = structure.getOrigin();
         final int ox = origin.getX(), oy = origin.getY(), oz = origin.getZ();
 
-        BlockPos min = buildingArea.getMin();
+        BlockPos min = buildingArea.min();
         final int mx = min.getX(), my = min.getY(), mz = min.getZ();
 
         BlockPos.Mutable pointer = new BlockPos.Mutable();
@@ -261,8 +261,8 @@ public class SbIsland {
     }
 
     public Vec3d getCenter() {
-        Vec3d buildingCenter = buildingArea.getCenter().withAxis(Direction.Axis.Y, buildingArea.getMin().getY());
-        Vec3d previewCenter = previewArea.getCenter().withAxis(Direction.Axis.Y, previewArea.getMin().getY());
+        Vec3d buildingCenter = buildingArea.getCenter().withAxis(Direction.Axis.Y, buildingArea.min().getY());
+        Vec3d previewCenter = previewArea.getCenter().withAxis(Direction.Axis.Y, previewArea.min().getY());
 
         return buildingCenter.add(previewCenter).multiply(0.5);
     }

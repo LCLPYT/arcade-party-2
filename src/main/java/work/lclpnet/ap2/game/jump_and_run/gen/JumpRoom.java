@@ -81,7 +81,7 @@ public class JumpRoom {
         for (var pos : structure.getBlockPositions()) {
             int x = pos.getX() - ox, y = pos.getY() - oy, z = pos.getZ() - oz;
 
-            Direction dir = bounds.getTangentSurface(x, y, z);
+            Direction dir = bounds.tangentSurface(x, y, z);
             if (dir == null || dir.getAxis() == Direction.Axis.Y) continue;
 
             var state = structure.getBlockState(pos);

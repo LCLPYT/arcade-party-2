@@ -107,7 +107,7 @@ public class AnvilFallSetup {
     }
 
     public static AnvilFallSetup scanWorld(BlockView world, BlockBox box, Random random) {
-        BlockPos min = box.getMin(), max = box.getMax();
+        BlockPos min = box.min(), max = box.max();
 
         final int xMin = min.getX(), yMin = min.getY(), zMin = min.getZ();
         final int xMax = max.getX(), yMax = max.getY(), zMax = max.getZ();

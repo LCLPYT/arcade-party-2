@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.world.StackedRoomGenerator;
+import work.lclpnet.kibu.structure.BlockStructure;
 import work.lclpnet.lobby.game.map.GameMap;
 
 import java.util.*;
@@ -28,14 +29,19 @@ class FineTuningSetup {
     }
 
     CompletableFuture<Void> createRooms() {
-        var generator = new StackedRoomGenerator<>(world, map, StackedRoomGenerator.Coordinates.RELATIVE, FineTuningRoom::new);
+        var generator = new StackedRoomGenerator<>(world, map, StackedRoomGenerator.Coordinates.RELATIVE, this::createRoom);
 
         return generator.generate(gameHandle.getParticipants())
+                .thenApply(StackedRoomGenerator.Result::rooms)
                 .thenAccept(this.rooms::putAll)
                 .exceptionally(throwable -> {
                     gameHandle.getLogger().error("Failed to create rooms", throwable);
                     return null;
                 });
+    }
+
+    private FineTuningRoom createRoom(BlockPos pos, BlockPos spawn, float spawnYaw, BlockStructure structure) {
+        return new FineTuningRoom(pos, spawn, spawnYaw);
     }
 
     static BlockPos[] readNoteBlockLocations(JSONArray noteBlockLocations, Logger logger) {

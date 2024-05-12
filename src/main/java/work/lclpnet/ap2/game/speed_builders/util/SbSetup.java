@@ -71,7 +71,7 @@ public class SbSetup {
         SbIslandProto proto = islands.getFirst();
         BlockBox buildArea = proto.data().buildArea();
 
-        return new Vec3i(buildArea.getWidth(), buildArea.getHeight(), buildArea.getLength());
+        return new Vec3i(buildArea.width(), buildArea.height(), buildArea.length());
     }
 
     public Map<UUID, SbIsland> createIslands(Participants participants, ServerWorld world) {
@@ -219,15 +219,15 @@ public class SbSetup {
 
                 // ensure the build areas are compatible; the first island defines the dimensions
                 if (width == -1 && height == -1 && length == -1) {
-                    width = buildArea.getWidth();
-                    height = buildArea.getHeight();
-                    length = buildArea.getLength();
-                } else if (width != buildArea.getWidth() || length != buildArea.getLength()) {
+                    width = buildArea.width();
+                    height = buildArea.height();
+                    length = buildArea.length();
+                } else if (width != buildArea.width() || length != buildArea.length()) {
                     logger.warn("Incompatible build area dimensions. The first island defined {}x{} but island '{}' defines {}x{}",
-                            width, length, data.id(), buildArea.getWidth(), buildArea.getLength());
+                            width, length, data.id(), buildArea.width(), buildArea.length());
                     continue;
-                } else if (buildArea.getHeight() < height) {
-                    logger.warn("Build area height of island {} is too small: {}. The first island defined height {}", data.id(), buildArea.getHeight(), height);
+                } else if (buildArea.height() < height) {
+                    logger.warn("Build area height of island {} is too small: {}. The first island defined height {}", data.id(), buildArea.height(), height);
                     continue;
                 }
 

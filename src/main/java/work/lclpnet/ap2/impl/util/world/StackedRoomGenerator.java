@@ -47,7 +47,7 @@ public class StackedRoomGenerator<T> {
      * @param participants The participants.
      * @return A future with the room mapping.
      */
-    public CompletableFuture<Map<UUID, T>> generate(Participants participants) {
+    public CompletableFuture<Result<T>> generate(Participants participants) {
         String schematicName = map.requireProperty("room-schematic");
         var session = ((MinecraftServerAccessor) world.getServer()).getSession();
         Path storage = session.getWorldDirectory(world.getRegistryKey());
@@ -56,7 +56,10 @@ public class StackedRoomGenerator<T> {
 
         return readSchematic(path)
                 .thenApply(structure -> placeStructures(map, world, participants.count(), structure))
-                .thenApply(data -> assignRooms(participants, data));
+                .thenApply(data -> {
+                    var mapping = assignRooms(participants, data);
+                    return new Result<>(mapping, data);
+                });
     }
 
     private CompletableFuture<BlockStructure> readSchematic(Path path) {
@@ -125,7 +128,7 @@ public class StackedRoomGenerator<T> {
             BlockPos roomPos = roomStart.add(roomOffset.multiply(i++));
             BlockPos spawn = roomPos.add(spawnOffset);
 
-            T room = roomFactory.createRoom(roomPos, spawn, yaw);
+            T room = roomFactory.createRoom(roomPos, spawn, yaw, data.structure());
 
             rooms.put(player.getUuid(), room);
         }
@@ -144,12 +147,15 @@ public class StackedRoomGenerator<T> {
          * @param pos The room position in the world, e.g. where the minimum position of the room is inside the world.
          * @param spawn The room spawn position, in absolute world coordinates.
          * @param spawnYaw The spawn yaw of the room.
+         * @param structure The structure the room consists of.
          * @return A room instance of the specified data type.
          */
-        T createRoom(BlockPos pos, BlockPos spawn, float spawnYaw);
+        T createRoom(BlockPos pos, BlockPos spawn, float spawnYaw, BlockStructure structure);
     }
 
-    private record GeneratorData(BlockPos roomStart, Vec3i roomOffset, BlockStructure structure) {}
+    public record GeneratorData(BlockPos roomStart, Vec3i roomOffset, BlockStructure structure) {}
+
+    public record Result<T>(Map<UUID, T> rooms, GeneratorData data) {}
 
     public enum Coordinates {
         ABSOLUTE,
