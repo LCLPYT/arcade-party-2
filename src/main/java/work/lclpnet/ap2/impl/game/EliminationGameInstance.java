@@ -133,6 +133,7 @@ public abstract class EliminationGameInstance extends DefaultGameInstance {
             if (!participants.isParticipating(player)) continue;
 
             toEliminate.add(player);
+            onEliminated(player);
 
             if (eliminatedMessages) {
                 deathMessages.eliminated(player).sendTo(PlayerLookup.all(server));
@@ -161,6 +162,8 @@ public abstract class EliminationGameInstance extends DefaultGameInstance {
         Participants participants = gameHandle.getParticipants();
 
         if (participants.isParticipating(player)) {
+            onEliminated(player);
+
             if (eliminatedMessages) {
                 DeathMessages deathMessages = gameHandle.getDeathMessages();
                 MinecraftServer server = gameHandle.getServer();
@@ -180,4 +183,6 @@ public abstract class EliminationGameInstance extends DefaultGameInstance {
             worldFacade.teleport(player);
         }
     }
+
+    protected void onEliminated(ServerPlayerEntity player) {}
 }

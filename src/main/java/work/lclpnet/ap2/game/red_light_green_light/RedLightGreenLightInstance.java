@@ -92,7 +92,7 @@ public class RedLightGreenLightInstance extends DefaultGameInstance implements R
         float yaw = MapUtils.getSpawnYaw(map);
 
         for (ServerPlayerEntity participant : gameHandle.getParticipants()) {
-            Vec3d pos = spawnArea.getRandomPos(random);
+            Vec3d pos = spawnArea.randomPos(random);
             participant.teleport(world, pos.getX(), pos.getY(), pos.getZ(), yaw, 0f);
         }
 

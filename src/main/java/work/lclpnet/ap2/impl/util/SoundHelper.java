@@ -26,5 +26,15 @@ public class SoundHelper {
         player.networkHandler.sendPacket(packet);
     }
 
+    /**
+     * Get the note pitch for a given note key.
+     * @param key The note key, ranging from F#3 (0) to F#5 (24), where one octave is 12 keys.
+     * @return The Minecraft sound pitch for the given key.
+     */
+    public static float getPitch(int key) {
+        float pitch = (float) Math.pow(2, (key - 12) / 12f);
+        return Math.max(0.5f, Math.min(2.0f, pitch));
+    }
+
     private SoundHelper() {}
 }

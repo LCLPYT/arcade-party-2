@@ -17,8 +17,8 @@ public class UnionCollider implements Collider {
         int maxX = Integer.MIN_VALUE, maxY = Integer.MIN_VALUE, maxZ = Integer.MIN_VALUE;
 
         for (Collider child : children) {
-            BlockPos min = child.getMin();
-            BlockPos max = child.getMax();
+            BlockPos min = child.min();
+            BlockPos max = child.max();
 
             minX = Math.min(minX, min.getX());
             minY = Math.min(minY, min.getY());
@@ -44,12 +44,12 @@ public class UnionCollider implements Collider {
     }
 
     @Override
-    public BlockPos getMin() {
+    public BlockPos min() {
         return min;
     }
 
     @Override
-    public BlockPos getMax() {
+    public BlockPos max() {
         return max;
     }
 

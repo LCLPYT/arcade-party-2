@@ -7,9 +7,9 @@ public interface Collider {
 
     boolean collidesWith(double x, double y, double z);
 
-    BlockPos getMin();
+    BlockPos min();
 
-    BlockPos getMax();
+    BlockPos max();
 
     default boolean collidesWith(Position pos) {
         return collidesWith(pos.getX(), pos.getY(), pos.getZ());

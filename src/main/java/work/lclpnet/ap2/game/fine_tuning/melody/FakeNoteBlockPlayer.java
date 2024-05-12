@@ -4,20 +4,17 @@ import net.minecraft.block.NoteBlock;
 import net.minecraft.block.enums.Instrument;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.util.math.BlockPos;
 import work.lclpnet.ap2.impl.util.SoundHelper;
 
 public class FakeNoteBlockPlayer {
 
-    private final ServerWorld world;
     private final BlockPos[] noteBlocks;
     private final int[] notes;
     private final Instrument[] instruments;
 
-    public FakeNoteBlockPlayer(ServerWorld world, BlockPos[] noteBlocks, int[] notes, Instrument[] instruments) {
-        this.world = world;
+    public FakeNoteBlockPlayer(BlockPos[] noteBlocks, int[] notes, Instrument[] instruments) {
         this.noteBlocks = noteBlocks;
         this.notes = notes;
         this.instruments = instruments;
@@ -42,7 +39,7 @@ public class FakeNoteBlockPlayer {
         if (instrument.shouldSpawnNoteParticles()) {
             pitch = NoteBlock.getNotePitch(note);
 
-            world.spawnParticles(player, ParticleTypes.NOTE, false,
+            player.getServerWorld().spawnParticles(player, ParticleTypes.NOTE, false,
                     pos.getX() + 0.5d,
                     pos.getY() + 1.2d,
                     pos.getZ() + 0.5d,

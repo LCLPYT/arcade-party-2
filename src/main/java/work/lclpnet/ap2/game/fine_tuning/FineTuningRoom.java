@@ -13,18 +13,22 @@ import java.util.Arrays;
 
 class FineTuningRoom {
 
-    private final ServerWorld world;
-    private final BlockPos[] noteBlocks;
+    private final BlockPos pos;
     private final BlockPos spawn;
     private final float yaw;
-    private final int[] notes, tmpNotes;
-    private final Instrument[] instruments;
-    private final FakeNoteBlockPlayer nbPlayer;
+    private BlockPos[] noteBlocks = null;
+    private int[] notes = null, tmpNotes = null;
+    private Instrument[] instruments = null;
+    private FakeNoteBlockPlayer nbPlayer = null;
     private boolean temporary = false;
 
-    public FineTuningRoom(ServerWorld world, BlockPos pos, Vec3i[] relNoteBlock, Vec3i relSpawn, float yaw) {
-        this.world = world;
+    public FineTuningRoom(BlockPos pos, BlockPos spawn, float yaw) {
+        this.pos = pos;
+        this.spawn = spawn;
+        this.yaw = yaw;
+    }
 
+    public void setNoteBlocks(Vec3i[] relNoteBlock) {
         BlockPos[] noteBlocks = new BlockPos[relNoteBlock.length];
 
         for (int j = 0; j < relNoteBlock.length; j++) {
@@ -42,13 +46,10 @@ class FineTuningRoom {
         instruments = new Instrument[noteBlocks.length];
         Arrays.fill(instruments, Instrument.HARP);
 
-        this.spawn = pos.add(relSpawn);
-        this.yaw = yaw;
-
-        this.nbPlayer = new FakeNoteBlockPlayer(this.world, noteBlocks, notes, instruments);
+        this.nbPlayer = new FakeNoteBlockPlayer(noteBlocks, notes, instruments);
     }
 
-    public void teleport(ServerPlayerEntity player) {
+    public void teleport(ServerPlayerEntity player, ServerWorld world) {
         double x = spawn.getX() + 0.5, y = spawn.getY(), z = spawn.getZ() + 0.5;
 
         player.teleport(world, x, y, z, yaw, 0.0F);

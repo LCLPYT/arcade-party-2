@@ -27,9 +27,9 @@ import java.util.function.BiConsumer;
 
 public class SbManager {
 
-    private static final int BASE_BUILD_DURATION_SECONDS = 45;
-    private static final int MIN_BUILD_DURATION_SECONDS = 5;
-    private static final int SUCCESSIVE_COMPLETION_REDUCTION_SECONDS = 4;
+    private static final int BASE_BUILD_DURATION_SECONDS = 60;
+    private static final int MIN_BUILD_DURATION_SECONDS = 10;
+    private static final int SUCCESSIVE_COMPLETION_REDUCTION_SECONDS = 5;
     private final Map<UUID, SbIsland> islands;
     private final List<SbModule> modules;
     private final MiniGameHandle gameHandle;
@@ -244,7 +244,7 @@ public class SbManager {
 
         if (island == null || !island.isCompleted(world, currentModule)) return;
 
-        completed.add(player.getUuid());
+        if (!completed.add(player.getUuid())) return;
 
         player.playSoundToPlayer(SoundEvents.ENTITY_PLAYER_LEVELUP, SoundCategory.PLAYERS, 0.75f, 1.1f);
 
@@ -304,7 +304,7 @@ public class SbManager {
         }
 
         int complexity = currentModule.getComplexity();
-        int bonusTime = Math.max(0, complexity - 64) / 3;
+        int bonusTime = (int) Math.floor((Math.max(0, complexity - 64) * 0.4));
         int reduction = Math.max(0, successiveCompletion * SUCCESSIVE_COMPLETION_REDUCTION_SECONDS);
 
         return Math.max(MIN_BUILD_DURATION_SECONDS, BASE_BUILD_DURATION_SECONDS + bonusTime - reduction);

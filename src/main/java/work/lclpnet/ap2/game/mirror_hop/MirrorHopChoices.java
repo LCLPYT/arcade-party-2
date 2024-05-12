@@ -129,12 +129,12 @@ public class MirrorHopChoices {
         public Platform(BlockBox ground) {
             this.ground = ground;
 
-            BlockPos min = ground.getMin();
+            BlockPos min = ground.min();
             this.minBx = min.getX();
             this.minBy = min.getY();
             this.minBz = min.getZ();
 
-            BlockPos max = ground.getMax();
+            BlockPos max = ground.max();
             this.maxBx = max.getX() + 1;
             this.maxBy = max.getY() + 3;
             this.maxBz = max.getZ() + 1;
@@ -148,13 +148,13 @@ public class MirrorHopChoices {
         }
 
         @Override
-        public BlockPos getMin() {
-            return ground.getMin();  // height is not important, therefore ground can be used
+        public BlockPos min() {
+            return ground.min();  // height is not important, therefore ground can be used
         }
 
         @Override
-        public BlockPos getMax() {
-            return ground.getMax();  // height is not important, therefore ground can be used
+        public BlockPos max() {
+            return ground.max();  // height is not important, therefore ground can be used
         }
 
         public BlockBox getGround() {

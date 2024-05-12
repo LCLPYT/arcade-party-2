@@ -64,7 +64,7 @@ public class JumpEnd {
 
             if (!mat.startsWith("minecraft:chain_command_block")) continue;
 
-            Direction dir = bounds.getTangentSurface(x, y, z);
+            Direction dir = bounds.tangentSurface(x, y, z);
 
             if (dir == null || dir.getAxis() == Direction.Axis.Y) continue;
 

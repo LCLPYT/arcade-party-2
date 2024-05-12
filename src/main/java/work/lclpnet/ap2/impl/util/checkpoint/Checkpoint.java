@@ -19,7 +19,7 @@ public record Checkpoint(BlockPos pos, float yaw, BlockBox bounds) {
     }
 
     public Checkpoint relativize(Vec3i origin) {
-        BlockBox relativeBounds = new BlockBox(bounds.getMin().subtract(origin), bounds.getMax().subtract(origin));
+        BlockBox relativeBounds = new BlockBox(bounds.min().subtract(origin), bounds.max().subtract(origin));
         return new Checkpoint(pos.subtract(origin), yaw, relativeBounds);
     }
 
