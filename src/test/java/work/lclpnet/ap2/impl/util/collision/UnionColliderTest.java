@@ -21,18 +21,18 @@ class UnionColliderTest {
     }
 
     @Test
-    void getMin() {
+    void min() {
         var shape = UnionCollider.union(new BlockBox(0, 0, 0, 1, 1, 1),
                 new BlockBox(1, 1, 1, 2, 2, 2));
 
-        assertEquals(new BlockPos(0, 0, 0), shape.getMin());
+        assertEquals(new BlockPos(0, 0, 0), shape.min());
     }
 
     @Test
-    void getMax() {
+    void max() {
         var shape = UnionCollider.union(new BlockBox(0, 0, 0, 1, 1, 1),
                 new BlockBox(1, 1, 1, 2, 2, 2));
 
-        assertEquals(new BlockPos(2, 2, 2), shape.getMax());
+        assertEquals(new BlockPos(2, 2, 2), shape.max());
     }
 }

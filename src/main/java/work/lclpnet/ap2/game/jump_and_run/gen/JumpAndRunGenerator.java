@@ -198,7 +198,7 @@ public class JumpAndRunGenerator {
     }
 
     private boolean isBoxInvalid(BlockBox box, BoxCollisionDetector shape) {
-        return box.getMin().getY() < minHeight || box.getMax().getY() > maxHeight || shape.hasCollisions(box);
+        return box.min().getY() < minHeight || box.max().getY() > maxHeight || shape.hasCollisions(box);
     }
 
     private static OrientedPart createPart(JumpRoom room, Connector connector) {

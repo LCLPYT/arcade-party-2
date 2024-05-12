@@ -219,7 +219,7 @@ public class PigRaceInstance extends DefaultGameInstance {
         }
 
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
-            Vec3d pos = bounds.getRandomPos(random);
+            Vec3d pos = bounds.randomPos(random);
 
             double x = pos.getX(), y = pos.getY(), z = pos.getZ();
 

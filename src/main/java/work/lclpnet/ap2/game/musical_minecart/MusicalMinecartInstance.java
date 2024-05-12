@@ -152,7 +152,7 @@ public class MusicalMinecartInstance extends EliminationGameInstance {
         ServerWorld world = getWorld();
 
         for (int i = 0; i < count; i++) {
-            bounds.getRandomBlockPos(pos, random);
+            bounds.randomBlockPos(pos, random);
 
             MinecartEntity minecart = new MinecartEntity(EntityType.MINECART, world);
             minecart.setPos(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
@@ -208,7 +208,7 @@ public class MusicalMinecartInstance extends EliminationGameInstance {
         ServerWorld world = getWorld();
 
         for (int i = 0; i < PARTICLE_AMOUNT; i++) {
-            Vec3d pos = particleBox.getRandomPos(random);
+            Vec3d pos = particleBox.randomPos(random);
 
             world.spawnParticles(ParticleTypes.NOTE, pos.getX(), pos.getY(), pos.getZ(), 10,
                     3, 2, 3, 1);
