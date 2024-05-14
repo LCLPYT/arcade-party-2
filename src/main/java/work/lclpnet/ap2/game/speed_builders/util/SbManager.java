@@ -24,6 +24,7 @@ import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 
 import java.util.*;
 import java.util.function.BiConsumer;
+import java.util.stream.Collectors;
 
 public class SbManager {
 
@@ -86,12 +87,11 @@ public class SbManager {
     public synchronized void setModule(SbModule module) {
         CustomScoreboardManager scoreboardManager = gameHandle.getScoreboardManager();
         PlayerManager playerManager = gameHandle.getServer().getPlayerManager();
-        Participants participants = gameHandle.getParticipants();
 
-        for (var entry : islands.entrySet()) {
+        for (var entry : activeIslands()) {
             ServerPlayerEntity player = playerManager.getPlayer(entry.getKey());
 
-            if (player == null || !participants.isParticipating(player)) continue;
+            if (player == null) continue;
 
             SbIsland island = entry.getValue();
 
@@ -137,21 +137,24 @@ public class SbManager {
                 .findFirst();
     }
 
+    private Set<Map.Entry<UUID, SbIsland>> activeIslands() {
+        Participants participants = gameHandle.getParticipants();
+
+        return islands.entrySet().stream()
+                .filter(entry -> participants.isParticipating(entry.getKey()))
+                .collect(Collectors.toSet());
+    }
+
     private Map<ServerPlayerEntity, Integer> evaluate() {
         if (currentModule == null) {
             return Map.of();
         }
 
         PlayerManager playerManager = gameHandle.getServer().getPlayerManager();
-        Participants participants = gameHandle.getParticipants();
         Map<ServerPlayerEntity, Integer> scores = new HashMap<>();
 
-        for (var entry : islands.entrySet()) {
-            UUID uuid = entry.getKey();
-
-            if (!participants.isParticipating(uuid)) continue;
-
-            ServerPlayerEntity player = playerManager.getPlayer(uuid);
+        for (var entry : activeIslands()) {
+            ServerPlayerEntity player = playerManager.getPlayer(entry.getKey());
 
             if (player == null) continue;
 
@@ -165,13 +168,13 @@ public class SbManager {
     }
 
     public List<? extends Entity> getPreviewEntities() {
-        var it = islands.values().iterator();
+        var it = activeIslands().iterator();
 
         if (!it.hasNext()) {
             return List.of();
         }
 
-        return it.next().getPreviewEntities(world);
+        return it.next().getValue().getPreviewEntities(world);
     }
 
     public void setTeam(Team team) {
@@ -211,15 +214,10 @@ public class SbManager {
     }
 
     private void checkPlayerPositions() {
-        Participants participants = gameHandle.getParticipants();
         PlayerManager playerManager = gameHandle.getServer().getPlayerManager();
 
-        for (var entry : islands.entrySet()) {
-            UUID uuid = entry.getKey();
-
-            if (!participants.isParticipating(uuid)) continue;
-
-            ServerPlayerEntity player = playerManager.getPlayer(uuid);
+        for (var entry : activeIslands()) {
+            ServerPlayerEntity player = playerManager.getPlayer(entry.getKey());
 
             if (player == null || !player.getAbilities().allowFlying) continue;
 
@@ -312,5 +310,14 @@ public class SbManager {
         int reduction = Math.max(0, successiveCompletion * SUCCESSIVE_COMPLETION_REDUCTION_SECONDS);
 
         return Math.max(MIN_BUILD_DURATION_SECONDS, BASE_BUILD_DURATION_SECONDS + bonusTime - reduction);
+    }
+
+    public Optional<ServerPlayerEntity> getIslandOwnerAt(BlockPos pos) {
+        return islands.entrySet().stream()
+                .filter(entry -> entry.getValue().isWithinBuildingArea(pos))
+                .map(Map.Entry::getKey)
+                .map(uuid -> gameHandle.getServer().getPlayerManager().getPlayer(uuid))
+                .filter(Objects::nonNull)
+                .findAny();
     }
 }
