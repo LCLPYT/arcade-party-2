@@ -27,9 +27,9 @@ import java.util.function.BiConsumer;
 
 public class SbManager {
 
-    private static final int BASE_BUILD_DURATION_SECONDS = 60;
+    private static final int BASE_BUILD_DURATION_SECONDS = 45;
     private static final int MIN_BUILD_DURATION_SECONDS = 10;
-    private static final int SUCCESSIVE_COMPLETION_REDUCTION_SECONDS = 5;
+    private static final int SUCCESSIVE_COMPLETION_REDUCTION_SECONDS = 6;
     private final Map<UUID, SbIsland> islands;
     private final List<SbModule> modules;
     private final MiniGameHandle gameHandle;
@@ -143,10 +143,14 @@ public class SbManager {
         }
 
         PlayerManager playerManager = gameHandle.getServer().getPlayerManager();
+        Participants participants = gameHandle.getParticipants();
         Map<ServerPlayerEntity, Integer> scores = new HashMap<>();
 
         for (var entry : islands.entrySet()) {
             UUID uuid = entry.getKey();
+
+            if (!participants.isParticipating(uuid)) continue;
+
             ServerPlayerEntity player = playerManager.getPlayer(uuid);
 
             if (player == null) continue;
