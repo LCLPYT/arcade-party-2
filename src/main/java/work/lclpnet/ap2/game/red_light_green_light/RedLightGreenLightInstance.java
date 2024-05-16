@@ -39,6 +39,7 @@ import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.title.Title;
 import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.kibu.translate.bossbar.TranslatedBossBar;
+import work.lclpnet.kibu.translate.text.LocalizedFormat;
 import work.lclpnet.lobby.game.map.GameMap;
 import work.lclpnet.lobby.game.map.MapUtils;
 import work.lclpnet.lobby.util.RayCaster;
@@ -332,10 +333,21 @@ public class RedLightGreenLightInstance extends DefaultGameInstance implements R
     }
 
     private void gradePlayers() {
+        TranslationService translations = gameHandle.getTranslations();
+
         // grade players who are not yet in the goal by their distance to the goal
         gameHandle.getParticipants().stream()
                 .filter(player -> !inGoal.contains(player.getUuid()))
-                .sorted(Comparator.comparingDouble(player -> goal.squaredDistanceTo(player.getPos())))
-                .forEachOrdered(data::add);
+                .map(player -> {
+                    double distanceSq = goal.squaredDistanceTo(player.getPos());
+                    return new Grade(player, Math.sqrt(distanceSq));
+                })
+                .sorted(Comparator.comparingDouble(Grade::distance))
+                .forEachOrdered(grade -> {
+                    var detail = translations.translateText("game.ap2.red_light_green_light.result", LocalizedFormat.format("%.1f", grade.distance));
+                    data.add(grade.player(), detail);
+                });
     }
+
+    private record Grade(ServerPlayerEntity player, double distance) {}
 }

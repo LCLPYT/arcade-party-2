@@ -1,7 +1,5 @@
 package work.lclpnet.ap2.impl.game.data;
 
-import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
-import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2IntArrayMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import work.lclpnet.ap2.api.game.data.DataContainer;
@@ -9,10 +7,12 @@ import work.lclpnet.ap2.api.game.data.DataEntry;
 import work.lclpnet.ap2.api.game.data.SubjectRef;
 import work.lclpnet.ap2.api.game.data.SubjectRefFactory;
 import work.lclpnet.ap2.impl.game.data.entry.SimpleOrderDataEntry;
+import work.lclpnet.kibu.translate.text.TranslatedText;
 
 import java.util.ArrayList;
-import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
 /**
@@ -22,9 +22,8 @@ import java.util.stream.Stream;
 public class EliminationDataContainer<T, Ref extends SubjectRef> implements DataContainer<T, Ref> {
 
     private final SubjectRefFactory<T, Ref> refs;
-    private final Object2IntMap<Ref> values = new Object2IntArrayMap<>();
-    private final Int2ObjectMap<List<Ref>> order = new Int2ObjectArrayMap<>();
-    private int index = 0;
+    private final Object2IntMap<Ref> index = new Object2IntArrayMap<>();
+    private final List<Map<Ref, SimpleOrderDataEntry<Ref>>> order = new ArrayList<>();
     private boolean frozen = false;
 
     public EliminationDataContainer(SubjectRefFactory<T, Ref> refs) {
@@ -32,32 +31,36 @@ public class EliminationDataContainer<T, Ref extends SubjectRef> implements Data
     }
 
     public void eliminated(T subject) {
-        allEliminated(List.of(subject));
+        eliminated(subject, null);
+    }
+
+    public void eliminated(T subject, TranslatedText data) {
+        allEliminated(List.of(subject), data);
     }
 
     public void allEliminated(Iterable<? extends T> subjects) {
+        allEliminated(subjects, null);
+    }
+
+    public void allEliminated(Iterable<? extends T> subjects, TranslatedText data) {
         synchronized (this) {
             if (frozen) return;
 
-            boolean changed = false;
+            int rank = order.size();
+            Map<Ref, SimpleOrderDataEntry<Ref>> mapping = new HashMap<>();
 
             for (T subject : subjects) {
                 Ref ref = refs.create(subject);
 
-                if (values.containsKey(ref)) continue;
+                if (index.containsKey(ref)) continue;
 
-                values.put(ref, index);
-
-                var list = order.computeIfAbsent(index, i -> new ArrayList<>());
-                list.add(ref);
-
-                changed = true;
-
+                index.put(ref, rank);
+                mapping.put(ref, new SimpleOrderDataEntry<>(ref, rank, data));
             }
 
-            if (changed) {
-                index++;
-            }
+            if (mapping.isEmpty()) return;
+
+            order.add(mapping);
         }
     }
 
@@ -67,13 +70,13 @@ public class EliminationDataContainer<T, Ref extends SubjectRef> implements Data
             if (frozen) return;
 
             Ref ref = refs.create(subject);
-            int order = getOrder(ref);
+            int rank = getRank(ref);
 
-            if (order == -1) return;
+            if (rank < 0 || rank >= order.size()) return;
 
-            values.removeInt(ref);
+            index.removeInt(ref);
 
-            var entries = this.order.get(order);
+            var entries = order.get(rank);
 
             if (entries == null) return;
 
@@ -81,27 +84,38 @@ public class EliminationDataContainer<T, Ref extends SubjectRef> implements Data
         }
     }
 
-    private int getOrder(Ref ref) {
-        return values.getOrDefault(ref, -1);
-    }
-
     @Override
     public DataEntry<Ref> getEntry(T subject) {
         Ref ref = refs.create(subject);
-        int order = getOrder(ref);
-        return new SimpleOrderDataEntry<>(ref, order);
+
+        synchronized (this) {
+            int rank = getRank(ref);
+
+            if (rank < 0 || rank >= order.size()) {
+                return new SimpleOrderDataEntry<>(ref, -1);
+            }
+
+            var mapping = order.get(rank);
+
+            if (mapping == null) {
+                return new SimpleOrderDataEntry<>(ref, rank);
+            }
+
+            var dataEntry = mapping.get(ref);
+
+            if (dataEntry == null) {
+                return new SimpleOrderDataEntry<>(ref, rank);
+            }
+
+            return dataEntry;
+        }
     }
 
     @Override
     public Stream<DataEntry<Ref>> orderedEntries() {
-        Comparator<Int2ObjectMap.Entry<List<Ref>>> ascending = Comparator.comparingInt(Int2ObjectMap.Entry::getIntKey);
-
-        return this.order.int2ObjectEntrySet().stream()
-                .sorted(ascending.reversed())
-                .flatMap(orderEntry -> {
-                    int order = orderEntry.getIntKey();
-                    return orderEntry.getValue().stream().map(ref -> new SimpleOrderDataEntry<>(ref, order));
-                });
+        synchronized (this) {
+            return this.order.stream().flatMap(mapping -> mapping.values().stream());
+        }
     }
 
     @Override
@@ -114,5 +128,9 @@ public class EliminationDataContainer<T, Ref extends SubjectRef> implements Data
     @Override
     public void ensureTracked(T subject) {
         eliminated(subject);
+    }
+
+    private int getRank(Ref ref) {
+        return index.getOrDefault(ref, -1);
     }
 }

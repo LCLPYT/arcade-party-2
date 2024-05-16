@@ -164,6 +164,7 @@
   "game.ap2.red_light_green_light.warn": "Achtung...",
   "game.ap2.red_light_green_light.stop": "Stopp!",
   "game.ap2.red_light_green_light.moved": "Du hast dich bewegt! Als Bestrafung wurdest du zurückgesetzt.",
+  "game.ap2.red_light_green_light.result": "%s Blöcke entfernt",
   "game.ap2.snowball_fight": "Schneeballschlacht",
   "game.ap2.snowball_fight.description": "Sammle Schnee vom Boden. Treffe deine Gegner mit den Schneebällen. Der letzte Überlebende gewinnt!",
   "game.ap2.speed_builders": "Schnellbauen",

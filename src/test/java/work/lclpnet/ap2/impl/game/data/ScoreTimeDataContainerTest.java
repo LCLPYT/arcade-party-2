@@ -1,8 +1,5 @@
 package work.lclpnet.ap2.impl.game.data;
 
-import net.minecraft.Bootstrap;
-import net.minecraft.SharedConstants;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import work.lclpnet.ap2.impl.game.data.entry.ScoreDataEntry;
 import work.lclpnet.ap2.impl.game.data.entry.ScoreTimeDataEntry;
@@ -11,12 +8,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
 class ScoreTimeDataContainerTest {
-
-    @BeforeAll
-    public static void bootstrap() {
-        SharedConstants.createGameVersion();
-        Bootstrap.initialize();
-    }
 
     @Test
     void testEntrySameScore() {
