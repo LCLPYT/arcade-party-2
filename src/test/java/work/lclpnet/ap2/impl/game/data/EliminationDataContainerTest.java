@@ -23,10 +23,10 @@ public class EliminationDataContainerTest {
 
         assertEquals(4, order.size());
 
-        assertEquals("foo", order.getFirst());
+        assertEquals("test", order.getFirst());
         assertTrue("bar".equals(order.get(1)) && "baz".equals(order.get(2))
                    || "bar".equals(order.get(2)) && "baz".equals(order.get(1)));
-        assertEquals("test", order.getLast());
+        assertEquals("foo", order.getLast());
     }
 
     @Test
@@ -43,9 +43,9 @@ public class EliminationDataContainerTest {
 
         var order = data.orderedEntries().toList();
 
-        assertSame(foo, order.getFirst());
+        assertSame(test, order.getFirst());
         assertTrue(bar == order.get(1) && baz == order.get(2)
                    || bar == order.get(2) && baz == order.get(1));
-        assertSame(test, order.getLast());
+        assertSame(foo, order.getLast());
     }
 }

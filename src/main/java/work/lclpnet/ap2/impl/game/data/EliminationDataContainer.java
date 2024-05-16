@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 /**
@@ -114,7 +115,10 @@ public class EliminationDataContainer<T, Ref extends SubjectRef> implements Data
     @Override
     public Stream<DataEntry<Ref>> orderedEntries() {
         synchronized (this) {
-            return this.order.stream().flatMap(mapping -> mapping.values().stream());
+            // order needs to be reversed
+            return IntStream.range(0, order.size())
+                    .mapToObj(i -> order.get(order.size() - i - 1))
+                    .flatMap(mapping -> mapping.values().stream());
         }
     }
 
