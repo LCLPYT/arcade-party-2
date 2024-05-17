@@ -24,12 +24,14 @@ import work.lclpnet.ap2.impl.game.PlayerUtil;
 import work.lclpnet.ap2.impl.game.TeamEliminationGameInstance;
 import work.lclpnet.ap2.impl.game.team.ApTeamKeys;
 import work.lclpnet.ap2.impl.util.TeamStorage;
+import work.lclpnet.ap2.impl.util.TimeHelper;
 import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedPlayerBossBar;
 import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedTeamBossBar;
 import work.lclpnet.ap2.impl.util.collision.ChunkedCollisionDetector;
 import work.lclpnet.ap2.impl.util.collision.PlayerMovementObserver;
 import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 import work.lclpnet.kibu.translate.TranslationService;
+import work.lclpnet.kibu.translate.text.LocalizedFormat;
 import work.lclpnet.lobby.game.map.GameMap;
 
 import java.util.HashSet;
@@ -119,6 +121,28 @@ public class CozyCampfireInstance extends TeamEliminationGameInstance implements
         gameHandle.getGameScheduler().interval(this::tick, 1);
     }
 
+    @Override
+    public void teamEliminated(Team team) {
+        var participatingTeams = getTeamManager().getParticipatingTeams();
+
+        if (participatingTeams.size() == 1) {
+            // there is only one team remaining, which will win after the super method call
+            // put a detail message into the elimination data container now, before the win manager does
+            Team lastTeam = participatingTeams.iterator().next();
+
+            TranslationService translations = gameHandle.getTranslations();
+            CampfireFuel fuel = campfireFuel.getOrCreate(lastTeam);
+            int remainingSeconds = getRemainingTime(fuel.count, lastTeam.getPlayerCount());
+
+            var duration = TimeHelper.formatTime(translations, remainingSeconds);
+            var detail = translations.translateText("game.ap2.cozy_campfire.remaining", duration);
+
+            getData().eliminated(lastTeam, detail);
+        }
+
+        super.teamEliminated(team);
+    }
+
     private void setupMovementObserver(CCHooks hookSetup) {
         HookRegistrar hooks = gameHandle.getHookRegistrar();
         MinecraftServer server = gameHandle.getServer();
@@ -189,13 +213,21 @@ public class CozyCampfireInstance extends TeamEliminationGameInstance implements
         return Math.max(1f, players * teamBias);
     }
 
-    private Object getTimeArgument(int fuel, int players) {
-        int normalizedFuel = Math.round(fuel / playersFactor(players));
-        int minutes = normalizedFuel / fuelPerMinute;
-        int seconds = normalizedFuel % fuelPerMinute / fuelPerSecond;
+    private Object getTimeArgument(int fuel, int playerCount) {
+        int seconds = getRemainingTime(fuel, playerCount);
+        int minutes = seconds / 60;
+        seconds %= 60;
 
         return gameHandle.getTranslations().translateText("game.ap2.cozy_campfire.time", minutes, seconds)
                 .formatted(Formatting.YELLOW);
+    }
+
+    private int getRemainingTime(int fuel, int playerCount) {
+        int normalizedFuel = Math.round(fuel / playersFactor(playerCount));
+        int minutes = normalizedFuel / fuelPerMinute;
+        int seconds = normalizedFuel % fuelPerMinute / fuelPerSecond;
+
+        return minutes * 60 + seconds;
     }
 
     private void tick() {
@@ -220,7 +252,14 @@ public class CozyCampfireInstance extends TeamEliminationGameInstance implements
             }
         }
 
-        eliminateAll(toEliminate);
+        if (toEliminate.isEmpty()) return;
+
+        TranslationService translations = gameHandle.getTranslations();
+        int timeSurvived = time / 20;
+        var duration = TimeHelper.formatTime(translations, timeSurvived);
+        var detail = translations.translateText("game.ap2.cozy_campfire.survived", duration);
+
+        eliminateAll(toEliminate, detail);
     }
 
     private int getFuelConsumption(Team team) {
@@ -258,8 +297,8 @@ public class CozyCampfireInstance extends TeamEliminationGameInstance implements
     private void notifyTeamMembers(Team team, int value) {
         TranslationService translations = gameHandle.getTranslations();
 
-        var msg = translations.translateText("game.ap2.cozy_campfire.fuel_added",
-                        styled((float) value / (fuelPerSecond * playersFactor(team)), Formatting.YELLOW))
+        var added = LocalizedFormat.format("%.2f", (float) value / (fuelPerSecond * playersFactor(team)));
+        var msg = translations.translateText("game.ap2.cozy_campfire.fuel_added", styled(added, Formatting.YELLOW))
                 .formatted(Formatting.GREEN);
 
         for (ServerPlayerEntity player : team.getPlayers()) {

@@ -61,7 +61,7 @@ public abstract class DefaultGameInstance extends BaseGameInstance implements Pa
 
     @Override
     public WinManagerAccess getWinManagerAccess() {
-        return new WinManagerAccessImpl<>(winManager, Optional::of);
+        return new WinManagerAccessImpl<>(winManager, Optional::of, getData());
     }
 
     protected abstract DataContainer<ServerPlayerEntity, PlayerRef> getData();

@@ -1,8 +1,5 @@
 package work.lclpnet.ap2.impl.game.data;
 
-import net.minecraft.Bootstrap;
-import net.minecraft.SharedConstants;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import work.lclpnet.ap2.impl.game.data.entry.ScoreDataEntry;
 import work.lclpnet.ap2.impl.game.data.entry.ScoreTimeDataEntry;
@@ -11,12 +8,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 
 class ScoreTimeDataContainerTest {
-
-    @BeforeAll
-    public static void bootstrap() {
-        SharedConstants.createGameVersion();
-        Bootstrap.initialize();
-    }
 
     @Test
     void testEntrySameScore() {
@@ -27,9 +18,11 @@ class ScoreTimeDataContainerTest {
 
         container.setScore(playerA, 5);
         container.setScore(playerB, 5);
+        container.setScore(playerB, 6);
+        container.setScore(playerA, 6);
 
-        assertEquals(1, ((ScoreTimeDataEntry<StringRef>) container.getEntry(playerA)).ranking());
-        assertEquals(2, ((ScoreTimeDataEntry<StringRef>) container.getEntry(playerB)).ranking());
+        assertEquals(1, ((ScoreTimeDataEntry<StringRef>) container.getEntry(playerB)).ranking());
+        assertEquals(2, ((ScoreTimeDataEntry<StringRef>) container.getEntry(playerA)).ranking());
     }
 
     @Test
@@ -69,5 +62,22 @@ class ScoreTimeDataContainerTest {
 
         assertEquals(1, ((ScoreTimeDataEntry<StringRef>) order.getFirst()).ranking());
         assertEquals(2, ((ScoreTimeDataEntry<StringRef>) order.get(1)).ranking());
+    }
+
+    @Test
+    void getBestSubject() {
+        var container = new ScoreTimeDataContainer<>(StringRef::new);
+
+        var playerA = "A";
+        var playerB = "B";
+
+        container.setScore(playerA, 5);
+        container.setScore(playerB, 5);
+        container.setScore(playerB, 6);
+        container.setScore(playerA, 6);
+
+        var bestSubject = container.getBestSubject(StringRef::name).orElseThrow();
+
+        assertEquals("B", bestSubject);
     }
 }

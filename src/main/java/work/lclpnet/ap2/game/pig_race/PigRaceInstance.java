@@ -245,7 +245,7 @@ public class PigRaceInstance extends DefaultGameInstance {
         TranslationService translations = gameHandle.getTranslations();
 
         ItemStack reset = PlayerHeadUtil.getItem(PlayerHeads.REDSTONE_BLOCK_REFRESH);
-        reset.set(DataComponentTypes.CUSTOM_NAME, translations.translateText(player, "game.ap2.reset").formatted(Formatting.RED)
+        reset.set(DataComponentTypes.CUSTOM_NAME, translations.translateText(player, "ap2.game.reset").formatted(Formatting.RED)
                 .styled(style -> style.withItalic(false)));
 
         player.getInventory().setStack(8, reset);

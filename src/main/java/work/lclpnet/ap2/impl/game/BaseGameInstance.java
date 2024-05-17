@@ -35,6 +35,7 @@ import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks;
 import work.lclpnet.kibu.hook.player.PlayerSpawnLocationCallback;
 import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 import work.lclpnet.kibu.scheduler.Ticks;
+import work.lclpnet.kibu.scheduler.api.RunningTask;
 import work.lclpnet.kibu.title.Title;
 import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.kibu.translate.bossbar.BossBarProvider;
@@ -43,7 +44,7 @@ import work.lclpnet.lobby.game.api.WorldFacade;
 import work.lclpnet.lobby.game.map.GameMap;
 import work.lclpnet.lobby.game.util.ProtectorUtils;
 
-import static net.minecraft.util.Formatting.RED;
+import static net.minecraft.util.Formatting.*;
 
 public abstract class BaseGameInstance implements MiniGameInstance {
 
@@ -55,6 +56,8 @@ public abstract class BaseGameInstance implements MiniGameInstance {
     private GameMap map = null;
     @Nullable
     private volatile GameCommons commons = null;
+    private int countdownTime = 0;
+    private int countdownValue = 0;
 
     public BaseGameInstance(MiniGameHandle gameHandle) {
         this.gameHandle = gameHandle;
@@ -106,7 +109,50 @@ public abstract class BaseGameInstance implements MiniGameInstance {
 
         prepare();
 
-        gameHandle.getGameScheduler().timeout(this::afterInitialDelay, getInitialDelay());
+        int initialDelay = getInitialDelay();
+
+        scheduleCountdown(initialDelay);
+
+        gameHandle.getGameScheduler().timeout(this::afterInitialDelay, initialDelay);
+    }
+
+    private void scheduleCountdown(int durationTicks) {
+        countdownValue = Math.min(3, durationTicks / 20);
+
+        if (countdownValue <= 0) return;
+
+        gameHandle.getGameScheduler()
+                .interval(this::tickCountdown, 1, durationTicks - countdownValue * 20L)
+                .whenComplete(this::clearCountdown);
+    }
+
+    private void tickCountdown(RunningTask task) {
+        int time = countdownTime++;
+
+        if (time % 20 != 0) return;
+
+        if (countdownValue <= 0) {
+            task.cancel();
+        }
+
+        Formatting color = switch (countdownValue) {
+            case 3 -> RED;
+            case 2 -> GOLD;
+            case 1 -> YELLOW;
+            default -> GREEN;
+        };
+
+        var msg = Text.literal(String.valueOf(countdownValue--)).formatted(color, BOLD);
+
+        for (ServerPlayerEntity player : PlayerLookup.all(gameHandle.getServer())) {
+            player.sendMessage(msg, true);
+        }
+    }
+
+    private void clearCountdown() {
+        for (ServerPlayerEntity player : PlayerLookup.all(gameHandle.getServer())) {
+            player.sendMessage(Text.empty(), true);
+        }
     }
 
     private void loadMapProperties() {

@@ -217,6 +217,28 @@ public class WinSequence<T, Ref extends SubjectRef> {
 
         sendUpperSeparator(player, len, sepLength, resultsText);
 
+        if (order.isEmpty()) {
+            player.sendMessage(translations.translateText(player, "ap2.no_results").formatted(GRAY));
+        } else {
+            sendRankList(player, order, placement, translations);
+            sendOwnScoreIfExists(player, placement, entries, sepSm);
+        }
+
+        player.sendMessage(sep);
+    }
+
+    private void sendOwnScoreIfExists(ServerPlayerEntity player, Map<Ref, Integer> placement, HashMap<Ref, DataEntry<Ref>> entries, MutableText sepSm) {
+        var ownRef = refs.create(player);
+
+        if (ownRef == null || !placement.containsKey(ownRef)) return;
+
+        int playerIndex = placement.get(ownRef);
+        DataEntry<Ref> entry = entries.get(ownRef);
+
+        sendOwnScore(player, entry, playerIndex, sepSm);
+    }
+
+    private void sendRankList(ServerPlayerEntity player, List<? extends DataEntry<Ref>> order, Map<Ref, Integer> placement, TranslationService translations) {
         int maxRank = 1;
 
         for (int i = 0; i < 3; i++) {
@@ -244,17 +266,6 @@ public class WinSequence<T, Ref extends SubjectRef> {
 
             player.sendMessage(msg);
         }
-
-        var ownRef = refs.create(player);
-
-        if (ownRef != null && placement.containsKey(ownRef)) {
-            int playerIndex = placement.get(ownRef);
-            DataEntry<Ref> entry = entries.get(ownRef);
-
-            sendOwnScore(player, entry, playerIndex, sepSm);
-        }
-
-        player.sendMessage(sep);
     }
 
     private void sendUpperSeparator(ServerPlayerEntity player, int len, int sepLength, MutableText resultsText) {
