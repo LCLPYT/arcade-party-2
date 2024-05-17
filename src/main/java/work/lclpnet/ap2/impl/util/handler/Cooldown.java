@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.impl.util;
+package work.lclpnet.ap2.impl.util.handler;
 
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.sound.SoundCategory;
