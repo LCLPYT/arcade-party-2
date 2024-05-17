@@ -45,8 +45,8 @@ import java.util.Random;
 
 public class SnowballFightInstance extends EliminationGameInstance {
 
-    private static final int WORLD_BORDER_DELAY = Ticks.minutes(2);
-    private static final int WORLD_BORDER_TIME = Ticks.seconds(20);
+    private static final int WORLD_BORDER_DELAY = Ticks.minutes(1);
+    private static final int WORLD_BORDER_TIME = Ticks.minutes(1) + Ticks.seconds(20);
     private static final float SNOWBALL_DAMAGE = 0.75f;
     private ScoreboardObjective healthObjective = null;
 

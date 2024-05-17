@@ -6,12 +6,16 @@ import work.lclpnet.ap2.api.game.data.SubjectRef;
 import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.kibu.translate.text.TranslatedText;
 
-public record SimpleOrderDataEntry<Ref extends SubjectRef>(Ref subject, int order) implements DataEntry<Ref> {
+public record SimpleOrderDataEntry<Ref extends SubjectRef>(Ref subject, int order, @Nullable TranslatedText data) implements DataEntry<Ref> {
+
+    public SimpleOrderDataEntry(Ref subject, int order) {
+        this(subject, order, null);
+    }
 
     @Nullable
     @Override
     public TranslatedText toText(TranslationService translationService) {
-        return null;
+        return data;
     }
 
     @Override

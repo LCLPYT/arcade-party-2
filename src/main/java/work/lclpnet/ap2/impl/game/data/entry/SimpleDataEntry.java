@@ -6,12 +6,16 @@ import work.lclpnet.ap2.api.game.data.SubjectRef;
 import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.kibu.translate.text.TranslatedText;
 
-public record SimpleDataEntry<Ref extends SubjectRef>(Ref subject) implements DataEntry<Ref> {
+public record SimpleDataEntry<Ref extends SubjectRef>(Ref subject, @Nullable TranslatedText data) implements DataEntry<Ref> {
+
+    public SimpleDataEntry(Ref subject) {
+        this(subject, null);
+    }
 
     @Nullable
     @Override
     public TranslatedText toText(TranslationService translationService) {
-        return null;
+        return data;
     }
 
     @Override

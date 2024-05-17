@@ -75,6 +75,12 @@ public class SbConfiguration {
 
                 return false;
             });
+
+            config.allow(ProtectionTypes.BLOCK_ITEM_DROP, (world, pos, stack) -> {
+                // give items for dropped blocks, such as carpets which were destroyed
+                manager.getIslandOwnerAt(pos).ifPresent(player -> giveStack(player, stack));
+                return false;
+            });
         });
     }
 
@@ -87,14 +93,6 @@ public class SbConfiguration {
             }
 
             return ActionResult.PASS;
-        });
-
-        hooks.registerHook(PlayerInteractionHooks.BREAK_BLOCK, (world, player, pos, state, blockEntity) -> {
-            if (player instanceof ServerPlayerEntity serverPlayer && canModify(serverPlayer, pos)) {
-                giveSourceItem(serverPlayer, state);
-            }
-
-            return true;
         });
 
         hooks.registerHook(BlockModificationHooks.PLACE_FLUID, (world, pos, entity, fluid) -> {

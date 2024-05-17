@@ -2,7 +2,6 @@ package work.lclpnet.ap2.base.cmd;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
-import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.Text;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
@@ -11,6 +10,8 @@ import work.lclpnet.ap2.api.game.WinManagerAccess;
 import work.lclpnet.ap2.api.game.WinManagerView;
 import work.lclpnet.kibu.plugin.cmd.CommandRegistrar;
 import work.lclpnet.kibu.plugin.cmd.KibuCommand;
+
+import static net.minecraft.server.command.CommandManager.literal;
 
 public class DrawCommand implements KibuCommand {
 
@@ -28,9 +29,11 @@ public class DrawCommand implements KibuCommand {
     }
 
     private LiteralArgumentBuilder<ServerCommandSource> command() {
-        return CommandManager.literal("draw")
+        return literal("draw")
                 .requires(s -> s.hasPermissionLevel(2))
-                .executes(this::draw);
+                .executes(this::draw)
+                .then(literal("now")
+                        .executes(this::drawNow));
     }
 
     private int draw(CommandContext<ServerCommandSource> ctx) {
@@ -42,6 +45,14 @@ public class DrawCommand implements KibuCommand {
         } else {
             gameHandle.completeWithoutWinner();
         }
+
+        return 1;
+    }
+
+    private int drawNow(CommandContext<ServerCommandSource> ctx) {
+        ctx.getSource().sendMessage(Text.literal("Ended the current mini game with a draw"));
+
+        gameHandle.completeWithoutWinner();
 
         return 1;
     }

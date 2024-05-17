@@ -50,7 +50,7 @@ import java.util.concurrent.CompletableFuture;
 public class SpeedBuildersInstance extends EliminationGameInstance implements MapBootstrap {
 
     private static final int
-            LOOK_DURATION_SECONDS = 10,
+            LOOK_DURATION_SECONDS = 8,
             JUDGE_DURATION_TICKS = Ticks.seconds(6),
             JUDGE_ANNOUNCEMENT_TICKS = Ticks.seconds(3),
             DESTROY_DELAY_TICKS = Ticks.seconds(4);
@@ -87,6 +87,8 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
 
             manager = new SbManager(islands, setup.getModules(), gameHandle, world, random, this::allPlayersCompleted);
             destruction = new SbDestruction(world, random, aelosId);
+
+            world.getGameRules().get(GameRules.DO_TILE_DROPS).set(true, gameHandle.getServer());
         });
     }
 

@@ -3,9 +3,9 @@ package work.lclpnet.ap2.impl.game;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
+import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
-import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.game.team.Team;
 import work.lclpnet.ap2.api.game.team.TeamKey;
 import work.lclpnet.ap2.api.game.team.TeamManager;
@@ -15,6 +15,7 @@ import work.lclpnet.ap2.impl.util.DeathMessages;
 import work.lclpnet.kibu.hook.entity.EntityHealthCallback;
 import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 import work.lclpnet.kibu.translate.TranslationService;
+import work.lclpnet.kibu.translate.text.TranslatedText;
 import work.lclpnet.lobby.game.api.WorldFacade;
 
 import java.util.HashSet;
@@ -89,6 +90,10 @@ public abstract class TeamEliminationGameInstance extends DefaultTeamGameInstanc
     }
 
     protected void eliminateAll(Iterable<? extends Team> teams) {
+        eliminateAll(teams, null);
+    }
+
+    protected void eliminateAll(Iterable<? extends Team> teams, @Nullable TranslatedText detail) {
         TeamManager teamManager = getTeamManager();
         TranslationService translations = gameHandle.getTranslations();
 
@@ -108,7 +113,7 @@ public abstract class TeamEliminationGameInstance extends DefaultTeamGameInstanc
         }
 
         // mark all teams as eliminated at the same moment
-        data.allEliminated(toEliminate);
+        data.allEliminated(toEliminate, detail);
 
         toEliminate.forEach(teamManager::setTeamEliminated);
 
@@ -132,7 +137,7 @@ public abstract class TeamEliminationGameInstance extends DefaultTeamGameInstanc
     }
 
     @Override
-    public DataContainer<Team, TeamRef> getData() {
+    public EliminationDataContainer<Team, TeamRef> getData() {
         return data;
     }
 }

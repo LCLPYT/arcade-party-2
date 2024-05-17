@@ -149,7 +149,7 @@ public abstract class DefaultTeamGameInstance extends BaseGameInstance implement
 
     @Override
     public WinManagerAccess getWinManagerAccess() {
-        return new WinManagerAccessImpl<>(winManager, getTeamManager()::getTeam);
+        return new WinManagerAccessImpl<>(winManager, getTeamManager()::getTeam, getData());
     }
 
     protected abstract DataContainer<Team, TeamRef> getData();

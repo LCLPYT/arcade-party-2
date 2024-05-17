@@ -192,6 +192,8 @@ public class MimicryInstance extends EliminationGameInstance implements MapBoots
             timer.stop();
         }
 
+        manager.setReplay(false);
+
         gameHandle.getGameScheduler().timeout(this::nextSequence, 30);
     }
 }

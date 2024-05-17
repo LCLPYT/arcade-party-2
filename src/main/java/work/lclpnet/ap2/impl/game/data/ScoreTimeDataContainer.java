@@ -178,6 +178,16 @@ public class ScoreTimeDataContainer<T, Ref extends SubjectRef> implements DataCo
     }
 
     @Override
+    public void clear() {
+        synchronized (this) {
+            if (frozen) return;
+
+            score.clear();
+            lastModified.clear();
+        }
+    }
+
+    @Override
     public void register(IntScoreEvent<T> listener) {
         listeners.add(Objects.requireNonNull(listener));
     }

@@ -93,6 +93,12 @@ public class HotPotatoInstance extends EliminationGameInstance implements GameOv
             return;
         }
 
+        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
+            if (player == markedPlayer) continue;
+
+            player.addStatusEffect(new StatusEffectInstance(StatusEffects.GLOWING, Ticks.seconds(3), 1, false, false, false));
+        }
+
         TranslatedBossBar bossBar = dynamicBossBar.getBossBar();
 
         task = gameHandle.getGameScheduler().interval(new SchedulerAction() {

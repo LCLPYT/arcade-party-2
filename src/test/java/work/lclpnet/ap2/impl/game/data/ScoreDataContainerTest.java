@@ -1,19 +1,10 @@
 package work.lclpnet.ap2.impl.game.data;
 
-import net.minecraft.Bootstrap;
-import net.minecraft.SharedConstants;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class ScoreDataContainerTest {
-
-    @BeforeAll
-    public static void bootstrap() {
-        SharedConstants.createGameVersion();
-        Bootstrap.initialize();
-    }
 
     @Test
     void orderedEntries() {

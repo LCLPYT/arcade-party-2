@@ -16,6 +16,8 @@ public interface DataContainer<T, Ref extends SubjectRef> {
 
     void ensureTracked(T subject);
 
+    void clear();
+
     default Optional<T> getBestSubject(SubjectRefResolver<T, Ref> resolver) {
         return orderedEntries().findFirst()
                 .map(DataEntry::subject)

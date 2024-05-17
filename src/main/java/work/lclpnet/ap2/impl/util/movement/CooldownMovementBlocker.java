@@ -1,7 +1,7 @@
 package work.lclpnet.ap2.impl.util.movement;
 
 import net.minecraft.server.network.ServerPlayerEntity;
-import work.lclpnet.ap2.impl.util.Cooldown;
+import work.lclpnet.ap2.impl.util.handler.Cooldown;
 import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 

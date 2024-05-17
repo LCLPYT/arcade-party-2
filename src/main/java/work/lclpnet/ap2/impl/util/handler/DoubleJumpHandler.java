@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.impl.util;
+package work.lclpnet.ap2.impl.util.handler;
 
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;

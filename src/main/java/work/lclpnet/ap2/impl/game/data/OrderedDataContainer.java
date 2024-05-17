@@ -5,9 +5,12 @@ import work.lclpnet.ap2.api.game.data.DataEntry;
 import work.lclpnet.ap2.api.game.data.SubjectRef;
 import work.lclpnet.ap2.api.game.data.SubjectRefFactory;
 import work.lclpnet.ap2.impl.game.data.entry.SimpleDataEntry;
+import work.lclpnet.kibu.translate.text.TranslatedText;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 /**
@@ -17,7 +20,7 @@ import java.util.stream.Stream;
 public class OrderedDataContainer<T, Ref extends SubjectRef> implements DataContainer<T, Ref> {
 
     private final SubjectRefFactory<T, Ref> refs;
-    private final List<Ref> order = new ArrayList<>();
+    private final Map<Ref, Entry<Ref>> order = new HashMap<>();
     private boolean frozen = false;
 
     public OrderedDataContainer(SubjectRefFactory<T, Ref> refs) {
@@ -25,14 +28,24 @@ public class OrderedDataContainer<T, Ref extends SubjectRef> implements DataCont
     }
 
     public void add(T subject) {
+        add(subject, SimpleDataEntry::new);
+    }
+
+    public void add(T subject, TranslatedText data) {
+        add(subject, ref -> new SimpleDataEntry<>(ref, data));
+    }
+
+    private void add(T subject, Function<Ref, SimpleDataEntry<Ref>> entryFactory) {
         synchronized (this) {
             if (frozen) return;
 
             Ref ref = refs.create(subject);
 
-            if (order.contains(ref)) return;
+            if (order.containsKey(ref)) return;
 
-            order.add(ref);
+            var dataEntry = entryFactory.apply(ref);
+
+            order.put(ref, new Entry<>(order.size(), dataEntry));
         }
     }
 
@@ -41,18 +54,31 @@ public class OrderedDataContainer<T, Ref extends SubjectRef> implements DataCont
         synchronized (this) {
             if (frozen) return;
 
-            order.remove(refs.create(subject));  // O(n) should not really be an issue
+            order.remove(refs.create(subject));
         }
     }
 
     @Override
     public DataEntry<Ref> getEntry(T subject) {
-        return new SimpleDataEntry<>(refs.create(subject));
+        synchronized (this) {
+            Ref ref = refs.create(subject);
+            var entry = order.get(ref);
+
+            if (entry == null) {
+                return new SimpleDataEntry<>(ref);
+            }
+
+            return entry.dataEntry();
+        }
     }
 
     @Override
     public Stream<? extends DataEntry<Ref>> orderedEntries() {
-        return order.stream().map(SimpleDataEntry::new);
+        synchronized (this) {
+            return order.values().stream()
+                    .sorted(Comparator.comparingInt(Entry::order))
+                    .map(Entry::dataEntry);
+        }
     }
 
     @Override
@@ -64,10 +90,17 @@ public class OrderedDataContainer<T, Ref extends SubjectRef> implements DataCont
 
     @Override
     public void ensureTracked(T subject) {
-        Ref ref = refs.create(subject);
-
-        if (order.contains(ref)) return;
-
-        order.add(ref);
+        add(subject);
     }
+
+    @Override
+    public void clear() {
+        synchronized (this) {
+            if (frozen) return;
+
+            order.clear();
+        }
+    }
+
+    private record Entry<Ref extends SubjectRef>(int order, SimpleDataEntry<Ref> dataEntry) {}
 }

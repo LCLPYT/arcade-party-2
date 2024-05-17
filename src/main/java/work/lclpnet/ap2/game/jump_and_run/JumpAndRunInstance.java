@@ -34,6 +34,8 @@ import work.lclpnet.ap2.impl.util.checkpoint.CheckpointHelper;
 import work.lclpnet.ap2.impl.util.checkpoint.CheckpointManager;
 import work.lclpnet.ap2.impl.util.collision.ChunkedCollisionDetector;
 import work.lclpnet.ap2.impl.util.collision.PlayerMovementObserver;
+import work.lclpnet.ap2.impl.util.handler.VisibilityHandler;
+import work.lclpnet.ap2.impl.util.handler.VisibilityManager;
 import work.lclpnet.ap2.impl.util.heads.PlayerHeadUtil;
 import work.lclpnet.ap2.impl.util.heads.PlayerHeads;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
@@ -129,13 +131,20 @@ public class JumpAndRunInstance extends DefaultGameInstance implements MapBootst
         team.setCollisionRule(AbstractTeam.CollisionRule.NEVER);
         scoreboardManager.joinTeam(gameHandle.getParticipants(), team);
 
+        TranslationService translations = gameHandle.getTranslations();
+        VisibilityHandler visibility = new VisibilityHandler(new VisibilityManager(team), translations, gameHandle.getParticipants());
+        visibility.init(gameHandle.getHookRegistrar());
+
         checkpoints = new CheckpointManager(jumpAndRun.checkpoints());
         checkpoints.init(collisionDetector, movementObserver);
         checkpoints.whenCheckpointReached(this::onCheckpointReached);
-        CheckpointHelper.notifyWhenReached(checkpoints, gameHandle.getTranslations());
+        CheckpointHelper.notifyWhenReached(checkpoints, translations);
 
         bossBar = usePlayerDynamicTaskDisplay(styled(1, YELLOW), styled(jumpAndRun.rooms().size() - 2, YELLOW));
         bossBar.setPercent(0);
+
+        giveItemsToPlayers();
+        visibility.giveItems();
     }
 
     @Override
@@ -155,20 +164,18 @@ public class JumpAndRunInstance extends DefaultGameInstance implements MapBootst
 
         CheckpointHelper.whenFallingIntoLava(hooks, participants::isParticipating)
                 .then(this::resetPlayerToCheckpoint);
-
-        giveResetItemsToPlayers();
     }
 
-    private void giveResetItemsToPlayers() {
+    private void giveItemsToPlayers() {
         TranslationService translations = gameHandle.getTranslations();
 
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
             ItemStack stack = PlayerHeadUtil.getItem(PlayerHeads.REDSTONE_BLOCK_REFRESH);
 
-            var name = translations.translateText(player, "game.ap2.reset").formatted(Formatting.RED);
+            var name = translations.translateText(player, "ap2.game.reset").formatted(Formatting.RED);
             stack.set(DataComponentTypes.CUSTOM_NAME, name.styled(style -> style.withItalic(false)));
 
-            player.getInventory().setStack(8, stack);
+            player.getInventory().setStack(4, stack);
             PlayerInventoryAccess.setSelectedSlot(player, 4);
         }
     }
