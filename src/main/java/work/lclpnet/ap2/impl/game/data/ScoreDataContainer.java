@@ -95,6 +95,15 @@ public class ScoreDataContainer<T, Ref extends SubjectRef> implements DataContai
         addScore(subject, 0);
     }
 
+    @Override
+    public void clear() {
+        synchronized (this) {
+            if (frozen) return;
+
+            scoreMap.clear();
+        }
+    }
+
     public OptionalInt getBestScore() {
         return scoreMap.values().stream().mapToInt(i -> i).max();
     }

@@ -93,5 +93,14 @@ public class OrderedDataContainer<T, Ref extends SubjectRef> implements DataCont
         add(subject);
     }
 
+    @Override
+    public void clear() {
+        synchronized (this) {
+            if (frozen) return;
+
+            order.clear();
+        }
+    }
+
     private record Entry<Ref extends SubjectRef>(int order, SimpleDataEntry<Ref> dataEntry) {}
 }

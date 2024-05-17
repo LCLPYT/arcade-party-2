@@ -134,6 +134,16 @@ public class EliminationDataContainer<T, Ref extends SubjectRef> implements Data
         eliminated(subject);
     }
 
+    @Override
+    public void clear() {
+        synchronized (this) {
+            if (frozen) return;
+
+            index.clear();
+            order.clear();
+        }
+    }
+
     private int getRank(Ref ref) {
         return index.getOrDefault(ref, -1);
     }

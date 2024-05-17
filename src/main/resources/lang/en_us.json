@@ -1,7 +1,7 @@
 {
   "ap2.prepare.next_game_title": "Next Game",
   "ap2.prepare.next_game": "The next game will be...",
-  "ap2.prepare.created_by": "Created by %s",
+  "ap2.prepare.created_by": "Developed by %s",
   "ap2.prepare.game_cannot_be_played": "Unfortunately, %s can't be played at the moment... Therefore it will be skipped.",
   "ap2.prepare.will_be_played_next": "will be played next",
   "ap2.nobody": "Nobody",
@@ -15,6 +15,7 @@
   "ap2.score": "Score",
   "ap2.you_placed": "You placed %s",
   "ap2.you_placed_value": "You placed %s - %s",
+  "ap2.no_results": "There are no results",
   "ap2.go": "Go!",
   "ap2.game.eliminated": "%s was eliminated",
   "ap2.game.team_eliminated": "%s was eliminated",
