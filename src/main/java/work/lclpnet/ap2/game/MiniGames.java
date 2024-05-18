@@ -21,6 +21,7 @@ import work.lclpnet.ap2.game.pig_race.PigRaceMiniGame;
 import work.lclpnet.ap2.game.red_light_green_light.RedLightGreenLightMiniGame;
 import work.lclpnet.ap2.game.snowball_fight.SnowballFightMiniGame;
 import work.lclpnet.ap2.game.speed_builders.SpeedBuildersMiniGame;
+import work.lclpnet.ap2.game.splashy_dropper.SplashyDropperMiniGame;
 import work.lclpnet.ap2.game.spleef.SpleefMiniGame;
 import work.lclpnet.ap2.game.tnt_run.TntRunMiniGame;
 import work.lclpnet.ap2.game.treasure_hunter.TreasureHunterMinigame;
@@ -57,5 +58,6 @@ public class MiniGames {
         games.add(new ChickenShooterMiniGame());
         games.add(new SpeedBuildersMiniGame());
         games.add(new MimicryMiniGame());
+        games.add(new SplashyDropperMiniGame());
     }
 }

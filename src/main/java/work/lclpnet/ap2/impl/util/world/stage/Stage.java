@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.game.guess_it.data;
+package work.lclpnet.ap2.impl.util.world.stage;
 
 import net.minecraft.util.math.BlockPos;
 

@@ -19,14 +19,18 @@ import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.math.Vec2i;
 import work.lclpnet.kibu.hook.HookFactory;
 import work.lclpnet.kibu.hook.player.PlayerMoveCallback;
+import work.lclpnet.kibu.hook.util.PositionRotation;
 import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.lobby.game.map.GameMap;
+import work.lclpnet.lobby.game.map.MapUtils;
 import work.lclpnet.lobby.game.util.BossBarTimer;
 
+import java.util.List;
 import java.util.Objects;
+import java.util.Random;
 
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
@@ -36,6 +40,7 @@ public class GameCommons {
     private final GameMap map;
     private final ServerWorld world;
     private volatile Announcer announcer = null;
+    private volatile List<PositionRotation> spawns = null;
 
     public GameCommons(MiniGameHandle gameHandle, GameMap map, ServerWorld world) {
         this.gameHandle = gameHandle;
@@ -191,6 +196,38 @@ public class GameCommons {
         }
 
         return announcer.withDefaults();
+    }
+
+    public void teleportToRandomSpawns(Random random) {
+        List<PositionRotation> spawns = getSpawns();
+
+        if (spawns.isEmpty()) return;
+
+        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
+            PositionRotation spawn = spawns.get(random.nextInt(spawns.size()));
+            player.teleport(world, spawn.getX(), spawn.getY(), spawn.getZ(), spawn.getYaw(), spawn.getPitch());
+        }
+    }
+
+    public void teleportToRandomSpawn(ServerPlayerEntity player, Random random) {
+        List<PositionRotation> spawns = getSpawns();
+
+        if (spawns.isEmpty()) return;
+
+        PositionRotation spawn = spawns.get(random.nextInt(spawns.size()));
+        player.teleport(world, spawn.getX(), spawn.getY(), spawn.getZ(), spawn.getYaw(), spawn.getPitch());
+    }
+
+    private List<PositionRotation> getSpawns() {
+        if (spawns != null) return spawns;
+
+        synchronized (this) {
+            if (spawns == null) {
+                spawns = MapUtils.getSpawnPositionsAndRotation(map);
+            }
+        }
+
+        return spawns;
     }
 
     public record WorldBorderConfig(int centerX, int centerZ, int maxRadius, int minRadius) {}

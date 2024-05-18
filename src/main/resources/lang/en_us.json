@@ -194,5 +194,8 @@
   "game.ap2.mimicry.attention": "Attention...",
   "game.ap2.mimicry.repeat": "Now repeat",
   "game.ap2.mimicry.wrong_button": "Your sequence is incorrect.",
-  "game.ap2.mimicry.correct": "Your sequence is correct!"
+  "game.ap2.mimicry.correct": "Your sequence is correct!",
+  "game.ap2.splashy_dropper": "Splashy Dropper",
+  "game.ap2.splashy_dropper.description": "Drop into pools of water. You earn points depending on the size of the pool you land in. Pool disappear when someone lands in them.",
+  "game.ap2.splashy_dropper.task": "Land in water pools"
 }

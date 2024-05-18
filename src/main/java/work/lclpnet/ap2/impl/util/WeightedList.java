@@ -2,36 +2,96 @@ package work.lclpnet.ap2.impl.util;
 
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
-public class WeightedList<T> {
+public class WeightedList<E> extends AbstractList<E> {
 
-    private final List<Entry<T>> entries = new ArrayList<>();
-    private float totalWeight = 0f;
+    private final List<Entry<E>> entries;
+    private float totalWeight;
 
-    public void add(T item, float weight) {
+    public WeightedList() {
+        this(new ArrayList<>(), 0);
+    }
+
+    private WeightedList(List<Entry<E>> entries, float totalWeight) {
+        this.entries = entries;
+        this.totalWeight = totalWeight;
+    }
+
+    @Override
+    public int size() {
+        synchronized (this) {
+            return entries.size();
+        }
+    }
+
+    @Override
+    public E get(int index) {
+        synchronized (this) {
+            return entries.get(index).item;
+        }
+    }
+
+    public void add(E item, float weight) {
         if (weight < 0f) throw new IllegalArgumentException("Weight must be positive");
 
-        entries.add(new Entry<>(item, weight));
-        totalWeight += weight;
+        synchronized (this) {
+            entries.add(new Entry<>(item, weight));
+            totalWeight += weight;
+        }
+    }
+
+    @Override
+    public E remove(int index) {
+        synchronized (this) {
+            Objects.checkIndex(index, entries.size());
+
+            Entry<E> entry = entries.remove(index);
+
+            totalWeight -= entry.weight;
+
+            return entry.item;
+        }
     }
 
     @Nullable
-    public T getRandomElement(Random random) {
-        final float target = random.nextFloat() * totalWeight;
-        float offset = 0f;
+    public E getRandomElement(Random random) {
+        int index = getRandomIndex(random);
 
-        for (var entry : entries) {
-            if (target <= offset + entry.weight) {
-                return entry.item;
+        if (index == -1) return null;
+
+        return get(index);
+    }
+
+    public int getRandomIndex(Random random) {
+        synchronized (this) {
+            final float target = random.nextFloat() * totalWeight;
+            float offset = 0f;
+
+            for (int i = 0, size = entries.size(); i < size; i++) {
+                var entry = entries.get(i);
+
+                if (target <= offset + entry.weight) {
+                    return i;
+                }
+
+                offset += entry.weight;
             }
 
-            offset += entry.weight;
+            return -1;
         }
+    }
 
-        return null;
+    public <U> WeightedList<U> map(Function<E, U> mapper) {
+        synchronized (this) {
+            List<Entry<U>> mappedEntries = this.entries.stream()
+                    .map(entry -> new Entry<>(mapper.apply(entry.item), entry.weight))
+                    .collect(Collectors.toCollection(ArrayList::new));
+
+            return new WeightedList<>(mappedEntries, totalWeight);
+        }
     }
 
     private record Entry<T>(T item, float weight) {}
