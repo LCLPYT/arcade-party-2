@@ -8,6 +8,7 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Formatting;
 import net.minecraft.world.border.WorldBorder;
+import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.base.WorldBorderManager;
@@ -209,16 +210,19 @@ public class GameCommons {
         }
     }
 
-    public void teleportToRandomSpawn(ServerPlayerEntity player, Random random) {
+    @Nullable
+    public PositionRotation teleportToRandomSpawn(ServerPlayerEntity player, Random random) {
         List<PositionRotation> spawns = getSpawns();
 
-        if (spawns.isEmpty()) return;
+        if (spawns.isEmpty()) return null;
 
         PositionRotation spawn = spawns.get(random.nextInt(spawns.size()));
         player.teleport(world, spawn.getX(), spawn.getY(), spawn.getZ(), spawn.getYaw(), spawn.getPitch());
+
+        return spawn;
     }
 
-    private List<PositionRotation> getSpawns() {
+    public List<PositionRotation> getSpawns() {
         if (spawns != null) return spawns;
 
         synchronized (this) {
