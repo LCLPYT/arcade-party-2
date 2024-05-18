@@ -1,13 +1,19 @@
 package work.lclpnet.ap2.game.splashy_dropper;
 
+import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.ShapeContext;
 import net.minecraft.registry.tag.FluidTags;
+import net.minecraft.scoreboard.AbstractTeam;
+import net.minecraft.scoreboard.ScoreboardDisplaySlot;
+import net.minecraft.scoreboard.Team;
+import net.minecraft.scoreboard.number.StyledNumberFormat;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.GameRules;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
@@ -20,7 +26,10 @@ import work.lclpnet.ap2.impl.game.data.ScoreTimeDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.map.ServerThreadMapBootstrap;
 import work.lclpnet.ap2.impl.util.collision.GroundDetector;
+import work.lclpnet.ap2.impl.util.handler.VisibilityHandler;
+import work.lclpnet.ap2.impl.util.handler.VisibilityManager;
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker;
+import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.ap2.impl.util.world.BfsWorldScanner;
 import work.lclpnet.ap2.impl.util.world.SimpleAdjacentBlocks;
 import work.lclpnet.kibu.hook.util.PositionRotation;
@@ -31,6 +40,8 @@ import work.lclpnet.lobby.game.map.GameMap;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+
+import static net.minecraft.util.Formatting.YELLOW;
 
 public class SplashyDropperInstance extends DefaultGameInstance implements MapBootstrapFunction {
 
@@ -88,6 +99,9 @@ public class SplashyDropperInstance extends DefaultGameInstance implements MapBo
         minSpawnY = commons().getSpawns().stream()
                 .mapToDouble(PositionRotation::getY)
                 .min().orElse(70);
+
+        setupObjective();
+        setupTeam();
     }
 
     @Override
@@ -102,6 +116,32 @@ public class SplashyDropperInstance extends DefaultGameInstance implements MapBo
 
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
             movementBlocker.enableMovement(player);
+        }
+    }
+
+    private void setupTeam() {
+        CustomScoreboardManager scoreboardManager = gameHandle.getScoreboardManager();
+        Team team = scoreboardManager.createTeam("team");
+        team.setCollisionRule(AbstractTeam.CollisionRule.NEVER);
+        scoreboardManager.joinTeam(gameHandle.getParticipants(), team);
+
+        TranslationService translations = gameHandle.getTranslations();
+        VisibilityHandler visibility = new VisibilityHandler(new VisibilityManager(team), translations, gameHandle.getParticipants());
+        visibility.init(gameHandle.getHookRegistrar());
+
+        visibility.giveItems();
+    }
+
+    private void setupObjective() {
+        var objective = gameHandle.getScoreboardManager().translateObjective("score", "game.ap2.chicken_shooter.points")
+                .formatted(YELLOW, Formatting.BOLD);
+
+        useScoreboardStatsSync(data, objective);
+        objective.setSlot(ScoreboardDisplaySlot.LIST);
+        objective.setNumberFormat(StyledNumberFormat.YELLOW);
+
+        for (ServerPlayerEntity player : PlayerLookup.all(gameHandle.getServer())) {
+            objective.addPlayer(player);
         }
     }
 
