@@ -123,7 +123,7 @@ public class SbSetup {
             BlockPos pos = new BlockPos(x, y, z);
             BlockBox bounds = StructureUtil.getBounds(structure).transform(AffineIntMatrix.makeTranslation(x, y, z));
 
-            SbIsland island = new SbIsland(data, origin, pos, bounds);
+            SbIsland island = new SbIsland(data, origin, pos, bounds, logger);
             UUID uuid = players.get(i);
 
             islandMapping.put(uuid, island);

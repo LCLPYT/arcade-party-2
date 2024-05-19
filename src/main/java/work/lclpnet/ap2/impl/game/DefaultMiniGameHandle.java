@@ -6,6 +6,7 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.world.border.WorldBorder;
 import net.minecraft.world.border.WorldBorderListener;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import work.lclpnet.activity.manager.ActivityManager;
 import work.lclpnet.activity.util.BossBarHandler;
 import work.lclpnet.ap2.api.base.Participants;
@@ -43,6 +44,7 @@ public class DefaultMiniGameHandle implements MiniGameHandle, Unloadable, WorldB
     private final BossBarProvider bossBarProvider;
     private final BossBarHandler bossBarHandler;
     private final CustomScoreboardManager scoreboardManager;
+    private final Logger logger;
     private MutableProtectionConfig protectionConfig;
     private volatile BasicProtector protector = null;
     private WorldBorderListener worldBorderListener = null;
@@ -58,6 +60,7 @@ public class DefaultMiniGameHandle implements MiniGameHandle, Unloadable, WorldB
         this.bossBarProvider = bossBarProvider;
         this.bossBarHandler = bossBarHandler;
         this.scoreboardManager = scoreboardManager;
+        this.logger = LoggerFactory.getLogger(info.getId().toString());
     }
 
     public void init() {
@@ -84,7 +87,7 @@ public class DefaultMiniGameHandle implements MiniGameHandle, Unloadable, WorldB
 
     @Override
     public Logger getLogger() {
-        return args.container().logger();
+        return logger;
     }
 
     @Override

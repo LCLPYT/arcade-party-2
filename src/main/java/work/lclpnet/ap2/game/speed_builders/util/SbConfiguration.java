@@ -1,6 +1,7 @@
 package work.lclpnet.ap2.game.speed_builders.util;
 
 import net.minecraft.block.*;
+import net.minecraft.block.enums.DoubleBlockHalf;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.fluid.FlowableFluid;
@@ -16,6 +17,7 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
+import net.minecraft.state.property.Properties;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.ItemActionResult;
 import net.minecraft.util.math.BlockPos;
@@ -77,6 +79,13 @@ public class SbConfiguration {
             });
 
             config.allow(ProtectionTypes.BLOCK_ITEM_DROP, (world, pos, stack) -> {
+                BlockState state = world.getBlockState(pos);
+
+                if (state.contains(Properties.BED_PART)) {
+                    // prevent bed duplications
+                    return false;
+                }
+
                 // give items for dropped blocks, such as carpets which were destroyed
                 manager.getIslandOwnerAt(pos).ifPresent(player -> giveStack(player, stack));
                 return false;
@@ -203,10 +212,20 @@ public class SbConfiguration {
 
             world.syncWorldEvent(null, WorldEvents.BLOCK_BROKEN, pos, Block.getRawIdFromState(state));
 
-            if (!world.setBlockState(pos, Blocks.AIR.getDefaultState())) return;
+            if (!destroyBlock(world, pos, state)) return;
 
             giveSourceItem(player, state);
         }, 1);
+    }
+
+    private boolean destroyBlock(World world, BlockPos pos, BlockState state) {
+        BlockState air = Blocks.AIR.getDefaultState();
+
+        if (state.contains(Properties.DOUBLE_BLOCK_HALF) && state.get(Properties.DOUBLE_BLOCK_HALF) == DoubleBlockHalf.UPPER) {
+            return world.setBlockState(pos, air, Block.NOTIFY_LISTENERS) && world.setBlockState(pos.down(), air);
+        }
+
+        return world.setBlockState(pos, air);
     }
 
     private void giveSourceItem(ServerPlayerEntity player, BlockState state) {

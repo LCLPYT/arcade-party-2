@@ -18,6 +18,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3i;
+import org.slf4j.Logger;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.math.AffineIntMatrix;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
@@ -28,6 +29,7 @@ import work.lclpnet.kibu.mc.KibuEntity;
 import work.lclpnet.kibu.nbt.FabricNbtConversion;
 import work.lclpnet.kibu.schematic.FabricBlockStateAdapter;
 import work.lclpnet.kibu.structure.BlockStructure;
+import work.lclpnet.kibu.util.BlockStateUtils;
 import work.lclpnet.kibu.util.StructureWriter;
 import work.lclpnet.kibu.util.math.Matrix3i;
 
@@ -44,6 +46,7 @@ public class SbIsland {
     private final BlockBox previewArea;
     private final BlockBox bounds;
     private final BlockBox movementBounds;
+    private final Logger logger;
 
     /**
      * Constructor.
@@ -53,8 +56,9 @@ public class SbIsland {
      * @param offset The offset the island structure is placed at in world coordinates.
      * @param bounds The island bounds in world space.
      */
-    public SbIsland(SbIslandData data, BlockPos origin, BlockPos offset, BlockBox bounds) {
+    public SbIsland(SbIslandData data, BlockPos origin, BlockPos offset, BlockBox bounds, Logger logger) {
         this.data = data;
+        this.logger = logger;
 
         BlockPos relSpawn = data.spawn().subtract(origin);
         this.spawnWorldPos = offset.add(relSpawn);
@@ -191,10 +195,21 @@ public class SbIsland {
 
             KibuBlockState kibuState = structure.getBlockState(pos);
             BlockState expected = adapter.revert(kibuState);
+
+            if (expected == null) {
+                // unknown block state, treat as correct
+                score++;
+                continue;
+            }
+
             BlockState actual = world.getBlockState(pointer);
 
             if (actual.equals(expected)) {
                 score++;
+            } else {
+                logger.info("Block differs: ({}, {}, {}) expected {} but got {}",
+                        pointer.getX(), pointer.getY(), pointer.getZ(),
+                        BlockStateUtils.stringify(expected), BlockStateUtils.stringify(actual));
             }
         }
 
@@ -221,7 +236,12 @@ public class SbIsland {
 
                 Identifier id = Registries.ENTITY_TYPE.getId(en.getType());
 
-                if (!identifier.equals(id)) continue;
+                if (!identifier.equals(id)) {
+                    logger.info("Entity differs: ({}, {}, {}) expected {} but got {}",
+                            pointer.getX(), pointer.getY(), pointer.getZ(),
+                            identifier, id);
+                    continue;
+                }
 
                 // the correct entity type is at the required position
 
@@ -241,6 +261,7 @@ public class SbIsland {
                     ItemStack actual = itemFrame.getHeldItemStack();
 
                     if ((!expected.isEmpty() || !actual.isEmpty()) && !actual.isOf(expected.getItem())) {
+                        logger.info("Item frame differs: Expected item {} but got {}", expected, actual);
                         continue next;  // incorrect item frame
                     }
                 }
@@ -256,8 +277,11 @@ public class SbIsland {
 
     public boolean isCompleted(ServerWorld world, SbModule module) {
         int score = evaluate(world, module);
+        int maxScore = module.getMaxScore();
 
-        return score >= module.getMaxScore();
+        logger.info("Island completion: {} / {}", score, maxScore);
+
+        return score >= maxScore;
     }
 
     public Vec3d getCenter() {

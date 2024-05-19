@@ -241,12 +241,16 @@ public class SbManager {
             return;
         }
 
+        logger.info("Player {} has no items left", player.getNameForScoreboard());
+
         // the player used all the materials, check if the building is complete
         SbIsland island = islands.get(player.getUuid());
 
         if (island == null || !island.isCompleted(world, currentModule)) return;
 
         if (!completed.add(player.getUuid())) return;
+
+        logger.info("Player {} has completed the building", player.getNameForScoreboard());
 
         player.playSoundToPlayer(SoundEvents.ENTITY_PLAYER_LEVELUP, SoundCategory.PLAYERS, 0.75f, 1.1f);
 
@@ -259,9 +263,10 @@ public class SbManager {
     }
 
     private void checkOverallCompletion() {
-        if (completed.size() >= gameHandle.getParticipants().count()) {
-            allPlayersCompleted.run();
-        }
+        if (completed.size() < gameHandle.getParticipants().count()) return;
+
+        logger.info("All players completed their buildings");
+        allPlayersCompleted.run();
     }
 
     public Optional<SbIsland> getIsland(ServerPlayerEntity player) {
