@@ -1,6 +1,7 @@
 package work.lclpnet.ap2.game.speed_builders.util;
 
 import net.minecraft.block.*;
+import net.minecraft.block.enums.BedPart;
 import net.minecraft.block.enums.DoubleBlockHalf;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
@@ -14,6 +15,7 @@ import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.registry.tag.FluidTags;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
@@ -21,9 +23,11 @@ import net.minecraft.state.property.Properties;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.ItemActionResult;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldAccess;
 import net.minecraft.world.WorldEvents;
+import net.minecraft.world.block.NeighborUpdater;
 import net.minecraft.world.event.GameEvent;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
@@ -77,19 +81,6 @@ public class SbConfiguration {
 
                 return false;
             });
-
-            config.allow(ProtectionTypes.BLOCK_ITEM_DROP, (world, pos, stack) -> {
-                BlockState state = world.getBlockState(pos);
-
-                if (state.contains(Properties.BED_PART)) {
-                    // prevent bed duplications
-                    return false;
-                }
-
-                // give items for dropped blocks, such as carpets which were destroyed
-                manager.getIslandOwnerAt(pos).ifPresent(player -> giveStack(player, stack));
-                return false;
-            });
         });
     }
 
@@ -97,8 +88,8 @@ public class SbConfiguration {
         HookRegistrar hooks = gameHandle.getHookRegistrar();
 
         hooks.registerHook(PlayerInteractionHooks.ATTACK_BLOCK, (player, world, hand, pos, direction) -> {
-            if (player instanceof ServerPlayerEntity serverPlayer && canModify(serverPlayer, pos)) {
-                destroyBlock(world, pos, serverPlayer);
+            if (player instanceof ServerPlayerEntity serverPlayer && canModify(serverPlayer, pos) && world instanceof ServerWorld serverWorld) {
+                destroyBlockDelayed(serverWorld, pos, serverPlayer);
             }
 
             return ActionResult.PASS;
@@ -116,7 +107,7 @@ public class SbConfiguration {
         hooks.registerHook(ItemFrameRemoveItemCallback.HOOK, (itemFrame, attacker) -> {
             ItemStack stack = itemFrame.getHeldItemStack();
 
-            if (attacker instanceof ServerPlayerEntity player && !stack.isEmpty()) {
+            if (attacker instanceof ServerPlayerEntity player && !stack.isEmpty() && canModify(player, itemFrame.getBlockPos())) {
                 giveStack(player, stack.copy());
             }
 
@@ -131,7 +122,7 @@ public class SbConfiguration {
                 return ActionResult.FAIL;
             }
 
-            if (player instanceof ServerPlayerEntity serverPlayer) {
+            if (player instanceof ServerPlayerEntity serverPlayer && canModify(serverPlayer, pos)) {
                 manager.onEdit(serverPlayer);
             }
 
@@ -139,7 +130,7 @@ public class SbConfiguration {
         });
 
         hooks.registerHook(BlockModificationHooks.PLACE_BLOCK, (world, pos, entity, newState) -> {
-            if (entity instanceof ServerPlayerEntity player) {
+            if (entity instanceof ServerPlayerEntity player && canModify(player, pos)) {
                 manager.onEdit(player);
             }
 
@@ -148,9 +139,9 @@ public class SbConfiguration {
 
         hooks.registerHook(BlockModificationHooks.USE_ITEM_ON_BLOCK, ctx -> {
             PlayerEntity player = ctx.getPlayer();
+            BlockPos pos = ctx.getBlockPos();
 
-            if (player instanceof ServerPlayerEntity serverPlayer) {
-                BlockPos pos = ctx.getBlockPos();
+            if (player instanceof ServerPlayerEntity serverPlayer && canModify(serverPlayer, pos)) {
                 World world = ctx.getWorld();
                 BlockState state = world.getBlockState(pos);
 
@@ -171,9 +162,18 @@ public class SbConfiguration {
         });
 
         hooks.registerHook(ItemFramePutItemCallback.HOOK, (itemFrame, stack, player, hand) -> {
-            if (player instanceof ServerPlayerEntity serverPlayer) {
+            if (player instanceof ServerPlayerEntity serverPlayer && canModify(serverPlayer, itemFrame.getBlockPos())) {
                 manager.onEdit(serverPlayer);
             }
+            return false;
+        });
+
+        hooks.registerHook(BlockModificationHooks.BREAK_BLOCK, (world, pos, entity) -> {
+            if (entity instanceof ServerPlayerEntity player && canModify(player, pos)) {
+                BlockState state = world.getBlockState(pos);
+                giveSourceItem(player, state);
+            }
+
             return false;
         });
     }
@@ -204,7 +204,7 @@ public class SbConfiguration {
         world.emitGameEvent(player, GameEvent.FLUID_PLACE, pos);
     }
 
-    private void destroyBlock(World world, BlockPos pos, ServerPlayerEntity player) {
+    private void destroyBlockDelayed(ServerWorld world, BlockPos pos, ServerPlayerEntity player) {
         gameHandle.getGameScheduler().timeout(() -> {
             BlockState state = world.getBlockState(pos);
 
@@ -212,20 +212,49 @@ public class SbConfiguration {
 
             world.syncWorldEvent(null, WorldEvents.BLOCK_BROKEN, pos, Block.getRawIdFromState(state));
 
-            if (!destroyBlock(world, pos, state)) return;
+            if (!destroyBlock(world, pos, state, player)) return;
 
             giveSourceItem(player, state);
         }, 1);
     }
 
-    private boolean destroyBlock(World world, BlockPos pos, BlockState state) {
+    private boolean destroyBlock(ServerWorld world, BlockPos pos, BlockState state, ServerPlayerEntity player) {
         BlockState air = Blocks.AIR.getDefaultState();
+        int noUpdate = Block.FORCE_STATE | Block.NOTIFY_LISTENERS | Block.SKIP_DROPS;
 
-        if (state.contains(Properties.DOUBLE_BLOCK_HALF) && state.get(Properties.DOUBLE_BLOCK_HALF) == DoubleBlockHalf.UPPER) {
-            return world.setBlockState(pos, air, Block.NOTIFY_LISTENERS) && world.setBlockState(pos.down(), air);
+        if (state.contains(Properties.DOUBLE_BLOCK_HALF)) {
+            BlockPos other = state.get(Properties.DOUBLE_BLOCK_HALF) == DoubleBlockHalf.LOWER ? pos.up() : pos.down();
+            return world.setBlockState(pos, air, noUpdate) && world.setBlockState(other, air, noUpdate);
         }
 
-        return world.setBlockState(pos, air);
+        if (state.contains(Properties.BED_PART) && state.contains(Properties.HORIZONTAL_FACING)) {
+            Direction dir = state.get(Properties.HORIZONTAL_FACING);
+            BlockPos other = pos.offset(dir, state.get(Properties.BED_PART) == BedPart.FOOT ? 1 : -1);
+            return world.setBlockState(pos, air, noUpdate) && world.setBlockState(other, air, noUpdate);
+        }
+
+
+        if (!world.setBlockState(pos, air, noUpdate)) return false;
+
+        // handle neighbour update manually
+        var mutable = new BlockPos.Mutable();
+
+        // check if neighbours will break in order to give source items
+        for (Direction dir : NeighborUpdater.UPDATE_ORDER) {
+            mutable.set(pos, dir);
+            BlockState neighbourState = world.getBlockState(mutable);
+            BlockState updated = neighbourState.getStateForNeighborUpdate(dir.getOpposite(), air, world, mutable, pos);
+
+            if (updated.isAir()) {
+                giveSourceItem(player, neighbourState);
+            }
+
+            world.setBlockState(mutable, updated, noUpdate);
+        }
+
+        world.updateNeighbors(pos, Blocks.AIR);
+
+        return true;
     }
 
     private void giveSourceItem(ServerPlayerEntity player, BlockState state) {
