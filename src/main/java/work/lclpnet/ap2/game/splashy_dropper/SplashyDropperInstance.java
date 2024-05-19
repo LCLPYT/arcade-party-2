@@ -90,7 +90,7 @@ public class SplashyDropperInstance extends DefaultGameInstance implements MapBo
         var adj = new SimpleAdjacentBlocks(pos -> world.getFluidState(pos).isIn(FluidTags.WATER), 0);
         worldScanner = new BfsWorldScanner(adj);
 
-        groundDetector = new GroundDetector(world, 0.15);
+        groundDetector = new GroundDetector(world, 0.35);
 
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
             movementBlocker.disableMovement(player);
