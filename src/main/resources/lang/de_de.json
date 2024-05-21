@@ -1,3 +1,4 @@
+
 {
   "ap2.prepare.next_game_title": "Nächstes Spiel",
   "ap2.prepare.next_game": "Als Nächstes wird gespielt...",
@@ -197,5 +198,7 @@
   "game.ap2.mimicry.correct": "Deine Reihenfolge ist korrekt!",
   "game.ap2.splashy_dropper": "Pfützenfall",
   "game.ap2.splashy_dropper.description": "Lande in verschieden großen Pfützen. Je nach Größe der Pfütze erhältst du Punkte. Nachdem jemand in einer Pfütze gelandet ist, verschwindet sie.",
-  "game.ap2.splashy_dropper.task": "Land in water pools"
+  "game.ap2.splashy_dropper.task": "Lande in Wasser",
+  "game.ap2.glowing_bomb": "Glühende Bombe",
+  "game.ap2.glowing_bomb.description": "Eine Glowstone-Bombe wird herum gereicht. Wenn sie bei dir explodiert, wird Glowstone in deinen Seelenanker getan. Wenn dein Seelenanker voll ist, fliegst du raus!"
 }

@@ -58,7 +58,7 @@ public class SplashyDropperInstance extends DefaultGameInstance implements MapBo
         super(gameHandle);
 
         movementBlocker = new SimpleMovementBlocker(gameHandle.getScheduler());
-        movementBlocker.setModifyAttributes(false);
+        movementBlocker.setModifySpeedAttribute(false);
     }
 
     @Override
