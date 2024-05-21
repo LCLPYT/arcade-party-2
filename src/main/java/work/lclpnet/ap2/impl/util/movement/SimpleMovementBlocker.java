@@ -14,7 +14,7 @@ public class SimpleMovementBlocker implements MovementBlocker {
     private final TaskScheduler scheduler;
     private final MovementListener movement = new MovementListener(this);
     private final Map<UUID, TaskHandle> blocked = new HashMap<>();
-    private boolean useStatusEffects = true;
+    private boolean modifyAttributes = true;
 
     public SimpleMovementBlocker(TaskScheduler scheduler) {
         this.scheduler = scheduler;
@@ -26,7 +26,7 @@ public class SimpleMovementBlocker implements MovementBlocker {
     }
 
     public void disableMovement(ServerPlayerEntity player) {
-        if (useStatusEffects) {
+        if (modifyAttributes) {
             MovementListener.modifyAttributes(player);
         }
 
@@ -42,7 +42,7 @@ public class SimpleMovementBlocker implements MovementBlocker {
             return;
         }
 
-        if (useStatusEffects) {
+        if (modifyAttributes) {
             MovementListener.modifyAttributes(player);
         }
 
@@ -68,11 +68,11 @@ public class SimpleMovementBlocker implements MovementBlocker {
 
     @Override
     public void setModifyAttributes(boolean modifyAttributes) {
-        this.useStatusEffects = modifyAttributes;
+        this.modifyAttributes = modifyAttributes;
     }
 
     @Override
-    public boolean isUsingStatusEffects() {
-        return useStatusEffects;
+    public boolean isModifyingAttributes() {
+        return modifyAttributes;
     }
 }

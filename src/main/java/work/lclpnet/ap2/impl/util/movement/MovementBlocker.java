@@ -15,5 +15,5 @@ public interface MovementBlocker {
 
     void setModifyAttributes(boolean modifyAttributes);
 
-    boolean isUsingStatusEffects();
+    boolean isModifyingAttributes();
 }

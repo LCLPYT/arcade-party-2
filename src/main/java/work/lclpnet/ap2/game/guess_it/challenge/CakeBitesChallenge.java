@@ -10,6 +10,7 @@ import net.minecraft.util.math.BlockPos;
 import org.joml.Matrix4f;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.game.guess_it.data.*;
+import work.lclpnet.ap2.impl.util.world.stage.Stage;
 import work.lclpnet.kibu.access.entity.DisplayEntityAccess;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.translate.TranslationService;

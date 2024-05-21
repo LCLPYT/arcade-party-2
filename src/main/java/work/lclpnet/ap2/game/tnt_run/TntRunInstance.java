@@ -11,8 +11,12 @@ import net.minecraft.util.math.BlockPos;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.impl.game.EliminationGameInstance;
+import work.lclpnet.ap2.impl.util.collision.GroundDetector;
 import work.lclpnet.kibu.hook.world.BlockBreakParticleCallback;
 import work.lclpnet.kibu.plugin.hook.HookRegistrar;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class TntRunInstance extends EliminationGameInstance {
 
@@ -20,6 +24,8 @@ public class TntRunInstance extends EliminationGameInstance {
     private static final double BLOCK_MARGIN = 0.35;
     private static final int BREAK_TICKS = 10;
     private final Object2IntMap<BlockPos> removal = new Object2IntOpenHashMap<>();
+    private final List<BlockPos> groundBlocks = new ArrayList<>();
+    private GroundDetector groundDetector = null;
 
     public TntRunInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
@@ -38,6 +44,8 @@ public class TntRunInstance extends EliminationGameInstance {
 
     @Override
     protected void ready() {
+        groundDetector = new GroundDetector(getWorld(), BLOCK_MARGIN);
+
         commons().whenBelowCriticalHeight().then(this::eliminate);
 
         gameHandle.getGameScheduler().interval(this::tick, 1);
@@ -48,9 +56,13 @@ public class TntRunInstance extends EliminationGameInstance {
 
         Participants participants = gameHandle.getParticipants();
 
+        groundBlocks.clear();
+
         for (ServerPlayerEntity player : participants) {
-            markForRemovalBelow(player);
+            groundDetector.collectBlocksBelow(player, groundBlocks);
         }
+
+        markForRemovalBelow();
     }
 
     private void tickRemoval() {
@@ -74,26 +86,20 @@ public class TntRunInstance extends EliminationGameInstance {
         }
     }
 
-    private void markForRemovalBelow(ServerPlayerEntity player) {
+    private void markForRemovalBelow() {
         ServerWorld world = getWorld();
 
-        double x = player.getX(), y = player.getY() - 1, z = player.getZ();
-        var pos = new BlockPos.Mutable();
+        for (BlockPos pos : groundBlocks) {
+            if (removal.containsKey(pos)) continue;
 
-        for (int dx = -1; dx < 2; dx++) {
-            for (int dz = -1; dz < 2; dz++) {
-                pos.set(x + BLOCK_MARGIN * dx, y, z + BLOCK_MARGIN * dz);
+            BlockState state = world.getBlockState(pos);
 
-                BlockState state = world.getBlockState(pos);
+            if (state.isAir()) continue;
 
-                if (state.isAir() || removal.containsKey(pos)) continue;
+            removal.put(pos, BREAK_TICKS);
 
-                // mark for removal
-                removal.put(pos.toImmutable(), BREAK_TICKS);
-
-                if (!state.getCollisionShape(world, pos).isEmpty()) {
-                    world.setBlockState(pos, MARKED_STATE);
-                }
+            if (!state.getCollisionShape(world, pos).isEmpty()) {
+                world.setBlockState(pos, MARKED_STATE);
             }
         }
     }

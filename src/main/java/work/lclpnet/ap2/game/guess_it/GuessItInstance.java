@@ -11,9 +11,7 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.GameRules;
-import org.json.JSONObject;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
@@ -23,12 +21,12 @@ import work.lclpnet.ap2.game.guess_it.data.*;
 import work.lclpnet.ap2.impl.game.DefaultGameInstance;
 import work.lclpnet.ap2.impl.game.data.ScoreDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
-import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.ap2.impl.util.scoreboard.ScoreHandle;
 import work.lclpnet.ap2.impl.util.scoreboard.ScoreboardLayout;
+import work.lclpnet.ap2.impl.util.world.stage.Stage;
+import work.lclpnet.ap2.impl.util.world.stage.StageReader;
 import work.lclpnet.kibu.hook.entity.*;
-import work.lclpnet.kibu.hook.util.PositionRotation;
 import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
@@ -36,12 +34,9 @@ import work.lclpnet.kibu.title.Title;
 import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.kibu.translate.text.TranslatedText;
 import work.lclpnet.lobby.game.map.GameMap;
-import work.lclpnet.lobby.game.map.MapUtils;
 import work.lclpnet.lobby.game.util.BossBarTimer;
 import work.lclpnet.lobby.util.ResetWorldModifier;
 
-import java.util.List;
-import java.util.Locale;
 import java.util.Objects;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
@@ -83,9 +78,10 @@ public class GuessItInstance extends DefaultGameInstance implements MapBootstrap
     @Override
     protected void prepare() {
         ServerWorld world = getWorld();
+        GameMap map = getMap();
         HookRegistrar hooks = gameHandle.getHookRegistrar();
         Participants participants = gameHandle.getParticipants();
-        Stage stage = readStage();
+        Stage stage = new StageReader(map).readStage();
 
         GameRules gameRules = world.getGameRules();
         gameRules.get(GameRules.REDUCED_DEBUG_INFO).set(true, gameHandle.getServer());
@@ -122,7 +118,7 @@ public class GuessItInstance extends DefaultGameInstance implements MapBootstrap
         // prevent boss mobs from creating boss bars for players
         hooks.registerHook(EntityBossBarCallback.HOOK, (entity, bossBar, player) -> true);
 
-        teleportRandom();
+        commons().teleportToRandomSpawns(random);
     }
 
     @Override
@@ -130,19 +126,6 @@ public class GuessItInstance extends DefaultGameInstance implements MapBootstrap
         inputManager.init(gameHandle.getHookRegistrar());
 
         prepareNextChallenge();
-    }
-
-    private void teleportRandom() {
-        List<PositionRotation> spawns = MapUtils.getSpawnPositionsAndRotation(getMap());
-
-        if (spawns.isEmpty()) return;
-
-        ServerWorld world = getWorld();
-
-        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
-            PositionRotation spawn = spawns.get(random.nextInt(spawns.size()));
-            player.teleport(world, spawn.getX(), spawn.getY(), spawn.getZ(), spawn.getYaw(), spawn.getPitch());
-        }
     }
 
     private void setupScoreboard() {
@@ -179,20 +162,6 @@ public class GuessItInstance extends DefaultGameInstance implements MapBootstrap
 
     private void updateRoundDisplay() {
         roundHandle.setNumberFormat(new FixedNumberFormat(Text.literal("%s/%s".formatted(round, rounds)).formatted(YELLOW)));
-    }
-
-    private Stage readStage() {
-        JSONObject area = getMap().requireProperty("area");
-        String type = area.getString("type").toLowerCase(Locale.ROOT);
-
-        if (type.equals(CylinderStage.TYPE)) {
-            BlockPos origin = MapUtil.readBlockPos(area.getJSONArray("origin"));
-            int radius = area.getInt("radius");
-            int height = area.getInt("height");
-            return new CylinderStage(origin, radius, height);
-        }
-
-        throw new IllegalStateException("Unknown area type " + type);
     }
 
     private void prepareNextChallenge() {

@@ -5,6 +5,7 @@ import org.jetbrains.annotations.NotNull;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.game.guess_it.challenge.*;
 import work.lclpnet.ap2.game.guess_it.util.GuessItDisplay;
+import work.lclpnet.ap2.impl.util.world.stage.Stage;
 import work.lclpnet.lobby.util.WorldModifier;
 
 import java.util.*;

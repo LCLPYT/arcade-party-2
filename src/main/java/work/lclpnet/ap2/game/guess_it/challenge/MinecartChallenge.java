@@ -22,6 +22,7 @@ import work.lclpnet.ap2.api.util.world.AdjacentBlocks;
 import work.lclpnet.ap2.game.guess_it.data.*;
 import work.lclpnet.ap2.game.guess_it.util.MobSpawner;
 import work.lclpnet.ap2.impl.util.world.SimpleAdjacentBlocks;
+import work.lclpnet.ap2.impl.util.world.stage.Stage;
 import work.lclpnet.kibu.access.entity.FireworkEntityAccess;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.RunningTask;

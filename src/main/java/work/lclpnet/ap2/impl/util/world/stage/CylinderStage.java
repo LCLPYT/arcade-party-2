@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.game.guess_it.data;
+package work.lclpnet.ap2.impl.util.world.stage;
 
 import net.minecraft.util.math.BlockPos;
 import work.lclpnet.ap2.impl.util.BlockBox;
@@ -9,6 +9,7 @@ import java.util.Iterator;
 public class CylinderStage implements Stage {
 
     public static final String TYPE = "cylinder";
+    public static final String TYPE_CIRCLE = "circle";
     private final BlockPos origin;
     private final int radius;
     private final int radiusSq;

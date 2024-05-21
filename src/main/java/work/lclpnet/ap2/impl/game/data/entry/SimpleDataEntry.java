@@ -20,6 +20,6 @@ public record SimpleDataEntry<Ref extends SubjectRef>(Ref subject, @Nullable Tra
 
     @Override
     public boolean scoreEquals(DataEntry<Ref> other) {
-        return false;
+        return other == this;
     }
 }

@@ -30,9 +30,9 @@ public class OrderedDataContainerTest {
         data.add("bar");
         data.add("baz");
 
-        var foo = data.getEntry("foo");
-        var bar = data.getEntry("bar");
-        var baz = data.getEntry("baz");
+        var foo = data.getEntry("foo").orElseThrow();
+        var bar = data.getEntry("bar").orElseThrow();
+        var baz = data.getEntry("baz").orElseThrow();
 
         List<DataEntry<StringRef>> expectedList = List.of(foo, bar, baz);
         var actualList = data.orderedEntries().toList();

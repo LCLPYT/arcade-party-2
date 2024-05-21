@@ -48,7 +48,7 @@ public class CooldownMovementBlocker implements MovementBlocker {
     }
 
     @Override
-    public boolean isUsingStatusEffects() {
+    public boolean isModifyingAttributes() {
         return modifyAttributes;
     }
 

@@ -10,6 +10,7 @@ import work.lclpnet.kibu.translate.text.TranslatedText;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -59,16 +60,16 @@ public class OrderedDataContainer<T, Ref extends SubjectRef> implements DataCont
     }
 
     @Override
-    public DataEntry<Ref> getEntry(T subject) {
+    public Optional<DataEntry<Ref>> getEntry(T subject) {
         synchronized (this) {
             Ref ref = refs.create(subject);
             var entry = order.get(ref);
 
             if (entry == null) {
-                return new SimpleDataEntry<>(ref);
+                return Optional.empty();
             }
 
-            return entry.dataEntry();
+            return Optional.of(entry.dataEntry());
         }
     }
 
