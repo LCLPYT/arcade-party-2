@@ -3,6 +3,7 @@ package work.lclpnet.ap2.game.speed_builders.data;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.block.enums.StairShape;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.decoration.ItemFrameEntity;
 import net.minecraft.entity.mob.MobEntity;
@@ -18,6 +19,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3i;
+import org.slf4j.Logger;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.math.AffineIntMatrix;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
@@ -28,12 +30,16 @@ import work.lclpnet.kibu.mc.KibuEntity;
 import work.lclpnet.kibu.nbt.FabricNbtConversion;
 import work.lclpnet.kibu.schematic.FabricBlockStateAdapter;
 import work.lclpnet.kibu.structure.BlockStructure;
+import work.lclpnet.kibu.util.BlockStateUtils;
 import work.lclpnet.kibu.util.StructureWriter;
 import work.lclpnet.kibu.util.math.Matrix3i;
 
 import java.util.EnumSet;
 import java.util.List;
 
+import static net.minecraft.block.enums.StairShape.*;
+import static net.minecraft.state.property.Properties.HORIZONTAL_FACING;
+import static net.minecraft.state.property.Properties.STAIR_SHAPE;
 import static work.lclpnet.kibu.util.StructureWriter.Option.*;
 
 public class SbIsland {
@@ -44,6 +50,7 @@ public class SbIsland {
     private final BlockBox previewArea;
     private final BlockBox bounds;
     private final BlockBox movementBounds;
+    private final Logger logger;
 
     /**
      * Constructor.
@@ -53,8 +60,9 @@ public class SbIsland {
      * @param offset The offset the island structure is placed at in world coordinates.
      * @param bounds The island bounds in world space.
      */
-    public SbIsland(SbIslandData data, BlockPos origin, BlockPos offset, BlockBox bounds) {
+    public SbIsland(SbIslandData data, BlockPos origin, BlockPos offset, BlockBox bounds, Logger logger) {
         this.data = data;
+        this.logger = logger;
 
         BlockPos relSpawn = data.spawn().subtract(origin);
         this.spawnWorldPos = offset.add(relSpawn);
@@ -166,39 +174,27 @@ public class SbIsland {
 
     public int evaluate(ServerWorld world, SbModule module) {
         BlockStructure structure = module.structure();
-        KibuBlockPos origin = structure.getOrigin();
-        final int ox = origin.getX(), oy = origin.getY(), oz = origin.getZ();
-
-        BlockPos min = buildingArea.min();
-        final int mx = min.getX(), my = min.getY(), mz = min.getZ();
 
         BlockPos.Mutable pointer = new BlockPos.Mutable();
-        FabricBlockStateAdapter adapter = FabricBlockStateAdapter.getInstance();
 
         // each block that of the structure that is present in the build area is awarded with one point
         int score = 0;
 
-        for (KibuBlockPos pos : structure.getBlockPositions()) {
-            int ry = pos.getY() - oy;
+        score += evaluateBlocks(world, structure, pointer);
+        score += evaluateEntities(world, structure, pointer);
 
-            // do not grade the floor
-            if (ry == 0) continue;
+        return score;
+    }
 
-            int rx = pos.getX() - ox;
-            int rz = pos.getZ() - oz;
+    private int evaluateEntities(ServerWorld world, BlockStructure structure, BlockPos.Mutable pointer) {
+        KibuBlockPos origin = structure.getOrigin();
+        BlockPos min = buildingArea.min();
 
-            pointer.set(mx + rx, my + ry - 1, mz + rz);
-
-            KibuBlockState kibuState = structure.getBlockState(pos);
-            BlockState expected = adapter.revert(kibuState);
-            BlockState actual = world.getBlockState(pointer);
-
-            if (actual.equals(expected)) {
-                score++;
-            }
-        }
+        final int ox = origin.getX(), oy = origin.getY(), oz = origin.getZ();
+        final int mx = min.getX(), my = min.getY(), mz = min.getZ();
 
         var presentEntities = getEntities(world, buildingArea);
+        int score = 0;
 
         next: for (KibuEntity entity : structure.getEntities()) {
             int rx = (int) Math.floor(entity.getX() - ox);
@@ -221,7 +217,12 @@ public class SbIsland {
 
                 Identifier id = Registries.ENTITY_TYPE.getId(en.getType());
 
-                if (!identifier.equals(id)) continue;
+                if (!identifier.equals(id)) {
+                    logger.info("Entity differs: ({}, {}, {}) expected {} but got {}",
+                            pointer.getX(), pointer.getY(), pointer.getZ(),
+                            identifier, id);
+                    continue;
+                }
 
                 // the correct entity type is at the required position
 
@@ -241,6 +242,7 @@ public class SbIsland {
                     ItemStack actual = itemFrame.getHeldItemStack();
 
                     if ((!expected.isEmpty() || !actual.isEmpty()) && !actual.isOf(expected.getItem())) {
+                        logger.info("Item frame differs: Expected item {} but got {}", expected, actual);
                         continue next;  // incorrect item frame
                     }
                 }
@@ -254,10 +256,84 @@ public class SbIsland {
         return score;
     }
 
+    private int evaluateBlocks(ServerWorld world, BlockStructure structure, BlockPos.Mutable pointer) {
+        KibuBlockPos origin = structure.getOrigin();
+        BlockPos min = buildingArea.min();
+
+        final int ox = origin.getX(), oy = origin.getY(), oz = origin.getZ();
+        final int mx = min.getX(), my = min.getY(), mz = min.getZ();
+
+        FabricBlockStateAdapter adapter = FabricBlockStateAdapter.getInstance();
+
+        int score = 0;
+
+        for (KibuBlockPos pos : structure.getBlockPositions()) {
+            int ry = pos.getY() - oy;
+
+            // do not grade the floor
+            if (ry == 0) continue;
+
+            int rx = pos.getX() - ox;
+            int rz = pos.getZ() - oz;
+
+            pointer.set(mx + rx, my + ry - 1, mz + rz);
+
+            KibuBlockState kibuState = structure.getBlockState(pos);
+            BlockState expected = adapter.revert(kibuState);
+
+            if (expected == null) {
+                // unknown block state, treat as correct
+                score++;
+                continue;
+            }
+
+            BlockState actual = world.getBlockState(pointer);
+
+            if (areStatesEqual(actual, expected)) {
+                score++;
+            } else {
+                logger.info("Block differs: ({}, {}, {}) expected {} but got {}",
+                        pointer.getX(), pointer.getY(), pointer.getZ(),
+                        BlockStateUtils.stringify(expected), BlockStateUtils.stringify(actual));
+            }
+        }
+
+        return score;
+    }
+
+    private boolean areStatesEqual(BlockState first, BlockState second) {
+        // stairs have states that look the same, but are actually different block states
+        // e.g. [shape=inner_right, facing=south] and [shape=inner_left, facing=west] should be equal
+        if (first.contains(STAIR_SHAPE) && second.contains(STAIR_SHAPE)
+            && first.contains(HORIZONTAL_FACING) && second.contains(HORIZONTAL_FACING)) {
+
+            StairShape firstShape = first.get(STAIR_SHAPE);
+            StairShape secondShape = second.get(STAIR_SHAPE);
+
+            if (firstShape != secondShape) {
+                // rotate second accordingly so that equivalences are formed
+                if ((firstShape == INNER_LEFT && secondShape == INNER_RIGHT) || (firstShape == OUTER_LEFT && secondShape == OUTER_RIGHT)) {
+                    second = second
+                            .with(STAIR_SHAPE, firstShape)
+                            .with(HORIZONTAL_FACING, second.get(HORIZONTAL_FACING).rotateYClockwise());
+                } else if ((firstShape == INNER_RIGHT && secondShape == INNER_LEFT) || (firstShape == OUTER_RIGHT && secondShape == OUTER_LEFT)) {
+                    second = second
+                            .with(STAIR_SHAPE, firstShape)
+                            .with(HORIZONTAL_FACING, second.get(HORIZONTAL_FACING).rotateYCounterclockwise());
+                }
+            }
+        }
+
+        return first.equals(second);
+    }
+
     public boolean isCompleted(ServerWorld world, SbModule module) {
         int score = evaluate(world, module);
+        int maxScore = module.getMaxScore();
 
-        return score >= module.getMaxScore();
+        logger.info("Island completion: {} / {}", score, maxScore);
+
+        return score >= maxScore;
     }
 
     public Vec3d getCenter() {

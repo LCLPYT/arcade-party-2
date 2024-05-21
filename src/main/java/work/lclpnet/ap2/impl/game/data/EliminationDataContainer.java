@@ -9,10 +9,7 @@ import work.lclpnet.ap2.api.game.data.SubjectRefFactory;
 import work.lclpnet.ap2.impl.game.data.entry.SimpleOrderDataEntry;
 import work.lclpnet.kibu.translate.text.TranslatedText;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -86,29 +83,25 @@ public class EliminationDataContainer<T, Ref extends SubjectRef> implements Data
     }
 
     @Override
-    public DataEntry<Ref> getEntry(T subject) {
+    public Optional<DataEntry<Ref>> getEntry(T subject) {
         Ref ref = refs.create(subject);
 
         synchronized (this) {
             int rank = getRank(ref);
 
             if (rank < 0 || rank >= order.size()) {
-                return new SimpleOrderDataEntry<>(ref, -1);
+                return Optional.empty();
             }
 
             var mapping = order.get(rank);
 
             if (mapping == null) {
-                return new SimpleOrderDataEntry<>(ref, rank);
+                return Optional.empty();
             }
 
             var dataEntry = mapping.get(ref);
 
-            if (dataEntry == null) {
-                return new SimpleOrderDataEntry<>(ref, rank);
-            }
-
-            return dataEntry;
+            return Optional.ofNullable(dataEntry);
         }
     }
 

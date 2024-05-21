@@ -6,7 +6,6 @@ import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.UnbreakableComponent;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.ItemEntity;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -22,7 +21,9 @@ import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.impl.game.DefaultGameInstance;
+import work.lclpnet.ap2.impl.game.data.CombinedDataContainer;
 import work.lclpnet.ap2.impl.game.data.OrderedDataContainer;
+import work.lclpnet.ap2.impl.game.data.ScoreDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.BlockBox;
@@ -35,8 +36,11 @@ import java.util.*;
 
 public class TreasureHunterInstance extends DefaultGameInstance {
 
-    private final Random rand = new Random();
-    private final OrderedDataContainer<ServerPlayerEntity, PlayerRef> data = new OrderedDataContainer<>(PlayerRef::create);
+    private static final float COIN_CHANCE = 0.025f;
+    private final Random random = new Random();
+    private final OrderedDataContainer<ServerPlayerEntity, PlayerRef> foundChest = new OrderedDataContainer<>(PlayerRef::create);
+    private final ScoreDataContainer<ServerPlayerEntity, PlayerRef> score = new ScoreDataContainer<>(PlayerRef::create);
+    private final CombinedDataContainer<ServerPlayerEntity, PlayerRef> data = new CombinedDataContainer<>(List.of(foundChest, score));
     private final Set<BlockState> materials = new HashSet<>();
 
     public TreasureHunterInstance(MiniGameHandle gameHandle) {
@@ -75,7 +79,7 @@ public class TreasureHunterInstance extends DefaultGameInstance {
             player.playSoundToPlayer(SoundEvents.BLOCK_AMETHYST_BLOCK_RESONATE, SoundCategory.BLOCKS, 1.2f, 1.8f);
             player.playSoundToPlayer(SoundEvents.BLOCK_CHEST_LOCKED, SoundCategory.BLOCKS, 0.2f, 0.5f);
 
-            data.add(serverPlayer);
+            foundChest.add(serverPlayer);
             winManager.win(serverPlayer);
 
             return ActionResult.success(true);
@@ -86,7 +90,7 @@ public class TreasureHunterInstance extends DefaultGameInstance {
                 return true;
             }
 
-            if (!materials.contains(state) || !(rand.nextFloat() < 0.005)) return true;
+            if (!materials.contains(state) || !(random.nextFloat() < COIN_CHANCE)) return true;
 
             spawnCoin(pos, world);
 
@@ -108,10 +112,10 @@ public class TreasureHunterInstance extends DefaultGameInstance {
                 return materials.contains(state);
             });
 
-            config.allow(ProtectionTypes.PICKUP_ITEM, (playerEntity, itemEntity) -> {
-                if (itemEntity.getStack().isOf(Items.SUNFLOWER)) {
-                    itemEntity.discard();
-                    giveCoin(playerEntity);
+            config.allow(ProtectionTypes.PICKUP_ITEM, (player, item) -> {
+                if (player instanceof ServerPlayerEntity serverPlayer && item.getStack().isOf(Items.SUNFLOWER)) {
+                    item.discard();
+                    giveCoin(serverPlayer);
                 }
 
                 return false;
@@ -126,9 +130,10 @@ public class TreasureHunterInstance extends DefaultGameInstance {
         world.spawnEntity(coin);
     }
 
-    private void giveCoin(PlayerEntity player) {
-        // TODO actually give the player the coin
+    private void giveCoin(ServerPlayerEntity player) {
         player.playSoundToPlayer(SoundEvents.ENTITY_ARROW_HIT_PLAYER, SoundCategory.BLOCKS, 0.7f, 1.55f);
+
+        commons().addScore(player, 1, score);
     }
 
     private void giveShovelsToPlayers() {
@@ -157,7 +162,7 @@ public class TreasureHunterInstance extends DefaultGameInstance {
             }
         }
 
-        int randomIndex = rand.nextInt(chestAreaList.size());
+        int randomIndex = random.nextInt(chestAreaList.size());
 
         BlockPos chestPos = chestAreaList.get(randomIndex);
         world.setBlockState(chestPos, Blocks.CHEST.getDefaultState());

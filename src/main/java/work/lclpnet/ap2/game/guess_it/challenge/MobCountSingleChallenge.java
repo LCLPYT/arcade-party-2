@@ -10,6 +10,7 @@ import work.lclpnet.ap2.game.guess_it.util.MobRandomizer;
 import work.lclpnet.ap2.game.guess_it.util.MobSpawner;
 import work.lclpnet.ap2.impl.util.TextUtil;
 import work.lclpnet.ap2.impl.util.world.SizedSpaceFinder;
+import work.lclpnet.ap2.impl.util.world.stage.Stage;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.lobby.util.WorldModifier;

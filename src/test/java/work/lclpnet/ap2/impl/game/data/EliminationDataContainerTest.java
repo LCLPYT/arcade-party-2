@@ -36,10 +36,10 @@ public class EliminationDataContainerTest {
         data.allEliminated(List.of("bar", "baz"));
         data.eliminated("test");
 
-        var foo = data.getEntry("foo");
-        var bar = data.getEntry("bar");
-        var baz = data.getEntry("baz");
-        var test = data.getEntry("test");
+        var foo = data.getEntry("foo").orElseThrow();
+        var bar = data.getEntry("bar").orElseThrow();
+        var baz = data.getEntry("baz").orElseThrow();
+        var test = data.getEntry("test").orElseThrow();
 
         var order = data.orderedEntries().toList();
 
