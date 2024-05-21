@@ -85,10 +85,10 @@ public class ScoreTimeDataContainer<T, Ref extends SubjectRef> implements DataCo
     }
 
     @Override
-    public DataEntry<Ref> getEntry(T subject) {
+    public Optional<DataEntry<Ref>> getEntry(T subject) {
         Ref ref = refs.create(subject);
 
-        return getEntry0(ref);
+        return Optional.of(getEntry0(ref));
     }
 
     @NotNull

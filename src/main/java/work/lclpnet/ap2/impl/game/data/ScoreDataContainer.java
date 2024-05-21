@@ -64,15 +64,23 @@ public class ScoreDataContainer<T, Ref extends SubjectRef> implements DataContai
     public void delete(T subject) {
         synchronized (this) {
             if (frozen) return;
+
             scoreMap.remove(refs.create(subject));
         }
     }
 
     @Override
-    public DataEntry<Ref> getEntry(T subject) {
+    public Optional<DataEntry<Ref>> getEntry(T subject) {
         Ref ref = refs.create(subject);
+
         synchronized (this) {
-            return new ScoreDataEntry<>(ref, scoreMap.get(ref));
+            Integer score = scoreMap.get(ref);
+
+            if (score == null) {
+                return Optional.empty();
+            }
+
+            return Optional.of(new ScoreDataEntry<>(ref, score));
         }
     }
 

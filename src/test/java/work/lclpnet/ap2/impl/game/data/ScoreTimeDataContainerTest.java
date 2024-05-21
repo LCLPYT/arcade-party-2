@@ -21,8 +21,8 @@ class ScoreTimeDataContainerTest {
         container.setScore(playerB, 6);
         container.setScore(playerA, 6);
 
-        assertEquals(1, ((ScoreTimeDataEntry<StringRef>) container.getEntry(playerB)).ranking());
-        assertEquals(2, ((ScoreTimeDataEntry<StringRef>) container.getEntry(playerA)).ranking());
+        assertEquals(1, ((ScoreTimeDataEntry<StringRef>) container.getEntry(playerB).orElseThrow()).ranking());
+        assertEquals(2, ((ScoreTimeDataEntry<StringRef>) container.getEntry(playerA).orElseThrow()).ranking());
     }
 
     @Test
@@ -35,8 +35,8 @@ class ScoreTimeDataContainerTest {
         container.setScore(playerA, 5);
         container.setScore(playerB, 6);
 
-        assertInstanceOf(ScoreDataEntry.class, container.getEntry(playerA));
-        assertInstanceOf(ScoreDataEntry.class, container.getEntry(playerB));
+        assertInstanceOf(ScoreDataEntry.class, container.getEntry(playerA).orElseThrow());
+        assertInstanceOf(ScoreDataEntry.class, container.getEntry(playerB).orElseThrow());
     }
 
     @Test

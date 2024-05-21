@@ -8,7 +8,7 @@ public interface DataContainer<T, Ref extends SubjectRef> {
 
     void delete(T subject);
 
-    DataEntry<Ref> getEntry(T subject);
+    Optional<DataEntry<Ref>> getEntry(T subject);
 
     Stream<? extends DataEntry<Ref>> orderedEntries();
 
@@ -25,12 +25,10 @@ public interface DataContainer<T, Ref extends SubjectRef> {
     }
 
     default Stream<T> getEqualScoreSubjects(T player, SubjectRefResolver<T, Ref> resolver) {
-        DataEntry<Ref> entry = getEntry(player);
-
-        return orderedEntries()
+        return getEntry(player).map(entry -> orderedEntries()
                 .filter(entry::scoreEquals)
                 .map(DataEntry::subject)
                 .map(resolver::resolve)
-                .filter(Objects::nonNull);
+                .filter(Objects::nonNull)).orElseGet(Stream::empty);
     }
 }
