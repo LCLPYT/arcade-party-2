@@ -8,6 +8,7 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
+import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.world.CircleStructureGenerator;
@@ -24,16 +25,18 @@ public class GbManager {
     private final ServerWorld world;
     private final GameMap map;
     private final Random random;
+    private final Participants participants;
     private final Map<UUID, GbAnchor> anchors = new HashMap<>();
     private Vec3d circleCenter = null;
 
-    public GbManager(ServerWorld world, GameMap map, Random random) {
+    public GbManager(ServerWorld world, GameMap map, Random random, Participants participants) {
         this.world = world;
         this.map = map;
         this.random = random;
+        this.participants = participants;
     }
 
-    public void setupAnchors(Participants participants) {
+    public void setupAnchors() {
         BlockPos center = MapUtil.readBlockPos(map.requireProperty("circle-center"));
         circleCenter = Vec3d.ofBottomCenter(center);
 
@@ -63,7 +66,7 @@ public class GbManager {
         }
     }
 
-    public void teleportPlayers(Participants participants) {
+    public void teleportPlayers() {
         for (ServerPlayerEntity player : participants) {
             teleport(player);
         }
@@ -97,5 +100,13 @@ public class GbManager {
         float yaw = (float) Math.toDegrees(Math.atan2(dx, -dz));
 
         player.teleport(world, pos.getX(), pos.getY(), pos.getZ(), yaw, 0);
+    }
+
+    @Nullable
+    public Vec3d randomBombLocation() {
+        return participants.getRandomParticipant(random)
+                .map(player -> anchors.get(player.getUuid()))
+                .map(anchor -> anchor.pos().add(0.5, 1.5, 0.5))
+                .orElse(null);
     }
 }
