@@ -220,7 +220,7 @@ public class ArcadePartyGameInstance implements GameInstance {
 
         MapRandomizer mapRandomizer = new BalancedMapRandomizer(mapManager, frequencyTracker, new Random());
 
-        MapFacade mapFacade = new MapFacadeImpl(worldFacade, mapRandomizer, server, logger);
+        MapFacade mapFacade = new MapFacadeImpl(worldFacade, mapRandomizer, mapManager, server, logger);
 
         return Pair.of(mapFacade, frequencyTracker);
     }

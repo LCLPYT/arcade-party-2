@@ -15,7 +15,7 @@ import java.util.List;
 import static net.minecraft.util.Formatting.AQUA;
 import static net.minecraft.util.Formatting.GREEN;
 
-public class MapIconMaker {
+public class GameIconMaker {
 
     public static ItemStack createIcon(MiniGame game, ServerPlayerEntity player, TranslationService translations) {
         ItemStack icon = game.getIcon();
@@ -80,5 +80,5 @@ public class MapIconMaker {
         return wrapped;
     }
 
-    private MapIconMaker() {}
+    private GameIconMaker() {}
 }

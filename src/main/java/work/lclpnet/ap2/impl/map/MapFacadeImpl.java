@@ -9,22 +9,30 @@ import org.slf4j.Logger;
 import work.lclpnet.ap2.api.game.MapReady;
 import work.lclpnet.ap2.api.map.MapFacade;
 import work.lclpnet.ap2.api.map.MapRandomizer;
+import work.lclpnet.ap2.base.ApConstants;
 import work.lclpnet.lobby.game.api.MapOptions;
 import work.lclpnet.lobby.game.api.WorldFacade;
 import work.lclpnet.lobby.game.map.GameMap;
+import work.lclpnet.lobby.game.map.MapDescriptor;
+import work.lclpnet.lobby.game.map.MapManager;
 
+import java.io.IOException;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 public class MapFacadeImpl implements MapFacade {
 
     private final WorldFacade worldFacade;
     private final MapRandomizer mapRandomizer;
+    private final MapManager mapManager;
     private final MinecraftServer server;
     private final Logger logger;
 
-    public MapFacadeImpl(WorldFacade worldFacade, MapRandomizer mapRandomizer, MinecraftServer server, Logger logger) {
+    public MapFacadeImpl(WorldFacade worldFacade, MapRandomizer mapRandomizer, MapManager mapManager,
+                         MinecraftServer server, Logger logger) {
         this.worldFacade = worldFacade;
         this.mapRandomizer = mapRandomizer;
+        this.mapManager = mapManager;
         this.server = server;
         this.logger = logger;
     }
@@ -50,6 +58,27 @@ public class MapFacadeImpl implements MapFacade {
                     logger.error("Failed to open a random map for game {}", gameId, throwable);
                     return null;
                 });
+    }
+
+    @Override
+    public CompletableFuture<Set<Identifier>> getMapIds(Identifier gameId) {
+        return mapRandomizer.getAvailableMapIds(gameId);
+    }
+
+    @Override
+    public CompletableFuture<Void> reloadMaps(Identifier gameId) {
+        return CompletableFuture.runAsync(() -> {
+            try {
+                mapManager.loadAll(new MapDescriptor(gameId, ApConstants.MAP_VERSION));
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to reload maps for game id %s".formatted(gameId), e);
+            }
+        });
+    }
+
+    @Override
+    public void forceMap(Identifier mapId) {
+        mapRandomizer.forceMap(mapId);
     }
 
     private void setupWorld(ServerWorld world) {

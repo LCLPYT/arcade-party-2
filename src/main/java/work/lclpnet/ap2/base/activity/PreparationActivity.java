@@ -33,9 +33,10 @@ import work.lclpnet.ap2.base.ApContainer;
 import work.lclpnet.ap2.base.ArcadeParty;
 import work.lclpnet.ap2.base.api.Skippable;
 import work.lclpnet.ap2.base.cmd.ForceGameCommand;
+import work.lclpnet.ap2.base.cmd.ForceMapCommand;
 import work.lclpnet.ap2.base.cmd.SkipCommand;
 import work.lclpnet.ap2.base.util.DevGameChooser;
-import work.lclpnet.ap2.base.util.MapIconMaker;
+import work.lclpnet.ap2.base.util.GameIconMaker;
 import work.lclpnet.ap2.impl.game.PlayerUtil;
 import work.lclpnet.ap2.impl.util.music.MusicHelper;
 import work.lclpnet.ap2.impl.util.title.AnimatedTitle;
@@ -62,7 +63,9 @@ import work.lclpnet.lobby.game.util.ProtectorComponent;
 import work.lclpnet.lobby.game.util.ProtectorUtils;
 
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 
 import static net.minecraft.util.Formatting.*;
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
@@ -83,6 +86,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
     private BossBarTimer bossBarTimer = null;
     private AnimatedTitle animatedTitle = null;
     private SongWrapper song = null;
+    private CompletableFuture<Void> whenTasksDone = null;
 
     public PreparationActivity(Args args) {
         super(args.pluginContext());
@@ -149,6 +153,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
         CommandRegistrar commandRegistrar = component(BuiltinComponents.COMMANDS).commands();
 
         new SkipCommand(this).register(commandRegistrar);
+        new ForceMapCommand(args.container.mapFacade(), this::getMiniGame).register(commandRegistrar);
 
         args.forceGameCommand.setGameEnforcer(this::forceGame);
     }
@@ -157,6 +162,8 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
         if (miniGame == null) {
             miniGame = pickNextGame();
         }
+
+        whenTasksDone = args.container.mapFacade().reloadMaps(miniGame.getId());
 
         displayGameQueue();
         startTimer().whenDone(this::onTimerEnded);
@@ -249,7 +256,12 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
             return;
         }
 
-        startGame();
+        if (whenTasksDone == null) {
+            startGame();
+            return;
+        }
+
+        whenTasksDone.thenRun(this::startGame);
     }
 
     private void startGame() {
@@ -501,7 +513,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
                 break;
             }
 
-            ItemStack icon = MapIconMaker.createIcon(game, player, translations);
+            ItemStack icon = GameIconMaker.createIcon(game, player, translations);
 
             inv.setStack(i++, icon);
         }
@@ -514,6 +526,10 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
     @Override
     public Set<ServerPlayerEntity> getParticipants() {
         return args.playerManager().getAsSet();
+    }
+
+    private Optional<MiniGame> getMiniGame() {
+        return Optional.ofNullable(miniGame);
     }
 
     public record Args(PluginContext pluginContext, ApContainer container, GameQueue gameQueue,
