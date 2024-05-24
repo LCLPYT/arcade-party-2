@@ -19,6 +19,7 @@ import work.lclpnet.lobby.game.map.MapManager;
 import java.io.IOException;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 public class MapFacadeImpl implements MapFacade {
 
@@ -62,7 +63,20 @@ public class MapFacadeImpl implements MapFacade {
 
     @Override
     public CompletableFuture<Set<Identifier>> getMapIds(Identifier gameId) {
-        return mapRandomizer.getAvailableMapIds(gameId);
+        Set<Identifier> mapIds = mapManager.getCollection()
+                .mapIdsWithPrefix(gameId)
+                .collect(Collectors.toUnmodifiableSet());
+
+        return CompletableFuture.completedFuture(mapIds);
+    }
+
+    @Override
+    public CompletableFuture<Set<GameMap>> getMaps(Identifier gameId) {
+        Set<GameMap> maps = mapManager.getCollection()
+                .mapsWithPrefix(gameId)
+                .collect(Collectors.toUnmodifiableSet());
+
+        return CompletableFuture.completedFuture(maps);
     }
 
     @Override

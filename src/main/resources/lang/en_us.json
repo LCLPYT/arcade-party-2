@@ -38,6 +38,8 @@
   "ap2.game.visibility.visible": "visible",
   "ap2.game.visibility.partially_visible": "partially visible",
   "ap2.game.visibility.invisible": "invisible",
+  "ap2.map.by": "Map %s by %s",
+  "ap2.built_by": "Built by %s",
   "game.ap2.title": "ArcadeParty",
   "game.ap2.reached_checkpoint": "Checkpoint reached",
   "game.ap2.spleef": "Spleef",

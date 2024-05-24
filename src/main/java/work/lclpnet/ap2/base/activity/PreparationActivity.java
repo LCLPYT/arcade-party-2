@@ -3,11 +3,8 @@ package work.lclpnet.ap2.base.activity;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.Inventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
-import net.minecraft.screen.slot.Slot;
-import net.minecraft.screen.slot.SlotActionType;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.sound.SoundCategory;
@@ -35,8 +32,8 @@ import work.lclpnet.ap2.base.api.Skippable;
 import work.lclpnet.ap2.base.cmd.ForceGameCommand;
 import work.lclpnet.ap2.base.cmd.ForceMapCommand;
 import work.lclpnet.ap2.base.cmd.SkipCommand;
-import work.lclpnet.ap2.base.util.DevGameChooser;
-import work.lclpnet.ap2.base.util.GameIconMaker;
+import work.lclpnet.ap2.base.util.DevChooser;
+import work.lclpnet.ap2.base.util.IconMaker;
 import work.lclpnet.ap2.impl.game.PlayerUtil;
 import work.lclpnet.ap2.impl.util.music.MusicHelper;
 import work.lclpnet.ap2.impl.util.title.AnimatedTitle;
@@ -58,6 +55,7 @@ import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.lobby.game.api.MapOptions;
 import work.lclpnet.lobby.game.api.WorldFacade;
+import work.lclpnet.lobby.game.map.GameMap;
 import work.lclpnet.lobby.game.util.BossBarTimer;
 import work.lclpnet.lobby.game.util.ProtectorComponent;
 import work.lclpnet.lobby.game.util.ProtectorUtils;
@@ -76,7 +74,8 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
     private static final int GAME_ANNOUNCE_DELAY = Ticks.seconds(3);
     private static final int PREPARATION_TIME = Ticks.seconds(25);
     private static final Identifier GAME_SONG_ID = ArcadeParty.identifier("ap2_game");
-    private final DevGameChooser gameChooser = new DevGameChooser();
+    private final DevChooser<MiniGame> gameChooser = new DevChooser<>();
+    private final DevChooser<GameMap> mapChooser = new DevChooser<>();
     private final Args args;
     private int time = 0;
     private boolean skipPreparation = false;
@@ -433,15 +432,19 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
         for (ServerPlayerEntity player : PlayerLookup.all(server)) {
             if (server.getPermissionLevel(player.getGameProfile()) < 2) continue;
 
-            ItemStack selector = new ItemStack(Items.TOTEM_OF_UNDYING);
-            selector.set(DataComponentTypes.CUSTOM_NAME, Text.literal("Select Game").styled(style -> style.withItalic(false).withFormatting(YELLOW)));
+            ItemStack gameSelector = new ItemStack(Items.TOTEM_OF_UNDYING);
+            gameSelector.set(DataComponentTypes.CUSTOM_NAME, Text.literal("Select Game").styled(style -> style.withItalic(false).withFormatting(YELLOW)));
+
+            ItemStack mapSelector = new ItemStack(Items.HEART_OF_THE_SEA);
+            mapSelector.set(DataComponentTypes.CUSTOM_NAME, Text.literal("Select Map").styled(style -> style.withItalic(false).withFormatting(YELLOW)));
 
             ItemStack skip = new ItemStack(Items.EMERALD_BLOCK);
             skip.set(DataComponentTypes.CUSTOM_NAME, Text.literal("Skip Preparation").styled(style -> style.withItalic(false).withFormatting(GREEN)));
 
             PlayerInventory inventory = player.getInventory();
-            inventory.setStack(0, selector);
-            inventory.setStack(1, skip);
+            inventory.setStack(0, gameSelector);
+            inventory.setStack(1, mapSelector);
+            inventory.setStack(2, skip);
         }
 
         hooks.registerHook(PlayerInteractionHooks.USE_ITEM, (player, world, hand) -> {
@@ -458,69 +461,49 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
             } else if (stack.isOf(Items.EMERALD_BLOCK)) {
                 setSkip(true);
                 player.sendMessage(Text.literal("Skipped the preparation phase"));
+            } else if (stack.isOf(Items.HEART_OF_THE_SEA)) {
+                openMapPicker(serverPlayer);
             }
 
             return TypedActionResult.success(stack);
         });
 
-        hooks.registerHook(PlayerInventoryHooks.MODIFY_INVENTORY, event -> {
-            this.onModifyInventory(event);
-            return false;
+        gameChooser.listen(hooks, (game, player) -> {
+            forceGame(game);
+            player.sendMessage(Text.literal("Forcing mini-game \"%s\"".formatted(game.getId())));
         });
-    }
 
-    private void onModifyInventory(PlayerInventoryHooks.ClickEvent event) {
-        if (event.action() != SlotActionType.PICKUP) return;
-
-        ServerPlayerEntity player = event.player();
-        MinecraftServer server = getServer();
-
-        if (server.getPermissionLevel(player.getGameProfile()) < 2) return;
-
-        Inventory inventory = event.inventory();
-        if (inventory == null) return;
-
-        Slot slot = event.handlerSlot();
-        if (slot == null) return;
-
-        int slotIndex = slot.getIndex();
-
-        MiniGame game = gameChooser.getGame(inventory, slotIndex);
-
-        if (game == null) return;
-
-        forceGame(game);
-
-        player.closeHandledScreen();
-        player.sendMessage(Text.literal("Forcing mini-game \"%s\"".formatted(game.getId())));
-        player.playSoundToPlayer(SoundEvents.BLOCK_NOTE_BLOCK_PLING.value(), SoundCategory.PLAYERS, 0.5f, 2f);
+        mapChooser.listen(hooks, (gameMap, player) -> {
+            Identifier mapId = gameMap.getDescriptor().getIdentifier();
+            args.container().mapFacade().forceMap(mapId);
+            player.sendMessage(Text.literal("Next map will be \"%s\"".formatted(mapId)));
+        });
     }
 
     private void openGamePicker(ServerPlayerEntity player) {
         var games = args.container().miniGames().getGames().stream().toList();
         TranslationService translations = args.container().translationService();
 
-        int rows = Math.max(1, Math.min(6, (int) Math.ceil(games.size() / 9d)));
-
-        RestrictedInventory inv = new RestrictedInventory(rows, Text.literal("Force Game"));
-
-        int capacity = rows * 9;
-        int i = 0;
-
-        for (MiniGame game : games) {
-            if (i >= capacity) {
-                getLogger().warn("Not enough space in inventory");
-                break;
-            }
-
-            ItemStack icon = GameIconMaker.createIcon(game, player, translations);
-
-            inv.setStack(i++, icon);
-        }
-
-        gameChooser.registerInventory(inv, games);
+        RestrictedInventory inv = gameChooser.createInventory(games, Text.literal("Force Game"),
+                game -> IconMaker.createIcon(game, player, translations));
 
         inv.open(player);
+    }
+
+    private void openMapPicker(ServerPlayerEntity player) {
+        if (miniGame == null) {
+            player.sendMessage(Text.literal("No maps found").formatted(RED));
+            return;
+        }
+
+        args.container().mapFacade().getMaps(miniGame.getId()).thenAccept(maps -> {
+            TranslationService translations = args.container().translationService();
+
+            RestrictedInventory inv = mapChooser.createInventory(maps, Text.literal("Force Map"),
+                    map -> IconMaker.createIcon(map, player, translations));
+
+            inv.open(player);
+        });
     }
 
     @Override

@@ -2,15 +2,16 @@ package work.lclpnet.ap2.impl.map;
 
 import it.unimi.dsi.fastutil.Pair;
 import net.minecraft.util.Identifier;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.map.MapFrequencyManager;
 import work.lclpnet.ap2.api.map.MapRandomizer;
 import work.lclpnet.lobby.game.map.GameMap;
-import work.lclpnet.lobby.game.map.MapDescriptor;
 import work.lclpnet.lobby.game.map.MapManager;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.NoSuchElementException;
+import java.util.Optional;
+import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -33,7 +34,9 @@ public class BalancedMapRandomizer implements MapRandomizer {
 
     @Override
     public CompletableFuture<GameMap> nextMap(Identifier gameId) {
-        var mapIds = getMapIds(gameId);
+        var mapIds = mapManager.getCollection()
+                .mapIdsWithPrefix(gameId)
+                .collect(Collectors.toUnmodifiableSet());
 
         if (frequencyTracker instanceof AsyncMapFrequencyManager async) {
             return async.preload(mapIds).thenCompose(ignored -> getRandomMap(mapIds));
@@ -43,25 +46,8 @@ public class BalancedMapRandomizer implements MapRandomizer {
     }
 
     @Override
-    public CompletableFuture<Set<Identifier>> getAvailableMapIds(Identifier gameId) {
-        Set<Identifier> mapIds = getMapIds(gameId);
-
-        return CompletableFuture.completedFuture(mapIds);
-    }
-
-    @Override
     public void forceMap(@Nullable Identifier mapId) {
         forcedMap = mapId;
-    }
-
-    private Set<Identifier> getMapIds(Identifier gameId) {
-        String prefix = withSlash(gameId);
-
-        return mapManager.getCollection().getMaps().stream()
-                .map(GameMap::getDescriptor)
-                .map(MapDescriptor::getIdentifier)
-                .filter(id -> id.getPath().startsWith(prefix))
-                .collect(Collectors.toUnmodifiableSet());
     }
 
     private CompletableFuture<GameMap> getRandomMap(Collection<Identifier> mapIds) {
@@ -104,16 +90,5 @@ public class BalancedMapRandomizer implements MapRandomizer {
             var err = new NoSuchElementException("Map %s not found".formatted(mapId));
             return CompletableFuture.failedFuture(err);
         });
-    }
-
-    @NotNull
-    private static String withSlash(Identifier gameId) {
-        String path = gameId.getPath();
-
-        if (path.endsWith("/")) {
-            return path;
-        }
-
-        return path + "/";
     }
 }

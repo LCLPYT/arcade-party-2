@@ -25,6 +25,8 @@ public interface MapFacade {
 
     CompletableFuture<Set<Identifier>> getMapIds(Identifier gameId);
 
+    CompletableFuture<Set<GameMap>> getMaps(Identifier gameId);
+
     CompletableFuture<Void> reloadMaps(Identifier gameId);
 
     void forceMap(Identifier mapId);
