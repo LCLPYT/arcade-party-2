@@ -13,7 +13,6 @@ import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
 
 /**
  * A {@link MapRandomizer} that takes the amount of times the map was picked into account.
@@ -36,7 +35,8 @@ public class BalancedMapRandomizer implements MapRandomizer {
     public CompletableFuture<GameMap> nextMap(Identifier gameId) {
         var mapIds = mapManager.getCollection()
                 .mapIdsWithPrefix(gameId)
-                .collect(Collectors.toUnmodifiableSet());
+                .sorted()  // obtain a sorted list to gain a uniform distribution with the rng
+                .toList();
 
         if (frequencyTracker instanceof AsyncMapFrequencyManager async) {
             return async.preload(mapIds).thenCompose(ignored -> getRandomMap(mapIds));
