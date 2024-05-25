@@ -122,7 +122,7 @@ public class DefaultMiniGameHandle implements MiniGameHandle, Unloadable, WorldB
 
     @Override
     public TranslationService getTranslations() {
-        return args.container().translationService();
+        return args.container().translations();
     }
 
     @Override

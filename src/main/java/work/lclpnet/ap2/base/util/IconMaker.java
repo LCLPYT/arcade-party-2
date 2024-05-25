@@ -5,6 +5,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
+import work.lclpnet.ap2.api.data.DataManager;
 import work.lclpnet.ap2.api.game.MiniGame;
 import work.lclpnet.kibu.inv.item.ItemStackUtil;
 import work.lclpnet.kibu.translate.TranslationService;
@@ -18,7 +19,7 @@ import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
 public class IconMaker {
 
-    public static ItemStack createIcon(GameMap map, ServerPlayerEntity player, TranslationService translations) {
+    public static ItemStack createIcon(GameMap map, ServerPlayerEntity player, TranslationService translations, DataManager dataManager) {
         ItemStack icon = new ItemStack(map.getIcon());
 
         String name = map.getName(translations.getLanguage(player));
@@ -26,7 +27,7 @@ public class IconMaker {
         icon.set(DataComponentTypes.CUSTOM_NAME, Text.literal(name)
                 .styled(style -> style.withItalic(false).withFormatting(AQUA)));
 
-        List<String> authors = map.getAuthors();
+        List<String> authors = map.getAuthors().stream().map(dataManager::string).toList();
 
         if (!authors.isEmpty()) {
             ItemStackUtil.setLore(icon, wrapText(translations.translateText(player, "ap2.built_by",

@@ -9,8 +9,8 @@ public final class ApConstants {
     public static final String MAP_VERSION = "";
 
     // people
-    public static final String PERSON_LCLP = "LCLP";
-    public static final String PERSON_BOPS = "bops";
+    public static final String PERSON_LCLP = "@person.lclp";
+    public static final String PERSON_BOPS = "@person.bops";
 
     // other
     public static final String SEPARATOR = "===================================";

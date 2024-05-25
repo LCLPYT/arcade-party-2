@@ -20,6 +20,7 @@ import work.lclpnet.activity.component.builtin.BuiltinComponents;
 import work.lclpnet.activity.manager.ActivityManager;
 import work.lclpnet.ap2.api.base.GameQueue;
 import work.lclpnet.ap2.api.base.PlayerManager;
+import work.lclpnet.ap2.api.data.DataManager;
 import work.lclpnet.ap2.api.game.GameStartContext;
 import work.lclpnet.ap2.api.game.MiniGame;
 import work.lclpnet.ap2.api.util.music.SongCache;
@@ -211,7 +212,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
         } else {
             if (t == GAME_ANNOUNCE_DELAY - 40) {
                 // "The next game will be %s"
-                args.container().translationService().translateText("ap2.prepare.next_game").formatted(GRAY)
+                args.container().translations().translateText("ap2.prepare.next_game").formatted(GRAY)
                         .sendTo(PlayerLookup.all(getServer()));
             } else if (t == GAME_ANNOUNCE_DELAY) {
                 announceNextGame();
@@ -226,7 +227,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
         Scheduler scheduler = component(BuiltinComponents.SCHEDULER).scheduler();
 
         MinecraftServer server = getServer();
-        TranslationService translationService = args.container().translationService();
+        TranslationService translationService = args.container().translations();
 
         var label = translationService.translateText("ap2.prepare.next_game_title");
 
@@ -329,11 +330,13 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
     }
 
     private void announceNextGame() {
-        TranslationService translations = args.container().translationService();
+        ApContainer container = args.container();
+        TranslationService translations = container.translations();
         MinecraftServer server = getServer();
-        SongManager songManager = args.container.songManager();
-        Logger logger = args.container().logger();
+        SongManager songManager = container.songManager();
+        Logger logger = container.logger();
         TaskScheduler scheduler = component(BuiltinComponents.SCHEDULER).scheduler();
+        DataManager dataManager = container.dataManager();
 
         var song = songManager.getSong(PreparationActivity.ARCADE_PARTY_GAME_TAG, GAME_SONG_ID);
         boolean soundFallback = song.isEmpty();
@@ -350,6 +353,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
 
         var playedNextMsg = translations.translateText("ap2.prepare.will_be_played_next").formatted(GREEN);
         var separator = Text.literal(ApConstants.SEPARATOR).formatted(DARK_GREEN, STRIKETHROUGH, BOLD);
+        String author = dataManager.string(miniGame.getAuthor());
 
         var players = PlayerLookup.all(server);
 
@@ -367,7 +371,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
             player.sendMessage(description);
 
             var createdBy = translations.translateText(player, "ap2.prepare.created_by",
-                    styled(miniGame.getAuthor(), YELLOW)).formatted(GRAY, ITALIC);
+                    styled(author, YELLOW)).formatted(GRAY, ITALIC);
 
             player.sendMessage(Text.literal(""));
             player.sendMessage(createdBy);
@@ -405,7 +409,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
      * Announces that the current game is no longer valid and that a new game will be picked.
      */
     private void announceInvalidGame() {
-        TranslationService translations = args.container().translationService();
+        TranslationService translations = args.container().translations();
 
         var gameTitle = translations.translateText(miniGame.getTitleKey()).formatted(YELLOW);
         var msg = translations.translateText("ap2.prepare.game_cannot_be_played", gameTitle).formatted(RED);
@@ -443,8 +447,8 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
 
             PlayerInventory inventory = player.getInventory();
             inventory.setStack(0, gameSelector);
-            inventory.setStack(1, mapSelector);
-            inventory.setStack(2, skip);
+            inventory.setStack(1, skip);
+            inventory.setStack(8, mapSelector);
         }
 
         hooks.registerHook(PlayerInteractionHooks.USE_ITEM, (player, world, hand) -> {
@@ -482,7 +486,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
 
     private void openGamePicker(ServerPlayerEntity player) {
         var games = args.container().miniGames().getGames().stream().toList();
-        TranslationService translations = args.container().translationService();
+        TranslationService translations = args.container().translations();
 
         RestrictedInventory inv = gameChooser.createInventory(games, Text.literal("Force Game"),
                 game -> IconMaker.createIcon(game, player, translations));
@@ -496,11 +500,14 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
             return;
         }
 
-        args.container().mapFacade().getMaps(miniGame.getId()).thenAccept(maps -> {
-            TranslationService translations = args.container().translationService();
+        ApContainer container = args.container();
+        DataManager dataManager = container.dataManager();
+
+        container.mapFacade().getMaps(miniGame.getId()).thenAccept(maps -> {
+            TranslationService translations = container.translations();
 
             RestrictedInventory inv = mapChooser.createInventory(maps, Text.literal("Force Map"),
-                    map -> IconMaker.createIcon(map, player, translations));
+                    map -> IconMaker.createIcon(map, player, translations, dataManager));
 
             inv.open(player);
         });

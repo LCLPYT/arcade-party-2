@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import work.lclpnet.activity.manager.ActivityManager;
 import work.lclpnet.ap2.api.base.GameQueue;
 import work.lclpnet.ap2.api.base.MiniGameManager;
+import work.lclpnet.ap2.api.data.DataManager;
 import work.lclpnet.ap2.api.game.MiniGame;
 import work.lclpnet.ap2.api.map.MapFacade;
 import work.lclpnet.ap2.api.map.MapRandomizer;
@@ -22,6 +23,9 @@ import work.lclpnet.ap2.base.config.ConfigManager;
 import work.lclpnet.ap2.impl.base.PlayerManagerImpl;
 import work.lclpnet.ap2.impl.base.SimpleMiniGameManager;
 import work.lclpnet.ap2.impl.base.VotedGameQueue;
+import work.lclpnet.ap2.impl.data.JsonDataSource;
+import work.lclpnet.ap2.impl.data.MapDynamicData;
+import work.lclpnet.ap2.impl.data.MutableDataManager;
 import work.lclpnet.ap2.impl.game.PlayerUtil;
 import work.lclpnet.ap2.impl.map.BalancedMapRandomizer;
 import work.lclpnet.ap2.impl.map.MapFacadeImpl;
@@ -37,9 +41,11 @@ import work.lclpnet.lobby.game.map.*;
 import work.lclpnet.lobby.game.start.ConditionGameStarter;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Objects;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 
@@ -118,9 +124,15 @@ public class ArcadePartyGameInstance implements GameInstance {
         Path songsDir = cacheDir.resolve("songs");
 
         SongManagerImpl songManager = new SongManagerImpl(songsDir);
+        MutableDataManager dataManager = new MutableDataManager();
 
-        CompletableFuture.allOf(loadMaps(mapManager), loadSqlite(frequencyManager, server), loadSongs(songManager, config))
-                .thenCompose(nil -> server.submit(() -> dispatchGameStart(server, worldFacade, mapFacade, songManager)))
+        CompletableFuture.allOf(
+                        loadMaps(mapManager),
+                        loadSqlite(frequencyManager, server),
+                        loadSongs(songManager, config),
+                        loadContainer(dataManager))
+                .thenCompose(nil -> server.submit(() ->
+                        dispatchGameStart(server, worldFacade, mapFacade, songManager, dataManager)))
                 .exceptionally(throwable -> {
                     logger.error("Failed to load ArcadeParty2", throwable);
                     return null;
@@ -128,7 +140,7 @@ public class ArcadePartyGameInstance implements GameInstance {
     }
 
     private void dispatchGameStart(MinecraftServer server, WorldFacade worldFacade, MapFacade mapFacade,
-                                   SongManager songManager) {
+                                   SongManager songManager, DataManager dataManager) {
 
         ArcadeParty arcadeParty = ArcadeParty.getInstance();
 
@@ -146,7 +158,7 @@ public class ArcadePartyGameInstance implements GameInstance {
 
         ApContainer container = new ApContainer(server, logger, translationService, environment.getHookStack(),
                 environment.getCommandStack(), environment.getSchedulerStack(), worldFacade, mapFacade, playerUtil,
-                gameManager, songManager);
+                gameManager, songManager, dataManager);
 
         SongCache songCache = new MapSongCache();
 
@@ -154,6 +166,12 @@ public class ArcadePartyGameInstance implements GameInstance {
         PreparationActivity preparation = new PreparationActivity(args);
 
         ActivityManager.getInstance().startActivity(preparation);
+    }
+
+    private CompletableFuture<Void> loadContainer(MutableDataManager dataManager) {
+        return CompletableFuture.runAsync(() -> dataManager.setData(MapDynamicData.builder()
+                .addSource(new JsonDataSource(this::openConfigurationFile, logger))
+                .build()));
     }
 
     private CompletableFuture<Void> loadSongs(SongManagerImpl songManager, Ap2Config config) {
@@ -239,5 +257,9 @@ public class ArcadePartyGameInstance implements GameInstance {
         var lookup = new RepositoryMapLookup(mapRepository);
 
         return new MapManager(lookup);
+    }
+
+    private InputStream openConfigurationFile() {
+        return Objects.requireNonNull(getClass().getResourceAsStream("/configuration.json"), "File not found: configuration.json");
     }
 }
