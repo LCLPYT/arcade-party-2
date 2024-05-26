@@ -8,7 +8,10 @@ import org.joml.Quaterniond;
 import org.joml.Vector3d;
 
 import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 public class Object3d {
 
@@ -80,6 +83,19 @@ public class Object3d {
             }
 
             parent = parent.parent;
+        }
+    }
+
+    public void traverse(Consumer<Object3d> action) {
+        List<Object3d> queue = new LinkedList<>();
+        queue.add(this);
+
+        while (!queue.isEmpty()) {
+            Object3d obj = queue.removeFirst();
+
+            action.accept(obj);
+
+            queue.addAll(obj.children());
         }
     }
 }

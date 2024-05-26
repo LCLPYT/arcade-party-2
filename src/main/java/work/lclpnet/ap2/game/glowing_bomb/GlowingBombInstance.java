@@ -1,21 +1,17 @@
 package work.lclpnet.ap2.game.glowing_bomb;
 
-import net.minecraft.block.Blocks;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.decoration.DisplayEntity;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.AffineTransformation;
 import net.minecraft.util.math.Vec3d;
-import org.joml.Matrix4f;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.map.MapBootstrap;
 import work.lclpnet.ap2.api.map.MapBootstrapFunction;
+import work.lclpnet.ap2.game.glowing_bomb.data.GbBomb;
 import work.lclpnet.ap2.game.glowing_bomb.data.GbManager;
 import work.lclpnet.ap2.impl.game.EliminationGameInstance;
 import work.lclpnet.ap2.impl.map.ServerThreadMapBootstrap;
+import work.lclpnet.ap2.impl.scene.Scene;
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker;
-import work.lclpnet.kibu.access.entity.DisplayEntityAccess;
 import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 import work.lclpnet.lobby.game.map.GameMap;
 
@@ -78,13 +74,12 @@ public class GlowingBombInstance extends EliminationGameInstance implements MapB
             return;
         }
 
-        ServerWorld world = getWorld();
+        GbBomb bomb = new GbBomb();
+        bomb.position.set(pos.getX(), pos.getY(), pos.getZ());
+        bomb.scale.set(0.4);
 
-        var display = new DisplayEntity.BlockDisplayEntity(EntityType.BLOCK_DISPLAY, world);
-        display.setPosition(pos);
-        DisplayEntityAccess.setBlockState(display, Blocks.GLOWSTONE.getDefaultState());
-        DisplayEntityAccess.setTransformation(display, new AffineTransformation(new Matrix4f().scale(0.2f)));
-
-        world.spawnEntity(display);
+        Scene scene = new Scene(getWorld());
+        scene.add(bomb);
+        scene.spawnObjects();
     }
 }
