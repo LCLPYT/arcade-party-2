@@ -5,14 +5,29 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.entity.decoration.DisplayEntity;
 import net.minecraft.server.world.ServerWorld;
 import work.lclpnet.ap2.impl.util.DisplayEntityUtil;
+import work.lclpnet.ap2.impl.util.EntityRef;
 import work.lclpnet.kibu.access.entity.DisplayEntityAccess;
 
 public class BlockDisplayObject extends Object3d implements Spawnable {
 
     private final BlockState blockState;
+    private EntityRef<DisplayEntity.BlockDisplayEntity> entityRef = null;
 
     public BlockDisplayObject(BlockState blockState) {
         this.blockState = blockState;
+    }
+
+    @Override
+    public void updateMatrixWorld() {
+        super.updateMatrixWorld();
+
+        if (entityRef != null) {
+            var display = entityRef.resolve();
+
+            if (display != null) {
+                DisplayEntityUtil.applyTransformation(display, matrixWorld);
+            }
+        }
     }
 
     @Override
@@ -22,6 +37,8 @@ public class BlockDisplayObject extends Object3d implements Spawnable {
 
         DisplayEntityUtil.applyTransformation(display, matrixWorld);
 
-        world.spawnEntity(display);
+        if (!world.spawnEntity(display)) return;
+
+        entityRef = new EntityRef<>(display);
     }
 }

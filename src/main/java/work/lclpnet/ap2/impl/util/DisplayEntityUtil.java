@@ -25,7 +25,7 @@ public class DisplayEntityUtil {
         display.setPos(position.x(), position.y(), position.z());
 
         DisplayEntityAccess.setTransformation(display, new AffineTransformation(new Matrix4f()
-                .scale((float) scale.x(), (float) scale.y(), (float) scale.z())
-                .rotate(rotation)));
+                .rotate(rotation)
+                .scale((float) scale.x(), (float) scale.y(), (float) scale.z())));
     }
 }

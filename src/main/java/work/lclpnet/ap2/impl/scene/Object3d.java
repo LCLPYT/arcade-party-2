@@ -7,12 +7,12 @@ import org.joml.Matrix4d;
 import org.joml.Quaterniond;
 import org.joml.Vector3d;
 
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Objects;
-import java.util.function.Consumer;
+import java.util.*;
 
+/**
+ * A generic 3D-Object that can be placed into a {@link Scene}.
+ * Inspired by <a href="https://github.com/mrdoob/three.js">three.js</a>.
+ */
 public class Object3d {
 
     public final Vector3d position = new Vector3d();
@@ -22,6 +22,7 @@ public class Object3d {
     public final Vector3d scale = new Vector3d(1, 1, 1);
     private final Collection<Object3d> children = new ObjectArraySet<>();
     private Object3d parent = null;
+    private int deepCount = 1;
 
     public void updateMatrix() {
         matrix.translationRotateScale(
@@ -38,7 +39,7 @@ public class Object3d {
         if (parent == null) {
             matrixWorld.set(matrix);
         } else {
-            parent.matrixWorld.mul(matrix, matrixWorld);
+            parent.matrixWorld.mulAffine(matrix, matrixWorld);
         }
 
         // update children
@@ -63,6 +64,8 @@ public class Object3d {
         boolean added = children.add(child);
         child.parent = this;
 
+        deepCount += child.deepCount;
+
         return added;
     }
 
@@ -70,6 +73,8 @@ public class Object3d {
         Objects.requireNonNull(child);
 
         child.parent = null;
+
+        deepCount -= child.deepCount;
 
         return children.remove(child);
     }
@@ -86,16 +91,40 @@ public class Object3d {
         }
     }
 
-    public void traverse(Consumer<Object3d> action) {
+    public int deepCount() {
+        return deepCount;
+    }
+
+    public Iterable<Object3d> traverse() {
+        return this::traverseIterator;
+    }
+
+    private Iterator<Object3d> traverseIterator() {
         List<Object3d> queue = new LinkedList<>();
         queue.add(this);
 
-        while (!queue.isEmpty()) {
-            Object3d obj = queue.removeFirst();
+        return new Iterator<>() {
 
-            action.accept(obj);
+            @Override
+            public boolean hasNext() {
+                return !queue.isEmpty();
+            }
 
-            queue.addAll(obj.children());
-        }
+            @Override
+            public Object3d next() {
+                Object3d obj = queue.removeFirst();
+
+                queue.addAll(obj.children());
+
+                return obj;
+            }
+        };
+    }
+
+    public Vector3d getWorldPosition() {
+        Vector3d position = new Vector3d();
+        matrix.getTranslation(position);
+
+        return position;
     }
 }
