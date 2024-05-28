@@ -4,12 +4,13 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.entity.decoration.DisplayEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.server.world.ServerWorld;
-import work.lclpnet.ap2.impl.util.DisplayEntityUtil;
+import work.lclpnet.ap2.impl.util.DisplayEntityTransformer;
 import work.lclpnet.ap2.impl.util.EntityRef;
 import work.lclpnet.kibu.access.entity.DisplayEntityAccess;
 
-public class ItemDisplayObject extends Object3d implements Spawnable {
+public class ItemDisplayObject extends Object3d implements Spawnable, Interpolatable {
 
+    private final DisplayEntityTransformer transformer = new DisplayEntityTransformer();
     private ItemStack stack;
     private EntityRef<DisplayEntity.ItemDisplayEntity> entityRef = null;
 
@@ -25,7 +26,7 @@ public class ItemDisplayObject extends Object3d implements Spawnable {
             var display = entityRef.resolve();
 
             if (display != null) {
-                DisplayEntityUtil.applyTransformation(display, matrixWorld);
+                transformer.applyTransformation(display, matrixWorld);
             }
         }
     }
@@ -35,7 +36,7 @@ public class ItemDisplayObject extends Object3d implements Spawnable {
         var display = new DisplayEntity.ItemDisplayEntity(EntityType.ITEM_DISPLAY, world);
         DisplayEntityAccess.setItemStack(display, stack);
 
-        DisplayEntityUtil.applyTransformation(display, matrixWorld);
+        transformer.applyTransformation(display, matrixWorld);
 
         if (!(world.spawnEntity(display))) return;
 
@@ -54,5 +55,14 @@ public class ItemDisplayObject extends Object3d implements Spawnable {
 
     public ItemStack getStack() {
         return stack;
+    }
+
+    @Override
+    public void updateTickRate(int tickRate) {
+        var display = entityRef.resolve();
+
+        if (display != null) {
+            DisplayEntityAccess.setInterpolationDuration(display, 1);
+        }
     }
 }

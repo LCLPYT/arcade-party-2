@@ -47,6 +47,14 @@ public class Scene {
             }
         }
 
+        for (Object3d object : objects) {
+            for (Object3d obj : object.traverse()) {
+                if (obj instanceof Interpolatable interpolatable) {
+                    interpolatable.updateTickRate(tickRate);
+                }
+            }
+        }
+
         double dt = tickRate / 20d;
         animationTask = scheduler.interval(() -> updateAnimation(dt), tickRate);
     }

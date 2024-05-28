@@ -89,7 +89,6 @@ public class GlowingBombInstance extends EliminationGameInstance implements MapB
         bomb = new GbBomb();
         bomb.scale.set(0.4);
         bomb.position.set(pos.getX(), pos.getY(), pos.getZ());
-        bomb.rotation.setAngleAxis(Math.PI / 4, 0, 1, 0);
 
         int amount = MIN_BOMB_GLOW_STONE + random.nextInt(Math.max(1, MAX_BOMB_GLOW_STONE - MIN_BOMB_GLOW_STONE + 1));
 //        bomb.setGlowStoneAmount(amount, random);
