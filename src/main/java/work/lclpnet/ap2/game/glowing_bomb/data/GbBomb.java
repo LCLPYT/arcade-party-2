@@ -6,7 +6,6 @@ import net.minecraft.item.Items;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
-import org.joml.Quaterniond;
 import org.joml.Vector3d;
 import work.lclpnet.ap2.impl.scene.*;
 
@@ -84,25 +83,20 @@ public class GbBomb extends Object3d implements Animatable {
         glowStones.forEach(this::removeChild);
         glowStones.clear();
 
-        for (int i = 0; i < amount; i++) {
-            GbGlowStone glowStone = new GbGlowStone(0.4, 0.4, Math.PI * 0.5);
-            glowStone.scale.set(0.2);
+        double incline = Math.PI / amount;
 
-            randomRotation(glowStone.rotation, random);
+        for (int i = 0; i < amount; i++) {
+            double initialAngle = random.nextDouble() * Math.PI * 2 - Math.PI;
+            double orbitSpeed = Math.PI * (random.nextDouble() * 0.4 + 0.55);
+            double rotationSpeed = Math.PI * (random.nextDouble() * 0.3 + 1.1);
+
+            GbGlowStone glowStone = new GbGlowStone(initialAngle, i * incline, orbitSpeed, rotationSpeed);
+            glowStone.scale.set(0.2);
 
             glowStones.add(glowStone);
 
             addChild(glowStone);
         }
-    }
-
-    private void randomRotation(Quaterniond rotation, Random random) {
-        rotation.set(
-                random.nextDouble() * 2 - 1,
-                random.nextDouble() * 2 - 1,
-                random.nextDouble() * 2 - 1,
-                random.nextDouble() * 2 - 1
-        ).normalize();
     }
 
     @Override

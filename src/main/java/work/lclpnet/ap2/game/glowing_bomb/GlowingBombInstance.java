@@ -64,7 +64,7 @@ public class GlowingBombInstance extends EliminationGameInstance implements MapB
         manager.teleportPlayers();
 
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
-//            movementBlocker.disableMovement(player);
+            movementBlocker.disableMovement(player);
         }
     }
 
@@ -91,7 +91,7 @@ public class GlowingBombInstance extends EliminationGameInstance implements MapB
         bomb.position.set(pos.getX(), pos.getY(), pos.getZ());
 
         int amount = MIN_BOMB_GLOW_STONE + random.nextInt(Math.max(1, MAX_BOMB_GLOW_STONE - MIN_BOMB_GLOW_STONE + 1));
-//        bomb.setGlowStoneAmount(amount, random);
+        bomb.setGlowStoneAmount(amount, random);
 
         scene = new Scene(getWorld());
         scene.add(bomb);
@@ -100,8 +100,8 @@ public class GlowingBombInstance extends EliminationGameInstance implements MapB
         TaskScheduler scheduler = gameHandle.getGameScheduler();
         scene.animate(1, scheduler);
 
-//        int fuseTicks = MIN_BOMB_FUSE_TICKS + random.nextInt(MAX_BOMB_FUSE_TICKS - MIN_BOMB_FUSE_TICKS + 1);
-//        scheduler.timeout(this::explodeBomb, fuseTicks);
+        int fuseTicks = MIN_BOMB_FUSE_TICKS + random.nextInt(MAX_BOMB_FUSE_TICKS - MIN_BOMB_FUSE_TICKS + 1);
+        scheduler.timeout(this::explodeBomb, fuseTicks);
     }
 
     private void explodeBomb() {
