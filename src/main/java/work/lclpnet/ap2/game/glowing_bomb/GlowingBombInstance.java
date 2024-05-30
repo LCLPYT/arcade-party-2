@@ -10,6 +10,7 @@ import org.joml.Vector3d;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.map.MapBootstrap;
 import work.lclpnet.ap2.api.map.MapBootstrapFunction;
+import work.lclpnet.ap2.game.glowing_bomb.data.GbAnchor;
 import work.lclpnet.ap2.game.glowing_bomb.data.GbBomb;
 import work.lclpnet.ap2.game.glowing_bomb.data.GbManager;
 import work.lclpnet.ap2.impl.game.EliminationGameInstance;
@@ -22,13 +23,14 @@ import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.lobby.game.map.GameMap;
 
 import java.util.Random;
+import java.util.UUID;
 
 public class GlowingBombInstance extends EliminationGameInstance implements MapBootstrapFunction {
 
     private static final int MIN_BOMB_GLOW_STONE = 1;
     private static final int MAX_BOMB_GLOW_STONE = 3;
-    private static final int MIN_BOMB_FUSE_TICKS = Ticks.seconds(5);
-    private static final int MAX_BOMB_FUSE_TICKS = Ticks.seconds(14);
+    private static final int MIN_BOMB_FUSE_TICKS = Ticks.seconds(7);
+    private static final int MAX_BOMB_FUSE_TICKS = Ticks.seconds(18);
     private final Random random = new Random();
     private final SimpleMovementBlocker movementBlocker;
     private GbManager manager = null;
@@ -51,7 +53,7 @@ public class GlowingBombInstance extends EliminationGameInstance implements MapB
 
     @Override
     public void bootstrapWorld(ServerWorld world, GameMap map) {
-        manager = new GbManager(world, map, random, gameHandle.getParticipants());
+        manager = new GbManager(world, map, random, gameHandle.getParticipants(), this::onAnchorFilled);
         manager.setupAnchors();
     }
 
@@ -79,21 +81,28 @@ public class GlowingBombInstance extends EliminationGameInstance implements MapB
     }
 
     private void spawnBomb() {
-        Vec3d pos = manager.randomBombLocation();
-
-        if (pos == null) {
-            winManager.checkForWinner(gameHandle.getParticipants().stream(), resolver);
+        if (!manager.assignBomb()) {
+            checkForWinner();
             return;
         }
 
-        bomb = new GbBomb();
+        Vec3d pos = manager.bombLocation();
+
+        if (pos == null) {
+            checkForWinner();
+            return;
+        }
+
+        bomb = new GbBomb(this::onBombYielded);
         bomb.scale.set(0.4);
         bomb.position.set(pos.getX(), pos.getY(), pos.getZ());
 
         int amount = MIN_BOMB_GLOW_STONE + random.nextInt(Math.max(1, MAX_BOMB_GLOW_STONE - MIN_BOMB_GLOW_STONE + 1));
         bomb.setGlowStoneAmount(amount, random);
 
-        scene = new Scene(getWorld());
+        ServerWorld world = getWorld();
+
+        scene = new Scene(world);
         scene.add(bomb);
         scene.spawnObjects();
 
@@ -101,17 +110,83 @@ public class GlowingBombInstance extends EliminationGameInstance implements MapB
         scene.animate(1, scheduler);
 
         int fuseTicks = MIN_BOMB_FUSE_TICKS + random.nextInt(MAX_BOMB_FUSE_TICKS - MIN_BOMB_FUSE_TICKS + 1);
-        scheduler.timeout(this::explodeBomb, fuseTicks);
+        scheduler.timeout(this::bombTimerExpired, fuseTicks);
+
+        double x = pos.getX(), y = pos.getY(), z = pos.getZ();
+
+        world.playSound(null, x, y, z, SoundEvents.ITEM_TRIDENT_RETURN, SoundCategory.HOSTILE, 0.75f, 0.5f);
+        world.spawnParticles(ParticleTypes.REVERSE_PORTAL, x, y, z, 15, 0.1, 0.1, 0.1, 0.2);
     }
 
-    private void explodeBomb() {
-        scene.stopAnimation();  // TODO start explode animation
+    private void bombTimerExpired() {
+        ServerWorld world = getWorld();
+        Vector3d pos = bomb.worldPosition();
+        double x = pos.x(), y = pos.y(), z = pos.z();
+
+        world.playSound(null, x, y, z, SoundEvents.BLOCK_RESPAWN_ANCHOR_DEPLETE.value(), SoundCategory.HOSTILE, 0.9f, 1.0f);
+        world.spawnParticles(ParticleTypes.FLASH, x, y, z, 1, 0, 0, 0, 1);
+        world.spawnParticles(ParticleTypes.SMALL_FLAME, x, y, z, 20, 0.1, 0.1, 0.1, 0.1);
+
+        GbAnchor anchor = manager.bombAnchor();
+
+        if (anchor == null) {
+            checkForWinnerOrNext();
+            return;
+        }
+
+        bomb.yieldGlowStone(manager, anchor);
+    }
+
+    private void checkForWinnerOrNext() {
+        if (gameHandle.getParticipants().count() < 2) {
+            checkForWinner();
+            return;
+        }
+
+        delayNextBomb();
+    }
+
+    private void delayNextBomb() {
+        gameHandle.getGameScheduler().timeout(this::spawnBomb, Ticks.seconds(4));
+    }
+
+    private void checkForWinner() {
+        winManager.checkForWinner(gameHandle.getParticipants().stream(), resolver);
+    }
+
+    private void onBombYielded() {
+        delayNextBomb();
+    }
+
+    private void onAnchorFilled(GbAnchor anchor) {
+        gameHandle.getGameScheduler().timeout(() -> explodeAnchor(anchor), 30);
+    }
+
+    private void explodeAnchor(GbAnchor anchor) {
+        if (winManager.isGameOver()) return;
 
         ServerWorld world = getWorld();
-        Vector3d pos = bomb.getWorldPosition();
-        double x = pos.x(), y = pos.y(), z = pos.z();
+
+        Vec3d pos = anchor.pos();
+        double x = pos.getX() + 0.5, y = pos.getY() + 0.5, z = pos.getZ() + 0.5;
 
         world.spawnParticles(ParticleTypes.EXPLOSION, x, y, z, 200, 1, 1, 1, 0.5);
         world.playSound(null, x, y, z, SoundEvents.ENTITY_GENERIC_EXPLODE.value(), SoundCategory.HOSTILE, 0.9f, 1.2f);
+
+        manager.removeAnchor(anchor);
+
+        UUID owner = anchor.owner();
+        ServerPlayerEntity player = gameHandle.getServer().getPlayerManager().getPlayer(owner);
+
+        if (player == null) {
+            checkForWinnerOrNext();
+            return;
+        }
+
+        eliminate(player);
+
+        if (winManager.isGameOver()) return;
+
+        delayNextBomb();
     }
 }

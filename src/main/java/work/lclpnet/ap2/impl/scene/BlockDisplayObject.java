@@ -4,6 +4,7 @@ import net.minecraft.block.BlockState;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.decoration.DisplayEntity;
 import net.minecraft.server.world.ServerWorld;
+import work.lclpnet.ap2.impl.scene.animation.Interpolatable;
 import work.lclpnet.ap2.impl.util.DisplayEntityTransformer;
 import work.lclpnet.ap2.impl.util.EntityRef;
 import work.lclpnet.kibu.access.entity.DisplayEntityAccess;
@@ -19,8 +20,8 @@ public class BlockDisplayObject extends Object3d implements Spawnable, Interpola
     }
 
     @Override
-    public void updateMatrixWorld() {
-        super.updateMatrixWorld();
+    public void updateMatrixWorld(boolean withParent, boolean withChildren) {
+        super.updateMatrixWorld(withParent, withChildren);
 
         if (entityRef != null) {
             var display = entityRef.resolve();

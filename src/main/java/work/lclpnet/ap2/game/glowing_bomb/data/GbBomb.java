@@ -6,8 +6,14 @@ import net.minecraft.item.Items;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
+import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3d;
-import work.lclpnet.ap2.impl.scene.*;
+import work.lclpnet.ap2.impl.scene.BlockDisplayObject;
+import work.lclpnet.ap2.impl.scene.ItemDisplayObject;
+import work.lclpnet.ap2.impl.scene.Object3d;
+import work.lclpnet.ap2.impl.scene.animation.Animatable;
+import work.lclpnet.ap2.impl.scene.animation.Animation;
+import work.lclpnet.ap2.impl.scene.animation.AnimationContext;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,24 +21,18 @@ import java.util.Random;
 
 public class GbBomb extends Object3d implements Animatable {
 
-    private static final double PARTICLE_PERIOD_SECONDS = 0.2;
-    private static final double BEEP_DELAY_SECONDS = 1.3;
-    private static final double LAMP_DURATION_SECONDS = 0.45;
-    private static final double ROTATION_SPEED = Math.PI / 6;
-    private static final double HOVER_SPEED = 0.15;
-    private static final double HOVER_AMPLITUDE = 0.15;
+    private final Runnable onYielded;
     private final ItemStack lampActiveStack = new ItemStack(Items.REDSTONE_TORCH);
     private final ItemStack lampInactiveStack = new ItemStack(Items.LEVER);
     private final List<GbGlowStone> glowStones = new ArrayList<>();
     private final ItemDisplayObject lever;
-    private double particleTime = 0;
-    private double beepTime = 0;
-    private double lampTime = 0;
-    private double rotationY = 0;
-    private int hoverDirection = 1;
-    private double elevation = 0;
+    private final Animation idleAnimation = new Animation(new IdleAnimation()).running();
+    @Nullable
+    private Animation yieldAnimation = null;
 
-    public GbBomb() {
+    public GbBomb(Runnable onYielded) {
+        this.onYielded = onYielded;
+
         double v = 0.0625;
         double w = 1.125;
 
@@ -90,7 +90,7 @@ public class GbBomb extends Object3d implements Animatable {
             double orbitSpeed = Math.PI * (random.nextDouble() * 0.4 + 0.55);
             double rotationSpeed = Math.PI * (random.nextDouble() * 0.3 + 1.1);
 
-            GbGlowStone glowStone = new GbGlowStone(initialAngle, i * incline, orbitSpeed, rotationSpeed);
+            GbGlowStone glowStone = new GbGlowStone(this::detach, initialAngle, i * incline, orbitSpeed, rotationSpeed);
             glowStone.scale.set(0.2);
 
             glowStones.add(glowStone);
@@ -101,54 +101,124 @@ public class GbBomb extends Object3d implements Animatable {
 
     @Override
     public void updateAnimation(double dt, AnimationContext ctx) {
-        particleTime += dt;
-        beepTime += dt;
+        idleAnimation.updateAnimation(dt, ctx);
 
-        if (particleTime >= PARTICLE_PERIOD_SECONDS) {
-            particleTime -= PARTICLE_PERIOD_SECONDS;
-
-            Vector3d fusePos = new Vector3d(0, 0.65, 0);
-            matrixWorld.transformPosition(fusePos);
-
-            ctx.world().spawnParticles(ParticleTypes.SMOKE, fusePos.x(), fusePos.y(), fusePos.z(), 0, 0, 1, 0, 0.05);
+        if (yieldAnimation != null) {
+            yieldAnimation.updateAnimation(dt, ctx);
         }
+    }
 
-        if (lever.getStack() == lampActiveStack) {
-            lampTime += dt;
+    private void detach(GbGlowStone glowStone) {
+        removeChild(glowStone);
 
-            if (lampTime >= LAMP_DURATION_SECONDS) {
-                lampTime -= LAMP_DURATION_SECONDS;
+        if (glowStones.remove(glowStone) && glowStones.isEmpty()) {
+            onYielded.run();
+        }
+    }
 
-                lever.setStack(lampInactiveStack);
+    public void yieldGlowStone(GbManager manager, GbAnchor anchor) {
+        idleAnimation.stop();
+
+        yieldAnimation = new Animation(new YieldAnimation(manager, anchor));
+        yieldAnimation.start();
+    }
+
+    private class IdleAnimation implements Animatable {
+
+        private static final double PARTICLE_PERIOD_SECONDS = 0.2;
+        private static final double BEEP_DELAY_SECONDS = 1.3;
+        private static final double LAMP_DURATION_SECONDS = 0.45;
+        private static final double ROTATION_SPEED = Math.PI / 6;
+        private static final double HOVER_SPEED = 0.15;
+        private static final double HOVER_AMPLITUDE = 0.15;
+
+        private double particleTime = 0;
+        private double beepTime = 0;
+        private double lampTime = 0;
+        private double rotationY = 0;
+        private int hoverDirection = 1;
+        private double elevation = 0;
+
+        @Override
+        public void updateAnimation(double dt, AnimationContext ctx) {
+            particleTime += dt;
+            beepTime += dt;
+
+            if (particleTime >= PARTICLE_PERIOD_SECONDS) {
+                particleTime -= PARTICLE_PERIOD_SECONDS;
+
+                Vector3d fusePos = new Vector3d(0, 0.65, 0);
+                matrixWorld.transformPosition(fusePos);
+
+                ctx.world().spawnParticles(ParticleTypes.SMOKE, fusePos.x(), fusePos.y(), fusePos.z(), 0, 0, 1, 0, 0.05);
             }
+
+            if (lever.getStack() == lampActiveStack) {
+                lampTime += dt;
+
+                if (lampTime >= LAMP_DURATION_SECONDS) {
+                    lampTime -= LAMP_DURATION_SECONDS;
+
+                    lever.setStack(lampInactiveStack);
+                }
+            }
+
+            if (beepTime >= BEEP_DELAY_SECONDS) {
+                beepTime -= BEEP_DELAY_SECONDS;
+
+                lever.setStack(lampActiveStack);
+
+                Vector3d pos = new Vector3d(0, 0, 0);
+                matrixWorld.transformPosition(pos);
+
+                ctx.world().playSound(null, pos.x(), pos.y(), pos.z(), SoundEvents.ITEM_LODESTONE_COMPASS_LOCK, SoundCategory.PLAYERS, 0.75f, 1);
+            }
+
+            rotationY = (rotationY + ROTATION_SPEED * dt) % (Math.PI * 2);
+
+            if (rotationY >= Math.PI) {
+                rotationY -= Math.PI * 2;
+            }
+
+            rotation.setAngleAxis(rotationY, 0, 1, 0);
+
+            double prevElevation = elevation;
+            elevation = Math.max(-HOVER_AMPLITUDE, Math.min(HOVER_AMPLITUDE, elevation + hoverDirection * HOVER_SPEED * dt));
+
+            if (elevation <= -HOVER_AMPLITUDE || elevation >= HOVER_AMPLITUDE) {
+                hoverDirection *= -1;
+            }
+
+            position.setComponent(1, position.get(1) - prevElevation + elevation);
+        }
+    }
+
+    private class YieldAnimation implements Animatable {
+
+        private static final double YIELD_DELAY_SECONDS = 0.75;
+
+        private final GbManager manager;
+        private final GbAnchor anchor;
+        private double yieldDelay = YIELD_DELAY_SECONDS;
+        private int yielded = 0;
+
+        private YieldAnimation(GbManager manager, GbAnchor anchor) {
+            this.manager = manager;
+            this.anchor = anchor;
         }
 
-        if (beepTime >= BEEP_DELAY_SECONDS) {
-            beepTime -= BEEP_DELAY_SECONDS;
+        @Override
+        public void updateAnimation(double dt, AnimationContext ctx) {
+            yieldDelay -= dt;
 
-            lever.setStack(lampActiveStack);
+            if (yieldDelay > 0) return;
 
-            Vector3d pos = new Vector3d(0, 0, 0);
-            matrixWorld.transformPosition(pos);
+            yieldDelay += YIELD_DELAY_SECONDS;
 
-            ctx.world().playSound(null, pos.x(), pos.y(), pos.z(), SoundEvents.ITEM_LODESTONE_COMPASS_LOCK, SoundCategory.PLAYERS, 0.75f, 1);
+            if (yielded >= glowStones.size()) return;
+
+            GbGlowStone glowStone = glowStones.get(yielded++);
+            glowStone.yieldInto(anchor, manager);
         }
-
-        rotationY = (rotationY + ROTATION_SPEED * dt) % (Math.PI * 2);
-
-        if (rotationY >= Math.PI) {
-            rotationY -= Math.PI * 2;
-        }
-
-        rotation.setAngleAxis(rotationY, 0, 1, 0);
-
-        double prevElevation = elevation;
-        elevation = Math.max(-HOVER_AMPLITUDE, Math.min(HOVER_AMPLITUDE, elevation + hoverDirection * HOVER_SPEED * dt));
-
-        if (elevation <= -HOVER_AMPLITUDE || elevation >= HOVER_AMPLITUDE) {
-            hoverDirection *= -1;
-        }
-
-        position.setComponent(1, position.get(1) - prevElevation + elevation);
     }
 }

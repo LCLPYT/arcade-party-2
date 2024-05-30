@@ -1,6 +1,9 @@
 package work.lclpnet.ap2.impl.scene;
 
 import net.minecraft.server.world.ServerWorld;
+import work.lclpnet.ap2.impl.scene.animation.Animatable;
+import work.lclpnet.ap2.impl.scene.animation.AnimationContext;
+import work.lclpnet.ap2.impl.scene.animation.Interpolatable;
 import work.lclpnet.kibu.scheduler.api.TaskHandle;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 

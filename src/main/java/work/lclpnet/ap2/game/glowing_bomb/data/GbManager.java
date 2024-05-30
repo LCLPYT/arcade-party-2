@@ -4,8 +4,11 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.decoration.DisplayEntity;
+import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.Nullable;
@@ -19,6 +22,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 public class GbManager {
 
@@ -26,14 +30,17 @@ public class GbManager {
     private final GameMap map;
     private final Random random;
     private final Participants participants;
+    private final Consumer<GbAnchor> onFull;
     private final Map<UUID, GbAnchor> anchors = new HashMap<>();
     private Vec3d circleCenter = null;
+    private UUID bombHolder = null;
 
-    public GbManager(ServerWorld world, GameMap map, Random random, Participants participants) {
+    public GbManager(ServerWorld world, GameMap map, Random random, Participants participants, Consumer<GbAnchor> onFull) {
         this.world = world;
         this.map = map;
         this.random = random;
         this.participants = participants;
+        this.onFull = onFull;
     }
 
     public void setupAnchors() {
@@ -62,7 +69,7 @@ public class GbManager {
 
             world.spawnEntity(display);
 
-            anchors.put(player.getUuid(), new GbAnchor(pos, display));
+            anchors.put(player.getUuid(), new GbAnchor(player.getUuid(), pos, display));
         }
     }
 
@@ -102,11 +109,60 @@ public class GbManager {
         player.teleport(world, pos.getX(), pos.getY(), pos.getZ(), yaw, 0);
     }
 
+    public boolean assignBomb() {
+        var holder = participants.getRandomParticipant(random);
+
+        if (holder.isEmpty()) return false;
+
+        bombHolder = holder.get().getUuid();
+
+        return true;
+    }
+
     @Nullable
-    public Vec3d randomBombLocation() {
-        return participants.getRandomParticipant(random)
-                .map(player -> anchors.get(player.getUuid()))
-                .map(anchor -> anchor.pos().add(0.5, 1.5, 0.5))
-                .orElse(null);
+    public Vec3d bombLocation() {
+        if (bombHolder == null || !participants.isParticipating(bombHolder)) return null;
+
+        GbAnchor anchor = anchors.get(bombHolder);
+
+        if (anchor == null) return null;
+
+        return anchor.pos().add(0.5, 1.5, 0.5);
+    }
+
+    @Nullable
+    public GbAnchor bombAnchor() {
+        if (bombHolder == null || !participants.isParticipating(bombHolder)) return null;
+
+        return anchors.get(bombHolder);
+    }
+
+    public void addCharge(GbAnchor anchor) {
+        Vec3d pos = anchor.pos();
+        double x = pos.getX() + 0.5, y = pos.getY() + 0.5, z = pos.getZ() + 0.5;
+
+        int charges = anchor.charges();
+
+        if (charges >= 4) {
+            // already full
+            world.playSound(null, x, y, z, SoundEvents.BLOCK_GLASS_BREAK, SoundCategory.PLAYERS, 0.5f, 1.5f);
+            return;
+        }
+
+        anchor.setCharges(charges + 1);
+
+        world.spawnParticles(ParticleTypes.WITCH, x, y, z, 30, 0.1, 0.1, 0.1, 0.5);
+
+        float pitch = charges < 3 ? 1.0f : 1.1f;
+        world.playSound(null, x, y, z, SoundEvents.BLOCK_RESPAWN_ANCHOR_CHARGE, SoundCategory.PLAYERS, 1, pitch);
+
+        if (charges == 3) {
+            onFull.accept(anchor);
+        }
+    }
+
+    public void removeAnchor(GbAnchor anchor) {
+        anchors.remove(anchor.owner());
+        anchor.discard();
     }
 }

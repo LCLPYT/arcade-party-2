@@ -32,6 +32,14 @@ public class Object3d {
     }
 
     public void updateMatrixWorld() {
+        updateMatrixWorld(false, true);
+    }
+
+    public void updateMatrixWorld(boolean withParent, boolean withChildren) {
+        if (withParent && parent != null) {
+            parent.updateMatrixWorld(true, false);
+        }
+
         // update local matrix
         this.updateMatrix();
 
@@ -42,9 +50,11 @@ public class Object3d {
             parent.matrixWorld.mulAffine(matrix, matrixWorld);
         }
 
+        if (!withChildren) return;
+
         // update children
         for (Object3d child : children) {
-            child.updateMatrixWorld();
+            child.updateMatrixWorld(false, true);
         }
     }
 
@@ -121,10 +131,38 @@ public class Object3d {
         };
     }
 
-    public Vector3d getWorldPosition() {
-        Vector3d position = new Vector3d();
-        matrix.getTranslation(position);
+    public Vector3d worldPosition() {
+        updateMatrixWorld(true, false);
 
-        return position;
+        return matrixWorld.getTranslation(new Vector3d());
+    }
+
+    public Vector3d worldPosition(Vector3d local) {
+        updateMatrixWorld(true, false);
+
+        return matrixWorld.transformPosition(local);
+    }
+
+    public Vector3d localPosition(Vector3d world) {
+        updateMatrixWorld(true, false);
+
+        return new Matrix4d(matrixWorld)
+                .invertAffine()
+                .transformPosition(world);
+    }
+
+    /**
+     * Set this object to a position in world coordinates.
+     * Does not mutate the given position.
+     * @param pos The position in world / global coordinates.
+     */
+    public void setWorldPosition(Vector3d pos) {
+        position.set(pos);
+
+        Object3d parent = parent();
+
+        if (parent != null) {
+            parent.localPosition(position);
+        }
     }
 }

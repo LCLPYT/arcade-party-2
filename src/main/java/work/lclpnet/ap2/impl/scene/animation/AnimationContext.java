@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.impl.scene;
+package work.lclpnet.ap2.impl.scene.animation;
 
 import net.minecraft.server.world.ServerWorld;
 
