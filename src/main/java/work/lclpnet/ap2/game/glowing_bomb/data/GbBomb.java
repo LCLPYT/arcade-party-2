@@ -101,6 +101,10 @@ public class GbBomb extends Object3d implements Animatable {
         }
     }
 
+    public int getGlowStoneAmount() {
+        return glowStones.size();
+    }
+
     @Override
     public void updateAnimation(double dt, AnimationContext ctx) {
         idleAnimation.updateAnimation(dt, ctx);

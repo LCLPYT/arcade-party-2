@@ -203,5 +203,7 @@
   "game.ap2.splashy_dropper.description": "Drop into pools of water. You earn points depending on the size of the pool you land in. Pools disappear when someone lands in them.",
   "game.ap2.splashy_dropper.task": "Land in water pools",
   "game.ap2.glowing_bomb": "Glowing Bomb",
-  "game.ap2.glowing_bomb.description": "A glowstone bomb is passed between the players. If it explodes while you have it, glowstone will be put into your respawn anchor. You are eliminated if your respawn anchor is full!"
+  "game.ap2.glowing_bomb.description": "A glowstone bomb is passed between the players. If it explodes while you have it, glowstone will be put into your respawn anchor. You are eliminated if your respawn anchor is full!",
+  "game.ap2.glowing_bomb.task": "Pass the bomb around",
+  "game.ap2.glowing_bomb.pass": "Pass the bomb"
 }

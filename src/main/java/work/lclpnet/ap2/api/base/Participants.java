@@ -38,7 +38,13 @@ public interface Participants extends Iterable<ServerPlayerEntity> {
             return Optional.empty();
         }
 
-        return getAsSet().stream().skip(random.nextInt(count)).findFirst();
+        return stream().skip(random.nextInt(count)).findFirst();
+    }
+
+    default Optional<ServerPlayerEntity> getParticipant(UUID uuid) {
+        return stream()
+                .filter(player -> player.getUuid().equals(uuid))
+                .findAny();
     }
 
     default Stream<ServerPlayerEntity> stream() {

@@ -18,10 +18,7 @@ import work.lclpnet.ap2.impl.util.world.CircleStructureGenerator;
 import work.lclpnet.kibu.access.entity.DisplayEntityAccess;
 import work.lclpnet.lobby.game.map.GameMap;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Consumer;
 
 public class GbManager {
@@ -31,9 +28,11 @@ public class GbManager {
     private final Random random;
     private final Participants participants;
     private final Consumer<GbAnchor> onFull;
+    private final List<UUID> orderedPlayers = new ArrayList<>();
     private final Map<UUID, GbAnchor> anchors = new HashMap<>();
     private Vec3d circleCenter = null;
     private UUID bombHolder = null;
+    private int playerIndex = -1;
 
     public GbManager(ServerWorld world, GameMap map, Random random, Participants participants, Consumer<GbAnchor> onFull) {
         this.world = world;
@@ -69,7 +68,9 @@ public class GbManager {
 
             world.spawnEntity(display);
 
-            anchors.put(player.getUuid(), new GbAnchor(player.getUuid(), pos, display));
+            UUID uuid = player.getUuid();
+            anchors.put(uuid, new GbAnchor(uuid, pos, display));
+            orderedPlayers.add(uuid);
         }
     }
 
@@ -110,7 +111,11 @@ public class GbManager {
     }
 
     public boolean assignBomb() {
-        var holder = participants.getRandomParticipant(random);
+        if (orderedPlayers.isEmpty()) return false;
+
+        playerIndex = random.nextInt(orderedPlayers.size());
+
+        var holder = participants.getParticipant(orderedPlayers.get(playerIndex));
 
         if (holder.isEmpty()) return false;
 
@@ -135,6 +140,10 @@ public class GbManager {
         if (bombHolder == null || !participants.isParticipating(bombHolder)) return null;
 
         return anchors.get(bombHolder);
+    }
+
+    public Optional<ServerPlayerEntity> bombHolder() {
+        return Optional.ofNullable(bombHolder).flatMap(participants::getParticipant);
     }
 
     public void addCharge(GbAnchor anchor) {
@@ -162,7 +171,40 @@ public class GbManager {
     }
 
     public void removeAnchor(GbAnchor anchor) {
-        anchors.remove(anchor.owner());
+        UUID uuid = anchor.owner();
+        orderedPlayers.remove(uuid);
+        anchors.remove(uuid);
         anchor.discard();
+    }
+
+    public void removeAnchorOf(ServerPlayerEntity player) {
+        UUID uuid = player.getUuid();
+        orderedPlayers.remove(uuid);
+        GbAnchor anchor = anchors.remove(uuid);
+
+        if (anchor != null) {
+            anchor.discard();
+        }
+    }
+
+    public boolean hasBomb(ServerPlayerEntity player) {
+        return player.getUuid().equals(bombHolder);
+    }
+
+    @Nullable
+    public ServerPlayerEntity nextBombHolder() {
+        if (orderedPlayers.isEmpty()) return null;
+
+        int nextIndex = (playerIndex + 1) % orderedPlayers.size();
+        UUID uuid = orderedPlayers.get(nextIndex);
+
+        var holder = participants.getParticipant(uuid);
+
+        if (holder.isEmpty()) return null;
+
+        bombHolder = uuid;
+        playerIndex = nextIndex;
+
+        return holder.get();
     }
 }
