@@ -27,6 +27,7 @@ import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 import work.lclpnet.kibu.scheduler.Ticks;
+import work.lclpnet.kibu.scheduler.api.TaskHandle;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.lobby.game.map.GameMap;
 
@@ -45,6 +46,7 @@ public class GlowingBombInstance extends EliminationGameInstance implements MapB
     private Scene scene = null;
     private GbBomb bomb = null;
     private boolean mayPass = false;
+    private TaskHandle bombDelayedSpawn = null;
 
     public GlowingBombInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
@@ -92,7 +94,7 @@ public class GlowingBombInstance extends EliminationGameInstance implements MapB
             }
 
             if (serverPlayer.getStackInHand(hand).isOf(Items.GLOWSTONE)) {
-                if (manager.hasBomb(serverPlayer)) {
+                if (manager.hasBomb(serverPlayer) && !player.getItemCooldownManager().isCoolingDown(Items.GLOWSTONE)) {
                     passBomb(serverPlayer);
                 }
 
@@ -163,6 +165,8 @@ public class GlowingBombInstance extends EliminationGameInstance implements MapB
 
         player.getInventory().setStack(4, stack);
         PlayerInventoryAccess.setSelectedSlot(player, 4);
+
+        player.getItemCooldownManager().set(Items.GLOWSTONE, 10);
     }
 
     private void onPassedBomb(ServerPlayerEntity player) {
@@ -226,7 +230,11 @@ public class GlowingBombInstance extends EliminationGameInstance implements MapB
     }
 
     private void delayNextBomb() {
-        gameHandle.getGameScheduler().timeout(this::spawnBomb, Ticks.seconds(4));
+        if (bombDelayedSpawn != null) {
+            bombDelayedSpawn.cancel();
+        }
+
+        bombDelayedSpawn = gameHandle.getGameScheduler().timeout(this::spawnBomb, Ticks.seconds(4));
     }
 
     private void checkForWinner() {
@@ -243,6 +251,7 @@ public class GlowingBombInstance extends EliminationGameInstance implements MapB
             world.spawnParticles(ParticleTypes.SMALL_FLAME, x, y, z, 20, 0.1, 0.1, 0.1, 0.1);
 
             scene.remove(bomb);
+            bomb = null;
         }
 
         delayNextBomb();

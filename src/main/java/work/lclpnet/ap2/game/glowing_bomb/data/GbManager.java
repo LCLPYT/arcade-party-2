@@ -195,7 +195,7 @@ public class GbManager {
     public ServerPlayerEntity nextBombHolder() {
         if (orderedPlayers.isEmpty()) return null;
 
-        int nextIndex = (playerIndex + 1) % orderedPlayers.size();
+        int nextIndex = Math.floorMod(playerIndex - 1,  orderedPlayers.size());
         UUID uuid = orderedPlayers.get(nextIndex);
 
         var holder = participants.getParticipant(uuid);
