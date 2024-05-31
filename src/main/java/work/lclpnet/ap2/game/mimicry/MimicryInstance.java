@@ -13,6 +13,7 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.map.MapBootstrap;
 import work.lclpnet.ap2.game.mimicry.data.MimicryManager;
@@ -105,6 +106,26 @@ public class MimicryInstance extends EliminationGameInstance implements MapBoots
 
         world.playSound(null, x, y, z, SoundEvents.ENTITY_GENERIC_EXPLODE.value(), SoundCategory.PLAYERS, 1f, 0f);
         world.spawnParticles(ParticleTypes.LAVA, x, y, z, 100, 0.5, 0.5, 0.5, 0.2);
+
+        putScoreDetail(player);
+    }
+
+    @Override
+    public void participantRemoved(ServerPlayerEntity player) {
+        Participants participants = gameHandle.getParticipants();
+
+        if (participants.count() == 1) {
+            participants.stream().findAny().ifPresent(this::putScoreDetail);
+        }
+
+        super.participantRemoved(player);
+    }
+
+    private void putScoreDetail(ServerPlayerEntity player) {
+        int count = manager.getCompletedCount(player);
+
+        var detail = gameHandle.getTranslations().translateText("game.ap2.mimicry.completed", count);
+        getData().eliminated(player, detail);
     }
 
     private ActionResult onUseBlock(PlayerEntity player, World world, Hand hand, BlockHitResult hitResult) {
@@ -173,13 +194,17 @@ public class MimicryInstance extends EliminationGameInstance implements MapBoots
     private void endReplay() {
         timer = null;
 
-        manager.setReplay(false);
-
         eliminateAll(manager.getPlayersToEliminate());
+
+        onRoundOver();
 
         if (winManager.isGameOver()) return;
 
         gameHandle.getGameScheduler().timeout(this::nextSequence, Ticks.seconds(NEXT_ROUND_DELAY_SECONDS));
+    }
+
+    private void onRoundOver() {
+        manager.setReplay(false);
     }
 
     private int calcReplaySeconds() {
@@ -192,7 +217,7 @@ public class MimicryInstance extends EliminationGameInstance implements MapBoots
             timer.stop();
         }
 
-        manager.setReplay(false);
+        onRoundOver();
 
         gameHandle.getGameScheduler().timeout(this::nextSequence, 30);
     }

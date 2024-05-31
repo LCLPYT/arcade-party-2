@@ -9,11 +9,11 @@ public class CooldownMovementBlocker implements MovementBlocker {
 
     private final Cooldown cooldown;
     private final MovementListener movement = new MovementListener(this);
-    private boolean modifyAttributes = true;
+    private boolean modifySpeedAttribute = true;
 
     public CooldownMovementBlocker(TaskScheduler scheduler) {
         this.cooldown = new Cooldown(scheduler);
-        this.cooldown.setOnCooldownOver(this::onCooldownOver);
+        this.cooldown.setOnCooldownOver(this::resetAttributes);
     }
 
     @Override
@@ -30,9 +30,7 @@ public class CooldownMovementBlocker implements MovementBlocker {
     public void disableMovement(ServerPlayerEntity player, int durationTicks) {
         if (durationTicks <= 0) return;
 
-        if (modifyAttributes) {
-            MovementListener.modifyAttributes(player);
-        }
+        applyAttributes(player);
 
         cooldown.setCooldown(player, durationTicks);
     }
@@ -43,18 +41,28 @@ public class CooldownMovementBlocker implements MovementBlocker {
     }
 
     @Override
-    public void setModifyAttributes(boolean modifyAttributes) {
-        this.modifyAttributes = modifyAttributes;
+    public void setModifySpeedAttribute(boolean modifySpeedAttribute) {
+        this.modifySpeedAttribute = modifySpeedAttribute;
     }
 
     @Override
-    public boolean isModifyingAttributes() {
-        return modifyAttributes;
+    public boolean shouldModifySpeedAttribute() {
+        return modifySpeedAttribute;
     }
 
-    private void onCooldownOver(ServerPlayerEntity player) {
-        if (modifyAttributes) {
-            MovementListener.resetAttributes(player);
+    private void applyAttributes(ServerPlayerEntity player) {
+        if (modifySpeedAttribute) {
+            MovementListener.modifySpeedAttribute(player);
         }
+
+        MovementListener.modifyJumpAttribute(player);
+    }
+
+    private void resetAttributes(ServerPlayerEntity player) {
+        if (modifySpeedAttribute) {
+            MovementListener.resetSpeedAttributes(player);
+        }
+
+        MovementListener.resetJumpAttributes(player);
     }
 }

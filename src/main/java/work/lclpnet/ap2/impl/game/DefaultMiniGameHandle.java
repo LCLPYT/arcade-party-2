@@ -11,6 +11,7 @@ import work.lclpnet.activity.manager.ActivityManager;
 import work.lclpnet.activity.util.BossBarHandler;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.base.WorldBorderManager;
+import work.lclpnet.ap2.api.data.DataManager;
 import work.lclpnet.ap2.api.game.GameInfo;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.team.TeamConfig;
@@ -122,7 +123,7 @@ public class DefaultMiniGameHandle implements MiniGameHandle, Unloadable, WorldB
 
     @Override
     public TranslationService getTranslations() {
-        return args.container().translationService();
+        return args.container().translations();
     }
 
     @Override
@@ -178,6 +179,11 @@ public class DefaultMiniGameHandle implements MiniGameHandle, Unloadable, WorldB
         }
 
         return deathMessages;
+    }
+
+    @Override
+    public DataManager getDataManager() {
+        return args.container().dataManager();
     }
 
     @Override

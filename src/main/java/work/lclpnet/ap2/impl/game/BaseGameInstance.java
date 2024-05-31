@@ -16,6 +16,7 @@ import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
+import work.lclpnet.ap2.api.data.DataManager;
 import work.lclpnet.ap2.api.game.GameInfo;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.MiniGameInstance;
@@ -40,11 +41,15 @@ import work.lclpnet.kibu.title.Title;
 import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.kibu.translate.bossbar.BossBarProvider;
 import work.lclpnet.kibu.translate.bossbar.TranslatedBossBar;
+import work.lclpnet.kibu.translate.text.TextTranslatable;
 import work.lclpnet.lobby.game.api.WorldFacade;
 import work.lclpnet.lobby.game.map.GameMap;
 import work.lclpnet.lobby.game.util.ProtectorUtils;
 
+import java.util.stream.Collectors;
+
 import static net.minecraft.util.Formatting.*;
+import static work.lclpnet.ap2.impl.util.TranslationUtil.quote;
 
 public abstract class BaseGameInstance implements MiniGameInstance {
 
@@ -107,6 +112,8 @@ public abstract class BaseGameInstance implements MiniGameInstance {
 
         resetPlayers();
 
+        sendMapCredits();
+
         prepare();
 
         int initialDelay = getInitialDelay();
@@ -114,6 +121,23 @@ public abstract class BaseGameInstance implements MiniGameInstance {
         scheduleCountdown(initialDelay);
 
         gameHandle.getGameScheduler().timeout(this::afterInitialDelay, initialDelay);
+    }
+
+    private void sendMapCredits() {
+        if (map == null) return;
+
+        DataManager dataManager = gameHandle.getDataManager();
+
+        TextTranslatable name = quote(lang -> Text.literal(map.getName(lang)).formatted(AQUA, BOLD));
+
+        Text authors = Text.literal(map.getAuthors().stream()
+                        .map(dataManager::string)
+                        .collect(Collectors.joining(", ")))
+                .formatted(YELLOW, BOLD);
+
+        gameHandle.getTranslations().translateText("ap2.map.by", name, authors)
+                .formatted(GREEN, BOLD)
+                .sendTo(getWorld().getPlayers());
     }
 
     private void scheduleCountdown(int durationTicks) {

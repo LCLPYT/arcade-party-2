@@ -31,7 +31,7 @@ import java.util.Random;
 public class BlockDissolveInstance extends EliminationGameInstance {
 
     public static final int SNOWBALL_SECONDS = 6;
-    private static final int MAX_SNOWBALLS = 6, WARNING_DELAY_TICKS = 70, WARNING_PERIOD_TICKS = 5, WARNING_AMOUNT = 100;
+    private static final int MAX_SNOWBALLS = 6, WARNING_DELAY_TICKS = 70, WARNING_PERIOD_TICKS = 5, WARNING_AMOUNT = 150;
     private final LongList markedBlocks = new LongArrayList();
     private final Random random = new Random();
     private int nextSnowball = Ticks.seconds(3), tickOfSecond = 0, extraDissolvedThisSecond = 0,
@@ -123,11 +123,11 @@ public class BlockDissolveInstance extends EliminationGameInstance {
         boolean changeDps;
 
         if (dps < 20) {
-            changeDps = totalTime % 50 == 0;
+            changeDps = totalTime % 45 == 0;
         } else if (dps < 30) {
-            changeDps = totalTime % 70 == 0;
+            changeDps = totalTime % 60 == 0;
         } else {
-            changeDps = totalTime % 100 == 0;
+            changeDps = totalTime % 85 == 0;
         }
 
         if (changeDps) {
