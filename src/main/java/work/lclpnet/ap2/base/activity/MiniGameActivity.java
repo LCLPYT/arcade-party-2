@@ -49,7 +49,7 @@ public class MiniGameActivity extends ComponentActivity {
         BossBarComponent bossBars = component(BuiltinComponents.BOSS_BAR);
 
         ScoreboardComponent scoreboardComponent = component(ArcadePartyComponents.SCORE_BOARD);
-        CustomScoreboardManager scoreboard = scoreboardComponent.scoreboardManager(args.container()::translationService);
+        CustomScoreboardManager scoreboard = scoreboardComponent.scoreboardManager(args.container()::translations);
 
         handle = new DefaultMiniGameHandle(miniGame, args, bossBars, bossBars, scoreboard);
         handle.init();

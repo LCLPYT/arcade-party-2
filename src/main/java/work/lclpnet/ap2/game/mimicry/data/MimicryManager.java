@@ -180,4 +180,14 @@ public class MimicryManager {
     public float getButtonPitch(int button) {
         return buttonPitches[button % buttonPitches.length];
     }
+
+    public int getCompletedCount(ServerPlayerEntity player) {
+        int len = sequenceLength();
+
+        if (progress.getOrDefault(player.getUuid(), 0) >= len) {
+            return len;
+        }
+
+        return len - 1;
+    }
 }

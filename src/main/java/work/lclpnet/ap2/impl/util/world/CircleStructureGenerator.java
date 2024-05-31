@@ -76,7 +76,7 @@ public class CircleStructureGenerator {
      * @param spacing The distance that should be between two adjacent points on a circle.
      * @return The radius that a circle must have, so that two adjacent points are apart the given spacing.
      */
-    public static int calculateRadius(int structureCount, double spacing) {
+    public static double calculateRadiusExact(int structureCount, double spacing) {
         if (structureCount < 2) {
             return 0;
         }
@@ -87,9 +87,18 @@ public class CircleStructureGenerator {
         // distance between points: spacing = sqrt((r * sin(angle))² + (r * cos(angle) - r)²)
         // rearrange, so that r = ± sqrt(spacing² / (sin²(angle) + (cos(angle) - 1)²))
 
-        double radius = sqrt(pow(spacing, 2) / (pow(sin(angle), 2) + pow(cos(angle) - 1, 2)));
+        return sqrt(pow(spacing, 2) / (pow(sin(angle), 2) + pow(cos(angle) - 1, 2)));
+    }
 
-        return (int) ceil(radius);
+    /**
+     * Calculates the radius so that two adjacent points on a circle are apart a given spacing.
+     * @param structureCount The amount of structures that are to be placed evenly on a circle.
+     *                       Used to determine the angular distance between the points on a circle.
+     * @param spacing The distance that should be between two adjacent points on a circle.
+     * @return The integer radius that a circle must have, so that two adjacent points are apart the given spacing.
+     */
+    public static int calculateRadius(int structureCount, double spacing) {
+        return (int) ceil(calculateRadiusExact(structureCount, spacing));
     }
 
     public static Vec2i[] generateHorizontalOffsets(List<BlockStructure> structures, final int minRadius) {

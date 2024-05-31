@@ -1,6 +1,8 @@
 package work.lclpnet.ap2.impl.util.handler;
 
 import com.google.common.collect.Iterables;
+import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.data.DataTracker;
 import net.minecraft.network.packet.s2c.play.EntityTrackerUpdateS2CPacket;
 import net.minecraft.network.packet.s2c.play.TeamS2CPacket;
@@ -39,6 +41,17 @@ public class VisibilityManager {
         applyVisibility(player, getVisibilityFor(player));
     }
 
+    public void updateVisibilityOf(Entity entity) {
+        for (ServerPlayerEntity player : PlayerLookup.tracking(entity)) {
+            updateVisibilityOf(entity, player);
+        }
+    }
+
+    private void updateVisibilityOf(Entity entity, ServerPlayerEntity player) {
+        Visibility visibility = getVisibilityFor(player);
+        makeVisibleFor(entity, player, visibility == Visibility.VISIBLE);
+    }
+
     private void applyVisibility(ServerPlayerEntity player, Visibility visibility) {
         if (visibility == Visibility.VISIBLE) {
             makeOthersVisibleFor(player, true);
@@ -61,17 +74,23 @@ public class VisibilityManager {
     }
 
     private void makeOthersVisibleFor(ServerPlayerEntity player, boolean visible) {
-        for (ServerPlayerEntity other : others(player)) {
-            byte flags = other.getDataTracker().get(EntityAccess.FLAGS);
-            flags = EntityAccess.setFlag(flags, EntityAccess.INVISIBLE_FLAG_INDEX, !visible);
-
-            var entry = DataTracker.SerializedEntry.of(EntityAccess.FLAGS, flags);
-            var packet = new EntityTrackerUpdateS2CPacket(other.getId(), List.of(entry));
-            player.networkHandler.sendPacket(packet);
+        for (Entity other : others(player)) {
+            makeVisibleFor(other, player, visible);
         }
     }
 
-    private Iterable<ServerPlayerEntity> others(ServerPlayerEntity player) {
-        return Iterables.filter(player.getServerWorld().getPlayers(), other -> other != player);
+    private void makeVisibleFor(Entity other, ServerPlayerEntity player, boolean visible) {
+        byte flags = other.getDataTracker().get(EntityAccess.FLAGS);
+        flags = EntityAccess.setFlag(flags, EntityAccess.INVISIBLE_FLAG_INDEX, !visible);
+
+        var entry = DataTracker.SerializedEntry.of(EntityAccess.FLAGS, flags);
+        var packet = new EntityTrackerUpdateS2CPacket(other.getId(), List.of(entry));
+        player.networkHandler.sendPacket(packet);
+    }
+
+    private Iterable<? extends Entity> others(ServerPlayerEntity player) {
+        return Iterables.filter(player.getServerWorld().iterateEntities(), other ->
+                other != player && other.getScoreboardTeam() == team && PlayerLookup.tracking(other).contains(player)
+                && !other.hasPassengerDeep(player));
     }
 }

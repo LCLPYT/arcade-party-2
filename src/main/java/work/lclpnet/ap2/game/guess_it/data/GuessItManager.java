@@ -13,7 +13,7 @@ import java.util.*;
 public class GuessItManager {
 
     private final Random random;
-    private final Set<Challenge> challenges = new HashSet<>();
+    private final Set<Challenge> challenges = new LinkedHashSet<>();
     private final List<Challenge> queue = new ArrayList<>();
 
     public GuessItManager(MiniGameHandle gameHandle, ServerWorld world, Random random, Stage stage,

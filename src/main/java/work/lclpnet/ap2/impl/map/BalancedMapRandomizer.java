@@ -2,17 +2,15 @@ package work.lclpnet.ap2.impl.map;
 
 import it.unimi.dsi.fastutil.Pair;
 import net.minecraft.util.Identifier;
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.map.MapFrequencyManager;
 import work.lclpnet.ap2.api.map.MapRandomizer;
-import work.lclpnet.ap2.base.ApConstants;
 import work.lclpnet.lobby.game.map.GameMap;
-import work.lclpnet.lobby.game.map.MapDescriptor;
 import work.lclpnet.lobby.game.map.MapManager;
 
-import java.io.IOException;
-import java.util.List;
+import java.util.Collection;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 
@@ -25,6 +23,7 @@ public class BalancedMapRandomizer implements MapRandomizer {
     private final MapManager mapManager;
     private final MapFrequencyManager frequencyTracker;
     private final Random random;
+    private Identifier forcedMap = null;
 
     public BalancedMapRandomizer(MapManager mapManager, MapFrequencyManager frequencyTracker, Random random) {
         this.mapManager = mapManager;
@@ -34,28 +33,10 @@ public class BalancedMapRandomizer implements MapRandomizer {
 
     @Override
     public CompletableFuture<GameMap> nextMap(Identifier gameId) {
-        String prefix = withSlash(gameId);
-
-        return reloadMaps(gameId)
-                .thenCompose(nil -> chooseRandomMap(prefix));
-    }
-
-    private CompletableFuture<Void> reloadMaps(Identifier gameId) {
-        return CompletableFuture.runAsync(() -> {
-            try {
-                mapManager.loadAll(new MapDescriptor(gameId, ApConstants.MAP_VERSION));
-            } catch (IOException e) {
-                throw new RuntimeException("Failed to reload maps for game id %s".formatted(gameId), e);
-            }
-        });
-    }
-
-    private CompletableFuture<GameMap> chooseRandomMap(String prefix) {
-        var mapIds = mapManager.getCollection().getMaps().stream()
-                .map(GameMap::getDescriptor)
-                .map(MapDescriptor::getIdentifier)
-                .filter(id -> id.getPath().startsWith(prefix))
-                .distinct().toList();
+        var mapIds = mapManager.getCollection()
+                .mapIdsWithPrefix(gameId)
+                .sorted()  // obtain a sorted list to gain a uniform distribution with the rng
+                .toList();
 
         if (frequencyTracker instanceof AsyncMapFrequencyManager async) {
             return async.preload(mapIds).thenCompose(ignored -> getRandomMap(mapIds));
@@ -64,7 +45,21 @@ public class BalancedMapRandomizer implements MapRandomizer {
         return CompletableFuture.completedFuture(mapIds).thenCompose(this::getRandomMap);
     }
 
-    private CompletableFuture<GameMap> getRandomMap(List<Identifier> mapIds) {
+    @Override
+    public void forceMap(@Nullable Identifier mapId) {
+        forcedMap = mapId;
+    }
+
+    private CompletableFuture<GameMap> getRandomMap(Collection<Identifier> mapIds) {
+        return Optional.ofNullable(forcedMap)
+                .flatMap(forced -> mapIds.stream()
+                        .filter(forced::equals)
+                        .findAny())
+                .map(this::getMapById)
+                .orElseGet(() -> getRandomLeastFrequentMap(mapIds));
+    }
+
+    private CompletableFuture<GameMap> getRandomLeastFrequentMap(Collection<Identifier> mapIds) {
         var mapFrequencies = mapIds.stream()
                 .map(id -> Pair.of(id, frequencyTracker.getFrequency(id)))
                 .toList();
@@ -85,23 +80,15 @@ public class BalancedMapRandomizer implements MapRandomizer {
 
         Identifier randomMapId = leastPlayedMaps.get(random.nextInt(leastPlayedMaps.size()));
 
-        var optMap = mapManager.getCollection().getMap(randomMapId);
-
-        return optMap.map(CompletableFuture::completedFuture).orElseGet(() -> {
-            var err = new NoSuchElementException("Map %s not found".formatted(randomMapId));
-            return CompletableFuture.failedFuture(err);
-        });
-
+        return getMapById(randomMapId);
     }
 
-    @NotNull
-    private static String withSlash(Identifier gameId) {
-        String path = gameId.getPath();
+    private CompletableFuture<GameMap> getMapById(Identifier mapId) {
+        var optMap = mapManager.getCollection().getMap(mapId);
 
-        if (path.endsWith("/")) {
-            return path;
-        }
-
-        return path + "/";
+        return optMap.map(CompletableFuture::completedFuture).orElseGet(() -> {
+            var err = new NoSuchElementException("Map %s not found".formatted(mapId));
+            return CompletableFuture.failedFuture(err);
+        });
     }
 }

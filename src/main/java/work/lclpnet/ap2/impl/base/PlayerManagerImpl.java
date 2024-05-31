@@ -6,10 +6,7 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import work.lclpnet.ap2.api.base.ParticipantListener;
 import work.lclpnet.ap2.api.base.PlayerManager;
 
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -188,5 +185,14 @@ public class PlayerManagerImpl implements PlayerManager {
     @Override
     public void bind(ParticipantListener listener) {
         this.listener = listener;
+    }
+
+    @Override
+    public Optional<ServerPlayerEntity> getParticipant(UUID uuid) {
+        if (!participants.contains(uuid)) {
+            return Optional.empty();
+        }
+
+        return Optional.ofNullable(server.getPlayerManager().getPlayer(uuid));
     }
 }

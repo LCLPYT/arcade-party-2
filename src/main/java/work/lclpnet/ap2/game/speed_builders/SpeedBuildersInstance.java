@@ -129,6 +129,22 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
         nextRound();
     }
 
+    @Override
+    protected void onEliminated(ServerPlayerEntity player) {
+        putScoreDetail(player, false);
+    }
+
+    @Override
+    public void participantRemoved(ServerPlayerEntity player) {
+        Participants participants = gameHandle.getParticipants();
+
+        if (participants.count() == 1) {
+            participants.stream().findAny().ifPresent(winner -> putScoreDetail(winner, true));
+        }
+
+        super.participantRemoved(player);
+    }
+
     private void setupGameRules() {
         GameRules gameRules = getWorld().getGameRules();
         MinecraftServer server = gameHandle.getServer();
@@ -284,6 +300,13 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
         }, Ticks.seconds(10));
     }
 
+    private void putScoreDetail(ServerPlayerEntity player, boolean winner) {
+        int completed = manager.getRoundsCompleted(player, winner);
+        var detail = gameHandle.getTranslations().translateText("game.ap2.speed_builders.survived", completed);
+
+        getData().eliminated(player, detail);
+    }
+
     private void onHitBlock(ProjectileEntity projectile, BlockHitResult hit) {
         if (!(projectile instanceof BreezeWindChargeEntity) || islandToDestroy == null) return;
 
@@ -346,17 +369,23 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
         playerToEliminate = null;
 
         if (gameHandle.getParticipants().count() > 1) {
+            manager.incrementRound();
             nextRound();
             return;
         }
 
         var it = gameHandle.getParticipants().iterator();
 
-        if (it.hasNext()) {
-            winManager.win(it.next());
-        } else {
+        if (!it.hasNext()) {
             winManager.winNobody();
+            return;
         }
+
+        ServerPlayerEntity winner = it.next();
+
+        putScoreDetail(winner, true);
+
+        winManager.win(winner);
     }
 
     private void allPlayersCompleted() {

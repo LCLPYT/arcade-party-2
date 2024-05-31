@@ -9,6 +9,8 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.entity.passive.PigEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.scoreboard.AbstractTeam;
+import net.minecraft.scoreboard.Team;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Formatting;
@@ -30,8 +32,11 @@ import work.lclpnet.ap2.impl.util.checkpoint.CheckpointHelper;
 import work.lclpnet.ap2.impl.util.checkpoint.CheckpointManager;
 import work.lclpnet.ap2.impl.util.collision.ChunkedCollisionDetector;
 import work.lclpnet.ap2.impl.util.collision.TickMovementObserver;
+import work.lclpnet.ap2.impl.util.handler.VisibilityHandler;
+import work.lclpnet.ap2.impl.util.handler.VisibilityManager;
 import work.lclpnet.ap2.impl.util.heads.PlayerHeadUtil;
 import work.lclpnet.ap2.impl.util.heads.PlayerHeads;
+import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.kibu.access.entity.PigEntityAccess;
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
 import work.lclpnet.kibu.hook.ServerPlayConnectionHooks;
@@ -70,6 +75,15 @@ public class PigRaceInstance extends DefaultGameInstance {
         useTaskDisplay();
 
         HookRegistrar hooks = gameHandle.getHookRegistrar();
+        CustomScoreboardManager scoreboardManager = gameHandle.getScoreboardManager();
+        TranslationService translations = gameHandle.getTranslations();
+        Participants participants = gameHandle.getParticipants();
+
+        Team team = createTeam();
+        VisibilityManager visibilityManager = new VisibilityManager(team);
+        VisibilityHandler visibility = new VisibilityHandler(visibilityManager, translations, participants);
+
+        visibility.init(hooks);
 
         // prevent dismounting
         hooks.registerHook(EntityDismountCallback.HOOK, (entity, vehicle) -> entity instanceof ServerPlayerEntity);
@@ -82,11 +96,13 @@ public class PigRaceInstance extends DefaultGameInstance {
 
         // mount a pig, after a player was teleported
         hooks.registerHook(PlayerTeleportedCallback.HOOK, player -> {
-            PendingPig pig = pendingPigs.remove(player.getUuid());
+            PendingPig pendingPig = pendingPigs.remove(player.getUuid());
 
-            if (pig != null) {
-                pig.create(player);
-            }
+            if (pendingPig == null) return;
+
+            PigEntity pig = pendingPig.create(player);
+            scoreboardManager.joinTeam(pig, team);
+            visibilityManager.updateVisibilityOf(pig);
         });
 
         // remove pigs when player quits
@@ -106,6 +122,8 @@ public class PigRaceInstance extends DefaultGameInstance {
         setupCheckpoints(spawnBounds, goal);
 
         movementObserver.init(gameHandle.getGameScheduler(), hooks, gameHandle.getServer());
+
+        visibility.giveItems(0);
     }
 
     @Override
@@ -138,6 +156,15 @@ public class PigRaceInstance extends DefaultGameInstance {
         }, 1);
 
         participants.forEach(this::giveResetItem);
+    }
+
+    private Team createTeam() {
+        CustomScoreboardManager scoreboardManager = gameHandle.getScoreboardManager();
+        Team team = scoreboardManager.createTeam("team");
+        team.setCollisionRule(AbstractTeam.CollisionRule.NEVER);
+        scoreboardManager.joinTeam(gameHandle.getParticipants(), team);
+
+        return team;
     }
 
     private void resetPlayerToCheckpoint(ServerPlayerEntity player) {
@@ -255,7 +282,7 @@ public class PigRaceInstance extends DefaultGameInstance {
 
     private record PendingPig(double x, double y, double z, float yaw) {
 
-        public void create(ServerPlayerEntity player) {
+        public PigEntity create(ServerPlayerEntity player) {
             ServerWorld world = player.getServerWorld();
 
             PigEntity pig = new PigEntity(EntityType.PIG, world);
@@ -267,6 +294,8 @@ public class PigRaceInstance extends DefaultGameInstance {
             world.spawnEntity(pig);
 
             player.startRiding(pig, true);
+
+            return pig;
         }
     }
 }

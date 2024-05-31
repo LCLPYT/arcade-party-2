@@ -1,3 +1,4 @@
+
 {
   "ap2.prepare.next_game_title": "Nächstes Spiel",
   "ap2.prepare.next_game": "Als Nächstes wird gespielt...",
@@ -38,6 +39,8 @@
   "ap2.game.visibility.visible": "sichtbar",
   "ap2.game.visibility.partially_visible": "leicht sichtbar",
   "ap2.game.visibility.invisible": "unsichtbar",
+  "ap2.map.by": "Welt %s von %s",
+  "ap2.built_by": "Erbaut von %s",
   "game.ap2.title": "ArcadeParty",
   "game.ap2.reached_checkpoint": "Checkpoint erreicht",
   "game.ap2.spleef": "Spleef",
@@ -188,6 +191,7 @@
   "game.ap2.speed_builders.impressed": "Aelos ist beeindruckt.",
   "game.ap2.speed_builders.will_eliminate": "fliegt raus!",
   "game.ap2.speed_builders.completed": "Glückwunsch! Du hast das Bauwerk fertiggestellt.",
+  "game.ap2.speed_builders.survived": "%s Runde(n)",
   "game.ap2.mimicry": "Nachahmen",
   "game.ap2.mimicry.description": "Drücke Knöpfe in einer vorgegebenen Reihenfolge. Wenn du einen Fehler machst, fliegst du raus!",
   "game.ap2.mimicry.task": "Wiederhole die Reihenfolge",
@@ -195,7 +199,12 @@
   "game.ap2.mimicry.repeat": "Nun wiederhole es",
   "game.ap2.mimicry.wrong_button": "Deine Reihenfolge ist leider falsch.",
   "game.ap2.mimicry.correct": "Deine Reihenfolge ist korrekt!",
+  "game.ap2.mimicry.completed": "%s Nachahmung(en)",
   "game.ap2.splashy_dropper": "Pfützenfall",
   "game.ap2.splashy_dropper.description": "Lande in verschieden großen Pfützen. Je nach Größe der Pfütze erhältst du Punkte. Nachdem jemand in einer Pfütze gelandet ist, verschwindet sie.",
-  "game.ap2.splashy_dropper.task": "Land in water pools"
+  "game.ap2.splashy_dropper.task": "Lande in Wasser",
+  "game.ap2.glowing_bomb": "Glühende Bombe",
+  "game.ap2.glowing_bomb.description": "Eine Glowstone-Bombe wird herum gereicht. Wenn sie bei dir explodiert, wird Glowstone in deinen Seelenanker getan. Wenn dein Seelenanker voll ist, fliegst du raus!",
+  "game.ap2.glowing_bomb.task": "Reiche die Bombe herum",
+  "game.ap2.glowing_bomb.pass": "Bombe weitergeben"
 }

@@ -18,14 +18,20 @@ class MovementListener implements HookListenerModule {
         this.blocker = blocker;
     }
 
-    static void modifyAttributes(ServerPlayerEntity player) {
-        PlayerUtil.setAttribute(player, EntityAttributes.GENERIC_MOVEMENT_SPEED, 0);
+    static void modifyJumpAttribute(ServerPlayerEntity player) {
         PlayerUtil.setAttribute(player, EntityAttributes.GENERIC_JUMP_STRENGTH, 0);
     }
 
-    static void resetAttributes(ServerPlayerEntity player) {
-        PlayerUtil.resetAttribute(player, EntityAttributes.GENERIC_MOVEMENT_SPEED);
+    static void resetJumpAttributes(ServerPlayerEntity player) {
         PlayerUtil.resetAttribute(player, EntityAttributes.GENERIC_JUMP_STRENGTH);
+    }
+
+    static void modifySpeedAttribute(ServerPlayerEntity player) {
+        PlayerUtil.setAttribute(player, EntityAttributes.GENERIC_MOVEMENT_SPEED, 0);
+    }
+
+    static void resetSpeedAttributes(ServerPlayerEntity player) {
+        PlayerUtil.resetAttribute(player, EntityAttributes.GENERIC_MOVEMENT_SPEED);
     }
 
     @Override

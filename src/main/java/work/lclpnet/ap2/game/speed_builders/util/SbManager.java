@@ -29,8 +29,8 @@ import java.util.stream.Collectors;
 public class SbManager {
 
     private static final int BASE_BUILD_DURATION_SECONDS = 45;
-    private static final int MIN_BUILD_DURATION_SECONDS = 10;
-    private static final int SUCCESSIVE_COMPLETION_REDUCTION_SECONDS = 6;
+    private static final int MIN_BUILD_DURATION_SECONDS = 5;
+    private static final int SUCCESSIVE_COMPLETION_REDUCTION_SECONDS = 9;
     private final Map<UUID, SbIsland> islands;
     private final List<SbModule> modules;
     private final MiniGameHandle gameHandle;
@@ -46,6 +46,7 @@ public class SbManager {
     private SbModule currentModule = null;
     private Team team = null;
     private int successiveCompletion = 0;
+    private int round = 0;
 
     public SbManager(Map<UUID, SbIsland> islands, List<SbModule> modules, MiniGameHandle gameHandle, ServerWorld world,
                      Random random, Runnable allPlayersCompleted) {
@@ -315,5 +316,17 @@ public class SbManager {
         int reduction = Math.max(0, successiveCompletion * SUCCESSIVE_COMPLETION_REDUCTION_SECONDS);
 
         return Math.max(MIN_BUILD_DURATION_SECONDS, BASE_BUILD_DURATION_SECONDS + bonusTime - reduction);
+    }
+
+    public void incrementRound() {
+        round++;
+    }
+
+    public int getRoundsCompleted(ServerPlayerEntity player, boolean winner) {
+        if (completed.contains(player.getUuid()) || winner) {
+            return round + 1;
+        }
+
+        return round;
     }
 }

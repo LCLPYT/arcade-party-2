@@ -14,7 +14,7 @@ public class SimpleMovementBlocker implements MovementBlocker {
     private final TaskScheduler scheduler;
     private final MovementListener movement = new MovementListener(this);
     private final Map<UUID, TaskHandle> blocked = new HashMap<>();
-    private boolean modifyAttributes = true;
+    private boolean modifySpeedAttribute = true;
 
     public SimpleMovementBlocker(TaskScheduler scheduler) {
         this.scheduler = scheduler;
@@ -26,9 +26,7 @@ public class SimpleMovementBlocker implements MovementBlocker {
     }
 
     public void disableMovement(ServerPlayerEntity player) {
-        if (modifyAttributes) {
-            MovementListener.modifyAttributes(player);
-        }
+        applyAttributes(player);
 
         TaskHandle prev = blocked.put(player.getUuid(), null);
 
@@ -42,9 +40,7 @@ public class SimpleMovementBlocker implements MovementBlocker {
             return;
         }
 
-        if (modifyAttributes) {
-            MovementListener.modifyAttributes(player);
-        }
+        applyAttributes(player);
 
         TaskHandle task = scheduler.timeout(() -> enableMovement(player), durationTicks);
         TaskHandle prev = blocked.put(player.getUuid(), task);
@@ -54,7 +50,7 @@ public class SimpleMovementBlocker implements MovementBlocker {
 
     @Override
     public void enableMovement(ServerPlayerEntity player) {
-        MovementListener.resetAttributes(player);
+        resetAttributes(player);
 
         TaskHandle task = blocked.remove(player.getUuid());
 
@@ -67,12 +63,28 @@ public class SimpleMovementBlocker implements MovementBlocker {
     }
 
     @Override
-    public void setModifyAttributes(boolean modifyAttributes) {
-        this.modifyAttributes = modifyAttributes;
+    public void setModifySpeedAttribute(boolean modifyAttributes) {
+        this.modifySpeedAttribute = modifyAttributes;
     }
 
     @Override
-    public boolean isModifyingAttributes() {
-        return modifyAttributes;
+    public boolean shouldModifySpeedAttribute() {
+        return modifySpeedAttribute;
+    }
+
+    private void applyAttributes(ServerPlayerEntity player) {
+        if (modifySpeedAttribute) {
+            MovementListener.modifySpeedAttribute(player);
+        }
+
+        MovementListener.modifyJumpAttribute(player);
+    }
+
+    private void resetAttributes(ServerPlayerEntity player) {
+        if (modifySpeedAttribute) {
+            MovementListener.resetSpeedAttributes(player);
+        }
+
+        MovementListener.resetJumpAttributes(player);
     }
 }

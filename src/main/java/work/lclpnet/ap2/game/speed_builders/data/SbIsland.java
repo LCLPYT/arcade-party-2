@@ -13,6 +13,7 @@ import net.minecraft.registry.Registries;
 import net.minecraft.scoreboard.Team;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.state.property.Properties;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.TypeFilter;
 import net.minecraft.util.math.BlockPos;
@@ -323,6 +324,14 @@ public class SbIsland {
                 }
             }
         }
+
+        // leaves distance
+        first = first.withIfExists(Properties.DISTANCE_1_7, 1);
+        second = second.withIfExists(Properties.DISTANCE_1_7, 1);
+
+        // leaves persistent
+        first = first.withIfExists(Properties.PERSISTENT, true);
+        second = second.withIfExists(Properties.PERSISTENT, true);
 
         return first.equals(second);
     }

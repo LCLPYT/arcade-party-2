@@ -77,11 +77,15 @@ public class VisibilityHandler {
     }
 
     public void giveItems() {
+        giveItems(8);
+    }
+
+    public void giveItems(int slot) {
         for (ServerPlayerEntity player : participants) {
             ItemStack stack = new ItemStack(ITEM);
             updateItemName(player, stack);
 
-            player.getInventory().setStack(8, stack);
+            player.getInventory().setStack(slot, stack);
         }
     }
 

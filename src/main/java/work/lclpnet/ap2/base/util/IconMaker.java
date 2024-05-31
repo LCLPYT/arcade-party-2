@@ -5,17 +5,38 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
+import work.lclpnet.ap2.api.data.DataManager;
 import work.lclpnet.ap2.api.game.MiniGame;
 import work.lclpnet.kibu.inv.item.ItemStackUtil;
 import work.lclpnet.kibu.translate.TranslationService;
+import work.lclpnet.lobby.game.map.GameMap;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static net.minecraft.util.Formatting.AQUA;
-import static net.minecraft.util.Formatting.GREEN;
+import static net.minecraft.util.Formatting.*;
+import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
-public class MapIconMaker {
+public class IconMaker {
+
+    public static ItemStack createIcon(GameMap map, ServerPlayerEntity player, TranslationService translations, DataManager dataManager) {
+        ItemStack icon = new ItemStack(map.getIcon());
+
+        String name = map.getName(translations.getLanguage(player));
+
+        icon.set(DataComponentTypes.CUSTOM_NAME, Text.literal(name)
+                .styled(style -> style.withItalic(false).withFormatting(AQUA)));
+
+        List<String> authors = map.getAuthors().stream().map(dataManager::string).toList();
+
+        if (!authors.isEmpty()) {
+            ItemStackUtil.setLore(icon, wrapText(translations.translateText(player, "ap2.built_by",
+                            styled(String.join(", ", authors), YELLOW))
+                    .formatted(GREEN), 32));
+        }
+
+        return icon;
+    }
 
     public static ItemStack createIcon(MiniGame game, ServerPlayerEntity player, TranslationService translations) {
         ItemStack icon = game.getIcon();
@@ -80,5 +101,5 @@ public class MapIconMaker {
         return wrapped;
     }
 
-    private MapIconMaker() {}
+    private IconMaker() {}
 }

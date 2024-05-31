@@ -7,6 +7,7 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.api.util.music.*;
 import work.lclpnet.ap2.base.ArcadeParty;
+import work.lclpnet.ap2.impl.util.IndexedSet;
 import work.lclpnet.ap2.impl.util.music.MapSongCache;
 import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.notica.api.data.SongMeta;
@@ -24,7 +25,7 @@ public class MMSongs {
     private final TranslationService translations;
     private final Random random;
     private final Logger logger;
-    private final Set<WeightedSong> songs = new HashSet<>();
+    private final Set<WeightedSong> songs = new IndexedSet<>();
     private final List<WeightedSong> queue = new ArrayList<>();
     private final SongCache cache = new MapSongCache();
 

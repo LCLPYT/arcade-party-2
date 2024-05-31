@@ -13,7 +13,7 @@ public interface MovementBlocker {
 
     boolean isMovementDisabled(ServerPlayerEntity player);
 
-    void setModifyAttributes(boolean modifyAttributes);
+    void setModifySpeedAttribute(boolean modifyAttributes);
 
-    boolean isModifyingAttributes();
+    boolean shouldModifySpeedAttribute();
 }

@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import work.lclpnet.activity.util.BossBarHandler;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.base.WorldBorderManager;
+import work.lclpnet.ap2.api.data.DataManager;
 import work.lclpnet.ap2.api.game.team.TeamConfig;
 import work.lclpnet.ap2.api.map.MapFacade;
 import work.lclpnet.ap2.api.util.music.SongManager;
@@ -76,6 +77,8 @@ public interface MiniGameHandle {
     SongManager getSongManager();
 
     DeathMessages getDeathMessages();
+
+    DataManager getDataManager();
 
     void resetGameScheduler();
 

@@ -17,6 +17,7 @@ import work.lclpnet.ap2.api.util.music.SongInfo;
 import work.lclpnet.ap2.api.util.music.SongManager;
 import work.lclpnet.ap2.api.util.music.WeightedSong;
 import work.lclpnet.ap2.base.ArcadeParty;
+import work.lclpnet.ap2.impl.util.IndexedSet;
 import work.lclpnet.notica.util.SongUtils;
 
 import java.io.IOException;
@@ -46,7 +47,14 @@ public class SongManagerImpl implements SongManager {
             return Set.of();
         }
 
-        return songs.values();
+        IndexedSet<WeightedSong> orderedSongs = new IndexedSet<>();
+
+        songs.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey())
+                .map(Map.Entry::getValue)
+                .forEachOrdered(orderedSongs::add);
+
+        return orderedSongs;
     }
 
     @Override
