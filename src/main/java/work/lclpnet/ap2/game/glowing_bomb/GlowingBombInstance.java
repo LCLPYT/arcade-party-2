@@ -104,7 +104,6 @@ public class GlowingBombInstance extends EliminationGameInstance implements MapB
 
         scene = new Scene(world);
         scene.add(bomb);
-        scene.spawnObjects();
 
         TaskScheduler scheduler = gameHandle.getGameScheduler();
         scene.animate(1, scheduler);
@@ -155,6 +154,17 @@ public class GlowingBombInstance extends EliminationGameInstance implements MapB
     }
 
     private void onBombYielded() {
+        if (bomb != null) {
+            Vector3d pos = bomb.worldPosition();
+            double x = pos.x(), y = pos.y(), z = pos.z();
+
+            ServerWorld world = getWorld();
+            world.playSound(null, x, y, z, SoundEvents.BLOCK_DECORATED_POT_INSERT, SoundCategory.HOSTILE, 1f, 0f);
+            world.spawnParticles(ParticleTypes.SMALL_FLAME, x, y, z, 20, 0.1, 0.1, 0.1, 0.1);
+
+            scene.remove(bomb);
+        }
+
         delayNextBomb();
     }
 

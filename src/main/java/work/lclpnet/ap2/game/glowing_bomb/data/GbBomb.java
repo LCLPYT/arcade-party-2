@@ -29,6 +29,8 @@ public class GbBomb extends Object3d implements Animatable {
     private final Animation idleAnimation = new Animation(new IdleAnimation()).running();
     @Nullable
     private Animation yieldAnimation = null;
+    private int requiredYieldCount = 0;
+    private int yielded = 0;
 
     public GbBomb(Runnable onYielded) {
         this.onYielded = onYielded;
@@ -90,7 +92,7 @@ public class GbBomb extends Object3d implements Animatable {
             double orbitSpeed = Math.PI * (random.nextDouble() * 0.4 + 0.55);
             double rotationSpeed = Math.PI * (random.nextDouble() * 0.3 + 1.1);
 
-            GbGlowStone glowStone = new GbGlowStone(this::detach, initialAngle, i * incline, orbitSpeed, rotationSpeed);
+            GbGlowStone glowStone = new GbGlowStone(initialAngle, i * incline, orbitSpeed, rotationSpeed);
             glowStone.scale.set(0.2);
 
             glowStones.add(glowStone);
@@ -108,10 +110,13 @@ public class GbBomb extends Object3d implements Animatable {
         }
     }
 
-    private void detach(GbGlowStone glowStone) {
-        removeChild(glowStone);
+    @Override
+    protected void onChildRemoved(Object3d child) {
+        if (!(child instanceof GbGlowStone)) return;
 
-        if (glowStones.remove(glowStone) && glowStones.isEmpty()) {
+        yielded++;
+
+        if (yielded == requiredYieldCount) {
             onYielded.run();
         }
     }
@@ -200,25 +205,30 @@ public class GbBomb extends Object3d implements Animatable {
         private final GbManager manager;
         private final GbAnchor anchor;
         private double yieldDelay = YIELD_DELAY_SECONDS;
-        private int yielded = 0;
 
         private YieldAnimation(GbManager manager, GbAnchor anchor) {
             this.manager = manager;
             this.anchor = anchor;
+
+            requiredYieldCount = glowStones.size();
         }
 
         @Override
         public void updateAnimation(double dt, AnimationContext ctx) {
+            if (glowStones.isEmpty()) return;
+
             yieldDelay -= dt;
 
             if (yieldDelay > 0) return;
 
             yieldDelay += YIELD_DELAY_SECONDS;
 
-            if (yielded >= glowStones.size()) return;
-
-            GbGlowStone glowStone = glowStones.get(yielded++);
+            GbGlowStone glowStone = glowStones.removeFirst();
             glowStone.yieldInto(anchor, manager);
+
+            Vector3d pos = worldPosition();
+
+            ctx.world().playSound(null, pos.x(), pos.y(), pos.z(), SoundEvents.BLOCK_CRAFTER_CRAFT, SoundCategory.HOSTILE, 1f, 1.25f);
         }
     }
 }

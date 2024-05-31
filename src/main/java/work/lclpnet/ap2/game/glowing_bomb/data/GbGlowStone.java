@@ -15,19 +15,15 @@ import work.lclpnet.ap2.impl.scene.simulation.StateVector;
 import work.lclpnet.ap2.impl.scene.simulation.solver.NumericalSolver;
 import work.lclpnet.ap2.impl.scene.simulation.solver.RungeKuttaSolver;
 
-import java.util.function.Consumer;
-
 import static java.lang.Math.PI;
 
 public class GbGlowStone extends Object3d implements Animatable {
 
-    private final Consumer<GbGlowStone> detach;
     private final Animation orbitAnimation;
     @Nullable
     private Animation yieldAnimation = null;
 
-    public GbGlowStone(Consumer<GbGlowStone> detach, double initialAngle, double incline, double orbitSpeed, double rotationSpeed) {
-        this.detach = detach;
+    public GbGlowStone(double initialAngle, double incline, double orbitSpeed, double rotationSpeed) {
         orbitAnimation = new Animation(new OrbitAnimation(initialAngle, incline, orbitSpeed, rotationSpeed)).running();
 
         BlockDisplayObject glowStone = new BlockDisplayObject(Blocks.GLOWSTONE.getDefaultState());
@@ -130,8 +126,8 @@ public class GbGlowStone extends Object3d implements Animatable {
             if (distanceSq <= 0.25) {
                 if (!complete) {
                     complete = true;
+                    detach();
                     manager.addCharge(anchor);
-                    detach.accept(GbGlowStone.this);
                 }
 
                 return;

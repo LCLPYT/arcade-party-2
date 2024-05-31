@@ -9,7 +9,7 @@ import work.lclpnet.ap2.impl.util.DisplayEntityTransformer;
 import work.lclpnet.ap2.impl.util.EntityRef;
 import work.lclpnet.kibu.access.entity.DisplayEntityAccess;
 
-public class BlockDisplayObject extends Object3d implements Spawnable, Interpolatable {
+public class BlockDisplayObject extends Object3d implements Mountable, Unmountable, Interpolatable {
 
     private final BlockState blockState;
     private final DisplayEntityTransformer transformer = new DisplayEntityTransformer();
@@ -33,7 +33,7 @@ public class BlockDisplayObject extends Object3d implements Spawnable, Interpola
     }
 
     @Override
-    public void spawn(ServerWorld world) {
+    public void mount(ServerWorld world) {
         var display = new DisplayEntity.BlockDisplayEntity(EntityType.BLOCK_DISPLAY, world);
         DisplayEntityAccess.setBlockState(display, blockState);
 
@@ -45,11 +45,31 @@ public class BlockDisplayObject extends Object3d implements Spawnable, Interpola
     }
 
     @Override
+    public void unmount(ServerWorld world) {
+        removeDisplay();
+    }
+
+    @Override
     public void updateTickRate(int tickRate) {
         var display = entityRef.resolve();
 
         if (display != null) {
             DisplayEntityAccess.setInterpolationDuration(display, 1);
         }
+    }
+
+    @Override
+    protected void onDetached() {
+        removeDisplay();
+    }
+
+    private void removeDisplay() {
+        if (entityRef == null) return;
+
+        var display = entityRef.resolve();
+
+        if (display != null) display.discard();
+
+        entityRef = null;
     }
 }

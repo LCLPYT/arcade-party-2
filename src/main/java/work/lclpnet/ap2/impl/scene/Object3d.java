@@ -86,7 +86,15 @@ public class Object3d {
 
         deepCount -= child.deepCount;
 
-        return children.remove(child);
+        boolean removed = children.remove(child);
+
+        for (Object3d obj : child.traverse()) {
+            obj.onDetached();
+        }
+
+        this.onChildRemoved(child);
+
+        return removed;
     }
 
     private void requireAcyclicHierarchy(@NotNull Object3d child) {
@@ -165,4 +173,14 @@ public class Object3d {
             parent.localPosition(position);
         }
     }
+
+    public void detach() {
+        if (parent != null) {
+            parent.removeChild(this);
+        }
+    }
+
+    protected void onDetached() {}
+
+    protected void onChildRemoved(Object3d child) {}
 }

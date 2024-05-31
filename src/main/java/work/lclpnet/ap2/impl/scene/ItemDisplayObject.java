@@ -9,7 +9,7 @@ import work.lclpnet.ap2.impl.util.DisplayEntityTransformer;
 import work.lclpnet.ap2.impl.util.EntityRef;
 import work.lclpnet.kibu.access.entity.DisplayEntityAccess;
 
-public class ItemDisplayObject extends Object3d implements Spawnable, Interpolatable {
+public class ItemDisplayObject extends Object3d implements Mountable, Unmountable, Interpolatable {
 
     private final DisplayEntityTransformer transformer = new DisplayEntityTransformer();
     private ItemStack stack;
@@ -33,7 +33,7 @@ public class ItemDisplayObject extends Object3d implements Spawnable, Interpolat
     }
 
     @Override
-    public void spawn(ServerWorld world) {
+    public void mount(ServerWorld world) {
         var display = new DisplayEntity.ItemDisplayEntity(EntityType.ITEM_DISPLAY, world);
         DisplayEntityAccess.setItemStack(display, stack);
 
@@ -54,8 +54,9 @@ public class ItemDisplayObject extends Object3d implements Spawnable, Interpolat
         }
     }
 
-    public ItemStack getStack() {
-        return stack;
+    @Override
+    public void unmount(ServerWorld world) {
+        removeDisplay();
     }
 
     @Override
@@ -65,5 +66,24 @@ public class ItemDisplayObject extends Object3d implements Spawnable, Interpolat
         if (display != null) {
             DisplayEntityAccess.setInterpolationDuration(display, 1);
         }
+    }
+
+    @Override
+    protected void onDetached() {
+        removeDisplay();
+    }
+
+    private void removeDisplay() {
+        if (entityRef == null) return;
+
+        var display = entityRef.resolve();
+
+        if (display != null) display.discard();
+
+        entityRef = null;
+    }
+
+    public ItemStack getStack() {
+        return stack;
     }
 }

@@ -9,30 +9,50 @@ import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 
 public class Scene {
 
     private final ServerWorld world;
     private final Collection<Object3d> objects = new ArrayList<>();
+    private final Collection<Object3d> toAdd = new ArrayList<>();
+    private final Collection<Object3d> toRemove = new ArrayList<>();
     private TaskHandle animationTask = null;
     private volatile AnimationContext animationContext = null;
+    private boolean iterating = false;
 
     public Scene(ServerWorld world) {
         this.world = world;
     }
 
     public void add(Object3d object) {
-        objects.add(object);
+        if (iterating) {
+            toAdd.add(object);
+            return;
+        }
+
+        if (!objects.add(object)) return;
+
+        object.updateMatrixWorld();
+
+        for (Object3d obj : object.traverse()) {
+            if (obj instanceof Mountable mountable) {
+                mountable.mount(world);
+            }
+        }
     }
 
-    public void spawnObjects() {
-        for (Object3d object : objects) {
-            object.updateMatrixWorld();
+    public void remove(Object3d object) {
+        if (iterating) {
+            toRemove.add(object);
+            return;
+        }
 
-            for (Object3d obj : object.traverse()) {
-                if (obj instanceof Spawnable spawnable) {
-                    spawnable.spawn(world);
-                }
+        if (!objects.remove(object)) return;
+
+        for (Object3d obj : object.traverse()) {
+            if (obj instanceof Unmountable mountable) {
+                mountable.unmount(world);
             }
         }
     }
@@ -50,7 +70,7 @@ public class Scene {
             }
         }
 
-        for (Object3d object : objects) {
+        for (Object3d object : iterate()) {
             for (Object3d obj : object.traverse()) {
                 if (obj instanceof Interpolatable interpolatable) {
                     interpolatable.updateTickRate(tickRate);
@@ -71,7 +91,7 @@ public class Scene {
 
 
     private void updateAnimation(double dt) {
-        for (Object3d object : objects) {
+        for (Object3d object : iterate()) {
             Object3d rootChanged = null;
 
             for (Object3d obj : object.traverse()) {
@@ -88,5 +108,38 @@ public class Scene {
                 rootChanged.updateMatrixWorld();
             }
         }
+    }
+
+    private Iterable<Object3d> iterate() {
+        return () -> {
+            iterating = true;
+
+            var parent = objects.iterator();
+
+            return new Iterator<>() {
+                boolean done = false;
+
+                @Override
+                public boolean hasNext() {
+                    boolean hasNext = parent.hasNext();
+
+                    if (!hasNext && !done) {
+                        done = true;
+                        iterating = false;
+                        toAdd.forEach(Scene.this::add);
+                        toRemove.forEach(Scene.this::remove);
+                        toAdd.clear();
+                        toRemove.clear();
+                    }
+
+                    return hasNext;
+                }
+
+                @Override
+                public Object3d next() {
+                    return parent.next();
+                }
+            };
+        };
     }
 }
