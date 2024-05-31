@@ -2,10 +2,7 @@ package work.lclpnet.ap2.impl.util;
 
 import net.minecraft.entity.decoration.DisplayEntity;
 import net.minecraft.util.math.AffineTransformation;
-import org.joml.Matrix4dc;
-import org.joml.Matrix4f;
-import org.joml.Quaternionf;
-import org.joml.Vector3d;
+import org.joml.*;
 import work.lclpnet.kibu.access.entity.DisplayEntityAccess;
 
 public class DisplayEntityTransformer {
@@ -14,11 +11,16 @@ public class DisplayEntityTransformer {
     private final Vector3d scale = new Vector3d();
     private final Quaternionf rotation = new Quaternionf();
     private final Matrix4f mat4f = new Matrix4f();
+    private final Matrix4d prevMatrix = new Matrix4d();
 
     public void applyTransformation(DisplayEntity display, Matrix4dc matrix) {
         AffineTransformation transformation;
 
         synchronized (this) {
+            if (matrix.equals(prevMatrix)) return;
+
+            prevMatrix.set(matrix);
+
             matrix.getTranslation(position);
             matrix.getScale(scale);
             matrix.getUnnormalizedRotation(rotation);
