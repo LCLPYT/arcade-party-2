@@ -2,6 +2,7 @@ package work.lclpnet.ap2.game.maniac_digger.data;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.block.FallingBlock;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.DyeColor;
 import net.minecraft.util.math.BlockPos;
@@ -14,6 +15,7 @@ import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.BlockHelper;
 import work.lclpnet.ap2.impl.util.StructureUtil;
+import work.lclpnet.ap2.impl.util.WeightedList;
 import work.lclpnet.ap2.impl.util.math.AffineIntMatrix;
 import work.lclpnet.ap2.impl.util.math.Vec2i;
 import work.lclpnet.kibu.structure.BlockStructure;
@@ -32,12 +34,16 @@ public class MdGenerator {
     private final GameMap map;
     private final Logger logger;
     private final Random random;
+    private final WeightedList<BlockState> fillMaterial;
+    private final WeightedList<BlockState> nonFallingMaterial;
 
     public MdGenerator(ServerWorld world, GameMap map, Logger logger, Random random) {
         this.world = world;
         this.map = map;
         this.logger = logger;
         this.random = random;
+        this.fillMaterial = genFillMaterial();
+        this.nonFallingMaterial = fillMaterial.filter(state -> !(state.getBlock() instanceof FallingBlock));
     }
 
     public List<MdPipe> generate(final int pipeCount) {
@@ -219,6 +225,91 @@ public class MdGenerator {
     }
 
     private BlockState randomFillMaterial(BlockPos pos) {
+        WeightedList<BlockState> pool;
+
+        if (pos.getY() == 0) {
+            pool = nonFallingMaterial;
+        } else {
+            pool = fillMaterial;
+        }
+
+
+        BlockState material = pool.getRandomElement(random);
+
+        if (material != null) {
+            return material;
+        }
+
         return Blocks.DIRT.getDefaultState();
+    }
+
+    private WeightedList<BlockState> genFillMaterial() {
+        WeightedList<BlockState> material = new WeightedList<>();
+
+        float common = 0.085f;
+        float uncommon = 0.035f;
+        float rare = 0.01f;
+
+        material.add(Blocks.DIRT.getDefaultState(), common);
+        material.add(Blocks.COBBLESTONE.getDefaultState(), common);
+        material.add(Blocks.ROOTED_DIRT.getDefaultState(), common);
+        material.add(Blocks.TUFF.getDefaultState(), common);
+        material.add(Blocks.ACACIA_WOOD.getDefaultState(), common);
+        material.add(Blocks.SPRUCE_PLANKS.getDefaultState(), common);
+        material.add(Blocks.ANDESITE.getDefaultState(), common);
+        material.add(Blocks.DIORITE.getDefaultState(), common);
+        material.add(Blocks.MUD.getDefaultState(), common);
+        material.add(Blocks.MUD_BRICKS.getDefaultState(), common);
+        material.add(Blocks.MYCELIUM.getDefaultState(), common);
+        material.add(Blocks.CRIMSON_STEM.getDefaultState(), common);
+        material.add(Blocks.BAMBOO_BLOCK.getDefaultState(), common);
+        material.add(Blocks.SMOOTH_STONE.getDefaultState(), common);
+        material.add(Blocks.DEEPSLATE.getDefaultState(), common);
+        material.add(Blocks.SAND.getDefaultState(), common);
+        material.add(Blocks.RED_SAND.getDefaultState(), common);
+        material.add(Blocks.PRISMARINE.getDefaultState(), common);
+        material.add(Blocks.SMOOTH_BASALT.getDefaultState(), common);
+        material.add(Blocks.MAGENTA_CONCRETE_POWDER.getDefaultState(), common);
+        material.add(Blocks.WHITE_CONCRETE_POWDER.getDefaultState(), common);
+        material.add(Blocks.LIME_CONCRETE_POWDER.getDefaultState(), common);
+        material.add(Blocks.COARSE_DIRT.getDefaultState(), common);
+        material.add(Blocks.CLAY.getDefaultState(), common);
+        material.add(Blocks.GRAVEL.getDefaultState(), common);
+        material.add(Blocks.SNOW_BLOCK.getDefaultState(), common);
+        material.add(Blocks.CALCITE.getDefaultState(), common);
+        material.add(Blocks.MOSS_BLOCK.getDefaultState(), common);
+        material.add(Blocks.SOUL_SAND.getDefaultState(), common);
+        material.add(Blocks.BOOKSHELF.getDefaultState(), common);
+        material.add(Blocks.SHROOMLIGHT.getDefaultState(), common);
+        material.add(Blocks.WARPED_WART_BLOCK.getDefaultState(), common);
+        material.add(Blocks.NETHER_WART_BLOCK.getDefaultState(), common);
+        material.add(Blocks.RED_MUSHROOM_BLOCK.getDefaultState(), common);
+        material.add(Blocks.BROWN_MUSHROOM_BLOCK.getDefaultState(), common);
+        material.add(Blocks.DRIPSTONE_BLOCK.getDefaultState(), common);
+        material.add(Blocks.BLUE_ICE.getDefaultState(), common);
+        material.add(Blocks.END_STONE.getDefaultState(), common);
+
+        material.add(Blocks.SPONGE.getDefaultState(), uncommon);
+        material.add(Blocks.TUFF_BRICKS.getDefaultState(), uncommon);
+        material.add(Blocks.STONE_BRICKS.getDefaultState(), uncommon);
+        material.add(Blocks.BAMBOO_MOSAIC.getDefaultState(), uncommon);
+        material.add(Blocks.CHISELED_RED_SANDSTONE.getDefaultState(), uncommon);
+        material.add(Blocks.PRISMARINE_BRICKS.getDefaultState(), uncommon);
+        material.add(Blocks.WAXED_COPPER_GRATE.getDefaultState(), uncommon);
+        material.add(Blocks.WEATHERED_CUT_COPPER.getDefaultState(), uncommon);
+        material.add(Blocks.PURPUR_BLOCK.getDefaultState(), uncommon);
+        material.add(Blocks.CHISELED_BOOKSHELF.getDefaultState(), uncommon);
+        material.add(Blocks.SLIME_BLOCK.getDefaultState(), uncommon);
+        material.add(Blocks.HONEY_BLOCK.getDefaultState(), uncommon);
+        material.add(Blocks.MAGMA_BLOCK.getDefaultState(), uncommon);
+        material.add(Blocks.OCHRE_FROGLIGHT.getDefaultState(), uncommon);
+        material.add(Blocks.LODESTONE.getDefaultState(), uncommon);
+
+        material.add(Blocks.OBSIDIAN.getDefaultState(), rare);
+        material.add(Blocks.CRYING_OBSIDIAN.getDefaultState(), rare);
+        material.add(Blocks.GLOWSTONE.getDefaultState(), rare);
+        material.add(Blocks.ANCIENT_DEBRIS.getDefaultState(), rare);
+
+        return material;
     }
 }

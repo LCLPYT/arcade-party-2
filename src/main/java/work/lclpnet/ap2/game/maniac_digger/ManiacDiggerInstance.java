@@ -137,9 +137,9 @@ public class ManiacDiggerInstance extends DefaultGameInstance implements MapBoot
         ItemStack hoe = new ItemStack(Items.IRON_HOE);
         hoe.set(DataComponentTypes.UNBREAKABLE, new UnbreakableComponent(false));
 
-        player.getInventory().setStack(0, pickaxe);
-        player.getInventory().setStack(1, shovel);
-        player.getInventory().setStack(2, axe);
+        player.getInventory().setStack(0, axe);
+        player.getInventory().setStack(1, pickaxe);
+        player.getInventory().setStack(2, shovel);
         player.getInventory().setStack(3, hoe);
     }
 

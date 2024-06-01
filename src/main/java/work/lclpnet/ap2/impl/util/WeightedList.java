@@ -4,6 +4,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class WeightedList<E> extends AbstractList<E> {
@@ -91,6 +92,19 @@ public class WeightedList<E> extends AbstractList<E> {
                     .collect(Collectors.toCollection(ArrayList::new));
 
             return new WeightedList<>(mappedEntries, totalWeight);
+        }
+    }
+
+    public WeightedList<E> filter(Predicate<E> predicate) {
+        synchronized (this) {
+            List<Entry<E>> filtered = this.entries.stream()
+                    .filter(entry -> predicate.test(entry.item))
+                    .collect(Collectors.toCollection(ArrayList::new));
+
+            float filteredWeight = filtered.stream()
+                    .reduce(0f, (accumulated, entry) -> accumulated + entry.weight, Float::sum);
+
+            return new WeightedList<>(filtered, filteredWeight);
         }
     }
 
