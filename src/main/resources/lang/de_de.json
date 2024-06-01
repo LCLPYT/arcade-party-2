@@ -206,5 +206,7 @@
   "game.ap2.glowing_bomb": "Glühende Bombe",
   "game.ap2.glowing_bomb.description": "Eine Glowstone-Bombe wird herum gereicht. Wenn sie bei dir explodiert, wird Glowstone in deinen Seelenanker getan. Wenn dein Seelenanker voll ist, fliegst du raus!",
   "game.ap2.glowing_bomb.task": "Reiche die Bombe herum",
-  "game.ap2.glowing_bomb.pass": "Bombe weitergeben"
+  "game.ap2.glowing_bomb.pass": "Bombe weitergeben",
+  "game.ap2.apocalypse_survival": "Untoten-Apokalypse",
+  "game.ap2.apocalypse_survival.description": "Eine Armee von Untoten wird erscheinen und dich jagen! Du kannst dich nicht wehren. Fliehe und überlebe bis zuletzt!"
 }
