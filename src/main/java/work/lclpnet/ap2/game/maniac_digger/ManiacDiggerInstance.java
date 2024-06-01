@@ -100,6 +100,8 @@ public class ManiacDiggerInstance extends DefaultGameInstance implements MapBoot
 
             giveItems(player);
         }
+
+        useTaskDisplay();
     }
 
     @Override
