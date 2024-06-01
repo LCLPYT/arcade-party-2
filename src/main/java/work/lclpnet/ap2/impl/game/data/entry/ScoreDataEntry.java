@@ -6,11 +6,16 @@ import work.lclpnet.ap2.api.game.data.SubjectRef;
 import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.kibu.translate.text.TranslatedText;
 
-public record ScoreDataEntry<Ref extends SubjectRef>(Ref subject, int score) implements DataEntry<Ref>, ScoreView {
+public record ScoreDataEntry<Ref extends SubjectRef>(Ref subject, int score, @Nullable String textOverride) implements DataEntry<Ref>, ScoreView {
+
+    public ScoreDataEntry(Ref subject, int score) {
+        this(subject, score, null);
+    }
 
     @Override
     public @Nullable TranslatedText toText(TranslationService translationService) {
-        return translationService.translateText("ap2.score.points",score);
+        String key = textOverride != null ? textOverride : "ap2.score.points";
+        return translationService.translateText(key, score);
     }
 
     @Override

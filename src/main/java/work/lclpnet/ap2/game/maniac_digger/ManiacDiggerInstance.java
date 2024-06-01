@@ -18,7 +18,10 @@ import work.lclpnet.ap2.game.maniac_digger.data.MdGenerator;
 import work.lclpnet.ap2.game.maniac_digger.data.MdPipe;
 import work.lclpnet.ap2.impl.game.DefaultGameInstance;
 import work.lclpnet.ap2.impl.game.PlayerUtil;
+import work.lclpnet.ap2.impl.game.data.CombinedDataContainer;
 import work.lclpnet.ap2.impl.game.data.OrderedDataContainer;
+import work.lclpnet.ap2.impl.game.data.Ordering;
+import work.lclpnet.ap2.impl.game.data.ScoreDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.map.ServerThreadMapBootstrap;
 import work.lclpnet.kibu.hook.world.BlockModificationHooks;
@@ -26,14 +29,13 @@ import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 import work.lclpnet.lobby.game.map.GameMap;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
-import java.util.UUID;
+import java.util.*;
 
 public class ManiacDiggerInstance extends DefaultGameInstance implements MapBootstrapFunction {
 
-    private final OrderedDataContainer<ServerPlayerEntity, PlayerRef> data = new OrderedDataContainer<>(PlayerRef::create);
+    private final OrderedDataContainer<ServerPlayerEntity, PlayerRef> reachedBottom = new OrderedDataContainer<>(PlayerRef::create);
+    private final ScoreDataContainer<ServerPlayerEntity, PlayerRef> score = new ScoreDataContainer<>(PlayerRef::create, Ordering.ASCENDING, "game.ap2.maniac_digger.result");
+    private final CombinedDataContainer<ServerPlayerEntity, PlayerRef> data = new CombinedDataContainer<>(List.of(reachedBottom, score));
     private final Map<UUID, MdPipe> pipes = new HashMap<>();
     private int winHeight = 64;
 
@@ -114,6 +116,8 @@ public class ManiacDiggerInstance extends DefaultGameInstance implements MapBoot
 
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
             if (player.getBlockY() <= winHeight) {
+                reachedBottom.add(player);
+                gradePlayers(player);
                 winManager.win(player);
                 break;
             }
@@ -137,5 +141,18 @@ public class ManiacDiggerInstance extends DefaultGameInstance implements MapBoot
         player.getInventory().setStack(1, shovel);
         player.getInventory().setStack(2, axe);
         player.getInventory().setStack(3, hoe);
+    }
+
+    private void gradePlayers(ServerPlayerEntity winner) {
+        UUID winnerUuid = winner.getUuid();
+
+        // grade players who are not yet in the goal by their distance to the goal
+        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
+            if (player.getUuid().equals(winnerUuid)) continue;
+
+            int distance = Math.max(0, player.getBlockY() - winHeight - 1);
+
+            score.setScore(player, distance);
+        }
     }
 }
