@@ -12,6 +12,7 @@ import work.lclpnet.ap2.game.guess_it.GuessItMiniGame;
 import work.lclpnet.ap2.game.hot_potato.HotPotatoMiniGame;
 import work.lclpnet.ap2.game.jump_and_run.JumpAndRunMiniGame;
 import work.lclpnet.ap2.game.knockout.KnockoutMiniGame;
+import work.lclpnet.ap2.game.maniac_digger.ManiacDiggerMiniGame;
 import work.lclpnet.ap2.game.mimicry.MimicryMiniGame;
 import work.lclpnet.ap2.game.mining_battle.MiningBattleMiniGame;
 import work.lclpnet.ap2.game.mirror_hop.MirrorHopMiniGame;
@@ -61,5 +62,6 @@ public class MiniGames {
         games.add(new MimicryMiniGame());
         games.add(new SplashyDropperMiniGame());
         games.add(new GlowingBombMiniGame());
+        games.add(new ManiacDiggerMiniGame());
     }
 }
