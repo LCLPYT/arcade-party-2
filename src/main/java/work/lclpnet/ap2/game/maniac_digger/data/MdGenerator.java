@@ -3,19 +3,24 @@ package work.lclpnet.ap2.game.maniac_digger.data;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.util.DyeColor;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3i;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.BlockBox;
+import work.lclpnet.ap2.impl.util.BlockHelper;
 import work.lclpnet.ap2.impl.util.StructureUtil;
+import work.lclpnet.ap2.impl.util.math.AffineIntMatrix;
 import work.lclpnet.ap2.impl.util.math.Vec2i;
 import work.lclpnet.kibu.structure.BlockStructure;
 import work.lclpnet.lobby.game.map.GameMap;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
@@ -35,7 +40,7 @@ public class MdGenerator {
         this.random = random;
     }
 
-    public void generate(final int pipeCount) {
+    public List<MdPipe> generate(final int pipeCount) {
         Vec3i dimensions = MapUtil.readBlockPos(map.requireProperty("area-dimensions"));
         JSONArray areas = map.requireProperty("areas");
 
@@ -58,24 +63,47 @@ public class MdGenerator {
         MdPipePlan plan = generatePipe(dimensions);
         BlockStructure structure = plan.structure();
 
+        List<DyeColor> colors = new ArrayList<>(DyeColor.values().length);
+        Collections.addAll(colors, DyeColor.values());
+
+        List<MdPipe> pipes = new ArrayList<>(pipeCount);
+
         for (int i = 0; i < pipeCount; i++) {
             BlockPos offset = offsets.get(i);
 
-            StructureUtil.placeStructureFast(structure, world, offset);
+            BlockState wallMaterial;
+
+            if (colors.isEmpty()) {
+                wallMaterial = Blocks.GLASS.getDefaultState();
+            } else {
+                DyeColor color = colors.remove(random.nextInt(colors.size()));
+                wallMaterial = BlockHelper.getStainedGlass(color).getDefaultState();
+            }
+
+            StructureUtil.placeStructureFast(StructureUtil.replace(structure, MdPipePlan.WALL_MATERIAL, wallMaterial), world, offset);
+
+            int x = offset.getX(), y = offset.getY(), z = offset.getZ();
+
+            Vec3d spawn = plan.getSpawn().add(x, y, z);
+            BlockBox bounds = plan.getBounds().transform(AffineIntMatrix.makeTranslation(x, y, z));
+
+            pipes.add(new MdPipe(spawn, bounds));
         }
+
+        return pipes;
     }
 
     private MdPipePlan generatePipe(Vec3i dimensions) {
         BlockBox box = new BlockBox(0, 0, 0,
                 dimensions.getX() - 1, dimensions.getY() - 1, dimensions.getZ() - 1);
 
-        MdPipePlan plan = new MdPipePlan(dimensions, 4, this::randomFillMaterial);
-
-
         List<Vec2i> chasms = genChasms(box);
         Vec2i chasm = chasms.get(random.nextInt(chasms.size()));
 
         final int maxY = box.max().getY();
+
+        Vec3d spawn = new Vec3d(chasm.x() + 2, maxY - 2, chasm.z() + 2);
+        MdPipePlan plan = new MdPipePlan(dimensions, 4, spawn, box, this::randomFillMaterial);
 
         var pos = new BlockPos.Mutable();
         var pos2 = new BlockPos.Mutable();
@@ -99,7 +127,7 @@ public class MdGenerator {
                 }
             }
 
-            plan.placeVertical(pos);
+            plan.placeVertical(pos, maxY - y);
             distance++;
         }
 
