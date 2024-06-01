@@ -206,5 +206,10 @@
   "game.ap2.glowing_bomb": "Glühende Bombe",
   "game.ap2.glowing_bomb.description": "Eine Glowstone-Bombe wird herum gereicht. Wenn sie bei dir explodiert, wird Glowstone in deinen Seelenanker getan. Wenn dein Seelenanker voll ist, fliegst du raus!",
   "game.ap2.glowing_bomb.task": "Reiche die Bombe herum",
-  "game.ap2.glowing_bomb.pass": "Bombe weitergeben"
+  "game.ap2.glowing_bomb.pass": "Bombe weitergeben",
+  "game.ap2.maniac_digger": "Verrücktes Graben",
+  "game.ap2.maniac_digger.description": "Grabe dich durch eine Röhre, die mit zufälligen Blöcken gefüllt ist. Nutze die richtigen Werkzeuge, um Blöcke schneller abzubauen.",
+  "game.ap2.maniac_digger.task": "Erreiche den Boden",
+  "game.ap2.maniac_digger.result": "%s Blöcke entfernt",
+  "game.ap2.maniac_digger.wrong_tool": "❌ falsches Werkzeug ❌"
 }

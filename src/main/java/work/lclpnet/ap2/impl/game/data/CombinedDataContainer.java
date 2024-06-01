@@ -74,10 +74,17 @@ public class CombinedDataContainer<T, Ref extends SubjectRef> implements DataCon
     @Override
     public void ensureTracked(T subject) {
         synchronized (this) {
-            // make sure the subject is tracked by the last child container
-            var lastChild = children.getLast();
+            DataContainer<T, Ref> container;
 
-            lastChild.ensureTracked(subject);
+            if (orderedEntries().findAny().isEmpty()) {
+                // if there is no data, add to the first data container
+                container = children.getFirst();
+            } else {
+                // otherwise, use the last data container
+                container = children.getLast();
+            }
+
+            container.ensureTracked(subject);
         }
     }
 
