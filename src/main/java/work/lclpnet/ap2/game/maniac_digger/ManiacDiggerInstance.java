@@ -1,6 +1,11 @@
 package work.lclpnet.ap2.game.maniac_digger;
 
+import net.minecraft.block.StainedGlassBlock;
+import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.UnbreakableComponent;
 import net.minecraft.entity.attribute.EntityAttributes;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.Vec3d;
@@ -16,6 +21,9 @@ import work.lclpnet.ap2.impl.game.PlayerUtil;
 import work.lclpnet.ap2.impl.game.data.OrderedDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.map.ServerThreadMapBootstrap;
+import work.lclpnet.kibu.hook.world.BlockModificationHooks;
+import work.lclpnet.kibu.plugin.hook.HookRegistrar;
+import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 import work.lclpnet.lobby.game.map.GameMap;
 
 import java.util.HashMap;
@@ -27,9 +35,12 @@ public class ManiacDiggerInstance extends DefaultGameInstance implements MapBoot
 
     private final OrderedDataContainer<ServerPlayerEntity, PlayerRef> data = new OrderedDataContainer<>(PlayerRef::create);
     private final Map<UUID, MdPipe> pipes = new HashMap<>();
+    private int winHeight = 64;
 
     public ManiacDiggerInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
+
+        useSurvivalMode();
     }
 
     @Override
@@ -46,6 +57,9 @@ public class ManiacDiggerInstance extends DefaultGameInstance implements MapBoot
 
     @Override
     public void bootstrapWorld(ServerWorld world, GameMap map) {
+        Number winHeight = map.requireProperty("goal-height");
+        this.winHeight = winHeight.intValue();
+
         MdGenerator generator = new MdGenerator(world, map, gameHandle.getLogger(), new Random());
         Participants participants = gameHandle.getParticipants();
 
@@ -71,11 +85,57 @@ public class ManiacDiggerInstance extends DefaultGameInstance implements MapBoot
             Vec3d spawn = pipe.spawn();
             player.teleport(world, spawn.getX(), spawn.getY(), spawn.getZ(), 0f, 0f);
             PlayerUtil.setAttribute(player, EntityAttributes.GENERIC_SCALE, 0.5);
+
+            giveItems(player);
         }
     }
 
     @Override
     protected void ready() {
+        gameHandle.protect(config -> config.allow(ProtectionTypes.BREAK_BLOCKS, ProtectionTypes.MODIFY_INVENTORY));
 
+        HookRegistrar hooks = gameHandle.getHookRegistrar();
+        Participants participants = gameHandle.getParticipants();
+
+        hooks.registerHook(BlockModificationHooks.BREAK_BLOCK, (world, pos, entity) -> {
+            if (!(entity instanceof ServerPlayerEntity player) || !participants.isParticipating(player)
+                || winManager.isGameOver()) return true;
+
+            MdPipe pipe = pipes.get(player.getUuid());
+
+            return pipe == null || !pipe.bounds().contains(pos) || world.getBlockState(pos).getBlock() instanceof StainedGlassBlock;
+        });
+
+        gameHandle.getGameScheduler().interval(this::checkGoal, 1);
+    }
+
+    private void checkGoal() {
+        if (winManager.isGameOver()) return;
+
+        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
+            if (player.getBlockY() <= winHeight) {
+                winManager.win(player);
+                break;
+            }
+        }
+    }
+
+    private void giveItems(ServerPlayerEntity player) {
+        ItemStack pickaxe = new ItemStack(Items.IRON_PICKAXE);
+        pickaxe.set(DataComponentTypes.UNBREAKABLE, new UnbreakableComponent(false));
+
+        ItemStack shovel = new ItemStack(Items.IRON_SHOVEL);
+        shovel.set(DataComponentTypes.UNBREAKABLE, new UnbreakableComponent(false));
+
+        ItemStack axe = new ItemStack(Items.IRON_AXE);
+        axe.set(DataComponentTypes.UNBREAKABLE, new UnbreakableComponent(false));
+
+        ItemStack hoe = new ItemStack(Items.IRON_HOE);
+        hoe.set(DataComponentTypes.UNBREAKABLE, new UnbreakableComponent(false));
+
+        player.getInventory().setStack(0, pickaxe);
+        player.getInventory().setStack(1, shovel);
+        player.getInventory().setStack(2, axe);
+        player.getInventory().setStack(3, hoe);
     }
 }

@@ -98,7 +98,8 @@ public class MdGenerator {
                 dimensions.getX() - 1, dimensions.getY() - 1, dimensions.getZ() - 1);
 
         List<Vec2i> chasms = genChasms(box);
-        Vec2i chasm = chasms.get(random.nextInt(chasms.size()));
+        Vec2i initialChasm = chasms.get(random.nextInt(chasms.size()));
+        Vec2i chasm = initialChasm;
 
         final int maxY = box.max().getY();
 
@@ -131,7 +132,39 @@ public class MdGenerator {
             distance++;
         }
 
+        clearSpawn(plan, initialChasm, maxY);
+
         return plan;
+    }
+
+    private void clearSpawn(MdPipePlan plan, Vec2i initialChasm, int maxY) {
+        var pos = new BlockPos.Mutable();
+        int x = initialChasm.x(), z = initialChasm.z();
+        BlockState air = Blocks.AIR.getDefaultState();
+
+        pos.set(x + 1, maxY - 1, z + 1);
+        plan.setBlockState(pos, air);
+
+        pos.set(x + 2, maxY - 1, z + 1);
+        plan.setBlockState(pos, air);
+
+        pos.set(x + 1, maxY - 1, z + 2);
+        plan.setBlockState(pos, air);
+
+        pos.set(x + 2, maxY - 1, z + 2);
+        plan.setBlockState(pos, air);
+
+        pos.set(x + 1, maxY - 2, z + 1);
+        plan.setBlockState(pos, air);
+
+        pos.set(x + 2, maxY - 2, z + 1);
+        plan.setBlockState(pos, air);
+
+        pos.set(x + 1, maxY - 2, z + 2);
+        plan.setBlockState(pos, air);
+
+        pos.set(x + 2, maxY - 2, z + 2);
+        plan.setBlockState(pos, air);
     }
 
     @Nullable

@@ -46,7 +46,7 @@ public class MdPipePlan {
 
                 if (depth == 0 || x == 0 || x == d || z == 0 || z == d) {
                     struct.setBlockState(tmpPos, WALL_MATERIAL);
-                } else if (depth > 2) {
+                } else {
                     BlockState material = this.fillMaterial.apply(tmpPos);
                     struct.setBlockState(tmpPos, material);
                 }
@@ -130,6 +130,10 @@ public class MdPipePlan {
         tmpPos.set(pos, 2, 0, 2);
         material = this.fillMaterial.apply(tmpPos);
         struct.setBlockState(tmpPos, material);
+    }
+
+    public void setBlockState(BlockPos pos, BlockState state) {
+        struct.setBlockState(pos, state);
     }
 
     public Vec3d getSpawn() {
