@@ -209,5 +209,6 @@
   "game.ap2.glowing_bomb.pass": "Bombe weitergeben",
   "game.ap2.maniac_digger": "Verrücktes Graben",
   "game.ap2.maniac_digger.description": "Grabe dich durch eine Röhre, die mit zufälligen Blöcken gefüllt ist. Nutze die richtigen Werkzeuge, um Blöcke schneller abzubauen.",
-  "game.ap2.maniac_digger.result": "%s Blöcke entfernt"
+  "game.ap2.maniac_digger.result": "%s Blöcke entfernt",
+  "game.ap2.maniac_digger.wrong_tool": "❌ falsches Werkzeug ❌"
 }
