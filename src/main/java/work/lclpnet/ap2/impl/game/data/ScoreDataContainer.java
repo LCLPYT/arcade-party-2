@@ -1,5 +1,6 @@
 package work.lclpnet.ap2.impl.game.data;
 
+import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.event.IntScoreEvent;
 import work.lclpnet.ap2.api.event.IntScoreEventSource;
 import work.lclpnet.ap2.api.game.data.*;
@@ -9,6 +10,7 @@ import work.lclpnet.ap2.impl.game.data.entry.ScoreView;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 /**
@@ -21,12 +23,23 @@ public class ScoreDataContainer<T, Ref extends SubjectRef> implements DataContai
     private final SubjectRefFactory<T, Ref> refs;
     private final Map<Ref, Integer> scoreMap = new HashMap<>();
     private final List<IntScoreEvent<T>> listeners = new ArrayList<>();
+    private final Ordering ordering;
+    private final @Nullable String detailKey;
 
     private boolean frozen = false;
 
     public ScoreDataContainer(SubjectRefFactory<T, Ref> refs) {
-        this.refs = refs;
+        this(refs, Ordering.DESCENDING);
+    }
 
+    public ScoreDataContainer(SubjectRefFactory<T, Ref> refs, Ordering ordering) {
+        this(refs, ordering, null);
+    }
+
+    public ScoreDataContainer(SubjectRefFactory<T, Ref> refs, Ordering ordering, @Nullable String detailKey) {
+        this.refs = refs;
+        this.ordering = Objects.requireNonNull(ordering);
+        this.detailKey = detailKey;
     }
 
     public void setScore(T subject, int score) {
@@ -80,15 +93,15 @@ public class ScoreDataContainer<T, Ref extends SubjectRef> implements DataContai
                 return Optional.empty();
             }
 
-            return Optional.of(new ScoreDataEntry<>(ref, score));
+            return Optional.of(new ScoreDataEntry<>(ref, score, detailKey));
         }
     }
 
     @Override
     public Stream<? extends DataEntry<Ref>> orderedEntries() {
         return scoreMap.entrySet().stream()
-                .map(e -> new ScoreDataEntry<>(e.getKey(), e.getValue()))
-                .sorted(Comparator.comparingInt(ScoreView::score).reversed());
+                .map(e -> new ScoreDataEntry<>(e.getKey(), e.getValue(), detailKey))
+                .sorted(ordering.order(ScoreView::score));
     }
 
     @Override
@@ -100,7 +113,14 @@ public class ScoreDataContainer<T, Ref extends SubjectRef> implements DataContai
 
     @Override
     public void ensureTracked(T subject) {
-        addScore(subject, 0);
+        var worst = getWorstScore();
+
+        int score = switch (ordering) {
+            case DESCENDING -> Math.max(0, worst.orElse(1) - 1);
+            case ASCENDING -> worst.orElse(-1) + 1;
+        };
+
+        addScore(subject, score);
     }
 
     @Override
@@ -113,7 +133,15 @@ public class ScoreDataContainer<T, Ref extends SubjectRef> implements DataContai
     }
 
     public OptionalInt getBestScore() {
-        return scoreMap.values().stream().mapToInt(i -> i).max();
+        return ordering.best(scores());
+    }
+
+    public OptionalInt getWorstScore() {
+        return ordering.opposite().best(scores());
+    }
+
+    private IntStream scores() {
+        return scoreMap.values().stream().mapToInt(i -> i);
     }
 
     public Set<T> getBestSubjects(SubjectRefResolver<T, Ref> resolver) {
