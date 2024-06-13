@@ -20,7 +20,6 @@ import work.lclpnet.ap2.api.game.team.TeamManager;
 import work.lclpnet.ap2.api.map.MapBootstrapFunction;
 import work.lclpnet.ap2.api.util.CollisionDetector;
 import work.lclpnet.ap2.game.cozy_campfire.setup.*;
-import work.lclpnet.ap2.impl.game.PlayerUtil;
 import work.lclpnet.ap2.impl.game.TeamEliminationGameInstance;
 import work.lclpnet.ap2.impl.game.team.ApTeamKeys;
 import work.lclpnet.ap2.impl.util.TeamStorage;
@@ -33,6 +32,7 @@ import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.kibu.translate.text.LocalizedFormat;
 import work.lclpnet.lobby.game.map.GameMap;
+import work.lclpnet.lobby.util.PlayerReset;
 
 import java.util.HashSet;
 import java.util.Random;
@@ -97,7 +97,7 @@ public class CozyCampfireInstance extends TeamEliminationGameInstance implements
 
         for (ServerPlayerEntity player : participants) {
             kitManager.giveItems(player);
-            PlayerUtil.modifyWalkSpeed(player, 0.15f);
+            PlayerReset.modifyWalkSpeed(player, 0.15f);
             player.sendAbilitiesUpdate();
         }
 

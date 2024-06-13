@@ -2,12 +2,12 @@ package work.lclpnet.ap2.impl.util.movement;
 
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.server.network.ServerPlayerEntity;
-import work.lclpnet.ap2.impl.game.PlayerUtil;
 import work.lclpnet.kibu.hook.player.PlayerConnectionHooks;
 import work.lclpnet.kibu.hook.player.PlayerMoveCallback;
 import work.lclpnet.kibu.hook.util.PositionRotation;
 import work.lclpnet.kibu.plugin.hook.HookListenerModule;
 import work.lclpnet.kibu.plugin.hook.HookRegistrar;
+import work.lclpnet.lobby.util.PlayerReset;
 
 class MovementListener implements HookListenerModule {
 
@@ -19,19 +19,19 @@ class MovementListener implements HookListenerModule {
     }
 
     static void modifyJumpAttribute(ServerPlayerEntity player) {
-        PlayerUtil.setAttribute(player, EntityAttributes.GENERIC_JUMP_STRENGTH, 0);
+        PlayerReset.setAttribute(player, EntityAttributes.GENERIC_JUMP_STRENGTH, 0);
     }
 
     static void resetJumpAttributes(ServerPlayerEntity player) {
-        PlayerUtil.resetAttribute(player, EntityAttributes.GENERIC_JUMP_STRENGTH);
+        PlayerReset.resetAttribute(player, EntityAttributes.GENERIC_JUMP_STRENGTH);
     }
 
     static void modifySpeedAttribute(ServerPlayerEntity player) {
-        PlayerUtil.setAttribute(player, EntityAttributes.GENERIC_MOVEMENT_SPEED, 0);
+        PlayerReset.setAttribute(player, EntityAttributes.GENERIC_MOVEMENT_SPEED, 0);
     }
 
     static void resetSpeedAttributes(ServerPlayerEntity player) {
-        PlayerUtil.resetAttribute(player, EntityAttributes.GENERIC_MOVEMENT_SPEED);
+        PlayerReset.resetAttribute(player, EntityAttributes.GENERIC_MOVEMENT_SPEED);
     }
 
     @Override

@@ -2,7 +2,6 @@ package work.lclpnet.ap2.game;
 
 import work.lclpnet.ap2.api.game.MiniGame;
 import work.lclpnet.ap2.game.anvil_fall.AnvilFallMiniGame;
-import work.lclpnet.ap2.game.apocalypse_survival.ApocalypseSurvivalMiniGame;
 import work.lclpnet.ap2.game.block_dissolve.BlockDissolveMiniGame;
 import work.lclpnet.ap2.game.bow_spleef.BowSpleefMiniGame;
 import work.lclpnet.ap2.game.chicken_shooter.ChickenShooterMiniGame;
@@ -64,6 +63,6 @@ public class MiniGames {
         games.add(new SplashyDropperMiniGame());
         games.add(new GlowingBombMiniGame());
         games.add(new ManiacDiggerMiniGame());
-        games.add(new ApocalypseSurvivalMiniGame());
+//        games.add(new ApocalypseSurvivalMiniGame());
     }
 }

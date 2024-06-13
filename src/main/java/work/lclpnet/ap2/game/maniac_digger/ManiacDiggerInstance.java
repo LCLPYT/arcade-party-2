@@ -24,7 +24,6 @@ import work.lclpnet.ap2.api.map.MapBootstrapFunction;
 import work.lclpnet.ap2.game.maniac_digger.data.MdGenerator;
 import work.lclpnet.ap2.game.maniac_digger.data.MdPipe;
 import work.lclpnet.ap2.impl.game.DefaultGameInstance;
-import work.lclpnet.ap2.impl.game.PlayerUtil;
 import work.lclpnet.ap2.impl.game.data.CombinedDataContainer;
 import work.lclpnet.ap2.impl.game.data.OrderedDataContainer;
 import work.lclpnet.ap2.impl.game.data.Ordering;
@@ -37,6 +36,7 @@ import work.lclpnet.kibu.hook.world.BlockModificationHooks;
 import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 import work.lclpnet.lobby.game.map.GameMap;
+import work.lclpnet.lobby.util.PlayerReset;
 
 import java.util.*;
 
@@ -96,7 +96,7 @@ public class ManiacDiggerInstance extends DefaultGameInstance implements MapBoot
 
             Vec3d spawn = pipe.spawn();
             player.teleport(world, spawn.getX(), spawn.getY(), spawn.getZ(), 0f, 0f);
-            PlayerUtil.setAttribute(player, EntityAttributes.GENERIC_SCALE, 0.5);
+            PlayerReset.setAttribute(player, EntityAttributes.GENERIC_SCALE, 0.5);
 
             giveItems(player);
         }

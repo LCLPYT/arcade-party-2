@@ -49,6 +49,7 @@ public class GuessItInstance extends DefaultGameInstance implements MapBootstrap
     private static final int PREPARATION_TICKS = Ticks.seconds(3);
     private static final int DELAY_TICKS = Ticks.seconds(5);
     private static final int MIN_ROUNDS = 8, MAX_ROUNDS = 14;
+    private static final int MAX_CONSECUTIVE_ERRORS = 5;
     private final ScoreDataContainer<ServerPlayerEntity, PlayerRef> data = new ScoreDataContainer<>(PlayerRef::create);
     private final Random random = new Random();
     private final PlayerChoices choices;
@@ -62,6 +63,7 @@ public class GuessItInstance extends DefaultGameInstance implements MapBootstrap
     private ScoreHandle roundHandle = null;
     private int round = 0;
     private int rounds = 10;
+    private int consecutiveErrors = 0;
 
     public GuessItInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
@@ -168,7 +170,11 @@ public class GuessItInstance extends DefaultGameInstance implements MapBootstrap
         modifier.undo();
 
         if (challenge != null) {
-            challenge.destroy();
+            try {
+                challenge.destroy();
+            } catch (Throwable t) {
+                gameHandle.getLogger().error("Failed to destroy {}, ignoring it", challenge.getClass().getSimpleName(), t);
+            }
         }
 
         round++;
@@ -187,7 +193,13 @@ public class GuessItInstance extends DefaultGameInstance implements MapBootstrap
             player.playSoundToPlayer(SoundEvents.BLOCK_END_PORTAL_FRAME_FILL, SoundCategory.NEUTRAL, 1f, 0.5f);
         }
 
-        challenge.prepare();
+        try {
+            challenge.prepare();
+        } catch (Throwable t) {
+            gameHandle.getLogger().error("Failed to prepare {}", challenge.getClass().getSimpleName(), t);
+            onChallengeError();
+            return;
+        }
 
         gameHandle.getGameScheduler().timeout(this::beginChallenge, PREPARATION_TICKS);
     }
@@ -208,7 +220,17 @@ public class GuessItInstance extends DefaultGameInstance implements MapBootstrap
         }
 
         messenger.reset();
-        challenge.begin(inputManager, messenger);
+
+        try {
+            challenge.begin(inputManager, messenger);
+        } catch (Throwable t) {
+            gameHandle.getLogger().error("Failed to begin {}", challenge.getClass().getSimpleName(), t);
+            onChallengeError();
+            return;
+        }
+
+        consecutiveErrors = 0;
+
         messenger.send();
 
         int durationTicks = challenge.getDurationTicks();
@@ -222,6 +244,19 @@ public class GuessItInstance extends DefaultGameInstance implements MapBootstrap
         timer.addPlayers(players);
         timer.whenDone(this::onTimerOver);
         timer.start(gameHandle.getBossBarProvider(), scheduler);
+    }
+
+    private void onChallengeError() {
+        consecutiveErrors++;
+
+        if (consecutiveErrors >= MAX_CONSECUTIVE_ERRORS) {
+            // to many errors in a row, abort the game
+            winManager.win(data.getBestSubjects(resolver));
+            return;
+        }
+
+        round--;
+        prepareNextChallenge();
     }
 
     private void onTimerOver() {
