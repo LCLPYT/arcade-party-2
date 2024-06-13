@@ -88,7 +88,7 @@ public class MirrorHopInstance extends DefaultGameInstance {
         movementObserver.whenEntering(goal, player -> {
             if (winManager.isGameOver()) return;
 
-            data.addScore(player, 1);
+            data.setScore(player, choices.getChoices().size() + 1);
 
             winManager.win(player);
         });
