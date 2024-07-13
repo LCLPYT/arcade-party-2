@@ -6,7 +6,6 @@ public final class ApConstants {
 
     public static final boolean DEVELOPMENT = FabricLoader.getInstance().isDevelopmentEnvironment();
     public static final String ID = "ap2";
-    public static final String MAP_VERSION = "";
 
     // people
     public static final String PERSON_LCLP = "@person.lclp";

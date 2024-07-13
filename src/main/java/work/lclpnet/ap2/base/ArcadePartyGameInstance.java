@@ -1,53 +1,32 @@
 package work.lclpnet.ap2.base;
 
-import it.unimi.dsi.fastutil.Pair;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import work.lclpnet.activity.manager.ActivityManager;
 import work.lclpnet.ap2.api.base.GameQueue;
 import work.lclpnet.ap2.api.base.MiniGameManager;
-import work.lclpnet.ap2.api.data.DataManager;
 import work.lclpnet.ap2.api.game.MiniGame;
-import work.lclpnet.ap2.api.map.MapFacade;
-import work.lclpnet.ap2.api.map.MapRandomizer;
 import work.lclpnet.ap2.api.util.music.SongCache;
-import work.lclpnet.ap2.api.util.music.SongManager;
 import work.lclpnet.ap2.base.activity.PreparationActivity;
 import work.lclpnet.ap2.base.cmd.ForceGameCommand;
-import work.lclpnet.ap2.base.config.Ap2Config;
-import work.lclpnet.ap2.base.config.ConfigManager;
 import work.lclpnet.ap2.impl.base.PlayerManagerImpl;
 import work.lclpnet.ap2.impl.base.SimpleMiniGameManager;
 import work.lclpnet.ap2.impl.base.VotedGameQueue;
-import work.lclpnet.ap2.impl.data.JsonDataSource;
-import work.lclpnet.ap2.impl.data.MapDynamicData;
-import work.lclpnet.ap2.impl.data.MutableDataManager;
+import work.lclpnet.ap2.impl.bootstrap.ApBootstrap;
 import work.lclpnet.ap2.impl.game.PlayerUtil;
-import work.lclpnet.ap2.impl.map.BalancedMapRandomizer;
-import work.lclpnet.ap2.impl.map.MapFacadeImpl;
-import work.lclpnet.ap2.impl.map.SqliteAsyncMapFrequencyManager;
 import work.lclpnet.ap2.impl.util.music.MapSongCache;
-import work.lclpnet.ap2.impl.util.music.SongManagerImpl;
 import work.lclpnet.kibu.translate.TranslationService;
 import work.lclpnet.lobby.game.api.GameEnvironment;
 import work.lclpnet.lobby.game.api.GameInstance;
 import work.lclpnet.lobby.game.api.GameStarter;
-import work.lclpnet.lobby.game.api.WorldFacade;
-import work.lclpnet.lobby.game.map.*;
 import work.lclpnet.lobby.game.start.ConditionGameStarter;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URI;
-import java.nio.file.Path;
 import java.util.List;
-import java.util.Objects;
-import java.util.Random;
-import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ForkJoinPool;
+
+import static work.lclpnet.ap2.impl.util.FutureUtil.onThread;
 
 public class ArcadePartyGameInstance implements GameInstance {
 
@@ -91,57 +70,19 @@ public class ArcadePartyGameInstance implements GameInstance {
     @Override
     public void start() {
         MinecraftServer server = environment.getServer();
+        ApBootstrap bootstrap = new ApBootstrap(logger);
 
-        loadConfig()
-                .thenCompose(configManager -> server.submit(() -> this.onConfigLoaded(configManager)))
-                .exceptionally(throwable -> {
-                    logger.info("Failed to load config", throwable);
-                    return null;
-                });
-    }
-
-    private void onConfigLoaded(ConfigManager configManager) {
-        MinecraftServer server = environment.getServer();
-        Ap2Config config = configManager.getConfig();
-        MapManager mapManager = createMapManager(config);
-
-        WorldFacade worldFacade = environment.getWorldFacade(() -> mapManager);
-        var mapPair = createMapFacade(server, mapManager, worldFacade);
-
-        MapFacade mapFacade = mapPair.left();
-        var frequencyManager = mapPair.right();
-
-        environment.closeWhenDone(() -> {
-            try {
-                frequencyManager.close();
-            } catch (Exception e) {
-                logger.error("Failed to close frequency manager", e);
-            }
-        });
-
-        ArcadeParty arcadeParty = ArcadeParty.getInstance();
-        Path cacheDir = arcadeParty.getCacheDirectory();
-        Path songsDir = cacheDir.resolve("songs");
-
-        SongManagerImpl songManager = new SongManagerImpl(songsDir);
-        MutableDataManager dataManager = new MutableDataManager();
-
-        CompletableFuture.allOf(
-                        loadMaps(mapManager),
-                        loadSqlite(frequencyManager, server),
-                        loadSongs(songManager, config),
-                        loadContainer(dataManager))
-                .thenCompose(nil -> server.submit(() ->
-                        dispatchGameStart(server, worldFacade, mapFacade, songManager, dataManager)))
+        bootstrap.loadConfig(ForkJoinPool.commonPool())
+                .thenCompose(configManager -> bootstrap.dispatch(configManager.getConfig(), environment))
+                .thenCompose(onThread(server, this::dispatchGameStart))
                 .exceptionally(throwable -> {
                     logger.error("Failed to load ArcadeParty2", throwable);
                     return null;
                 });
     }
 
-    private void dispatchGameStart(MinecraftServer server, WorldFacade worldFacade, MapFacade mapFacade,
-                                   SongManager songManager, DataManager dataManager) {
-
+    private void dispatchGameStart(ApBootstrap.Result result) {
+        MinecraftServer server = environment.getServer();
         ArcadeParty arcadeParty = ArcadeParty.getInstance();
 
         TranslationService translationService = arcadeParty.getTranslationService();
@@ -157,8 +98,8 @@ public class ArcadePartyGameInstance implements GameInstance {
         forceGameCommand.register(environment.getCommandStack());
 
         ApContainer container = new ApContainer(server, logger, translationService, environment.getHookStack(),
-                environment.getCommandStack(), environment.getSchedulerStack(), worldFacade, mapFacade, playerUtil,
-                gameManager, songManager, dataManager);
+                environment.getCommandStack(), environment.getSchedulerStack(), result.worldFacade(),
+                result.mapFacade(), playerUtil, gameManager, result.songManager(), result.dataManager());
 
         SongCache songCache = new MapSongCache();
 
@@ -166,100 +107,5 @@ public class ArcadePartyGameInstance implements GameInstance {
         PreparationActivity preparation = new PreparationActivity(args);
 
         ActivityManager.getInstance().startActivity(preparation);
-    }
-
-    private CompletableFuture<Void> loadContainer(MutableDataManager dataManager) {
-        return CompletableFuture.runAsync(() -> dataManager.setData(MapDynamicData.builder()
-                .addSource(new JsonDataSource(this::openConfigurationFile, logger))
-                .build()));
-    }
-
-    private CompletableFuture<Void> loadSongs(SongManagerImpl songManager, Ap2Config config) {
-        return CompletableFuture.runAsync(() -> {
-            int i = 0;
-
-            for (var entry : config.songSources.entries()) {
-                Identifier tag = entry.getKey();
-                URI uri = entry.getValue();
-
-                try {
-                    songManager.loadBundleSync(tag, uri, i++, logger);
-                } catch (IOException e) {
-                    logger.error("Failed to load song bundle with tag {} from {}", tag, uri, e);
-                }
-            }
-        }).exceptionally(err -> {
-            logger.error("Failed to load songs", err);
-            return null;
-        });
-    }
-
-    private CompletableFuture<Void> loadSqlite(SqliteAsyncMapFrequencyManager frequencyManager, MinecraftServer server) {
-        return frequencyManager.open(server)
-                .exceptionally(throwable -> {
-                    logger.error("Failed to establish sqlite connection. Fallback to StubMapFrequencyManager", throwable);
-                    return null;
-                });
-    }
-
-    @NotNull
-    private static CompletableFuture<Void> loadMaps(MapManager mapManager) {
-        return CompletableFuture.runAsync(() -> {
-            // load mini game maps
-
-            try {
-                // load general arcade party 2 maps
-                mapManager.loadAll(new MapDescriptor(ApConstants.ID, "", ApConstants.MAP_VERSION));
-            } catch (IOException e) {
-                throw new RuntimeException("Failed to load maps of namespace %s".formatted(ApConstants.ID), e);
-            }
-        });
-    }
-
-    private CompletableFuture<ConfigManager> loadConfig() {
-        Path configPath = Path.of("config")
-                .resolve(ApConstants.ID)
-                .resolve("config.json");
-
-        ConfigManager configManager = new ConfigManager(configPath, logger);
-
-        return configManager.init().thenApply(nil -> configManager);
-    }
-
-    @NotNull
-    private Pair<MapFacade, SqliteAsyncMapFrequencyManager> createMapFacade(
-            MinecraftServer server, MapManager mapManager, WorldFacade worldFacade) {
-
-        Path dbPath = Path.of("config")
-                .resolve(ApConstants.ID)
-                .resolve("map_frequencies.sqlite");
-
-        SqliteAsyncMapFrequencyManager frequencyTracker = new SqliteAsyncMapFrequencyManager(dbPath, logger);
-
-        MapRandomizer mapRandomizer = new BalancedMapRandomizer(mapManager, frequencyTracker, new Random());
-
-        MapFacade mapFacade = new MapFacadeImpl(worldFacade, mapRandomizer, mapManager, server, logger);
-
-        return Pair.of(mapFacade, frequencyTracker);
-    }
-
-    private MapManager createMapManager(Ap2Config config) {
-        var repositories = config.mapsSource.stream()
-                .map(uri -> new UriMapRepository(uri, logger))
-                .toArray(MapRepository[]::new);
-
-        if (repositories.length == 0) {
-            throw new IllegalStateException("Map sources not configured");
-        }
-
-        MapRepository mapRepository = new MultiMapRepository(repositories);
-
-        var lookup = new RepositoryMapLookup(mapRepository);
-
-        return new MapManager(lookup);
-    }
-
-    private InputStream openConfigurationFile() {
-        return Objects.requireNonNull(getClass().getResourceAsStream("/configuration.json"), "File not found: configuration.json");
     }
 }
