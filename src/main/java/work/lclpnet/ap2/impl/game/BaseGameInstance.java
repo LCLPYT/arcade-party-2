@@ -212,7 +212,7 @@ public abstract class BaseGameInstance implements MiniGameInstance {
                 continue;
             }
 
-            Identifier id = new Identifier(str);
+            Identifier id = Identifier.of(str);
             ApEffect effect = ApEffects.tryFrom(id);
 
             if (effect == null) continue;

@@ -21,6 +21,7 @@ import org.json.JSONArray;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.impl.game.EliminationGameInstance;
 import work.lclpnet.ap2.impl.map.MapUtil;
+import work.lclpnet.ap2.impl.util.ItemStackHelper;
 import work.lclpnet.ap2.impl.util.SoundHelper;
 import work.lclpnet.ap2.impl.util.handler.DoubleJumpHandler;
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
@@ -90,13 +91,15 @@ public class BowSpleefInstance extends EliminationGameInstance {
     }
 
     private void giveBowsToPlayers(TranslationService translations) {
+        var infinity = ItemStackHelper.getEnchantment(Enchantments.INFINITY, getWorld().getRegistryManager());
+
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
             ItemStack stack = new ItemStack(Items.BOW);
 
             stack.set(DataComponentTypes.CUSTOM_NAME, translations.translateText(player, "game.ap2.bow_spleef.bow")
                     .styled(style -> style.withItalic(false).withFormatting(Formatting.GOLD)));
 
-            stack.addEnchantment(Enchantments.INFINITY,1);
+            stack.addEnchantment(infinity,1);
 
             stack.set(DataComponentTypes.UNBREAKABLE, new UnbreakableComponent(false));
 

@@ -67,7 +67,7 @@ public class SqliteAsyncMapFrequencyManager extends AsyncMapFrequencyManager imp
                 String idStr = result.getString(1);
                 long count = result.getLong(2);
 
-                Identifier mapId = new Identifier(idStr);
+                Identifier mapId = Identifier.of(idStr);
                 missing.remove(mapId);
 
                 setFrequencyInternal(mapId, count);

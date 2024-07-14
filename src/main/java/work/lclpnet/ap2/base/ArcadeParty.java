@@ -36,7 +36,7 @@ public class ArcadeParty extends KibuPlugin implements TranslatedPlugin {
     }
 
     public static Identifier identifier(String path) {
-        return new Identifier(ApConstants.ID, path);
+        return Identifier.of(ApConstants.ID, path);
     }
 
     @Override

@@ -9,7 +9,6 @@ import org.slf4j.Logger;
 import work.lclpnet.ap2.api.game.MapReady;
 import work.lclpnet.ap2.api.map.MapFacade;
 import work.lclpnet.ap2.api.map.MapRandomizer;
-import work.lclpnet.ap2.base.ApConstants;
 import work.lclpnet.lobby.game.api.MapOptions;
 import work.lclpnet.lobby.game.api.WorldFacade;
 import work.lclpnet.lobby.game.map.GameMap;
@@ -85,7 +84,7 @@ public class MapFacadeImpl implements MapFacade {
     public CompletableFuture<Void> reloadMaps(Identifier gameId) {
         return CompletableFuture.runAsync(() -> {
             try {
-                mapManager.loadAll(new MapDescriptor(gameId, ApConstants.MAP_VERSION));
+                mapManager.loadAll(new MapDescriptor(gameId));
             } catch (IOException e) {
                 throw new RuntimeException("Failed to reload maps for game id %s".formatted(gameId), e);
             }

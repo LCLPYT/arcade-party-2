@@ -61,7 +61,7 @@ public class SoundSubtitles {
             if (!key.startsWith(prefix)) continue;
 
             String rest = key.substring(prefix.length());
-            Identifier id = new Identifier(rest);
+            Identifier id = Identifier.of(rest);
             SoundEvent soundEvent = Registries.SOUND_EVENT.get(id);
 
             if (soundEvent != null) {

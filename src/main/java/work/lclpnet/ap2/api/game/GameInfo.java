@@ -48,6 +48,6 @@ public interface GameInfo {
     default Identifier identifier(String subPath) {
         Identifier gameId = getId();
 
-        return new Identifier(gameId.getNamespace(), gameId.getPath().concat("/").concat(subPath));
+        return Identifier.of(gameId.getNamespace(), gameId.getPath().concat("/").concat(subPath));
     }
 }

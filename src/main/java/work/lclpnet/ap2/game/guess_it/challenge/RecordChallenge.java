@@ -1,20 +1,23 @@
 package work.lclpnet.ap2.game.guess_it.challenge;
 
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
+import net.minecraft.block.jukebox.JukeboxSong;
+import net.minecraft.component.DataComponentTypes;
+import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.MusicDiscItem;
 import net.minecraft.network.packet.s2c.play.StopSoundS2CPacket;
+import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.registry.Registries;
-import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.registry.tag.ItemTags;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvent;
 import net.minecraft.text.Text;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.game.guess_it.data.*;
 import work.lclpnet.ap2.game.guess_it.util.GuessItDisplay;
 import work.lclpnet.ap2.game.guess_it.util.OptionMaker;
+import work.lclpnet.ap2.impl.util.ItemHelper;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.translate.TranslationService;
 
@@ -30,7 +33,7 @@ public class RecordChallenge implements Challenge {
     private final ServerWorld world;
     private final Random random;
     private final GuessItDisplay display;
-    private MusicDiscItem correct = null;
+    private Item correct = null;
     private int correctOption = -1;
 
     public RecordChallenge(MiniGameHandle gameHandle, ServerWorld world, Random random, GuessItDisplay display) {
@@ -63,36 +66,48 @@ public class RecordChallenge implements Challenge {
 
         display.displayItem(new ItemStack(correct));
 
-        for (ServerPlayerEntity player : PlayerLookup.world(world)) {
-            player.playSoundToPlayer(correct.getSound(), SoundCategory.RECORDS, 0.5f, 1f);
-        }
+        DynamicRegistryManager registryManager = world.getRegistryManager();
+        ItemHelper.getJukeboxSong(correct, registryManager).ifPresent(song -> {
+            SoundEvent sound = song.soundEvent().value();
+
+            for (ServerPlayerEntity player : PlayerLookup.world(world)) {
+                player.playSoundToPlayer(sound, SoundCategory.RECORDS, 0.5f, 1f);
+            }
+        });
 
         input.expectSelection(opts.stream()
-                .map(MusicDiscItem::getDescription)
+                .map(item -> ItemHelper.getJukeboxSong(item, registryManager)
+                        .map(JukeboxSong::description)
+                        .orElse(null))
+                .filter(Objects::nonNull)
                 .toArray(Text[]::new));
     }
 
-    private Set<MusicDiscItem> getMusicDiscs() {
-        return Registries.ITEM.getEntryList(ItemTags.MUSIC_DISCS)
-                .orElseThrow().stream()
-                .map(RegistryEntry::value)
-                .map(item -> item instanceof MusicDiscItem mdi ? mdi : null)
-                .filter(Objects::nonNull)
+    private Set<Item> getMusicDiscs() {
+        return Registries.ITEM.stream()
+                .filter(item -> item.getComponents().contains(DataComponentTypes.JUKEBOX_PLAYABLE))
                 .collect(Collectors.toSet());
     }
 
     @Override
     public void evaluate(PlayerChoices choices, ChallengeResult result) {
-        result.setCorrectAnswer(correct.getDescription());
+        Text answer = ItemHelper.getJukeboxSong(this.correct, world.getRegistryManager())
+                .map(JukeboxSong::description)
+                .orElse(null);
+
+        result.setCorrectAnswer(answer);
         result.grantIfCorrect(gameHandle.getParticipants(), correctOption, choices::getOption);
     }
 
     @Override
     public void destroy() {
-        StopSoundS2CPacket packet = new StopSoundS2CPacket(correct.getSound().getId(), SoundCategory.RECORDS);
+        ItemHelper.getJukeboxSong(correct, world.getRegistryManager()).ifPresent(song -> {
+            SoundEvent sound = song.soundEvent().value();
+            StopSoundS2CPacket packet = new StopSoundS2CPacket(sound.getId(), SoundCategory.RECORDS);
 
-        for (ServerPlayerEntity player : PlayerLookup.world(world)) {
-            player.networkHandler.sendPacket(packet);
-        }
+            for (ServerPlayerEntity player : PlayerLookup.world(world)) {
+                player.networkHandler.sendPacket(packet);
+            }
+        });
     }
 }

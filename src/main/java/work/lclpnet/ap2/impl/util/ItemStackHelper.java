@@ -1,5 +1,6 @@
 package work.lclpnet.ap2.impl.util;
 
+import net.minecraft.enchantment.Enchantment;
 import net.minecraft.item.trim.ArmorTrimMaterial;
 import net.minecraft.item.trim.ArmorTrimPattern;
 import net.minecraft.registry.DynamicRegistryManager;
@@ -38,5 +39,10 @@ public class ItemStackHelper {
     public static RegistryEntry<ArmorTrimMaterial> getTrimMaterial(DynamicRegistryManager registryManager, RegistryKey<ArmorTrimMaterial> key) {
         var registry = registryManager.get(RegistryKeys.TRIM_MATERIAL);
         return registry.getEntry(key).orElseThrow();
+    }
+
+    public static RegistryEntry<Enchantment> getEnchantment(RegistryKey<Enchantment> enchantment, DynamicRegistryManager registryManager) {
+        var enchantments = registryManager.get(RegistryKeys.ENCHANTMENT);
+        return enchantments.getEntry(enchantment).orElseThrow();
     }
 }

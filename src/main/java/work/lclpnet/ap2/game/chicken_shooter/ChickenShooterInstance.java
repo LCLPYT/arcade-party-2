@@ -34,6 +34,7 @@ import work.lclpnet.ap2.impl.game.data.ScoreTimeDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.BlockBox;
+import work.lclpnet.ap2.impl.util.ItemStackHelper;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
 import work.lclpnet.kibu.hook.entity.ProjectileCanHitCallback;
@@ -227,10 +228,12 @@ public class ChickenShooterInstance extends DefaultGameInstance implements Runna
     }
 
     private void giveBowsToPlayers(TranslationService translations) {
+        var infinity = ItemStackHelper.getEnchantment(Enchantments.INFINITY, getWorld().getRegistryManager());
+
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
             ItemStack stack = new ItemStack(Items.BOW);
 
-            stack.addEnchantment(Enchantments.INFINITY, 1);
+            stack.addEnchantment(infinity, 1);
             stack.set(DataComponentTypes.UNBREAKABLE, new UnbreakableComponent(false));
             stack.set(DataComponentTypes.CUSTOM_NAME, translations.translateText(player, "game.ap2.chicken_shooter.bow")
                     .styled(style -> style.withItalic(false).withFormatting(Formatting.GOLD)));

@@ -1,7 +1,7 @@
 package work.lclpnet.ap2.game.fine_tuning.melody;
 
 import net.minecraft.block.NoteBlock;
-import net.minecraft.block.enums.Instrument;
+import net.minecraft.block.enums.NoteBlockInstrument;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.sound.SoundCategory;
@@ -12,9 +12,9 @@ public class FakeNoteBlockPlayer {
 
     private final BlockPos[] noteBlocks;
     private final int[] notes;
-    private final Instrument[] instruments;
+    private final NoteBlockInstrument[] instruments;
 
-    public FakeNoteBlockPlayer(BlockPos[] noteBlocks, int[] notes, Instrument[] instruments) {
+    public FakeNoteBlockPlayer(BlockPos[] noteBlocks, int[] notes, NoteBlockInstrument[] instruments) {
         this.noteBlocks = noteBlocks;
         this.notes = notes;
         this.instruments = instruments;
@@ -33,10 +33,10 @@ public class FakeNoteBlockPlayer {
         int note = notes[index];
         BlockPos pos = noteBlocks[index];
 
-        Instrument instrument = instruments[index];
+        NoteBlockInstrument instrument = instruments[index];
         float pitch;
 
-        if (instrument.shouldSpawnNoteParticles()) {
+        if (instrument.canBePitched()) {
             pitch = NoteBlock.getNotePitch(note);
 
             player.getServerWorld().spawnParticles(player, ParticleTypes.NOTE, false,
@@ -57,7 +57,7 @@ public class FakeNoteBlockPlayer {
 
     public void setMelody(Melody melody) {
         Note[] melodyNotes = melody.notes();
-        Instrument instrument = melody.instrument();
+        NoteBlockInstrument instrument = melody.instrument();
 
         int i;
 

@@ -1,6 +1,6 @@
 package work.lclpnet.ap2.game.fine_tuning;
 
-import net.minecraft.block.enums.Instrument;
+import net.minecraft.block.enums.NoteBlockInstrument;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
@@ -18,7 +18,7 @@ class FineTuningRoom {
     private final float yaw;
     private BlockPos[] noteBlocks = null;
     private int[] notes = null, tmpNotes = null;
-    private Instrument[] instruments = null;
+    private NoteBlockInstrument[] instruments = null;
     private FakeNoteBlockPlayer nbPlayer = null;
     private boolean temporary = false;
 
@@ -43,8 +43,8 @@ class FineTuningRoom {
         this.tmpNotes = new int[noteBlocks.length];
         Arrays.fill(tmpNotes, 0);
 
-        instruments = new Instrument[noteBlocks.length];
-        Arrays.fill(instruments, Instrument.HARP);
+        instruments = new NoteBlockInstrument[noteBlocks.length];
+        Arrays.fill(instruments, NoteBlockInstrument.HARP);
 
         this.nbPlayer = new FakeNoteBlockPlayer(noteBlocks, notes, instruments);
     }
@@ -116,7 +116,7 @@ class FineTuningRoom {
     public Melody getCurrentMelody() {
         restoreMelody();
 
-        Instrument instrument = instruments[0];
+        NoteBlockInstrument instrument = instruments[0];
         Note[] currentNotes = new Note[notes.length];
 
         var allNotes = Note.values();
