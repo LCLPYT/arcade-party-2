@@ -10,6 +10,7 @@ import work.lclpnet.ap2.api.base.PlayerManager;
 import work.lclpnet.ap2.api.game.MiniGame;
 import work.lclpnet.ap2.api.game.MiniGameInstance;
 import work.lclpnet.ap2.base.cmd.DrawCommand;
+import work.lclpnet.ap2.base.cmd.RemakeCommand;
 import work.lclpnet.ap2.base.cmd.WinCommand;
 import work.lclpnet.ap2.impl.activity.ArcadePartyComponents;
 import work.lclpnet.ap2.impl.activity.ScoreboardComponent;
@@ -20,6 +21,8 @@ import work.lclpnet.kibu.hook.player.PlayerConnectionHooks;
 import work.lclpnet.kibu.hook.player.PlayerRecipePacketCallback;
 import work.lclpnet.kibu.plugin.cmd.CommandRegistrar;
 import work.lclpnet.kibu.plugin.hook.HookRegistrar;
+
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class MiniGameActivity extends ComponentActivity {
 
@@ -51,7 +54,9 @@ public class MiniGameActivity extends ComponentActivity {
         ScoreboardComponent scoreboardComponent = component(ArcadePartyComponents.SCORE_BOARD);
         CustomScoreboardManager scoreboard = scoreboardComponent.scoreboardManager(args.container()::translations);
 
-        handle = new DefaultMiniGameHandle(miniGame, args, bossBars, bossBars, scoreboard);
+        AtomicBoolean remake = new AtomicBoolean(false);
+
+        handle = new DefaultMiniGameHandle(miniGame, args, bossBars, bossBars, scoreboard, remake);
         handle.init();
 
         PlayerManager playerManager = args.playerManager();
@@ -69,6 +74,7 @@ public class MiniGameActivity extends ComponentActivity {
 
         new WinCommand(handle, instance).register(commands);
         new DrawCommand(handle, instance).register(commands);
+        new RemakeCommand(handle, remake).register(commands);
 
         HookRegistrar hooks = component(BuiltinComponents.HOOKS).hooks();
         hooks.registerHook(PlayerAdvancementPacketCallback.HOOK, (player, packet) -> true);
