@@ -32,7 +32,7 @@ public class SdGenerator {
     }
 
     public void generate() {
-        Stage stage = new StageReader(map).readStage();
+        Stage stage = StageReader.readStage(map);
 
         WeightedList<SdShape> shapes = new WeightedList<>();
         shapes.add(SdShape.square(1, 1), 0.2f);
