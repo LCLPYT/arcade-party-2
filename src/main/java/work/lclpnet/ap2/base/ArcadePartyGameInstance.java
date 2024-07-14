@@ -209,7 +209,7 @@ public class ArcadePartyGameInstance implements GameInstance {
 
             try {
                 // load general arcade party 2 maps
-                mapManager.loadAll(new MapDescriptor(ApConstants.ID, "", ApConstants.MAP_VERSION));
+                mapManager.loadAll(new MapDescriptor(ApConstants.ID, ""));
             } catch (IOException e) {
                 throw new RuntimeException("Failed to load maps of namespace %s".formatted(ApConstants.ID), e);
             }

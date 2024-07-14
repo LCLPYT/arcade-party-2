@@ -1,7 +1,7 @@
 package work.lclpnet.ap2.game.fine_tuning;
 
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
-import net.minecraft.block.enums.Instrument;
+import net.minecraft.block.enums.NoteBlockInstrument;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -97,8 +97,8 @@ class StagePhase {
         int[] notes = new int[presenterNoteBlocks.length];
         Arrays.fill(notes, Note.FIS3.ordinal());
 
-        Instrument[] instruments = new Instrument[presenterNoteBlocks.length];
-        Arrays.fill(instruments, Instrument.HARP);
+        NoteBlockInstrument[] instruments = new NoteBlockInstrument[presenterNoteBlocks.length];
+        Arrays.fill(instruments, NoteBlockInstrument.HARP);
 
         this.nbPlayer = new FakeNoteBlockPlayer(presenterNoteBlocks, notes, instruments);
     }
