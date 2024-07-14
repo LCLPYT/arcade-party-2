@@ -6,6 +6,8 @@ import net.minecraft.entity.VariantHolder;
 import net.minecraft.entity.ai.brain.MemoryModuleType;
 import net.minecraft.entity.mob.*;
 import net.minecraft.entity.passive.*;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
 import net.minecraft.registry.RegistryKeys;
@@ -78,7 +80,7 @@ public class MobSpawner {
 
         if (entity instanceof AbstractHorseEntity horse) {
             if (random.nextFloat() < 0.05f) {
-                horse.saddle(null);
+                horse.saddle(new ItemStack(Items.SADDLE), null);
             }
         }
 

@@ -1,11 +1,16 @@
 package work.lclpnet.ap2.impl.util;
 
+import net.minecraft.block.jukebox.JukeboxSong;
+import net.minecraft.component.DataComponentTypes;
 import net.minecraft.item.ArmorMaterial;
 import net.minecraft.item.ArmorMaterials;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
+import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.registry.entry.RegistryEntry;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.Optional;
 
 public class ItemHelper {
 
@@ -58,5 +63,17 @@ public class ItemHelper {
         if (material == ArmorMaterials.NETHERITE) return Items.NETHERITE_BOOTS;
 
         return null;
+    }
+
+    public static Optional<JukeboxSong> getJukeboxSong(Item musicDiscItem, RegistryWrapper.WrapperLookup registryLookup) {
+        var component = musicDiscItem.getComponents().get(DataComponentTypes.JUKEBOX_PLAYABLE);
+
+        if (component == null) {
+            return Optional.empty();
+        }
+
+        return component.song()
+                .getEntry(registryLookup)
+                .map(RegistryEntry::value);
     }
 }

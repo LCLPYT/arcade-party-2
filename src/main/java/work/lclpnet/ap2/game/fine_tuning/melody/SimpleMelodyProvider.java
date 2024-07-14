@@ -1,16 +1,16 @@
 package work.lclpnet.ap2.game.fine_tuning.melody;
 
-import net.minecraft.block.enums.Instrument;
+import net.minecraft.block.enums.NoteBlockInstrument;
 
 import java.util.Arrays;
 import java.util.Random;
 
 public class SimpleMelodyProvider implements MelodyProvider {
 
-    private final Instrument[] instruments = new Instrument[] {
-            Instrument.HARP, Instrument.GUITAR, Instrument.FLUTE, Instrument.BELL, Instrument.CHIME,
-            Instrument.XYLOPHONE, Instrument.COW_BELL, Instrument.IRON_XYLOPHONE, Instrument.COW_BELL,
-            Instrument.DIDGERIDOO, Instrument.BIT, Instrument.BANJO, Instrument.PLING
+    private final NoteBlockInstrument[] instruments = new NoteBlockInstrument[] {
+            NoteBlockInstrument.HARP, NoteBlockInstrument.GUITAR, NoteBlockInstrument.FLUTE, NoteBlockInstrument.BELL, NoteBlockInstrument.CHIME,
+            NoteBlockInstrument.XYLOPHONE, NoteBlockInstrument.COW_BELL, NoteBlockInstrument.IRON_XYLOPHONE, NoteBlockInstrument.COW_BELL,
+            NoteBlockInstrument.DIDGERIDOO, NoteBlockInstrument.BIT, NoteBlockInstrument.BANJO, NoteBlockInstrument.PLING
     };
     private final Random random;
     private final NotesProvider notesProvider;
@@ -24,7 +24,7 @@ public class SimpleMelodyProvider implements MelodyProvider {
 
     @Override
     public Melody nextMelody() {
-        Instrument instrument = instruments[random.nextInt(instruments.length)];
+        NoteBlockInstrument instrument = instruments[random.nextInt(instruments.length)];
 
         Note[] notes = new Note[noteCount];
         Arrays.fill(notes, Note.FIS3);

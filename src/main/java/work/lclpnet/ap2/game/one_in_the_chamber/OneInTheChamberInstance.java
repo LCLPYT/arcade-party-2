@@ -15,6 +15,7 @@ import net.minecraft.scoreboard.ScoreboardCriterion;
 import net.minecraft.scoreboard.ScoreboardDisplaySlot;
 import net.minecraft.scoreboard.ScoreboardObjective;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
@@ -73,7 +74,8 @@ public class OneInTheChamberInstance extends DefaultGameInstance {
 
     @Override
     protected void prepare() {
-        GameRules gameRules = getWorld().getGameRules();
+        ServerWorld world = getWorld();
+        GameRules gameRules = world.getGameRules();
         gameRules.get(GameRules.DO_ENTITY_DROPS).set(false, null);
         gameRules.get(GameRules.NATURAL_REGENERATION).set(false, null);
         gameRules.get(GameRules.ANNOUNCE_ADVANCEMENTS).set(false, null);
@@ -98,7 +100,7 @@ public class OneInTheChamberInstance extends DefaultGameInstance {
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
             BlockPos pos = respawn.getRandomSpawn();
 
-            player.teleport(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
+            player.teleport(world, pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, player.getYaw(), player.getPitch());
 
             movementBlocker.disableMovement(player);
         }
@@ -114,7 +116,7 @@ public class OneInTheChamberInstance extends DefaultGameInstance {
         respawnCooldown.setOnCooldownOver(player -> {
             BlockPos randomSpawn = respawn.getRandomSpawn();
 
-            player.teleport(randomSpawn.getX() + 0.5, randomSpawn.getY(), randomSpawn.getZ() + 0.5);
+            player.teleport(world, randomSpawn.getX() + 0.5, randomSpawn.getY(), randomSpawn.getZ() + 0.5, player.getYaw(), player.getPitch());
             giveCrossbowToPlayer(player);
 
             player.changeGameMode(gameHandle.getPlayerUtil().getDefaultGameMode());
@@ -225,7 +227,7 @@ public class OneInTheChamberInstance extends DefaultGameInstance {
         killer.sendMessage(Text.literal("+1 ").append(TextUtil.getVanillaName(Items.ARROW))
                 .formatted(GOLD), true);
 
-        killer.playSoundToPlayer(SoundEvents.ITEM_CROSSBOW_QUICK_CHARGE_3, SoundCategory.PLAYERS, 1f, 1f);
+        killer.playSoundToPlayer(SoundEvents.ITEM_CROSSBOW_QUICK_CHARGE_3.value(), SoundCategory.PLAYERS, 1f, 1f);
 
         giveCrossbowToPlayer(killer);
         killer.setHealth(20);
