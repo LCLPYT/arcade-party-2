@@ -9,7 +9,7 @@ import work.lclpnet.ap2.api.util.music.*;
 import work.lclpnet.ap2.base.ArcadeParty;
 import work.lclpnet.ap2.impl.util.IndexedSet;
 import work.lclpnet.ap2.impl.util.music.MapSongCache;
-import work.lclpnet.kibu.translate.TranslationService;
+import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.notica.api.data.SongMeta;
 
 import java.util.*;
@@ -22,14 +22,14 @@ public class MMSongs {
 
     public static final Identifier MUSICAL_MINECART_TAG = ArcadeParty.identifier("musical_minecart");
     private final SongManager songManager;
-    private final TranslationService translations;
+    private final Translations translations;
     private final Random random;
     private final Logger logger;
     private final Set<WeightedSong> songs = new IndexedSet<>();
     private final List<WeightedSong> queue = new ArrayList<>();
     private final SongCache cache = new MapSongCache();
 
-    public MMSongs(SongManager songManager, TranslationService translations, Random random, Logger logger) {
+    public MMSongs(SongManager songManager, Translations translations, Random random, Logger logger) {
         this.songManager = songManager;
         this.translations = translations;
         this.random = random;

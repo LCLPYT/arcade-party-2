@@ -17,7 +17,7 @@ import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.impl.util.SoundHelper;
 import work.lclpnet.ap2.impl.util.WeightedList;
-import work.lclpnet.kibu.translate.TranslationService;
+import work.lclpnet.kibu.translate.Translations;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -175,7 +175,7 @@ public class MiningBattleOre {
     private void weakenOthers(ServerPlayerEntity player) {
         SoundHelper.playSound(player.getServer(), SoundEvents.ENTITY_RAVAGER_CELEBRATE, SoundCategory.HOSTILE, 0.5f, 1f);
 
-        TranslationService translations = gameHandle.getTranslations();
+        Translations translations = gameHandle.getTranslations();
 
         var playerMsg = translations.translateText(player, "game.ap2.mining_battle.weakened")
                 .formatted(Formatting.GREEN);

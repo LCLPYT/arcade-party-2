@@ -6,8 +6,8 @@ import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.Text;
 import work.lclpnet.ap2.base.api.Skippable;
-import work.lclpnet.kibu.plugin.cmd.CommandRegistrar;
-import work.lclpnet.kibu.plugin.cmd.KibuCommand;
+import work.lclpnet.kibu.cmd.type.CommandRegistrar;
+import work.lclpnet.kibu.cmd.type.KibuCommand;
 
 public class SkipCommand implements KibuCommand {
 

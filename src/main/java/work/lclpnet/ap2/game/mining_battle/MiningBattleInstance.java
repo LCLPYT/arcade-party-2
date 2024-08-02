@@ -27,9 +27,9 @@ import work.lclpnet.ap2.impl.map.ServerThreadMapBootstrap;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.ItemStackHelper;
 import work.lclpnet.ap2.impl.util.TextUtil;
+import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.world.BlockModificationHooks;
-import work.lclpnet.kibu.plugin.hook.HookRegistrar;
-import work.lclpnet.kibu.translate.TranslationService;
+import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 import work.lclpnet.lobby.game.map.GameMap;
 
@@ -94,7 +94,7 @@ public class MiningBattleInstance extends DefaultGameInstance implements MapBoot
             return false;
         });
 
-        TranslationService translations = gameHandle.getTranslations();
+        Translations translations = gameHandle.getTranslations();
         var subject = translations.translateText(gameHandle.getGameInfo().getTaskKey());
 
         commons().createTimer(subject, DURATION_SECONDS).whenDone(this::onTimerDone);

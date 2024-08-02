@@ -18,9 +18,9 @@ import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.util.DeathMessages;
 import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedBossBar;
 import work.lclpnet.kibu.access.misc.DamageTrackerAccess;
+import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.EntityHealthCallback;
-import work.lclpnet.kibu.plugin.hook.HookRegistrar;
-import work.lclpnet.kibu.translate.TranslationService;
+import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.kibu.translate.bossbar.TranslatedBossBar;
 import work.lclpnet.kibu.translate.text.FormatWrapper;
 import work.lclpnet.lobby.game.api.WorldFacade;
@@ -61,7 +61,7 @@ public abstract class EliminationGameInstance extends DefaultGameInstance {
 
     protected final DynamicTranslatedBossBar useRemainingPlayersDisplay() {
         GameInfo gameInfo = gameHandle.getGameInfo();
-        TranslationService translations = gameHandle.getTranslations();
+        Translations translations = gameHandle.getTranslations();
         Identifier id = gameInfo.identifier("remaining");
 
         var title = remainingTitle();

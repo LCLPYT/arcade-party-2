@@ -11,7 +11,6 @@ import work.lclpnet.ap2.api.map.MapFrequencyManager;
 import work.lclpnet.ap2.api.map.MapRandomizer;
 import work.lclpnet.ap2.api.util.music.SongManager;
 import work.lclpnet.ap2.base.ApConstants;
-import work.lclpnet.ap2.base.ArcadeParty;
 import work.lclpnet.ap2.base.config.Ap2Config;
 import work.lclpnet.ap2.base.config.ConfigManager;
 import work.lclpnet.ap2.impl.data.JsonDataSource;
@@ -41,10 +40,12 @@ import java.util.concurrent.ForkJoinPool;
 
 public class ApBootstrap {
 
+    private final Path cacheDirectory;
     private final Logger logger;
     private volatile MapCache mapCache = null;
 
-    public ApBootstrap(Logger logger) {
+    public ApBootstrap(Path cacheDirectory, Logger logger) {
+        this.cacheDirectory = cacheDirectory;
         this.logger = logger;
     }
 
@@ -143,7 +144,7 @@ public class ApBootstrap {
 
         var manager = new SqliteAsyncMapFrequencyManager(dbPath, logger);
 
-        environment.closeWhenDone(() -> {
+        environment.whenDone(() -> {
             try {
                 manager.close();
             } catch (Exception e) {
@@ -164,9 +165,7 @@ public class ApBootstrap {
         var randomizer = createBalancedMapRandomizer(mapManager, frequencyManager);
         MapFacade mapFacade = createMapFacade(server, mapManager, worldFacade, randomizer);
 
-        ArcadeParty arcadeParty = ArcadeParty.getInstance();
-        Path cacheDir = arcadeParty.getCacheDirectory();
-        Path songsDir = cacheDir.resolve("songs");
+        Path songsDir = cacheDirectory.resolve("songs");
 
         SongManagerImpl songManager = new SongManagerImpl(songsDir);
         MutableDataManager dataManager = new MutableDataManager();

@@ -5,8 +5,8 @@ import com.mojang.brigadier.context.CommandContext;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.Text;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
-import work.lclpnet.kibu.plugin.cmd.CommandRegistrar;
-import work.lclpnet.kibu.plugin.cmd.KibuCommand;
+import work.lclpnet.kibu.cmd.type.CommandRegistrar;
+import work.lclpnet.kibu.cmd.type.KibuCommand;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 

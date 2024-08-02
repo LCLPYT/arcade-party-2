@@ -30,19 +30,18 @@ import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.util.BookUtil;
 import work.lclpnet.ap2.impl.util.heads.PlayerHeadUtil;
 import work.lclpnet.ap2.impl.util.heads.PlayerHeads;
+import work.lclpnet.kibu.hook.HookContainer;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.kibu.hook.player.PlayerInventoryHooks;
 import work.lclpnet.kibu.hook.util.PlayerUtils;
-import work.lclpnet.kibu.plugin.hook.HookContainer;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.TaskHandle;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.kibu.title.Title;
-import work.lclpnet.kibu.translate.TranslationService;
+import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.kibu.translate.bossbar.BossBarProvider;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 import work.lclpnet.lobby.game.util.BossBarTimer;
-import work.lclpnet.mplugins.ext.Unloadable;
 
 import java.util.*;
 
@@ -50,7 +49,7 @@ import static net.minecraft.util.Formatting.*;
 import static work.lclpnet.ap2.game.fine_tuning.FineTuningInstance.MELODY_COUNT;
 import static work.lclpnet.ap2.game.fine_tuning.FineTuningInstance.REPLAY_COOLDOWN;
 
-class TuningPhase implements Unloadable {
+class TuningPhase {
 
     private final MiniGameHandle gameHandle;
     private final Map<UUID, FineTuningRoom> rooms;
@@ -77,7 +76,7 @@ class TuningPhase implements Unloadable {
     }
 
     public void init() {
-        gameHandle.closeWhenDone(this);
+        gameHandle.whenDone(this::unload);
 
         addNoteBlockHooks();
         hooks.registerHook(PlayerInventoryHooks.MODIFY_INVENTORY, event -> !event.player().isCreativeLevelTwoOp());
@@ -189,7 +188,7 @@ class TuningPhase implements Unloadable {
 
     private void beginTune() {
         MinecraftServer server = gameHandle.getServer();
-        TranslationService translations = gameHandle.getTranslations();
+        Translations translations = gameHandle.getTranslations();
         TaskScheduler scheduler = gameHandle.getGameScheduler();
         BossBarProvider bossBarProvider = gameHandle.getBossBarProvider();
 
@@ -276,7 +275,7 @@ class TuningPhase implements Unloadable {
     }
 
     private void giveReplayItems() {
-        TranslationService translations = gameHandle.getTranslations();
+        Translations translations = gameHandle.getTranslations();
         Participants participants = gameHandle.getParticipants();
 
         for (ServerPlayerEntity player : participants) {
@@ -390,7 +389,6 @@ class TuningPhase implements Unloadable {
         return true;
     }
 
-    @Override
     public void unload() {
         hooks.unload();
     }
@@ -400,7 +398,7 @@ class TuningPhase implements Unloadable {
     }
 
     public void giveBooks() {
-        TranslationService translations = gameHandle.getTranslations();
+        Translations translations = gameHandle.getTranslations();
         Participants participants = gameHandle.getParticipants();
 
         for (ServerPlayerEntity player : participants) {

@@ -37,7 +37,7 @@ import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.kibu.access.entity.FireworkEntityAccess;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.title.Title;
-import work.lclpnet.kibu.translate.TranslationService;
+import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.kibu.translate.bossbar.TranslatedBossBar;
 import work.lclpnet.kibu.translate.text.LocalizedFormat;
 import work.lclpnet.lobby.game.map.GameMap;
@@ -272,7 +272,7 @@ public class RedLightGreenLightInstance extends DefaultGameInstance implements R
 
         FireworkEntityAccess.explode(firework);
 
-        TranslationService translations = gameHandle.getTranslations();
+        Translations translations = gameHandle.getTranslations();
 
         if (inGoal.size() >= gameHandle.getParticipants().count()) {
             winManager.win(data.getBestSubject(resolver).orElse(null));
@@ -333,7 +333,7 @@ public class RedLightGreenLightInstance extends DefaultGameInstance implements R
     }
 
     private void gradePlayers() {
-        TranslationService translations = gameHandle.getTranslations();
+        Translations translations = gameHandle.getTranslations();
 
         // grade players who are not yet in the goal by their distance to the goal
         gameHandle.getParticipants().stream()

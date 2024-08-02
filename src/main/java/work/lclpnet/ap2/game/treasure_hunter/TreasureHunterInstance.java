@@ -29,8 +29,8 @@ import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.ItemStackHelper;
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
+import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
-import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 
 import java.util.*;

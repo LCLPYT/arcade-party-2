@@ -19,12 +19,12 @@ import work.lclpnet.ap2.api.util.action.PlayerAction;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.math.Vec2i;
 import work.lclpnet.kibu.hook.HookFactory;
+import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.player.PlayerMoveCallback;
 import work.lclpnet.kibu.hook.util.PositionRotation;
-import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
-import work.lclpnet.kibu.translate.TranslationService;
+import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.lobby.game.map.GameMap;
 import work.lclpnet.lobby.game.map.MapUtils;
 import work.lclpnet.lobby.game.util.BossBarTimer;
@@ -158,7 +158,7 @@ public class GameCommons {
     }
 
     public BossBarTimer createTimer(Object subject, int durationSeconds, BossBar.Color color) {
-        TranslationService translations = gameHandle.getTranslations();
+        Translations translations = gameHandle.getTranslations();
 
         BossBarTimer timer = BossBarTimer.builder(translations, subject)
                 .withAlertSound(false)

@@ -19,7 +19,7 @@ import work.lclpnet.ap2.game.guess_it.util.GuessItDisplay;
 import work.lclpnet.ap2.game.guess_it.util.OptionMaker;
 import work.lclpnet.ap2.impl.util.ItemHelper;
 import work.lclpnet.kibu.scheduler.Ticks;
-import work.lclpnet.kibu.translate.TranslationService;
+import work.lclpnet.kibu.translate.Translations;
 
 import java.util.Objects;
 import java.util.Random;
@@ -55,7 +55,7 @@ public class RecordChallenge implements Challenge {
 
     @Override
     public void begin(InputInterface input, ChallengeMessenger messenger) {
-        TranslationService translations = gameHandle.getTranslations();
+        Translations translations = gameHandle.getTranslations();
         messenger.task(translations.translateText("game.ap2.guess_it.music_disc"));
 
         var discs = getMusicDiscs();

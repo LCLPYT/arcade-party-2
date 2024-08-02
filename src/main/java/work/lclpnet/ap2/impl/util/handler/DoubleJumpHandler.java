@@ -6,8 +6,8 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import work.lclpnet.ap2.impl.game.PlayerUtil;
 import work.lclpnet.kibu.access.VelocityModifier;
+import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.player.PlayerToggleFlightCallback;
-import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 

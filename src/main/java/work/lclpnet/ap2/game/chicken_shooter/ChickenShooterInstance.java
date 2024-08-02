@@ -37,11 +37,11 @@ import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.ItemStackHelper;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
+import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.ProjectileCanHitCallback;
 import work.lclpnet.kibu.hook.entity.ProjectileHooks;
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks;
-import work.lclpnet.kibu.plugin.hook.HookRegistrar;
-import work.lclpnet.kibu.translate.TranslationService;
+import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 
 import java.util.HashSet;
@@ -139,7 +139,7 @@ public class ChickenShooterInstance extends DefaultGameInstance implements Runna
         gameHandle.protect(config -> config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, damageSource)
                 -> damageSource.getSource() instanceof ProjectileEntity && entity instanceof ChickenEntity));
 
-        TranslationService translations = gameHandle.getTranslations();
+        Translations translations = gameHandle.getTranslations();
         giveBowsToPlayers(translations);
 
         chickenSpawner();
@@ -227,7 +227,7 @@ public class ChickenShooterInstance extends DefaultGameInstance implements Runna
         return score;
     }
 
-    private void giveBowsToPlayers(TranslationService translations) {
+    private void giveBowsToPlayers(Translations translations) {
         var infinity = ItemStackHelper.getEnchantment(Enchantments.INFINITY, getWorld().getRegistryManager());
 
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
