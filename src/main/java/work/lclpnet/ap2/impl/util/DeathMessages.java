@@ -10,7 +10,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.game.team.Team;
 import work.lclpnet.ap2.api.game.team.TeamKey;
-import work.lclpnet.kibu.translate.TranslationService;
+import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.kibu.translate.text.FormatWrapper;
 import work.lclpnet.kibu.translate.text.TranslatedText;
 
@@ -25,9 +25,9 @@ public class DeathMessages {
             TEAM_ELIMINATED = "ap2.game.team_eliminated",
             KILLED_BY = "ap2.pvp.killed_by",
             SHOT_BY = "ap2.pvp.shot_by";
-    private final TranslationService translations;
+    private final Translations translations;
 
-    public DeathMessages(TranslationService translations) {
+    public DeathMessages(Translations translations) {
         this.translations = translations;
     }
 

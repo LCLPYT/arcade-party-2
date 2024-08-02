@@ -7,7 +7,7 @@ import net.minecraft.text.ClickEvent;
 import net.minecraft.text.HoverEvent;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
-import work.lclpnet.kibu.translate.TranslationService;
+import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.kibu.translate.text.TranslatedText;
 
 import static net.minecraft.util.Formatting.*;
@@ -16,11 +16,11 @@ import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 public class ChallengeMessengerImpl implements ChallengeMessenger {
 
     private final ServerWorld world;
-    private final TranslationService translations;
+    private final Translations translations;
     private TranslatedText task = null;
     private Text[] options = null;
 
-    public ChallengeMessengerImpl(ServerWorld world, TranslationService translations) {
+    public ChallengeMessengerImpl(ServerWorld world, Translations translations) {
         this.world = world;
         this.translations = translations;
     }

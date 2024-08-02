@@ -16,7 +16,7 @@ import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.RunningTask;
 import work.lclpnet.kibu.scheduler.api.SchedulerAction;
 import work.lclpnet.kibu.title.Title;
-import work.lclpnet.kibu.translate.TranslationService;
+import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.kibu.translate.text.RootText;
 import work.lclpnet.kibu.translate.text.TranslatedText;
 
@@ -40,7 +40,7 @@ public class WinSequence<T, Ref extends SubjectRef> {
     }
 
     public void start(GameWinners<Ref> winners) {
-        TranslationService translations = gameHandle.getTranslations();
+        Translations translations = gameHandle.getTranslations();
         MinecraftServer server = gameHandle.getServer();
 
         for (ServerPlayerEntity player : PlayerLookup.all(server)) {
@@ -105,7 +105,7 @@ public class WinSequence<T, Ref extends SubjectRef> {
     }
 
     private void announceWinner(Ref winner) {
-        TranslationService translations = gameHandle.getTranslations();
+        Translations translations = gameHandle.getTranslations();
         TranslatedText won = translations.translateText("ap2.won").formatted(DARK_GREEN);
 
         for (ServerPlayerEntity player : PlayerLookup.all(gameHandle.getServer())) {
@@ -132,7 +132,7 @@ public class WinSequence<T, Ref extends SubjectRef> {
     }
 
     private void announceDraw() {
-        TranslationService translations = gameHandle.getTranslations();
+        Translations translations = gameHandle.getTranslations();
         TranslatedText won = translations.translateText("ap2.won").formatted(DARK_GREEN);
 
         TranslatedText nobody = translations.translateText("ap2.nobody").formatted(AQUA);
@@ -144,7 +144,7 @@ public class WinSequence<T, Ref extends SubjectRef> {
     }
 
     private void announceMultipleWinners(GameWinners<Ref> winners) {
-        TranslationService translations = gameHandle.getTranslations();
+        Translations translations = gameHandle.getTranslations();
 
         boolean teams = winners.getSubjects().iterator().next() instanceof TeamRef;
 
@@ -205,7 +205,7 @@ public class WinSequence<T, Ref extends SubjectRef> {
 
     private void sendTop3(ServerPlayerEntity player, List<? extends DataEntry<Ref>> order, Map<Ref, Integer> placement,
                           HashMap<Ref, DataEntry<Ref>> entries) {
-        TranslationService translations = gameHandle.getTranslations();
+        Translations translations = gameHandle.getTranslations();
         String results = translations.translate(player, "ap2.results");
         int len = results.length() + 2;
 
@@ -238,7 +238,7 @@ public class WinSequence<T, Ref extends SubjectRef> {
         sendOwnScore(player, entry, playerIndex, sepSm);
     }
 
-    private void sendRankList(ServerPlayerEntity player, List<? extends DataEntry<Ref>> order, Map<Ref, Integer> placement, TranslationService translations) {
+    private void sendRankList(ServerPlayerEntity player, List<? extends DataEntry<Ref>> order, Map<Ref, Integer> placement, Translations translations) {
         int maxRank = 1;
 
         for (int i = 0; i < 3; i++) {
@@ -289,7 +289,7 @@ public class WinSequence<T, Ref extends SubjectRef> {
     }
 
     private void sendOwnScore(ServerPlayerEntity player, DataEntry<Ref> entry, int ranking, MutableText sepSm) {
-        TranslationService translations = gameHandle.getTranslations();
+        Translations translations = gameHandle.getTranslations();
         player.sendMessage(sepSm);
 
         var extra = entry.toText(translations);

@@ -1,7 +1,7 @@
 package work.lclpnet.ap2.game.guess_it.data;
 
 import net.minecraft.server.network.ServerPlayerEntity;
-import work.lclpnet.kibu.translate.TranslationService;
+import work.lclpnet.kibu.translate.Translations;
 
 import java.text.NumberFormat;
 import java.text.ParseException;
@@ -9,10 +9,10 @@ import java.util.*;
 
 public class PlayerChoices {
 
-    private final TranslationService translations;
+    private final Translations translations;
     private final Map<UUID, String> choices = new HashMap<>();
 
-    public PlayerChoices(TranslationService translations) {
+    public PlayerChoices(Translations translations) {
         this.translations = translations;
     }
 

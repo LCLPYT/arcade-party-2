@@ -16,11 +16,11 @@ import work.lclpnet.ap2.impl.activity.ArcadePartyComponents;
 import work.lclpnet.ap2.impl.activity.ScoreboardComponent;
 import work.lclpnet.ap2.impl.game.DefaultMiniGameHandle;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
+import work.lclpnet.kibu.cmd.type.CommandRegistrar;
+import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.player.PlayerAdvancementPacketCallback;
 import work.lclpnet.kibu.hook.player.PlayerConnectionHooks;
 import work.lclpnet.kibu.hook.player.PlayerRecipePacketCallback;
-import work.lclpnet.kibu.plugin.cmd.CommandRegistrar;
-import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -31,7 +31,7 @@ public class MiniGameActivity extends ComponentActivity {
     private DefaultMiniGameHandle handle;
 
     public MiniGameActivity(MiniGame miniGame, PreparationActivity.Args args) {
-        super(args.pluginContext());
+        super(args.container().server(), args.container().logger());
         this.miniGame = miniGame;
         this.args = args;
     }

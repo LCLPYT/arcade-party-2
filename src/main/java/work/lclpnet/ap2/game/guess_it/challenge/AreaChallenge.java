@@ -16,7 +16,7 @@ import work.lclpnet.ap2.impl.util.TextUtil;
 import work.lclpnet.ap2.impl.util.world.SimpleAdjacentBlocks;
 import work.lclpnet.ap2.impl.util.world.stage.Stage;
 import work.lclpnet.kibu.scheduler.Ticks;
-import work.lclpnet.kibu.translate.TranslationService;
+import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.lobby.util.WorldModifier;
 
 import java.util.*;
@@ -52,7 +52,7 @@ public class AreaChallenge implements Challenge {
 
     @Override
     public void begin(InputInterface input, ChallengeMessenger messenger) {
-        TranslationService translations = gameHandle.getTranslations();
+        Translations translations = gameHandle.getTranslations();
         messenger.task(translations.translateText("game.ap2.guess_it.area"));
 
         var opts = OptionMaker.createOptions(Set.of(DyeColor.values()), 4, random);

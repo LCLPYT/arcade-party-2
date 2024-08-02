@@ -7,7 +7,7 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import work.lclpnet.ap2.api.game.team.Team;
 import work.lclpnet.ap2.api.game.team.TeamManager;
 import work.lclpnet.ap2.api.util.bossbar.PlayerBossBar;
-import work.lclpnet.kibu.plugin.hook.HookRegistrar;
+import work.lclpnet.kibu.hook.HookRegistrar;
 
 public class DynamicTranslatedTeamBossBar implements PlayerBossBar {
 

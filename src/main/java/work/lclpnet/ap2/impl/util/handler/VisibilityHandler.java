@@ -19,10 +19,10 @@ import net.minecraft.util.TypedActionResult;
 import org.jetbrains.annotations.NotNull;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.kibu.access.entity.EntityAccess;
+import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.kibu.hook.network.ServerSendPacketCallback;
-import work.lclpnet.kibu.plugin.hook.HookRegistrar;
-import work.lclpnet.kibu.translate.TranslationService;
+import work.lclpnet.kibu.translate.Translations;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,10 +35,10 @@ public class VisibilityHandler {
     private static final Item ITEM = Items.ENDER_EYE;
     private static final int FLAGS_TRACKED_DATA_ID = EntityAccess.FLAGS.id();
     private final VisibilityManager manager;
-    private final TranslationService translations;
+    private final Translations translations;
     private final Participants participants;
 
-    public VisibilityHandler(VisibilityManager manager, TranslationService translations, Participants participants) {
+    public VisibilityHandler(VisibilityManager manager, Translations translations, Participants participants) {
         this.manager = manager;
         this.translations = translations;
         this.participants = participants;

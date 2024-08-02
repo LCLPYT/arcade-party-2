@@ -4,8 +4,8 @@ import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import work.lclpnet.ap2.api.util.CollisionDetector;
+import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.player.PlayerMoveCallback;
-import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 
 import java.util.function.Predicate;
 

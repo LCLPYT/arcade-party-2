@@ -23,16 +23,15 @@ import work.lclpnet.ap2.base.activity.MiniGameActivity;
 import work.lclpnet.ap2.base.activity.PreparationActivity;
 import work.lclpnet.ap2.impl.util.DeathMessages;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
-import work.lclpnet.kibu.plugin.cmd.CommandRegistrar;
-import work.lclpnet.kibu.plugin.hook.HookStack;
-import work.lclpnet.kibu.plugin.scheduler.SchedulerStack;
+import work.lclpnet.kibu.cmd.type.CommandRegistrar;
+import work.lclpnet.kibu.hook.HookStack;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
-import work.lclpnet.kibu.translate.TranslationService;
+import work.lclpnet.kibu.scheduler.util.SchedulerStack;
+import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.kibu.translate.bossbar.BossBarProvider;
 import work.lclpnet.lobby.game.api.WorldFacade;
 import work.lclpnet.lobby.game.impl.prot.BasicProtector;
 import work.lclpnet.lobby.game.impl.prot.MutableProtectionConfig;
-import work.lclpnet.mplugins.ext.Unloadable;
 import work.lclpnet.notica.Notica;
 import work.lclpnet.notica.api.SongHandle;
 
@@ -41,7 +40,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-public class DefaultMiniGameHandle implements MiniGameHandle, Unloadable, WorldBorderManager {
+public class DefaultMiniGameHandle implements MiniGameHandle, WorldBorderManager {
 
     private final MiniGame game;
     private final PreparationActivity.Args args;
@@ -53,7 +52,7 @@ public class DefaultMiniGameHandle implements MiniGameHandle, Unloadable, WorldB
     private MutableProtectionConfig protectionConfig;
     private volatile BasicProtector protector = null;
     private WorldBorderListener worldBorderListener = null;
-    private volatile List<Unloadable> closeWhenDone = null;
+    private volatile List<Runnable> whenDone = null;
     private TaskScheduler scheduler = null;
     private boolean ended = false;
     private volatile DeathMessages deathMessages = null;
@@ -128,7 +127,7 @@ public class DefaultMiniGameHandle implements MiniGameHandle, Unloadable, WorldB
     }
 
     @Override
-    public TranslationService getTranslations() {
+    public Translations getTranslations() {
         return args.container().translations();
     }
 
@@ -218,19 +217,18 @@ public class DefaultMiniGameHandle implements MiniGameHandle, Unloadable, WorldB
         protector.activate();
     }
 
-    @Override
-    public void closeWhenDone(Unloadable unloadable) {
-        Objects.requireNonNull(unloadable);
+    public void whenDone(Runnable action) {
+        Objects.requireNonNull(action);
 
-        if (closeWhenDone == null) {
+        if (whenDone == null) {
             synchronized (this) {
-                if (closeWhenDone == null) {
-                    closeWhenDone = new ArrayList<>();
+                if (whenDone == null) {
+                    whenDone = new ArrayList<>();
                 }
             }
         }
 
-        closeWhenDone.add(unloadable);
+        whenDone.add(action);
     }
 
     @Override
@@ -253,7 +251,6 @@ public class DefaultMiniGameHandle implements MiniGameHandle, Unloadable, WorldB
         ActivityManager.getInstance().startActivity(activity);
     }
 
-    @Override
     public void unload() {
         ApContainer container = args.container();
 
@@ -268,9 +265,9 @@ public class DefaultMiniGameHandle implements MiniGameHandle, Unloadable, WorldB
             protector.unload();
         }
 
-        if (closeWhenDone != null) {
-            closeWhenDone.forEach(Unloadable::unload);
-            closeWhenDone.clear();
+        if (whenDone != null) {
+            whenDone.forEach(Runnable::run);
+            whenDone.clear();
         }
 
         Notica.getInstance(getServer()).getPlayingSongs().forEach(SongHandle::stop);

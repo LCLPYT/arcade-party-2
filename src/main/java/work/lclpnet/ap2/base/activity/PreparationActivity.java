@@ -39,21 +39,20 @@ import work.lclpnet.ap2.impl.game.PlayerUtil;
 import work.lclpnet.ap2.impl.util.music.MusicHelper;
 import work.lclpnet.ap2.impl.util.title.AnimatedTitle;
 import work.lclpnet.ap2.impl.util.title.NextGameTitleAnimation;
+import work.lclpnet.kibu.cmd.type.CommandRegistrar;
+import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.kibu.hook.player.PlayerAdvancementPacketCallback;
 import work.lclpnet.kibu.hook.player.PlayerConnectionHooks;
 import work.lclpnet.kibu.hook.player.PlayerInventoryHooks;
 import work.lclpnet.kibu.hook.player.PlayerRecipePacketCallback;
 import work.lclpnet.kibu.inv.type.RestrictedInventory;
-import work.lclpnet.kibu.plugin.cmd.CommandRegistrar;
-import work.lclpnet.kibu.plugin.ext.PluginContext;
-import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.RunningTask;
 import work.lclpnet.kibu.scheduler.api.Scheduler;
 import work.lclpnet.kibu.scheduler.api.TaskHandle;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
-import work.lclpnet.kibu.translate.TranslationService;
+import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.lobby.game.api.MapOptions;
 import work.lclpnet.lobby.game.api.WorldFacade;
 import work.lclpnet.lobby.game.map.GameMap;
@@ -89,7 +88,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
     private CompletableFuture<Void> whenTasksDone = null;
 
     public PreparationActivity(Args args) {
-        super(args.pluginContext());
+        super(args.container().server(), args.container().logger());
         this.args = args;
     }
 
@@ -227,7 +226,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
         Scheduler scheduler = component(BuiltinComponents.SCHEDULER).scheduler();
 
         MinecraftServer server = getServer();
-        TranslationService translationService = args.container().translations();
+        Translations translationService = args.container().translations();
 
         var label = translationService.translateText("ap2.prepare.next_game_title");
 
@@ -331,7 +330,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
 
     private void announceNextGame() {
         ApContainer container = args.container();
-        TranslationService translations = container.translations();
+        Translations translations = container.translations();
         MinecraftServer server = getServer();
         SongManager songManager = container.songManager();
         Logger logger = container.logger();
@@ -409,7 +408,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
      * Announces that the current game is no longer valid and that a new game will be picked.
      */
     private void announceInvalidGame() {
-        TranslationService translations = args.container().translations();
+        Translations translations = args.container().translations();
 
         var gameTitle = translations.translateText(miniGame.getTitleKey()).formatted(YELLOW);
         var msg = translations.translateText("ap2.prepare.game_cannot_be_played", gameTitle).formatted(RED);
@@ -486,7 +485,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
 
     private void openGamePicker(ServerPlayerEntity player) {
         var games = args.container().miniGames().getGames().stream().toList();
-        TranslationService translations = args.container().translations();
+        Translations translations = args.container().translations();
 
         RestrictedInventory inv = gameChooser.createInventory(games, Text.literal("Force Game"),
                 game -> IconMaker.createIcon(game, player, translations));
@@ -504,7 +503,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
         DataManager dataManager = container.dataManager();
 
         container.mapFacade().getMaps(miniGame.getId()).thenAccept(maps -> {
-            TranslationService translations = container.translations();
+            Translations translations = container.translations();
 
             RestrictedInventory inv = mapChooser.createInventory(maps, Text.literal("Force Map"),
                     map -> IconMaker.createIcon(map, player, translations, dataManager));
@@ -522,6 +521,6 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
         return Optional.ofNullable(miniGame);
     }
 
-    public record Args(PluginContext pluginContext, ApContainer container, GameQueue gameQueue,
+    public record Args(ApContainer container, GameQueue gameQueue,
                        PlayerManager playerManager, ForceGameCommand forceGameCommand, SongCache sharedSongCache) {}
 }

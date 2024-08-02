@@ -2,7 +2,7 @@ package work.lclpnet.ap2.impl.bootstrap;
 
 import net.minecraft.util.Identifier;
 import org.apache.commons.io.FileUtils;
-import work.lclpnet.ap2.base.ArcadeParty;
+import org.slf4j.Logger;
 import work.lclpnet.ap2.base.config.Ap2Config;
 import work.lclpnet.lobby.game.api.data.DataPackSink;
 import work.lclpnet.lobby.game.api.data.GameDataPacks;
@@ -21,9 +21,17 @@ import java.util.stream.Stream;
 
 public class ApDataPacks implements GameDataPacks {
 
+    private final Path cacheDirectory;
+    private final Logger logger;
+
+    public ApDataPacks(Path cacheDirectory, Logger logger) {
+        this.cacheDirectory = cacheDirectory;
+        this.logger = logger;
+    }
+
     @Override
     public CompletableFuture<Void> downloadPacks(DataPackSink dataPackSink, Executor executor) {
-        ApBootstrap bootstrap = new ApBootstrap(ArcadeParty.logger);
+        ApBootstrap bootstrap = new ApBootstrap(cacheDirectory, logger);
         Identifier dataPacksPath = Objects.requireNonNull(Identifier.of("datapacks", ""));
 
         return bootstrap.loadConfig(executor)
@@ -41,7 +49,7 @@ public class ApDataPacks implements GameDataPacks {
                     fetchDataPacks(mapManager, maps, dataPackSink);
                 })
                 .exceptionally(err -> {
-                    ArcadeParty.logger.error("Failed to locate data packs");
+                    logger.error("Failed to locate data packs");
                     return null;
                 });
     }
@@ -49,13 +57,13 @@ public class ApDataPacks implements GameDataPacks {
     private void fetchDataPacks(MapManager mapManager, Stream<GameMap> maps, DataPackSink sink) {
         var it = maps.iterator();
 
-        Path dir = ArcadeParty.getInstance().getCacheDirectory().resolve("data_pack_maps");
+        Path dir = cacheDirectory.resolve("data_pack_maps");
 
         if (!Files.exists(dir)) {
             try {
                 Files.createDirectories(dir);
             } catch (IOException e) {
-                ArcadeParty.logger.error("Failed to create directory: {}", dir, e);
+                logger.error("Failed to create directory: {}", dir, e);
                 return;
             }
         }
@@ -76,7 +84,7 @@ public class ApDataPacks implements GameDataPacks {
 
                 offerPacksFrom(directory, sink);
             } catch (IOException e) {
-                ArcadeParty.logger.error("Failed fetch data packs of map {}: failed to pull", map, e);
+                logger.error("Failed fetch data packs of map {}: failed to pull", map, e);
             }
         }
     }
@@ -98,7 +106,7 @@ public class ApDataPacks implements GameDataPacks {
             try (var in = Files.newInputStream(pack)) {
                 sink.offer(pack.getFileName(), in);
             } catch (IOException e) {
-                ArcadeParty.logger.error("Failed to copy data pack {}", pack, e);
+                logger.error("Failed to copy data pack {}", pack, e);
             }
         }
     }

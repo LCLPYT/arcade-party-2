@@ -19,19 +19,18 @@ import net.minecraft.util.Formatting;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.util.scoreboard.CustomScoreboardObjective;
-import work.lclpnet.kibu.translate.TranslationService;
+import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.kibu.translate.text.RootText;
 import work.lclpnet.kibu.translate.text.TextTranslatable;
-import work.lclpnet.mplugins.ext.Unloadable;
 
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
-public class TranslatedScoreboardObjective implements CustomScoreboardObjective, Unloadable {
+public class TranslatedScoreboardObjective implements CustomScoreboardObjective {
 
-    private final TranslationService translations;
+    private final Translations translations;
     private final PlayerManager playerManager;
     private final String name;
     private final ScoreboardCriterion.RenderType renderType;
@@ -49,7 +48,7 @@ public class TranslatedScoreboardObjective implements CustomScoreboardObjective,
     @Nullable
     private Function<String, @Nullable Text> displayFunction = null;
 
-    public TranslatedScoreboardObjective(TranslationService translations, PlayerManager playerManager, String name,
+    public TranslatedScoreboardObjective(Translations translations, PlayerManager playerManager, String name,
                                          ScoreboardCriterion.RenderType renderType, String translationKey, Object[] args) {
         this.translations = translations;
         this.playerManager = playerManager;
@@ -398,7 +397,6 @@ public class TranslatedScoreboardObjective implements CustomScoreboardObjective,
         createText(Text.empty(), position);
     }
 
-    @Override
     public void unload() {
         objectivePlayers.forEach((objective, uuids) -> {
             for (UUID uuid : uuids) {

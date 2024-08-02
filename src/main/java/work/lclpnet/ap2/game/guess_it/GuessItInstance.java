@@ -26,12 +26,12 @@ import work.lclpnet.ap2.impl.util.scoreboard.ScoreHandle;
 import work.lclpnet.ap2.impl.util.scoreboard.ScoreboardLayout;
 import work.lclpnet.ap2.impl.util.world.stage.Stage;
 import work.lclpnet.ap2.impl.util.world.stage.StageReader;
+import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.*;
-import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.kibu.title.Title;
-import work.lclpnet.kibu.translate.TranslationService;
+import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.kibu.translate.text.TranslatedText;
 import work.lclpnet.lobby.game.map.GameMap;
 import work.lclpnet.lobby.game.util.BossBarTimer;
@@ -132,7 +132,7 @@ public class GuessItInstance extends DefaultGameInstance implements MapBootstrap
 
     private void setupScoreboard() {
         CustomScoreboardManager scoreboardManager = gameHandle.getScoreboardManager();
-        TranslationService translations = gameHandle.getTranslations();
+        Translations translations = gameHandle.getTranslations();
 
         var objective = scoreboardManager.translateObjective("score", gameHandle.getGameInfo().getTitleKey())
                 .formatted(AQUA, Formatting.BOLD);
@@ -182,7 +182,7 @@ public class GuessItInstance extends DefaultGameInstance implements MapBootstrap
 
         challenge = manager.nextChallenge();
         ServerWorld world = getWorld();
-        TranslationService translations = gameHandle.getTranslations();
+        Translations translations = gameHandle.getTranslations();
 
         var prepareMsg = translations.translateText("game.ap2.guess_it.prepare." + challenge.getPreparationKey())
                 .formatted(DARK_GREEN, BOLD);
@@ -208,7 +208,7 @@ public class GuessItInstance extends DefaultGameInstance implements MapBootstrap
         Objects.requireNonNull(challenge, "Challenge cannot be null");
 
         ServerWorld world = getWorld();
-        TranslationService translations = gameHandle.getTranslations();
+        Translations translations = gameHandle.getTranslations();
         TaskScheduler scheduler = gameHandle.getGameScheduler();
 
         var players = PlayerLookup.world(world);
@@ -272,7 +272,7 @@ public class GuessItInstance extends DefaultGameInstance implements MapBootstrap
     private void evaluateChallenge() {
         Objects.requireNonNull(challenge, "Challenge cannot be null");
 
-        TranslationService translations = gameHandle.getTranslations();
+        Translations translations = gameHandle.getTranslations();
 
         result.clear();
         challenge.evaluate(choices, result);

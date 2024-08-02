@@ -13,7 +13,7 @@ import work.lclpnet.ap2.game.guess_it.data.*;
 import work.lclpnet.ap2.impl.util.world.stage.Stage;
 import work.lclpnet.kibu.access.entity.DisplayEntityAccess;
 import work.lclpnet.kibu.scheduler.Ticks;
-import work.lclpnet.kibu.translate.TranslationService;
+import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.lobby.util.WorldModifier;
 
 import java.util.Random;
@@ -48,7 +48,7 @@ public class CakeBitesChallenge implements Challenge {
 
     @Override
     public void begin(InputInterface input, ChallengeMessenger messenger) {
-        TranslationService translations = gameHandle.getTranslations();
+        Translations translations = gameHandle.getTranslations();
         messenger.task(translations.translateText("game.ap2.guess_it.cake_bites"));
 
         input.expectInput().validateInt(translations);

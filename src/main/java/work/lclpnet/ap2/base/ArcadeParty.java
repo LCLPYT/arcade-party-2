@@ -1,59 +1,50 @@
 package work.lclpnet.ap2.base;
 
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.util.Identifier;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import work.lclpnet.kibu.plugin.ext.KibuPlugin;
-import work.lclpnet.kibu.plugin.ext.TranslatedPlugin;
-import work.lclpnet.kibu.translate.TranslationService;
-import work.lclpnet.translations.loader.translation.SPITranslationLoader;
+import work.lclpnet.ap2.impl.bootstrap.ApDataPacks;
+import work.lclpnet.kibu.translate.util.ModTranslations;
+import work.lclpnet.lobby.game.api.Game;
+import work.lclpnet.lobby.game.api.GameEnvironment;
+import work.lclpnet.lobby.game.api.GameInstance;
+import work.lclpnet.lobby.game.api.TranslatedGame;
+import work.lclpnet.lobby.game.api.data.GameDataPacks;
+import work.lclpnet.lobby.game.conf.GameConfig;
+import work.lclpnet.lobby.game.conf.MinecraftGameConfig;
 import work.lclpnet.translations.loader.translation.TranslationLoader;
 
 import java.nio.file.Path;
 
-public class ArcadeParty extends KibuPlugin implements TranslatedPlugin {
+public class ArcadeParty implements Game, TranslatedGame {
 
     public static final Logger logger = LoggerFactory.getLogger(ApConstants.ID);
-    private static ArcadeParty instance;
-    private TranslationService translationService = null;
+    private final MinecraftGameConfig config = new MinecraftGameConfig("ap2", new ItemStack(Items.GOLD_BLOCK));
     private final Path cacheDirectory = Path.of(".cache", ApConstants.ID);
-
-    @Override
-    public void loadKibuPlugin() {
-        instance = this;
-
-        logger.info("ArcadeParty2 initialized.");
-    }
-
-    @NotNull
-    public static ArcadeParty getInstance() {
-        if (instance == null) {
-            throw new IllegalStateException("Called to early");
-        }
-
-        return instance;
-    }
 
     public static Identifier identifier(String path) {
         return Identifier.of(ApConstants.ID, path);
     }
 
     @Override
-    public void injectTranslationService(TranslationService translationService) {
-        this.translationService = translationService;
+    public GameConfig getConfig() {
+        return config;
     }
 
     @Override
-    public TranslationLoader createTranslationLoader() {
-        return new SPITranslationLoader(getClass().getClassLoader());
+    public GameInstance createInstance(GameEnvironment gameEnvironment) {
+        return new ArcadePartyInstance(gameEnvironment, cacheDirectory, logger);
     }
 
-    public TranslationService getTranslationService() {
-        return translationService;
+    @Override
+    public GameDataPacks getBootstrapDataPacks() {
+        return new ApDataPacks(cacheDirectory, logger);
     }
 
-    public Path getCacheDirectory() {
-        return cacheDirectory;
+    @Override
+    public TranslationLoader getTranslationLoader() {
+        return ModTranslations.assetTranslationLoader(ApConstants.ID, logger);
     }
 }

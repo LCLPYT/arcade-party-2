@@ -22,7 +22,7 @@ import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.SoundHelper;
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
 import work.lclpnet.kibu.scheduler.Ticks;
-import work.lclpnet.kibu.translate.TranslationService;
+import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 
 import java.util.Objects;
@@ -59,7 +59,7 @@ public class SpleefInstance extends EliminationGameInstance {
                     -> damageSource.isOf(DamageTypes.LAVA) || damageSource.isOf(DamageTypes.OUTSIDE_BORDER));
         });
 
-        TranslationService translations = gameHandle.getTranslations();
+        Translations translations = gameHandle.getTranslations();
 
         giveShovelsToPlayers(translations);
 
@@ -83,7 +83,7 @@ public class SpleefInstance extends EliminationGameInstance {
         SoundHelper.playSound(gameHandle.getServer(), SoundEvents.ENTITY_WITHER_DEATH, SoundCategory.AMBIENT, 0.8f, 1f);
     }
 
-    private void giveShovelsToPlayers(TranslationService translations) {
+    private void giveShovelsToPlayers(Translations translations) {
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
             ItemStack stack = new ItemStack(Items.IRON_SHOVEL);
 

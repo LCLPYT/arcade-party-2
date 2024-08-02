@@ -17,33 +17,36 @@ import work.lclpnet.ap2.impl.base.VotedGameQueue;
 import work.lclpnet.ap2.impl.bootstrap.ApBootstrap;
 import work.lclpnet.ap2.impl.game.PlayerUtil;
 import work.lclpnet.ap2.impl.util.music.MapSongCache;
-import work.lclpnet.kibu.translate.TranslationService;
+import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.lobby.game.api.GameEnvironment;
 import work.lclpnet.lobby.game.api.GameInstance;
 import work.lclpnet.lobby.game.api.GameStarter;
 import work.lclpnet.lobby.game.start.ConditionGameStarter;
 
+import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.ForkJoinPool;
 
 import static work.lclpnet.ap2.impl.util.FutureUtil.onThread;
 
-public class ArcadePartyGameInstance implements GameInstance {
+public class ArcadePartyInstance implements GameInstance {
 
     private static final int MIN_REQUIRED_PLAYERS = 2;
-    private final Logger logger = ArcadeParty.logger;
     private final GameEnvironment environment;
+    private final Path cacheDirectory;
+    private final Logger logger;
 
-    public ArcadePartyGameInstance(GameEnvironment environment) {
+    public ArcadePartyInstance(GameEnvironment environment, Path cacheDirectory, Logger logger) {
         this.environment = environment;
+        this.cacheDirectory = cacheDirectory;
+        this.logger = logger;
     }
 
     @Override
     public GameStarter createStarter(GameStarter.Args args, GameStarter.Callback callback) {
         ConditionGameStarter starter = new ConditionGameStarter(this::canStart, args, callback, environment);
 
-        ArcadeParty arcadeParty = ArcadeParty.getInstance();
-        TranslationService translations = arcadeParty.getTranslationService();
+        Translations translations = environment.getTranslations();
 
         var msg = translations.translateText("lobby.game.not_enough_players", MIN_REQUIRED_PLAYERS)
                 .formatted(Formatting.RED);
@@ -70,7 +73,7 @@ public class ArcadePartyGameInstance implements GameInstance {
     @Override
     public void start() {
         MinecraftServer server = environment.getServer();
-        ApBootstrap bootstrap = new ApBootstrap(logger);
+        ApBootstrap bootstrap = new ApBootstrap(cacheDirectory, logger);
 
         bootstrap.loadConfig(ForkJoinPool.commonPool())
                 .thenCompose(configManager -> bootstrap.dispatch(configManager.getConfig(), environment))
@@ -83,9 +86,7 @@ public class ArcadePartyGameInstance implements GameInstance {
 
     private void dispatchGameStart(ApBootstrap.Result result) {
         MinecraftServer server = environment.getServer();
-        ArcadeParty arcadeParty = ArcadeParty.getInstance();
-
-        TranslationService translationService = arcadeParty.getTranslationService();
+        Translations translationService = environment.getTranslations();
 
         MiniGameManager gameManager = new SimpleMiniGameManager(logger);
         List<MiniGame> votedGames = List.of();  // TODO get from vote manager and shuffle
@@ -103,7 +104,7 @@ public class ArcadePartyGameInstance implements GameInstance {
 
         SongCache songCache = new MapSongCache();
 
-        var args = new PreparationActivity.Args(arcadeParty, container, queue, playerManager, forceGameCommand, songCache);
+        var args = new PreparationActivity.Args(container, queue, playerManager, forceGameCommand, songCache);
         PreparationActivity preparation = new PreparationActivity(args);
 
         ActivityManager.getInstance().startActivity(preparation);
