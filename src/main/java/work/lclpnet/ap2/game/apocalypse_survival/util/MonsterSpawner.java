@@ -1,21 +1,21 @@
 package work.lclpnet.ap2.game.apocalypse_survival.util;
 
-import net.minecraft.block.Blocks;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.ai.goal.BreakDoorGoal;
+import net.minecraft.entity.ai.goal.GoalSelector;
+import net.minecraft.entity.ai.goal.ZombieAttackGoal;
 import net.minecraft.entity.ai.pathing.EntityNavigation;
 import net.minecraft.entity.ai.pathing.MobNavigation;
-import net.minecraft.entity.ai.pathing.PathNode;
 import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.entity.decoration.DisplayEntity;
 import net.minecraft.entity.mob.ZombieEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.AffineTransformation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
-import org.joml.Matrix4f;
+import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.impl.util.world.stage.Stage;
-import work.lclpnet.kibu.access.entity.DisplayEntityAccess;
+import work.lclpnet.ap2.mixin.MobEntityAccessor;
 import work.lclpnet.kibu.scheduler.Ticks;
 
 import java.util.Random;
@@ -26,7 +26,7 @@ public class MonsterSpawner {
             PARTICLE_TICKS = 12,
             MOB_MIN_TICKS = Ticks.seconds(1),
             MOB_MAX_TICKS = Ticks.seconds(4),
-            MOB_LIMIT = 1;
+            MOB_LIMIT = 30;
     private final ServerWorld world;
     private final Stage stage;
     private final Random random;
@@ -72,23 +72,19 @@ public class MonsterSpawner {
         ZombieEntity zombie = new ZombieEntity(EntityType.ZOMBIE, world);
         zombie.setPersistent();
         zombie.setPosition(Vec3d.ofBottomCenter(pos));
+        zombie.setCanBreakDoors(true);
 
+        // adjust follow range, so that the zombie will follow far players
         var followRange = zombie.getAttributeInstance(EntityAttributes.GENERIC_FOLLOW_RANGE);
 
         if (followRange != null) {
             followRange.setBaseValue(100);
         }
 
-        world.spawnEntity(zombie);
-        mobCount++;
-
-        debugPath(zombie);
-    }
-
-    private void debugPath(ZombieEntity zombie) {
-        zombie.setOnGround(true);
-
         EntityNavigation navigation = zombie.getNavigation();
+
+        // adjust range multiplier to find longer paths using the A* Algorithm
+        navigation.setRangeMultiplier(2.5f);
 
         if (navigation instanceof MobNavigation nav) {
             nav.setCanPathThroughDoors(true);
@@ -96,25 +92,38 @@ public class MonsterSpawner {
             nav.setCanEnterOpenDoors(true);
         }
 
+        adjustGoals(zombie);
+
+        @Nullable PlayerEntity closestPlayer = world.getClosestPlayer(zombie, 150);
+        zombie.setTarget(closestPlayer);
+
+        world.spawnEntity(zombie);
+        mobCount++;
+
+//        debugPath(zombie);
+    }
+
+    private void adjustGoals(ZombieEntity zombie) {
+        var mobAccess = (MobEntityAccessor) zombie;
+
+        GoalSelector goalSelector = mobAccess.getGoalSelector();
+        GoalSelector targetSelector = mobAccess.getTargetSelector();
+
+        GoalModifier.clear(goalSelector);
+        GoalModifier.clear(targetSelector);
+
+        goalSelector.add(1, new BreakDoorGoal(zombie, difficulty -> true));
+        goalSelector.add(2, new ZombieAttackGoal(zombie, 1.5, false));
+    }
+
+    private void debugPath(ZombieEntity zombie) {
+        zombie.setOnGround(true);
+
         BlockPos target = new BlockPos(-50, 73, 10);
+
+        EntityNavigation navigation = zombie.getNavigation();
         var path = navigation.findPathTo(target, 2, 150);
 
-        if (path == null) {
-            System.out.println("could not find path");
-            return;
-        }
-
-        System.out.printf("target: %s reaches: %s distance: %s%n", path.getTarget(), path.reachesTarget(), path.getManhattanDistanceFromTarget());
-
-        for (int i = 0; i < path.getLength(); i++) {
-            PathNode node = path.getNode(i);
-
-            var display = new DisplayEntity.BlockDisplayEntity(EntityType.BLOCK_DISPLAY, world);
-            display.setPosition(node.getPos().add(.25, .25, .25));
-            DisplayEntityAccess.setBlockState(display, Blocks.LIME_CONCRETE.getDefaultState());
-            DisplayEntityAccess.setTransformation(display, new AffineTransformation(new Matrix4f().scale(.5f)));
-
-            world.spawnEntity(display);
-        }
+        new PathDebugging(world).displayPath(path, zombie);
     }
 }

@@ -19,7 +19,9 @@
       "work.lclpnet.ap2.base.ArcadeParty"
     ]
   },
-  "mixins": [],
+  "mixins": [
+    "ap2.mixins.json"
+  ],
   "depends": {
     "fabricloader": ">=0.15.11",
     "minecraft": "~1.21",
