@@ -3,6 +3,7 @@ package work.lclpnet.ap2.game.apocalypse_survival.util;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.ai.goal.BreakDoorGoal;
 import net.minecraft.entity.ai.goal.GoalSelector;
+import net.minecraft.entity.ai.goal.WanderAroundFarGoal;
 import net.minecraft.entity.ai.goal.ZombieAttackGoal;
 import net.minecraft.entity.ai.pathing.EntityNavigation;
 import net.minecraft.entity.ai.pathing.MobNavigation;
@@ -26,18 +27,20 @@ public class MonsterSpawner {
             PARTICLE_TICKS = 12,
             MOB_MIN_TICKS = Ticks.seconds(1),
             MOB_MAX_TICKS = Ticks.seconds(4),
-            MOB_LIMIT = 30;
+            MOB_LIMIT = 50;
     private final ServerWorld world;
     private final Stage stage;
     private final Random random;
+    private final TargetManager targetManager;
     private int nextParticle = 0;
     private int nextMob;
     private int mobCount = 0;
 
-    public MonsterSpawner(ServerWorld world, Stage stage, Random random) {
+    public MonsterSpawner(ServerWorld world, Stage stage, Random random, TargetManager targetManager) {
         this.world = world;
         this.stage = stage;
         this.random = random;
+        this.targetManager = targetManager;
 
         scheduleNextMob();
     }
@@ -73,6 +76,7 @@ public class MonsterSpawner {
         zombie.setPersistent();
         zombie.setPosition(Vec3d.ofBottomCenter(pos));
         zombie.setCanBreakDoors(true);
+        zombie.setGlowing(true);  // debug
 
         // adjust follow range, so that the zombie will follow far players
         var followRange = zombie.getAttributeInstance(EntityAttributes.GENERIC_FOLLOW_RANGE);
@@ -100,6 +104,8 @@ public class MonsterSpawner {
         world.spawnEntity(zombie);
         mobCount++;
 
+        targetManager.addMob(zombie);
+
 //        debugPath(zombie);
     }
 
@@ -114,6 +120,7 @@ public class MonsterSpawner {
 
         goalSelector.add(1, new BreakDoorGoal(zombie, difficulty -> true));
         goalSelector.add(2, new ZombieAttackGoal(zombie, 1.5, false));
+        goalSelector.add(7, new WanderAroundFarGoal(zombie, 1.25));
     }
 
     private void debugPath(ZombieEntity zombie) {

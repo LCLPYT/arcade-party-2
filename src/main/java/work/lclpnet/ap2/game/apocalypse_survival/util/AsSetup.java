@@ -16,11 +16,13 @@ public class AsSetup {
     private final GameMap map;
     private final ServerWorld world;
     private final Random random;
+    private final TargetManager targetManager;
 
-    public AsSetup(GameMap map, ServerWorld world, Random random) {
+    public AsSetup(GameMap map, ServerWorld world, Random random, TargetManager targetManager) {
         this.map = map;
         this.world = world;
         this.random = random;
+        this.targetManager = targetManager;
     }
 
     public List<MonsterSpawner> readSpawners() {
@@ -42,6 +44,6 @@ public class AsSetup {
 
         Stage stage = StageReader.readStage(stageJson);
 
-        return new MonsterSpawner(world, stage, random);
+        return new MonsterSpawner(world, stage, random, targetManager);
     }
 }
