@@ -4,18 +4,22 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.damage.DamageTypes;
 import net.minecraft.entity.mob.MobEntity;
+import net.minecraft.scoreboard.Team;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.util.Formatting;
 import net.minecraft.world.GameRules;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.game.apocalypse_survival.util.AsSetup;
 import work.lclpnet.ap2.game.apocalypse_survival.util.MonsterSpawner;
 import work.lclpnet.ap2.game.apocalypse_survival.util.TargetManager;
 import work.lclpnet.ap2.impl.game.EliminationGameInstance;
+import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.ServerEntityHooks;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
+import work.lclpnet.lobby.game.map.GameMap;
 
 import java.util.List;
 import java.util.Random;
@@ -37,11 +41,18 @@ public class ApocalypseSurvivalInstance extends EliminationGameInstance {
         useSmoothDeath();
 
         ServerWorld world = getWorld();
+        GameMap map = getMap();
         MinecraftServer server = gameHandle.getServer();
 
-        targetManager = new TargetManager(gameHandle.getParticipants());
+        CustomScoreboardManager scoreboardManager = gameHandle.getScoreboardManager();
+        Team target = scoreboardManager.createTeam("target");
+        target.setColor(Formatting.DARK_RED);
+        Team guard = scoreboardManager.createTeam("guard");
+        guard.setColor(Formatting.BLUE);
 
-        var setup = new AsSetup(getMap(), world, new Random(), targetManager);
+        targetManager = new TargetManager(gameHandle.getParticipants(), map, scoreboardManager, target, guard);
+
+        var setup = new AsSetup(map, world, new Random(), targetManager);
 
         spawners = setup.readSpawners();
 
@@ -51,8 +62,8 @@ public class ApocalypseSurvivalInstance extends EliminationGameInstance {
 
         HookRegistrar hooks = gameHandle.getHookRegistrar();
 
-        hooks.registerHook(ServerEntityHooks.ENTITY_UNLOAD, (entity, _world) -> {
-            if (entity instanceof MobEntity mob) {
+        hooks.registerHook(ServerEntityHooks.ENTITY_UNLOAD, (entity, relWorld) -> {
+            if (relWorld == world && entity instanceof MobEntity mob) {
                 targetManager.removeMob(mob);
             }
         });

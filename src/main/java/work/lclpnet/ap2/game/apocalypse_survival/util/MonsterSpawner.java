@@ -3,18 +3,16 @@ package work.lclpnet.ap2.game.apocalypse_survival.util;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.ai.goal.BreakDoorGoal;
 import net.minecraft.entity.ai.goal.GoalSelector;
-import net.minecraft.entity.ai.goal.WanderAroundFarGoal;
 import net.minecraft.entity.ai.goal.ZombieAttackGoal;
 import net.minecraft.entity.ai.pathing.EntityNavigation;
 import net.minecraft.entity.ai.pathing.MobNavigation;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.mob.ZombieEntity;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
-import org.jetbrains.annotations.Nullable;
+import work.lclpnet.ap2.game.apocalypse_survival.goal.GuardEmptyAreaGoal;
 import work.lclpnet.ap2.impl.util.world.stage.Stage;
 import work.lclpnet.ap2.mixin.MobEntityAccessor;
 import work.lclpnet.kibu.scheduler.Ticks;
@@ -98,9 +96,6 @@ public class MonsterSpawner {
 
         adjustGoals(zombie);
 
-        @Nullable PlayerEntity closestPlayer = world.getClosestPlayer(zombie, 150);
-        zombie.setTarget(closestPlayer);
-
         world.spawnEntity(zombie);
         mobCount++;
 
@@ -120,7 +115,7 @@ public class MonsterSpawner {
 
         goalSelector.add(1, new BreakDoorGoal(zombie, difficulty -> true));
         goalSelector.add(2, new ZombieAttackGoal(zombie, 1.5, false));
-        goalSelector.add(7, new WanderAroundFarGoal(zombie, 1.25));
+        goalSelector.add(7, new GuardEmptyAreaGoal(zombie, targetManager, 1.25));
     }
 
     private void debugPath(ZombieEntity zombie) {

@@ -2,9 +2,13 @@ package work.lclpnet.ap2.game.apocalypse_survival.util;
 
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.SetMultimap;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.mob.MobEntity;
+import net.minecraft.scoreboard.Team;
 import net.minecraft.server.network.ServerPlayerEntity;
 import work.lclpnet.ap2.api.base.Participants;
+import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
+import work.lclpnet.lobby.game.map.GameMap;
 
 import java.util.*;
 import java.util.stream.Stream;
@@ -13,34 +17,48 @@ public class TargetManager {
 
     private static final int PURSUERS_PER_PLAYER = 20;
     private final Participants participants;
+    private final CustomScoreboardManager scoreboardManager;
+    private final Team targetTeam, guardTeam;
     private final SetMultimap<UUID, MobEntity> pursuit;
-    private final Map<UUID, UUID> assigned = new HashMap<>();
+    private final Map<MobEntity, UUID> assigned = new HashMap<>();
     private final PriorityQueue<UUID> leastPursuers;
     private final Set<MobEntity> mobs = new HashSet<>();
+    private final Set<MobEntity> unassigned = new HashSet<>();
+    private final MobDensityManager densityManager;
     /** Used to store new pursuers in each update iteration. */
     private final Set<MobEntity> newPursuers = new HashSet<>();
 
-    public TargetManager(Participants participants) {
+    public TargetManager(Participants participants, GameMap map, CustomScoreboardManager scoreboardManager, Team targetTeam, Team guardTeam) {
         this.participants = participants;
+        this.scoreboardManager = scoreboardManager;
+        this.targetTeam = targetTeam;
+        this.guardTeam = guardTeam;
+
         pursuit = HashMultimap.create(participants.count(), PURSUERS_PER_PLAYER);
         leastPursuers = new PriorityQueue<>(participants.count(), Comparator.comparingInt(uuid -> pursuit.get(uuid).size()));
 
         for (ServerPlayerEntity player : participants) {
             leastPursuers.add(player.getUuid());
         }
+
+        densityManager = new MobDensityManager(map);
     }
 
     public void addMob(MobEntity mob) {
         synchronized (this) {
             mobs.add(mob);
+            unassigned.add(mob);
+            densityManager.startTracking(mob);
         }
     }
 
     public void removeMob(MobEntity mob) {
         synchronized (this) {
             mobs.remove(mob);
+            unassigned.remove(mob);
+            densityManager.stopTracking(mob);
 
-            UUID target = assigned.remove(mob.getUuid());
+            UUID target = assigned.remove(mob);
 
             if (target != null) {
                 pursuit.remove(target, mob);
@@ -59,17 +77,16 @@ public class TargetManager {
             var pursuers = pursuit.removeAll(uuid);
 
             for (MobEntity pursuer : pursuers) {
-                assigned.remove(pursuer.getUuid());
+                assigned.remove(pursuer);
             }
         }
     }
 
-    private void setPursuing(MobEntity mob, ServerPlayerEntity target) {
-        UUID mobId = mob.getUuid();
+    private void setPursuing(MobEntity mob, LivingEntity target) {
         UUID playerId = target.getUuid();
 
         synchronized (this) {
-            UUID oldTargetId = assigned.put(mobId, playerId);
+            UUID oldTargetId = assigned.put(mob, playerId);
 
             if (oldTargetId != null && !oldTargetId.equals(playerId)) {
                 // the mob pursuit target changed, remove it from the old target pursuers
@@ -77,7 +94,9 @@ public class TargetManager {
             }
 
             pursuit.put(playerId, mob);
+            unassigned.remove(mob);
             mob.setTarget(target);
+            scoreboardManager.joinTeam(mob, targetTeam);
 
             updatePursuerCount(playerId);
         }
@@ -92,6 +111,8 @@ public class TargetManager {
     }
 
     public void update() {
+        densityManager.update();
+
         synchronized (this) {
             // for each player, find the closest mobs and assign n to pursue them
             for (ServerPlayerEntity player : participants) {
@@ -133,8 +154,10 @@ public class TargetManager {
                 if (newPursuers.remove(mob)) return false;
 
                 // the mob should no longer be a pursuer of that player
-                assigned.remove(mob.getUuid());
+                assigned.remove(mob);
+                unassigned.add(mob);
                 mob.setTarget(null);
+                scoreboardManager.leaveTeam(mob, targetTeam);
 
                 return true;
             });
@@ -146,5 +169,17 @@ public class TargetManager {
 
             updatePursuerCount(uuid);
         }
+    }
+
+    public MobDensityManager getDensityManager() {
+        return densityManager;
+    }
+
+    public Team getGuardTeam() {
+        return guardTeam;
+    }
+
+    public CustomScoreboardManager getScoreboardManager() {
+        return scoreboardManager;
     }
 }

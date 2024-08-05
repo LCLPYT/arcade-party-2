@@ -23,7 +23,7 @@ class QuadTreeTest {
         @Test
         void testInitial() {
             assertNull(quadTree.root.entries);
-            assertFalse(quadTree.root.split);
+            assertFalse(quadTree.root.divided);
             assertNull(quadTree.root.nw);
             assertNull(quadTree.root.ne);
             assertNull(quadTree.root.sw);
@@ -65,17 +65,17 @@ class QuadTreeTest {
             // Insert a fifth point, which should cause the root node to split
             assertTrue(quadTree.add(point5));
 
-            assertTrue(quadTree.root.split);
+            assertTrue(quadTree.root.divided);
             assertNull(quadTree.root.entries);
             assertNotNull(quadTree.root.nw);
             assertNotNull(quadTree.root.ne);
             assertNotNull(quadTree.root.sw);
             assertNotNull(quadTree.root.se);
 
-            assertTrue(quadTree.root.nw.split);  // the 5 points are in root.nw, therefore it should have split again
-            assertFalse(quadTree.root.ne.split);
-            assertFalse(quadTree.root.sw.split);
-            assertFalse(quadTree.root.se.split);
+            assertTrue(quadTree.root.nw.divided);  // the 5 points are in root.nw, therefore it should have split again
+            assertFalse(quadTree.root.ne.divided);
+            assertFalse(quadTree.root.sw.divided);
+            assertFalse(quadTree.root.se.divided);
 
             assertNull(quadTree.root.nw.entries);
             assertNull(quadTree.root.ne.entries);
@@ -110,7 +110,7 @@ class QuadTreeTest {
             assertTrue(quadTree.add(point4));
 
             // QuadTree should still hold all points at this stage
-            assertFalse(quadTree.root.split);
+            assertFalse(quadTree.root.divided);
             assertNotNull(quadTree.root.entries);
             assertEquals(4, quadTree.root.entries.size());
             assertNull(quadTree.root.nw);
@@ -187,7 +187,7 @@ class QuadTreeTest {
             quadTree.add(point5);
 
             // At this point, the root node should have split
-            assertTrue(quadTree.root.split);
+            assertTrue(quadTree.root.divided);
 
             // Remove an element that causes a merge
             assertTrue(quadTree.remove(point5));
@@ -196,7 +196,7 @@ class QuadTreeTest {
             assertTrue(quadTree.remove(point2));
 
             // After removing point2, point3, point4, and point5, the tree should merge back to a single node
-            assertFalse(quadTree.root.split);
+            assertFalse(quadTree.root.divided);
             assertEquals(1, quadTree.root.count());
 
             // Finally, remove the last element
@@ -219,6 +219,34 @@ class QuadTreeTest {
 
             assertTrue(quadTree.remove(pointOnBoundary2));
             assertEquals(0, quadTree.root.count());
+        }
+
+        @Test
+        void testChildrenIterator() {
+            Vec3d point1 = new Vec3d(10, 0, 10);
+            Vec3d point2 = new Vec3d(90, 0, 90);
+            Vec3d point3 = new Vec3d(10, 0, 90);
+            Vec3d point4 = new Vec3d(90, 0, 10);
+            Vec3d point5 = new Vec3d(50, 0, 50);
+
+            quadTree.add(point1);
+            quadTree.add(point2);
+            quadTree.add(point3);
+            quadTree.add(point4);
+            quadTree.add(point5);
+
+            var root = quadTree.getRoot();
+            assertTrue(root.divided());
+
+            var it = root.children();
+            int i = 0;
+
+            while (it.hasNext()) {
+                it.next();
+                i++;
+            }
+
+            assertEquals(4, i);
         }
     }
 
@@ -247,7 +275,7 @@ class QuadTreeTest {
 
         tree.update(mutPos);
 
-        assertFalse(tree.root.split);
+        assertFalse(tree.root.divided);
         assertEquals(0, tree.root.count());
     }
 
@@ -258,14 +286,14 @@ class QuadTreeTest {
 
         tree.add(mutPos);
 
-        assertFalse(tree.root.split);
+        assertFalse(tree.root.divided);
         assertEquals(1, tree.root.count());
 
         mutPos.x = 60;
         mutPos.z = 5;
         tree.update(mutPos);
 
-        assertFalse(tree.root.split);
+        assertFalse(tree.root.divided);
         assertEquals(1, tree.root.count());
         assertNotNull(tree.root.entries);
 
@@ -286,7 +314,7 @@ class QuadTreeTest {
         mutPos.z = 5;
         assertFalse(tree.add(mutPos));  // not added twice
 
-        assertFalse(tree.root.split);
+        assertFalse(tree.root.divided);
         assertEquals(1, tree.root.count());
         assertNotNull(tree.root.entries);
 
@@ -307,7 +335,7 @@ class QuadTreeTest {
         tree.add(new MutPos(54, 96));
         tree.add(new MutPos(72, 11));
 
-        assertTrue(tree.root.split);
+        assertTrue(tree.root.divided);
         assertNotNull(tree.root.nw);
         assertNotNull(tree.root.ne);
         assertEquals(1, tree.root.nw.count());
@@ -317,7 +345,7 @@ class QuadTreeTest {
         mutPos.z = 5;
         tree.update(mutPos);
 
-        assertTrue(tree.root.split);
+        assertTrue(tree.root.divided);
         assertEquals(0, tree.root.nw.count());
         assertEquals(2, tree.root.ne.count());
     }
@@ -333,7 +361,7 @@ class QuadTreeTest {
         tree.add(new MutPos(54, 96));
         tree.add(new MutPos(72, 11));
 
-        assertTrue(tree.root.split);
+        assertTrue(tree.root.divided);
         assertNotNull(tree.root.nw);
         assertEquals(1, tree.root.nw.count());
 
@@ -341,7 +369,7 @@ class QuadTreeTest {
         mutPos.z = 31;
         tree.update(mutPos);
 
-        assertTrue(tree.root.split);
+        assertTrue(tree.root.divided);
         assertEquals(1, tree.root.nw.count());
     }
 
@@ -358,7 +386,7 @@ class QuadTreeTest {
         tree.add(new MutPos(30, 12));
 
         assertNotNull(tree.root.nw);
-        assertTrue(tree.root.nw.split);
+        assertTrue(tree.root.nw.divided);
         assertEquals(5, tree.root.nw.count());
 
         // move to ne
@@ -366,7 +394,7 @@ class QuadTreeTest {
         mutPos.z = 30;
         tree.update(mutPos);
 
-        assertFalse(tree.root.nw.split);
+        assertFalse(tree.root.nw.divided);
         assertEquals(4, tree.root.nw.count());
         assertNotNull(tree.root.ne);
         assertEquals(1, tree.root.ne.count());

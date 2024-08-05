@@ -1,13 +1,12 @@
 package work.lclpnet.ap2.impl.util;
 
+import com.google.common.collect.Iterators;
 import net.minecraft.util.math.Vec3d;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.VisibleForTesting;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 
 public class QuadTree<T> {
@@ -22,7 +21,7 @@ public class QuadTree<T> {
         if (width < 0) throw new IllegalArgumentException("Width must be positive");
         if (length < 0) throw new IllegalArgumentException("Length must be positive");
 
-        this.root = new Node(x, z, width, length);
+        this.root = new Node(x, z, width, length, 0);
         this.nodeCapacity = nodeCapacity;
         this.posProvider = posProvider;
     }
@@ -45,7 +44,7 @@ public class QuadTree<T> {
         Node node = root;
 
         while (!node.hasCapacity()) {
-            node.split();
+            node.divide();
             node = node.childAt(pos);
         }
 
@@ -70,7 +69,7 @@ public class QuadTree<T> {
         Node parent = null;
         Node node = root;
 
-        while (node.split) {
+        while (node.divided) {
             parent = node;
             node = node.childAt(entry.pos);
         }
@@ -107,11 +106,11 @@ public class QuadTree<T> {
         Node oldNode = root;
         Node newNode = root;
 
-        while (oldNode.split) {
+        while (oldNode.divided) {
             oldNode = oldNode.childAt(oldPos);
         }
 
-        while (newNode.split) {
+        while (newNode.divided) {
             newNode = newNode.childAt(newPos);
         }
 
@@ -125,23 +124,46 @@ public class QuadTree<T> {
         add(element);
     }
 
+    public void traverse(Visitor<T> visitor) {
+        Stack<Node> stack = new Stack<>();
+        stack.push(root);
+
+        // DFS
+        while (!stack.isEmpty()) {
+            Node node = stack.pop();
+
+            if (!visitor.visit(node) || !node.divided) continue;
+
+            if (node.nw != null) stack.push(node.nw);
+            if (node.ne != null) stack.push(node.ne);
+            if (node.sw != null) stack.push(node.sw);
+            if (node.se != null) stack.push(node.se);
+        }
+    }
+
+    public INode<T> getRoot() {
+        return root;
+    }
+
     @VisibleForTesting
-    class Node {
+    class Node implements INode<T> {
 
         final double x, z, width, length;
+        final int level;
         @Nullable List<Entry> entries = null;
         @Nullable Node nw, ne, sw, se = null;
-        boolean split = false;
+        boolean divided = false;
 
-        Node(double x, double z, double width, double length) {
+        Node(double x, double z, double width, double length, int level) {
             this.x = x;
             this.z = z;
             this.width = width;
             this.length = length;
+            this.level = level;
         }
 
         boolean hasCapacity() {
-            return !split && (entries == null || entries.size() < nodeCapacity);
+            return !divided && (entries == null || entries.size() < nodeCapacity);
         }
 
         boolean outOfBounds(Vec3d position) {
@@ -167,19 +189,19 @@ public class QuadTree<T> {
                     : (west ? sw : se);
         }
 
-        void split() {
-            // check if already split
-            if (split) return;
+        void divide() {
+            // check if already divided
+            if (divided) return;
 
-            split = true;
+            divided = true;
 
             double halfWidth = width * 0.5;
             double halfHeight = length * 0.5;
 
-            nw = new Node(x, z, halfWidth, halfHeight);
-            ne = new Node(x + halfWidth, z, halfWidth, halfHeight);
-            sw = new Node(x, z + halfHeight, halfWidth, halfHeight);
-            se = new Node(x + halfWidth, z + halfHeight, halfWidth, halfHeight);
+            nw = new Node(x, z, halfWidth, halfHeight, level + 1);
+            ne = new Node(x + halfWidth, z, halfWidth, halfHeight, level + 1);
+            sw = new Node(x, z + halfHeight, halfWidth, halfHeight, level + 1);
+            se = new Node(x + halfWidth, z + halfHeight, halfWidth, halfHeight, level + 1);
 
             if (entries == null) return;
 
@@ -195,7 +217,7 @@ public class QuadTree<T> {
         }
 
         boolean add(Entry entry) {
-            if (split) return false;
+            if (divided) return false;
 
             if (entries == null) {
                 entries = new ArrayList<>(nodeCapacity);
@@ -205,7 +227,7 @@ public class QuadTree<T> {
         }
 
         boolean remove(Entry entry) {
-            if (split || entries == null || !entries.remove(entry)) {
+            if (divided || entries == null || !entries.remove(entry)) {
                 return false;
             }
 
@@ -217,8 +239,9 @@ public class QuadTree<T> {
             return true;
         }
 
-        int count() {
-            if (!split) {
+        @Override
+        public int count() {
+            if (!divided) {
                 return entries != null ? entries.size() : 0;
             }
 
@@ -233,7 +256,7 @@ public class QuadTree<T> {
         }
 
         void merge() {
-            if (!split || count() > nodeCapacity) return;
+            if (!divided || count() > nodeCapacity) return;
 
             if (entries == null) {
                 entries = new ArrayList<>(nodeCapacity);
@@ -260,12 +283,100 @@ public class QuadTree<T> {
             sw = null;
             se = null;
 
-            split = false;
+            divided = false;
         }
 
         @Override
         public String toString() {
-            return "Node{count=%s, split=%s, x=%s, z=%s, width=%s, length=%s}".formatted(count(), split, x, z, width, length);
+            return "Node{count=%s, divided=%s, level=%s, x=%s, z=%s, width=%s, length=%s}".formatted(count(), divided, level, x, z, width, length);
+        }
+
+        @NotNull
+        @Override
+        public Iterator<T> iterator() {
+            if (entries == null) {
+                return Collections.emptyIterator();
+            }
+
+            return Iterators.transform(entries.iterator(), e -> e.element);
+        }
+
+        @Override
+        public int level() {
+            return level;
+        }
+
+        @Override
+        public double x() {
+            return x;
+        }
+
+        @Override
+        public double z() {
+            return z;
+        }
+
+        @Override
+        public double width() {
+            return width;
+        }
+
+        @Override
+        public double length() {
+            return length;
+        }
+
+        @Override
+        public boolean divided() {
+            return divided;
+        }
+
+        @Override
+        public Iterator<INode<T>> children() {
+            if (!divided) {
+                return Collections.emptyIterator();
+            }
+
+            return new Iterator<INode<T>>() {
+                int i = 0;
+                INode<T> next = advance();
+
+                INode<T> advance() {
+                    while (i < 4) {
+                        switch (i++) {
+                            case 0 -> {
+                                if (nw != null) return nw;
+                            }
+                            case 1 -> {
+                                if (ne != null) return ne;
+                            }
+                            case 2 -> {
+                                if (sw != null) return sw;
+                            }
+                            case 3 -> {
+                                if (se != null) return se;
+                            }
+                            default -> {}
+                        }
+                    }
+
+                    return null;
+                }
+
+                @Override
+                public boolean hasNext() {
+                    return next != null;
+                }
+
+                @Override
+                public INode<T> next() {
+                    INode<T> ret = next;
+
+                    next = advance();
+
+                    return ret;
+                }
+            };
         }
     }
 
@@ -277,5 +388,34 @@ public class QuadTree<T> {
             this.element = element;
             this.pos = pos;
         }
+    }
+
+    public interface INode<T> extends Iterable<T> {
+
+        int count();
+
+        int level();
+
+        double x();
+
+        double z();
+
+        double width();
+
+        double length();
+
+        boolean divided();
+
+        Iterator<INode<T>> children();
+    }
+
+    public interface Visitor<T> {
+
+        /**
+         * Called for each node in the tree.
+         * @param node The node to be visited.
+         * @return True, if the children of the node should be traversed, if there are any.
+         */
+        boolean visit(INode<T> node);
     }
 }
