@@ -13,6 +13,7 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import work.lclpnet.ap2.game.apocalypse_survival.goal.GuardEmptyAreaGoal;
+import work.lclpnet.ap2.game.apocalypse_survival.goal.UnstuckGoal;
 import work.lclpnet.ap2.impl.util.world.stage.Stage;
 import work.lclpnet.ap2.mixin.MobEntityAccessor;
 import work.lclpnet.kibu.scheduler.Ticks;
@@ -116,6 +117,7 @@ public class MonsterSpawner {
         goalSelector.add(1, new BreakDoorGoal(zombie, difficulty -> true));
         goalSelector.add(2, new ZombieAttackGoal(zombie, 1.5, false));
         goalSelector.add(7, new GuardEmptyAreaGoal(zombie, targetManager, 1.25));
+        goalSelector.add(8, new UnstuckGoal(zombie, random));
     }
 
     private void debugPath(ZombieEntity zombie) {
