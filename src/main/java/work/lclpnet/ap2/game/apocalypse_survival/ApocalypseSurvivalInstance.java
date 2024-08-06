@@ -44,13 +44,16 @@ public class ApocalypseSurvivalInstance extends EliminationGameInstance {
         GameMap map = getMap();
         MinecraftServer server = gameHandle.getServer();
 
-        CustomScoreboardManager scoreboardManager = gameHandle.getScoreboardManager();
-        Team target = scoreboardManager.createTeam("target");
-        target.setColor(Formatting.DARK_RED);
-        Team guard = scoreboardManager.createTeam("guard");
-        guard.setColor(Formatting.BLUE);
+        CustomScoreboardManager debug$scoreboardManager = gameHandle.getScoreboardManager();
 
-        targetManager = new TargetManager(gameHandle.getParticipants(), map, scoreboardManager, target, guard);
+        Team debug$pursuitTeam = debug$scoreboardManager.createTeam("pursuit");
+        debug$pursuitTeam.setColor(Formatting.DARK_RED);
+
+        Team debug$roamTeam = debug$scoreboardManager.createTeam("roam");
+        debug$roamTeam.setColor(Formatting.BLUE);
+
+        targetManager = new TargetManager(gameHandle.getParticipants(), map,
+                debug$scoreboardManager, debug$pursuitTeam, debug$roamTeam);
 
         var setup = new AsSetup(map, world, new Random(), targetManager);
 

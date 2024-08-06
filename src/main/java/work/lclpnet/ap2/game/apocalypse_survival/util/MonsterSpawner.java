@@ -12,7 +12,7 @@ import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
-import work.lclpnet.ap2.game.apocalypse_survival.goal.GuardEmptyAreaGoal;
+import work.lclpnet.ap2.game.apocalypse_survival.goal.RoamGoal;
 import work.lclpnet.ap2.game.apocalypse_survival.goal.UnstuckGoal;
 import work.lclpnet.ap2.impl.util.world.stage.Stage;
 import work.lclpnet.ap2.mixin.MobEntityAccessor;
@@ -26,7 +26,7 @@ public class MonsterSpawner {
             PARTICLE_TICKS = 12,
             MOB_MIN_TICKS = Ticks.seconds(1),
             MOB_MAX_TICKS = Ticks.seconds(4),
-            MOB_LIMIT = 50;
+            MOB_LIMIT = 100;
     private final ServerWorld world;
     private final Stage stage;
     private final Random random;
@@ -100,7 +100,7 @@ public class MonsterSpawner {
         world.spawnEntity(zombie);
         mobCount++;
 
-        targetManager.addMob(zombie);
+        targetManager.addZombie(zombie);
 
 //        debugPath(zombie);
     }
@@ -116,7 +116,7 @@ public class MonsterSpawner {
 
         goalSelector.add(1, new BreakDoorGoal(zombie, difficulty -> true));
         goalSelector.add(2, new ZombieAttackGoal(zombie, 1.5, false));
-        goalSelector.add(7, new GuardEmptyAreaGoal(zombie, targetManager, 1.25));
+        goalSelector.add(7, new RoamGoal(zombie, targetManager, 1.25));
         goalSelector.add(8, new UnstuckGoal(zombie, random));
     }
 

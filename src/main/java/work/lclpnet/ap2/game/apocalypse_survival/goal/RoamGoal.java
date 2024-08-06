@@ -8,14 +8,14 @@ import work.lclpnet.ap2.game.apocalypse_survival.util.TargetManager;
 
 import java.util.EnumSet;
 
-public class GuardEmptyAreaGoal extends Goal {
+public class RoamGoal extends Goal {
 
     private final PathAwareEntity mob;
     private final TargetManager targetManager;
     private final double speed;
     private @Nullable Vec3d target = null;
 
-    public GuardEmptyAreaGoal(PathAwareEntity mob, TargetManager targetManager, double speed) {
+    public RoamGoal(PathAwareEntity mob, TargetManager targetManager, double speed) {
         this.mob = mob;
         this.targetManager = targetManager;
         this.speed = speed;
@@ -25,7 +25,7 @@ public class GuardEmptyAreaGoal extends Goal {
 
     @Override
     public boolean canStart() {
-        if (mob.hasControllingPassenger() || mob.getTarget() != null) {
+        if (mob.hasControllingPassenger() || mob.getTarget() != null || mob.getNavigation().isFollowingPath()) {
             return false;
         }
 
@@ -44,7 +44,7 @@ public class GuardEmptyAreaGoal extends Goal {
     public void start() {
         if (target == null) return;
 
-        targetManager.getScoreboardManager().joinTeam(mob, targetManager.getGuardTeam());
+        targetManager.debug$getScoreboardManager().joinTeam(mob, targetManager.debug$getRoamTeam());
         mob.getNavigation().startMovingTo(target.getX(), target.getY(), target.getZ(), speed);
     }
 
@@ -54,6 +54,6 @@ public class GuardEmptyAreaGoal extends Goal {
         targetManager.getDensityManager().stopGuarding(mob);
         target = null;
 
-        targetManager.getScoreboardManager().leaveTeam(mob, targetManager.getGuardTeam());
+        targetManager.debug$getScoreboardManager().leaveTeam(mob, targetManager.debug$getRoamTeam());
     }
 }

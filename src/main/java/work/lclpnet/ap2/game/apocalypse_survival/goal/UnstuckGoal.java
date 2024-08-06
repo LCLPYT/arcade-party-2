@@ -74,8 +74,4 @@ public class UnstuckGoal extends Goal {
 
         VelocityModifier.setVelocity(mob, direction.multiply(0.6));
     }
-
-    private void flingTowards(Vec3d pos) {
-
-    }
 }
