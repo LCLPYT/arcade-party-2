@@ -6,6 +6,7 @@ import net.minecraft.entity.ai.goal.GoalSelector;
 import net.minecraft.entity.ai.goal.ZombieAttackGoal;
 import net.minecraft.entity.ai.pathing.EntityNavigation;
 import net.minecraft.entity.ai.pathing.MobNavigation;
+import net.minecraft.entity.attribute.EntityAttributeInstance;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.mob.DrownedEntity;
 import net.minecraft.entity.mob.HuskEntity;
@@ -102,6 +103,17 @@ public class MonsterSpawner {
         zombie.setPersistent();
         zombie.setPosition(Vec3d.ofBottomCenter(pos));
         zombie.setCanBreakDoors(true);
+
+        if (random.nextFloat() < 0.5f)  {
+            zombie.setBaby(true);
+
+            EntityAttributeInstance movementSpeed = zombie.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED);
+
+            if (movementSpeed != null) {
+                movementSpeed.setBaseValue(0.18);
+            }
+        }
+
         zombie.setGlowing(true);  // debug
 
         // adjust follow range, so that the zombie will follow far players
