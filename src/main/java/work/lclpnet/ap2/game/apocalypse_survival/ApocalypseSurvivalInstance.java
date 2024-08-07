@@ -17,6 +17,7 @@ import work.lclpnet.ap2.game.apocalypse_survival.util.TargetManager;
 import work.lclpnet.ap2.impl.game.EliminationGameInstance;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.kibu.hook.HookRegistrar;
+import work.lclpnet.kibu.hook.entity.ProjectileHooks;
 import work.lclpnet.kibu.hook.entity.ServerEntityHooks;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 import work.lclpnet.lobby.game.map.GameMap;
@@ -70,6 +71,8 @@ public class ApocalypseSurvivalInstance extends EliminationGameInstance {
                 targetManager.removeMob(mob);
             }
         });
+
+        hooks.registerHook(ProjectileHooks.HIT_BLOCK, (projectile, hit) -> projectile.discard());
     }
 
     @Override

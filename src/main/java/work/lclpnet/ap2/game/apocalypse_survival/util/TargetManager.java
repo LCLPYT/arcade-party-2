@@ -1,6 +1,8 @@
 package work.lclpnet.ap2.game.apocalypse_survival.util;
 
+import net.minecraft.entity.mob.AbstractSkeletonEntity;
 import net.minecraft.entity.mob.MobEntity;
+import net.minecraft.entity.mob.SkeletonEntity;
 import net.minecraft.entity.mob.ZombieEntity;
 import net.minecraft.scoreboard.Team;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -12,7 +14,9 @@ public class TargetManager {
 
     private final CustomScoreboardManager debug$scoreboardManager;
     private final Team debug$pursuitTeam, debug$roamTeam;
+    private final PursuitClass<?>[] pursuits;
     private final PursuitClass<ZombieEntity> zombiePursuit;
+    private final PursuitClass<AbstractSkeletonEntity> skeletonPursuit;
     private final MobDensityManager densityManager;
 
     public TargetManager(Participants participants, GameMap map,
@@ -22,12 +26,21 @@ public class TargetManager {
         this.debug$roamTeam = debug$roamTeam;
 
         zombiePursuit = new PursuitClass<>(participants, 20, this);
+        skeletonPursuit = new PursuitClass<>(participants, 10, this);
+
+        pursuits = new PursuitClass[] {zombiePursuit, skeletonPursuit};
+
         densityManager = new MobDensityManager(map);
     }
 
     public void addZombie(ZombieEntity zombie) {
         this.addMob(zombie);
         zombiePursuit.addMob(zombie);
+    }
+
+    public void addSkeleton(AbstractSkeletonEntity skeleton) {
+        this.addMob(skeleton);
+        skeletonPursuit.addMob(skeleton);
     }
 
     private void addMob(MobEntity mob) {
@@ -39,17 +52,23 @@ public class TargetManager {
 
         switch (mob) {
             case ZombieEntity zombie -> zombiePursuit.removeMob(zombie);
+            case SkeletonEntity skeleton -> skeletonPursuit.removeMob(skeleton);
             default -> {}
         }
     }
 
     public void removeParticipant(ServerPlayerEntity player) {
-        zombiePursuit.removeParticipant(player);
+        for (var pursuit : pursuits) {
+            pursuit.removeParticipant(player);
+        }
     }
 
     public void update() {
         densityManager.update();
-        zombiePursuit.update();
+
+        for (var pursuit : pursuits) {
+            pursuit.update();
+        }
     }
 
     public MobDensityManager getDensityManager() {
