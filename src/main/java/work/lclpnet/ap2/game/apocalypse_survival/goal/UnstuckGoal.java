@@ -1,9 +1,17 @@
 package work.lclpnet.ap2.game.apocalypse_survival.goal;
 
+import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.goal.Goal;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.registry.tag.BlockTags;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvents;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.kibu.access.VelocityModifier;
 
@@ -59,6 +67,9 @@ public class UnstuckGoal extends Goal {
     }
 
     private void unstuck() {
+        destroyBlockage();
+        destroyHideout();
+
         PlayerEntity nearbyPlayer = mob.getWorld().getClosestPlayer(mob, 10);
 
         if (nearbyPlayer != null) {
@@ -73,5 +84,32 @@ public class UnstuckGoal extends Goal {
         Vec3d direction = Vec3d.fromPolar(pitch, yaw);
 
         VelocityModifier.setVelocity(mob, direction.multiply(0.6));
+    }
+
+    private void destroyHideout() {
+        LivingEntity target = mob.getTarget();
+
+        if (target == null || mob.squaredDistanceTo(target) > TOLERANCE) return;
+
+        // target in reach, check if it is hiding below a trapdoor
+        BlockPos aboveTarget = target.getBlockPos().up();
+
+        World world = mob.getWorld();
+        BlockState state = world.getBlockState(aboveTarget);
+
+        if (state.isIn(BlockTags.WOODEN_TRAPDOORS)) {
+            world.breakBlock(aboveTarget, false, mob);
+
+            world.playSound(null, aboveTarget.getX() + 0.5, aboveTarget.getY() + 0.5, aboveTarget.getZ() + 0.5,
+                    SoundEvents.ENTITY_ZOMBIE_BREAK_WOODEN_DOOR, SoundCategory.HOSTILE, 0.75f, 1f);
+        }
+    }
+
+    private void destroyBlockage() {
+        World world = mob.getWorld();
+
+        BlockPos.stream(mob.getBoundingBox())
+                .filter(pos -> world.getBlockState(pos).isOf(Blocks.COBWEB))
+                .forEach(pos -> world.breakBlock(pos, false, mob));
     }
 }
