@@ -69,4 +69,8 @@ public class Pursuit<T extends MobEntity> {
     public void setNeedsUpdate() {
         needsUpdate = true;
     }
+
+    public int getPursuerCount() {
+        return pursuers.size();
+    }
 }
