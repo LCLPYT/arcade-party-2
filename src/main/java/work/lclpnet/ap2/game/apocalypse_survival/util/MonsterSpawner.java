@@ -7,13 +7,17 @@ import net.minecraft.entity.ai.goal.ZombieAttackGoal;
 import net.minecraft.entity.ai.pathing.EntityNavigation;
 import net.minecraft.entity.ai.pathing.MobNavigation;
 import net.minecraft.entity.attribute.EntityAttributes;
+import net.minecraft.entity.mob.DrownedEntity;
+import net.minecraft.entity.mob.HuskEntity;
 import net.minecraft.entity.mob.ZombieEntity;
+import net.minecraft.entity.mob.ZombieVillagerEntity;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import work.lclpnet.ap2.game.apocalypse_survival.goal.RoamGoal;
 import work.lclpnet.ap2.game.apocalypse_survival.goal.UnstuckGoal;
+import work.lclpnet.ap2.impl.util.WeightedList;
 import work.lclpnet.ap2.impl.util.world.stage.Stage;
 import work.lclpnet.ap2.mixin.MobEntityAccessor;
 import work.lclpnet.kibu.scheduler.Ticks;
@@ -31,6 +35,7 @@ public class MonsterSpawner {
     private final Stage stage;
     private final Random random;
     private final TargetManager targetManager;
+    private final WeightedList<EntityType<? extends ZombieEntity>> zombieTypes;
     private int nextParticle = 0;
     private int nextMob;
     private int mobCount = 0;
@@ -40,6 +45,13 @@ public class MonsterSpawner {
         this.stage = stage;
         this.random = random;
         this.targetManager = targetManager;
+
+        zombieTypes = new WeightedList<>();
+        zombieTypes.add(EntityType.ZOMBIE, 0.8f);
+        zombieTypes.add(EntityType.ZOMBIE_VILLAGER, 0.07f);
+        zombieTypes.add(EntityType.HUSK, 0.05f);
+        zombieTypes.add(EntityType.ZOMBIFIED_PIGLIN, 0.03f);
+        zombieTypes.add(EntityType.DROWNED, 0.05f);
 
         scheduleNextMob();
     }
@@ -52,7 +64,7 @@ public class MonsterSpawner {
 
         if (mobCount < MOB_LIMIT && nextMob-- <= 0) {
             scheduleNextMob();
-            spawnMob();
+            spawnZombie();
         }
     }
 
@@ -68,10 +80,25 @@ public class MonsterSpawner {
                 30, offset, offset, offset, 0.15);
     }
 
-    private void spawnMob() {
+    private void spawnZombie() {
         BlockPos pos = stage.getOrigin();
 
-        ZombieEntity zombie = new ZombieEntity(EntityType.ZOMBIE, world);
+        var type = zombieTypes.getRandomElement(random);
+
+        if (type == null) return;
+
+        ZombieEntity zombie;
+
+        if (type == EntityType.ZOMBIE) {
+            zombie = new ZombieEntity(EntityType.ZOMBIE, world);
+        } else if (type == EntityType.ZOMBIE_VILLAGER) {
+            zombie = new ZombieVillagerEntity(EntityType.ZOMBIE_VILLAGER, world);
+        } else if (type == EntityType.HUSK) {
+            zombie = new HuskEntity(EntityType.HUSK, world);
+        } else if (type == EntityType.DROWNED) {
+            zombie = new DrownedEntity(EntityType.DROWNED, world);
+        } else return;
+
         zombie.setPersistent();
         zombie.setPosition(Vec3d.ofBottomCenter(pos));
         zombie.setCanBreakDoors(true);
@@ -101,8 +128,6 @@ public class MonsterSpawner {
         mobCount++;
 
         targetManager.addZombie(zombie);
-
-//        debugPath(zombie);
     }
 
     private void adjustGoals(ZombieEntity zombie) {
