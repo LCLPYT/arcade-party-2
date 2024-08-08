@@ -49,6 +49,8 @@ loom {
     runs {
         remove client
     }
+
+    accessWidenerPath = file("src/main/resources/ap2.accesswidener")
 }
 
 dependencies {

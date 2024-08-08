@@ -1,9 +1,6 @@
 package work.lclpnet.ap2.game.apocalypse_survival.util;
 
-import net.minecraft.entity.mob.AbstractSkeletonEntity;
-import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.entity.mob.SkeletonEntity;
-import net.minecraft.entity.mob.ZombieEntity;
+import net.minecraft.entity.mob.*;
 import net.minecraft.scoreboard.Team;
 import net.minecraft.server.network.ServerPlayerEntity;
 import work.lclpnet.ap2.api.base.Participants;
@@ -17,6 +14,7 @@ public class TargetManager {
     private final PursuitClass<?>[] pursuits;
     private final PursuitClass<ZombieEntity> zombiePursuit;
     private final PursuitClass<AbstractSkeletonEntity> skeletonPursuit;
+    private final PursuitClass<PhantomEntity> phantomPursuit;
     private final MobDensityManager densityManager;
 
     public TargetManager(Participants participants, GameMap map,
@@ -27,8 +25,9 @@ public class TargetManager {
 
         zombiePursuit = new PursuitClass<>(participants, 20, this);
         skeletonPursuit = new PursuitClass<>(participants, 10, this);
+        phantomPursuit = new PursuitClass<>(participants, 3, this);
 
-        pursuits = new PursuitClass[] {zombiePursuit, skeletonPursuit};
+        pursuits = new PursuitClass[] {zombiePursuit, skeletonPursuit, phantomPursuit};
 
         densityManager = new MobDensityManager(map);
     }
@@ -43,6 +42,11 @@ public class TargetManager {
         skeletonPursuit.addMob(skeleton);
     }
 
+    public void addPhantom(PhantomEntity phantom) {
+        this.addMob(phantom);
+        phantomPursuit.addMob(phantom);
+    }
+
     private void addMob(MobEntity mob) {
         densityManager.startTracking(mob);
     }
@@ -53,6 +57,7 @@ public class TargetManager {
         switch (mob) {
             case ZombieEntity zombie -> zombiePursuit.removeMob(zombie);
             case SkeletonEntity skeleton -> skeletonPursuit.removeMob(skeleton);
+            case PhantomEntity phantom -> phantomPursuit.removeMob(phantom);
             default -> {}
         }
     }

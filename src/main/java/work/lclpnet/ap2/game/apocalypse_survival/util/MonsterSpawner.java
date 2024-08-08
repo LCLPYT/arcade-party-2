@@ -5,11 +5,8 @@ import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.ai.goal.*;
 import net.minecraft.entity.ai.pathing.EntityNavigation;
 import net.minecraft.entity.ai.pathing.MobNavigation;
-import net.minecraft.entity.attribute.EntityAttributeInstance;
 import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.entity.mob.AbstractSkeletonEntity;
-import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.entity.mob.ZombieEntity;
+import net.minecraft.entity.mob.*;
 import net.minecraft.entity.projectile.ProjectileUtil;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -20,6 +17,7 @@ import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.game.apocalypse_survival.goal.RoamGoal;
 import work.lclpnet.ap2.game.apocalypse_survival.goal.UnstuckGoal;
+import work.lclpnet.ap2.impl.util.EntityUtil;
 import work.lclpnet.ap2.impl.util.WeightedList;
 import work.lclpnet.ap2.impl.util.world.stage.Stage;
 import work.lclpnet.ap2.mixin.MobEntityAccessor;
@@ -32,7 +30,7 @@ public class MonsterSpawner {
     private static final int
             PARTICLE_TICKS = 12,
             MOB_MIN_TICKS = Ticks.seconds(1),
-            MOB_MAX_TICKS = Ticks.seconds(3),
+            MOB_MAX_TICKS = Ticks.seconds(4),
             MOB_LIMIT = 150;
     private final ServerWorld world;
     private final Stage stage;
@@ -86,8 +84,9 @@ public class MonsterSpawner {
 
     private void handleTimedEvents(int ticks) {
         switch (ticks) {
-            case 0 -> spawnTypes.add(SpawnType.SKELETON, 0.6f);
-            case 30 * 20 -> spawnTypes.add(SpawnType.SKELETON, 0.2f);
+            case 0 -> spawnTypes.add(SpawnType.ZOMBIE, 0.6f);
+            case 45 * 20 -> spawnTypes.add(SpawnType.SKELETON, 0.2f);
+            case 55 * 20 -> spawnTypes.add(SpawnType.PHANTOM, 0.04f);
             default -> {}
         }
     }
@@ -110,6 +109,7 @@ public class MonsterSpawner {
         switch (spawnType) {
             case ZOMBIE -> spawnZombie();
             case SKELETON -> spawnSkeleton();
+            case PHANTOM -> spawnPhantom();
             case null -> {}
         }
     }
@@ -121,15 +121,19 @@ public class MonsterSpawner {
 
         zombie.setCanBreakDoors(true);
 
-        if (random.nextFloat() < 0.05f)  {
-            zombie.setBaby(true);
+        double baseSpeed = zombie.getAttributeBaseValue(EntityAttributes.GENERIC_MOVEMENT_SPEED);
 
-            EntityAttributeInstance movementSpeed = zombie.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED);
-
-            if (movementSpeed != null) {
-                movementSpeed.setBaseValue(0.18);
-            }
+        if (zombie.isBaby())  {
+            baseSpeed *= 0.75;
         }
+
+        if (zombie instanceof DrownedEntity) {
+            baseSpeed *= 0.87;
+        } else if (zombie instanceof ZombifiedPiglinEntity) {
+            baseSpeed *= 0.9;
+        }
+
+        EntityUtil.setAttribute(zombie, EntityAttributes.GENERIC_MOVEMENT_SPEED, baseSpeed);
 
         // adjust goals
         var mobAccess = (MobEntityAccessor) zombie;
@@ -143,6 +147,10 @@ public class MonsterSpawner {
         goalSelector.add(2, new ZombieAttackGoal(zombie, 1.5, false));
         goalSelector.add(7, new RoamGoal(zombie, targetManager, 1.25));
         goalSelector.add(8, new UnstuckGoal(zombie, random));
+
+        if (zombie instanceof DrownedEntity drowned) {
+            goalSelector.add(2, new DrownedEntity.TridentAttackGoal(drowned, 1.3, 40, 10.0F));
+        }
 
         // spawn mob
         spawnMobInWorld(zombie);
@@ -191,6 +199,27 @@ public class MonsterSpawner {
         targetManager.addSkeleton(skeleton);
     }
 
+    private void spawnPhantom() {
+        var phantom = createMob(EntityType.PHANTOM);
+
+        if (phantom == null) return;
+
+        phantom.setPhantomSize(0);
+
+        // resize maybe
+        if (random.nextFloat() < 0.25f) {
+            EntityUtil.setAttribute(phantom, EntityAttributes.GENERIC_SCALE, random.nextFloat(0.2f, 5.0f));
+        }
+
+        // adjust goals
+        var mobAccess = (MobEntityAccessor) phantom;
+
+        GoalModifier.clear(mobAccess.getTargetSelector());
+
+        spawnMobInWorld(phantom);
+        targetManager.addPhantom(phantom);
+    }
+
     @Nullable
     private <T extends MobEntity> T createMob(WeightedList<EntityType<? extends T>> types) {
         // select random zombie type
@@ -198,6 +227,11 @@ public class MonsterSpawner {
 
         if (type == null) return null;
 
+        return createMob(type);
+    }
+
+    @Nullable
+    private <T extends MobEntity> T createMob(EntityType<? extends T> type) {
         T mob = type.create(world, null, stage.getOrigin(), SpawnReason.COMMAND, false, false);
 
         if (mob == null) return null;
@@ -212,7 +246,7 @@ public class MonsterSpawner {
 
         skeleton.setPersistent();
         skeleton.setPosition(Vec3d.ofBottomCenter(pos));
-        skeleton.setGlowing(true);  // debug
+//        skeleton.setGlowing(true);  // debug
 
         // adjust follow range, so that the zombie will follow far players
         var followRange = skeleton.getAttributeInstance(EntityAttributes.GENERIC_FOLLOW_RANGE);
@@ -252,5 +286,6 @@ public class MonsterSpawner {
     private enum SpawnType {
         ZOMBIE,
         SKELETON,
+        PHANTOM
     }
 }

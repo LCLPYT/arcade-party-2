@@ -1,6 +1,7 @@
 package work.lclpnet.ap2.game.apocalypse_survival;
 
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.damage.DamageTypes;
 import net.minecraft.entity.mob.MobEntity;
@@ -10,6 +11,7 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Formatting;
 import net.minecraft.world.GameRules;
+import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.game.apocalypse_survival.util.AsSetup;
 import work.lclpnet.ap2.game.apocalypse_survival.util.MonsterSpawner;
@@ -21,6 +23,7 @@ import work.lclpnet.kibu.hook.entity.ProjectileHooks;
 import work.lclpnet.kibu.hook.entity.ServerEntityHooks;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 import work.lclpnet.lobby.game.map.GameMap;
+import work.lclpnet.lobby.util.PlayerReset;
 
 import java.util.List;
 import java.util.Random;
@@ -44,7 +47,7 @@ public class ApocalypseSurvivalInstance extends EliminationGameInstance {
         ServerWorld world = getWorld();
         GameMap map = getMap();
         MinecraftServer server = gameHandle.getServer();
-
+        Participants participants = gameHandle.getParticipants();
         CustomScoreboardManager debug$scoreboardManager = gameHandle.getScoreboardManager();
 
         Team debug$pursuitTeam = debug$scoreboardManager.createTeam("pursuit");
@@ -53,7 +56,7 @@ public class ApocalypseSurvivalInstance extends EliminationGameInstance {
         Team debug$roamTeam = debug$scoreboardManager.createTeam("roam");
         debug$roamTeam.setColor(Formatting.BLUE);
 
-        targetManager = new TargetManager(gameHandle.getParticipants(), map,
+        targetManager = new TargetManager(participants, map,
                 debug$scoreboardManager, debug$pursuitTeam, debug$roamTeam);
 
         var setup = new AsSetup(map, world, new Random(), targetManager);
@@ -73,6 +76,11 @@ public class ApocalypseSurvivalInstance extends EliminationGameInstance {
         });
 
         hooks.registerHook(ProjectileHooks.HIT_BLOCK, (projectile, hit) -> projectile.discard());
+
+        for (ServerPlayerEntity player : participants) {
+            PlayerReset.setAttribute(player, EntityAttributes.GENERIC_SAFE_FALL_DISTANCE, 5.0);
+            PlayerReset.setAttribute(player, EntityAttributes.GENERIC_FALL_DAMAGE_MULTIPLIER, 0.5);
+        }
     }
 
     @Override
