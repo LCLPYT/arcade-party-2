@@ -105,6 +105,7 @@ public class PlayerUtil {
         player.setExperiencePoints(0);
         player.setFireTicks(0);
         player.setOnFire(false);
+        player.setStuckArrowCount(0);
         VelocityModifier.setVelocity(player, Vec3d.ZERO);
 
         PlayerReset.resetAttributes(player);

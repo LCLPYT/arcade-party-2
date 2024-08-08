@@ -30,7 +30,7 @@ public class MonsterSpawner {
     private static final int
             PARTICLE_TICKS = 12,
             MOB_MIN_TICKS = Ticks.seconds(1),
-            MOB_MAX_TICKS = Ticks.seconds(4),
+            MOB_MAX_TICKS = Ticks.seconds(3) + 10,
             MOB_LIMIT = 150;
     private final ServerWorld world;
     private final Stage stage;
@@ -84,7 +84,7 @@ public class MonsterSpawner {
 
     private void handleTimedEvents(int ticks) {
         switch (ticks) {
-            case 0 -> spawnTypes.add(SpawnType.ZOMBIE, 0.6f);
+            case 0 -> spawnTypes.add(SpawnType.SKELETON, 0.6f);
             case 45 * 20 -> spawnTypes.add(SpawnType.SKELETON, 0.2f);
             case 55 * 20 -> spawnTypes.add(SpawnType.PHANTOM, 0.04f);
             default -> {}
@@ -125,6 +125,12 @@ public class MonsterSpawner {
 
         if (zombie.isBaby())  {
             baseSpeed *= 0.75;
+        } else if (random.nextFloat() < 0.05) {
+            // change scale
+            float scale = random.nextFloat(0.75f, 1.8f);
+            EntityUtil.setAttribute(zombie, EntityAttributes.GENERIC_SCALE, scale);
+
+            baseSpeed *= Math.min(1.12, Math.max(0.75, 1 / Math.pow(scale, 1.15)));
         }
 
         if (zombie instanceof DrownedEntity) {
@@ -161,6 +167,19 @@ public class MonsterSpawner {
         var skeleton = createMob(skeletonTypes);
 
         if (skeleton == null) return;
+
+        double baseSpeed = skeleton.getAttributeBaseValue(EntityAttributes.GENERIC_MOVEMENT_SPEED);
+
+        if (random.nextFloat() < 0.075) {
+            // change scale
+            float scale = random.nextFloat(0.75f, 2.5f);
+            EntityUtil.setAttribute(skeleton, EntityAttributes.GENERIC_SCALE, scale);
+
+            double scaleSpeedFactor = Math.min(1.1, Math.max(0.6, 1 / Math.pow(scale, 1.15)));
+            baseSpeed *= scaleSpeedFactor;
+        }
+
+        EntityUtil.setAttribute(skeleton, EntityAttributes.GENERIC_MOVEMENT_SPEED, baseSpeed);
 
         // adjust goals
         var mobAccess = (MobEntityAccessor) skeleton;

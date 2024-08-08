@@ -5,6 +5,7 @@ import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.damage.DamageTypes;
 import net.minecraft.entity.mob.MobEntity;
+import net.minecraft.entity.projectile.ProjectileEntity;
 import net.minecraft.scoreboard.Team;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -100,7 +101,7 @@ public class ApocalypseSurvivalInstance extends EliminationGameInstance {
     }
 
     private boolean allowDamage(Entity entity, DamageSource source) {
-        if (source.isOf(DamageTypes.FALL) && entity instanceof MobEntity) {
+        if (entity instanceof MobEntity && (source.isOf(DamageTypes.FALL) || source.getSource() instanceof ProjectileEntity)) {
             return false;
         }
 
