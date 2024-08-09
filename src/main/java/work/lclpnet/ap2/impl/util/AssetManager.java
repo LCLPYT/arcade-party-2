@@ -15,10 +15,12 @@ import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 
 /**
  * A manager for retrieving Minecraft client assets.
@@ -28,6 +30,7 @@ public class AssetManager {
 
     public static final URI VERSIONS_URI = URI.create("https://piston-meta.mojang.com/mc/game/version_manifest_v2.json");
     public static final URI RESOURCES_URI = URI.create("https://resources.download.minecraft.net");
+    public static final String DOWNLOAD_CLIENT = "client";
     private static volatile AssetManager sharedInstance = null;
     private final Path assetsRoot;
     private final String minecraftVersion;
@@ -36,6 +39,8 @@ public class AssetManager {
     private final Map<String, Download> downloads = new ConcurrentHashMap<>();
     private volatile JSONObject index = null;
     private volatile boolean indexFetched = false;
+    private volatile JSONObject versionData = null;
+    private volatile boolean versionDataFetched = false;
 
     public AssetManager(Path assetsRoot, String minecraftVersion, Logger logger) {
         this.assetsRoot = assetsRoot;
@@ -64,6 +69,65 @@ public class AssetManager {
         }
 
         return getAssetByHash(hash);
+    }
+
+    /**
+     * Gets a local path for a given download of the configured Minecraft version.
+     * If the download is not yet present on the local machine, it is downloaded.
+     * <br>
+     * Example: Downloading the Minecraft client
+     * <code>@Nullable Path clientPath = assetManager.getDownload(AssetManager.DOWNLOAD_CLIENT)</code>
+     *
+     * @param download The download id string. This can be any key that exists on the downloads config of the configured version.
+     * @return The path of the downloaded file, or null if it doesn't exist or if there was an error.
+     */
+    @Nullable
+    public Path getDownload(String download) {
+        JSONObject data = getVersionData();
+
+        if (data == null) {
+            return null;
+        }
+
+        JSONObject downloads = data.optJSONObject("downloads");
+
+        if (downloads == null) {
+            logger.error("Downloads not defined in version data");
+            return null;
+        }
+
+        JSONObject info = downloads.optJSONObject(download);
+
+        if (info == null) {
+            logger.error("Unknown download {}", download);
+            return null;
+        }
+
+        String urlStr = info.optString("url");
+
+        if (urlStr == null) {
+            logger.error("Download url is not defined for download {}", download);
+            return null;
+        }
+
+        URL url = getUrl(urlStr);
+
+        if (url == null) {
+            return null;
+        }
+
+        String fileName;
+
+        try {
+            fileName = Path.of(url.getPath()).getFileName().toString();
+        } catch (InvalidPathException e) {
+            fileName = download;
+        }
+
+        Path path = assetsRoot.resolve("downloads").resolve(minecraftVersion).resolve(fileName);
+        String hash = minecraftVersion + "/" + download;
+
+        return getLocalOrDownload(hash, path, () -> saveDownload(url, path));
     }
 
     @VisibleForTesting
@@ -117,13 +181,7 @@ public class AssetManager {
 
     @Nullable
     private IndexData fetchIndexData() {
-        URL versionUrl = getCurrentVersionUrl();
-
-        if (versionUrl == null) {
-            return null;
-        }
-
-        JSONObject data = readJson(versionUrl);
+        JSONObject data = getVersionData();
 
         if (data == null) {
             return null;
@@ -157,6 +215,52 @@ public class AssetManager {
         }
 
         return new IndexData(assetsId, url);
+    }
+
+    @Nullable
+    private JSONObject getVersionData() {
+        if (versionDataFetched) {
+            return versionData;
+        }
+
+        synchronized (indexLock) {
+            if (versionDataFetched) {
+                return versionData;
+            }
+
+            try {
+                versionData = fetchVersionData();
+            } finally {
+                versionDataFetched = true;
+            }
+        }
+
+        return versionData;
+    }
+
+    private JSONObject fetchVersionData() {
+        // this method is synchronized via the indexLock monitor
+        Path path = assetsRoot.resolve("versions").resolve(minecraftVersion + ".json");
+
+        if (Files.exists(path)) {
+            JSONObject localData = readJson(path);
+
+            if (localData != null) {
+                return localData;
+            }
+        }
+
+        URL versionUrl = getCurrentVersionUrl();
+
+        if (versionUrl == null) {
+            return null;
+        }
+
+        if (!saveFile(versionUrl, path)) {
+            return null;
+        }
+
+        return readJson(path);
     }
 
     @Nullable
@@ -268,6 +372,11 @@ public class AssetManager {
 
         Path path = assetsRoot.resolve("objects").resolve(prefix).resolve(hash);
 
+        return getLocalOrDownload(hash, path, () -> downloadAsset(hash, prefix, path));
+    }
+
+    @Nullable
+    private Path getLocalOrDownload(String hash, Path path, Supplier<Path> downloader) {
         // if asset is not still downloading and if it exists, return directly
         if (!downloads.containsKey(hash) && Files.exists(path)) {
             return path;
@@ -283,14 +392,13 @@ public class AssetManager {
             }
 
             try {
-                download.resultPath = downloadAsset(hash, prefix, path);
+                download.resultPath = downloader.get();
             } finally {
                 downloads.remove(hash);
             }
 
             return download.resultPath;
         }
-
     }
 
     @VisibleForTesting
@@ -305,6 +413,11 @@ public class AssetManager {
             return null;
         }
 
+        return saveDownload(url, path);
+    }
+
+    @Nullable
+    private Path saveDownload(URL url, Path path) {
         if (!saveFile(url, path)) {
             return null;
         }
@@ -344,7 +457,7 @@ public class AssetManager {
 
             in.transferTo(out);
         } catch (IOException e) {
-            logger.error("Failed to download asset {}", conn.getURL(), e);
+            logger.error("Failed to download {}", conn.getURL(), e);
             return false;
         }
 
