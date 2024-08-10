@@ -217,8 +217,9 @@ public class AssetManager {
         return new IndexData(assetsId, url);
     }
 
+    @VisibleForTesting
     @Nullable
-    private JSONObject getVersionData() {
+    JSONObject getVersionData() {
         if (versionDataFetched) {
             return versionData;
         }
@@ -238,7 +239,9 @@ public class AssetManager {
         return versionData;
     }
 
-    private JSONObject fetchVersionData() {
+    @VisibleForTesting
+    @Nullable
+    JSONObject fetchVersionData() {
         // this method is synchronized via the indexLock monitor
         Path path = assetsRoot.resolve("versions").resolve(minecraftVersion + ".json");
 
@@ -375,8 +378,9 @@ public class AssetManager {
         return getLocalOrDownload(hash, path, () -> downloadAsset(hash, prefix, path));
     }
 
+    @VisibleForTesting
     @Nullable
-    private Path getLocalOrDownload(String hash, Path path, Supplier<Path> downloader) {
+    Path getLocalOrDownload(String hash, Path path, Supplier<Path> downloader) {
         // if asset is not still downloading and if it exists, return directly
         if (!downloads.containsKey(hash) && Files.exists(path)) {
             return path;
