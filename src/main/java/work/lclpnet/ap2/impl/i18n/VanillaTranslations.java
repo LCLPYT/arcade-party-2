@@ -67,7 +67,8 @@ public class VanillaTranslations {
         }
     }
 
-    public synchronized boolean loadLanguage(String language) {
+    @Blocking
+    public synchronized boolean addLanguage(String language) {
         if (!availableLanguages.contains(language)) {
             return false;
         }
@@ -94,7 +95,8 @@ public class VanillaTranslations {
         return true;
     }
 
-    public synchronized boolean unloadLanguage(String language) {
+    @Blocking
+    public synchronized boolean removeLanguage(String language) {
         TranslationLoader loader = languageLoaders.remove(language);
 
         if (loader == null) {
@@ -104,6 +106,10 @@ public class VanillaTranslations {
         parentLoader.remove(loader);
 
         return true;
+    }
+
+    public boolean hasLanguage(String language) {
+        return initialized && ("en_us".equals(language) || languageLoaders.containsKey(language));
     }
 
     @Nullable

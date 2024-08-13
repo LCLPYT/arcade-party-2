@@ -60,9 +60,9 @@ class VanillaTranslationsTest {
     }
 
     @Test
-    void loadLanguage_notInitialized() {
-        assertFalse(translations.loadLanguage("de_de"));
-        assertFalse(translations.loadLanguage("ja_jp"));
+    void addLanguage_notInitialized() {
+        assertFalse(translations.addLanguage("de_de"));
+        assertFalse(translations.addLanguage("ja_jp"));
 
         translator.reload().join();
 
@@ -71,18 +71,18 @@ class VanillaTranslationsTest {
     }
 
     @Test
-    void loadLanguage_initialized() {
+    void addLanguage_initialized() {
         translations.init();
 
-        assertTrue(translations.loadLanguage("de_de"));
-        assertTrue(translations.loadLanguage("ja_jp"));
+        assertTrue(translations.addLanguage("de_de"));
+        assertTrue(translations.addLanguage("ja_jp"));
 
         translator.reload().join();
 
         assertEquals("Erde", translator.translate("de_de", "block.minecraft.dirt"));
         assertEquals("土", translator.translate("ja_jp", "block.minecraft.dirt"));
 
-        translations.unloadLanguage("ja_jp");
+        translations.removeLanguage("ja_jp");
 
         translator.reload().join();
 
@@ -90,16 +90,16 @@ class VanillaTranslationsTest {
     }
 
     @Test
-    void unloadLanguage_translationsRemoved() {
+    void removeLanguage_translationsRemoved() {
         translations.init();
 
-        assertTrue(translations.loadLanguage("de_de"));
-        assertTrue(translations.loadLanguage("ja_jp"));
+        assertTrue(translations.addLanguage("de_de"));
+        assertTrue(translations.addLanguage("ja_jp"));
 
         translator.reload().join();
 
-        assertTrue(translations.unloadLanguage("ja_jp"));
-        assertFalse(translations.unloadLanguage("ja_jp"));  // unloading twice shouldn't do anything
+        assertTrue(translations.removeLanguage("ja_jp"));
+        assertFalse(translations.removeLanguage("ja_jp"));  // unloading twice shouldn't do anything
 
         translator.reload().join();
 
@@ -119,8 +119,8 @@ class VanillaTranslationsTest {
 
         translations.init();
 
-        assertTrue(translations.loadLanguage("de_de"));
-        assertTrue(translations.loadLanguage("ja_jp"));
+        assertTrue(translations.addLanguage("de_de"));
+        assertTrue(translations.addLanguage("ja_jp"));
 
         translator.reload().join();
 
