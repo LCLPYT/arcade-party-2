@@ -70,7 +70,8 @@ dependencies {
     // optional runtime dependencies (not explicitly required for compilation, but needed to play the game)
     modLocalRuntime "work.lclpnet.mods:pal:${project.pal_version}"
     modLocalRuntime "work.lclpnet.mcserver-api:mcserver-api-fabric:${project.mcserver_api_version}"
-    localRuntime "work.lclpnet:translations4j:${project.translations4j_version}:network"
+    implementation "work.lclpnet:translations4j:${project.translations4j_version}"
+    implementation "work.lclpnet:translations4j:${project.translations4j_version}:network"
 
     implementation 'org.json:json:20231013'
     include(implementation('work.lclpnet:json-config4j:1.0.0'))
