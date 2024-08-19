@@ -3,9 +3,8 @@ package work.lclpnet.ap2.impl.i18n;
 import it.unimi.dsi.fastutil.Function;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
-import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
+import org.jetbrains.annotations.VisibleForTesting;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.player.PlayerConnectionHooks;
 import work.lclpnet.kibu.translate.hook.LanguageChangedCallback;
@@ -20,7 +19,7 @@ public class DynamicLanguageManager {
     private final Function<ServerPlayerEntity, String> languageGetter;
     private final Runnable updateCallback;
     private final Map<UUID, String> playerLanguage = new HashMap<>();
-    private final Object2IntMap<String> languageUserCount;
+    @VisibleForTesting final Object2IntMap<String> languageUserCount;
 
     public DynamicLanguageManager(VanillaTranslations translations, Function<ServerPlayerEntity, String> languageGetter,
                                   Runnable updateCallback) {
@@ -32,7 +31,7 @@ public class DynamicLanguageManager {
         languageUserCount.defaultReturnValue(0);
     }
 
-    public void init(HookRegistrar hooks, MinecraftServer server) {
+    public void init(HookRegistrar hooks, Iterable<ServerPlayerEntity> allPlayers) {
         // register hooks
         hooks.registerHook(PlayerConnectionHooks.JOIN, this::onJoin);
         hooks.registerHook(PlayerConnectionHooks.QUIT, this::onQuit);
@@ -40,7 +39,7 @@ public class DynamicLanguageManager {
 
         // sync state with currently online players
         synchronized (this) {
-            for (ServerPlayerEntity player : PlayerLookup.all(server)) {
+            for (ServerPlayerEntity player : allPlayers) {
                 String lang = languageGetter.apply(player);
 
                 String oldLang = playerLanguage.put(player.getUuid(), lang);
@@ -56,7 +55,7 @@ public class DynamicLanguageManager {
         }
 
         // load all initially used languages, off-thread as it is blocking
-        Thread.startVirtualThread(() -> {
+        dispatch(() -> {
             boolean needsUpdate = false;
 
             synchronized (this) {
@@ -119,7 +118,7 @@ public class DynamicLanguageManager {
         if (translations.hasLanguage(lang)) return;
 
         // add language off-thread, as it is blocking
-        Thread.startVirtualThread(() -> {
+        dispatch(() -> {
             if (translations.addLanguage(lang)) {
                 updateCallback.run();
             }
@@ -130,10 +129,15 @@ public class DynamicLanguageManager {
         if (userCount > 0) return;
 
         // remove language off-thread, as it is blocking
-        Thread.startVirtualThread(() -> {
+        dispatch(() -> {
             if (translations.removeLanguage(lang)) {
                 updateCallback.run();
             }
         });
+    }
+
+    @VisibleForTesting
+    void dispatch(Runnable action) {
+        Thread.startVirtualThread(action);
     }
 }
