@@ -22,7 +22,7 @@ import java.util.regex.Pattern;
 
 public class VanillaTranslations {
 
-    private static final Pattern LANGUAGE_PATTERN = Pattern.compile("[a-z]{2}_[a-z]{2}");
+    private static final Pattern LANGUAGE_PATTERN = Pattern.compile("[a-z_]+");
     private final AssetManager assetManager;
     private final Logger logger;
     private final @Nullable Predicate<String> translationKeyPredicate;
