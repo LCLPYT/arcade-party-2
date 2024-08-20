@@ -16,12 +16,16 @@ import work.lclpnet.ap2.impl.base.SimpleMiniGameManager;
 import work.lclpnet.ap2.impl.base.VotedGameQueue;
 import work.lclpnet.ap2.impl.bootstrap.ApBootstrap;
 import work.lclpnet.ap2.impl.game.PlayerUtil;
+import work.lclpnet.ap2.impl.i18n.DynamicLanguageManager;
+import work.lclpnet.ap2.impl.i18n.VanillaTranslations;
 import work.lclpnet.ap2.impl.util.music.MapSongCache;
+import work.lclpnet.kibu.hook.HookStack;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.lobby.game.api.GameEnvironment;
 import work.lclpnet.lobby.game.api.GameInstance;
 import work.lclpnet.lobby.game.api.GameStarter;
 import work.lclpnet.lobby.game.start.ConditionGameStarter;
+import work.lclpnet.translations.DefaultLanguageTranslator;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -34,11 +38,14 @@ public class ArcadePartyInstance implements GameInstance {
     private static final int MIN_REQUIRED_PLAYERS = 2;
     private final GameEnvironment environment;
     private final Path cacheDirectory;
+    private final VanillaTranslations vanillaTranslations;
     private final Logger logger;
 
-    public ArcadePartyInstance(GameEnvironment environment, Path cacheDirectory, Logger logger) {
+    public ArcadePartyInstance(GameEnvironment environment, Path cacheDirectory,
+                               VanillaTranslations vanillaTranslations, Logger logger) {
         this.environment = environment;
         this.cacheDirectory = cacheDirectory;
+        this.vanillaTranslations = vanillaTranslations;
         this.logger = logger;
     }
 
@@ -76,7 +83,7 @@ public class ArcadePartyInstance implements GameInstance {
         ApBootstrap bootstrap = new ApBootstrap(cacheDirectory, logger);
 
         bootstrap.loadConfig(ForkJoinPool.commonPool())
-                .thenCompose(configManager -> bootstrap.dispatch(configManager.getConfig(), environment))
+                .thenCompose(configManager -> bootstrap.dispatch(configManager.getConfig(), environment, vanillaTranslations))
                 .thenCompose(onThread(server, this::dispatchGameStart))
                 .exceptionally(throwable -> {
                     logger.error("Failed to load ArcadeParty2", throwable);
@@ -86,7 +93,7 @@ public class ArcadePartyInstance implements GameInstance {
 
     private void dispatchGameStart(ApBootstrap.Result result) {
         MinecraftServer server = environment.getServer();
-        Translations translationService = environment.getTranslations();
+        Translations translations = environment.getTranslations();
 
         MiniGameManager gameManager = new SimpleMiniGameManager(logger);
         List<MiniGame> votedGames = List.of();  // TODO get from vote manager and shuffle
@@ -98,7 +105,10 @@ public class ArcadePartyInstance implements GameInstance {
         ForceGameCommand forceGameCommand = new ForceGameCommand(gameManager, queue::setNextGame);
         forceGameCommand.register(environment.getCommandStack());
 
-        ApContainer container = new ApContainer(server, logger, translationService, environment.getHookStack(),
+        HookStack hookStack = environment.getHookStack();
+        initDynamicLanguages(hookStack, translations, server);
+
+        ApContainer container = new ApContainer(server, logger, translations, hookStack,
                 environment.getCommandStack(), environment.getSchedulerStack(), result.worldFacade(),
                 result.mapFacade(), playerUtil, gameManager, result.songManager(), result.dataManager());
 
@@ -108,5 +118,26 @@ public class ArcadePartyInstance implements GameInstance {
         PreparationActivity preparation = new PreparationActivity(args);
 
         ActivityManager.getInstance().startActivity(preparation);
+    }
+
+    private void initDynamicLanguages(HookStack hookStack, Translations translations, MinecraftServer server) {
+        // translation reload is called off-thread by the DynamicLanguageManager
+        var reloadLock = new Object();
+        var callback = reload(translations, reloadLock);
+
+        var manager = new DynamicLanguageManager(vanillaTranslations, translations::getLanguage, callback);
+
+        manager.init(hookStack, PlayerLookup.all(server));
+    }
+
+    private Runnable reload(Translations translations, Object lock) {
+        if (translations.getTranslator() instanceof DefaultLanguageTranslator translator) return () -> {
+            synchronized (lock) {
+                // only one reload should be done at once
+                translator.reload().join();
+            }
+        };
+
+        return () -> {};  // NOOP
     }
 }

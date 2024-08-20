@@ -1,6 +1,5 @@
 package work.lclpnet.ap2.impl.i18n;
 
-import it.unimi.dsi.fastutil.Function;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -12,6 +11,7 @@ import work.lclpnet.kibu.translate.hook.LanguageChangedCallback;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Function;
 
 public class DynamicLanguageManager {
 
@@ -60,9 +60,10 @@ public class DynamicLanguageManager {
 
             synchronized (this) {
                 for (String lang : languageUserCount.keySet()) {
-                    if (languageUserCount.getInt(lang) > 0 && translations.addLanguage(lang)) {
-                        needsUpdate = true;
-                    }
+                    if (languageUserCount.getInt(lang) <= 0) continue;
+
+                    translations.addLanguage(lang);
+                    needsUpdate = true;
                 }
             }
 

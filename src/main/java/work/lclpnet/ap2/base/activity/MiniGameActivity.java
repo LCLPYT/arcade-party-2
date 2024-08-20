@@ -57,7 +57,7 @@ public class MiniGameActivity extends ComponentActivity {
         AtomicBoolean remake = new AtomicBoolean(false);
 
         handle = new DefaultMiniGameHandle(miniGame, args, bossBars, bossBars, scoreboard, remake);
-        handle.init();
+        handle.init();  // hook stack is pushed and later popped by handle::unload in stop()
 
         PlayerManager playerManager = args.playerManager();
 

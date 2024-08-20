@@ -16,6 +16,7 @@ import work.lclpnet.ap2.base.config.ConfigManager;
 import work.lclpnet.ap2.impl.data.JsonDataSource;
 import work.lclpnet.ap2.impl.data.MapDynamicData;
 import work.lclpnet.ap2.impl.data.MutableDataManager;
+import work.lclpnet.ap2.impl.i18n.VanillaTranslations;
 import work.lclpnet.ap2.impl.map.BalancedMapRandomizer;
 import work.lclpnet.ap2.impl.map.MapFacadeImpl;
 import work.lclpnet.ap2.impl.map.SqliteAsyncMapFrequencyManager;
@@ -37,6 +38,8 @@ import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ForkJoinPool;
+
+import static java.util.concurrent.CompletableFuture.runAsync;
 
 public class ApBootstrap {
 
@@ -155,7 +158,9 @@ public class ApBootstrap {
         return manager;
     }
 
-    public CompletableFuture<Result> dispatch(Ap2Config config, GameEnvironment environment) {
+    public CompletableFuture<Result> dispatch(Ap2Config config, GameEnvironment environment,
+                                              VanillaTranslations vanillaTranslations) {
+
         MinecraftServer server = environment.getServer();
         MapManager mapManager = createMapManager(config);
 
@@ -174,12 +179,14 @@ public class ApBootstrap {
         var sqliteTask = loadSqlite(frequencyManager, server);
         var songTask = loadSongs(songManager, config);
         var containerTask = loadContainer(dataManager);
+        var vanillaTranslationsTask = runAsync(vanillaTranslations::init);
 
         return CompletableFuture.supplyAsync(() -> {
             mapTask.join();
             sqliteTask.join();
             songTask.join();
             containerTask.join();
+            vanillaTranslationsTask.join();
 
             return new Result(worldFacade, mapFacade, songManager, dataManager);
         });
@@ -192,7 +199,7 @@ public class ApBootstrap {
 
     @NotNull
     public CompletableFuture<Void> loadMaps(MapManager mapManager, MapDescriptor descriptor, Executor executor) {
-        return CompletableFuture.runAsync(() -> {
+        return runAsync(() -> {
             try {
                 // load general arcade party 2 maps
                 mapManager.loadAll(descriptor);
@@ -213,7 +220,7 @@ public class ApBootstrap {
 
     @NotNull
     public CompletableFuture<Void> loadSongs(SongManagerImpl songManager, Ap2Config config) {
-        return CompletableFuture.runAsync(() -> {
+        return runAsync(() -> {
             int i = 0;
 
             for (var entry : config.songSources.entries()) {
@@ -234,7 +241,7 @@ public class ApBootstrap {
 
     @NotNull
     public CompletableFuture<Void> loadContainer(MutableDataManager dataManager) {
-        return CompletableFuture.runAsync(() -> dataManager.setData(MapDynamicData.builder()
+        return runAsync(() -> dataManager.setData(MapDynamicData.builder()
                 .addSource(new JsonDataSource(this::openConfigurationFile, logger))
                 .build()));
     }

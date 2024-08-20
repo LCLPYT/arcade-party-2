@@ -6,13 +6,15 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.projectile.ProjectileEntity;
 import net.minecraft.entity.projectile.thrown.SnowballEntity;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.text.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.game.team.Team;
 import work.lclpnet.ap2.api.game.team.TeamKey;
 import work.lclpnet.kibu.translate.Translations;
-import work.lclpnet.kibu.translate.text.FormatWrapper;
 import work.lclpnet.kibu.translate.text.TranslatedText;
+
+import java.util.Arrays;
 
 import static net.minecraft.util.Formatting.GRAY;
 import static net.minecraft.util.Formatting.YELLOW;
@@ -39,11 +41,22 @@ public class DeathMessages {
         return text.formatted(GRAY);
     }
 
-    private FormatWrapper wrap(PlayerEntity player) {
-        return wrap(player.getNameForScoreboard());
+    private Object wrap(PlayerEntity player) {
+        return wrap(player.getDisplayName());
     }
 
-    private FormatWrapper wrap(Object obj) {
+    private Object wrap(Object obj) {
+        if (obj instanceof Text text) {
+            Style style = text.getStyle();
+            HoverEvent hoverEvent = style.getHoverEvent();
+
+            // text with entity hover action indicates an entity display name
+            // if the display name already has a color, keep it as is
+            if (hoverEvent != null && hoverEvent.getValue(HoverEvent.Action.SHOW_ENTITY) != null && style.getColor() != null) {
+                return text;
+            }
+        }
+
         return styled(obj, YELLOW);
     }
 
@@ -71,11 +84,25 @@ public class DeathMessages {
 
     @NotNull
     public TranslatedText getDeathMessage(ServerPlayerEntity player, @Nullable DamageSource source) {
-        if (source == null) return eliminated(player);
+        TextContent content = player.getDamageTracker().getDeathMessage().getContent();
+
+        if (content instanceof TranslatableTextContent translated) {
+            String key = translated.getKey();
+
+            if (translations.getTranslator().hasTranslation("en_us", key)) {
+                return root(key, Arrays.stream(translated.getArgs()).map(this::wrap).toArray());
+            }
+        }
+
+        if (source == null) {
+            return eliminated(player);
+        }
 
         Entity attacker = source.getAttacker();
 
-        if (!(attacker instanceof ServerPlayerEntity killer)) return eliminated(player);
+        if (!(attacker instanceof ServerPlayerEntity killer)) {
+            return eliminated(player);
+        }
 
         Entity directSource = source.getSource();
 
