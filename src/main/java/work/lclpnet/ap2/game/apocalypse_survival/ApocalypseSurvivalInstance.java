@@ -4,8 +4,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.damage.DamageTypes;
-import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.entity.mob.VexEntity;
+import net.minecraft.entity.mob.*;
 import net.minecraft.entity.projectile.PersistentProjectileEntity;
 import net.minecraft.entity.projectile.ProjectileEntity;
 import net.minecraft.server.MinecraftServer;
@@ -64,11 +63,6 @@ public class ApocalypseSurvivalInstance extends EliminationGameInstance {
 
         HookRegistrar hooks = gameHandle.getHookRegistrar();
 
-        hooks.registerHook(ServerEntityHooks.ENTITY_UNLOAD, (entity, relWorld) -> {
-            if (relWorld == world && entity instanceof MobEntity mob) {
-                targetManager.removeMob(mob);
-            }
-        });
 
         hooks.registerHook(ProjectileHooks.HIT_BLOCK, (projectile, hit) -> {
             if (projectile instanceof PersistentProjectileEntity) {
@@ -77,8 +71,22 @@ public class ApocalypseSurvivalInstance extends EliminationGameInstance {
         });
 
         hooks.registerHook(ServerEntityHooks.ENTITY_LOAD, (entity, relWorld) -> {
-            if (relWorld == world && entity instanceof VexEntity vex) {
-                VexEntityBehaviour.setForceClipping(vex, true);
+            if (relWorld != world) return;
+
+
+            switch (entity) {
+                case ZombieEntity zombie -> targetManager.addZombie(zombie);
+                case SkeletonEntity skeleton -> targetManager.addSkeleton(skeleton);
+                case PhantomEntity phantom -> targetManager.addPhantom(phantom);
+                case VindicatorEntity vindicator -> targetManager.addVindicator(vindicator);
+                case VexEntity vex -> VexEntityBehaviour.setForceClipping(vex, true);
+                default -> {}
+            }
+        });
+
+        hooks.registerHook(ServerEntityHooks.ENTITY_UNLOAD, (entity, relWorld) -> {
+            if (relWorld == world && entity instanceof MobEntity mob) {
+                targetManager.removeMob(mob);
             }
         });
 

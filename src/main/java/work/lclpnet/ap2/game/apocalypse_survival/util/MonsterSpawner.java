@@ -166,7 +166,6 @@ public class MonsterSpawner {
 
         // spawn mob
         spawnMobInWorld(zombie);
-        targetManager.addZombie(zombie);
     }
 
     private void spawnSkeleton() {
@@ -219,9 +218,7 @@ public class MonsterSpawner {
             });
         }
 
-        // spawn mob
         spawnMobInWorld(skeleton);
-        targetManager.addSkeleton(skeleton);
     }
 
     private void spawnPhantom() {
@@ -242,7 +239,6 @@ public class MonsterSpawner {
         GoalModifier.clear(mobAccess.getTargetSelector());
 
         spawnMobInWorld(phantom);
-        targetManager.addPhantom(phantom);
     }
 
     private void spawnGhast() {
@@ -273,7 +269,6 @@ public class MonsterSpawner {
         EntityUtil.setAttribute(vindicator, EntityAttributes.GENERIC_MOVEMENT_SPEED, baseSpeed);
 
         spawnMobInWorld(vindicator);
-        targetManager.addVindicator(vindicator);
     }
 
     private void spawnEvoker() {
