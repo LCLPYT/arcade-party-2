@@ -214,5 +214,6 @@
   "game.ap2.maniac_digger.wrong_tool": "❌ falsches Werkzeug ❌",
   "game.ap2.apocalypse_survival": "Untoten-Apokalypse",
   "game.ap2.apocalypse_survival.description": "Eine Armee von Untoten wird erscheinen und dich jagen! Du kannst dich nicht wehren. Fliehe und überlebe bis zuletzt!",
-  "game.ap2.apocalypse_survival.task": "Überlebe die Untoten"
+  "game.ap2.apocalypse_survival.task": "Überlebe die Untoten",
+  "game.ap2.apocalypse_survival.survived": "%s überlebt"
 }

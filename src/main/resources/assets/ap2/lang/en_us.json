@@ -213,5 +213,6 @@
   "game.ap2.maniac_digger.wrong_tool": "❌ wrong tool ❌",
   "game.ap2.apocalypse_survival": "Apocalypse Survival",
   "game.ap2.apocalypse_survival.description": "An army of undead will spawn and will hunt you down! You cannot defend yourself. Be the last player remaining in order to win!",
-  "game.ap2.apocalypse_survival.task": "Survive the undead"
+  "game.ap2.apocalypse_survival.task": "Survive the undead",
+  "game.ap2.apocalypse_survival.survived": "survived %s"
 }
