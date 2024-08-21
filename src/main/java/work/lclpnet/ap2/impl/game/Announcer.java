@@ -9,7 +9,7 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.kibu.title.Title;
-import work.lclpnet.kibu.translate.TranslationService;
+import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.kibu.translate.text.TranslatedText;
 
 import static net.minecraft.util.Formatting.AQUA;
@@ -17,7 +17,7 @@ import static net.minecraft.util.Formatting.DARK_GREEN;
 
 public class Announcer {
 
-    private final TranslationService translations;
+    private final Translations translations;
     private final MinecraftServer server;
     @Nullable
     private SoundEvent sound = SoundEvents.BLOCK_NOTE_BLOCK_PLING.value();
@@ -28,7 +28,7 @@ public class Announcer {
     private int stayTicks = 30;
     private int fadeOutTicks = 5;
 
-    public Announcer(TranslationService translations, MinecraftServer server) {
+    public Announcer(Translations translations, MinecraftServer server) {
         this.translations = translations;
         this.server = server;
     }

@@ -60,6 +60,7 @@ public class ScoreDataContainer<T, Ref extends SubjectRef> implements DataContai
             Ref key = refs.create(subject);
 
             score = scoreMap.computeIfAbsent(key, ref -> 0) + add;
+
             scoreMap.put(key, score);
         }
 
@@ -113,14 +114,18 @@ public class ScoreDataContainer<T, Ref extends SubjectRef> implements DataContai
 
     @Override
     public void ensureTracked(T subject) {
-        var worst = getWorstScore();
+        synchronized (this) {
+            if (scoreMap.containsKey(refs.create(subject))) return;
 
-        int score = switch (ordering) {
-            case DESCENDING -> Math.max(0, worst.orElse(1) - 1);
-            case ASCENDING -> worst.orElse(-1) + 1;
-        };
+            var worst = getWorstScore();
 
-        addScore(subject, score);
+            int score = switch (ordering) {
+                case DESCENDING -> Math.max(0, worst.orElse(1) - 1);
+                case ASCENDING -> worst.orElse(-1) + 1;
+            };
+
+            setScore(subject, score);
+        }
     }
 
     @Override

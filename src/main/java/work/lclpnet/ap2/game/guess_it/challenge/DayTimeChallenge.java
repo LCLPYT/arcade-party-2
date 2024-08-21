@@ -18,7 +18,7 @@ import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.RunningTask;
 import work.lclpnet.kibu.scheduler.api.SchedulerAction;
 import work.lclpnet.kibu.scheduler.api.TaskHandle;
-import work.lclpnet.kibu.translate.TranslationService;
+import work.lclpnet.kibu.translate.Translations;
 
 import java.util.OptionalInt;
 import java.util.Random;
@@ -66,7 +66,7 @@ public class DayTimeChallenge implements Challenge, SchedulerAction {
 
     @Override
     public void begin(InputInterface input, ChallengeMessenger messenger) {
-        TranslationService translations = gameHandle.getTranslations();
+        Translations translations = gameHandle.getTranslations();
         messenger.task(translations.translateText("game.ap2.guess_it.daytime.guess"));
 
         input.expectInput().validate((str, player) -> MinecraftDayTime.dayTimeValue(str),

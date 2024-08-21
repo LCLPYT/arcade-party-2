@@ -8,8 +8,8 @@ import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.game.guess_it.data.InputManager;
-import work.lclpnet.kibu.plugin.cmd.CommandRegistrar;
-import work.lclpnet.kibu.plugin.cmd.KibuCommand;
+import work.lclpnet.kibu.cmd.type.CommandRegistrar;
+import work.lclpnet.kibu.cmd.type.KibuCommand;
 
 import static com.mojang.brigadier.arguments.StringArgumentType.string;
 import static net.minecraft.server.command.CommandManager.argument;

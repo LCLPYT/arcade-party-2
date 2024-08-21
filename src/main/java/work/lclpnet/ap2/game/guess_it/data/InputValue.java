@@ -3,7 +3,7 @@ package work.lclpnet.ap2.game.guess_it.data;
 import it.unimi.dsi.fastutil.Pair;
 import net.minecraft.server.network.ServerPlayerEntity;
 import org.jetbrains.annotations.Nullable;
-import work.lclpnet.kibu.translate.TranslationService;
+import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.kibu.translate.text.TranslatedText;
 
 import java.util.ArrayList;
@@ -27,12 +27,12 @@ public class InputValue {
         return this;
     }
 
-    public InputValue validateInt(TranslationService translations) {
+    public InputValue validateInt(Translations translations) {
         return validate(InputValue::intValue, input ->
                 translations.translateText("game.ap2.guess_it.input.int", styled(input, YELLOW)).formatted(RED));
     }
 
-    public InputValue validateFloat(TranslationService translations, int precision) {
+    public InputValue validateFloat(Translations translations, int precision) {
         return validate((input, player) -> floatValue(input, player, translations, precision), input ->
                 translations.translateText("game.ap2.guess_it.input.float", styled(input, YELLOW)).formatted(RED));
     }
@@ -60,7 +60,7 @@ public class InputValue {
         return once;
     }
 
-    private static Optional<String> floatValue(String s, ServerPlayerEntity player, TranslationService translations, int precision) {
+    private static Optional<String> floatValue(String s, ServerPlayerEntity player, Translations translations, int precision) {
         s = s.replace(',', '.');
 
         float f;

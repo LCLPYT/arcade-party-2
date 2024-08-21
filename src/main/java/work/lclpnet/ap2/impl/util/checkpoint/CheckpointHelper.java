@@ -12,10 +12,10 @@ import net.minecraft.util.Formatting;
 import net.minecraft.util.TypedActionResult;
 import work.lclpnet.ap2.api.util.action.Action;
 import work.lclpnet.ap2.api.util.action.PlayerAction;
+import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.kibu.hook.player.PlayerMoveCallback;
-import work.lclpnet.kibu.plugin.hook.HookRegistrar;
-import work.lclpnet.kibu.translate.TranslationService;
+import work.lclpnet.kibu.translate.Translations;
 
 import java.util.function.BooleanSupplier;
 import java.util.function.Predicate;
@@ -24,7 +24,7 @@ public class CheckpointHelper {
 
     private CheckpointHelper() {}
 
-    public static void notifyWhenReached(CheckpointManager manager, TranslationService translations) {
+    public static void notifyWhenReached(CheckpointManager manager, Translations translations) {
         manager.whenCheckpointReached((player, checkpoint) -> {
             var msg = translations.translateText(player, "game.ap2.reached_checkpoint").formatted(Formatting.GREEN);
 

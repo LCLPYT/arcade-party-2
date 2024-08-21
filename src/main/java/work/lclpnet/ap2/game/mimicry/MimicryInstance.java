@@ -27,7 +27,7 @@ import work.lclpnet.ap2.impl.util.world.StackedRoomGenerator;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.kibu.mc.KibuBlockPos;
 import work.lclpnet.kibu.scheduler.Ticks;
-import work.lclpnet.kibu.translate.TranslationService;
+import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.lobby.game.map.GameMap;
 import work.lclpnet.lobby.game.util.BossBarTimer;
 
@@ -177,7 +177,7 @@ public class MimicryInstance extends EliminationGameInstance implements MapBoots
 
         manager.setReplay(true);
 
-        TranslationService translations = gameHandle.getTranslations();
+        Translations translations = gameHandle.getTranslations();
         var subject = translations.translateText(gameHandle.getGameInfo().getTaskKey());
 
         timer = commons().createTimer(subject, calcReplaySeconds());

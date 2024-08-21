@@ -25,12 +25,12 @@ import work.lclpnet.ap2.impl.util.ItemStackHelper;
 import work.lclpnet.ap2.impl.util.SoundHelper;
 import work.lclpnet.ap2.impl.util.handler.DoubleJumpHandler;
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
+import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.ProjectileHooks;
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks;
 import work.lclpnet.kibu.hook.world.BlockBreakParticleCallback;
-import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 import work.lclpnet.kibu.scheduler.Ticks;
-import work.lclpnet.kibu.translate.TranslationService;
+import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 
 import java.util.Objects;
@@ -82,7 +82,7 @@ public class BowSpleefInstance extends EliminationGameInstance {
 
         doubleJumpHandler.init(hooks);
 
-        TranslationService translations = gameHandle.getTranslations();
+        Translations translations = gameHandle.getTranslations();
 
         giveBowsToPlayers(translations);
 
@@ -90,7 +90,7 @@ public class BowSpleefInstance extends EliminationGameInstance {
                 .then(this::removeBlocksUnder);
     }
 
-    private void giveBowsToPlayers(TranslationService translations) {
+    private void giveBowsToPlayers(Translations translations) {
         var infinity = ItemStackHelper.getEnchantment(Enchantments.INFINITY, getWorld().getRegistryManager());
 
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {

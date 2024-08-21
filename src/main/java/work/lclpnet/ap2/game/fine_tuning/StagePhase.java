@@ -29,7 +29,7 @@ import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.kibu.title.Title;
-import work.lclpnet.kibu.translate.TranslationService;
+import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.lobby.game.api.WorldFacade;
 import work.lclpnet.lobby.game.map.GameMap;
 
@@ -105,7 +105,7 @@ class StagePhase {
 
     private void beginSongPresentation() {
         MinecraftServer server = gameHandle.getServer();
-        TranslationService translations = gameHandle.getTranslations();
+        Translations translations = gameHandle.getTranslations();
 
         SoundHelper.playSound(server, SoundEvents.BLOCK_NOTE_BLOCK_PLING.value(), SoundCategory.RECORDS, 0.5f, 0f);
 
@@ -119,7 +119,7 @@ class StagePhase {
 
     private void presentNextMelody() {
         MinecraftServer server = gameHandle.getServer();
-        TranslationService translations = gameHandle.getTranslations();
+        Translations translations = gameHandle.getTranslations();
 
         SoundHelper.playSound(server, SoundEvents.BLOCK_NOTE_BLOCK_PLING.value(), SoundCategory.RECORDS, 0.5f, 0f);
 
@@ -156,7 +156,7 @@ class StagePhase {
 
     private void beginBestMelody() {
         MinecraftServer server = gameHandle.getServer();
-        TranslationService translations = gameHandle.getTranslations();
+        Translations translations = gameHandle.getTranslations();
 
         SoundHelper.playSound(server, SoundEvents.BLOCK_NOTE_BLOCK_PLING.value(), SoundCategory.RECORDS, 0.5f, 0f);
 
@@ -191,7 +191,7 @@ class StagePhase {
 
     private void beginWorstMelody() {
         MinecraftServer server = gameHandle.getServer();
-        TranslationService translations = gameHandle.getTranslations();
+        Translations translations = gameHandle.getTranslations();
 
         SoundHelper.playSound(server, SoundEvents.BLOCK_NOTE_BLOCK_PLING.value(), SoundCategory.RECORDS, 0.5f, 0f);
 

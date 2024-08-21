@@ -9,9 +9,9 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.base.Participants;
+import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.ServerMessageHooks;
-import work.lclpnet.kibu.plugin.hook.HookRegistrar;
-import work.lclpnet.kibu.translate.TranslationService;
+import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.kibu.translate.text.TranslatedText;
 
 import static net.minecraft.util.Formatting.*;
@@ -20,14 +20,14 @@ import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 public class InputManager implements InputInterface {
 
     private final PlayerChoices choices;
-    private final TranslationService translations;
+    private final Translations translations;
     private final Participants participants;
     private final ChallengeMessenger messenger;
     private InputValue inputValue = null;
     private OptionValue optionValue = null;
     private boolean locked = false;
 
-    public InputManager(PlayerChoices choices, TranslationService translations, Participants participants, ChallengeMessenger messenger) {
+    public InputManager(PlayerChoices choices, Translations translations, Participants participants, ChallengeMessenger messenger) {
         this.choices = choices;
         this.translations = translations;
         this.participants = participants;

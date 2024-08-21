@@ -30,15 +30,15 @@ import work.lclpnet.ap2.impl.util.effect.ApEffect;
 import work.lclpnet.ap2.impl.util.effect.ApEffects;
 import work.lclpnet.ap2.impl.util.property.ApMapProperties;
 import work.lclpnet.combatctl.api.CombatStyle;
+import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.EntityHealthCallback;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks;
 import work.lclpnet.kibu.hook.player.PlayerSpawnLocationCallback;
-import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.RunningTask;
 import work.lclpnet.kibu.title.Title;
-import work.lclpnet.kibu.translate.TranslationService;
+import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.kibu.translate.bossbar.BossBarProvider;
 import work.lclpnet.kibu.translate.bossbar.TranslatedBossBar;
 import work.lclpnet.kibu.translate.text.TextTranslatable;
@@ -305,7 +305,7 @@ public abstract class BaseGameInstance implements MiniGameInstance {
 
     protected final TranslatedBossBar useTaskDisplay() {
         GameInfo gameInfo = gameHandle.getGameInfo();
-        TranslationService translations = gameHandle.getTranslations();
+        Translations translations = gameHandle.getTranslations();
         Identifier id = gameInfo.identifier("task");
 
         TranslatedBossBar bossBar = translations.translateBossBar(id, gameInfo.getTaskKey(), gameInfo.getTaskArguments())
@@ -326,7 +326,7 @@ public abstract class BaseGameInstance implements MiniGameInstance {
         Identifier id = ArcadeParty.identifier("task");
         String key = gameInfo.getTaskKey();
 
-        TranslationService translations = gameHandle.getTranslations();
+        Translations translations = gameHandle.getTranslations();
         BossBarProvider provider = gameHandle.getBossBarProvider();
 
         var bossBar = new DynamicTranslatedPlayerBossBar(id, key, args, translations, provider)

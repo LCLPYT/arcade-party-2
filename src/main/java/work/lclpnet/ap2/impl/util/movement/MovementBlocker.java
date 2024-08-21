@@ -1,7 +1,7 @@
 package work.lclpnet.ap2.impl.util.movement;
 
 import net.minecraft.server.network.ServerPlayerEntity;
-import work.lclpnet.kibu.plugin.hook.HookRegistrar;
+import work.lclpnet.kibu.hook.HookRegistrar;
 
 public interface MovementBlocker {
 

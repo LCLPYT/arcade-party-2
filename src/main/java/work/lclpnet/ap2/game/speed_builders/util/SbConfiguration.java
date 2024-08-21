@@ -31,11 +31,11 @@ import net.minecraft.world.block.NeighborUpdater;
 import net.minecraft.world.event.GameEvent;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
+import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.ItemFramePutItemCallback;
 import work.lclpnet.kibu.hook.entity.ItemFrameRemoveItemCallback;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.kibu.hook.world.BlockModificationHooks;
-import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 
 public class SbConfiguration {

@@ -39,12 +39,12 @@ import work.lclpnet.ap2.impl.util.heads.PlayerHeads;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.kibu.access.entity.PigEntityAccess;
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
+import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.ServerPlayConnectionHooks;
 import work.lclpnet.kibu.hook.entity.EntityDismountCallback;
 import work.lclpnet.kibu.hook.entity.EntityMountCallback;
 import work.lclpnet.kibu.hook.player.PlayerTeleportedCallback;
-import work.lclpnet.kibu.plugin.hook.HookRegistrar;
-import work.lclpnet.kibu.translate.TranslationService;
+import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.lobby.game.map.GameMap;
 import work.lclpnet.lobby.game.map.MapUtils;
 
@@ -76,7 +76,7 @@ public class PigRaceInstance extends DefaultGameInstance {
 
         HookRegistrar hooks = gameHandle.getHookRegistrar();
         CustomScoreboardManager scoreboardManager = gameHandle.getScoreboardManager();
-        TranslationService translations = gameHandle.getTranslations();
+        Translations translations = gameHandle.getTranslations();
         Participants participants = gameHandle.getParticipants();
 
         Team team = createTeam();
@@ -258,7 +258,7 @@ public class PigRaceInstance extends DefaultGameInstance {
     }
 
     private void giveStick(ServerPlayerEntity player) {
-        TranslationService translations = gameHandle.getTranslations();
+        Translations translations = gameHandle.getTranslations();
 
         ItemStack stick = new ItemStack(Items.CARROT_ON_A_STICK);
         stick.set(DataComponentTypes.UNBREAKABLE, new UnbreakableComponent(false));
@@ -269,7 +269,7 @@ public class PigRaceInstance extends DefaultGameInstance {
     }
 
     private void giveResetItem(ServerPlayerEntity player) {
-        TranslationService translations = gameHandle.getTranslations();
+        Translations translations = gameHandle.getTranslations();
 
         ItemStack reset = PlayerHeadUtil.getItem(PlayerHeads.REDSTONE_BLOCK_REFRESH);
         reset.set(DataComponentTypes.CUSTOM_NAME, translations.translateText(player, "ap2.game.reset").formatted(Formatting.RED)

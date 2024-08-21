@@ -12,9 +12,9 @@ import work.lclpnet.ap2.api.game.team.TeamManager;
 import work.lclpnet.ap2.impl.game.data.EliminationDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.TeamRef;
 import work.lclpnet.ap2.impl.util.DeathMessages;
+import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.EntityHealthCallback;
-import work.lclpnet.kibu.plugin.hook.HookRegistrar;
-import work.lclpnet.kibu.translate.TranslationService;
+import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.kibu.translate.text.TranslatedText;
 import work.lclpnet.lobby.game.api.WorldFacade;
 
@@ -95,7 +95,7 @@ public abstract class TeamEliminationGameInstance extends DefaultTeamGameInstanc
 
     protected void eliminateAll(Iterable<? extends Team> teams, @Nullable TranslatedText detail) {
         TeamManager teamManager = getTeamManager();
-        TranslationService translations = gameHandle.getTranslations();
+        Translations translations = gameHandle.getTranslations();
 
         Set<Team> toEliminate = new HashSet<>();
 

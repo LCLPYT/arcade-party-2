@@ -7,13 +7,13 @@ import work.lclpnet.ap2.api.data.DataManager;
 import work.lclpnet.ap2.api.map.MapFacade;
 import work.lclpnet.ap2.api.util.music.SongManager;
 import work.lclpnet.ap2.impl.game.PlayerUtil;
-import work.lclpnet.kibu.plugin.cmd.CommandStack;
-import work.lclpnet.kibu.plugin.hook.HookStack;
-import work.lclpnet.kibu.plugin.scheduler.SchedulerStack;
-import work.lclpnet.kibu.translate.TranslationService;
+import work.lclpnet.kibu.cmd.impl.CommandStack;
+import work.lclpnet.kibu.hook.HookStack;
+import work.lclpnet.kibu.scheduler.util.SchedulerStack;
+import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.lobby.game.api.WorldFacade;
 
-public record ApContainer(MinecraftServer server, Logger logger, TranslationService translations, HookStack hookStack,
+public record ApContainer(MinecraftServer server, Logger logger, Translations translations, HookStack hookStack,
                           CommandStack commandStack, SchedulerStack schedulerStack, WorldFacade worldFacade,
                           MapFacade mapFacade, PlayerUtil playerUtil, MiniGameManager miniGames,
                           SongManager songManager, DataManager dataManager) {

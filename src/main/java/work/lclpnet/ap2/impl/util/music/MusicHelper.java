@@ -42,7 +42,7 @@ public class MusicHelper {
                 .whenComplete((res, err) -> {
                     if (err == null) return;
 
-                    logger.error("Failed to load song {}", loadable.getId());
+                    logger.error("Failed to load song {}", loadable.getId(), err);
                 });
 
         return wrapper;

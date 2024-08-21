@@ -2,7 +2,7 @@ package work.lclpnet.ap2.game.guess_it.data;
 
 import it.unimi.dsi.fastutil.Pair;
 import org.jetbrains.annotations.Nullable;
-import work.lclpnet.kibu.translate.TranslationService;
+import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.kibu.translate.text.TranslatedText;
 
 import java.util.Optional;
@@ -13,10 +13,10 @@ import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
 public class OptionValue {
 
-    private final TranslationService translations;
+    private final Translations translations;
     private final int options;
 
-    public OptionValue(TranslationService translations, int options) {
+    public OptionValue(Translations translations, int options) {
         if (options < 2) {
             throw new IllegalArgumentException("There must be at least two options");
         }

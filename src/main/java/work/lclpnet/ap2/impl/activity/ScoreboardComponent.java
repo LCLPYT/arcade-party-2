@@ -9,14 +9,14 @@ import work.lclpnet.activity.component.DependentComponent;
 import work.lclpnet.activity.component.builtin.BuiltinComponents;
 import work.lclpnet.ap2.impl.util.Lazy;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
-import work.lclpnet.kibu.plugin.hook.HookRegistrar;
-import work.lclpnet.kibu.translate.TranslationService;
+import work.lclpnet.kibu.hook.HookRegistrar;
+import work.lclpnet.kibu.translate.Translations;
 
 import java.util.function.Supplier;
 
 public class ScoreboardComponent implements Component, DependentComponent {
 
-    private final Lazy<CustomScoreboardManager, TranslationService> scoreboardManager;
+    private final Lazy<CustomScoreboardManager, Translations> scoreboardManager;
     private HookRegistrar hooks;
 
     public ScoreboardComponent(ServerScoreboard scoreboard, PlayerManager playerManager) {
@@ -43,7 +43,7 @@ public class ScoreboardComponent implements Component, DependentComponent {
         scoreboardManager.afterEvaluate(CustomScoreboardManager::unload);
     }
 
-    public CustomScoreboardManager scoreboardManager(Supplier<TranslationService> translationsSupplier) {
+    public CustomScoreboardManager scoreboardManager(Supplier<Translations> translationsSupplier) {
         return scoreboardManager.get(translationsSupplier);
     }
 }

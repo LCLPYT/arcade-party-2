@@ -25,7 +25,7 @@ import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.SoundHelper;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
-import work.lclpnet.kibu.translate.TranslationService;
+import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 import work.lclpnet.lobby.game.map.GameMap;
 import work.lclpnet.notica.Notica;
@@ -58,7 +58,7 @@ public class MusicalMinecartInstance extends EliminationGameInstance {
         super(gameHandle);
 
         SongManager songManager = gameHandle.getSongManager();
-        TranslationService translations = gameHandle.getTranslations();
+        Translations translations = gameHandle.getTranslations();
 
         this.songManager = new MMSongs(songManager, translations, random, gameHandle.getLogger());
     }
@@ -130,7 +130,7 @@ public class MusicalMinecartInstance extends EliminationGameInstance {
 
         SoundHelper.playSound(gameHandle.getServer(), SoundEvents.ENTITY_IRON_GOLEM_HURT, SoundCategory.HOSTILE, 0.9f, 0f);
 
-        TranslationService translations = gameHandle.getTranslations();
+        Translations translations = gameHandle.getTranslations();
         Participants participants = gameHandle.getParticipants();
 
         for (ServerPlayerEntity player : participants) {

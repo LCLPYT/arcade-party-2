@@ -75,6 +75,7 @@
   "game.ap2.treasure_hunter": "Treasure Hunter",
   "game.ap2.treasure_hunter.description": "Search for a treasure in a big pile of sand. First one to find the chest wins!",
   "game.ap2.treasure_hunter.task": "Find the treasure",
+  "game.ap2.treasure_hunter.found_treasure": "Found treasure (%s)",
   "game.ap2.panda_finder": "Panda Finder",
   "game.ap2.panda_finder.description": "Find a panda from a picture. First player with %s points wins.",
   "game.ap2.panda_finder.task": "Find the panda %s/%s",
@@ -210,5 +211,9 @@
   "game.ap2.maniac_digger.description": "Dig down through a pipe filled with random blocks. Use the right tool to break block quicker.",
   "game.ap2.maniac_digger.task": "Reach the bottom",
   "game.ap2.maniac_digger.result": "%s blocks away",
-  "game.ap2.maniac_digger.wrong_tool": "❌ wrong tool ❌"
+  "game.ap2.maniac_digger.wrong_tool": "❌ wrong tool ❌",
+  "game.ap2.apocalypse_survival": "Apocalypse Survival",
+  "game.ap2.apocalypse_survival.description": "An army of undead will spawn and will hunt you down! You cannot defend yourself. Be the last player remaining in order to win!",
+  "game.ap2.apocalypse_survival.task": "Survive the undead",
+  "game.ap2.apocalypse_survival.survived": "survived %s"
 }

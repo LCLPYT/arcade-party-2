@@ -6,6 +6,7 @@ import work.lclpnet.config.json.FileConfigSerializer;
 
 import java.nio.file.Path;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 
 public class ConfigManager implements ConfigAccess {
 
@@ -22,7 +23,7 @@ public class ConfigManager implements ConfigAccess {
         return handler.getConfig();
     }
 
-    public CompletableFuture<Void> init() {
-        return CompletableFuture.runAsync(handler::loadConfig);
+    public CompletableFuture<Void> init(Executor executor) {
+        return CompletableFuture.runAsync(handler::loadConfig, executor);
     }
 }

@@ -10,9 +10,9 @@ import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.util.bossbar.PlayerBossBar;
+import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.player.PlayerConnectionHooks;
-import work.lclpnet.kibu.plugin.hook.HookRegistrar;
-import work.lclpnet.kibu.translate.TranslationService;
+import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.kibu.translate.bossbar.BossBarProvider;
 import work.lclpnet.kibu.translate.hook.LanguageChangedCallback;
 import work.lclpnet.kibu.translate.text.RootText;
@@ -24,7 +24,7 @@ import java.util.function.UnaryOperator;
 public class DynamicTranslatedPlayerBossBar implements PlayerBossBar {
 
     private final Identifier id;
-    private final TranslationService translations;
+    private final Translations translations;
     private final BossBarProvider bossBarProvider;
     private final Map<UUID, Entry> entries = new WeakHashMap<>();
     private final String translationKey;
@@ -36,7 +36,7 @@ public class DynamicTranslatedPlayerBossBar implements PlayerBossBar {
     private Style titleStyle = Style.EMPTY;
 
     public DynamicTranslatedPlayerBossBar(Identifier id, String translationKey, Object[] arguments,
-                                          TranslationService translations, BossBarProvider bossBarProvider) {
+                                          Translations translations, BossBarProvider bossBarProvider) {
         this.id = id;
         this.translationKey = translationKey;
         this.arguments = arguments;

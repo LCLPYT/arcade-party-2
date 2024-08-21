@@ -8,7 +8,7 @@ import net.minecraft.text.Text;
 import work.lclpnet.ap2.api.data.DataManager;
 import work.lclpnet.ap2.api.game.MiniGame;
 import work.lclpnet.kibu.inv.item.ItemStackUtil;
-import work.lclpnet.kibu.translate.TranslationService;
+import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.lobby.game.map.GameMap;
 
 import java.util.ArrayList;
@@ -19,7 +19,7 @@ import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
 public class IconMaker {
 
-    public static ItemStack createIcon(GameMap map, ServerPlayerEntity player, TranslationService translations, DataManager dataManager) {
+    public static ItemStack createIcon(GameMap map, ServerPlayerEntity player, Translations translations, DataManager dataManager) {
         ItemStack icon = new ItemStack(map.getIcon());
 
         String name = map.getName(translations.getLanguage(player));
@@ -38,7 +38,7 @@ public class IconMaker {
         return icon;
     }
 
-    public static ItemStack createIcon(MiniGame game, ServerPlayerEntity player, TranslationService translations) {
+    public static ItemStack createIcon(MiniGame game, ServerPlayerEntity player, Translations translations) {
         ItemStack icon = game.getIcon();
 
         icon.set(DataComponentTypes.CUSTOM_NAME, translations.translateText(player, game.getTitleKey())

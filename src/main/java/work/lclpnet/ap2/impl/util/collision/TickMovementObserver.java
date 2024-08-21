@@ -5,7 +5,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import work.lclpnet.ap2.api.util.CollisionDetector;
 import work.lclpnet.ap2.impl.util.movement.TickMovementDetector;
-import work.lclpnet.kibu.plugin.hook.HookRegistrar;
+import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 
 import java.util.function.Predicate;

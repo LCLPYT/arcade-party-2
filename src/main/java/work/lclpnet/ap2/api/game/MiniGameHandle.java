@@ -13,14 +13,13 @@ import work.lclpnet.ap2.api.util.music.SongManager;
 import work.lclpnet.ap2.impl.game.PlayerUtil;
 import work.lclpnet.ap2.impl.util.DeathMessages;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
-import work.lclpnet.kibu.plugin.cmd.CommandRegistrar;
-import work.lclpnet.kibu.plugin.hook.HookRegistrar;
+import work.lclpnet.kibu.cmd.type.CommandRegistrar;
+import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
-import work.lclpnet.kibu.translate.TranslationService;
+import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.kibu.translate.bossbar.BossBarProvider;
 import work.lclpnet.lobby.game.api.WorldFacade;
 import work.lclpnet.lobby.game.impl.prot.MutableProtectionConfig;
-import work.lclpnet.mplugins.ext.Unloadable;
 
 import java.util.Optional;
 import java.util.Set;
@@ -58,7 +57,7 @@ public interface MiniGameHandle {
      */
     TaskScheduler getGameScheduler();
 
-    TranslationService getTranslations();
+    Translations getTranslations();
 
     Participants getParticipants();
 
@@ -84,7 +83,7 @@ public interface MiniGameHandle {
 
     void protect(Consumer<MutableProtectionConfig> action);
 
-    void closeWhenDone(Unloadable unloadable);
+    void whenDone(Runnable action);
 
     void complete(Set<ServerPlayerEntity> winners);
 

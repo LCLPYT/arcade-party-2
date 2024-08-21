@@ -46,10 +46,10 @@ import work.lclpnet.ap2.impl.util.world.NotOccupiedBlockPredicate;
 import work.lclpnet.ap2.impl.util.world.SimpleAdjacentBlocks;
 import work.lclpnet.ap2.impl.util.world.SizedSpaceFinder;
 import work.lclpnet.kibu.access.entity.FireworkEntityAccess;
+import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
-import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 import work.lclpnet.kibu.scheduler.Ticks;
-import work.lclpnet.kibu.translate.TranslationService;
+import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.lobby.game.map.GameMap;
 
 import java.util.List;
@@ -123,7 +123,7 @@ public class PandaFinderInstance extends DefaultGameInstance {
 
         var players = PlayerLookup.all(gameHandle.getServer());
 
-        TranslationService translations = gameHandle.getTranslations();
+        Translations translations = gameHandle.getTranslations();
 
         pandaManager.getLocalizedPandaGene().ifPresent(key -> translations.translateText("game.ap2.panda_finder.find",
                         styled(translations.translateText(key), Formatting.YELLOW))
@@ -199,7 +199,7 @@ public class PandaFinderInstance extends DefaultGameInstance {
         data.addScore(player, 1);
         bossBar.setArgument(player, 0, styled(data.getScore(player), Formatting.YELLOW));
 
-        TranslationService translations = gameHandle.getTranslations();
+        Translations translations = gameHandle.getTranslations();
         MinecraftServer server = gameHandle.getServer();
 
         var players = PlayerLookup.all(server);

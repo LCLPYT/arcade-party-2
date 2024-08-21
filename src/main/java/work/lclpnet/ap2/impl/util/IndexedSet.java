@@ -6,8 +6,17 @@ import java.util.*;
 
 public class IndexedSet<E> extends AbstractSet<E> {
 
-    private final List<E> index = new ArrayList<>();
-    private final Map<E, Integer> reverseIndex = new HashMap<>();
+    private final List<E> index;
+    private final Map<E, Integer> reverseIndex;
+
+    public IndexedSet() {
+        this(16);
+    }
+
+    public IndexedSet(int initialCapacity) {
+        index = new ArrayList<>(initialCapacity);
+        reverseIndex = new HashMap<>(initialCapacity);
+    }
 
     @Override
     public @NotNull Iterator<E> iterator() {
@@ -99,5 +108,13 @@ public class IndexedSet<E> extends AbstractSet<E> {
 
     public E get(int idx) {
         return index.get(idx);
+    }
+
+    @Override
+    public void clear() {
+        synchronized (this) {
+            index.clear();
+            reverseIndex.clear();
+        }
     }
 }

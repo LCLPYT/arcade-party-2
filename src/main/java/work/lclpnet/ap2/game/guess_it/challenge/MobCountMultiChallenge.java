@@ -10,7 +10,7 @@ import work.lclpnet.ap2.game.guess_it.util.MobSpawner;
 import work.lclpnet.ap2.impl.util.TextUtil;
 import work.lclpnet.ap2.impl.util.world.stage.Stage;
 import work.lclpnet.kibu.scheduler.Ticks;
-import work.lclpnet.kibu.translate.TranslationService;
+import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.lobby.util.WorldModifier;
 
 import java.util.List;
@@ -49,7 +49,7 @@ public class MobCountMultiChallenge implements Challenge {
 
     @Override
     public void begin(InputInterface input, ChallengeMessenger messenger) {
-        TranslationService translations = gameHandle.getTranslations();
+        Translations translations = gameHandle.getTranslations();
 
         input.expectInput().validateInt(translations);
 

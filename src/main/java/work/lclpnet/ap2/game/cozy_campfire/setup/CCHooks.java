@@ -23,13 +23,13 @@ import work.lclpnet.ap2.api.game.team.TeamSpawnAccess;
 import work.lclpnet.ap2.api.util.Collider;
 import work.lclpnet.ap2.api.util.CollisionDetector;
 import work.lclpnet.ap2.impl.util.collision.PlayerMovementObserver;
+import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks;
 import work.lclpnet.kibu.hook.player.PlayerSpawnLocationCallback;
 import work.lclpnet.kibu.hook.util.PlayerUtils;
 import work.lclpnet.kibu.hook.util.PositionRotation;
-import work.lclpnet.kibu.plugin.hook.HookRegistrar;
-import work.lclpnet.kibu.translate.TranslationService;
+import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.lobby.game.api.prot.ProtectionConfig;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 
@@ -38,11 +38,11 @@ public class CCHooks {
     private final Participants participants;
     private final TeamManager teamManager;
     private final TeamSpawnAccess spawnAccess;
-    private final TranslationService translations;
+    private final Translations translations;
     private final Args args;
 
     public CCHooks(Participants participants, TeamManager teamManager, TeamSpawnAccess spawnAccess,
-                   TranslationService translations, Args args) {
+                   Translations translations, Args args) {
         this.participants = participants;
         this.teamManager = teamManager;
         this.spawnAccess = spawnAccess;
