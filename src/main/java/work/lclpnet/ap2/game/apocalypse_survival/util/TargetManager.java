@@ -17,6 +17,7 @@ public class TargetManager {
     private final PursuitClass<ZombieEntity> zombiePursuit;
     private final PursuitClass<AbstractSkeletonEntity> skeletonPursuit;
     private final PursuitClass<PhantomEntity> phantomPursuit;
+    private final PursuitClass<VindicatorEntity> vindicatorPursuit;
     private final MobDensityManager densityManager;
 
     public TargetManager(Participants participants, GameMap map,
@@ -28,8 +29,9 @@ public class TargetManager {
         zombiePursuit = new PursuitClass<>(participants, 20, this);
         skeletonPursuit = new PursuitClass<>(participants, 10, this);
         phantomPursuit = new PursuitClass<>(participants, 3, this);
+        vindicatorPursuit = new PursuitClass<>(participants, 5, this);
 
-        pursuits = new PursuitClass[] {zombiePursuit, skeletonPursuit, phantomPursuit};
+        pursuits = new PursuitClass[] {zombiePursuit, skeletonPursuit, phantomPursuit, vindicatorPursuit};
 
         densityManager = new MobDensityManager(map, random);
     }
@@ -49,6 +51,11 @@ public class TargetManager {
         phantomPursuit.addMob(phantom);
     }
 
+    public void addVindicator(VindicatorEntity vindicator) {
+        this.addMob(vindicator);
+        vindicatorPursuit.addMob(vindicator);
+    }
+
     private void addMob(MobEntity mob) {
         densityManager.startTracking(mob);
     }
@@ -60,6 +67,7 @@ public class TargetManager {
             case ZombieEntity zombie -> zombiePursuit.removeMob(zombie);
             case SkeletonEntity skeleton -> skeletonPursuit.removeMob(skeleton);
             case PhantomEntity phantom -> phantomPursuit.removeMob(phantom);
+            case VindicatorEntity vindicator -> vindicatorPursuit.removeMob(vindicator);
             default -> {}
         }
     }

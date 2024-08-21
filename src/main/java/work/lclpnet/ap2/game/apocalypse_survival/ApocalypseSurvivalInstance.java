@@ -5,6 +5,8 @@ import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.damage.DamageTypes;
 import net.minecraft.entity.mob.MobEntity;
+import net.minecraft.entity.mob.VexEntity;
+import net.minecraft.entity.projectile.PersistentProjectileEntity;
 import net.minecraft.entity.projectile.ProjectileEntity;
 import net.minecraft.scoreboard.Team;
 import net.minecraft.server.MinecraftServer;
@@ -19,6 +21,7 @@ import work.lclpnet.ap2.game.apocalypse_survival.util.MonsterSpawner;
 import work.lclpnet.ap2.game.apocalypse_survival.util.TargetManager;
 import work.lclpnet.ap2.impl.game.EliminationGameInstance;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
+import work.lclpnet.kibu.behaviour.entity.VexEntityBehaviour;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.ProjectileHooks;
 import work.lclpnet.kibu.hook.entity.ServerEntityHooks;
@@ -42,7 +45,6 @@ public class ApocalypseSurvivalInstance extends EliminationGameInstance {
     @Override
     protected void prepare() {
         useTaskDisplay();
-        useNoHealing();
         useSmoothDeath();
 
         ServerWorld world = getWorld();
@@ -69,6 +71,7 @@ public class ApocalypseSurvivalInstance extends EliminationGameInstance {
         GameRules gameRules = world.getGameRules();
         gameRules.get(GameRules.FALL_DAMAGE).set(true, server);
         gameRules.get(GameRules.DO_MOB_GRIEFING).set(true, server);
+        gameRules.get(GameRules.NATURAL_REGENERATION).set(false, server);
 
         HookRegistrar hooks = gameHandle.getHookRegistrar();
 
@@ -78,7 +81,17 @@ public class ApocalypseSurvivalInstance extends EliminationGameInstance {
             }
         });
 
-        hooks.registerHook(ProjectileHooks.HIT_BLOCK, (projectile, hit) -> projectile.discard());
+        hooks.registerHook(ProjectileHooks.HIT_BLOCK, (projectile, hit) -> {
+            if (projectile instanceof PersistentProjectileEntity) {
+                projectile.discard();
+            }
+        });
+
+        hooks.registerHook(ServerEntityHooks.ENTITY_LOAD, (entity, relWorld) -> {
+            if (relWorld == world && entity instanceof VexEntity vex) {
+                VexEntityBehaviour.setForceClipping(vex, true);
+            }
+        });
 
         for (ServerPlayerEntity player : participants) {
             PlayerReset.setAttribute(player, EntityAttributes.GENERIC_SAFE_FALL_DISTANCE, 5.0);

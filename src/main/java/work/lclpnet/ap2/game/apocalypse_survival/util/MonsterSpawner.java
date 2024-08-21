@@ -85,7 +85,10 @@ public class MonsterSpawner {
     private void handleTimedEvents(int ticks) {
         switch (ticks) {
             case 0 -> spawnTypes.add(SpawnType.ZOMBIE, 0.6f);
-            case 120 * 20 -> spawnTypes.add(SpawnType.SKELETON, 0.2f);
+            case 70 * 20 -> spawnTypes.add(SpawnType.VINDICATOR, 0.06f);
+            case 130 * 20 -> spawnTypes.add(SpawnType.SKELETON, 0.165f);
+            case 150 * 20 -> spawnTypes.add(SpawnType.GHAST, 0.05f);
+            case 175 * 20 -> spawnTypes.add(SpawnType.EVOKER, 0.06f);
             case 200 * 20 -> spawnTypes.add(SpawnType.PHANTOM, 0.04f);
             default -> {}
         }
@@ -110,6 +113,9 @@ public class MonsterSpawner {
             case ZOMBIE -> spawnZombie();
             case SKELETON -> spawnSkeleton();
             case PHANTOM -> spawnPhantom();
+            case GHAST -> spawnGhast();
+            case VINDICATOR -> spawnVindicator();
+            case EVOKER -> spawnEvoker();
             case null -> {}
         }
     }
@@ -150,12 +156,12 @@ public class MonsterSpawner {
         GoalModifier.clear(mobAccess.getTargetSelector());
 
         goalSelector.add(1, new BreakDoorGoal(zombie, difficulty -> true));
-        goalSelector.add(2, new ZombieAttackGoal(zombie, 1.5, false));
+        goalSelector.add(2, new ZombieAttackGoal(zombie, 1.4, false));
         goalSelector.add(7, new RoamGoal(zombie, targetManager, 1.25));
         goalSelector.add(8, new UnstuckGoal(zombie, random));
 
         if (zombie instanceof DrownedEntity drowned) {
-            goalSelector.add(2, new DrownedEntity.TridentAttackGoal(drowned, 1.3, 40, 10.0F));
+            goalSelector.add(2, new DrownedEntity.TridentAttackGoal(drowned, 1.0, 60, 10.0F));
         }
 
         // spawn mob
@@ -196,9 +202,9 @@ public class MonsterSpawner {
         ItemStack stack = skeleton.getStackInHand(ProjectileUtil.getHandPossiblyHolding(skeleton, Items.BOW));
 
         if (stack.isOf(Items.BOW)) {
-            goalSelector.add(4, new BowAttackGoal<>(skeleton, 1.2, 20, 15.0F));
+            goalSelector.add(4, new BowAttackGoal<>(skeleton, 1.1, 20, 15.0F));
         } else {
-            goalSelector.add(4, new MeleeAttackGoal(skeleton, 1.5, false) {
+            goalSelector.add(4, new MeleeAttackGoal(skeleton, 1.4, false) {
                 @Override
                 public void start() {
                     super.start();
@@ -237,6 +243,45 @@ public class MonsterSpawner {
 
         spawnMobInWorld(phantom);
         targetManager.addPhantom(phantom);
+    }
+
+    private void spawnGhast() {
+        var ghast = createMob(EntityType.GHAST);
+
+        if (ghast == null) return;
+
+        EntityUtil.setAttribute(ghast, EntityAttributes.GENERIC_SCALE, random.nextFloat(0.2f, 1.0f));
+
+        spawnMobInWorld(ghast);
+    }
+
+    private void spawnVindicator() {
+        var vindicator = createMob(EntityType.VINDICATOR);
+
+        if (vindicator == null) return;
+
+        double baseSpeed = vindicator.getAttributeBaseValue(EntityAttributes.GENERIC_MOVEMENT_SPEED);
+
+        if (random.nextFloat() < 0.05) {
+            // change scale
+            float scale = random.nextFloat(0.75f, 1.3f);
+            EntityUtil.setAttribute(vindicator, EntityAttributes.GENERIC_SCALE, scale);
+
+            baseSpeed *= Math.min(1.12, Math.max(0.75, 1 / Math.pow(scale, 1.15)));
+        }
+
+        EntityUtil.setAttribute(vindicator, EntityAttributes.GENERIC_MOVEMENT_SPEED, baseSpeed);
+
+        spawnMobInWorld(vindicator);
+        targetManager.addVindicator(vindicator);
+    }
+
+    private void spawnEvoker() {
+        var evoker = createMob(EntityType.EVOKER);
+
+        if (evoker == null) return;
+
+        spawnMobInWorld(evoker);
     }
 
     @Nullable
@@ -305,6 +350,9 @@ public class MonsterSpawner {
     private enum SpawnType {
         ZOMBIE,
         SKELETON,
-        PHANTOM
+        PHANTOM,
+        GHAST,
+        VINDICATOR,
+        EVOKER
     }
 }
