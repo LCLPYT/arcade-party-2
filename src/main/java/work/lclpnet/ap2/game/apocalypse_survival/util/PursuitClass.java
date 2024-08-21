@@ -16,17 +16,15 @@ public class PursuitClass<T extends MobEntity> {
     private static final int INITIAL_FORCED_TARGET_SECONDS = 10;
     private final Participants participants;
     private final int capacityPerPlayer;
-    private final TargetManager debug$targetManager;
     private final Map<UUID, Pursuit<T>> pursuitMap;
     private final Set<T> mobs = new HashSet<>();
     private final Map<T, Pursuit<T>> pursuitMember = new HashMap<>();
     private final Object2IntMap<T> forcedTarget = new Object2IntOpenHashMap<>();
 
-    public PursuitClass(Participants participants, int capacityPerPlayer, TargetManager debug$targetManager) {
+    public PursuitClass(Participants participants, int capacityPerPlayer) {
         this.participants = participants;
         this.capacityPerPlayer = capacityPerPlayer;
         this.pursuitMap = new HashMap<>(participants.count());
-        this.debug$targetManager = debug$targetManager;
 
         for (ServerPlayerEntity player : participants) {
             UUID uuid = player.getUuid();
@@ -140,8 +138,6 @@ public class PursuitClass<T extends MobEntity> {
 
         if (pursuit.addPursuer(mob)) {
             mob.setTarget(target);
-
-            debug$targetManager.debug$getScoreboardManager().joinTeam(mob, debug$targetManager.debug$getPursuitTeam());
         } else {
             stopPursuit(mob);
         }
@@ -157,8 +153,6 @@ public class PursuitClass<T extends MobEntity> {
         mob.setTarget(null);
 
         forcedTarget.removeInt(mob);
-
-        debug$targetManager.debug$getScoreboardManager().leaveTeam(mob, debug$targetManager.debug$getPursuitTeam());
     }
 
     private Optional<ServerPlayerEntity> playerWithLeastPursuers() {

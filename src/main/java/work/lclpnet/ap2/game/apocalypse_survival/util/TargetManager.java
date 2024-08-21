@@ -1,18 +1,14 @@
 package work.lclpnet.ap2.game.apocalypse_survival.util;
 
 import net.minecraft.entity.mob.*;
-import net.minecraft.scoreboard.Team;
 import net.minecraft.server.network.ServerPlayerEntity;
 import work.lclpnet.ap2.api.base.Participants;
-import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.lobby.game.map.GameMap;
 
 import java.util.Random;
 
 public class TargetManager {
 
-    private final CustomScoreboardManager debug$scoreboardManager;
-    private final Team debug$pursuitTeam, debug$roamTeam;
     private final PursuitClass<?>[] pursuits;
     private final PursuitClass<ZombieEntity> zombiePursuit;
     private final PursuitClass<AbstractSkeletonEntity> skeletonPursuit;
@@ -20,16 +16,11 @@ public class TargetManager {
     private final PursuitClass<VindicatorEntity> vindicatorPursuit;
     private final MobDensityManager densityManager;
 
-    public TargetManager(Participants participants, GameMap map,
-                         CustomScoreboardManager debug$scoreboardManager, Team debug$pursuitTeam, Team debug$roamTeam, Random random) {
-        this.debug$scoreboardManager = debug$scoreboardManager;
-        this.debug$pursuitTeam = debug$pursuitTeam;
-        this.debug$roamTeam = debug$roamTeam;
-
-        zombiePursuit = new PursuitClass<>(participants, 20, this);
-        skeletonPursuit = new PursuitClass<>(participants, 10, this);
-        phantomPursuit = new PursuitClass<>(participants, 3, this);
-        vindicatorPursuit = new PursuitClass<>(participants, 5, this);
+    public TargetManager(Participants participants, GameMap map, Random random) {
+        zombiePursuit = new PursuitClass<>(participants, 20);
+        skeletonPursuit = new PursuitClass<>(participants, 10);
+        phantomPursuit = new PursuitClass<>(participants, 3);
+        vindicatorPursuit = new PursuitClass<>(participants, 5);
 
         pursuits = new PursuitClass[] {zombiePursuit, skeletonPursuit, phantomPursuit, vindicatorPursuit};
 
@@ -88,17 +79,5 @@ public class TargetManager {
 
     public MobDensityManager getDensityManager() {
         return densityManager;
-    }
-
-    public Team debug$getPursuitTeam() {
-        return debug$pursuitTeam;
-    }
-
-    public Team debug$getRoamTeam() {
-        return debug$roamTeam;
-    }
-
-    public CustomScoreboardManager debug$getScoreboardManager() {
-        return debug$scoreboardManager;
     }
 }

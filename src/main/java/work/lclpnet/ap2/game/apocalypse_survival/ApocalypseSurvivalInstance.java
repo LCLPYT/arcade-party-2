@@ -8,11 +8,9 @@ import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.mob.VexEntity;
 import net.minecraft.entity.projectile.PersistentProjectileEntity;
 import net.minecraft.entity.projectile.ProjectileEntity;
-import net.minecraft.scoreboard.Team;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.Formatting;
 import net.minecraft.world.GameRules;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
@@ -20,7 +18,6 @@ import work.lclpnet.ap2.game.apocalypse_survival.util.AsSetup;
 import work.lclpnet.ap2.game.apocalypse_survival.util.MonsterSpawner;
 import work.lclpnet.ap2.game.apocalypse_survival.util.TargetManager;
 import work.lclpnet.ap2.impl.game.EliminationGameInstance;
-import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.kibu.behaviour.entity.VexEntityBehaviour;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.ProjectileHooks;
@@ -51,18 +48,10 @@ public class ApocalypseSurvivalInstance extends EliminationGameInstance {
         GameMap map = getMap();
         MinecraftServer server = gameHandle.getServer();
         Participants participants = gameHandle.getParticipants();
-        CustomScoreboardManager debug$scoreboardManager = gameHandle.getScoreboardManager();
-
-        Team debug$pursuitTeam = debug$scoreboardManager.createTeam("pursuit");
-        debug$pursuitTeam.setColor(Formatting.DARK_RED);
-
-        Team debug$roamTeam = debug$scoreboardManager.createTeam("roam");
-        debug$roamTeam.setColor(Formatting.BLUE);
 
         Random random = new Random();
 
-        targetManager = new TargetManager(participants, map,
-                debug$scoreboardManager, debug$pursuitTeam, debug$roamTeam, random);
+        targetManager = new TargetManager(participants, map, random);
 
         var setup = new AsSetup(map, world, random, targetManager);
 

@@ -310,7 +310,6 @@ public class MonsterSpawner {
 
         skeleton.setPersistent();
         skeleton.setPosition(Vec3d.ofBottomCenter(pos));
-        skeleton.setGlowing(false);  // debug
 
         // adjust follow range, so that the zombie will follow far players
         var followRange = skeleton.getAttributeInstance(EntityAttributes.GENERIC_FOLLOW_RANGE);
@@ -334,17 +333,6 @@ public class MonsterSpawner {
     private void spawnMobInWorld(MobEntity mob) {
         world.spawnEntity(mob);
         mobCount++;
-    }
-
-    private void debugPath(ZombieEntity zombie) {
-        zombie.setOnGround(true);
-
-        BlockPos target = new BlockPos(-50, 73, 10);
-
-        EntityNavigation navigation = zombie.getNavigation();
-        var path = navigation.findPathTo(target, 2, 150);
-
-        new PathDebugging(world).displayPath(path, zombie);
     }
 
     private enum SpawnType {

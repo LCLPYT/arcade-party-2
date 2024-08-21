@@ -44,7 +44,6 @@ public class RoamGoal extends Goal {
     public void start() {
         if (target == null) return;
 
-        targetManager.debug$getScoreboardManager().joinTeam(mob, targetManager.debug$getRoamTeam());
         mob.getNavigation().startMovingTo(target.getX(), target.getY(), target.getZ(), speed);
     }
 
@@ -53,7 +52,5 @@ public class RoamGoal extends Goal {
         mob.getNavigation().stop();
         targetManager.getDensityManager().stopGuarding(mob);
         target = null;
-
-        targetManager.debug$getScoreboardManager().leaveTeam(mob, targetManager.debug$getRoamTeam());
     }
 }
