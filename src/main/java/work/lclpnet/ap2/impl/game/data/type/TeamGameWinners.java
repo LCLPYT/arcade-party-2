@@ -3,7 +3,7 @@ package work.lclpnet.ap2.impl.game.data.type;
 import net.minecraft.server.network.ServerPlayerEntity;
 import work.lclpnet.ap2.api.game.data.GameWinners;
 import work.lclpnet.ap2.api.game.team.Team;
-import work.lclpnet.kibu.translate.TranslationService;
+import work.lclpnet.kibu.translate.Translations;
 
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -13,7 +13,7 @@ public class TeamGameWinners implements GameWinners<TeamRef> {
     private final Set<ServerPlayerEntity> players;
     private final Set<TeamRef> refs;
 
-    public TeamGameWinners(Set<Team> winners, TranslationService translations) {
+    public TeamGameWinners(Set<Team> winners, Translations translations) {
         this.players = winners.stream()
                 .flatMap(team -> team.getPlayers().stream())
                 .collect(Collectors.toUnmodifiableSet());

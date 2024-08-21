@@ -38,7 +38,7 @@ import work.lclpnet.kibu.hook.entity.ProjectileHooks;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.kibu.title.Title;
-import work.lclpnet.kibu.translate.TranslationService;
+import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.kibu.translate.text.TranslatedText;
 import work.lclpnet.lobby.game.map.GameMap;
 import work.lclpnet.lobby.game.util.BossBarTimer;
@@ -160,7 +160,7 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
 
         commons().announcer().announceSubtitle("game.ap2.speed_builders.look");
 
-        TranslationService translations = gameHandle.getTranslations();
+        Translations translations = gameHandle.getTranslations();
 
         TranslatedText label = translations.translateText("game.ap2.speed_builders.prepare_label");
         timer = commons().createTimer(label, LOOK_DURATION_SECONDS, BossBar.Color.YELLOW);
@@ -180,7 +180,7 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
         manager.setBuildingPhase(true);
         items.giveBuildingMaterials(gameHandle.getParticipants(), manager.getPreviewEntities());
 
-        TranslationService translations = gameHandle.getTranslations();
+        Translations translations = gameHandle.getTranslations();
 
         TranslatedText label = translations.translateText("game.ap2.speed_builders.label");
         timer = commons().createTimer(label, manager.getBuildingDurationTicks());

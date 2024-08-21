@@ -1,0 +1,15 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "work.lclpnet.ap2.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "mixins": [
+    "EntityNavigationAccessor",
+    "MobEntityAccessor",
+    "PathNodeMakerAccessor",
+    "PathNodeNavigatorAccessor"
+  ]
+}

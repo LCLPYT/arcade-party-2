@@ -5,7 +5,7 @@ import work.lclpnet.ap2.game.guess_it.data.*;
 import work.lclpnet.ap2.game.guess_it.math.Expression;
 import work.lclpnet.ap2.game.guess_it.math.Term;
 import work.lclpnet.kibu.scheduler.Ticks;
-import work.lclpnet.kibu.translate.TranslationService;
+import work.lclpnet.kibu.translate.Translations;
 
 import java.util.Random;
 
@@ -37,7 +37,7 @@ public class MathsChallenge implements Challenge {
 
     @Override
     public void begin(InputInterface input, ChallengeMessenger messenger) {
-        TranslationService translations = gameHandle.getTranslations();
+        Translations translations = gameHandle.getTranslations();
 
         input.expectInput()
                 .validateInt(translations)

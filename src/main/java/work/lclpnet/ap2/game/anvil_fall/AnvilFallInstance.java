@@ -31,7 +31,7 @@ import work.lclpnet.kibu.access.entity.FallingBlockAccess;
 import work.lclpnet.kibu.hook.player.PlayerMoveCallback;
 import work.lclpnet.kibu.hook.util.PositionRotation;
 import work.lclpnet.kibu.scheduler.Ticks;
-import work.lclpnet.kibu.translate.TranslationService;
+import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.kibu.translate.bossbar.TranslatedBossBar;
 import work.lclpnet.kibu.translate.text.FormatWrapper;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
@@ -95,7 +95,7 @@ public class AnvilFallInstance extends EliminationGameInstance {
 
     private void setupBossBar() {
         GameInfo gameInfo = gameHandle.getGameInfo();
-        TranslationService translations = gameHandle.getTranslations();
+        Translations translations = gameHandle.getTranslations();
         Identifier id = gameInfo.identifier("status");
 
         String key = "game.ap2.anvil_fall.status";

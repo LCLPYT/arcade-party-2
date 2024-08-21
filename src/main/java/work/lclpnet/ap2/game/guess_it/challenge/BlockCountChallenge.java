@@ -11,7 +11,7 @@ import work.lclpnet.ap2.impl.util.world.stage.Stage;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.RunningTask;
 import work.lclpnet.kibu.scheduler.api.SchedulerAction;
-import work.lclpnet.kibu.translate.TranslationService;
+import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.lobby.util.WorldModifier;
 
 import java.util.*;
@@ -96,7 +96,7 @@ public class BlockCountChallenge implements Challenge, SchedulerAction {
 
     @Override
     public void begin(InputInterface input, ChallengeMessenger messenger) {
-        TranslationService translations = gameHandle.getTranslations();
+        Translations translations = gameHandle.getTranslations();
         messenger.task(translations.translateText("game.ap2.guess_it.shape." + shape.name().toLowerCase(Locale.ROOT)));
 
         input.expectInput().validateInt(translations);

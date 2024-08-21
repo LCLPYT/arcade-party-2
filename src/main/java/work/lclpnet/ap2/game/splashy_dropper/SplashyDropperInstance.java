@@ -32,9 +32,9 @@ import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.ap2.impl.util.world.BfsWorldScanner;
 import work.lclpnet.ap2.impl.util.world.SimpleAdjacentBlocks;
+import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.util.PositionRotation;
-import work.lclpnet.kibu.plugin.hook.HookRegistrar;
-import work.lclpnet.kibu.translate.TranslationService;
+import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.lobby.game.map.GameMap;
 
 import java.util.ArrayList;
@@ -106,7 +106,7 @@ public class SplashyDropperInstance extends DefaultGameInstance implements MapBo
 
     @Override
     protected void ready() {
-        TranslationService translations = gameHandle.getTranslations();
+        Translations translations = gameHandle.getTranslations();
         var subject = translations.translateText(gameHandle.getGameInfo().getTaskKey());
 
         int duration = MIN_DURATION_SECONDS + random.nextInt(MAX_DURATION_SECONDS - MIN_DURATION_SECONDS + 1);
@@ -125,7 +125,7 @@ public class SplashyDropperInstance extends DefaultGameInstance implements MapBo
         team.setCollisionRule(AbstractTeam.CollisionRule.NEVER);
         scoreboardManager.joinTeam(gameHandle.getParticipants(), team);
 
-        TranslationService translations = gameHandle.getTranslations();
+        Translations translations = gameHandle.getTranslations();
         VisibilityHandler visibility = new VisibilityHandler(new VisibilityManager(team), translations, gameHandle.getParticipants());
         visibility.init(gameHandle.getHookRegistrar());
 

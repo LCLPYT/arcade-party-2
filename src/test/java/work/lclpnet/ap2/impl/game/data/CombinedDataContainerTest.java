@@ -81,19 +81,22 @@ class CombinedDataContainerTest {
     }
 
     @Test
-    void ensureTracked_addedToLast() {
+    void ensureTracked_noDataAddedToFirst_thenAddedToLast() {
         var first = new OrderedDataContainer<>(StringRef::new);
         var second = new ScoreDataContainer<>(StringRef::new);
         var container = new CombinedDataContainer<>(List.of(first, second));
 
         container.ensureTracked("foo");
         container.ensureTracked("bar");
+        container.ensureTracked("baz");
 
-        assertTrue(second.getEntry("foo").isPresent());
+        assertTrue(first.getEntry("foo").isPresent());
         assertTrue(second.getEntry("bar").isPresent());
+        assertTrue(second.getEntry("baz").isPresent());
 
-        assertTrue(first.getEntry("foo").isEmpty());
+        assertTrue(second.getEntry("foo").isEmpty());
         assertTrue(first.getEntry("bar").isEmpty());
+        assertTrue(first.getEntry("baz").isEmpty());
     }
 
     @Test

@@ -12,9 +12,9 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
+import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.player.PlayerInventoryHooks;
 import work.lclpnet.kibu.inv.type.RestrictedInventory;
-import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 
 import java.util.Collection;
 import java.util.WeakHashMap;

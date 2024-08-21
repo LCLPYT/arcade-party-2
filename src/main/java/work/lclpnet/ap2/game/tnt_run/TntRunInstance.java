@@ -12,8 +12,8 @@ import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.impl.game.EliminationGameInstance;
 import work.lclpnet.ap2.impl.util.collision.GroundDetector;
+import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.world.BlockBreakParticleCallback;
-import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 
 import java.util.ArrayList;
 import java.util.List;

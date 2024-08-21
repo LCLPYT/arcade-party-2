@@ -26,12 +26,12 @@ import work.lclpnet.ap2.impl.util.scoreboard.ScoreHandle;
 import work.lclpnet.ap2.impl.util.scoreboard.ScoreboardLayout;
 import work.lclpnet.ap2.impl.util.world.stage.Stage;
 import work.lclpnet.ap2.impl.util.world.stage.StageReader;
+import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.*;
-import work.lclpnet.kibu.plugin.hook.HookRegistrar;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.kibu.title.Title;
-import work.lclpnet.kibu.translate.TranslationService;
+import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.kibu.translate.text.TranslatedText;
 import work.lclpnet.lobby.game.map.GameMap;
 import work.lclpnet.lobby.game.util.BossBarTimer;
@@ -49,6 +49,7 @@ public class GuessItInstance extends DefaultGameInstance implements MapBootstrap
     private static final int PREPARATION_TICKS = Ticks.seconds(3);
     private static final int DELAY_TICKS = Ticks.seconds(5);
     private static final int MIN_ROUNDS = 8, MAX_ROUNDS = 14;
+    private static final int MAX_CONSECUTIVE_ERRORS = 5;
     private final ScoreDataContainer<ServerPlayerEntity, PlayerRef> data = new ScoreDataContainer<>(PlayerRef::create);
     private final Random random = new Random();
     private final PlayerChoices choices;
@@ -62,6 +63,7 @@ public class GuessItInstance extends DefaultGameInstance implements MapBootstrap
     private ScoreHandle roundHandle = null;
     private int round = 0;
     private int rounds = 10;
+    private int consecutiveErrors = 0;
 
     public GuessItInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
@@ -81,7 +83,7 @@ public class GuessItInstance extends DefaultGameInstance implements MapBootstrap
         GameMap map = getMap();
         HookRegistrar hooks = gameHandle.getHookRegistrar();
         Participants participants = gameHandle.getParticipants();
-        Stage stage = new StageReader(map).readStage();
+        Stage stage = StageReader.readStage(map);
 
         GameRules gameRules = world.getGameRules();
         gameRules.get(GameRules.REDUCED_DEBUG_INFO).set(true, gameHandle.getServer());
@@ -130,7 +132,7 @@ public class GuessItInstance extends DefaultGameInstance implements MapBootstrap
 
     private void setupScoreboard() {
         CustomScoreboardManager scoreboardManager = gameHandle.getScoreboardManager();
-        TranslationService translations = gameHandle.getTranslations();
+        Translations translations = gameHandle.getTranslations();
 
         var objective = scoreboardManager.translateObjective("score", gameHandle.getGameInfo().getTitleKey())
                 .formatted(AQUA, Formatting.BOLD);
@@ -168,7 +170,11 @@ public class GuessItInstance extends DefaultGameInstance implements MapBootstrap
         modifier.undo();
 
         if (challenge != null) {
-            challenge.destroy();
+            try {
+                challenge.destroy();
+            } catch (Throwable t) {
+                gameHandle.getLogger().error("Failed to destroy {}, ignoring it", challenge.getClass().getSimpleName(), t);
+            }
         }
 
         round++;
@@ -176,7 +182,7 @@ public class GuessItInstance extends DefaultGameInstance implements MapBootstrap
 
         challenge = manager.nextChallenge();
         ServerWorld world = getWorld();
-        TranslationService translations = gameHandle.getTranslations();
+        Translations translations = gameHandle.getTranslations();
 
         var prepareMsg = translations.translateText("game.ap2.guess_it.prepare." + challenge.getPreparationKey())
                 .formatted(DARK_GREEN, BOLD);
@@ -187,7 +193,13 @@ public class GuessItInstance extends DefaultGameInstance implements MapBootstrap
             player.playSoundToPlayer(SoundEvents.BLOCK_END_PORTAL_FRAME_FILL, SoundCategory.NEUTRAL, 1f, 0.5f);
         }
 
-        challenge.prepare();
+        try {
+            challenge.prepare();
+        } catch (Throwable t) {
+            gameHandle.getLogger().error("Failed to prepare {}", challenge.getClass().getSimpleName(), t);
+            onChallengeError();
+            return;
+        }
 
         gameHandle.getGameScheduler().timeout(this::beginChallenge, PREPARATION_TICKS);
     }
@@ -196,7 +208,7 @@ public class GuessItInstance extends DefaultGameInstance implements MapBootstrap
         Objects.requireNonNull(challenge, "Challenge cannot be null");
 
         ServerWorld world = getWorld();
-        TranslationService translations = gameHandle.getTranslations();
+        Translations translations = gameHandle.getTranslations();
         TaskScheduler scheduler = gameHandle.getGameScheduler();
 
         var players = PlayerLookup.world(world);
@@ -208,7 +220,17 @@ public class GuessItInstance extends DefaultGameInstance implements MapBootstrap
         }
 
         messenger.reset();
-        challenge.begin(inputManager, messenger);
+
+        try {
+            challenge.begin(inputManager, messenger);
+        } catch (Throwable t) {
+            gameHandle.getLogger().error("Failed to begin {}", challenge.getClass().getSimpleName(), t);
+            onChallengeError();
+            return;
+        }
+
+        consecutiveErrors = 0;
+
         messenger.send();
 
         int durationTicks = challenge.getDurationTicks();
@@ -224,6 +246,19 @@ public class GuessItInstance extends DefaultGameInstance implements MapBootstrap
         timer.start(gameHandle.getBossBarProvider(), scheduler);
     }
 
+    private void onChallengeError() {
+        consecutiveErrors++;
+
+        if (consecutiveErrors >= MAX_CONSECUTIVE_ERRORS) {
+            // to many errors in a row, abort the game
+            winManager.win(data.getBestSubjects(resolver));
+            return;
+        }
+
+        round--;
+        prepareNextChallenge();
+    }
+
     private void onTimerOver() {
         if (challenge instanceof LongerChallenge longerChallenge) {
             inputManager.setLocked(true);
@@ -237,7 +272,7 @@ public class GuessItInstance extends DefaultGameInstance implements MapBootstrap
     private void evaluateChallenge() {
         Objects.requireNonNull(challenge, "Challenge cannot be null");
 
-        TranslationService translations = gameHandle.getTranslations();
+        Translations translations = gameHandle.getTranslations();
 
         result.clear();
         challenge.evaluate(choices, result);

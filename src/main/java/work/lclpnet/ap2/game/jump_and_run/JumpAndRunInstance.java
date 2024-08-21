@@ -40,9 +40,9 @@ import work.lclpnet.ap2.impl.util.heads.PlayerHeadUtil;
 import work.lclpnet.ap2.impl.util.heads.PlayerHeads;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
-import work.lclpnet.kibu.plugin.hook.HookRegistrar;
+import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.scheduler.Ticks;
-import work.lclpnet.kibu.translate.TranslationService;
+import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 import work.lclpnet.lobby.game.map.GameMap;
 
@@ -131,7 +131,7 @@ public class JumpAndRunInstance extends DefaultGameInstance implements MapBootst
         team.setCollisionRule(AbstractTeam.CollisionRule.NEVER);
         scoreboardManager.joinTeam(gameHandle.getParticipants(), team);
 
-        TranslationService translations = gameHandle.getTranslations();
+        Translations translations = gameHandle.getTranslations();
         VisibilityHandler visibility = new VisibilityHandler(new VisibilityManager(team), translations, gameHandle.getParticipants());
         visibility.init(gameHandle.getHookRegistrar());
 
@@ -167,7 +167,7 @@ public class JumpAndRunInstance extends DefaultGameInstance implements MapBootst
     }
 
     private void giveItemsToPlayers() {
-        TranslationService translations = gameHandle.getTranslations();
+        Translations translations = gameHandle.getTranslations();
 
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
             ItemStack stack = PlayerHeadUtil.getItem(PlayerHeads.REDSTONE_BLOCK_REFRESH);
@@ -292,7 +292,7 @@ public class JumpAndRunInstance extends DefaultGameInstance implements MapBootst
         }
 
         BlockBox bounds = room.bounds();
-        TranslationService translations = gameHandle.getTranslations();
+        Translations translations = gameHandle.getTranslations();
 
         for (ServerPlayerEntity player : PlayerLookup.all(gameHandle.getServer())) {
             if (!bounds.contains(player.getX(), player.getY(), player.getZ())) continue;

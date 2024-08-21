@@ -29,7 +29,7 @@ import work.lclpnet.ap2.impl.util.effect.ApEffects;
 import work.lclpnet.ap2.impl.util.movement.CooldownMovementBlocker;
 import work.lclpnet.ap2.impl.util.movement.MovementBlocker;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
-import work.lclpnet.kibu.plugin.hook.HookRegistrar;
+import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.lobby.game.map.GameMap;
 
@@ -88,7 +88,7 @@ public class MirrorHopInstance extends DefaultGameInstance {
         movementObserver.whenEntering(goal, player -> {
             if (winManager.isGameOver()) return;
 
-            data.addScore(player, 1);
+            data.setScore(player, choices.getChoices().size() + 1);
 
             winManager.win(player);
         });

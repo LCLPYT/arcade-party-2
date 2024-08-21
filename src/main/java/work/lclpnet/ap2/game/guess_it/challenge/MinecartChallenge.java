@@ -27,7 +27,7 @@ import work.lclpnet.kibu.access.entity.FireworkEntityAccess;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.RunningTask;
 import work.lclpnet.kibu.scheduler.api.SchedulerAction;
-import work.lclpnet.kibu.translate.TranslationService;
+import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.kibu.translate.text.LocalizedFormat;
 import work.lclpnet.lobby.util.WorldModifier;
 
@@ -72,7 +72,7 @@ public class MinecartChallenge implements Challenge, LongerChallenge, SchedulerA
 
     @Override
     public void begin(InputInterface input, ChallengeMessenger messenger) {
-        TranslationService translations = gameHandle.getTranslations();
+        Translations translations = gameHandle.getTranslations();
         messenger.task(translations.translateText("game.ap2.guess_it.minecart"));
 
         input.expectInput().validateFloat(translations, 3);

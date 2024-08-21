@@ -13,6 +13,7 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
+import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.GameRules;
@@ -29,8 +30,9 @@ import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.ItemStackHelper;
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
+import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
-import work.lclpnet.kibu.plugin.hook.HookRegistrar;
+import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 
 import java.util.*;
@@ -64,7 +66,7 @@ public class TreasureHunterInstance extends DefaultGameInstance {
         MapUtil.readBlockStates(getMap().requireProperty("materials"), materials, gameHandle.getLogger());
 
         Participants participants = gameHandle.getParticipants();
-
+        Translations translations = gameHandle.getTranslations();
         HookRegistrar hooks = gameHandle.getHookRegistrar();
 
         hooks.registerHook(PlayerInteractionHooks.USE_BLOCK, (player, world, hand, hitResult) -> {
@@ -80,7 +82,12 @@ public class TreasureHunterInstance extends DefaultGameInstance {
             player.playSoundToPlayer(SoundEvents.BLOCK_AMETHYST_BLOCK_RESONATE, SoundCategory.BLOCKS, 1.2f, 1.8f);
             player.playSoundToPlayer(SoundEvents.BLOCK_CHEST_LOCKED, SoundCategory.BLOCKS, 0.2f, 0.5f);
 
-            foundChest.add(serverPlayer);
+            var scoreEntry = score.getEntry(serverPlayer)
+                    .<Object>map(entry -> entry.toText(translations))
+                    .orElse(Text.literal("-"));
+
+            var detail = translations.translateText("game.ap2.treasure_hunter.found_treasure", scoreEntry);
+            foundChest.add(serverPlayer, detail);
             winManager.win(serverPlayer);
 
             return ActionResult.success(true);

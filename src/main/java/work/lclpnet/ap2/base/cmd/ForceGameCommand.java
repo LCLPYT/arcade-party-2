@@ -12,8 +12,8 @@ import net.minecraft.util.Identifier;
 import work.lclpnet.ap2.api.base.MiniGameManager;
 import work.lclpnet.ap2.api.game.MiniGame;
 import work.lclpnet.ap2.base.cmd.arg.MiniGameSuggestionProvider;
-import work.lclpnet.kibu.plugin.cmd.CommandRegistrar;
-import work.lclpnet.kibu.plugin.cmd.KibuCommand;
+import work.lclpnet.kibu.cmd.type.CommandRegistrar;
+import work.lclpnet.kibu.cmd.type.KibuCommand;
 
 import java.util.function.Consumer;
 
