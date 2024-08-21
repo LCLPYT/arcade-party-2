@@ -84,9 +84,9 @@ public class MonsterSpawner {
 
     private void handleTimedEvents(int ticks) {
         switch (ticks) {
-            case 0 -> spawnTypes.add(SpawnType.SKELETON, 0.6f);
-            case 45 * 20 -> spawnTypes.add(SpawnType.SKELETON, 0.2f);
-            case 55 * 20 -> spawnTypes.add(SpawnType.PHANTOM, 0.04f);
+            case 0 -> spawnTypes.add(SpawnType.ZOMBIE, 0.6f);
+            case 120 * 20 -> spawnTypes.add(SpawnType.SKELETON, 0.2f);
+            case 200 * 20 -> spawnTypes.add(SpawnType.PHANTOM, 0.04f);
             default -> {}
         }
     }
@@ -265,7 +265,7 @@ public class MonsterSpawner {
 
         skeleton.setPersistent();
         skeleton.setPosition(Vec3d.ofBottomCenter(pos));
-//        skeleton.setGlowing(true);  // debug
+        skeleton.setGlowing(false);  // debug
 
         // adjust follow range, so that the zombie will follow far players
         var followRange = skeleton.getAttributeInstance(EntityAttributes.GENERIC_FOLLOW_RANGE);

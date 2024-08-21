@@ -57,10 +57,12 @@ public class ApocalypseSurvivalInstance extends EliminationGameInstance {
         Team debug$roamTeam = debug$scoreboardManager.createTeam("roam");
         debug$roamTeam.setColor(Formatting.BLUE);
 
-        targetManager = new TargetManager(participants, map,
-                debug$scoreboardManager, debug$pursuitTeam, debug$roamTeam);
+        Random random = new Random();
 
-        var setup = new AsSetup(map, world, new Random(), targetManager);
+        targetManager = new TargetManager(participants, map,
+                debug$scoreboardManager, debug$pursuitTeam, debug$roamTeam, random);
+
+        var setup = new AsSetup(map, world, random, targetManager);
 
         spawners = setup.readSpawners();
 

@@ -7,6 +7,8 @@ import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.lobby.game.map.GameMap;
 
+import java.util.Random;
+
 public class TargetManager {
 
     private final CustomScoreboardManager debug$scoreboardManager;
@@ -18,7 +20,7 @@ public class TargetManager {
     private final MobDensityManager densityManager;
 
     public TargetManager(Participants participants, GameMap map,
-                         CustomScoreboardManager debug$scoreboardManager, Team debug$pursuitTeam, Team debug$roamTeam) {
+                         CustomScoreboardManager debug$scoreboardManager, Team debug$pursuitTeam, Team debug$roamTeam, Random random) {
         this.debug$scoreboardManager = debug$scoreboardManager;
         this.debug$pursuitTeam = debug$pursuitTeam;
         this.debug$roamTeam = debug$roamTeam;
@@ -29,7 +31,7 @@ public class TargetManager {
 
         pursuits = new PursuitClass[] {zombiePursuit, skeletonPursuit, phantomPursuit};
 
-        densityManager = new MobDensityManager(map);
+        densityManager = new MobDensityManager(map, random);
     }
 
     public void addZombie(ZombieEntity zombie) {

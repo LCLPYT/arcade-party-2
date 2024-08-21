@@ -5,61 +5,105 @@ import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.mob.PathAwareEntity;
 import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.Nullable;
-import work.lclpnet.ap2.impl.util.QuadTree;
+import work.lclpnet.ap2.impl.util.IndexedSet;
 import work.lclpnet.lobby.game.map.GameMap;
 import work.lclpnet.lobby.game.map.MapUtils;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class MobDensityManager {
 
-    private final QuadTree<MobPos> mobPositions;
+    private static final double CELL_SIZE = 25;
+    private final Random random;
+    private final double centerX, centerZ;
+    private final int cellsX, cellsZ;
+    private final int[] cells;
+    private final IndexedSet<Integer> cellsWithLeast;
     private final Map<MobEntity, MobPos> mobs = new HashMap<>();
+    private int minMobCount = 0;
 
-    public MobDensityManager(GameMap map) {
+    public MobDensityManager(GameMap map, Random random) {
+        this.random = random;
+
         Vec3d spawn = MapUtils.getSpawnPosition(map);
         Number radiusNum = map.requireProperty("bounding-box-radius");
 
-        double x = spawn.getX();
-        double z = spawn.getZ();
+        centerX = spawn.getX();
+        centerZ = spawn.getZ();
+
         double radius = radiusNum.doubleValue();
 
-        mobPositions = new QuadTree<>(x - radius, z - radius, 2 * radius, 2 * radius, 8, MobPos::getPos);
+        // determine cell count
+        cellsX = cellsZ = 2 * Math.max(1, (int) Math.ceil(radius / CELL_SIZE));
+
+        // initialize mob count to zero
+        cells = new int[cellsX * cellsZ];
+
+        Arrays.fill(cells, 0);
+
+        // initialize all cells as cell with the least mobs (zero)
+        cellsWithLeast = new IndexedSet<>(cellsX * cellsZ);
+
+        for (int i = 0; i < cellsX * cellsZ; i++) {
+            cellsWithLeast.add(i);
+        }
+    }
+
+    public int cellWithLeastMobs() {
+        if (cellsWithLeast.isEmpty()) {
+            throw new IllegalStateException("Least mob cells list is empty, this shouldn't happen");
+        }
+
+        return cellsWithLeast.get(random.nextInt(cellsWithLeast.size()));
+    }
+
+    public OptionalInt cellAt(double x, double z) {
+        int cellX = (int) Math.floor(x / CELL_SIZE) + cellsX / 2;
+        int cellZ = (int) Math.floor(z / CELL_SIZE) + cellsZ / 2;
+
+        if (cellX < 0 || cellX >= cellsX || cellZ < 0 || cellZ >= cellsZ) {
+            return OptionalInt.empty();
+        }
+
+        return OptionalInt.of(cellX + cellZ * cellsX);
+    }
+
+    public double getX(int cell) {
+        return centerX + CELL_SIZE * ((cell % cellsX) - cellsX * 0.5);
+    }
+
+    public double getZ(int cell) {
+        return centerZ + CELL_SIZE * (Math.floorDiv(cell,  cellsX) - cellsZ * 0.5);
     }
 
     public void startTracking(MobEntity mob) {
         MobPos mobPos = new MobPos(mob);
         mobs.put(mob, mobPos);
-        mobPositions.add(mobPos);
+
+        updateMobPos(mobPos);
     }
 
     public void stopTracking(MobEntity mob) {
         MobPos mobPos = mobs.remove(mob);
 
-        if (mobPos != null) {
-            mobPositions.remove(mobPos);
-        }
+        if (mobPos == null) return;
+
+        removeFromCell(mobPos);
     }
 
     @Nullable
     public Vec3d startGuarding(PathAwareEntity mob) {
         MobPos mobPos = mobs.get(mob);
 
-        if (mobPos == null) {
-            // not tracked
-            return null;
-        }
+        if (mobPos == null) return null;  // not tracked
 
         Vec3d guardPos = findGuardPos(mob);
 
-        if (guardPos == null) {
-            return null;
-        }
+        if (guardPos == null) return null;
 
         // override mob position, so that not every mob is headed towards the same area
         mobPos.guardPos = guardPos;
-        mobPositions.update(mobPos);
+        updateMobPos(mobPos);
 
         return guardPos;
     }
@@ -71,67 +115,103 @@ public class MobDensityManager {
 
         // use live position again
         mobPos.guardPos = null;
-        mobPositions.update(mobPos);
+        updateMobPos(mobPos);
+    }
+
+    private void updateMobPos(MobPos mobPos) {
+        var optCell = cellAt(mobPos.getX(), mobPos.getZ());
+
+        // skip if nothing changed
+        if ((optCell.isPresent() && mobPos.hasCell && mobPos.cell == optCell.getAsInt())
+            || (optCell.isEmpty() && !mobPos.hasCell)) return;
+
+        removeFromCell(mobPos);
+
+        if (optCell.isEmpty()) {
+            mobPos.hasCell = false;
+            return;
+        }
+
+        addToCell(mobPos);
+    }
+
+    private void addToCell(MobPos mobPos) {
+        int newMobCount = ++cells[mobPos.cell];
+
+        if (newMobCount != minMobCount + 1) return;
+
+        // cell was among the cells with the least mobs
+        cellsWithLeast.remove((Object) mobPos.cell);
+
+        if (!cellsWithLeast.isEmpty()) return;
+
+        // cell was the last cell with the minMobCount; update it
+        minMobCount = newMobCount;
+
+        // find all cells with new min count
+        for (int i = 0; i < cellsX * cellsZ; i++) {
+            if (cells[i] == newMobCount) {
+                cellsWithLeast.add(i);
+            }
+        }
+    }
+
+    private void removeFromCell(MobPos mobPos) {
+        if (!mobPos.hasCell) return;
+
+        int newMobCount = --cells[mobPos.cell];
+
+        if (newMobCount < minMobCount) {
+            // cell is now the single cell with the least mobs
+            minMobCount = newMobCount;
+            cellsWithLeast.clear();
+            cellsWithLeast.add(mobPos.cell);
+        } else if (newMobCount == minMobCount) {
+            // cell is now among the cells with the least mobs
+            cellsWithLeast.add(mobPos.cell);
+        }
     }
 
     @Nullable
     private Vec3d findGuardPos(PathAwareEntity mob) {
-        // find quadrant with the least mobs or use root node
-        QuadTree.INode<MobPos> leastMobs = mobPositions.getRoot();
-        int least = Integer.MAX_VALUE;
+        int cell = cellWithLeastMobs();
 
-        var it = leastMobs.children();
-
-        while (it.hasNext()) {
-            var child = it.next();
-            int count = child.count();
-
-            if (count < least) {
-                leastMobs = child;
-                least = count;
-            }
-        }
-
-        // calc node center coordinates
-        double x = leastMobs.x() + leastMobs.width() * 0.5;
-        double z = leastMobs.z() + leastMobs.level() * 0.5;
-
-//        System.out.println(mobPositions.getRoot().count() + " :: " + node);
+        double x = getX(cell) + 0.5 * CELL_SIZE;
+        double z = getZ(cell) + 0.5 * CELL_SIZE;
 
         return FuzzyTargeting.findTo(mob, 20, 10, new Vec3d(x, mob.getY(), z));
     }
 
     public void update() {
         for (var mobPos : mobs.values()) {
-//            if (mobPos.mob.getTarget() != null) {
-//                // use navigation target as guardPos
-//                Path currentPath = mobPos.mob.getNavigation().getCurrentPath();
-//
-//                if (currentPath != null) {
-//                    mobPos.guardPos = currentPath.getTarget().toCenterPos();
-//                } else {
-//                    mobPos.guardPos = null;
-//                }
-//            }
-
-            mobPositions.update(mobPos);
+            updateMobPos(mobPos);
         }
     }
 
     private static class MobPos {
         final MobEntity mob;
         Vec3d guardPos = null;
+        int cell;
+        boolean hasCell = false;
 
         MobPos(MobEntity mob) {
             this.mob = mob;
         }
 
-        Vec3d getPos() {
+        double getX() {
             if (guardPos != null) {
-                return guardPos;
+                return guardPos.getX();
             }
 
-            return mob.getPos();
+            return mob.getX();
+        }
+
+        double getZ() {
+            if (guardPos != null) {
+                return guardPos.getZ();
+            }
+
+            return mob.getZ();
         }
     }
 }
