@@ -76,6 +76,7 @@
   "game.ap2.treasure_hunter": "Schatzsuche",
   "game.ap2.treasure_hunter.description": "Suche einen Schatz in einer riesigen Sandgrube. Der erste, der die Kiste findet, gewinnt!",
   "game.ap2.treasure_hunter.task": "Finde den Schatz",
+  "game.ap2.treasure_hunter.found_treasure": "Schatz gefunden (%s)",
   "game.ap2.panda_finder": "Panda Safari",
   "game.ap2.panda_finder.description": "Finde einen Panda von einem Bild. Es gewinnt der Spieler, der zuerst %s Punkte erreicht!",
   "game.ap2.panda_finder.task": "Finde den Panda %s/%s",
