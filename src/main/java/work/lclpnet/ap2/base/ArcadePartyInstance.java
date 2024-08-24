@@ -22,6 +22,7 @@ import work.lclpnet.ap2.impl.util.music.MapSongCache;
 import work.lclpnet.kibu.hook.HookStack;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.lobby.game.api.GameEnvironment;
+import work.lclpnet.lobby.game.api.GameFinisher;
 import work.lclpnet.lobby.game.api.GameInstance;
 import work.lclpnet.lobby.game.api.GameStarter;
 import work.lclpnet.lobby.game.start.ConditionGameStarter;
@@ -113,8 +114,9 @@ public class ArcadePartyInstance implements GameInstance {
                 result.mapFacade(), playerUtil, gameManager, result.songManager(), result.dataManager());
 
         SongCache songCache = new MapSongCache();
+        var finisher = environment.getFinisher();
 
-        var args = new PreparationActivity.Args(container, queue, playerManager, forceGameCommand, songCache);
+        var args = new PreparationActivity.Args(container, queue, playerManager, forceGameCommand, songCache, finisher);
         PreparationActivity preparation = new PreparationActivity(args);
 
         ActivityManager.getInstance().startActivity(preparation);

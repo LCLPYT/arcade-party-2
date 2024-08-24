@@ -7,11 +7,14 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.TypedActionResult;
+import org.jetbrains.annotations.Nullable;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import work.lclpnet.activity.ComponentActivity;
 import work.lclpnet.activity.component.ComponentBundle;
@@ -34,7 +37,9 @@ import work.lclpnet.ap2.base.cmd.ForceGameCommand;
 import work.lclpnet.ap2.base.cmd.ForceMapCommand;
 import work.lclpnet.ap2.base.cmd.SkipCommand;
 import work.lclpnet.ap2.base.util.DevChooser;
+import work.lclpnet.ap2.base.util.GameDisplay;
 import work.lclpnet.ap2.base.util.IconMaker;
+import work.lclpnet.ap2.base.util.ScreenConfig;
 import work.lclpnet.ap2.impl.game.PlayerUtil;
 import work.lclpnet.ap2.impl.util.music.MusicHelper;
 import work.lclpnet.ap2.impl.util.title.AnimatedTitle;
@@ -53,6 +58,7 @@ import work.lclpnet.kibu.scheduler.api.Scheduler;
 import work.lclpnet.kibu.scheduler.api.TaskHandle;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.kibu.translate.Translations;
+import work.lclpnet.lobby.game.api.GameFinisher;
 import work.lclpnet.lobby.game.api.MapOptions;
 import work.lclpnet.lobby.game.api.WorldFacade;
 import work.lclpnet.lobby.game.map.GameMap;
@@ -86,6 +92,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
     private AnimatedTitle animatedTitle = null;
     private SongWrapper song = null;
     private CompletableFuture<Void> whenTasksDone = null;
+    private @Nullable GameDisplay gameDisplay = null;
 
     public PreparationActivity(Args args) {
         super(args.container().server(), args.container().logger());
@@ -113,12 +120,21 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
 
         WorldFacade worldFacade = args.container().worldFacade();
 
-        worldFacade.changeMap(ArcadeParty.identifier("preparation"), MapOptions.REUSABLE)
-                .thenRun(this::onReady)
-                .exceptionally(throwable -> {
-                    getLogger().error("Failed to change map", throwable);
-                    return null;
-                });
+        args.container().mapFacade().getMap(ArcadeParty.identifier("preparation")).ifPresentOrElse(map -> {
+            Identifier mapId = map.getDescriptor().getIdentifier();
+
+            // change to preparation map, loading it if not yet done
+            worldFacade.changeMap(mapId, MapOptions.REUSABLE)
+                    .thenAccept(world -> onReady(map, world))
+                    .exceptionally(throwable -> {
+                        getLogger().error("Failed to change map", throwable);
+                        args.finisher().finishGame();
+                        return null;
+                    });
+        }, () -> {
+            getLogger().error("Could not find preparation map");
+            args.finisher().finishGame();
+        });
     }
 
     @Override
@@ -127,7 +143,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
         super.stop();
     }
 
-    private void onReady() {
+    private void onReady(GameMap map, ServerWorld world) {
         PlayerManager playerManager = args.playerManager();
         playerManager.startPreparation();
 
@@ -145,6 +161,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
             giveDevelopmentItems(hooks);
         }
 
+        setupDisplays(map, world, hooks);
         showLeaderboard();
         displayGameQueue();
         prepareNextMiniGame();
@@ -178,6 +195,17 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
 
         PlayerUtil.State state = spectator ? PlayerUtil.State.SPECTATOR : PlayerUtil.State.DEFAULT;
         args.container().playerUtil().resetPlayer(player, state);
+    }
+
+    private void setupDisplays(GameMap map, ServerWorld world, HookRegistrar hooks) {
+        JSONObject gameDisplayJson = map.getProperty("game-display");
+
+        if (gameDisplayJson != null) {
+            var config = ScreenConfig.fromJson(gameDisplayJson);
+
+            var gameDisplay = new GameDisplay(config, world, hooks, args.container().translations());
+            gameDisplay.displayDefault();
+        }
     }
 
     private void showLeaderboard() {
@@ -502,14 +530,13 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
         ApContainer container = args.container();
         DataManager dataManager = container.dataManager();
 
-        container.mapFacade().getMaps(miniGame.getId()).thenAccept(maps -> {
-            Translations translations = container.translations();
+        var maps = container.mapFacade().getMaps(miniGame.getId());
+        Translations translations = container.translations();
 
-            RestrictedInventory inv = mapChooser.createInventory(maps, Text.literal("Force Map"),
-                    map -> IconMaker.createIcon(map, player, translations, dataManager));
+        RestrictedInventory inv = mapChooser.createInventory(maps, Text.literal("Force Map"),
+                map -> IconMaker.createIcon(map, player, translations, dataManager));
 
-            inv.open(player);
-        });
+        inv.open(player);
     }
 
     @Override
@@ -521,6 +548,6 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
         return Optional.ofNullable(miniGame);
     }
 
-    public record Args(ApContainer container, GameQueue gameQueue,
-                       PlayerManager playerManager, ForceGameCommand forceGameCommand, SongCache sharedSongCache) {}
+    public record Args(ApContainer container, GameQueue gameQueue, PlayerManager playerManager,
+                       ForceGameCommand forceGameCommand, SongCache sharedSongCache, GameFinisher finisher) {}
 }

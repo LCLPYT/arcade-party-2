@@ -32,10 +32,12 @@ public class MapSuggestionProvider implements SuggestionProvider<ServerCommandSo
     }
 
     private Function<MiniGame, CompletableFuture<Suggestions>> buildSuggestions(SuggestionsBuilder builder) {
-        return miniGame -> mapFacade.getMapIds(miniGame.getId()).thenApply(mapIds -> {
-            mapIds.stream().map(Identifier::toString).forEach(builder::suggest);
+        return miniGame -> {
+            mapFacade.getMapIds(miniGame.getId()).stream()
+                    .map(Identifier::toString)
+                    .forEach(builder::suggest);
 
-            return builder.build();
-        });
+            return builder.buildFuture();
+        };
     }
 }

@@ -8,6 +8,7 @@ import work.lclpnet.lobby.game.api.MapOptions;
 import work.lclpnet.lobby.game.map.GameMap;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 public interface MapFacade {
@@ -23,9 +24,11 @@ public interface MapFacade {
 
     void openRandomMap(Identifier gameId, MapOptions options, MapReady onReady);
 
-    CompletableFuture<List<Identifier>> getMapIds(Identifier gameId);
+    List<Identifier> getMapIds(Identifier gameId);
 
-    CompletableFuture<List<GameMap>> getMaps(Identifier gameId);
+    List<GameMap> getMaps(Identifier gameId);
+
+    Optional<GameMap> getMap(Identifier mapId);
 
     CompletableFuture<Void> reloadMaps(Identifier gameId);
 

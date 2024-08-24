@@ -18,6 +18,7 @@ import work.lclpnet.lobby.game.map.MapManager;
 import java.io.IOException;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 public class MapFacadeImpl implements MapFacade {
@@ -61,23 +62,24 @@ public class MapFacadeImpl implements MapFacade {
     }
 
     @Override
-    public CompletableFuture<List<Identifier>> getMapIds(Identifier gameId) {
-        List<Identifier> mapIds = mapManager.getCollection()
+    public List<Identifier> getMapIds(Identifier gameId) {
+        return mapManager.getCollection()
                 .mapIdsWithPrefix(gameId)
                 .sorted()
                 .toList();
-
-        return CompletableFuture.completedFuture(mapIds);
     }
 
     @Override
-    public CompletableFuture<List<GameMap>> getMaps(Identifier gameId) {
-        List<GameMap> maps = mapManager.getCollection()
+    public List<GameMap> getMaps(Identifier gameId) {
+        return mapManager.getCollection()
                 .mapsWithPrefix(gameId)
                 .sorted(Comparator.comparing(map -> map.getDescriptor().getIdentifier()))
                 .toList();
+    }
 
-        return CompletableFuture.completedFuture(maps);
+    @Override
+    public Optional<GameMap> getMap(Identifier mapId) {
+        return mapManager.getCollection().getMap(mapId);
     }
 
     @Override

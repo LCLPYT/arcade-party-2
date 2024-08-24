@@ -4,6 +4,7 @@ import it.unimi.dsi.fastutil.Pair;
 import net.minecraft.block.BlockState;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
+import org.joml.Vector3f;
 import org.json.JSONArray;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.impl.util.BlockBox;
@@ -46,6 +47,12 @@ public class MapUtil {
         if (tuple.length() < 2) throw new IllegalArgumentException("Tuple must be of size 2");
 
         return new Vec2i(tuple.getInt(0), tuple.getInt(1));
+    }
+
+    public static Vector3f readVector3f(JSONArray tuple) {
+        if (tuple.length() < 3) throw new IllegalArgumentException("Tuple must be of size 3");
+
+        return new Vector3f(tuple.getFloat(0), tuple.getFloat(1), tuple.getFloat(2));
     }
 
     public static int readInt(Number number) {
