@@ -217,6 +217,14 @@ public class TranslatedTextDisplay implements DynamicEntity {
         return glowColorOverride;
     }
 
+    public void setTextAlignment(DisplayEntity.TextDisplayEntity.TextAlignment alignment) {
+        displayFlags = switch (alignment) {
+            case CENTER -> displayFlags;
+            case LEFT -> (byte) (displayFlags | DisplayEntity.TextDisplayEntity.LEFT_ALIGNMENT_FLAG);
+            case RIGHT -> (byte) (displayFlags | DisplayEntity.TextDisplayEntity.RIGHT_ALIGNMENT_FLAG);
+        };
+    }
+
     @Override
     public Entity getEntity(ServerPlayerEntity player) {
         String language = translations.getLanguage(player);

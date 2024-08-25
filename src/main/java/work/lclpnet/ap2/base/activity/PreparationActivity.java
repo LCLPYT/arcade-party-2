@@ -212,7 +212,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
         if (gameDisplayJson != null) {
             var config = ScreenConfig.fromJson(gameDisplayJson);
 
-            var gameDisplay = new GameDisplay(config, world, hooks, translations, manager);
+            gameDisplay = new GameDisplay(config, world, hooks, translations, manager);
             gameDisplay.displayDefault();
         }
     }
@@ -425,6 +425,10 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
 
         if (!soundFallback) {
             this.song = MusicHelper.playSong(song.get(), 0.4f, players, server, args.sharedSongCache(), logger);
+        }
+
+        if (gameDisplay != null) {
+            gameDisplay.displayGame(miniGame);
         }
     }
 
