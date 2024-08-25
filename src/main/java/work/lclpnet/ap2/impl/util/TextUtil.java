@@ -16,6 +16,10 @@ import net.minecraft.util.Util;
 
 public class TextUtil {
 
+    public static final int FONT_HEIGHT = 9;
+    public static final float DISPLAY_FONT_SCALE = 0.025F;
+    public static final float DISPLAY_LINE_HEIGHT = DISPLAY_FONT_SCALE * FONT_HEIGHT;
+
     public static MutableText getVanillaName(Item item) {
         return Text.translatable(item.getTranslationKey());
     }

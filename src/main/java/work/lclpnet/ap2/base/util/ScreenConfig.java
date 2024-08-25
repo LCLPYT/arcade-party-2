@@ -1,12 +1,10 @@
 package work.lclpnet.ap2.base.util;
 
 import net.minecraft.util.math.MathHelper;
-import org.joml.Quaternionf;
 import org.joml.Vector3f;
 import org.joml.Vector3fc;
 import org.json.JSONObject;
 import work.lclpnet.ap2.impl.map.MapUtil;
-import work.lclpnet.ap2.impl.util.math.MathUtil;
 
 public record ScreenConfig(Vector3fc pos, Vector3fc normal, float width, float height) {
 
@@ -37,9 +35,5 @@ public record ScreenConfig(Vector3fc pos, Vector3fc normal, float width, float h
         return screenUp.mul(height * 0.5f)
                 .add(screenRight.mul(width * 0.5f))
                 .add(pos);
-    }
-
-    public Quaternionf rotation() {
-        return MathUtil.rotation(new Vector3f(0, 0, 1), normal);
     }
 }

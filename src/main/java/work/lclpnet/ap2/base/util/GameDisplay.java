@@ -4,7 +4,10 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.AffineTransformation;
 import net.minecraft.util.math.Vec3d;
 import org.joml.Matrix4f;
+import org.joml.Vector3f;
 import work.lclpnet.ap2.base.ApConstants;
+import work.lclpnet.ap2.impl.util.TextUtil;
+import work.lclpnet.ap2.impl.util.math.MathUtil;
 import work.lclpnet.ap2.impl.util.world.entity.DynamicEntity;
 import work.lclpnet.ap2.impl.util.world.entity.DynamicEntityManager;
 import work.lclpnet.ap2.impl.util.world.entity.TranslatedTextDisplay;
@@ -41,11 +44,16 @@ public class GameDisplay {
         var title = new TranslatedTextDisplay(world, translations);
 
         title.setText(translations.translateText("game.%s.title".formatted(ApConstants.ID)).formatted(GRAY, ITALIC));
+        title.setLineWidth(100);
 
-        title.setPosition(new Vec3d(config.center()));
+        float scale = 2;
+        Vec3d position = new Vec3d(config.center().sub(0, TextUtil.DISPLAY_LINE_HEIGHT * scale * 0.5F, 0));
+
+        title.setPosition(position);
+
         title.setTransformation(new AffineTransformation(new Matrix4f()
-                .scale(2)
-                .rotateAffine(config.rotation())));
+                .scale(scale)
+                .rotateAffine(MathUtil.rotation(new Vector3f(0, 0, 1), config.normal()))));
 
         spawnDynamic(title);
     }
