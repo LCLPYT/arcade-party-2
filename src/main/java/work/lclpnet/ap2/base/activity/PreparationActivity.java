@@ -44,6 +44,7 @@ import work.lclpnet.ap2.impl.game.PlayerUtil;
 import work.lclpnet.ap2.impl.util.music.MusicHelper;
 import work.lclpnet.ap2.impl.util.title.AnimatedTitle;
 import work.lclpnet.ap2.impl.util.title.NextGameTitleAnimation;
+import work.lclpnet.ap2.impl.util.world.entity.DynamicEntityManager;
 import work.lclpnet.kibu.cmd.type.CommandRegistrar;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
@@ -152,6 +153,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
         playerManager.forEach(playerUtil::resetPlayer);
 
         HookRegistrar hooks = component(BuiltinComponents.HOOKS).hooks();
+
         hooks.registerHook(PlayerConnectionHooks.JOIN, this::onJoin);
         hooks.registerHook(PlayerInventoryHooks.MODIFY_INVENTORY, event -> !event.player().isCreativeLevelTwoOp());
         hooks.registerHook(PlayerAdvancementPacketCallback.HOOK, (player, packet) -> true);
@@ -161,10 +163,12 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
             giveDevelopmentItems(hooks);
         }
 
-        setupDisplays(map, world, hooks);
+        Scheduler scheduler = component(BuiltinComponents.SCHEDULER).scheduler();
+
+        setupDisplays(map, world, hooks, scheduler);
         showLeaderboard();
         displayGameQueue();
-        prepareNextMiniGame();
+        prepareNextMiniGame(scheduler);
 
         CommandRegistrar commandRegistrar = component(BuiltinComponents.COMMANDS).commands();
 
@@ -174,7 +178,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
         args.forceGameCommand.setGameEnforcer(this::forceGame);
     }
 
-    private void prepareNextMiniGame() {
+    private void prepareNextMiniGame(Scheduler scheduler) {
         if (miniGame == null) {
             miniGame = pickNextGame();
         }
@@ -184,7 +188,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
         displayGameQueue();
         startTimer().whenDone(this::onTimerEnded);
 
-        taskHandle = component(BuiltinComponents.SCHEDULER).scheduler()
+        taskHandle = scheduler
                 .interval(this::tick, 1);
     }
 
@@ -197,13 +201,18 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
         args.container().playerUtil().resetPlayer(player, state);
     }
 
-    private void setupDisplays(GameMap map, ServerWorld world, HookRegistrar hooks) {
+    private void setupDisplays(GameMap map, ServerWorld world, HookRegistrar hooks, Scheduler scheduler) {
+        DynamicEntityManager manager = new DynamicEntityManager(world);
+        manager.init(scheduler);
+
+        Translations translations = args.container().translations();
+
         JSONObject gameDisplayJson = map.getProperty("game-display");
 
         if (gameDisplayJson != null) {
             var config = ScreenConfig.fromJson(gameDisplayJson);
 
-            var gameDisplay = new GameDisplay(config, world, hooks, args.container().translations());
+            var gameDisplay = new GameDisplay(config, world, hooks, translations, manager);
             gameDisplay.displayDefault();
         }
     }
@@ -279,7 +288,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
 
     private void onTimerEnded() {
         if (miniGame == null) {
-            prepareNextMiniGame();
+            prepareNextMiniGame(component(BuiltinComponents.SCHEDULER).scheduler());
             return;
         }
 
