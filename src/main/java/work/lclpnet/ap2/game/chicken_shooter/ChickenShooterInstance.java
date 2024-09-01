@@ -78,9 +78,9 @@ public class ChickenShooterInstance extends DefaultGameInstance implements Runna
     protected void prepare() {
         ServerWorld world = getWorld();
 
-        GameRules gameRules = world.getGameRules();
-        gameRules.get(GameRules.DO_ENTITY_DROPS).set(false, null);
-        gameRules.get(GameRules.ANNOUNCE_ADVANCEMENTS).set(false, null);
+        commons().gameRuleBuilder()
+                .set(GameRules.DO_ENTITY_DROPS, false)
+                .set(GameRules.ANNOUNCE_ADVANCEMENTS, false);
 
         despawnHeight = getMap().requireProperty("despawn-height");
 

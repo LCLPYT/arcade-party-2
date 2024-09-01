@@ -68,7 +68,7 @@ public class CozyCampfireInstance extends TeamEliminationGameInstance implements
 
     @Override
     public void bootstrapWorld(ServerWorld world, GameMap map) {
-        setupGameRules(world);
+        setupGameRules();
         randomizeWorldConditions(world);
     }
 
@@ -181,13 +181,11 @@ public class CozyCampfireInstance extends TeamEliminationGameInstance implements
         return new CCBaseManager(bases, teamManager);
     }
 
-    private void setupGameRules(ServerWorld world) {
-        MinecraftServer server = gameHandle.getServer();
-
-        GameRules gameRules = world.getGameRules();
-        gameRules.get(GameRules.SNOW_ACCUMULATION_HEIGHT).set(0, server);
-        gameRules.get(GameRules.DO_WEATHER_CYCLE).set(false, server);
-        gameRules.get(GameRules.DO_DAYLIGHT_CYCLE).set(false, server);
+    private void setupGameRules() {
+        commons().gameRuleBuilder()
+                .set(GameRules.SNOW_ACCUMULATION_HEIGHT, 0)
+                .set(GameRules.DO_WEATHER_CYCLE, false)
+                .set(GameRules.DO_DAYLIGHT_CYCLE, false);
     }
 
     private void randomizeWorldConditions(ServerWorld world) {
