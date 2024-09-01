@@ -124,7 +124,7 @@
   "game.ap2.mining_battle.weakened_by": "%s hat dich geschwächt!",
   "game.ap2.mining_battle.haste": "Du hast den Statuseffekt Eile erhalten!",
   "game.ap2.knockout": "Knockout",
-  "game.ap2.knockout.description": "Schlage deine Gegner von der Map. Je mehr ein Spieler nehmen umso mehr Rückstoß The knock-back gets increasingly stronger the more a player is hit.",
+  "game.ap2.knockout.description": "Schlage deine Gegner von der Map. Je mehr ein Spieler geschlagen wurde, desto mehr Rückstoß bekommt er.",
   "game.ap2.knockout.charge": "Schaden: %s",
   "game.ap2.musical_minecart": "Musiklore",
   "game.ap2.musical_minecart.description": "Setze dich in eine Lore, sobald die Musik aufhört zu spielen. Spieler die nicht in einer Lore sitzen, fliegen raus!",
@@ -216,5 +216,7 @@
   "game.ap2.apocalypse_survival": "Untoten-Apokalypse",
   "game.ap2.apocalypse_survival.description": "Eine Armee von Untoten wird erscheinen und dich jagen! Du kannst dich nicht wehren. Fliehe und überlebe bis zuletzt!",
   "game.ap2.apocalypse_survival.task": "Überlebe die Untoten",
-  "game.ap2.apocalypse_survival.survived": "%s überlebt"
+  "game.ap2.apocalypse_survival.survived": "%s überlebt",
+  "game.ap2.pillar_battle": "Säulenkampf",
+  "game.ap2.pillar_battle.description": "Alle Spieler werden auf Säulen platziert. Jeder erhält alle %s Sekunden einen zufälligen Gegenstand. Besiege alle Gegner und sei der letzte Überlebende!"
 }
