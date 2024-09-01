@@ -118,8 +118,7 @@ public class PbSetup {
         var structs = assignment.structs();
 
         // calculate pillar offsets in the world
-        double spacing = participants.count() < 6 ? 8 : 6;
-        int minRadius = CircleStructureGenerator.computeMinimumRadius(structs, spacing);
+        int minRadius = CircleStructureGenerator.calculateRadius(structs.size(), 9);
 
         Object mapMinRadius = map.getProperty("pillar-min-radius");
 
@@ -138,16 +137,16 @@ public class PbSetup {
         var playerIds = assignment.playerIds();
 
         CircleStructureGenerator.placeStructures(structs, world, offsets, (i, struct, offset) -> {
-            BlockPos spawn = center.add(offset.x(), 0, offset.z());
+            BlockPos pillarSpawn = spawns.get(i);
+            BlockPos pos = center.add(offset.x(), -pillarSpawn.getY(), offset.z());
+            BlockPos spawn = pos.add(pillarSpawn);
 
             float yaw = (float) Math.toDegrees(Math.atan2(offset.x(), -offset.z()));
 
             UUID playerId = playerIds.get(i);
             mapping.put(playerId, new PositionRotation(spawn.getX() + 0.5, spawn.getY(), spawn.getZ() + 0.5, yaw, 0));
 
-            BlockPos pillarSpawn = spawns.get(i);
-
-            return spawn.subtract(pillarSpawn);
+            return pos;
         });
 
         return mapping;
