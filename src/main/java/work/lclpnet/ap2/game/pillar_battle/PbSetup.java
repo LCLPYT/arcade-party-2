@@ -111,29 +111,14 @@ public class PbSetup {
     }
 
     public Map<UUID, PositionRotation> placePillars(Participants participants, Random random) {
-        if (availablePillars == null || availablePillars.isEmpty()) {
-            logger.error("No pillars available");
-            return Map.of();
-        }
+        var assignment = assignPillars(participants, random);
 
-        // assign each player a pillar variant
-        int playerCount = participants.count();
-        int available = availablePillars.size();
+        if (assignment == null) return Map.of();
 
-        List<BlockStructure> structs = new ArrayList<>(playerCount);
-        List<BlockPos> spawns = new ArrayList<>(playerCount);
-        List<UUID> playerIds = new ArrayList<>(playerCount);
-
-        for (ServerPlayerEntity player : participants) {
-            playerIds.add(player.getUuid());
-
-            var info = availablePillars.get(random.nextInt(available));
-            structs.add(info.struct);
-            spawns.add(info.spawn);
-        }
+        var structs = assignment.structs();
 
         // calculate pillar offsets in the world
-        double spacing = playerCount < 6 ? 8 : 6;
+        double spacing = participants.count() < 6 ? 8 : 6;
         int minRadius = CircleStructureGenerator.computeMinimumRadius(structs, spacing);
 
         Object mapMinRadius = map.getProperty("pillar-min-radius");
@@ -149,6 +134,8 @@ public class PbSetup {
         BlockPos center = MapUtil.readBlockPos(centerTuple);
 
         Map<UUID, PositionRotation> mapping = new HashMap<>();
+        var spawns = assignment.spawns();
+        var playerIds = assignment.playerIds();
 
         CircleStructureGenerator.placeStructures(structs, world, offsets, (i, struct, offset) -> {
             BlockPos spawn = center.add(offset.x(), 0, offset.z());
@@ -166,5 +153,40 @@ public class PbSetup {
         return mapping;
     }
 
+    @Nullable
+    private Assignment assignPillars(Participants participants, Random random) {
+        if (availablePillars == null || availablePillars.isEmpty()) {
+            logger.error("No pillars available");
+            return null;
+        }
+
+        int playerCount = participants.count();
+
+        List<BlockStructure> structs = new ArrayList<>(playerCount);
+        List<BlockPos> spawns = new ArrayList<>(playerCount);
+        List<UUID> playerIds = new ArrayList<>(playerCount);
+
+        List<PillarInfo> pool = new ArrayList<>(availablePillars.size());
+
+        for (ServerPlayerEntity player : participants) {
+            playerIds.add(player.getUuid());
+
+            if (pool.isEmpty()) {
+                // refill pool if empty
+                pool.addAll(availablePillars);
+            }
+
+            // retrieve random pillar variant from pool and then remove it for more variant diversity
+            var info = pool.remove(random.nextInt(pool.size()));
+
+            structs.add(info.struct);
+            spawns.add(info.spawn);
+        }
+
+        return new Assignment(structs, spawns, playerIds);
+    }
+
     public record PillarInfo(BlockStructure struct, BlockPos spawn) {}
+
+    public record Assignment(List<BlockStructure> structs, List<BlockPos> spawns, List<UUID> playerIds) {}
 }
