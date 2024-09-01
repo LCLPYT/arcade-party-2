@@ -3,7 +3,6 @@ package work.lclpnet.ap2.game.pillar_battle;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
-import org.apache.commons.lang3.mutable.MutableFloat;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -136,6 +135,13 @@ public class PbSetup {
         // calculate pillar offsets in the world
         double spacing = playerCount < 6 ? 8 : 6;
         int minRadius = CircleStructureGenerator.computeMinimumRadius(structs, spacing);
+
+        Object mapMinRadius = map.getProperty("pillar-min-radius");
+
+        if (mapMinRadius instanceof Number num) {
+            minRadius = Math.max(minRadius, num.intValue());
+        }
+
         Vec2i[] offsets = CircleStructureGenerator.generateHorizontalOffsets(structs, minRadius);
 
         // place pillars
