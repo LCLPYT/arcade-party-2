@@ -83,7 +83,7 @@ public class PillarBattleInstance extends EliminationGameInstance implements Map
 
         commons().whenBelowCriticalHeight().then(player -> player.damage(player.getDamageSources().outOfWorld(), player.getHealth()));
 
-        var randomizer = new PbRandomizer(random, gameHandle.getParticipants());
+        var randomizer = new PbRandomizer(random, gameHandle.getParticipants(), getWorld().getRegistryManager());
 
         gameHandle.getGameScheduler().interval(randomizer::giveRandomItems, RANDOM_ITEM_DELAY_TICKS);
     }

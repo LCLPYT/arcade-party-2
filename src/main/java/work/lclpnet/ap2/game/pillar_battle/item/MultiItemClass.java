@@ -9,6 +9,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.stream.Stream;
 
 public record MultiItemClass(List<Item> items) implements ItemClass {
 
@@ -31,5 +32,10 @@ public record MultiItemClass(List<Item> items) implements ItemClass {
         }
 
         return new MultiItemClass(items);
+    }
+
+    @Override
+    public Stream<Item> stream() {
+        return items.stream();
     }
 }
