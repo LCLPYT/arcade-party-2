@@ -386,7 +386,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
 
         animatedTitle.start(scheduler, 2);
 
-        if (!soundFallback) {
+        if (!soundFallback && !players.isEmpty()) {
             this.song = MusicHelper.playSong(song.get(), 0.4f, players, server, args.sharedSongCache(), logger);
         }
     }
