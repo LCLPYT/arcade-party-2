@@ -48,6 +48,10 @@ loom {
 
     runs {
         remove client
+
+        server {
+            vmArgs "-Dfabric-tag-conventions-v2.missingTagTranslationWarning=SILENCED"
+        }
     }
 
     accessWidenerPath = file("src/main/resources/ap2.accesswidener")

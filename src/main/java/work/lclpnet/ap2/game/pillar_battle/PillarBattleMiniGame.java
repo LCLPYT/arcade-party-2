@@ -6,6 +6,7 @@ import net.minecraft.util.Identifier;
 import work.lclpnet.ap2.api.game.*;
 import work.lclpnet.ap2.base.ApConstants;
 import work.lclpnet.ap2.base.ArcadeParty;
+import work.lclpnet.kibu.translate.text.LocalizedFormat;
 
 public class PillarBattleMiniGame implements MiniGame {
 
@@ -41,7 +42,7 @@ public class PillarBattleMiniGame implements MiniGame {
 
     @Override
     public Object[] getDescriptionArguments() {
-        return new Object[] {PillarBattleInstance.RANDOM_ITEM_DELAY_SECONDS};
+        return new Object[] {LocalizedFormat.format("%.1f", PillarBattleInstance.RANDOM_ITEM_DELAY_TICKS / 20f)};
     }
 
     @Override

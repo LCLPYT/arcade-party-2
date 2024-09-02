@@ -6,6 +6,7 @@ import net.minecraft.component.type.UnbreakableComponent;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -60,8 +61,10 @@ public class MiningBattleInstance extends DefaultGameInstance implements MapBoot
 
     @Override
     public void bootstrapWorld(ServerWorld world, GameMap map) {
-        commons().gameRuleBuilder()
-                .set(GameRules.DO_TILE_DROPS, false);
+        GameRules gameRules = world.getGameRules();
+        MinecraftServer server = gameHandle.getServer();
+
+        gameRules.get(GameRules.DO_TILE_DROPS).set(false, server);
 
         placeOres(world, map);
     }

@@ -8,6 +8,7 @@ import work.lclpnet.ap2.api.map.MapBootstrap;
 import work.lclpnet.ap2.impl.game.EliminationGameInstance;
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker;
 import work.lclpnet.kibu.hook.util.PositionRotation;
+import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.lobby.game.impl.prot.MutableProtectionConfig;
 import work.lclpnet.lobby.game.map.GameMap;
 
@@ -18,7 +19,7 @@ import java.util.concurrent.CompletableFuture;
 
 public class PillarBattleInstance extends EliminationGameInstance implements MapBootstrap {
 
-    public static final int RANDOM_ITEM_DELAY_SECONDS = 6;
+    public static final int RANDOM_ITEM_DELAY_TICKS = 70;
     private final Random random = new Random();
     private final SimpleMovementBlocker movementBlocker;
     private Map<UUID, PositionRotation> spawns = null;
@@ -82,5 +83,9 @@ public class PillarBattleInstance extends EliminationGameInstance implements Map
         }
 
         commons().whenBelowCriticalHeight().then(player -> player.damage(player.getDamageSources().outOfWorld(), player.getHealth()));
+
+        var randomizer = new PbRandomizer(random, gameHandle.getParticipants());
+
+        gameHandle.getGameScheduler().interval(randomizer::giveRandomItems, RANDOM_ITEM_DELAY_TICKS);
     }
 }
