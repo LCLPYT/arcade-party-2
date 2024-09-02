@@ -79,6 +79,8 @@ public class PandaFinderInstance extends DefaultGameInstance {
     protected void prepare() {
         scanWorld();
         readImages();
+
+        bossBar = usePlayerDynamicTaskDisplay(styled(0, Formatting.YELLOW), styled(3, Formatting.YELLOW));
     }
 
     @Override
@@ -96,8 +98,6 @@ public class PandaFinderInstance extends DefaultGameInstance {
         });
 
         setupScoreboard();
-
-        bossBar = usePlayerDynamicTaskDisplay(styled(0, Formatting.YELLOW), styled(3, Formatting.YELLOW));
 
         nextRound();
     }
