@@ -81,7 +81,7 @@ public class StackedRoomGenerator<T> {
     private GeneratorData placeStructures(GameMap map, ServerWorld world, int roomCount, BlockStructure structure) {
         BlockPos roomStart = MapUtil.readBlockPos(map.requireProperty("room-start"));
 
-        Vec3i roomDirection = MathUtil.normalize(MapUtil.readBlockPos(map.requireProperty("room-direction")));
+        Vec3i roomDirection = MapUtil.readBlockPos(map.requireProperty("room-direction"));
 
         final int width = structure.getWidth(),
                 height = structure.getHeight(),
