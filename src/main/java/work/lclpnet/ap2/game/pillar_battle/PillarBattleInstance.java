@@ -8,7 +8,6 @@ import work.lclpnet.ap2.api.map.MapBootstrap;
 import work.lclpnet.ap2.impl.game.EliminationGameInstance;
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker;
 import work.lclpnet.kibu.hook.util.PositionRotation;
-import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.lobby.game.impl.prot.MutableProtectionConfig;
 import work.lclpnet.lobby.game.map.GameMap;
 

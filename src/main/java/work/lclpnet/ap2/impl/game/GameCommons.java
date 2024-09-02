@@ -70,7 +70,7 @@ public class GameCommons {
         hooks.registerHook(PlayerMoveCallback.HOOK, (player, from, to) -> {
             if (!participants.isParticipating(player)) return false;
 
-            if (!(to.getY() >= minY)) {
+            if (player.getY() < minY) {
                 hook.invoker().act(player);
             }
 
