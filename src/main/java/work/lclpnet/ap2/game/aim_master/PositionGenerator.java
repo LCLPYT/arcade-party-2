@@ -83,7 +83,7 @@ public class PositionGenerator {
 
             for (BlockPos pos : new ArrayList<>(cone)) {
 
-                double euclideanDistance = sqrt(pow(pos.getX() - selectedPos.getX(), 2) + pow(pos.getY() - selectedPos.getY(), 2) + pow(pos.getZ() - selectedPos.getZ(), 2));;
+                double euclideanDistance = sqrt(pow(pos.getX() - selectedPos.getX(), 2) + pow(pos.getY() - selectedPos.getY(), 2) + pow(pos.getZ() - selectedPos.getZ(), 2));
                 if (euclideanDistance <= 1.8) {cone.remove(pos);}
             }
         }
