@@ -114,6 +114,10 @@ public class CircleStructureGenerator {
     }
 
     public static Vec2i[] generateHorizontalOffsets(List<BlockStructure> structures, final int minRadius) {
+        return generateHorizontalOffsetsRadius(structures, minRadius).offsets();
+    }
+
+    public static OffsetResult generateHorizontalOffsetsRadius(List<BlockStructure> structures, final int minRadius) {
         /*
         The idea of the algorithm is the following:
         - start with the min radius
@@ -185,7 +189,7 @@ public class CircleStructureGenerator {
 
             // there were no collisions, check if we found the best radius
             if (left == right || left == right - 1 || radius == minRadius) {
-                return offsets;
+                return new OffsetResult(offsets, radius);
             }
 
             // perform bisection by jumping to the middle of the two boundaries
@@ -196,4 +200,6 @@ public class CircleStructureGenerator {
     public interface PositionFunction {
         BlockPos compute(int index, BlockStructure structure, Vec2i circleOffset);
     }
+
+    public record OffsetResult(Vec2i[] offsets, int radius) {}
 }

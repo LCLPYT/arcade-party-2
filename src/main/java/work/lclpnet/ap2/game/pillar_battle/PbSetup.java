@@ -110,10 +110,11 @@ public class PbSetup {
         return session.getWorldDirectory(world.getRegistryKey());
     }
 
-    public Map<UUID, PositionRotation> placePillars(Participants participants, Random random) {
+    @Nullable
+    public PlacementResult placePillars(Participants participants, Random random) {
         var assignment = assignPillars(participants, random);
 
-        if (assignment == null) return Map.of();
+        if (assignment == null) return null;
 
         var structs = assignment.structs();
 
@@ -126,7 +127,7 @@ public class PbSetup {
             minRadius = Math.max(minRadius, num.intValue());
         }
 
-        Vec2i[] offsets = CircleStructureGenerator.generateHorizontalOffsets(structs, minRadius);
+        var offsetResult = CircleStructureGenerator.generateHorizontalOffsetsRadius(structs, minRadius);
 
         // place pillars
         JSONArray centerTuple = map.requireProperty("pillar-center");
@@ -136,7 +137,7 @@ public class PbSetup {
         var spawns = assignment.spawns();
         var playerIds = assignment.playerIds();
 
-        CircleStructureGenerator.placeStructures(structs, world, offsets, (i, struct, offset) -> {
+        CircleStructureGenerator.placeStructures(structs, world, offsetResult.offsets(), (i, struct, offset) -> {
             BlockPos pillarSpawn = spawns.get(i);
             BlockPos pos = center.add(offset.x(), -pillarSpawn.getY(), offset.z());
             BlockPos spawn = pos.add(pillarSpawn);
@@ -149,7 +150,7 @@ public class PbSetup {
             return pos;
         });
 
-        return mapping;
+        return new PlacementResult(mapping, offsetResult.radius(), center);
     }
 
     @Nullable
@@ -188,4 +189,6 @@ public class PbSetup {
     public record PillarInfo(BlockStructure struct, BlockPos spawn) {}
 
     public record Assignment(List<BlockStructure> structs, List<BlockPos> spawns, List<UUID> playerIds) {}
+
+    public record PlacementResult(Map<UUID, PositionRotation> spawns, int radius, BlockPos center) {}
 }
