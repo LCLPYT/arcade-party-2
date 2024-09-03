@@ -7,6 +7,8 @@ import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.map.MapBootstrap;
 import work.lclpnet.ap2.impl.game.EliminationGameInstance;
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker;
+import work.lclpnet.kibu.hook.HookRegistrar;
+import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks;
 import work.lclpnet.kibu.hook.util.PositionRotation;
 import work.lclpnet.lobby.game.impl.prot.MutableProtectionConfig;
 import work.lclpnet.lobby.game.map.GameMap;
@@ -50,7 +52,7 @@ public class PillarBattleInstance extends EliminationGameInstance implements Map
                 .set(GameRules.FALL_DAMAGE, true)
                 .set(GameRules.DO_FIRE_TICK, true)
                 .set(GameRules.DO_INSOMNIA, false)
-                .set(GameRules.NATURAL_REGENERATION, false)
+                .set(GameRules.NATURAL_REGENERATION, true)
                 .set(GameRules.DO_MOB_GRIEFING, true)
                 .set(GameRules.DO_TRADER_SPAWNING, false)
                 .set(GameRules.DO_PATROL_SPAWNING, false);
@@ -86,5 +88,15 @@ public class PillarBattleInstance extends EliminationGameInstance implements Map
         var randomizer = new PbRandomizer(random, gameHandle.getParticipants(), getWorld().getRegistryManager());
 
         gameHandle.getGameScheduler().interval(randomizer::giveRandomItems, RANDOM_ITEM_DELAY_TICKS);
+
+        HookRegistrar hooks = gameHandle.getHookRegistrar();
+        hooks.registerHook(ServerLivingEntityHooks.ALLOW_DAMAGE, (entity, source, amount) -> {
+            if (entity instanceof ServerPlayerEntity player && player.getHungerManager().getFoodLevel() >= 20) {
+                player.getHungerManager().setExhaustion(12);
+                player.getHungerManager().setSaturationLevel(0);
+            }
+
+            return true;
+        });
     }
 }
