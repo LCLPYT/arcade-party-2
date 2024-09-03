@@ -1,5 +1,6 @@
 package work.lclpnet.ap2.game.aim_master;
 
+import net.minecraft.block.Blocks;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Formatting;
@@ -14,6 +15,7 @@ import work.lclpnet.ap2.impl.util.world.StackedRoomGenerator;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.lobby.game.map.GameMap;
 
+import java.util.ArrayList;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 
@@ -67,6 +69,9 @@ public class AimMasterInstance extends DefaultGameInstance implements MapBootstr
         ServerWorld world = getWorld();
 
         PositionGenerator positionGenerator = new PositionGenerator(SPHERE_RADIUS, SPHERE_OFFSET, new BlockPos(0,42,0), world, CONE_FOV, TARGET_NUMBER);
+
+        ArrayList<BlockPos> blockPositions = positionGenerator.pickPositions();
+        for (BlockPos blockPos : blockPositions) world.setBlockState(blockPos, Blocks.TARGET.getDefaultState());
 
         bossBar = usePlayerDynamicTaskDisplay(styled(scoreGoal, Formatting.YELLOW), styled(0, Formatting.YELLOW));
 

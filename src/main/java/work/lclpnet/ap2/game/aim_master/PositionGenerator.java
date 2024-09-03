@@ -1,6 +1,5 @@
 package work.lclpnet.ap2.game.aim_master;
 
-import net.minecraft.block.Blocks;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import work.lclpnet.ap2.impl.util.BlockBox;
@@ -17,18 +16,13 @@ public class PositionGenerator {
     private final int fov;
     private final int targetNumber;
     private final BlockPos center;
-    private final ServerWorld world;
 
     public PositionGenerator(int radius, int offset, BlockPos center, ServerWorld world, int fov, int targetNumber) {
         this.radius = radius;
         this.offset = offset;
         this.center = center;
-        this.world = world;
         this.fov = fov;
         this.targetNumber = targetNumber;
-
-        ArrayList<BlockPos> blockPositions = pickPositions();
-        for (BlockPos blockPos : blockPositions) world.setBlockState(blockPos, Blocks.TARGET.getDefaultState());
     }
 
     private BlockBox generateBlockBox() {
@@ -61,7 +55,6 @@ public class PositionGenerator {
                     double angle = getAngle(x, y, z);
 
                     if (angle <= fov) {
-                        world.setBlockState(pos, Blocks.GLASS.getDefaultState());
                         validBlockPositions.add(pos.toImmutable());
                     }
                 }
@@ -70,7 +63,7 @@ public class PositionGenerator {
         return validBlockPositions;
     }
 
-    private ArrayList<BlockPos> pickPositions() {
+    public ArrayList<BlockPos> pickPositions() {
         ArrayList<BlockPos> cone = generateCone();
         ArrayList<BlockPos> BlockPositions = new ArrayList<>();
         final Random random = new Random();
