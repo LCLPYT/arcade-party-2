@@ -5,6 +5,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.GameRules;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.api.game.MapReady;
 import work.lclpnet.ap2.api.map.MapFacade;
@@ -92,7 +93,7 @@ public class MapFacadeImpl implements MapFacade {
     }
 
     @Override
-    public void forceMap(Identifier mapId) {
+    public void forceMap(@Nullable Identifier mapId) {
         mapRandomizer.forceMap(mapId);
     }
 

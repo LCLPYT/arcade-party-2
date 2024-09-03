@@ -7,7 +7,6 @@ import net.minecraft.entity.damage.DamageTypes;
 import net.minecraft.entity.mob.*;
 import net.minecraft.entity.projectile.PersistentProjectileEntity;
 import net.minecraft.entity.projectile.ProjectileEntity;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.world.GameRules;
@@ -47,7 +46,6 @@ public class ApocalypseSurvivalInstance extends EliminationGameInstance {
 
         ServerWorld world = getWorld();
         GameMap map = getMap();
-        MinecraftServer server = gameHandle.getServer();
         Participants participants = gameHandle.getParticipants();
 
         Random random = new Random();
@@ -58,10 +56,10 @@ public class ApocalypseSurvivalInstance extends EliminationGameInstance {
 
         spawners = setup.readSpawners();
 
-        GameRules gameRules = world.getGameRules();
-        gameRules.get(GameRules.FALL_DAMAGE).set(true, server);
-        gameRules.get(GameRules.DO_MOB_GRIEFING).set(true, server);
-        gameRules.get(GameRules.NATURAL_REGENERATION).set(false, server);
+        commons().gameRuleBuilder()
+                .set(GameRules.FALL_DAMAGE, true)
+                .set(GameRules.DO_MOB_GRIEFING, true)
+                .set(GameRules.NATURAL_REGENERATION, false);
 
         HookRegistrar hooks = gameHandle.getHookRegistrar();
 

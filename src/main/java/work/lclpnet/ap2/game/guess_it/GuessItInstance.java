@@ -85,8 +85,8 @@ public class GuessItInstance extends DefaultGameInstance implements MapBootstrap
         Participants participants = gameHandle.getParticipants();
         Stage stage = StageReader.readStage(map);
 
-        GameRules gameRules = world.getGameRules();
-        gameRules.get(GameRules.REDUCED_DEBUG_INFO).set(true, gameHandle.getServer());
+        commons().gameRuleBuilder()
+                .set(GameRules.REDUCED_DEBUG_INFO, true);
 
         rounds = MIN_ROUNDS + random.nextInt(MAX_ROUNDS - MIN_ROUNDS + 1);
 

@@ -59,9 +59,9 @@ public class TreasureHunterInstance extends DefaultGameInstance {
 
     @Override
     protected void prepare() {
-        GameRules gameRules = getWorld().getGameRules();
-        gameRules.get(GameRules.DO_TILE_DROPS).set(false, null);
-        gameRules.get(GameRules.DO_ENTITY_DROPS).set(false, null);
+        commons().gameRuleBuilder()
+                .set(GameRules.DO_TILE_DROPS, false)
+                .set(GameRules.DO_ENTITY_DROPS, false);
 
         MapUtil.readBlockStates(getMap().requireProperty("materials"), materials, gameHandle.getLogger());
 

@@ -146,10 +146,8 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
     }
 
     private void setupGameRules() {
-        GameRules gameRules = getWorld().getGameRules();
-        MinecraftServer server = gameHandle.getServer();
-
-        gameRules.get(GameRules.RANDOM_TICK_SPEED).set(0, server);
+        commons().gameRuleBuilder()
+                .set(GameRules.RANDOM_TICK_SPEED, 0);
     }
 
     private void nextRound() {

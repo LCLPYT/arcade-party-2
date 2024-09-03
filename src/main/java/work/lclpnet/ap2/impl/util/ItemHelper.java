@@ -6,11 +6,18 @@ import net.minecraft.item.ArmorMaterial;
 import net.minecraft.item.ArmorMaterials;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
+import net.minecraft.potion.Potion;
+import net.minecraft.potion.Potions;
+import net.minecraft.registry.Registries;
+import net.minecraft.registry.Registry;
 import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.registry.entry.RegistryEntry;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Objects;
 import java.util.Optional;
+import java.util.Random;
 
 public class ItemHelper {
 
@@ -75,5 +82,25 @@ public class ItemHelper {
         return component.song()
                 .getEntry(registryLookup)
                 .map(RegistryEntry::value);
+    }
+
+    public static @NotNull RegistryEntry<Potion> getRandomPotion(Random random) {
+        var potion = getRandomEntry(Registries.POTION, random);
+
+        if (potion == null) {
+            potion = Objects.requireNonNull(Potions.WATER);
+        }
+
+        return potion;
+    }
+
+    public static <T> @Nullable RegistryEntry<T> getRandomEntry(Registry<T> registry, Random random) {
+        var entries = registry.getIndexedEntries();
+
+        if (entries.size() <= 0) {
+            return null;
+        }
+
+        return entries.get(random.nextInt(entries.size()));
     }
 }

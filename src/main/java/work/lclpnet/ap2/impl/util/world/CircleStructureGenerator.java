@@ -16,9 +16,7 @@ import static java.lang.Math.*;
 public class CircleStructureGenerator {
 
     public static void placeStructures(List<BlockStructure> structures, ServerWorld world, double spacing, PositionFunction position) {
-        double largestTangentDistance = CircleStructureGenerator.computeLargestTangentDistance(structures);
-        int count = structures.size();
-        int minRadius = CircleStructureGenerator.calculateRadius(count, largestTangentDistance + spacing);
+        int minRadius = computeMinimumRadius(structures, spacing);
 
         // offsets are relative to the origin
         Vec2i[] offsets = CircleStructureGenerator.generateHorizontalOffsets(structures, minRadius);
@@ -36,6 +34,20 @@ public class CircleStructureGenerator {
 
             StructureUtil.placeStructureFast(structure, world, pos);
         }
+    }
+
+    /**
+     * Compute the minimum radius required of a circle composed of the given structures so that two adjacent
+     * structures have a given spacing between them.
+     * This also considers the dimensions of the structures.
+     * @param structures List of structures; adjacent structures in the list will be adjacent in the circle.
+     * @param spacing The desired spacing between each placed structure on the ring.
+     * @return The minimum radius required.
+     */
+    public static int computeMinimumRadius(List<BlockStructure> structures, double spacing) {
+        double largestTangentDistance = CircleStructureGenerator.computeLargestTangentDistance(structures);
+
+        return CircleStructureGenerator.calculateRadius(structures.size(), largestTangentDistance + spacing);
     }
 
     /**
@@ -102,6 +114,10 @@ public class CircleStructureGenerator {
     }
 
     public static Vec2i[] generateHorizontalOffsets(List<BlockStructure> structures, final int minRadius) {
+        return generateHorizontalOffsetsRadius(structures, minRadius).offsets();
+    }
+
+    public static OffsetResult generateHorizontalOffsetsRadius(List<BlockStructure> structures, final int minRadius) {
         /*
         The idea of the algorithm is the following:
         - start with the min radius
@@ -173,7 +189,7 @@ public class CircleStructureGenerator {
 
             // there were no collisions, check if we found the best radius
             if (left == right || left == right - 1 || radius == minRadius) {
-                return offsets;
+                return new OffsetResult(offsets, radius);
             }
 
             // perform bisection by jumping to the middle of the two boundaries
@@ -184,4 +200,6 @@ public class CircleStructureGenerator {
     public interface PositionFunction {
         BlockPos compute(int index, BlockStructure structure, Vec2i circleOffset);
     }
+
+    public record OffsetResult(Vec2i[] offsets, int radius) {}
 }
