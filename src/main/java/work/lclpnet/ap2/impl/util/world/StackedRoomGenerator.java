@@ -83,6 +83,12 @@ public class StackedRoomGenerator<T> {
 
         Vec3i roomDirection = MathUtil.normalize(MapUtil.readBlockPos(map.requireProperty("room-direction")));
 
+        int spacing = -1;
+
+        if (map.getProperty("room-spacing") instanceof Number num) {
+            spacing = num.intValue();
+        }
+
         final int width = structure.getWidth(),
                 height = structure.getHeight(),
                 length = structure.getLength();
@@ -90,9 +96,9 @@ public class StackedRoomGenerator<T> {
         int rz = roomDirection.getZ(), rx = roomDirection.getX(), ry = roomDirection.getY();
         int sx = roomStart.getX(), sy = roomStart.getY(), sz = roomStart.getZ();
 
-        Vec3i roomOffset = new Vec3i(rx * (width - Math.abs(rx)),
-                ry * (height - Math.abs(ry)),
-                rz * (length - Math.abs(rz)));
+        Vec3i roomOffset = new Vec3i(rx * (width + spacing),
+                ry * (height + spacing),
+                rz * (length + spacing));
 
         var pos = new BlockPos.Mutable();
 

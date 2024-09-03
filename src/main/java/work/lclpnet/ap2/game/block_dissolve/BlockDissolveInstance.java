@@ -45,11 +45,9 @@ public class BlockDissolveInstance extends EliminationGameInstance {
 
     @Override
     protected void prepare() {
-        MinecraftServer server = gameHandle.getServer();
-        GameRules gameRules = getWorld().getGameRules();
-
-        gameRules.get(GameRules.RANDOM_TICK_SPEED).set(0, server);
-        gameRules.get(GameRules.DO_VINES_SPREAD).set(false, server);
+        commons().gameRuleBuilder()
+                .set(GameRules.RANDOM_TICK_SPEED, 0)
+                .set(GameRules.DO_VINES_SPREAD, false);
 
         useNoHealing();
         useSmoothDeath();

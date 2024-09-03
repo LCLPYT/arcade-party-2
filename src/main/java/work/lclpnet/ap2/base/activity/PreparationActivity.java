@@ -23,6 +23,7 @@ import work.lclpnet.ap2.api.base.PlayerManager;
 import work.lclpnet.ap2.api.data.DataManager;
 import work.lclpnet.ap2.api.game.GameStartContext;
 import work.lclpnet.ap2.api.game.MiniGame;
+import work.lclpnet.ap2.api.map.MapFacade;
 import work.lclpnet.ap2.api.util.music.SongCache;
 import work.lclpnet.ap2.api.util.music.SongManager;
 import work.lclpnet.ap2.api.util.music.SongWrapper;
@@ -128,6 +129,9 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
     }
 
     private void onReady() {
+        MapFacade mapFacade = args.container.mapFacade();
+        mapFacade.forceMap(null);  // reset forced map
+
         PlayerManager playerManager = args.playerManager();
         playerManager.startPreparation();
 
@@ -152,7 +156,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
         CommandRegistrar commandRegistrar = component(BuiltinComponents.COMMANDS).commands();
 
         new SkipCommand(this).register(commandRegistrar);
-        new ForceMapCommand(args.container.mapFacade(), this::getMiniGame).register(commandRegistrar);
+        new ForceMapCommand(mapFacade, this::getMiniGame).register(commandRegistrar);
 
         args.forceGameCommand.setGameEnforcer(this::forceGame);
     }
@@ -386,7 +390,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
 
         animatedTitle.start(scheduler, 2);
 
-        if (!soundFallback) {
+        if (!soundFallback && !players.isEmpty()) {
             this.song = MusicHelper.playSong(song.get(), 0.4f, players, server, args.sharedSongCache(), logger);
         }
     }

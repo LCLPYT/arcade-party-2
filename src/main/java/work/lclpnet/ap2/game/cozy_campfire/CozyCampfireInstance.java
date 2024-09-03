@@ -1,5 +1,7 @@
 package work.lclpnet.ap2.game.cozy_campfire;
 
+import net.minecraft.entity.effect.StatusEffectInstance;
+import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.item.ItemStack;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.scoreboard.AbstractTeam;
@@ -28,7 +30,9 @@ import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedPlayerBossBar;
 import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedTeamBossBar;
 import work.lclpnet.ap2.impl.util.collision.ChunkedCollisionDetector;
 import work.lclpnet.ap2.impl.util.collision.PlayerMovementObserver;
+import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker;
 import work.lclpnet.kibu.hook.HookRegistrar;
+import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.kibu.translate.text.LocalizedFormat;
 import work.lclpnet.lobby.game.map.GameMap;
@@ -49,6 +53,7 @@ public class CozyCampfireInstance extends TeamEliminationGameInstance implements
     private final PlayerMovementObserver movementObserver;
     private final TeamStorage<CampfireFuel> campfireFuel = TeamStorage.create(this::createCampfireFuel);
     private final Set<Team> toEliminate = new HashSet<>();
+    private final SimpleMovementBlocker movementBlocker;
     private CCHooks hookSetup;
     private CCFuel fuel;
     private DynamicTranslatedTeamBossBar bossBar;
@@ -64,11 +69,14 @@ public class CozyCampfireInstance extends TeamEliminationGameInstance implements
         useSurvivalMode();
 
         movementObserver = new PlayerMovementObserver(collisionDetector, gameHandle.getParticipants()::isParticipating);
+
+        movementBlocker = new SimpleMovementBlocker(gameHandle.getGameScheduler());
+        movementBlocker.setModifySpeedAttribute(false);
     }
 
     @Override
     public void bootstrapWorld(ServerWorld world, GameMap map) {
-        setupGameRules(world);
+        setupGameRules();
         randomizeWorldConditions(world);
     }
 
@@ -95,17 +103,23 @@ public class CozyCampfireInstance extends TeamEliminationGameInstance implements
 
         CCKitManager kitManager = new CCKitManager(teamManager, getWorld(), random);
 
+        HookRegistrar hooks = gameHandle.getHookRegistrar();
+        movementBlocker.init(hooks);
+
         for (ServerPlayerEntity player : participants) {
             kitManager.giveItems(player);
             PlayerReset.modifyWalkSpeed(player, 0.15f);
             player.sendAbilitiesUpdate();
+
+            player.addStatusEffect(new StatusEffectInstance(StatusEffects.INVISIBILITY, Ticks.seconds(30), 1, false, false, false));
+            movementBlocker.disableMovement(player);
         }
 
         Translations translations = gameHandle.getTranslations();
         var args = new CCHooks.Args(fuel, baseManager, kitManager, this::onAddFuel);
 
         hookSetup = new CCHooks(participants, teamManager, this, translations, args);
-        hookSetup.register(gameHandle.getHookRegistrar());
+        hookSetup.register(hooks);
 
         setupMovementObserver(hookSetup);
 
@@ -117,6 +131,11 @@ public class CozyCampfireInstance extends TeamEliminationGameInstance implements
     @Override
     protected void ready() {
         gameHandle.protect(hookSetup::configure);
+
+        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
+            movementBlocker.enableMovement(player);
+            player.removeStatusEffect(StatusEffects.INVISIBILITY);
+        }
 
         gameHandle.getGameScheduler().interval(this::tick, 1);
     }
@@ -181,13 +200,11 @@ public class CozyCampfireInstance extends TeamEliminationGameInstance implements
         return new CCBaseManager(bases, teamManager);
     }
 
-    private void setupGameRules(ServerWorld world) {
-        MinecraftServer server = gameHandle.getServer();
-
-        GameRules gameRules = world.getGameRules();
-        gameRules.get(GameRules.SNOW_ACCUMULATION_HEIGHT).set(0, server);
-        gameRules.get(GameRules.DO_WEATHER_CYCLE).set(false, server);
-        gameRules.get(GameRules.DO_DAYLIGHT_CYCLE).set(false, server);
+    private void setupGameRules() {
+        commons().gameRuleBuilder()
+                .set(GameRules.SNOW_ACCUMULATION_HEIGHT, 0)
+                .set(GameRules.DO_WEATHER_CYCLE, false)
+                .set(GameRules.DO_DAYLIGHT_CYCLE, false);
     }
 
     private void randomizeWorldConditions(ServerWorld world) {

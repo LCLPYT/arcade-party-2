@@ -8,7 +8,6 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.scoreboard.*;
 import net.minecraft.scoreboard.number.StyledNumberFormat;
-import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -88,11 +87,9 @@ public class JumpAndRunInstance extends DefaultGameInstance implements MapBootst
 
     @Override
     protected void prepare() {
-        MinecraftServer server = gameHandle.getServer();
-
-        GameRules gameRules = getWorld().getGameRules();
-        gameRules.get(GameRules.RANDOM_TICK_SPEED).set(0, server);
-        gameRules.get(GameRules.DO_DAYLIGHT_CYCLE).set(false, server);
+        commons().gameRuleBuilder()
+                .set(GameRules.RANDOM_TICK_SPEED, 0)
+                .set(GameRules.DO_DAYLIGHT_CYCLE, false);
 
         // setup room listeners
         var rooms = jumpAndRun.rooms();
