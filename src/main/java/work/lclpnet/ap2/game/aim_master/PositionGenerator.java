@@ -75,12 +75,19 @@ public class PositionGenerator {
         ArrayList<BlockPos> BlockPositions = new ArrayList<>();
         final Random random = new Random();
 
-        while (true) {
-            if (BlockPositions.size() >= targetNumber || cone.isEmpty()) return BlockPositions;
+        while (BlockPositions.size() < targetNumber && !cone.isEmpty()) {
 
             int randIndex = random.nextInt(cone.size());
-            BlockPositions.add(cone.remove(randIndex));
+            BlockPos selectedPos = cone.remove(randIndex);
+            BlockPositions.add(selectedPos);
+
+            for (BlockPos pos : new ArrayList<>(cone)) {
+
+                double euclideanDistance = sqrt(pow(pos.getX() - selectedPos.getX(), 2) + pow(pos.getY() - selectedPos.getY(), 2) + pow(pos.getZ() - selectedPos.getZ(), 2));;
+                if (euclideanDistance <= 1.8) {cone.remove(pos);}
+            }
         }
+        return BlockPositions;
     }
 
     private static double getAngle(int x, int y, int z) {
