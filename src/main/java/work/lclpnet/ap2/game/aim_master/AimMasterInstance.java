@@ -1,6 +1,5 @@
 package work.lclpnet.ap2.game.aim_master;
 
-import net.minecraft.block.Blocks;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Formatting;
@@ -15,7 +14,6 @@ import work.lclpnet.ap2.impl.util.world.StackedRoomGenerator;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.lobby.game.map.GameMap;
 
-import java.util.ArrayList;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 
@@ -25,13 +23,18 @@ public class AimMasterInstance extends DefaultGameInstance implements MapBootstr
 
     private final ScoreDataContainer<ServerPlayerEntity, PlayerRef> data = new ScoreDataContainer<>(PlayerRef::create);
 
+    //game parameters
     private static final int MIN_SCORE = 24;
     private static final int MAX_SCORE = 36;
+    private static final int TARGET_NUMBER = 6;
+    private static final int TARGET_MIN_DISTANCE = 2;
 
-    private static final int TARGET_NUMBER = 5;
-    private static final int SPHERE_RADIUS = 14;
-    private static final int SPHERE_OFFSET = 3;
-    private static final int CONE_FOV = 30;
+    //parameters for cone generation
+    private static final int SPHERE_RADIUS = 15; //radius of the sphere the cone base is projected on
+    private static final int SPHERE_OFFSET = 5; //offset from player position
+    private static final double UPWARD_TILT = 0.55; //angle that tilts the view cone upwards
+    private static final double ELLIPSE_FACTOR = 0.35; //this factor 'squishes' the base of the view cone to make it elliptical
+    private static final int CONE_FOV = 35; //fov of the view cone
 
     private static final Random random = new Random();
     int scoreGoal = MIN_SCORE + random.nextInt(MAX_SCORE - MIN_SCORE + 1);
@@ -66,14 +69,15 @@ public class AimMasterInstance extends DefaultGameInstance implements MapBootstr
 
     @Override
     protected void prepare() {
+
         ServerWorld world = getWorld();
-
-        PositionGenerator positionGenerator = new PositionGenerator(SPHERE_RADIUS, SPHERE_OFFSET, new BlockPos(0,42,0), world, CONE_FOV, TARGET_NUMBER);
-
-        ArrayList<BlockPos> blockPositions = positionGenerator.pickPositions();
-        for (BlockPos blockPos : blockPositions) world.setBlockState(blockPos, Blocks.TARGET.getDefaultState());
-
         bossBar = usePlayerDynamicTaskDisplay(styled(scoreGoal, Formatting.YELLOW), styled(0, Formatting.YELLOW));
+
+        PositionGenerator positionGenerator = new PositionGenerator(SPHERE_RADIUS, SPHERE_OFFSET, UPWARD_TILT, ELLIPSE_FACTOR, new BlockPos(0,42,0), CONE_FOV, TARGET_NUMBER, TARGET_MIN_DISTANCE);
+        BlockOptions blockOptions = new BlockOptions();
+        SequenceGenerator sequenceGenerator = new SequenceGenerator(positionGenerator, blockOptions, world, scoreGoal);
+
+        AimMasterSequence sequence = sequenceGenerator.getSequence();
 
         //hooks
         HookRegistrar hooks = gameHandle.getHookRegistrar();
@@ -84,5 +88,4 @@ public class AimMasterInstance extends DefaultGameInstance implements MapBootstr
     protected void ready() {
         var subject = gameHandle.getTranslations().translateText("game.ap2.aim_master.task");
     }
-
 }

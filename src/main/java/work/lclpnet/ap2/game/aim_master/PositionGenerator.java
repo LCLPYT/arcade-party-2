@@ -1,6 +1,5 @@
 package work.lclpnet.ap2.game.aim_master;
 
-import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import work.lclpnet.ap2.impl.util.BlockBox;
 
@@ -13,16 +12,22 @@ public class PositionGenerator {
 
     private final int radius;
     private final int offset;
+    private final double upwardTilt;
+    private final double ellipseFactor;
     private final int fov;
     private final int targetNumber;
+    private final int targetMinDistance;
     private final BlockPos center;
 
-    public PositionGenerator(int radius, int offset, BlockPos center, ServerWorld world, int fov, int targetNumber) {
+    public PositionGenerator(int radius, int offset, double upwardTilt, double ellipseFactor, BlockPos center, int fov, int targetNumber, int targetMinDistance) {
         this.radius = radius;
         this.offset = offset;
+        this.upwardTilt = upwardTilt;
+        this.ellipseFactor = ellipseFactor;
         this.center = center;
         this.fov = fov;
         this.targetNumber = targetNumber;
+        this.targetMinDistance = targetMinDistance;
     }
 
     private BlockBox generateBlockBox() {
@@ -43,11 +48,11 @@ public class PositionGenerator {
             int squaredDistance = x * x + y * y + z * z;
             int radiusSquared = radius * radius;
 
-            int e = 13;
+            double e = radius*(radius*0.004+0.84);
 
             if ((abs(squaredDistance - radiusSquared) <= e)) {
                 double a = radius;
-                double b = radius * 0.42;
+                double b = radius * ellipseFactor;
 
                 double distanceToEllipse = (x * x) / (a * a) + (y * y) / (b * b);
 
@@ -77,15 +82,15 @@ public class PositionGenerator {
             for (BlockPos pos : new ArrayList<>(cone)) {
 
                 double euclideanDistance = sqrt(pow(pos.getX() - selectedPos.getX(), 2) + pow(pos.getY() - selectedPos.getY(), 2) + pow(pos.getZ() - selectedPos.getZ(), 2));
-                if (euclideanDistance <= 1.8) {cone.remove(pos);}
+                if (euclideanDistance <= targetMinDistance) {cone.remove(pos);}
             }
         }
         return BlockPositions;
     }
 
-    private static double getAngle(int x, int y, int z) {
+    private double getAngle(int x, int y, int z) {
         double[] vec = {x, y, z};
-        double[] viewDir = {0, 0.5, 1};
+        double[] viewDir = {0, 0+upwardTilt, 1};
 
         return toDegrees(acos(calculateDotProduct(vec, viewDir) / (vectorLen(vec) * vectorLen(viewDir))));
     }
