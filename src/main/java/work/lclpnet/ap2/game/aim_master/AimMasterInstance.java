@@ -1,8 +1,10 @@
 package work.lclpnet.ap2.game.aim_master;
 
+import net.minecraft.item.ItemStack;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Formatting;
+import net.minecraft.util.TypedActionResult;
 import net.minecraft.util.math.BlockPos;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.map.MapBootstrap;
@@ -13,6 +15,7 @@ import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedPlayerBossBar;
 import work.lclpnet.ap2.impl.util.world.StackedRoomGenerator;
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
 import work.lclpnet.kibu.hook.HookRegistrar;
+import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.kibu.hook.player.PlayerInventoryHooks;
 import work.lclpnet.lobby.game.map.GameMap;
 
@@ -26,8 +29,8 @@ public class AimMasterInstance extends DefaultGameInstance implements MapBootstr
     private final ScoreDataContainer<ServerPlayerEntity, PlayerRef> data = new ScoreDataContainer<>(PlayerRef::create);
 
     //game parameters
-    private static final int MIN_SCORE = 24;
-    private static final int MAX_SCORE = 36;
+    private static final int MIN_SCORE = 20;
+    private static final int MAX_SCORE = 30;
     private static final int TARGET_NUMBER = 6;
     private static final int TARGET_MIN_DISTANCE = 2;
 
@@ -80,21 +83,17 @@ public class AimMasterInstance extends DefaultGameInstance implements MapBootstr
     @Override
     protected void prepare() {
 
-        ServerWorld world = getWorld();
-
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
             AimMasterDomain domain = manager.getDomains().get(player.getUuid());
             domain.teleport(player);
         }
-
-        bossBar = usePlayerDynamicTaskDisplay(styled(scoreGoal, Formatting.YELLOW), styled(0, Formatting.YELLOW));
-
+        bossBar = usePlayerDynamicTaskDisplay(styled(scoreGoal, Formatting.YELLOW));
+        bossBar.setPercent(0);
     }
 
     @Override
     protected void ready() {
 
-        var subject = gameHandle.getTranslations().translateText("game.ap2.aim_master.task");
         var sequenceItems = sequence.getItems();
 
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
@@ -108,6 +107,24 @@ public class AimMasterInstance extends DefaultGameInstance implements MapBootstr
         HookRegistrar hooks = gameHandle.getHookRegistrar();
         hooks.registerHook(PlayerInventoryHooks.SLOT_CHANGE, (player, slot) -> {
             if (!(slot == 4)) PlayerInventoryAccess.setSelectedSlot(player, 4);
+        });
+
+        hooks.registerHook(PlayerInteractionHooks.USE_ITEM, (player, world, hand) -> {
+            AimMasterDomain domain = manager.getDomains().get(player.getUuid());
+            ServerPlayerEntity serverPlayer = (ServerPlayerEntity) player;
+
+            if (domain.rayCaster(serverPlayer, SPHERE_RADIUS)) {
+
+                data.addScore(serverPlayer, 1);
+                int newScore = data.getScore(serverPlayer);
+                bossBar.setPercent((float) newScore / scoreGoal);
+
+                if (newScore >= scoreGoal) winManager.win(serverPlayer);
+                else manager.advancePlayer(serverPlayer);
+
+                return TypedActionResult.success(ItemStack.EMPTY);
+            }
+            return TypedActionResult.pass(ItemStack.EMPTY);
         });
     }
 }

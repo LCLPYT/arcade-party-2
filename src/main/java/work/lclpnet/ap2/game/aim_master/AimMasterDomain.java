@@ -25,6 +25,7 @@ public class AimMasterDomain {
     private final ServerWorld world;
     private final float yaw;
     private BlockPos target = null;
+    private BlockPos offsetTarget = null;
 
     public AimMasterDomain(BlockPos spawn, float yaw, ServerWorld world) {
         this.spawn = spawn;
@@ -41,8 +42,10 @@ public class AimMasterDomain {
 
         for (BlockPos pos : blockMap.keySet()) {
             BlockPos offsetPos = pos.add(spawn);
-            world.setBlockState(offsetPos, blockMap.get(pos).getDefaultState());
             target = item.target();
+            offsetTarget = target.add(spawn);
+
+            world.setBlockState(offsetPos, blockMap.get(pos).getDefaultState());
 
             // give target Item
             ItemStack stack = new ItemStack(blockMap.get(target));
@@ -67,7 +70,9 @@ public class AimMasterDomain {
     public boolean rayCaster(ServerPlayerEntity player, int radius) {
         Vec3d start = player.getEyePos();
         Vec3d end = player.getEyePos().add(player.getRotationVector().multiply(radius * 2));
-        BlockHitResult res = RayCaster.rayCast(start, end, pos -> pos.equals(target));
+
+        BlockHitResult res = RayCaster.rayCast(start, end, pos -> pos.equals(offsetTarget));
+
         return res.getType() == HitResult.Type.BLOCK;
     }
 }
