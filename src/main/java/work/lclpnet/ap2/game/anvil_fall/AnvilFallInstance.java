@@ -59,9 +59,9 @@ public class AnvilFallInstance extends EliminationGameInstance {
 
     @Override
     protected void prepare() {
-        GameRules gameRules = getWorld().getGameRules();
-        gameRules.get(GameRules.DO_ENTITY_DROPS).set(false, null);
-        gameRules.get(GameRules.FALL_DAMAGE).set(true, null);
+        commons().gameRuleBuilder()
+                .set(GameRules.DO_ENTITY_DROPS, false)
+                .set(GameRules.FALL_DAMAGE, true);
 
         scanWorld();
 

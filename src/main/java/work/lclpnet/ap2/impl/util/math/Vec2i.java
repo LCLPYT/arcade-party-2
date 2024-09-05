@@ -17,6 +17,11 @@ public class Vec2i {
         return z;
     }
 
+    @Override
+    public String toString() {
+        return "(%d, %d)".formatted(x, z);
+    }
+
     public static class Mutable extends Vec2i {
 
         public Mutable(int x, int z) {

@@ -218,5 +218,8 @@
   "game.ap2.apocalypse_survival": "Apocalypse Survival",
   "game.ap2.apocalypse_survival.description": "An army of undead will spawn and will hunt you down! You cannot defend yourself. Be the last player remaining in order to win!",
   "game.ap2.apocalypse_survival.task": "Survive the undead",
-  "game.ap2.apocalypse_survival.survived": "survived %s"
+  "game.ap2.apocalypse_survival.survived": "survived %s",
+  "game.ap2.pillar_battle": "Pillar Battle",
+  "game.ap2.pillar_battle.description": "All players are placed on pillars. Everyone receives a random item every %s seconds. Kill other players and be the last one standing!",
+  "game.ap2.pillar_battle.out_of_bounds": "You cannot build there..."
 }

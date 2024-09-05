@@ -17,6 +17,7 @@ import work.lclpnet.ap2.api.game.sink.IntDataSink;
 import work.lclpnet.ap2.api.util.action.Action;
 import work.lclpnet.ap2.api.util.action.PlayerAction;
 import work.lclpnet.ap2.impl.map.MapUtil;
+import work.lclpnet.ap2.impl.util.GameRuleBuilder;
 import work.lclpnet.ap2.impl.util.math.Vec2i;
 import work.lclpnet.kibu.hook.HookFactory;
 import work.lclpnet.kibu.hook.HookRegistrar;
@@ -42,6 +43,7 @@ public class GameCommons {
     private final ServerWorld world;
     private volatile Announcer announcer = null;
     private volatile List<PositionRotation> spawns = null;
+    private volatile GameRuleBuilder gameRuleBuilder = null;
 
     public GameCommons(MiniGameHandle gameHandle, GameMap map, ServerWorld world) {
         this.gameHandle = gameHandle;
@@ -68,7 +70,7 @@ public class GameCommons {
         hooks.registerHook(PlayerMoveCallback.HOOK, (player, from, to) -> {
             if (!participants.isParticipating(player)) return false;
 
-            if (!(to.getY() >= minY)) {
+            if (player.getY() < minY) {
                 hook.invoker().act(player);
             }
 
@@ -232,6 +234,18 @@ public class GameCommons {
         }
 
         return spawns;
+    }
+
+    public GameRuleBuilder gameRuleBuilder() {
+        if (gameRuleBuilder != null) return gameRuleBuilder;
+
+        synchronized (this) {
+            if (gameRuleBuilder == null) {
+                gameRuleBuilder = new GameRuleBuilder(world.getGameRules(), gameHandle.getServer());
+            }
+        }
+
+        return gameRuleBuilder;
     }
 
     public record WorldBorderConfig(int centerX, int centerZ, int maxRadius, int minRadius) {}
