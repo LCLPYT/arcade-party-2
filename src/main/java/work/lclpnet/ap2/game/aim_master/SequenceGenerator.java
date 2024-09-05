@@ -1,7 +1,6 @@
 package work.lclpnet.ap2.game.aim_master;
 
 import net.minecraft.block.Block;
-import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import work.lclpnet.ap2.impl.util.IndexedSet;
 
@@ -12,22 +11,22 @@ import java.util.Random;
 public class SequenceGenerator {
     private final PositionGenerator posGen;
     private final BlockOptions blockOps;
-    private final ServerWorld world;
     private final int scoreGoal;
 
     AimMasterSequence sequence = new AimMasterSequence();
     private final Random random = new Random();
 
-    public SequenceGenerator(PositionGenerator posGen, BlockOptions blockOps, ServerWorld world, int scoreGoal) {
+    public SequenceGenerator(PositionGenerator posGen, BlockOptions blockOps, int scoreGoal) {
         this.posGen = posGen;
         this.blockOps = blockOps;
-        this.world = world;
         this.scoreGoal = scoreGoal;
 
         this.sequence = generateSequence();
     }
 
-    public AimMasterSequence getSequence() {return sequence;}
+    public AimMasterSequence getSequence() {
+        return sequence;
+    }
 
     private AimMasterSequence generateSequence() {
 
