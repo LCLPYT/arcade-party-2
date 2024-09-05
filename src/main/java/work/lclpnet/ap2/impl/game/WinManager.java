@@ -4,6 +4,7 @@ import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.game.GameOverListener;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.*;
+import work.lclpnet.ap2.api.util.action.Action;
 import work.lclpnet.kibu.hook.Hook;
 import work.lclpnet.kibu.hook.HookFactory;
 import work.lclpnet.lobby.game.util.ProtectorUtils;
@@ -34,21 +35,20 @@ public class WinManager<T, Ref extends SubjectRef> {
         this.winnersFactory = winnersFactory;
     }
 
-    public void win(@Nullable T winner) {
+    public Action<Runnable> win(@Nullable T winner) {
         if (winner == null) {
-            winNobody();
-            return;
+            return winNobody();
         }
 
-        win(Set.of(winner));
+        return win(Set.of(winner));
     }
 
-    public void winNobody() {
-        win(Set.of());
+    public Action<Runnable> winNobody() {
+        return win(Set.of());
     }
 
-    public synchronized void win(Set<T> winners) {
-        if (this.gameOver) return;
+    public synchronized Action<Runnable> win(Set<T> winners) {
+        if (this.gameOver) return Action.noop();
 
         gameOver = true;
         gameOverHook.invoker().onGameOver();
@@ -69,7 +69,7 @@ public class WinManager<T, Ref extends SubjectRef> {
         var winSequence = new WinSequence<>(gameHandle, data, refs);
         var gameWinners = winnersFactory.create(winners);
 
-        winSequence.start(gameWinners);
+        return winSequence.start(gameWinners);
     }
 
     public void addListener(GameOverListener listener) {
