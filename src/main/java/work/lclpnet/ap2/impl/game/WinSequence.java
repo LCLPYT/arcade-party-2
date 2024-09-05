@@ -9,9 +9,12 @@ import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.*;
+import work.lclpnet.ap2.api.util.action.Action;
 import work.lclpnet.ap2.base.ApConstants;
 import work.lclpnet.ap2.impl.game.data.type.TeamRef;
 import work.lclpnet.ap2.impl.util.SoundHelper;
+import work.lclpnet.kibu.hook.Hook;
+import work.lclpnet.kibu.hook.HookFactory;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.RunningTask;
 import work.lclpnet.kibu.scheduler.api.SchedulerAction;
@@ -39,7 +42,7 @@ public class WinSequence<T, Ref extends SubjectRef> {
         this.refs = refs;
     }
 
-    public void start(GameWinners<Ref> winners) {
+    public Action<Runnable> start(GameWinners<Ref> winners) {
         Translations translations = gameHandle.getTranslations();
         MinecraftServer server = gameHandle.getServer();
 
@@ -50,6 +53,12 @@ public class WinSequence<T, Ref extends SubjectRef> {
 
             player.sendMessage(msg.formatted(GRAY));
         }
+
+        var hook = HookFactory.createArrayBacked(Runnable.class, actions -> () -> {
+            for (Runnable action : actions) {
+                action.run();
+            }
+        });
 
         gameHandle.getScheduler().interval(new SchedulerAction() {
             int t = 0;
@@ -77,7 +86,9 @@ public class WinSequence<T, Ref extends SubjectRef> {
                     }
                 }
             }
-        }, 1);
+        }, 1).whenComplete(() -> hook.invoker().run());
+
+        return Action.create(hook);
     }
 
     private void announceGameOver(GameWinners<Ref> winners) {

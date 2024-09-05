@@ -31,8 +31,8 @@ public class PositionGenerator {
     }
 
     private BlockBox generateBlockBox() {
-        BlockPos pos1 = new BlockPos(center.getX() + radius, center.getY() + radius, (center.getZ()+offset) + radius);
-        BlockPos pos2 = new BlockPos(center.getX() - radius, center.getY() - radius, (center.getZ()+offset) - radius);
+        BlockPos pos1 = new BlockPos(center.getX() + radius, center.getY() + radius, (center.getZ() + offset) + radius);
+        BlockPos pos2 = new BlockPos(center.getX() - radius, center.getY() - radius, (center.getZ() + offset) - radius);
         return new BlockBox(pos1, pos2);
     }
 
@@ -43,12 +43,12 @@ public class PositionGenerator {
 
             int x = pos.getX() - center.getX();
             int y = pos.getY() - center.getY();
-            int z = pos.getZ() - (center.getZ()+offset);
+            int z = pos.getZ() - (center.getZ() + offset);
 
             int squaredDistance = x * x + y * y + z * z;
             int radiusSquared = radius * radius;
 
-            double e = radius*(radius*0.004+0.84);
+            double e = radius * (radius * 0.004 + 0.84);
 
             if ((abs(squaredDistance - radiusSquared) <= e)) {
                 double a = radius;
@@ -82,7 +82,9 @@ public class PositionGenerator {
             for (BlockPos pos : new ArrayList<>(cone)) {
 
                 double euclideanDistance = sqrt(pow(pos.getX() - selectedPos.getX(), 2) + pow(pos.getY() - selectedPos.getY(), 2) + pow(pos.getZ() - selectedPos.getZ(), 2));
-                if (euclideanDistance <= targetMinDistance) {cone.remove(pos);}
+                if (euclideanDistance <= targetMinDistance) {
+                    cone.remove(pos);
+                }
             }
         }
         return BlockPositions;
@@ -90,7 +92,7 @@ public class PositionGenerator {
 
     private double getAngle(int x, int y, int z) {
         double[] vec = {x, y, z};
-        double[] viewDir = {0, 0+upwardTilt, 1};
+        double[] viewDir = {0, 0 + upwardTilt, 1};
 
         return toDegrees(acos(calculateDotProduct(vec, viewDir) / (vectorLen(vec) * vectorLen(viewDir))));
     }
@@ -104,6 +106,6 @@ public class PositionGenerator {
     }
 
     private static double vectorLen(double[] vec) {
-        return sqrt(vec[0]*vec[0] + vec[1]*vec[1] + vec[2]*vec[2]);
+        return sqrt(vec[0] * vec[0] + vec[1] * vec[1] + vec[2] * vec[2]);
     }
 }

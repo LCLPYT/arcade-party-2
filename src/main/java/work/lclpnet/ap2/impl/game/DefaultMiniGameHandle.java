@@ -76,7 +76,7 @@ public class DefaultMiniGameHandle implements MiniGameHandle, WorldBorderManager
         container.commandStack().push();
         container.schedulerStack().push();
 
-        scheduler = container.schedulerStack();
+        scheduler = container.schedulerStack().current();
 
         container.schedulerStack().push();
     }
