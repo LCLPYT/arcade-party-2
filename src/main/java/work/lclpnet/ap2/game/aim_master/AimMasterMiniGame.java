@@ -8,6 +8,7 @@ import work.lclpnet.ap2.base.ApConstants;
 import work.lclpnet.ap2.base.ArcadeParty;
 
 public class AimMasterMiniGame implements MiniGame {
+
     @Override
     public boolean canBeFinale(GameStartContext context) {
         return true;

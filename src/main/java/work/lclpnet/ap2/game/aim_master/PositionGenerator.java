@@ -40,7 +40,6 @@ public class PositionGenerator {
         ArrayList<BlockPos> validBlockPositions = new ArrayList<>();
 
         for (BlockPos pos : generateBlockBox()) {
-
             int x = pos.getX() - center.getX();
             int y = pos.getY() - center.getY();
             int z = pos.getZ() - (center.getZ() + offset);
@@ -50,7 +49,7 @@ public class PositionGenerator {
 
             double e = radius * (radius * 0.004 + 0.84);
 
-            if ((abs(squaredDistance - radiusSquared) <= e)) {
+            if (abs(squaredDistance - radiusSquared) <= e) {
                 double a = radius;
                 double b = radius * ellipseFactor;
 
@@ -65,6 +64,7 @@ public class PositionGenerator {
                 }
             }
         }
+
         return validBlockPositions;
     }
 
@@ -74,14 +74,13 @@ public class PositionGenerator {
         final Random random = new Random();
 
         while (BlockPositions.size() < targetNumber && !cone.isEmpty()) {
-
             int randIndex = random.nextInt(cone.size());
             BlockPos selectedPos = cone.remove(randIndex);
             BlockPositions.add(selectedPos);
 
             for (BlockPos pos : new ArrayList<>(cone)) {
-
                 double euclideanDistance = sqrt(pow(pos.getX() - selectedPos.getX(), 2) + pow(pos.getY() - selectedPos.getY(), 2) + pow(pos.getZ() - selectedPos.getZ(), 2));
+
                 if (euclideanDistance <= targetMinDistance) {
                     cone.remove(pos);
                 }

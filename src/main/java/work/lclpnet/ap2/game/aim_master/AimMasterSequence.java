@@ -8,12 +8,12 @@ import java.util.List;
 import java.util.Map;
 
 public class AimMasterSequence {
+
     private final List<Item> sequence = new ArrayList<>();
 
     public List<Item> getItems() {
         return sequence;
     }
 
-    public record Item(Map<BlockPos, Block> blockMap, BlockPos target) {
-    }
+    public record Item(Map<BlockPos, Block> blockMap, BlockPos target) {}
 }

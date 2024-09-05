@@ -6,9 +6,6 @@ import work.lclpnet.ap2.impl.util.IndexedSet;
 
 public class BlockOptions {
 
-    public BlockOptions() {
-    }
-
     public IndexedSet<Block> getBlockOptions() {
         IndexedSet<Block> blockOptions = new IndexedSet<>();
         setBlockOptions(blockOptions);
@@ -16,7 +13,6 @@ public class BlockOptions {
     }
 
     private void setBlockOptions(IndexedSet<Block> blockOptions) {
-
         blockOptions.add(Blocks.OAK_WOOD);
         blockOptions.add(Blocks.BIRCH_WOOD);
         blockOptions.add(Blocks.MANGROVE_PLANKS);

@@ -9,11 +9,11 @@ import java.util.HashMap;
 import java.util.Random;
 
 public class SequenceGenerator {
+
     private final PositionGenerator posGen;
     private final BlockOptions blockOps;
     private final int scoreGoal;
-
-    AimMasterSequence sequence = new AimMasterSequence();
+    private final AimMasterSequence sequence;
     private final Random random = new Random();
 
     public SequenceGenerator(PositionGenerator posGen, BlockOptions blockOps, int scoreGoal) {
@@ -29,9 +29,9 @@ public class SequenceGenerator {
     }
 
     private AimMasterSequence generateSequence() {
+        AimMasterSequence sequence = new AimMasterSequence();
 
         for (int i = 0; i < scoreGoal; i++) {
-
             HashMap<BlockPos, Block> posBlockMap = new HashMap<>();
 
             ArrayList<BlockPos> positions = posGen.pickPositions();
