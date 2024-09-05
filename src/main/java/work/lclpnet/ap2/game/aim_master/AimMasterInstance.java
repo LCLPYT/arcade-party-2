@@ -42,6 +42,8 @@ public class AimMasterInstance extends DefaultGameInstance implements MapBootstr
     private DynamicTranslatedPlayerBossBar bossBar;
     private AimMasterManager manager;
 
+    private AimMasterSequence sequence;
+
     public AimMasterInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
     }
@@ -53,12 +55,18 @@ public class AimMasterInstance extends DefaultGameInstance implements MapBootstr
 
     @Override
     public CompletableFuture<Void> createWorldBootstrap(ServerWorld world, GameMap map) {
-        var generator = new StackedRoomGenerator<>(world, map, StackedRoomGenerator.Coordinates.ABSOLUTE, (pos, spawn, yaw, structure) -> new AimMasterDomain(pos, spawn, yaw));
+
+        var generator = new StackedRoomGenerator<>(world, map, StackedRoomGenerator.Coordinates.ABSOLUTE, (pos, spawn, yaw, structure) -> new AimMasterDomain(spawn, yaw, world));
+        var positionGenerator = new PositionGenerator(SPHERE_RADIUS, SPHERE_OFFSET, UPWARD_TILT, ELLIPSE_FACTOR, new BlockPos(0,0,0), CONE_FOV, TARGET_NUMBER, TARGET_MIN_DISTANCE);
+        var blockOptions = new BlockOptions();
+        var sequenceGenerator = new SequenceGenerator(positionGenerator, blockOptions, world, scoreGoal);
+
+        sequence = sequenceGenerator.getSequence();
 
         return generator.generate(gameHandle.getParticipants())
                 .thenAccept(result -> {
                     var domains = result.rooms();
-                    manager = new AimMasterManager(domains, world);
+                    manager = new AimMasterManager(world, domains, sequence);
 
                 })
                 .exceptionally(throwable -> {
@@ -71,13 +79,15 @@ public class AimMasterInstance extends DefaultGameInstance implements MapBootstr
     protected void prepare() {
 
         ServerWorld world = getWorld();
+        var sequenceItems = sequence.getItems();
+
+        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
+            AimMasterDomain domain = manager.getDomains().get(player.getUuid());
+            domain.teleport(player);
+            domain.setBlocks(sequenceItems.getFirst());
+        }
+
         bossBar = usePlayerDynamicTaskDisplay(styled(scoreGoal, Formatting.YELLOW), styled(0, Formatting.YELLOW));
-
-        PositionGenerator positionGenerator = new PositionGenerator(SPHERE_RADIUS, SPHERE_OFFSET, UPWARD_TILT, ELLIPSE_FACTOR, new BlockPos(0,42,0), CONE_FOV, TARGET_NUMBER, TARGET_MIN_DISTANCE);
-        BlockOptions blockOptions = new BlockOptions();
-        SequenceGenerator sequenceGenerator = new SequenceGenerator(positionGenerator, blockOptions, world, scoreGoal);
-
-        AimMasterSequence sequence = sequenceGenerator.getSequence();
 
         //hooks
         HookRegistrar hooks = gameHandle.getHookRegistrar();

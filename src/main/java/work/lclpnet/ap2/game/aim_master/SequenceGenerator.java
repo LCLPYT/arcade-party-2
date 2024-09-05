@@ -2,7 +2,6 @@ package work.lclpnet.ap2.game.aim_master;
 
 import net.minecraft.block.Block;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.Pair;
 import net.minecraft.util.math.BlockPos;
 import work.lclpnet.ap2.impl.util.IndexedSet;
 
@@ -45,13 +44,11 @@ public class SequenceGenerator {
                 posBlockMap.put(p, block);
             }
 
-            Integer targetIndex = random.nextInt(positions.size());
-            Pair<Integer, HashMap<BlockPos, Block>> sequenceItem = new Pair<>(targetIndex, posBlockMap);
+            int targetIndex = random.nextInt(positions.size());
+            var sequenceItem = new AimMasterSequence.Item(posBlockMap, positions.get(targetIndex));
 
-            sequence.add(sequenceItem);
+            sequence.getItems().add(sequenceItem);
         }
-        //test generation with first sequence item
-        for (BlockPos pos : sequence.get(0).getRight().keySet()) world.setBlockState(pos, sequence.get(0).getRight().get(pos).getDefaultState());
 
         return sequence;
     }
