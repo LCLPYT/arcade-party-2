@@ -130,7 +130,7 @@ public class AimMasterInstance extends DefaultGameInstance implements MapBootstr
 
             data.addScore(serverPlayer, 1);
             int newScore = data.getScore(serverPlayer);
-            bossBar.setPercent((float) newScore / scoreGoal);
+            bossBar.getBossBar(serverPlayer).setPercent((float) newScore / scoreGoal);
 
             BlockPos target = domain.getCurrentTarget();
             ServerWorld serverWorld = serverPlayer.getServerWorld();
