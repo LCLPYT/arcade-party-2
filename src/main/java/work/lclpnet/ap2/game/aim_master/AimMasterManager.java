@@ -1,5 +1,6 @@
 package work.lclpnet.ap2.game.aim_master;
 
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 
 import java.util.HashMap;
@@ -23,17 +24,19 @@ public class AimMasterManager {
         return domains;
     }
 
-    public void advancePlayer(UUID player) {
-        AimMasterDomain domain = domains.get(player);
+    public void advancePlayer(ServerPlayerEntity player) {
+        var playerUuid = player.getUuid();
+
+        AimMasterDomain domain = domains.get(playerUuid);
 
         int progress = getPlayerProgress(player);
         int newProgress = progress + 1;
 
         domain.removeBlocks(sequence.getItems().get(progress));
-        domain.setBlocks(sequence.getItems().get(newProgress));
-        playerProgress.put(player, newProgress);
+        domain.setBlocks(sequence.getItems().get(newProgress), player);
+        playerProgress.put(playerUuid, newProgress);
     }
 
-    public int getPlayerProgress(UUID player) {
-        return playerProgress.getOrDefault(player, 0);}
+    public int getPlayerProgress(ServerPlayerEntity player) {
+        return playerProgress.getOrDefault(player.getUuid(), 0);}
 }

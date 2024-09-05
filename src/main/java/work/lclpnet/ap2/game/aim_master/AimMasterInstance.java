@@ -11,7 +11,9 @@ import work.lclpnet.ap2.impl.game.data.ScoreDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedPlayerBossBar;
 import work.lclpnet.ap2.impl.util.world.StackedRoomGenerator;
+import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
 import work.lclpnet.kibu.hook.HookRegistrar;
+import work.lclpnet.kibu.hook.player.PlayerInventoryHooks;
 import work.lclpnet.lobby.game.map.GameMap;
 
 import java.util.Random;
@@ -79,23 +81,33 @@ public class AimMasterInstance extends DefaultGameInstance implements MapBootstr
     protected void prepare() {
 
         ServerWorld world = getWorld();
-        var sequenceItems = sequence.getItems();
 
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
             AimMasterDomain domain = manager.getDomains().get(player.getUuid());
             domain.teleport(player);
-            domain.setBlocks(sequenceItems.getFirst());
         }
 
         bossBar = usePlayerDynamicTaskDisplay(styled(scoreGoal, Formatting.YELLOW), styled(0, Formatting.YELLOW));
-
-        //hooks
-        HookRegistrar hooks = gameHandle.getHookRegistrar();
 
     }
 
     @Override
     protected void ready() {
+
         var subject = gameHandle.getTranslations().translateText("game.ap2.aim_master.task");
+        var sequenceItems = sequence.getItems();
+
+        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
+            AimMasterDomain domain = manager.getDomains().get(player.getUuid());
+            domain.teleport(player);
+            PlayerInventoryAccess.setSelectedSlot(player, 4);
+            domain.setBlocks(sequenceItems.getFirst(), player);
+        }
+
+        //hooks
+        HookRegistrar hooks = gameHandle.getHookRegistrar();
+        hooks.registerHook(PlayerInventoryHooks.SLOT_CHANGE, (player, slot) -> {
+            if (!(slot == 4)) PlayerInventoryAccess.setSelectedSlot(player, 4);
+        });
     }
 }

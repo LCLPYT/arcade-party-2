@@ -13,5 +13,5 @@ public class AimMasterSequence {
     public List<Item> getItems() {
         return sequence;
     }
-    public record Item(Map<BlockPos, Block> blockMap, BlockPos pos) {}
+    public record Item(Map<BlockPos, Block> blockMap, BlockPos target) {}
 }
