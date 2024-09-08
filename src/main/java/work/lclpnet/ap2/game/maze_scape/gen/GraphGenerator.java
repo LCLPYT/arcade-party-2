@@ -36,6 +36,8 @@ public class GraphGenerator<C, P extends Piece<C>, O extends OrientedPiece<C, P>
                 // find fitting piece for each connector
                 Map<C, List<O>> fittingConnectors = findFittingConnectorPieces(node);
                 node.setFittingConnectors(fittingConnectors);
+
+                anyFitting |= fittingConnectors != null && !fittingConnectors.isEmpty();
             }
 
             if (!anyFitting) {
@@ -48,21 +50,37 @@ public class GraphGenerator<C, P extends Piece<C>, O extends OrientedPiece<C, P>
             Collections.shuffle(currentNodes, random);
 
             for (var node : currentNodes) {
-                var connectors = node.oriented().piece().connectors();
-                var children = new ArrayList<Graph.Node<C, P, O>>(connectors.size());
+                O oriented = node.oriented();
+
+                if (oriented == null) continue;
+
+                var connectors = oriented.piece().connectors();
+                int connectorCount = connectors.size();
+                var children = new ArrayList<Graph.Node<C, P, O>>(connectorCount);
+
+                // mark all connectors as closed initially
+                for (int i = 0; i < connectorCount; i++) {
+                    children.add(null);
+                }
 
                 node.setChildren(children);
 
+                Map<C, List<O>> fittingMap = node.fittingConnectors();
+
+                if (fittingMap == null) {
+                    // no fitting pieces set
+                    continue;
+                }
+
                 // assign connectors in a random order too
-                for (int i : randomIndexOrder(connectors.size())) {
+                for (int i : randomIndexOrder(connectorCount)) {
                     C connector = connectors.get(i);
 
                     // assign a random fitting piece for the connector
-                    List<O> fitting = node.fittingConnectors().get(connector);
+                    List<O> fitting = fittingMap.get(connector);
 
                     if (fitting == null || fitting.isEmpty()) {
-                        // no fitting pieces for the connector, mark it as closed
-                        children.set(i, null);
+                        // no fitting pieces for the connector
                         continue;
                     }
 
@@ -104,11 +122,12 @@ public class GraphGenerator<C, P extends Piece<C>, O extends OrientedPiece<C, P>
         return order;
     }
 
+    @Nullable
     private Map<C, List<O>> findFittingConnectorPieces(Graph.Node<C, P, O> node) {
         O placed = node.oriented();
 
         if (placed == null) {
-            return Map.of();
+            return null;
         }
 
         var connectors = placed.piece().connectors();

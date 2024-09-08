@@ -13,6 +13,18 @@ public record StringConnector(int x, int y, int direction) {
         return (this.direction - other.direction + 2) % 4;
     }
 
+    public int directionX() {
+        if (direction % 4 == 0) return 1;
+        if (direction % 4 == 2) return -1;
+        return 0;
+    }
+
+    public int directionY() {
+        if (direction % 4 == 1) return 1;
+        if (direction % 4 == 3) return -1;
+        return 0;
+    }
+
     @Override
     public String toString() {
         return "StringConnector{x=%d, y=%d, direction=%s}".formatted(x, y, ARROWS[direction % 4]);

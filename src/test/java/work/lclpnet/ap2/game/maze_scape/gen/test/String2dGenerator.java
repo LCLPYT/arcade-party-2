@@ -1,6 +1,7 @@
 package work.lclpnet.ap2.game.maze_scape.gen.test;
 
 import work.lclpnet.ap2.game.maze_scape.gen.Generator;
+import work.lclpnet.kibu.util.math.Matrix3i;
 
 import java.util.*;
 
@@ -28,13 +29,31 @@ public class String2dGenerator implements Generator<StringConnector, StringPiece
     public List<OrientedStringPiece> fittingPieces(StringConnector connector) {
         List<OrientedStringPiece> fitting = new ArrayList<>();
 
-        int cx = connector.x(), cy = connector.y();
+        int conX = connector.x(), conY = connector.y();
 
         for (StringPiece piece : pieces) {
+            int baseWidth = piece.width(), baseHeight = piece.height();
+
             // find all possible placements according to connectors of the piece
             for (StringConnector other : piece.connectors()) {
-                // determine orientation and position
+                // determine rotation and position
+                int rotation = connector.rotateToFace(other);
 
+                var mat = Matrix3i.makeRotationZ(rotation);
+
+                var dimensions = mat.transform(baseWidth, baseHeight, 0);
+
+                int ox = -Math.min(0, dimensions.getX() + 1);
+                int oy = -Math.min(0, dimensions.getY() + 1);
+
+                var pos = mat.transform(other.x(), other.y(), 0);
+
+                int x = conX + connector.directionX() - pos.getX() - ox;
+                int y = conY + connector.directionY() - pos.getY() - oy;
+
+                // check if piece would fit with rotation and position // TODO implement
+
+                fitting.add(new OrientedStringPiece(piece, x, y, rotation));
             }
         }
 
