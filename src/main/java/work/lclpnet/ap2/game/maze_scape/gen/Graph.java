@@ -31,6 +31,10 @@ public class Graph<C, P extends Piece<C>, O extends OrientedPiece<C, P>> {
         return nodes;
     }
 
+    public Node<C, P, O> root() {
+        return root;
+    }
+
     public static class Node<C, P extends Piece<C>, O extends OrientedPiece<C, P>> {
 
         private @Nullable Node<C, P, O> parent = null;

@@ -12,16 +12,17 @@ import java.util.*;
  */
 public class GraphGenerator<C, P extends Piece<C>, O extends OrientedPiece<C, P>> {
 
-    private final Generator<C, P, O> generator;
+    private final GeneratorDomain<C, P, O> domain;
     private final Random random;
 
-    public GraphGenerator(Generator<C, P, O> generator, Random random) {
-        this.generator = generator;
+    public GraphGenerator(GeneratorDomain<C, P, O> domain, Random random) {
+        this.domain = domain;
         this.random = random;
     }
 
     public Graph<C, P, O> generateGraph(P startPiece, final int targetPieceCount) {
-        O start = generator.placeStart(startPiece);
+        O start = domain.placeStart(startPiece);
+
         var graph = new Graph<>(makeNode(start, null));
         int generatedPieces = 1;
         int currentLevel = 0;
@@ -134,7 +135,7 @@ public class GraphGenerator<C, P extends Piece<C>, O extends OrientedPiece<C, P>
         Map<C, List<O>> fitting = new HashMap<>(connectors.size());
 
         for (C connector : connectors) {
-            fitting.put(connector, generator.fittingPieces(connector));
+            fitting.put(connector, domain.fittingPieces(connector));
         }
 
         return fitting;
