@@ -7,7 +7,6 @@ import java.util.List;
 
 public class StringPiece implements Piece<StringConnector> {
 
-    static final char[] ARROWS = new char[] {'→', '↓', '←', '↑'};
     private final String string;
     private final int width, height;
     private final List<StringConnector> connectors;

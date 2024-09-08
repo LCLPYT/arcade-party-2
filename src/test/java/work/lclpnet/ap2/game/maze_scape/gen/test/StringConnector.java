@@ -1,8 +1,8 @@
 package work.lclpnet.ap2.game.maze_scape.gen.test;
 
-import static work.lclpnet.ap2.game.maze_scape.gen.test.StringPiece.ARROWS;
-
 public record StringConnector(int x, int y, int direction) {
+
+    static final char[] ARROWS = new char[] {'→', '↓', '←', '↑'};
 
     /**
      * Calculate the amount of rotation another connector has to be rotated in order to face this connector.

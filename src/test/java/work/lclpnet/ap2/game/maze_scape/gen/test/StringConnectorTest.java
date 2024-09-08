@@ -5,7 +5,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static work.lclpnet.ap2.game.maze_scape.gen.test.StringPiece.ARROWS;
+import static work.lclpnet.ap2.game.maze_scape.gen.test.StringConnector.ARROWS;
 
 public class StringConnectorTest {
 

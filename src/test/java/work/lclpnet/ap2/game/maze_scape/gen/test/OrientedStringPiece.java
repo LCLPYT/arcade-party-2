@@ -5,18 +5,21 @@ import work.lclpnet.ap2.game.maze_scape.gen.OrientedPiece;
 import work.lclpnet.kibu.util.math.Matrix3i;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import static work.lclpnet.ap2.game.maze_scape.gen.test.StringPiece.ARROWS;
+import static work.lclpnet.ap2.game.maze_scape.gen.test.StringConnector.ARROWS;
 
 public final class OrientedStringPiece implements OrientedPiece<StringConnector, StringPiece> {
 
+    private static final char[] CORNERS = new char[] {'┌', '┐', '┘', '└'};
     private final StringPiece piece;
     private final int x, y;
     private final int rotation;
     private final int width, height;
     private final String string;
+    private final List<StringConnector> connectors;
 
     public OrientedStringPiece(StringPiece piece, int x, int y, int rotation) {
         this.piece = piece;
@@ -51,11 +54,25 @@ public final class OrientedStringPiece implements OrientedPiece<StringConnector,
         this.string = Arrays.stream(chars)
                 .map(String::new)
                 .collect(Collectors.joining("\n"));
+
+        // rotate and translate base connectors
+        this.connectors = piece.connectors().stream().map(connector -> {
+            mat.transform(connector.x(), connector.y(), 0, pos);
+
+            int direction = (connector.direction() + rotation) % 4;
+
+            return new StringConnector(pos.getX() + ox, pos.getY() + oy, direction);
+        }).toList();
     }
 
     @Override
     public StringPiece piece() {
         return piece;
+    }
+
+    @Override
+    public List<StringConnector> connectors() {
+        return connectors;
     }
 
     public int x() {
@@ -102,8 +119,6 @@ public final class OrientedStringPiece implements OrientedPiece<StringConnector,
     public String toString() {
         return "OrientedStringPiece[piece=%s, x=%d, y=%d, rotation=%d]".formatted(piece, x, y, rotation);
     }
-
-    private static final char[] CORNERS = new char[] {'┌', '┐', '┘', '└'};
 
     private static char rotate(char c, int rotation) {
         return switch (c) {
