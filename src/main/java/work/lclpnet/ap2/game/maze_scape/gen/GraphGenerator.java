@@ -28,36 +28,23 @@ public class GraphGenerator<C, P extends Piece<C>, O extends OrientedPiece<C, P>
         int currentLevel = 0;
 
         while (generatedPieces < targetPieceCount) {
-            // first, determine all pieces that can be placed onto connectors of nodes at current level
-            boolean anyFitting = false;
-
             var currentNodes = graph.nodesAtLevel(currentLevel);
-
-            for (var node : currentNodes) {
-                // find fitting piece for each connector
-                var fittingConnectors = findFittingConnectorPieces(node);
-                node.setFittingConnectors(fittingConnectors);
-
-                anyFitting |= fittingConnectors != null && !fittingConnectors.isEmpty();
-            }
-
-            if (!anyFitting) {
-                // generation cannot be completed, as there are no possibilities left for the current graph
-                System.err.println("Dead end!");
-                return graph;
-                // TODO try to alter tree so that generation can continue
-//                throw new IllegalStateException("Generation ran out of possibilities; back-tracking is not yet implemented");
-            }
 
             // begin connector assignment for nodes in a random order
             Collections.shuffle(currentNodes, random);
 
+            boolean anyPlaced = false;
+
+            // try to expand pieces with connectors
             for (var node : currentNodes) {
                 O oriented = node.oriented();
 
                 if (oriented == null) continue;
 
                 int connectorCount = oriented.connectors().size();
+
+                if (connectorCount == 0) continue;
+
                 var children = new ArrayList<Graph.Node<C, P, O>>(connectorCount);
 
                 // mark all connectors as closed initially
@@ -67,12 +54,7 @@ public class GraphGenerator<C, P extends Piece<C>, O extends OrientedPiece<C, P>
 
                 node.setChildren(children);
 
-                List<@Nullable List<O>> fittingList = node.fittingConnectors();
-
-                if (fittingList == null) {
-                    // no fitting pieces set
-                    continue;
-                }
+                var fittingList = findFittingConnectorPieces(oriented);
 
                 // assign connectors in a random order too
                 for (int i : randomIndexOrder(connectorCount)) {
@@ -90,13 +72,16 @@ public class GraphGenerator<C, P extends Piece<C>, O extends OrientedPiece<C, P>
                     var nextNode = makeNode(nextPiece, node);
                     children.set(i, nextNode);
                     generatedPieces++;
+                    anyPlaced = true;
 
                     domain.placePiece(nextPiece);
-
-                    // TODO remove all pieces of other connectors (also of other nodes) that no longer fit due to this assignment!
-                    // maybe lazily when getting the fitting connector list,
-                    // or eagerly to save repeated checking, but would have to do more work in back-tracking
                 }
+            }
+
+            if (!anyPlaced) {
+                // generation cannot be completed, as there are no possibilities left for the current graph
+                // TODO try to alter tree so that generation can continue
+                 throw new IllegalStateException("Generation ran out of possibilities; back-tracking is not yet implemented");
             }
 
             // at least one new piece was assigned, therefore increment current level
@@ -124,15 +109,8 @@ public class GraphGenerator<C, P extends Piece<C>, O extends OrientedPiece<C, P>
         return order;
     }
 
-    @Nullable
-    private List<@Nullable List<O>> findFittingConnectorPieces(Graph.Node<C, P, O> node) {
-        O placed = node.oriented();
-
-        if (placed == null) {
-            return null;
-        }
-
-        var connectors = placed.connectors();
+    private List<@Nullable List<O>> findFittingConnectorPieces(O oriented) {
+        var connectors = oriented.connectors();
         List<@Nullable List<O>> fitting = new ArrayList<>(connectors.size());
 
         for (C connector : connectors) {

@@ -62,16 +62,31 @@ class GraphGeneratorTest {
                 ← │
                 ┐↓│"""));
 
-        long seed = -5313774123164251313L; // new Random().nextLong(10_000);
-        System.out.println("Seed: " + seed);
-
-        var random = new Random(seed);
+        var random = new Random(2450);
         var generator = new String2DGeneratorDomain(pieces, random);
         var graphGen = new GraphGenerator<>(generator, random);
 
         var graph = graphGen.generateGraph(start, 10);
 
-        var string = genString(graph);
-        System.out.println(string);
+        var expected = """
+                   ┌──     \s
+                   │ →     \s
+                   │↓┌     \s
+                   │↑│     \s
+                   │ │     \s
+                   │↓│     \s
+                   │↑│┌─────
+                   │ ││ →← →
+                   │↓││↓┌───
+                │↑││↑└┘↑│  \s
+                │ ││ →← │  \s
+                │↓││↓┌──┘  \s
+                │↑└┘↑│     \s
+                │ →← │     \s
+                └────┘     \s""";
+
+        var actual = genString(graph);
+
+        assertEquals(expected, actual);
     }
 }
