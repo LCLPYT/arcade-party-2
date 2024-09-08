@@ -23,7 +23,7 @@ class GraphGeneratorTest {
                 ← →
                 ───"""));
 
-        var random = new Random();
+        var random = new Random(100);
         var generator = new String2dGenerator(pieces, random);
         var graphGen = new GraphGenerator<>(generator, random);
 

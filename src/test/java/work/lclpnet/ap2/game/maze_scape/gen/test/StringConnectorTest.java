@@ -1,6 +1,8 @@
 package work.lclpnet.ap2.game.maze_scape.gen.test;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static work.lclpnet.ap2.game.maze_scape.gen.test.StringPiece.ARROWS;
@@ -20,5 +22,17 @@ public class StringConnectorTest {
                 assertEquals(expected, ARROWS[Math.floorMod(j + rot, 4)]);
             }
         }
+    }
+
+    @ParameterizedTest
+    @CsvSource({"0,1", "1,0", "2,-1", "3,0"})
+    void testDirectionX(int rot, int x) {
+        assertEquals(x, new StringConnector(0, 0, rot).directionX());
+    }
+
+    @ParameterizedTest
+    @CsvSource({"0,0", "1,1", "2,0", "3,-1"})
+    void testDirectionY(int rot, int y) {
+        assertEquals(y, new StringConnector(0, 0, rot).directionY());
     }
 }
