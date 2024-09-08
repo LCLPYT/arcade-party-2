@@ -4,7 +4,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.function.Predicate;
 
@@ -38,9 +37,9 @@ public class Graph<C, P extends Piece<C>, O extends OrientedPiece<C, P>> {
     public static class Node<C, P extends Piece<C>, O extends OrientedPiece<C, P>> {
 
         private @Nullable Node<C, P, O> parent = null;
-        private @Nullable List<Node<C, P, O>> children = null;
+        private @Nullable List<@Nullable Node<C, P, O>> children = null;
         private @Nullable O oriented = null;
-        private @Nullable List<List<O>> fittingConnectors = null;
+        private @Nullable List<@Nullable List<O>> fittingConnectors = null;
         private int level = 0;
 
         public @Nullable Node<C, P, O> parent() {
@@ -78,15 +77,17 @@ public class Graph<C, P extends Piece<C>, O extends OrientedPiece<C, P>> {
             if (!action.test(this) || children == null) return;
 
             for (var child : children) {
-                child.traverse(action);
+                if (child != null) {
+                    child.traverse(action);
+                }
             }
         }
 
-        public void setFittingConnectors(@Nullable List<List<O>> fittingConnectors) {
+        public void setFittingConnectors(@Nullable List<@Nullable List<O>> fittingConnectors) {
             this.fittingConnectors = fittingConnectors;
         }
 
-        public @Nullable List<List<O>> fittingConnectors() {
+        public @Nullable List<@Nullable List<O>> fittingConnectors() {
             return fittingConnectors;
         }
     }

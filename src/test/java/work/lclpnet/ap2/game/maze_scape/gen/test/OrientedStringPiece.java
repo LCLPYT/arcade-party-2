@@ -4,6 +4,7 @@ import net.minecraft.util.math.BlockPos;
 import work.lclpnet.ap2.game.maze_scape.gen.OrientedPiece;
 import work.lclpnet.kibu.util.math.Matrix3i;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -22,6 +23,10 @@ public final class OrientedStringPiece implements OrientedPiece<StringConnector,
     private final List<StringConnector> connectors;
 
     public OrientedStringPiece(StringPiece piece, int x, int y, int rotation) {
+        this(piece, x, y, rotation, -1);
+    }
+
+    public OrientedStringPiece(StringPiece piece, int x, int y, int rotation, int parentConnector) {
         this.piece = piece;
         this.x = x;
         this.y = y;
@@ -56,13 +61,23 @@ public final class OrientedStringPiece implements OrientedPiece<StringConnector,
                 .collect(Collectors.joining("\n"));
 
         // rotate and translate base connectors
-        this.connectors = piece.connectors().stream().map(connector -> {
+        var base = piece().connectors();
+        List<StringConnector> connectors = new ArrayList<>(parentConnector == -1 ? base.size() : base.size() - 1);
+
+        for (int i = 0, baseSize = base.size(); i < baseSize; i++) {
+            if (i == parentConnector) continue;
+
+            StringConnector connector = base.get(i);
+
             mat.transform(connector.x(), connector.y(), 0, pos);
 
             int direction = (connector.direction() + rotation) % 4;
 
-            return new StringConnector(pos.getX() + ox, pos.getY() + oy, direction);
-        }).toList();
+            var orientedConnector = new StringConnector(pos.getX() + ox + x, pos.getY() + oy + y, direction);
+            connectors.add(orientedConnector);
+        }
+
+        this.connectors = connectors;
     }
 
     @Override
@@ -117,7 +132,7 @@ public final class OrientedStringPiece implements OrientedPiece<StringConnector,
 
     @Override
     public String toString() {
-        return "OrientedStringPiece[piece=%s, x=%d, y=%d, rotation=%d]".formatted(piece, x, y, rotation);
+        return "OrientedStringPiece(x=%d, y=%d):%n%s".formatted(x, y, string);
     }
 
     private static char rotate(char c, int rotation) {
