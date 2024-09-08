@@ -35,7 +35,7 @@ public class GraphGenerator<C, P extends Piece<C>, O extends OrientedPiece<C, P>
 
             for (var node : currentNodes) {
                 // find fitting piece for each connector
-                List<List<O>> fittingConnectors = findFittingConnectorPieces(node);
+                var fittingConnectors = findFittingConnectorPieces(node);
                 node.setFittingConnectors(fittingConnectors);
 
                 anyFitting |= fittingConnectors != null && !fittingConnectors.isEmpty();
@@ -43,8 +43,10 @@ public class GraphGenerator<C, P extends Piece<C>, O extends OrientedPiece<C, P>
 
             if (!anyFitting) {
                 // generation cannot be completed, as there are no possibilities left for the current graph
+                System.err.println("Dead end!");
+                return graph;
                 // TODO try to alter tree so that generation can continue
-                throw new IllegalStateException("Generation ran out of possibilities; back-tracking is not yet implemented");
+//                throw new IllegalStateException("Generation ran out of possibilities; back-tracking is not yet implemented");
             }
 
             // begin connector assignment for nodes in a random order
@@ -65,7 +67,7 @@ public class GraphGenerator<C, P extends Piece<C>, O extends OrientedPiece<C, P>
 
                 node.setChildren(children);
 
-                List<List<O>> fittingList = node.fittingConnectors();
+                List<@Nullable List<O>> fittingList = node.fittingConnectors();
 
                 if (fittingList == null) {
                     // no fitting pieces set
@@ -89,7 +91,9 @@ public class GraphGenerator<C, P extends Piece<C>, O extends OrientedPiece<C, P>
                     children.set(i, nextNode);
                     generatedPieces++;
 
-                    // TODO remove all pieces of other connectors (also of other nodes) that no longer fit due to this assignment
+                    domain.placePiece(nextPiece);
+
+                    // TODO remove all pieces of other connectors (also of other nodes) that no longer fit due to this assignment!
                     // maybe lazily when getting the fitting connector list,
                     // or eagerly to save repeated checking, but would have to do more work in back-tracking
                 }
@@ -121,7 +125,7 @@ public class GraphGenerator<C, P extends Piece<C>, O extends OrientedPiece<C, P>
     }
 
     @Nullable
-    private List<List<O>> findFittingConnectorPieces(Graph.Node<C, P, O> node) {
+    private List<@Nullable List<O>> findFittingConnectorPieces(Graph.Node<C, P, O> node) {
         O placed = node.oriented();
 
         if (placed == null) {
@@ -129,7 +133,7 @@ public class GraphGenerator<C, P extends Piece<C>, O extends OrientedPiece<C, P>
         }
 
         var connectors = placed.connectors();
-        List<List<O>> fitting = new ArrayList<>(connectors.size());
+        List<@Nullable List<O>> fitting = new ArrayList<>(connectors.size());
 
         for (C connector : connectors) {
             fitting.add(domain.fittingPieces(connector));
@@ -140,6 +144,7 @@ public class GraphGenerator<C, P extends Piece<C>, O extends OrientedPiece<C, P>
 
     private Graph.Node<C, P, O> makeNode(O piece, @Nullable Graph.Node<C, P, O> parent) {
         var node = new Graph.Node<C, P, O>();
+
         node.setOriented(piece);
         node.setParent(parent);
 

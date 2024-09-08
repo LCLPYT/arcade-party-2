@@ -7,20 +7,20 @@ import java.util.*;
 
 public class String2DGeneratorDomain implements GeneratorDomain<StringConnector, StringPiece, OrientedStringPiece> {
 
-    private final Set<StringPiece> pieces;
+    private final Collection<StringPiece> pieces;
     private final Random random;
     private final Set<OrientedStringPiece> placed = new HashSet<>();
 
-    public String2DGeneratorDomain(Set<StringPiece> pieces, Random random) {
+    public String2DGeneratorDomain(Collection<StringPiece> pieces, Random random) {
         this.pieces = pieces;
         this.random = random;
     }
 
     @Override
     public OrientedStringPiece placeStart(StringPiece startPiece) {
-        var start = new OrientedStringPiece(startPiece, 0, 0, randomRotation());
+        var start = new OrientedStringPiece(startPiece, 0, 0, randomRotation(), -1);
 
-        placed.add(start);
+        placePiece(start);
 
         return start;
     }
@@ -35,7 +35,11 @@ public class String2DGeneratorDomain implements GeneratorDomain<StringConnector,
             int baseWidth = piece.width(), baseHeight = piece.height();
 
             // find all possible placements according to connectors of the piece
-            for (StringConnector other : piece.connectors()) {
+            var connectors = piece.connectors();
+
+            for (int i = 0, len = connectors.size(); i < len; i++) {
+                StringConnector other = connectors.get(i);
+
                 // determine rotation and position
                 int rotation = connector.rotateToFace(other);
 
@@ -51,16 +55,41 @@ public class String2DGeneratorDomain implements GeneratorDomain<StringConnector,
                 int x = conX + connector.directionX() - pos.getX() - ox;
                 int y = conY + connector.directionY() - pos.getY() - oy;
 
-                // check if piece would fit with rotation and position // TODO implement
+                int width = Math.abs(dimensions.getX());
+                int height = Math.abs(dimensions.getY());
 
-                fitting.add(new OrientedStringPiece(piece, x, y, rotation));
+                // check if piece would fit with rotation and position
+                if (hasCollision(x, y, width, height)) continue;
+
+                fitting.add(new OrientedStringPiece(piece, x, y, rotation, i));
             }
         }
 
         return fitting;
     }
 
+    @Override
+    public void placePiece(OrientedStringPiece oriented) {
+        placed.add(oriented);
+    }
+
+    @Override
+    public void removePiece(OrientedStringPiece oriented) {
+        placed.remove(oriented);
+    }
+
     private int randomRotation() {
         return random.nextInt(4);
+    }
+
+    private boolean hasCollision(int xMin, int yMin, int width, int height) {
+        for (OrientedStringPiece piece : placed) {
+            if (xMin + width > piece.x() && piece.x() + piece.width() > xMin &&
+                yMin + height > piece.y() && piece.y() + piece.height() > yMin) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

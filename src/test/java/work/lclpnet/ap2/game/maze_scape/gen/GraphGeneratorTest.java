@@ -3,6 +3,7 @@ package work.lclpnet.ap2.game.maze_scape.gen;
 import org.junit.jupiter.api.Test;
 import work.lclpnet.ap2.game.maze_scape.gen.test.*;
 
+import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
@@ -44,5 +45,33 @@ class GraphGeneratorTest {
         String actual = genString(graph);
 
         assertEquals(expected, actual);
+    }
+
+    @Test
+    void generateGraph_multipleParts() {
+        var start = new StringPiece("""
+                ───
+                ← →
+                ┐↓┌""");
+
+        var pieces = List.of(new StringPiece("""
+                ───
+                ← →
+                ───"""), new StringPiece("""
+                ──┐
+                ← │
+                ┐↓│"""));
+
+        long seed = -5313774123164251313L; // new Random().nextLong(10_000);
+        System.out.println("Seed: " + seed);
+
+        var random = new Random(seed);
+        var generator = new String2DGeneratorDomain(pieces, random);
+        var graphGen = new GraphGenerator<>(generator, random);
+
+        var graph = graphGen.generateGraph(start, 10);
+
+        var string = genString(graph);
+        System.out.println(string);
     }
 }
