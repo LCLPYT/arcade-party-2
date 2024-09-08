@@ -1,17 +1,17 @@
 package work.lclpnet.ap2.game.maze_scape.gen.test;
 
-import work.lclpnet.ap2.game.maze_scape.gen.Generator;
+import work.lclpnet.ap2.game.maze_scape.gen.GeneratorDomain;
 import work.lclpnet.kibu.util.math.Matrix3i;
 
 import java.util.*;
 
-public class String2dGenerator implements Generator<StringConnector, StringPiece, OrientedStringPiece> {
+public class String2DGeneratorDomain implements GeneratorDomain<StringConnector, StringPiece, OrientedStringPiece> {
 
     private final Set<StringPiece> pieces;
     private final Random random;
     private final Set<OrientedStringPiece> placed = new HashSet<>();
 
-    public String2dGenerator(Set<StringPiece> pieces, Random random) {
+    public String2DGeneratorDomain(Set<StringPiece> pieces, Random random) {
         this.pieces = pieces;
         this.random = random;
     }
