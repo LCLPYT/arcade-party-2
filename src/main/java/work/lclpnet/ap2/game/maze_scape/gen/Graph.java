@@ -40,7 +40,7 @@ public class Graph<C, P extends Piece<C>, O extends OrientedPiece<C, P>> {
         private @Nullable Node<C, P, O> parent = null;
         private @Nullable List<Node<C, P, O>> children = null;
         private @Nullable O oriented = null;
-        private @Nullable Map<C, List<O>> fittingConnectors = null;
+        private @Nullable List<List<O>> fittingConnectors = null;
         private int level = 0;
 
         public @Nullable Node<C, P, O> parent() {
@@ -82,11 +82,11 @@ public class Graph<C, P extends Piece<C>, O extends OrientedPiece<C, P>> {
             }
         }
 
-        public void setFittingConnectors(@Nullable Map<C, List<O>> fittingConnectors) {
+        public void setFittingConnectors(@Nullable List<List<O>> fittingConnectors) {
             this.fittingConnectors = fittingConnectors;
         }
 
-        public @Nullable Map<C, List<O>> fittingConnectors() {
+        public @Nullable List<List<O>> fittingConnectors() {
             return fittingConnectors;
         }
     }
