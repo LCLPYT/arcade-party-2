@@ -41,9 +41,10 @@ public class TestGraphBuilder {
     }
 
     public Graph.@NotNull Node<StringConnector, StringPiece, OrientedStringPiece> choose(Graph.Node<StringConnector, StringPiece, OrientedStringPiece> node, int connector, StringPiece piece, int rotation) {
-        var fitting = graphGen.findFittingConnectorPieces(Objects.requireNonNull(node.oriented()));
+        var oriented = Objects.requireNonNull(node.oriented());
+        var fitting = domain.fittingPieces(oriented.connectors().get(connector));
 
-        var childPiece = Objects.requireNonNull(fitting.get(connector)).stream()
+        var childPiece = fitting.stream()
                 .filter(p -> piece.equals(p.piece()) && p.rotation() == rotation)
                 .findAny().orElseThrow();
 

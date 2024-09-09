@@ -34,12 +34,26 @@ public class Graph<C, P extends Piece<C>, O extends OrientedPiece<C, P>> {
         return root;
     }
 
+    public List<Node<C, P, O>> leafNodes() {
+        // this can definitely be optimized by storing leaf nodes directly in a member variable
+        List<Node<C, P, O>> nodes = new ArrayList<>();
+
+        root.traverse(node -> {
+            if (node.children == null || node.children.stream().allMatch(Objects::isNull)) {
+                nodes.add(node);
+            }
+
+            return true;
+        });
+
+        return nodes;
+    }
+
     public static class Node<C, P extends Piece<C>, O extends OrientedPiece<C, P>> {
 
         private @Nullable Node<C, P, O> parent = null;
         private @Nullable List<@Nullable Node<C, P, O>> children = null;
         private @Nullable O oriented = null;
-        private @Nullable List<@Nullable List<O>> fittingConnectors = null;
         private int level = 0;
 
         public @Nullable Node<C, P, O> parent() {
@@ -59,6 +73,10 @@ public class Graph<C, P extends Piece<C>, O extends OrientedPiece<C, P>> {
 
                 return true;
             });
+        }
+
+        public int level() {
+            return level;
         }
 
         public void setOriented(@Nullable O oriented) {
@@ -85,14 +103,6 @@ public class Graph<C, P extends Piece<C>, O extends OrientedPiece<C, P>> {
                     child.traverse(action);
                 }
             }
-        }
-
-        public void setFittingConnectors(@Nullable List<@Nullable List<O>> fittingConnectors) {
-            this.fittingConnectors = fittingConnectors;
-        }
-
-        public @Nullable List<@Nullable List<O>> fittingConnectors() {
-            return fittingConnectors;
         }
     }
 }

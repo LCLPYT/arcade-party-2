@@ -1,5 +1,6 @@
 package work.lclpnet.ap2.game.maze_scape.gen;
 
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.impl.util.ArrayUtil;
 
@@ -37,8 +38,8 @@ public class GraphGenerator<C, P extends Piece<C>, O extends OrientedPiece<C, P>
             Collections.shuffle(currentNodes, random);
 
             boolean anyPlaced = false;
+            boolean anyLeaf = false;
 
-            // try to expand pieces with connectors
             for (var node : currentNodes) {
                 O oriented = node.oriented();
 
@@ -46,50 +47,152 @@ public class GraphGenerator<C, P extends Piece<C>, O extends OrientedPiece<C, P>
 
                 int connectorCount = oriented.connectors().size();
 
+                // skip if the node has no connectors
                 if (connectorCount == 0) continue;
 
-                var children = new ArrayList<Graph.Node<C, P, O>>(connectorCount);
+                var children = node.children();
 
-                // mark all connectors as closed initially
-                for (int i = 0; i < connectorCount; i++) {
-                    children.add(null);
-                }
+                // skip if node is already fully generated
+                if (children != null && children.size() == connectorCount &&
+                    children.stream().allMatch(Objects::nonNull)) continue;
 
-                node.setChildren(children);
+                anyLeaf = true;
+                children = initChildren(node, connectorCount);
 
-                var fittingList = findFittingConnectorPieces(oriented);
+                var connectors = oriented.connectors();
 
-                // assign connectors in a random order too
+                // assign connectors in a random order
                 for (int i : randomIndexOrder(connectorCount)) {
-                    // assign a random fitting piece for the connector
-                    List<O> fitting = fittingList.get(i);
+                    // skip if connector is already assigned
+                    if (children.get(i) != null) continue;
 
-                    if (fitting == null || fitting.isEmpty()) {
-                        // no fitting pieces for the connector
-                        continue;
-                    }
+                    // find all fitting pieces for the connector
+                    List<O> fitting = domain.fittingPieces(connectors.get(i));
 
-                    O nextPiece = fitting.get(random.nextInt(fitting.size()));
+                    if (fitting == null || fitting.isEmpty()) continue;
 
-                    // insert the next piece as child node
-                    var nextNode = makeNode(nextPiece, node);
-                    children.set(i, nextNode);
+                    placeRandomChildPiece(node, i, fitting);
+
                     generatedPieces++;
                     anyPlaced = true;
-
-                    domain.placePiece(nextPiece);
                 }
             }
 
-            if (!anyPlaced) {
+            if (anyLeaf && !anyPlaced) {
                 // generation cannot be completed, as there are no possibilities left for the current graph
-                // TODO try to alter tree so that generation can continue
-                 throw new IllegalStateException("Generation ran out of possibilities; back-tracking is not yet implemented");
+                // try to back-track some branch to a previous level
+                BackTrackResult res = performBackTracking(graph);
+
+                if (res == null) {
+                    throw new IllegalStateException("Back-Tracking failed; generation cannot be completed");
+                }
+
+                currentLevel = res.level;
+                generatedPieces -= res.removed;
+
+                continue;
             }
 
             // at least one new piece was assigned, therefore increment current level
             currentLevel++;
         }
+    }
+
+    private void placeRandomChildPiece(Graph.Node<C, P, O> node, int connectorIndex, List<O> fitting) {
+        var children = node.children();
+
+        if (children == null) return;
+
+        O nextPiece = fitting.get(random.nextInt(fitting.size()));
+
+        // insert the next piece as child node
+        var nextNode = makeNode(nextPiece, node);
+
+        children.set(connectorIndex, nextNode);
+
+        domain.placePiece(nextPiece);
+    }
+
+    private @NotNull List<Graph.Node<C, P, O>> initChildren(Graph.Node<C, P, O> node, int connectorCount) {
+        var children = node.children();
+
+        if (children == null) {
+            children = new ArrayList<>(connectorCount);
+            node.setChildren(children);
+        }
+
+        for (int i = children.size(); i < connectorCount; i++) {
+            children.add(null);
+        }
+
+        return children;
+    }
+
+    @Nullable
+    private BackTrackResult performBackTracking(Graph<C, P, O> graph) {
+        // try to back-track short paths first
+        var leafNodes = graph.leafNodes();
+
+        leafNodes.sort(Comparator.comparingInt(Graph.Node::level));
+
+        for (var leaf : leafNodes) {
+            var res = backTrackBranch(leaf, 0);
+
+            if (res != null) {
+                return res;
+            }
+        }
+
+        return null;
+    }
+
+    @Nullable
+    private BackTrackResult backTrackBranch(Graph.Node<C, P, O> leaf, int depth) {
+        var parent = leaf.parent();
+
+        // do not try to back-track the root node
+        if (parent == null) return null;
+
+        O oriented = leaf.oriented();
+
+        if (oriented == null) return null;
+
+        var children = parent.children();
+
+        if (children == null) return null;
+
+        int connectorIndex = children.indexOf(leaf);
+
+        if (connectorIndex == -1) return null;
+
+        // detach leaf
+        leaf.setParent(null);
+        children.set(connectorIndex, null);
+        domain.removePiece(oriented);
+
+        // now try to find a new fitting piece
+        O parentOriented = parent.oriented();
+
+        if (parentOriented == null) return null;
+
+        var parentConnectors = parentOriented.connectors();
+        C connector = parentConnectors.get(connectorIndex);
+
+        var fitting = domain.fittingPieces(connector);
+
+        fitting.remove(oriented);  // remove previous choice
+
+        if (!fitting.isEmpty()) {
+            // place random fitting piece directly
+            placeRandomChildPiece(parent, connectorIndex, fitting);
+
+            return new BackTrackResult(parent.level() + 1, depth);
+        }
+
+        // no other piece is fitting; if the parent is a junction, stop back-tracking
+        if (parentConnectors.size() >= 2) return null;
+
+        return backTrackBranch(parent, depth + 1);
     }
 
     /**
@@ -110,17 +213,6 @@ public class GraphGenerator<C, P extends Piece<C>, O extends OrientedPiece<C, P>
         return order;
     }
 
-    public List<@Nullable List<O>> findFittingConnectorPieces(O oriented) {
-        var connectors = oriented.connectors();
-        List<@Nullable List<O>> fitting = new ArrayList<>(connectors.size());
-
-        for (C connector : connectors) {
-            fitting.add(domain.fittingPieces(connector));
-        }
-
-        return fitting;
-    }
-
     public Graph.Node<C, P, O> makeNode(O piece, @Nullable Graph.Node<C, P, O> parent) {
         var node = new Graph.Node<C, P, O>();
 
@@ -129,4 +221,6 @@ public class GraphGenerator<C, P extends Piece<C>, O extends OrientedPiece<C, P>
 
         return node;
     }
+
+    private record BackTrackResult(int level, int removed) {}
 }
