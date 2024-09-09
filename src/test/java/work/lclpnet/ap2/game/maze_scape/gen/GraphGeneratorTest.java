@@ -115,15 +115,9 @@ class GraphGeneratorTest {
                 ← │
                 ──┘""");
 
-        var turn = new StringPiece("""
-                ──┐
-                ← │
-                ┐↓│""");
+        var pieces = List.of(uTurn, uTurnFlipped, straight);
 
-        var pieces = List.of(uTurn, uTurnFlipped, turn, straight);
-
-        long seed = new Random().nextLong(100_000);
-        var random = new Random(seed);
+        var random = new Random(40713);
         var domain = new String2DGeneratorDomain(pieces, random);
         var graphGen = new GraphGenerator<>(domain, random);
 
@@ -134,12 +128,36 @@ class GraphGeneratorTest {
         builder.choose(start, 1, uTurnFlipped, 0);
         builder.choose(left, 0, straight, 0);
 
+        /*
+        the input graph cannot be continued on both open ends, as no piece can be inserted without collisions
+        back-tracking should be used to rewind a path in order to choose a different path:
+        ┌───────┐
+        │ →← →← │
+        │ ┌───┐ │ <- the right u turn piece should be changed through back-tracking
+        │ └───┘ │
+        │ →← →← │
+        └───────┘
+         */
         var graph = new Graph<>(start);
 
         graphGen.generateGraph(graph, 4, 2, 5);
 
+        var expected = """
+                   ┌──  \s
+                   │ →  \s
+                   │ ┌  \s
+                   │ └──┐
+                   │ →← │
+                   └──┐ │
+                ┌─────┘ │
+                │ →← →← │
+                │ ┌─────┘
+                │ └───  \s
+                │ →← →  \s
+                └─────  \s""";
+
         var actual = genString(graph);
 
-        System.out.println(actual);
+        assertEquals(expected, actual);
     }
 }
