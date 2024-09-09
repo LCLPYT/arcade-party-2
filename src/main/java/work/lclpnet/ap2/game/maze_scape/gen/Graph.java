@@ -49,6 +49,10 @@ public class Graph<C, P extends Piece<C>, O extends OrientedPiece<C, P>> {
         public void setParent(@Nullable Node<C, P, O> parent) {
             this.parent = parent;
 
+            updateLevel();
+        }
+
+        public void updateLevel() {
             this.traverse(node -> {
                 if (node.parent == null) node.level = 0;
                 else node.level = node.parent.level + 1;

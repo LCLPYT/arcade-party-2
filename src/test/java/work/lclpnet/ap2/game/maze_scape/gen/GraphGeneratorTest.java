@@ -1,7 +1,9 @@
 package work.lclpnet.ap2.game.maze_scape.gen;
 
 import org.junit.jupiter.api.Test;
-import work.lclpnet.ap2.game.maze_scape.gen.test.*;
+import work.lclpnet.ap2.game.maze_scape.gen.test.String2DGeneratorDomain;
+import work.lclpnet.ap2.game.maze_scape.gen.test.StringPiece;
+import work.lclpnet.ap2.game.maze_scape.gen.test.TestGraphBuilder;
 
 import java.util.List;
 import java.util.Random;
@@ -88,5 +90,56 @@ class GraphGeneratorTest {
         var actual = genString(graph);
 
         assertEquals(expected, actual);
+    }
+
+    @Test
+    void generateGraph_deadEnd() {
+        var straight = new StringPiece("""
+                ───
+                ← →
+                ───""");
+
+        var uTurn = new StringPiece("""
+                ┌──
+                │ →
+                │ ┌
+                │ └
+                │ →
+                └──""");
+
+        var uTurnFlipped = new StringPiece("""
+                ──┐
+                ← │
+                ┐ │
+                ┘ │
+                ← │
+                ──┘""");
+
+        var turn = new StringPiece("""
+                ──┐
+                ← │
+                ┐↓│""");
+
+        var pieces = List.of(uTurn, uTurnFlipped, turn, straight);
+
+        long seed = new Random().nextLong(100_000);
+        var random = new Random(seed);
+        var domain = new String2DGeneratorDomain(pieces, random);
+        var graphGen = new GraphGenerator<>(domain, random);
+
+        // build graph manually
+        var builder = new TestGraphBuilder(domain, graphGen);
+        var start = builder.start(straight, 0, 0, 0);
+        var left = builder.choose(start, 0, uTurn, 0);
+        builder.choose(start, 1, uTurnFlipped, 0);
+        builder.choose(left, 0, straight, 0);
+
+        var graph = new Graph<>(start);
+
+        graphGen.generateGraph(graph, 4, 2, 5);
+
+        var actual = genString(graph);
+
+        System.out.println(actual);
     }
 }
