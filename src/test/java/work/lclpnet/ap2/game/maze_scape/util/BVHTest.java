@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.game.maze_scape.math;
+package work.lclpnet.ap2.game.maze_scape.util;
 
 import net.minecraft.util.math.BlockPos;
 import org.jetbrains.annotations.NotNull;
