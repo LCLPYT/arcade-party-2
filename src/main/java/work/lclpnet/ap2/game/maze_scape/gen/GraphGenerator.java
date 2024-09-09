@@ -22,11 +22,14 @@ public class GraphGenerator<C, P extends Piece<C>, O extends OrientedPiece<C, P>
 
     public Graph<C, P, O> generateGraph(P startPiece, final int targetPieceCount) {
         O start = domain.placeStart(startPiece);
+        Graph<C, P, O> graph = new Graph<>(makeNode(start, null));
 
-        var graph = new Graph<>(makeNode(start, null));
-        int generatedPieces = 1;
-        int currentLevel = 0;
+        generateGraph(graph, 1, 0, targetPieceCount);
 
+        return graph;
+    }
+
+    void generateGraph(Graph<C, P, O> graph, int generatedPieces, int currentLevel, final int targetPieceCount) {
         while (generatedPieces < targetPieceCount) {
             var currentNodes = graph.nodesAtLevel(currentLevel);
 
@@ -87,8 +90,6 @@ public class GraphGenerator<C, P extends Piece<C>, O extends OrientedPiece<C, P>
             // at least one new piece was assigned, therefore increment current level
             currentLevel++;
         }
-
-        return graph;
     }
 
     /**
@@ -109,7 +110,7 @@ public class GraphGenerator<C, P extends Piece<C>, O extends OrientedPiece<C, P>
         return order;
     }
 
-    private List<@Nullable List<O>> findFittingConnectorPieces(O oriented) {
+    public List<@Nullable List<O>> findFittingConnectorPieces(O oriented) {
         var connectors = oriented.connectors();
         List<@Nullable List<O>> fitting = new ArrayList<>(connectors.size());
 
@@ -120,7 +121,7 @@ public class GraphGenerator<C, P extends Piece<C>, O extends OrientedPiece<C, P>
         return fitting;
     }
 
-    private Graph.Node<C, P, O> makeNode(O piece, @Nullable Graph.Node<C, P, O> parent) {
+    public Graph.Node<C, P, O> makeNode(O piece, @Nullable Graph.Node<C, P, O> parent) {
         var node = new Graph.Node<C, P, O>();
 
         node.setOriented(piece);
