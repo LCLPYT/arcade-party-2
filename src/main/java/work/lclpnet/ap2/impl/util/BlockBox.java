@@ -8,6 +8,7 @@ import work.lclpnet.ap2.api.util.Collider;
 import work.lclpnet.ap2.impl.util.math.AffineIntMatrix;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.Objects;
 import java.util.Random;
 
@@ -126,7 +127,7 @@ public class BlockBox implements Pair<BlockPos, BlockPos>, Iterable<BlockPos>, C
         return contains(box.minX, box.minY, box.minZ) && contains(box.maxX, box.maxY, box.maxZ);
     }
 
-    public boolean collidesWith(BlockBox other) {
+    public boolean intersects(BlockBox other) {
         return this.max.getX() >= other.min.getX() && other.max.getX() >= this.min.getX()
                && this.max.getY() >= other.min.getY() && other.max.getY() >= this.min.getY()
                && this.max.getZ() >= other.min.getZ() && other.max.getZ() >= this.min.getZ();
@@ -213,5 +214,31 @@ public class BlockBox implements Pair<BlockPos, BlockPos>, Iterable<BlockPos>, C
         int area = width * length;
 
         return rx + rz * width + ry * area;
+    }
+
+    public Direction.Axis majorAxis() {
+        int width = width(), height = height(), length = length();
+
+        if (width > height && width > length) return Direction.Axis.X;
+        if (height > length) return Direction.Axis.Y;
+        return Direction.Axis.Z;
+    }
+
+    public static BlockBox enclosing(List<BlockBox> boxes) {
+        if (boxes.isEmpty()) {
+            throw new IllegalArgumentException("Boxes list is empty");
+        }
+
+        BlockPos min = boxes.getFirst().min();
+        BlockPos max = boxes.getFirst().max();
+
+        for (int i = 1, len = boxes.size(); i < len; i++) {
+            BlockBox box = boxes.get(i);
+
+            min = BlockPos.min(min, box.min());
+            max = BlockPos.max(max, box.max());
+        }
+
+        return new BlockBox(min, max);
     }
 }

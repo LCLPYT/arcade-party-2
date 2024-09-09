@@ -24,7 +24,7 @@ public class BoxCollisionDetector {
     }
 
     public boolean hasCollisions(BlockBox box) {
-        return boxes.stream().anyMatch(box::collidesWith);
+        return boxes.stream().anyMatch(box::intersects);
     }
 
     public void push() {
