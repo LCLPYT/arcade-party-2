@@ -80,4 +80,8 @@ public class GraphStringSerializer {
                 .map(String::new)
                 .collect(Collectors.joining("\n"));
     }
+
+    public static String clearMarkers(String s) {
+        return s.replaceAll("[←→↑↓]", " ");
+    }
 }

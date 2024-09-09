@@ -10,7 +10,7 @@ public record StringConnector(int x, int y, int direction) {
      * @return The amount of rotation the other connector has to be rotated.
      */
     public int rotateToFace(StringConnector other) {
-        return (this.direction - other.direction + 2) % 4;
+        return Math.floorMod(this.direction - other.direction + 2, 4);
     }
 
     public int directionX() {
