@@ -10,6 +10,7 @@ import java.util.Random;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static work.lclpnet.ap2.game.maze_scape.gen.test.GraphStringSerializer.clearMarkers;
 import static work.lclpnet.ap2.game.maze_scape.gen.test.GraphStringSerializer.genString;
 
 class GraphGeneratorTest {
@@ -157,6 +158,79 @@ class GraphGeneratorTest {
                 └─────  \s""";
 
         var actual = genString(graph);
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    void generateGraph_complex() {
+        var start = new StringPiece("""
+                ──┘↑└
+                ←   →
+                ┐↓┌──""");
+
+        var pieces = List.of(new StringPiece("""
+                ───
+                ← →
+                ───"""), new StringPiece("""
+                ──┐
+                ← │
+                ┐↓│"""), new StringPiece("""
+                ┘↑└
+                ← →
+                ───"""), new StringPiece("""
+                ──┐
+                ← │
+                ──┘
+                """));
+
+        var random = new Random(29551);
+        var generator = new String2DGeneratorDomain(pieces, random);
+        var graphGen = new GraphGenerator<>(generator, random);
+
+        var graph = graphGen.generateGraph(start, 40);
+
+        String expected = """
+                               │ │              \s
+                               │ │              \s
+                               │ │              \s
+                            │ └┘ │──┐           \s
+                            │    │  │           \s
+                            │ ┌┐ │┐ │           \s
+                               │ └┘ └───        \s
+                               │                \s
+                               │ ┌──────        \s
+                            ┌─┐│ └───┘ │        \s
+                            │ ││       │        \s
+                            │ ││ ┌─────┘        \s
+                ┌───────────┘ └┘ │              \s
+                │                │              \s
+                │ ┌──────┐ ┌───┐ │   │ │   │ │  \s
+                │ └      │ │───┘ │   │ │   │ │  \s
+                │        │ │     │   │ │   │ │  \s
+                └──      │ │┐ ┌┐ │───┘ └───┘ └┘ │
+                         │ └┘ │                 │
+                         │    │   ┐ ┌─────────┐ │
+                         └──┐ └───┘ │           \s
+                            │       │           \s
+                            │ ┌───┐ │           \s
+                            │ ││ └┘ │           \s
+                            │ ││    │           \s
+                            │ │└──┐ │           \s
+                            │ └───┘ │           \s
+                            │       │           \s
+                            └──┐ ┌┐ │           \s
+                         ┌─────┘ │┘ └───┘ │     \s
+                         │       │        │     \s
+                         │ ┌┐ ┌──┘────────┘     \s
+                         │ ││ │                 \s
+                         │ ││ │                 \s
+                         │ ││ │                 \s
+                            │ │                 \s
+                            │ │                 \s
+                            │ │                 \s""";
+
+        String actual = clearMarkers(genString(graph));
 
         assertEquals(expected, actual);
     }
