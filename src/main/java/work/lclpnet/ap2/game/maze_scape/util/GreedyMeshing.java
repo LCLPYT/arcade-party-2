@@ -33,8 +33,8 @@ public class GreedyMeshing {
     public List<BlockBox> generateBoxes() {
         List<BlockBox> meshes = new ArrayList<>();
 
-        for (int z = 0; z < length; z++) {
-            for (int y = 0; y < height; y++) {
+        for (int y = 0; y < height; y++) {
+            for (int z = 0; z < length; z++) {
                 for (int x = 0; x < width; x++) {
                     if (!voxelView.isVoxelAt(x, y, z) || visited[x][y][z]) continue;
 
@@ -56,7 +56,6 @@ public class GreedyMeshing {
             maxX++;
         }
 
-        // expand y
         boolean canExpandY = true;
 
         while (canExpandY && maxY + 1 < height) {
@@ -104,7 +103,7 @@ public class GreedyMeshing {
     }
 
     public interface VoxelView {
-        
+
         boolean isVoxelAt(int x, int y, int z);
     }
 }
