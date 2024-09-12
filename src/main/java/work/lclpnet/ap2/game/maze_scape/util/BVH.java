@@ -46,6 +46,10 @@ public class BVH {
         return root.intersects(box);
     }
 
+    public boolean intersects(BVH other) {
+        return this.root.intersects(other.root);
+    }
+
     private static class Node {
         final BlockBox bounds;
         final @Nullable Node left, right;
@@ -63,13 +67,72 @@ public class BVH {
         }
 
         boolean intersects(BlockBox box) {
-            if (!this.bounds.intersects(box)) return false;
+            if (!this.bounds.intersects(box)) {
+                return false;
+            }
 
             if (left == null || right == null) {
                 return true;
             }
 
             return left.intersects(box) || right.intersects(box);
+        }
+
+        boolean intersects(Node other) {
+            // if node bounds to not intersect, they are not colliding
+            if (!this.bounds.intersects(other.bounds)) {
+                return false;
+            }
+
+            boolean thisLeaf = this.isLeaf();
+            boolean otherLeaf = other.isLeaf();
+
+            // if both nodes are leafs, an intersection is detected
+            if (thisLeaf && otherLeaf) {
+                return true;
+            }
+
+            if (thisLeaf) {
+                return leafCollides(other);
+            }
+
+            if (otherLeaf) {
+                return other.leafCollides(this);
+            }
+
+            // both nodes are not leafs, check all child combinations: LL, LR, RL, RR
+            // first check left combinations
+            if (this.left != null) {
+                if (other.left != null && this.left.intersects(other.left)) {
+                    return true;
+                }
+
+                if (other.right != null && this.left.intersects(other.right)) {
+                    return true;
+                }
+            }
+
+            // now check right combinations
+            if (this.right == null) {
+                return false;
+            }
+
+            if (other.left != null && this.right.intersects(other.left)) {
+                return true;
+            }
+
+            return other.right != null && this.right.intersects(other.right);
+        }
+
+        boolean leafCollides(Node other) {
+            // assumes this is a leaf node and other is not
+            return other.left != null && this.bounds.intersects(other.left.bounds) ||
+                   other.right != null && this.bounds.intersects(other.right.bounds);
+
+        }
+
+        boolean isLeaf() {
+            return this.left == null || this.right == null;
         }
     }
 }
