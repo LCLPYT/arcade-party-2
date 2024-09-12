@@ -10,13 +10,22 @@ import java.util.List;
 
 public class BVH {
 
-    private final Node root;
+    public static final BVH EMPTY = new BVH(null);
+    private final @Nullable Node root;
 
-    public BVH(List<BlockBox> objects) {
-        this.root = build(objects);
+    private BVH(@Nullable Node root) {
+        this.root = root;
     }
 
-    private Node build(List<BlockBox> boxes) {
+    public static BVH build(List<BlockBox> boxes) {
+        if (boxes.isEmpty()) {
+            return EMPTY;
+        }
+
+        return new BVH(buildNode(boxes));
+    }
+
+    private static Node buildNode(List<BlockBox> boxes) {
         if (boxes.size() == 1) {
             return new Node(boxes.getFirst());
         }
@@ -36,18 +45,18 @@ public class BVH {
         var leftObjects = boxes.subList(0, mid);
         var rightObjects = boxes.subList(mid, boxes.size());
 
-        Node leftChild = build(leftObjects);
-        Node rightChild = build(rightObjects);
+        Node leftChild = buildNode(leftObjects);
+        Node rightChild = buildNode(rightObjects);
 
         return new Node(leftChild, rightChild);
     }
 
     public boolean intersects(BlockBox box) {
-        return root.intersects(box);
+        return root != null && root.intersects(box);
     }
 
     public boolean intersects(BVH other) {
-        return this.root.intersects(other.root);
+        return this.root != null && other.root != null && this.root.intersects(other.root);
     }
 
     private static class Node {
