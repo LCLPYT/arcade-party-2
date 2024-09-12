@@ -16,6 +16,10 @@ public class WeightedList<E> extends AbstractList<E> {
         this(new ArrayList<>(), 0);
     }
 
+    public WeightedList(int initialCapacity) {
+        this(new ArrayList<>(initialCapacity), 0);
+    }
+
     private WeightedList(List<Entry<E>> entries, float totalWeight) {
         this.entries = entries;
         this.totalWeight = totalWeight;
