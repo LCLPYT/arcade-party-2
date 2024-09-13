@@ -27,7 +27,7 @@ public class MSGenerator {
         var pos = new BlockPos.Mutable(0, 64, 0);
 
         for (StructurePiece piece : loaded.pieces()) {
-            BlockStructure struct = piece.structure();
+            BlockStructure struct = piece.wrapper().getStructure();
             BlockBox bounds = StructureUtil.getBounds(struct);
 
             StructureUtil.placeStructureFast(struct, world, pos);
