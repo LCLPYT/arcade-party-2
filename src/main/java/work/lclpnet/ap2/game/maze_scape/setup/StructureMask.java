@@ -16,7 +16,7 @@ public record StructureMask(boolean[][][] mask, int width, int height, int lengt
     public static StructureMask nonAir(BlockStructure structure) {
         // init new empty mask
         int width = structure.getWidth(), height = structure.getHeight(), length = structure.getLength();
-        boolean[][][] mask = empty(width, height, length);
+        boolean[][][] mask = fill(new boolean[width][height][length], width, height, false);
 
         var origin = structure.getOrigin();
 
@@ -29,14 +29,13 @@ public record StructureMask(boolean[][][] mask, int width, int height, int lengt
         return new StructureMask(mask, width, height, length);
     }
 
-    public static boolean[][][] empty(int width, int height, int length) {
-        boolean[][][] mask = new boolean[width][height][length];
-
+    public static boolean[][][] fill(boolean[][][] mask, int width, int height, boolean val) {
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++) {
-                Arrays.fill(mask[x][y], false);
+                Arrays.fill(mask[x][y], val);
             }
         }
+
         return mask;
     }
 }
