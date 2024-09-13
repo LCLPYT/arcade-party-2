@@ -13,6 +13,10 @@ public record StructureMask(boolean[][][] mask, int width, int height, int lengt
         return x >= 0 && x < width && y >= 0 && y < height && z >= 0 && z < length && mask[x][y][z];
     }
 
+    public GreedyMeshing greedyMeshing() {
+        return new GreedyMeshing(width, height, length, this);
+    }
+
     public static StructureMask nonAir(BlockStructure structure) {
         // init new empty mask
         int width = structure.getWidth(), height = structure.getHeight(), length = structure.getLength();

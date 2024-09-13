@@ -12,6 +12,7 @@ import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.game.maze_scape.util.BVH;
+import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.WeightedList;
 import work.lclpnet.kibu.mc.KibuBlockState;
 import work.lclpnet.kibu.schematic.FabricBlockStateAdapter;
@@ -143,6 +144,14 @@ public class MSLoader {
     }
 
     private BVH buildBounds(FabricStructureWrapper wrapper, List<Connector3d> connectors) {
+        /*
+        build a bounding volume hierarchy by doing following steps:
+        1. create a structure mask (3d bool array) that contains every non-air block
+        2. close structure connectors by using plane flood-fill at each connector
+        3. use flood fill to detect blocks outside the now closed structure
+        4. use greedy meshing to generate a list of boxes that compose the structure bounds
+        5. join these boxes using a bounding volume hierarchy
+        */
         BlockStructure struct = wrapper.getStructure();
 
         // create a structure mask with non-air blocks
@@ -156,8 +165,10 @@ public class MSLoader {
 
         maskInside(structMask);
 
-        // TODO
-        return BVH.EMPTY;
+        // use greedy meshing to obtain cuboid partition mesh of the mask
+        List<BlockBox> boxes = structMask.greedyMeshing().generateBoxes();
+
+        return BVH.build(boxes);
     }
 
     private void maskInside(StructureMask structMask) {
