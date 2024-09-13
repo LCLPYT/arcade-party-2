@@ -3,7 +3,6 @@ package work.lclpnet.ap2.game.maze_scape.setup;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
 import net.minecraft.block.enums.Orientation;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.state.property.Properties;
@@ -31,6 +30,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
 
 import static net.minecraft.util.math.BlockPos.asLong;
 
@@ -154,11 +154,44 @@ public class MSLoader {
             maskCorridor(connector, mask, wrapper);
         }
 
+        maskInside(structMask);
+
         // TODO
         return BVH.EMPTY;
     }
 
-    @SuppressWarnings("DuplicatedCode")
+    private void maskInside(StructureMask structMask) {
+        // create mask that contains everything inside, aka everything except the outside
+        final int width = structMask.width(), height = structMask.height(), length = structMask.length();
+        final int xMax = width - 1, yMax = height - 1, zMax = length - 1;
+        boolean[][][] wallMask = structMask.mask();
+
+        // inside initially contains everything; the outside is removed iteratively from the mask
+        boolean[][][] inside = StructureMask.fill(new boolean[width][height][length], width, height, true);
+
+        // utilize flood fill to detect outside
+        var floodFill = new BoxFloodFill(width, height, length);
+
+        // search for air blocks on the structure bounds border that are not yet marked as outside
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
+                for (int z = 0; z < length; z++) {
+                    if (x != 0 && x != xMax && y != 0 && y != yMax && z != 0 && z != zMax || wallMask[x][y][z]
+                        || !inside[x][y][z]) continue;
+
+                    // found air border that is still marked as inside; initiate flood-fill
+                    floodFill.execute(
+                            new BlockPos(x, y, z),
+                            pos -> inside[pos.getX()][pos.getY()][pos.getZ()] = false,  // mark as outside
+                            (ax, ay, az) -> !wallMask[ax][ay][az]);  // add neighbour if also outside
+                }
+            }
+        }
+
+        // copy result to original array
+        System.arraycopy(inside, 0, wallMask, 0, inside.length);
+    }
+
     private void maskCorridor(Connector3d connector, boolean[][][] mask, FabricStructureWrapper wrapper) {
         BlockStructure struct = wrapper.getStructure();
         Orientation orientation = connector.orientation();
@@ -168,53 +201,21 @@ public class MSLoader {
         Vec3i normal = orientation.getFacing().getVector();
         int width = struct.getWidth(), height = struct.getHeight(), length = struct.getLength();
 
-        Queue<BlockPos> queue = new LinkedList<>();
-        LongSet visited = new LongOpenHashSet();
-
         BlockPos start = connectorPos.offset(orientation.getRotation());
-        queue.offer(start);
-        visited.add(asLong(start.getX(), start.getY(), start.getZ()));
-
         var plane = new Plane(connectorPos, normal);
         var transparent = new TransparencyChecker(wrapper);
 
-        while (!queue.isEmpty()) {
-            BlockPos pos = queue.poll();
-            final int x = pos.getX(), y = pos.getY(), z = pos.getZ();
-
-            // add to mask
-            mask[x][y][z] = true;
-
-            // for each neighbor pos "a", check if is in the plane and is transparent
-            int ax, ay, az;
-
-            ax = x + 1; ay = y; az = z;
-            if (ax < width && plane.test(ax, ay, az) && transparent.test(ax, ay, az) && visited.add(asLong(ax, ay, az)))
-                queue.add(new BlockPos(ax, ay, az));
-
-            ax = x - 1;
-            if (ax >= 0 && plane.test(ax, ay, az) && transparent.test(ax, ay, az) && visited.add(asLong(ax, ay, az)))
-                queue.add(new BlockPos(ax, ay, az));
-
-            ax = x; ay = y + 1;
-            if (ay < height && plane.test(ax, ay, az) && transparent.test(ax, ay, az) && visited.add(asLong(ax, ay, az)))
-                queue.add(new BlockPos(ax, ay, az));
-
-            ay = y - 1;
-            if (ay >= 0 && plane.test(ax, ay, az) && transparent.test(ax, ay, az) && visited.add(asLong(ax, ay, az)))
-                queue.add(new BlockPos(ax, ay, az));
-
-            ay = y; az = z + 1;
-            if (az < length && plane.test(ax, ay, az) && transparent.test(ax, ay, az) && visited.add(asLong(ax, ay, az)))
-                queue.add(new BlockPos(ax, ay, az));
-
-            az = z - 1;
-            if (az >= 0 && plane.test(ax, ay, az) && transparent.test(ax, ay, az) && visited.add(asLong(ax, ay, az)))
-                queue.add(new BlockPos(ax, ay, az));
-        }
+        new BoxFloodFill(width, height, length).execute(
+                start,
+                pos -> mask[pos.getX()][pos.getY()][pos.getZ()] = true,  // add to mask
+                (x, y, z) -> plane.test(x, y, z) && transparent.test(x, y, z));  // add neighbour if in plane and transparent
     }
 
-    private static class TransparencyChecker {
+    private interface Int3Predicate {
+        boolean test(int x, int y, int z);
+    }
+
+    private static class TransparencyChecker implements Int3Predicate {
 
         final FabricStructureWrapper wrapper;
         final BlockPos.Mutable pos = new BlockPos.Mutable();
@@ -223,14 +224,15 @@ public class MSLoader {
             this.wrapper = wrapper;
         }
 
-        boolean test(int x, int y, int z) {
+        @Override
+        public boolean test(int x, int y, int z) {
             pos.set(x, y, z);
             BlockState state = wrapper.getBlockState(pos);
             return !state.isOpaque();
         }
     }
 
-    private static class Plane {
+    private static class Plane implements Int3Predicate {
         final int ox, oy, oz;
         final int nx, ny, nz;
 
@@ -243,8 +245,64 @@ public class MSLoader {
             nz = normal.getZ();
         }
 
-        boolean test(int x, int y, int z) {
+        @Override
+        public boolean test(int x, int y, int z) {
             return (x - ox) * nx + (y - oy) * ny + (z - oz) * nz == 0;
+        }
+    }
+
+    private static class BoxFloodFill {
+        final Queue<BlockPos> queue = new LinkedList<>();
+        final LongSet visited = new LongOpenHashSet();
+        final int width, height, length;
+
+        BoxFloodFill(int width, int height, int length) {
+            this.width = width;
+            this.height = height;
+            this.length = length;
+        }
+
+        @SuppressWarnings("DuplicatedCode")
+        synchronized void execute(BlockPos start, Consumer<BlockPos> action, Int3Predicate predicate) {
+            queue.clear();
+            visited.clear();
+
+            queue.offer(start);
+            visited.add(asLong(start.getX(), start.getY(), start.getZ()));
+
+            while (!queue.isEmpty()) {
+                BlockPos pos = queue.poll();
+                action.accept(pos);
+
+                final int x = pos.getX(), y = pos.getY(), z = pos.getZ();
+
+                // test each neighbor pos "a" and maybe offer to the queue
+                int ax, ay, az;
+
+                ax = x + 1; ay = y; az = z;
+                if (ax < width && predicate.test(ax, ay, az) && visited.add(asLong(ax, ay, az)))
+                    queue.add(new BlockPos(ax, ay, az));
+
+                ax = x - 1;
+                if (ax >= 0 && predicate.test(ax, ay, az) && visited.add(asLong(ax, ay, az)))
+                    queue.add(new BlockPos(ax, ay, az));
+
+                ax = x; ay = y + 1;
+                if (ay < height && predicate.test(ax, ay, az) && visited.add(asLong(ax, ay, az)))
+                    queue.add(new BlockPos(ax, ay, az));
+
+                ay = y - 1;
+                if (ay >= 0 && predicate.test(ax, ay, az) && visited.add(asLong(ax, ay, az)))
+                    queue.add(new BlockPos(ax, ay, az));
+
+                ay = y; az = z + 1;
+                if (az < length && predicate.test(ax, ay, az) && visited.add(asLong(ax, ay, az)))
+                    queue.add(new BlockPos(ax, ay, az));
+
+                az = z - 1;
+                if (az >= 0 && predicate.test(ax, ay, az) && visited.add(asLong(ax, ay, az)))
+                    queue.add(new BlockPos(ax, ay, az));
+            }
         }
     }
 
