@@ -14,6 +14,8 @@ import org.slf4j.Logger;
 import work.lclpnet.ap2.game.maze_scape.util.BVH;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.WeightedList;
+import work.lclpnet.kibu.jnbt.CompoundTag;
+import work.lclpnet.kibu.mc.KibuBlockEntity;
 import work.lclpnet.kibu.mc.KibuBlockState;
 import work.lclpnet.kibu.schematic.FabricBlockStateAdapter;
 import work.lclpnet.kibu.schematic.FabricStructureWrapper;
@@ -133,6 +135,17 @@ public class MSLoader {
                 continue;
             }
 
+            // make sure the jigsaw block has a target that is not minecraft:empty
+            KibuBlockEntity kibuBlockEntity = struct.getBlockEntity(pos);
+
+            if (kibuBlockEntity == null) continue;
+
+            CompoundTag nbt = kibuBlockEntity.createNbt();
+            String target = nbt.getString("target");
+
+            if (target.isEmpty() || target.equals("minecraft:empty")) continue;
+
+            // add connector
             Orientation orientation = state.get(Properties.ORIENTATION);
 
             var localPos = new BlockPos(pos.getX() - ox, pos.getY() - oy, pos.getZ() - oz);
