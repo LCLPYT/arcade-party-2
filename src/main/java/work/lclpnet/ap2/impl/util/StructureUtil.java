@@ -30,7 +30,11 @@ public class StructureUtil {
     }
 
     public static void placeStructureFast(BlockStructure structure, ServerWorld world, Vec3i pos) {
-        StructureWriter.placeStructure(structure, world, pos, Matrix3i.IDENTITY, FAST_NO_VIEWERS);
+        placeStructureFast(structure, world, pos, Matrix3i.IDENTITY);
+    }
+
+    public static void placeStructureFast(BlockStructure structure, ServerWorld world, Vec3i pos, Matrix3i transformation) {
+        StructureWriter.placeStructure(structure, world, pos, transformation, FAST_NO_VIEWERS);
     }
 
     public static BlockBox getBounds(Cuboid structure) {
