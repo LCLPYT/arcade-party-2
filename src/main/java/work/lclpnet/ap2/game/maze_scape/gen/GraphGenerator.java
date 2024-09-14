@@ -2,37 +2,51 @@ package work.lclpnet.ap2.game.maze_scape.gen;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
 import work.lclpnet.ap2.impl.util.ArrayUtil;
 
 import java.util.*;
 
 /**
  * A generator that builds a graph of interconnected materialized pieces.
+ * @param <C> Connector type.
  * @param <P> Piece base type that has no position or orientation in the world yet.
  * @param <O> Materialized piece type in the world. Should be a type that combines {@link P} with a position and orientation.
+ * @apiNote It is expected that instances of oriented pieces {@link O} can be compared with {@link O#equals(Object)}.
+ * If the equals method is not implemented accordingly with the instances returned by {@link GeneratorDomain#fittingPieces(Object)},
+ * the back-tracking algorithm might end up in an infinite loop.
  */
 public class GraphGenerator<C, P extends Piece<C>, O extends OrientedPiece<C, P>> {
 
     private final GeneratorDomain<C, P, O> domain;
     private final Random random;
+    private final Logger logger;
 
-    public GraphGenerator(GeneratorDomain<C, P, O> domain, Random random) {
+    public GraphGenerator(GeneratorDomain<C, P, O> domain, Random random, Logger logger) {
         this.domain = domain;
         this.random = random;
+        this.logger = logger;
     }
 
-    public Graph<C, P, O> generateGraph(P startPiece, final int targetPieceCount) {
+    public Optional<Graph<C, P, O>> generateGraph(P startPiece, final int targetPieceCount) {
         O start = domain.placeStart(startPiece);
         Graph<C, P, O> graph = new Graph<>(makeNode(start, null));
 
-        generateGraph(graph, 1, 0, targetPieceCount);
+        boolean success = generateGraph(graph, 1, 0, targetPieceCount);
 
-        return graph;
+        if (!success) return Optional.empty();
+
+        return Optional.of(graph);
     }
 
-    void generateGraph(Graph<C, P, O> graph, int generatedPieces, int currentLevel, final int targetPieceCount) {
+    boolean generateGraph(Graph<C, P, O> graph, int generatedPieces, int currentLevel, final int targetPieceCount) {
         while (generatedPieces < targetPieceCount) {
             var currentNodes = graph.nodesAtLevel(currentLevel);
+
+            if (currentNodes.isEmpty()) {
+                logger.error("Generator cannot find nodes to expand, aborting generation");
+                return false;
+            }
 
             // begin connector assignment for nodes in a random order
             Collections.shuffle(currentNodes, random);
@@ -43,20 +57,26 @@ public class GraphGenerator<C, P extends Piece<C>, O extends OrientedPiece<C, P>
             for (var node : currentNodes) {
                 O oriented = node.oriented();
 
-                if (oriented == null) continue;
+                if (oriented == null) {
+                    logger.error("Node has no oriented piece configured, aborting generation");
+                    return false;
+                }
 
                 int connectorCount = oriented.connectors().size();
+
+                var children = node.children();
+
+                if (children != null && children.size() == connectorCount && children.stream().allMatch(Objects::nonNull)) {
+                    // if node is already fully generated, skip it; set anyPlaced=true to advance to next level
+                    anyPlaced = true;
+                    continue;
+                }
+
+                anyLeaf = true;
 
                 // skip if the node has no connectors
                 if (connectorCount == 0) continue;
 
-                var children = node.children();
-
-                // skip if node is already fully generated
-                if (children != null && children.size() == connectorCount &&
-                    children.stream().allMatch(Objects::nonNull)) continue;
-
-                anyLeaf = true;
                 children = initChildren(node, connectorCount);
 
                 var connectors = oriented.connectors();
@@ -84,7 +104,8 @@ public class GraphGenerator<C, P extends Piece<C>, O extends OrientedPiece<C, P>
                 BackTrackResult res = performBackTracking(graph);
 
                 if (res == null) {
-                    throw new IllegalStateException("Back-Tracking failed; generation cannot be completed");
+                    logger.error("Back-Tracking could not find a suitable solution; generation cannot be completed");
+                    return false;
                 }
 
                 currentLevel = res.level;
@@ -96,6 +117,8 @@ public class GraphGenerator<C, P extends Piece<C>, O extends OrientedPiece<C, P>
             // at least one new piece was assigned, therefore increment current level
             currentLevel++;
         }
+
+        return true;
     }
 
     private void placeRandomChildPiece(Graph.Node<C, P, O> node, int connectorIndex, List<O> fitting) {
@@ -180,7 +203,10 @@ public class GraphGenerator<C, P extends Piece<C>, O extends OrientedPiece<C, P>
 
         var fitting = domain.fittingPieces(connector);
 
-        fitting.remove(oriented);  // remove previous choice
+        // remove all previous choices
+        var previousChoices = parent.previousChoices(connectorIndex);
+        previousChoices.add(oriented);
+        fitting.removeAll(previousChoices);
 
         if (!fitting.isEmpty()) {
             // place random fitting piece directly

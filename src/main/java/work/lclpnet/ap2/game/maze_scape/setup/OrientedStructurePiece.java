@@ -12,11 +12,13 @@ import work.lclpnet.kibu.util.math.Matrix3i;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class OrientedStructurePiece implements OrientedPiece<Connector3, StructurePiece> {
 
     private final StructurePiece piece;
     private final BlockPos pos;
+    private final int rotation;
     private final List<Connector3> connectors;
     private final Matrix3i mat;
     private final BVH bounds;
@@ -24,6 +26,7 @@ public class OrientedStructurePiece implements OrientedPiece<Connector3, Structu
     public OrientedStructurePiece(StructurePiece piece, BlockPos pos, int rotation, int parentConnector, @Nullable BVH bounds) {
         this.piece = piece;
         this.pos = pos;
+        this.rotation = rotation;
 
         this.mat = Matrix3i.makeRotationY(rotation);
         this.bounds = bounds != null ? bounds : piece.bounds().transform(new AffineIntMatrix(mat, pos));
@@ -81,5 +84,18 @@ public class OrientedStructurePiece implements OrientedPiece<Connector3, Structu
 
     public Matrix3i transformation() {
         return mat;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        OrientedStructurePiece that = (OrientedStructurePiece) o;
+        return rotation == that.rotation && Objects.equals(piece, that.piece) && Objects.equals(pos, that.pos);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(piece, pos, rotation);
     }
 }

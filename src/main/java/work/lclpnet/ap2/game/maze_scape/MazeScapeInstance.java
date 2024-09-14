@@ -23,7 +23,16 @@ public class MazeScapeInstance extends EliminationGameInstance implements MapBoo
         Logger logger = gameHandle.getLogger();
         var setup = new MSLoader(world, map, logger);
 
-        return setup.load().thenAccept(res -> new MSGenerator(world, map, res, new Random(), logger).generate());
+        return setup.load().thenAccept(res -> {
+            long seed = new Random().nextLong();
+            var random = new Random(seed);
+
+            var generator = new MSGenerator(world, map, res, random, logger);
+
+            if (!generator.generate()) {
+                logger.error("Failed to generate structure. Seed: {}", seed);
+            }
+        });
     }
 
     @Override

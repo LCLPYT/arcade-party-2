@@ -1,5 +1,6 @@
 package work.lclpnet.ap2.game.maze_scape.gen;
 
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -55,6 +56,7 @@ public class Graph<C, P extends Piece<C>, O extends OrientedPiece<C, P>> {
         private @Nullable List<@Nullable Node<C, P, O>> children = null;
         private @Nullable O oriented = null;
         private int level = 0;
+        private @Nullable List<@Nullable List<O>> previousChoices;
 
         public @Nullable Node<C, P, O> parent() {
             return parent;
@@ -103,6 +105,32 @@ public class Graph<C, P extends Piece<C>, O extends OrientedPiece<C, P>> {
                     child.traverse(action);
                 }
             }
+        }
+
+        @NotNull
+        public List<O> previousChoices(int connectorIndex) {
+            if (previousChoices == null) {
+                int connectorCount = oriented != null ? oriented.connectors().size() : 0;
+
+                if (connectorCount == 0) {
+                    throw new IllegalStateException("Node has no connectors");
+                }
+
+                previousChoices = new ArrayList<>(connectorCount);
+
+                for (int i = 0; i < connectorCount; i++) {
+                    previousChoices.add(null);
+                }
+            }
+
+            List<O> prev = previousChoices.get(connectorIndex);
+
+            if (prev == null) {
+                prev = new ArrayList<>();
+                previousChoices.set(connectorIndex, prev);
+            }
+
+            return prev;
         }
     }
 }
