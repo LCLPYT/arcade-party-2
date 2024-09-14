@@ -14,4 +14,7 @@ public record StructurePiece(
         int maxCount
 ) implements Piece<Connector3> {
 
+    public boolean limitedCount() {
+        return maxCount != -1;
+    }
 }
