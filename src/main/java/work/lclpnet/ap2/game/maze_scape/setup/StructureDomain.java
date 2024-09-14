@@ -1,5 +1,7 @@
 package work.lclpnet.ap2.game.maze_scape.setup;
 
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.util.math.BlockPos;
 import work.lclpnet.ap2.game.maze_scape.gen.GeneratorDomain;
 import work.lclpnet.ap2.game.maze_scape.util.BVH;
@@ -12,11 +14,13 @@ public class StructureDomain implements GeneratorDomain<Connector3, StructurePie
 
     private final Collection<StructurePiece> pieces;
     private final Random random;
+    private final Object2IntMap<StructurePiece> pieceCount;
     private final Set<OrientedStructurePiece> placed = new HashSet<>();
 
     public StructureDomain(Collection<StructurePiece> pieces, Random random) {
         this.pieces = pieces;
         this.random = random;
+        this.pieceCount = new Object2IntOpenHashMap<>(pieces.size());
     }
 
     @Override
@@ -35,6 +39,10 @@ public class StructureDomain implements GeneratorDomain<Connector3, StructurePie
         BlockPos connectorPos = connector.pos();
 
         for (StructurePiece piece : pieces) {
+            int count = pieceCount.getOrDefault(piece, 0);
+
+            if (piece.limitedCount() && count >= piece.maxCount()) continue;
+
             // find all possible placements according to connectors of the piece
             var connectors = piece.connectors();
 
@@ -63,11 +71,13 @@ public class StructureDomain implements GeneratorDomain<Connector3, StructurePie
     @Override
     public void placePiece(OrientedStructurePiece oriented) {
         placed.add(oriented);
+        pieceCount.compute(oriented.piece(), (_piece, count) -> count == null ? 1 : count + 1);
     }
 
     @Override
     public void removePiece(OrientedStructurePiece oriented) {
         placed.remove(oriented);
+        pieceCount.compute(oriented.piece(), (_piece, count) -> count == null ? null : count - 1);
     }
 
     private int randomRotation() {
