@@ -23,13 +23,21 @@ public class AffineIntMatrix {
     }
 
     public AffineIntMatrix(Matrix3i matrix3) {
+        this(matrix3, 0, 0, 0);
+    }
+
+    public AffineIntMatrix(Matrix3i matrix3, Vec3i translation) {
+        this(matrix3, translation.getX(), translation.getY(), translation.getZ());
+    }
+
+    public AffineIntMatrix(Matrix3i matrix3, int translateX, int translateY, int translateZ) {
         elements = new int[12];
 
         int[] me = matrix3.elements;
 
-        elements[0] = me[0]; elements[1] = me[1]; elements[2] = me[2]; elements[3] = 0;
-        elements[4] = me[3]; elements[5] = me[4]; elements[6] = me[5]; elements[7] = 0;
-        elements[8] = me[6]; elements[9] = me[7]; elements[10] = me[8]; elements[11] = 0;
+        elements[0] = me[0]; elements[1] = me[1]; elements[2] = me[2]; elements[3] = translateX;
+        elements[4] = me[3]; elements[5] = me[4]; elements[6] = me[5]; elements[7] = translateY;
+        elements[8] = me[6]; elements[9] = me[7]; elements[10] = me[8]; elements[11] = translateZ;
     }
 
     public void transform(int x, int y, int z, BlockPos.Mutable target) {

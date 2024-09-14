@@ -4,6 +4,8 @@ import net.minecraft.util.math.BlockPos;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import work.lclpnet.ap2.impl.util.BlockBox;
+import work.lclpnet.ap2.impl.util.math.AffineIntMatrix;
+import work.lclpnet.kibu.util.math.Matrix3i;
 
 import java.util.List;
 
@@ -122,6 +124,42 @@ class BVHTest {
         var second = BVH.build(List.of(box(6, 8)));
 
         assertNoIntersection(first, second);
+    }
+
+    @Test
+    void transform_rotate() {
+        var bvh = BVH.build(List.of(box(0, 3), box(-1, 2), box(2, 5)));
+        bvh = bvh.transform(new AffineIntMatrix(Matrix3i.makeRotationY(2)));
+
+        assertNotNull(bvh.root);
+        assertNotNull(bvh.root.left);
+        assertNotNull(bvh.root.right);
+        assertNotNull(bvh.root.right.left);
+        assertNotNull(bvh.root.right.right);
+
+        assertEquals(new BlockBox(-5, -1, -5, 1, 5, 1), bvh.root.bounds);
+        assertEquals(new BlockBox(-2, -1, -2, 1, 2, 1), bvh.root.left.bounds);
+        assertEquals(new BlockBox(-5, 0, -5, 0, 5, 0), bvh.root.right.bounds);
+        assertEquals(new BlockBox(-3, 0, -3, 0, 3, 0), bvh.root.right.left.bounds);
+        assertEquals(new BlockBox(-5, 2, -5, -2, 5, -2), bvh.root.right.right.bounds);
+    }
+
+    @Test
+    void transform_affine() {
+        var bvh = BVH.build(List.of(box(0, 3), box(-1, 2), box(2, 5)));
+        bvh = bvh.transform(new AffineIntMatrix(Matrix3i.makeRotationY(2), 1, 2, 3));
+
+        assertNotNull(bvh.root);
+        assertNotNull(bvh.root.left);
+        assertNotNull(bvh.root.right);
+        assertNotNull(bvh.root.right.left);
+        assertNotNull(bvh.root.right.right);
+
+        assertEquals(new BlockBox(-4, 1, -2, 2, 7, 4), bvh.root.bounds);
+        assertEquals(new BlockBox(-1, 1, 1, 2, 4, 4), bvh.root.left.bounds);
+        assertEquals(new BlockBox(-4, 2, -2, 1, 7, 3), bvh.root.right.bounds);
+        assertEquals(new BlockBox(-2, 2, 0, 1, 5, 3), bvh.root.right.left.bounds);
+        assertEquals(new BlockBox(-4, 4, -2, -1, 7, 1), bvh.root.right.right.bounds);
     }
 
     void assertIntersection(BVH first, BVH second) {

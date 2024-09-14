@@ -2,7 +2,9 @@ package work.lclpnet.ap2.game.maze_scape.util;
 
 import net.minecraft.util.math.BlockPos;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.VisibleForTesting;
 import work.lclpnet.ap2.impl.util.BlockBox;
+import work.lclpnet.ap2.impl.util.math.AffineIntMatrix;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -11,7 +13,8 @@ import java.util.List;
 public class BVH {
 
     public static final BVH EMPTY = new BVH(null);
-    private final @Nullable Node root;
+    @VisibleForTesting @Nullable
+    final Node root;
 
     private BVH(@Nullable Node root) {
         this.root = root;
@@ -59,7 +62,26 @@ public class BVH {
         return this.root != null && other.root != null && this.root.intersects(other.root);
     }
 
-    private static class Node {
+    public int width() {
+        return root != null ? root.bounds.width() : 0;
+    }
+
+    public int height() {
+        return root != null ? root.bounds.height() : 0;
+    }
+
+    public int length() {
+        return root != null ? root.bounds.length() : 0;
+    }
+
+    public BVH transform(AffineIntMatrix mat) {
+        if (root == null) return EMPTY;
+
+        return new BVH(root.transform(mat));
+    }
+
+    @VisibleForTesting
+    static class Node {
         final BlockBox bounds;
         final @Nullable Node left, right;
 
@@ -142,6 +164,14 @@ public class BVH {
 
         boolean isLeaf() {
             return this.left == null || this.right == null;
+        }
+
+        public Node transform(AffineIntMatrix mat) {
+            if (left == null || right == null) {
+                return new Node(bounds.transform(mat));
+            }
+
+            return new Node(left.transform(mat), right.transform(mat));
         }
     }
 }
