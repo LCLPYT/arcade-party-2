@@ -29,12 +29,18 @@ public class MSGenerator {
         this.logger = logger;
     }
 
-    public void generate() {
+    public boolean generate() {
         var domain = new StructureDomain(loaded.pieces(), random);
-        var generator = new GraphGenerator<>(domain, random);
-        var graph = generator.generateGraph(loaded.startPiece(), 100);
+        var generator = new GraphGenerator<>(domain, random, logger);
+        var graph = generator.generateGraph(loaded.startPiece(), 100).orElse(null);
+
+        if (graph == null) {
+            return false;
+        }
 
         placePieces(graph);
+
+        return true;
     }
 
     private void placePieces(Graph<Connector3, StructurePiece, OrientedStructurePiece> graph) {

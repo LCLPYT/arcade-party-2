@@ -25,7 +25,8 @@ public class StructureDomain implements GeneratorDomain<Connector3, StructurePie
 
     @Override
     public OrientedStructurePiece placeStart(StructurePiece startPiece) {
-        var start = new OrientedStructurePiece(startPiece, BlockPos.ORIGIN, randomRotation(), -1, null);
+        var pos = new BlockPos(0, 64, 0);
+        var start = new OrientedStructurePiece(startPiece, pos, randomRotation(), -1, null);
 
         placePiece(start);
 
