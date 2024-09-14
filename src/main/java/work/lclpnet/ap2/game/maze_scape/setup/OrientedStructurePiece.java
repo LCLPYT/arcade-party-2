@@ -1,0 +1,85 @@
+package work.lclpnet.ap2.game.maze_scape.setup;
+
+import net.minecraft.block.enums.Orientation;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.Vec3i;
+import org.jetbrains.annotations.Nullable;
+import work.lclpnet.ap2.game.maze_scape.gen.OrientedPiece;
+import work.lclpnet.ap2.game.maze_scape.util.BVH;
+import work.lclpnet.ap2.impl.util.math.AffineIntMatrix;
+import work.lclpnet.kibu.util.math.Matrix3i;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class OrientedStructurePiece implements OrientedPiece<Connector3, StructurePiece> {
+
+    private final StructurePiece piece;
+    private final BlockPos pos;
+    private final List<Connector3> connectors;
+    private final Matrix3i mat;
+    private final BVH bounds;
+
+    public OrientedStructurePiece(StructurePiece piece, BlockPos pos, int rotation, int parentConnector, @Nullable BVH bounds) {
+        this.piece = piece;
+        this.pos = pos;
+
+        this.mat = Matrix3i.makeRotationY(rotation);
+        this.bounds = bounds != null ? bounds : piece.bounds().transform(new AffineIntMatrix(mat, pos));
+
+        // rotate and translate base connectors
+        var base = piece().connectors();
+        List<Connector3> connectors = new ArrayList<>(parentConnector == -1 ? base.size() : base.size() - 1);
+
+        for (int i = 0, baseSize = base.size(); i < baseSize; i++) {
+            if (i == parentConnector) continue;
+
+            Connector3 connector = base.get(i);
+
+            // find connector position
+            BlockPos connectorPos = mat.transform(connector.pos());
+            var newConnectorPos = pos.add(connectorPos);
+
+            // transform facing vector
+            Vec3i vec = mat.transform(connector.orientation().getFacing().getVector());
+            Direction dir = Direction.fromVector(vec.getX(), vec.getY(), vec.getZ());
+
+            if (dir == null) {
+                throw new IllegalArgumentException("Invalid transformation: Direction is not canonical");
+            }
+
+            var newOrientation = Orientation.byDirections(dir, connector.orientation().getRotation());
+
+            if (newOrientation == null) {
+                throw new IllegalArgumentException("Invalid transformation: Invalid orientation");
+            }
+
+            connectors.add(new Connector3(newConnectorPos, newOrientation));
+        }
+
+        this.connectors = connectors;
+    }
+
+    @Override
+    public StructurePiece piece() {
+        return piece;
+    }
+
+    @Override
+    public List<Connector3> connectors() {
+        return connectors;
+    }
+
+    public BVH bounds() {
+        return bounds;
+    }
+
+    public BlockPos pos() {
+        return pos;
+    }
+
+    public Matrix3i transformation() {
+        return mat;
+    }
+}

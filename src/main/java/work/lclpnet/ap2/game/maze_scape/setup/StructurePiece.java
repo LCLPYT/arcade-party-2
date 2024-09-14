@@ -9,9 +9,9 @@ import java.util.List;
 public record StructurePiece(
         FabricStructureWrapper wrapper,
         BVH bounds,
-        List<Connector3d> connectors,
+        List<Connector3> connectors,
         float weight,
         int maxCount
-) implements Piece<Connector3d> {
+) implements Piece<Connector3> {
 
 }

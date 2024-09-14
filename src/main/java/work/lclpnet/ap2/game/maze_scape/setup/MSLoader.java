@@ -13,7 +13,6 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.game.maze_scape.util.BVH;
 import work.lclpnet.ap2.impl.util.BlockBox;
-import work.lclpnet.ap2.impl.util.WeightedList;
 import work.lclpnet.kibu.jnbt.CompoundTag;
 import work.lclpnet.kibu.mc.KibuBlockEntity;
 import work.lclpnet.kibu.mc.KibuBlockState;
@@ -60,7 +59,7 @@ public class MSLoader {
             JSONObject piecesConfig = map.requireProperty("pieces");
             String startPieceName = map.requireProperty("start-piece");
 
-            var pieces = new WeightedList<StructurePiece>(piecesConfig.length());
+            var pieces = new ArrayList<StructurePiece>(piecesConfig.length());
             StructurePiece startPiece = null;
 
             for (String name : piecesConfig.keySet()) {
@@ -77,7 +76,7 @@ public class MSLoader {
 
                 if (piece == null) continue;
 
-                pieces.add(piece, piece.weight());
+                pieces.add(piece);
 
                 if (startPieceName.equals(name)) {
                     startPiece = piece;
@@ -107,7 +106,7 @@ public class MSLoader {
 
         var wrapper = new FabricStructureWrapper(struct, adapter);
 
-        List<Connector3d> connectors = findConnectors(struct, adapter);
+        List<Connector3> connectors = findConnectors(struct, adapter);
         BVH bounds = buildBounds(wrapper, connectors);
 
         float weight = config.optFloat("weight", 1.0f);
@@ -116,8 +115,8 @@ public class MSLoader {
         return new StructurePiece(wrapper, bounds, connectors, weight, maxCount);
     }
 
-    private List<Connector3d> findConnectors(BlockStructure struct, FabricBlockStateAdapter adapter) {
-        List<Connector3d> connectors = new ArrayList<>(2);
+    private List<Connector3> findConnectors(BlockStructure struct, FabricBlockStateAdapter adapter) {
+        List<Connector3> connectors = new ArrayList<>(2);
         var origin = struct.getOrigin();
         int ox = origin.getX(), oy = origin.getY(), oz = origin.getZ();
 
@@ -150,13 +149,13 @@ public class MSLoader {
 
             var localPos = new BlockPos(pos.getX() - ox, pos.getY() - oy, pos.getZ() - oz);
 
-            connectors.add(new Connector3d(localPos, orientation));
+            connectors.add(new Connector3(localPos, orientation));
         }
 
         return connectors;
     }
 
-    private BVH buildBounds(FabricStructureWrapper wrapper, List<Connector3d> connectors) {
+    private BVH buildBounds(FabricStructureWrapper wrapper, List<Connector3> connectors) {
         /*
         build a bounding volume hierarchy by doing following steps:
         1. create a structure mask (3d bool array) that contains every non-air block
@@ -172,7 +171,7 @@ public class MSLoader {
         var mask = structMask.mask();
 
         // close open walls at connectors
-        for (Connector3d connector : connectors) {
+        for (Connector3 connector : connectors) {
             maskCorridor(connector, mask, wrapper);
         }
 
@@ -216,7 +215,7 @@ public class MSLoader {
         System.arraycopy(inside, 0, wallMask, 0, inside.length);
     }
 
-    private void maskCorridor(Connector3d connector, boolean[][][] mask, FabricStructureWrapper wrapper) {
+    private void maskCorridor(Connector3 connector, boolean[][][] mask, FabricStructureWrapper wrapper) {
         BlockStructure struct = wrapper.getStructure();
         Orientation orientation = connector.orientation();
         BlockPos connectorPos = connector.pos();
@@ -330,5 +329,5 @@ public class MSLoader {
         }
     }
 
-    public record Result(WeightedList<StructurePiece> pieces, StructurePiece startPiece) {}
+    public record Result(List<StructurePiece> pieces, StructurePiece startPiece) {}
 }
