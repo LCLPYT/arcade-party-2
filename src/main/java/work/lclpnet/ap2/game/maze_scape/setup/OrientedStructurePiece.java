@@ -22,6 +22,7 @@ public class OrientedStructurePiece implements OrientedPiece<Connector3, Structu
     private final List<Connector3> connectors;
     private final Matrix3i mat;
     private final BVH bounds;
+    @Nullable private volatile Matrix3i invMat = null;
 
     public OrientedStructurePiece(StructurePiece piece, BlockPos pos, int rotation, int parentConnector, @Nullable BVH bounds) {
         this.piece = piece;
@@ -84,6 +85,18 @@ public class OrientedStructurePiece implements OrientedPiece<Connector3, Structu
 
     public Matrix3i transformation() {
         return mat;
+    }
+
+    public Matrix3i inverseTransformation() {
+        if (invMat != null) return invMat;
+
+        synchronized (this) {
+            if (invMat == null) {
+                invMat = mat.invert();
+            }
+        }
+
+        return invMat;
     }
 
     @Override

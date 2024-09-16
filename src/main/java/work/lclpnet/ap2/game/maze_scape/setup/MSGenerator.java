@@ -1,5 +1,7 @@
 package work.lclpnet.ap2.game.maze_scape.setup;
 
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockState;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import org.slf4j.Logger;
@@ -8,8 +10,13 @@ import work.lclpnet.ap2.game.maze_scape.gen.GraphGenerator;
 import work.lclpnet.ap2.game.maze_scape.setup.wall.ConnectorWall;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.StructureUtil;
+import work.lclpnet.ap2.impl.util.math.AffineIntMatrix;
+import work.lclpnet.kibu.jnbt.CompoundTag;
+import work.lclpnet.kibu.mc.KibuBlockPos;
 import work.lclpnet.kibu.schematic.FabricStructureWrapper;
 import work.lclpnet.kibu.structure.BlockStructure;
+import work.lclpnet.kibu.util.BlockStateUtils;
+import work.lclpnet.kibu.util.RotationUtil;
 import work.lclpnet.kibu.util.math.Matrix3i;
 import work.lclpnet.lobby.game.map.GameMap;
 
@@ -64,11 +71,57 @@ public class MSGenerator {
 
         StructureUtil.placeStructureFast(struct, world, pos, transformation);
 
-        // TODO replace jigsaws
+        replaceJigsaws(oriented);
 
         closeConnectors(node, oriented);
 
         return true;
+    }
+
+    private void replaceJigsaws(OrientedStructurePiece oriented) {
+        Matrix3i mat = oriented.transformation();
+        var transformation = new AffineIntMatrix(mat, oriented.pos());
+
+        StructurePiece piece = oriented.piece();
+        BlockStructure struct = piece.wrapper().getStructure();
+
+        var placedPos = new BlockPos.Mutable();
+        var kibuPos = new KibuBlockPos.Mutable();
+
+        int flags = Block.FORCE_STATE | Block.SKIP_DROPS;
+
+        for (Connector3 connector : piece.connectors()) {
+            BlockPos pos = connector.pos();
+            kibuPos.set(pos.getX(), pos.getY(), pos.getZ());
+
+            // determine jigsaw final state
+            var blockEntity = struct.getBlockEntity(kibuPos);
+
+            if (blockEntity == null) {
+                logger.warn("Could not find jigsaw block entity in structure at position {}", pos);
+                continue;
+            }
+
+            CompoundTag nbt = blockEntity.createNbt();
+            String str = nbt.getString("final_state");
+
+            if (str.isEmpty()) continue;
+
+            BlockState state = BlockStateUtils.parse(str);
+
+            if (state == null) {
+                logger.warn("Unknown block state {} as jigsaw final state", str);
+                continue;
+            }
+
+            // apply rotation to state
+            state = RotationUtil.rotate(state, mat);
+
+            // determine actual location
+            transformation.transform(pos.getX(), pos.getY(), pos.getZ(), placedPos);
+
+            world.setBlockState(placedPos, state, flags);
+        }
     }
 
     private void closeConnectors(Graph.Node<Connector3, StructurePiece, OrientedStructurePiece> node, OrientedStructurePiece oriented) {
