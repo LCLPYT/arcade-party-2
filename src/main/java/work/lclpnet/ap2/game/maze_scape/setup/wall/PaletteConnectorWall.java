@@ -3,7 +3,6 @@ package work.lclpnet.ap2.game.maze_scape.setup.wall;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.enums.Orientation;
-import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3i;
 import work.lclpnet.ap2.game.maze_scape.setup.Connector3;
@@ -11,6 +10,7 @@ import work.lclpnet.ap2.game.maze_scape.setup.OrientedStructurePiece;
 import work.lclpnet.ap2.game.maze_scape.util.*;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.kibu.schematic.FabricStructureWrapper;
+import work.lclpnet.lobby.util.WorldModifier;
 
 import java.util.Random;
 
@@ -23,7 +23,7 @@ public class PaletteConnectorWall implements ConnectorWall {
     }
 
     @Override
-    public void place(Connector3 connector, OrientedStructurePiece oriented, ServerWorld world, Random random) {
+    public void place(Connector3 connector, OrientedStructurePiece oriented, WorldModifier modifier, Random random) {
         // determine connector position in rotated local space
         BlockPos connectorPos = connector.pos();
 
@@ -51,7 +51,7 @@ public class PaletteConnectorWall implements ConnectorWall {
                 // place random block from palette
                 pos -> {
                     BlockState state = palette.sample(random);
-                    world.setBlockState(pos, state, flags);
+                    modifier.setBlockState(pos, state, flags);
                 },
                 // advance to neighbour if in plane and transparent
                 (x, y, z) -> plane.test(x, y, z) && notWall.test(x - rx, y - ry, z - rz));
