@@ -42,7 +42,7 @@ public class TestGraphBuilder {
 
     public Graph.@NotNull Node<StringConnector, StringPiece, OrientedStringPiece> choose(Graph.Node<StringConnector, StringPiece, OrientedStringPiece> node, int connector, StringPiece piece, int rotation) {
         var oriented = Objects.requireNonNull(node.oriented());
-        var fitting = domain.fittingPieces(oriented.connectors().get(connector));
+        var fitting = domain.fittingPieces(oriented, oriented.connectors().get(connector));
 
         var childPiece = fitting.stream()
                 .filter(p -> piece.equals(p.piece()) && p.rotation() == rotation)

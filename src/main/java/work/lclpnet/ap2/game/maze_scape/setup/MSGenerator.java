@@ -45,7 +45,13 @@ public class MSGenerator {
     }
 
     public synchronized boolean generate() {
-        var domain = new StructureDomain(loaded.pieces(), random);
+        Number maxChunkSizeProp = map.requireProperty("max-chunk-size");
+        int maxChunkSize = Math.max(maxChunkSizeProp.intValue(), 2);
+
+        int bottomY = world.getBottomY();
+        int topY = world.getTopY() - 1;
+
+        var domain = new StructureDomain(loaded.pieces(), random, maxChunkSize, bottomY, topY);
         var generator = new GraphGenerator<>(domain, random, logger);
         var graph = generator.generateGraph(loaded.startPiece(), 100).orElse(null);
 

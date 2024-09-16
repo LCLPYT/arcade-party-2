@@ -26,7 +26,7 @@ public class String2DGeneratorDomain implements GeneratorDomain<StringConnector,
     }
 
     @Override
-    public List<OrientedStringPiece> fittingPieces(StringConnector connector) {
+    public List<OrientedStringPiece> fittingPieces(OrientedStringPiece oriented, StringConnector connector) {
         List<OrientedStringPiece> fitting = new ArrayList<>();
 
         int conX = connector.x(), conY = connector.y();
