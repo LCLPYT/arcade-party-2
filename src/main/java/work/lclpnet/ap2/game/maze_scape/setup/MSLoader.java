@@ -1,7 +1,5 @@
 package work.lclpnet.ap2.game.maze_scape.setup;
 
-import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
-import it.unimi.dsi.fastutil.longs.LongSet;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.enums.Orientation;
 import net.minecraft.server.world.ServerWorld;
@@ -11,7 +9,9 @@ import net.minecraft.util.math.Vec3i;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import org.slf4j.Logger;
-import work.lclpnet.ap2.game.maze_scape.util.BVH;
+import work.lclpnet.ap2.game.maze_scape.setup.wall.ConnectorWall;
+import work.lclpnet.ap2.game.maze_scape.setup.wall.PaletteConnectorWall;
+import work.lclpnet.ap2.game.maze_scape.util.*;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.kibu.jnbt.CompoundTag;
 import work.lclpnet.kibu.mc.KibuBlockEntity;
@@ -28,13 +28,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Queue;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Consumer;
-
-import static net.minecraft.util.math.BlockPos.asLong;
 
 public class MSLoader {
 
@@ -50,6 +45,8 @@ public class MSLoader {
 
     public CompletableFuture<Result> load() {
         return CompletableFuture.supplyAsync(() -> {
+            var defaultConnectorWall = parseConnectorWall(map.requireProperty("default-connector-wall"));
+
             var session = ((MinecraftServerAccessor) world.getServer()).getSession();
             Path dir = session.getWorldDirectory(world.getRegistryKey()).resolve("structures");
 
@@ -87,8 +84,20 @@ public class MSLoader {
                 throw new IllegalStateException("Could not find start piece named %s".formatted(startPieceName));
             }
 
-            return new Result(pieces, startPiece);
+            return new Result(pieces, startPiece, defaultConnectorWall);
         });
+    }
+
+    private ConnectorWall parseConnectorWall(JSONObject json) {
+        var array = json.optJSONArray("palette");
+
+        if (array != null) {
+            var states = BlockPalette.parseStatesFromJson(array, logger);
+            BlockPalette palette = new BlockPalette(states);
+            return new PaletteConnectorWall(palette);
+        }
+
+        throw new IllegalStateException("Invalid connector wall configuration");
     }
 
     @Nullable
@@ -111,8 +120,9 @@ public class MSLoader {
 
         float weight = config.optFloat("weight", 1.0f);
         int maxCount = config.optInt("max-count", -1);
+        boolean connectSame = config.optBoolean("connect-same", true);
 
-        return new StructurePiece(wrapper, bounds, connectors, weight, maxCount);
+        return new StructurePiece(wrapper, bounds, connectors, weight, maxCount, connectSame);
     }
 
     private List<Connector3> findConnectors(BlockStructure struct, FabricBlockStateAdapter adapter) {
@@ -225,8 +235,8 @@ public class MSLoader {
         int width = struct.getWidth(), height = struct.getHeight(), length = struct.getLength();
 
         BlockPos start = connectorPos.offset(orientation.getRotation());
-        var plane = new Plane(connectorPos, normal);
-        var transparent = new TransparencyChecker(wrapper);
+        var plane = new PlanePredicate(connectorPos, normal);
+        var transparent = new TransparencyPredicate(wrapper);
 
         new BoxFloodFill(width, height, length).execute(
                 start,
@@ -234,100 +244,9 @@ public class MSLoader {
                 (x, y, z) -> plane.test(x, y, z) && transparent.test(x, y, z));  // add neighbour if in plane and transparent
     }
 
-    private interface Int3Predicate {
-        boolean test(int x, int y, int z);
-    }
-
-    private static class TransparencyChecker implements Int3Predicate {
-
-        final FabricStructureWrapper wrapper;
-        final BlockPos.Mutable pos = new BlockPos.Mutable();
-
-        TransparencyChecker(FabricStructureWrapper wrapper) {
-            this.wrapper = wrapper;
-        }
-
-        @Override
-        public boolean test(int x, int y, int z) {
-            pos.set(x, y, z);
-            BlockState state = wrapper.getBlockState(pos);
-            return !state.isOpaque();
-        }
-    }
-
-    private static class Plane implements Int3Predicate {
-        final int ox, oy, oz;
-        final int nx, ny, nz;
-
-        Plane(Vec3i origin, Vec3i normal) {
-            ox = origin.getX();
-            oy = origin.getY();
-            oz = origin.getZ();
-            nx = normal.getX();
-            ny = normal.getY();
-            nz = normal.getZ();
-        }
-
-        @Override
-        public boolean test(int x, int y, int z) {
-            return (x - ox) * nx + (y - oy) * ny + (z - oz) * nz == 0;
-        }
-    }
-
-    private static class BoxFloodFill {
-        final Queue<BlockPos> queue = new LinkedList<>();
-        final LongSet visited = new LongOpenHashSet();
-        final int width, height, length;
-
-        BoxFloodFill(int width, int height, int length) {
-            this.width = width;
-            this.height = height;
-            this.length = length;
-        }
-
-        @SuppressWarnings("DuplicatedCode")
-        synchronized void execute(BlockPos start, Consumer<BlockPos> action, Int3Predicate predicate) {
-            queue.clear();
-            visited.clear();
-
-            queue.offer(start);
-            visited.add(asLong(start.getX(), start.getY(), start.getZ()));
-
-            while (!queue.isEmpty()) {
-                BlockPos pos = queue.poll();
-                action.accept(pos);
-
-                final int x = pos.getX(), y = pos.getY(), z = pos.getZ();
-
-                // test each neighbor pos "a" and maybe offer to the queue
-                int ax, ay, az;
-
-                ax = x + 1; ay = y; az = z;
-                if (ax < width && predicate.test(ax, ay, az) && visited.add(asLong(ax, ay, az)))
-                    queue.add(new BlockPos(ax, ay, az));
-
-                ax = x - 1;
-                if (ax >= 0 && predicate.test(ax, ay, az) && visited.add(asLong(ax, ay, az)))
-                    queue.add(new BlockPos(ax, ay, az));
-
-                ax = x; ay = y + 1;
-                if (ay < height && predicate.test(ax, ay, az) && visited.add(asLong(ax, ay, az)))
-                    queue.add(new BlockPos(ax, ay, az));
-
-                ay = y - 1;
-                if (ay >= 0 && predicate.test(ax, ay, az) && visited.add(asLong(ax, ay, az)))
-                    queue.add(new BlockPos(ax, ay, az));
-
-                ay = y; az = z + 1;
-                if (az < length && predicate.test(ax, ay, az) && visited.add(asLong(ax, ay, az)))
-                    queue.add(new BlockPos(ax, ay, az));
-
-                az = z - 1;
-                if (az >= 0 && predicate.test(ax, ay, az) && visited.add(asLong(ax, ay, az)))
-                    queue.add(new BlockPos(ax, ay, az));
-            }
-        }
-    }
-
-    public record Result(List<StructurePiece> pieces, StructurePiece startPiece) {}
+    public record Result(
+            List<StructurePiece> pieces,
+            StructurePiece startPiece,
+            ConnectorWall defaultConnectorWall
+    ) {}
 }

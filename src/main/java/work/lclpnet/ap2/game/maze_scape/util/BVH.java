@@ -62,6 +62,11 @@ public class BVH {
         return this.root != null && other.root != null && this.root.intersects(other.root);
     }
 
+    @Nullable
+    public BlockBox box() {
+        return root != null ? root.bounds : null;
+    }
+
     public int width() {
         return root != null ? root.bounds.width() : 0;
     }
