@@ -2,15 +2,17 @@ package work.lclpnet.ap2.game.maze_scape.setup;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.enums.Orientation;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.game.maze_scape.gen.Graph;
 import work.lclpnet.ap2.game.maze_scape.gen.GraphGenerator;
-import work.lclpnet.ap2.game.maze_scape.setup.wall.ConnectorWall;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.StructureUtil;
 import work.lclpnet.ap2.impl.util.math.AffineIntMatrix;
+import work.lclpnet.ap2.impl.util.world.ResetBlockWorldModifier;
 import work.lclpnet.kibu.jnbt.CompoundTag;
 import work.lclpnet.kibu.mc.KibuBlockPos;
 import work.lclpnet.kibu.schematic.FabricStructureWrapper;
@@ -20,15 +22,19 @@ import work.lclpnet.kibu.util.RotationUtil;
 import work.lclpnet.kibu.util.math.Matrix3i;
 import work.lclpnet.lobby.game.map.GameMap;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 
 public class MSGenerator {
 
+    public static final int PLACE_FLAGS = Block.FORCE_STATE | Block.SKIP_DROPS;
     private final ServerWorld world;
     private final GameMap map;
     private final MSLoader.Result loaded;
     private final Random random;
     private final Logger logger;
+    private final Map<Connector3, ResetBlockWorldModifier> closedConnectors = new HashMap<>();
 
     public MSGenerator(ServerWorld world, GameMap map, MSLoader.Result loaded, Random random, Logger logger) {
         this.world = world;
@@ -38,7 +44,7 @@ public class MSGenerator {
         this.logger = logger;
     }
 
-    public boolean generate() {
+    public synchronized boolean generate() {
         var domain = new StructureDomain(loaded.pieces(), random);
         var generator = new GraphGenerator<>(domain, random, logger);
         var graph = generator.generateGraph(loaded.startPiece(), 100).orElse(null);
@@ -88,8 +94,6 @@ public class MSGenerator {
         var placedPos = new BlockPos.Mutable();
         var kibuPos = new KibuBlockPos.Mutable();
 
-        int flags = Block.FORCE_STATE | Block.SKIP_DROPS;
-
         for (Connector3 connector : piece.connectors()) {
             BlockPos pos = connector.pos();
             kibuPos.set(pos.getX(), pos.getY(), pos.getZ());
@@ -120,7 +124,7 @@ public class MSGenerator {
             // determine actual location
             transformation.transform(pos.getX(), pos.getY(), pos.getZ(), placedPos);
 
-            world.setBlockState(placedPos, state, flags);
+            world.setBlockState(placedPos, state, PLACE_FLAGS);
         }
     }
 
@@ -128,12 +132,11 @@ public class MSGenerator {
         var connectors = oriented.connectors();
         var children = node.children();
         int size = connectors.size();
-        ConnectorWall connectorWall = loaded.defaultConnectorWall();
 
         if (children == null || children.size() != size) {
             // close all connectors
             for (Connector3 connector : connectors) {
-                connectorWall.place(connector, oriented, world, random);
+                handleCloseConnector(oriented, connector);
             }
             return;
         }
@@ -146,8 +149,37 @@ public class MSGenerator {
 
             Connector3 connector = connectors.get(i);
 
-            connectorWall.place(connector, oriented, world, random);
+            handleCloseConnector(oriented, connector);
         }
+    }
+
+    private void handleCloseConnector(OrientedStructurePiece oriented, Connector3 connector) {
+        // check if there is another piece, perfectly aligned with the current connector by any chance
+        Orientation orientation = connector.orientation();
+        Direction facing = orientation.getFacing();
+
+        Orientation opposingOrientation = Orientation.byDirections(facing.getOpposite(), orientation.getRotation());
+
+        if (opposingOrientation == null) return;
+
+        BlockPos opposingPos = connector.pos().add(facing.getVector());
+        var opposing = new Connector3(opposingPos, opposingOrientation);
+
+        var wall = closedConnectors.get(opposing);
+
+        if (wall != null) {
+            // the opposing connector was closed, remove the wall and link the two rooms
+            wall.undo();
+            closedConnectors.remove(opposing);
+            return;
+        }
+
+        // close the connector
+        ResetBlockWorldModifier modifier = new ResetBlockWorldModifier(world, PLACE_FLAGS);
+
+        loaded.defaultConnectorWall().place(connector, oriented, modifier, random);
+
+        closedConnectors.put(connector, modifier);
     }
 
     private void debugPieces() {
