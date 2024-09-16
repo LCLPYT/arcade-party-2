@@ -5,6 +5,7 @@ import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.util.math.BlockPos;
 import work.lclpnet.ap2.game.maze_scape.gen.GeneratorDomain;
 import work.lclpnet.ap2.game.maze_scape.util.BVH;
+import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.math.AffineIntMatrix;
 import work.lclpnet.kibu.util.math.Matrix3i;
 
@@ -15,12 +16,18 @@ public class StructureDomain implements GeneratorDomain<Connector3, StructurePie
     private final Collection<StructurePiece> pieces;
     private final Random random;
     private final Object2IntMap<StructurePiece> pieceCount;
+    private final BlockBox bounds;
     private final Set<OrientedStructurePiece> placed = new HashSet<>();
 
-    public StructureDomain(Collection<StructurePiece> pieces, Random random) {
+    public StructureDomain(Collection<StructurePiece> pieces, Random random, int maxChunkSize, int bottomY, int topY) {
         this.pieces = pieces;
         this.random = random;
         this.pieceCount = new Object2IntOpenHashMap<>(pieces.size());
+
+        int min = -maxChunkSize * 16;
+        int max = maxChunkSize * 16 - 1;
+
+        this.bounds = new BlockBox(min, bottomY, min, max, topY, max);
     }
 
     @Override
@@ -34,12 +41,16 @@ public class StructureDomain implements GeneratorDomain<Connector3, StructurePie
     }
 
     @Override
-    public List<OrientedStructurePiece> fittingPieces(Connector3 connector) {
+    public List<OrientedStructurePiece> fittingPieces(OrientedStructurePiece oriented, Connector3 connector) {
         List<OrientedStructurePiece> fitting = new ArrayList<>();
 
         BlockPos connectorPos = connector.pos();
+        StructurePiece originPiece = oriented.piece();
+        boolean excludeSame = !originPiece.connectSame();
 
         for (StructurePiece piece : pieces) {
+            if (excludeSame && piece == originPiece) continue;
+
             int count = pieceCount.getOrDefault(piece, 0);
 
             if (piece.limitedCount() && count >= piece.maxCount()) continue;
@@ -60,7 +71,7 @@ public class StructureDomain implements GeneratorDomain<Connector3, StructurePie
                 BVH bvh = piece.bounds().transform(new AffineIntMatrix(mat, pos));
 
                 // check if piece would fit with rotation and position
-                if (hasCollision(bvh)) continue;
+                if (!bvh.isContainedWithin(bounds) || hasCollision(bvh)) continue;
 
                 fitting.add(new OrientedStructurePiece(piece, pos, rotation, i, bvh));
             }

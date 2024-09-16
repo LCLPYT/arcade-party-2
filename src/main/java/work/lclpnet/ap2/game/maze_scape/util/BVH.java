@@ -62,6 +62,10 @@ public class BVH {
         return this.root != null && other.root != null && this.root.intersects(other.root);
     }
 
+    public boolean isContainedWithin(BlockBox box) {
+        return root != null && box.contains(root.bounds);
+    }
+
     @Nullable
     public BlockBox box() {
         return root != null ? root.bounds : null;
@@ -171,7 +175,7 @@ public class BVH {
             return this.left == null || this.right == null;
         }
 
-        public Node transform(AffineIntMatrix mat) {
+        Node transform(AffineIntMatrix mat) {
             if (left == null || right == null) {
                 return new Node(bounds.transform(mat));
             }

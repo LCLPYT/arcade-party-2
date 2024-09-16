@@ -179,4 +179,81 @@ class BlockBoxTest {
         assertEquals(7, box.posToIndexYZX(new BlockPos(0, 2, 1)));
         assertEquals(8, box.posToIndexYZX(new BlockPos(0, 2, 2)));
     }
+
+    @Test
+    void contains_fullyContained() {
+        var first = new BlockBox(new BlockPos(0, 0, 0), new BlockPos(5, 5, 5));
+        var second = new BlockBox(new BlockPos(1, 1, 1), new BlockPos(4, 4, 4));
+
+        assertTrue(first.contains(second));
+    }
+
+    @Test
+    void contains_notContained() {
+        var first = new BlockBox(new BlockPos(0, 0, 0), new BlockPos(5, 5, 5));
+        var second = new BlockBox(new BlockPos(1, 1, 1), new BlockPos(4, 4, 4));
+
+        assertFalse(second.contains(first));
+    }
+
+    @Test
+    void contains_partiallyOverlapping() {
+        var first = new BlockBox(new BlockPos(0, 0, 0), new BlockPos(5, 5, 5));
+        var second = new BlockBox(new BlockPos(3, 3, 3), new BlockPos(7, 7, 7));
+
+        assertFalse(first.contains(second));
+        assertFalse(second.contains(first));
+    }
+
+    @Test
+    void contains_self() {
+        var first = new BlockBox(new BlockPos(0, 0, 0), new BlockPos(5, 5, 5));
+
+        assertTrue(first.contains(first));
+    }
+
+    @Test
+    void contains_containedEdge() {
+        var first = new BlockBox(new BlockPos(0, 0, 0), new BlockPos(5, 5, 5));
+        var second = new BlockBox(new BlockPos(5, 5, 5), new BlockPos(5, 5, 5));
+
+        assertTrue(first.contains(second));
+        assertFalse(second.contains(first));
+    }
+
+    @Test
+    void contains_edgeIntersect() {
+        var first = new BlockBox(new BlockPos(0, 0, 0), new BlockPos(5, 5, 5));
+        var second = new BlockBox(new BlockPos(5, 5, 5), new BlockPos(6, 6, 6));
+
+        assertFalse(first.contains(second));
+        assertFalse(second.contains(first));
+    }
+
+    @Test
+    void contains_disjoint() {
+        var first = new BlockBox(new BlockPos(0, 0, 0), new BlockPos(5, 5, 5));
+        var second = new BlockBox(new BlockPos(6, 6, 6), new BlockPos(10, 10, 10));
+
+        assertFalse(first.contains(second));
+        assertFalse(second.contains(first));
+    }
+
+    @Test
+    void contains_negativeCoordinates() {
+        var first = new BlockBox(new BlockPos(0, 0, 0), new BlockPos(5, 5, 5));
+        var second = new BlockBox(new BlockPos(-5, -5, -5), new BlockPos(-1, -1, -1));
+
+        assertFalse(first.contains(second));
+        assertFalse(second.contains(first));
+    }
+
+    @Test
+    void contains_negativeContained() {
+        var first = new BlockBox(new BlockPos(-5, -5, -5), new BlockPos(5, 5, 5));
+        var second = new BlockBox(new BlockPos(-2, -2, -2), new BlockPos(2, 2, 2));
+
+        assertTrue(first.contains(second));
+        assertFalse(second.contains(first));
+    }
 }
