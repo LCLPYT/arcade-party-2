@@ -41,7 +41,7 @@ public class PaletteConnectorWall implements ConnectorWall {
         int rx = roomPos.getX(), ry = roomPos.getY(), rz = roomPos.getZ();
 
         var plane = new PlanePredicate(connectorPos, normal);
-        var notWall = new NotWallPredicate(room, oriented.transformation().invert());
+        var notWall = new NotWallPredicate(room, oriented.inverseTransformation());
 
         int flags = Block.FORCE_STATE | Block.SKIP_DROPS;
 
