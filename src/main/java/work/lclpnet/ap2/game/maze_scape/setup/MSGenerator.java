@@ -5,8 +5,10 @@ import net.minecraft.util.math.BlockPos;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.game.maze_scape.gen.Graph;
 import work.lclpnet.ap2.game.maze_scape.gen.GraphGenerator;
+import work.lclpnet.ap2.game.maze_scape.setup.wall.ConnectorWall;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.StructureUtil;
+import work.lclpnet.kibu.schematic.FabricStructureWrapper;
 import work.lclpnet.kibu.structure.BlockStructure;
 import work.lclpnet.kibu.util.math.Matrix3i;
 import work.lclpnet.lobby.game.map.GameMap;
@@ -55,13 +57,44 @@ public class MSGenerator {
             return false;
         }
 
-        BlockStructure struct = oriented.piece().wrapper().getStructure();
+        FabricStructureWrapper wrapper = oriented.piece().wrapper();
+        BlockStructure struct = wrapper.getStructure();
         BlockPos pos = oriented.pos();
         Matrix3i transformation = oriented.transformation();
 
         StructureUtil.placeStructureFast(struct, world, pos, transformation);
 
+        // TODO replace jigsaws
+
+        closeConnectors(node, oriented);
+
         return true;
+    }
+
+    private void closeConnectors(Graph.Node<Connector3, StructurePiece, OrientedStructurePiece> node, OrientedStructurePiece oriented) {
+        var connectors = oriented.connectors();
+        var children = node.children();
+        int size = connectors.size();
+        ConnectorWall connectorWall = loaded.defaultConnectorWall();
+
+        if (children == null || children.size() != size) {
+            // close all connectors
+            for (Connector3 connector : connectors) {
+                connectorWall.place(connector, oriented, world, random);
+            }
+            return;
+        }
+
+        // close only open connectors
+        for (int i = 0; i < size; i++) {
+            var child = children.get(i);
+
+            if (child != null) continue;
+
+            Connector3 connector = connectors.get(i);
+
+            connectorWall.place(connector, oriented, world, random);
+        }
     }
 
     private void debugPieces() {

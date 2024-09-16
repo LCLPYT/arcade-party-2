@@ -11,7 +11,8 @@ public record StructurePiece(
         BVH bounds,
         List<Connector3> connectors,
         float weight,
-        int maxCount
+        int maxCount,
+        boolean connectSame
 ) implements Piece<Connector3> {
 
     public boolean limitedCount() {
