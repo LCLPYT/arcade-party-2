@@ -4,6 +4,7 @@ import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.util.math.BlockPos;
 import work.lclpnet.ap2.game.maze_scape.gen.GeneratorDomain;
+import work.lclpnet.ap2.game.maze_scape.gen.NodeView;
 import work.lclpnet.ap2.game.maze_scape.util.BVH;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.WeightedList;
@@ -14,17 +15,23 @@ import java.util.*;
 
 public class StructureDomain implements GeneratorDomain<Connector3, StructurePiece, OrientedStructurePiece> {
 
-    private final Collection<StructurePiece> pieces;
     private final Random random;
+    private final int deadEndStartLevel;
     private final Object2IntMap<StructurePiece> pieceCount;
     private final BlockBox bounds;
+    private final List<StructurePiece> normalPieces, endPieces;
+    private final List<OrientedStructurePiece> fitting;
     private final Set<OrientedStructurePiece> placed = new HashSet<>();
     private final WeightedList<OrientedStructurePiece> weightedPieces = new WeightedList<>();
 
-    public StructureDomain(Collection<StructurePiece> pieces, Random random, int maxChunkSize, int bottomY, int topY) {
-        this.pieces = pieces;
+    public StructureDomain(Collection<StructurePiece> pieces, Random random, int deadEndStartLevel, int maxChunkSize, int bottomY, int topY) {
         this.random = random;
         this.pieceCount = new Object2IntOpenHashMap<>(pieces.size());
+
+        this.endPieces = pieces.stream().filter(StructurePiece::deadEnd).toList();
+        this.normalPieces = pieces.stream().filter(piece -> !piece.deadEnd()).toList();
+        this.fitting = new ArrayList<>(pieces.size());
+        this.deadEndStartLevel = deadEndStartLevel;
 
         int min = -maxChunkSize * 16;
         int max = maxChunkSize * 16 - 1;
@@ -43,14 +50,27 @@ public class StructureDomain implements GeneratorDomain<Connector3, StructurePie
     }
 
     @Override
-    public List<OrientedStructurePiece> fittingPieces(OrientedStructurePiece oriented, Connector3 connector) {
-        List<OrientedStructurePiece> fitting = new ArrayList<>();
+    public List<OrientedStructurePiece> fittingPieces(OrientedStructurePiece oriented, Connector3 connector, NodeView node) {
+        fitting.clear();
 
+        int nodeLevel = node.level();
+
+        addFittingPieces(oriented, connector, normalPieces);
+
+        // try to fit dead ends when minimum target level is reached or if no other piece fits
+        if (nodeLevel >= deadEndStartLevel || fitting.isEmpty()) {
+            addFittingPieces(oriented, connector, endPieces);
+        }
+
+        return fitting;
+    }
+
+    private void addFittingPieces(OrientedStructurePiece oriented, Connector3 connector, Collection<StructurePiece> pool) {
         BlockPos connectorPos = connector.pos();
         StructurePiece originPiece = oriented.piece();
         boolean excludeSame = !originPiece.connectSame();
 
-        for (StructurePiece piece : pieces) {
+        for (StructurePiece piece : pool) {
             if (excludeSame && piece == originPiece) continue;
 
             int count = pieceCount.getOrDefault(piece, 0);
@@ -78,8 +98,6 @@ public class StructureDomain implements GeneratorDomain<Connector3, StructurePie
                 fitting.add(new OrientedStructurePiece(piece, pos, rotation, i, bvh));
             }
         }
-
-        return fitting;
     }
 
     @Override
