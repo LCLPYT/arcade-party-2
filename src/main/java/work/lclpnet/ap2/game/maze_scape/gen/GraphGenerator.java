@@ -126,7 +126,7 @@ public class GraphGenerator<C, P extends Piece<C>, O extends OrientedPiece<C, P>
 
         if (children == null) return;
 
-        O nextPiece = fitting.get(random.nextInt(fitting.size()));
+        O nextPiece = domain.choosePiece(fitting, random);
 
         // insert the next piece as child node
         var nextNode = makeNode(nextPiece, node);
