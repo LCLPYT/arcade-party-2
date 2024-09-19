@@ -26,17 +26,13 @@ public class WeightedList<E> extends AbstractList<E> {
     }
 
     @Override
-    public int size() {
-        synchronized (this) {
-            return entries.size();
-        }
+    public synchronized int size() {
+        return entries.size();
     }
 
     @Override
-    public E get(int index) {
-        synchronized (this) {
-            return entries.get(index).item;
-        }
+    public synchronized E get(int index) {
+        return entries.get(index).item;
     }
 
     public void add(E item, float weight) {
@@ -49,16 +45,20 @@ public class WeightedList<E> extends AbstractList<E> {
     }
 
     @Override
-    public E remove(int index) {
-        synchronized (this) {
-            Objects.checkIndex(index, entries.size());
+    public synchronized E remove(int index) {
+        Objects.checkIndex(index, entries.size());
 
-            Entry<E> entry = entries.remove(index);
+        Entry<E> entry = entries.remove(index);
 
-            totalWeight -= entry.weight;
+        totalWeight -= entry.weight;
 
-            return entry.item;
-        }
+        return entry.item;
+    }
+
+    @Override
+    public synchronized void clear() {
+        entries.clear();
+        totalWeight = 0;
     }
 
     @Nullable
@@ -70,46 +70,40 @@ public class WeightedList<E> extends AbstractList<E> {
         return get(index);
     }
 
-    public int getRandomIndex(Random random) {
-        synchronized (this) {
-            final float target = random.nextFloat() * totalWeight;
-            float offset = 0f;
+    public synchronized int getRandomIndex(Random random) {
+        final float target = random.nextFloat() * totalWeight;
+        float offset = 0f;
 
-            for (int i = 0, size = entries.size(); i < size; i++) {
-                var entry = entries.get(i);
+        for (int i = 0, size = entries.size(); i < size; i++) {
+            var entry = entries.get(i);
 
-                if (target <= offset + entry.weight) {
-                    return i;
-                }
-
-                offset += entry.weight;
+            if (target <= offset + entry.weight) {
+                return i;
             }
 
-            return -1;
+            offset += entry.weight;
         }
+
+        return -1;
     }
 
-    public <U> WeightedList<U> map(Function<E, U> mapper) {
-        synchronized (this) {
-            List<Entry<U>> mappedEntries = this.entries.stream()
-                    .map(entry -> new Entry<>(mapper.apply(entry.item), entry.weight))
-                    .collect(Collectors.toCollection(ArrayList::new));
+    public synchronized <U> WeightedList<U> map(Function<E, U> mapper) {
+        List<Entry<U>> mappedEntries = this.entries.stream()
+                .map(entry -> new Entry<>(mapper.apply(entry.item), entry.weight))
+                .collect(Collectors.toCollection(ArrayList::new));
 
-            return new WeightedList<>(mappedEntries, totalWeight);
-        }
+        return new WeightedList<>(mappedEntries, totalWeight);
     }
 
-    public WeightedList<E> filter(Predicate<E> predicate) {
-        synchronized (this) {
-            List<Entry<E>> filtered = this.entries.stream()
-                    .filter(entry -> predicate.test(entry.item))
-                    .collect(Collectors.toCollection(ArrayList::new));
+    public synchronized WeightedList<E> filter(Predicate<E> predicate) {
+        List<Entry<E>> filtered = this.entries.stream()
+                .filter(entry -> predicate.test(entry.item))
+                .collect(Collectors.toCollection(ArrayList::new));
 
-            float filteredWeight = filtered.stream()
-                    .reduce(0f, (accumulated, entry) -> accumulated + entry.weight, Float::sum);
+        float filteredWeight = filtered.stream()
+                .reduce(0f, (accumulated, entry) -> accumulated + entry.weight, Float::sum);
 
-            return new WeightedList<>(filtered, filteredWeight);
-        }
+        return new WeightedList<>(filtered, filteredWeight);
     }
 
     private record Entry<T>(T item, float weight) {}

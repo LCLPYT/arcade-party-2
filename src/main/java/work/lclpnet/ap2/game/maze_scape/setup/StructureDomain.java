@@ -6,6 +6,7 @@ import net.minecraft.util.math.BlockPos;
 import work.lclpnet.ap2.game.maze_scape.gen.GeneratorDomain;
 import work.lclpnet.ap2.game.maze_scape.util.BVH;
 import work.lclpnet.ap2.impl.util.BlockBox;
+import work.lclpnet.ap2.impl.util.WeightedList;
 import work.lclpnet.ap2.impl.util.math.AffineIntMatrix;
 import work.lclpnet.kibu.util.math.Matrix3i;
 
@@ -18,6 +19,7 @@ public class StructureDomain implements GeneratorDomain<Connector3, StructurePie
     private final Object2IntMap<StructurePiece> pieceCount;
     private final BlockBox bounds;
     private final Set<OrientedStructurePiece> placed = new HashSet<>();
+    private final WeightedList<OrientedStructurePiece> weightedPieces = new WeightedList<>();
 
     public StructureDomain(Collection<StructurePiece> pieces, Random random, int maxChunkSize, int bottomY, int topY) {
         this.pieces = pieces;
@@ -90,6 +92,17 @@ public class StructureDomain implements GeneratorDomain<Connector3, StructurePie
     public void removePiece(OrientedStructurePiece oriented) {
         placed.remove(oriented);
         pieceCount.compute(oriented.piece(), (_piece, count) -> count == null ? null : count - 1);
+    }
+
+    @Override
+    public synchronized OrientedStructurePiece choosePiece(List<OrientedStructurePiece> fitting, Random random) {
+        weightedPieces.clear();
+
+        for (OrientedStructurePiece oriented : fitting) {
+            weightedPieces.add(oriented, oriented.piece().weight());
+        }
+
+        return weightedPieces.getRandomElement(random);
     }
 
     private int randomRotation() {
