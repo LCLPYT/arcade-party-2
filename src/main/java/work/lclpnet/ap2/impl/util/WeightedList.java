@@ -1,63 +1,84 @@
 package work.lclpnet.ap2.impl.util;
 
+import it.unimi.dsi.fastutil.floats.FloatArrayList;
+import it.unimi.dsi.fastutil.floats.FloatList;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.VisibleForTesting;
 
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class WeightedList<E> extends AbstractList<E> {
 
-    private final List<Entry<E>> entries;
+    private final List<E> elements;
+    private final FloatList cumulativeWeights;  // is always ordered ascending
     private float totalWeight;
 
     public WeightedList() {
-        this(new ArrayList<>(), 0);
+        this(10);
     }
 
     public WeightedList(int initialCapacity) {
-        this(new ArrayList<>(initialCapacity), 0);
+        this(new ArrayList<>(initialCapacity), new FloatArrayList(initialCapacity), 0);
     }
 
-    private WeightedList(List<Entry<E>> entries, float totalWeight) {
-        this.entries = entries;
+    private WeightedList(List<E> elements, FloatList cumulativeWeights, float totalWeight) {
+        this.elements = elements;
+        this.cumulativeWeights = cumulativeWeights;
         this.totalWeight = totalWeight;
     }
 
     @Override
     public synchronized int size() {
-        return entries.size();
+        return elements.size();
     }
 
     @Override
     public synchronized E get(int index) {
-        return entries.get(index).item;
+        return elements.get(index);
     }
 
     public void add(E item, float weight) {
         if (weight < 0f) throw new IllegalArgumentException("Weight must be positive");
+        else if (!Float.isFinite(weight)) throw new IllegalArgumentException("Weight must be finite");
 
         synchronized (this) {
-            entries.add(new Entry<>(item, weight));
+            elements.add(item);
             totalWeight += weight;
+            cumulativeWeights.add(totalWeight);
         }
     }
 
     @Override
     public synchronized E remove(int index) {
-        Objects.checkIndex(index, entries.size());
+        Objects.checkIndex(index, elements.size());
 
-        Entry<E> entry = entries.remove(index);
+        E element = elements.remove(index);
+        float offset = cumulativeWeights.removeFloat(index);
 
-        totalWeight -= entry.weight;
+        float cumulativeWeight = index > 0 ? cumulativeWeights.getFloat(index - 1) : 0f;
 
-        return entry.item;
+        // update subsequent cumulative weights
+        for (int i = index, size = cumulativeWeights.size(); i < size; i++) {
+            float oldCumulativeWeight = cumulativeWeights.getFloat(i);
+            float weight = oldCumulativeWeight - offset;
+            offset = oldCumulativeWeight;
+
+            cumulativeWeight += weight;
+
+            cumulativeWeights.set(i, cumulativeWeight);
+        }
+
+        return element;
     }
 
     @Override
     public synchronized void clear() {
-        entries.clear();
+        elements.clear();
+        cumulativeWeights.clear();
         totalWeight = 0;
     }
 
@@ -72,39 +93,78 @@ public class WeightedList<E> extends AbstractList<E> {
 
     public synchronized int getRandomIndex(Random random) {
         final float target = random.nextFloat() * totalWeight;
-        float offset = 0f;
 
-        for (int i = 0, size = entries.size(); i < size; i++) {
-            var entry = entries.get(i);
+        int index = binarySearch(cumulativeWeights, target);
 
-            if (target <= offset + entry.weight) {
-                return i;
+        if (index < 0) {
+            index = -index - 1;
+        }
+
+        if (index >= elements.size()) {
+            return -1;
+        }
+
+        return index;
+    }
+
+    @VisibleForTesting
+    static int binarySearch(FloatList list, float target) {
+        int lo = 0;
+        int hi = list.size() - 1;
+
+        while (lo <= hi) {
+            int mid = (hi + lo) >>> 1;
+            float val = list.getFloat(mid);
+            int cmp = Float.compare(val, target);
+
+            if (cmp < 0) {
+                if (mid < hi && target <= list.getFloat(mid + 1)) {
+                    return mid + 1;
+                }
+
+                lo = mid + 1;
+            } else if (cmp > 0) {
+                float start = mid > 0 ? list.getFloat(mid - 1) : 0.0f;
+
+                if (target > start) {
+                    return mid;
+                }
+
+                hi = mid - 1;
+            } else {
+                return mid;
             }
-
-            offset += entry.weight;
         }
 
         return -1;
     }
 
     public synchronized <U> WeightedList<U> map(Function<E, U> mapper) {
-        List<Entry<U>> mappedEntries = this.entries.stream()
-                .map(entry -> new Entry<>(mapper.apply(entry.item), entry.weight))
+        List<U> mappedElements = this.elements.stream()
+                .map(mapper)
                 .collect(Collectors.toCollection(ArrayList::new));
 
-        return new WeightedList<>(mappedEntries, totalWeight);
+        return new WeightedList<>(mappedElements, cumulativeWeights, totalWeight);
     }
 
     public synchronized WeightedList<E> filter(Predicate<E> predicate) {
-        List<Entry<E>> filtered = this.entries.stream()
-                .filter(entry -> predicate.test(entry.item))
-                .collect(Collectors.toCollection(ArrayList::new));
+        int[] indices = IntStream.range(0, this.elements.size())
+                .filter(i -> predicate.test(get(i)))
+                .toArray();
 
-        float filteredWeight = filtered.stream()
-                .reduce(0f, (accumulated, entry) -> accumulated + entry.weight, Float::sum);
+        List<E> filtered = new ArrayList<>(indices.length);
+        FloatList filteredCumulativeWeights = new FloatArrayList(indices.length);
 
-        return new WeightedList<>(filtered, filteredWeight);
+        float totalWeight = 0;
+
+        for (int i : indices) {
+            filtered.add(elements.get(i));
+            float offset = i > 0 ? cumulativeWeights.getFloat(i - 1) : 0f;
+            float weight = cumulativeWeights.getFloat(i) - offset;
+            totalWeight += weight;
+            filteredCumulativeWeights.add(totalWeight);
+        }
+
+        return new WeightedList<>(filtered, filteredCumulativeWeights, totalWeight);
     }
-
-    private record Entry<T>(T item, float weight) {}
 }
