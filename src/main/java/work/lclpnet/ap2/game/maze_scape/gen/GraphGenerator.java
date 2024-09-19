@@ -13,7 +13,7 @@ import java.util.*;
  * @param <P> Piece base type that has no position or orientation in the world yet.
  * @param <O> Materialized piece type in the world. Should be a type that combines {@link P} with a position and orientation.
  * @apiNote It is expected that instances of oriented pieces {@link O} can be compared with {@link O#equals(Object)}.
- * If the equals method is not implemented accordingly with the instances returned by {@link GeneratorDomain#fittingPieces(O, Object)},
+ * If the equals method is not implemented accordingly with the instances returned by {@link GeneratorDomain#fittingPieces(O, Object, NodeView)},
  * the back-tracking algorithm might end up in an infinite loop.
  */
 public class GraphGenerator<C, P extends Piece<C>, O extends OrientedPiece<C, P>> {
@@ -87,7 +87,7 @@ public class GraphGenerator<C, P extends Piece<C>, O extends OrientedPiece<C, P>
                     if (children.get(i) != null) continue;
 
                     // find all fitting pieces for the connector
-                    List<O> fitting = domain.fittingPieces(oriented, connectors.get(i));
+                    List<O> fitting = domain.fittingPieces(oriented, connectors.get(i), node);
 
                     if (fitting == null || fitting.isEmpty()) continue;
 
@@ -201,7 +201,7 @@ public class GraphGenerator<C, P extends Piece<C>, O extends OrientedPiece<C, P>
         var parentConnectors = parentOriented.connectors();
         C connector = parentConnectors.get(connectorIndex);
 
-        var fitting = domain.fittingPieces(parentOriented, connector);
+        var fitting = domain.fittingPieces(parentOriented, connector, parent);
 
         // remove all previous choices
         var previousChoices = parent.previousChoices(connectorIndex);

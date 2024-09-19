@@ -18,4 +18,8 @@ public record StructurePiece(
     public boolean limitedCount() {
         return maxCount != -1;
     }
+
+    public boolean deadEnd() {
+        return connectors.size() == 1;
+    }
 }

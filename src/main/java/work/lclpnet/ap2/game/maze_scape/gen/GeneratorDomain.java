@@ -7,7 +7,7 @@ public interface GeneratorDomain<C, P extends Piece<C>, O extends OrientedPiece<
 
     O placeStart(P startPiece);
 
-    List<O> fittingPieces(O oriented, C connector);
+    List<O> fittingPieces(O oriented, C connector, NodeView node);
 
     void placePiece(O oriented);
 

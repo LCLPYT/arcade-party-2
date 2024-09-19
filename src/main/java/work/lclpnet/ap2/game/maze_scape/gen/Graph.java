@@ -50,7 +50,7 @@ public class Graph<C, P extends Piece<C>, O extends OrientedPiece<C, P>> {
         return nodes;
     }
 
-    public static class Node<C, P extends Piece<C>, O extends OrientedPiece<C, P>> {
+    public static class Node<C, P extends Piece<C>, O extends OrientedPiece<C, P>> implements NodeView {
 
         private @Nullable Node<C, P, O> parent = null;
         private @Nullable List<@Nullable Node<C, P, O>> children = null;
@@ -77,6 +77,7 @@ public class Graph<C, P extends Piece<C>, O extends OrientedPiece<C, P>> {
             });
         }
 
+        @Override
         public int level() {
             return level;
         }
