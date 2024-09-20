@@ -26,7 +26,7 @@ public class TestGraphBuilder {
     }
 
     private Graph.@NotNull Node<StringConnector, StringPiece, OrientedStringPiece> node(OrientedStringPiece piece, @Nullable Graph.Node<StringConnector, StringPiece, OrientedStringPiece> parent) {
-        var startNode = graphGen.makeNode(piece, parent);
+        var node = graphGen.makeNode(piece, parent);
 
         int count = piece.connectors().size();
         var children = new ArrayList<Graph.Node<StringConnector, StringPiece, OrientedStringPiece>>(count);
@@ -35,9 +35,9 @@ public class TestGraphBuilder {
             children.add(null);
         }
 
-        startNode.setChildren(children);
+        node.setChildren(children);
 
-        return startNode;
+        return node;
     }
 
     public Graph.@NotNull Node<StringConnector, StringPiece, OrientedStringPiece> choose(Graph.Node<StringConnector, StringPiece, OrientedStringPiece> node, int connector, StringPiece piece, int rotation) {
@@ -53,6 +53,7 @@ public class TestGraphBuilder {
         var childNode = node(childPiece, node);
 
         Objects.requireNonNull(node.children()).set(connector, childNode);
+        node.updateChildCount();
 
         return childNode;
     }

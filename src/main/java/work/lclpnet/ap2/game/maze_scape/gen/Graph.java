@@ -50,13 +50,18 @@ public class Graph<C, P extends Piece<C>, O extends OrientedPiece<C, P>> {
         return nodes;
     }
 
+    public int nodeCount() {
+        return root.deepChildCount + 1;
+    }
+
     public static class Node<C, P extends Piece<C>, O extends OrientedPiece<C, P>> implements NodeView {
 
         private @Nullable Node<C, P, O> parent = null;
         private @Nullable List<@Nullable Node<C, P, O>> children = null;
         private @Nullable O oriented = null;
-        private int level = 0;
         private @Nullable List<@Nullable List<O>> previousChoices;
+        private int level = 0;
+        private int deepChildCount = 0;
 
         public @Nullable Node<C, P, O> parent() {
             return parent;
@@ -91,10 +96,43 @@ public class Graph<C, P extends Piece<C>, O extends OrientedPiece<C, P>> {
         }
 
         public void setChildren(@Nullable List<Node<C, P, O>> children) {
+            if (this.children == children) return;
+
             this.children = children;
+
+            updateChildCount();
         }
 
-        public @Nullable List<Node<C, P, O>> children() {
+        public void updateChildCount() {
+            // update deepChildCount for this node
+            int prevCount = this.deepChildCount;
+
+            this.deepChildCount = 0;
+
+            if (children != null) {
+                for (var child : children) {
+                    if (child == null) continue;
+
+                    this.deepChildCount += child.deepChildCount + 1;
+                }
+            }
+
+            // update deepChildCount recursively for parent nodes
+            var node = this;
+            var parent = node.parent;
+            int prevParentDeepChildCount;
+
+            while (parent != null) {
+                // delta update
+                prevParentDeepChildCount = parent.deepChildCount;
+                parent.deepChildCount = parent.deepChildCount - prevCount + node.deepChildCount;
+                prevCount = prevParentDeepChildCount;
+                node = parent;
+                parent = node.parent;
+            }
+        }
+
+        public @Nullable List<@Nullable Node<C, P, O>> children() {
             return children;
         }
 
