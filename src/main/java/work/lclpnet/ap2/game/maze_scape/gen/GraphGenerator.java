@@ -32,15 +32,15 @@ public class GraphGenerator<C, P extends Piece<C>, O extends OrientedPiece<C, P>
         O start = domain.placeStart(startPiece);
         Graph<C, P, O> graph = new Graph<>(makeNode(start, null));
 
-        boolean success = generateGraph(graph, 1, 0, targetPieceCount);
+        boolean success = generateGraph(graph, 0, targetPieceCount);
 
         if (!success) return Optional.empty();
 
         return Optional.of(graph);
     }
 
-    boolean generateGraph(Graph<C, P, O> graph, int generatedPieces, int currentLevel, final int targetPieceCount) {
-        while (generatedPieces < targetPieceCount) {
+    boolean generateGraph(Graph<C, P, O> graph, int currentLevel, final int targetPieceCount) {
+        while (graph.nodeCount() < targetPieceCount) {
             var currentNodes = graph.nodesAtLevel(currentLevel);
 
             if (currentNodes.isEmpty()) {
@@ -93,7 +93,6 @@ public class GraphGenerator<C, P extends Piece<C>, O extends OrientedPiece<C, P>
 
                     placeRandomChildPiece(node, i, fitting);
 
-                    generatedPieces++;
                     anyPlaced = true;
                 }
             }
@@ -101,15 +100,14 @@ public class GraphGenerator<C, P extends Piece<C>, O extends OrientedPiece<C, P>
             if (anyLeaf && !anyPlaced) {
                 // generation cannot be completed, as there are no possibilities left for the current graph
                 // try to back-track some branch to a previous level
-                BackTrackResult res = performBackTracking(graph);
+                OptionalInt level = performBackTracking(graph);
 
-                if (res == null) {
+                if (level.isEmpty()) {
                     logger.error("Back-Tracking could not find a suitable solution; generation cannot be completed");
                     return false;
                 }
 
-                currentLevel = res.level;
-                generatedPieces -= res.removed;
+                currentLevel = level.getAsInt();
 
                 continue;
             }
@@ -132,6 +130,7 @@ public class GraphGenerator<C, P extends Piece<C>, O extends OrientedPiece<C, P>
         var nextNode = makeNode(nextPiece, node);
 
         children.set(connectorIndex, nextNode);
+        node.updateChildCount();
 
         domain.placePiece(nextPiece);
     }
@@ -151,52 +150,51 @@ public class GraphGenerator<C, P extends Piece<C>, O extends OrientedPiece<C, P>
         return children;
     }
 
-    @Nullable
-    private BackTrackResult performBackTracking(Graph<C, P, O> graph) {
+    private OptionalInt performBackTracking(Graph<C, P, O> graph) {
         // try to back-track short paths first
         var leafNodes = graph.leafNodes();
 
         leafNodes.sort(Comparator.comparingInt(Graph.Node::level));
 
         for (var leaf : leafNodes) {
-            var res = backTrackBranch(leaf, 0);
+            var level = backTrackBranch(leaf, 0);
 
-            if (res != null) {
-                return res;
+            if (level.isPresent()) {
+                return level;
             }
         }
 
-        return null;
+        return OptionalInt.empty();
     }
 
-    @Nullable
-    private BackTrackResult backTrackBranch(Graph.Node<C, P, O> leaf, int depth) {
+    private OptionalInt backTrackBranch(Graph.Node<C, P, O> leaf, int depth) {
         var parent = leaf.parent();
 
         // do not try to back-track the root node
-        if (parent == null) return null;
+        if (parent == null) return OptionalInt.empty();
 
         O oriented = leaf.oriented();
 
-        if (oriented == null) return null;
+        if (oriented == null) return OptionalInt.empty();
 
         var children = parent.children();
 
-        if (children == null) return null;
+        if (children == null) return OptionalInt.empty();
 
         int connectorIndex = children.indexOf(leaf);
 
-        if (connectorIndex == -1) return null;
+        if (connectorIndex == -1) return OptionalInt.empty();
 
         // detach leaf
         leaf.setParent(null);
         children.set(connectorIndex, null);
+        parent.updateChildCount();
         domain.removePiece(oriented);
 
         // now try to find a new fitting piece
         O parentOriented = parent.oriented();
 
-        if (parentOriented == null) return null;
+        if (parentOriented == null) return OptionalInt.empty();
 
         var parentConnectors = parentOriented.connectors();
         C connector = parentConnectors.get(connectorIndex);
@@ -212,11 +210,11 @@ public class GraphGenerator<C, P extends Piece<C>, O extends OrientedPiece<C, P>
             // place random fitting piece directly
             placeRandomChildPiece(parent, connectorIndex, fitting);
 
-            return new BackTrackResult(parent.level() + 1, depth);
+            return OptionalInt.of(parent.level() + 1);
         }
 
         // no other piece is fitting; if the parent is a junction, stop back-tracking
-        if (parentConnectors.size() >= 2) return null;
+        if (parentConnectors.size() >= 2) return OptionalInt.empty();
 
         return backTrackBranch(parent, depth + 1);
     }
@@ -247,6 +245,4 @@ public class GraphGenerator<C, P extends Piece<C>, O extends OrientedPiece<C, P>
 
         return node;
     }
-
-    private record BackTrackResult(int level, int removed) {}
 }
