@@ -23,6 +23,7 @@ public class StructureDomain implements GeneratorDomain<Connector3, StructurePie
     private final List<OrientedStructurePiece> fitting;
     private final Set<OrientedStructurePiece> placed = new HashSet<>();
     private final WeightedList<OrientedStructurePiece> weightedPieces = new WeightedList<>();
+    private int totalArea = 0;
 
     public StructureDomain(Collection<StructurePiece> pieces, Random random, int deadEndStartLevel, int maxChunkSize, int bottomY, int topY) {
         this.random = random;
@@ -104,12 +105,14 @@ public class StructureDomain implements GeneratorDomain<Connector3, StructurePie
     public void placePiece(OrientedStructurePiece oriented) {
         placed.add(oriented);
         pieceCount.compute(oriented.piece(), (_piece, count) -> count == null ? 1 : count + 1);
+        totalArea += area(oriented);
     }
 
     @Override
     public void removePiece(OrientedStructurePiece oriented) {
         placed.remove(oriented);
         pieceCount.compute(oriented.piece(), (_piece, count) -> count == null ? null : count - 1);
+        totalArea -= area(oriented);
     }
 
     @Override
@@ -135,5 +138,14 @@ public class StructureDomain implements GeneratorDomain<Connector3, StructurePie
         }
 
         return false;
+    }
+
+    public int totalArea() {
+        return totalArea;
+    }
+
+    private static int area(OrientedStructurePiece oriented) {
+        BVH bounds = oriented.bounds();
+        return bounds.width() * bounds.length();
     }
 }

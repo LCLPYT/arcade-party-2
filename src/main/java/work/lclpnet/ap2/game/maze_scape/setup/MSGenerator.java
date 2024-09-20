@@ -45,17 +45,21 @@ public class MSGenerator {
     }
 
     public synchronized boolean generate() {
+        // the generator will try to only put dead-ends after this many rooms on the path towards the start room
         int deadEndStart = ((Number) map.requireProperty("dead-end-start-level")).intValue();
 
+        // the generator will continue until the total room area is greater than this
+        int targetArea = ((Number) map.requireProperty("target-room-area")).intValue();
+
+        // this will determine the bounding box that the generated pieces can't exit
         Number maxChunkSizeProp = map.requireProperty("max-chunk-size");
         int maxChunkSize = Math.max(maxChunkSizeProp.intValue(), 2);
-
         int bottomY = world.getBottomY();
         int topY = world.getTopY() - 1;
 
         var domain = new StructureDomain(loaded.pieces(), random, deadEndStart, maxChunkSize, bottomY, topY);
         var generator = new GraphGenerator<>(domain, random, logger);
-        var graph = generator.generateGraph(loaded.startPiece(), 100).orElse(null);
+        var graph = generator.generateGraph(loaded.startPiece(), g -> domain.totalArea() < targetArea).orElse(null);
 
         if (graph == null) {
             return false;

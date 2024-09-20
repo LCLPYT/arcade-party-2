@@ -147,7 +147,7 @@ class GraphGeneratorTest {
          */
         var graph = new Graph<>(start);
 
-        graphGen.generateGraph(graph, 2, 5);
+        graphGen.generateGraph(graph, 2, g -> g.nodeCount() < 5);
 
         var expected = """
                 ┌───────────

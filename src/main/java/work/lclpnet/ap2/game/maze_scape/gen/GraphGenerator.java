@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import work.lclpnet.ap2.impl.util.ArrayUtil;
 
 import java.util.*;
+import java.util.function.Predicate;
 
 /**
  * A generator that builds a graph of interconnected materialized pieces.
@@ -28,19 +29,23 @@ public class GraphGenerator<C, P extends Piece<C>, O extends OrientedPiece<C, P>
         this.logger = logger;
     }
 
-    public Optional<Graph<C, P, O>> generateGraph(P startPiece, final int targetPieceCount) {
+    public Optional<Graph<C, P, O>> generateGraph(P startPiece, int targetPieceCount) {
+        return generateGraph(startPiece, graph -> graph.nodeCount() < targetPieceCount);
+    }
+
+    public Optional<Graph<C, P, O>> generateGraph(P startPiece, Predicate<Graph<C, P, O>> condition) {
         O start = domain.placeStart(startPiece);
         Graph<C, P, O> graph = new Graph<>(makeNode(start, null));
 
-        boolean success = generateGraph(graph, 0, targetPieceCount);
+        boolean success = generateGraph(graph, 0, condition);
 
         if (!success) return Optional.empty();
 
         return Optional.of(graph);
     }
 
-    boolean generateGraph(Graph<C, P, O> graph, int currentLevel, final int targetPieceCount) {
-        while (graph.nodeCount() < targetPieceCount) {
+    boolean generateGraph(Graph<C, P, O> graph, int currentLevel, Predicate<Graph<C, P, O>> condition) {
+        while (condition.test(graph)) {
             var currentNodes = graph.nodesAtLevel(currentLevel);
 
             if (currentNodes.isEmpty()) {
