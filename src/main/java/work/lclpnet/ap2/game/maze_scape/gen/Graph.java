@@ -54,6 +54,20 @@ public class Graph<C, P extends Piece<C>, O extends OrientedPiece<C, P>> {
         return root.deepChildCount + 1;
     }
 
+    public List<Node<C, P, O>> openNodes() {
+        List<Node<C, P, O>> nodes = new ArrayList<>();
+
+        root.traverse(node -> {
+            if (node.children == null || node.children.stream().anyMatch(Objects::isNull)) {
+                nodes.add(node);
+            }
+
+            return true;
+        });
+
+        return nodes;
+    }
+
     public static class Node<C, P extends Piece<C>, O extends OrientedPiece<C, P>> implements NodeView {
 
         private @Nullable Node<C, P, O> parent = null;

@@ -124,7 +124,7 @@ public class GraphGenerator<C, P extends Piece<C>, O extends OrientedPiece<C, P>
         return true;
     }
 
-    private void placeRandomChildPiece(Graph.Node<C, P, O> node, int connectorIndex, List<O> fitting) {
+    public void placeRandomChildPiece(Graph.Node<C, P, O> node, int connectorIndex, List<O> fitting) {
         var children = node.children();
 
         if (children == null) return;
@@ -140,7 +140,7 @@ public class GraphGenerator<C, P extends Piece<C>, O extends OrientedPiece<C, P>
         domain.placePiece(nextPiece);
     }
 
-    private @NotNull List<Graph.Node<C, P, O>> initChildren(Graph.Node<C, P, O> node, int connectorCount) {
+    public @NotNull List<Graph.Node<C, P, O>> initChildren(Graph.Node<C, P, O> node, int connectorCount) {
         var children = node.children();
 
         if (children == null) {

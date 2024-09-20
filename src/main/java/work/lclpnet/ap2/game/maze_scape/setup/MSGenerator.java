@@ -30,44 +30,92 @@ public class MSGenerator {
 
     public static final int PLACE_FLAGS = Block.FORCE_STATE | Block.SKIP_DROPS;
     private final ServerWorld world;
-    private final GameMap map;
     private final MSLoader.Result loaded;
     private final Random random;
     private final Logger logger;
     private final Map<Connector3, ResetBlockWorldModifier> closedConnectors = new HashMap<>();
+    private final int targetArea;
+    private final float deadEndChance;
+    private final StructureDomain domain;
+    private GraphGenerator<Connector3, StructurePiece, OrientedStructurePiece> generator;
 
     public MSGenerator(ServerWorld world, GameMap map, MSLoader.Result loaded, Random random, Logger logger) {
         this.world = world;
-        this.map = map;
         this.loaded = loaded;
         this.random = random;
         this.logger = logger;
-    }
 
-    public synchronized boolean generate() {
+        // the generator will continue until the total room area is greater than this value
+        targetArea = ((Number) map.requireProperty("target-room-area")).intValue();
+
         // the generator will try to only put dead-ends after this many rooms on the path towards the start room
         int deadEndStart = ((Number) map.requireProperty("dead-end-start-level")).intValue();
 
-        // the generator will continue until the total room area is greater than this
-        int targetArea = ((Number) map.requireProperty("target-room-area")).intValue();
+        // chance to append a dead-end piece to an open connector instead of closing it
+        Number deadEndChanceProp = map.requireProperty("dead-end-chance");
+        deadEndChance = Math.max(0, Math.min(1, deadEndChanceProp.floatValue()));
 
-        // this will determine the bounding box that the generated pieces can't exit
+        // this will determine the bounding box that the generated pieces must be generated in
         Number maxChunkSizeProp = map.requireProperty("max-chunk-size");
         int maxChunkSize = Math.max(maxChunkSizeProp.intValue(), 2);
+
         int bottomY = world.getBottomY();
         int topY = world.getTopY() - 1;
 
-        var domain = new StructureDomain(loaded.pieces(), random, deadEndStart, maxChunkSize, bottomY, topY);
-        var generator = new GraphGenerator<>(domain, random, logger);
+        domain = new StructureDomain(loaded.pieces(), random, deadEndStart, maxChunkSize, bottomY, topY);
+    }
+
+    public synchronized boolean generate() {
+        domain.reset();
+
+        generator = new GraphGenerator<>(domain, random, logger);
+
         var graph = generator.generateGraph(loaded.startPiece(), g -> domain.totalArea() < targetArea).orElse(null);
 
         if (graph == null) {
             return false;
         }
 
+        placeAdditionalDeadEnds(graph);
+
         placePieces(graph);
 
         return true;
+    }
+
+    private void placeAdditionalDeadEnds(Graph<Connector3, StructurePiece, OrientedStructurePiece> graph) {
+        domain.setOnlyDeadEnds(true);
+
+        for (var node : graph.openNodes()) {
+            var oriented = node.oriented();
+
+            if (oriented == null) continue;
+
+            var connectors = oriented.connectors();
+            var children = node.children();
+            int size = connectors.size();
+
+            // place a dead end at open connectors with a certain chance
+            for (int i = 0; i < size; i++) {
+                if ((children != null && children.get(i) != null) || random.nextFloat() >= deadEndChance) continue;
+
+                appendDeadEnd(oriented, i, node);
+            }
+        }
+    }
+
+    private void appendDeadEnd(OrientedStructurePiece oriented, int connectorIndex,
+                               Graph.Node<Connector3, StructurePiece, OrientedStructurePiece> node) {
+
+        var connectors = oriented.connectors();
+        generator.initChildren(node, connectors.size());
+
+        var connector = connectors.get(connectorIndex);
+        var fitting = domain.fittingPieces(oriented, connector, node);
+
+        if (fitting.isEmpty()) return;
+
+        generator.placeRandomChildPiece(node, connectorIndex, fitting);
     }
 
     private void placePieces(Graph<Connector3, StructurePiece, OrientedStructurePiece> graph) {

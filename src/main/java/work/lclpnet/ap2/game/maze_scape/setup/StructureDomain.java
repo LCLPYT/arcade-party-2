@@ -24,6 +24,7 @@ public class StructureDomain implements GeneratorDomain<Connector3, StructurePie
     private final Set<OrientedStructurePiece> placed = new HashSet<>();
     private final WeightedList<OrientedStructurePiece> weightedPieces = new WeightedList<>();
     private int totalArea = 0;
+    private boolean onlyDeadEnds = false;
 
     public StructureDomain(Collection<StructurePiece> pieces, Random random, int deadEndStartLevel, int maxChunkSize, int bottomY, int topY) {
         this.random = random;
@@ -56,7 +57,9 @@ public class StructureDomain implements GeneratorDomain<Connector3, StructurePie
 
         int nodeLevel = node.level();
 
-        addFittingPieces(oriented, connector, normalPieces);
+        if (!onlyDeadEnds) {
+            addFittingPieces(oriented, connector, normalPieces);
+        }
 
         // try to fit dead ends when minimum target level is reached or if no other piece fits
         if (nodeLevel >= deadEndStartLevel || fitting.isEmpty()) {
@@ -147,5 +150,16 @@ public class StructureDomain implements GeneratorDomain<Connector3, StructurePie
     private static int area(OrientedStructurePiece oriented) {
         BVH bounds = oriented.bounds();
         return bounds.width() * bounds.length();
+    }
+
+    public void setOnlyDeadEnds(boolean onlyDeadEnds) {
+        this.onlyDeadEnds = onlyDeadEnds;
+    }
+
+    public void reset() {
+        pieceCount.clear();
+        placed.clear();
+        totalArea = 0;
+        onlyDeadEnds = false;
     }
 }
