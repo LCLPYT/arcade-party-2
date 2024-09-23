@@ -26,7 +26,7 @@ public class StructureDomain implements GeneratorDomain<Connector3, StructurePie
     private int totalArea = 0;
     private boolean onlyDeadEnds = false;
 
-    public StructureDomain(Collection<StructurePiece> pieces, Random random, int deadEndStartLevel, int maxChunkSize, int bottomY, int topY) {
+    public StructureDomain(Collection<StructurePiece> pieces, Random random, int deadEndStartLevel, BoundsCfg bounds) {
         this.random = random;
         this.pieceCount = new Object2IntOpenHashMap<>(pieces.size());
 
@@ -35,10 +35,10 @@ public class StructureDomain implements GeneratorDomain<Connector3, StructurePie
         this.fitting = new ArrayList<>(pieces.size());
         this.deadEndStartLevel = deadEndStartLevel;
 
-        int min = -maxChunkSize * 16;
-        int max = maxChunkSize * 16 - 1;
+        int min = -bounds.maxChunkSize * 16;
+        int max = bounds.maxChunkSize * 16 - 1;
 
-        this.bounds = new BlockBox(min, bottomY, min, max, topY, max);
+        this.bounds = new BlockBox(min, bounds.bottomY, min, max, bounds.topY, max);
     }
 
     @Override
@@ -55,6 +55,23 @@ public class StructureDomain implements GeneratorDomain<Connector3, StructurePie
     public List<OrientedStructurePiece> fittingPieces(OrientedStructurePiece oriented, Connector3 connector, NodeView node) {
         fitting.clear();
 
+        Cluster cluster = oriented.cluster();
+
+        if (cluster != null && !cluster.complete()) {
+            // the parent piece is inside an unfinished cluster, try to expand it first
+            addFittingPieces(oriented, connector, cluster.definition().pieces());
+
+            if (!fitting.isEmpty()) {
+                // mark each fitting piece as potential part of the cluster
+                for (var piece : fitting) {
+                    piece.setCluster(cluster);
+                }
+
+                return fitting;
+            }
+        }
+
+        // non-cluster behaviour
         int nodeLevel = node.level();
 
         if (!onlyDeadEnds) {
@@ -109,6 +126,8 @@ public class StructureDomain implements GeneratorDomain<Connector3, StructurePie
         placed.add(oriented);
         pieceCount.compute(oriented.piece(), (_piece, count) -> count == null ? 1 : count + 1);
         totalArea += area(oriented);
+
+        processCluster(oriented);
     }
 
     @Override
@@ -116,6 +135,13 @@ public class StructureDomain implements GeneratorDomain<Connector3, StructurePie
         placed.remove(oriented);
         pieceCount.compute(oriented.piece(), (_piece, count) -> count == null ? null : count - 1);
         totalArea -= area(oriented);
+
+        Cluster cluster = oriented.cluster();
+
+        if (cluster != null) {
+            cluster.remove(oriented);
+            oriented.setCluster(null);
+        }
     }
 
     @Override
@@ -127,6 +153,30 @@ public class StructureDomain implements GeneratorDomain<Connector3, StructurePie
         }
 
         return weightedPieces.getRandomElement(random);
+    }
+
+    private void processCluster(OrientedStructurePiece oriented) {
+        Cluster assignedCluster = oriented.cluster();
+
+        if (assignedCluster != null) {
+            // actually join the cluster
+            assignedCluster.add(oriented);
+            return;
+        }
+
+        // begin clusters by chance
+        for (ClusterDef clusterDef : oriented.piece().clusters()) {
+            if (random.nextFloat() >= clusterDef.chance()) continue;
+
+            // begin new cluster instance
+            int targetPieceCount = random.nextInt(clusterDef.minPieces(), clusterDef.maxPieces() + 1);
+            var cluster = new Cluster(clusterDef, targetPieceCount);
+
+            cluster.add(oriented);
+            oriented.setCluster(cluster);
+
+            break;
+        }
     }
 
     private int randomRotation() {
@@ -162,4 +212,6 @@ public class StructureDomain implements GeneratorDomain<Connector3, StructurePie
         totalArea = 0;
         onlyDeadEnds = false;
     }
+
+    public record BoundsCfg(int maxChunkSize, int bottomY, int topY) {}
 }

@@ -62,7 +62,8 @@ public class MSGenerator {
         int bottomY = world.getBottomY();
         int topY = world.getTopY() - 1;
 
-        domain = new StructureDomain(loaded.pieces(), random, deadEndStart, maxChunkSize, bottomY, topY);
+        var bounds = new StructureDomain.BoundsCfg(maxChunkSize, bottomY, topY);
+        domain = new StructureDomain(loaded.pieces(), random, deadEndStart, bounds);
     }
 
     public synchronized boolean generate() {
