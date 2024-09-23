@@ -6,7 +6,9 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.state.property.Properties;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3i;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.game.maze_scape.setup.wall.ConnectorWall;
@@ -27,8 +29,7 @@ import work.lclpnet.lobby.game.map.GameMap;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 public class MSLoader {
@@ -36,6 +37,7 @@ public class MSLoader {
     private final ServerWorld world;
     private final GameMap map;
     private final Logger logger;
+    private final FabricBlockStateAdapter adapter = FabricBlockStateAdapter.getInstance();
 
     public MSLoader(ServerWorld world, GameMap map, Logger logger) {
         this.map = map;
@@ -44,48 +46,76 @@ public class MSLoader {
     }
 
     public CompletableFuture<Result> load() {
-        return CompletableFuture.supplyAsync(() -> {
-            var defaultConnectorWall = parseConnectorWall(map.requireProperty("default-connector-wall"));
+        return CompletableFuture.supplyAsync(this::loadSync);
+    }
 
-            var session = ((MinecraftServerAccessor) world.getServer()).getSession();
-            Path dir = session.getWorldDirectory(world.getRegistryKey()).resolve("structures");
+    private @NotNull Result loadSync() {
+        var defaultConnectorWall = parseConnectorWall(map.requireProperty("default-connector-wall"));
 
-            var reader = VanillaStructureFormat.get(world.getServer()).reader();
-            var adapter = FabricBlockStateAdapter.getInstance();
+        var clusterDefs = parseClusterDefinitions(map.getProperty("clusters"));
 
-            JSONObject piecesConfig = map.requireProperty("pieces");
-            String startPieceName = map.requireProperty("start-piece");
+        var session = ((MinecraftServerAccessor) world.getServer()).getSession();
+        Path dir = session.getWorldDirectory(world.getRegistryKey()).resolve("structures");
 
-            var pieces = new ArrayList<StructurePiece>(piecesConfig.length());
-            StructurePiece startPiece = null;
+        var reader = VanillaStructureFormat.get(world.getServer()).reader();
 
-            for (String name : piecesConfig.keySet()) {
-                Path path = dir.resolve(name + ".nbt");
+        JSONObject piecesConfig = map.requireProperty("pieces");
+        String startPieceName = map.requireProperty("start-piece");
 
-                JSONObject config = piecesConfig.optJSONObject(name);
+        var pieces = new ArrayList<StructurePiece>(piecesConfig.length());
+        StructurePiece startPiece = null;
 
-                if (config == null) {
-                    logger.error("Expected JSONObject as value of piece {}", name);
-                    continue;
-                }
+        for (String name : piecesConfig.keySet()) {
+            Path path = dir.resolve(name + ".nbt");
 
-                StructurePiece piece = parsePiece(path, reader, adapter, config);
+            JSONObject config = piecesConfig.optJSONObject(name);
 
-                if (piece == null) continue;
-
-                pieces.add(piece);
-
-                if (startPieceName.equals(name)) {
-                    startPiece = piece;
-                }
+            if (config == null) {
+                logger.error("Expected JSONObject as value of piece {}", name);
+                continue;
             }
 
-            if (startPiece == null) {
-                throw new IllegalStateException("Could not find start piece named %s".formatted(startPieceName));
+            StructurePiece piece = parsePiece(path, reader, config, clusterDefs);
+
+            if (piece == null) continue;
+
+            pieces.add(piece);
+
+            if (startPieceName.equals(name)) {
+                startPiece = piece;
+            }
+        }
+
+        if (startPiece == null) {
+            throw new IllegalStateException("Could not find start piece named %s".formatted(startPieceName));
+        }
+
+        return new Result(pieces, startPiece, defaultConnectorWall);
+    }
+
+    private Map<String, ClusterDef> parseClusterDefinitions(@Nullable JSONObject rootCfg) {
+        if (rootCfg == null) {
+            return Map.of();
+        }
+
+        Map<String, ClusterDef> clusterDefs = new HashMap<>(rootCfg.length());
+
+        for (String name : rootCfg.keySet()) {
+            Object o = rootCfg.get(name);
+
+            if (!(o instanceof JSONObject cfg)) {
+                logger.warn("Invalid cluster definition {} expected JSONObject but got {}", name, o);
+                continue;
             }
 
-            return new Result(pieces, startPiece, defaultConnectorWall);
-        });
+            var def = ClusterDef.fromJson(cfg, logger);
+
+            if (def != null) {
+                clusterDefs.put(name, def);
+            }
+        }
+
+        return clusterDefs;
     }
 
     private ConnectorWall parseConnectorWall(JSONObject json) {
@@ -101,7 +131,7 @@ public class MSLoader {
     }
 
     @Nullable
-    private StructurePiece parsePiece(Path path, SchematicReader reader, FabricBlockStateAdapter adapter, JSONObject config) {
+    private StructurePiece parsePiece(Path path, SchematicReader reader, JSONObject config, Map<String, ClusterDef> clusterDefs) {
         if (!Files.isRegularFile(path)) return null;
 
         BlockStructure struct;
@@ -122,7 +152,42 @@ public class MSLoader {
         int maxCount = config.optInt("max-count", -1);
         boolean connectSame = config.optBoolean("connect-same", true);
 
-        return new StructurePiece(wrapper, bounds, connectors, weight, maxCount, connectSame);
+        Set<ClusterDef> clusters = parseClusters(path, config, clusterDefs);
+        StructurePiece piece = new StructurePiece(wrapper, bounds, connectors, weight, maxCount, connectSame, clusters);
+
+        for (ClusterDef cluster : clusters) {
+            cluster.pieces().add(piece);
+        }
+
+        return piece;
+    }
+
+    private Set<ClusterDef> parseClusters(Path path, JSONObject config, Map<String, ClusterDef> clusterDefs) {
+        JSONArray clustersArray = config.optJSONArray("clusters");
+
+        if (clustersArray == null) {
+            return Set.of();
+        }
+
+        Set<ClusterDef> clusters = new HashSet<>(clustersArray.length());
+
+        for (Object o : clustersArray) {
+            if (!(o instanceof String name)) {
+                logger.warn("Invalid cluster entry {}. Expected String but got {}", path.getFileName().toString(), o);
+                continue;
+            }
+
+            ClusterDef def = clusterDefs.get(name);
+
+            if (def == null) {
+                logger.warn("Unknown cluster {}", name);
+                continue;
+            }
+
+            clusters.add(def);
+        }
+
+        return clusters;
     }
 
     private List<Connector3> findConnectors(BlockStructure struct, FabricBlockStateAdapter adapter) {

@@ -5,6 +5,7 @@ import work.lclpnet.ap2.game.maze_scape.util.BVH;
 import work.lclpnet.kibu.schematic.FabricStructureWrapper;
 
 import java.util.List;
+import java.util.Set;
 
 public record StructurePiece(
         FabricStructureWrapper wrapper,
@@ -12,7 +13,8 @@ public record StructurePiece(
         List<Connector3> connectors,
         float weight,
         int maxCount,
-        boolean connectSame
+        boolean connectSame,
+        Set<ClusterDef> clusters
 ) implements Piece<Connector3> {
 
     public boolean limitedCount() {

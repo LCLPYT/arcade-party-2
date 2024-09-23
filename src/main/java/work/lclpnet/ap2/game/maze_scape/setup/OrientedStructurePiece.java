@@ -23,6 +23,7 @@ public class OrientedStructurePiece implements OrientedPiece<Connector3, Structu
     private final Matrix3i mat;
     private final BVH bounds;
     @Nullable private volatile Matrix3i invMat = null;
+    @Nullable private Cluster cluster = null;
 
     public OrientedStructurePiece(StructurePiece piece, BlockPos pos, int rotation, int parentConnector, @Nullable BVH bounds) {
         this.piece = piece;
@@ -97,6 +98,14 @@ public class OrientedStructurePiece implements OrientedPiece<Connector3, Structu
         }
 
         return invMat;
+    }
+
+    public void setCluster(@Nullable Cluster cluster) {
+        this.cluster = cluster;
+    }
+
+    public @Nullable Cluster cluster() {
+        return cluster;
     }
 
     @Override
