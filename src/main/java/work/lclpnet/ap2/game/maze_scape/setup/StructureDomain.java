@@ -55,11 +55,13 @@ public class StructureDomain implements GeneratorDomain<Connector3, StructurePie
     public List<OrientedStructurePiece> fittingPieces(OrientedStructurePiece oriented, Connector3 connector, NodeView node) {
         fitting.clear();
 
+        int nodeLevel = node.level();
+
         Cluster cluster = oriented.cluster();
 
         if (cluster != null && !cluster.complete()) {
             // the parent piece is inside an unfinished cluster, try to expand it first
-            addFittingPieces(oriented, connector, cluster.definition().pieces());
+            addFittingPieces(oriented, connector, cluster.definition().pieces(), nodeLevel);
 
             if (!fitting.isEmpty()) {
                 // mark each fitting piece as potential part of the cluster
@@ -72,28 +74,27 @@ public class StructureDomain implements GeneratorDomain<Connector3, StructurePie
         }
 
         // non-cluster behaviour
-        int nodeLevel = node.level();
-
         if (!onlyDeadEnds) {
-            addFittingPieces(oriented, connector, normalPieces);
+            addFittingPieces(oriented, connector, normalPieces, nodeLevel);
         }
 
         // try to fit dead ends when minimum target level is reached or if no other piece fits
         if (nodeLevel >= deadEndStartLevel || fitting.isEmpty()) {
-            addFittingPieces(oriented, connector, endPieces);
+            addFittingPieces(oriented, connector, endPieces, nodeLevel);
         }
 
         return fitting;
     }
 
-    private void addFittingPieces(OrientedStructurePiece oriented, Connector3 connector, Collection<StructurePiece> pool) {
+    private void addFittingPieces(OrientedStructurePiece oriented, Connector3 connector, Collection<StructurePiece> pool, int nodeLevel) {
         BlockPos connectorPos = connector.pos();
         StructurePiece originPiece = oriented.piece();
         boolean excludeSame = !originPiece.connectSame();
         String target = connector.target();
+        int distance = nodeLevel + 1;
 
         for (StructurePiece piece : pool) {
-            if (excludeSame && piece == originPiece) continue;
+            if (excludeSame && piece == originPiece || distance < piece.minDistance()) continue;
 
             int count = pieceCount.getOrDefault(piece, 0);
 
@@ -175,8 +176,6 @@ public class StructureDomain implements GeneratorDomain<Connector3, StructurePie
             // begin new cluster instance
             int targetPieceCount = random.nextInt(clusterDef.minPieces(), clusterDef.maxPieces() + 1);
             var cluster = new Cluster(clusterDef, targetPieceCount);
-
-            System.out.println("begin cluster of size " + targetPieceCount + " at " + oriented.pos());
 
             cluster.add(oriented);
             oriented.setCluster(cluster);
