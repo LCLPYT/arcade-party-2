@@ -24,13 +24,13 @@ public class MazeScapeInstance extends EliminationGameInstance implements MapBoo
         var setup = new MSLoader(world, map, logger);
 
         return setup.load().thenAccept(res -> {
-            long seed = new Random().nextLong();
+            long seed = -3654864321680657140L; //new Random().nextLong();
             var random = new Random(seed);
 
             var generator = new MSGenerator(world, map, res, random, logger);
 
             if (!generator.generate()) {
-                logger.error("Failed to generate structure. Seed: {}", seed);
+                logger.error("Failed to generate structure. Map: {}, Seed: {}", map.getDescriptor(), seed);
             }
         });
     }

@@ -5,6 +5,7 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 public record ClusterDef(float chance, int minPieces, int maxPieces, Set<StructurePiece> pieces) {
@@ -16,6 +17,19 @@ public record ClusterDef(float chance, int minPieces, int maxPieces, Set<Structu
     public ClusterDef {
         minPieces = Math.max(minPieces, 1);
         maxPieces = Math.max(minPieces, maxPieces);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ClusterDef that = (ClusterDef) o;
+        return Float.compare(chance, that.chance) == 0 && minPieces == that.minPieces && maxPieces == that.maxPieces;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(chance, minPieces, maxPieces);
     }
 
     @Nullable
