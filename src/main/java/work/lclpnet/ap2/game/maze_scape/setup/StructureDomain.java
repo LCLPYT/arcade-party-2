@@ -90,6 +90,7 @@ public class StructureDomain implements GeneratorDomain<Connector3, StructurePie
         BlockPos connectorPos = connector.pos();
         StructurePiece originPiece = oriented.piece();
         boolean excludeSame = !originPiece.connectSame();
+        String target = connector.target();
 
         for (StructurePiece piece : pool) {
             if (excludeSame && piece == originPiece) continue;
@@ -103,6 +104,9 @@ public class StructureDomain implements GeneratorDomain<Connector3, StructurePie
 
             for (int i = 0, len = connectors.size(); i < len; i++) {
                 Connector3 otherConnector = connectors.get(i);
+
+                // check if otherConnector has the target name
+                if (!target.equals(otherConnector.name())) continue;
 
                 // determine rotation and position
                 int rotation = connector.rotateToFace(otherConnector);
@@ -171,6 +175,8 @@ public class StructureDomain implements GeneratorDomain<Connector3, StructurePie
             // begin new cluster instance
             int targetPieceCount = random.nextInt(clusterDef.minPieces(), clusterDef.maxPieces() + 1);
             var cluster = new Cluster(clusterDef, targetPieceCount);
+
+            System.out.println("begin cluster of size " + targetPieceCount + " at " + oriented.pos());
 
             cluster.add(oriented);
             oriented.setCluster(cluster);

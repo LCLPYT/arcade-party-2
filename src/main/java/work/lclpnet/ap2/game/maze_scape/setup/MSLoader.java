@@ -13,6 +13,7 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.game.maze_scape.setup.wall.ConnectorWall;
 import work.lclpnet.ap2.game.maze_scape.setup.wall.PaletteConnectorWall;
+import work.lclpnet.ap2.game.maze_scape.setup.wall.StructureConnectorWall;
 import work.lclpnet.ap2.game.maze_scape.util.*;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.kibu.jnbt.CompoundTag;
@@ -38,11 +39,13 @@ public class MSLoader {
     private final GameMap map;
     private final Logger logger;
     private final FabricBlockStateAdapter adapter = FabricBlockStateAdapter.getInstance();
+    private final SchematicReader schematicReader;
 
     public MSLoader(ServerWorld world, GameMap map, Logger logger) {
         this.map = map;
         this.world = world;
         this.logger = logger;
+        this.schematicReader = VanillaStructureFormat.get(world.getServer()).reader();
     }
 
     public CompletableFuture<Result> load() {
@@ -50,14 +53,13 @@ public class MSLoader {
     }
 
     private @NotNull Result loadSync() {
-        var defaultConnectorWall = parseConnectorWall(map.requireProperty("default-connector-wall"));
-
         var clusterDefs = parseClusterDefinitions(map.getProperty("clusters"));
 
         var session = ((MinecraftServerAccessor) world.getServer()).getSession();
         Path dir = session.getWorldDirectory(world.getRegistryKey()).resolve("structures");
 
-        var reader = VanillaStructureFormat.get(world.getServer()).reader();
+        JSONObject wallCfg = map.requireProperty("default-connector-wall");
+        var defaultConnectorWall = parseConnectorWall(wallCfg, dir);
 
         JSONObject piecesConfig = map.requireProperty("pieces");
         String startPieceName = map.requireProperty("start-piece");
@@ -75,7 +77,7 @@ public class MSLoader {
                 continue;
             }
 
-            StructurePiece piece = parsePiece(path, reader, config, clusterDefs);
+            StructurePiece piece = parsePiece(path, config, clusterDefs);
 
             if (piece == null) continue;
 
@@ -118,7 +120,7 @@ public class MSLoader {
         return clusterDefs;
     }
 
-    private ConnectorWall parseConnectorWall(JSONObject json) {
+    private ConnectorWall parseConnectorWall(JSONObject json, Path structureDir) {
         var array = json.optJSONArray("palette");
 
         if (array != null) {
@@ -127,17 +129,36 @@ public class MSLoader {
             return new PaletteConnectorWall(palette);
         }
 
+        var structName = json.optString("structure");
+
+        if (structName != null) {
+            Path path = structureDir.resolve(structName + ".nbt");
+
+            BlockStructure struct;
+
+            try (var in = Files.newInputStream(path)) {
+                struct = schematicReader.read(in, adapter);
+            } catch (IOException e) {
+                logger.error("Failed to read structure piece {}", path, e);
+                return ConnectorWall.EMPTY;
+            }
+
+            var connectors = findConnectors(struct, adapter);
+
+            return new StructureConnectorWall(struct, connectors, logger);
+        }
+
         throw new IllegalStateException("Invalid connector wall configuration");
     }
 
     @Nullable
-    private StructurePiece parsePiece(Path path, SchematicReader reader, JSONObject config, Map<String, ClusterDef> clusterDefs) {
+    private StructurePiece parsePiece(Path path, JSONObject config, Map<String, ClusterDef> clusterDefs) {
         if (!Files.isRegularFile(path)) return null;
 
         BlockStructure struct;
 
         try (var in = Files.newInputStream(path)) {
-            struct = reader.read(in, adapter);
+            struct = schematicReader.read(in, adapter);
         } catch (IOException e) {
             logger.error("Failed to read structure piece {}", path, e);
             return null;
@@ -188,46 +209,6 @@ public class MSLoader {
         }
 
         return clusters;
-    }
-
-    private List<Connector3> findConnectors(BlockStructure struct, FabricBlockStateAdapter adapter) {
-        List<Connector3> connectors = new ArrayList<>(2);
-        var origin = struct.getOrigin();
-        int ox = origin.getX(), oy = origin.getY(), oz = origin.getZ();
-
-        for (var pos : struct.getBlockPositions()) {
-            KibuBlockState kibuState = struct.getBlockState(pos);
-            String str = kibuState.getAsString();
-
-            if (!str.startsWith("minecraft:jigsaw")) continue;
-
-            // found a connector
-            BlockState state = adapter.revert(kibuState);
-
-            if (state == null) {
-                logger.error("Unknown block state {}", str);
-                continue;
-            }
-
-            // make sure the jigsaw block has a target that is not minecraft:empty
-            KibuBlockEntity kibuBlockEntity = struct.getBlockEntity(pos);
-
-            if (kibuBlockEntity == null) continue;
-
-            CompoundTag nbt = kibuBlockEntity.createNbt();
-            String target = nbt.getString("target");
-
-            if (target.isEmpty() || target.equals("minecraft:empty")) continue;
-
-            // add connector
-            Orientation orientation = state.get(Properties.ORIENTATION);
-
-            var localPos = new BlockPos(pos.getX() - ox, pos.getY() - oy, pos.getZ() - oz);
-
-            connectors.add(new Connector3(localPos, orientation));
-        }
-
-        return connectors;
     }
 
     private BVH buildBounds(FabricStructureWrapper wrapper, List<Connector3> connectors) {
@@ -307,6 +288,50 @@ public class MSLoader {
                 start,
                 pos -> mask[pos.getX()][pos.getY()][pos.getZ()] = true,  // add to mask
                 (x, y, z) -> plane.test(x, y, z) && transparent.test(x, y, z));  // add neighbour if in plane and transparent
+    }
+
+    private List<Connector3> findConnectors(BlockStructure struct, FabricBlockStateAdapter adapter) {
+        List<Connector3> connectors = new ArrayList<>(2);
+        var origin = struct.getOrigin();
+        int ox = origin.getX(), oy = origin.getY(), oz = origin.getZ();
+
+        for (var pos : struct.getBlockPositions()) {
+            KibuBlockState kibuState = struct.getBlockState(pos);
+            String str = kibuState.getAsString();
+
+            if (!str.startsWith("minecraft:jigsaw")) continue;
+
+            // found a connector
+            BlockState state = adapter.revert(kibuState);
+
+            if (state == null) {
+                logger.error("Unknown block state {}", str);
+                continue;
+            }
+
+            // make sure the jigsaw block has a target that is not minecraft:empty
+            KibuBlockEntity kibuBlockEntity = struct.getBlockEntity(pos);
+
+            if (kibuBlockEntity == null) continue;
+
+            CompoundTag nbt = kibuBlockEntity.createNbt();
+            String name = nbt.getString("name");
+
+            if (name.isEmpty() || name.equals("minecraft:empty")) continue;
+
+            String target = nbt.getString("target");
+
+            if (target.isEmpty() || target.equals("minecraft:empty")) continue;
+
+            // add connector
+            Orientation orientation = state.get(Properties.ORIENTATION);
+
+            var localPos = new BlockPos(pos.getX() - ox, pos.getY() - oy, pos.getZ() - oz);
+
+            connectors.add(new Connector3(localPos, orientation, name, target));
+        }
+
+        return connectors;
     }
 
     public record Result(

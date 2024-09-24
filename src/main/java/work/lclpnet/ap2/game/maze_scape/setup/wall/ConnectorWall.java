@@ -8,5 +8,7 @@ import java.util.Random;
 
 public interface ConnectorWall {
 
+    ConnectorWall EMPTY = (connector, oriented, modifier, random) -> {};
+
     void place(Connector3 connector, OrientedStructurePiece oriented, WorldModifier modifier, Random random);
 }

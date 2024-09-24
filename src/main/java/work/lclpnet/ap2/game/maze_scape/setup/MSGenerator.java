@@ -224,7 +224,9 @@ public class MSGenerator {
         if (opposingOrientation == null) return;
 
         BlockPos opposingPos = connector.pos().add(facing.getVector());
-        var opposing = new Connector3(opposingPos, opposingOrientation);
+
+        // target and name must be inverted for the opposing connector
+        var opposing = new Connector3(opposingPos, opposingOrientation, connector.target(), connector.name());
 
         var wall = closedConnectors.get(opposing);
 

@@ -60,7 +60,7 @@ public class OrientedStructurePiece implements OrientedPiece<Connector3, Structu
                 throw new IllegalArgumentException("Invalid transformation: Invalid orientation");
             }
 
-            connectors.add(new Connector3(newConnectorPos, newOrientation));
+            connectors.add(new Connector3(newConnectorPos, newOrientation, connector.name(), connector.target()));
         }
 
         this.connectors = connectors;
