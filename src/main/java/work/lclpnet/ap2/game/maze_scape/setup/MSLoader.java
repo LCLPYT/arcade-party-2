@@ -172,9 +172,10 @@ public class MSLoader {
         float weight = config.optFloat("weight", 1.0f);
         int maxCount = config.optInt("max-count", -1);
         boolean connectSame = config.optBoolean("connect-same", true);
+        int minDistance = config.optInt("min-distance", 0);
 
         Set<ClusterDef> clusters = parseClusters(path, config, clusterDefs);
-        StructurePiece piece = new StructurePiece(wrapper, bounds, connectors, weight, maxCount, connectSame, clusters);
+        StructurePiece piece = new StructurePiece(wrapper, bounds, connectors, weight, maxCount, connectSame, clusters, minDistance);
 
         for (ClusterDef cluster : clusters) {
             cluster.pieces().add(piece);
