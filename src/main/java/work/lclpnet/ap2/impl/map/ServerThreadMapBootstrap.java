@@ -22,14 +22,7 @@ public class ServerThreadMapBootstrap implements MapBootstrap {
 
     @Override
     public CompletableFuture<Void> createWorldBootstrap(ServerWorld world, GameMap map) {
-        var future = new CompletableFuture<Void>();
-
         // execute the operation on the next server tick, this introduces a delay
-        world.getServer().submit(() -> {
-            op.bootstrapWorld(world, map);
-            future.complete(null);
-        });
-
-        return future;
+        return world.getServer().submit(() -> op.bootstrapWorld(world, map));
     }
 }

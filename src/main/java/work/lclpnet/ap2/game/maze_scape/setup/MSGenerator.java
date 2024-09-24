@@ -9,7 +9,8 @@ import net.minecraft.util.math.Direction;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.game.maze_scape.gen.Graph;
 import work.lclpnet.ap2.game.maze_scape.gen.GraphGenerator;
-import work.lclpnet.ap2.impl.util.BlockBox;
+import work.lclpnet.ap2.game.maze_scape.gen.GraphGenerator.Result;
+import work.lclpnet.ap2.impl.util.FutureUtil;
 import work.lclpnet.ap2.impl.util.StructureUtil;
 import work.lclpnet.ap2.impl.util.math.AffineIntMatrix;
 import work.lclpnet.ap2.impl.util.world.ResetBlockWorldModifier;
@@ -25,14 +26,22 @@ import work.lclpnet.lobby.game.map.GameMap;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.CompletableFuture;
+
+import static work.lclpnet.ap2.game.maze_scape.gen.GraphGenerator.ResultType.FAILURE;
+import static work.lclpnet.ap2.game.maze_scape.gen.GraphGenerator.ResultType.INTERRUPTED;
 
 public class MSGenerator {
 
     public static final int PLACE_FLAGS = Block.FORCE_STATE | Block.SKIP_DROPS;
     public static final boolean DEBUG = false;
+    private static final int GENERATOR_MAX_TRIES = 5;
+    private static final int GENERATOR_MAX_DURATION_MS = 15_000;
     private final ServerWorld world;
+    private final GameMap map;
     private final MSLoader.Result loaded;
     private final Random random;
+    private final long seed;
     private final Logger logger;
     private final Map<Connector3, ResetBlockWorldModifier> closedConnectors = new HashMap<>();
     private final int targetArea;
@@ -41,10 +50,12 @@ public class MSGenerator {
     private GraphGenerator<Connector3, StructurePiece, OrientedStructurePiece> generator;
     private boolean decorate = true;
 
-    public MSGenerator(ServerWorld world, GameMap map, MSLoader.Result loaded, Random random, Logger logger) {
+    public MSGenerator(ServerWorld world, GameMap map, MSLoader.Result loaded, Random random, long seed, Logger logger) {
         this.world = world;
+        this.map = map;
         this.loaded = loaded;
         this.random = random;
+        this.seed = seed;
         this.logger = logger;
 
         // the generator will continue until the total room area is greater than this value
@@ -66,30 +77,6 @@ public class MSGenerator {
 
         var bounds = new StructureDomain.BoundsCfg(maxChunkSize, bottomY, topY);
         domain = new StructureDomain(loaded.pieces(), random, deadEndStart, bounds);
-    }
-
-    public synchronized boolean generate() {
-        domain.reset();
-
-        generator = new GraphGenerator<>(domain, random, logger);
-
-        var res = generator.generateGraph(loaded.startPiece(), g -> domain.totalArea() < targetArea);
-
-        if (!res.success() && !DEBUG) {
-            // abort on failure in non-debug mode
-            return false;
-        }
-
-        decorate = res.success();
-        var graph = res.graph();
-
-        if (decorate) {
-            placeAdditionalDeadEnds(graph);
-        }
-
-        placePieces(graph);
-
-        return true;
     }
 
     private void placeAdditionalDeadEnds(Graph<Connector3, StructurePiece, OrientedStructurePiece> graph) {
@@ -255,16 +242,70 @@ public class MSGenerator {
         closedConnectors.put(connector, modifier);
     }
 
-    private void debugPieces() {
-        var pos = new BlockPos.Mutable(0, 64, 0);
+    public CompletableFuture<Void> startGenerator() {
+        generator = new GraphGenerator<>(domain, random, logger);
 
-        for (StructurePiece piece : loaded.pieces()) {
-            BlockStructure struct = piece.wrapper().getStructure();
-            BlockBox bounds = StructureUtil.getBounds(struct);
+        var future = new CompletableFuture<Result<Connector3, StructurePiece, OrientedStructurePiece>>();
 
-            StructureUtil.placeStructureFast(struct, world, pos);
+        // dispatch structure generation in a separate thread
+        var generatorThread = Thread.ofPlatform().name("Structure Generator").unstarted(() -> tryGenerate(future));
 
-            pos.setX(pos.getX() + bounds.width() + 5);
+        // also dispatch a watchdog thread that interrupts the generator thread after the maximum duration
+        Thread.ofVirtual().name("Structure Generator Watchdog").start(() -> {
+            logger.info("Starting structure generator thread with a maximum duration of {} ms", GENERATOR_MAX_DURATION_MS);
+            generatorThread.start();
+
+            try {
+                generatorThread.join(GENERATOR_MAX_DURATION_MS);
+            } catch (InterruptedException ignored) {} finally {
+                if (generatorThread.isAlive()) {
+                    logger.error("Generator thread is taking too long. Interrupting it...");
+                    generator.interrupt();
+                    generatorThread.interrupt();
+                }
+            }
+        });
+
+        // finally place structure on the server thread
+        return future.thenCompose(FutureUtil.onThread(world.getServer(), res -> {
+            decorate = res.success();
+            var graph = res.graph();
+
+            if (decorate) {
+                placeAdditionalDeadEnds(graph);
+            }
+
+            placePieces(graph);
+        }));
+    }
+
+    private void tryGenerate(CompletableFuture<Result<Connector3, StructurePiece, OrientedStructurePiece>> future) {
+        for (int i = 0; i < GENERATOR_MAX_TRIES; i++) {
+            domain.reset();
+
+            var res = generator.generateGraph(loaded.startPiece(), g -> domain.totalArea() < targetArea);
+            var type = res.type();
+
+            if (type == INTERRUPTED) {
+                String msg = "Failed to generate structure. Generation took too long";
+
+                if (DEBUG) {
+                    logger.error(msg);
+                } else {
+                    future.completeExceptionally(new IllegalStateException(msg));
+                    return;
+                }
+            } else if (type == FAILURE) {
+                logger.error("Failed to generate structure. Map: {}, Seed: {}; Retries remaining: {}", map.getDescriptor(), seed, GENERATOR_MAX_TRIES - i - 1);
+
+                // accept result regardless in debug mode
+                if (!DEBUG) continue;
+            }
+
+            future.complete(res);
+            return;
         }
+
+        future.completeExceptionally(new IllegalStateException("Failed to generate structure. Maximum number of re-tries has been exceeded"));
     }
 }
