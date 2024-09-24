@@ -22,6 +22,7 @@ public class GraphGenerator<C, P extends Piece<C>, O extends OrientedPiece<C, P>
     private final GeneratorDomain<C, P, O> domain;
     private final Random random;
     private final Logger logger;
+    private volatile boolean interrupted = false;
 
     public GraphGenerator(GeneratorDomain<C, P, O> domain, Random random, Logger logger) {
         this.domain = domain;
@@ -39,22 +40,22 @@ public class GraphGenerator<C, P extends Piece<C>, O extends OrientedPiece<C, P>
         O start = domain.placeStart(startPiece);
         Graph<C, P, O> graph = new Graph<>(makeNode(start, null));
 
-        boolean success = generateGraph(graph, 0, condition);
+        var resultType = generateGraph(graph, 0, condition);
 
-        if (!success) {
-            return new Result<>(ResultType.FAILURE, graph);
-        }
-
-        return new Result<>(ResultType.SUCCESS, graph);
+        return new Result<>(resultType, graph);
     }
 
-    boolean generateGraph(Graph<C, P, O> graph, int currentLevel, Predicate<Graph<C, P, O>> condition) {
+    ResultType generateGraph(Graph<C, P, O> graph, int currentLevel, Predicate<Graph<C, P, O>> condition) {
         while (condition.test(graph)) {
+            if (interrupted) {
+                return ResultType.INTERRUPTED;
+            }
+
             var currentNodes = graph.nodesAtLevel(currentLevel);
 
             if (currentNodes.isEmpty()) {
                 logger.error("Generator cannot find nodes to expand, aborting generation");
-                return false;
+                return ResultType.FAILURE;
             }
 
             // begin connector assignment for nodes in a random order
@@ -64,11 +65,15 @@ public class GraphGenerator<C, P extends Piece<C>, O extends OrientedPiece<C, P>
             boolean anyLeaf = false;
 
             for (var node : currentNodes) {
+                if (interrupted) {
+                    return ResultType.INTERRUPTED;
+                }
+
                 O oriented = node.oriented();
 
                 if (oriented == null) {
                     logger.error("Node has no oriented piece configured, aborting generation");
-                    return false;
+                    return ResultType.FAILURE;
                 }
 
                 int connectorCount = oriented.connectors().size();
@@ -92,6 +97,10 @@ public class GraphGenerator<C, P extends Piece<C>, O extends OrientedPiece<C, P>
 
                 // assign connectors in a random order
                 for (int i : randomIndexOrder(connectorCount)) {
+                    if (interrupted) {
+                        return ResultType.INTERRUPTED;
+                    }
+
                     // skip if connector is already assigned
                     if (children.get(i) != null) continue;
 
@@ -113,7 +122,7 @@ public class GraphGenerator<C, P extends Piece<C>, O extends OrientedPiece<C, P>
 
                 if (level.isEmpty()) {
                     logger.error("Back-Tracking could not find a suitable solution; generation cannot be completed");
-                    return false;
+                    return ResultType.FAILURE;
                 }
 
                 currentLevel = level.getAsInt();
@@ -125,7 +134,7 @@ public class GraphGenerator<C, P extends Piece<C>, O extends OrientedPiece<C, P>
             currentLevel++;
         }
 
-        return true;
+        return ResultType.SUCCESS;
     }
 
     public void placeRandomChildPiece(Graph.Node<C, P, O> node, int connectorIndex, List<O> fitting) {
@@ -177,6 +186,10 @@ public class GraphGenerator<C, P extends Piece<C>, O extends OrientedPiece<C, P>
     }
 
     private OptionalInt backTrackBranch(Graph.Node<C, P, O> leaf, int depth) {
+        if (interrupted) {
+            return OptionalInt.empty();
+        }
+
         var parent = leaf.parent();
 
         // do not try to back-track the root node
@@ -255,9 +268,14 @@ public class GraphGenerator<C, P extends Piece<C>, O extends OrientedPiece<C, P>
         return node;
     }
 
+    public void interrupt() {
+        this.interrupted = true;
+    }
+
     public enum ResultType {
         SUCCESS,
-        FAILURE
+        FAILURE,
+        INTERRUPTED
     }
 
     public record Result<C, P extends Piece<C>, O extends OrientedPiece<C, P>>(ResultType type, Graph<C, P, O> graph) {
