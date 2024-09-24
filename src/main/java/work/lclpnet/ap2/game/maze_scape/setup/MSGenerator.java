@@ -29,6 +29,7 @@ import java.util.Random;
 public class MSGenerator {
 
     public static final int PLACE_FLAGS = Block.FORCE_STATE | Block.SKIP_DROPS;
+    public static final boolean DEBUG = false;
     private final ServerWorld world;
     private final MSLoader.Result loaded;
     private final Random random;
@@ -38,6 +39,7 @@ public class MSGenerator {
     private final float deadEndChance;
     private final StructureDomain domain;
     private GraphGenerator<Connector3, StructurePiece, OrientedStructurePiece> generator;
+    private boolean decorate = true;
 
     public MSGenerator(ServerWorld world, GameMap map, MSLoader.Result loaded, Random random, Logger logger) {
         this.world = world;
@@ -71,13 +73,19 @@ public class MSGenerator {
 
         generator = new GraphGenerator<>(domain, random, logger);
 
-        var graph = generator.generateGraph(loaded.startPiece(), g -> domain.totalArea() < targetArea).orElse(null);
+        var res = generator.generateGraph(loaded.startPiece(), g -> domain.totalArea() < targetArea);
 
-        if (graph == null) {
+        if (!res.success() && !DEBUG) {
+            // abort on failure in non-debug mode
             return false;
         }
 
-        placeAdditionalDeadEnds(graph);
+        decorate = res.success();
+        var graph = res.graph();
+
+        if (decorate) {
+            placeAdditionalDeadEnds(graph);
+        }
 
         placePieces(graph);
 
@@ -138,9 +146,11 @@ public class MSGenerator {
 
         StructureUtil.placeStructureFast(struct, world, pos, transformation);
 
-        replaceJigsaws(oriented);
+        if (decorate) {
+            replaceJigsaws(oriented);
 
-        closeConnectors(node, oriented);
+            closeConnectors(node, oriented);
+        }
 
         return true;
     }

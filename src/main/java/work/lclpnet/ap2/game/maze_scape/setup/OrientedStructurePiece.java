@@ -120,4 +120,9 @@ public class OrientedStructurePiece implements OrientedPiece<Connector3, Structu
     public int hashCode() {
         return Objects.hash(piece, pos, rotation);
     }
+
+    @Override
+    public String toString() {
+        return "OrientedStructurePiece{pos=%s, rotation=%d}".formatted(pos, rotation);
+    }
 }
