@@ -37,7 +37,7 @@ class GraphGeneratorTest {
         var generator = new String2DGeneratorDomain(pieces, random);
         var graphGen = new GraphGenerator<>(generator, random, logger);
 
-        var graph = graphGen.generateGraph(start, 4).orElseThrow();
+        var graph = graphGen.generateGraph(start, 4).optional().orElseThrow();
 
         assertEquals(1, graph.nodesAtLevel(0).size());
         assertEquals(3, graph.nodesAtLevel(1).size());
@@ -75,7 +75,7 @@ class GraphGeneratorTest {
         var generator = new String2DGeneratorDomain(pieces, random);
         var graphGen = new GraphGenerator<>(generator, random, logger);
 
-        var graph = graphGen.generateGraph(start, 10).orElseThrow();
+        var graph = graphGen.generateGraph(start, 10).optional().orElseThrow();
 
         var expected = """
                    ┌──     \s
@@ -188,7 +188,7 @@ class GraphGeneratorTest {
         var generator = new String2DGeneratorDomain(pieces, random);
         var graphGen = new GraphGenerator<>(generator, random, logger);
 
-        var graph = graphGen.generateGraph(start, 40).orElseThrow();
+        var graph = graphGen.generateGraph(start, 40).optional().orElseThrow();
 
         String expected = """
                                │ │              \s
@@ -263,7 +263,7 @@ class GraphGeneratorTest {
         var generator = new String2DGeneratorDomain(pieces, random);
         var graphGen = new GraphGenerator<>(generator, random, logger);
 
-        var graph = graphGen.generateGraph(start, 40).orElseThrow();
+        var graph = graphGen.generateGraph(start, 40).optional().orElseThrow();
 
         String expected = """
                             │↑│              \s
@@ -330,6 +330,6 @@ class GraphGeneratorTest {
 
         var res = graphGen.generateGraph(start, 6);
 
-        assertEquals(Optional.empty(), res);
+        assertEquals(Optional.empty(), res.optional());
     }
 }

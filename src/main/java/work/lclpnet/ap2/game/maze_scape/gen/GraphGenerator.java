@@ -29,19 +29,23 @@ public class GraphGenerator<C, P extends Piece<C>, O extends OrientedPiece<C, P>
         this.logger = logger;
     }
 
-    public Optional<Graph<C, P, O>> generateGraph(P startPiece, int targetPieceCount) {
+    @NotNull
+    public Result<C, P, O> generateGraph(P startPiece, int targetPieceCount) {
         return generateGraph(startPiece, graph -> graph.nodeCount() < targetPieceCount);
     }
 
-    public Optional<Graph<C, P, O>> generateGraph(P startPiece, Predicate<Graph<C, P, O>> condition) {
+    @NotNull
+    public Result<C, P, O> generateGraph(P startPiece, Predicate<Graph<C, P, O>> condition) {
         O start = domain.placeStart(startPiece);
         Graph<C, P, O> graph = new Graph<>(makeNode(start, null));
 
         boolean success = generateGraph(graph, 0, condition);
 
-        if (!success) return Optional.empty();
+        if (!success) {
+            return new Result<>(ResultType.FAILURE, graph);
+        }
 
-        return Optional.of(graph);
+        return new Result<>(ResultType.SUCCESS, graph);
     }
 
     boolean generateGraph(Graph<C, P, O> graph, int currentLevel, Predicate<Graph<C, P, O>> condition) {
@@ -249,5 +253,22 @@ public class GraphGenerator<C, P extends Piece<C>, O extends OrientedPiece<C, P>
         node.setParent(parent);
 
         return node;
+    }
+
+    public enum ResultType {
+        SUCCESS,
+        FAILURE
+    }
+
+    public record Result<C, P extends Piece<C>, O extends OrientedPiece<C, P>>(ResultType type, Graph<C, P, O> graph) {
+
+        public boolean success() {
+            return type == ResultType.SUCCESS;
+        }
+
+        public Optional<Graph<C, P, O>> optional() {
+            return success() ? Optional.of(graph) : Optional.empty();
+
+        }
     }
 }
