@@ -41,16 +41,17 @@ public class JumpAndRunSetup {
     }
 
     public CompletableFuture<JumpAndRun> setup() {
-        return readParts().thenApply(this::generate);
+        return readParts().thenCompose(this::generate);
     }
 
-    private JumpAndRun generate(Parts parts) {
+    private CompletableFuture<JumpAndRun> generate(Parts parts) {
         BlockPos spawnPos = BlockPos.ofFloored(MapUtils.getSpawnPosition(map));
         JumpAndRun jumpAndRun = generator.generate(parts, spawnPos);
 
-        placer.place(jumpAndRun);
-
-        return jumpAndRun;
+        return world.getServer().submit(() -> {
+            placer.place(jumpAndRun);
+            return jumpAndRun;
+        });
     }
 
     private CompletableFuture<Parts> readParts() {
