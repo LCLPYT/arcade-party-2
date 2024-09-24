@@ -173,9 +173,10 @@ public class MSLoader {
         int maxCount = config.optInt("max-count", -1);
         boolean connectSame = config.optBoolean("connect-same", true);
         int minDistance = config.optInt("min-distance", 0);
+        boolean updateBlocks = config.optBoolean("update-blocks", false);
 
         Set<ClusterDef> clusters = parseClusters(path, config, clusterDefs);
-        StructurePiece piece = new StructurePiece(wrapper, bounds, connectors, weight, maxCount, connectSame, clusters, minDistance);
+        StructurePiece piece = new StructurePiece(wrapper, bounds, connectors, weight, maxCount, connectSame, clusters, minDistance, updateBlocks);
 
         for (ClusterDef cluster : clusters) {
             cluster.pieces().add(piece);
