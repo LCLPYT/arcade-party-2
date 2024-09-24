@@ -18,7 +18,7 @@ import static work.lclpnet.kibu.util.StructureWriter.Option.*;
 
 public class StructureUtil {
 
-    public static final EnumSet<StructureWriter.Option> FAST_NO_VIEWERS = EnumSet.of(SKIP_AIR, FORCE_STATE, SKIP_PLAYER_SYNC, SKIP_DROPS);
+    private static final EnumSet<StructureWriter.Option> FAST_NO_VIEWERS = EnumSet.of(SKIP_AIR, FORCE_STATE, SKIP_PLAYER_SYNC, SKIP_DROPS, SKIP_NEIGHBOUR_UPDATE);
 
     private StructureUtil() {}
 

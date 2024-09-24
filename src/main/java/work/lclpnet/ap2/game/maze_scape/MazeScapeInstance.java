@@ -20,6 +20,8 @@ public class MazeScapeInstance extends EliminationGameInstance implements MapBoo
 
     @Override
     public CompletableFuture<Void> createWorldBootstrap(ServerWorld world, GameMap map) {
+        world.setTimeOfDay(18_000);
+
         Logger logger = gameHandle.getLogger();
         var setup = new MSLoader(world, map, logger);
 

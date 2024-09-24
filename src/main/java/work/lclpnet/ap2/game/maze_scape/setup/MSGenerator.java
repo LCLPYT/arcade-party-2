@@ -20,9 +20,11 @@ import work.lclpnet.kibu.schematic.FabricStructureWrapper;
 import work.lclpnet.kibu.structure.BlockStructure;
 import work.lclpnet.kibu.util.BlockStateUtils;
 import work.lclpnet.kibu.util.RotationUtil;
+import work.lclpnet.kibu.util.StructureWriter;
 import work.lclpnet.kibu.util.math.Matrix3i;
 import work.lclpnet.lobby.game.map.GameMap;
 
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
@@ -30,9 +32,12 @@ import java.util.concurrent.CompletableFuture;
 
 import static work.lclpnet.ap2.game.maze_scape.gen.GraphGenerator.ResultType.FAILURE;
 import static work.lclpnet.ap2.game.maze_scape.gen.GraphGenerator.ResultType.INTERRUPTED;
+import static work.lclpnet.kibu.util.StructureWriter.Option.*;
+import static work.lclpnet.kibu.util.StructureWriter.Option.SKIP_DROPS;
 
 public class MSGenerator {
 
+    private static final EnumSet<StructureWriter.Option> UPDATE_NEIGHBOURS_OPTS = EnumSet.of(SKIP_AIR, FORCE_STATE, SKIP_PLAYER_SYNC, SKIP_DROPS);
     public static final int PLACE_FLAGS = Block.FORCE_STATE | Block.SKIP_DROPS;
     public static final boolean DEBUG = false;
     private static final int GENERATOR_MAX_TRIES = 5;
@@ -126,12 +131,17 @@ public class MSGenerator {
             return false;
         }
 
-        FabricStructureWrapper wrapper = oriented.piece().wrapper();
+        StructurePiece piece = oriented.piece();
+        FabricStructureWrapper wrapper = piece.wrapper();
         BlockStructure struct = wrapper.getStructure();
         BlockPos pos = oriented.pos();
         Matrix3i transformation = oriented.transformation();
 
-        StructureUtil.placeStructureFast(struct, world, pos, transformation);
+        if (piece.updateBlocks()) {
+            StructureWriter.placeStructure(struct, world, pos, transformation, UPDATE_NEIGHBOURS_OPTS);
+        } else {
+            StructureUtil.placeStructureFast(struct, world, pos, transformation);
+        }
 
         if (decorate) {
             replaceJigsaws(oriented);

@@ -15,7 +15,8 @@ public record StructurePiece(
         int maxCount,
         boolean connectSame,
         Set<ClusterDef> clusters,
-        int minDistance
+        int minDistance,
+        boolean updateBlocks
 ) implements Piece<Connector3> {
 
     public boolean limitedCount() {
