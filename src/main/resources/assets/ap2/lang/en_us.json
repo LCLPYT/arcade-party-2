@@ -221,5 +221,6 @@
   "game.ap2.apocalypse_survival.survived": "survived %s",
   "game.ap2.pillar_battle": "Pillar Battle",
   "game.ap2.pillar_battle.description": "All players are placed on pillars. Everyone receives a random item every %s seconds. Kill other players and be the last one standing!",
-  "game.ap2.pillar_battle.out_of_bounds": "You cannot build there..."
+  "game.ap2.pillar_battle.out_of_bounds": "You cannot build there...",
+  "game.ap2.pillar_battle.border_warn": "Careful! You are near the build border"
 }
