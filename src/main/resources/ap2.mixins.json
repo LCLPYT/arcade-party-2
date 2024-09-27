@@ -7,9 +7,7 @@
     "defaultRequire": 1
   },
   "mixins": [
-    "EntityNavigationAccessor",
-    "MobEntityAccessor",
-    "PathNodeMakerAccessor",
-    "PathNodeNavigatorAccessor"
+    "LivingEntityAccessor",
+    "MobEntityAccessor"
   ]
 }

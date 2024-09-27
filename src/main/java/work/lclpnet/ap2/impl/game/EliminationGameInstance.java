@@ -17,6 +17,7 @@ import work.lclpnet.ap2.impl.game.data.EliminationDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.util.DeathMessages;
 import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedBossBar;
+import work.lclpnet.ap2.mixin.LivingEntityAccessor;
 import work.lclpnet.kibu.access.misc.DamageTrackerAccess;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.EntityHealthCallback;
@@ -99,6 +100,7 @@ public abstract class EliminationGameInstance extends DefaultGameInstance {
         hooks.registerHook(EntityHealthCallback.HOOK, (entity, health) -> {
             if (!(entity instanceof ServerPlayerEntity player) || health > 0) return false;
 
+            // the player is dying
             List<DamageRecord> recentDamage = DamageTrackerAccess.getRecentDamage(entity);
 
             int size = recentDamage.size();
@@ -107,7 +109,14 @@ public abstract class EliminationGameInstance extends DefaultGameInstance {
                 eliminate(player);
             } else {
                 DamageRecord damageRecord = recentDamage.get(size - 1);
-                eliminate(player, damageRecord.damageSource());
+                DamageSource source = damageRecord.damageSource();
+
+                // try to use totem of undying
+                if (((LivingEntityAccessor) player).invokeTryUseTotem(source)) {
+                    return true;
+                }
+
+                eliminate(player, source);
             }
 
             return true;
