@@ -1,5 +1,8 @@
 package work.lclpnet.ap2.game.pillar_battle;
 
+import net.minecraft.entity.boss.dragon.EnderDragonEntity;
+import net.minecraft.entity.boss.dragon.EnderDragonFight;
+import net.minecraft.entity.boss.dragon.phase.PhaseType;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -15,15 +18,15 @@ import work.lclpnet.ap2.api.map.MapBootstrap;
 import work.lclpnet.ap2.impl.game.EliminationGameInstance;
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker;
 import work.lclpnet.ap2.impl.util.world.WorldBorderUtil;
+import work.lclpnet.ap2.type.ApDragonFight;
+import work.lclpnet.kibu.hook.HookRegistrar;
+import work.lclpnet.kibu.hook.entity.ServerEntityHooks;
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 import work.lclpnet.lobby.game.map.GameMap;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 public class PillarBattleInstance extends EliminationGameInstance implements MapBootstrap {
@@ -146,7 +149,29 @@ public class PillarBattleInstance extends EliminationGameInstance implements Map
             return true;
         });
 
+        handleEnderDragonAi(hooks);
+
         scheduler.interval(this::warnWorldBorder, 1);
+    }
+
+    private void handleEnderDragonAi(HookRegistrar hooks) {
+        if (pillars == null) return;
+
+        BlockPos center = pillars.center();
+
+        hooks.registerHook(ServerEntityHooks.ENTITY_LOAD, (entity, world) -> {
+            if (!(entity instanceof EnderDragonEntity dragon)) return;
+
+            var data = new EnderDragonFight.Data(false, false, false, false,
+                    Optional.of(dragon.getUuid()), Optional.of(center), Optional.of(List.of()));
+
+            EnderDragonFight fight = new EnderDragonFight(world, random.nextLong(), data, center);
+            ((ApDragonFight) fight).ap2$setTemporary();
+
+            dragon.setFight(fight);
+            dragon.setFightOrigin(center);
+            dragon.getPhaseManager().setPhase(PhaseType.HOLDING_PATTERN);
+        });
     }
 
     private boolean outOfBounds(BlockPos pos) {
