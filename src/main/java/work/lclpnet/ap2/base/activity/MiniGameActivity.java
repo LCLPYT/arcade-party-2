@@ -18,6 +18,7 @@ import work.lclpnet.ap2.impl.game.DefaultMiniGameHandle;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.kibu.cmd.type.CommandRegistrar;
 import work.lclpnet.kibu.hook.HookRegistrar;
+import work.lclpnet.kibu.hook.entity.EntityUsePortalCallback;
 import work.lclpnet.kibu.hook.player.PlayerAdvancementPacketCallback;
 import work.lclpnet.kibu.hook.player.PlayerConnectionHooks;
 import work.lclpnet.kibu.hook.player.PlayerRecipePacketCallback;
@@ -79,6 +80,7 @@ public class MiniGameActivity extends ComponentActivity {
         HookRegistrar hooks = component(BuiltinComponents.HOOKS).hooks();
         hooks.registerHook(PlayerAdvancementPacketCallback.HOOK, (player, packet) -> true);
         hooks.registerHook(PlayerRecipePacketCallback.HOOK, (player, packet) -> true);
+        hooks.registerHook(EntityUsePortalCallback.HOOK, (entity, portal, pos) -> true);
     }
 
     @Override
