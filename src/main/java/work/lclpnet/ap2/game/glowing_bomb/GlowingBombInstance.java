@@ -1,5 +1,7 @@
 package work.lclpnet.ap2.game.glowing_bomb;
 
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -40,12 +42,19 @@ public class GlowingBombInstance extends EliminationGameInstance implements MapB
     private static final int MAX_BOMB_GLOW_STONE = 3;
     private static final int MIN_BOMB_FUSE_TICKS = Ticks.seconds(7);
     private static final int MAX_BOMB_FUSE_TICKS = Ticks.seconds(18);
+    private static final int BOMB_PASS_COST = 40;
+    private static final int INITIAL_CREDITS = BOMB_PASS_COST * 2;
+    private static final int MINIMUM_BOMB_PASS_TICKS = 10;
+    private static final int CREDITS_PER_TICK = 1;
     private final Random random = new Random();
     private final SimpleMovementBlocker movementBlocker;
+    private final Object2IntMap<UUID> credits = new Object2IntOpenHashMap<>();
     private GbManager manager = null;
     private Scene scene = null;
     private GbBomb bomb = null;
     private boolean mayPass = false;
+    private boolean wasPassed = false;
+    private int time = 0;
     private TaskHandle bombDelayedSpawn = null;
 
     public GlowingBombInstance(MiniGameHandle gameHandle) {
@@ -104,6 +113,8 @@ public class GlowingBombInstance extends EliminationGameInstance implements MapB
             return TypedActionResult.pass(ItemStack.EMPTY);
         });
 
+        gameHandle.getGameScheduler().interval(this::tickCredits, 1);
+
         spawnBomb();
     }
 
@@ -154,7 +165,14 @@ public class GlowingBombInstance extends EliminationGameInstance implements MapB
         world.playSound(null, x, y, z, SoundEvents.ITEM_TRIDENT_RETURN, SoundCategory.HOSTILE, 0.75f, 0.5f);
         world.spawnParticles(ParticleTypes.REVERSE_PORTAL, x, y, z, 15, 0.1, 0.1, 0.1, 0.2);
 
+        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
+            credits.put(player.getUuid(), INITIAL_CREDITS);
+        }
+
+        time = 0;
+        wasPassed = false;
         mayPass = true;
+
         manager.bombHolder().ifPresent(this::onAcquiredBomb);
     }
 
@@ -166,7 +184,10 @@ public class GlowingBombInstance extends EliminationGameInstance implements MapB
         player.getInventory().setStack(4, stack);
         PlayerInventoryAccess.setSelectedSlot(player, 4);
 
-        player.getItemCooldownManager().set(Items.GLOWSTONE, 10);
+        int creditCount = credits.getOrDefault(player.getUuid(), 0);
+        int cooldown = MINIMUM_BOMB_PASS_TICKS + Math.max(0, BOMB_PASS_COST - creditCount);
+
+        player.getItemCooldownManager().set(Items.GLOWSTONE, cooldown);
     }
 
     private void onPassedBomb(ServerPlayerEntity player) {
@@ -176,6 +197,15 @@ public class GlowingBombInstance extends EliminationGameInstance implements MapB
     private void passBomb(ServerPlayerEntity player) {
         if (winManager.isGameOver() || !mayPass) return;
 
+        // remove credits
+        UUID uuid = player.getUuid();
+        int creditCount = credits.getOrDefault(uuid, 0);
+
+        if (creditCount < BOMB_PASS_COST) return;
+
+        credits.put(uuid, Math.max(0, creditCount - BOMB_PASS_COST));
+
+        // pass bomb
         ServerPlayerEntity nextHolder = manager.nextBombHolder();
 
         if (nextHolder == null) {
@@ -186,6 +216,8 @@ public class GlowingBombInstance extends EliminationGameInstance implements MapB
         onAcquiredBomb(nextHolder);
 
         if (nextHolder == player) return;
+
+        wasPassed = true;
 
         if (bomb == null) return;
 
@@ -287,5 +319,22 @@ public class GlowingBombInstance extends EliminationGameInstance implements MapB
         if (winManager.isGameOver()) return;
 
         delayNextBomb();
+    }
+
+    private void tickCredits() {
+        // pause credit acquisition if the bomb is currently not passable
+        if (!mayPass) return;
+
+        time++;
+
+        // don't grant credits if the bomb wasn't passed yet and couldn't have exploded yet because of the minimum fuse time
+        if (!wasPassed && time < MIN_BOMB_FUSE_TICKS) return;
+
+        // grant credits each tick
+        manager.bombHolder().ifPresent(player -> credits.computeInt(player.getUuid(), (uuid, count) -> {
+            if (count == null) count = 0;
+
+            return count + CREDITS_PER_TICK;
+        }));
     }
 }
