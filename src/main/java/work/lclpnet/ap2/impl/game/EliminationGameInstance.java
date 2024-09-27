@@ -2,6 +2,7 @@ package work.lclpnet.ap2.impl.game;
 
 import it.unimi.dsi.fastutil.Pair;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.boss.BossBar;
 import net.minecraft.entity.damage.DamageRecord;
 import net.minecraft.entity.damage.DamageSource;
@@ -106,6 +107,7 @@ public abstract class EliminationGameInstance extends DefaultGameInstance {
             int size = recentDamage.size();
 
             if (size == 0) {
+                onDeath(player, null);
                 eliminate(player);
             } else {
                 DamageRecord damageRecord = recentDamage.get(size - 1);
@@ -116,11 +118,18 @@ public abstract class EliminationGameInstance extends DefaultGameInstance {
                     return true;
                 }
 
+                onDeath(player, source.getAttacker());
                 eliminate(player, source);
             }
 
             return true;
         });
+    }
+
+    protected void onDeath(ServerPlayerEntity player, @Nullable Entity attacker) {
+        var accessor = (LivingEntityAccessor) player;
+        accessor.invokeDropInventory();
+        accessor.invokeDropXp(attacker);
     }
 
     protected final void disableEliminationMessages() {

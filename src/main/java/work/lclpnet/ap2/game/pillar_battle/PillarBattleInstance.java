@@ -59,7 +59,8 @@ public class PillarBattleInstance extends EliminationGameInstance implements Map
                 .set(GameRules.NATURAL_REGENERATION, true)
                 .set(GameRules.DO_MOB_GRIEFING, true)
                 .set(GameRules.DO_TRADER_SPAWNING, false)
-                .set(GameRules.DO_PATROL_SPAWNING, false);
+                .set(GameRules.DO_PATROL_SPAWNING, false)
+                .set(GameRules.KEEP_INVENTORY, false);
 
         movementBlocker.init(gameHandle.getHookRegistrar());
 
