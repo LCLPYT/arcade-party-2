@@ -9,7 +9,6 @@ import net.minecraft.component.type.UnbreakableComponent;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
-import net.minecraft.network.packet.s2c.play.WorldBorderWarningBlocksChangedS2CPacket;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
@@ -30,7 +29,7 @@ import work.lclpnet.ap2.impl.game.data.Ordering;
 import work.lclpnet.ap2.impl.game.data.ScoreDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.map.ServerThreadMapBootstrap;
-import work.lclpnet.kibu.access.network.packet.WorldBorderWarningBlocksChangedS2CPacketAccess;
+import work.lclpnet.ap2.impl.util.world.WorldBorderUtil;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.kibu.hook.world.BlockModificationHooks;
@@ -194,18 +193,13 @@ public class ManiacDiggerInstance extends DefaultGameInstance implements MapBoot
 
         player.sendMessage(msg, true);
 
-        var packet = WorldBorderWarningBlocksChangedS2CPacketAccess.withWarningBlocks(
-                new WorldBorderWarningBlocksChangedS2CPacket(player.getServerWorld().getWorldBorder()),
-                Integer.MAX_VALUE);
-
-        player.networkHandler.sendPacket(packet);
+        WorldBorderUtil.setWarning(player);
     }
 
     private void onCorrectTool(ServerPlayerEntity player) {
         player.sendMessage(Text.empty(), true);
 
-        var packet = new WorldBorderWarningBlocksChangedS2CPacket(player.getServerWorld().getWorldBorder());
-        player.networkHandler.sendPacket(packet);
+        WorldBorderUtil.resetWarningBlocks(player);
     }
 
     private void gradePlayers(ServerPlayerEntity winner) {

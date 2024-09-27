@@ -2,6 +2,7 @@ package work.lclpnet.ap2.impl.game;
 
 import it.unimi.dsi.fastutil.Pair;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.boss.BossBar;
 import net.minecraft.entity.damage.DamageRecord;
 import net.minecraft.entity.damage.DamageSource;
@@ -17,6 +18,7 @@ import work.lclpnet.ap2.impl.game.data.EliminationDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.util.DeathMessages;
 import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedBossBar;
+import work.lclpnet.ap2.mixin.LivingEntityAccessor;
 import work.lclpnet.kibu.access.misc.DamageTrackerAccess;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.EntityHealthCallback;
@@ -99,19 +101,35 @@ public abstract class EliminationGameInstance extends DefaultGameInstance {
         hooks.registerHook(EntityHealthCallback.HOOK, (entity, health) -> {
             if (!(entity instanceof ServerPlayerEntity player) || health > 0) return false;
 
+            // the player is dying
             List<DamageRecord> recentDamage = DamageTrackerAccess.getRecentDamage(entity);
 
             int size = recentDamage.size();
 
             if (size == 0) {
+                onDeath(player, null);
                 eliminate(player);
             } else {
                 DamageRecord damageRecord = recentDamage.get(size - 1);
-                eliminate(player, damageRecord.damageSource());
+                DamageSource source = damageRecord.damageSource();
+
+                // try to use totem of undying
+                if (((LivingEntityAccessor) player).invokeTryUseTotem(source)) {
+                    return true;
+                }
+
+                onDeath(player, source.getAttacker());
+                eliminate(player, source);
             }
 
             return true;
         });
+    }
+
+    protected void onDeath(ServerPlayerEntity player, @Nullable Entity attacker) {
+        var accessor = (LivingEntityAccessor) player;
+        accessor.invokeDropInventory();
+        accessor.invokeDropXp(attacker);
     }
 
     protected final void disableEliminationMessages() {

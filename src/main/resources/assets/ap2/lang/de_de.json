@@ -222,5 +222,6 @@
   "game.ap2.apocalypse_survival.survived": "%s überlebt",
   "game.ap2.pillar_battle": "Säulenkampf",
   "game.ap2.pillar_battle.description": "Alle Spieler werden auf Säulen platziert. Jeder erhält alle %s Sekunden einen zufälligen Gegenstand. Besiege alle Gegner und sei der letzte Überlebende!",
-  "game.ap2.pillar_battle.out_of_bounds": "Du kannst dort nicht bauen..."
+  "game.ap2.pillar_battle.out_of_bounds": "Du kannst dort nicht bauen...",
+  "game.ap2.pillar_battle.border_warn": "Achtung! Du näherst dich der Baugrenze"
 }

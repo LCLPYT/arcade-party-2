@@ -10,7 +10,6 @@ import org.slf4j.Logger;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.IndexedSet;
-import work.lclpnet.ap2.impl.util.math.Vec2i;
 import work.lclpnet.ap2.impl.util.world.CircleStructureGenerator;
 import work.lclpnet.kibu.hook.util.PositionRotation;
 import work.lclpnet.kibu.mc.BlockStateAdapter;
@@ -26,6 +25,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 public class PbSetup {
 
@@ -168,7 +168,11 @@ public class PbSetup {
 
         List<PillarInfo> pool = new ArrayList<>(availablePillars.size());
 
-        for (ServerPlayerEntity player : participants) {
+        // randomize player order to get different neighbours each game
+        var playerOrder = participants.stream().collect(Collectors.toCollection(ArrayList::new));
+        Collections.shuffle(playerOrder, random);
+
+        for (ServerPlayerEntity player : playerOrder) {
             playerIds.add(player.getUuid());
 
             if (pool.isEmpty()) {
