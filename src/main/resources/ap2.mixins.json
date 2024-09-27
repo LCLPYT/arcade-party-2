@@ -7,9 +7,8 @@
     "defaultRequire": 1
   },
   "mixins": [
-    "EntityNavigationAccessor",
-    "MobEntityAccessor",
-    "PathNodeMakerAccessor",
-    "PathNodeNavigatorAccessor"
+    "EnderDragonFightMixin",
+    "LivingEntityAccessor",
+    "MobEntityAccessor"
   ]
 }
