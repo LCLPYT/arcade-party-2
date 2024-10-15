@@ -4,10 +4,12 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.block.ShapeContext;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
+import net.minecraft.util.math.Direction;
 import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.world.BlockView;
 import work.lclpnet.ap2.api.util.world.BlockPredicate;
+
+import static net.minecraft.util.math.Direction.Axis.*;
 
 public class WalkableBlockPredicate implements BlockPredicate {
 
@@ -19,49 +21,59 @@ public class WalkableBlockPredicate implements BlockPredicate {
 
     @Override
     public boolean test(BlockPos pos) {
+        // verify position itself is free
         BlockState state = world.getBlockState(pos);
         VoxelShape shape = state.getCollisionShape(world, pos, ShapeContext.absent());
 
         if (!shape.isEmpty()) {
-            Box box = shape.getBoundingBox();
+            double minX = shape.getMin(X), maxX = shape.getMax(X);
+            double minY = shape.getMin(Y), maxY = shape.getMax(Y);
+            double minZ = shape.getMin(Z), maxZ = shape.getMax(Z);
 
-            boolean spaceX = box.getLengthX() <= 0.4 && (isClose(box.minX, 0) || isClose(box.maxX, 1));
-            boolean spaceZ = box.getLengthZ() <= 0.4 && (isClose(box.minZ, 0) || isClose(box.maxZ, 1));
+            // support slim blocks like doors
+            boolean spaceX = maxX - minX <= 0.4 && (isClose(minX, 0) || isClose(maxX, 1));
+            boolean spaceZ = maxZ - minZ <= 0.4 && (isClose(minZ, 0) || isClose(maxZ, 1));
 
-            if (!spaceX && !spaceZ && box.maxY - box.minY > 0.5) {
+            if (!spaceX && !spaceZ && maxY - minY > 0.5) {
                 return false;
             }
         }
 
-        BlockPos below = pos.down();
-        BlockState stateBelow = world.getBlockState(below);
+        // verify position below is solid
+        var queryPos = new BlockPos.Mutable(pos.getX(), pos.getY() - 1, pos.getZ());
 
-        if (stateBelow.isOf(Blocks.LADDER)) {
+        state = world.getBlockState(queryPos);
+
+        if (state.isOf(Blocks.LADDER)) {
             return false;
         }
 
-        VoxelShape shapeBelow = stateBelow.getCollisionShape(world, below);
+        shape = state.getCollisionShape(world, queryPos);
 
-        if (shapeBelow.isEmpty()) {
+        if (shape.isEmpty()) {
             return false;
         }
 
-        Box boundsBelow = shapeBelow.getBoundingBox();
+        double maxY = shape.getMax(Y);
 
-        if (boundsBelow.getLengthY() > 1 || boundsBelow.getLengthX() < 0.4 || boundsBelow.getLengthZ() < 0.4 || boundsBelow.maxY < 0.8) {
+        if (maxY < 0.8 || maxY - shape.getMin(Y) > 1 || length(shape, X) < 0.4 || length(shape, Z) < 0.4) {
             return false;
         }
 
-        BlockPos above = pos.up();
-        VoxelShape shapeAbove = world.getBlockState(above).getCollisionShape(world, above);
+        // verify position above is free
+        queryPos.setY(pos.getY() + 1);
 
-        if (shapeAbove.isEmpty()) {
+        shape = world.getBlockState(queryPos).getCollisionShape(world, queryPos);
+
+        if (shape.isEmpty()) {
             return true;
         }
 
-        Box boundsAbove = shapeAbove.getBoundingBox();
+        return length(shape, X) < 0.4 || length(shape, Z) < 0.4;
+    }
 
-        return boundsAbove.getLengthX() < 0.4 || boundsAbove.getLengthZ() < 0.4;
+    private static double length(VoxelShape shape, Direction.Axis axis) {
+        return shape.getMax(axis) - shape.getMin(axis);
     }
 
     private static boolean isClose(double a, double b) {
