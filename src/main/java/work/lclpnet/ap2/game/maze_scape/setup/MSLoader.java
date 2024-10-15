@@ -5,6 +5,7 @@ import net.minecraft.block.enums.Orientation;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.state.property.Properties;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3i;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -16,6 +17,7 @@ import work.lclpnet.ap2.game.maze_scape.setup.wall.PaletteConnectorWall;
 import work.lclpnet.ap2.game.maze_scape.setup.wall.StructureConnectorWall;
 import work.lclpnet.ap2.game.maze_scape.util.*;
 import work.lclpnet.ap2.impl.util.BlockBox;
+import work.lclpnet.ap2.impl.util.world.WalkableBlockPredicate;
 import work.lclpnet.kibu.jnbt.CompoundTag;
 import work.lclpnet.kibu.mc.KibuBlockEntity;
 import work.lclpnet.kibu.mc.KibuBlockState;
@@ -167,7 +169,10 @@ public class MSLoader {
         var wrapper = new FabricStructureWrapper(struct, adapter);
 
         List<Connector3> connectors = findConnectors(struct, adapter);
-        BVH bounds = buildBounds(wrapper, connectors);
+
+        StructureMask insideMask = buildStructureMask(wrapper, connectors);
+
+        BVH bounds = buildBounds(insideMask);
 
         float weight = config.optFloat("weight", 1.0f);
         int maxCount = config.optInt("max-count", -1);
@@ -176,13 +181,47 @@ public class MSLoader {
         boolean updateBlocks = config.optBoolean("update-blocks", false);
 
         Set<ClusterDef> clusters = parseClusters(path, config, clusterDefs);
-        StructurePiece piece = new StructurePiece(wrapper, bounds, connectors, weight, maxCount, connectSame, clusters, minDistance, updateBlocks);
+
+        Vec3d spawnPos = findSpawnPos(wrapper, insideMask);
+
+        StructurePiece piece = new StructurePiece(wrapper, bounds, connectors, weight, maxCount, connectSame, clusters,
+                minDistance, updateBlocks, spawnPos);
 
         for (ClusterDef cluster : clusters) {
             cluster.pieces().add(piece);
         }
 
         return piece;
+    }
+
+    private Vec3d findSpawnPos(FabricStructureWrapper wrapper, StructureMask insideMask) {
+        var pos = new BlockPos.Mutable();
+        var walkable = new WalkableBlockPredicate(wrapper);
+
+        // find the most central walkable position
+        var best = new BlockPos.Mutable();
+
+        for (int y = 1, height = insideMask.height(); y < height; y++) {
+            for (int x = 0, width = insideMask.width(); x < width; x++) {
+                for (int z = 0, length = insideMask.length(); z < length; z++) {
+                    if (!insideMask.isVoxelAt(x, y, z)) continue;
+
+                    pos.set(x, y, z);
+                    BlockState state = wrapper.getBlockState(pos);
+
+                    if (!state.isAir() || !insideMask.isVoxelAt(x, y - 1, z)) continue;
+
+                    // check if position below is walkable
+                    pos.setY(y - 1);
+
+                    if (!walkable.test(pos)) continue;
+
+
+                }
+            }
+        }
+        
+        return Vec3d.ofBottomCenter(best);
     }
 
     private Set<ClusterDef> parseClusters(Path path, JSONObject config, Map<String, ClusterDef> clusterDefs) {
@@ -213,14 +252,19 @@ public class MSLoader {
         return clusters;
     }
 
-    private BVH buildBounds(FabricStructureWrapper wrapper, List<Connector3> connectors) {
+    private BVH buildBounds(StructureMask insideMask) {
+        // use greedy meshing to obtain cuboid partition mesh of the inside mask
+        List<BlockBox> boxes = insideMask.greedyMeshing().generateBoxes();
+
+        return BVH.build(boxes);
+    }
+
+    private @NotNull StructureMask buildStructureMask(FabricStructureWrapper wrapper, List<Connector3> connectors) {
         /*
-        build a bounding volume hierarchy by doing following steps:
+        generate a mask that separates outside and inside in these steps:
         1. create a structure mask (3d bool array) that contains every non-air block
         2. close structure connectors by using plane flood-fill at each connector
         3. use flood fill to detect blocks outside the now closed structure
-        4. use greedy meshing to generate a list of boxes that compose the structure bounds
-        5. join these boxes using a bounding volume hierarchy
         */
         BlockStructure struct = wrapper.getStructure();
 
@@ -233,12 +277,10 @@ public class MSLoader {
             maskCorridor(connector, mask, wrapper);
         }
 
+        // remove every outside position
         maskInside(structMask);
 
-        // use greedy meshing to obtain cuboid partition mesh of the mask
-        List<BlockBox> boxes = structMask.greedyMeshing().generateBoxes();
-
-        return BVH.build(boxes);
+        return structMask;
     }
 
     private void maskInside(StructureMask structMask) {
