@@ -24,16 +24,12 @@ import work.lclpnet.kibu.util.StructureWriter;
 import work.lclpnet.kibu.util.math.Matrix3i;
 import work.lclpnet.lobby.game.map.GameMap;
 
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 import static work.lclpnet.ap2.game.maze_scape.gen.GraphGenerator.ResultType.FAILURE;
 import static work.lclpnet.ap2.game.maze_scape.gen.GraphGenerator.ResultType.INTERRUPTED;
 import static work.lclpnet.kibu.util.StructureWriter.Option.*;
-import static work.lclpnet.kibu.util.StructureWriter.Option.SKIP_DROPS;
 
 public class MSGenerator {
 
@@ -252,7 +248,7 @@ public class MSGenerator {
         closedConnectors.put(connector, modifier);
     }
 
-    public CompletableFuture<Void> startGenerator() {
+    public CompletableFuture<Optional<Graph<Connector3, StructurePiece, OrientedStructurePiece>>> startGenerator() {
         generator = new GraphGenerator<>(domain, random, logger);
 
         var future = new CompletableFuture<Result<Connector3, StructurePiece, OrientedStructurePiece>>();
@@ -286,6 +282,8 @@ public class MSGenerator {
             }
 
             placePieces(graph);
+
+            return res.optional();
         }));
     }
 
