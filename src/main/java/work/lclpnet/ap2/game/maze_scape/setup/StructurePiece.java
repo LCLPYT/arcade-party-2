@@ -1,6 +1,7 @@
 package work.lclpnet.ap2.game.maze_scape.setup;
 
 import net.minecraft.util.math.Vec3d;
+import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.game.maze_scape.gen.Piece;
 import work.lclpnet.ap2.game.maze_scape.util.BVH;
 import work.lclpnet.kibu.schematic.FabricStructureWrapper;
@@ -18,7 +19,7 @@ public record StructurePiece(
         Set<ClusterDef> clusters,
         int minDistance,
         boolean updateBlocks,
-        Vec3d spawn
+        @Nullable Vec3d spawn
 ) implements Piece<Connector3> {
 
     public boolean limitedCount() {

@@ -1,6 +1,7 @@
 package work.lclpnet.ap2.game.maze_scape.setup;
 
 import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
 import net.minecraft.block.enums.Orientation;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.state.property.Properties;
@@ -34,6 +35,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+
+import static java.lang.Math.pow;
 
 public class MSLoader {
 
@@ -194,16 +197,24 @@ public class MSLoader {
         return piece;
     }
 
+    @Nullable
     private Vec3d findSpawnPos(FabricStructureWrapper wrapper, StructureMask insideMask) {
         var pos = new BlockPos.Mutable();
         var walkable = new WalkableBlockPredicate(wrapper);
 
+        int width = insideMask.width();
+        int height = insideMask.height();
+        int length = insideMask.length();
+
+        double cx = width * 0.5, cy = height * 0.5, cz = length * 0.5;
+
         // find the most central walkable position
         var best = new BlockPos.Mutable();
+        double bestDistanceSq = Double.MAX_VALUE;
 
-        for (int y = 1, height = insideMask.height(); y < height; y++) {
-            for (int x = 0, width = insideMask.width(); x < width; x++) {
-                for (int z = 0, length = insideMask.length(); z < length; z++) {
+        for (int y = 1; y < height - 1; y++) {  // no need to scan the bottom / top layer
+            for (int x = 0; x < width; x++) {
+                for (int z = 0; z < length; z++) {
                     if (!insideMask.isVoxelAt(x, y, z)) continue;
 
                     pos.set(x, y, z);
@@ -211,16 +222,26 @@ public class MSLoader {
 
                     if (!state.isAir() || !insideMask.isVoxelAt(x, y - 1, z)) continue;
 
-                    // check if position below is walkable
-                    pos.setY(y - 1);
+                    // check if position is walkable
+                    pos.setY(y);
 
                     if (!walkable.test(pos)) continue;
 
+                    // calc squared distance to center
+                    double distanceSq = pow(x + 0.5 - cx, 2) + pow(y + 0.5 - cy, 2) + pow(z + 0.5 - cz, 2);
 
+                    if (distanceSq < bestDistanceSq) {
+                        bestDistanceSq = distanceSq;
+                        best.set(x, y, z);
+                    }
                 }
             }
         }
-        
+
+        if (Double.isInfinite(bestDistanceSq)) {
+            return null;
+        }
+
         return Vec3d.ofBottomCenter(best);
     }
 
