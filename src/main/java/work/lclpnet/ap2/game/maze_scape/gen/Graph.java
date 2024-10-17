@@ -2,6 +2,7 @@ package work.lclpnet.ap2.game.maze_scape.gen;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import work.lclpnet.ap2.game.maze_scape.util.GraphDfsIterator;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -68,7 +69,19 @@ public class Graph<C, P extends Piece<C>, O extends OrientedPiece<C, P>> {
         return nodes;
     }
 
-    public static class Node<C, P extends Piece<C>, O extends OrientedPiece<C, P>> implements NodeView {
+    public List<Node<C,P,O>> nodes() {
+        List<Node<C, P, O>> nodes = new ArrayList<>();
+
+        root.traverse(node -> {
+            nodes.add(node);
+
+            return true;
+        });
+
+        return nodes;
+    }
+
+    public static class Node<C, P extends Piece<C>, O extends OrientedPiece<C, P>> implements NodeView<Node<C, P, O>> {
 
         private @Nullable Node<C, P, O> parent = null;
         private @Nullable List<@Nullable Node<C, P, O>> children = null;
@@ -184,6 +197,10 @@ public class Graph<C, P extends Piece<C>, O extends OrientedPiece<C, P>> {
             }
 
             return prev;
+        }
+
+        public Iterable<Node<C, P, O>> iterate() {
+            return () -> new GraphDfsIterator<>(this);
         }
     }
 }

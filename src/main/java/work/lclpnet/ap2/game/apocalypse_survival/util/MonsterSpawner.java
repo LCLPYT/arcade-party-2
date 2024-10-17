@@ -300,20 +300,20 @@ public class MonsterSpawner {
         return mob;
     }
 
-    private void configureMob(MobEntity skeleton) {
+    private void configureMob(MobEntity mob) {
         BlockPos pos = stage.getOrigin();
 
-        skeleton.setPersistent();
-        skeleton.setPosition(Vec3d.ofBottomCenter(pos));
+        mob.setPersistent();
+        mob.setPosition(Vec3d.ofBottomCenter(pos));
 
-        // adjust follow range, so that the zombie will follow far players
-        var followRange = skeleton.getAttributeInstance(EntityAttributes.GENERIC_FOLLOW_RANGE);
+        // adjust follow range, so that the mob will follow far players
+        var followRange = mob.getAttributeInstance(EntityAttributes.GENERIC_FOLLOW_RANGE);
 
         if (followRange != null) {
             followRange.setBaseValue(100);
         }
 
-        EntityNavigation navigation = skeleton.getNavigation();
+        EntityNavigation navigation = mob.getNavigation();
 
         // adjust range multiplier to find longer paths using the A* Algorithm
         navigation.setRangeMultiplier(2.5f);

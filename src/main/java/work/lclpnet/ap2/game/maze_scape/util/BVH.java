@@ -1,6 +1,7 @@
 package work.lclpnet.ap2.game.maze_scape.util;
 
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Position;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.VisibleForTesting;
 import work.lclpnet.ap2.impl.util.BlockBox;
@@ -62,6 +63,10 @@ public class BVH {
         return this.root != null && other.root != null && this.root.intersects(other.root);
     }
 
+    public boolean contains(Position pos) {
+        return this.root != null && this.root.contains(pos);
+    }
+
     public boolean isContainedWithin(BlockBox box) {
         return root != null && box.contains(root.bounds);
     }
@@ -104,6 +109,18 @@ public class BVH {
             this.right = right;
             this.bounds = new BlockBox(BlockPos.min(left.bounds.min(), right.bounds.min()),
                     BlockPos.max(left.bounds.max(), right.bounds.max()));
+        }
+
+        boolean contains(Position pos) {
+            if (!this.bounds.contains(pos)) {
+                return false;
+            }
+
+            if (left == null || right == null) {
+                return true;
+            }
+
+            return left.contains(pos) || right.contains(pos);
         }
 
         boolean intersects(BlockBox box) {
