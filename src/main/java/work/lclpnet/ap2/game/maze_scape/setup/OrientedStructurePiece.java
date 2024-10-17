@@ -3,6 +3,7 @@ package work.lclpnet.ap2.game.maze_scape.setup;
 import net.minecraft.block.enums.Orientation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3i;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.game.maze_scape.gen.OrientedPiece;
@@ -22,6 +23,7 @@ public class OrientedStructurePiece implements OrientedPiece<Connector3, Structu
     private final List<Connector3> connectors;
     private final Matrix3i mat;
     private final BVH bounds;
+    private final @Nullable Vec3d spawn;
     @Nullable private volatile Matrix3i invMat = null;
     @Nullable private Cluster cluster = null;
 
@@ -64,6 +66,14 @@ public class OrientedStructurePiece implements OrientedPiece<Connector3, Structu
         }
 
         this.connectors = connectors;
+
+        Vec3d spawn = piece.spawn();
+
+        if (spawn != null) {
+            spawn = mat.transform(spawn).add(pos.getX(), pos.getY(), pos.getZ());
+        }
+
+        this.spawn = spawn;
     }
 
     @Override
@@ -106,6 +116,11 @@ public class OrientedStructurePiece implements OrientedPiece<Connector3, Structu
 
     public @Nullable Cluster cluster() {
         return cluster;
+    }
+
+    @Nullable
+    public Vec3d spawn() {
+        return spawn;
     }
 
     @Override

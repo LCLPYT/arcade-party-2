@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import work.lclpnet.ap2.game.maze_scape.gen.Graph;
 import work.lclpnet.ap2.game.maze_scape.gen.GraphGenerator;
 import work.lclpnet.ap2.game.maze_scape.gen.GraphGenerator.Result;
+import work.lclpnet.ap2.game.maze_scape.util.MSStruct;
 import work.lclpnet.ap2.impl.util.FutureUtil;
 import work.lclpnet.ap2.impl.util.StructureUtil;
 import work.lclpnet.ap2.impl.util.math.AffineIntMatrix;
@@ -237,6 +238,7 @@ public class MSGenerator {
             // the opposing connector was closed, remove the wall and link the two rooms
             wall.undo();
             closedConnectors.remove(opposing);
+            // TODO link nodes in graph
             return;
         }
 
@@ -248,7 +250,7 @@ public class MSGenerator {
         closedConnectors.put(connector, modifier);
     }
 
-    public CompletableFuture<Optional<Graph<Connector3, StructurePiece, OrientedStructurePiece>>> startGenerator() {
+    public CompletableFuture<Optional<MSStruct>> startGenerator() {
         generator = new GraphGenerator<>(domain, random, logger);
 
         var future = new CompletableFuture<Result<Connector3, StructurePiece, OrientedStructurePiece>>();
@@ -283,7 +285,7 @@ public class MSGenerator {
 
             placePieces(graph);
 
-            return res.optional();
+            return res.optional().map(MSStruct::new);
         }));
     }
 

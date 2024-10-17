@@ -10,8 +10,11 @@ import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.map.MapBootstrap;
 import work.lclpnet.ap2.game.maze_scape.gen.Graph;
 import work.lclpnet.ap2.game.maze_scape.setup.*;
+import work.lclpnet.ap2.game.maze_scape.util.MSManager;
+import work.lclpnet.ap2.game.maze_scape.util.MSStruct;
 import work.lclpnet.ap2.impl.game.EliminationGameInstance;
 import work.lclpnet.ap2.impl.util.math.MathUtil;
+import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.util.math.Matrix3i;
 import work.lclpnet.lobby.game.map.GameMap;
 import work.lclpnet.lobby.game.map.MapUtils;
@@ -24,7 +27,8 @@ import static java.util.Objects.requireNonNull;
 
 public class MazeScapeInstance extends EliminationGameInstance implements MapBootstrap {
 
-    private Graph<Connector3, StructurePiece, OrientedStructurePiece> graph;
+    private static final int MOB_SPAWN_DELAY_TICKS = Ticks.seconds(0);
+    private MSStruct struct;
 
     public MazeScapeInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
@@ -43,13 +47,13 @@ public class MazeScapeInstance extends EliminationGameInstance implements MapBoo
 
             var generator = new MSGenerator(world, map, res, random, seed, logger);
 
-            return generator.startGenerator().thenAccept(optGraph -> graph = optGraph.orElse(null));
+            return generator.startGenerator().thenAccept(optGraph -> struct = optGraph.orElse(null));
         });
     }
 
     @Override
     protected void prepare() {
-        if (graph == null) {
+        if (struct == null) {
             gameHandle.getLogger().error("Failed to generate structure graph. Aborting the mini-game...");
             gameHandle.completeWithoutWinner();
             return;
@@ -59,20 +63,16 @@ public class MazeScapeInstance extends EliminationGameInstance implements MapBoo
     }
 
     private void teleportPlayers() {
-        OrientedStructurePiece oriented = graph.root().oriented();
+        OrientedStructurePiece oriented = struct.graph().root().oriented();
 
         if (oriented == null) return;
 
-        StructurePiece piece = oriented.piece();
-        Vec3d baseSpawn = piece.spawn();
+        Vec3d spawn = oriented.spawn();
 
-        if (baseSpawn == null) return;
-
-        BlockPos pos = oriented.pos();
-        Matrix3i transformation = oriented.transformation();
-        Vec3d spawn = transformation.transform(baseSpawn).add(pos.getX(), pos.getY(), pos.getZ());
+        if (spawn == null) return;
 
         GameMap map = getMap();
+        Matrix3i transformation = oriented.transformation();
 
         float yaw = MapUtils.getSpawnYaw(map);
         yaw = MathUtil.rotateYaw(yaw, transformation, new Vector3d());
@@ -86,6 +86,8 @@ public class MazeScapeInstance extends EliminationGameInstance implements MapBoo
 
     @Override
     protected void ready() {
+        var manager = new MSManager(getWorld(), struct, gameHandle.getParticipants(), gameHandle.getLogger());
 
+        gameHandle.getGameScheduler().timeout(manager::spawnMobs, MOB_SPAWN_DELAY_TICKS);
     }
 }
