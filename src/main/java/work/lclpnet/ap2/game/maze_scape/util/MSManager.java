@@ -29,12 +29,15 @@ public class MSManager {
     private final MSStruct struct;
     private final Participants participants;
     private final Logger logger;
+    private final MSTargetManager targetManager;
 
     public MSManager(ServerWorld world, MSStruct struct, Participants participants, Logger logger) {
         this.world = world;
         this.struct = struct;
         this.participants = participants;
         this.logger = logger;
+
+        targetManager = new MSTargetManager(struct, participants);
     }
 
     public void spawnMobs() {
@@ -124,5 +127,11 @@ public class MSManager {
         }
 
         world.spawnEntity(warden);
+
+        ServerPlayerEntity nearest = targetManager.findNearestTarget(warden);
+
+        if (nearest != null) {
+            targetManager.assignTarget(warden, nearest);
+        }
     }
 }

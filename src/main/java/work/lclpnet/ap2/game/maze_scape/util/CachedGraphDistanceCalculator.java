@@ -5,7 +5,7 @@ import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import org.jetbrains.annotations.Nullable;
-import work.lclpnet.ap2.game.maze_scape.gen.NodeView;
+import work.lclpnet.ap2.game.maze_scape.gen.UndirectedGraphNode;
 
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -18,7 +18,7 @@ import java.util.Set;
  * All results are cached internally for fast subsequent calls with the same parameters.
  * @param <T> The node type.
  */
-public class CachedGraphDistanceCalculator<T extends NodeView<T>> {
+public class CachedGraphDistanceCalculator<T extends UndirectedGraphNode<T>> {
 
     private final Int2IntMap cache = new Int2IntOpenHashMap();
 
@@ -46,9 +46,9 @@ public class CachedGraphDistanceCalculator<T extends NodeView<T>> {
         while (!queue.isEmpty()) {
             T node = queue.removeFirst();
 
-            var children = node.children();
+            var children = node.neighbours();
 
-            if (children == null || children.isEmpty()) continue;
+            if (children.isEmpty()) continue;
 
             int parentDistance = distanceFromStart.getInt(node);
 

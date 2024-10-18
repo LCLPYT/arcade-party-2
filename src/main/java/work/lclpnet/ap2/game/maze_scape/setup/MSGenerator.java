@@ -91,11 +91,11 @@ public class MSGenerator {
 
             var connectors = oriented.connectors();
             var children = node.children();
-            int size = connectors.size();
+            int size = Math.min(connectors.size(), children.size());
 
             // place a dead end at open connectors with a certain chance
             for (int i = 0; i < size; i++) {
-                if ((children != null && children.get(i) != null) || random.nextFloat() >= deadEndChance) continue;
+                if (children.get(i) != null || random.nextFloat() >= deadEndChance) continue;
 
                 appendDeadEnd(oriented, i, node);
             }
@@ -198,7 +198,7 @@ public class MSGenerator {
         var children = node.children();
         int size = connectors.size();
 
-        if (children == null || children.size() != size) {
+        if (children.size() != size) {
             // close all connectors
             for (Connector3 connector : connectors) {
                 handleCloseConnector(oriented, connector);

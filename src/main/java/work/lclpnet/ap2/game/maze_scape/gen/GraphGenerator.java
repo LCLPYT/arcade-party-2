@@ -80,7 +80,7 @@ public class GraphGenerator<C, P extends Piece<C>, O extends OrientedPiece<C, P>
 
                 var children = node.children();
 
-                if (children != null && children.size() == connectorCount && children.stream().allMatch(Objects::nonNull)) {
+                if (connectorCount > 0 && children.size() == connectorCount && children.stream().allMatch(Objects::nonNull)) {
                     // if node is already fully generated, skip it; set anyPlaced=true to advance to next level
                     anyPlaced = true;
                     continue;
@@ -140,8 +140,6 @@ public class GraphGenerator<C, P extends Piece<C>, O extends OrientedPiece<C, P>
     public void placeRandomChildPiece(Graph.Node<C, P, O> node, int connectorIndex, List<O> fitting) {
         var children = node.children();
 
-        if (children == null) return;
-
         O nextPiece = domain.choosePiece(fitting, random);
 
         // insert the next piece as child node
@@ -156,8 +154,11 @@ public class GraphGenerator<C, P extends Piece<C>, O extends OrientedPiece<C, P>
     public @NotNull List<Graph.Node<C, P, O>> initChildren(Graph.Node<C, P, O> node, int connectorCount) {
         var children = node.children();
 
-        if (children == null) {
-            children = new ArrayList<>(connectorCount);
+        if (children.size() < connectorCount) {
+            var newChildren = new ArrayList<Graph.@Nullable Node<C, P, O>>(connectorCount);
+            newChildren.addAll(children);
+            children = newChildren;
+
             node.setChildren(children);
         }
 
@@ -200,8 +201,6 @@ public class GraphGenerator<C, P extends Piece<C>, O extends OrientedPiece<C, P>
         if (oriented == null) return OptionalInt.empty();
 
         var children = parent.children();
-
-        if (children == null) return OptionalInt.empty();
 
         int connectorIndex = children.indexOf(leaf);
 

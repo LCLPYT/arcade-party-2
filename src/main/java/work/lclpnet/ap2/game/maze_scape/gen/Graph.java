@@ -2,7 +2,7 @@ package work.lclpnet.ap2.game.maze_scape.gen;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import work.lclpnet.ap2.game.maze_scape.util.GraphDfsIterator;
+import work.lclpnet.ap2.game.maze_scape.util.DirectedGraphDfsIterator;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,7 +41,7 @@ public class Graph<C, P extends Piece<C>, O extends OrientedPiece<C, P>> {
         List<Node<C, P, O>> nodes = new ArrayList<>();
 
         root.traverse(node -> {
-            if (node.children == null || node.children.stream().allMatch(Objects::isNull)) {
+            if (node.children.stream().allMatch(Objects::isNull)) {
                 nodes.add(node);
             }
 
@@ -59,7 +59,7 @@ public class Graph<C, P extends Piece<C>, O extends OrientedPiece<C, P>> {
         List<Node<C, P, O>> nodes = new ArrayList<>();
 
         root.traverse(node -> {
-            if (node.children == null || node.children.stream().anyMatch(Objects::isNull)) {
+            if (node.children.isEmpty() || node.children.stream().anyMatch(Objects::isNull)) {
                 nodes.add(node);
             }
 
@@ -81,23 +81,58 @@ public class Graph<C, P extends Piece<C>, O extends OrientedPiece<C, P>> {
         return nodes;
     }
 
-    public static class Node<C, P extends Piece<C>, O extends OrientedPiece<C, P>> implements NodeView<Node<C, P, O>> {
+    public static class Node<C, P extends Piece<C>, O extends OrientedPiece<C, P>> implements NodeView,
+            DirectedGraphNode<Node<C, P, O>>, UndirectedGraphNode<Node<C, P, O>> {
 
+        private final @NotNull ArrayList<Node<C, P, O>> neighbours = new ArrayList<>();
+        private final @NotNull List<Node<C, P, O>> extraLinks = new ArrayList<>(1);
         private @Nullable Node<C, P, O> parent = null;
-        private @Nullable List<@Nullable Node<C, P, O>> children = null;
+        private @NotNull List<@Nullable Node<C, P, O>> children = List.of();
         private @Nullable O oriented = null;
         private @Nullable List<@Nullable List<O>> previousChoices;
         private int level = 0;
         private int deepChildCount = 0;
+        private int lastChildrenHash = children.hashCode();
 
         public @Nullable Node<C, P, O> parent() {
             return parent;
         }
 
         public void setParent(@Nullable Node<C, P, O> parent) {
+            if (this.parent != null) {
+                unlinkExtra(this.parent);
+            }
+
+            if (parent != null) {
+                linkExtra(parent);
+            }
+
             this.parent = parent;
 
             updateLevel();
+        }
+
+        public void linkExtra(Node<C, P, O> node) {
+            extraLinks.add(node);
+
+            updateNeighbours();
+        }
+
+        public void unlinkExtra(Node<C, P, O> node) {
+            extraLinks.remove(node);
+
+            updateNeighbours();
+        }
+
+        private void updateNeighbours() {
+            neighbours.clear();
+
+            neighbours.ensureCapacity(children.size() + extraLinks.size());
+
+            neighbours.addAll(children);
+            neighbours.addAll(extraLinks);
+
+            lastChildrenHash = children.hashCode();
         }
 
         public void updateLevel() {
@@ -122,8 +157,8 @@ public class Graph<C, P extends Piece<C>, O extends OrientedPiece<C, P>> {
             return oriented;
         }
 
-        public void setChildren(@Nullable List<Node<C, P, O>> children) {
-            if (this.children == children) return;
+        public void setChildren(List<Node<C, P, O>> children) {
+            if (this.children == children || children == null) return;
 
             this.children = children;
 
@@ -136,12 +171,10 @@ public class Graph<C, P extends Piece<C>, O extends OrientedPiece<C, P>> {
 
             this.deepChildCount = 0;
 
-            if (children != null) {
-                for (var child : children) {
-                    if (child == null) continue;
+            for (var child : children) {
+                if (child == null) continue;
 
-                    this.deepChildCount += child.deepChildCount + 1;
-                }
+                this.deepChildCount += child.deepChildCount + 1;
             }
 
             // update deepChildCount recursively for parent nodes
@@ -159,12 +192,12 @@ public class Graph<C, P extends Piece<C>, O extends OrientedPiece<C, P>> {
             }
         }
 
-        public @Nullable List<@Nullable Node<C, P, O>> children() {
+        public @NotNull List<@Nullable Node<C, P, O>> children() {
             return children;
         }
 
         public void traverse(Predicate<Node<C, P, O>> action) {
-            if (!action.test(this) || children == null) return;
+            if (!action.test(this)) return;
 
             for (var child : children) {
                 if (child != null) {
@@ -200,7 +233,23 @@ public class Graph<C, P extends Piece<C>, O extends OrientedPiece<C, P>> {
         }
 
         public Iterable<Node<C, P, O>> iterate() {
-            return () -> new GraphDfsIterator<>(this);
+            return () -> new DirectedGraphDfsIterator<>(this);
+        }
+
+        @Override
+        public @NotNull List<Node<C, P, O>> neighbours() {
+            if (parent == null) {
+                return children;
+            }
+
+            if (lastChildrenHash == children.hashCode()) {
+                // no changes since last call
+                return neighbours;
+            }
+
+            updateNeighbours();
+
+            return neighbours;
         }
     }
 }

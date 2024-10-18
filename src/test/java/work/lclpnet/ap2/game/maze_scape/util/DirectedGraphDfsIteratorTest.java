@@ -3,14 +3,14 @@ package work.lclpnet.ap2.game.maze_scape.util;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import work.lclpnet.ap2.game.maze_scape.gen.NodeView;
+import work.lclpnet.ap2.game.maze_scape.gen.DirectedGraphNode;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 
-class GraphDfsIteratorTest {
+class DirectedGraphDfsIteratorTest {
 
     @Test
     void iterate_sameAsInline() {
@@ -25,18 +25,13 @@ class GraphDfsIteratorTest {
 
         root.traverse(inlineOrder::add);
 
-        var it = new GraphDfsIterator<>(root);
+        var it = new DirectedGraphDfsIterator<>(root);
         it.forEachRemaining(iteratorOrder::add);
 
         Assertions.assertEquals(inlineOrder, iteratorOrder);
     }
 
-    private record Node(@Nullable List<@Nullable Node> children) implements NodeView<Node> {
-
-        @Override
-        public int level() {
-            return 0;
-        }
+    private record Node(@Nullable List<@Nullable Node> children) implements DirectedGraphNode<Node> {
 
         public void traverse(Consumer<Node> action) {
             action.accept(this);
