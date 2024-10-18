@@ -2,23 +2,23 @@ package work.lclpnet.ap2.game.maze_scape.util;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import work.lclpnet.ap2.game.maze_scape.gen.NodeView;
+import work.lclpnet.ap2.game.maze_scape.gen.DirectedGraphNode;
 
 import java.util.Iterator;
 import java.util.Stack;
 
-public class GraphDfsIterator<T extends NodeView<T>> implements Iterator<T> {
+public class DirectedGraphDfsIterator<T extends DirectedGraphNode<T>> implements Iterator<T> {
 
     private final Stack<State> stack = new Stack<>();
     @Nullable private State state;
     @Nullable private T node;
 
-    public GraphDfsIterator(@NotNull T root) {
+    public DirectedGraphDfsIterator(@NotNull T root) {
         node = root;
 
         var children = root.children();
 
-        if (children != null && !children.isEmpty()) {
+        if (!children.isEmpty()) {
             state = new State(root);
         }
     }
@@ -65,7 +65,7 @@ public class GraphDfsIterator<T extends NodeView<T>> implements Iterator<T> {
 
         var grandChildren = child.children();
 
-        if (grandChildren == null || grandChildren.isEmpty()) {
+        if (grandChildren.isEmpty()) {
             return true;
         }
 
@@ -83,7 +83,7 @@ public class GraphDfsIterator<T extends NodeView<T>> implements Iterator<T> {
         // find next child
         var children = state.node.children();
 
-        if (children == null || children.isEmpty()) return null;
+        if (children.isEmpty()) return null;
 
         int size = children.size();
 
@@ -104,10 +104,10 @@ public class GraphDfsIterator<T extends NodeView<T>> implements Iterator<T> {
     }
 
     private class State {
-        final NodeView<T> node;
+        final DirectedGraphNode<T> node;
         int childIndex = -1;
 
-        State(NodeView<T> node) {
+        State(DirectedGraphNode<T> node) {
             this.node = node;
         }
     }
