@@ -20,7 +20,8 @@
     ]
   },
   "mixins": [
-    "ap2.mixins.json"
+    "ap2.mixins.json",
+    "ap2-debug.mixins.json"
   ],
   "accessWidener": "ap2.accesswidener",
   "depends": {

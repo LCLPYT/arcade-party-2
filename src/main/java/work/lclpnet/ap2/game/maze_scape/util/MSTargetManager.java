@@ -8,6 +8,7 @@ import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.server.network.ServerPlayerEntity;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.base.Participants;
+import work.lclpnet.ap2.debug.EntityNavigationDebug;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -53,6 +54,8 @@ public class MSTargetManager {
         }
 
         EntityNavigation navigation = mob.getNavigation();
+        ((EntityNavigationDebug) navigation).ap2$setDebug(true);
+
         int minLength = Integer.MAX_VALUE;
         ServerPlayerEntity nearest = null;
 
@@ -73,6 +76,8 @@ public class MSTargetManager {
                 nearest = player;
             }
         }
+
+        ((EntityNavigationDebug) navigation).ap2$setDebug(false);
 
         return nearest;
     }

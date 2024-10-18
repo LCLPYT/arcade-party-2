@@ -8,6 +8,7 @@
   },
   "mixins": [
     "EntityNavigationAccessor",
+    "LivingEntityMixin",
     "MobEntityAccessor",
     "PathNodeMakerAccessor",
     "PathNodeNavigatorAccessor"

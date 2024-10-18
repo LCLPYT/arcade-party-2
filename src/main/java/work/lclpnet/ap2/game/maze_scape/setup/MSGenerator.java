@@ -71,14 +71,19 @@ public class MSGenerator {
         deadEndChance = Math.max(0, Math.min(1, deadEndChanceProp.floatValue()));
 
         // this will determine the bounding box that the generated pieces must be generated in
-        Number maxChunkSizeProp = map.requireProperty("max-chunk-size");
-        int maxChunkSize = Math.max(maxChunkSizeProp.intValue(), 2);
+        int maxChunkSize = getMaxChunkSize(map);
 
         int bottomY = world.getBottomY();
         int topY = world.getTopY() - 1;
 
         var bounds = new StructureDomain.BoundsCfg(maxChunkSize, bottomY, topY);
         domain = new StructureDomain(loaded.pieces(), random, deadEndStart, bounds);
+    }
+
+    public static int getMaxChunkSize(GameMap map) {
+        Number maxChunkSizeProp = map.requireProperty("max-chunk-size");
+
+        return Math.max(maxChunkSizeProp.intValue(), 2);
     }
 
     private void placeAdditionalDeadEnds(Graph<Connector3, StructurePiece, OrientedStructurePiece> graph) {
