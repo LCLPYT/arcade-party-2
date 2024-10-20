@@ -5,6 +5,7 @@ import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.entity.ai.pathing.EntityNavigation;
 import net.minecraft.entity.ai.pathing.Path;
 import net.minecraft.entity.mob.MobEntity;
+import net.minecraft.entity.mob.WardenEntity;
 import net.minecraft.server.network.ServerPlayerEntity;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.base.Participants;
@@ -85,5 +86,9 @@ public class MSTargetManager {
     public void assignTarget(MobEntity mob, ServerPlayerEntity player) {
         mob.setTarget(player);
         playerTargetedBy.put(player.getUuid(), mob.getUuid());
+
+        if (mob instanceof WardenEntity warden) {
+            warden.updateAttackTarget(player);
+        }
     }
 }

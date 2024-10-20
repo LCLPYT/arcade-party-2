@@ -1,11 +1,11 @@
 package work.lclpnet.ap2.game.maze_scape.setup;
 
 import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
 import net.minecraft.block.enums.Orientation;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.state.property.Properties;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3i;
 import org.jetbrains.annotations.NotNull;
@@ -17,6 +17,7 @@ import work.lclpnet.ap2.game.maze_scape.setup.wall.ConnectorWall;
 import work.lclpnet.ap2.game.maze_scape.setup.wall.PaletteConnectorWall;
 import work.lclpnet.ap2.game.maze_scape.setup.wall.StructureConnectorWall;
 import work.lclpnet.ap2.game.maze_scape.util.*;
+import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.world.WalkableBlockPredicate;
 import work.lclpnet.kibu.jnbt.CompoundTag;
@@ -40,6 +41,7 @@ import static java.lang.Math.pow;
 
 public class MSLoader {
 
+    private static final Direction[] HORIZONTAL_DIRECTIONS = new Direction[] {Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST};
     private final ServerWorld world;
     private final GameMap map;
     private final Logger logger;
@@ -185,7 +187,15 @@ public class MSLoader {
 
         Set<ClusterDef> clusters = parseClusters(path, config, clusterDefs);
 
-        Vec3d spawnPos = findSpawnPos(wrapper, insideMask);
+        Vec3d spawnPos;
+        JSONArray spawnTuple = config.optJSONArray("spawn");
+
+        if (spawnTuple != null) {
+            BlockPos spawnBlockPos = MapUtil.readBlockPos(spawnTuple);
+            spawnPos = Vec3d.ofBottomCenter(spawnBlockPos);
+        } else {
+            spawnPos = findSpawnPos(wrapper, insideMask);
+        }
 
         StructurePiece piece = new StructurePiece(wrapper, bounds, connectors, weight, maxCount, connectSame, clusters,
                 minDistance, updateBlocks, spawnPos);
@@ -206,7 +216,8 @@ public class MSLoader {
         int height = insideMask.height();
         int length = insideMask.length();
 
-        double cx = width * 0.5, cy = height * 0.5, cz = length * 0.5;
+        double cx = width * 0.5, cz = length * 0.5;
+        float verticalWeight = 0.3f;
 
         // find the most central walkable position
         var best = new BlockPos.Mutable();
@@ -227,8 +238,8 @@ public class MSLoader {
 
                     if (!walkable.test(pos)) continue;
 
-                    // calc squared distance to center
-                    double distanceSq = pow(x + 0.5 - cx, 2) + pow(y + 0.5 - cy, 2) + pow(z + 0.5 - cz, 2);
+                    // calc squared distance to center; prefer lower height to avoid spawning on furniture
+                    double distanceSq = pow(x + 0.5 - cx, 2) + pow(verticalWeight * y, 2) + pow(z + 0.5 - cz, 2);
 
                     if (distanceSq < bestDistanceSq) {
                         bestDistanceSq = distanceSq;
@@ -242,7 +253,31 @@ public class MSLoader {
             return null;
         }
 
-        return Vec3d.ofBottomCenter(best);
+        return adjustSpawn(wrapper, insideMask, best, walkable);
+    }
+
+    private Vec3d adjustSpawn(FabricStructureWrapper wrapper, StructureMask insideMask, BlockPos spawn, WalkableBlockPredicate walkable) {
+        Vec3d adjustment = Vec3d.ZERO;
+
+        // check each horizontal neighbour if there is a wall (or the outside). If yes, try to move the spawn away from it
+        for (Direction direction : HORIZONTAL_DIRECTIONS) {
+            BlockPos adj = spawn.offset(direction);
+
+            if (!insideMask.isVoxelAt(adj.getX(), adj.getY(), adj.getZ()) ||
+                !wrapper.getBlockState(adj).getCollisionShape(wrapper, adj).isEmpty()) {
+
+                // try to adjust spawn in the opposite direction
+                adjustment = adjustment.add(-direction.getOffsetX(), 0, -direction.getOffsetZ());
+            }
+        }
+
+        BlockPos adjusted = BlockPos.ofFloored(Vec3d.ofBottomCenter(spawn).add(adjustment.normalize()));
+
+        if (insideMask.isVoxelAt(adjusted.getX(), adjusted.getY(), adjusted.getZ()) && walkable.test(adjusted)) {
+            spawn = adjusted;
+        }
+
+        return Vec3d.ofBottomCenter(spawn);
     }
 
     private Set<ClusterDef> parseClusters(Path path, JSONObject config, Map<String, ClusterDef> clusterDefs) {
