@@ -17,7 +17,7 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import work.lclpnet.ap2.debug.EntityNavigationDebug;
+import work.lclpnet.ap2.type.debug.EntityNavigationDebug;
 
 import java.util.Set;
 

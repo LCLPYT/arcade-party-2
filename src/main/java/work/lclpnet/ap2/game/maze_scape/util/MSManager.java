@@ -1,18 +1,26 @@
 package work.lclpnet.ap2.game.maze_scape.util;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.mojang.serialization.Dynamic;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.ai.brain.Activity;
+import net.minecraft.entity.ai.brain.Brain;
 import net.minecraft.entity.ai.brain.MemoryModuleType;
+import net.minecraft.entity.ai.brain.task.LookAtMobTask;
+import net.minecraft.entity.ai.brain.task.MeleeAttackTask;
+import net.minecraft.entity.ai.brain.task.RangedApproachTask;
 import net.minecraft.entity.ai.pathing.EntityNavigation;
 import net.minecraft.entity.ai.pathing.MobNavigation;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.mob.WardenEntity;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.Unit;
 import net.minecraft.util.math.Vec3d;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.game.maze_scape.gen.Graph;
@@ -20,13 +28,15 @@ import work.lclpnet.ap2.game.maze_scape.setup.Connector3;
 import work.lclpnet.ap2.game.maze_scape.setup.MSGenerator;
 import work.lclpnet.ap2.game.maze_scape.setup.OrientedStructurePiece;
 import work.lclpnet.ap2.game.maze_scape.setup.StructurePiece;
+import work.lclpnet.ap2.hook.BrainCreationCallback;
 import work.lclpnet.ap2.hook.LivingEntityAttributeInitCallback;
 import work.lclpnet.ap2.impl.util.EntityUtil;
+import work.lclpnet.ap2.type.WardenBrainHandle;
 import work.lclpnet.kibu.hook.HookRegistrar;
-import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.lobby.game.map.GameMap;
 
 import java.util.*;
+import java.util.function.Supplier;
 
 public class MSManager {
 
@@ -50,6 +60,7 @@ public class MSManager {
 
     public void init(HookRegistrar hooks) {
         hooks.registerHook(LivingEntityAttributeInitCallback.HOOK, this::initAttributes);
+        hooks.registerHook(BrainCreationCallback.Warden.HOOK, this::createWardenBrain);
     }
 
     public void spawnMobs() {
@@ -120,8 +131,9 @@ public class MSManager {
 
         // TODO adjust ai for mini game
         var brain = warden.getBrain();
-        brain.remember(MemoryModuleType.DIG_COOLDOWN, Unit.INSTANCE, Ticks.minutes(15));
-        brain.remember(MemoryModuleType.SONIC_BOOM_COOLDOWN, Unit.INSTANCE, Ticks.minutes(15));
+        brain.setTaskList(Activity.EMERGE, 5, ImmutableList.of(), MemoryModuleType.IS_EMERGING);
+        brain.setTaskList(Activity.DIG, 5, ImmutableList.of(), MemoryModuleType.DIG_COOLDOWN);
+        brain.resetPossibleActivities();
 
         EntityNavigation navigation = warden.getNavigation();
 
@@ -149,5 +161,42 @@ public class MSManager {
 
     private boolean isMonster(LivingEntity living) {
         return world == living.getWorld() && (living instanceof WardenEntity);
+    }
+
+    private @Nullable Brain<WardenEntity> createWardenBrain(WardenEntity warden, Dynamic<?> dynamic, Supplier<WardenBrainHandle> handleGetter) {
+        if (warden.getWorld() != world) return null;
+
+        WardenBrainHandle handle = handleGetter.get();
+
+        // adjusted activities from WardenBrain::create
+        var brain = handle.deserialize(dynamic);
+
+        handle.addCoreActivities(brain);  // don't add emerge and dig activities
+        handle.addIdleActivities(brain);
+        handle.addRoarActivities(brain);
+        handle.addInvestigateActivities(brain);
+        handle.addSniffActivities(brain);
+
+        // custom fight activity
+        brain.setTaskList(
+                Activity.FIGHT,
+                10,
+                ImmutableList.of(
+                        LookAtMobTask.create(entity -> isTargeting(warden, entity), (float)warden.getAttributeValue(EntityAttributes.GENERIC_FOLLOW_RANGE)),
+                        RangedApproachTask.create(1.2F),
+                        MeleeAttackTask.create(18)
+                ),
+                MemoryModuleType.ATTACK_TARGET
+        );
+
+        brain.setCoreActivities(ImmutableSet.of(Activity.CORE));
+        brain.setDefaultActivity(Activity.IDLE);
+        brain.resetPossibleActivities();
+
+        return brain;
+    }
+
+    private static boolean isTargeting(WardenEntity warden, LivingEntity entity) {
+        return warden.getBrain().getOptionalRegisteredMemory(MemoryModuleType.ATTACK_TARGET).filter(x -> x == entity).isPresent();
     }
 }

@@ -8,7 +8,7 @@ import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.server.network.ServerPlayerEntity;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.base.Participants;
-import work.lclpnet.ap2.debug.EntityNavigationDebug;
+import work.lclpnet.ap2.type.debug.EntityNavigationDebug;
 
 import java.util.HashMap;
 import java.util.Map;
