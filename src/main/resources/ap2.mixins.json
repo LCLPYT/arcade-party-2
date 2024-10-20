@@ -7,10 +7,8 @@
     "defaultRequire": 1
   },
   "mixins": [
-    "EntityNavigationAccessor",
     "LivingEntityMixin",
     "MobEntityAccessor",
-    "PathNodeMakerAccessor",
-    "PathNodeNavigatorAccessor"
+    "WardenBrainMixin"
   ]
 }
