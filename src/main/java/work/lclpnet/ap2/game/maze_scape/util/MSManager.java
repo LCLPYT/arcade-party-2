@@ -23,6 +23,7 @@ import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.api.base.Participants;
+import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.game.maze_scape.gen.Graph;
 import work.lclpnet.ap2.game.maze_scape.setup.Connector3;
 import work.lclpnet.ap2.game.maze_scape.setup.MSGenerator;
@@ -31,8 +32,8 @@ import work.lclpnet.ap2.game.maze_scape.setup.StructurePiece;
 import work.lclpnet.ap2.hook.BrainCreationCallback;
 import work.lclpnet.ap2.hook.LivingEntityAttributeInitCallback;
 import work.lclpnet.ap2.impl.util.EntityUtil;
+import work.lclpnet.ap2.impl.util.world.ChunkPersistence;
 import work.lclpnet.ap2.type.WardenBrainHandle;
-import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.lobby.game.map.GameMap;
 
 import java.util.*;
@@ -58,9 +59,14 @@ public class MSManager {
         mapChunkRadius = MSGenerator.getMaxChunkSize(map);
     }
 
-    public void init(HookRegistrar hooks) {
+    public void init(MiniGameHandle gameHandle) {
+        var hooks = gameHandle.getHookRegistrar();
+
         hooks.registerHook(LivingEntityAttributeInitCallback.HOOK, this::initAttributes);
         hooks.registerHook(BrainCreationCallback.Warden.HOOK, this::createWardenBrain);
+
+        var persistence = new ChunkPersistence(world, gameHandle);
+        persistence.markQuadPersistent(-mapChunkRadius, -mapChunkRadius, mapChunkRadius, mapChunkRadius);
     }
 
     public void spawnMobs() {
@@ -136,6 +142,7 @@ public class MSManager {
         brain.resetPossibleActivities();
 
         EntityNavigation navigation = warden.getNavigation();
+        navigation.setRangeMultiplier(8f);
 
         if (navigation instanceof MobNavigation nav) {
             nav.setCanPathThroughDoors(true);
