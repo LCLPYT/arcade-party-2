@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.type;
+package work.lclpnet.ap2.core.type;
 
 import net.minecraft.entity.ai.brain.Brain;
 import net.minecraft.entity.mob.WardenEntity;

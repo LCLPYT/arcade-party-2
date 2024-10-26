@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.mixin;
+package work.lclpnet.ap2.core.mixin;
 
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
@@ -8,7 +8,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import work.lclpnet.ap2.hook.LivingEntityAttributeInitCallback;
+import work.lclpnet.ap2.core.hook.LivingEntityAttributeInitCallback;
 
 @Mixin(LivingEntity.class)
 public class LivingEntityMixin {

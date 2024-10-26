@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.hook;
+package work.lclpnet.ap2.core.hook;
 
 import net.minecraft.entity.LivingEntity;
 import work.lclpnet.kibu.hook.Hook;

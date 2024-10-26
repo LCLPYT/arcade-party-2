@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.mixin;
+package work.lclpnet.ap2.core.mixin;
 
 import com.mojang.serialization.Dynamic;
 import net.minecraft.entity.ai.brain.Brain;
@@ -14,8 +14,8 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import work.lclpnet.ap2.hook.BrainCreationCallback;
-import work.lclpnet.ap2.type.WardenBrainHandle;
+import work.lclpnet.ap2.core.hook.BrainCreationCallback;
+import work.lclpnet.ap2.core.type.WardenBrainHandle;
 
 import java.util.List;
 

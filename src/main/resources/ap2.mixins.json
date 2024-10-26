@@ -1,14 +1,18 @@
 {
   "required": true,
   "minVersion": "0.8",
-  "package": "work.lclpnet.ap2.mixin",
+  "package": "work.lclpnet.ap2.core.mixin",
   "compatibilityLevel": "JAVA_21",
   "injectors": {
     "defaultRequire": 1
   },
   "mixins": [
+    "EntityMixin",
     "LivingEntityMixin",
     "MobEntityAccessor",
+    "PathMixin",
+    "PathNodeMakerAccessor",
+    "PathNodeNavigatorMixin",
     "WardenBrainMixin"
   ]
 }

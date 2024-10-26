@@ -1,12 +1,14 @@
-package work.lclpnet.ap2.mixin.debug;
+package work.lclpnet.ap2.core.mixin.debug;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.llamalad7.mixinextras.sugar.Local;
 import net.minecraft.entity.ai.pathing.EntityNavigation;
 import net.minecraft.entity.ai.pathing.Path;
 import net.minecraft.entity.ai.pathing.PathNodeNavigator;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.minecraft.world.chunk.ChunkCache;
 import org.jetbrains.annotations.Nullable;
@@ -16,8 +18,9 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import work.lclpnet.ap2.type.debug.EntityNavigationDebug;
+import work.lclpnet.ap2.core.type.debug.EntityNavigationDebug;
 
 import java.util.Set;
 
@@ -78,6 +81,19 @@ public abstract class EntityNavigationMixin implements EntityNavigationDebug {
         out.println("PATH IS " + path);
 
         return path;
+    }
+
+    @Inject(
+            method = "tick",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/entity/ai/control/MoveControl;moveTo(DDDD)V"
+            )
+    )
+    public void ap2$debugMoveTo(CallbackInfo ci, @Local(ordinal = 0) Vec3d nodePos) {
+        if (!debug) return;
+
+        out.println("MOVE TO " + nodePos);
     }
 
     @Override

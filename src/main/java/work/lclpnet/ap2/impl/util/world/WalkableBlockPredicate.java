@@ -14,9 +14,15 @@ import static net.minecraft.util.math.Direction.Axis.*;
 public class WalkableBlockPredicate implements BlockPredicate {
 
     private final BlockView world;
+    private final int verticalSpace;
 
     public WalkableBlockPredicate(BlockView world) {
+        this(world, 2);
+    }
+
+    public WalkableBlockPredicate(BlockView world, int verticalSpace) {
         this.world = world;
+        this.verticalSpace = verticalSpace;
     }
 
     @Override
@@ -61,15 +67,19 @@ public class WalkableBlockPredicate implements BlockPredicate {
         }
 
         // verify position above is free
-        queryPos.setY(pos.getY() + 1);
+        for (int i = 1; i < verticalSpace; i++) {
+            queryPos.setY(pos.getY() + 1);
 
-        shape = world.getBlockState(queryPos).getCollisionShape(world, queryPos);
+            shape = world.getBlockState(queryPos).getCollisionShape(world, queryPos);
 
-        if (shape.isEmpty()) {
-            return true;
+            if (shape.isEmpty()) continue;
+
+            if (length(shape, X) >= 0.4 && length(shape, Z) >= 0.4) {
+                return false;
+            }
         }
 
-        return length(shape, X) < 0.4 || length(shape, Z) < 0.4;
+        return true;
     }
 
     private static double length(VoxelShape shape, Direction.Axis axis) {

@@ -1,7 +1,7 @@
 {
   "required": true,
   "minVersion": "0.8",
-  "package": "work.lclpnet.ap2.mixin.debug",
+  "package": "work.lclpnet.ap2.core.mixin.debug",
   "compatibilityLevel": "JAVA_21",
   "injectors": {
     "defaultRequire": 1

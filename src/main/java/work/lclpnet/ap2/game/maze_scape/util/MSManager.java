@@ -24,16 +24,17 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
+import work.lclpnet.ap2.core.hook.BrainCreationCallback;
+import work.lclpnet.ap2.core.hook.LivingEntityAttributeInitCallback;
+import work.lclpnet.ap2.core.type.ApEntity;
+import work.lclpnet.ap2.core.type.WardenBrainHandle;
 import work.lclpnet.ap2.game.maze_scape.gen.Graph;
 import work.lclpnet.ap2.game.maze_scape.setup.Connector3;
 import work.lclpnet.ap2.game.maze_scape.setup.MSGenerator;
 import work.lclpnet.ap2.game.maze_scape.setup.OrientedStructurePiece;
 import work.lclpnet.ap2.game.maze_scape.setup.StructurePiece;
-import work.lclpnet.ap2.hook.BrainCreationCallback;
-import work.lclpnet.ap2.hook.LivingEntityAttributeInitCallback;
 import work.lclpnet.ap2.impl.util.EntityUtil;
 import work.lclpnet.ap2.impl.util.world.ChunkPersistence;
-import work.lclpnet.ap2.type.WardenBrainHandle;
 import work.lclpnet.lobby.game.map.GameMap;
 
 import java.util.*;
@@ -149,6 +150,10 @@ public class MSManager {
             nav.setCanWalkOverFences(true);
             nav.setCanEnterOpenDoors(true);
         }
+
+        // fix warden getting stuck on narrow blocks, like open trapdoors on walls / as railings
+        //noinspection DataFlowIssue
+        ((ApEntity) warden).ap2$patchNarrowMovement();
 
         world.spawnEntity(warden);
 

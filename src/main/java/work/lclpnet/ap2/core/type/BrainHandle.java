@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.type;
+package work.lclpnet.ap2.core.type;
 
 import com.mojang.serialization.Dynamic;
 import net.minecraft.entity.LivingEntity;

@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.type.debug;
+package work.lclpnet.ap2.core.type.debug;
 
 public interface EntityNavigationDebug {
 

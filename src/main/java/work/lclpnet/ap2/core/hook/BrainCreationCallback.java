@@ -1,12 +1,12 @@
-package work.lclpnet.ap2.hook;
+package work.lclpnet.ap2.core.hook;
 
 import com.mojang.serialization.Dynamic;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.brain.Brain;
 import net.minecraft.entity.mob.WardenEntity;
 import org.jetbrains.annotations.Nullable;
-import work.lclpnet.ap2.type.BrainHandle;
-import work.lclpnet.ap2.type.WardenBrainHandle;
+import work.lclpnet.ap2.core.type.BrainHandle;
+import work.lclpnet.ap2.core.type.WardenBrainHandle;
 import work.lclpnet.kibu.hook.Hook;
 import work.lclpnet.kibu.hook.HookFactory;
 

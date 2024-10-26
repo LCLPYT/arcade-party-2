@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.mixin;
+package work.lclpnet.ap2.core.mixin;
 
 import net.minecraft.entity.ai.goal.GoalSelector;
 import net.minecraft.entity.mob.MobEntity;

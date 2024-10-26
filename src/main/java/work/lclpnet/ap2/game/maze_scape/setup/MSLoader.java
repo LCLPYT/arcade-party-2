@@ -210,7 +210,7 @@ public class MSLoader {
     @Nullable
     private Vec3d findSpawnPos(FabricStructureWrapper wrapper, StructureMask insideMask) {
         var pos = new BlockPos.Mutable();
-        var walkable = new WalkableBlockPredicate(wrapper);
+        var walkable = new WalkableBlockPredicate(wrapper, 3);  // warden is 3 blocks tall
 
         int width = insideMask.width();
         int height = insideMask.height();
