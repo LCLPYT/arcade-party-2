@@ -54,8 +54,8 @@ public class PathMixin implements ApPath {
 
         Vec3d pos = NarrowMovementPatch.getNodePosition(entity, node);
 
-        if (pos != null) {
-            cir.setReturnValue(pos);
-        }
+        if (pos == null) return;
+
+        cir.setReturnValue(pos);
     }
 }

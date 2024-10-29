@@ -15,6 +15,7 @@ import net.minecraft.entity.ai.brain.task.MeleeAttackTask;
 import net.minecraft.entity.ai.brain.task.RangedApproachTask;
 import net.minecraft.entity.ai.pathing.EntityNavigation;
 import net.minecraft.entity.ai.pathing.MobNavigation;
+import net.minecraft.entity.ai.pathing.PathNodeMaker;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.mob.WardenEntity;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -26,7 +27,9 @@ import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.core.hook.BrainCreationCallback;
 import work.lclpnet.ap2.core.hook.LivingEntityAttributeInitCallback;
+import work.lclpnet.ap2.core.mixin.EntityNavigationAccessor;
 import work.lclpnet.ap2.core.type.ApEntity;
+import work.lclpnet.ap2.core.type.ApLandPathNodeMaker;
 import work.lclpnet.ap2.core.type.WardenBrainHandle;
 import work.lclpnet.ap2.game.maze_scape.gen.Graph;
 import work.lclpnet.ap2.game.maze_scape.setup.Connector3;
@@ -154,6 +157,13 @@ public class MSManager {
         // fix warden getting stuck on narrow blocks, like open trapdoors on walls / as railings
         //noinspection DataFlowIssue
         ((ApEntity) warden).ap2$patchNarrowMovement();
+
+        // adjust PathNodeMaker
+        PathNodeMaker nodeMaker = ((EntityNavigationAccessor) navigation).getNodeMaker();
+
+        if (nodeMaker instanceof ApLandPathNodeMaker apPathMaker) {
+            apPathMaker.ap2$enablePathfindingPatch();
+        }
 
         world.spawnEntity(warden);
 

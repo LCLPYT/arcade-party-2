@@ -8,6 +8,8 @@
   },
   "mixins": [
     "EntityMixin",
+    "EntityNavigationAccessor",
+    "LandPathNodeMakerMixin",
     "LivingEntityMixin",
     "MobEntityAccessor",
     "PathMixin",
