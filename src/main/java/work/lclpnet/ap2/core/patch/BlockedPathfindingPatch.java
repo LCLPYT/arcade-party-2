@@ -25,9 +25,9 @@ public class BlockedPathfindingPatch {
         World world = entity.getWorld();
         var pos = new BlockPos.Mutable(x, y, z);
 
-        int dx = from.getX() - x;
-        int dy = from.getY() - y;
-        int dz = from.getZ() - z;
+        int dx = x - from.getX();
+        int dy = y - from.getY();
+        int dz = z - from.getZ();
 
         Direction dir = Direction.fromVector(dx, dy, dz);
 
@@ -48,7 +48,7 @@ public class BlockedPathfindingPatch {
         }
 
         // then check z direction
-        dir = Direction.fromVector(0, 0, -dz);
+        dir = Direction.fromVector(0, 0, dz);
         pos.set(x, y, z);  // reset pos as it was likely modified
 
         return dir != null && isBidiBlocked(world, pos, dir);
@@ -61,11 +61,11 @@ public class BlockedPathfindingPatch {
         }
 
         // check if the previous position is blocked
-        pos.set(pos.getX() + dir.getOffsetX(),
-                pos.getY() + dir.getOffsetY(),
-                pos.getZ() + dir.getOffsetZ());
+        pos.set(pos.getX() - dir.getOffsetX(),
+                pos.getY() - dir.getOffsetY(),
+                pos.getZ() - dir.getOffsetZ());
 
-        return isBlockedByTrapdoor(world, pos, dir);
+        return isBlockedByTrapdoor(world, pos, dir.getOpposite());
     }
 
     private static boolean isBlockedByTrapdoor(World world, BlockPos pos, Direction dir) {
