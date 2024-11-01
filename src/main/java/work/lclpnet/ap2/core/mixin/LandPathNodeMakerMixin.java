@@ -42,19 +42,6 @@ public class LandPathNodeMakerMixin implements ApLandPathNodeMaker {
     }
 
     @Inject(
-            method = "getJumpOnTopNode",
-            at = @At(
-                    value = "INVOKE",
-                    target = "Lnet/minecraft/entity/ai/pathing/LandPathNodeMaker;getPathNode(IIIIDLnet/minecraft/util/math/Direction;Lnet/minecraft/entity/ai/pathing/PathNodeType;)Lnet/minecraft/entity/ai/pathing/PathNode;"
-            )
-    )
-    public void kibu$storeFromJumpPosition(int x, int y, int z, int maxYStep, double prevFeetY, Direction direction, PathNodeType nodeType, BlockPos.Mutable mutablePos, CallbackInfoReturnable<PathNode> cir) {
-        if (pathfindingPatched) {
-            from.set(x, y, z);
-        }
-    }
-
-    @Inject(
             method = "getPathNode",
             at = @At(
                     value = "INVOKE",

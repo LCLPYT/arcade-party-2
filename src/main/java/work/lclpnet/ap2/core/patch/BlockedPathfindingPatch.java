@@ -26,17 +26,16 @@ public class BlockedPathfindingPatch {
         var pos = new BlockPos.Mutable(x, y, z);
 
         int dx = x - from.getX();
-        int dy = y - from.getY();
         int dz = z - from.getZ();
 
-        Direction dir = Direction.fromVector(dx, dy, dz);
+        Direction dir = Direction.fromVector(dx, 0, dz);
 
         if (dir != null) {
             return isBidiBlocked(world, pos, dir);
         }
 
         // check horizontal diagonal
-        if (dy != 0 || Math.abs(dx) != 1 || Math.abs(dz) != 1) {
+        if (Math.abs(dx) != 1 || Math.abs(dz) != 1) {
             return false;
         }
 
