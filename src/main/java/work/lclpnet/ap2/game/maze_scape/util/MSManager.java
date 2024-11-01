@@ -138,6 +138,7 @@ public class MSManager {
         warden.setInvulnerable(true);
         warden.setPersistent();
         warden.setOnGround(true);  // required to perform path finding immediately
+        warden.setGlowing(true);
 
         // TODO adjust ai for mini game
         var brain = warden.getBrain();
