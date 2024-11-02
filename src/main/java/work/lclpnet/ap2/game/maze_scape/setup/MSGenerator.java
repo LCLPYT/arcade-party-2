@@ -4,22 +4,27 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.enums.Orientation;
 import net.minecraft.entity.EntityType;
-import net.minecraft.entity.data.DataTracker;
-import net.minecraft.entity.decoration.ArmorStandEntity;
+import net.minecraft.entity.decoration.DisplayEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
+import work.lclpnet.ap2.api.util.model.Model;
 import work.lclpnet.ap2.game.maze_scape.gen.Graph;
 import work.lclpnet.ap2.game.maze_scape.gen.GraphGenerator;
 import work.lclpnet.ap2.game.maze_scape.gen.GraphGenerator.Result;
 import work.lclpnet.ap2.game.maze_scape.util.MSStruct;
+import work.lclpnet.ap2.impl.util.FunctionExecutor;
 import work.lclpnet.ap2.impl.util.FutureUtil;
 import work.lclpnet.ap2.impl.util.StructureUtil;
 import work.lclpnet.ap2.impl.util.math.AffineIntMatrix;
+import work.lclpnet.ap2.impl.util.model.ModelManager;
+import work.lclpnet.ap2.impl.util.model.Models;
 import work.lclpnet.ap2.impl.util.world.ResetBlockWorldModifier;
+import work.lclpnet.kibu.access.entity.DisplayEntityAccess;
 import work.lclpnet.kibu.jnbt.CompoundTag;
 import work.lclpnet.kibu.mc.KibuBlockPos;
 import work.lclpnet.kibu.schematic.FabricStructureWrapper;
@@ -56,6 +61,7 @@ public class MSGenerator {
     private final int targetArea;
     private final float deadEndChance;
     private final StructureDomain domain;
+    private final DebugController debugController = new DebugController();
     private GraphGenerator<Connector3, StructurePiece, OrientedStructurePiece> generator;
     private boolean decorate = true;
 
@@ -85,6 +91,12 @@ public class MSGenerator {
 
         var bounds = new StructureDomain.BoundsCfg(maxChunkSize, bottomY, topY);
         domain = new StructureDomain(loaded.pieces(), random, deadEndStart, bounds);
+
+        var modelManager = new ModelManager(new FunctionExecutor(world.getServer(), logger));
+
+        if (DEBUG_SPAWNS) {
+            debugController.spawnMarker = modelManager.loadFunction(Models.CROSS).orElseThrow();
+        }
     }
 
     public static int getMaxChunkSize(GameMap map) {
@@ -166,27 +178,23 @@ public class MSGenerator {
     }
 
     private void visualizeSpawn(OrientedStructurePiece oriented) {
+        Vec3d pos = oriented.spawn();
 
-        ArmorStandEntity armorStand = new ArmorStandEntity(EntityType.ARMOR_STAND, world);
-        armorStand.setCustomName(Text.literal(oriented.piece().name() + " r" + oriented.rotation()));
-        armorStand.setCustomNameVisible(true);
-        armorStand.setNoGravity(true);
-        armorStand.setInvisible(true);
+        if (pos == null) return;
 
-        DataTracker dataTracker = armorStand.getDataTracker();
-
-        byte flags = dataTracker.get(ArmorStandEntity.ARMOR_STAND_FLAGS);
-        flags |= ArmorStandEntity.MARKER_FLAG;
-
-        dataTracker.set(ArmorStandEntity.ARMOR_STAND_FLAGS, flags);
-
-        Vec3d spawn = oriented.spawn();
-
-        if (spawn != null) {
-            armorStand.setPosition(spawn);
+        if (debugController.spawnMarker != null) {
+            debugController.spawnMarker.spawn(world, pos.subtract(0.5, 0, 0.5));
         }
 
-        world.spawnEntity(armorStand);
+        var display = new DisplayEntity.TextDisplayEntity(EntityType.TEXT_DISPLAY, world);
+        display.setPosition(pos.add(0, 0.2, 0));
+
+        var text = Text.literal(oriented.piece().name() + " r" + oriented.rotation());
+        DisplayEntityAccess.setText(display, text);
+
+        DisplayEntityAccess.setBillboardMode(display, DisplayEntity.BillboardMode.CENTER);
+
+        world.spawnEntity(display);
     }
 
     private void replaceJigsaws(OrientedStructurePiece oriented) {
@@ -357,5 +365,9 @@ public class MSGenerator {
         }
 
         future.completeExceptionally(new IllegalStateException("Failed to generate structure. Maximum number of re-tries has been exceeded"));
+    }
+
+    private static class DebugController {
+        private @Nullable Model spawnMarker = null;
     }
 }
