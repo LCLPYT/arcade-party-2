@@ -155,9 +155,14 @@ public class MSManager {
             nav.setCanEnterOpenDoors(true);
         }
 
-        // fix warden getting stuck on narrow blocks, like open trapdoors on walls / as railings
         //noinspection DataFlowIssue
-        ((ApEntity) warden).ap2$patchNarrowMovement();
+        ApEntity apWarden = (ApEntity) warden;
+
+        // fix warden getting stuck on narrow blocks, like open trapdoors on walls / as railings
+        apWarden.ap2$patchNarrowMovement();
+
+        // fix continuous jumping when walking by open trapdoors
+        apWarden.ap2$patchTrapdoorJumping();
 
         // adjust PathNodeMaker
         PathNodeMaker nodeMaker = ((EntityNavigationAccessor) navigation).getNodeMaker();
