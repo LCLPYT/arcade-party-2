@@ -256,7 +256,7 @@ public abstract class BaseGameInstance implements MiniGameInstance {
         hooks.registerHook(PlayerSpawnLocationCallback.HOOK, data -> playerUtil.resetPlayer(data.getPlayer()));
 
         hooks.registerHook(PlayerInteractionHooks.USE_BLOCK, (player, world1, hand, hitResult) -> {
-            if (mapProperties.getBoolean(ApMapProperties.ALLOW_BLOCK_INTERACTION, true)) {
+            if (player.isCreative() || mapProperties.getBoolean(ApMapProperties.ALLOW_BLOCK_INTERACTION, true)) {
                 return ActionResult.PASS;
             }
 

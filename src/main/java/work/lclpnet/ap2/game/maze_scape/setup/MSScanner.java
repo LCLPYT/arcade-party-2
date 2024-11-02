@@ -60,7 +60,7 @@ public class MSScanner {
             visitJigsaw(localPos, state, nbt, scan);
         }
 
-        return scan.toResult();
+        return scan;
     }
 
     private void visitJigsaw(BlockPos.Mutable localPos, BlockState state, CompoundTag nbt, Scan scan) {
@@ -68,6 +68,9 @@ public class MSScanner {
 
         // make sure the jigsaw block name is not empty
         if (name.isEmpty() || name.equals("minecraft:empty")) return;
+
+        BlockPos pos = localPos.toImmutable();
+        scan.jigsaws.add(pos);
 
         String pool = nbt.getString("pool");
 
@@ -85,18 +88,32 @@ public class MSScanner {
             // found a connector
             Orientation orientation = state.get(Properties.ORIENTATION);
 
-            scan.connectors.add(new Connector3(localPos.toImmutable(), orientation, name, target));
+            scan.connectors.add(new Connector3(pos, orientation, name, target));
         }
     }
 
-    private static class Scan {
+    public interface Result {
+        List<Connector3> connectors();
+        List<BlockPos> jigsaws();
+        @Nullable Vec3d spawn();
+    }
+
+    private static class Scan implements Result {
         final List<Connector3> connectors = new ArrayList<>(2);
+        final List<BlockPos> jigsaws = new ArrayList<>(2);
         @Nullable Vec3d spawn = null;
 
-        public Result toResult() {
-            return new Result(connectors, spawn);
+        public List<Connector3> connectors() {
+            return connectors;
+        }
+
+        @Override
+        public List<BlockPos> jigsaws() {
+            return jigsaws;
+        }
+
+        public @Nullable Vec3d spawn() {
+            return spawn;
         }
     }
-
-    public record Result(List<Connector3> connectors, @Nullable Vec3d spawn) {}
 }

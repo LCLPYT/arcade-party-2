@@ -50,7 +50,7 @@ public class MSGenerator {
     public static final int PLACE_FLAGS = Block.FORCE_STATE | Block.SKIP_DROPS;
     public static final boolean
             DEBUG_GENERATOR = false,
-            DEBUG_SPAWNS = true;
+            DEBUG_SPAWNS = false;
     private static final int GENERATOR_MAX_TRIES = 5;
     private static final int GENERATOR_MAX_DURATION_MS = 15_000;
     private final ServerWorld world;
@@ -211,8 +211,7 @@ public class MSGenerator {
         var placedPos = new BlockPos.Mutable();
         var kibuPos = new KibuBlockPos.Mutable();
 
-        for (Connector3 connector : piece.connectors()) {
-            BlockPos pos = connector.pos();
+        for (BlockPos pos : piece.jigsaws()) {
             kibuPos.set(pos.getX(), pos.getY(), pos.getZ());
 
             // determine jigsaw final state

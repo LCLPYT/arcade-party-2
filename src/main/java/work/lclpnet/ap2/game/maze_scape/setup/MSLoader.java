@@ -173,10 +173,9 @@ public class MSLoader {
         // scan the structure for jigsaws
         var scanResult = scanner.scan(struct);
 
-        var connectors = scanResult.connectors();
         var wrapper = new FabricStructureWrapper(struct, adapter);
 
-        StructureMask insideMask = buildStructureMask(wrapper, connectors);
+        StructureMask insideMask = buildStructureMask(wrapper, scanResult.connectors());
 
         BVH bounds = buildBounds(insideMask);
 
@@ -191,8 +190,8 @@ public class MSLoader {
         Vec3d spawnPos = Optional.ofNullable(scanResult.spawn())
                 .orElseGet(() -> findSpawnPos(wrapper, insideMask));
 
-        StructurePiece piece = new StructurePiece(name, wrapper, bounds, connectors, weight, maxCount, connectSame, clusters,
-                minDistance, updateBlocks, spawnPos);
+        StructurePiece piece = new StructurePiece(name, wrapper, bounds, scanResult.connectors(), weight, maxCount, connectSame, clusters,
+                minDistance, updateBlocks, spawnPos, scanResult.jigsaws());
 
         for (ClusterDef cluster : clusters) {
             cluster.pieces().add(piece);
