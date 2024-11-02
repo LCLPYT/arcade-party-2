@@ -7,10 +7,12 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.entity.decoration.DisplayEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
+import net.minecraft.util.math.AffineTransformation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Matrix4f;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.api.util.model.Model;
 import work.lclpnet.ap2.game.maze_scape.gen.Graph;
@@ -193,6 +195,8 @@ public class MSGenerator {
         DisplayEntityAccess.setText(display, text);
 
         DisplayEntityAccess.setBillboardMode(display, DisplayEntity.BillboardMode.CENTER);
+        DisplayEntityAccess.setBackground(display, 0);
+        DisplayEntityAccess.setTransformation(display, new AffineTransformation(new Matrix4f().scale(0.3f)));
 
         world.spawnEntity(display);
     }
