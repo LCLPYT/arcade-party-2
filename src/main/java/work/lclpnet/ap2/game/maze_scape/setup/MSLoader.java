@@ -3,11 +3,11 @@ package work.lclpnet.ap2.game.maze_scape.setup;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.enums.Orientation;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.state.property.Properties;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3i;
+import org.apache.commons.io.FilenameUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
@@ -17,12 +17,8 @@ import work.lclpnet.ap2.game.maze_scape.setup.wall.ConnectorWall;
 import work.lclpnet.ap2.game.maze_scape.setup.wall.PaletteConnectorWall;
 import work.lclpnet.ap2.game.maze_scape.setup.wall.StructureConnectorWall;
 import work.lclpnet.ap2.game.maze_scape.util.*;
-import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.world.WalkableBlockPredicate;
-import work.lclpnet.kibu.jnbt.CompoundTag;
-import work.lclpnet.kibu.mc.KibuBlockEntity;
-import work.lclpnet.kibu.mc.KibuBlockState;
 import work.lclpnet.kibu.schematic.FabricBlockStateAdapter;
 import work.lclpnet.kibu.schematic.FabricStructureWrapper;
 import work.lclpnet.kibu.schematic.api.SchematicReader;
@@ -47,12 +43,14 @@ public class MSLoader {
     private final Logger logger;
     private final FabricBlockStateAdapter adapter = FabricBlockStateAdapter.getInstance();
     private final SchematicReader schematicReader;
+    private final MSScanner scanner;
 
     public MSLoader(ServerWorld world, GameMap map, Logger logger) {
         this.map = map;
         this.world = world;
         this.logger = logger;
         this.schematicReader = VanillaStructureFormat.get(world.getServer()).reader();
+        this.scanner = new MSScanner(logger);
     }
 
     public CompletableFuture<Result> load() {
@@ -150,7 +148,7 @@ public class MSLoader {
                 return ConnectorWall.EMPTY;
             }
 
-            var connectors = findConnectors(struct, adapter);
+            var connectors = scanner.scan(struct).connectors();
 
             return new StructureConnectorWall(struct, connectors, logger);
         }
@@ -171,9 +169,13 @@ public class MSLoader {
             return null;
         }
 
-        var wrapper = new FabricStructureWrapper(struct, adapter);
+        String name = FilenameUtils.getBaseName(path.getFileName().toString());
 
-        List<Connector3> connectors = findConnectors(struct, adapter);
+        // scan the structure for jigsaws
+        var scanResult = scanner.scan(struct);
+
+        var connectors = scanResult.connectors();
+        var wrapper = new FabricStructureWrapper(struct, adapter);
 
         StructureMask insideMask = buildStructureMask(wrapper, connectors);
 
@@ -187,17 +189,10 @@ public class MSLoader {
 
         Set<ClusterDef> clusters = parseClusters(path, config, clusterDefs);
 
-        Vec3d spawnPos;
-        JSONArray spawnTuple = config.optJSONArray("spawn");
+        Vec3d spawnPos = Optional.ofNullable(scanResult.spawn())
+                .orElseGet(() -> findSpawnPos(wrapper, insideMask));
 
-        if (spawnTuple != null) {
-            BlockPos spawnBlockPos = MapUtil.readBlockPos(spawnTuple);
-            spawnPos = Vec3d.ofBottomCenter(spawnBlockPos);
-        } else {
-            spawnPos = findSpawnPos(wrapper, insideMask);
-        }
-
-        StructurePiece piece = new StructurePiece(wrapper, bounds, connectors, weight, maxCount, connectSame, clusters,
+        StructurePiece piece = new StructurePiece(name, wrapper, bounds, connectors, weight, maxCount, connectSame, clusters,
                 minDistance, updateBlocks, spawnPos);
 
         for (ClusterDef cluster : clusters) {
@@ -388,50 +383,6 @@ public class MSLoader {
                 start,
                 pos -> mask[pos.getX()][pos.getY()][pos.getZ()] = true,  // add to mask
                 (x, y, z) -> plane.test(x, y, z) && transparent.test(x, y, z));  // add neighbour if in plane and transparent
-    }
-
-    private List<Connector3> findConnectors(BlockStructure struct, FabricBlockStateAdapter adapter) {
-        List<Connector3> connectors = new ArrayList<>(2);
-        var origin = struct.getOrigin();
-        int ox = origin.getX(), oy = origin.getY(), oz = origin.getZ();
-
-        for (var pos : struct.getBlockPositions()) {
-            KibuBlockState kibuState = struct.getBlockState(pos);
-            String str = kibuState.getAsString();
-
-            if (!str.startsWith("minecraft:jigsaw")) continue;
-
-            // found a connector
-            BlockState state = adapter.revert(kibuState);
-
-            if (state == null) {
-                logger.error("Unknown block state {}", str);
-                continue;
-            }
-
-            // make sure the jigsaw block has a target that is not minecraft:empty
-            KibuBlockEntity kibuBlockEntity = struct.getBlockEntity(pos);
-
-            if (kibuBlockEntity == null) continue;
-
-            CompoundTag nbt = kibuBlockEntity.createNbt();
-            String name = nbt.getString("name");
-
-            if (name.isEmpty() || name.equals("minecraft:empty")) continue;
-
-            String target = nbt.getString("target");
-
-            if (target.isEmpty() || target.equals("minecraft:empty")) continue;
-
-            // add connector
-            Orientation orientation = state.get(Properties.ORIENTATION);
-
-            var localPos = new BlockPos(pos.getX() - ox, pos.getY() - oy, pos.getZ() - oz);
-
-            connectors.add(new Connector3(localPos, orientation, name, target));
-        }
-
-        return connectors;
     }
 
     public record Result(

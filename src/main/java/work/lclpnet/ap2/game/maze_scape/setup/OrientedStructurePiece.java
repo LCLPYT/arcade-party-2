@@ -70,7 +70,8 @@ public class OrientedStructurePiece implements OrientedPiece<Connector3, Structu
         Vec3d spawn = piece.spawn();
 
         if (spawn != null) {
-            spawn = mat.transform(spawn).add(pos.getX(), pos.getY(), pos.getZ());
+            spawn = mat.transform(spawn.getX() - 0.5, spawn.getY() - 0.5, spawn.getZ() - 0.5)
+                    .add(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
         }
 
         this.spawn = spawn;
@@ -108,6 +109,10 @@ public class OrientedStructurePiece implements OrientedPiece<Connector3, Structu
         }
 
         return invMat;
+    }
+
+    public int rotation() {
+        return rotation;
     }
 
     public void setCluster(@Nullable Cluster cluster) {

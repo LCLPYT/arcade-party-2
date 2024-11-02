@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Set;
 
 public record StructurePiece(
+        String name,
         FabricStructureWrapper wrapper,
         BVH bounds,
         List<Connector3> connectors,

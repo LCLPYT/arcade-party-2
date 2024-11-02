@@ -3,9 +3,14 @@ package work.lclpnet.ap2.game.maze_scape.setup;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.enums.Orientation;
+import net.minecraft.entity.EntityType;
+import net.minecraft.entity.data.DataTracker;
+import net.minecraft.entity.decoration.ArmorStandEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.Vec3d;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.game.maze_scape.gen.Graph;
 import work.lclpnet.ap2.game.maze_scape.gen.GraphGenerator;
@@ -36,7 +41,9 @@ public class MSGenerator {
 
     private static final EnumSet<StructureWriter.Option> UPDATE_NEIGHBOURS_OPTS = EnumSet.of(SKIP_AIR, FORCE_STATE, SKIP_PLAYER_SYNC, SKIP_DROPS);
     public static final int PLACE_FLAGS = Block.FORCE_STATE | Block.SKIP_DROPS;
-    public static final boolean DEBUG = false;
+    public static final boolean
+            DEBUG_GENERATOR = false,
+            DEBUG_SPAWNS = true;
     private static final int GENERATOR_MAX_TRIES = 5;
     private static final int GENERATOR_MAX_DURATION_MS = 15_000;
     private final ServerWorld world;
@@ -145,6 +152,10 @@ public class MSGenerator {
             StructureUtil.placeStructureFast(struct, world, pos, transformation);
         }
 
+        if (DEBUG_SPAWNS) {
+            visualizeSpawn(oriented);
+        }
+
         if (decorate) {
             replaceJigsaws(oriented);
 
@@ -152,6 +163,30 @@ public class MSGenerator {
         }
 
         return true;
+    }
+
+    private void visualizeSpawn(OrientedStructurePiece oriented) {
+
+        ArmorStandEntity armorStand = new ArmorStandEntity(EntityType.ARMOR_STAND, world);
+        armorStand.setCustomName(Text.literal(oriented.piece().name() + " r" + oriented.rotation()));
+        armorStand.setCustomNameVisible(true);
+        armorStand.setNoGravity(true);
+        armorStand.setInvisible(true);
+
+        DataTracker dataTracker = armorStand.getDataTracker();
+
+        byte flags = dataTracker.get(ArmorStandEntity.ARMOR_STAND_FLAGS);
+        flags |= ArmorStandEntity.MARKER_FLAG;
+
+        dataTracker.set(ArmorStandEntity.ARMOR_STAND_FLAGS, flags);
+
+        Vec3d spawn = oriented.spawn();
+
+        if (spawn != null) {
+            armorStand.setPosition(spawn);
+        }
+
+        world.spawnEntity(armorStand);
     }
 
     private void replaceJigsaws(OrientedStructurePiece oriented) {
@@ -304,7 +339,7 @@ public class MSGenerator {
             if (type == INTERRUPTED) {
                 String msg = "Failed to generate structure. Generation took too long";
 
-                if (DEBUG) {
+                if (DEBUG_GENERATOR) {
                     logger.error(msg);
                 } else {
                     future.completeExceptionally(new IllegalStateException(msg));
@@ -314,7 +349,7 @@ public class MSGenerator {
                 logger.error("Failed to generate structure. Map: {}, Seed: {}; Retries remaining: {}", map.getDescriptor(), seed, GENERATOR_MAX_TRIES - i - 1);
 
                 // accept result regardless in debug mode
-                if (!DEBUG) continue;
+                if (!DEBUG_GENERATOR) continue;
             }
 
             future.complete(res);

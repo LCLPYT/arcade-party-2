@@ -86,6 +86,6 @@ public class MazeScapeInstance extends EliminationGameInstance implements MapBoo
         var manager = new MSManager(getWorld(), getMap(), struct, gameHandle.getParticipants(), gameHandle.getLogger());
         manager.init(gameHandle);
 
-        gameHandle.getGameScheduler().timeout(manager::spawnMobs, MOB_SPAWN_DELAY_TICKS);
+//        gameHandle.getGameScheduler().timeout(manager::spawnMobs, MOB_SPAWN_DELAY_TICKS);
     }
 }
