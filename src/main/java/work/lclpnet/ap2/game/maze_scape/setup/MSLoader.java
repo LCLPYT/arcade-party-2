@@ -37,7 +37,6 @@ import static java.lang.Math.pow;
 
 public class MSLoader {
 
-    private static final Direction[] HORIZONTAL_DIRECTIONS = new Direction[] {Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST};
     private final ServerWorld world;
     private final GameMap map;
     private final Logger logger;
@@ -226,7 +225,8 @@ public class MSLoader {
                     pos.set(x, y, z);
                     BlockState state = wrapper.getBlockState(pos);
 
-                    if (!state.isAir() || !insideMask.isVoxelAt(x, y - 1, z)) continue;
+                    // skip non-air blocks and blocks that neighbour outside blocks
+                    if (!state.isAir() || insideMask.isBorder(x, y, z)) continue;
 
                     // check if position is walkable
                     pos.setY(y);
@@ -255,7 +255,7 @@ public class MSLoader {
         Vec3d adjustment = Vec3d.ZERO;
 
         // check each horizontal neighbour if there is a wall (or the outside). If yes, try to move the spawn away from it
-        for (Direction direction : HORIZONTAL_DIRECTIONS) {
+        for (Direction direction : Direction.Type.HORIZONTAL) {
             BlockPos adj = spawn.offset(direction);
 
             if (!insideMask.isVoxelAt(adj.getX(), adj.getY(), adj.getZ()) ||
@@ -268,7 +268,10 @@ public class MSLoader {
 
         BlockPos adjusted = BlockPos.ofFloored(Vec3d.ofBottomCenter(spawn).add(adjustment.normalize()));
 
-        if (insideMask.isVoxelAt(adjusted.getX(), adjusted.getY(), adjusted.getZ()) && walkable.test(adjusted)) {
+        if (insideMask.isVoxelAt(adjusted.getX(), adjusted.getY(), adjusted.getZ())
+            && walkable.test(adjusted)
+            && !insideMask.isBorder(adjusted.getX(), adjusted.getY(), adjusted.getZ())) {
+
             spawn = adjusted;
         }
 

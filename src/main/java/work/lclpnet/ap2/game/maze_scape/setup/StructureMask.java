@@ -1,5 +1,6 @@
 package work.lclpnet.ap2.game.maze_scape.setup;
 
+import net.minecraft.util.math.Direction;
 import work.lclpnet.ap2.game.maze_scape.util.GreedyMeshing;
 import work.lclpnet.kibu.mc.KibuBlockPos;
 import work.lclpnet.kibu.structure.BlockStructure;
@@ -11,6 +12,20 @@ public record StructureMask(boolean[][][] mask, int width, int height, int lengt
     @Override
     public boolean isVoxelAt(int x, int y, int z) {
         return x >= 0 && x < width && y >= 0 && y < height && z >= 0 && z < length && mask[x][y][z];
+    }
+
+    public boolean isBorder(int x, int y, int z) {
+        if (x <= 0 || x >= width - 1 || y <= 0 || y >= height - 1 || z <= 0 || z >= length - 1) {
+            return true;
+        }
+
+        for (Direction dir : Direction.values()) {
+            if (!isVoxelAt(x + dir.getOffsetX(), y + dir.getOffsetY(), z + dir.getOffsetZ())) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public GreedyMeshing greedyMeshing() {
