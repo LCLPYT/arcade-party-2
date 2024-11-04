@@ -323,6 +323,7 @@ public class MSGenerator {
             // the opposing connector was closed, remove the wall and link the two rooms
             wall.undo();
             closedConnectors.remove(opposing);
+
             // TODO link nodes in graph
             return;
         }

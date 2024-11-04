@@ -14,7 +14,7 @@ import java.util.function.Predicate;
  * @param <P> Piece base type that has no position or orientation in the world yet.
  * @param <O> Materialized piece type in the world. Should be a type that combines {@link P} with a position and orientation.
  * @apiNote It is expected that instances of oriented pieces {@link O} can be compared with {@link O#equals(Object)}.
- * If the equals method is not implemented accordingly with the instances returned by {@link GeneratorDomain#fittingPieces(O, Object, NodeView)},
+ * If the equals method is not implemented accordingly with the instances returned by {@link GeneratorDomain#fittingPieces(O, Object, Graph.Node)},
  * the back-tracking algorithm might end up in an infinite loop.
  */
 public class GraphGenerator<C, P extends Piece<C>, O extends OrientedPiece<C, P>> {

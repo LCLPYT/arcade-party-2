@@ -81,15 +81,15 @@ public class Graph<C, P extends Piece<C>, O extends OrientedPiece<C, P>> {
         return nodes;
     }
 
-    public static class Node<C, P extends Piece<C>, O extends OrientedPiece<C, P>> implements NodeView,
-            DirectedGraphNode<Node<C, P, O>>, UndirectedGraphNode<Node<C, P, O>> {
+    public static class Node<C, P extends Piece<C>, O extends OrientedPiece<C, P>>
+            implements DirectedGraphNode<Node<C, P, O>>, UndirectedGraphNode<Node<C, P, O>> {
 
-        private final @NotNull ArrayList<Node<C, P, O>> neighbours = new ArrayList<>();
-        private final @NotNull List<Node<C, P, O>> extraLinks = new ArrayList<>(1);
-        private @Nullable Node<C, P, O> parent = null;
+        private final @NotNull ArrayList<@Nullable Node<C, P, O>> neighbours = new ArrayList<>();
+        private final @NotNull List<@NotNull Node<C, P, O>> extraLinks = new ArrayList<>(1);
         private @NotNull List<@Nullable Node<C, P, O>> children = List.of();
-        private @Nullable O oriented = null;
+        private @Nullable Node<C, P, O> parent = null;
         private @Nullable List<@Nullable List<O>> previousChoices;
+        private @Nullable O oriented = null;
         private int level = 0;
         private int deepChildCount = 0;
         private int lastChildrenHash = children.hashCode();
@@ -100,11 +100,11 @@ public class Graph<C, P extends Piece<C>, O extends OrientedPiece<C, P>> {
 
         public void setParent(@Nullable Node<C, P, O> parent) {
             if (this.parent != null) {
-                unlinkExtra(this.parent);
+                removeConnection(this.parent);
             }
 
             if (parent != null) {
-                linkExtra(parent);
+                addConnection(parent);
             }
 
             this.parent = parent;
@@ -112,13 +112,13 @@ public class Graph<C, P extends Piece<C>, O extends OrientedPiece<C, P>> {
             updateLevel();
         }
 
-        public void linkExtra(Node<C, P, O> node) {
+        public void addConnection(Node<C, P, O> node) {
             extraLinks.add(node);
 
             updateNeighbours();
         }
 
-        public void unlinkExtra(Node<C, P, O> node) {
+        public void removeConnection(Node<C, P, O> node) {
             extraLinks.remove(node);
 
             updateNeighbours();
@@ -144,7 +144,6 @@ public class Graph<C, P extends Piece<C>, O extends OrientedPiece<C, P>> {
             });
         }
 
-        @Override
         public int level() {
             return level;
         }
@@ -192,6 +191,7 @@ public class Graph<C, P extends Piece<C>, O extends OrientedPiece<C, P>> {
             }
         }
 
+        @Override
         public @NotNull List<@Nullable Node<C, P, O>> children() {
             return children;
         }
@@ -237,7 +237,7 @@ public class Graph<C, P extends Piece<C>, O extends OrientedPiece<C, P>> {
         }
 
         @Override
-        public @NotNull List<Node<C, P, O>> neighbours() {
+        public @NotNull List<@Nullable Node<C, P, O>> neighbours() {
             if (parent == null) {
                 return children;
             }

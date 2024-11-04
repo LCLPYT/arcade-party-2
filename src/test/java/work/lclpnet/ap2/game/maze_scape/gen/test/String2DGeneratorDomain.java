@@ -1,7 +1,7 @@
 package work.lclpnet.ap2.game.maze_scape.gen.test;
 
 import work.lclpnet.ap2.game.maze_scape.gen.GeneratorDomain;
-import work.lclpnet.ap2.game.maze_scape.gen.NodeView;
+import work.lclpnet.ap2.game.maze_scape.gen.Graph;
 import work.lclpnet.kibu.util.math.Matrix3i;
 
 import java.util.*;
@@ -27,7 +27,7 @@ public class String2DGeneratorDomain implements GeneratorDomain<StringConnector,
     }
 
     @Override
-    public List<OrientedStringPiece> fittingPieces(OrientedStringPiece oriented, StringConnector connector, NodeView node) {
+    public List<OrientedStringPiece> fittingPieces(OrientedStringPiece oriented, StringConnector connector, Graph.Node<StringConnector, StringPiece, OrientedStringPiece> node) {
         List<OrientedStringPiece> fitting = new ArrayList<>();
 
         int conX = connector.x(), conY = connector.y();

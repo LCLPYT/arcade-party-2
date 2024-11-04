@@ -57,7 +57,7 @@ public class DirectedGraphDfsIterator<T extends DirectedGraphNode<T>> implements
     }
 
     private boolean advanceCurrent() {
-        T child = nextChild();
+        var child = nextChild();
 
         if (child == null) return false;
 
@@ -93,7 +93,7 @@ public class DirectedGraphDfsIterator<T extends DirectedGraphNode<T>> implements
         state.childIndex++;
 
         for (; state.childIndex < size; state.childIndex++) {
-            T child = children.get(state.childIndex);
+            var child = children.get(state.childIndex);
 
             if (child == null) continue;
 
@@ -104,10 +104,10 @@ public class DirectedGraphDfsIterator<T extends DirectedGraphNode<T>> implements
     }
 
     private class State {
-        final DirectedGraphNode<T> node;
+        final T node;
         int childIndex = -1;
 
-        State(DirectedGraphNode<T> node) {
+        State(T node) {
             this.node = node;
         }
     }
