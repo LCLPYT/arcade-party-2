@@ -47,6 +47,8 @@ public class ItemDisplayObject extends Object3d implements Mountable, Unmountabl
     public void setStack(ItemStack stack) {
         this.stack = stack;
 
+        if (entityRef == null) return;
+
         var display = entityRef.resolve();
 
         if (display != null) {

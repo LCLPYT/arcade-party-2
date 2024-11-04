@@ -3,7 +3,7 @@ package work.lclpnet.ap2.game.maze_scape.gen;
 import java.util.List;
 import java.util.Random;
 
-public interface GeneratorDomain<C, P extends Piece<C>, O extends OrientedPiece<C, P>> {
+public interface GeneratorDomain<C, P extends Piece<C>, O extends OrientedPiece<C, P, O>> {
 
     O placeStart(P startPiece);
 

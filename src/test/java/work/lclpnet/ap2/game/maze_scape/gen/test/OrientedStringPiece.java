@@ -1,6 +1,8 @@
 package work.lclpnet.ap2.game.maze_scape.gen.test;
 
 import net.minecraft.util.math.BlockPos;
+import org.jetbrains.annotations.Nullable;
+import work.lclpnet.ap2.game.maze_scape.gen.Node;
 import work.lclpnet.ap2.game.maze_scape.gen.OrientedPiece;
 import work.lclpnet.kibu.util.math.Matrix3i;
 
@@ -12,7 +14,7 @@ import java.util.stream.Collectors;
 
 import static work.lclpnet.ap2.game.maze_scape.gen.test.StringConnector.ARROWS;
 
-public final class OrientedStringPiece implements OrientedPiece<StringConnector, StringPiece> {
+public final class OrientedStringPiece implements OrientedPiece<StringConnector, StringPiece, OrientedStringPiece> {
 
     private static final char[] CORNERS = new char[] {'┌', '┐', '┘', '└'};
     private final StringPiece piece;
@@ -21,6 +23,7 @@ public final class OrientedStringPiece implements OrientedPiece<StringConnector,
     private final int width, height;
     private final String string;
     private final List<StringConnector> connectors;
+    private @Nullable Node<StringConnector, StringPiece, OrientedStringPiece> node = null;
 
     public OrientedStringPiece(StringPiece piece, int x, int y, int rotation) {
         this(piece, x, y, rotation, -1);
@@ -88,6 +91,16 @@ public final class OrientedStringPiece implements OrientedPiece<StringConnector,
     @Override
     public List<StringConnector> connectors() {
         return connectors;
+    }
+
+    @Override
+    public @Nullable Node<StringConnector, StringPiece, OrientedStringPiece> node() {
+        return node;
+    }
+
+    @Override
+    public void setNode(@Nullable Node<StringConnector, StringPiece, OrientedStringPiece> node) {
+        this.node = node;
     }
 
     public int x() {

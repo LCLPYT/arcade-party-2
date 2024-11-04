@@ -11,7 +11,7 @@ import work.lclpnet.kibu.access.entity.DisplayEntityAccess;
 
 public class BlockDisplayObject extends Object3d implements Mountable, Unmountable, Interpolatable {
 
-    private final BlockState blockState;
+    private BlockState blockState;
     private final DisplayEntityTransformer transformer = new DisplayEntityTransformer();
     private EntityRef<DisplayEntity.BlockDisplayEntity> entityRef = null;
 
@@ -70,6 +70,22 @@ public class BlockDisplayObject extends Object3d implements Mountable, Unmountab
         copy.deepCopy(this);
 
         return copy;
+    }
+
+    public void setBlockState(BlockState state) {
+        this.blockState = state;
+
+        if (entityRef == null) return;
+
+        var entity = entityRef.resolve();
+
+        if (entity != null) {
+            DisplayEntityAccess.setBlockState(entity, state);
+        }
+    }
+
+    public BlockState getBlockState() {
+        return blockState;
     }
 
     private void removeDisplay() {

@@ -4,6 +4,7 @@ import net.minecraft.block.enums.Orientation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3i;
+import org.jetbrains.annotations.Nullable;
 
 public record Connector3(BlockPos pos, Orientation orientation, String name, String target) {
 
@@ -13,6 +14,20 @@ public record Connector3(BlockPos pos, Orientation orientation, String name, Str
 
     public int rotateToFace(Connector3 other) {
         return rotateToFace(this.orientation.getFacing(), other.orientation.getFacing());
+    }
+
+    @Nullable
+    public Connector3 createOpposing() {
+        Direction facing = orientation.getFacing();
+
+        Orientation opposingOrientation = Orientation.byDirections(facing.getOpposite(), orientation.getRotation());
+
+        if (opposingOrientation == null) return null;
+
+        BlockPos opposingPos = pos.add(facing.getVector());
+
+        // target and name must be inverted for the opposing connector
+        return new Connector3(opposingPos, opposingOrientation, target, name);
     }
 
     /**

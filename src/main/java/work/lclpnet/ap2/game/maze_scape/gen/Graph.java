@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class Graph<C, P extends Piece<C>, O extends OrientedPiece<C, P>> {
+public class Graph<C, P extends Piece<C>, O extends OrientedPiece<C, P, O>> {
 
     private final Node<C, P, O> root;
 

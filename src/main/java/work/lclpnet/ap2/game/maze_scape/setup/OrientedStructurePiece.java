@@ -6,6 +6,7 @@ import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3i;
 import org.jetbrains.annotations.Nullable;
+import work.lclpnet.ap2.game.maze_scape.gen.Node;
 import work.lclpnet.ap2.game.maze_scape.gen.OrientedPiece;
 import work.lclpnet.ap2.game.maze_scape.util.BVH;
 import work.lclpnet.ap2.impl.util.math.AffineIntMatrix;
@@ -15,7 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class OrientedStructurePiece implements OrientedPiece<Connector3, StructurePiece> {
+public class OrientedStructurePiece implements OrientedPiece<Connector3, StructurePiece, OrientedStructurePiece> {
 
     private final StructurePiece piece;
     private final BlockPos pos;
@@ -24,10 +25,12 @@ public class OrientedStructurePiece implements OrientedPiece<Connector3, Structu
     private final Matrix3i mat;
     private final BVH bounds;
     private final @Nullable Vec3d spawn;
+    private final @Nullable Connector3 parentConnector;
     @Nullable private volatile Matrix3i invMat = null;
     @Nullable private Cluster cluster = null;
+    @Nullable private Node<Connector3, StructurePiece, OrientedStructurePiece> node = null;
 
-    public OrientedStructurePiece(StructurePiece piece, BlockPos pos, int rotation, int parentConnector, @Nullable BVH bounds) {
+    public OrientedStructurePiece(StructurePiece piece, BlockPos pos, int rotation, int parentConnectorIndex, @Nullable BVH bounds) {
         this.piece = piece;
         this.pos = pos;
         this.rotation = rotation;
@@ -37,11 +40,11 @@ public class OrientedStructurePiece implements OrientedPiece<Connector3, Structu
 
         // rotate and translate base connectors
         var base = piece().connectors();
-        List<Connector3> connectors = new ArrayList<>(parentConnector == -1 ? base.size() : base.size() - 1);
+        List<Connector3> connectors = new ArrayList<>(parentConnectorIndex == -1 ? base.size() : base.size() - 1);
+
+        Connector3 parentConnector = null;
 
         for (int i = 0, baseSize = base.size(); i < baseSize; i++) {
-            if (i == parentConnector) continue;
-
             Connector3 connector = base.get(i);
 
             // find connector position
@@ -62,10 +65,17 @@ public class OrientedStructurePiece implements OrientedPiece<Connector3, Structu
                 throw new IllegalArgumentException("Invalid transformation: Invalid orientation");
             }
 
-            connectors.add(new Connector3(newConnectorPos, newOrientation, connector.name(), connector.target()));
+            Connector3 transformed = new Connector3(newConnectorPos, newOrientation, connector.name(), connector.target());
+
+            if (i == parentConnectorIndex) {
+                parentConnector = transformed;
+            } else {
+                connectors.add(transformed);
+            }
         }
 
         this.connectors = connectors;
+        this.parentConnector = parentConnector;
 
         Vec3d spawn = piece.spawn();
 
@@ -85,6 +95,10 @@ public class OrientedStructurePiece implements OrientedPiece<Connector3, Structu
     @Override
     public List<Connector3> connectors() {
         return connectors;
+    }
+
+    public @Nullable Connector3 parentConnector() {
+        return parentConnector;
     }
 
     public BVH bounds() {
@@ -126,6 +140,17 @@ public class OrientedStructurePiece implements OrientedPiece<Connector3, Structu
     @Nullable
     public Vec3d spawn() {
         return spawn;
+    }
+
+    @Override
+    @Nullable
+    public Node<Connector3, StructurePiece, OrientedStructurePiece> node() {
+        return node;
+    }
+
+    @Override
+    public void setNode(@Nullable Node<Connector3, StructurePiece, OrientedStructurePiece> node) {
+        this.node = node;
     }
 
     @Override

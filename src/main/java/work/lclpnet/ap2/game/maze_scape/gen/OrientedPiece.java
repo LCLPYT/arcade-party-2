@@ -1,5 +1,7 @@
 package work.lclpnet.ap2.game.maze_scape.gen;
 
+import org.jetbrains.annotations.Nullable;
+
 import java.util.List;
 
 /**
@@ -10,9 +12,13 @@ import java.util.List;
  * @param <C> The connector type.
  * @param <P> The base piece type.
  */
-public interface OrientedPiece<C, P extends Piece<C>> {
+public interface OrientedPiece<C, P extends Piece<C>, O extends OrientedPiece<C, P, O>> {
 
     P piece();
 
     List<C> connectors();
+
+    @Nullable Node<C, P, O> node();
+
+    void setNode(@Nullable Node<C, P, O> node);
 }

@@ -57,10 +57,13 @@ class GraphTest {
         assertEquals(7, graph.nodeCount());
     }
 
-    private Node<Object, Piece<Object>, OrientedPiece<Object, Piece<Object>>> node(
-            @Nullable Node<Object, Piece<Object>, OrientedPiece<Object, Piece<Object>>> parent) {
-        var node = new Node<>();
+    private Node<Object, Piece<Object>, OrientedTest> node(
+            @Nullable Node<Object, Piece<Object>, OrientedTest> parent) {
+        var node = new Node<Object, Piece<Object>, OrientedTest>();
         node.setParent(parent);
         return node;
     }
+
+    // anchor for generic self reference of OrientedPiece
+    private interface OrientedTest extends OrientedPiece<Object, Piece<Object>, OrientedTest> {}
 }

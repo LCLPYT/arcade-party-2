@@ -17,7 +17,7 @@ import java.util.function.Predicate;
  * If the equals method is not implemented accordingly with the instances returned by {@link GeneratorDomain#fittingPieces(O, Object, Node)},
  * the back-tracking algorithm might end up in an infinite loop.
  */
-public class GraphGenerator<C, P extends Piece<C>, O extends OrientedPiece<C, P>> {
+public class GraphGenerator<C, P extends Piece<C>, O extends OrientedPiece<C, P, O>> {
 
     private final GeneratorDomain<C, P, O> domain;
     private final Random random;
@@ -277,7 +277,7 @@ public class GraphGenerator<C, P extends Piece<C>, O extends OrientedPiece<C, P>
         INTERRUPTED
     }
 
-    public record Result<C, P extends Piece<C>, O extends OrientedPiece<C, P>>(ResultType type, Graph<C, P, O> graph) {
+    public record Result<C, P extends Piece<C>, O extends OrientedPiece<C, P, O>>(ResultType type, Graph<C, P, O> graph) {
 
         public boolean success() {
             return type == ResultType.SUCCESS;

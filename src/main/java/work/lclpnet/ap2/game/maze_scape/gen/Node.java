@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
 
-public class Node<C, P extends Piece<C>, O extends OrientedPiece<C, P>>
+public class Node<C, P extends Piece<C>, O extends OrientedPiece<C, P, O>>
         implements DirectedGraphNode<Node<C, P, O>>, UndirectedGraphNode<Node<C, P, O>> {
 
     private final @NotNull ArrayList<@Nullable Node<C, P, O>> neighbours = new ArrayList<>();
@@ -80,7 +80,15 @@ public class Node<C, P extends Piece<C>, O extends OrientedPiece<C, P>>
     }
 
     public void setOriented(@Nullable O oriented) {
+        if (this.oriented != null) {
+            this.oriented.setNode(null);
+        }
+
         this.oriented = oriented;
+
+        if (this.oriented != null) {
+            this.oriented.setNode(this);
+        }
     }
 
     public @Nullable O oriented() {

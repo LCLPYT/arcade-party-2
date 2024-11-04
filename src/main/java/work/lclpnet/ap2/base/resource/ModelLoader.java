@@ -15,7 +15,7 @@ import org.joml.Quaternionf;
 import work.lclpnet.ap2.impl.scene.BlockDisplayObject;
 import work.lclpnet.ap2.impl.scene.ItemDisplayObject;
 import work.lclpnet.ap2.impl.scene.Object3d;
-import work.lclpnet.ap2.impl.util.model.PreparedModel;
+import work.lclpnet.ap2.impl.util.model.TemplateModel;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -35,7 +35,7 @@ public class ModelLoader {
     }
 
     @Nullable
-    public PreparedModel load(InputStream in) throws IOException {
+    public TemplateModel load(InputStream in) throws IOException {
         byte[] bytes = in.readAllBytes();
         String str = new String(bytes, StandardCharsets.UTF_8);
 
@@ -91,7 +91,7 @@ public class ModelLoader {
 
         root.updateMatrixWorld();
 
-        return new PreparedModel(root);
+        return new TemplateModel(root);
     }
 
     private double coordinate(String s) {
