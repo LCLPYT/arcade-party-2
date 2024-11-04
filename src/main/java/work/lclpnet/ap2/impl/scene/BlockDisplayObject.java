@@ -63,6 +63,15 @@ public class BlockDisplayObject extends Object3d implements Mountable, Unmountab
         removeDisplay();
     }
 
+    @Override
+    public BlockDisplayObject deepCopy() {
+        var copy = new BlockDisplayObject(blockState);
+
+        copy.deepCopy(this);
+
+        return copy;
+    }
+
     private void removeDisplay() {
         if (entityRef == null) return;
 

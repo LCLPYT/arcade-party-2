@@ -15,6 +15,9 @@
   "license": "AGPL-3.0",
   "environment": "server",
   "entrypoints": {
+    "main": [
+      "work.lclpnet.ap2.base.ArcadePartyInit"
+    ],
     "game-entry": [
       "work.lclpnet.ap2.base.ArcadeParty"
     ]

@@ -73,6 +73,15 @@ public class ItemDisplayObject extends Object3d implements Mountable, Unmountabl
         removeDisplay();
     }
 
+    @Override
+    public ItemDisplayObject deepCopy() {
+        var copy = new ItemDisplayObject(stack);
+
+        copy.deepCopy(this);
+
+        return copy;
+    }
+
     private void removeDisplay() {
         if (entityRef == null) return;
 

@@ -180,6 +180,45 @@ public class Object3d {
         }
     }
 
+    public Object3d deepCopy() {
+        var type = this.getClass();
+
+        if (type != Object3d.class) {
+            throw new UnsupportedOperationException(type.getName() + "::deepCopy");
+        }
+
+        var copy = new Object3d();
+
+        copy.deepCopy(this);
+
+        return copy;
+    }
+
+    public void copy(Object3d other) {
+        this.position.set(other.position);
+        this.matrix.set(other.matrix);
+        this.matrixWorld.set(other.matrixWorld);
+        this.rotation.set(other.rotation);
+        this.scale.set(other.scale);
+    }
+
+    public void deepCopy(Object3d other) {
+        copy(other);
+
+        // detach from parent and clear children
+        this.parent = null;
+        this.children.clear();
+        this.deepCount = 0;
+
+        // copy children of other object
+        for (Object3d child : other.children) {
+            Object3d childCopy = child.deepCopy();
+            this.addChild(childCopy);
+        }
+
+        this.deepCount = other.deepCount;
+    }
+
     protected void onDetached() {}
 
     protected void onChildRemoved(Object3d child) {}

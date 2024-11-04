@@ -15,15 +15,17 @@ import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.api.util.model.Model;
+import work.lclpnet.ap2.api.util.model.ModelManager;
+import work.lclpnet.ap2.base.resource.ApResources;
 import work.lclpnet.ap2.game.maze_scape.gen.Graph;
 import work.lclpnet.ap2.game.maze_scape.gen.GraphGenerator;
 import work.lclpnet.ap2.game.maze_scape.gen.GraphGenerator.Result;
 import work.lclpnet.ap2.game.maze_scape.util.MSStruct;
-import work.lclpnet.ap2.impl.util.FunctionExecutor;
+import work.lclpnet.ap2.impl.scene.Object3d;
+import work.lclpnet.ap2.impl.scene.Scene;
 import work.lclpnet.ap2.impl.util.FutureUtil;
 import work.lclpnet.ap2.impl.util.StructureUtil;
 import work.lclpnet.ap2.impl.util.math.AffineIntMatrix;
-import work.lclpnet.ap2.impl.util.model.ModelManager;
 import work.lclpnet.ap2.impl.util.model.Models;
 import work.lclpnet.ap2.impl.util.world.ResetBlockWorldModifier;
 import work.lclpnet.kibu.access.entity.DisplayEntityAccess;
@@ -63,7 +65,7 @@ public class MSGenerator {
     private final int targetArea;
     private final float deadEndChance;
     private final StructureDomain domain;
-    private final DebugController debugController = new DebugController();
+    private final DebugController debugger = new DebugController();
     private GraphGenerator<Connector3, StructurePiece, OrientedStructurePiece> generator;
     private boolean decorate = true;
 
@@ -94,10 +96,11 @@ public class MSGenerator {
         var bounds = new StructureDomain.BoundsCfg(maxChunkSize, bottomY, topY);
         domain = new StructureDomain(loaded.pieces(), random, deadEndStart, bounds);
 
-        var modelManager = new ModelManager(new FunctionExecutor(world.getServer(), logger));
+        ModelManager modelManager = ApResources.getInstance();
 
         if (DEBUG_SPAWNS) {
-            debugController.spawnMarker = modelManager.loadFunction(Models.CROSS).orElseThrow();
+            debugger.enable(world);
+            debugger.spawnMarker = modelManager.getModel(Models.CROSS).orElseThrow();
         }
     }
 
@@ -184,8 +187,10 @@ public class MSGenerator {
 
         if (pos == null) return;
 
-        if (debugController.spawnMarker != null) {
-            debugController.spawnMarker.spawn(world, pos.subtract(0.5, 0, 0.5));
+        if (debugger.spawnMarker != null) {
+            Object3d model = debugger.spawnMarker.createInstance();
+            model.position.add(pos.x - 0.5, pos.y, pos.z - 0.5);
+            debugger.display(model);
         }
 
         var display = new DisplayEntity.TextDisplayEntity(EntityType.TEXT_DISPLAY, world);
@@ -371,6 +376,19 @@ public class MSGenerator {
     }
 
     private static class DebugController {
+        private @Nullable Scene scene = null;
         private @Nullable Model spawnMarker = null;
+
+        public void display(Object3d obj) {
+            if (scene != null) {
+                scene.add(obj);
+            }
+        }
+
+        public void enable(ServerWorld world) {
+            if (scene == null) {
+                scene = new Scene(world);
+            }
+        }
     }
 }
