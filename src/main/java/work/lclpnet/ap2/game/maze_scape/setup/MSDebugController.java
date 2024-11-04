@@ -8,6 +8,7 @@ import net.minecraft.text.Text;
 import net.minecraft.util.math.AffineTransformation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.math.Vec3i;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import work.lclpnet.ap2.api.util.model.Model;
@@ -21,6 +22,8 @@ import work.lclpnet.ap2.impl.util.model.TemplateModel;
 import work.lclpnet.kibu.access.entity.DisplayEntityAccess;
 
 import java.util.*;
+
+import static java.lang.Math.abs;
 
 class MSDebugController {
     private @Nullable Scene scene = null;
@@ -98,17 +101,27 @@ class MSDebugController {
 
                 Connector3 connector = connectors.get(i);
                 BlockPos pos = connector.pos();
-                double angleY = MathUtil.angleY(connector.direction());
+                Vec3i dir = connector.direction();
+                double angleY = MathUtil.angleY(dir);
 
-                displayArrow(childMarker, pos.getX() + 0.5, pos.getY() + 1, pos.getZ() + 0.5, 0.75, angleY);
+                displayArrow(childMarker,
+                        pos.getX() + 0.5 - abs(dir.getZ()) * 0.25,
+                        pos.getY() + 1,
+                        pos.getZ() + 0.5 - abs(dir.getX()) * 0.25,
+                        0.75, angleY);
             }
         }
 
         for (Connector3 connector : getOutgoingConnectors(node)) {
             BlockPos pos = connector.pos();
-            double angleY = MathUtil.angleY(connector.direction());
+            Vec3i dir = connector.direction();
+            double angleY = MathUtil.angleY(dir);
 
-            displayArrow(passageMarker, pos.getX() + 0.5, pos.getY() + 1.1, pos.getZ() + 0.5, 0.75, angleY);
+            displayArrow(passageMarker,
+                    pos.getX() + 0.5 + abs(dir.getZ()) * 0.25,
+                    pos.getY() + 1,
+                    pos.getZ() + 0.5 + abs(dir.getX()) * 0.25,
+                    0.75, angleY);
         }
     }
 
