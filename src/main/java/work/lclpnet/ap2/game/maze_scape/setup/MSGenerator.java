@@ -26,6 +26,7 @@ import work.lclpnet.ap2.impl.scene.Scene;
 import work.lclpnet.ap2.impl.util.FutureUtil;
 import work.lclpnet.ap2.impl.util.StructureUtil;
 import work.lclpnet.ap2.impl.util.math.AffineIntMatrix;
+import work.lclpnet.ap2.impl.util.math.MathUtil;
 import work.lclpnet.ap2.impl.util.model.Models;
 import work.lclpnet.ap2.impl.util.world.ResetBlockWorldModifier;
 import work.lclpnet.kibu.access.entity.DisplayEntityAccess;
@@ -52,7 +53,8 @@ public class MSGenerator {
     public static final int PLACE_FLAGS = Block.FORCE_STATE | Block.SKIP_DROPS;
     public static final boolean
             DEBUG_GENERATOR = false,
-            DEBUG_SPAWNS = false;
+            DEBUG_SPAWNS = true,
+            DEBUG_GRAPH = true;
     private static final int GENERATOR_MAX_TRIES = 5;
     private static final int GENERATOR_MAX_DURATION_MS = 15_000;
     private final ServerWorld world;
@@ -101,6 +103,11 @@ public class MSGenerator {
         if (DEBUG_SPAWNS) {
             debugger.enable(world);
             debugger.spawnMarker = modelManager.getModel(Models.CROSS).orElseThrow();
+        }
+
+        if (DEBUG_GRAPH) {
+            debugger.enable(world);
+            debugger.graphMarker = modelManager.getModel(Models.ARROW).orElseThrow();
         }
     }
 
@@ -169,17 +176,37 @@ public class MSGenerator {
             StructureUtil.placeStructureFast(struct, world, pos, transformation);
         }
 
-        if (DEBUG_SPAWNS) {
-            visualizeSpawn(oriented);
-        }
-
         if (decorate) {
             replaceJigsaws(oriented);
 
             closeConnectors(node, oriented);
         }
 
+        if (DEBUG_SPAWNS) {
+            visualizeSpawn(oriented);
+        }
+
+        if (DEBUG_GRAPH) {
+            visualizeGraph(oriented);
+        }
+
         return true;
+    }
+
+    private void visualizeGraph(OrientedStructurePiece oriented) {
+        if (debugger.graphMarker == null) return;
+
+        for (Connector3 connector : oriented.connectors()) {
+            Object3d marker = debugger.graphMarker.createInstance();
+            marker.scale.set(0.75);
+
+            BlockPos pos = connector.pos();
+            marker.position.set(pos.getX() + 0.5, pos.getY() + 1, pos.getZ() + 0.5);
+
+            marker.rotation.setAngleAxis(MathUtil.angleY(connector.direction()), 0, 1, 0);
+
+            debugger.display(marker);
+        }
     }
 
     private void visualizeSpawn(OrientedStructurePiece oriented) {
@@ -189,14 +216,10 @@ public class MSGenerator {
 
         if (debugger.spawnMarker != null) {
             Object3d marker = debugger.spawnMarker.createInstance();
-            marker.position.sub(0.5, 0, 0.5);
+            marker.position.set(pos.x, pos.y, pos.z);
+            marker.scale.set(0.75);
 
-            Object3d pivot = new Object3d();
-            pivot.position.set(pos.x, pos.y, pos.z);
-            pivot.scale.set(0.75);
-            pivot.addChild(marker);
-
-            debugger.display(pivot);
+            debugger.display(marker);
         }
 
         var display = new DisplayEntity.TextDisplayEntity(EntityType.TEXT_DISPLAY, world);
@@ -383,7 +406,7 @@ public class MSGenerator {
 
     private static class DebugController {
         private @Nullable Scene scene = null;
-        private @Nullable Model spawnMarker = null;
+        private @Nullable Model spawnMarker = null, graphMarker = null;
 
         public void display(Object3d obj) {
             if (scene != null) {

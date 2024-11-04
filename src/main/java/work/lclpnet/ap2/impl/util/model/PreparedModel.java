@@ -13,6 +13,8 @@ public class PreparedModel implements Model {
 
     @Override
     public Object3d createInstance() {
-        return model.deepCopy();
+        var wrapper = new Object3d();
+        wrapper.addChild(model.deepCopy());
+        return wrapper;
     }
 }

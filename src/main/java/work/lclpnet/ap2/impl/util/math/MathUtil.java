@@ -26,8 +26,16 @@ public class MathUtil {
         vec.z = Math.cos(rad);
     }
 
+    public static double angleY(Vec3i dir) {
+        return angleY(dir.getX(), dir.getZ());
+    }
+
+    public static double angleY(double x, double z) {
+        return Math.atan2(x, z);
+    }
+
     public static float vec2yaw(Vector3dc vec) {
-        return (float) Math.toDegrees(Math.atan2(-vec.x(), vec.z()));
+        return (float) Math.toDegrees(angleY(-vec.x(), vec.z()));
     }
 
     public static float rotateYaw(float yaw, Matrix3i mat, Vector3d tmp) {
