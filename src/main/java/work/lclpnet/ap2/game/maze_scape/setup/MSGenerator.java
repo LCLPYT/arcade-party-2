@@ -2,18 +2,9 @@ package work.lclpnet.ap2.game.maze_scape.setup;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.decoration.DisplayEntity;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.text.Text;
-import net.minecraft.util.math.AffineTransformation;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
-import org.jetbrains.annotations.Nullable;
-import org.joml.Matrix4f;
 import org.slf4j.Logger;
-import work.lclpnet.ap2.api.util.model.Model;
 import work.lclpnet.ap2.api.util.model.ModelManager;
 import work.lclpnet.ap2.base.resource.ApResources;
 import work.lclpnet.ap2.game.maze_scape.gen.Graph;
@@ -21,16 +12,10 @@ import work.lclpnet.ap2.game.maze_scape.gen.GraphGenerator;
 import work.lclpnet.ap2.game.maze_scape.gen.GraphGenerator.Result;
 import work.lclpnet.ap2.game.maze_scape.gen.Node;
 import work.lclpnet.ap2.game.maze_scape.util.MSStruct;
-import work.lclpnet.ap2.impl.scene.Object3d;
-import work.lclpnet.ap2.impl.scene.Scene;
 import work.lclpnet.ap2.impl.util.FutureUtil;
 import work.lclpnet.ap2.impl.util.StructureUtil;
 import work.lclpnet.ap2.impl.util.math.AffineIntMatrix;
-import work.lclpnet.ap2.impl.util.math.MathUtil;
-import work.lclpnet.ap2.impl.util.model.Models;
-import work.lclpnet.ap2.impl.util.model.TemplateModel;
 import work.lclpnet.ap2.impl.util.world.ResetBlockWorldModifier;
-import work.lclpnet.kibu.access.entity.DisplayEntityAccess;
 import work.lclpnet.kibu.jnbt.CompoundTag;
 import work.lclpnet.kibu.mc.KibuBlockPos;
 import work.lclpnet.kibu.schematic.FabricStructureWrapper;
@@ -69,7 +54,7 @@ public class MSGenerator {
     private final int targetArea;
     private final float deadEndChance;
     private final StructureDomain domain;
-    private final DebugController debugger = new DebugController();
+    private final MSDebugController debugger = new MSDebugController();
     private GraphGenerator<Connector3, StructurePiece, OrientedStructurePiece> generator;
     private boolean decorate = true;
 
@@ -101,20 +86,7 @@ public class MSGenerator {
         domain = new StructureDomain(loaded.pieces(), random, deadEndStart, bounds);
 
         ModelManager modelManager = ApResources.getInstance();
-
-        if (DEBUG_SPAWNS) {
-            debugger.enable(world);
-            debugger.spawnMarker = modelManager.getModel(Models.CROSS).orElseThrow();
-        }
-
-        if (DEBUG_GRAPH) {
-            debugger.enable(world);
-            debugger.childMarker = modelManager.getModel(Models.ARROW).orElseThrow();
-            debugger.passageMarker = Optional.of(debugger.childMarker)
-                    .map(model -> model instanceof TemplateModel m ? m : null)
-                    .map(m -> m.copy().replace(Blocks.LIME_CONCRETE.getDefaultState(), Blocks.LIGHT_BLUE_CONCRETE.getDefaultState()))
-                    .orElseThrow();
-        }
+        debugger.init(modelManager, world);
     }
 
     public static int getMaxChunkSize(GameMap map) {
@@ -160,6 +132,17 @@ public class MSGenerator {
 
     private void placePieces(Graph<Connector3, StructurePiece, OrientedStructurePiece> graph) {
         graph.root().traverse(this::placeNode);
+
+        if (DEBUG_GRAPH) {
+            graph.root().traverse(node -> {
+                OrientedStructurePiece oriented = node.oriented();
+
+                if (oriented == null) return false;
+
+                debugger.visualizeGraphEdges(oriented);
+                return true;
+            });
+        }
     }
 
     private boolean placeNode(Node<Connector3, StructurePiece, OrientedStructurePiece> node) {
@@ -190,10 +173,6 @@ public class MSGenerator {
 
         if (DEBUG_SPAWNS) {
             debugger.visualizeSpawn(oriented);
-        }
-
-        if (DEBUG_GRAPH) {
-            debugger.visualizeGraphEdges(oriented);
         }
 
         return true;
@@ -282,8 +261,7 @@ public class MSGenerator {
             closedConnectors.remove(opposing);
 
             var node = oriented.node();
-            var other = wall.oriented();
-            var otherNode = other.node();
+            var otherNode = wall.oriented().node();
 
             if (node != null && otherNode != null) {
                 node.addConnection(otherNode);
@@ -371,136 +349,4 @@ public class MSGenerator {
     }
 
     private record ClosedConnector(OrientedStructurePiece oriented, ResetBlockWorldModifier modifier) {}
-
-    private static class DebugController {
-        private @Nullable Scene scene = null;
-        private @Nullable Model spawnMarker = null, childMarker = null, passageMarker = null;
-        private @Nullable ServerWorld world = null;
-
-        public void display(Object3d obj) {
-            if (scene != null) {
-                scene.add(obj);
-            }
-        }
-
-        public void enable(ServerWorld world) {
-            if (scene == null) {
-                scene = new Scene(world);
-                this.world = world;
-            }
-        }
-
-        public void displayArrow(Model model, double x, double y, double z, double scale, double angleY) {
-            Object3d marker = model.createInstance();
-            marker.scale.set(scale);
-            marker.position.set(x, y, z);
-            marker.rotation.setAngleAxis(angleY, 0, 1, 0);
-
-            display(marker);
-        }
-
-        public void visualizeSpawn(OrientedStructurePiece oriented) {
-            Vec3d pos = oriented.spawn();
-
-            if (pos == null) return;
-
-            if (spawnMarker != null) {
-                Object3d marker = spawnMarker.createInstance();
-                marker.position.set(pos.x, pos.y, pos.z);
-                marker.scale.set(0.75);
-
-                display(marker);
-            }
-
-            var display = new DisplayEntity.TextDisplayEntity(EntityType.TEXT_DISPLAY, world);
-            display.setPosition(pos.add(0, 0.2, 0));
-
-            var text = Text.literal(oriented.piece().name() + " r" + oriented.rotation());
-            DisplayEntityAccess.setText(display, text);
-
-            DisplayEntityAccess.setBillboardMode(display, DisplayEntity.BillboardMode.CENTER);
-            DisplayEntityAccess.setBackground(display, 0);
-            DisplayEntityAccess.setTransformation(display, new AffineTransformation(new Matrix4f().scale(0.3f)));
-
-            if (world != null) {
-                world.spawnEntity(display);
-            }
-        }
-
-        private void visualizeGraphEdges(OrientedStructurePiece oriented) {
-            var node = oriented.node();
-
-            if (node == null || childMarker == null || passageMarker == null) return;
-
-            var children = node.children();
-            var connectors = oriented.connectors();
-
-            if (!children.isEmpty()) {
-                for (int i = 0; i < connectors.size(); i++) {
-                    var child = children.get(i);
-
-                    if (child == null) continue;
-
-                    Connector3 connector = connectors.get(i);
-                    BlockPos pos = connector.pos();
-                    double angleY = MathUtil.angleY(connector.direction());
-
-                    displayArrow(childMarker, pos.getX() + 0.5, pos.getY() + 1, pos.getZ() + 0.5, 0.75, angleY);
-                }
-            }
-
-            for (Connector3 connector : getOutgoingConnectors(node)) {
-                BlockPos pos = connector.pos();
-                double angleY = MathUtil.angleY(connector.direction());
-
-                displayArrow(passageMarker, pos.getX() + 0.5, pos.getY() + 1.1, pos.getZ() + 0.5, 0.75, angleY);
-            }
-        }
-
-        private List<Connector3> getOutgoingConnectors(Node<Connector3, StructurePiece, OrientedStructurePiece> from) {
-            OrientedStructurePiece oriented = from.oriented();
-
-            if (oriented == null) {
-                return List.of();
-            }
-
-            // collect all parent connectors from neighbour pieces
-            Set<Connector3> neighbourConnectors = new HashSet<>();
-
-            for (var neighbour : from.neighbours()) {
-                if (neighbour == null) continue;
-
-                OrientedStructurePiece adj = neighbour.oriented();
-
-                if (adj == null) continue;
-
-                neighbourConnectors.addAll(adj.connectors());
-                neighbourConnectors.add(adj.parentConnector());
-            }
-
-            // iterate over each connector and check if there is a connection via neighbours
-            List<Connector3> connectors = new ArrayList<>(1);
-
-            for (Connector3 connector : oriented.connectors()) {
-                Connector3 opposing = connector.createOpposing();
-
-                if (neighbourConnectors.contains(opposing)) {
-                    connectors.add(connector);
-                }
-            }
-
-            // also check the parent connector
-            Connector3 parentConnector = oriented.parentConnector();
-
-            if (parentConnector != null) {
-                Connector3 opposing = parentConnector.createOpposing();
-
-                if (neighbourConnectors.contains(opposing)) {
-                    connectors.add(parentConnector);
-                }
-            }
-
-            return connectors;
-        }
-    }
 }
