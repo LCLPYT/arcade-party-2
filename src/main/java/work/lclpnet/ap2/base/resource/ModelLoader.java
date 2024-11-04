@@ -10,6 +10,7 @@ import net.minecraft.nbt.*;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.util.math.AffineTransformation;
+import org.jetbrains.annotations.Nullable;
 import org.joml.Quaternionf;
 import work.lclpnet.ap2.impl.scene.BlockDisplayObject;
 import work.lclpnet.ap2.impl.scene.ItemDisplayObject;
@@ -19,9 +20,12 @@ import work.lclpnet.ap2.impl.util.model.PreparedModel;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class ModelLoader {
 
+    private static final Pattern SUMMON_PATTERN = Pattern.compile("(?:execute at @[sp] run )?summon (?:[a-z0-9_.-]+:)?[a-z0-9/._-]+ (~|~?[-+\\d.]+) (~|~?[-+\\d.]+) (~|~?[-+\\d.]+) ");
     private final RegistryWrapper.WrapperLookup lookup;
     private final RegistryWrapper.Impl<Block> blockLookup;
 
@@ -30,38 +34,80 @@ public class ModelLoader {
         blockLookup = lookup.getWrapperOrThrow(RegistryKeys.BLOCK);
     }
 
+    @Nullable
     public PreparedModel load(InputStream in) throws IOException {
         byte[] bytes = in.readAllBytes();
         String str = new String(bytes, StandardCharsets.UTF_8);
 
+        Matcher matcher = SUMMON_PATTERN.matcher(str);
         StringReader reader = new StringReader(str);
 
-        double x, y, z;
-        NbtCompound nbt;
+        Object3d root = null;
+        int count = 0;
 
-        try {
-            x = reader.readDouble();
-            reader.skipWhitespace();
+        while (matcher.find()) {
+            String xs = matcher.group(1);
+            String ys = matcher.group(2);
+            String zs = matcher.group(3);
 
-            y = reader.readDouble();
-            reader.skipWhitespace();
+            double x = coordinate(xs);
+            double y = coordinate(ys);
+            double z = coordinate(zs);
 
-            z = reader.readDouble();
-            reader.skipWhitespace();
+            int index = matcher.end();
+            reader.setCursor(index);
 
-            nbt = new StringNbtReader(reader).parseCompound();
-        } catch (CommandSyntaxException e) {
-            throw new IOException("Failed to parse model", e);
+            NbtCompound nbt;
+
+            try {
+                nbt = new StringNbtReader(reader).parseCompound();
+            } catch (CommandSyntaxException e) {
+                throw new IOException("Failed to parse model nbt", e);
+            }
+
+            var obj = new Object3d();
+            obj.position.set(x, y, z);
+
+            parseChildren(obj, nbt);
+
+            if (root == null) {
+                root = obj;
+            } else {
+                if (count == 1) {
+                    var newRoot = new Object3d();
+                    newRoot.addChild(root);
+                    root = newRoot;
+                }
+
+                root.addChild(obj);
+            }
+
+            count++;
         }
 
-        Object3d root = new Object3d();
-        root.position.set(x, y, z);
-
-        parseChildren(root, nbt);
+        if (root == null) {
+            return null;
+        }
 
         root.updateMatrixWorld();
 
         return new PreparedModel(root);
+    }
+
+    private double coordinate(String s) {
+        int len = s.length();
+
+        if (len == 0) {
+            return 0;
+        }
+
+        boolean rel = s.charAt(0) == '~';
+
+        if (len == 1 && rel) {
+            return 0;
+        }
+
+        return Double.parseDouble(s.substring(rel ? 1 : 0));
     }
 
     private void parseChildren(Object3d root, NbtCompound nbt) {

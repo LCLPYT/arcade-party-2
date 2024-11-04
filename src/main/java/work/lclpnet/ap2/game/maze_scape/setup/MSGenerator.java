@@ -188,9 +188,15 @@ public class MSGenerator {
         if (pos == null) return;
 
         if (debugger.spawnMarker != null) {
-            Object3d model = debugger.spawnMarker.createInstance();
-            model.position.add(pos.x - 0.5, pos.y, pos.z - 0.5);
-            debugger.display(model);
+            Object3d marker = debugger.spawnMarker.createInstance();
+            marker.position.sub(0.5, 0, 0.5);
+
+            Object3d pivot = new Object3d();
+            pivot.position.set(pos.x, pos.y, pos.z);
+            pivot.scale.set(0.75);
+            pivot.addChild(marker);
+
+            debugger.display(pivot);
         }
 
         var display = new DisplayEntity.TextDisplayEntity(EntityType.TEXT_DISPLAY, world);

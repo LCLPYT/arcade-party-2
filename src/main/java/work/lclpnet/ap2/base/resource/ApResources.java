@@ -18,7 +18,7 @@ import static work.lclpnet.ap2.base.ArcadeParty.logger;
 
 public class ApResources implements ModelManager {
 
-    private final ResourceFinder MODEL_FINDER = new ResourceFinder("models", ".nbtmodel");
+    private final ResourceFinder MODEL_FINDER = new ResourceFinder("function/model", ".mcfunction");
     private Map<Identifier, PreparedModel> models = Map.of();
 
     public void reload(ResourceManager manager, RegistryWrapper.WrapperLookup lookup) {
@@ -36,6 +36,11 @@ public class ApResources implements ModelManager {
                 model = modelLoader.load(in);
             } catch (IOException e) {
                 logger.error("Failed to load model {} from data pack {}", id, res.getPackId());
+                continue;
+            }
+
+            if (model == null) {
+                logger.error("No objects found in model {} from data pack {}", id, res.getPackId());
                 continue;
             }
 
