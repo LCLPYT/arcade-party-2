@@ -20,6 +20,7 @@ import work.lclpnet.ap2.base.resource.ApResources;
 import work.lclpnet.ap2.game.maze_scape.gen.Graph;
 import work.lclpnet.ap2.game.maze_scape.gen.GraphGenerator;
 import work.lclpnet.ap2.game.maze_scape.gen.GraphGenerator.Result;
+import work.lclpnet.ap2.game.maze_scape.gen.Node;
 import work.lclpnet.ap2.game.maze_scape.util.MSStruct;
 import work.lclpnet.ap2.impl.scene.Object3d;
 import work.lclpnet.ap2.impl.scene.Scene;
@@ -139,7 +140,7 @@ public class MSGenerator {
     }
 
     private void appendDeadEnd(OrientedStructurePiece oriented, int connectorIndex,
-                               Graph.Node<Connector3, StructurePiece, OrientedStructurePiece> node) {
+                               Node<Connector3, StructurePiece, OrientedStructurePiece> node) {
 
         var connectors = oriented.connectors();
         generator.initChildren(node, connectors.size());
@@ -156,7 +157,7 @@ public class MSGenerator {
         graph.root().traverse(this::placeNode);
     }
 
-    private boolean placeNode(Graph.Node<Connector3, StructurePiece, OrientedStructurePiece> node) {
+    private boolean placeNode(Node<Connector3, StructurePiece, OrientedStructurePiece> node) {
         OrientedStructurePiece oriented = node.oriented();
 
         if (oriented == null) {
@@ -278,7 +279,7 @@ public class MSGenerator {
         }
     }
 
-    private void closeConnectors(Graph.Node<Connector3, StructurePiece, OrientedStructurePiece> node, OrientedStructurePiece oriented) {
+    private void closeConnectors(Node<Connector3, StructurePiece, OrientedStructurePiece> node, OrientedStructurePiece oriented) {
         var connectors = oriented.connectors();
         var children = node.children();
         int size = connectors.size();

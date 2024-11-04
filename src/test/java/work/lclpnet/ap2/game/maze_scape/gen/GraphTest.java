@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class GraphTest {
 
@@ -57,9 +57,9 @@ class GraphTest {
         assertEquals(7, graph.nodeCount());
     }
 
-    private Graph.Node<Object, Piece<Object>, OrientedPiece<Object, Piece<Object>>> node(
-            @Nullable Graph.Node<Object, Piece<Object>, OrientedPiece<Object, Piece<Object>>> parent) {
-        var node = new Graph.Node<>();
+    private Node<Object, Piece<Object>, OrientedPiece<Object, Piece<Object>>> node(
+            @Nullable Node<Object, Piece<Object>, OrientedPiece<Object, Piece<Object>>> parent) {
+        var node = new Node<>();
         node.setParent(parent);
         return node;
     }

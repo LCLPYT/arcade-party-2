@@ -2,8 +2,8 @@ package work.lclpnet.ap2.game.maze_scape.gen.test;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import work.lclpnet.ap2.game.maze_scape.gen.Graph;
 import work.lclpnet.ap2.game.maze_scape.gen.GraphGenerator;
+import work.lclpnet.ap2.game.maze_scape.gen.Node;
 
 import java.util.ArrayList;
 import java.util.Objects;
@@ -18,18 +18,18 @@ public class TestGraphBuilder {
         this.graphGen = graphGen;
     }
 
-    public Graph.Node<StringConnector, StringPiece, OrientedStringPiece> start(StringPiece piece, int x, int y, int rotation) {
+    public Node<StringConnector, StringPiece, OrientedStringPiece> start(StringPiece piece, int x, int y, int rotation) {
         OrientedStringPiece startPiece = new OrientedStringPiece(piece, x, y, rotation, -1);
         domain.placePiece(startPiece);
 
         return node(startPiece, null);
     }
 
-    private Graph.@NotNull Node<StringConnector, StringPiece, OrientedStringPiece> node(OrientedStringPiece piece, @Nullable Graph.Node<StringConnector, StringPiece, OrientedStringPiece> parent) {
+    private @NotNull Node<StringConnector, StringPiece, OrientedStringPiece> node(OrientedStringPiece piece, @Nullable Node<StringConnector, StringPiece, OrientedStringPiece> parent) {
         var node = graphGen.makeNode(piece, parent);
 
         int count = piece.connectors().size();
-        var children = new ArrayList<Graph.Node<StringConnector, StringPiece, OrientedStringPiece>>(count);
+        var children = new ArrayList<Node<StringConnector, StringPiece, OrientedStringPiece>>(count);
 
         for (int i = 0; i < count; i++) {
             children.add(null);
@@ -40,7 +40,7 @@ public class TestGraphBuilder {
         return node;
     }
 
-    public Graph.@NotNull Node<StringConnector, StringPiece, OrientedStringPiece> choose(Graph.Node<StringConnector, StringPiece, OrientedStringPiece> node, int connector, StringPiece piece, int rotation) {
+    public @NotNull Node<StringConnector, StringPiece, OrientedStringPiece> choose(Node<StringConnector, StringPiece, OrientedStringPiece> node, int connector, StringPiece piece, int rotation) {
         var oriented = Objects.requireNonNull(node.oriented());
         var fitting = domain.fittingPieces(oriented, oriented.connectors().get(connector), node);
 

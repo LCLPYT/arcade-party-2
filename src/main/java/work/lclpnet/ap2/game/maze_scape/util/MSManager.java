@@ -31,7 +31,7 @@ import work.lclpnet.ap2.core.mixin.EntityNavigationAccessor;
 import work.lclpnet.ap2.core.type.ApEntity;
 import work.lclpnet.ap2.core.type.ApLandPathNodeMaker;
 import work.lclpnet.ap2.core.type.WardenBrainHandle;
-import work.lclpnet.ap2.game.maze_scape.gen.Graph;
+import work.lclpnet.ap2.game.maze_scape.gen.Node;
 import work.lclpnet.ap2.game.maze_scape.setup.Connector3;
 import work.lclpnet.ap2.game.maze_scape.setup.MSGenerator;
 import work.lclpnet.ap2.game.maze_scape.setup.OrientedStructurePiece;
@@ -118,8 +118,8 @@ public class MSManager {
                 .toList();
     }
 
-    private Set<Graph.Node<Connector3, StructurePiece, OrientedStructurePiece>> playerNodes() {
-        Set<Graph.Node<Connector3, StructurePiece, OrientedStructurePiece>> playerNodes = new HashSet<>();
+    private Set<Node<Connector3, StructurePiece, OrientedStructurePiece>> playerNodes() {
+        Set<Node<Connector3, StructurePiece, OrientedStructurePiece>> playerNodes = new HashSet<>();
 
         for (ServerPlayerEntity player : participants) {
             var node = struct.nodeAt(player.getPos());

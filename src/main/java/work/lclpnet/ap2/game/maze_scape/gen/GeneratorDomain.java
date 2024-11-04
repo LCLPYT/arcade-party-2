@@ -7,7 +7,7 @@ public interface GeneratorDomain<C, P extends Piece<C>, O extends OrientedPiece<
 
     O placeStart(P startPiece);
 
-    List<O> fittingPieces(O oriented, C connector, Graph.Node<C, P, O> node);
+    List<O> fittingPieces(O oriented, C connector, Node<C, P, O> node);
 
     void placePiece(O oriented);
 

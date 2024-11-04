@@ -4,7 +4,7 @@ import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.util.math.BlockPos;
 import work.lclpnet.ap2.game.maze_scape.gen.GeneratorDomain;
-import work.lclpnet.ap2.game.maze_scape.gen.Graph;
+import work.lclpnet.ap2.game.maze_scape.gen.Node;
 import work.lclpnet.ap2.game.maze_scape.util.BVH;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.WeightedList;
@@ -52,7 +52,7 @@ public class StructureDomain implements GeneratorDomain<Connector3, StructurePie
     }
 
     @Override
-    public List<OrientedStructurePiece> fittingPieces(OrientedStructurePiece oriented, Connector3 connector, Graph.Node<Connector3, StructurePiece, OrientedStructurePiece> node) {
+    public List<OrientedStructurePiece> fittingPieces(OrientedStructurePiece oriented, Connector3 connector, Node<Connector3, StructurePiece, OrientedStructurePiece> node) {
         fitting.clear();
 
         int nodeLevel = node.level();

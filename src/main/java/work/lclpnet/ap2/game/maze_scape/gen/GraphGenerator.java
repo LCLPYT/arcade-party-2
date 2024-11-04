@@ -14,7 +14,7 @@ import java.util.function.Predicate;
  * @param <P> Piece base type that has no position or orientation in the world yet.
  * @param <O> Materialized piece type in the world. Should be a type that combines {@link P} with a position and orientation.
  * @apiNote It is expected that instances of oriented pieces {@link O} can be compared with {@link O#equals(Object)}.
- * If the equals method is not implemented accordingly with the instances returned by {@link GeneratorDomain#fittingPieces(O, Object, Graph.Node)},
+ * If the equals method is not implemented accordingly with the instances returned by {@link GeneratorDomain#fittingPieces(O, Object, Node)},
  * the back-tracking algorithm might end up in an infinite loop.
  */
 public class GraphGenerator<C, P extends Piece<C>, O extends OrientedPiece<C, P>> {
@@ -137,7 +137,7 @@ public class GraphGenerator<C, P extends Piece<C>, O extends OrientedPiece<C, P>
         return ResultType.SUCCESS;
     }
 
-    public void placeRandomChildPiece(Graph.Node<C, P, O> node, int connectorIndex, List<O> fitting) {
+    public void placeRandomChildPiece(Node<C, P, O> node, int connectorIndex, List<O> fitting) {
         var children = node.children();
 
         O nextPiece = domain.choosePiece(fitting, random);
@@ -151,11 +151,11 @@ public class GraphGenerator<C, P extends Piece<C>, O extends OrientedPiece<C, P>
         domain.placePiece(nextPiece);
     }
 
-    public @NotNull List<Graph.Node<C, P, O>> initChildren(Graph.Node<C, P, O> node, int connectorCount) {
+    public @NotNull List<Node<C, P, O>> initChildren(Node<C, P, O> node, int connectorCount) {
         var children = node.children();
 
         if (children.size() < connectorCount) {
-            var newChildren = new ArrayList<Graph.@Nullable Node<C, P, O>>(connectorCount);
+            var newChildren = new ArrayList<@Nullable Node<C, P, O>>(connectorCount);
             newChildren.addAll(children);
             children = newChildren;
 
@@ -173,7 +173,7 @@ public class GraphGenerator<C, P extends Piece<C>, O extends OrientedPiece<C, P>
         // try to back-track short paths first
         var leafNodes = graph.leafNodes();
 
-        leafNodes.sort(Comparator.comparingInt(Graph.Node::level));
+        leafNodes.sort(Comparator.comparingInt(Node::level));
 
         for (var leaf : leafNodes) {
             var level = backTrackBranch(leaf, 0);
@@ -186,7 +186,7 @@ public class GraphGenerator<C, P extends Piece<C>, O extends OrientedPiece<C, P>
         return OptionalInt.empty();
     }
 
-    private OptionalInt backTrackBranch(Graph.Node<C, P, O> leaf, int depth) {
+    private OptionalInt backTrackBranch(Node<C, P, O> leaf, int depth) {
         if (interrupted) {
             return OptionalInt.empty();
         }
@@ -258,8 +258,8 @@ public class GraphGenerator<C, P extends Piece<C>, O extends OrientedPiece<C, P>
         return order;
     }
 
-    public Graph.Node<C, P, O> makeNode(O piece, @Nullable Graph.Node<C, P, O> parent) {
-        var node = new Graph.Node<C, P, O>();
+    public Node<C, P, O> makeNode(O piece, @Nullable Node<C, P, O> parent) {
+        var node = new Node<C, P, O>();
 
         node.setOriented(piece);
         node.setParent(parent);

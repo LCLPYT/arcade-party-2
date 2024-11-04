@@ -3,6 +3,7 @@ package work.lclpnet.ap2.game.maze_scape.util;
 import net.minecraft.util.math.Position;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.game.maze_scape.gen.Graph;
+import work.lclpnet.ap2.game.maze_scape.gen.Node;
 import work.lclpnet.ap2.game.maze_scape.setup.Connector3;
 import work.lclpnet.ap2.game.maze_scape.setup.OrientedStructurePiece;
 import work.lclpnet.ap2.game.maze_scape.setup.StructurePiece;
@@ -10,7 +11,7 @@ import work.lclpnet.ap2.game.maze_scape.setup.StructurePiece;
 public final class MSStruct {
 
     private final Graph<Connector3, StructurePiece, OrientedStructurePiece> graph;
-    private final CachedGraphDistanceCalculator<Graph.Node<Connector3, StructurePiece, OrientedStructurePiece>> distanceCalculator;
+    private final CachedGraphDistanceCalculator<Node<Connector3, StructurePiece, OrientedStructurePiece>> distanceCalculator;
 
     public MSStruct(Graph<Connector3, StructurePiece, OrientedStructurePiece> graph) {
         this.graph = graph;
@@ -18,7 +19,7 @@ public final class MSStruct {
     }
 
     @Nullable
-    public Graph.Node<Connector3, StructurePiece, OrientedStructurePiece> nodeAt(Position pos) {
+    public Node<Connector3, StructurePiece, OrientedStructurePiece> nodeAt(Position pos) {
         for (var node : graph.root().iterate()) {
             var oriented = node.oriented();
 
@@ -36,7 +37,7 @@ public final class MSStruct {
         return graph;
     }
 
-    public CachedGraphDistanceCalculator<Graph.Node<Connector3, StructurePiece, OrientedStructurePiece>> distanceCalculator() {
+    public CachedGraphDistanceCalculator<Node<Connector3, StructurePiece, OrientedStructurePiece>> distanceCalculator() {
         return distanceCalculator;
     }
 }
