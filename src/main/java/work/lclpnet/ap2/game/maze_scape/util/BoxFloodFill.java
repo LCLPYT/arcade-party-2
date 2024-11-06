@@ -76,4 +76,9 @@ public class BoxFloodFill {
                 queue.add(new BlockPos(ax, ay, az));
         }
     }
+
+    public synchronized void reset() {
+        visited.clear();
+        queue.clear();
+    }
 }

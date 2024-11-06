@@ -20,7 +20,8 @@ public class MSScanner {
 
     public static final String
             FUNCTION_POOL = "ap2:maze_scape/function",
-            FUNCTION_SPAWN = "ap2:spawn";
+            FUNCTION_SPAWN = "ap2:spawn",
+            FUNCTION_PIT = "ap2:pit";
 
     private final Logger logger;
     private final FabricBlockStateAdapter adapter = FabricBlockStateAdapter.getInstance();
@@ -76,8 +77,10 @@ public class MSScanner {
 
         if (FUNCTION_POOL.equals(pool)) {
             // found a function jigsaw
-            if (FUNCTION_SPAWN.equals(name)) {
-                scan.spawn = new Vec3d(localPos.getX() + 0.5, localPos.getY() + 1, localPos.getZ() + 0.5);
+            switch (name) {
+                case FUNCTION_SPAWN -> scan.spawn = new Vec3d(localPos.getX() + 0.5, localPos.getY() + 1, localPos.getZ() + 0.5);
+                case FUNCTION_PIT -> scan.pitMarkers.add(localPos.toImmutable());
+                default -> {}
             }
             return;
         }
@@ -96,11 +99,13 @@ public class MSScanner {
         List<Connector3> connectors();
         List<BlockPos> jigsaws();
         @Nullable Vec3d spawn();
+        List<BlockPos> pitMarkers();
     }
 
     private static class Scan implements Result {
         final List<Connector3> connectors = new ArrayList<>(2);
         final List<BlockPos> jigsaws = new ArrayList<>(2);
+        final List<BlockPos> pitMarkers = new ArrayList<>(0);
         @Nullable Vec3d spawn = null;
 
         public List<Connector3> connectors() {
@@ -114,6 +119,11 @@ public class MSScanner {
 
         public @Nullable Vec3d spawn() {
             return spawn;
+        }
+
+        @Override
+        public List<BlockPos> pitMarkers() {
+            return pitMarkers;
         }
     }
 }

@@ -7,6 +7,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3i;
+import net.minecraft.util.shape.VoxelShape;
 import org.apache.commons.io.FilenameUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -33,6 +34,7 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
+import static java.lang.Math.abs;
 import static java.lang.Math.pow;
 
 public class MSLoader {
@@ -190,14 +192,74 @@ public class MSLoader {
         Vec3d spawnPos = Optional.ofNullable(scanResult.spawn())
                 .orElseGet(() -> findSpawnPos(wrapper, insideMask));
 
+        StructureMask pit = buildPitMask(wrapper, scanResult.pitMarkers());
+
         StructurePiece piece = new StructurePiece(name, wrapper, bounds, scanResult.connectors(), weight, maxCount, connectSame, clusters,
-                minDistance, updateBlocks, spawnPos, scanResult.jigsaws());
+                minDistance, updateBlocks, spawnPos, scanResult.jigsaws(), pit);
 
         for (ClusterDef cluster : clusters) {
             cluster.pieces().add(piece);
         }
 
         return piece;
+    }
+
+    private StructureMask buildPitMask(FabricStructureWrapper wrapper, List<BlockPos> pitMarkers) {
+        BlockStructure struct = wrapper.getStructure();
+        int width = struct.getWidth();
+        int height = struct.getHeight();
+        int length = struct.getLength();
+
+        boolean[][][] mask = new boolean[width][height][length];
+        var queryPos = new BlockPos.Mutable();
+        BoxFloodFill floodFill = null;
+
+        // initiate flood fill from each marker, but without ascending.
+        // each position is expanded upwards greedily
+        for (BlockPos pitMarker : pitMarkers) {
+            if (floodFill == null) {
+                floodFill = new BoxFloodFill(width, height, length);
+            }
+
+            int topY = pitMarker.getY();
+
+            floodFill.execute(pitMarker, pos -> {
+                final int x = pos.getX();
+                int y = pos.getY();
+                final int z = pos.getZ();
+
+                mask[x][y][z] = true;
+
+                // greedily expand up, until hitting a surface; flood fill isn't propagated
+                for (++y; y < height; y++) {
+                    if (mask[x][y][z]) break;
+
+                    queryPos.set(x, y, z);
+
+                    BlockState state = wrapper.getBlockState(queryPos);
+                    VoxelShape shape = state.getSidesShape(wrapper, queryPos);
+
+                    if (!shape.isEmpty()) {
+                        double w = shape.getMax(Direction.Axis.X) - shape.getMin(Direction.Axis.X);
+                        double h = shape.getMax(Direction.Axis.Y) - shape.getMin(Direction.Axis.Y);
+                        double l = shape.getMax(Direction.Axis.Z) - shape.getMin(Direction.Axis.Z);
+
+                        // surface
+                        if (abs(w - 1.0) < 1e-4 && abs(l - 1.0) < 1e-4 && h > 0.4) break;
+                    }
+
+                    mask[x][y][z] = true;
+                }
+            }, (x, y, z) -> {
+                if (y > topY || mask[x][y][z]) return false;
+
+                queryPos.set(x, y, z);
+
+                return !wrapper.getBlockState(queryPos).isFullCube(world, queryPos);
+            });
+        }
+
+        return new StructureMask(mask, width, height, length);
     }
 
     @Nullable
@@ -343,7 +405,7 @@ public class MSLoader {
         boolean[][][] wallMask = structMask.mask();
 
         // inside initially contains everything; the outside is removed iteratively from the mask
-        boolean[][][] inside = StructureMask.fill(new boolean[width][height][length], width, height, true);
+        boolean[][][] inside = StructureMask.fill(new boolean[width][height][length], true);
 
         // utilize flood fill to detect outside
         var floodFill = new BoxFloodFill(width, height, length);

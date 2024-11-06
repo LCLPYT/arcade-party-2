@@ -23,7 +23,8 @@ public record StructurePiece(
         int minDistance,
         boolean updateBlocks,
         @Nullable Vec3d spawn,
-        List<BlockPos> jigsaws
+        List<BlockPos> jigsaws,
+        StructureMask pit
 ) implements Piece<Connector3> {
 
     public boolean limitedCount() {

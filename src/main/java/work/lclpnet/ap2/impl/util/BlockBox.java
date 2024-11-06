@@ -6,6 +6,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.util.Collider;
 import work.lclpnet.ap2.impl.util.math.AffineIntMatrix;
+import work.lclpnet.kibu.util.math.Matrix3i;
 
 import java.util.Iterator;
 import java.util.List;
@@ -70,6 +71,10 @@ public class BlockBox implements Pair<BlockPos, BlockPos>, Iterable<BlockPos>, C
 
     public BlockBox transform(AffineIntMatrix mat4) {
         return new BlockBox(mat4.transform(min), mat4.transform(max));
+    }
+
+    public BlockBox transform(Matrix3i mat3) {
+        return new BlockBox(mat3.transform(min), mat3.transform(max));
     }
 
     @Override

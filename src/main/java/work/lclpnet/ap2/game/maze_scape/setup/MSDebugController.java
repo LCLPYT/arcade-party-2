@@ -11,15 +11,18 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3i;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
+import org.joml.Vector3f;
 import work.lclpnet.ap2.api.util.model.Model;
 import work.lclpnet.ap2.api.util.model.ModelManager;
 import work.lclpnet.ap2.game.maze_scape.gen.Node;
 import work.lclpnet.ap2.impl.scene.Object3d;
 import work.lclpnet.ap2.impl.scene.Scene;
+import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.math.MathUtil;
 import work.lclpnet.ap2.impl.util.model.Models;
 import work.lclpnet.ap2.impl.util.model.TemplateModel;
 import work.lclpnet.kibu.access.entity.DisplayEntityAccess;
+import work.lclpnet.kibu.util.math.Matrix3i;
 
 import java.util.*;
 
@@ -169,5 +172,26 @@ class MSDebugController {
         }
 
         return connectors;
+    }
+
+    public void visualizePits(OrientedStructurePiece oriented) {
+        if (world == null) return;
+
+        Matrix3i mat = oriented.transformation();
+        BlockPos pos = oriented.pos();
+
+        for (BlockBox box : oriented.piece().pit().greedyMeshing().generateBoxes()) {
+            box = box.transform(mat);
+
+            var display = new DisplayEntity.BlockDisplayEntity(EntityType.BLOCK_DISPLAY, world);
+            display.setPosition(Vec3d.of(pos.add(box.min())));
+
+            DisplayEntityAccess.setBlockState(display, Blocks.RED_STAINED_GLASS.getDefaultState());
+
+            var scale = new Vector3f(box.width(), box.height(), box.length());
+            DisplayEntityAccess.setTransformation(display, new AffineTransformation(null, null, scale, null));
+
+            world.spawnEntity(display);
+        }
     }
 }

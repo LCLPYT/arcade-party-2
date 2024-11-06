@@ -9,6 +9,10 @@ import java.util.Arrays;
 
 public record StructureMask(boolean[][][] mask, int width, int height, int length) implements GreedyMeshing.VoxelView {
 
+    public StructureMask(int width, int height, int length) {
+        this(fill(new boolean[width][height][length], false), width, height, length);
+    }
+
     @Override
     public boolean isVoxelAt(int x, int y, int z) {
         return x >= 0 && x < width && y >= 0 && y < height && z >= 0 && z < length && mask[x][y][z];
@@ -35,7 +39,7 @@ public record StructureMask(boolean[][][] mask, int width, int height, int lengt
     public static StructureMask nonAir(BlockStructure structure) {
         // init new empty mask
         int width = structure.getWidth(), height = structure.getHeight(), length = structure.getLength();
-        boolean[][][] mask = fill(new boolean[width][height][length], width, height, false);
+        boolean[][][] mask = fill(new boolean[width][height][length], false);
 
         var origin = structure.getOrigin();
 
@@ -48,10 +52,10 @@ public record StructureMask(boolean[][][] mask, int width, int height, int lengt
         return new StructureMask(mask, width, height, length);
     }
 
-    public static boolean[][][] fill(boolean[][][] mask, int width, int height, boolean val) {
-        for (int x = 0; x < width; x++) {
-            for (int y = 0; y < height; y++) {
-                Arrays.fill(mask[x][y], val);
+    public static boolean[][][] fill(boolean[][][] mask, boolean val) {
+        for (boolean[][] slices : mask) {
+            for (boolean[] slice : slices) {
+                Arrays.fill(slice, val);
             }
         }
 
