@@ -71,7 +71,12 @@ public final class MSStruct {
 
     @Nullable
     public Node<Connector3, StructurePiece, OrientedStructurePiece> nodeAt(Position pos) {
-        Chunk chunk = chunkAt(MathHelper.floor(pos.getX()), MathHelper.floor(pos.getZ()));
+        return nodeAt(pos.getX(), pos.getY(), pos.getZ());
+    }
+
+    @Nullable
+    public Node<Connector3, StructurePiece, OrientedStructurePiece> nodeAt(double x, double y, double z) {
+        Chunk chunk = chunkAt(MathHelper.floor(x), MathHelper.floor(z));
 
         if (chunk == null || chunk.nodes == null) {
             return null;
@@ -82,7 +87,7 @@ public final class MSStruct {
 
             if (oriented == null) continue;
 
-            if (oriented.bounds().contains(pos)) {
+            if (oriented.bounds().contains(x, y, z)) {
                 return node;
             }
         }

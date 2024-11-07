@@ -15,6 +15,7 @@ import work.lclpnet.ap2.game.maze_scape.util.MSStruct;
 import work.lclpnet.ap2.impl.game.EliminationGameInstance;
 import work.lclpnet.ap2.impl.util.math.MathUtil;
 import work.lclpnet.kibu.scheduler.Ticks;
+import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.kibu.util.math.Matrix3i;
 import work.lclpnet.lobby.game.map.GameMap;
 import work.lclpnet.lobby.game.map.MapUtils;
@@ -86,6 +87,8 @@ public class MazeScapeInstance extends EliminationGameInstance implements MapBoo
         var manager = new MSManager(getWorld(), getMap(), struct, gameHandle.getParticipants(), gameHandle.getLogger());
         manager.init(gameHandle);
 
-        gameHandle.getGameScheduler().timeout(manager::spawnMobs, MOB_SPAWN_DELAY_TICKS);
+        TaskScheduler scheduler = gameHandle.getGameScheduler();
+        scheduler.timeout(manager::spawnMobs, MOB_SPAWN_DELAY_TICKS);
+        scheduler.interval(manager::tick, 1);
     }
 }

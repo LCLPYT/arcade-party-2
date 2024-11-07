@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableSet;
 import com.mojang.serialization.Dynamic;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.brain.Activity;
@@ -53,6 +54,7 @@ public class MSManager {
     private final Logger logger;
     private final MSTargetManager targetManager;
     private final int mapChunkRadius;
+    private final List<Entity> entities = new ArrayList<>();
 
     public MSManager(ServerWorld world, GameMap map, MSStruct struct, Participants participants, Logger logger) {
         this.world = world;
@@ -174,6 +176,7 @@ public class MSManager {
         }
 
         world.spawnEntity(warden);
+        entities.add(warden);
 
         ServerPlayerEntity nearest = targetManager.findNearestTarget(warden);
 
@@ -228,5 +231,53 @@ public class MSManager {
 
     private static boolean isTargeting(WardenEntity warden, LivingEntity entity) {
         return warden.getBrain().getOptionalRegisteredMemory(MemoryModuleType.ATTACK_TARGET).filter(x -> x == entity).isPresent();
+    }
+
+    public void tick() {
+        for (Entity entity : entities) {
+            validatePos(entity);
+        }
+    }
+
+    private void validatePos(Entity entity) {
+        var node = struct.nodeAt(entity.getX(), entity.getY(), entity.getZ());
+
+        if (node == null) {
+            teleportToDistantPos(entity);
+            return;
+        }
+
+        OrientedStructurePiece oriented = node.oriented();
+
+        if (oriented == null) {
+            teleportToDistantPos(entity);
+            return;
+        }
+
+        if (oriented.isPitAt(entity.getBlockX(), entity.getBlockY(), entity.getBlockZ())) {
+            Vec3d spawn = oriented.spawn();
+
+            if (spawn == null) {
+                teleportToDistantPos(entity);
+                return;
+            }
+
+            teleport(entity, spawn);
+        }
+    }
+
+    private void teleportToDistantPos(Entity entity) {
+        var spawns = mostDistantSpawns();
+
+        if (spawns.isEmpty()) {
+            logger.error("Could not find distant position");
+            return;
+        }
+
+        teleport(entity, spawns.getFirst());
+    }
+
+    private void teleport(Entity entity, Vec3d pos) {
+        entity.teleport(world, pos.getX(), pos.getY(), pos.getZ(), Set.of(), entity.getYaw(), entity.getPitch());
     }
 }
