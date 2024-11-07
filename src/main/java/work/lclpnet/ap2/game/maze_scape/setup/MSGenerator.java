@@ -56,6 +56,7 @@ public class MSGenerator {
     private final float deadEndChance;
     private final StructureDomain domain;
     private final MSDebugController debugger = new MSDebugController();
+    private final StructureDomain.BoundsCfg bounds;
     private GraphGenerator<Connector3, StructurePiece, OrientedStructurePiece> generator;
     private boolean decorate = true;
 
@@ -83,7 +84,7 @@ public class MSGenerator {
         int bottomY = world.getBottomY();
         int topY = world.getTopY() - 1;
 
-        var bounds = new StructureDomain.BoundsCfg(maxChunkSize, bottomY, topY);
+        bounds = new StructureDomain.BoundsCfg(maxChunkSize, bottomY, topY);
         domain = new StructureDomain(loaded.pieces(), random, deadEndStart, bounds);
 
         ModelManager modelManager = ApResources.getInstance();
@@ -319,7 +320,7 @@ public class MSGenerator {
 
             placePieces(graph);
 
-            return res.optional().map(MSStruct::new);
+            return res.optional().map(g -> new MSStruct(g, bounds));
         }));
     }
 

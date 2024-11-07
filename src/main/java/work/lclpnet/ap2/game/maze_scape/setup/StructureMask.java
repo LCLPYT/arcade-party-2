@@ -9,10 +9,6 @@ import java.util.Arrays;
 
 public record StructureMask(boolean[][][] mask, int width, int height, int length) implements GreedyMeshing.VoxelView {
 
-    public StructureMask(int width, int height, int length) {
-        this(fill(new boolean[width][height][length], false), width, height, length);
-    }
-
     @Override
     public boolean isVoxelAt(int x, int y, int z) {
         return x >= 0 && x < width && y >= 0 && y < height && z >= 0 && z < length && mask[x][y][z];

@@ -35,8 +35,8 @@ public class StructureDomain implements GeneratorDomain<Connector3, StructurePie
         this.fitting = new ArrayList<>(pieces.size());
         this.deadEndStartLevel = deadEndStartLevel;
 
-        int min = -bounds.maxChunkSize * 16;
-        int max = bounds.maxChunkSize * 16 - 1;
+        int min = bounds.min();
+        int max = bounds.max();
 
         this.bounds = new BlockBox(min, bounds.bottomY, min, max, bounds.topY, max);
     }
@@ -218,5 +218,14 @@ public class StructureDomain implements GeneratorDomain<Connector3, StructurePie
         onlyDeadEnds = false;
     }
 
-    public record BoundsCfg(int maxChunkSize, int bottomY, int topY) {}
+    public record BoundsCfg(int maxChunkSize, int bottomY, int topY) {
+
+        public int min() {
+            return -maxChunkSize * 16;
+        }
+
+        public int max() {
+            return maxChunkSize * 16 - 1;
+        }
+    }
 }

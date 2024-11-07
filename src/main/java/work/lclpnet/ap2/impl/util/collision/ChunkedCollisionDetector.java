@@ -63,7 +63,7 @@ public class ChunkedCollisionDetector implements CollisionDetector {
         return ChunkPos.toLong(rx, rz);
     }
 
-    private static Iterable<Vec2i> iterateRegions(Collider collider) {
+    public static Iterable<Vec2i> iterateRegions(Collider collider) {
         BlockPos min = collider.min(), max = collider.max();
 
         int minRx = ChunkSectionPos.getSectionCoord(min.getX()), minRz = ChunkSectionPos.getSectionCoord(min.getZ());

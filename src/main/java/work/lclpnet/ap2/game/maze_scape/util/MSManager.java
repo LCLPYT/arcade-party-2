@@ -36,6 +36,7 @@ import work.lclpnet.ap2.game.maze_scape.setup.Connector3;
 import work.lclpnet.ap2.game.maze_scape.setup.MSGenerator;
 import work.lclpnet.ap2.game.maze_scape.setup.OrientedStructurePiece;
 import work.lclpnet.ap2.game.maze_scape.setup.StructurePiece;
+import work.lclpnet.ap2.impl.ai.BlockedPathFindingPredicate;
 import work.lclpnet.ap2.impl.util.EntityUtil;
 import work.lclpnet.ap2.impl.util.world.ChunkPersistence;
 import work.lclpnet.lobby.game.map.GameMap;
@@ -168,7 +169,8 @@ public class MSManager {
         PathNodeMaker nodeMaker = ((EntityNavigationAccessor) navigation).getNodeMaker();
 
         if (nodeMaker instanceof ApLandPathNodeMaker apPathMaker) {
-            apPathMaker.ap2$enablePathfindingPatch();
+            apPathMaker.ap2$addPathFindingPredicate(BlockedPathFindingPredicate.getInstance());
+            apPathMaker.ap2$addPathFindingPredicate(new PitPathFindingPredicate(struct));
         }
 
         world.spawnEntity(warden);
