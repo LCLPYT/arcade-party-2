@@ -23,7 +23,7 @@ public class NarrowMovementPatch {
         double dy = node.y;
         double dz = node.z + hitBoxOffset;
 
-        Box boxAtNodePos = entity.getType().getDimensions().getBoxAt(dx, dy, dz);
+        Box boxAtNodePos = entity.getDimensions(entity.getPose()).getBoxAt(dx, dy, dz);
 
         World world = entity.getWorld();
         var blockCollisions = world.getBlockCollisions(entity, boxAtNodePos);
