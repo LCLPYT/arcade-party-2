@@ -1,29 +1,28 @@
 package work.lclpnet.ap2.core.patch;
 
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.ai.pathing.PathNode;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.Nullable;
 
-import static java.lang.Math.max;
-import static java.lang.Math.min;
+import static java.lang.Math.*;
 import static net.minecraft.util.math.Direction.Axis.X;
 import static net.minecraft.util.math.Direction.Axis.Z;
 
 
 public class NarrowMovementPatch {
 
-    public static Vec3d getNodePosition(Entity entity, PathNode node) {
+    @Nullable
+    public static Vec3d getNodePosition(Entity entity, int x, int y, int z) {
         double hitBoxOffset = ((int) (entity.getWidth() + 1.0F)) * 0.5;
 
         // default node position
-        double dx = node.x + hitBoxOffset;
-        double dy = node.y;
-        double dz = node.z + hitBoxOffset;
+        double dx = x + hitBoxOffset;
+        double dz = z + hitBoxOffset;
 
-        Box boxAtNodePos = entity.getDimensions(entity.getPose()).getBoxAt(dx, dy, dz);
+        Box boxAtNodePos = entity.getDimensions(entity.getPose()).getBoxAt(dx, y, dz);
 
         World world = entity.getWorld();
         var blockCollisions = world.getBlockCollisions(entity, boxAtNodePos);
@@ -34,6 +33,9 @@ public class NarrowMovementPatch {
             double collisionMinZ = collision.getMin(Z);
             double overlapX = min(collision.getMax(X), boxAtNodePos.maxX) - max(collisionMinX, boxAtNodePos.minX);
             double overlapZ = min(collision.getMax(Z), boxAtNodePos.maxZ) - max(collisionMinZ, boxAtNodePos.minZ);
+
+            // if overlap is about the same along both axes, the collision cannot be resolved without error
+            if (abs(overlapX - overlapZ) < 0.1) continue;
 
             int mtvX = 0, mtvZ = 0;
             double minOverlap = Double.MAX_VALUE;
@@ -56,7 +58,7 @@ public class NarrowMovementPatch {
 
             Vec3d adjusted = new Vec3d(
                     dx + mtvX * minOverlap,
-                    dy,
+                    y,
                     dz + mtvZ * minOverlap
             );
 

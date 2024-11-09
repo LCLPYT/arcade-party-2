@@ -1,11 +1,12 @@
 package work.lclpnet.ap2.core.mixin;
 
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import net.minecraft.entity.ai.pathing.LandPathNodeMaker;
 import net.minecraft.entity.ai.pathing.PathNode;
 import net.minecraft.entity.ai.pathing.PathNodeType;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
@@ -65,26 +66,28 @@ public class LandPathNodeMakerMixin implements ApLandPathNodeMaker {
         }
     }
 
-    @Inject(
+    @WrapOperation(
             method = "getPathNode",
             at = @At(
                     value = "INVOKE",
                     target = "Lnet/minecraft/entity/ai/pathing/LandPathNodeMaker;getNodeType(III)Lnet/minecraft/entity/ai/pathing/PathNodeType;"
-            ),
-            cancellable = true
+            )
     )
-    public void kibu$modifyGetPathNode(int x, int y, int z, int maxYStep, double prevFeetY, Direction direction, PathNodeType nodeType, CallbackInfoReturnable<PathNode> cir) {
+    public PathNodeType kibu$modifyGetPathNode(LandPathNodeMaker instance, int x, int y, int z, Operation<PathNodeType> original) {
         var pred = predicates;
 
-        if (pred == null || from == null) return;
+        if (pred == null || from == null) {
+            return original.call(instance, x, y, z);
+        }
 
         MobEntity entity = ((PathNodeMakerAccessor) this).getEntity();
 
         for (PathFindingPredicate predicate : pred) {
             if (!predicate.canReach(x, y, z, entity, from)) {
-                cir.setReturnValue(null);
-                break;
+                return PathNodeType.BLOCKED;
             }
         }
+
+        return original.call(instance, x, y, z);
     }
 }

@@ -52,7 +52,7 @@ public class PathMixin implements ApPath {
 
         PathNode node = this.nodes.get(index);
 
-        Vec3d pos = NarrowMovementPatch.getNodePosition(entity, node);
+        Vec3d pos = NarrowMovementPatch.getNodePosition(entity, node.x, node.y, node.z);
 
         if (pos == null) return;
 
