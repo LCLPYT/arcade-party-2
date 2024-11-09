@@ -142,6 +142,7 @@ public class MSManager {
         warden.setPersistent();
         warden.setOnGround(true);  // required to perform path finding immediately
         warden.setGlowing(true);
+        EntityUtil.setAttribute(warden, EntityAttributes.GENERIC_STEP_HEIGHT, 2);
 
         // TODO adjust ai for mini game
         var brain = warden.getBrain();

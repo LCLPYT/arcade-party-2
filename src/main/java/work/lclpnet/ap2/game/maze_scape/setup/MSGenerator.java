@@ -40,8 +40,8 @@ public class MSGenerator {
     public static final int PLACE_FLAGS = Block.FORCE_STATE | Block.SKIP_DROPS;
     public static final boolean
             DEBUG_GENERATOR = false,
-            DEBUG_SPAWNS = false,
-            DEBUG_GRAPH = false,
+            DEBUG_SPAWNS = true,
+            DEBUG_GRAPH = true,
             DEBUG_PITS = true;
     private static final int GENERATOR_MAX_TRIES = 5;
     private static final int GENERATOR_MAX_DURATION_MS = 15_000;
