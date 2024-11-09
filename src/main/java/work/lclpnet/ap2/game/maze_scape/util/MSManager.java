@@ -31,6 +31,7 @@ import work.lclpnet.ap2.core.hook.LivingEntityAttributeInitCallback;
 import work.lclpnet.ap2.core.mixin.EntityNavigationAccessor;
 import work.lclpnet.ap2.core.type.ApEntity;
 import work.lclpnet.ap2.core.type.ApLandPathNodeMaker;
+import work.lclpnet.ap2.core.type.ApMobNavigation;
 import work.lclpnet.ap2.core.type.WardenBrainHandle;
 import work.lclpnet.ap2.game.maze_scape.gen.Node;
 import work.lclpnet.ap2.game.maze_scape.setup.Connector3;
@@ -157,6 +158,10 @@ public class MSManager {
             nav.setCanPathThroughDoors(true);
             nav.setCanWalkOverFences(true);
             nav.setCanEnterOpenDoors(true);
+        }
+
+        if (navigation instanceof ApMobNavigation nav) {
+            nav.ap2$patchTrapdoorPathFindingTarget();
         }
 
         //noinspection DataFlowIssue

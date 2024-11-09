@@ -6,7 +6,6 @@ import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
@@ -53,64 +52,5 @@ public class TrapdoorJumpPatch {
         });
 
         return result.getType() == HitResult.Type.BLOCK;
-
-        // check if the entity has to jump in order to follow the current path
-//        Path path = entity.getNavigation().getCurrentPath();
-//
-//        if (path == null) {
-//            return false;
-//        }
-//
-//        int length = path.getLength();
-//
-//        if (length <= 0) {
-//            return false;
-//        }
-//
-//        int index = path.getCurrentNodeIndex();
-//
-//        if (index < 0 || index >= length - 1) {
-//            return false;
-//        }
-//
-//        PathNode current = path.getNode(index);
-//        PathNode next = path.getNode(index + 1);
-//
-//        BlockPos from = current.getBlockPos();
-//        BlockPos to = next.getBlockPos();
-//
-//        int dx = to.getX() - from.getX();
-//        int dz = to.getZ() - from.getZ();
-//
-//        Direction dir = Direction.fromVector(dx, 0, dz);
-//
-//        // only support jumping on x and z axis
-//        if (dir == null) {
-//            return false;
-//        }
-//
-//        World world = entity.getWorld();
-//
-//        if (noObstacle(world, to, dir) && noObstacle(world, from, dir.getOpposite())) {
-//            return false;
-//        }
-//
-//        // make sure the entity is looking towards the next node
-//        var rotation = new Vector3d();
-//        MathUtil.yaw2vec(entity.getYaw(), rotation);
-//
-//        return Math.acos(rotation.dot(dx, 0, dz)) <= Math.toRadians(60);
-    }
-
-    private static boolean noObstacle(World world, BlockPos pos, Direction expected) {
-        BlockState state = world.getBlockState(pos);
-
-        if (!state.isIn(BlockTags.TRAPDOORS) || !state.contains(OPEN) && !state.contains(FACING)) {
-            return true;
-        }
-
-        Direction facing = state.get(FACING);
-
-        return facing != expected;
     }
 }
