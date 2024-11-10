@@ -7,7 +7,7 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.api.util.music.*;
 import work.lclpnet.ap2.base.ArcadeParty;
-import work.lclpnet.ap2.impl.util.IndexedSet;
+import work.lclpnet.ap2.impl.ds.IndexedSet;
 import work.lclpnet.ap2.impl.util.music.MapSongCache;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.notica.api.data.SongMeta;

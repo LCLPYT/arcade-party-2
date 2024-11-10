@@ -15,8 +15,8 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.explosion.Explosion;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
+import work.lclpnet.ap2.impl.ds.WeightedList;
 import work.lclpnet.ap2.impl.util.SoundHelper;
-import work.lclpnet.ap2.impl.util.WeightedList;
 import work.lclpnet.kibu.translate.Translations;
 
 import java.util.HashMap;

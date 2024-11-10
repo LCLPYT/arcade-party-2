@@ -18,8 +18,8 @@ import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.core.mixin.MobEntityAccessor;
 import work.lclpnet.ap2.game.apocalypse_survival.goal.RoamGoal;
 import work.lclpnet.ap2.game.apocalypse_survival.goal.UnstuckGoal;
+import work.lclpnet.ap2.impl.ds.WeightedList;
 import work.lclpnet.ap2.impl.util.EntityUtil;
-import work.lclpnet.ap2.impl.util.WeightedList;
 import work.lclpnet.ap2.impl.util.world.stage.Stage;
 import work.lclpnet.kibu.scheduler.Ticks;
 

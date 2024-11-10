@@ -10,8 +10,8 @@ import net.minecraft.registry.tag.TagKey;
 import net.minecraft.server.network.ServerPlayerEntity;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.game.pillar_battle.item.*;
+import work.lclpnet.ap2.impl.ds.IndexedSet;
 import work.lclpnet.ap2.impl.tags.ApItemTags;
-import work.lclpnet.ap2.impl.util.IndexedSet;
 
 import java.util.Random;
 import java.util.Set;

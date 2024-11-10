@@ -4,7 +4,7 @@ import net.minecraft.block.BlockState;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
-import work.lclpnet.ap2.impl.util.WeightedList;
+import work.lclpnet.ap2.impl.ds.WeightedList;
 import work.lclpnet.kibu.util.BlockStateUtils;
 
 import java.util.Random;

@@ -3,7 +3,7 @@ package work.lclpnet.ap2.impl.util.music;
 import org.jetbrains.annotations.NotNull;
 import work.lclpnet.ap2.api.util.music.LoadableSong;
 import work.lclpnet.ap2.api.util.music.WeightedSong;
-import work.lclpnet.ap2.impl.util.WeightedList;
+import work.lclpnet.ap2.impl.ds.WeightedList;
 
 import java.util.Collections;
 import java.util.Random;

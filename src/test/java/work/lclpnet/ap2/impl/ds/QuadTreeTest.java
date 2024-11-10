@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.impl.util;
+package work.lclpnet.ap2.impl.ds;
 
 import net.minecraft.util.math.Vec3d;
 import org.junit.jupiter.api.BeforeEach;

@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.impl.util;
+package work.lclpnet.ap2.impl.ds;
 
 import com.google.common.collect.Iterators;
 import net.minecraft.util.math.Vec3d;

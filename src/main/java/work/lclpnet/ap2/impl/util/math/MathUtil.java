@@ -1,9 +1,12 @@
 package work.lclpnet.ap2.impl.util.math;
 
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3i;
 import org.joml.Vector3d;
 import org.joml.Vector3dc;
 import work.lclpnet.kibu.util.math.Matrix3i;
+
+import static java.lang.Math.abs;
 
 public class MathUtil {
 
@@ -47,4 +50,8 @@ public class MathUtil {
     }
 
     private MathUtil() {}
+
+    public static int manhattanDistance(BlockPos a, BlockPos b) {
+        return abs(a.getX() - b.getX()) + abs(a.getY() - b.getY()) + abs(a.getZ() - b.getZ());
+    }
 }
