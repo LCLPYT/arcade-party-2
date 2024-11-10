@@ -2,6 +2,8 @@ package work.lclpnet.ap2.game.maze_scape.gen;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import work.lclpnet.ap2.api.ds.DirectedGraphNode;
+import work.lclpnet.ap2.api.ds.UndirectedGraphNode;
 import work.lclpnet.ap2.game.maze_scape.util.DirectedGraphDfsIterator;
 
 import java.util.ArrayList;

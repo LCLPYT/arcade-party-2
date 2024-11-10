@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.game.maze_scape.gen;
+package work.lclpnet.ap2.api.ds;
 
 import org.jetbrains.annotations.NotNull;
 

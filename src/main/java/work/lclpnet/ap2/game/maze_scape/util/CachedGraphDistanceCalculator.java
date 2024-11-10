@@ -5,7 +5,7 @@ import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import org.jetbrains.annotations.Nullable;
-import work.lclpnet.ap2.game.maze_scape.gen.UndirectedGraphNode;
+import work.lclpnet.ap2.api.ds.UndirectedGraphNode;
 
 import java.util.HashSet;
 import java.util.LinkedList;
