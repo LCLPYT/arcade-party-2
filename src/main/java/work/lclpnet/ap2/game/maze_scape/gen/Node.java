@@ -183,12 +183,10 @@ public class Node<C, P extends Piece<C>, O extends OrientedPiece<C, P, O>>
             return children;
         }
 
-        if (lastChildrenHash == children.hashCode()) {
-            // no changes since last call
-            return neighbours;
+        if (lastChildrenHash != children.hashCode()) {
+            // there were children changes since last call
+            updateNeighbours();
         }
-
-        updateNeighbours();
 
         return neighbours;
     }

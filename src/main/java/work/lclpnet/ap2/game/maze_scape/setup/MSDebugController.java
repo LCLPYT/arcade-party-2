@@ -1,5 +1,7 @@
 package work.lclpnet.ap2.game.maze_scape.setup;
 
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.decoration.DisplayEntity;
@@ -15,6 +17,9 @@ import org.joml.Vector3f;
 import work.lclpnet.ap2.api.util.model.Model;
 import work.lclpnet.ap2.api.util.model.ModelManager;
 import work.lclpnet.ap2.game.maze_scape.gen.Node;
+import work.lclpnet.ap2.game.maze_scape.util.DebugRenderer;
+import work.lclpnet.ap2.game.maze_scape.util.MSStruct;
+import work.lclpnet.ap2.game.maze_scape.util.Passage;
 import work.lclpnet.ap2.impl.scene.Object3d;
 import work.lclpnet.ap2.impl.scene.Scene;
 import work.lclpnet.ap2.impl.util.BlockBox;
@@ -32,10 +37,13 @@ class MSDebugController {
     private @Nullable Scene scene = null;
     private @Nullable Model spawnMarker = null, childMarker = null, passageMarker = null;
     private @Nullable ServerWorld world = null;
+    private @Nullable DebugRenderer renderer = null;
 
     public void init(ModelManager modelManager, ServerWorld world) {
         this.world = world;
+
         scene = new Scene(world);
+        renderer = new DebugRenderer(scene);
 
         spawnMarker = modelManager.getModel(Models.CROSS).orElseThrow();
         childMarker = modelManager.getModel(Models.ARROW).orElseThrow();
@@ -146,7 +154,12 @@ class MSDebugController {
             if (adj == null) continue;
 
             neighbourConnectors.addAll(adj.connectors());
-            neighbourConnectors.add(adj.parentConnector());
+
+            Connector3 parentConnector = adj.parentConnector();
+
+            if (parentConnector != null) {
+                neighbourConnectors.add(parentConnector);
+            }
         }
 
         // iterate over each connector and check if there is a connection via neighbours
@@ -192,6 +205,28 @@ class MSDebugController {
             DisplayEntityAccess.setTransformation(display, new AffineTransformation(null, null, scale, null));
 
             world.spawnEntity(display);
+        }
+    }
+
+    public void visualizePassages(MSStruct struct) {
+        if (renderer == null) return;
+
+        var queue = new LinkedList<Passage>();
+        var processed = new IntOpenHashSet();
+
+        struct.passagesOf(struct.graph().root()).forEach(queue::offer);
+
+        BlockState material = Blocks.BLUE_CONCRETE.getDefaultState();
+
+        while (!queue.isEmpty()) {
+            Passage passage = queue.poll();
+
+            for (Passage neighbour : passage.neighbours()) {
+                if (!processed.add(passage.hashCode() + neighbour.hashCode())) continue;
+
+                queue.offer(neighbour);
+                renderer.line(passage.pos().toBottomCenterPos(), neighbour.pos().toBottomCenterPos(), 0.03125, material);
+            }
         }
     }
 }

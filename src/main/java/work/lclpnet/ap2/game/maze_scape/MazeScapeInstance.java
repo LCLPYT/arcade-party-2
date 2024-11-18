@@ -10,6 +10,7 @@ import work.lclpnet.ap2.api.map.MapBootstrap;
 import work.lclpnet.ap2.game.maze_scape.setup.MSGenerator;
 import work.lclpnet.ap2.game.maze_scape.setup.MSLoader;
 import work.lclpnet.ap2.game.maze_scape.setup.OrientedStructurePiece;
+import work.lclpnet.ap2.game.maze_scape.util.DebugPathCommand;
 import work.lclpnet.ap2.game.maze_scape.util.MSManager;
 import work.lclpnet.ap2.game.maze_scape.util.MSStruct;
 import work.lclpnet.ap2.impl.game.EliminationGameInstance;
@@ -56,6 +57,8 @@ public class MazeScapeInstance extends EliminationGameInstance implements MapBoo
             gameHandle.completeWithoutWinner();
             return;
         }
+
+        new DebugPathCommand(struct).register(gameHandle.getCommandRegistrar());
 
         teleportPlayers();
     }

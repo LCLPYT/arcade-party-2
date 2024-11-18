@@ -40,9 +40,10 @@ public class MSGenerator {
     public static final int PLACE_FLAGS = Block.FORCE_STATE | Block.SKIP_DROPS;
     public static final boolean
             DEBUG_GENERATOR = false,
-            DEBUG_SPAWNS = true,
+            DEBUG_SPAWNS = false,
             DEBUG_GRAPH = true,
-            DEBUG_PITS = true;
+            DEBUG_PITS = false,
+            DEBUG_PASSAGES = true;
     private static final int GENERATOR_MAX_TRIES = 5;
     private static final int GENERATOR_MAX_DURATION_MS = 15_000;
     private final ServerWorld world;
@@ -320,7 +321,15 @@ public class MSGenerator {
 
             placePieces(graph);
 
-            return res.optional().map(g -> new MSStruct(g, bounds));
+            return res.optional().map(g -> {
+                var struct = new MSStruct(g, bounds);
+
+                if (DEBUG_PASSAGES) {
+                    debugger.visualizePassages(struct);
+                }
+
+                return struct;
+            });
         }));
     }
 
