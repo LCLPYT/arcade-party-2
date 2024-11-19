@@ -346,7 +346,7 @@ public class MSLoader {
             return Set.of();
         }
 
-        Set<ClusterDef> clusters = new HashSet<>(clustersArray.length());
+        Set<ClusterDef> clusters = new LinkedHashSet<>(clustersArray.length());
 
         for (Object o : clustersArray) {
             if (!(o instanceof String name)) {

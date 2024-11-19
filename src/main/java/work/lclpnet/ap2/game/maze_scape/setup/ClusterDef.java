@@ -4,14 +4,14 @@ import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
 
 public record ClusterDef(float chance, int minPieces, int maxPieces, Set<StructurePiece> pieces) {
 
     public ClusterDef(float chance, int minPieces, int maxPieces) {
-        this(chance, minPieces, maxPieces, new HashSet<>());
+        this(chance, minPieces, maxPieces, new LinkedHashSet<>());
     }
 
     public ClusterDef {
