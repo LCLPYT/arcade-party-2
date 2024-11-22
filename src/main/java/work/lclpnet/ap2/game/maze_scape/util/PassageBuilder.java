@@ -1,6 +1,6 @@
 package work.lclpnet.ap2.game.maze_scape.util;
 
-import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import net.minecraft.util.math.BlockPos;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.ds.UndirectedGraphNode;
@@ -24,7 +24,7 @@ public class PassageBuilder<N extends UndirectedGraphNode<N>> {
         queue.add(new Item<>(root, null));
         seen.add(root);
 
-        var edgeIndex = new IntOpenHashSet();
+        var edgeIndex = new Int2ObjectOpenHashMap<Passage>();
         var passages = new HashMap<N, List<Passage>>();
         var clique = new ArrayList<Passage>();
 
@@ -37,13 +37,19 @@ public class PassageBuilder<N extends UndirectedGraphNode<N>> {
                 if (neighbour == null) continue;
 
                 // only one passage for undirected edge
-                if (!edgeIndex.add(item.node.hashCode() + neighbour.hashCode())) continue;
+                int hash = item.node.hashCode() + neighbour.hashCode();
 
-                BlockPos pos = posProvider.get(item.node, neighbour);
+                Passage passage = edgeIndex.computeIfAbsent(hash, _h -> {
+                    BlockPos pos = posProvider.get(item.node, neighbour);
 
-                if (pos == null) continue;
+                    if (pos == null) {
+                        return null;
+                    }
 
-                var passage = new Passage(pos);
+                    return new Passage(pos);
+                });
+
+                if (passage == null) continue;
 
                 clique.add(passage);
 
@@ -53,9 +59,9 @@ public class PassageBuilder<N extends UndirectedGraphNode<N>> {
             }
 
             // origin should be part of the clique
-            if (item.origin != null) {
-                clique.add(item.origin);
-            }
+//            if (item.origin != null) {
+//                clique.add(item.origin);
+//            }
 
             // interconnect nodes in current clique
             int k = clique.size();

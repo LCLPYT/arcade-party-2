@@ -41,7 +41,7 @@ public class MazeScapeInstance extends EliminationGameInstance implements MapBoo
         var setup = new MSLoader(world, map, logger);
 
         return setup.load().thenCompose(res -> {
-            long seed = new Random().nextLong();
+            long seed = /*new Random().nextLong()*/ 123456L;
             var random = new Random(seed);
 
             var generator = new MSGenerator(world, map, res, random, seed, logger);
