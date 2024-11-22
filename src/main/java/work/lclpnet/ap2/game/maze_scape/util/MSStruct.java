@@ -39,17 +39,19 @@ public final class MSStruct {
 
         chunksXZ = buildChunks(graph, bounds);
 
-        var passageBuilder = new PassageBuilder<Node<Connector3, StructurePiece, OrientedStructurePiece>>((from, to) -> {
+        var lineGraphBuilder = new LineGraphBuilder<Node<Connector3, StructurePiece, OrientedStructurePiece>, Passage>((from, to) -> {
             var connectors = connectorBetween(from, to);
 
             if (connectors.isEmpty()) {
                 return null;
             }
 
-            return connectors.getFirst().pos().up();
+            BlockPos pos = connectors.getFirst().pos().up();
+
+            return new Passage(pos);
         });
 
-        passages = passageBuilder.build(graph.root());
+        passages = lineGraphBuilder.buildByNode(graph.root());
     }
 
     private Chunk[][] buildChunks(Graph<Connector3, StructurePiece, OrientedStructurePiece> graph, StructureDomain.BoundsCfg bounds) {
