@@ -16,12 +16,10 @@ public class PassageBuilder<N extends UndirectedGraphNode<N>> {
     }
 
     public Map<N, List<Passage>> build(N root) {
-        record Item<N>(N node, @Nullable Passage origin) {}
-
-        var queue = new LinkedList<Item<N>>();
+        var queue = new LinkedList<N>();
         var seen = new HashSet<N>();
 
-        queue.add(new Item<>(root, null));
+        queue.add(root);
         seen.add(root);
 
         var edgeIndex = new Int2ObjectOpenHashMap<Passage>();
@@ -29,18 +27,18 @@ public class PassageBuilder<N extends UndirectedGraphNode<N>> {
         var clique = new ArrayList<Passage>();
 
         while (!queue.isEmpty()) {
-            var item = queue.poll();
+            var node = queue.poll();
 
             clique.clear();
 
-            for (@Nullable N neighbour : item.node.neighbours()) {
+            for (@Nullable N neighbour : node.neighbours()) {
                 if (neighbour == null) continue;
 
                 // only one passage for undirected edge
-                int hash = item.node.hashCode() + neighbour.hashCode();
+                int hash = node.hashCode() + neighbour.hashCode();
 
                 Passage passage = edgeIndex.computeIfAbsent(hash, _h -> {
-                    BlockPos pos = posProvider.get(item.node, neighbour);
+                    BlockPos pos = posProvider.get(node, neighbour);
 
                     if (pos == null) {
                         return null;
@@ -54,14 +52,9 @@ public class PassageBuilder<N extends UndirectedGraphNode<N>> {
                 clique.add(passage);
 
                 if (seen.add(neighbour)) {
-                    queue.offer(new Item<>(neighbour, passage));
+                    queue.offer(neighbour);
                 }
             }
-
-            // origin should be part of the clique
-//            if (item.origin != null) {
-//                clique.add(item.origin);
-//            }
 
             // interconnect nodes in current clique
             int k = clique.size();
@@ -76,7 +69,7 @@ public class PassageBuilder<N extends UndirectedGraphNode<N>> {
                 }
             }
 
-            passages.put(item.node, List.copyOf(clique));
+            passages.put(node, List.copyOf(clique));
         }
 
         return passages;
