@@ -181,6 +181,10 @@ public final class MSStruct {
         return distanceCalculator;
     }
 
+    public AStar<Passage> pathFinder() {
+        return pathFinder;
+    }
+
     @NotNull
     public List<Passage> passagesOf(Node<Connector3, StructurePiece, OrientedStructurePiece> node) {
         var passages = this.passages.get(node);

@@ -33,7 +33,7 @@ import java.util.*;
 
 import static java.lang.Math.abs;
 
-class MSDebugController {
+public class MSDebugController {
     private @Nullable Scene scene = null;
     private @Nullable Model spawnMarker = null, childMarker = null, passageMarker = null;
     private @Nullable ServerWorld world = null;
@@ -225,8 +225,19 @@ class MSDebugController {
                 if (!processed.add(passage.hashCode() + neighbour.hashCode())) continue;
 
                 queue.offer(neighbour);
-                renderer.line(passage.pos().toBottomCenterPos(), neighbour.pos().toBottomCenterPos(), 0.03125, material);
+                visualizePassage(neighbour, passage, material);
             }
         }
+    }
+
+    @Nullable
+    public Object3d visualizePassage(Passage from, Passage to, BlockState material) {
+        if (renderer == null) return null;
+
+        return renderer.line(to.pos().toBottomCenterPos(), from.pos().toBottomCenterPos(), 0.03125, material);
+    }
+
+    public @Nullable Scene scene() {
+        return scene;
     }
 }

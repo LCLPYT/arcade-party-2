@@ -16,6 +16,7 @@ public class AStar<N extends UndirectedGraphNode<N>> {
         this.distanceCalc = distanceCalc;
     }
 
+    @NotNull
     public List<N> findPath(N start, N end) {
         Map<N, Node<N>> nodes = new HashMap<>();
 

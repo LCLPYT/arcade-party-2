@@ -7,6 +7,7 @@ import org.joml.Vector3d;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.map.MapBootstrap;
+import work.lclpnet.ap2.game.maze_scape.setup.MSDebugController;
 import work.lclpnet.ap2.game.maze_scape.setup.MSGenerator;
 import work.lclpnet.ap2.game.maze_scape.setup.MSLoader;
 import work.lclpnet.ap2.game.maze_scape.setup.OrientedStructurePiece;
@@ -27,6 +28,7 @@ import java.util.concurrent.CompletableFuture;
 public class MazeScapeInstance extends EliminationGameInstance implements MapBootstrap {
 
     private static final int MOB_SPAWN_DELAY_TICKS = Ticks.seconds(0);
+    private final MSDebugController debugController = new MSDebugController();
     private MSStruct struct;
 
     public MazeScapeInstance(MiniGameHandle gameHandle) {
@@ -41,10 +43,10 @@ public class MazeScapeInstance extends EliminationGameInstance implements MapBoo
         var setup = new MSLoader(world, map, logger);
 
         return setup.load().thenCompose(res -> {
-            long seed = /*new Random().nextLong()*/ 123456L;
+            long seed = new Random().nextLong();
             var random = new Random(seed);
 
-            var generator = new MSGenerator(world, map, res, random, seed, logger);
+            var generator = new MSGenerator(world, map, res, random, seed, logger, debugController);
 
             return generator.startGenerator().thenAccept(optGraph -> struct = optGraph.orElse(null));
         });
@@ -58,7 +60,7 @@ public class MazeScapeInstance extends EliminationGameInstance implements MapBoo
             return;
         }
 
-        new DebugPathCommand(struct).register(gameHandle.getCommandRegistrar());
+        new DebugPathCommand(struct, debugController).register(gameHandle.getCommandRegistrar());
 
         teleportPlayers();
     }

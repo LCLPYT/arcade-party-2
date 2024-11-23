@@ -43,7 +43,7 @@ public class MSGenerator {
             DEBUG_SPAWNS = false,
             DEBUG_GRAPH = true,
             DEBUG_PITS = false,
-            DEBUG_PASSAGES = true;
+            DEBUG_PASSAGES = false;
     private static final int GENERATOR_MAX_TRIES = 5;
     private static final int GENERATOR_MAX_DURATION_MS = 15_000;
     private final ServerWorld world;
@@ -56,18 +56,20 @@ public class MSGenerator {
     private final int targetArea;
     private final float deadEndChance;
     private final StructureDomain domain;
-    private final MSDebugController debugger = new MSDebugController();
+    private final MSDebugController debugger;
     private final StructureDomain.BoundsCfg bounds;
     private GraphGenerator<Connector3, StructurePiece, OrientedStructurePiece> generator;
     private boolean decorate = true;
 
-    public MSGenerator(ServerWorld world, GameMap map, MSLoader.Result loaded, Random random, long seed, Logger logger) {
+    public MSGenerator(ServerWorld world, GameMap map, MSLoader.Result loaded, Random random, long seed, Logger logger,
+                       MSDebugController debugger) {
         this.world = world;
         this.map = map;
         this.loaded = loaded;
         this.random = random;
         this.seed = seed;
         this.logger = logger;
+        this.debugger = debugger;
 
         // the generator will continue until the total room area is greater than this value
         targetArea = ((Number) map.requireProperty("target-room-area")).intValue();
