@@ -15,6 +15,8 @@ import work.lclpnet.ap2.game.maze_scape.setup.StructurePiece;
 
 import java.util.*;
 
+import static java.lang.Math.sqrt;
+
 public class MSTargetManager {
 
     private final MSStruct struct;
@@ -114,13 +116,13 @@ public class MSTargetManager {
         // sum estimated distance between passages
         for (int i = 1, len = path.size(); i < len; i++) {
             var next = path.get(i);
-            distance += last.pos().getSquaredDistance(next.pos());
+            distance += sqrt(last.pos().getSquaredDistance(next.pos()));
             last = next;
         }
 
         // add estimated distance between exact from / to position and their respective passage
-        distance += passageFrom.pos().getSquaredDistance(from.exact());
-        distance += passageTo.pos().getSquaredDistance(to.exact());
+        distance += sqrt(passageFrom.pos().getSquaredDistance(from.exact()));
+        distance += sqrt(passageTo.pos().getSquaredDistance(to.exact()));
 
         return distance;
     }
