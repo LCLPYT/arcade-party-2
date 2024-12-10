@@ -64,7 +64,7 @@ public class MSManager {
         this.participants = participants;
         this.logger = logger;
 
-        targetManager = new MSTargetManager(struct, participants);
+        targetManager = new MSTargetManager(struct, participants, world);
         mapChunkRadius = MSGenerator.getMaxChunkSize(map);
     }
 
@@ -186,11 +186,7 @@ public class MSManager {
         world.spawnEntity(warden);
         entities.add(warden);
 
-        ServerPlayerEntity nearest = targetManager.findNearestTarget(warden);
-
-        if (nearest != null) {
-            targetManager.assignTarget(warden, nearest);
-        }
+        targetManager.updateTarget(warden);
     }
 
     private void initAttributes(LivingEntity living) {

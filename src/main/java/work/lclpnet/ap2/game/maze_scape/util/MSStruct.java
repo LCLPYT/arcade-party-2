@@ -181,7 +181,7 @@ public final class MSStruct {
         return distanceCalculator;
     }
 
-    public AStar<Passage> pathFinder() {
+    public AStar<Passage> passagePathFinder() {
         return pathFinder;
     }
 

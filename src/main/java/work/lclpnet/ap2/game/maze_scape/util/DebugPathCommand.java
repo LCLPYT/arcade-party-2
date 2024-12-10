@@ -66,7 +66,7 @@ public class DebugPathCommand implements KibuCommand {
     private synchronized int updatePath(CommandContext<ServerCommandSource> ctx) {
         if (start == null || end == null) return 0;
 
-        var path = struct.pathFinder().findPath(start, end);
+        var path = struct.passagePathFinder().findPath(start, end);
 
         if (path.isEmpty()) {
             ctx.getSource().sendError(Text.literal("Failed to find path"));
