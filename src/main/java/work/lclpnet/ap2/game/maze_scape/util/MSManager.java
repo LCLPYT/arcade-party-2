@@ -88,6 +88,8 @@ public class MSManager {
         }
 
         spawnWarden(spawns.getFirst());
+
+        targetManager.update();
     }
 
     private List<Vec3d> mostDistantSpawns() {
@@ -186,7 +188,7 @@ public class MSManager {
         world.spawnEntity(warden);
         entities.add(warden);
 
-        targetManager.updateTarget(warden);
+        targetManager.addMonster(warden);
     }
 
     private void initAttributes(LivingEntity living) {
@@ -235,6 +237,10 @@ public class MSManager {
 
     private static boolean isTargeting(WardenEntity warden, LivingEntity entity) {
         return warden.getBrain().getOptionalRegisteredMemory(MemoryModuleType.ATTACK_TARGET).filter(x -> x == entity).isPresent();
+    }
+
+    public void updateMobs() {
+        targetManager.update();
     }
 
     public void tick() {

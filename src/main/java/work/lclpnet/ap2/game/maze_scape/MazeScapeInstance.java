@@ -27,7 +27,10 @@ import java.util.concurrent.CompletableFuture;
 
 public class MazeScapeInstance extends EliminationGameInstance implements MapBootstrap {
 
-    private static final int MOB_SPAWN_DELAY_TICKS = Ticks.seconds(0);
+    private static final int
+            MOB_SPAWN_DELAY_TICKS = Ticks.seconds(0),
+            MOB_UPDATE_DELAY_TICKS = Ticks.seconds(1);
+
     private final MSDebugController debugController = new MSDebugController();
     private MSStruct struct;
 
@@ -94,6 +97,7 @@ public class MazeScapeInstance extends EliminationGameInstance implements MapBoo
 
         TaskScheduler scheduler = gameHandle.getGameScheduler();
         scheduler.timeout(manager::spawnMobs, MOB_SPAWN_DELAY_TICKS);
+        scheduler.interval(manager::updateMobs, MOB_UPDATE_DELAY_TICKS, MOB_SPAWN_DELAY_TICKS);
         scheduler.interval(manager::tick, 1);
     }
 }

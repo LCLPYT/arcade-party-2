@@ -204,6 +204,11 @@ public final class MSStruct {
             return null;
         }
 
+        return nearestPassageTo(pos, node);
+    }
+
+    @Nullable
+    public Passage nearestPassageTo(Position pos, Node<Connector3, StructurePiece, OrientedStructurePiece> node) {
         var passages = this.passages.get(node);
 
         if (passages == null) {
