@@ -198,14 +198,10 @@ public class MSManager {
     }
 
     private void initAttributes(LivingEntity living) {
-        if (!isMonster(living)) return;
+        if (living.getWorld() != world || !(living instanceof WardenEntity)) return;
 
         // make sure monsters can track down players everywhere in the map
         EntityUtil.setAttribute(living, EntityAttributes.GENERIC_FOLLOW_RANGE, 2 * mapChunkRadius * 16);
-    }
-
-    private boolean isMonster(Entity entity) {
-        return world == entity.getWorld() && monsters.contains(entity.getUuid());
     }
 
     private @Nullable Brain<WardenEntity> createWardenBrain(WardenEntity warden, Dynamic<?> dynamic, Supplier<WardenBrainHandle> handleGetter) {
@@ -302,7 +298,7 @@ public class MSManager {
     }
 
     private @Nullable Path modifyPathFinding(Entity entity, @Nullable Path path, Set<BlockPos> targets, Function<BlockPos, @Nullable Path> pathFinder) {
-        if (!isMonster(entity) || (path != null && path.reachesTarget())) {
+        if (!monsters.contains(entity.getUuid()) || (path != null && path.reachesTarget())) {
             return path;
         }
 
