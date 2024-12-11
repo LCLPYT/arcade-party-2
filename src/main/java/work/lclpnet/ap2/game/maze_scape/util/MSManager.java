@@ -38,6 +38,8 @@ import work.lclpnet.ap2.core.type.ApLandPathNodeMaker;
 import work.lclpnet.ap2.core.type.ApMobNavigation;
 import work.lclpnet.ap2.core.type.WardenBrainHandle;
 import work.lclpnet.ap2.game.maze_scape.gen.Node;
+import work.lclpnet.ap2.game.maze_scape.monster.MonsterData;
+import work.lclpnet.ap2.game.maze_scape.monster.WardenData;
 import work.lclpnet.ap2.game.maze_scape.setup.Connector3;
 import work.lclpnet.ap2.game.maze_scape.setup.MSGenerator;
 import work.lclpnet.ap2.game.maze_scape.setup.OrientedStructurePiece;
@@ -61,7 +63,7 @@ public class MSManager {
     private final Logger logger;
     private final MSTargetManager targetManager;
     private final int mapChunkRadius;
-    private final Set<UUID> monsters = new HashSet<>();
+    private final Map<UUID, MonsterData> monsters = new HashMap<>();
 
     public MSManager(ServerWorld world, GameMap map, MSStruct struct, Participants participants, Logger logger) {
         this.world = world;
@@ -71,6 +73,14 @@ public class MSManager {
 
         targetManager = new MSTargetManager(struct, participants, world);
         mapChunkRadius = MSGenerator.getMaxChunkSize(map);
+    }
+
+    public ServerWorld world() {
+        return world;
+    }
+
+    public MSStruct struct() {
+        return struct;
     }
 
     public void init(MiniGameHandle gameHandle) {
@@ -98,7 +108,7 @@ public class MSManager {
         targetManager.update();
     }
 
-    private List<Vec3d> mostDistantSpawns() {
+    public List<Vec3d> mostDistantSpawns() {
         var playerNodes = playerNodes();
         var distanceCalculator = struct.distanceCalculator();
 
@@ -192,7 +202,9 @@ public class MSManager {
         }
 
         world.spawnEntity(warden);
-        monsters.add(warden.getUuid());
+
+        UUID uuid = warden.getUuid();
+        monsters.put(uuid, new WardenData(uuid, this, logger));
 
         targetManager.addMonster(warden);
     }
@@ -246,59 +258,13 @@ public class MSManager {
     }
 
     public void tick() {
-        for (UUID monsterId : monsters) {
-            Entity entity = world.getEntity(monsterId);
-
-            if (entity != null) {
-                validatePos(entity);
-            }
+        for (var data : monsters.values()) {
+            data.tick();
         }
-    }
-
-    private void validatePos(Entity entity) {
-        var node = struct.nodeAt(entity.getX(), entity.getY(), entity.getZ());
-
-        if (node == null) {
-            teleportToDistantPos(entity);
-            return;
-        }
-
-        OrientedStructurePiece oriented = node.oriented();
-
-        if (oriented == null) {
-            teleportToDistantPos(entity);
-            return;
-        }
-
-        if (oriented.isPitAt(entity.getBlockX(), entity.getBlockY(), entity.getBlockZ())) {
-            Vec3d spawn = oriented.spawn();
-
-            if (spawn == null) {
-                teleportToDistantPos(entity);
-                return;
-            }
-
-            teleport(entity, spawn);
-        }
-    }
-
-    private void teleportToDistantPos(Entity entity) {
-        var spawns = mostDistantSpawns();
-
-        if (spawns.isEmpty()) {
-            logger.error("Could not find distant position");
-            return;
-        }
-
-        teleport(entity, spawns.getFirst());
-    }
-
-    private void teleport(Entity entity, Vec3d pos) {
-        entity.teleport(world, pos.getX(), pos.getY(), pos.getZ(), Set.of(), entity.getYaw(), entity.getPitch());
     }
 
     private @Nullable Path modifyPathFinding(Entity entity, @Nullable Path path, Set<BlockPos> targets, Function<BlockPos, @Nullable Path> pathFinder) {
-        if (!monsters.contains(entity.getUuid()) || (path != null && path.reachesTarget())) {
+        if (!monsters.containsKey(entity.getUuid()) || (path != null && path.reachesTarget())) {
             return path;
         }
 
@@ -336,7 +302,7 @@ public class MSManager {
         return null;
     }
 
-    private @NotNull List<Passage> findPassagePath(Entity entity, BlockPos target) {
+    public @NotNull List<Passage> findPassagePath(Entity entity, BlockPos target) {
         Vec3d entityPos = entity.getPos();
         Vec3d targetPos = target.toBottomCenterPos();
 
