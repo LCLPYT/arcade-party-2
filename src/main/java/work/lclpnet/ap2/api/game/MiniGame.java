@@ -1,5 +1,7 @@
 package work.lclpnet.ap2.api.game;
 
+import work.lclpnet.kibu.scheduler.Ticks;
+
 public interface MiniGame extends GameInfo {
 
     /**
@@ -25,4 +27,8 @@ public interface MiniGame extends GameInfo {
     boolean canBePlayed(GameStartContext context);
 
     MiniGameInstance createInstance(MiniGameHandle gameHandle);
+
+    default int getMaxDurationTicks() {
+        return Ticks.minutes(15);
+    }
 }

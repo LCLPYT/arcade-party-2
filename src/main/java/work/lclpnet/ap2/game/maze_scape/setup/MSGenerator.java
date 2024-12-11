@@ -41,7 +41,7 @@ public class MSGenerator {
     public static final boolean
             DEBUG_GENERATOR = false,
             DEBUG_SPAWNS = false,
-            DEBUG_GRAPH = true,
+            DEBUG_GRAPH = false,
             DEBUG_PITS = false,
             DEBUG_PASSAGES = false;
     private static final int GENERATOR_MAX_TRIES = 5;
