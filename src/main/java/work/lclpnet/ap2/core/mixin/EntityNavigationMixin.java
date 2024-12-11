@@ -33,7 +33,7 @@ public class EntityNavigationMixin {
             )
     )
     public @Nullable Path ap2$modifyPath(PathNodeNavigator instance, ChunkCache world, MobEntity mob, Set<BlockPos> positions, float followRange, int distance, float rangeMultiplier, Operation<Path> original) {
-        Path path = original.call(instance, world, mob,  positions, followRange, distance, rangeMultiplier);
+        Path path = original.call(instance, world, mob, positions, followRange, distance, rangeMultiplier);
 
         return EntityPathFindingCallback.HOOK.invoker().modifyPath(entity, path, positions,
                 (target) -> instance.findPathToAny(world, mob, Set.of(target), followRange, distance, rangeMultiplier));

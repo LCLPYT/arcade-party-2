@@ -56,18 +56,31 @@ public class MSTargetManager {
         Set<ServerPlayerEntity> assignedPlayers = new HashSet<>();
 
         for (var entry : entries) {
-            if (assignedMonsters.contains(entry.mob) || assignedPlayers.contains(entry.player)) continue;
+            if (assignedMonsters.contains(entry.mob) || (assignedPlayers.contains(entry.player))) continue;
 
             assignedMonsters.add(entry.mob);
             assignedPlayers.add(entry.player);
 
-            System.out.printf("Assign %s to %s\n", entry.player.getNameForScoreboard(), entry.mob.getName().getString());
+            assignTarget(entry.mob, entry.player);
+
+            if (assignedMonsters.size() >= monsters.size()) break;
+        }
+
+        if (assignedMonsters.size() >= monsters.size()) return;
+
+        // for every remaining monster, allow duplicate player assignment
+        for (var entry : entries) {
+            if (assignedMonsters.contains(entry.mob)) continue;
+
+            assignedMonsters.add(entry.mob);
 
             assignTarget(entry.mob, entry.player);
         }
     }
 
     public void assignTarget(MobEntity mob, ServerPlayerEntity player) {
+        System.out.printf("Assign %s to %s\n", player.getNameForScoreboard(), mob.getName().getString());
+
         mob.setTarget(player);
 
         if (mob instanceof WardenEntity warden) {
