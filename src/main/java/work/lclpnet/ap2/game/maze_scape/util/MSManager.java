@@ -16,17 +16,21 @@ import net.minecraft.entity.ai.brain.task.MeleeAttackTask;
 import net.minecraft.entity.ai.brain.task.RangedApproachTask;
 import net.minecraft.entity.ai.pathing.EntityNavigation;
 import net.minecraft.entity.ai.pathing.MobNavigation;
+import net.minecraft.entity.ai.pathing.Path;
 import net.minecraft.entity.ai.pathing.PathNodeMaker;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.mob.WardenEntity;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.core.hook.BrainCreationCallback;
+import work.lclpnet.ap2.core.hook.EntityPathFindingCallback;
 import work.lclpnet.ap2.core.hook.LivingEntityAttributeInitCallback;
 import work.lclpnet.ap2.core.mixin.EntityNavigationAccessor;
 import work.lclpnet.ap2.core.type.ApEntity;
@@ -45,6 +49,7 @@ import work.lclpnet.ap2.impl.util.world.ChunkPersistence;
 import work.lclpnet.lobby.game.map.GameMap;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 public class MSManager {
@@ -56,7 +61,7 @@ public class MSManager {
     private final Logger logger;
     private final MSTargetManager targetManager;
     private final int mapChunkRadius;
-    private final List<Entity> entities = new ArrayList<>();
+    private final Set<UUID> monsters = new HashSet<>();
 
     public MSManager(ServerWorld world, GameMap map, MSStruct struct, Participants participants, Logger logger) {
         this.world = world;
@@ -73,6 +78,7 @@ public class MSManager {
 
         hooks.registerHook(LivingEntityAttributeInitCallback.HOOK, this::initAttributes);
         hooks.registerHook(BrainCreationCallback.Warden.HOOK, this::createWardenBrain);
+        hooks.registerHook(EntityPathFindingCallback.HOOK, this::modifyPathFinding);
 
         var persistence = new ChunkPersistence(world, gameHandle);
         persistence.markQuadPersistent(-mapChunkRadius, -mapChunkRadius, mapChunkRadius, mapChunkRadius);
@@ -186,7 +192,7 @@ public class MSManager {
         }
 
         world.spawnEntity(warden);
-        entities.add(warden);
+        monsters.add(warden.getUuid());
 
         targetManager.addMonster(warden);
     }
@@ -198,8 +204,8 @@ public class MSManager {
         EntityUtil.setAttribute(living, EntityAttributes.GENERIC_FOLLOW_RANGE, 2 * mapChunkRadius * 16);
     }
 
-    private boolean isMonster(LivingEntity living) {
-        return world == living.getWorld() && (living instanceof WardenEntity);
+    private boolean isMonster(Entity entity) {
+        return world == entity.getWorld() && monsters.contains(entity.getUuid());
     }
 
     private @Nullable Brain<WardenEntity> createWardenBrain(WardenEntity warden, Dynamic<?> dynamic, Supplier<WardenBrainHandle> handleGetter) {
@@ -244,8 +250,12 @@ public class MSManager {
     }
 
     public void tick() {
-        for (Entity entity : entities) {
-            validatePos(entity);
+        for (UUID monsterId : monsters) {
+            Entity entity = world.getEntity(monsterId);
+
+            if (entity != null) {
+                validatePos(entity);
+            }
         }
     }
 
@@ -289,5 +299,65 @@ public class MSManager {
 
     private void teleport(Entity entity, Vec3d pos) {
         entity.teleport(world, pos.getX(), pos.getY(), pos.getZ(), Set.of(), entity.getYaw(), entity.getPitch());
+    }
+
+    private @Nullable Path modifyPathFinding(Entity entity, @Nullable Path path, Set<BlockPos> targets, Function<BlockPos, @Nullable Path> pathFinder) {
+        if (!isMonster(entity) || (path != null && path.reachesTarget())) {
+            return path;
+        }
+
+        // try to find the shortest partial path, as the no real target could directly be reached
+        return targets.stream()
+                .map(target -> findPartialPath(entity, target, pathFinder))
+                .filter(Objects::nonNull)
+                .min(Comparator.comparingInt(Path::getLength))
+                .orElse(path);
+    }
+
+    private @Nullable Path findPartialPath(Entity entity, BlockPos target, Function<BlockPos, Path> pathFinder) {
+        var passagePath = findPassagePath(entity, target);
+
+        if (passagePath.isEmpty()) {
+            return null;
+        }
+
+        // try to find partial path towards the passage on half the way
+        final int size = passagePath.size();
+        int i = (size / 2) - 1;
+
+        while (i >= 0 && i < size) {
+            Passage passage = passagePath.get(i);
+            Path partial = pathFinder.apply(passage.pos());
+
+            if (partial != null && partial.reachesTarget()) {
+                return partial;
+            }
+
+            // no path could be found, try to half the way again
+            i = ((i + 1) / 2) - 1;
+        }
+
+        return null;
+    }
+
+    private @NotNull List<Passage> findPassagePath(Entity entity, BlockPos target) {
+        Vec3d entityPos = entity.getPos();
+        Vec3d targetPos = target.toBottomCenterPos();
+
+        var entityNode = struct.nodeAt(entityPos);
+        var targetNode = struct.nodeAt(targetPos);
+
+        if (entityNode == null || targetNode == null || entityNode == targetNode) {
+            return List.of();
+        }
+
+        Passage start = struct.nearestPassageTo(entityPos, entityNode);
+        Passage end = struct.nearestPassageTo(targetPos, targetNode);
+
+        if (start == null || end == null) {
+            return List.of();
+        }
+
+        return struct.passagePathFinder().findPath(start, end);
     }
 }

@@ -298,7 +298,7 @@ public class MSGenerator {
 
         // also dispatch a watchdog thread that interrupts the generator thread after the maximum duration
         Thread.ofVirtual().name("Structure Generator Watchdog").start(() -> {
-            logger.info("Starting structure generator thread with a maximum duration of {} ms", GENERATOR_MAX_DURATION_MS);
+            logger.info("Starting structure generator thread with a maximum duration of {} ms, seed: {}", GENERATOR_MAX_DURATION_MS, seed);
             generatorThread.start();
 
             try {
