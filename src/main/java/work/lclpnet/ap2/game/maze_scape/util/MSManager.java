@@ -19,6 +19,8 @@ import net.minecraft.entity.ai.pathing.MobNavigation;
 import net.minecraft.entity.ai.pathing.Path;
 import net.minecraft.entity.ai.pathing.PathNodeMaker;
 import net.minecraft.entity.attribute.EntityAttributes;
+import net.minecraft.entity.mob.MobEntity;
+import net.minecraft.entity.mob.SpiderEntity;
 import net.minecraft.entity.mob.WardenEntity;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -30,6 +32,7 @@ import org.slf4j.Logger;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.core.hook.BrainCreationCallback;
+import work.lclpnet.ap2.core.hook.CobwebSlowCallback;
 import work.lclpnet.ap2.core.hook.EntityPathFindingCallback;
 import work.lclpnet.ap2.core.hook.LivingEntityAttributeInitCallback;
 import work.lclpnet.ap2.core.mixin.EntityNavigationAccessor;
@@ -39,6 +42,7 @@ import work.lclpnet.ap2.core.type.ApMobNavigation;
 import work.lclpnet.ap2.core.type.WardenBrainHandle;
 import work.lclpnet.ap2.game.maze_scape.gen.Node;
 import work.lclpnet.ap2.game.maze_scape.monster.MonsterData;
+import work.lclpnet.ap2.game.maze_scape.monster.SpiderData;
 import work.lclpnet.ap2.game.maze_scape.monster.WardenData;
 import work.lclpnet.ap2.game.maze_scape.setup.Connector3;
 import work.lclpnet.ap2.game.maze_scape.setup.MSGenerator;
@@ -60,15 +64,17 @@ public class MSManager {
     private final ServerWorld world;
     private final MSStruct struct;
     private final Participants participants;
+    private final Random random;
     private final Logger logger;
     private final MSTargetManager targetManager;
     private final int mapChunkRadius;
     private final Map<UUID, MonsterData> monsters = new HashMap<>();
 
-    public MSManager(ServerWorld world, GameMap map, MSStruct struct, Participants participants, Logger logger) {
+    public MSManager(ServerWorld world, GameMap map, MSStruct struct, Participants participants, Random random, Logger logger) {
         this.world = world;
         this.struct = struct;
         this.participants = participants;
+        this.random = random;
         this.logger = logger;
 
         targetManager = new MSTargetManager(struct, participants, world);
@@ -89,6 +95,7 @@ public class MSManager {
         hooks.registerHook(LivingEntityAttributeInitCallback.HOOK, this::initAttributes);
         hooks.registerHook(BrainCreationCallback.Warden.HOOK, this::createWardenBrain);
         hooks.registerHook(EntityPathFindingCallback.HOOK, this::modifyPathFinding);
+        hooks.registerHook(CobwebSlowCallback.HOOK, this::cancelCobwebSlow);
 
         var persistence = new ChunkPersistence(world, gameHandle);
         persistence.markQuadPersistent(-mapChunkRadius, -mapChunkRadius, mapChunkRadius, mapChunkRadius);
@@ -98,17 +105,20 @@ public class MSManager {
         // find most distant nodes where the monsters may spawn
         var spawns = mostDistantSpawns();
 
-        if (spawns.size() < 3) {
+        if (spawns.size() < MOB_COUNT) {
             logger.error("Failed to find {} spawn points for mobs", MOB_COUNT);
             return;
         }
 
         spawnWarden(spawns.getFirst());
+        spawnSpider(spawns.get(1));
 
         targetManager.update();
     }
 
     public List<Vec3d> mostDistantSpawns() {
+        // TODO use astar path finder to calculate distance
+        // TODO spread mobs among different directions / branches of the structure
         var playerNodes = playerNodes();
         var distanceCalculator = struct.distanceCalculator();
 
@@ -157,20 +167,44 @@ public class MSManager {
 
     private void spawnWarden(Vec3d pos) {
         WardenEntity warden = new WardenEntity(EntityType.WARDEN, world);
-        warden.setPosition(pos);
-        warden.setInvulnerable(true);
-        warden.setPersistent();
-        warden.setOnGround(true);  // required to perform path finding immediately
-        warden.setGlowing(true);
-        EntityUtil.setAttribute(warden, EntityAttributes.GENERIC_STEP_HEIGHT, 2);
 
-        // TODO adjust ai for mini game
+        configureMobCommon(pos, warden);
+
         var brain = warden.getBrain();
         brain.setTaskList(Activity.EMERGE, 5, ImmutableList.of(), MemoryModuleType.IS_EMERGING);
         brain.setTaskList(Activity.DIG, 5, ImmutableList.of(), MemoryModuleType.DIG_COOLDOWN);
         brain.resetPossibleActivities();
 
-        EntityNavigation navigation = warden.getNavigation();
+        world.spawnEntity(warden);
+
+        UUID uuid = warden.getUuid();
+        monsters.put(uuid, new WardenData(uuid, this, logger));
+
+        targetManager.addMonster(warden);
+    }
+
+    private void spawnSpider(Vec3d pos) {
+        SpiderEntity spider = new SpiderEntity(EntityType.SPIDER, world);
+
+        configureMobCommon(pos, spider);
+
+        world.spawnEntity(spider);
+
+        UUID uuid = spider.getUuid();
+        monsters.put(uuid, new SpiderData(uuid, this, logger, random));
+
+        targetManager.addMonster(spider);
+    }
+
+    private void configureMobCommon(Vec3d pos, MobEntity entity) {
+        entity.setPosition(pos);
+        entity.setInvulnerable(true);
+        entity.setPersistent();
+        entity.setOnGround(true);  // required to perform path finding immediately
+
+        EntityUtil.setAttribute(entity, EntityAttributes.GENERIC_STEP_HEIGHT, 2);
+
+        EntityNavigation navigation = entity.getNavigation();
         navigation.setRangeMultiplier(8f);
 
         if (navigation instanceof MobNavigation nav) {
@@ -183,14 +217,13 @@ public class MSManager {
             nav.ap2$patchTrapdoorPathFindingTarget();
         }
 
-        //noinspection DataFlowIssue
-        ApEntity apWarden = (ApEntity) warden;
+        ApEntity apEntity = (ApEntity) entity;
 
         // fix warden getting stuck on narrow blocks, like open trapdoors on walls / as railings
-        apWarden.ap2$patchNarrowMovement();
+        apEntity.ap2$patchNarrowMovement();
 
         // fix continuous jumping when walking by open trapdoors
-        apWarden.ap2$patchTrapdoorJumping();
+        apEntity.ap2$patchTrapdoorJumping();
 
         // adjust PathNodeMaker
         PathNodeMaker nodeMaker = ((EntityNavigationAccessor) navigation).getNodeMaker();
@@ -200,20 +233,13 @@ public class MSManager {
             apPathMaker.ap2$addPathFindingPredicate(CollisionPathFindingPredicate.getInstance());
             apPathMaker.ap2$addPathFindingPredicate(new PitPathFindingPredicate(struct));
         }
-
-        world.spawnEntity(warden);
-
-        UUID uuid = warden.getUuid();
-        monsters.put(uuid, new WardenData(uuid, this, logger));
-
-        targetManager.addMonster(warden);
     }
 
-    private void initAttributes(LivingEntity living) {
-        if (living.getWorld() != world || !(living instanceof WardenEntity)) return;
+    private void initAttributes(LivingEntity entity) {
+        if (entity.getWorld() != world || !(entity instanceof WardenEntity || entity instanceof SpiderEntity)) return;
 
         // make sure monsters can track down players everywhere in the map
-        EntityUtil.setAttribute(living, EntityAttributes.GENERIC_FOLLOW_RANGE, 2 * mapChunkRadius * 16);
+        EntityUtil.setAttribute(entity, EntityAttributes.GENERIC_FOLLOW_RANGE, 2 * mapChunkRadius * 16);
     }
 
     private @Nullable Brain<WardenEntity> createWardenBrain(WardenEntity warden, Dynamic<?> dynamic, Supplier<WardenBrainHandle> handleGetter) {
@@ -321,5 +347,9 @@ public class MSManager {
         }
 
         return struct.passagePathFinder().findPath(start, end);
+    }
+
+    private boolean cancelCobwebSlow(Entity entity, BlockPos blockPos) {
+        return entity.getWorld() == world && monsters.containsKey(entity.getUuid());
     }
 }

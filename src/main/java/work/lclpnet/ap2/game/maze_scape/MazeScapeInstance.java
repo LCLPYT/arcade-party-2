@@ -32,6 +32,7 @@ public class MazeScapeInstance extends EliminationGameInstance implements MapBoo
             MOB_UPDATE_DELAY_TICKS = Ticks.seconds(1);
 
     private final MSDebugController debugController = new MSDebugController();
+    private final Random random = new Random();
     private MSStruct struct;
 
     public MazeScapeInstance(MiniGameHandle gameHandle) {
@@ -92,7 +93,7 @@ public class MazeScapeInstance extends EliminationGameInstance implements MapBoo
 
     @Override
     protected void ready() {
-        var manager = new MSManager(getWorld(), getMap(), struct, gameHandle.getParticipants(), gameHandle.getLogger());
+        var manager = new MSManager(getWorld(), getMap(), struct, gameHandle.getParticipants(), random, gameHandle.getLogger());
         manager.init(gameHandle);
 
         TaskScheduler scheduler = gameHandle.getGameScheduler();
