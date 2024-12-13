@@ -19,6 +19,7 @@ import net.minecraft.entity.ai.pathing.MobNavigation;
 import net.minecraft.entity.ai.pathing.Path;
 import net.minecraft.entity.ai.pathing.PathNodeMaker;
 import net.minecraft.entity.attribute.EntityAttributes;
+import net.minecraft.entity.mob.EndermanEntity;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.mob.SpiderEntity;
 import net.minecraft.entity.mob.WardenEntity;
@@ -41,6 +42,7 @@ import work.lclpnet.ap2.core.type.ApLandPathNodeMaker;
 import work.lclpnet.ap2.core.type.ApMobNavigation;
 import work.lclpnet.ap2.core.type.WardenBrainHandle;
 import work.lclpnet.ap2.game.maze_scape.gen.Node;
+import work.lclpnet.ap2.game.maze_scape.monster.EndermanData;
 import work.lclpnet.ap2.game.maze_scape.monster.MonsterData;
 import work.lclpnet.ap2.game.maze_scape.monster.SpiderData;
 import work.lclpnet.ap2.game.maze_scape.monster.WardenData;
@@ -112,6 +114,7 @@ public class MSManager {
 
         spawnWarden(spawns.getFirst());
         spawnSpider(spawns.get(1));
+        spawnEnderman(spawns.get(2));
 
         targetManager.update();
     }
@@ -196,6 +199,19 @@ public class MSManager {
         targetManager.addMonster(spider);
     }
 
+    private void spawnEnderman(Vec3d pos) {
+        EndermanEntity enderman = new EndermanEntity(EntityType.ENDERMAN, world);
+
+        configureMobCommon(pos, enderman);
+
+        world.spawnEntity(enderman);
+
+        UUID uuid = enderman.getUuid();
+        monsters.put(uuid, new EndermanData(uuid, this, logger));
+
+        targetManager.addMonster(enderman);
+    }
+
     private void configureMobCommon(Vec3d pos, MobEntity entity) {
         entity.setPosition(pos);
         entity.setInvulnerable(true);
@@ -236,10 +252,16 @@ public class MSManager {
     }
 
     private void initAttributes(LivingEntity entity) {
-        if (entity.getWorld() != world || !(entity instanceof WardenEntity || entity instanceof SpiderEntity)) return;
+        if (entity.getWorld() != world || !isMonsterType(entity)) return;
 
         // make sure monsters can track down players everywhere in the map
         EntityUtil.setAttribute(entity, EntityAttributes.GENERIC_FOLLOW_RANGE, 2 * mapChunkRadius * 16);
+    }
+
+    private static boolean isMonsterType(LivingEntity entity) {
+        return entity instanceof WardenEntity
+                || entity instanceof SpiderEntity
+                || entity instanceof EndermanEntity;
     }
 
     private @Nullable Brain<WardenEntity> createWardenBrain(WardenEntity warden, Dynamic<?> dynamic, Supplier<WardenBrainHandle> handleGetter) {
@@ -351,5 +373,9 @@ public class MSManager {
 
     private boolean cancelCobwebSlow(Entity entity, BlockPos blockPos) {
         return entity.getWorld() == world && monsters.containsKey(entity.getUuid());
+    }
+
+    public Participants participants() {
+        return participants;
     }
 }
