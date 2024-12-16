@@ -27,7 +27,7 @@ public class EndermanData implements MonsterData {
     private int visibleCheckTimer = 0;
 
     public EndermanData(UUID uuid, MSManager manager, Logger logger) {
-        common = new CommonData(uuid, manager, logger, 0.3);
+        common = new CommonData(uuid, manager, logger, 0.3, 0.45, 0.25);
     }
 
     @Override

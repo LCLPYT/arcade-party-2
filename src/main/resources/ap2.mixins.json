@@ -19,6 +19,7 @@
     "PathMixin",
     "PathNodeMakerAccessor",
     "PathNodeNavigatorMixin",
+    "SpiderEntityMixin",
     "WardenBrainMixin"
   ]
 }

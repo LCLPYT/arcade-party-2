@@ -13,7 +13,6 @@ import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.game.maze_scape.util.MSManager;
-import work.lclpnet.ap2.game.maze_scape.util.MSStruct;
 import work.lclpnet.kibu.scheduler.Ticks;
 
 import java.util.UUID;
@@ -21,16 +20,15 @@ import java.util.UUID;
 public class WardenData implements MonsterData {
 
     private static final int
-            SONIC_BOOM_TRIGGER_TICKS = Ticks.seconds(15),
+            SONIC_BOOM_TRIGGER_TICKS = Ticks.seconds(18),
             SONIC_BOOM_SOUND_TICKS = 34;
 
     private final CommonData common;
-    private int sonicBoomTimer = 0;
     private int sonicBoomSoundDelay = 0;
     private @Nullable LivingEntity sonicBoomTarget = null;
 
     public WardenData(UUID uuid, MSManager manager, Logger logger) {
-        this.common = new CommonData(uuid, manager, logger, 0.3);
+        this.common = new CommonData(uuid, manager, logger, 0.3, 0.45, 0.25);
     }
 
     @Override
@@ -46,15 +44,12 @@ public class WardenData implements MonsterData {
 
         if (warden == null) return;
 
-        LivingEntity target = warden.getTarget();
+        if (common.sameRoomTimerDue(SONIC_BOOM_TRIGGER_TICKS)) {
+            LivingEntity target = warden.getTarget();
 
-        if (target != null && inRangeForSonicBoom(warden, target)) {
-            if (sonicBoomTimer++ >= SONIC_BOOM_TRIGGER_TICKS) {
+            if (target != null) {
                 triggerSonicBoom(target, warden);
-                sonicBoomTimer = 0;
             }
-        } else {
-            sonicBoomTimer = 0;
         }
 
         if (sonicBoomTarget != null) {
@@ -74,15 +69,6 @@ public class WardenData implements MonsterData {
     @Override
     public void onKillAcquired() {
         common.onKillAcquired();
-    }
-
-    private boolean inRangeForSonicBoom(WardenEntity warden, LivingEntity target) {
-        MSStruct struct = common.manager().struct();
-
-        var wardenNode = struct.nodeAt(warden.getPos());
-        var targetNode = struct.nodeAt(target.getPos());
-
-        return wardenNode != null && wardenNode == targetNode;
     }
 
     private void triggerSonicBoom(LivingEntity target, WardenEntity warden) {

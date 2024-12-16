@@ -14,6 +14,7 @@ import net.minecraft.entity.ai.brain.MemoryModuleType;
 import net.minecraft.entity.ai.brain.task.LookAtMobTask;
 import net.minecraft.entity.ai.brain.task.MeleeAttackTask;
 import net.minecraft.entity.ai.brain.task.RangedApproachTask;
+import net.minecraft.entity.ai.goal.*;
 import net.minecraft.entity.ai.pathing.EntityNavigation;
 import net.minecraft.entity.ai.pathing.MobNavigation;
 import net.minecraft.entity.ai.pathing.Path;
@@ -23,6 +24,7 @@ import net.minecraft.entity.mob.EndermanEntity;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.mob.SpiderEntity;
 import net.minecraft.entity.mob.WardenEntity;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
@@ -37,10 +39,9 @@ import work.lclpnet.ap2.core.hook.CobwebSlowCallback;
 import work.lclpnet.ap2.core.hook.EntityPathFindingCallback;
 import work.lclpnet.ap2.core.hook.LivingEntityAttributeInitCallback;
 import work.lclpnet.ap2.core.mixin.EntityNavigationAccessor;
-import work.lclpnet.ap2.core.type.ApEntity;
-import work.lclpnet.ap2.core.type.ApLandPathNodeMaker;
-import work.lclpnet.ap2.core.type.ApMobNavigation;
-import work.lclpnet.ap2.core.type.WardenBrainHandle;
+import work.lclpnet.ap2.core.mixin.MobEntityAccessor;
+import work.lclpnet.ap2.core.type.*;
+import work.lclpnet.ap2.game.apocalypse_survival.util.GoalModifier;
 import work.lclpnet.ap2.game.maze_scape.gen.Node;
 import work.lclpnet.ap2.game.maze_scape.monster.EndermanData;
 import work.lclpnet.ap2.game.maze_scape.monster.MonsterData;
@@ -112,8 +113,8 @@ public class MSManager {
             return;
         }
 
-        spawnWarden(spawns.getFirst());
-//        spawnSpider(spawns.get(1));
+//        spawnWarden(spawns.getFirst());
+        spawnSpider(spawns.get(1));
 //        spawnEnderman(spawns.get(2));
 
         monsters.values().forEach(MonsterData::init);
@@ -190,12 +191,29 @@ public class MSManager {
         targetManager.addMonster(warden);
     }
 
+    @SuppressWarnings("DataFlowIssue")
     private void spawnSpider(Vec3d pos) {
         SpiderEntity spider = new SpiderEntity(EntityType.SPIDER, world);
 
         configureMobCommon(pos, spider);
 
         EntityUtil.setAttribute(spider, EntityAttributes.GENERIC_ATTACK_DAMAGE, 5);
+
+        ((ApSpider) spider).ap2$setCanClimb(false);
+        ((ApLivingEntity) spider).ap2$setServerSidedScale(0.64f);  // change spider width to ~0.9
+
+        var mobAccess = (MobEntityAccessor) spider;
+
+        GoalSelector goalSelector = mobAccess.getGoalSelector();
+
+        GoalModifier.clear(goalSelector);
+        GoalModifier.clear(mobAccess.getTargetSelector());
+
+        goalSelector.add(1, new SwimGoal(spider));
+        goalSelector.add(3, new PounceAtTargetGoal(spider, 0.4f));
+        goalSelector.add(4, new MeleeAttackGoal(spider, 1.0, false));
+        goalSelector.add(6, new LookAtEntityGoal(spider, PlayerEntity.class, 8.0f));
+        goalSelector.add(6, new LookAroundGoal(spider));
 
         world.spawnEntity(spider);
 
