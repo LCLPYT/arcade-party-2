@@ -8,15 +8,23 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.game.maze_scape.setup.OrientedStructurePiece;
 import work.lclpnet.ap2.game.maze_scape.util.MSManager;
+import work.lclpnet.ap2.impl.util.EntityUtil;
 import work.lclpnet.kibu.scheduler.Ticks;
 
 import java.util.Set;
 import java.util.UUID;
 
+import static net.minecraft.entity.attribute.EntityAttributes.GENERIC_MOVEMENT_SPEED;
+
 class CommonData implements MonsterData {
 
     private static final int UNSTUCK_TICKS = Ticks.seconds(5);
-    private static final double STUCK_TOL_SQ = 0.25 * 0.25;
+    private static final double
+            STUCK_TOL_SQ = 0.25 * 0.25,
+            ACCELERATION_DISTANCE_SQ = 16 * 16,
+            ACCELERATION_PER_TICK = 2.8125E-4,
+            MAX_MOVE_SPEED = 0.45;
+
     private final UUID uuid;
     private final MSManager manager;
     private final Logger logger;
@@ -46,10 +54,6 @@ class CommonData implements MonsterData {
         return uuid;
     }
 
-    public int stuckTimer() {
-        return stuckTimer;
-    }
-
     public void tick() {
         MobEntity mob = mob();
 
@@ -69,7 +73,30 @@ class CommonData implements MonsterData {
             }
         } else {
             stuckTimer = 0;
+            accelerate(mob);
         }
+    }
+
+    @Override
+    public void onKillAcquired() {
+        MobEntity mob = mob();
+
+        if (mob == null) return;
+
+        System.out.println("Reset speed");
+        EntityUtil.resetAttribute(mob, GENERIC_MOVEMENT_SPEED);
+    }
+
+    private void accelerate(MobEntity mob) {
+        LivingEntity target = mob.getTarget();
+
+        if (target == null || mob.squaredDistanceTo(target) > ACCELERATION_DISTANCE_SQ) return;
+
+        double currentSpeed = mob.getAttributeBaseValue(GENERIC_MOVEMENT_SPEED);
+        double newSpeed = Math.min(currentSpeed + ACCELERATION_PER_TICK, MAX_MOVE_SPEED);
+
+        System.out.println("speed: " + newSpeed);
+        EntityUtil.setAttribute(mob, GENERIC_MOVEMENT_SPEED, newSpeed);
     }
 
     private void unstuck(MobEntity mob) {

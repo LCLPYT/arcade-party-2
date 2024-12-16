@@ -43,6 +43,11 @@ public class SpiderData implements MonsterData {
         }
     }
 
+    @Override
+    public void onKillAcquired() {
+        common.onKillAcquired();
+    }
+
     public @Nullable SpiderEntity spider() {
         if (common.mob() instanceof SpiderEntity spider) {
             return spider;

@@ -21,7 +21,7 @@ import java.util.UUID;
 public class WardenData implements MonsterData {
 
     private static final int
-            SONIC_BOOM_TRIGGER_TICKS = Ticks.seconds(3),
+            SONIC_BOOM_TRIGGER_TICKS = Ticks.seconds(15),
             SONIC_BOOM_SOUND_TICKS = 34;
 
     private final CommonData common;
@@ -43,7 +43,7 @@ public class WardenData implements MonsterData {
 
         LivingEntity target = warden.getTarget();
 
-        if (common.stuckTimer() > 0 && target != null && inRangeForSonicBoom(warden, target)) {
+        if (target != null && inRangeForSonicBoom(warden, target)) {
             if (sonicBoomTimer++ >= SONIC_BOOM_TRIGGER_TICKS) {
                 triggerSonicBoom(target, warden);
                 sonicBoomTimer = 0;
@@ -64,6 +64,11 @@ public class WardenData implements MonsterData {
                 sonicBoomSoundDelay = 0;
             }
         }
+    }
+
+    @Override
+    public void onKillAcquired() {
+        common.onKillAcquired();
     }
 
     private boolean inRangeForSonicBoom(WardenEntity warden, LivingEntity target) {

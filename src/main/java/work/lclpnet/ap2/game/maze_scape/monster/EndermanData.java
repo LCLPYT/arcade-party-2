@@ -40,6 +40,11 @@ public class EndermanData implements MonsterData {
         }
     }
 
+    @Override
+    public void onKillAcquired() {
+        common.onKillAcquired();
+    }
+
     private @Nullable EndermanEntity enderman() {
         if (common.mob() instanceof EndermanEntity enderman) {
             return enderman;
@@ -50,6 +55,8 @@ public class EndermanData implements MonsterData {
 
     private void checkVisible() {
         var enderman = enderman();
+
+        if (enderman == null) return;
 
         for (ServerPlayerEntity player : common.manager().participants()) {
             if (isVisibleBy(enderman, player)) {

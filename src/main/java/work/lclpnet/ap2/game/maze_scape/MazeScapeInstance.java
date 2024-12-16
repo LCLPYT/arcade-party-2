@@ -1,8 +1,12 @@
 package work.lclpnet.ap2.game.maze_scape;
 
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.entity.damage.DamageTypes;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.Vec3d;
+import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3d;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
@@ -19,6 +23,7 @@ import work.lclpnet.ap2.impl.util.math.MathUtil;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.kibu.util.math.Matrix3i;
+import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 import work.lclpnet.lobby.game.map.GameMap;
 import work.lclpnet.lobby.game.map.MapUtils;
 
@@ -33,7 +38,8 @@ public class MazeScapeInstance extends EliminationGameInstance implements MapBoo
 
     private final MSDebugController debugController = new MSDebugController();
     private final Random random = new Random();
-    private MSStruct struct;
+    private @Nullable MSStruct struct = null;
+    private @Nullable MSManager manager = null;
 
     public MazeScapeInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
@@ -66,10 +72,42 @@ public class MazeScapeInstance extends EliminationGameInstance implements MapBoo
 
         new DebugPathCommand(struct, debugController).register(gameHandle.getCommandRegistrar());
 
+        useSmoothDeath();
+        useNoHealing();
+        useRemainingPlayersDisplay();
+
         teleportPlayers();
     }
 
+    @Override
+    protected void ready() {
+        manager = new MSManager(getWorld(), getMap(), struct, gameHandle.getParticipants(), random, gameHandle.getLogger());
+        manager.init(gameHandle);
+
+        TaskScheduler scheduler = gameHandle.getGameScheduler();
+        scheduler.timeout(manager::spawnMobs, MOB_SPAWN_DELAY_TICKS);
+        scheduler.interval(manager::updateMobs, MOB_UPDATE_DELAY_TICKS, MOB_SPAWN_DELAY_TICKS);
+        scheduler.interval(manager::tick, 1);
+
+        gameHandle.protect(config -> config.allow(ProtectionTypes.ALLOW_DAMAGE, this::allowDamage));
+    }
+
+    @Override
+    protected void eliminate(ServerPlayerEntity player, @Nullable DamageSource source) {
+        super.eliminate(player, source);
+
+        if (source == null || manager == null) return;
+
+        Entity attacker = source.getAttacker();
+
+        if (attacker != null) {
+            manager.onKillAcquired(attacker);
+        }
+    }
+
     private void teleportPlayers() {
+        if (struct == null) return;
+
         OrientedStructurePiece oriented = struct.graph().root().oriented();
 
         if (oriented == null) return;
@@ -91,14 +129,7 @@ public class MazeScapeInstance extends EliminationGameInstance implements MapBoo
         }
     }
 
-    @Override
-    protected void ready() {
-        var manager = new MSManager(getWorld(), getMap(), struct, gameHandle.getParticipants(), random, gameHandle.getLogger());
-        manager.init(gameHandle);
-
-        TaskScheduler scheduler = gameHandle.getGameScheduler();
-        scheduler.timeout(manager::spawnMobs, MOB_SPAWN_DELAY_TICKS);
-        scheduler.interval(manager::updateMobs, MOB_UPDATE_DELAY_TICKS, MOB_SPAWN_DELAY_TICKS);
-        scheduler.interval(manager::tick, 1);
+    private boolean allowDamage(Entity entity, DamageSource source) {
+        return !source.isOf(DamageTypes.PLAYER_ATTACK);
     }
 }

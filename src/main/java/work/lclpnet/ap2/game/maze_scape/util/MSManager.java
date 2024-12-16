@@ -113,8 +113,8 @@ public class MSManager {
         }
 
         spawnWarden(spawns.getFirst());
-        spawnSpider(spawns.get(1));
-        spawnEnderman(spawns.get(2));
+//        spawnSpider(spawns.get(1));
+//        spawnEnderman(spawns.get(2));
 
         targetManager.update();
     }
@@ -216,6 +216,7 @@ public class MSManager {
         entity.setPosition(pos);
         entity.setInvulnerable(true);
         entity.setPersistent();
+        entity.setGlowing(true);
         entity.setOnGround(true);  // required to perform path finding immediately
 
         EntityUtil.setAttribute(entity, EntityAttributes.GENERIC_STEP_HEIGHT, 2);
@@ -377,5 +378,13 @@ public class MSManager {
 
     public Participants participants() {
         return participants;
+    }
+
+    public void onKillAcquired(Entity entity) {
+        MonsterData data = monsters.get(entity.getUuid());
+
+        if (data == null) return;
+
+        data.onKillAcquired();
     }
 }
