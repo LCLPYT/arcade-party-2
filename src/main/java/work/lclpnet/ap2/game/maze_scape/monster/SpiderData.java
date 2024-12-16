@@ -23,7 +23,7 @@ public class SpiderData implements MonsterData {
     private int nextCobweb;
 
     public SpiderData(UUID uuid, MSManager manager, Logger logger, Random random) {
-        this.common = new CommonData(uuid, manager, logger);
+        this.common = new CommonData(uuid, manager, logger, 0.3);
         this.random = random;
 
         scheduleCobweb();
@@ -31,6 +31,11 @@ public class SpiderData implements MonsterData {
 
     private void scheduleCobweb() {
         nextCobweb = COBWEB_DELAY_MIN_TICKS + random.nextInt(COBWEB_DELAY_MAX_TICKS - COBWEB_DELAY_MIN_TICKS + 1);
+    }
+
+    @Override
+    public void init() {
+        common.init();
     }
 
     @Override

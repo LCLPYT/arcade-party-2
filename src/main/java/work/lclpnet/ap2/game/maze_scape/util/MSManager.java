@@ -116,6 +116,8 @@ public class MSManager {
 //        spawnSpider(spawns.get(1));
 //        spawnEnderman(spawns.get(2));
 
+        monsters.values().forEach(MonsterData::init);
+
         targetManager.update();
     }
 
@@ -173,6 +175,8 @@ public class MSManager {
 
         configureMobCommon(pos, warden);
 
+        EntityUtil.setAttribute(warden, EntityAttributes.GENERIC_ATTACK_DAMAGE, 10);
+
         var brain = warden.getBrain();
         brain.setTaskList(Activity.EMERGE, 5, ImmutableList.of(), MemoryModuleType.IS_EMERGING);
         brain.setTaskList(Activity.DIG, 5, ImmutableList.of(), MemoryModuleType.DIG_COOLDOWN);
@@ -190,6 +194,8 @@ public class MSManager {
         SpiderEntity spider = new SpiderEntity(EntityType.SPIDER, world);
 
         configureMobCommon(pos, spider);
+
+        EntityUtil.setAttribute(spider, EntityAttributes.GENERIC_ATTACK_DAMAGE, 5);
 
         world.spawnEntity(spider);
 

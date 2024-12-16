@@ -30,7 +30,12 @@ public class WardenData implements MonsterData {
     private @Nullable LivingEntity sonicBoomTarget = null;
 
     public WardenData(UUID uuid, MSManager manager, Logger logger) {
-        this.common = new CommonData(uuid, manager, logger);
+        this.common = new CommonData(uuid, manager, logger, 0.3);
+    }
+
+    @Override
+    public void init() {
+        common.init();
     }
 
     @Override

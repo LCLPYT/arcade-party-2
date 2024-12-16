@@ -28,13 +28,15 @@ class CommonData implements MonsterData {
     private final UUID uuid;
     private final MSManager manager;
     private final Logger logger;
+    private final double baseSpeed;
     private @Nullable Vec3d prevPos = null;
     private int stuckTimer = 0;
 
-    public CommonData(UUID uuid, MSManager manager, Logger logger) {
+    public CommonData(UUID uuid, MSManager manager, Logger logger, double baseSpeed) {
         this.uuid = uuid;
         this.manager = manager;
         this.logger = logger;
+        this.baseSpeed = baseSpeed;
     }
 
     @Nullable
@@ -54,6 +56,12 @@ class CommonData implements MonsterData {
         return uuid;
     }
 
+    @Override
+    public void init() {
+        resetSpeed();
+    }
+
+    @Override
     public void tick() {
         MobEntity mob = mob();
 
@@ -79,12 +87,15 @@ class CommonData implements MonsterData {
 
     @Override
     public void onKillAcquired() {
+        resetSpeed();
+    }
+
+    private void resetSpeed() {
         MobEntity mob = mob();
 
         if (mob == null) return;
 
-        System.out.println("Reset speed");
-        EntityUtil.resetAttribute(mob, GENERIC_MOVEMENT_SPEED);
+        EntityUtil.setAttribute(mob, GENERIC_MOVEMENT_SPEED, baseSpeed);
     }
 
     private void accelerate(MobEntity mob) {
