@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.game.maze_scape.util;
+package work.lclpnet.ap2.game.maze_scape.debug;
 
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.context.CommandContext;
@@ -12,6 +12,8 @@ import net.minecraft.text.Text;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.game.maze_scape.setup.MSDebugController;
+import work.lclpnet.ap2.game.maze_scape.util.MSStruct;
+import work.lclpnet.ap2.game.maze_scape.util.Passage;
 import work.lclpnet.ap2.impl.scene.Object3d;
 import work.lclpnet.ap2.impl.scene.Scene;
 import work.lclpnet.kibu.cmd.type.CommandRegistrar;
@@ -38,7 +40,7 @@ public class DebugPathCommand implements KibuCommand {
 
     @Override
     public void register(CommandRegistrar registrar) {
-        registrar.registerCommand(literal("ap2:debugpath")
+        registrar.registerCommand(literal("ap2:debug_path")
                 .requires(s -> s.hasPermissionLevel(2))
                 .then(literal("start")
                         .executes(this::start))

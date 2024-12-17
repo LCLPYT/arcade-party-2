@@ -4,13 +4,12 @@ import net.minecraft.entity.mob.EndermanEntity;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.util.hit.HitResult;
-import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4d;
-import org.joml.Vector3d;
 import org.joml.Vector4d;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.game.maze_scape.util.MSManager;
+import work.lclpnet.ap2.impl.util.math.MathUtil;
 
 import java.util.UUID;
 
@@ -73,14 +72,7 @@ public class EndermanData implements MonsterData {
 
     private boolean isVisibleBy(EndermanEntity enderman, ServerPlayerEntity player) {
         // check if the enderman is within the players (estimated) view frustum
-        Vec3d _dir = player.getRotationVector();
-        Vector3d dir = new Vector3d(_dir.getX(), _dir.getY(), _dir.getZ());
-
-        int zFar = player.getViewDistance() * 16;
-        var mat = new Matrix4d()
-                .perspective(PLAYER_FOV, PLAYER_ASPECT_RATIO, 0.5, zFar)
-                .translate(-player.getX(), -player.getY(), -player.getZ())
-                .lookAlong(dir, new Vector3d(0, 1, 0));
+        Matrix4d mat = MathUtil.viewProjectionMatrix(player, PLAYER_FOV, PLAYER_ASPECT_RATIO, new Matrix4d());
 
         Vector4d pos = new Vector4d(enderman.getX(), enderman.getEyeY(), enderman.getZ(), 1d);
 
@@ -91,7 +83,7 @@ public class EndermanData implements MonsterData {
         if (abs(pos.x) > 1.d || abs(pos.y) > 1.d || abs(pos.z) > 1.d) return false;
 
         // check for occlusion
-        HitResult hit = player.raycast(zFar + 1, 0, true);
+        HitResult hit = player.raycast(player.getViewDistance() * 16 + 1, 0, true);
 
         return hit instanceof EntityHitResult entityHit && entityHit.getEntity() == enderman;
     }

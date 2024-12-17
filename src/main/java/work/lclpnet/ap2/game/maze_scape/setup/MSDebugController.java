@@ -240,4 +240,8 @@ public class MSDebugController {
     public @Nullable Scene scene() {
         return scene;
     }
+
+    public @Nullable DebugRenderer renderer() {
+        return renderer;
+    }
 }

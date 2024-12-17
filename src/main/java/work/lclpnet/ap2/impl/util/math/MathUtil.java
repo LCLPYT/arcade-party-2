@@ -1,7 +1,10 @@
 package work.lclpnet.ap2.impl.util.math;
 
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3i;
+import org.joml.Matrix4d;
 import org.joml.Vector3d;
 import org.joml.Vector3dc;
 import work.lclpnet.kibu.util.math.Matrix3i;
@@ -53,5 +56,17 @@ public class MathUtil {
 
     public static int manhattanDistance(BlockPos a, BlockPos b) {
         return abs(a.getX() - b.getX()) + abs(a.getY() - b.getY()) + abs(a.getZ() - b.getZ());
+    }
+
+    public static Matrix4d viewProjectionMatrix(ServerPlayerEntity player, double fovRadians, double screenAspectRatio, Matrix4d mat) {
+        Vec3d _dir = player.getRotationVector();
+        Vector3d dir = new Vector3d(_dir.getX(), _dir.getY(), _dir.getZ());
+
+        int zFar = player.getViewDistance() * 16;
+
+        return mat
+                .perspective(fovRadians, screenAspectRatio, 0.5, zFar)
+                .translate(-player.getX(), -player.getEyeY(), -player.getZ())
+                .lookAlong(dir, new Vector3d(0, 1, 0));
     }
 }
