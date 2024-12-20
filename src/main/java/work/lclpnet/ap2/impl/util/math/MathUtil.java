@@ -1,10 +1,11 @@
 package work.lclpnet.ap2.impl.util.math;
 
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3i;
 import org.joml.Matrix4d;
+import org.joml.Quaterniond;
 import org.joml.Vector3d;
 import org.joml.Vector3dc;
 import work.lclpnet.kibu.util.math.Matrix3i;
@@ -59,14 +60,24 @@ public class MathUtil {
     }
 
     public static Matrix4d viewProjectionMatrix(ServerPlayerEntity player, double fovRadians, double screenAspectRatio, Matrix4d mat) {
-        Vec3d _dir = player.getRotationVector();
-        Vector3d dir = new Vector3d(_dir.getX(), _dir.getY(), _dir.getZ());
+        MinecraftServer server = player.getServer();
+        int viewDistance;
 
-        int zFar = player.getViewDistance() * 16;
+        if (server == null) {
+            viewDistance = 2;
+        } else {
+            viewDistance = Math.max(2, Math.min(player.getViewDistance(), server.getPlayerManager().getViewDistance()));
+        }
 
-        return mat
-                .perspective(fovRadians, screenAspectRatio, 0.5, zFar)
-                .translate(-player.getX(), -player.getEyeY(), -player.getZ())
-                .lookAlong(dir, new Vector3d(0, 1, 0));
+        Quaterniond rotation = new Quaterniond()
+                .rotationYXZ(Math.PI - player.getYaw() * Math.PI / 180.0, -player.getPitch() * Math.PI / 180.0, 0.0F)
+                .conjugate();
+
+        int zFar = viewDistance * 16;
+
+        return mat.identity()
+                .perspective(fovRadians, screenAspectRatio, 0.05, zFar)
+                .rotate(rotation)
+                .translate(-player.getX(), -player.getEyeY(), -player.getZ());
     }
 }

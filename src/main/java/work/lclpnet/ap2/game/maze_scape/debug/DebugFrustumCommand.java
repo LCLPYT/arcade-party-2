@@ -74,7 +74,7 @@ public class DebugFrustumCommand implements KibuCommand {
             frustum[i] = new Vec3d(hom.x / hom.w, hom.y / hom.w, hom.z / hom.w);
         }
 
-        double thickness = 0.03125;
+        double thickness = 0.005;
         BlockState state = Blocks.BLACK_CONCRETE.getDefaultState();
 
         for (int i = 0; i < 4; i++) {

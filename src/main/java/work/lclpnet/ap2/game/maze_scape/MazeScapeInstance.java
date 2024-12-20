@@ -11,6 +11,7 @@ import org.joml.Vector3d;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.map.MapBootstrap;
+import work.lclpnet.ap2.game.maze_scape.debug.DebugFrustumCommand;
 import work.lclpnet.ap2.game.maze_scape.debug.DebugPathCommand;
 import work.lclpnet.ap2.game.maze_scape.setup.MSDebugController;
 import work.lclpnet.ap2.game.maze_scape.setup.MSGenerator;
@@ -20,6 +21,7 @@ import work.lclpnet.ap2.game.maze_scape.util.MSManager;
 import work.lclpnet.ap2.game.maze_scape.util.MSStruct;
 import work.lclpnet.ap2.impl.game.EliminationGameInstance;
 import work.lclpnet.ap2.impl.util.math.MathUtil;
+import work.lclpnet.kibu.cmd.type.CommandRegistrar;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.kibu.util.math.Matrix3i;
@@ -70,7 +72,10 @@ public class MazeScapeInstance extends EliminationGameInstance implements MapBoo
             return;
         }
 
-        new DebugPathCommand(struct, debugController).register(gameHandle.getCommandRegistrar());
+        CommandRegistrar commandRegistrar = gameHandle.getCommandRegistrar();
+
+        new DebugPathCommand(struct, debugController).register(commandRegistrar);
+        new DebugFrustumCommand(debugController).register(commandRegistrar);
 
         useSmoothDeath();
         useNoHealing();
