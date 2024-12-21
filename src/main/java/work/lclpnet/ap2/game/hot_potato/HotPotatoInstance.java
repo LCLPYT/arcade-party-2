@@ -140,7 +140,7 @@ public class HotPotatoInstance extends EliminationGameInstance implements GameOv
     }
 
     @Override
-    protected void eliminate(ServerPlayerEntity player) {
+    public void eliminate(ServerPlayerEntity player) {
         super.eliminate(player);
 
         removePotato(player);

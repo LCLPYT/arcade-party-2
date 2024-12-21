@@ -153,6 +153,10 @@ public class OrientedStructurePiece implements OrientedPiece<Connector3, Structu
         this.node = node;
     }
 
+    public boolean isPitAt(Vec3i pos) {
+        return isPitAt(pos.getX(), pos.getY(), pos.getZ());
+    }
+
     public boolean isPitAt(int x, int y, int z) {
         // could be optimized by querying a transformed precomputed pit structure mask
         var local = inverseTransformation().transform(x - pos.getX(), y - pos.getY(), z - pos.getZ());

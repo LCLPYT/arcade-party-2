@@ -164,7 +164,7 @@ public class SnowballFightInstance extends EliminationGameInstance {
     }
 
     @Override
-    protected void eliminate(ServerPlayerEntity player, @Nullable DamageSource source) {
+    public void eliminate(ServerPlayerEntity player, @Nullable DamageSource source) {
         if (source != null) {
             ServerWorld world = getWorld();
 

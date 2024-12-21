@@ -1,11 +1,19 @@
 package work.lclpnet.ap2.game.maze_scape;
 
+import net.minecraft.block.BlockState;
+import net.minecraft.block.ShapeContext;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.damage.DamageTypes;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.util.function.BooleanBiFunction;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Box;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.shape.VoxelShape;
+import net.minecraft.util.shape.VoxelShapes;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3d;
 import org.slf4j.Logger;
@@ -20,6 +28,7 @@ import work.lclpnet.ap2.game.maze_scape.setup.OrientedStructurePiece;
 import work.lclpnet.ap2.game.maze_scape.util.MSManager;
 import work.lclpnet.ap2.game.maze_scape.util.MSStruct;
 import work.lclpnet.ap2.impl.game.EliminationGameInstance;
+import work.lclpnet.ap2.impl.util.DeathMessages;
 import work.lclpnet.ap2.impl.util.math.MathUtil;
 import work.lclpnet.kibu.cmd.type.CommandRegistrar;
 import work.lclpnet.kibu.scheduler.Ticks;
@@ -37,6 +46,8 @@ public class MazeScapeInstance extends EliminationGameInstance implements MapBoo
     private static final int
             MOB_SPAWN_DELAY_TICKS = Ticks.seconds(0),
             MOB_UPDATE_DELAY_TICKS = Ticks.seconds(1);
+
+    private static final String FELL_INTO_PIT = "game.ap2.maze_scape.fell_into_pit";
 
     private final MSDebugController debugController = new MSDebugController();
     private final Random random = new Random();
@@ -93,12 +104,13 @@ public class MazeScapeInstance extends EliminationGameInstance implements MapBoo
         scheduler.timeout(manager::spawnMobs, MOB_SPAWN_DELAY_TICKS);
         scheduler.interval(manager::updateMobs, MOB_UPDATE_DELAY_TICKS, MOB_SPAWN_DELAY_TICKS);
         scheduler.interval(manager::tick, 1);
+        scheduler.interval(this::checkPits, 1);
 
         gameHandle.protect(config -> config.allow(ProtectionTypes.ALLOW_DAMAGE, this::allowDamage));
     }
 
     @Override
-    protected void eliminate(ServerPlayerEntity player, @Nullable DamageSource source) {
+    public void eliminate(ServerPlayerEntity player, @Nullable DamageSource source) {
         super.eliminate(player, source);
 
         if (source == null || manager == null) return;
@@ -136,5 +148,70 @@ public class MazeScapeInstance extends EliminationGameInstance implements MapBoo
 
     private boolean allowDamage(Entity entity, DamageSource source) {
         return !source.isOf(DamageTypes.PLAYER_ATTACK);
+    }
+
+    private void checkPits() {
+        gameHandle.getParticipants().forEach(this::checkInPit);
+    }
+
+    private void checkInPit(ServerPlayerEntity player) {
+        if (struct == null) return;
+
+        var node = struct.nodeAt(player.getPos());
+
+        if (node == null) return;
+
+        OrientedStructurePiece oriented = node.oriented();
+
+        if (oriented == null) return;
+
+        Box box = player.getBoundingBox();
+
+        // check if bottom face of bounding box is completely within a pit
+        double eps = 1e-6;
+
+        int minX = MathHelper.floor(box.minX - eps);
+        int minZ = MathHelper.floor(box.minZ - eps);
+        int maxX = MathHelper.floor(box.maxX + eps);
+        int maxZ = MathHelper.floor(box.maxZ + eps);
+        int by = MathHelper.floor(box.minY);
+
+        if (!BlockPos.stream(minX, by, minZ, maxX, by, maxZ).allMatch(oriented::isPitAt)) return;
+
+        // check if on ground
+        double delta = 0.1;
+        int minY = MathHelper.floor(box.minY - delta);
+        int maxY = MathHelper.floor(box.minY + delta);
+
+        ServerWorld world = getWorld();
+        ShapeContext context = ShapeContext.of(player);
+        Box collisionBox = box.withMinY(box.minY - delta).withMaxY(box.minY + delta);
+        VoxelShape boxShape = VoxelShapes.cuboid(collisionBox);
+
+        if (BlockPos.stream(minX, minY, minZ, maxX, maxY, maxZ)
+                .filter(pos -> !oriented.isPitAt(pos))  // blocks marked as pit are considered air
+                .noneMatch(pos -> collides(pos, world, context, collisionBox, boxShape))) return;
+
+        // hit the ground within a pit
+        DeathMessages msg = gameHandle.getDeathMessages();
+
+        eliminate(player, msg.root(FELL_INTO_PIT, msg.wrap(player)));
+    }
+
+    private static boolean collides(BlockPos pos, ServerWorld world, ShapeContext context, Box collisionBox, VoxelShape boxShape) {
+        BlockState state = world.getBlockState(pos);
+        VoxelShape shape = state.getCollisionShape(world, pos, context);
+
+        int x = pos.getX();
+        int y = pos.getY();
+        int z = pos.getZ();
+
+        if (shape == VoxelShapes.fullCube()) {
+            return collisionBox.intersects(x, y, z, x + 1.0, y + 1.0, z + 1.0);
+        }
+
+        VoxelShape offset = shape.offset(x, y, z);
+
+        return !offset.isEmpty() && VoxelShapes.matchesAnywhere(offset, boxShape, BooleanBiFunction.AND);
     }
 }

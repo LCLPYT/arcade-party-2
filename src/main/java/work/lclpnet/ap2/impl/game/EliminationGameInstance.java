@@ -11,6 +11,7 @@ import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.base.Participants;
+import work.lclpnet.ap2.api.game.EliminationController;
 import work.lclpnet.ap2.api.game.GameInfo;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.impl.game.data.EliminationDataContainer;
@@ -23,13 +24,14 @@ import work.lclpnet.kibu.hook.entity.EntityHealthCallback;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.kibu.translate.bossbar.TranslatedBossBar;
 import work.lclpnet.kibu.translate.text.FormatWrapper;
+import work.lclpnet.kibu.translate.text.TranslatedText;
 import work.lclpnet.lobby.game.api.WorldFacade;
 
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public abstract class EliminationGameInstance extends DefaultGameInstance {
+public abstract class EliminationGameInstance extends DefaultGameInstance implements EliminationController {
 
     private final EliminationDataContainer<ServerPlayerEntity, PlayerRef> data = new EliminationDataContainer<>(PlayerRef::create);
     private DynamicTranslatedBossBar remainingDisplay = null;
@@ -122,7 +124,8 @@ public abstract class EliminationGameInstance extends DefaultGameInstance {
         this.teleportEliminated = false;
     }
 
-    protected synchronized void eliminateAll(Iterable<? extends ServerPlayerEntity> players) {
+    @Override
+    public synchronized void eliminateAll(Iterable<? extends ServerPlayerEntity> players) {
         Participants participants = gameHandle.getParticipants();
         DeathMessages deathMessages = gameHandle.getDeathMessages();
         MinecraftServer server = gameHandle.getServer();
@@ -154,11 +157,8 @@ public abstract class EliminationGameInstance extends DefaultGameInstance {
         }
     }
 
-    protected void eliminate(ServerPlayerEntity player) {
-        eliminate(player, null);
-    }
-
-    protected void eliminate(ServerPlayerEntity player, @Nullable DamageSource source) {
+    @Override
+    public void eliminate(ServerPlayerEntity player, @Nullable DamageSource source, @Nullable TranslatedText customMsg) {
         Participants participants = gameHandle.getParticipants();
 
         if (participants.isParticipating(player)) {
@@ -168,7 +168,9 @@ public abstract class EliminationGameInstance extends DefaultGameInstance {
                 DeathMessages deathMessages = gameHandle.getDeathMessages();
                 MinecraftServer server = gameHandle.getServer();
 
-                deathMessages.getDeathMessage(player, source).sendTo(PlayerLookup.all(server));
+                var msg = customMsg != null ? customMsg : deathMessages.getDeathMessage(player, source);
+
+                msg.sendTo(PlayerLookup.all(server));
             }
 
             participants.remove(player);

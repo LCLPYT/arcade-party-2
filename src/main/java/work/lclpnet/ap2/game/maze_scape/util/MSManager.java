@@ -64,6 +64,7 @@ import java.util.function.Supplier;
 public class MSManager {
 
     private static final int MOB_COUNT = 3;
+
     private final ServerWorld world;
     private final MSStruct struct;
     private final Participants participants;

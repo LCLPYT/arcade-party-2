@@ -79,8 +79,6 @@ public class MSTargetManager {
     }
 
     public void assignTarget(MobEntity mob, ServerPlayerEntity player) {
-        System.out.printf("Assign %s to %s\n", player.getNameForScoreboard(), mob.getName().getString());
-
         mob.setTarget(player);
 
         if (mob instanceof WardenEntity warden) {

@@ -27,25 +27,26 @@ public class DeathMessages {
             TEAM_ELIMINATED = "ap2.game.team_eliminated",
             KILLED_BY = "ap2.pvp.killed_by",
             SHOT_BY = "ap2.pvp.shot_by";
+
     private final Translations translations;
 
     public DeathMessages(Translations translations) {
         this.translations = translations;
     }
 
-    private TranslatedText root(String key, Object... args) {
+    public TranslatedText root(String key, Object... args) {
         return root(translations.translateText(key, args));
     }
 
-    private TranslatedText root(TranslatedText text) {
+    public TranslatedText root(TranslatedText text) {
         return text.formatted(GRAY);
     }
 
-    private Object wrap(PlayerEntity player) {
+    public Object wrap(PlayerEntity player) {
         return wrap(player.getDisplayName());
     }
 
-    private Object wrap(Object obj) {
+    public Object wrap(Object obj) {
         if (obj instanceof Text text) {
             Style style = text.getStyle();
             HoverEvent hoverEvent = style.getHoverEvent();
