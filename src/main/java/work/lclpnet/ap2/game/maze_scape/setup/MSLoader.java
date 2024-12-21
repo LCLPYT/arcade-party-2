@@ -186,6 +186,7 @@ public class MSLoader {
         boolean connectSame = config.optBoolean("connect-same", true);
         int minDistance = config.optInt("min-distance", 0);
         boolean updateBlocks = config.optBoolean("update-blocks", false);
+        boolean noUnstuck = config.optBoolean("no-unstuck", false);
 
         Set<ClusterDef> clusters = parseClusters(path, config, clusterDefs);
 
@@ -195,7 +196,7 @@ public class MSLoader {
         StructureMask pit = buildPitMask(wrapper, scanResult.pitMarkers());
 
         StructurePiece piece = new StructurePiece(name, wrapper, bounds, scanResult.connectors(), weight, maxCount, connectSame, clusters,
-                minDistance, updateBlocks, spawnPos, scanResult.jigsaws(), pit);
+                minDistance, updateBlocks, noUnstuck, spawnPos, scanResult.jigsaws(), pit);
 
         for (ClusterDef cluster : clusters) {
             cluster.pieces().add(piece);

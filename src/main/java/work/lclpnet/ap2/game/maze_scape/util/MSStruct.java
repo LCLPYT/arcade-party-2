@@ -48,7 +48,7 @@ public final class MSStruct {
 
             BlockPos pos = connectors.getFirst().pos().up();
 
-            return new Passage(pos);
+            return new Passage(pos, from, to);
         });
 
         passages = lineGraphBuilder.buildByNode(graph.root());

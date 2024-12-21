@@ -25,7 +25,7 @@ public class SpiderData implements MonsterData {
     private int nextCobweb;
 
     public SpiderData(UUID uuid, MSManager manager, Logger logger, Random random) {
-        this.common = new CommonData(uuid, manager, logger, 0.3, 0.45, 0.125);
+        this.common = new CommonData(uuid, manager, logger, 0.3, 0.48, 0.125);
         this.random = random;
 
         scheduleCobweb();

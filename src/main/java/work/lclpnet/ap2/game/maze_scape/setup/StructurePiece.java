@@ -22,6 +22,7 @@ public record StructurePiece(
         Set<ClusterDef> clusters,
         int minDistance,
         boolean updateBlocks,
+        boolean noUnstuck,
         @Nullable Vec3d spawn,
         List<BlockPos> jigsaws,
         StructureMask pit
