@@ -30,7 +30,7 @@ class CommonData implements MonsterData {
 
     private static final int
             UNSTUCK_TICKS = Ticks.seconds(5),
-            POSITION_SAMPLE_SIZE = 80;
+            POSITION_SAMPLE_SIZE = 120;
     private static final boolean
             DEBUG_AVG_POS = true;
     private static final double
@@ -171,27 +171,24 @@ class CommonData implements MonsterData {
 
         if (target == null) return;
 
-        var startNode = manager.struct().nodeAt(mob.getPos());
-
-        if (startNode == null) return;
-
-        OrientedStructurePiece oriented = startNode.oriented();
-
-        if (oriented == null || oriented.piece().noUnstuck()) return;
-
         var passagePath = manager.findPassagePath(mob, target.getBlockPos());
 
         if (passagePath.size() < 2) return;
 
-        Passage first = passagePath.get(0);
+        Passage first = passagePath.getFirst();
         Passage second = passagePath.get(1);
 
         var commonNode = first.commonNode(second);
 
-        // if the first two passages share the start node, use the second passage as teleport target
-        int index = commonNode == startNode ? 1 : 0;
+        if (commonNode != null) {
+            OrientedStructurePiece oriented = commonNode.oriented();
 
-        teleport(mob, passagePath.get(index).pos().toBottomCenterPos());
+            if (oriented != null && oriented.piece().noUnstuck()) {
+                return;
+            }
+        }
+
+        teleport(mob, second.pos().toBottomCenterPos());
     }
 
     private void validatePos(Entity entity) {
