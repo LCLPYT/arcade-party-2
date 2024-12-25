@@ -30,9 +30,10 @@ class CommonData implements MonsterData {
 
     private static final int
             UNSTUCK_TICKS = Ticks.seconds(5),
-            POSITION_SAMPLE_SIZE = 120;
+            POSITION_SAMPLE_SIZE = 120,
+            MAX_FAILED_UNSTUCK_ATTEMPTS = 4;
     private static final boolean
-            DEBUG_AVG_POS = true;
+            DEBUG_AVG_POS = false;
     private static final double
             ACCELERATION_DISTANCE_SQ = 16 * 16,
             ACCELERATION_PER_TICK = 2.8125E-4;
@@ -43,6 +44,7 @@ class CommonData implements MonsterData {
     private final double baseSpeed, maxSpeed, stuckTolSq;
     private final PosBuf posBuf = new PosBuf(POSITION_SAMPLE_SIZE);
     private final Vector3d prevAvgPos = new Vector3d(0);
+    private int unstuckFailCount = 0;
     private int stuckTimer = 0;
     private int sameRoomTimer = 0;
     private @Nullable DisplayEntity.BlockDisplayEntity avgPosDisplay = null;
@@ -173,7 +175,16 @@ class CommonData implements MonsterData {
 
         var passagePath = manager.findPassagePath(mob, target.getBlockPos());
 
-        if (passagePath.size() < 2) return;
+        if (passagePath.size() < 2) {
+            if (++unstuckFailCount >= MAX_FAILED_UNSTUCK_ATTEMPTS) {
+                unstuckFailCount = 0;
+                teleport(mob, target.getPos());
+            }
+
+            return;
+        }
+
+        unstuckFailCount = 0;
 
         Passage first = passagePath.getFirst();
         Passage second = passagePath.get(1);

@@ -42,6 +42,8 @@ import work.lclpnet.ap2.core.mixin.EntityNavigationAccessor;
 import work.lclpnet.ap2.core.mixin.MobEntityAccessor;
 import work.lclpnet.ap2.core.type.*;
 import work.lclpnet.ap2.game.apocalypse_survival.util.GoalModifier;
+import work.lclpnet.ap2.game.maze_scape.ai.AttackGoal;
+import work.lclpnet.ap2.game.maze_scape.ai.MoveToTargetGoal;
 import work.lclpnet.ap2.game.maze_scape.gen.Node;
 import work.lclpnet.ap2.game.maze_scape.monster.EndermanData;
 import work.lclpnet.ap2.game.maze_scape.monster.MonsterData;
@@ -212,7 +214,8 @@ public class MSManager {
 
         goalSelector.add(1, new SwimGoal(spider));
         goalSelector.add(3, new PounceAtTargetGoal(spider, 0.4f));
-        goalSelector.add(4, new MeleeAttackGoal(spider, 1.0, false));
+        goalSelector.add(4, new MoveToTargetGoal(spider, 1.0));
+        goalSelector.add(4, new AttackGoal(spider));
         goalSelector.add(6, new LookAtEntityGoal(spider, PlayerEntity.class, 8.0f));
         goalSelector.add(6, new LookAroundGoal(spider));
 
@@ -359,7 +362,7 @@ public class MSManager {
 
         // try to find partial path towards the passage on half the way
         final int size = passagePath.size();
-        int i = (size / 2) - 1;
+        int i = size - 1;
 
         while (i >= 0 && i < size) {
             Passage passage = passagePath.get(i);
