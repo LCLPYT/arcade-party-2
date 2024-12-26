@@ -13,11 +13,11 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
+/**
+ * Manages {@link DynamicEntity} tracking for online players, so that they are only visible when nearby, just like real entities.
+ */
 public class DynamicEntityManager {
 
     private final Map<DynamicEntity, Tracker> entities = new HashMap<>();
@@ -42,11 +42,11 @@ public class DynamicEntityManager {
         scheduler.interval(() -> tick(invalid), 1);
     }
 
-    public void add(DynamicEntity entity) {
+    public synchronized void add(DynamicEntity entity) {
         entities.computeIfAbsent(entity, Tracker::new);
     }
 
-    public void remove(DynamicEntity entity) {
+    public synchronized void remove(DynamicEntity entity) {
         var tracker = entities.remove(entity);
 
         if (tracker == null) return;
@@ -54,7 +54,19 @@ public class DynamicEntityManager {
         tracker.destroy();
     }
 
-    private void tick(Set<ServerPlayNetworkHandler> invalid) {
+    public synchronized void clear() {
+        var it = entities.entrySet().iterator();
+
+        while (it.hasNext()) {
+            var entry = it.next();
+
+            it.remove();
+
+            entry.getValue().destroy();
+        }
+    }
+
+    private synchronized void tick(Set<ServerPlayNetworkHandler> invalid) {
         for (var entry : entities.entrySet()) {  // maybe optimize in the future, e.g. make chunk-based to iterate less
             DynamicEntity dynamic = entry.getKey();
             var tracker = entry.getValue();
@@ -75,7 +87,7 @@ public class DynamicEntityManager {
                 int chunkZ = ChunkSectionPos.getSectionCoord(position.getZ());
 
                 boolean inRange = player.squaredDistanceTo(position) <= viewDistanceSquared
-                                  && isChunkTrackedBy(player, chunkX, chunkZ);
+                        && isChunkTrackedBy(player, chunkX, chunkZ);
 
                 if (inRange) {
                     tracker.add(player);
@@ -107,6 +119,7 @@ public class DynamicEntityManager {
     private class Tracker {
 
         private final DynamicEntity dynamic;
+        private final List<ServerPlayerEntity> removal = new ArrayList<>();
         private final Map<ServerPlayNetworkHandler, EntityPair> entriesByListener = new HashMap<>();
         private final Map<Entity, Set<ServerPlayNetworkHandler>> listenersByEntity = new HashMap<>();
         private final Map<Entity, EntityTrackerEntry> entriesByEntity = new HashMap<>();
@@ -117,6 +130,23 @@ public class DynamicEntityManager {
         }
 
         public void tick() {
+            // gather entries where the entity was removed
+            for (var entry : entriesByListener.entrySet()) {
+                EntityPair pair = entry.getValue();
+
+                if (pair.entity.isRemoved()) {
+                    removal.add(entry.getKey().player);
+                }
+            }
+
+            // actually remove players from this tracker
+            for (var player : removal) {
+                remove(player);
+            }
+
+            removal.clear();
+
+            // tick entries
             for (EntityTrackerEntry entry : entries) {
                 entry.tick();
             }
@@ -141,6 +171,9 @@ public class DynamicEntityManager {
             if (entriesByListener.containsKey(player.networkHandler)) return;
 
             Entity entity = dynamic.getEntity(player);
+
+            if (entity == null || entity.isRemoved()) return;
+
             EntityTrackerEntry trackerEntry = getTrackerEntry(player, entity);
 
             entriesByListener.put(player.networkHandler, new EntityPair(entity, trackerEntry));
@@ -175,12 +208,14 @@ public class DynamicEntityManager {
 
             if (!listeners.isEmpty()) return;
 
-            // cleanup entity
+            // nobody tracks the entity; cleanup
             EntityTrackerEntry trackerEntry = entriesByEntity.remove(entity);
 
-            if (trackerEntry == null) return;
+            if (trackerEntry != null) {
+                entries.remove(trackerEntry);
+            }
 
-            entries.remove(trackerEntry);
+            listenersByEntity.remove(entity);
         }
 
         private EntityTrackerEntry getTrackerEntry(ServerPlayerEntity player, Entity entity) {

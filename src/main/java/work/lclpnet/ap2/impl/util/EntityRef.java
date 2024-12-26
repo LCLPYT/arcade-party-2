@@ -4,10 +4,11 @@ import net.minecraft.entity.Entity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
+import work.lclpnet.ap2.api.ds.Resolvable;
 
 import java.util.UUID;
 
-public record EntityRef<T extends Entity>(UUID uuid, ServerWorld world, Class<T> type) {
+public record EntityRef<T extends Entity>(UUID uuid, ServerWorld world, Class<T> type) implements Resolvable<@Nullable T> {
 
     @SuppressWarnings("unchecked")
     public EntityRef(T entity) {

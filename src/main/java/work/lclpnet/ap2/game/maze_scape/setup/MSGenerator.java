@@ -5,8 +5,6 @@ import net.minecraft.block.BlockState;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import org.slf4j.Logger;
-import work.lclpnet.ap2.api.util.model.ModelManager;
-import work.lclpnet.ap2.base.resource.ApResources;
 import work.lclpnet.ap2.game.maze_scape.gen.Graph;
 import work.lclpnet.ap2.game.maze_scape.gen.GraphGenerator;
 import work.lclpnet.ap2.game.maze_scape.gen.GraphGenerator.Result;
@@ -89,9 +87,6 @@ public class MSGenerator {
 
         bounds = new StructureDomain.BoundsCfg(maxChunkSize, bottomY, topY);
         domain = new StructureDomain(loaded.pieces(), random, deadEndStart, bounds);
-
-        ModelManager modelManager = ApResources.getInstance();
-        debugger.init(modelManager, world);
     }
 
     public static int getMaxChunkSize(GameMap map) {

@@ -57,8 +57,8 @@ class CommonData implements MonsterData {
         this.stuckTolSq = stuckTol * stuckTol;
     }
 
-    @Nullable
-    public MobEntity mob() {
+    @Override
+    public @Nullable MobEntity mob() {
         if (manager.world().getEntity(uuid) instanceof MobEntity mob) {
             return mob;
         }

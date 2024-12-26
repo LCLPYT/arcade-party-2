@@ -23,6 +23,7 @@ import work.lclpnet.ap2.game.maze_scape.util.Passage;
 import work.lclpnet.ap2.impl.scene.BlockDisplayObject;
 import work.lclpnet.ap2.impl.scene.Object3d;
 import work.lclpnet.ap2.impl.scene.Scene;
+import work.lclpnet.ap2.impl.scene.ServerWorldMountContext;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.math.MathUtil;
 import work.lclpnet.ap2.impl.util.model.Models;
@@ -43,7 +44,7 @@ public class MSDebugController {
     public void init(ModelManager modelManager, ServerWorld world) {
         this.world = world;
 
-        scene = new Scene(world);
+        scene = new Scene(new ServerWorldMountContext(world));
         renderer = new DebugRenderer(scene);
 
         spawnMarker = modelManager.getModel(Models.CROSS).orElseThrow();
@@ -75,6 +76,7 @@ public class MSDebugController {
         marker.position.set(-0.5, -0.5, -0.5);
         marker.setGlowing(true);
         marker.setGlowColorOverride(glowColor);
+        marker.setInterpolationDuration(1);
 
         Object3d wrapper = new Object3d();
         wrapper.position.set(x, y, z);

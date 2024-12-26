@@ -45,7 +45,8 @@ public class EndermanData implements MonsterData {
         common.onKillAcquired();
     }
 
-    private @Nullable EndermanEntity enderman() {
+    @Override
+    public @Nullable EndermanEntity mob() {
         if (common.mob() instanceof EndermanEntity enderman) {
             return enderman;
         }
@@ -54,7 +55,7 @@ public class EndermanData implements MonsterData {
     }
 
     private void checkVisible() {
-        var enderman = enderman();
+        var enderman = mob();
 
         if (enderman == null) return;
 

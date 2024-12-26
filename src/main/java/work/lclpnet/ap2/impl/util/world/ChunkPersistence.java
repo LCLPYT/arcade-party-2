@@ -2,8 +2,10 @@ package work.lclpnet.ap2.impl.util.world;
 
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
+import net.minecraft.server.world.ServerChunkManager;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.ChunkPos;
+import net.minecraft.world.chunk.ChunkStatus;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 
 import static java.lang.Math.max;
@@ -35,7 +37,12 @@ public class ChunkPersistence {
 
     private void setForced(int chunkX, int chunkZ, boolean forced) {
         ChunkPos pos = new ChunkPos(chunkX, chunkZ);
-        world.getChunkManager().setChunkForced(pos, forced);
+        ServerChunkManager chunkManager = world.getChunkManager();
+        chunkManager.setChunkForced(pos, forced);
+
+        if (forced && !chunkManager.isChunkLoaded(chunkX, chunkZ)) {
+            chunkManager.getChunk(chunkX, chunkZ, ChunkStatus.FULL, true);
+        }
     }
 
     /**

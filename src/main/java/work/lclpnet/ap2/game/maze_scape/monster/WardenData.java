@@ -36,7 +36,7 @@ public class WardenData implements MonsterData {
     public void tick() {
         common.tick();
 
-        WardenEntity warden = warden();
+        WardenEntity warden = mob();
 
         if (warden == null) return;
 
@@ -97,7 +97,8 @@ public class WardenData implements MonsterData {
         }
     }
 
-    private @Nullable WardenEntity warden() {
+    @Override
+    public @Nullable WardenEntity mob() {
         if (common.mob() instanceof WardenEntity warden) {
             return warden;
         }

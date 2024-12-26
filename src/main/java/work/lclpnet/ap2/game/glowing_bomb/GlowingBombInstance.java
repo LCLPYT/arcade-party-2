@@ -22,6 +22,7 @@ import work.lclpnet.ap2.game.glowing_bomb.data.GbManager;
 import work.lclpnet.ap2.impl.game.EliminationGameInstance;
 import work.lclpnet.ap2.impl.map.ServerThreadMapBootstrap;
 import work.lclpnet.ap2.impl.scene.Scene;
+import work.lclpnet.ap2.impl.scene.ServerWorldMountContext;
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker;
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
 import work.lclpnet.kibu.hook.HookRegistrar;
@@ -140,7 +141,7 @@ public class GlowingBombInstance extends EliminationGameInstance implements MapB
 
         ServerWorld world = getWorld();
 
-        scene = new Scene(world);
+        scene = new Scene(new ServerWorldMountContext(world));
         scene.add(bomb);
 
         TaskScheduler scheduler = gameHandle.getGameScheduler();

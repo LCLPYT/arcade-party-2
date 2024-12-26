@@ -1,6 +1,5 @@
 package work.lclpnet.ap2.impl.scene;
 
-import net.minecraft.server.world.ServerWorld;
 import work.lclpnet.ap2.impl.scene.animation.Animatable;
 import work.lclpnet.ap2.impl.scene.animation.AnimationContext;
 import work.lclpnet.ap2.impl.scene.animation.Interpolatable;
@@ -13,7 +12,7 @@ import java.util.Iterator;
 
 public class Scene {
 
-    private final ServerWorld world;
+    private final MountContext mountContext;
     private final Collection<Object3d> objects = new ArrayList<>();
     private final Collection<Object3d> toAdd = new ArrayList<>();
     private final Collection<Object3d> toRemove = new ArrayList<>();
@@ -21,8 +20,8 @@ public class Scene {
     private volatile AnimationContext animationContext = null;
     private boolean iterating = false;
 
-    public Scene(ServerWorld world) {
-        this.world = world;
+    public Scene(MountContext mountContext) {
+        this.mountContext = mountContext;
     }
 
     public void add(Object3d object) {
@@ -37,7 +36,7 @@ public class Scene {
 
         for (Object3d obj : object.traverse()) {
             if (obj instanceof Mountable mountable) {
-                mountable.mount(world);
+                mountable.mount(mountContext);
             }
         }
     }
@@ -52,7 +51,7 @@ public class Scene {
 
         for (Object3d obj : object.traverse()) {
             if (obj instanceof Unmountable mountable) {
-                mountable.unmount(world);
+                mountable.unmount(mountContext);
             }
         }
     }
@@ -65,7 +64,7 @@ public class Scene {
         if (animationContext == null) {
             synchronized (this) {
                 if (animationContext == null) {
-                    animationContext = new AnimationContext(world);
+                    animationContext = new AnimationContext(mountContext.world());
                 }
             }
         }
@@ -89,6 +88,11 @@ public class Scene {
         }
     }
 
+    public void clear() {
+        for (Object3d obj : iterate()) {
+            remove(obj);
+        }
+    }
 
     private void updateAnimation(double dt) {
         for (Object3d object : iterate()) {
@@ -110,7 +114,7 @@ public class Scene {
         }
     }
 
-    private Iterable<Object3d> iterate() {
+    public Iterable<Object3d> iterate() {
         return () -> {
             iterating = true;
 

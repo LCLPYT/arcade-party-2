@@ -52,7 +52,6 @@ import work.lclpnet.ap2.game.maze_scape.setup.OrientedStructurePiece;
 import work.lclpnet.ap2.impl.ai.BlockedPathFindingPredicate;
 import work.lclpnet.ap2.impl.ai.CollisionPathFindingPredicate;
 import work.lclpnet.ap2.impl.util.EntityUtil;
-import work.lclpnet.ap2.impl.util.world.ChunkPersistence;
 import work.lclpnet.lobby.game.map.GameMap;
 
 import java.util.*;
@@ -102,9 +101,6 @@ public class MSManager {
         hooks.registerHook(BrainCreationCallback.Warden.HOOK, this::createWardenBrain);
         hooks.registerHook(EntityPathFindingCallback.HOOK, this::modifyPathFinding);
         hooks.registerHook(CobwebSlowCallback.HOOK, this::cancelCobwebSlow);
-
-        var persistence = new ChunkPersistence(world, gameHandle);
-        persistence.markQuadPersistent(-mapChunkRadius, -mapChunkRadius, mapChunkRadius, mapChunkRadius);
     }
 
     public void spawnMobs() {
@@ -131,6 +127,10 @@ public class MSManager {
         monsters.values().forEach(MonsterData::init);
 
         targetManager.update();
+    }
+
+    public Collection<MonsterData> monsters() {
+        return Collections.unmodifiableCollection(monsters.values());
     }
 
     public void updateMobs() {

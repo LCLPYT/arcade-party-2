@@ -3,10 +3,10 @@ package work.lclpnet.ap2.impl.scene;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.decoration.DisplayEntity;
-import net.minecraft.server.world.ServerWorld;
+import org.jetbrains.annotations.NotNull;
+import work.lclpnet.ap2.api.ds.Resolvable;
 import work.lclpnet.ap2.impl.scene.animation.Interpolatable;
 import work.lclpnet.ap2.impl.util.DisplayEntityTransformer;
-import work.lclpnet.ap2.impl.util.EntityRef;
 import work.lclpnet.kibu.access.entity.DisplayEntityAccess;
 
 public class BlockDisplayObject extends Object3d implements Mountable, Unmountable, Interpolatable {
@@ -14,8 +14,9 @@ public class BlockDisplayObject extends Object3d implements Mountable, Unmountab
     private BlockState blockState;
     private boolean glowing = false;
     private int glowColorOverride = -1;
+    private int interpolationDuration = 0;
     private final DisplayEntityTransformer transformer = new DisplayEntityTransformer();
-    private EntityRef<DisplayEntity.BlockDisplayEntity> entityRef = null;
+    private @NotNull Resolvable<DisplayEntity.BlockDisplayEntity> entityRef = Resolvable.none();
 
     public BlockDisplayObject(BlockState blockState) {
         this.blockState = blockState;
@@ -25,42 +26,35 @@ public class BlockDisplayObject extends Object3d implements Mountable, Unmountab
     public void updateMatrixWorld(boolean withParent, boolean withChildren) {
         super.updateMatrixWorld(withParent, withChildren);
 
-        if (entityRef != null) {
-            var display = entityRef.resolve();
+        var display = entityRef.resolve();
 
-            if (display != null) {
-                transformer.applyTransformation(display, matrixWorld);
-            }
+        if (display != null) {
+            transformer.applyTransformation(display, matrixWorld);
         }
     }
 
     @Override
-    public void mount(ServerWorld world) {
-        var display = new DisplayEntity.BlockDisplayEntity(EntityType.BLOCK_DISPLAY, world);
+    public void mount(MountContext ctx) {
+        var display = new DisplayEntity.BlockDisplayEntity(EntityType.BLOCK_DISPLAY, ctx.world());
         DisplayEntityAccess.setBlockState(display, blockState);
         DisplayEntityAccess.setGlowColorOverride(display, glowColorOverride);
+        DisplayEntityAccess.setInterpolationDuration(display, interpolationDuration);
 
         display.setGlowing(glowing);
 
         transformer.applyTransformation(display, matrixWorld);
 
-        if (!world.spawnEntity(display)) return;
-
-        entityRef = new EntityRef<>(display);
+        entityRef = ctx.spawn(display, this);
     }
 
     @Override
-    public void unmount(ServerWorld world) {
+    public void unmount(MountContext ctx) {
         removeDisplay();
     }
 
     @Override
     public void updateTickRate(int tickRate) {
-        var display = entityRef.resolve();
-
-        if (display != null) {
-            DisplayEntityAccess.setInterpolationDuration(display, 1);
-        }
+        setInterpolationDuration(tickRate);
     }
 
     @Override
@@ -80,8 +74,6 @@ public class BlockDisplayObject extends Object3d implements Mountable, Unmountab
     public void setBlockState(BlockState state) {
         this.blockState = state;
 
-        if (entityRef == null) return;
-
         var entity = entityRef.resolve();
 
         if (entity != null) {
@@ -95,8 +87,6 @@ public class BlockDisplayObject extends Object3d implements Mountable, Unmountab
 
     public void setGlowColorOverride(int glowColorOverride) {
         this.glowColorOverride = glowColorOverride;
-
-        if (entityRef == null) return;
 
         var entity = entityRef.resolve();
 
@@ -112,8 +102,6 @@ public class BlockDisplayObject extends Object3d implements Mountable, Unmountab
     public void setGlowing(boolean glowing) {
         this.glowing = glowing;
 
-        if (entityRef == null) return;
-
         var entity = entityRef.resolve();
 
         if (entity != null) {
@@ -125,13 +113,25 @@ public class BlockDisplayObject extends Object3d implements Mountable, Unmountab
         return glowing;
     }
 
-    private void removeDisplay() {
-        if (entityRef == null) return;
+    public void setInterpolationDuration(int interpolationDuration) {
+        this.interpolationDuration = interpolationDuration;
 
+        var display = entityRef.resolve();
+
+        if (display != null) {
+            DisplayEntityAccess.setInterpolationDuration(display, 1);
+        }
+    }
+
+    public int getInterpolationDuration() {
+        return interpolationDuration;
+    }
+
+    private void removeDisplay() {
         var display = entityRef.resolve();
 
         if (display != null) display.discard();
 
-        entityRef = null;
+        entityRef = Resolvable.none();
     }
 }

@@ -58,7 +58,8 @@ public class SpiderData implements MonsterData {
         common.onKillAcquired();
     }
 
-    public @Nullable SpiderEntity spider() {
+    @Override
+    public @Nullable SpiderEntity mob() {
         if (common.mob() instanceof SpiderEntity spider) {
             return spider;
         }
@@ -67,7 +68,7 @@ public class SpiderData implements MonsterData {
     }
 
     private void cobwebSpecial() {
-        SpiderEntity spider = spider();
+        SpiderEntity spider = mob();
 
         if (spider == null) return;
 
@@ -81,7 +82,7 @@ public class SpiderData implements MonsterData {
     }
 
     private void placeCobweb() {
-        SpiderEntity spider = spider();
+        SpiderEntity spider = mob();
 
         if (spider == null) return;
 

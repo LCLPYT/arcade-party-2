@@ -139,6 +139,28 @@ public class Object3d {
         };
     }
 
+    public Iterable<Object3d> traverseParents() {
+        return this::traverseParentsIterator;
+    }
+
+    private Iterator<Object3d> traverseParentsIterator() {
+        return new Iterator<>() {
+            Object3d current = Object3d.this;
+
+            @Override
+            public boolean hasNext() {
+                return current != null;
+            }
+
+            @Override
+            public Object3d next() {
+                Object3d obj = current;
+                current = current.parent;
+                return obj;
+            }
+        };
+    }
+
     public Vector3d worldPosition() {
         updateMatrixWorld(true, false);
 

@@ -17,8 +17,11 @@ import net.minecraft.util.shape.VoxelShapes;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3d;
 import org.slf4j.Logger;
+import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.map.MapBootstrap;
+import work.lclpnet.ap2.api.util.model.ModelManager;
+import work.lclpnet.ap2.base.resource.ApResources;
 import work.lclpnet.ap2.game.maze_scape.debug.DebugFrustumCommand;
 import work.lclpnet.ap2.game.maze_scape.debug.DebugPathCommand;
 import work.lclpnet.ap2.game.maze_scape.setup.MSDebugController;
@@ -27,9 +30,11 @@ import work.lclpnet.ap2.game.maze_scape.setup.MSLoader;
 import work.lclpnet.ap2.game.maze_scape.setup.OrientedStructurePiece;
 import work.lclpnet.ap2.game.maze_scape.util.MSManager;
 import work.lclpnet.ap2.game.maze_scape.util.MSStruct;
+import work.lclpnet.ap2.game.maze_scape.util.MonsterReveal;
 import work.lclpnet.ap2.impl.game.EliminationGameInstance;
 import work.lclpnet.ap2.impl.util.DeathMessages;
 import work.lclpnet.ap2.impl.util.math.MathUtil;
+import work.lclpnet.ap2.impl.util.world.ChunkPersistence;
 import work.lclpnet.kibu.cmd.type.CommandRegistrar;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
@@ -45,7 +50,8 @@ public class MazeScapeInstance extends EliminationGameInstance implements MapBoo
 
     private static final int
             MOB_SPAWN_DELAY_TICKS = Ticks.seconds(0),
-            MOB_UPDATE_DELAY_TICKS = Ticks.seconds(1);
+            MOB_UPDATE_DELAY_TICKS = Ticks.seconds(1),
+            MOB_REVEAL_TICKS = Ticks.seconds(8);
 
     private static final String FELL_INTO_PIT = "game.ap2.maze_scape.fell_into_pit";
 
@@ -61,6 +67,9 @@ public class MazeScapeInstance extends EliminationGameInstance implements MapBoo
     @Override
     public CompletableFuture<Void> createWorldBootstrap(ServerWorld world, GameMap map) {
         world.setTimeOfDay(18_000);
+
+        ModelManager modelManager = ApResources.getInstance();
+        debugController.init(modelManager, world);
 
         Logger logger = gameHandle.getLogger();
         var setup = new MSLoader(world, map, logger);
@@ -92,21 +101,37 @@ public class MazeScapeInstance extends EliminationGameInstance implements MapBoo
         useNoHealing();
         useRemainingPlayersDisplay();
 
+        var persistence = new ChunkPersistence(getWorld(), gameHandle);
+        int mapChunkRadius = MSGenerator.getMaxChunkSize(getMap());
+
+        persistence.markQuadPersistent(-mapChunkRadius, -mapChunkRadius, mapChunkRadius, mapChunkRadius);
+
         teleportPlayers();
     }
 
     @Override
     protected void ready() {
-        manager = new MSManager(getWorld(), getMap(), struct, gameHandle.getParticipants(), random,
+        ServerWorld world = getWorld();
+        Participants participants = gameHandle.getParticipants();
+
+        manager = new MSManager(world, getMap(), struct, participants, random,
                 gameHandle.getLogger(), debugController);
 
         manager.init(gameHandle);
 
         TaskScheduler scheduler = gameHandle.getGameScheduler();
-        scheduler.timeout(manager::spawnMobs, MOB_SPAWN_DELAY_TICKS);
         scheduler.interval(manager::updateMobs, MOB_UPDATE_DELAY_TICKS, MOB_SPAWN_DELAY_TICKS);
         scheduler.interval(manager::tick, 1);
         scheduler.interval(this::checkPits, 1);
+
+        scheduler.timeout(() -> {
+            manager.spawnMobs();
+
+            var reveal = new MonsterReveal(ApResources.getInstance(), manager.participants(), world, manager.monsters());
+            reveal.start(scheduler);
+
+            scheduler.timeout(reveal::stop, MOB_REVEAL_TICKS);
+        }, MOB_SPAWN_DELAY_TICKS);
 
         gameHandle.protect(config -> config.allow(ProtectionTypes.ALLOW_DAMAGE, this::allowDamage));
     }
