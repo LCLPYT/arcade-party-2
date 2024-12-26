@@ -2,6 +2,8 @@ package work.lclpnet.ap2.game.maze_scape.monster;
 
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.effect.StatusEffectInstance;
+import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.mob.SpiderEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
@@ -25,7 +27,7 @@ public class SpiderData implements MonsterData {
     private int nextCobweb;
 
     public SpiderData(UUID uuid, MSManager manager, Logger logger, Random random) {
-        this.common = new CommonData(uuid, manager, logger, 0.3, 0.48, 0.125);
+        this.common = new CommonData(uuid, manager, logger, 0.35, 0.48, 0.125);
         this.random = random;
 
         scheduleCobweb();
@@ -77,6 +79,8 @@ public class SpiderData implements MonsterData {
         if (target == null) return;
 
         putCobweb(target.getBlockPos());
+        target.damage(spider.getDamageSources().indirectMagic(spider, spider), 2);
+        target.addStatusEffect(new StatusEffectInstance(StatusEffects.POISON, Ticks.seconds(5), 0));
     }
 
     private void placeCobweb() {
