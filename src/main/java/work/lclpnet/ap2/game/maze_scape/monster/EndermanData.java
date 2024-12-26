@@ -7,11 +7,7 @@ import net.minecraft.util.hit.HitResult;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4d;
 import org.joml.Vector4d;
-import org.slf4j.Logger;
-import work.lclpnet.ap2.game.maze_scape.util.MSManager;
 import work.lclpnet.ap2.impl.util.math.MathUtil;
-
-import java.util.UUID;
 
 import static java.lang.Math.abs;
 
@@ -25,8 +21,8 @@ public class EndermanData implements MonsterData {
     private final CommonData common;
     private int visibleCheckTimer = 0;
 
-    public EndermanData(UUID uuid, MSManager manager, Logger logger) {
-        common = new CommonData(uuid, manager, logger, 0.3, 0.45, 0.25);
+    public EndermanData(MonsterArgs args) {
+        common = new CommonData(args, 0.3, 0.45, 0.2);
     }
 
     @Override

@@ -97,7 +97,9 @@ public class MazeScapeInstance extends EliminationGameInstance implements MapBoo
 
     @Override
     protected void ready() {
-        manager = new MSManager(getWorld(), getMap(), struct, gameHandle.getParticipants(), random, gameHandle.getLogger());
+        manager = new MSManager(getWorld(), getMap(), struct, gameHandle.getParticipants(), random,
+                gameHandle.getLogger(), debugController);
+
         manager.init(gameHandle);
 
         TaskScheduler scheduler = gameHandle.getGameScheduler();

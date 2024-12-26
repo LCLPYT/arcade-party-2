@@ -12,6 +12,8 @@ import work.lclpnet.kibu.access.entity.DisplayEntityAccess;
 public class BlockDisplayObject extends Object3d implements Mountable, Unmountable, Interpolatable {
 
     private BlockState blockState;
+    private boolean glowing = false;
+    private int glowColorOverride = -1;
     private final DisplayEntityTransformer transformer = new DisplayEntityTransformer();
     private EntityRef<DisplayEntity.BlockDisplayEntity> entityRef = null;
 
@@ -36,6 +38,9 @@ public class BlockDisplayObject extends Object3d implements Mountable, Unmountab
     public void mount(ServerWorld world) {
         var display = new DisplayEntity.BlockDisplayEntity(EntityType.BLOCK_DISPLAY, world);
         DisplayEntityAccess.setBlockState(display, blockState);
+        DisplayEntityAccess.setGlowColorOverride(display, glowColorOverride);
+
+        display.setGlowing(glowing);
 
         transformer.applyTransformation(display, matrixWorld);
 
@@ -86,6 +91,38 @@ public class BlockDisplayObject extends Object3d implements Mountable, Unmountab
 
     public BlockState getBlockState() {
         return blockState;
+    }
+
+    public void setGlowColorOverride(int glowColorOverride) {
+        this.glowColorOverride = glowColorOverride;
+
+        if (entityRef == null) return;
+
+        var entity = entityRef.resolve();
+
+        if (entity != null) {
+            DisplayEntityAccess.setGlowColorOverride(entity, glowColorOverride);
+        }
+    }
+
+    public int getGlowColorOverride() {
+        return glowColorOverride;
+    }
+
+    public void setGlowing(boolean glowing) {
+        this.glowing = glowing;
+
+        if (entityRef == null) return;
+
+        var entity = entityRef.resolve();
+
+        if (entity != null) {
+            entity.setGlowing(glowing);
+        }
+    }
+
+    public boolean isGlowing() {
+        return glowing;
     }
 
     private void removeDisplay() {

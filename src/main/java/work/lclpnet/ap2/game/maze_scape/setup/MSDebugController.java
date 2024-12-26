@@ -20,6 +20,7 @@ import work.lclpnet.ap2.game.maze_scape.gen.Node;
 import work.lclpnet.ap2.game.maze_scape.util.DebugRenderer;
 import work.lclpnet.ap2.game.maze_scape.util.MSStruct;
 import work.lclpnet.ap2.game.maze_scape.util.Passage;
+import work.lclpnet.ap2.impl.scene.BlockDisplayObject;
 import work.lclpnet.ap2.impl.scene.Object3d;
 import work.lclpnet.ap2.impl.scene.Scene;
 import work.lclpnet.ap2.impl.util.BlockBox;
@@ -66,6 +67,23 @@ public class MSDebugController {
         marker.rotation.setAngleAxis(angleY, 0, 1, 0);
 
         display(marker);
+    }
+
+    public Object3d displayMarker(double x, double y, double z, BlockState state, int glowColor) {
+        BlockDisplayObject marker = new BlockDisplayObject(state);
+
+        marker.position.set(-0.5, -0.5, -0.5);
+        marker.setGlowing(true);
+        marker.setGlowColorOverride(glowColor);
+
+        Object3d wrapper = new Object3d();
+        wrapper.position.set(x, y, z);
+        wrapper.scale.set(0.25);
+        wrapper.addChild(marker);
+
+        display(wrapper);
+
+        return wrapper;
     }
 
     public void visualizeSpawn(OrientedStructurePiece oriented) {

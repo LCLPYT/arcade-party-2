@@ -21,21 +21,18 @@ import net.minecraft.entity.ai.pathing.MobNavigation;
 import net.minecraft.entity.ai.pathing.Path;
 import net.minecraft.entity.ai.pathing.PathNodeMaker;
 import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.entity.decoration.DisplayEntity;
 import net.minecraft.entity.mob.EndermanEntity;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.mob.SpiderEntity;
 import net.minecraft.entity.mob.WardenEntity;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.AffineTransformation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.Nullable;
-import org.joml.Matrix4f;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.api.base.Participants;
+import work.lclpnet.ap2.api.ds.Partial;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.core.hook.BrainCreationCallback;
 import work.lclpnet.ap2.core.hook.CobwebSlowCallback;
@@ -48,19 +45,14 @@ import work.lclpnet.ap2.game.apocalypse_survival.util.GoalModifier;
 import work.lclpnet.ap2.game.maze_scape.ai.AttackGoal;
 import work.lclpnet.ap2.game.maze_scape.ai.MoveToTargetGoal;
 import work.lclpnet.ap2.game.maze_scape.gen.Node;
-import work.lclpnet.ap2.game.maze_scape.monster.EndermanData;
-import work.lclpnet.ap2.game.maze_scape.monster.MonsterData;
-import work.lclpnet.ap2.game.maze_scape.monster.SpiderData;
-import work.lclpnet.ap2.game.maze_scape.monster.WardenData;
-import work.lclpnet.ap2.game.maze_scape.setup.Connector3;
+import work.lclpnet.ap2.game.maze_scape.monster.*;
+import work.lclpnet.ap2.game.maze_scape.setup.MSDebugController;
 import work.lclpnet.ap2.game.maze_scape.setup.MSGenerator;
 import work.lclpnet.ap2.game.maze_scape.setup.OrientedStructurePiece;
-import work.lclpnet.ap2.game.maze_scape.setup.StructurePiece;
 import work.lclpnet.ap2.impl.ai.BlockedPathFindingPredicate;
 import work.lclpnet.ap2.impl.ai.CollisionPathFindingPredicate;
 import work.lclpnet.ap2.impl.util.EntityUtil;
 import work.lclpnet.ap2.impl.util.world.ChunkPersistence;
-import work.lclpnet.kibu.access.entity.DisplayEntityAccess;
 import work.lclpnet.lobby.game.map.GameMap;
 
 import java.util.*;
@@ -80,14 +72,16 @@ public class MSManager {
     private final Logger logger;
     private final MSTargetManager targetManager;
     private final int mapChunkRadius;
+    private final MSDebugController debugController;
     private final Map<UUID, MonsterData> monsters = new HashMap<>();
 
-    public MSManager(ServerWorld world, GameMap map, MSStruct struct, Participants participants, Random random, Logger logger) {
+    public MSManager(ServerWorld world, GameMap map, MSStruct struct, Participants participants, Random random, Logger logger, MSDebugController debugController) {
         this.world = world;
         this.struct = struct;
         this.participants = participants;
         this.random = random;
         this.logger = logger;
+        this.debugController = debugController;
 
         targetManager = new MSTargetManager(struct, participants, world);
         mapChunkRadius = MSGenerator.getMaxChunkSize(map);
@@ -124,21 +118,15 @@ public class MSManager {
 
         if (DEBUG_MOB_SPAWNS) {
             for (Vec3d pos : spawns.source()) {
-                var display = new DisplayEntity.BlockDisplayEntity(EntityType.BLOCK_DISPLAY, world);
-                display.setPosition(pos);
-                display.setGlowing(true);
-
-                DisplayEntityAccess.setBlockState(display, Blocks.YELLOW_CONCRETE.getDefaultState());
-                DisplayEntityAccess.setTransformation(display, new AffineTransformation(new Matrix4f().scale(.25f).translate(-.5f, .5f, -.5f)));
-                DisplayEntityAccess.setGlowColorOverride(display, 0xffff00);
-
-                world.spawnEntity(display);
+                debugController.displayMarker(pos.x, pos.y + 0.5, pos.z, Blocks.YELLOW_CONCRETE.getDefaultState(), 0xffff00);
             }
         }
 
-        spawnWarden(spawns.get());
-        spawnSpider(spawns.get());
-//        spawnEnderman(spawns.get());
+        Partial<MonsterArgs, UUID> args = uuid -> new MonsterArgs(uuid, this, logger, debugController);
+
+        spawnWarden(spawns.get(), args);
+        spawnSpider(spawns.get(), args);
+//        spawnEnderman(spawns.get(), args);
 
         monsters.values().forEach(MonsterData::init);
 
@@ -195,21 +183,7 @@ public class MSManager {
         return new RandomGenerator<>(mostDistant, random);
     }
 
-    private Set<Node<Connector3, StructurePiece, OrientedStructurePiece>> playerNodes() {
-        Set<Node<Connector3, StructurePiece, OrientedStructurePiece>> playerNodes = new HashSet<>();
-
-        for (ServerPlayerEntity player : participants) {
-            var node = struct.nodeAt(player.getPos());
-
-            if (node != null) {
-                playerNodes.add(node);
-            }
-        }
-
-        return playerNodes;
-    }
-
-    private void spawnWarden(Vec3d pos) {
+    private void spawnWarden(Vec3d pos, Partial<MonsterArgs, UUID> args) {
         WardenEntity warden = new WardenEntity(EntityType.WARDEN, world);
 
         configureMobCommon(pos, warden);
@@ -224,13 +198,13 @@ public class MSManager {
         world.spawnEntity(warden);
 
         UUID uuid = warden.getUuid();
-        monsters.put(uuid, new WardenData(uuid, this, logger));
+        monsters.put(uuid, new WardenData(args.with(uuid)));
 
         targetManager.addMonster(warden);
     }
 
     @SuppressWarnings("DataFlowIssue")
-    private void spawnSpider(Vec3d pos) {
+    private void spawnSpider(Vec3d pos, Partial<MonsterArgs, UUID> args) {
         SpiderEntity spider = new SpiderEntity(EntityType.SPIDER, world);
 
         configureMobCommon(pos, spider);
@@ -257,12 +231,12 @@ public class MSManager {
         world.spawnEntity(spider);
 
         UUID uuid = spider.getUuid();
-        monsters.put(uuid, new SpiderData(uuid, this, logger, random));
+        monsters.put(uuid, new SpiderData(args.with(uuid), random));
 
         targetManager.addMonster(spider);
     }
 
-    private void spawnEnderman(Vec3d pos) {
+    private void spawnEnderman(Vec3d pos, Partial<MonsterArgs, UUID> args) {
         EndermanEntity enderman = new EndermanEntity(EntityType.ENDERMAN, world);
 
         configureMobCommon(pos, enderman);
@@ -270,7 +244,7 @@ public class MSManager {
         world.spawnEntity(enderman);
 
         UUID uuid = enderman.getUuid();
-        monsters.put(uuid, new EndermanData(uuid, this, logger));
+        monsters.put(uuid, new EndermanData(args.with(uuid)));
 
         targetManager.addMonster(enderman);
     }

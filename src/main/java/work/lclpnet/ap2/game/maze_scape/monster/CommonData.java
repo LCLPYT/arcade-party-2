@@ -2,23 +2,19 @@ package work.lclpnet.ap2.game.maze_scape.monster;
 
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.decoration.DisplayEntity;
 import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.AffineTransformation;
 import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.Nullable;
-import org.joml.Matrix4f;
 import org.joml.Vector3d;
 import org.slf4j.Logger;
+import work.lclpnet.ap2.game.maze_scape.setup.MSDebugController;
 import work.lclpnet.ap2.game.maze_scape.setup.OrientedStructurePiece;
 import work.lclpnet.ap2.game.maze_scape.util.MSManager;
 import work.lclpnet.ap2.game.maze_scape.util.MSStruct;
 import work.lclpnet.ap2.game.maze_scape.util.Passage;
+import work.lclpnet.ap2.impl.scene.Object3d;
 import work.lclpnet.ap2.impl.util.EntityUtil;
-import work.lclpnet.kibu.access.entity.DisplayEntityAccess;
 import work.lclpnet.kibu.scheduler.Ticks;
 
 import java.util.List;
@@ -42,18 +38,20 @@ class CommonData implements MonsterData {
     private final UUID uuid;
     private final MSManager manager;
     private final Logger logger;
+    private final MSDebugController debugController;
     private final double baseSpeed, maxSpeed, stuckTolSq;
     private final PosBuf posBuf = new PosBuf(POSITION_SAMPLE_SIZE);
     private final Vector3d prevAvgPos = new Vector3d(0);
     private int unstuckFailCount = 0;
     private int stuckTimer = 0;
     private int sameRoomTimer = 0;
-    private @Nullable DisplayEntity.BlockDisplayEntity avgPosDisplay = null;
+    private @Nullable Object3d avgPosMarker = null;
 
-    public CommonData(UUID uuid, MSManager manager, Logger logger, double baseSpeed, double maxSpeed, double stuckTol) {
-        this.uuid = uuid;
-        this.manager = manager;
-        this.logger = logger;
+    public CommonData(MonsterArgs args, double baseSpeed, double maxSpeed, double stuckTol) {
+        this.uuid = args.uuid();
+        this.manager = args.manager();
+        this.logger = args.logger();
+        this.debugController = args.debugController();
         this.baseSpeed = baseSpeed;
         this.maxSpeed = maxSpeed;
         this.stuckTolSq = stuckTol * stuckTol;
@@ -81,21 +79,10 @@ class CommonData implements MonsterData {
         resetSpeed();
 
         if (DEBUG_AVG_POS) {
-            ServerWorld world = manager.world();
-            avgPosDisplay = new DisplayEntity.BlockDisplayEntity(EntityType.BLOCK_DISPLAY, world);
-            avgPosDisplay.setGlowing(true);
-
-            DisplayEntityAccess.setBlockState(avgPosDisplay, Blocks.GREEN_CONCRETE.getDefaultState());
-            DisplayEntityAccess.setGlowColorOverride(avgPosDisplay, 0x00ff00);
-            DisplayEntityAccess.setTransformation(avgPosDisplay, new AffineTransformation(new Matrix4f().scale(.25f)));
-
             MobEntity mob = mob();
+            Vec3d pos = mob != null ? mob.getPos() : Vec3d.ZERO;
 
-            if (mob != null) {
-                avgPosDisplay.setPosition(mob.getPos());
-            }
-
-            world.spawnEntity(avgPosDisplay);
+            avgPosMarker = debugController.displayMarker(pos.x, pos.y, pos.z, Blocks.GREEN_CONCRETE.getDefaultState(), 0x00ff00);
         }
     }
 
@@ -109,8 +96,9 @@ class CommonData implements MonsterData {
 
         posBuf.update(mob.getPos());
 
-        if (DEBUG_AVG_POS && avgPosDisplay != null) {
-            avgPosDisplay.teleport(manager.world(), posBuf.avg.x, posBuf.avg.y, posBuf.avg.z, Set.of(), 0, 0);
+        if (DEBUG_AVG_POS && avgPosMarker != null) {
+            avgPosMarker.position.set(posBuf.avg.x, posBuf.avg.y, posBuf.avg.z);
+            avgPosMarker.updateMatrixWorld();
         }
 
         if (prevAvgPos.distanceSquared(posBuf.avg) < stuckTolSq) {

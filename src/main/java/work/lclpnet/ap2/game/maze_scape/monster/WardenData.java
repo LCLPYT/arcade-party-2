@@ -11,11 +11,7 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.Nullable;
-import org.slf4j.Logger;
-import work.lclpnet.ap2.game.maze_scape.util.MSManager;
 import work.lclpnet.kibu.scheduler.Ticks;
-
-import java.util.UUID;
 
 public class WardenData implements MonsterData {
 
@@ -27,8 +23,8 @@ public class WardenData implements MonsterData {
     private int sonicBoomSoundDelay = 0;
     private @Nullable LivingEntity sonicBoomTarget = null;
 
-    public WardenData(UUID uuid, MSManager manager, Logger logger) {
-        this.common = new CommonData(uuid, manager, logger, 0.3, 0.45, 0.25);
+    public WardenData(MonsterArgs args) {
+        this.common = new CommonData(args, 0.3, 0.45, 0.2);
     }
 
     @Override

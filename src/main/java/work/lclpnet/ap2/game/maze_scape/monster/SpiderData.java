@@ -8,12 +8,9 @@ import net.minecraft.entity.mob.SpiderEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import org.jetbrains.annotations.Nullable;
-import org.slf4j.Logger;
-import work.lclpnet.ap2.game.maze_scape.util.MSManager;
 import work.lclpnet.kibu.scheduler.Ticks;
 
 import java.util.Random;
-import java.util.UUID;
 
 public class SpiderData implements MonsterData {
 
@@ -26,8 +23,8 @@ public class SpiderData implements MonsterData {
     private final Random random;
     private int nextCobweb;
 
-    public SpiderData(UUID uuid, MSManager manager, Logger logger, Random random) {
-        this.common = new CommonData(uuid, manager, logger, 0.35, 0.48, 0.125);
+    public SpiderData(MonsterArgs args, Random random) {
+        this.common = new CommonData(args, 0.35, 0.48, 0.125);
         this.random = random;
 
         scheduleCobweb();

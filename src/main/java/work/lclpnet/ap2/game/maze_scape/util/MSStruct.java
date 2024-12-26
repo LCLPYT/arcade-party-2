@@ -24,7 +24,6 @@ import static net.minecraft.util.math.ChunkSectionPos.getSectionCoord;
 public final class MSStruct {
 
     private final Graph<Connector3, StructurePiece, OrientedStructurePiece> graph;
-    private final CachedGraphDistanceCalculator<Node<Connector3, StructurePiece, OrientedStructurePiece>> distanceCalculator;
     private final AStar<Passage> pathFinder;
     private final StructureDomain.BoundsCfg bounds;
     private final Chunk[][] chunksXZ;
@@ -34,7 +33,6 @@ public final class MSStruct {
         this.graph = graph;
         this.bounds = bounds;
 
-        distanceCalculator = new CachedGraphDistanceCalculator<>();
         pathFinder = new AStar<>(Passage::estimateDistance, Passage::estimateDistance);
 
         chunksXZ = buildChunks(graph, bounds);
@@ -175,10 +173,6 @@ public final class MSStruct {
 
     public Graph<Connector3, StructurePiece, OrientedStructurePiece> graph() {
         return graph;
-    }
-
-    public CachedGraphDistanceCalculator<Node<Connector3, StructurePiece, OrientedStructurePiece>> distanceCalculator() {
-        return distanceCalculator;
     }
 
     public AStar<Passage> passagePathFinder() {
