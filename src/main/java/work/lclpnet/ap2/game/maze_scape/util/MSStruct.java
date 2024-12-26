@@ -231,6 +231,30 @@ public final class MSStruct {
         return nearest;
     }
 
+    public Optional<NavPath> findPath(Position from, Position to) {
+        var entityNode = nodeAt(from);
+        var targetNode = nodeAt(to);
+
+        if (entityNode == null || targetNode == null) {
+            return Optional.empty();
+        }
+
+        if (entityNode == targetNode) {
+            return Optional.of(new NavPath(from, List.of(), to));
+        }
+
+        Passage start = nearestPassageTo(from, entityNode);
+        Passage end = nearestPassageTo(to, targetNode);
+
+        if (start == null || end == null) {
+            return Optional.empty();
+        }
+
+        List<Passage> path = passagePathFinder().findPath(start, end);
+
+        return Optional.of(new NavPath(from, path, to));
+    }
+
     private static class Chunk {
         List<Node<Connector3, StructurePiece, OrientedStructurePiece>> nodes = null;
 

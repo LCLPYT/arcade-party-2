@@ -3,8 +3,9 @@ package work.lclpnet.ap2.game.maze_scape.util;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.mojang.serialization.Dynamic;
-import it.unimi.dsi.fastutil.objects.Object2IntMap;
-import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
+import it.unimi.dsi.fastutil.objects.Object2DoubleMap;
+import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
+import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
@@ -20,6 +21,7 @@ import net.minecraft.entity.ai.pathing.MobNavigation;
 import net.minecraft.entity.ai.pathing.Path;
 import net.minecraft.entity.ai.pathing.PathNodeMaker;
 import net.minecraft.entity.attribute.EntityAttributes;
+import net.minecraft.entity.decoration.DisplayEntity;
 import net.minecraft.entity.mob.EndermanEntity;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.mob.SpiderEntity;
@@ -27,10 +29,11 @@ import net.minecraft.entity.mob.WardenEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.util.math.AffineTransformation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Matrix4f;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
@@ -57,15 +60,18 @@ import work.lclpnet.ap2.impl.ai.BlockedPathFindingPredicate;
 import work.lclpnet.ap2.impl.ai.CollisionPathFindingPredicate;
 import work.lclpnet.ap2.impl.util.EntityUtil;
 import work.lclpnet.ap2.impl.util.world.ChunkPersistence;
+import work.lclpnet.kibu.access.entity.DisplayEntityAccess;
 import work.lclpnet.lobby.game.map.GameMap;
 
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import static java.lang.Math.*;
+
 public class MSManager {
 
-    private static final int MOB_COUNT = 3;
+    private static final boolean DEBUG_MOB_SPAWNS = false;
 
     private final ServerWorld world;
     private final MSStruct struct;
@@ -109,55 +115,84 @@ public class MSManager {
 
     public void spawnMobs() {
         // find most distant nodes where the monsters may spawn
-        var spawns = mostDistantSpawns();
+        var spawns = spawns();
 
-        if (spawns.size() < MOB_COUNT) {
-            logger.error("Failed to find {} spawn points for mobs", MOB_COUNT);
+        if (spawns == null) {
+            logger.error("Failed to find spawn points for mobs");
             return;
         }
 
-//        spawnWarden(spawns.getFirst());
-        spawnSpider(spawns.get(1));
-//        spawnEnderman(spawns.get(2));
+        if (DEBUG_MOB_SPAWNS) {
+            for (Vec3d pos : spawns.source()) {
+                var display = new DisplayEntity.BlockDisplayEntity(EntityType.BLOCK_DISPLAY, world);
+                display.setPosition(pos);
+                display.setGlowing(true);
+
+                DisplayEntityAccess.setBlockState(display, Blocks.YELLOW_CONCRETE.getDefaultState());
+                DisplayEntityAccess.setTransformation(display, new AffineTransformation(new Matrix4f().scale(.25f).translate(-.5f, .5f, -.5f)));
+                DisplayEntityAccess.setGlowColorOverride(display, 0xffff00);
+
+                world.spawnEntity(display);
+            }
+        }
+
+        spawnWarden(spawns.get());
+        spawnSpider(spawns.get());
+//        spawnEnderman(spawns.get());
 
         monsters.values().forEach(MonsterData::init);
 
         targetManager.update();
     }
 
-    public List<Vec3d> mostDistantSpawns() {
-        // TODO use astar path finder to calculate distance
-        // TODO spread mobs among different directions / branches of the structure
-        var playerNodes = playerNodes();
-        var distanceCalculator = struct.distanceCalculator();
+    public void updateMobs() {
+        targetManager.update();
+    }
 
+    public void tick() {
+        for (var data : monsters.values()) {
+            data.tick();
+        }
+    }
+
+    /**
+     * Finds a specified amount of spawns for mobs.
+     * The spawns are chosen, such so that they are not near any players, if possible.
+     * @return A list of spawn positions, is <b>not guaranteed</b> to be of the requested size, if anything is configured wrong.
+     */
+    public @Nullable RandomGenerator<Vec3d> spawns() {
         var nodes = struct.graph().nodes();
-        Object2IntMap<Object> distances = new Object2IntOpenHashMap<>(nodes.size());
+        Object2DoubleMap<Object> minDistances = new Object2DoubleOpenHashMap<>(nodes.size());
 
-        for (var node : nodes) {
-            int minDistance = Integer.MAX_VALUE;
+        // calculate the min distance to a player for each node
+        nodes.forEach(node -> Optional.ofNullable(node.oriented())
+                .map(OrientedStructurePiece::spawn)
+                .stream()
+                .flatMapToDouble(nodeSpawn -> participants.stream()
+                        .flatMap(player -> struct.findPath(player.getPos(), nodeSpawn).stream())
+                        .mapToDouble(NavPath::length))
+                .min()
+                .ifPresent(minDist -> minDistances.put(node, minDist)));
 
-            for (var playerNode : playerNodes) {
-                int distance = distanceCalculator.distance(playerNode, node);
+        // sort by calculated min dist descending
+        nodes.sort(Comparator.comparingDouble(node -> minDistances.getOrDefault(node, Double.MIN_VALUE)).reversed());
 
-                if (distance < minDistance) {
-                    minDistance = distance;
-                }
-            }
+        // select elements randomly out of certain % of most distant elements
+        double threshold = 0.3;
+        int thresholdIdx = max(0, min(nodes.size() - 1, (int) floor(nodes.size() * (threshold))));
 
-            if (minDistance == Integer.MAX_VALUE) continue;
+        var mostDistant = nodes.subList(0, thresholdIdx).stream()
+                .map(Node::oriented)
+                .filter(Objects::nonNull)
+                .map(OrientedStructurePiece::spawn)
+                .filter(Objects::nonNull)
+                .toList();
 
-            distances.put(node, minDistance);
+        if (mostDistant.isEmpty()) {
+            return null;
         }
 
-        nodes.sort(Comparator.comparingInt(node -> distances.getOrDefault(node, Integer.MIN_VALUE)).reversed());
-
-        return nodes.stream()
-                .flatMap(node -> Optional.ofNullable(node.oriented())
-                        .map(OrientedStructurePiece::spawn)
-                        .stream())
-                .limit(MOB_COUNT)
-                .toList();
+        return new RandomGenerator<>(mostDistant, random);
     }
 
     private Set<Node<Connector3, StructurePiece, OrientedStructurePiece>> playerNodes() {
@@ -330,16 +365,6 @@ public class MSManager {
         return warden.getBrain().getOptionalRegisteredMemory(MemoryModuleType.ATTACK_TARGET).filter(x -> x == entity).isPresent();
     }
 
-    public void updateMobs() {
-        targetManager.update();
-    }
-
-    public void tick() {
-        for (var data : monsters.values()) {
-            data.tick();
-        }
-    }
-
     private @Nullable Path modifyPathFinding(Entity entity, @Nullable Path path, Set<BlockPos> targets, Function<BlockPos, @Nullable Path> pathFinder) {
         if (!monsters.containsKey(entity.getUuid()) || (path != null && path.reachesTarget())) {
             return path;
@@ -354,18 +379,20 @@ public class MSManager {
     }
 
     private @Nullable Path findPartialPath(Entity entity, BlockPos target, Function<BlockPos, Path> pathFinder) {
-        var passagePath = findPassagePath(entity, target);
+        var navPath = struct.findPath(entity.getPos(), target.toBottomCenterPos());
 
-        if (passagePath.isEmpty()) {
+        if (navPath.isEmpty()) {
             return null;
         }
 
         // try to find partial path towards the passage on half the way
-        final int size = passagePath.size();
+        List<Passage> passages = navPath.get().path();
+
+        final int size = passages.size();
         int i = size - 1;
 
         while (i >= 0 && i < size) {
-            Passage passage = passagePath.get(i);
+            Passage passage = passages.get(i);
             Path partial = pathFinder.apply(passage.pos());
 
             if (partial != null && partial.reachesTarget()) {
@@ -377,27 +404,6 @@ public class MSManager {
         }
 
         return null;
-    }
-
-    public @NotNull List<Passage> findPassagePath(Entity entity, BlockPos target) {
-        Vec3d entityPos = entity.getPos();
-        Vec3d targetPos = target.toBottomCenterPos();
-
-        var entityNode = struct.nodeAt(entityPos);
-        var targetNode = struct.nodeAt(targetPos);
-
-        if (entityNode == null || targetNode == null || entityNode == targetNode) {
-            return List.of();
-        }
-
-        Passage start = struct.nearestPassageTo(entityPos, entityNode);
-        Passage end = struct.nearestPassageTo(targetPos, targetNode);
-
-        if (start == null || end == null) {
-            return List.of();
-        }
-
-        return struct.passagePathFinder().findPath(start, end);
     }
 
     private boolean cancelCobwebSlow(Entity entity, BlockPos blockPos) {

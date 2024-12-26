@@ -21,6 +21,7 @@ import work.lclpnet.ap2.impl.util.EntityUtil;
 import work.lclpnet.kibu.access.entity.DisplayEntityAccess;
 import work.lclpnet.kibu.scheduler.Ticks;
 
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -173,7 +174,11 @@ class CommonData implements MonsterData {
 
         if (target == null) return;
 
-        var passagePath = manager.findPassagePath(mob, target.getBlockPos());
+        var navPath = manager.struct().findPath(mob.getPos(), target.getPos());
+
+        if (navPath.isEmpty()) return;
+
+        List<Passage> passagePath = navPath.get().path();
 
         if (passagePath.size() < 2) {
             if (++unstuckFailCount >= MAX_FAILED_UNSTUCK_ATTEMPTS) {
@@ -230,14 +235,14 @@ class CommonData implements MonsterData {
     }
 
     private void teleportToDistantPos(Entity entity) {
-        var spawns = manager.mostDistantSpawns();
+        var spawns = manager.spawns();
 
-        if (spawns.isEmpty()) {
+        if (spawns == null) {
             logger.error("Could not find distant position");
             return;
         }
 
-        teleport(entity, spawns.getFirst());
+        teleport(entity, spawns.get());
     }
 
     private void teleport(Entity entity, Vec3d pos) {

@@ -11,7 +11,6 @@ import java.util.*;
 
 import static java.lang.Double.isFinite;
 import static java.lang.Double.isNaN;
-import static java.lang.Math.sqrt;
 
 public class MSTargetManager {
 
@@ -87,51 +86,10 @@ public class MSTargetManager {
     }
 
     private double distanceBetween(Position from, Position to) {
-        var nodeFrom = struct.nodeAt(from);
-        var nodeTo = struct.nodeAt(to);
-
-        if (nodeFrom == null || nodeTo == null) {
-            return Double.POSITIVE_INFINITY;
-        }
-
-        if (nodeTo == nodeFrom) {
-            double dx = to.getX() - from.getX();
-            double dy = to.getY() - from.getY();
-            double dz = to.getZ() - from.getZ();
-
-            return sqrt(dx * dx + dy * dy + dz * dz);
-        }
-
-        var passageFrom = struct.nearestPassageTo(from);
-        var passageTo = struct.nearestPassageTo(to);
-
-        if (passageFrom == null || passageTo == null) {
-            return Double.POSITIVE_INFINITY;
-        }
-
         // TODO cache estimated distance between to passages
         // TODO use real distance between passages rather than estimation
-        List<Passage> path = struct.passagePathFinder().findPath(passageFrom, passageTo);
-
-        if (path.isEmpty()) {
-            // no path found
-            return Double.POSITIVE_INFINITY;
-        }
-
-        double distance = 0;
-        var last = path.getFirst();
-
-        // sum estimated distance between passages
-        for (int i = 1, len = path.size(); i < len; i++) {
-            var next = path.get(i);
-            distance += sqrt(last.pos().getSquaredDistance(next.pos()));
-            last = next;
-        }
-
-        // add estimated distance between exact from / to position and their respective passage
-        distance += sqrt(passageFrom.pos().getSquaredDistance(from));
-        distance += sqrt(passageTo.pos().getSquaredDistance(to));
-
-        return distance;
+        return struct.findPath(from, to)
+                .map(NavPath::length)
+                .orElse(Double.POSITIVE_INFINITY);
     }
 }
