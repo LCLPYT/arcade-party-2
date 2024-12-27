@@ -26,8 +26,8 @@ import static net.minecraft.entity.attribute.EntityAttributes.GENERIC_MOVEMENT_S
 class CommonData implements MonsterData {
 
     private static final int
-            UNSTUCK_TICKS = Ticks.seconds(5),
-            POSITION_SAMPLE_SIZE = 120,
+            CHECK_STUCK_TICKS = Ticks.seconds(2),
+            POSITION_SAMPLE_SIZE = 30,
             MAX_FAILED_UNSTUCK_ATTEMPTS = 4;
     private static final boolean
             DEBUG_AVG_POS = false;
@@ -43,8 +43,9 @@ class CommonData implements MonsterData {
     private final PosBuf posBuf = new PosBuf(POSITION_SAMPLE_SIZE);
     private final Vector3d prevAvgPos = new Vector3d(0);
     private int unstuckFailCount = 0;
-    private int stuckTimer = 0;
+    private int checkStuckTimer = 0;
     private int sameRoomTimer = 0;
+    private @Nullable Passage lastUnstuck = null;
     private @Nullable Object3d avgPosMarker = null;
 
     public CommonData(MonsterArgs args, double baseSpeed, double maxSpeed, double stuckTol) {
@@ -101,17 +102,15 @@ class CommonData implements MonsterData {
             avgPosMarker.updateMatrixWorld();
         }
 
-        if (prevAvgPos.distanceSquared(posBuf.avg) < stuckTolSq) {
-            if (stuckTimer++ >= UNSTUCK_TICKS) {
-                stuckTimer = 0;
+        if (checkStuckTimer++ % CHECK_STUCK_TICKS == 0) {
+            if (prevAvgPos.distanceSquared(posBuf.avg) < stuckTolSq) {
                 unstuck(mob);
             }
-        } else {
-            stuckTimer = 0;
-            accelerate(mob);
+
+            prevAvgPos.set(posBuf.avg);
         }
 
-        prevAvgPos.set(posBuf.avg);
+        accelerate(mob);
     }
 
     @Override
@@ -168,6 +167,8 @@ class CommonData implements MonsterData {
 
         List<Passage> passagePath = navPath.get().path();
 
+        System.out.println(passagePath.size());
+
         if (passagePath.size() < 2) {
             if (++unstuckFailCount >= MAX_FAILED_UNSTUCK_ATTEMPTS) {
                 unstuckFailCount = 0;
@@ -192,7 +193,15 @@ class CommonData implements MonsterData {
             }
         }
 
-        teleport(mob, second.pos().toBottomCenterPos());
+        Passage next = second;
+
+        if (second == lastUnstuck && passagePath.size() >= 3) {
+            next = passagePath.get(2);
+        }
+
+        lastUnstuck = next;
+
+        teleport(mob, next.pos().toBottomCenterPos());
     }
 
     private void validatePos(Entity entity) {

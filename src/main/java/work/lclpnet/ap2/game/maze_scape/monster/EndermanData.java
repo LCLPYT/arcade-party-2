@@ -22,7 +22,7 @@ public class EndermanData implements MonsterData {
     private int visibleCheckTimer = 0;
 
     public EndermanData(MonsterArgs args) {
-        common = new CommonData(args, 0.3, 0.45, 0.2);
+        common = new CommonData(args, 0.3, 0.45, 0.75);
     }
 
     @Override

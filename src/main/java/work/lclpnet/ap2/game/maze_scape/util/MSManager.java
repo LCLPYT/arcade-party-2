@@ -369,7 +369,7 @@ public class MSManager {
             Passage passage = passages.get(i);
             Path partial = pathFinder.apply(passage.pos());
 
-            if (partial != null && partial.reachesTarget()) {
+            if (partial != null && partial.reachesTarget() && partial.getLength() > 2) {
                 return partial;
             }
 

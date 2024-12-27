@@ -24,7 +24,7 @@ public class WardenData implements MonsterData {
     private @Nullable LivingEntity sonicBoomTarget = null;
 
     public WardenData(MonsterArgs args) {
-        this.common = new CommonData(args, 0.3, 0.45, 0.2);
+        this.common = new CommonData(args, 0.3, 0.45, 0.75);
     }
 
     @Override
