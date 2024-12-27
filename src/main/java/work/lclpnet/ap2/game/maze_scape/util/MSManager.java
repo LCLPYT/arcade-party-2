@@ -252,7 +252,7 @@ public class MSManager {
         world.spawnEntity(enderman);
 
         UUID uuid = enderman.getUuid();
-        EndermanData data = new EndermanData(args.with(uuid));
+        EndermanData data = new EndermanData(args.with(uuid), struct);
         monsters.put(uuid, data);
 
         targetManager.addMonster(data);

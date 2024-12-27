@@ -32,6 +32,7 @@ import work.lclpnet.kibu.access.entity.DisplayEntityAccess;
 import work.lclpnet.kibu.util.math.Matrix3i;
 
 import java.util.*;
+import java.util.function.Consumer;
 
 import static java.lang.Math.abs;
 
@@ -40,6 +41,8 @@ public class MSDebugController {
     private @Nullable Model spawnMarker = null, childMarker = null, passageMarker = null;
     private @Nullable ServerWorld world = null;
     private @Nullable DebugRenderer renderer = null;
+    private @Nullable Map<String, List<Object3d>> namedObjects = null;
+    private @Nullable ThreadLocal<@Nullable List<Object3d>> group = null;
 
     public void init(ModelManager modelManager, ServerWorld world) {
         this.world = world;
@@ -53,11 +56,20 @@ public class MSDebugController {
                 .map(model -> model instanceof TemplateModel m ? m : null)
                 .map(m -> m.copy().replace(Blocks.LIME_CONCRETE.getDefaultState(), Blocks.LIGHT_BLUE_CONCRETE.getDefaultState()))
                 .orElseThrow();
+
+        namedObjects = new HashMap<>();
+        group = ThreadLocal.withInitial(() -> null);
     }
 
     public void display(Object3d obj) {
-        if (scene != null) {
-            scene.add(obj);
+        if (scene == null || group == null) return;
+
+        scene.add(obj);
+
+        List<Object3d> objects = group.get();
+
+        if (objects != null) {
+            objects.add(obj);
         }
     }
 
@@ -71,6 +83,10 @@ public class MSDebugController {
     }
 
     public Object3d displayMarker(double x, double y, double z, BlockState state, int glowColor) {
+        return displayMarker(x, y, z, state, glowColor, 0.25);
+    }
+
+    public Object3d displayMarker(double x, double y, double z, BlockState state, int glowColor, double scale) {
         BlockDisplayObject marker = new BlockDisplayObject(state);
 
         marker.position.set(-0.5, -0.5, -0.5);
@@ -80,7 +96,7 @@ public class MSDebugController {
 
         Object3d wrapper = new Object3d();
         wrapper.position.set(x, y, z);
-        wrapper.scale.set(0.25);
+        wrapper.scale.set(scale);
         wrapper.addChild(marker);
 
         display(wrapper);
@@ -263,5 +279,18 @@ public class MSDebugController {
 
     public @Nullable DebugRenderer renderer() {
         return renderer;
+    }
+
+    public void exclusive(String name, Consumer<MSDebugController> action) {
+        if (namedObjects == null || scene == null || group == null) return;
+
+        var objects = namedObjects.computeIfAbsent(name, n -> new ArrayList<>());
+        objects.forEach(scene::remove);
+
+        group.set(objects);
+
+        action.accept(this);
+
+        group.remove();
     }
 }
