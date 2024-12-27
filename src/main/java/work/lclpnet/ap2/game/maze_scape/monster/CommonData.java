@@ -167,8 +167,6 @@ class CommonData implements MonsterData {
 
         List<Passage> passagePath = navPath.get().path();
 
-        System.out.println(passagePath.size());
-
         if (passagePath.size() < 2) {
             if (++unstuckFailCount >= MAX_FAILED_UNSTUCK_ATTEMPTS) {
                 unstuckFailCount = 0;

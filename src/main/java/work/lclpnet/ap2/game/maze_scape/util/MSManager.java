@@ -29,6 +29,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.api.base.Participants;
@@ -82,7 +83,7 @@ public class MSManager {
         this.logger = logger;
         this.debugController = debugController;
 
-        targetManager = new MSTargetManager(struct, participants, world);
+        targetManager = new MSTargetManager(struct, participants);
         mapChunkRadius = MSGenerator.getMaxChunkSize(map);
     }
 
@@ -120,9 +121,9 @@ public class MSManager {
 
         Partial<MonsterArgs, UUID> args = uuid -> new MonsterArgs(uuid, this, logger, debugController);
 
-        spawnWarden(spawns.get(), args);
-        spawnSpider(spawns.get(), args);
-//        spawnEnderman(spawns.get(), args);
+//        spawnWarden(spawns.get(), args);
+//        spawnSpider(spawns.get(), args);
+        spawnEnderman(spawns.get(), args);
 
         monsters.values().forEach(MonsterData::init);
 
@@ -198,9 +199,10 @@ public class MSManager {
         world.spawnEntity(warden);
 
         UUID uuid = warden.getUuid();
-        monsters.put(uuid, new WardenData(args.with(uuid)));
+        WardenData data = new WardenData(args.with(uuid));
+        monsters.put(uuid, data);
 
-        targetManager.addMonster(warden);
+        targetManager.addMonster(data);
     }
 
     @SuppressWarnings("DataFlowIssue")
@@ -214,12 +216,7 @@ public class MSManager {
         ((ApSpider) spider).ap2$setCanClimb(false);
         ((ApLivingEntity) spider).ap2$setServerSidedScale(0.64f);  // change spider width to ~0.9
 
-        var mobAccess = (MobEntityAccessor) spider;
-
-        GoalSelector goalSelector = mobAccess.getGoalSelector();
-
-        GoalModifier.clear(goalSelector);
-        GoalModifier.clear(mobAccess.getTargetSelector());
+        GoalSelector goalSelector = resetAi(spider).getGoalSelector();
 
         goalSelector.add(1, new SwimGoal(spider));
         goalSelector.add(3, new PounceAtTargetGoal(spider, 0.4f));
@@ -231,9 +228,10 @@ public class MSManager {
         world.spawnEntity(spider);
 
         UUID uuid = spider.getUuid();
-        monsters.put(uuid, new SpiderData(args.with(uuid), random));
+        SpiderData data = new SpiderData(args.with(uuid), random);
+        monsters.put(uuid, data);
 
-        targetManager.addMonster(spider);
+        targetManager.addMonster(data);
     }
 
     private void spawnEnderman(Vec3d pos, Partial<MonsterArgs, UUID> args) {
@@ -241,12 +239,32 @@ public class MSManager {
 
         configureMobCommon(pos, enderman);
 
+        EntityUtil.setAttribute(enderman, EntityAttributes.GENERIC_ATTACK_DAMAGE, 20);
+        enderman.setSilent(true);
+
+        GoalSelector goalSelector = resetAi(enderman).getGoalSelector();
+
+        goalSelector.add(0, new SwimGoal(enderman));
+        goalSelector.add(4, new MoveToTargetGoal(enderman, 1.0));
+        goalSelector.add(4, new AttackGoal(enderman));
+        goalSelector.add(6, new LookAroundGoal(enderman));
+
         world.spawnEntity(enderman);
 
         UUID uuid = enderman.getUuid();
-        monsters.put(uuid, new EndermanData(args.with(uuid)));
+        EndermanData data = new EndermanData(args.with(uuid));
+        monsters.put(uuid, data);
 
-        targetManager.addMonster(enderman);
+        targetManager.addMonster(data);
+    }
+
+    private static @NotNull MobEntityAccessor resetAi(MobEntity mob) {
+        var access = (MobEntityAccessor) mob;
+
+        GoalModifier.clear(access.getGoalSelector());
+        GoalModifier.clear(access.getTargetSelector());
+
+        return access;
     }
 
     private void configureMobCommon(Vec3d pos, MobEntity entity) {

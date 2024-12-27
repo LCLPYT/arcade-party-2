@@ -8,6 +8,7 @@
   },
   "mixins": [
     "CobwebBlockMixin",
+    "EndermanEntityAccessor",
     "EntityMixin",
     "EntityNavigationAccessor",
     "EntityNavigationMixin",

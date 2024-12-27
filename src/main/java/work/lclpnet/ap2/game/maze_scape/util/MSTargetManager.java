@@ -1,11 +1,18 @@
 package work.lclpnet.ap2.game.maze_scape.util;
 
+import net.minecraft.entity.attribute.EntityAttributeInstance;
+import net.minecraft.entity.attribute.EntityAttributes;
+import net.minecraft.entity.data.DataTracker;
+import net.minecraft.entity.mob.EndermanEntity;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.mob.WardenEntity;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Position;
 import work.lclpnet.ap2.api.base.Participants;
+import work.lclpnet.ap2.core.mixin.EndermanEntityAccessor;
+import work.lclpnet.ap2.game.maze_scape.monster.EndermanData;
+import work.lclpnet.ap2.game.maze_scape.monster.MonsterData;
 
 import java.util.*;
 
@@ -16,33 +23,33 @@ public class MSTargetManager {
 
     private final MSStruct struct;
     private final Participants participants;
-    private final ServerWorld world;
-    private final Set<UUID> monsters = new HashSet<>();
+    private final Set<MonsterData> monsters = new HashSet<>();
 
-    public MSTargetManager(MSStruct struct, Participants participants, ServerWorld world) {
+    public MSTargetManager(MSStruct struct, Participants participants) {
         this.struct = struct;
         this.participants = participants;
-        this.world = world;
     }
 
-    public void addMonster(MobEntity mob) {
-        monsters.add(mob.getUuid());
+    public void addMonster(MonsterData monster) {
+        monsters.add(monster);
     }
 
     public void update() {
-        record Entry(double distance, MobEntity mob, ServerPlayerEntity player) {}
+        record Entry(double distance, MonsterData monster, ServerPlayerEntity player) {}
 
         // collect distances for from each monster to each player
         List<Entry> entries = new ArrayList<>(monsters.size() * participants.count());
 
-        for (UUID monsterId : monsters) {
-            if (!(world.getEntity(monsterId) instanceof MobEntity mob)) continue;
+        for (MonsterData monster : monsters) {
+            MobEntity mob = monster.mob();
+
+            if (mob == null) continue;
 
             for (ServerPlayerEntity player : participants) {
                 double distance = distanceBetween(player.getPos(), mob.getPos());
 
                 if (!isNaN(distance) && isFinite(distance) && distance >= 0) {
-                    entries.add(new Entry(distance, mob, player));
+                    entries.add(new Entry(distance, monster, player));
                 }
             }
         }
@@ -51,16 +58,16 @@ public class MSTargetManager {
         entries.sort(Comparator.comparingDouble(Entry::distance));
 
         // assign player closest to each mob, exclusively
-        Set<MobEntity> assignedMonsters = new HashSet<>();
+        Set<MonsterData> assignedMonsters = new HashSet<>();
         Set<ServerPlayerEntity> assignedPlayers = new HashSet<>();
 
         for (var entry : entries) {
-            if (assignedMonsters.contains(entry.mob) || (assignedPlayers.contains(entry.player))) continue;
+            if (assignedMonsters.contains(entry.monster) || (assignedPlayers.contains(entry.player))) continue;
 
-            assignedMonsters.add(entry.mob);
+            assignedMonsters.add(entry.monster);
             assignedPlayers.add(entry.player);
 
-            assignTarget(entry.mob, entry.player);
+            assignTarget(entry.monster, entry.player);
 
             if (assignedMonsters.size() >= monsters.size()) break;
         }
@@ -69,19 +76,35 @@ public class MSTargetManager {
 
         // for every remaining monster, allow duplicate player assignment
         for (var entry : entries) {
-            if (assignedMonsters.contains(entry.mob)) continue;
+            if (assignedMonsters.contains(entry.monster)) continue;
 
-            assignedMonsters.add(entry.mob);
+            assignedMonsters.add(entry.monster);
 
-            assignTarget(entry.mob, entry.player);
+            assignTarget(entry.monster, entry.player);
         }
     }
 
-    public void assignTarget(MobEntity mob, ServerPlayerEntity player) {
+    public void assignTarget(MonsterData monster, ServerPlayerEntity player) {
+        MobEntity mob = monster.mob();
+
+        if (mob == null) return;
+
         mob.setTarget(player);
 
         if (mob instanceof WardenEntity warden) {
             warden.updateAttackTarget(player);
+        }
+
+        if (mob instanceof EndermanEntity enderman && monster instanceof EndermanData data) {
+            EntityAttributeInstance instance = enderman.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED);
+
+            if (instance != null) {
+                instance.removeModifier(Identifier.ofVanilla("attacking"));
+            }
+
+            DataTracker dataTracker = enderman.getDataTracker();
+            dataTracker.set(EndermanEntityAccessor.ANGRY(), data.isScared());
+            dataTracker.set(EndermanEntityAccessor.PROVOKED(), false);
         }
     }
 
