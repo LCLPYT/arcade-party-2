@@ -242,17 +242,18 @@ public class MSManager {
         EntityUtil.setAttribute(enderman, EntityAttributes.GENERIC_ATTACK_DAMAGE, 20);
         enderman.setSilent(true);
 
+        UUID uuid = enderman.getUuid();
+        EndermanData data = new EndermanData(args.with(uuid), struct);
+
         GoalSelector goalSelector = resetAi(enderman).getGoalSelector();
 
         goalSelector.add(0, new SwimGoal(enderman));
-        goalSelector.add(4, new MoveToTargetGoal(enderman, 1.0));
+        goalSelector.add(4, new MoveToTargetGoal(enderman, 1.0, data::targetPos));
         goalSelector.add(4, new AttackGoal(enderman));
         goalSelector.add(6, new LookAroundGoal(enderman));
 
         world.spawnEntity(enderman);
 
-        UUID uuid = enderman.getUuid();
-        EndermanData data = new EndermanData(args.with(uuid), struct);
         monsters.put(uuid, data);
 
         targetManager.addMonster(data);

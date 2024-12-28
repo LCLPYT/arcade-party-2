@@ -11,6 +11,7 @@ import net.minecraft.util.math.AffineTransformation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3i;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
@@ -38,7 +39,7 @@ import static java.lang.Math.abs;
 
 public class MSDebugController {
     private @Nullable Scene scene = null;
-    private @Nullable Model spawnMarker = null, childMarker = null, passageMarker = null;
+    private @Nullable Model spawnMarker = null, childMarker = null, passageMarker = null, arrow = null;
     private @Nullable ServerWorld world = null;
     private @Nullable DebugRenderer renderer = null;
     private @Nullable Map<String, List<Object3d>> namedObjects = null;
@@ -51,11 +52,9 @@ public class MSDebugController {
         renderer = new DebugRenderer(scene);
 
         spawnMarker = modelManager.getModel(Models.CROSS).orElseThrow();
-        childMarker = modelManager.getModel(Models.ARROW).orElseThrow();
-        passageMarker = Optional.of(childMarker)
-                .map(model -> model instanceof TemplateModel m ? m : null)
-                .map(m -> m.copy().replace(Blocks.LIME_CONCRETE.getDefaultState(), Blocks.LIGHT_BLUE_CONCRETE.getDefaultState()))
-                .orElseThrow();
+        arrow = modelManager.getModel(Models.ARROW).orElseThrow();
+        childMarker = arrow;
+        passageMarker = replace(arrow, Blocks.LIME_CONCRETE.getDefaultState(), Blocks.LIGHT_BLUE_CONCRETE.getDefaultState());
 
         namedObjects = new HashMap<>();
         group = ThreadLocal.withInitial(() -> null);
@@ -73,11 +72,25 @@ public class MSDebugController {
         }
     }
 
-    public void displayArrow(Model model, double x, double y, double z, double scale, double angleY) {
+    public void displayArrow(Model model, double x, double y, double z, double angleYRad, double scale) {
         Object3d marker = model.createInstance();
         marker.scale.set(scale);
         marker.position.set(x, y, z);
-        marker.rotation.setAngleAxis(angleY, 0, 1, 0);
+        marker.rotation.setAngleAxis(angleYRad, 0, 1, 0);
+
+        display(marker);
+    }
+
+    public void displayArrow(Vec3d pos, Vec3d dir, double scale, BlockState color) {
+        var model = replace(arrow, Blocks.LIME_CONCRETE.getDefaultState(), color);
+        displayArrow(model, pos.x, pos.y, pos.z, dir.x, dir.y, dir.z, scale);
+    }
+
+    public void displayArrow(Model model, double x, double y, double z, double dx, double dy, double dz, double scale) {
+        Object3d marker = model.createInstance();
+        marker.scale.set(scale);
+        marker.position.set(x, y, z);
+        marker.rotation.rotateTo(0, 0, 1, dx, dy, dz);
 
         display(marker);
     }
@@ -155,7 +168,7 @@ public class MSDebugController {
                         pos.getX() + 0.5 - abs(dir.getZ()) * 0.25,
                         pos.getY() + 1,
                         pos.getZ() + 0.5 - abs(dir.getX()) * 0.25,
-                        0.75, angleY);
+                        angleY, 0.75);
             }
         }
 
@@ -168,7 +181,7 @@ public class MSDebugController {
                     pos.getX() + 0.5 + abs(dir.getZ()) * 0.25,
                     pos.getY() + 1,
                     pos.getZ() + 0.5 + abs(dir.getX()) * 0.25,
-                    0.75, angleY);
+                    angleY, 0.75);
         }
     }
 
@@ -292,5 +305,12 @@ public class MSDebugController {
         action.accept(this);
 
         group.remove();
+    }
+
+    private static @NotNull TemplateModel replace(@Nullable Model model, BlockState from, BlockState to) {
+        return Optional.ofNullable(model)
+                .map(m -> m instanceof TemplateModel tm ? tm : null)
+                .map(m -> m.copy().replace(from, to))
+                .orElseThrow();
     }
 }

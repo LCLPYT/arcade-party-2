@@ -84,4 +84,8 @@ public class Passage implements
 
         return null;
     }
+
+    public Node<Connector3, StructurePiece, OrientedStructurePiece> other(Node<Connector3, StructurePiece, OrientedStructurePiece> node) {
+        return left == node ? right : left;
+    }
 }

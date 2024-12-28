@@ -47,6 +47,7 @@ class CommonData implements MonsterData {
     private int sameRoomTimer = 0;
     private @Nullable Passage lastUnstuck = null;
     private @Nullable Object3d avgPosMarker = null;
+    private boolean unstuckEnabled = true;
 
     public CommonData(MonsterArgs args, double baseSpeed, double maxSpeed, double stuckTol) {
         this.uuid = args.uuid();
@@ -102,7 +103,7 @@ class CommonData implements MonsterData {
             avgPosMarker.updateMatrixWorld();
         }
 
-        if (checkStuckTimer++ % CHECK_STUCK_TICKS == 0) {
+        if (unstuckEnabled && checkStuckTimer++ % CHECK_STUCK_TICKS == 0) {
             if (prevAvgPos.distanceSquared(posBuf.avg) < stuckTolSq) {
                 unstuck(mob);
             }
@@ -251,6 +252,10 @@ class CommonData implements MonsterData {
         var targetNode = struct.nodeAt(second);
 
         return wardenNode != null && wardenNode == targetNode;
+    }
+
+    public void setUnstuckEnabled(boolean enabled) {
+        unstuckEnabled = enabled;
     }
 
     private static class PosBuf {

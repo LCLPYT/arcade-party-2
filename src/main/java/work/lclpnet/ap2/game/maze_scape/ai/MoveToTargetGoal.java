@@ -9,37 +9,34 @@ import net.minecraft.util.math.BlockPos;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.EnumSet;
+import java.util.function.Supplier;
 
 public class MoveToTargetGoal extends Goal {
 
     protected final PathAwareEntity mob;
     protected final double speed;
+    protected final Supplier<@Nullable BlockPos> targetSupplier;
     protected @Nullable Path path = null;
     protected @Nullable BlockPos targetPos = null, prevTargetPos = null;
 
     public MoveToTargetGoal(PathAwareEntity mob, double speed) {
-        this.mob = mob;
-        this.speed = speed;
-        this.setControls(EnumSet.of(Goal.Control.MOVE));
+        this(mob, speed, () -> targetEntityPos(mob));
     }
 
-    protected @Nullable LivingEntity target() {
-        LivingEntity target = mob.getTarget();
-
-        if (target == null || !target.isAlive() || target.isSpectator()) {
-            return null;
-        }
-
-        return target;
+    public MoveToTargetGoal(PathAwareEntity mob, double speed, Supplier<@Nullable BlockPos> targetSupplier) {
+        this.mob = mob;
+        this.speed = speed;
+        this.targetSupplier = targetSupplier;
+        this.setControls(EnumSet.of(Goal.Control.MOVE));
     }
 
     @Override
     public boolean canStart() {
-        LivingEntity target = target();
+        BlockPos pos = targetSupplier.get();
 
-        if (target == null) return false;
+        if (pos == null) return false;
 
-        updatePath(target);
+        updatePath(pos);
 
         return path != null;
     }
@@ -52,15 +49,15 @@ public class MoveToTargetGoal extends Goal {
 
     @Override
     public boolean shouldContinue() {
-        LivingEntity target = target();
+        BlockPos pos = targetSupplier.get();
 
-        if (target == null) return false;
+        if (pos == null) return false;
 
         EntityNavigation nav = mob.getNavigation();
 
         if (nav.isIdle()) return false;
 
-        updatePath(target);
+        updatePath(pos);
 
         return this.path != null;
     }
@@ -70,10 +67,10 @@ public class MoveToTargetGoal extends Goal {
         startPathing();
     }
 
-    private void updatePath(LivingEntity target) {
+    private void updatePath(BlockPos pos) {
         prevTargetPos = targetPos;
-        targetPos = target.getBlockPos();
-        path = mob.getNavigation().findPathTo(target, 0);
+        targetPos = pos;
+        path = mob.getNavigation().findPathTo(pos, 0);
     }
 
     private void startPathing() {
@@ -81,5 +78,15 @@ public class MoveToTargetGoal extends Goal {
 
         mob.getNavigation().startMovingAlong(path, speed);
         prevTargetPos = targetPos;
+    }
+
+    private static @Nullable BlockPos targetEntityPos(PathAwareEntity mob) {
+        LivingEntity target = mob.getTarget();
+
+        if (target == null || !target.isAlive() || target.isSpectator()) {
+            return null;
+        }
+
+        return target.getBlockPos();
     }
 }
