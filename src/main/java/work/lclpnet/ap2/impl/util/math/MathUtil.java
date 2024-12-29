@@ -3,12 +3,16 @@ package work.lclpnet.ap2.impl.util.math;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Box;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3i;
 import org.joml.Matrix4d;
 import org.joml.Quaterniond;
 import org.joml.Vector3d;
 import org.joml.Vector3dc;
 import work.lclpnet.kibu.util.math.Matrix3i;
+
+import java.util.Iterator;
 
 import static java.lang.Math.abs;
 
@@ -79,5 +83,27 @@ public class MathUtil {
                 .perspective(fovRadians, screenAspectRatio, 0.05, zFar)
                 .rotate(rotation)
                 .translate(-player.getX(), -player.getEyeY(), -player.getZ());
+    }
+
+    public static Iterable<Vec3d> corners(Box box) {
+        return () -> new Iterator<>() {
+            int i = 0;
+
+            @Override
+            public boolean hasNext() {
+                return i < 8;
+            }
+
+            @Override
+            public Vec3d next() {
+                double x = (i & 1) == 0 ? box.minX : box.maxX;
+                double y = (i & 4) == 0 ? box.minY : box.maxY;
+                double z = (i & 2) == 0 ? box.minZ : box.maxZ;
+
+                i++;
+
+                return new Vec3d(x, y, z);
+            }
+        };
     }
 }

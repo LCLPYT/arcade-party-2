@@ -63,7 +63,9 @@ import static java.lang.Math.*;
 
 public class MSManager {
 
-    private static final boolean DEBUG_MOB_SPAWNS = false;
+    private static final boolean
+            DEBUG_MOB_SPAWNS = false,
+            DEBUG_SHOW_MOBS = true;
 
     private final ServerWorld world;
     private final MSStruct struct;
@@ -272,8 +274,11 @@ public class MSManager {
         entity.setPosition(pos);
         entity.setInvulnerable(true);
         entity.setPersistent();
-        entity.setGlowing(true);
         entity.setOnGround(true);  // required to perform path finding immediately
+
+        if (DEBUG_SHOW_MOBS) {
+            entity.setGlowing(true);
+        }
 
         EntityUtil.setAttribute(entity, EntityAttributes.GENERIC_STEP_HEIGHT, 2);
 
