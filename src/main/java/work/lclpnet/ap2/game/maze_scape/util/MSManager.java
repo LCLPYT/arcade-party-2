@@ -6,6 +6,7 @@ import com.mojang.serialization.Dynamic;
 import it.unimi.dsi.fastutil.objects.Object2DoubleMap;
 import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
 import net.minecraft.block.Blocks;
+import net.minecraft.command.argument.EntityAnchorArgumentType;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
@@ -35,10 +36,7 @@ import org.slf4j.Logger;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.ds.Partial;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
-import work.lclpnet.ap2.core.hook.BrainCreationCallback;
-import work.lclpnet.ap2.core.hook.CobwebSlowCallback;
-import work.lclpnet.ap2.core.hook.EntityPathFindingCallback;
-import work.lclpnet.ap2.core.hook.LivingEntityAttributeInitCallback;
+import work.lclpnet.ap2.core.hook.*;
 import work.lclpnet.ap2.core.mixin.EntityNavigationAccessor;
 import work.lclpnet.ap2.core.mixin.MobEntityAccessor;
 import work.lclpnet.ap2.core.type.*;
@@ -104,6 +102,7 @@ public class MSManager {
         hooks.registerHook(BrainCreationCallback.Warden.HOOK, this::createWardenBrain);
         hooks.registerHook(EntityPathFindingCallback.HOOK, this::modifyPathFinding);
         hooks.registerHook(CobwebSlowCallback.HOOK, this::cancelCobwebSlow);
+        hooks.registerHook(EntityAfterMoveCallback.HOOK, this::afterMoveTick);
     }
 
     public void spawnMobs() {
@@ -418,5 +417,25 @@ public class MSManager {
         if (data == null) return;
 
         data.onKillAcquired();
+    }
+
+    private void afterMoveTick(MobEntity mob) {
+        if (mob.getWorld() != world || !(monsters.get(mob.getUuid()) instanceof EndermanData data)) return;
+
+        // make the enderman always face the target player while fleeing
+        LivingEntity target = mob.getTarget();
+        var handle = (ApEntity) mob;
+
+        if (!data.isFleeing() || target == null) {
+            handle.ap2$setUseMovementYaw(false);
+            return;
+        }
+
+        // store original yaw for movement calculation
+        handle.ap2$setUseMovementYaw(true);
+        handle.ap2$setMovementYaw(mob.getYaw());
+
+        // but look at the target player all the time
+        mob.lookAt(EntityAnchorArgumentType.EntityAnchor.EYES, target.getEyePos());
     }
 }

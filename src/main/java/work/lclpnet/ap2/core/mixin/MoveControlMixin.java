@@ -11,7 +11,9 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import work.lclpnet.ap2.core.hook.EntityAfterMoveCallback;
 import work.lclpnet.ap2.core.patch.TrapdoorJumpPatch;
 import work.lclpnet.ap2.core.type.ApEntity;
 
@@ -57,5 +59,31 @@ public class MoveControlMixin {
             this.entity.getJumpControl().setActive();
             this.state = MoveControl.State.JUMPING;
         }
+    }
+
+    @Inject(
+            method = "tick",
+            at = @At("RETURN")
+    )
+    public void ap2$afterMoveTick(CallbackInfo ci) {
+        EntityAfterMoveCallback.HOOK.invoker().afterMoveTick(entity);
+    }
+
+    @ModifyArg(
+            method = "tick",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/entity/ai/control/MoveControl;wrapDegrees(FFF)F"
+            ),
+            index = 0
+    )
+    private float ap2$modifyMovementYaw(float yaw) {
+        var handle = (ApEntity) entity;
+
+        if (handle.ap2$isUseMovementYaw()) {
+            return handle.ap2$getMovementYaw();
+        }
+
+        return yaw;
     }
 }

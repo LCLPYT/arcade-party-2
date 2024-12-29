@@ -550,4 +550,8 @@ public class EndermanData implements MonsterData {
     public boolean isAngry() {
         return anger >= ANGER_TRIGGER_THRESHOLD;
     }
+
+    public boolean isFleeing() {
+        return fleeTargetPos != null && angerTarget == null;
+    }
 }
