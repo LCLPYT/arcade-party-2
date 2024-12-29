@@ -103,8 +103,8 @@ public class MSTargetManager {
             }
 
             DataTracker dataTracker = enderman.getDataTracker();
-            dataTracker.set(EndermanEntityAccessor.ANGRY(), data.isScared());
-            dataTracker.set(EndermanEntityAccessor.PROVOKED(), false);
+            dataTracker.set(EndermanEntityAccessor.ANGRY(), data.isScreaming());  // angry attribute differs from data.isAngry()
+            dataTracker.set(EndermanEntityAccessor.PROVOKED(), data.isAngry());
         }
     }
 
