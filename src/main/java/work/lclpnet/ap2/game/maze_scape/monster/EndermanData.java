@@ -8,10 +8,8 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.pathing.EntityNavigation;
 import net.minecraft.entity.ai.pathing.Path;
 import net.minecraft.entity.ai.pathing.PathNode;
-import net.minecraft.entity.attribute.EntityAttributeInstance;
-import net.minecraft.entity.attribute.EntityAttributeModifier;
-import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.mob.EndermanEntity;
+import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
@@ -45,13 +43,18 @@ import java.util.*;
 import java.util.function.Predicate;
 
 import static java.lang.Math.abs;
+import static net.minecraft.entity.attribute.EntityAttributeModifier.Operation.ADD_VALUE;
+import static net.minecraft.entity.attribute.EntityAttributes.GENERIC_MOVEMENT_SPEED;
+import static work.lclpnet.ap2.impl.util.EntityUtil.addAttributeModifier;
+import static work.lclpnet.ap2.impl.util.EntityUtil.removeAttributeModifier;
 
 public class EndermanData implements MonsterData {
 
     private static final int
             VISIBLE_CHECK_INTERVAL_TICKS = 5,
             SCARED_TICKS = 16,
-            FLEE_TIMEOUT_TICKS = Ticks.seconds(5);
+            FLEE_TIMEOUT_TICKS = Ticks.seconds(5),
+            SCARE_FROZEN_TICKS = 10;
     private static final double
             PLAYER_FOV = Math.toRadians(90),
             PLAYER_ASPECT_RATIO = 1920 / 1080.d,
@@ -64,11 +67,12 @@ public class EndermanData implements MonsterData {
             ANGER_TRIGGER_BONUS = ANGER_DECAY_PER_SECOND * 12.0;
     private static final boolean
             DEBUG_FLEE_POSITIONS = false,
-            DEBUG_TARGET_FLEE_POS = true,
+            DEBUG_TARGET_FLEE_POS = false,
             DEBUG_FLEE_PATHS = false;
     private static final Identifier
             FLEE_BONUS_ID = ArcadeParty.identifier("flee_bonus"),
-            ANGER_BONUS_ID = ArcadeParty.identifier("anger_bonus");
+            ANGER_BONUS_ID = ArcadeParty.identifier("anger_bonus"),
+            SCARE_FROZEN_ID = ArcadeParty.identifier("scare_frozen");
 
     private final MonsterArgs args;
     private final CommonData common;
@@ -81,6 +85,7 @@ public class EndermanData implements MonsterData {
     private int fleeTargetTimeout = 0;
     private double anger = 0;
     private @Nullable UUID angerTarget = null;
+    private int frozenTimer = 0;
 
     public EndermanData(MonsterArgs args, MSStruct struct) {
         this.args = args;
@@ -109,6 +114,10 @@ public class EndermanData implements MonsterData {
 
         if (scaredTimer > 0 && --scaredTimer == 0) {
             setScreaming(false);
+        }
+
+        if (frozenTimer > 0 && --frozenTimer == 0) {
+            unfreeze(mob);
         }
 
         if (fleeTargetTimeout > 0) {
@@ -224,6 +233,8 @@ public class EndermanData implements MonsterData {
     private void onLookedAt(EndermanEntity mob, ServerPlayerEntity player) {
         if (isAngry()) return;
 
+        boolean wasFleeing = isFleeing();
+
         setScreaming(true);
         scaredTimer = SCARED_TICKS;
 
@@ -234,19 +245,21 @@ public class EndermanData implements MonsterData {
             return;
         }
 
-        if (!pos.equals(fleeTargetPos)) {
-            playSoundFar(player, mob, SoundEvents.ENTITY_ENDERMAN_HURT, 0.5f, 1.4f);
-        }
-
         if (DEBUG_TARGET_FLEE_POS) {
             args.debugController().exclusive("target_flee_pos", controller -> controller.displayMarker(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, Blocks.CYAN_CONCRETE.getDefaultState(), 0x03b2fe, 0.5));
         }
 
-        if (fleeToo(mob, pos)) {
-            setAnger(anger + LOOK_AT_ANGER_AMOUNT, player);
-        } else {
+        if (!fleeToo(mob, pos)) {
             angerFully(player);
+            return;
         }
+
+        if (!wasFleeing) {
+            playSoundFar(player, mob, SoundEvents.ENTITY_ENDERMAN_HURT, 0.5f, 1.4f);
+            freeze(mob);
+        }
+
+        setAnger(anger + LOOK_AT_ANGER_AMOUNT, player);
     }
 
     private void setAnger(double amount, @Nullable ServerPlayerEntity player) {
@@ -279,20 +292,15 @@ public class EndermanData implements MonsterData {
         if (mob == null) return;
 
         stopFleeing(mob);
+        unfreeze(mob);
 
         mob.setSilent(!angry);
         mob.getDataTracker().set(EndermanEntityAccessor.PROVOKED(), angry);
 
-        EntityAttributeInstance attr = mob.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED);
-
-        if (attr != null) {
-            if (angry) {
-                if (!attr.hasModifier(ANGER_BONUS_ID)) {
-                    attr.addTemporaryModifier(new EntityAttributeModifier(ANGER_BONUS_ID, ANGER_SPEED_BONUS, EntityAttributeModifier.Operation.ADD_VALUE));
-                }
-            } else {
-                attr.removeModifier(ANGER_BONUS_ID);
-            }
+        if (angry) {
+            addAttributeModifier(mob, GENERIC_MOVEMENT_SPEED, ANGER_BONUS_ID, ANGER_SPEED_BONUS, ADD_VALUE);
+        } else {
+            removeAttributeModifier(mob, GENERIC_MOVEMENT_SPEED, ANGER_BONUS_ID);
         }
 
         if (angry && player != null) {
@@ -323,11 +331,7 @@ public class EndermanData implements MonsterData {
         fleeTargetPos = pos;
         nav.startMovingAlong(path, 1);
 
-        EntityAttributeInstance attr = mob.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED);
-
-        if (attr != null && !attr.hasModifier(FLEE_BONUS_ID)) {
-            attr.addTemporaryModifier(new EntityAttributeModifier(FLEE_BONUS_ID, FLEE_SPEED_BONUS, EntityAttributeModifier.Operation.ADD_VALUE));
-        }
+        addAttributeModifier(mob, GENERIC_MOVEMENT_SPEED, FLEE_BONUS_ID, FLEE_SPEED_BONUS, ADD_VALUE);
 
         return true;
     }
@@ -335,16 +339,13 @@ public class EndermanData implements MonsterData {
     private void stopFleeing(EndermanEntity mob) {
         fleeTargetPos = null;
         fleeTargetTimeout = 0;
+        frozenTimer = 0;
 
         if (DEBUG_TARGET_FLEE_POS) {
             args.debugController().exclusive("target_flee_pos", debugger -> {});
         }
 
-        EntityAttributeInstance attr = mob.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED);
-
-        if (attr != null) {
-            attr.removeModifier(FLEE_BONUS_ID);
-        }
+        removeAttributeModifier(mob, GENERIC_MOVEMENT_SPEED, FLEE_BONUS_ID);
     }
 
     private void angerFully(ServerPlayerEntity player) {
@@ -553,5 +554,16 @@ public class EndermanData implements MonsterData {
 
     public boolean isFleeing() {
         return fleeTargetPos != null && angerTarget == null;
+    }
+
+    private void freeze(MobEntity mob) {
+        frozenTimer = SCARE_FROZEN_TICKS;
+
+        addAttributeModifier(mob, GENERIC_MOVEMENT_SPEED, SCARE_FROZEN_ID, Double.NEGATIVE_INFINITY, ADD_VALUE);
+    }
+
+    private void unfreeze(MobEntity mob) {
+        frozenTimer = 0;
+        removeAttributeModifier(mob, GENERIC_MOVEMENT_SPEED, SCARE_FROZEN_ID);
     }
 }

@@ -3,9 +3,11 @@ package work.lclpnet.ap2.impl.util;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttribute;
 import net.minecraft.entity.attribute.EntityAttributeInstance;
+import net.minecraft.entity.attribute.EntityAttributeModifier;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.util.Identifier;
 
 public class EntityUtil {
 
@@ -26,5 +28,21 @@ public class EntityUtil {
         }
 
         setAttribute(entity, attribute, attribute.value().getDefaultValue());
+    }
+
+    public static void addAttributeModifier(LivingEntity entity, RegistryEntry<EntityAttribute> attribute, Identifier id, double value, EntityAttributeModifier.Operation operation) {
+        EntityAttributeInstance instance = entity.getAttributeInstance(attribute);
+
+        if (instance == null || instance.hasModifier(id)) return;
+
+        instance.addTemporaryModifier(new EntityAttributeModifier(id, value, operation));
+    }
+
+    public static void removeAttributeModifier(LivingEntity entity, RegistryEntry<EntityAttribute> attribute, Identifier id) {
+        EntityAttributeInstance instance = entity.getAttributeInstance(attribute);
+
+        if (instance == null) return;
+
+        instance.removeModifier(id);
     }
 }
