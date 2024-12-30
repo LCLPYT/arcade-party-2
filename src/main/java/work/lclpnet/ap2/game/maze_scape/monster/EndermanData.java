@@ -62,7 +62,7 @@ public class EndermanData implements MonsterData {
             ANGER_SPEED_BONUS = 0.1,
             FLEE_MIN_ANGLE_DEG = 65.0,
             LOOK_AT_ANGER_AMOUNT = 25.0,
-            ANGER_TRIGGER_THRESHOLD = 350.0,
+            ANGER_TRIGGER_THRESHOLD = 450.0,
             ANGER_DECAY_PER_SECOND = 3.5,
             ANGER_TRIGGER_BONUS = ANGER_DECAY_PER_SECOND * 12.0;
     private static final boolean

@@ -42,7 +42,7 @@ import static java.lang.Math.min;
 
 public class MonsterSpawner {
 
-    private static final boolean DEBUG_SHOW_MOBS = true;
+    private static final boolean DEBUG_SHOW_MOBS = false;
 
     private final MSManager manager;
     private final Logger logger;
