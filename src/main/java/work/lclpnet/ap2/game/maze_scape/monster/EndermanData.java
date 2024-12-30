@@ -42,7 +42,7 @@ import work.lclpnet.kibu.scheduler.Ticks;
 import java.util.*;
 import java.util.function.Predicate;
 
-import static java.lang.Math.abs;
+import static java.lang.Math.*;
 import static net.minecraft.entity.attribute.EntityAttributeModifier.Operation.ADD_VALUE;
 import static net.minecraft.entity.attribute.EntityAttributes.GENERIC_MOVEMENT_SPEED;
 import static work.lclpnet.ap2.impl.util.EntityUtil.addAttributeModifier;
@@ -56,7 +56,7 @@ public class EndermanData implements MonsterData {
             FLEE_TIMEOUT_TICKS = Ticks.seconds(5),
             SCARE_FROZEN_TICKS = 10;
     private static final double
-            PLAYER_FOV = Math.toRadians(90),
+            PLAYER_FOV = toRadians(90),
             PLAYER_ASPECT_RATIO = 1920 / 1080.d,
             FLEE_SPEED_BONUS = 0.05,
             ANGER_SPEED_BONUS = 0.1,
@@ -109,7 +109,7 @@ public class EndermanData implements MonsterData {
         if (mob == null) return;
 
         if (timer % VISIBLE_CHECK_INTERVAL_TICKS == 0) {
-            checkVisible();
+            checkLookedAt();
         }
 
         if (scaredTimer > 0 && --scaredTimer == 0) {
@@ -120,6 +120,7 @@ public class EndermanData implements MonsterData {
             unfreeze(mob);
         }
 
+        // timeout mob once the flee position is reached
         if (fleeTargetTimeout > 0) {
             if (--fleeTargetTimeout == 0) {
                 stopFleeing(mob);
@@ -128,6 +129,7 @@ public class EndermanData implements MonsterData {
             fleeTargetTimeout = FLEE_TIMEOUT_TICKS;
         }
 
+        // validate anger target
         if (angerTarget != null) {
             ServerPlayerEntity player = args.manager().participants().getParticipant(angerTarget)
                     .filter(p -> p.isAlive() && !p.isSpectator())
@@ -140,7 +142,7 @@ public class EndermanData implements MonsterData {
         }
 
         if (timer % 20 == 0) {
-            setAnger(Math.max(0.0, anger - ANGER_DECAY_PER_SECOND), null);
+            setAnger(max(0.0, anger - ANGER_DECAY_PER_SECOND), null);
         }
 
         timer++;
@@ -167,20 +169,19 @@ public class EndermanData implements MonsterData {
         return null;
     }
 
-    private void checkVisible() {
+    private void checkLookedAt() {
         var enderman = mob();
 
         if (enderman == null) return;
 
-        LivingEntity target = enderman.getTarget();
+        for (ServerPlayerEntity player : args.manager().participants()) {
+            // update view-projection matrix with current data
+            MathUtil.viewProjectionMatrix(player, PLAYER_FOV, PLAYER_ASPECT_RATIO, viewProjMat);
 
-        if (!(target instanceof ServerPlayerEntity player)) return;
-
-        // update view-projection matrix with current data
-        MathUtil.viewProjectionMatrix(player, PLAYER_FOV, PLAYER_ASPECT_RATIO, viewProjMat);
-
-        if (isVisibleBy(enderman, player)) {
-            onLookedAt(enderman, player);
+            if (isVisibleBy(enderman, player)) {
+                onLookedAt(enderman, player);
+                return;
+            }
         }
     }
 
@@ -256,7 +257,7 @@ public class EndermanData implements MonsterData {
 
         if (!wasFleeing) {
             playSoundFar(player, mob, SoundEvents.ENTITY_ENDERMAN_HURT, 0.5f, 1.4f);
-            freeze(mob);
+            freeze(mob);  // freeze is temporarily
         }
 
         setAnger(anger + LOOK_AT_ANGER_AMOUNT, player);
@@ -279,7 +280,7 @@ public class EndermanData implements MonsterData {
 
         if (wasAngry == angry) return;
 
-        // state change
+        // state changed
         setScreaming(angry);
 
         if (angry) {
@@ -403,9 +404,9 @@ public class EndermanData implements MonsterData {
                     args.debugController().displayArrow(mobPos.add(dir.multiply(0.3)), dir, 0.6, Blocks.LIME_CONCRETE.getDefaultState());
                 }
 
-                double angle = Math.acos(mobToPlayerDir.dotProduct(dir));
+                double angle = acos(mobToPlayerDir.dotProduct(dir));
 
-                if (angle < Math.toRadians(FLEE_MIN_ANGLE_DEG)) continue;
+                if (angle < toRadians(FLEE_MIN_ANGLE_DEG)) continue;
 
                 var neighbour = passage.other(entityNode);
 
@@ -425,15 +426,17 @@ public class EndermanData implements MonsterData {
 
             if (node == playerNode) continue;
 
-            // this could be made optimized by either accepting the first position, or making this lazy
             var fleePos = findFleePositions(node, pos -> {
-                if (isVisibleByAt(mob, player, pos.toBottomCenterPos(), 0.2)) {
-                    return false;
+                // check if any player would see the entity at pos
+                for (ServerPlayerEntity participant : args.manager().participants()) {
+                    if (isVisibleByAt(mob, participant, pos.toBottomCenterPos(), 0.2)) {
+                        return false;
+                    }
                 }
 
                 if (DEBUG_FLEE_POSITIONS) {
                     debugPositions.add(pos);
-                    return false;
+                    return false;  // debug should find all positions
                 }
 
                 return true;
@@ -459,14 +462,14 @@ public class EndermanData implements MonsterData {
                 }
             });
 
-            return debugPositions.getFirst();
+            return debugPositions.getFirst();  // pick first to get same result as without debug
         }
 
         return null;
     }
 
     private Vec3d startingDirection(BlockPos start, Path path) {
-        int samples = Math.min(4, path.getLength() - 1);
+        int samples = min(4, path.getLength() - 1);
 
         if (samples <= 0) {
             return Vec3d.ZERO;
