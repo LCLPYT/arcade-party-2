@@ -1,48 +1,31 @@
 package work.lclpnet.ap2.game.maze_scape.monster;
 
-import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
-import net.minecraft.block.ShapeContext;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.pathing.EntityNavigation;
 import net.minecraft.entity.ai.pathing.Path;
-import net.minecraft.entity.ai.pathing.PathNode;
 import net.minecraft.entity.mob.EndermanEntity;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.shape.VoxelShape;
-import net.minecraft.world.BlockView;
-import net.minecraft.world.RaycastContext;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.joml.Matrix4d;
-import org.joml.Vector4d;
 import work.lclpnet.ap2.base.ArcadeParty;
 import work.lclpnet.ap2.core.mixin.EndermanEntityAccessor;
-import work.lclpnet.ap2.game.maze_scape.gen.Node;
-import work.lclpnet.ap2.game.maze_scape.setup.Connector3;
-import work.lclpnet.ap2.game.maze_scape.setup.OrientedStructurePiece;
-import work.lclpnet.ap2.game.maze_scape.setup.StructurePiece;
+import work.lclpnet.ap2.game.maze_scape.util.EndermanEscape;
+import work.lclpnet.ap2.game.maze_scape.util.MSManager;
 import work.lclpnet.ap2.game.maze_scape.util.MSStruct;
-import work.lclpnet.ap2.game.maze_scape.util.Passage;
-import work.lclpnet.ap2.impl.util.math.MathUtil;
+import work.lclpnet.ap2.game.maze_scape.util.VisibilityChecker;
 import work.lclpnet.kibu.scheduler.Ticks;
 
-import java.util.*;
-import java.util.function.Predicate;
+import java.util.UUID;
 
-import static java.lang.Math.*;
+import static java.lang.Math.max;
 import static net.minecraft.entity.attribute.EntityAttributeModifier.Operation.ADD_VALUE;
 import static net.minecraft.entity.attribute.EntityAttributes.GENERIC_MOVEMENT_SPEED;
 import static work.lclpnet.ap2.impl.util.EntityUtil.addAttributeModifier;
@@ -56,19 +39,15 @@ public class EndermanData implements MonsterData {
             FLEE_TIMEOUT_TICKS = Ticks.seconds(5),
             SCARE_FROZEN_TICKS = 10;
     private static final double
-            PLAYER_FOV = toRadians(90),
-            PLAYER_ASPECT_RATIO = 1920 / 1080.d,
             FLEE_SPEED_BONUS = 0.05,
             ANGER_SPEED_BONUS = 0.09,
-            FLEE_MIN_ANGLE_DEG = 65.0,
             LOOK_AT_ANGER_AMOUNT = 25.0,
             ANGER_TRIGGER_THRESHOLD = 450.0,
             ANGER_DECAY_PER_SECOND = 6.5,
             ANGER_TRIGGER_BONUS = ANGER_DECAY_PER_SECOND * 12.0;
     private static final boolean
-            DEBUG_FLEE_POSITIONS = false,
             DEBUG_TARGET_FLEE_POS = false,
-            DEBUG_FLEE_PATHS = false;
+            DEBUG_DISABLE_ANGER = false;
     private static final Identifier
             FLEE_BONUS_ID = ArcadeParty.identifier("flee_bonus"),
             ANGER_BONUS_ID = ArcadeParty.identifier("anger_bonus"),
@@ -76,11 +55,11 @@ public class EndermanData implements MonsterData {
 
     private final MonsterArgs args;
     private final CommonData common;
-    private final MSStruct struct;
+    private final VisibilityChecker visibilityChecker;
+    private final EndermanEscape escape;
     private int timer = 0;
     private boolean screaming = false;
     private int scaredTimer = 0;
-    private final Matrix4d viewProjMat = new Matrix4d();
     private @Nullable BlockPos fleeTargetPos = null;
     private int fleeTargetTimeout = 0;
     private double anger = 0;
@@ -90,7 +69,10 @@ public class EndermanData implements MonsterData {
     public EndermanData(MonsterArgs args, MSStruct struct) {
         this.args = args;
         this.common = new CommonData(args, 0.35, 0.42, 0.75);
-        this.struct = struct;
+
+        MSManager manager = args.manager();
+        this.visibilityChecker = new VisibilityChecker(manager.world());
+        this.escape = new EndermanEscape(struct, visibilityChecker, manager.participants(), manager.debugController());
     }
 
     @Override
@@ -170,67 +152,15 @@ public class EndermanData implements MonsterData {
     }
 
     private void checkLookedAt() {
-        var enderman = mob();
+        var mob = mob();
 
-        if (enderman == null) return;
+        if (mob == null) return;
 
-        for (ServerPlayerEntity player : args.manager().participants()) {
-            if (player.isSpectator()) continue;
+        ServerPlayerEntity looking = visibilityChecker.getAnyoneLookingAt(mob, mob.getPos(), args.manager().participants());
 
-            // update view-projection matrix with current data
-            MathUtil.viewProjectionMatrix(player, PLAYER_FOV, PLAYER_ASPECT_RATIO, viewProjMat);
-
-            if (isVisibleBy(enderman, player)) {
-                onLookedAt(enderman, player);
-                return;
-            }
+        if (looking != null) {
+            onLookedAt(mob, looking);
         }
-    }
-
-    private boolean isVisibleBy(EndermanEntity enderman, ServerPlayerEntity player) {
-        return isVisibleByAt(enderman, player, enderman.getPos(), -0.1);
-    }
-
-    private boolean isVisibleByAt(EndermanEntity enderman, ServerPlayerEntity player, Vec3d pos, double margin) {
-        // check if the enderman is within the players (estimated) view frustum
-        Box bounds = enderman.getDimensions(enderman.getPose()).getBoxAt(pos).expand(margin);  // add some margin
-        Vector4d ndc = new Vector4d();
-        Vec3d playerEyePos = player.getEyePos();
-
-        for (Vec3d corner : MathUtil.corners(bounds)) {
-            ndc.set(corner.x, corner.y, corner.z);
-            viewProjMat.transform(ndc);
-            ndc.div(ndc.w);
-
-            if (abs(ndc.x) > 1.d || abs(ndc.y) > 1.d || abs(ndc.z) > 1.d) continue;
-
-            // within view frustum, check for occlusion
-            if (!occluded(playerEyePos, corner, common.manager().world())) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    public static boolean occluded(Vec3d from, Vec3d to, BlockView view) {
-        var hit = BlockView.raycast(from, to, null, (ctx, pos) -> {
-            BlockState state = view.getBlockState(pos);
-
-            // ray should pass through non-opaque blocks
-            if (!state.isOpaque()) {
-                return null;
-            }
-
-            VoxelShape shape = RaycastContext.ShapeType.VISUAL.get(state, view, pos, ShapeContext.absent());
-
-            return view.raycastBlock(from, to, pos, shape, state);
-        }, o -> {
-            Vec3d dir = from.subtract(to);
-            return BlockHitResult.createMissed(to, Direction.getFacing(dir.x, dir.y, dir.z), BlockPos.ofFloored(to));
-        });
-
-        return hit.getType() != HitResult.Type.MISS;
     }
 
     private void onLookedAt(EndermanEntity mob, ServerPlayerEntity player) {
@@ -241,20 +171,26 @@ public class EndermanData implements MonsterData {
         setScreaming(true);
         scaredTimer = SCARED_TICKS;
 
-        BlockPos pos = findFleePos(mob, player);
+        if (fleeTargetPos == null || visibilityChecker.isAnyoneLookingAt(mob, fleeTargetPos.toBottomCenterPos(), args.manager().participants())) {
+            BlockPos pos = escape.findFleePos(mob, player);
 
-        if (pos == null) {
-            angerFully(player);
-            return;
-        }
+            if (DEBUG_TARGET_FLEE_POS) {
+                args.manager().debugController().exclusive("target_flee_pos", controller -> {
+                    if (pos == null) return;
 
-        if (DEBUG_TARGET_FLEE_POS) {
-            args.manager().debugController().exclusive("target_flee_pos", controller -> controller.displayMarker(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, Blocks.CYAN_CONCRETE.getDefaultState(), 0x03b2fe, 0.5));
-        }
+                    controller.displayMarker(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, Blocks.CYAN_CONCRETE.getDefaultState(), 0x03b2fe, 0.5);
+                });
+            }
 
-        if (!fleeToo(mob, pos)) {
-            angerFully(player);
-            return;
+            if (pos == null) {
+                angerFully(player);
+                return;
+            }
+
+            if (!fleeToo(mob, pos)) {
+                angerFully(player);
+                return;
+            }
         }
 
         if (!wasFleeing) {
@@ -266,6 +202,8 @@ public class EndermanData implements MonsterData {
     }
 
     private void setAnger(double amount, @Nullable ServerPlayerEntity player) {
+        if (DEBUG_DISABLE_ANGER) return;
+
         boolean wasAngry = isAngry();
 
         anger = amount;
@@ -367,162 +305,6 @@ public class EndermanData implements MonsterData {
         if (mob != null) {
             mob.getDataTracker().set(EndermanEntityAccessor.ANGRY(), screaming);
         }
-    }
-
-    private @Nullable BlockPos findFleePos(EndermanEntity mob, ServerPlayerEntity player) {
-        Vec3d mobPos = mob.getPos();
-        Vec3d playerPos = player.getPos();
-
-        var entityNode = struct.nodeAt(mobPos);
-        var playerNode = struct.nodeAt(playerPos);
-
-        if (entityNode == null || playerNode == null) return null;
-
-        final int maxChecks = 10;
-        Queue<Node<Connector3, StructurePiece, OrientedStructurePiece>> queue = new LinkedList<>();
-        Set<Node<Connector3, StructurePiece, OrientedStructurePiece>> known = new HashSet<>();
-
-        if (entityNode == playerNode) {
-            // only consider neighbours don't require the mob to go towards the player
-            EntityNavigation nav = mob.getNavigation();
-            BlockPos mobBlockPos = mob.getBlockPos();
-            Vec3d mobToPlayerDir = playerPos.subtract(mobPos).withAxis(Direction.Axis.Y, 0).normalize();
-
-            if (DEBUG_FLEE_PATHS) {
-                args.manager().debugController().displayArrow(mobPos.add(mobToPlayerDir.multiply(0.3)), mobToPlayerDir, 0.6, Blocks.BLUE_CONCRETE.getDefaultState());
-            }
-
-            for (Passage passage : struct.passagesOf(entityNode)) {
-                BlockPos pos = passage.pos();
-                Path path = nav.findPathTo(pos, 0);
-
-                if (path == null) continue;
-
-                Vec3d dir = startingDirection(mobBlockPos, path).withAxis(Direction.Axis.Y, 0).normalize();
-
-                if (abs(dir.length() - 1) > 1e-6) continue;
-
-                if (DEBUG_FLEE_PATHS) {
-                    args.manager().debugController().displayArrow(mobPos.add(dir.multiply(0.3)), dir, 0.6, Blocks.LIME_CONCRETE.getDefaultState());
-                }
-
-                double angle = acos(mobToPlayerDir.dotProduct(dir));
-
-                if (angle < toRadians(FLEE_MIN_ANGLE_DEG)) continue;
-
-                var neighbour = passage.other(entityNode);
-
-                queue.offer(neighbour);
-                known.add(neighbour);
-            }
-        } else {
-            queue.offer(entityNode);
-            known.add(entityNode);
-        }
-
-        LinkedHashSet<BlockPos> debugPositions = DEBUG_FLEE_POSITIONS ? new LinkedHashSet<>() : null;
-        int i = 0;
-
-        while (!queue.isEmpty() && i++ <= maxChecks) {
-            var node = queue.poll();
-
-            if (node == playerNode) continue;
-
-            var fleePos = findFleePositions(node, pos -> {
-                // check if any player would see the entity at pos
-                for (ServerPlayerEntity participant : args.manager().participants()) {
-                    if (participant.isSpectator()) continue;
-
-                    if (isVisibleByAt(mob, participant, pos.toBottomCenterPos(), 0.2)) {
-                        return false;
-                    }
-                }
-
-                if (DEBUG_FLEE_POSITIONS) {
-                    debugPositions.add(pos);
-                    return false;  // debug should find all positions
-                }
-
-                return true;
-            });
-
-            if (fleePos != null) {
-                return fleePos;
-            }
-
-            for (@Nullable var neighbour : node.neighbours()) {
-                if (neighbour == null || !known.add(neighbour)) continue;
-
-                queue.offer(neighbour);
-            }
-        }
-
-        if (DEBUG_FLEE_POSITIONS && !debugPositions.isEmpty()) {
-            args.manager().debugController().exclusive("flee_positions", controller -> {
-                var state = Blocks.MAGENTA_TERRACOTTA.getDefaultState();
-
-                for (BlockPos pos : debugPositions) {
-                    controller.displayMarker(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, state, 0xd808db);
-                }
-            });
-
-            return debugPositions.getFirst();  // pick first to get same result as without debug
-        }
-
-        return null;
-    }
-
-    private Vec3d startingDirection(BlockPos start, Path path) {
-        int samples = min(4, path.getLength() - 1);
-
-        if (samples <= 0) {
-            return Vec3d.ZERO;
-        }
-
-        final int sx = start.getX(), sy = start.getY(), sz = start.getZ();
-        double x = 0, y = 0, z = 0;
-
-        // first position is the start pos, don't count it as it will be zero
-        for (int i = 1; i <= samples; i++) {
-            PathNode node = path.getNode(i);
-            BlockPos pos = node.getBlockPos();
-
-            if (DEBUG_FLEE_PATHS) {
-                args.manager().debugController().displayMarker(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, Blocks.BLACK_CONCRETE.getDefaultState(), 0);
-            }
-
-            x += (pos.getX() - sx);
-            y += (pos.getY() - sy);
-            z += (pos.getZ() - sz);
-        }
-
-        return new Vec3d(x / samples, y / samples, z / samples).normalize();
-    }
-
-    private @Nullable BlockPos findFleePositions(Node<Connector3, StructurePiece, OrientedStructurePiece> node, Predicate<BlockPos> positions) {
-        OrientedStructurePiece oriented = node.oriented();
-
-        if (oriented != null) {
-            Vec3d spawn = oriented.spawn();
-
-            if (spawn != null) {
-                BlockPos pos = BlockPos.ofFloored(spawn);
-
-                if (positions.test(pos)) {
-                    return pos;
-                }
-            }
-        }
-
-        for (Passage passage : struct.passagesOf(node)) {
-            BlockPos pos = passage.pos();
-
-            if (positions.test(pos)) {
-                return pos;
-            }
-        }
-
-        return null;
     }
 
     public @Nullable BlockPos targetPos() {

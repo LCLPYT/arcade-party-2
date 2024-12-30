@@ -1,13 +1,9 @@
 package work.lclpnet.ap2.impl.util.math;
 
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3i;
-import org.joml.Matrix4d;
-import org.joml.Quaterniond;
 import org.joml.Vector3d;
 import org.joml.Vector3dc;
 import work.lclpnet.kibu.util.math.Matrix3i;
@@ -61,28 +57,6 @@ public class MathUtil {
 
     public static int manhattanDistance(BlockPos a, BlockPos b) {
         return abs(a.getX() - b.getX()) + abs(a.getY() - b.getY()) + abs(a.getZ() - b.getZ());
-    }
-
-    public static Matrix4d viewProjectionMatrix(ServerPlayerEntity player, double fovRadians, double screenAspectRatio, Matrix4d mat) {
-        MinecraftServer server = player.getServer();
-        int viewDistance;
-
-        if (server == null) {
-            viewDistance = 2;
-        } else {
-            viewDistance = Math.max(2, Math.min(player.getViewDistance(), server.getPlayerManager().getViewDistance()));
-        }
-
-        Quaterniond rotation = new Quaterniond()
-                .rotationYXZ(Math.PI - player.getYaw() * Math.PI / 180.0, -player.getPitch() * Math.PI / 180.0, 0.0F)
-                .conjugate();
-
-        int zFar = viewDistance * 16;
-
-        return mat.identity()
-                .perspective(fovRadians, screenAspectRatio, 0.05, zFar)
-                .rotate(rotation)
-                .translate(-player.getX(), -player.getEyeY(), -player.getZ());
     }
 
     public static Iterable<Vec3d> corners(Box box) {

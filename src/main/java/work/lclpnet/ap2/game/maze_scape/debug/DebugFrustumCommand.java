@@ -12,9 +12,9 @@ import org.joml.Matrix4d;
 import org.joml.Vector4d;
 import work.lclpnet.ap2.game.maze_scape.setup.MSDebugController;
 import work.lclpnet.ap2.game.maze_scape.util.DebugRenderer;
+import work.lclpnet.ap2.game.maze_scape.util.VisibilityChecker;
 import work.lclpnet.ap2.impl.scene.Object3d;
 import work.lclpnet.ap2.impl.scene.Scene;
-import work.lclpnet.ap2.impl.util.math.MathUtil;
 import work.lclpnet.kibu.cmd.type.CommandRegistrar;
 import work.lclpnet.kibu.cmd.type.KibuCommand;
 
@@ -54,7 +54,7 @@ public class DebugFrustumCommand implements KibuCommand {
 
         reset();
 
-        Matrix4d invViewProj = MathUtil.viewProjectionMatrix(player, Math.toRadians(90), 1920 / 1080f, new Matrix4d()).invert();
+        Matrix4d invViewProj = VisibilityChecker.viewProjectionMatrix(player, Math.toRadians(90), 1920 / 1080f, new Matrix4d()).invert();
 
         final Vec3d[] frustum = {
                 new Vec3d(-1, -1, -1),
