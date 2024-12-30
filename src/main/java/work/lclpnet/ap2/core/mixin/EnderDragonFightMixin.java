@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.mixin;
+package work.lclpnet.ap2.core.mixin;
 
 import net.minecraft.entity.boss.dragon.EnderDragonFight;
 import net.minecraft.util.math.BlockPos;
