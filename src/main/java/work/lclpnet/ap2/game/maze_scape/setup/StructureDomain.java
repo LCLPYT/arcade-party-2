@@ -190,7 +190,7 @@ public class StructureDomain implements GeneratorDomain<Connector3, StructurePie
 
     private boolean hasCollision(BVH bvh) {
         for (OrientedStructurePiece placed : placed) {
-            if (bvh.intersects(placed.bounds())) {
+            if (placed.intersectsGeneratorBounds(bvh)) {
                 return true;
             }
         }

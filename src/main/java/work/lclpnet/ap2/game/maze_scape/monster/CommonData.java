@@ -32,7 +32,7 @@ class CommonData implements MonsterData {
             DEBUG_AVG_POS = false;
     private static final double
             ACCELERATION_DISTANCE_SQ = 16 * 16,
-            ACCELERATION_PER_TICK = 2.8125E-4;
+            ACCELERATION_PER_TICK = 2.0E-4;
 
     private final UUID uuid;
     private final MSManager manager;

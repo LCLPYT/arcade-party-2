@@ -9,6 +9,7 @@ import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.game.maze_scape.gen.Node;
 import work.lclpnet.ap2.game.maze_scape.gen.OrientedPiece;
 import work.lclpnet.ap2.game.maze_scape.util.BVH;
+import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.math.AffineIntMatrix;
 import work.lclpnet.kibu.util.math.Matrix3i;
 
@@ -24,6 +25,7 @@ public class OrientedStructurePiece implements OrientedPiece<Connector3, Structu
     private final List<Connector3> connectors;
     private final Matrix3i mat;
     private final BVH bounds;
+    private final List<BlockBox> extraGeneratorBounds;
     private final @Nullable Vec3d spawn;
     private final @Nullable Connector3 parentConnector;
     @Nullable private volatile Matrix3i invMat = null;
@@ -36,7 +38,9 @@ public class OrientedStructurePiece implements OrientedPiece<Connector3, Structu
         this.rotation = rotation;
 
         this.mat = Matrix3i.makeRotationY(rotation);
-        this.bounds = bounds != null ? bounds : piece.bounds().transform(new AffineIntMatrix(mat, pos));
+
+        AffineIntMatrix affineMatrix = new AffineIntMatrix(mat, pos);
+        this.bounds = bounds != null ? bounds : piece.bounds().transform(affineMatrix);
 
         // rotate and translate base connectors
         var base = piece().connectors();
@@ -85,6 +89,10 @@ public class OrientedStructurePiece implements OrientedPiece<Connector3, Structu
         }
 
         this.spawn = spawn;
+
+        this.extraGeneratorBounds = piece.extraGeneratorBounds().stream()
+                .map(box -> box.transform(affineMatrix))
+                .toList();
     }
 
     @Override
@@ -103,6 +111,20 @@ public class OrientedStructurePiece implements OrientedPiece<Connector3, Structu
 
     public BVH bounds() {
         return bounds;
+    }
+
+    public boolean intersectsGeneratorBounds(BVH bvh) {
+        if (bvh.intersects(bounds)) {
+            return true;
+        }
+
+        for (BlockBox box : extraGeneratorBounds) {
+            if (bvh.intersects(box)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public BlockPos pos() {

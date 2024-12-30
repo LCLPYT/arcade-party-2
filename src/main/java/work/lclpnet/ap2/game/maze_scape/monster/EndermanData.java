@@ -59,11 +59,11 @@ public class EndermanData implements MonsterData {
             PLAYER_FOV = toRadians(90),
             PLAYER_ASPECT_RATIO = 1920 / 1080.d,
             FLEE_SPEED_BONUS = 0.05,
-            ANGER_SPEED_BONUS = 0.1,
+            ANGER_SPEED_BONUS = 0.09,
             FLEE_MIN_ANGLE_DEG = 65.0,
             LOOK_AT_ANGER_AMOUNT = 25.0,
             ANGER_TRIGGER_THRESHOLD = 450.0,
-            ANGER_DECAY_PER_SECOND = 3.5,
+            ANGER_DECAY_PER_SECOND = 6.5,
             ANGER_TRIGGER_BONUS = ANGER_DECAY_PER_SECOND * 12.0;
     private static final boolean
             DEBUG_FLEE_POSITIONS = false,
@@ -89,7 +89,7 @@ public class EndermanData implements MonsterData {
 
     public EndermanData(MonsterArgs args, MSStruct struct) {
         this.args = args;
-        this.common = new CommonData(args, 0.35, 0.45, 0.75);
+        this.common = new CommonData(args, 0.35, 0.42, 0.75);
         this.struct = struct;
     }
 
@@ -175,6 +175,8 @@ public class EndermanData implements MonsterData {
         if (enderman == null) return;
 
         for (ServerPlayerEntity player : args.manager().participants()) {
+            if (player.isSpectator()) continue;
+
             // update view-projection matrix with current data
             MathUtil.viewProjectionMatrix(player, PLAYER_FOV, PLAYER_ASPECT_RATIO, viewProjMat);
 
@@ -429,6 +431,8 @@ public class EndermanData implements MonsterData {
             var fleePos = findFleePositions(node, pos -> {
                 // check if any player would see the entity at pos
                 for (ServerPlayerEntity participant : args.manager().participants()) {
+                    if (participant.isSpectator()) continue;
+
                     if (isVisibleByAt(mob, participant, pos.toBottomCenterPos(), 0.2)) {
                         return false;
                     }
@@ -524,6 +528,7 @@ public class EndermanData implements MonsterData {
     public @Nullable BlockPos targetPos() {
         if (angerTarget != null) {
             BlockPos angerTargetPos = args.manager().participants().getParticipant(angerTarget)
+                    .filter(p -> !p.isSpectator())
                     .map(Entity::getBlockPos)
                     .orElse(null);
 
@@ -544,7 +549,7 @@ public class EndermanData implements MonsterData {
 
         LivingEntity target = mob.getTarget();
 
-        if (target == null) {
+        if (target == null || !target.isAlive() || target.isSpectator()) {
             return null;
         }
 

@@ -18,6 +18,7 @@ import work.lclpnet.ap2.game.maze_scape.setup.wall.ConnectorWall;
 import work.lclpnet.ap2.game.maze_scape.setup.wall.PaletteConnectorWall;
 import work.lclpnet.ap2.game.maze_scape.setup.wall.StructureConnectorWall;
 import work.lclpnet.ap2.game.maze_scape.util.*;
+import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.world.WalkableBlockPredicate;
 import work.lclpnet.kibu.schematic.FabricBlockStateAdapter;
@@ -188,6 +189,8 @@ public class MSLoader {
         boolean updateBlocks = config.optBoolean("update-blocks", false);
         boolean noUnstuck = config.optBoolean("no-unstuck", false);
 
+        List<BlockBox> extraGeneratorBounds = parseExtraGeneratorBounds(config);
+
         Set<ClusterDef> clusters = parseClusters(path, config, clusterDefs);
 
         Vec3d spawnPos = Optional.ofNullable(scanResult.spawn())
@@ -196,13 +199,34 @@ public class MSLoader {
         StructureMask pit = buildPitMask(wrapper, scanResult.pitMarkers());
 
         StructurePiece piece = new StructurePiece(name, wrapper, bounds, scanResult.connectors(), weight, maxCount, connectSame, clusters,
-                minDistance, updateBlocks, noUnstuck, spawnPos, scanResult.jigsaws(), pit);
+                minDistance, updateBlocks, noUnstuck, extraGeneratorBounds, spawnPos, scanResult.jigsaws(), pit);
 
         for (ClusterDef cluster : clusters) {
             cluster.pieces().add(piece);
         }
 
         return piece;
+    }
+
+    private List<BlockBox> parseExtraGeneratorBounds(JSONObject config) {
+        JSONArray array = config.optJSONArray("extra-generator-bounds");
+
+        if (array == null) return List.of();
+
+        List<BlockBox> extraBounds = new ArrayList<>(array.length());
+
+        for (Object o : array) {
+            if (!(o instanceof JSONArray tuple)) {
+                logger.warn("Unexpected array element for extra generator bounds of type {}", o != null ? o.getClass().getSimpleName() : null);
+                continue;
+            }
+
+            BlockBox box = MapUtil.readBox(tuple);
+
+            extraBounds.add(box);
+        }
+
+        return extraBounds;
     }
 
     private StructureMask buildPitMask(FabricStructureWrapper wrapper, List<BlockPos> pitMarkers) {

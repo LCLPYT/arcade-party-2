@@ -5,6 +5,7 @@ import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.game.maze_scape.gen.Piece;
 import work.lclpnet.ap2.game.maze_scape.util.BVH;
+import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.kibu.schematic.FabricStructureWrapper;
 
 import java.util.List;
@@ -23,6 +24,7 @@ public record StructurePiece(
         int minDistance,
         boolean updateBlocks,
         boolean noUnstuck,
+        List<BlockBox> extraGeneratorBounds,
         @Nullable Vec3d spawn,
         List<BlockPos> jigsaws,
         StructureMask pit
