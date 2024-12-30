@@ -8,11 +8,13 @@
   },
   "mixins": [
     "CobwebBlockMixin",
+    "EnderDragonFightMixin",
     "EndermanEntityAccessor",
     "EntityMixin",
     "EntityNavigationAccessor",
     "EntityNavigationMixin",
     "LandPathNodeMakerMixin",
+    "LivingEntityAccessor",
     "LivingEntityMixin",
     "MobEntityAccessor",
     "MobNavigationMixin",

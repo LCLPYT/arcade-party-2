@@ -1,23 +1,32 @@
 package work.lclpnet.ap2.game.pillar_battle;
 
+import net.minecraft.entity.boss.dragon.EnderDragonEntity;
+import net.minecraft.entity.boss.dragon.EnderDragonFight;
+import net.minecraft.entity.boss.dragon.phase.PhaseType;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
+import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.GameRules;
+import net.minecraft.world.border.WorldBorder;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.map.MapBootstrap;
 import work.lclpnet.ap2.impl.game.EliminationGameInstance;
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker;
+import work.lclpnet.ap2.impl.util.world.WorldBorderUtil;
+import work.lclpnet.ap2.type.ApDragonFight;
+import work.lclpnet.kibu.hook.HookRegistrar;
+import work.lclpnet.kibu.hook.entity.ServerEntityHooks;
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 import work.lclpnet.lobby.game.map.GameMap;
 
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 public class PillarBattleInstance extends EliminationGameInstance implements MapBootstrap {
@@ -25,9 +34,13 @@ public class PillarBattleInstance extends EliminationGameInstance implements Map
     public static final int RANDOM_ITEM_DELAY_TICKS = 70;
     private static final int BUILD_HEIGHT = 25;
     private static final int BUILD_OUTER_RADIUS = 10;
+    private static final int BORDER_WARN_DISTANCE = 2;
+    private static final int BORDER_WARN_DELAY_MS = 2000;
     private final Random random = new Random();
     private final SimpleMovementBlocker movementBlocker;
     private @Nullable PbSetup.PlacementResult pillars = null;
+    private final Map<UUID, Warning> warnings = new HashMap<>();
+    private @Nullable WorldBorder border = null;
 
     public PillarBattleInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
@@ -59,7 +72,8 @@ public class PillarBattleInstance extends EliminationGameInstance implements Map
                 .set(GameRules.NATURAL_REGENERATION, true)
                 .set(GameRules.DO_MOB_GRIEFING, true)
                 .set(GameRules.DO_TRADER_SPAWNING, false)
-                .set(GameRules.DO_PATROL_SPAWNING, false);
+                .set(GameRules.DO_PATROL_SPAWNING, false)
+                .set(GameRules.KEEP_INVENTORY, false);
 
         movementBlocker.init(gameHandle.getHookRegistrar());
 
@@ -80,6 +94,18 @@ public class PillarBattleInstance extends EliminationGameInstance implements Map
 
             movementBlocker.disableMovement(player);
         }
+
+        setupWorldBorder();
+    }
+
+    private void setupWorldBorder() {
+        if (pillars == null) return;
+
+        BlockPos center = pillars.center();
+        double radius = pillars.radius() + BUILD_OUTER_RADIUS + 0.5;
+
+        border = WorldBorderUtil.createBorder(center.getX() + 0.5, center.getZ() + 0.5, radius * 2);
+        border.setWarningBlocks(0);
     }
 
     @Override
@@ -109,7 +135,8 @@ public class PillarBattleInstance extends EliminationGameInstance implements Map
 
         var randomizer = new PbRandomizer(random, gameHandle.getParticipants(), getWorld().getRegistryManager());
 
-        gameHandle.getGameScheduler().interval(randomizer::giveRandomItems, RANDOM_ITEM_DELAY_TICKS);
+        var scheduler = gameHandle.getGameScheduler();
+        scheduler.interval(randomizer::giveRandomItems, RANDOM_ITEM_DELAY_TICKS);
 
         var hooks = gameHandle.getHookRegistrar();
 
@@ -120,6 +147,30 @@ public class PillarBattleInstance extends EliminationGameInstance implements Map
             }
 
             return true;
+        });
+
+        handleEnderDragonAi(hooks);
+
+        scheduler.interval(this::warnWorldBorder, 1);
+    }
+
+    private void handleEnderDragonAi(HookRegistrar hooks) {
+        if (pillars == null) return;
+
+        BlockPos center = pillars.center();
+
+        hooks.registerHook(ServerEntityHooks.ENTITY_LOAD, (entity, world) -> {
+            if (!(entity instanceof EnderDragonEntity dragon)) return;
+
+            var data = new EnderDragonFight.Data(false, false, false, false,
+                    Optional.of(dragon.getUuid()), Optional.of(center), Optional.of(List.of()));
+
+            EnderDragonFight fight = new EnderDragonFight(world, random.nextLong(), data, center);
+            ((ApDragonFight) fight).ap2$setTemporary();
+
+            dragon.setFight(fight);
+            dragon.setFightOrigin(center);
+            dragon.getPhaseManager().setPhase(PhaseType.HOLDING_PATTERN);
         });
     }
 
@@ -138,5 +189,65 @@ public class PillarBattleInstance extends EliminationGameInstance implements Map
         int x = pos.getX(), z = pos.getZ();
 
         return x < minX || x > maxX || z < minZ || z > maxZ;
+    }
+
+    private void warnWorldBorder() {
+        if (pillars == null) return;
+
+        Translations translations = gameHandle.getTranslations();
+        BlockPos center = pillars.center();
+        double cx = center.getX(), cz = center.getZ();
+        double totalRadius = pillars.radius() + BUILD_OUTER_RADIUS + 0.5;
+
+        WorldBorder realBorder = getWorld().getWorldBorder();
+
+        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
+            UUID uuid = player.getUuid();
+            Warning warning = warnings.computeIfAbsent(uuid, u -> new Warning());
+
+            double dx = totalRadius - Math.abs(cx + 0.5 - player.getX());
+            double dz = totalRadius - Math.abs(cz + 0.5 - player.getZ());
+
+            if (dx > BORDER_WARN_DISTANCE && dz > BORDER_WARN_DISTANCE) {
+                // not near the border
+                if (warning.warned) {
+                    warning.warned = false;
+
+                    WorldBorderUtil.init(player, realBorder);
+
+                    if (System.currentTimeMillis() - warning.lastWarning < 62 * 50) {
+                        player.sendMessage(Text.empty(), true);
+                    }
+                }
+                continue;
+            }
+
+            // near the border
+            if (warning.warned) continue;
+
+            warning.warned = true;
+
+            if (border != null) {
+                // send fake world border
+                WorldBorderUtil.init(player, border);
+            }
+
+            long timestamp = System.currentTimeMillis();
+
+            if (timestamp - warning.lastWarning < BORDER_WARN_DELAY_MS) continue;
+
+            warning.lastWarning = timestamp;
+
+            var msg = translations.translateText(player, "game.ap2.pillar_battle.border_warn")
+                    .styled(style -> style.withColor(0xff0000).withBold(true));
+
+            player.sendMessage(msg, true);
+            player.playSoundToPlayer(SoundEvents.BLOCK_NOTE_BLOCK_PLING.value(), SoundCategory.HOSTILE, 0.3f, 0.5f);
+        }
+    }
+
+    private static class Warning {
+        private boolean warned = false;
+        private long lastWarning = 0;
     }
 }

@@ -69,6 +69,9 @@
   "game.ap2.one_in_the_chamber": "One in the Chamber",
   "game.ap2.one_in_the_chamber.description": "Your crossbow one hits, but you only have one shot! Gain another by killing someone. First reaching %s kills wins!",
   "game.ap2.one_in_the_chamber.task": "Reach %s kills",
+  "game.ap2.aim_master": "Aim Master",
+  "game.ap2.aim_master.task": "Reach %s points",
+  "game.ap2.aim_master.description": "Click on the correct blocks and be the first to reach the point goal!",
   "game.ap2.anvil_fall": "Anvil Fall",
   "game.ap2.anvil_fall.description": "Dodge the anvils falling from the sky.\nBe the last one remaining!",
   "game.ap2.anvil_fall.status": "%s anvils per second",
@@ -219,6 +222,7 @@
   "game.ap2.pillar_battle": "Pillar Battle",
   "game.ap2.pillar_battle.description": "All players are placed on pillars. Everyone receives a random item every %s seconds. Kill other players and be the last one standing!",
   "game.ap2.pillar_battle.out_of_bounds": "You cannot build there...",
+  "game.ap2.pillar_battle.border_warn": "Careful! You are near the build border",
   "game.ap2.maze_scape": "MazeScape",
   "game.ap2.maze_scape.description": "You have to run from monsters inside a labyrinth-like facility. The last survivor wins!",
   "game.ap2.maze_scape.fell_into_pit": "%s fell into a pit"

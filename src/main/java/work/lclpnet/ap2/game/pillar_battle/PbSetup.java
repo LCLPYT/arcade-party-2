@@ -25,6 +25,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 public class PbSetup {
 
@@ -167,7 +168,11 @@ public class PbSetup {
 
         List<PillarInfo> pool = new ArrayList<>(availablePillars.size());
 
-        for (ServerPlayerEntity player : participants) {
+        // randomize player order to get different neighbours each game
+        var playerOrder = participants.stream().collect(Collectors.toCollection(ArrayList::new));
+        Collections.shuffle(playerOrder, random);
+
+        for (ServerPlayerEntity player : playerOrder) {
             playerIds.add(player.getUuid());
 
             if (pool.isEmpty()) {
