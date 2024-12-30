@@ -8,7 +8,6 @@ import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3d;
 import org.slf4j.Logger;
-import work.lclpnet.ap2.game.maze_scape.setup.MSDebugController;
 import work.lclpnet.ap2.game.maze_scape.setup.OrientedStructurePiece;
 import work.lclpnet.ap2.game.maze_scape.util.MSManager;
 import work.lclpnet.ap2.game.maze_scape.util.MSStruct;
@@ -38,7 +37,6 @@ class CommonData implements MonsterData {
     private final UUID uuid;
     private final MSManager manager;
     private final Logger logger;
-    private final MSDebugController debugController;
     private final double baseSpeed, maxSpeed, stuckTolSq;
     private final PosBuf posBuf = new PosBuf(POSITION_SAMPLE_SIZE);
     private final Vector3d prevAvgPos = new Vector3d(0);
@@ -53,7 +51,6 @@ class CommonData implements MonsterData {
         this.uuid = args.uuid();
         this.manager = args.manager();
         this.logger = args.logger();
-        this.debugController = args.debugController();
         this.baseSpeed = baseSpeed;
         this.maxSpeed = maxSpeed;
         this.stuckTolSq = stuckTol * stuckTol;
@@ -84,7 +81,7 @@ class CommonData implements MonsterData {
             MobEntity mob = mob();
             Vec3d pos = mob != null ? mob.getPos() : Vec3d.ZERO;
 
-            avgPosMarker = debugController.displayMarker(pos.x, pos.y, pos.z, Blocks.GREEN_CONCRETE.getDefaultState(), 0x00ff00);
+            avgPosMarker = manager.debugController().displayMarker(pos.x, pos.y, pos.z, Blocks.GREEN_CONCRETE.getDefaultState(), 0x00ff00);
         }
     }
 

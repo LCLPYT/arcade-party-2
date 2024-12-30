@@ -247,7 +247,7 @@ public class EndermanData implements MonsterData {
         }
 
         if (DEBUG_TARGET_FLEE_POS) {
-            args.debugController().exclusive("target_flee_pos", controller -> controller.displayMarker(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, Blocks.CYAN_CONCRETE.getDefaultState(), 0x03b2fe, 0.5));
+            args.manager().debugController().exclusive("target_flee_pos", controller -> controller.displayMarker(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, Blocks.CYAN_CONCRETE.getDefaultState(), 0x03b2fe, 0.5));
         }
 
         if (!fleeToo(mob, pos)) {
@@ -343,7 +343,7 @@ public class EndermanData implements MonsterData {
         frozenTimer = 0;
 
         if (DEBUG_TARGET_FLEE_POS) {
-            args.debugController().exclusive("target_flee_pos", debugger -> {});
+            args.manager().debugController().exclusive("target_flee_pos", debugger -> {});
         }
 
         removeAttributeModifier(mob, GENERIC_MOVEMENT_SPEED, FLEE_BONUS_ID);
@@ -387,7 +387,7 @@ public class EndermanData implements MonsterData {
             Vec3d mobToPlayerDir = playerPos.subtract(mobPos).withAxis(Direction.Axis.Y, 0).normalize();
 
             if (DEBUG_FLEE_PATHS) {
-                args.debugController().displayArrow(mobPos.add(mobToPlayerDir.multiply(0.3)), mobToPlayerDir, 0.6, Blocks.BLUE_CONCRETE.getDefaultState());
+                args.manager().debugController().displayArrow(mobPos.add(mobToPlayerDir.multiply(0.3)), mobToPlayerDir, 0.6, Blocks.BLUE_CONCRETE.getDefaultState());
             }
 
             for (Passage passage : struct.passagesOf(entityNode)) {
@@ -401,7 +401,7 @@ public class EndermanData implements MonsterData {
                 if (abs(dir.length() - 1) > 1e-6) continue;
 
                 if (DEBUG_FLEE_PATHS) {
-                    args.debugController().displayArrow(mobPos.add(dir.multiply(0.3)), dir, 0.6, Blocks.LIME_CONCRETE.getDefaultState());
+                    args.manager().debugController().displayArrow(mobPos.add(dir.multiply(0.3)), dir, 0.6, Blocks.LIME_CONCRETE.getDefaultState());
                 }
 
                 double angle = acos(mobToPlayerDir.dotProduct(dir));
@@ -454,7 +454,7 @@ public class EndermanData implements MonsterData {
         }
 
         if (DEBUG_FLEE_POSITIONS && !debugPositions.isEmpty()) {
-            args.debugController().exclusive("flee_positions", controller -> {
+            args.manager().debugController().exclusive("flee_positions", controller -> {
                 var state = Blocks.MAGENTA_TERRACOTTA.getDefaultState();
 
                 for (BlockPos pos : debugPositions) {
@@ -484,7 +484,7 @@ public class EndermanData implements MonsterData {
             BlockPos pos = node.getBlockPos();
 
             if (DEBUG_FLEE_PATHS) {
-                args.debugController().displayMarker(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, Blocks.BLACK_CONCRETE.getDefaultState(), 0);
+                args.manager().debugController().displayMarker(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, Blocks.BLACK_CONCRETE.getDefaultState(), 0);
             }
 
             x += (pos.getX() - sx);

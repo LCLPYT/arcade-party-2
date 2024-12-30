@@ -8,7 +8,6 @@ import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
 import net.minecraft.block.Blocks;
 import net.minecraft.command.argument.EntityAnchorArgumentType;
 import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.brain.Activity;
 import net.minecraft.entity.ai.brain.Brain;
@@ -16,40 +15,29 @@ import net.minecraft.entity.ai.brain.MemoryModuleType;
 import net.minecraft.entity.ai.brain.task.LookAtMobTask;
 import net.minecraft.entity.ai.brain.task.MeleeAttackTask;
 import net.minecraft.entity.ai.brain.task.RangedApproachTask;
-import net.minecraft.entity.ai.goal.*;
-import net.minecraft.entity.ai.pathing.EntityNavigation;
-import net.minecraft.entity.ai.pathing.MobNavigation;
 import net.minecraft.entity.ai.pathing.Path;
-import net.minecraft.entity.ai.pathing.PathNodeMaker;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.mob.EndermanEntity;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.mob.SpiderEntity;
 import net.minecraft.entity.mob.WardenEntity;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.api.base.Participants;
-import work.lclpnet.ap2.api.ds.Partial;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.core.hook.*;
-import work.lclpnet.ap2.core.mixin.EntityNavigationAccessor;
-import work.lclpnet.ap2.core.mixin.MobEntityAccessor;
-import work.lclpnet.ap2.core.type.*;
-import work.lclpnet.ap2.game.apocalypse_survival.util.GoalModifier;
-import work.lclpnet.ap2.game.maze_scape.ai.AttackGoal;
-import work.lclpnet.ap2.game.maze_scape.ai.MoveToTargetGoal;
+import work.lclpnet.ap2.core.type.ApEntity;
+import work.lclpnet.ap2.core.type.WardenBrainHandle;
 import work.lclpnet.ap2.game.maze_scape.gen.Node;
-import work.lclpnet.ap2.game.maze_scape.monster.*;
+import work.lclpnet.ap2.game.maze_scape.monster.EndermanData;
+import work.lclpnet.ap2.game.maze_scape.monster.MonsterData;
+import work.lclpnet.ap2.game.maze_scape.monster.MonsterSpawner;
 import work.lclpnet.ap2.game.maze_scape.setup.MSDebugController;
 import work.lclpnet.ap2.game.maze_scape.setup.MSGenerator;
 import work.lclpnet.ap2.game.maze_scape.setup.OrientedStructurePiece;
-import work.lclpnet.ap2.impl.ai.BlockedPathFindingPredicate;
-import work.lclpnet.ap2.impl.ai.CollisionPathFindingPredicate;
 import work.lclpnet.ap2.impl.util.EntityUtil;
 import work.lclpnet.lobby.game.map.GameMap;
 
@@ -61,9 +49,7 @@ import static java.lang.Math.*;
 
 public class MSManager {
 
-    private static final boolean
-            DEBUG_MOB_SPAWNS = false,
-            DEBUG_SHOW_MOBS = true;
+    private static final boolean DEBUG_MOB_SPAWNS = false;
 
     private final ServerWorld world;
     private final MSStruct struct;
@@ -74,6 +60,7 @@ public class MSManager {
     private final int mapChunkRadius;
     private final MSDebugController debugController;
     private final Map<UUID, MonsterData> monsters = new HashMap<>();
+    private final MonsterSpawner spawner;
 
     public MSManager(ServerWorld world, GameMap map, MSStruct struct, Participants participants, Random random, Logger logger, MSDebugController debugController) {
         this.world = world;
@@ -85,6 +72,7 @@ public class MSManager {
 
         targetManager = new MSTargetManager(struct, participants);
         mapChunkRadius = MSGenerator.getMaxChunkSize(map);
+        spawner = new MonsterSpawner(this, logger, random);
     }
 
     public ServerWorld world() {
@@ -93,6 +81,10 @@ public class MSManager {
 
     public MSStruct struct() {
         return struct;
+    }
+
+    public MSDebugController debugController() {
+        return debugController;
     }
 
     public void init(MiniGameHandle gameHandle) {
@@ -120,12 +112,10 @@ public class MSManager {
             }
         }
 
-        Partial<MonsterArgs, UUID> args = uuid -> new MonsterArgs(uuid, this, logger, debugController);
-
-        // TODO separate into primary and secondary mobs and randomly choose depending on player count
-//        spawnWarden(spawns.get(), args);
-//        spawnSpider(spawns.get(), args);
-        spawnEnderman(spawns.get(), args);
+        spawner.spawn(spawns, (uuid, data) -> {
+            monsters.put(uuid, data);
+            targetManager.addMonster(data);
+        });
 
         monsters.values().forEach(MonsterData::init);
 
@@ -184,133 +174,6 @@ public class MSManager {
         }
 
         return new RandomGenerator<>(mostDistant, random);
-    }
-
-    private void spawnWarden(Vec3d pos, Partial<MonsterArgs, UUID> args) {
-        WardenEntity warden = new WardenEntity(EntityType.WARDEN, world);
-
-        configureMobCommon(pos, warden);
-
-        EntityUtil.setAttribute(warden, EntityAttributes.GENERIC_ATTACK_DAMAGE, 10);
-
-        var brain = warden.getBrain();
-        brain.setTaskList(Activity.EMERGE, 5, ImmutableList.of(), MemoryModuleType.IS_EMERGING);
-        brain.setTaskList(Activity.DIG, 5, ImmutableList.of(), MemoryModuleType.DIG_COOLDOWN);
-        brain.resetPossibleActivities();
-
-        world.spawnEntity(warden);
-
-        UUID uuid = warden.getUuid();
-        WardenData data = new WardenData(args.with(uuid));
-        monsters.put(uuid, data);
-
-        targetManager.addMonster(data);
-    }
-
-    @SuppressWarnings("DataFlowIssue")
-    private void spawnSpider(Vec3d pos, Partial<MonsterArgs, UUID> args) {
-        SpiderEntity spider = new SpiderEntity(EntityType.SPIDER, world);
-
-        configureMobCommon(pos, spider);
-
-        EntityUtil.setAttribute(spider, EntityAttributes.GENERIC_ATTACK_DAMAGE, 5);
-
-        ((ApSpider) spider).ap2$setCanClimb(false);
-        ((ApLivingEntity) spider).ap2$setServerSidedScale(0.64f);  // change spider width to ~0.9
-
-        GoalSelector goalSelector = resetAi(spider).getGoalSelector();
-
-        goalSelector.add(1, new SwimGoal(spider));
-        goalSelector.add(3, new PounceAtTargetGoal(spider, 0.4f));
-        goalSelector.add(4, new MoveToTargetGoal(spider, 1.0));
-        goalSelector.add(4, new AttackGoal(spider));
-        goalSelector.add(6, new LookAtEntityGoal(spider, PlayerEntity.class, 8.0f));
-        goalSelector.add(6, new LookAroundGoal(spider));
-
-        world.spawnEntity(spider);
-
-        UUID uuid = spider.getUuid();
-        SpiderData data = new SpiderData(args.with(uuid), random);
-        monsters.put(uuid, data);
-
-        targetManager.addMonster(data);
-    }
-
-    private void spawnEnderman(Vec3d pos, Partial<MonsterArgs, UUID> args) {
-        EndermanEntity enderman = new EndermanEntity(EntityType.ENDERMAN, world);
-
-        configureMobCommon(pos, enderman);
-
-        EntityUtil.setAttribute(enderman, EntityAttributes.GENERIC_ATTACK_DAMAGE, 20);
-        enderman.setSilent(true);
-
-        UUID uuid = enderman.getUuid();
-        EndermanData data = new EndermanData(args.with(uuid), struct);
-
-        GoalSelector goalSelector = resetAi(enderman).getGoalSelector();
-
-        goalSelector.add(0, new SwimGoal(enderman));
-        goalSelector.add(4, new MoveToTargetGoal(enderman, 1.0, data::targetPos));
-        goalSelector.add(4, new AttackGoal(enderman));
-        goalSelector.add(6, new LookAroundGoal(enderman));
-
-        world.spawnEntity(enderman);
-
-        monsters.put(uuid, data);
-
-        targetManager.addMonster(data);
-    }
-
-    private static @NotNull MobEntityAccessor resetAi(MobEntity mob) {
-        var access = (MobEntityAccessor) mob;
-
-        GoalModifier.clear(access.getGoalSelector());
-        GoalModifier.clear(access.getTargetSelector());
-
-        return access;
-    }
-
-    private void configureMobCommon(Vec3d pos, MobEntity entity) {
-        entity.setPosition(pos);
-        entity.setInvulnerable(true);
-        entity.setPersistent();
-        entity.setOnGround(true);  // required to perform path finding immediately
-
-        if (DEBUG_SHOW_MOBS) {
-            entity.setGlowing(true);
-        }
-
-        EntityUtil.setAttribute(entity, EntityAttributes.GENERIC_STEP_HEIGHT, 2);
-
-        EntityNavigation navigation = entity.getNavigation();
-        navigation.setRangeMultiplier(8f);
-
-        if (navigation instanceof MobNavigation nav) {
-            nav.setCanPathThroughDoors(true);
-            nav.setCanWalkOverFences(true);
-            nav.setCanEnterOpenDoors(true);
-        }
-
-        if (navigation instanceof ApMobNavigation nav) {
-            nav.ap2$patchTrapdoorPathFindingTarget();
-        }
-
-        ApEntity apEntity = (ApEntity) entity;
-
-        // fix warden getting stuck on narrow blocks, like open trapdoors on walls / as railings
-        apEntity.ap2$patchNarrowMovement();
-
-        // fix continuous jumping when walking by open trapdoors
-        apEntity.ap2$patchTrapdoorJumping();
-
-        // adjust PathNodeMaker
-        PathNodeMaker nodeMaker = ((EntityNavigationAccessor) navigation).getNodeMaker();
-
-        if (nodeMaker instanceof ApLandPathNodeMaker apPathMaker) {
-            apPathMaker.ap2$addPathFindingPredicate(BlockedPathFindingPredicate.getInstance());
-            apPathMaker.ap2$addPathFindingPredicate(CollisionPathFindingPredicate.getInstance());
-            apPathMaker.ap2$addPathFindingPredicate(new PitPathFindingPredicate(struct));
-        }
     }
 
     private void initAttributes(LivingEntity entity) {
