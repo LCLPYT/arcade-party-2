@@ -85,7 +85,10 @@ public class Passage implements
         return null;
     }
 
+    @Nullable
     public Node<Connector3, StructurePiece, OrientedStructurePiece> other(Node<Connector3, StructurePiece, OrientedStructurePiece> node) {
-        return left == node ? right : left;
+        if (left == node) return right;
+        if (right == node) return left;
+        return null;
     }
 }

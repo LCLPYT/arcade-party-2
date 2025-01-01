@@ -95,6 +95,10 @@ public class MSDebugController {
         display(marker);
     }
 
+    public Object3d displayMarker(Vec3d pos, BlockState state, int glowColor) {
+        return displayMarker(pos.x, pos.y, pos.z, state, glowColor);
+    }
+
     public Object3d displayMarker(double x, double y, double z, BlockState state, int glowColor) {
         return displayMarker(x, y, z, state, glowColor, 0.25);
     }

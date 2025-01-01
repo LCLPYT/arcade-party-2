@@ -1,7 +1,6 @@
 package work.lclpnet.ap2.game.maze_scape.util;
 
 import net.minecraft.block.Blocks;
-import net.minecraft.entity.ai.pathing.EntityNavigation;
 import net.minecraft.entity.ai.pathing.Path;
 import net.minecraft.entity.ai.pathing.PathNode;
 import net.minecraft.entity.mob.EndermanEntity;
@@ -18,7 +17,6 @@ import work.lclpnet.ap2.game.maze_scape.setup.OrientedStructurePiece;
 import work.lclpnet.ap2.game.maze_scape.setup.StructurePiece;
 
 import java.util.*;
-import java.util.function.Predicate;
 
 import static java.lang.Math.*;
 
@@ -42,96 +40,100 @@ public class EndermanEscape {
         this.debugController = debugController;
     }
 
-    public @Nullable BlockPos findFleePos(EndermanEntity mob, ServerPlayerEntity player) {
+    public Optional<Path> findEscapePath(EndermanEntity mob) {
         Vec3d mobPos = mob.getPos();
-        Vec3d playerPos = player.getPos();
-
         var entityNode = struct.nodeAt(mobPos);
-        var playerNode = struct.nodeAt(playerPos);
 
-        if (entityNode == null || playerNode == null) return null;
+        if (entityNode == null) return Optional.empty();
 
-        final int maxChecks = 10;
         Queue<Node<Connector3, StructurePiece, OrientedStructurePiece>> queue = new LinkedList<>();
         Set<Node<Connector3, StructurePiece, OrientedStructurePiece>> known = new HashSet<>();
 
-        // only consider neighbours don't require the mob to go towards the player
-        EntityNavigation nav = mob.getNavigation();
-        BlockPos mobBlockPos = mob.getBlockPos();
-        Vec3d mobToPlayerDir = playerPos.subtract(mobPos).withAxis(Direction.Axis.Y, 0).normalize();
+        queue.offer(entityNode);
+        known.add(entityNode);
 
-        if (DEBUG_FLEE_PATHS) {
-            debugController.displayArrow(mobPos.add(mobToPlayerDir.multiply(0.3)), mobToPlayerDir, 0.6, Blocks.BLUE_CONCRETE.getDefaultState());
-        }
+        List<Path> paths = new ArrayList<>();
+        final int maxChecks = 6;
+        int check = 0;
 
-        for (Passage passage : struct.passagesOf(entityNode)) {
-            BlockPos pos = passage.pos();
-            Path path = nav.findPathTo(pos, 0);
-
-            if (path == null) continue;
-
-            Vec3d dir = startingDirection(mobBlockPos, path).withAxis(Direction.Axis.Y, 0).normalize();
-
-            if (abs(dir.length() - 1) > 1e-6) continue;
-
-            if (DEBUG_FLEE_PATHS) {
-                debugController.displayArrow(mobPos.add(dir.multiply(0.3)), dir, 0.6, Blocks.LIME_CONCRETE.getDefaultState());
-            }
-
-            double angle = acos(mobToPlayerDir.dotProduct(dir));
-
-            if (angle < toRadians(FLEE_MIN_ANGLE_DEG)) continue;
-
-            var neighbour = passage.other(entityNode);
-
-            queue.offer(neighbour);
-            known.add(neighbour);
-        }
-
-        LinkedHashSet<BlockPos> debugPositions = DEBUG_FLEE_POSITIONS ? new LinkedHashSet<>() : null;
-        int i = 0;
-
-        while (!queue.isEmpty() && i++ <= maxChecks) {
+        while (!queue.isEmpty() && check++ < maxChecks) {
             var node = queue.poll();
 
-            if (node == playerNode) continue;
+            OrientedStructurePiece oriented = node.oriented();
 
-            var fleePos = findFleePositions(node, pos -> {
-                // check if any player would see the entity at pos
-                if (visibilityChecker.isAnyoneLookingAt(mob, pos.toCenterPos(), participants)) return false;
+            if (oriented == null) continue;
 
-                if (DEBUG_FLEE_POSITIONS) {
-                    debugPositions.add(pos);
-                    return false;  // debug should find all positions
+            Vec3d spawn = oriented.spawn();
+
+            if (spawn != null) {
+                Path path = escapePath(spawn, mob);
+
+                if (path != null && !leadingToAny(mobPos, path)) {
+                    paths.add(path);
                 }
-
-                return true;
-            });
-
-            if (fleePos != null) {
-                return fleePos;
             }
 
-            for (@Nullable var neighbour : node.neighbours()) {
-                if (neighbour == null || !known.add(neighbour)) continue;
+            for (Passage passage : struct.passagesOf(node)) {
+                Path path = escapePath(passage.pos().toBottomCenterPos(), mob);
 
-                queue.offer(neighbour);
+                if (path != null) {
+                    if (leadingToAny(mobPos, path)) continue;
+
+                    paths.add(path);
+                }
+
+                var next = passage.other(node);
+
+                if (next != null && known.add(next)) {
+                    queue.offer(next);
+                }
             }
         }
 
         if (DEBUG_FLEE_POSITIONS) {
-            debugController.exclusive("flee_positions", controller -> {
-                var state = Blocks.MAGENTA_TERRACOTTA.getDefaultState();
-
-                for (BlockPos pos : debugPositions) {
-                    controller.displayMarker(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, state, 0xd808db);
-                }
-            });
-
-            return debugPositions.isEmpty() ? null : debugPositions.getFirst();  // pick first to get same result as without debug
+            debugController.exclusive("flee_positions", controller -> paths.stream()
+                    .map(Path::getTarget)
+                    .map(BlockPos::toBottomCenterPos)
+                    .forEach(pos -> controller.displayMarker(pos, Blocks.MAGENTA_TERRACOTTA.getDefaultState(), 0xd808db)));
         }
 
-        return null;
+        return paths.stream().min(Comparator.comparingInt(Path::getLength));
+    }
+
+    private @Nullable Path escapePath(Vec3d pos, EndermanEntity mob) {
+        if (visibilityChecker.isAnyoneLookingAt(mob, pos, participants)) {
+            return null;
+        }
+
+        return mob.getNavigation().findPathTo(BlockPos.ofFloored(pos), 0);
+    }
+
+    private boolean leadingToAny(Vec3d startPos, Path path) {
+        Vec3d startingDir = startingDirection(BlockPos.ofFloored(startPos), path).withAxis(Direction.Axis.Y, 0).normalize();
+
+        if (!isUnit(startingDir)) return false;
+
+        final double maxDistSq = 32 * 32;
+
+        for (ServerPlayerEntity player : participants) {
+            if (player.squaredDistanceTo(startPos) > maxDistSq) continue;
+
+            Vec3d playerDir = player.getPos().subtract(startPos).withAxis(Direction.Axis.Y, 0).normalize();
+
+            if (!isUnit(playerDir)) continue;
+
+            double angle = acos(playerDir.dotProduct(startingDir));
+
+            if (angle < toRadians(FLEE_MIN_ANGLE_DEG)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static boolean isUnit(Vec3d playerDir) {
+        return abs(playerDir.lengthSquared() - 1) < 1e-4;
     }
 
     private Vec3d startingDirection(BlockPos start, Path path) {
@@ -159,31 +161,5 @@ public class EndermanEscape {
         }
 
         return new Vec3d(x / samples, y / samples, z / samples).normalize();
-    }
-
-    private @Nullable BlockPos findFleePositions(Node<Connector3, StructurePiece, OrientedStructurePiece> node, Predicate<BlockPos> positions) {
-        OrientedStructurePiece oriented = node.oriented();
-
-        if (oriented != null) {
-            Vec3d spawn = oriented.spawn();
-
-            if (spawn != null) {
-                BlockPos pos = BlockPos.ofFloored(spawn);
-
-                if (positions.test(pos)) {
-                    return pos;
-                }
-            }
-        }
-
-        for (Passage passage : struct.passagesOf(node)) {
-            BlockPos pos = passage.pos();
-
-            if (positions.test(pos)) {
-                return pos;
-            }
-        }
-
-        return null;
     }
 }

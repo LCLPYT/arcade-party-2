@@ -3,7 +3,6 @@ package work.lclpnet.ap2.game.maze_scape.monster;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.ai.pathing.EntityNavigation;
 import net.minecraft.entity.ai.pathing.Path;
 import net.minecraft.entity.mob.EndermanEntity;
 import net.minecraft.entity.mob.MobEntity;
@@ -172,25 +171,18 @@ public class EndermanData implements MonsterData {
         scaredTimer = SCARED_TICKS;
 
         if (fleeTargetPos == null || visibilityChecker.isAnyoneLookingAt(mob, fleeTargetPos.toBottomCenterPos(), args.manager().participants())) {
-            BlockPos pos = escape.findFleePos(mob, player);
+            var optPath = escape.findEscapePath(mob);
 
             if (DEBUG_TARGET_FLEE_POS) {
                 args.manager().debugController().exclusive("target_flee_pos", controller -> {
-                    if (pos == null) return;
+                    if (optPath.isEmpty()) return;
 
+                    BlockPos pos = optPath.get().getTarget();
                     controller.displayMarker(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, Blocks.CYAN_CONCRETE.getDefaultState(), 0x03b2fe, 0.5);
                 });
             }
 
-            if (pos == null) {
-                angerFully(player);
-                return;
-            }
-
-            if (!fleeToo(mob, pos)) {
-                angerFully(player);
-                return;
-            }
+            optPath.ifPresentOrElse(path -> flee(mob, path), () -> angerFully(player));
         }
 
         if (!wasFleeing) {
@@ -252,7 +244,9 @@ public class EndermanData implements MonsterData {
     private void playSoundFar(@NotNull ServerPlayerEntity player, EndermanEntity mob, SoundEvent sound, float volume, float pitch) {
         World world = mob.getWorld();
 
-        if (player.squaredDistanceTo(mob) >= 256) {
+        double dist = 16 * volume;
+
+        if (player.squaredDistanceTo(mob) >= dist * dist) {
             world.playSound(player, mob.getBlockPos(), sound, mob.getSoundCategory(), volume, pitch);
             player.playSoundToPlayer(sound, mob.getSoundCategory(), volume, pitch);
         } else {
@@ -260,21 +254,12 @@ public class EndermanData implements MonsterData {
         }
     }
 
-    private boolean fleeToo(EndermanEntity mob, BlockPos pos) {
-        EntityNavigation nav = mob.getNavigation();
-        Path path = nav.findPathTo(pos, 0);
-
-        if (path == null) {
-            return false;
-        }
-
+    private void flee(EndermanEntity mob, Path path) {
         fleeTargetTimeout = 0;
-        fleeTargetPos = pos;
-        nav.startMovingAlong(path, 1);
+        fleeTargetPos = path.getTarget();
+        mob.getNavigation().startMovingAlong(path, 1);
 
         addAttributeModifier(mob, GENERIC_MOVEMENT_SPEED, FLEE_BONUS_ID, FLEE_SPEED_BONUS, ADD_VALUE);
-
-        return true;
     }
 
     private void stopFleeing(EndermanEntity mob) {
