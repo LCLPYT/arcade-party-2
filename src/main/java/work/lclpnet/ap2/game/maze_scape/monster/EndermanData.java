@@ -40,8 +40,9 @@ public class EndermanData implements MonsterData {
     private static final double
             FLEE_SPEED_BONUS = 0.05,
             ANGER_SPEED_BONUS = 0.09,
+            SCARE_ANGER_AMOUNT = 10.0,
             LOOK_AT_ANGER_AMOUNT = 25.0,
-            ANGER_TRIGGER_THRESHOLD = 450.0,
+            ANGER_TRIGGER_THRESHOLD = 350.0,
             ANGER_DECAY_PER_SECOND = 6.5,
             ANGER_TRIGGER_BONUS = ANGER_DECAY_PER_SECOND * 12.0;
     private static final boolean
@@ -185,12 +186,13 @@ public class EndermanData implements MonsterData {
             optPath.ifPresentOrElse(path -> flee(mob, path), () -> angerFully(player));
         }
 
-        if (!wasFleeing) {
+        if (wasFleeing) {
+            setAnger(anger + LOOK_AT_ANGER_AMOUNT, player);
+        } else {
+            setAnger(anger + SCARE_ANGER_AMOUNT, player);
             playSoundFar(player, mob, SoundEvents.ENTITY_ENDERMAN_HURT, 0.5f, 1.4f);
             freeze(mob);  // freeze is temporarily
         }
-
-        setAnger(anger + LOOK_AT_ANGER_AMOUNT, player);
     }
 
     private void setAnger(double amount, @Nullable ServerPlayerEntity player) {
