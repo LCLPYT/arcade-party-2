@@ -10,8 +10,8 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
+import net.minecraft.util.ActionResult;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.TypedActionResult;
 import org.slf4j.Logger;
 import work.lclpnet.activity.ComponentActivity;
 import work.lclpnet.activity.component.ComponentBundle;
@@ -46,7 +46,7 @@ import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.kibu.hook.player.PlayerAdvancementPacketCallback;
 import work.lclpnet.kibu.hook.player.PlayerConnectionHooks;
 import work.lclpnet.kibu.hook.player.PlayerInventoryHooks;
-import work.lclpnet.kibu.hook.player.PlayerRecipePacketCallback;
+import work.lclpnet.kibu.hook.player.PlayerRecipeNotificationCallback;
 import work.lclpnet.kibu.inv.type.RestrictedInventory;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.RunningTask;
@@ -143,7 +143,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
         hooks.registerHook(PlayerConnectionHooks.JOIN, this::onJoin);
         hooks.registerHook(PlayerInventoryHooks.MODIFY_INVENTORY, event -> !event.player().isCreativeLevelTwoOp());
         hooks.registerHook(PlayerAdvancementPacketCallback.HOOK, (player, packet) -> true);
-        hooks.registerHook(PlayerRecipePacketCallback.HOOK, (player, packet) -> true);
+        hooks.registerHook(PlayerRecipeNotificationCallback.HOOK, (player, recipeEntry, displayEntry) -> true);
 
         if (ApConstants.DEVELOPMENT) {
             giveDevelopmentItems(hooks);
@@ -458,7 +458,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
             if (!(player instanceof ServerPlayerEntity serverPlayer)
                 || server.getPermissionLevel(serverPlayer.getGameProfile()) < 2) {
 
-                return TypedActionResult.pass(ItemStack.EMPTY);
+                return ActionResult.PASS;
             }
 
             ItemStack stack = player.getStackInHand(hand);
@@ -467,12 +467,12 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
                 openGamePicker(serverPlayer);
             } else if (stack.isOf(Items.EMERALD_BLOCK)) {
                 setSkip(true);
-                player.sendMessage(Text.literal("Skipped the preparation phase"));
+                player.sendMessage(Text.literal("Skipped the preparation phase"), false);
             } else if (stack.isOf(Items.HEART_OF_THE_SEA)) {
                 openMapPicker(serverPlayer);
             }
 
-            return TypedActionResult.success(stack);
+            return ActionResult.SUCCESS;
         });
 
         gameChooser.listen(hooks, (game, player) -> {

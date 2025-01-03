@@ -7,8 +7,11 @@ import work.lclpnet.ap2.base.ArcadeParty;
 
 public class ApItemTags {
 
-    public static TagKey<Item> DYES = of("dyes");
-    public static TagKey<Item> BANNER_PATTERNS = of("banner_patterns");
+    public static TagKey<Item>
+            DYES = of("dyes"),
+            BANNER_PATTERNS = of("banner_patterns"),
+            FLOWERS = of("flowers"),
+            TRIM_TEMPLATES = of("trim_templates");
 
     private static TagKey<Item> of(String path) {
         return TagKey.of(RegistryKeys.ITEM, ArcadeParty.identifier(path));

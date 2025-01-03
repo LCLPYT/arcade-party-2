@@ -103,7 +103,7 @@ public class RecordChallenge implements Challenge {
     public void destroy() {
         ItemHelper.getJukeboxSong(correct, world.getRegistryManager()).ifPresent(song -> {
             SoundEvent sound = song.soundEvent().value();
-            StopSoundS2CPacket packet = new StopSoundS2CPacket(sound.getId(), SoundCategory.RECORDS);
+            StopSoundS2CPacket packet = new StopSoundS2CPacket(sound.id(), SoundCategory.RECORDS);
 
             for (ServerPlayerEntity player : PlayerLookup.world(world)) {
                 player.networkHandler.sendPacket(packet);

@@ -85,7 +85,7 @@ public class AttackGoal extends Goal {
         if (cooldown == 0 && mob.isInAttackRange(target) && mob.getVisibilityCache().canSee(target)) {
             cooldown = getTickCount(ATTACK_TIME_TICKS);
             mob.swingHand(Hand.MAIN_HAND);
-            mob.tryAttack(target);
+            mob.tryAttack(getServerWorld(mob), target);
         }
     }
 }

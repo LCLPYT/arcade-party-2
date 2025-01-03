@@ -158,7 +158,7 @@ public class SbSetup {
         breeze.setPersistent();
         breeze.setYaw(0);
 
-        EntityAttributeInstance instance = breeze.getAttributeInstance(EntityAttributes.GENERIC_SCALE);
+        EntityAttributeInstance instance = breeze.getAttributeInstance(EntityAttributes.SCALE);
 
         if (instance != null) {
             instance.setBaseValue(10);

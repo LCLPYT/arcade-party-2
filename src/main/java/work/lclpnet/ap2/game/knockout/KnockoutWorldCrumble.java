@@ -138,7 +138,7 @@ public class KnockoutWorldCrumble {
     }
 
     private Iterable<BlockPos> iterateBlocks(int targetDistance) {
-        return () -> new DistanceIterator(radius, centerX, centerZ, world.getBottomY(), world.getTopY(), distances, targetDistance);
+        return () -> new DistanceIterator(radius, centerX, centerZ, world.getBottomY(), world.getTopYInclusive(), distances, targetDistance);
     }
 
     public int getDelaySeconds() {

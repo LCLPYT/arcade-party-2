@@ -26,7 +26,7 @@ public class EnchantedBookItemClass implements ItemClass {
     public ItemStack getRandomStack(Random random) {
         ItemStack stack = new ItemStack(Items.ENCHANTED_BOOK);
 
-        var registry = registryManager.get(RegistryKeys.ENCHANTMENT);
+        var registry = registryManager.getOrThrow(RegistryKeys.ENCHANTMENT);
         var entry = ItemHelper.getRandomEntry(registry, random);
 
         if (entry == null) return stack;

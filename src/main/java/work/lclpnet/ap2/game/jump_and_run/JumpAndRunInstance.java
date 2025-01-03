@@ -47,6 +47,7 @@ import work.lclpnet.lobby.game.map.GameMap;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 import static net.minecraft.util.Formatting.BOLD;
@@ -244,7 +245,7 @@ public class JumpAndRunInstance extends DefaultGameInstance implements MapBootst
         Checkpoint checkpoint = checkpoints.getCheckpoint(player);
 
         BlockPos pos = checkpoint.pos();
-        player.teleport(getWorld(), pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, checkpoint.yaw(), 0f);
+        player.teleport(getWorld(), pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, Set.of(), checkpoint.yaw(), 0f, true);
 
         player.setFireTicks(0);
     }

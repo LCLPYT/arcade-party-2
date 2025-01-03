@@ -9,6 +9,7 @@ import net.minecraft.entity.player.ItemCooldownManager;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.registry.Registries;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.PlayerManager;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -17,7 +18,7 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
-import net.minecraft.util.TypedActionResult;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.base.Participants;
@@ -83,10 +84,10 @@ class TuningPhase {
 
         hooks.registerHook(PlayerInteractionHooks.USE_ITEM, (player, world, hand) -> {
             if (onUseItem(player)) {
-                return TypedActionResult.success(ItemStack.EMPTY, true);
+                return ActionResult.SUCCESS_SERVER;
             }
 
-            return TypedActionResult.pass(ItemStack.EMPTY);
+            return ActionResult.PASS;
         });
 
         hooks.registerHook(PlayerInteractionHooks.ATTACK_BLOCK, (player, world, hand, pos, direction) -> {
@@ -284,16 +285,17 @@ class TuningPhase {
                     .styled(style -> style.withItalic(false).withFormatting(YELLOW)));
 
             player.getInventory().setStack(4, stack);
-            player.getItemCooldownManager().set(stack.getItem(), REPLAY_COOLDOWN);
+            player.getItemCooldownManager().set(stack, REPLAY_COOLDOWN);
         }
     }
 
     private void takeReplayItems() {
         Participants participants = gameHandle.getParticipants();
+        Identifier group = Registries.ITEM.getId(Items.PLAYER_HEAD);
 
         for (ServerPlayerEntity player : participants) {
             player.getInventory().setStack(4, ItemStack.EMPTY);
-            player.getItemCooldownManager().remove(Items.PLAYER_HEAD);
+            player.getItemCooldownManager().remove(group);
         }
     }
 
@@ -374,11 +376,11 @@ class TuningPhase {
 
         ItemCooldownManager cooldownManager = player.getItemCooldownManager();
 
-        if (cooldownManager.isCoolingDown(Items.PLAYER_HEAD)) {
+        if (cooldownManager.isCoolingDown(stack)) {
             return false;
         }
 
-        cooldownManager.set(Items.PLAYER_HEAD, REPLAY_COOLDOWN);
+        cooldownManager.set(stack, REPLAY_COOLDOWN);
 
         UUID uuid = serverPlayer.getUuid();
 

@@ -96,7 +96,7 @@ public class MSTargetManager {
         }
 
         if (mob instanceof EndermanEntity enderman && monster instanceof EndermanData data) {
-            EntityAttributeInstance instance = enderman.getAttributeInstance(EntityAttributes.GENERIC_MOVEMENT_SPEED);
+            EntityAttributeInstance instance = enderman.getAttributeInstance(EntityAttributes.MOVEMENT_SPEED);
 
             if (instance != null) {
                 instance.removeModifier(Identifier.ofVanilla("attacking"));

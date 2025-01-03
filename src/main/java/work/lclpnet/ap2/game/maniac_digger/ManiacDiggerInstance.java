@@ -94,8 +94,8 @@ public class ManiacDiggerInstance extends DefaultGameInstance implements MapBoot
             if (pipe == null) continue;
 
             Vec3d spawn = pipe.spawn();
-            player.teleport(world, spawn.getX(), spawn.getY(), spawn.getZ(), 0f, 0f);
-            PlayerReset.setAttribute(player, EntityAttributes.GENERIC_SCALE, 0.5);
+            player.teleport(world, spawn.getX(), spawn.getY(), spawn.getZ(), Set.of(), 0f, 0f, true);
+            PlayerReset.setAttribute(player, EntityAttributes.SCALE, 0.5);
 
             giveItems(player);
         }

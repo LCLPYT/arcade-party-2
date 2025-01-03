@@ -10,6 +10,7 @@ import net.minecraft.util.math.Direction;
 import work.lclpnet.ap2.impl.util.BlockBox;
 
 import java.util.Objects;
+import java.util.Set;
 
 public final class MimicryRoom {
 
@@ -30,7 +31,7 @@ public final class MimicryRoom {
     public void teleport(ServerPlayerEntity player, ServerWorld world) {
         double x = spawn.getX() + 0.5, y = spawn.getY(), z = spawn.getZ() + 0.5;
 
-        player.teleport(world, x, y, z, yaw, 0.0F);
+        player.teleport(world, x, y, z, Set.of(), yaw, 0.0F, true);
     }
 
     public int buttonIndex(BlockPos pos) {

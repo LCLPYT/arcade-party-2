@@ -16,6 +16,7 @@ import work.lclpnet.ap2.impl.util.TextUtil;
 import work.lclpnet.lobby.util.RayCaster;
 
 import java.util.Map;
+import java.util.Set;
 
 import static net.minecraft.util.Formatting.GOLD;
 
@@ -38,7 +39,7 @@ public class AimMasterDomain {
     }
 
     public void teleport(ServerPlayerEntity player) {
-        player.teleport(world, spawn.getX() + 0.5, spawn.getY(), spawn.getZ() + 0.5, yaw, 0);
+        player.teleport(world, spawn.getX() + 0.5, spawn.getY(), spawn.getZ() + 0.5, Set.of(), yaw, 0, true);
     }
 
     public void setBlocks(AimMasterSequence.Item item, ServerPlayerEntity player) {

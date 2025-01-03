@@ -14,12 +14,12 @@ public abstract class AbstractHeightIterator implements Iterator<BlockPos> {
     protected int rx = 0, rz = 0;
     private int y;
 
-    public AbstractHeightIterator(int radius, int centerX, int centerZ, int minY, int maxY) {
+    public AbstractHeightIterator(int radius, int centerX, int centerZ, int minY, int maxYInclusive) {
         this.radius = radius;
         this.centerX = centerX;
         this.centerZ = centerZ;
         this.minY = minY;
-        this.maxY = maxY;
+        this.maxY = maxYInclusive;
         this.y = minY;
     }
 

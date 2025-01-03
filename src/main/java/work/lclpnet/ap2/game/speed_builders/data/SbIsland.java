@@ -37,6 +37,7 @@ import work.lclpnet.kibu.util.math.Matrix3i;
 
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 
 import static net.minecraft.block.enums.StairShape.*;
 import static net.minecraft.state.property.Properties.HORIZONTAL_FACING;
@@ -90,7 +91,7 @@ public class SbIsland {
         double x = spawnWorldPos.getX() + 0.5, y = spawnWorldPos.getY(), z = spawnWorldPos.getZ() + 0.5;
         ServerWorld world = player.getServerWorld();
 
-        player.teleport(world, x, y, z, data.yaw(), 0);
+        player.teleport(world, x, y, z, Set.of(), data.yaw(), 0, true);
     }
 
     public boolean isWithinBuildingArea(BlockPos pos) {

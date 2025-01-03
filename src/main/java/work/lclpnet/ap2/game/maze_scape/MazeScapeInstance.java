@@ -44,6 +44,7 @@ import work.lclpnet.lobby.game.map.GameMap;
 import work.lclpnet.lobby.game.map.MapUtils;
 
 import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 public class MazeScapeInstance extends EliminationGameInstance implements MapBootstrap {
@@ -169,7 +170,7 @@ public class MazeScapeInstance extends EliminationGameInstance implements MapBoo
         ServerWorld world = getWorld();
 
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
-            player.teleport(world, spawn.getX(), spawn.getY(), spawn.getZ(), yaw, 0);
+            player.teleport(world, spawn.getX(), spawn.getY(), spawn.getZ(), Set.of(), yaw, 0, true);
         }
     }
 

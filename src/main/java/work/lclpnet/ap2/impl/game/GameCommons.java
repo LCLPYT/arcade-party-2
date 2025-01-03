@@ -33,6 +33,7 @@ import work.lclpnet.lobby.game.util.BossBarTimer;
 import java.util.List;
 import java.util.Objects;
 import java.util.Random;
+import java.util.Set;
 
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
@@ -208,7 +209,7 @@ public class GameCommons {
 
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
             PositionRotation spawn = spawns.get(random.nextInt(spawns.size()));
-            player.teleport(world, spawn.getX(), spawn.getY(), spawn.getZ(), spawn.getYaw(), spawn.getPitch());
+            player.teleport(world, spawn.getX(), spawn.getY(), spawn.getZ(), Set.of(), spawn.getYaw(), spawn.getPitch(), true);
         }
     }
 
@@ -219,7 +220,7 @@ public class GameCommons {
         if (spawns.isEmpty()) return null;
 
         PositionRotation spawn = spawns.get(random.nextInt(spawns.size()));
-        player.teleport(world, spawn.getX(), spawn.getY(), spawn.getZ(), spawn.getYaw(), spawn.getPitch());
+        player.teleport(world, spawn.getX(), spawn.getY(), spawn.getZ(), Set.of(), spawn.getYaw(), spawn.getPitch(), true);
 
         return spawn;
     }

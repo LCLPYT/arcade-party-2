@@ -38,8 +38,8 @@ public record Connector3(BlockPos pos, Orientation orientation, String name, Str
      * @return The amount of counter-clockwise rotation as a multiple of 90 degrees. (1=90, 2=180 ...)
      */
     public static int rotateToFace(Direction face, Direction other) {
-        int rotation = face.getHorizontal();
-        int otherRotation = other.getHorizontal();
+        int rotation = face.getHorizontalQuarterTurns();
+        int otherRotation = other.getHorizontalQuarterTurns();
 
         return Math.floorMod(-1 * (rotation - otherRotation + 2), 4);
     }

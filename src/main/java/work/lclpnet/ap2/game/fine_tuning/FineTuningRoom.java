@@ -10,6 +10,7 @@ import work.lclpnet.ap2.game.fine_tuning.melody.Melody;
 import work.lclpnet.ap2.game.fine_tuning.melody.Note;
 
 import java.util.Arrays;
+import java.util.Set;
 
 class FineTuningRoom {
 
@@ -52,7 +53,7 @@ class FineTuningRoom {
     public void teleport(ServerPlayerEntity player, ServerWorld world) {
         double x = spawn.getX() + 0.5, y = spawn.getY(), z = spawn.getZ() + 0.5;
 
-        player.teleport(world, x, y, z, yaw, 0.0F);
+        player.teleport(world, x, y, z, Set.of(), yaw, 0.0F, true);
     }
 
     public void useNoteBlock(ServerPlayerEntity player, BlockPos pos) {

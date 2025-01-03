@@ -39,10 +39,12 @@ import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.ProjectileHooks;
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks;
 import work.lclpnet.kibu.hook.player.PlayerInventoryHooks;
+import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.kibu.translate.text.TranslatedText;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 
 import java.util.Random;
+import java.util.Set;
 
 import static net.minecraft.util.Formatting.*;
 
@@ -101,7 +103,7 @@ public class OneInTheChamberInstance extends DefaultGameInstance {
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
             BlockPos pos = respawn.getRandomSpawn();
 
-            player.teleport(world, pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, player.getYaw(), player.getPitch());
+            player.teleport(world, pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, Set.of(), player.getYaw(), player.getPitch(), true);
 
             movementBlocker.disableMovement(player);
         }
@@ -114,13 +116,19 @@ public class OneInTheChamberInstance extends DefaultGameInstance {
 
         hooks.registerHook(ServerLivingEntityHooks.ALLOW_DAMAGE, this::onDamage);
 
+        TaskScheduler scheduler = gameHandle.getGameScheduler();
+
         respawnCooldown.setOnCooldownOver(player -> {
             BlockPos randomSpawn = respawn.getRandomSpawn();
 
-            player.teleport(world, randomSpawn.getX() + 0.5, randomSpawn.getY(), randomSpawn.getZ() + 0.5, player.getYaw(), player.getPitch());
+            player.teleport(world, randomSpawn.getX() + 0.5, randomSpawn.getY(), randomSpawn.getZ() + 0.5, Set.of(), player.getYaw(), player.getPitch(), true);
             giveCrossbowToPlayer(player);
 
-            player.changeGameMode(gameHandle.getPlayerUtil().getDefaultGameMode());
+            player.getAbilities().setFlySpeed(0);
+            player.sendAbilitiesUpdate();
+
+            // delay game mode change one tick to prevent other players from seeing the teleport
+            scheduler.immediate(() -> player.changeGameMode(gameHandle.getPlayerUtil().getDefaultGameMode()));
         });
     }
 

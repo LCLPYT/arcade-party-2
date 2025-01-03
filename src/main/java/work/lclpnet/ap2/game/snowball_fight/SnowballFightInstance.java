@@ -24,7 +24,7 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
-import net.minecraft.util.TypedActionResult;
+import net.minecraft.util.ActionResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.Nullable;
@@ -42,6 +42,7 @@ import work.lclpnet.lobby.game.map.GameMap;
 
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 
 public class SnowballFightInstance extends EliminationGameInstance {
 
@@ -88,8 +89,8 @@ public class SnowballFightInstance extends EliminationGameInstance {
         });
 
         hooks.registerHook(ServerLivingEntityHooks.ALLOW_DAMAGE, (entity, source, amount) -> {
-            if (source.getSource() instanceof SnowballEntity && Math.abs(amount) < 1e-4f) {
-                entity.damage(source, SNOWBALL_DAMAGE);
+            if (source.getSource() instanceof SnowballEntity && Math.abs(amount) < 1e-4f && entity.getWorld() instanceof ServerWorld world) {
+                entity.damage(world, source, SNOWBALL_DAMAGE);
                 return false;
             }
 
@@ -103,7 +104,7 @@ public class SnowballFightInstance extends EliminationGameInstance {
                 onDepleteStack(player);
             }
 
-            return TypedActionResult.pass(ItemStack.EMPTY);
+            return ActionResult.PASS;
         });
 
         hooks.registerHook(EntityHealthCallback.HOOK, (entity, health) -> {
@@ -119,7 +120,7 @@ public class SnowballFightInstance extends EliminationGameInstance {
         });
 
         for (ServerPlayerEntity player : participants) {
-            EntityAttributeInstance attribute = player.getAttributeInstance(EntityAttributes.PLAYER_BLOCK_BREAK_SPEED);
+            EntityAttributeInstance attribute = player.getAttributeInstance(EntityAttributes.BLOCK_BREAK_SPEED);
 
             if (attribute != null) {
                 attribute.setBaseValue(100);
@@ -222,7 +223,7 @@ public class SnowballFightInstance extends EliminationGameInstance {
 
             float yaw = random.nextFloat(360) - 180;
 
-            player.teleport(world, spawn.getX(), spawn.getY(), spawn.getZ(), yaw, 0);
+            player.teleport(world, spawn.getX(), spawn.getY(), spawn.getZ(), Set.of(), yaw, 0, true);
         }
     }
 

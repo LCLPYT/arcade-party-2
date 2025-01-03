@@ -36,7 +36,7 @@ public class JumpAndRunSetup {
         this.map = map;
         this.world = world;
         this.logger = gameHandle.getLogger();
-        this.generator = new JumpAndRunGenerator(targetMinutes, new Random(), logger, world.getBottomY(), world.getTopY() - 1);
+        this.generator = new JumpAndRunGenerator(targetMinutes, new Random(), logger, world.getBottomY(), world.getTopYInclusive());
         this.placer = new JumpAndRunPlacer(world);
     }
 

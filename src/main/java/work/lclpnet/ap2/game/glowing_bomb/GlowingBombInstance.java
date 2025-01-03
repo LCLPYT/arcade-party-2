@@ -6,12 +6,14 @@ import net.minecraft.component.DataComponentTypes;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.particle.ParticleTypes;
+import net.minecraft.registry.Registries;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
+import net.minecraft.util.ActionResult;
 import net.minecraft.util.Formatting;
-import net.minecraft.util.TypedActionResult;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Vec3d;
 import org.joml.Vector3d;
 import work.lclpnet.ap2.api.base.Participants;
@@ -100,18 +102,20 @@ public class GlowingBombInstance extends EliminationGameInstance implements MapB
 
         hooks.registerHook(PlayerInteractionHooks.USE_ITEM, (player, world, hand) -> {
             if (!(player instanceof ServerPlayerEntity serverPlayer) || !participants.isParticipating(serverPlayer)) {
-                return TypedActionResult.pass(ItemStack.EMPTY);
+                return ActionResult.PASS;
             }
 
-            if (serverPlayer.getStackInHand(hand).isOf(Items.GLOWSTONE)) {
-                if (manager.hasBomb(serverPlayer) && !player.getItemCooldownManager().isCoolingDown(Items.GLOWSTONE)) {
+            ItemStack stack = serverPlayer.getStackInHand(hand);
+
+            if (stack.isOf(Items.GLOWSTONE)) {
+                if (manager.hasBomb(serverPlayer) && !player.getItemCooldownManager().isCoolingDown(stack)) {
                     passBomb(serverPlayer);
                 }
 
-                return TypedActionResult.fail(ItemStack.EMPTY);
+                return ActionResult.FAIL;
             }
 
-            return TypedActionResult.pass(ItemStack.EMPTY);
+            return ActionResult.PASS;
         });
 
         gameHandle.getGameScheduler().interval(this::tickCredits, 1);
@@ -188,7 +192,9 @@ public class GlowingBombInstance extends EliminationGameInstance implements MapB
         int creditCount = credits.getOrDefault(player.getUuid(), 0);
         int cooldown = MINIMUM_BOMB_PASS_TICKS + Math.max(0, BOMB_PASS_COST - creditCount);
 
-        player.getItemCooldownManager().set(Items.GLOWSTONE, cooldown);
+        Identifier cooldownGroup = Registries.ITEM.getId(Items.GLOWSTONE);
+
+        player.getItemCooldownManager().set(cooldownGroup, cooldown);
     }
 
     private void onPassedBomb(ServerPlayerEntity player) {

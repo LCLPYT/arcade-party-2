@@ -1,16 +1,14 @@
 package work.lclpnet.ap2.game.cozy_campfire.setup;
 
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
-import net.minecraft.block.entity.AbstractFurnaceBlockEntity;
 import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.item.BlockItem;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.loot.context.LootContextParameterSet;
+import net.minecraft.item.*;
 import net.minecraft.loot.context.LootContextParameters;
+import net.minecraft.loot.context.LootWorldContext;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.tag.ItemTags;
 import net.minecraft.registry.tag.TagKey;
@@ -19,13 +17,16 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
+import work.lclpnet.ap2.core.type.ApFuelRegistry;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
 
 public class CCFuel {
 
     private final Set<Block> breakableBlocks = new HashSet<>();
-    private final Map<Item, Integer> fuel = new HashMap<>();
+    private final Object2IntMap<Item> fuel = new Object2IntOpenHashMap<>();
     private final ServerWorld world;
     private final CCBaseManager baseManager;
 
@@ -36,7 +37,16 @@ public class CCFuel {
 
     public void registerFuel(int fuelPerSecond) {
         // vanilla materials
-        fuel.putAll(AbstractFurnaceBlockEntity.createFuelTimeMap());
+        FuelRegistry fuelRegistry = world.getFuelRegistry();
+        ApFuelRegistry fuelAccess = (ApFuelRegistry) fuelRegistry;
+
+        for (Item item : fuelRegistry.getFuelItems()) {
+            int fuelTicks = fuelAccess.ap2$getFuelTicks(item);
+
+            if (fuelTicks > 0) {
+                fuel.put(item, fuelTicks);
+            }
+        }
 
         // custom materials
         addFuel(ItemTags.LEAVES, 50);
@@ -100,7 +110,7 @@ public class CCFuel {
         ItemStack stack = player.getMainHandStack();
         BlockEntity blockEntity = world.getBlockEntity(pos);
 
-        LootContextParameterSet.Builder builder = new LootContextParameterSet.Builder(world)
+        LootWorldContext.Builder builder = new LootWorldContext.Builder(world)
                 .add(LootContextParameters.ORIGIN, Vec3d.ofCenter(pos))
                 .add(LootContextParameters.TOOL, stack)
                 .addOptional(LootContextParameters.THIS_ENTITY, player)

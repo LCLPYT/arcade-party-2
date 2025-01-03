@@ -179,7 +179,7 @@ public class PigRaceInstance extends DefaultGameInstance {
         float yaw = checkpoint.yaw();
 
         pendingPigs.put(player.getUuid(), new PendingPig(x, y, z, yaw));
-        player.teleport(getWorld(), x, y, z, yaw, 0f);
+        player.teleport(getWorld(), x, y, z, Set.of(), yaw, 0f, true);
 
         player.setFireTicks(0);
     }
@@ -251,7 +251,7 @@ public class PigRaceInstance extends DefaultGameInstance {
             double x = pos.getX(), y = pos.getY(), z = pos.getZ();
 
             pendingPigs.put(player.getUuid(), new PendingPig(x, y, z, yaw));
-            player.teleport(world, x, y, z, yaw, 0f);
+            player.teleport(world, x, y, z, Set.of(), yaw, 0f, true);
 
             giveStick(player);
         }

@@ -21,7 +21,6 @@ import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.state.property.Properties;
 import net.minecraft.util.ActionResult;
-import net.minecraft.util.ItemActionResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.world.World;
@@ -151,7 +150,7 @@ public class SbConfiguration {
                     world.setBlockState(pos, Blocks.WATER_CAULDRON.getDefaultState().with(LeveledCauldronBlock.LEVEL, LeveledCauldronBlock.MAX_LEVEL));
                     world.playSound(null, pos, SoundEvents.ITEM_BUCKET_EMPTY, SoundCategory.BLOCKS, 1.0f, 1.0f);
                     manager.onEdit(serverPlayer);
-                    return ItemActionResult.FAIL;
+                    return ActionResult.FAIL;
                 } else if (stack.isOf(Items.ITEM_FRAME) || stack.isOf(Items.GLOW_ITEM_FRAME)) {
                     manager.onEdit(serverPlayer);
                     return null;
@@ -243,7 +242,7 @@ public class SbConfiguration {
         for (Direction dir : NeighborUpdater.UPDATE_ORDER) {
             mutable.set(pos, dir);
             BlockState neighbourState = world.getBlockState(mutable);
-            BlockState updated = neighbourState.getStateForNeighborUpdate(dir.getOpposite(), air, world, mutable, pos);
+            BlockState updated = neighbourState.getStateForNeighborUpdate(world, world, pos, dir.getOpposite(), mutable, air, world.getRandom());
 
             if (updated.isAir()) {
                 giveSourceItem(player, neighbourState);

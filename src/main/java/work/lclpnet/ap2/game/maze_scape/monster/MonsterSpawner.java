@@ -8,7 +8,6 @@ import net.minecraft.entity.ai.goal.*;
 import net.minecraft.entity.ai.pathing.EntityNavigation;
 import net.minecraft.entity.ai.pathing.MobNavigation;
 import net.minecraft.entity.ai.pathing.PathNodeMaker;
-import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.mob.EndermanEntity;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.mob.SpiderEntity;
@@ -39,6 +38,8 @@ import java.util.function.BiConsumer;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static net.minecraft.entity.attribute.EntityAttributes.ATTACK_DAMAGE;
+import static net.minecraft.entity.attribute.EntityAttributes.STEP_HEIGHT;
 
 public class MonsterSpawner {
 
@@ -84,7 +85,7 @@ public class MonsterSpawner {
 
         configureMobCommon(pos, warden);
 
-        EntityUtil.setAttribute(warden, EntityAttributes.GENERIC_ATTACK_DAMAGE, 10);
+        EntityUtil.setAttribute(warden, ATTACK_DAMAGE, 10);
 
         var brain = warden.getBrain();
         brain.setTaskList(Activity.EMERGE, 5, ImmutableList.of(), MemoryModuleType.IS_EMERGING);
@@ -105,7 +106,7 @@ public class MonsterSpawner {
 
         configureMobCommon(pos, spider);
 
-        EntityUtil.setAttribute(spider, EntityAttributes.GENERIC_ATTACK_DAMAGE, 5);
+        EntityUtil.setAttribute(spider, ATTACK_DAMAGE, 5);
 
         ((ApSpider) spider).ap2$setCanClimb(false);
         ((ApLivingEntity) spider).ap2$setServerSidedScale(0.64f);  // change spider width to ~0.9
@@ -132,7 +133,7 @@ public class MonsterSpawner {
 
         configureMobCommon(pos, enderman);
 
-        EntityUtil.setAttribute(enderman, EntityAttributes.GENERIC_ATTACK_DAMAGE, 20);
+        EntityUtil.setAttribute(enderman, ATTACK_DAMAGE, 20);
         enderman.setSilent(true);
 
         UUID uuid = enderman.getUuid();
@@ -169,7 +170,7 @@ public class MonsterSpawner {
             entity.setGlowing(true);
         }
 
-        EntityUtil.setAttribute(entity, EntityAttributes.GENERIC_STEP_HEIGHT, 2);
+        EntityUtil.setAttribute(entity, STEP_HEIGHT, 2);
 
         EntityNavigation navigation = entity.getNavigation();
         navigation.setRangeMultiplier(8f);
@@ -177,7 +178,6 @@ public class MonsterSpawner {
         if (navigation instanceof MobNavigation nav) {
             nav.setCanPathThroughDoors(true);
             nav.setCanWalkOverFences(true);
-            nav.setCanEnterOpenDoors(true);
         }
 
         if (navigation instanceof ApMobNavigation nav) {

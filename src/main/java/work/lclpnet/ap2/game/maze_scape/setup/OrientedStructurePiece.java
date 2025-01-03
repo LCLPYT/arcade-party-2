@@ -57,7 +57,7 @@ public class OrientedStructurePiece implements OrientedPiece<Connector3, Structu
 
             // transform facing vector
             Vec3i vec = mat.transform(connector.orientation().getFacing().getVector());
-            Direction dir = Direction.fromVector(vec.getX(), vec.getY(), vec.getZ());
+            Direction dir = Direction.fromVector(vec.getX(), vec.getY(), vec.getZ(), null);
 
             if (dir == null) {
                 throw new IllegalArgumentException("Invalid transformation: Direction is not canonical");

@@ -35,6 +35,7 @@ import work.lclpnet.lobby.game.map.GameMap;
 
 import java.util.Arrays;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Consumer;
 
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
@@ -237,7 +238,7 @@ class StagePhase {
         ServerPlayerEntity player = server.getPlayerManager().getPlayer(ref.uuid());
 
         if (player != null) {
-            player.teleport(world, presenterPos.getX() + 0.5, presenterPos.getY(), presenterPos.getZ() + 0.5, presenterYaw, 0);
+            player.teleport(world, presenterPos.getX() + 0.5, presenterPos.getY(), presenterPos.getZ() + 0.5, Set.of(), presenterYaw, 0, true);
             movementBlocker.disableMovement(player);
         }
 

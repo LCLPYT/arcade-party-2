@@ -20,7 +20,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import static net.minecraft.entity.attribute.EntityAttributes.GENERIC_MOVEMENT_SPEED;
+import static net.minecraft.entity.attribute.EntityAttributes.MOVEMENT_SPEED;
 
 class CommonData implements MonsterData {
 
@@ -140,7 +140,7 @@ class CommonData implements MonsterData {
 
         if (mob == null) return;
 
-        EntityUtil.setAttribute(mob, GENERIC_MOVEMENT_SPEED, baseSpeed);
+        EntityUtil.setAttribute(mob, MOVEMENT_SPEED, baseSpeed);
     }
 
     private void accelerate(MobEntity mob) {
@@ -148,10 +148,10 @@ class CommonData implements MonsterData {
 
         if (target == null || mob.squaredDistanceTo(target) > ACCELERATION_DISTANCE_SQ) return;
 
-        double currentSpeed = mob.getAttributeBaseValue(GENERIC_MOVEMENT_SPEED);
+        double currentSpeed = mob.getAttributeBaseValue(MOVEMENT_SPEED);
         double newSpeed = Math.min(currentSpeed + ACCELERATION_PER_TICK, maxSpeed);
 
-        EntityUtil.setAttribute(mob, GENERIC_MOVEMENT_SPEED, newSpeed);
+        EntityUtil.setAttribute(mob, MOVEMENT_SPEED, newSpeed);
     }
 
     private void unstuck(MobEntity mob) {
@@ -239,7 +239,7 @@ class CommonData implements MonsterData {
     }
 
     private void teleport(Entity entity, Vec3d pos) {
-        entity.teleport(manager.world(), pos.getX(), pos.getY(), pos.getZ(), Set.of(), entity.getYaw(), entity.getPitch());
+        entity.teleport(manager.world(), pos.getX(), pos.getY(), pos.getZ(), Set.of(), entity.getYaw(), entity.getPitch(), true);
     }
 
     private boolean isInSameRoom(Vec3d first, Vec3d second) {

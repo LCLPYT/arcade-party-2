@@ -5,7 +5,7 @@ import net.minecraft.block.BlockState;
 import net.minecraft.entity.EntityType;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.trim.ArmorTrimPattern;
+import net.minecraft.item.equipment.trim.ArmorTrimPattern;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.sound.SoundEvent;
@@ -17,12 +17,11 @@ import net.minecraft.util.Util;
 public class TextUtil {
 
     public static MutableText getVanillaName(Item item) {
-        return Text.translatable(item.getTranslationKey());
+        return item.getName().copy();
     }
 
     public static MutableText getVanillaName(ItemStack stack) {
-        Item item = stack.getItem();
-        return Text.translatable(item.getTranslationKey(stack));
+        return stack.getName().copy();
     }
 
     public static MutableText getVanillaName(Block block) {
@@ -38,7 +37,7 @@ public class TextUtil {
     }
 
     public static MutableText getVanillaName(SoundEvent soundEvent) {
-        return Text.translatable("subtitles." + soundEvent.getId().getPath());
+        return Text.translatable("subtitles." + soundEvent.id().getPath());
     }
 
     public static MutableText getVanillaName(RegistryEntry<ArmorTrimPattern> pattern) {

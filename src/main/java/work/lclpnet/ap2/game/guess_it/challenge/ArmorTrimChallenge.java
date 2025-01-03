@@ -4,12 +4,12 @@ import net.minecraft.component.DataComponentTypes;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.mob.GiantEntity;
-import net.minecraft.item.ArmorMaterial;
-import net.minecraft.item.ArmorMaterials;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.trim.ArmorTrim;
-import net.minecraft.item.trim.ArmorTrimMaterial;
-import net.minecraft.item.trim.ArmorTrimPattern;
+import net.minecraft.item.equipment.ArmorMaterial;
+import net.minecraft.item.equipment.ArmorMaterials;
+import net.minecraft.item.equipment.trim.ArmorTrim;
+import net.minecraft.item.equipment.trim.ArmorTrimMaterial;
+import net.minecraft.item.equipment.trim.ArmorTrimPattern;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.server.world.ServerWorld;
@@ -40,7 +40,7 @@ public class ArmorTrimChallenge implements Challenge {
     private final WorldModifier modifier;
     private RegistryEntry<ArmorTrimPattern> correct = null;
     private RegistryEntry<ArmorTrimMaterial> material = null;
-    private RegistryEntry<ArmorMaterial> armorMaterial = null;
+    private ArmorMaterial armorMaterial = null;
     private int correctOption = -1;
 
     public ArmorTrimChallenge(MiniGameHandle gameHandle, ServerWorld world, Random random, Stage stage, WorldModifier modifier) {
@@ -135,6 +135,6 @@ public class ArmorTrimChallenge implements Challenge {
     }
 
     private IndexedIterable<RegistryEntry<ArmorTrimPattern>> getTrimPatterns() {
-        return world.getRegistryManager().get(RegistryKeys.TRIM_PATTERN).getIndexedEntries();
+        return world.getRegistryManager().getOrThrow(RegistryKeys.TRIM_PATTERN).getIndexedEntries();
     }
 }

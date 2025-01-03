@@ -26,7 +26,7 @@ import java.util.UUID;
 
 import static java.lang.Math.max;
 import static net.minecraft.entity.attribute.EntityAttributeModifier.Operation.ADD_VALUE;
-import static net.minecraft.entity.attribute.EntityAttributes.GENERIC_MOVEMENT_SPEED;
+import static net.minecraft.entity.attribute.EntityAttributes.MOVEMENT_SPEED;
 import static work.lclpnet.ap2.impl.util.EntityUtil.addAttributeModifier;
 import static work.lclpnet.ap2.impl.util.EntityUtil.removeAttributeModifier;
 
@@ -233,9 +233,9 @@ public class EndermanData implements MonsterData {
         mob.getDataTracker().set(EndermanEntityAccessor.PROVOKED(), angry);
 
         if (angry) {
-            addAttributeModifier(mob, GENERIC_MOVEMENT_SPEED, ANGER_BONUS_ID, ANGER_SPEED_BONUS, ADD_VALUE);
+            addAttributeModifier(mob, MOVEMENT_SPEED, ANGER_BONUS_ID, ANGER_SPEED_BONUS, ADD_VALUE);
         } else {
-            removeAttributeModifier(mob, GENERIC_MOVEMENT_SPEED, ANGER_BONUS_ID);
+            removeAttributeModifier(mob, MOVEMENT_SPEED, ANGER_BONUS_ID);
         }
 
         if (angry && player != null) {
@@ -261,7 +261,7 @@ public class EndermanData implements MonsterData {
         fleeTargetPos = path.getTarget();
         mob.getNavigation().startMovingAlong(path, 1);
 
-        addAttributeModifier(mob, GENERIC_MOVEMENT_SPEED, FLEE_BONUS_ID, FLEE_SPEED_BONUS, ADD_VALUE);
+        addAttributeModifier(mob, MOVEMENT_SPEED, FLEE_BONUS_ID, FLEE_SPEED_BONUS, ADD_VALUE);
     }
 
     private void stopFleeing(EndermanEntity mob) {
@@ -273,7 +273,7 @@ public class EndermanData implements MonsterData {
             args.manager().debugController().exclusive("target_flee_pos", debugger -> {});
         }
 
-        removeAttributeModifier(mob, GENERIC_MOVEMENT_SPEED, FLEE_BONUS_ID);
+        removeAttributeModifier(mob, MOVEMENT_SPEED, FLEE_BONUS_ID);
     }
 
     private void angerFully(ServerPlayerEntity player) {
@@ -336,11 +336,11 @@ public class EndermanData implements MonsterData {
     private void freeze(MobEntity mob) {
         frozenTimer = SCARE_FROZEN_TICKS;
 
-        addAttributeModifier(mob, GENERIC_MOVEMENT_SPEED, SCARE_FROZEN_ID, Double.NEGATIVE_INFINITY, ADD_VALUE);
+        addAttributeModifier(mob, MOVEMENT_SPEED, SCARE_FROZEN_ID, Double.NEGATIVE_INFINITY, ADD_VALUE);
     }
 
     private void unfreeze(MobEntity mob) {
         frozenTimer = 0;
-        removeAttributeModifier(mob, GENERIC_MOVEMENT_SPEED, SCARE_FROZEN_ID);
+        removeAttributeModifier(mob, MOVEMENT_SPEED, SCARE_FROZEN_ID);
     }
 }

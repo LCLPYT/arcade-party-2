@@ -1,14 +1,13 @@
 package work.lclpnet.ap2.game.aim_master;
 
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
+import net.minecraft.util.ActionResult;
 import net.minecraft.util.Formatting;
-import net.minecraft.util.TypedActionResult;
 import net.minecraft.util.math.BlockPos;
 import org.jetbrains.annotations.NotNull;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
@@ -122,7 +121,7 @@ public class AimMasterInstance extends DefaultGameInstance implements MapBootstr
         hooks.registerHook(PlayerSwingHandHook.HOOK, (player, hand) -> invokeRayCaster(player));
     }
 
-    private @NotNull TypedActionResult<ItemStack> invokeRayCaster(PlayerEntity player) {
+    private @NotNull ActionResult invokeRayCaster(PlayerEntity player) {
         AimMasterDomain domain = manager.getDomains().get(player.getUuid());
         ServerPlayerEntity serverPlayer = (ServerPlayerEntity) player;
 
@@ -141,12 +140,12 @@ public class AimMasterInstance extends DefaultGameInstance implements MapBootstr
             if (newScore >= scoreGoal) win(serverPlayer);
             else manager.advancePlayer(serverPlayer);
 
-            return TypedActionResult.fail(ItemStack.EMPTY);
+            return ActionResult.FAIL;
         }
 
         player.playSoundToPlayer(SoundEvents.BLOCK_NOTE_BLOCK_BASS.value(), SoundCategory.PLAYERS, 0.2f, 0.2f);
 
-        return TypedActionResult.pass(ItemStack.EMPTY);
+        return ActionResult.PASS;
     }
 
     protected void win(ServerPlayerEntity winner) {

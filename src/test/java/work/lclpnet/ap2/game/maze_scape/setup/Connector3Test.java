@@ -12,17 +12,17 @@ class Connector3Test {
     @Test
     void rotateToFace() {
         for (int i = 0; i < 4; i++) {
-            Direction face = Direction.fromHorizontal(i);
+            Direction face = Direction.fromHorizontalQuarterTurns(i);
 
             for (int j = 0; j < 4; j++) {
-                Direction other = Direction.fromHorizontal(j);
+                Direction other = Direction.fromHorizontalQuarterTurns(j);
 
                 int rotation = Connector3.rotateToFace(face, other);
 
                 var mat = Matrix3i.makeRotationY(rotation);
                 var vec = mat.transform(other.getVector());
 
-                Direction dir = Direction.fromVector(vec.getX(), vec.getY(), vec.getZ());
+                Direction dir = Direction.fromVector(vec.getX(), vec.getY(), vec.getZ(), null);
 
                 assertNotNull(dir);
                 assertEquals(face, dir.getOpposite());

@@ -38,9 +38,8 @@ public class PbRandomizer {
         group(ItemTags.BEDS);
         group(ItemTags.CANDLES);
         group(ItemTags.DECORATED_POT_SHERDS);
-        group(ItemTags.TRIM_TEMPLATES);
-        group(ItemTags.SMALL_FLOWERS);
-        group(ItemTags.TALL_FLOWERS);
+        group(ApItemTags.TRIM_TEMPLATES);
+        group(ApItemTags.FLOWERS);
         group(ApItemTags.DYES);
         group(ApItemTags.BANNER_PATTERNS);
 

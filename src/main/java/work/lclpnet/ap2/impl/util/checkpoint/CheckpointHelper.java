@@ -9,7 +9,6 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Formatting;
-import net.minecraft.util.TypedActionResult;
 import work.lclpnet.ap2.api.util.action.Action;
 import work.lclpnet.ap2.api.util.action.PlayerAction;
 import work.lclpnet.kibu.hook.HookRegistrar;
@@ -38,18 +37,18 @@ public class CheckpointHelper {
 
         hooks.registerHook(PlayerInteractionHooks.USE_ITEM, (player, world1, hand) -> {
             if (disabled.getAsBoolean() || !(player instanceof ServerPlayerEntity sp) || !eligible.test(sp)) {
-                return TypedActionResult.pass(ItemStack.EMPTY);
+                return ActionResult.PASS;
             }
 
             ItemStack stack = player.getStackInHand(hand);
 
             if (!stack.isOf(Items.PLAYER_HEAD)) {
-                return TypedActionResult.pass(ItemStack.EMPTY);
+                return ActionResult.PASS;
             }
 
             hook.invoker().act(sp);
 
-            return TypedActionResult.success(ItemStack.EMPTY, true);
+            return ActionResult.SUCCESS_SERVER;
         });
 
         hooks.registerHook(PlayerInteractionHooks.USE_BLOCK, (player, world1, hand, hitResult) -> {

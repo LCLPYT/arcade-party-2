@@ -127,14 +127,14 @@ public class MonsterSpawner {
 
         zombie.setCanBreakDoors(true);
 
-        double baseSpeed = zombie.getAttributeBaseValue(EntityAttributes.GENERIC_MOVEMENT_SPEED);
+        double baseSpeed = zombie.getAttributeBaseValue(EntityAttributes.MOVEMENT_SPEED);
 
         if (zombie.isBaby())  {
             baseSpeed *= 0.75;
         } else if (random.nextFloat() < 0.05) {
             // change scale
             float scale = random.nextFloat(0.75f, 1.8f);
-            EntityUtil.setAttribute(zombie, EntityAttributes.GENERIC_SCALE, scale);
+            EntityUtil.setAttribute(zombie, EntityAttributes.SCALE, scale);
 
             baseSpeed *= Math.min(1.12, Math.max(0.75, 1 / Math.pow(scale, 1.15)));
         }
@@ -145,7 +145,7 @@ public class MonsterSpawner {
             baseSpeed *= 0.9;
         }
 
-        EntityUtil.setAttribute(zombie, EntityAttributes.GENERIC_MOVEMENT_SPEED, baseSpeed);
+        EntityUtil.setAttribute(zombie, EntityAttributes.MOVEMENT_SPEED, baseSpeed);
 
         // adjust goals
         var mobAccess = (MobEntityAccessor) zombie;
@@ -173,18 +173,18 @@ public class MonsterSpawner {
 
         if (skeleton == null) return;
 
-        double baseSpeed = skeleton.getAttributeBaseValue(EntityAttributes.GENERIC_MOVEMENT_SPEED);
+        double baseSpeed = skeleton.getAttributeBaseValue(EntityAttributes.MOVEMENT_SPEED);
 
         if (random.nextFloat() < 0.075) {
             // change scale
             float scale = random.nextFloat(0.75f, 2.5f);
-            EntityUtil.setAttribute(skeleton, EntityAttributes.GENERIC_SCALE, scale);
+            EntityUtil.setAttribute(skeleton, EntityAttributes.SCALE, scale);
 
             double scaleSpeedFactor = Math.min(1.1, Math.max(0.6, 1 / Math.pow(scale, 1.15)));
             baseSpeed *= scaleSpeedFactor;
         }
 
-        EntityUtil.setAttribute(skeleton, EntityAttributes.GENERIC_MOVEMENT_SPEED, baseSpeed);
+        EntityUtil.setAttribute(skeleton, EntityAttributes.MOVEMENT_SPEED, baseSpeed);
 
         // adjust goals
         var mobAccess = (MobEntityAccessor) skeleton;
@@ -230,7 +230,7 @@ public class MonsterSpawner {
 
         // resize maybe
         if (random.nextFloat() < 0.25f) {
-            EntityUtil.setAttribute(phantom, EntityAttributes.GENERIC_SCALE, random.nextFloat(0.2f, 5.0f));
+            EntityUtil.setAttribute(phantom, EntityAttributes.SCALE, random.nextFloat(0.2f, 5.0f));
         }
 
         // adjust goals
@@ -246,7 +246,7 @@ public class MonsterSpawner {
 
         if (ghast == null) return;
 
-        EntityUtil.setAttribute(ghast, EntityAttributes.GENERIC_SCALE, random.nextFloat(0.2f, 1.0f));
+        EntityUtil.setAttribute(ghast, EntityAttributes.SCALE, random.nextFloat(0.2f, 1.0f));
 
         spawnMobInWorld(ghast);
     }
@@ -256,17 +256,17 @@ public class MonsterSpawner {
 
         if (vindicator == null) return;
 
-        double baseSpeed = vindicator.getAttributeBaseValue(EntityAttributes.GENERIC_MOVEMENT_SPEED);
+        double baseSpeed = vindicator.getAttributeBaseValue(EntityAttributes.MOVEMENT_SPEED);
 
         if (random.nextFloat() < 0.05) {
             // change scale
             float scale = random.nextFloat(0.75f, 1.3f);
-            EntityUtil.setAttribute(vindicator, EntityAttributes.GENERIC_SCALE, scale);
+            EntityUtil.setAttribute(vindicator, EntityAttributes.SCALE, scale);
 
             baseSpeed *= Math.min(1.12, Math.max(0.75, 1 / Math.pow(scale, 1.15)));
         }
 
-        EntityUtil.setAttribute(vindicator, EntityAttributes.GENERIC_MOVEMENT_SPEED, baseSpeed);
+        EntityUtil.setAttribute(vindicator, EntityAttributes.MOVEMENT_SPEED, baseSpeed);
 
         spawnMobInWorld(vindicator);
     }
@@ -307,7 +307,7 @@ public class MonsterSpawner {
         mob.setPosition(Vec3d.ofBottomCenter(pos));
 
         // adjust follow range, so that the mob will follow far players
-        var followRange = mob.getAttributeInstance(EntityAttributes.GENERIC_FOLLOW_RANGE);
+        var followRange = mob.getAttributeInstance(EntityAttributes.FOLLOW_RANGE);
 
         if (followRange != null) {
             followRange.setBaseValue(100);
@@ -321,7 +321,6 @@ public class MonsterSpawner {
         if (navigation instanceof MobNavigation nav) {
             nav.setCanPathThroughDoors(true);
             nav.setCanWalkOverFences(true);
-            nav.setCanEnterOpenDoors(true);
         }
     }
 

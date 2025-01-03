@@ -6,8 +6,8 @@ public class DistanceIterator extends AbstractHeightIterator {
     private final int targetDistance;
     boolean first;
 
-    public DistanceIterator(int radius, int centerX, int centerZ, int minY, int maxY, short[][] distances, int targetDistance) {
-        super(radius, centerX, centerZ, minY, maxY);
+    public DistanceIterator(int radius, int centerX, int centerZ, int minY, int maxYInclusive, short[][] distances, int targetDistance) {
+        super(radius, centerX, centerZ, minY, maxYInclusive);
         this.distances = distances;
         this.len = distances.length;
         this.targetDistance = targetDistance;

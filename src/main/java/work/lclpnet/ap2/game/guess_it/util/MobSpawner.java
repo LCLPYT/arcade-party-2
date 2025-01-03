@@ -2,6 +2,7 @@ package work.lclpnet.ap2.game.guess_it.util;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.VariantHolder;
 import net.minecraft.entity.ai.brain.MemoryModuleType;
 import net.minecraft.entity.mob.*;
@@ -54,7 +55,7 @@ public class MobSpawner {
 
     @Nullable
     public <T extends Entity> T createEntity(EntityType<T> type, Vec3d pos) {
-        T entity = type.create(world);
+        T entity = type.create(world, SpawnReason.COMMAND);
 
         if (entity == null) return null;
 
@@ -183,7 +184,7 @@ public class MobSpawner {
             var brain = warden.getBrain();
             brain.remember(MemoryModuleType.DIG_COOLDOWN, Unit.INSTANCE, Ticks.minutes(10));
         } else if (entity instanceof WolfEntity wolf) {
-            randomizeVariant(wolf, world.getRegistryManager().get(RegistryKeys.WOLF_VARIANT));
+            randomizeVariant(wolf, world.getRegistryManager().getOrThrow(RegistryKeys.WOLF_VARIANT));
         } else if (entity instanceof BoggedEntity bogged) {
             if (random.nextFloat() < 0.2) {
                 bogged.setSheared(true);

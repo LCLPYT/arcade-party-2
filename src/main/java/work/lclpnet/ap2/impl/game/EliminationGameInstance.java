@@ -8,6 +8,7 @@ import net.minecraft.entity.damage.DamageRecord;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.Nullable;
@@ -115,8 +116,8 @@ public abstract class EliminationGameInstance extends DefaultGameInstance implem
                 DamageRecord damageRecord = recentDamage.get(size - 1);
                 DamageSource source = damageRecord.damageSource();
 
-                // try to use totem of undying
-                if (((LivingEntityAccessor) player).invokeTryUseTotem(source)) {
+                // try to use death protector
+                if (((LivingEntityAccessor) player).invokeTryUseDeathProtector(source)) {
                     return true;
                 }
 
@@ -130,8 +131,10 @@ public abstract class EliminationGameInstance extends DefaultGameInstance implem
 
     protected void onDeath(ServerPlayerEntity player, @Nullable Entity attacker) {
         var accessor = (LivingEntityAccessor) player;
-        accessor.invokeDropInventory();
-        accessor.invokeDropXp(attacker);
+
+        ServerWorld world = getWorld();
+        accessor.invokeDropInventory(world);
+        accessor.invokeDropExperience(world, attacker);
     }
 
     protected final void disableEliminationMessages() {

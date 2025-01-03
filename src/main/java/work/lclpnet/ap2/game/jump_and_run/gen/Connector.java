@@ -9,7 +9,7 @@ public record Connector(BlockPos pos, Direction direction) {
 
     public Connector transform(AffineIntMatrix mat4) {
         Vec3i vec = mat4.transformVector(this.direction.getVector());
-        Direction dir = Direction.fromVector(vec.getX(), vec.getY(), vec.getZ());
+        Direction dir = Direction.fromVector(vec.getX(), vec.getY(), vec.getZ(), null);
 
         if (dir == null) throw new IllegalArgumentException("Invalid transformation: Direction is not canonical");
 

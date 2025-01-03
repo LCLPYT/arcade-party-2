@@ -24,7 +24,7 @@ public class BlockedPathFindingPredicate implements PathFindingPredicate {
         int dx = x - from.getX();
         int dz = z - from.getZ();
 
-        Direction dir = Direction.fromVector(dx, 0, dz);
+        Direction dir = Direction.fromVector(dx, 0, dz, null);
 
         if (dir != null) {
             return !isBidiBlocked(world, to, dir, prev, entity);
@@ -36,14 +36,14 @@ public class BlockedPathFindingPredicate implements PathFindingPredicate {
         }
 
         // check x direction first
-        dir = Direction.fromVector(dx, 0, 0);
+        dir = Direction.fromVector(dx, 0, 0, null);
 
         if (dir != null && isBidiBlocked(world, to, dir, prev, entity)) {
             return false;
         }
 
         // then check z direction
-        dir = Direction.fromVector(0, 0, dz);
+        dir = Direction.fromVector(0, 0, dz, null);
 
         return dir == null || !isBidiBlocked(world, to, dir, prev, entity);
     }

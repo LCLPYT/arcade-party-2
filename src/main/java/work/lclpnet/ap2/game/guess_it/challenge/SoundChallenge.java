@@ -114,7 +114,7 @@ public class SoundChallenge implements Challenge {
     }
 
     private void stopSound() {
-        var packet = new StopSoundS2CPacket(correct.getId(), SoundCategory.MASTER);
+        var packet = new StopSoundS2CPacket(correct.id(), SoundCategory.MASTER);
 
         for (ServerPlayerEntity player : PlayerLookup.world(world)) {
             player.networkHandler.sendPacket(packet);

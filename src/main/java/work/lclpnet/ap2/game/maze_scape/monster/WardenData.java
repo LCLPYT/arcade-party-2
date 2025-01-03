@@ -3,7 +3,6 @@ package work.lclpnet.ap2.game.maze_scape.monster;
 import net.minecraft.entity.EntityAttachmentType;
 import net.minecraft.entity.EntityStatuses;
 import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.mob.WardenEntity;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.world.ServerWorld;
@@ -12,6 +11,8 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.kibu.scheduler.Ticks;
+
+import static net.minecraft.entity.attribute.EntityAttributes.KNOCKBACK_RESISTANCE;
 
 public class WardenData implements MonsterData {
 
@@ -89,9 +90,9 @@ public class WardenData implements MonsterData {
 
         warden.playSound(SoundEvents.ENTITY_WARDEN_SONIC_BOOM, 3.0f, 1.0f);
 
-        if (target.damage(world.getDamageSources().sonicBoom(warden), 10.0f)) {
-            double vertical = 0.5 * (1.0 - target.getAttributeValue(EntityAttributes.GENERIC_KNOCKBACK_RESISTANCE));
-            double horizontal = 2.5 * (1.0 - target.getAttributeValue(EntityAttributes.GENERIC_KNOCKBACK_RESISTANCE));
+        if (target.damage(world, world.getDamageSources().sonicBoom(warden), 10.0f)) {
+            double vertical = 0.5 * (1.0 - target.getAttributeValue(KNOCKBACK_RESISTANCE));
+            double horizontal = 2.5 * (1.0 - target.getAttributeValue(KNOCKBACK_RESISTANCE));
 
             target.addVelocity(dir.getX() * horizontal, dir.getY() * vertical, dir.getZ() * horizontal);
         }

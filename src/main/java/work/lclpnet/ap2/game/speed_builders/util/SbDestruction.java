@@ -17,7 +17,10 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.event.GameEvent;
 import net.minecraft.world.explosion.Explosion;
+import net.minecraft.world.explosion.ExplosionImpl;
+import work.lclpnet.ap2.core.mixin.ExplosionImplAccessor;
 import work.lclpnet.ap2.game.speed_builders.data.SbIsland;
 import work.lclpnet.ap2.impl.util.ParticleHelper;
 import work.lclpnet.ap2.impl.util.SoundHelper;
@@ -76,20 +79,20 @@ public class SbDestruction {
     }
 
     public void destroyIsland(SbIsland island, Vec3d impactPos, Vec3d velocity) {
-        Explosion explosion = new Explosion(world, null, null, null,
-                impactPos.getX(), impactPos.getY(), impactPos.getZ(), 25, false,
-                Explosion.DestructionType.KEEP, ParticleTypes.EXPLOSION, ParticleTypes.EXPLOSION_EMITTER,
-                SoundEvents.ENTITY_GENERIC_EXPLODE);
+        var explosion = new ExplosionImpl(world, null, null, null,
+                impactPos, 25, false,
+                Explosion.DestructionType.KEEP);
 
-        explosion.collectBlocksAndDamageEntities();
+        var access = (ExplosionImplAccessor) explosion;
 
+        world.emitGameEvent(null, GameEvent.EXPLODE, impactPos);
         addEffects(impactPos);
 
         velocity = velocity.normalize();
 
         int flags = Block.FORCE_STATE | Block.NOTIFY_LISTENERS | Block.SKIP_DROPS;
 
-        for (BlockPos pos : explosion.getAffectedBlocks()) {
+        for (BlockPos pos : access.invokeGetBlocksToDestroy()) {
             if (!island.getBounds().contains(pos)) continue;
 
             BlockState state = world.getBlockState(pos);

@@ -107,7 +107,7 @@ public abstract class DefaultTeamGameInstance extends BaseGameInstance implement
             float yaw = spawn.getYaw(), pitch = spawn.getPitch();
 
             for (ServerPlayerEntity player : team.getPlayers()) {
-                player.teleport(world, x, y, z, yaw, pitch);
+                player.teleport(world, x, y, z, Set.of(), yaw, pitch, true);
             }
         }
     }

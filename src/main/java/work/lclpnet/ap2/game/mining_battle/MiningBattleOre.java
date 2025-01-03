@@ -12,15 +12,20 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.event.GameEvent;
 import net.minecraft.world.explosion.Explosion;
+import net.minecraft.world.explosion.ExplosionImpl;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
+import work.lclpnet.ap2.core.mixin.ExplosionImplAccessor;
 import work.lclpnet.ap2.impl.ds.WeightedList;
 import work.lclpnet.ap2.impl.util.SoundHelper;
 import work.lclpnet.kibu.translate.Translations;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
 import java.util.function.BiConsumer;
 import java.util.function.Predicate;
@@ -121,21 +126,25 @@ public class MiningBattleOre {
         ServerWorld world = player.getServerWorld();
 
         double x = pos.getX() + 0.5, y = pos.getY() + 0.5, z = pos.getZ() + 0.5;
+        Vec3d vec = new Vec3d(x, y, z);
         float power = 2.1f;
 
-        Explosion explosion = new Explosion(world, null, null, null,
-                x, y, z, power, false,
-                Explosion.DestructionType.KEEP, ParticleTypes.EXPLOSION, ParticleTypes.EXPLOSION_EMITTER,
-                SoundEvents.ENTITY_GENERIC_EXPLODE);
+        var explosion = new ExplosionImpl(world, null, null, null,
+                vec, power, false,
+                Explosion.DestructionType.KEEP);
 
-        explosion.collectBlocksAndDamageEntities();
-        explosion.affectWorld(true);
+        var access = (ExplosionImplAccessor) explosion;
+
+        // mimic behaviour of ServerWorld::createExplosion
+        world.emitGameEvent(null, GameEvent.EXPLODE, vec);
+        world.addParticle(ParticleTypes.EXPLOSION, x, y, z, 1.0, 0.0, 0.0);
 
         BlockState air = AIR.getDefaultState();
 
         int totalValue = 0;
 
-        for (BlockPos exPos : explosion.getAffectedBlocks()) {
+        // manually destroy blocks (and count value)
+        for (BlockPos exPos : access.invokeGetBlocksToDestroy()) {
             if (!valid.test(exPos)) continue;
 
             BlockState exState = world.getBlockState(exPos);
@@ -150,14 +159,16 @@ public class MiningBattleOre {
             scoreConsumer.accept(player, totalValue);
         }
 
-        explosion.clearAffectedBlocks();
+        // calculate damage and knockback
+        access.invokeDamageEntities();
 
+        // send explosion packets
         for (ServerPlayerEntity other : world.getPlayers()) {
             if (!(other.squaredDistanceTo(x, y, z) < 4096.0)) continue;
 
-            other.networkHandler.sendPacket(new ExplosionS2CPacket(x, y, z, power, explosion.getAffectedBlocks(),
-                    explosion.getAffectedPlayers().get(other), explosion.getDestructionType(), explosion.getParticle(),
-                    explosion.getEmitterParticle(), explosion.getSoundEvent()));
+            var knockback = Optional.ofNullable(explosion.getKnockbackByPlayer().get(other));
+
+            other.networkHandler.sendPacket(new ExplosionS2CPacket(vec, knockback, ParticleTypes.EXPLOSION, SoundEvents.ENTITY_GENERIC_EXPLODE));
         }
     }
 

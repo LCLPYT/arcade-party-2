@@ -94,7 +94,7 @@ public class RedLightGreenLightInstance extends DefaultGameInstance implements R
 
         for (ServerPlayerEntity participant : gameHandle.getParticipants()) {
             Vec3d pos = spawnArea.randomPos(random);
-            participant.teleport(world, pos.getX(), pos.getY(), pos.getZ(), yaw, 0f);
+            participant.teleport(world, pos.getX(), pos.getY(), pos.getZ(), Set.of(), yaw, 0f, true);
         }
 
         readTrafficLights();
@@ -238,7 +238,7 @@ public class RedLightGreenLightInstance extends DefaultGameInstance implements R
             y = findSuitableY(world, pos);
             z = pos.getZ();
 
-            player.teleport(world, x, y, z, player.getYaw(), player.getPitch());
+            player.teleport(world, x, y, z, Set.of(), player.getYaw(), player.getPitch(), true);
             player.playSoundToPlayer(SoundEvents.ENTITY_ZOMBIE_ATTACK_WOODEN_DOOR, SoundCategory.PLAYERS, 0.5f, 1f);
         } else {
             world.playSound(null, player.getBlockPos(), SoundEvents.ENTITY_ZOMBIE_ATTACK_WOODEN_DOOR, SoundCategory.PLAYERS, 0.5f, 1f);

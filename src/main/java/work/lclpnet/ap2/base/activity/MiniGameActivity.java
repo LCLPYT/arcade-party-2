@@ -21,7 +21,7 @@ import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.EntityUsePortalCallback;
 import work.lclpnet.kibu.hook.player.PlayerAdvancementPacketCallback;
 import work.lclpnet.kibu.hook.player.PlayerConnectionHooks;
-import work.lclpnet.kibu.hook.player.PlayerRecipePacketCallback;
+import work.lclpnet.kibu.hook.player.PlayerRecipeNotificationCallback;
 import work.lclpnet.kibu.scheduler.api.Scheduler;
 
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -81,7 +81,7 @@ public class MiniGameActivity extends ComponentActivity {
 
         HookRegistrar hooks = component(BuiltinComponents.HOOKS).hooks();
         hooks.registerHook(PlayerAdvancementPacketCallback.HOOK, (player, packet) -> true);
-        hooks.registerHook(PlayerRecipePacketCallback.HOOK, (player, packet) -> true);
+        hooks.registerHook(PlayerRecipeNotificationCallback.HOOK, (player, recipeEntry, displayEntry) -> true);
         hooks.registerHook(EntityUsePortalCallback.HOOK, (entity, portal, pos) -> true);
 
         Scheduler scheduler = component(BuiltinComponents.SCHEDULER).scheduler();

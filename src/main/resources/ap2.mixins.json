@@ -13,6 +13,8 @@
     "EntityMixin",
     "EntityNavigationAccessor",
     "EntityNavigationMixin",
+    "ExplosionImplAccessor",
+    "FuelRegistryMixin",
     "LandPathNodeMakerMixin",
     "LivingEntityAccessor",
     "LivingEntityMixin",

@@ -208,8 +208,8 @@ public class JumpAndRunGenerator {
         JumpRoom.Connectors connectors = room.getConnectors();
         Connector entrance = connectors.entrance();
 
-        int targetRotation = direction.getOpposite().getHorizontal();
-        int rotation = entrance.direction().getHorizontal() - targetRotation;
+        int targetRotation = direction.getOpposite().getHorizontalQuarterTurns();
+        int rotation = entrance.direction().getHorizontalQuarterTurns() - targetRotation;
         Matrix3i rotationMatrix = Matrix3i.makeRotationY(rotation);
 
         BlockPos entrancePos = entrance.pos();
@@ -228,7 +228,7 @@ public class JumpAndRunGenerator {
         JumpEnd startRoom = parts.start();
         BlockStructure startStruct = startRoom.getStructure();
 
-        int rotation = startRoom.getExit().direction().getHorizontal();
+        int rotation = startRoom.getExit().direction().getHorizontalQuarterTurns();
         Matrix3i rotationMatrix = Matrix3i.makeRotationY(rotation);
 
         BlockPos spawn = Objects.requireNonNull(startRoom.getSpawn(), "Spawn position must be non-null");
@@ -244,8 +244,8 @@ public class JumpAndRunGenerator {
 
         Connector exit = endRoom.getExit();
 
-        int targetRotation = connector.direction().getOpposite().getHorizontal();
-        int rotation = exit.direction().getHorizontal() - targetRotation;
+        int targetRotation = connector.direction().getOpposite().getHorizontalQuarterTurns();
+        int rotation = exit.direction().getHorizontalQuarterTurns() - targetRotation;
         Matrix3i rotationMatrix = Matrix3i.makeRotationY(rotation);
 
         BlockPos exitPos = exit.pos();

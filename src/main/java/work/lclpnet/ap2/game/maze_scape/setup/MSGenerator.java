@@ -83,7 +83,7 @@ public class MSGenerator {
         int maxChunkSize = getMaxChunkSize(map);
 
         int bottomY = world.getBottomY();
-        int topY = world.getTopY() - 1;
+        int topY = world.getTopYInclusive();
 
         bounds = new StructureDomain.BoundsCfg(maxChunkSize, bottomY, topY);
         domain = new StructureDomain(loaded.pieces(), random, deadEndStart, bounds);

@@ -67,7 +67,7 @@ public class MiningBattleGenerator {
 
             BlockState state = world.getBlockState(rel);
 
-            if (!state.isOpaqueFullCube(world, pos)) return true;
+            if (!state.isOpaqueFullCube()) return true;
         }
 
         return false;

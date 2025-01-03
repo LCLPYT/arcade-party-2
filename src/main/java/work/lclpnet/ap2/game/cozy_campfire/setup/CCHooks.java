@@ -8,6 +8,7 @@ import net.minecraft.entity.vehicle.BoatEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
@@ -127,8 +128,8 @@ public class CCHooks {
         });
 
         hooks.registerHook(ServerLivingEntityHooks.ALLOW_DAMAGE, (entity, source, amount) -> {
-            if (source.isOf(DamageTypes.FREEZE) && amount < Float.MAX_VALUE) {
-                entity.damage(entity.getDamageSources().freeze(), Float.MAX_VALUE);
+            if (source.isOf(DamageTypes.FREEZE) && amount < Float.MAX_VALUE && entity.getWorld() instanceof ServerWorld world) {
+                entity.damage(world, entity.getDamageSources().freeze(), Float.MAX_VALUE);
                 return false;
             }
 

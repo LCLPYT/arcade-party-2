@@ -90,7 +90,7 @@ public class PillarBattleInstance extends EliminationGameInstance implements Map
                 continue;
             }
 
-            player.teleport(world, spawn.getX(), spawn.getY(), spawn.getZ(), spawn.getYaw(), spawn.getPitch());
+            player.teleport(world, spawn.getX(), spawn.getY(), spawn.getZ(), Set.of(), spawn.getYaw(), spawn.getPitch(), true);
 
             movementBlocker.disableMovement(player);
         }
@@ -131,7 +131,7 @@ public class PillarBattleInstance extends EliminationGameInstance implements Map
             movementBlocker.enableMovement(player);
         }
 
-        commons().whenBelowCriticalHeight().then(player -> player.damage(player.getDamageSources().outOfWorld(), player.getHealth()));
+        commons().whenBelowCriticalHeight().then(player -> player.damage(player.getServerWorld(), player.getDamageSources().outOfWorld(), player.getHealth()));
 
         var randomizer = new PbRandomizer(random, gameHandle.getParticipants(), getWorld().getRegistryManager());
 
@@ -142,7 +142,7 @@ public class PillarBattleInstance extends EliminationGameInstance implements Map
 
         hooks.registerHook(ServerLivingEntityHooks.ALLOW_DAMAGE, (entity, source, amount) -> {
             if (entity instanceof ServerPlayerEntity player && player.getHungerManager().getFoodLevel() >= 20) {
-                player.getHungerManager().setExhaustion(12);
+                player.getHungerManager().addExhaustion(12);
                 player.getHungerManager().setSaturationLevel(0);
             }
 

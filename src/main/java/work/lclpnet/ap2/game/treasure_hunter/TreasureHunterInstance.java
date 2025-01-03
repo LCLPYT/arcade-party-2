@@ -90,7 +90,7 @@ public class TreasureHunterInstance extends DefaultGameInstance {
             foundChest.add(serverPlayer, detail);
             winManager.win(serverPlayer);
 
-            return ActionResult.success(true);
+            return ActionResult.SUCCESS_SERVER;
         });
 
         hooks.registerHook(PlayerInteractionHooks.BREAK_BLOCK, (world, player, pos, state, blockEntity) -> {

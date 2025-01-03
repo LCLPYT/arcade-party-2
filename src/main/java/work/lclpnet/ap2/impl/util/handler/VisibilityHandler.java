@@ -14,8 +14,8 @@ import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
+import net.minecraft.util.ActionResult;
 import net.minecraft.util.Formatting;
-import net.minecraft.util.TypedActionResult;
 import org.jetbrains.annotations.NotNull;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.kibu.access.entity.EntityAccess;
@@ -47,28 +47,28 @@ public class VisibilityHandler {
     public void init(HookRegistrar hooks) {
         hooks.registerHook(PlayerInteractionHooks.USE_ITEM, (player, world, hand) -> {
             if (!(player instanceof ServerPlayerEntity serverPlayer) || !participants.isParticipating(serverPlayer)) {
-                return TypedActionResult.pass(ItemStack.EMPTY);
+                return ActionResult.PASS;
             }
 
             ItemStack stack = player.getStackInHand(hand);
 
             if (!stack.isOf(ITEM)) {
-                return TypedActionResult.pass(ItemStack.EMPTY);
+                return ActionResult.PASS;
             }
 
             ItemCooldownManager cooldownManager = serverPlayer.getItemCooldownManager();
 
-            if (cooldownManager.isCoolingDown(ITEM)) {
-                return TypedActionResult.fail(ItemStack.EMPTY);
+            if (cooldownManager.isCoolingDown(stack)) {
+                return ActionResult.FAIL;
             }
 
-            cooldownManager.set(ITEM, ITEM_COOLDOWN_TICKS);
+            cooldownManager.set(stack, ITEM_COOLDOWN_TICKS);
 
             manager.toggleVisibilityFor(serverPlayer);
 
             updateItemName(serverPlayer, stack);
 
-            return TypedActionResult.fail(ItemStack.EMPTY);
+            return ActionResult.FAIL;
         });
 
         hooks.registerHook(ServerSendPacketCallback.HOOK, this::ensureRelativePlayerVisibility);
@@ -120,24 +120,22 @@ public class VisibilityHandler {
         // Needs to be done this obscurely, because this needs manipulation of entity data for each player individually.
 
         // filter packet and visibility, this hook only needs to modify packets when other players should be invisible
-        if (!(packet instanceof EntityTrackerUpdateS2CPacket updatePacket)
+        if (!(packet instanceof EntityTrackerUpdateS2CPacket(int id, List<DataTracker.SerializedEntry<?>> trackedValues))
             || !(handler instanceof ServerPlayNetworkHandler networkHandler)
             || manager.getVisibilityFor(networkHandler.player) == Visibility.VISIBLE) {
             return false;
         }
 
         // check if the packet target entity is another player
-        Entity entity = networkHandler.player.getServerWorld().getEntityById(updatePacket.id());
+        Entity entity = networkHandler.player.getServerWorld().getEntityById(id);
 
         if (!(entity instanceof ServerPlayerEntity) || entity == networkHandler.player) {
             return false;
         }
 
-        var entries = updatePacket.trackedValues();
-
         // check if the invisibility flag is already set. If not, send a modified packet
-        for (int i = 0, size = entries.size(); i < size; i++) {
-            var entry = entries.get(i);
+        for (int i = 0, size = trackedValues.size(); i < size; i++) {
+            var entry = trackedValues.get(i);
 
             // filter for the flags tracked data entry
             if (entry.id() != FLAGS_TRACKED_DATA_ID) continue;
@@ -150,8 +148,8 @@ public class VisibilityHandler {
                 return false;
             }
 
-            var newEntries = modifyEntries(size, i, entries, flags);
-            var modifiedPacket = new EntityTrackerUpdateS2CPacket(updatePacket.id(), newEntries);
+            var newEntries = modifyEntries(size, i, trackedValues, flags);
+            var modifiedPacket = new EntityTrackerUpdateS2CPacket(id, newEntries);
             handler.sendPacket(modifiedPacket);  // this will cause another invocation of this hook, but won't loop
 
             return true;  // retain the old packet

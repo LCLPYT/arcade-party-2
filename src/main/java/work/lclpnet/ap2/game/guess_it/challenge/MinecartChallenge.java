@@ -271,7 +271,7 @@ public class MinecartChallenge implements Challenge, LongerChallenge, SchedulerA
                 int dx = pos.getX() - start.getX();
                 int dz = pos.getZ() - start.getZ();
 
-                Direction dir = Direction.fromVector(dx, 0, dz);
+                Direction dir = Direction.fromVector(dx, 0, dz, null);
 
                 if (dir != null) {
                     directions.add(dir);

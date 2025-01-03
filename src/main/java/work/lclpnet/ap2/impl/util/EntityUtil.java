@@ -22,7 +22,7 @@ public class EntityUtil {
     }
 
     public static void resetAttribute(LivingEntity entity, RegistryEntry<EntityAttribute> attribute) {
-        if (attribute == EntityAttributes.GENERIC_MOVEMENT_SPEED && entity instanceof ServerPlayerEntity player) {
+        if (attribute == EntityAttributes.MOVEMENT_SPEED && entity instanceof ServerPlayerEntity player) {
             setAttribute(player, attribute, player.getAbilities().getWalkSpeed());
             return;
         }

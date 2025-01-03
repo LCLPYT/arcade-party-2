@@ -77,7 +77,7 @@ public class SpiderData implements MonsterData {
         if (target == null) return;
 
         putCobweb(target.getBlockPos());
-        target.damage(spider.getDamageSources().indirectMagic(spider, spider), 2);
+        target.damage(common.manager().world(), spider.getDamageSources().indirectMagic(spider, spider), 2);
         target.addStatusEffect(new StatusEffectInstance(StatusEffects.POISON, Ticks.seconds(5), 0));
     }
 

@@ -91,8 +91,8 @@ public class ApocalypseSurvivalInstance extends EliminationGameInstance {
         });
 
         for (ServerPlayerEntity player : participants) {
-            PlayerReset.setAttribute(player, EntityAttributes.GENERIC_SAFE_FALL_DISTANCE, 5.0);
-            PlayerReset.setAttribute(player, EntityAttributes.GENERIC_FALL_DAMAGE_MULTIPLIER, 0.5);
+            PlayerReset.setAttribute(player, EntityAttributes.SAFE_FALL_DISTANCE, 5.0);
+            PlayerReset.setAttribute(player, EntityAttributes.FALL_DAMAGE_MULTIPLIER, 0.5);
         }
     }
 

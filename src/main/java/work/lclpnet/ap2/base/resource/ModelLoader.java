@@ -31,7 +31,7 @@ public class ModelLoader {
 
     public ModelLoader(RegistryWrapper.WrapperLookup lookup) {
         this.lookup = lookup;
-        blockLookup = lookup.getWrapperOrThrow(RegistryKeys.BLOCK);
+        blockLookup = lookup.getOrThrow(RegistryKeys.BLOCK);
     }
 
     @Nullable

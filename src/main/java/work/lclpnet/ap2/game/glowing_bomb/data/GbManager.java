@@ -107,7 +107,7 @@ public class GbManager {
 
         float yaw = (float) Math.toDegrees(Math.atan2(dx, -dz));
 
-        player.teleport(world, pos.getX(), pos.getY(), pos.getZ(), yaw, 0);
+        player.teleport(world, pos.getX(), pos.getY(), pos.getZ(), Set.of(), yaw, 0, true);
     }
 
     public boolean assignBomb() {

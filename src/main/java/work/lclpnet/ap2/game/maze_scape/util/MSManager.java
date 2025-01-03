@@ -180,7 +180,7 @@ public class MSManager {
         if (entity.getWorld() != world || !isMonsterType(entity)) return;
 
         // make sure monsters can track down players everywhere in the map
-        EntityUtil.setAttribute(entity, EntityAttributes.GENERIC_FOLLOW_RANGE, 2 * mapChunkRadius * 16);
+        EntityUtil.setAttribute(entity, EntityAttributes.FOLLOW_RANGE, 2 * mapChunkRadius * 16);
     }
 
     private static boolean isMonsterType(LivingEntity entity) {
@@ -208,7 +208,7 @@ public class MSManager {
                 Activity.FIGHT,
                 10,
                 ImmutableList.of(
-                        LookAtMobTask.create(entity -> isTargeting(warden, entity), (float)warden.getAttributeValue(EntityAttributes.GENERIC_FOLLOW_RANGE)),
+                        LookAtMobTask.create(entity -> isTargeting(warden, entity), (float)warden.getAttributeValue(EntityAttributes.FOLLOW_RANGE)),
                         RangedApproachTask.create(1.2F),
                         MeleeAttackTask.create(18)
                 ),
