@@ -128,7 +128,12 @@ public class OneInTheChamberInstance extends DefaultGameInstance {
             player.sendAbilitiesUpdate();
 
             // delay game mode change one tick to prevent other players from seeing the teleport
-            scheduler.immediate(() -> player.changeGameMode(gameHandle.getPlayerUtil().getDefaultGameMode()));
+            scheduler.immediate(() -> {
+                player.getAbilities().setFlySpeed(0.05f);
+                player.sendAbilitiesUpdate();
+
+                player.changeGameMode(gameHandle.getPlayerUtil().getDefaultGameMode());
+            });
         });
     }
 

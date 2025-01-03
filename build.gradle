@@ -84,7 +84,6 @@ dependencies {
     implementation "work.lclpnet:translations4j:${project.translations4j_version}:network"
 
     // optional runtime dependencies (not required to play)
-    modLocalRuntime "maven.modrinth:dev-tools-unlocker:${project.dev_tools_unlocker_version}"
     modLocalRuntime "maven.modrinth:anti-xray:${project.anti_xray_version}"
     localRuntime "com.moandjiezana.toml:toml4j:${project.toml_version}"
 

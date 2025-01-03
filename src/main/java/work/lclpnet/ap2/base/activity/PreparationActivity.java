@@ -472,7 +472,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
                 openMapPicker(serverPlayer);
             }
 
-            return ActionResult.SUCCESS;
+            return ActionResult.SUCCESS_SERVER;
         });
 
         gameChooser.listen(hooks, (game, player) -> {
