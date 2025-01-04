@@ -1,13 +1,15 @@
 package work.lclpnet.ap2.game.guess_it.challenge;
 
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
+import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.LodestoneTrackerComponent;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
-import net.minecraft.network.packet.s2c.play.PlayerSpawnPositionS2CPacket;
 import net.minecraft.network.packet.s2c.play.WorldTimeUpdateS2CPacket;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.GlobalPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.GameRules;
 import work.lclpnet.ap2.api.base.Participants;
@@ -20,6 +22,7 @@ import work.lclpnet.kibu.scheduler.api.SchedulerAction;
 import work.lclpnet.kibu.scheduler.api.TaskHandle;
 import work.lclpnet.kibu.translate.Translations;
 
+import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Random;
 
@@ -72,12 +75,20 @@ public class DayTimeChallenge implements Challenge, SchedulerAction {
         input.expectInput().validate((str, player) -> MinecraftDayTime.dayTimeValue(str),
                 str -> translations.translateText("game.ap2.guess_it.input.daytime", styled(str, YELLOW)).formatted(RED));
 
-        var packet = new PlayerSpawnPositionS2CPacket(BlockPos.ORIGIN.north(10000), 0);
+        // create compass that points north
+        ItemStack stack = new ItemStack(Items.COMPASS);
+
+        stack.set(DataComponentTypes.LODESTONE_TRACKER, new LodestoneTrackerComponent(
+                Optional.of(new GlobalPos(world.getRegistryKey(), BlockPos.ORIGIN.north(10000))),
+                false));
+
+        stack.set(DataComponentTypes.CUSTOM_NAME, Items.COMPASS.getName().copy()
+                .styled(style -> style.withItalic(false)));
+
+        stack.set(DataComponentTypes.ENCHANTMENT_GLINT_OVERRIDE, false);
 
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
-            // give compass and make it point north
-            player.networkHandler.sendPacket(packet);
-            player.getInventory().setStack(4, new ItemStack(Items.COMPASS));
+            player.getInventory().setStack(4, stack.copy());
         }
     }
 
