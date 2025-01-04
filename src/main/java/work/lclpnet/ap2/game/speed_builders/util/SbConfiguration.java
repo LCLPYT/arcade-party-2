@@ -37,6 +37,9 @@ import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.kibu.hook.world.BlockModificationHooks;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 
+/**
+ * Configure and handle custom block placement / destruction logic inside the build area of each player.
+ */
 public class SbConfiguration {
 
     private final MiniGameHandle gameHandle;
@@ -221,6 +224,7 @@ public class SbConfiguration {
         BlockState air = Blocks.AIR.getDefaultState();
         int noUpdate = Block.FORCE_STATE | Block.NOTIFY_LISTENERS | Block.SKIP_DROPS;
 
+        // destroy multi-blocks
         if (state.contains(Properties.DOUBLE_BLOCK_HALF)) {
             BlockPos other = state.get(Properties.DOUBLE_BLOCK_HALF) == DoubleBlockHalf.LOWER ? pos.up() : pos.down();
             return world.setBlockState(pos, air, noUpdate) && world.setBlockState(other, air, noUpdate);
@@ -232,7 +236,6 @@ public class SbConfiguration {
             return world.setBlockState(pos, air, noUpdate) && world.setBlockState(other, air, noUpdate);
         }
 
-
         if (!world.setBlockState(pos, air, noUpdate)) return false;
 
         // handle neighbour update manually
@@ -242,7 +245,7 @@ public class SbConfiguration {
         for (Direction dir : NeighborUpdater.UPDATE_ORDER) {
             mutable.set(pos, dir);
             BlockState neighbourState = world.getBlockState(mutable);
-            BlockState updated = neighbourState.getStateForNeighborUpdate(world, world, pos, dir.getOpposite(), mutable, air, world.getRandom());
+            BlockState updated = neighbourState.getStateForNeighborUpdate(world, world, mutable, dir.getOpposite(), pos, air, world.getRandom());
 
             if (updated.isAir()) {
                 giveSourceItem(player, neighbourState);
