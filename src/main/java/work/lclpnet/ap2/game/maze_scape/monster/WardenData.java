@@ -14,32 +14,32 @@ import work.lclpnet.kibu.scheduler.Ticks;
 
 import static net.minecraft.entity.attribute.EntityAttributes.KNOCKBACK_RESISTANCE;
 
-public class WardenData implements MonsterData {
+public class WardenData implements MonsterData<WardenEntity> {
 
     private static final int
             SONIC_BOOM_TRIGGER_TICKS = Ticks.seconds(18),
             SONIC_BOOM_SOUND_TICKS = 34;
 
     private final CommonData common;
+    private final UnstuckBehaviour unstuck;
     private int sonicBoomSoundDelay = 0;
     private @Nullable LivingEntity sonicBoomTarget = null;
 
     public WardenData(MonsterArgs args) {
-        this.common = new CommonData(args, 0.3, 0.45, 0.75);
+        this.common = new CommonData(args, 0.3, 0.45);
+        this.unstuck = new UnstuckBehaviour(args.manager(), 0.75);
     }
 
     @Override
-    public void init() {
-        common.init();
+    public void init(WardenEntity mob) {
+        common.init(mob);
+        unstuck.init(mob);
     }
 
     @Override
-    public void tick() {
-        common.tick();
-
-        WardenEntity warden = mob();
-
-        if (warden == null) return;
+    public void tick(WardenEntity warden) {
+        common.tick(warden);
+        unstuck.tick(warden);
 
         if (common.sameRoomTimerDue(SONIC_BOOM_TRIGGER_TICKS)) {
             LivingEntity target = warden.getTarget();
@@ -64,8 +64,8 @@ public class WardenData implements MonsterData {
     }
 
     @Override
-    public void onKillAcquired() {
-        common.onKillAcquired();
+    public void onKillAcquired(WardenEntity mob) {
+        common.onKillAcquired(mob);
     }
 
     private void triggerSonicBoom(LivingEntity target, WardenEntity warden) {

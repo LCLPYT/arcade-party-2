@@ -12,7 +12,7 @@ import work.lclpnet.kibu.scheduler.Ticks;
 
 import java.util.Random;
 
-public class SpiderData implements MonsterData {
+public class SpiderData implements MonsterData<SpiderEntity> {
 
     private static final int
             COBWEB_DELAY_MIN_TICKS = Ticks.seconds(6),
@@ -21,11 +21,13 @@ public class SpiderData implements MonsterData {
 
     private final CommonData common;
     private final Random random;
+    private final UnstuckBehaviour unstuck;
     private int nextCobweb;
 
     public SpiderData(MonsterArgs args, Random random) {
-        this.common = new CommonData(args, 0.35, 0.48, 0.65);
+        this.common = new CommonData(args, 0.35, 0.48);
         this.random = random;
+        this.unstuck = new UnstuckBehaviour(args.manager(), 0.65);
 
         scheduleCobweb();
     }
@@ -35,13 +37,15 @@ public class SpiderData implements MonsterData {
     }
 
     @Override
-    public void init() {
-        common.init();
+    public void init(SpiderEntity spider) {
+        common.init(spider);
+        unstuck.init(spider);
     }
 
     @Override
-    public void tick() {
-        common.tick();
+    public void tick(SpiderEntity spider) {
+        common.tick(spider);
+        unstuck.tick(spider);
 
         if (nextCobweb-- <= 0) {
             placeCobweb();
@@ -54,8 +58,8 @@ public class SpiderData implements MonsterData {
     }
 
     @Override
-    public void onKillAcquired() {
-        common.onKillAcquired();
+    public void onKillAcquired(SpiderEntity spider) {
+        common.onKillAcquired(spider);
     }
 
     @Override

@@ -59,7 +59,7 @@ public class MSManager {
     private final MSTargetManager targetManager;
     private final int mapChunkRadius;
     private final MSDebugController debugController;
-    private final Map<UUID, MonsterData> monsters = new HashMap<>();
+    private final Map<UUID, MonsterData<?>> monsters = new HashMap<>();
     private final MonsterSpawner spawner;
 
     public MSManager(ServerWorld world, GameMap map, MSStruct struct, Participants participants, Random random, Logger logger, MSDebugController debugController) {
@@ -122,7 +122,7 @@ public class MSManager {
         targetManager.update();
     }
 
-    public Collection<MonsterData> monsters() {
+    public Collection<MonsterData<?>> monsters() {
         return Collections.unmodifiableCollection(monsters.values());
     }
 
@@ -131,9 +131,7 @@ public class MSManager {
     }
 
     public void tick() {
-        for (var data : monsters.values()) {
-            data.tick();
-        }
+        monsters.values().forEach(MonsterData::tick);
     }
 
     /**
@@ -276,7 +274,7 @@ public class MSManager {
     }
 
     public void onKillAcquired(Entity entity) {
-        MonsterData data = monsters.get(entity.getUuid());
+        MonsterData<?> data = monsters.get(entity.getUuid());
 
         if (data == null) return;
 
