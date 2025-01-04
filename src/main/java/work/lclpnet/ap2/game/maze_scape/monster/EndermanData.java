@@ -16,12 +16,16 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.base.ArcadeParty;
 import work.lclpnet.ap2.core.mixin.EndermanEntityAccessor;
+import work.lclpnet.ap2.game.maze_scape.monster.behaviour.AccelerationBehaviour;
+import work.lclpnet.ap2.game.maze_scape.monster.behaviour.UnstuckBehaviour;
+import work.lclpnet.ap2.game.maze_scape.monster.behaviour.ValidPositionBehaviour;
 import work.lclpnet.ap2.game.maze_scape.util.EndermanEscape;
 import work.lclpnet.ap2.game.maze_scape.util.MSManager;
 import work.lclpnet.ap2.game.maze_scape.util.MSStruct;
 import work.lclpnet.ap2.game.maze_scape.util.VisibilityChecker;
 import work.lclpnet.kibu.scheduler.Ticks;
 
+import java.util.List;
 import java.util.UUID;
 
 import static java.lang.Math.max;
@@ -69,12 +73,17 @@ public class EndermanData implements MonsterData<EndermanEntity> {
 
     public EndermanData(MonsterArgs args, MSStruct struct) {
         this.args = args;
-        this.common = new CommonData(args, 0.35, 0.42);
 
         MSManager manager = args.manager();
+
+        this.common = new CommonData(args, List.of(
+                new ValidPositionBehaviour(manager, args.logger()),
+                new AccelerationBehaviour(0.35, 0.42),
+                unstuck = new UnstuckBehaviour(manager, 0.75)
+        ));
+
         this.visibilityChecker = new VisibilityChecker(manager.world());
         this.escape = new EndermanEscape(struct, visibilityChecker, manager.participants(), manager.debugController());
-        this.unstuck = new UnstuckBehaviour(manager, 0.75);
     }
 
     @Override

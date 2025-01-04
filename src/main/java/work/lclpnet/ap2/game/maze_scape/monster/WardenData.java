@@ -10,7 +10,13 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.Nullable;
+import work.lclpnet.ap2.game.maze_scape.monster.behaviour.AccelerationBehaviour;
+import work.lclpnet.ap2.game.maze_scape.monster.behaviour.SameRoomBehaviour;
+import work.lclpnet.ap2.game.maze_scape.monster.behaviour.UnstuckBehaviour;
+import work.lclpnet.ap2.game.maze_scape.monster.behaviour.ValidPositionBehaviour;
 import work.lclpnet.kibu.scheduler.Ticks;
+
+import java.util.List;
 
 import static net.minecraft.entity.attribute.EntityAttributes.KNOCKBACK_RESISTANCE;
 
@@ -21,33 +27,26 @@ public class WardenData implements MonsterData<WardenEntity> {
             SONIC_BOOM_SOUND_TICKS = 34;
 
     private final CommonData common;
-    private final UnstuckBehaviour unstuck;
     private int sonicBoomSoundDelay = 0;
     private @Nullable LivingEntity sonicBoomTarget = null;
 
     public WardenData(MonsterArgs args) {
-        this.common = new CommonData(args, 0.3, 0.45);
-        this.unstuck = new UnstuckBehaviour(args.manager(), 0.75);
+        this.common = new CommonData(args, List.of(
+                new ValidPositionBehaviour(args.manager(), args.logger()),
+                new AccelerationBehaviour(0.3, 0.45),
+                new UnstuckBehaviour(args.manager(), 0.75),
+                new SameRoomBehaviour<>(args.manager().struct(), SONIC_BOOM_TRIGGER_TICKS, this::triggerSonicBoom)
+        ));
     }
 
     @Override
     public void init(WardenEntity mob) {
         common.init(mob);
-        unstuck.init(mob);
     }
 
     @Override
     public void tick(WardenEntity warden) {
         common.tick(warden);
-        unstuck.tick(warden);
-
-        if (common.sameRoomTimerDue(SONIC_BOOM_TRIGGER_TICKS)) {
-            LivingEntity target = warden.getTarget();
-
-            if (target != null) {
-                triggerSonicBoom(target, warden);
-            }
-        }
 
         if (sonicBoomTarget != null) {
             if (sonicBoomTarget.isAlive()) {
@@ -68,7 +67,7 @@ public class WardenData implements MonsterData<WardenEntity> {
         common.onKillAcquired(mob);
     }
 
-    private void triggerSonicBoom(LivingEntity target, WardenEntity warden) {
+    private void triggerSonicBoom(WardenEntity warden, LivingEntity target) {
         sonicBoomTarget = target;
         common.manager().world().sendEntityStatus(warden, EntityStatuses.SONIC_BOOM);
         warden.playSound(SoundEvents.ENTITY_WARDEN_SONIC_CHARGE, 3.0f, 1.0f);

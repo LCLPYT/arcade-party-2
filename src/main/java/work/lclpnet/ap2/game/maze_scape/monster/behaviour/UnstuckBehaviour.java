@@ -1,8 +1,10 @@
-package work.lclpnet.ap2.game.maze_scape.monster;
+package work.lclpnet.ap2.game.maze_scape.monster.behaviour;
 
 import net.minecraft.block.Blocks;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.mob.MobEntity;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3d;
@@ -13,8 +15,9 @@ import work.lclpnet.ap2.impl.scene.Object3d;
 import work.lclpnet.kibu.scheduler.Ticks;
 
 import java.util.List;
+import java.util.Set;
 
-public class UnstuckBehaviour {
+public class UnstuckBehaviour implements MonsterBehaviour {
 
     private static final int
             CHECK_STUCK_TICKS = Ticks.seconds(2),
@@ -42,6 +45,7 @@ public class UnstuckBehaviour {
         this.enabled = enabled;
     }
 
+    @Override
     public void init(MobEntity mob) {
         if (DEBUG_AVG_POS) {
             Vec3d pos = mob != null ? mob.getPos() : Vec3d.ZERO;
@@ -50,6 +54,7 @@ public class UnstuckBehaviour {
         }
     }
 
+    @Override
     public void tick(MobEntity mob) {
         posBuf.update(mob.getPos());
 
@@ -81,7 +86,7 @@ public class UnstuckBehaviour {
         if (passagePath.size() < 2) {
             if (++unstuckFailCount >= MAX_FAILED_UNSTUCK_ATTEMPTS) {
                 unstuckFailCount = 0;
-                CommonData.teleport(mob, target.getPos());
+                teleport(mob, target.getPos());
             }
 
             return;
@@ -110,7 +115,13 @@ public class UnstuckBehaviour {
 
         lastUnstuck = next;
 
-        CommonData.teleport(mob, next.pos().toBottomCenterPos());
+        teleport(mob, next.pos().toBottomCenterPos());
+    }
+
+    static void teleport(Entity entity, Vec3d pos) {
+        if (entity.getWorld() instanceof ServerWorld world) {
+            entity.teleport(world, pos.getX(), pos.getY(), pos.getZ(), Set.of(), entity.getYaw(), entity.getPitch(), true);
+        }
     }
 
     private static class PosBuf {
