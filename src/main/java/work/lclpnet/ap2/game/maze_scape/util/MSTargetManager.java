@@ -23,24 +23,24 @@ public class MSTargetManager {
 
     private final MSStruct struct;
     private final Participants participants;
-    private final Set<MonsterData> monsters = new HashSet<>();
+    private final Set<MonsterData<?>> monsters = new HashSet<>();
 
     public MSTargetManager(MSStruct struct, Participants participants) {
         this.struct = struct;
         this.participants = participants;
     }
 
-    public void addMonster(MonsterData monster) {
+    public void addMonster(MonsterData<?> monster) {
         monsters.add(monster);
     }
 
     public void update() {
-        record Entry(double distance, MonsterData monster, ServerPlayerEntity player) {}
+        record Entry(double distance, MonsterData<?> monster, ServerPlayerEntity player) {}
 
         // collect distances for from each monster to each player
         List<Entry> entries = new ArrayList<>(monsters.size() * participants.count());
 
-        for (MonsterData monster : monsters) {
+        for (var monster : monsters) {
             MobEntity mob = monster.mob();
 
             if (mob == null) continue;
@@ -58,7 +58,7 @@ public class MSTargetManager {
         entries.sort(Comparator.comparingDouble(Entry::distance));
 
         // assign player closest to each mob, exclusively
-        Set<MonsterData> assignedMonsters = new HashSet<>();
+        Set<MonsterData<?>> assignedMonsters = new HashSet<>();
         Set<ServerPlayerEntity> assignedPlayers = new HashSet<>();
 
         for (var entry : entries) {
@@ -84,7 +84,7 @@ public class MSTargetManager {
         }
     }
 
-    public void assignTarget(MonsterData monster, ServerPlayerEntity player) {
+    public void assignTarget(MonsterData<?> monster, ServerPlayerEntity player) {
         MobEntity mob = monster.mob();
 
         if (mob == null) return;

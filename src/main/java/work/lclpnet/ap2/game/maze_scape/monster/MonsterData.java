@@ -5,13 +5,13 @@ import org.jetbrains.annotations.Nullable;
 
 public interface MonsterData<T extends MobEntity> {
 
+    @Nullable T mob();
+
     void init(T mob);
 
     void tick(T mob);
 
     void onKillAcquired(T mob);
-
-    @Nullable T mob();
 
     default void init() {
         T mob = mob();
