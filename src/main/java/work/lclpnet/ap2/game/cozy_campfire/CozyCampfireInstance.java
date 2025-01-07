@@ -48,6 +48,7 @@ public class CozyCampfireInstance extends TeamEliminationGameInstance implements
 
     private static final float DAY_TIME_CHANCE = 0.25f, CLEAR_WEATHER_CHANCE = 0.6f, THUNDER_CHANCE = 0.05f;
     public static final TeamKey TEAM_RED = ApTeamKeys.RED, TEAM_BLUE = ApTeamKeys.BLUE;
+    public static final float MOVEMENT_SPEED = 0.15f;
     private final Random random = new Random();
     private final CollisionDetector collisionDetector = new ChunkedCollisionDetector();
     private final PlayerMovementObserver movementObserver;
@@ -108,8 +109,7 @@ public class CozyCampfireInstance extends TeamEliminationGameInstance implements
 
         for (ServerPlayerEntity player : participants) {
             kitManager.giveItems(player);
-            PlayerReset.modifyWalkSpeed(player, 0.15f);
-            player.sendAbilitiesUpdate();
+            PlayerReset.modifyWalkSpeed(player, MOVEMENT_SPEED);
 
             player.addStatusEffect(new StatusEffectInstance(StatusEffects.INVISIBILITY, Ticks.seconds(30), 1, false, false, false));
             movementBlocker.disableMovement(player);

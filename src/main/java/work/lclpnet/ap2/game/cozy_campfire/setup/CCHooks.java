@@ -33,6 +33,9 @@ import work.lclpnet.kibu.hook.util.PositionRotation;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.lobby.game.api.prot.ProtectionConfig;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
+import work.lclpnet.lobby.util.PlayerReset;
+
+import static work.lclpnet.ap2.game.cozy_campfire.CozyCampfireInstance.MOVEMENT_SPEED;
 
 public class CCHooks {
 
@@ -211,6 +214,7 @@ public class CCHooks {
         data.setPitch(spawn.getPitch());
 
         args.kitManager().giveItems(player);
+        PlayerReset.modifyWalkSpeed(player, MOVEMENT_SPEED);
     }
 
     private void onDeath(ServerPlayerEntity player) {
