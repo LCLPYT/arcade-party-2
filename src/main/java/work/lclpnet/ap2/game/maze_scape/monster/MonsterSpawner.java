@@ -31,6 +31,7 @@ import work.lclpnet.ap2.impl.ai.BlockedPathFindingPredicate;
 import work.lclpnet.ap2.impl.ai.CollisionPathFindingPredicate;
 import work.lclpnet.ap2.impl.util.EntityUtil;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
@@ -61,8 +62,8 @@ public class MonsterSpawner {
     public void spawn(RandomGenerator<Vec3d> spawns, BiConsumer<UUID, MonsterData> consumer) {
         Partial<MonsterArgs, UUID> args = uuid -> new MonsterArgs(uuid, manager, logger);
 
-        List<MonsterFactory> primary = List.of(this::spawnWarden, this::spawnSpider);
-        List<MonsterFactory> secondary = List.of(this::spawnEnderman);
+        var primary = new ArrayList<MonsterFactory>(List.of(this::spawnWarden, this::spawnSpider));
+        var secondary = new ArrayList<MonsterFactory>(List.of(this::spawnEnderman));
 
         final int players = manager.participants().count();
 
@@ -70,12 +71,12 @@ public class MonsterSpawner {
         int secondaryMobs = max(1, min(secondary.size(), players / 3));
 
         for (int i = 0; i < primaryMobs; i++) {
-            var factory = primary.get(random.nextInt(primary.size()));
+            var factory = primary.remove(random.nextInt(primary.size()));
             factory.spawn(spawns.get(), args, consumer);
         }
 
         for (int i = 0; i < secondaryMobs; i++) {
-            var factory = secondary.get(random.nextInt(secondary.size()));
+            var factory = secondary.remove(random.nextInt(secondary.size()));
             factory.spawn(spawns.get(), args, consumer);
         }
     }
