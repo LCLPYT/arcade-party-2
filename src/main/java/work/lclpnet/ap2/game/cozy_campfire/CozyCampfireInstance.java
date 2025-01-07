@@ -1,7 +1,5 @@
 package work.lclpnet.ap2.game.cozy_campfire;
 
-import net.minecraft.entity.effect.StatusEffectInstance;
-import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.item.ItemStack;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.scoreboard.AbstractTeam;
@@ -19,7 +17,7 @@ import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.team.Team;
 import work.lclpnet.ap2.api.game.team.TeamKey;
 import work.lclpnet.ap2.api.game.team.TeamManager;
-import work.lclpnet.ap2.api.map.MapBootstrapFunction;
+import work.lclpnet.ap2.api.map.MapBootstrap;
 import work.lclpnet.ap2.api.util.CollisionDetector;
 import work.lclpnet.ap2.game.cozy_campfire.setup.*;
 import work.lclpnet.ap2.impl.game.TeamEliminationGameInstance;
@@ -30,9 +28,7 @@ import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedPlayerBossBar;
 import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedTeamBossBar;
 import work.lclpnet.ap2.impl.util.collision.ChunkedCollisionDetector;
 import work.lclpnet.ap2.impl.util.collision.PlayerMovementObserver;
-import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker;
 import work.lclpnet.kibu.hook.HookRegistrar;
-import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.kibu.translate.text.LocalizedFormat;
 import work.lclpnet.lobby.game.map.GameMap;
@@ -41,12 +37,13 @@ import work.lclpnet.lobby.util.PlayerReset;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
-public class CozyCampfireInstance extends TeamEliminationGameInstance implements MapBootstrapFunction {
+public class CozyCampfireInstance extends TeamEliminationGameInstance implements MapBootstrap {
 
-    private static final float DAY_TIME_CHANCE = 0.25f, CLEAR_WEATHER_CHANCE = 0.6f, THUNDER_CHANCE = 0.05f;
+    private static final float DAY_TIME_CHANCE = 0.55f, RAIN_CHANCE = 0.6f, THUNDER_CHANCE = 0.15f;
     public static final TeamKey TEAM_RED = ApTeamKeys.RED, TEAM_BLUE = ApTeamKeys.BLUE;
     public static final float MOVEMENT_SPEED = 0.15f;
     private final Random random = new Random();
@@ -54,7 +51,6 @@ public class CozyCampfireInstance extends TeamEliminationGameInstance implements
     private final PlayerMovementObserver movementObserver;
     private final TeamStorage<CampfireFuel> campfireFuel = TeamStorage.create(this::createCampfireFuel);
     private final Set<Team> toEliminate = new HashSet<>();
-    private final SimpleMovementBlocker movementBlocker;
     private CCHooks hookSetup;
     private CCFuel fuel;
     private DynamicTranslatedTeamBossBar bossBar;
@@ -62,6 +58,8 @@ public class CozyCampfireInstance extends TeamEliminationGameInstance implements
     private int fuelPerSecond = 100, startingFuelSeconds = 30;
     private int fuelPerMinute, startingFuel;
     private int time = 0;
+    private CCBaseManager baseManager;
+    private TeamManager teamManager;
 
     public CozyCampfireInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
@@ -70,24 +68,25 @@ public class CozyCampfireInstance extends TeamEliminationGameInstance implements
         useSurvivalMode();
 
         movementObserver = new PlayerMovementObserver(collisionDetector, gameHandle.getParticipants()::isParticipating);
-
-        movementBlocker = new SimpleMovementBlocker(gameHandle.getGameScheduler());
-        movementBlocker.setModifySpeedAttribute(false);
     }
 
     @Override
-    public void bootstrapWorld(ServerWorld world, GameMap map) {
-        setupGameRules();
-        randomizeWorldConditions(world);
+    public CompletableFuture<Void> createWorldBootstrap(ServerWorld world, GameMap map) {
+        teamManager = getTeamManager();
+        teamManager.partitionIntoTeams(gameHandle.getParticipants(), Set.of(TEAM_RED, TEAM_BLUE));
+
+        CCReader setup = new CCReader(map, world, gameHandle.getLogger());
+
+        return setup.readBases(teamManager.getTeams())
+                .thenAccept(bases -> baseManager = new CCBaseManager(bases, teamManager))
+                .thenCompose(nil -> world.getServer().submit(() -> {
+                    setupGameRules(map, world);
+                    randomizeWorldConditions(world);
+                }));
     }
 
     @Override
     protected void prepare() {
-        Participants participants = gameHandle.getParticipants();
-
-        TeamManager teamManager = getTeamManager();
-        teamManager.partitionIntoTeams(participants, Set.of(TEAM_RED, TEAM_BLUE));
-
         teamManager.getMinecraftTeams().forEach(team -> {
             team.setFriendlyFireAllowed(false);
             team.setShowFriendlyInvisibles(true);
@@ -95,7 +94,6 @@ public class CozyCampfireInstance extends TeamEliminationGameInstance implements
         });
 
         readMapFuelInfo();
-        CCBaseManager baseManager = readBases(teamManager);
 
         fuel = new CCFuel(getWorld(), baseManager);
         fuel.registerFuel(fuelPerSecond);
@@ -103,23 +101,18 @@ public class CozyCampfireInstance extends TeamEliminationGameInstance implements
         teleportTeamsToSpawns();
 
         CCKitManager kitManager = new CCKitManager(teamManager, getWorld(), random);
-
-        HookRegistrar hooks = gameHandle.getHookRegistrar();
-        movementBlocker.init(hooks);
+        Participants participants = gameHandle.getParticipants();
 
         for (ServerPlayerEntity player : participants) {
             kitManager.giveItems(player);
             PlayerReset.modifyWalkSpeed(player, MOVEMENT_SPEED);
-
-            player.addStatusEffect(new StatusEffectInstance(StatusEffects.INVISIBILITY, Ticks.seconds(30), 1, false, false, false));
-            movementBlocker.disableMovement(player);
         }
 
         Translations translations = gameHandle.getTranslations();
         var args = new CCHooks.Args(fuel, baseManager, kitManager, this::onAddFuel);
 
         hookSetup = new CCHooks(participants, teamManager, this, translations, args);
-        hookSetup.register(hooks);
+        hookSetup.register(gameHandle.getHookRegistrar());
 
         setupMovementObserver(hookSetup);
 
@@ -132,12 +125,9 @@ public class CozyCampfireInstance extends TeamEliminationGameInstance implements
     protected void ready() {
         gameHandle.protect(hookSetup::configure);
 
-        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
-            movementBlocker.enableMovement(player);
-            player.removeStatusEffect(StatusEffects.INVISIBILITY);
-        }
-
         gameHandle.getGameScheduler().interval(this::tick, 1);
+
+        baseManager.openDoors(getWorld());
     }
 
     @Override
@@ -193,15 +183,8 @@ public class CozyCampfireInstance extends TeamEliminationGameInstance implements
         this.startingFuel = this.fuelPerSecond * this.startingFuelSeconds;
     }
 
-    private CCBaseManager readBases(TeamManager teamManager) {
-        CCReader setup = new CCReader(getMap(), gameHandle.getLogger());
-        var bases = setup.readBases(teamManager.getTeams());
-
-        return new CCBaseManager(bases, teamManager);
-    }
-
-    private void setupGameRules() {
-        commons().gameRuleBuilder()
+    private void setupGameRules(GameMap map, ServerWorld world) {
+        commons(map, world).gameRuleBuilder()
                 .set(GameRules.SNOW_ACCUMULATION_HEIGHT, 0)
                 .set(GameRules.DO_WEATHER_CYCLE, false)
                 .set(GameRules.DO_DAYLIGHT_CYCLE, false);
@@ -214,11 +197,11 @@ public class CozyCampfireInstance extends TeamEliminationGameInstance implements
             world.setTimeOfDay(18000);
         }
 
-        if (random.nextFloat() <= CLEAR_WEATHER_CHANCE) {
-            world.setWeather(1000, 0, false, false);
-        } else {
-            boolean thunder = random.nextFloat() <= (THUNDER_CHANCE / CLEAR_WEATHER_CHANCE);  // conditional probability
+        if (random.nextFloat() <= RAIN_CHANCE) {
+            boolean thunder = random.nextFloat() <= (THUNDER_CHANCE / RAIN_CHANCE);  // conditional probability
             world.setWeather(0, 1000, true, thunder);
+        } else {
+            world.setWeather(1000, 0, false, false);
         }
     }
 

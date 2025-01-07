@@ -344,13 +344,23 @@ public abstract class BaseGameInstance implements MiniGameInstance {
         return bossBar;
     }
 
+    /**
+     * Get or create {@link GameCommons} for this game.
+     * This method should only be called after the map is ready.
+     * If the {@link GameCommons} already need to be accessed during bootstrap, {@link #commons(GameMap, ServerWorld)} should be used instead.
+     * @return The {@link GameCommons} singleton in scope of this game instance.
+     */
     protected final GameCommons commons() {
+        return commons(getMap(), getWorld());
+    }
+
+    protected final GameCommons commons(GameMap map, ServerWorld world) {
         if (commons != null) return commons;
 
         synchronized (this) {
             if (commons != null) return commons;
 
-            commons = new GameCommons(gameHandle, getMap(), getWorld());
+            commons = new GameCommons(gameHandle, map, world);
         }
 
         return commons;

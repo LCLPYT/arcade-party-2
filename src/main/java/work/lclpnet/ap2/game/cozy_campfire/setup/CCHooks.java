@@ -143,7 +143,7 @@ public class CCHooks {
     public void configureBaseRegionEvents(CollisionDetector collisions, PlayerMovementObserver observer) {
         for (var entry : args.baseManager().getBases().entrySet()) {
             CCBase base = entry.getValue();
-            Collider bounds = base.getBounds();
+            Collider bounds = base.bounds();
 
             collisions.add(bounds);
 
@@ -162,7 +162,7 @@ public class CCHooks {
         if (team == null || !teamManager.isTeamMember(player, team)) return;
 
         CCBase base = args.baseManager().getBase(team).orElseThrow();
-        BlockPos pos = base.getCampfirePos();
+        BlockPos pos = base.campfirePos();
 
         args.fuelListener().onAddFuel(player, pos, team, stack);
     }
