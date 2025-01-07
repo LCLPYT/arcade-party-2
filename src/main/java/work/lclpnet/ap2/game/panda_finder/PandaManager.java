@@ -125,7 +125,13 @@ public class PandaManager {
                 .map(gene -> "game.ap2.panda_finder.find.".concat(gene.asString()));
     }
 
-    public void setFound() {
+    public synchronized void setFound() {
+        for (PandaEntity panda : pandas) {
+            if (isSearchedPanda(panda)) {
+                panda.setGlowing(true);
+            }
+        }
+
         current = null;
     }
 
