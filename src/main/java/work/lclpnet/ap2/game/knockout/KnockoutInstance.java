@@ -50,7 +50,8 @@ public class KnockoutInstance extends EliminationGameInstance {
 
         gameHandle.getHookRegistrar().registerHook(EntityDamageCallback.HOOK, (entity, source, health) -> {
             if (entity instanceof ServerPlayerEntity player
-                && source.getAttacker() instanceof ServerPlayerEntity attacker) {
+                    && source.getAttacker() instanceof ServerPlayerEntity attacker
+                    && player.hurtTime <= 0) {  // prevent duplicate damage during grace period
                 this.onDamage(player, attacker);
                 return true;
             }

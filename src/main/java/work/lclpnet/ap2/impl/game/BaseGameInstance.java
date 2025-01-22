@@ -29,7 +29,7 @@ import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedPlayerBossBar;
 import work.lclpnet.ap2.impl.util.effect.ApEffect;
 import work.lclpnet.ap2.impl.util.effect.ApEffects;
 import work.lclpnet.ap2.impl.util.property.ApMapProperties;
-import work.lclpnet.combatctl.api.CombatStyle;
+import work.lclpnet.combatctl.impl.CombatStyles;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.EntityHealthCallback;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
@@ -290,7 +290,7 @@ public abstract class BaseGameInstance implements MiniGameInstance {
     }
 
     protected final void useOldCombat() {
-        gameHandle.getPlayerUtil().setDefaultCombatStyle(CombatStyle.OLD);
+        gameHandle.getPlayerUtil().setDefaultCombatStyle(CombatStyles.CLASSIC);
     }
 
     /**

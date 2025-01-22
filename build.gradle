@@ -40,6 +40,14 @@ repositories {
     maven {
         url = 'https://maven.nucleoid.xyz/'
     }
+
+    maven {
+        url "https://maven.terraformersmc.com/releases/"
+    }
+
+    maven {
+        url "https://maven.shedaniel.me/"
+    }
 }
 
 loom {
@@ -84,6 +92,7 @@ dependencies {
     implementation "work.lclpnet:translations4j:${project.translations4j_version}:network"
 
     // optional runtime dependencies (not required to play)
+    modLocalRuntime "work.lclpnet.mods:mc-debug-sender-impl:${project.mc_debug_sender_impl_version}"
     modLocalRuntime "maven.modrinth:anti-xray:${project.anti_xray_version}"
     localRuntime "com.moandjiezana.toml:toml4j:${project.toml_version}"
 
