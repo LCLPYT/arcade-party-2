@@ -1,8 +1,10 @@
 package work.lclpnet.ap2.game.maze_scape.util;
 
+import net.minecraft.entity.ai.brain.MemoryModuleType;
 import net.minecraft.entity.attribute.EntityAttributeInstance;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.data.DataTracker;
+import net.minecraft.entity.mob.CreakingEntity;
 import net.minecraft.entity.mob.EndermanEntity;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.mob.WardenEntity;
@@ -91,20 +93,22 @@ public class MSTargetManager {
 
         mob.setTarget(player);
 
-        if (mob instanceof WardenEntity warden) {
-            warden.updateAttackTarget(player);
-        }
+        switch (mob) {
+            case WardenEntity warden -> warden.updateAttackTarget(player);
+            case EndermanEntity enderman when monster instanceof EndermanData data -> {
+                EntityAttributeInstance instance = enderman.getAttributeInstance(EntityAttributes.MOVEMENT_SPEED);
 
-        if (mob instanceof EndermanEntity enderman && monster instanceof EndermanData data) {
-            EntityAttributeInstance instance = enderman.getAttributeInstance(EntityAttributes.MOVEMENT_SPEED);
+                if (instance != null) {
+                    instance.removeModifier(Identifier.ofVanilla("attacking"));
+                }
 
-            if (instance != null) {
-                instance.removeModifier(Identifier.ofVanilla("attacking"));
+                DataTracker dataTracker = enderman.getDataTracker();
+                dataTracker.set(EndermanEntityAccessor.ANGRY(), data.isScreaming());  // angry attribute differs from data.isAngry()
+
+                dataTracker.set(EndermanEntityAccessor.PROVOKED(), data.isAngry());
             }
-
-            DataTracker dataTracker = enderman.getDataTracker();
-            dataTracker.set(EndermanEntityAccessor.ANGRY(), data.isScreaming());  // angry attribute differs from data.isAngry()
-            dataTracker.set(EndermanEntityAccessor.PROVOKED(), data.isAngry());
+            case CreakingEntity creaking -> creaking.getBrain().remember(MemoryModuleType.ATTACK_TARGET, player);
+            default -> {}
         }
     }
 

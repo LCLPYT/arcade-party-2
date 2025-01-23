@@ -1,36 +1,38 @@
 package work.lclpnet.ap2.core.hook;
 
-import com.mojang.serialization.Dynamic;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.brain.Brain;
+import net.minecraft.entity.mob.CreakingEntity;
 import net.minecraft.entity.mob.WardenEntity;
 import org.jetbrains.annotations.Nullable;
-import work.lclpnet.ap2.core.type.BrainHandle;
-import work.lclpnet.ap2.core.type.WardenBrainHandle;
 import work.lclpnet.kibu.hook.Hook;
 import work.lclpnet.kibu.hook.HookFactory;
 
 import java.util.function.Supplier;
 
-public interface BrainCreationCallback<T extends LivingEntity, H extends BrainHandle<T>> {
+public interface BrainCreationCallback<T extends LivingEntity> {
 
-    @Nullable
-    Brain<T> createBrain(T entity, Dynamic<?> dynamic, Supplier<H> handleGetter);
+    @Nullable Brain<T> createBrain(T entity, Supplier<Brain<T>> brainGetter);
 
-    interface Warden extends BrainCreationCallback<WardenEntity, WardenBrainHandle> {
+    interface Warden extends BrainCreationCallback<WardenEntity> {
+        Hook<Warden> HOOK = HookFactory.createArrayBacked(Warden.class, hooks -> (entity, handleGetter) -> invoke(hooks, entity, handleGetter));
+    }
 
-        Hook<Warden> HOOK = HookFactory.createArrayBacked(Warden.class, hooks -> (entity, dynamic, handleGetter) -> {
-            Brain<WardenEntity> override = null;
+    interface Creaking extends BrainCreationCallback<CreakingEntity> {
+        Hook<Creaking> HOOK = HookFactory.createArrayBacked(Creaking.class, hooks -> (entity, handleGetter) -> invoke(hooks, entity, handleGetter));
+    }
 
-            for (var hook : hooks) {
-                var res = hook.createBrain(entity, dynamic, handleGetter);
+    private static <T extends LivingEntity, I extends BrainCreationCallback<T>> @Nullable Brain<T> invoke(I[] hooks, T entity, Supplier<Brain<T>> handleGetter) {
+        Brain<T> override = null;
 
-                if (res != null) {
-                    override = res;
-                }
+        for (var hook : hooks) {
+            var res = hook.createBrain(entity, handleGetter);
+
+            if (res != null) {
+                override = res;
             }
+        }
 
-            return override;
-        });
+        return override;
     }
 }
