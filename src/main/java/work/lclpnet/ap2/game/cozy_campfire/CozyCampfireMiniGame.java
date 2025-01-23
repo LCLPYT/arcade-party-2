@@ -36,7 +36,8 @@ public class CozyCampfireMiniGame implements MiniGame {
 
     @Override
     public boolean canBePlayed(GameStartContext context) {
-        return context.getParticipantCount() >= 2;
+        int count = context.getParticipantCount();
+        return count == 2 || count >= 4;
     }
 
     @Override

@@ -13,6 +13,7 @@ import work.lclpnet.ap2.api.base.PlayerManager;
 import work.lclpnet.ap2.impl.util.effect.ApEffect;
 import work.lclpnet.combatctl.api.CombatControl;
 import work.lclpnet.combatctl.api.CombatStyle;
+import work.lclpnet.combatctl.impl.CombatStyles;
 import work.lclpnet.kibu.access.VelocityModifier;
 import work.lclpnet.kibu.hook.util.PlayerUtils;
 import work.lclpnet.lobby.util.PlayerReset;
@@ -28,7 +29,7 @@ public class PlayerUtil {
     private final CombatControl combatControl;
     private final Set<ApEffect> effects = new ObjectOpenHashSet<>(1);
     private GameMode defaultGameMode = INITIAL_GAMEMODE;
-    private CombatStyle defaultCombatStyle = CombatStyle.MODERN;
+    private CombatStyle defaultCombatStyle = CombatStyles.MODERN;
     private boolean allowFlight = false;
 
     public PlayerUtil(MinecraftServer server, PlayerManager playerManager) {

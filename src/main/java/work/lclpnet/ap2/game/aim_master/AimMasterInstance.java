@@ -69,7 +69,7 @@ public class AimMasterInstance extends DefaultGameInstance implements MapBootstr
     @Override
     public CompletableFuture<Void> createWorldBootstrap(ServerWorld world, GameMap map) {
 
-        var generator = new StackedRoomGenerator<>(world, map, StackedRoomGenerator.Coordinates.ABSOLUTE, (pos, spawn, yaw, structure) -> new AimMasterDomain(spawn, yaw, world));
+        var generator = new StackedRoomGenerator<>(world, map, StackedRoomGenerator.Coordinates.RELATIVE, (pos, spawn, yaw, structure) -> new AimMasterDomain(spawn, yaw, world));
         var positionGenerator = new PositionGenerator(SPHERE_RADIUS, SPHERE_OFFSET, UPWARD_TILT, ELLIPSE_FACTOR, new BlockPos(0, 0, 0), CONE_FOV, TARGET_NUMBER, TARGET_MIN_DISTANCE);
         var blockOptions = new BlockOptions();
         var sequenceGenerator = new SequenceGenerator(positionGenerator, blockOptions, scoreGoal);

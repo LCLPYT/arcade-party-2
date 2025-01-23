@@ -107,6 +107,7 @@ public class MazeScapeInstance extends EliminationGameInstance implements MapBoo
 
         persistence.markQuadPersistent(-mapChunkRadius, -mapChunkRadius, mapChunkRadius, mapChunkRadius);
 
+        commons().displayHealth();
         teleportPlayers();
     }
 

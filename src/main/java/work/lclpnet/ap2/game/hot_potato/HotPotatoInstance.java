@@ -32,6 +32,7 @@ import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.RunningTask;
 import work.lclpnet.kibu.scheduler.api.SchedulerAction;
 import work.lclpnet.kibu.scheduler.api.TaskHandle;
+import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.kibu.title.Title;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.kibu.translate.bossbar.TranslatedBossBar;
@@ -39,14 +40,19 @@ import work.lclpnet.kibu.translate.bossbar.TranslatedBossBar;
 import java.util.List;
 import java.util.Random;
 
+import static net.minecraft.entity.effect.StatusEffects.GLOWING;
+
 public class HotPotatoInstance extends EliminationGameInstance implements GameOverListener {
 
-    public static final int DURATION_SECONDS = 20;
+    public static final int
+            DURATION_SECONDS = 20,
+            MARK_PERIOD_TICKS = Ticks.seconds(6);
+
     private final Random random = new Random();
     private DynamicTranslatedBossBar dynamicBossBar;
     private ServerPlayerEntity markedPlayer = null;
     private Team team;
-    private TaskHandle task = null;
+    private TaskHandle task = null, markTask = null;
 
     public HotPotatoInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
@@ -96,12 +102,15 @@ public class HotPotatoInstance extends EliminationGameInstance implements GameOv
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
             if (player == markedPlayer) continue;
 
-            player.addStatusEffect(new StatusEffectInstance(StatusEffects.GLOWING, Ticks.seconds(3), 1, false, false, false));
+            glow(player, Ticks.seconds(3));
         }
 
         TranslatedBossBar bossBar = dynamicBossBar.getBossBar();
+        TaskScheduler scheduler = gameHandle.getGameScheduler();
 
-        task = gameHandle.getGameScheduler().interval(new SchedulerAction() {
+        markAndReschedule(scheduler);
+
+        task = scheduler.interval(new SchedulerAction() {
             int t = 0, i = DURATION_SECONDS;
 
             @Override
@@ -133,7 +142,27 @@ public class HotPotatoInstance extends EliminationGameInstance implements GameOv
         }, 1).whenComplete(this::onRoundOver);
     }
 
+    private void markAndReschedule(TaskScheduler scheduler) {
+        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
+            glow(player, Ticks.seconds(1));
+        }
+
+        markTask = scheduler.timeout(() -> markAndReschedule(scheduler), MARK_PERIOD_TICKS);
+    }
+
+    private static void glow(ServerPlayerEntity player, int ticks) {
+        player.addStatusEffect(new StatusEffectInstance(GLOWING, ticks, 1, false, false, false));
+    }
+
     private void onRoundOver() {
+        if (markTask != null) {
+            markTask.cancel();
+        }
+
+        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
+            player.removeStatusEffect(GLOWING);
+        }
+
         if (winManager.isGameOver()) return;
 
         gameHandle.getGameScheduler().timeout(this::nextRound, Ticks.seconds(3));
@@ -153,13 +182,17 @@ public class HotPotatoInstance extends EliminationGameInstance implements GameOv
     public void participantRemoved(ServerPlayerEntity player) {
         super.participantRemoved(player);
 
-        if (markedPlayer == player) {
-            removePotato(player);
-            markedPlayer = null;
+        if (markedPlayer != player) return;
 
-            if (task != null) {
-                task.cancel();
-            }
+        removePotato(player);
+        markedPlayer = null;
+
+        if (task != null) {
+            task.cancel();
+        }
+
+        if (markTask != null) {
+            markTask.cancel();
         }
     }
 
@@ -239,7 +272,7 @@ public class HotPotatoInstance extends EliminationGameInstance implements GameOv
         player.equipStack(EquipmentSlot.HEAD, new ItemStack(Items.RED_WOOL));
 
         player.addStatusEffect(new StatusEffectInstance(StatusEffects.SPEED, DURATION_SECONDS * 20, 1, false, false, false));
-        player.addStatusEffect(new StatusEffectInstance(StatusEffects.GLOWING, DURATION_SECONDS * 20, 1, false, false, false));
+        glow(player, DURATION_SECONDS * 20);
 
         var title = translations.translateText(player, "game.ap2.hot_potato.title")
                 .styled(style -> style.withColor(0xff0000).withBold(true));

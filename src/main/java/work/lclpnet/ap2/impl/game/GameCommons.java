@@ -45,6 +45,7 @@ public class GameCommons {
     private volatile Announcer announcer = null;
     private volatile List<PositionRotation> spawns = null;
     private volatile GameRuleBuilder gameRuleBuilder = null;
+    private volatile HealthDisplay healthDisplay = null;
 
     public GameCommons(MiniGameHandle gameHandle, GameMap map, ServerWorld world) {
         this.gameHandle = gameHandle;
@@ -247,6 +248,18 @@ public class GameCommons {
         }
 
         return gameRuleBuilder;
+    }
+
+    public void displayHealth() {
+        if (healthDisplay != null) return;
+
+        synchronized (this) {
+            if (healthDisplay != null) return;
+
+            healthDisplay = new HealthDisplay(gameHandle);
+        }
+
+        healthDisplay.setup(gameHandle.getHookRegistrar());
     }
 
     public record WorldBorderConfig(int centerX, int centerZ, int maxRadius, int minRadius) {}

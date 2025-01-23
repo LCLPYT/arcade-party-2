@@ -33,6 +33,9 @@ import work.lclpnet.kibu.hook.util.PositionRotation;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.lobby.game.api.prot.ProtectionConfig;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
+import work.lclpnet.lobby.util.PlayerReset;
+
+import static work.lclpnet.ap2.game.cozy_campfire.CozyCampfireInstance.MOVEMENT_SPEED;
 
 public class CCHooks {
 
@@ -140,7 +143,7 @@ public class CCHooks {
     public void configureBaseRegionEvents(CollisionDetector collisions, PlayerMovementObserver observer) {
         for (var entry : args.baseManager().getBases().entrySet()) {
             CCBase base = entry.getValue();
-            Collider bounds = base.getBounds();
+            Collider bounds = base.bounds();
 
             collisions.add(bounds);
 
@@ -159,7 +162,7 @@ public class CCHooks {
         if (team == null || !teamManager.isTeamMember(player, team)) return;
 
         CCBase base = args.baseManager().getBase(team).orElseThrow();
-        BlockPos pos = base.getCampfirePos();
+        BlockPos pos = base.campfirePos();
 
         args.fuelListener().onAddFuel(player, pos, team, stack);
     }
@@ -211,6 +214,7 @@ public class CCHooks {
         data.setPitch(spawn.getPitch());
 
         args.kitManager().giveItems(player);
+        PlayerReset.modifyWalkSpeed(player, MOVEMENT_SPEED);
     }
 
     private void onDeath(ServerPlayerEntity player) {

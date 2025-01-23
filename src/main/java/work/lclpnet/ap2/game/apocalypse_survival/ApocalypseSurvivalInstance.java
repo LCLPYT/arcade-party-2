@@ -94,6 +94,8 @@ public class ApocalypseSurvivalInstance extends EliminationGameInstance {
             PlayerReset.setAttribute(player, EntityAttributes.SAFE_FALL_DISTANCE, 5.0);
             PlayerReset.setAttribute(player, EntityAttributes.FALL_DAMAGE_MULTIPLIER, 0.5);
         }
+
+        commons().displayHealth();
     }
 
     @Override
