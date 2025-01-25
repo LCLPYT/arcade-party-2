@@ -1,8 +1,10 @@
 package work.lclpnet.ap2.game.maze_scape.util;
 
+import net.minecraft.entity.ai.brain.MemoryModuleType;
 import net.minecraft.entity.attribute.EntityAttributeInstance;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.data.DataTracker;
+import net.minecraft.entity.mob.CreakingEntity;
 import net.minecraft.entity.mob.EndermanEntity;
 import net.minecraft.entity.mob.MobEntity;
 import net.minecraft.entity.mob.WardenEntity;
@@ -23,24 +25,24 @@ public class MSTargetManager {
 
     private final MSStruct struct;
     private final Participants participants;
-    private final Set<MonsterData> monsters = new HashSet<>();
+    private final Set<MonsterData<?>> monsters = new HashSet<>();
 
     public MSTargetManager(MSStruct struct, Participants participants) {
         this.struct = struct;
         this.participants = participants;
     }
 
-    public void addMonster(MonsterData monster) {
+    public void addMonster(MonsterData<?> monster) {
         monsters.add(monster);
     }
 
     public void update() {
-        record Entry(double distance, MonsterData monster, ServerPlayerEntity player) {}
+        record Entry(double distance, MonsterData<?> monster, ServerPlayerEntity player) {}
 
         // collect distances for from each monster to each player
         List<Entry> entries = new ArrayList<>(monsters.size() * participants.count());
 
-        for (MonsterData monster : monsters) {
+        for (var monster : monsters) {
             MobEntity mob = monster.mob();
 
             if (mob == null) continue;
@@ -58,7 +60,7 @@ public class MSTargetManager {
         entries.sort(Comparator.comparingDouble(Entry::distance));
 
         // assign player closest to each mob, exclusively
-        Set<MonsterData> assignedMonsters = new HashSet<>();
+        Set<MonsterData<?>> assignedMonsters = new HashSet<>();
         Set<ServerPlayerEntity> assignedPlayers = new HashSet<>();
 
         for (var entry : entries) {
@@ -84,27 +86,29 @@ public class MSTargetManager {
         }
     }
 
-    public void assignTarget(MonsterData monster, ServerPlayerEntity player) {
+    public void assignTarget(MonsterData<?> monster, ServerPlayerEntity player) {
         MobEntity mob = monster.mob();
 
         if (mob == null) return;
 
         mob.setTarget(player);
 
-        if (mob instanceof WardenEntity warden) {
-            warden.updateAttackTarget(player);
-        }
+        switch (mob) {
+            case WardenEntity warden -> warden.updateAttackTarget(player);
+            case EndermanEntity enderman when monster instanceof EndermanData data -> {
+                EntityAttributeInstance instance = enderman.getAttributeInstance(EntityAttributes.MOVEMENT_SPEED);
 
-        if (mob instanceof EndermanEntity enderman && monster instanceof EndermanData data) {
-            EntityAttributeInstance instance = enderman.getAttributeInstance(EntityAttributes.MOVEMENT_SPEED);
+                if (instance != null) {
+                    instance.removeModifier(Identifier.ofVanilla("attacking"));
+                }
 
-            if (instance != null) {
-                instance.removeModifier(Identifier.ofVanilla("attacking"));
+                DataTracker dataTracker = enderman.getDataTracker();
+                dataTracker.set(EndermanEntityAccessor.ANGRY(), data.isScreaming());  // angry attribute differs from data.isAngry()
+
+                dataTracker.set(EndermanEntityAccessor.PROVOKED(), data.isAngry());
             }
-
-            DataTracker dataTracker = enderman.getDataTracker();
-            dataTracker.set(EndermanEntityAccessor.ANGRY(), data.isScreaming());  // angry attribute differs from data.isAngry()
-            dataTracker.set(EndermanEntityAccessor.PROVOKED(), data.isAngry());
+            case CreakingEntity creaking -> creaking.getBrain().remember(MemoryModuleType.ATTACK_TARGET, player);
+            default -> {}
         }
     }
 

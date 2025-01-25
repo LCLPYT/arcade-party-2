@@ -33,13 +33,13 @@ public class MonsterReveal {
 
     private final ModelManager modelManager;
     private final Participants participants;
-    private final Collection<MonsterData> monsters;
+    private final Collection<MonsterData<?>> monsters;
     private final DynamicEntityManager dynamicEntities;
     private final Scene scene;
     private final List<DangerMark> marks = new ArrayList<>();
     private @Nullable TaskHandle tickHandle = null;
 
-    public MonsterReveal(ModelManager modelManager, Participants participants, ServerWorld world, Collection<MonsterData> monsters) {
+    public MonsterReveal(ModelManager modelManager, Participants participants, ServerWorld world, Collection<MonsterData<?>> monsters) {
         this.modelManager = modelManager;
         this.participants = participants;
         this.monsters = monsters;
@@ -54,7 +54,7 @@ public class MonsterReveal {
         Model dangerModel = modelManager.getModel(Models.DANGER).orElseThrow();
 
         for (ServerPlayerEntity player : participants) {
-            for (MonsterData monster : monsters) {
+            for (var monster : monsters) {
                 var mark = new DangerMark(player.getUuid(), monster);
 
                 if (!mark.updatePosition(player)) continue;
@@ -131,9 +131,9 @@ public class MonsterReveal {
 
     private class DangerMark extends Object3d {
         private final UUID playerUuid;
-        private final MonsterData monster;
+        private final MonsterData<?> monster;
 
-        private DangerMark(UUID playerUuid, MonsterData monster) {
+        private DangerMark(UUID playerUuid, MonsterData<?> monster) {
             this.playerUuid = playerUuid;
             this.monster = monster;
         }

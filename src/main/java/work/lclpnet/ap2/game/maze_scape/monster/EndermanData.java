@@ -16,12 +16,16 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.base.ArcadeParty;
 import work.lclpnet.ap2.core.mixin.EndermanEntityAccessor;
+import work.lclpnet.ap2.game.maze_scape.monster.behaviour.AccelerationBehaviour;
+import work.lclpnet.ap2.game.maze_scape.monster.behaviour.UnstuckBehaviour;
+import work.lclpnet.ap2.game.maze_scape.monster.behaviour.ValidPositionBehaviour;
 import work.lclpnet.ap2.game.maze_scape.util.EndermanEscape;
 import work.lclpnet.ap2.game.maze_scape.util.MSManager;
 import work.lclpnet.ap2.game.maze_scape.util.MSStruct;
 import work.lclpnet.ap2.game.maze_scape.util.VisibilityChecker;
 import work.lclpnet.kibu.scheduler.Ticks;
 
+import java.util.List;
 import java.util.UUID;
 
 import static java.lang.Math.max;
@@ -30,7 +34,7 @@ import static net.minecraft.entity.attribute.EntityAttributes.MOVEMENT_SPEED;
 import static work.lclpnet.ap2.impl.util.EntityUtil.addAttributeModifier;
 import static work.lclpnet.ap2.impl.util.EntityUtil.removeAttributeModifier;
 
-public class EndermanData implements MonsterData {
+public class EndermanData implements MonsterData<EndermanEntity> {
 
     private static final int
             VISIBLE_CHECK_INTERVAL_TICKS = 5,
@@ -57,6 +61,7 @@ public class EndermanData implements MonsterData {
     private final CommonData common;
     private final VisibilityChecker visibilityChecker;
     private final EndermanEscape escape;
+    private final UnstuckBehaviour unstuck;
     private int timer = 0;
     private boolean screaming = false;
     private int scaredTimer = 0;
@@ -68,27 +73,31 @@ public class EndermanData implements MonsterData {
 
     public EndermanData(MonsterArgs args, MSStruct struct) {
         this.args = args;
-        this.common = new CommonData(args, 0.35, 0.42, 0.75);
 
         MSManager manager = args.manager();
+
+        this.common = new CommonData(args, List.of(
+                new ValidPositionBehaviour(manager, args.logger()),
+                new AccelerationBehaviour(0.35, 0.42),
+                unstuck = new UnstuckBehaviour(manager, 0.75)
+        ));
+
         this.visibilityChecker = new VisibilityChecker(manager.world());
         this.escape = new EndermanEscape(struct, visibilityChecker, manager.participants(), manager.debugController());
     }
 
     @Override
-    public void init() {
-        common.init();
+    public void init(EndermanEntity mob) {
+        common.init(mob);
+        unstuck.init(mob);
     }
 
     @Override
-    public void tick() {
-        common.setUnstuckEnabled(fleeTargetPos == null);
+    public void tick(EndermanEntity mob) {
+        unstuck.setEnabled(fleeTargetPos == null);
 
-        common.tick();
-
-        EndermanEntity mob = mob();
-
-        if (mob == null) return;
+        common.tick(mob);
+        unstuck.tick(mob);
 
         if (timer % VISIBLE_CHECK_INTERVAL_TICKS == 0) {
             checkLookedAt();
@@ -131,15 +140,10 @@ public class EndermanData implements MonsterData {
     }
 
     @Override
-    public void onKillAcquired() {
-        common.onKillAcquired();
+    public void onKillAcquired(EndermanEntity mob) {
+        common.onKillAcquired(mob);
         setAnger(0, null);
-
-        EndermanEntity mob = mob();
-
-        if (mob != null) {
-            stopFleeing(mob);
-        }
+        stopFleeing(mob);
     }
 
     @Override

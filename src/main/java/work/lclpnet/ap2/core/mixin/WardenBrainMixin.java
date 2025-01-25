@@ -10,12 +10,10 @@ import net.minecraft.entity.mob.WardenEntity;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import work.lclpnet.ap2.core.hook.BrainCreationCallback;
-import work.lclpnet.ap2.core.type.WardenBrainHandle;
 
 import java.util.List;
 
@@ -26,66 +24,17 @@ public abstract class WardenBrainMixin {
 
     @Shadow @Final private static List<SensorType<? extends Sensor<? super WardenEntity>>> SENSORS;
 
-    @Shadow private static void addCoreActivities(Brain<WardenEntity> brain) {}
-
-    @Shadow private static void addIdleActivities(Brain<WardenEntity> brain) {}
-
-    @Shadow private static void addRoarActivities(Brain<WardenEntity> brain) {}
-
-    @Shadow private static void addInvestigateActivities(Brain<WardenEntity> brain) {}
-
-    @Shadow private static void addSniffActivities(Brain<WardenEntity> brain) {}
-
     @Inject(
             method = "create",
             at = @At("HEAD"),
             cancellable = true
     )
     private static void ap2$overrideCreate(WardenEntity warden, Dynamic<?> dynamic, CallbackInfoReturnable<Brain<?>> cir) {
-        var override = BrainCreationCallback.Warden.HOOK.invoker().createBrain(warden, dynamic, WardenBrainMixin::createHandle);
+        var override = BrainCreationCallback.Warden.HOOK.invoker().createBrain(warden, () ->
+                Brain.createProfile(MEMORY_MODULES, SENSORS).deserialize(dynamic));
 
         if (override != null) {
             cir.setReturnValue(override);
         }
-    }
-
-    @Unique
-    private static WardenBrainHandle createHandle() {
-        return new WardenBrainHandle() {
-            @Override
-            public void addCoreActivities(Brain<WardenEntity> brain) {
-                WardenBrainMixin.addCoreActivities(brain);
-            }
-
-            @Override
-            public void addIdleActivities(Brain<WardenEntity> brain) {
-                WardenBrainMixin.addIdleActivities(brain);
-            }
-
-            @Override
-            public void addRoarActivities(Brain<WardenEntity> brain) {
-                WardenBrainMixin.addRoarActivities(brain);
-            }
-
-            @Override
-            public void addInvestigateActivities(Brain<WardenEntity> brain) {
-                WardenBrainMixin.addInvestigateActivities(brain);
-            }
-
-            @Override
-            public void addSniffActivities(Brain<WardenEntity> brain) {
-                WardenBrainMixin.addSniffActivities(brain);
-            }
-
-            @Override
-            public List<MemoryModuleType<?>> memoryModules() {
-                return MEMORY_MODULES;
-            }
-
-            @Override
-            public List<SensorType<? extends Sensor<? super WardenEntity>>> sensors() {
-                return SENSORS;
-            }
-        };
     }
 }

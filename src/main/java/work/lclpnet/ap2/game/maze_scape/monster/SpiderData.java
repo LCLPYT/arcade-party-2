@@ -8,11 +8,16 @@ import net.minecraft.entity.mob.SpiderEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import org.jetbrains.annotations.Nullable;
+import work.lclpnet.ap2.game.maze_scape.monster.behaviour.AccelerationBehaviour;
+import work.lclpnet.ap2.game.maze_scape.monster.behaviour.SameRoomBehaviour;
+import work.lclpnet.ap2.game.maze_scape.monster.behaviour.UnstuckBehaviour;
+import work.lclpnet.ap2.game.maze_scape.monster.behaviour.ValidPositionBehaviour;
 import work.lclpnet.kibu.scheduler.Ticks;
 
+import java.util.List;
 import java.util.Random;
 
-public class SpiderData implements MonsterData {
+public class SpiderData implements MonsterData<SpiderEntity> {
 
     private static final int
             COBWEB_DELAY_MIN_TICKS = Ticks.seconds(6),
@@ -24,7 +29,13 @@ public class SpiderData implements MonsterData {
     private int nextCobweb;
 
     public SpiderData(MonsterArgs args, Random random) {
-        this.common = new CommonData(args, 0.35, 0.48, 0.65);
+        this.common = new CommonData(args, List.of(
+                new ValidPositionBehaviour(args.manager(), args.logger()),
+                new AccelerationBehaviour(0.35, 0.48),
+                new UnstuckBehaviour(args.manager(), 0.65),
+                new SameRoomBehaviour<>(args.manager().struct(), COBWEB_SPECIAL_TICKS, this::cobwebSpecial)
+        ));
+
         this.random = random;
 
         scheduleCobweb();
@@ -35,27 +46,23 @@ public class SpiderData implements MonsterData {
     }
 
     @Override
-    public void init() {
-        common.init();
+    public void init(SpiderEntity spider) {
+        common.init(spider);
     }
 
     @Override
-    public void tick() {
-        common.tick();
+    public void tick(SpiderEntity spider) {
+        common.tick(spider);
 
         if (nextCobweb-- <= 0) {
             placeCobweb();
             scheduleCobweb();
         }
-
-        if (common.sameRoomTimerDue(COBWEB_SPECIAL_TICKS)) {
-            cobwebSpecial();
-        }
     }
 
     @Override
-    public void onKillAcquired() {
-        common.onKillAcquired();
+    public void onKillAcquired(SpiderEntity spider) {
+        common.onKillAcquired(spider);
     }
 
     @Override
@@ -67,15 +74,7 @@ public class SpiderData implements MonsterData {
         return null;
     }
 
-    private void cobwebSpecial() {
-        SpiderEntity spider = mob();
-
-        if (spider == null) return;
-
-        LivingEntity target = spider.getTarget();
-
-        if (target == null) return;
-
+    private void cobwebSpecial(SpiderEntity spider, LivingEntity target) {
         putCobweb(target.getBlockPos());
         target.damage(common.manager().world(), spider.getDamageSources().indirectMagic(spider, spider), 2);
         target.addStatusEffect(new StatusEffectInstance(StatusEffects.POISON, Ticks.seconds(5), 0));

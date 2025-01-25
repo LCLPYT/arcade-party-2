@@ -8,6 +8,8 @@
   },
   "mixins": [
     "CobwebBlockMixin",
+    "CreakingBrainAccessor",
+    "CreakingEntityMixin",
     "EnderDragonFightMixin",
     "EndermanEntityAccessor",
     "EntityMixin",
@@ -25,6 +27,7 @@
     "PathNodeMakerAccessor",
     "PathNodeNavigatorMixin",
     "SpiderEntityMixin",
+    "WardenBrainAccessor",
     "WardenBrainMixin"
   ]
 }

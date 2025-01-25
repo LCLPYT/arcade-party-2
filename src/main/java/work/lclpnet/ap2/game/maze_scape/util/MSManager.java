@@ -2,7 +2,6 @@ package work.lclpnet.ap2.game.maze_scape.util;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.mojang.serialization.Dynamic;
 import it.unimi.dsi.fastutil.objects.Object2DoubleMap;
 import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
 import net.minecraft.block.Blocks;
@@ -17,10 +16,7 @@ import net.minecraft.entity.ai.brain.task.MeleeAttackTask;
 import net.minecraft.entity.ai.brain.task.RangedApproachTask;
 import net.minecraft.entity.ai.pathing.Path;
 import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.entity.mob.EndermanEntity;
-import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.entity.mob.SpiderEntity;
-import net.minecraft.entity.mob.WardenEntity;
+import net.minecraft.entity.mob.*;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
@@ -29,8 +25,9 @@ import org.slf4j.Logger;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.core.hook.*;
+import work.lclpnet.ap2.core.mixin.CreakingBrainAccessor;
+import work.lclpnet.ap2.core.mixin.WardenBrainAccessor;
 import work.lclpnet.ap2.core.type.ApEntity;
-import work.lclpnet.ap2.core.type.WardenBrainHandle;
 import work.lclpnet.ap2.game.maze_scape.gen.Node;
 import work.lclpnet.ap2.game.maze_scape.monster.EndermanData;
 import work.lclpnet.ap2.game.maze_scape.monster.MonsterData;
@@ -59,7 +56,7 @@ public class MSManager {
     private final MSTargetManager targetManager;
     private final int mapChunkRadius;
     private final MSDebugController debugController;
-    private final Map<UUID, MonsterData> monsters = new HashMap<>();
+    private final Map<UUID, MonsterData<?>> monsters = new HashMap<>();
     private final MonsterSpawner spawner;
 
     public MSManager(ServerWorld world, GameMap map, MSStruct struct, Participants participants, Random random, Logger logger, MSDebugController debugController) {
@@ -92,6 +89,7 @@ public class MSManager {
 
         hooks.registerHook(LivingEntityAttributeInitCallback.HOOK, this::initAttributes);
         hooks.registerHook(BrainCreationCallback.Warden.HOOK, this::createWardenBrain);
+        hooks.registerHook(BrainCreationCallback.Creaking.HOOK, this::createCreakingBrain);
         hooks.registerHook(EntityPathFindingCallback.HOOK, this::modifyPathFinding);
         hooks.registerHook(CobwebSlowCallback.HOOK, this::cancelCobwebSlow);
         hooks.registerHook(EntityAfterMoveCallback.HOOK, this::afterMoveTick);
@@ -122,7 +120,7 @@ public class MSManager {
         targetManager.update();
     }
 
-    public Collection<MonsterData> monsters() {
+    public Collection<MonsterData<?>> monsters() {
         return Collections.unmodifiableCollection(monsters.values());
     }
 
@@ -131,9 +129,7 @@ public class MSManager {
     }
 
     public void tick() {
-        for (var data : monsters.values()) {
-            data.tick();
-        }
+        monsters.values().forEach(MonsterData::tick);
     }
 
     /**
@@ -186,22 +182,21 @@ public class MSManager {
     private static boolean isMonsterType(LivingEntity entity) {
         return entity instanceof WardenEntity
                 || entity instanceof SpiderEntity
-                || entity instanceof EndermanEntity;
+                || entity instanceof EndermanEntity
+                || entity instanceof CreakingEntity;
     }
 
-    private @Nullable Brain<WardenEntity> createWardenBrain(WardenEntity warden, Dynamic<?> dynamic, Supplier<WardenBrainHandle> handleGetter) {
+    private @Nullable Brain<WardenEntity> createWardenBrain(WardenEntity warden, Supplier<Brain<WardenEntity>> brainSupplier) {
         if (warden.getWorld() != world) return null;
 
-        WardenBrainHandle handle = handleGetter.get();
+        var brain = brainSupplier.get();
 
         // adjusted activities from WardenBrain::create
-        var brain = handle.deserialize(dynamic);
-
-        handle.addCoreActivities(brain);  // don't add emerge and dig activities
-        handle.addIdleActivities(brain);
-        handle.addRoarActivities(brain);
-        handle.addInvestigateActivities(brain);
-        handle.addSniffActivities(brain);
+        WardenBrainAccessor.invokeAddCoreActivities(brain);  // don't add emerge and dig activities
+        WardenBrainAccessor.invokeAddIdleActivities(brain);
+        WardenBrainAccessor.invokeAddRoarActivities(brain);
+        WardenBrainAccessor.invokeAddInvestigateActivities(brain);
+        WardenBrainAccessor.invokeAddSniffActivities(brain);
 
         // custom fight activity
         brain.setTaskList(
@@ -211,6 +206,32 @@ public class MSManager {
                         LookAtMobTask.create(entity -> isTargeting(warden, entity), (float)warden.getAttributeValue(EntityAttributes.FOLLOW_RANGE)),
                         RangedApproachTask.create(1.2F),
                         MeleeAttackTask.create(18)
+                ),
+                MemoryModuleType.ATTACK_TARGET
+        );
+
+        brain.setCoreActivities(ImmutableSet.of(Activity.CORE));
+        brain.setDefaultActivity(Activity.IDLE);
+        brain.resetPossibleActivities();
+
+        return brain;
+    }
+
+    private @Nullable Brain<CreakingEntity> createCreakingBrain(CreakingEntity creaking, Supplier<Brain<CreakingEntity>> brainSupplier) {
+        if (creaking.getWorld() != world) return null;
+
+        var brain = brainSupplier.get();
+
+        // adjusted activities from CreakingBrain::create
+        CreakingBrainAccessor.invokeAddCoreTasks(brain);
+
+        // custom fight activity
+        brain.setTaskList(
+                Activity.FIGHT,
+                10,
+                ImmutableList.of(
+                        RangedApproachTask.create(1.0F),
+                        MeleeAttackTask.create(CreakingEntity::isUnrooted, 40)
                 ),
                 MemoryModuleType.ATTACK_TARGET
         );
@@ -276,7 +297,7 @@ public class MSManager {
     }
 
     public void onKillAcquired(Entity entity) {
-        MonsterData data = monsters.get(entity.getUuid());
+        MonsterData<?> data = monsters.get(entity.getUuid());
 
         if (data == null) return;
 

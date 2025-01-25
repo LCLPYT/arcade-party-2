@@ -8,10 +8,7 @@ import net.minecraft.entity.ai.goal.*;
 import net.minecraft.entity.ai.pathing.EntityNavigation;
 import net.minecraft.entity.ai.pathing.MobNavigation;
 import net.minecraft.entity.ai.pathing.PathNodeMaker;
-import net.minecraft.entity.mob.EndermanEntity;
-import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.entity.mob.SpiderEntity;
-import net.minecraft.entity.mob.WardenEntity;
+import net.minecraft.entity.mob.*;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.Vec3d;
@@ -59,11 +56,11 @@ public class MonsterSpawner {
         world = manager.world();
     }
 
-    public void spawn(RandomGenerator<Vec3d> spawns, BiConsumer<UUID, MonsterData> consumer) {
+    public void spawn(RandomGenerator<Vec3d> spawns, Registrar consumer) {
         Partial<MonsterArgs, UUID> args = uuid -> new MonsterArgs(uuid, manager, logger);
 
-        var primary = new ArrayList<MonsterFactory>(List.of(this::spawnWarden, this::spawnSpider));
-        var secondary = new ArrayList<MonsterFactory>(List.of(this::spawnEnderman));
+        List<MonsterFactory> primary = new ArrayList<>(List.of(this::spawnWarden, this::spawnSpider));
+        List<MonsterFactory> secondary = new ArrayList<>(List.of(this::spawnEnderman, this::spawnCreaking));
 
         final int players = manager.participants().count();
 
@@ -81,8 +78,8 @@ public class MonsterSpawner {
         }
     }
 
-    private void spawnWarden(Vec3d pos, Partial<MonsterArgs, UUID> args, BiConsumer<UUID, MonsterData> consumer) {
-        WardenEntity warden = new WardenEntity(EntityType.WARDEN, world);
+    private void spawnWarden(Vec3d pos, Partial<MonsterArgs, UUID> args, Registrar registrar) {
+        var warden = new WardenEntity(EntityType.WARDEN, world);
 
         configureMobCommon(pos, warden);
 
@@ -96,14 +93,14 @@ public class MonsterSpawner {
         world.spawnEntity(warden);
 
         UUID uuid = warden.getUuid();
-        WardenData data = new WardenData(args.with(uuid));
+        var data = new WardenData(args.with(uuid));
 
-        consumer.accept(uuid, data);
+        registrar.accept(uuid, data);
     }
 
     @SuppressWarnings("DataFlowIssue")
-    private void spawnSpider(Vec3d pos, Partial<MonsterArgs, UUID> args, BiConsumer<UUID, MonsterData> consumer) {
-        SpiderEntity spider = new SpiderEntity(EntityType.SPIDER, world);
+    private void spawnSpider(Vec3d pos, Partial<MonsterArgs, UUID> args, Registrar registrar) {
+        var spider = new SpiderEntity(EntityType.SPIDER, world);
 
         configureMobCommon(pos, spider);
 
@@ -124,13 +121,13 @@ public class MonsterSpawner {
         world.spawnEntity(spider);
 
         UUID uuid = spider.getUuid();
-        SpiderData data = new SpiderData(args.with(uuid), random);
+        var data = new SpiderData(args.with(uuid), random);
 
-        consumer.accept(uuid, data);
+        registrar.accept(uuid, data);
     }
 
-    private void spawnEnderman(Vec3d pos, Partial<MonsterArgs, UUID> args, BiConsumer<UUID, MonsterData> consumer) {
-        EndermanEntity enderman = new EndermanEntity(EntityType.ENDERMAN, world);
+    private void spawnEnderman(Vec3d pos, Partial<MonsterArgs, UUID> args, Registrar registrar) {
+        var enderman = new EndermanEntity(EntityType.ENDERMAN, world);
 
         configureMobCommon(pos, enderman);
 
@@ -138,7 +135,7 @@ public class MonsterSpawner {
         enderman.setSilent(true);
 
         UUID uuid = enderman.getUuid();
-        EndermanData data = new EndermanData(args.with(uuid), manager.struct());
+        var data = new EndermanData(args.with(uuid), manager.struct());
 
         GoalSelector goalSelector = resetAi(enderman).getGoalSelector();
 
@@ -149,7 +146,22 @@ public class MonsterSpawner {
 
         world.spawnEntity(enderman);
 
-        consumer.accept(uuid, data);
+        registrar.accept(uuid, data);
+    }
+
+    private void spawnCreaking(Vec3d pos, Partial<MonsterArgs, UUID> args, Registrar registrar) {
+        var creaking = new CreakingEntity(EntityType.CREAKING, world);
+
+        configureMobCommon(pos, creaking);
+
+        EntityUtil.setAttribute(creaking, ATTACK_DAMAGE, 8);
+
+        world.spawnEntity(creaking);
+
+        UUID uuid = creaking.getUuid();
+        var data = new CreakingData(args.with(uuid));
+
+        registrar.accept(uuid, data);
     }
 
     private static @NotNull MobEntityAccessor resetAi(MobEntity mob) {
@@ -204,6 +216,8 @@ public class MonsterSpawner {
     }
 
     private interface MonsterFactory {
-        void spawn(Vec3d pos, Partial<MonsterArgs, UUID> args, BiConsumer<UUID, MonsterData> consumer);
+        void spawn(Vec3d pos, Partial<MonsterArgs, UUID> args, Registrar registrar);
     }
+
+    public interface Registrar extends BiConsumer<UUID, MonsterData<?>> {}
 }
