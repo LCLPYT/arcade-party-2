@@ -205,40 +205,6 @@ public class JumpAndRunInstance extends DefaultGameInstance implements MapBootst
         }
     }
 
-//    private void enterRoom(ServerPlayerEntity player, int room) {
-//        delayAssistance(room);
-//
-//        if (room <= data.getScore(player)) return;
-//
-//        data.setScore(player, room);
-//
-//        int checkpointOffset = jumpAndRun.getCheckpointOffset(room);
-//        checkpoints.grantCheckpoint(player, checkpointOffset);
-//
-//        if (room <= 1) return;
-//
-//        player.playSoundToPlayer(SoundEvents.ENTITY_PLAYER_LEVELUP, SoundCategory.PLAYERS, 0.5f, 2f);
-//
-//        var msg = gameHandle.getTranslations().translateText(player, "game.ap2.jump_and_run.reached_room",
-//                        styled("#" + room, Formatting.YELLOW))
-//                .formatted(Formatting.GREEN);
-//
-//        player.sendMessage(msg);
-//
-//        int maxRooms = jumpAndRun.rooms().size() - 2;
-//        int canonicalRoom = MathHelper.clamp(room, 1, maxRooms);
-//
-//        bossBar.setArgument(player, 0, styled(canonicalRoom, YELLOW));
-//
-//        if (maxRooms > 0) {
-//            bossBar.getBossBar(player).setPercent((float) (room - 1) / maxRooms);
-//        }
-//
-//        if (winManager.isGameOver() || room < jumpAndRun.rooms().size() - 1) return;
-//
-//        winManager.win(player);
-//    }
-
     private void resetPlayerToCheckpoint(ServerPlayerEntity player) {
         Checkpoint checkpoint = checkpoints.getCheckpoint(player);
 
@@ -248,31 +214,26 @@ public class JumpAndRunInstance extends DefaultGameInstance implements MapBootst
         player.setFireTicks(0);
     }
 
-    private void delayAssistance(int room) {
-//        synchronized (this) {
-//            if (room <= reachedRoom) return;
-//
-//            reachedRoom = room;
-//        }
-//
-//        List<RoomInfo> rooms = jumpAndRun.rooms();
-//        if (room < 0 || room >= rooms.size()) return;
-//
-//        RoomInfo info = rooms.get(room);
-//        if (info == null) return;
-//
-//        RoomData data = info.data();
-//        if (data == null) return;
-//
-//        if (data.assistance().blocks().isEmpty()) return;
-//
-//        float weight = 1f + (data.value() - 1f) * 0.5f;
-//        int timeout = Math.max(ASSISTANCE_TICKS_BASE, Math.round(ASSISTANCE_TICKS_BASE * weight));
-//        gameHandle.getGameScheduler().timeout(() -> placeAssistance(info), timeout);
+    private void delayAssistance() {
+        var segments = jumpAndRun.segments();
+
+        if (segmentIndex < 0 || segmentIndex >= segments.size()) return;
+
+        Segment segment = segments.get(segmentIndex);
+
+        RoomData data = segment.roomInfo().data();
+
+        if (data == null || data.assistance().blocks().isEmpty()) return;
+
+        float weight = 1f + (data.value() - 1f) * 0.5f;
+        int timeout = Math.max(ASSISTANCE_TICKS_BASE, Math.round(ASSISTANCE_TICKS_BASE * weight));
+
+        gameHandle.getGameScheduler().timeout(() -> placeAssistance(segment.roomInfo()), timeout);
     }
 
     private void placeAssistance(RoomInfo room) {
         RoomData data = room.data();
+
         if (data == null) return;
 
         JumpAssistance assistance = data.assistance();
@@ -407,5 +368,6 @@ public class JumpAndRunInstance extends DefaultGameInstance implements MapBootst
     private void beginSegment() {
         openGate();
         segmentActive = true;
+        delayAssistance();
     }
 }

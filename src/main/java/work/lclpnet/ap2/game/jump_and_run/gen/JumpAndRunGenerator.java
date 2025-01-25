@@ -61,7 +61,7 @@ public class JumpAndRunGenerator {
                     .filter(Objects::nonNull)
                     .toList();
 
-            segments.add(new Segment(jumpParts, bounds, checkpoints, startBridge.bounds(), spawnPos, 0f));
+            segments.add(new Segment(jumpParts, bounds, checkpoints, startBridge.bounds(), mainPart.info(), spawnPos, 0f));
 
             minutes += room.estimatedMinutes();
 
