@@ -118,7 +118,10 @@ public class JumpAndRunInstance extends DefaultGameInstance implements MapBootst
     @Override
     public void participantRemoved(ServerPlayerEntity player) {
         super.participantRemoved(player);
-        checkSegmentComplete();
+
+        if (!winManager.isGameOver()) {
+            checkSegmentComplete();
+        }
     }
 
     private void initScoreBoard(CustomScoreboardManager scoreboardManager) {
