@@ -27,6 +27,7 @@ import work.lclpnet.ap2.impl.game.data.ScoreDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.SoundHelper;
+import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedPlayerBossBar;
 import work.lclpnet.ap2.impl.util.checkpoint.Checkpoint;
 import work.lclpnet.ap2.impl.util.checkpoint.CheckpointHelper;
 import work.lclpnet.ap2.impl.util.checkpoint.CheckpointManager;
@@ -70,7 +71,7 @@ public class JumpAndRunInstance extends DefaultGameInstance implements MapBootst
     private final List<BlockPos> gateBlocks = new ArrayList<>();
     private JumpAndRun jumpAndRun;
     private CheckpointManager checkpoints;
-    //    private DynamicTranslatedPlayerBossBar bossBar;
+    private DynamicTranslatedPlayerBossBar bossBar;
     private volatile int segmentIndex = 0, reachedGoal = 0;
     private volatile boolean segmentActive = false;
 
@@ -101,15 +102,15 @@ public class JumpAndRunInstance extends DefaultGameInstance implements MapBootst
 
         movementObserver.init(gameHandle.getHookRegistrar(), gameHandle.getServer());
 
+        bossBar = usePlayerDynamicTaskDisplay(styled(0, YELLOW), styled(jumpAndRun.segments().size(), YELLOW));
+        bossBar.setPercent(0);
+
         setSegment(0);
 
         CustomScoreboardManager scoreboardManager = gameHandle.getScoreboardManager();
 
         initScoreBoard(scoreboardManager);
         initTeam(scoreboardManager);
-
-//        bossBar = usePlayerDynamicTaskDisplay(styled(1, YELLOW), styled(jumpAndRun.rooms().size() - 2, YELLOW));
-//        bossBar.setPercent(0);
 
         giveItemsToPlayers();
     }
@@ -238,12 +239,6 @@ public class JumpAndRunInstance extends DefaultGameInstance implements MapBootst
 //        winManager.win(player);
 //    }
 
-//    private void onCheckpointReached(ServerPlayerEntity player, int checkpoint) {
-//        int room = jumpAndRun.getRoomOfCheckpoint(checkpoint);
-//
-//        enterRoom(player, room);
-//    }
-
     private void resetPlayerToCheckpoint(ServerPlayerEntity player) {
         Checkpoint checkpoint = checkpoints.getCheckpoint(player);
 
@@ -309,8 +304,9 @@ public class JumpAndRunInstance extends DefaultGameInstance implements MapBootst
 
     private void setSegment(int i) {
         var segments = jumpAndRun.segments();
+        int segmentCount = segments.size();
 
-        if (i < 0 || i >= segments.size()) return;
+        if (i < 0 || i >= segmentCount) return;
 
         segmentIndex = i;
         reachedGoal = 0;
@@ -334,6 +330,12 @@ public class JumpAndRunInstance extends DefaultGameInstance implements MapBootst
         CheckpointHelper.notifyWhenReached(checkpoints, gameHandle.getTranslations());
 
         movementObserver.whenEntering(segment.parts().getLast().bounds(), this::onReachedGoal);
+
+        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
+            bossBar.setArgument(player, 0, styled(segmentIndex, YELLOW));
+        }
+
+        bossBar.setPercent((float) (segmentIndex) / segmentCount);
     }
 
     private void onReachedGoal(ServerPlayerEntity player) {
@@ -353,9 +355,19 @@ public class JumpAndRunInstance extends DefaultGameInstance implements MapBootst
 
         player.playSoundToPlayer(SoundEvents.ENTITY_PLAYER_LEVELUP, SoundCategory.PLAYERS, 0.5f, 2f);
 
+        int room = segmentIndex + 1;
+
         player.sendMessage(gameHandle.getTranslations().translateText(player, "game.ap2.jump_and_run.completed_room",
-                        styled("#" + (segmentIndex + 1), Formatting.YELLOW))
+                        styled("#" + room, Formatting.YELLOW))
                 .formatted(Formatting.GREEN));
+
+        bossBar.setArgument(player, 0, styled(room, YELLOW));
+
+        int segments = jumpAndRun.segments().size();
+
+        if (segments > 0) {
+            bossBar.getBossBar(player).setPercent((float) (room) / segments);
+        }
 
         checkSegmentComplete();
     }
