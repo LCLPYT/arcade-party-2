@@ -14,18 +14,18 @@ public class StructurePrintable implements Printable {
     }
 
     @Override
-    public BlockStructure getStructure() {
+    public BlockStructure structure() {
         return structure;
     }
 
     @Override
-    public Vec3i getPrintOffset() {
+    public Vec3i printOffset() {
         var origin = structure.getOrigin();
         return new Vec3i(origin.getX(), origin.getY(), origin.getZ());
     }
 
     @Override
-    public Matrix3i getPrintMatrix() {
+    public Matrix3i printMatrix() {
         return Matrix3i.IDENTITY;
     }
 }

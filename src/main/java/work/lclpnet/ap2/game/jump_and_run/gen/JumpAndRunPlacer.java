@@ -12,8 +12,10 @@ public class JumpAndRunPlacer {
     }
 
     public void place(JumpAndRun jumpAndRun) {
-        for (JumpPart part : jumpAndRun.parts()) {
-            StructureUtil.placeStructureFast(part.printable(), world);
+        for (Segment segment : jumpAndRun.segments()) {
+            for (JumpPart part : segment.parts()) {
+                StructureUtil.placeStructureFast(part, world);
+            }
         }
     }
 }

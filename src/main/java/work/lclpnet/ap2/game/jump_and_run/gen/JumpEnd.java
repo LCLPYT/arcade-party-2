@@ -23,19 +23,19 @@ public class JumpEnd {
         this.exit = exit;
     }
 
-    public BlockStructure getStructure() {
+    public BlockStructure structure() {
         return structure;
     }
 
-    public BlockBox getBounds() {
+    public BlockBox bounds() {
         return bounds;
     }
 
-    public @Nullable BlockPos getSpawn() {
+    public @Nullable BlockPos spawn() {
         return spawn;
     }
 
-    public Connector getExit() {
+    public Connector exit() {
         return exit;
     }
 

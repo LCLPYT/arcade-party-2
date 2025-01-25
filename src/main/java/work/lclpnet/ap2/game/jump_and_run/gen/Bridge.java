@@ -4,13 +4,12 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3i;
 import org.joml.Vector3f;
-import work.lclpnet.ap2.api.util.Printable;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.checkpoint.Checkpoint;
 import work.lclpnet.kibu.structure.BlockStructure;
 import work.lclpnet.kibu.util.math.Matrix3i;
 
-public class Bridge implements Printable {
+public class Bridge implements JumpPart {
 
     private final BlockStructure structure;
     private final BlockBox bounds;
@@ -25,27 +24,24 @@ public class Bridge implements Printable {
     }
 
     @Override
-    public BlockStructure getStructure() {
+    public BlockStructure structure() {
         return structure;
     }
 
     @Override
-    public Vec3i getPrintOffset() {
+    public Vec3i printOffset() {
         var origin = structure.getOrigin();
         return new Vec3i(origin.getX(), origin.getY(), origin.getZ());
     }
 
     @Override
-    public Matrix3i getPrintMatrix() {
+    public Matrix3i printMatrix() {
         return Matrix3i.IDENTITY;
     }
 
-    public BlockBox getBounds() {
+    @Override
+    public BlockBox bounds() {
         return bounds;
-    }
-
-    public JumpPart asJumpPart() {
-        return new JumpPart(this, bounds);
     }
 
     public Checkpoint asCheckpoint() {
