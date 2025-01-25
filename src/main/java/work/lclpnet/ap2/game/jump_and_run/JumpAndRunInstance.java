@@ -26,6 +26,7 @@ import work.lclpnet.ap2.impl.game.DefaultGameInstance;
 import work.lclpnet.ap2.impl.game.data.ScoreDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.util.BlockBox;
+import work.lclpnet.ap2.impl.util.SoundHelper;
 import work.lclpnet.ap2.impl.util.checkpoint.Checkpoint;
 import work.lclpnet.ap2.impl.util.checkpoint.CheckpointHelper;
 import work.lclpnet.ap2.impl.util.checkpoint.CheckpointManager;
@@ -372,6 +373,9 @@ public class JumpAndRunInstance extends DefaultGameInstance implements MapBootst
         gameHandle.getTranslations().translateText("game.ap2.jump_and_run.next_segment_wait").formatted(GRAY).sendTo(PlayerLookup.world(getWorld()));
 
         setSegment(nextSegment);
+
+        SoundHelper.playSound(getWorld(), SoundEvents.ENTITY_PLAYER_LEVELUP, SoundCategory.PLAYERS, 0.5f, 2f);
+
         gameHandle.getGameScheduler().timeout(this::nextSegment, NEXT_PHASE_WAIT_TICKS);
     }
 
