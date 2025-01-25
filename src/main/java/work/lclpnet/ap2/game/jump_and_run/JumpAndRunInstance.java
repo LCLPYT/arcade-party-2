@@ -46,9 +46,7 @@ import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 import work.lclpnet.lobby.game.map.GameMap;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 import static java.lang.Math.max;
@@ -63,7 +61,7 @@ public class JumpAndRunInstance extends DefaultGameInstance implements MapBootst
             REACH_GOAL_REQUIRED = 3,
             NEXT_PHASE_WAIT_TICKS = Ticks.seconds(6);
     private static final float
-            TARGET_MINUTES = 4.0f;  // target completion time of the jump and run (approximate)
+            TARGET_MINUTES = 3.75f;  // target completion time of the jump and run (approximate)
 
     private final ScoreDataContainer<ServerPlayerEntity, PlayerRef> data = new ScoreDataContainer<>(PlayerRef::create);
     private final CollisionDetector collisionDetector = new ChunkedCollisionDetector();
@@ -74,6 +72,7 @@ public class JumpAndRunInstance extends DefaultGameInstance implements MapBootst
     private DynamicTranslatedPlayerBossBar bossBar;
     private volatile int segmentIndex = 0, reachedGoal = 0;
     private volatile boolean segmentActive = false;
+    private final Set<UUID> inGoal = new HashSet<>();
 
     public JumpAndRunInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
@@ -275,6 +274,7 @@ public class JumpAndRunInstance extends DefaultGameInstance implements MapBootst
         segmentIndex = i;
         reachedGoal = 0;
         segmentActive = false;
+        inGoal.clear();
 
         closeGate();
 
@@ -293,7 +293,7 @@ public class JumpAndRunInstance extends DefaultGameInstance implements MapBootst
         checkpoints.init(collisionDetector, movementObserver);
         CheckpointHelper.notifyWhenReached(checkpoints, gameHandle.getTranslations());
 
-        movementObserver.whenEntering(segment.parts().getLast().bounds(), this::onReachedGoal);
+        movementObserver.whenEntering(segment.parts().getLast().bounds(), player -> onReachedGoal(player, true));
 
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
             bossBar.setArgument(player, 0, styled(segmentIndex, YELLOW));
@@ -302,7 +302,7 @@ public class JumpAndRunInstance extends DefaultGameInstance implements MapBootst
         bossBar.setPercent((float) (segmentIndex) / segmentCount);
     }
 
-    private void onReachedGoal(ServerPlayerEntity player) {
+    private void onReachedGoal(ServerPlayerEntity player, boolean reached) {
         if (requiredAmountReachedGoal()) return;
 
         int reachedIndex;
@@ -315,14 +315,16 @@ public class JumpAndRunInstance extends DefaultGameInstance implements MapBootst
             reachedGoal++;
         }
 
+        inGoal.add(player.getUuid());
         data.addScore(player, max(0, REACH_GOAL_REQUIRED - reachedIndex));
 
         player.playSoundToPlayer(SoundEvents.ENTITY_PLAYER_LEVELUP, SoundCategory.PLAYERS, 0.5f, 2f);
 
         int room = segmentIndex + 1;
 
-        player.sendMessage(gameHandle.getTranslations().translateText(player, "game.ap2.jump_and_run.completed_room",
-                        styled("#" + room, Formatting.YELLOW))
+        String key = reached ? "game.ap2.jump_and_run.completed_room" : "game.ap2.jump_and_run.last_not_completed";
+
+        player.sendMessage(gameHandle.getTranslations().translateText(player, key, styled("#" + room, Formatting.YELLOW))
                 .formatted(Formatting.GREEN));
 
         bossBar.setArgument(player, 0, styled(room, YELLOW));
@@ -331,6 +333,22 @@ public class JumpAndRunInstance extends DefaultGameInstance implements MapBootst
 
         if (segments > 0) {
             bossBar.getBossBar(player).setPercent((float) (room) / segments);
+        }
+
+        if (!requiredAmountReachedGoal()) {
+            Participants participants = gameHandle.getParticipants();
+            int notYetInGoal = participants.count() - reachedGoal;
+
+            if (notYetInGoal == 1) {
+                var lastRemaining = participants.stream()
+                        .filter(p -> !inGoal.contains(p.getUuid()))
+                        .findFirst();
+
+                if (lastRemaining.isPresent()) {
+                    onReachedGoal(lastRemaining.get(), false);
+                    return;
+                }
+            }
         }
 
         checkSegmentComplete();
@@ -356,7 +374,11 @@ public class JumpAndRunInstance extends DefaultGameInstance implements MapBootst
     }
 
     private boolean requiredAmountReachedGoal() {
-        return reachedGoal >= min(gameHandle.getParticipants().count(), REACH_GOAL_REQUIRED);
+        return reachedGoal >= requiredAmount();
+    }
+
+    private int requiredAmount() {
+        return min(gameHandle.getParticipants().count(), REACH_GOAL_REQUIRED);
     }
 
     private void nextSegment() {
