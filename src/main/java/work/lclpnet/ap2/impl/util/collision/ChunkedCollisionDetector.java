@@ -42,6 +42,11 @@ public class ChunkedCollisionDetector implements CollisionDetector {
     }
 
     @Override
+    public void clear() {
+        regions.clear();
+    }
+
+    @Override
     public void updateCollisions(Position pos, CollisionInfo info) {
         info.reset();
 

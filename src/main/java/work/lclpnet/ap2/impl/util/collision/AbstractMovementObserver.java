@@ -61,6 +61,16 @@ public class AbstractMovementObserver implements MovementObserver {
         regionLeave.put(region, action);
     }
 
+    @Override
+    public void clear() {
+        collisionDetector.clear();
+        entries.clear();
+        regionEnter.clear();
+        regionLeave.clear();
+        onEnter = null;
+        onLeave = null;
+    }
+
     protected void onMove(ServerPlayerEntity player, Position pos) {
         if (!predicate.test(player)) return;
 

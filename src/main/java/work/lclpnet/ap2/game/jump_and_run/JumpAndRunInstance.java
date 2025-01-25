@@ -26,7 +26,9 @@ import work.lclpnet.ap2.impl.game.DefaultGameInstance;
 import work.lclpnet.ap2.impl.game.data.ScoreDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.util.BlockBox;
+import work.lclpnet.ap2.impl.util.checkpoint.Checkpoint;
 import work.lclpnet.ap2.impl.util.checkpoint.CheckpointHelper;
+import work.lclpnet.ap2.impl.util.checkpoint.CheckpointManager;
 import work.lclpnet.ap2.impl.util.collision.ChunkedCollisionDetector;
 import work.lclpnet.ap2.impl.util.collision.PlayerMovementObserver;
 import work.lclpnet.ap2.impl.util.handler.VisibilityHandler;
@@ -37,30 +39,39 @@ import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.scheduler.Ticks;
+import work.lclpnet.kibu.title.Title;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 import work.lclpnet.lobby.game.map.GameMap;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
-import static net.minecraft.util.Formatting.BOLD;
-import static net.minecraft.util.Formatting.YELLOW;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+import static net.minecraft.util.Formatting.*;
+import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
 public class JumpAndRunInstance extends DefaultGameInstance implements MapBootstrap {
 
-    private static final int ASSISTANCE_TICKS_BASE = Ticks.seconds(90);  // time after which assistance is provided
-    private static final float TARGET_MINUTES = 4.0f;  // target completion time of the jump and run (approximate)
+    private static final int
+            ASSISTANCE_TICKS_BASE = Ticks.seconds(90),  // time after which assistance is provided
+            REACH_GOAL_REQUIRED = 3,
+            NEXT_PHASE_WAIT_TICKS = Ticks.seconds(6);
+    private static final float
+            TARGET_MINUTES = 4.0f;  // target completion time of the jump and run (approximate)
+
     private final ScoreDataContainer<ServerPlayerEntity, PlayerRef> data = new ScoreDataContainer<>(PlayerRef::create);
     private final CollisionDetector collisionDetector = new ChunkedCollisionDetector();
     private final PlayerMovementObserver movementObserver;
     private final List<BlockPos> gateBlocks = new ArrayList<>();
     private JumpAndRun jumpAndRun;
-//    private CheckpointManager checkpoints;
-//    private DynamicTranslatedPlayerBossBar bossBar;
-    private int reachedRoom = 0;
-    private int segment = 0;
+    private CheckpointManager checkpoints;
+    //    private DynamicTranslatedPlayerBossBar bossBar;
+    private volatile int segmentIndex = 0, reachedGoal = 0;
+    private volatile boolean segmentActive = false;
 
     public JumpAndRunInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
@@ -89,11 +100,26 @@ public class JumpAndRunInstance extends DefaultGameInstance implements MapBootst
 
         movementObserver.init(gameHandle.getHookRegistrar(), gameHandle.getServer());
 
-        // close gate until ready
-        closeGate();
+        setSegment(0);
 
-        // add scoreboard
         CustomScoreboardManager scoreboardManager = gameHandle.getScoreboardManager();
+
+        initScoreBoard(scoreboardManager);
+        initTeam(scoreboardManager);
+
+//        bossBar = usePlayerDynamicTaskDisplay(styled(1, YELLOW), styled(jumpAndRun.rooms().size() - 2, YELLOW));
+//        bossBar.setPercent(0);
+
+        giveItemsToPlayers();
+    }
+
+    @Override
+    public void participantRemoved(ServerPlayerEntity player) {
+        super.participantRemoved(player);
+        checkSegmentComplete();
+    }
+
+    private void initScoreBoard(CustomScoreboardManager scoreboardManager) {
         ScoreboardObjective objective = scoreboardManager.createObjective("points", ScoreboardCriterion.DUMMY,
                 Text.literal("Points").formatted(YELLOW, BOLD), ScoreboardCriterion.RenderType.INTEGER,
                 StyledNumberFormat.YELLOW);
@@ -101,18 +127,6 @@ public class JumpAndRunInstance extends DefaultGameInstance implements MapBootst
         useScoreboardStatsSync(data, objective);
 
         scoreboardManager.setDisplay(ScoreboardDisplaySlot.LIST, objective);
-
-        initTeam(scoreboardManager);
-
-//        checkpoints = new CheckpointManager(jumpAndRun.checkpoints());
-//        checkpoints.init(collisionDetector, movementObserver);
-//        checkpoints.whenCheckpointReached(this::onCheckpointReached);
-//        CheckpointHelper.notifyWhenReached(checkpoints, translations);
-
-//        bossBar = usePlayerDynamicTaskDisplay(styled(1, YELLOW), styled(jumpAndRun.rooms().size() - 2, YELLOW));
-//        bossBar.setPercent(0);
-
-        giveItemsToPlayers();
     }
 
     private void initTeam(CustomScoreboardManager scoreboardManager) {
@@ -127,7 +141,7 @@ public class JumpAndRunInstance extends DefaultGameInstance implements MapBootst
 
     @Override
     protected void ready() {
-        openGate();
+        beginSegment();
 
         gameHandle.protect(config -> config.allow(ProtectionTypes.USE_BLOCK, (entity, pos) -> {
             BlockState state = entity.getWorld().getBlockState(pos);
@@ -137,7 +151,7 @@ public class JumpAndRunInstance extends DefaultGameInstance implements MapBootst
         Participants participants = gameHandle.getParticipants();
         HookRegistrar hooks = gameHandle.getHookRegistrar();
 
-        CheckpointHelper.setupResetItem(hooks, winManager::isGameOver, participants::isParticipating)
+        CheckpointHelper.setupResetItem(hooks, () -> winManager.isGameOver() || !segmentActive, participants::isParticipating)
                 .then(this::resetPlayerToCheckpoint);
 
         CheckpointHelper.whenFallingIntoLava(hooks, participants::isParticipating)
@@ -172,11 +186,11 @@ public class JumpAndRunInstance extends DefaultGameInstance implements MapBootst
     private void closeGate() {
         var segments = jumpAndRun.segments();
 
-        if (segment < 0 || segment >= segments.size()) return;
+        if (segmentIndex < 0 || segmentIndex >= segments.size()) return;
 
         gateBlocks.clear();
 
-        BlockBox gate = segments.get(segment).gate();
+        BlockBox gate = segments.get(segmentIndex).gate();
         ServerWorld world = getWorld();
 
         BlockState state = Blocks.WHITE_STAINED_GLASS.getDefaultState();
@@ -230,10 +244,10 @@ public class JumpAndRunInstance extends DefaultGameInstance implements MapBootst
 //    }
 
     private void resetPlayerToCheckpoint(ServerPlayerEntity player) {
-//        Checkpoint checkpoint = checkpoints.getCheckpoint(player);
-//
-//        BlockPos pos = checkpoint.pos();
-//        player.teleport(getWorld(), pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, Set.of(), checkpoint.yaw(), 0f, true);
+        Checkpoint checkpoint = checkpoints.getCheckpoint(player);
+
+        BlockPos pos = checkpoint.pos();
+        player.teleport(getWorld(), pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, Set.of(), checkpoint.yaw(), 0f, true);
 
         player.setFireTicks(0);
     }
@@ -290,5 +304,92 @@ public class JumpAndRunInstance extends DefaultGameInstance implements MapBootst
 
             player.sendMessage(msg);
         }
+    }
+
+    private void setSegment(int i) {
+        var segments = jumpAndRun.segments();
+
+        if (i < 0 || i >= segments.size()) return;
+
+        segmentIndex = i;
+        reachedGoal = 0;
+        segmentActive = false;
+
+        closeGate();
+
+        Segment segment = segments.get(i);
+        BlockPos spawn = segment.spawn();
+        ServerWorld world = getWorld();
+
+        for (ServerPlayerEntity player : PlayerLookup.world(world)) {
+            player.teleport(world, spawn.getX() + 0.5, spawn.getY(), spawn.getZ() + 0.5, Set.of(), segment.yaw(), 0f, true);
+        }
+
+        collisionDetector.clear();
+        movementObserver.clear();
+
+        checkpoints = new CheckpointManager(segment.checkpoints());
+        checkpoints.init(collisionDetector, movementObserver);
+        CheckpointHelper.notifyWhenReached(checkpoints, gameHandle.getTranslations());
+
+        movementObserver.whenEntering(segment.parts().getLast().bounds(), this::onReachedGoal);
+    }
+
+    private void onReachedGoal(ServerPlayerEntity player) {
+        if (requiredAmountReachedGoal()) return;
+
+        int reachedIndex;
+
+        synchronized (this) {
+            if (requiredAmountReachedGoal()) return;
+
+            reachedIndex = reachedGoal;
+
+            reachedGoal++;
+        }
+
+        data.addScore(player, max(0, REACH_GOAL_REQUIRED - reachedIndex));
+
+        player.playSoundToPlayer(SoundEvents.ENTITY_PLAYER_LEVELUP, SoundCategory.PLAYERS, 0.5f, 2f);
+
+        player.sendMessage(gameHandle.getTranslations().translateText(player, "game.ap2.jump_and_run.completed_room",
+                        styled("#" + (segmentIndex + 1), Formatting.YELLOW))
+                .formatted(Formatting.GREEN));
+
+        checkSegmentComplete();
+    }
+
+    private void checkSegmentComplete() {
+        if (!requiredAmountReachedGoal()) return;
+
+        int nextSegment = segmentIndex + 1;
+
+        if (nextSegment >= jumpAndRun.segments().size()) {
+            winManager.win(data.getBestSubject(resolver).orElse(null));
+            return;
+        }
+
+        gameHandle.getTranslations().translateText("game.ap2.jump_and_run.next_segment_wait").formatted(GRAY).sendTo(PlayerLookup.world(getWorld()));
+
+        setSegment(nextSegment);
+        gameHandle.getGameScheduler().timeout(this::nextSegment, NEXT_PHASE_WAIT_TICKS);
+    }
+
+    private boolean requiredAmountReachedGoal() {
+        return reachedGoal >= min(gameHandle.getParticipants().count(), REACH_GOAL_REQUIRED);
+    }
+
+    private void nextSegment() {
+        gameHandle.getTranslations().translateText("ap2.go").formatted(RED).acceptEach(PlayerLookup.world(getWorld()), (player, text) -> {
+            Title.get(player).title(text, Text.empty(), 5, 20, 5);
+            player.playSoundToPlayer(SoundEvents.ENTITY_CHICKEN_EGG, SoundCategory.PLAYERS, 1, 0);
+        });
+
+        beginSegment();
+    }
+
+    private void beginSegment() {
+        openGate();
+        segmentActive = true;
     }
 }
