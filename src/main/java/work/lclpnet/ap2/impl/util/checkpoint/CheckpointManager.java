@@ -47,15 +47,15 @@ public class CheckpointManager {
     }
 
     public void init(CollisionDetector collisionDetector, MovementObserver movementObserver) {
-        for (int i = 0, checkpointsSize = checkpoints.size(); i < checkpointsSize; i++) {
+        for (int i = 0, len = checkpoints.size(); i < len; i++) {
             Checkpoint checkpoint = checkpoints.get(i);
-            Collider checkpointBounds = checkpoint.bounds();
+            Collider bounds = checkpoint.bounds();
 
-            collisionDetector.add(checkpointBounds);
+            collisionDetector.add(bounds);
 
             int index = i;
 
-            movementObserver.whenEntering(checkpointBounds, player -> onEnterCheckpoint(player, index));
+            movementObserver.whenEntering(bounds, player -> onEnterCheckpoint(player, index));
         }
     }
 

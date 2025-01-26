@@ -15,4 +15,6 @@ public interface MovementObserver {
     void whenEntering(Collider region, Consumer<ServerPlayerEntity> action);
 
     void whenLeaving(Collider region, Consumer<ServerPlayerEntity> action);
+
+    void clear();
 }

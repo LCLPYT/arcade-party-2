@@ -13,6 +13,8 @@ public interface CollisionDetector {
 
     void remove(Collider collider);
 
+    void clear();
+
     /**
      * Finds all colliders that collide with a point.
      * @param pos The position to check collisions with.

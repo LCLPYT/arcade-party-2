@@ -15,16 +15,16 @@ import java.util.List;
 
 public class JumpRoom {
 
-    private final float value;
+    private final float estimatedMinutes;
     private final BlockStructure structure;
     private final BlockBox bounds;
     private final Connectors connectors;
     private final JumpAssistance assistance;
     private final List<Checkpoint> checkpoints;
 
-    public JumpRoom(float value, BlockStructure structure, BlockBox bounds, Connectors connectors,
+    public JumpRoom(float estimatedMinutes, BlockStructure structure, BlockBox bounds, Connectors connectors,
                     JumpAssistance assistance, List<Checkpoint> checkpoints) {
-        this.value = value;
+        this.estimatedMinutes = estimatedMinutes;
         this.structure = structure;
         this.bounds = bounds;
         this.connectors = connectors;
@@ -32,43 +32,20 @@ public class JumpRoom {
         this.checkpoints = checkpoints;
     }
 
-    public float getValue() {
-        return value;
+    public float estimatedMinutes() {
+        return estimatedMinutes;
     }
 
-    public BlockBox getBounds() {
+    public BlockBox bounds() {
         return bounds;
     }
 
-    public BlockStructure getStructure() {
+    public BlockStructure structure() {
         return structure;
     }
 
-    public Connectors getConnectors() {
+    public Connectors connectors() {
         return connectors;
-    }
-
-    public boolean isStraight() {
-        return connectors.entrance().direction() == connectors.exit().direction();
-    }
-
-    public static Partial from(BlockStructure structure) {
-        BlockBox bounds = StructureUtil.getBounds(structure);
-
-        Connectors connectors = findConnectors(structure, bounds);
-
-        return (value, assistance, checkpoints) -> {
-            var orig = structure.getOrigin();
-            Vec3i origin = new Vec3i(orig.getX(), orig.getY(), orig.getZ());
-
-            var relativeAssistance = assistance.relativize(origin);
-
-            var relativeCheckpoints = checkpoints.stream()
-                    .map(checkpoint -> checkpoint.relativize(origin))
-                    .toList();
-
-            return new JumpRoom(value, structure, bounds, connectors, relativeAssistance, relativeCheckpoints);
-        };
     }
 
     @NotNull
@@ -119,12 +96,31 @@ public class JumpRoom {
     }
 
     public RoomData createData() {
-        return new RoomData(value, assistance, checkpoints);
+        return new RoomData(estimatedMinutes, assistance, checkpoints);
     }
 
     public record Connectors(Connector entrance, Connector exit) {}
 
     public interface Partial {
+        static Partial from(BlockStructure structure) {
+            BlockBox bounds = StructureUtil.getBounds(structure);
+
+            Connectors connectors = findConnectors(structure, bounds);
+
+            return (value, assistance, checkpoints) -> {
+                var orig = structure.getOrigin();
+                Vec3i origin = new Vec3i(orig.getX(), orig.getY(), orig.getZ());
+
+                var relativeAssistance = assistance.relativize(origin);
+
+                var relativeCheckpoints = checkpoints.stream()
+                        .map(checkpoint -> checkpoint.relativize(origin))
+                        .toList();
+
+                return new JumpRoom(value, structure, bounds, connectors, relativeAssistance, relativeCheckpoints);
+            };
+        }
+
         JumpRoom with(float value, JumpAssistance assistance, List<Checkpoint> checkpoints);
     }
 }

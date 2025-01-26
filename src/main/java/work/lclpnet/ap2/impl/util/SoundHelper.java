@@ -5,6 +5,7 @@ import net.minecraft.network.packet.s2c.play.PlaySoundS2CPacket;
 import net.minecraft.registry.Registries;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
 
@@ -12,6 +13,12 @@ public class SoundHelper {
 
     public static void playSound(MinecraftServer server, SoundEvent sound, SoundCategory category, float volume, float pitch) {
         for (ServerPlayerEntity player : PlayerLookup.all(server)) {
+            player.playSoundToPlayer(sound, category, volume, pitch);
+        }
+    }
+
+    public static void playSound(ServerWorld world, SoundEvent sound, SoundCategory category, float volume, float pitch) {
+        for (ServerPlayerEntity player : PlayerLookup.world(world)) {
             player.playSoundToPlayer(sound, category, volume, pitch);
         }
     }

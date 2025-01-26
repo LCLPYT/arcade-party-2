@@ -31,7 +31,7 @@ public class JumpAndRunMiniGame implements MiniGame {
 
     @Override
     public boolean canBeFinale(GameStartContext context) {
-        return true;
+        return false;
     }
 
     @Override

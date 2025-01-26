@@ -6,12 +6,8 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3i;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import org.slf4j.Logger;
-import work.lclpnet.ap2.api.util.Printable;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.checkpoint.Checkpoint;
-import work.lclpnet.ap2.impl.util.collision.BoxCollisionDetector;
 import work.lclpnet.kibu.schematic.FabricBlockStateAdapter;
 import work.lclpnet.kibu.schematic.FabricStructureWrapper;
 import work.lclpnet.kibu.structure.BlockStructure;
@@ -19,193 +15,67 @@ import work.lclpnet.kibu.structure.SimpleBlockStructure;
 import work.lclpnet.kibu.util.math.Matrix3i;
 
 import java.util.*;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static java.util.Objects.requireNonNull;
 import static net.minecraft.block.HorizontalFacingBlock.FACING;
 
 public class JumpAndRunGenerator {
 
-    private final float maxTotal;
+    private final float targetMinutes;
     private final Random random;
-    private final Logger logger;
-    private final int minHeight, maxHeight;
 
-    public JumpAndRunGenerator(float maxTotal, Random random, Logger logger, int minHeight, int maxHeight) {
-        this.maxTotal = maxTotal;
+    public JumpAndRunGenerator(float targetMinutes, Random random) {
+        this.targetMinutes = targetMinutes;
         this.random = random;
-        this.logger = logger;
-        this.minHeight = minHeight;
-        this.maxHeight = maxHeight;
     }
 
     public JumpAndRun generate(JumpAndRunSetup.Parts parts, BlockPos spawnPos) {
-        BoxCollisionDetector shape = new BoxCollisionDetector();
+        Direction stackingDir = Direction.SOUTH;
 
-        // start room
-        OrientedPart start = createStart(parts, spawnPos);
-        shape.add(start.getBounds());
+        List<JumpRoom> rooms = new ArrayList<>(parts.rooms());
+        List<Segment> segments = new ArrayList<>();
+        float minutes = 0;
 
-        // start bridge
-        Connector startConnector = start.getOut();
-        JumpPart startBridge = makeBridge(startConnector);
-        shape.add(startBridge.bounds());
+        while (minutes < targetMinutes && !rooms.isEmpty()) {
+            JumpRoom room = rooms.remove(random.nextInt(rooms.size()));
 
-        // subsequent rooms and their bridges
-        List<JumpPart> rooms = createRooms(parts, startConnector, shape);
+            OrientedPart start = createStart(parts.start(), spawnPos, stackingDir);
+            Connector startConnector = requireNonNull(start.out());
+            OrientedPart mainPart = createPart(room, startConnector);
+            Connector endConnector = requireNonNull(mainPart.out());
+            OrientedPart end = createEnd(parts.end(), endConnector);
 
-        // combine everything
-        List<JumpPart> combined = new ArrayList<>();
-        combined.add(start.asJumpPart());
-        combined.add(startBridge);
-        combined.addAll(rooms);
+            Bridge startBridge = makeBridge(startConnector);
+            Bridge endBridge = makeBridge(endConnector);
 
-        List<RoomInfo> roomData = combined.stream()
-                .map(part -> part.printable() instanceof OrientedPart roomPart ? roomPart.getInfo() : null)
-                .filter(Objects::nonNull)
-                .toList();
+            var jumpParts = List.of(start, startBridge, mainPart, endBridge, end);
+            var bounds = BlockBox.enclosing(jumpParts.stream().map(JumpPart::bounds).toList());
 
-        List<Checkpoint> checkpoints = combined.stream()
-                .flatMap(part -> {
-                    Printable printable = part.printable();
+            List<Checkpoint> checkpoints = jumpParts.stream()
+                    .flatMap(part -> switch (part) {
+                        case Bridge bridge -> Stream.of(bridge.asCheckpoint());
+                        case OrientedPart p when p.info().data() != null -> p.info().data().checkpoints().stream();
+                        default -> Stream.empty();
+                    })
+                    .filter(Objects::nonNull)
+                    .toList();
 
-                    if (printable instanceof Bridge bridge) {
-                        return Stream.of(bridge.asCheckpoint());
-                    }
+            segments.add(new Segment(jumpParts, bounds, checkpoints, startBridge.bounds(), mainPart.info(), spawnPos, 0f));
 
-                    if (printable instanceof OrientedPart orientedPart) {
-                        RoomInfo info = orientedPart.getInfo();
-                        RoomData data = info.data();
+            minutes += room.estimatedMinutes();
 
-                        if (data == null) return Stream.empty();
-
-                        return data.checkpoints().stream();
-                    }
-
-                    return Stream.empty();
-                })
-                .filter(Objects::nonNull)
-                .toList();
-
-        BlockBox gate = combined.stream()
-                .map(part -> part.printable() instanceof Bridge bridge ? bridge.getBounds() : null)
-                .filter(Objects::nonNull)
-                .findFirst()
-                .orElseThrow();
-
-        return new JumpAndRun(combined, roomData, checkpoints, gate);
-    }
-
-    @NotNull
-    private List<JumpPart> createRooms(JumpAndRunSetup.Parts parts, Connector startConnector, BoxCollisionDetector shape) {
-        final int maxTries = 10;
-
-        for (int i = 0; i < maxTries; i++) {
-            shape.push();
-
-            var rooms = tryGenerateRooms(parts.rooms(), startConnector, shape, parts.end());
-
-            if (rooms != null) {
-                return rooms;
-            }
-
-            shape.pop();
+            spawnPos = spawnPos.offset(stackingDir, bounds.length());
         }
 
-        logger.warn("Failed to generate jump and run rooms. Fallback to only straight rooms...");
-
-        shape.push();
-
-        var straightRooms = parts.rooms().stream().filter(JumpRoom::isStraight).collect(Collectors.toSet());
-        var rooms = tryGenerateRooms(straightRooms, startConnector, shape, parts.end());
-
-        if (rooms != null) {
-            return rooms;
-        }
-
-        shape.pop();
-
-        logger.error("Failed to generate jump and run with straight rooms. Placing the end room directly...");
-
-        // add the end room in case the room generation failed
-        OrientedPart end = createEnd(parts.end(), startConnector);
-
-        shape.add(end.getBounds());
-
-        return List.of(end.asJumpPart());
-    }
-
-    @Nullable
-    private List<JumpPart> tryGenerateRooms(Set<JumpRoom> rooms, Connector startConnector, BoxCollisionDetector shape, JumpEnd endRoom) {
-        Set<JumpRoom> open = new HashSet<>(rooms);
-
-        double avgTime = open.stream().mapToDouble(JumpRoom::getValue).average().orElse(1.0);
-        int expected = (int) Math.ceil(maxTotal / avgTime);
-        List<JumpPart> parts = new ArrayList<>(expected);
-
-        float currentValue = 0f;
-        Connector lastConnector = startConnector;
-
-        // append rooms until the configured cumulative value is reached or there are no rooms left
-        while (currentValue < maxTotal && !open.isEmpty()) {
-            List<PossibleRoom> possible = possibleRooms(open, lastConnector, shape, endRoom);
-            if (possible.isEmpty()) return null;  // maybe use backtracking?
-
-            PossibleRoom possibleRoom = possible.get(random.nextInt(possible.size()));
-            if (!shape.add(possibleRoom.part.getBounds())) return null;  // sanity check; should never occur
-
-            parts.add(possibleRoom.part.asJumpPart());
-            open.remove(possibleRoom.room);
-            lastConnector = possibleRoom.part.getOut();
-            currentValue += possibleRoom.room.getValue();
-
-            JumpPart bridge = makeBridge(lastConnector);
-            parts.add(bridge);
-
-            if (!shape.add(bridge.bounds())) return null;  // sanity check; should never occur
-        }
-
-        OrientedPart end = createEnd(endRoom, lastConnector);
-        parts.add(end.asJumpPart());
-
-        if (!shape.add(end.getBounds())) return null;  // sanity check; should never occur
-
-        return parts;
-    }
-
-    @NotNull
-    private List<PossibleRoom> possibleRooms(Set<JumpRoom> rooms, Connector connector, BoxCollisionDetector shape, JumpEnd endRoom) {
-        List<PossibleRoom> possible = new ArrayList<>();
-
-        for (JumpRoom room : rooms) {
-            // check if the room itself can be put at the last connector
-            OrientedPart part = createPart(room, connector);
-            if (isBoxInvalid(part.getBounds(), shape)) continue;
-
-            // check if the bridge to the next room can fit
-            Connector out = part.getOut();
-            if (isBoxInvalid(getBridgeBounds(out), shape)) continue;
-
-            // check if the end room would fit after the bridge
-            OrientedPart nextPart = createEnd(endRoom, out);
-            if (isBoxInvalid(nextPart.getBounds(), shape)) continue;
-
-            // room can fit
-            possible.add(new PossibleRoom(room, part));
-        }
-
-        return possible;
-    }
-
-    private boolean isBoxInvalid(BlockBox box, BoxCollisionDetector shape) {
-        return box.min().getY() < minHeight || box.max().getY() > maxHeight || shape.hasCollisions(box);
+        return new JumpAndRun(segments);
     }
 
     private static OrientedPart createPart(JumpRoom room, Connector connector) {
         Direction direction = connector.direction();
         BlockPos pos = connector.pos();
 
-        JumpRoom.Connectors connectors = room.getConnectors();
+        JumpRoom.Connectors connectors = room.connectors();
         Connector entrance = connectors.entrance();
 
         int targetRotation = direction.getOpposite().getHorizontalQuarterTurns();
@@ -220,29 +90,29 @@ public class JumpAndRunGenerator {
 
         RoomData data = room.createData();
 
-        return new OrientedPart(room.getStructure(), entranceOffset, rotation, entrance, connectors.exit(), data);
+        return new OrientedPart(room.structure(), entranceOffset, rotation, entrance, connectors.exit(), data);
     }
 
     @NotNull
-    private OrientedPart createStart(JumpAndRunSetup.Parts parts, BlockPos spawnPos) {
-        JumpEnd startRoom = parts.start();
-        BlockStructure startStruct = startRoom.getStructure();
+    private OrientedPart createStart(JumpEnd startRoom, BlockPos spawnPos, Direction facing) {
+        BlockStructure startStruct = startRoom.structure();
 
-        int rotation = startRoom.getExit().direction().getHorizontalQuarterTurns();
+        int targetRotation = facing.getHorizontalQuarterTurns();
+        int rotation = startRoom.exit().direction().getHorizontalQuarterTurns() - targetRotation;
         Matrix3i rotationMatrix = Matrix3i.makeRotationY(rotation);
 
-        BlockPos spawn = Objects.requireNonNull(startRoom.getSpawn(), "Spawn position must be non-null");
+        BlockPos spawn = requireNonNull(startRoom.spawn(), "Spawn position must be non-null");
         Vec3i rotatedSpawn = rotationMatrix.transform(spawn);
         BlockPos startOffset = spawnPos.subtract(rotatedSpawn);
 
-        return new OrientedPart(startStruct, startOffset, rotation, null, startRoom.getExit(), null);
+        return new OrientedPart(startStruct, startOffset, rotation, null, startRoom.exit(), null);
     }
 
     @NotNull
     private OrientedPart createEnd(JumpEnd endRoom, Connector connector) {
-        BlockStructure endStruct = endRoom.getStructure();
+        BlockStructure endStruct = endRoom.structure();
 
-        Connector exit = endRoom.getExit();
+        Connector exit = endRoom.exit();
 
         int targetRotation = connector.direction().getOpposite().getHorizontalQuarterTurns();
         int rotation = exit.direction().getHorizontalQuarterTurns() - targetRotation;
@@ -258,7 +128,7 @@ public class JumpAndRunGenerator {
     }
 
     @NotNull
-    private JumpPart makeBridge(Connector connector) {
+    private Bridge makeBridge(Connector connector) {
         BlockPos pos = connector.pos();
         Direction dir = connector.direction();
         Vec3i vec = dir.getVector();
@@ -282,9 +152,7 @@ public class JumpAndRunGenerator {
         BlockStructure structure = makeStructure(blocks);
         BlockBox bounds = getBridgeBounds(connector);
 
-        Bridge bridge = new Bridge(structure, bounds, pos.down().add(vec), dir);
-
-        return bridge.asJumpPart();
+        return new Bridge(structure, bounds, pos.down().add(vec), dir);
     }
 
     @NotNull
@@ -316,6 +184,4 @@ public class JumpAndRunGenerator {
         blocks.forEach((pos, state) -> structure.setBlockState(adapter.adapt(pos), adapter.adapt(state)));
         return structure;
     }
-
-    private record PossibleRoom(JumpRoom room, OrientedPart part) {}
 }

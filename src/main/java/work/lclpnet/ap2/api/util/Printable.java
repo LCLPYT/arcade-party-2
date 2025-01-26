@@ -6,9 +6,9 @@ import work.lclpnet.kibu.util.math.Matrix3i;
 
 public interface Printable {
 
-    BlockStructure getStructure();
+    BlockStructure structure();
 
-    Vec3i getPrintOffset();
+    Vec3i printOffset();
 
-    Matrix3i getPrintMatrix();
+    Matrix3i printMatrix();
 }

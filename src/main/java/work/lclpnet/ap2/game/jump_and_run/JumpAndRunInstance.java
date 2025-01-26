@@ -15,7 +15,6 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.GameRules;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
@@ -24,15 +23,17 @@ import work.lclpnet.ap2.api.map.MapBootstrap;
 import work.lclpnet.ap2.api.util.CollisionDetector;
 import work.lclpnet.ap2.game.jump_and_run.gen.*;
 import work.lclpnet.ap2.impl.game.DefaultGameInstance;
-import work.lclpnet.ap2.impl.game.data.ScoreTimeDataContainer;
+import work.lclpnet.ap2.impl.game.data.ScoreDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.util.BlockBox;
+import work.lclpnet.ap2.impl.util.SoundHelper;
 import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedPlayerBossBar;
 import work.lclpnet.ap2.impl.util.checkpoint.Checkpoint;
 import work.lclpnet.ap2.impl.util.checkpoint.CheckpointHelper;
 import work.lclpnet.ap2.impl.util.checkpoint.CheckpointManager;
 import work.lclpnet.ap2.impl.util.collision.ChunkedCollisionDetector;
 import work.lclpnet.ap2.impl.util.collision.PlayerMovementObserver;
+import work.lclpnet.ap2.impl.util.handler.Visibility;
 import work.lclpnet.ap2.impl.util.handler.VisibilityHandler;
 import work.lclpnet.ap2.impl.util.handler.VisibilityManager;
 import work.lclpnet.ap2.impl.util.heads.PlayerHeadUtil;
@@ -41,31 +42,38 @@ import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.scheduler.Ticks;
+import work.lclpnet.kibu.title.Title;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 import work.lclpnet.lobby.game.map.GameMap;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
-import static net.minecraft.util.Formatting.BOLD;
-import static net.minecraft.util.Formatting.YELLOW;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+import static net.minecraft.util.Formatting.*;
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
 public class JumpAndRunInstance extends DefaultGameInstance implements MapBootstrap {
 
-    private static final int ASSISTANCE_TICKS_BASE = Ticks.seconds(90);  // time after which assistance is provided
-    private static final float TARGET_MINUTES = 4.0f;  // target completion time of the jump and run (approximate)
-    private final ScoreTimeDataContainer<ServerPlayerEntity, PlayerRef> data = new ScoreTimeDataContainer<>(PlayerRef::create);
+    private static final int
+            ASSISTANCE_TICKS_BASE = Ticks.seconds(90),  // time after which assistance is provided
+            REACH_GOAL_REQUIRED = 3,
+            NEXT_PHASE_WAIT_TICKS = Ticks.seconds(4);
+    private static final float
+            TARGET_MINUTES = 3.75f;  // target completion time of the jump and run (approximate)
+
+    private final ScoreDataContainer<ServerPlayerEntity, PlayerRef> data = new ScoreDataContainer<>(PlayerRef::create);
     private final CollisionDetector collisionDetector = new ChunkedCollisionDetector();
     private final PlayerMovementObserver movementObserver;
     private final List<BlockPos> gateBlocks = new ArrayList<>();
     private JumpAndRun jumpAndRun;
     private CheckpointManager checkpoints;
     private DynamicTranslatedPlayerBossBar bossBar;
-    private int reachedRoom = 0;
+    private volatile int segmentIndex = 0, reachedGoal = 0;
+    private volatile boolean segmentActive = false;
+    private final Set<UUID> inGoal = new HashSet<>();
 
     public JumpAndRunInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
@@ -81,7 +89,7 @@ public class JumpAndRunInstance extends DefaultGameInstance implements MapBootst
     public CompletableFuture<Void> createWorldBootstrap(ServerWorld world, GameMap map) {
         world.setTimeOfDay(4000);
 
-        JumpAndRunSetup setup = new JumpAndRunSetup(gameHandle, map, world, TARGET_MINUTES);
+        var setup = new JumpAndRunSetup(gameHandle, map, world, TARGET_MINUTES);
 
         return setup.setup().thenAccept(jumpAndRun -> this.jumpAndRun = jumpAndRun);
     }
@@ -92,30 +100,31 @@ public class JumpAndRunInstance extends DefaultGameInstance implements MapBootst
                 .set(GameRules.RANDOM_TICK_SPEED, 0)
                 .set(GameRules.DO_DAYLIGHT_CYCLE, false);
 
-        // setup room listeners
-        var rooms = jumpAndRun.rooms();
-
-        for (int i = 0, roomsSize = rooms.size(); i < roomsSize; i++) {
-            BlockBox room = rooms.get(i).bounds();
-
-            collisionDetector.add(room);
-
-            int roomIndex = i;
-
-            movementObserver.whenEntering(room, player -> {
-                if (winManager.isGameOver()) return;
-
-                enterRoom(player, roomIndex);
-            });
-        }
-
         movementObserver.init(gameHandle.getHookRegistrar(), gameHandle.getServer());
 
-        // close gate until ready
-        closeGate();
+        bossBar = usePlayerDynamicTaskDisplay(styled(0, YELLOW), styled(jumpAndRun.segments().size(), YELLOW));
+        bossBar.setPercent(0);
 
-        // add scoreboard
+        setSegment(0);
+
         CustomScoreboardManager scoreboardManager = gameHandle.getScoreboardManager();
+
+        initScoreBoard(scoreboardManager);
+        initTeam(scoreboardManager);
+
+        giveItemsToPlayers();
+    }
+
+    @Override
+    public void participantRemoved(ServerPlayerEntity player) {
+        super.participantRemoved(player);
+
+        if (!winManager.isGameOver()) {
+            checkSegmentComplete();
+        }
+    }
+
+    private void initScoreBoard(CustomScoreboardManager scoreboardManager) {
         ScoreboardObjective objective = scoreboardManager.createObjective("points", ScoreboardCriterion.DUMMY,
                 Text.literal("Points").formatted(YELLOW, BOLD), ScoreboardCriterion.RenderType.INTEGER,
                 StyledNumberFormat.YELLOW);
@@ -123,31 +132,21 @@ public class JumpAndRunInstance extends DefaultGameInstance implements MapBootst
         useScoreboardStatsSync(data, objective);
 
         scoreboardManager.setDisplay(ScoreboardDisplaySlot.LIST, objective);
+    }
 
-        // add team to disable collision
+    private void initTeam(CustomScoreboardManager scoreboardManager) {
         Team team = scoreboardManager.createTeam("team");
         team.setCollisionRule(AbstractTeam.CollisionRule.NEVER);
         scoreboardManager.joinTeam(gameHandle.getParticipants(), team);
 
-        Translations translations = gameHandle.getTranslations();
-        VisibilityHandler visibility = new VisibilityHandler(new VisibilityManager(team), translations, gameHandle.getParticipants());
+        VisibilityHandler visibility = new VisibilityHandler(new VisibilityManager(team, Visibility.PARTIALLY_VISIBLE), gameHandle.getTranslations(), gameHandle.getParticipants());
         visibility.init(gameHandle.getHookRegistrar());
-
-        checkpoints = new CheckpointManager(jumpAndRun.checkpoints());
-        checkpoints.init(collisionDetector, movementObserver);
-        checkpoints.whenCheckpointReached(this::onCheckpointReached);
-        CheckpointHelper.notifyWhenReached(checkpoints, translations);
-
-        bossBar = usePlayerDynamicTaskDisplay(styled(1, YELLOW), styled(jumpAndRun.rooms().size() - 2, YELLOW));
-        bossBar.setPercent(0);
-
-        giveItemsToPlayers();
         visibility.giveItems();
     }
 
     @Override
     protected void ready() {
-        openGate();
+        beginSegment();
 
         gameHandle.protect(config -> config.allow(ProtectionTypes.USE_BLOCK, (entity, pos) -> {
             BlockState state = entity.getWorld().getBlockState(pos);
@@ -157,7 +156,7 @@ public class JumpAndRunInstance extends DefaultGameInstance implements MapBootst
         Participants participants = gameHandle.getParticipants();
         HookRegistrar hooks = gameHandle.getHookRegistrar();
 
-        CheckpointHelper.setupResetItem(hooks, winManager::isGameOver, participants::isParticipating)
+        CheckpointHelper.setupResetItem(hooks, () -> winManager.isGameOver() || !segmentActive, participants::isParticipating)
                 .then(this::resetPlayerToCheckpoint);
 
         CheckpointHelper.whenFallingIntoLava(hooks, participants::isParticipating)
@@ -185,10 +184,18 @@ public class JumpAndRunInstance extends DefaultGameInstance implements MapBootst
         for (BlockPos pos : gateBlocks) {
             world.setBlockState(pos, air);
         }
+
+        gateBlocks.clear();
     }
 
     private void closeGate() {
-        BlockBox gate = jumpAndRun.gate();
+        var segments = jumpAndRun.segments();
+
+        if (segmentIndex < 0 || segmentIndex >= segments.size()) return;
+
+        gateBlocks.clear();
+
+        BlockBox gate = segments.get(segmentIndex).gate();
         ServerWorld world = getWorld();
 
         BlockState state = Blocks.WHITE_STAINED_GLASS.getDefaultState();
@@ -201,46 +208,6 @@ public class JumpAndRunInstance extends DefaultGameInstance implements MapBootst
         }
     }
 
-    private void enterRoom(ServerPlayerEntity player, int room) {
-        delayAssistance(room);
-
-        if (room <= data.getScore(player)) return;
-
-        data.setScore(player, room);
-
-        int checkpointOffset = jumpAndRun.getCheckpointOffset(room);
-        checkpoints.grantCheckpoint(player, checkpointOffset);
-
-        if (room <= 1) return;
-
-        player.playSoundToPlayer(SoundEvents.ENTITY_PLAYER_LEVELUP, SoundCategory.PLAYERS, 0.5f, 2f);
-
-        var msg = gameHandle.getTranslations().translateText(player, "game.ap2.jump_and_run.reached_room",
-                        styled("#" + room, Formatting.YELLOW))
-                .formatted(Formatting.GREEN);
-
-        player.sendMessage(msg);
-
-        int maxRooms = jumpAndRun.rooms().size() - 2;
-        int canonicalRoom = MathHelper.clamp(room, 1, maxRooms);
-
-        bossBar.setArgument(player, 0, styled(canonicalRoom, YELLOW));
-
-        if (maxRooms > 0) {
-            bossBar.getBossBar(player).setPercent((float) (room - 1) / maxRooms);
-        }
-
-        if (winManager.isGameOver() || room < jumpAndRun.rooms().size() - 1) return;
-
-        winManager.win(player);
-    }
-
-    private void onCheckpointReached(ServerPlayerEntity player, int checkpoint) {
-        int room = jumpAndRun.getRoomOfCheckpoint(checkpoint);
-
-        enterRoom(player, room);
-    }
-
     private void resetPlayerToCheckpoint(ServerPlayerEntity player) {
         Checkpoint checkpoint = checkpoints.getCheckpoint(player);
 
@@ -250,31 +217,26 @@ public class JumpAndRunInstance extends DefaultGameInstance implements MapBootst
         player.setFireTicks(0);
     }
 
-    private void delayAssistance(int room) {
-        synchronized (this) {
-            if (room <= reachedRoom) return;
+    private void delayAssistance() {
+        var segments = jumpAndRun.segments();
 
-            reachedRoom = room;
-        }
+        if (segmentIndex < 0 || segmentIndex >= segments.size()) return;
 
-        List<RoomInfo> rooms = jumpAndRun.rooms();
-        if (room < 0 || room >= rooms.size()) return;
+        Segment segment = segments.get(segmentIndex);
 
-        RoomInfo info = rooms.get(room);
-        if (info == null) return;
+        RoomData data = segment.roomInfo().data();
 
-        RoomData data = info.data();
-        if (data == null) return;
-
-        if (data.assistance().blocks().isEmpty()) return;
+        if (data == null || data.assistance().blocks().isEmpty()) return;
 
         float weight = 1f + (data.value() - 1f) * 0.5f;
         int timeout = Math.max(ASSISTANCE_TICKS_BASE, Math.round(ASSISTANCE_TICKS_BASE * weight));
-        gameHandle.getGameScheduler().timeout(() -> placeAssistance(info), timeout);
+
+        gameHandle.getGameScheduler().timeout(() -> placeAssistance(segment.roomInfo()), timeout);
     }
 
     private void placeAssistance(RoomInfo room) {
         RoomData data = room.data();
+
         if (data == null) return;
 
         JumpAssistance assistance = data.assistance();
@@ -302,5 +264,136 @@ public class JumpAndRunInstance extends DefaultGameInstance implements MapBootst
 
             player.sendMessage(msg);
         }
+    }
+
+    private void setSegment(int i) {
+        var segments = jumpAndRun.segments();
+        int segmentCount = segments.size();
+
+        if (i < 0 || i >= segmentCount) return;
+
+        segmentIndex = i;
+        reachedGoal = 0;
+        segmentActive = false;
+        inGoal.clear();
+
+        closeGate();
+
+        Segment segment = segments.get(i);
+        BlockPos spawn = segment.spawn();
+        ServerWorld world = getWorld();
+
+        for (ServerPlayerEntity player : PlayerLookup.world(world)) {
+            player.teleport(world, spawn.getX() + 0.5, spawn.getY(), spawn.getZ() + 0.5, Set.of(), segment.yaw(), 0f, true);
+        }
+
+        collisionDetector.clear();
+        movementObserver.clear();
+
+        checkpoints = new CheckpointManager(segment.checkpoints());
+        checkpoints.init(collisionDetector, movementObserver);
+        CheckpointHelper.notifyWhenReached(checkpoints, gameHandle.getTranslations());
+
+        movementObserver.whenEntering(segment.parts().getLast().bounds(), player -> onReachedGoal(player, true));
+
+        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
+            bossBar.setArgument(player, 0, styled(segmentIndex, YELLOW));
+        }
+
+        bossBar.setPercent((float) (segmentIndex) / segmentCount);
+    }
+
+    private void onReachedGoal(ServerPlayerEntity player, boolean reached) {
+        if (requiredAmountReachedGoal()) return;
+
+        int reachedIndex;
+
+        synchronized (this) {
+            if (requiredAmountReachedGoal()) return;
+
+            reachedIndex = reachedGoal;
+
+            reachedGoal++;
+        }
+
+        inGoal.add(player.getUuid());
+        data.addScore(player, max(0, REACH_GOAL_REQUIRED - reachedIndex));
+
+        player.playSoundToPlayer(SoundEvents.ENTITY_PLAYER_LEVELUP, SoundCategory.PLAYERS, 0.5f, 2f);
+
+        int room = segmentIndex + 1;
+
+        String key = reached ? "game.ap2.jump_and_run.completed_room" : "game.ap2.jump_and_run.last_not_completed";
+
+        player.sendMessage(gameHandle.getTranslations().translateText(player, key, styled("#" + room, Formatting.YELLOW))
+                .formatted(Formatting.GREEN));
+
+        bossBar.setArgument(player, 0, styled(room, YELLOW));
+
+        int segments = jumpAndRun.segments().size();
+
+        if (segments > 0) {
+            bossBar.getBossBar(player).setPercent((float) (room) / segments);
+        }
+
+        if (!requiredAmountReachedGoal()) {
+            Participants participants = gameHandle.getParticipants();
+            int notYetInGoal = participants.count() - reachedGoal;
+
+            if (notYetInGoal == 1) {
+                var lastRemaining = participants.stream()
+                        .filter(p -> !inGoal.contains(p.getUuid()))
+                        .findFirst();
+
+                if (lastRemaining.isPresent()) {
+                    onReachedGoal(lastRemaining.get(), false);
+                    return;
+                }
+            }
+        }
+
+        checkSegmentComplete();
+    }
+
+    private void checkSegmentComplete() {
+        if (!requiredAmountReachedGoal()) return;
+
+        int nextSegment = segmentIndex + 1;
+
+        if (nextSegment >= jumpAndRun.segments().size()) {
+            winManager.win(data.getBestSubject(resolver).orElse(null));
+            return;
+        }
+
+        gameHandle.getTranslations().translateText("game.ap2.jump_and_run.next_segment_wait").formatted(GRAY).sendTo(PlayerLookup.world(getWorld()));
+
+        setSegment(nextSegment);
+
+        SoundHelper.playSound(getWorld(), SoundEvents.ENTITY_PLAYER_LEVELUP, SoundCategory.PLAYERS, 0.5f, 2f);
+
+        gameHandle.getGameScheduler().timeout(this::nextSegment, NEXT_PHASE_WAIT_TICKS);
+    }
+
+    private boolean requiredAmountReachedGoal() {
+        return reachedGoal >= requiredAmount();
+    }
+
+    private int requiredAmount() {
+        return min(gameHandle.getParticipants().count(), REACH_GOAL_REQUIRED);
+    }
+
+    private void nextSegment() {
+        gameHandle.getTranslations().translateText("ap2.go").formatted(RED).acceptEach(PlayerLookup.world(getWorld()), (player, text) -> {
+            Title.get(player).title(text, Text.empty(), 5, 20, 5);
+            player.playSoundToPlayer(SoundEvents.ENTITY_CHICKEN_EGG, SoundCategory.PLAYERS, 1, 0);
+        });
+
+        beginSegment();
+    }
+
+    private void beginSegment() {
+        openGate();
+        segmentActive = true;
+        delayAssistance();
     }
 }

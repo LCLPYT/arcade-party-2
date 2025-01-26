@@ -9,35 +9,7 @@ import work.lclpnet.kibu.mc.BuiltinKibuBlockState;
 import work.lclpnet.kibu.mc.KibuBlockPos;
 import work.lclpnet.kibu.structure.BlockStructure;
 
-public class JumpEnd {
-
-    private final BlockStructure structure;
-    private final BlockBox bounds;
-    private final @Nullable BlockPos spawn;
-    private final Connector exit;
-
-    public JumpEnd(BlockStructure structure, BlockBox bounds, @Nullable BlockPos spawn, Connector exit) {
-        this.structure = structure;
-        this.bounds = bounds;
-        this.spawn = spawn;
-        this.exit = exit;
-    }
-
-    public BlockStructure getStructure() {
-        return structure;
-    }
-
-    public BlockBox getBounds() {
-        return bounds;
-    }
-
-    public @Nullable BlockPos getSpawn() {
-        return spawn;
-    }
-
-    public Connector getExit() {
-        return exit;
-    }
+public record JumpEnd(BlockStructure structure, BlockBox bounds, @Nullable BlockPos spawn, Connector exit) {
 
     public static JumpEnd from(BlockStructure structure) {
         BlockBox bounds = StructureUtil.getBounds(structure);

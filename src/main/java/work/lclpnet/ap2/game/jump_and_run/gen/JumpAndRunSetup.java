@@ -36,7 +36,7 @@ public class JumpAndRunSetup {
         this.map = map;
         this.world = world;
         this.logger = gameHandle.getLogger();
-        this.generator = new JumpAndRunGenerator(targetMinutes, new Random(), logger, world.getBottomY(), world.getTopYInclusive());
+        this.generator = new JumpAndRunGenerator(targetMinutes, new Random());
         this.placer = new JumpAndRunPlacer(world);
     }
 
@@ -145,7 +145,7 @@ public class JumpAndRunSetup {
     private Optional<JumpRoom.Partial> readRoom(String id, Path schematicsDir) {
         return readStructure(id, schematicsDir).map(structure -> {
             try {
-                return JumpRoom.from(structure);
+                return JumpRoom.Partial.from(structure);
             } catch (Throwable t) {
                 logger.error("Invalid room schematic '{}'", id, t);
                 return null;

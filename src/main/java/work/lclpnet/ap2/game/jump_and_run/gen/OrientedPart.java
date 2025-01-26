@@ -2,7 +2,6 @@ package work.lclpnet.ap2.game.jump_and_run.gen;
 
 import net.minecraft.util.math.Vec3i;
 import org.jetbrains.annotations.Nullable;
-import work.lclpnet.ap2.api.util.Printable;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.StructureUtil;
 import work.lclpnet.ap2.impl.util.math.AffineIntMatrix;
@@ -11,17 +10,17 @@ import work.lclpnet.kibu.util.math.Matrix3i;
 
 import java.util.Objects;
 
-public final class OrientedPart implements Printable {
+public final class OrientedPart implements JumpPart {
 
     private final BlockStructure structure;
     private final Vec3i offset;
     private final int rotation;
     private final BlockBox bounds;
-    private final Connector in, out;
+    private final @Nullable Connector in, out;
     private final RoomInfo info;
     private final Matrix3i matrix;
 
-    public OrientedPart(BlockStructure structure, Vec3i offset, int rotation, Connector in, Connector out, @Nullable RoomData data) {
+    public OrientedPart(BlockStructure structure, Vec3i offset, int rotation, @Nullable Connector in, @Nullable Connector out, @Nullable RoomData data) {
         this.structure = structure;
         this.offset = offset;
         this.rotation = rotation;
@@ -37,10 +36,12 @@ public final class OrientedPart implements Printable {
         this.info = new RoomInfo(bounds, transformedData);
     }
 
-    public BlockBox getBounds() {
+    @Override
+    public BlockBox bounds() {
         return bounds;
     }
 
+    @Override
     public BlockStructure structure() {
         return structure;
     }
@@ -53,15 +54,17 @@ public final class OrientedPart implements Printable {
         return rotation;
     }
 
-    public Connector getIn() {
+    @Nullable
+    public Connector in() {
         return in;
     }
 
-    public Connector getOut() {
+    @Nullable
+    public Connector out() {
         return out;
     }
 
-    public RoomInfo getInfo() {
+    public RoomInfo info() {
         return info;
     }
 
@@ -89,21 +92,12 @@ public final class OrientedPart implements Printable {
     }
 
     @Override
-    public BlockStructure getStructure() {
-        return structure;
-    }
-
-    @Override
-    public Vec3i getPrintOffset() {
+    public Vec3i printOffset() {
         return offset;
     }
 
     @Override
-    public Matrix3i getPrintMatrix() {
+    public Matrix3i printMatrix() {
         return matrix;
-    }
-
-    public JumpPart asJumpPart() {
-        return new JumpPart(this, bounds);
     }
 }

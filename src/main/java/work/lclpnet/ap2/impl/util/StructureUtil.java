@@ -23,10 +23,10 @@ public class StructureUtil {
     private StructureUtil() {}
 
     public static void placeStructureFast(Printable printable, ServerWorld world) {
-        BlockStructure structure = printable.getStructure();
-        Vec3i pos = printable.getPrintOffset();
+        BlockStructure structure = printable.structure();
+        Vec3i pos = printable.printOffset();
 
-        StructureWriter.placeStructure(structure, world, pos, printable.getPrintMatrix(), FAST_NO_VIEWERS);
+        StructureWriter.placeStructure(structure, world, pos, printable.printMatrix(), FAST_NO_VIEWERS);
     }
 
     public static void placeStructureFast(BlockStructure structure, ServerWorld world, Vec3i pos) {
