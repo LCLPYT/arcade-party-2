@@ -2,6 +2,7 @@ package work.lclpnet.ap2.impl.util.movement;
 
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.util.PlayerInput;
 import work.lclpnet.kibu.hook.HookListenerModule;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.player.PlayerConnectionHooks;
@@ -9,8 +10,9 @@ import work.lclpnet.kibu.hook.player.PlayerMoveCallback;
 import work.lclpnet.kibu.hook.util.PositionRotation;
 import work.lclpnet.lobby.util.PlayerReset;
 
-class MovementListener implements HookListenerModule {
+public class MovementListener implements HookListenerModule {
 
+    private static final double TOL_SQ = 0.2 * 0.2;
     private final MovementBlocker blocker;
     private boolean registered = false;
 
@@ -45,6 +47,10 @@ class MovementListener implements HookListenerModule {
     }
 
     private boolean onPlayerMove(ServerPlayerEntity player, PositionRotation from, PositionRotation to) {
-        return blocker.isMovementDisabled(player) && from.squaredDistanceTo(to) > 1e-3 && from.squaredDistanceTo(to) <= 1;
+        return blocker.isMovementDisabled(player) && (from.squaredDistanceTo(to) >= TOL_SQ || isMovementInput(player.getPlayerInput()));
+    }
+
+    public static boolean isMovementInput(PlayerInput input) {
+        return input.jump() || input.forward() || input.backward() || input.left() || input.right();
     }
 }

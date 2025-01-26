@@ -32,9 +32,10 @@ import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker;
-import work.lclpnet.ap2.impl.util.movement.TickMovementDetector;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.kibu.access.entity.FireworkEntityAccess;
+import work.lclpnet.kibu.hook.HookRegistrar;
+import work.lclpnet.kibu.hook.player.PlayerMoveCallback;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.title.Title;
 import work.lclpnet.kibu.translate.Translations;
@@ -51,9 +52,9 @@ import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
 public class RedLightGreenLightInstance extends DefaultGameInstance implements Runnable {
 
-    private static final int STOP_MIN_TICKS = 60, STOP_MAX_TICKS = 90;
-    private static final int WARN_MIN_TICKS = 35, WARN_MAX_TICKS = 75;
-    private static final int GO_MIN_TICKS = 60, GO_MAX_TICKS = 120;
+    private static final int UNTIL_STOP_MIN_TICKS = 90, UNTIL_STOP_MAX_TICKS = 160;
+    private static final int WARN_TIME_MIN_TICKS = 38, WARN_TIME_MAX_TICKS = 78;
+    private static final int FROZEN_MIN_TICKS = 60, FROZEN_MAX_TICKS = 105;
     private static final int END_TIME_SECONDS = 15;
     private final SimpleMovementBlocker movementBlocker;
     private final OrderedDataContainer<ServerPlayerEntity, PlayerRef> data = new OrderedDataContainer<>(PlayerRef::create);
@@ -61,6 +62,7 @@ public class RedLightGreenLightInstance extends DefaultGameInstance implements R
     private final Set<UUID> inGoal = new HashSet<>();
     private final Set<UUID> moved = new HashSet<>();
     private final List<TrafficLight> trafficLights = new ArrayList<>();
+    private final RLGLMovementDetector movementDetector = new RLGLMovementDetector();
     private MovementTracker tracker = null;
     private TranslatedBossBar taskBar = null;
     private BlockBox goal;
@@ -110,9 +112,15 @@ public class RedLightGreenLightInstance extends DefaultGameInstance implements R
 
     @Override
     protected void ready() {
-        TickMovementDetector detector = new TickMovementDetector(gameHandle::getParticipants);
-        detector.register(this::onMove);
-        detector.init(gameHandle.getGameScheduler(), gameHandle.getHookRegistrar());
+        HookRegistrar hooks = gameHandle.getHookRegistrar();
+
+        movementDetector.register(this::onMovedWhileRed);
+        movementDetector.init(hooks);
+
+        hooks.registerHook(PlayerMoveCallback.HOOK, (player, from, to) -> {
+            onMove(player);
+            return false;
+        });
 
         openGate();
         scheduleNextStop();
@@ -137,6 +145,8 @@ public class RedLightGreenLightInstance extends DefaultGameInstance implements R
 
     private void setStatus(TrafficLight.Status status) {
         if (status == TrafficLight.Status.GREEN) {
+            movementDetector.unfixAll();
+
             for (UUID uuid : moved) {
                 ServerPlayerEntity player = gameHandle.getServer().getPlayerManager().getPlayer(uuid);
 
@@ -146,6 +156,12 @@ public class RedLightGreenLightInstance extends DefaultGameInstance implements R
             }
 
             moved.clear();
+        } else if (status == TrafficLight.Status.RED) {
+            for (ServerPlayerEntity player : gameHandle.getParticipants()) {
+                if (inGoal.contains(player.getUuid())) continue;
+
+                movementDetector.fixPosition(player);
+            }
         }
 
         setTrafficLightStatus(EnumSet.of(status));
@@ -200,25 +216,22 @@ public class RedLightGreenLightInstance extends DefaultGameInstance implements R
     }
 
     private void onMove(ServerPlayerEntity player) {
-        if (winManager.isGameOver()
-            || !gameHandle.getParticipants().isParticipating(player)
-            || inGoal.contains(player.getUuid())) return;
+        if (timer <= 0) return;
 
-        double x = player.getX(), y = player.getY(), z = player.getZ();
+        tracker.track(player);
 
-        if (goal.collidesWith(x, y, z)) {
+        if (goal.contains(player.getPos())) {
             onGoalReached(player);
-            return;
         }
+    }
 
-        if (timer > 0) {
-            tracker.track(player);
-            return;
-        }
+    private void onMovedWhileRed(ServerPlayerEntity player) {
+        if (winManager.isGameOver()
+                || !gameHandle.getParticipants().isParticipating(player)
+                || inGoal.contains(player.getUuid())
+                || !moved.add(player.getUuid())) return;
 
-        // moved while stopped, check if the player is already tracked as "moved"
-        if (!moved.add(player.getUuid())) return;
-
+        movementDetector.unfixPosition(player);
         punish(player);
     }
 
@@ -288,12 +301,12 @@ public class RedLightGreenLightInstance extends DefaultGameInstance implements R
     }
 
     private void scheduleNextStop() {
-        timer = STOP_MIN_TICKS + random.nextInt(STOP_MAX_TICKS - STOP_MIN_TICKS + 1);
+        timer = UNTIL_STOP_MIN_TICKS + random.nextInt(UNTIL_STOP_MAX_TICKS - UNTIL_STOP_MIN_TICKS + 1);
 
-        int randomNextWarn = WARN_MIN_TICKS + random.nextInt(WARN_MAX_TICKS - WARN_MIN_TICKS + 1);
-        warn = Math.max(1, Math.min(timer - WARN_MIN_TICKS, randomNextWarn));
+        int randomNextWarn = WARN_TIME_MIN_TICKS + random.nextInt(WARN_TIME_MAX_TICKS - WARN_TIME_MIN_TICKS + 1);
+        warn = Math.max(1, Math.min(timer - WARN_TIME_MIN_TICKS, randomNextWarn));
 
-        go = GO_MIN_TICKS + random.nextInt(GO_MAX_TICKS - GO_MIN_TICKS + 1);
+        go = FROZEN_MIN_TICKS + random.nextInt(FROZEN_MAX_TICKS - FROZEN_MIN_TICKS + 1);
     }
 
     @Override
