@@ -88,5 +88,7 @@ public class BlockOptions {
         blockOptions.add(Blocks.OBSERVER);
         blockOptions.add(Blocks.TNT);
         blockOptions.add(Blocks.TARGET);
+        blockOptions.add(Blocks.RESIN_BLOCK);
+        blockOptions.add(Blocks.CREAKING_HEART);
     }
 }

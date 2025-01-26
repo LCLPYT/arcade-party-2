@@ -122,6 +122,8 @@ public class AimMasterInstance extends DefaultGameInstance implements MapBootstr
     }
 
     private @NotNull ActionResult invokeRayCaster(PlayerEntity player) {
+        if (winManager.isGameOver()) return ActionResult.FAIL;
+
         AimMasterDomain domain = manager.getDomains().get(player.getUuid());
         ServerPlayerEntity serverPlayer = (ServerPlayerEntity) player;
 
@@ -143,7 +145,7 @@ public class AimMasterInstance extends DefaultGameInstance implements MapBootstr
             return ActionResult.FAIL;
         }
 
-        player.playSoundToPlayer(SoundEvents.BLOCK_NOTE_BLOCK_BASS.value(), SoundCategory.PLAYERS, 0.2f, 0.2f);
+        player.playSoundToPlayer(SoundEvents.BLOCK_NOTE_BLOCK_BASS.value(), SoundCategory.PLAYERS, 0.3f, 0.2f);
 
         return ActionResult.PASS;
     }
