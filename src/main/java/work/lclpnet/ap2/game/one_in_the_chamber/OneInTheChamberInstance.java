@@ -198,12 +198,14 @@ public class OneInTheChamberInstance extends DefaultGameInstance {
     }
 
     private boolean onDamage(LivingEntity entity, DamageSource source, float amount) {
-        if (!(entity instanceof ServerPlayerEntity player)) return false;
+        if (!(entity instanceof ServerPlayerEntity player) || winManager.isGameOver()) return false;
 
         if (source.getSource() instanceof ProjectileEntity projectile) {
             onProjectileDamage(player, projectile);
             return false;
         }
+
+        if (player.hurtTime > 0) return false;
 
         if ((player.getHealth() - amount) <= 0) {
             onLethalDamage(source, player);
