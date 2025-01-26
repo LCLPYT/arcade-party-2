@@ -59,7 +59,7 @@ public class JumpAndRunInstance extends DefaultGameInstance implements MapBootst
     private static final int
             ASSISTANCE_TICKS_BASE = Ticks.seconds(90),  // time after which assistance is provided
             REACH_GOAL_REQUIRED = 3,
-            NEXT_PHASE_WAIT_TICKS = Ticks.seconds(6);
+            NEXT_PHASE_WAIT_TICKS = Ticks.seconds(4);
     private static final float
             TARGET_MINUTES = 3.75f;  // target completion time of the jump and run (approximate)
 
