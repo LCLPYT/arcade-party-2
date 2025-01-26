@@ -33,6 +33,7 @@ import work.lclpnet.ap2.impl.util.checkpoint.CheckpointHelper;
 import work.lclpnet.ap2.impl.util.checkpoint.CheckpointManager;
 import work.lclpnet.ap2.impl.util.collision.ChunkedCollisionDetector;
 import work.lclpnet.ap2.impl.util.collision.PlayerMovementObserver;
+import work.lclpnet.ap2.impl.util.handler.Visibility;
 import work.lclpnet.ap2.impl.util.handler.VisibilityHandler;
 import work.lclpnet.ap2.impl.util.handler.VisibilityManager;
 import work.lclpnet.ap2.impl.util.heads.PlayerHeadUtil;
@@ -138,7 +139,7 @@ public class JumpAndRunInstance extends DefaultGameInstance implements MapBootst
         team.setCollisionRule(AbstractTeam.CollisionRule.NEVER);
         scoreboardManager.joinTeam(gameHandle.getParticipants(), team);
 
-        VisibilityHandler visibility = new VisibilityHandler(new VisibilityManager(team), gameHandle.getTranslations(), gameHandle.getParticipants());
+        VisibilityHandler visibility = new VisibilityHandler(new VisibilityManager(team, Visibility.PARTIALLY_VISIBLE), gameHandle.getTranslations(), gameHandle.getParticipants());
         visibility.init(gameHandle.getHookRegistrar());
         visibility.giveItems();
     }

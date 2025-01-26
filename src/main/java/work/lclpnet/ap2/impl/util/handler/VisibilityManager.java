@@ -20,9 +20,15 @@ public class VisibilityManager {
 
     private final Team team;
     private final Map<UUID, Visibility> visibilities = new HashMap<>();
+    private final Visibility defaultVisibility;
 
     public VisibilityManager(Team team) {
+        this(team, Visibility.VISIBLE);
+    }
+
+    public VisibilityManager(Team team, Visibility defaultVisibility) {
         this.team = team;
+        this.defaultVisibility = defaultVisibility;
     }
 
     public void toggleVisibilityFor(ServerPlayerEntity player) {
@@ -70,7 +76,7 @@ public class VisibilityManager {
     }
 
     public Visibility getVisibilityFor(ServerPlayerEntity player) {
-        return visibilities.getOrDefault(player.getUuid(), Visibility.VISIBLE);
+        return visibilities.getOrDefault(player.getUuid(), defaultVisibility);
     }
 
     private void makeOthersVisibleFor(ServerPlayerEntity player, boolean visible) {
