@@ -26,6 +26,7 @@ import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
+import work.lclpnet.ap2.core.hook.SpectatePlayerCallback;
 import work.lclpnet.ap2.impl.game.DefaultGameInstance;
 import work.lclpnet.ap2.impl.game.data.ScoreDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
@@ -115,6 +116,8 @@ public class OneInTheChamberInstance extends DefaultGameInstance {
                 -> projectile.discard());
 
         hooks.registerHook(ServerLivingEntityHooks.ALLOW_DAMAGE, this::onDamage);
+
+        hooks.registerHook(SpectatePlayerCallback.HOOK, (spectator, target) -> gameHandle.getParticipants().isParticipating(spectator));
 
         TaskScheduler scheduler = gameHandle.getGameScheduler();
 
