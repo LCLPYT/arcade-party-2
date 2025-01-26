@@ -26,6 +26,7 @@
     "PathMixin",
     "PathNodeMakerAccessor",
     "PathNodeNavigatorMixin",
+    "ServerPlayerEntityMixin",
     "SpiderEntityMixin",
     "WardenBrainAccessor",
     "WardenBrainMixin"
