@@ -32,6 +32,7 @@ import work.lclpnet.ap2.impl.util.checkpoint.CheckpointHelper;
 import work.lclpnet.ap2.impl.util.checkpoint.CheckpointManager;
 import work.lclpnet.ap2.impl.util.collision.ChunkedCollisionDetector;
 import work.lclpnet.ap2.impl.util.collision.TickMovementObserver;
+import work.lclpnet.ap2.impl.util.handler.Visibility;
 import work.lclpnet.ap2.impl.util.handler.VisibilityHandler;
 import work.lclpnet.ap2.impl.util.handler.VisibilityManager;
 import work.lclpnet.ap2.impl.util.heads.PlayerHeadUtil;
@@ -80,8 +81,8 @@ public class PigRaceInstance extends DefaultGameInstance {
         Participants participants = gameHandle.getParticipants();
 
         Team team = createTeam();
-        VisibilityManager visibilityManager = new VisibilityManager(team);
-        VisibilityHandler visibility = new VisibilityHandler(visibilityManager, translations, participants);
+        var visibilityManager = new VisibilityManager(team, Visibility.PARTIALLY_VISIBLE);
+        var visibility = new VisibilityHandler(visibilityManager, translations, participants);
 
         visibility.init(hooks);
 

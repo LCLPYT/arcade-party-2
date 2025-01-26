@@ -25,6 +25,9 @@ import work.lclpnet.ap2.impl.game.EliminationGameInstance;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedBossBar;
+import work.lclpnet.ap2.impl.util.handler.Visibility;
+import work.lclpnet.ap2.impl.util.handler.VisibilityHandler;
+import work.lclpnet.ap2.impl.util.handler.VisibilityManager;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.kibu.access.VelocityModifier;
 import work.lclpnet.kibu.access.entity.FallingBlockAccess;
@@ -71,6 +74,10 @@ public class AnvilFallInstance extends EliminationGameInstance {
         team.setCollisionRule(AbstractTeam.CollisionRule.NEVER);
 
         scoreboardManager.joinTeam(gameHandle.getParticipants(), team);
+
+        var manager = new VisibilityManager(team, Visibility.PARTIALLY_VISIBLE);
+        var handler = new VisibilityHandler(manager, gameHandle.getTranslations(), gameHandle.getParticipants());
+        handler.init(gameHandle.getHookRegistrar());
     }
 
     @Override

@@ -26,6 +26,7 @@ import work.lclpnet.ap2.impl.game.data.ScoreTimeDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.map.ServerThreadMapBootstrap;
 import work.lclpnet.ap2.impl.util.collision.GroundDetector;
+import work.lclpnet.ap2.impl.util.handler.Visibility;
 import work.lclpnet.ap2.impl.util.handler.VisibilityHandler;
 import work.lclpnet.ap2.impl.util.handler.VisibilityManager;
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker;
@@ -81,6 +82,9 @@ public class SplashyDropperInstance extends DefaultGameInstance implements MapBo
 
     @Override
     protected void prepare() {
+        setupObjective();
+        setupTeam();
+
         commons().teleportToRandomSpawns(random);
 
         HookRegistrar hooks = gameHandle.getHookRegistrar();
@@ -99,9 +103,6 @@ public class SplashyDropperInstance extends DefaultGameInstance implements MapBo
         minSpawnY = commons().getSpawns().stream()
                 .mapToDouble(PositionRotation::getY)
                 .min().orElse(70);
-
-        setupObjective();
-        setupTeam();
     }
 
     @Override
@@ -126,7 +127,7 @@ public class SplashyDropperInstance extends DefaultGameInstance implements MapBo
         scoreboardManager.joinTeam(gameHandle.getParticipants(), team);
 
         Translations translations = gameHandle.getTranslations();
-        VisibilityHandler visibility = new VisibilityHandler(new VisibilityManager(team), translations, gameHandle.getParticipants());
+        VisibilityHandler visibility = new VisibilityHandler(new VisibilityManager(team, Visibility.PARTIALLY_VISIBLE), translations, gameHandle.getParticipants());
         visibility.init(gameHandle.getHookRegistrar());
 
         visibility.giveItems();

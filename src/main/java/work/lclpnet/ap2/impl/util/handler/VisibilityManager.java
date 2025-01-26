@@ -22,10 +22,6 @@ public class VisibilityManager {
     private final Map<UUID, Visibility> visibilities = new HashMap<>();
     private final Visibility defaultVisibility;
 
-    public VisibilityManager(Team team) {
-        this(team, Visibility.VISIBLE);
-    }
-
     public VisibilityManager(Team team, Visibility defaultVisibility) {
         this.team = team;
         this.defaultVisibility = defaultVisibility;
