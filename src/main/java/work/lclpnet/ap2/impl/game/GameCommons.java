@@ -30,10 +30,7 @@ import work.lclpnet.lobby.game.map.GameMap;
 import work.lclpnet.lobby.game.map.MapUtils;
 import work.lclpnet.lobby.game.util.BossBarTimer;
 
-import java.util.List;
-import java.util.Objects;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
 
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
@@ -204,12 +201,18 @@ public class GameCommons {
     }
 
     public void teleportToRandomSpawns(Random random) {
-        List<PositionRotation> spawns = getSpawns();
+        List<PositionRotation> pool = getSpawns();
 
-        if (spawns.isEmpty()) return;
+        if (pool.isEmpty()) return;
+
+        var spawns = new ArrayList<>(pool);
 
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
-            PositionRotation spawn = spawns.get(random.nextInt(spawns.size()));
+            if (spawns.isEmpty()) {
+                spawns.addAll(pool);
+            }
+
+            PositionRotation spawn = spawns.remove(random.nextInt(spawns.size()));
             player.teleport(world, spawn.getX(), spawn.getY(), spawn.getZ(), Set.of(), spawn.getYaw(), spawn.getPitch(), true);
         }
     }
@@ -231,7 +234,7 @@ public class GameCommons {
 
         synchronized (this) {
             if (spawns == null) {
-                spawns = MapUtils.getSpawnPositionsAndRotation(map);
+                spawns = List.copyOf(MapUtils.getSpawnPositionsAndRotation(map));
             }
         }
 
