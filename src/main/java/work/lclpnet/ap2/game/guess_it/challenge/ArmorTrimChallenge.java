@@ -32,7 +32,7 @@ import java.util.Random;
 
 public class ArmorTrimChallenge implements Challenge {
 
-    private static final int DURATION_TICKS = Ticks.seconds(16);
+    private static final int DURATION_TICKS = Ticks.seconds(14);
     private final MiniGameHandle gameHandle;
     private final ServerWorld world;
     private final Random random;

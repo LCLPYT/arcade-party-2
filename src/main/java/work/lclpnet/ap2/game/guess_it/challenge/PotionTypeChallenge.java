@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 
 public class PotionTypeChallenge implements Challenge {
 
-    private static final int DURATION_TICKS = Ticks.seconds(16);
+    private static final int DURATION_TICKS = Ticks.seconds(15);
     private final MiniGameHandle gameHandle;
     private final Random random;
     private final GuessItDisplay display;
