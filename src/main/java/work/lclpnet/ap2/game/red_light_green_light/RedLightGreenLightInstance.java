@@ -216,7 +216,7 @@ public class RedLightGreenLightInstance extends DefaultGameInstance implements R
     }
 
     private void onMove(ServerPlayerEntity player) {
-        if (timer <= 0) return;
+        if (timer <= 0 || inGoal.contains(player.getUuid())) return;
 
         tracker.track(player);
 
@@ -271,10 +271,11 @@ public class RedLightGreenLightInstance extends DefaultGameInstance implements R
     }
 
     private void onGoalReached(ServerPlayerEntity player) {
-        data.add(player);
-        inGoal.add(player.getUuid());
+        if (!inGoal.add(player.getUuid())) return;
 
-        FireworkExplosionComponent explosion = new FireworkExplosionComponent(FireworkExplosionComponent.Type.LARGE_BALL, IntList.of(0x20FF4D), IntList.of(0x1E7220), false, true);
+        data.add(player);
+
+        var explosion = new FireworkExplosionComponent(FireworkExplosionComponent.Type.LARGE_BALL, IntList.of(0x20FF4D), IntList.of(0x1E7220), false, true);
 
         ItemStack rocket = new ItemStack(Items.FIREWORK_ROCKET);
         rocket.set(DataComponentTypes.FIREWORKS, new FireworksComponent(1, List.of(explosion)));
