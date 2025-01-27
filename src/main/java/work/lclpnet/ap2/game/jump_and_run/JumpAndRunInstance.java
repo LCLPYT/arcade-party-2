@@ -71,7 +71,7 @@ public class JumpAndRunInstance extends DefaultGameInstance implements MapBootst
     private JumpAndRun jumpAndRun;
     private CheckpointManager checkpoints;
     private DynamicTranslatedPlayerBossBar bossBar;
-    private volatile int segmentIndex = 0, reachedGoal = 0;
+    private volatile int segmentIndex = 0;
     private volatile boolean segmentActive = false;
     private final Set<UUID> inGoal = new HashSet<>();
 
@@ -273,7 +273,6 @@ public class JumpAndRunInstance extends DefaultGameInstance implements MapBootst
         if (i < 0 || i >= segmentCount) return;
 
         segmentIndex = i;
-        reachedGoal = 0;
         segmentActive = false;
         inGoal.clear();
 
@@ -304,20 +303,9 @@ public class JumpAndRunInstance extends DefaultGameInstance implements MapBootst
     }
 
     private void onReachedGoal(ServerPlayerEntity player, boolean reached) {
-        if (requiredAmountReachedGoal()) return;
+        if (requiredAmountReachedGoal() || !inGoal.add(player.getUuid())) return;
 
-        int reachedIndex;
-
-        synchronized (this) {
-            if (requiredAmountReachedGoal()) return;
-
-            reachedIndex = reachedGoal;
-
-            reachedGoal++;
-        }
-
-        inGoal.add(player.getUuid());
-        data.addScore(player, max(0, REACH_GOAL_REQUIRED - reachedIndex));
+        data.addScore(player, max(0, REACH_GOAL_REQUIRED - inGoal.size() + 1));
 
         player.playSoundToPlayer(SoundEvents.ENTITY_PLAYER_LEVELUP, SoundCategory.PLAYERS, 0.5f, 2f);
 
@@ -338,7 +326,7 @@ public class JumpAndRunInstance extends DefaultGameInstance implements MapBootst
 
         if (!requiredAmountReachedGoal()) {
             Participants participants = gameHandle.getParticipants();
-            int notYetInGoal = participants.count() - reachedGoal;
+            int notYetInGoal = participants.count() - inGoal.size();
 
             if (notYetInGoal == 1) {
                 var lastRemaining = participants.stream()
@@ -375,7 +363,7 @@ public class JumpAndRunInstance extends DefaultGameInstance implements MapBootst
     }
 
     private boolean requiredAmountReachedGoal() {
-        return reachedGoal >= requiredAmount();
+        return inGoal.size() >= requiredAmount();
     }
 
     private int requiredAmount() {
