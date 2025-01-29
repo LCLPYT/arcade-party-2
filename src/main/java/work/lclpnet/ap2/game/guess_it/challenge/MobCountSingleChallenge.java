@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Random;
 
 import static net.minecraft.util.Formatting.YELLOW;
+import static work.lclpnet.ap2.impl.util.world.PositionUtil.findGroundPositions;
 
 public class MobCountSingleChallenge implements Challenge {
 
@@ -60,7 +61,7 @@ public class MobCountSingleChallenge implements Challenge {
         amount = getRandomAmount(type);
 
         SizedSpaceFinder spaceFinder = SizedSpaceFinder.create(world, type);
-        List<Vec3d> spaces = spaceFinder.findSpaces(stage.groundPositionIterator());
+        List<Vec3d> spaces = spaceFinder.findSpaces(findGroundPositions(stage, world));
 
         if (spaces.isEmpty()) {
             throw new IllegalStateException("There are no spaces that support " + Registries.ENTITY_TYPE.getId(type));

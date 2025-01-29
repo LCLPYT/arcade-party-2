@@ -25,8 +25,8 @@ public class AsSetup {
         this.targetManager = targetManager;
     }
 
-    public List<MonsterSpawner> readSpawners() {
-        List<MonsterSpawner> spawners = new LinkedList<>();
+    public List<MonsterSpawner<?>> readSpawners() {
+        List<MonsterSpawner<?>> spawners = new LinkedList<>();
 
         JSONArray array = map.requireProperty("spawners");
 
@@ -39,11 +39,18 @@ public class AsSetup {
         return spawners;
     }
 
-    private MonsterSpawner createSpawner(JSONObject json) {
+    private MonsterSpawner<?> createSpawner(JSONObject json) {
         JSONObject stageJson = json.getJSONObject("stage");
 
         Stage stage = StageReader.readStage(stageJson);
+        var stageWithRadius = validateStage(stage);
 
-        return new MonsterSpawner(world, stage, random, targetManager);
+        return new MonsterSpawner<>(world, stageWithRadius, random, targetManager);
+    }
+
+    @SuppressWarnings("unchecked")
+    private <S extends Stage & Stage.WithRadius> S validateStage(Stage stage) {
+        if (!(stage instanceof Stage.WithRadius)) throw new IllegalArgumentException("Stage with radius required");
+        return (S) stage;
     }
 }

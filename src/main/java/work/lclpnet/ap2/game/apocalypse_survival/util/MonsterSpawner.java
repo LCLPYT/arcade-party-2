@@ -25,7 +25,7 @@ import work.lclpnet.kibu.scheduler.Ticks;
 
 import java.util.Random;
 
-public class MonsterSpawner {
+public class MonsterSpawner<S extends Stage & Stage.WithRadius> {
 
     private static final int
             PARTICLE_TICKS = 12,
@@ -33,7 +33,7 @@ public class MonsterSpawner {
             MOB_MAX_TICKS = Ticks.seconds(3) + 10,
             MOB_LIMIT = 150;
     private final ServerWorld world;
-    private final Stage stage;
+    private final S stage;
     private final Random random;
     private final TargetManager targetManager;
     private final WeightedList<EntityType<? extends ZombieEntity>> zombieTypes;
@@ -44,7 +44,7 @@ public class MonsterSpawner {
     private int nextMob;
     private int mobCount = 0;
 
-    public MonsterSpawner(ServerWorld world, Stage stage, Random random, TargetManager targetManager) {
+    public MonsterSpawner(ServerWorld world, S stage, Random random, TargetManager targetManager) {
         this.world = world;
         this.stage = stage;
         this.random = random;

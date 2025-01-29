@@ -80,13 +80,11 @@ public class SdGenerator {
         }
     }
 
-    private static @NotNull WeightedList<ShapeSpace> createPool(Stage stage, WeightedList<SdShape> shapes) {
+    private @NotNull WeightedList<ShapeSpace> createPool(Stage stage, WeightedList<SdShape> shapes) {
         Set<BlockPos> space = new HashSet<>();
 
-        var it = stage.groundPositionIterator();
-
-        while (it.hasNext()) {
-            space.add(it.next().toImmutable());
+        for (BlockPos pos : stage) {
+            space.add(pos.toImmutable());
         }
 
         // create mutable pool of shapes and their possible spaces

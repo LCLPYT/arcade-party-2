@@ -34,6 +34,7 @@ import work.lclpnet.lobby.util.WorldModifier;
 import java.util.*;
 
 import static net.minecraft.util.math.Direction.*;
+import static work.lclpnet.ap2.impl.util.world.PositionUtil.findGroundPositions;
 
 public class MinecartChallenge implements Challenge, LongerChallenge, SchedulerAction {
 
@@ -138,10 +139,8 @@ public class MinecartChallenge implements Challenge, LongerChallenge, SchedulerA
     private void generateTracks() {
         Set<BlockPos> positions = new HashSet<>();
 
-        var it = stage.groundPositionIterator();
-
-        while (it.hasNext()) {
-            positions.add(it.next().toImmutable());
+        for (BlockPos pos : findGroundPositions(stage, world)) {
+            positions.add(pos.toImmutable());
         }
 
         if (positions.isEmpty()) {

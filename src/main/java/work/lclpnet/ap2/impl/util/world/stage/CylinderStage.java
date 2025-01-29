@@ -1,12 +1,13 @@
 package work.lclpnet.ap2.impl.util.world.stage;
 
+import com.google.common.collect.Iterators;
 import net.minecraft.util.math.BlockPos;
+import org.jetbrains.annotations.NotNull;
 import work.lclpnet.ap2.impl.util.BlockBox;
-import work.lclpnet.ap2.impl.util.FilterIterator;
 
 import java.util.Iterator;
 
-public class CylinderStage implements Stage {
+public class CylinderStage implements Stage, Stage.WithRadius, Stage.WithHeight {
 
     public static final String TYPE = "cylinder";
     public static final String TYPE_CIRCLE = "circle";
@@ -14,7 +15,7 @@ public class CylinderStage implements Stage {
     private final int radius;
     private final int radiusSq;
     private final int height;
-    private final BlockBox groundBounds;
+    private final BlockBox bounds;
     private final BlockPos center;
 
     public CylinderStage(BlockPos origin, int radius, int height) {
@@ -25,18 +26,13 @@ public class CylinderStage implements Stage {
         this.radius = radius;
         this.radiusSq = radius * radius;
         this.height = height;
-        this.groundBounds = new BlockBox(origin.add(-radius, 0, -radius), origin.add(radius, 0, radius));
+        this.bounds = new BlockBox(origin.add(-radius, 0, -radius), origin.add(radius, height - 1, radius));
         this.center = origin.add(0, height / 2, 0);
     }
 
     @Override
     public BlockPos getOrigin() {
         return origin;
-    }
-
-    @Override
-    public Iterator<BlockPos> groundPositionIterator() {
-        return new FilterIterator<>(groundBounds.iterator(), this::contains);
     }
 
     @Override
@@ -67,5 +63,10 @@ public class CylinderStage implements Stage {
         float dx = x - ox, dz = z - oz;
 
         return dx * dx + dz * dz < radiusSq;
+    }
+
+    @Override
+    public @NotNull Iterator<BlockPos> iterator() {
+        return Iterators.filter(bounds.iterator(), this::contains);
     }
 }

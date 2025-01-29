@@ -2,11 +2,14 @@ package work.lclpnet.ap2.impl.util.world.stage;
 
 import net.minecraft.util.math.BlockPos;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.lobby.game.map.GameMap;
 
 import java.util.Locale;
+import java.util.NoSuchElementException;
+import java.util.Optional;
 
 public class StageReader {
 
@@ -16,24 +19,36 @@ public class StageReader {
         return readStage(area);
     }
 
-    @NotNull
     public static Stage readStage(JSONObject json) {
+        return readStage(json, null);
+    }
+
+    @NotNull
+    public static Stage readStage(JSONObject json, @Nullable BlockPos spawn) {
         String type = json.getString("type").toLowerCase(Locale.ROOT);
 
         switch (type) {
             case CylinderStage.TYPE -> {
-                BlockPos origin = MapUtil.readBlockPos(json.getJSONArray("origin"));
+                BlockPos origin = origin(json, spawn);
                 int radius = json.getInt("radius");
                 int height = json.getInt("height");
+
                 return new CylinderStage(origin, radius, height);
             }
             case CylinderStage.TYPE_CIRCLE -> {
-                BlockPos origin = MapUtil.readBlockPos(json.getJSONArray("origin"));
+                BlockPos origin = origin(json, spawn);
                 int radius = json.getInt("radius");
+
                 return new CylinderStage(origin, radius, 1);
             }
         }
 
         throw new IllegalStateException("Unknown area type " + type);
+    }
+
+    private static BlockPos origin(JSONObject json, @Nullable BlockPos spawn) {
+        return MapUtil.optBlockPos(json.getJSONArray("origin"))
+                .or(() -> Optional.ofNullable(spawn))
+                .orElseThrow(() -> new NoSuchElementException("Origin undefined"));
     }
 }

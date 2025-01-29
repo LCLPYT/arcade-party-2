@@ -14,6 +14,8 @@ import work.lclpnet.lobby.util.WorldModifier;
 import java.util.List;
 import java.util.Random;
 
+import static work.lclpnet.ap2.impl.util.world.PositionUtil.findGroundPositions;
+
 public class DistinctMobCountChallenge implements Challenge {
 
     private static final int DURATION_TICKS = Ticks.seconds(21);
@@ -55,7 +57,7 @@ public class DistinctMobCountChallenge implements Challenge {
 
         types = MobRandomizer.trimTypes(types, random, amount);
 
-        List<Vec3d> spaces = MobSpawner.findSpawns(world, types).findSpaces(stage.groundPositionIterator());
+        List<Vec3d> spaces = MobSpawner.findSpawns(world, types).findSpaces(findGroundPositions(stage, world));
 
         if (spaces.isEmpty()) {
             throw new IllegalStateException("No spawn spaces found");

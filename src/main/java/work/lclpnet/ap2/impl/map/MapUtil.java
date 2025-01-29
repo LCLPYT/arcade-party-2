@@ -12,6 +12,7 @@ import work.lclpnet.kibu.util.BlockStateUtils;
 
 import java.util.Collection;
 import java.util.Objects;
+import java.util.Optional;
 
 public class MapUtil {
 
@@ -37,9 +38,13 @@ public class MapUtil {
     }
 
     public static BlockPos readBlockPos(JSONArray tuple) {
-        if (tuple.length() < 3) throw new IllegalArgumentException("Tuple must be of size 3");
+        return optBlockPos(tuple).orElseThrow(() -> new IllegalArgumentException("Tuple must be of size 3"));
+    }
 
-        return new BlockPos(tuple.getInt(0), tuple.getInt(1), tuple.getInt(2));
+    public static Optional<BlockPos> optBlockPos(JSONArray tuple) {
+        if (tuple.length() < 3) return Optional.empty();
+
+        return Optional.of(new BlockPos(tuple.getInt(0), tuple.getInt(1), tuple.getInt(2)));
     }
 
     public static Vec2i readVec2i(JSONArray tuple) {

@@ -17,12 +17,12 @@ import work.lclpnet.lobby.util.WorldModifier;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class BlockCountChallenge implements Challenge, SchedulerAction {
+public class BlockCountChallenge<S extends Stage & Stage.WithRadius & Stage.WithHeight> implements Challenge, SchedulerAction {
 
     private static final int DURATION_TICKS = Ticks.seconds(20);
     private final MiniGameHandle gameHandle;
     private final Random random;
-    private final Stage stage;
+    private final S stage;
     private final WorldModifier modifier;
     private int amount = 0;
     private int distance = 0;
@@ -32,7 +32,7 @@ public class BlockCountChallenge implements Challenge, SchedulerAction {
     private BlockState state = null;
     private Shape shape = null;
 
-    public BlockCountChallenge(MiniGameHandle gameHandle, Random random, Stage stage, WorldModifier modifier) {
+    public BlockCountChallenge(MiniGameHandle gameHandle, Random random, S stage, WorldModifier modifier) {
         this.gameHandle = gameHandle;
         this.random = random;
         this.stage = stage;

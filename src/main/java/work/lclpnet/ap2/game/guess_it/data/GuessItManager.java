@@ -20,6 +20,8 @@ public class GuessItManager {
                           WorldModifier modifier, SoundSubtitles soundSubtitles) {
         this.random = random;
 
+        var stageRadiusHeight = validateStage(stage);
+
         GuessItDisplay display = new GuessItDisplay(world, modifier, stage);
 
         challenges.add(new MathsChallenge(gameHandle, random));
@@ -32,10 +34,17 @@ public class GuessItManager {
         challenges.add(new PotionTypeChallenge(gameHandle, random, display));
         challenges.add(new FoodAmountChallenge(gameHandle, random, display));
         challenges.add(new ArmorTrimChallenge(gameHandle, world, random, stage, modifier));
-        challenges.add(new BlockCountChallenge(gameHandle, random, stage, modifier));
+        challenges.add(new BlockCountChallenge<>(gameHandle, random, stageRadiusHeight, modifier));
         challenges.add(new RecordChallenge(gameHandle, world, random, display));
-        challenges.add(new AreaChallenge(gameHandle, random, stage, modifier));
+        challenges.add(new AreaChallenge(gameHandle, world, random, stage, modifier));
         challenges.add(new MinecartChallenge(gameHandle, world, random, stage, modifier));
+    }
+
+    @SuppressWarnings("unchecked")
+    private <S extends Stage & Stage.WithRadius & Stage.WithHeight> S validateStage(Stage stage) {
+        if (!(stage instanceof Stage.WithRadius)) throw new IllegalArgumentException("Stage with radius is required");
+        if (!(stage instanceof Stage.WithHeight)) throw new IllegalArgumentException("Stage with height is required");
+        return (S) stage;
     }
 
     @NotNull

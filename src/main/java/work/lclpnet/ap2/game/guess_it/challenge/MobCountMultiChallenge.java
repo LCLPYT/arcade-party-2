@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Random;
 
 import static net.minecraft.util.Formatting.YELLOW;
+import static work.lclpnet.ap2.impl.util.world.PositionUtil.findGroundPositions;
 
 public class MobCountMultiChallenge implements Challenge {
 
@@ -64,7 +65,7 @@ public class MobCountMultiChallenge implements Challenge {
             throw new IllegalStateException("There must be at least two entity types");
         }
 
-        List<Vec3d> spaces = MobSpawner.findSpawns(world, types).findSpaces(stage.groundPositionIterator());
+        List<Vec3d> spaces = MobSpawner.findSpawns(world, types).findSpaces(findGroundPositions(stage, world));
 
         if (spaces.isEmpty()) {
             throw new IllegalStateException("No spawn spaces found");
