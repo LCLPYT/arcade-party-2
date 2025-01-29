@@ -20,12 +20,12 @@ import work.lclpnet.ap2.game.apocalypse_survival.goal.RoamGoal;
 import work.lclpnet.ap2.game.apocalypse_survival.goal.UnstuckGoal;
 import work.lclpnet.ap2.impl.ds.WeightedList;
 import work.lclpnet.ap2.impl.util.EntityUtil;
-import work.lclpnet.ap2.impl.util.world.stage.Stage;
+import work.lclpnet.ap2.impl.util.world.stage.BlockShape;
 import work.lclpnet.kibu.scheduler.Ticks;
 
 import java.util.Random;
 
-public class MonsterSpawner<S extends Stage & Stage.WithRadius> {
+public class MonsterSpawner<S extends BlockShape & BlockShape.WithRadius> {
 
     private static final int
             PARTICLE_TICKS = 12,

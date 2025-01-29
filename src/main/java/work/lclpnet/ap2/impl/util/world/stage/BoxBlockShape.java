@@ -6,12 +6,12 @@ import work.lclpnet.ap2.impl.util.BlockBox;
 
 import java.util.Iterator;
 
-public class BoxStage implements Stage {
+public class BoxBlockShape implements BlockShape {
 
     private final BlockBox box;
     private final BlockPos center, origin;
 
-    public BoxStage(BlockBox box) {
+    public BoxBlockShape(BlockBox box) {
         this.box = box;
         this.center = BlockPos.ofFloored(box.getCenter());
         this.origin = center.withY(box.min().getY());

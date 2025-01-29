@@ -14,32 +14,32 @@ import java.util.Optional;
 public class StageReader {
 
     @NotNull
-    public static Stage readStage(GameMap map) {
+    public static BlockShape readStage(GameMap map) {
         JSONObject area = map.requireProperty("area");
         return readStage(area);
     }
 
-    public static Stage readStage(JSONObject json) {
+    public static BlockShape readStage(JSONObject json) {
         return readStage(json, null);
     }
 
     @NotNull
-    public static Stage readStage(JSONObject json, @Nullable BlockPos spawn) {
+    public static BlockShape readStage(JSONObject json, @Nullable BlockPos spawn) {
         String type = json.getString("type").toLowerCase(Locale.ROOT);
 
         switch (type) {
-            case CylinderStage.TYPE -> {
+            case CylinderBlockShape.TYPE -> {
                 BlockPos origin = origin(json, spawn);
                 int radius = json.getInt("radius");
                 int height = json.getInt("height");
 
-                return new CylinderStage(origin, radius, height);
+                return new CylinderBlockShape(origin, radius, height);
             }
-            case CylinderStage.TYPE_CIRCLE -> {
+            case CylinderBlockShape.TYPE_CIRCLE -> {
                 BlockPos origin = origin(json, spawn);
                 int radius = json.getInt("radius");
 
-                return new CylinderStage(origin, radius, 1);
+                return new CylinderBlockShape(origin, radius, 1);
             }
         }
 

@@ -7,7 +7,7 @@ import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.NotNull;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.game.guess_it.data.*;
-import work.lclpnet.ap2.impl.util.world.stage.Stage;
+import work.lclpnet.ap2.impl.util.world.stage.BlockShape;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.RunningTask;
 import work.lclpnet.kibu.scheduler.api.SchedulerAction;
@@ -17,7 +17,7 @@ import work.lclpnet.lobby.util.WorldModifier;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class BlockCountChallenge<S extends Stage & Stage.WithRadius & Stage.WithHeight> implements Challenge, SchedulerAction {
+public class BlockCountChallenge<S extends BlockShape & BlockShape.WithRadius & BlockShape.WithHeight> implements Challenge, SchedulerAction {
 
     private static final int DURATION_TICKS = Ticks.seconds(20);
     private final MiniGameHandle gameHandle;

@@ -2,7 +2,7 @@ package work.lclpnet.ap2.impl.util.world.stage;
 
 import net.minecraft.util.math.BlockPos;
 
-public interface Stage extends Iterable<BlockPos> {
+public interface BlockShape extends Iterable<BlockPos> {
 
     BlockPos getOrigin();
 

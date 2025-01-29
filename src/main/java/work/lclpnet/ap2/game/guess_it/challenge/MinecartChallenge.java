@@ -22,7 +22,7 @@ import work.lclpnet.ap2.api.util.world.AdjacentBlocks;
 import work.lclpnet.ap2.game.guess_it.data.*;
 import work.lclpnet.ap2.game.guess_it.util.MobSpawner;
 import work.lclpnet.ap2.impl.util.world.SimpleAdjacentBlocks;
-import work.lclpnet.ap2.impl.util.world.stage.Stage;
+import work.lclpnet.ap2.impl.util.world.stage.BlockShape;
 import work.lclpnet.kibu.access.entity.FireworkEntityAccess;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.RunningTask;
@@ -44,7 +44,7 @@ public class MinecartChallenge implements Challenge, LongerChallenge, SchedulerA
     private final MiniGameHandle gameHandle;
     private final ServerWorld world;
     private final Random random;
-    private final Stage stage;
+    private final BlockShape blockShape;
     private final WorldModifier modifier;
     private BlockPos powerPos = null;
     private UUID minecartUuid = null;
@@ -53,11 +53,11 @@ public class MinecartChallenge implements Challenge, LongerChallenge, SchedulerA
     private int finalTime = 0;
     private int running = 0;
 
-    public MinecartChallenge(MiniGameHandle gameHandle, ServerWorld world, Random random, Stage stage, WorldModifier modifier) {
+    public MinecartChallenge(MiniGameHandle gameHandle, ServerWorld world, Random random, BlockShape blockShape, WorldModifier modifier) {
         this.gameHandle = gameHandle;
         this.world = world;
         this.random = random;
-        this.stage = stage;
+        this.blockShape = blockShape;
         this.modifier = modifier;
     }
 
@@ -139,7 +139,7 @@ public class MinecartChallenge implements Challenge, LongerChallenge, SchedulerA
     private void generateTracks() {
         Set<BlockPos> positions = new HashSet<>();
 
-        for (BlockPos pos : findGroundPositions(stage, world)) {
+        for (BlockPos pos : findGroundPositions(blockShape, world)) {
             positions.add(pos.toImmutable());
         }
 

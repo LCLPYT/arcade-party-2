@@ -7,7 +7,7 @@ import work.lclpnet.ap2.impl.util.BlockBox;
 
 import java.util.Iterator;
 
-public class CylinderStage implements Stage, Stage.WithRadius, Stage.WithHeight {
+public class CylinderBlockShape implements BlockShape, BlockShape.WithRadius, BlockShape.WithHeight {
 
     public static final String TYPE = "cylinder";
     public static final String TYPE_CIRCLE = "circle";
@@ -18,7 +18,7 @@ public class CylinderStage implements Stage, Stage.WithRadius, Stage.WithHeight 
     private final BlockBox bounds;
     private final BlockPos center;
 
-    public CylinderStage(BlockPos origin, int radius, int height) {
+    public CylinderBlockShape(BlockPos origin, int radius, int height) {
         if (radius <= 0) throw new IllegalArgumentException("Radius must be positive");
         if (height <= 0) throw new IllegalArgumentException("Height must be positive");
 

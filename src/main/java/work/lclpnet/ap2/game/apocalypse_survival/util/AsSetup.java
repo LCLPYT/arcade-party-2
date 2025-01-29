@@ -3,7 +3,7 @@ package work.lclpnet.ap2.game.apocalypse_survival.util;
 import net.minecraft.server.world.ServerWorld;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import work.lclpnet.ap2.impl.util.world.stage.Stage;
+import work.lclpnet.ap2.impl.util.world.stage.BlockShape;
 import work.lclpnet.ap2.impl.util.world.stage.StageReader;
 import work.lclpnet.lobby.game.map.GameMap;
 
@@ -42,15 +42,15 @@ public class AsSetup {
     private MonsterSpawner<?> createSpawner(JSONObject json) {
         JSONObject stageJson = json.getJSONObject("stage");
 
-        Stage stage = StageReader.readStage(stageJson);
-        var stageWithRadius = validateStage(stage);
+        BlockShape blockShape = StageReader.readStage(stageJson);
+        var stageWithRadius = validateStage(blockShape);
 
         return new MonsterSpawner<>(world, stageWithRadius, random, targetManager);
     }
 
     @SuppressWarnings("unchecked")
-    private <S extends Stage & Stage.WithRadius> S validateStage(Stage stage) {
-        if (!(stage instanceof Stage.WithRadius)) throw new IllegalArgumentException("Stage with radius required");
-        return (S) stage;
+    private <S extends BlockShape & BlockShape.WithRadius> S validateStage(BlockShape blockShape) {
+        if (!(blockShape instanceof BlockShape.WithRadius)) throw new IllegalArgumentException("Stage with radius required");
+        return (S) blockShape;
     }
 }

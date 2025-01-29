@@ -15,7 +15,7 @@ import work.lclpnet.ap2.game.guess_it.util.OptionMaker;
 import work.lclpnet.ap2.impl.util.BlockHelper;
 import work.lclpnet.ap2.impl.util.TextUtil;
 import work.lclpnet.ap2.impl.util.world.SimpleAdjacentBlocks;
-import work.lclpnet.ap2.impl.util.world.stage.Stage;
+import work.lclpnet.ap2.impl.util.world.stage.BlockShape;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.lobby.util.WorldModifier;
@@ -33,15 +33,15 @@ public class AreaChallenge implements Challenge {
     private final MiniGameHandle gameHandle;
     private final ServerWorld world;
     private final Random random;
-    private final Stage stage;
+    private final BlockShape blockShape;
     private final WorldModifier modifier;
     private Areas areas = null;
 
-    public AreaChallenge(MiniGameHandle gameHandle, ServerWorld world, Random random, Stage stage, WorldModifier modifier) {
+    public AreaChallenge(MiniGameHandle gameHandle, ServerWorld world, Random random, BlockShape blockShape, WorldModifier modifier) {
         this.gameHandle = gameHandle;
         this.world = world;
         this.random = random;
-        this.stage = stage;
+        this.blockShape = blockShape;
         this.modifier = modifier;
     }
 
@@ -101,7 +101,7 @@ public class AreaChallenge implements Challenge {
     private void randomizeArea(List<BlockState> blockStates) {
         Set<BlockPos> open = new HashSet<>();
 
-        for (BlockPos pos : findGroundPositions(stage, world)) {
+        for (BlockPos pos : findGroundPositions(blockShape, world)) {
             open.add(pos.toImmutable());
         }
 
