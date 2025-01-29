@@ -31,23 +31,13 @@ public class CylinderBlockShape implements BlockShape, BlockShape.WithRadius, Bl
     }
 
     @Override
-    public BlockPos getOrigin() {
+    public BlockPos origin() {
         return origin;
     }
 
     @Override
-    public BlockPos getCenter() {
+    public BlockPos center() {
         return center;
-    }
-
-    @Override
-    public int getRadius() {
-        return radius;
-    }
-
-    @Override
-    public int getHeight() {
-        return height;
     }
 
     @Override
@@ -66,7 +56,22 @@ public class CylinderBlockShape implements BlockShape, BlockShape.WithRadius, Bl
     }
 
     @Override
+    public BlockBox bounds() {
+        return bounds;
+    }
+
+    @Override
     public @NotNull Iterator<BlockPos> iterator() {
         return Iterators.filter(bounds.iterator(), this::contains);
+    }
+
+    @Override
+    public int radius() {
+        return radius;
+    }
+
+    @Override
+    public int height() {
+        return height;
     }
 }

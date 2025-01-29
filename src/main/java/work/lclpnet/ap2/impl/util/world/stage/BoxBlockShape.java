@@ -22,18 +22,23 @@ public class BoxBlockShape implements BlockShape {
     }
 
     @Override
-    public BlockPos getOrigin() {
+    public BlockPos origin() {
         return origin;
     }
 
     @Override
-    public BlockPos getCenter() {
+    public BlockPos center() {
         return center;
     }
 
     @Override
     public boolean contains(BlockPos pos) {
         return box.contains(pos);
+    }
+
+    @Override
+    public BlockBox bounds() {
+        return box;
     }
 
     @Override

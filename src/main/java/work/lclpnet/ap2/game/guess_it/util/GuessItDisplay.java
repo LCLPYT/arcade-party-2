@@ -40,7 +40,7 @@ public class GuessItDisplay {
 
         DisplayEntityAccess.setTransformation(display, transformation);
 
-        BlockPos origin = blockShape.getOrigin();
+        BlockPos origin = blockShape.origin();
 
         double x = origin.getX() + 0.5;
         double y = origin.getY() + scale;

@@ -99,8 +99,8 @@ public class MonsterSpawner<S extends BlockShape & BlockShape.WithRadius> {
     }
 
     private void spawnParticle() {
-        BlockPos center = stage.getCenter();
-        int offset = stage.getRadius() / 2;
+        BlockPos center = stage.center();
+        int offset = stage.radius() / 2;
 
         world.spawnParticles(ParticleTypes.REVERSE_PORTAL, center.getX() + 0.5, center.getY() + 0.5, center.getZ() + 0.5,
                 30, offset, offset, offset, 0.15);
@@ -291,7 +291,7 @@ public class MonsterSpawner<S extends BlockShape & BlockShape.WithRadius> {
 
     @Nullable
     private <T extends MobEntity> T createMob(EntityType<? extends T> type) {
-        T mob = type.create(world, null, stage.getOrigin(), SpawnReason.COMMAND, false, false);
+        T mob = type.create(world, null, stage.origin(), SpawnReason.COMMAND, false, false);
 
         if (mob == null) return null;
 
@@ -301,7 +301,7 @@ public class MonsterSpawner<S extends BlockShape & BlockShape.WithRadius> {
     }
 
     private void configureMob(MobEntity mob) {
-        BlockPos pos = stage.getOrigin();
+        BlockPos pos = stage.origin();
 
         mob.setPersistent();
         mob.setPosition(Vec3d.ofBottomCenter(pos));

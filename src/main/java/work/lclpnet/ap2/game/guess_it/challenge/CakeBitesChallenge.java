@@ -73,7 +73,7 @@ public class CakeBitesChallenge implements Challenge {
 
         DisplayEntityAccess.setTransformation(display, transformation);
 
-        BlockPos origin = blockShape.getOrigin();
+        BlockPos origin = blockShape.origin();
         double x = origin.getX() + 0.5 - scale * 0.5;
         double y = origin.getY();
         double z = origin.getZ() + 0.5 - scale * 0.5;

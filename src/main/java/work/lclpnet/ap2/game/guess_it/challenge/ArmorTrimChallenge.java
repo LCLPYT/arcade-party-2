@@ -99,7 +99,7 @@ public class ArmorTrimChallenge implements Challenge {
     }
 
     private void spawnGiants() {
-        Vec3d pos = Vec3d.ofBottomCenter(blockShape.getOrigin());
+        Vec3d pos = Vec3d.ofBottomCenter(blockShape.origin());
 
         int spacing = 7;
         spawnGiant(pos.add(spacing, 0, 0), -90);

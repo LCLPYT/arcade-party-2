@@ -51,7 +51,7 @@ public class BlockCountChallenge<S extends BlockShape & BlockShape.WithRadius & 
 
     @Override
     public void prepare() {
-        BlockPos center = stage.getCenter();
+        BlockPos center = stage.center();
         centerX = center.getX();
         centerY = center.getY();
         centerZ = center.getZ();
@@ -140,9 +140,9 @@ public class BlockCountChallenge<S extends BlockShape & BlockShape.WithRadius & 
     @NotNull
     private List<BlockPos> generateSphere() {
         int minRadius = 4;
-        int maxRadius = Math.min(stage.getHeight() / 2, stage.getRadius());
+        int maxRadius = Math.min(stage.height() / 2, stage.radius());
 
-        int radius = Math.min(maxRadius, minRadius + random.nextInt(Math.max(1, stage.getRadius() - minRadius)));
+        int radius = Math.min(maxRadius, minRadius + random.nextInt(Math.max(1, stage.radius() - minRadius)));
 
         var iter = BlockPos.iterate(
                 centerX - radius, centerY - radius, centerZ - radius,
@@ -168,7 +168,7 @@ public class BlockCountChallenge<S extends BlockShape & BlockShape.WithRadius & 
     @NotNull
     private List<BlockPos> generateCube() {
         int minRadius = 4;
-        int maxRadius = (int) Math.floor(Math.sin(Math.PI * 0.25) * stage.getRadius());
+        int maxRadius = (int) Math.floor(Math.sin(Math.PI * 0.25) * stage.radius());
 
         int radius = minRadius + random.nextInt(Math.max(1, maxRadius - minRadius));
 
@@ -190,10 +190,10 @@ public class BlockCountChallenge<S extends BlockShape & BlockShape.WithRadius & 
         int minRadius = 4;
         int minHeight = 10;
 
-        int maxHeight = stage.getHeight();
+        int maxHeight = stage.height();
         int height = minHeight + random.nextInt(Math.max(1, maxHeight - minHeight));
 
-        int maxRadius = Math.min(height / 2, stage.getRadius());
+        int maxRadius = Math.min(height / 2, stage.radius());
         int radius = minRadius + random.nextInt(Math.max(1, maxRadius - minRadius));
 
         int halfHeight = height / 2;
