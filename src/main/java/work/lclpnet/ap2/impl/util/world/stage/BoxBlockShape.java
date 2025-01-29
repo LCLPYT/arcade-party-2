@@ -8,6 +8,8 @@ import java.util.Iterator;
 
 public class BoxBlockShape implements BlockShape {
 
+    public static final String TYPE_CUBE = "cube";
+
     private final BlockBox box;
     private final BlockPos center, origin;
 

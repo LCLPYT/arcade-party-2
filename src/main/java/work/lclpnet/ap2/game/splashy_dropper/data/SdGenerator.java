@@ -9,8 +9,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.impl.ds.IndexedSet;
 import work.lclpnet.ap2.impl.ds.WeightedList;
+import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.world.stage.BlockShape;
-import work.lclpnet.ap2.impl.util.world.stage.StageReader;
 import work.lclpnet.lobby.game.map.GameMap;
 
 import java.util.HashSet;
@@ -32,7 +32,7 @@ public class SdGenerator {
     }
 
     public void generate() {
-        BlockShape blockShape = StageReader.readStage(map);
+        BlockShape blockShape = MapUtil.readShape(map);
 
         WeightedList<SdShape> shapes = new WeightedList<>();
         shapes.add(SdShape.square(1, 1), 0.2f);
