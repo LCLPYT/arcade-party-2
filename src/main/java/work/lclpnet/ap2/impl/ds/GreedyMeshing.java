@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.game.maze_scape.util;
+package work.lclpnet.ap2.impl.ds;
 
 import net.minecraft.util.math.BlockPos;
 import work.lclpnet.ap2.impl.util.BlockBox;
@@ -7,6 +7,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * Greedy meshing implementation that generates a meshes out of a 3d-voxel grid.
+ */
 public class GreedyMeshing {
 
     private final int width;

@@ -1,7 +1,6 @@
-package work.lclpnet.ap2.game.maze_scape.setup;
+package work.lclpnet.ap2.impl.ds;
 
 import net.minecraft.util.math.Direction;
-import work.lclpnet.ap2.game.maze_scape.util.GreedyMeshing;
 import work.lclpnet.kibu.mc.KibuBlockPos;
 import work.lclpnet.kibu.structure.BlockStructure;
 

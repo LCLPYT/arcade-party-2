@@ -5,7 +5,7 @@ import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.util.math.BlockPos;
 import work.lclpnet.ap2.game.maze_scape.gen.GeneratorDomain;
 import work.lclpnet.ap2.game.maze_scape.gen.Node;
-import work.lclpnet.ap2.game.maze_scape.util.BVH;
+import work.lclpnet.ap2.impl.ds.BVH;
 import work.lclpnet.ap2.impl.ds.WeightedList;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.math.AffineIntMatrix;

@@ -11,6 +11,11 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+/**
+ * A list implementation, where every item has a weight, that is used to randomly sample and element from the list.
+ * Higher weights correspond to higher frequency.
+ * @param <E> The element type to store.
+ */
 public class WeightedList<E> extends AbstractList<E> {
 
     private final List<E> elements;
@@ -82,6 +87,15 @@ public class WeightedList<E> extends AbstractList<E> {
         totalWeight = 0;
     }
 
+    /**
+     * Get a random element, respecting the elements corresponding weights.
+     * The runtime of this method is dependent of:
+     * 1. The random index lookup (implemented as binary search with <code>O(log(n))</code>).
+     * 2. The index access of the backing list (which is ArrayList by default, with <code>O(1)</code>).
+     * Therefore, the runtime is <code>O(log(n))</code> by default.
+     * @param random The RNG.
+     * @return A random element, or null, if there are no elements.
+     */
     @Nullable
     public E getRandomElement(Random random) {
         int index = getRandomIndex(random);

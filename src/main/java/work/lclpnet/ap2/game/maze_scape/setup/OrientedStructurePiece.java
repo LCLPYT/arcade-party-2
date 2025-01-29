@@ -8,7 +8,7 @@ import net.minecraft.util.math.Vec3i;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.game.maze_scape.gen.Node;
 import work.lclpnet.ap2.game.maze_scape.gen.OrientedPiece;
-import work.lclpnet.ap2.game.maze_scape.util.BVH;
+import work.lclpnet.ap2.impl.ds.BVH;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.math.AffineIntMatrix;
 import work.lclpnet.kibu.util.math.Matrix3i;
