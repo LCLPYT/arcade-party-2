@@ -15,6 +15,6 @@ services:
       GUI: false
       MAX_MEMORY: 6G
       AP2_DEV: true
+      PACKWIZ_URL: "file:///packwiz/pack.toml"
     volumes:
-      - ./data:/data
-      - ~/.maps:/home/minecraft/.maps
+      - ./packwiz:/packwiz
