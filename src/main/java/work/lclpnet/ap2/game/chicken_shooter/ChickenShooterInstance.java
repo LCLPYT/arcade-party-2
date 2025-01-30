@@ -90,7 +90,7 @@ public class ChickenShooterInstance extends DefaultGameInstance implements Runna
 
         hooks.registerHook(ServerLivingEntityHooks.ALLOW_DAMAGE, (entity, source, amount) -> {
             if (!(source.getSource() instanceof ProjectileEntity projectile)
-                || !(entity instanceof ChickenEntity chicken)) return false;
+                    || !(entity instanceof ChickenEntity chicken)) return false;
 
             projectile.discard();
 
@@ -144,9 +144,13 @@ public class ChickenShooterInstance extends DefaultGameInstance implements Runna
 
         int playerCount = gameHandle.getParticipants().count();
 
-        if (playerCount > 7) {spawnInterval = 5;}
-        else if (playerCount > 3) {spawnInterval = 7;}
-        else {spawnInterval = 10;}
+        if (playerCount > 7) {
+            spawnInterval = 5;
+        } else if (playerCount > 3) {
+            spawnInterval = 7;
+        } else {
+            spawnInterval = 10;
+        }
 
         giveBowsToPlayers(translations);
 
