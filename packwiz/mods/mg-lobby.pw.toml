@@ -1,0 +1,7 @@
+name = "mg-lobby"
+filename = "mg-lobby-0.66.0+1.21.4.jar"
+
+[download]
+url = "https://github.com/LCLPYT/mg-lobby/releases/download/0.66.0%2B1.21.4/mg-lobby-0.66.0+1.21.4.jar"
+hash-format = "sha256"
+hash = "243700b0a2265d48c04bdec4ae1ec85baabfb434b5ee7a67db3c3fd5c2cd5484"
