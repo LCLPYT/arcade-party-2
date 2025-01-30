@@ -252,7 +252,11 @@ public class ChickenShooterInstance extends DefaultGameInstance implements Runna
         int playerCount = PlayerLookup.all(gameHandle.getServer()).size();
         System.out.println(playerCount);
 
-        int spawnInterval = (playerCount > 3) ? 7 : 10;
+        int spawnInterval;
+        if (playerCount > 7) {spawnInterval = 5;}
+        else if (playerCount > 3) {spawnInterval = 7;}
+        else {spawnInterval = 10;}
+
         if (time % spawnInterval == 0) {
             spawnChicken();
         }
