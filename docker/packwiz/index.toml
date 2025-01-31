@@ -1,0 +1,71 @@
+hash-format = "sha256"
+
+[[files]]
+file = "mods/anti-xray.pw.toml"
+hash = "05a1a121e1b6c88338020f411c874ecd48fecacff9b9f9ae6ff884da48bca5a7"
+metafile = true
+
+[[files]]
+file = "mods/combat-control.pw.toml"
+hash = "f05cc46ab1ad1ef6edad97573d1381c923c0198cbc4e1a104a8b522badac4881"
+metafile = true
+
+[[files]]
+file = "mods/fabric-api.pw.toml"
+hash = "dd4c3c3ee97fa946926784db25da0b5a9984c9959681f412d6b402cc5bdfc83e"
+metafile = true
+
+[[files]]
+file = "mods/fantasy.pw.toml"
+hash = "3abc9592c816339a519601f1c01fbbbf4557520de71db601d938e784a250758f"
+metafile = true
+
+[[files]]
+file = "mods/kibu-world-api.pw.toml"
+hash = "7fae084b865daa8da6055f9421b0f74ecee9993a79f73f52684f252ff190e7ad"
+metafile = true
+
+[[files]]
+file = "mods/kibu.pw.toml"
+hash = "4fefe0945d2448dbb5e8e73b5633583700464c6072ddc449d6dc74c8d137050b"
+metafile = true
+
+[[files]]
+file = "mods/krypton.pw.toml"
+hash = "c4e45594c8d1ab3dacc3b49142f16fb253178dd31d97cc917bf4a4d54f21e081"
+metafile = true
+
+[[files]]
+file = "mods/lithium.pw.toml"
+hash = "f4070441d1f1bdeb3e6a594b5ba1c3f314b8f13815a67619cb38621c0f6a1fec"
+metafile = true
+
+[[files]]
+file = "mods/mcserver-api.pw.toml"
+hash = "dfc3eb91e16a0b60a6af824b5dc716bf16ce95c6d20b652ab5ce3d479e2e57be"
+metafile = true
+
+[[files]]
+file = "mods/mg-lobby.pw.toml"
+hash = "bfa14be852e77df36b644b6196d666ec4678a94c72998642773fc13876eb06ea"
+metafile = true
+
+[[files]]
+file = "mods/notica.pw.toml"
+hash = "8b68968c4df951563dae766f193e3eb86b5a06c7de5544e980ff226b97bc5c96"
+metafile = true
+
+[[files]]
+file = "mods/pal.pw.toml"
+hash = "9ee15f36058a030fc2a701585214e9ad81479c1d4fa080f1ab2fd5a874f60cbf"
+metafile = true
+
+[[files]]
+file = "mods/ruler.pw.toml"
+hash = "1ea8a2087073f0ecee4529c7143ea5cc1042cd149c39d512a57d26fb0c3d1fcf"
+metafile = true
+
+[[files]]
+file = "mods/sqlite-jdbc.pw.toml"
+hash = "c1103579d21a2dae37a7379d7355a216a51b5721ddd585781b06e795c4249d0c"
+metafile = true
