@@ -1,6 +1,8 @@
 services:
   mc:
-    image: itzg/minecraft-server:java21-alpine
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
     tty: true
     stdin_open: true
     ports:
@@ -17,4 +19,4 @@ services:
       AP2_DEV: true
       PACKWIZ_URL: "file:///packwiz/pack.toml"
     volumes:
-      - ./packwiz:/packwiz
+      - ./docker/packwiz:/packwiz
