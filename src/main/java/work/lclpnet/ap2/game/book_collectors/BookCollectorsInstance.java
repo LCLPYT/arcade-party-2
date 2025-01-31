@@ -15,8 +15,6 @@ import work.lclpnet.ap2.api.game.team.TeamManager;
 import work.lclpnet.ap2.game.cozy_campfire.setup.CCBaseManager;
 import work.lclpnet.ap2.game.cozy_campfire.setup.CCReader;
 import work.lclpnet.ap2.impl.game.TeamEliminationGameInstance;
-import work.lclpnet.ap2.impl.game.data.ScoreDataContainer;
-import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.game.team.ApTeamKeys;
 import work.lclpnet.ap2.impl.util.TextUtil;
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
@@ -42,11 +40,6 @@ public class BookCollectorsInstance extends TeamEliminationGameInstance {
         super(gameHandle);
 
         useOldCombat();
-    }
-
-    @Override
-    protected ScoreDataContainer<ServerPlayerEntity, PlayerRef> getData() {
-        return null;
     }
 
     public CompletableFuture<Void> createWorldBootstrap(ServerWorld world, GameMap map) {
