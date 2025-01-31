@@ -11,5 +11,10 @@ docker compose up -d
 
 The image is saved between runs. If you update the project, make sure to rebuild the container to use the latest version of arcade-party-2:
 ```bash
-docker compose build
+docker compose build --no-cache
+```
+
+If you want to build a branch other than the default branch, use:
+```bash
+docker compose build --no-cache --build-arg GIT_REF=<git ref>
 ```
