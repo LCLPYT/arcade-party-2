@@ -3,7 +3,7 @@ WORKDIR /app
 
 RUN apk add --update git
 
-COPY . .
+RUN git clone https://github.com/LCLPYT/arcade-party-2.git .
 
 RUN ./gradlew clean remapJar --no-daemon
 
