@@ -52,7 +52,7 @@ import static net.minecraft.util.Formatting.YELLOW;
 
 public class ChickenShooterInstance extends DefaultGameInstance implements Runnable {
 
-    private static final double BABY_CHANCE = 0.07;
+    private static final double BABY_CHANCE = 0.15;
     private static final double TNT_CHANCE = 0.07;
     private static final double TNT_RADIUS = 6;
     private static final int MIN_DURATION = 40;
@@ -64,6 +64,7 @@ public class ChickenShooterInstance extends DefaultGameInstance implements Runna
     private BlockBox chickenBox = null;
     private int despawnHeight = 0;
     private int time = 0;
+    private int spawnInterval;
 
     public ChickenShooterInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
@@ -89,7 +90,7 @@ public class ChickenShooterInstance extends DefaultGameInstance implements Runna
 
         hooks.registerHook(ServerLivingEntityHooks.ALLOW_DAMAGE, (entity, source, amount) -> {
             if (!(source.getSource() instanceof ProjectileEntity projectile)
-                || !(entity instanceof ChickenEntity chicken)) return false;
+                    || !(entity instanceof ChickenEntity chicken)) return false;
 
             projectile.discard();
 
@@ -140,6 +141,17 @@ public class ChickenShooterInstance extends DefaultGameInstance implements Runna
                 -> damageSource.getSource() instanceof ProjectileEntity && entity instanceof ChickenEntity));
 
         Translations translations = gameHandle.getTranslations();
+
+        int playerCount = gameHandle.getParticipants().count();
+
+        if (playerCount > 7) {
+            spawnInterval = 5;
+        } else if (playerCount > 3) {
+            spawnInterval = 7;
+        } else {
+            spawnInterval = 10;
+        }
+
         giveBowsToPlayers(translations);
 
         chickenSpawner();
@@ -249,7 +261,8 @@ public class ChickenShooterInstance extends DefaultGameInstance implements Runna
 
     @Override
     public void run() {
-        if (time % 10 == 0) {
+
+        if (time % spawnInterval == 0) {
             spawnChicken();
         }
 
