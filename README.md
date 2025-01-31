@@ -6,7 +6,7 @@ Whoever wins the most games wins!
 With [Docker](https://docs.docker.com/) installed, you can use compose to start a production-ready server:
 
 ```bash
-docker compose up --build
+docker compose up --build -d
 ```
 
 The container will be persisted between runs. 
