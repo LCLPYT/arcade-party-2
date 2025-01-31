@@ -6,15 +6,13 @@ Whoever wins the most games wins!
 With [Docker](https://docs.docker.com/) installed, you can use compose to start a production-ready server:
 
 ```bash
-docker compose up -d
+docker compose up --build
 ```
 
-The image is saved between runs. If you update the project, make sure to rebuild the container to use the latest version of arcade-party-2:
+The container will be persisted between runs. 
+That means, if you update the project, you may end up with outdated config files.
+If the container fails to start after an update, you can remove the container: 
 ```bash
-docker compose build --no-cache
+docker compose rm
 ```
-
-If you want to build a branch other than the default branch, use:
-```bash
-docker compose build --no-cache --build-arg GIT_REF=<git ref>
-```
+After that, start the container as usual.

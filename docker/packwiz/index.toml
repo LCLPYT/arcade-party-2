@@ -47,7 +47,7 @@ metafile = true
 
 [[files]]
 file = "mods/mg-lobby.pw.toml"
-hash = "0eda3ce7ff783d67682b351d3bebe25fb24a14ddfca53afb03f22f3ea12683c9"
+hash = "bfa14be852e77df36b644b6196d666ec4678a94c72998642773fc13876eb06ea"
 metafile = true
 
 [[files]]
@@ -63,4 +63,9 @@ metafile = true
 [[files]]
 file = "mods/ruler.pw.toml"
 hash = "1ea8a2087073f0ecee4529c7143ea5cc1042cd149c39d512a57d26fb0c3d1fcf"
+metafile = true
+
+[[files]]
+file = "mods/sqlite-jdbc.pw.toml"
+hash = "c1103579d21a2dae37a7379d7355a216a51b5721ddd585781b06e795c4249d0c"
 metafile = true
