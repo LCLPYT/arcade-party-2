@@ -22,6 +22,7 @@ import work.lclpnet.kibu.access.entity.EntityAccess;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.kibu.hook.network.ServerSendPacketCallback;
+import work.lclpnet.kibu.hook.util.PendingResult;
 import work.lclpnet.kibu.translate.Translations;
 
 import java.util.ArrayList;
@@ -114,7 +115,7 @@ public class VisibilityHandler {
         stack.set(DataComponentTypes.CUSTOM_NAME, getItemNameFor(player));
     }
 
-    private boolean ensureRelativePlayerVisibility(Packet<?> packet, ServerCommonNetworkHandler handler) {
+    private PendingResult<Packet<?>> ensureRelativePlayerVisibility(Packet<?> packet, ServerCommonNetworkHandler handler) {
         // When a player should not see other participants, or only partially, they have to be invisible for the player.
         // This hook intercepts EntityTrackerUpdateS2CPacket targeting other players and ensures they are invisible.
         // Needs to be done this obscurely, because this needs manipulation of entity data for each player individually.
@@ -123,14 +124,14 @@ public class VisibilityHandler {
         if (!(packet instanceof EntityTrackerUpdateS2CPacket(int id, List<DataTracker.SerializedEntry<?>> trackedValues))
             || !(handler instanceof ServerPlayNetworkHandler networkHandler)
             || manager.getVisibilityFor(networkHandler.player) == Visibility.VISIBLE) {
-            return false;
+            return PendingResult.pass();
         }
 
         // check if the packet target entity is another player
         Entity entity = networkHandler.player.getServerWorld().getEntityById(id);
 
         if (!(entity instanceof ServerPlayerEntity) || entity == networkHandler.player) {
-            return false;
+            return PendingResult.pass();
         }
 
         // check if the invisibility flag is already set. If not, send a modified packet
@@ -145,18 +146,17 @@ public class VisibilityHandler {
 
             if (alreadyInvisible) {
                 // already invisible, send the packet. This also prevents looping in case the packet is re-sent
-                return false;
+                return PendingResult.pass();
             }
 
             var newEntries = modifyEntries(size, i, trackedValues, flags);
             var modifiedPacket = new EntityTrackerUpdateS2CPacket(id, newEntries);
-            handler.sendPacket(modifiedPacket);  // this will cause another invocation of this hook, but won't loop
 
-            return true;  // retain the old packet
+            return PendingResult.of(modifiedPacket);  // retain the old packet
         }
 
         // flags entry not present in the update packet
-        return false;
+        return PendingResult.pass();
     }
 
     @NotNull
