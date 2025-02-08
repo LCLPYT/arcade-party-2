@@ -6,8 +6,13 @@ hash = "05a1a121e1b6c88338020f411c874ecd48fecacff9b9f9ae6ff884da48bca5a7"
 metafile = true
 
 [[files]]
+file = "mods/cloth-config.pw.toml"
+hash = "df15648dd4d4e27dd0c45ab4e78277c45886b77a698b129f4ce2d2bc337f7044"
+metafile = true
+
+[[files]]
 file = "mods/combat-control.pw.toml"
-hash = "f05cc46ab1ad1ef6edad97573d1381c923c0198cbc4e1a104a8b522badac4881"
+hash = "41ae43179e7cc6bca460569d4b453b7aa0defb12268c30ab80d335e8fbfa099a"
 metafile = true
 
 [[files]]
@@ -17,17 +22,17 @@ metafile = true
 
 [[files]]
 file = "mods/fantasy.pw.toml"
-hash = "3abc9592c816339a519601f1c01fbbbf4557520de71db601d938e784a250758f"
+hash = "fa5efdb92b2aad5d84b224bc6351dff7d4780561bd294e443fcb0bbe5e24c7eb"
 metafile = true
 
 [[files]]
 file = "mods/kibu-world-api.pw.toml"
-hash = "7fae084b865daa8da6055f9421b0f74ecee9993a79f73f52684f252ff190e7ad"
+hash = "ea6a8543a21218f3a628ac61945163769cbe88ca9e35004c843f926eb1bd265a"
 metafile = true
 
 [[files]]
 file = "mods/kibu.pw.toml"
-hash = "4fefe0945d2448dbb5e8e73b5633583700464c6072ddc449d6dc74c8d137050b"
+hash = "dcada4a5d07d6ab51b40b698d608169939e6983367e81d6d7322b91578f25afd"
 metafile = true
 
 [[files]]
@@ -41,13 +46,13 @@ hash = "f4070441d1f1bdeb3e6a594b5ba1c3f314b8f13815a67619cb38621c0f6a1fec"
 metafile = true
 
 [[files]]
-file = "mods/mcserver-api.pw.toml"
-hash = "dfc3eb91e16a0b60a6af824b5dc716bf16ce95c6d20b652ab5ce3d479e2e57be"
+file = "mods/mcserver-api-fabric.pw.toml"
+hash = "c88956fd641fdbbab2810cb92ccc8780f4f24af07afa371a32962bad2b97c826"
 metafile = true
 
 [[files]]
 file = "mods/mg-lobby.pw.toml"
-hash = "bfa14be852e77df36b644b6196d666ec4678a94c72998642773fc13876eb06ea"
+hash = "33f2e6cf5d0c49d4f59e7ea329311717053e4f78f5d1d49c1da016f26490e26a"
 metafile = true
 
 [[files]]
@@ -57,12 +62,12 @@ metafile = true
 
 [[files]]
 file = "mods/pal.pw.toml"
-hash = "9ee15f36058a030fc2a701585214e9ad81479c1d4fa080f1ab2fd5a874f60cbf"
+hash = "347f816c90c0cd4e76db27868c01900e5db9f795816098cc516e696d47e7dcd5"
 metafile = true
 
 [[files]]
 file = "mods/ruler.pw.toml"
-hash = "1ea8a2087073f0ecee4529c7143ea5cc1042cd149c39d512a57d26fb0c3d1fcf"
+hash = "e228cf7508b18a1ee186f0cd2a8d282e1df008e229bd994096bb7f52474767e0"
 metafile = true
 
 [[files]]
