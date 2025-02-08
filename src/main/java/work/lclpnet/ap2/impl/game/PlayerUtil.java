@@ -143,6 +143,9 @@ public class PlayerUtil {
 
     public void resetToDefaults() {
         setDefaultGameMode(PlayerUtil.INITIAL_GAMEMODE);
+        setDefaultCombatStyle(CombatStyles.MODERN
+                .andThen(player -> player.setDisableOldBobbing(false), global -> {}));
+
         setAllowFlight(false);
         effects.clear();
     }
