@@ -23,13 +23,17 @@ import java.util.Random;
 
 public class SpecialItemPositions {
 
-    private static final boolean DEBUG_SPAWNS = false;
+    private static final boolean
+            DEBUG_SPAWNS = false,
+            DEBUG_TIMINGS = false;
 
     private final GameMap map;
     private final BlockPredicate validPos;
     private final Random random;
-    private @Nullable WeightedList<BlockBox> spawnBoxes = null;
     private final DebugController debugController;
+    private @Nullable WeightedList<BlockBox> spawnBoxes = null;
+    private @Nullable BlockShape shape = null;
+    private @Nullable StructureMask mask = null;
 
     public SpecialItemPositions(GameMap map, BlockView world, Random random, DebugController debugController) {
         this(map, new WalkableBlockPredicate(world), random, debugController);
@@ -42,26 +46,38 @@ public class SpecialItemPositions {
         this.debugController = debugController;
     }
 
-    public void scan() {
+    public void init() {
         JSONObject cfg = map.requireProperty("items");
-
         BlockPos mapSpawn = BlockPos.ofFloored(MapUtils.getSpawnPosition(map));
-        BlockShape shape = MapUtil.readShape(cfg.getJSONObject("spawn-area"), mapSpawn);
-        BlockBox bounds = shape.bounds();
-        BlockPos minPos = bounds.min();
-        StructureMask mask = StructureMask.createEmpty(bounds);
+
+        shape = MapUtil.readShape(cfg.getJSONObject("spawn-area"), mapSpawn);
+        mask = StructureMask.createEmpty(shape.bounds());
+    }
+
+    public synchronized void update() {
+        if (shape == null || mask == null) return;
+
+        debugController.stopWatch().start("scan");
+
+        BlockPos minPos = shape.bounds().min();
 
         for (BlockPos pos : shape) {
-            if (validPos.test(pos)) {
-                mask.setVoxelAt(pos.getX() - minPos.getX(), pos.getY() - minPos.getY(), pos.getZ() - minPos.getZ(), true);
-            }
+            boolean valid = validPos.test(pos);
+            mask.setVoxelAt(pos.getX() - minPos.getX(), pos.getY() - minPos.getY(), pos.getZ() - minPos.getZ(), valid);
         }
+
+        debugController.stopWatch().start("meshing");
 
         List<BlockBox> boxes = mask.greedyMeshing().generateBoxes();
         spawnBoxes = WeightedList.of(boxes, BlockBox::volume);
 
+        if (DEBUG_TIMINGS) {
+            debugController.stopWatch().printResults(System.out);
+        }
+
         if (DEBUG_SPAWNS) {
-            debugController.visualizeBoxes(boxes, minPos, Matrix3i.IDENTITY, Blocks.LIME_STAINED_GLASS.getDefaultState());
+            debugController.exclusive("spawn_boxes", controller ->
+                    controller.visualizeBoxes(boxes, minPos, Matrix3i.IDENTITY, Blocks.LIME_STAINED_GLASS.getDefaultState()));
         }
     }
 

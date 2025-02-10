@@ -13,6 +13,7 @@ public class SpecialItems {
     }
 
     public void init() {
-        positions.scan();
+        positions.init();
+        positions.update();
     }
 }

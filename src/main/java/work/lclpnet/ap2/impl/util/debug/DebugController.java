@@ -5,6 +5,7 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.util.model.ModelManager;
+import work.lclpnet.ap2.base.ApConstants;
 import work.lclpnet.ap2.impl.ds.StructureMask;
 import work.lclpnet.ap2.impl.scene.Object3d;
 import work.lclpnet.ap2.impl.scene.Scene;
@@ -22,6 +23,7 @@ public class DebugController {
     private @Nullable DebugRenderer renderer = null;
     private @Nullable Map<String, List<Object3d>> namedObjects = null;
     private @Nullable ThreadLocal<@Nullable List<Object3d>> group = null;
+    private volatile StopWatchImpl stopWatch = null;
 
     public void init(ModelManager modelManager, ServerWorld world) {
         scene = new Scene(new ServerWorldMountContext(world));
@@ -73,5 +75,21 @@ public class DebugController {
         action.accept(this);
 
         group.remove();
+    }
+
+    public StopWatch stopWatch() {
+        if (stopWatch != null) return stopWatch;
+
+        synchronized (this) {
+            if (stopWatch != null) return stopWatch;
+
+            stopWatch = new StopWatchImpl();
+        }
+
+        if (ApConstants.DEBUG) {
+            stopWatch.enable();
+        }
+
+        return stopWatch;
     }
 }

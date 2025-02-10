@@ -6,7 +6,7 @@ public final class ApConstants {
 
     public static final boolean
             DEVELOPMENT = FabricLoader.getInstance().isDevelopmentEnvironment() || "true".equals(System.getenv("AP2_DEV")),
-            DEBUG = false;
+            DEBUG = FabricLoader.getInstance().isDevelopmentEnvironment();
 
     public static final String ID = "ap2";
 
