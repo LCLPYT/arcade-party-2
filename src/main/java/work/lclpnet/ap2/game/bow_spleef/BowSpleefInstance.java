@@ -34,12 +34,14 @@ import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 
 import java.util.Objects;
+import java.util.Random;
 
 public class BowSpleefInstance extends EliminationGameInstance {
 
     private static final int WORLD_BORDER_DELAY = Ticks.seconds(80);
     private static final int WORLD_BORDER_TIME = Ticks.seconds(20);
     private final DoubleJumpHandler doubleJumpHandler;
+    private final Random random = new Random();
 
     public BowSpleefInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
@@ -71,6 +73,8 @@ public class BowSpleefInstance extends EliminationGameInstance {
         });
 
         commons().whenBelowCriticalHeight().then(this::eliminate);
+
+        commons().specialItems(random).init();
     }
 
     @Override

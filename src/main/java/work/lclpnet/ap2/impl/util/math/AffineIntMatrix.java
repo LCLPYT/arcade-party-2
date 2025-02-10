@@ -91,9 +91,9 @@ public class AffineIntMatrix {
         return transform(pos.getX(), pos.getY(), pos.getZ());
     }
 
-    public AffineIntMatrix multiply(AffineIntMatrix other) {
+    public AffineIntMatrix multiply(AffineIntMatrix right) {
         AffineIntMatrix dest = new AffineIntMatrix();
-        multiply(this, other, dest);
+        multiply(this, right, dest);
         return dest;
     }
 
@@ -154,6 +154,10 @@ public class AffineIntMatrix {
                 }
             }
         }
+    }
+
+    public static AffineIntMatrix makeTranslation(Vec3i offset) {
+        return makeTranslation(offset.getX(), offset.getY(), offset.getZ());
     }
 
     public static AffineIntMatrix makeTranslation(int x, int y, int z) {

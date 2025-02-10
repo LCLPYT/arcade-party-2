@@ -181,4 +181,15 @@ public class WeightedList<E> extends AbstractList<E> {
 
         return new WeightedList<>(filtered, filteredCumulativeWeights, totalWeight);
     }
+
+    public static <E> WeightedList<E> of(Collection<? extends E> elements, Function<E, Number> probabilityMapper) {
+        var list = new WeightedList<E>(elements.size());
+
+        for (E element : elements) {
+            float probability = probabilityMapper.apply(element).floatValue();
+            list.add(element, probability);
+        }
+
+        return list;
+    }
 }

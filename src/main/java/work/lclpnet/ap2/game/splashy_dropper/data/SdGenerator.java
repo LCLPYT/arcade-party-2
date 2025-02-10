@@ -32,7 +32,7 @@ public class SdGenerator {
     }
 
     public void generate() {
-        BlockShape blockShape = MapUtil.readShape(map);
+        BlockShape blockShape = MapUtil.readArea(map);
 
         WeightedList<SdShape> shapes = new WeightedList<>();
         shapes.add(SdShape.square(1, 1), 0.2f);

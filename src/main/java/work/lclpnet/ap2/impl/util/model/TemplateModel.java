@@ -1,9 +1,13 @@
 package work.lclpnet.ap2.impl.util.model;
 
 import net.minecraft.block.BlockState;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.util.model.Model;
 import work.lclpnet.ap2.impl.scene.BlockDisplayObject;
 import work.lclpnet.ap2.impl.scene.Object3d;
+
+import java.util.Optional;
 
 public record TemplateModel(Object3d template) implements Model {
 
@@ -26,5 +30,12 @@ public record TemplateModel(Object3d template) implements Model {
         }
 
         return this;
+    }
+
+    public static @NotNull TemplateModel replace(@Nullable Model model, BlockState from, BlockState to) {
+        return Optional.ofNullable(model)
+                .map(m -> m instanceof TemplateModel tm ? tm : null)
+                .map(m -> m.copy().replace(from, to))
+                .orElseThrow();
     }
 }

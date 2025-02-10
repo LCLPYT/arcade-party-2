@@ -21,6 +21,7 @@ import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.map.MapBootstrap;
 import work.lclpnet.ap2.api.util.model.ModelManager;
+import work.lclpnet.ap2.base.ApConstants;
 import work.lclpnet.ap2.base.resource.ApResources;
 import work.lclpnet.ap2.game.maze_scape.debug.DebugFrustumCommand;
 import work.lclpnet.ap2.game.maze_scape.debug.DebugPathCommand;
@@ -70,7 +71,10 @@ public class MazeScapeInstance extends EliminationGameInstance implements MapBoo
         world.setTimeOfDay(18_000);
 
         ModelManager modelManager = ApResources.getInstance();
-        debugController.init(modelManager, world);
+
+        if (ApConstants.DEBUG) {
+            debugController.init(modelManager, world);
+        }
 
         Logger logger = gameHandle.getLogger();
         var setup = new MSLoader(world, map, logger);
@@ -95,8 +99,10 @@ public class MazeScapeInstance extends EliminationGameInstance implements MapBoo
 
         CommandRegistrar commandRegistrar = gameHandle.getCommandRegistrar();
 
-        new DebugPathCommand(struct, debugController).register(commandRegistrar);
-        new DebugFrustumCommand(debugController).register(commandRegistrar);
+        if (ApConstants.DEBUG) {
+            new DebugPathCommand(struct, debugController).register(commandRegistrar);
+            new DebugFrustumCommand(debugController).register(commandRegistrar);
+        }
 
         useSmoothDeath();
         useNoHealing();

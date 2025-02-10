@@ -96,7 +96,7 @@ public class MapUtil {
     }
 
     @NotNull
-    public static BlockShape readShape(GameMap map) {
+    public static BlockShape readArea(GameMap map) {
         JSONObject area = map.requireProperty("area");
         return readShape(area);
     }
@@ -135,7 +135,8 @@ public class MapUtil {
     }
 
     private static BlockPos origin(JSONObject json, @Nullable BlockPos fallback) {
-        return optBlockPos(json.getJSONArray("origin"))
+        return Optional.ofNullable(json.optJSONArray("origin"))
+                .flatMap(MapUtil::optBlockPos)
                 .or(() -> Optional.ofNullable(fallback))
                 .orElseThrow(() -> new NoSuchElementException("Origin undefined"));
     }

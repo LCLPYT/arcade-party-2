@@ -83,7 +83,7 @@ public class GuessItInstance extends DefaultGameInstance implements MapBootstrap
         GameMap map = getMap();
         HookRegistrar hooks = gameHandle.getHookRegistrar();
         Participants participants = gameHandle.getParticipants();
-        BlockShape blockShape = MapUtil.readShape(map);
+        BlockShape blockShape = MapUtil.readArea(map);
 
         commons().gameRuleBuilder()
                 .set(GameRules.REDUCED_DEBUG_INFO, true);

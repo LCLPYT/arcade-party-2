@@ -11,10 +11,9 @@ import net.minecraft.util.math.Vec3d;
 import org.joml.Matrix4d;
 import org.joml.Vector4d;
 import work.lclpnet.ap2.game.maze_scape.setup.MSDebugController;
-import work.lclpnet.ap2.game.maze_scape.util.DebugRenderer;
 import work.lclpnet.ap2.game.maze_scape.util.VisibilityChecker;
 import work.lclpnet.ap2.impl.scene.Object3d;
-import work.lclpnet.ap2.impl.scene.Scene;
+import work.lclpnet.ap2.impl.util.debug.DebugRenderer;
 import work.lclpnet.kibu.cmd.type.CommandRegistrar;
 import work.lclpnet.kibu.cmd.type.KibuCommand;
 
@@ -45,7 +44,7 @@ public class DebugFrustumCommand implements KibuCommand {
     private int showSelf(CommandContext<ServerCommandSource> ctx) throws CommandSyntaxException {
         ServerPlayerEntity player = ctx.getSource().getPlayerOrThrow();
 
-        DebugRenderer renderer = debugger.renderer();
+        DebugRenderer renderer = debugger.parent().renderer().orElse(null);
 
         if (renderer == null) {
             ctx.getSource().sendError(Text.literal("Debug renderer not initialized"));
@@ -89,12 +88,7 @@ public class DebugFrustumCommand implements KibuCommand {
     }
 
     private void reset() {
-        Scene scene = debugger.scene();
-
-        if (scene != null) {
-            lines.forEach(scene::remove);
-        }
-
+        debugger.parent().scene().ifPresent(scene -> lines.forEach(scene::remove));
         lines.clear();
     }
 
