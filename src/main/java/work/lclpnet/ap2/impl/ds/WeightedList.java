@@ -2,6 +2,7 @@ package work.lclpnet.ap2.impl.ds;
 
 import it.unimi.dsi.fastutil.floats.FloatArrayList;
 import it.unimi.dsi.fastutil.floats.FloatList;
+import it.unimi.dsi.fastutil.floats.FloatLists;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.VisibleForTesting;
 
@@ -30,7 +31,7 @@ public class WeightedList<E> extends AbstractList<E> {
         this(new ArrayList<>(initialCapacity), new FloatArrayList(initialCapacity), 0);
     }
 
-    private WeightedList(List<E> elements, FloatList cumulativeWeights, float totalWeight) {
+    protected WeightedList(List<E> elements, FloatList cumulativeWeights, float totalWeight) {
         this.elements = elements;
         this.cumulativeWeights = cumulativeWeights;
         this.totalWeight = totalWeight;
@@ -182,6 +183,14 @@ public class WeightedList<E> extends AbstractList<E> {
         return new WeightedList<>(filtered, filteredCumulativeWeights, totalWeight);
     }
 
+    public WeightedList<E> immutableView() {
+        if (this.getClass() == Immutable.class) {
+            return this;
+        }
+
+        return new Immutable<>(elements, cumulativeWeights, totalWeight);
+    }
+
     public static <E> WeightedList<E> of(Collection<? extends E> elements, Function<E, Number> probabilityMapper) {
         var list = new WeightedList<E>(elements.size());
 
@@ -191,5 +200,38 @@ public class WeightedList<E> extends AbstractList<E> {
         }
 
         return list;
+    }
+
+    /**
+     * Returns an empty immutable {@link WeightedList}.
+     * @return An empty {@link WeightedList}.
+     * @param <E> The {@link WeightedList}'s element type.
+     */
+    @SuppressWarnings("unchecked")
+    public static <E> WeightedList<E> empty() {
+        return (WeightedList<E>) Immutable.EMPTY;
+    }
+
+    private static class Immutable<E> extends WeightedList<E> {
+        private static final WeightedList<?> EMPTY = new Immutable<>(List.of(), FloatLists.emptyList(), 0);
+
+        private Immutable(List<E> elements, FloatList cumulativeWeights, float totalWeight) {
+            super(elements, cumulativeWeights, totalWeight);
+        }
+
+        @Override
+        public void add(E item, float weight) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public E remove(int index) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void clear() {
+            throw new UnsupportedOperationException();
+        }
     }
 }

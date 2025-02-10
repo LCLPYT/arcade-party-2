@@ -16,13 +16,8 @@ import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.sink.IntDataSink;
 import work.lclpnet.ap2.api.util.action.Action;
 import work.lclpnet.ap2.api.util.action.PlayerAction;
-import work.lclpnet.ap2.base.ApConstants;
-import work.lclpnet.ap2.base.resource.ApResources;
-import work.lclpnet.ap2.impl.game.item.SpecialItemPositions;
-import work.lclpnet.ap2.impl.game.item.SpecialItems;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.GameRuleBuilder;
-import work.lclpnet.ap2.impl.util.debug.DebugController;
 import work.lclpnet.ap2.impl.util.math.Vec2i;
 import work.lclpnet.kibu.hook.HookFactory;
 import work.lclpnet.kibu.hook.HookRegistrar;
@@ -268,18 +263,6 @@ public class GameCommons {
         }
 
         healthDisplay.setup(gameHandle.getHookRegistrar());
-    }
-
-    public SpecialItems specialItems(Random random) {
-        var debugController = new DebugController();
-
-        if (ApConstants.DEBUG) {
-            debugController.init(ApResources.getInstance(), world);
-        }
-
-        var positions = new SpecialItemPositions(map, world, random, debugController);
-
-        return new SpecialItems(map, positions);
     }
 
     public record WorldBorderConfig(int centerX, int centerZ, int maxRadius, int minRadius) {}

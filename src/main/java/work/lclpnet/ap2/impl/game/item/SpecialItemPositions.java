@@ -2,7 +2,6 @@ package work.lclpnet.ap2.impl.game.item;
 
 import net.minecraft.block.Blocks;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.BlockView;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import work.lclpnet.ap2.api.util.world.BlockPredicate;
@@ -11,11 +10,8 @@ import work.lclpnet.ap2.impl.ds.WeightedList;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.debug.DebugController;
-import work.lclpnet.ap2.impl.util.world.WalkableBlockPredicate;
 import work.lclpnet.ap2.impl.util.world.stage.BlockShape;
 import work.lclpnet.kibu.util.math.Matrix3i;
-import work.lclpnet.lobby.game.map.GameMap;
-import work.lclpnet.lobby.game.map.MapUtils;
 
 import java.util.List;
 import java.util.Optional;
@@ -27,7 +23,6 @@ public class SpecialItemPositions {
             DEBUG_SPAWNS = false,
             DEBUG_TIMINGS = false;
 
-    private final GameMap map;
     private final BlockPredicate validPos;
     private final Random random;
     private final DebugController debugController;
@@ -35,22 +30,14 @@ public class SpecialItemPositions {
     private @Nullable BlockShape shape = null;
     private @Nullable StructureMask mask = null;
 
-    public SpecialItemPositions(GameMap map, BlockView world, Random random, DebugController debugController) {
-        this(map, new WalkableBlockPredicate(world), random, debugController);
-    }
-
-    public SpecialItemPositions(GameMap map, BlockPredicate validPos, Random random, DebugController debugController) {
-        this.map = map;
+    public SpecialItemPositions(BlockPredicate validPos, Random random, DebugController debugController) {
         this.validPos = validPos;
         this.random = random;
         this.debugController = debugController;
     }
 
-    public void init() {
-        JSONObject cfg = map.requireProperty("items");
-        BlockPos mapSpawn = BlockPos.ofFloored(MapUtils.getSpawnPosition(map));
-
-        shape = MapUtil.readShape(cfg.getJSONObject("spawn-area"), mapSpawn);
+    public void init(JSONObject areaJson, BlockPos mapSpawn) {
+        shape = MapUtil.readShape(areaJson, mapSpawn);
         mask = StructureMask.createEmpty(shape.bounds());
     }
 

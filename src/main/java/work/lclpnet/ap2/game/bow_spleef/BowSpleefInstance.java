@@ -19,7 +19,9 @@ import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
 import org.json.JSONArray;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
+import work.lclpnet.ap2.game.bow_spleef.item.TripleShotPowerup;
 import work.lclpnet.ap2.impl.game.EliminationGameInstance;
+import work.lclpnet.ap2.impl.game.item.SpecialItems;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.ItemStackHelper;
 import work.lclpnet.ap2.impl.util.SoundHelper;
@@ -74,7 +76,10 @@ public class BowSpleefInstance extends EliminationGameInstance {
 
         commons().whenBelowCriticalHeight().then(this::eliminate);
 
-        commons().specialItems(random).init();
+        SpecialItems specialItems = SpecialItems.create(getMap(), getWorld(), random, registrar -> registrar
+                .register(new TripleShotPowerup(), 1.f));
+
+        specialItems.setup();
     }
 
     @Override
