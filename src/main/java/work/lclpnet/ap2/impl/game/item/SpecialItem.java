@@ -1,10 +1,10 @@
 package work.lclpnet.ap2.impl.game.item;
 
-import net.minecraft.entity.ItemEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
+import work.lclpnet.kibu.hook.HookRegistrar;
 
 public interface SpecialItem {
 
@@ -13,14 +13,10 @@ public interface SpecialItem {
     ItemStack createItemStack();
 
     /**
-     * Called when a player is about to pick up the special item.
+     * Called when a player picked up an instance of the special item.
      * @param player The player.
-     * @param itemEntity The item entity representing an instance of the special item.
-     * @return True, if the default special item pickup logic should be cancelled. False otherwise.
      */
-    default boolean onPickUp(ServerPlayerEntity player, ItemEntity itemEntity) {
-        return false;
-    }
+    default void onPickedUp(ServerPlayerEntity player) {}
 
     /**
      * Called when a player uses (right-clicks) the special item.
@@ -32,4 +28,6 @@ public interface SpecialItem {
     default ActionResult onUse(ServerPlayerEntity player, ItemStack stack, Hand hand) {
         return ActionResult.PASS;
     }
+
+    default void registerHooks(HookRegistrar hooks, SpecialItemContext ctx) {}
 }

@@ -25,6 +25,7 @@ import work.lclpnet.ap2.base.resource.ApResources;
 import work.lclpnet.ap2.impl.ds.WeightedList;
 import work.lclpnet.ap2.impl.util.debug.DebugController;
 import work.lclpnet.ap2.impl.util.world.WalkableBlockPredicate;
+import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.player.PlayerInventoryHooks;
 import work.lclpnet.lobby.game.map.GameMap;
 import work.lclpnet.lobby.game.map.MapUtils;
@@ -33,7 +34,7 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.function.Consumer;
 
-public class SpecialItems {
+public class SpecialItems implements SpecialItemContext {
 
     public static final MapCodec<NbtCompound> NBT_CODEC = NbtCompound.CODEC.fieldOf("ap2:special_item");
     public static final String ID_KEY = "Id";
@@ -73,7 +74,12 @@ public class SpecialItems {
     public void setup() {
         positions.update();
 
-        gameHandle.getHookRegistrar().registerHook(PlayerInventoryHooks.PLAYER_PICKUP, this::onPickup);
+        HookRegistrar hooks = gameHandle.getHookRegistrar();
+        hooks.registerHook(PlayerInventoryHooks.PLAYER_PICKUP, this::onPickup);
+
+        for (SpecialItem item : registry.entries()) {
+            item.registerHooks(hooks, this);
+        }
     }
 
     private boolean onPickup(PlayerEntity player, ItemEntity itemEntity) {
@@ -83,23 +89,26 @@ public class SpecialItems {
 
         SpecialItem specialItem = get(itemEntity.getStack()).orElse(null);
 
-        if (specialItem == null || specialItem.onPickUp(serverPlayer, itemEntity)) {
+        if (specialItem == null) {
             return false;
         }
 
-        tryPickupSpecialItem(serverPlayer, itemEntity);
+        tryPickupSpecialItem(serverPlayer, itemEntity, specialItem);
 
         return true;
     }
 
     /** The default pickup handler, if there is no override */
-    private void tryPickupSpecialItem(ServerPlayerEntity player, ItemEntity itemEntity) {
+    private void tryPickupSpecialItem(ServerPlayerEntity player, ItemEntity itemEntity, SpecialItem specialItem) {
         // check if the player already has a special item
         if (hasAnySpecialItem(player)) return;
 
-        player.getInventory().setStack(8, itemEntity.getStack().copy());
+        ItemStack stack = itemEntity.getStack().copy();
+        player.getInventory().setStack(8, stack);
         player.sendPickup(itemEntity, itemEntity.getStack().getCount());
         itemEntity.discard();
+
+        specialItem.onPickedUp(player);
     }
 
     public boolean hasAnySpecialItem(ServerPlayerEntity player) {
@@ -108,6 +117,22 @@ public class SpecialItems {
 
     public boolean hasSpecialItem(ServerPlayerEntity player, @Nullable SpecialItem item) {
         return get(player.getInventory().getStack(8)).orElse(null) == item;
+    }
+
+    @Override
+    public void removeSpecialItem(ServerPlayerEntity player, SpecialItem item) {
+        if (item == null) return;
+
+        SpecialItem currentItem = get(player.getInventory().getStack(8)).orElse(null);
+
+        if (currentItem == item) {
+            player.getInventory().setStack(8, ItemStack.EMPTY);
+        }
+    }
+
+    @Override
+    public boolean isSpecialItem(ItemStack stack, @Nullable SpecialItem item) {
+        return get(stack).orElse(null) == item;
     }
 
     public Optional<SpecialItem> get(ItemStack stack) {
@@ -144,9 +169,6 @@ public class SpecialItems {
     public void spawnRandomItem(Random random) {
         BlockPos blockPos = positions.randomPos(random).orElse(null);
         SpecialItem item = weightedItems.getRandomElement(random);
-
-        System.out.println(blockPos);
-        System.out.println(item);
 
         if (blockPos == null || item == null) return;
 

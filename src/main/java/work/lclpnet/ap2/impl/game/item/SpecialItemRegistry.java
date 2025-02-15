@@ -1,5 +1,6 @@
 package work.lclpnet.ap2.impl.game.item;
 
+import com.google.common.collect.Iterables;
 import org.json.JSONObject;
 import work.lclpnet.ap2.impl.ds.WeightedList;
 
@@ -42,6 +43,10 @@ public class SpecialItemRegistry implements SpecialItemRegistrar {
 
     public Optional<SpecialItem> get(String id) {
         return Optional.ofNullable(items.getOrDefault(id, null)).map(Entry::item);
+    }
+
+    public Iterable<SpecialItem> entries() {
+        return Iterables.transform(items.values(), Entry::item);
     }
 
     private record Entry(SpecialItem item, float chance) {}
