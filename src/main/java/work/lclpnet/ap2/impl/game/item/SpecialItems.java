@@ -182,6 +182,26 @@ public class SpecialItems implements SpecialItemContext {
         world.spawnEntity(itemEntity);
     }
 
+    public void spawnPeriodically(int minIntervalTicks, int maxIntervalTicks, Random random) {
+        gameHandle.getGameScheduler().interval(new Runnable() {
+            int timer = 0;
+            int next = randomInterval();
+
+            @Override
+            public void run() {
+                if (timer++ < next) return;
+
+                timer = 0;
+                next = randomInterval();
+                spawnRandomItem(random);
+            }
+
+            int randomInterval() {
+                return random.nextInt(maxIntervalTicks - minIntervalTicks + 1);
+            }
+        }, 1);
+    }
+
     public static SpecialItems create(MiniGameHandle gameHandle, GameMap map, ServerWorld world, Consumer<SpecialItemRegistrar> config) {
         return create(gameHandle, map, world, new WalkableBlockPredicate(world), config);
     }

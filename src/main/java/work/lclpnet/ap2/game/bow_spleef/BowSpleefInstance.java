@@ -42,7 +42,9 @@ public class BowSpleefInstance extends EliminationGameInstance {
 
     private static final int
             WORLD_BORDER_DELAY = Ticks.seconds(80),
-            WORLD_BORDER_TIME = Ticks.seconds(20);
+            WORLD_BORDER_TIME = Ticks.seconds(20),
+            ITEM_SPAWN_MIN_TICKS = Ticks.seconds(6),
+            ITEM_SPAWN_MAX_TICKS = Ticks.seconds(13);
 
     private final DoubleJumpHandler doubleJumpHandler;
     private final Random random = new Random();
@@ -101,7 +103,7 @@ public class BowSpleefInstance extends EliminationGameInstance {
         commons().scheduleWorldBorderShrink(WORLD_BORDER_DELAY, WORLD_BORDER_TIME, Ticks.seconds(5))
                 .then(this::removeBlocksUnder);
 
-        specialItems.spawnRandomItem(random);
+        specialItems.spawnPeriodically(ITEM_SPAWN_MIN_TICKS, ITEM_SPAWN_MAX_TICKS, random);
     }
 
     private void giveBowsToPlayers(Translations translations) {
