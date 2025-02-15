@@ -8,7 +8,7 @@ import net.minecraft.item.Items;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
-import work.lclpnet.ap2.core.hook.RangedWeaponUseCallback;
+import work.lclpnet.ap2.core.hook.RangedWeaponUsedCallback;
 import work.lclpnet.ap2.impl.game.item.SpecialItem;
 import work.lclpnet.ap2.impl.game.item.SpecialItemContext;
 import work.lclpnet.ap2.impl.util.ItemStackHelper;
@@ -41,7 +41,7 @@ public class TripleShotPowerup implements SpecialItem {
 
     @Override
     public void registerHooks(HookRegistrar hooks, SpecialItemContext ctx) {
-        hooks.registerHook(RangedWeaponUseCallback.HOOK, (entity, stack) -> {
+        hooks.registerHook(RangedWeaponUsedCallback.HOOK, (entity, stack) -> {
             if (!(entity instanceof ServerPlayerEntity player) || stack != player.getInventory().getStack(4))
                 return;
 

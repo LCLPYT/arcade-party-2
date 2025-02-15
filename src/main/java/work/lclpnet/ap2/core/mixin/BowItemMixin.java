@@ -8,7 +8,7 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
-import work.lclpnet.ap2.core.hook.RangedWeaponUseCallback;
+import work.lclpnet.ap2.core.hook.RangedWeaponUsedCallback;
 
 @Mixin(BowItem.class)
 public class BowItemMixin {
@@ -17,10 +17,10 @@ public class BowItemMixin {
             method = "onStoppedUsing",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/item/BowItem;load(Lnet/minecraft/item/ItemStack;Lnet/minecraft/item/ItemStack;Lnet/minecraft/entity/LivingEntity;)Ljava/util/List;"
+                    target = "Lnet/minecraft/world/World;playSound(Lnet/minecraft/entity/player/PlayerEntity;DDDLnet/minecraft/sound/SoundEvent;Lnet/minecraft/sound/SoundCategory;FF)V"
             )
     )
     public void ap2$onShoot(ItemStack stack, World world, LivingEntity user, int remainingUseTicks, CallbackInfoReturnable<Boolean> cir) {
-        RangedWeaponUseCallback.HOOK.invoker().onShoot(user, stack);
+        RangedWeaponUsedCallback.HOOK.invoker().onShot(user, stack);
     }
 }
