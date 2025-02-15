@@ -85,6 +85,7 @@ public class BowSpleefInstance extends EliminationGameInstance {
                 .register(new TripleShotPowerup(), 1.f));
 
         specialItems.setup();
+        specialItems.syncWithWorldBorder();
     }
 
     @Override
@@ -146,6 +147,8 @@ public class BowSpleefInstance extends EliminationGameInstance {
         world.spawnParticles(ParticleTypes.ELECTRIC_SPARK, cx, y, cz, 60, 1, 0.6, 1, 0.01);
         world.spawnParticles(ParticleTypes.FLAME, cx, y, cz, 30, 1, 0.6, 1, 0.04);
         world.playSound(null, x, y, z, SoundEvents.ENTITY_DRAGON_FIREBALL_EXPLODE, SoundCategory.AMBIENT, 0.12f, 0f);
+
+        specialItems.positions().update();
     }
 
     private void removeBlocksUnder() {

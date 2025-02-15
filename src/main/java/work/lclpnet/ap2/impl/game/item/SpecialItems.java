@@ -2,6 +2,7 @@ package work.lclpnet.ap2.impl.game.item;
 
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.MapCodec;
+import lombok.Setter;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.DamageResistantComponent;
 import net.minecraft.component.type.NbtComponent;
@@ -11,11 +12,14 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtOps;
+import net.minecraft.particle.ParticleTypes;
 import net.minecraft.registry.tag.DamageTypeTags;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Rarity;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.border.WorldBorder;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
@@ -34,6 +38,8 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.function.Consumer;
 
+import static java.lang.Math.abs;
+
 public class SpecialItems implements SpecialItemContext {
 
     public static final MapCodec<NbtCompound> NBT_CODEC = NbtCompound.CODEC.fieldOf("ap2:special_item");
@@ -45,6 +51,7 @@ public class SpecialItems implements SpecialItemContext {
     private final SpecialItemPositions positions;
     private final SpecialItemRegistry registry;
     private WeightedList<SpecialItem> weightedItems = WeightedList.empty();
+    @Setter private int despawnTicks = 500;
 
     public SpecialItems(MiniGameHandle gameHandle, GameMap map, ServerWorld world, SpecialItemPositions positions, SpecialItemRegistry registry) {
         this.gameHandle = gameHandle;
@@ -172,14 +179,27 @@ public class SpecialItems implements SpecialItemContext {
 
         if (blockPos == null || item == null) return;
 
+        Vec3d pos = blockPos.toBottomCenterPos();
+
+        if (!world.getWorldBorder().contains(pos)) return;
+
         ItemStack stack = createItemStack(item);
 
         var itemEntity = new ItemEntity(EntityType.ITEM, world);
-        itemEntity.setPosition(blockPos.toBottomCenterPos());
+        itemEntity.setPosition(pos);
         itemEntity.setStack(stack);
         itemEntity.setNeverDespawn();
 
+        world.spawnParticles(ParticleTypes.END_ROD, pos.x, pos.y, pos.z, 15, 0.1, 0.1, 0.1, 0.1);
         world.spawnEntity(itemEntity);
+
+        if (despawnTicks > 0) {
+            gameHandle.getGameScheduler().timeout(() -> {
+                if (!itemEntity.isRemoved()) {
+                    itemEntity.discard();
+                }
+            }, despawnTicks);
+        }
     }
 
     public void spawnPeriodically(int minIntervalTicks, int maxIntervalTicks, Random random) {
@@ -202,8 +222,33 @@ public class SpecialItems implements SpecialItemContext {
         }, 1);
     }
 
+    public void syncWithWorldBorder() {
+        WorldBorder border = world.getWorldBorder();
+
+        gameHandle.getGameScheduler().interval(new Runnable() {
+            double prevSize = Double.NaN, prevCenterX = Double.NaN, prevCenterZ = Double.NaN;
+
+            @Override
+            public void run() {
+                double size = border.getSize();
+                double centerX = border.getCenterX();
+                double centerZ = border.getCenterZ();
+
+                if (abs(prevSize - size) < 0.1 || abs(prevCenterX - centerX) < 0.1 || abs(prevCenterZ - centerZ) < 0.1) {
+                    prevSize = size;
+                    prevCenterX = centerX;
+                    prevCenterZ = centerZ;
+
+                    positions.update();
+                }
+            }
+        }, 20);
+    }
+
     public static SpecialItems create(MiniGameHandle gameHandle, GameMap map, ServerWorld world, Consumer<SpecialItemRegistrar> config) {
-        return create(gameHandle, map, world, new WalkableBlockPredicate(world), config);
+        var validSpawn = BlockPredicate.and(gameHandle.getWorldBorderManager().getWorldBorder()::contains, new WalkableBlockPredicate(world));
+
+        return create(gameHandle, map, world, validSpawn, config);
     }
 
     public static SpecialItems create(MiniGameHandle gameHandle, GameMap map, ServerWorld world, BlockPredicate validSpawn, Consumer<SpecialItemRegistrar> config) {
