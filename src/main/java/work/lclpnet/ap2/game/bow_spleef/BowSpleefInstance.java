@@ -1,5 +1,7 @@
 package work.lclpnet.ap2.game.bow_spleef;
 
+import lombok.Getter;
+import lombok.Setter;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.component.DataComponentTypes;
@@ -19,8 +21,8 @@ import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
 import org.json.JSONArray;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
-import work.lclpnet.ap2.game.bow_spleef.item.TripleShotPowerup;
 import work.lclpnet.ap2.impl.game.EliminationGameInstance;
+import work.lclpnet.ap2.impl.game.item.PlainSpecialItem;
 import work.lclpnet.ap2.impl.game.item.SpecialItems;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.ItemStackHelper;
@@ -44,6 +46,7 @@ public class BowSpleefInstance extends EliminationGameInstance {
     private static final int WORLD_BORDER_TIME = Ticks.seconds(20);
     private final DoubleJumpHandler doubleJumpHandler;
     private final Random random = new Random();
+    private SpecialItems specialItems;
 
     public BowSpleefInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
@@ -76,8 +79,8 @@ public class BowSpleefInstance extends EliminationGameInstance {
 
         commons().whenBelowCriticalHeight().then(this::eliminate);
 
-        SpecialItems specialItems = SpecialItems.create(getMap(), getWorld(), random, registrar -> registrar
-                .register(new TripleShotPowerup(), 1.f));
+        specialItems = SpecialItems.create(gameHandle, getMap(), getWorld(), r -> r
+                .register(new PlainSpecialItem("triple_shot", new ItemStack(Items.ARROW, 3)), 1.f));
 
         specialItems.setup();
     }
@@ -97,6 +100,8 @@ public class BowSpleefInstance extends EliminationGameInstance {
 
         commons().scheduleWorldBorderShrink(WORLD_BORDER_DELAY, WORLD_BORDER_TIME, Ticks.seconds(5))
                 .then(this::removeBlocksUnder);
+
+        specialItems.spawnRandomItem(random);
     }
 
     private void giveBowsToPlayers(Translations translations) {
@@ -157,5 +162,10 @@ public class BowSpleefInstance extends EliminationGameInstance {
         for (BlockPos pos : BlockPos.iterate(x - 3, y - 30, z - 3, x + 3, y + 10, z + 3)) {
             world.setBlockState(pos, air);
         }
+    }
+
+    @Getter @Setter
+    public static class PlayerState {
+        boolean tripleShot = false;
     }
 }

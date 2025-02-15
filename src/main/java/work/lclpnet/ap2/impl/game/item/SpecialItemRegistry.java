@@ -5,6 +5,7 @@ import work.lclpnet.ap2.impl.ds.WeightedList;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 public class SpecialItemRegistry implements SpecialItemRegistrar {
 
@@ -37,6 +38,10 @@ public class SpecialItemRegistry implements SpecialItemRegistrar {
         }
 
         return weighted;
+    }
+
+    public Optional<SpecialItem> get(String id) {
+        return Optional.ofNullable(items.getOrDefault(id, null)).map(Entry::item);
     }
 
     private record Entry(SpecialItem item, float chance) {}

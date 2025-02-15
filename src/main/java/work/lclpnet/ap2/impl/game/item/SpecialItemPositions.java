@@ -24,15 +24,13 @@ public class SpecialItemPositions {
             DEBUG_TIMINGS = false;
 
     private final BlockPredicate validPos;
-    private final Random random;
     private final DebugController debugController;
     private @Nullable WeightedList<BlockBox> spawnBoxes = null;
     private @Nullable BlockShape shape = null;
     private @Nullable StructureMask mask = null;
 
-    public SpecialItemPositions(BlockPredicate validPos, Random random, DebugController debugController) {
+    public SpecialItemPositions(BlockPredicate validPos, DebugController debugController) {
         this.validPos = validPos;
-        this.random = random;
         this.debugController = debugController;
     }
 
@@ -68,8 +66,8 @@ public class SpecialItemPositions {
         }
     }
 
-    public Optional<BlockPos> randomPos() {
-        if (spawnBoxes == null) {
+    public Optional<BlockPos> randomPos(Random random) {
+        if (spawnBoxes == null || shape == null) {
             return Optional.empty();
         }
 
@@ -81,7 +79,8 @@ public class SpecialItemPositions {
 
         var pos = new BlockPos.Mutable();
         box.randomBlockPos(pos, random);
+        pos.move(shape.bounds().min());
 
-        return Optional.empty();
+        return Optional.of(pos);
     }
 }
