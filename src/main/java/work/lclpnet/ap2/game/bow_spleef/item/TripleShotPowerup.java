@@ -5,13 +5,14 @@ import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import work.lclpnet.ap2.core.hook.RangedWeaponUsedCallback;
 import work.lclpnet.ap2.impl.game.item.SpecialItem;
 import work.lclpnet.ap2.impl.game.item.SpecialItemContext;
-import work.lclpnet.ap2.impl.util.ItemStackHelper;
+import work.lclpnet.ap2.impl.util.ItemHelper;
 import work.lclpnet.kibu.hook.HookRegistrar;
 
 public class TripleShotPowerup implements SpecialItem {
@@ -24,14 +25,14 @@ public class TripleShotPowerup implements SpecialItem {
     }
 
     @Override
-    public ItemStack createItemStack() {
+    public ItemStack createItemStack(DynamicRegistryManager registryManager) {
         return new ItemStack(Items.ARROW, 3);
     }
 
     @Override
     public void onPickedUp(ServerPlayerEntity player) {
         ItemStack bow = player.getInventory().getStack(4);
-        var multiShot = ItemStackHelper.getEnchantment(Enchantments.MULTISHOT, player.getWorld().getRegistryManager());
+        var multiShot = ItemHelper.getEnchantment(Enchantments.MULTISHOT, player.getWorld().getRegistryManager());
         bow.addEnchantment(multiShot, 1);
 
         bow.set(DataComponentTypes.ENCHANTMENT_GLINT_OVERRIDE, true);
@@ -41,7 +42,7 @@ public class TripleShotPowerup implements SpecialItem {
 
     @Override
     public void registerHooks(HookRegistrar hooks, SpecialItemContext ctx) {
-        hooks.registerHook(RangedWeaponUsedCallback.HOOK, (entity, stack) -> {
+        hooks.registerHook(RangedWeaponUsedCallback.HOOK, (entity, stack, remainingUseTicks) -> {
             if (!(entity instanceof ServerPlayerEntity player) || stack != player.getInventory().getStack(4))
                 return;
 

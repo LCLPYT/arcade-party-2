@@ -21,6 +21,6 @@ public class BowItemMixin {
             )
     )
     public void ap2$onShoot(ItemStack stack, World world, LivingEntity user, int remainingUseTicks, CallbackInfoReturnable<Boolean> cir) {
-        RangedWeaponUsedCallback.HOOK.invoker().onShot(user, stack);
+        RangedWeaponUsedCallback.HOOK.invoker().onShot(user, stack, remainingUseTicks);
     }
 }

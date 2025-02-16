@@ -19,11 +19,12 @@ import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
 import org.json.JSONArray;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
+import work.lclpnet.ap2.game.bow_spleef.item.BurstShotPowerup;
 import work.lclpnet.ap2.game.bow_spleef.item.TripleShotPowerup;
 import work.lclpnet.ap2.impl.game.EliminationGameInstance;
 import work.lclpnet.ap2.impl.game.item.SpecialItems;
 import work.lclpnet.ap2.impl.map.MapUtil;
-import work.lclpnet.ap2.impl.util.ItemStackHelper;
+import work.lclpnet.ap2.impl.util.ItemHelper;
 import work.lclpnet.ap2.impl.util.SoundHelper;
 import work.lclpnet.ap2.impl.util.handler.DoubleJumpHandler;
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
@@ -82,7 +83,8 @@ public class BowSpleefInstance extends EliminationGameInstance {
         commons().whenBelowCriticalHeight().then(this::eliminate);
 
         specialItems = SpecialItems.create(gameHandle, getMap(), getWorld(), random, r -> r
-                .register(new TripleShotPowerup(), 1.f));
+                .register(new TripleShotPowerup(), 1.f)
+                .register(new BurstShotPowerup(), 0.8f));
 
         specialItems.setup();
         specialItems.syncWithWorldBorder();
@@ -108,7 +110,7 @@ public class BowSpleefInstance extends EliminationGameInstance {
     }
 
     private void giveBowsToPlayers(Translations translations) {
-        var infinity = ItemStackHelper.getEnchantment(Enchantments.INFINITY, getWorld().getRegistryManager());
+        var infinity = ItemHelper.getEnchantment(Enchantments.INFINITY, getWorld().getRegistryManager());
 
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
             ItemStack stack = new ItemStack(Items.BOW);

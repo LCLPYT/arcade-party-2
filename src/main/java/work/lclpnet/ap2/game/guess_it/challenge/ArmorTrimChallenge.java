@@ -20,7 +20,6 @@ import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.game.guess_it.data.*;
 import work.lclpnet.ap2.game.guess_it.util.OptionMaker;
 import work.lclpnet.ap2.impl.util.ItemHelper;
-import work.lclpnet.ap2.impl.util.ItemStackHelper;
 import work.lclpnet.ap2.impl.util.TextUtil;
 import work.lclpnet.ap2.impl.util.world.stage.BlockShape;
 import work.lclpnet.kibu.scheduler.Ticks;
@@ -73,7 +72,7 @@ public class ArmorTrimChallenge implements Challenge {
 
         correct = opts.get(correctOption);
 
-        material = ItemStackHelper.getRandomTrimMaterial(world.getRegistryManager(), random);
+        material = ItemHelper.getRandomTrimMaterial(world.getRegistryManager(), random);
 
         armorMaterial = switch (random.nextInt(6)) {
             case 0 -> ArmorMaterials.LEATHER;

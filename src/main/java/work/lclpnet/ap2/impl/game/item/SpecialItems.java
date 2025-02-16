@@ -27,6 +27,7 @@ import work.lclpnet.ap2.impl.ds.WeightedList;
 import work.lclpnet.ap2.impl.util.debug.DebugController;
 import work.lclpnet.ap2.impl.util.world.WalkableBlockPredicate;
 import work.lclpnet.kibu.hook.HookRegistrar;
+import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.lobby.game.map.GameMap;
 import work.lclpnet.lobby.game.map.MapUtils;
 
@@ -114,6 +115,7 @@ public class SpecialItems implements SpecialItemContext {
         return !hasSpecialItem(player, null);
     }
 
+    @Override
     public boolean hasSpecialItem(ServerPlayerEntity player, @Nullable SpecialItem item) {
         return get(player.getInventory().getStack(8)).orElse(null) == item;
     }
@@ -134,6 +136,11 @@ public class SpecialItems implements SpecialItemContext {
         return get(stack).orElse(null) == item;
     }
 
+    @Override
+    public TaskScheduler scheduler() {
+        return gameHandle.getGameScheduler();
+    }
+
     public Optional<SpecialItem> get(ItemStack stack) {
         NbtComponent component = stack.getOrDefault(DataComponentTypes.CUSTOM_DATA, NbtComponent.DEFAULT);
         DataResult<NbtCompound> res = component.get(NBT_CODEC);
@@ -149,7 +156,7 @@ public class SpecialItems implements SpecialItemContext {
     }
 
     public ItemStack createItemStack(SpecialItem item) {
-        ItemStack stack = item.createItemStack();
+        ItemStack stack = item.createItemStack(world.getRegistryManager());
 
         // persist special item id in the stack
         var nbt = new NbtCompound();

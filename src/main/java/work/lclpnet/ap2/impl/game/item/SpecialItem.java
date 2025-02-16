@@ -1,6 +1,7 @@
 package work.lclpnet.ap2.impl.game.item;
 
 import net.minecraft.item.ItemStack;
+import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
@@ -10,7 +11,7 @@ public interface SpecialItem {
 
     String id();
 
-    ItemStack createItemStack();
+    ItemStack createItemStack(DynamicRegistryManager registryManager);
 
     /**
      * Called when a player picked up an instance of the special item.

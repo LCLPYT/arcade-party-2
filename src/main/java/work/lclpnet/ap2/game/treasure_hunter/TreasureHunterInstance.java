@@ -28,7 +28,7 @@ import work.lclpnet.ap2.impl.game.data.ScoreDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.BlockBox;
-import work.lclpnet.ap2.impl.util.ItemStackHelper;
+import work.lclpnet.ap2.impl.util.ItemHelper;
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
@@ -145,7 +145,7 @@ public class TreasureHunterInstance extends DefaultGameInstance {
     }
 
     private void giveShovelsToPlayers() {
-        var efficiency = ItemStackHelper.getEnchantment(Enchantments.EFFICIENCY, getWorld().getRegistryManager());
+        var efficiency = ItemHelper.getEnchantment(Enchantments.EFFICIENCY, getWorld().getRegistryManager());
 
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
             ItemStack stack = new ItemStack(Items.IRON_SHOVEL);

@@ -7,11 +7,11 @@ import work.lclpnet.kibu.hook.HookFactory;
 
 public interface RangedWeaponUsedCallback {
 
-    Hook<RangedWeaponUsedCallback> HOOK = HookFactory.createArrayBacked(RangedWeaponUsedCallback.class, hooks -> (entity, stack) -> {
+    Hook<RangedWeaponUsedCallback> HOOK = HookFactory.createArrayBacked(RangedWeaponUsedCallback.class, hooks -> (entity, stack, remainingUseTicks) -> {
         for (RangedWeaponUsedCallback hook : hooks) {
-            hook.onShot(entity, stack);
+            hook.onShot(entity, stack, remainingUseTicks);
         }
     });
 
-    void onShot(LivingEntity entity, ItemStack stack);
+    void onShot(LivingEntity entity, ItemStack stack, int remainingUseTicks);
 }
