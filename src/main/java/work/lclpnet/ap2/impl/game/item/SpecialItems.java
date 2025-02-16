@@ -6,8 +6,6 @@ import lombok.Setter;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.DamageResistantComponent;
 import net.minecraft.component.type.NbtComponent;
-import net.minecraft.entity.ItemEntity;
-import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtOps;
@@ -29,7 +27,6 @@ import work.lclpnet.ap2.impl.ds.WeightedList;
 import work.lclpnet.ap2.impl.util.debug.DebugController;
 import work.lclpnet.ap2.impl.util.world.WalkableBlockPredicate;
 import work.lclpnet.kibu.hook.HookRegistrar;
-import work.lclpnet.kibu.hook.player.PlayerInventoryHooks;
 import work.lclpnet.lobby.game.map.GameMap;
 import work.lclpnet.lobby.game.map.MapUtils;
 
@@ -53,13 +50,13 @@ public class SpecialItems implements SpecialItemContext {
     private WeightedList<SpecialItem> weightedItems = WeightedList.empty();
     @Setter private int despawnTicks = 500;
 
-    public SpecialItems(MiniGameHandle gameHandle, GameMap map, ServerWorld world, SpecialItemPositions positions, SpecialItemRegistry registry) {
+    public SpecialItems(MiniGameHandle gameHandle, GameMap map, ServerWorld world, Random random, SpecialItemPositions positions, SpecialItemRegistry registry) {
         this.gameHandle = gameHandle;
         this.map = map;
         this.world = world;
         this.positions = positions;
         this.registry = registry;
-        this.scene = new SpecialItemScene(world);
+        this.scene = new SpecialItemScene(random, world);
     }
 
     public SpecialItemPositions positions() {
@@ -84,41 +81,33 @@ public class SpecialItems implements SpecialItemContext {
     public void setup() {
         positions.update();
 
+        scene.onPickup().register(this::pickup);
+
         HookRegistrar hooks = gameHandle.getHookRegistrar();
-        hooks.registerHook(PlayerInventoryHooks.PLAYER_PICKUP, this::onPickup);
 
         for (SpecialItem item : registry.entries()) {
             item.registerHooks(hooks, this);
         }
+
+        gameHandle.getGameScheduler().interval(this::tickPickup, 1);
     }
 
-    private boolean onPickup(PlayerEntity player, ItemEntity itemEntity) {
-        if (!(player instanceof ServerPlayerEntity serverPlayer) || !gameHandle.getParticipants().isParticipating(serverPlayer)) {
-            return false;
+    private void tickPickup() {
+        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
+            scene.tickPickUp(player);
         }
+    }
 
-        SpecialItem specialItem = get(itemEntity.getStack()).orElse(null);
+    private boolean pickup(ServerPlayerEntity player, SpecialItemObject object) {
+        // check if the player already has a special item
+        if (hasAnySpecialItem(player)) return false;
 
-        if (specialItem == null) {
-            return false;
-        }
+        ItemStack stack = object.itemDisplay().getStack().copy();
+        player.getInventory().setStack(8, stack);
 
-        tryPickupSpecialItem(serverPlayer, itemEntity, specialItem);
+        object.item().onPickedUp(player);
 
         return true;
-    }
-
-    /** The default pickup handler, if there is no override */
-    private void tryPickupSpecialItem(ServerPlayerEntity player, ItemEntity itemEntity, SpecialItem specialItem) {
-        // check if the player already has a special item
-        if (hasAnySpecialItem(player)) return;
-
-        ItemStack stack = itemEntity.getStack().copy();
-        player.getInventory().setStack(8, stack);
-        player.sendPickup(itemEntity, itemEntity.getStack().getCount());
-        itemEntity.discard();
-
-        specialItem.onPickedUp(player);
     }
 
     public boolean hasAnySpecialItem(ServerPlayerEntity player) {
@@ -188,7 +177,7 @@ public class SpecialItems implements SpecialItemContext {
 
         world.spawnParticles(ParticleTypes.END_ROD, pos.x, pos.y, pos.z, 15, 0.1, 0.1, 0.1, 0.1);
 
-        SpecialItemObject obj = scene.spawnItem(pos, createItemStack(item));
+        SpecialItemObject obj = scene.spawnItem(pos, item, createItemStack(item));
 
         if (despawnTicks > 0) {
             gameHandle.getGameScheduler().timeout(() -> scene.remove(obj), despawnTicks);
@@ -238,13 +227,13 @@ public class SpecialItems implements SpecialItemContext {
         }, 20);
     }
 
-    public static SpecialItems create(MiniGameHandle gameHandle, GameMap map, ServerWorld world, Consumer<SpecialItemRegistrar> config) {
+    public static SpecialItems create(MiniGameHandle gameHandle, GameMap map, ServerWorld world, Random random, Consumer<SpecialItemRegistrar> config) {
         var validSpawn = BlockPredicate.and(gameHandle.getWorldBorderManager().getWorldBorder()::contains, new WalkableBlockPredicate(world));
 
-        return create(gameHandle, map, world, validSpawn, config);
+        return create(gameHandle, map, world, random, validSpawn, config);
     }
 
-    public static SpecialItems create(MiniGameHandle gameHandle, GameMap map, ServerWorld world, BlockPredicate validSpawn, Consumer<SpecialItemRegistrar> config) {
+    public static SpecialItems create(MiniGameHandle gameHandle, GameMap map, ServerWorld world, Random random, BlockPredicate validSpawn, Consumer<SpecialItemRegistrar> config) {
         var debugController = new DebugController();
 
         if (ApConstants.DEBUG) {
@@ -256,7 +245,7 @@ public class SpecialItems implements SpecialItemContext {
 
         config.accept(registry);
 
-        var specialItems = new SpecialItems(gameHandle, map, world, positions, registry);
+        var specialItems = new SpecialItems(gameHandle, map, world, random, positions, registry);
 
         specialItems.init();
 

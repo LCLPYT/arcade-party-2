@@ -2,8 +2,13 @@ package work.lclpnet.ap2.impl.game.item;
 
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
+import net.minecraft.entity.Entity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvents;
+import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
 import org.joml.Vector3d;
 import work.lclpnet.ap2.impl.scene.MixedMountContext;
@@ -15,23 +20,39 @@ import work.lclpnet.ap2.impl.scene.simulation.StateVector;
 import work.lclpnet.ap2.impl.scene.simulation.solver.EulerSolver;
 import work.lclpnet.ap2.impl.scene.simulation.solver.NumericalSolver;
 import work.lclpnet.ap2.impl.util.world.entity.DynamicEntityManager;
+import work.lclpnet.kibu.hook.Hook;
+import work.lclpnet.kibu.hook.HookFactory;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import static java.lang.Math.pow;
 
 public class SpecialItemScene {
 
+    private final Random random;
     private final Scene scene;
     private final List<SpecialItemObject> objects = new ArrayList<>();
     private final Object2IntMap<SpecialItemObject> indices = new Object2IntOpenHashMap<>();
     private final Gradient gravity = new SimpleGravityGradient(0.04 * pow(20, 2));
     private final NumericalSolver solver = EulerSolver.INSTANCE;
+    private final Hook<SpecialItemPickup> onPickup = HookFactory.createArrayBacked(SpecialItemPickup.class, hooks -> (player, object) -> {
+        boolean pickup = false;
+
+        for (SpecialItemPickup hook : hooks) {
+            if (hook.shouldPickup(player, object)) {
+                pickup = true;
+            }
+        }
+
+        return pickup;
+    });
     private StateVector state = new StateVector(new Vector3d[0]);
 
-    public SpecialItemScene(ServerWorld world) {
+    public SpecialItemScene(Random random, ServerWorld world) {
+        this.random = random;
         var dynamicEntityManager = new DynamicEntityManager(world);
         this.scene = new Scene(new MixedMountContext(world, dynamicEntityManager));
         indices.defaultReturnValue(-1);
@@ -48,7 +69,7 @@ public class SpecialItemScene {
         for (int i = 0; i < objects.size(); i++) {
             SpecialItemObject obj = objects.get(i);
 
-            if (obj.isOnGround(ctx.world())) {
+            if (obj.isPickedUp() || obj.isOnGround(ctx.world())) {
                 // reset velocity
                 state.getVector3(2 * i + 1).set(0);
                 continue;
@@ -58,8 +79,8 @@ public class SpecialItemScene {
         }
     }
 
-    public SpecialItemObject spawnItem(Vec3d pos, ItemStack stack) {
-        var obj = new SpecialItemObject(stack);
+    public SpecialItemObject spawnItem(Vec3d pos, SpecialItem item, ItemStack stack) {
+        var obj = new SpecialItemObject(item, stack);
         obj.position.set(pos.x, pos.y, pos.z);
 
         scene.add(obj);
@@ -111,5 +132,36 @@ public class SpecialItemScene {
 
             state = new StateVector(vectors);
         }
+    }
+
+    public void tickPickUp(ServerPlayerEntity player) {
+        if (player.isSpectator() || player.getHealth() <= 0.f) return;
+
+        Box box;
+        Entity vehicle = player.getVehicle();
+
+        if (vehicle != null && !vehicle.isRemoved()) {
+            box = player.getBoundingBox().union(vehicle.getBoundingBox()).expand(1.0, 0.0, 1.0);
+        } else {
+            box = player.getBoundingBox().expand(1.0, 0.5, 1.0);
+        }
+
+        for (SpecialItemObject object : objects) {
+            if (object.isPickedUp() || !object.intersects(box) || !onPickup.invoker().shouldPickup(player, object)) continue;
+
+            object.startPickup(player, () -> remove(object));
+
+            float pitch = (random.nextFloat() - random.nextFloat()) * 1.4F + 2.0F;
+            player.getServerWorld().playSound(null, object.position.x, object.position.y, object.position.z, SoundEvents.ENTITY_ITEM_PICKUP, SoundCategory.PLAYERS, 0.2F, pitch);
+        }
+    }
+
+    public Hook<SpecialItemPickup> onPickup() {
+        return onPickup;
+    }
+
+    public interface SpecialItemPickup {
+
+        boolean shouldPickup(ServerPlayerEntity player, SpecialItemObject object);
     }
 }
