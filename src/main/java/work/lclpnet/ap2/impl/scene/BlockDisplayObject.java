@@ -1,6 +1,8 @@
 package work.lclpnet.ap2.impl.scene;
 
+import lombok.Getter;
 import net.minecraft.block.BlockState;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.decoration.DisplayEntity;
 import org.jetbrains.annotations.NotNull;
@@ -11,10 +13,10 @@ import work.lclpnet.kibu.access.entity.DisplayEntityAccess;
 
 public class BlockDisplayObject extends Object3d implements Mountable, Unmountable, Interpolatable {
 
-    private BlockState blockState;
-    private boolean glowing = false;
-    private int glowColorOverride = -1;
-    private int interpolationDuration = 0;
+    @Getter private BlockState blockState;
+    @Getter private boolean glowing = false;
+    @Getter private int glowColorOverride = -1;
+    @Getter private int interpolationDuration = 0;
     private final DisplayEntityTransformer transformer = new DisplayEntityTransformer();
     private @NotNull Resolvable<DisplayEntity.BlockDisplayEntity> entityRef = Resolvable.none();
 
@@ -26,11 +28,7 @@ public class BlockDisplayObject extends Object3d implements Mountable, Unmountab
     public void updateMatrixWorld(boolean withParent, boolean withChildren) {
         super.updateMatrixWorld(withParent, withChildren);
 
-        var display = entityRef.resolve();
-
-        if (display != null) {
-            transformer.applyTransformation(display, matrixWorld);
-        }
+        entityRef.optional().ifPresent(display -> transformer.applyTransformation(display, matrixWorld));
     }
 
     @Override
@@ -73,65 +71,26 @@ public class BlockDisplayObject extends Object3d implements Mountable, Unmountab
 
     public void setBlockState(BlockState state) {
         this.blockState = state;
-
-        var entity = entityRef.resolve();
-
-        if (entity != null) {
-            DisplayEntityAccess.setBlockState(entity, state);
-        }
-    }
-
-    public BlockState getBlockState() {
-        return blockState;
+        entityRef.optional().ifPresent(display -> display.setBlockState(state));
     }
 
     public void setGlowColorOverride(int glowColorOverride) {
         this.glowColorOverride = glowColorOverride;
-
-        var entity = entityRef.resolve();
-
-        if (entity != null) {
-            DisplayEntityAccess.setGlowColorOverride(entity, glowColorOverride);
-        }
-    }
-
-    public int getGlowColorOverride() {
-        return glowColorOverride;
+        entityRef.optional().ifPresent(display -> display.setGlowColorOverride(glowColorOverride));
     }
 
     public void setGlowing(boolean glowing) {
         this.glowing = glowing;
-
-        var entity = entityRef.resolve();
-
-        if (entity != null) {
-            entity.setGlowing(glowing);
-        }
-    }
-
-    public boolean isGlowing() {
-        return glowing;
+        entityRef.optional().ifPresent(display -> display.setGlowing(glowing));
     }
 
     public void setInterpolationDuration(int interpolationDuration) {
         this.interpolationDuration = interpolationDuration;
-
-        var display = entityRef.resolve();
-
-        if (display != null) {
-            DisplayEntityAccess.setInterpolationDuration(display, 1);
-        }
-    }
-
-    public int getInterpolationDuration() {
-        return interpolationDuration;
+        entityRef.optional().ifPresent(display -> display.setInterpolationDuration(interpolationDuration));
     }
 
     private void removeDisplay() {
-        var display = entityRef.resolve();
-
-        if (display != null) display.discard();
-
+        entityRef.optional().ifPresent(Entity::discard);
         entityRef = Resolvable.none();
     }
 }

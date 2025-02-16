@@ -6,7 +6,6 @@ import lombok.Setter;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.DamageResistantComponent;
 import net.minecraft.component.type.NbtComponent;
-import net.minecraft.entity.EntityType;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
@@ -50,6 +49,7 @@ public class SpecialItems implements SpecialItemContext {
     private final ServerWorld world;
     private final SpecialItemPositions positions;
     private final SpecialItemRegistry registry;
+    private final SpecialItemScene scene;
     private WeightedList<SpecialItem> weightedItems = WeightedList.empty();
     @Setter private int despawnTicks = 500;
 
@@ -59,6 +59,7 @@ public class SpecialItems implements SpecialItemContext {
         this.world = world;
         this.positions = positions;
         this.registry = registry;
+        this.scene = new SpecialItemScene(world);
     }
 
     public SpecialItemPositions positions() {
@@ -76,6 +77,8 @@ public class SpecialItems implements SpecialItemContext {
         BlockPos mapSpawn = BlockPos.ofFloored(MapUtils.getSpawnPosition(map));
 
         positions.init(areaJson, mapSpawn);
+
+        scene.init(gameHandle.getGameScheduler());
     }
 
     public void setup() {
@@ -183,22 +186,12 @@ public class SpecialItems implements SpecialItemContext {
 
         if (!world.getWorldBorder().contains(pos)) return;
 
-        ItemStack stack = createItemStack(item);
-
-        var itemEntity = new ItemEntity(EntityType.ITEM, world);
-        itemEntity.setPosition(pos);
-        itemEntity.setStack(stack);
-        itemEntity.setNeverDespawn();
-
         world.spawnParticles(ParticleTypes.END_ROD, pos.x, pos.y, pos.z, 15, 0.1, 0.1, 0.1, 0.1);
-        world.spawnEntity(itemEntity);
+
+        SpecialItemObject obj = scene.spawnItem(pos, createItemStack(item));
 
         if (despawnTicks > 0) {
-            gameHandle.getGameScheduler().timeout(() -> {
-                if (!itemEntity.isRemoved()) {
-                    itemEntity.discard();
-                }
-            }, despawnTicks);
+            gameHandle.getGameScheduler().timeout(() -> scene.remove(obj), despawnTicks);
         }
     }
 
