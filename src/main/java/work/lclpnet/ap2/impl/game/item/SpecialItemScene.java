@@ -55,7 +55,6 @@ public class SpecialItemScene {
             }
 
             obj.position.set(state.getVector3(2 * i));
-            obj.updateMatrixWorld();
         }
     }
 

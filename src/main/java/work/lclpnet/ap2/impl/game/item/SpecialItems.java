@@ -78,7 +78,7 @@ public class SpecialItems implements SpecialItemContext {
 
         positions.init(areaJson, mapSpawn);
 
-        scene.init(gameHandle.getGameScheduler());
+        scene.init(gameHandle.getScheduler());
     }
 
     public void setup() {
