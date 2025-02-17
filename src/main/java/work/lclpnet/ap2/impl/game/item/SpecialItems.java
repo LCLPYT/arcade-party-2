@@ -2,7 +2,6 @@ package work.lclpnet.ap2.impl.game.item;
 
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.MapCodec;
-import lombok.Setter;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.DamageResistantComponent;
 import net.minecraft.component.type.LoreComponent;
@@ -32,6 +31,7 @@ import work.lclpnet.ap2.impl.ds.WeightedList;
 import work.lclpnet.ap2.impl.util.debug.DebugController;
 import work.lclpnet.ap2.impl.util.world.WalkableBlockPredicate;
 import work.lclpnet.kibu.hook.HookRegistrar;
+import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.kibu.translate.text.RootText;
 import work.lclpnet.lobby.game.map.GameMap;
@@ -42,7 +42,7 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.function.Consumer;
 
-import static java.lang.Math.abs;
+import static java.lang.Math.*;
 import static java.lang.String.join;
 
 public class SpecialItems implements SpecialItemContext {
@@ -53,16 +53,21 @@ public class SpecialItems implements SpecialItemContext {
     private final MiniGameHandle gameHandle;
     private final GameMap map;
     private final ServerWorld world;
+    private final Random random;
     private final SpecialItemPositions positions;
     private final SpecialItemRegistry registry;
     private final SpecialItemScene scene;
     private WeightedList<SpecialItem> weightedItems = WeightedList.empty();
-    @Setter private int despawnTicks = 500;
+    private int despawnTicks = 500;
+    private int spawnMinTicks = Ticks.seconds(4);
+    private int spawnMaxTicks = Ticks.seconds(8);
+    private int maxItems = 16;
 
     public SpecialItems(MiniGameHandle gameHandle, GameMap map, ServerWorld world, Random random, SpecialItemPositions positions, SpecialItemRegistry registry) {
         this.gameHandle = gameHandle;
         this.map = map;
         this.world = world;
+        this.random = random;
         this.positions = positions;
         this.registry = registry;
         this.scene = new SpecialItemScene(random, world);
@@ -81,6 +86,11 @@ public class SpecialItems implements SpecialItemContext {
 
         JSONObject areaJson = cfg.getJSONObject("spawn-area");
         BlockPos mapSpawn = BlockPos.ofFloored(MapUtils.getSpawnPosition(map));
+
+        spawnMinTicks = max(1, cfg.optNumber("spawn-min-ticks", spawnMinTicks).intValue());
+        spawnMaxTicks = max(1, cfg.optNumber("spawn-max-ticks", spawnMaxTicks).intValue());
+        despawnTicks = cfg.optNumber("despawn-ticks", despawnTicks).intValue();
+        maxItems = cfg.optNumber("max-items", maxItems).intValue();
 
         positions.init(areaJson, mapSpawn);
 
@@ -212,7 +222,9 @@ public class SpecialItems implements SpecialItemContext {
         return stack;
     }
 
-    public void spawnRandomItem(Random random) {
+    public void spawnRandomItem() {
+        if (scene.itemCount() >= maxItems) return;
+
         BlockPos blockPos = positions.randomPos(random).orElse(null);
         SpecialItem item = weightedItems.getRandomElement(random);
 
@@ -231,7 +243,7 @@ public class SpecialItems implements SpecialItemContext {
         }
     }
 
-    public void spawnPeriodically(int minIntervalTicks, int maxIntervalTicks, Random random) {
+    public void spawnPeriodically() {
         gameHandle.getGameScheduler().interval(new Runnable() {
             int timer = 0;
             int next = randomInterval();
@@ -242,11 +254,13 @@ public class SpecialItems implements SpecialItemContext {
 
                 timer = 0;
                 next = randomInterval();
-                spawnRandomItem(random);
+                spawnRandomItem();
             }
 
             int randomInterval() {
-                return random.nextInt(maxIntervalTicks - minIntervalTicks + 1);
+                int minTicks = min(spawnMinTicks, spawnMaxTicks);
+                int maxTicks = max(spawnMinTicks, spawnMaxTicks);
+                return random.nextInt(maxTicks - minTicks + 1) + minTicks;
             }
         }, 1);
     }

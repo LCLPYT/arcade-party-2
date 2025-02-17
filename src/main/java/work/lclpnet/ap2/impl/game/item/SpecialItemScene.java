@@ -160,6 +160,10 @@ public class SpecialItemScene {
         return onPickup;
     }
 
+    public int itemCount() {
+        return objects.size();
+    }
+
     public interface SpecialItemPickup {
 
         boolean shouldPickup(ServerPlayerEntity player, SpecialItemObject object);
