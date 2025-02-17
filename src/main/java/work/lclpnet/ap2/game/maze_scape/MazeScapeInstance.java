@@ -136,7 +136,7 @@ public class MazeScapeInstance extends EliminationGameInstance implements MapBoo
             manager.spawnMobs();
 
             var reveal = new MonsterReveal(ApResources.getInstance(), manager.participants(), world, manager.monsters());
-            reveal.start(scheduler);
+            reveal.start(scheduler, gameHandle.getHookRegistrar());
 
             scheduler.timeout(reveal::stop, MOB_REVEAL_TICKS);
         }, MOB_SPAWN_DELAY_TICKS);

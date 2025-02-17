@@ -11,7 +11,9 @@ import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.ChunkSectionPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
+import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
+import work.lclpnet.kibu.translate.hook.LanguageChangedCallback;
 
 import java.util.*;
 
@@ -20,6 +22,7 @@ import java.util.*;
  */
 public class DynamicEntityManager {
 
+    /** Each entity has an associated tracker, managing the player tracking of that entity */
     private final Map<DynamicEntity, Tracker> entities = new HashMap<>();
     private final ServerWorld world;
     private final int serverViewDistance;
@@ -36,10 +39,12 @@ public class DynamicEntityManager {
         }
     }
 
-    public void init(TaskScheduler scheduler) {
+    public void init(TaskScheduler scheduler, HookRegistrar hooks) {
         Set<ServerPlayNetworkHandler> invalid = new HashSet<>();
 
         scheduler.interval(() -> tick(invalid), 1);
+
+        hooks.registerHook(LanguageChangedCallback.HOOK, (player, lang, reason) -> update(player));
     }
 
     public synchronized void add(DynamicEntity entity) {
@@ -108,6 +113,12 @@ public class DynamicEntityManager {
         }
     }
 
+    private synchronized void update(ServerPlayerEntity player) {
+        for (Tracker tracker : entities.values()) {
+            tracker.update(player);
+        }
+    }
+
     private int getViewDistance(ServerPlayerEntity player) {
         return MathHelper.clamp(player.getViewDistance(), 2, serverViewDistance);
     }
@@ -117,13 +128,18 @@ public class DynamicEntityManager {
         return player.getChunkFilter().isWithinDistance(chunkX, chunkZ) && !player.networkHandler.chunkDataSender.isInNextBatch(ChunkPos.toLong(chunkX, chunkZ));
     }
 
+    /** A tracker for a DynamicEntity instance. Handles per-player tracking */
     private class Tracker {
 
         private final DynamicEntity dynamic;
         private final List<ServerPlayerEntity> removal = new ArrayList<>();
+        /** Each player who tracks the dynamic entity is assigned a (possibly shared) EntityPair, containing the real entity and the associated vanilla tracker */
         private final Map<ServerPlayNetworkHandler, EntityPair> entriesByListener = new HashMap<>();
+        /** Each created real entity is viewed by at least one, or possibly multiple players. */
         private final Map<Entity, Set<ServerPlayNetworkHandler>> listenersByEntity = new HashMap<>();
+        /** Each entity has an associated tracker. This map is also represented by an EntityPair in the entriesByListener map */
         private final Map<Entity, EntityTrackerEntry> entriesByEntity = new HashMap<>();
+        /** All associated vanilla trackers */
         private final Set<EntityTrackerEntry> entries = new HashSet<>();
 
         private Tracker(DynamicEntity dynamic) {
@@ -219,6 +235,10 @@ public class DynamicEntityManager {
             listenersByEntity.remove(entity);
         }
 
+        public void update(ServerPlayerEntity player) {
+            // TODO implement update
+        }
+
         private EntityTrackerEntry getTrackerEntry(ServerPlayerEntity player, Entity entity) {
             // get or create listener set for the entity
             var listeners = listenersByEntity.computeIfAbsent(entity, e -> new HashSet<>());
@@ -242,5 +262,10 @@ public class DynamicEntityManager {
         }
     }
 
+    /**
+     * A pair of an entity and the associated vanilla tracker.
+     * @param entity The entity
+     * @param trackerEntry The vanilla tracker
+     */
     private record EntityPair(Entity entity, EntityTrackerEntry trackerEntry) {}
 }

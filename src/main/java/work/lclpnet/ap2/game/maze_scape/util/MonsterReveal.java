@@ -18,6 +18,7 @@ import work.lclpnet.ap2.impl.scene.Scene;
 import work.lclpnet.ap2.impl.util.model.Models;
 import work.lclpnet.ap2.impl.util.world.entity.DynamicEntity;
 import work.lclpnet.ap2.impl.util.world.entity.DynamicEntityManager;
+import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.scheduler.api.TaskHandle;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 
@@ -45,8 +46,8 @@ public class MonsterReveal {
         this.scene = new Scene(new DangerMountContext(world, dynamicEntities, new HashMap<>()));
     }
 
-    public void start(TaskScheduler scheduler) {
-        dynamicEntities.init(scheduler);
+    public void start(TaskScheduler scheduler, HookRegistrar hooks) {
+        dynamicEntities.init(scheduler, hooks);
 
         Model dangerModel = modelManager.getModel(Models.DANGER).orElseThrow();
 

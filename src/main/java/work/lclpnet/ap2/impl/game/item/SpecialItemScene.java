@@ -22,6 +22,7 @@ import work.lclpnet.ap2.impl.scene.simulation.solver.NumericalSolver;
 import work.lclpnet.ap2.impl.util.world.entity.DynamicEntityManager;
 import work.lclpnet.kibu.hook.Hook;
 import work.lclpnet.kibu.hook.HookFactory;
+import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.kibu.translate.text.TranslatedText;
@@ -64,10 +65,10 @@ public class SpecialItemScene {
         minY = world.getBottomY() - 20.d;
     }
 
-    public void init(TaskScheduler scheduler) {
+    public void init(TaskScheduler scheduler, HookRegistrar hooks) {
         scene.animate(1, scheduler);
         scene.onUpdateAnimation(this::updateSimulation);
-        dynamicEntityManager.init(scheduler);
+        dynamicEntityManager.init(scheduler, hooks);
     }
 
     private synchronized void updateSimulation(double dt, AnimationContext ctx) {
