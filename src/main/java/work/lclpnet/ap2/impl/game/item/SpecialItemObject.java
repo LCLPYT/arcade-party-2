@@ -7,7 +7,6 @@ import net.minecraft.item.ModelTransformationMode;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.Box;
-import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.RotationAxis;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.impl.scene.ItemDisplayObject;
@@ -18,6 +17,8 @@ import work.lclpnet.ap2.impl.scene.animation.AnimationContext;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.kibu.translate.text.TranslatedText;
 
+import static net.minecraft.util.math.MathHelper.sin;
+
 public class SpecialItemObject extends Object3d implements Animatable {
 
     public static final double DEFAULT_SIZE = 0.25;
@@ -25,6 +26,7 @@ public class SpecialItemObject extends Object3d implements Animatable {
     private final double size;
     private final float ageOffset = (float) (Math.random() * Math.PI * 2);
     private final ItemDisplayObject itemDisplay;
+    private final TranslatedTextDisplayObject textDisplay;
     private double age = 0;
     private Box boundingBox;
     @Getter private boolean pickedUp = false;
@@ -39,14 +41,14 @@ public class SpecialItemObject extends Object3d implements Animatable {
         this.size = size;
 
         itemDisplay = new ItemDisplayObject(stack);
-        itemDisplay.position.set(0, 0.25, 0);
         itemDisplay.scale.set(size / DEFAULT_SIZE);
         itemDisplay.setTransformationMode(ModelTransformationMode.GROUND);
 
         addChild(itemDisplay);
 
-        var textDisplay = new TranslatedTextDisplayObject(translations);
+        textDisplay = new TranslatedTextDisplayObject(translations);
         textDisplay.position.set(0, DEFAULT_SIZE * 2, 0);
+        textDisplay.scale.set(0.6);
         textDisplay.controller().setText(name);
         textDisplay.controller().setBillboardMode(DisplayEntity.BillboardMode.CENTER);
 
@@ -96,8 +98,10 @@ public class SpecialItemObject extends Object3d implements Animatable {
 
         itemDisplay.rotation.set(RotationAxis.POSITIVE_Y.rotation((float) age + ageOffset));
 
-        float offsetY = MathHelper.sin((float) age * 2.f + this.ageOffset) * 0.1F + 0.1F;
-        itemDisplay.position.set(0.0F, offsetY + 0.25F * itemDisplay.scale.y, 0.0F);
+        double offsetY = (sin((float) age * 2.f + this.ageOffset) * 0.1F + 0.1F) + 0.25F * itemDisplay.scale.y;
+
+        itemDisplay.position.set(0.d, offsetY, 0.d);
+        textDisplay.position.set(0.d, offsetY + 2 * DEFAULT_SIZE, 0.d);
     }
 
     public boolean intersects(Box box) {
