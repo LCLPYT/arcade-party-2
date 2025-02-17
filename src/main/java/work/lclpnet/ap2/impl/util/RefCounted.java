@@ -57,4 +57,9 @@ public class RefCounted<K, V> {
     public void forEach(BiConsumer<K, V> action) {
         map.forEach(action);
     }
+
+    public synchronized void clear() {
+        map.clear();
+        refCount.clear();
+    }
 }

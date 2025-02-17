@@ -34,6 +34,7 @@ import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.kibu.translate.text.RootText;
+import work.lclpnet.kibu.translate.text.TranslatedText;
 import work.lclpnet.lobby.game.map.GameMap;
 import work.lclpnet.lobby.game.map.MapUtils;
 
@@ -124,7 +125,7 @@ public class SpecialItems implements SpecialItemContext {
         ItemStack stack = object.itemDisplay().getStack().copy();
         SpecialItem item = object.item();
 
-        stack.set(DataComponentTypes.CUSTOM_NAME, itemName(player, item));
+        stack.set(DataComponentTypes.CUSTOM_NAME, itemName(item).translateFor(player));
 
         List<Text> lore = itemDescription(player, item);
 
@@ -139,11 +140,11 @@ public class SpecialItems implements SpecialItemContext {
         return true;
     }
 
-    private RootText itemName(ServerPlayerEntity player, SpecialItem item) {
+    private TranslatedText itemName(SpecialItem item) {
         Identifier gameId = gameHandle.getGameInfo().getId();
         String key = join(".", "item", gameId.getNamespace(), gameId.getPath(), item.id());
 
-        return gameHandle.getTranslations().translateText(player, key)
+        return gameHandle.getTranslations().translateText(key)
                 .styled(style -> style.withItalic(false).withFormatting(Rarity.UNCOMMON.getFormatting()));
     }
 
@@ -236,7 +237,7 @@ public class SpecialItems implements SpecialItemContext {
 
         world.spawnParticles(ParticleTypes.END_ROD, pos.x, pos.y, pos.z, 15, 0.1, 0.1, 0.1, 0.1);
 
-        SpecialItemObject obj = scene.spawnItem(pos, item, createItemStack(item));
+        SpecialItemObject obj = scene.spawnItem(pos, item, createItemStack(item), gameHandle.getTranslations(), itemName(item));
 
         if (despawnTicks > 0) {
             gameHandle.getGameScheduler().timeout(() -> scene.remove(obj), despawnTicks);

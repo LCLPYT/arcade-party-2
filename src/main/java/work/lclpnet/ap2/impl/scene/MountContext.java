@@ -9,5 +9,7 @@ public interface MountContext {
 
     ServerWorld world();
 
-    <T extends Entity> Resolvable<@Nullable T> spawn(T entity, Object3d origin);
+    <T extends Entity> Resolvable<@Nullable T> spawn(@Nullable T entity, Object3d origin);
+
+    <T extends Entity> void remove(@Nullable T entity, Object3d origin);
 }

@@ -21,10 +21,7 @@ import work.lclpnet.ap2.impl.util.world.entity.DynamicEntityManager;
 import work.lclpnet.kibu.scheduler.api.TaskHandle;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 public class MonsterReveal {
 
@@ -45,7 +42,7 @@ public class MonsterReveal {
         this.monsters = monsters;
 
         this.dynamicEntities = new DynamicEntityManager(world);
-        this.scene = new Scene(new DangerMountContext(world, dynamicEntities));
+        this.scene = new Scene(new DangerMountContext(world, dynamicEntities, new HashMap<>()));
     }
 
     public void start(TaskScheduler scheduler) {
@@ -106,26 +103,52 @@ public class MonsterReveal {
         }
     }
 
-    private record DangerMountContext(ServerWorld world, DynamicEntityManager manager) implements MountContext {
+    private record DangerMountContext(ServerWorld world, DynamicEntityManager manager, Map<DangerMark, DangerMarkEntity> marks) implements MountContext {
 
         @Override
-        public <T extends Entity> Resolvable<T> spawn(T entity, Object3d origin) {
-            DangerMark dangerMark = null;
-
-            for (Object3d obj : origin.traverseParents()) {
-                if (obj instanceof DangerMark mark) {
-                    dangerMark = mark;
-                    break;
-                }
-            }
-
-            if (dangerMark == null) {
+        public <T extends Entity> Resolvable<T> spawn(@Nullable T entity, Object3d origin) {
+            if (entity == null) {
                 return Resolvable.none();
             }
 
-            manager.add(new DangerMarkEntity(entity, dangerMark.playerUuid));
+            DangerMark mark = findDangerMark(origin);
+
+            if (mark == null) {
+                return Resolvable.none();
+            }
+
+            var markEntity = marks.put(mark, new DangerMarkEntity(entity, mark.playerUuid));
+
+            manager.add(markEntity);
 
             return Resolvable.constant(entity);
+        }
+
+        private @Nullable DangerMark findDangerMark(Object3d origin) {
+            for (Object3d obj : origin.traverseParents()) {
+                if (obj instanceof DangerMark mark) {
+                    return mark;
+                }
+            }
+
+            return null;
+        }
+
+        @Override
+        public <T extends Entity> void remove(@Nullable T entity, Object3d origin) {
+            if (entity != null) {
+                entity.discard();
+            }
+
+            DangerMark mark = findDangerMark(origin);
+
+            if (mark == null) return;
+
+            var markEntity = marks.remove(mark);
+
+            if (markEntity == null) return;
+
+            manager.remove(markEntity);
         }
     }
 

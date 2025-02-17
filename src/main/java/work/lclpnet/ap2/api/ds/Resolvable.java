@@ -20,6 +20,6 @@ public interface Resolvable<T> {
     }
 
     static <T> Resolvable<T> constant(T t) {
-        return () -> t;
+        return t == null ? none() : () -> t;
     }
 }

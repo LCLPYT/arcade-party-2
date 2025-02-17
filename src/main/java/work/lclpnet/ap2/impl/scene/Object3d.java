@@ -197,7 +197,9 @@ public class Object3d {
     }
 
     public void detach() {
-        if (parent != null) {
+        if (parent == null) {
+            onDetached();
+        } else {
             parent.removeChild(this);
         }
     }

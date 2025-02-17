@@ -9,11 +9,18 @@ import work.lclpnet.ap2.impl.util.EntityRef;
 public record ServerWorldMountContext(ServerWorld world) implements MountContext {
 
     @Override
-    public <T extends Entity> Resolvable<@Nullable T> spawn(T entity, Object3d origin) {
-        if (!world.spawnEntity(entity)) {
+    public <T extends Entity> Resolvable<@Nullable T> spawn(@Nullable T entity, Object3d origin) {
+        if (entity == null || !world.spawnEntity(entity)) {
             return Resolvable.none();
         }
 
         return new EntityRef<>(entity);
+    }
+
+    @Override
+    public <T extends Entity> void remove(@Nullable T entity, Object3d origin) {
+        if (entity != null) {
+            entity.discard();
+        }
     }
 }

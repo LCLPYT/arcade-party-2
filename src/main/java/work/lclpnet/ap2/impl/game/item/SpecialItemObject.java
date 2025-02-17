@@ -1,6 +1,7 @@
 package work.lclpnet.ap2.impl.game.item;
 
 import lombok.Getter;
+import net.minecraft.entity.decoration.DisplayEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.ModelTransformationMode;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -11,8 +12,11 @@ import net.minecraft.util.math.RotationAxis;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.impl.scene.ItemDisplayObject;
 import work.lclpnet.ap2.impl.scene.Object3d;
+import work.lclpnet.ap2.impl.scene.TranslatedTextDisplayObject;
 import work.lclpnet.ap2.impl.scene.animation.Animatable;
 import work.lclpnet.ap2.impl.scene.animation.AnimationContext;
+import work.lclpnet.kibu.translate.Translations;
+import work.lclpnet.kibu.translate.text.TranslatedText;
 
 public class SpecialItemObject extends Object3d implements Animatable {
 
@@ -26,11 +30,11 @@ public class SpecialItemObject extends Object3d implements Animatable {
     @Getter private boolean pickedUp = false;
     private @Nullable PickupAnimation pickupAnimation = null;
 
-    public SpecialItemObject(SpecialItem item, ItemStack stack) {
-        this(item, stack, 0.25);
+    public SpecialItemObject(SpecialItem item, ItemStack stack, Translations translations, TranslatedText name) {
+        this(item, stack, translations, name, 0.25);
     }
 
-    public SpecialItemObject(SpecialItem item, ItemStack stack, double size) {
+    public SpecialItemObject(SpecialItem item, ItemStack stack, Translations translations, TranslatedText name, double size) {
         this.item = item;
         this.size = size;
 
@@ -40,6 +44,13 @@ public class SpecialItemObject extends Object3d implements Animatable {
         itemDisplay.setTransformationMode(ModelTransformationMode.GROUND);
 
         addChild(itemDisplay);
+
+        var textDisplay = new TranslatedTextDisplayObject(translations);
+        textDisplay.position.set(0, DEFAULT_SIZE * 2, 0);
+        textDisplay.controller().setText(name);
+        textDisplay.controller().setBillboardMode(DisplayEntity.BillboardMode.CENTER);
+
+        addChild(textDisplay);
 
         updateBoundingBox();
     }

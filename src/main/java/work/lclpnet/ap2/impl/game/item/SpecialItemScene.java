@@ -23,6 +23,8 @@ import work.lclpnet.ap2.impl.util.world.entity.DynamicEntityManager;
 import work.lclpnet.kibu.hook.Hook;
 import work.lclpnet.kibu.hook.HookFactory;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
+import work.lclpnet.kibu.translate.Translations;
+import work.lclpnet.kibu.translate.text.TranslatedText;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -49,11 +51,12 @@ public class SpecialItemScene {
 
         return pickup;
     });
+    private final DynamicEntityManager dynamicEntityManager;
     private StateVector state = new StateVector(new Vector3d[0]);
 
     public SpecialItemScene(Random random, ServerWorld world) {
         this.random = random;
-        var dynamicEntityManager = new DynamicEntityManager(world);
+        dynamicEntityManager = new DynamicEntityManager(world);
         this.scene = new Scene(new MixedMountContext(world, dynamicEntityManager));
         indices.defaultReturnValue(-1);
     }
@@ -61,6 +64,7 @@ public class SpecialItemScene {
     public void init(TaskScheduler scheduler) {
         scene.animate(1, scheduler);
         scene.onUpdateAnimation(this::updateSimulation);
+        dynamicEntityManager.init(scheduler);
     }
 
     private synchronized void updateSimulation(double dt, AnimationContext ctx) {
@@ -79,8 +83,8 @@ public class SpecialItemScene {
         }
     }
 
-    public SpecialItemObject spawnItem(Vec3d pos, SpecialItem item, ItemStack stack) {
-        var obj = new SpecialItemObject(item, stack);
+    public SpecialItemObject spawnItem(Vec3d pos, SpecialItem item, ItemStack stack, Translations translations, TranslatedText name) {
+        var obj = new SpecialItemObject(item, stack, translations, name);
         obj.position.set(pos.x, pos.y, pos.z);
 
         scene.add(obj);
