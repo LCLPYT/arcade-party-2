@@ -136,9 +136,4 @@ public class ItemHelper {
         var enchantments = registryManager.getOrThrow(RegistryKeys.ENCHANTMENT);
         return enchantments.getOrThrow(enchantment);
     }
-
-    public static RegistryEntry<Potion> getPotion(RegistryKey<Potion> potion, DynamicRegistryManager registryManager) {
-        var potions = registryManager.getOrThrow(RegistryKeys.POTION);
-        return potions.getOrThrow(potion);
-    }
 }

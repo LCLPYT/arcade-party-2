@@ -5,6 +5,7 @@ import com.mojang.serialization.MapCodec;
 import lombok.Setter;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.DamageResistantComponent;
+import net.minecraft.component.type.LoreComponent;
 import net.minecraft.component.type.NbtComponent;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
@@ -13,6 +14,9 @@ import net.minecraft.particle.ParticleTypes;
 import net.minecraft.registry.tag.DamageTypeTags;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.Rarity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
@@ -23,19 +27,23 @@ import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.util.world.BlockPredicate;
 import work.lclpnet.ap2.base.ApConstants;
 import work.lclpnet.ap2.base.resource.ApResources;
+import work.lclpnet.ap2.base.util.IconMaker;
 import work.lclpnet.ap2.impl.ds.WeightedList;
 import work.lclpnet.ap2.impl.util.debug.DebugController;
 import work.lclpnet.ap2.impl.util.world.WalkableBlockPredicate;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
+import work.lclpnet.kibu.translate.text.RootText;
 import work.lclpnet.lobby.game.map.GameMap;
 import work.lclpnet.lobby.game.map.MapUtils;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 import java.util.function.Consumer;
 
 import static java.lang.Math.abs;
+import static java.lang.String.join;
 
 public class SpecialItems implements SpecialItemContext {
 
@@ -104,11 +112,43 @@ public class SpecialItems implements SpecialItemContext {
         if (hasAnySpecialItem(player)) return false;
 
         ItemStack stack = object.itemDisplay().getStack().copy();
+        SpecialItem item = object.item();
+
+        stack.set(DataComponentTypes.CUSTOM_NAME, itemName(player, item));
+
+        List<Text> lore = itemDescription(player, item);
+
+        if (!lore.isEmpty()) {
+            stack.set(DataComponentTypes.LORE, new LoreComponent(lore));
+        }
+
         player.getInventory().setStack(8, stack);
 
-        object.item().onPickedUp(player);
+        item.onPickedUp(player);
 
         return true;
+    }
+
+    private RootText itemName(ServerPlayerEntity player, SpecialItem item) {
+        Identifier gameId = gameHandle.getGameInfo().getId();
+        String key = join(".", "item", gameId.getNamespace(), gameId.getPath(), item.id());
+
+        return gameHandle.getTranslations().translateText(player, key)
+                .styled(style -> style.withItalic(false).withFormatting(Rarity.UNCOMMON.getFormatting()));
+    }
+
+    private List<Text> itemDescription(ServerPlayerEntity player, SpecialItem item) {
+        Identifier gameId = gameHandle.getGameInfo().getId();
+        String key = join(".", "item", gameId.getNamespace(), gameId.getPath(), item.id(), "desc");
+
+        if (!gameHandle.getTranslations().getTranslator().hasTranslation("en_us", key)) {
+            return List.of();
+        }
+
+        RootText desc = gameHandle.getTranslations().translateText(player, key)
+                .styled(style -> style.withItalic(false).withFormatting(Formatting.GREEN));
+
+        return IconMaker.wrapText(desc, 32);
     }
 
     public boolean hasAnySpecialItem(ServerPlayerEntity player) {
