@@ -43,6 +43,7 @@ public class DynamicEntityManager {
     }
 
     public synchronized void add(DynamicEntity entity) {
+        Objects.requireNonNull(entity, "Dynamic entity cannot be null");
         entities.computeIfAbsent(entity, Tracker::new);
     }
 

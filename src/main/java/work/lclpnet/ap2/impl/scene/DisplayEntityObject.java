@@ -19,6 +19,7 @@ public abstract class DisplayEntityObject<T extends DisplayEntity> extends Objec
     @Getter private boolean glowing = false;
     @Getter private int glowColorOverride = -1;
     @Getter private int interpolationDuration = 0;
+    @Getter private int teleportDuration = 0;
     @Getter private DisplayEntity.BillboardMode billboardMode = DisplayEntity.BillboardMode.FIXED;
 
     protected abstract @Nullable T createDisplayEntity(MountContext ctx);
@@ -48,6 +49,7 @@ public abstract class DisplayEntityObject<T extends DisplayEntity> extends Objec
     protected void configure(T display) {
         display.setGlowColorOverride(glowColorOverride);
         display.setInterpolationDuration(interpolationDuration);
+        display.setTeleportDuration(teleportDuration);
         display.setBillboardMode(billboardMode);
 
         display.setGlowing(glowing);
@@ -63,6 +65,7 @@ public abstract class DisplayEntityObject<T extends DisplayEntity> extends Objec
     @Override
     public void updateTickRate(int tickRate) {
         setInterpolationDuration(tickRate);
+        setTeleportDuration(tickRate);
     }
 
     @Override
@@ -83,6 +86,11 @@ public abstract class DisplayEntityObject<T extends DisplayEntity> extends Objec
     public void setInterpolationDuration(int interpolationDuration) {
         this.interpolationDuration = interpolationDuration;
         entityRef.optional().ifPresent(display -> display.setInterpolationDuration(interpolationDuration));
+    }
+
+    public void setTeleportDuration(int teleportDuration) {
+        this.teleportDuration = teleportDuration;
+        entityRef.optional().ifPresent(display -> display.setTeleportDuration(teleportDuration));
     }
 
     public void setBillboardMode(DisplayEntity.BillboardMode billboardMode) {

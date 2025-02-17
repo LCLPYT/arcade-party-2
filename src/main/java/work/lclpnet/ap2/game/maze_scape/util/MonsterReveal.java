@@ -117,8 +117,9 @@ public class MonsterReveal {
                 return Resolvable.none();
             }
 
-            var markEntity = marks.put(mark, new DangerMarkEntity(entity, mark.playerUuid));
+            var markEntity = new DangerMarkEntity(entity, mark.playerUuid);
 
+            marks.put(mark, markEntity);
             manager.add(markEntity);
 
             return Resolvable.constant(entity);
