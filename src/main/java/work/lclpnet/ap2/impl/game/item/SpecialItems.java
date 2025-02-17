@@ -6,11 +6,13 @@ import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.DamageResistantComponent;
 import net.minecraft.component.type.LoreComponent;
 import net.minecraft.component.type.NbtComponent;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.registry.tag.DamageTypeTags;
+import net.minecraft.screen.slot.Slot;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
@@ -31,6 +33,7 @@ import work.lclpnet.ap2.impl.ds.WeightedList;
 import work.lclpnet.ap2.impl.util.debug.DebugController;
 import work.lclpnet.ap2.impl.util.world.WalkableBlockPredicate;
 import work.lclpnet.kibu.hook.HookRegistrar;
+import work.lclpnet.kibu.hook.player.PlayerInventoryHooks;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.kibu.translate.text.RootText;
@@ -45,6 +48,8 @@ import java.util.function.Consumer;
 
 import static java.lang.Math.*;
 import static java.lang.String.join;
+import static net.minecraft.util.math.MathHelper.cos;
+import static net.minecraft.util.math.MathHelper.sin;
 
 public class SpecialItems implements SpecialItemContext {
 
@@ -105,11 +110,56 @@ public class SpecialItems implements SpecialItemContext {
 
         HookRegistrar hooks = gameHandle.getHookRegistrar();
 
+        hooks.registerHook(PlayerInventoryHooks.DROP_ITEM, this::onDropItem);
+
         for (SpecialItem item : registry.entries()) {
             item.registerHooks(hooks, this);
         }
 
         gameHandle.getGameScheduler().interval(this::tickPickup, 1);
+    }
+
+    private boolean onDropItem(PlayerEntity _player, int slotIdx, boolean inInventory) {
+        if (!(_player instanceof ServerPlayerEntity player)) return false;
+
+        ItemStack stack;
+
+        if (inInventory) {
+            Slot slot = player.currentScreenHandler.getSlot(slotIdx);
+            stack = slot != null ? slot.getStack() : ItemStack.EMPTY;
+        } else {
+            stack = player.getInventory().getStack(slotIdx);
+        }
+
+        SpecialItem item = get(stack).orElse(null);
+
+        if (item == null) return false;
+
+        player.getInventory().setStack(8, ItemStack.EMPTY);
+        dropSpecialItem(player, item);
+
+        return true;
+    }
+
+    private void dropSpecialItem(ServerPlayerEntity player, SpecialItem item) {
+        Vec3d pos = player.getEyePos().subtract(0, 0.3, 0);
+        SpecialItemObject obj = scene.spawnItem(pos, item, createItemStack(item), gameHandle.getTranslations(), itemName(item));
+        obj.setPickupDelay(40);
+
+        scheduleDespawn(obj);
+
+        float pitchSin = sin(player.getPitch() * (float) (Math.PI / 180.0));
+        float pitchCos = cos(player.getPitch() * (float) (Math.PI / 180.0));
+        float yawSin = sin(player.getYaw() * (float) (Math.PI / 180.0));
+        float yawCos = cos(player.getYaw() * (float) (Math.PI / 180.0));
+        float randomHorizontalAngle = random.nextFloat() * (float) (Math.PI * 2);
+        float divergence = 0.02F * random.nextFloat();
+
+        scene.velocity(obj).set(
+                -yawSin * pitchCos * 0.3F + cos(randomHorizontalAngle) * divergence,
+                -pitchSin * 0.3F + 0.1F + (random.nextFloat() - random.nextFloat()) * 0.1F,
+                yawCos * pitchCos * 0.3F + sin(randomHorizontalAngle) * divergence
+        ).mul(20);
     }
 
     private void tickPickup() {
@@ -239,9 +289,13 @@ public class SpecialItems implements SpecialItemContext {
 
         SpecialItemObject obj = scene.spawnItem(pos, item, createItemStack(item), gameHandle.getTranslations(), itemName(item));
 
-        if (despawnTicks > 0) {
-            gameHandle.getGameScheduler().timeout(() -> scene.remove(obj), despawnTicks);
-        }
+        scheduleDespawn(obj);
+    }
+
+    private void scheduleDespawn(SpecialItemObject obj) {
+        if (despawnTicks <= 0) return;
+
+        gameHandle.getGameScheduler().timeout(() -> scene.remove(obj), despawnTicks);
     }
 
     public void spawnPeriodically() {

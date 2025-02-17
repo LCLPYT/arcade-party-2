@@ -17,6 +17,7 @@ import work.lclpnet.ap2.impl.scene.animation.AnimationContext;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.kibu.translate.text.TranslatedText;
 
+import static java.lang.Math.max;
 import static net.minecraft.util.math.MathHelper.sin;
 
 public class SpecialItemObject extends Object3d implements Animatable {
@@ -31,6 +32,7 @@ public class SpecialItemObject extends Object3d implements Animatable {
     private Box boundingBox;
     @Getter private boolean pickedUp = false;
     private @Nullable PickupAnimation pickupAnimation = null;
+    @Getter private double pickupDelay = 0;
 
     public SpecialItemObject(SpecialItem item, ItemStack stack, Translations translations, TranslatedText name) {
         this(item, stack, translations, name, 0.25);
@@ -91,6 +93,10 @@ public class SpecialItemObject extends Object3d implements Animatable {
     public void updateAnimation(double dt, AnimationContext ctx) {
         age += dt;
 
+        if (pickupDelay > 0) {
+            pickupDelay = max(0.d, pickupDelay - dt);
+        }
+
         if (pickupAnimation != null) {
             pickupAnimation.updateAnimation(dt, ctx);
             return;
@@ -114,5 +120,9 @@ public class SpecialItemObject extends Object3d implements Animatable {
         pickedUp = true;
 
         pickupAnimation = new PickupAnimation(this, target -> target.set(player.getX(), player.getY(), player.getZ()), whenDone);
+    }
+
+    public void setPickupDelay(int delayTicks) {
+        pickupDelay = delayTicks / 20.d;
     }
 }

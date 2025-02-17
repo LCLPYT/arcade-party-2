@@ -71,6 +71,14 @@ public class SpecialItemScene {
         dynamicEntityManager.init(scheduler, hooks);
     }
 
+    public Vector3d velocity(SpecialItemObject obj) {
+        synchronized (this) {
+            int i = indices.getInt(obj);
+
+            return i == -1 ? new Vector3d(0) : state.getVector3(2 * i + 1);
+        }
+    }
+
     private synchronized void updateSimulation(double dt, AnimationContext ctx) {
         solver.solve(state, dt, gravity);
 
@@ -163,7 +171,10 @@ public class SpecialItemScene {
         }
 
         for (SpecialItemObject object : objects) {
-            if (object.isPickedUp() || !object.intersects(box) || !onPickup.invoker().shouldPickup(player, object)) continue;
+            if (object.isPickedUp()
+                    || object.getPickupDelay() > 0
+                    || !object.intersects(box)
+                    || !onPickup.invoker().shouldPickup(player, object)) continue;
 
             object.startPickup(player, () -> remove(object));
 
