@@ -129,20 +129,20 @@ class Object3dTest {
     }
 
     @Test
-    public void testWorldPositionInitial() {
-        assertVectorsEqual(new Vector3d(), new Object3d().worldPosition());
+    public void testWorldTranslationInitial() {
+        assertVectorsEqual(new Vector3d(), new Object3d().worldTranslation());
     }
 
     @Test
-    public void testWorldPositionRoot() {
+    public void testWorldTranslationRoot() {
         Object3d obj = new Object3d();
         obj.position.set(10, 20, 13);
 
-        assertVectorsEqual(new Vector3d(10, 20, 13), obj.worldPosition());
+        assertVectorsEqual(new Vector3d(10, 20, 13), obj.worldTranslation());
     }
 
     @Test
-    public void testWorldPositionChild() {
+    public void testWorldTranslationChild() {
         Object3d obj = new Object3d();
         obj.position.set(10, 20, 13);
         obj.scale.set(0.5);
@@ -152,11 +152,11 @@ class Object3dTest {
 
         obj.addChild(child);
 
-        assertVectorsEqual(new Vector3d(12, 22, 15), child.worldPosition());
+        assertVectorsEqual(new Vector3d(12, 22, 15), child.worldTranslation());
     }
 
     @Test
-    public void testWorldPositionRelative() {
+    public void testWorldTranslationRelative() {
         Object3d obj = new Object3d();
         obj.position.set(10, 20, 13);
         obj.scale.set(0.5);

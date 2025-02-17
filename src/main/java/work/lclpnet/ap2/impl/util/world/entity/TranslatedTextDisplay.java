@@ -18,6 +18,7 @@ import work.lclpnet.kibu.translate.text.TranslatedText;
 
 import java.util.HashMap;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 public class TranslatedTextDisplay implements DynamicEntity {
 
@@ -36,7 +37,7 @@ public class TranslatedTextDisplay implements DynamicEntity {
 
     @Override
     public Entity getEntity(ServerPlayerEntity player) {
-        return controller.ref(translations.getLanguage(player));
+        return controller.ref(translations.getLanguage(player), display -> {});
     }
 
     @Override
@@ -65,6 +66,8 @@ public class TranslatedTextDisplay implements DynamicEntity {
         AffineTransformation getTransformation();
         void setInterpolationDuration(int interpolationDuration);
         int getInterpolationDuration();
+        void setTeleportDuration(int teleportDuration);
+        int getTeleportDuration();
         void setStartInterpolation(int startInterpolation);
         int getStartInterpolation();
         void setBillboardMode(DisplayEntity.BillboardMode billboardMode);
@@ -97,6 +100,7 @@ public class TranslatedTextDisplay implements DynamicEntity {
         @Getter private byte displayFlags = (byte) 0;
         @Getter private AffineTransformation transformation = AffineTransformation.identity();
         @Getter private int interpolationDuration = 0;
+        @Getter private int teleportDuration = 0;
         @Getter private int startInterpolation = 0;
         @Getter private DisplayEntity.BillboardMode billboardMode = DisplayEntity.BillboardMode.FIXED;
         private @Nullable Brightness brightness = null;
@@ -111,7 +115,7 @@ public class TranslatedTextDisplay implements DynamicEntity {
             this.world = world;
         }
 
-        public DisplayEntity.TextDisplayEntity ref(String language) {
+        public DisplayEntity.TextDisplayEntity ref(String language, Consumer<DisplayEntity.TextDisplayEntity> init) {
             return entities.reference(language, lang -> {
                 var textDisplay = new DisplayEntity.TextDisplayEntity(EntityType.TEXT_DISPLAY, world);
                 textDisplay.setPosition(position);
@@ -123,6 +127,7 @@ public class TranslatedTextDisplay implements DynamicEntity {
                 textDisplay.setDisplayFlags(displayFlags);
                 textDisplay.setTransformation(transformation);
                 textDisplay.setInterpolationDuration(interpolationDuration);
+                textDisplay.setTeleportDuration(teleportDuration);
                 textDisplay.setStartInterpolation(startInterpolation);
                 textDisplay.setBillboardMode(billboardMode);
                 textDisplay.setBrightness(brightness);
@@ -132,6 +137,8 @@ public class TranslatedTextDisplay implements DynamicEntity {
                 textDisplay.setDisplayWidth(displayWidth);
                 textDisplay.setDisplayHeight(displayHeight);
                 textDisplay.setGlowColorOverride(glowColorOverride);
+
+                init.accept(textDisplay);
 
                 return textDisplay;
             });
@@ -195,6 +202,13 @@ public class TranslatedTextDisplay implements DynamicEntity {
             this.interpolationDuration = interpolationDuration;
 
             entities.forEach(display -> display.setInterpolationDuration(interpolationDuration));
+        }
+
+        @Override
+        public void setTeleportDuration(int teleportDuration) {
+            this.teleportDuration = teleportDuration;
+
+            entities.forEach(display -> display.setTeleportDuration(teleportDuration));
         }
 
         @Override

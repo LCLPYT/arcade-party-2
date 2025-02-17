@@ -5,6 +5,7 @@ import net.minecraft.entity.Entity;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Vector3d;
 import work.lclpnet.ap2.impl.scene.animation.Interpolatable;
 import work.lclpnet.ap2.impl.util.DisplayEntityTransformer;
 import work.lclpnet.ap2.impl.util.world.entity.DynamicEntity;
@@ -19,7 +20,8 @@ public class TranslatedTextDisplayObject extends Object3d implements Mountable, 
     private final TranslatedTextDisplay.ControllerImpl controller;
     private final DisplayEntityTransformer transformer = new DisplayEntityTransformer();
     private final Set<MountContext> contexts = new ObjectArraySet<>(1);
-    private Vec3d pos = Vec3d.ZERO;
+    private final Vector3d worldPos = new Vector3d(0);
+    private Vec3d mcWorldPos = Vec3d.ZERO;
 
     public TranslatedTextDisplayObject(Translations translations) {
         this.translations = translations;
@@ -34,19 +36,33 @@ public class TranslatedTextDisplayObject extends Object3d implements Mountable, 
     public void updateMatrixWorld(boolean withParent, boolean withChildren) {
         super.updateMatrixWorld(withParent, withChildren);
 
-        pos = new Vec3d(position.x, position.y, position.z);
-        transformer.update(matrixWorld, position.x, position.y, position.z);
-        controller.getEntities().forEach(display -> transformer.applyTransformation(display));
+        updateWorldPos();
+
+        if (transformer.update(matrixWorld, worldPos.x, worldPos.y, worldPos.z)) {
+            controller.getEntities().forEach(transformer::apply);
+        }
+    }
+
+    private void updateWorldPos() {
+        matrixWorld.transformPosition(worldPos.zero());
+
+        if (worldPos.x != mcWorldPos.x || worldPos.y != mcWorldPos.y || worldPos.z != mcWorldPos.z) {
+            mcWorldPos = new Vec3d(worldPos.x, worldPos.y, worldPos.z);
+        }
     }
 
     @Override
     public Vec3d getPosition() {
-        return pos;
+        return mcWorldPos;
     }
 
     @Override
     public @Nullable Entity getEntity(ServerPlayerEntity player) {
-        return controller.ref(translations.getLanguage(player));
+        return controller.ref(translations.getLanguage(player), display -> {
+            updateWorldPos();
+            transformer.update(matrixWorld, worldPos.x, worldPos.y, worldPos.z);
+            transformer.apply(display);
+        });
     }
 
     @Override
@@ -74,6 +90,7 @@ public class TranslatedTextDisplayObject extends Object3d implements Mountable, 
     @Override
     public void updateTickRate(int tickRate) {
         controller.setInterpolationDuration(tickRate);
+        controller.setTeleportDuration(tickRate);
     }
 
     private void removeDisplay(MountContext ctx) {

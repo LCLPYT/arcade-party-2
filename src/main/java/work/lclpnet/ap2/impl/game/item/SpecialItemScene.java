@@ -52,6 +52,8 @@ public class SpecialItemScene {
         return pickup;
     });
     private final DynamicEntityManager dynamicEntityManager;
+    private final List<SpecialItemObject> removal = new ArrayList<>();
+    private final double minY;
     private StateVector state = new StateVector(new Vector3d[0]);
 
     public SpecialItemScene(Random random, ServerWorld world) {
@@ -59,6 +61,7 @@ public class SpecialItemScene {
         dynamicEntityManager = new DynamicEntityManager(world);
         this.scene = new Scene(new MixedMountContext(world, dynamicEntityManager));
         indices.defaultReturnValue(-1);
+        minY = world.getBottomY() - 20.d;
     }
 
     public void init(TaskScheduler scheduler) {
@@ -70,6 +73,8 @@ public class SpecialItemScene {
     private synchronized void updateSimulation(double dt, AnimationContext ctx) {
         solver.solve(state, dt, gravity);
 
+        removal.clear();
+
         for (int i = 0; i < objects.size(); i++) {
             SpecialItemObject obj = objects.get(i);
 
@@ -80,7 +85,13 @@ public class SpecialItemScene {
             }
 
             obj.position.set(state.getVector3(2 * i));
+
+            if (obj.position.y < minY) {
+                removal.add(obj);
+            }
         }
+
+        removal.forEach(this::remove);
     }
 
     public SpecialItemObject spawnItem(Vec3d pos, SpecialItem item, ItemStack stack, Translations translations, TranslatedText name) {

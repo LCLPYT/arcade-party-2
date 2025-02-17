@@ -113,7 +113,7 @@ public class GbGlowStone extends Object3d implements Animatable {
             Vec3d anchorPos = anchor.pos();
             targetPos = new Vector3d(anchorPos.getX() + 0.5, anchorPos.getY() + 0.5, anchorPos.getZ() + 0.5);
 
-            Vector3d worldPos = worldPosition();
+            Vector3d worldPos = worldTranslation();
             Vector3d velocity = gradient.getLaunchVelocity(worldPos, targetPos, 2);
 
             this.state = new StateVector(new Vector3d[] { worldPos, velocity });
@@ -121,7 +121,7 @@ public class GbGlowStone extends Object3d implements Animatable {
 
         @Override
         public void updateAnimation(double dt, AnimationContext ctx) {
-            double distanceSq = worldPosition().distanceSquared(targetPos);
+            double distanceSq = worldTranslation().distanceSquared(targetPos);
 
             if (distanceSq <= 0.25) {
                 if (!complete) {

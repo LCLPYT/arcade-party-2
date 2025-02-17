@@ -11,11 +11,24 @@ public class DisplayEntityTransformer {
     private final Vector3d scale = new Vector3d();
     private final Quaternionf rotation = new Quaternionf();
     private final Matrix4f mat4f = new Matrix4f();
-    private final Matrix4d prevMatrix = new Matrix4d();
+    private final Matrix4d prevMatrix = new Matrix4d().scale(Double.NaN);
+    private final double positionTolSq;
     private AffineTransformation transformation = new AffineTransformation(mat4f);
 
-    public synchronized void update(Matrix4dc matrix, double x, double y, double z) {
-        if (matrix.equals(prevMatrix)) return;
+    public DisplayEntityTransformer() {
+        this(16);
+    }
+
+    /**
+     * Construct a new {@link DisplayEntityTransformer}.
+     * @param positionTol The distance in blocks that a DisplayEntity can be translated without being teleported. Default is 16
+     */
+    public DisplayEntityTransformer(double positionTol) {
+        this.positionTolSq = positionTol * positionTol;
+    }
+
+    public synchronized boolean update(Matrix4dc matrix, double x, double y, double z) {
+        if (matrix.equals(prevMatrix)) return false;
 
         prevMatrix.set(matrix);
 
@@ -25,26 +38,34 @@ public class DisplayEntityTransformer {
 
         mat4f.identity();
 
+        position.set(x, y, z);
+
         double tx = translation.x(), ty = translation.y(), tz = translation.z();
 
-        if (Vector3d.distanceSquared(x, y, z, tx, ty, tz) > 256) {
+        if (position.distanceSquared(tx, ty, tz) > positionTolSq) {
             position.set(tx, ty, tz);
         } else {
-            mat4f.translate((float) (tx - x), (float) (ty - y), (float) (tz - z));
+            mat4f.translate((float) (tx - position.x), (float) (ty - position.y), (float) (tz - position.z));
         }
 
         mat4f.rotate(rotation).scale((float) scale.x(), (float) scale.y(), (float) scale.z());
 
         transformation = new AffineTransformation(mat4f);
+
+        return true;
     }
 
-    public void applyTransformation(DisplayEntity display, Matrix4dc matrix) {
-        update(matrix, display.getX(), display.getY(), display.getZ());
-        applyTransformation(display);
+    public void updateAndApply(DisplayEntity display, Matrix4dc matrix) {
+        if (update(matrix, display.getX(), display.getY(), display.getZ())) {
+            apply(display);
+        }
     }
 
-    public void applyTransformation(DisplayEntity display) {
-        display.setPos(position.x, position.y, position.z);
+    public void apply(DisplayEntity display) {
+        if (display.squaredDistanceTo(position.x, position.y, position.z) > 1.0E-4) {
+            display.setPos(position.x, position.y, position.z);
+        }
+
         display.setTransformation(transformation);
         display.setStartInterpolation(0);
     }

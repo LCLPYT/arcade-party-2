@@ -28,7 +28,7 @@ public abstract class DisplayEntityObject<T extends DisplayEntity> extends Objec
     public void updateMatrixWorld(boolean withParent, boolean withChildren) {
         super.updateMatrixWorld(withParent, withChildren);
 
-        entityRef.optional().ifPresent(display -> transformer.applyTransformation(display, matrixWorld));
+        entityRef.optional().ifPresent(display -> transformer.updateAndApply(display, matrixWorld));
     }
 
     @Override
@@ -54,7 +54,7 @@ public abstract class DisplayEntityObject<T extends DisplayEntity> extends Objec
 
         display.setGlowing(glowing);
 
-        transformer.applyTransformation(display, matrixWorld);
+        transformer.updateAndApply(display, matrixWorld);
     }
 
     @Override
