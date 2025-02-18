@@ -30,12 +30,14 @@ public class TripleShotItem implements SpecialItem {
     @Override
     public void onPickedUp(ServerPlayerEntity player, ItemStack stack, SpecialItemContext ctx) {
         ItemStack bow = player.getInventory().getStack(4);
-        var multiShot = ItemHelper.getEnchantment(Enchantments.MULTISHOT, player.getWorld().getRegistryManager());
-        bow.addEnchantment(multiShot, 1);
-
-        bow.set(DataComponentTypes.ENCHANTMENT_GLINT_OVERRIDE, true);
+        addEnchant(bow, player.getWorld().getRegistryManager());
 
         player.playSoundToPlayer(SoundEvents.BLOCK_ENCHANTMENT_TABLE_USE, SoundCategory.PLAYERS, 0.4f, 1.35f);
+    }
+
+    @Override
+    public void onDropped(ServerPlayerEntity player) {
+        removeEnchant(player.getInventory().getStack(4));
     }
 
     @Override
@@ -45,12 +47,23 @@ public class TripleShotItem implements SpecialItem {
                     || stack != player.getInventory().getStack(4)
                     || !ctx.hasSpecialItem(player, this)) return;
 
-            EnchantmentHelper.apply(stack, builder -> builder.remove(enchant ->
-                    enchant.getKey().orElse(null) == Enchantments.MULTISHOT));
-
-            stack.set(DataComponentTypes.ENCHANTMENT_GLINT_OVERRIDE, false);
+            removeEnchant(stack);
 
             ctx.removeSpecialItem(player, TripleShotItem.this);
         });
+    }
+
+    private void addEnchant(ItemStack bow, DynamicRegistryManager registryManager) {
+        var multiShot = ItemHelper.getEnchantment(Enchantments.MULTISHOT, registryManager);
+        bow.addEnchantment(multiShot, 1);
+
+        bow.set(DataComponentTypes.ENCHANTMENT_GLINT_OVERRIDE, true);
+    }
+
+    private void removeEnchant(ItemStack stack) {
+        EnchantmentHelper.apply(stack, builder -> builder.remove(enchant ->
+                enchant.getKey().orElse(null) == Enchantments.MULTISHOT));
+
+        stack.set(DataComponentTypes.ENCHANTMENT_GLINT_OVERRIDE, false);
     }
 }

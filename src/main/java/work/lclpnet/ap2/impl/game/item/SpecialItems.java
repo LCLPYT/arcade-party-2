@@ -143,6 +143,7 @@ public class SpecialItems implements SpecialItemContext {
 
         player.getInventory().setStack(8, ItemStack.EMPTY);
         dropSpecialItem(player, item, stack);
+        item.onDropped(player);
 
         return true;
     }

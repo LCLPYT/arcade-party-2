@@ -26,7 +26,7 @@ import work.lclpnet.ap2.core.hook.EntitySpawnCallback;
 import work.lclpnet.ap2.core.hook.ProjectileHitEntityCallback;
 import work.lclpnet.ap2.game.bow_spleef.item.ExplodeAmmoItem;
 import work.lclpnet.ap2.game.bow_spleef.item.HeavyWeightItem;
-import work.lclpnet.ap2.game.bow_spleef.item.LightWeightItem;
+import work.lclpnet.ap2.game.bow_spleef.item.TripleJumpItem;
 import work.lclpnet.ap2.impl.game.EliminationGameInstance;
 import work.lclpnet.ap2.impl.game.item.SpecialItems;
 import work.lclpnet.ap2.impl.map.MapUtil;
@@ -58,7 +58,8 @@ public class BowSpleefInstance extends EliminationGameInstance {
     private final DoubleJumpHandler doubleJumpHandler;
     private final Random random = new Random();
     private final HeavyWeightItem heavyWeightItem = new HeavyWeightItem();
-    private SpecialItems specialItems;
+    private final TripleJumpItem tripleJumpItem = new TripleJumpItem();
+    private SpecialItems specialItems = null;
 
     public BowSpleefInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
@@ -69,6 +70,10 @@ public class BowSpleefInstance extends EliminationGameInstance {
         heavyWeightItem.setDoubleJumpHandler(doubleJumpHandler);
 
         doubleJumpHandler.onDoubleJump().then(player -> {
+            if (specialItems != null
+                    && specialItems.hasSpecialItem(player, tripleJumpItem)
+                    && tripleJumpItem.handleExtraJump(player, specialItems)) return;
+
             doubleJumpHandler.disable(player);
             cooldown.setCooldown(player, DOUBLE_JUMP_COOLDOWN_TICKS);
         });
@@ -129,7 +134,8 @@ public class BowSpleefInstance extends EliminationGameInstance {
 //                .register(new FishingRodItem(), 0.25f)
 //                .register(new SwitcherItem(), 0.15f)
 //                .register(new LevitationItem(), 0.15f)
-                .register(new LightWeightItem(), 0.25f));
+//                .register(new LightWeightItem(), 0.25f)
+                .register(tripleJumpItem, 0.1f));
 
         specialItems.setup();
         specialItems.syncWithWorldBorder();

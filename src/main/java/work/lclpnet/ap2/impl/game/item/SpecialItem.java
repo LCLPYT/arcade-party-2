@@ -1,5 +1,6 @@
 package work.lclpnet.ap2.impl.game.item;
 
+import net.minecraft.component.DataComponentTypes;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -22,7 +23,13 @@ public interface SpecialItem {
      * @return A newly initialized {@link ItemStack} with the used item state set.
      */
     default ItemStack usedItemStack(ItemStack current, DynamicRegistryManager registryManager) {
-        return createItemStack(registryManager);
+        ItemStack stack = createItemStack(registryManager);
+
+        if (current.contains(DataComponentTypes.DAMAGE)) {
+            stack.set(DataComponentTypes.DAMAGE, current.get(DataComponentTypes.DAMAGE));
+        }
+
+        return stack;
     }
 
     default boolean canBeDropped(ServerPlayerEntity player, ItemStack stack) {
@@ -36,6 +43,12 @@ public interface SpecialItem {
      * @param ctx The context.
      */
     default void onPickedUp(ServerPlayerEntity player, ItemStack stack, SpecialItemContext ctx) {}
+
+    /**
+     * Called when a player drops an instance of the special item.
+     * @param player The player.
+     */
+    default void onDropped(ServerPlayerEntity player) {}
 
     /**
      * Called when a player uses (right-clicks) the special item.

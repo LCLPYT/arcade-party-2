@@ -29,15 +29,6 @@ public class FishingRodItem implements SpecialItem {
     }
 
     @Override
-    public ItemStack usedItemStack(ItemStack current, DynamicRegistryManager registryManager) {
-        ItemStack stack = createItemStack(registryManager);
-
-        stack.set(DataComponentTypes.DAMAGE, current.get(DataComponentTypes.DAMAGE));
-
-        return stack;
-    }
-
-    @Override
     public void registerHooks(HookRegistrar hooks, SpecialItemContext ctx) {
         hooks.registerHook(PlayerInventoryHooks.SLOT_CHANGE, (player, i) -> {
             if (!ctx.hasSpecialItem(player, this)
