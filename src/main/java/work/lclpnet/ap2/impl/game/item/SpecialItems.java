@@ -138,14 +138,17 @@ public class SpecialItems implements SpecialItemContext {
         if (item == null) return false;
 
         player.getInventory().setStack(8, ItemStack.EMPTY);
-        dropSpecialItem(player, item);
+        dropSpecialItem(player, item, stack);
 
         return true;
     }
 
-    private void dropSpecialItem(ServerPlayerEntity player, SpecialItem item) {
+    private void dropSpecialItem(ServerPlayerEntity player, SpecialItem item, ItemStack stack) {
         Vec3d pos = player.getEyePos().subtract(0, 0.3, 0);
-        SpecialItemObject obj = scene.spawnItem(pos, item, createItemStack(item), gameHandle.getTranslations(), itemName(item));
+
+        ItemStack dropStack = configureStack(item, item.usedItemStack(stack, world.getRegistryManager()));
+
+        SpecialItemObject obj = scene.spawnItem(pos, item, dropStack, gameHandle.getTranslations(), itemName(item));
         obj.setPickupDelay(40);
 
         scheduleDespawn(obj);
@@ -274,9 +277,7 @@ public class SpecialItems implements SpecialItemContext {
         return registry.get(id);
     }
 
-    public ItemStack createItemStack(SpecialItem item) {
-        ItemStack stack = item.createItemStack(world.getRegistryManager());
-
+    private ItemStack configureStack(SpecialItem item, ItemStack stack) {
         // persist special item id in the stack
         var nbt = new NbtCompound();
         nbt.putString(ID_KEY, item.id());
@@ -305,7 +306,9 @@ public class SpecialItems implements SpecialItemContext {
 
         world.spawnParticles(ParticleTypes.END_ROD, pos.x, pos.y, pos.z, 15, 0.1, 0.1, 0.1, 0.1);
 
-        SpecialItemObject obj = scene.spawnItem(pos, item, createItemStack(item), gameHandle.getTranslations(), itemName(item));
+        ItemStack stack = configureStack(item, item.createItemStack(world.getRegistryManager()));
+
+        SpecialItemObject obj = scene.spawnItem(pos, item, stack, gameHandle.getTranslations(), itemName(item));
 
         scheduleDespawn(obj);
     }

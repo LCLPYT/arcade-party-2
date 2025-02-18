@@ -14,6 +14,18 @@ public interface SpecialItem {
     ItemStack createItemStack(DynamicRegistryManager registryManager);
 
     /**
+     * Creates a new instance of the used item stack.
+     * Used for example when dropping special items.
+     * The returned {@link ItemStack} should not be localized, but have all state set, such as durability.
+     * @param current The current, maybe localized stack from a player's inventory.
+     * @param registryManager The {@link DynamicRegistryManager}.
+     * @return A newly initialized {@link ItemStack} with the used item state set.
+     */
+    default ItemStack usedItemStack(ItemStack current, DynamicRegistryManager registryManager) {
+        return createItemStack(registryManager);
+    }
+
+    /**
      * Called when a player picked up an instance of the special item.
      * @param player The player.
      */
