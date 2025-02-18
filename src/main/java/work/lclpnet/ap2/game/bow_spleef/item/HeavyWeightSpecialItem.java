@@ -18,7 +18,6 @@ import work.lclpnet.ap2.impl.util.handler.DoubleJumpHandler;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.scheduler.Ticks;
 
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -68,7 +67,7 @@ public class HeavyWeightSpecialItem implements SpecialItem {
 
             ctx.translations().translateText("game.ap2.bow_spleef.heavy_weighted")
                     .styled(style -> style.withColor(0xff0000))
-                    .sendTo(Collections.singleton(player), true);  // TODO unwrap
+                    .sendTo(player, true);
 
             ctx.scheduler().timeout(() -> removeHeavyWeighted(player), DURATION_TICKS);
         });
@@ -81,7 +80,7 @@ public class HeavyWeightSpecialItem implements SpecialItem {
             doubleJumpHandler.disable(player);
         }
 
-        setAttribute(player, GRAVITY, 0.16);
+        setAttribute(player, GRAVITY, 0.14);
         setAttribute(player, MOVEMENT_SPEED, 0.075);
     }
 
