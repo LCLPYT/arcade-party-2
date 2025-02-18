@@ -334,7 +334,8 @@ public class SpecialItems implements SpecialItemContext {
 
         if (item == null) return;
 
-        world.spawnParticles(ParticleTypes.END_ROD, pos.x, pos.y, pos.z, 15, 0.1, 0.1, 0.1, 0.1);
+        world.spawnParticles(ParticleTypes.END_ROD, pos.x, pos.y, pos.z, 20, 0.1, 0.1, 0.1, 0.1);
+        world.spawnParticles(ParticleTypes.PORTAL, pos.x, pos.y, pos.z, 400, 0.15, 4, 0.15, 0.1);
 
         ItemStack stack = configureStack(item, item.createItemStack(world.getRegistryManager()));
 
