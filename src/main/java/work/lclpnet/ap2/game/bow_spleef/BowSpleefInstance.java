@@ -74,6 +74,8 @@ public class BowSpleefInstance extends EliminationGameInstance {
 
             doubleJumpHandler.enable(player);
         });
+
+        useOldCombat();
     }
 
     @Override
