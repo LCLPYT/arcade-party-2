@@ -20,6 +20,7 @@ import net.minecraft.util.math.BlockPos;
 import org.json.JSONArray;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.game.bow_spleef.item.BurstShotPowerup;
+import work.lclpnet.ap2.game.bow_spleef.item.ExplodeAmmoPowerup;
 import work.lclpnet.ap2.game.bow_spleef.item.TripleShotPowerup;
 import work.lclpnet.ap2.impl.game.EliminationGameInstance;
 import work.lclpnet.ap2.impl.game.item.SpecialItems;
@@ -28,6 +29,8 @@ import work.lclpnet.ap2.impl.util.ItemHelper;
 import work.lclpnet.ap2.impl.util.SoundHelper;
 import work.lclpnet.ap2.impl.util.handler.DoubleJumpHandler;
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
+import work.lclpnet.kibu.hook.Hook;
+import work.lclpnet.kibu.hook.HookFactory;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.ProjectileHooks;
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks;
@@ -65,16 +68,27 @@ public class BowSpleefInstance extends EliminationGameInstance {
 
         hooks.registerHook(BlockBreakParticleCallback.HOOK, (world, pos, state) -> true);
 
-        hooks.registerHook(ProjectileHooks.HIT_BLOCK,(projectile, hit) -> {
-            removeBlocks(hit.getBlockPos(), (ServerWorld) projectile.getWorld());
+        Hook<Impact> impactHook = HookFactory.createArrayBacked(Impact.class, callbacks -> (projectile, pos) -> {
+            for (Impact callback : callbacks) {
+                callback.onImpact(projectile, pos);
+            }
+        });
+
+        impactHook.register((projectile, pos) -> {
+            removeBlocks(pos, getWorld());
             projectile.discard();
         });
+
+        hooks.registerHook(ProjectileHooks.HIT_BLOCK,(projectile, hit)
+                -> impactHook.invoker().onImpact(projectile, hit.getBlockPos()));
 
         hooks.registerHook(ServerLivingEntityHooks.ALLOW_DAMAGE, (entity, source, amount) -> {
             if (!(source.getSource() instanceof ProjectileEntity projectile)) return true;
 
-            removeBlocks(entity.getBlockPos().down(), (ServerWorld) entity.getWorld());
-            projectile.discard();
+            if (source.isOf(DamageTypes.ARROW)) {
+                impactHook.invoker().onImpact(projectile, entity.getBlockPos().down());
+            }
+
             return false;
         });
 
@@ -82,7 +96,8 @@ public class BowSpleefInstance extends EliminationGameInstance {
 
         specialItems = SpecialItems.create(gameHandle, getMap(), getWorld(), random, r -> r
                 .register(new TripleShotPowerup(), 1.f)
-                .register(new BurstShotPowerup(), 0.8f));
+                .register(new BurstShotPowerup(), 1.f)
+                .register(new ExplodeAmmoPowerup(impactHook), 0.4f));
 
         specialItems.setup();
         specialItems.syncWithWorldBorder();
@@ -90,8 +105,14 @@ public class BowSpleefInstance extends EliminationGameInstance {
 
     @Override
     protected void ready() {
-        gameHandle.protect(config -> config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, damageSource)
-                -> damageSource.getSource() instanceof ProjectileEntity || damageSource.isOf(DamageTypes.OUTSIDE_BORDER)));
+        gameHandle.protect(config -> {
+            config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, damageSource)
+                    -> damageSource.getSource() instanceof ProjectileEntity || damageSource.isOf(DamageTypes.OUTSIDE_BORDER));
+
+            config.allow(ProtectionTypes.EXPLOSION, explosion
+                    -> explosion.getEntity() instanceof ProjectileEntity projectile
+                    && projectile.getCommandTags().contains(ExplodeAmmoPowerup.TAG_EXPLOSIVE));
+        });
 
         HookRegistrar hooks = gameHandle.getHookRegistrar();
 
@@ -168,5 +189,9 @@ public class BowSpleefInstance extends EliminationGameInstance {
         for (BlockPos pos : BlockPos.iterate(x - 3, y - 30, z - 3, x + 3, y + 10, z + 3)) {
             world.setBlockState(pos, air);
         }
+    }
+
+    public interface Impact {
+        void onImpact(ProjectileEntity projectile, BlockPos pos);
     }
 }

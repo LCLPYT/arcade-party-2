@@ -43,8 +43,9 @@ public class TripleShotPowerup implements SpecialItem {
     @Override
     public void registerHooks(HookRegistrar hooks, SpecialItemContext ctx) {
         hooks.registerHook(RangedWeaponUsedCallback.HOOK, (entity, stack, remainingUseTicks) -> {
-            if (!(entity instanceof ServerPlayerEntity player) || stack != player.getInventory().getStack(4))
-                return;
+            if (!(entity instanceof ServerPlayerEntity player)
+                    || stack != player.getInventory().getStack(4)
+                    || !ctx.hasSpecialItem(player, this)) return;
 
             EnchantmentHelper.apply(stack, builder -> builder.remove(enchant ->
                     enchant.getKey().orElse(null) == Enchantments.MULTISHOT));

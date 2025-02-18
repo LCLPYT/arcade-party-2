@@ -27,6 +27,7 @@
     "PathMixin",
     "PathNodeMakerAccessor",
     "PathNodeNavigatorMixin",
+    "RangedWeaponItemMixin",
     "ServerPlayerEntityMixin",
     "SpiderEntityMixin",
     "WardenBrainAccessor",
