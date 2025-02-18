@@ -16,11 +16,10 @@ import net.minecraft.screen.slot.Slot;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.Rarity;
+import net.minecraft.util.*;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.World;
 import net.minecraft.world.border.WorldBorder;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
@@ -33,9 +32,11 @@ import work.lclpnet.ap2.impl.ds.WeightedList;
 import work.lclpnet.ap2.impl.util.debug.DebugController;
 import work.lclpnet.ap2.impl.util.world.WalkableBlockPredicate;
 import work.lclpnet.kibu.hook.HookRegistrar;
+import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.kibu.hook.player.PlayerInventoryHooks;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
+import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.kibu.translate.text.RootText;
 import work.lclpnet.kibu.translate.text.TranslatedText;
 import work.lclpnet.lobby.game.map.GameMap;
@@ -111,6 +112,7 @@ public class SpecialItems implements SpecialItemContext {
         HookRegistrar hooks = gameHandle.getHookRegistrar();
 
         hooks.registerHook(PlayerInventoryHooks.DROP_ITEM, this::onDropItem);
+        hooks.registerHook(PlayerInteractionHooks.USE_ITEM, this::interact);
 
         for (SpecialItem item : registry.entries()) {
             item.registerHooks(hooks, this);
@@ -160,6 +162,17 @@ public class SpecialItems implements SpecialItemContext {
                 -pitchSin * 0.3F + 0.1F + (random.nextFloat() - random.nextFloat()) * 0.1F,
                 yawCos * pitchCos * 0.3F + sin(randomHorizontalAngle) * divergence
         ).mul(20);
+    }
+
+    private ActionResult interact(PlayerEntity p, World w, Hand hand) {
+        if (!(p instanceof ServerPlayerEntity player)) return ActionResult.PASS;
+
+        ItemStack stack = p.getStackInHand(hand);
+        SpecialItem item = get(stack).orElse(null);
+
+        if (item == null) return ActionResult.PASS;
+
+        return item.onUse(player, stack, hand);
     }
 
     private void tickPickup() {
@@ -240,6 +253,11 @@ public class SpecialItems implements SpecialItemContext {
     @Override
     public TaskScheduler scheduler() {
         return gameHandle.getGameScheduler();
+    }
+
+    @Override
+    public Translations translations() {
+        return gameHandle.getTranslations();
     }
 
     public Optional<SpecialItem> get(ItemStack stack) {

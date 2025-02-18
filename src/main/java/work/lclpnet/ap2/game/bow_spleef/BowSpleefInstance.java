@@ -6,6 +6,7 @@ import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.UnbreakableComponent;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.damage.DamageTypes;
+import net.minecraft.entity.passive.ChickenEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.entity.projectile.ProjectileEntity;
 import net.minecraft.item.ItemStack;
@@ -19,21 +20,22 @@ import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
 import org.json.JSONArray;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
-import work.lclpnet.ap2.game.bow_spleef.item.BurstShotPowerup;
+import work.lclpnet.ap2.core.hook.EntitySpawnCallback;
+import work.lclpnet.ap2.core.hook.ProjectileHitEntityCallback;
 import work.lclpnet.ap2.game.bow_spleef.item.ExplodeAmmoPowerup;
-import work.lclpnet.ap2.game.bow_spleef.item.TripleShotPowerup;
+import work.lclpnet.ap2.game.bow_spleef.item.HeavyWeightSpecialItem;
 import work.lclpnet.ap2.impl.game.EliminationGameInstance;
 import work.lclpnet.ap2.impl.game.item.SpecialItems;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.ItemHelper;
 import work.lclpnet.ap2.impl.util.SoundHelper;
+import work.lclpnet.ap2.impl.util.handler.Cooldown;
 import work.lclpnet.ap2.impl.util.handler.DoubleJumpHandler;
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
 import work.lclpnet.kibu.hook.Hook;
 import work.lclpnet.kibu.hook.HookFactory;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.ProjectileHooks;
-import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks;
 import work.lclpnet.kibu.hook.world.BlockBreakParticleCallback;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.translate.Translations;
@@ -46,16 +48,32 @@ public class BowSpleefInstance extends EliminationGameInstance {
 
     private static final int
             WORLD_BORDER_DELAY = Ticks.seconds(80),
-            WORLD_BORDER_TIME = Ticks.seconds(20);
+            WORLD_BORDER_TIME = Ticks.seconds(20),
+            DOUBLE_JUMP_COOLDOWN_TICKS = Ticks.seconds(2);
 
     private final DoubleJumpHandler doubleJumpHandler;
     private final Random random = new Random();
+    private final HeavyWeightSpecialItem heavyWeightItem = new HeavyWeightSpecialItem();
     private SpecialItems specialItems;
 
     public BowSpleefInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
 
-        doubleJumpHandler = new DoubleJumpHandler(gameHandle.getPlayerUtil(), gameHandle.getScheduler());
+        var cooldown = new Cooldown(gameHandle.getScheduler());
+
+        doubleJumpHandler = new DoubleJumpHandler(player -> !cooldown.isOnCooldown(player) && !heavyWeightItem.isHeavyWeighted(player));
+        heavyWeightItem.setDoubleJumpHandler(doubleJumpHandler);
+
+        doubleJumpHandler.onDoubleJump().then(player -> {
+            doubleJumpHandler.disable(player);
+            cooldown.setCooldown(player, DOUBLE_JUMP_COOLDOWN_TICKS);
+        });
+
+        cooldown.setOnCooldownOver(player -> {
+            if (heavyWeightItem.isHeavyWeighted(player)) return;
+
+            doubleJumpHandler.enable(player);
+        });
     }
 
     @Override
@@ -79,25 +97,23 @@ public class BowSpleefInstance extends EliminationGameInstance {
             projectile.discard();
         });
 
-        hooks.registerHook(ProjectileHooks.HIT_BLOCK,(projectile, hit)
+        hooks.registerHook(ProjectileHooks.HIT_BLOCK, (projectile, hit)
                 -> impactHook.invoker().onImpact(projectile, hit.getBlockPos()));
 
-        hooks.registerHook(ServerLivingEntityHooks.ALLOW_DAMAGE, (entity, source, amount) -> {
-            if (!(source.getSource() instanceof ProjectileEntity projectile)) return true;
-
-            if (source.isOf(DamageTypes.ARROW)) {
-                impactHook.invoker().onImpact(projectile, entity.getBlockPos().down());
-            }
-
-            return false;
+        hooks.registerHook(ProjectileHitEntityCallback.HOOK, (projectile, hit) -> {
+            impactHook.invoker().onImpact(projectile, hit.getEntity().getBlockPos().down());
         });
+
+        // don't spawn chickens from thrown eggs
+        hooks.registerHook(EntitySpawnCallback.HOOK, (entity, world) -> entity instanceof ChickenEntity);
 
         commons().whenBelowCriticalHeight().then(this::eliminate);
 
         specialItems = SpecialItems.create(gameHandle, getMap(), getWorld(), random, r -> r
-                .register(new TripleShotPowerup(), 1.f)
-                .register(new BurstShotPowerup(), 1.f)
-                .register(new ExplodeAmmoPowerup(impactHook), 0.4f));
+//                .register(new TripleShotPowerup(), 1.f)
+//                .register(new BurstShotPowerup(), 1.f)
+//                .register(new ExplodeAmmoPowerup(impactHook), 0.4f)
+                .register(heavyWeightItem, 0.25f));
 
         specialItems.setup();
         specialItems.syncWithWorldBorder();
@@ -107,7 +123,7 @@ public class BowSpleefInstance extends EliminationGameInstance {
     protected void ready() {
         gameHandle.protect(config -> {
             config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, damageSource)
-                    -> damageSource.getSource() instanceof ProjectileEntity || damageSource.isOf(DamageTypes.OUTSIDE_BORDER));
+                    -> damageSource.isOf(DamageTypes.OUTSIDE_BORDER));
 
             config.allow(ProtectionTypes.EXPLOSION, explosion
                     -> explosion.getEntity() instanceof ProjectileEntity projectile
@@ -117,6 +133,7 @@ public class BowSpleefInstance extends EliminationGameInstance {
         HookRegistrar hooks = gameHandle.getHookRegistrar();
 
         doubleJumpHandler.init(hooks);
+        doubleJumpHandler.enable(gameHandle.getParticipants());
 
         Translations translations = gameHandle.getTranslations();
 

@@ -1,6 +1,7 @@
 package work.lclpnet.ap2.game.bow_spleef.item;
 
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.projectile.ArrowEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.particle.ParticleTypes;
@@ -42,6 +43,7 @@ public class ExplodeAmmoPowerup implements SpecialItem {
     public void registerHooks(HookRegistrar hooks, SpecialItemContext ctx) {
         hooks.registerHook(ProjectileShootCallback.HOOK, (shooter, projectile) -> {
             if (!(shooter instanceof ServerPlayerEntity player)
+                    || !(projectile instanceof ArrowEntity)
                     || !ctx.hasSpecialItem(player, this)) return;
 
             projectile.addCommandTag(TAG_EXPLOSIVE);

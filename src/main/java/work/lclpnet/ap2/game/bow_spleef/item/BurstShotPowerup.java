@@ -17,14 +17,13 @@ import work.lclpnet.kibu.hook.HookRegistrar;
 
 public class BurstShotPowerup implements SpecialItem {
 
-    public static final String BURST_SHOT = "burst_shot";
     private static final int
             BURST_COUNT = 3,
             BURST_INTERVAL_TICKS = 5;
 
     @Override
     public String id() {
-        return BURST_SHOT;
+        return "burst_shot";
     }
 
     @Override

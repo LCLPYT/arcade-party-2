@@ -17,11 +17,9 @@ import work.lclpnet.kibu.hook.HookRegistrar;
 
 public class TripleShotPowerup implements SpecialItem {
 
-    public static final String ID = "triple_shot";
-
     @Override
     public String id() {
-        return ID;
+        return "triple_shot";
     }
 
     @Override

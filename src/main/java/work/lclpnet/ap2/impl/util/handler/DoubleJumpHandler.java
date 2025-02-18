@@ -1,68 +1,70 @@
 package work.lclpnet.ap2.impl.util.handler;
 
 import net.minecraft.particle.ParticleTypes;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
-import work.lclpnet.ap2.impl.game.PlayerUtil;
+import work.lclpnet.ap2.api.util.action.Action;
 import work.lclpnet.kibu.access.VelocityModifier;
+import work.lclpnet.kibu.hook.Hook;
+import work.lclpnet.kibu.hook.HookFactory;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.player.PlayerToggleFlightCallback;
-import work.lclpnet.kibu.scheduler.Ticks;
-import work.lclpnet.kibu.scheduler.api.TaskScheduler;
+
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 public class DoubleJumpHandler {
 
-    private final PlayerUtil playerUtil;
-    private final Cooldown cooldown;
-    private int cooldownTicks = Ticks.seconds(2);
-    private boolean enabled = false;
+    private final Predicate<ServerPlayerEntity> predicate;
+    private final Hook<OnDoubleJump> hook;
+    private final Set<UUID> enabled = new HashSet<>();
 
-    public DoubleJumpHandler(PlayerUtil playerUtil, TaskScheduler scheduler) {
-        this.playerUtil = playerUtil;
-        this.cooldown = new Cooldown(scheduler);
+    public DoubleJumpHandler(Predicate<ServerPlayerEntity> predicate) {
+        this.predicate = predicate;
 
-        cooldown.setOnCooldownOver(player -> {
-            if (!enabled) return;
-
-            player.getAbilities().allowFlying = true;
-            player.sendAbilitiesUpdate();
+        hook = HookFactory.createArrayBacked(OnDoubleJump.class, hooks -> player -> {
+            for (var hook : hooks) {
+                hook.accept(player);
+            }
         });
     }
 
-    public boolean isEnabled() {
-        return enabled;
+    public void enable(Iterable<? extends ServerPlayerEntity> players) {
+        players.forEach(this::enable);
     }
 
-    public void setEnabled(boolean enabled) {
-        if (this.enabled == enabled) return;
-
-        this.enabled = enabled;
-
-        playerUtil.setAllowFlight(enabled);
-        cooldown.resetAll();
+    public void enable(ServerPlayerEntity player) {
+        enabled.add(player.getUuid());
+        player.getAbilities().allowFlying = true;
+        player.sendAbilitiesUpdate();
     }
 
-    public int getCooldownTicks() {
-        return cooldownTicks;
+    public void disable(ServerPlayerEntity player) {
+        enabled.remove(player.getUuid());
+        player.getAbilities().allowFlying = false;
+        player.sendAbilitiesUpdate();
     }
 
-    public void setCooldownTicks(int cooldownTicks) {
-        this.cooldownTicks = cooldownTicks;
+    public Action<OnDoubleJump> onDoubleJump() {
+        return Action.create(hook);
     }
 
-    public void init(HookRegistrar hookRegistrar) {
-        hookRegistrar.registerHook(PlayerToggleFlightCallback.HOOK, (player, fly) -> {
-            if (!fly) return false;
+    public void init(HookRegistrar hooks) {
+        hooks.registerHook(PlayerToggleFlightCallback.HOOK, (player, fly) -> {
+            if (!fly || player.isCreative()) {
+                return false;
+            }
 
-            if (cooldown.isOnCooldown(player)) {
+            if (!predicate.test(player)) {
                 return true;
             }
 
-            cooldown.setCooldown(player, cooldownTicks);
-
-            player.getAbilities().allowFlying = false;
-            player.sendAbilitiesUpdate();
+            hook.invoker().accept(player);
 
             VelocityModifier.setVelocity(player, player.getRotationVector().multiply(1.3));
 
@@ -77,7 +79,7 @@ public class DoubleJumpHandler {
 
             return true;
         });
-
-        setEnabled(true);
     }
+
+    public interface OnDoubleJump extends Consumer<ServerPlayerEntity> {}
 }

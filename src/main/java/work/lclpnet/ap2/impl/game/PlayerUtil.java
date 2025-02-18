@@ -1,6 +1,7 @@
 package work.lclpnet.ap2.impl.game;
 
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
+import lombok.Getter;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.entity.player.PlayerAbilities;
 import net.minecraft.item.ItemStack;
@@ -28,8 +29,11 @@ public class PlayerUtil {
     private final PlayerManager playerManager;
     private final CombatControl combatControl;
     private final Set<ApEffect> effects = new ObjectOpenHashSet<>(1);
+    @Getter
     private GameMode defaultGameMode = INITIAL_GAMEMODE;
+    @Getter
     private CombatStyle defaultCombatStyle = CombatStyles.MODERN;
+    @Getter
     private boolean allowFlight = false;
 
     public PlayerUtil(MinecraftServer server, PlayerManager playerManager) {
@@ -43,17 +47,9 @@ public class PlayerUtil {
         this.defaultGameMode = defaultGameMode;
     }
 
-    public GameMode getDefaultGameMode() {
-        return defaultGameMode;
-    }
-
     public void setDefaultCombatStyle(CombatStyle defaultCombatStyle) {
         this.defaultCombatStyle = defaultCombatStyle;
         combatControl.setStyle(this.defaultCombatStyle);
-    }
-
-    public CombatStyle getDefaultCombatStyle() {
-        return defaultCombatStyle;
     }
 
     public void setAllowFlight(boolean allowFlight) {
@@ -63,10 +59,6 @@ public class PlayerUtil {
             player.getAbilities().allowFlying = allowFlight;
             player.sendAbilitiesUpdate();
         });
-    }
-
-    public boolean isAllowFlight() {
-        return allowFlight;
     }
 
     public void enableEffect(ApEffect effect) {

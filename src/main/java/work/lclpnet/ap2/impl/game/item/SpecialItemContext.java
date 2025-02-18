@@ -4,6 +4,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.server.network.ServerPlayerEntity;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
+import work.lclpnet.kibu.translate.Translations;
 
 public interface SpecialItemContext {
 
@@ -14,4 +15,6 @@ public interface SpecialItemContext {
     boolean hasSpecialItem(ServerPlayerEntity player, @Nullable SpecialItem item);
 
     TaskScheduler scheduler();
+
+    Translations translations();
 }
