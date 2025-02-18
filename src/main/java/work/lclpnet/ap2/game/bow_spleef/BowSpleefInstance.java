@@ -126,16 +126,16 @@ public class BowSpleefInstance extends EliminationGameInstance {
         commons().whenBelowCriticalHeight().then(this::eliminate);
 
         specialItems = SpecialItems.create(gameHandle, getMap(), getWorld(), random, r -> r
-                .register(new TripleShotItem(), 1.f)
-                .register(new BurstShotItem(), 1.f)
-                .register(new ExplodeAmmoItem(impactHook), 0.4f)
-                .register(heavyWeightItem, 0.25f)
-                .register(new FishingRodItem(), 0.25f)
-                .register(new SwitcherItem(), 0.15f)
-                .register(new LevitationItem(), 0.15f)
+                .register(new TripleShotItem(), 0.6f)
+                .register(new BurstShotItem(), 0.5f)
+                .register(new ExplodeAmmoItem(impactHook), 0.3f)
+                .register(heavyWeightItem, 0.3f)
+                .register(new FishingRodItem(), 0.15f)
+                .register(new SwitcherItem(), 0.3f)
+                .register(new LevitationItem(), 0.2f)
                 .register(new LightWeightItem(), 0.25f)
-                .register(tripleJumpItem, 0.1f)
-                .register(new CreeperExplosionItem(), 0.1f));
+                .register(tripleJumpItem, 0.25f)
+                .register(new CreeperExplosionItem(), 0.2f));
 
         specialItems.setup();
         specialItems.syncWithWorldBorder();
