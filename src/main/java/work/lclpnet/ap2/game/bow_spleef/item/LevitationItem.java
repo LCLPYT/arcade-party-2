@@ -10,6 +10,7 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
+import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.impl.game.item.SpecialItem;
 import work.lclpnet.ap2.impl.game.item.SpecialItemContext;
 import work.lclpnet.kibu.scheduler.Ticks;
@@ -34,7 +35,7 @@ public class LevitationItem implements SpecialItem {
     }
 
     @Override
-    public ActionResult onUse(ServerPlayerEntity player, ItemStack stack, Hand hand, SpecialItemContext ctx) {
+    public ActionResult onUse(ServerPlayerEntity player, ItemStack stack, @Nullable Hand hand, SpecialItemContext ctx) {
         player.getItemCooldownManager().set(stack, DURATION);
         player.addStatusEffect(new StatusEffectInstance(StatusEffects.LEVITATION, DURATION, 4));
         ctx.scheduler().timeout(() -> ctx.removeSpecialItem(player, this), DURATION);

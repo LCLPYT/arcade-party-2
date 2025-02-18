@@ -115,12 +115,24 @@ public class SpecialItems implements SpecialItemContext {
 
         hooks.registerHook(PlayerInventoryHooks.DROP_ITEM, this::onDropItem);
         hooks.registerHook(PlayerInteractionHooks.USE_ITEM, this::interact);
+        hooks.registerHook(PlayerInventoryHooks.SWAP_HANDS, this::swapHands);
 
         for (SpecialItem item : registry.entries()) {
             item.registerHooks(hooks, this);
         }
 
         gameHandle.getGameScheduler().interval(this::tickPickup, 1);
+    }
+
+    private boolean swapHands(ServerPlayerEntity player, int i) {
+        ItemStack stack = player.getInventory().getStack(8);
+        SpecialItem item = get(stack).orElse(null);
+
+        if (item == null) return false;
+
+        ActionResult result = useItem(player, stack, item, null);
+
+        return result != ActionResult.PASS;
     }
 
     private boolean onDropItem(PlayerEntity _player, int slotIdx, boolean inInventory) {
@@ -180,6 +192,10 @@ public class SpecialItems implements SpecialItemContext {
 
         if (item == null) return ActionResult.PASS;
 
+        return useItem(player, stack, item, hand);
+    }
+
+    private ActionResult useItem(ServerPlayerEntity player, ItemStack stack, SpecialItem item, @Nullable Hand hand) {
         if (player.getItemCooldownManager().isCoolingDown(stack)) return ActionResult.FAIL;
 
         return item.onUse(player, stack, hand, this);

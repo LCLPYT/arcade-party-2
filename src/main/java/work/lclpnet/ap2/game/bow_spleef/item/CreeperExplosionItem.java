@@ -13,6 +13,7 @@ import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.world.World;
 import net.minecraft.world.explosion.ExplosionBehavior;
+import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.impl.game.item.SpecialItem;
 import work.lclpnet.ap2.impl.game.item.SpecialItemContext;
 import work.lclpnet.kibu.hook.util.PlayerUtils;
@@ -47,7 +48,7 @@ public class CreeperExplosionItem implements SpecialItem {
     }
 
     @Override
-    public ActionResult onUse(ServerPlayerEntity player, ItemStack stack, Hand hand, SpecialItemContext ctx) {
+    public ActionResult onUse(ServerPlayerEntity player, ItemStack stack, @Nullable Hand hand, SpecialItemContext ctx) {
         if (tasks.containsKey(player.getUuid())) return ActionResult.FAIL;
 
         tasks.put(player.getUuid(), ctx.scheduler().interval(new SchedulerAction() {

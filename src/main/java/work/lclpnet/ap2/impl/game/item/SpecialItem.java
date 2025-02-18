@@ -6,6 +6,7 @@ import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
+import org.jetbrains.annotations.Nullable;
 import work.lclpnet.kibu.hook.HookRegistrar;
 
 public interface SpecialItem {
@@ -54,11 +55,11 @@ public interface SpecialItem {
      * Called when a player uses (right-clicks) the special item.
      * @param player The player.
      * @param stack The item.
-     * @param hand The hand in which the player is holding the item that is being used.
+     * @param hand The hand in which the player is holding the item that is being used. Or null if the item was used otherwise.
      * @param ctx The context.
      * @return The {@link ActionResult} to be forwarded to the interaction hook.
      */
-    default ActionResult onUse(ServerPlayerEntity player, ItemStack stack, Hand hand, SpecialItemContext ctx) {
+    default ActionResult onUse(ServerPlayerEntity player, ItemStack stack, @Nullable Hand hand, SpecialItemContext ctx) {
         return ActionResult.PASS;
     }
 
