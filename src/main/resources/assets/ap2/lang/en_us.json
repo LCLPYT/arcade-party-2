@@ -236,5 +236,7 @@
   "item.ap2.bow_spleef.explode_ammo": "Explode Ammo",
   "item.ap2.bow_spleef.explode_ammo.desc": "Creates an explosion on impact",
   "item.ap2.bow_spleef.heavy_weight_egg": "Heavy Weighted Egg",
-  "item.ap2.bow_spleef.heavy_weight_egg.desc": "Increases weight of hit players"
+  "item.ap2.bow_spleef.heavy_weight_egg.desc": "Increases weight of hit players",
+  "item.ap2.bow_spleef.fishing_rod": "Fishing Rod",
+  "item.ap2.bow_spleef.fishing_rod.desc": "Let's you pull players"
 }

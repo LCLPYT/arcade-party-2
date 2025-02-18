@@ -15,7 +15,7 @@ import work.lclpnet.ap2.impl.game.item.SpecialItemContext;
 import work.lclpnet.ap2.impl.util.ItemHelper;
 import work.lclpnet.kibu.hook.HookRegistrar;
 
-public class TripleShotPowerup implements SpecialItem {
+public class TripleShotItem implements SpecialItem {
 
     @Override
     public String id() {
@@ -50,7 +50,7 @@ public class TripleShotPowerup implements SpecialItem {
 
             stack.set(DataComponentTypes.ENCHANTMENT_GLINT_OVERRIDE, false);
 
-            ctx.removeSpecialItem(player, TripleShotPowerup.this);
+            ctx.removeSpecialItem(player, TripleShotItem.this);
         });
     }
 }

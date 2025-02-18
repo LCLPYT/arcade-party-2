@@ -8,6 +8,8 @@ import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.damage.DamageTypes;
 import net.minecraft.entity.passive.ChickenEntity;
 import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.entity.projectile.ArrowEntity;
+import net.minecraft.entity.projectile.FishingBobberEntity;
 import net.minecraft.entity.projectile.ProjectileEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -22,8 +24,9 @@ import org.json.JSONArray;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.core.hook.EntitySpawnCallback;
 import work.lclpnet.ap2.core.hook.ProjectileHitEntityCallback;
-import work.lclpnet.ap2.game.bow_spleef.item.ExplodeAmmoPowerup;
-import work.lclpnet.ap2.game.bow_spleef.item.HeavyWeightSpecialItem;
+import work.lclpnet.ap2.game.bow_spleef.item.ExplodeAmmoItem;
+import work.lclpnet.ap2.game.bow_spleef.item.FishingRodItem;
+import work.lclpnet.ap2.game.bow_spleef.item.HeavyWeightItem;
 import work.lclpnet.ap2.impl.game.EliminationGameInstance;
 import work.lclpnet.ap2.impl.game.item.SpecialItems;
 import work.lclpnet.ap2.impl.map.MapUtil;
@@ -31,6 +34,7 @@ import work.lclpnet.ap2.impl.util.ItemHelper;
 import work.lclpnet.ap2.impl.util.SoundHelper;
 import work.lclpnet.ap2.impl.util.handler.Cooldown;
 import work.lclpnet.ap2.impl.util.handler.DoubleJumpHandler;
+import work.lclpnet.combatctl.impl.CombatStyles;
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
 import work.lclpnet.kibu.hook.Hook;
 import work.lclpnet.kibu.hook.HookFactory;
@@ -53,7 +57,7 @@ public class BowSpleefInstance extends EliminationGameInstance {
 
     private final DoubleJumpHandler doubleJumpHandler;
     private final Random random = new Random();
-    private final HeavyWeightSpecialItem heavyWeightItem = new HeavyWeightSpecialItem();
+    private final HeavyWeightItem heavyWeightItem = new HeavyWeightItem();
     private SpecialItems specialItems;
 
     public BowSpleefInstance(MiniGameHandle gameHandle) {
@@ -75,7 +79,8 @@ public class BowSpleefInstance extends EliminationGameInstance {
             doubleJumpHandler.enable(player);
         });
 
-        useOldCombat();
+        gameHandle.getPlayerUtil().setDefaultCombatStyle(CombatStyles.CLASSIC.andThen(playerConfig
+                -> playerConfig.setFishingRodPull(true), globalConfig -> {}));
     }
 
     @Override
@@ -99,11 +104,16 @@ public class BowSpleefInstance extends EliminationGameInstance {
             projectile.discard();
         });
 
-        hooks.registerHook(ProjectileHooks.HIT_BLOCK, (projectile, hit)
-                -> impactHook.invoker().onImpact(projectile, hit.getBlockPos()));
+        hooks.registerHook(ProjectileHooks.HIT_BLOCK, (projectile, hit) -> {
+            if (projectile instanceof ArrowEntity) {
+                impactHook.invoker().onImpact(projectile, hit.getBlockPos());
+            }
+        });
 
         hooks.registerHook(ProjectileHitEntityCallback.HOOK, (projectile, hit) -> {
-            impactHook.invoker().onImpact(projectile, hit.getEntity().getBlockPos().down());
+            if (projectile instanceof ArrowEntity) {
+                impactHook.invoker().onImpact(projectile, hit.getEntity().getBlockPos().down());
+            }
         });
 
         // don't spawn chickens from thrown eggs
@@ -112,10 +122,11 @@ public class BowSpleefInstance extends EliminationGameInstance {
         commons().whenBelowCriticalHeight().then(this::eliminate);
 
         specialItems = SpecialItems.create(gameHandle, getMap(), getWorld(), random, r -> r
-//                .register(new TripleShotPowerup(), 1.f)
-//                .register(new BurstShotPowerup(), 1.f)
-//                .register(new ExplodeAmmoPowerup(impactHook), 0.4f)
-                .register(heavyWeightItem, 0.25f));
+//                .register(new TripleShotItem(), 1.f)
+//                .register(new BurstShotItem(), 1.f)
+//                .register(new ExplodeAmmoItem(impactHook), 0.4f)
+//                .register(heavyWeightItem, 0.25f)
+                .register(new FishingRodItem(), 0.2f));
 
         specialItems.setup();
         specialItems.syncWithWorldBorder();
@@ -125,11 +136,12 @@ public class BowSpleefInstance extends EliminationGameInstance {
     protected void ready() {
         gameHandle.protect(config -> {
             config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, damageSource)
-                    -> damageSource.isOf(DamageTypes.OUTSIDE_BORDER));
+                    -> damageSource.isOf(DamageTypes.OUTSIDE_BORDER)
+                    || (damageSource.isOf(DamageTypes.THROWN) && damageSource.getSource() instanceof FishingBobberEntity));
 
             config.allow(ProtectionTypes.EXPLOSION, explosion
                     -> explosion.getEntity() instanceof ProjectileEntity projectile
-                    && projectile.getCommandTags().contains(ExplodeAmmoPowerup.TAG_EXPLOSIVE));
+                    && projectile.getCommandTags().contains(ExplodeAmmoItem.TAG_EXPLOSIVE));
         });
 
         HookRegistrar hooks = gameHandle.getHookRegistrar();

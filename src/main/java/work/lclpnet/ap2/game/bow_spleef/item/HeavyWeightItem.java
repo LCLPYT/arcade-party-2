@@ -27,7 +27,7 @@ import static net.minecraft.entity.attribute.EntityAttributes.MOVEMENT_SPEED;
 import static work.lclpnet.lobby.util.PlayerReset.resetAttribute;
 import static work.lclpnet.lobby.util.PlayerReset.setAttribute;
 
-public class HeavyWeightSpecialItem implements SpecialItem {
+public class HeavyWeightItem implements SpecialItem {
 
     public static final String TAG_HEAVY_WEIGHT = "ap2:heavy_weight_egg";
     private static final int DURATION_TICKS = Ticks.seconds(3);

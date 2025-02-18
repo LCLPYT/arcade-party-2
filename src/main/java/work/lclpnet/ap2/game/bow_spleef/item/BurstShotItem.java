@@ -15,7 +15,7 @@ import work.lclpnet.ap2.impl.game.item.SpecialItem;
 import work.lclpnet.ap2.impl.game.item.SpecialItemContext;
 import work.lclpnet.kibu.hook.HookRegistrar;
 
-public class BurstShotPowerup implements SpecialItem {
+public class BurstShotItem implements SpecialItem {
 
     private static final int
             BURST_COUNT = 3,

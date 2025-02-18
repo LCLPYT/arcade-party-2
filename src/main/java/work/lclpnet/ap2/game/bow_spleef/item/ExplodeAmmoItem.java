@@ -20,12 +20,12 @@ import work.lclpnet.ap2.impl.game.item.SpecialItemContext;
 import work.lclpnet.kibu.hook.Hook;
 import work.lclpnet.kibu.hook.HookRegistrar;
 
-public class ExplodeAmmoPowerup implements SpecialItem {
+public class ExplodeAmmoItem implements SpecialItem {
 
     public static final String TAG_EXPLOSIVE = "ap2:explosive";
     private final Hook<BowSpleefInstance.Impact> impactHook;
 
-    public ExplodeAmmoPowerup(Hook<BowSpleefInstance.Impact> impactHook) {
+    public ExplodeAmmoItem(Hook<BowSpleefInstance.Impact> impactHook) {
         this.impactHook = impactHook;
     }
 

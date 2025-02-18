@@ -237,5 +237,7 @@
   "item.ap2.bow_spleef.explode_ammo": "Explosionsmunition",
   "item.ap2.bow_spleef.explode_ammo.desc": "Creates an explosion on impact",
   "item.ap2.bow_spleef.heavy_weight_egg": "Schwerkraftei",
-  "item.ap2.bow_spleef.heavy_weight_egg.desc": "Erhöht die Schwerkraft getroffener Spieler"
+  "item.ap2.bow_spleef.heavy_weight_egg.desc": "Erhöht die Schwerkraft getroffener Spieler",
+  "item.ap2.bow_spleef.fishing_rod": "Angel",
+  "item.ap2.bow_spleef.fishing_rod.desc": "Lässt dich andere Spieler zu dir ziehen"
 }
