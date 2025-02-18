@@ -6,10 +6,9 @@ import net.minecraft.item.Items;
 import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.ActionResult;
+import net.minecraft.util.Hand;
 import work.lclpnet.ap2.impl.game.item.SpecialItem;
 import work.lclpnet.ap2.impl.game.item.SpecialItemContext;
-import work.lclpnet.kibu.hook.HookRegistrar;
-import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.kibu.hook.util.PlayerUtils;
 
 import java.util.HashSet;
@@ -34,6 +33,12 @@ public class TripleJumpItem implements SpecialItem {
     @Override
     public void onDropped(ServerPlayerEntity player) {
         tripleJump.remove(player.getUuid());
+    }
+
+    @Override
+    public ActionResult onUse(ServerPlayerEntity player, ItemStack stack, Hand hand, SpecialItemContext ctx) {
+        PlayerUtils.syncPlayerItems(player);
+        return ActionResult.FAIL;
     }
 
     public boolean handleExtraJump(ServerPlayerEntity player, SpecialItemContext ctx) {
@@ -63,19 +68,5 @@ public class TripleJumpItem implements SpecialItem {
         tripleJump.add(uuid);
 
         return true;
-    }
-
-    @Override
-    public void registerHooks(HookRegistrar hooks, SpecialItemContext ctx) {
-        hooks.registerHook(PlayerInteractionHooks.USE_ITEM, (player, world, hand) -> {
-            ItemStack stack = player.getStackInHand(hand);
-
-            if (ctx.isSpecialItem(stack, this)) {
-                PlayerUtils.syncPlayerItems(player);
-                return ActionResult.FAIL;
-            }
-
-            return ActionResult.PASS;
-        });
     }
 }
