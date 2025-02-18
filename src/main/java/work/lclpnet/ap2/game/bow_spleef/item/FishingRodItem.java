@@ -12,7 +12,7 @@ import work.lclpnet.kibu.hook.player.PlayerInventoryHooks;
 
 public class FishingRodItem implements SpecialItem {
 
-    private static final int USES = 5;
+    private static final int USES = 4;
 
     @Override
     public String id() {

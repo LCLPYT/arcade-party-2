@@ -39,7 +39,6 @@ import work.lclpnet.kibu.hook.player.PlayerInventoryHooks;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.kibu.translate.Translations;
-import work.lclpnet.kibu.translate.text.RootText;
 import work.lclpnet.kibu.translate.text.TranslatedText;
 import work.lclpnet.lobby.game.map.GameMap;
 import work.lclpnet.lobby.game.map.MapUtils;
@@ -216,11 +215,12 @@ public class SpecialItems implements SpecialItemContext {
 
         stack.set(DataComponentTypes.CUSTOM_NAME, itemName(item).translateFor(player));
 
-        List<Text> lore = itemDescription(player, item);
-
-        if (!lore.isEmpty()) {
+        itemDescription(player, item).ifPresent(desc -> {
+            List<Text> lore = IconMaker.wrapText(desc, 32);
             stack.set(DataComponentTypes.LORE, new LoreComponent(lore));
-        }
+
+            player.sendMessage(Text.literal("↓ ").formatted(Formatting.AQUA).append(desc), true);
+        });
 
         player.getInventory().setStack(8, stack);
 
@@ -237,18 +237,16 @@ public class SpecialItems implements SpecialItemContext {
                 .styled(style -> style.withItalic(false).withFormatting(Rarity.UNCOMMON.getFormatting()));
     }
 
-    private List<Text> itemDescription(ServerPlayerEntity player, SpecialItem item) {
+    private Optional<Text> itemDescription(ServerPlayerEntity player, SpecialItem item) {
         Identifier gameId = gameHandle.getGameInfo().getId();
         String key = join(".", "item", gameId.getNamespace(), gameId.getPath(), item.id(), "desc");
 
         if (!gameHandle.getTranslations().getTranslator().hasTranslation("en_us", key)) {
-            return List.of();
+            return Optional.empty();
         }
 
-        RootText desc = gameHandle.getTranslations().translateText(player, key)
-                .styled(style -> style.withItalic(false).withFormatting(Formatting.GREEN));
-
-        return IconMaker.wrapText(desc, 32);
+        return Optional.of(gameHandle.getTranslations().translateText(player, key)
+                .styled(style -> style.withItalic(false).withFormatting(Formatting.GREEN)));
     }
 
     public boolean hasAnySpecialItem(ServerPlayerEntity player) {

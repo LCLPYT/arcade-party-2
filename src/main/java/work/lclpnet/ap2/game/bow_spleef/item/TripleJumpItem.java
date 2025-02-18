@@ -18,7 +18,7 @@ import java.util.UUID;
 
 public class TripleJumpItem implements SpecialItem {
 
-    private static final int USES = 3;
+    private static final int USES = 1;
     private final Set<UUID> tripleJump = new HashSet<>();
 
     @Override

@@ -242,11 +242,11 @@
   "item.ap2.bow_spleef.switcher": "Switcher",
   "item.ap2.bow_spleef.switcher.desc": "Switch positions with the hit player",
   "item.ap2.bow_spleef.levitation": "Levitation",
-  "item.ap2.bow_spleef.levitation.desc": "Levitate for a short time",
+  "item.ap2.bow_spleef.levitation.desc": "Use to levitate for a short time",
   "item.ap2.bow_spleef.light_weight": "Lightweight",
   "item.ap2.bow_spleef.light_weight.desc": "Briefly be featherlight",
   "item.ap2.bow_spleef.triple_jump": "Triple Jump",
-  "item.ap2.bow_spleef.triple_jump.desc": "Allows you to perform another double jump a couple of times",
+  "item.ap2.bow_spleef.triple_jump.desc": "Allows you to perform another double jump",
   "item.ap2.bow_spleef.creeper_explosion": "Creeper Explosion",
   "item.ap2.bow_spleef.creeper_explosion.desc": "Explodes yourself upon usage"
 }

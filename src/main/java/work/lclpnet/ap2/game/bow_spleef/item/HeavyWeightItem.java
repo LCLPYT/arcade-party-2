@@ -4,8 +4,10 @@ import lombok.Setter;
 import net.minecraft.entity.projectile.thrown.EggEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.particle.ParticleTypes;
 import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.math.Vec3d;
@@ -63,7 +65,9 @@ public class HeavyWeightItem implements SpecialItem {
             setHeavyWeighted(player);
 
             Vec3d pos = hit.getPos();
-            player.getWorld().playSound(null, pos.x, pos.y, pos.z, SoundEvents.ENTITY_BLAZE_HURT, SoundCategory.HOSTILE, 0.5f, 0.65f);
+            ServerWorld world = player.getServerWorld();
+            world.playSound(null, pos.x, pos.y, pos.z, SoundEvents.ENTITY_BLAZE_HURT, SoundCategory.HOSTILE, 0.5f, 0.65f);
+            world.spawnParticles(ParticleTypes.FALLING_NECTAR, pos.x, pos.y + 1, pos.z, 100, 0.25, 0.5, 0.25, 1);
 
             ctx.translations().translateText("game.ap2.bow_spleef.heavy_weighted")
                     .styled(style -> style.withColor(0xff0000))
