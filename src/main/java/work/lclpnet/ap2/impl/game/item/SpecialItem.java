@@ -25,6 +25,10 @@ public interface SpecialItem {
         return createItemStack(registryManager);
     }
 
+    default boolean canBeDropped(ServerPlayerEntity player, ItemStack stack) {
+        return true;
+    }
+
     /**
      * Called when a player picked up an instance of the special item.
      * @param player The player.
@@ -36,9 +40,10 @@ public interface SpecialItem {
      * @param player The player.
      * @param stack The item.
      * @param hand The hand in which the player is holding the item that is being used.
+     * @param ctx The context.
      * @return The {@link ActionResult} to be forwarded to the interaction hook.
      */
-    default ActionResult onUse(ServerPlayerEntity player, ItemStack stack, Hand hand) {
+    default ActionResult onUse(ServerPlayerEntity player, ItemStack stack, Hand hand, SpecialItemContext ctx) {
         return ActionResult.PASS;
     }
 

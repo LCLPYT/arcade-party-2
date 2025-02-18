@@ -241,5 +241,7 @@
   "item.ap2.bow_spleef.fishing_rod": "Angel",
   "item.ap2.bow_spleef.fishing_rod.desc": "Lässt dich andere Spieler zu dir ziehen",
   "item.ap2.bow_spleef.switcher": "Tauscher",
-  "item.ap2.bow_spleef.switcher.desc": "Tauscht die Position mit dem getroffenen Spieler"
+  "item.ap2.bow_spleef.switcher.desc": "Tauscht die Position mit dem getroffenen Spieler",
+  "item.ap2.bow_spleef.levitation": "Schweben",
+  "item.ap2.bow_spleef.levitation.desc": "Schwebe für eine kurze Zeit"
 }

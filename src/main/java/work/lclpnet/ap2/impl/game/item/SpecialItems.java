@@ -137,6 +137,8 @@ public class SpecialItems implements SpecialItemContext {
 
         if (item == null) return false;
 
+        if (!item.canBeDropped(player, stack)) return true;
+
         player.getInventory().setStack(8, ItemStack.EMPTY);
         dropSpecialItem(player, item, stack);
 
@@ -175,7 +177,9 @@ public class SpecialItems implements SpecialItemContext {
 
         if (item == null) return ActionResult.PASS;
 
-        return item.onUse(player, stack, hand);
+        if (player.getItemCooldownManager().isCoolingDown(stack)) return ActionResult.FAIL;
+
+        return item.onUse(player, stack, hand, this);
     }
 
     private void tickPickup() {
