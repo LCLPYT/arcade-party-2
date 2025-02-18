@@ -242,5 +242,7 @@
   "item.ap2.bow_spleef.switcher": "Switcher",
   "item.ap2.bow_spleef.switcher.desc": "Switch positions with the hit player",
   "item.ap2.bow_spleef.levitation": "Levitation",
-  "item.ap2.bow_spleef.levitation.desc": "Levitate for a short time"
+  "item.ap2.bow_spleef.levitation.desc": "Levitate for a short time",
+  "item.ap2.bow_spleef.light_weight": "Lightweight",
+  "item.ap2.bow_spleef.light_weight.desc": "Briefly be featherlight"
 }

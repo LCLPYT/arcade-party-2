@@ -32,8 +32,10 @@ public interface SpecialItem {
     /**
      * Called when a player picked up an instance of the special item.
      * @param player The player.
+     * @param stack The {@link ItemStack}.
+     * @param ctx The context.
      */
-    default void onPickedUp(ServerPlayerEntity player) {}
+    default void onPickedUp(ServerPlayerEntity player, ItemStack stack, SpecialItemContext ctx) {}
 
     /**
      * Called when a player uses (right-clicks) the special item.

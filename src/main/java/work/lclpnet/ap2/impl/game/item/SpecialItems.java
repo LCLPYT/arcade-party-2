@@ -2,6 +2,8 @@ package work.lclpnet.ap2.impl.game.item;
 
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.MapCodec;
+import lombok.Getter;
+import lombok.Setter;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.DamageResistantComponent;
 import net.minecraft.component.type.LoreComponent;
@@ -65,10 +67,10 @@ public class SpecialItems implements SpecialItemContext {
     private final SpecialItemRegistry registry;
     private final SpecialItemScene scene;
     private WeightedList<SpecialItem> weightedItems = WeightedList.empty();
-    private int despawnTicks = 500;
-    private int spawnMinTicks = Ticks.seconds(4);
-    private int spawnMaxTicks = Ticks.seconds(8);
-    private int maxItems = 16;
+    private @Setter @Getter int despawnTicks = 600;
+    private @Setter @Getter int spawnMinTicks = Ticks.seconds(4);
+    private @Setter @Getter int spawnMaxTicks = Ticks.seconds(7);
+    private @Setter @Getter int maxItems = 16;
 
     public SpecialItems(MiniGameHandle gameHandle, GameMap map, ServerWorld world, Random random, SpecialItemPositions positions, SpecialItemRegistry registry) {
         this.gameHandle = gameHandle;
@@ -205,7 +207,7 @@ public class SpecialItems implements SpecialItemContext {
 
         player.getInventory().setStack(8, stack);
 
-        item.onPickedUp(player);
+        item.onPickedUp(player, stack, this);
 
         return true;
     }

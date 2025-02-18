@@ -28,7 +28,7 @@ public class TripleShotItem implements SpecialItem {
     }
 
     @Override
-    public void onPickedUp(ServerPlayerEntity player) {
+    public void onPickedUp(ServerPlayerEntity player, ItemStack stack, SpecialItemContext ctx) {
         ItemStack bow = player.getInventory().getStack(4);
         var multiShot = ItemHelper.getEnchantment(Enchantments.MULTISHOT, player.getWorld().getRegistryManager());
         bow.addEnchantment(multiShot, 1);

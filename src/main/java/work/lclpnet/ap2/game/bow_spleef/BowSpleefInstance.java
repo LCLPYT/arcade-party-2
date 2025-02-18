@@ -26,7 +26,7 @@ import work.lclpnet.ap2.core.hook.EntitySpawnCallback;
 import work.lclpnet.ap2.core.hook.ProjectileHitEntityCallback;
 import work.lclpnet.ap2.game.bow_spleef.item.ExplodeAmmoItem;
 import work.lclpnet.ap2.game.bow_spleef.item.HeavyWeightItem;
-import work.lclpnet.ap2.game.bow_spleef.item.LevitationItem;
+import work.lclpnet.ap2.game.bow_spleef.item.LightWeightItem;
 import work.lclpnet.ap2.impl.game.EliminationGameInstance;
 import work.lclpnet.ap2.impl.game.item.SpecialItems;
 import work.lclpnet.ap2.impl.map.MapUtil;
@@ -128,7 +128,8 @@ public class BowSpleefInstance extends EliminationGameInstance {
 //                .register(heavyWeightItem, 0.25f)
 //                .register(new FishingRodItem(), 0.25f)
 //                .register(new SwitcherItem(), 0.15f)
-                .register(new LevitationItem(), 0.15f));
+//                .register(new LevitationItem(), 0.15f)
+                .register(new LightWeightItem(), 0.25f));
 
         specialItems.setup();
         specialItems.syncWithWorldBorder();

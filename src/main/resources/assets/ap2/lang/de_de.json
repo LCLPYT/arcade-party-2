@@ -243,5 +243,7 @@
   "item.ap2.bow_spleef.switcher": "Tauscher",
   "item.ap2.bow_spleef.switcher.desc": "Tauscht die Position mit dem getroffenen Spieler",
   "item.ap2.bow_spleef.levitation": "Schweben",
-  "item.ap2.bow_spleef.levitation.desc": "Schwebe für eine kurze Zeit"
+  "item.ap2.bow_spleef.levitation.desc": "Schwebe für eine kurze Zeit",
+  "item.ap2.bow_spleef.light_weight": "Federleicht",
+  "item.ap2.bow_spleef.light_weight.desc": "Werde kurz federleicht"
 }
