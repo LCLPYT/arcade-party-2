@@ -1,0 +1,13 @@
+name = "arcade-party-2"
+author = "LCLP"
+version = "1.0.0"
+pack-format = "packwiz:1.1.0"
+
+[index]
+file = "index.toml"
+hash-format = "sha256"
+hash = "a651fab5f7ead69d72c5c68aa844033e22dfd3492f23acbc5a13cb896e8e5d4b"
+
+[versions]
+fabric = "0.16.10"
+minecraft = "1.21.4"

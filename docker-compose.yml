@@ -1,0 +1,20 @@
+services:
+  mc:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    tty: true
+    stdin_open: true
+    ports:
+      - "25565:25565"
+      - "24454:24454/udp"  # voice chat
+    environment:
+      EULA: "TRUE"
+      TZ: "Europe/Berlin"
+      TYPE: 'FABRIC'
+      VERSION: '1.21.4'
+      MOTD: 'ArcadeParty 2'
+      GUI: false
+      MAX_MEMORY: 6G
+      AP2_DEV: true
+      PACKWIZ_URL: "file:///packwiz/pack.toml"

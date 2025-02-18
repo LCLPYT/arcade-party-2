@@ -33,6 +33,7 @@ import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.ap2.impl.util.world.BfsWorldScanner;
 import work.lclpnet.ap2.impl.util.world.SimpleAdjacentBlocks;
+import work.lclpnet.combatctl.impl.CombatStyles;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.util.PositionRotation;
 import work.lclpnet.kibu.translate.Translations;
@@ -60,6 +61,9 @@ public class SplashyDropperInstance extends DefaultGameInstance implements MapBo
 
         movementBlocker = new SimpleMovementBlocker(gameHandle.getScheduler());
         movementBlocker.setModifySpeedAttribute(false);
+
+        gameHandle.getPlayerUtil().setDefaultCombatStyle(CombatStyles.CLASSIC
+                .andThen(player -> player.setDisableOldBobbing(true), global -> {}));
     }
 
     @Override

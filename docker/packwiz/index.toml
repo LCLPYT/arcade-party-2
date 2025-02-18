@@ -1,0 +1,76 @@
+hash-format = "sha256"
+
+[[files]]
+file = "mods/anti-xray.pw.toml"
+hash = "05a1a121e1b6c88338020f411c874ecd48fecacff9b9f9ae6ff884da48bca5a7"
+metafile = true
+
+[[files]]
+file = "mods/cloth-config.pw.toml"
+hash = "df15648dd4d4e27dd0c45ab4e78277c45886b77a698b129f4ce2d2bc337f7044"
+metafile = true
+
+[[files]]
+file = "mods/combat-control.pw.toml"
+hash = "41ae43179e7cc6bca460569d4b453b7aa0defb12268c30ab80d335e8fbfa099a"
+metafile = true
+
+[[files]]
+file = "mods/fabric-api.pw.toml"
+hash = "dd4c3c3ee97fa946926784db25da0b5a9984c9959681f412d6b402cc5bdfc83e"
+metafile = true
+
+[[files]]
+file = "mods/fantasy.pw.toml"
+hash = "fa5efdb92b2aad5d84b224bc6351dff7d4780561bd294e443fcb0bbe5e24c7eb"
+metafile = true
+
+[[files]]
+file = "mods/kibu-world-api.pw.toml"
+hash = "ea6a8543a21218f3a628ac61945163769cbe88ca9e35004c843f926eb1bd265a"
+metafile = true
+
+[[files]]
+file = "mods/kibu.pw.toml"
+hash = "dcada4a5d07d6ab51b40b698d608169939e6983367e81d6d7322b91578f25afd"
+metafile = true
+
+[[files]]
+file = "mods/krypton.pw.toml"
+hash = "c4e45594c8d1ab3dacc3b49142f16fb253178dd31d97cc917bf4a4d54f21e081"
+metafile = true
+
+[[files]]
+file = "mods/lithium.pw.toml"
+hash = "f4070441d1f1bdeb3e6a594b5ba1c3f314b8f13815a67619cb38621c0f6a1fec"
+metafile = true
+
+[[files]]
+file = "mods/mcserver-api-fabric.pw.toml"
+hash = "c88956fd641fdbbab2810cb92ccc8780f4f24af07afa371a32962bad2b97c826"
+metafile = true
+
+[[files]]
+file = "mods/mg-lobby.pw.toml"
+hash = "33f2e6cf5d0c49d4f59e7ea329311717053e4f78f5d1d49c1da016f26490e26a"
+metafile = true
+
+[[files]]
+file = "mods/notica.pw.toml"
+hash = "8b68968c4df951563dae766f193e3eb86b5a06c7de5544e980ff226b97bc5c96"
+metafile = true
+
+[[files]]
+file = "mods/pal.pw.toml"
+hash = "347f816c90c0cd4e76db27868c01900e5db9f795816098cc516e696d47e7dcd5"
+metafile = true
+
+[[files]]
+file = "mods/ruler.pw.toml"
+hash = "e228cf7508b18a1ee186f0cd2a8d282e1df008e229bd994096bb7f52474767e0"
+metafile = true
+
+[[files]]
+file = "mods/sqlite-jdbc.pw.toml"
+hash = "c1103579d21a2dae37a7379d7355a216a51b5721ddd585781b06e795c4249d0c"
+metafile = true

@@ -52,8 +52,8 @@ import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
 public class RedLightGreenLightInstance extends DefaultGameInstance implements Runnable {
 
-    private static final int UNTIL_STOP_MIN_TICKS = 90, UNTIL_STOP_MAX_TICKS = 160;
-    private static final int WARN_TIME_MIN_TICKS = 38, WARN_TIME_MAX_TICKS = 78;
+    private static final int UNTIL_STOP_MIN_TICKS = 70, UNTIL_STOP_MAX_TICKS = 110;
+    private static final int WARN_TIME_MIN_TICKS = 35, WARN_TIME_MAX_TICKS = 75;
     private static final int FROZEN_MIN_TICKS = 60, FROZEN_MAX_TICKS = 105;
     private static final int END_TIME_SECONDS = 15;
     private final SimpleMovementBlocker movementBlocker;
@@ -216,7 +216,7 @@ public class RedLightGreenLightInstance extends DefaultGameInstance implements R
     }
 
     private void onMove(ServerPlayerEntity player) {
-        if (timer <= 0) return;
+        if (timer <= 0 || inGoal.contains(player.getUuid())) return;
 
         tracker.track(player);
 
@@ -271,10 +271,11 @@ public class RedLightGreenLightInstance extends DefaultGameInstance implements R
     }
 
     private void onGoalReached(ServerPlayerEntity player) {
-        data.add(player);
-        inGoal.add(player.getUuid());
+        if (!inGoal.add(player.getUuid())) return;
 
-        FireworkExplosionComponent explosion = new FireworkExplosionComponent(FireworkExplosionComponent.Type.LARGE_BALL, IntList.of(0x20FF4D), IntList.of(0x1E7220), false, true);
+        data.add(player);
+
+        var explosion = new FireworkExplosionComponent(FireworkExplosionComponent.Type.LARGE_BALL, IntList.of(0x20FF4D), IntList.of(0x1E7220), false, true);
 
         ItemStack rocket = new ItemStack(Items.FIREWORK_ROCKET);
         rocket.set(DataComponentTypes.FIREWORKS, new FireworksComponent(1, List.of(explosion)));
