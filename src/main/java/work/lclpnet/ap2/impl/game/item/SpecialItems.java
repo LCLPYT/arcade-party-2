@@ -302,14 +302,23 @@ public class SpecialItems implements SpecialItemContext {
     public void spawnRandomItem() {
         if (scene.itemCount() >= maxItems) return;
 
-        BlockPos blockPos = positions.randomPos(random).orElse(null);
-        SpecialItem item = weightedItems.getRandomElement(random);
+        WorldBorder worldBorder = world.getWorldBorder();
+        BlockPos blockPos;
+        int i = 0;
 
-        if (blockPos == null || item == null) return;
+        do {
+            blockPos = positions.randomPos(random).orElse(null);
+
+            if (blockPos == null) return;
+        } while (++i < 16 && !worldBorder.contains(blockPos));
 
         Vec3d pos = blockPos.toBottomCenterPos();
 
-        if (!world.getWorldBorder().contains(pos)) return;
+        if (!worldBorder.contains(pos)) return;
+
+        SpecialItem item = weightedItems.getRandomElement(random);
+
+        if (item == null) return;
 
         world.spawnParticles(ParticleTypes.END_ROD, pos.x, pos.y, pos.z, 15, 0.1, 0.1, 0.1, 0.1);
 
