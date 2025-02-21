@@ -31,7 +31,7 @@ import java.util.Random;
 
 public class ApocalypseSurvivalInstance extends EliminationGameInstance {
 
-    private List<MonsterSpawner> spawners;
+    private List<MonsterSpawner<?>> spawners;
     private TargetManager targetManager;
     private int time = 0;
 

@@ -11,12 +11,17 @@ import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.ChunkSectionPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
+import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
+import work.lclpnet.kibu.translate.hook.LanguageChangedCallback;
 
 import java.util.*;
 
 /**
  * Manages {@link DynamicEntity} tracking for online players, so that they are only visible when nearby, just like real entities.
+ * When tracking a {@link DynamicEntity}, each player can possibly see a different entity.
+ * The actual "real" entity that is shown to a player in range depends on the {@link DynamicEntity} implementation.
+ * @implNote This class doesn't do anything until {@link #init(TaskScheduler, HookRegistrar)} is called.
  */
 public class DynamicEntityManager {
 
@@ -36,13 +41,21 @@ public class DynamicEntityManager {
         }
     }
 
-    public void init(TaskScheduler scheduler) {
+    /**
+     * Initializes entity tracking.
+     * @param scheduler The scheduler
+     * @param hooks The hook registrar
+     */
+    public void init(TaskScheduler scheduler, HookRegistrar hooks) {
         Set<ServerPlayNetworkHandler> invalid = new HashSet<>();
 
         scheduler.interval(() -> tick(invalid), 1);
+
+        hooks.registerHook(LanguageChangedCallback.HOOK, (player, lang, reason) -> update(player));
     }
 
     public synchronized void add(DynamicEntity entity) {
+        Objects.requireNonNull(entity, "Dynamic entity cannot be null");
         entities.computeIfAbsent(entity, Tracker::new);
     }
 
@@ -74,7 +87,7 @@ public class DynamicEntityManager {
             tracker.tick();
 
             // mark all listeners as invalid initially
-            invalid.addAll(tracker.entriesByListener.keySet());
+            invalid.addAll(tracker.byPlayer.keySet());
 
             // update player tracking status
             for (ServerPlayerEntity player : world.getPlayers()) {
@@ -107,6 +120,12 @@ public class DynamicEntityManager {
         }
     }
 
+    private synchronized void update(ServerPlayerEntity player) {
+        for (Tracker tracker : entities.values()) {
+            tracker.update(player);
+        }
+    }
+
     private int getViewDistance(ServerPlayerEntity player) {
         return MathHelper.clamp(player.getViewDistance(), 2, serverViewDistance);
     }
@@ -116,14 +135,22 @@ public class DynamicEntityManager {
         return player.getChunkFilter().isWithinDistance(chunkX, chunkZ) && !player.networkHandler.chunkDataSender.isInNextBatch(ChunkPos.toLong(chunkX, chunkZ));
     }
 
+    /** A per-player tracking handler for a DynamicEntity instance */
     private class Tracker {
 
         private final DynamicEntity dynamic;
+
+        /** Buffer for players who no longer track the entity and should be removed by ::tick */
         private final List<ServerPlayerEntity> removal = new ArrayList<>();
-        private final Map<ServerPlayNetworkHandler, EntityPair> entriesByListener = new HashMap<>();
-        private final Map<Entity, Set<ServerPlayNetworkHandler>> listenersByEntity = new HashMap<>();
-        private final Map<Entity, EntityTrackerEntry> entriesByEntity = new HashMap<>();
-        private final Set<EntityTrackerEntry> entries = new HashSet<>();
+
+        /** Each player who tracks the dynamic entity is assigned a possibly shared Entity */
+        private final Map<ServerPlayNetworkHandler, Entity> byPlayer = new HashMap<>();
+
+        /** Each real entity is tracked by at least one player. Used to determine the players to which the associated tracker entry sends data. */
+        private final Map<Entity, Set<ServerPlayNetworkHandler>> byEntity = new HashMap<>();
+
+        /** Each entity has an associated tracker that gets updated during ::tick */
+        private final Map<Entity, EntityTrackerEntry> trackerEntries = new HashMap<>();
 
         private Tracker(DynamicEntity dynamic) {
             this.dynamic = dynamic;
@@ -131,10 +158,10 @@ public class DynamicEntityManager {
 
         public void tick() {
             // gather entries where the entity was removed
-            for (var entry : entriesByListener.entrySet()) {
-                EntityPair pair = entry.getValue();
+            for (var entry : byPlayer.entrySet()) {
+                Entity entity = entry.getValue();
 
-                if (pair.entity.isRemoved()) {
+                if (entity.isRemoved()) {
                     removal.add(entry.getKey().player);
                 }
             }
@@ -147,13 +174,13 @@ public class DynamicEntityManager {
             removal.clear();
 
             // tick entries
-            for (EntityTrackerEntry entry : entries) {
+            for (EntityTrackerEntry entry : trackerEntries.values()) {
                 entry.tick();
             }
         }
 
         public synchronized void destroy() {
-            for (var entry : entriesByListener.entrySet()) {
+            for (var entry : byPlayer.entrySet()) {
                 ServerPlayerEntity player = entry.getKey().getPlayer();
 
                 if (player == null) continue;
@@ -161,14 +188,13 @@ public class DynamicEntityManager {
                 removeEntityForPlayer(player, entry.getValue());
             }
 
-            entriesByListener.clear();
-            listenersByEntity.clear();
-            entriesByEntity.clear();
-            entries.clear();
+            byPlayer.clear();
+            byEntity.clear();
+            trackerEntries.clear();
         }
 
         public synchronized void add(ServerPlayerEntity player) {
-            if (entriesByListener.containsKey(player.networkHandler)) return;
+            if (byPlayer.containsKey(player.networkHandler)) return;
 
             Entity entity = dynamic.getEntity(player);
 
@@ -176,31 +202,34 @@ public class DynamicEntityManager {
 
             EntityTrackerEntry trackerEntry = getTrackerEntry(player, entity);
 
-            entriesByListener.put(player.networkHandler, new EntityPair(entity, trackerEntry));
+            byPlayer.put(player.networkHandler, entity);
 
             trackerEntry.startTracking(player);
         }
 
         public synchronized void remove(ServerPlayerEntity player) {
-            var pair = entriesByListener.remove(player.networkHandler);
+            var entity = byPlayer.remove(player.networkHandler);
 
-            if (pair == null) return;
+            if (entity == null) return;
 
-            removeListener(player, pair.entity());
-
-            removeEntityForPlayer(player, pair);
+            removeEntityForPlayer(player, entity);
+            removeListener(player, entity);
         }
 
-        private void removeEntityForPlayer(ServerPlayerEntity player, EntityPair pair) {
-            if (!player.isDisconnected() && player.getWorld() == pair.entity().getWorld()) {
-                pair.trackerEntry().stopTracking(player);
+        private void removeEntityForPlayer(ServerPlayerEntity player, Entity entity) {
+            if (!player.isDisconnected() && player.getWorld() == entity.getWorld()) {
+                EntityTrackerEntry trackerEntry = trackerEntries.get(entity);
+
+                if (trackerEntry != null) {
+                    trackerEntry.stopTracking(player);
+                }
             }
 
             dynamic.cleanup(player);
         }
 
         private void removeListener(ServerPlayerEntity player, Entity entity) {
-            var listeners = listenersByEntity.get(entity);
+            var listeners = byEntity.get(entity);
 
             if (listeners == null) return;
 
@@ -209,37 +238,37 @@ public class DynamicEntityManager {
             if (!listeners.isEmpty()) return;
 
             // nobody tracks the entity; cleanup
-            EntityTrackerEntry trackerEntry = entriesByEntity.remove(entity);
+            trackerEntries.remove(entity);
+            byEntity.remove(entity);
+        }
 
-            if (trackerEntry != null) {
-                entries.remove(trackerEntry);
-            }
+        public synchronized void update(ServerPlayerEntity player) {
+            Entity current = byPlayer.get(player.networkHandler);
 
-            listenersByEntity.remove(entity);
+            if (current == null) return;
+
+            Entity entity = dynamic.getEntity(player);
+
+            if (Objects.equals(current, entity)) return;
+
+            remove(player);
+            add(player);
         }
 
         private EntityTrackerEntry getTrackerEntry(ServerPlayerEntity player, Entity entity) {
-            // get or create listener set for the entity
-            var listeners = listenersByEntity.computeIfAbsent(entity, e -> new HashSet<>());
+            var listeners = byEntity.computeIfAbsent(entity, e -> new HashSet<>());
             listeners.add(player.networkHandler);
 
-            // get or create tracker entry for the entity
-            return entriesByEntity.computeIfAbsent(entity, e -> {
+            return trackerEntries.computeIfAbsent(entity, e -> {
                 var type = e.getType();
 
                 // use internal Minecraft class that is normally used for syncing the entity
-                var entry = new EntityTrackerEntry(world, e, type.getTrackTickInterval(), type.alwaysUpdateVelocity(), packet -> {
+                return new EntityTrackerEntry(world, e, type.getTrackTickInterval(), type.alwaysUpdateVelocity(), packet -> {
                     for (ServerPlayNetworkHandler tracker : listeners) {
                         tracker.sendPacket(packet);
                     }
                 });
-
-                entries.add(entry);
-
-                return entry;
             });
         }
     }
-
-    private record EntityPair(Entity entity, EntityTrackerEntry trackerEntry) {}
 }

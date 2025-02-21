@@ -116,8 +116,8 @@ public class BlockBox implements Pair<BlockPos, BlockPos>, Iterable<BlockPos>, C
 
     public boolean contains(double x, double y, double z) {
         return x >= min.getX() && x < max.getX() + 1
-               && y >= min.getY() && y < max.getY() + 1
-               && z >= min.getZ() && z < max.getZ() + 1;
+                && y >= min.getY() && y < max.getY() + 1
+                && z >= min.getZ() && z < max.getZ() + 1;
     }
 
     public boolean contains(Vec3i pos) {
@@ -134,17 +134,17 @@ public class BlockBox implements Pair<BlockPos, BlockPos>, Iterable<BlockPos>, C
 
     public boolean contains(BlockBox other) {
         return this.min.getX() <= other.min.getX() &&
-               this.min.getY() <= other.min.getY() &&
-               this.min.getZ() <= other.min.getZ() &&
-               other.max.getX() <= this.max.getX() &&
-               other.max.getY() <= this.max.getY() &&
-               other.max.getZ() <= this.max.getZ();
+                this.min.getY() <= other.min.getY() &&
+                this.min.getZ() <= other.min.getZ() &&
+                other.max.getX() <= this.max.getX() &&
+                other.max.getY() <= this.max.getY() &&
+                other.max.getZ() <= this.max.getZ();
     }
 
     public boolean intersects(BlockBox other) {
         return this.max.getX() >= other.min.getX() && other.max.getX() >= this.min.getX()
-               && this.max.getY() >= other.min.getY() && other.max.getY() >= this.min.getY()
-               && this.max.getZ() >= other.min.getZ() && other.max.getZ() >= this.min.getZ();
+                && this.max.getY() >= other.min.getY() && other.max.getY() >= this.min.getY()
+                && this.max.getZ() >= other.min.getZ() && other.max.getZ() >= this.min.getZ();
     }
 
     public void randomBlockPos(BlockPos.Mutable pos, Random random) {
@@ -254,5 +254,11 @@ public class BlockBox implements Pair<BlockPos, BlockPos>, Iterable<BlockPos>, C
         }
 
         return new BlockBox(min, max);
+    }
+
+    public static BlockBox ofRadius(Vec3i origin, int radius) {
+        return new BlockBox(
+                origin.getX() - radius, origin.getY() - radius, origin.getZ() - radius,
+                origin.getX() + radius, origin.getY() + radius, origin.getZ() + radius);
     }
 }

@@ -105,9 +105,11 @@ public class MSManager {
         }
 
         if (DEBUG_MOB_SPAWNS) {
-            for (Vec3d pos : spawns.source()) {
-                debugController.displayMarker(pos.x, pos.y + 0.5, pos.z, Blocks.YELLOW_CONCRETE.getDefaultState(), 0xffff00);
-            }
+            debugController.parent().renderer().ifPresent(renderer -> {
+                for (Vec3d pos : spawns.source()) {
+                    renderer.marker(pos.x, pos.y + 0.5, pos.z, Blocks.YELLOW_CONCRETE.getDefaultState(), 0xffff00);
+                }
+            });
         }
 
         spawner.spawn(spawns, (uuid, data) -> {

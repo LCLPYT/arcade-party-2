@@ -4,6 +4,8 @@ import org.joml.Vector3d;
 
 /**
  * A simple gradient that only considers gravity, independent of any other forces.
+ * It also has no concept of world geometry.
+ * For object with index i, it expects the position at <code>2 * i</code> and the velocity at <code>2 * i + 1</code>.
  */
 public class SimpleGravityGradient implements Gradient {
 

@@ -1,25 +1,35 @@
-package work.lclpnet.ap2.impl.util;
+package work.lclpnet.ap2.impl.util.debug;
+
+import org.jetbrains.annotations.Nullable;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class StopWatch {
+public class StopWatchImpl implements StopWatch {
 
-    private final List<Section> sections = new ArrayList<>();
-    private String section = null;
+    private @Nullable List<Section> sections = null;
+    private @Nullable String section = null;
     private long startNanos = 0L;
 
+    public void enable() {
+        sections = new ArrayList<>();
+    }
+
+    @Override
     public void start(String section) {
+        if (sections == null) return;
+
         stop();
 
         this.section = section;
         startNanos = System.nanoTime();
     }
 
+    @Override
     public void stop() {
-        if (section == null) return;
+        if (sections == null || section == null) return;
 
         long elapsed = System.nanoTime() - startNanos;
 
@@ -30,11 +40,20 @@ public class StopWatch {
     }
 
     public List<Section> getSections() {
-        return sections;
+        return sections != null ? sections : List.of();
     }
 
-    public void printSections(PrintStream out) {
+    @Override
+    public void printResults(PrintStream out) {
+        if (sections == null) return;
+
+        stop();
+
+        sections.add(new Section("total", sections.stream().mapToLong(Section::nanoSeconds).sum()));
+
         final int n = sections.size() + 1;
+
+        // columns
         String[] names = new String[n];
         String[] nanos = new String[n];
         String[] millis = new String[n];
@@ -61,15 +80,19 @@ public class StopWatch {
         int millisWidth = Arrays.stream(millis).mapToInt(String::length).max().orElse(0);
         int secondsWidth = Arrays.stream(seconds).mapToInt(String::length).max().orElse(0);
 
+        String hl = "─".repeat(namesWidth + nanosWidth + millisWidth + secondsWidth + 3) + "%n";
+
+        out.printf(hl);
+
         for (int i = 0; i < n; i++) {
-            String name = ("%" + namesWidth + "s").formatted(names[i]);
-            String nano = ("%-" + nanosWidth + "s").formatted(nanos[i]);
-            String milli = ("%-" + millisWidth + "s").formatted(millis[i]);
-            String second = ("%-" + secondsWidth + "s").formatted(seconds[i]);
+            String name = ("%-" + namesWidth + "s").formatted(names[i]);
+            String nano = ("%" + nanosWidth + "s").formatted(nanos[i]);
+            String milli = ("%" + millisWidth + "s").formatted(millis[i]);
+            String second = ("%" + secondsWidth + "s").formatted(seconds[i]);
             out.printf("%s %s %s %s%n", name, second, milli, nano);
 
-            if (i == 0) {
-                out.printf("─".repeat(namesWidth + nanosWidth + millisWidth + secondsWidth + 3) + "%n");
+            if (i == 0 || i >= n - 2) {
+                out.printf(hl);
             }
         }
     }

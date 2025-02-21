@@ -91,10 +91,10 @@ public class EndermanEscape {
         }
 
         if (DEBUG_FLEE_POSITIONS) {
-            debugController.exclusive("flee_positions", controller -> paths.stream()
+            debugController.parent().renderer().ifPresent(renderer -> debugController.parent().exclusive("flee_positions", c -> paths.stream()
                     .map(Path::getTarget)
                     .map(BlockPos::toBottomCenterPos)
-                    .forEach(pos -> controller.displayMarker(pos, Blocks.MAGENTA_TERRACOTTA.getDefaultState(), 0xd808db)));
+                    .forEach(pos -> renderer.marker(pos, Blocks.MAGENTA_TERRACOTTA.getDefaultState(), 0xd808db))));
         }
 
         return paths.stream().min(Comparator.comparingInt(Path::getLength));
@@ -152,7 +152,8 @@ public class EndermanEscape {
             BlockPos pos = node.getBlockPos();
 
             if (DEBUG_FLEE_PATHS) {
-                debugController.displayMarker(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, Blocks.BLACK_CONCRETE.getDefaultState(), 0);
+                debugController.parent().renderer().ifPresent(renderer ->
+                        renderer.marker(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, Blocks.BLACK_CONCRETE.getDefaultState(), 0));
             }
 
             x += (pos.getX() - sx);

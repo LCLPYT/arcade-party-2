@@ -8,7 +8,7 @@ import work.lclpnet.ap2.game.guess_it.data.*;
 import work.lclpnet.ap2.game.guess_it.util.MobRandomizer;
 import work.lclpnet.ap2.game.guess_it.util.MobSpawner;
 import work.lclpnet.ap2.impl.util.TextUtil;
-import work.lclpnet.ap2.impl.util.world.stage.Stage;
+import work.lclpnet.ap2.impl.util.world.stage.BlockShape;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.lobby.util.WorldModifier;
@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Random;
 
 import static net.minecraft.util.Formatting.YELLOW;
+import static work.lclpnet.ap2.impl.util.world.PositionUtil.findGroundPositions;
 
 public class MobCountMultiChallenge implements Challenge {
 
@@ -25,15 +26,15 @@ public class MobCountMultiChallenge implements Challenge {
     private final MiniGameHandle gameHandle;
     private final ServerWorld world;
     private final Random random;
-    private final Stage stage;
+    private final BlockShape blockShape;
     private final WorldModifier modifier;
     private int amount = 0;
 
-    public MobCountMultiChallenge(MiniGameHandle gameHandle, ServerWorld world, Random random, Stage stage, WorldModifier modifier) {
+    public MobCountMultiChallenge(MiniGameHandle gameHandle, ServerWorld world, Random random, BlockShape blockShape, WorldModifier modifier) {
         this.gameHandle = gameHandle;
         this.world = world;
         this.random = random;
-        this.stage = stage;
+        this.blockShape = blockShape;
         this.modifier = modifier;
     }
 
@@ -64,7 +65,7 @@ public class MobCountMultiChallenge implements Challenge {
             throw new IllegalStateException("There must be at least two entity types");
         }
 
-        List<Vec3d> spaces = MobSpawner.findSpawns(world, types).findSpaces(stage.groundPositionIterator());
+        List<Vec3d> spaces = MobSpawner.findSpawns(world, types).findSpaces(findGroundPositions(blockShape, world));
 
         if (spaces.isEmpty()) {
             throw new IllegalStateException("No spawn spaces found");

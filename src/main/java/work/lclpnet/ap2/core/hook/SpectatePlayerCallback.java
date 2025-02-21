@@ -5,6 +5,7 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import work.lclpnet.kibu.hook.Hook;
 import work.lclpnet.kibu.hook.HookFactory;
 
+// subject to be moved to kibu
 public interface SpectatePlayerCallback {
 
     Hook<SpectatePlayerCallback> HOOK = HookFactory.createArrayBacked(SpectatePlayerCallback.class, callbacks -> (spectator, target) -> {

@@ -15,7 +15,7 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import work.lclpnet.ap2.api.game.team.TeamManager;
 import work.lclpnet.ap2.game.cozy_campfire.CozyCampfireInstance;
-import work.lclpnet.ap2.impl.util.ItemStackHelper;
+import work.lclpnet.ap2.impl.util.ItemHelper;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -59,11 +59,11 @@ public class CCKitManager {
         inventory.setStack(4, hoe);
 
         DynamicRegistryManager registryManager = world.getRegistryManager();
-        var trimPattern = patterns.computeIfAbsent(player.getUuid(), uuid -> ItemStackHelper.getRandomTrimPattern(registryManager, random));
+        var trimPattern = patterns.computeIfAbsent(player.getUuid(), uuid -> ItemHelper.getRandomTrimPattern(registryManager, random));
         var trimMaterialKey = teamManager.getTeam(player)
                 .map(team -> team.getKey().equals(CozyCampfireInstance.TEAM_RED) ? ArmorTrimMaterials.REDSTONE : ArmorTrimMaterials.LAPIS)
                 .orElse(ArmorTrimMaterials.IRON);
-        var trimMaterial = ItemStackHelper.getTrimMaterial(registryManager, trimMaterialKey);
+        var trimMaterial = ItemHelper.getTrimMaterial(registryManager, trimMaterialKey);
 
         ItemStack helmet = new ItemStack(Items.IRON_HELMET);
         helmet.set(DataComponentTypes.UNBREAKABLE, new UnbreakableComponent(false));

@@ -23,6 +23,7 @@ import work.lclpnet.ap2.game.maze_scape.util.EndermanEscape;
 import work.lclpnet.ap2.game.maze_scape.util.MSManager;
 import work.lclpnet.ap2.game.maze_scape.util.MSStruct;
 import work.lclpnet.ap2.game.maze_scape.util.VisibilityChecker;
+import work.lclpnet.ap2.impl.util.debug.DebugController;
 import work.lclpnet.kibu.scheduler.Ticks;
 
 import java.util.List;
@@ -179,12 +180,13 @@ public class EndermanData implements MonsterData<EndermanEntity> {
             var optPath = escape.findEscapePath(mob);
 
             if (DEBUG_TARGET_FLEE_POS) {
-                args.manager().debugController().exclusive("target_flee_pos", controller -> {
+                DebugController parent = args.manager().debugController().parent();
+                parent.renderer().ifPresent(renderer -> parent.exclusive("target_flee_pos", c -> {
                     if (optPath.isEmpty()) return;
 
                     BlockPos pos = optPath.get().getTarget();
-                    controller.displayMarker(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, Blocks.CYAN_CONCRETE.getDefaultState(), 0x03b2fe, 0.5);
-                });
+                    renderer.marker(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, Blocks.CYAN_CONCRETE.getDefaultState(), 0x03b2fe, 0.5);
+                }));
             }
 
             optPath.ifPresentOrElse(path -> flee(mob, path), () -> angerFully(player));
@@ -274,7 +276,7 @@ public class EndermanData implements MonsterData<EndermanEntity> {
         frozenTimer = 0;
 
         if (DEBUG_TARGET_FLEE_POS) {
-            args.manager().debugController().exclusive("target_flee_pos", debugger -> {});
+            args.manager().debugController().parent().exclusive("target_flee_pos", debugger -> {});
         }
 
         removeAttributeModifier(mob, MOVEMENT_SPEED, FLEE_BONUS_ID);

@@ -150,7 +150,7 @@ public class PandaFinderInstance extends DefaultGameInstance {
 
         ServerWorld world = getWorld();
 
-        BlockPredicate predicate = BlockPredicate.and(new NotOccupiedBlockPredicate(world), pos -> {
+        BlockPredicate predicate = new NotOccupiedBlockPredicate(world).and(pos -> {
             int x = pos.getX(), y = pos.getY(), z = pos.getZ();
             return bounds.contains(x, y, z) && !exclude.contains(x, y, z);
         });

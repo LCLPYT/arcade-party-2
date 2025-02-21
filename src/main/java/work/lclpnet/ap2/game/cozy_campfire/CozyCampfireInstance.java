@@ -140,7 +140,7 @@ public class CozyCampfireInstance extends TeamEliminationGameInstance implements
             Team lastTeam = participatingTeams.iterator().next();
 
             Translations translations = gameHandle.getTranslations();
-            CampfireFuel fuel = campfireFuel.getOrCreate(lastTeam);
+            CampfireFuel fuel = campfireFuel.get(lastTeam);
             int remainingSeconds = getRemainingTime(fuel.count, lastTeam.getPlayerCount());
 
             var duration = TimeHelper.formatTime(translations, remainingSeconds);
@@ -240,7 +240,7 @@ public class CozyCampfireInstance extends TeamEliminationGameInstance implements
         toEliminate.clear();
 
         for (Team team : getTeamManager().getTeams()) {
-            CampfireFuel fuel = campfireFuel.getOrCreate(team);
+            CampfireFuel fuel = campfireFuel.get(team);
 
             int fuelConsumption = getFuelConsumption(team);
             fuel.set(fuel.count - fuelConsumption);
@@ -286,7 +286,7 @@ public class CozyCampfireInstance extends TeamEliminationGameInstance implements
 
         if (value <= 0) return;
 
-        CampfireFuel fuel = campfireFuel.getOrCreate(team);
+        CampfireFuel fuel = campfireFuel.get(team);
         fuel.set(fuel.count + value);
 
         updateBossBar(team, fuel);

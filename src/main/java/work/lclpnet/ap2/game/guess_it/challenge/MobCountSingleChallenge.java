@@ -10,7 +10,7 @@ import work.lclpnet.ap2.game.guess_it.util.MobRandomizer;
 import work.lclpnet.ap2.game.guess_it.util.MobSpawner;
 import work.lclpnet.ap2.impl.util.TextUtil;
 import work.lclpnet.ap2.impl.util.world.SizedSpaceFinder;
-import work.lclpnet.ap2.impl.util.world.stage.Stage;
+import work.lclpnet.ap2.impl.util.world.stage.BlockShape;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.lobby.util.WorldModifier;
@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Random;
 
 import static net.minecraft.util.Formatting.YELLOW;
+import static work.lclpnet.ap2.impl.util.world.PositionUtil.findGroundPositions;
 
 public class MobCountSingleChallenge implements Challenge {
 
@@ -26,15 +27,15 @@ public class MobCountSingleChallenge implements Challenge {
     private final MiniGameHandle gameHandle;
     private final ServerWorld world;
     private final Random random;
-    private final Stage stage;
+    private final BlockShape blockShape;
     private final WorldModifier modifier;
     private int amount = 0;
 
-    public MobCountSingleChallenge(MiniGameHandle gameHandle, ServerWorld world, Random random, Stage stage, WorldModifier modifier) {
+    public MobCountSingleChallenge(MiniGameHandle gameHandle, ServerWorld world, Random random, BlockShape blockShape, WorldModifier modifier) {
         this.gameHandle = gameHandle;
         this.world = world;
         this.random = random;
-        this.stage = stage;
+        this.blockShape = blockShape;
         this.modifier = modifier;
     }
 
@@ -60,7 +61,7 @@ public class MobCountSingleChallenge implements Challenge {
         amount = getRandomAmount(type);
 
         SizedSpaceFinder spaceFinder = SizedSpaceFinder.create(world, type);
-        List<Vec3d> spaces = spaceFinder.findSpaces(stage.groundPositionIterator());
+        List<Vec3d> spaces = spaceFinder.findSpaces(findGroundPositions(blockShape, world));
 
         if (spaces.isEmpty()) {
             throw new IllegalStateException("There are no spaces that support " + Registries.ENTITY_TYPE.getId(type));

@@ -9,8 +9,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.impl.ds.IndexedSet;
 import work.lclpnet.ap2.impl.ds.WeightedList;
-import work.lclpnet.ap2.impl.util.world.stage.Stage;
-import work.lclpnet.ap2.impl.util.world.stage.StageReader;
+import work.lclpnet.ap2.impl.map.MapUtil;
+import work.lclpnet.ap2.impl.util.world.stage.BlockShape;
 import work.lclpnet.lobby.game.map.GameMap;
 
 import java.util.HashSet;
@@ -32,18 +32,18 @@ public class SdGenerator {
     }
 
     public void generate() {
-        Stage stage = StageReader.readStage(map);
+        BlockShape blockShape = MapUtil.readArea(map);
 
         WeightedList<SdShape> shapes = new WeightedList<>();
         shapes.add(SdShape.square(1, 1), 0.2f);
         shapes.add(SdShape.square(2, 2), 0.44f);
         shapes.add(SdShape.square(3, 3), 0.36f);
 
-        generatePuddles(stage, shapes);
+        generatePuddles(blockShape, shapes);
     }
 
-    private void generatePuddles(Stage stage, WeightedList<SdShape> shapes) {
-        WeightedList<ShapeSpace> pool = createPool(stage, shapes);
+    private void generatePuddles(BlockShape blockShape, WeightedList<SdShape> shapes) {
+        WeightedList<ShapeSpace> pool = createPool(blockShape, shapes);
 
         /* Algorithm:
          * - pick a random shape from the pool
@@ -80,13 +80,11 @@ public class SdGenerator {
         }
     }
 
-    private static @NotNull WeightedList<ShapeSpace> createPool(Stage stage, WeightedList<SdShape> shapes) {
+    private @NotNull WeightedList<ShapeSpace> createPool(BlockShape blockShape, WeightedList<SdShape> shapes) {
         Set<BlockPos> space = new HashSet<>();
 
-        var it = stage.groundPositionIterator();
-
-        while (it.hasNext()) {
-            space.add(it.next().toImmutable());
+        for (BlockPos pos : blockShape) {
+            space.add(pos.toImmutable());
         }
 
         // create mutable pool of shapes and their possible spaces

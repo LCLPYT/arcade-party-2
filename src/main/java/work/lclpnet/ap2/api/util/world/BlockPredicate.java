@@ -6,7 +6,11 @@ public interface BlockPredicate {
 
     boolean test(BlockPos pos);
 
+    default BlockPredicate and(BlockPredicate other) {
+        return pos -> this.test(pos) && other.test(pos);
+    }
+
     static BlockPredicate and(BlockPredicate first, BlockPredicate second) {
-        return pos -> first.test(pos) && second.test(pos);
+        return first.and(second);
     }
 }

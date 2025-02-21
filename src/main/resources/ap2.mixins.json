@@ -7,6 +7,7 @@
     "defaultRequire": 1
   },
   "mixins": [
+    "BowItemMixin",
     "CobwebBlockMixin",
     "CreakingBrainAccessor",
     "CreakingEntityMixin",
@@ -26,7 +27,10 @@
     "PathMixin",
     "PathNodeMakerAccessor",
     "PathNodeNavigatorMixin",
+    "ProjectileEntityMixin",
+    "RangedWeaponItemMixin",
     "ServerPlayerEntityMixin",
+    "ServerWorldMixin",
     "SpiderEntityMixin",
     "WardenBrainAccessor",
     "WardenBrainMixin"

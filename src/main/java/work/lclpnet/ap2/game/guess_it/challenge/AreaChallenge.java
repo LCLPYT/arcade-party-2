@@ -3,6 +3,7 @@ package work.lclpnet.ap2.game.guess_it.challenge;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.util.DyeColor;
@@ -14,7 +15,7 @@ import work.lclpnet.ap2.game.guess_it.util.OptionMaker;
 import work.lclpnet.ap2.impl.util.BlockHelper;
 import work.lclpnet.ap2.impl.util.TextUtil;
 import work.lclpnet.ap2.impl.util.world.SimpleAdjacentBlocks;
-import work.lclpnet.ap2.impl.util.world.stage.Stage;
+import work.lclpnet.ap2.impl.util.world.stage.BlockShape;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.lobby.util.WorldModifier;
@@ -24,19 +25,23 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 
+import static work.lclpnet.ap2.impl.util.world.PositionUtil.findGroundPositions;
+
 public class AreaChallenge implements Challenge {
 
     private static final int DURATION_TICKS = Ticks.seconds(16);
     private final MiniGameHandle gameHandle;
+    private final ServerWorld world;
     private final Random random;
-    private final Stage stage;
+    private final BlockShape blockShape;
     private final WorldModifier modifier;
     private Areas areas = null;
 
-    public AreaChallenge(MiniGameHandle gameHandle, Random random, Stage stage, WorldModifier modifier) {
+    public AreaChallenge(MiniGameHandle gameHandle, ServerWorld world, Random random, BlockShape blockShape, WorldModifier modifier) {
         this.gameHandle = gameHandle;
+        this.world = world;
         this.random = random;
-        this.stage = stage;
+        this.blockShape = blockShape;
         this.modifier = modifier;
     }
 
@@ -96,10 +101,7 @@ public class AreaChallenge implements Challenge {
     private void randomizeArea(List<BlockState> blockStates) {
         Set<BlockPos> open = new HashSet<>();
 
-        var it = stage.groundPositionIterator();
-
-        while (it.hasNext()) {
-            BlockPos pos = it.next();
+        for (BlockPos pos : findGroundPositions(blockShape, world)) {
             open.add(pos.toImmutable());
         }
 

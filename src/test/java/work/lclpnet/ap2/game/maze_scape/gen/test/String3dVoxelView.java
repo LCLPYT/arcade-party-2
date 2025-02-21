@@ -1,7 +1,7 @@
 package work.lclpnet.ap2.game.maze_scape.gen.test;
 
 import net.minecraft.util.math.BlockPos;
-import work.lclpnet.ap2.game.maze_scape.util.GreedyMeshing;
+import work.lclpnet.ap2.impl.ds.GreedyMeshing;
 import work.lclpnet.ap2.impl.util.BlockBox;
 
 import java.util.Arrays;

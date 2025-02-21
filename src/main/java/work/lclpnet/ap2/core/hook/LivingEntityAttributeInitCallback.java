@@ -4,6 +4,7 @@ import net.minecraft.entity.LivingEntity;
 import work.lclpnet.kibu.hook.Hook;
 import work.lclpnet.kibu.hook.HookFactory;
 
+// subject to be moved to kibu
 /**
  * Called after the {@link net.minecraft.entity.attribute.EntityAttributes} of a {@link LivingEntity} have been initialized.
  * @implNote Attributes are typically initialized when the {@link LivingEntity} is constructed.

@@ -4,14 +4,20 @@ import it.unimi.dsi.fastutil.Pair;
 import net.minecraft.block.BlockState;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.math.Vec2i;
+import work.lclpnet.ap2.impl.util.world.stage.BlockShape;
+import work.lclpnet.ap2.impl.util.world.stage.BoxBlockShape;
+import work.lclpnet.ap2.impl.util.world.stage.CylinderBlockShape;
 import work.lclpnet.kibu.util.BlockStateUtils;
+import work.lclpnet.lobby.game.map.GameMap;
 
-import java.util.Collection;
-import java.util.Objects;
+import java.util.*;
 
 public class MapUtil {
 
@@ -37,9 +43,13 @@ public class MapUtil {
     }
 
     public static BlockPos readBlockPos(JSONArray tuple) {
-        if (tuple.length() < 3) throw new IllegalArgumentException("Tuple must be of size 3");
+        return optBlockPos(tuple).orElseThrow(() -> new IllegalArgumentException("Tuple must be of size 3"));
+    }
 
-        return new BlockPos(tuple.getInt(0), tuple.getInt(1), tuple.getInt(2));
+    public static Optional<BlockPos> optBlockPos(JSONArray tuple) {
+        if (tuple.length() < 3) return Optional.empty();
+
+        return Optional.of(new BlockPos(tuple.getInt(0), tuple.getInt(1), tuple.getInt(2)));
     }
 
     public static Vec2i readVec2i(JSONArray tuple) {
@@ -83,6 +93,52 @@ public class MapUtil {
             BlockState state = readBlockState(str);
             states.add(state);
         }
+    }
+
+    @NotNull
+    public static BlockShape readArea(GameMap map) {
+        JSONObject area = map.requireProperty("area");
+        return readShape(area);
+    }
+
+    public static BlockShape readShape(JSONObject json) {
+        return readShape(json, null);
+    }
+
+    @NotNull
+    public static BlockShape readShape(JSONObject json, @Nullable BlockPos spawn) {
+        String type = json.getString("type").toLowerCase(Locale.ROOT);
+
+        switch (type) {
+            case CylinderBlockShape.TYPE -> {
+                BlockPos origin = origin(json, spawn);
+                int radius = json.getInt("radius");
+                int height = json.getInt("height");
+
+                return new CylinderBlockShape(origin, radius, height);
+            }
+            case CylinderBlockShape.TYPE_CIRCLE -> {
+                BlockPos origin = origin(json, spawn);
+                int radius = json.getInt("radius");
+
+                return new CylinderBlockShape(origin, radius, 1);
+            }
+            case BoxBlockShape.TYPE_CUBE -> {
+                BlockPos origin = origin(json, spawn);
+                int radius = json.getInt("radius");
+
+                return new BoxBlockShape(BlockBox.ofRadius(origin, radius));
+            }
+        }
+
+        throw new IllegalStateException("Unknown area type " + type);
+    }
+
+    private static BlockPos origin(JSONObject json, @Nullable BlockPos fallback) {
+        return Optional.ofNullable(json.optJSONArray("origin"))
+                .flatMap(MapUtil::optBlockPos)
+                .or(() -> Optional.ofNullable(fallback))
+                .orElseThrow(() -> new NoSuchElementException("Origin undefined"));
     }
 
     private MapUtil() {}

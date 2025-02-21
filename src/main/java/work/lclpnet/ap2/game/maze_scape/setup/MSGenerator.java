@@ -2,6 +2,7 @@ package work.lclpnet.ap2.game.maze_scape.setup;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import org.slf4j.Logger;
@@ -176,7 +177,7 @@ public class MSGenerator {
         }
 
         if (DEBUG_PITS) {
-            debugger.visualizePits(oriented);
+            debugger.parent().visualizeStructureMask(oriented.piece().pit(), oriented.pos(), oriented.transformation(), Blocks.RED_STAINED_GLASS.getDefaultState());
         }
 
         return true;

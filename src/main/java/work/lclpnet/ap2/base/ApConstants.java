@@ -4,7 +4,10 @@ import net.fabricmc.loader.api.FabricLoader;
 
 public final class ApConstants {
 
-    public static final boolean DEVELOPMENT = FabricLoader.getInstance().isDevelopmentEnvironment() || "true".equals(System.getenv("AP2_DEV"));
+    public static final boolean
+            DEVELOPMENT = FabricLoader.getInstance().isDevelopmentEnvironment() || "true".equals(System.getenv("AP2_DEV")),
+            DEBUG = FabricLoader.getInstance().isDevelopmentEnvironment();
+
     public static final String ID = "ap2";
 
     // people

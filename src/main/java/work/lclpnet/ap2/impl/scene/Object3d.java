@@ -161,10 +161,14 @@ public class Object3d {
         };
     }
 
-    public Vector3d worldPosition() {
+    public Vector3d worldTranslation() {
+        return worldTranslation(new Vector3d());
+    }
+
+    public Vector3d worldTranslation(Vector3d dest) {
         updateMatrixWorld(true, false);
 
-        return matrixWorld.getTranslation(new Vector3d());
+        return matrixWorld.getTranslation(dest);
     }
 
     public Vector3d worldPosition(Vector3d local) {
@@ -197,7 +201,9 @@ public class Object3d {
     }
 
     public void detach() {
-        if (parent != null) {
+        if (parent == null) {
+            onDetached();
+        } else {
             parent.removeChild(this);
         }
     }

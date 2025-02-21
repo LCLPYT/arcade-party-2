@@ -6,6 +6,10 @@ import work.lclpnet.ap2.api.ds.UndirectedGraphNode;
 
 import java.util.*;
 
+/**
+ * AStar pathfinding algorithm implementation for generic nodes.
+ * @param <N> The undirected node type
+ */
 public class AStar<N extends UndirectedGraphNode<N>> {
 
     private final Heuristic<N> heuristic;

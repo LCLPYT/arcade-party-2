@@ -2,6 +2,7 @@ package work.lclpnet.ap2.impl.ds;
 
 import it.unimi.dsi.fastutil.floats.FloatArrayList;
 import it.unimi.dsi.fastutil.floats.FloatList;
+import it.unimi.dsi.fastutil.floats.FloatLists;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.VisibleForTesting;
 
@@ -11,6 +12,11 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+/**
+ * A list implementation, where every item has a weight, that is used to randomly sample and element from the list.
+ * Higher weights correspond to higher frequency.
+ * @param <E> The element type to store.
+ */
 public class WeightedList<E> extends AbstractList<E> {
 
     private final List<E> elements;
@@ -25,7 +31,7 @@ public class WeightedList<E> extends AbstractList<E> {
         this(new ArrayList<>(initialCapacity), new FloatArrayList(initialCapacity), 0);
     }
 
-    private WeightedList(List<E> elements, FloatList cumulativeWeights, float totalWeight) {
+    protected WeightedList(List<E> elements, FloatList cumulativeWeights, float totalWeight) {
         this.elements = elements;
         this.cumulativeWeights = cumulativeWeights;
         this.totalWeight = totalWeight;
@@ -82,6 +88,15 @@ public class WeightedList<E> extends AbstractList<E> {
         totalWeight = 0;
     }
 
+    /**
+     * Get a random element, respecting the elements corresponding weights.
+     * The runtime of this method is dependent of:
+     * 1. The random index lookup (implemented as binary search with <code>O(log(n))</code>).
+     * 2. The index access of the backing list (which is ArrayList by default, with <code>O(1)</code>).
+     * Therefore, the runtime is <code>O(log(n))</code> by default.
+     * @param random The RNG.
+     * @return A random element, or null, if there are no elements.
+     */
     @Nullable
     public E getRandomElement(Random random) {
         int index = getRandomIndex(random);
@@ -166,5 +181,57 @@ public class WeightedList<E> extends AbstractList<E> {
         }
 
         return new WeightedList<>(filtered, filteredCumulativeWeights, totalWeight);
+    }
+
+    public WeightedList<E> immutableView() {
+        if (this.getClass() == Immutable.class) {
+            return this;
+        }
+
+        return new Immutable<>(elements, cumulativeWeights, totalWeight);
+    }
+
+    public static <E> WeightedList<E> of(Collection<? extends E> elements, Function<E, Number> probabilityMapper) {
+        var list = new WeightedList<E>(elements.size());
+
+        for (E element : elements) {
+            float probability = probabilityMapper.apply(element).floatValue();
+            list.add(element, probability);
+        }
+
+        return list;
+    }
+
+    /**
+     * Returns an empty immutable {@link WeightedList}.
+     * @return An empty {@link WeightedList}.
+     * @param <E> The {@link WeightedList}'s element type.
+     */
+    @SuppressWarnings("unchecked")
+    public static <E> WeightedList<E> empty() {
+        return (WeightedList<E>) Immutable.EMPTY;
+    }
+
+    private static class Immutable<E> extends WeightedList<E> {
+        private static final WeightedList<?> EMPTY = new Immutable<>(List.of(), FloatLists.emptyList(), 0);
+
+        private Immutable(List<E> elements, FloatList cumulativeWeights, float totalWeight) {
+            super(elements, cumulativeWeights, totalWeight);
+        }
+
+        @Override
+        public void add(E item, float weight) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public E remove(int index) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void clear() {
+            throw new UnsupportedOperationException();
+        }
     }
 }

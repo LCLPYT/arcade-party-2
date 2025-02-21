@@ -1,5 +1,7 @@
 package work.lclpnet.ap2.impl.util.world.entity;
 
+import lombok.Getter;
+import lombok.Setter;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.decoration.Brightness;
@@ -10,247 +12,271 @@ import net.minecraft.util.math.AffineTransformation;
 import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.impl.util.RefCounted;
-import work.lclpnet.kibu.access.entity.DisplayEntityAccess;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.kibu.translate.text.RootText;
 import work.lclpnet.kibu.translate.text.TranslatedText;
 
 import java.util.HashMap;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 public class TranslatedTextDisplay implements DynamicEntity {
 
-    private final ServerWorld world;
     private final Translations translations;
-    private final RefCounted<String, DisplayEntity.TextDisplayEntity> entities = new RefCounted<>(HashMap::new);
-    private Vec3d position = Vec3d.ZERO;
-    private TranslatedText text = TranslatedText.create(lang -> RootText.create(), player -> "");  // empty by default
-    private int lineWidth = 200;
-    private byte textOpacity = (byte) -1;
-    private int background = 0;
-    private byte displayFlags = (byte) 0;
-    private AffineTransformation transformation = AffineTransformation.identity();
-    private int interpolationDuration = 0;
-    private int startInterpolation = 0;
-    private DisplayEntity.BillboardMode billboardMode = DisplayEntity.BillboardMode.FIXED;
-    private @Nullable Brightness brightness = null;
-    private float viewRange = 1.0F;
-    private float shadowRadius = 0.0F;
-    private float shadowStrength = 1.0F;
-    private float displayWidth = 0.0F;
-    private float displayHeight = 0.0F;
-    private int glowColorOverride = -1;
+    private final ControllerImpl controller;
 
     public TranslatedTextDisplay(ServerWorld world, Translations translations) {
-        this.world = world;
         this.translations = translations;
-    }
-
-    public void setPosition(Vec3d position) {
-        this.position = Objects.requireNonNull(position);
-
-        entities.forEach(display -> display.setPosition(position));
+        controller = new ControllerImpl(world);
     }
 
     @Override
     public Vec3d getPosition() {
-        return position;
-    }
-
-    public void setText(TranslatedText text) {
-        this.text = text;
-
-        entities.forEach((lang, display) -> DisplayEntityAccess.setText(display, text.translateTo(lang)));
-    }
-
-    public TranslatedText getText() {
-        return text;
-    }
-
-    public void setLineWidth(int lineWidth) {
-        this.lineWidth = lineWidth;
-
-        entities.forEach(display -> DisplayEntityAccess.setLineWidth(display, lineWidth));
-    }
-
-    public int getLineWidth() {
-        return lineWidth;
-    }
-
-    public void setTextOpacity(byte textOpacity) {
-        this.textOpacity = textOpacity;
-
-        entities.forEach(display -> DisplayEntityAccess.setTextOpacity(display, textOpacity));
-    }
-
-    public byte getTextOpacity() {
-        return textOpacity;
-    }
-
-    public void setBackground(int background) {
-        this.background = background;
-
-        entities.forEach(display -> DisplayEntityAccess.setBackground(display, background));
-    }
-
-    public int getBackground() {
-        return background;
-    }
-
-    public void setDisplayFlags(byte displayFlags) {
-        this.displayFlags = displayFlags;
-
-        entities.forEach(display -> DisplayEntityAccess.setDisplayFlags(display, displayFlags));
-    }
-
-    public byte getDisplayFlags() {
-        return displayFlags;
-    }
-
-    public void setTransformation(AffineTransformation transformation) {
-        this.transformation = transformation;
-
-        entities.forEach(display -> DisplayEntityAccess.setTransformation(display, transformation));
-    }
-
-    public AffineTransformation getTransformation() {
-        return transformation;
-    }
-
-    public void setInterpolationDuration(int interpolationDuration) {
-        this.interpolationDuration = interpolationDuration;
-
-        entities.forEach(display -> DisplayEntityAccess.setInterpolationDuration(display, interpolationDuration));
-    }
-
-    public int getInterpolationDuration() {
-        return interpolationDuration;
-    }
-
-    public void setStartInterpolation(int startInterpolation) {
-        this.startInterpolation = startInterpolation;
-
-        entities.forEach(display -> DisplayEntityAccess.setStartInterpolation(display, startInterpolation));
-    }
-
-    public int getStartInterpolation() {
-        return startInterpolation;
-    }
-
-    public void setBillboardMode(DisplayEntity.BillboardMode billboardMode) {
-        this.billboardMode = billboardMode;
-
-        entities.forEach(display -> DisplayEntityAccess.setBillboardMode(display, billboardMode));
-    }
-
-    public DisplayEntity.BillboardMode getBillboardMode() {
-        return billboardMode;
-    }
-
-    public void setBrightness(@Nullable Brightness brightness) {
-        this.brightness = brightness;
-
-        entities.forEach(display -> DisplayEntityAccess.setBrightness(display, brightness));
-    }
-
-    public @Nullable Brightness getBrightness() {
-        return brightness;
-    }
-
-    public void setViewRange(float viewRange) {
-        this.viewRange = viewRange;
-
-        entities.forEach(display -> DisplayEntityAccess.setViewRange(display, viewRange));
-    }
-
-    public float getViewRange() {
-        return viewRange;
-    }
-
-    public void setShadowRadius(float shadowRadius) {
-        this.shadowRadius = shadowRadius;
-
-        entities.forEach(display -> DisplayEntityAccess.setShadowRadius(display, shadowRadius));
-    }
-
-    public float getShadowRadius() {
-        return shadowRadius;
-    }
-
-    public void setShadowStrength(float shadowStrength) {
-        this.shadowStrength = shadowStrength;
-
-        entities.forEach(display -> DisplayEntityAccess.setShadowStrength(display, shadowStrength));
-    }
-
-    public float getShadowStrength() {
-        return shadowStrength;
-    }
-
-    public void setDisplayWidth(float displayWidth) {
-        this.displayWidth = displayWidth;
-
-        entities.forEach(display -> DisplayEntityAccess.setDisplayWidth(display, displayWidth));
-    }
-
-    public float getDisplayWidth() {
-        return displayWidth;
-    }
-
-    public void setDisplayHeight(float displayHeight) {
-        this.displayHeight = displayHeight;
-
-        entities.forEach(display -> DisplayEntityAccess.setDisplayHeight(display, displayHeight));
-    }
-
-    public float getDisplayHeight() {
-        return displayHeight;
-    }
-
-    public void setGlowColorOverride(int glowColorOverride) {
-        this.glowColorOverride = glowColorOverride;
-
-        entities.forEach(display -> DisplayEntityAccess.setGlowColorOverride(display, glowColorOverride));
-    }
-
-    public int getGlowColorOverride() {
-        return glowColorOverride;
+        return controller.getPosition();
     }
 
     @Override
     public Entity getEntity(ServerPlayerEntity player) {
-        String language = translations.getLanguage(player);
-
-        // one text display entity per language
-        return entities.reference(language, lang -> {
-            var textDisplay = new DisplayEntity.TextDisplayEntity(EntityType.TEXT_DISPLAY, world);
-            textDisplay.setPosition(position);
-
-            DisplayEntityAccess.setText(textDisplay, text.translateTo(lang));
-            DisplayEntityAccess.setLineWidth(textDisplay, lineWidth);
-            DisplayEntityAccess.setTextOpacity(textDisplay, textOpacity);
-            DisplayEntityAccess.setBackground(textDisplay, background);
-            DisplayEntityAccess.setDisplayFlags(textDisplay, displayFlags);
-            DisplayEntityAccess.setTransformation(textDisplay, transformation);
-            DisplayEntityAccess.setInterpolationDuration(textDisplay, interpolationDuration);
-            DisplayEntityAccess.setStartInterpolation(textDisplay, startInterpolation);
-            DisplayEntityAccess.setBillboardMode(textDisplay, billboardMode);
-            DisplayEntityAccess.setBrightness(textDisplay, brightness);
-            DisplayEntityAccess.setViewRange(textDisplay, viewRange);
-            DisplayEntityAccess.setShadowRadius(textDisplay, shadowRadius);
-            DisplayEntityAccess.setShadowStrength(textDisplay, shadowStrength);
-            DisplayEntityAccess.setDisplayWidth(textDisplay, displayWidth);
-            DisplayEntityAccess.setDisplayHeight(textDisplay, displayHeight);
-            DisplayEntityAccess.setGlowColorOverride(textDisplay, glowColorOverride);
-
-            return textDisplay;
-        });
+        return controller.ref(translations.getLanguage(player), display -> {});
     }
 
     @Override
     public void cleanup(ServerPlayerEntity player) {
-        String language = translations.getLanguage(player);
+        controller.deref(translations.getLanguage(player));
+    }
 
-        entities.dereference(language);
+    public Controller controller() {
+        return controller;
+    }
+
+    public interface Controller {
+        void setText(TranslatedText text);
+        TranslatedText getText();
+        void setPosition(Vec3d position);
+        Vec3d getPosition();
+        void setLineWidth(int lineWidth);
+        int getLineWidth();
+        void setTextOpacity(byte textOpacity);
+        byte getTextOpacity();
+        void setBackground(int background);
+        int getBackground();
+        void setDisplayFlags(byte displayFlags);
+        byte getDisplayFlags();
+        void setTransformation(AffineTransformation transformation);
+        AffineTransformation getTransformation();
+        void setInterpolationDuration(int interpolationDuration);
+        int getInterpolationDuration();
+        void setTeleportDuration(int teleportDuration);
+        int getTeleportDuration();
+        void setStartInterpolation(int startInterpolation);
+        int getStartInterpolation();
+        void setBillboardMode(DisplayEntity.BillboardMode billboardMode);
+        DisplayEntity.BillboardMode getBillboardMode();
+        void setBrightness(@Nullable Brightness brightness);
+        @Nullable Brightness getBrightness();
+        void setViewRange(float viewRange);
+        float getViewRange();
+        void setShadowRadius(float shadowRadius);
+        float getShadowRadius();
+        void setShadowStrength(float shadowStrength);
+        float getShadowStrength();
+        void setDisplayWidth(float displayWidth);
+        float getDisplayWidth();
+        void setDisplayHeight(float displayHeight);
+        float getDisplayHeight();
+        void setGlowColorOverride(int glowColorOverride);
+        int getGlowColorOverride();
+    }
+
+    public static class ControllerImpl implements Controller {
+
+        @Setter private @Nullable ServerWorld world;
+        @Getter private final RefCounted<String, DisplayEntity.TextDisplayEntity> entities = new RefCounted<>(HashMap::new);
+        @Getter private TranslatedText text = TranslatedText.create(lang -> RootText.create(), player -> "");  // empty by default
+        @Getter private Vec3d position = Vec3d.ZERO;
+        @Getter private int lineWidth = 200;
+        @Getter private byte textOpacity = (byte) -1;
+        @Getter private int background = 0;
+        @Getter private byte displayFlags = (byte) 0;
+        @Getter private AffineTransformation transformation = AffineTransformation.identity();
+        @Getter private int interpolationDuration = 0;
+        @Getter private int teleportDuration = 0;
+        @Getter private int startInterpolation = 0;
+        @Getter private DisplayEntity.BillboardMode billboardMode = DisplayEntity.BillboardMode.FIXED;
+        private @Nullable Brightness brightness = null;
+        @Getter private float viewRange = 1.0F;
+        @Getter private float shadowRadius = 0.0F;
+        @Getter private float shadowStrength = 1.0F;
+        @Getter private float displayWidth = 0.0F;
+        @Getter private float displayHeight = 0.0F;
+        @Getter private int glowColorOverride = -1;
+
+        public ControllerImpl(@Nullable ServerWorld world) {
+            this.world = world;
+        }
+
+        public DisplayEntity.TextDisplayEntity ref(String language, Consumer<DisplayEntity.TextDisplayEntity> init) {
+            return entities.reference(language, lang -> {
+                var textDisplay = new DisplayEntity.TextDisplayEntity(EntityType.TEXT_DISPLAY, world);
+                textDisplay.setPosition(position);
+
+                textDisplay.setText(text.translateTo(lang));
+                textDisplay.setLineWidth(lineWidth);
+                textDisplay.setTextOpacity(textOpacity);
+                textDisplay.setBackground(background);
+                textDisplay.setDisplayFlags(displayFlags);
+                textDisplay.setTransformation(transformation);
+                textDisplay.setInterpolationDuration(interpolationDuration);
+                textDisplay.setTeleportDuration(teleportDuration);
+                textDisplay.setStartInterpolation(startInterpolation);
+                textDisplay.setBillboardMode(billboardMode);
+                textDisplay.setBrightness(brightness);
+                textDisplay.setViewRange(viewRange);
+                textDisplay.setShadowRadius(shadowRadius);
+                textDisplay.setShadowStrength(shadowStrength);
+                textDisplay.setDisplayWidth(displayWidth);
+                textDisplay.setDisplayHeight(displayHeight);
+                textDisplay.setGlowColorOverride(glowColorOverride);
+
+                init.accept(textDisplay);
+
+                return textDisplay;
+            });
+        }
+
+        public void deref(String language) {
+            entities.dereference(language);
+        }
+
+        @Override
+        public void setText(TranslatedText text) {
+            this.text = text;
+
+            entities.forEach((lang, display) -> display.setText(text.translateTo(lang)));
+        }
+
+        @Override
+        public void setPosition(Vec3d position) {
+            this.position = Objects.requireNonNull(position);
+
+            entities.forEach(display -> display.setPosition(position));
+        }
+
+        @Override
+        public void setLineWidth(int lineWidth) {
+            this.lineWidth = lineWidth;
+
+            entities.forEach(display -> display.setLineWidth(lineWidth));
+        }
+
+        @Override
+        public void setTextOpacity(byte textOpacity) {
+            this.textOpacity = textOpacity;
+
+            entities.forEach(display -> display.setTextOpacity(textOpacity));
+        }
+
+        @Override
+        public void setBackground(int background) {
+            this.background = background;
+
+            entities.forEach(display -> display.setBackground(background));
+        }
+
+        @Override
+        public void setDisplayFlags(byte displayFlags) {
+            this.displayFlags = displayFlags;
+
+            entities.forEach(display -> display.setDisplayFlags(displayFlags));
+        }
+
+        @Override
+        public void setTransformation(AffineTransformation transformation) {
+            this.transformation = transformation;
+
+            entities.forEach(display -> display.setTransformation(transformation));
+        }
+
+        @Override
+        public void setInterpolationDuration(int interpolationDuration) {
+            this.interpolationDuration = interpolationDuration;
+
+            entities.forEach(display -> display.setInterpolationDuration(interpolationDuration));
+        }
+
+        @Override
+        public void setTeleportDuration(int teleportDuration) {
+            this.teleportDuration = teleportDuration;
+
+            entities.forEach(display -> display.setTeleportDuration(teleportDuration));
+        }
+
+        @Override
+        public void setStartInterpolation(int startInterpolation) {
+            this.startInterpolation = startInterpolation;
+
+            entities.forEach(display -> display.setStartInterpolation(startInterpolation));
+        }
+
+        @Override
+        public void setBillboardMode(DisplayEntity.BillboardMode billboardMode) {
+            this.billboardMode = billboardMode;
+
+            entities.forEach(display -> display.setBillboardMode(billboardMode));
+        }
+
+        @Override
+        public void setBrightness(@Nullable Brightness brightness) {
+            this.brightness = brightness;
+
+            entities.forEach(display -> display.setBrightness(brightness));
+        }
+
+        @Override
+        public @Nullable Brightness getBrightness() {
+            return brightness;
+        }
+
+        @Override
+        public void setViewRange(float viewRange) {
+            this.viewRange = viewRange;
+
+            entities.forEach(display -> display.setViewRange(viewRange));
+        }
+
+        @Override
+        public void setShadowRadius(float shadowRadius) {
+            this.shadowRadius = shadowRadius;
+
+            entities.forEach(display -> display.setShadowRadius(shadowRadius));
+        }
+
+        @Override
+        public void setShadowStrength(float shadowStrength) {
+            this.shadowStrength = shadowStrength;
+
+            entities.forEach(display -> display.setShadowStrength(shadowStrength));
+        }
+
+        @Override
+        public void setDisplayWidth(float displayWidth) {
+            this.displayWidth = displayWidth;
+
+            entities.forEach(display -> display.setDisplayWidth(displayWidth));
+        }
+
+        @Override
+        public void setDisplayHeight(float displayHeight) {
+            this.displayHeight = displayHeight;
+
+            entities.forEach(display -> display.setDisplayHeight(displayHeight));
+        }
+
+        @Override
+        public void setGlowColorOverride(int glowColorOverride) {
+            this.glowColorOverride = glowColorOverride;
+
+            entities.forEach(display -> display.setGlowColorOverride(glowColorOverride));
+        }
     }
 }

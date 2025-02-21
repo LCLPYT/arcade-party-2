@@ -8,6 +8,9 @@ services:
     ports:
       - "25565:25565"
       - "24454:24454/udp"  # voice chat
+    env_file:
+      - path: .env
+        required: false
     environment:
       EULA: "TRUE"
       TZ: "Europe/Berlin"

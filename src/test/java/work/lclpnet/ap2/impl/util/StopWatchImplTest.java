@@ -1,14 +1,16 @@
 package work.lclpnet.ap2.impl.util;
 
 import org.junit.jupiter.api.Test;
+import work.lclpnet.ap2.impl.util.debug.StopWatchImpl;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class StopWatchTest {
+class StopWatchImplTest {
 
     @Test
-    void stop_wait50ms_sectionIsCreated() throws InterruptedException {
-        StopWatch stopWatch = new StopWatch();
+    void pop_wait50Ms_sectionIsCreated() throws InterruptedException {
+        StopWatchImpl stopWatch = new StopWatchImpl();
+        stopWatch.enable();
         stopWatch.start("test");
 
         Thread.sleep(50);
