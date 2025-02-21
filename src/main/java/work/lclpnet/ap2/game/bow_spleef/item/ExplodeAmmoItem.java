@@ -63,10 +63,10 @@ public class ExplodeAmmoItem implements SpecialItem {
                 }
             };
 
-            Vec3d pos = blockPos.toCenterPos();
+            Vec3d pos = blockPos.up().toCenterPos();
 
             world.createExplosion(projectile, null, behaviour, pos.x, pos.y, pos.z, 3f, false,
-                    World.ExplosionSourceType.NONE, ParticleTypes.EXPLOSION, ParticleTypes.EXPLOSION_EMITTER,
+                    World.ExplosionSourceType.BLOCK, ParticleTypes.EXPLOSION, ParticleTypes.EXPLOSION_EMITTER,
                     SoundEvents.ENTITY_GENERIC_EXPLODE);
         });
     }

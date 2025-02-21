@@ -20,12 +20,14 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.explosion.Explosion;
 import org.json.JSONArray;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.core.hook.EntitySpawnCallback;
 import work.lclpnet.ap2.core.hook.ProjectileHitEntityCallback;
-import work.lclpnet.ap2.game.bow_spleef.item.*;
+import work.lclpnet.ap2.game.bow_spleef.item.CreeperExplosionItem;
+import work.lclpnet.ap2.game.bow_spleef.item.ExplodeAmmoItem;
+import work.lclpnet.ap2.game.bow_spleef.item.HeavyWeightItem;
+import work.lclpnet.ap2.game.bow_spleef.item.TripleJumpItem;
 import work.lclpnet.ap2.impl.game.EliminationGameInstance;
 import work.lclpnet.ap2.impl.game.item.SpecialItems;
 import work.lclpnet.ap2.impl.map.MapUtil;
@@ -103,11 +105,6 @@ public class BowSpleefInstance extends EliminationGameInstance {
             }
         });
 
-        impactHook.register((projectile, pos) -> {
-            removeBlocks(pos, getWorld());
-            projectile.discard();
-        });
-
         hooks.registerHook(ProjectileHooks.HIT_BLOCK, (projectile, hit) -> {
             if (projectile instanceof ArrowEntity) {
                 impactHook.invoker().onImpact(projectile, hit.getBlockPos());
@@ -126,19 +123,25 @@ public class BowSpleefInstance extends EliminationGameInstance {
         commons().whenBelowCriticalHeight().then(this::eliminate);
 
         specialItems = SpecialItems.create(gameHandle, getMap(), getWorld(), random, r -> r
-                .register(new TripleShotItem(), 0.55f)
-                .register(new BurstShotItem(), 0.4f)
+//                .register(new TripleShotItem(), 0.55f)
+//                .register(new BurstShotItem(), 0.4f)
                 .register(new ExplodeAmmoItem(impactHook), 0.3f)
-                .register(heavyWeightItem, 0.3f)
-                .register(new FishingRodItem(), 0.15f)
-                .register(new SwitcherItem(), 0.3f)
-                .register(new LevitationItem(), 0.2f)
-                .register(new LightWeightItem(), 0.25f)
-                .register(tripleJumpItem, 0.15f)
+//                .register(heavyWeightItem, 0.3f)
+//                .register(new FishingRodItem(), 0.15f)
+//                .register(new SwitcherItem(), 0.3f)
+//                .register(new LevitationItem(), 0.2f)
+//                .register(new LightWeightItem(), 0.25f)
+//                .register(tripleJumpItem, 0.15f)
                 .register(new CreeperExplosionItem(), 0.2f));
 
         specialItems.setup();
         specialItems.syncWithWorldBorder();
+
+        // register this callback after special item setup, to execute it last (updates spawn pos mesh)
+        impactHook.register((projectile, pos) -> {
+            removeBlocks(pos, getWorld());
+            projectile.discard();
+        });
     }
 
     @Override
@@ -148,7 +151,7 @@ public class BowSpleefInstance extends EliminationGameInstance {
                     -> damageSource.isOf(DamageTypes.OUTSIDE_BORDER)
                     || (damageSource.isOf(DamageTypes.THROWN) && damageSource.getSource() instanceof FishingBobberEntity));
 
-            config.allow(ProtectionTypes.EXPLOSION, explosion -> explosion.getDestructionType() == Explosion.DestructionType.KEEP);
+            config.allow(ProtectionTypes.EXPLOSION);
         });
 
         HookRegistrar hooks = gameHandle.getHookRegistrar();

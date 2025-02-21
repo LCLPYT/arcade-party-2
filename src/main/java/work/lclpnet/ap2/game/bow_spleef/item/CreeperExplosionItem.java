@@ -82,7 +82,7 @@ public class CreeperExplosionItem implements SpecialItem {
 
                 world.createExplosion(player, null, behaviour, player.getX(), player.getY(), player.getZ(),
                         3.5f, false,
-                        World.ExplosionSourceType.NONE, ParticleTypes.EXPLOSION, ParticleTypes.EXPLOSION_EMITTER,
+                        World.ExplosionSourceType.BLOCK, ParticleTypes.EXPLOSION, ParticleTypes.EXPLOSION_EMITTER,
                         SoundEvents.ENTITY_GENERIC_EXPLODE);
 
                 world.spawnParticles(ParticleTypes.EXPLOSION_EMITTER, player.getX(), player.getY(), player.getZ(), 1, 0.1, 0.1, 0.1, 0.15);
