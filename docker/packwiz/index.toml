@@ -2,7 +2,7 @@ hash-format = "sha256"
 
 [[files]]
 file = "mods/anti-xray.pw.toml"
-hash = "05a1a121e1b6c88338020f411c874ecd48fecacff9b9f9ae6ff884da48bca5a7"
+hash = "0f02a94df6c8c9154c0e2073a19a7791c41d02356035f50a76eaded7a02592ef"
 metafile = true
 
 [[files]]
@@ -17,7 +17,7 @@ metafile = true
 
 [[files]]
 file = "mods/fabric-api.pw.toml"
-hash = "dd4c3c3ee97fa946926784db25da0b5a9984c9959681f412d6b402cc5bdfc83e"
+hash = "3039ab6ea60a5424d3b7d31f8fbfe16d3988b9a0bb7c670ba949743f63695ebd"
 metafile = true
 
 [[files]]
@@ -32,7 +32,7 @@ metafile = true
 
 [[files]]
 file = "mods/kibu.pw.toml"
-hash = "dcada4a5d07d6ab51b40b698d608169939e6983367e81d6d7322b91578f25afd"
+hash = "d15ff4c3c784f7f3bad65c5dd707bf4d1524f3641d838407b86348071138964d"
 metafile = true
 
 [[files]]
