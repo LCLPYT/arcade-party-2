@@ -37,6 +37,8 @@ import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.kibu.hook.player.PlayerInventoryHooks;
 import work.lclpnet.kibu.scheduler.Ticks;
+import work.lclpnet.kibu.scheduler.api.RunningTask;
+import work.lclpnet.kibu.scheduler.api.SchedulerAction;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.kibu.translate.text.TranslatedText;
@@ -57,6 +59,7 @@ public class SpecialItems implements SpecialItemContext {
 
     public static final MapCodec<NbtCompound> NBT_CODEC = NbtCompound.CODEC.fieldOf("ap2:special_item");
     public static final String ID_KEY = "Id";
+    private static final int ITEM_PARTICLE_MIN_TICKS = 22, ITEM_PARTICLE_MAX_TICKS = 38;
 
     private final MiniGameHandle gameHandle;
     private final GameMap map;
@@ -347,7 +350,30 @@ public class SpecialItems implements SpecialItemContext {
     private void scheduleDespawn(SpecialItemObject obj) {
         if (despawnTicks <= 0) return;
 
-        gameHandle.getGameScheduler().timeout(() -> scene.remove(obj), despawnTicks);
+        gameHandle.getGameScheduler().interval(new SchedulerAction() {
+            int timer = 0;
+            int particle = 0;
+
+            @Override
+            public void run(RunningTask task) {
+                if (!scene.contains(obj)) {
+                    task.cancel();
+                    return;
+                }
+
+                int t = timer++;
+
+                if (t == particle) {
+                    particle = timer + ITEM_PARTICLE_MIN_TICKS + random.nextInt(ITEM_PARTICLE_MAX_TICKS - ITEM_PARTICLE_MIN_TICKS + 1);
+                    world.spawnParticles(ParticleTypes.HAPPY_VILLAGER, obj.position.x, obj.position.y + 0.125, obj.position.z, 1, 0.35, 0.25, 0.35, 0.1);
+                }
+
+                if (t >= despawnTicks) {
+                    scene.remove(obj);
+                    task.cancel();
+                }
+            }
+        }, 1);
     }
 
     public void spawnPeriodically() {

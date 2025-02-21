@@ -191,6 +191,10 @@ public class SpecialItemScene {
         return objects.size();
     }
 
+    public boolean contains(SpecialItemObject obj) {
+        return indices.containsKey(obj);
+    }
+
     public interface SpecialItemPickup {
 
         boolean shouldPickup(ServerPlayerEntity player, SpecialItemObject object);
