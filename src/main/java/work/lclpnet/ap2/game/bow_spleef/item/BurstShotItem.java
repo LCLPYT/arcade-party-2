@@ -18,8 +18,8 @@ import work.lclpnet.kibu.hook.HookRegistrar;
 public class BurstShotItem implements SpecialItem {
 
     private static final int
-            BURST_COUNT = 3,
-            BURST_INTERVAL_TICKS = 5;
+            BURST_COUNT = 4,
+            BURST_INTERVAL_TICKS = 2;
 
     @Override
     public String id() {

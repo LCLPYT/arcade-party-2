@@ -233,7 +233,7 @@
   "item.ap2.bow_spleef.triple_shot": "Dreifachschuss",
   "item.ap2.bow_spleef.triple_shot.desc": "Schießt drei Pfeile auf einmal",
   "item.ap2.bow_spleef.burst_shot": "Salvenschuss",
-  "item.ap2.bow_spleef.burst_shot.desc": "Schießt eine Salve von drei Pfeilen",
+  "item.ap2.bow_spleef.burst_shot.desc": "Schießt eine Salve von Pfeilen",
   "item.ap2.bow_spleef.explode_ammo": "Explosionsmunition",
   "item.ap2.bow_spleef.explode_ammo.desc": "Creates an explosion on impact",
   "item.ap2.bow_spleef.heavy_weight_egg": "Schwerkraftei",
