@@ -230,7 +230,7 @@ public class GbBomb extends Object3d implements Animatable {
             GbGlowStone glowStone = glowStones.removeFirst();
             glowStone.yieldInto(anchor, manager);
 
-            Vector3d pos = worldPosition();
+            Vector3d pos = worldTranslation();
 
             ctx.world().playSound(null, pos.x(), pos.y(), pos.z(), SoundEvents.BLOCK_CRAFTER_CRAFT, SoundCategory.HOSTILE, 1f, 1.25f);
         }

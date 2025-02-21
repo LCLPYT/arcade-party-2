@@ -10,7 +10,7 @@ import net.minecraft.util.math.BlockPos;
 import org.joml.Matrix4f;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.game.guess_it.data.*;
-import work.lclpnet.ap2.impl.util.world.stage.Stage;
+import work.lclpnet.ap2.impl.util.world.stage.BlockShape;
 import work.lclpnet.kibu.access.entity.DisplayEntityAccess;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.translate.Translations;
@@ -24,15 +24,15 @@ public class CakeBitesChallenge implements Challenge {
     private final MiniGameHandle gameHandle;
     private final ServerWorld world;
     private final Random random;
-    private final Stage stage;
+    private final BlockShape blockShape;
     private final WorldModifier modifier;
     private int amount = 0;
 
-    public CakeBitesChallenge(MiniGameHandle gameHandle, ServerWorld world, Random random, Stage stage, WorldModifier modifier) {
+    public CakeBitesChallenge(MiniGameHandle gameHandle, ServerWorld world, Random random, BlockShape blockShape, WorldModifier modifier) {
         this.gameHandle = gameHandle;
         this.world = world;
         this.random = random;
-        this.stage = stage;
+        this.blockShape = blockShape;
         this.modifier = modifier;
     }
 
@@ -73,7 +73,7 @@ public class CakeBitesChallenge implements Challenge {
 
         DisplayEntityAccess.setTransformation(display, transformation);
 
-        BlockPos origin = stage.getOrigin();
+        BlockPos origin = blockShape.origin();
         double x = origin.getX() + 0.5 - scale * 0.5;
         double y = origin.getY();
         double z = origin.getZ() + 0.5 - scale * 0.5;

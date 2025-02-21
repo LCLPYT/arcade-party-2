@@ -9,4 +9,8 @@ import java.util.List;
 public interface SpaceFinder {
 
     List<Vec3d> findSpaces(Iterator<BlockPos> positions);
+
+    default List<Vec3d> findSpaces(Iterable<BlockPos> positions) {
+        return findSpaces(positions.iterator());
+    }
 }

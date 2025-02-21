@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.game.maze_scape.util;
+package work.lclpnet.ap2.impl.ds;
 
 import org.junit.jupiter.api.Test;
 import work.lclpnet.ap2.game.maze_scape.gen.test.String2dVoxelView;

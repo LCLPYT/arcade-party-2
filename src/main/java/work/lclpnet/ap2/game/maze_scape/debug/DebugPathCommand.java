@@ -15,7 +15,6 @@ import work.lclpnet.ap2.game.maze_scape.setup.MSDebugController;
 import work.lclpnet.ap2.game.maze_scape.util.MSStruct;
 import work.lclpnet.ap2.game.maze_scape.util.Passage;
 import work.lclpnet.ap2.impl.scene.Object3d;
-import work.lclpnet.ap2.impl.scene.Scene;
 import work.lclpnet.kibu.cmd.type.CommandRegistrar;
 import work.lclpnet.kibu.cmd.type.KibuCommand;
 
@@ -76,12 +75,7 @@ public class DebugPathCommand implements KibuCommand {
         }
 
         // clear old path
-        Scene scene = debugger.scene();
-
-        if (scene != null) {
-            lines.forEach(scene::remove);
-        }
-
+        debugger.parent().scene().ifPresent(scene -> lines.forEach(scene::remove));
         lines.clear();
 
         // display new path

@@ -7,7 +7,7 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.AffineTransformation;
 import net.minecraft.util.math.BlockPos;
 import org.joml.Matrix4f;
-import work.lclpnet.ap2.impl.util.world.stage.Stage;
+import work.lclpnet.ap2.impl.util.world.stage.BlockShape;
 import work.lclpnet.kibu.access.entity.DisplayEntityAccess;
 import work.lclpnet.lobby.util.WorldModifier;
 
@@ -15,12 +15,12 @@ public class GuessItDisplay {
 
     private final ServerWorld world;
     private final WorldModifier modifier;
-    private final Stage stage;
+    private final BlockShape blockShape;
 
-    public GuessItDisplay(ServerWorld world, WorldModifier modifier, Stage stage) {
+    public GuessItDisplay(ServerWorld world, WorldModifier modifier, BlockShape blockShape) {
         this.world = world;
         this.modifier = modifier;
-        this.stage = stage;
+        this.blockShape = blockShape;
     }
 
     public void displayItem(ItemStack stack) {
@@ -40,7 +40,7 @@ public class GuessItDisplay {
 
         DisplayEntityAccess.setTransformation(display, transformation);
 
-        BlockPos origin = stage.getOrigin();
+        BlockPos origin = blockShape.origin();
 
         double x = origin.getX() + 0.5;
         double y = origin.getY() + scale;

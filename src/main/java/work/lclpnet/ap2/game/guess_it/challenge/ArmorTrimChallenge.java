@@ -20,9 +20,8 @@ import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.game.guess_it.data.*;
 import work.lclpnet.ap2.game.guess_it.util.OptionMaker;
 import work.lclpnet.ap2.impl.util.ItemHelper;
-import work.lclpnet.ap2.impl.util.ItemStackHelper;
 import work.lclpnet.ap2.impl.util.TextUtil;
-import work.lclpnet.ap2.impl.util.world.stage.Stage;
+import work.lclpnet.ap2.impl.util.world.stage.BlockShape;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.lobby.util.WorldModifier;
@@ -36,18 +35,18 @@ public class ArmorTrimChallenge implements Challenge {
     private final MiniGameHandle gameHandle;
     private final ServerWorld world;
     private final Random random;
-    private final Stage stage;
+    private final BlockShape blockShape;
     private final WorldModifier modifier;
     private RegistryEntry<ArmorTrimPattern> correct = null;
     private RegistryEntry<ArmorTrimMaterial> material = null;
     private ArmorMaterial armorMaterial = null;
     private int correctOption = -1;
 
-    public ArmorTrimChallenge(MiniGameHandle gameHandle, ServerWorld world, Random random, Stage stage, WorldModifier modifier) {
+    public ArmorTrimChallenge(MiniGameHandle gameHandle, ServerWorld world, Random random, BlockShape blockShape, WorldModifier modifier) {
         this.gameHandle = gameHandle;
         this.world = world;
         this.random = random;
-        this.stage = stage;
+        this.blockShape = blockShape;
         this.modifier = modifier;
     }
 
@@ -73,7 +72,7 @@ public class ArmorTrimChallenge implements Challenge {
 
         correct = opts.get(correctOption);
 
-        material = ItemStackHelper.getRandomTrimMaterial(world.getRegistryManager(), random);
+        material = ItemHelper.getRandomTrimMaterial(world.getRegistryManager(), random);
 
         armorMaterial = switch (random.nextInt(6)) {
             case 0 -> ArmorMaterials.LEATHER;
@@ -99,7 +98,7 @@ public class ArmorTrimChallenge implements Challenge {
     }
 
     private void spawnGiants() {
-        Vec3d pos = Vec3d.ofBottomCenter(stage.getOrigin());
+        Vec3d pos = Vec3d.ofBottomCenter(blockShape.origin());
 
         int spacing = 7;
         spawnGiant(pos.add(spacing, 0, 0), -90);

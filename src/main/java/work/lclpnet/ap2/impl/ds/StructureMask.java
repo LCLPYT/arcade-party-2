@@ -1,7 +1,8 @@
-package work.lclpnet.ap2.game.maze_scape.setup;
+package work.lclpnet.ap2.impl.ds;
 
 import net.minecraft.util.math.Direction;
-import work.lclpnet.ap2.game.maze_scape.util.GreedyMeshing;
+import work.lclpnet.ap2.impl.util.BlockBox;
+import work.lclpnet.ap2.impl.util.StructureUtil;
 import work.lclpnet.kibu.mc.KibuBlockPos;
 import work.lclpnet.kibu.structure.BlockStructure;
 
@@ -28,14 +29,17 @@ public record StructureMask(boolean[][][] mask, int width, int height, int lengt
         return false;
     }
 
+    public void setVoxelAt(int x, int y, int z, boolean present) {
+        mask[x][y][z] = present;
+    }
+
     public GreedyMeshing greedyMeshing() {
         return new GreedyMeshing(width, height, length, this);
     }
 
     public static StructureMask nonAir(BlockStructure structure) {
-        // init new empty mask
-        int width = structure.getWidth(), height = structure.getHeight(), length = structure.getLength();
-        boolean[][][] mask = fill(new boolean[width][height][length], false);
+        StructureMask structureMask = createEmpty(StructureUtil.getBounds(structure));
+        boolean[][][] mask = structureMask.mask();
 
         var origin = structure.getOrigin();
 
@@ -44,6 +48,13 @@ public record StructureMask(boolean[][][] mask, int width, int height, int lengt
 
             mask[pos.getX() - origin.getX()][pos.getY() - origin.getY()][pos.getZ() - origin.getZ()] = true;
         }
+
+        return structureMask;
+    }
+
+    public static StructureMask createEmpty(BlockBox box) {
+        int width = box.width(), height = box.height(), length = box.length();
+        var mask = fill(new boolean[width][height][length], false);
 
         return new StructureMask(mask, width, height, length);
     }

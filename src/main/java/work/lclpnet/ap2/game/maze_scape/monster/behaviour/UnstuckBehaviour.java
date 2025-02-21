@@ -50,7 +50,9 @@ public class UnstuckBehaviour implements MonsterBehaviour {
         if (DEBUG_AVG_POS) {
             Vec3d pos = mob != null ? mob.getPos() : Vec3d.ZERO;
 
-            avgPosMarker = manager.debugController().displayMarker(pos.x, pos.y, pos.z, Blocks.GREEN_CONCRETE.getDefaultState(), 0x00ff00);
+            avgPosMarker = manager.debugController().parent().renderer()
+                    .map(renderer -> renderer.marker(pos.x, pos.y, pos.z, Blocks.GREEN_CONCRETE.getDefaultState(), 0x00ff00))
+                    .orElse(null);
         }
     }
 

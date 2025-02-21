@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.game.maze_scape.util;
+package work.lclpnet.ap2.impl.ds;
 
 import net.minecraft.util.math.BlockPos;
 import org.jetbrains.annotations.Nullable;
@@ -10,6 +10,9 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
+/**
+ * A bounding volume hierarchy for axis aligned bounding boxes.
+ */
 public class BVH {
 
     public static final BVH EMPTY = new BVH(null);

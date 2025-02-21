@@ -242,7 +242,7 @@ public class GlowingBombInstance extends EliminationGameInstance implements MapB
         manager.bombHolder().ifPresent(this::onPassedBomb);
 
         ServerWorld world = getWorld();
-        Vector3d pos = bomb.worldPosition();
+        Vector3d pos = bomb.worldTranslation();
         double x = pos.x(), y = pos.y(), z = pos.z();
 
         world.playSound(null, x, y, z, SoundEvents.BLOCK_RESPAWN_ANCHOR_DEPLETE.value(), SoundCategory.HOSTILE, 0.9f, 1.0f);
@@ -282,7 +282,7 @@ public class GlowingBombInstance extends EliminationGameInstance implements MapB
 
     private void onBombYielded() {
         if (bomb != null) {
-            Vector3d pos = bomb.worldPosition();
+            Vector3d pos = bomb.worldTranslation();
             double x = pos.x(), y = pos.y(), z = pos.z();
 
             ServerWorld world = getWorld();

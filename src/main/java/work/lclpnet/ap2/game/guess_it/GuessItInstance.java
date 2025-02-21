@@ -21,11 +21,11 @@ import work.lclpnet.ap2.game.guess_it.data.*;
 import work.lclpnet.ap2.impl.game.DefaultGameInstance;
 import work.lclpnet.ap2.impl.game.data.ScoreDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
+import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.ap2.impl.util.scoreboard.ScoreHandle;
 import work.lclpnet.ap2.impl.util.scoreboard.ScoreboardLayout;
-import work.lclpnet.ap2.impl.util.world.stage.Stage;
-import work.lclpnet.ap2.impl.util.world.stage.StageReader;
+import work.lclpnet.ap2.impl.util.world.stage.BlockShape;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.*;
 import work.lclpnet.kibu.scheduler.Ticks;
@@ -83,7 +83,7 @@ public class GuessItInstance extends DefaultGameInstance implements MapBootstrap
         GameMap map = getMap();
         HookRegistrar hooks = gameHandle.getHookRegistrar();
         Participants participants = gameHandle.getParticipants();
-        Stage stage = StageReader.readStage(map);
+        BlockShape blockShape = MapUtil.readArea(map);
 
         commons().gameRuleBuilder()
                 .set(GameRules.REDUCED_DEBUG_INFO, true);
@@ -93,7 +93,7 @@ public class GuessItInstance extends DefaultGameInstance implements MapBootstrap
         messenger = new ChallengeMessengerImpl(world, gameHandle.getTranslations());
         inputManager = new InputManager(choices, gameHandle.getTranslations(), participants, messenger);
         modifier = new ResetWorldModifier(world, hooks);
-        manager = new GuessItManager(gameHandle, world, random, stage, modifier, soundSubtitles);
+        manager = new GuessItManager(gameHandle, world, random, blockShape, modifier, soundSubtitles);
 
         new AnswerCommand(participants, inputManager).register(gameHandle.getCommandRegistrar());
 

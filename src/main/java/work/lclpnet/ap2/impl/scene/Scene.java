@@ -17,7 +17,9 @@ public class Scene {
     private final Collection<Object3d> toAdd = new ArrayList<>();
     private final Collection<Object3d> toRemove = new ArrayList<>();
     private TaskHandle animationTask = null;
+    private Animatable onUpdateAnimation = null;
     private volatile AnimationContext animationContext = null;
+    private int animationTickRate = 0;
     private boolean iterating = false;
 
     public Scene(MountContext mountContext) {
@@ -37,6 +39,10 @@ public class Scene {
         for (Object3d obj : object.traverse()) {
             if (obj instanceof Mountable mountable) {
                 mountable.mount(mountContext);
+            }
+
+            if (animationTickRate > 0 && obj instanceof Interpolatable interpolatable) {
+                interpolatable.updateTickRate(animationTickRate);
             }
         }
     }
@@ -69,6 +75,8 @@ public class Scene {
             }
         }
 
+        animationTickRate = tickRate;
+
         for (Object3d object : iterate()) {
             for (Object3d obj : object.traverse()) {
                 if (obj instanceof Interpolatable interpolatable) {
@@ -85,7 +93,12 @@ public class Scene {
         if (animationTask != null) {
             animationTask.cancel();
             animationTask = null;
+            animationTickRate = 0;
         }
+    }
+
+    public void onUpdateAnimation(Animatable action) {
+        this.onUpdateAnimation = action;
     }
 
     public void clear() {
@@ -95,6 +108,10 @@ public class Scene {
     }
 
     private void updateAnimation(double dt) {
+        if (onUpdateAnimation != null) {
+            onUpdateAnimation.updateAnimation(dt, animationContext);
+        }
+
         for (Object3d object : iterate()) {
             Object3d rootChanged = null;
 

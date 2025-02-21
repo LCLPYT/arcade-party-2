@@ -5,7 +5,6 @@ import work.lclpnet.ap2.api.game.team.Team;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -23,20 +22,16 @@ public final class TeamStorage<T> {
         }
     }
 
-    public T getOrCreate(Team team) {
-        return getOrCreate(team, factory);
+    public T get(Team team) {
+        return get(team, factory);
     }
 
-    public T getOrCreate(Team team, Supplier<T> supplier) {
-        return getOrCreate(team, t -> supplier.get());
+    public T get(Team team, Supplier<T> supplier) {
+        return get(team, t -> supplier.get());
     }
 
-    public T getOrCreate(Team team, Function<Team, T> factory) {
+    public T get(Team team, Function<Team, T> factory) {
         return storage.computeIfAbsent(team, factory);
-    }
-
-    public T require(Team team) {
-        return Objects.requireNonNull(storage.get(team), "No value is stored for team " + team.getKey().id());
     }
 
     public Optional<T> optional(Team team) {

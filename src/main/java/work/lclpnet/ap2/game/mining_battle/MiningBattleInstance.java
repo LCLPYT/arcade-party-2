@@ -25,7 +25,7 @@ import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.map.ServerThreadMapBootstrap;
 import work.lclpnet.ap2.impl.util.BlockBox;
-import work.lclpnet.ap2.impl.util.ItemStackHelper;
+import work.lclpnet.ap2.impl.util.ItemHelper;
 import work.lclpnet.ap2.impl.util.TextUtil;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.world.BlockModificationHooks;
@@ -132,7 +132,7 @@ public class MiningBattleInstance extends DefaultGameInstance implements MapBoot
     }
 
     private void giveItems() {
-        var efficiency = ItemStackHelper.getEnchantment(Enchantments.EFFICIENCY, getWorld().getRegistryManager());
+        var efficiency = ItemHelper.getEnchantment(Enchantments.EFFICIENCY, getWorld().getRegistryManager());
 
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
             ItemStack pickaxe = new ItemStack(Items.DIAMOND_PICKAXE);

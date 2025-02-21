@@ -2,15 +2,16 @@ package work.lclpnet.ap2.impl.util;
 
 import net.minecraft.block.jukebox.JukeboxSong;
 import net.minecraft.component.DataComponentTypes;
+import net.minecraft.enchantment.Enchantment;
 import net.minecraft.item.Item;
 import net.minecraft.item.Items;
 import net.minecraft.item.equipment.ArmorMaterial;
 import net.minecraft.item.equipment.ArmorMaterials;
+import net.minecraft.item.equipment.trim.ArmorTrimMaterial;
+import net.minecraft.item.equipment.trim.ArmorTrimPattern;
 import net.minecraft.potion.Potion;
 import net.minecraft.potion.Potions;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.Registry;
-import net.minecraft.registry.RegistryWrapper;
+import net.minecraft.registry.*;
 import net.minecraft.registry.entry.RegistryEntry;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -102,5 +103,37 @@ public class ItemHelper {
         }
 
         return entries.get(random.nextInt(entries.size()));
+    }
+
+    public static RegistryEntry<ArmorTrimPattern> getRandomTrimPattern(DynamicRegistryManager registryManager, Random random) {
+        var registry = registryManager.getOrThrow(RegistryKeys.TRIM_PATTERN);
+        var entries = registry.getIndexedEntries();
+
+        if (entries.size() <= 0) throw new IllegalStateException("There are no trim patterns registered");
+
+        int idx = random.nextInt(entries.size());
+
+        return entries.getOrThrow(idx);
+    }
+
+    public static RegistryEntry<ArmorTrimMaterial> getRandomTrimMaterial(DynamicRegistryManager registryManager, Random random) {
+        var registry = registryManager.getOrThrow(RegistryKeys.TRIM_MATERIAL);
+        var entries = registry.getIndexedEntries();
+
+        if (entries.size() <= 0) throw new IllegalStateException("There are no trim patterns registered");
+
+        int idx = random.nextInt(entries.size());
+
+        return entries.getOrThrow(idx);
+    }
+
+    public static RegistryEntry<ArmorTrimMaterial> getTrimMaterial(DynamicRegistryManager registryManager, RegistryKey<ArmorTrimMaterial> key) {
+        var registry = registryManager.getOrThrow(RegistryKeys.TRIM_MATERIAL);
+        return registry.getOrThrow(key);
+    }
+
+    public static RegistryEntry<Enchantment> getEnchantment(RegistryKey<Enchantment> enchantment, DynamicRegistryManager registryManager) {
+        var enchantments = registryManager.getOrThrow(RegistryKeys.ENCHANTMENT);
+        return enchantments.getOrThrow(enchantment);
     }
 }

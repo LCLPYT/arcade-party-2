@@ -11,114 +11,43 @@ import net.minecraft.util.math.AffineTransformation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3i;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
-import org.joml.Vector3f;
 import work.lclpnet.ap2.api.util.model.Model;
 import work.lclpnet.ap2.api.util.model.ModelManager;
 import work.lclpnet.ap2.game.maze_scape.gen.Node;
-import work.lclpnet.ap2.game.maze_scape.util.DebugRenderer;
 import work.lclpnet.ap2.game.maze_scape.util.MSStruct;
 import work.lclpnet.ap2.game.maze_scape.util.Passage;
-import work.lclpnet.ap2.impl.scene.BlockDisplayObject;
 import work.lclpnet.ap2.impl.scene.Object3d;
-import work.lclpnet.ap2.impl.scene.Scene;
-import work.lclpnet.ap2.impl.scene.ServerWorldMountContext;
-import work.lclpnet.ap2.impl.util.BlockBox;
+import work.lclpnet.ap2.impl.util.debug.DebugController;
 import work.lclpnet.ap2.impl.util.math.MathUtil;
 import work.lclpnet.ap2.impl.util.model.Models;
 import work.lclpnet.ap2.impl.util.model.TemplateModel;
 import work.lclpnet.kibu.access.entity.DisplayEntityAccess;
-import work.lclpnet.kibu.util.math.Matrix3i;
 
 import java.util.*;
-import java.util.function.Consumer;
 
 import static java.lang.Math.abs;
 
 public class MSDebugController {
-    private @Nullable Scene scene = null;
-    private @Nullable Model spawnMarker = null, childMarker = null, passageMarker = null, arrow = null;
+
+    private final DebugController parent = new DebugController();
+    private @Nullable Model spawnMarker = null, childMarker = null, passageMarker = null;
     private @Nullable ServerWorld world = null;
-    private @Nullable DebugRenderer renderer = null;
-    private @Nullable Map<String, List<Object3d>> namedObjects = null;
-    private @Nullable ThreadLocal<@Nullable List<Object3d>> group = null;
+
+    public DebugController parent() {
+        return parent;
+    }
 
     public void init(ModelManager modelManager, ServerWorld world) {
+        parent.init(modelManager, world);
+
         this.world = world;
 
-        scene = new Scene(new ServerWorldMountContext(world));
-        renderer = new DebugRenderer(scene);
-
         spawnMarker = modelManager.getModel(Models.CROSS).orElseThrow();
-        arrow = modelManager.getModel(Models.ARROW).orElseThrow();
+        Model arrow = modelManager.getModel(Models.ARROW).orElseThrow();
         childMarker = arrow;
-        passageMarker = replace(arrow, Blocks.LIME_CONCRETE.getDefaultState(), Blocks.LIGHT_BLUE_CONCRETE.getDefaultState());
-
-        namedObjects = new HashMap<>();
-        group = ThreadLocal.withInitial(() -> null);
-    }
-
-    public void display(Object3d obj) {
-        if (scene == null || group == null) return;
-
-        scene.add(obj);
-
-        List<Object3d> objects = group.get();
-
-        if (objects != null) {
-            objects.add(obj);
-        }
-    }
-
-    public void displayArrow(Model model, double x, double y, double z, double angleYRad, double scale) {
-        Object3d marker = model.createInstance();
-        marker.scale.set(scale);
-        marker.position.set(x, y, z);
-        marker.rotation.setAngleAxis(angleYRad, 0, 1, 0);
-
-        display(marker);
-    }
-
-    public void displayArrow(Vec3d pos, Vec3d dir, double scale, BlockState color) {
-        var model = replace(arrow, Blocks.LIME_CONCRETE.getDefaultState(), color);
-        displayArrow(model, pos.x, pos.y, pos.z, dir.x, dir.y, dir.z, scale);
-    }
-
-    public void displayArrow(Model model, double x, double y, double z, double dx, double dy, double dz, double scale) {
-        Object3d marker = model.createInstance();
-        marker.scale.set(scale);
-        marker.position.set(x, y, z);
-        marker.rotation.rotateTo(0, 0, 1, dx, dy, dz);
-
-        display(marker);
-    }
-
-    public Object3d displayMarker(Vec3d pos, BlockState state, int glowColor) {
-        return displayMarker(pos.x, pos.y, pos.z, state, glowColor);
-    }
-
-    public Object3d displayMarker(double x, double y, double z, BlockState state, int glowColor) {
-        return displayMarker(x, y, z, state, glowColor, 0.25);
-    }
-
-    public Object3d displayMarker(double x, double y, double z, BlockState state, int glowColor, double scale) {
-        BlockDisplayObject marker = new BlockDisplayObject(state);
-
-        marker.position.set(-0.5, -0.5, -0.5);
-        marker.setGlowing(true);
-        marker.setGlowColorOverride(glowColor);
-        marker.setInterpolationDuration(1);
-
-        Object3d wrapper = new Object3d();
-        wrapper.position.set(x, y, z);
-        wrapper.scale.set(scale);
-        wrapper.addChild(marker);
-
-        display(wrapper);
-
-        return wrapper;
+        passageMarker = TemplateModel.replace(arrow, Blocks.LIME_CONCRETE.getDefaultState(), Blocks.LIGHT_BLUE_CONCRETE.getDefaultState());
     }
 
     public void visualizeSpawn(OrientedStructurePiece oriented) {
@@ -131,7 +60,7 @@ public class MSDebugController {
             marker.position.set(pos.x, pos.y, pos.z);
             marker.scale.set(0.75);
 
-            display(marker);
+            parent.renderer().ifPresent(renderer -> renderer.display(marker));
         }
 
         var display = new DisplayEntity.TextDisplayEntity(EntityType.TEXT_DISPLAY, world);
@@ -168,11 +97,12 @@ public class MSDebugController {
                 Vec3i dir = connector.direction();
                 double angleY = MathUtil.angleY(dir);
 
-                displayArrow(childMarker,
+                parent.renderer().ifPresent(renderer -> renderer.arrow(
                         pos.getX() + 0.5 - abs(dir.getZ()) * 0.25,
                         pos.getY() + 1,
                         pos.getZ() + 0.5 - abs(dir.getX()) * 0.25,
-                        angleY, 0.75);
+                        angleY, 0.75,
+                        childMarker));
             }
         }
 
@@ -181,11 +111,12 @@ public class MSDebugController {
             Vec3i dir = connector.direction();
             double angleY = MathUtil.angleY(dir);
 
-            displayArrow(passageMarker,
+            parent().renderer().ifPresent(renderer -> renderer.arrow(
                     pos.getX() + 0.5 + abs(dir.getZ()) * 0.25,
                     pos.getY() + 1,
                     pos.getZ() + 0.5 + abs(dir.getX()) * 0.25,
-                    angleY, 0.75);
+                    angleY, 0.75,
+                    passageMarker));
         }
     }
 
@@ -240,30 +171,7 @@ public class MSDebugController {
         return connectors;
     }
 
-    public void visualizePits(OrientedStructurePiece oriented) {
-        if (world == null) return;
-
-        Matrix3i mat = oriented.transformation();
-        BlockPos pos = oriented.pos();
-
-        for (BlockBox box : oriented.piece().pit().greedyMeshing().generateBoxes()) {
-            box = box.transform(mat);
-
-            var display = new DisplayEntity.BlockDisplayEntity(EntityType.BLOCK_DISPLAY, world);
-            display.setPosition(Vec3d.of(pos.add(box.min())));
-
-            DisplayEntityAccess.setBlockState(display, Blocks.RED_STAINED_GLASS.getDefaultState());
-
-            var scale = new Vector3f(box.width(), box.height(), box.length());
-            DisplayEntityAccess.setTransformation(display, new AffineTransformation(null, null, scale, null));
-
-            world.spawnEntity(display);
-        }
-    }
-
     public void visualizePassages(MSStruct struct) {
-        if (renderer == null) return;
-
         var queue = new LinkedList<Passage>();
         var processed = new IntOpenHashSet();
 
@@ -285,36 +193,8 @@ public class MSDebugController {
 
     @Nullable
     public Object3d visualizePassage(Passage from, Passage to, BlockState material) {
-        if (renderer == null) return null;
-
-        return renderer.line(to.pos().toBottomCenterPos(), from.pos().toBottomCenterPos(), 0.03125, material);
-    }
-
-    public @Nullable Scene scene() {
-        return scene;
-    }
-
-    public @Nullable DebugRenderer renderer() {
-        return renderer;
-    }
-
-    public void exclusive(String name, Consumer<MSDebugController> action) {
-        if (namedObjects == null || scene == null || group == null) return;
-
-        var objects = namedObjects.computeIfAbsent(name, n -> new ArrayList<>());
-        objects.forEach(scene::remove);
-
-        group.set(objects);
-
-        action.accept(this);
-
-        group.remove();
-    }
-
-    private static @NotNull TemplateModel replace(@Nullable Model model, BlockState from, BlockState to) {
-        return Optional.ofNullable(model)
-                .map(m -> m instanceof TemplateModel tm ? tm : null)
-                .map(m -> m.copy().replace(from, to))
-                .orElseThrow();
+        return parent.renderer()
+                .map(renderer -> renderer.line(to.pos().toBottomCenterPos(), from.pos().toBottomCenterPos(), 0.03125, material))
+                .orElse(null);
     }
 }

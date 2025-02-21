@@ -3,8 +3,8 @@ package work.lclpnet.ap2.game.apocalypse_survival.util;
 import net.minecraft.server.world.ServerWorld;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import work.lclpnet.ap2.impl.util.world.stage.Stage;
-import work.lclpnet.ap2.impl.util.world.stage.StageReader;
+import work.lclpnet.ap2.impl.map.MapUtil;
+import work.lclpnet.ap2.impl.util.world.stage.BlockShape;
 import work.lclpnet.lobby.game.map.GameMap;
 
 import java.util.LinkedList;
@@ -25,8 +25,8 @@ public class AsSetup {
         this.targetManager = targetManager;
     }
 
-    public List<MonsterSpawner> readSpawners() {
-        List<MonsterSpawner> spawners = new LinkedList<>();
+    public List<MonsterSpawner<?>> readSpawners() {
+        List<MonsterSpawner<?>> spawners = new LinkedList<>();
 
         JSONArray array = map.requireProperty("spawners");
 
@@ -39,11 +39,18 @@ public class AsSetup {
         return spawners;
     }
 
-    private MonsterSpawner createSpawner(JSONObject json) {
+    private MonsterSpawner<?> createSpawner(JSONObject json) {
         JSONObject stageJson = json.getJSONObject("stage");
 
-        Stage stage = StageReader.readStage(stageJson);
+        BlockShape blockShape = MapUtil.readShape(stageJson);
+        var stageWithRadius = validateStage(blockShape);
 
-        return new MonsterSpawner(world, stage, random, targetManager);
+        return new MonsterSpawner<>(world, stageWithRadius, random, targetManager);
+    }
+
+    @SuppressWarnings("unchecked")
+    private <S extends BlockShape & BlockShape.WithRadius> S validateStage(BlockShape blockShape) {
+        if (!(blockShape instanceof BlockShape.WithRadius)) throw new IllegalArgumentException("Stage with radius required");
+        return (S) blockShape;
     }
 }

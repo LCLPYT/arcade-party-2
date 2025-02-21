@@ -20,12 +20,12 @@ import work.lclpnet.ap2.game.apocalypse_survival.goal.RoamGoal;
 import work.lclpnet.ap2.game.apocalypse_survival.goal.UnstuckGoal;
 import work.lclpnet.ap2.impl.ds.WeightedList;
 import work.lclpnet.ap2.impl.util.EntityUtil;
-import work.lclpnet.ap2.impl.util.world.stage.Stage;
+import work.lclpnet.ap2.impl.util.world.stage.BlockShape;
 import work.lclpnet.kibu.scheduler.Ticks;
 
 import java.util.Random;
 
-public class MonsterSpawner {
+public class MonsterSpawner<S extends BlockShape & BlockShape.WithRadius> {
 
     private static final int
             PARTICLE_TICKS = 12,
@@ -33,7 +33,7 @@ public class MonsterSpawner {
             MOB_MAX_TICKS = Ticks.seconds(3) + 10,
             MOB_LIMIT = 150;
     private final ServerWorld world;
-    private final Stage stage;
+    private final S stage;
     private final Random random;
     private final TargetManager targetManager;
     private final WeightedList<EntityType<? extends ZombieEntity>> zombieTypes;
@@ -44,7 +44,7 @@ public class MonsterSpawner {
     private int nextMob;
     private int mobCount = 0;
 
-    public MonsterSpawner(ServerWorld world, Stage stage, Random random, TargetManager targetManager) {
+    public MonsterSpawner(ServerWorld world, S stage, Random random, TargetManager targetManager) {
         this.world = world;
         this.stage = stage;
         this.random = random;
@@ -99,8 +99,8 @@ public class MonsterSpawner {
     }
 
     private void spawnParticle() {
-        BlockPos center = stage.getCenter();
-        int offset = stage.getRadius() / 2;
+        BlockPos center = stage.center();
+        int offset = stage.radius() / 2;
 
         world.spawnParticles(ParticleTypes.REVERSE_PORTAL, center.getX() + 0.5, center.getY() + 0.5, center.getZ() + 0.5,
                 30, offset, offset, offset, 0.15);
@@ -291,7 +291,7 @@ public class MonsterSpawner {
 
     @Nullable
     private <T extends MobEntity> T createMob(EntityType<? extends T> type) {
-        T mob = type.create(world, null, stage.getOrigin(), SpawnReason.COMMAND, false, false);
+        T mob = type.create(world, null, stage.origin(), SpawnReason.COMMAND, false, false);
 
         if (mob == null) return null;
 
@@ -301,7 +301,7 @@ public class MonsterSpawner {
     }
 
     private void configureMob(MobEntity mob) {
-        BlockPos pos = stage.getOrigin();
+        BlockPos pos = stage.origin();
 
         mob.setPersistent();
         mob.setPosition(Vec3d.ofBottomCenter(pos));

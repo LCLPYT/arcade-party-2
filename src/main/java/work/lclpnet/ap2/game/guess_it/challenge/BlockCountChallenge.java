@@ -7,7 +7,7 @@ import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.NotNull;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.game.guess_it.data.*;
-import work.lclpnet.ap2.impl.util.world.stage.Stage;
+import work.lclpnet.ap2.impl.util.world.stage.BlockShape;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.RunningTask;
 import work.lclpnet.kibu.scheduler.api.SchedulerAction;
@@ -17,12 +17,12 @@ import work.lclpnet.lobby.util.WorldModifier;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class BlockCountChallenge implements Challenge, SchedulerAction {
+public class BlockCountChallenge<S extends BlockShape & BlockShape.WithRadius & BlockShape.WithHeight> implements Challenge, SchedulerAction {
 
     private static final int DURATION_TICKS = Ticks.seconds(20);
     private final MiniGameHandle gameHandle;
     private final Random random;
-    private final Stage stage;
+    private final S stage;
     private final WorldModifier modifier;
     private int amount = 0;
     private int distance = 0;
@@ -32,7 +32,7 @@ public class BlockCountChallenge implements Challenge, SchedulerAction {
     private BlockState state = null;
     private Shape shape = null;
 
-    public BlockCountChallenge(MiniGameHandle gameHandle, Random random, Stage stage, WorldModifier modifier) {
+    public BlockCountChallenge(MiniGameHandle gameHandle, Random random, S stage, WorldModifier modifier) {
         this.gameHandle = gameHandle;
         this.random = random;
         this.stage = stage;
@@ -51,7 +51,7 @@ public class BlockCountChallenge implements Challenge, SchedulerAction {
 
     @Override
     public void prepare() {
-        BlockPos center = stage.getCenter();
+        BlockPos center = stage.center();
         centerX = center.getX();
         centerY = center.getY();
         centerZ = center.getZ();
@@ -140,9 +140,9 @@ public class BlockCountChallenge implements Challenge, SchedulerAction {
     @NotNull
     private List<BlockPos> generateSphere() {
         int minRadius = 4;
-        int maxRadius = Math.min(stage.getHeight() / 2, stage.getRadius());
+        int maxRadius = Math.min(stage.height() / 2, stage.radius());
 
-        int radius = Math.min(maxRadius, minRadius + random.nextInt(Math.max(1, stage.getRadius() - minRadius)));
+        int radius = Math.min(maxRadius, minRadius + random.nextInt(Math.max(1, stage.radius() - minRadius)));
 
         var iter = BlockPos.iterate(
                 centerX - radius, centerY - radius, centerZ - radius,
@@ -168,7 +168,7 @@ public class BlockCountChallenge implements Challenge, SchedulerAction {
     @NotNull
     private List<BlockPos> generateCube() {
         int minRadius = 4;
-        int maxRadius = (int) Math.floor(Math.sin(Math.PI * 0.25) * stage.getRadius());
+        int maxRadius = (int) Math.floor(Math.sin(Math.PI * 0.25) * stage.radius());
 
         int radius = minRadius + random.nextInt(Math.max(1, maxRadius - minRadius));
 
@@ -190,10 +190,10 @@ public class BlockCountChallenge implements Challenge, SchedulerAction {
         int minRadius = 4;
         int minHeight = 10;
 
-        int maxHeight = stage.getHeight();
+        int maxHeight = stage.height();
         int height = minHeight + random.nextInt(Math.max(1, maxHeight - minHeight));
 
-        int maxRadius = Math.min(height / 2, stage.getRadius());
+        int maxRadius = Math.min(height / 2, stage.radius());
         int radius = minRadius + random.nextInt(Math.max(1, maxRadius - minRadius));
 
         int halfHeight = height / 2;

@@ -3,45 +3,70 @@ package work.lclpnet.ap2.impl.util;
 import net.minecraft.entity.decoration.DisplayEntity;
 import net.minecraft.util.math.AffineTransformation;
 import org.joml.*;
-import work.lclpnet.kibu.access.entity.DisplayEntityAccess;
 
 public class DisplayEntityTransformer {
 
     private final Vector3d position = new Vector3d();
+    private final Vector3d translation = new Vector3d();
     private final Vector3d scale = new Vector3d();
     private final Quaternionf rotation = new Quaternionf();
     private final Matrix4f mat4f = new Matrix4f();
-    private final Matrix4d prevMatrix = new Matrix4d();
+    private final Matrix4d prevMatrix = new Matrix4d().scale(Double.NaN);
+    private final double positionTolSq;
+    private AffineTransformation transformation = new AffineTransformation(mat4f);
 
-    public void applyTransformation(DisplayEntity display, Matrix4dc matrix) {
-        AffineTransformation transformation;
+    public DisplayEntityTransformer() {
+        this(16);
+    }
 
-        synchronized (this) {
-            if (matrix.equals(prevMatrix)) return;
+    /**
+     * Construct a new {@link DisplayEntityTransformer}.
+     * @param positionTol The distance in blocks that a DisplayEntity can be translated without being teleported. Default is 16
+     */
+    public DisplayEntityTransformer(double positionTol) {
+        this.positionTolSq = positionTol * positionTol;
+    }
 
-            prevMatrix.set(matrix);
+    public synchronized boolean update(Matrix4dc matrix, double x, double y, double z) {
+        if (matrix.equals(prevMatrix)) return false;
 
-            matrix.getTranslation(position);
-            matrix.getScale(scale);
-            matrix.getUnnormalizedRotation(rotation);
+        prevMatrix.set(matrix);
 
-            mat4f.identity();
+        matrix.getTranslation(translation);
+        matrix.getScale(scale);
+        matrix.getUnnormalizedRotation(rotation);
 
-            double x1 = display.getX(), y1 = display.getY(), z1 = display.getZ();
-            double x2 = position.x(), y2 = position.y(), z2 = position.z();
+        mat4f.identity();
 
-            if (Vector3d.distanceSquared(x1, y1, z1, x2, y2, z2) > 256) {
-                display.setPos(x2, y2, z2);
-            } else {
-                mat4f.translate((float) (x2 - x1), (float) (y2 - y1), (float) (z2 - z1));
-            }
+        position.set(x, y, z);
 
-            mat4f.rotate(rotation).scale((float) scale.x(), (float) scale.y(), (float) scale.z());
+        double tx = translation.x(), ty = translation.y(), tz = translation.z();
 
-            transformation = new AffineTransformation(mat4f);
+        if (position.distanceSquared(tx, ty, tz) > positionTolSq) {
+            position.set(tx, ty, tz);
+        } else {
+            mat4f.translate((float) (tx - position.x), (float) (ty - position.y), (float) (tz - position.z));
         }
 
-        DisplayEntityAccess.setTransformation(display, transformation);
-        DisplayEntityAccess.setStartInterpolation(display, 0);
+        mat4f.rotate(rotation).scale((float) scale.x(), (float) scale.y(), (float) scale.z());
+
+        transformation = new AffineTransformation(mat4f);
+
+        return true;
+    }
+
+    public void updateAndApply(DisplayEntity display, Matrix4dc matrix) {
+        if (update(matrix, display.getX(), display.getY(), display.getZ())) {
+            apply(display);
+        }
+    }
+
+    public void apply(DisplayEntity display) {
+        if (display.squaredDistanceTo(position.x, position.y, position.z) > 1.0E-4) {
+            display.setPos(position.x, position.y, position.z);
+        }
+
+        display.setTransformation(transformation);
+        display.setStartInterpolation(0);
     }
 }

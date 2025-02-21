@@ -4,7 +4,8 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.game.maze_scape.gen.Piece;
-import work.lclpnet.ap2.game.maze_scape.util.BVH;
+import work.lclpnet.ap2.impl.ds.BVH;
+import work.lclpnet.ap2.impl.ds.StructureMask;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.kibu.schematic.FabricStructureWrapper;
 
