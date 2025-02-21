@@ -10,6 +10,8 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
+import net.minecraft.util.ActionResult;
+import net.minecraft.util.Hand;
 import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.core.hook.ProjectileHitEntityCallback;
@@ -17,6 +19,7 @@ import work.lclpnet.ap2.core.hook.ProjectileShootCallback;
 import work.lclpnet.ap2.impl.game.item.SpecialItem;
 import work.lclpnet.ap2.impl.game.item.SpecialItemContext;
 import work.lclpnet.ap2.impl.util.handler.DoubleJumpHandler;
+import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.scheduler.Ticks;
 
@@ -75,6 +78,12 @@ public class HeavyWeightItem implements SpecialItem {
 
             ctx.scheduler().timeout(() -> removeHeavyWeighted(player), DURATION_TICKS);
         });
+    }
+
+    @Override
+    public ActionResult onUse(ServerPlayerEntity player, ItemStack stack, @Nullable Hand hand, SpecialItemContext ctx) {
+        PlayerInventoryAccess.setSelectedSlot(player, 8);
+        return ActionResult.PASS;
     }
 
     private void setHeavyWeighted(ServerPlayerEntity player) {

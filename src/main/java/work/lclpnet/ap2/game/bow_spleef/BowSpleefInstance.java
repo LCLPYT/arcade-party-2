@@ -124,12 +124,12 @@ public class BowSpleefInstance extends EliminationGameInstance {
                 .register(new BurstShotItem(), 0.4f)
                 .register(new ExplodeAmmoItem(impactHook), 0.3f)
                 .register(heavyWeightItem, 0.3f)
-                .register(new FishingRodItem(), 0.15f)
+                .register(new FishingRodItem(), 0.125f)
                 .register(new SwitcherItem(), 0.3f)
                 .register(new LevitationItem(), 0.2f)
                 .register(new LightWeightItem(), 0.25f)
                 .register(tripleJumpItem, 0.15f)
-                .register(new CreeperExplosionItem(), 0.2f));
+                .register(new CreeperExplosionItem(), 0.15f));
 
         specialItems.setup();
         specialItems.syncWithWorldBorder();
