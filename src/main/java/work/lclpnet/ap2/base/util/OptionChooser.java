@@ -21,7 +21,7 @@ import java.util.WeakHashMap;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
-public class DevChooser<T> {
+public class OptionChooser<T> {
 
     private final WeakHashMap<Inventory, ChooserInventory<T>> inventories = new WeakHashMap<>();
 

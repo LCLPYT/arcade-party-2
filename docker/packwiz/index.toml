@@ -17,7 +17,7 @@ metafile = true
 
 [[files]]
 file = "mods/fabric-api.pw.toml"
-hash = "3039ab6ea60a5424d3b7d31f8fbfe16d3988b9a0bb7c670ba949743f63695ebd"
+hash = "71e384f643d16f13d509c543c26e81542baa22599365d6c16d867cd1eeda5acd"
 metafile = true
 
 [[files]]
@@ -32,7 +32,7 @@ metafile = true
 
 [[files]]
 file = "mods/kibu.pw.toml"
-hash = "d15ff4c3c784f7f3bad65c5dd707bf4d1524f3641d838407b86348071138964d"
+hash = "aa51b880d5fa2eccb6b0e40702d11809a514da236e3262714e752413588eee82"
 metafile = true
 
 [[files]]
@@ -42,7 +42,7 @@ metafile = true
 
 [[files]]
 file = "mods/lithium.pw.toml"
-hash = "f4070441d1f1bdeb3e6a594b5ba1c3f314b8f13815a67619cb38621c0f6a1fec"
+hash = "97697e194c4e9742501485140b71b4104b857f27bd34446816fd55e4ec486e2c"
 metafile = true
 
 [[files]]
@@ -62,7 +62,7 @@ metafile = true
 
 [[files]]
 file = "mods/pal.pw.toml"
-hash = "347f816c90c0cd4e76db27868c01900e5db9f795816098cc516e696d47e7dcd5"
+hash = "539eb43184a464dc26d5288596d4375ed0b9143d180b5bb24f0dda45c02a1bba"
 metafile = true
 
 [[files]]
