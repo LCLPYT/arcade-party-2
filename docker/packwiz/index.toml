@@ -67,7 +67,7 @@ metafile = true
 
 [[files]]
 file = "mods/ruler.pw.toml"
-hash = "e228cf7508b18a1ee186f0cd2a8d282e1df008e229bd994096bb7f52474767e0"
+hash = "71160a6cc93ff6ae0cc3cae5c8b8bec4e142f40b7e75d0b8ab309dd2201c0a3b"
 metafile = true
 
 [[files]]
