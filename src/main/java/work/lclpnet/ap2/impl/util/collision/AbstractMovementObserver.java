@@ -62,6 +62,13 @@ public class AbstractMovementObserver implements MovementObserver {
     }
 
     @Override
+    public void removeListeners(Collider region) {
+        collisionDetector.remove(region);
+        regionEnter.remove(region);
+        regionLeave.remove(region);
+    }
+
+    @Override
     public void clear() {
         collisionDetector.clear();
         entries.clear();

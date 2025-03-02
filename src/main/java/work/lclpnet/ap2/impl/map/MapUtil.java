@@ -109,29 +109,34 @@ public class MapUtil {
     public static BlockShape readShape(JSONObject json, @Nullable BlockPos spawn) {
         String type = json.getString("type").toLowerCase(Locale.ROOT);
 
-        switch (type) {
+        return switch (type) {
             case CylinderBlockShape.TYPE -> {
                 BlockPos origin = origin(json, spawn);
                 int radius = json.getInt("radius");
                 int height = json.getInt("height");
 
-                return new CylinderBlockShape(origin, radius, height);
+                yield new CylinderBlockShape(origin, radius, height);
             }
             case CylinderBlockShape.TYPE_CIRCLE -> {
                 BlockPos origin = origin(json, spawn);
                 int radius = json.getInt("radius");
 
-                return new CylinderBlockShape(origin, radius, 1);
+                yield new CylinderBlockShape(origin, radius, 1);
             }
             case BoxBlockShape.TYPE_CUBE -> {
                 BlockPos origin = origin(json, spawn);
                 int radius = json.getInt("radius");
 
-                return new BoxBlockShape(BlockBox.ofRadius(origin, radius));
+                yield new BoxBlockShape(BlockBox.ofRadius(origin, radius));
             }
-        }
+            case BoxBlockShape.TYPE_BOX -> {
+                JSONArray tuple = json.getJSONArray("bounds");
+                BlockBox box = readBox(tuple);
 
-        throw new IllegalStateException("Unknown area type " + type);
+                yield new BoxBlockShape(box);
+            }
+            default -> throw new IllegalStateException("Unknown area type " + type);
+        };
     }
 
     private static BlockPos origin(JSONObject json, @Nullable BlockPos fallback) {
