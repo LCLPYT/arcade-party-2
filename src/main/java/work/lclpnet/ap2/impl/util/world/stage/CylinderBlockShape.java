@@ -1,16 +1,26 @@
 package work.lclpnet.ap2.impl.util.world.stage;
 
 import com.google.common.collect.Iterators;
+import com.mojang.serialization.MapCodec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.minecraft.util.dynamic.Codecs;
 import net.minecraft.util.math.BlockPos;
 import org.jetbrains.annotations.NotNull;
 import work.lclpnet.ap2.impl.util.BlockBox;
 
 import java.util.Iterator;
+import java.util.Optional;
 
 public class CylinderBlockShape implements BlockShape, BlockShape.WithRadius, BlockShape.WithHeight {
 
-    public static final String TYPE = "cylinder";
-    public static final String TYPE_CIRCLE = "circle";
+    public static final String TYPE = "cylinder", TYPE_CIRCLE = "circle";
+
+    public static final MapCodec<CylinderBlockShape> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
+            BlockPos.CODEC.fieldOf("origin").forGetter(CylinderBlockShape::origin),
+            Codecs.POSITIVE_INT.fieldOf("radius").forGetter(CylinderBlockShape::radius),
+            Codecs.POSITIVE_INT.optionalFieldOf("height").forGetter(shape -> Optional.of(shape.height()))
+    ).apply(instance, (pos, radius, height) -> new CylinderBlockShape(pos, radius, height.orElse(1))));
+
     private final BlockPos origin;
     private final int radius;
     private final int radiusSq;
@@ -31,6 +41,11 @@ public class CylinderBlockShape implements BlockShape, BlockShape.WithRadius, Bl
     }
 
     @Override
+    public BlockShapes.Type<?> type() {
+        return height == 1 ? BlockShapes.TYPE_CIRCLE : BlockShapes.TYPE_CYLINDER;
+    }
+
+    @Override
     public BlockPos origin() {
         return origin;
     }
@@ -41,18 +56,20 @@ public class CylinderBlockShape implements BlockShape, BlockShape.WithRadius, Bl
     }
 
     @Override
-    public boolean contains(BlockPos pos) {
-        int y = pos.getY();
+    public boolean contains(double x, double y, double z) {
         int oy = origin.getY();
 
         if (y < oy || y > oy + height - 1) return false;
 
-        float ox = origin.getX() + 0.5f, oz = origin.getZ() + 0.5f;
-        float x = pos.getX() + 0.5f, z = pos.getZ() + 0.5f;
-
-        float dx = x - ox, dz = z - oz;
+        double dx = x - (origin.getX() + 0.5);
+        double dz = z - (origin.getZ() + 0.5);
 
         return dx * dx + dz * dz < radiusSq;
+    }
+
+    @Override
+    public boolean contains(int x, int y, int z) {
+        return contains(x + 0.5, y, z + 0.5);
     }
 
     @Override

@@ -20,6 +20,9 @@
     ],
     "game-entry": [
       "work.lclpnet.ap2.base.ArcadeParty"
+    ],
+    "actor_provider": [
+      "work.lclpnet.ap2.base.ApActors"
     ]
   },
   "mixins": [
