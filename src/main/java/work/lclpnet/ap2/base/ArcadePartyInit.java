@@ -70,11 +70,9 @@ public class ArcadePartyInit implements ModInitializer {
 
             Actor actor = ((ApMarkerEntity) marker).ap2$getActor();
 
-            if (actor == null || !ActorManagerAccess.get(world).remove(actor)) return;
+            if (actor == null) return;
 
-            actor.onRemove();
-
-            ActorRemovedCallback.HOOK.invoker().onRemoved(actor);
+            ActorManagerAccess.get(world).discard(actor, marker);
         });
     }
 
@@ -84,16 +82,6 @@ public class ArcadePartyInit implements ModInitializer {
         var dataSource = new Dynamic<>(NbtOps.INSTANCE, data);
         var init = new Init(world, dataSource);
 
-        factory.create(init).ifPresent(actor -> {
-            actor.setPosition(marker.getPos());
-
-            ((ApMarkerEntity) marker).ap2$setActor(actor);
-
-            if (!ActorManagerAccess.get(world).add(actor)) return;
-
-            actor.onSpawn();
-
-            ActorSpawnedCallback.HOOK.invoker().onSpawned(actor);
-        });
+        factory.create(init).ifPresent(actor -> ActorManagerAccess.get(world).spawn(actor, marker));
     }
 }
