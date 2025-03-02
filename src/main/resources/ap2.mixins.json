@@ -21,6 +21,7 @@
     "LandPathNodeMakerMixin",
     "LivingEntityAccessor",
     "LivingEntityMixin",
+    "MarkerEntityMixin",
     "MobEntityAccessor",
     "MobNavigationMixin",
     "MoveControlMixin",

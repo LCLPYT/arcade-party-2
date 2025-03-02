@@ -1,5 +1,7 @@
 package work.lclpnet.ap2.impl.util;
 
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import it.unimi.dsi.fastutil.Pair;
 import net.minecraft.util.math.*;
 import org.jetbrains.annotations.NotNull;
@@ -14,6 +16,17 @@ import java.util.Objects;
 import java.util.Random;
 
 public class BlockBox implements Pair<BlockPos, BlockPos>, Iterable<BlockPos>, Collider {
+
+    public static final Codec<BlockBox> CODEC = Codec.withAlternative(
+            BlockPos.CODEC.listOf(2, 2).xmap(
+                    list -> new BlockBox(list.getFirst(), list.get(1)),
+                    box -> List.of(box.min, box.max)
+            ),
+            RecordCodecBuilder.create(instance -> instance.group(
+                    BlockPos.CODEC.fieldOf("from").forGetter(BlockBox::min),
+                    BlockPos.CODEC.fieldOf("to").forGetter(BlockBox::max)
+            ).apply(instance, BlockBox::new))
+    );
 
     private final BlockPos min, max;
 
@@ -236,6 +249,11 @@ public class BlockBox implements Pair<BlockPos, BlockPos>, Iterable<BlockPos>, C
         if (width > height && width > length) return Direction.Axis.X;
         if (height > length) return Direction.Axis.Y;
         return Direction.Axis.Z;
+    }
+
+    public boolean isCube() {
+        int w = width();
+        return w == height() && w == length();
     }
 
     public static BlockBox enclosing(List<BlockBox> boxes) {

@@ -16,5 +16,7 @@ public interface MovementObserver {
 
     void whenLeaving(Collider region, Consumer<ServerPlayerEntity> action);
 
+    void removeListeners(Collider region);
+
     void clear();
 }
