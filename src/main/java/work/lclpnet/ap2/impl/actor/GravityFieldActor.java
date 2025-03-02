@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.server.network.ServerPlayerEntity;
 import org.jetbrains.annotations.Nullable;
+import work.lclpnet.ap2.api.actor.ActorData;
 import work.lclpnet.ap2.api.actor.ActorInit;
 import work.lclpnet.ap2.api.actor.BaseActor;
 import work.lclpnet.ap2.api.util.collision.MovementObserver;
@@ -62,6 +63,11 @@ public class GravityFieldActor extends BaseActor {
         if (manipulator != null && player.getServerWorld() == world) {
             manipulator.remove(player, this);
         }
+    }
+
+    @Override
+    public @Nullable ActorData<?> createData() {
+        return new ActorData<>(new Data(shape, strength), Data.CODEC);
     }
 
     public record Data(BlockShape shape, double strength) {
