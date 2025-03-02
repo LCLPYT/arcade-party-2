@@ -6,6 +6,8 @@ import org.jetbrains.annotations.Nullable;
 
 public interface Actor {
 
+    ActorType<?> getType();
+
     Vec3d getPosition();
 
     void setPosition(Vec3d pos);

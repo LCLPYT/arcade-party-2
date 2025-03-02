@@ -12,10 +12,15 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.Vec3d;
+import work.lclpnet.ap2.api.actor.ActorSpawnedCallback;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
+import work.lclpnet.ap2.impl.actor.GravityFieldActor;
 import work.lclpnet.ap2.impl.game.EliminationGameInstance;
+import work.lclpnet.ap2.impl.util.collision.ChunkedCollisionDetector;
+import work.lclpnet.ap2.impl.util.collision.PlayerMovementObserver;
 import work.lclpnet.kibu.access.VelocityModifier;
+import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.EntityDamageCallback;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
@@ -37,6 +42,23 @@ public class KnockoutInstance extends EliminationGameInstance {
     }
 
     @Override
+    public void start() {
+        var movementObserver = new PlayerMovementObserver(new ChunkedCollisionDetector(), gameHandle.getParticipants()::isParticipating);
+        var gravityManipulator = new GravityFieldActor.Manipulator();
+        HookRegistrar hooks = gameHandle.getHookRegistrar();
+
+        movementObserver.init(hooks, gameHandle.getServer());
+
+        hooks.registerHook(ActorSpawnedCallback.HOOK, actor -> {
+            if (actor instanceof GravityFieldActor gravityField) {
+                gravityField.enable(movementObserver, gravityManipulator);
+            }
+        });
+
+        super.start();
+    }
+
+    @Override
     protected void prepare() {
         commons().whenBelowCriticalHeight().then(this::eliminate);
 
@@ -48,7 +70,9 @@ public class KnockoutInstance extends EliminationGameInstance {
     protected void ready() {
         gameHandle.protect(config -> config.allow(ProtectionTypes.ALLOW_DAMAGE, this::canDamage));
 
-        gameHandle.getHookRegistrar().registerHook(EntityDamageCallback.HOOK, (entity, source, health) -> {
+        HookRegistrar hooks = gameHandle.getHookRegistrar();
+
+        hooks.registerHook(EntityDamageCallback.HOOK, (entity, source, health) -> {
             if (entity instanceof ServerPlayerEntity player
                     && source.getAttacker() instanceof ServerPlayerEntity attacker
                     && player.hurtTime <= 0) {  // prevent duplicate damage during grace period

@@ -16,7 +16,6 @@ import work.lclpnet.ap2.api.actor.*;
 import work.lclpnet.ap2.base.resource.ApResources;
 import work.lclpnet.ap2.core.type.ActorManagerAccess;
 import work.lclpnet.ap2.core.type.ApMarkerEntity;
-import work.lclpnet.kibu.access.entity.MarkerEntityAccess;
 import work.lclpnet.kibu.hook.entity.ServerEntityHooks;
 
 import static work.lclpnet.ap2.base.ArcadeParty.logger;
@@ -24,7 +23,6 @@ import static work.lclpnet.ap2.base.ArcadeParty.logger;
 public class ArcadePartyInit implements ModInitializer {
 
     public static final Identifier RESOURCES_ID = ArcadeParty.identifier("resources");
-    public static final String ACTOR_NBT_KEY = "gca:actor";
 
     @Override
     public void onInitialize() {
@@ -48,19 +46,20 @@ public class ArcadePartyInit implements ModInitializer {
         ServerEntityHooks.ENTITY_LOAD.register((entity, world) -> {
             if (!(entity instanceof MarkerEntity marker)) return;
 
-            NbtCompound data = MarkerEntityAccess.getData(marker);
-            NbtCompound actorData = data.getCompound(ACTOR_NBT_KEY);
+            NbtCompound actorNbt = ActorManager.getActorNbt(marker);
 
-            String type = actorData.getString("type");
+            if (actorNbt == null) return;
 
-            if (type.isEmpty()) return;
+            String typeStr = actorNbt.getString(ActorManager.ACTOR_TYPE_NBT_KEY);
 
-            Identifier actorId = Identifier.tryParse(type);
+            if (typeStr.isEmpty()) return;
+
+            Identifier actorId = Identifier.tryParse(typeStr);
 
             if (actorId == null) return;
 
-            actorRegistry.get(actorId).ifPresentOrElse(
-                    factory -> createActor(world, marker, factory, actorData),
+            actorRegistry.getType(actorId).ifPresentOrElse(
+                    type -> createActor(world, marker, type, actorNbt),
                     () -> logger.warn("Unknown actor type {} in world {} at {}", actorId, world.getRegistryKey().getValue(), marker.getBlockPos())
             );
         });
@@ -76,12 +75,10 @@ public class ArcadePartyInit implements ModInitializer {
         });
     }
 
-    private void createActor(ServerWorld world, MarkerEntity marker, ActorFactory<?> factory, NbtCompound data) {
-        record Init(ServerWorld world, Dynamic<?> dataSource) implements ActorInit {}
-
+    private void createActor(ServerWorld world, MarkerEntity marker, ActorType<?> type, NbtCompound data) {
         var dataSource = new Dynamic<>(NbtOps.INSTANCE, data);
-        var init = new Init(world, dataSource);
+        var init = new ActorInit(world, type, dataSource);
 
-        factory.create(init).ifPresent(actor -> ActorManagerAccess.get(world).spawn(actor, marker));
+        type.factory().create(init).ifPresent(actor -> ActorManagerAccess.get(world).spawn(actor, marker));
     }
 }

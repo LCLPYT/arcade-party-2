@@ -9,16 +9,15 @@ import java.util.Optional;
 
 public class ActorRegistry {
 
-    private final Map<Identifier, ActorFactory<?>> types = new HashMap<>();
+    private final Map<Identifier, ActorType<?>> types = new HashMap<>();
 
-    public <T extends Actor> void register(Identifier id, ActorFactory<T> type) {
-        Objects.requireNonNull(id, "Actor id is null");
+    public void register(ActorType<?> type) {
         Objects.requireNonNull(type, "Actor type is null");
 
-        types.put(id, type);
+        types.put(type.id(), type);
     }
 
-    public Optional<ActorFactory<?>> get(Identifier id) {
+    public Optional<ActorType<?>> getType(Identifier id) {
         return Optional.ofNullable(types.getOrDefault(id, null));
     }
 }
