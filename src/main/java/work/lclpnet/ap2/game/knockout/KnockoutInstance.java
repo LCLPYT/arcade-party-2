@@ -1,7 +1,9 @@
 package work.lclpnet.ap2.game.knockout;
 
-import it.unimi.dsi.fastutil.objects.Object2DoubleArrayMap;
+import it.unimi.dsi.fastutil.objects.Object2BooleanMap;
+import it.unimi.dsi.fastutil.objects.Object2BooleanOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2DoubleMap;
+import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.damage.DamageTypes;
@@ -11,18 +13,24 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Formatting;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import work.lclpnet.ap2.api.actor.ActorSpawnedCallback;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
+import work.lclpnet.ap2.base.ApConstants;
+import work.lclpnet.ap2.base.resource.ApResources;
+import work.lclpnet.ap2.game.knockout.util.ImpactDetector;
 import work.lclpnet.ap2.impl.actor.GravityFieldActor;
 import work.lclpnet.ap2.impl.game.EliminationGameInstance;
 import work.lclpnet.ap2.impl.util.collision.ChunkedCollisionDetector;
 import work.lclpnet.ap2.impl.util.collision.PlayerMovementObserver;
+import work.lclpnet.ap2.impl.util.debug.DebugController;
 import work.lclpnet.kibu.access.VelocityModifier;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.EntityDamageCallback;
 import work.lclpnet.kibu.scheduler.Ticks;
+import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 
 import java.util.UUID;
@@ -32,8 +40,10 @@ import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 public class KnockoutInstance extends EliminationGameInstance {
 
     private static final double CHARGE_INCREMENT = 0.075, CRITICAL_THRESHOLD = 2.5;
-    private final Object2DoubleMap<UUID> charge = new Object2DoubleArrayMap<>();
+    private final Object2DoubleMap<UUID> charge = new Object2DoubleOpenHashMap<>();
+    private final Object2BooleanMap<UUID> hit = new Object2BooleanOpenHashMap<>();
     private KnockoutWorldCrumble crumble = null;
+    private ImpactDetector impactDetector;
 
     public KnockoutInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
@@ -84,7 +94,19 @@ public class KnockoutInstance extends EliminationGameInstance {
         });
 
         int delaySeconds = crumble.getDelaySeconds();
-        gameHandle.getGameScheduler().timeout(this::beginCrumble, Ticks.seconds(delaySeconds));
+        TaskScheduler scheduler = gameHandle.getGameScheduler();
+        scheduler.timeout(this::beginCrumble, Ticks.seconds(delaySeconds));
+
+        var debugController = new DebugController();
+        impactDetector = new ImpactDetector(gameHandle.getParticipants(), debugController, 0.85);
+
+        if (ApConstants.DEBUG) {
+            debugController.init(ApResources.getInstance(), getWorld());
+        }
+
+        impactDetector.enable(scheduler);
+        impactDetector.onImpact().register(this::onImpact);
+        impactDetector.onMiss().register(this::onMiss);
     }
 
     private void beginCrumble() {
@@ -102,6 +124,10 @@ public class KnockoutInstance extends EliminationGameInstance {
 
     private void onDamage(ServerPlayerEntity player, ServerPlayerEntity attacker) {
         double power = charge.computeDouble(player.getUuid(), (uuid, old) -> (old == null ? 0 : old) + CHARGE_INCREMENT);
+
+        synchronized (this) {
+            hit.put(player.getUuid(), true);
+        }
 
         Vec3d vec = player.getPos().subtract(attacker.getPos()).normalize();
         vec = new Vec3d(vec.getX(), 0.1, vec.getZ());
@@ -129,5 +155,19 @@ public class KnockoutInstance extends EliminationGameInstance {
                 .formatted(Formatting.GOLD, Formatting.BOLD);
 
         player.sendMessage(msg, true);
+
+        impactDetector.checkImpact(player);
+    }
+
+    private void onImpact(ServerPlayerEntity player, Iterable<BlockPos> collisions) {
+        synchronized (this) {
+            if (!hit.put(player.getUuid(), false)) return;
+        }
+
+        // TODO implement block breaking
+    }
+
+    private synchronized void onMiss(ServerPlayerEntity player) {
+        hit.put(player.getUuid(), false);
     }
 }
