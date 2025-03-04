@@ -153,17 +153,19 @@ public class KnockoutInstance extends EliminationGameInstance {
         world.spawnParticles(ParticleTypes.CLOUD, x, y, z, 25, 0.25, 0.25, 0.25, 0.1);
 
         Formatting chargeColor;
+        world.playSound(null, x, y, z, SoundEvents.ENTITY_PLAYER_ATTACK_KNOCKBACK, SoundCategory.PLAYERS, 0.5f, 1.2f);
+        world.playSound(null, x, y, z, SoundEvents.ENTITY_PLAYER_ATTACK_CRIT, SoundCategory.PLAYERS, 0.5f, 1.25f);
 
         if (power > CRITICAL_THRESHOLD) {
-            world.playSound(null, x, y, z, SoundEvents.ENTITY_WITHER_BREAK_BLOCK, SoundCategory.PLAYERS, 0.5f, 0.75f);
             chargeColor = Formatting.DARK_RED;
+            world.playSound(null, x, y, z, SoundEvents.ENTITY_ALLAY_HURT, SoundCategory.PLAYERS, 0.25f, 1.25f);
+            world.spawnParticles(ParticleTypes.RAID_OMEN, x, y + 1, z, 10, 0.5, 0.5, 0.5, 0.1);
         } else {
-            world.playSound(null, x, y, z, SoundEvents.ENTITY_PLAYER_ATTACK_CRIT, SoundCategory.PLAYERS, 0.5f, 1.25f);
             chargeColor = Formatting.WHITE;
         }
 
         var msg = gameHandle.getTranslations().translateText(player, "game.ap2.knockout.charge",
-                        styled("%.2f".formatted(power * 100), chargeColor))
+                        styled("%d%%".formatted((int) Math.round(power * 100)), chargeColor))
                 .formatted(Formatting.GOLD, Formatting.BOLD);
 
         player.sendMessage(msg, true);
@@ -209,9 +211,9 @@ public class KnockoutInstance extends EliminationGameInstance {
         }
 
         if (anyBroke) {
-            world.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.ENTITY_WITHER_BREAK_BLOCK, SoundCategory.BLOCKS, 0.25f, 1.15f);
+            world.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.ENTITY_WITHER_BREAK_BLOCK, SoundCategory.BLOCKS, 0.2f, 1.15f);
         } else {
-            world.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.ENTITY_ZOMBIE_ATTACK_IRON_DOOR, SoundCategory.BLOCKS, 0.25f, 0.85f);
+            world.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.ENTITY_ZOMBIE_ATTACK_IRON_DOOR, SoundCategory.BLOCKS, 0.18f, 0.85f);
         }
     }
 
