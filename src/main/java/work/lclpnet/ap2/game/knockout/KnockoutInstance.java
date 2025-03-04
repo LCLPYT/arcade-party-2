@@ -26,6 +26,7 @@ import work.lclpnet.ap2.impl.game.EliminationGameInstance;
 import work.lclpnet.ap2.impl.util.collision.ChunkedCollisionDetector;
 import work.lclpnet.ap2.impl.util.collision.PlayerMovementObserver;
 import work.lclpnet.ap2.impl.util.debug.DebugController;
+import work.lclpnet.ap2.impl.util.world.DestroyStageManager;
 import work.lclpnet.kibu.access.VelocityModifier;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.EntityDamageCallback;
@@ -35,6 +36,7 @@ import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 
 import java.util.UUID;
 
+import static java.lang.Math.sqrt;
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
 public class KnockoutInstance extends EliminationGameInstance {
@@ -42,8 +44,10 @@ public class KnockoutInstance extends EliminationGameInstance {
     private static final double CHARGE_INCREMENT = 0.075, CRITICAL_THRESHOLD = 2.5;
     private final Object2DoubleMap<UUID> charge = new Object2DoubleOpenHashMap<>();
     private final Object2BooleanMap<UUID> hit = new Object2BooleanOpenHashMap<>();
+    private final Object2DoubleMap<BlockPos> blockDestruction = new Object2DoubleOpenHashMap<>();
     private KnockoutWorldCrumble crumble = null;
     private ImpactDetector impactDetector;
+    private DestroyStageManager destroyStageManager;
 
     public KnockoutInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
@@ -98,7 +102,8 @@ public class KnockoutInstance extends EliminationGameInstance {
         scheduler.timeout(this::beginCrumble, Ticks.seconds(delaySeconds));
 
         var debugController = new DebugController();
-        impactDetector = new ImpactDetector(gameHandle.getParticipants(), debugController, 0.85);
+        impactDetector = new ImpactDetector(gameHandle.getParticipants(), debugController, 0.1);
+        destroyStageManager = new DestroyStageManager(getWorld());
 
         if (ApConstants.DEBUG) {
             debugController.init(ApResources.getInstance(), getWorld());
@@ -156,7 +161,7 @@ public class KnockoutInstance extends EliminationGameInstance {
 
         player.sendMessage(msg, true);
 
-        impactDetector.checkImpact(player);
+        impactDetector.checkImpact(player, vec);
     }
 
     private void onImpact(ServerPlayerEntity player, Iterable<BlockPos> collisions) {
@@ -164,7 +169,39 @@ public class KnockoutInstance extends EliminationGameInstance {
             if (!hit.put(player.getUuid(), false)) return;
         }
 
-        // TODO implement block breaking
+        Vec3d velocity = impactDetector.getVelocity(player);
+
+        if (velocity == null) return;
+
+        double strength = velocity.multiply(1, 0, 1).length();
+
+        if (strength < 0.6) return;
+
+        double damage = sqrt(strength) * 0.16;
+        ServerWorld world = getWorld();
+
+        boolean anyBroke = false;
+
+        for (BlockPos mutable : collisions) {
+            BlockPos pos = mutable.toImmutable();
+            double destruction = blockDestruction.compute(pos, (p, prev) -> prev == null ? damage : prev + damage);
+
+            if (destruction < 1.d) {
+                destroyStageManager.setDestroyStage(pos, (int) (destruction * 10));
+                continue;
+            }
+
+            destroyStageManager.removeDestroyStage(pos);
+
+            world.breakBlock(pos, false);
+            anyBroke = true;
+        }
+
+        if (anyBroke) {
+            world.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.ENTITY_WITHER_BREAK_BLOCK, SoundCategory.BLOCKS, 0.25f, 1.15f);
+        } else {
+            world.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.ENTITY_ZOMBIE_ATTACK_IRON_DOOR, SoundCategory.BLOCKS, 0.25f, 0.85f);
+        }
     }
 
     private synchronized void onMiss(ServerPlayerEntity player) {
