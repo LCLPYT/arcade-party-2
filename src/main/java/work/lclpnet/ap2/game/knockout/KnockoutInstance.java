@@ -12,9 +12,9 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
+import org.jetbrains.annotations.NotNull;
 import work.lclpnet.ap2.api.actor.ActorSpawnedCallback;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
@@ -32,13 +32,17 @@ import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.EntityDamageCallback;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
+import work.lclpnet.kibu.translate.text.LocalizedFormat;
+import work.lclpnet.kibu.translate.text.RootText;
+import work.lclpnet.kibu.translate.text.TranslatedText;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 
 import java.util.UUID;
 
+import static java.lang.Math.round;
 import static java.lang.Math.sqrt;
-import static net.minecraft.util.Formatting.*;
-import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
+import static net.minecraft.util.Formatting.DARK_RED;
+import static net.minecraft.util.Formatting.WHITE;
 
 public class KnockoutInstance extends EliminationGameInstance {
 
@@ -123,6 +127,29 @@ public class KnockoutInstance extends EliminationGameInstance {
         scheduler.interval(this::sendChargeDisplay, Ticks.seconds(2));
     }
 
+    @Override
+    public void participantRemoved(ServerPlayerEntity player) {
+        getData().eliminated(player, chargeDetail(player));
+
+        if (gameHandle.getParticipants().count() == 1) {
+            ServerPlayerEntity winner = gameHandle.getParticipants().iterator().next();
+            getData().eliminated(winner, chargeDetail(winner));
+        }
+
+        super.participantRemoved(player);
+    }
+
+    private @NotNull TranslatedText chargeDetail(ServerPlayerEntity player) {
+        return TranslatedText.create(
+                lang -> RootText.create().append(formattedCharge(chargeOf(player)).translateTo(lang)),
+                gameHandle.getTranslations()::getLanguage
+        );
+    }
+
+    private LocalizedFormat formattedCharge(double charge) {
+        return LocalizedFormat.format("%d%%", (int) round(charge * 100));
+    }
+
     private void sendChargeDisplay() {
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
             sendCharge(player);
@@ -176,13 +203,10 @@ public class KnockoutInstance extends EliminationGameInstance {
 
     private void sendCharge(ServerPlayerEntity player) {
         double charge = chargeOf(player);
-        Formatting chargeColor = charge > CRITICAL_THRESHOLD ? DARK_RED : WHITE;
 
-        player.sendMessage(gameHandle.getTranslations().translateText(
-                player,
-                "game.ap2.knockout.charge",
-                styled("%d%%".formatted((int) Math.round(charge * 100)), chargeColor)
-        ).formatted(GOLD, BOLD), true);
+        player.sendMessage(formattedCharge(charge)
+                .translateTo(gameHandle.getTranslations().getLanguage(player))
+                .copy().formatted( charge > CRITICAL_THRESHOLD ? DARK_RED : WHITE), true);
     }
 
     private void onImpact(ServerPlayerEntity player, Iterable<BlockPos> collisions) {
