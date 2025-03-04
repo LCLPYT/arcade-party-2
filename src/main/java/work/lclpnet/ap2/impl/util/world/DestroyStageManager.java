@@ -5,6 +5,8 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 
+import static java.lang.Math.floorMod;
+
 public class DestroyStageManager {
 
     private static final int
@@ -37,6 +39,7 @@ public class DestroyStageManager {
      */
     public void setDestroyStage(BlockPos pos, int progress) {
         int id = id(pos);
+        System.out.println(id + "\t" + pos);
         var packet = new BlockBreakingProgressS2CPacket(id, pos, progress);
 
         for (ServerPlayerEntity player : world.getPlayers()) {
@@ -62,9 +65,9 @@ public class DestroyStageManager {
     }
 
     public int id(BlockPos pos) {
-        int x = pos.getX() % MAX_XZ;
-        int z = pos.getZ() % MAX_XZ;
-        int y = pos.getY() % MAX_Y;
+        int x = floorMod(pos.getX(), MAX_XZ);
+        int z = floorMod(pos.getZ(), MAX_XZ);
+        int y = floorMod(pos.getY(), MAX_Y);
 
         int id = (x << (XZ_BITS * 2)) | (z << (XZ_BITS)) | y;
 
