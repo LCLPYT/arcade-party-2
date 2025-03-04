@@ -7,6 +7,8 @@ import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.damage.DamageTypes;
+import net.minecraft.entity.effect.StatusEffectInstance;
+import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -26,6 +28,7 @@ import work.lclpnet.ap2.impl.game.EliminationGameInstance;
 import work.lclpnet.ap2.impl.util.collision.ChunkedCollisionDetector;
 import work.lclpnet.ap2.impl.util.collision.PlayerMovementObserver;
 import work.lclpnet.ap2.impl.util.debug.DebugController;
+import work.lclpnet.ap2.impl.util.world.CombatIdleManager;
 import work.lclpnet.ap2.impl.util.world.DestroyStageManager;
 import work.lclpnet.kibu.access.VelocityModifier;
 import work.lclpnet.kibu.hook.HookRegistrar;
@@ -41,8 +44,7 @@ import java.util.UUID;
 
 import static java.lang.Math.round;
 import static java.lang.Math.sqrt;
-import static net.minecraft.util.Formatting.DARK_RED;
-import static net.minecraft.util.Formatting.WHITE;
+import static net.minecraft.util.Formatting.*;
 
 public class KnockoutInstance extends EliminationGameInstance {
 
@@ -52,6 +54,8 @@ public class KnockoutInstance extends EliminationGameInstance {
             CRITICAL_THRESHOLD = 2.5,
             IMPACT_STRENGTH_THRESHOLD = 0.6,
             MIN_IMPACT_CHARGE = 1.6;
+
+    private static final int IDLE_GLOW_TICKS = Ticks.seconds(15);
 
     private final Object2DoubleMap<UUID> charge = new Object2DoubleOpenHashMap<>();
     private final Object2BooleanMap<UUID> hit = new Object2BooleanOpenHashMap<>();
@@ -85,6 +89,8 @@ public class KnockoutInstance extends EliminationGameInstance {
 
     @Override
     protected void prepare() {
+        useRemainingPlayersDisplay();
+
         commons().whenBelowCriticalHeight().then(this::eliminate);
 
         crumble = new KnockoutWorldCrumble(getWorld(), getMap());
@@ -96,6 +102,8 @@ public class KnockoutInstance extends EliminationGameInstance {
         gameHandle.protect(config -> config.allow(ProtectionTypes.ALLOW_DAMAGE, this::canDamage));
 
         HookRegistrar hooks = gameHandle.getHookRegistrar();
+        TaskScheduler scheduler = gameHandle.getGameScheduler();
+        Participants participants = gameHandle.getParticipants();
 
         hooks.registerHook(EntityDamageCallback.HOOK, (entity, source, damage) -> {
             if (entity instanceof ServerPlayerEntity player
@@ -109,11 +117,10 @@ public class KnockoutInstance extends EliminationGameInstance {
         });
 
         int delaySeconds = crumble.getDelaySeconds();
-        TaskScheduler scheduler = gameHandle.getGameScheduler();
         scheduler.timeout(this::beginCrumble, Ticks.seconds(delaySeconds));
 
         var debugController = new DebugController();
-        impactDetector = new ImpactDetector(gameHandle.getParticipants(), debugController, 0.1);
+        impactDetector = new ImpactDetector(participants, debugController, 0.1);
         destroyStageManager = new DestroyStageManager(getWorld());
 
         if (ApConstants.DEBUG) {
@@ -125,6 +132,23 @@ public class KnockoutInstance extends EliminationGameInstance {
         impactDetector.onMiss().register(this::onMiss);
 
         scheduler.interval(this::sendChargeDisplay, Ticks.seconds(2));
+
+        var idleManager = new CombatIdleManager(participants, IDLE_GLOW_TICKS);
+
+        idleManager.onEnterIdle().register(player -> {
+            gameHandle.getTranslations()
+                    .translateText("game.ap2.knockout.idle")
+                    .formatted(YELLOW)
+                    .sendTo(player);
+
+            player.getServerWorld().spawnParticles(ParticleTypes.WITCH, player.getX(), player.getY(), player.getZ(), 50, 0.5, 1.0, 0.5, 0.1);
+            player.playSoundToPlayer(SoundEvents.ENTITY_ZOMBIE_VILLAGER_CONVERTED, SoundCategory.PLAYERS, 0.8f, 1f);
+            player.addStatusEffect(new StatusEffectInstance(StatusEffects.GLOWING, Integer.MAX_VALUE, 1, false, false, true));
+        });
+
+        idleManager.onLeaveIdle().register(player -> player.removeStatusEffect(StatusEffects.GLOWING));
+
+        idleManager.enable(scheduler, hooks);
     }
 
     @Override
