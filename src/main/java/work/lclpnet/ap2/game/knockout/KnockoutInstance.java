@@ -53,7 +53,8 @@ public class KnockoutInstance extends EliminationGameInstance {
             CHARGE_CRITICAL_INCREMENT = 0.08,
             CRITICAL_THRESHOLD = 2.5,
             IMPACT_STRENGTH_THRESHOLD = 0.6,
-            MIN_IMPACT_CHARGE = 1.6;
+            MIN_IMPACT_CHARGE = 1.6,
+            IMPACT_DESTRUCTION_MULTIPLIER = 0.35;
 
     private static final int IDLE_GLOW_TICKS = Ticks.seconds(15);
 
@@ -250,7 +251,7 @@ public class KnockoutInstance extends EliminationGameInstance {
 
         if (strength < IMPACT_STRENGTH_THRESHOLD) return;
 
-        double damage = sqrt(strength - IMPACT_STRENGTH_THRESHOLD) * 0.16;
+        double damage = sqrt(strength - IMPACT_STRENGTH_THRESHOLD) * IMPACT_DESTRUCTION_MULTIPLIER;
         ServerWorld world = getWorld();
 
         boolean anyBroke = false;
