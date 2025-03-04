@@ -39,7 +39,6 @@ public class DestroyStageManager {
      */
     public void setDestroyStage(BlockPos pos, int progress) {
         int id = id(pos);
-        System.out.println(id + "\t" + pos);
         var packet = new BlockBreakingProgressS2CPacket(id, pos, progress);
 
         for (ServerPlayerEntity player : world.getPlayers()) {

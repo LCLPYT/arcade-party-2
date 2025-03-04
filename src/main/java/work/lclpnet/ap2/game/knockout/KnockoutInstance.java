@@ -41,7 +41,12 @@ import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
 public class KnockoutInstance extends EliminationGameInstance {
 
-    private static final double CHARGE_INCREMENT = 0.075, CRITICAL_THRESHOLD = 2.5;
+    private static final double
+            CHARGE_INCREMENT = 0.075,
+            CRITICAL_THRESHOLD = 2.5,
+            IMPACT_STRENGTH_THRESHOLD = 0.6,
+            MIN_IMPACT_CHARGE = 1.6;
+
     private final Object2DoubleMap<UUID> charge = new Object2DoubleOpenHashMap<>();
     private final Object2BooleanMap<UUID> hit = new Object2BooleanOpenHashMap<>();
     private final Object2DoubleMap<BlockPos> blockDestruction = new Object2DoubleOpenHashMap<>();
@@ -173,11 +178,15 @@ public class KnockoutInstance extends EliminationGameInstance {
 
         if (velocity == null) return;
 
-        double strength = velocity.multiply(1, 0, 1).length();
+        double charge = chargeOf(player);
 
-        if (strength < 0.6) return;
+        if (charge < MIN_IMPACT_CHARGE) return;
 
-        double damage = sqrt(strength) * 0.16;
+        double strength = velocity.length();
+
+        if (strength < IMPACT_STRENGTH_THRESHOLD) return;
+
+        double damage = sqrt(strength - IMPACT_STRENGTH_THRESHOLD) * 0.16;
         ServerWorld world = getWorld();
 
         boolean anyBroke = false;
@@ -202,6 +211,10 @@ public class KnockoutInstance extends EliminationGameInstance {
         } else {
             world.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.ENTITY_ZOMBIE_ATTACK_IRON_DOOR, SoundCategory.BLOCKS, 0.25f, 0.85f);
         }
+    }
+
+    private double chargeOf(ServerPlayerEntity player) {
+        return charge.getOrDefault(player.getUuid(), 0.0);
     }
 
     private synchronized void onMiss(ServerPlayerEntity player) {

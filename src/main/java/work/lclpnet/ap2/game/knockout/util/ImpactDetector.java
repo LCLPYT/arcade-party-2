@@ -98,23 +98,19 @@ public class ImpactDetector {
             return;
         }
 
-        // predict future position
-        Vec3d dir = velocity.multiply(1.d / speed);
-        double offset = 0.25 + (speed - thresholdSpeed) * 0.1;
-
+        // predict future horizontal position
+        Vec3d dir = velocity.multiply(1.0, 0.0, 1.0).multiply(1.d / speed);
         Vec3d pos = player.getPos();
-        Vec3d futurePos1 = pos.add(dir.multiply(offset)).add(0, 0.01, 0);
-        Vec3d futurePos2 = pos.add(dir.multiply(offset * 2)).add(0, 0.01, 0);
+        Vec3d futurePos1 = pos.add(dir.multiply(0.2)).add(0, 0.01, 0);
+        Vec3d futurePos2 = pos.add(dir.multiply(0.4)).add(0, 0.01, 0);
 
         EntityDimensions pose = player.getDimensions(player.getPose());
-        Box box = pose.getBoxAt(pos);
         Box futureBox1 = pose.getBoxAt(futurePos1);
         Box futureBox2 = pose.getBoxAt(futurePos2);
 
         if (DEBUG_IMPACT) {
             debugController.exclusive("box_" + player.getNameForScoreboard(), controller -> controller.renderer().ifPresent(r -> {
                 r.marker(pos, Blocks.LIME_TERRACOTTA.getDefaultState(), 0x06cc34);
-                r.box(box, Blocks.LIME_STAINED_GLASS.getDefaultState());
                 r.box(futureBox1, Blocks.LIME_STAINED_GLASS.getDefaultState());
                 r.box(futureBox2, Blocks.LIME_STAINED_GLASS.getDefaultState());
                 r.text(pos.add(0, 0.25, 0), Text.literal(String.format("%.3f", speed)));
@@ -122,11 +118,7 @@ public class ImpactDetector {
             }));
         }
 
-        Iterable<BlockPos> fst = collisions(player, box);
-        Iterable<BlockPos> snd = collisions(player, futureBox1);
-        Iterable<BlockPos> trd = collisions(player, futureBox2);
-
-        var collisions = Iterables.concat(fst, snd, trd);
+        var collisions = Iterables.concat(collisions(player, futureBox1), collisions(player, futureBox2));
         var it = collisions.iterator();
 
         if (!it.hasNext()) return;
