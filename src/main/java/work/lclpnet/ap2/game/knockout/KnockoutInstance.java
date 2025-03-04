@@ -43,6 +43,7 @@ public class KnockoutInstance extends EliminationGameInstance {
 
     private static final double
             CHARGE_INCREMENT = 0.075,
+            CHARGE_CRITICAL_INCREMENT = 0.08,
             CRITICAL_THRESHOLD = 2.5,
             IMPACT_STRENGTH_THRESHOLD = 0.6,
             MIN_IMPACT_CHARGE = 1.6;
@@ -91,11 +92,11 @@ public class KnockoutInstance extends EliminationGameInstance {
 
         HookRegistrar hooks = gameHandle.getHookRegistrar();
 
-        hooks.registerHook(EntityDamageCallback.HOOK, (entity, source, health) -> {
+        hooks.registerHook(EntityDamageCallback.HOOK, (entity, source, damage) -> {
             if (entity instanceof ServerPlayerEntity player
                     && source.getAttacker() instanceof ServerPlayerEntity attacker
                     && player.hurtTime <= 0) {  // prevent duplicate damage during grace period
-                this.onDamage(player, attacker);
+                this.onDamage(player, attacker, damage);
                 return true;
             }
 
@@ -132,8 +133,9 @@ public class KnockoutInstance extends EliminationGameInstance {
                && participants.isParticipating(player) && participants.isParticipating(attacker);
     }
 
-    private void onDamage(ServerPlayerEntity player, ServerPlayerEntity attacker) {
-        double power = charge.computeDouble(player.getUuid(), (uuid, old) -> (old == null ? 0 : old) + CHARGE_INCREMENT);
+    private void onDamage(ServerPlayerEntity player, ServerPlayerEntity attacker, float damage) {
+        double increment = damage > 2.0 ? CHARGE_CRITICAL_INCREMENT : CHARGE_INCREMENT;
+        double power = charge.computeDouble(player.getUuid(), (uuid, old) -> (old == null ? 0 : old) + increment);
 
         synchronized (this) {
             hit.put(player.getUuid(), true);
