@@ -37,6 +37,7 @@ import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 import java.util.UUID;
 
 import static java.lang.Math.sqrt;
+import static net.minecraft.util.Formatting.*;
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
 public class KnockoutInstance extends EliminationGameInstance {
@@ -118,6 +119,14 @@ public class KnockoutInstance extends EliminationGameInstance {
         impactDetector.enable(scheduler);
         impactDetector.onImpact().register(this::onImpact);
         impactDetector.onMiss().register(this::onMiss);
+
+        scheduler.interval(this::sendChargeDisplay, Ticks.seconds(2));
+    }
+
+    private void sendChargeDisplay() {
+        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
+            sendCharge(player);
+        }
     }
 
     private void beginCrumble() {
@@ -128,9 +137,9 @@ public class KnockoutInstance extends EliminationGameInstance {
         Participants participants = gameHandle.getParticipants();
 
         return source.isOf(DamageTypes.PLAYER_ATTACK) && entity instanceof ServerPlayerEntity player
-               && !winManager.isGameOver()
-               && source.getAttacker() instanceof ServerPlayerEntity attacker
-               && participants.isParticipating(player) && participants.isParticipating(attacker);
+                && !winManager.isGameOver()
+                && source.getAttacker() instanceof ServerPlayerEntity attacker
+                && participants.isParticipating(player) && participants.isParticipating(attacker);
     }
 
     private void onDamage(ServerPlayerEntity player, ServerPlayerEntity attacker, float damage) {
@@ -152,25 +161,28 @@ public class KnockoutInstance extends EliminationGameInstance {
         double x = player.getX(), y = player.getY(), z = player.getZ();
         world.spawnParticles(ParticleTypes.CLOUD, x, y, z, 25, 0.25, 0.25, 0.25, 0.1);
 
-        Formatting chargeColor;
         world.playSound(null, x, y, z, SoundEvents.ENTITY_PLAYER_ATTACK_KNOCKBACK, SoundCategory.PLAYERS, 0.5f, 1.2f);
         world.playSound(null, x, y, z, SoundEvents.ENTITY_PLAYER_ATTACK_CRIT, SoundCategory.PLAYERS, 0.5f, 1.25f);
 
         if (power > CRITICAL_THRESHOLD) {
-            chargeColor = Formatting.DARK_RED;
             world.playSound(null, x, y, z, SoundEvents.ENTITY_ALLAY_HURT, SoundCategory.PLAYERS, 0.25f, 1.25f);
             world.spawnParticles(ParticleTypes.RAID_OMEN, x, y + 1, z, 10, 0.5, 0.5, 0.5, 0.1);
-        } else {
-            chargeColor = Formatting.WHITE;
         }
 
-        var msg = gameHandle.getTranslations().translateText(player, "game.ap2.knockout.charge",
-                        styled("%d%%".formatted((int) Math.round(power * 100)), chargeColor))
-                .formatted(Formatting.GOLD, Formatting.BOLD);
-
-        player.sendMessage(msg, true);
+        sendCharge(player);
 
         impactDetector.checkImpact(player, vec);
+    }
+
+    private void sendCharge(ServerPlayerEntity player) {
+        double charge = chargeOf(player);
+        Formatting chargeColor = charge > CRITICAL_THRESHOLD ? DARK_RED : WHITE;
+
+        player.sendMessage(gameHandle.getTranslations().translateText(
+                player,
+                "game.ap2.knockout.charge",
+                styled("%d%%".formatted((int) Math.round(charge * 100)), chargeColor)
+        ).formatted(GOLD, BOLD), true);
     }
 
     private void onImpact(ServerPlayerEntity player, Iterable<BlockPos> collisions) {
