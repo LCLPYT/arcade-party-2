@@ -71,7 +71,7 @@ public class KnockoutInstance extends EliminationGameInstance {
 
         hooks.registerHook(ActorSpawnedCallback.HOOK, actor -> {
             if (actor instanceof GravityFieldActor gravityField) {
-                gravityField.enable(movementObserver, gravityManipulator);
+                gravityField.enable(movementObserver, gravityManipulator, gameHandle.getHookRegistrar());
             }
         });
 
