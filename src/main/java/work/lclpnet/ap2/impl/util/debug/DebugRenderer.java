@@ -2,13 +2,17 @@ package work.lclpnet.ap2.impl.util.debug;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.entity.decoration.DisplayEntity;
+import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
 import work.lclpnet.ap2.api.util.model.Model;
 import work.lclpnet.ap2.api.util.model.ModelManager;
 import work.lclpnet.ap2.impl.scene.BlockDisplayObject;
 import work.lclpnet.ap2.impl.scene.Object3d;
 import work.lclpnet.ap2.impl.scene.Scene;
+import work.lclpnet.ap2.impl.scene.TextDisplayObject;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.model.Models;
 import work.lclpnet.ap2.impl.util.model.TemplateModel;
@@ -74,6 +78,17 @@ public class DebugRenderer {
         return obj;
     }
 
+    public Object3d box(Box box, BlockState state) {
+        var obj = new BlockDisplayObject(state);
+
+        obj.position.set(box.minX, box.minY, box.minZ);
+        obj.scale.set(box.getLengthX(), box.getLengthY(), box.getLengthZ());
+
+        display(obj);
+
+        return obj;
+    }
+
     private Model arrowModel(BlockState state) {
         Model baseModel = modelManager.getModel(Models.ARROW).orElseThrow();
         return TemplateModel.replace(baseModel, Blocks.LIME_CONCRETE.getDefaultState(), state);
@@ -95,6 +110,10 @@ public class DebugRenderer {
         return arrow;
     }
 
+    public void arrow(Vec3d pos, Vec3d dir, BlockState color) {
+        arrow(pos, dir, 0.5, color);
+    }
+
     public void arrow(Vec3d pos, Vec3d dir, double scale, BlockState color) {
         arrow(pos.x, pos.y, pos.z, dir.x, dir.y, dir.z, scale, color);
     }
@@ -103,11 +122,15 @@ public class DebugRenderer {
         var model = TemplateModel.replace(arrowModel(state), Blocks.LIME_CONCRETE.getDefaultState(), state);
 
         Object3d marker = model.createInstance();
-        marker.scale.set(scale);
-        marker.position.set(x, y, z);
-        marker.rotation.rotateTo(0, 0, 1, dx, dy, dz);
+        marker.position.set(0, 0, 0.5);
 
-        display(marker);
+        Object3d wrapper = new Object3d();
+        wrapper.addChild(marker);
+        wrapper.scale.set(scale);
+        wrapper.position.set(x, y, z);
+        wrapper.rotation.rotateTo(0, 0, 1, dx, dy, dz);
+
+        display(wrapper);
     }
 
     public Object3d marker(Vec3d pos, BlockState state, int glowColor) {
@@ -134,5 +157,25 @@ public class DebugRenderer {
         display(wrapper);
 
         return wrapper;
+    }
+
+    public Object3d text(Vec3d pos, Text text) {
+        return text(pos, text, 0.25);
+    }
+
+    public Object3d text(Vec3d pos, Text text, double scale) {
+        return text(pos.getX(), pos.getY(), pos.getZ(), text, scale);
+    }
+
+    public Object3d text(double x, double y, double z, Text text, double scale) {
+        var display = new TextDisplayObject(text);
+
+        display.position.set(x, y, z);
+        display.scale.set(scale);
+        display.setBillboardMode(DisplayEntity.BillboardMode.CENTER);
+
+        display(display);
+
+        return display;
     }
 }

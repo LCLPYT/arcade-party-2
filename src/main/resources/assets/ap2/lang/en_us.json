@@ -130,7 +130,7 @@
   "game.ap2.mining_battle.haste": "You gained the haste status effect!",
   "game.ap2.knockout": "Knockout",
   "game.ap2.knockout.description": "Punch your enemies into the void. The knock-back gets increasingly stronger the more a player is hit.",
-  "game.ap2.knockout.charge": "Charge: %s",
+  "game.ap2.knockout.idle": "You are now visible to other players, because you were out-of-combat for too long",
   "game.ap2.musical_minecart": "Musical Minecart",
   "game.ap2.musical_minecart.description": "Enter a minecart when the music stops playing, in order to survive. Last player standing wins.",
   "game.ap2.musical_minecart.deadline": "Enter a minecart now!",

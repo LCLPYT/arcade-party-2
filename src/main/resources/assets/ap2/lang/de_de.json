@@ -131,7 +131,7 @@
   "game.ap2.mining_battle.haste": "Du hast den Statuseffekt Eile erhalten!",
   "game.ap2.knockout": "Knockout",
   "game.ap2.knockout.description": "Schlage deine Gegner von der Map. Je mehr ein Spieler geschlagen wurde, desto mehr Rückstoß bekommt er.",
-  "game.ap2.knockout.charge": "Schaden: %s",
+  "game.ap2.knockout.idle": "Du bist nun für andere Spieler sichtbar, weil du zu lange nicht gekämpft hast",
   "game.ap2.musical_minecart": "Musiklore",
   "game.ap2.musical_minecart.description": "Setze dich in eine Lore, sobald die Musik aufhört zu spielen. Spieler die nicht in einer Lore sitzen, fliegen raus!",
   "game.ap2.musical_minecart.deadline": "Setz dich in eine Lore!",
