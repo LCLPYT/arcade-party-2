@@ -12,8 +12,8 @@ import net.minecraft.world.GameRules;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.team.TeamKey;
 import work.lclpnet.ap2.api.game.team.TeamManager;
-import work.lclpnet.ap2.game.cozy_campfire.setup.CCBaseManager;
-import work.lclpnet.ap2.game.cozy_campfire.setup.CCReader;
+import work.lclpnet.ap2.game.book_collectors.setup.BCBaseManager;
+import work.lclpnet.ap2.game.book_collectors.setup.BCReader;
 import work.lclpnet.ap2.impl.game.TeamEliminationGameInstance;
 import work.lclpnet.ap2.impl.game.team.ApTeamKeys;
 import work.lclpnet.ap2.impl.util.TextUtil;
@@ -29,12 +29,12 @@ import static net.minecraft.util.Formatting.GOLD;
 
 public class BookCollectorsInstance extends TeamEliminationGameInstance {
 
-    private static final float DAY_TIME_CHANCE = 0.55f, RAIN_CHANCE = 0.6f, THUNDER_CHANCE = 0.15f;
-    static final int GAME_DURATION = 180*20;
     public static final TeamKey TEAM_RED = ApTeamKeys.RED, TEAM_BLUE = ApTeamKeys.BLUE;
-    private CCBaseManager baseManager;
-    private TeamManager teamManager;
+    static final int GAME_DURATION = 180 * 20;
+    private static final float RAIN_CHANCE = 0.6f, THUNDER_CHANCE = 0.15f;
     private final Random random = new Random();
+    private BCBaseManager baseManager;
+    private TeamManager teamManager;
 
     public BookCollectorsInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
@@ -46,13 +46,9 @@ public class BookCollectorsInstance extends TeamEliminationGameInstance {
         teamManager = getTeamManager();
         teamManager.partitionIntoTeams(gameHandle.getParticipants(), Set.of(TEAM_RED, TEAM_BLUE));
 
-        CCReader setup = new CCReader(map, world, gameHandle.getLogger());
+        BCReader setup = new BCReader(map, gameHandle.getLogger());
 
-        return setup.readBases(teamManager.getTeams())
-                .thenAccept(bases -> baseManager = new CCBaseManager(bases, teamManager))
-                .thenCompose(nil -> world.getServer().submit(() -> {
-                    randomizeWorldConditions(world);
-                }));
+        return setup.readBases(teamManager.getTeams()).thenAccept(bases -> baseManager = new BCBaseManager(bases, teamManager)).thenCompose(nil -> world.getServer().submit(() -> randomizeWorldConditions(world)));
     }
 
     @Override
@@ -65,10 +61,8 @@ public class BookCollectorsInstance extends TeamEliminationGameInstance {
             team.setCollisionRule(AbstractTeam.CollisionRule.PUSH_OTHER_TEAMS);
         });
 
-        commons().gameRuleBuilder()
-                .set(GameRules.DO_ENTITY_DROPS, false)
-                .set(GameRules.NATURAL_REGENERATION, true)
-                .set(GameRules.ANNOUNCE_ADVANCEMENTS, false);
+
+        commons().gameRuleBuilder().set(GameRules.DO_ENTITY_DROPS, false).set(GameRules.NATURAL_REGENERATION, true).set(GameRules.ANNOUNCE_ADVANCEMENTS, false);
 
         HookRegistrar hooks = gameHandle.getHookRegistrar();
 
@@ -86,8 +80,7 @@ public class BookCollectorsInstance extends TeamEliminationGameInstance {
     private void giveSwordToPlayer(ServerPlayerEntity player) {
         ItemStack stack = new ItemStack(Items.STONE_SWORD);
 
-        stack.set(DataComponentTypes.CUSTOM_NAME, TextUtil.getVanillaName(stack)
-                .styled(style -> style.withItalic(false).withFormatting(GOLD)));
+        stack.set(DataComponentTypes.CUSTOM_NAME, TextUtil.getVanillaName(stack).styled(style -> style.withItalic(false).withFormatting(GOLD)));
 
         stack.set(DataComponentTypes.UNBREAKABLE, new UnbreakableComponent(false));
 
@@ -97,12 +90,6 @@ public class BookCollectorsInstance extends TeamEliminationGameInstance {
     }
 
     private void randomizeWorldConditions(ServerWorld world) {
-        if (random.nextFloat() <= DAY_TIME_CHANCE) {
-            world.setTimeOfDay(6000);
-        } else {
-            world.setTimeOfDay(18000);
-        }
-
         if (random.nextFloat() <= RAIN_CHANCE) {
             boolean thunder = random.nextFloat() <= (THUNDER_CHANCE / RAIN_CHANCE);  // conditional probability
             world.setWeather(0, 1000, true, thunder);
