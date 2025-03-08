@@ -12,6 +12,7 @@ import net.minecraft.world.GameRules;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.team.TeamKey;
 import work.lclpnet.ap2.api.game.team.TeamManager;
+import work.lclpnet.ap2.api.map.MapBootstrap;
 import work.lclpnet.ap2.game.book_collectors.setup.BCBaseManager;
 import work.lclpnet.ap2.game.book_collectors.setup.BCReader;
 import work.lclpnet.ap2.impl.game.TeamEliminationGameInstance;
@@ -27,7 +28,7 @@ import java.util.concurrent.CompletableFuture;
 
 import static net.minecraft.util.Formatting.GOLD;
 
-public class BookCollectorsInstance extends TeamEliminationGameInstance {
+public class BookCollectorsInstance extends TeamEliminationGameInstance implements MapBootstrap {
 
     public static final TeamKey TEAM_RED = ApTeamKeys.RED, TEAM_BLUE = ApTeamKeys.BLUE;
     static final int GAME_DURATION = 180 * 20;
@@ -48,7 +49,9 @@ public class BookCollectorsInstance extends TeamEliminationGameInstance {
 
         BCReader setup = new BCReader(map, gameHandle.getLogger());
 
-        return setup.readBases(teamManager.getTeams()).thenAccept(bases -> baseManager = new BCBaseManager(bases, teamManager)).thenCompose(nil -> world.getServer().submit(() -> randomizeWorldConditions(world)));
+        return setup.readBases(teamManager.getTeams()).thenAccept(bases -> baseManager = new BCBaseManager(bases, teamManager)).thenCompose(nil -> world.getServer().submit(() -> {
+            randomizeWorldConditions(world);
+        }));
     }
 
     @Override
@@ -61,12 +64,11 @@ public class BookCollectorsInstance extends TeamEliminationGameInstance {
             team.setCollisionRule(AbstractTeam.CollisionRule.PUSH_OTHER_TEAMS);
         });
 
+        teleportTeamsToSpawns();
 
         commons().gameRuleBuilder().set(GameRules.DO_ENTITY_DROPS, false).set(GameRules.NATURAL_REGENERATION, true).set(GameRules.ANNOUNCE_ADVANCEMENTS, false);
 
         HookRegistrar hooks = gameHandle.getHookRegistrar();
-
-        teleportTeamsToSpawns();
 
     }
 

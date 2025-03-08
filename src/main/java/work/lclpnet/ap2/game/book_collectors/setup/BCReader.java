@@ -1,14 +1,12 @@
 package work.lclpnet.ap2.game.book_collectors.setup;
 
-import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.Nullable;
-import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.api.game.team.Team;
 import work.lclpnet.ap2.impl.map.MapUtil;
-import work.lclpnet.ap2.impl.util.BlockBox;
+import work.lclpnet.ap2.impl.util.world.stage.BlockShape;
 import work.lclpnet.lobby.game.map.GameMap;
 
 import java.util.*;
@@ -64,15 +62,12 @@ public class BCReader {
             return null;
         }
 
-        JSONArray boundsArray = json.getJSONArray("bounds");
-        List<BlockBox> bounds = new ArrayList<>(boundsArray.length());
+        JSONObject boundsObject = json.getJSONObject("bounds");
 
-        for (Object entry : boundsArray) {
-            if (!(entry instanceof JSONArray array)) continue;
+        BlockShape box = MapUtil.readShape(boundsObject);
 
-            BlockBox box = MapUtil.readBox(array);
-            bounds.add(box);
-        }
+        List<BlockShape> bounds = new ArrayList<>();
+        bounds.add(box);
 
         return new BCBase(bounds);
     }
