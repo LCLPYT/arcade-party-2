@@ -1,6 +1,7 @@
 package work.lclpnet.ap2.game.book_collectors.setup;
 
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.util.math.BlockPos;
 import work.lclpnet.ap2.api.game.team.Team;
 import work.lclpnet.ap2.api.game.team.TeamManager;
 
@@ -33,6 +34,10 @@ public class BCBaseManager {
         BCBase base = requireBase(team);
 
         return base.isInside(player.getX(), player.getY(), player.getZ());
+    }
+
+    public Optional<Team> blockPosInAnyBase(BlockPos pos) {
+        return bases.entrySet().stream().filter(base -> base.getValue().isInside(pos.getX(), pos.getY(), pos.getZ())).map(Map.Entry::getKey).findFirst();
     }
 
     public Optional<BCBase> getBase(Team team) {
