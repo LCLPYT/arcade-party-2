@@ -2,6 +2,8 @@ package work.lclpnet.ap2.game.book_collectors;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.block.entity.ChiseledBookshelfBlockEntity;
+import net.minecraft.block.entity.LecternBlockEntity;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.UnbreakableComponent;
 import net.minecraft.entity.player.PlayerInventory;
@@ -87,9 +89,10 @@ public class BookCollectorsInstance extends TeamEliminationGameInstance implemen
             if (team.getKey() == TEAM_BLUE) teamBlueBookshelfs.add(pos.toImmutable());
         }
 
-        System.out.println("teamRedBookshelfs: " + teamRedBookshelfs);
-        System.out.println("teamBlueBookshelfs: " + teamBlueBookshelfs);
-        System.out.println("mapBookshelfs: " + mapBookshelfs);
+        ArrayList<ItemStack> books = new ArrayList<>();
+        books.add(new ItemStack(Items.ENCHANTED_BOOK)); // book for testing
+
+        fillBookshelfs(world, mapBookshelfs, books);
 
         teamManager.getMinecraftTeams().forEach(team -> {
             team.setFriendlyFireAllowed(false);
@@ -108,6 +111,32 @@ public class BookCollectorsInstance extends TeamEliminationGameInstance implemen
     protected void ready() {
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
             giveSwordToPlayer(player);
+        }
+    }
+
+    private void fillBookshelfs(ServerWorld world, ArrayList<BlockPos> bookshelfs, ArrayList<ItemStack> books) {
+
+        for (ItemStack book : books) {
+
+            int r = random.nextInt(bookshelfs.size());
+            BlockPos bsPos = bookshelfs.get(r);
+
+            if (world.getBlockEntity(bsPos) instanceof ChiseledBookshelfBlockEntity chiseled) {
+
+                ArrayList<Integer> freeSlots = new ArrayList<>();
+                for (int i = 0; i < 6; i++) {
+                    if (chiseled.getStack(i).isEmpty()) {
+                        freeSlots.add(i);
+                    }
+                }
+                int slot = random.nextInt(freeSlots.size());
+                chiseled.setStack(slot, book);
+            }
+
+            if (world.getBlockEntity(bsPos) instanceof LecternBlockEntity lectern) {
+                lectern.setBook(book);
+                bookshelfs.remove(r);
+            }
         }
     }
 
