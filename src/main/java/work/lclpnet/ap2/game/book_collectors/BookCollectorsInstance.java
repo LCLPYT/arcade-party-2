@@ -14,20 +14,27 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.GameRules;
+import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
+import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.game.team.Team;
 import work.lclpnet.ap2.api.game.team.TeamKey;
 import work.lclpnet.ap2.api.game.team.TeamManager;
 import work.lclpnet.ap2.api.map.MapBootstrap;
+import work.lclpnet.ap2.core.hook.ChiseledBookshelfModifyCallback;
+import work.lclpnet.ap2.core.mixin.LecternBlockEntityAccessor;
 import work.lclpnet.ap2.game.book_collectors.setup.BCBaseManager;
 import work.lclpnet.ap2.game.book_collectors.setup.BCReader;
-import work.lclpnet.ap2.impl.game.TeamEliminationGameInstance;
+import work.lclpnet.ap2.impl.game.DefaultTeamGameInstance;
+import work.lclpnet.ap2.impl.game.data.ScoreDataContainer;
+import work.lclpnet.ap2.impl.game.data.type.TeamRef;
 import work.lclpnet.ap2.impl.game.team.ApTeamKeys;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.TextUtil;
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
 import work.lclpnet.kibu.hook.HookRegistrar;
+import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 import work.lclpnet.lobby.game.map.GameMap;
 
 import java.util.ArrayList;
@@ -37,19 +44,24 @@ import java.util.concurrent.CompletableFuture;
 
 import static net.minecraft.util.Formatting.GOLD;
 
-public class BookCollectorsInstance extends TeamEliminationGameInstance implements MapBootstrap {
+public class BookCollectorsInstance extends DefaultTeamGameInstance implements MapBootstrap {
 
     public static final TeamKey TEAM_RED = ApTeamKeys.RED, TEAM_BLUE = ApTeamKeys.BLUE;
     static final int GAME_DURATION = 180 * 20;
     private static final float RAIN_CHANCE = 0.6f, THUNDER_CHANCE = 0.15f;
     private final Random random = new Random();
+    private final ScoreDataContainer<Team, TeamRef> data = new ScoreDataContainer<>(this::createReference);
     private BCBaseManager baseManager;
     private TeamManager teamManager;
 
     public BookCollectorsInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
-
         useOldCombat();
+    }
+
+    @Override
+    protected DataContainer<Team, TeamRef> getData() {
+        return null;
     }
 
     public CompletableFuture<Void> createWorldBootstrap(ServerWorld world, GameMap map) {
@@ -65,8 +77,18 @@ public class BookCollectorsInstance extends TeamEliminationGameInstance implemen
 
     @Override
     protected void prepare() {
-        ServerWorld world = getWorld();
+        teamManager.getMinecraftTeams().forEach(team -> {
+            team.setFriendlyFireAllowed(false);
+            team.setShowFriendlyInvisibles(true);
+            team.setCollisionRule(AbstractTeam.CollisionRule.PUSH_OTHER_TEAMS);
+        });
+
+        ServerWorld serverWorld = getWorld();
         GameMap map = getMap();
+        Participants participants = gameHandle.getParticipants();
+
+        var bookOptions = new BookOptions();
+        ArrayList<ItemStack> books = bookOptions.getBookOptions();
 
         BlockBox mapBox = MapUtil.readBox(map.requireProperty(("corners")));
         ArrayList<BlockPos> teamRedBookshelfs = new ArrayList<>();
@@ -74,7 +96,7 @@ public class BookCollectorsInstance extends TeamEliminationGameInstance implemen
         ArrayList<BlockPos> mapBookshelfs = new ArrayList<>();
 
         for (BlockPos pos : mapBox) {
-            BlockState state = world.getBlockState(pos);
+            BlockState state = serverWorld.getBlockState(pos);
             if (!state.isOf(Blocks.LECTERN) && !state.isOf(Blocks.CHISELED_BOOKSHELF)) {
                 continue;
             }
@@ -89,10 +111,7 @@ public class BookCollectorsInstance extends TeamEliminationGameInstance implemen
             if (team.getKey() == TEAM_BLUE) teamBlueBookshelfs.add(pos.toImmutable());
         }
 
-        ArrayList<ItemStack> books = new ArrayList<>();
-        books.add(new ItemStack(Items.ENCHANTED_BOOK)); // book for testing
-
-        fillBookshelfs(world, mapBookshelfs, books);
+        fillBookshelves(serverWorld, mapBookshelfs, books);
 
         teamManager.getMinecraftTeams().forEach(team -> {
             team.setFriendlyFireAllowed(false);
@@ -105,6 +124,19 @@ public class BookCollectorsInstance extends TeamEliminationGameInstance implemen
         commons().gameRuleBuilder().set(GameRules.DO_ENTITY_DROPS, false).set(GameRules.NATURAL_REGENERATION, true).set(GameRules.ANNOUNCE_ADVANCEMENTS, false);
 
         HookRegistrar hooks = gameHandle.getHookRegistrar();
+
+        hooks.registerHook(ChiseledBookshelfModifyCallback.ADD, (player, pos) -> {
+            System.out.println("add book");
+        });
+        hooks.registerHook(ChiseledBookshelfModifyCallback.REMOVE, (player, pos) -> {
+            System.out.println("remove book");
+        });
+
+        gameHandle.protect(config -> config.allow(ProtectionTypes.USE_BLOCK, (entity, pos) -> {
+            BlockState state = entity.getWorld().getBlockState(pos);
+            if (winManager.isGameOver()) return false;
+            return (state.isOf(Blocks.LECTERN) | state.isOf(Blocks.CHISELED_BOOKSHELF));
+        }));
     }
 
     @Override
@@ -114,12 +146,12 @@ public class BookCollectorsInstance extends TeamEliminationGameInstance implemen
         }
     }
 
-    private void fillBookshelfs(ServerWorld world, ArrayList<BlockPos> bookshelfs, ArrayList<ItemStack> books) {
+    private void fillBookshelves(ServerWorld world, ArrayList<BlockPos> bookshelves, ArrayList<ItemStack> books) {
 
         for (ItemStack book : books) {
 
-            int r = random.nextInt(bookshelfs.size());
-            BlockPos bsPos = bookshelfs.get(r);
+            int r = random.nextInt(bookshelves.size());
+            BlockPos bsPos = bookshelves.get(r);
 
             if (world.getBlockEntity(bsPos) instanceof ChiseledBookshelfBlockEntity chiseled) {
 
@@ -134,8 +166,10 @@ public class BookCollectorsInstance extends TeamEliminationGameInstance implemen
             }
 
             if (world.getBlockEntity(bsPos) instanceof LecternBlockEntity lectern) {
-                lectern.setBook(book);
-                bookshelfs.remove(r);
+
+                ((LecternBlockEntityAccessor) lectern).getInventory().setStack(0, book);
+                System.out.printf("set book to lectern at %s\n", bsPos);
+                bookshelves.remove(r);
             }
         }
     }

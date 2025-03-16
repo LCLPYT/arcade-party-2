@@ -8,6 +8,7 @@
   },
   "mixins": [
     "BowItemMixin",
+    "ChiseledBookshelfBlockMixin",
     "CobwebBlockMixin",
     "CreakingBrainAccessor",
     "CreakingEntityMixin",
@@ -19,6 +20,7 @@
     "ExplosionImplAccessor",
     "FuelRegistryMixin",
     "LandPathNodeMakerMixin",
+    "LecternBlockEntityAccessor",
     "LivingEntityAccessor",
     "LivingEntityMixin",
     "MarkerEntityMixin",
