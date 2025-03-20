@@ -2,17 +2,20 @@ package work.lclpnet.ap2.game.book_collectors;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.block.LecternBlock;
 import net.minecraft.block.entity.ChiseledBookshelfBlockEntity;
 import net.minecraft.block.entity.LecternBlockEntity;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.UnbreakableComponent;
 import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.inventory.Inventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.scoreboard.AbstractTeam;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.GameRules;
@@ -24,7 +27,6 @@ import work.lclpnet.ap2.api.game.team.TeamKey;
 import work.lclpnet.ap2.api.game.team.TeamManager;
 import work.lclpnet.ap2.api.map.MapBootstrap;
 import work.lclpnet.ap2.core.hook.ChiseledBookshelfModifyCallback;
-import work.lclpnet.ap2.core.mixin.LecternBlockEntityAccessor;
 import work.lclpnet.ap2.game.book_collectors.setup.BCBaseManager;
 import work.lclpnet.ap2.game.book_collectors.setup.BCReader;
 import work.lclpnet.ap2.impl.game.DefaultTeamGameInstance;
@@ -65,7 +67,7 @@ public class BookCollectorsInstance extends DefaultTeamGameInstance implements M
 
     @Override
     protected DataContainer<Team, TeamRef> getData() {
-        return null;
+        return data;
     }
 
     public CompletableFuture<Void> createWorldBootstrap(ServerWorld world, GameMap map) {
@@ -95,9 +97,9 @@ public class BookCollectorsInstance extends DefaultTeamGameInstance implements M
         ArrayList<ItemStack> books = bookOptions.getBookOptions();
 
         BlockBox mapBox = MapUtil.readBox(map.requireProperty(("corners")));
-        ArrayList<BlockPos> teamRedBookshelfs = new ArrayList<>();
-        ArrayList<BlockPos> teamBlueBookshelfs = new ArrayList<>();
-        ArrayList<BlockPos> mapBookshelfs = new ArrayList<>();
+        ArrayList<BlockPos> teamRedBookshelves = new ArrayList<>();
+        ArrayList<BlockPos> teamBlueBookshelves = new ArrayList<>();
+        ArrayList<BlockPos> mapBookshelves = new ArrayList<>();
 
         for (BlockPos pos : mapBox) {
             BlockState state = serverWorld.getBlockState(pos);
@@ -107,15 +109,15 @@ public class BookCollectorsInstance extends DefaultTeamGameInstance implements M
 
             Team team = baseManager.blockPosInAnyBase(pos).orElse(null);
             if (team == null) {
-                mapBookshelfs.add(pos.toImmutable());
+                mapBookshelves.add(pos.toImmutable());
                 continue;
             }
 
-            if (team.getKey() == TEAM_RED) teamRedBookshelfs.add(pos.toImmutable());
-            if (team.getKey() == TEAM_BLUE) teamBlueBookshelfs.add(pos.toImmutable());
+            if (team.getKey() == TEAM_RED) teamRedBookshelves.add(pos.toImmutable());
+            if (team.getKey() == TEAM_BLUE) teamBlueBookshelves.add(pos.toImmutable());
         }
 
-        fillBookshelves(serverWorld, mapBookshelfs, books);
+        fillBookshelves(serverWorld, mapBookshelves, books);
 
         teamManager.getMinecraftTeams().forEach(team -> {
             team.setFriendlyFireAllowed(false);
@@ -131,28 +133,61 @@ public class BookCollectorsInstance extends DefaultTeamGameInstance implements M
 
         hooks.registerHook(ChiseledBookshelfModifyCallback.ADD, (player, pos) -> {
             Team team = baseManager.blockPosInAnyBase(pos).orElse(null);
-            if (team == null)  return;
+            if (team == null) return false;
 
             double x = pos.getX() + 0.5;
             double y = pos.getY() + 0.5;
             double z = pos.getZ() + 0.5;
 
-            if (team.getPlayers().contains(player)) serverWorld.spawnParticles(ParticleTypes.HAPPY_VILLAGER, x, y, z, 12, 0.5, 0.1, 0.5, 0.2);
+            if (team.getPlayers().contains(player))
+                serverWorld.spawnParticles(ParticleTypes.HAPPY_VILLAGER, x, y, z, 12, 0.5, 0.1, 0.5, 0.2);
             else serverWorld.spawnParticles(ParticleTypes.ANGRY_VILLAGER, x, y, z, 4, 0.5, 0.1, 0.5, 0.2);
 
             addScore(team);
+            return false;
         });
 
         hooks.registerHook(ChiseledBookshelfModifyCallback.REMOVE, (player, pos) -> {
+            Inventory inventory = player.getInventory();
+            int bookCounter = 0;
+            for (int i = 0; i < inventory.size(); i++) {
+                ItemStack stack = inventory.getStack(i);
+                if (stack.isOf(Items.WRITTEN_BOOK) || stack.isOf(Items.ENCHANTED_BOOK) || stack.isOf(Items.KNOWLEDGE_BOOK)) {
+                    bookCounter += stack.getCount();
+                }
+            }
+
+            if (bookCounter >= 3) {
+                //TODO translate msg
+                player.sendMessage(Text.of("Maximum Number of Books reached!"), true);
+                return true;
+            }
+
             Team team = baseManager.blockPosInAnyBase(pos).orElse(null);
-            if (team == null)  return;
-            removeScore(team);
+            if (team != null) {
+                removeScore(team);
+            }
+            return false;
         });
 
         gameHandle.protect(config -> config.allow(ProtectionTypes.USE_BLOCK, (entity, pos) -> {
             BlockState state = entity.getWorld().getBlockState(pos);
+
             if (winManager.isGameOver()) return false;
-            return (state.isOf(Blocks.LECTERN) | state.isOf(Blocks.CHISELED_BOOKSHELF));
+
+            if (state.isOf(Blocks.CHISELED_BOOKSHELF)) return true;
+
+            if (state.isOf(Blocks.LECTERN)) {
+                if (serverWorld.getBlockEntity(pos) instanceof LecternBlockEntity lecternBlockEntity && entity instanceof ServerPlayerEntity player) {
+                    player.getInventory().insertStack(lecternBlockEntity.getBook());
+                    lecternBlockEntity.clear(); //FIXME
+                }
+            }
+            return false;
+        }));
+
+        gameHandle.protect(config -> config.allow(ProtectionTypes.TAKE_LECTERN_BOOK, (entity, blockPos) -> {
+            return !winManager.isGameOver();
         }));
     }
 
@@ -174,6 +209,7 @@ public class BookCollectorsInstance extends DefaultTeamGameInstance implements M
 
             int r = random.nextInt(bookshelves.size());
             BlockPos bsPos = bookshelves.get(r);
+            BlockState bsState = world.getBlockState(bsPos);
 
             if (world.getBlockEntity(bsPos) instanceof ChiseledBookshelfBlockEntity chiseled) {
 
@@ -187,11 +223,9 @@ public class BookCollectorsInstance extends DefaultTeamGameInstance implements M
                 chiseled.setStack(slot, book);
             }
 
-            if (world.getBlockEntity(bsPos) instanceof LecternBlockEntity lectern) {
+            if (bsState.isOf(Blocks.LECTERN)) {
+                LecternBlock.putBookIfAbsent(null, world, bsPos, bsState, book);
 
-                //FIXME
-                ((LecternBlockEntityAccessor) lectern).getInventory().setStack(0, book);
-                System.out.printf("set book to lectern at %s\n", bsPos);
                 bookshelves.remove(r);
             }
         }
@@ -223,14 +257,10 @@ public class BookCollectorsInstance extends DefaultTeamGameInstance implements M
         data.addScore(team, 1);
 
         for (ServerPlayerEntity player : team.getPlayers()) {
-            var msg = gameHandle.getTranslations().translateText(player, "ap2.gain_point",
-                            styled(1, Formatting.YELLOW),
-                            styled(data.getScore(team), Formatting.AQUA))
-                    .formatted(Formatting.GREEN);
+            var msg = gameHandle.getTranslations().translateText(player, "ap2.gain_point", styled(1, Formatting.YELLOW), styled(data.getScore(team), Formatting.AQUA)).formatted(Formatting.GREEN);
 
             player.sendMessage(msg, true);
         }
-
     }
 
     private void removeScore(Team team) {
@@ -238,17 +268,12 @@ public class BookCollectorsInstance extends DefaultTeamGameInstance implements M
         data.setScore(team, data.getScore(team) - 1);
 
         for (ServerPlayerEntity player : team.getPlayers()) {
-            var msg = gameHandle.getTranslations().translateText(player, "ap2.lose_point",
-                            styled(1, Formatting.GOLD),
-                            styled(data.getScore(team), Formatting.AQUA))
-                    .formatted(Formatting.RED);
+            var msg = gameHandle.getTranslations().translateText(player, "ap2.lose_point", styled(1, Formatting.YELLOW), styled(data.getScore(team), Formatting.AQUA)).formatted(Formatting.RED);
 
             player.sendMessage(msg, true);
         }
-
     }
 
-    // FIXME
     private void onTimerDone() {
         winManager.win(data.getBestSubject(getResolver()).orElse(null));
     }

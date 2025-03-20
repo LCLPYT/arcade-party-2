@@ -22,13 +22,14 @@ public class ChiseledBookshelfBlockMixin {
             method = "onUseWithItem",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/block/ChiseledBookshelfBlock;tryAddBook(Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/block/entity/ChiseledBookshelfBlockEntity;Lnet/minecraft/item/ItemStack;I)V",
-                    shift = At.Shift.AFTER
-            )
+                    target = "Lnet/minecraft/block/ChiseledBookshelfBlock;tryAddBook(Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/block/entity/ChiseledBookshelfBlockEntity;Lnet/minecraft/item/ItemStack;I)V"
+            ),
+            cancellable = true
     )
     private void ap2$afterAddBook(ItemStack stack, BlockState state, World world, BlockPos pos, PlayerEntity player, Hand hand, BlockHitResult hit, CallbackInfoReturnable<ActionResult> cir) {
-        if (player instanceof ServerPlayerEntity serverPlayer) {
-            ChiseledBookshelfModifyCallback.ADD.invoker().onModifyBook(serverPlayer, pos);
+        if (player instanceof ServerPlayerEntity serverPlayer
+                && ChiseledBookshelfModifyCallback.ADD.invoker().onModifyBook(serverPlayer, pos)) {
+            cir.setReturnValue(ActionResult.PASS);
         }
     }
 
@@ -36,13 +37,14 @@ public class ChiseledBookshelfBlockMixin {
             method = "onUse",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/block/ChiseledBookshelfBlock;tryRemoveBook(Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/block/entity/ChiseledBookshelfBlockEntity;I)V",
-                    shift = At.Shift.AFTER
-            )
+                    target = "Lnet/minecraft/block/ChiseledBookshelfBlock;tryRemoveBook(Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/entity/player/PlayerEntity;Lnet/minecraft/block/entity/ChiseledBookshelfBlockEntity;I)V"
+            ),
+            cancellable = true
     )
     private void ap2$afterRemoveBook(BlockState state, World world, BlockPos pos, PlayerEntity player, BlockHitResult hit, CallbackInfoReturnable<ActionResult> cir) {
-        if (player instanceof ServerPlayerEntity serverPlayer) {
-            ChiseledBookshelfModifyCallback.REMOVE.invoker().onModifyBook(serverPlayer, pos);
+        if (player instanceof ServerPlayerEntity serverPlayer
+                && ChiseledBookshelfModifyCallback.REMOVE.invoker().onModifyBook(serverPlayer, pos)) {
+            cir.setReturnValue(ActionResult.PASS);
         }
     }
 }

@@ -8,16 +8,28 @@ import work.lclpnet.kibu.hook.HookFactory;
 public interface ChiseledBookshelfModifyCallback {
 
     Hook<ChiseledBookshelfModifyCallback> ADD = HookFactory.createArrayBacked(ChiseledBookshelfModifyCallback.class, callbacks -> (player, pos) -> {
+        boolean cancel = false;
+
         for (var cb : callbacks) {
-            cb.onModifyBook(player, pos);
+            if (cb.onModifyBook(player, pos)) {
+                cancel = true;
+            }
         }
+
+        return cancel;
     });
 
     Hook<ChiseledBookshelfModifyCallback> REMOVE = HookFactory.createArrayBacked(ChiseledBookshelfModifyCallback.class, callbacks -> (player, pos) -> {
+        boolean cancel = false;
+
         for (var cb : callbacks) {
-            cb.onModifyBook(player, pos);
+            if (cb.onModifyBook(player, pos)) {
+                cancel = true;
+            }
         }
+
+        return cancel;
     });
 
-    void onModifyBook(ServerPlayerEntity player, BlockPos pos);
+    boolean onModifyBook(ServerPlayerEntity player, BlockPos pos);
 }
