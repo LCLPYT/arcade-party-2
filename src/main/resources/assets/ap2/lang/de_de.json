@@ -25,6 +25,8 @@
   "ap2.score.points_timed": "%s Punkte (als %ser)",
   "ap2.gain_point": "+%s Punkt (%s)",
   "ap2.gain_points": "+%s Punkte (%s)",
+  "ap2.lose_point": "-%s Punkt (%s)",
+  "ap2.lose_points": "-%s Punkte (%s)",
   "ap2.game.remaining": "%s Spieler übrig",
   "ap2.game.remaining_single": "%s Spieler übrig",
   "ap2.pvp.shot_by": "%s wurde von %s erschossen",
