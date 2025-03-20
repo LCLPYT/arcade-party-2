@@ -249,5 +249,8 @@
   "item.ap2.bow_spleef.triple_jump": "Dreifachsprung",
   "item.ap2.bow_spleef.triple_jump.desc": "Erlaubt dir einen weiteren Doppelsprung",
   "item.ap2.bow_spleef.creeper_explosion": "Creeper-Explosion",
-  "item.ap2.bow_spleef.creeper_explosion.desc": "Lässt dich bei Benutzung explodieren"
+  "item.ap2.bow_spleef.creeper_explosion.desc": "Lässt dich bei Benutzung explodieren",
+  "game.ap2.book_collectors": "Büchersammler",
+  "game.ap2.book_collectors.description": "Suche Bücher und bringe sie in die Bibliothek deines Teams.\nAber pass auf, deine Bücher sind nirgendwo sicher vor dem Gegnerteam!",
+  "game.ap2.book_collectors.task" : "Bringe so viele Bücher wie du kannst in deine Bibliothek!"
 }

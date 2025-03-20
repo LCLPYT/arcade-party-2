@@ -34,6 +34,7 @@ import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.TextUtil;
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
 import work.lclpnet.kibu.hook.HookRegistrar;
+import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 import work.lclpnet.lobby.game.map.GameMap;
 
@@ -47,7 +48,7 @@ import static net.minecraft.util.Formatting.GOLD;
 public class BookCollectorsInstance extends DefaultTeamGameInstance implements MapBootstrap {
 
     public static final TeamKey TEAM_RED = ApTeamKeys.RED, TEAM_BLUE = ApTeamKeys.BLUE;
-    static final int GAME_DURATION = 180 * 20;
+    static final int GAME_DURATION = 180;
     private static final float RAIN_CHANCE = 0.6f, THUNDER_CHANCE = 0.15f;
     private final Random random = new Random();
     private final ScoreDataContainer<Team, TeamRef> data = new ScoreDataContainer<>(this::createReference);
@@ -144,6 +145,11 @@ public class BookCollectorsInstance extends DefaultTeamGameInstance implements M
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
             giveSwordToPlayer(player);
         }
+        // Timer and game end
+        Translations translations = gameHandle.getTranslations();
+        var subject = translations.translateText("game.ap2.book_collectors.task");
+
+        commons().createTimer(subject, GAME_DURATION).whenDone(this::onTimerDone);
     }
 
     private void fillBookshelves(ServerWorld world, ArrayList<BlockPos> bookshelves, ArrayList<ItemStack> books) {
@@ -193,6 +199,10 @@ public class BookCollectorsInstance extends DefaultTeamGameInstance implements M
         } else {
             world.setWeather(1000, 0, false, false);
         }
+    }
+
+    private void onTimerDone() {
+        winManager.win(data.getBestSubject(getResolver()).orElse(null));
     }
 
 }
