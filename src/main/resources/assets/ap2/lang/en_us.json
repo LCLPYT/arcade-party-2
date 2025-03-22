@@ -252,6 +252,7 @@
   "item.ap2.bow_spleef.creeper_explosion": "Creeper Explosion",
   "item.ap2.bow_spleef.creeper_explosion.desc": "Explodes yourself upon usage",
   "game.ap2.book_collectors" : "Book Collectors",
-  "game.ap2.book_collectors.description" : "Collect books from around the map and store them in your teams library.\nBe aware, your bookshelfs aren't safe from the opposing team!",
-  "game.ap2.book_collectors.task" : "Acquire as many books as you can!"
+  "game.ap2.book_collectors.description" : "Collect books from around the map and store them in your teams library.\nBe aware, your bookshelves aren't safe from the opposing team!",
+  "game.ap2.book_collectors.task" : "Acquire books!",
+  "game.ap2.book_collectors.max_book_warning" : "Already carrying the maximum number of books!"
 }

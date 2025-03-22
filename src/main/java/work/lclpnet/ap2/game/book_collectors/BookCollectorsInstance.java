@@ -15,7 +15,6 @@ import net.minecraft.particle.ParticleTypes;
 import net.minecraft.scoreboard.AbstractTeam;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.GameRules;
@@ -59,6 +58,8 @@ public class BookCollectorsInstance extends DefaultTeamGameInstance implements M
     private final ScoreDataContainer<Team, TeamRef> data = new ScoreDataContainer<>(this::createReference);
     private BCBaseManager baseManager;
     private TeamManager teamManager;
+    private final Translations translations = gameHandle.getTranslations();
+    private final Participants participants = gameHandle.getParticipants();
 
     public BookCollectorsInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
@@ -72,52 +73,20 @@ public class BookCollectorsInstance extends DefaultTeamGameInstance implements M
 
     public CompletableFuture<Void> createWorldBootstrap(ServerWorld world, GameMap map) {
         teamManager = getTeamManager();
-        teamManager.partitionIntoTeams(gameHandle.getParticipants(), Set.of(TEAM_RED, TEAM_BLUE));
+        teamManager.partitionIntoTeams(participants, Set.of(TEAM_RED, TEAM_BLUE));
 
         BCReader setup = new BCReader(map, gameHandle.getLogger());
 
-        return setup.readBases(teamManager.getTeams()).thenAccept(bases -> baseManager = new BCBaseManager(bases, teamManager)).thenCompose(nil -> world.getServer().submit(() -> {
-            randomizeWorldConditions(world);
-        }));
+        return setup.readBases(teamManager.getTeams())
+                .thenAccept(bases -> baseManager = new BCBaseManager(bases, teamManager))
+                .thenCompose(nil -> world.getServer().submit(() -> randomizeWorldConditions(world)));
     }
 
     @Override
     protected void prepare() {
-        teamManager.getMinecraftTeams().forEach(team -> {
-            team.setFriendlyFireAllowed(false);
-            team.setShowFriendlyInvisibles(true);
-            team.setCollisionRule(AbstractTeam.CollisionRule.PUSH_OTHER_TEAMS);
-        });
 
         ServerWorld serverWorld = getWorld();
         GameMap map = getMap();
-        Participants participants = gameHandle.getParticipants();
-
-        var bookOptions = new BookOptions();
-        ArrayList<ItemStack> books = bookOptions.getBookOptions();
-
-        BlockBox mapBox = MapUtil.readBox(map.requireProperty(("corners")));
-        ArrayList<BlockPos> teamRedBookshelves = new ArrayList<>();
-        ArrayList<BlockPos> teamBlueBookshelves = new ArrayList<>();
-        ArrayList<BlockPos> mapBookshelves = new ArrayList<>();
-
-        for (BlockPos pos : mapBox) {
-            BlockState state = serverWorld.getBlockState(pos);
-            if (!state.isOf(Blocks.LECTERN) && !state.isOf(Blocks.CHISELED_BOOKSHELF)) {
-                continue;
-            }
-
-            Team team = baseManager.blockPosInAnyBase(pos).orElse(null);
-            if (team == null) {
-                mapBookshelves.add(pos.toImmutable());
-                continue;
-            }
-
-            if (team.getKey() == TEAM_RED) teamRedBookshelves.add(pos.toImmutable());
-            if (team.getKey() == TEAM_BLUE) teamBlueBookshelves.add(pos.toImmutable());
-        }
-
-        fillBookshelves(serverWorld, mapBookshelves, books);
 
         teamManager.getMinecraftTeams().forEach(team -> {
             team.setFriendlyFireAllowed(false);
@@ -126,6 +95,24 @@ public class BookCollectorsInstance extends DefaultTeamGameInstance implements M
         });
 
         teleportTeamsToSpawns();
+
+        var bookOptions = new BookOptions();
+        ArrayList<ItemStack> books = bookOptions.getBookOptions();
+        BlockBox mapBox = MapUtil.readBox(map.requireProperty(("corners")));
+        ArrayList<BlockPos> mapBookshelves = new ArrayList<>();
+
+        for (BlockPos pos : mapBox) {
+            BlockState state = serverWorld.getBlockState(pos);
+
+            if (!state.isOf(Blocks.LECTERN) && !state.isOf(Blocks.CHISELED_BOOKSHELF)) continue;
+
+            Team team = baseManager.blockPosInAnyBase(pos).orElse(null);
+            if (team != null) continue;
+
+            mapBookshelves.add(pos.toImmutable());
+        }
+
+        fillBookshelves(serverWorld, mapBookshelves, books);
 
         commons().gameRuleBuilder().set(GameRules.DO_ENTITY_DROPS, false).set(GameRules.NATURAL_REGENERATION, true).set(GameRules.ANNOUNCE_ADVANCEMENTS, false);
 
@@ -158,15 +145,12 @@ public class BookCollectorsInstance extends DefaultTeamGameInstance implements M
             }
 
             if (bookCounter >= 3) {
-                //TODO translate msg
-                player.sendMessage(Text.of("Maximum Number of Books reached!"), true);
+                var msg = translations.translateText(player, "game.ap2.book_collectors.max_book_warning").formatted(Formatting.RED);
+                player.sendMessage(msg, true);
                 return true;
             }
 
-            Team team = baseManager.blockPosInAnyBase(pos).orElse(null);
-            if (team != null) {
-                removeScore(team);
-            }
+            baseManager.blockPosInAnyBase(pos).ifPresent(this::removeScore);
             return false;
         });
 
@@ -186,21 +170,19 @@ public class BookCollectorsInstance extends DefaultTeamGameInstance implements M
             return false;
         }));
 
-        gameHandle.protect(config -> config.allow(ProtectionTypes.TAKE_LECTERN_BOOK, (entity, blockPos) -> {
-            return !winManager.isGameOver();
-        }));
+        gameHandle.protect(config -> config.allow(ProtectionTypes.TAKE_LECTERN_BOOK, (entity, blockPos) -> !winManager.isGameOver()));
     }
 
     @Override
     protected void ready() {
-        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
+        for (ServerPlayerEntity player : participants) {
             giveSwordToPlayer(player);
         }
-        // Timer and game end
-        Translations translations = gameHandle.getTranslations();
-        var subject = translations.translateText("game.ap2.book_collectors.task");
 
+        var subject = translations.translateText("game.ap2.book_collectors.task");
         commons().createTimer(subject, GAME_DURATION).whenDone(this::onTimerDone);
+
+        gameHandle.protect(config -> config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, blockPos) -> !winManager.isGameOver()));
     }
 
     private void fillBookshelves(ServerWorld world, ArrayList<BlockPos> bookshelves, ArrayList<ItemStack> books) {
@@ -257,7 +239,9 @@ public class BookCollectorsInstance extends DefaultTeamGameInstance implements M
         data.addScore(team, 1);
 
         for (ServerPlayerEntity player : team.getPlayers()) {
-            var msg = gameHandle.getTranslations().translateText(player, "ap2.gain_point", styled(1, Formatting.YELLOW), styled(data.getScore(team), Formatting.AQUA)).formatted(Formatting.GREEN);
+            var msg = gameHandle.getTranslations()
+                    .translateText(player, "ap2.gain_point", styled(1, Formatting.YELLOW), styled(data.getScore(team), Formatting.AQUA))
+                    .formatted(Formatting.GREEN);
 
             player.sendMessage(msg, true);
         }
@@ -268,7 +252,9 @@ public class BookCollectorsInstance extends DefaultTeamGameInstance implements M
         data.setScore(team, data.getScore(team) - 1);
 
         for (ServerPlayerEntity player : team.getPlayers()) {
-            var msg = gameHandle.getTranslations().translateText(player, "ap2.lose_point", styled(1, Formatting.YELLOW), styled(data.getScore(team), Formatting.AQUA)).formatted(Formatting.RED);
+            var msg = gameHandle.getTranslations()
+                    .translateText(player, "ap2.lose_point", styled(1, Formatting.YELLOW), styled(data.getScore(team), Formatting.AQUA))
+                    .formatted(Formatting.RED);
 
             player.sendMessage(msg, true);
         }
