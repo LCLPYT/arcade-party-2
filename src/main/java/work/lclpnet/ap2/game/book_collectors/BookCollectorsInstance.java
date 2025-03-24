@@ -56,10 +56,10 @@ public class BookCollectorsInstance extends DefaultTeamGameInstance implements M
     private static final float RAIN_CHANCE = 0.6f, THUNDER_CHANCE = 0.15f;
     private final Random random = new Random();
     private final ScoreDataContainer<Team, TeamRef> data = new ScoreDataContainer<>(this::createReference);
-    private BCBaseManager baseManager;
-    private TeamManager teamManager;
     private final Translations translations = gameHandle.getTranslations();
     private final Participants participants = gameHandle.getParticipants();
+    private BCBaseManager baseManager;
+    private TeamManager teamManager;
 
     public BookCollectorsInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
@@ -77,9 +77,7 @@ public class BookCollectorsInstance extends DefaultTeamGameInstance implements M
 
         BCReader setup = new BCReader(map, gameHandle.getLogger());
 
-        return setup.readBases(teamManager.getTeams())
-                .thenAccept(bases -> baseManager = new BCBaseManager(bases, teamManager))
-                .thenCompose(nil -> world.getServer().submit(() -> randomizeWorldConditions(world)));
+        return setup.readBases(teamManager.getTeams()).thenAccept(bases -> baseManager = new BCBaseManager(bases, teamManager)).thenCompose(nil -> world.getServer().submit(() -> randomizeWorldConditions(world)));
     }
 
     @Override
@@ -135,7 +133,7 @@ public class BookCollectorsInstance extends DefaultTeamGameInstance implements M
         });
 
         hooks.registerHook(ChiseledBookshelfModifyCallback.REMOVE, (player, pos) -> {
-            if (bookLimit(player)) return true;
+            if (checkBookLimit(player)) return true;
             baseManager.blockPosInAnyBase(pos).ifPresent(this::removeScore);
             return false;
         });
@@ -147,13 +145,13 @@ public class BookCollectorsInstance extends DefaultTeamGameInstance implements M
 
             if (state.isOf(Blocks.CHISELED_BOOKSHELF)) return true;
 
-            if (state.isOf(Blocks.LECTERN)) {
-                if (serverWorld.getBlockEntity(pos) instanceof LecternBlockEntity lecternBlockEntity && entity instanceof ServerPlayerEntity player) {
-                    if (bookLimit(player)) return true;
-                    player.getInventory().insertStack(lecternBlockEntity.getBook().copy());
-                    lecternBlockEntity.clear();
-                    serverWorld.setBlockState(pos, state.with(LecternBlock.HAS_BOOK, false));
-                }
+            if (serverWorld.getBlockEntity(pos) instanceof LecternBlockEntity lecternBlockEntity && entity instanceof ServerPlayerEntity player) {
+                var lecternBook = lecternBlockEntity.getBook().copy();
+                if ((lecternBook != ItemStack.EMPTY) && checkBookLimit(player)) return false;
+
+                player.getInventory().insertStack(lecternBook);
+                lecternBlockEntity.clear();
+                serverWorld.setBlockState(pos, state.with(LecternBlock.HAS_BOOK, false));
             }
             return false;
         }));
@@ -201,7 +199,7 @@ public class BookCollectorsInstance extends DefaultTeamGameInstance implements M
         }
     }
 
-    private boolean bookLimit(ServerPlayerEntity player) {
+    private boolean checkBookLimit(ServerPlayerEntity player) {
 
         Inventory inventory = player.getInventory();
         int bookCounter = 0;
@@ -246,9 +244,7 @@ public class BookCollectorsInstance extends DefaultTeamGameInstance implements M
         data.addScore(team, 1);
 
         for (ServerPlayerEntity player : team.getPlayers()) {
-            var msg = gameHandle.getTranslations()
-                    .translateText(player, "ap2.gain_point", styled(1, Formatting.YELLOW), styled(data.getScore(team), Formatting.AQUA))
-                    .formatted(Formatting.GREEN);
+            var msg = gameHandle.getTranslations().translateText(player, "ap2.gain_point", styled(1, Formatting.YELLOW), styled(data.getScore(team), Formatting.AQUA)).formatted(Formatting.GREEN);
 
             player.sendMessage(msg, true);
         }
@@ -259,9 +255,7 @@ public class BookCollectorsInstance extends DefaultTeamGameInstance implements M
         data.setScore(team, data.getScore(team) - 1);
 
         for (ServerPlayerEntity player : team.getPlayers()) {
-            var msg = gameHandle.getTranslations()
-                    .translateText(player, "ap2.lose_point", styled(1, Formatting.YELLOW), styled(data.getScore(team), Formatting.AQUA))
-                    .formatted(Formatting.RED);
+            var msg = gameHandle.getTranslations().translateText(player, "ap2.lose_point", styled(1, Formatting.YELLOW), styled(data.getScore(team), Formatting.AQUA)).formatted(Formatting.RED);
 
             player.sendMessage(msg, true);
         }
