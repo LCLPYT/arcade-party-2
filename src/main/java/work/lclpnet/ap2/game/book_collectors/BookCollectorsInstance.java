@@ -37,6 +37,7 @@ import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.TextUtil;
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
 import work.lclpnet.kibu.hook.HookRegistrar;
+import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 import work.lclpnet.lobby.game.map.GameMap;
@@ -60,6 +61,7 @@ public class BookCollectorsInstance extends DefaultTeamGameInstance implements M
     private final Participants participants = gameHandle.getParticipants();
     private BCBaseManager baseManager;
     private TeamManager teamManager;
+    private final BookOptions bookOptions = new BookOptions();
 
     public BookCollectorsInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
@@ -75,9 +77,11 @@ public class BookCollectorsInstance extends DefaultTeamGameInstance implements M
         teamManager = getTeamManager();
         teamManager.partitionIntoTeams(participants, Set.of(TEAM_RED, TEAM_BLUE));
 
-        BCReader setup = new BCReader(map, gameHandle.getLogger());
+        BCReader setup = new BCReader(map, world, gameHandle.getLogger());
 
-        return setup.readBases(teamManager.getTeams()).thenAccept(bases -> baseManager = new BCBaseManager(bases, teamManager)).thenCompose(nil -> world.getServer().submit(() -> randomizeWorldConditions(world)));
+        return setup.readBases(teamManager.getTeams())
+                .thenAccept(bases -> baseManager = new BCBaseManager(bases))
+                .thenCompose(nil -> world.getServer().submit(() -> randomizeWorldConditions(world)));
     }
 
     @Override
@@ -94,7 +98,6 @@ public class BookCollectorsInstance extends DefaultTeamGameInstance implements M
 
         teleportTeamsToSpawns();
 
-        var bookOptions = new BookOptions();
         ArrayList<ItemStack> books = bookOptions.getBookOptions();
         BlockBox mapBox = MapUtil.readBox(map.requireProperty(("corners")));
         ArrayList<BlockPos> mapBookshelves = new ArrayList<>();
@@ -138,6 +141,14 @@ public class BookCollectorsInstance extends DefaultTeamGameInstance implements M
             return false;
         });
 
+        hooks.registerHook(ServerLivingEntityHooks.ALLOW_DEATH, (entity, damageSource, damageAmount) -> {
+            if (entity instanceof ServerPlayerEntity player) {
+                onDeath(player);
+            }
+
+            return true;
+        });
+
         gameHandle.protect(config -> config.allow(ProtectionTypes.USE_BLOCK, (entity, pos) -> {
             BlockState state = entity.getWorld().getBlockState(pos);
 
@@ -169,6 +180,8 @@ public class BookCollectorsInstance extends DefaultTeamGameInstance implements M
         commons().createTimer(subject, GAME_DURATION).whenDone(this::onTimerDone);
 
         gameHandle.protect(config -> config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, blockPos) -> !winManager.isGameOver()));
+
+        baseManager.openDoors(getWorld());
     }
 
     private void fillBookshelves(ServerWorld world, ArrayList<BlockPos> bookshelves, ArrayList<ItemStack> books) {
@@ -258,6 +271,19 @@ public class BookCollectorsInstance extends DefaultTeamGameInstance implements M
             var msg = gameHandle.getTranslations().translateText(player, "ap2.lose_point", styled(1, Formatting.YELLOW), styled(data.getScore(team), Formatting.AQUA)).formatted(Formatting.RED);
 
             player.sendMessage(msg, true);
+        }
+    }
+
+    private void onDeath(ServerPlayerEntity player) {
+        PlayerInventory inventory = player.getInventory();
+
+        // remove non-fuel items so that they won't be dropped
+        for (int i = 0; i < inventory.size(); ++i) {
+            ItemStack stack = inventory.getStack(i);
+
+            if (bookOptions.getBookOptions().contains(stack)) continue;
+
+            inventory.removeStack(i);
         }
     }
 
