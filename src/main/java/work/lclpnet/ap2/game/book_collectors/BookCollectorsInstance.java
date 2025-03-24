@@ -135,21 +135,7 @@ public class BookCollectorsInstance extends DefaultTeamGameInstance implements M
         });
 
         hooks.registerHook(ChiseledBookshelfModifyCallback.REMOVE, (player, pos) -> {
-            Inventory inventory = player.getInventory();
-            int bookCounter = 0;
-            for (int i = 0; i < inventory.size(); i++) {
-                ItemStack stack = inventory.getStack(i);
-                if (stack.isOf(Items.WRITTEN_BOOK) || stack.isOf(Items.ENCHANTED_BOOK) || stack.isOf(Items.KNOWLEDGE_BOOK)) {
-                    bookCounter += stack.getCount();
-                }
-            }
-
-            if (bookCounter >= 3) {
-                var msg = translations.translateText(player, "game.ap2.book_collectors.max_book_warning").formatted(Formatting.RED);
-                player.sendMessage(msg, true);
-                return true;
-            }
-
+            if (bookLimit(player)) return true;
             baseManager.blockPosInAnyBase(pos).ifPresent(this::removeScore);
             return false;
         });
@@ -163,8 +149,10 @@ public class BookCollectorsInstance extends DefaultTeamGameInstance implements M
 
             if (state.isOf(Blocks.LECTERN)) {
                 if (serverWorld.getBlockEntity(pos) instanceof LecternBlockEntity lecternBlockEntity && entity instanceof ServerPlayerEntity player) {
-                    player.getInventory().insertStack(lecternBlockEntity.getBook());
-                    lecternBlockEntity.clear(); //FIXME
+                    if (bookLimit(player)) return true;
+                    player.getInventory().insertStack(lecternBlockEntity.getBook().copy());
+                    lecternBlockEntity.clear();
+                    serverWorld.setBlockState(pos, state.with(LecternBlock.HAS_BOOK, false));
                 }
             }
             return false;
@@ -211,6 +199,25 @@ public class BookCollectorsInstance extends DefaultTeamGameInstance implements M
                 bookshelves.remove(r);
             }
         }
+    }
+
+    private boolean bookLimit(ServerPlayerEntity player) {
+
+        Inventory inventory = player.getInventory();
+        int bookCounter = 0;
+        for (int i = 0; i < inventory.size(); i++) {
+            ItemStack stack = inventory.getStack(i);
+            if (stack.isOf(Items.WRITTEN_BOOK) || stack.isOf(Items.ENCHANTED_BOOK) || stack.isOf(Items.KNOWLEDGE_BOOK)) {
+                bookCounter += stack.getCount();
+            }
+        }
+
+        if (bookCounter >= 3) {
+            var msg = translations.translateText(player, "game.ap2.book_collectors.max_book_warning").formatted(Formatting.RED);
+            player.sendMessage(msg, true);
+            return true;
+        }
+        return false;
     }
 
     private void giveSwordToPlayer(ServerPlayerEntity player) {
