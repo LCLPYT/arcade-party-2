@@ -186,6 +186,8 @@
   "game.ap2.red_light_green_light.result": "%s Blöcke entfernt",
   "game.ap2.snowball_fight": "Schneeballschlacht",
   "game.ap2.snowball_fight.description": "Sammle Schnee vom Boden. Treffe deine Gegner mit den Schneebällen. Der letzte Überlebende gewinnt!",
+  "game.ap2.snowball_fight.idle": "Du wirst erfrieren, wenn du dich zu lange nicht am Kampf beteiligst...",
+  "game.ap2.snowball_fight.max_snowballs": "Du kannst nicht noch mehr Schneebälle einsammeln",
   "game.ap2.speed_builders": "Schnellbauen",
   "game.ap2.speed_builders.description": "Baue so schnell wie möglich Bauwerke nach. Jede Runde fliegt der Spieler raus, dessen Bauwerk am wenigsten dem Original gleicht.",
   "game.ap2.speed_builders.look": "Schau dir dieses Bauwerk an...",

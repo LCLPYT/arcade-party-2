@@ -19,17 +19,18 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.ActionResult;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.impl.game.EliminationGameInstance;
-import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks;
 import work.lclpnet.kibu.scheduler.Ticks;
+import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 import work.lclpnet.lobby.game.map.GameMap;
 
@@ -39,8 +40,13 @@ import java.util.Set;
 
 public class SnowballFightInstance extends EliminationGameInstance {
 
-    private static final int WORLD_BORDER_DELAY = Ticks.minutes(1);
-    private static final int WORLD_BORDER_TIME = Ticks.minutes(1) + Ticks.seconds(20);
+    private static final int
+            WORLD_BORDER_DELAY = Ticks.minutes(1),
+            WORLD_BORDER_TIME = Ticks.minutes(1) + Ticks.seconds(20),
+            COMBAT_IDLE_TICKS = Ticks.seconds(9),
+            FREEZING_DURATION_TICKS = Ticks.seconds(5),
+            MAX_SNOWBALL_STACKS = 9;
+
     private static final float SNOWBALL_DAMAGE = 0.75f;
 
     public SnowballFightInstance(MiniGameHandle gameHandle) {
@@ -62,8 +68,8 @@ public class SnowballFightInstance extends EliminationGameInstance {
     @Override
     protected void ready() {
         Participants participants = gameHandle.getParticipants();
-        CustomScoreboardManager manager = gameHandle.getScoreboardManager();
         HookRegistrar hooks = gameHandle.getHookRegistrar();
+        TaskScheduler scheduler = gameHandle.getGameScheduler();
 
         gameHandle.protect(config -> {
             config.allow(ProtectionTypes.BREAK_BLOCKS, (entity, pos) -> {
@@ -74,9 +80,11 @@ public class SnowballFightInstance extends EliminationGameInstance {
                 return false;
             });
 
-            config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, damageSource) ->
-                    damageSource.isOf(DamageTypes.OUTSIDE_BORDER) ||
-                    entity instanceof ServerPlayerEntity damaged && participants.isParticipating(damaged)
+            config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, damageSource)
+                    -> damageSource.isOf(DamageTypes.OUTSIDE_BORDER)
+                    || damageSource.isOf(DamageTypes.FREEZE)
+                    || entity instanceof ServerPlayerEntity damaged
+                    && participants.isParticipating(damaged)
                     && damageSource.getSource() instanceof ProjectileEntity && damageSource.getAttacker() != entity);
         });
 
@@ -108,6 +116,11 @@ public class SnowballFightInstance extends EliminationGameInstance {
         }
 
         commons().scheduleWorldBorderShrink(WORLD_BORDER_DELAY, WORLD_BORDER_TIME, Ticks.seconds(5));
+
+        var freezingManager = new FreezingManager(scheduler, gameHandle.getTranslations(), participants,
+                COMBAT_IDLE_TICKS, FREEZING_DURATION_TICKS);
+
+        freezingManager.enable(hooks);
     }
 
     @Override
@@ -177,7 +190,18 @@ public class SnowballFightInstance extends EliminationGameInstance {
         BlockState state = player.getServerWorld().getBlockState(pos);
 
         if (state.isOf(Blocks.SNOW) || state.isOf(Blocks.SNOW_BLOCK) || state.isOf(Blocks.POWDER_SNOW)) {
-            player.getInventory().insertStack(new ItemStack(Items.SNOWBALL, 1));
+            addSnowball(player);
         }
+    }
+
+    private void addSnowball(ServerPlayerEntity player) {
+        if (player.getInventory().count(Items.SNOWBALL) < MAX_SNOWBALL_STACKS * Items.SNOWBALL.getMaxCount()) {
+            player.getInventory().insertStack(new ItemStack(Items.SNOWBALL, 1));
+            return;
+        }
+
+        gameHandle.getTranslations().translateText("game.ap2.snowball_fight.max_snowballs")
+                .formatted(Formatting.RED)
+                .sendTo(player, true);
     }
 }
