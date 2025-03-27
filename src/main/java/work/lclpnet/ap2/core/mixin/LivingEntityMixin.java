@@ -11,6 +11,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import work.lclpnet.ap2.core.hook.LivingEntityAttributeInitCallback;
+import work.lclpnet.ap2.core.hook.PowderedSnowSlowCallback;
 import work.lclpnet.ap2.core.type.ApLivingEntity;
 
 @Mixin(LivingEntity.class)
@@ -47,5 +48,37 @@ public class LivingEntityMixin implements ApLivingEntity {
     @Override
     public void ap2$setServerSidedScale(float scale) {
         serverSidedScale = scale;
+    }
+
+    @Inject(
+            method = "addPowderSnowSlowIfNeeded",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/entity/attribute/EntityAttributeInstance;addTemporaryModifier(Lnet/minecraft/entity/attribute/EntityAttributeModifier;)V"
+            ),
+            cancellable = true
+    )
+    public void ap2$addPowderSnowSlow(CallbackInfo ci) {
+        var self = (LivingEntity) (Object) this;
+
+        if (PowderedSnowSlowCallback.ADD.invoker().shouldCancel(self)) {
+            ci.cancel();
+        }
+    }
+
+    @Inject(
+            method = "removePowderSnowSlow",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/entity/attribute/EntityAttributeInstance;removeModifier(Lnet/minecraft/util/Identifier;)Z"
+            ),
+            cancellable = true
+    )
+    public void ap2$removePowderSnowSlow(CallbackInfo ci) {
+        var self = (LivingEntity) (Object) this;
+
+        if (PowderedSnowSlowCallback.REMOVE.invoker().shouldCancel(self)) {
+            ci.cancel();
+        }
     }
 }
