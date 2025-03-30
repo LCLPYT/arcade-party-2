@@ -13,6 +13,7 @@ import net.minecraft.registry.Registries;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.PlayerManager;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
@@ -23,11 +24,13 @@ import net.minecraft.util.math.BlockPos;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
+import work.lclpnet.ap2.api.util.heads.PlayerHead;
 import work.lclpnet.ap2.base.ApConstants;
 import work.lclpnet.ap2.game.fine_tuning.melody.*;
 import work.lclpnet.ap2.impl.game.GameCommons;
 import work.lclpnet.ap2.impl.game.data.ScoreTimeDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
+import work.lclpnet.ap2.impl.util.ApRegistries;
 import work.lclpnet.ap2.impl.util.BookUtil;
 import work.lclpnet.ap2.impl.util.heads.PlayerHeadUtil;
 import work.lclpnet.ap2.impl.util.heads.PlayerHeads;
@@ -57,6 +60,7 @@ class TuningPhase {
     private final ScoreTimeDataContainer<ServerPlayerEntity, PlayerRef> data;
     private final Runnable onEnd;
     private final GameCommons commons;
+    private final ServerWorld world;
     private final Random random = new Random();
     private final MelodyProvider melodyProvider = new SimpleMelodyProvider(random, new SimpleNotesProvider(random), 5);
     private final Map<UUID, TaskHandle> replaying = new HashMap<>();
@@ -68,12 +72,14 @@ class TuningPhase {
     private int melodyNumber = 0;
 
     public TuningPhase(MiniGameHandle gameHandle, Map<UUID, FineTuningRoom> rooms,
-                       ScoreTimeDataContainer<ServerPlayerEntity, PlayerRef> data, Runnable onEnd, GameCommons commons) {
+                       ScoreTimeDataContainer<ServerPlayerEntity, PlayerRef> data, Runnable onEnd, GameCommons commons,
+                       ServerWorld world) {
         this.gameHandle = gameHandle;
         this.rooms = rooms;
         this.data = data;
         this.onEnd = onEnd;
         this.commons = commons;
+        this.world = world;
     }
 
     public void init() {
@@ -279,8 +285,13 @@ class TuningPhase {
         Translations translations = gameHandle.getTranslations();
         Participants participants = gameHandle.getParticipants();
 
+        PlayerHead head = world.getRegistryManager()
+                .getOrThrow(ApRegistries.PLAYER_HEAD)
+                .getOptionalValue(PlayerHeads.GEODE_ARROW_FORWARD)
+                .orElseThrow();
+
         for (ServerPlayerEntity player : participants) {
-            ItemStack stack = PlayerHeadUtil.getItem(PlayerHeads.GEODE_ARROW_FORWARD);
+            ItemStack stack = PlayerHeadUtil.getStack(head);
             stack.set(DataComponentTypes.CUSTOM_NAME, translations.translateText(player, "game.ap2.fine_tuning.replay")
                     .styled(style -> style.withItalic(false).withFormatting(YELLOW)));
 

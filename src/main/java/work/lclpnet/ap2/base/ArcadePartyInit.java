@@ -2,6 +2,7 @@ package work.lclpnet.ap2.base;
 
 import com.mojang.serialization.Dynamic;
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.event.registry.DynamicRegistries;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
 import net.fabricmc.loader.api.FabricLoader;
@@ -13,9 +14,11 @@ import net.minecraft.resource.ResourceType;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Identifier;
 import work.lclpnet.ap2.api.actor.*;
+import work.lclpnet.ap2.api.util.heads.PlayerHead;
 import work.lclpnet.ap2.base.resource.ApResources;
 import work.lclpnet.ap2.core.type.ActorManagerAccess;
 import work.lclpnet.ap2.core.type.ApMarkerEntity;
+import work.lclpnet.ap2.impl.util.ApRegistries;
 import work.lclpnet.kibu.hook.entity.ServerEntityHooks;
 
 import static work.lclpnet.ap2.base.ArcadeParty.logger;
@@ -26,10 +29,12 @@ public class ArcadePartyInit implements ModInitializer {
 
     @Override
     public void onInitialize() {
+        registerDynamicRegistries();
+
         ResourceManagerHelper.get(ResourceType.SERVER_DATA).registerReloadListener(RESOURCES_ID, lookup -> new SimpleSynchronousResourceReloadListener() {
             @Override
             public Identifier getFabricId() {
-                return ArcadeParty.identifier("resources");
+                return RESOURCES_ID;
             }
 
             @Override
@@ -80,5 +85,9 @@ public class ArcadePartyInit implements ModInitializer {
         var init = new ActorInit(world, type, dataSource);
 
         type.factory().create(init).ifPresent(actor -> ActorManagerAccess.get(world).spawn(actor, marker));
+    }
+
+    private void registerDynamicRegistries() {
+        DynamicRegistries.register(ApRegistries.PLAYER_HEAD, PlayerHead.CODEC);
     }
 }

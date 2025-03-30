@@ -22,6 +22,11 @@ public class ApResources implements ModelManager {
     private Map<Identifier, TemplateModel> models = Map.of();
 
     public void reload(ResourceManager manager, RegistryWrapper.WrapperLookup lookup) {
+        findModels(manager, lookup);
+//        findPlayerHeads(manager);
+    }
+
+    private void findModels(ResourceManager manager, RegistryWrapper.WrapperLookup lookup) {
         var resources = MODEL_FINDER.findResources(manager);
         var builder = ImmutableMap.<Identifier, TemplateModel>builder();
         var modelLoader = new ModelLoader(lookup);
@@ -49,6 +54,33 @@ public class ApResources implements ModelManager {
 
         this.models = builder.build();
     }
+
+//    private void findPlayerHeads(ResourceManager manager) {
+//        for (String namespace : manager.getAllNamespaces()) {
+//            Resource res = manager.getResource(Identifier.of(namespace, PLAYER_HEADS_JSON)).orElse(null);
+//
+//            if (res == null) continue;
+//
+//            try (var in = res.getInputStream()) {
+//                String content = new String(in.readAllBytes(), StandardCharsets.UTF_8);
+//                JSONObject json = new JSONObject(content);
+//
+//                for (String path : json.keySet()) {
+//                    try {
+//                        JSONObject headJson = json.getJSONObject(path);
+//                        PlayerHead head = PlayerHead.fromJson(headJson);
+//                        Identifier id = Identifier.of(namespace, path);
+//
+//                        Registry.register(playerHeads, id, head);
+//                    } catch (JSONException e) {
+//                        logger.error("Failed to parse player head {} from data pack {}", path, res.getPackId());
+//                    }
+//                }
+//            } catch (IOException | JSONException e) {
+//                logger.error("Failed to load {} from data pack {}", PLAYER_HEADS_JSON, res.getPackId());
+//            }
+//        }
+//    }
 
     @Override
     public Optional<Model> getModel(Identifier id) {

@@ -6,13 +6,14 @@ import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.ProfileComponent;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import work.lclpnet.ap2.api.util.heads.PlayerHead;
 
 import java.util.Optional;
 import java.util.UUID;
 
 public class PlayerHeadUtil {
 
-    public static ItemStack getItem(UUID uuid, String texture) {
+    public static ItemStack getStack(UUID uuid, String texture) {
         PropertyMap properties = new PropertyMap();
         properties.put("textures", new Property("textures", texture));
 
@@ -22,8 +23,8 @@ public class PlayerHeadUtil {
         return stack;
     }
 
-    public static ItemStack getItem(PlayerHead playerHead) {
-        return getItem(playerHead.uuid(), playerHead.texture());
+    public static ItemStack getStack(PlayerHead playerHead) {
+        return getStack(playerHead.uuid(), playerHead.texture());
     }
 
     private PlayerHeadUtil() {}
