@@ -16,6 +16,7 @@ import work.lclpnet.ap2.impl.util.world.stage.BoxBlockShape;
 import work.lclpnet.ap2.impl.util.world.stage.CylinderBlockShape;
 import work.lclpnet.kibu.util.BlockStateUtils;
 import work.lclpnet.lobby.game.map.GameMap;
+import work.lclpnet.lobby.game.map.MapUtils;
 
 import java.util.*;
 
@@ -99,6 +100,12 @@ public class MapUtil {
     public static BlockShape readArea(GameMap map) {
         JSONObject area = map.requireProperty("area");
         return readShape(area);
+    }
+
+    public static BlockShape readShape(GameMap map, String key) {
+        BlockPos mapSpawn = BlockPos.ofFloored(MapUtils.getSpawnPosition(map));
+
+        return readShape(map.requireProperty(key), mapSpawn);
     }
 
     public static BlockShape readShape(JSONObject json) {
