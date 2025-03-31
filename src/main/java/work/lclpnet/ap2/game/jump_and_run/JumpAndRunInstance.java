@@ -38,7 +38,6 @@ import work.lclpnet.ap2.impl.util.collision.PlayerMovementObserver;
 import work.lclpnet.ap2.impl.util.handler.Visibility;
 import work.lclpnet.ap2.impl.util.handler.VisibilityHandler;
 import work.lclpnet.ap2.impl.util.handler.VisibilityManager;
-import work.lclpnet.ap2.impl.util.heads.PlayerHeadUtil;
 import work.lclpnet.ap2.impl.util.heads.PlayerHeads;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
@@ -173,7 +172,7 @@ public class JumpAndRunInstance extends DefaultGameInstance implements MapBootst
                 .orElseThrow();
 
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
-            ItemStack stack = PlayerHeadUtil.getStack(head);
+            ItemStack stack = head.createStack();
 
             var name = translations.translateText(player, "ap2.game.reset").formatted(Formatting.RED);
             stack.set(DataComponentTypes.CUSTOM_NAME, name.styled(style -> style.withItalic(false)));

@@ -10,7 +10,6 @@ import net.minecraft.text.Text;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.impl.tags.PlayerHeadTags;
 import work.lclpnet.ap2.impl.util.ApRegistries;
-import work.lclpnet.ap2.impl.util.heads.PlayerHeadUtil;
 import work.lclpnet.kibu.cmd.type.CommandRegistrar;
 import work.lclpnet.kibu.cmd.type.KibuCommand;
 import work.lclpnet.kibu.inv.type.KibuInventory;
@@ -49,7 +48,7 @@ public class DebugEggsCommand implements KibuCommand {
 
             if (slot >= inv.size()) continue;
 
-            ItemStack stack = PlayerHeadUtil.getStack(entry.value());
+            ItemStack stack = entry.value().createStack();
             stack.set(DataComponentTypes.ITEM_NAME, Text.literal(entry.getIdAsString()));
 
             inv.setStack(slot, stack);

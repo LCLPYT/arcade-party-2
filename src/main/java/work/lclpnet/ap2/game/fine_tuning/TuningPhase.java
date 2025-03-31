@@ -32,7 +32,6 @@ import work.lclpnet.ap2.impl.game.data.ScoreTimeDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.util.ApRegistries;
 import work.lclpnet.ap2.impl.util.BookUtil;
-import work.lclpnet.ap2.impl.util.heads.PlayerHeadUtil;
 import work.lclpnet.ap2.impl.util.heads.PlayerHeads;
 import work.lclpnet.kibu.hook.HookContainer;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
@@ -291,7 +290,7 @@ class TuningPhase {
                 .orElseThrow();
 
         for (ServerPlayerEntity player : participants) {
-            ItemStack stack = PlayerHeadUtil.getStack(head);
+            ItemStack stack = head.createStack();
             stack.set(DataComponentTypes.CUSTOM_NAME, translations.translateText(player, "game.ap2.fine_tuning.replay")
                     .styled(style -> style.withItalic(false).withFormatting(YELLOW)));
 

@@ -37,7 +37,6 @@ import work.lclpnet.ap2.impl.util.collision.TickMovementObserver;
 import work.lclpnet.ap2.impl.util.handler.Visibility;
 import work.lclpnet.ap2.impl.util.handler.VisibilityHandler;
 import work.lclpnet.ap2.impl.util.handler.VisibilityManager;
-import work.lclpnet.ap2.impl.util.heads.PlayerHeadUtil;
 import work.lclpnet.ap2.impl.util.heads.PlayerHeads;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.kibu.access.entity.PigEntityAccess;
@@ -279,7 +278,7 @@ public class PigRaceInstance extends DefaultGameInstance {
                 .getOptionalValue(PlayerHeads.REDSTONE_BLOCK_REFRESH)
                 .orElseThrow();
 
-        ItemStack reset = PlayerHeadUtil.getStack(head);
+        ItemStack reset = head.createStack();
 
         reset.set(DataComponentTypes.CUSTOM_NAME, translations.translateText(player, "ap2.game.reset").formatted(Formatting.RED)
                 .styled(style -> style.withItalic(false)));
