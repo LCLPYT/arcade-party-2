@@ -13,9 +13,14 @@ import net.minecraft.component.type.NbtComponent;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.particle.ParticleTypes;
 import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvents;
+import net.minecraft.util.ActionResult;
+import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import org.jetbrains.annotations.NotNull;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
@@ -34,6 +39,7 @@ import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.ColorUtil;
 import work.lclpnet.ap2.impl.util.debug.DebugController;
 import work.lclpnet.ap2.impl.util.world.stage.BlockShape;
+import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.lobby.game.map.GameMap;
 
 import java.util.ArrayList;
@@ -43,7 +49,7 @@ import java.util.concurrent.CompletableFuture;
 
 public class EggventureInstance extends DefaultGameInstance implements MapBootstrap {
 
-    private static final boolean DEBUG_EGG_POSITIONS = true;
+    private static final boolean DEBUG_EGG_POSITIONS = false;
     private static final MapCodec<Boolean> NBT_CODEC = Codec.BOOL.fieldOf("easter_egg");
 
     private final ScoreTimeDataContainer<ServerPlayerEntity, PlayerRef> data = new ScoreTimeDataContainer<>(PlayerRef::create);
@@ -173,11 +179,54 @@ public class EggventureInstance extends DefaultGameInstance implements MapBootst
 
     @Override
     protected void ready() {
-        BlockBox gate = MapUtil.readBox(getMap().requireProperty("gate"));
+        GameMap map = getMap();
+        BlockBox gate = MapUtil.readBox(map.requireProperty("gate"));
         ServerWorld world = getWorld();
 
         for (BlockPos pos : gate) {
             world.setBlockState(pos, Blocks.AIR.getDefaultState());
         }
+
+        PlayerInteractionHooks.USE_BLOCK.register((_player, _world, hand, hitResult) -> {
+            BlockPos pos = hitResult.getBlockPos();
+
+            if (_player instanceof ServerPlayerEntity player
+                    && gameHandle.getParticipants().isParticipating(player)
+                    && hand == Hand.MAIN_HAND
+                    && isEasterEgg(world, pos)) {
+                onFindEasterEgg(player, pos);
+            }
+
+            return ActionResult.PASS;
+        });
+
+        int minDurationSeconds = map.requireProperty("min-duration-seconds");
+        int maxDurationSeconds = map.requireProperty("max-duration-seconds");
+        int durationSeconds = minDurationSeconds + random.nextInt(maxDurationSeconds - minDurationSeconds + 1);
+
+        var subject = gameHandle.getTranslations().translateText(gameHandle.getGameInfo().getTaskKey());
+
+        commons().createTimer(subject, durationSeconds).whenDone(this::onTimerDone);
+    }
+
+    private void onFindEasterEgg(ServerPlayerEntity player, BlockPos pos) {
+        if (winManager.isGameOver()) return;
+
+        ServerWorld world = player.getServerWorld();
+        world.setBlockState(pos, Blocks.AIR.getDefaultState(), Block.SKIP_DROPS | Block.FORCE_STATE);
+
+        commons().addScore(player, 1, data);
+
+        double x = pos.getX() + 0.5, y = pos.getY(), z = pos.getZ() + 0.5;
+        world.playSound(null, x, y, z, SoundEvents.ENTITY_ALLAY_ITEM_THROWN, SoundCategory.PLAYERS, 1f, 1f);
+        player.playSoundToPlayer(SoundEvents.ENTITY_ARROW_HIT_PLAYER, SoundCategory.PLAYERS, 0.75f, 1.2f);
+
+        world.spawnParticles(ParticleTypes.CRIMSON_SPORE, x, y, z, 75, 0.25, 0.25, 0.25, 0);
+        world.spawnParticles(ParticleTypes.WARPED_SPORE, x, y, z, 75, 0.25, 0.25, 0.25, 0);
+        world.spawnParticles(ParticleTypes.GLOW, x, y, z, 25, 0.5, 0.5, 0.5, 0);
+    }
+
+    private void onTimerDone() {
+        winManager.win(data.getBestSubject(resolver).orElse(null));
     }
 }
