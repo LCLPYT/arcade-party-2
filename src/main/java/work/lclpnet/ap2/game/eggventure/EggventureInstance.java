@@ -8,7 +8,11 @@ import net.minecraft.block.Blocks;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.block.entity.SkullBlockEntity;
 import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.DyedColorComponent;
 import net.minecraft.component.type.NbtComponent;
+import net.minecraft.entity.EquipmentSlot;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -27,6 +31,7 @@ import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.tags.PlayerHeadTags;
 import work.lclpnet.ap2.impl.util.ApRegistries;
 import work.lclpnet.ap2.impl.util.BlockBox;
+import work.lclpnet.ap2.impl.util.ColorUtil;
 import work.lclpnet.ap2.impl.util.debug.DebugController;
 import work.lclpnet.ap2.impl.util.world.stage.BlockShape;
 import work.lclpnet.lobby.game.map.GameMap;
@@ -71,7 +76,7 @@ public class EggventureInstance extends DefaultGameInstance implements MapBootst
         List<PlayerHead> variants = eggVariants(world.getRegistryManager());
 
         if (variants.isEmpty()) {
-            throw new IllegalStateException("There are no easter eggs variants defined");
+            throw new IllegalStateException("There are no egg variants defined");
         }
 
         var debugController = new DebugController();
@@ -139,6 +144,31 @@ public class EggventureInstance extends DefaultGameInstance implements MapBootst
     @Override
     protected void prepare() {
         new DebugEggsCommand(gameHandle.getLogger()).register(gameHandle.getCommandRegistrar());
+
+        var variants = eggVariants(getWorld().getRegistryManager());
+
+        if (variants.isEmpty()) {
+            throw new IllegalStateException("There are no egg variants defined");
+        }
+
+        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
+            PlayerHead variant = variants.get(random.nextInt(variants.size()));
+            player.equipStack(EquipmentSlot.HEAD, variant.createStack());
+
+            int color = ColorUtil.getRandomHsvColor(random);
+
+            ItemStack chestPlate = new ItemStack(Items.LEATHER_CHESTPLATE);
+            chestPlate.set(DataComponentTypes.DYED_COLOR, new DyedColorComponent(color, false));
+            player.equipStack(EquipmentSlot.CHEST, chestPlate);
+
+            ItemStack leggings = new ItemStack(Items.LEATHER_LEGGINGS);
+            leggings.set(DataComponentTypes.DYED_COLOR, new DyedColorComponent(color, false));
+            player.equipStack(EquipmentSlot.LEGS, leggings);
+
+            ItemStack boots = new ItemStack(Items.LEATHER_BOOTS);
+            boots.set(DataComponentTypes.DYED_COLOR, new DyedColorComponent(color, false));
+            player.equipStack(EquipmentSlot.FEET, boots);
+        }
     }
 
     @Override
