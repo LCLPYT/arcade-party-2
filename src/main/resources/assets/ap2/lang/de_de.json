@@ -235,6 +235,7 @@
   "game.ap2.eggventure": "Eierjagd",
   "game.ap2.eggventure.description": "Finde am meisten Ostereier.",
   "game.ap2.eggventure.task": "Finde Ostereier",
+  "game.ap2.eggventure.find_sample": "Finde diese Ostereier",
   "item.ap2.bow_spleef.triple_shot": "Dreifachschuss",
   "item.ap2.bow_spleef.triple_shot.desc": "Schießt drei Pfeile auf einmal",
   "item.ap2.bow_spleef.burst_shot": "Salvenschuss",

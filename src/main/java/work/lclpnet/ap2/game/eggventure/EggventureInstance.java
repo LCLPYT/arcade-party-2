@@ -38,6 +38,7 @@ import work.lclpnet.ap2.impl.util.ApRegistries;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.ColorUtil;
 import work.lclpnet.ap2.impl.util.debug.DebugController;
+import work.lclpnet.ap2.impl.util.world.entity.DynamicEntityManager;
 import work.lclpnet.ap2.impl.util.world.stage.BlockShape;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.lobby.game.map.GameMap;
@@ -175,6 +176,16 @@ public class EggventureInstance extends DefaultGameInstance implements MapBootst
             boots.set(DataComponentTypes.DYED_COLOR, new DyedColorComponent(color, false));
             player.equipStack(EquipmentSlot.FEET, boots);
         }
+    }
+
+    @Override
+    protected void afterInitialDelay() {
+        ServerWorld world = getWorld();
+        DynamicEntityManager dynamicEntityManager = new DynamicEntityManager(world);
+        var tutorial = new EggventureTutorial(world, dynamicEntityManager, random, gameHandle.getTranslations());
+
+        dynamicEntityManager.init(gameHandle.getGameScheduler(), gameHandle.getHookRegistrar());
+        tutorial.start(gameHandle.getGameScheduler(), gameHandle.getParticipants()).thenRun(super::afterInitialDelay);
     }
 
     @Override
