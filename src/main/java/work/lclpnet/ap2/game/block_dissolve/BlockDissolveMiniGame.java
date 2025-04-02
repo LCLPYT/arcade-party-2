@@ -2,6 +2,7 @@ package work.lclpnet.ap2.game.block_dissolve;
 
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.util.Identifier;
 import work.lclpnet.ap2.api.game.*;
 import work.lclpnet.ap2.base.ApConstants;
@@ -25,7 +26,7 @@ public class BlockDissolveMiniGame implements MiniGame {
     }
 
     @Override
-    public ItemStack getIcon() {
+    public ItemStack getIcon(DynamicRegistryManager manager) {
         return new ItemStack(Items.FLINT_AND_STEEL);
     }
 

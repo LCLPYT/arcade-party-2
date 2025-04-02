@@ -10,7 +10,8 @@ public class PlayerHeads {
 
     public static final RegistryKey<PlayerHead>
             GEODE_ARROW_FORWARD = ref("geode_arrow_forward"),
-            REDSTONE_BLOCK_REFRESH = ref("redstone_block_refresh");
+            REDSTONE_BLOCK_REFRESH = ref("redstone_block_refresh"),
+            EASTER_EGG_PINK_PATTERN = ref("easter_egg_pink_pattern");
 
     private PlayerHeads() {}
 

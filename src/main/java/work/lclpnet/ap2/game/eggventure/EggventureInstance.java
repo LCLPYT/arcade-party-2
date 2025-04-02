@@ -15,10 +15,15 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.registry.DynamicRegistryManager;
+import net.minecraft.scoreboard.ScoreboardCriterion;
+import net.minecraft.scoreboard.ScoreboardDisplaySlot;
+import net.minecraft.scoreboard.ScoreboardObjective;
+import net.minecraft.scoreboard.number.StyledNumberFormat;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
+import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
@@ -38,6 +43,7 @@ import work.lclpnet.ap2.impl.util.ApRegistries;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.ColorUtil;
 import work.lclpnet.ap2.impl.util.debug.DebugController;
+import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.ap2.impl.util.world.entity.DynamicEntityManager;
 import work.lclpnet.ap2.impl.util.world.stage.BlockShape;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
@@ -47,6 +53,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
+
+import static net.minecraft.util.Formatting.BOLD;
+import static net.minecraft.util.Formatting.YELLOW;
 
 public class EggventureInstance extends DefaultGameInstance implements MapBootstrap {
 
@@ -176,6 +185,16 @@ public class EggventureInstance extends DefaultGameInstance implements MapBootst
             boots.set(DataComponentTypes.DYED_COLOR, new DyedColorComponent(color, false));
             player.equipStack(EquipmentSlot.FEET, boots);
         }
+
+        CustomScoreboardManager scoreboardManager = gameHandle.getScoreboardManager();
+
+        ScoreboardObjective objective = scoreboardManager.createObjective("points", ScoreboardCriterion.DUMMY,
+                Text.literal("Points").formatted(YELLOW, BOLD), ScoreboardCriterion.RenderType.INTEGER,
+                StyledNumberFormat.YELLOW);
+
+        useScoreboardStatsSync(data, objective);
+
+        scoreboardManager.setDisplay(ScoreboardDisplaySlot.LIST, objective);
     }
 
     @Override
@@ -224,7 +243,7 @@ public class EggventureInstance extends DefaultGameInstance implements MapBootst
         if (winManager.isGameOver()) return;
 
         ServerWorld world = player.getServerWorld();
-        world.setBlockState(pos, Blocks.AIR.getDefaultState(), Block.SKIP_DROPS | Block.FORCE_STATE);
+        world.setBlockState(pos, Blocks.AIR.getDefaultState(), Block.SKIP_DROPS | Block.FORCE_STATE | Block.NOTIFY_LISTENERS);
 
         commons().addScore(player, 1, data);
 

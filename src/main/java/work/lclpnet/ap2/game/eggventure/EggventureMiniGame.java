@@ -1,11 +1,13 @@
 package work.lclpnet.ap2.game.eggventure;
 
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
+import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.util.Identifier;
 import work.lclpnet.ap2.api.game.*;
 import work.lclpnet.ap2.base.ApConstants;
 import work.lclpnet.ap2.base.ArcadeParty;
+import work.lclpnet.ap2.impl.util.ApRegistries;
+import work.lclpnet.ap2.impl.util.heads.PlayerHeads;
 
 public class EggventureMiniGame implements MiniGame {
 
@@ -40,7 +42,9 @@ public class EggventureMiniGame implements MiniGame {
     }
 
     @Override
-    public ItemStack getIcon() {
-        return new ItemStack(Items.EGG);
+    public ItemStack getIcon(DynamicRegistryManager manager) {
+        return manager.getOrThrow(ApRegistries.PLAYER_HEAD)
+                .getValueOrThrow(PlayerHeads.EASTER_EGG_PINK_PATTERN)
+                .createStack();
     }
 }
