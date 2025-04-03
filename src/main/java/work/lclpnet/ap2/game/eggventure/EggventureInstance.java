@@ -5,12 +5,14 @@ import com.mojang.serialization.MapCodec;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.block.ShapeContext;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.block.entity.SkullBlockEntity;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.DyedColorComponent;
 import net.minecraft.component.type.NbtComponent;
 import net.minecraft.entity.EquipmentSlot;
+import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.particle.ParticleTypes;
@@ -26,7 +28,10 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
+import net.minecraft.util.hit.BlockHitResult;
+import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.RaycastContext;
 import org.jetbrains.annotations.NotNull;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
@@ -42,11 +47,14 @@ import work.lclpnet.ap2.impl.tags.PlayerHeadTags;
 import work.lclpnet.ap2.impl.util.ApRegistries;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.ColorUtil;
+import work.lclpnet.ap2.impl.util.RayCastUtil;
 import work.lclpnet.ap2.impl.util.debug.DebugController;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.ap2.impl.util.world.entity.DynamicEntityManager;
 import work.lclpnet.ap2.impl.util.world.stage.BlockShape;
+import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
+import work.lclpnet.kibu.hook.player.PlayerSwingHandHook;
 import work.lclpnet.lobby.game.map.GameMap;
 
 import java.util.ArrayList;
@@ -217,7 +225,9 @@ public class EggventureInstance extends DefaultGameInstance implements MapBootst
             world.setBlockState(pos, Blocks.AIR.getDefaultState());
         }
 
-        PlayerInteractionHooks.USE_BLOCK.register((_player, _world, hand, hitResult) -> {
+        HookRegistrar hooks = gameHandle.getHookRegistrar();
+
+        hooks.registerHook(PlayerInteractionHooks.USE_BLOCK, (_player, _world, hand, hitResult) -> {
             BlockPos pos = hitResult.getBlockPos();
 
             if (_player instanceof ServerPlayerEntity player
@@ -228,6 +238,24 @@ public class EggventureInstance extends DefaultGameInstance implements MapBootst
             }
 
             return ActionResult.PASS;
+        });
+
+        hooks.registerHook(PlayerSwingHandHook.HOOK, (player, hand) -> {
+            if (hand != Hand.MAIN_HAND || !gameHandle.getParticipants().isParticipating(player)) return;
+
+            double range = player.getAttributeValue(EntityAttributes.BLOCK_INTERACTION_RANGE);
+
+            HitResult hit = RayCastUtil.raycast(world, player.getEyePos(), player.getRotationVector(), range,
+                    RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.NONE, ShapeContext.absent(),
+                    entity -> !entity.isSpectator());
+
+            if (!(hit instanceof BlockHitResult blockHit)) return;
+
+            BlockPos pos = blockHit.getBlockPos();
+
+            if (isEasterEgg(world, pos)) {
+                onFindEasterEgg(player, pos);
+            }
         });
 
         int minDurationSeconds = map.requireProperty("min-duration-seconds");

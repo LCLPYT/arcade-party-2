@@ -44,7 +44,7 @@ public class RayCastUtil {
 
         HitResult entityHit = raycastEntities(world, start, direction, blockHitDistance, filter);
 
-        if (blockHit.getType() == HitResult.Type.BLOCK) {
+        if (blockHit.getType() == HitResult.Type.MISS) {
             return entityHit;
         }
 
