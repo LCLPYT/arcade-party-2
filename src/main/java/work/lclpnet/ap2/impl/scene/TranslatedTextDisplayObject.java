@@ -38,7 +38,7 @@ public class TranslatedTextDisplayObject extends Object3d implements Mountable, 
 
         updateWorldPos();
 
-        if (transformer.update(matrixWorld)) {
+        if (transformer.update(matrixWorld, worldPos.x, worldPos.y, worldPos.z)) {
             controller.getEntities().forEach(transformer::apply);
         }
     }
@@ -60,7 +60,7 @@ public class TranslatedTextDisplayObject extends Object3d implements Mountable, 
     public @Nullable Entity getEntity(ServerPlayerEntity player) {
         return controller.ref(translations.getLanguage(player), display -> {
             updateWorldPos();
-            transformer.update(matrixWorld);
+            transformer.update(matrixWorld, worldPos.x, worldPos.y, worldPos.z);
             transformer.apply(display);
         });
     }

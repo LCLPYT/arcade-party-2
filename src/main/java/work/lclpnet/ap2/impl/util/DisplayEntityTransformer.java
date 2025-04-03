@@ -12,9 +12,22 @@ public class DisplayEntityTransformer {
     private final Quaternionf rotation = new Quaternionf();
     private final Matrix4f mat4f = new Matrix4f();
     private final Matrix4d prevMatrix = new Matrix4d().scale(Double.NaN);
+    private final double positionTolSq;
     private AffineTransformation transformation = new AffineTransformation(mat4f);
 
-    public synchronized boolean update(Matrix4dc matrix) {
+    public DisplayEntityTransformer() {
+        this(16);
+    }
+
+    /**
+     * Construct a new {@link DisplayEntityTransformer}.
+     * @param positionTol The distance in blocks that a DisplayEntity can be translated without being teleported. Default is 16
+     */
+    public DisplayEntityTransformer(double positionTol) {
+        this.positionTolSq = positionTol * positionTol;
+    }
+
+    public synchronized boolean update(Matrix4dc matrix, double x, double y, double z) {
         if (matrix.equals(prevMatrix)) return false;
 
         prevMatrix.set(matrix);
@@ -25,7 +38,15 @@ public class DisplayEntityTransformer {
 
         mat4f.identity();
 
-        position.set(translation.x(), translation.y(), translation.z());
+        position.set(x, y, z);
+
+        double tx = translation.x(), ty = translation.y(), tz = translation.z();
+
+        if (position.distanceSquared(tx, ty, tz) > positionTolSq) {
+            position.set(tx, ty, tz);
+        } else {
+            mat4f.translate((float) (tx - position.x), (float) (ty - position.y), (float) (tz - position.z));
+        }
 
         mat4f.rotate(rotation).scale((float) scale.x(), (float) scale.y(), (float) scale.z());
 
@@ -35,7 +56,7 @@ public class DisplayEntityTransformer {
     }
 
     public void updateAndApply(DisplayEntity display, Matrix4dc matrix) {
-        if (update(matrix)) {
+        if (update(matrix, display.getX(), display.getY(), display.getZ())) {
             apply(display);
         }
     }
