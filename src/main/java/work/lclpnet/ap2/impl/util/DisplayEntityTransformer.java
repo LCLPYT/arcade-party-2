@@ -1,5 +1,6 @@
 package work.lclpnet.ap2.impl.util;
 
+import lombok.Setter;
 import net.minecraft.entity.decoration.DisplayEntity;
 import net.minecraft.util.math.AffineTransformation;
 import org.joml.*;
@@ -14,6 +15,8 @@ public class DisplayEntityTransformer {
     private final Matrix4d prevMatrix = new Matrix4d().scale(Double.NaN);
     private final double positionTolSq;
     private AffineTransformation transformation = new AffineTransformation(mat4f);
+    @Setter
+    private boolean teleportOnly = false;
 
     public DisplayEntityTransformer() {
         this(16);
@@ -42,7 +45,7 @@ public class DisplayEntityTransformer {
 
         double tx = translation.x(), ty = translation.y(), tz = translation.z();
 
-        if (position.distanceSquared(tx, ty, tz) > positionTolSq) {
+        if (teleportOnly || position.distanceSquared(tx, ty, tz) > positionTolSq) {
             position.set(tx, ty, tz);
         } else {
             mat4f.translate((float) (tx - position.x), (float) (ty - position.y), (float) (tz - position.z));

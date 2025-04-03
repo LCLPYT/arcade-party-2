@@ -108,6 +108,7 @@ public class EggventureTutorial {
         label.position.set(0, 0.1, 0);
         label.scale.set(0.65);
         label.setBillboardMode(DisplayEntity.BillboardMode.CENTER);
+        label.getTransformer().setTeleportOnly(true);
 
         egg.addChild(label);
 

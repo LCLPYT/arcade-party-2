@@ -1,6 +1,7 @@
 package work.lclpnet.ap2.impl.scene;
 
 import it.unimi.dsi.fastutil.objects.ObjectArraySet;
+import lombok.Getter;
 import net.minecraft.entity.Entity;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.math.Vec3d;
@@ -18,6 +19,7 @@ public class TranslatedTextDisplayObject extends Object3d implements Mountable, 
 
     private final Translations translations;
     private final TranslatedTextDisplay.ControllerImpl controller;
+    @Getter
     private final DisplayEntityTransformer transformer = new DisplayEntityTransformer();
     private final Set<MountContext> contexts = new ObjectArraySet<>(1);
     private final Vector3d worldPos = new Vector3d(0);
