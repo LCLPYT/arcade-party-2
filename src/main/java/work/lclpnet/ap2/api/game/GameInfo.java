@@ -1,6 +1,7 @@
 package work.lclpnet.ap2.api.game;
 
 import net.minecraft.item.ItemStack;
+import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.util.Identifier;
 
 public interface GameInfo {
@@ -17,7 +18,7 @@ public interface GameInfo {
 
     String getAuthor();
 
-    ItemStack getIcon();
+    ItemStack getIcon(DynamicRegistryManager manager);
 
     default String getTitleKey() {
         Identifier id = getId();

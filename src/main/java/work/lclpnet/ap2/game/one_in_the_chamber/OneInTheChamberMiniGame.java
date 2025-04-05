@@ -2,6 +2,7 @@ package work.lclpnet.ap2.game.one_in_the_chamber;
 
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import work.lclpnet.ap2.api.game.*;
@@ -26,7 +27,7 @@ public class OneInTheChamberMiniGame implements MiniGame {
     }
 
     @Override
-    public ItemStack getIcon() {
+    public ItemStack getIcon(DynamicRegistryManager manager) {
         return new ItemStack(Items.CROSSBOW);
     }
 

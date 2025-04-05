@@ -2,6 +2,7 @@ package work.lclpnet.ap2.game.maze_scape;
 
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.util.Identifier;
 import work.lclpnet.ap2.api.game.*;
 import work.lclpnet.ap2.base.ApConstants;
@@ -35,7 +36,7 @@ public class MazeScapeMiniGame implements MiniGame {
     }
 
     @Override
-    public ItemStack getIcon() {
+    public ItemStack getIcon(DynamicRegistryManager manager) {
         return new ItemStack(Items.SCULK_CATALYST);
     }
 

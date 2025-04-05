@@ -8,6 +8,7 @@ import work.lclpnet.ap2.game.block_dissolve.BlockDissolveMiniGame;
 import work.lclpnet.ap2.game.bow_spleef.BowSpleefMiniGame;
 import work.lclpnet.ap2.game.chicken_shooter.ChickenShooterMiniGame;
 import work.lclpnet.ap2.game.cozy_campfire.CozyCampfireMiniGame;
+import work.lclpnet.ap2.game.eggventure.EggventureMiniGame;
 import work.lclpnet.ap2.game.fine_tuning.FineTuningMiniGame;
 import work.lclpnet.ap2.game.glowing_bomb.GlowingBombMiniGame;
 import work.lclpnet.ap2.game.guess_it.GuessItMiniGame;
@@ -71,5 +72,6 @@ public class MiniGames {
         games.add(new PillarBattleMiniGame());
         games.add(new AimMasterMiniGame());
         games.add(new MazeScapeMiniGame());
+        games.add(new EggventureMiniGame());
     }
 }

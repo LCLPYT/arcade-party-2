@@ -22,10 +22,12 @@ import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.util.CollisionDetector;
+import work.lclpnet.ap2.api.util.heads.PlayerHead;
 import work.lclpnet.ap2.impl.game.DefaultGameInstance;
 import work.lclpnet.ap2.impl.game.data.ScoreTimeDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.map.MapUtil;
+import work.lclpnet.ap2.impl.util.ApRegistries;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.checkpoint.Checkpoint;
 import work.lclpnet.ap2.impl.util.checkpoint.CheckpointHelper;
@@ -35,7 +37,6 @@ import work.lclpnet.ap2.impl.util.collision.TickMovementObserver;
 import work.lclpnet.ap2.impl.util.handler.Visibility;
 import work.lclpnet.ap2.impl.util.handler.VisibilityHandler;
 import work.lclpnet.ap2.impl.util.handler.VisibilityManager;
-import work.lclpnet.ap2.impl.util.heads.PlayerHeadUtil;
 import work.lclpnet.ap2.impl.util.heads.PlayerHeads;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.kibu.access.entity.PigEntityAccess;
@@ -272,7 +273,13 @@ public class PigRaceInstance extends DefaultGameInstance {
     private void giveResetItem(ServerPlayerEntity player) {
         Translations translations = gameHandle.getTranslations();
 
-        ItemStack reset = PlayerHeadUtil.getItem(PlayerHeads.REDSTONE_BLOCK_REFRESH);
+        PlayerHead head = getWorld().getRegistryManager()
+                .getOrThrow(ApRegistries.PLAYER_HEAD)
+                .getOptionalValue(PlayerHeads.REDSTONE_BLOCK_REFRESH)
+                .orElseThrow();
+
+        ItemStack reset = head.createStack();
+
         reset.set(DataComponentTypes.CUSTOM_NAME, translations.translateText(player, "ap2.game.reset").formatted(Formatting.RED)
                 .styled(style -> style.withItalic(false)));
 

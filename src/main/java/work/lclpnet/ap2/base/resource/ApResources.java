@@ -22,6 +22,10 @@ public class ApResources implements ModelManager {
     private Map<Identifier, TemplateModel> models = Map.of();
 
     public void reload(ResourceManager manager, RegistryWrapper.WrapperLookup lookup) {
+        findModels(manager, lookup);
+    }
+
+    private void findModels(ResourceManager manager, RegistryWrapper.WrapperLookup lookup) {
         var resources = MODEL_FINDER.findResources(manager);
         var builder = ImmutableMap.<Identifier, TemplateModel>builder();
         var modelLoader = new ModelLoader(lookup);

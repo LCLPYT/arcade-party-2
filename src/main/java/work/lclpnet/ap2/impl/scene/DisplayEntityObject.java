@@ -13,7 +13,8 @@ import java.util.Set;
 
 public abstract class DisplayEntityObject<T extends DisplayEntity> extends Object3d implements Mountable, Unmountable, Interpolatable {
 
-    protected final DisplayEntityTransformer transformer = new DisplayEntityTransformer();
+    @Getter
+    private final DisplayEntityTransformer transformer = new DisplayEntityTransformer();
     private final Set<MountContext> contexts = new ObjectArraySet<>(1);
     protected @NotNull Resolvable<T> entityRef = Resolvable.none();
     @Getter private boolean glowing = false;

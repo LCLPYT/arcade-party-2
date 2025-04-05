@@ -21,10 +21,12 @@ import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.map.MapBootstrap;
 import work.lclpnet.ap2.api.util.CollisionDetector;
+import work.lclpnet.ap2.api.util.heads.PlayerHead;
 import work.lclpnet.ap2.game.jump_and_run.gen.*;
 import work.lclpnet.ap2.impl.game.DefaultGameInstance;
 import work.lclpnet.ap2.impl.game.data.ScoreDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
+import work.lclpnet.ap2.impl.util.ApRegistries;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.SoundHelper;
 import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedPlayerBossBar;
@@ -36,7 +38,6 @@ import work.lclpnet.ap2.impl.util.collision.PlayerMovementObserver;
 import work.lclpnet.ap2.impl.util.handler.Visibility;
 import work.lclpnet.ap2.impl.util.handler.VisibilityHandler;
 import work.lclpnet.ap2.impl.util.handler.VisibilityManager;
-import work.lclpnet.ap2.impl.util.heads.PlayerHeadUtil;
 import work.lclpnet.ap2.impl.util.heads.PlayerHeads;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
@@ -165,9 +166,13 @@ public class JumpAndRunInstance extends DefaultGameInstance implements MapBootst
 
     private void giveItemsToPlayers() {
         Translations translations = gameHandle.getTranslations();
+        PlayerHead head = getWorld().getRegistryManager()
+                .getOrThrow(ApRegistries.PLAYER_HEAD)
+                .getOptionalValue(PlayerHeads.REDSTONE_BLOCK_REFRESH)
+                .orElseThrow();
 
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
-            ItemStack stack = PlayerHeadUtil.getItem(PlayerHeads.REDSTONE_BLOCK_REFRESH);
+            ItemStack stack = head.createStack();
 
             var name = translations.translateText(player, "ap2.game.reset").formatted(Formatting.RED);
             stack.set(DataComponentTypes.CUSTOM_NAME, name.styled(style -> style.withItalic(false)));

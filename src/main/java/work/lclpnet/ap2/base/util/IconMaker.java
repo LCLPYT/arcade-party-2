@@ -2,6 +2,7 @@ package work.lclpnet.ap2.base.util;
 
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.item.ItemStack;
+import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
@@ -39,7 +40,8 @@ public class IconMaker {
     }
 
     public static ItemStack createIcon(MiniGame game, ServerPlayerEntity player, Translations translations) {
-        ItemStack icon = game.getIcon();
+        DynamicRegistryManager registryManager = player.getServerWorld().getRegistryManager();
+        ItemStack icon = game.getIcon(registryManager);
 
         icon.set(DataComponentTypes.CUSTOM_NAME, translations.translateText(player, game.getTitleKey())
                 .styled(style -> style.withItalic(false).withFormatting(AQUA)));

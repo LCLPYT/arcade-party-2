@@ -227,7 +227,7 @@ public abstract class BaseGameInstance implements MiniGameInstance {
         PlayerLookup.all(gameHandle.getServer()).forEach(playerUtil::resetPlayer);
     }
 
-    private void afterInitialDelay() {
+    protected void afterInitialDelay() {
         gameHandle.getTranslations().translateText("ap2.go").formatted(RED)
                 .acceptEach(PlayerLookup.all(gameHandle.getServer()), (player, text) -> {
                     Title.get(player).title(text, Text.empty(), 5, 20, 5);
