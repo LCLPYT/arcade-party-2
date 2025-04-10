@@ -7,14 +7,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class ScoreDataContainerTest {
 
     @Test
-    void orderedEntries() {
+    void streamOrderedEntries() {
         var container = new ScoreDataContainer<>(StringRef::new);
 
         container.setScore("Player_A", 12);
         container.setScore("Player_B", 5);
         container.setScore("Player_C", 15);
 
-        var order = container.orderedEntries().toList();
+        var order = container.streamOrderedEntries().toList();
 
         assertEquals(3, order.size());
         assertEquals("Player_C", order.getFirst().subject().name());

@@ -99,7 +99,7 @@ public class ScoreDataContainer<T, Ref extends SubjectRef> implements DataContai
     }
 
     @Override
-    public Stream<? extends DataEntry<Ref>> orderedEntries() {
+    public Stream<? extends DataEntry<Ref>> streamOrderedEntries() {
         return scoreMap.entrySet().stream()
                 .map(e -> new ScoreDataEntry<>(e.getKey(), e.getValue(), detailKey))
                 .sorted(ordering.order(ScoreView::score));

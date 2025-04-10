@@ -50,12 +50,12 @@ public class CombinedDataContainer<T, Ref extends SubjectRef> implements DataCon
     }
 
     @Override
-    public Stream<? extends DataEntry<Ref>> orderedEntries() {
+    public Stream<? extends DataEntry<Ref>> streamOrderedEntries() {
         Set<Ref> seen = new HashSet<>();
 
         synchronized (this) {
             return children.stream()
-                    .flatMap(DataContainer::orderedEntries)
+                    .flatMap(DataContainer::streamOrderedEntries)
                     .filter(entry -> seen.add(entry.subject()));  // each entry only once. this is stateful, only sequential streams will work
         }
     }
@@ -76,7 +76,7 @@ public class CombinedDataContainer<T, Ref extends SubjectRef> implements DataCon
         synchronized (this) {
             DataContainer<T, Ref> container;
 
-            if (orderedEntries().findAny().isEmpty()) {
+            if (streamOrderedEntries().findAny().isEmpty()) {
                 // if there is no data, add to the first data container
                 container = children.getFirst();
             } else {

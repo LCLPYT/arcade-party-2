@@ -12,7 +12,7 @@ import net.minecraft.util.math.BlockPos;
 import org.jetbrains.annotations.NotNull;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.map.MapBootstrap;
-import work.lclpnet.ap2.impl.game.DefaultGameInstance;
+import work.lclpnet.ap2.impl.game.FFAGameInstance;
 import work.lclpnet.ap2.impl.game.data.ScoreDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedPlayerBossBar;
@@ -32,7 +32,7 @@ import java.util.concurrent.CompletableFuture;
 
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
-public class AimMasterInstance extends DefaultGameInstance implements MapBootstrap {
+public class AimMasterInstance extends FFAGameInstance implements MapBootstrap {
 
     private final ScoreDataContainer<ServerPlayerEntity, PlayerRef> data = new ScoreDataContainer<>(PlayerRef::create);
 

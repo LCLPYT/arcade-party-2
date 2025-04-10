@@ -51,7 +51,7 @@ class ScoreTimeDataContainerTest {
         container.setScore(playerC, 10);
         container.setScore(playerB, 10);
 
-        var order = container.orderedEntries().toList();
+        var order = container.streamOrderedEntries().toList();
         assertEquals(playerC, order.getFirst().subject().name());
         assertEquals(playerB, order.get(1).subject().name());
         assertEquals(playerA, order.get(2).subject().name());

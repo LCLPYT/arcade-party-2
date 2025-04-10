@@ -22,7 +22,7 @@ import work.lclpnet.ap2.api.map.MapBootstrap;
 import work.lclpnet.ap2.api.map.MapBootstrapFunction;
 import work.lclpnet.ap2.game.maniac_digger.data.MdGenerator;
 import work.lclpnet.ap2.game.maniac_digger.data.MdPipe;
-import work.lclpnet.ap2.impl.game.DefaultGameInstance;
+import work.lclpnet.ap2.impl.game.FFAGameInstance;
 import work.lclpnet.ap2.impl.game.data.CombinedDataContainer;
 import work.lclpnet.ap2.impl.game.data.OrderedDataContainer;
 import work.lclpnet.ap2.impl.game.data.Ordering;
@@ -39,7 +39,7 @@ import work.lclpnet.lobby.util.PlayerReset;
 
 import java.util.*;
 
-public class ManiacDiggerInstance extends DefaultGameInstance implements MapBootstrapFunction {
+public class ManiacDiggerInstance extends FFAGameInstance implements MapBootstrapFunction {
 
     private final OrderedDataContainer<ServerPlayerEntity, PlayerRef> reachedBottom = new OrderedDataContainer<>(PlayerRef::create);
     private final ScoreDataContainer<ServerPlayerEntity, PlayerRef> score = new ScoreDataContainer<>(PlayerRef::create, Ordering.ASCENDING, "game.ap2.maniac_digger.result");

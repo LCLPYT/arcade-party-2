@@ -6,6 +6,7 @@ import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.Text;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.MiniGameInstance;
+import work.lclpnet.ap2.api.game.MiniGameResults;
 import work.lclpnet.ap2.api.game.WinManagerView;
 import work.lclpnet.kibu.cmd.type.CommandRegistrar;
 import work.lclpnet.kibu.cmd.type.KibuCommand;
@@ -46,7 +47,7 @@ public class DrawCommand implements KibuCommand {
     private int drawNow(CommandContext<ServerCommandSource> ctx) {
         ctx.getSource().sendMessage(Text.literal("Ended the current mini game with a draw"));
 
-        gameHandle.completeWithoutWinner();
+        gameHandle.complete(MiniGameResults.EMPTY);
 
         return 1;
     }
@@ -55,7 +56,7 @@ public class DrawCommand implements KibuCommand {
         if (instance instanceof WinManagerView view) {
             view.getWinManagerAccess().draw();
         } else {
-            gameHandle.completeWithoutWinner();
+            gameHandle.complete(MiniGameResults.EMPTY);
         }
     }
 }

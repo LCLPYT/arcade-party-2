@@ -34,7 +34,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public abstract class EliminationGameInstance extends DefaultGameInstance implements EliminationController {
+public abstract class EliminationGameInstance extends FFAGameInstance implements EliminationController {
 
     private final EliminationDataContainer<ServerPlayerEntity, PlayerRef> data = new EliminationDataContainer<>(PlayerRef::create);
     private DynamicTranslatedBossBar remainingDisplay = null;

@@ -106,7 +106,7 @@ public class EliminationDataContainer<T, Ref extends SubjectRef> implements Data
     }
 
     @Override
-    public Stream<DataEntry<Ref>> orderedEntries() {
+    public Stream<DataEntry<Ref>> streamOrderedEntries() {
         synchronized (this) {
             // order needs to be reversed
             return IntStream.range(0, order.size())

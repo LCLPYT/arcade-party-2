@@ -45,7 +45,7 @@ class CombinedDataContainerTest {
     }
 
     @Test
-    void orderedEntries_inOrderOfChildrenAndWithoutDuplicates() {
+    void streamOrderedEntries_inOrderOfChildrenAndWithoutDuplicates() {
         var first = new OrderedDataContainer<>(StringRef::new);
         var second = new ScoreDataContainer<>(StringRef::new);
         var container = new CombinedDataContainer<>(List.of(first, second));
@@ -55,7 +55,7 @@ class CombinedDataContainerTest {
 
         first.add("foo");
 
-        var order = container.orderedEntries()
+        var order = container.streamOrderedEntries()
                 .map(DataEntry::subject)
                 .map(StringRef::name)
                 .toList();

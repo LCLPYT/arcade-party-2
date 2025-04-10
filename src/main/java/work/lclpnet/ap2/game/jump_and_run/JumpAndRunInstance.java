@@ -23,7 +23,7 @@ import work.lclpnet.ap2.api.map.MapBootstrap;
 import work.lclpnet.ap2.api.util.CollisionDetector;
 import work.lclpnet.ap2.api.util.heads.PlayerHead;
 import work.lclpnet.ap2.game.jump_and_run.gen.*;
-import work.lclpnet.ap2.impl.game.DefaultGameInstance;
+import work.lclpnet.ap2.impl.game.FFAGameInstance;
 import work.lclpnet.ap2.impl.game.data.ScoreDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.util.ApRegistries;
@@ -56,7 +56,7 @@ import static java.lang.Math.min;
 import static net.minecraft.util.Formatting.*;
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
-public class JumpAndRunInstance extends DefaultGameInstance implements MapBootstrap {
+public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap {
 
     private static final int
             ASSISTANCE_TICKS_BASE = Ticks.seconds(90),  // time after which assistance is provided

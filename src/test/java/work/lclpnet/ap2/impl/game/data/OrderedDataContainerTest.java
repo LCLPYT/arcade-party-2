@@ -11,20 +11,20 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 public class OrderedDataContainerTest {
 
     @Test
-    void orderedEntries() {
+    void streamOrderedEntries() {
         var data = new OrderedDataContainer<>(StringRef::new);
         data.add("foo");
         data.add("bar");
         data.add("baz");
 
-        assertEquals(List.of("foo", "bar", "baz"), data.orderedEntries()
+        assertEquals(List.of("foo", "bar", "baz"), data.streamOrderedEntries()
                 .map(DataEntry::subject)
                 .map(StringRef::name)
                 .toList());
     }
 
     @Test
-    void orderedEntries_sameEntryInstance() {
+    void streamOrderedEntries_sameEntryInstance() {
         var data = new OrderedDataContainer<>(StringRef::new);
         data.add("foo");
         data.add("bar");
@@ -35,7 +35,7 @@ public class OrderedDataContainerTest {
         var baz = data.getEntry("baz").orElseThrow();
 
         List<DataEntry<StringRef>> expectedList = List.of(foo, bar, baz);
-        var actualList = data.orderedEntries().toList();
+        var actualList = data.streamOrderedEntries().toList();
 
         for (int i = 0, listSize = actualList.size(); i < listSize; i++) {
             var expected = expectedList.get(i);

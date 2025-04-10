@@ -19,7 +19,7 @@ import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.map.MapBootstrap;
 import work.lclpnet.ap2.api.map.MapBootstrapFunction;
-import work.lclpnet.ap2.impl.game.DefaultGameInstance;
+import work.lclpnet.ap2.impl.game.FFAGameInstance;
 import work.lclpnet.ap2.impl.game.data.ScoreTimeDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.map.MapUtil;
@@ -37,7 +37,7 @@ import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
 
-public class MiningBattleInstance extends DefaultGameInstance implements MapBootstrapFunction {
+public class MiningBattleInstance extends FFAGameInstance implements MapBootstrapFunction {
 
     private static final int DURATION_SECONDS = 60;
     private final ScoreTimeDataContainer<ServerPlayerEntity, PlayerRef> data = new ScoreTimeDataContainer<>(PlayerRef::create);

@@ -23,7 +23,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
-public abstract class DefaultTeamGameInstance extends BaseGameInstance implements ParticipantListener,
+public abstract class TeamGameInstance extends BaseGameInstance implements ParticipantListener,
         TeamEliminatedListener, TeamSpawnAccess, WinManagerView {
 
     private volatile TeamRefResolver resolver = null;
@@ -31,9 +31,16 @@ public abstract class DefaultTeamGameInstance extends BaseGameInstance implement
     private volatile Map<String, PositionRotation> teamSpawns = null;
     protected final WinManager<Team, TeamRef> winManager;
 
-    public DefaultTeamGameInstance(MiniGameHandle gameHandle) {
+    public TeamGameInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
         this.winManager = new WinManager<>(gameHandle, this::getData, this::createReferenceFor, this::createWinners);
+    }
+
+    @Override
+    public void start() {
+        teamManager.getTeams().forEach(getData()::ensureTracked);
+
+        super.start();
     }
 
     @Override
@@ -143,8 +150,8 @@ public abstract class DefaultTeamGameInstance extends BaseGameInstance implement
         return team.map(this::createReference).orElse(null);
     }
 
-    private TeamGameWinners createWinners(Set<Team> winners) {
-        return new TeamGameWinners(winners, gameHandle.getTranslations());
+    private TeamGameWinners createWinners() {
+        return new TeamGameWinners(getData(), getResolver());
     }
 
     @Override

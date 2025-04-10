@@ -19,6 +19,7 @@ import org.joml.Vector3d;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
+import work.lclpnet.ap2.api.game.MiniGameResults;
 import work.lclpnet.ap2.api.map.MapBootstrap;
 import work.lclpnet.ap2.api.util.model.ModelManager;
 import work.lclpnet.ap2.base.ApConstants;
@@ -93,7 +94,7 @@ public class MazeScapeInstance extends EliminationGameInstance implements MapBoo
     protected void prepare() {
         if (struct == null) {
             gameHandle.getLogger().error("Failed to generate structure graph. Aborting the mini-game...");
-            gameHandle.completeWithoutWinner();
+            gameHandle.complete(MiniGameResults.EMPTY);
             return;
         }
 

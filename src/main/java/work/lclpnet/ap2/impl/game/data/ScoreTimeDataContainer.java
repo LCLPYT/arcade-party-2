@@ -100,7 +100,7 @@ public class ScoreTimeDataContainer<T, Ref extends SubjectRef> implements DataCo
     }
 
     @Override
-    public Stream<? extends DataEntry<Ref>> orderedEntries() {
+    public Stream<? extends DataEntry<Ref>> streamOrderedEntries() {
         return score.object2IntEntrySet().stream()
                 .map(e -> {
                     Ref ref = e.getKey();

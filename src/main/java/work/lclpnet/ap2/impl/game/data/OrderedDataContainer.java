@@ -74,7 +74,7 @@ public class OrderedDataContainer<T, Ref extends SubjectRef> implements DataCont
     }
 
     @Override
-    public Stream<? extends DataEntry<Ref>> orderedEntries() {
+    public Stream<? extends DataEntry<Ref>> streamOrderedEntries() {
         synchronized (this) {
             return order.values().stream()
                     .sorted(Comparator.comparingInt(Entry::order))

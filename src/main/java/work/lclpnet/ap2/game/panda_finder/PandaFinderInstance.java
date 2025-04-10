@@ -33,7 +33,7 @@ import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.util.world.AdjacentBlocks;
 import work.lclpnet.ap2.api.util.world.BlockPredicate;
 import work.lclpnet.ap2.api.util.world.WorldScanner;
-import work.lclpnet.ap2.impl.game.DefaultGameInstance;
+import work.lclpnet.ap2.impl.game.FFAGameInstance;
 import work.lclpnet.ap2.impl.game.data.ScoreDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.map.MapUtil;
@@ -57,7 +57,7 @@ import java.util.Random;
 
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
-public class PandaFinderInstance extends DefaultGameInstance {
+public class PandaFinderInstance extends FFAGameInstance {
 
     public static final int WIN_SCORE = 3;
     private final ScoreDataContainer<ServerPlayerEntity, PlayerRef> data = new ScoreDataContainer<>(PlayerRef::create);

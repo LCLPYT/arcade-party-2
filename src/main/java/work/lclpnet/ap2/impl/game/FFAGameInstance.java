@@ -8,6 +8,7 @@ import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.WinManagerAccess;
 import work.lclpnet.ap2.api.game.WinManagerView;
 import work.lclpnet.ap2.api.game.data.DataContainer;
+import work.lclpnet.ap2.api.game.data.GameWinners;
 import work.lclpnet.ap2.api.util.scoreboard.CustomScoreboardObjective;
 import work.lclpnet.ap2.impl.game.data.type.PlayerGameWinners;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
@@ -15,16 +16,23 @@ import work.lclpnet.ap2.impl.game.data.type.PlayerRefResolver;
 
 import java.util.Optional;
 
-public abstract class DefaultGameInstance extends BaseGameInstance implements ParticipantListener, WinManagerView {
+public abstract class FFAGameInstance extends BaseGameInstance implements ParticipantListener, WinManagerView {
 
     protected final PlayerRefResolver resolver;
     protected final WinManager<ServerPlayerEntity, PlayerRef> winManager;
 
-    public DefaultGameInstance(MiniGameHandle gameHandle) {
+    public FFAGameInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
 
         this.resolver = new PlayerRefResolver(gameHandle.getServer().getPlayerManager());
-        this.winManager = new WinManager<>(gameHandle, this::getData, PlayerRef::create, PlayerGameWinners::new);
+        this.winManager = new WinManager<>(gameHandle, this::getData, PlayerRef::create, this::createWinners);
+    }
+
+    @Override
+    public void start() {
+        gameHandle.getParticipants().forEach(getData()::ensureTracked);
+
+        super.start();
     }
 
     @Override
@@ -57,6 +65,10 @@ public abstract class DefaultGameInstance extends BaseGameInstance implements Pa
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
             data.ensureTracked(player);
         }
+    }
+
+    private GameWinners<PlayerRef> createWinners() {
+        return new PlayerGameWinners(getData());
     }
 
     @Override

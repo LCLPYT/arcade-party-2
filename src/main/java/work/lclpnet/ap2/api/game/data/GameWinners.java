@@ -1,12 +1,15 @@
 package work.lclpnet.ap2.api.game.data;
 
-import net.minecraft.server.network.ServerPlayerEntity;
+import work.lclpnet.ap2.api.game.MiniGameResults;
+import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 
 import java.util.Set;
 
 public interface GameWinners<Ref extends SubjectRef> {
 
-    Set<ServerPlayerEntity> getPlayers();
+    Set<PlayerRef> getWinningPlayers();
 
-    Set<Ref> getSubjects();
+    Set<Ref> getWinningSubjects();
+
+    MiniGameResults getResults();
 }

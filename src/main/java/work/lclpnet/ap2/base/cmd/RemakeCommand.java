@@ -5,6 +5,7 @@ import com.mojang.brigadier.context.CommandContext;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.Text;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
+import work.lclpnet.ap2.api.game.MiniGameResults;
 import work.lclpnet.kibu.cmd.type.CommandRegistrar;
 import work.lclpnet.kibu.cmd.type.KibuCommand;
 
@@ -40,7 +41,7 @@ public class RemakeCommand implements KibuCommand {
 
         ctx.getSource().sendMessage(Text.literal("Restarting the current mini game..."));
 
-        handle.completeWithoutWinner();
+        handle.complete(MiniGameResults.EMPTY);
 
         return 1;
     }

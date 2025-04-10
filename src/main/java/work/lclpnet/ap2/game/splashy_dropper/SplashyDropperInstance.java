@@ -21,7 +21,7 @@ import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.map.MapBootstrap;
 import work.lclpnet.ap2.api.map.MapBootstrapFunction;
 import work.lclpnet.ap2.game.splashy_dropper.data.SdGenerator;
-import work.lclpnet.ap2.impl.game.DefaultGameInstance;
+import work.lclpnet.ap2.impl.game.FFAGameInstance;
 import work.lclpnet.ap2.impl.game.data.ScoreTimeDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.map.ServerThreadMapBootstrap;
@@ -45,7 +45,7 @@ import java.util.Random;
 
 import static net.minecraft.util.Formatting.YELLOW;
 
-public class SplashyDropperInstance extends DefaultGameInstance implements MapBootstrapFunction {
+public class SplashyDropperInstance extends FFAGameInstance implements MapBootstrapFunction {
 
     private static final int MIN_DURATION_SECONDS = 50, MAX_DURATION_SECONDS = 75;
     private final ScoreTimeDataContainer<ServerPlayerEntity, PlayerRef> data = new ScoreTimeDataContainer<>(PlayerRef::create);

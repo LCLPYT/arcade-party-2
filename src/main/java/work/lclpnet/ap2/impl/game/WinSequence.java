@@ -11,9 +11,9 @@ import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.*;
 import work.lclpnet.ap2.api.util.action.Action;
 import work.lclpnet.ap2.base.ApConstants;
+import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.game.data.type.TeamRef;
 import work.lclpnet.ap2.impl.util.SoundHelper;
-import work.lclpnet.kibu.hook.Hook;
 import work.lclpnet.kibu.hook.HookFactory;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.RunningTask;
@@ -95,11 +95,11 @@ public class WinSequence<T, Ref extends SubjectRef> {
         announceWinners(winners);
         broadcastTop3();
 
-        gameHandle.getScheduler().timeout(() -> gameHandle.complete(winners.getPlayers()), Ticks.seconds(7));
+        gameHandle.getScheduler().timeout(() -> gameHandle.complete(winners.getResults()), Ticks.seconds(7));
     }
 
     private void announceWinners(GameWinners<Ref> winners) {
-        var subjects = winners.getSubjects();
+        var subjects = winners.getWinningSubjects();
 
         if (subjects.size() > 1) {
             announceMultipleWinners(winners);
@@ -111,7 +111,7 @@ public class WinSequence<T, Ref extends SubjectRef> {
             return;
         }
 
-        Ref winner = winners.getSubjects().iterator().next();
+        Ref winner = winners.getWinningSubjects().iterator().next();
         announceWinner(winner);
     }
 
@@ -157,18 +157,20 @@ public class WinSequence<T, Ref extends SubjectRef> {
     private void announceMultipleWinners(GameWinners<Ref> winners) {
         Translations translations = gameHandle.getTranslations();
 
-        boolean teams = winners.getSubjects().iterator().next() instanceof TeamRef;
+        boolean teams = winners.getWinningSubjects().iterator().next() instanceof TeamRef;
 
         TranslatedText gameOver = translations.translateText("ap2.game_over").formatted(AQUA);
         TranslatedText youWon = translations.translateText(teams ? "ap2.your_team_won" : "ap2.you_won").formatted(DARK_GREEN);
         TranslatedText youLost = translations.translateText(teams ? "ap2.your_team_lost" : "ap2.you_lost").formatted(DARK_RED);
 
-        var winningPlayers = winners.getPlayers();
+        var winningPlayersRefs = winners.getWinningPlayers();
 
         for (ServerPlayerEntity player : PlayerLookup.all(gameHandle.getServer())) {
             TranslatedText subtitle;
 
-            if (winningPlayers.contains(player)) {
+            PlayerRef ref = PlayerRef.create(player);
+
+            if (winningPlayersRefs.contains(ref)) {
                 subtitle = youWon;
                 playWinSound(player);
             } else {
@@ -189,7 +191,7 @@ public class WinSequence<T, Ref extends SubjectRef> {
     }
 
     private void broadcastTop3() {
-        var order = data.orderedEntries().toList();
+        var order = data.streamOrderedEntries().toList();
         var placement = new HashMap<Ref, Integer>();
         var entryByRef = new HashMap<Ref, DataEntry<Ref>>();
 

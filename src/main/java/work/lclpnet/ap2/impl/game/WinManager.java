@@ -1,5 +1,6 @@
 package work.lclpnet.ap2.impl.game;
 
+import lombok.Getter;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.game.GameOverListener;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
@@ -19,20 +20,21 @@ public class WinManager<T, Ref extends SubjectRef> {
     private final MiniGameHandle gameHandle;
     private final Supplier<DataContainer<T, Ref>> dataSupplier;
     private final PlayerSubjectRefFactory<Ref> refs;
-    private final GameWinnersFactory<T, Ref> winnersFactory;
+    private final Supplier<GameWinners<Ref>> winnersSupplier;
     private final Hook<GameOverListener> gameOverHook = HookFactory.createArrayBacked(GameOverListener.class, hooks -> () -> {
         for (GameOverListener hook : hooks) {
             hook.onGameOver();
         }
     });
+    @Getter
     private volatile boolean gameOver = false;
 
     public WinManager(MiniGameHandle gameHandle, Supplier<DataContainer<T, Ref>> dataSupplier,
-                      PlayerSubjectRefFactory<Ref> refs, GameWinnersFactory<T, Ref> winnersFactory) {
+                      PlayerSubjectRefFactory<Ref> refs, Supplier<GameWinners<Ref>> winnersSupplier) {
         this.gameHandle = gameHandle;
         this.dataSupplier = dataSupplier;
         this.refs = refs;
-        this.winnersFactory = winnersFactory;
+        this.winnersSupplier = winnersSupplier;
     }
 
     public Action<Runnable> win(@Nullable T winner) {
@@ -67,17 +69,13 @@ public class WinManager<T, Ref extends SubjectRef> {
         data.freeze();
 
         var winSequence = new WinSequence<>(gameHandle, data, refs);
-        var gameWinners = winnersFactory.create(winners);
+        var gameWinners = winnersSupplier.get();
 
         return winSequence.start(gameWinners);
     }
 
     public void addListener(GameOverListener listener) {
         gameOverHook.register(listener);
-    }
-
-    public boolean isGameOver() {
-        return gameOver;
     }
 
     public void checkForWinner(Stream<? extends T> participants, SubjectRefResolver<T, Ref> resolver) {

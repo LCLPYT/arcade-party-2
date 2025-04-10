@@ -23,7 +23,7 @@ import java.util.Set;
 
 import static net.minecraft.util.Formatting.GRAY;
 
-public abstract class TeamEliminationGameInstance extends DefaultTeamGameInstance {
+public abstract class TeamEliminationGameInstance extends TeamGameInstance {
 
     private final EliminationDataContainer<Team, TeamRef> data = new EliminationDataContainer<>(this::createReference);
 

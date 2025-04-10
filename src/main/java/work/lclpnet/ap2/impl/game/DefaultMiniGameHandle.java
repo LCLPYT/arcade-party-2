@@ -1,7 +1,6 @@
 package work.lclpnet.ap2.impl.game;
 
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.world.border.WorldBorder;
 import net.minecraft.world.border.WorldBorderListener;
@@ -15,12 +14,14 @@ import work.lclpnet.ap2.api.data.DataManager;
 import work.lclpnet.ap2.api.game.GameInfo;
 import work.lclpnet.ap2.api.game.MiniGame;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
+import work.lclpnet.ap2.api.game.MiniGameResults;
 import work.lclpnet.ap2.api.game.team.TeamConfig;
 import work.lclpnet.ap2.api.map.MapFacade;
 import work.lclpnet.ap2.api.util.music.SongManager;
 import work.lclpnet.ap2.base.ApContainer;
 import work.lclpnet.ap2.base.activity.MiniGameActivity;
 import work.lclpnet.ap2.base.activity.PreparationActivity;
+import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.util.DeathMessages;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.kibu.cmd.type.CommandRegistrar;
@@ -38,7 +39,6 @@ import work.lclpnet.notica.api.SongHandle;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 public class DefaultMiniGameHandle implements MiniGameHandle, WorldBorderManager {
 
@@ -232,7 +232,7 @@ public class DefaultMiniGameHandle implements MiniGameHandle, WorldBorderManager
     }
 
     @Override
-    public synchronized void complete(Set<ServerPlayerEntity> winners) {
+    public synchronized void complete(MiniGameResults results) {
         if (ended) return;
         ended = true;
 
@@ -243,9 +243,21 @@ public class DefaultMiniGameHandle implements MiniGameHandle, WorldBorderManager
         }
 
         // TODO track winners
-        getLogger().info("Winners: {}", winners.stream()
-                .map(ServerPlayerEntity::getNameForScoreboard)
-                .collect(Collectors.toSet()));
+        logger.info("Game results:");
+
+        int rank = 1;
+        var byRank = results.getEntriesByRank();
+
+        for (Set<MiniGameResults.PlayerResult> players : byRank) {
+            var playerNames = players.stream()
+                    .map(MiniGameResults.PlayerResult::getRef)
+                    .map(PlayerRef::name)
+                    .toList();
+
+            logger.info("#{}: {}", rank, playerNames);
+
+            rank += players.size();
+        }
 
         PreparationActivity activity = new PreparationActivity(args);
         ActivityManager.getInstance().startActivity(activity);

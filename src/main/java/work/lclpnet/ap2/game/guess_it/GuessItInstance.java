@@ -18,7 +18,7 @@ import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.map.MapBootstrap;
 import work.lclpnet.ap2.base.ApConstants;
 import work.lclpnet.ap2.game.guess_it.data.*;
-import work.lclpnet.ap2.impl.game.DefaultGameInstance;
+import work.lclpnet.ap2.impl.game.FFAGameInstance;
 import work.lclpnet.ap2.impl.game.data.ScoreDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.map.MapUtil;
@@ -44,7 +44,7 @@ import java.util.concurrent.CompletableFuture;
 import static net.minecraft.util.Formatting.*;
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
-public class GuessItInstance extends DefaultGameInstance implements MapBootstrap {
+public class GuessItInstance extends FFAGameInstance implements MapBootstrap {
 
     private static final int PREPARATION_TICKS = Ticks.seconds(3);
     private static final int DELAY_TICKS = Ticks.seconds(5);

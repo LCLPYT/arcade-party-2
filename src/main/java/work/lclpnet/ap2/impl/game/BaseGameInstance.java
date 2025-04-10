@@ -51,6 +51,14 @@ import java.util.stream.Collectors;
 import static net.minecraft.util.Formatting.*;
 import static work.lclpnet.ap2.impl.util.TranslationUtil.quote;
 
+/// A game instance that:
+/// - loads a random map for the mini-game
+/// - provides the default onPrepare() and onReady() entry points with the countdown in between
+/// - provides common mini-game behaviour configuration methods
+/// - configures restrictive protection with bypass for creative operator players
+/// - registers default hooks, e.g. for spectators, spawn location and map properties
+///
+/// Note that this game instance is not bound be of a specific type, i.e. subclasses can be ob type FFA, TEAM etc.
 public abstract class BaseGameInstance implements MiniGameInstance {
 
     protected final MiniGameHandle gameHandle;

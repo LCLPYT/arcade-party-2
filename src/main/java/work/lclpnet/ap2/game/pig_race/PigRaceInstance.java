@@ -23,7 +23,7 @@ import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.util.CollisionDetector;
 import work.lclpnet.ap2.api.util.heads.PlayerHead;
-import work.lclpnet.ap2.impl.game.DefaultGameInstance;
+import work.lclpnet.ap2.impl.game.FFAGameInstance;
 import work.lclpnet.ap2.impl.game.data.ScoreTimeDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.map.MapUtil;
@@ -52,7 +52,7 @@ import work.lclpnet.lobby.game.map.MapUtils;
 
 import java.util.*;
 
-public class PigRaceInstance extends DefaultGameInstance {
+public class PigRaceInstance extends FFAGameInstance {
 
     private final ScoreTimeDataContainer<ServerPlayerEntity, PlayerRef> data = new ScoreTimeDataContainer<>(PlayerRef::create);
     private final Random random = new Random();
