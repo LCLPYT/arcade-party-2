@@ -113,7 +113,7 @@ public abstract class TeamEliminationGameInstance extends TeamGameInstance {
         }
 
         // mark all teams as eliminated at the same moment
-        data.allEliminated(toEliminate, detail);
+        data.addAll(toEliminate, detail);
 
         toEliminate.forEach(teamManager::setTeamEliminated);
 
@@ -131,7 +131,7 @@ public abstract class TeamEliminationGameInstance extends TeamGameInstance {
     @Override
     public void teamEliminated(Team team) {
         // make sure the team is tracked as eliminated
-        data.eliminated(team);
+        data.add(team);
 
         super.teamEliminated(team);
     }

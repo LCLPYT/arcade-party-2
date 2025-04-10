@@ -1,7 +1,6 @@
 package work.lclpnet.ap2.impl.util;
 
 import java.util.Comparator;
-import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.function.Function;
@@ -18,7 +17,7 @@ public class RankUtil {
         return source.get()
                 .collect(groupingBy(ranker))
                 .entrySet().stream()
-                .sorted(Comparator.<Entry<Integer, List<T>>>comparingInt(Entry::getKey).reversed())
+                .sorted(Comparator.comparingInt(Entry::getKey))
                 .map(Entry::getValue)
                 .map(Set::copyOf);
     }

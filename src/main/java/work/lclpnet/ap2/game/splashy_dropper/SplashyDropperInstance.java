@@ -115,7 +115,7 @@ public class SplashyDropperInstance extends FFAGameInstance implements MapBootst
         var subject = translations.translateText(gameHandle.getGameInfo().getTaskKey());
 
         int duration = MIN_DURATION_SECONDS + random.nextInt(MAX_DURATION_SECONDS - MIN_DURATION_SECONDS + 1);
-        commons().createTimer(subject, duration).whenDone(this::onTimerDone);
+        commons().createTimer(subject, duration).whenDone(winManager::complete);
 
         gameHandle.getGameScheduler().interval(this::tick, 1);
 
@@ -220,9 +220,5 @@ public class SplashyDropperInstance extends FFAGameInstance implements MapBootst
         }
 
         return count;
-    }
-
-    private void onTimerDone() {
-        winManager.win(data.getBestSubject(resolver).orElse(null));
     }
 }

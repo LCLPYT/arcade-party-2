@@ -264,7 +264,7 @@ public class EggventureInstance extends FFAGameInstance implements MapBootstrap 
 
         var subject = gameHandle.getTranslations().translateText(gameHandle.getGameInfo().getTaskKey());
 
-        commons().createTimer(subject, durationSeconds).whenDone(this::onTimerDone);
+        commons().createTimer(subject, durationSeconds).whenDone(winManager::complete);
     }
 
     private void onFindEasterEgg(ServerPlayerEntity player, BlockPos pos) {
@@ -282,9 +282,5 @@ public class EggventureInstance extends FFAGameInstance implements MapBootstrap 
         world.spawnParticles(ParticleTypes.CRIMSON_SPORE, x, y, z, 75, 0.25, 0.25, 0.25, 0);
         world.spawnParticles(ParticleTypes.WARPED_SPORE, x, y, z, 75, 0.25, 0.25, 0.25, 0);
         world.spawnParticles(ParticleTypes.GLOW, x, y, z, 25, 0.5, 0.5, 0.5, 0);
-    }
-
-    private void onTimerDone() {
-        winManager.win(data.getBestSubject(resolver).orElse(null));
     }
 }

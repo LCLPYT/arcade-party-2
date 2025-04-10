@@ -88,7 +88,7 @@ public class TreasureHunterInstance extends FFAGameInstance {
 
             var detail = translations.translateText("game.ap2.treasure_hunter.found_treasure", scoreEntry);
             foundChest.add(serverPlayer, detail);
-            winManager.win(serverPlayer);
+            winManager.complete();
 
             return ActionResult.SUCCESS_SERVER;
         });

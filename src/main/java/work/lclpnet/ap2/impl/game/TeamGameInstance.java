@@ -11,7 +11,7 @@ import work.lclpnet.ap2.api.game.WinManagerAccess;
 import work.lclpnet.ap2.api.game.WinManagerView;
 import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.game.team.*;
-import work.lclpnet.ap2.impl.game.data.type.TeamGameWinners;
+import work.lclpnet.ap2.impl.game.data.type.TeamGameResult;
 import work.lclpnet.ap2.impl.game.data.type.TeamRef;
 import work.lclpnet.ap2.impl.game.data.type.TeamRefResolver;
 import work.lclpnet.ap2.impl.game.team.SimpleTeamManager;
@@ -33,12 +33,15 @@ public abstract class TeamGameInstance extends BaseGameInstance implements Parti
 
     public TeamGameInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
-        this.winManager = new WinManager<>(gameHandle, this::getData, this::createReferenceFor, this::createWinners);
+
+        this.winManager = new WinManager<>(gameHandle, this::getData, getTeamManager()::getTeam,
+                this::createReference, this::createReferenceFor,
+                data -> new TeamGameResult(data, getResolver()));
     }
 
     @Override
     public void start() {
-        teamManager.getTeams().forEach(getData()::ensureTracked);
+        teamManager.getTeams().forEach(getData()::identityIfAbsent);
 
         super.start();
     }
@@ -62,7 +65,7 @@ public abstract class TeamGameInstance extends BaseGameInstance implements Parti
 
     @Override
     public void teamEliminated(Team team) {
-        winManager.checkForWinner(teamManager.getParticipatingTeams().stream(), getResolver());
+        winManager.checkForLastRemaining();
     }
 
     @NotNull
@@ -148,10 +151,6 @@ public abstract class TeamGameInstance extends BaseGameInstance implements Parti
         var team = teamManager.getTeam(player);
 
         return team.map(this::createReference).orElse(null);
-    }
-
-    private TeamGameWinners createWinners() {
-        return new TeamGameWinners(getData(), getResolver());
     }
 
     @Override

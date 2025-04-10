@@ -1,55 +1,65 @@
 package work.lclpnet.ap2.impl.game;
 
 import lombok.Getter;
+import net.minecraft.server.network.ServerPlayerEntity;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.game.GameOverListener;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
+import work.lclpnet.ap2.api.game.MiniGameResults;
 import work.lclpnet.ap2.api.game.data.*;
 import work.lclpnet.ap2.api.util.action.Action;
+import work.lclpnet.ap2.impl.game.data.CombinedDataContainer;
+import work.lclpnet.ap2.impl.game.data.SupremeDataContainer;
 import work.lclpnet.kibu.hook.Hook;
 import work.lclpnet.kibu.hook.HookFactory;
 import work.lclpnet.lobby.game.util.ProtectorUtils;
 
+import java.util.List;
+import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class WinManager<T, Ref extends SubjectRef> {
 
     private final MiniGameHandle gameHandle;
     private final Supplier<DataContainer<T, Ref>> dataSupplier;
-    private final PlayerSubjectRefFactory<Ref> refs;
-    private final Supplier<GameWinners<Ref>> winnersSupplier;
+    private final PlayerSubjectRefFactory<Ref> playerRefs;
+    private final Function<ServerPlayerEntity, Optional<T>> subjectMapper;
+    private final Function<DataContainer<T, Ref>, GenericGameResult<Ref>> winnersFactory;
     private final Hook<GameOverListener> gameOverHook = HookFactory.createArrayBacked(GameOverListener.class, hooks -> () -> {
         for (GameOverListener hook : hooks) {
             hook.onGameOver();
         }
     });
+    private final SupremeDataContainer<T, Ref> forcedWinners;
     @Getter
     private volatile boolean gameOver = false;
 
-    public WinManager(MiniGameHandle gameHandle, Supplier<DataContainer<T, Ref>> dataSupplier,
-                      PlayerSubjectRefFactory<Ref> refs, Supplier<GameWinners<Ref>> winnersSupplier) {
+    public WinManager(MiniGameHandle gameHandle,
+                      Supplier<DataContainer<T, Ref>> dataSupplier,
+                      Function<ServerPlayerEntity, Optional<T>> subjectMapper,
+                      SubjectRefFactory<T, Ref> subjectRefs,
+                      PlayerSubjectRefFactory<Ref> playerRefs,
+                      Function<DataContainer<T, Ref>, GenericGameResult<Ref>> winnersFactory) {
+
         this.gameHandle = gameHandle;
         this.dataSupplier = dataSupplier;
-        this.refs = refs;
-        this.winnersSupplier = winnersSupplier;
+        this.subjectMapper = subjectMapper;
+        this.playerRefs = playerRefs;
+        this.winnersFactory = winnersFactory;
+        this.forcedWinners = new SupremeDataContainer<>(subjectRefs);
     }
 
-    public Action<Runnable> win(@Nullable T winner) {
-        if (winner == null) {
-            return winNobody();
-        }
-
-        return win(Set.of(winner));
+    public Action<Runnable> complete() {
+        return startWinSequence(MiniGameResults.Status.SUCCESS);
     }
 
-    public Action<Runnable> winNobody() {
-        return win(Set.of());
+    public Action<Runnable> cancel() {
+        return startWinSequence(MiniGameResults.Status.CANCELLED);
     }
 
-    public synchronized Action<Runnable> win(Set<T> winners) {
+    private synchronized Action<Runnable> startWinSequence(MiniGameResults.Status status) {
         if (this.gameOver) return Action.noop();
 
         gameOver = true;
@@ -63,44 +73,36 @@ public class WinManager<T, Ref extends SubjectRef> {
             ProtectorUtils.allowCreativeOperatorBypass(config);
         });
 
-        var data = dataSupplier.get();
+        // concat forced winners, then the rest
+        var finalData = new CombinedDataContainer<>(List.of(forcedWinners, dataSupplier.get().copy()));
+        GenericGameResult<Ref> result = winnersFactory.apply(finalData);
+        var winSequence = new WinSequence<>(gameHandle, finalData, playerRefs, result, status);
 
-        winners.forEach(data::ensureTracked);
-        data.freeze();
-
-        var winSequence = new WinSequence<>(gameHandle, data, refs);
-        var gameWinners = winnersSupplier.get();
-
-        return winSequence.start(gameWinners);
+        return winSequence.start();
     }
 
     public void addListener(GameOverListener listener) {
         gameOverHook.register(listener);
     }
 
-    public void checkForWinner(Stream<? extends T> participants, SubjectRefResolver<T, Ref> resolver) {
-        var participating = participants.collect(Collectors.toSet());
+    public void checkForLastRemaining() {
+        if (gameHandle.getParticipants().count() > 1) return;
 
-        if (participating.size() > 1) return;
+        gameHandle.getParticipants().stream()
+                .findAny()
+                .flatMap(subjectMapper)
+                .ifPresent(dataSupplier.get()::add);
 
-        var winner = participating.stream().findAny();
+        complete();
+    }
 
-        var data = dataSupplier.get();
+    public void forceWin(@Nullable Set<T> winners) {
+        forcedWinners.clear();
 
-        if (winner.isEmpty()) {
-            winner = data.getBestSubject(resolver);
+        if (winners != null) {
+            winners.forEach(forcedWinners::add);
         }
 
-        if (winner.isPresent()) {
-            // it is important to check whether there are multiple winning teams via the data container
-            var equal = data.getEqualScoreSubjects(winner.get(), resolver).collect(Collectors.toSet());
-
-            if (equal.size() > 1) {
-                win(equal);
-                return;
-            }
-        }
-
-        winner.ifPresentOrElse(this::win, this::winNobody);
+        complete();
     }
 }

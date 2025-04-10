@@ -159,7 +159,7 @@ public class AimMasterInstance extends FFAGameInstance implements MapBootstrap {
         Task task = new Task(winner, domain, sequence);
         TaskHandle taskHandle = gameHandle.getScheduler().interval(task, 5);
 
-        winManager.win(winner).then(taskHandle::cancel);
+        winManager.complete().then(taskHandle::cancel);
     }
 
     private static class Task implements SchedulerAction {

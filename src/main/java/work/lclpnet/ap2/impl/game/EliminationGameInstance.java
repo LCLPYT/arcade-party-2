@@ -48,7 +48,7 @@ public abstract class EliminationGameInstance extends FFAGameInstance implements
     @Override
     public void participantRemoved(ServerPlayerEntity player) {
         // make sure the player is tracked as eliminated
-        data.eliminated(player);
+        data.add(player);
 
         if (remainingDisplay != null) {
             var title = remainingTitle();
@@ -165,7 +165,7 @@ public abstract class EliminationGameInstance extends FFAGameInstance implements
         }
 
         // mark all players as eliminated at the same moment
-        data.allEliminated(toEliminate);
+        data.addAll(toEliminate);
 
         WorldFacade worldFacade = gameHandle.getWorldFacade();
         PlayerUtil playerUtil = gameHandle.getPlayerUtil();

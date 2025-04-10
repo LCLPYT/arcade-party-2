@@ -8,9 +8,8 @@ import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.WinManagerAccess;
 import work.lclpnet.ap2.api.game.WinManagerView;
 import work.lclpnet.ap2.api.game.data.DataContainer;
-import work.lclpnet.ap2.api.game.data.GameWinners;
 import work.lclpnet.ap2.api.util.scoreboard.CustomScoreboardObjective;
-import work.lclpnet.ap2.impl.game.data.type.PlayerGameWinners;
+import work.lclpnet.ap2.impl.game.data.type.FFAGameResult;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRefResolver;
 
@@ -25,12 +24,12 @@ public abstract class FFAGameInstance extends BaseGameInstance implements Partic
         super(gameHandle);
 
         this.resolver = new PlayerRefResolver(gameHandle.getServer().getPlayerManager());
-        this.winManager = new WinManager<>(gameHandle, this::getData, PlayerRef::create, this::createWinners);
+        this.winManager = new WinManager<>(gameHandle, this::getData, Optional::of, PlayerRef::create, PlayerRef::create, FFAGameResult::new);
     }
 
     @Override
     public void start() {
-        gameHandle.getParticipants().forEach(getData()::ensureTracked);
+        initScores();
 
         super.start();
     }
@@ -42,8 +41,8 @@ public abstract class FFAGameInstance extends BaseGameInstance implements Partic
 
     @Override
     public void participantRemoved(ServerPlayerEntity player) {
-        // this will be called when a participant quits
-        winManager.checkForWinner(gameHandle.getParticipants().stream(), resolver);
+        // this will be called when a participant quits or is eliminated
+        winManager.checkForLastRemaining();
     }
 
     protected final void useScoreboardStatsSync(IntScoreEventSource<ServerPlayerEntity> source, ScoreboardObjective objective) {
@@ -59,16 +58,7 @@ public abstract class FFAGameInstance extends BaseGameInstance implements Partic
     }
 
     protected final void initScores() {
-        var data = getData();
-
-        // initialize scores
-        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
-            data.ensureTracked(player);
-        }
-    }
-
-    private GameWinners<PlayerRef> createWinners() {
-        return new PlayerGameWinners(getData());
+        gameHandle.getParticipants().forEach(getData()::identityIfAbsent);
     }
 
     @Override

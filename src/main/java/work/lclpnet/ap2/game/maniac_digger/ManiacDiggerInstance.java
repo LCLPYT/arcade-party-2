@@ -15,6 +15,7 @@ import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
+import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
@@ -101,6 +102,10 @@ public class ManiacDiggerInstance extends FFAGameInstance implements MapBootstra
         }
 
         useTaskDisplay();
+
+        // set initial score
+        data.clear();
+        gradePlayers(null);
     }
 
     @Override
@@ -145,8 +150,8 @@ public class ManiacDiggerInstance extends FFAGameInstance implements MapBootstra
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
             if (player.getBlockY() <= winHeight) {
                 reachedBottom.add(player);
-                gradePlayers(player);
-                winManager.win(player);
+                gradePlayers(player.getUuid());
+                winManager.complete();
                 break;
             }
         }
@@ -202,9 +207,7 @@ public class ManiacDiggerInstance extends FFAGameInstance implements MapBootstra
         WorldBorderUtil.resetWarningBlocks(player);
     }
 
-    private void gradePlayers(ServerPlayerEntity winner) {
-        UUID winnerUuid = winner.getUuid();
-
+    private void gradePlayers(@Nullable UUID winnerUuid) {
         // grade players who are not yet in the goal by their distance to the goal
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
             if (player.getUuid().equals(winnerUuid)) continue;

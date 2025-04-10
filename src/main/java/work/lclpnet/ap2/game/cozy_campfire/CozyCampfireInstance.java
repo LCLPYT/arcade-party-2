@@ -146,7 +146,7 @@ public class CozyCampfireInstance extends TeamEliminationGameInstance implements
             var duration = TimeHelper.formatTime(translations, remainingSeconds);
             var detail = translations.translateText("game.ap2.cozy_campfire.remaining", duration);
 
-            getData().eliminated(lastTeam, detail);
+            getData().add(lastTeam, detail);
         }
 
         super.teamEliminated(team);

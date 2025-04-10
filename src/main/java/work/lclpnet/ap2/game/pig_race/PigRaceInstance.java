@@ -220,7 +220,7 @@ public class PigRaceInstance extends FFAGameInstance {
         data.setScore(player, checkpoint);
 
         if (checkpoint >= checkpointManager.getCheckpoints().size() - 1) {
-            winManager.win(player);
+            winManager.complete();
         }
     }
 

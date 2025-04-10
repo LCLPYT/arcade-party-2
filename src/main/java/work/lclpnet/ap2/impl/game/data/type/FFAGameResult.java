@@ -1,32 +1,26 @@
 package work.lclpnet.ap2.impl.game.data.type;
 
-import it.unimi.dsi.fastutil.Pair;
 import it.unimi.dsi.fastutil.objects.ObjectIntPair;
 import net.minecraft.server.network.ServerPlayerEntity;
-import work.lclpnet.ap2.api.game.MiniGameResults;
 import work.lclpnet.ap2.api.game.data.DataContainer;
-import work.lclpnet.ap2.api.game.data.GameWinners;
+import work.lclpnet.ap2.api.game.data.GenericGameResult;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class PlayerGameWinners implements GameWinners<PlayerRef> {
+public class FFAGameResult implements GenericGameResult<PlayerRef> {
 
-    private final MiniGameResults results;
+    private final List<ObjectIntPair<PlayerRef>> results;
     private final Set<PlayerRef> refs;
 
-    public PlayerGameWinners(DataContainer<ServerPlayerEntity, PlayerRef> data) {
+    public FFAGameResult(DataContainer<ServerPlayerEntity, PlayerRef> data) {
         var byRank = data.streamEntriesRanked().toList();
 
-        var resultMap = byRank.stream()
+        this.results = byRank.stream()
                 .flatMap(Collection::stream)
-                .collect(Collectors.toMap(
-                        Pair::left,
-                        playerRank -> new MiniGameResults.PlayerResult(playerRank.left(), playerRank.rightInt())
-                ));
-
-        this.results = new MiniGameResults(resultMap);
+                .toList();
 
         this.refs = byRank.isEmpty()
                 ? Set.of()
@@ -46,7 +40,12 @@ public class PlayerGameWinners implements GameWinners<PlayerRef> {
     }
 
     @Override
-    public MiniGameResults getResults() {
+    public List<ObjectIntPair<PlayerRef>> getPlayerResults() {
+        return results;
+    }
+
+    @Override
+    public List<ObjectIntPair<PlayerRef>> getSubjectResults() {
         return results;
     }
 }

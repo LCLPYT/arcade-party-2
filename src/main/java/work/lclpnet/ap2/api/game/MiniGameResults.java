@@ -2,23 +2,24 @@ package work.lclpnet.ap2.api.game;
 
 import lombok.Getter;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
+import work.lclpnet.ap2.impl.util.RankUtil;
 
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import static java.lang.Math.max;
 
 public class MiniGameResults {
 
-    public static final MiniGameResults EMPTY = new MiniGameResults(Map.of());
+    public static final MiniGameResults EMPTY = new MiniGameResults(Status.CANCELLED, Map.of());
 
+    @Getter
+    private final Status status;
     private final Map<PlayerRef, PlayerResult> entries;
 
-    public MiniGameResults(Map<PlayerRef, PlayerResult> entries) {
+    public MiniGameResults(Status status, Map<PlayerRef, PlayerResult> entries) {
+        this.status = status;
         this.entries = entries;
     }
 
@@ -27,13 +28,7 @@ public class MiniGameResults {
     }
 
     public List<Set<PlayerResult>> getEntriesByRank() {
-        return entries.values().stream()
-                .collect(Collectors.groupingBy(playerResult -> playerResult.rank))
-                .entrySet().stream()
-                .sorted(Comparator.<Entry<Integer, List<PlayerResult>>>comparingInt(Entry::getKey).reversed())
-                .map(Entry::getValue)
-                .map(Set::copyOf)
-                .toList();
+        return RankUtil.rank(entries.values()::stream, PlayerResult::getRank).toList();
     }
 
     @Getter
@@ -50,5 +45,10 @@ public class MiniGameResults {
         public void setCoinsAcquired(int coinsAcquired) {
             this.coinsAcquired = max(0, coinsAcquired);
         }
+    }
+
+    public enum Status {
+        SUCCESS,
+        CANCELLED
     }
 }

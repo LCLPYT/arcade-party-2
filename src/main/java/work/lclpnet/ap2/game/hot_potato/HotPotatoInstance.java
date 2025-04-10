@@ -95,7 +95,7 @@ public class HotPotatoInstance extends EliminationGameInstance implements GameOv
 
     private void nextRound() {
         if (!markRandomPlayer()) {
-            winManager.winNobody();
+            winManager.cancel();
             return;
         }
 

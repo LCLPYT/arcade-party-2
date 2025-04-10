@@ -354,7 +354,7 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
         int nextSegment = segmentIndex + 1;
 
         if (nextSegment >= jumpAndRun.segments().size()) {
-            winManager.win(data.getBestSubject(resolver).orElse(null));
+            winManager.complete();
             return;
         }
 

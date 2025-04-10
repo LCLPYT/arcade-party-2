@@ -289,7 +289,7 @@ public class RedLightGreenLightInstance extends FFAGameInstance implements Runna
         Translations translations = gameHandle.getTranslations();
 
         if (inGoal.size() >= gameHandle.getParticipants().count()) {
-            winManager.win(data.getBestSubject(resolver).orElse(null));
+            winManager.complete();
         } else if (gameEnd == -1) {
             translations.translateText("game.ap2.red_light_green_light.goal",
                             styled(player.getNameForScoreboard(), YELLOW),
@@ -321,7 +321,7 @@ public class RedLightGreenLightInstance extends FFAGameInstance implements Runna
 
             if (ticksUntilEnd == 0) {
                 gradePlayers();
-                winManager.win(data.getBestSubject(resolver).orElse(null));
+                winManager.complete();
                 return;
             }
         }

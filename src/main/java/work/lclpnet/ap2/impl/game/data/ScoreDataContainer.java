@@ -18,15 +18,12 @@ import java.util.stream.Stream;
  * The scores can still be updated after a subject was added.
  * The subject with the highest score is the winner.
  */
-public class ScoreDataContainer<T, Ref extends SubjectRef> implements DataContainer<T, Ref>, IntScoreEventSource<T>, IntDataSink<T> {
+public class ScoreDataContainer<T, Ref extends SubjectRef> extends BaseDataContainer<T, Ref> implements IntScoreEventSource<T>, IntDataSink<T> {
 
-    private final SubjectRefFactory<T, Ref> refs;
     private final Map<Ref, Integer> scoreMap = new HashMap<>();
     private final List<IntScoreEvent<T>> listeners = new ArrayList<>();
     private final Ordering ordering;
     private final @Nullable String detailKey;
-
-    private boolean frozen = false;
 
     public ScoreDataContainer(SubjectRefFactory<T, Ref> refs) {
         this(refs, Ordering.DESCENDING);
@@ -37,14 +34,13 @@ public class ScoreDataContainer<T, Ref extends SubjectRef> implements DataContai
     }
 
     public ScoreDataContainer(SubjectRefFactory<T, Ref> refs, Ordering ordering, @Nullable String detailKey) {
-        this.refs = refs;
+        super(refs);
         this.ordering = Objects.requireNonNull(ordering);
         this.detailKey = detailKey;
     }
 
     public void setScore(T subject, int score) {
         synchronized (this) {
-            if (frozen) return;
             scoreMap.put(refs.create(subject), score);
         }
 
@@ -56,7 +52,6 @@ public class ScoreDataContainer<T, Ref extends SubjectRef> implements DataContai
         int score;
 
         synchronized (this) {
-            if (frozen) return;
             Ref key = refs.create(subject);
 
             score = scoreMap.computeIfAbsent(key, ref -> 0) + add;
@@ -68,88 +63,56 @@ public class ScoreDataContainer<T, Ref extends SubjectRef> implements DataContai
     }
 
     @Override
-    public int getScore(T subject) {
-        synchronized (this) {
-            return scoreMap.computeIfAbsent(refs.create(subject), ref -> 0);
-        }
+    public synchronized int getScore(T subject) {
+        return scoreMap.computeIfAbsent(refs.create(subject), ref -> 0);
     }
 
     @Override
-    public void delete(T subject) {
-        synchronized (this) {
-            if (frozen) return;
+    public synchronized Optional<DataEntry<Ref>> getEntry(Ref ref) {
+        Integer score = scoreMap.get(ref);
 
-            scoreMap.remove(refs.create(subject));
+        if (score == null) {
+            return Optional.empty();
         }
+
+        return Optional.of(new ScoreDataEntry<>(ref, score, detailKey));
     }
 
     @Override
-    public Optional<DataEntry<Ref>> getEntry(T subject) {
-        Ref ref = refs.create(subject);
-
-        synchronized (this) {
-            Integer score = scoreMap.get(ref);
-
-            if (score == null) {
-                return Optional.empty();
-            }
-
-            return Optional.of(new ScoreDataEntry<>(ref, score, detailKey));
-        }
-    }
-
-    @Override
-    public Stream<? extends DataEntry<Ref>> streamOrderedEntries() {
+    public synchronized Stream<? extends DataEntry<Ref>> streamOrderedEntries() {
         return scoreMap.entrySet().stream()
                 .map(e -> new ScoreDataEntry<>(e.getKey(), e.getValue(), detailKey))
                 .sorted(ordering.order(ScoreView::score));
     }
 
     @Override
-    public void freeze() {
-        synchronized (this) {
-            frozen = true;
-        }
+    public void add(T subject) {
+        identityIfAbsent(subject);
     }
 
     @Override
-    public void ensureTracked(T subject) {
-        synchronized (this) {
-            if (scoreMap.containsKey(refs.create(subject))) return;
-
-            var worst = getWorstScore();
-
-            int score = switch (ordering) {
-                case DESCENDING -> Math.max(0, worst.orElse(1) - 1);
-                case ASCENDING -> worst.orElse(-1) + 1;
-            };
-
-            setScore(subject, score);
-        }
+    public void identityIfAbsent(T subject) {
+        addScore(subject, 0);
     }
 
     @Override
-    public void clear() {
-        synchronized (this) {
-            if (frozen) return;
-
-            scoreMap.clear();
-        }
+    public synchronized void clear() {
+        scoreMap.clear();
     }
 
-    public OptionalInt getBestScore() {
+    public synchronized OptionalInt getBestScore() {
         return ordering.best(scores());
     }
 
-    public OptionalInt getWorstScore() {
+    public synchronized OptionalInt getWorstScore() {
         return ordering.opposite().best(scores());
     }
 
-    private IntStream scores() {
+    private synchronized IntStream scores() {
         return scoreMap.values().stream().mapToInt(i -> i);
     }
 
-    public Set<T> getBestSubjects(SubjectRefResolver<T, Ref> resolver) {
+    public synchronized Set<T> getBestSubjects(SubjectRefResolver<T, Ref> resolver) {
         OptionalInt best = getBestScore();
 
         if (best.isEmpty()) return Set.of();
@@ -166,5 +129,13 @@ public class ScoreDataContainer<T, Ref extends SubjectRef> implements DataContai
     @Override
     public void register(IntScoreEvent<T> listener) {
         listeners.add(Objects.requireNonNull(listener));
+    }
+
+    @Override
+    public synchronized DataContainer<T, Ref> copy() {
+        var copy = new ScoreDataContainer<>(refs, ordering, detailKey);
+        copy.scoreMap.putAll(this.scoreMap);
+
+        return copy;
     }
 }

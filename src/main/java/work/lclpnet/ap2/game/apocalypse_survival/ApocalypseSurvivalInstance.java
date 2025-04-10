@@ -117,7 +117,7 @@ public class ApocalypseSurvivalInstance extends EliminationGameInstance {
         int timeSurvived = time / 20;
         var duration = TimeHelper.formatTime(translations, timeSurvived);
         var detail = translations.translateText("game.ap2.cozy_campfire.survived", duration);
-        getData().eliminated(player, detail);
+        getData().add(player, detail);
 
         super.participantRemoved(player);
     }

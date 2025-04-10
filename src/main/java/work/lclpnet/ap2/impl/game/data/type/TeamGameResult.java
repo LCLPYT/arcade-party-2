@@ -1,30 +1,33 @@
 package work.lclpnet.ap2.impl.game.data.type;
 
-import it.unimi.dsi.fastutil.Pair;
 import it.unimi.dsi.fastutil.objects.ObjectIntPair;
-import work.lclpnet.ap2.api.game.MiniGameResults;
 import work.lclpnet.ap2.api.game.data.DataContainer;
-import work.lclpnet.ap2.api.game.data.GameWinners;
+import work.lclpnet.ap2.api.game.data.GenericGameResult;
 import work.lclpnet.ap2.api.game.data.SubjectRefResolver;
 import work.lclpnet.ap2.api.game.team.Team;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class TeamGameWinners implements GameWinners<TeamRef> {
+public class TeamGameResult implements GenericGameResult<TeamRef> {
 
-    private final MiniGameResults results;
+    private final List<ObjectIntPair<PlayerRef>> playerResults;
+    private final List<ObjectIntPair<TeamRef>> subjectResults;
     private final Set<PlayerRef> players;
     private final Set<TeamRef> refs;
 
-    public TeamGameWinners(DataContainer<Team, TeamRef> data, SubjectRefResolver<Team, TeamRef> refResolver) {
+    public TeamGameResult(DataContainer<Team, TeamRef> data, SubjectRefResolver<Team, TeamRef> refResolver) {
         var byRank = data.streamEntriesRanked().toList();
 
-        var resultMap = byRank.stream()
+        this.subjectResults = byRank.stream()
                 .flatMap(Collection::stream)
+                .toList();
+
+        this.playerResults = this.subjectResults.stream()
                 .flatMap(teamRank -> {
                     Team team = refResolver.resolve(teamRank.key());
 
@@ -36,12 +39,7 @@ public class TeamGameWinners implements GameWinners<TeamRef> {
                             .map(PlayerRef::create)
                             .map(ref -> ObjectIntPair.of(ref, teamRank.rightInt()));
                 })
-                .collect(Collectors.toMap(
-                        Pair::left,
-                        playerRank -> new MiniGameResults.PlayerResult(playerRank.left(), playerRank.rightInt())
-                ));
-
-        this.results = new MiniGameResults(resultMap);
+                .toList();
 
         this.refs = byRank.isEmpty()
                 ? Set.of()
@@ -68,7 +66,12 @@ public class TeamGameWinners implements GameWinners<TeamRef> {
     }
 
     @Override
-    public MiniGameResults getResults() {
-        return results;
+    public List<ObjectIntPair<PlayerRef>> getPlayerResults() {
+        return playerResults;
+    }
+
+    @Override
+    public List<ObjectIntPair<TeamRef>> getSubjectResults() {
+        return subjectResults;
     }
 }

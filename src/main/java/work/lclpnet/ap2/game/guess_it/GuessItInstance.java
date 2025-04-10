@@ -251,7 +251,7 @@ public class GuessItInstance extends FFAGameInstance implements MapBootstrap {
 
         if (consecutiveErrors >= MAX_CONSECUTIVE_ERRORS) {
             // to many errors in a row, abort the game
-            winManager.win(data.getBestSubjects(resolver));
+            winManager.complete();
             return;
         }
 
@@ -313,7 +313,7 @@ public class GuessItInstance extends FFAGameInstance implements MapBootstrap {
         inputManager.reset();
 
         if (round >= rounds) {
-            winManager.win(data.getBestSubjects(resolver));
+            winManager.complete();
         } else {
             gameHandle.getGameScheduler().timeout(this::prepareNextChallenge, DELAY_TICKS);
         }

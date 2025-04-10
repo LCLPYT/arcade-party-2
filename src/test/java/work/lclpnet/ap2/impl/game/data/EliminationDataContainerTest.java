@@ -12,9 +12,9 @@ public class EliminationDataContainerTest {
     @Test
     void streamOrderedEntries() {
         var data = new EliminationDataContainer<>(StringRef::new);
-        data.eliminated("foo");
-        data.allEliminated(List.of("bar", "baz"));
-        data.eliminated("test");
+        data.add("foo");
+        data.addAll(List.of("bar", "baz"));
+        data.add("test");
 
         var order = data.streamOrderedEntries()
                 .map(DataEntry::subject)
@@ -32,9 +32,9 @@ public class EliminationDataContainerTest {
     @Test
     void streamOrderedEntries_sameEntryInstance() {
         var data = new EliminationDataContainer<>(StringRef::new);
-        data.eliminated("foo");
-        data.allEliminated(List.of("bar", "baz"));
-        data.eliminated("test");
+        data.add("foo");
+        data.addAll(List.of("bar", "baz"));
+        data.add("test");
 
         var foo = data.getEntry("foo").orElseThrow();
         var bar = data.getEntry("bar").orElseThrow();

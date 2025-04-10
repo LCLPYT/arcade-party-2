@@ -63,8 +63,7 @@ public class FineTuningInstance extends FFAGameInstance implements MapBootstrap 
     private void startStagePhase() {
         tuningPhase.unload();
 
-        StagePhase stagePhase = new StagePhase(gameHandle, data, resolver, tuningPhase.getRecords(), getMap(),
-                getWorld(), winner -> winner.ifPresentOrElse(winManager::win, winManager::winNobody));
+        var stagePhase = new StagePhase(gameHandle, tuningPhase.getRecords(), getMap(), getWorld(), winManager);
 
         stagePhase.beginStage();
     }

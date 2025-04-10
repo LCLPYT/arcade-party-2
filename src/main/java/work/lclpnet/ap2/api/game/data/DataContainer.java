@@ -10,17 +10,32 @@ import java.util.stream.StreamSupport;
 
 public interface DataContainer<T, Ref extends SubjectRef> {
 
-    void delete(T subject);
-
     Optional<DataEntry<Ref>> getEntry(T subject);
+
+    Optional<DataEntry<Ref>> getEntry(Ref ref);
 
     Stream<? extends DataEntry<Ref>> streamOrderedEntries();
 
-    void freeze();
+    /**
+     * Adds a player to the container.
+     * Can be used to add the winner for data containers that track order.
+     * In the case of score containers, this is probably equivalent to calling {@link #identityIfAbsent(Object)}.
+     * For other containers, e.g. the EliminationDataContainer, this is different though, as it modifies the order.
+     * @param subject The subject.
+     */
+    void add(T subject);
 
-    void ensureTracked(T subject);
+    /**
+     * Sets the identity value for the given subject, if it doesn't exist in the container yet.
+     * This could mean that the subject is tracked with a zero for score containers.
+     * For some containers, e.g. the EliminationDataContainer, this may be a noop, as they need to track the order.
+     * @param subject The subject.
+     */
+    void identityIfAbsent(T subject);
 
     void clear();
+
+    DataContainer<T, Ref> copy();
 
     default Optional<T> getBestSubject(SubjectRefResolver<T, Ref> resolver) {
         return streamOrderedEntries().findFirst()

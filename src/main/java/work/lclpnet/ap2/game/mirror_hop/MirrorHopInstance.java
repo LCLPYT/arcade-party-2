@@ -90,7 +90,7 @@ public class MirrorHopInstance extends FFAGameInstance {
 
             data.setScore(player, choices.getChoices().size() + 1);
 
-            winManager.win(player);
+            winManager.complete();
         });
 
         movementObserver.setRegionEnterListener((player, collider) -> {

@@ -100,7 +100,7 @@ public class WinCommand implements KibuCommand {
         PlayerRef ref = PlayerRef.create(winner);
         var res = new MiniGameResults.PlayerResult(ref, 1);
 
-        gameHandle.complete(new MiniGameResults(Map.of(ref, res)));
+        gameHandle.complete(new MiniGameResults(MiniGameResults.Status.SUCCESS, Map.of(ref, res)));
     }
 
     private void complete(Set<ServerPlayerEntity> winners) {
@@ -108,7 +108,7 @@ public class WinCommand implements KibuCommand {
                 .map(PlayerRef::create)
                 .collect(Collectors.toMap(Function.identity(), ref -> new MiniGameResults.PlayerResult(ref, 1)));
 
-        gameHandle.complete(new MiniGameResults(entries));
+        gameHandle.complete(new MiniGameResults(MiniGameResults.Status.SUCCESS, entries));
     }
 
     @NotNull

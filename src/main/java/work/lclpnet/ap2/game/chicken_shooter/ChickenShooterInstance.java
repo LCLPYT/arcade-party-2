@@ -159,7 +159,7 @@ public class ChickenShooterInstance extends FFAGameInstance implements Runnable 
         // Timer and game end
         var subject = translations.translateText("game.ap2.chicken_shooter.task");
 
-        commons().createTimer(subject, durationSeconds).whenDone(this::onTimerDone);
+        commons().createTimer(subject, durationSeconds).whenDone(winManager::complete);
     }
 
     private void chickenSpawner() {
@@ -285,9 +285,5 @@ public class ChickenShooterInstance extends FFAGameInstance implements Runnable 
 
             return false;
         });
-    }
-
-    private void onTimerDone() {
-        winManager.win(data.getBestSubject(resolver).orElse(null));
     }
 }

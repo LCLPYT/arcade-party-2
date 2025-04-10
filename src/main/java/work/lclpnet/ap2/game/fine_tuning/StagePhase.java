@@ -20,9 +20,8 @@ import work.lclpnet.ap2.game.fine_tuning.melody.Melody;
 import work.lclpnet.ap2.game.fine_tuning.melody.Note;
 import work.lclpnet.ap2.game.fine_tuning.melody.PlayMelodyTask;
 import work.lclpnet.ap2.impl.game.PlayerUtil;
-import work.lclpnet.ap2.impl.game.data.ScoreTimeDataContainer;
+import work.lclpnet.ap2.impl.game.WinManager;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
-import work.lclpnet.ap2.impl.game.data.type.PlayerRefResolver;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.SoundHelper;
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker;
@@ -34,37 +33,30 @@ import work.lclpnet.lobby.game.api.WorldFacade;
 import work.lclpnet.lobby.game.map.GameMap;
 
 import java.util.Arrays;
-import java.util.Optional;
 import java.util.Set;
-import java.util.function.Consumer;
 
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
 class StagePhase {
 
     private final MiniGameHandle gameHandle;
-    private final ScoreTimeDataContainer<ServerPlayerEntity, PlayerRef> data;
-    private final PlayerRefResolver resolver;
-    private final Consumer<Optional<ServerPlayerEntity>> winnerAction;
     private final MelodyRecords records;
     private final GameMap map;
     private final ServerWorld world;
+    private final WinManager<ServerPlayerEntity, PlayerRef> winManager;
     private final SimpleMovementBlocker movementBlocker;
     private BlockPos presenterPos;
     private float presenterYaw;
     private FakeNoteBlockPlayer nbPlayer;
     private int melodyNumber = 0;
 
-    public StagePhase(MiniGameHandle gameHandle, ScoreTimeDataContainer<ServerPlayerEntity, PlayerRef> data,
-                      PlayerRefResolver resolver, MelodyRecords records, GameMap map, ServerWorld world,
-                      Consumer<Optional<ServerPlayerEntity>> winnerAction) {
+    public StagePhase(MiniGameHandle gameHandle, MelodyRecords records, GameMap map, ServerWorld world,
+                      WinManager<ServerPlayerEntity, PlayerRef> winManager) {
         this.gameHandle = gameHandle;
-        this.data = data;
-        this.resolver = resolver;
         this.records = records;
         this.map = map;
         this.world = world;
-        this.winnerAction = winnerAction;
+        this.winManager = winManager;
         this.movementBlocker = new SimpleMovementBlocker(gameHandle.getScheduler());
         this.movementBlocker.setModifySpeedAttribute(false);
     }
@@ -222,7 +214,7 @@ class StagePhase {
             }
 
             if (++melodyNumber == FineTuningInstance.MELODY_COUNT) {
-                dispatchWin();
+                winManager.complete();
             } else {
                 presentNextMelody();
             }
@@ -247,9 +239,5 @@ class StagePhase {
 
     private void setMelody(Melody melody) {
         nbPlayer.setMelody(melody);
-    }
-
-    private void dispatchWin() {
-        winnerAction.accept(data.getBestSubject(resolver));
     }
 }

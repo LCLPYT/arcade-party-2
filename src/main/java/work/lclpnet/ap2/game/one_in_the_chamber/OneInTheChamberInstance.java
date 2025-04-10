@@ -255,7 +255,7 @@ public class OneInTheChamberInstance extends FFAGameInstance {
         int newScore = data.getScore(killer);
 
         if (newScore == SCORE_LIMIT) {
-            winManager.win(killer);
+            winManager.complete();
         }
 
         killer.playSoundToPlayer(SoundEvents.ENTITY_ARROW_HIT_PLAYER, SoundCategory.PLAYERS, 0.8f, 0.8f);

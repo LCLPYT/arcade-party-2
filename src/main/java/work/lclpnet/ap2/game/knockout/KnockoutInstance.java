@@ -154,11 +154,11 @@ public class KnockoutInstance extends EliminationGameInstance {
 
     @Override
     public void participantRemoved(ServerPlayerEntity player) {
-        getData().eliminated(player, chargeDetail(player));
+        getData().add(player, chargeDetail(player));
 
         if (gameHandle.getParticipants().count() == 1) {
             ServerPlayerEntity winner = gameHandle.getParticipants().iterator().next();
-            getData().eliminated(winner, chargeDetail(winner));
+            getData().add(winner, chargeDetail(winner));
         }
 
         super.participantRemoved(player);

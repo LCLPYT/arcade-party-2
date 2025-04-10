@@ -97,7 +97,7 @@ public class MiningBattleInstance extends FFAGameInstance implements MapBootstra
         Translations translations = gameHandle.getTranslations();
         var subject = translations.translateText(gameHandle.getGameInfo().getTaskKey());
 
-        commons().createTimer(subject, DURATION_SECONDS).whenDone(this::onTimerDone);
+        commons().createTimer(subject, DURATION_SECONDS).whenDone(winManager::complete);
     }
 
     private void placeOres(ServerWorld world, GameMap map) {
@@ -125,10 +125,6 @@ public class MiningBattleInstance extends FFAGameInstance implements MapBootstra
             player.playSoundToPlayer(SoundEvents.ENTITY_WITHER_SPAWN, SoundCategory.BLOCKS, 0.325f, 1.2f);
             player.playSoundToPlayer(SoundEvents.BLOCK_END_PORTAL_SPAWN, SoundCategory.BLOCKS, 0.225f, 0f);
         }
-    }
-
-    private void onTimerDone() {
-        winManager.win(data.getBestSubject(resolver).orElse(null));
     }
 
     private void giveItems() {
