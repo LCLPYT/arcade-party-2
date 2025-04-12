@@ -134,7 +134,6 @@ public class PandaFinderInstance extends FFAGameInstance {
         int maxScore = data.getBestScore().orElse(0);
 
         if (maxScore >= WIN_SCORE) {
-            var winners = data.getBestSubjects(resolver);
             winManager.complete();
             return;
         }
