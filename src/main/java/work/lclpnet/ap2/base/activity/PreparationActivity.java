@@ -15,6 +15,7 @@ import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Identifier;
 import org.slf4j.Logger;
+import work.lclpnet.activity.Activity;
 import work.lclpnet.activity.ComponentActivity;
 import work.lclpnet.activity.component.ComponentBundle;
 import work.lclpnet.activity.component.builtin.BossBarComponent;
@@ -26,22 +27,17 @@ import work.lclpnet.ap2.api.data.DataManager;
 import work.lclpnet.ap2.api.game.GameStartContext;
 import work.lclpnet.ap2.api.game.MiniGame;
 import work.lclpnet.ap2.api.map.MapFacade;
-import work.lclpnet.ap2.api.util.music.SongCache;
 import work.lclpnet.ap2.api.util.music.SongManager;
 import work.lclpnet.ap2.api.util.music.SongWrapper;
 import work.lclpnet.ap2.base.ApConstants;
-import work.lclpnet.ap2.base.ApContainer;
+import work.lclpnet.ap2.base.ApMiniGameArgs;
 import work.lclpnet.ap2.base.ArcadeParty;
 import work.lclpnet.ap2.base.api.Skippable;
-import work.lclpnet.ap2.base.cmd.ForceGameCommand;
 import work.lclpnet.ap2.base.cmd.ForceMapCommand;
 import work.lclpnet.ap2.base.cmd.SkipCommand;
-import work.lclpnet.ap2.base.util.IconMaker;
-import work.lclpnet.ap2.base.util.OptionChooser;
-import work.lclpnet.ap2.base.util.ScoreManager;
+import work.lclpnet.ap2.base.util.*;
 import work.lclpnet.ap2.impl.activity.ArcadePartyComponents;
 import work.lclpnet.ap2.impl.activity.ScoreboardComponent;
-import work.lclpnet.ap2.impl.game.PlayerUtil;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.util.ScoreboardUtil;
 import work.lclpnet.ap2.impl.util.music.MusicHelper;
@@ -52,10 +48,6 @@ import work.lclpnet.ap2.impl.util.title.NextGameTitleAnimation;
 import work.lclpnet.kibu.cmd.type.CommandRegistrar;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
-import work.lclpnet.kibu.hook.player.PlayerAdvancementPacketCallback;
-import work.lclpnet.kibu.hook.player.PlayerConnectionHooks;
-import work.lclpnet.kibu.hook.player.PlayerInventoryHooks;
-import work.lclpnet.kibu.hook.player.PlayerRecipeNotificationCallback;
 import work.lclpnet.kibu.inv.type.RestrictedInventory;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.RunningTask;
@@ -68,13 +60,13 @@ import work.lclpnet.lobby.game.api.WorldFacade;
 import work.lclpnet.lobby.game.map.GameMap;
 import work.lclpnet.lobby.game.util.BossBarTimer;
 import work.lclpnet.lobby.game.util.ProtectorComponent;
-import work.lclpnet.lobby.game.util.ProtectorUtils;
 
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
+import static java.util.stream.Collectors.toSet;
 import static net.minecraft.util.Formatting.*;
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
@@ -86,7 +78,8 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
     private static final Identifier GAME_SONG_ID = ArcadeParty.identifier("ap2_game");
     private final OptionChooser<MiniGame> gameChooser = new OptionChooser<>();
     private final OptionChooser<GameMap> mapChooser = new OptionChooser<>();
-    private final Args args;
+    private final ApBaseArgs args;
+    private final BaseActivityConfigurator activityConfigurator;
     private int time = 0;
     private boolean skipPreparation = false;
     private boolean gameForced = false;
@@ -97,9 +90,11 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
     private SongWrapper song = null;
     private CompletableFuture<Void> whenTasksDone = null;
 
-    public PreparationActivity(Args args) {
-        super(args.container().server(), args.container().logger());
+    public PreparationActivity(ApBaseArgs args) {
+        super(args.miniGameArgs().server(), args.miniGameArgs().logger());
+
         this.args = args;
+        this.activityConfigurator = new BaseActivityConfigurator(this, args);
     }
 
     @Override
@@ -116,13 +111,9 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
     public void start() {
         super.start();
 
-        component(ProtectorComponent.KEY).configure(config -> {
-            config.disallowAll();
+        activityConfigurator.configureProtector();
 
-            ProtectorUtils.allowCreativeOperatorBypass(config);
-        });
-
-        WorldFacade worldFacade = args.container().worldFacade();
+        WorldFacade worldFacade = args.miniGameArgs().worldFacade();
 
         worldFacade.changeMap(ArcadeParty.identifier("preparation"), MapOptions.REUSABLE)
                 .thenRun(this::onReady)
@@ -134,30 +125,38 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
 
     @Override
     public void stop() {
-        args.forceGameCommand.setGameEnforcer(args.gameQueue::setNextGame);
+        args.forceGameCommand().setGameEnforcer(args.gameQueue()::setNextGame);
+
         super.stop();
     }
 
     private void onReady() {
-        args.scoreManager.incrementRound();
-
-        MapFacade mapFacade = args.container.mapFacade();
+        MapFacade mapFacade = args.miniGameArgs().mapFacade();
         mapFacade.forceMap(null);  // reset forced map
 
+        ScoreManager scoreManager = args.scoreManager();
+
+        if (scoreManager.hasClearWinner()) {
+            beginWinSequence();
+            return;
+        }
+
         PlayerManager playerManager = args.playerManager();
+
+        if (scoreManager.hasMultipleWinners()) {
+            playerManager.enterFinale(scoreManager.getFinalists().collect(toSet()));
+        }
+
         playerManager.startPreparation();
 
-        PlayerUtil playerUtil = args.container().playerUtil();
-        playerUtil.resetToDefaults();
-        playerManager.forEach(playerUtil::resetPlayer);
+        scoreManager.incrementRound();
 
-        HookRegistrar hooks = component(BuiltinComponents.HOOKS).hooks();
-        hooks.registerHook(PlayerConnectionHooks.JOIN, this::onJoin);
-        hooks.registerHook(PlayerInventoryHooks.MODIFY_INVENTORY, event -> !event.player().isCreativeLevelTwoOp());
-        hooks.registerHook(PlayerAdvancementPacketCallback.HOOK, (player, packet) -> true);
-        hooks.registerHook(PlayerRecipeNotificationCallback.HOOK, (player, recipeEntry, displayEntry) -> true);
+        activityConfigurator.resetPlayers();
+        activityConfigurator.configureHooks();
 
         if (ApConstants.DEVELOPMENT) {
+            HookRegistrar hooks = component(BuiltinComponents.HOOKS).hooks();
+
             giveDevelopmentItems(hooks);
         }
 
@@ -170,7 +169,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
         new SkipCommand(this).register(commandRegistrar);
         new ForceMapCommand(mapFacade, this::getMiniGame).register(commandRegistrar);
 
-        args.forceGameCommand.setGameEnforcer(this::forceGame);
+        args.forceGameCommand().setGameEnforcer(this::forceGame);
     }
 
     private void prepareNextMiniGame() {
@@ -178,7 +177,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
             miniGame = pickNextGame();
         }
 
-        whenTasksDone = args.container.mapFacade().reloadMaps(miniGame.getId());
+        whenTasksDone = args.miniGameArgs().mapFacade().reloadMaps(miniGame.getId());
 
         displayGameQueue();
         startTimer().whenDone(this::onTimerEnded);
@@ -187,20 +186,11 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
                 .interval(this::tick, 1);
     }
 
-    private void onJoin(ServerPlayerEntity player) {
-        PlayerManager playerManager = args.playerManager();
-
-        boolean spectator = playerManager.isPermanentSpectator(player) || !playerManager.offer(player);
-
-        PlayerUtil.State state = spectator ? PlayerUtil.State.SPECTATOR : PlayerUtil.State.DEFAULT;
-        args.container().playerUtil().resetPlayer(player, state);
-    }
-
     private void showLeaderboard() {
-        Translations translations = args.container().translations();
+        Translations translations = args.miniGameArgs().translations();
         ScoreManager scoreManager = args.scoreManager();
         ScoreboardComponent component = component(ArcadePartyComponents.SCORE_BOARD);
-        CustomScoreboardManager scoreboard = component.scoreboardManager(args.container()::translations);
+        CustomScoreboardManager scoreboard = component.scoreboardManager(args.miniGameArgs()::translations);
 
         var objective = ScoreboardUtil.setupSidebar(scoreboard, "game.%s.title".formatted(ApConstants.ID));
 
@@ -240,7 +230,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
         objective.createNewline(ScoreboardLayout.BOTTOM);
 
         // display objective for all players
-        for (ServerPlayerEntity player : PlayerLookup.all(args.container.server())) {
+        for (ServerPlayerEntity player : PlayerLookup.all(args.miniGameArgs().server())) {
             objective.addPlayer(player);
         }
     }
@@ -272,7 +262,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
         } else {
             if (t == GAME_ANNOUNCE_DELAY - 40) {
                 // "The next game will be %s"
-                args.container().translations().translateText("ap2.prepare.next_game").formatted(GRAY)
+                args.miniGameArgs().translations().translateText("ap2.prepare.next_game").formatted(GRAY)
                         .sendTo(PlayerLookup.all(getServer()));
             } else if (t == GAME_ANNOUNCE_DELAY) {
                 announceNextGame();
@@ -287,7 +277,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
         Scheduler scheduler = component(BuiltinComponents.SCHEDULER).scheduler();
 
         MinecraftServer server = getServer();
-        Translations translationService = args.container().translations();
+        Translations translationService = args.miniGameArgs().translations();
 
         var label = translationService.translateText("ap2.prepare.next_game_title");
 
@@ -326,7 +316,18 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
 
     private void startGame() {
         Objects.requireNonNull(miniGame, "Mini-Game is not set");
+        MiniGameActivity activity = new MiniGameActivity(miniGame, args);
 
+        switchActivity(activity);
+    }
+
+    private void beginWinSequence() {
+        WinActivity activity = new WinActivity(args);
+
+        switchActivity(activity);
+    }
+
+    private void switchActivity(Activity activity) {
         if (animatedTitle != null) {
             animatedTitle.stop();
         }
@@ -335,7 +336,6 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
             song.stop();
         }
 
-        MiniGameActivity activity = new MiniGameActivity(miniGame, args);
         ActivityManager.getInstance().startActivity(activity);
     }
 
@@ -349,7 +349,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
             return Objects.requireNonNull(queue.pollNextGame(), "Could not determine next game");
         }
 
-        final int maxTries = args.container().miniGames().getGames().size();  // cycle through every registered game once
+        final int maxTries = args.miniGameArgs().miniGames().getGames().size();  // cycle through every registered game once
 
         for (int tries = 0; tries < maxTries; tries++) {
             MiniGame game = Objects.requireNonNull(queue.pollNextGame(), "Next game from queue is null");
@@ -390,7 +390,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
     }
 
     private void announceNextGame() {
-        ApContainer container = args.container();
+        ApMiniGameArgs container = args.miniGameArgs();
         Translations translations = container.translations();
         MinecraftServer server = getServer();
         SongManager songManager = container.songManager();
@@ -469,7 +469,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
      * Announces that the current game is no longer valid and that a new game will be picked.
      */
     private void announceInvalidGame() {
-        Translations translations = args.container().translations();
+        Translations translations = args.miniGameArgs().translations();
 
         var gameTitle = translations.translateText(miniGame.getTitleKey()).formatted(YELLOW);
         var msg = translations.translateText("ap2.prepare.game_cannot_be_played", gameTitle).formatted(RED);
@@ -539,14 +539,14 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
 
         mapChooser.listen(hooks, (gameMap, player) -> {
             Identifier mapId = gameMap.getDescriptor().getIdentifier();
-            args.container().mapFacade().forceMap(mapId);
+            args.miniGameArgs().mapFacade().forceMap(mapId);
             player.sendMessage(Text.literal("Next map will be \"%s\"".formatted(mapId)));
         });
     }
 
     private void openGamePicker(ServerPlayerEntity player) {
-        var games = args.container().miniGames().getGames().stream().toList();
-        Translations translations = args.container().translations();
+        var games = args.miniGameArgs().miniGames().getGames().stream().toList();
+        Translations translations = args.miniGameArgs().translations();
 
         RestrictedInventory inv = gameChooser.createInventory(games, Text.literal("Force Game"),
                 game -> IconMaker.createIcon(game, player, translations));
@@ -560,7 +560,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
             return;
         }
 
-        ApContainer container = args.container();
+        ApMiniGameArgs container = args.miniGameArgs();
         DataManager dataManager = container.dataManager();
 
         container.mapFacade().getMaps(miniGame.getId()).thenAccept(maps -> {
@@ -581,7 +581,4 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
     private Optional<MiniGame> getMiniGame() {
         return Optional.ofNullable(miniGame);
     }
-
-    public record Args(ApContainer container, GameQueue gameQueue, PlayerManager playerManager,
-                       ForceGameCommand forceGameCommand, SongCache sharedSongCache, ScoreManager scoreManager) {}
 }

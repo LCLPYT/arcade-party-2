@@ -11,6 +11,7 @@ import work.lclpnet.ap2.api.game.MiniGame;
 import work.lclpnet.ap2.api.util.music.SongCache;
 import work.lclpnet.ap2.base.activity.PreparationActivity;
 import work.lclpnet.ap2.base.cmd.ForceGameCommand;
+import work.lclpnet.ap2.base.util.ApBaseArgs;
 import work.lclpnet.ap2.base.util.ScoreManager;
 import work.lclpnet.ap2.impl.base.PlayerManagerImpl;
 import work.lclpnet.ap2.impl.base.SimpleMiniGameManager;
@@ -112,14 +113,14 @@ public class ArcadePartyInstance implements GameInstance {
         HookStack hookStack = environment.getHookStack();
         initDynamicLanguages(hookStack, translations, server);
 
-        ApContainer container = new ApContainer(server, logger, translations, hookStack,
+        ApMiniGameArgs container = new ApMiniGameArgs(server, logger, translations, hookStack,
                 environment.getCommandStack(), environment.getSchedulerStack(), result.worldFacade(),
                 result.mapFacade(), playerUtil, gameManager, result.songManager(), result.dataManager());
 
         SongCache songCache = new MapSongCache();
-        ScoreManager scoreManager = new ScoreManager(WIN_SCORE);
+        ScoreManager scoreManager = new ScoreManager(server.getPlayerManager(), WIN_SCORE);
 
-        var args = new PreparationActivity.Args(container, queue, playerManager, forceGameCommand, songCache, scoreManager);
+        var args = new ApBaseArgs(container, queue, playerManager, forceGameCommand, songCache, scoreManager);
         PreparationActivity preparation = new PreparationActivity(args);
 
         ActivityManager.getInstance().startActivity(preparation);

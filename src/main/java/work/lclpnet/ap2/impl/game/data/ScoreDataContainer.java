@@ -82,7 +82,7 @@ public class ScoreDataContainer<T, Ref extends SubjectRef> extends BaseDataConta
     }
 
     @Override
-    public synchronized Stream<? extends DataEntry<Ref>> streamOrderedEntries() {
+    public synchronized Stream<ScoreDataEntry<Ref>> streamOrderedEntries() {
         return scoreMap.entrySet().stream()
                 .map(e -> new ScoreDataEntry<>(e.getKey(), e.getValue(), detailKey))
                 .sorted(ordering.order(ScoreView::score));
@@ -103,11 +103,11 @@ public class ScoreDataContainer<T, Ref extends SubjectRef> extends BaseDataConta
         scoreMap.clear();
     }
 
-    public synchronized OptionalInt getBestScore() {
+    public synchronized Optional<Integer> getBestScore() {
         return ordering.best(scores());
     }
 
-    public synchronized OptionalInt getWorstScore() {
+    public synchronized Optional<Integer> getWorstScore() {
         return ordering.opposite().best(scores());
     }
 
@@ -116,11 +116,11 @@ public class ScoreDataContainer<T, Ref extends SubjectRef> extends BaseDataConta
     }
 
     public synchronized Set<T> getBestSubjects(SubjectRefResolver<T, Ref> resolver) {
-        OptionalInt best = getBestScore();
+        Optional<Integer> best = getBestScore();
 
         if (best.isEmpty()) return Set.of();
 
-        final int bestScore = best.getAsInt();
+        final int bestScore = best.get();
 
         return scoreMap.keySet().stream()
                 .filter(ref -> scoreMap.get(ref) == bestScore)

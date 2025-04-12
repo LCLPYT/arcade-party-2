@@ -12,6 +12,7 @@ import work.lclpnet.ap2.api.game.MiniGameInstance;
 import work.lclpnet.ap2.base.cmd.DrawCommand;
 import work.lclpnet.ap2.base.cmd.RemakeCommand;
 import work.lclpnet.ap2.base.cmd.WinCommand;
+import work.lclpnet.ap2.base.util.ApBaseArgs;
 import work.lclpnet.ap2.impl.activity.ArcadePartyComponents;
 import work.lclpnet.ap2.impl.activity.ScoreboardComponent;
 import work.lclpnet.ap2.impl.game.DefaultMiniGameHandle;
@@ -29,11 +30,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class MiniGameActivity extends ComponentActivity {
 
     private final MiniGame miniGame;
-    private final PreparationActivity.Args args;
+    private final ApBaseArgs args;
     private DefaultMiniGameHandle handle;
 
-    public MiniGameActivity(MiniGame miniGame, PreparationActivity.Args args) {
-        super(args.container().server(), args.container().logger());
+    public MiniGameActivity(MiniGame miniGame, ApBaseArgs args) {
+        super(args.miniGameArgs().server(), args.miniGameArgs().logger());
         this.miniGame = miniGame;
         this.args = args;
     }
@@ -55,7 +56,7 @@ public class MiniGameActivity extends ComponentActivity {
         BossBarComponent bossBars = component(BuiltinComponents.BOSS_BAR);
 
         ScoreboardComponent scoreboardComponent = component(ArcadePartyComponents.SCORE_BOARD);
-        CustomScoreboardManager scoreboard = scoreboardComponent.scoreboardManager(args.container()::translations);
+        CustomScoreboardManager scoreboard = scoreboardComponent.scoreboardManager(args.miniGameArgs()::translations);
 
         AtomicBoolean remake = new AtomicBoolean(false);
 
@@ -65,7 +66,7 @@ public class MiniGameActivity extends ComponentActivity {
         PlayerManager playerManager = args.playerManager();
 
         playerManager.startMiniGame();
-        registerHooks(args.container().hookStack());
+        registerHooks(args.miniGameArgs().hookStack());
 
         MiniGameInstance instance = miniGame.createInstance(handle);
         instance.start();
@@ -107,7 +108,7 @@ public class MiniGameActivity extends ComponentActivity {
     }
 
     private void onJoin(ServerPlayerEntity player) {
-        args.container().playerUtil().resetPlayer(player);
+        args.miniGameArgs().playerUtil().resetPlayer(player);
     }
 
     private void onQuit(ServerPlayerEntity player) {

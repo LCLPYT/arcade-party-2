@@ -106,18 +106,21 @@ public class PlayerManagerImpl implements PlayerManager {
                 // remove finalists who left
                 participants.removeIf(uuid -> server.getPlayerManager().getPlayer(uuid) == null);
             } else {
-                // clear old entries in case the player has left
-                participants.clear();
-
-                // add everyone to the participants set
-                PlayerLookup.all(server).stream()
-                        .map(ServerPlayerEntity::getUuid)
-                        .filter(uuid -> !permanentSpectators.contains(uuid))
-                        .forEach(participants::add);
+                addAllPlayers();
             }
         } finally {
             writeLock.unlock();
         }
+    }
+
+    private void addAllPlayers() {
+        // clear old entries in case the player has left
+        participants.clear();
+
+        PlayerLookup.all(server).stream()
+                .map(ServerPlayerEntity::getUuid)
+                .filter(uuid -> !permanentSpectators.contains(uuid))
+                .forEach(participants::add);
     }
 
     @Override
@@ -194,5 +197,18 @@ public class PlayerManagerImpl implements PlayerManager {
         }
 
         return Optional.ofNullable(server.getPlayerManager().getPlayer(uuid));
+    }
+
+    @Override
+    public void leaveFinale() {
+        try {
+            writeLock.lock();
+
+            finale = false;
+
+            addAllPlayers();
+        } finally {
+            writeLock.unlock();
+        }
     }
 }

@@ -1,7 +1,7 @@
 package work.lclpnet.ap2.impl.game.data;
 
 import java.util.Comparator;
-import java.util.OptionalInt;
+import java.util.Optional;
 import java.util.function.ToIntFunction;
 import java.util.stream.IntStream;
 
@@ -10,11 +10,11 @@ public enum Ordering {
     DESCENDING,
     ASCENDING;
 
-    public OptionalInt best(IntStream stream) {
-        return switch (this) {
+    public Optional<Integer> best(IntStream stream) {
+        return (switch (this) {
             case DESCENDING -> stream.max();
             case ASCENDING -> stream.min();
-        };
+        }).stream().boxed().findAny();
     }
 
     public Ordering opposite() {
