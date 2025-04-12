@@ -4,7 +4,10 @@ import com.google.common.collect.AbstractIterator;
 import it.unimi.dsi.fastutil.objects.ObjectIntPair;
 import work.lclpnet.ap2.impl.util.RankUtil;
 
-import java.util.*;
+import java.util.Iterator;
+import java.util.Optional;
+import java.util.Set;
+import java.util.Spliterators;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -37,18 +40,8 @@ public interface DataContainer<T, Ref extends SubjectRef> {
 
     DataContainer<T, Ref> copy();
 
-    default Optional<T> getBestSubject(SubjectRefResolver<T, Ref> resolver) {
-        return streamOrderedEntries().findFirst()
-                .map(DataEntry::subject)
-                .map(resolver::resolve);
-    }
-
-    default Stream<T> getEqualScoreSubjects(T player, SubjectRefResolver<T, Ref> resolver) {
-        return getEntry(player).map(entry -> streamOrderedEntries()
-                .filter(entry::scoreEquals)
-                .map(DataEntry::subject)
-                .map(resolver::resolve)
-                .filter(Objects::nonNull)).orElseGet(Stream::empty);
+    default boolean isEmpty() {
+        return streamEntriesRanked().findAny().isEmpty();
     }
 
     default Stream<Set<ObjectIntPair<Ref>>> streamEntriesRanked() {

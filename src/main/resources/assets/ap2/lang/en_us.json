@@ -4,6 +4,8 @@
   "ap2.prepare.created_by": "Developed by %s",
   "ap2.prepare.game_cannot_be_played": "Unfortunately, %s can't be played at the moment... Therefore it will be skipped.",
   "ap2.prepare.will_be_played_next": "will be played next",
+  "ap2.prepare.round": "Round",
+  "ap2.prepare.score_required": "Win with %s points",
   "ap2.nobody": "Nobody",
   "ap2.won": "won the game",
   "ap2.game_over": "Game Over",

@@ -1,10 +1,12 @@
 package work.lclpnet.ap2.base.activity;
 
+import it.unimi.dsi.fastutil.objects.ObjectIntPair;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.scoreboard.number.FixedNumberFormat;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.sound.SoundCategory;
@@ -36,8 +38,15 @@ import work.lclpnet.ap2.base.cmd.ForceMapCommand;
 import work.lclpnet.ap2.base.cmd.SkipCommand;
 import work.lclpnet.ap2.base.util.IconMaker;
 import work.lclpnet.ap2.base.util.OptionChooser;
+import work.lclpnet.ap2.base.util.ScoreManager;
+import work.lclpnet.ap2.impl.activity.ArcadePartyComponents;
+import work.lclpnet.ap2.impl.activity.ScoreboardComponent;
 import work.lclpnet.ap2.impl.game.PlayerUtil;
+import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
+import work.lclpnet.ap2.impl.util.ScoreboardUtil;
 import work.lclpnet.ap2.impl.util.music.MusicHelper;
+import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
+import work.lclpnet.ap2.impl.util.scoreboard.ScoreboardLayout;
 import work.lclpnet.ap2.impl.util.title.AnimatedTitle;
 import work.lclpnet.ap2.impl.util.title.NextGameTitleAnimation;
 import work.lclpnet.kibu.cmd.type.CommandRegistrar;
@@ -99,7 +108,8 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
                 .add(BuiltinComponents.BOSS_BAR)
                 .add(BuiltinComponents.HOOKS)
                 .add(BuiltinComponents.COMMANDS)
-                .add(ProtectorComponent.KEY);
+                .add(ProtectorComponent.KEY)
+                .add(ArcadePartyComponents.SCORE_BOARD);
     }
 
     @Override
@@ -129,6 +139,8 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
     }
 
     private void onReady() {
+        args.scoreManager.incrementRound();
+
         MapFacade mapFacade = args.container.mapFacade();
         mapFacade.forceMap(null);  // reset forced map
 
@@ -185,7 +197,52 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
     }
 
     private void showLeaderboard() {
-        // TODO implement
+        Translations translations = args.container().translations();
+        ScoreManager scoreManager = args.scoreManager();
+        ScoreboardComponent component = component(ArcadePartyComponents.SCORE_BOARD);
+        CustomScoreboardManager scoreboard = component.scoreboardManager(args.container()::translations);
+
+        var objective = ScoreboardUtil.setupSidebar(scoreboard, "game.%s.title".formatted(ApConstants.ID));
+
+        // header
+        var round = new FixedNumberFormat(Text.literal(String.valueOf(scoreManager.getRound())).formatted(YELLOW));
+        objective.createText(translations.translateText("ap2.prepare.round").formatted(GREEN)).setNumberFormat(round);
+
+        if (scoreManager.hasScores()) {
+            objective.createNewline(ScoreboardLayout.TOP);
+
+            objective.createText(translations.translateText("ap2.score").formatted(YELLOW, BOLD));
+
+            var separator = Text.literal(ApConstants.SCOREBOARD_SEPARATOR_SM).formatted(DARK_GREEN, STRIKETHROUGH);
+            objective.createText(separator);
+        }
+
+        // top 5 scores
+        int i = 0;
+
+        for (ObjectIntPair<PlayerRef> entry : scoreManager.iterateRankedScores()) {
+            if (i++ >= 5) continue;
+
+            PlayerRef ref = entry.left();
+            int score = scoreManager.getScore(ref);
+            int rank = entry.rightInt();
+
+            objective.setScore(ref.name(), score);
+
+            objective.setDisplayName(ref.name(), Text.literal("#%d ".formatted(rank)).formatted(YELLOW)
+                    .append(Text.literal(ref.name()).formatted(GREEN)));
+        }
+
+        // footer
+        var requiredScore = styled(scoreManager.getTargetScore()).formatted(YELLOW);
+        objective.createText(translations.translateText("ap2.prepare.score_required", requiredScore).formatted(AQUA), ScoreboardLayout.BOTTOM);
+
+        objective.createNewline(ScoreboardLayout.BOTTOM);
+
+        // display objective for all players
+        for (ServerPlayerEntity player : PlayerLookup.all(args.container.server())) {
+            objective.addPlayer(player);
+        }
     }
 
     private void displayGameQueue() {
@@ -525,6 +582,6 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
         return Optional.ofNullable(miniGame);
     }
 
-    public record Args(ApContainer container, GameQueue gameQueue,
-                       PlayerManager playerManager, ForceGameCommand forceGameCommand, SongCache sharedSongCache) {}
+    public record Args(ApContainer container, GameQueue gameQueue, PlayerManager playerManager,
+                       ForceGameCommand forceGameCommand, SongCache sharedSongCache, ScoreManager scoreManager) {}
 }

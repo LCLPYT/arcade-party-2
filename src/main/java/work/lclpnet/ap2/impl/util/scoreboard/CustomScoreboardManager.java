@@ -14,9 +14,10 @@ import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.player.PlayerConnectionHooks;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.kibu.translate.hook.LanguageChangedCallback;
-import work.lclpnet.kibu.translate.util.WeakList;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public class CustomScoreboardManager {
@@ -26,7 +27,7 @@ public class CustomScoreboardManager {
     private final PlayerManager playerManager;
     private final Set<Team> teams = new HashSet<>();
     private final Set<ScoreboardObjective> objectives = new HashSet<>();
-    private final WeakList<TranslatedScoreboardObjective> translatedObjectives = new WeakList<>();
+    private final List<TranslatedScoreboardObjective> translatedObjectives = new ArrayList<>();
 
     public CustomScoreboardManager(ServerScoreboard scoreboard, Translations translations, PlayerManager playerManager) {
         this.scoreboard = scoreboard;
@@ -182,15 +183,13 @@ public class CustomScoreboardManager {
         return objective;
     }
 
-    public void unload() {
-        synchronized (this) {
-            teams.forEach(scoreboard::removeTeam);
-            teams.clear();
+    public synchronized void unload() {
+        teams.forEach(scoreboard::removeTeam);
+        teams.clear();
 
-            translatedObjectives.forEach(TranslatedScoreboardObjective::unload);
+        translatedObjectives.forEach(TranslatedScoreboardObjective::unload);
 
-            objectives.forEach(scoreboard::removeObjective);
-            objectives.clear();
-        }
+        objectives.forEach(scoreboard::removeObjective);
+        objectives.clear();
     }
 }

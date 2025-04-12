@@ -21,7 +21,7 @@ import work.lclpnet.ap2.api.util.music.SongManager;
 import work.lclpnet.ap2.base.ApContainer;
 import work.lclpnet.ap2.base.activity.MiniGameActivity;
 import work.lclpnet.ap2.base.activity.PreparationActivity;
-import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
+import work.lclpnet.ap2.base.util.ScoreManager;
 import work.lclpnet.ap2.impl.util.DeathMessages;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.kibu.cmd.type.CommandRegistrar;
@@ -242,21 +242,18 @@ public class DefaultMiniGameHandle implements MiniGameHandle, WorldBorderManager
             return;
         }
 
-        // TODO track winners
-        logger.info("Game results:");
+        // track player scores; 3 points for 1st, 2 points for 2nd, 1 point for 3rd
+        ScoreManager scoreManager = args.scoreManager();
+        int score = 3;
 
-        int rank = 1;
-        var byRank = results.getEntriesByRank();
+        for (Set<MiniGameResults.PlayerResult> group : results.getEntriesByRank()) {
+            if (score <= 0) break;
 
-        for (Set<MiniGameResults.PlayerResult> players : byRank) {
-            var playerNames = players.stream()
-                    .map(MiniGameResults.PlayerResult::getRef)
-                    .map(PlayerRef::name)
-                    .toList();
+            for (MiniGameResults.PlayerResult playerResult : group) {
+                scoreManager.addScore(playerResult.getRef(), score);
+            }
 
-            logger.info("#{}: {}", rank, playerNames);
-
-            rank += players.size();
+            score--;
         }
 
         PreparationActivity activity = new PreparationActivity(args);

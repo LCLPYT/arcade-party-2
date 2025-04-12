@@ -2,15 +2,12 @@ package work.lclpnet.ap2.game.guess_it;
 
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.entity.boss.BossBar;
-import net.minecraft.scoreboard.ScoreboardDisplaySlot;
 import net.minecraft.scoreboard.number.FixedNumberFormat;
-import net.minecraft.scoreboard.number.StyledNumberFormat;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
 import net.minecraft.world.GameRules;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
@@ -22,6 +19,7 @@ import work.lclpnet.ap2.impl.game.FFAGameInstance;
 import work.lclpnet.ap2.impl.game.data.ScoreDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.map.MapUtil;
+import work.lclpnet.ap2.impl.util.ScoreboardUtil;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.ap2.impl.util.scoreboard.ScoreHandle;
 import work.lclpnet.ap2.impl.util.scoreboard.ScoreboardLayout;
@@ -134,17 +132,7 @@ public class GuessItInstance extends FFAGameInstance implements MapBootstrap {
         CustomScoreboardManager scoreboardManager = gameHandle.getScoreboardManager();
         Translations translations = gameHandle.getTranslations();
 
-        var objective = scoreboardManager.translateObjective("score", gameHandle.getGameInfo().getTitleKey())
-                .formatted(AQUA, Formatting.BOLD);
-
-        objective.setSlot(ScoreboardDisplaySlot.SIDEBAR);
-        objective.setDisplayName(holder -> Text.literal(holder).formatted(GREEN));
-        objective.setNumberFormat(StyledNumberFormat.YELLOW);
-
-        // separators at top and bottom
-        var separator = Text.literal(ApConstants.SCOREBOARD_SEPARATOR).formatted(DARK_GREEN, STRIKETHROUGH, BOLD);
-        objective.createText(separator, ScoreboardLayout.TOP);
-        objective.createText(separator, ScoreboardLayout.BOTTOM);
+        var objective = ScoreboardUtil.setupSidebar(scoreboardManager, gameHandle.getGameInfo().getTitleKey());
 
         // round display
         roundHandle = objective.createText(translations.translateText("game.ap2.guess_it.round").formatted(GREEN));
@@ -154,6 +142,9 @@ public class GuessItInstance extends FFAGameInstance implements MapBootstrap {
 
         // score heading
         objective.createText(translations.translateText("ap2.score").formatted(YELLOW, BOLD));
+
+        var separator = Text.literal(ApConstants.SCOREBOARD_SEPARATOR_SM).formatted(DARK_GREEN, STRIKETHROUGH);
+        objective.createText(separator);
 
         for (ServerPlayerEntity player : PlayerLookup.all(gameHandle.getServer())) {
             objective.addPlayer(player);

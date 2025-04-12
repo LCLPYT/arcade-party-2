@@ -11,6 +11,7 @@ import work.lclpnet.ap2.api.game.MiniGame;
 import work.lclpnet.ap2.api.util.music.SongCache;
 import work.lclpnet.ap2.base.activity.PreparationActivity;
 import work.lclpnet.ap2.base.cmd.ForceGameCommand;
+import work.lclpnet.ap2.base.util.ScoreManager;
 import work.lclpnet.ap2.impl.base.PlayerManagerImpl;
 import work.lclpnet.ap2.impl.base.SimpleMiniGameManager;
 import work.lclpnet.ap2.impl.base.VotedGameQueue;
@@ -35,7 +36,10 @@ import static work.lclpnet.ap2.impl.util.FutureUtil.onThread;
 
 public class ArcadePartyInstance implements GameInstance {
 
-    private static final int MIN_REQUIRED_PLAYERS = 2;
+    private static final int
+            MIN_REQUIRED_PLAYERS = 2,
+            WIN_SCORE = 20;
+
     private final GameEnvironment environment;
     private final Path cacheDirectory;
     private final VanillaTranslations vanillaTranslations;
@@ -113,8 +117,9 @@ public class ArcadePartyInstance implements GameInstance {
                 result.mapFacade(), playerUtil, gameManager, result.songManager(), result.dataManager());
 
         SongCache songCache = new MapSongCache();
+        ScoreManager scoreManager = new ScoreManager(WIN_SCORE);
 
-        var args = new PreparationActivity.Args(container, queue, playerManager, forceGameCommand, songCache);
+        var args = new PreparationActivity.Args(container, queue, playerManager, forceGameCommand, songCache, scoreManager);
         PreparationActivity preparation = new PreparationActivity(args);
 
         ActivityManager.getInstance().startActivity(preparation);

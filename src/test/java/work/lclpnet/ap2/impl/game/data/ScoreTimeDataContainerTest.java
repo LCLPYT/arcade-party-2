@@ -63,21 +63,4 @@ class ScoreTimeDataContainerTest {
         assertEquals(1, ((ScoreTimeDataEntry<StringRef>) order.getFirst()).ranking());
         assertEquals(2, ((ScoreTimeDataEntry<StringRef>) order.get(1)).ranking());
     }
-
-    @Test
-    void getBestSubject() {
-        var container = new ScoreTimeDataContainer<>(StringRef::new);
-
-        var playerA = "A";
-        var playerB = "B";
-
-        container.setScore(playerA, 5);
-        container.setScore(playerB, 5);
-        container.setScore(playerB, 6);
-        container.setScore(playerA, 6);
-
-        var bestSubject = container.getBestSubject(StringRef::name).orElseThrow();
-
-        assertEquals("B", bestSubject);
-    }
 }

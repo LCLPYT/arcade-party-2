@@ -1,5 +1,6 @@
 package work.lclpnet.ap2.impl.game.data;
 
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.event.IntScoreEvent;
 import work.lclpnet.ap2.api.event.IntScoreEventSource;
@@ -49,22 +50,24 @@ public class ScoreDataContainer<T, Ref extends SubjectRef> extends BaseDataConta
 
     @Override
     public void addScore(T subject, int add) {
-        int score;
+        Ref key = refs.create(subject);
 
-        synchronized (this) {
-            Ref key = refs.create(subject);
-
-            score = scoreMap.computeIfAbsent(key, ref -> 0) + add;
-
-            scoreMap.put(key, score);
-        }
+        int score = addScore(key, add);
 
         listeners.forEach(listener -> listener.accept(subject, score));
     }
 
+    public synchronized int addScore(Ref ref, int add) {
+        return scoreMap.compute(ref, (r, score) -> (score != null ? score : 0) + add);
+    }
+
     @Override
-    public synchronized int getScore(T subject) {
-        return scoreMap.computeIfAbsent(refs.create(subject), ref -> 0);
+    public int getScore(T subject) {
+        return getScore(refs.create(subject));
+    }
+
+    public synchronized @NotNull Integer getScore(Ref ref) {
+        return scoreMap.computeIfAbsent(ref, r -> 0);
     }
 
     @Override
