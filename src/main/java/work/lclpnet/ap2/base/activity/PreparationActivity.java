@@ -43,6 +43,7 @@ import work.lclpnet.ap2.impl.util.ScoreboardUtil;
 import work.lclpnet.ap2.impl.util.music.MusicHelper;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.ap2.impl.util.scoreboard.ScoreboardLayout;
+import work.lclpnet.ap2.impl.util.scoreboard.TranslatedScoreboardObjective;
 import work.lclpnet.ap2.impl.util.title.AnimatedTitle;
 import work.lclpnet.ap2.impl.util.title.NextGameTitleAnimation;
 import work.lclpnet.kibu.cmd.type.CommandRegistrar;
@@ -55,6 +56,7 @@ import work.lclpnet.kibu.scheduler.api.Scheduler;
 import work.lclpnet.kibu.scheduler.api.TaskHandle;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.kibu.translate.Translations;
+import work.lclpnet.kibu.translate.text.TranslatedText;
 import work.lclpnet.lobby.game.api.MapOptions;
 import work.lclpnet.lobby.game.api.WorldFacade;
 import work.lclpnet.lobby.game.map.GameMap;
@@ -198,6 +200,45 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
         var round = new FixedNumberFormat(Text.literal(String.valueOf(scoreManager.getRound())).formatted(YELLOW));
         objective.createText(translations.translateText("ap2.prepare.round").formatted(GREEN)).setNumberFormat(round);
 
+        if (args.playerManager().isFinale()) {
+            addFinalistsToScoreboard(objective);
+        } else {
+            addPlayerScoresToScoreboard(objective);
+        }
+
+        // footer
+        var requiredScore = styled(scoreManager.getTargetScore()).formatted(YELLOW);
+        TranslatedText taskMsg = translations.translateText("ap2.prepare.score_required", requiredScore);
+        objective.createText(taskMsg.formatted(AQUA), ScoreboardLayout.BOTTOM);
+
+        objective.createNewline(ScoreboardLayout.BOTTOM);
+
+        // display objective for all players
+        for (ServerPlayerEntity player : PlayerLookup.all(args.miniGameArgs().server())) {
+            objective.addPlayer(player);
+        }
+    }
+
+    private void addFinalistsToScoreboard(TranslatedScoreboardObjective objective) {
+        Set<ServerPlayerEntity> finalists = args.scoreManager().getFinalists().collect(toSet());
+        Translations translations = args.miniGameArgs().translations();
+
+        objective.createNewline(ScoreboardLayout.TOP);
+
+        objective.createText(translations.translateText("ap2.finale").formatted(YELLOW, BOLD));
+
+        var separator = Text.literal(ApConstants.SCOREBOARD_SEPARATOR_SM).formatted(DARK_GREEN, STRIKETHROUGH);
+        objective.createText(separator);
+
+        for (ServerPlayerEntity finalist : finalists) {
+            objective.createText(Text.literal("• " + finalist.getNameForScoreboard()).formatted(GREEN));
+        }
+    }
+
+    private void addPlayerScoresToScoreboard(TranslatedScoreboardObjective objective) {
+        Translations translations = args.miniGameArgs().translations();
+        ScoreManager scoreManager = args.scoreManager();
+
         if (scoreManager.hasScores()) {
             objective.createNewline(ScoreboardLayout.TOP);
 
@@ -221,17 +262,6 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
 
             objective.setDisplayName(ref.name(), Text.literal("#%d ".formatted(rank)).formatted(YELLOW)
                     .append(Text.literal(ref.name()).formatted(GREEN)));
-        }
-
-        // footer
-        var requiredScore = styled(scoreManager.getTargetScore()).formatted(YELLOW);
-        objective.createText(translations.translateText("ap2.prepare.score_required", requiredScore).formatted(AQUA), ScoreboardLayout.BOTTOM);
-
-        objective.createNewline(ScoreboardLayout.BOTTOM);
-
-        // display objective for all players
-        for (ServerPlayerEntity player : PlayerLookup.all(args.miniGameArgs().server())) {
-            objective.addPlayer(player);
         }
     }
 

@@ -23,4 +23,6 @@ public interface PlayerManager extends Participants {
     void bind(ParticipantListener listener);
 
     void leaveFinale();
+
+    boolean isFinale();
 }

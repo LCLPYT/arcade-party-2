@@ -211,4 +211,9 @@ public class PlayerManagerImpl implements PlayerManager {
             writeLock.unlock();
         }
     }
+
+    @Override
+    public boolean isFinale() {
+        return finale;
+    }
 }
