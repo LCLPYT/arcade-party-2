@@ -17,6 +17,7 @@ import work.lclpnet.combatctl.api.CombatStyle;
 import work.lclpnet.combatctl.impl.CombatStyles;
 import work.lclpnet.kibu.access.VelocityModifier;
 import work.lclpnet.kibu.hook.util.PlayerUtils;
+import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.lobby.util.PlayerReset;
 
 import java.util.Objects;
@@ -140,6 +141,10 @@ public class PlayerUtil {
 
         setAllowFlight(false);
         effects.clear();
+    }
+
+    public static int getLoadingDelayTicks(int players) {
+        return Ticks.seconds(5) + players * 10;
     }
 
     public enum State {

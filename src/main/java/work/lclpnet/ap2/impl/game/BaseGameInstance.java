@@ -35,7 +35,6 @@ import work.lclpnet.kibu.hook.entity.EntityHealthCallback;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks;
 import work.lclpnet.kibu.hook.player.PlayerSpawnLocationCallback;
-import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.RunningTask;
 import work.lclpnet.kibu.title.Title;
 import work.lclpnet.kibu.translate.Translations;
@@ -274,7 +273,7 @@ public abstract class BaseGameInstance implements MiniGameInstance {
 
     protected int getInitialDelay() {
         int players = gameHandle.getParticipants().getAsSet().size();
-        return Ticks.seconds(5) + players * 10;
+        return PlayerUtil.getLoadingDelayTicks(players);
     }
 
     protected final ServerWorld getWorld() {

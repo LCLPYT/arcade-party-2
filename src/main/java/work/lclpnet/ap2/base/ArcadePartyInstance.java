@@ -120,7 +120,9 @@ public class ArcadePartyInstance implements GameInstance {
         SongCache songCache = new MapSongCache();
         ScoreManager scoreManager = new ScoreManager(server.getPlayerManager(), WIN_SCORE);
 
-        var args = new ApBaseArgs(container, queue, playerManager, forceGameCommand, songCache, scoreManager);
+        var args = new ApBaseArgs(container, queue, playerManager, forceGameCommand, songCache, scoreManager,
+                environment.getFinisher());
+
         PreparationActivity preparation = new PreparationActivity(args);
 
         ActivityManager.getInstance().startActivity(preparation);

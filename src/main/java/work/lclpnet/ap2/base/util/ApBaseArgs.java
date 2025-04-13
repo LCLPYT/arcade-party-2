@@ -5,6 +5,7 @@ import work.lclpnet.ap2.api.base.PlayerManager;
 import work.lclpnet.ap2.api.util.music.SongCache;
 import work.lclpnet.ap2.base.ApMiniGameArgs;
 import work.lclpnet.ap2.base.cmd.ForceGameCommand;
+import work.lclpnet.lobby.game.api.GameFinisher;
 
 /**
  * A container for objects required for the arcade-party base game.
@@ -17,5 +18,5 @@ import work.lclpnet.ap2.base.cmd.ForceGameCommand;
  */
 public record ApBaseArgs(
         ApMiniGameArgs miniGameArgs, GameQueue gameQueue, PlayerManager playerManager, ForceGameCommand forceGameCommand,
-        SongCache sharedSongCache, ScoreManager scoreManager
+        SongCache sharedSongCache, ScoreManager scoreManager, GameFinisher finisher
 ) {}
