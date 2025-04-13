@@ -12,15 +12,18 @@ import net.minecraft.text.Text;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.util.scoreboard.CustomScoreboardObjective;
+import work.lclpnet.ap2.api.util.scoreboard.InformativeScoreboard;
+import work.lclpnet.kibu.translate.text.TranslatedText;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-public class DynamicScoreboardObjective implements CustomScoreboardObjective {
+public class DynamicScoreboardObjective implements CustomScoreboardObjective, InformativeScoreboard {
 
     private final String name;
     private final ScoreboardCriterion.RenderType renderType;
@@ -32,6 +35,8 @@ public class DynamicScoreboardObjective implements CustomScoreboardObjective {
     private ScoreboardDisplaySlot slot = null;
     @Setter
     private NumberFormat defaultNumberFormat = StyledNumberFormat.RED;
+    @Setter
+    private BiFunction<ServerPlayerEntity, String, Text> defaultDisplay = (player, holder) -> Text.literal(holder);
 
     public DynamicScoreboardObjective(String name, ScoreboardCriterion.RenderType renderType,
                                       Function<ServerPlayerEntity, Text> title, PlayerManager playerManager) {
@@ -111,7 +116,7 @@ public class DynamicScoreboardObjective implements CustomScoreboardObjective {
             return entry;
         }
 
-        entry = new DynamicEntry(holder, 0, defaultNumberFormat, player -> Text.literal(holder));
+        entry = new DynamicEntry(holder, 0, defaultNumberFormat, player -> defaultDisplay.apply(player, holder));
 
         setDynamicEntry(holder, entry);
 
@@ -124,12 +129,14 @@ public class DynamicScoreboardObjective implements CustomScoreboardObjective {
         eachObjective(entry::put);
     }
 
-    public void createNewline(int position) {
-        createText(Text.empty(), position);
-    }
-
+    @Override
     public ScoreHandle createText(Text line, int position) {
         return createText(p -> line, position);
+    }
+
+    @Override
+    public ScoreHandle createText(TranslatedText line, int position) {
+        return createText(line::translateFor, position);
     }
 
     public ScoreHandle createText(Function<ServerPlayerEntity, @Nullable Text> textFactory, int position) {

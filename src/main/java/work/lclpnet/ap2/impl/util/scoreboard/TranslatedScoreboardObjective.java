@@ -2,6 +2,8 @@ package work.lclpnet.ap2.impl.util.scoreboard;
 
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
+import lombok.Getter;
+import lombok.Setter;
 import net.minecraft.scoreboard.ScoreboardCriterion;
 import net.minecraft.scoreboard.ScoreboardDisplaySlot;
 import net.minecraft.scoreboard.number.BlankNumberFormat;
@@ -11,20 +13,21 @@ import net.minecraft.server.PlayerManager;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import work.lclpnet.ap2.api.util.StyleTransformer;
 import work.lclpnet.ap2.api.util.scoreboard.CustomScoreboardObjective;
+import work.lclpnet.ap2.api.util.scoreboard.InformativeScoreboard;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.kibu.translate.text.RootText;
 import work.lclpnet.kibu.translate.text.TextTranslatable;
+import work.lclpnet.kibu.translate.text.TranslatedText;
 
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.UnaryOperator;
 
-public class TranslatedScoreboardObjective implements CustomScoreboardObjective {
+public class TranslatedScoreboardObjective implements CustomScoreboardObjective, StyleTransformer<TranslatedScoreboardObjective>, InformativeScoreboard {
 
     private final Translations translations;
     private final PlayerManager playerManager;
@@ -40,6 +43,7 @@ public class TranslatedScoreboardObjective implements CustomScoreboardObjective 
     private String translationKey;
     private Object[] args;
     private ScoreboardDisplaySlot slot = null;
+    @Setter @Getter
     private Style style = Style.EMPTY;
     @Nullable
     private Function<String, @Nullable Text> displayFunction = null;
@@ -150,59 +154,6 @@ public class TranslatedScoreboardObjective implements CustomScoreboardObjective 
         for (var objective : localizedObjectives.values()) {
             action.accept(objective);
         }
-    }
-
-    public Style getStyle() {
-        return style;
-    }
-
-    public void setStyle(Style style) {
-        this.style = style;
-    }
-
-    /**
-     * Updates the style of the title text.
-     *
-     * @see #getStyle()
-     * @see #setStyle(Style)
-     *
-     * @param styleUpdater the style updater
-     */
-    public TranslatedScoreboardObjective styled(UnaryOperator<Style> styleUpdater) {
-        this.setStyle(styleUpdater.apply(this.getStyle()));
-        return this;
-    }
-
-    /**
-     * Fills the absent parts of the title text's style with definitions from {@code styleOverride}.
-     *
-     * @see Style#withParent(Style)
-     *
-     * @param styleOverride the style that provides definitions for absent definitions in the title text's style
-     */
-    public TranslatedScoreboardObjective fillStyle(Style styleOverride) {
-        this.setStyle(styleOverride.withParent(this.getStyle()));
-        return this;
-    }
-
-    /**
-     * Adds some formattings to the title text's style.
-     *
-     * @param formattings an array of formattings
-     */
-    public TranslatedScoreboardObjective formatted(Formatting... formattings) {
-        this.setStyle(this.getStyle().withFormatting(formattings));
-        return this;
-    }
-
-    /**
-     * Add a formatting to the title text's style.
-     *
-     * @param formatting a formatting
-     */
-    public TranslatedScoreboardObjective formatted(Formatting formatting) {
-        this.setStyle(this.getStyle().withFormatting(formatting));
-        return this;
     }
 
     public void setSlot(@Nullable ScoreboardDisplaySlot slot) {
@@ -327,10 +278,7 @@ public class TranslatedScoreboardObjective implements CustomScoreboardObjective 
         return translatedDisplay.translateTo(language);
     }
 
-    public ScoreHandle createText(Text text) {
-        return createText(text, ScoreboardLayout.TOP);
-    }
-
+    @Override
     public ScoreHandle createText(Text text, int position) {
         ScoreHandle handle = createHandle(position);
         handle.setDisplay(text);
@@ -338,11 +286,8 @@ public class TranslatedScoreboardObjective implements CustomScoreboardObjective 
         return handle;
     }
 
-    public ScoreHandle createText(TextTranslatable text) {
-        return createText(text, ScoreboardLayout.TOP);
-    }
-
-    public ScoreHandle createText(TextTranslatable text, int position) {
+    @Override
+    public ScoreHandle createText(TranslatedText text, int position) {
         ScoreHandle handle = createHandle(position);
 
         setDisplayName(handle.getHolder(), text);
@@ -358,10 +303,6 @@ public class TranslatedScoreboardObjective implements CustomScoreboardObjective 
 
         handle.setNumberFormat(BlankNumberFormat.INSTANCE);
         return handle;
-    }
-
-    public void createNewline(int position) {
-        createText(Text.empty(), position);
     }
 
     public void unload() {

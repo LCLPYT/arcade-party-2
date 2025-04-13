@@ -42,8 +42,8 @@ import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.util.ScoreboardUtil;
 import work.lclpnet.ap2.impl.util.music.MusicHelper;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
+import work.lclpnet.ap2.impl.util.scoreboard.DynamicScoreboardObjective;
 import work.lclpnet.ap2.impl.util.scoreboard.ScoreboardLayout;
-import work.lclpnet.ap2.impl.util.scoreboard.TranslatedScoreboardObjective;
 import work.lclpnet.ap2.impl.util.title.AnimatedTitle;
 import work.lclpnet.ap2.impl.util.title.NextGameTitleAnimation;
 import work.lclpnet.kibu.cmd.type.CommandRegistrar;
@@ -194,7 +194,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
         ScoreboardComponent component = component(ArcadePartyComponents.SCORE_BOARD);
         CustomScoreboardManager scoreboard = component.scoreboardManager(args.miniGameArgs()::translations);
 
-        var objective = ScoreboardUtil.setupSidebar(scoreboard, "game.%s.title".formatted(ApConstants.ID));
+        var objective = ScoreboardUtil.setupDynamicSidebar(scoreboard, "game.%s.title".formatted(ApConstants.ID));
 
         // header
         var round = new FixedNumberFormat(Text.literal(String.valueOf(scoreManager.getRound())).formatted(YELLOW));
@@ -207,9 +207,19 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
         }
 
         // footer
-        var requiredScore = styled(scoreManager.getTargetScore()).formatted(YELLOW);
-        TranslatedText taskMsg = translations.translateText("ap2.prepare.score_required", requiredScore);
-        objective.createText(taskMsg.formatted(AQUA), ScoreboardLayout.BOTTOM);
+        if (args.playerManager().isFinale()) {
+            objective.createText(player -> {
+                String translation = args.playerManager().isParticipating(player)
+                        ? "ap2.prepare.win_finale"
+                        : "ap2.prepare.spectating";
+
+                return translations.translateText(player, translation).formatted(AQUA);
+            }, ScoreboardLayout.BOTTOM);
+        } else {
+            var requiredScore = styled(scoreManager.getTargetScore()).formatted(YELLOW);
+            TranslatedText taskMsg = translations.translateText("ap2.prepare.score_required", requiredScore);
+            objective.createText(taskMsg.formatted(AQUA), ScoreboardLayout.BOTTOM);
+        }
 
         objective.createNewline(ScoreboardLayout.BOTTOM);
 
@@ -219,7 +229,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
         }
     }
 
-    private void addFinalistsToScoreboard(TranslatedScoreboardObjective objective) {
+    private void addFinalistsToScoreboard(DynamicScoreboardObjective objective) {
         Set<ServerPlayerEntity> finalists = args.scoreManager().getFinalists().collect(toSet());
         Translations translations = args.miniGameArgs().translations();
 
@@ -235,7 +245,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
         }
     }
 
-    private void addPlayerScoresToScoreboard(TranslatedScoreboardObjective objective) {
+    private void addPlayerScoresToScoreboard(DynamicScoreboardObjective objective) {
         Translations translations = args.miniGameArgs().translations();
         ScoreManager scoreManager = args.scoreManager();
 

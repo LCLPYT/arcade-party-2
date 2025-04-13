@@ -1,5 +1,6 @@
 package work.lclpnet.ap2.impl.util.scoreboard;
 
+import lombok.Getter;
 import net.minecraft.entity.Entity;
 import net.minecraft.scoreboard.*;
 import net.minecraft.scoreboard.number.NumberFormat;
@@ -19,15 +20,18 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
 
 public class CustomScoreboardManager {
 
     private final ServerScoreboard scoreboard;
+    @Getter
     private final Translations translations;
     private final PlayerManager playerManager;
     private final Set<Team> teams = new HashSet<>();
     private final Set<ScoreboardObjective> objectives = new HashSet<>();
     private final List<TranslatedScoreboardObjective> translatedObjectives = new ArrayList<>();
+    private final List<DynamicScoreboardObjective> dynamicObjectives = new ArrayList<>();
 
     public CustomScoreboardManager(ServerScoreboard scoreboard, Translations translations, PlayerManager playerManager) {
         this.scoreboard = scoreboard;
@@ -183,11 +187,25 @@ public class CustomScoreboardManager {
         return objective;
     }
 
+    public DynamicScoreboardObjective createDynamicObjective(String name, Function<ServerPlayerEntity, Text> title) {
+        return createDynamicObjective(name, ScoreboardCriterion.RenderType.INTEGER, title);
+    }
+
+    public DynamicScoreboardObjective createDynamicObjective(String name, ScoreboardCriterion.RenderType renderType,
+                                                             Function<ServerPlayerEntity, Text> title) {
+        var objective = new DynamicScoreboardObjective(name, renderType, title, playerManager);
+
+        dynamicObjectives.add(objective);
+
+        return objective;
+    }
+
     public synchronized void unload() {
         teams.forEach(scoreboard::removeTeam);
         teams.clear();
 
         translatedObjectives.forEach(TranslatedScoreboardObjective::unload);
+        dynamicObjectives.forEach(DynamicScoreboardObjective::unload);
 
         objectives.forEach(scoreboard::removeObjective);
         objectives.clear();
