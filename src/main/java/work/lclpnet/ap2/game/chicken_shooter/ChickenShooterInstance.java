@@ -122,7 +122,7 @@ public class ChickenShooterInstance extends FFAGameInstance implements Runnable 
         objective.setNumberFormat(StyledNumberFormat.YELLOW);
 
         for (ServerPlayerEntity player : PlayerLookup.all(gameHandle.getServer())) {
-            objective.addPlayer(player);
+            objective.add(player);
         }
 
         Team team = scoreboardManager.createTeam("team");

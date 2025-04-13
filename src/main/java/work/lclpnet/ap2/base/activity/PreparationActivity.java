@@ -225,7 +225,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
 
         // display objective for all players
         for (ServerPlayerEntity player : PlayerLookup.all(args.miniGameArgs().server())) {
-            objective.addPlayer(player);
+            objective.add(player);
         }
     }
 

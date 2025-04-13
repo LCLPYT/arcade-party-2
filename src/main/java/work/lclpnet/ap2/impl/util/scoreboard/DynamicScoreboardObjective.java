@@ -13,6 +13,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.util.scoreboard.CustomScoreboardObjective;
 import work.lclpnet.ap2.api.util.scoreboard.InformativeScoreboard;
+import work.lclpnet.ap2.api.util.scoreboard.VirtualScoreboardObjective;
 import work.lclpnet.kibu.translate.text.TranslatedText;
 
 import java.util.HashMap;
@@ -23,7 +24,10 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-public class DynamicScoreboardObjective implements CustomScoreboardObjective, InformativeScoreboard {
+public class DynamicScoreboardObjective implements
+        CustomScoreboardObjective,
+        InformativeScoreboard,
+        VirtualScoreboardObjective {
 
     private final String name;
     private final ScoreboardCriterion.RenderType renderType;
@@ -46,7 +50,8 @@ public class DynamicScoreboardObjective implements CustomScoreboardObjective, In
         this.playerManager = playerManager;
     }
 
-    public void addPlayer(ServerPlayerEntity player) {
+    @Override
+    public void add(ServerPlayerEntity player) {
         CustomObjective objective = objectives.computeIfAbsent(player.getUuid(), uuid -> getObjective(player));
 
         entries.values().forEach(dynamicEntry -> dynamicEntry.put(player, objective));
@@ -56,13 +61,22 @@ public class DynamicScoreboardObjective implements CustomScoreboardObjective, In
         objective.syncScores(player);
     }
 
-    public void removePlayer(ServerPlayerEntity player) {
+    @Override
+    public void remove(ServerPlayerEntity player) {
         CustomObjective objective = objectives.remove(player.getUuid());
 
         if (objective == null) return;
 
         CustomObjective.setDisplay(player, null, slot);
         objective.remove(player);
+    }
+
+    @Override
+    public void update(ServerPlayerEntity player) {
+        if (!objectives.containsKey(player.getUuid())) return;
+
+        remove(player);
+        add(player);
     }
 
     protected @NotNull CustomObjective getObjective(ServerPlayerEntity player) {
@@ -169,6 +183,7 @@ public class DynamicScoreboardObjective implements CustomScoreboardObjective, In
         objectives.values().forEach(action);
     }
 
+    @Override
     public void unload() {
         eachObjective((player, objective) -> {
             CustomObjective.setDisplay(player, null, slot);

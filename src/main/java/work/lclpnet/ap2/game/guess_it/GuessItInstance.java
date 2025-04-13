@@ -147,7 +147,7 @@ public class GuessItInstance extends FFAGameInstance implements MapBootstrap {
         objective.createText(separator);
 
         for (ServerPlayerEntity player : PlayerLookup.all(gameHandle.getServer())) {
-            objective.addPlayer(player);
+            objective.add(player);
         }
 
         useScoreboardStatsSync(data, objective);

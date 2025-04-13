@@ -146,7 +146,7 @@ public class SplashyDropperInstance extends FFAGameInstance implements MapBootst
         objective.setNumberFormat(StyledNumberFormat.YELLOW);
 
         for (ServerPlayerEntity player : PlayerLookup.all(gameHandle.getServer())) {
-            objective.addPlayer(player);
+            objective.add(player);
         }
     }
 

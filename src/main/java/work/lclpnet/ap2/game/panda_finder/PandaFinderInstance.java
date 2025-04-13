@@ -112,7 +112,7 @@ public class PandaFinderInstance extends FFAGameInstance {
         objective.setSlot(ScoreboardDisplaySlot.SIDEBAR);
 
         for (ServerPlayerEntity player : PlayerLookup.all(gameHandle.getServer())) {
-            objective.addPlayer(player);
+            objective.add(player);
         }
 
         useScoreboardStatsSync(data, objective);

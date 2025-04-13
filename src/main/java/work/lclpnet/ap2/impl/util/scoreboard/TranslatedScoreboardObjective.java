@@ -18,6 +18,7 @@ import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.util.StyleTransformer;
 import work.lclpnet.ap2.api.util.scoreboard.CustomScoreboardObjective;
 import work.lclpnet.ap2.api.util.scoreboard.InformativeScoreboard;
+import work.lclpnet.ap2.api.util.scoreboard.VirtualScoreboardObjective;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.kibu.translate.text.RootText;
 import work.lclpnet.kibu.translate.text.TextTranslatable;
@@ -27,7 +28,11 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-public class TranslatedScoreboardObjective implements CustomScoreboardObjective, StyleTransformer<TranslatedScoreboardObjective>, InformativeScoreboard {
+public class TranslatedScoreboardObjective implements
+        CustomScoreboardObjective,
+        StyleTransformer<TranslatedScoreboardObjective>,
+        InformativeScoreboard,
+        VirtualScoreboardObjective {
 
     private final Translations translations;
     private final PlayerManager playerManager;
@@ -58,7 +63,8 @@ public class TranslatedScoreboardObjective implements CustomScoreboardObjective,
         this.args = args;
     }
 
-    public void addPlayer(ServerPlayerEntity player) {
+    @Override
+    public void add(ServerPlayerEntity player) {
         final String language = translations.getLanguage(player);
         final UUID uuid = player.getUuid();
 
@@ -69,7 +75,7 @@ public class TranslatedScoreboardObjective implements CustomScoreboardObjective,
 
         if (oldLanguage != null) {
             // the language changed, remove the player from the old boss bar
-            removePlayer(player);
+            remove(player);
         }
 
         CustomObjective objective = getLocalizedObjective(language);
@@ -83,7 +89,8 @@ public class TranslatedScoreboardObjective implements CustomScoreboardObjective,
         players.put(uuid, language);
     }
 
-    public void removePlayer(ServerPlayerEntity player) {
+    @Override
+    public void remove(ServerPlayerEntity player) {
         UUID uuid = player.getUuid();
         String lang = players.remove(uuid);
         if (lang == null) return;
@@ -99,11 +106,12 @@ public class TranslatedScoreboardObjective implements CustomScoreboardObjective,
         uuids.remove(uuid);
     }
 
-    public void updatePlayerLanguage(ServerPlayerEntity player) {
+    @Override
+    public void update(ServerPlayerEntity player) {
         if (!players.containsKey(player.getUuid())) return;
 
         // adding the player will update the language
-        addPlayer(player);
+        add(player);
     }
 
     @NotNull
@@ -305,6 +313,7 @@ public class TranslatedScoreboardObjective implements CustomScoreboardObjective,
         return handle;
     }
 
+    @Override
     public void unload() {
         objectivePlayers.forEach((objective, uuids) -> {
             for (UUID uuid : uuids) {

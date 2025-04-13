@@ -11,6 +11,7 @@ import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.event.IntScoreEventSource;
 import work.lclpnet.ap2.api.util.scoreboard.CustomScoreboardObjective;
+import work.lclpnet.ap2.api.util.scoreboard.VirtualScoreboardObjective;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.player.PlayerConnectionHooks;
 import work.lclpnet.kibu.translate.Translations;
@@ -30,8 +31,7 @@ public class CustomScoreboardManager {
     private final PlayerManager playerManager;
     private final Set<Team> teams = new HashSet<>();
     private final Set<ScoreboardObjective> objectives = new HashSet<>();
-    private final List<TranslatedScoreboardObjective> translatedObjectives = new ArrayList<>();
-    private final List<DynamicScoreboardObjective> dynamicObjectives = new ArrayList<>();
+    private final List<VirtualScoreboardObjective> virtualObjectives = new ArrayList<>();
 
     public CustomScoreboardManager(ServerScoreboard scoreboard, Translations translations, PlayerManager playerManager) {
         this.scoreboard = scoreboard;
@@ -41,14 +41,14 @@ public class CustomScoreboardManager {
 
     public void init(HookRegistrar hookRegistrar) {
         hookRegistrar.registerHook(LanguageChangedCallback.HOOK, (player, language, reason) -> {
-            for (TranslatedScoreboardObjective objective : translatedObjectives) {
-                objective.updatePlayerLanguage(player);
+            for (var objective : virtualObjectives) {
+                objective.update(player);
             }
         });
 
         hookRegistrar.registerHook(PlayerConnectionHooks.JOIN, player -> {
-            for (TranslatedScoreboardObjective objective : translatedObjectives) {
-                objective.addPlayer(player);
+            for (var objective : virtualObjectives) {
+                objective.add(player);
             }
         });
 
@@ -182,7 +182,7 @@ public class CustomScoreboardManager {
                                                             String translationKey, Object... args) {
         var objective = new TranslatedScoreboardObjective(translations, playerManager, name, renderType, translationKey, args);
 
-        translatedObjectives.add(objective);
+        virtualObjectives.add(objective);
 
         return objective;
     }
@@ -195,7 +195,7 @@ public class CustomScoreboardManager {
                                                              Function<ServerPlayerEntity, Text> title) {
         var objective = new DynamicScoreboardObjective(name, renderType, title, playerManager);
 
-        dynamicObjectives.add(objective);
+        virtualObjectives.add(objective);
 
         return objective;
     }
@@ -204,8 +204,7 @@ public class CustomScoreboardManager {
         teams.forEach(scoreboard::removeTeam);
         teams.clear();
 
-        translatedObjectives.forEach(TranslatedScoreboardObjective::unload);
-        dynamicObjectives.forEach(DynamicScoreboardObjective::unload);
+        virtualObjectives.forEach(VirtualScoreboardObjective::unload);
 
         objectives.forEach(scoreboard::removeObjective);
         objectives.clear();
