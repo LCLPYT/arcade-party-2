@@ -2,7 +2,6 @@ package work.lclpnet.ap2.base;
 
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.util.Formatting;
 import org.slf4j.Logger;
 import work.lclpnet.activity.manager.ActivityManager;
 import work.lclpnet.ap2.api.base.GameQueue;
@@ -27,21 +26,21 @@ import work.lclpnet.kibu.hook.HookStack;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.lobby.game.api.GameEnvironment;
 import work.lclpnet.lobby.game.api.GameInstance;
-import work.lclpnet.lobby.game.api.GameStarter;
-import work.lclpnet.lobby.game.start.ConditionGameStarter;
+import work.lclpnet.lobby.game.api.option.GameOptions;
+import work.lclpnet.lobby.game.api.option.VoteResult;
 import work.lclpnet.translations.DefaultLanguageTranslator;
 
 import java.nio.file.Path;
-import java.util.List;
+import java.util.*;
+import java.util.Map.Entry;
 import java.util.concurrent.ForkJoinPool;
+import java.util.stream.Collectors;
 
 import static work.lclpnet.ap2.impl.util.FutureUtil.onThread;
 
 public class ArcadePartyInstance implements GameInstance {
 
-    private static final int
-            MIN_REQUIRED_PLAYERS = 2,
-            WIN_SCORE = 20;
+    private static final int WIN_SCORE = 20;
 
     private final GameEnvironment environment;
     private final Path cacheDirectory;
@@ -57,53 +56,27 @@ public class ArcadePartyInstance implements GameInstance {
     }
 
     @Override
-    public GameStarter createStarter(GameStarter.Args args, GameStarter.Callback callback) {
-        ConditionGameStarter starter = new ConditionGameStarter(this::canStart, args, callback, environment);
-
-        Translations translations = environment.getTranslations();
-
-        var msg = translations.translateText("lobby.game.not_enough_players", MIN_REQUIRED_PLAYERS)
-                .formatted(Formatting.RED);
-
-        starter.setConditionMessage(msg::translateFor);
-
-        starter.setConditionBossBarValue(translations.translateText("lobby.game.waiting_for_players"));
-
-        return starter;
-    }
-
-    private boolean canStart() {
-        MinecraftServer server = environment.getServer();
-
-        int players = PlayerLookup.all(server).size();
-
-        if (ApConstants.DEVELOPMENT) {
-            return players >= 1;
-        }
-
-        return players >= MIN_REQUIRED_PLAYERS;
-    }
-
-    @Override
-    public void start() {
+    public void start(GameOptions options) {
         MinecraftServer server = environment.getServer();
         ApBootstrap bootstrap = new ApBootstrap(cacheDirectory, logger);
 
         bootstrap.loadConfig(ForkJoinPool.commonPool())
                 .thenCompose(configManager -> bootstrap.dispatch(configManager.getConfig(), environment, vanillaTranslations))
-                .thenCompose(onThread(server, this::dispatchGameStart))
+                .thenCompose(onThread(server, result -> {
+                    dispatchGameStart(result, options);
+                }))
                 .exceptionally(throwable -> {
                     logger.error("Failed to load ArcadeParty2", throwable);
                     return null;
                 });
     }
 
-    private void dispatchGameStart(ApBootstrap.Result result) {
+    private void dispatchGameStart(ApBootstrap.Result result, GameOptions options) {
         MinecraftServer server = environment.getServer();
         Translations translations = environment.getTranslations();
 
         MiniGameManager gameManager = new SimpleMiniGameManager(logger);
-        List<MiniGame> votedGames = List.of();  // TODO get from vote manager and shuffle
+        List<MiniGame> votedGames = getVotedGames(gameManager, options);
         GameQueue queue = new VotedGameQueue(gameManager, votedGames, 5);
 
         PlayerManagerImpl playerManager = new PlayerManagerImpl(server);
@@ -133,6 +106,31 @@ public class ArcadePartyInstance implements GameInstance {
         PreparationActivity preparation = new PreparationActivity(args);
 
         ActivityManager.getInstance().startActivity(preparation);
+    }
+
+    private List<MiniGame> getVotedGames(MiniGameManager gameManager, GameOptions options) {
+        Map<MiniGame, Integer> voted = options.getVotingResults(ArcadeParty.VOTING_MINI_GAMES, MiniGame.class)
+                .map(VoteResult::asMap)
+                .orElse(Map.of());
+
+        Random random = new Random();
+
+        return voted.keySet().stream()
+                // only voted games
+                .filter(game -> voted.getOrDefault(game, 0) > 0)
+                // group by vote count
+                .collect(Collectors.groupingBy(voted::get)).entrySet().stream()
+                // sort by grouped vote count descending
+                .sorted(Comparator.<Entry<Integer, List<MiniGame>>>comparingInt(Entry::getKey).reversed())
+                .map(Entry::getValue)
+                // shuffle order of games with the same vote count
+                .flatMap(voteGroup -> {
+                    Collections.shuffle(voteGroup, random);
+                    return voteGroup.stream();
+                })
+                // voted games are not the same instances as the ones in the game manager, therefore lookup correct one
+                .flatMap(game -> gameManager.getGame(game.getId()).stream())
+                .toList();
     }
 
     private void initDynamicLanguages(HookStack hookStack, Translations translations, MinecraftServer server) {
