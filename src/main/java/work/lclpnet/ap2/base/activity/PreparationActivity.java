@@ -14,6 +14,7 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Identifier;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import work.lclpnet.activity.Activity;
 import work.lclpnet.activity.ComponentActivity;
@@ -91,6 +92,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
     private AnimatedTitle animatedTitle = null;
     private SongWrapper song = null;
     private CompletableFuture<Void> whenTasksDone = null;
+    private @Nullable Runnable onScoreUpdate = null;
 
     public PreparationActivity(ApBaseArgs args) {
         super(args.miniGameArgs().server(), args.miniGameArgs().logger());
@@ -129,6 +131,10 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
     public void stop() {
         args.forceGameCommand().setGameEnforcer(args.gameQueue()::setNextGame);
 
+        if (onScoreUpdate != null) {
+            args.scoreManager().onChange().unregister(onScoreUpdate);
+        }
+
         super.stop();
     }
 
@@ -153,6 +159,8 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
 
         scoreManager.incrementRound();
 
+        scoreManager.onChange().register(onScoreUpdate = this::restartActivity);
+
         activityConfigurator.resetPlayers();
         activityConfigurator.configureHooks();
 
@@ -172,6 +180,18 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
         new ForceMapCommand(mapFacade, this::getMiniGame).register(commandRegistrar);
 
         args.forceGameCommand().setGameEnforcer(this::forceGame);
+    }
+
+    private void restartActivity() {
+        args.scoreManager().decrementRound();
+
+        GameQueue queue = args.gameQueue();
+
+        if (this.miniGame != null) {
+            queue.shiftGame(this.miniGame);
+        }
+
+        switchActivity(new PreparationActivity(args));
     }
 
     private void prepareNextMiniGame() {

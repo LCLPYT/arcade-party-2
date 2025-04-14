@@ -41,11 +41,15 @@ public class ScoreDataContainer<T, Ref extends SubjectRef> extends BaseDataConta
     }
 
     public void setScore(T subject, int score) {
-        synchronized (this) {
-            scoreMap.put(refs.create(subject), score);
-        }
+        Ref ref = refs.create(subject);
+
+        setScore(ref, score);
 
         listeners.forEach(listener -> listener.accept(subject, score));
+    }
+
+    public synchronized void setScore(Ref ref, int score) {
+        scoreMap.put(ref, score);
     }
 
     @Override

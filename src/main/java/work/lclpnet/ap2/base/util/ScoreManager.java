@@ -7,12 +7,15 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import work.lclpnet.ap2.api.game.data.DataEntry;
 import work.lclpnet.ap2.impl.game.data.ScoreDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
+import work.lclpnet.kibu.hook.Hook;
+import work.lclpnet.kibu.hook.HookFactory;
 
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
+import static java.lang.Math.max;
 import static java.util.stream.Collectors.toSet;
 
 public class ScoreManager {
@@ -21,6 +24,11 @@ public class ScoreManager {
     private final PlayerManager playerManager;
     @Getter
     private final int targetScore;
+    private final Hook<Runnable> onChange = HookFactory.createArrayBacked(Runnable.class, hooks -> () -> {
+        for (Runnable hook : hooks) {
+            hook.run();
+        }
+    });
     @Getter
     private int round = 0;
 
@@ -29,10 +37,18 @@ public class ScoreManager {
         this.targetScore = targetScore;
     }
 
+    public void setScore(PlayerRef player, int score) {
+        data.setScore(player, max(0, score));
+
+        onChange.invoker().run();
+    }
+
     public void addScore(PlayerRef player, int score) {
         if (score <= 0) return;
 
         data.addScore(player, score);
+
+        onChange.invoker().run();
     }
 
     public int getScore(PlayerRef ref) {
@@ -41,6 +57,10 @@ public class ScoreManager {
 
     public void incrementRound() {
         round++;
+    }
+
+    public void decrementRound() {
+        round = max(0, round - 1);
     }
 
     public Iterable<ObjectIntPair<PlayerRef>> iterateRankedScores() {
@@ -115,5 +135,9 @@ public class ScoreManager {
      */
     public boolean hasMultipleWinners() {
         return getFinalists().count() >= 2;
+    }
+
+    public Hook<Runnable> onChange() {
+        return onChange;
     }
 }
