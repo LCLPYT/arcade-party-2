@@ -34,7 +34,6 @@ public class BaseActivityConfigurator {
     public void configureHooks() {
         HookRegistrar hooks = activity.component(BuiltinComponents.HOOKS).hooks();
         hooks.registerHook(PlayerConnectionHooks.JOIN, this::onJoin);
-//        hooks.registerHook(PlayerInventoryHooks.MODIFY_INVENTORY, event -> !event.player().isCreativeLevelTwoOp());
         hooks.registerHook(PlayerAdvancementPacketCallback.HOOK, (player, packet) -> true);
         hooks.registerHook(PlayerRecipeNotificationCallback.HOOK, (player, recipeEntry, displayEntry) -> true);
     }
