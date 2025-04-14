@@ -3,18 +3,24 @@ package work.lclpnet.ap2.base.activity;
 import it.unimi.dsi.fastutil.objects.ObjectIntPair;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.component.DataComponentTypes;
+import net.minecraft.entity.decoration.DisplayEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.scoreboard.number.FixedNumberFormat;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Vector3d;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import work.lclpnet.activity.Activity;
 import work.lclpnet.activity.ComponentActivity;
@@ -40,6 +46,11 @@ import work.lclpnet.ap2.base.util.*;
 import work.lclpnet.ap2.impl.activity.ArcadePartyComponents;
 import work.lclpnet.ap2.impl.activity.ScoreboardComponent;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
+import work.lclpnet.ap2.impl.map.MapUtil;
+import work.lclpnet.ap2.impl.scene.MixedMountContext;
+import work.lclpnet.ap2.impl.scene.Object3d;
+import work.lclpnet.ap2.impl.scene.Scene;
+import work.lclpnet.ap2.impl.scene.TranslatedTextDisplayObject;
 import work.lclpnet.ap2.impl.util.ScoreboardUtil;
 import work.lclpnet.ap2.impl.util.music.MusicHelper;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
@@ -47,6 +58,7 @@ import work.lclpnet.ap2.impl.util.scoreboard.DynamicScoreboardObjective;
 import work.lclpnet.ap2.impl.util.scoreboard.ScoreboardLayout;
 import work.lclpnet.ap2.impl.util.title.AnimatedTitle;
 import work.lclpnet.ap2.impl.util.title.NextGameTitleAnimation;
+import work.lclpnet.ap2.impl.util.world.entity.DynamicEntityManager;
 import work.lclpnet.kibu.cmd.type.CommandRegistrar;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
@@ -64,11 +76,11 @@ import work.lclpnet.lobby.game.map.GameMap;
 import work.lclpnet.lobby.game.util.BossBarTimer;
 import work.lclpnet.lobby.game.util.ProtectorComponent;
 
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.BiConsumer;
 
+import static java.lang.Math.*;
 import static java.util.stream.Collectors.toSet;
 import static net.minecraft.util.Formatting.*;
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
@@ -93,6 +105,10 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
     private SongWrapper song = null;
     private CompletableFuture<Void> whenTasksDone = null;
     private @Nullable Runnable onScoreUpdate = null;
+    private ServerWorld world;
+    private GameMap map;
+    private DynamicEntityManager dynamicEntityManager;
+    private Object3d gameQueueDisplay;
 
     public PreparationActivity(ApBaseArgs args) {
         super(args.miniGameArgs().server(), args.miniGameArgs().logger());
@@ -117,12 +133,19 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
 
         activityConfigurator.configureProtector();
 
-        WorldFacade worldFacade = args.miniGameArgs().worldFacade();
+        setupMap(args.miniGameArgs(), this::onReady);
+    }
 
-        worldFacade.changeMap(ArcadeParty.identifier("preparation"), MapOptions.REUSABLE)
-                .thenRun(this::onReady)
+    static void setupMap(ApMiniGameArgs miniGameArgs, BiConsumer<ServerWorld, GameMap> onReady) {
+        WorldFacade worldFacade = miniGameArgs.worldFacade();
+        Identifier mapId = ArcadeParty.identifier("preparation");
+
+        worldFacade.changeMap(mapId, MapOptions.REUSABLE)
+                .thenCompose(world -> miniGameArgs.mapFacade().getMap(mapId)
+                        .thenAccept(map -> onReady.accept(world, map.orElseThrow(()
+                                -> new IllegalStateException("Map %s not found".formatted(mapId))))))
                 .exceptionally(throwable -> {
-                    getLogger().error("Failed to change map", throwable);
+                    miniGameArgs.logger().error("Failed to change map", throwable);
                     return null;
                 });
     }
@@ -138,7 +161,10 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
         super.stop();
     }
 
-    private void onReady() {
+    private void onReady(ServerWorld world, GameMap map) {
+        this.world = world;
+        this.map = map;
+
         MapFacade mapFacade = args.miniGameArgs().mapFacade();
         mapFacade.forceMap(null);  // reset forced map
 
@@ -164,9 +190,13 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
         activityConfigurator.resetPlayers();
         activityConfigurator.configureHooks();
 
-        if (ApConstants.DEVELOPMENT) {
-            HookRegistrar hooks = component(BuiltinComponents.HOOKS).hooks();
+        HookRegistrar hooks = component(BuiltinComponents.HOOKS).hooks();
+        Scheduler scheduler = component(BuiltinComponents.SCHEDULER).scheduler();
 
+        dynamicEntityManager = new DynamicEntityManager(world);
+        dynamicEntityManager.init(scheduler, hooks);
+
+        if (ApConstants.DEVELOPMENT) {
             giveDevelopmentItems(hooks);
         }
 
@@ -296,7 +326,87 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
     }
 
     private void displayGameQueue() {
-        // TODO implement
+        JSONObject gameQueue = map.getProperty("game-queue");
+
+        if (gameQueue == null) return;
+
+        Vec3d pos = MapUtil.readVec3d(gameQueue.getJSONArray("pos"));
+        double height = max(1, gameQueue.getDouble("height"));
+        double yaw = Math.toRadians(gameQueue.optDouble("yaw", 0d) + 90.f);
+
+        var scene = new Scene(new MixedMountContext(world, dynamicEntityManager));
+
+        Translations translations = args.miniGameArgs().translations();
+
+        if (gameQueueDisplay != null) {
+            gameQueueDisplay.detach();
+        }
+
+        gameQueueDisplay = new Object3d();
+        gameQueueDisplay.position.set(pos.getX(), pos.getY(), pos.getZ());
+        gameQueueDisplay.rotation.setAngleAxis(yaw, new Vector3d(0, 1, 0));
+
+        List<GameQueue.Entry> preview = args.gameQueue().preview();
+
+        double textHeight = 0.25;
+        int reservedSpace = miniGame != null ? 2 : 1;
+        int amount = max(0, min(preview.size(), (int) floor(height / textHeight) - reservedSpace));
+        preview = preview.subList(0, amount);
+
+        Collections.reverse(preview);
+
+        double offsetY = 0;
+
+        for (var entry : preview) {
+            var obj = new TranslatedTextDisplayObject(translations);
+
+            Formatting color = switch (entry.type()) {
+                case REGULAR -> GREEN;
+                case VOTED -> GOLD;
+                case PRIORITY -> LIGHT_PURPLE;
+            };
+
+            obj.controller().configure(controller -> {
+                controller.setText(translations.translateText(entry.game().getTitleKey()).formatted(color));
+                controller.setDisplayFlags(DisplayEntity.TextDisplayEntity.DEFAULT_BACKGROUND_FLAG);
+            });
+
+            obj.position.set(0, offsetY, 0);
+
+            offsetY += textHeight;
+
+            gameQueueDisplay.addChild(obj);
+        }
+
+        if (miniGame != null) {
+            var obj = new TranslatedTextDisplayObject(translations);
+            var currentTitle = translations.translateText(miniGame.getTitleKey()).formatted(AQUA);
+
+            obj.controller().configure(controller -> {
+                controller.setText(lang -> Text.literal("→ ").formatted(YELLOW)
+                                .append(currentTitle.translateTo(lang)));
+                controller.setDisplayFlags(DisplayEntity.TextDisplayEntity.DEFAULT_BACKGROUND_FLAG);
+            });
+
+            obj.position.set(0, offsetY, 0);
+
+            offsetY += textHeight;
+
+            gameQueueDisplay.addChild(obj);
+        }
+
+        var title = new TranslatedTextDisplayObject(translations);
+
+        title.controller().configure(controller -> {
+            controller.setText(translations.translateText("ap2.prepare.game_queue").formatted(YELLOW, UNDERLINE, BOLD));
+            controller.setDisplayFlags(DisplayEntity.TextDisplayEntity.DEFAULT_BACKGROUND_FLAG);
+        });
+
+        title.position.set(0, offsetY, 0);
+
+        gameQueueDisplay.addChild(title);
+
+        scene.add(gameQueueDisplay);
     }
 
     private void tick(RunningTask task) {

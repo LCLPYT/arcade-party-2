@@ -54,16 +54,15 @@ public class VotedGameQueue implements GameQueue {
     }
 
     @Override
-    public List<MiniGame> preview() {
-        synchronized (this) {
-            ensureMinimumSize();
+    public synchronized List<Entry> preview() {
+        ensureMinimumSize();
 
-            List<MiniGame> preview = new ArrayList<>(priority);
-            preview.addAll(voted);
-            preview.addAll(regular);
+        List<Entry> preview = new ArrayList<>(priority.size() + voted.size() + regular.size());
+        priority.forEach(game -> preview.add(new Entry(game, Type.PRIORITY)));
+        voted.forEach(game -> preview.add(new Entry(game, Type.VOTED)));
+        regular.forEach(game -> preview.add(new Entry(game, Type.REGULAR)));
 
-            return preview;
-        }
+        return preview;
     }
 
     @Override

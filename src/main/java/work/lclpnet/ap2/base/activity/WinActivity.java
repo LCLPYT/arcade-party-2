@@ -8,13 +8,11 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Vec3d;
 import work.lclpnet.activity.ComponentActivity;
 import work.lclpnet.activity.component.ComponentBundle;
 import work.lclpnet.activity.component.builtin.BuiltinComponents;
 import work.lclpnet.ap2.api.util.action.Action;
-import work.lclpnet.ap2.base.ArcadeParty;
 import work.lclpnet.ap2.base.util.ApBaseArgs;
 import work.lclpnet.ap2.base.util.BaseActivityConfigurator;
 import work.lclpnet.ap2.base.util.ScoreManager;
@@ -27,8 +25,6 @@ import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.Scheduler;
 import work.lclpnet.kibu.title.Title;
 import work.lclpnet.kibu.translate.Translations;
-import work.lclpnet.lobby.game.api.MapOptions;
-import work.lclpnet.lobby.game.api.WorldFacade;
 import work.lclpnet.lobby.game.map.GameMap;
 import work.lclpnet.lobby.game.map.MapUtils;
 import work.lclpnet.lobby.game.util.ProtectorComponent;
@@ -82,18 +78,7 @@ public class WinActivity extends ComponentActivity {
 
         scheduler = component(BuiltinComponents.SCHEDULER).scheduler();
 
-        WorldFacade worldFacade = args.miniGameArgs().worldFacade();
-
-        Identifier mapId = ArcadeParty.identifier("preparation");
-
-        worldFacade.changeMap(mapId, MapOptions.REUSABLE)
-                .thenCompose(world -> args.miniGameArgs().mapFacade().getMap(mapId)
-                        .thenAccept(map -> this.onReady(world, map.orElseThrow(()
-                                -> new IllegalStateException("Map %s not found".formatted(mapId))))))
-                .exceptionally(throwable -> {
-                    getLogger().error("Failed to change map", throwable);
-                    return null;
-                });
+        PreparationActivity.setupMap(args.miniGameArgs(), this::onReady);
     }
 
     private void onReady(ServerWorld world, GameMap map) {

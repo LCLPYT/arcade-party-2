@@ -4,6 +4,7 @@ import it.unimi.dsi.fastutil.Pair;
 import net.minecraft.block.BlockState;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
@@ -51,6 +52,16 @@ public class MapUtil {
         if (tuple.length() < 3) return Optional.empty();
 
         return Optional.of(new BlockPos(tuple.getInt(0), tuple.getInt(1), tuple.getInt(2)));
+    }
+
+    public static Vec3d readVec3d(JSONArray tuple) {
+        return optVec3d(tuple).orElseThrow(() -> new IllegalArgumentException("Tuple must be of size 3"));
+    }
+
+    public static Optional<Vec3d> optVec3d(JSONArray tuple) {
+        if (tuple.length() < 3) return Optional.empty();
+
+        return Optional.of(new Vec3d(tuple.getDouble(0), tuple.getDouble(1), tuple.getDouble(2)));
     }
 
     public static Vec2i readVec2i(JSONArray tuple) {
