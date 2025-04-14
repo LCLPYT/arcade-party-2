@@ -67,6 +67,10 @@ public class ScoreManager {
         return data::getRankedEntries;
     }
 
+    public Stream<Set<ObjectIntPair<PlayerRef>>> streamEntriesRanked() {
+        return data.streamEntriesRanked();
+    }
+
     public boolean hasScores() {
         return !data.isEmpty();
     }
@@ -139,5 +143,9 @@ public class ScoreManager {
 
     public Hook<Runnable> onChange() {
         return onChange;
+    }
+
+    public Optional<DataEntry<PlayerRef>> getEntry(PlayerRef ref) {
+        return data.getEntry(ref);
     }
 }

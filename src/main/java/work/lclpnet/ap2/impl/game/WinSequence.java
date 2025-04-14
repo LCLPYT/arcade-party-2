@@ -6,13 +6,14 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.MiniGameResults;
-import work.lclpnet.ap2.api.game.data.*;
+import work.lclpnet.ap2.api.game.data.DataContainer;
+import work.lclpnet.ap2.api.game.data.GenericGameResult;
+import work.lclpnet.ap2.api.game.data.PlayerSubjectRefFactory;
+import work.lclpnet.ap2.api.game.data.SubjectRef;
 import work.lclpnet.ap2.api.util.action.Action;
-import work.lclpnet.ap2.base.ApConstants;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.game.data.type.TeamRef;
 import work.lclpnet.ap2.impl.util.SoundHelper;
@@ -22,16 +23,12 @@ import work.lclpnet.kibu.scheduler.api.RunningTask;
 import work.lclpnet.kibu.scheduler.api.SchedulerAction;
 import work.lclpnet.kibu.title.Title;
 import work.lclpnet.kibu.translate.Translations;
-import work.lclpnet.kibu.translate.text.RootText;
 import work.lclpnet.kibu.translate.text.TranslatedText;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import static net.minecraft.util.Formatting.*;
-import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
 public class WinSequence<T, Ref extends SubjectRef> {
 
@@ -206,125 +203,12 @@ public class WinSequence<T, Ref extends SubjectRef> {
     }
 
     private void broadcastTop3() {
-        var order = winners.getSubjectResults();
-        var placement = new HashMap<Ref, Integer>();
-        var entryByRef = new HashMap<Ref, DataEntry<Ref>>();
+        List<ObjectIntPair<Ref>> order = winners.getSubjectResults();
 
-        for (ObjectIntPair<Ref> rankEntry : order) {
-            Ref ref = rankEntry.left();
-            DataEntry<Ref> entry = data.getEntry(ref).orElse(null);
-
-            if (entry == null) continue;
-
-            placement.put(ref, rankEntry.rightInt());
-            entryByRef.put(ref, entry);
-        }
+        var announcement = new ResultAnnouncement<>(gameHandle.getTranslations(), refs, order, data::getEntry);
 
         for (ServerPlayerEntity player : PlayerLookup.all(gameHandle.getServer())) {
-            sendTop3(player, order, placement, entryByRef);
+            announcement.sendTop(3, player);
         }
-    }
-
-    private void sendTop3(ServerPlayerEntity player, List<ObjectIntPair<Ref>> order, Map<Ref, Integer> placement,
-                          HashMap<Ref, DataEntry<Ref>> entries) {
-        Translations translations = gameHandle.getTranslations();
-        String results = translations.translate(player, "ap2.results");
-        int len = results.length() + 2;
-
-        var resultsText = Text.literal(results).formatted(GREEN);
-
-        var sep = Text.literal(ApConstants.SEPARATOR).formatted(DARK_GREEN, STRIKETHROUGH, BOLD);
-        int sepLength = ApConstants.SEPARATOR.length();
-        var sepSm = Text.literal("-".repeat(sepLength)).formatted(DARK_GRAY, STRIKETHROUGH);
-
-        sendUpperSeparator(player, len, sepLength, resultsText);
-
-        if (order.isEmpty()) {
-            player.sendMessage(translations.translateText(player, "ap2.no_results").formatted(GRAY));
-        } else {
-            sendRankList(player, order, entries, translations);
-            sendOwnScoreIfExists(player, placement, entries, sepSm);
-        }
-
-        player.sendMessage(sep);
-    }
-
-    private void sendOwnScoreIfExists(ServerPlayerEntity player, Map<Ref, Integer> placement,
-                                      HashMap<Ref, DataEntry<Ref>> entries, MutableText sepSm) {
-        var ownRef = refs.create(player);
-
-        if (ownRef == null || !placement.containsKey(ownRef)) return;
-
-        int playerIndex = placement.get(ownRef);
-        DataEntry<Ref> entry = entries.get(ownRef);
-
-        sendOwnScore(player, entry, playerIndex, sepSm);
-    }
-
-    private void sendRankList(ServerPlayerEntity player, List<ObjectIntPair<Ref>> order,
-                              HashMap<Ref, DataEntry<Ref>> entries, Translations translations) {
-
-        for (int i = 0; i < 3; i++) {
-            if (order.size() <= i) break;
-
-            ObjectIntPair<Ref> rankEntry = order.get(i);
-            Ref subject = rankEntry.left();
-
-            var entry = entries.getOrDefault(subject, null);
-            var text = entry != null ? entry.toText(translations) : null;
-
-            Text subjectName = subject.getNameFor(player);
-
-            if (subjectName.getStyle().getColor() == null) {
-                subjectName = subjectName.copy().formatted(GRAY);
-            }
-
-            MutableText msg = Text.literal("#%s ".formatted(rankEntry.rightInt())).formatted(YELLOW)
-                    .append(subjectName);
-
-            if (text != null) {
-                msg.append(" ").append(text.translateFor(player));
-            }
-
-            player.sendMessage(msg);
-        }
-    }
-
-    private void sendUpperSeparator(ServerPlayerEntity player, int len, int sepLength, MutableText resultsText) {
-        if (len - 1 >= sepLength) {
-            player.sendMessage(resultsText);
-            return;
-        }
-
-        int times = (sepLength - len) / 2;
-        String sepShort = "=".repeat(times);
-
-        var msg = Text.empty()
-                .append(Text.literal(sepShort).formatted(DARK_GREEN, STRIKETHROUGH, BOLD))
-                .append(Text.literal("[").formatted(DARK_GREEN, BOLD))
-                .append(resultsText.formatted(BOLD))
-                .append(Text.literal("]").formatted(DARK_GREEN, BOLD))
-                .append(Text.literal(sepShort + (sepLength - 2 * times - len > 0 ? "=" : ""))
-                        .formatted(DARK_GREEN, STRIKETHROUGH, BOLD));
-
-        player.sendMessage(msg);
-    }
-
-    private void sendOwnScore(ServerPlayerEntity player, DataEntry<Ref> entry, int ranking, MutableText sepSm) {
-        Translations translations = gameHandle.getTranslations();
-        player.sendMessage(sepSm);
-
-        var extra = entry.toText(translations);
-
-        if (extra == null) {
-            player.sendMessage(translations.translateText(player, "ap2.you_placed",
-                    styled("#" + ranking, YELLOW)).formatted(GRAY));
-            return;
-        }
-
-        RootText translatedExtra = extra.translateFor(player);
-        player.sendMessage(translations.translateText(player, "ap2.you_placed_value",
-                styled("#" + ranking, YELLOW),
-                translatedExtra.formatted(YELLOW)).formatted(GRAY));
     }
 }

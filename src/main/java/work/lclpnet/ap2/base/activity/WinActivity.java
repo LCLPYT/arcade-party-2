@@ -1,5 +1,6 @@
 package work.lclpnet.ap2.base.activity;
 
+import it.unimi.dsi.fastutil.objects.ObjectIntPair;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -16,8 +17,10 @@ import work.lclpnet.ap2.api.util.action.Action;
 import work.lclpnet.ap2.base.ArcadeParty;
 import work.lclpnet.ap2.base.util.ApBaseArgs;
 import work.lclpnet.ap2.base.util.BaseActivityConfigurator;
+import work.lclpnet.ap2.base.util.ScoreManager;
 import work.lclpnet.ap2.impl.game.Announcer;
 import work.lclpnet.ap2.impl.game.PlayerUtil;
+import work.lclpnet.ap2.impl.game.ResultAnnouncement;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.util.Fireworks;
 import work.lclpnet.kibu.scheduler.Ticks;
@@ -30,6 +33,7 @@ import work.lclpnet.lobby.game.map.GameMap;
 import work.lclpnet.lobby.game.map.MapUtils;
 import work.lclpnet.lobby.game.util.ProtectorComponent;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Random;
 
@@ -148,7 +152,17 @@ public class WinActivity extends ComponentActivity {
     private void announceStats() {
         playSound(world, SoundEvents.ENTITY_CHICKEN_EGG, SoundCategory.PLAYERS, 1f, 0.5f);
 
-        // TODO
+        ScoreManager scoreManager = args.scoreManager();
+
+        List<ObjectIntPair<PlayerRef>> order = scoreManager.streamEntriesRanked()
+                .flatMap(Collection::stream)
+                .toList();
+
+        var announcement = new ResultAnnouncement<>(translations, PlayerRef::create, order, scoreManager::getEntry);
+
+        for (ServerPlayerEntity player : players()) {
+            announcement.sendTop(5, player);
+        }
     }
 
     private void onFireworksOver() {
