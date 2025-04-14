@@ -125,7 +125,7 @@ public class MimicryInstance extends EliminationGameInstance implements MapBoots
         int count = manager.getCompletedCount(player);
 
         var detail = gameHandle.getTranslations().translateText("game.ap2.mimicry.completed", count);
-        getData().eliminated(player, detail);
+        getData().add(player, detail);
     }
 
     private ActionResult onUseBlock(PlayerEntity player, World world, Hand hand, BlockHitResult hitResult) {

@@ -23,7 +23,7 @@ import java.util.Set;
 
 import static net.minecraft.util.Formatting.GRAY;
 
-public abstract class TeamEliminationGameInstance extends DefaultTeamGameInstance {
+public abstract class TeamEliminationGameInstance extends TeamGameInstance {
 
     private final EliminationDataContainer<Team, TeamRef> data = new EliminationDataContainer<>(this::createReference);
 
@@ -113,7 +113,7 @@ public abstract class TeamEliminationGameInstance extends DefaultTeamGameInstanc
         }
 
         // mark all teams as eliminated at the same moment
-        data.allEliminated(toEliminate, detail);
+        data.addAll(toEliminate, detail);
 
         toEliminate.forEach(teamManager::setTeamEliminated);
 
@@ -131,7 +131,7 @@ public abstract class TeamEliminationGameInstance extends DefaultTeamGameInstanc
     @Override
     public void teamEliminated(Team team) {
         // make sure the team is tracked as eliminated
-        data.eliminated(team);
+        data.add(team);
 
         super.teamEliminated(team);
     }

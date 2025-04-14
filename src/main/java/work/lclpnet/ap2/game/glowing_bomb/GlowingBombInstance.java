@@ -277,7 +277,7 @@ public class GlowingBombInstance extends EliminationGameInstance implements MapB
     }
 
     private void checkForWinner() {
-        winManager.checkForWinner(gameHandle.getParticipants().stream(), resolver);
+        winManager.checkForLastRemaining();
     }
 
     private void onBombYielded() {

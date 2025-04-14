@@ -4,6 +4,7 @@ import net.minecraft.Bootstrap;
 import net.minecraft.SharedConstants;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import work.lclpnet.ap2.api.base.GameQueue;
 import work.lclpnet.ap2.api.base.MiniGameManager;
 import work.lclpnet.ap2.impl.game.TestMiniGame;
 
@@ -67,7 +68,10 @@ class VotedGameQueueTest {
 
         var queue = new VotedGameQueue(manager, List.of(), 5);
 
-        assertEquals(List.of(game, game, game, game, game), queue.preview().stream().limit(5).toList());
+        assertEquals(List.of(game, game, game, game, game), queue.preview().stream()
+                .map(GameQueue.Entry::game)
+                .limit(5)
+                .toList());
     }
 
     @Test
@@ -82,7 +86,10 @@ class VotedGameQueueTest {
 
         var queue = new VotedGameQueue(manager, List.of(gameB), 5);
 
-        assertEquals(List.of(gameB, gameA, gameA, gameA, gameA), queue.preview().stream().limit(5).toList());
+        assertEquals(List.of(gameB, gameA, gameA, gameA, gameA), queue.preview().stream()
+                .map(GameQueue.Entry::game)
+                .limit(5)
+                .toList());
     }
 
     @Test
@@ -100,6 +107,9 @@ class VotedGameQueueTest {
 
         queue.setNextGame(gameC);
 
-        assertEquals(List.of(gameC, gameB, gameA, gameA, gameA), queue.preview().stream().limit(5).toList());
+        assertEquals(List.of(gameC, gameB, gameA, gameA, gameA), queue.preview().stream()
+                .map(GameQueue.Entry::game)
+                .limit(5)
+                .toList());
     }
 }

@@ -1,16 +1,18 @@
 package work.lclpnet.ap2.impl.util.scoreboard;
 
+import lombok.Getter;
 import net.minecraft.scoreboard.number.NumberFormat;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
-import work.lclpnet.kibu.translate.text.TextTranslatable;
+import work.lclpnet.ap2.api.util.scoreboard.CustomScoreboardObjective;
 
 public class ScoreHandle {
 
+    @Getter
     private final String holder;
-    private final TranslatedScoreboardObjective objective;
+    private final CustomScoreboardObjective objective;
 
-    public ScoreHandle(String holder, TranslatedScoreboardObjective objective) {
+    public ScoreHandle(String holder, CustomScoreboardObjective objective) {
         this.holder = holder;
         this.objective = objective;
     }
@@ -19,15 +21,7 @@ public class ScoreHandle {
         objective.setScore(holder, score);
     }
 
-    public int getScore() {
-        return objective.getScore(holder);
-    }
-
     public void setDisplay(@Nullable Text text) {
-        objective.setDisplayName(holder, text);
-    }
-
-    public void setDisplay(@Nullable TextTranslatable text) {
         objective.setDisplayName(holder, text);
     }
 

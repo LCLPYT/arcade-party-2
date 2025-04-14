@@ -9,15 +9,15 @@ import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.NotNull;
-import work.lclpnet.ap2.api.game.MiniGameHandle;
-import work.lclpnet.ap2.api.game.MiniGameInstance;
-import work.lclpnet.ap2.api.game.WinManagerAccess;
-import work.lclpnet.ap2.api.game.WinManagerView;
+import work.lclpnet.ap2.api.game.*;
+import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.kibu.cmd.type.CommandRegistrar;
 import work.lclpnet.kibu.cmd.type.KibuCommand;
 
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static net.minecraft.server.command.CommandManager.argument;
@@ -59,7 +59,7 @@ public class WinCommand implements KibuCommand {
             WinManagerAccess winManagerAccess = view.getWinManagerAccess();
             winManagerAccess.win(player);
         } else {
-            gameHandle.complete(player);
+            complete(player);
         }
 
         return 1;
@@ -70,7 +70,7 @@ public class WinCommand implements KibuCommand {
 
         ctx.getSource().sendMessage(Text.literal("Made yourself the winner of the current mini game"));
 
-        gameHandle.complete(player);
+        complete(player);
 
         return 1;
     }
@@ -82,7 +82,7 @@ public class WinCommand implements KibuCommand {
             WinManagerAccess winManagerAccess = view.getWinManagerAccess();
             winManagerAccess.win(players);
         } else {
-            gameHandle.complete(players);
+            complete(players);
         }
 
         return 1;
@@ -91,9 +91,24 @@ public class WinCommand implements KibuCommand {
     private int winPlayersNow(CommandContext<ServerCommandSource> ctx) throws CommandSyntaxException {
         var players = getWinners(ctx);
 
-        gameHandle.complete(players);
+        complete(players);
 
         return 1;
+    }
+
+    private void complete(ServerPlayerEntity winner) {
+        PlayerRef ref = PlayerRef.create(winner);
+        var res = new MiniGameResults.PlayerResult(ref, 1);
+
+        gameHandle.complete(new MiniGameResults(MiniGameResults.Status.SUCCESS, Map.of(ref, res)));
+    }
+
+    private void complete(Set<ServerPlayerEntity> winners) {
+        var entries = winners.stream()
+                .map(PlayerRef::create)
+                .collect(Collectors.toMap(Function.identity(), ref -> new MiniGameResults.PlayerResult(ref, 1)));
+
+        gameHandle.complete(new MiniGameResults(MiniGameResults.Status.SUCCESS, entries));
     }
 
     @NotNull

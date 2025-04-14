@@ -26,12 +26,12 @@ public class WinManagerAccessImpl<T, Ref extends SubjectRef> implements WinManag
     @Override
     public void draw() {
         data.clear();
-        winManager.winNobody();
+        winManager.complete();
     }
 
     @Override
     public void win(ServerPlayerEntity player) {
-        mapper.apply(player).ifPresentOrElse(winManager::win, this::draw);
+        mapper.apply(player).ifPresentOrElse(winner -> winManager.forceWin(Set.of(winner)), this::draw);
     }
 
     @Override
@@ -41,6 +41,6 @@ public class WinManagerAccessImpl<T, Ref extends SubjectRef> implements WinManag
                 .flatMap(Optional::stream)
                 .collect(Collectors.toSet());
 
-        winManager.win(winners);
+        winManager.forceWin(winners);
     }
 }

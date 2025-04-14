@@ -11,26 +11,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class CombinedDataContainerTest {
 
     @Test
-    void delete_fromAllChildren() {
-        var first = new OrderedDataContainer<>(StringRef::new);
-        var second = new ScoreDataContainer<>(StringRef::new);
-        var container = new CombinedDataContainer<>(List.of(first, second));
-
-        second.addScore("foo", 5);
-        second.addScore("bar", 7);
-
-        first.add("foo");
-
-        assertTrue(first.getEntry("foo").isPresent());
-        assertTrue(second.getEntry("foo").isPresent());
-
-        container.delete("foo");
-
-        assertTrue(first.getEntry("foo").isEmpty());
-        assertTrue(second.getEntry("foo").isEmpty());
-    }
-
-    @Test
     void getEntry_fromChildren() {
         var first = new OrderedDataContainer<>(StringRef::new);
         var second = new ScoreDataContainer<>(StringRef::new);
@@ -45,7 +25,7 @@ class CombinedDataContainerTest {
     }
 
     @Test
-    void orderedEntries_inOrderOfChildrenAndWithoutDuplicates() {
+    void streamOrderedEntries_inOrderOfChildrenAndWithoutDuplicates() {
         var first = new OrderedDataContainer<>(StringRef::new);
         var second = new ScoreDataContainer<>(StringRef::new);
         var container = new CombinedDataContainer<>(List.of(first, second));
@@ -55,7 +35,7 @@ class CombinedDataContainerTest {
 
         first.add("foo");
 
-        var order = container.orderedEntries()
+        var order = container.streamOrderedEntries()
                 .map(DataEntry::subject)
                 .map(StringRef::name)
                 .toList();
@@ -64,39 +44,22 @@ class CombinedDataContainerTest {
     }
 
     @Test
-    void freeze_childrenAreFrozen() {
+    void identityIfAbsent_twoChildren_addedToLast() {
         var first = new OrderedDataContainer<>(StringRef::new);
         var second = new ScoreDataContainer<>(StringRef::new);
         var container = new CombinedDataContainer<>(List.of(first, second));
 
-        container.freeze();
-
-        second.addScore("foo", 5);
-        second.addScore("bar", 7);
-
-        first.add("foo");
+        container.identityIfAbsent("foo");
+        container.identityIfAbsent("bar");
+        container.identityIfAbsent("baz");
 
         assertTrue(first.getEntry("foo").isEmpty());
-        assertTrue(second.getEntry("bar").isEmpty());
-    }
-
-    @Test
-    void ensureTracked_noDataAddedToFirst_thenAddedToLast() {
-        var first = new OrderedDataContainer<>(StringRef::new);
-        var second = new ScoreDataContainer<>(StringRef::new);
-        var container = new CombinedDataContainer<>(List.of(first, second));
-
-        container.ensureTracked("foo");
-        container.ensureTracked("bar");
-        container.ensureTracked("baz");
-
-        assertTrue(first.getEntry("foo").isPresent());
-        assertTrue(second.getEntry("bar").isPresent());
-        assertTrue(second.getEntry("baz").isPresent());
-
-        assertTrue(second.getEntry("foo").isEmpty());
         assertTrue(first.getEntry("bar").isEmpty());
         assertTrue(first.getEntry("baz").isEmpty());
+
+        assertTrue(second.getEntry("foo").isPresent());
+        assertTrue(second.getEntry("bar").isPresent());
+        assertTrue(second.getEntry("baz").isPresent());
     }
 
     @Test

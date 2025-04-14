@@ -21,7 +21,7 @@ import net.minecraft.world.World;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
-import work.lclpnet.ap2.impl.game.DefaultGameInstance;
+import work.lclpnet.ap2.impl.game.FFAGameInstance;
 import work.lclpnet.ap2.impl.game.data.CombinedDataContainer;
 import work.lclpnet.ap2.impl.game.data.OrderedDataContainer;
 import work.lclpnet.ap2.impl.game.data.ScoreDataContainer;
@@ -37,7 +37,7 @@ import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 
 import java.util.*;
 
-public class TreasureHunterInstance extends DefaultGameInstance {
+public class TreasureHunterInstance extends FFAGameInstance {
 
     private static final float COIN_CHANCE = 0.025f;
     private final Random random = new Random();
@@ -88,7 +88,7 @@ public class TreasureHunterInstance extends DefaultGameInstance {
 
             var detail = translations.translateText("game.ap2.treasure_hunter.found_treasure", scoreEntry);
             foundChest.add(serverPlayer, detail);
-            winManager.win(serverPlayer);
+            winManager.complete();
 
             return ActionResult.SUCCESS_SERVER;
         });

@@ -234,7 +234,7 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
         var worstPlayer = manager.getWorstPlayer();
 
         if (worstPlayer.isEmpty()) {
-            winManager.win(getData().getBestSubject(resolver).orElse(null));
+            winManager.complete();
             return;
         }
 
@@ -302,7 +302,7 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
         int completed = manager.getRoundsCompleted(player, winner);
         var detail = gameHandle.getTranslations().translateText("game.ap2.speed_builders.survived", completed);
 
-        getData().eliminated(player, detail);
+        getData().add(player, detail);
     }
 
     private void onHitBlock(ProjectileEntity projectile, BlockHitResult hit) {
@@ -375,7 +375,7 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
         var it = gameHandle.getParticipants().iterator();
 
         if (!it.hasNext()) {
-            winManager.winNobody();
+            winManager.cancel();
             return;
         }
 
@@ -383,7 +383,7 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
 
         putScoreDetail(winner, true);
 
-        winManager.win(winner);
+        winManager.complete();
     }
 
     private void allPlayersCompleted() {

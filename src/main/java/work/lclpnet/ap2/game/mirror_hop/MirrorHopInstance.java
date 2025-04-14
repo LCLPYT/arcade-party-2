@@ -18,7 +18,7 @@ import net.minecraft.util.math.Vec3d;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.util.CollisionDetector;
-import work.lclpnet.ap2.impl.game.DefaultGameInstance;
+import work.lclpnet.ap2.impl.game.FFAGameInstance;
 import work.lclpnet.ap2.impl.game.data.ScoreDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.map.MapUtil;
@@ -35,7 +35,7 @@ import work.lclpnet.lobby.game.map.GameMap;
 
 import java.util.Random;
 
-public class MirrorHopInstance extends DefaultGameInstance {
+public class MirrorHopInstance extends FFAGameInstance {
 
     private final ScoreDataContainer<ServerPlayerEntity, PlayerRef> data = new ScoreDataContainer<>(PlayerRef::create);
     private final CollisionDetector collisionDetector = new ChunkedCollisionDetector();
@@ -90,7 +90,7 @@ public class MirrorHopInstance extends DefaultGameInstance {
 
             data.setScore(player, choices.getChoices().size() + 1);
 
-            winManager.win(player);
+            winManager.complete();
         });
 
         movementObserver.setRegionEnterListener((player, collider) -> {

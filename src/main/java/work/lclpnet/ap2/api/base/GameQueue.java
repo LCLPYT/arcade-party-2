@@ -8,9 +8,13 @@ public interface GameQueue {
 
     MiniGame pollNextGame();
 
-    List<MiniGame> preview();
+    List<Entry> preview();
 
     void setNextGame(MiniGame miniGame);
 
     void shiftGame(MiniGame miniGame);
+
+    enum Type {REGULAR, VOTED, PRIORITY }
+
+    record Entry(MiniGame game, Type type) {}
 }

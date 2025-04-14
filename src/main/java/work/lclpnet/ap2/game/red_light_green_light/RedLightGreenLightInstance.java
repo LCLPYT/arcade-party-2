@@ -26,7 +26,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
-import work.lclpnet.ap2.impl.game.DefaultGameInstance;
+import work.lclpnet.ap2.impl.game.FFAGameInstance;
 import work.lclpnet.ap2.impl.game.data.OrderedDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.map.MapUtil;
@@ -50,7 +50,7 @@ import java.util.*;
 import static net.minecraft.util.Formatting.*;
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
-public class RedLightGreenLightInstance extends DefaultGameInstance implements Runnable {
+public class RedLightGreenLightInstance extends FFAGameInstance implements Runnable {
 
     private static final int UNTIL_STOP_MIN_TICKS = 70, UNTIL_STOP_MAX_TICKS = 110;
     private static final int WARN_TIME_MIN_TICKS = 35, WARN_TIME_MAX_TICKS = 75;
@@ -289,7 +289,7 @@ public class RedLightGreenLightInstance extends DefaultGameInstance implements R
         Translations translations = gameHandle.getTranslations();
 
         if (inGoal.size() >= gameHandle.getParticipants().count()) {
-            winManager.win(data.getBestSubject(resolver).orElse(null));
+            winManager.complete();
         } else if (gameEnd == -1) {
             translations.translateText("game.ap2.red_light_green_light.goal",
                             styled(player.getNameForScoreboard(), YELLOW),
@@ -321,7 +321,7 @@ public class RedLightGreenLightInstance extends DefaultGameInstance implements R
 
             if (ticksUntilEnd == 0) {
                 gradePlayers();
-                winManager.win(data.getBestSubject(resolver).orElse(null));
+                winManager.complete();
                 return;
             }
         }

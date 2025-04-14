@@ -9,22 +9,29 @@ import work.lclpnet.ap2.api.game.WinManagerAccess;
 import work.lclpnet.ap2.api.game.WinManagerView;
 import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.util.scoreboard.CustomScoreboardObjective;
-import work.lclpnet.ap2.impl.game.data.type.PlayerGameWinners;
+import work.lclpnet.ap2.impl.game.data.type.FFAGameResult;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRefResolver;
 
 import java.util.Optional;
 
-public abstract class DefaultGameInstance extends BaseGameInstance implements ParticipantListener, WinManagerView {
+public abstract class FFAGameInstance extends BaseGameInstance implements ParticipantListener, WinManagerView {
 
     protected final PlayerRefResolver resolver;
     protected final WinManager<ServerPlayerEntity, PlayerRef> winManager;
 
-    public DefaultGameInstance(MiniGameHandle gameHandle) {
+    public FFAGameInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
 
         this.resolver = new PlayerRefResolver(gameHandle.getServer().getPlayerManager());
-        this.winManager = new WinManager<>(gameHandle, this::getData, PlayerRef::create, PlayerGameWinners::new);
+        this.winManager = new WinManager<>(gameHandle, this::getData, Optional::of, PlayerRef::create, PlayerRef::create, FFAGameResult::new);
+    }
+
+    @Override
+    public void start() {
+        initScores();
+
+        super.start();
     }
 
     @Override
@@ -34,8 +41,8 @@ public abstract class DefaultGameInstance extends BaseGameInstance implements Pa
 
     @Override
     public void participantRemoved(ServerPlayerEntity player) {
-        // this will be called when a participant quits
-        winManager.checkForWinner(gameHandle.getParticipants().stream(), resolver);
+        // this will be called when a participant quits or is eliminated
+        winManager.checkForLastRemaining();
     }
 
     protected final void useScoreboardStatsSync(IntScoreEventSource<ServerPlayerEntity> source, ScoreboardObjective objective) {
@@ -51,12 +58,7 @@ public abstract class DefaultGameInstance extends BaseGameInstance implements Pa
     }
 
     protected final void initScores() {
-        var data = getData();
-
-        // initialize scores
-        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
-            data.ensureTracked(player);
-        }
+        gameHandle.getParticipants().forEach(getData()::identityIfAbsent);
     }
 
     @Override

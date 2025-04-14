@@ -1,18 +1,28 @@
 package work.lclpnet.ap2.base.activity;
 
+import it.unimi.dsi.fastutil.objects.ObjectIntPair;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.component.DataComponentTypes;
+import net.minecraft.entity.decoration.DisplayEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.scoreboard.number.FixedNumberFormat;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.math.Vec3d;
+import org.jetbrains.annotations.Nullable;
+import org.joml.Vector3d;
+import org.json.JSONObject;
 import org.slf4j.Logger;
+import work.lclpnet.activity.Activity;
 import work.lclpnet.activity.ComponentActivity;
 import work.lclpnet.activity.component.ComponentBundle;
 import work.lclpnet.activity.component.builtin.BossBarComponent;
@@ -24,29 +34,34 @@ import work.lclpnet.ap2.api.data.DataManager;
 import work.lclpnet.ap2.api.game.GameStartContext;
 import work.lclpnet.ap2.api.game.MiniGame;
 import work.lclpnet.ap2.api.map.MapFacade;
-import work.lclpnet.ap2.api.util.music.SongCache;
 import work.lclpnet.ap2.api.util.music.SongManager;
 import work.lclpnet.ap2.api.util.music.SongWrapper;
 import work.lclpnet.ap2.base.ApConstants;
-import work.lclpnet.ap2.base.ApContainer;
+import work.lclpnet.ap2.base.ApMiniGameArgs;
 import work.lclpnet.ap2.base.ArcadeParty;
 import work.lclpnet.ap2.base.api.Skippable;
-import work.lclpnet.ap2.base.cmd.ForceGameCommand;
 import work.lclpnet.ap2.base.cmd.ForceMapCommand;
 import work.lclpnet.ap2.base.cmd.SkipCommand;
-import work.lclpnet.ap2.base.util.IconMaker;
-import work.lclpnet.ap2.base.util.OptionChooser;
-import work.lclpnet.ap2.impl.game.PlayerUtil;
+import work.lclpnet.ap2.base.util.*;
+import work.lclpnet.ap2.impl.activity.ArcadePartyComponents;
+import work.lclpnet.ap2.impl.activity.ScoreboardComponent;
+import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
+import work.lclpnet.ap2.impl.map.MapUtil;
+import work.lclpnet.ap2.impl.scene.MixedMountContext;
+import work.lclpnet.ap2.impl.scene.Object3d;
+import work.lclpnet.ap2.impl.scene.Scene;
+import work.lclpnet.ap2.impl.scene.TranslatedTextDisplayObject;
+import work.lclpnet.ap2.impl.util.ScoreboardUtil;
 import work.lclpnet.ap2.impl.util.music.MusicHelper;
+import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
+import work.lclpnet.ap2.impl.util.scoreboard.DynamicScoreboardObjective;
+import work.lclpnet.ap2.impl.util.scoreboard.ScoreboardLayout;
 import work.lclpnet.ap2.impl.util.title.AnimatedTitle;
 import work.lclpnet.ap2.impl.util.title.NextGameTitleAnimation;
+import work.lclpnet.ap2.impl.util.world.entity.DynamicEntityManager;
 import work.lclpnet.kibu.cmd.type.CommandRegistrar;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
-import work.lclpnet.kibu.hook.player.PlayerAdvancementPacketCallback;
-import work.lclpnet.kibu.hook.player.PlayerConnectionHooks;
-import work.lclpnet.kibu.hook.player.PlayerInventoryHooks;
-import work.lclpnet.kibu.hook.player.PlayerRecipeNotificationCallback;
 import work.lclpnet.kibu.inv.type.RestrictedInventory;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.RunningTask;
@@ -54,18 +69,19 @@ import work.lclpnet.kibu.scheduler.api.Scheduler;
 import work.lclpnet.kibu.scheduler.api.TaskHandle;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.kibu.translate.Translations;
+import work.lclpnet.kibu.translate.text.TranslatedText;
 import work.lclpnet.lobby.game.api.MapOptions;
 import work.lclpnet.lobby.game.api.WorldFacade;
 import work.lclpnet.lobby.game.map.GameMap;
 import work.lclpnet.lobby.game.util.BossBarTimer;
 import work.lclpnet.lobby.game.util.ProtectorComponent;
-import work.lclpnet.lobby.game.util.ProtectorUtils;
 
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.BiConsumer;
 
+import static java.lang.Math.*;
+import static java.util.stream.Collectors.toSet;
 import static net.minecraft.util.Formatting.*;
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
@@ -77,7 +93,8 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
     private static final Identifier GAME_SONG_ID = ArcadeParty.identifier("ap2_game");
     private final OptionChooser<MiniGame> gameChooser = new OptionChooser<>();
     private final OptionChooser<GameMap> mapChooser = new OptionChooser<>();
-    private final Args args;
+    private final ApBaseArgs args;
+    private final BaseActivityConfigurator activityConfigurator;
     private int time = 0;
     private boolean skipPreparation = false;
     private boolean gameForced = false;
@@ -87,10 +104,17 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
     private AnimatedTitle animatedTitle = null;
     private SongWrapper song = null;
     private CompletableFuture<Void> whenTasksDone = null;
+    private @Nullable Runnable onScoreUpdate = null;
+    private ServerWorld world;
+    private GameMap map;
+    private DynamicEntityManager dynamicEntityManager;
+    private Object3d gameQueueDisplay;
 
-    public PreparationActivity(Args args) {
-        super(args.container().server(), args.container().logger());
+    public PreparationActivity(ApBaseArgs args) {
+        super(args.miniGameArgs().server(), args.miniGameArgs().logger());
+
         this.args = args;
+        this.activityConfigurator = new BaseActivityConfigurator(this, args);
     }
 
     @Override
@@ -99,51 +123,78 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
                 .add(BuiltinComponents.BOSS_BAR)
                 .add(BuiltinComponents.HOOKS)
                 .add(BuiltinComponents.COMMANDS)
-                .add(ProtectorComponent.KEY);
+                .add(ProtectorComponent.KEY)
+                .add(ArcadePartyComponents.SCORE_BOARD);
     }
 
     @Override
     public void start() {
         super.start();
 
-        component(ProtectorComponent.KEY).configure(config -> {
-            config.disallowAll();
+        activityConfigurator.configureProtector();
 
-            ProtectorUtils.allowCreativeOperatorBypass(config);
-        });
+        setupMap(args.miniGameArgs(), this::onReady);
+    }
 
-        WorldFacade worldFacade = args.container().worldFacade();
+    static void setupMap(ApMiniGameArgs miniGameArgs, BiConsumer<ServerWorld, GameMap> onReady) {
+        WorldFacade worldFacade = miniGameArgs.worldFacade();
+        Identifier mapId = ArcadeParty.identifier("preparation");
 
-        worldFacade.changeMap(ArcadeParty.identifier("preparation"), MapOptions.REUSABLE)
-                .thenRun(this::onReady)
+        worldFacade.changeMap(mapId, MapOptions.REUSABLE)
+                .thenCompose(world -> miniGameArgs.mapFacade().getMap(mapId)
+                        .thenAccept(map -> onReady.accept(world, map.orElseThrow(()
+                                -> new IllegalStateException("Map %s not found".formatted(mapId))))))
                 .exceptionally(throwable -> {
-                    getLogger().error("Failed to change map", throwable);
+                    miniGameArgs.logger().error("Failed to change map", throwable);
                     return null;
                 });
     }
 
     @Override
     public void stop() {
-        args.forceGameCommand.setGameEnforcer(args.gameQueue::setNextGame);
+        args.forceGameCommand().setGameEnforcer(args.gameQueue()::setNextGame);
+
+        if (onScoreUpdate != null) {
+            args.scoreManager().onChange().unregister(onScoreUpdate);
+        }
+
         super.stop();
     }
 
-    private void onReady() {
-        MapFacade mapFacade = args.container.mapFacade();
+    private void onReady(ServerWorld world, GameMap map) {
+        this.world = world;
+        this.map = map;
+
+        MapFacade mapFacade = args.miniGameArgs().mapFacade();
         mapFacade.forceMap(null);  // reset forced map
 
+        ScoreManager scoreManager = args.scoreManager();
+
+        if (scoreManager.hasClearWinner()) {
+            beginWinSequence();
+            return;
+        }
+
         PlayerManager playerManager = args.playerManager();
+
+        if (scoreManager.hasMultipleWinners()) {
+            playerManager.enterFinale(scoreManager.getFinalists().collect(toSet()));
+        }
+
         playerManager.startPreparation();
 
-        PlayerUtil playerUtil = args.container().playerUtil();
-        playerUtil.resetToDefaults();
-        playerManager.forEach(playerUtil::resetPlayer);
+        scoreManager.incrementRound();
+
+        scoreManager.onChange().register(onScoreUpdate = this::restartActivity);
+
+        activityConfigurator.resetPlayers();
+        activityConfigurator.configureHooks();
 
         HookRegistrar hooks = component(BuiltinComponents.HOOKS).hooks();
-        hooks.registerHook(PlayerConnectionHooks.JOIN, this::onJoin);
-        hooks.registerHook(PlayerInventoryHooks.MODIFY_INVENTORY, event -> !event.player().isCreativeLevelTwoOp());
-        hooks.registerHook(PlayerAdvancementPacketCallback.HOOK, (player, packet) -> true);
-        hooks.registerHook(PlayerRecipeNotificationCallback.HOOK, (player, recipeEntry, displayEntry) -> true);
+        Scheduler scheduler = component(BuiltinComponents.SCHEDULER).scheduler();
+
+        dynamicEntityManager = new DynamicEntityManager(world);
+        dynamicEntityManager.init(scheduler, hooks);
 
         if (ApConstants.DEVELOPMENT) {
             giveDevelopmentItems(hooks);
@@ -158,7 +209,19 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
         new SkipCommand(this).register(commandRegistrar);
         new ForceMapCommand(mapFacade, this::getMiniGame).register(commandRegistrar);
 
-        args.forceGameCommand.setGameEnforcer(this::forceGame);
+        args.forceGameCommand().setGameEnforcer(this::forceGame);
+    }
+
+    private void restartActivity() {
+        args.scoreManager().decrementRound();
+
+        GameQueue queue = args.gameQueue();
+
+        if (this.miniGame != null) {
+            queue.shiftGame(this.miniGame);
+        }
+
+        switchActivity(new PreparationActivity(args));
     }
 
     private void prepareNextMiniGame() {
@@ -166,7 +229,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
             miniGame = pickNextGame();
         }
 
-        whenTasksDone = args.container.mapFacade().reloadMaps(miniGame.getId());
+        whenTasksDone = args.miniGameArgs().mapFacade().reloadMaps(miniGame.getId());
 
         displayGameQueue();
         startTimer().whenDone(this::onTimerEnded);
@@ -175,21 +238,175 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
                 .interval(this::tick, 1);
     }
 
-    private void onJoin(ServerPlayerEntity player) {
-        PlayerManager playerManager = args.playerManager();
+    private void showLeaderboard() {
+        Translations translations = args.miniGameArgs().translations();
+        ScoreManager scoreManager = args.scoreManager();
+        ScoreboardComponent component = component(ArcadePartyComponents.SCORE_BOARD);
+        CustomScoreboardManager scoreboard = component.scoreboardManager(args.miniGameArgs()::translations);
 
-        boolean spectator = playerManager.isPermanentSpectator(player) || !playerManager.offer(player);
+        var objective = ScoreboardUtil.setupDynamicSidebar(scoreboard, "game.%s.title".formatted(ApConstants.ID));
 
-        PlayerUtil.State state = spectator ? PlayerUtil.State.SPECTATOR : PlayerUtil.State.DEFAULT;
-        args.container().playerUtil().resetPlayer(player, state);
+        // header
+        var round = new FixedNumberFormat(Text.literal(String.valueOf(scoreManager.getRound())).formatted(YELLOW));
+        objective.createText(translations.translateText("ap2.prepare.round").formatted(GREEN)).setNumberFormat(round);
+
+        if (args.playerManager().isFinale()) {
+            addFinalistsToScoreboard(objective);
+        } else {
+            addPlayerScoresToScoreboard(objective);
+        }
+
+        // footer
+        if (args.playerManager().isFinale()) {
+            objective.createText(player -> {
+                String translation = args.playerManager().isParticipating(player)
+                        ? "ap2.prepare.win_finale"
+                        : "ap2.prepare.spectating";
+
+                return translations.translateText(player, translation).formatted(AQUA);
+            }, ScoreboardLayout.BOTTOM);
+        } else {
+            var requiredScore = styled(scoreManager.getTargetScore()).formatted(YELLOW);
+            TranslatedText taskMsg = translations.translateText("ap2.prepare.score_required", requiredScore);
+            objective.createText(taskMsg.formatted(AQUA), ScoreboardLayout.BOTTOM);
+        }
+
+        objective.createNewline(ScoreboardLayout.BOTTOM);
+
+        // display objective for all players
+        for (ServerPlayerEntity player : PlayerLookup.all(args.miniGameArgs().server())) {
+            objective.add(player);
+        }
     }
 
-    private void showLeaderboard() {
-        // TODO implement
+    private void addFinalistsToScoreboard(DynamicScoreboardObjective objective) {
+        Set<ServerPlayerEntity> finalists = args.scoreManager().getFinalists().collect(toSet());
+        Translations translations = args.miniGameArgs().translations();
+
+        objective.createNewline(ScoreboardLayout.TOP);
+
+        objective.createText(translations.translateText("ap2.finale").formatted(YELLOW, BOLD));
+
+        var separator = Text.literal(ApConstants.SCOREBOARD_SEPARATOR_SM).formatted(DARK_GREEN, STRIKETHROUGH);
+        objective.createText(separator);
+
+        for (ServerPlayerEntity finalist : finalists) {
+            objective.createText(Text.literal("• " + finalist.getNameForScoreboard()).formatted(GREEN));
+        }
+    }
+
+    private void addPlayerScoresToScoreboard(DynamicScoreboardObjective objective) {
+        Translations translations = args.miniGameArgs().translations();
+        ScoreManager scoreManager = args.scoreManager();
+
+        if (scoreManager.hasScores()) {
+            objective.createNewline(ScoreboardLayout.TOP);
+
+            objective.createText(translations.translateText("ap2.score").formatted(YELLOW, BOLD));
+
+            var separator = Text.literal(ApConstants.SCOREBOARD_SEPARATOR_SM).formatted(DARK_GREEN, STRIKETHROUGH);
+            objective.createText(separator);
+        }
+
+        // top 5 scores
+        int i = 0;
+
+        for (ObjectIntPair<PlayerRef> entry : scoreManager.iterateRankedScores()) {
+            if (i++ >= 5) continue;
+
+            PlayerRef ref = entry.left();
+            int score = scoreManager.getScore(ref);
+            int rank = entry.rightInt();
+
+            objective.setScore(ref.name(), score);
+
+            objective.setDisplayName(ref.name(), Text.literal("#%d ".formatted(rank)).formatted(YELLOW)
+                    .append(Text.literal(ref.name()).formatted(GREEN)));
+        }
     }
 
     private void displayGameQueue() {
-        // TODO implement
+        JSONObject gameQueue = map.getProperty("game-queue");
+
+        if (gameQueue == null) return;
+
+        Vec3d pos = MapUtil.readVec3d(gameQueue.getJSONArray("pos"));
+        double height = max(1, gameQueue.getDouble("height"));
+        double yaw = Math.toRadians(gameQueue.optDouble("yaw", 0d) + 90.f);
+
+        var scene = new Scene(new MixedMountContext(world, dynamicEntityManager));
+
+        Translations translations = args.miniGameArgs().translations();
+
+        if (gameQueueDisplay != null) {
+            gameQueueDisplay.detach();
+        }
+
+        gameQueueDisplay = new Object3d();
+        gameQueueDisplay.position.set(pos.getX(), pos.getY(), pos.getZ());
+        gameQueueDisplay.rotation.setAngleAxis(yaw, new Vector3d(0, 1, 0));
+
+        List<GameQueue.Entry> preview = args.gameQueue().preview();
+
+        double textHeight = 0.25;
+        int reservedSpace = miniGame != null ? 2 : 1;
+        int amount = max(0, min(preview.size(), (int) floor(height / textHeight) - reservedSpace));
+        preview = preview.subList(0, amount);
+
+        Collections.reverse(preview);
+
+        double offsetY = 0;
+
+        for (var entry : preview) {
+            var obj = new TranslatedTextDisplayObject(translations);
+
+            Formatting color = switch (entry.type()) {
+                case REGULAR -> GREEN;
+                case VOTED -> GOLD;
+                case PRIORITY -> LIGHT_PURPLE;
+            };
+
+            obj.controller().configure(controller -> {
+                controller.setText(translations.translateText(entry.game().getTitleKey()).formatted(color));
+                controller.setDisplayFlags(DisplayEntity.TextDisplayEntity.DEFAULT_BACKGROUND_FLAG);
+            });
+
+            obj.position.set(0, offsetY, 0);
+
+            offsetY += textHeight;
+
+            gameQueueDisplay.addChild(obj);
+        }
+
+        if (miniGame != null) {
+            var obj = new TranslatedTextDisplayObject(translations);
+            var currentTitle = translations.translateText(miniGame.getTitleKey()).formatted(AQUA);
+
+            obj.controller().configure(controller -> {
+                controller.setText(lang -> Text.literal("→ ").formatted(YELLOW)
+                                .append(currentTitle.translateTo(lang)));
+                controller.setDisplayFlags(DisplayEntity.TextDisplayEntity.DEFAULT_BACKGROUND_FLAG);
+            });
+
+            obj.position.set(0, offsetY, 0);
+
+            offsetY += textHeight;
+
+            gameQueueDisplay.addChild(obj);
+        }
+
+        var title = new TranslatedTextDisplayObject(translations);
+
+        title.controller().configure(controller -> {
+            controller.setText(translations.translateText("ap2.prepare.game_queue").formatted(YELLOW, UNDERLINE, BOLD));
+            controller.setDisplayFlags(DisplayEntity.TextDisplayEntity.DEFAULT_BACKGROUND_FLAG);
+        });
+
+        title.position.set(0, offsetY, 0);
+
+        gameQueueDisplay.addChild(title);
+
+        scene.add(gameQueueDisplay);
     }
 
     private void tick(RunningTask task) {
@@ -215,7 +432,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
         } else {
             if (t == GAME_ANNOUNCE_DELAY - 40) {
                 // "The next game will be %s"
-                args.container().translations().translateText("ap2.prepare.next_game").formatted(GRAY)
+                args.miniGameArgs().translations().translateText("ap2.prepare.next_game").formatted(GRAY)
                         .sendTo(PlayerLookup.all(getServer()));
             } else if (t == GAME_ANNOUNCE_DELAY) {
                 announceNextGame();
@@ -230,7 +447,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
         Scheduler scheduler = component(BuiltinComponents.SCHEDULER).scheduler();
 
         MinecraftServer server = getServer();
-        Translations translationService = args.container().translations();
+        Translations translationService = args.miniGameArgs().translations();
 
         var label = translationService.translateText("ap2.prepare.next_game_title");
 
@@ -269,7 +486,18 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
 
     private void startGame() {
         Objects.requireNonNull(miniGame, "Mini-Game is not set");
+        MiniGameActivity activity = new MiniGameActivity(miniGame, args);
 
+        switchActivity(activity);
+    }
+
+    private void beginWinSequence() {
+        WinActivity activity = new WinActivity(args);
+
+        switchActivity(activity);
+    }
+
+    private void switchActivity(Activity activity) {
         if (animatedTitle != null) {
             animatedTitle.stop();
         }
@@ -278,7 +506,6 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
             song.stop();
         }
 
-        MiniGameActivity activity = new MiniGameActivity(miniGame, args);
         ActivityManager.getInstance().startActivity(activity);
     }
 
@@ -292,7 +519,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
             return Objects.requireNonNull(queue.pollNextGame(), "Could not determine next game");
         }
 
-        final int maxTries = args.container().miniGames().getGames().size();  // cycle through every registered game once
+        final int maxTries = args.miniGameArgs().miniGames().getGames().size();  // cycle through every registered game once
 
         for (int tries = 0; tries < maxTries; tries++) {
             MiniGame game = Objects.requireNonNull(queue.pollNextGame(), "Next game from queue is null");
@@ -333,7 +560,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
     }
 
     private void announceNextGame() {
-        ApContainer container = args.container();
+        ApMiniGameArgs container = args.miniGameArgs();
         Translations translations = container.translations();
         MinecraftServer server = getServer();
         SongManager songManager = container.songManager();
@@ -412,7 +639,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
      * Announces that the current game is no longer valid and that a new game will be picked.
      */
     private void announceInvalidGame() {
-        Translations translations = args.container().translations();
+        Translations translations = args.miniGameArgs().translations();
 
         var gameTitle = translations.translateText(miniGame.getTitleKey()).formatted(YELLOW);
         var msg = translations.translateText("ap2.prepare.game_cannot_be_played", gameTitle).formatted(RED);
@@ -482,14 +709,14 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
 
         mapChooser.listen(hooks, (gameMap, player) -> {
             Identifier mapId = gameMap.getDescriptor().getIdentifier();
-            args.container().mapFacade().forceMap(mapId);
+            args.miniGameArgs().mapFacade().forceMap(mapId);
             player.sendMessage(Text.literal("Next map will be \"%s\"".formatted(mapId)));
         });
     }
 
     private void openGamePicker(ServerPlayerEntity player) {
-        var games = args.container().miniGames().getGames().stream().toList();
-        Translations translations = args.container().translations();
+        var games = args.miniGameArgs().miniGames().getGames().stream().toList();
+        Translations translations = args.miniGameArgs().translations();
 
         RestrictedInventory inv = gameChooser.createInventory(games, Text.literal("Force Game"),
                 game -> IconMaker.createIcon(game, player, translations));
@@ -503,7 +730,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
             return;
         }
 
-        ApContainer container = args.container();
+        ApMiniGameArgs container = args.miniGameArgs();
         DataManager dataManager = container.dataManager();
 
         container.mapFacade().getMaps(miniGame.getId()).thenAccept(maps -> {
@@ -524,7 +751,4 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
     private Optional<MiniGame> getMiniGame() {
         return Optional.ofNullable(miniGame);
     }
-
-    public record Args(ApContainer container, GameQueue gameQueue,
-                       PlayerManager playerManager, ForceGameCommand forceGameCommand, SongCache sharedSongCache) {}
 }

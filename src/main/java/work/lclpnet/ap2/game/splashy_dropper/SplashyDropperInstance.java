@@ -21,7 +21,7 @@ import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.map.MapBootstrap;
 import work.lclpnet.ap2.api.map.MapBootstrapFunction;
 import work.lclpnet.ap2.game.splashy_dropper.data.SdGenerator;
-import work.lclpnet.ap2.impl.game.DefaultGameInstance;
+import work.lclpnet.ap2.impl.game.FFAGameInstance;
 import work.lclpnet.ap2.impl.game.data.ScoreTimeDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.map.ServerThreadMapBootstrap;
@@ -45,7 +45,7 @@ import java.util.Random;
 
 import static net.minecraft.util.Formatting.YELLOW;
 
-public class SplashyDropperInstance extends DefaultGameInstance implements MapBootstrapFunction {
+public class SplashyDropperInstance extends FFAGameInstance implements MapBootstrapFunction {
 
     private static final int MIN_DURATION_SECONDS = 50, MAX_DURATION_SECONDS = 75;
     private final ScoreTimeDataContainer<ServerPlayerEntity, PlayerRef> data = new ScoreTimeDataContainer<>(PlayerRef::create);
@@ -115,7 +115,7 @@ public class SplashyDropperInstance extends DefaultGameInstance implements MapBo
         var subject = translations.translateText(gameHandle.getGameInfo().getTaskKey());
 
         int duration = MIN_DURATION_SECONDS + random.nextInt(MAX_DURATION_SECONDS - MIN_DURATION_SECONDS + 1);
-        commons().createTimer(subject, duration).whenDone(this::onTimerDone);
+        commons().createTimer(subject, duration).whenDone(winManager::complete);
 
         gameHandle.getGameScheduler().interval(this::tick, 1);
 
@@ -146,7 +146,7 @@ public class SplashyDropperInstance extends DefaultGameInstance implements MapBo
         objective.setNumberFormat(StyledNumberFormat.YELLOW);
 
         for (ServerPlayerEntity player : PlayerLookup.all(gameHandle.getServer())) {
-            objective.addPlayer(player);
+            objective.add(player);
         }
     }
 
@@ -220,9 +220,5 @@ public class SplashyDropperInstance extends DefaultGameInstance implements MapBo
         }
 
         return count;
-    }
-
-    private void onTimerDone() {
-        winManager.win(data.getBestSubject(resolver).orElse(null));
     }
 }

@@ -19,6 +19,7 @@ import work.lclpnet.lobby.game.map.MapManager;
 import java.io.IOException;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 public class MapFacadeImpl implements MapFacade {
@@ -79,6 +80,13 @@ public class MapFacadeImpl implements MapFacade {
                 .toList();
 
         return CompletableFuture.completedFuture(maps);
+    }
+
+    @Override
+    public CompletableFuture<Optional<GameMap>> getMap(Identifier mapId) {
+        var optMap = mapManager.getCollection().getMap(mapId);
+
+        return CompletableFuture.completedFuture(optMap);
     }
 
     @Override

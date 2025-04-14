@@ -27,7 +27,7 @@ import org.json.JSONArray;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.core.hook.SpectatePlayerCallback;
-import work.lclpnet.ap2.impl.game.DefaultGameInstance;
+import work.lclpnet.ap2.impl.game.FFAGameInstance;
 import work.lclpnet.ap2.impl.game.data.ScoreDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.util.DeathMessages;
@@ -49,7 +49,7 @@ import java.util.Set;
 
 import static net.minecraft.util.Formatting.*;
 
-public class OneInTheChamberInstance extends DefaultGameInstance {
+public class OneInTheChamberInstance extends FFAGameInstance {
 
     static final int SCORE_LIMIT = 15;
     static final double RESPAWN_SPACING = 20;
@@ -255,7 +255,7 @@ public class OneInTheChamberInstance extends DefaultGameInstance {
         int newScore = data.getScore(killer);
 
         if (newScore == SCORE_LIMIT) {
-            winManager.win(killer);
+            winManager.complete();
         }
 
         killer.playSoundToPlayer(SoundEvents.ENTITY_ARROW_HIT_PLAYER, SoundCategory.PLAYERS, 0.8f, 0.8f);

@@ -1,7 +1,6 @@
 package work.lclpnet.ap2.impl.game;
 
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.world.border.WorldBorder;
 import net.minecraft.world.border.WorldBorderListener;
@@ -15,12 +14,15 @@ import work.lclpnet.ap2.api.data.DataManager;
 import work.lclpnet.ap2.api.game.GameInfo;
 import work.lclpnet.ap2.api.game.MiniGame;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
+import work.lclpnet.ap2.api.game.MiniGameResults;
 import work.lclpnet.ap2.api.game.team.TeamConfig;
 import work.lclpnet.ap2.api.map.MapFacade;
 import work.lclpnet.ap2.api.util.music.SongManager;
-import work.lclpnet.ap2.base.ApContainer;
+import work.lclpnet.ap2.base.ApMiniGameArgs;
 import work.lclpnet.ap2.base.activity.MiniGameActivity;
 import work.lclpnet.ap2.base.activity.PreparationActivity;
+import work.lclpnet.ap2.base.util.ApBaseArgs;
+import work.lclpnet.ap2.base.util.ScoreManager;
 import work.lclpnet.ap2.impl.util.DeathMessages;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.kibu.cmd.type.CommandRegistrar;
@@ -38,12 +40,11 @@ import work.lclpnet.notica.api.SongHandle;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 public class DefaultMiniGameHandle implements MiniGameHandle, WorldBorderManager {
 
     private final MiniGame game;
-    private final PreparationActivity.Args args;
+    private final ApBaseArgs args;
     private final BossBarProvider bossBarProvider;
     private final BossBarHandler bossBarHandler;
     private final CustomScoreboardManager scoreboardManager;
@@ -57,7 +58,7 @@ public class DefaultMiniGameHandle implements MiniGameHandle, WorldBorderManager
     private boolean ended = false;
     private volatile DeathMessages deathMessages = null;
 
-    public DefaultMiniGameHandle(MiniGame game, PreparationActivity.Args args, BossBarProvider bossBarProvider,
+    public DefaultMiniGameHandle(MiniGame game, ApBaseArgs args, BossBarProvider bossBarProvider,
                                  BossBarHandler bossBarHandler, CustomScoreboardManager scoreboardManager,
                                  AtomicBoolean remake) {
         this.game = game;
@@ -70,7 +71,7 @@ public class DefaultMiniGameHandle implements MiniGameHandle, WorldBorderManager
     }
 
     public void init() {
-        ApContainer container = args.container();
+        ApMiniGameArgs container = args.miniGameArgs();
 
         container.hookStack().push();
         container.commandStack().push();
@@ -83,7 +84,7 @@ public class DefaultMiniGameHandle implements MiniGameHandle, WorldBorderManager
 
     @Override
     public MinecraftServer getServer() {
-        return args.container().server();
+        return args.miniGameArgs().server();
     }
 
     @Override
@@ -98,22 +99,22 @@ public class DefaultMiniGameHandle implements MiniGameHandle, WorldBorderManager
 
     @Override
     public WorldFacade getWorldFacade() {
-        return args.container().worldFacade();
+        return args.miniGameArgs().worldFacade();
     }
 
     @Override
     public MapFacade getMapFacade() {
-        return args.container().mapFacade();
+        return args.miniGameArgs().mapFacade();
     }
 
     @Override
     public HookStack getHookRegistrar() {
-        return args.container().hookStack();
+        return args.miniGameArgs().hookStack();
     }
 
     @Override
     public CommandRegistrar getCommandRegistrar() {
-        return args.container().commandStack();
+        return args.miniGameArgs().commandStack();
     }
 
     @Override
@@ -123,12 +124,12 @@ public class DefaultMiniGameHandle implements MiniGameHandle, WorldBorderManager
 
     @Override
     public SchedulerStack getGameScheduler() {
-        return args.container().schedulerStack();
+        return args.miniGameArgs().schedulerStack();
     }
 
     @Override
     public Translations getTranslations() {
-        return args.container().translations();
+        return args.miniGameArgs().translations();
     }
 
     @Override
@@ -143,7 +144,7 @@ public class DefaultMiniGameHandle implements MiniGameHandle, WorldBorderManager
 
     @Override
     public PlayerUtil getPlayerUtil() {
-        return args.container().playerUtil();
+        return args.miniGameArgs().playerUtil();
     }
 
     @Override
@@ -168,7 +169,7 @@ public class DefaultMiniGameHandle implements MiniGameHandle, WorldBorderManager
 
     @Override
     public SongManager getSongManager() {
-        return args.container().songManager();
+        return args.miniGameArgs().songManager();
     }
 
     @Override
@@ -188,7 +189,7 @@ public class DefaultMiniGameHandle implements MiniGameHandle, WorldBorderManager
 
     @Override
     public DataManager getDataManager() {
-        return args.container().dataManager();
+        return args.miniGameArgs().dataManager();
     }
 
     @Override
@@ -232,7 +233,7 @@ public class DefaultMiniGameHandle implements MiniGameHandle, WorldBorderManager
     }
 
     @Override
-    public synchronized void complete(Set<ServerPlayerEntity> winners) {
+    public synchronized void complete(MiniGameResults results) {
         if (ended) return;
         ended = true;
 
@@ -242,17 +243,26 @@ public class DefaultMiniGameHandle implements MiniGameHandle, WorldBorderManager
             return;
         }
 
-        // TODO track winners
-        getLogger().info("Winners: {}", winners.stream()
-                .map(ServerPlayerEntity::getNameForScoreboard)
-                .collect(Collectors.toSet()));
+        // track player scores; 3 points for 1st, 2 points for 2nd, 1 point for 3rd
+        ScoreManager scoreManager = args.scoreManager();
+        int score = 3;
+
+        for (Set<MiniGameResults.PlayerResult> group : results.getEntriesByRank()) {
+            if (score <= 0) break;
+
+            for (MiniGameResults.PlayerResult playerResult : group) {
+                scoreManager.addScore(playerResult.getRef(), score);
+            }
+
+            score--;
+        }
 
         PreparationActivity activity = new PreparationActivity(args);
         ActivityManager.getInstance().startActivity(activity);
     }
 
     public void unload() {
-        ApContainer container = args.container();
+        ApMiniGameArgs container = args.miniGameArgs();
 
         container.hookStack().pop();
         container.commandStack().pop();

@@ -11,6 +11,9 @@ import work.lclpnet.ap2.api.game.MiniGame;
 import work.lclpnet.ap2.api.util.music.SongCache;
 import work.lclpnet.ap2.base.activity.PreparationActivity;
 import work.lclpnet.ap2.base.cmd.ForceGameCommand;
+import work.lclpnet.ap2.base.cmd.ScoreCommand;
+import work.lclpnet.ap2.base.util.ApBaseArgs;
+import work.lclpnet.ap2.base.util.ScoreManager;
 import work.lclpnet.ap2.impl.base.PlayerManagerImpl;
 import work.lclpnet.ap2.impl.base.SimpleMiniGameManager;
 import work.lclpnet.ap2.impl.base.VotedGameQueue;
@@ -19,6 +22,7 @@ import work.lclpnet.ap2.impl.game.PlayerUtil;
 import work.lclpnet.ap2.impl.i18n.DynamicLanguageManager;
 import work.lclpnet.ap2.impl.i18n.VanillaTranslations;
 import work.lclpnet.ap2.impl.util.music.MapSongCache;
+import work.lclpnet.kibu.cmd.impl.CommandStack;
 import work.lclpnet.kibu.hook.HookStack;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.lobby.game.api.GameEnvironment;
@@ -35,7 +39,10 @@ import static work.lclpnet.ap2.impl.util.FutureUtil.onThread;
 
 public class ArcadePartyInstance implements GameInstance {
 
-    private static final int MIN_REQUIRED_PLAYERS = 2;
+    private static final int
+            MIN_REQUIRED_PLAYERS = 2,
+            WIN_SCORE = 20;
+
     private final GameEnvironment environment;
     private final Path cacheDirectory;
     private final VanillaTranslations vanillaTranslations;
@@ -102,19 +109,27 @@ public class ArcadePartyInstance implements GameInstance {
         PlayerManagerImpl playerManager = new PlayerManagerImpl(server);
         PlayerUtil playerUtil = new PlayerUtil(server, playerManager);
 
+        ScoreManager scoreManager = new ScoreManager(server.getPlayerManager(), WIN_SCORE);
+        CommandStack commandStack = environment.getCommandStack();
+
         ForceGameCommand forceGameCommand = new ForceGameCommand(gameManager, queue::setNextGame);
-        forceGameCommand.register(environment.getCommandStack());
+        forceGameCommand.register(commandStack);
+
+        ScoreCommand scoreCommand = new ScoreCommand(scoreManager, translations);
+        scoreCommand.register(commandStack);
 
         HookStack hookStack = environment.getHookStack();
         initDynamicLanguages(hookStack, translations, server);
 
-        ApContainer container = new ApContainer(server, logger, translations, hookStack,
-                environment.getCommandStack(), environment.getSchedulerStack(), result.worldFacade(),
+        ApMiniGameArgs container = new ApMiniGameArgs(server, logger, translations, hookStack,
+                commandStack, environment.getSchedulerStack(), result.worldFacade(),
                 result.mapFacade(), playerUtil, gameManager, result.songManager(), result.dataManager());
 
         SongCache songCache = new MapSongCache();
 
-        var args = new PreparationActivity.Args(container, queue, playerManager, forceGameCommand, songCache);
+        var args = new ApBaseArgs(container, queue, playerManager, forceGameCommand, songCache, scoreManager,
+                environment.getFinisher());
+
         PreparationActivity preparation = new PreparationActivity(args);
 
         ActivityManager.getInstance().startActivity(preparation);

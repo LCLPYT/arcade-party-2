@@ -26,25 +26,24 @@ import static java.util.Comparator.comparingLong;
  * but the order in which the scores who reached is saved.
  * In case two subjects have the same score, the subject who reached the score first is ranked higher.
  */
-public class ScoreTimeDataContainer<T, Ref extends SubjectRef> implements DataContainer<T, Ref>, IntScoreEventSource<T>, IntDataSink<T> {
+public class ScoreTimeDataContainer<T, Ref extends SubjectRef> extends BaseDataContainer<T, Ref> implements IntScoreEventSource<T>, IntDataSink<T> {
 
-    private final SubjectRefFactory<T, Ref> refs;
     private final Object2IntMap<Ref> score = new Object2IntOpenHashMap<>();
     private final Object2LongMap<Ref> lastTransaction = new Object2LongOpenHashMap<>();
     private final List<IntScoreEvent<T>> listeners = new ArrayList<>();
     /** An incrementing transaction counter. Used to determine who got to which score first. */
     private long transaction = 0;
-    private boolean frozen = false;
 
     public ScoreTimeDataContainer(SubjectRefFactory<T, Ref> refs) {
-        this.refs = refs;
+        super(refs);
     }
 
     public void setScore(T subject, int score) {
         synchronized (this) {
-            if (frozen) return;
             Ref ref = refs.create(subject);
+
             this.score.put(ref, score);
+
             modified(ref);
         }
 
@@ -56,7 +55,6 @@ public class ScoreTimeDataContainer<T, Ref extends SubjectRef> implements DataCo
         int score;
 
         synchronized (this) {
-            if (frozen) return;
             Ref ref = refs.create(subject);
             score = this.score.compute(ref, (_ref, prev) -> (prev != null ? prev : 0) + add);
             modified(ref);
@@ -70,37 +68,24 @@ public class ScoreTimeDataContainer<T, Ref extends SubjectRef> implements DataCo
         return score.getOrDefault(refs.create(subject), 0);
     }
 
-    private synchronized void modified(Ref ref) {
+    private void modified(Ref ref) {
         lastTransaction.put(ref, transaction++);
     }
 
-    @Override
-    public synchronized void delete(T subject) {
-        if (frozen) return;
-        score.removeInt(refs.create(subject));
-    }
-
-    @Override
-    public Optional<DataEntry<Ref>> getEntry(T subject) {
-        Ref ref = refs.create(subject);
-
-        return Optional.of(_getEntry(ref));
-    }
-
     @NotNull
-    private synchronized DataEntry<Ref> _getEntry(Ref ref) {
+    public synchronized Optional<DataEntry<Ref>> getEntry(Ref ref) {
         int score = this.score.getOrDefault(ref, 0);
-        int ranking = _getTimedRanking(ref);
+        int ranking = getTimedRanking(ref);
 
         if (ranking == 0) {
-            return new ScoreDataEntry<>(ref, score);
+            return Optional.of(new ScoreDataEntry<>(ref, score));
         }
 
-        return new ScoreTimeDataEntry<>(ref, score, ranking);
+        return Optional.of(new ScoreTimeDataEntry<>(ref, score, ranking));
     }
 
     @Override
-    public Stream<? extends DataEntry<Ref>> orderedEntries() {
+    public synchronized Stream<? extends DataEntry<Ref>> streamOrderedEntries() {
         return score.object2IntEntrySet().stream()
                 .map(e -> {
                     Ref ref = e.getKey();
@@ -128,11 +113,6 @@ public class ScoreTimeDataContainer<T, Ref extends SubjectRef> implements DataCo
      * @return The ranking, or 0 if the score is unique.
      */
     private synchronized int getTimedRanking(Ref ref) {
-        return _getTimedRanking(ref);
-    }
-
-    // requires external synchronization
-    private int _getTimedRanking(Ref ref) {
         int subjectScore = score.getInt(ref);
 
         var ordered = score.object2IntEntrySet().stream()
@@ -157,19 +137,17 @@ public class ScoreTimeDataContainer<T, Ref extends SubjectRef> implements DataCo
     }
 
     @Override
-    public synchronized void freeze() {
-        frozen = true;
+    public void add(T subject) {
+        identityIfAbsent(subject);
     }
 
     @Override
-    public void ensureTracked(T subject) {
+    public void identityIfAbsent(T subject) {
         addScore(subject, 0);
     }
 
     @Override
     public synchronized void clear() {
-        if (frozen) return;
-
         score.clear();
         lastTransaction.clear();
     }
@@ -177,5 +155,15 @@ public class ScoreTimeDataContainer<T, Ref extends SubjectRef> implements DataCo
     @Override
     public void register(IntScoreEvent<T> listener) {
         listeners.add(Objects.requireNonNull(listener));
+    }
+
+    @Override
+    public synchronized DataContainer<T, Ref> copy() {
+        var copy = new ScoreTimeDataContainer<>(refs);
+        copy.transaction = transaction;
+        copy.score.putAll(this.score);
+        copy.lastTransaction.putAll(this.lastTransaction);
+
+        return copy;
     }
 }

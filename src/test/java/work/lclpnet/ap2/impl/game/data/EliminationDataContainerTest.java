@@ -10,13 +10,13 @@ import static org.junit.jupiter.api.Assertions.*;
 public class EliminationDataContainerTest {
 
     @Test
-    void orderedEntries() {
+    void streamOrderedEntries() {
         var data = new EliminationDataContainer<>(StringRef::new);
-        data.eliminated("foo");
-        data.allEliminated(List.of("bar", "baz"));
-        data.eliminated("test");
+        data.add("foo");
+        data.addAll(List.of("bar", "baz"));
+        data.add("test");
 
-        var order = data.orderedEntries()
+        var order = data.streamOrderedEntries()
                 .map(DataEntry::subject)
                 .map(StringRef::name)
                 .toList();
@@ -30,18 +30,18 @@ public class EliminationDataContainerTest {
     }
 
     @Test
-    void orderedEntries_sameEntryInstance() {
+    void streamOrderedEntries_sameEntryInstance() {
         var data = new EliminationDataContainer<>(StringRef::new);
-        data.eliminated("foo");
-        data.allEliminated(List.of("bar", "baz"));
-        data.eliminated("test");
+        data.add("foo");
+        data.addAll(List.of("bar", "baz"));
+        data.add("test");
 
         var foo = data.getEntry("foo").orElseThrow();
         var bar = data.getEntry("bar").orElseThrow();
         var baz = data.getEntry("baz").orElseThrow();
         var test = data.getEntry("test").orElseThrow();
 
-        var order = data.orderedEntries().toList();
+        var order = data.streamOrderedEntries().toList();
 
         assertSame(test, order.getFirst());
         assertTrue(bar == order.get(1) && baz == order.get(2)

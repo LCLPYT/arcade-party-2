@@ -202,6 +202,10 @@ public class Object3d {
 
     public void detach() {
         if (parent == null) {
+            for (Object3d obj : traverse()) {
+                obj.onDetached();
+            }
+
             onDetached();
         } else {
             parent.removeChild(this);

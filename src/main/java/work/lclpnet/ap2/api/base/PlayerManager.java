@@ -21,4 +21,8 @@ public interface PlayerManager extends Participants {
     boolean isPermanentSpectator(ServerPlayerEntity player);
 
     void bind(ParticipantListener listener);
+
+    void leaveFinale();
+
+    boolean isFinale();
 }

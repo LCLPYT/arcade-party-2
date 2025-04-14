@@ -34,7 +34,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public abstract class EliminationGameInstance extends DefaultGameInstance implements EliminationController {
+public abstract class EliminationGameInstance extends FFAGameInstance implements EliminationController {
 
     private final EliminationDataContainer<ServerPlayerEntity, PlayerRef> data = new EliminationDataContainer<>(PlayerRef::create);
     private DynamicTranslatedBossBar remainingDisplay = null;
@@ -48,7 +48,7 @@ public abstract class EliminationGameInstance extends DefaultGameInstance implem
     @Override
     public void participantRemoved(ServerPlayerEntity player) {
         // make sure the player is tracked as eliminated
-        data.eliminated(player);
+        data.add(player);
 
         if (remainingDisplay != null) {
             var title = remainingTitle();
@@ -165,7 +165,7 @@ public abstract class EliminationGameInstance extends DefaultGameInstance implem
         }
 
         // mark all players as eliminated at the same moment
-        data.allEliminated(toEliminate);
+        data.addAll(toEliminate);
 
         WorldFacade worldFacade = gameHandle.getWorldFacade();
         PlayerUtil playerUtil = gameHandle.getPlayerUtil();

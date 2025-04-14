@@ -6,7 +6,7 @@ import org.json.JSONArray;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.map.MapBootstrap;
-import work.lclpnet.ap2.impl.game.DefaultGameInstance;
+import work.lclpnet.ap2.impl.game.FFAGameInstance;
 import work.lclpnet.ap2.impl.game.data.ScoreTimeDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.kibu.scheduler.Ticks;
@@ -16,7 +16,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
-public class FineTuningInstance extends DefaultGameInstance implements MapBootstrap {
+public class FineTuningInstance extends FFAGameInstance implements MapBootstrap {
 
     static final int MELODY_COUNT = 3;
     static final int REPLAY_COOLDOWN = Ticks.seconds(5);
@@ -63,8 +63,7 @@ public class FineTuningInstance extends DefaultGameInstance implements MapBootst
     private void startStagePhase() {
         tuningPhase.unload();
 
-        StagePhase stagePhase = new StagePhase(gameHandle, data, resolver, tuningPhase.getRecords(), getMap(),
-                getWorld(), winner -> winner.ifPresentOrElse(winManager::win, winManager::winNobody));
+        var stagePhase = new StagePhase(gameHandle, tuningPhase.getRecords(), getMap(), getWorld(), winManager);
 
         stagePhase.beginStage();
     }

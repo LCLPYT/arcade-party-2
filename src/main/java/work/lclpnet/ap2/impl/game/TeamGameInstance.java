@@ -11,7 +11,7 @@ import work.lclpnet.ap2.api.game.WinManagerAccess;
 import work.lclpnet.ap2.api.game.WinManagerView;
 import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.game.team.*;
-import work.lclpnet.ap2.impl.game.data.type.TeamGameWinners;
+import work.lclpnet.ap2.impl.game.data.type.TeamGameResult;
 import work.lclpnet.ap2.impl.game.data.type.TeamRef;
 import work.lclpnet.ap2.impl.game.data.type.TeamRefResolver;
 import work.lclpnet.ap2.impl.game.team.SimpleTeamManager;
@@ -23,7 +23,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 
-public abstract class DefaultTeamGameInstance extends BaseGameInstance implements ParticipantListener,
+public abstract class TeamGameInstance extends BaseGameInstance implements ParticipantListener,
         TeamEliminatedListener, TeamSpawnAccess, WinManagerView {
 
     private volatile TeamRefResolver resolver = null;
@@ -31,9 +31,19 @@ public abstract class DefaultTeamGameInstance extends BaseGameInstance implement
     private volatile Map<String, PositionRotation> teamSpawns = null;
     protected final WinManager<Team, TeamRef> winManager;
 
-    public DefaultTeamGameInstance(MiniGameHandle gameHandle) {
+    public TeamGameInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
-        this.winManager = new WinManager<>(gameHandle, this::getData, this::createReferenceFor, this::createWinners);
+
+        this.winManager = new WinManager<>(gameHandle, this::getData, getTeamManager()::getTeam,
+                this::createReference, this::createReferenceFor,
+                data -> new TeamGameResult(data, getResolver()));
+    }
+
+    @Override
+    public void start() {
+        teamManager.getTeams().forEach(getData()::identityIfAbsent);
+
+        super.start();
     }
 
     @Override
@@ -55,7 +65,7 @@ public abstract class DefaultTeamGameInstance extends BaseGameInstance implement
 
     @Override
     public void teamEliminated(Team team) {
-        winManager.checkForWinner(teamManager.getParticipatingTeams().stream(), getResolver());
+        winManager.checkForLastRemaining();
     }
 
     @NotNull
@@ -141,10 +151,6 @@ public abstract class DefaultTeamGameInstance extends BaseGameInstance implement
         var team = teamManager.getTeam(player);
 
         return team.map(this::createReference).orElse(null);
-    }
-
-    private TeamGameWinners createWinners(Set<Team> winners) {
-        return new TeamGameWinners(winners, gameHandle.getTranslations());
     }
 
     @Override

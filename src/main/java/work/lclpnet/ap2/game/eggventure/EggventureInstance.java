@@ -39,7 +39,7 @@ import work.lclpnet.ap2.api.map.MapBootstrap;
 import work.lclpnet.ap2.api.util.heads.PlayerHead;
 import work.lclpnet.ap2.base.ApConstants;
 import work.lclpnet.ap2.base.resource.ApResources;
-import work.lclpnet.ap2.impl.game.DefaultGameInstance;
+import work.lclpnet.ap2.impl.game.FFAGameInstance;
 import work.lclpnet.ap2.impl.game.data.ScoreTimeDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.map.MapUtil;
@@ -65,7 +65,7 @@ import java.util.concurrent.CompletableFuture;
 import static net.minecraft.util.Formatting.BOLD;
 import static net.minecraft.util.Formatting.YELLOW;
 
-public class EggventureInstance extends DefaultGameInstance implements MapBootstrap {
+public class EggventureInstance extends FFAGameInstance implements MapBootstrap {
 
     private static final boolean DEBUG_EGG_POSITIONS = false;
     private static final MapCodec<Boolean> NBT_CODEC = Codec.BOOL.fieldOf("easter_egg");
@@ -264,7 +264,7 @@ public class EggventureInstance extends DefaultGameInstance implements MapBootst
 
         var subject = gameHandle.getTranslations().translateText(gameHandle.getGameInfo().getTaskKey());
 
-        commons().createTimer(subject, durationSeconds).whenDone(this::onTimerDone);
+        commons().createTimer(subject, durationSeconds).whenDone(winManager::complete);
     }
 
     private void onFindEasterEgg(ServerPlayerEntity player, BlockPos pos) {
@@ -282,9 +282,5 @@ public class EggventureInstance extends DefaultGameInstance implements MapBootst
         world.spawnParticles(ParticleTypes.CRIMSON_SPORE, x, y, z, 75, 0.25, 0.25, 0.25, 0);
         world.spawnParticles(ParticleTypes.WARPED_SPORE, x, y, z, 75, 0.25, 0.25, 0.25, 0);
         world.spawnParticles(ParticleTypes.GLOW, x, y, z, 25, 0.5, 0.5, 0.5, 0);
-    }
-
-    private void onTimerDone() {
-        winManager.win(data.getBestSubject(resolver).orElse(null));
     }
 }

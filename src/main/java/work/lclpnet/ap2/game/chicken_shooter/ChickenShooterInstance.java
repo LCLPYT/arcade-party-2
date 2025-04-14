@@ -29,7 +29,7 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.GameRules;
 import org.json.JSONArray;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
-import work.lclpnet.ap2.impl.game.DefaultGameInstance;
+import work.lclpnet.ap2.impl.game.FFAGameInstance;
 import work.lclpnet.ap2.impl.game.data.ScoreTimeDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.map.MapUtil;
@@ -50,7 +50,7 @@ import java.util.Set;
 
 import static net.minecraft.util.Formatting.YELLOW;
 
-public class ChickenShooterInstance extends DefaultGameInstance implements Runnable {
+public class ChickenShooterInstance extends FFAGameInstance implements Runnable {
 
     private static final double BABY_CHANCE = 0.15;
     private static final double TNT_CHANCE = 0.07;
@@ -122,7 +122,7 @@ public class ChickenShooterInstance extends DefaultGameInstance implements Runna
         objective.setNumberFormat(StyledNumberFormat.YELLOW);
 
         for (ServerPlayerEntity player : PlayerLookup.all(gameHandle.getServer())) {
-            objective.addPlayer(player);
+            objective.add(player);
         }
 
         Team team = scoreboardManager.createTeam("team");
@@ -159,7 +159,7 @@ public class ChickenShooterInstance extends DefaultGameInstance implements Runna
         // Timer and game end
         var subject = translations.translateText("game.ap2.chicken_shooter.task");
 
-        commons().createTimer(subject, durationSeconds).whenDone(this::onTimerDone);
+        commons().createTimer(subject, durationSeconds).whenDone(winManager::complete);
     }
 
     private void chickenSpawner() {
@@ -285,9 +285,5 @@ public class ChickenShooterInstance extends DefaultGameInstance implements Runna
 
             return false;
         });
-    }
-
-    private void onTimerDone() {
-        winManager.win(data.getBestSubject(resolver).orElse(null));
     }
 }

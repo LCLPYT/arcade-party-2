@@ -12,13 +12,15 @@ import work.lclpnet.kibu.title.Title;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.kibu.translate.text.TranslatedText;
 
+import java.util.function.Supplier;
+
 import static net.minecraft.util.Formatting.AQUA;
 import static net.minecraft.util.Formatting.DARK_GREEN;
 
 public class Announcer {
 
     private final Translations translations;
-    private final MinecraftServer server;
+    private final Supplier<Iterable<ServerPlayerEntity>> players;
     @Nullable
     private SoundEvent sound = SoundEvents.BLOCK_NOTE_BLOCK_PLING.value();
     private SoundCategory category = SoundCategory.RECORDS;
@@ -29,8 +31,12 @@ public class Announcer {
     private int fadeOutTicks = 5;
 
     public Announcer(Translations translations, MinecraftServer server) {
+        this(translations, () -> PlayerLookup.all(server));
+    }
+
+    public Announcer(Translations translations, Supplier<Iterable<ServerPlayerEntity>> players) {
         this.translations = translations;
-        this.server = server;
+        this.players = players;
     }
 
     public Announcer withDefaults() {
@@ -76,7 +82,7 @@ public class Announcer {
     }
 
     public void announce(@Nullable TranslatedText title, @Nullable TranslatedText subtitle) {
-        for (ServerPlayerEntity player : PlayerLookup.all(server)) {
+        for (ServerPlayerEntity player : players.get()) {
             Text titleText = title != null ? title.translateFor(player) : Text.empty();
             Text subTitleText = subtitle != null ? subtitle.translateFor(player) : Text.empty();
 

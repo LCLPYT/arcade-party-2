@@ -14,6 +14,7 @@ import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.impl.util.RefCounted;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.kibu.translate.text.RootText;
+import work.lclpnet.kibu.translate.text.TextTranslatable;
 import work.lclpnet.kibu.translate.text.TranslatedText;
 
 import java.util.HashMap;
@@ -50,8 +51,8 @@ public class TranslatedTextDisplay implements DynamicEntity {
     }
 
     public interface Controller {
-        void setText(TranslatedText text);
-        TranslatedText getText();
+        void setText(TextTranslatable text);
+        TextTranslatable getText();
         void setPosition(Vec3d position);
         Vec3d getPosition();
         void setLineWidth(int lineWidth);
@@ -86,13 +87,17 @@ public class TranslatedTextDisplay implements DynamicEntity {
         float getDisplayHeight();
         void setGlowColorOverride(int glowColorOverride);
         int getGlowColorOverride();
+
+        default void configure(Consumer<Controller> action) {
+            action.accept(this);
+        }
     }
 
     public static class ControllerImpl implements Controller {
 
         @Setter private @Nullable ServerWorld world;
         @Getter private final RefCounted<String, DisplayEntity.TextDisplayEntity> entities = new RefCounted<>(HashMap::new);
-        @Getter private TranslatedText text = TranslatedText.create(lang -> RootText.create(), player -> "");  // empty by default
+        @Getter private TextTranslatable text = TranslatedText.create(lang -> RootText.create(), player -> "");  // empty by default
         @Getter private Vec3d position = Vec3d.ZERO;
         @Getter private int lineWidth = 200;
         @Getter private byte textOpacity = (byte) -1;
@@ -149,7 +154,7 @@ public class TranslatedTextDisplay implements DynamicEntity {
         }
 
         @Override
-        public void setText(TranslatedText text) {
+        public void setText(TextTranslatable text) {
             this.text = text;
 
             entities.forEach((lang, display) -> display.setText(text.translateTo(lang)));

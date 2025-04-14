@@ -18,16 +18,15 @@ import java.util.stream.Stream;
  * A data container that keeps the order the subjects were added.
  * The first added subject is the winner.
  */
-public class OrderedDataContainer<T, Ref extends SubjectRef> implements DataContainer<T, Ref> {
+public class OrderedDataContainer<T, Ref extends SubjectRef> extends BaseDataContainer<T, Ref> {
 
-    private final SubjectRefFactory<T, Ref> refs;
     private final Map<Ref, Entry<Ref>> order = new HashMap<>();
-    private boolean frozen = false;
 
     public OrderedDataContainer(SubjectRefFactory<T, Ref> refs) {
-        this.refs = refs;
+        super(refs);
     }
 
+    @Override
     public void add(T subject) {
         add(subject, SimpleDataEntry::new);
     }
@@ -36,71 +35,50 @@ public class OrderedDataContainer<T, Ref extends SubjectRef> implements DataCont
         add(subject, ref -> new SimpleDataEntry<>(ref, data));
     }
 
-    private void add(T subject, Function<Ref, SimpleDataEntry<Ref>> entryFactory) {
-        synchronized (this) {
-            if (frozen) return;
+    private synchronized void add(T subject, Function<Ref, SimpleDataEntry<Ref>> entryFactory) {
+        Ref ref = refs.create(subject);
 
-            Ref ref = refs.create(subject);
+        if (order.containsKey(ref)) return;
 
-            if (order.containsKey(ref)) return;
+        var dataEntry = entryFactory.apply(ref);
 
-            var dataEntry = entryFactory.apply(ref);
-
-            order.put(ref, new Entry<>(order.size(), dataEntry));
-        }
+        order.put(ref, new Entry<>(order.size(), dataEntry));
     }
 
     @Override
-    public void delete(T subject) {
-        synchronized (this) {
-            if (frozen) return;
+    public synchronized Optional<DataEntry<Ref>> getEntry(Ref ref) {
+        var entry = order.get(ref);
 
-            order.remove(refs.create(subject));
+        if (entry == null) {
+            return Optional.empty();
         }
+
+        return Optional.of(entry.dataEntry());
     }
 
     @Override
-    public Optional<DataEntry<Ref>> getEntry(T subject) {
-        synchronized (this) {
-            Ref ref = refs.create(subject);
-            var entry = order.get(ref);
-
-            if (entry == null) {
-                return Optional.empty();
-            }
-
-            return Optional.of(entry.dataEntry());
-        }
+    public synchronized Stream<? extends DataEntry<Ref>> streamOrderedEntries() {
+        return order.values().stream()
+                .sorted(Comparator.comparingInt(Entry::order))
+                .map(Entry::dataEntry);
     }
 
     @Override
-    public Stream<? extends DataEntry<Ref>> orderedEntries() {
-        synchronized (this) {
-            return order.values().stream()
-                    .sorted(Comparator.comparingInt(Entry::order))
-                    .map(Entry::dataEntry);
-        }
+    public void identityIfAbsent(T subject) {
+        // NOOP
     }
 
     @Override
-    public void freeze() {
-        synchronized (this) {
-            frozen = true;
-        }
+    public synchronized void clear() {
+        order.clear();
     }
 
     @Override
-    public void ensureTracked(T subject) {
-        add(subject);
-    }
+    public synchronized DataContainer<T, Ref> copy() {
+        var copy = new OrderedDataContainer<>(refs);
+        copy.order.putAll(this.order);
 
-    @Override
-    public void clear() {
-        synchronized (this) {
-            if (frozen) return;
-
-            order.clear();
-        }
+        return copy;
     }
 
     private record Entry<Ref extends SubjectRef>(int order, SimpleDataEntry<Ref> dataEntry) {}

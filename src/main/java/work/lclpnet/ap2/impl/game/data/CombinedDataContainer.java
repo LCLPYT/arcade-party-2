@@ -13,89 +13,69 @@ import java.util.stream.Stream;
 public class CombinedDataContainer<T, Ref extends SubjectRef> implements DataContainer<T, Ref> {
 
     private final List<DataContainer<T, Ref>> children;
-    private boolean frozen = false;
 
     public CombinedDataContainer(List<DataContainer<T, Ref>> children) {
         if (children.isEmpty()) {
             throw new IllegalArgumentException("There needs to be at least on child data container");
         }
 
-        this.children = children;
+        this.children = List.copyOf(children);
     }
 
     @Override
-    public void delete(T subject) {
-        synchronized (this) {
-            if (frozen) return;
+    public synchronized Optional<DataEntry<Ref>> getEntry(T subject) {
+        for (var child : children) {
+            var entry = child.getEntry(subject);
 
-            for (var child : children) {
-                child.delete(subject);
+            if (entry.isPresent()) {
+                return entry;
             }
         }
+
+        return Optional.empty();
     }
 
     @Override
-    public Optional<DataEntry<Ref>> getEntry(T subject) {
-        synchronized (this) {
-            for (var child : children) {
-                var entry = child.getEntry(subject);
+    public synchronized Optional<DataEntry<Ref>> getEntry(Ref ref) {
+        for (var child : children) {
+            var entry = child.getEntry(ref);
 
-                if (entry.isPresent()) {
-                    return entry;
-                }
+            if (entry.isPresent()) {
+                return entry;
             }
-
-            return Optional.empty();
         }
+
+        return Optional.empty();
     }
 
     @Override
-    public Stream<? extends DataEntry<Ref>> orderedEntries() {
+    public synchronized Stream<? extends DataEntry<Ref>> streamOrderedEntries() {
         Set<Ref> seen = new HashSet<>();
 
-        synchronized (this) {
-            return children.stream()
-                    .flatMap(DataContainer::orderedEntries)
-                    .filter(entry -> seen.add(entry.subject()));  // each entry only once. this is stateful, only sequential streams will work
+        return children.stream()
+                .flatMap(DataContainer::streamOrderedEntries)
+                .filter(entry -> seen.add(entry.subject()));  // each entry only once. this is stateful, only sequential streams will work
+    }
+
+    @Override
+    public void add(T subject) {
+        children.getFirst().add(subject);
+    }
+
+    @Override
+    public void identityIfAbsent(T subject) {
+        children.getLast().identityIfAbsent(subject);
+    }
+
+    @Override
+    public synchronized void clear() {
+        for (var child : children) {
+            child.clear();
         }
     }
 
     @Override
-    public void freeze() {
-        synchronized (this) {
-            frozen = true;
-
-            for (var child : children) {
-                child.freeze();
-            }
-        }
-    }
-
-    @Override
-    public void ensureTracked(T subject) {
-        synchronized (this) {
-            DataContainer<T, Ref> container;
-
-            if (orderedEntries().findAny().isEmpty()) {
-                // if there is no data, add to the first data container
-                container = children.getFirst();
-            } else {
-                // otherwise, use the last data container
-                container = children.getLast();
-            }
-
-            container.ensureTracked(subject);
-        }
-    }
-
-    @Override
-    public void clear() {
-        synchronized (this) {
-            if (frozen) return;
-
-            for (var child : children) {
-                child.clear();
-            }
-        }
+    public synchronized DataContainer<T, Ref> copy() {
+        return new CombinedDataContainer<>(children.stream().map(DataContainer::copy).toList());
     }
 }
