@@ -17,7 +17,7 @@ metafile = true
 
 [[files]]
 file = "mods/fabric-api.pw.toml"
-hash = "71e384f643d16f13d509c543c26e81542baa22599365d6c16d867cd1eeda5acd"
+hash = "687d9f69912b725a879bf3b4da8fb3f63eead93e4ce3e719c2be67d56b70c0b5"
 metafile = true
 
 [[files]]
@@ -42,7 +42,7 @@ metafile = true
 
 [[files]]
 file = "mods/lithium.pw.toml"
-hash = "97697e194c4e9742501485140b71b4104b857f27bd34446816fd55e4ec486e2c"
+hash = "df9d69dc784ef61e99064407952d34c294f62fe1155b5260f825bd9a82e2f3a2"
 metafile = true
 
 [[files]]
@@ -52,12 +52,12 @@ metafile = true
 
 [[files]]
 file = "mods/mg-lobby.pw.toml"
-hash = "33f2e6cf5d0c49d4f59e7ea329311717053e4f78f5d1d49c1da016f26490e26a"
+hash = "ce2ae0e397226508711fd4742ce279354dba8ee85f769bcf0dc3f78bd055f4e8"
 metafile = true
 
 [[files]]
 file = "mods/notica.pw.toml"
-hash = "8b68968c4df951563dae766f193e3eb86b5a06c7de5544e980ff226b97bc5c96"
+hash = "06b97d07e092da01363d9afeb95496ac0ad5cb95b1839e16b8ce29061fe2a9ce"
 metafile = true
 
 [[files]]
@@ -67,7 +67,7 @@ metafile = true
 
 [[files]]
 file = "mods/ruler.pw.toml"
-hash = "71160a6cc93ff6ae0cc3cae5c8b8bec4e142f40b7e75d0b8ab309dd2201c0a3b"
+hash = "f49d17421205b1609414af751a27ba72476749c18f55948ba58e808e7b09f786"
 metafile = true
 
 [[files]]
