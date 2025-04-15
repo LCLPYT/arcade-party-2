@@ -1,0 +1,15 @@
+name = "arcade-party-2"
+filename = "arcade-party-2-0.1.0+1.21.4.jar"
+side = "both"
+
+[download]
+url = "https://github.com/LCLPYT/arcade-party-2/releases/download/0.1.0%2B1.21.4/arcade-party-2-0.1.0%2B1.21.4.jar"
+hash-format = "sha256"
+hash = "ce317b5629d56e76fa9f386c993837b41d41dc6792b1df1821667986cc5c3182"
+
+[update]
+[update.github]
+branch = "1.21.4"
+regex = "^.+(?<!-api|-dev|-dev-preshadow|-sources)\\.jar$"
+slug = "LCLPYT/arcade-party-2"
+tag = "0.1.0+1.21.4"

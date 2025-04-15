@@ -6,6 +6,11 @@ hash = "0f02a94df6c8c9154c0e2073a19a7791c41d02356035f50a76eaded7a02592ef"
 metafile = true
 
 [[files]]
+file = "mods/arcade-party-2.pw.toml"
+hash = "70f836df5e6ee7d4f2c54da5c1bd92caa87fd23268155388cbd7f2cf604fa0ad"
+metafile = true
+
+[[files]]
 file = "mods/cloth-config.pw.toml"
 hash = "df15648dd4d4e27dd0c45ab4e78277c45886b77a698b129f4ce2d2bc337f7044"
 metafile = true

@@ -1,8 +1,6 @@
 services:
   mc:
-    build:
-      context: .
-      dockerfile: docker/Dockerfile
+    image: itzg/minecraft-server:java21-alpine
     tty: true
     stdin_open: true
     ports:
