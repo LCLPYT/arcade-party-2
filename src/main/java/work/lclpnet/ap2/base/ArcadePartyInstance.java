@@ -40,7 +40,7 @@ import static work.lclpnet.ap2.impl.util.FutureUtil.onThread;
 
 public class ArcadePartyInstance implements GameInstance {
 
-    private static final int WIN_SCORE = 20;
+    private static final int WIN_SCORE = 30;
 
     private final GameEnvironment environment;
     private final Path cacheDirectory;
