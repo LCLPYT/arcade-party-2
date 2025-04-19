@@ -48,7 +48,9 @@ public class ArcadeParty implements Game {
 
     @Override
     public boolean canBePlayed(GameScope gameScope) {
-        return ApConstants.DEVELOPMENT || gameScope.playerCount() >= MIN_REQUIRED_PLAYERS;
+        int playerCount = gameScope.playerCount();
+
+        return (ApConstants.DEVELOPMENT && playerCount >= 1) || playerCount >= MIN_REQUIRED_PLAYERS;
     }
 
     @Override
