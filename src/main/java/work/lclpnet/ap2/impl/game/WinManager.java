@@ -92,11 +92,15 @@ public class WinManager<T, Ref extends SubjectRef> {
                 .flatMap(Optional::stream)
                 .collect(Collectors.toSet());
 
-        if (participatingSubjects.size() > 1) return;
+        int size = participatingSubjects.size();
 
-        T lastRemaining = participatingSubjects.iterator().next();
+        if (size > 1) return;
 
-        dataSupplier.get().add(lastRemaining);
+        if (size == 1) {
+            T lastRemaining = participatingSubjects.iterator().next();
+
+            dataSupplier.get().add(lastRemaining);
+        }
 
         complete();
     }
