@@ -72,21 +72,23 @@ public abstract class TeamEliminationGameInstance extends TeamGameInstance {
     protected void eliminate(Team team) {
         TeamManager teamManager = getTeamManager();
 
-        if (teamManager.isParticipating(team)) {
-            DeathMessages deathMessages = gameHandle.getDeathMessages();
-            MinecraftServer server = gameHandle.getServer();
-
-            deathMessages.eliminated(team).sendTo(PlayerLookup.all(server));
-
-            teamManager.setTeamEliminated(team);
-        }
-
+        // eliminate all remaining team players first
         Participants participants = gameHandle.getParticipants();
 
         for (ServerPlayerEntity player : team.getPlayers()) {
             participants.remove(player);
             resetPlayer(player);
         }
+
+        // now actually eliminate the team
+        if (!teamManager.isParticipating(team)) return;
+
+        DeathMessages deathMessages = gameHandle.getDeathMessages();
+        MinecraftServer server = gameHandle.getServer();
+
+        deathMessages.eliminated(team).sendTo(PlayerLookup.all(server));
+
+        teamManager.setTeamEliminated(team);
     }
 
     protected void eliminateAll(Iterable<? extends Team> teams) {
@@ -115,8 +117,6 @@ public abstract class TeamEliminationGameInstance extends TeamGameInstance {
         // mark all teams as eliminated at the same moment
         data.addAll(toEliminate, detail);
 
-        toEliminate.forEach(teamManager::setTeamEliminated);
-
         Participants participants = gameHandle.getParticipants();
 
         // deliberately use teams instead of toEliminate, to make sure there are no participating members anymore
@@ -126,6 +126,9 @@ public abstract class TeamEliminationGameInstance extends TeamGameInstance {
                 resetPlayer(player);
             }
         }
+
+        // finally actually set the teams to eliminated, after the all team participants are eliminated
+        toEliminate.forEach(teamManager::setTeamEliminated);
     }
 
     @Override

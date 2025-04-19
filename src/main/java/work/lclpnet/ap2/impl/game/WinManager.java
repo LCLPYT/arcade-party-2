@@ -19,6 +19,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 public class WinManager<T, Ref extends SubjectRef> {
 
@@ -86,12 +87,16 @@ public class WinManager<T, Ref extends SubjectRef> {
     }
 
     public void checkForLastRemaining() {
-        if (gameHandle.getParticipants().count() > 1) return;
+        Set<T> participatingSubjects = gameHandle.getParticipants().stream()
+                .map(subjectMapper)
+                .flatMap(Optional::stream)
+                .collect(Collectors.toSet());
 
-        gameHandle.getParticipants().stream()
-                .findAny()
-                .flatMap(subjectMapper)
-                .ifPresent(dataSupplier.get()::add);
+        if (participatingSubjects.size() > 1) return;
+
+        T lastRemaining = participatingSubjects.iterator().next();
+
+        dataSupplier.get().add(lastRemaining);
 
         complete();
     }
