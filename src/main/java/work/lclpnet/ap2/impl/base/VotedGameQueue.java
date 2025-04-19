@@ -6,6 +6,7 @@ import work.lclpnet.ap2.api.base.MiniGameManager;
 import work.lclpnet.ap2.api.game.MiniGame;
 
 import java.util.*;
+import java.util.function.Predicate;
 
 /**
  * A game queue that picks voted games first.
@@ -18,9 +19,10 @@ public class VotedGameQueue implements GameQueue {
     private final MiniGameManager gameManager;
     private final int minimumSize;
     private final Queue<MiniGame> voted = new LinkedList<>(), regular = new LinkedList<>();
+    private final LinkedList<MiniGame> priority = new LinkedList<>();
     @Nullable
     private MiniGame forcedNextGame = null;
-    private final LinkedList<MiniGame> priority = new LinkedList<>();
+    private Predicate<MiniGame> filter = miniGame -> true;
 
     public VotedGameQueue(MiniGameManager gameManager, Iterable<MiniGame> voted, int minimumSize) {
         this.gameManager = gameManager;
@@ -30,27 +32,25 @@ public class VotedGameQueue implements GameQueue {
     }
 
     @Override
-    public MiniGame pollNextGame() {
-        synchronized (this) {
-            ensureMinimumSize();
+    public synchronized MiniGame pollNextGame() {
+        ensureMinimumSize();
 
-            if (forcedNextGame != null) {
-                MiniGame next = forcedNextGame;
-                forcedNextGame = null;
+        if (forcedNextGame != null) {
+            MiniGame next = forcedNextGame;
+            forcedNextGame = null;
 
-                return next;
-            }
-
-            if (!priority.isEmpty()) {
-                return priority.poll();
-            }
-
-            if (!voted.isEmpty()) {
-                return voted.poll();
-            }
-
-            return regular.poll();
+            return next;
         }
+
+        if (!priority.isEmpty()) {
+            return priority.poll();
+        }
+
+        if (!voted.isEmpty()) {
+            return voted.poll();
+        }
+
+        return regular.poll();
     }
 
     @Override
@@ -66,22 +66,31 @@ public class VotedGameQueue implements GameQueue {
     }
 
     @Override
-    public void setNextGame(MiniGame miniGame) {
+    public synchronized void setNextGame(MiniGame miniGame) {
         Objects.requireNonNull(miniGame);
 
-        synchronized (this) {
-            priority.clear();
-            priority.add(miniGame);
-        }
+        priority.clear();
+        priority.add(miniGame);
     }
 
     @Override
-    public void shiftGame(MiniGame miniGame) {
+    public synchronized void shiftGame(MiniGame miniGame) {
         Objects.requireNonNull(miniGame);
 
-        synchronized (this) {
-            priority.addFirst(miniGame);
-        }
+        priority.addFirst(miniGame);
+    }
+
+    @Override
+    public synchronized void setFilter(Predicate<MiniGame> filter) {
+        this.filter = filter;
+
+        var isInvalid = Predicate.not(filter);
+
+        priority.removeIf(isInvalid);
+        voted.removeIf(isInvalid);
+        regular.removeIf(isInvalid);
+
+        ensureMinimumSize();
     }
 
     private void ensureMinimumSize() {
@@ -91,10 +100,12 @@ public class VotedGameQueue implements GameQueue {
     }
 
     private void restockRegular() {
-        var games = gameManager.getGames();
+        var games = gameManager.getGames().stream()
+                .filter(filter)
+                .toList();
 
         if (games.isEmpty()) {
-            throw new IllegalStateException("There are no games registered");
+            throw new IllegalStateException("There are no valid games to append to the queue");
         }
 
         while (size() < minimumSize) {
@@ -104,9 +115,10 @@ public class VotedGameQueue implements GameQueue {
 
     /**
      * Offer a randomized batch of games to the regular queue.
+     *
      * @param games The games to randomize
      */
-    private void offerRandomized(Set<? extends MiniGame> games) {
+    private void offerRandomized(List<? extends MiniGame> games) {
         List<MiniGame> batch = new ArrayList<>(games);
 
         Collections.shuffle(batch);

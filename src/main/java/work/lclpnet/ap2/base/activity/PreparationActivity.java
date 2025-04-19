@@ -158,6 +158,8 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
             args.scoreManager().onChange().unregister(onScoreUpdate);
         }
 
+        removeGameQueue();
+
         super.stop();
     }
 
@@ -179,6 +181,9 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
 
         if (scoreManager.hasMultipleWinners()) {
             playerManager.enterFinale(scoreManager.getFinalists().collect(toSet()));
+
+            // remove games from the queue that cannot be played in a finale
+            args.gameQueue().setFilter(game -> game.canBeFinale(this));
         }
 
         playerManager.startPreparation();
@@ -338,44 +343,17 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
 
         Translations translations = args.miniGameArgs().translations();
 
-        if (gameQueueDisplay != null) {
-            gameQueueDisplay.detach();
-        }
+        removeGameQueue();
 
         gameQueueDisplay = new Object3d();
         gameQueueDisplay.position.set(pos.getX(), pos.getY(), pos.getZ());
         gameQueueDisplay.rotation.setAngleAxis(yaw, new Vector3d(0, 1, 0));
 
-        List<GameQueue.Entry> preview = args.gameQueue().preview();
-
-        double textHeight = 0.25;
-        int reservedSpace = miniGame != null ? 2 : 1;
-        int amount = max(0, min(preview.size(), (int) floor(height / textHeight) - reservedSpace));
-        preview = preview.subList(0, amount);
-
-        Collections.reverse(preview);
-
         double offsetY = 0;
+        double textHeight = 0.25;
 
-        for (var entry : preview) {
-            var obj = new TranslatedTextDisplayObject(translations);
-
-            Formatting color = switch (entry.type()) {
-                case REGULAR -> GREEN;
-                case VOTED -> GOLD;
-                case PRIORITY -> LIGHT_PURPLE;
-            };
-
-            obj.controller().configure(controller -> {
-                controller.setText(translations.translateText(entry.game().getTitleKey()).formatted(color));
-                controller.setDisplayFlags(DisplayEntity.TextDisplayEntity.DEFAULT_BACKGROUND_FLAG);
-            });
-
-            obj.position.set(0, offsetY, 0);
-
-            offsetY += textHeight;
-
-            gameQueueDisplay.addChild(obj);
+        if (!args.playerManager().isFinale()) {
+            offsetY = addUpcomingGames(height, translations, offsetY, textHeight);
         }
 
         if (miniGame != null) {
@@ -409,6 +387,54 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
         scene.add(gameQueueDisplay);
     }
 
+    private void removeGameQueue() {
+        if (gameQueueDisplay != null) {
+            gameQueueDisplay.detach();
+        }
+    }
+
+    private double addUpcomingGames(double height, Translations translations, double offsetY, double textHeight) {
+        List<GameQueue.Entry> preview = args.gameQueue().preview();
+
+        int reservedSpace = miniGame != null ? 2 : 1;
+        int amount = max(0, min(preview.size(), (int) floor(height / textHeight) - reservedSpace));
+        preview = preview.subList(0, amount);
+
+        Collections.reverse(preview);
+
+        for (var entry : preview) {
+            var obj = new TranslatedTextDisplayObject(translations);
+
+            Formatting color = switch (entry.type()) {
+                case REGULAR -> GREEN;
+                case VOTED -> GOLD;
+                case PRIORITY -> LIGHT_PURPLE;
+            };
+
+            boolean mayPossiblyNotBePlayed = !entry.game().canBePlayed(this);
+
+            obj.controller().configure(controller -> {
+                TranslatedText text = translations.translateText(entry.game().getTitleKey()).formatted(color);
+
+                if (mayPossiblyNotBePlayed) {
+                    controller.setText(lang -> Text.literal("⏳ ").formatted(WHITE)
+                            .append(text.translateTo(lang).formatted(ITALIC)));
+                } else {
+                    controller.setText(text);
+                }
+
+                controller.setDisplayFlags(DisplayEntity.TextDisplayEntity.DEFAULT_BACKGROUND_FLAG);
+            });
+
+            obj.position.set(0, offsetY, 0);
+
+            offsetY += textHeight;
+
+            gameQueueDisplay.addChild(obj);
+        }
+        return offsetY;
+    }
+
     private void tick(RunningTask task) {
         int t = time++;
 
@@ -439,7 +465,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
             }
         }
 
-        return t == PREPARATION_TIME || allPlayersAreReady();
+        return t == PREPARATION_TIME;
     }
 
     private BossBarTimer startTimer() {
@@ -463,11 +489,6 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
         bossBars.showOnJoin(bossBarTimer.getBossBar());
 
         return bossBarTimer;
-    }
-
-    private boolean allPlayersAreReady() {
-        // TODO implement
-        return false;
     }
 
     private void onTimerEnded() {
@@ -523,6 +544,8 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
 
         for (int tries = 0; tries < maxTries; tries++) {
             MiniGame game = Objects.requireNonNull(queue.pollNextGame(), "Next game from queue is null");
+
+            if (args.playerManager().isFinale() && !game.canBeFinale(this)) continue;
 
             if (game.canBePlayed(this)) {
                 return game;
