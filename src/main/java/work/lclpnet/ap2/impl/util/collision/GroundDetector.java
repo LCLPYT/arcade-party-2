@@ -17,16 +17,18 @@ public class GroundDetector {
     }
 
     public void collectBlocksBelow(ServerPlayerEntity player, Collection<BlockPos> list) {
-        double x = player.getX(), y = player.getY() - 1, z = player.getZ();
+        double x = player.getX(), y = player.getY(), z = player.getZ();
         var pos = new BlockPos.Mutable();
 
-        for (int dx = -1; dx < 2; dx++) {
-            for (int dz = -1; dz < 2; dz++) {
-                pos.set(x + margin * dx, y, z + margin * dz);
+        for (double dy = -1; dy < 0; dy += 0.5) {
+            for (int dx = -1; dx < 2; dx++) {
+                for (int dz = -1; dz < 2; dz++) {
+                    pos.set(x + margin * dx, y + dy, z + margin * dz);
 
-                if (world.isAir(pos)) continue;
+                    if (world.isAir(pos)) continue;
 
-                list.add(pos.toImmutable());
+                    list.add(pos.toImmutable());
+                }
             }
         }
     }

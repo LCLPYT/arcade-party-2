@@ -5,9 +5,12 @@ import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.entity.Entity;
+import net.minecraft.network.packet.s2c.play.PositionFlag;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Box;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.impl.game.EliminationGameInstance;
@@ -98,9 +101,17 @@ public class TntRunInstance extends EliminationGameInstance {
 
             removal.put(pos, BREAK_TICKS);
 
-            if (!state.getCollisionShape(world, pos).isEmpty()) {
-                world.setBlockState(pos, MARKED_STATE);
+            if (state.getCollisionShape(world, pos).isEmpty()) continue;
+
+            Box markedCollisionBox = MARKED_STATE.getCollisionShape(world, pos).getBoundingBox().offset(pos);
+            List<Entity> colliding = world.getOtherEntities(null, markedCollisionBox, entity -> !entity.isSpectator());
+
+            for (Entity entity : colliding) {
+                double dy = markedCollisionBox.maxY - entity.getY();
+                entity.teleport(world, 0, dy, 0, PositionFlag.VALUES, 0, 0, false);
             }
+
+            world.setBlockState(pos, MARKED_STATE);
         }
     }
 }
