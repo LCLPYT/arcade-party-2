@@ -5,6 +5,7 @@ import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.block.ShapeContext;
 import net.minecraft.entity.Entity;
 import net.minecraft.network.packet.s2c.play.PositionFlag;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -95,9 +96,12 @@ public class TntRunInstance extends EliminationGameInstance {
         for (BlockPos pos : groundBlocks) {
             if (removal.containsKey(pos)) continue;
 
-            BlockState state = world.getBlockState(pos);
+            BlockPos posUp = pos.up();
 
-            if (state.isAir()) continue;
+            BlockState state = world.getBlockState(pos);
+            BlockState above = world.getBlockState(posUp);
+
+            if (state.isAir() || !above.getCollisionShape(world, posUp, ShapeContext.absent()).isEmpty()) continue;
 
             removal.put(pos, BREAK_TICKS);
 
