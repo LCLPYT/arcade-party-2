@@ -37,6 +37,7 @@ public class BlockDissolveInstance extends EliminationGameInstance {
     private int nextSnowball = Ticks.seconds(3), tickOfSecond = 0, extraDissolvedThisSecond = 0,
             totalTime = 0, time = 0, dps = 0, warningTimer = 0;
     private boolean warning = false;
+    private boolean physics = false;
 
     public BlockDissolveInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
@@ -53,15 +54,23 @@ public class BlockDissolveInstance extends EliminationGameInstance {
         useSmoothDeath();
         useRemainingPlayersDisplay();
 
+        gameHandle.protect(config -> {
+            config.allow(ProtectionTypes.MOUNT);
+            config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, source) -> source.getSource() instanceof ProjectileEntity);
+        });
+
+        Object physics = getMap().getProperty("block_physics");
+
+        if (physics instanceof Boolean p) {
+            this.physics = p;
+        }
+
         scanWorld();
     }
 
     @Override
     protected void ready() {
         commons().whenBelowCriticalHeight().then(this::eliminate);
-
-        gameHandle.protect(config -> config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, source)
-                -> source.getSource() instanceof ProjectileEntity));
 
         startDissolve();
     }
@@ -183,7 +192,15 @@ public class BlockDissolveInstance extends EliminationGameInstance {
         BlockPos pos = BlockPos.fromLong(markedBlocks.removeLong(idx));
         ServerWorld world = getWorld();
 
-        world.setBlockState(pos, Blocks.AIR.getDefaultState(), Block.FORCE_STATE | Block.NOTIFY_LISTENERS | Block.SKIP_DROPS);
+        int flags = Block.NOTIFY_LISTENERS | Block.SKIP_DROPS;
+
+        if (physics) {
+            flags |= Block.NOTIFY_NEIGHBORS;
+        } else {
+            flags |= Block.FORCE_STATE;
+        }
+
+        world.setBlockState(pos, Blocks.AIR.getDefaultState(), flags);
 
         double x = pos.getX() + 0.5, y = pos.getY() + 0.5, z = pos.getZ() + 0.5;
 
