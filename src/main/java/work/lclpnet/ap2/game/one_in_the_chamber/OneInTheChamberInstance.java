@@ -142,9 +142,13 @@ public class OneInTheChamberInstance extends FFAGameInstance {
 
     @Override
     protected void ready() {
-        gameHandle.protect(config -> config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, damageSource)
-                -> entity instanceof ServerPlayerEntity &&
-                   (damageSource.isOf(DamageTypes.ARROW) || damageSource.isOf(DamageTypes.PLAYER_ATTACK))));
+        gameHandle.protect(config -> {
+            config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, damageSource)
+                    -> entity instanceof ServerPlayerEntity &&
+                    (damageSource.isOf(DamageTypes.ARROW) || damageSource.isOf(DamageTypes.PLAYER_ATTACK)));
+
+            config.allow(ProtectionTypes.MOUNT);
+        });
 
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
             giveCrossbowToPlayer(player);
