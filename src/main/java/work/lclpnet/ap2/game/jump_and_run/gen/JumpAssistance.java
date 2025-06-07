@@ -7,6 +7,7 @@ import net.minecraft.util.math.Vec3i;
 import org.json.JSONArray;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.impl.map.MapUtil;
+import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.math.AffineIntMatrix;
 import work.lclpnet.kibu.util.RotationUtil;
 import work.lclpnet.kibu.util.math.Matrix3i;
@@ -14,15 +15,15 @@ import work.lclpnet.kibu.util.math.Matrix3i;
 import java.util.ArrayList;
 import java.util.List;
 
-public record JumpAssistance(List<Pair<BlockPos, BlockState>> blocks) {
+public record JumpAssistance(List<Pair<BlockBox, BlockState>> blocks) {
 
     public static final JumpAssistance EMPTY = new JumpAssistance(List.of());
 
     public JumpAssistance relativize(Vec3i origin) {
         var transformed = blocks.stream()
                 .map(pair -> {
-                    BlockPos offsetPos = pair.left().subtract(origin);
-                    return Pair.of(offsetPos, pair.right());
+                    BlockBox offsetBox = pair.left().translate(origin.multiply(-1));
+                    return Pair.of(offsetBox, pair.right());
                 })
                 .toList();
 
@@ -34,7 +35,7 @@ public record JumpAssistance(List<Pair<BlockPos, BlockState>> blocks) {
 
         var transformed = blocks.stream()
                 .map(pair -> {
-                    BlockPos rotatedPos = mat4.transform(pair.left());
+                    BlockBox rotatedPos = pair.left().transform(mat4);
                     BlockState rotatedState = RotationUtil.rotate(pair.right(), mat3);
 
                     return Pair.of(rotatedPos, rotatedState);
@@ -45,7 +46,7 @@ public record JumpAssistance(List<Pair<BlockPos, BlockState>> blocks) {
     }
 
     public static JumpAssistance fromJson(JSONArray json, Logger logger) {
-        List<Pair<BlockPos, BlockState>> blocks = new ArrayList<>(json.length());
+        List<Pair<BlockBox, BlockState>> blocks = new ArrayList<>(json.length());
 
         for (Object entry : json) {
             if (!(entry instanceof JSONArray array)) {
@@ -58,10 +59,25 @@ public record JumpAssistance(List<Pair<BlockPos, BlockState>> blocks) {
                 continue;
             }
 
-            BlockPos pos = MapUtil.readBlockPos(array.getJSONArray(0));
+            JSONArray positional = array.getJSONArray(0);
+
+            if (positional.isEmpty()) {
+                logger.warn("Empty positional array for assistance entry {}", entry);
+                continue;
+            }
+
+            BlockBox box;
+
+            if (positional.get(0) instanceof JSONArray) {
+                box = MapUtil.readBox(positional);
+            } else {
+                BlockPos pos = MapUtil.readBlockPos(positional);
+                box = BlockBox.of(pos);
+            }
+
             BlockState state = MapUtil.readBlockState(array.getString(1));
 
-            blocks.add(Pair.of(pos, state));
+            blocks.add(Pair.of(box, state));
         }
 
         return new JumpAssistance(blocks);

@@ -248,12 +248,14 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
         ServerWorld world = getWorld();
 
         for (var block : assistance.blocks()) {
-            BlockPos pos = block.left();
+            BlockBox box = block.left();
             BlockState state = block.right();
 
-            world.setBlockState(pos, state);
-            world.spawnParticles(ParticleTypes.CLOUD, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5,
-                    5, 0.3, 0.3, 0.3, 0.1);
+            for (BlockPos pos : box) {
+                world.setBlockState(pos, state);
+                world.spawnParticles(ParticleTypes.CLOUD, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5,
+                        5, 0.3, 0.3, 0.3, 0.1);
+            }
         }
 
         BlockBox bounds = room.bounds();
