@@ -288,14 +288,18 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
         ServerWorld world = getWorld();
 
         for (ServerPlayerEntity player : PlayerLookup.world(world)) {
-            player.teleport(world, spawn.getX() + 0.5, spawn.getY(), spawn.getZ() + 0.5, Set.of(), segment.yaw(), 0f, true);
+            player.teleport(world, spawn.getX() + 0.5, spawn.getY(), spawn.getZ() + 0.5, Set.of(), segment.spawnYaw(), 0f, true);
         }
 
         collisionDetector.clear();
         movementObserver.clear();
 
+        if (checkpoints != null) {
+            checkpoints.destroy();
+        }
+
         checkpoints = new CheckpointManager(segment.checkpoints());
-        checkpoints.init(collisionDetector, movementObserver);
+        checkpoints.init(collisionDetector, movementObserver, world);
         CheckpointHelper.notifyWhenReached(checkpoints, gameHandle.getTranslations());
 
         movementObserver.whenEntering(segment.parts().getLast().bounds(), player -> onReachedGoal(player, true));

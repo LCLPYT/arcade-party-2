@@ -7,6 +7,8 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
+import work.lclpnet.ap2.impl.map.MapUtil;
+import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.checkpoint.Checkpoint;
 import work.lclpnet.kibu.schematic.FabricBlockStateAdapter;
 import work.lclpnet.kibu.schematic.SchematicFormats;
@@ -36,7 +38,7 @@ public class JumpAndRunSetup {
         this.map = map;
         this.world = world;
         this.logger = gameHandle.getLogger();
-        this.generator = new JumpAndRunGenerator(targetMinutes, new Random());
+        this.generator = new JumpAndRunGenerator(targetMinutes, new Random(), logger);
         this.placer = new JumpAndRunPlacer(world);
     }
 
@@ -70,7 +72,7 @@ public class JumpAndRunSetup {
 
         Path schematicsDir = storage.resolve("schematics");
 
-        Set<JumpRoom> jumpRooms = readJumpRooms(schematicsDir);
+        List<JumpRoom> jumpRooms = readJumpRooms(schematicsDir);
 
         String startId = map.requireProperty("start-room");
         String endId = map.requireProperty("end-room");
@@ -81,14 +83,14 @@ public class JumpAndRunSetup {
         JumpEnd start = JumpEnd.from(startStruct);
         JumpEnd end = JumpEnd.from(endStruct);
 
-        return new Parts(Collections.unmodifiableSet(jumpRooms), start, end);
+        return new Parts(Collections.unmodifiableList(jumpRooms), start, end);
     }
 
     @NotNull
-    private Set<JumpRoom> readJumpRooms(Path schematicsDir) {
+    private List<JumpRoom> readJumpRooms(Path schematicsDir) {
         JSONArray rooms = map.requireProperty("rooms");
 
-        Set<JumpRoom> jumpRooms = new HashSet<>();
+        List<JumpRoom> jumpRooms = new ArrayList<>();
 
         for (Object item : rooms) {
             if (!(item instanceof JSONObject json)) {
@@ -117,8 +119,28 @@ public class JumpAndRunSetup {
                 checkpoints = List.of();
             }
 
+            JumpRoom.Start start;
+
+            if (json.has("start")) {
+                BlockPos spawn = MapUtil.readBlockPos(json.getJSONArray("spawn"));
+                float yaw = MapUtil.readAngle(json.getNumber("yaw"));
+                BlockBox gate = MapUtil.readBox(json.getJSONArray("gate"));
+
+                start = new JumpRoom.Start(spawn, yaw, gate);
+            } else {
+                start = null;
+            }
+
+            Checkpoint end;
+
+            if (json.has("end")) {
+                end = Checkpoint.fromJson(json.getJSONObject("end"));
+            } else {
+                end = null;
+            }
+
             readRoom(id, schematicsDir)
-                    .map(partial -> partial.with(value, assistance, checkpoints))
+                    .map(partial -> partial.with(value, assistance, checkpoints, start, end))
                     .ifPresent(jumpRooms::add);
         }
 
@@ -145,7 +167,7 @@ public class JumpAndRunSetup {
     private Optional<JumpRoom.Partial> readRoom(String id, Path schematicsDir) {
         return readStructure(id, schematicsDir).map(structure -> {
             try {
-                return JumpRoom.Partial.from(structure);
+                return JumpRoom.Partial.from(structure, id);
             } catch (Throwable t) {
                 logger.error("Invalid room schematic '{}'", id, t);
                 return null;
@@ -167,5 +189,5 @@ public class JumpAndRunSetup {
         }
     }
 
-    public record Parts(Set<JumpRoom> rooms, JumpEnd start, JumpEnd end) {}
+    public record Parts(List<JumpRoom> rooms, JumpEnd start, JumpEnd end) {}
 }

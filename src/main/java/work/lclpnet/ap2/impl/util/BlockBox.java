@@ -256,6 +256,14 @@ public class BlockBox implements Pair<BlockPos, BlockPos>, Iterable<BlockPos>, C
         return w == height() && w == length();
     }
 
+    public int sideLength(Direction.Axis axis) {
+        return switch (axis) {
+            case X -> width();
+            case Y -> height();
+            case Z -> length();
+        };
+    }
+
     public static BlockBox enclosing(List<BlockBox> boxes) {
         if (boxes.isEmpty()) {
             throw new IllegalArgumentException("Boxes list is empty");

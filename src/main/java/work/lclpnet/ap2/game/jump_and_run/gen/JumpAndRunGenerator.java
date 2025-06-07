@@ -6,8 +6,11 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3i;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.checkpoint.Checkpoint;
+import work.lclpnet.ap2.impl.util.math.AffineIntMatrix;
 import work.lclpnet.kibu.schematic.FabricBlockStateAdapter;
 import work.lclpnet.kibu.schematic.FabricStructureWrapper;
 import work.lclpnet.kibu.structure.BlockStructure;
@@ -15,8 +18,9 @@ import work.lclpnet.kibu.structure.SimpleBlockStructure;
 import work.lclpnet.kibu.util.math.Matrix3i;
 
 import java.util.*;
-import java.util.stream.Stream;
 
+import static java.lang.Math.acos;
+import static java.lang.Math.toDegrees;
 import static java.util.Objects.requireNonNull;
 import static net.minecraft.block.HorizontalFacingBlock.FACING;
 
@@ -24,59 +28,122 @@ public class JumpAndRunGenerator {
 
     private final float targetMinutes;
     private final Random random;
+    private final Logger logger;
 
-    public JumpAndRunGenerator(float targetMinutes, Random random) {
+    public JumpAndRunGenerator(float targetMinutes, Random random, Logger logger) {
         this.targetMinutes = targetMinutes;
         this.random = random;
+        this.logger = logger;
     }
 
     public JumpAndRun generate(JumpAndRunSetup.Parts parts, BlockPos spawnPos) {
         Direction stackingDir = Direction.SOUTH;
 
         List<JumpRoom> rooms = new ArrayList<>(parts.rooms());
+        Collections.shuffle(rooms, random);
+
         List<Segment> segments = new ArrayList<>();
         float minutes = 0;
 
         while (minutes < targetMinutes && !rooms.isEmpty()) {
-            JumpRoom room = rooms.remove(random.nextInt(rooms.size()));
+            JumpRoom room = rooms.removeFirst();
 
-            OrientedPart start = createStart(parts.start(), spawnPos, stackingDir);
-            Connector startConnector = requireNonNull(start.out());
-            OrientedPart mainPart = createPart(room, startConnector);
-            Connector endConnector = requireNonNull(mainPart.out());
-            OrientedPart end = createEnd(parts.end(), endConnector);
+            SegmentInfo segment = createSegmentParts(room, parts, stackingDir);
 
-            Bridge startBridge = makeBridge(startConnector);
-            Bridge endBridge = makeBridge(endConnector);
+            if (segment == null) {
+                logger.warn("Segment for room {} could not be created, skipping it", room.id());
+                continue;
+            }
 
-            var jumpParts = List.of(start, startBridge, mainPart, endBridge, end);
-            var bounds = BlockBox.enclosing(jumpParts.stream().map(JumpPart::bounds).toList());
+            segment = segment.offset(spawnPos);
 
-            List<Checkpoint> checkpoints = jumpParts.stream()
-                    .flatMap(part -> switch (part) {
-                        case Bridge bridge -> Stream.of(bridge.asCheckpoint());
-                        case OrientedPart p when p.info().data() != null -> p.info().data().checkpoints().stream();
-                        default -> Stream.empty();
-                    })
-                    .filter(Objects::nonNull)
-                    .toList();
+            BlockBox bounds = segment.bounds();
 
-            segments.add(new Segment(jumpParts, bounds, checkpoints, startBridge.bounds(), mainPart.info(), spawnPos, 0f));
+            segments.add(new Segment(segment.parts, bounds, segment.checkpoints(), segment.roomInfo, segment.start));
 
             minutes += room.estimatedMinutes();
 
-            spawnPos = spawnPos.offset(stackingDir, bounds.length());
+            spawnPos = spawnPos.offset(stackingDir, bounds.sideLength(stackingDir.getAxis()));
         }
 
         return new JumpAndRun(segments);
     }
 
-    private static OrientedPart createPart(JumpRoom room, Connector connector) {
+    @Nullable
+    private SegmentInfo createSegmentParts(JumpRoom room, JumpAndRunSetup.Parts parts, Direction stackingDir) {
+        List<JumpPart> segment = new ArrayList<>(5);
+
+        var entrance = room.connectors().entrance();
+        var exit = room.connectors().exit();
+
+        OrientedPart mainPart;
+        JumpRoom.Start start;
+        Checkpoint end;
+
+        // Previously, all the rooms were interconnected. Now, rooms are independent of each other.
+        // Older rooms required both a start and an end connector, on which the bridges to the next rooms were placed.
+        // In the modern version, a room can either have both start and end connectors, only the start connector,
+        // only the end connector, or neither.
+        // Open connectors are connected with the template start or end room of each segment.
+
+        if (entrance != null) {
+            BlockPos spawnPos = BlockPos.ORIGIN;
+
+            OrientedPart startPart = createStart(parts.start(), spawnPos, stackingDir);
+            segment.add(startPart);
+
+            Connector startConnector = requireNonNull(startPart.out());
+            Bridge startBridge = makeBridge(startConnector);
+            segment.add(startBridge);
+
+            mainPart = createMainPart(room, startConnector, entrance);
+
+            double dot = stackingDir.getDoubleVector().dotProduct(Direction.SOUTH.getDoubleVector());
+            float spawnYaw = (float) toDegrees(acos(dot));
+            start = new JumpRoom.Start(spawnPos, spawnYaw, startBridge.bounds());
+        } else {
+            start = room.start().orElse(null);
+
+            if (start == null) {
+                logger.error("Room {} without entrance must define a start", room.id());
+                return null;
+            }
+
+            mainPart = createMainPart(room, exit);
+        }
+
+        segment.add(mainPart);
+
+        if (exit != null) {
+            Connector endConnector = requireNonNull(mainPart.out());
+            Bridge endBridge = makeBridge(endConnector);
+            segment.add(endBridge);
+
+            OrientedPart endPart = createEnd(parts.end(), endConnector);
+            segment.add(endPart);
+
+            end = endBridge.asCheckpoint();
+        } else {
+            end = room.end().orElse(null);
+
+            if (end == null) {
+                logger.error("Room {} without exit must define an end", room.id());
+                return null;
+            }
+        }
+
+        return new SegmentInfo(segment, mainPart.info(), start, end);
+    }
+
+    private OrientedPart createMainPart(JumpRoom room, @Nullable Connector exit) {
+        RoomData data = room.createData();
+
+        return OrientedPart.createTransformed(room.structure(), BlockPos.ORIGIN, 0, null, exit, data);
+    }
+
+    private static OrientedPart createMainPart(JumpRoom room, Connector connector, Connector entrance) {
         Direction direction = connector.direction();
         BlockPos pos = connector.pos();
-
-        JumpRoom.Connectors connectors = room.connectors();
-        Connector entrance = connectors.entrance();
 
         int targetRotation = direction.getOpposite().getHorizontalQuarterTurns();
         int rotation = entrance.direction().getHorizontalQuarterTurns() - targetRotation;
@@ -90,7 +157,7 @@ public class JumpAndRunGenerator {
 
         RoomData data = room.createData();
 
-        return new OrientedPart(room.structure(), entranceOffset, rotation, entrance, connectors.exit(), data);
+        return OrientedPart.createTransformed(room.structure(), entranceOffset, rotation, entrance, room.connectors().exit(), data);
     }
 
     @NotNull
@@ -105,7 +172,7 @@ public class JumpAndRunGenerator {
         Vec3i rotatedSpawn = rotationMatrix.transform(spawn);
         BlockPos startOffset = spawnPos.subtract(rotatedSpawn);
 
-        return new OrientedPart(startStruct, startOffset, rotation, null, startRoom.exit(), null);
+        return OrientedPart.createTransformed(startStruct, startOffset, rotation, null, startRoom.exit(), null);
     }
 
     @NotNull
@@ -124,7 +191,7 @@ public class JumpAndRunGenerator {
         Vec3i bridgeOffset = connector.direction().getVector().multiply(2);
         BlockPos endOffset = connector.pos().subtract(rotatedExit).add(bridgeOffset);
 
-        return new OrientedPart(endStruct, endOffset, rotation, null, exit, null);
+        return OrientedPart.createTransformed(endStruct, endOffset, rotation, null, exit, null);
     }
 
     @NotNull
@@ -152,7 +219,7 @@ public class JumpAndRunGenerator {
         BlockStructure structure = makeStructure(blocks);
         BlockBox bounds = getBridgeBounds(connector);
 
-        return new Bridge(structure, bounds, pos.down().add(vec), dir);
+        return new Bridge(structure, bounds, pos.down().add(vec), dir, BlockPos.ORIGIN);
     }
 
     @NotNull
@@ -183,5 +250,47 @@ public class JumpAndRunGenerator {
 
         blocks.forEach((pos, state) -> structure.setBlockState(adapter.adapt(pos), adapter.adapt(state)));
         return structure;
+    }
+
+    private record SegmentInfo(List<JumpPart> parts, RoomInfo roomInfo, JumpRoom.Start start, Checkpoint end) {
+
+        public BlockBox bounds() {
+            return BlockBox.enclosing(parts.stream().map(JumpPart::bounds).toList());
+        }
+
+        public List<Checkpoint> checkpoints() {
+            List<Checkpoint> checkpoints = new ArrayList<>();
+
+            checkpoints.add(start.checkpoint());
+
+            for (JumpPart part : parts) {
+                if (!(part instanceof OrientedPart p)) continue;
+
+                RoomData data = p.info().data();
+
+                if (data == null) continue;
+
+                checkpoints.addAll(data.checkpoints());
+            }
+
+            checkpoints.add(end);
+
+            return checkpoints;
+        }
+
+        public SegmentInfo offset(BlockPos offset) {
+            List<JumpPart> parts = this.parts.stream().map(part -> part.transform(offset)).toList();
+
+            var mat = AffineIntMatrix.makeTranslation(offset);
+
+            BlockPos invOffset = offset.multiply(-1);
+
+            JumpRoom.Start relStart = start.relativize(invOffset);
+            Checkpoint relEnd = end.relativize(invOffset);
+
+            RoomInfo transformedInfo = roomInfo.transform(mat);
+
+            return new SegmentInfo(parts, transformedInfo, relStart, relEnd);
+        }
     }
 }

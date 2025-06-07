@@ -25,6 +25,12 @@ public class MathUtil {
         );
     }
 
+    public static Vec3d yaw2vec(float yaw) {
+        double rad = Math.toRadians(yaw);
+
+        return new Vec3d(Math.sin(-rad), 0, Math.cos(rad));
+    }
+
     public static void yaw2vec(float yaw, Vector3d vec) {
         double rad = Math.toRadians(yaw);
 

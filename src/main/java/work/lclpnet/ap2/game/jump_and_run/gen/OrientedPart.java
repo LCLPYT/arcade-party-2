@@ -1,5 +1,6 @@
 package work.lclpnet.ap2.game.jump_and_run.gen;
 
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3i;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.impl.util.BlockBox;
@@ -20,20 +21,16 @@ public final class OrientedPart implements JumpPart {
     private final RoomInfo info;
     private final Matrix3i matrix;
 
-    public OrientedPart(BlockStructure structure, Vec3i offset, int rotation, @Nullable Connector in, @Nullable Connector out, @Nullable RoomData data) {
+    public OrientedPart(BlockStructure structure, Vec3i offset, int rotation, BlockBox bounds,
+                        @Nullable Connector in, @Nullable Connector out, RoomInfo info) {
         this.structure = structure;
         this.offset = offset;
         this.rotation = rotation;
         this.matrix = Matrix3i.makeRotationY(rotation);
-
-        AffineIntMatrix mat4 = new AffineIntMatrix(matrix).translate(offset);
-
-        this.bounds = StructureUtil.getBounds(structure).transform(mat4);
-        this.in = in != null ? in.transform(mat4) : null;
-        this.out = out != null ? out.transform(mat4) : null;
-
-        RoomData transformedData = data != null ? data.transform(mat4) : null;
-        this.info = new RoomInfo(bounds, transformedData);
+        this.bounds = bounds;
+        this.in = in;
+        this.out = out;
+        this.info = info;
     }
 
     @Override
@@ -69,6 +66,19 @@ public final class OrientedPart implements JumpPart {
     }
 
     @Override
+    public OrientedPart transform(BlockPos offset) {
+        var mat4 = AffineIntMatrix.makeTranslation(offset);
+
+        Vec3i translatedOffset = this.offset.add(offset);
+        BlockBox transformedBounds = this.bounds.transform(mat4);
+        var translatedIn = in != null ? in.transform(mat4) : null;
+        var translatedOut = out != null ? out.transform(mat4) : null;
+        var translatedData = info.transform(mat4);
+
+        return new OrientedPart(structure, translatedOffset, rotation, transformedBounds, translatedIn, translatedOut, translatedData);
+    }
+
+    @Override
     public boolean equals(Object obj) {
         if (obj == this) return true;
         if (obj == null || obj.getClass() != this.getClass()) return false;
@@ -99,5 +109,21 @@ public final class OrientedPart implements JumpPart {
     @Override
     public Matrix3i printMatrix() {
         return matrix;
+    }
+
+    public static OrientedPart createTransformed(BlockStructure structure, Vec3i offset, int rotation,
+                                                 @Nullable Connector in, @Nullable Connector out,
+                                                 @Nullable RoomData data) {
+
+        var mat4 = new AffineIntMatrix(Matrix3i.makeRotationY(rotation)).translate(offset);
+
+        BlockBox bounds = StructureUtil.getBounds(structure).transform(mat4);
+        Connector transformedIn = in != null ? in.transform(mat4) : null;
+        Connector transformedOut = out != null ? out.transform(mat4) : null;
+        RoomData transformedData = data != null ? data.transform(mat4) : null;
+
+        var info = new RoomInfo(bounds, transformedData);
+
+        return new OrientedPart(structure, offset, rotation, bounds, transformedIn, transformedOut, info);
     }
 }
