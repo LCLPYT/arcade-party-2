@@ -7,7 +7,7 @@ import work.lclpnet.ap2.impl.util.checkpoint.Checkpoint;
 import java.util.List;
 
 public record Segment(List<JumpPart> parts, BlockBox bounds, List<Checkpoint> checkpoints, RoomInfo roomInfo,
-                      JumpRoom.Start start) {
+                      JumpRoom.Start start, BlockBox goalBounds) {
 
     public BlockBox gate() {
         return start.gate();

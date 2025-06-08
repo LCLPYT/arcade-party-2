@@ -122,9 +122,10 @@ public class JumpAndRunSetup {
             JumpRoom.Start start;
 
             if (json.has("start")) {
-                BlockPos spawn = MapUtil.readBlockPos(json.getJSONArray("spawn"));
-                float yaw = MapUtil.readAngle(json.getNumber("yaw"));
-                BlockBox gate = MapUtil.readBox(json.getJSONArray("gate"));
+                JSONObject startJson = json.getJSONObject("start");
+                BlockPos spawn = MapUtil.readBlockPos(startJson.getJSONArray("spawn"));
+                float yaw = MapUtil.readAngle(startJson.getNumber("yaw"));
+                BlockBox gate = MapUtil.readBox(startJson.getJSONArray("gate"));
 
                 start = new JumpRoom.Start(spawn, yaw, gate);
             } else {

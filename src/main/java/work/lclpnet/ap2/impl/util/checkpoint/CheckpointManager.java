@@ -20,7 +20,7 @@ import java.util.*;
 
 public class CheckpointManager {
 
-    private static final boolean DEBUG_CHECKPOINTS = false;
+    private static final boolean DEBUG_CHECKPOINTS = true;
 
     @Getter
     private final List<Checkpoint> checkpoints;

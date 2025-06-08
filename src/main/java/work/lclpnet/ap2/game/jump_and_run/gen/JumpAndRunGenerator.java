@@ -59,7 +59,7 @@ public class JumpAndRunGenerator {
 
             BlockBox bounds = segment.bounds();
 
-            segments.add(new Segment(segment.parts, bounds, segment.checkpoints(), segment.roomInfo, segment.start));
+            segments.add(new Segment(segment.parts, bounds, segment.checkpoints(), segment.roomInfo, segment.start, segment.goalBounds()));
 
             minutes += room.estimatedMinutes();
 
@@ -114,6 +114,8 @@ public class JumpAndRunGenerator {
 
         segment.add(mainPart);
 
+        BlockBox goalBounds;
+
         if (exit != null) {
             Connector endConnector = requireNonNull(mainPart.out());
             Bridge endBridge = makeBridge(endConnector);
@@ -123,6 +125,7 @@ public class JumpAndRunGenerator {
             segment.add(endPart);
 
             end = endBridge.asCheckpoint();
+            goalBounds = endPart.bounds();
         } else {
             end = room.end().orElse(null);
 
@@ -130,9 +133,11 @@ public class JumpAndRunGenerator {
                 logger.error("Room {} without exit must define an end", room.id());
                 return null;
             }
+
+            goalBounds = end.bounds();
         }
 
-        return new SegmentInfo(segment, mainPart.info(), start, end);
+        return new SegmentInfo(segment, mainPart.info(), start, end, goalBounds);
     }
 
     private OrientedPart createMainPart(JumpRoom room, @Nullable Connector exit) {
@@ -252,7 +257,7 @@ public class JumpAndRunGenerator {
         return structure;
     }
 
-    private record SegmentInfo(List<JumpPart> parts, RoomInfo roomInfo, JumpRoom.Start start, Checkpoint end) {
+    private record SegmentInfo(List<JumpPart> parts, RoomInfo roomInfo, JumpRoom.Start start, Checkpoint end, BlockBox goalBounds) {
 
         public BlockBox bounds() {
             return BlockBox.enclosing(parts.stream().map(JumpPart::bounds).toList());
@@ -289,8 +294,9 @@ public class JumpAndRunGenerator {
             Checkpoint relEnd = end.relativize(invOffset);
 
             RoomInfo transformedInfo = roomInfo.transform(mat);
+            BlockBox transformedGoalBounds = goalBounds.transform(mat);
 
-            return new SegmentInfo(parts, transformedInfo, relStart, relEnd);
+            return new SegmentInfo(parts, transformedInfo, relStart, relEnd, transformedGoalBounds);
         }
     }
 }

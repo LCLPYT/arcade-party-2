@@ -6,6 +6,7 @@ import net.minecraft.block.Blocks;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.item.ItemStack;
 import net.minecraft.particle.ParticleTypes;
+import net.minecraft.registry.tag.DamageTypeTags;
 import net.minecraft.scoreboard.*;
 import net.minecraft.scoreboard.number.StyledNumberFormat;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -149,10 +150,22 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
     protected void ready() {
         beginSegment();
 
-        gameHandle.protect(config -> config.allow(ProtectionTypes.USE_BLOCK, (entity, pos) -> {
-            BlockState state = entity.getWorld().getBlockState(pos);
-            return state.isOf(Blocks.SHULKER_BOX);
-        }));
+        gameHandle.protect(config -> {
+            config.allow(ProtectionTypes.USE_BLOCK, (entity, pos) -> {
+                BlockState state = entity.getWorld().getBlockState(pos);
+                return state.isOf(Blocks.SHULKER_BOX);
+            });
+
+            config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, source) -> {
+                if (entity instanceof ServerPlayerEntity player
+                        && gameHandle.getParticipants().isParticipating(player)
+                        && source.isIn(DamageTypeTags.IS_FIRE)) {
+
+                    resetPlayerToCheckpoint(player);
+                }
+                return false;
+            });
+        });
 
         Participants participants = gameHandle.getParticipants();
         HookRegistrar hooks = gameHandle.getHookRegistrar();
@@ -304,7 +317,7 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
         checkpoints.init(collisionDetector, movementObserver, world);
         CheckpointHelper.notifyWhenReached(checkpoints, gameHandle.getTranslations());
 
-        movementObserver.whenEntering(segment.parts().getLast().bounds(), player -> onReachedGoal(player, true));
+        movementObserver.whenEntering(segment.goalBounds(), player -> onReachedGoal(player, true));
 
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
             bossBar.setArgument(player, 0, styled(segmentIndex, YELLOW));
