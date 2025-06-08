@@ -14,6 +14,7 @@ import work.lclpnet.kibu.util.math.Matrix3i;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.BiConsumer;
 
 public record JumpAssistance(List<Pair<BlockBox, BlockState>> blocks) {
 
@@ -43,6 +44,17 @@ public record JumpAssistance(List<Pair<BlockBox, BlockState>> blocks) {
                 .toList();
 
         return new JumpAssistance(transformed);
+    }
+
+    public void forEach(BiConsumer<BlockState, BlockPos> action) {
+        for (var block : blocks()) {
+            BlockBox box = block.left();
+            BlockState state = block.right();
+
+            for (BlockPos pos : box) {
+                action.accept(state, pos);
+            }
+        }
     }
 
     public static JumpAssistance fromJson(JSONArray json, Logger logger) {

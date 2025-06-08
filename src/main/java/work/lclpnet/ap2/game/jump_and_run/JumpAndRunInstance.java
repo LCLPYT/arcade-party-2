@@ -23,6 +23,8 @@ import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.map.MapBootstrap;
 import work.lclpnet.ap2.api.util.CollisionDetector;
 import work.lclpnet.ap2.api.util.heads.PlayerHead;
+import work.lclpnet.ap2.base.ApConstants;
+import work.lclpnet.ap2.base.resource.ApResources;
 import work.lclpnet.ap2.game.jump_and_run.gen.*;
 import work.lclpnet.ap2.impl.game.FFAGameInstance;
 import work.lclpnet.ap2.impl.game.data.ScoreDataContainer;
@@ -36,6 +38,7 @@ import work.lclpnet.ap2.impl.util.checkpoint.CheckpointHelper;
 import work.lclpnet.ap2.impl.util.checkpoint.CheckpointManager;
 import work.lclpnet.ap2.impl.util.collision.ChunkedCollisionDetector;
 import work.lclpnet.ap2.impl.util.collision.PlayerMovementObserver;
+import work.lclpnet.ap2.impl.util.debug.DebugController;
 import work.lclpnet.ap2.impl.util.handler.Visibility;
 import work.lclpnet.ap2.impl.util.handler.VisibilityHandler;
 import work.lclpnet.ap2.impl.util.handler.VisibilityManager;
@@ -63,13 +66,17 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
             ASSISTANCE_TICKS_BASE = Ticks.seconds(90),  // time after which assistance is provided
             REACH_GOAL_REQUIRED = 3,
             NEXT_PHASE_WAIT_TICKS = Ticks.seconds(4);
+
     private static final float
             TARGET_MINUTES = 3.75f;  // target completion time of the jump and run (approximate)
+
+    private static final boolean DEBUG_ASSISTANCE = true;
 
     private final ScoreDataContainer<ServerPlayerEntity, PlayerRef> data = new ScoreDataContainer<>(PlayerRef::create);
     private final CollisionDetector collisionDetector = new ChunkedCollisionDetector();
     private final PlayerMovementObserver movementObserver;
     private final List<BlockPos> gateBlocks = new ArrayList<>();
+    private final DebugController debugController = new DebugController();
     private JumpAndRun jumpAndRun;
     private CheckpointManager checkpoints;
     private DynamicTranslatedPlayerBossBar bossBar;
@@ -257,19 +264,13 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
 
         if (data == null) return;
 
-        JumpAssistance assistance = data.assistance();
         ServerWorld world = getWorld();
 
-        for (var block : assistance.blocks()) {
-            BlockBox box = block.left();
-            BlockState state = block.right();
-
-            for (BlockPos pos : box) {
-                world.setBlockState(pos, state);
-                world.spawnParticles(ParticleTypes.CLOUD, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5,
-                        5, 0.3, 0.3, 0.3, 0.1);
-            }
-        }
+        data.assistance().forEach((state, pos) -> {
+            world.setBlockState(pos, state);
+            world.spawnParticles(ParticleTypes.CLOUD, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5,
+                    5, 0.3, 0.3, 0.3, 0.1);
+        });
 
         BlockBox bounds = room.bounds();
         Translations translations = gameHandle.getTranslations();
@@ -324,6 +325,28 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
         }
 
         bossBar.setPercent((float) (segmentIndex) / segmentCount);
+
+        debugAssistance();
+    }
+
+    private void debugAssistance() {
+        if (!ApConstants.DEBUG || !DEBUG_ASSISTANCE) return;
+
+        debugController.destroy();
+        debugController.init(ApResources.getInstance(), getWorld());
+
+        List<Segment> segments = jumpAndRun.segments();
+
+        if (segmentIndex < 0 || segmentIndex >= segments.size()) return;
+
+        Segment segment = segments.get(segmentIndex);
+
+        RoomData data = segment.roomInfo().data();
+
+        if (data == null) return;
+
+        debugController.renderer().ifPresent(renderer -> data.assistance().forEach((state, pos) ->
+                renderer.marker(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, state, 0, 0.5)));
     }
 
     private void onReachedGoal(ServerPlayerEntity player, boolean reached) {

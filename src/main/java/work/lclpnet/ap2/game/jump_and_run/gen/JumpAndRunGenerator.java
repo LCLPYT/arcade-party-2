@@ -63,7 +63,10 @@ public class JumpAndRunGenerator {
 
             minutes += room.estimatedMinutes();
 
-            spawnPos = spawnPos.offset(stackingDir, bounds.sideLength(stackingDir.getAxis()));
+            Direction.Axis axis = stackingDir.getAxis();
+            int offset = bounds.sideLength(axis) + parts.start().bounds().sideLength(axis) / 2;
+
+            spawnPos = spawnPos.offset(stackingDir, offset);
         }
 
         return new JumpAndRun(segments);
