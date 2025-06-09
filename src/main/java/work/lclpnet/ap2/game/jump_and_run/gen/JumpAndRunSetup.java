@@ -129,9 +129,38 @@ public class JumpAndRunSetup {
                 JSONObject startJson = json.getJSONObject("start");
                 BlockPos spawn = MapUtil.readBlockPos(startJson.getJSONArray("spawn"));
                 float yaw = MapUtil.readAngle(startJson.getNumber("yaw"));
-                BlockBox gate = MapUtil.readBox(startJson.getJSONArray("gate"));
+                BlockBox bounds;
+                List<BlockBox> gateBoxes;
 
-                start = new JumpRoom.Start(spawn, yaw, gate);
+
+                /*
+                gateArray:   [ [x1, y1, z1], [x2, y2, z2] ]
+                gateArray: [
+                             [ [x01, y01, z01], [x02, y02, z02] ],
+                             [ [x11, y11, z11], [x12, y12, z12] ],
+                             ...
+                           ]
+                 */
+
+                JSONArray gateArray = startJson.getJSONArray("gate");
+
+                if (gateArray.getJSONArray(0).get(0) instanceof JSONArray) {
+                    // gate consists out of multiple boxes
+                    bounds = MapUtil.readBox(gateArray.getJSONArray(0));
+
+                    gateBoxes = new ArrayList<>(gateArray.length());
+                    gateBoxes.add(bounds);
+
+                    for (int i = 1; i < gateArray.length(); i++) {
+                        gateBoxes.add(MapUtil.readBox(gateArray.getJSONArray(i)));
+                    }
+                } else {
+                    // assume single gate box
+                    bounds = MapUtil.readBox(gateArray);
+                    gateBoxes = List.of(bounds);
+                }
+
+                start = new JumpRoom.Start(spawn, yaw, bounds, gateBoxes);
             } else {
                 start = null;
             }

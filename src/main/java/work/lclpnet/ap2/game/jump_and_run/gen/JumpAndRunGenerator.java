@@ -121,7 +121,7 @@ public class JumpAndRunGenerator {
 
             double dot = stackingDir.getDoubleVector().dotProduct(Direction.SOUTH.getDoubleVector());
             float spawnYaw = (float) toDegrees(acos(dot));
-            start = new JumpRoom.Start(spawnPos, spawnYaw, startBridge.bounds());
+            start = new JumpRoom.Start(spawnPos, spawnYaw, startBridge.bounds(), List.of(startBridge.bounds()));
         } else {
             start = room.start().orElse(null);
 

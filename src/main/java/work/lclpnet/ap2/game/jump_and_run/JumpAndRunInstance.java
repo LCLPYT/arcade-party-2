@@ -226,16 +226,18 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
     private void closeGate(Segment segment) {
         gateBlocks.clear();
 
-        BlockBox gate = segment.gate();
+        List<BlockBox> gate = segment.start().gate();
         ServerWorld world = getWorld();
 
         BlockState state = Blocks.WHITE_STAINED_GLASS.getDefaultState();
 
-        for (BlockPos pos : gate) {
-            if (!world.getBlockState(pos).getCollisionShape(world, pos).isEmpty()) continue;
+        for (BlockBox box : gate) {
+            for (BlockPos pos : box) {
+                if (!world.getBlockState(pos).getCollisionShape(world, pos).isEmpty()) continue;
 
-            world.setBlockState(pos, state);
-            gateBlocks.add(pos.toImmutable());
+                world.setBlockState(pos, state);
+                gateBlocks.add(pos.toImmutable());
+            }
         }
     }
 
@@ -302,14 +304,16 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
 
         closeGate(segment);
 
-        BlockPos spawn = segment.spawn();
+        BlockPos spawn = segment.start().spawn();
         ServerWorld world = getWorld();
 
         disableEffects();
         enableEffects(segment.effects());
 
+        float yaw = segment.start().spawnYaw();
+
         for (ServerPlayerEntity player : PlayerLookup.world(world)) {
-            player.teleport(world, spawn.getX() + 0.5, spawn.getY(), spawn.getZ() + 0.5, Set.of(), segment.spawnYaw(), 0f, true);
+            player.teleport(world, spawn.getX() + 0.5, spawn.getY(), spawn.getZ() + 0.5, Set.of(), yaw, 0f, true);
         }
 
         collisionDetector.clear();

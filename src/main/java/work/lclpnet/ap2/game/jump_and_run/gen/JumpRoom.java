@@ -128,13 +128,15 @@ public class JumpRoom {
 
     public static class Start {
         private final Checkpoint checkpoint;
+        private final List<BlockBox> gate;
 
-        public Start(BlockPos spawn, float spawnYaw, BlockBox gate) {
-            this(new Checkpoint(spawn, spawnYaw, gate));
+        public Start(BlockPos spawn, float spawnYaw, BlockBox bounds, List<BlockBox> extraBounds) {
+            this(new Checkpoint(spawn, spawnYaw, bounds), extraBounds);
         }
 
-        public Start(Checkpoint checkpoint) {
+        public Start(Checkpoint checkpoint, List<BlockBox> extraBounds) {
             this.checkpoint = checkpoint;
+            this.gate = extraBounds;
         }
 
         public BlockPos spawn() {
@@ -145,8 +147,8 @@ public class JumpRoom {
             return checkpoint.yaw();
         }
 
-        public BlockBox gate() {
-            return checkpoint.bounds();
+        public List<BlockBox> gate() {
+            return gate;
         }
 
         public Checkpoint checkpoint() {
@@ -154,7 +156,13 @@ public class JumpRoom {
         }
 
         public Start relativize(Vec3i origin) {
-            return new Start(checkpoint.relativize(origin));
+            Vec3i translation = origin.multiply(-1);
+
+            List<BlockBox> relativeBounds = gate.stream()
+                    .map(box -> box.translate(translation))
+                    .toList();
+
+            return new Start(checkpoint.relativize(origin), relativeBounds);
         }
     }
 
