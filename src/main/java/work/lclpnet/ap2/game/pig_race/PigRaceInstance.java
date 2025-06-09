@@ -209,7 +209,7 @@ public class PigRaceInstance extends FFAGameInstance {
         checkpoints.add(goal);
 
         checkpointManager = new CheckpointManager(checkpoints);
-        checkpointManager.init(collisionDetector, movementObserver);
+        checkpointManager.init(collisionDetector, movementObserver, getWorld());
 
         CheckpointHelper.notifyWhenReached(checkpointManager, gameHandle.getTranslations());
 

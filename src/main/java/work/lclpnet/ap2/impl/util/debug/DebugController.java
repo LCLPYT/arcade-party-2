@@ -25,7 +25,7 @@ public class DebugController {
     private @Nullable ThreadLocal<@Nullable List<Object3d>> group = null;
     private volatile StopWatchImpl stopWatch = null;
 
-    public void init(ModelManager modelManager, ServerWorld world) {
+    public synchronized void init(ModelManager modelManager, ServerWorld world) {
         scene = new Scene(new ServerWorldMountContext(world));
         renderer = new DebugRenderer(scene, modelManager, this::groupObject);
         namedObjects = new HashMap<>();
@@ -91,5 +91,24 @@ public class DebugController {
         }
 
         return stopWatch;
+    }
+
+    public synchronized void destroy() {
+        if (namedObjects != null) {
+            namedObjects = null;
+        }
+
+        if (group != null) {
+            group.remove();
+            group = null;
+        }
+
+        if (scene != null) {
+            scene.clear();
+            scene = null;
+        }
+
+        renderer = null;
+        stopWatch = null;
     }
 }

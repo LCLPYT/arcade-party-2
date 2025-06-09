@@ -4,8 +4,10 @@ import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.component.DataComponentTypes;
+import net.minecraft.entity.damage.DamageTypes;
 import net.minecraft.item.ItemStack;
 import net.minecraft.particle.ParticleTypes;
+import net.minecraft.registry.tag.DamageTypeTags;
 import net.minecraft.scoreboard.*;
 import net.minecraft.scoreboard.number.StyledNumberFormat;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -16,12 +18,16 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.GameRules;
+import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.map.MapBootstrap;
 import work.lclpnet.ap2.api.util.CollisionDetector;
 import work.lclpnet.ap2.api.util.heads.PlayerHead;
+import work.lclpnet.ap2.base.ApConstants;
+import work.lclpnet.ap2.base.resource.ApResources;
+import work.lclpnet.ap2.core.hook.DripLeafTiltCallback;
 import work.lclpnet.ap2.game.jump_and_run.gen.*;
 import work.lclpnet.ap2.impl.game.FFAGameInstance;
 import work.lclpnet.ap2.impl.game.data.ScoreDataContainer;
@@ -35,6 +41,7 @@ import work.lclpnet.ap2.impl.util.checkpoint.CheckpointHelper;
 import work.lclpnet.ap2.impl.util.checkpoint.CheckpointManager;
 import work.lclpnet.ap2.impl.util.collision.ChunkedCollisionDetector;
 import work.lclpnet.ap2.impl.util.collision.PlayerMovementObserver;
+import work.lclpnet.ap2.impl.util.debug.DebugController;
 import work.lclpnet.ap2.impl.util.handler.Visibility;
 import work.lclpnet.ap2.impl.util.handler.VisibilityHandler;
 import work.lclpnet.ap2.impl.util.handler.VisibilityManager;
@@ -62,13 +69,17 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
             ASSISTANCE_TICKS_BASE = Ticks.seconds(90),  // time after which assistance is provided
             REACH_GOAL_REQUIRED = 3,
             NEXT_PHASE_WAIT_TICKS = Ticks.seconds(4);
+
     private static final float
-            TARGET_MINUTES = 3.75f;  // target completion time of the jump and run (approximate)
+            TARGET_MINUTES = 4.0f;  // target completion time of the jump and run (approximate)
+
+    private static final boolean DEBUG_ASSISTANCE = false;
 
     private final ScoreDataContainer<ServerPlayerEntity, PlayerRef> data = new ScoreDataContainer<>(PlayerRef::create);
     private final CollisionDetector collisionDetector = new ChunkedCollisionDetector();
     private final PlayerMovementObserver movementObserver;
     private final List<BlockPos> gateBlocks = new ArrayList<>();
+    private final DebugController debugController = new DebugController();
     private JumpAndRun jumpAndRun;
     private CheckpointManager checkpoints;
     private DynamicTranslatedPlayerBossBar bossBar;
@@ -149,10 +160,22 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
     protected void ready() {
         beginSegment();
 
-        gameHandle.protect(config -> config.allow(ProtectionTypes.USE_BLOCK, (entity, pos) -> {
-            BlockState state = entity.getWorld().getBlockState(pos);
-            return state.isOf(Blocks.SHULKER_BOX);
-        }));
+        gameHandle.protect(config -> {
+            config.allow(ProtectionTypes.USE_BLOCK, (entity, pos) -> {
+                BlockState state = entity.getWorld().getBlockState(pos);
+                return state.isOf(Blocks.SHULKER_BOX);
+            });
+
+            config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, source) -> {
+                if (entity instanceof ServerPlayerEntity player
+                        && gameHandle.getParticipants().isParticipating(player)
+                        && (source.isIn(DamageTypeTags.IS_FIRE) || source.isOf(DamageTypes.OUT_OF_WORLD))) {
+
+                    resetPlayerToCheckpoint(player);
+                }
+                return false;
+            });
+        });
 
         Participants participants = gameHandle.getParticipants();
         HookRegistrar hooks = gameHandle.getHookRegistrar();
@@ -162,6 +185,13 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
 
         CheckpointHelper.whenFallingIntoLava(hooks, participants::isParticipating)
                 .then(this::resetPlayerToCheckpoint);
+
+        commons().whenBelowY(getWorld().getBottomY())
+                .then(this::resetPlayerToCheckpoint);
+
+        // disable drip leaf tilt for players in goal
+        hooks.registerHook(DripLeafTiltCallback.HOOK, (entity, pos) -> entity instanceof ServerPlayerEntity player
+                && inGoal.contains(player.getUuid()));
     }
 
     private void giveItemsToPlayers() {
@@ -193,23 +223,21 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
         gateBlocks.clear();
     }
 
-    private void closeGate() {
-        var segments = jumpAndRun.segments();
-
-        if (segmentIndex < 0 || segmentIndex >= segments.size()) return;
-
+    private void closeGate(Segment segment) {
         gateBlocks.clear();
 
-        BlockBox gate = segments.get(segmentIndex).gate();
+        List<BlockBox> gate = segment.start().gate();
         ServerWorld world = getWorld();
 
         BlockState state = Blocks.WHITE_STAINED_GLASS.getDefaultState();
 
-        for (BlockPos pos : gate) {
-            if (!world.getBlockState(pos).getCollisionShape(world, pos).isEmpty()) continue;
+        for (BlockBox box : gate) {
+            for (BlockPos pos : box) {
+                if (!world.getBlockState(pos).getCollisionShape(world, pos).isEmpty()) continue;
 
-            world.setBlockState(pos, state);
-            gateBlocks.add(pos.toImmutable());
+                world.setBlockState(pos, state);
+                gateBlocks.add(pos.toImmutable());
+            }
         }
     }
 
@@ -223,11 +251,9 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
     }
 
     private void delayAssistance() {
-        var segments = jumpAndRun.segments();
+        Segment segment = currentSegment();
 
-        if (segmentIndex < 0 || segmentIndex >= segments.size()) return;
-
-        Segment segment = segments.get(segmentIndex);
+        if (segment == null) return;
 
         RoomData data = segment.roomInfo().data();
 
@@ -244,17 +270,13 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
 
         if (data == null) return;
 
-        JumpAssistance assistance = data.assistance();
         ServerWorld world = getWorld();
 
-        for (var block : assistance.blocks()) {
-            BlockPos pos = block.left();
-            BlockState state = block.right();
-
+        data.assistance().forEach((state, pos) -> {
             world.setBlockState(pos, state);
             world.spawnParticles(ParticleTypes.CLOUD, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5,
                     5, 0.3, 0.3, 0.3, 0.1);
-        }
+        });
 
         BlockBox bounds = room.bounds();
         Translations translations = gameHandle.getTranslations();
@@ -272,39 +294,74 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
     }
 
     private void setSegment(int i) {
-        var segments = jumpAndRun.segments();
-        int segmentCount = segments.size();
-
-        if (i < 0 || i >= segmentCount) return;
-
         segmentIndex = i;
         segmentActive = false;
         inGoal.clear();
 
-        closeGate();
+        Segment segment = currentSegment();
 
-        Segment segment = segments.get(i);
-        BlockPos spawn = segment.spawn();
+        if (segment == null) return;
+
+        closeGate(segment);
+
+        BlockPos spawn = segment.start().spawn();
         ServerWorld world = getWorld();
 
+        disableEffects();
+        enableEffects(segment.effects());
+
+        float yaw = segment.start().spawnYaw();
+
         for (ServerPlayerEntity player : PlayerLookup.world(world)) {
-            player.teleport(world, spawn.getX() + 0.5, spawn.getY(), spawn.getZ() + 0.5, Set.of(), segment.yaw(), 0f, true);
+            player.teleport(world, spawn.getX() + 0.5, spawn.getY(), spawn.getZ() + 0.5, Set.of(), yaw, 0f, true);
         }
 
         collisionDetector.clear();
         movementObserver.clear();
 
+        if (checkpoints != null) {
+            checkpoints.destroy();
+        }
+
         checkpoints = new CheckpointManager(segment.checkpoints());
-        checkpoints.init(collisionDetector, movementObserver);
+        checkpoints.init(collisionDetector, movementObserver, world);
         CheckpointHelper.notifyWhenReached(checkpoints, gameHandle.getTranslations());
 
-        movementObserver.whenEntering(segment.parts().getLast().bounds(), player -> onReachedGoal(player, true));
+        movementObserver.whenEntering(segment.goalBounds(), player -> onReachedGoal(player, true));
 
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
             bossBar.setArgument(player, 0, styled(segmentIndex, YELLOW));
         }
 
-        bossBar.setPercent((float) (segmentIndex) / segmentCount);
+        bossBar.setPercent((float) (segmentIndex) / jumpAndRun.segments().size());
+
+        debugAssistance();
+    }
+
+    private void debugAssistance() {
+        if (!ApConstants.DEBUG || !DEBUG_ASSISTANCE) return;
+
+        debugController.destroy();
+        debugController.init(ApResources.getInstance(), getWorld());
+
+        Segment segment = currentSegment();
+
+        if (segment == null) return;
+
+        RoomData data = segment.roomInfo().data();
+
+        if (data == null) return;
+
+        debugController.renderer().ifPresent(renderer -> data.assistance().forEach((state, pos) ->
+                renderer.marker(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, state, 0, 0.5)));
+    }
+
+    private @Nullable Segment currentSegment() {
+        List<Segment> segments = jumpAndRun.segments();
+
+        if (segmentIndex < 0 || segmentIndex >= segments.size()) return null;
+
+        return segments.get(segmentIndex);
     }
 
     private void onReachedGoal(ServerPlayerEntity player, boolean reached) {

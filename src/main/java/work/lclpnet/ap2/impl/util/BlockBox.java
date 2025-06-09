@@ -256,6 +256,18 @@ public class BlockBox implements Pair<BlockPos, BlockPos>, Iterable<BlockPos>, C
         return w == height() && w == length();
     }
 
+    public int sideLength(Direction.Axis axis) {
+        return switch (axis) {
+            case X -> width();
+            case Y -> height();
+            case Z -> length();
+        };
+    }
+
+    public BlockBox translate(Vec3i offset) {
+        return transform(AffineIntMatrix.makeTranslation(offset));
+    }
+
     public static BlockBox enclosing(List<BlockBox> boxes) {
         if (boxes.isEmpty()) {
             throw new IllegalArgumentException("Boxes list is empty");
@@ -278,5 +290,9 @@ public class BlockBox implements Pair<BlockPos, BlockPos>, Iterable<BlockPos>, C
         return new BlockBox(
                 origin.getX() - radius, origin.getY() - radius, origin.getZ() - radius,
                 origin.getX() + radius, origin.getY() + radius, origin.getZ() + radius);
+    }
+
+    public static BlockBox of(BlockPos pos) {
+        return new BlockBox(pos, pos);
     }
 }
