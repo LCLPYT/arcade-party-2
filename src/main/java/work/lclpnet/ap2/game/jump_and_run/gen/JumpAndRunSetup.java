@@ -24,6 +24,8 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
+import static java.lang.Math.max;
+
 public class JumpAndRunSetup {
 
     private final MiniGameHandle gameHandle;
@@ -140,8 +142,12 @@ public class JumpAndRunSetup {
                 end = null;
             }
 
+            int stackingMargin = max(0, json.optNumber("stacking-margin", 0).intValue());
+
+            var metaData = new JumpRoom.MetaData(value, stackingMargin);
+
             readRoom(id, schematicsDir)
-                    .map(partial -> partial.with(value, assistance, checkpoints, start, end))
+                    .map(partial -> partial.with(metaData, assistance, checkpoints, start, end))
                     .ifPresent(jumpRooms::add);
         }
 

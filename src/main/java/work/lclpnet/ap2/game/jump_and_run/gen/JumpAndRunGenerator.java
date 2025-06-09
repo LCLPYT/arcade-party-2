@@ -19,8 +19,7 @@ import work.lclpnet.kibu.util.math.Matrix3i;
 
 import java.util.*;
 
-import static java.lang.Math.acos;
-import static java.lang.Math.toDegrees;
+import static java.lang.Math.*;
 import static java.util.Objects.requireNonNull;
 import static net.minecraft.block.HorizontalFacingBlock.FACING;
 
@@ -44,6 +43,7 @@ public class JumpAndRunGenerator {
 
         List<Segment> segments = new ArrayList<>();
         float minutes = 0;
+        int lastMargin = 0;
 
         while (minutes < targetMinutes && !rooms.isEmpty()) {
             JumpRoom room = rooms.removeFirst();
@@ -55,18 +55,29 @@ public class JumpAndRunGenerator {
                 continue;
             }
 
+            int margin = room.metaData().stackingMargin();
+
+            // pre-margin
+            if (!segments.isEmpty()) {
+                int extraMargin = max(0, margin - lastMargin);
+
+                spawnPos = spawnPos.offset(stackingDir, extraMargin);
+            }
+
             segment = segment.offset(spawnPos);
 
             BlockBox bounds = segment.bounds();
 
             segments.add(new Segment(segment.parts, bounds, segment.checkpoints(), segment.roomInfo, segment.start, segment.goalBounds()));
 
-            minutes += room.estimatedMinutes();
+            minutes += room.metaData().estimatedMinutes();
 
+            // offset position for next segment
             Direction.Axis axis = stackingDir.getAxis();
-            int offset = bounds.sideLength(axis) + parts.start().bounds().sideLength(axis) / 2;
+            int offset = bounds.sideLength(axis) + parts.start().bounds().sideLength(axis) / 2 + margin;
 
             spawnPos = spawnPos.offset(stackingDir, offset);
+            lastMargin = margin;
         }
 
         return new JumpAndRun(segments);

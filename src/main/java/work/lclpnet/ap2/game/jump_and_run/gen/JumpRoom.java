@@ -17,7 +17,7 @@ import java.util.Optional;
 
 public class JumpRoom {
 
-    private final float estimatedMinutes;
+    private final MetaData metaData;
     private final BlockStructure structure;
     private final BlockBox bounds;
     private final Connectors connectors;
@@ -27,9 +27,9 @@ public class JumpRoom {
     private final @Nullable Checkpoint end;
     private final String id;
 
-    public JumpRoom(float estimatedMinutes, BlockStructure structure, BlockBox bounds, Connectors connectors,
+    public JumpRoom(MetaData metaData, BlockStructure structure, BlockBox bounds, Connectors connectors,
                     JumpAssistance assistance, List<Checkpoint> checkpoints, @Nullable Start start, @Nullable Checkpoint end, String id) {
-        this.estimatedMinutes = estimatedMinutes;
+        this.metaData = metaData;
         this.structure = structure;
         this.bounds = bounds;
         this.connectors = connectors;
@@ -40,8 +40,8 @@ public class JumpRoom {
         this.id = id;
     }
 
-    public float estimatedMinutes() {
-        return estimatedMinutes;
+    public MetaData metaData() {
+        return metaData;
     }
 
     public BlockBox bounds() {
@@ -119,7 +119,7 @@ public class JumpRoom {
     }
 
     public RoomData createData() {
-        return new RoomData(estimatedMinutes, assistance, checkpoints);
+        return new RoomData(metaData.estimatedMinutes(), assistance, checkpoints);
     }
 
     public record Connectors(@Nullable Connector entrance, @Nullable Connector exit) {}
@@ -156,13 +156,15 @@ public class JumpRoom {
         }
     }
 
+    public record MetaData(float estimatedMinutes, int stackingMargin) {}
+
     public interface Partial {
         static Partial from(BlockStructure structure, String id) {
             BlockBox bounds = StructureUtil.getBounds(structure);
 
             Connectors connectors = findConnectors(structure, bounds);
 
-            return (value, assistance, checkpoints, start, end) -> {
+            return (metaData, assistance, checkpoints, start, end) -> {
                 var orig = structure.getOrigin();
                 Vec3i origin = new Vec3i(orig.getX(), orig.getY(), orig.getZ());
 
@@ -175,12 +177,12 @@ public class JumpRoom {
                 var relStart = start != null ? start.relativize(origin) : null;
                 var relEnd = end != null ? end.relativize(origin) : null;
 
-                return new JumpRoom(value, structure, bounds, connectors, relativeAssistance, relativeCheckpoints,
+                return new JumpRoom(metaData, structure, bounds, connectors, relativeAssistance, relativeCheckpoints,
                         relStart, relEnd, id);
             };
         }
 
-        JumpRoom with(float value, JumpAssistance assistance, List<Checkpoint> checkpoints,
+        JumpRoom with(MetaData metaData, JumpAssistance assistance, List<Checkpoint> checkpoints,
                       @Nullable Start start, @Nullable Checkpoint end);
     }
 }
