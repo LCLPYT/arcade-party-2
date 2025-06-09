@@ -25,6 +25,7 @@ import work.lclpnet.ap2.api.util.CollisionDetector;
 import work.lclpnet.ap2.api.util.heads.PlayerHead;
 import work.lclpnet.ap2.base.ApConstants;
 import work.lclpnet.ap2.base.resource.ApResources;
+import work.lclpnet.ap2.core.hook.DripLeafTiltCallback;
 import work.lclpnet.ap2.game.jump_and_run.gen.*;
 import work.lclpnet.ap2.impl.game.FFAGameInstance;
 import work.lclpnet.ap2.impl.game.data.ScoreDataContainer;
@@ -182,6 +183,10 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
 
         CheckpointHelper.whenFallingIntoLava(hooks, participants::isParticipating)
                 .then(this::resetPlayerToCheckpoint);
+
+        // disable drip leaf tilt for players in goal
+        hooks.registerHook(DripLeafTiltCallback.HOOK, (entity, pos) -> entity instanceof ServerPlayerEntity player
+                && inGoal.contains(player.getUuid()));
     }
 
     private void giveItemsToPlayers() {
