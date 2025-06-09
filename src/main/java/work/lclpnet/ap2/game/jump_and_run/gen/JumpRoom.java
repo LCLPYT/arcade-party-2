@@ -156,7 +156,7 @@ public class JumpRoom {
         }
     }
 
-    public record MetaData(float estimatedMinutes, int stackingMargin) {}
+    public record MetaData(float estimatedMinutes, int stackingMargin, float weight) {}
 
     public interface Partial {
         static Partial from(BlockStructure structure, String id) {

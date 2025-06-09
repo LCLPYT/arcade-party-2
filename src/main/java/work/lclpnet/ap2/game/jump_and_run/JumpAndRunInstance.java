@@ -68,7 +68,7 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
             NEXT_PHASE_WAIT_TICKS = Ticks.seconds(4);
 
     private static final float
-            TARGET_MINUTES = 3.75f;  // target completion time of the jump and run (approximate)
+            TARGET_MINUTES = 4.0f;  // target completion time of the jump and run (approximate)
 
     private static final boolean DEBUG_ASSISTANCE = true;
 

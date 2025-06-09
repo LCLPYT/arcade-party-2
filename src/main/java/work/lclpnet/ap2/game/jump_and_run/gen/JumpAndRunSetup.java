@@ -143,8 +143,9 @@ public class JumpAndRunSetup {
             }
 
             int stackingMargin = max(0, json.optNumber("stacking-margin", 0).intValue());
+            float weight = max(0, json.optNumber("weight", 1).floatValue());
 
-            var metaData = new JumpRoom.MetaData(value, stackingMargin);
+            var metaData = new JumpRoom.MetaData(value, stackingMargin, weight);
 
             readRoom(id, schematicsDir)
                     .map(partial -> partial.with(metaData, assistance, checkpoints, start, end))

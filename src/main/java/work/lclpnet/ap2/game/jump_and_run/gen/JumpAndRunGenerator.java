@@ -8,6 +8,7 @@ import net.minecraft.util.math.Vec3i;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
+import work.lclpnet.ap2.impl.ds.WeightedList;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.checkpoint.Checkpoint;
 import work.lclpnet.ap2.impl.util.math.AffineIntMatrix;
@@ -38,15 +39,19 @@ public class JumpAndRunGenerator {
     public JumpAndRun generate(JumpAndRunSetup.Parts parts, BlockPos spawnPos) {
         Direction stackingDir = Direction.SOUTH;
 
-        List<JumpRoom> rooms = new ArrayList<>(parts.rooms());
-        Collections.shuffle(rooms, random);
+        WeightedList<JumpRoom> rooms = new WeightedList<>();
+
+        for (JumpRoom room : parts.rooms()) {
+            rooms.add(room, room.metaData().weight());
+        }
 
         List<Segment> segments = new ArrayList<>();
         float minutes = 0;
         int lastMargin = 0;
 
         while (minutes < targetMinutes && !rooms.isEmpty()) {
-            JumpRoom room = rooms.removeFirst();
+            int i = rooms.getRandomIndex(random);
+            JumpRoom room = rooms.remove(i);
 
             SegmentInfo segment = createSegmentParts(room, parts, stackingDir);
 
