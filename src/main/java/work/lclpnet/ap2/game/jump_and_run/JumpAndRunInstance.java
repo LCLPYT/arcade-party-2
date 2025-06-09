@@ -4,6 +4,7 @@ import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.component.DataComponentTypes;
+import net.minecraft.entity.damage.DamageTypes;
 import net.minecraft.item.ItemStack;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.registry.tag.DamageTypeTags;
@@ -168,7 +169,7 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
             config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, source) -> {
                 if (entity instanceof ServerPlayerEntity player
                         && gameHandle.getParticipants().isParticipating(player)
-                        && source.isIn(DamageTypeTags.IS_FIRE)) {
+                        && (source.isIn(DamageTypeTags.IS_FIRE) || source.isOf(DamageTypes.OUT_OF_WORLD))) {
 
                     resetPlayerToCheckpoint(player);
                 }
@@ -183,6 +184,9 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
                 .then(this::resetPlayerToCheckpoint);
 
         CheckpointHelper.whenFallingIntoLava(hooks, participants::isParticipating)
+                .then(this::resetPlayerToCheckpoint);
+
+        commons().whenBelowY(getWorld().getBottomY())
                 .then(this::resetPlayerToCheckpoint);
 
         // disable drip leaf tilt for players in goal
