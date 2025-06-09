@@ -8,12 +8,14 @@ import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.StructureUtil;
 import work.lclpnet.ap2.impl.util.checkpoint.Checkpoint;
+import work.lclpnet.ap2.impl.util.effect.ApEffect;
 import work.lclpnet.kibu.mc.BuiltinKibuBlockState;
 import work.lclpnet.kibu.mc.KibuBlockPos;
 import work.lclpnet.kibu.structure.BlockStructure;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 public class JumpRoom {
 
@@ -156,7 +158,7 @@ public class JumpRoom {
         }
     }
 
-    public record MetaData(float estimatedMinutes, int stackingMargin, float weight) {}
+    public record MetaData(float estimatedMinutes, int stackingMargin, float weight, Set<ApEffect> effects) {}
 
     public interface Partial {
         static Partial from(BlockStructure structure, String id) {

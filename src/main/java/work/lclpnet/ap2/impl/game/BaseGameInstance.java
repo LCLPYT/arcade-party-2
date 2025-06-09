@@ -45,6 +45,8 @@ import work.lclpnet.lobby.game.api.WorldFacade;
 import work.lclpnet.lobby.game.map.GameMap;
 import work.lclpnet.lobby.game.util.ProtectorUtils;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static net.minecraft.util.Formatting.*;
@@ -70,6 +72,7 @@ public abstract class BaseGameInstance implements MiniGameInstance {
     private volatile GameCommons commons = null;
     private int countdownTime = 0;
     private int countdownValue = 0;
+    private final Set<ApEffect> activeEffects = new HashSet<>();
 
     public BaseGameInstance(MiniGameHandle gameHandle) {
         this.gameHandle = gameHandle;
@@ -208,24 +211,32 @@ public abstract class BaseGameInstance implements MiniGameInstance {
 
     private void applyMapEffects() {
         Object prop = getMap().getProperty("effects");
+        
         if (!(prop instanceof JSONArray array)) return;
 
-        Logger logger = gameHandle.getLogger();
+        Set<ApEffect> effects = ApEffects.fromJson(array, gameHandle.getLogger());
+
+        enableEffects(effects);
+    }
+
+    protected synchronized void enableEffects(Set<ApEffect> effects) {
+        activeEffects.addAll(effects);
+
         PlayerUtil playerUtil = gameHandle.getPlayerUtil();
 
-        for (Object obj : array) {
-            if (!(obj instanceof String str)) {
-                logger.warn("Invalid effect entry of type {}", obj.getClass().getSimpleName());
-                continue;
-            }
-
-            Identifier id = Identifier.of(str);
-            ApEffect effect = ApEffects.tryFrom(id);
-
-            if (effect == null) continue;
-
+        for (ApEffect effect : effects) {
             playerUtil.enableEffect(effect);
         }
+    }
+
+    protected synchronized void disableEffects() {
+        PlayerUtil playerUtil = gameHandle.getPlayerUtil();
+
+        for (ApEffect effect : activeEffects) {
+            playerUtil.disableEffect(effect);
+        }
+
+        activeEffects.clear();
     }
 
     private void resetPlayers() {

@@ -10,6 +10,8 @@ import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.checkpoint.Checkpoint;
+import work.lclpnet.ap2.impl.util.effect.ApEffect;
+import work.lclpnet.ap2.impl.util.effect.ApEffects;
 import work.lclpnet.kibu.schematic.FabricBlockStateAdapter;
 import work.lclpnet.kibu.schematic.SchematicFormats;
 import work.lclpnet.kibu.schematic.api.SchematicReader;
@@ -145,7 +147,15 @@ public class JumpAndRunSetup {
             int stackingMargin = max(0, json.optNumber("stacking-margin", 0).intValue());
             float weight = max(0, json.optNumber("weight", 1).floatValue());
 
-            var metaData = new JumpRoom.MetaData(value, stackingMargin, weight);
+            Set<ApEffect> effects;
+
+            if (json.has("effects")) {
+                effects = ApEffects.fromJson(json.getJSONArray("effects"), logger);
+            } else {
+                effects = Set.of();
+            }
+
+            var metaData = new JumpRoom.MetaData(value, stackingMargin, weight, effects);
 
             readRoom(id, schematicsDir)
                     .map(partial -> partial.with(metaData, assistance, checkpoints, start, end))

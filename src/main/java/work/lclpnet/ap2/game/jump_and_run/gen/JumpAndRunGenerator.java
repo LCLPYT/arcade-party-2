@@ -60,7 +60,8 @@ public class JumpAndRunGenerator {
                 continue;
             }
 
-            int margin = room.metaData().stackingMargin();
+            JumpRoom.MetaData metaData = room.metaData();
+            int margin = metaData.stackingMargin();
 
             // pre-margin
             if (!segments.isEmpty()) {
@@ -73,9 +74,10 @@ public class JumpAndRunGenerator {
 
             BlockBox bounds = segment.bounds();
 
-            segments.add(new Segment(segment.parts, bounds, segment.checkpoints(), segment.roomInfo, segment.start, segment.goalBounds()));
+            segments.add(new Segment(segment.parts, bounds, segment.checkpoints(), segment.roomInfo, segment.start,
+                    segment.goalBounds(), metaData.effects()));
 
-            minutes += room.metaData().estimatedMinutes();
+            minutes += metaData.estimatedMinutes();
 
             // offset position for next segment
             Direction.Axis axis = stackingDir.getAxis();

@@ -17,6 +17,7 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.GameRules;
+import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
@@ -71,7 +72,7 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
     private static final float
             TARGET_MINUTES = 4.0f;  // target completion time of the jump and run (approximate)
 
-    private static final boolean DEBUG_ASSISTANCE = true;
+    private static final boolean DEBUG_ASSISTANCE = false;
 
     private final ScoreDataContainer<ServerPlayerEntity, PlayerRef> data = new ScoreDataContainer<>(PlayerRef::create);
     private final CollisionDetector collisionDetector = new ChunkedCollisionDetector();
@@ -218,14 +219,10 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
         gateBlocks.clear();
     }
 
-    private void closeGate() {
-        var segments = jumpAndRun.segments();
-
-        if (segmentIndex < 0 || segmentIndex >= segments.size()) return;
-
+    private void closeGate(Segment segment) {
         gateBlocks.clear();
 
-        BlockBox gate = segments.get(segmentIndex).gate();
+        BlockBox gate = segment.gate();
         ServerWorld world = getWorld();
 
         BlockState state = Blocks.WHITE_STAINED_GLASS.getDefaultState();
@@ -248,11 +245,9 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
     }
 
     private void delayAssistance() {
-        var segments = jumpAndRun.segments();
+        Segment segment = currentSegment();
 
-        if (segmentIndex < 0 || segmentIndex >= segments.size()) return;
-
-        Segment segment = segments.get(segmentIndex);
+        if (segment == null) return;
 
         RoomData data = segment.roomInfo().data();
 
@@ -293,20 +288,21 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
     }
 
     private void setSegment(int i) {
-        var segments = jumpAndRun.segments();
-        int segmentCount = segments.size();
-
-        if (i < 0 || i >= segmentCount) return;
-
         segmentIndex = i;
         segmentActive = false;
         inGoal.clear();
 
-        closeGate();
+        Segment segment = currentSegment();
 
-        Segment segment = segments.get(i);
+        if (segment == null) return;
+
+        closeGate(segment);
+
         BlockPos spawn = segment.spawn();
         ServerWorld world = getWorld();
+
+        disableEffects();
+        enableEffects(segment.effects());
 
         for (ServerPlayerEntity player : PlayerLookup.world(world)) {
             player.teleport(world, spawn.getX() + 0.5, spawn.getY(), spawn.getZ() + 0.5, Set.of(), segment.spawnYaw(), 0f, true);
@@ -329,7 +325,7 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
             bossBar.setArgument(player, 0, styled(segmentIndex, YELLOW));
         }
 
-        bossBar.setPercent((float) (segmentIndex) / segmentCount);
+        bossBar.setPercent((float) (segmentIndex) / jumpAndRun.segments().size());
 
         debugAssistance();
     }
@@ -340,11 +336,9 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
         debugController.destroy();
         debugController.init(ApResources.getInstance(), getWorld());
 
-        List<Segment> segments = jumpAndRun.segments();
+        Segment segment = currentSegment();
 
-        if (segmentIndex < 0 || segmentIndex >= segments.size()) return;
-
-        Segment segment = segments.get(segmentIndex);
+        if (segment == null) return;
 
         RoomData data = segment.roomInfo().data();
 
@@ -352,6 +346,14 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
 
         debugController.renderer().ifPresent(renderer -> data.assistance().forEach((state, pos) ->
                 renderer.marker(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, state, 0, 0.5)));
+    }
+
+    private @Nullable Segment currentSegment() {
+        List<Segment> segments = jumpAndRun.segments();
+
+        if (segmentIndex < 0 || segmentIndex >= segments.size()) return null;
+
+        return segments.get(segmentIndex);
     }
 
     private void onReachedGoal(ServerPlayerEntity player, boolean reached) {
