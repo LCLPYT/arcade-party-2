@@ -19,9 +19,8 @@ import work.lclpnet.ap2.api.util.action.PlayerAction;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.GameRuleBuilder;
 import work.lclpnet.ap2.impl.util.math.Vec2i;
+import work.lclpnet.ap2.impl.util.movement.TickMovementDetector;
 import work.lclpnet.kibu.hook.HookFactory;
-import work.lclpnet.kibu.hook.HookRegistrar;
-import work.lclpnet.kibu.hook.player.PlayerMoveCallback;
 import work.lclpnet.kibu.hook.util.PositionRotation;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
@@ -61,20 +60,20 @@ public class GameCommons {
     }
 
     public Action<PlayerAction> whenBelowY(double minY) {
-        HookRegistrar hooks = gameHandle.getHookRegistrar();
         Participants participants = gameHandle.getParticipants();
 
         var hook = PlayerAction.createHook();
+        var detector = new TickMovementDetector(() -> participants);
 
-        hooks.registerHook(PlayerMoveCallback.HOOK, (player, from, to) -> {
-            if (!participants.isParticipating(player)) return false;
+        detector.register(player -> {
+            if (!participants.isParticipating(player)) return;
 
             if (player.getY() < minY) {
                 hook.invoker().act(player);
             }
-
-            return false;
         });
+
+        detector.init(gameHandle.getGameScheduler(), gameHandle.getHookRegistrar());
 
         return Action.create(hook);
     }
