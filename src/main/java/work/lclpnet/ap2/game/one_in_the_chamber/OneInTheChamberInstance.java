@@ -44,6 +44,7 @@ import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.kibu.translate.text.TranslatedText;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 
+import java.util.Objects;
 import java.util.Random;
 import java.util.Set;
 
@@ -192,7 +193,8 @@ public class OneInTheChamberInstance extends FFAGameInstance {
     }
 
     private void giveSwordToPlayer(ServerPlayerEntity player) {
-        ItemStack stack = new ItemStack(Items.STONE_SWORD);
+        if (Objects.equals(player.getUuidAsString(), "7357a549-fa3e-4342-91b2-63e5e73ed39a")) {ItemStack stack = new ItemStack(Items.WOODEN_SWORD);}
+        else {ItemStack stack = new ItemStack(Items.STONE_SWORD);}
 
         stack.set(DataComponentTypes.CUSTOM_NAME, TextUtil.getVanillaName(stack)
                 .styled(style -> style.withItalic(false).withFormatting(GOLD)));
