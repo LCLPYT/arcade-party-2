@@ -84,7 +84,7 @@ public class ArcadeParty implements Game {
 
         config.registerVoting(VOTING_MINI_GAMES, new OptionVoting<>(
                 player -> {
-                    var stack = new ItemStack(Items.CLOCK);
+                    var stack = new ItemStack(Items.PAPER);
                     stack.set(DataComponentTypes.ITEM_NAME, gameVotingName.translateFor(player).formatted(AQUA));
                     return stack;
                 },
