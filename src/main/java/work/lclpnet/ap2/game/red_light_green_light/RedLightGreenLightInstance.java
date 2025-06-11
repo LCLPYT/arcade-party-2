@@ -53,7 +53,7 @@ import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 public class RedLightGreenLightInstance extends FFAGameInstance implements Runnable {
 
     private static final int UNTIL_STOP_MIN_TICKS = 70, UNTIL_STOP_MAX_TICKS = 110;
-    private static final int WARN_TIME_MIN_TICKS = 35, WARN_TIME_MAX_TICKS = 75;
+    private static final int WARN_TIME_MIN_TICKS = 35, WARN_TIME_MAX_TICKS = 70;
     private static final int FROZEN_MIN_TICKS = 60, FROZEN_MAX_TICKS = 105;
     private static final int END_TIME_SECONDS = 15;
     private final SimpleMovementBlocker movementBlocker;
