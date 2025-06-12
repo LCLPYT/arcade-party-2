@@ -1,6 +1,7 @@
 package work.lclpnet.ap2.game.panda_finder;
 
 
+import com.mojang.serialization.JavaOps;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.MapIdComponent;
 import net.minecraft.entity.EntityType;
@@ -138,8 +139,8 @@ public class PandaManager {
     public void readImages(JSONObject images) {
         Map<PandaEntity.Gene, List<Integer>> imagesByGene = new HashMap<>();
 
-        for (var key : images.keySet()) {
-            var gene = PandaEntity.Gene.CODEC.byId(key);
+        for (String key : images.keySet()) {
+            var gene = PandaEntity.Gene.CODEC.parse(JavaOps.INSTANCE, key).result().orElse(null);
 
             if (gene == null) {
                 logger.warn("Invalid panda gene named '{}'", key);

@@ -2,8 +2,8 @@ package work.lclpnet.ap2.game.guess_it.util;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.SpawnReason;
-import net.minecraft.entity.VariantHolder;
 import net.minecraft.entity.ai.brain.MemoryModuleType;
 import net.minecraft.entity.mob.*;
 import net.minecraft.entity.passive.*;
@@ -22,6 +22,8 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.village.VillagerData;
 import net.minecraft.village.VillagerDataContainer;
 import org.jetbrains.annotations.Nullable;
+import work.lclpnet.ap2.core.mixin.ShulkerEntityAccessor;
+import work.lclpnet.ap2.core.type.ApVariantHolder;
 import work.lclpnet.ap2.impl.util.world.SizedSpaceFinder;
 import work.lclpnet.kibu.access.entity.GoatEntityAccess;
 import work.lclpnet.kibu.access.entity.HorseEntityAccess;
@@ -66,6 +68,7 @@ public class MobSpawner {
         return entity;
     }
 
+    @SuppressWarnings("unchecked")
     public void randomizeEntity(Entity entity) {
         if (random.nextFloat() < 0.005) {
             entity.setCustomName(Text.literal("Dinnerbone"));
@@ -81,20 +84,21 @@ public class MobSpawner {
 
         if (entity instanceof AbstractHorseEntity horse) {
             if (random.nextFloat() < 0.05f) {
-                horse.saddle(new ItemStack(Items.SADDLE), null);
+                horse.equipStack(EquipmentSlot.SADDLE, new ItemStack(Items.SADDLE));
             }
         }
 
         if (entity instanceof AxolotlEntity axolotl) {
-            randomizeVariant(axolotl, AxolotlEntity.Variant.values());
+            randomizeVariant((ApVariantHolder<AxolotlEntity.Variant>) axolotl, AxolotlEntity.Variant.values());
         } else if (entity instanceof RabbitEntity rabbit) {
             if (random.nextFloat() < 0.125f) {  // 1 / 8 chance
                 rabbit.setCustomName(Text.literal("Toast"));
             } else {
-                randomizeVariant(rabbit, RabbitEntity.RabbitType.values());
+                randomizeVariant((ApVariantHolder<RabbitEntity.Variant>) rabbit, RabbitEntity.Variant.values());
             }
         } else if (entity instanceof CatEntity cat) {
-            randomizeVariant(cat, Registries.CAT_VARIANT);
+            var catTypes = world.getRegistryManager().getOrThrow(RegistryKeys.CAT_VARIANT);
+            randomizeVariant((ApVariantHolder<RegistryEntry<CatVariant>>) cat, catTypes);
         } else if (entity instanceof SheepEntity sheep) {
             if (random.nextFloat() < 0.01f) {
                 sheep.setSheared(true);
@@ -110,9 +114,10 @@ public class MobSpawner {
                 donkey.setHasChest(true);
             }
         } else if (entity instanceof FoxEntity fox) {
-            randomizeVariant(fox, FoxEntity.Type.values());
+            randomizeVariant((ApVariantHolder<FoxEntity.Variant>) fox, FoxEntity.Variant.values());
         } else if (entity instanceof FrogEntity frog) {
-            randomizeVariant(frog, Registries.FROG_VARIANT);
+            var frogTypes = world.getRegistryManager().getOrThrow(RegistryKeys.FROG_VARIANT);
+            randomizeVariant((ApVariantHolder<RegistryEntry<FrogVariant>>) frog, frogTypes);
         } else if (entity instanceof GoatEntity goat) {
             if (random.nextFloat() < 0.05f) {
                 goat.setScreaming(true);
@@ -131,7 +136,7 @@ public class MobSpawner {
 
             HorseEntityAccess.setVariant(horse, color, marking);
         } else if (entity instanceof LlamaEntity llama) {
-            randomizeVariant(llama, LlamaEntity.Variant.values());
+            randomizeVariant((ApVariantHolder<LlamaEntity.Variant>) llama, LlamaEntity.Variant.values());
 
             if (!(entity instanceof TraderLlamaEntity) && random.nextFloat() < 0.6) {
                 DyeColor color = randomElement(DyeColor.values());
@@ -141,7 +146,7 @@ public class MobSpawner {
         } else if (entity instanceof SlimeEntity slime) {
             slime.setSize(random.nextInt(5), false);
         } else if (entity instanceof MooshroomEntity mooshroom) {
-            randomizeVariant(mooshroom, MooshroomEntity.Type.values());
+            randomizeVariant((ApVariantHolder<MooshroomEntity.Variant>) mooshroom, MooshroomEntity.Variant.values());
         } else if (entity instanceof MuleEntity mule) {
             if (random.nextFloat() < 0.04f) {
                 mule.setHasChest(true);
@@ -151,26 +156,26 @@ public class MobSpawner {
             panda.setMainGene(gene);
             panda.setHiddenGene(gene);
         } else if (entity instanceof ParrotEntity parrot) {
-            randomizeVariant(parrot, ParrotEntity.Variant.values());
+            randomizeVariant((ApVariantHolder<ParrotEntity.Variant>) parrot, ParrotEntity.Variant.values());
         } else if (entity instanceof PhantomEntity phantom) {
             if (random.nextFloat() < 0.35f) {
                 phantom.setPhantomSize(random.nextInt(4));
             }
         } else if (entity instanceof ShulkerEntity shulker) {
             if (random.nextFloat() < 0.9411765f) {  // 1 / 17 chance to be default color
-                shulker.setVariant(Optional.of(randomElement(DyeColor.values())));
+                ((ShulkerEntityAccessor) shulker).invokeSetColor(Optional.of(randomElement(DyeColor.values())));
             }
         } else if (entity instanceof VillagerDataContainer villager) {
             var types = Registries.VILLAGER_TYPE.getIndexedEntries();
             var professions = Registries.VILLAGER_PROFESSION.getIndexedEntries();
 
-            villager.setVillagerData(new VillagerData(randomElement(types).value(), randomElement(professions).value(), 2));
+            villager.setVillagerData(new VillagerData(randomElement(types), randomElement(professions), 2));
         } else if (entity instanceof SnowGolemEntity snowGolem) {
             if (random.nextFloat() < 0.5) {
                 snowGolem.setHasPumpkin(false);
             }
         } else if (entity instanceof TropicalFishEntity tropicalFish) {
-            var variety = randomElement(TropicalFishEntity.Variety.values());
+            var variety = randomElement(TropicalFishEntity.Pattern.values());
             DyeColor baseColor = randomElement(DyeColor.values());
             DyeColor patternColor = randomElement(DyeColor.values());
 
@@ -184,7 +189,7 @@ public class MobSpawner {
             var brain = warden.getBrain();
             brain.remember(MemoryModuleType.DIG_COOLDOWN, Unit.INSTANCE, Ticks.minutes(10));
         } else if (entity instanceof WolfEntity wolf) {
-            randomizeVariant(wolf, world.getRegistryManager().getOrThrow(RegistryKeys.WOLF_VARIANT));
+            randomizeVariant((ApVariantHolder<RegistryEntry<WolfVariant>>) wolf, world.getRegistryManager().getOrThrow(RegistryKeys.WOLF_VARIANT));
         } else if (entity instanceof BoggedEntity bogged) {
             if (random.nextFloat() < 0.2) {
                 bogged.setSheared(true);
@@ -192,20 +197,20 @@ public class MobSpawner {
         }
     }
 
-    private <T> void randomizeVariant(VariantHolder<RegistryEntry<T>> holder, Registry<T> registry) {
+    private <T> void randomizeVariant(ApVariantHolder<RegistryEntry<T>> holder, Registry<T> registry) {
         var variants = registry.getIndexedEntries();
 
         randomizeVariant(holder, variants);
     }
 
-    private <T> void randomizeVariant(VariantHolder<T> holder, IndexedIterable<T> variants) {
+    private <T> void randomizeVariant(ApVariantHolder<T> holder, IndexedIterable<T> variants) {
         T variant = randomElement(variants);
-        holder.setVariant(variant);
+        holder.ap2$setVariant(variant);
     }
 
-    private <T> void randomizeVariant(VariantHolder<T> holder, T[] variants) {
+    private <T> void randomizeVariant(ApVariantHolder<T> holder, T[] variants) {
         T variant = randomElement(variants);
-        holder.setVariant(variant);
+        holder.ap2$setVariant(variant);
     }
 
     private <T> T randomElement(IndexedIterable<T> variants) {

@@ -3,7 +3,6 @@ package work.lclpnet.ap2.game.one_in_the_chamber;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.ChargedProjectilesComponent;
-import net.minecraft.component.type.UnbreakableComponent;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.damage.DamageTypes;
@@ -31,6 +30,7 @@ import work.lclpnet.ap2.impl.game.FFAGameInstance;
 import work.lclpnet.ap2.impl.game.data.ScoreDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.util.DeathMessages;
+import work.lclpnet.ap2.impl.util.ItemHelper;
 import work.lclpnet.ap2.impl.util.TextUtil;
 import work.lclpnet.ap2.impl.util.handler.Cooldown;
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker;
@@ -185,7 +185,7 @@ public class OneInTheChamberInstance extends FFAGameInstance {
         stack.set(DataComponentTypes.CUSTOM_NAME, TextUtil.getVanillaName(stack)
                 .styled(style -> style.withItalic(false).withFormatting(GOLD)));
 
-        stack.set(DataComponentTypes.UNBREAKABLE, new UnbreakableComponent(false));
+        ItemHelper.setUnbreakable(stack);
 
         PlayerInventory inventory = player.getInventory();
         inventory.setStack(1, stack);
@@ -197,7 +197,7 @@ public class OneInTheChamberInstance extends FFAGameInstance {
         stack.set(DataComponentTypes.CUSTOM_NAME, TextUtil.getVanillaName(stack)
                 .styled(style -> style.withItalic(false).withFormatting(GOLD)));
 
-        stack.set(DataComponentTypes.UNBREAKABLE, new UnbreakableComponent(false));
+        ItemHelper.setUnbreakable(stack);
 
         PlayerInventory inventory = player.getInventory();
         inventory.setStack(0, stack);

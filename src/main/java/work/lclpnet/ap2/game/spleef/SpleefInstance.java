@@ -3,7 +3,6 @@ package work.lclpnet.ap2.game.spleef;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.UnbreakableComponent;
 import net.minecraft.entity.damage.DamageTypes;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
@@ -19,6 +18,7 @@ import org.json.JSONArray;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.impl.game.EliminationGameInstance;
 import work.lclpnet.ap2.impl.map.MapUtil;
+import work.lclpnet.ap2.impl.util.ItemHelper;
 import work.lclpnet.ap2.impl.util.SoundHelper;
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
 import work.lclpnet.kibu.scheduler.Ticks;
@@ -90,7 +90,7 @@ public class SpleefInstance extends EliminationGameInstance {
             stack.set(DataComponentTypes.CUSTOM_NAME, translations.translateText(player, "game.ap2.spleef.shovel")
                     .styled(style -> style.withItalic(false).withFormatting(Formatting.GOLD)));
 
-            stack.set(DataComponentTypes.UNBREAKABLE, new UnbreakableComponent(false));
+            ItemHelper.setUnbreakable(stack);
 
             PlayerInventory inventory = player.getInventory();
             inventory.setStack(4, stack);

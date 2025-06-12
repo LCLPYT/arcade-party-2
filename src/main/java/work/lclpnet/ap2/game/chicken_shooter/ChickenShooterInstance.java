@@ -2,7 +2,6 @@ package work.lclpnet.ap2.game.chicken_shooter;
 
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.UnbreakableComponent;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.TntEntity;
@@ -246,9 +245,10 @@ public class ChickenShooterInstance extends FFAGameInstance implements Runnable 
             ItemStack stack = new ItemStack(Items.BOW);
 
             stack.addEnchantment(infinity, 1);
-            stack.set(DataComponentTypes.UNBREAKABLE, new UnbreakableComponent(false));
             stack.set(DataComponentTypes.CUSTOM_NAME, translations.translateText(player, "game.ap2.chicken_shooter.bow")
                     .styled(style -> style.withItalic(false).withFormatting(Formatting.GOLD)));
+
+            ItemHelper.setUnbreakable(stack);
 
             PlayerInventory inventory = player.getInventory();
             inventory.setStack(4, stack);

@@ -1,6 +1,7 @@
 package work.lclpnet.ap2.game.guess_it.challenge;
 
 import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.TooltipDisplayComponent;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.mob.GiantEntity;
@@ -115,19 +116,23 @@ public class ArmorTrimChallenge implements Challenge {
         giant.setPos(pos.getX(), pos.getY(), pos.getZ());
 
         ItemStack helmet = new ItemStack(Objects.requireNonNull(ItemHelper.getHelmet(armorMaterial)));
-        helmet.set(DataComponentTypes.TRIM, new ArmorTrim(material, correct, false));
+        helmet.set(DataComponentTypes.TRIM, new ArmorTrim(material, correct));
+        helmet.set(DataComponentTypes.TOOLTIP_DISPLAY, TooltipDisplayComponent.DEFAULT.with(DataComponentTypes.TRIM, true));
         giant.equipStack(EquipmentSlot.HEAD, helmet);
 
         ItemStack chestPlate = new ItemStack(Objects.requireNonNull(ItemHelper.getChestPlate(armorMaterial)));
-        chestPlate.set(DataComponentTypes.TRIM, new ArmorTrim(material, correct, false));
+        chestPlate.set(DataComponentTypes.TRIM, new ArmorTrim(material, correct));
+        chestPlate.set(DataComponentTypes.TOOLTIP_DISPLAY, TooltipDisplayComponent.DEFAULT.with(DataComponentTypes.TRIM, true));
         giant.equipStack(EquipmentSlot.CHEST, chestPlate);
 
         ItemStack leggings = new ItemStack(Objects.requireNonNull(ItemHelper.getLeggings(armorMaterial)));
-        leggings.set(DataComponentTypes.TRIM, new ArmorTrim(material, correct, false));
+        leggings.set(DataComponentTypes.TRIM, new ArmorTrim(material, correct));
+        leggings.set(DataComponentTypes.TOOLTIP_DISPLAY, TooltipDisplayComponent.DEFAULT.with(DataComponentTypes.TRIM, true));
         giant.equipStack(EquipmentSlot.LEGS, leggings);
 
         ItemStack boots = new ItemStack(Objects.requireNonNull(ItemHelper.getBoots(armorMaterial)));
-        boots.set(DataComponentTypes.TRIM, new ArmorTrim(material, correct, false));
+        boots.set(DataComponentTypes.TRIM, new ArmorTrim(material, correct));
+        boots.set(DataComponentTypes.TOOLTIP_DISPLAY, TooltipDisplayComponent.DEFAULT.with(DataComponentTypes.TRIM, true));
         giant.equipStack(EquipmentSlot.FEET, boots);
 
         modifier.spawnEntity(giant);

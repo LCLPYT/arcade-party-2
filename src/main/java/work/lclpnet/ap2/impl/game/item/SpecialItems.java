@@ -296,7 +296,7 @@ public class SpecialItems implements SpecialItemContext {
             return Optional.empty();
         }
 
-        String id = nbt.getString(ID_KEY);
+        String id = nbt.getString(ID_KEY, "");
 
         return registry.get(id);
     }

@@ -3,9 +3,9 @@ package work.lclpnet.ap2.game.pig_race;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.UnbreakableComponent;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.passive.PigEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -29,6 +29,7 @@ import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.ApRegistries;
 import work.lclpnet.ap2.impl.util.BlockBox;
+import work.lclpnet.ap2.impl.util.ItemHelper;
 import work.lclpnet.ap2.impl.util.checkpoint.Checkpoint;
 import work.lclpnet.ap2.impl.util.checkpoint.CheckpointHelper;
 import work.lclpnet.ap2.impl.util.checkpoint.CheckpointManager;
@@ -39,7 +40,6 @@ import work.lclpnet.ap2.impl.util.handler.VisibilityHandler;
 import work.lclpnet.ap2.impl.util.handler.VisibilityManager;
 import work.lclpnet.ap2.impl.util.heads.PlayerHeads;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
-import work.lclpnet.kibu.access.entity.PigEntityAccess;
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.ServerPlayConnectionHooks;
@@ -263,7 +263,7 @@ public class PigRaceInstance extends FFAGameInstance {
         Translations translations = gameHandle.getTranslations();
 
         ItemStack stick = new ItemStack(Items.CARROT_ON_A_STICK);
-        stick.set(DataComponentTypes.UNBREAKABLE, new UnbreakableComponent(false));
+        ItemHelper.setUnbreakable(stick);
         stick.set(DataComponentTypes.CUSTOM_NAME, translations.translateText(player, "game.ap2.pig_race.boost")
                 .styled(style -> style.withItalic(false).withFormatting(Formatting.GOLD)));
 
@@ -297,7 +297,7 @@ public class PigRaceInstance extends FFAGameInstance {
             pig.setInvulnerable(true);
             pig.setBodyYaw(yaw);
             pig.setPos(x, y + 0.1, z);
-            PigEntityAccess.setSaddled(pig, true);
+            pig.equipStack(EquipmentSlot.SADDLE, new ItemStack(Items.SADDLE));
 
             world.spawnEntity(pig);
 

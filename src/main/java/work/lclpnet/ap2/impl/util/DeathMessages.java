@@ -53,7 +53,7 @@ public class DeathMessages {
 
             // text with entity hover action indicates an entity display name
             // if the display name already has a color, keep it as is
-            if (hoverEvent != null && hoverEvent.getValue(HoverEvent.Action.SHOW_ENTITY) != null && style.getColor() != null) {
+            if (hoverEvent != null && hoverEvent.getAction() == HoverEvent.Action.SHOW_ENTITY && style.getColor() != null) {
                 return text;
             }
         }

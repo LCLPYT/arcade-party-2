@@ -7,8 +7,10 @@
     "defaultRequire": 1
   },
   "mixins": [
+    "AxolotlEntityMixin",
     "BigDripLeafBlockMixin",
     "BowItemMixin",
+    "CatEntityMixin",
     "CobwebBlockMixin",
     "CreakingBrainAccessor",
     "CreakingEntityMixin",
@@ -18,23 +20,31 @@
     "EntityNavigationAccessor",
     "EntityNavigationMixin",
     "ExplosionImplAccessor",
+    "FoxEntityMixin",
+    "FrogEntityMixin",
     "FuelRegistryMixin",
     "LandPathNodeMakerMixin",
     "LivingEntityAccessor",
     "LivingEntityMixin",
+    "LlamaEntityMixin",
     "MarkerEntityMixin",
     "MobEntityAccessor",
     "MobNavigationMixin",
+    "MooshroomEntityMixin",
     "MoveControlMixin",
+    "ParrotEntityMixin",
     "PathMixin",
     "PathNodeMakerAccessor",
     "PathNodeNavigatorMixin",
     "ProjectileEntityMixin",
+    "RabbitEntityMixin",
     "RangedWeaponItemMixin",
     "ServerPlayerEntityMixin",
     "ServerWorldMixin",
+    "ShulkerEntityAccessor",
     "SpiderEntityMixin",
     "WardenBrainAccessor",
-    "WardenBrainMixin"
+    "WardenBrainMixin",
+    "WolfEntityMixin"
   ]
 }

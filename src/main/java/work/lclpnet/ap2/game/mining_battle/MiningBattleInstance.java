@@ -2,7 +2,6 @@ package work.lclpnet.ap2.game.mining_battle;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.UnbreakableComponent;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -134,7 +133,7 @@ public class MiningBattleInstance extends FFAGameInstance implements MapBootstra
             ItemStack pickaxe = new ItemStack(Items.DIAMOND_PICKAXE);
             pickaxe.addEnchantment(efficiency, 3);
 
-            pickaxe.set(DataComponentTypes.UNBREAKABLE, new UnbreakableComponent(false));
+            ItemHelper.setUnbreakable(pickaxe);
 
             pickaxe.set(DataComponentTypes.CUSTOM_NAME, TextUtil.getVanillaName(pickaxe).styled(style -> style
                     .withFormatting(Formatting.GOLD)

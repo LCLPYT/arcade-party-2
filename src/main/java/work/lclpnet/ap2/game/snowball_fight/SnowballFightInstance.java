@@ -146,7 +146,7 @@ public class SnowballFightInstance extends EliminationGameInstance {
     private static void onDepleteStack(PlayerEntity player) {
         PlayerInventory inventory = player.getInventory();
 
-        int selected = inventory.selectedSlot;
+        int selected = inventory.getSelectedSlot();
         int size = inventory.size();
 
         for (int i = 0; i < size; i++) {

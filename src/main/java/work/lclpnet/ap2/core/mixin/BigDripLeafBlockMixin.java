@@ -3,6 +3,7 @@ package work.lclpnet.ap2.core.mixin;
 import net.minecraft.block.BigDripleafBlock;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityCollisionHandler;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import org.spongepowered.asm.mixin.Mixin;
@@ -22,7 +23,7 @@ public abstract class BigDripLeafBlockMixin {
             ),
             cancellable = true
     )
-    private void ap2$onDripLeafCollision(BlockState state, World world, BlockPos pos, Entity entity, CallbackInfo ci) {
+    private void ap2$onDripLeafCollision(BlockState state, World world, BlockPos pos, Entity entity, EntityCollisionHandler handler, CallbackInfo ci) {
         if (DripLeafTiltCallback.HOOK.invoker().onTilt(entity, pos)) {
             ci.cancel();
         }

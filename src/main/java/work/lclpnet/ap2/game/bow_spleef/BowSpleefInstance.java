@@ -3,7 +3,6 @@ package work.lclpnet.ap2.game.bow_spleef;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.UnbreakableComponent;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.damage.DamageTypes;
 import net.minecraft.entity.passive.ChickenEntity;
@@ -49,7 +48,7 @@ import java.util.Random;
 public class BowSpleefInstance extends EliminationGameInstance {
 
     private static final int
-            WORLD_BORDER_DELAY = Ticks.seconds(80),
+            WORLD_BORDER_DELAY = Ticks.seconds(70),
             WORLD_BORDER_TIME = Ticks.seconds(20),
             DOUBLE_JUMP_COOLDOWN_TICKS = Ticks.seconds(2);
 
@@ -178,7 +177,7 @@ public class BowSpleefInstance extends EliminationGameInstance {
             stack.addEnchantment(infinity,1);
             stack.set(DataComponentTypes.ENCHANTMENT_GLINT_OVERRIDE, false);
 
-            stack.set(DataComponentTypes.UNBREAKABLE, new UnbreakableComponent(false));
+            ItemHelper.setUnbreakable(stack);
 
             PlayerInventory inventory = player.getInventory();
             inventory.setStack(4, stack);

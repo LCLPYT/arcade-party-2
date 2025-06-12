@@ -267,6 +267,14 @@ public class DynamicEntityManager {
                     for (ServerPlayNetworkHandler tracker : listeners) {
                         tracker.sendPacket(packet);
                     }
+                }, (packet, except) -> {
+                    for (ServerPlayNetworkHandler tracker : listeners) {
+                        ServerPlayerEntity p = tracker.getPlayer();
+
+                        if (p != null && except.contains(p.getUuid())) continue;
+
+                        tracker.sendPacket(packet);
+                    }
                 });
             });
         }

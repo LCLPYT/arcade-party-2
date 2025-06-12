@@ -1,7 +1,7 @@
 package work.lclpnet.ap2.game.cozy_campfire.setup;
 
 import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.UnbreakableComponent;
+import net.minecraft.component.type.TooltipDisplayComponent;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
@@ -39,23 +39,23 @@ public class CCKitManager {
         PlayerInventory inventory = player.getInventory();
 
         ItemStack sword = new ItemStack(Items.IRON_SWORD);
-        sword.set(DataComponentTypes.UNBREAKABLE, new UnbreakableComponent(false));
+        ItemHelper.setUnbreakable(sword);
         inventory.setStack(0, sword);
 
         ItemStack pickaxe = new ItemStack(Items.IRON_PICKAXE);
-        pickaxe.set(DataComponentTypes.UNBREAKABLE, new UnbreakableComponent(false));
+        ItemHelper.setUnbreakable(pickaxe);
         inventory.setStack(1, pickaxe);
 
         ItemStack axe = new ItemStack(Items.IRON_AXE);
-        axe.set(DataComponentTypes.UNBREAKABLE, new UnbreakableComponent(false));
+        ItemHelper.setUnbreakable(axe);
         inventory.setStack(2, axe);
 
         ItemStack shovel = new ItemStack(Items.IRON_SHOVEL);
-        shovel.set(DataComponentTypes.UNBREAKABLE, new UnbreakableComponent(false));
+        ItemHelper.setUnbreakable(shovel);
         inventory.setStack(3, shovel);
 
         ItemStack hoe = new ItemStack(Items.IRON_HOE);
-        hoe.set(DataComponentTypes.UNBREAKABLE, new UnbreakableComponent(false));
+        ItemHelper.setUnbreakable(hoe);
         inventory.setStack(4, hoe);
 
         DynamicRegistryManager registryManager = world.getRegistryManager();
@@ -66,23 +66,27 @@ public class CCKitManager {
         var trimMaterial = ItemHelper.getTrimMaterial(registryManager, trimMaterialKey);
 
         ItemStack helmet = new ItemStack(Items.IRON_HELMET);
-        helmet.set(DataComponentTypes.UNBREAKABLE, new UnbreakableComponent(false));
-        helmet.set(DataComponentTypes.TRIM, new ArmorTrim(trimMaterial, trimPattern, false));
+        helmet.set(DataComponentTypes.TRIM, new ArmorTrim(trimMaterial, trimPattern));
+        helmet.set(DataComponentTypes.TOOLTIP_DISPLAY, TooltipDisplayComponent.DEFAULT.with(DataComponentTypes.TRIM, true));
+        ItemHelper.setUnbreakable(helmet);
         player.equipStack(EquipmentSlot.HEAD, helmet);
 
         ItemStack chestPlate = new ItemStack(Items.IRON_CHESTPLATE);
-        chestPlate.set(DataComponentTypes.UNBREAKABLE, new UnbreakableComponent(false));
-        chestPlate.set(DataComponentTypes.TRIM, new ArmorTrim(trimMaterial, trimPattern, false));
+        chestPlate.set(DataComponentTypes.TRIM, new ArmorTrim(trimMaterial, trimPattern));
+        chestPlate.set(DataComponentTypes.TOOLTIP_DISPLAY, TooltipDisplayComponent.DEFAULT.with(DataComponentTypes.TRIM, true));
+        ItemHelper.setUnbreakable(chestPlate);
         player.equipStack(EquipmentSlot.CHEST, chestPlate);
 
         ItemStack leggings = new ItemStack(Items.IRON_LEGGINGS);
-        leggings.set(DataComponentTypes.UNBREAKABLE, new UnbreakableComponent(false));
-        leggings.set(DataComponentTypes.TRIM, new ArmorTrim(trimMaterial, trimPattern, false));
+        leggings.set(DataComponentTypes.TRIM, new ArmorTrim(trimMaterial, trimPattern));
+        leggings.set(DataComponentTypes.TOOLTIP_DISPLAY, TooltipDisplayComponent.DEFAULT.with(DataComponentTypes.TRIM, true));
+        ItemHelper.setUnbreakable(leggings);
         player.equipStack(EquipmentSlot.LEGS, leggings);
 
         ItemStack boots = new ItemStack(Items.IRON_BOOTS);
-        boots.set(DataComponentTypes.UNBREAKABLE, new UnbreakableComponent(false));
-        boots.set(DataComponentTypes.TRIM, new ArmorTrim(trimMaterial, trimPattern, false));
+        boots.set(DataComponentTypes.TRIM, new ArmorTrim(trimMaterial, trimPattern));
+        boots.set(DataComponentTypes.TOOLTIP_DISPLAY, TooltipDisplayComponent.DEFAULT.with(DataComponentTypes.TRIM, true));
+        ItemHelper.setUnbreakable(boots);
         player.equipStack(EquipmentSlot.FEET, boots);
     }
 }

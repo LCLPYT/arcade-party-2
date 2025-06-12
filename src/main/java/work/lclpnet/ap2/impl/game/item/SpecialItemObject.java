@@ -2,8 +2,8 @@ package work.lclpnet.ap2.impl.game.item;
 
 import lombok.Getter;
 import net.minecraft.entity.decoration.DisplayEntity;
+import net.minecraft.item.ItemDisplayContext;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.ModelTransformationMode;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.Box;
@@ -44,7 +44,7 @@ public class SpecialItemObject extends Object3d implements Animatable {
 
         itemDisplay = new ItemDisplayObject(stack);
         itemDisplay.scale.set(size / DEFAULT_SIZE);
-        itemDisplay.setTransformationMode(ModelTransformationMode.GROUND);
+        itemDisplay.setItemDisplayContext(ItemDisplayContext.GROUND);
 
         addChild(itemDisplay);
 

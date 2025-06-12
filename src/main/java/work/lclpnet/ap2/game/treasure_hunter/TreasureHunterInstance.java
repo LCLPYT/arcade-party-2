@@ -2,8 +2,6 @@ package work.lclpnet.ap2.game.treasure_hunter;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.UnbreakableComponent;
 import net.minecraft.enchantment.Enchantments;
 import net.minecraft.entity.ItemEntity;
 import net.minecraft.entity.player.PlayerInventory;
@@ -151,7 +149,7 @@ public class TreasureHunterInstance extends FFAGameInstance {
             ItemStack stack = new ItemStack(Items.IRON_SHOVEL);
 
             stack.addEnchantment(efficiency, 4);
-            stack.set(DataComponentTypes.UNBREAKABLE, new UnbreakableComponent(false));
+            ItemHelper.setUnbreakable(stack);
 
             PlayerInventory inventory = player.getInventory();
             inventory.setStack(4, stack);

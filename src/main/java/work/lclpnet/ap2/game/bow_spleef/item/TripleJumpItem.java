@@ -56,7 +56,7 @@ public class TripleJumpItem implements SpecialItem {
             if (damage + dmg >= maxDamage) {
                 ctx.removeSpecialItem(player, this);
             } else {
-                if (player.getInventory().selectedSlot == 8) {
+                if (player.getInventory().getSelectedSlot() == 8) {
                     stack.damage(dmg, player, EquipmentSlot.MAINHAND);
                 } else {
                     stack.damage(dmg, player);

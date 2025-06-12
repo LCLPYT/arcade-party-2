@@ -1,6 +1,5 @@
 package work.lclpnet.ap2.base.resource;
 
-import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.datafixers.util.Pair;
 import net.minecraft.block.Block;
@@ -40,7 +39,6 @@ public class ModelLoader {
         String str = new String(bytes, StandardCharsets.UTF_8);
 
         Matcher matcher = SUMMON_PATTERN.matcher(str);
-        StringReader reader = new StringReader(str);
 
         Object3d root = null;
         int count = 0;
@@ -55,12 +53,12 @@ public class ModelLoader {
             double z = coordinate(zs);
 
             int index = matcher.end();
-            reader.setCursor(index);
+            String snbt = str.substring(index);
 
             NbtCompound nbt;
 
             try {
-                nbt = new StringNbtReader(reader).parseCompound();
+                nbt = StringNbtReader.readCompound(snbt);
             } catch (CommandSyntaxException e) {
                 throw new IOException("Failed to parse model nbt", e);
             }
@@ -111,7 +109,7 @@ public class ModelLoader {
     }
 
     private void parseChildren(Object3d root, NbtCompound nbt) {
-        NbtList passengers = nbt.getList("Passengers", NbtElement.COMPOUND_TYPE);
+        NbtList passengers = nbt.getListOrEmpty("Passengers");
 
         for (NbtElement passenger : passengers) {
             if (passenger instanceof NbtCompound compound) {
@@ -121,18 +119,18 @@ public class ModelLoader {
     }
 
     private void parseChild(Object3d root, NbtCompound nbt) {
-        String id = nbt.getString("id");
+        String id = nbt.getString("id", null);
 
         Object3d obj = switch (id) {
             case "minecraft:block_display" -> {
-                BlockState state = NbtHelper.toBlockState(blockLookup, nbt.getCompound("block_state"));
+                BlockState state = NbtHelper.toBlockState(blockLookup, nbt.getCompoundOrEmpty("block_state"));
                 yield new BlockDisplayObject(state);
             }
             case "minecraft:item_display" -> {
-                var stack = ItemStack.fromNbt(lookup, nbt.getCompound("item")).orElse(ItemStack.EMPTY);
+                var stack = ItemStack.fromNbt(lookup, nbt.getCompoundOrEmpty("item")).orElse(ItemStack.EMPTY);
                 yield new ItemDisplayObject(stack);
             }
-            default -> null;
+            case null, default -> null;
         };
 
         if (obj == null) return;

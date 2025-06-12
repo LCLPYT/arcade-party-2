@@ -5,7 +5,6 @@ import net.minecraft.block.Blocks;
 import net.minecraft.block.StainedGlassBlock;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.ToolComponent;
-import net.minecraft.component.type.UnbreakableComponent;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -30,6 +29,7 @@ import work.lclpnet.ap2.impl.game.data.Ordering;
 import work.lclpnet.ap2.impl.game.data.ScoreDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.map.ServerThreadMapBootstrap;
+import work.lclpnet.ap2.impl.util.ItemHelper;
 import work.lclpnet.ap2.impl.util.world.WorldBorderUtil;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
@@ -159,16 +159,16 @@ public class ManiacDiggerInstance extends FFAGameInstance implements MapBootstra
 
     private void giveItems(ServerPlayerEntity player) {
         ItemStack pickaxe = new ItemStack(Items.IRON_PICKAXE);
-        pickaxe.set(DataComponentTypes.UNBREAKABLE, new UnbreakableComponent(false));
+        ItemHelper.setUnbreakable(pickaxe);
 
         ItemStack shovel = new ItemStack(Items.IRON_SHOVEL);
-        shovel.set(DataComponentTypes.UNBREAKABLE, new UnbreakableComponent(false));
+        ItemHelper.setUnbreakable(shovel);
 
         ItemStack axe = new ItemStack(Items.IRON_AXE);
-        axe.set(DataComponentTypes.UNBREAKABLE, new UnbreakableComponent(false));
+        ItemHelper.setUnbreakable(axe);
 
         ItemStack hoe = new ItemStack(Items.IRON_HOE);
-        hoe.set(DataComponentTypes.UNBREAKABLE, new UnbreakableComponent(false));
+        ItemHelper.setUnbreakable(hoe);
 
         player.getInventory().setStack(0, axe);
         player.getInventory().setStack(1, pickaxe);

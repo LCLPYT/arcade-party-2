@@ -1,18 +1,22 @@
 package work.lclpnet.ap2.api.actor;
 
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
+import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.NbtComponent;
 import net.minecraft.entity.MarkerEntity;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtOps;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.Util;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import work.lclpnet.ap2.core.type.ApMarkerEntity;
-import work.lclpnet.kibu.access.entity.MarkerEntityAccess;
 
 import java.util.LinkedHashSet;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 public class ActorManager implements Tickable {
@@ -20,6 +24,8 @@ public class ActorManager implements Tickable {
     public static final String
             ACTOR_NBT_KEY = "gca:actor",
             ACTOR_TYPE_NBT_KEY = "type";
+
+    public static final MapCodec<ActorInfo> ACTOR_INFO_CODEC = ActorInfo.CODEC.fieldOf(ACTOR_NBT_KEY);
 
     private static final Logger logger = LoggerFactory.getLogger(ActorManager.class);
 
@@ -85,32 +91,47 @@ public class ActorManager implements Tickable {
         }
     }
 
-    public static @Nullable NbtCompound getActorNbt(MarkerEntity marker) {
-        NbtCompound data = MarkerEntityAccess.getData(marker);
+    public static Optional<ActorInfo> getActorNbt(MarkerEntity marker) {
+        NbtComponent customData = marker.getOrDefault(DataComponentTypes.CUSTOM_DATA, NbtComponent.DEFAULT);
 
-        if (!data.contains(ACTOR_NBT_KEY, NbtElement.COMPOUND_TYPE)) {
-            return null;
-        }
-
-        return data.getCompound(ACTOR_NBT_KEY);
+        return customData.get(ACTOR_INFO_CODEC).result();
     }
 
     public static void writeActorNbt(MarkerEntity marker, Actor actor) {
         NbtCompound actorCompound = new NbtCompound();
-        NbtElement actorNbt = actorCompound;
+        NbtCompound actorNbt = actorCompound;
 
-        String typeStr = actor.getType().id().toString();
-        actorCompound.putString(ACTOR_TYPE_NBT_KEY, typeStr);
+        ActorData<?> data = actor.createData();
+        Identifier id = actor.getType().id();
 
-        ActorData<?> actorData = actor.createData();
-
-        if (actorData != null) {
-            actorNbt = actorData.encode(NbtOps.INSTANCE, actorCompound)
-                    .resultOrPartial(Util.addPrefix("Encoding actor data for %s: ".formatted(typeStr), logger::error))
+        if (data != null) {
+            actorNbt = data.encode(NbtOps.INSTANCE, actorCompound)
+                    .map(elem -> (NbtCompound) elem)
+                    .resultOrPartial(Util.addPrefix("Encoding actor data for %s: ".formatted(id), logger::error))
                     .orElse(actorCompound);
         }
 
-        NbtCompound markerNbt = MarkerEntityAccess.getData(marker);
-        markerNbt.put(ACTOR_NBT_KEY, actorNbt);
+        var info = new ActorInfo(id, actorNbt);
+
+        NbtComponent customData = marker.get(DataComponentTypes.CUSTOM_DATA);
+
+        if (customData == null) return;
+
+        customData.with(NbtOps.INSTANCE, ACTOR_INFO_CODEC, info)
+                .ifSuccess(component -> marker.setComponent(DataComponentTypes.CUSTOM_DATA, component));
+    }
+
+    public record ActorInfo(Identifier type, NbtCompound nbt) {
+
+        public static final MapCodec<Identifier> TYPE_CODEC = Identifier.CODEC.fieldOf(ACTOR_TYPE_NBT_KEY);
+
+        public static final Codec<ActorInfo> CODEC = NbtCompound.CODEC.flatXmap(
+                nbt -> NbtOps.INSTANCE.getMap(nbt)
+                        .flatMap(mapLike -> TYPE_CODEC.decode(NbtOps.INSTANCE, mapLike))
+                        .map(id -> new ActorInfo(id, nbt)),
+                actorInfo -> NbtOps.INSTANCE.getMap(actorInfo.nbt()).flatMap(mapLike -> TYPE_CODEC.encode(actorInfo.type(), NbtOps.INSTANCE, NbtOps.INSTANCE.mapBuilder())
+                        .build(actorInfo.nbt())
+                        .map(d -> (NbtCompound) d))
+        );
     }
 }

@@ -11,6 +11,7 @@ import net.minecraft.block.entity.SkullBlockEntity;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.DyedColorComponent;
 import net.minecraft.component.type.NbtComponent;
+import net.minecraft.component.type.TooltipDisplayComponent;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.item.ItemStack;
@@ -62,6 +63,8 @@ import java.util.List;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 
+import static net.minecraft.component.DataComponentTypes.DYED_COLOR;
+import static net.minecraft.component.DataComponentTypes.TOOLTIP_DISPLAY;
 import static net.minecraft.util.Formatting.BOLD;
 import static net.minecraft.util.Formatting.YELLOW;
 
@@ -182,15 +185,18 @@ public class EggventureInstance extends FFAGameInstance implements MapBootstrap 
             int color = ColorUtil.getRandomHsvColor(random);
 
             ItemStack chestPlate = new ItemStack(Items.LEATHER_CHESTPLATE);
-            chestPlate.set(DataComponentTypes.DYED_COLOR, new DyedColorComponent(color, false));
+            chestPlate.set(DYED_COLOR, new DyedColorComponent(color));
+            chestPlate.set(TOOLTIP_DISPLAY, TooltipDisplayComponent.DEFAULT.with(DYED_COLOR, true));
             player.equipStack(EquipmentSlot.CHEST, chestPlate);
 
             ItemStack leggings = new ItemStack(Items.LEATHER_LEGGINGS);
-            leggings.set(DataComponentTypes.DYED_COLOR, new DyedColorComponent(color, false));
+            leggings.set(DYED_COLOR, new DyedColorComponent(color));
+            leggings.set(TOOLTIP_DISPLAY, TooltipDisplayComponent.DEFAULT.with(DYED_COLOR, true));
             player.equipStack(EquipmentSlot.LEGS, leggings);
 
             ItemStack boots = new ItemStack(Items.LEATHER_BOOTS);
-            boots.set(DataComponentTypes.DYED_COLOR, new DyedColorComponent(color, false));
+            boots.set(DYED_COLOR, new DyedColorComponent(color));
+            boots.set(TOOLTIP_DISPLAY, TooltipDisplayComponent.DEFAULT.with(DYED_COLOR, true));
             player.equipStack(EquipmentSlot.FEET, boots);
         }
 

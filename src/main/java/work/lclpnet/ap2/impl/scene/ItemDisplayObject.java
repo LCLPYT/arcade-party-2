@@ -3,14 +3,14 @@ package work.lclpnet.ap2.impl.scene;
 import lombok.Getter;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.decoration.DisplayEntity;
+import net.minecraft.item.ItemDisplayContext;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.ModelTransformationMode;
 
 @Getter
 public class ItemDisplayObject extends DisplayEntityObject<DisplayEntity.ItemDisplayEntity> {
 
     private ItemStack stack;
-    private ModelTransformationMode transformationMode = ModelTransformationMode.NONE;
+    private ItemDisplayContext itemDisplayContext = ItemDisplayContext.NONE;
 
     public ItemDisplayObject(ItemStack stack) {
         this.stack = stack;
@@ -26,7 +26,7 @@ public class ItemDisplayObject extends DisplayEntityObject<DisplayEntity.ItemDis
         super.configure(display);
 
         display.setItemStack(stack);
-        display.setTransformationMode(transformationMode);
+        display.setItemDisplayContext(itemDisplayContext);
     }
 
     @Override
@@ -43,8 +43,8 @@ public class ItemDisplayObject extends DisplayEntityObject<DisplayEntity.ItemDis
         entityRef.optional().ifPresent(display -> display.setItemStack(stack));
     }
 
-    public void setTransformationMode(ModelTransformationMode transformationMode) {
-        this.transformationMode = transformationMode;
-        entityRef.optional().ifPresent(display -> display.setTransformationMode(transformationMode));
+    public void setItemDisplayContext(ItemDisplayContext itemDisplayContext) {
+        this.itemDisplayContext = itemDisplayContext;
+        entityRef.optional().ifPresent(display -> display.setItemDisplayContext(itemDisplayContext));
     }
 }

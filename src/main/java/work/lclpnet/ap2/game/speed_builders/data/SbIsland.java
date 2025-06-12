@@ -240,7 +240,7 @@ public class SbIsland {
 
                     NbtCompound item = FabricNbtConversion.convert(kibuItem, NbtCompound.class);
 
-                    ItemStack expected = ItemStack.fromNbtOrEmpty(world.getRegistryManager(), item);
+                    ItemStack expected = ItemStack.fromNbt(world.getRegistryManager(), item).orElse(ItemStack.EMPTY);
                     ItemStack actual = itemFrame.getHeldItemStack();
 
                     if ((!expected.isEmpty() || !actual.isEmpty()) && !actual.isOf(expected.getItem())) {

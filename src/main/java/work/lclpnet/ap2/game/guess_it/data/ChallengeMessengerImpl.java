@@ -63,13 +63,13 @@ public class ChallengeMessengerImpl implements ChallengeMessenger {
         char letter = 'A';
 
         for (Text option : options) {
-            ClickEvent clickEvent = new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/answer " + letter);
+            ClickEvent clickEvent = new ClickEvent.RunCommand("/answer " + letter);
 
             for (ServerPlayerEntity player : players) {
                 var hoverMsg = translations.translateText(player, "game.ap2.guess_it.hover_option", styled(letter, YELLOW))
                         .formatted(GREEN);
 
-                HoverEvent hoverEvent = new HoverEvent(HoverEvent.Action.SHOW_TEXT, hoverMsg);
+                HoverEvent hoverEvent = new HoverEvent.ShowText(hoverMsg);
 
                 Text msg = Text.literal(letter + ") ").formatted(YELLOW)
                         .append(option.copy().formatted(AQUA))

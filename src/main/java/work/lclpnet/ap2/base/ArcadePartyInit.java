@@ -51,21 +51,13 @@ public class ArcadePartyInit implements ModInitializer {
         ServerEntityHooks.ENTITY_LOAD.register((entity, world) -> {
             if (!(entity instanceof MarkerEntity marker)) return;
 
-            NbtCompound actorNbt = ActorManager.getActorNbt(marker);
+            ActorManager.ActorInfo data = ActorManager.getActorNbt(marker).orElse(null);
 
-            if (actorNbt == null) return;
+            if (data == null) return;
 
-            String typeStr = actorNbt.getString(ActorManager.ACTOR_TYPE_NBT_KEY);
-
-            if (typeStr.isEmpty()) return;
-
-            Identifier actorId = Identifier.tryParse(typeStr);
-
-            if (actorId == null) return;
-
-            actorRegistry.getType(actorId).ifPresentOrElse(
-                    type -> createActor(world, marker, type, actorNbt),
-                    () -> logger.warn("Unknown actor type {} in world {} at {}", actorId, world.getRegistryKey().getValue(), marker.getBlockPos())
+            actorRegistry.getType(data.type()).ifPresentOrElse(
+                    type -> createActor(world, marker, type, data.nbt()),
+                    () -> logger.warn("Unknown actor type {} in world {} at {}", data.type(), world.getRegistryKey().getValue(), marker.getBlockPos())
             );
         });
 

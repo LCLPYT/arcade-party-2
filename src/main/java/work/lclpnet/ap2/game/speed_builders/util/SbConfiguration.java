@@ -271,7 +271,7 @@ public class SbConfiguration {
         PlayerInventory inventory = player.getInventory();
 
         if (inventory.getOccupiedSlotWithRoomForStack(stack) == -1 && player.getMainHandStack().isEmpty()) {
-            inventory.insertStack(inventory.selectedSlot, stack);
+            inventory.insertStack(inventory.getSelectedSlot(), stack);
         } else {
             inventory.insertStack(stack);
         }

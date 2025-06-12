@@ -15,14 +15,13 @@ public class CreakingEntityMixin {
             method = "deserializeBrain",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/entity/mob/CreakingBrain;create(Lnet/minecraft/entity/ai/brain/Brain;)Lnet/minecraft/entity/ai/brain/Brain;"
+                    target = "Lnet/minecraft/entity/mob/CreakingBrain;create(Lnet/minecraft/entity/mob/CreakingEntity;Lnet/minecraft/entity/ai/brain/Brain;)Lnet/minecraft/entity/ai/brain/Brain;"
             )
     )
-    private Brain<CreakingEntity> ap2$createBrain(Brain<CreakingEntity> brain, Operation<Brain<CreakingEntity>> original) {
+    private Brain<CreakingEntity> ap2$createBrain(CreakingEntity creaking, Brain<CreakingEntity> brain, Operation<Brain<CreakingEntity>> original) {
         var self = (CreakingEntity) (Object) this;
         var override = BrainCreationCallback.Creaking.HOOK.invoker().createBrain(self, () -> brain);
 
-        return override != null ? brain : original.call(brain);
-
+        return override != null ? override : original.call(creaking, brain);
     }
 }

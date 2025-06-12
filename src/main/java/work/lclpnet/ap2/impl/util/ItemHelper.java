@@ -2,8 +2,10 @@ package work.lclpnet.ap2.impl.util;
 
 import net.minecraft.block.jukebox.JukeboxSong;
 import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.TooltipDisplayComponent;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.item.equipment.ArmorMaterial;
 import net.minecraft.item.equipment.ArmorMaterials;
@@ -13,6 +15,7 @@ import net.minecraft.potion.Potion;
 import net.minecraft.potion.Potions;
 import net.minecraft.registry.*;
 import net.minecraft.registry.entry.RegistryEntry;
+import net.minecraft.util.Unit;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -81,7 +84,7 @@ public class ItemHelper {
         }
 
         return component.song()
-                .getEntry(registryLookup)
+                .resolveEntry(registryLookup)
                 .map(RegistryEntry::value);
     }
 
@@ -135,5 +138,13 @@ public class ItemHelper {
     public static RegistryEntry<Enchantment> getEnchantment(RegistryKey<Enchantment> enchantment, DynamicRegistryManager registryManager) {
         var enchantments = registryManager.getOrThrow(RegistryKeys.ENCHANTMENT);
         return enchantments.getOrThrow(enchantment);
+    }
+
+    public static void setUnbreakable(ItemStack stack) {
+        stack.set(DataComponentTypes.UNBREAKABLE, Unit.INSTANCE);
+
+        var display = stack.getOrDefault(DataComponentTypes.TOOLTIP_DISPLAY, TooltipDisplayComponent.DEFAULT);
+
+        stack.set(DataComponentTypes.TOOLTIP_DISPLAY, display.with(DataComponentTypes.UNBREAKABLE, true));
     }
 }

@@ -137,7 +137,7 @@ public class MiningBattleOre {
 
         // mimic behaviour of ServerWorld::createExplosion
         world.emitGameEvent(null, GameEvent.EXPLODE, vec);
-        world.addParticle(ParticleTypes.EXPLOSION, x, y, z, 1.0, 0.0, 0.0);
+        world.spawnParticles(ParticleTypes.EXPLOSION, x, y, z, 1, 1.0, 0.0, 0.0, 1);
 
         BlockState air = AIR.getDefaultState();
 
