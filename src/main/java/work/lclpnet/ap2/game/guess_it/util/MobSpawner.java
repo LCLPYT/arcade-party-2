@@ -194,6 +194,15 @@ public class MobSpawner {
             if (random.nextFloat() < 0.2) {
                 bogged.setSheared(true);
             }
+        } else if (entity instanceof PigEntity pig) {
+            var pigTypes = world.getRegistryManager().getOrThrow(RegistryKeys.PIG_VARIANT);
+            randomizeVariant((ApVariantHolder<RegistryEntry<PigVariant>>) pig, pigTypes);
+        } else if (entity instanceof CowEntity cow) {
+            var cowTypes = world.getRegistryManager().getOrThrow(RegistryKeys.COW_VARIANT);
+            randomizeVariant((ApVariantHolder<RegistryEntry<CowVariant>>) cow, cowTypes);
+        } else if (entity instanceof ChickenEntity chicken) {
+            var chickenTypes = world.getRegistryManager().getOrThrow(RegistryKeys.CHICKEN_VARIANT);
+            randomizeVariant((ApVariantHolder<RegistryEntry<ChickenVariant>>) chicken, chickenTypes);
         }
     }
 
