@@ -8,11 +8,14 @@ import net.minecraft.entity.TntEntity;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.entity.passive.ChickenEntity;
+import net.minecraft.entity.passive.ChickenVariant;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.entity.projectile.ProjectileEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.particle.ParticleTypes;
+import net.minecraft.registry.RegistryKeys;
+import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.scoreboard.AbstractTeam;
 import net.minecraft.scoreboard.ScoreboardDisplaySlot;
 import net.minecraft.scoreboard.Team;
@@ -28,6 +31,7 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.GameRules;
 import org.json.JSONArray;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
+import work.lclpnet.ap2.core.type.ApVariantHolder;
 import work.lclpnet.ap2.impl.game.FFAGameInstance;
 import work.lclpnet.ap2.impl.game.data.ScoreTimeDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
@@ -167,12 +171,20 @@ public class ChickenShooterInstance extends FFAGameInstance implements Runnable 
         gameHandle.getGameScheduler().interval(this, 1);
     }
 
+    @SuppressWarnings("unchecked")
     private void spawnChicken() {
         ServerWorld world = getWorld();
         BlockPos.Mutable randomPos = new BlockPos.Mutable();
         chickenBox.randomBlockPos(randomPos, random);
 
         ChickenEntity chicken = new ChickenEntity(EntityType.CHICKEN, world);
+
+        var variants = world.getRegistryManager().getOrThrow(RegistryKeys.CHICKEN_VARIANT).getIndexedEntries();
+
+        if (variants.size() >= 1) {
+            var variant = variants.get(random.nextInt(variants.size()));
+            ((ApVariantHolder<RegistryEntry<ChickenVariant>>) chicken).ap2$setVariant(variant);
+        }
 
         if (random.nextFloat() < BABY_CHANCE) {
             chicken.setBaby(true);
