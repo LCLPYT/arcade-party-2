@@ -12,16 +12,13 @@ import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.checkpoint.Checkpoint;
 import work.lclpnet.ap2.impl.util.effect.ApEffect;
 import work.lclpnet.ap2.impl.util.effect.ApEffects;
-import work.lclpnet.kibu.schematic.FabricBlockStateAdapter;
-import work.lclpnet.kibu.schematic.SchematicFormats;
-import work.lclpnet.kibu.schematic.api.SchematicReader;
+import work.lclpnet.ap2.impl.util.structure.StructureUtil;
 import work.lclpnet.kibu.structure.BlockStructure;
 import work.lclpnet.kibu.world.mixin.MinecraftServerAccessor;
 import work.lclpnet.lobby.game.map.GameMap;
 import work.lclpnet.lobby.game.map.MapUtils;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -135,6 +132,7 @@ public class JumpAndRunSetup {
 
                 /*
                 gateArray:   [ [x1, y1, z1], [x2, y2, z2] ]
+                OR
                 gateArray: [
                              [ [x01, y01, z01], [x02, y02, z02] ],
                              [ [x11, y11, z11], [x12, y12, z12] ],
@@ -224,16 +222,8 @@ public class JumpAndRunSetup {
 
     private Optional<BlockStructure> readStructure(String id, Path schematicsDir) {
         Path path = schematicsDir.resolve(id.concat(".schem"));
-        SchematicReader reader = SchematicFormats.SPONGE_V2.reader();
-        var adapter = FabricBlockStateAdapter.getInstance();
 
-        try (var in = Files.newInputStream(path)) {
-            BlockStructure structure = reader.read(in, adapter);
-            return Optional.of(structure);
-        } catch (IOException e) {
-            logger.error("Failed to read schematic {}", path, e);
-            return Optional.empty();
-        }
+        return StructureUtil.readAndFixStructure(path, logger, world.getRegistryManager());
     }
 
     public record Parts(List<JumpRoom> rooms, JumpEnd start, JumpEnd end) {}

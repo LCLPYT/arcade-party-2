@@ -1,7 +1,7 @@
 package work.lclpnet.ap2.game.jump_and_run.gen;
 
 import net.minecraft.server.world.ServerWorld;
-import work.lclpnet.ap2.impl.util.StructureUtil;
+import work.lclpnet.ap2.impl.util.structure.StructureUtil;
 
 public class JumpAndRunPlacer {
 

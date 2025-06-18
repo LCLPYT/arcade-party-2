@@ -42,7 +42,7 @@ public class MusicalMinecartInstance extends EliminationGameInstance {
 
     private static final int
             MIN_DELAY_TICKS = Ticks.seconds(10),
-            MAX_DELAY_TICKS = Ticks.seconds(20),
+            MAX_DELAY_TICKS = Ticks.seconds(20),  // do not increase; song timings are adjusted to max 20
             ELIMINATION_DELAY_TICKS = Ticks.seconds(9),
             NEXT_SONG_DELAY_TICKS = Ticks.seconds(2),
             PARTICLE_AMOUNT = 2;
