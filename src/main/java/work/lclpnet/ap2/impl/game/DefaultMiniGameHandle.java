@@ -243,22 +243,44 @@ public class DefaultMiniGameHandle implements MiniGameHandle, WorldBorderManager
             return;
         }
 
-        // track player scores; 3 points for 1st, 2 points for 2nd, 1 point for 3rd
-        ScoreManager scoreManager = args.scoreManager();
-        int score = 3;
-
-        for (Set<MiniGameResults.PlayerResult> group : results.getEntriesByRank()) {
-            if (score <= 0) break;
-
-            for (MiniGameResults.PlayerResult playerResult : group) {
-                scoreManager.addScore(playerResult.getRef(), score);
-            }
-
-            score--;
-        }
+        adjustScores(results);
 
         PreparationActivity activity = new PreparationActivity(args);
         ActivityManager.getInstance().startActivity(activity);
+    }
+
+    private void adjustScores(MiniGameResults results) {
+        ScoreManager scoreManager = args.scoreManager();
+        final var entriesByRank = results.getEntriesByRank();
+
+        switch (game.getType()) {
+            case FFA, TOURNAMENT -> {
+                // track player scores; 3 points for 1st, 2 points for 2nd, 1 point for 3rd
+                int score = 3;
+
+                for (Set<MiniGameResults.PlayerResult> group : entriesByRank) {
+                    if (score <= 0) break;
+
+                    for (MiniGameResults.PlayerResult playerResult : group) {
+                        scoreManager.addScore(playerResult.getRef(), score);
+                    }
+
+                    score--;
+                }
+            }
+            case TEAM -> {
+                if (entriesByRank.isEmpty()) break;
+
+                // members of the winning team get 3 points each
+                var winners = entriesByRank.getFirst();
+
+                for (var winner : winners) {
+                    scoreManager.addScore(winner.getRef(), 3);
+                }
+            }
+            case BOUNTY -> {}
+        }
+
     }
 
     public void unload() {
