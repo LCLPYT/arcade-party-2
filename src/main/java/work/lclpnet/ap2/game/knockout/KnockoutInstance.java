@@ -20,14 +20,11 @@ import org.jetbrains.annotations.NotNull;
 import work.lclpnet.ap2.api.actor.ActorSpawnedCallback;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
-import work.lclpnet.ap2.base.ApConstants;
-import work.lclpnet.ap2.base.resource.ApResources;
 import work.lclpnet.ap2.game.knockout.util.ImpactDetector;
 import work.lclpnet.ap2.impl.actor.GravityFieldActor;
 import work.lclpnet.ap2.impl.game.EliminationGameInstance;
 import work.lclpnet.ap2.impl.util.collision.ChunkedCollisionDetector;
 import work.lclpnet.ap2.impl.util.collision.PlayerMovementObserver;
-import work.lclpnet.ap2.impl.util.debug.DebugController;
 import work.lclpnet.ap2.impl.util.world.CombatIdleManager;
 import work.lclpnet.ap2.impl.util.world.DestroyStageManager;
 import work.lclpnet.kibu.access.VelocityModifier;
@@ -120,13 +117,9 @@ public class KnockoutInstance extends EliminationGameInstance {
         int delaySeconds = crumble.getDelaySeconds();
         scheduler.timeout(this::beginCrumble, Ticks.seconds(delaySeconds));
 
-        var debugController = new DebugController();
+        var debugController = commons().debugController();
         impactDetector = new ImpactDetector(participants, debugController, 0.1);
         destroyStageManager = new DestroyStageManager(getWorld());
-
-        if (ApConstants.DEBUG) {
-            debugController.init(ApResources.getInstance(), getWorld());
-        }
 
         impactDetector.enable(scheduler);
         impactDetector.onImpact().register(this::onImpact);

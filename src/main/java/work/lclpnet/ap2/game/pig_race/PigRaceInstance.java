@@ -208,7 +208,7 @@ public class PigRaceInstance extends FFAGameInstance {
         // add the goal as last checkpoint
         checkpoints.add(goal);
 
-        checkpointManager = new CheckpointManager(checkpoints);
+        checkpointManager = new CheckpointManager(checkpoints, commons().debugController());
         checkpointManager.init(collisionDetector, movementObserver, getWorld());
 
         CheckpointHelper.notifyWhenReached(checkpointManager, gameHandle.getTranslations());

@@ -3,16 +3,11 @@ package work.lclpnet.ap2.game.maze_scape.setup;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.decoration.DisplayEntity;
-import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
-import net.minecraft.util.math.AffineTransformation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3i;
 import org.jetbrains.annotations.Nullable;
-import org.joml.Matrix4f;
 import work.lclpnet.ap2.api.util.model.Model;
 import work.lclpnet.ap2.api.util.model.ModelManager;
 import work.lclpnet.ap2.game.maze_scape.gen.Node;
@@ -23,7 +18,6 @@ import work.lclpnet.ap2.impl.util.debug.DebugController;
 import work.lclpnet.ap2.impl.util.math.MathUtil;
 import work.lclpnet.ap2.impl.util.model.Models;
 import work.lclpnet.ap2.impl.util.model.TemplateModel;
-import work.lclpnet.kibu.access.entity.DisplayEntityAccess;
 
 import java.util.*;
 
@@ -31,19 +25,18 @@ import static java.lang.Math.abs;
 
 public class MSDebugController {
 
-    private final DebugController parent = new DebugController();
+    private final DebugController parent;
     private @Nullable Model spawnMarker = null, childMarker = null, passageMarker = null;
-    private @Nullable ServerWorld world = null;
+
+    public MSDebugController(DebugController parent) {
+        this.parent = parent;
+    }
 
     public DebugController parent() {
         return parent;
     }
 
-    public void init(ModelManager modelManager, ServerWorld world) {
-        parent.init(modelManager, world);
-
-        this.world = world;
-
+    public void init(ModelManager modelManager) {
         spawnMarker = modelManager.getModel(Models.CROSS).orElseThrow();
         Model arrow = modelManager.getModel(Models.ARROW).orElseThrow();
         childMarker = arrow;
@@ -55,27 +48,14 @@ public class MSDebugController {
 
         if (pos == null) return;
 
-        if (spawnMarker != null) {
-            Object3d marker = spawnMarker.createInstance();
-            marker.position.set(pos.x, pos.y, pos.z);
-            marker.scale.set(0.75);
+        parent.renderer().ifPresent(renderer -> {
+            if (spawnMarker != null) {
+                renderer.model(spawnMarker, pos, 0.75);
+            }
 
-            parent.renderer().ifPresent(renderer -> renderer.display(marker));
-        }
-
-        var display = new DisplayEntity.TextDisplayEntity(EntityType.TEXT_DISPLAY, world);
-        display.setPosition(pos.add(0, 0.2, 0));
-
-        var text = Text.literal(oriented.piece().name() + " r" + oriented.rotation());
-        DisplayEntityAccess.setText(display, text);
-
-        DisplayEntityAccess.setBillboardMode(display, DisplayEntity.BillboardMode.CENTER);
-        DisplayEntityAccess.setBackground(display, 0);
-        DisplayEntityAccess.setTransformation(display, new AffineTransformation(new Matrix4f().scale(0.3f)));
-
-        if (world != null) {
-            world.spawnEntity(display);
-        }
+            var text = Text.literal(oriented.piece().name() + " r" + oriented.rotation());
+            renderer.text(pos.add(0, 0.2, 0), text, 0.3f);
+        });
     }
 
     public void visualizeGraphEdges(OrientedStructurePiece oriented) {

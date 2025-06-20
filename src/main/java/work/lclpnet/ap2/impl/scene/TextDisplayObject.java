@@ -10,6 +10,7 @@ import org.jetbrains.annotations.Nullable;
 public class TextDisplayObject extends DisplayEntityObject<DisplayEntity.TextDisplayEntity> {
 
     private Text text;
+    private int background = 1073741824;
 
     public TextDisplayObject(Text text) {
         this.text = text;
@@ -25,6 +26,7 @@ public class TextDisplayObject extends DisplayEntityObject<DisplayEntity.TextDis
         super.configure(display);
 
         display.setText(text);
+        display.setBackground(background);
     }
 
     @Override
@@ -39,5 +41,10 @@ public class TextDisplayObject extends DisplayEntityObject<DisplayEntity.TextDis
     public void setText(Text text) {
         this.text = text;
         entityRef.optional().ifPresent(display -> display.setText(text));
+    }
+
+    public void setBackground(int background) {
+        this.background = background;
+        entityRef.optional().ifPresent(display -> display.setBackground(background));
     }
 }

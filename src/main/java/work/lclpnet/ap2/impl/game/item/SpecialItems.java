@@ -27,8 +27,6 @@ import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.util.world.BlockPredicate;
-import work.lclpnet.ap2.base.ApConstants;
-import work.lclpnet.ap2.base.resource.ApResources;
 import work.lclpnet.ap2.base.util.IconMaker;
 import work.lclpnet.ap2.impl.ds.WeightedList;
 import work.lclpnet.ap2.impl.util.debug.DebugController;
@@ -421,18 +419,17 @@ public class SpecialItems implements SpecialItemContext {
         }, 20);
     }
 
-    public static SpecialItems create(MiniGameHandle gameHandle, GameMap map, ServerWorld world, Random random, Consumer<SpecialItemRegistrar> config) {
+    public static SpecialItems create(MiniGameHandle gameHandle, GameMap map, ServerWorld world, Random random,
+                                      DebugController debugController, Consumer<SpecialItemRegistrar> config) {
+
         var validSpawn = BlockPredicate.and(gameHandle.getWorldBorderManager().getWorldBorder()::contains, new WalkableBlockPredicate(world));
 
-        return create(gameHandle, map, world, random, validSpawn, config);
+        return create(gameHandle, map, world, random, validSpawn, debugController, config);
     }
 
-    public static SpecialItems create(MiniGameHandle gameHandle, GameMap map, ServerWorld world, Random random, BlockPredicate validSpawn, Consumer<SpecialItemRegistrar> config) {
-        var debugController = new DebugController();
-
-        if (ApConstants.DEBUG) {
-            debugController.init(ApResources.getInstance(), world);
-        }
+    public static SpecialItems create(MiniGameHandle gameHandle, GameMap map, ServerWorld world, Random random,
+                                      BlockPredicate validSpawn, DebugController debugController,
+                                      Consumer<SpecialItemRegistrar> config) {
 
         var positions = new SpecialItemPositions(validSpawn, debugController);
         var registry = new SpecialItemRegistry();

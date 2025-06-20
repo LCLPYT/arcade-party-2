@@ -18,6 +18,7 @@ import org.json.JSONArray;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.impl.game.EliminationGameInstance;
 import work.lclpnet.ap2.impl.map.MapUtil;
+import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.ItemHelper;
 import work.lclpnet.ap2.impl.util.SoundHelper;
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
@@ -30,7 +31,7 @@ import java.util.Objects;
 public class SpleefInstance extends EliminationGameInstance {
 
     private static final int WORLD_BORDER_DELAY = Ticks.seconds(40);
-    private static final int WORLD_BORDER_TIME = Ticks.seconds(20);
+    private static final int WORLD_BORDER_TIME = Ticks.seconds(30);
 
     public SpleefInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
@@ -72,7 +73,7 @@ public class SpleefInstance extends EliminationGameInstance {
         BlockState air = Blocks.AIR.getDefaultState();
 
         JSONArray areaJson = Objects.requireNonNull(getMap().getProperty("snow-area"), "Snow area undefined");
-        var box = MapUtil.readBox(areaJson);
+        BlockBox box = MapUtil.readBox(areaJson);
 
         for (BlockPos pos : BlockPos.iterate(box.first(), box.second())) {
             if (world.getBlockState(pos).isOf(Blocks.SNOW_BLOCK)) {

@@ -11,8 +11,6 @@ import net.minecraft.util.math.Vec3d;
 import work.lclpnet.ap2.api.util.Collider;
 import work.lclpnet.ap2.api.util.CollisionDetector;
 import work.lclpnet.ap2.api.util.collision.MovementObserver;
-import work.lclpnet.ap2.base.ApConstants;
-import work.lclpnet.ap2.base.resource.ApResources;
 import work.lclpnet.ap2.impl.util.debug.DebugController;
 import work.lclpnet.ap2.impl.util.math.MathUtil;
 
@@ -27,12 +25,13 @@ public class CheckpointManager {
     private final Object2IntMap<Checkpoint> checkpointIndices;
     private final Map<UUID, Checkpoint> playerCheckpoints = new HashMap<>();
     private final List<Listener> listeners = new ArrayList<>();
-    private DebugController debugController;
+    private final DebugController debugController;
 
-    public CheckpointManager(List<Checkpoint> checkpoints) {
+    public CheckpointManager(List<Checkpoint> checkpoints, DebugController debugController) {
         if (checkpoints.isEmpty()) throw new IllegalStateException("Checkpoints must not be empty");
         this.checkpoints = Collections.unmodifiableList(checkpoints);
         this.checkpointIndices = new Object2IntOpenHashMap<>(checkpoints.size());
+        this.debugController = debugController;
 
         for (int i = 0, size = checkpoints.size(); i < size; i++) {
             Checkpoint checkpoint = checkpoints.get(i);
@@ -70,11 +69,7 @@ public class CheckpointManager {
             movementObserver.whenEntering(bounds, player -> onEnterCheckpoint(player, index));
         }
 
-        debugController = new DebugController();
-
-        if (!ApConstants.DEBUG || !DEBUG_CHECKPOINTS) return;
-
-        debugController.init(ApResources.getInstance(), world);
+        if (!DEBUG_CHECKPOINTS) return;
 
         debugController.renderer().ifPresent(renderer -> {
             for (Checkpoint checkpoint : checkpoints) {
