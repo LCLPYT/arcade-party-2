@@ -12,8 +12,9 @@ import java.util.UUID;
 
 public class MovementTracker {
 
+    // last tracked position will be MIN_TRACK_DISTANCE * MAX_POSITIONS blocks away
     private static final double MIN_TRACK_DISTANCE = 3.0;
-    private static final int MAX_POSITIONS = 10;
+    private static final int MAX_POSITIONS = 5;
     private final Map<UUID, Entry> entries = new HashMap<>();
     private final BlockBox goal;
 
