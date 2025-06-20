@@ -22,7 +22,8 @@ import work.lclpnet.ap2.api.map.MapBootstrap;
 import work.lclpnet.ap2.api.map.MapBootstrapFunction;
 import work.lclpnet.ap2.game.splashy_dropper.data.SdGenerator;
 import work.lclpnet.ap2.impl.game.FFAGameInstance;
-import work.lclpnet.ap2.impl.game.data.ScoreTimeDataContainer;
+import work.lclpnet.ap2.impl.game.data.DataContainers;
+import work.lclpnet.ap2.impl.game.data.IntDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.map.ServerThreadMapBootstrap;
 import work.lclpnet.ap2.impl.util.collision.GroundDetector;
@@ -48,7 +49,7 @@ import static net.minecraft.util.Formatting.YELLOW;
 public class SplashyDropperInstance extends FFAGameInstance implements MapBootstrapFunction {
 
     private static final int MIN_DURATION_SECONDS = 50, MAX_DURATION_SECONDS = 75;
-    private final ScoreTimeDataContainer<ServerPlayerEntity, PlayerRef> data = new ScoreTimeDataContainer<>(PlayerRef::create);
+    private final IntDataContainer<ServerPlayerEntity, PlayerRef> data;
     private final Random random = new Random();
     private final List<BlockPos> blocksBelow = new ArrayList<>();
     private final SimpleMovementBlocker movementBlocker;
@@ -58,6 +59,8 @@ public class SplashyDropperInstance extends FFAGameInstance implements MapBootst
 
     public SplashyDropperInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
+
+        data = DataContainers.finaleCompatibleScoreContainer(gameHandle, PlayerRef::create);
 
         movementBlocker = new SimpleMovementBlocker(gameHandle.getScheduler());
         movementBlocker.setModifySpeedAttribute(false);

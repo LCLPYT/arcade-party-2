@@ -6,12 +6,10 @@ import it.unimi.dsi.fastutil.objects.Object2LongMap;
 import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
 import org.jetbrains.annotations.NotNull;
 import work.lclpnet.ap2.api.event.IntScoreEvent;
-import work.lclpnet.ap2.api.event.IntScoreEventSource;
 import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.game.data.DataEntry;
 import work.lclpnet.ap2.api.game.data.SubjectRef;
 import work.lclpnet.ap2.api.game.data.SubjectRefFactory;
-import work.lclpnet.ap2.api.game.sink.IntDataSink;
 import work.lclpnet.ap2.impl.game.data.entry.ScoreDataEntry;
 import work.lclpnet.ap2.impl.game.data.entry.ScoreTimeDataEntry;
 import work.lclpnet.ap2.impl.game.data.entry.ScoreView;
@@ -26,7 +24,7 @@ import static java.util.Comparator.comparingLong;
  * but the order in which the scores who reached is saved.
  * In case two subjects have the same score, the subject who reached the score first is ranked higher.
  */
-public class ScoreTimeDataContainer<T, Ref extends SubjectRef> extends BaseDataContainer<T, Ref> implements IntScoreEventSource<T>, IntDataSink<T> {
+public class ScoreTimeDataContainer<T, Ref extends SubjectRef> extends BaseDataContainer<T, Ref> implements IntDataContainer<T, Ref> {
 
     private final Object2IntMap<Ref> score = new Object2IntOpenHashMap<>();
     private final Object2LongMap<Ref> lastTransaction = new Object2LongOpenHashMap<>();

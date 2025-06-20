@@ -13,7 +13,7 @@ public class EggventureMiniGame implements MiniGame {
 
     @Override
     public boolean canBeFinale(GameStartContext context) {
-        return false;
+        return true;
     }
 
     @Override

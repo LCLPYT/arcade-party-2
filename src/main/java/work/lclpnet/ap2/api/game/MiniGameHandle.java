@@ -84,4 +84,6 @@ public interface MiniGameHandle {
     void whenDone(Runnable action);
 
     void complete(MiniGameResults results);
+
+    boolean isFinale();
 }

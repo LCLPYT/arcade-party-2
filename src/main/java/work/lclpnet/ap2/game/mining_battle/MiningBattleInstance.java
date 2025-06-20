@@ -19,7 +19,8 @@ import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.map.MapBootstrap;
 import work.lclpnet.ap2.api.map.MapBootstrapFunction;
 import work.lclpnet.ap2.impl.game.FFAGameInstance;
-import work.lclpnet.ap2.impl.game.data.ScoreTimeDataContainer;
+import work.lclpnet.ap2.impl.game.data.DataContainers;
+import work.lclpnet.ap2.impl.game.data.IntDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.map.ServerThreadMapBootstrap;
@@ -39,7 +40,7 @@ import java.util.Set;
 public class MiningBattleInstance extends FFAGameInstance implements MapBootstrapFunction {
 
     private static final int DURATION_SECONDS = 60;
-    private final ScoreTimeDataContainer<ServerPlayerEntity, PlayerRef> data = new ScoreTimeDataContainer<>(PlayerRef::create);
+    private final IntDataContainer<ServerPlayerEntity, PlayerRef> data;
     private final MiningBattleOre ore;
     private final Set<BlockState> material = new HashSet<>();
     private BlockBox box = null;
@@ -48,6 +49,8 @@ public class MiningBattleInstance extends FFAGameInstance implements MapBootstra
         super(gameHandle);
 
         this.ore = new MiningBattleOre(new Random(), gameHandle, this::onGainPoints, this::canBeMined);
+
+        data = DataContainers.finaleCompatibleScoreContainer(gameHandle, PlayerRef::create);
 
         useSurvivalMode();
     }

@@ -31,9 +31,11 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.GameRules;
 import org.json.JSONArray;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
+import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.core.type.ApVariantHolder;
 import work.lclpnet.ap2.impl.game.FFAGameInstance;
-import work.lclpnet.ap2.impl.game.data.ScoreTimeDataContainer;
+import work.lclpnet.ap2.impl.game.data.DataContainers;
+import work.lclpnet.ap2.impl.game.data.IntDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.BlockBox;
@@ -62,7 +64,7 @@ public class ChickenShooterInstance extends FFAGameInstance implements Runnable 
     private static final int MAX_DURATION = 60;
     private final Random random = new Random();
     private final int durationSeconds = MIN_DURATION + random.nextInt(MAX_DURATION - MIN_DURATION + 1);
-    private final ScoreTimeDataContainer<ServerPlayerEntity, PlayerRef> data = new ScoreTimeDataContainer<>(PlayerRef::create);
+    private final IntDataContainer<ServerPlayerEntity, PlayerRef> data;
     private final Set<ChickenEntity> chickenSet = new HashSet<>();
     private BlockBox chickenBox = null;
     private int despawnHeight = 0;
@@ -71,10 +73,12 @@ public class ChickenShooterInstance extends FFAGameInstance implements Runnable 
 
     public ChickenShooterInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
+
+        data = DataContainers.finaleCompatibleScoreContainer(gameHandle, PlayerRef::create);
     }
 
     @Override
-    protected ScoreTimeDataContainer<ServerPlayerEntity, PlayerRef> getData() {
+    protected DataContainer<ServerPlayerEntity, PlayerRef> getData() {
         return data;
     }
 
