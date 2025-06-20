@@ -26,6 +26,8 @@ public class DebugController {
     private volatile StopWatchImpl stopWatch = null;
 
     public synchronized void init(ModelManager modelManager, ServerWorld world) {
+        destroy();
+
         scene = new Scene(new ServerWorldMountContext(world));
         renderer = new DebugRenderer(scene, modelManager, this::groupObject);
         namedObjects = new HashMap<>();

@@ -58,8 +58,8 @@ public class MazeScapeInstance extends EliminationGameInstance implements MapBoo
 
     private static final String FELL_INTO_PIT = "game.ap2.maze_scape.fell_into_pit";
 
-    private final MSDebugController debugController = new MSDebugController();
     private final Random random = new Random();
+    private MSDebugController debugController;
     private @Nullable MSStruct struct = null;
     private @Nullable MSManager manager = null;
 
@@ -73,8 +73,10 @@ public class MazeScapeInstance extends EliminationGameInstance implements MapBoo
 
         ModelManager modelManager = ApResources.getInstance();
 
+        debugController = new MSDebugController(commons(map, world).debugController());
+
         if (ApConstants.DEBUG) {
-            debugController.init(modelManager, world);
+            debugController.init(modelManager);
         }
 
         Logger logger = gameHandle.getLogger();

@@ -4,8 +4,10 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.decoration.DisplayEntity;
 import net.minecraft.text.Text;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
+import net.minecraft.util.math.Position;
 import net.minecraft.util.math.Vec3d;
 import work.lclpnet.ap2.api.util.model.Model;
 import work.lclpnet.ap2.api.util.model.ModelManager;
@@ -17,6 +19,7 @@ import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.model.Models;
 import work.lclpnet.ap2.impl.util.model.TemplateModel;
 
+import java.util.NoSuchElementException;
 import java.util.function.Consumer;
 
 public class DebugRenderer {
@@ -89,6 +92,11 @@ public class DebugRenderer {
         return obj;
     }
 
+    private Model crossModel(BlockState state) {
+        Model baseModel = modelManager.getModel(Models.CROSS).orElseThrow();
+        return TemplateModel.replace(baseModel, Blocks.RED_CONCRETE.getDefaultState(), state);
+    }
+
     private Model arrowModel(BlockState state) {
         Model baseModel = modelManager.getModel(Models.ARROW).orElseThrow();
         return TemplateModel.replace(baseModel, Blocks.LIME_CONCRETE.getDefaultState(), state);
@@ -159,23 +167,60 @@ public class DebugRenderer {
         return wrapper;
     }
 
-    public Object3d text(Vec3d pos, Text text) {
+    public TextDisplayObject text(Vec3d pos, Text text) {
         return text(pos, text, 0.25);
     }
 
-    public Object3d text(Vec3d pos, Text text, double scale) {
+    public TextDisplayObject text(double x, double y, double z, Text text) {
+        return text(x, y, z, text, 0.25);
+    }
+
+    public TextDisplayObject text(Vec3d pos, Text text, double scale) {
         return text(pos.getX(), pos.getY(), pos.getZ(), text, scale);
     }
 
-    public Object3d text(double x, double y, double z, Text text, double scale) {
+    public TextDisplayObject text(double x, double y, double z, Text text, double scale) {
         var display = new TextDisplayObject(text);
 
         display.position.set(x, y, z);
         display.scale.set(scale);
         display.setBillboardMode(DisplayEntity.BillboardMode.CENTER);
+        display.setBackground(0);
 
         display(display);
 
         return display;
+    }
+
+    public void quadStroke(double x1, double z1, double x2, double z2, double y, double thickness, BlockState color) {
+        line(x1, y, z2, x2, y, z2, thickness, color);
+        line(x1, y, z1, x2, y, z1, thickness, color);
+        line(x2, y, z2, x2, y, z1, thickness, color);
+        line(x1, y, z1, x1, y, z2, thickness, color);
+    }
+
+    public void model(Identifier modelId, double x, double y, double z, double scale) {
+        Model model = modelManager.getModel(modelId).orElseThrow(() -> new NoSuchElementException("Unknown model: " + modelId));
+
+        model(model, x, y, z, scale);
+    }
+
+    public void model(Model model, Position pos, double scale) {
+        model(model, pos.getX(), pos.getY(), pos.getZ(), scale);
+    }
+
+    public void model(Model model, double x, double y, double z, double scale) {
+        Object3d instance = model.createInstance();
+        instance.position.set(x, y, z);
+        instance.scale.set(scale);
+
+        display(instance);
+    }
+
+    public void labeledCross(double x, double y, double z, BlockState color, Text label) {
+        Model model = crossModel(color);
+
+        model(model, x, y, z, 0.75);
+        text(x, y + 0.2, z, label);
     }
 }

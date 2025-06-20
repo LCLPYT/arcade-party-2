@@ -8,6 +8,7 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Formatting;
 import net.minecraft.world.border.WorldBorder;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import work.lclpnet.ap2.api.base.Participants;
@@ -16,10 +17,14 @@ import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.sink.IntDataSink;
 import work.lclpnet.ap2.api.util.action.Action;
 import work.lclpnet.ap2.api.util.action.PlayerAction;
+import work.lclpnet.ap2.base.ApConstants;
+import work.lclpnet.ap2.base.resource.ApResources;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.GameRuleBuilder;
+import work.lclpnet.ap2.impl.util.debug.DebugController;
 import work.lclpnet.ap2.impl.util.math.Vec2i;
 import work.lclpnet.ap2.impl.util.movement.TickMovementDetector;
+import work.lclpnet.ap2.impl.util.world.WorldBorderRandomizer;
 import work.lclpnet.kibu.hook.HookFactory;
 import work.lclpnet.kibu.hook.util.PositionRotation;
 import work.lclpnet.kibu.scheduler.Ticks;
@@ -31,6 +36,7 @@ import work.lclpnet.lobby.game.util.BossBarTimer;
 
 import java.util.*;
 
+import static java.lang.Math.floor;
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
 public class GameCommons {
@@ -38,6 +44,7 @@ public class GameCommons {
     private final MiniGameHandle gameHandle;
     private final GameMap map;
     private final ServerWorld world;
+    private final DebugController debugController;
     private volatile Announcer announcer = null;
     private volatile List<PositionRotation> spawns = null;
     private volatile GameRuleBuilder gameRuleBuilder = null;
@@ -47,6 +54,16 @@ public class GameCommons {
         this.gameHandle = gameHandle;
         this.map = map;
         this.world = world;
+
+        debugController = new DebugController();
+
+        if (ApConstants.DEBUG) {
+            debugController.init(ApResources.getInstance(), world);
+        }
+    }
+
+    public @NotNull DebugController debugController() {
+        return debugController;
     }
 
     public Action<PlayerAction> whenBelowCriticalHeight() {
@@ -78,11 +95,11 @@ public class GameCommons {
         return Action.create(hook);
     }
 
-    public Action<Runnable> scheduleWorldBorderShrink(long delayTicks, long durationTicks) {
-        return scheduleWorldBorderShrink(delayTicks, durationTicks, 0);
+    public Action<Runnable> scheduleWorldBorderShrink(long delayTicks, long durationTicks, long finalDelayTicks) {
+        return scheduleWorldBorderShrink(delayTicks, durationTicks, finalDelayTicks, new Random());
     }
 
-    public Action<Runnable> scheduleWorldBorderShrink(long delayTicks, long durationTicks, long finalDelayTicks) {
+    public Action<Runnable> scheduleWorldBorderShrink(long delayTicks, long durationTicks, long finalDelayTicks, Random random) {
         TaskScheduler scheduler = gameHandle.getGameScheduler();
 
         var hook = HookFactory.createArrayBacked(Runnable.class, callbacks -> () -> {
@@ -95,7 +112,14 @@ public class GameCommons {
 
         scheduler.timeout(() -> {
             WorldBorder worldBorder = setupWorldBorder(config);
-            worldBorder.interpolateSize(worldBorder.getSize(), config.minRadius(), durationTicks * 50L);
+
+            if (config.randomCenter()) {
+                var randomizer = new WorldBorderRandomizer(map, debugController);
+
+                randomizer.randomizeCenter(worldBorder, config, random);
+            }
+
+            worldBorder.interpolateSize(worldBorder.getSize(), config.minSize(), durationTicks * 50L);
 
             for (ServerPlayerEntity player : PlayerLookup.world(world)) {
                 player.playSoundToPlayer(SoundEvents.ENTITY_WITHER_DEATH, SoundCategory.HOSTILE, 1, 0);
@@ -121,13 +145,13 @@ public class GameCommons {
             centerZ = center.z();
         }
 
-        int minRadius = 5;
+        int minSize = 5;
 
         if (wbConfig.has("min-size")) {
-            minRadius = wbConfig.getInt("min-size");
+            minSize = wbConfig.getInt("min-size");
 
-            if (minRadius % 2 == 0) {
-                minRadius += 1;
+            if (minSize % 2 == 0) {
+                minSize += 1;
             }
         }
 
@@ -137,7 +161,10 @@ public class GameCommons {
             maxRadius += 1;
         }
 
-        return new WorldBorderConfig(centerX, centerZ, maxRadius, minRadius);
+        boolean randomCenter = wbConfig.optBoolean("random-center", false);
+        boolean alignRandomCenter = wbConfig.optBoolean("align-random-center", true);
+
+        return new WorldBorderConfig(centerX, centerZ, maxRadius, minSize, randomCenter, alignRandomCenter);
     }
 
     public WorldBorder setupWorldBorder(WorldBorderConfig config) {
@@ -264,5 +291,11 @@ public class GameCommons {
         healthDisplay.setup(gameHandle.getHookRegistrar());
     }
 
-    public record WorldBorderConfig(int centerX, int centerZ, int maxRadius, int minRadius) {}
+    public record WorldBorderConfig(int centerX, int centerZ, int maxRadius, int minSize, boolean randomCenter,
+                                    boolean alignRandomCenter) {
+
+        public double align(double v) {
+            return alignRandomCenter ? floor(v) + 0.5 : v;
+        }
+    }
 }

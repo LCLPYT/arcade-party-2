@@ -41,7 +41,6 @@ import work.lclpnet.ap2.impl.util.checkpoint.CheckpointHelper;
 import work.lclpnet.ap2.impl.util.checkpoint.CheckpointManager;
 import work.lclpnet.ap2.impl.util.collision.ChunkedCollisionDetector;
 import work.lclpnet.ap2.impl.util.collision.PlayerMovementObserver;
-import work.lclpnet.ap2.impl.util.debug.DebugController;
 import work.lclpnet.ap2.impl.util.handler.Visibility;
 import work.lclpnet.ap2.impl.util.handler.VisibilityHandler;
 import work.lclpnet.ap2.impl.util.handler.VisibilityManager;
@@ -79,7 +78,6 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
     private final CollisionDetector collisionDetector = new ChunkedCollisionDetector();
     private final PlayerMovementObserver movementObserver;
     private final List<BlockPos> gateBlocks = new ArrayList<>();
-    private final DebugController debugController = new DebugController();
     private JumpAndRun jumpAndRun;
     private CheckpointManager checkpoints;
     private DynamicTranslatedPlayerBossBar bossBar;
@@ -323,7 +321,7 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
             checkpoints.destroy();
         }
 
-        checkpoints = new CheckpointManager(segment.checkpoints());
+        checkpoints = new CheckpointManager(segment.checkpoints(), commons().debugController());
         checkpoints.init(collisionDetector, movementObserver, world);
         CheckpointHelper.notifyWhenReached(checkpoints, gameHandle.getTranslations());
 
@@ -340,6 +338,8 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
 
     private void debugAssistance() {
         if (!ApConstants.DEBUG || !DEBUG_ASSISTANCE) return;
+
+        var debugController = commons().debugController();
 
         debugController.destroy();
         debugController.init(ApResources.getInstance(), getWorld());

@@ -118,7 +118,7 @@ public class BowSpleefInstance extends EliminationGameInstance {
 
         commons().whenBelowCriticalHeight().then(this::eliminate);
 
-        specialItems = SpecialItems.create(gameHandle, getMap(), getWorld(), random, r -> r
+        specialItems = SpecialItems.create(gameHandle, getMap(), getWorld(), random, commons().debugController(), r -> r
                 .register(new TripleShotItem(), 0.55f)
                 .register(new BurstShotItem(), 0.4f)
                 .register(new ExplodeAmmoItem(impactHook), 0.3f)

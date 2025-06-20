@@ -39,7 +39,6 @@ import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.map.MapBootstrap;
 import work.lclpnet.ap2.api.util.heads.PlayerHead;
 import work.lclpnet.ap2.base.ApConstants;
-import work.lclpnet.ap2.base.resource.ApResources;
 import work.lclpnet.ap2.impl.game.FFAGameInstance;
 import work.lclpnet.ap2.impl.game.data.ScoreTimeDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
@@ -49,7 +48,6 @@ import work.lclpnet.ap2.impl.util.ApRegistries;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.ColorUtil;
 import work.lclpnet.ap2.impl.util.RayCastUtil;
-import work.lclpnet.ap2.impl.util.debug.DebugController;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.ap2.impl.util.world.entity.DynamicEntityManager;
 import work.lclpnet.ap2.impl.util.world.stage.BlockShape;
@@ -106,13 +104,11 @@ public class EggventureInstance extends FFAGameInstance implements MapBootstrap 
             throw new IllegalStateException("There are no egg variants defined");
         }
 
-        var debugController = new DebugController();
-
         if (ApConstants.DEBUG) {
-            debugController.init(ApResources.getInstance(), world);
-
             gameHandle.getLogger().info("There are {} possible egg positions and {} should be placed", positions.size(), eggs);
         }
+
+        var debugController = commons(map, world).debugController();
 
         for (int i = 0; i < eggs && !positions.isEmpty(); i++) {
             BlockPos pos = positions.remove(random.nextInt(positions.size()));
