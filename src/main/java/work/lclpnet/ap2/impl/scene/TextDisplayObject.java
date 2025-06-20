@@ -26,6 +26,7 @@ public class TextDisplayObject extends DisplayEntityObject<DisplayEntity.TextDis
         super.configure(display);
 
         display.setText(text);
+        display.setBackground(background);
     }
 
     @Override
