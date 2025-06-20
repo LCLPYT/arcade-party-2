@@ -16,7 +16,7 @@ import static java.lang.Math.max;
 
 public class WorldBorderRandomizer {
 
-    private static final boolean DEBUG_RANGES = true;
+    private static final boolean DEBUG_RANGES = false;
 
     private final GameMap map;
     private final DebugController debugController;

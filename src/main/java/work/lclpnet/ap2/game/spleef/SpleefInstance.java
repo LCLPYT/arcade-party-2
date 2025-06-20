@@ -30,8 +30,8 @@ import java.util.Objects;
 
 public class SpleefInstance extends EliminationGameInstance {
 
-    private static final int WORLD_BORDER_DELAY = Ticks.seconds(10);
-    private static final int WORLD_BORDER_TIME = Ticks.seconds(20);
+    private static final int WORLD_BORDER_DELAY = Ticks.seconds(40);
+    private static final int WORLD_BORDER_TIME = Ticks.seconds(30);
 
     public SpleefInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
