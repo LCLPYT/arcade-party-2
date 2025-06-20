@@ -10,6 +10,8 @@ import work.lclpnet.ap2.base.ArcadeParty;
 
 public class CozyCampfireMiniGame implements MiniGame {
 
+    private static final boolean DEBUG_PLAYER_CONSTRAINT = false;
+
     @Override
     public Identifier getId() {
         return ArcadeParty.identifier("cozy_campfire");
@@ -38,6 +40,11 @@ public class CozyCampfireMiniGame implements MiniGame {
     @Override
     public boolean canBePlayed(GameStartContext context) {
         int count = context.getParticipantCount();
+
+        if (DEBUG_PLAYER_CONSTRAINT) {
+            return count >= 2;
+        }
+
         return count == 2 || count >= 4;
     }
 
