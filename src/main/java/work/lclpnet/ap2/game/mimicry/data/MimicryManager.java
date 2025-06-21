@@ -4,6 +4,7 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
+import lombok.Setter;
 import net.minecraft.server.PlayerManager;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -20,6 +21,7 @@ import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 
 import java.util.*;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 public class MimicryManager {
 
@@ -28,21 +30,22 @@ public class MimicryManager {
     private final BlockBox buttons;
     private final Random random;
     private final ServerWorld world;
-    private final Runnable allCompleteCallback;
+    private final Consumer<ServerPlayerEntity> completeCallback;
     private final IntList sequence = new IntArrayList();
     private final Object2IntMap<UUID> progress = new Object2IntOpenHashMap<>();
     private final float[] buttonPitches;
+    @Setter
     private boolean replay = false;
     private final Map<UUID, TaskHandle> deactivation = new HashMap<>();
 
     public MimicryManager(MiniGameHandle gameHandle, Map<UUID, MimicryRoom> rooms, BlockBox buttons, Random random,
-                          ServerWorld world, Runnable allCompleteCallback) {
+                          ServerWorld world, Consumer<ServerPlayerEntity> completeCallback) {
         this.rooms = rooms;
         this.gameHandle = gameHandle;
         this.buttons = buttons;
         this.random = random;
         this.world = world;
-        this.allCompleteCallback = allCompleteCallback;
+        this.completeCallback = completeCallback;
 
         int buttonCount = buttonCount();
         this.buttonPitches = new float[buttonCount];
@@ -156,13 +159,7 @@ public class MimicryManager {
         player.sendMessage(msg);
         player.playSoundToPlayer(SoundEvents.ENTITY_PLAYER_LEVELUP, SoundCategory.PLAYERS, 0.5f, 1.5f);
 
-        if (getPlayersToEliminate().isEmpty()) {
-            allCompleteCallback.run();
-        }
-    }
-
-    public void setReplay(boolean replay) {
-        this.replay = replay;
+        completeCallback.accept(player);
     }
 
     public List<ServerPlayerEntity> getPlayersToEliminate() {
@@ -179,15 +176,5 @@ public class MimicryManager {
 
     public float getButtonPitch(int button) {
         return buttonPitches[button % buttonPitches.length];
-    }
-
-    public int getCompletedCount(ServerPlayerEntity player) {
-        int len = sequenceLength();
-
-        if (progress.getOrDefault(player.getUuid(), 0) >= len) {
-            return len;
-        }
-
-        return len - 1;
     }
 }

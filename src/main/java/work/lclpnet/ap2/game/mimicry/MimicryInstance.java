@@ -1,5 +1,6 @@
 package work.lclpnet.ap2.game.mimicry;
 
+import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.registry.tag.BlockTags;
@@ -12,14 +13,20 @@ import net.minecraft.util.Formatting;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.GameMode;
 import net.minecraft.world.World;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
+import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.map.MapBootstrap;
 import work.lclpnet.ap2.game.mimicry.data.MimicryManager;
 import work.lclpnet.ap2.game.mimicry.data.MimicryRoom;
 import work.lclpnet.ap2.game.mimicry.data.SequencePlayer;
-import work.lclpnet.ap2.impl.game.EliminationGameInstance;
+import work.lclpnet.ap2.impl.game.FFAGameInstance;
+import work.lclpnet.ap2.impl.game.data.IntDataContainer;
+import work.lclpnet.ap2.impl.game.data.Ordering;
+import work.lclpnet.ap2.impl.game.data.ScoreDataContainer;
+import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.math.AffineIntMatrix;
@@ -31,10 +38,10 @@ import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.lobby.game.map.GameMap;
 import work.lclpnet.lobby.game.util.BossBarTimer;
 
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
-public class MimicryInstance extends EliminationGameInstance implements MapBootstrap {
+public class MimicryInstance extends FFAGameInstance implements MapBootstrap {
 
     private static final int
             PREPARE_TICKS = 50,
@@ -43,6 +50,9 @@ public class MimicryInstance extends EliminationGameInstance implements MapBoots
             REPLAY_MAX_SECONDS = 30,
             NEXT_ROUND_DELAY_SECONDS = 4;
 
+    private final IntDataContainer<ServerPlayerEntity, PlayerRef> dataContainer = new ScoreDataContainer<>(PlayerRef::create, Ordering.DESCENDING, "game.ap2.mimicry.completed");
+    private final Set<UUID> toEliminate = new HashSet<>();
+
     private MimicryManager manager = null;
     private SequencePlayer sequencePlayer = null;
     private BossBarTimer timer = null;
@@ -50,8 +60,11 @@ public class MimicryInstance extends EliminationGameInstance implements MapBoots
 
     public MimicryInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
+    }
 
-        disableTeleportEliminated();
+    @Override
+    protected DataContainer<ServerPlayerEntity, PlayerRef> getData() {
+        return dataContainer;
     }
 
     @Override
@@ -74,7 +87,7 @@ public class MimicryInstance extends EliminationGameInstance implements MapBoots
                     var rooms = result.rooms();
                     Random random = new Random();
 
-                    manager = new MimicryManager(gameHandle, rooms, buttons, random, world, this::onAllCompleted);
+                    manager = new MimicryManager(gameHandle, rooms, buttons, random, world, this::onCompleted);
                 })
                 .exceptionally(throwable -> {
                     gameHandle.getLogger().error("Failed to create rooms", throwable);
@@ -98,70 +111,48 @@ public class MimicryInstance extends EliminationGameInstance implements MapBoots
         gameHandle.getHookRegistrar().registerHook(PlayerInteractionHooks.USE_BLOCK, this::onUseBlock);
     }
 
-    @Override
-    protected void onEliminated(ServerPlayerEntity player) {
-        double x = player.getX(), y = player.getY(), z = player.getZ();
-
-        ServerWorld world = getWorld();
-
-        world.playSound(null, x, y, z, SoundEvents.ENTITY_GENERIC_EXPLODE.value(), SoundCategory.PLAYERS, 1f, 0f);
-        world.spawnParticles(ParticleTypes.LAVA, x, y, z, 100, 0.5, 0.5, 0.5, 0.2);
-
-        putScoreDetail(player);
-    }
-
-    @Override
-    public void participantRemoved(ServerPlayerEntity player) {
-        Participants participants = gameHandle.getParticipants();
-
-        if (participants.count() == 1) {
-            participants.stream().findAny().ifPresent(this::putScoreDetail);
-        }
-
-        super.participantRemoved(player);
-    }
-
-    private void putScoreDetail(ServerPlayerEntity player) {
-        int count = manager.getCompletedCount(player);
-
-        var detail = gameHandle.getTranslations().translateText("game.ap2.mimicry.completed", count);
-        getData().add(player, detail);
-    }
-
     private ActionResult onUseBlock(PlayerEntity player, World world, Hand hand, BlockHitResult hitResult) {
         if (winManager.isGameOver()
-            || !(player instanceof ServerPlayerEntity serverPlayer)
-            || !gameHandle.getParticipants().isParticipating(serverPlayer)) {
+                || !(player instanceof ServerPlayerEntity serverPlayer)
+                || !gameHandle.getParticipants().isParticipating(serverPlayer)
+                || toEliminate.contains(player.getUuid())) {
             return ActionResult.PASS;
         }
 
         BlockPos pos = hitResult.getBlockPos();
 
-        if (world.getBlockState(pos).isIn(BlockTags.BUTTONS)) {
-            if (manager.onInputButton(serverPlayer, pos)) {
-                var msg = gameHandle.getTranslations().translateText(serverPlayer, "game.ap2.mimicry.wrong_button")
-                        .formatted(Formatting.RED);
+        if (!world.getBlockState(pos).isIn(BlockTags.BUTTONS)) {
+            return ActionResult.PASS;
+        }
 
-                serverPlayer.sendMessage(msg);
-
-                eliminate(serverPlayer);
-            }
-
+        if (!manager.onInputButton(serverPlayer, pos)) {
             return ActionResult.FAIL;
         }
 
-        return ActionResult.PASS;
+        var msg = gameHandle.getTranslations().translateText(serverPlayer, "game.ap2.mimicry.wrong_button")
+                .formatted(Formatting.RED);
+
+        serverPlayer.sendMessage(msg);
+
+        eliminate(serverPlayer);
+
+        return ActionResult.FAIL;
     }
 
     private void nextSequence() {
-        if (timer != null) {
-            timerTransaction++;
-            timer.stop();
-        }
+        removeTimer();
 
         commons().announcer().announceSubtitle("game.ap2.mimicry.attention");
 
         gameHandle.getGameScheduler().timeout(this::playSequence, PREPARE_TICKS);
+    }
+
+    private void removeTimer() {
+        if (timer == null) return;
+
+        timerTransaction++;
+        timer.stop();
+        timer = null;
     }
 
     private void playSequence() {
@@ -192,9 +183,7 @@ public class MimicryInstance extends EliminationGameInstance implements MapBoots
     }
 
     private void endReplay() {
-        timer = null;
-
-        eliminateAll(manager.getPlayersToEliminate());
+        manager.getPlayersToEliminate().forEach(this::eliminate);
 
         onRoundOver();
 
@@ -204,21 +193,69 @@ public class MimicryInstance extends EliminationGameInstance implements MapBoots
     }
 
     private void onRoundOver() {
+        removeTimer();
+
         manager.setReplay(false);
+
+        // remove all players who were marked as eliminated this round
+        Participants participants = gameHandle.getParticipants();
+
+        toEliminate.stream()
+                .map(participants::getParticipant)
+                .flatMap(Optional::stream)
+                .forEach(participants::remove);
+
+        toEliminate.clear();
     }
 
     private int calcReplaySeconds() {
         return Math.max(REPLAY_MIN_SECONDS, Math.min(REPLAY_MAX_SECONDS, manager.sequenceLength() * REPLAY_SECONDS_PER_NOTE));
     }
 
-    private void onAllCompleted() {
-        if (timer != null) {
-            timerTransaction++;
-            timer.stop();
-        }
+    private void onCompleted(ServerPlayerEntity player) {
+        commons().addScore(player, 1, dataContainer);
 
+        checkRoundComplete();
+    }
+
+    private void onAllCompleted() {
         onRoundOver();
 
         gameHandle.getGameScheduler().timeout(this::nextSequence, 30);
+    }
+
+    private void eliminate(ServerPlayerEntity player) {
+        if (toEliminate.contains(player.getUuid()) || !gameHandle.getParticipants().isParticipating(player)) return;
+
+        double x = player.getX(), y = player.getY(), z = player.getZ();
+
+        ServerWorld world = getWorld();
+
+        world.playSound(null, x, y, z, SoundEvents.ENTITY_GENERIC_EXPLODE.value(), SoundCategory.PLAYERS, 1f, 0f);
+        world.spawnParticles(ParticleTypes.LAVA, x, y, z, 100, 0.5, 0.5, 0.5, 0.2);
+
+        gameHandle.getDeathMessages().getDeathMessage(player, null)
+                .sendTo(PlayerLookup.all(gameHandle.getServer()));
+
+        player.changeGameMode(GameMode.SPECTATOR);
+
+        toEliminate.add(player.getUuid());
+
+        checkRoundComplete();
+    }
+
+    private void checkRoundComplete() {
+        int notCompleted = manager.getPlayersToEliminate().size();
+
+        if (notCompleted == 0) {
+            onAllCompleted();
+            return;
+        }
+
+        int remainingReplay = notCompleted - toEliminate.size();
+
+        if (remainingReplay <= 0) {
+            endReplay();
+        }
     }
 }
