@@ -7,7 +7,8 @@ import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.map.MapBootstrap;
 import work.lclpnet.ap2.impl.game.FFAGameInstance;
-import work.lclpnet.ap2.impl.game.data.ScoreTimeDataContainer;
+import work.lclpnet.ap2.impl.game.data.DataContainers;
+import work.lclpnet.ap2.impl.game.data.IntDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.lobby.game.map.GameMap;
@@ -20,12 +21,14 @@ public class FineTuningInstance extends FFAGameInstance implements MapBootstrap 
 
     static final int MELODY_COUNT = 3;
     static final int REPLAY_COOLDOWN = Ticks.seconds(5);
-    private final ScoreTimeDataContainer<ServerPlayerEntity, PlayerRef> data = new ScoreTimeDataContainer<>(PlayerRef::create);
+    private final IntDataContainer<ServerPlayerEntity, PlayerRef> data;
     private FineTuningSetup setup;
     private TuningPhase tuningPhase;
 
     public FineTuningInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
+
+        data = DataContainers.finaleCompatibleScoreContainer(gameHandle, PlayerRef::create);
 
         useSurvivalMode();  // survival is needed to left-click note blocks
     }

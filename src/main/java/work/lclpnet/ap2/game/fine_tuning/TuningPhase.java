@@ -1,5 +1,6 @@
 package work.lclpnet.ap2.game.fine_tuning;
 
+import lombok.Getter;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -28,7 +29,7 @@ import work.lclpnet.ap2.api.util.heads.PlayerHead;
 import work.lclpnet.ap2.base.ApConstants;
 import work.lclpnet.ap2.game.fine_tuning.melody.*;
 import work.lclpnet.ap2.impl.game.GameCommons;
-import work.lclpnet.ap2.impl.game.data.ScoreTimeDataContainer;
+import work.lclpnet.ap2.impl.game.data.IntDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.util.ApRegistries;
 import work.lclpnet.ap2.impl.util.BookUtil;
@@ -56,7 +57,7 @@ class TuningPhase {
 
     private final MiniGameHandle gameHandle;
     private final Map<UUID, FineTuningRoom> rooms;
-    private final ScoreTimeDataContainer<ServerPlayerEntity, PlayerRef> data;
+    private final IntDataContainer<ServerPlayerEntity, PlayerRef> data;
     private final Runnable onEnd;
     private final GameCommons commons;
     private final ServerWorld world;
@@ -65,13 +66,14 @@ class TuningPhase {
     private final Map<UUID, TaskHandle> replaying = new HashMap<>();
     private final LinkedHashSet<UUID> lastInteracted = new LinkedHashSet<>();
     private final HookContainer hooks = new HookContainer();
+    @Getter
     private final MelodyRecords records = new MelodyRecords();
     private boolean playersCanInteract = false;
     private Melody melody = null;
     private int melodyNumber = 0;
 
     public TuningPhase(MiniGameHandle gameHandle, Map<UUID, FineTuningRoom> rooms,
-                       ScoreTimeDataContainer<ServerPlayerEntity, PlayerRef> data, Runnable onEnd, GameCommons commons,
+                       IntDataContainer<ServerPlayerEntity, PlayerRef> data, Runnable onEnd, GameCommons commons,
                        ServerWorld world) {
         this.gameHandle = gameHandle;
         this.rooms = rooms;
@@ -403,10 +405,6 @@ class TuningPhase {
 
     public void unload() {
         hooks.unload();
-    }
-
-    public MelodyRecords getRecords() {
-        return records;
     }
 
     public void giveBooks() {
