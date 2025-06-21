@@ -3,9 +3,7 @@ package work.lclpnet.ap2.impl.game.data;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.event.IntScoreEvent;
-import work.lclpnet.ap2.api.event.IntScoreEventSource;
 import work.lclpnet.ap2.api.game.data.*;
-import work.lclpnet.ap2.api.game.sink.IntDataSink;
 import work.lclpnet.ap2.impl.game.data.entry.ScoreDataEntry;
 import work.lclpnet.ap2.impl.game.data.entry.ScoreView;
 
@@ -19,7 +17,7 @@ import java.util.stream.Stream;
  * The scores can still be updated after a subject was added.
  * The subject with the highest score is the winner.
  */
-public class ScoreDataContainer<T, Ref extends SubjectRef> extends BaseDataContainer<T, Ref> implements IntScoreEventSource<T>, IntDataSink<T> {
+public class ScoreDataContainer<T, Ref extends SubjectRef> extends BaseDataContainer<T, Ref> implements IntDataContainer<T, Ref>  {
 
     private final Map<Ref, Integer> scoreMap = new HashMap<>();
     private final List<IntScoreEvent<T>> listeners = new ArrayList<>();

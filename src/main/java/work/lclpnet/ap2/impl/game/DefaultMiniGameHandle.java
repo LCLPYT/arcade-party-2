@@ -338,4 +338,9 @@ public class DefaultMiniGameHandle implements MiniGameHandle, WorldBorderManager
             worldBorder.removeListener(worldBorderListener);
         }
     }
+
+    @Override
+    public boolean isFinale() {
+        return args.playerManager().isFinale();
+    }
 }

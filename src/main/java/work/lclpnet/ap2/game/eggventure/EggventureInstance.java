@@ -40,7 +40,8 @@ import work.lclpnet.ap2.api.map.MapBootstrap;
 import work.lclpnet.ap2.api.util.heads.PlayerHead;
 import work.lclpnet.ap2.base.ApConstants;
 import work.lclpnet.ap2.impl.game.FFAGameInstance;
-import work.lclpnet.ap2.impl.game.data.ScoreTimeDataContainer;
+import work.lclpnet.ap2.impl.game.data.DataContainers;
+import work.lclpnet.ap2.impl.game.data.IntDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.tags.PlayerHeadTags;
@@ -71,11 +72,13 @@ public class EggventureInstance extends FFAGameInstance implements MapBootstrap 
     private static final boolean DEBUG_EGG_POSITIONS = false;
     private static final MapCodec<Boolean> NBT_CODEC = Codec.BOOL.fieldOf("easter_egg");
 
-    private final ScoreTimeDataContainer<ServerPlayerEntity, PlayerRef> data = new ScoreTimeDataContainer<>(PlayerRef::create);
+    private final IntDataContainer<ServerPlayerEntity, PlayerRef> data;
     private final Random random = new Random();
 
     public EggventureInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
+
+        data = DataContainers.finaleCompatibleScoreContainer(gameHandle, PlayerRef::create);
     }
 
     @Override

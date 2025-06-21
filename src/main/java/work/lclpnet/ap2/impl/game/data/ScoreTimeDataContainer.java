@@ -5,13 +5,12 @@ import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2LongMap;
 import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.event.IntScoreEvent;
-import work.lclpnet.ap2.api.event.IntScoreEventSource;
 import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.game.data.DataEntry;
 import work.lclpnet.ap2.api.game.data.SubjectRef;
 import work.lclpnet.ap2.api.game.data.SubjectRefFactory;
-import work.lclpnet.ap2.api.game.sink.IntDataSink;
 import work.lclpnet.ap2.impl.game.data.entry.ScoreDataEntry;
 import work.lclpnet.ap2.impl.game.data.entry.ScoreTimeDataEntry;
 import work.lclpnet.ap2.impl.game.data.entry.ScoreView;
@@ -26,16 +25,23 @@ import static java.util.Comparator.comparingLong;
  * but the order in which the scores who reached is saved.
  * In case two subjects have the same score, the subject who reached the score first is ranked higher.
  */
-public class ScoreTimeDataContainer<T, Ref extends SubjectRef> extends BaseDataContainer<T, Ref> implements IntScoreEventSource<T>, IntDataSink<T> {
+public class ScoreTimeDataContainer<T, Ref extends SubjectRef> extends BaseDataContainer<T, Ref> implements IntDataContainer<T, Ref> {
 
     private final Object2IntMap<Ref> score = new Object2IntOpenHashMap<>();
     private final Object2LongMap<Ref> lastTransaction = new Object2LongOpenHashMap<>();
     private final List<IntScoreEvent<T>> listeners = new ArrayList<>();
+    private final @Nullable String detailKey;
     /** An incrementing transaction counter. Used to determine who got to which score first. */
     private long transaction = 0;
 
     public ScoreTimeDataContainer(SubjectRefFactory<T, Ref> refs) {
+        this(refs, null);
+    }
+
+    public ScoreTimeDataContainer(SubjectRefFactory<T, Ref> refs, @Nullable String detailKey) {
         super(refs);
+
+        this.detailKey = detailKey;
     }
 
     public void setScore(T subject, int score) {
@@ -78,10 +84,10 @@ public class ScoreTimeDataContainer<T, Ref extends SubjectRef> extends BaseDataC
         int ranking = getTimedRanking(ref);
 
         if (ranking == 0) {
-            return Optional.of(new ScoreDataEntry<>(ref, score));
+            return Optional.of(new ScoreDataEntry<>(ref, score, detailKey));
         }
 
-        return Optional.of(new ScoreTimeDataEntry<>(ref, score, ranking));
+        return Optional.of(new ScoreTimeDataEntry<>(ref, score, detailKey, ranking));
     }
 
     @Override
@@ -92,10 +98,10 @@ public class ScoreTimeDataContainer<T, Ref extends SubjectRef> extends BaseDataC
                     int ranking = getTimedRanking(ref);
 
                     if (ranking == 0) {
-                        return new ScoreDataEntry<>(ref, e.getIntValue());
+                        return new ScoreDataEntry<>(ref, e.getIntValue(), detailKey);
                     }
 
-                    return new ScoreTimeDataEntry<>(ref, e.getIntValue(), ranking);
+                    return new ScoreTimeDataEntry<>(ref, e.getIntValue(), detailKey, ranking);
                 })
                 .sorted(Comparator.comparingInt(ScoreView::score).reversed().thenComparingInt(x -> {
                     if (x instanceof ScoreTimeDataEntry<?> scoreTime) {
