@@ -1,6 +1,5 @@
 package work.lclpnet.ap2.game.musical_minecart;
 
-import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.Nullable;
@@ -10,6 +9,8 @@ import work.lclpnet.ap2.base.ArcadeParty;
 import work.lclpnet.ap2.impl.ds.IndexedSet;
 import work.lclpnet.ap2.impl.util.music.MapSongCache;
 import work.lclpnet.kibu.translate.Translations;
+import work.lclpnet.kibu.translate.text.RootText;
+import work.lclpnet.kibu.translate.text.TranslatedText;
 import work.lclpnet.notica.api.data.SongMeta;
 
 import java.util.*;
@@ -62,7 +63,7 @@ public class MMSongs {
     }
 
     @Nullable
-    public Text getSongTitle(ServerPlayerEntity player, SongInfo info, SongMeta meta) {
+    public TranslatedText getSongTitle(SongInfo info, SongMeta meta) {
         String name = info.optMeta().map(SongInfo.Meta::title).orElseGet(meta::name);
 
         if (name.isBlank()) {
@@ -72,7 +73,7 @@ public class MMSongs {
         String from = info.from();
 
         if (!from.isBlank()) {
-            return translations.translateText(player, "game.ap2.musical_minecart.format.from",
+            return translations.translateText("game.ap2.musical_minecart.format.from",
                     styled(name, YELLOW), styled(from, AQUA)).formatted(GREEN);
         }
 
@@ -83,15 +84,17 @@ public class MMSongs {
         boolean hasOrigAuthor = !originalAuthor.isBlank();
 
         if (hasAuthor && hasOrigAuthor) {
-            return translations.translateText(player, "game.ap2.musical_minecart.format.by_original",
+            return translations.translateText("game.ap2.musical_minecart.format.by_original",
                     styled(name, YELLOW), styled(author, AQUA), styled(originalAuthor, DARK_AQUA)).formatted(GREEN);
         }
 
         if (!hasAuthor && !hasOrigAuthor) {
-            return Text.literal(name).formatted(YELLOW);
+            var text = RootText.create().append(Text.literal(name).formatted(YELLOW));
+
+            return TranslatedText.create(s -> text, translations::getLanguage);
         }
 
-        return translations.translateText(player, "game.ap2.musical_minecart.format.by",
+        return translations.translateText("game.ap2.musical_minecart.format.by",
                 styled(name, YELLOW), styled(hasAuthor ? author : originalAuthor, AQUA)).formatted(GREEN);
     }
 }

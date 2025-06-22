@@ -154,6 +154,7 @@
   "game.ap2.musical_minecart.format.from": "%s aus %s",
   "game.ap2.musical_minecart.format.by": "%s von %s",
   "game.ap2.musical_minecart.format.by_original": "%s von %s [%s]",
+  "game.ap2.musical_minecart.now_playing": "Jetzt läuft: %s",
   "game.ap2.guess_it": "Ratespiel",
   "game.ap2.guess_it.description": "Du bekommst verschiedene Schätz- oder Wissensfragen. Je näher du an der Antwort liegst, desto mehr Punkte erhältst du.",
   "game.ap2.guess_it.round": "Runde",

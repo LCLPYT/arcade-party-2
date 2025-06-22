@@ -11,6 +11,7 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.Nullable;
@@ -27,6 +28,7 @@ import work.lclpnet.ap2.impl.util.SoundHelper;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.kibu.translate.Translations;
+import work.lclpnet.kibu.translate.text.TranslatedText;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 import work.lclpnet.lobby.game.map.GameMap;
 import work.lclpnet.notica.Notica;
@@ -38,8 +40,6 @@ import work.lclpnet.notica.api.SongHandle;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
-
-import static net.minecraft.util.Formatting.GREEN;
 
 public class MusicalMinecartInstance extends EliminationGameInstance {
 
@@ -115,14 +115,14 @@ public class MusicalMinecartInstance extends EliminationGameInstance {
         long delay = MIN_DELAY_TICKS + random.nextInt(MAX_DELAY_TICKS - MIN_DELAY_TICKS + 1);
         gameHandle.getGameScheduler().timeout(this::stopMusic, delay);
 
-        for (ServerPlayerEntity player : players) {
-            Text title = songManager.getSongTitle(player, config.info(), song.song().metaData());
+        TranslatedText title = songManager.getSongTitle(config.info(), song.song().metaData());
 
-            if (title == null) return;  // can return here, as the title is only null when the song has no name
+        if (title == null) return;
 
-            Text msg = Text.literal("🎵 ").append(title).formatted(GREEN);
-            player.sendMessage(msg, true);
-        }
+        gameHandle.getTranslations()
+                .translateText("game.ap2.musical_minecart.now_playing", title)
+                .formatted(Formatting.GRAY)
+                .sendTo(players);
     }
 
     private void stopMusic() {
