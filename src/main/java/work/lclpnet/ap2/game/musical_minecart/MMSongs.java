@@ -1,5 +1,7 @@
 package work.lclpnet.ap2.game.musical_minecart;
 
+import net.minecraft.text.ClickEvent;
+import net.minecraft.text.HoverEvent;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.Nullable;
@@ -7,12 +9,15 @@ import org.slf4j.Logger;
 import work.lclpnet.ap2.api.util.music.*;
 import work.lclpnet.ap2.base.ArcadeParty;
 import work.lclpnet.ap2.impl.ds.IndexedSet;
+import work.lclpnet.ap2.impl.util.UriUtil;
 import work.lclpnet.ap2.impl.util.music.MapSongCache;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.kibu.translate.text.RootText;
+import work.lclpnet.kibu.translate.text.TextTranslatable;
 import work.lclpnet.kibu.translate.text.TranslatedText;
 import work.lclpnet.notica.api.data.SongMeta;
 
+import java.net.URI;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
@@ -63,7 +68,29 @@ public class MMSongs {
     }
 
     @Nullable
-    public TranslatedText getSongTitle(SongInfo info, SongMeta meta) {
+    public TextTranslatable getSongTitle(SongInfo info, SongMeta meta) {
+        TranslatedText title = createSongTitle(info, meta);
+
+        if (title == null) return null;
+
+        String license = info.license();
+
+        if (license.isBlank()) {
+            return title;
+        }
+
+        return language -> title.translateTo(language).append(Text.literal(" ⚖").formatted(LIGHT_PURPLE).styled(style -> {
+            List<URI> uris = UriUtil.findUris(license, 1);
+
+            if (!uris.isEmpty()) {
+                style = style.withClickEvent(new ClickEvent.OpenUrl(uris.getLast()));
+            }
+
+            return style.withHoverEvent(new HoverEvent.ShowText(Text.literal(license).formatted(GRAY)));
+        }));
+    }
+
+    private @Nullable TranslatedText createSongTitle(SongInfo info, SongMeta meta) {
         String name = info.optMeta().map(SongInfo.Meta::title).orElseGet(meta::name);
 
         if (name.isBlank()) {

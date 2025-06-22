@@ -28,7 +28,7 @@ import work.lclpnet.ap2.impl.util.SoundHelper;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.kibu.translate.Translations;
-import work.lclpnet.kibu.translate.text.TranslatedText;
+import work.lclpnet.kibu.translate.text.TextTranslatable;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 import work.lclpnet.lobby.game.map.GameMap;
 import work.lclpnet.notica.Notica;
@@ -115,7 +115,7 @@ public class MusicalMinecartInstance extends EliminationGameInstance {
         long delay = MIN_DELAY_TICKS + random.nextInt(MAX_DELAY_TICKS - MIN_DELAY_TICKS + 1);
         gameHandle.getGameScheduler().timeout(this::stopMusic, delay);
 
-        TranslatedText title = songManager.getSongTitle(config.info(), song.song().metaData());
+        TextTranslatable title = songManager.getSongTitle(config.info(), song.song().metaData());
 
         if (title == null) return;
 
