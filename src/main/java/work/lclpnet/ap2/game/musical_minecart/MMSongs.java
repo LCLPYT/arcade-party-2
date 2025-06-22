@@ -63,7 +63,7 @@ public class MMSongs {
 
     @Nullable
     public Text getSongTitle(ServerPlayerEntity player, SongInfo info, SongMeta meta) {
-        String name = meta.name();
+        String name = info.optMeta().map(SongInfo.Meta::title).orElseGet(meta::name);
 
         if (name.isBlank()) {
             return null;
@@ -76,8 +76,8 @@ public class MMSongs {
                     styled(name, YELLOW), styled(from, AQUA)).formatted(GREEN);
         }
 
-        String originalAuthor = meta.originalAuthor();
-        String author = meta.author();
+        String originalAuthor = info.optMeta().map(SongInfo.Meta::originalBy).orElseGet(meta::originalAuthor);
+        String author = info.optMeta().map(SongInfo.Meta::author).orElseGet(meta::author);
 
         boolean hasAuthor = !author.isBlank();
         boolean hasOrigAuthor = !originalAuthor.isBlank();

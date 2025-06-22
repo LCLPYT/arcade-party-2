@@ -2,10 +2,7 @@ package work.lclpnet.ap2.impl.util.music;
 
 import net.minecraft.util.Identifier;
 import org.slf4j.Logger;
-import work.lclpnet.ap2.api.util.music.ConfiguredSong;
-import work.lclpnet.ap2.api.util.music.LoadableSong;
-import work.lclpnet.ap2.api.util.music.SongCache;
-import work.lclpnet.ap2.api.util.music.SongInfo;
+import work.lclpnet.ap2.api.util.music.*;
 import work.lclpnet.notica.api.CheckedSong;
 import work.lclpnet.notica.util.ServerSongLoader;
 
@@ -18,16 +15,14 @@ public class PathLoadableSong implements LoadableSong {
 
     private final Path path;
     private final Identifier id;
-    private final float volume;
-    private final int startTick;
+    private final PlaybackInfo playbackInfo;
     private final float weight;
     private final SongInfo info;
 
-    public PathLoadableSong(Path path, Identifier id, float volume, int startTick, float weight, SongInfo info) {
+    public PathLoadableSong(Path path, Identifier id, PlaybackInfo playbackInfo, float weight, SongInfo info) {
         this.path = path;
         this.id = id;
-        this.volume = volume;
-        this.startTick = startTick;
+        this.playbackInfo = playbackInfo;
         this.weight = weight;
         this.info = info;
     }
@@ -37,7 +32,7 @@ public class PathLoadableSong implements LoadableSong {
         CheckedSong cached = cache.getCachedSong(path);
 
         if (cached != null) {
-            return CompletableFuture.completedFuture(new ConfiguredSong(cached, volume, startTick, weight, info));
+            return CompletableFuture.completedFuture(new ConfiguredSong(cached, playbackInfo, info));
         }
 
         return CompletableFuture.supplyAsync(() -> {
@@ -52,7 +47,7 @@ public class PathLoadableSong implements LoadableSong {
 
             cache.cacheSong(path, song);
 
-            return new ConfiguredSong(song, volume, startTick, weight, info);
+            return new ConfiguredSong(song, playbackInfo, info);
         });
     }
 

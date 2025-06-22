@@ -18,6 +18,7 @@ import org.json.JSONArray;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.util.music.ConfiguredSong;
+import work.lclpnet.ap2.api.util.music.PlaybackInfo;
 import work.lclpnet.ap2.api.util.music.SongManager;
 import work.lclpnet.ap2.impl.game.EliminationGameInstance;
 import work.lclpnet.ap2.impl.map.MapUtil;
@@ -30,6 +31,8 @@ import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 import work.lclpnet.lobby.game.map.GameMap;
 import work.lclpnet.notica.Notica;
 import work.lclpnet.notica.api.CheckedSong;
+import work.lclpnet.notica.api.PlaybackOptions;
+import work.lclpnet.notica.api.PlaybackVariant;
 import work.lclpnet.notica.api.SongHandle;
 
 import java.util.HashSet;
@@ -103,9 +106,11 @@ public class MusicalMinecartInstance extends EliminationGameInstance {
         var players = PlayerLookup.all(server);
 
         CheckedSong song = config.song();
+        PlaybackInfo playback = config.playbackInfo();
+        var playbackOptions = new PlaybackOptions(playback.volume() * MUSIC_VOLUME, PlaybackVariant.STREAMED, playback.stereoMode());
 
         Notica notica = Notica.getInstance(server);
-        songHandle = notica.playSong(song, config.volume() * MUSIC_VOLUME, config.startTick(), players);
+        songHandle = notica.playSong(song, playbackOptions, playback.startTick(), players);
 
         long delay = MIN_DELAY_TICKS + random.nextInt(MAX_DELAY_TICKS - MIN_DELAY_TICKS + 1);
         gameHandle.getGameScheduler().timeout(this::stopMusic, delay);

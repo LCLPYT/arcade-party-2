@@ -33,6 +33,7 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Objects;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
@@ -172,7 +173,7 @@ public class ApBootstrap {
 
         Path songsDir = cacheDirectory.resolve("songs");
 
-        SongManagerImpl songManager = new SongManagerImpl(songsDir);
+        SongManagerImpl songManager = new SongManagerImpl(songsDir, logger);
         MutableDataManager dataManager = new MutableDataManager();
 
         var mapTask = loadAp2Maps(mapManager);
@@ -221,16 +222,18 @@ public class ApBootstrap {
     @NotNull
     public CompletableFuture<Void> loadSongs(SongManagerImpl songManager, Ap2Config config) {
         return runAsync(() -> {
-            int i = 0;
-
-            for (var entry : config.songSources.entries()) {
+            for (var entry : config.songSources.entrySet()) {
                 Identifier tag = entry.getKey();
-                URI uri = entry.getValue();
+                List<URI> uris = entry.getValue();
 
-                try {
-                    songManager.loadBundleSync(tag, uri, i++, logger);
-                } catch (IOException e) {
-                    logger.error("Failed to load song bundle with tag {} from {}", tag, uri, e);
+                for (int i = 0; i < uris.size(); i++) {
+                    URI uri = uris.get(i);
+
+                    try {
+                        songManager.loadBundleSync(tag, uri, i);
+                    } catch (IOException e) {
+                        logger.error("Failed to load song bundle with tag {} from {}", tag, uri, e);
+                    }
                 }
             }
         }).exceptionally(err -> {
