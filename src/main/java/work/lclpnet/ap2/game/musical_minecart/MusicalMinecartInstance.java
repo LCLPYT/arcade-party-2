@@ -43,13 +43,19 @@ import java.util.Set;
 
 public class MusicalMinecartInstance extends EliminationGameInstance {
 
+    private static final boolean
+            DEBUG_INFINITE_SONGS = false,
+            DEBUG_FULL_DELAY = false;
+
     private static final int
             MIN_DELAY_TICKS = Ticks.seconds(10),
             MAX_DELAY_TICKS = Ticks.seconds(20),  // do not increase; song timings are adjusted to max 20
             ELIMINATION_DELAY_TICKS = Ticks.seconds(9),
             NEXT_SONG_DELAY_TICKS = Ticks.seconds(2),
             PARTICLE_AMOUNT = 2;
+
     private static final float MUSIC_VOLUME = 0.75f;
+
     private final MMSongs songManager;
     private final Random random = new Random();
     private BlockBox bounds = null, particleBox = null;
@@ -97,6 +103,8 @@ public class MusicalMinecartInstance extends EliminationGameInstance {
             if (err == null) return;
 
             gameHandle.getLogger().error("Failed to load next song", err);
+
+            getWinManagerAccess().draw();
         });
     }
 
@@ -112,7 +120,14 @@ public class MusicalMinecartInstance extends EliminationGameInstance {
         Notica notica = Notica.getInstance(server);
         songHandle = notica.playSong(song, playbackOptions, playback.startTick(), players);
 
-        long delay = MIN_DELAY_TICKS + random.nextInt(MAX_DELAY_TICKS - MIN_DELAY_TICKS + 1);
+        long delay;
+
+        if (DEBUG_FULL_DELAY) {
+            delay = MAX_DELAY_TICKS;
+        } else {
+            delay = MIN_DELAY_TICKS + random.nextInt(MAX_DELAY_TICKS - MIN_DELAY_TICKS + 1);
+        }
+
         gameHandle.getGameScheduler().timeout(this::stopMusic, delay);
 
         TextTranslatable title = songManager.getSongTitle(config.info(), song.song().metaData());
@@ -129,6 +144,11 @@ public class MusicalMinecartInstance extends EliminationGameInstance {
         if (songHandle != null) {
             songHandle.stop();
             songHandle = null;
+        }
+
+        if (DEBUG_INFINITE_SONGS) {
+            nextSong();
+            return;
         }
 
         spawnMinecarts();
