@@ -185,12 +185,20 @@ public class GameCommons {
     }
 
     public BossBarTimer createTimer(Object subject, int durationSeconds, BossBar.Color color) {
+        return createTimerTicks(subject, Ticks.seconds(durationSeconds), color);
+    }
+
+    public BossBarTimer createTimerTicks(Object subject, int durationTicks) {
+        return createTimerTicks(subject, durationTicks, BossBar.Color.RED);
+    }
+
+    public BossBarTimer createTimerTicks(Object subject, int durationTicks, BossBar.Color color) {
         Translations translations = gameHandle.getTranslations();
 
         BossBarTimer timer = BossBarTimer.builder(translations, subject)
                 .withAlertSound(false)
                 .withColor(color)
-                .withDurationTicks(Ticks.seconds(durationSeconds))
+                .withDurationTicks(durationTicks)
                 .build();
 
         timer.addPlayers(PlayerLookup.all(gameHandle.getServer()));

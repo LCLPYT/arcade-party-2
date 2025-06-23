@@ -45,7 +45,8 @@ public class MusicalMinecartInstance extends EliminationGameInstance {
 
     private static final boolean
             DEBUG_INFINITE_SONGS = false,
-            DEBUG_FULL_DELAY = false;
+            DEBUG_FULL_DELAY = false,
+            DEBUG_INFO = false;
 
     private static final int
             MIN_DELAY_TICKS = Ticks.seconds(10),
@@ -120,7 +121,7 @@ public class MusicalMinecartInstance extends EliminationGameInstance {
         Notica notica = Notica.getInstance(server);
         songHandle = notica.playSong(song, playbackOptions, playback.startTick(), players);
 
-        long delay;
+        int delay;
 
         if (DEBUG_FULL_DELAY) {
             delay = MAX_DELAY_TICKS;
@@ -128,7 +129,14 @@ public class MusicalMinecartInstance extends EliminationGameInstance {
             delay = MIN_DELAY_TICKS + random.nextInt(MAX_DELAY_TICKS - MIN_DELAY_TICKS + 1);
         }
 
-        gameHandle.getGameScheduler().timeout(this::stopMusic, delay);
+        if (DEBUG_INFO) {
+            int total = songManager.getSongs().size();
+            int done = total - songManager.getQueue().size();
+
+            commons().createTimerTicks("Queue %s / %s".formatted(done, total), delay).whenDone(this::stopMusic);
+        } else {
+            gameHandle.getGameScheduler().timeout(this::stopMusic, delay);
+        }
 
         TextTranslatable title = songManager.getSongTitle(config.info(), song.song().metaData());
 
@@ -238,5 +246,10 @@ public class MusicalMinecartInstance extends EliminationGameInstance {
             world.spawnParticles(ParticleTypes.NOTE, pos.getX(), pos.getY(), pos.getZ(), 10,
                     3, 2, 3, 1);
         }
+    }
+
+    @Override
+    public int getMaxDurationTicks() {
+        return DEBUG_INFINITE_SONGS ? -1 : super.getMaxDurationTicks();
     }
 }

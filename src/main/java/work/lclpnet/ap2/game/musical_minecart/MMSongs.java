@@ -124,4 +124,12 @@ public class MMSongs {
         return translations.translateText("game.ap2.musical_minecart.format.by",
                 styled(name, YELLOW), styled(hasAuthor ? author : originalAuthor, AQUA)).formatted(GREEN);
     }
+
+    public List<WeightedSong> getQueue() {
+        return Collections.unmodifiableList(queue);
+    }
+
+    public Set<WeightedSong> getSongs() {
+        return Collections.unmodifiableSet(songs);
+    }
 }
