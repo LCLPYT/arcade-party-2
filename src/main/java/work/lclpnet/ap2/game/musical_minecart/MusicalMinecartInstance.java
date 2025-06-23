@@ -3,8 +3,12 @@ package work.lclpnet.ap2.game.musical_minecart;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.passive.FrogEntity;
+import net.minecraft.entity.passive.FrogVariant;
 import net.minecraft.entity.vehicle.MinecartEntity;
 import net.minecraft.particle.ParticleTypes;
+import net.minecraft.registry.RegistryKeys;
+import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -20,6 +24,7 @@ import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.util.music.ConfiguredSong;
 import work.lclpnet.ap2.api.util.music.PlaybackInfo;
 import work.lclpnet.ap2.api.util.music.SongManager;
+import work.lclpnet.ap2.core.type.ApVariantHolder;
 import work.lclpnet.ap2.game.musical_minecart.cmd.SetSongCommand;
 import work.lclpnet.ap2.game.musical_minecart.cmd.SkipSongCommand;
 import work.lclpnet.ap2.impl.game.EliminationGameInstance;
@@ -48,7 +53,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static java.lang.Math.max;
+import static java.lang.Math.*;
 import static net.minecraft.util.Formatting.GREEN;
 import static work.lclpnet.ap2.impl.util.TranslationUtil.transformText;
 
@@ -64,9 +69,12 @@ public class MusicalMinecartInstance extends EliminationGameInstance {
             MAX_DELAY_TICKS = Ticks.seconds(20),  // do not increase; song timings are adjusted to max 20
             ELIMINATION_DELAY_TICKS = Ticks.seconds(9),
             NEXT_SONG_DELAY_TICKS = Ticks.seconds(2),
-            PARTICLE_AMOUNT = 2;
+            PARTICLE_AMOUNT = 2,
+            MAX_DECOYS = 4;
 
-    private static final float MUSIC_VOLUME = 0.75f;
+    private static final float
+            MUSIC_VOLUME = 0.75f,
+            DECOY_CHANCE = 0.15f;
 
     private final MMSongs songManager;
     private final Random random = new Random();
@@ -232,25 +240,67 @@ public class MusicalMinecartInstance extends EliminationGameInstance {
     }
 
     private void spawnMinecarts() {
+        double p = random.nextDouble();
+        int decoys = (int) floor(log(p) / log(DECOY_CHANCE));
+
+        decoys = max(0, min(MAX_DECOYS, decoys));
+
         int count = gameHandle.getParticipants().count() - 1;
+
+        if (count <= 0) {
+            decoys = 0;
+        }
+
+        int total = count + decoys;
         var pos = new BlockPos.Mutable();
 
         ServerWorld world = getWorld();
 
-        for (int i = 0; i < count; i++) {
+        for (int i = 0; i < total; i++) {
             bounds.randomBlockPos(pos, random);
 
-            MinecartEntity minecart = new MinecartEntity(EntityType.MINECART, world);
+            var minecart = new MinecartEntity(EntityType.MINECART, world);
             minecart.setPos(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
             minecart.setInvulnerable(true);
 
             world.spawnEntity(minecart);
             minecartEntities.add(minecart);
+
+            if (i >= count) {
+                createDecoyEntity(world, minecart);
+            }
         }
     }
 
+    @SuppressWarnings("unchecked")
+    private void createDecoyEntity(ServerWorld world, MinecartEntity minecart) {
+        var frog = new FrogEntity(EntityType.FROG, world);
+        frog.setPosition(minecart.getPos());
+
+        var frogTypes = world.getRegistryManager().getOrThrow(RegistryKeys.FROG_VARIANT).getIndexedEntries();
+
+        if (frogTypes.size() <= 0) return;
+
+        var variant = frogTypes.get(random.nextInt(frogTypes.size()));
+
+        if (variant != null) {
+            ((ApVariantHolder<RegistryEntry<FrogVariant>>) frog).ap2$setVariant(variant);
+        }
+
+        world.spawnEntity(frog);
+        frog.startRiding(minecart);
+    }
+
     private void removeMinecarts() {
-        minecartEntities.forEach(Entity::discard);
+        for (MinecartEntity minecart : minecartEntities) {
+            // remove all non-player passengers
+            minecart.getPassengerList().stream()
+                    .filter(entity -> !(entity instanceof ServerPlayerEntity))
+                    .forEach(Entity::discard);
+
+            minecart.discard();
+        }
+
         minecartEntities.clear();
     }
 
