@@ -117,30 +117,46 @@ public class MMSongs {
             return null;
         }
 
-        String from = info.from();
-
-        if (!from.isBlank()) {
-            return translations.translateText("game.ap2.musical_minecart.format.from",
-                    styled(name, YELLOW), styled(from, AQUA)).formatted(GREEN);
-        }
-
         String originalAuthor = info.optMeta().map(SongInfo.Meta::originalBy).orElseGet(meta::originalAuthor);
         String author = info.optMeta().map(SongInfo.Meta::author).orElseGet(meta::author);
 
         boolean hasAuthor = !author.isBlank();
         boolean hasOrigAuthor = !originalAuthor.isBlank();
 
+        String from = info.from();
+
+        if (!from.isBlank()) {
+            if (hasAuthor && hasOrigAuthor) {
+                // Song "X" from "Y" by "Z" (original by "W")
+                return translations.translateText("game.ap2.musical_minecart.format.from_by_original",
+                        styled(name, YELLOW), styled(from, AQUA), styled(author, AQUA), styled(originalAuthor, DARK_AQUA)).formatted(GREEN);
+            }
+
+            if (!hasAuthor && !hasOrigAuthor) {
+                // Song "X" from "Y"
+                return translations.translateText("game.ap2.musical_minecart.format.from",
+                        styled(name, YELLOW), styled(from, AQUA)).formatted(GREEN);
+            }
+
+            // Song "X" from "Y" by "Z"
+            return translations.translateText("game.ap2.musical_minecart.format.from_by",
+                    styled(name, YELLOW), styled(from, AQUA), styled(hasAuthor ? author : originalAuthor, AQUA)).formatted(GREEN);
+        }
+
         if (hasAuthor && hasOrigAuthor) {
+            // Song "X" by "Y" (original by "Z")
             return translations.translateText("game.ap2.musical_minecart.format.by_original",
                     styled(name, YELLOW), styled(author, AQUA), styled(originalAuthor, DARK_AQUA)).formatted(GREEN);
         }
 
         if (!hasAuthor && !hasOrigAuthor) {
+            // Song "X"
             var text = RootText.create().append(Text.literal(name).formatted(YELLOW));
 
             return TranslatedText.create(s -> text, translations::getLanguage);
         }
 
+        // Song "X" by "Y"
         return translations.translateText("game.ap2.musical_minecart.format.by",
                 styled(name, YELLOW), styled(hasAuthor ? author : originalAuthor, AQUA)).formatted(GREEN);
     }

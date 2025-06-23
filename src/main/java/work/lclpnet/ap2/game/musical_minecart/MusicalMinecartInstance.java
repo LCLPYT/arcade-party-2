@@ -11,7 +11,6 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.Nullable;
@@ -47,6 +46,9 @@ import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
+
+import static net.minecraft.util.Formatting.GREEN;
+import static work.lclpnet.ap2.impl.util.TranslationUtil.transformText;
 
 public class MusicalMinecartInstance extends EliminationGameInstance {
 
@@ -179,10 +181,14 @@ public class MusicalMinecartInstance extends EliminationGameInstance {
 
         if (title == null) return;
 
-        gameHandle.getTranslations()
-                .translateText("game.ap2.musical_minecart.now_playing", title)
-                .formatted(Formatting.GRAY)
-                .sendTo(players);
+
+        Translations translations = gameHandle.getTranslations();
+
+        transformText(
+                translations.translateText("game.ap2.musical_minecart.now_playing", title),
+                text -> Text.literal("🎵 ").append(text).formatted(GREEN), 
+                translations
+        ).sendTo(players);
     }
 
     private synchronized CompletableFuture<ConfiguredSong> loadNextSong() {
