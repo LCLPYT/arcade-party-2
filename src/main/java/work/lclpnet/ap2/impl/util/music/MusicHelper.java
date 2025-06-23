@@ -8,6 +8,8 @@ import work.lclpnet.ap2.api.util.music.SongCache;
 import work.lclpnet.ap2.api.util.music.SongWrapper;
 import work.lclpnet.ap2.api.util.music.WeightedSong;
 import work.lclpnet.notica.Notica;
+import work.lclpnet.notica.api.PlaybackOptions;
+import work.lclpnet.notica.api.PlaybackVariant;
 import work.lclpnet.notica.api.SongHandle;
 
 import java.util.Collection;
@@ -34,8 +36,10 @@ public class MusicHelper {
                 .thenAccept(config -> {
                     Notica notica = Notica.getInstance(server);
 
-                    float scaledVolume = volume * config.volume();
-                    SongHandle handle = notica.playSong(config.song(), scaledVolume, config.startTick(), players);
+                    var playback = config.playbackInfo();
+                    var playbackOptions = new PlaybackOptions(playback.volume() * volume, PlaybackVariant.STREAMED, playback.stereoMode());
+
+                    SongHandle handle = notica.playSong(config.song(), playbackOptions, playback.startTick(), players);
 
                     wrapper.setHandle(handle);
                 })

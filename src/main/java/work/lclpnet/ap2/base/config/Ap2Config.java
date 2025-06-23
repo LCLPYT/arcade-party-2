@@ -1,8 +1,6 @@
 package work.lclpnet.ap2.base.config;
 
-import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.SetMultimap;
 import net.minecraft.util.Identifier;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -14,13 +12,12 @@ import work.lclpnet.config.json.JsonConfigFactory;
 
 import java.net.URI;
 import java.nio.file.Path;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
 public class Ap2Config implements JsonConfig {
 
     public List<URI> mapsSource = List.of(URI.create("https://maps.lclpnet.work/release/"));
-    public SetMultimap<Identifier, URI> songSources = HashMultimap.create();
+    public Map<Identifier, List<URI>> songSources = new HashMap<>();
 
     public Ap2Config() {
         setDefaults();
@@ -41,7 +38,7 @@ public class Ap2Config implements JsonConfig {
 
                 List<URI> uris = readUriList(songSources, key);
 
-                this.songSources.putAll(tag, uris);
+                this.songSources.put(tag, uris);
             }
         }
 
@@ -50,19 +47,28 @@ public class Ap2Config implements JsonConfig {
 
     private void setDefaults() {
         // set defaults that cannot be set in the initializer
-        putDefaultSongSourceUrl(MMSongs.MUSICAL_MINECART_TAG, "https://lclpnet.work/dl/ap2-musical-minecart-songs");
-        putDefaultSongSourceUrl(PreparationActivity.ARCADE_PARTY_GAME_TAG, "https://lclpnet.work/dl/ap2-game-sounds");
+        putDefaultSongSourceUrl(MMSongs.MUSICAL_MINECART_TAG, List.of(
+                "https://lclpnet.work/dl/ap2-musical-minecart-pack1",
+                "https://lclpnet.work/dl/ap2-musical-minecart-pack2",
+                "https://lclpnet.work/dl/ap2-musical-minecart-pack3"
+        ));
+        putDefaultSongSourceUrl(PreparationActivity.ARCADE_PARTY_GAME_TAG, List.of("https://lclpnet.work/dl/ap2-game-sounds"));
     }
 
-    private void putDefaultSongSourceUrl(Identifier id, String sourceUrl) {
-        if (!songSources.containsKey(id) || songSources.get(id).isEmpty()) {
+    private void putDefaultSongSourceUrl(Identifier id, List<String> sourceUris) {
+        if (songSources.containsKey(id) && !songSources.get(id).isEmpty()) return;
+
+        List<URI> uris = new ArrayList<>(sourceUris.size());
+
+        for (String sourceUri : sourceUris) {
             try {
-                URI uri = URI.create(sourceUrl);
-                songSources.put(id, uri);
+                uris.add(URI.create(sourceUri));
             } catch (IllegalArgumentException err) {
                 ArcadeParty.logger.error("Failed to set default song source", err);
             }
         }
+
+        songSources.put(id, uris);
     }
 
     @Override

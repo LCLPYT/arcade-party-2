@@ -86,7 +86,11 @@ public class MiniGameActivity extends ComponentActivity {
         hooks.registerHook(EntityUsePortalCallback.HOOK, (entity, portal, pos) -> true);
 
         Scheduler scheduler = component(BuiltinComponents.SCHEDULER).scheduler();
-        scheduler.timeout(() -> DrawCommand.dispatchDraw(instance, handle), miniGame.getMaxDurationTicks());
+        int maxDurationTicks = instance.getMaxDurationTicks();
+
+        if (maxDurationTicks > 0) {
+            scheduler.timeout(() -> DrawCommand.dispatchDraw(instance, handle), maxDurationTicks);
+        }
     }
 
     @Override
