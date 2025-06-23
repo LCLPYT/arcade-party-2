@@ -31,6 +31,7 @@ import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.math.AffineIntMatrix;
 import work.lclpnet.ap2.impl.util.world.StackedRoomGenerator;
+import work.lclpnet.kibu.hook.ServerMessageHooks;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.kibu.mc.KibuBlockPos;
 import work.lclpnet.kibu.scheduler.Ticks;
@@ -100,6 +101,8 @@ public class MimicryInstance extends FFAGameInstance implements MapBootstrap {
         ServerWorld world = getWorld();
 
         manager.eachParticipant((player, room) -> room.teleport(player, world));
+
+        gameHandle.getHookRegistrar().registerHook(ServerMessageHooks.ALLOW_CHAT_MESSAGE, (message, sender, params) -> false);
     }
 
     @Override
