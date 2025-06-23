@@ -44,8 +44,9 @@ public class StructureFix {
 
             String id = blockEntity.getId();
 
-            if ("minecraft:sign".equals(id)) {
-                fixSign(structure, pos, blockEntity);
+            switch (id) {
+                case "minecraft:sign", "minecraft:hanging_sign" -> fixSign(structure, pos, blockEntity);
+                case null, default -> {}
             }
         }
     }
