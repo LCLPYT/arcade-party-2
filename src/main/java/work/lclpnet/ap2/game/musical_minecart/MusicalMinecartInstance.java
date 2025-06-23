@@ -67,7 +67,6 @@ public class MusicalMinecartInstance extends EliminationGameInstance {
     private static final int
             MIN_DELAY_TICKS = Ticks.seconds(10),
             MAX_DELAY_TICKS = Ticks.seconds(20),  // do not increase; song timings are adjusted to max 20
-            ELIMINATION_DELAY_TICKS = Ticks.seconds(9),
             NEXT_SONG_DELAY_TICKS = Ticks.seconds(2),
             PARTICLE_AMOUNT = 2,
             MAX_DECOYS = 4;
@@ -87,6 +86,7 @@ public class MusicalMinecartInstance extends EliminationGameInstance {
     private BossBarTimer timer = null;
     private TaskHandle taskHandle = null;
     private CompletableFuture<ConfiguredSong> nextSong = null;
+    private int eliminationDelayTicks = Ticks.seconds(9);
 
     public MusicalMinecartInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
@@ -105,6 +105,12 @@ public class MusicalMinecartInstance extends EliminationGameInstance {
 
         if (map.hasProperty("particle", JSONArray.class)) {
             particleBox = MapUtil.readBox(map.requireProperty("particle"));
+        }
+
+        var eliminationDelayTicks = map.getProperty("elimination-delay-ticks");
+
+        if (eliminationDelayTicks instanceof Number n) {
+            this.eliminationDelayTicks = max(0, n.intValue());
         }
 
         songManager.init();
@@ -236,7 +242,7 @@ public class MusicalMinecartInstance extends EliminationGameInstance {
             player.sendMessage(msg, true);
         }
 
-        taskHandle = gameHandle.getGameScheduler().timeout(this::eliminatePlayers, ELIMINATION_DELAY_TICKS);
+        taskHandle = gameHandle.getGameScheduler().timeout(this::eliminatePlayers, eliminationDelayTicks);
     }
 
     private void spawnMinecarts() {
