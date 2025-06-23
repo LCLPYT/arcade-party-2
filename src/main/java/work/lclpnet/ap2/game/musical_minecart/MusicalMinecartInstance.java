@@ -33,6 +33,9 @@ import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.Hints;
 import work.lclpnet.ap2.impl.util.SoundHelper;
 import work.lclpnet.kibu.cmd.type.CommandRegistrar;
+import work.lclpnet.kibu.hook.HookRegistrar;
+import work.lclpnet.kibu.hook.entity.EntityDismountCallback;
+import work.lclpnet.kibu.hook.entity.EntityMountCallback;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.TaskHandle;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
@@ -48,6 +51,7 @@ import work.lclpnet.notica.api.PlaybackVariant;
 import work.lclpnet.notica.api.SongHandle;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -84,9 +88,10 @@ public class MusicalMinecartInstance extends EliminationGameInstance {
     @Nullable
     private SongHandle songHandle = null;
     private BossBarTimer timer = null;
-    private TaskHandle taskHandle = null;
+    private List<TaskHandle> taskHandles = List.of();
     private CompletableFuture<ConfiguredSong> nextSong = null;
     private int eliminationDelayTicks = Ticks.seconds(9);
+    private boolean minecartsGlowing = false;
 
     public MusicalMinecartInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
@@ -136,6 +141,24 @@ public class MusicalMinecartInstance extends EliminationGameInstance {
         gameHandle.getGameScheduler().interval(this::tickParticle, 7);
 
         ready.set(true);
+
+        HookRegistrar hooks = gameHandle.getHookRegistrar();
+
+        hooks.registerHook(EntityMountCallback.HOOK, (entity, vehicle, force) -> {
+            if (vehicle.isGlowing()) {
+                vehicle.setGlowing(false);
+            }
+
+            return false;
+        });
+
+        hooks.registerHook(EntityDismountCallback.HOOK, (entity, vehicle) -> {
+            if (minecartsGlowing && vehicle instanceof MinecartEntity) {
+                vehicle.setGlowing(true);
+            }
+
+            return false;
+        });
     }
 
     private synchronized void nextSong() {
@@ -196,7 +219,7 @@ public class MusicalMinecartInstance extends EliminationGameInstance {
             timer = commons().createTimerTicks("Queue %s / %s".formatted(done, total), delay);
         }
 
-        taskHandle = gameHandle.getGameScheduler().timeout(this::stopMusic, delay);
+        taskHandles = List.of(gameHandle.getGameScheduler().timeout(this::stopMusic, delay));
 
         TextTranslatable title = songManager.getSongTitle(config.info(), song.song().metaData());
 
@@ -242,7 +265,12 @@ public class MusicalMinecartInstance extends EliminationGameInstance {
             player.sendMessage(msg, true);
         }
 
-        taskHandle = gameHandle.getGameScheduler().timeout(this::eliminatePlayers, eliminationDelayTicks);
+        TaskScheduler scheduler = gameHandle.getGameScheduler();
+
+        taskHandles = List.of(
+                scheduler.timeout(this::markFreeMinecarts, eliminationDelayTicks / 2),
+                scheduler.timeout(this::eliminatePlayers, eliminationDelayTicks)
+        );
     }
 
     private void spawnMinecarts() {
@@ -297,6 +325,16 @@ public class MusicalMinecartInstance extends EliminationGameInstance {
         frog.startRiding(minecart);
     }
 
+    private void markFreeMinecarts() {
+        minecartsGlowing = true;
+
+        for (MinecartEntity minecart : minecartEntities) {
+            if (minecart.getPassengerList().isEmpty()) {
+                minecart.setGlowing(true);
+            }
+        }
+    }
+
     private void removeMinecarts() {
         for (MinecartEntity minecart : minecartEntities) {
             // remove all non-player passengers
@@ -308,6 +346,7 @@ public class MusicalMinecartInstance extends EliminationGameInstance {
         }
 
         minecartEntities.clear();
+        minecartsGlowing = false;
     }
 
     private void eliminatePlayers() {
@@ -370,8 +409,8 @@ public class MusicalMinecartInstance extends EliminationGameInstance {
             songHandle = null;
         }
 
-        if (taskHandle != null) {
-            taskHandle.cancel();
+        if (taskHandles != null) {
+            taskHandles.forEach(TaskHandle::cancel);
         }
 
         if (timer != null) {
