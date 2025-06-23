@@ -55,9 +55,9 @@ import static work.lclpnet.ap2.impl.util.TranslationUtil.transformText;
 public class MusicalMinecartInstance extends EliminationGameInstance {
 
     private static final boolean
-            DEBUG_INFINITE_SONGS = true,
-            DEBUG_FULL_DELAY = true,
-            DEBUG_INFO = true;
+            DEBUG_INFINITE_SONGS = false,
+            DEBUG_FULL_DELAY = false,
+            DEBUG_INFO = false;
 
     private static final int
             MIN_DELAY_TICKS = Ticks.seconds(10),
