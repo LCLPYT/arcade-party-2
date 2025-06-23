@@ -24,8 +24,8 @@ public class SkipSongCommand implements KibuCommand {
     }
 
     private int skip(CommandContext<ServerCommandSource> ctx) {
-        skipCurrent.run();
         ctx.getSource().sendMessage(Text.literal("Skipped the current song."));
+        skipCurrent.run();
         return 1;
     }
 }

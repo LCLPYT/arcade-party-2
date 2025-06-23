@@ -69,9 +69,10 @@ public class SetSongCommand implements KibuCommand {
         }
 
         songs.pushSong(song);
-        skipCurrent.run();
 
         ctx.getSource().sendMessage(Text.literal("Set song to \"%s\"".formatted(id)));
+
+        skipCurrent.run();
 
         return 1;
     }
@@ -88,9 +89,10 @@ public class SetSongCommand implements KibuCommand {
         }
 
         songs.pushSong(song);
-        skipCurrent.run();
 
         ctx.getSource().sendMessage(Text.literal("Set song to \"%s\" with time %d".formatted(id, startTick)));
+
+        skipCurrent.run();
 
         return 1;
     }

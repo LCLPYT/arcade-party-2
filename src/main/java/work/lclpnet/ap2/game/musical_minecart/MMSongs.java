@@ -176,4 +176,8 @@ public class MMSongs {
     public void pushSong(WeightedSong song) {
         priority.addFirst(song);
     }
+
+    public boolean hasPrioritySongs() {
+        return !priority.isEmpty();
+    }
 }

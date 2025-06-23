@@ -45,6 +45,7 @@ import work.lclpnet.notica.api.SongHandle;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class MusicalMinecartInstance extends EliminationGameInstance {
@@ -67,11 +68,13 @@ public class MusicalMinecartInstance extends EliminationGameInstance {
     private final Random random = new Random();
     private final Set<MinecartEntity> minecartEntities = new HashSet<>();
     private final AtomicBoolean ready = new AtomicBoolean(false);
+    private boolean intermission = false;  // intermission is true if a priority song inhibited the next queue song
     private BlockBox bounds = null, particleBox = null;
     @Nullable
     private SongHandle songHandle = null;
     private BossBarTimer timer = null;
     private TaskHandle taskHandle = null;
+    private CompletableFuture<ConfiguredSong> nextSong = null;
 
     public MusicalMinecartInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
@@ -112,10 +115,22 @@ public class MusicalMinecartInstance extends EliminationGameInstance {
         ready.set(true);
     }
 
-    private void nextSong() {
+    private synchronized void nextSong() {
         removeMinecarts();
 
-        songManager.getNextSong().whenComplete((res, err) -> {
+        intermission = false;
+
+        var future = nextSong;
+
+        if (songManager.hasPrioritySongs()) {
+            // do not replace existing nextSong future
+            future = loadNextSong();
+            intermission = nextSong != null;
+        } else if (future == null) {
+            future = nextSong = loadNextSong();
+        }
+
+        future.whenComplete((res, err) -> {
             if (err == null) {
                 this.playSong(res);
                 return;
@@ -128,6 +143,10 @@ public class MusicalMinecartInstance extends EliminationGameInstance {
     }
 
     private synchronized void playSong(ConfiguredSong config) {
+        if (!intermission) {
+            nextSong = loadNextSong();
+        }
+
         MinecraftServer server = gameHandle.getServer();
 
         var players = PlayerLookup.all(server);
@@ -164,6 +183,10 @@ public class MusicalMinecartInstance extends EliminationGameInstance {
                 .translateText("game.ap2.musical_minecart.now_playing", title)
                 .formatted(Formatting.GRAY)
                 .sendTo(players);
+    }
+
+    private synchronized CompletableFuture<ConfiguredSong> loadNextSong() {
+        return songManager.getNextSong();
     }
 
     private synchronized void stopMusic() {
