@@ -17,7 +17,7 @@ public record SongInfo(String from, String license, @Nullable SongInfo.Meta meta
         return new SongInfo(from, license, meta);
     }
 
-    public record Meta(@Nullable String title, @Nullable String author, @Nullable String originalBy) {
+    public record Meta(@Nullable String title, @Nullable String author, @Nullable String originalBy, @Nullable String from) {
 
         public Meta override(@Nullable Meta parent) {
             if (parent == null) {
@@ -27,7 +27,8 @@ public record SongInfo(String from, String license, @Nullable SongInfo.Meta meta
             return new Meta(
                     this.title != null ? this.title : parent.title,
                     this.author != null ? this.author : parent.author,
-                    this.originalBy != null ? this.originalBy : parent.originalBy
+                    this.originalBy != null ? this.originalBy : parent.originalBy,
+                    this.from != null ? this.from : parent.from
             );
         }
 
@@ -37,8 +38,9 @@ public record SongInfo(String from, String license, @Nullable SongInfo.Meta meta
             String title = json.optString("title", null);
             String author = json.optString("author", null);
             String originalBy = json.optString("original_by", null);
+            String from = json.optString("from", null);
 
-            return new Meta(title, author, originalBy);
+            return new Meta(title, author, originalBy, from);
         }
     }
 }

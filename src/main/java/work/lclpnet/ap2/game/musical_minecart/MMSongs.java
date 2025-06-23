@@ -111,19 +111,21 @@ public class MMSongs {
     }
 
     private @Nullable TranslatedText createSongTitle(SongInfo info, SongMeta meta) {
-        String name = info.optMeta().map(SongInfo.Meta::title).orElseGet(meta::name);
+        Optional<SongInfo.Meta> optMeta = info.optMeta();
+
+        String name = optMeta.map(SongInfo.Meta::title).orElseGet(meta::name);
 
         if (name.isBlank()) {
             return null;
         }
 
-        String originalAuthor = info.optMeta().map(SongInfo.Meta::originalBy).orElseGet(meta::originalAuthor);
-        String author = info.optMeta().map(SongInfo.Meta::author).orElseGet(meta::author);
+        String originalAuthor = optMeta.map(SongInfo.Meta::originalBy).orElseGet(meta::originalAuthor);
+        String author = optMeta.map(SongInfo.Meta::author).orElseGet(meta::author);
 
         boolean hasAuthor = !author.isBlank();
         boolean hasOrigAuthor = !originalAuthor.isBlank();
 
-        String from = info.from();
+        String from = optMeta.map(SongInfo.Meta::from).orElseGet(info::from);
 
         if (!from.isBlank()) {
             if (hasAuthor && hasOrigAuthor) {
