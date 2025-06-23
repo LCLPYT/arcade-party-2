@@ -47,7 +47,11 @@ public class Ap2Config implements JsonConfig {
 
     private void setDefaults() {
         // set defaults that cannot be set in the initializer
-        putDefaultSongSourceUrl(MMSongs.MUSICAL_MINECART_TAG, List.of("https://lclpnet.work/dl/ap2-musical-minecart-songs"));
+        putDefaultSongSourceUrl(MMSongs.MUSICAL_MINECART_TAG, List.of(
+                "https://lclpnet.work/dl/ap2-musical-minecart-pack1",
+                "https://lclpnet.work/dl/ap2-musical-minecart-pack2",
+                "https://lclpnet.work/dl/ap2-musical-minecart-pack3"
+        ));
         putDefaultSongSourceUrl(PreparationActivity.ARCADE_PARTY_GAME_TAG, List.of("https://lclpnet.work/dl/ap2-game-sounds"));
     }
 
