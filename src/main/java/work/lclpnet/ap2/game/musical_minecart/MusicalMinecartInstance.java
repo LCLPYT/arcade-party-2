@@ -45,13 +45,14 @@ import work.lclpnet.notica.api.SongHandle;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class MusicalMinecartInstance extends EliminationGameInstance {
 
     private static final boolean
-            DEBUG_INFINITE_SONGS = false,
-            DEBUG_FULL_DELAY = false,
-            DEBUG_INFO = false;
+            DEBUG_INFINITE_SONGS = true,
+            DEBUG_FULL_DELAY = true,
+            DEBUG_INFO = true;
 
     private static final int
             MIN_DELAY_TICKS = Ticks.seconds(10),
@@ -65,6 +66,7 @@ public class MusicalMinecartInstance extends EliminationGameInstance {
     private final MMSongs songManager;
     private final Random random = new Random();
     private final Set<MinecartEntity> minecartEntities = new HashSet<>();
+    private final AtomicBoolean ready = new AtomicBoolean(false);
     private BlockBox bounds = null, particleBox = null;
     @Nullable
     private SongHandle songHandle = null;
@@ -95,6 +97,10 @@ public class MusicalMinecartInstance extends EliminationGameInstance {
         useRemainingPlayersDisplay();
 
         gameHandle.protect(config -> config.allow(ProtectionTypes.MOUNT));
+
+        CommandRegistrar commands = gameHandle.getCommandRegistrar();
+        new SetSongCommand(songManager, this::skipSong).register(commands);
+        new SkipSongCommand(this::skipSong).register(commands);
     }
 
     @Override
@@ -103,10 +109,7 @@ public class MusicalMinecartInstance extends EliminationGameInstance {
 
         gameHandle.getGameScheduler().interval(this::tickParticle, 7);
 
-        CommandRegistrar commands = gameHandle.getCommandRegistrar();
-
-        new SetSongCommand(songManager, this::skipSong).register(commands);
-        new SkipSongCommand(this::skipSong).register(commands);
+        ready.set(true);
     }
 
     private void nextSong() {
@@ -269,6 +272,8 @@ public class MusicalMinecartInstance extends EliminationGameInstance {
     }
 
     private synchronized void skipSong() {
+        if (!ready.get()) return;
+
         if (songHandle != null) {
             songHandle.stop();
             songHandle = null;

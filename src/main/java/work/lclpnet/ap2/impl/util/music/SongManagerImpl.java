@@ -272,7 +272,7 @@ public class SongManagerImpl implements SongManager {
         float volume = song.optFloat("volume", 1.0f);
         int startTick = song.optInt("start", 0);
         float weight = song.optFloat("weight", 1.0f);
-        String mergeTag = song.optString("merge_tag");
+        String mergeTag = song.optString("merge_tag", null);
         StereoMode stereoMode = parseStereoMode(song.optString("stereo_mode", StereoMode.SPATIAL.name()));
         var override = SongInfo.Meta.fromJson(song.optJSONObject("override"));
 
