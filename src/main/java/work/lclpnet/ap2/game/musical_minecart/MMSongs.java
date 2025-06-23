@@ -1,16 +1,19 @@
 package work.lclpnet.ap2.game.musical_minecart;
 
+import lombok.Getter;
 import net.minecraft.text.ClickEvent;
 import net.minecraft.text.HoverEvent;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.api.util.music.*;
 import work.lclpnet.ap2.base.ArcadeParty;
 import work.lclpnet.ap2.impl.ds.IndexedSet;
 import work.lclpnet.ap2.impl.util.UriUtil;
-import work.lclpnet.ap2.impl.util.music.MapSongCache;
+import work.lclpnet.ap2.impl.util.music.SimpleWeightedSong;
+import work.lclpnet.ap2.impl.util.music.VoidSongCache;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.kibu.translate.text.RootText;
 import work.lclpnet.kibu.translate.text.TextTranslatable;
@@ -20,6 +23,8 @@ import work.lclpnet.notica.api.data.SongMeta;
 import java.net.URI;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static net.minecraft.util.Formatting.*;
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
@@ -31,9 +36,13 @@ public class MMSongs {
     private final Translations translations;
     private final Random random;
     private final Logger logger;
+    @Getter
     private final Set<WeightedSong> songs = new IndexedSet<>();
+    @Getter
     private final List<WeightedSong> queue = new ArrayList<>();
-    private final SongCache cache = new MapSongCache();
+    @Getter
+    private final List<WeightedSong> priority = new ArrayList<>();
+    private final SongCache cache = VoidSongCache.INSTANCE;
 
     public MMSongs(SongManager songManager, Translations translations, Random random, Logger logger) {
         this.songManager = songManager;
@@ -49,13 +58,24 @@ public class MMSongs {
     }
 
     public CompletableFuture<ConfiguredSong> getNextSong() {
-        if (queue.isEmpty()) {
-            populateQueue();
+        WeightedSong weightedSong;
+
+        if (!priority.isEmpty()) {
+            weightedSong = priority.removeFirst();
+        } else {
+            if (queue.isEmpty()) {
+                populateQueue();
+            }
+
+            weightedSong = queue.removeFirst();
         }
 
-        var weightedSong = queue.removeFirst();
         LoadableSong loadable = weightedSong.getRandomElement(random);
 
+        return loadSong(loadable);
+    }
+
+    private CompletableFuture<ConfiguredSong> loadSong(LoadableSong loadable) {
         return loadable.load(cache, logger);
     }
 
@@ -125,11 +145,35 @@ public class MMSongs {
                 styled(name, YELLOW), styled(hasAuthor ? author : originalAuthor, AQUA)).formatted(GREEN);
     }
 
-    public List<WeightedSong> getQueue() {
-        return Collections.unmodifiableList(queue);
+    public Set<Identifier> getSongIds() {
+        return songs.stream()
+                .map(WeightedSong::getAllElements)
+                .flatMap(Collection::stream)
+                .map(LoadableSong::getId)
+                .collect(Collectors.toSet());
     }
 
-    public Set<WeightedSong> getSongs() {
-        return Collections.unmodifiableSet(songs);
+    public Optional<WeightedSong> getRandomSongById(Identifier id) {
+        var matchingSongs = streamSongsById(id).collect(Collectors.toSet());
+
+        return matchingSongs.isEmpty() ? Optional.empty() : Optional.of(new SimpleWeightedSong(matchingSongs));
+    }
+
+    public @NotNull Stream<LoadableSong> streamSongsById(Identifier id) {
+        return songs.stream()
+                .map(WeightedSong::getAllElements)
+                .flatMap(Collection::stream)
+                .filter(song -> id.equals(song.getId()));
+    }
+
+    public Optional<WeightedSong> getSongByIdAndTime(Identifier id, int startTick) {
+        return streamSongsById(id)
+                .filter(song -> song.getPlaybackInfo().startTick() == startTick)
+                .findAny()
+                .map(song -> new SimpleWeightedSong(Set.of(song)));
+    }
+
+    public void pushSong(WeightedSong song) {
+        priority.addFirst(song);
     }
 }

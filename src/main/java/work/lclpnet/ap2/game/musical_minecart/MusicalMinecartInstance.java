@@ -21,16 +21,21 @@ import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.util.music.ConfiguredSong;
 import work.lclpnet.ap2.api.util.music.PlaybackInfo;
 import work.lclpnet.ap2.api.util.music.SongManager;
+import work.lclpnet.ap2.game.musical_minecart.cmd.SetSongCommand;
+import work.lclpnet.ap2.game.musical_minecart.cmd.SkipSongCommand;
 import work.lclpnet.ap2.impl.game.EliminationGameInstance;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.SoundHelper;
+import work.lclpnet.kibu.cmd.type.CommandRegistrar;
 import work.lclpnet.kibu.scheduler.Ticks;
+import work.lclpnet.kibu.scheduler.api.TaskHandle;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.kibu.translate.text.TextTranslatable;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 import work.lclpnet.lobby.game.map.GameMap;
+import work.lclpnet.lobby.game.util.BossBarTimer;
 import work.lclpnet.notica.Notica;
 import work.lclpnet.notica.api.CheckedSong;
 import work.lclpnet.notica.api.PlaybackOptions;
@@ -59,10 +64,12 @@ public class MusicalMinecartInstance extends EliminationGameInstance {
 
     private final MMSongs songManager;
     private final Random random = new Random();
+    private final Set<MinecartEntity> minecartEntities = new HashSet<>();
     private BlockBox bounds = null, particleBox = null;
     @Nullable
     private SongHandle songHandle = null;
-    private final Set<MinecartEntity> minecartEntities = new HashSet<>();
+    private BossBarTimer timer = null;
+    private TaskHandle taskHandle = null;
 
     public MusicalMinecartInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
@@ -95,13 +102,21 @@ public class MusicalMinecartInstance extends EliminationGameInstance {
         nextSong();
 
         gameHandle.getGameScheduler().interval(this::tickParticle, 7);
+
+        CommandRegistrar commands = gameHandle.getCommandRegistrar();
+
+        new SetSongCommand(songManager, this::skipSong).register(commands);
+        new SkipSongCommand(this::skipSong).register(commands);
     }
 
     private void nextSong() {
         removeMinecarts();
 
-        songManager.getNextSong().thenAccept(this::playSong).whenComplete((res, err) -> {
-            if (err == null) return;
+        songManager.getNextSong().whenComplete((res, err) -> {
+            if (err == null) {
+                this.playSong(res);
+                return;
+            }
 
             gameHandle.getLogger().error("Failed to load next song", err);
 
@@ -109,7 +124,7 @@ public class MusicalMinecartInstance extends EliminationGameInstance {
         });
     }
 
-    private void playSong(ConfiguredSong config) {
+    private synchronized void playSong(ConfiguredSong config) {
         MinecraftServer server = gameHandle.getServer();
 
         var players = PlayerLookup.all(server);
@@ -133,10 +148,10 @@ public class MusicalMinecartInstance extends EliminationGameInstance {
             int total = songManager.getSongs().size();
             int done = total - songManager.getQueue().size();
 
-            commons().createTimerTicks("Queue %s / %s".formatted(done, total), delay).whenDone(this::stopMusic);
-        } else {
-            gameHandle.getGameScheduler().timeout(this::stopMusic, delay);
+            timer = commons().createTimerTicks("Queue %s / %s".formatted(done, total), delay);
         }
+
+        taskHandle = gameHandle.getGameScheduler().timeout(this::stopMusic, delay);
 
         TextTranslatable title = songManager.getSongTitle(config.info(), song.song().metaData());
 
@@ -148,7 +163,7 @@ public class MusicalMinecartInstance extends EliminationGameInstance {
                 .sendTo(players);
     }
 
-    private void stopMusic() {
+    private synchronized void stopMusic() {
         if (songHandle != null) {
             songHandle.stop();
             songHandle = null;
@@ -175,7 +190,7 @@ public class MusicalMinecartInstance extends EliminationGameInstance {
             player.sendMessage(msg, true);
         }
 
-        gameHandle.getGameScheduler().timeout(this::eliminatePlayers, ELIMINATION_DELAY_TICKS);
+        taskHandle = gameHandle.getGameScheduler().timeout(this::eliminatePlayers, ELIMINATION_DELAY_TICKS);
     }
 
     private void spawnMinecarts() {
@@ -251,5 +266,23 @@ public class MusicalMinecartInstance extends EliminationGameInstance {
     @Override
     public int getMaxDurationTicks() {
         return DEBUG_INFINITE_SONGS ? -1 : super.getMaxDurationTicks();
+    }
+
+    private synchronized void skipSong() {
+        if (songHandle != null) {
+            songHandle.stop();
+            songHandle = null;
+        }
+
+        if (taskHandle != null) {
+            taskHandle.cancel();
+        }
+
+        if (timer != null) {
+            timer.stop();
+        }
+
+        removeMinecarts();
+        nextSong();
     }
 }

@@ -57,6 +57,11 @@ public class PathLoadableSong implements LoadableSong {
     }
 
     @Override
+    public PlaybackInfo getPlaybackInfo() {
+        return playbackInfo;
+    }
+
+    @Override
     public float getWeight() {
         return weight;
     }
