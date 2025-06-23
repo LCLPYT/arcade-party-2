@@ -25,6 +25,7 @@ import work.lclpnet.ap2.game.musical_minecart.cmd.SkipSongCommand;
 import work.lclpnet.ap2.impl.game.EliminationGameInstance;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.BlockBox;
+import work.lclpnet.ap2.impl.util.Hints;
 import work.lclpnet.ap2.impl.util.SoundHelper;
 import work.lclpnet.kibu.cmd.type.CommandRegistrar;
 import work.lclpnet.kibu.scheduler.Ticks;
@@ -47,6 +48,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import static java.lang.Math.max;
 import static net.minecraft.util.Formatting.GREEN;
 import static work.lclpnet.ap2.impl.util.TranslationUtil.transformText;
 
@@ -106,6 +108,11 @@ public class MusicalMinecartInstance extends EliminationGameInstance {
         CommandRegistrar commands = gameHandle.getCommandRegistrar();
         new SetSongCommand(songManager, this::skipSong).register(commands);
         new SkipSongCommand(this::skipSong).register(commands);
+
+        gameHandle.getGameScheduler().timeout(() -> {
+            var hints = new Hints(gameHandle.getTranslations(), gameHandle.getServer());
+            hints.sendModHint(Hints.Mod.NOTICA);
+        }, max(0, getInitialDelay() - Ticks.seconds(3)));
     }
 
     @Override
@@ -181,12 +188,11 @@ public class MusicalMinecartInstance extends EliminationGameInstance {
 
         if (title == null) return;
 
-
         Translations translations = gameHandle.getTranslations();
 
         transformText(
                 translations.translateText("game.ap2.musical_minecart.now_playing", title),
-                text -> Text.literal("🎵 ").append(text).formatted(GREEN), 
+                text -> Text.literal("🎵 ").append(text).formatted(GREEN),
                 translations
         ).sendTo(players);
     }
@@ -269,7 +275,7 @@ public class MusicalMinecartInstance extends EliminationGameInstance {
 
         if (winManager.isGameOver() || participants.count() == 0) return;
 
-        int passDelay = Math.max(0, NEXT_SONG_DELAY_TICKS - Ticks.seconds(1));
+        int passDelay = max(0, NEXT_SONG_DELAY_TICKS - Ticks.seconds(1));
 
         TaskScheduler scheduler = gameHandle.getGameScheduler();
 
