@@ -58,6 +58,7 @@ public class MimicryInstance extends FFAGameInstance implements MapBootstrap {
     private SequencePlayer sequencePlayer = null;
     private BossBarTimer timer = null;
     private int timerTransaction = 0;
+    private Phase phase = Phase.IDLE;
 
     public MimicryInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
@@ -137,12 +138,14 @@ public class MimicryInstance extends FFAGameInstance implements MapBootstrap {
 
         serverPlayer.sendMessage(msg);
 
-        eliminate(serverPlayer);
+        softEliminate(serverPlayer);
 
         return ActionResult.FAIL;
     }
 
-    private void nextSequence() {
+    private synchronized void nextSequence() {
+        if (phase != Phase.IDLE || winManager.isGameOver()) return;
+
         removeTimer();
 
         commons().announcer().announceSubtitle("game.ap2.mimicry.attention");
@@ -150,7 +153,7 @@ public class MimicryInstance extends FFAGameInstance implements MapBootstrap {
         gameHandle.getGameScheduler().timeout(this::playSequence, PREPARE_TICKS);
     }
 
-    private void removeTimer() {
+    private synchronized void removeTimer() {
         if (timer == null) return;
 
         timerTransaction++;
@@ -158,7 +161,11 @@ public class MimicryInstance extends FFAGameInstance implements MapBootstrap {
         timer = null;
     }
 
-    private void playSequence() {
+    private synchronized void playSequence() {
+        if (phase != Phase.IDLE || winManager.isGameOver()) return;
+
+        phase = Phase.PLAYING;
+
         manager.reset();
         manager.extendSequence();
 
@@ -166,7 +173,11 @@ public class MimicryInstance extends FFAGameInstance implements MapBootstrap {
         sequencePlayer.play().whenComplete(this::beginReplay);
     }
 
-    private void beginReplay() {
+    private synchronized void beginReplay() {
+        if (phase != Phase.PLAYING || winManager.isGameOver()) return;
+
+        phase = Phase.REPLAY;
+
         commons().announcer().announceSubtitle("game.ap2.mimicry.repeat");
 
         manager.setReplay(true);
@@ -180,22 +191,26 @@ public class MimicryInstance extends FFAGameInstance implements MapBootstrap {
 
         timer.whenDone(() -> {
             if (transaction == timerTransaction) {
-                endReplay();
+                endReplayAndEliminate();
             }
         });
     }
 
-    private void endReplay() {
-        manager.getPlayersToEliminate().forEach(this::eliminate);
+    private synchronized void endReplayAndEliminate() {
+        if (phase != Phase.REPLAY || winManager.isGameOver()) return;
+
+        manager.getPlayersToEliminate().forEach(this::softEliminate);
 
         onRoundOver();
-
-        if (winManager.isGameOver()) return;
 
         gameHandle.getGameScheduler().timeout(this::nextSequence, Ticks.seconds(NEXT_ROUND_DELAY_SECONDS));
     }
 
-    private void onRoundOver() {
+    private synchronized void onRoundOver() {
+        if (phase != Phase.REPLAY) return;
+
+        phase = Phase.IDLE;
+
         removeTimer();
 
         manager.setReplay(false);
@@ -222,13 +237,17 @@ public class MimicryInstance extends FFAGameInstance implements MapBootstrap {
     }
 
     private void onAllCompleted() {
+        if (phase != Phase.REPLAY) return;
+
         onRoundOver();
 
         gameHandle.getGameScheduler().timeout(this::nextSequence, 30);
     }
 
-    private void eliminate(ServerPlayerEntity player) {
-        if (toEliminate.contains(player.getUuid()) || !gameHandle.getParticipants().isParticipating(player)) return;
+    private synchronized void softEliminate(ServerPlayerEntity player) {
+        if (phase != Phase.REPLAY
+                || toEliminate.contains(player.getUuid())
+                || !gameHandle.getParticipants().isParticipating(player)) return;
 
         double x = player.getX(), y = player.getY(), z = player.getZ();
 
@@ -247,7 +266,9 @@ public class MimicryInstance extends FFAGameInstance implements MapBootstrap {
         checkRoundComplete();
     }
 
-    private void checkRoundComplete() {
+    private synchronized void checkRoundComplete() {
+        if (phase != Phase.REPLAY) return;
+
         int notCompleted = manager.getPlayersToEliminate().size();
 
         if (notCompleted == 0) {
@@ -258,7 +279,9 @@ public class MimicryInstance extends FFAGameInstance implements MapBootstrap {
         int remainingReplay = notCompleted - toEliminate.size();
 
         if (remainingReplay <= 0) {
-            endReplay();
+            endReplayAndEliminate();
         }
     }
+
+    private enum Phase { PLAYING, REPLAY, IDLE }
 }
