@@ -21,6 +21,8 @@ import work.lclpnet.lobby.game.map.MapUtils;
 
 import java.util.*;
 
+import static java.lang.Math.floor;
+
 public class MapUtil {
 
     /**
@@ -62,6 +64,20 @@ public class MapUtil {
         if (tuple.length() < 3) return Optional.empty();
 
         return Optional.of(new Vec3d(tuple.getDouble(0), tuple.getDouble(1), tuple.getDouble(2)));
+    }
+
+    public static Vec3d readCenteredVec3d(JSONArray tuple) {
+        return optCenteredVec3d(tuple).orElseThrow(() -> new IllegalArgumentException("Tuple must be of size 3"));
+    }
+
+    public static Optional<Vec3d> optCenteredVec3d(JSONArray tuple) {
+        if (tuple.length() < 3) return Optional.empty();
+
+        return Optional.of(new Vec3d(
+                centeredDouble(tuple.getDouble(0)),
+                centeredDouble(tuple.getDouble(1)),
+                centeredDouble(tuple.getDouble(2))
+        ));
     }
 
     public static Vec2i readVec2i(JSONArray tuple) {
@@ -162,6 +178,17 @@ public class MapUtil {
                 .flatMap(MapUtil::optBlockPos)
                 .or(() -> Optional.ofNullable(fallback))
                 .orElseThrow(() -> new NoSuchElementException("Origin undefined"));
+    }
+
+    public static double centeredDouble(double d) {
+        int i = (int) floor(d);
+
+        if (Math.abs(d - i) < 1e-6) {
+            // return centered block pos
+            return i + 0.5;
+        }
+
+        return d;
     }
 
     private MapUtil() {}

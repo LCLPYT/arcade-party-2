@@ -77,6 +77,8 @@ dependencies {
     implementation 'org.json:json:20231013'
     include(implementation('work.lclpnet:json-config4j:1.0.0'))
     include(implementation('org.apache.commons:commons-compress:1.26.2'))
+    include(implementation("org.ejml:ejml-core:0.44.0"))
+    include(implementation("org.ejml:ejml-simple:0.44.0"))
 
     modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
     modImplementation "work.lclpnet.mods.kibu:kibu:${project.kibu_version}"
