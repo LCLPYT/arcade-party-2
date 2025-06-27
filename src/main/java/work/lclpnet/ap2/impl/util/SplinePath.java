@@ -3,6 +3,8 @@ package work.lclpnet.ap2.impl.util;
 import net.minecraft.util.math.Vec3d;
 import org.ejml.data.SingularMatrixException;
 import org.ejml.simple.SimpleMatrix;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.VisibleForTesting;
 import org.json.JSONArray;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.impl.map.MapUtil;
@@ -52,13 +54,13 @@ public class SplinePath {
 
         double[] arcLength = new double[samples];
 
-        Vec3d start = sampleRaw(0.d);
+        Vec3d start = sampleLinear(0.d);
         double totalLen = 0.d;
 
         arcLength[0] = totalLen;
 
         for (int i = 1; i < samples; i++) {
-            Vec3d end = sampleRaw(i * dt);
+            Vec3d end = sampleLinear(i * dt);
 
             totalLen += start.distanceTo(end);
             arcLength[i] = totalLen;
@@ -69,7 +71,12 @@ public class SplinePath {
         return arcLength;
     }
 
-    public Vec3d sampleRaw(double t) {
+    /**
+     * Samples a path position using linear segment-parametrization given a progress parameter t.
+     * @param t The progress parameter ranging [0..1].
+     * @return The position vector at t.
+     */
+    public Vec3d sampleLinear(double t) {
         if (t <= 0.d) {
             return new Vec3d(x[0], y[0], z[0]);
         }
@@ -95,35 +102,221 @@ public class SplinePath {
         return new Vec3d(xs, ys, zs);
     }
 
-    public Vec3d sample(double s) {
-        if (s <= 0.d) {
-            return new Vec3d(x[0], y[0], z[0]);
+    /**
+     * Samples the first derivative using linear segment-parametrization given a progress parameter t.
+     * This represents the tangent vector or direction at that point.
+     * @param t The progress parameter ranging [0..1].
+     * @return The tangent vector at t.
+     */
+    public Vec3d sampleDirectionLinear(double t) {
+        if (t <= 0.d) {
+            return sampleLinear(0.001).subtract(sampleLinear(0)).normalize();
         }
 
-        if (s >= 1.d) {
-            return new Vec3d(x[n - 1], y[n - 1], z[n - 1]);
+        if (t >= 1.d) {
+            return sampleLinear(1).subtract(sampleLinear(0.999)).normalize();
         }
+
+        t *= n - 1;
+
+        int i = min(n - 2, (int) floor(t));
+
+        double a = (i + 1) - t;
+        double b = t - i;
+
+        double dxs = -x[i] + x[i + 1] + (-(3 * a * a - 1) * d2x[i] + (3 * b * b - 1) * d2x[i + 1]) / 6.d;
+        double dys = -y[i] + y[i + 1] + (-(3 * a * a - 1) * d2y[i] + (3 * b * b - 1) * d2y[i + 1]) / 6.d;
+        double dzs = -z[i] + z[i + 1] + (-(3 * a * a - 1) * d2z[i] + (3 * b * b - 1) * d2z[i + 1]) / 6.d;
+
+        return new Vec3d(dxs * (n - 1), dys * (n - 1), dzs * (n - 1));
+    }
+
+    /**
+     * Samples the second derivative using linear segment-parametrization given a progress parameter t.
+     * This represents the change of direction or curvature at that point.
+     * @param t The progress parameter ranging [0..1].
+     * @return The curvature vector at t.
+     */
+    public @NotNull Vec3d sampleCurvatureLinear(double t) {
+        double t_tau = t * (n - 1);
+
+        int i = min(n - 2, (int) floor(t_tau));
+
+        double a = (i + 1) - t_tau;
+        double b = t_tau - i;
+
+        double d2xs = (a * d2x[i] + b * d2x[i + 1]) * (n - 1) * (n - 1);
+        double d2ys = (a * d2y[i] + b * d2y[i + 1]) * (n - 1) * (n - 1);
+        double d2zs = (a * d2z[i] + b * d2z[i + 1]) * (n - 1) * (n - 1);
+
+        return new Vec3d(d2xs, d2ys, d2zs);
+    }
+
+    /**
+     * Samples a path position using arclength-normalized parametrization given a progress parameter s.
+     * @param s The progress parameter ranging [0..1].
+     * @return The position vector at s.
+     */
+    public Vec3d sample(double s) {
+        return sampleLinear(getLinearProgress(s));
+    }
+
+    /**
+     * Samples the first derivative using arclength-normalized parametrization given a progress parameter s.
+     * This represents the tangent vector or direction at that point.
+     * @param s The progress parameter ranging [0..1].
+     * @return The tangent vector at s.
+     */
+    public Vec3d sampleDirection(double s) {
+        return sampleDirectionLinear(getLinearProgress(s));
+    }
+
+    /**
+     * Samples the second derivative using arclength-normalized parametrization given a progress parameter s.
+     * This represents the change of direction or curvature at that point.
+     * @param s The progress parameter ranging [0..1].
+     * @return The curvature vector at s.
+     */
+    public Vec3d sampleCurvature(double s) {
+        return sampleCurvatureLinear(getLinearProgress(s));
+    }
+
+    /**
+     * Return the spline parameter [0..1] that corresponds to the nearest point on the path towards the given position.
+     * In other words, grade the progress of a given position along the path.
+     * @param queryPos The query position.
+     * @return The normalized spline parameter [0..1] that can be used to retrieve the nearest path position towards
+     * the query position using the {@link #sample(double)} method.
+     */
+    public double getProgress(Vec3d queryPos) {
+        // estimate segment progress, then refine using Newtons method
+        double t = estimateSegmentProgress(queryPos);
+
+        final int MAX_ITERATIONS = 50;
+        final double EPSILON = 1e-6;
+
+        for (int iter = 0; iter < MAX_ITERATIONS; iter++) {
+            Vec3d pos = sampleLinear(t);
+            Vec3d d1 = sampleDirectionLinear(t);
+
+            Vec3d V = d1.subtract(pos);
+
+            // f(t) = V . P'(t)
+            double ft = pos.subtract(queryPos).dotProduct(d1);
+
+            if (abs(ft) < EPSILON) break;
+
+            // Calculate f'(t)
+            Vec3d d2 = sampleCurvatureLinear(t);
+            double d1t = d1.dotProduct(d1) + V.dotProduct(d2);
+
+            if (abs(d1t) < 1e-10) break;
+
+            // Newton update, clamp
+            t = max(0.d, min(1.d, t - (ft / d1t)));
+        }
+
+        return getNormalizedProgress(t);
+    }
+
+    /**
+     * Converts a given segment progress in the linear domain to a normalized progress in the arclength domain.
+     * @param t The linear segment progress.
+     * @return The arclength-normalized progress.
+     */
+    public double getNormalizedProgress(double t) {
+        if (t <= 0.d) return 0.d;
+        if (t >= 1.d) return 1.d;
+
+        double finalArcLength = sampleArcLength(t);
+
+        return finalArcLength / arcLength[arcLength.length - 1];
+    }
+
+    /**
+     * Converts a given arclength-normalized progress parameter to a linear segment progress parameter.
+     * @param s The arclength-normalized progress.
+     * @return The linear segment progress.
+     */
+    public double getLinearProgress(double s) {
+        if (s <= 0.d) return 0.d;
+        if (s >= 1.d) return 1.d;
 
         double targetLength = s * arcLength[arcLength.length - 1];
-
-        int i = min(findArcLengthSection(targetLength), arcLength.length - 1);
+        int i = min(findArcLengthSection(arcLength, targetLength), arcLength.length - 1);
 
         double len0 = arcLength[i];
         double len1 = arcLength[i + 1];
 
-        // determine progress between arc length samples (assume linear)
-        double fraction = (targetLength - len0) / (len1 - len0 + 1e-10d);
+        if (abs(len0 - len1) < 1e-10) {
+            return (double) i / (arcLength.length - 1);
+        }
 
-        // fractional position in arcLength array
+        double fraction = (targetLength - len0) / (len1 - len0);
+
         double arcLengthPos = i + fraction;
 
-        // convert to spline parameter
-        double t = arcLengthPos / arcLength.length;
-
-        return sampleRaw(t);
+        return arcLengthPos / (arcLength.length - 1);
     }
 
-    private int findArcLengthSection(double targetLength) {
+    /**
+     * Samples a given linear segment progress to the corresponding arclength.
+     * @param t The linear segment progress.
+     * @return The corresponding arclength.
+     */
+    @VisibleForTesting
+    protected double sampleArcLength(double t) {
+        double arcLengthIndex = t * (arcLength.length - 1);
+        int lowerIndex = (int) floor(arcLengthIndex);
+        int upperIndex = (int) ceil(arcLengthIndex);
+
+        if (lowerIndex == upperIndex) {
+            return arcLength[lowerIndex];
+        }
+
+        double weightUpper = arcLengthIndex - lowerIndex;
+        double weightLower = 1.0 - weightUpper;
+
+        return arcLength[lowerIndex] * weightLower + arcLength[upperIndex] * weightUpper;
+    }
+
+    /**
+     * Estimates the linear segment progress by finding the closest of discrete sampling points.
+     * @param queryPos The query position.
+     * @return The estimated progress
+     */
+    @VisibleForTesting
+    protected double estimateSegmentProgress(Vec3d queryPos) {
+        final double dt = 1.d / (arcLength.length - 1);
+
+        // arcLength pos to spline parameter
+        double minSqDist = Double.MAX_VALUE;
+        double initialT = 0.0;
+
+        for (int i = 0; i < arcLength.length; i++) {
+            double t = i * dt;
+
+            Vec3d sample = sampleLinear(t);
+            double distSq = queryPos.squaredDistanceTo(sample);
+
+            if (distSq < minSqDist) {
+                minSqDist = distSq;
+                initialT = t;
+            }
+        }
+
+        return initialT;
+    }
+
+    /**
+     * Finds the lower index of the range in the cumulative arcLength array where targetLength is greater or equal
+     * than the lower entry and smaller than the upper entry.
+     * @param arcLength The cumulative arclength array.
+     * @param targetLength The target length.
+     * @return The index after which targetLength would be placed inside the arcLength array.
+     */
+    @VisibleForTesting
+    protected static int findArcLengthSection(double[] arcLength, double targetLength) {
         int i = Arrays.binarySearch(arcLength, targetLength);
 
         if (i >= 0) {
