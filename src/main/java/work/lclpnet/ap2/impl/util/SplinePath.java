@@ -1,6 +1,5 @@
 package work.lclpnet.ap2.impl.util;
 
-import lombok.Getter;
 import net.minecraft.util.math.Vec3d;
 import org.ejml.data.SingularMatrixException;
 import org.ejml.simple.SimpleMatrix;
@@ -17,16 +16,12 @@ import static java.lang.Math.min;
 
 public class SplinePath {
 
-    @Getter
-    private final List<Vec3d> keypoints;
-    private final double[] ts;
+    private final double[] ts;  // time parameters of keypoints
     private final double[] x, y, z;
-    private final double[] mX, mY, mZ;  // d^2 / dx^2
+    private final double[] d2x, d2y, d2z;  // d^2 / dx^2
     private final int n;
 
     protected SplinePath(List<Vec3d> keypoints) throws SingularMatrixException {
-        this.keypoints = List.copyOf(keypoints);
-
         n = keypoints.size();
 
         if (n < 2) {
@@ -48,21 +43,23 @@ public class SplinePath {
             z[i] = p.getZ();
         }
 
-        mX = solveNaturalCubic(ts, x);
-        mY = solveNaturalCubic(ts, y);
-        mZ = solveNaturalCubic(ts, z);
+        d2x = solveNaturalCubic(ts, x);
+        d2y = solveNaturalCubic(ts, y);
+        d2z = solveNaturalCubic(ts, z);
     }
 
     public Vec3d sample(double t) {
-        if (t <= 0) {
+        if (t <= 0.d) {
             return new Vec3d(x[0], y[0], z[0]);
         }
 
-        if (t >= ts[n - 1]) {
+        if (t >= 1.d) {
             return new Vec3d(x[n - 1], y[n - 1], z[n - 1]);
         }
 
-        int i = min(n-2, (int) floor(t));
+        t *= n - 1;
+
+        int i = min(n - 2, (int) floor(t));
 
         double h = ts[i + 1] - ts[i];
         double a = (ts[i + 1] - t) / h;
@@ -73,11 +70,21 @@ public class SplinePath {
         double a3ma = a * a * a - a;
         double b3mb = b * b * b - b;
 
-        double xs = a * x[i] + b * x[i + 1] + (a3ma * mX[i] + b3mb * mX[i + 1]) * h2 / 6.d;
-        double ys = a * y[i] + b * y[i + 1] + (a3ma * mY[i] + b3mb * mY[i + 1]) * h2 / 6.d;
-        double zs = a * z[i] + b * z[i + 1] + (a3ma * mZ[i] + b3mb * mZ[i + 1]) * h2 / 6.d;
+        double xs = a * x[i] + b * x[i + 1] + (a3ma * d2x[i] + b3mb * d2x[i + 1]) * h2 / 6.d;
+        double ys = a * y[i] + b * y[i + 1] + (a3ma * d2y[i] + b3mb * d2y[i + 1]) * h2 / 6.d;
+        double zs = a * z[i] + b * z[i + 1] + (a3ma * d2z[i] + b3mb * d2z[i + 1]) * h2 / 6.d;
 
         return new Vec3d(xs, ys, zs);
+    }
+
+    public List<Vec3d> getKeypoints() {
+        List<Vec3d> keypoints = new ArrayList<>(n);
+
+        for (int i = 0; i < n; i++) {
+            keypoints.add(new Vec3d(x[i], y[i], z[i]));
+        }
+
+        return keypoints;
     }
 
     private static double[] solveNaturalCubic(double[] t, double[] v) {
@@ -124,7 +131,7 @@ public class SplinePath {
 
         for (Object item : json) {
             if (!(item instanceof JSONArray tuple)) {
-                logger.error("Invalid dragon path element: {}", item);
+                logger.error("Invalid spline path element: {}", item);
                 continue;
             }
 

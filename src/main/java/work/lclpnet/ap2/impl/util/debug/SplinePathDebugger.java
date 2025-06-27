@@ -27,7 +27,7 @@ public class SplinePathDebugger {
         renderer.marker(start, Blocks.YELLOW_CONCRETE.getDefaultState(), 0xeeff00, 0.2f);
 
         for (int i = 1; i < samples; i++) {
-            Vec3d end = path.sample(i * step * keypoints.size());
+            Vec3d end = path.sample(i * step);
 
             renderer.line(start, end, 0.1, Blocks.YELLOW_CONCRETE.getDefaultState());
             renderer.marker(start, Blocks.YELLOW_CONCRETE.getDefaultState(), 0xeeff00, 0.2f);
