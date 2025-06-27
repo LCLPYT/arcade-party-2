@@ -18,16 +18,19 @@ public class SplinePathDebugger {
         List<Vec3d> keypoints = path.getKeypoints();
 
         for (Vec3d keypoint : keypoints) {
-            renderer.marker(keypoint, Blocks.YELLOW_CONCRETE.getDefaultState(), 0xeeff00);
+            renderer.marker(keypoint, Blocks.ORANGE_CONCRETE.getDefaultState(), 0xeeff00, 0.5f);
         }
 
         Vec3d start = keypoints.getFirst();
         double step = 1.d / (samples - 1);
 
+        renderer.marker(start, Blocks.YELLOW_CONCRETE.getDefaultState(), 0xeeff00, 0.2f);
+
         for (int i = 1; i < samples; i++) {
             Vec3d end = path.sample(i * step * keypoints.size());
 
             renderer.line(start, end, 0.1, Blocks.YELLOW_CONCRETE.getDefaultState());
+            renderer.marker(start, Blocks.YELLOW_CONCRETE.getDefaultState(), 0xeeff00, 0.2f);
 
             start = end;
         }

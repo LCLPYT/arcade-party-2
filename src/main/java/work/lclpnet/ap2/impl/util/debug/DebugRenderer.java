@@ -49,7 +49,13 @@ public class DebugRenderer {
     }
 
     public Object3d line(double x1, double y1, double z1, double x2, double y2, double z2, double thickness, BlockState state) {
-        var line = new BlockDisplayObject(state);
+        var base = new BlockDisplayObject(state);
+        
+        // base will be pointing in positive x direction, center in y and z plane
+        base.position.set(0, -0.5, -0.5);
+
+        var line = new Object3d();
+        line.addChild(base);
 
         double dx = x2 - x1;
         double dy = y2 - y1;
@@ -143,6 +149,10 @@ public class DebugRenderer {
 
     public Object3d marker(Vec3d pos, BlockState state, int glowColor) {
         return marker(pos.x, pos.y, pos.z, state, glowColor);
+    }
+
+    public Object3d marker(Vec3d pos, BlockState state, int glowColor, double scale) {
+        return marker(pos.x, pos.y, pos.z, state, glowColor, scale);
     }
 
     public Object3d marker(double x, double y, double z, BlockState state, int glowColor) {
