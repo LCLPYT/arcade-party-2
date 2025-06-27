@@ -8,17 +8,17 @@ import org.slf4j.Logger;
 import work.lclpnet.ap2.impl.map.MapUtil;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-import static java.lang.Math.floor;
-import static java.lang.Math.min;
+import static java.lang.Math.*;
 
 public class SplinePath {
 
-    private final double[] ts;  // time parameters of keypoints
     private final double[] x, y, z;
-    private final double[] d2x, d2y, d2z;  // d^2 / dx^2
+    private final double[] d2x, d2y, d2z;  // d^2 / dx^2 at keypoints
+    private final double[] arcLength;
     private final int n;
 
     protected SplinePath(List<Vec3d> keypoints) throws SingularMatrixException {
@@ -28,14 +28,11 @@ public class SplinePath {
             throw new IllegalArgumentException("Too few keypoints, at least 2 keypoints are required");
         }
 
-        ts = new double[n];
         x = new double[n];
         y = new double[n];
         z = new double[n];
 
         for (int i = 0; i < n; i++) {
-            ts[i] = i;
-
             Vec3d p = keypoints.get(i);
 
             x[i] = p.getX();
@@ -43,12 +40,36 @@ public class SplinePath {
             z[i] = p.getZ();
         }
 
-        d2x = solveNaturalCubic(ts, x);
-        d2y = solveNaturalCubic(ts, y);
-        d2z = solveNaturalCubic(ts, z);
+        d2x = solveNaturalCubic(n, x);
+        d2y = solveNaturalCubic(n, y);
+        d2z = solveNaturalCubic(n, z);
+
+        arcLength = buildArcLength(n * 40);
     }
 
-    public Vec3d sample(double t) {
+    private double[] buildArcLength(int samples) {
+        final double dt = 1.d / (samples - 1);
+
+        double[] arcLength = new double[samples];
+
+        Vec3d start = sampleRaw(0.d);
+        double totalLen = 0.d;
+
+        arcLength[0] = totalLen;
+
+        for (int i = 1; i < samples; i++) {
+            Vec3d end = sampleRaw(i * dt);
+
+            totalLen += start.distanceTo(end);
+            arcLength[i] = totalLen;
+
+            start = end;
+        }
+
+        return arcLength;
+    }
+
+    public Vec3d sampleRaw(double t) {
         if (t <= 0.d) {
             return new Vec3d(x[0], y[0], z[0]);
         }
@@ -61,20 +82,56 @@ public class SplinePath {
 
         int i = min(n - 2, (int) floor(t));
 
-        double h = ts[i + 1] - ts[i];
-        double a = (ts[i + 1] - t) / h;
-        double b = (t - ts[i]) / h;
-
-        double h2 = h * h;
+        double a = (i + 1) - t;
+        double b = t - i;
 
         double a3ma = a * a * a - a;
         double b3mb = b * b * b - b;
 
-        double xs = a * x[i] + b * x[i + 1] + (a3ma * d2x[i] + b3mb * d2x[i + 1]) * h2 / 6.d;
-        double ys = a * y[i] + b * y[i + 1] + (a3ma * d2y[i] + b3mb * d2y[i + 1]) * h2 / 6.d;
-        double zs = a * z[i] + b * z[i + 1] + (a3ma * d2z[i] + b3mb * d2z[i + 1]) * h2 / 6.d;
+        double xs = a * x[i] + b * x[i + 1] + (a3ma * d2x[i] + b3mb * d2x[i + 1]) / 6.d;
+        double ys = a * y[i] + b * y[i + 1] + (a3ma * d2y[i] + b3mb * d2y[i + 1]) / 6.d;
+        double zs = a * z[i] + b * z[i + 1] + (a3ma * d2z[i] + b3mb * d2z[i + 1]) / 6.d;
 
         return new Vec3d(xs, ys, zs);
+    }
+
+    public Vec3d sample(double s) {
+        if (s <= 0.d) {
+            return new Vec3d(x[0], y[0], z[0]);
+        }
+
+        if (s >= 1.d) {
+            return new Vec3d(x[n - 1], y[n - 1], z[n - 1]);
+        }
+
+        double targetLength = s * arcLength[arcLength.length - 1];
+
+        int i = min(findArcLengthSection(targetLength), arcLength.length - 1);
+
+        double len0 = arcLength[i];
+        double len1 = arcLength[i + 1];
+
+        // determine progress between arc length samples (assume linear)
+        double fraction = (targetLength - len0) / (len1 - len0 + 1e-10d);
+
+        // fractional position in arcLength array
+        double arcLengthPos = i + fraction;
+
+        // convert to spline parameter
+        double t = arcLengthPos / arcLength.length;
+
+        return sampleRaw(t);
+    }
+
+    private int findArcLengthSection(double targetLength) {
+        int i = Arrays.binarySearch(arcLength, targetLength);
+
+        if (i >= 0) {
+            return i;
+        }
+
+        // exact time is not in the array, use the previous sample (similar to floor())
+        return max(0, -(i + 1) - 1);
     }
 
     public List<Vec3d> getKeypoints() {
@@ -87,9 +144,7 @@ public class SplinePath {
         return keypoints;
     }
 
-    private static double[] solveNaturalCubic(double[] t, double[] v) {
-        final int n = t.length;
-
+    private static double[] solveNaturalCubic(int n, double[] v) {
         var A = new SimpleMatrix(n, n);
         var rhs = new SimpleMatrix(n, 1);
 
@@ -99,14 +154,11 @@ public class SplinePath {
         rhs.set(n - 1, 0, 0);
 
         for (int i = 1; i < n - 1; i++) {
-            double h0 = t[i] - t[i - 1];
-            double h1 = t[i + 1] - t[i];
+            A.set(i, i - 1, 1.d);
+            A.set(i, i, 2 * (1.d + 1.d));
+            A.set(i, i + 1, 1.d);
 
-            A.set(i, i - 1, h0);
-            A.set(i, i, 2 * (h0 + h1));
-            A.set(i, i + 1, h1);
-
-            double dv = (v[i + 1] - v[i]) / h1 - (v[i] - v[i - 1]) / h0;
+            double dv = (v[i + 1] - v[i]) - (v[i] - v[i - 1]);
 
             rhs.set(i, 0, 6 * dv);
         }
