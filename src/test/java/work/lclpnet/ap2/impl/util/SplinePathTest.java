@@ -63,32 +63,32 @@ class SplinePathTest {
 
     @Test
     @DisplayName("sampleLinear should return start point for t <= 0")
-    void sampleLinear_returnsStartForTZeroOrLess() {
-        assertEquals(new Vec3d(0, 0, 0), straightPath.sampleLinear(0.0));
-        assertEquals(new Vec3d(0, 0, 0), straightPath.sampleLinear(-1.0));
+    void samplePositionLinear_returnsStartForTZeroOrLess() {
+        assertEquals(new Vec3d(0, 0, 0), straightPath.samplePositionLinear(0.0));
+        assertEquals(new Vec3d(0, 0, 0), straightPath.samplePositionLinear(-1.0));
     }
 
     @Test
     @DisplayName("sampleLinear should return end point for t >= 1")
-    void sampleLinear_returnsEndForTOneOrMore() {
-        assertEquals(new Vec3d(20, 0, 0), straightPath.sampleLinear(1.0));
-        assertEquals(new Vec3d(20, 0, 0), straightPath.sampleLinear(2.0));
+    void samplePositionLinear_returnsEndForTOneOrMore() {
+        assertEquals(new Vec3d(20, 0, 0), straightPath.samplePositionLinear(1.0));
+        assertEquals(new Vec3d(20, 0, 0), straightPath.samplePositionLinear(2.0));
     }
 
     @Test
     @DisplayName("sampleLinear should correctly interpolate along a straight path")
-    void sampleLinear_interpolatesStraightPath() {
-        assertVectorEquals(new Vec3d(5, 0, 0), straightPath.sampleLinear(0.25));
-        assertVectorEquals(new Vec3d(10, 0, 0), straightPath.sampleLinear(0.5));
-        assertVectorEquals(new Vec3d(15, 0, 0), straightPath.sampleLinear(0.75));
+    void samplePositionLinear_interpolatesStraightPath() {
+        assertVectorEquals(new Vec3d(5, 0, 0), straightPath.samplePositionLinear(0.25));
+        assertVectorEquals(new Vec3d(10, 0, 0), straightPath.samplePositionLinear(0.5));
+        assertVectorEquals(new Vec3d(15, 0, 0), straightPath.samplePositionLinear(0.75));
     }
 
     @Test
     @DisplayName("sampleLinear should interpolate through keypoints on a curved path")
-    void sampleLinear_interpolatesCurvedPathKeypoints() {
-        assertVectorEquals(new Vec3d(0, 0, 0), curvedPath.sampleLinear(0.0));
-        assertVectorEquals(new Vec3d(10, 10, 0), curvedPath.sampleLinear(0.5));
-        assertVectorEquals(new Vec3d(20, 0, 0), curvedPath.sampleLinear(1.0));
+    void samplePositionLinear_interpolatesCurvedPathKeypoints() {
+        assertVectorEquals(new Vec3d(0, 0, 0), curvedPath.samplePositionLinear(0.0));
+        assertVectorEquals(new Vec3d(10, 10, 0), curvedPath.samplePositionLinear(0.5));
+        assertVectorEquals(new Vec3d(20, 0, 0), curvedPath.samplePositionLinear(1.0));
     }
 
     @Test
@@ -119,38 +119,38 @@ class SplinePathTest {
 
     @Test
     @DisplayName("sample should return start point for s = 0")
-    void sample_returnsStartForSZero() {
-        assertVectorEquals(new Vec3d(0, 0, 0), straightPath.sample(0.0));
-        assertVectorEquals(new Vec3d(0, 0, 0), curvedPath.sample(0.0));
+    void samplePosition_returnsStartForSZero() {
+        assertVectorEquals(new Vec3d(0, 0, 0), straightPath.samplePosition(0.0));
+        assertVectorEquals(new Vec3d(0, 0, 0), curvedPath.samplePosition(0.0));
     }
 
     @Test
     @DisplayName("sample should return end point for s = 1")
-    void sample_returnsEndForSOne() {
-        assertVectorEquals(new Vec3d(20, 0, 0), straightPath.sample(1.0));
-        assertVectorEquals(new Vec3d(20, 0, 0), curvedPath.sample(1.0));
+    void samplePosition_returnsEndForSOne() {
+        assertVectorEquals(new Vec3d(20, 0, 0), straightPath.samplePosition(1.0));
+        assertVectorEquals(new Vec3d(20, 0, 0), curvedPath.samplePosition(1.0));
     }
 
     @Test
     @DisplayName("sample at s=0.5 on a straight path should be the midpoint")
-    void sample_isMidpointForStraightPath() {
-        assertVectorEquals(new Vec3d(10, 0, 0), straightPath.sample(0.5));
+    void samplePosition_isMidpointForStraightPath() {
+        assertVectorEquals(new Vec3d(10, 0, 0), straightPath.samplePosition(0.5));
     }
 
     @Test
     @DisplayName("getLinearProgress and getNormalizedProgress should be inverse operations")
     void progressConversions_areInverse() {
-        assertEquals(0.25, straightPath.getLinearProgress(straightPath.getNormalizedProgress(0.25)), EPSILON);
-        assertEquals(0.5, curvedPath.getLinearProgress(curvedPath.getNormalizedProgress(0.5)), EPSILON);
-        assertEquals(0.75, straightPath.getNormalizedProgress(straightPath.getLinearProgress(0.75)), EPSILON);
+        assertEquals(0.25, straightPath.getLinearProgress(straightPath.getProgress(0.25)), EPSILON);
+        assertEquals(0.5, curvedPath.getLinearProgress(curvedPath.getProgress(0.5)), EPSILON);
+        assertEquals(0.75, straightPath.getProgress(straightPath.getLinearProgress(0.75)), EPSILON);
     }
 
     @ParameterizedTest
     @ValueSource(doubles = {0.0, 0.25, 0.5, 0.75, 1.0})
     @DisplayName("getProgress should find the correct progress for points on the path")
-    void getProgress_findsCorrectProgressForOnPathPoints(double t) {
-        Vec3d pointOnPath = straightPath.sampleLinear(t);
-        double expectedS = straightPath.getNormalizedProgress(t);
+    void getProgress_findsCorrectNormalizedProgressForOnPathPoints(double t) {
+        Vec3d pointOnPath = straightPath.samplePositionLinear(t);
+        double expectedS = straightPath.getProgress(t);
         assertEquals(expectedS, straightPath.getProgress(pointOnPath), 1e-4);
     }
 
@@ -159,7 +159,7 @@ class SplinePathTest {
     void getProgress_findsClosestPointForOffPathQueries() {
         Vec3d queryPos = new Vec3d(10, 5, 0); // Above the midpoint of the straight path
         double progress = straightPath.getProgress(queryPos);
-        Vec3d closestPoint = straightPath.sample(progress);
+        Vec3d closestPoint = straightPath.samplePosition(progress);
         assertVectorEquals(new Vec3d(10, 0, 0), closestPoint);
     }
 

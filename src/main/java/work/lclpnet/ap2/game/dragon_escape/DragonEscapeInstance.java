@@ -27,7 +27,9 @@ import java.util.Set;
 
 public class DragonEscapeInstance extends FFAGameInstance {
 
-    private static final boolean DEBUG_PATH = true;
+    private static final boolean
+            DEBUG_PATH = true,
+            DEBUG_PROGRESS = true;
 
     private final OrderedDataContainer<ServerPlayerEntity, PlayerRef> completed = new OrderedDataContainer<>(PlayerRef::create);
     private final ScoreDataContainer<ServerPlayerEntity, PlayerRef> score = new ScoreDataContainer<>(PlayerRef::create);
@@ -63,7 +65,10 @@ public class DragonEscapeInstance extends FFAGameInstance {
         teleportPlayers();
 
         if (DEBUG_PATH) {
-            SplinePathDebugger.debug(commons().debugController(), path, 1000);
+            var debugger = new SplinePathDebugger(commons().debugController(), path);
+            debugger.renderPath(1000);
+
+            debugger.renderLiveProgress(gameHandle::getParticipants, gameHandle.getGameScheduler());
         }
     }
 
@@ -100,6 +105,5 @@ public class DragonEscapeInstance extends FFAGameInstance {
 
     @Override
     protected void ready() {
-
     }
 }

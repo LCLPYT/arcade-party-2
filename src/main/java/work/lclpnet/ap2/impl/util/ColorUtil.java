@@ -12,6 +12,11 @@ public class ColorUtil {
     public static int getRandomHsvColor(Random random) {
         // hue between 0 and 360
         final float hue = random.nextFloat() * 360;
+
+        return getRandomHsvColor(random, hue);
+    }
+
+    public static int getRandomHsvColor(Random random, float hue) {
         // saturation between 0.6 and 1
         final float saturation = random.nextFloat() * 0.4F + 0.6F;
         // value between 0.9 and 1

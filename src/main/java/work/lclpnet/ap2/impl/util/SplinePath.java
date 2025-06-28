@@ -54,13 +54,13 @@ public class SplinePath {
 
         double[] arcLength = new double[samples];
 
-        Vec3d start = sampleLinear(0.d);
+        Vec3d start = samplePositionLinear(0.d);
         double totalLen = 0.d;
 
         arcLength[0] = totalLen;
 
         for (int i = 1; i < samples; i++) {
-            Vec3d end = sampleLinear(i * dt);
+            Vec3d end = samplePositionLinear(i * dt);
 
             totalLen += start.distanceTo(end);
             arcLength[i] = totalLen;
@@ -76,7 +76,7 @@ public class SplinePath {
      * @param t The progress parameter ranging [0..1].
      * @return The position vector at t.
      */
-    public Vec3d sampleLinear(double t) {
+    public Vec3d samplePositionLinear(double t) {
         if (t <= 0.d) {
             return new Vec3d(x[0], y[0], z[0]);
         }
@@ -110,11 +110,11 @@ public class SplinePath {
      */
     public Vec3d sampleDirectionLinear(double t) {
         if (t <= 0.d) {
-            return sampleLinear(0.001).subtract(sampleLinear(0)).normalize();
+            return samplePositionLinear(0.001).subtract(samplePositionLinear(0)).normalize();
         }
 
         if (t >= 1.d) {
-            return sampleLinear(1).subtract(sampleLinear(0.999)).normalize();
+            return samplePositionLinear(1).subtract(samplePositionLinear(0.999)).normalize();
         }
 
         t *= n - 1;
@@ -157,8 +157,8 @@ public class SplinePath {
      * @param s The progress parameter ranging [0..1].
      * @return The position vector at s.
      */
-    public Vec3d sample(double s) {
-        return sampleLinear(getLinearProgress(s));
+    public Vec3d samplePosition(double s) {
+        return samplePositionLinear(getLinearProgress(s));
     }
 
     /**
@@ -182,13 +182,26 @@ public class SplinePath {
     }
 
     /**
-     * Return the spline parameter [0..1] that corresponds to the nearest point on the path towards the given position.
+     * Return the spline parameter [0..1] that corresponds to the nearest point on the path towards the given position using arclength-normalized parametrization.
      * In other words, grade the progress of a given position along the path.
      * @param queryPos The query position.
-     * @return The normalized spline parameter [0..1] that can be used to retrieve the nearest path position towards
-     * the query position using the {@link #sample(double)} method.
+     * @return The spline parameter [0..1] that can be used to retrieve the nearest path position towards
+     * the query position using the {@link #samplePosition(double)} method.
      */
     public double getProgress(Vec3d queryPos) {
+        double t = getLinearProgress(queryPos);
+
+        return getProgress(t);
+    }
+
+    /**
+     * Return the spline parameter [0..1] that corresponds to the nearest point on the path towards the given position using linear segment parametrization.
+     * In other words, grade the progress of a given position along the path.
+     * @param queryPos The query position.
+     * @return The spline parameter [0..1] that can be used to retrieve the nearest path position towards
+     * the query position using the {@link #samplePositionLinear(double)} method.
+     */
+    public double getLinearProgress(Vec3d queryPos) {
         // estimate segment progress, then refine using Newtons method
         double t = estimateSegmentProgress(queryPos);
 
@@ -196,18 +209,18 @@ public class SplinePath {
         final double EPSILON = 1e-6;
 
         for (int iter = 0; iter < MAX_ITERATIONS; iter++) {
-            Vec3d pos = sampleLinear(t);
-            Vec3d d1 = sampleDirectionLinear(t);
+            Vec3d pos = samplePositionLinear(t);
+            Vec3d d1 = sampleDirectionLinear(t);  // first derivative
 
-            Vec3d V = d1.subtract(pos);
+            Vec3d V = pos.subtract(queryPos);
 
             // f(t) = V . P'(t)
-            double ft = pos.subtract(queryPos).dotProduct(d1);
+            double ft = V.dotProduct(d1);
 
             if (abs(ft) < EPSILON) break;
 
             // Calculate f'(t)
-            Vec3d d2 = sampleCurvatureLinear(t);
+            Vec3d d2 = sampleCurvatureLinear(t);  // second derivative
             double d1t = d1.dotProduct(d1) + V.dotProduct(d2);
 
             if (abs(d1t) < 1e-10) break;
@@ -216,7 +229,13 @@ public class SplinePath {
             t = max(0.d, min(1.d, t - (ft / d1t)));
         }
 
-        return getNormalizedProgress(t);
+        return t;
+    }
+
+    public Vec3d getNearestPosition(Vec3d queryPos) {
+        double s = getLinearProgress(queryPos);
+
+        return samplePositionLinear(s);
     }
 
     /**
@@ -224,7 +243,7 @@ public class SplinePath {
      * @param t The linear segment progress.
      * @return The arclength-normalized progress.
      */
-    public double getNormalizedProgress(double t) {
+    public double getProgress(double t) {
         if (t <= 0.d) return 0.d;
         if (t >= 1.d) return 1.d;
 
@@ -291,21 +310,21 @@ public class SplinePath {
 
         // arcLength pos to spline parameter
         double minSqDist = Double.MAX_VALUE;
-        double initialT = 0.0;
+        double minT = 0.0;
 
         for (int i = 0; i < arcLength.length; i++) {
             double t = i * dt;
 
-            Vec3d sample = sampleLinear(t);
+            Vec3d sample = samplePositionLinear(t);
             double distSq = queryPos.squaredDistanceTo(sample);
 
             if (distSq < minSqDist) {
                 minSqDist = distSq;
-                initialT = t;
+                minT = t;
             }
         }
 
-        return initialT;
+        return minT;
     }
 
     /**
