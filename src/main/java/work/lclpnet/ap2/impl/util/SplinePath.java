@@ -356,6 +356,10 @@ public class SplinePath {
         return keypoints;
     }
 
+    public double getLength() {
+        return arcLength[arcLength.length - 1];
+    }
+
     private static double[] solveNaturalCubic(int n, double[] v) {
         var A = new SimpleMatrix(n, n);
         var rhs = new SimpleMatrix(n, 1);

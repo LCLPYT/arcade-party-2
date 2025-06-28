@@ -37,6 +37,7 @@ public class DragonEscapeInstance extends FFAGameInstance {
     private final Random random = new Random();
 
     private SplinePath path = null;
+    private DragonController dragonController;
 
     public DragonEscapeInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
@@ -64,11 +65,16 @@ public class DragonEscapeInstance extends FFAGameInstance {
 
         teleportPlayers();
 
+        dragonController = new DragonController(path, getWorld());
+        dragonController.spawnDragon();
+
         if (DEBUG_PATH) {
             var debugger = new SplinePathDebugger(commons().debugController(), path);
             debugger.renderPath(1000);
 
-            debugger.renderLiveProgress(gameHandle::getParticipants, gameHandle.getGameScheduler());
+            if (DEBUG_PROGRESS) {
+                debugger.renderLiveProgress(gameHandle::getParticipants, gameHandle.getGameScheduler());
+            }
         }
     }
 
@@ -105,5 +111,6 @@ public class DragonEscapeInstance extends FFAGameInstance {
 
     @Override
     protected void ready() {
+        dragonController.start(gameHandle.getGameScheduler());
     }
 }
