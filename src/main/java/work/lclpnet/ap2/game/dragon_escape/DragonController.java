@@ -1,5 +1,6 @@
 package work.lclpnet.ap2.game.dragon_escape;
 
+import lombok.Getter;
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.EntityType;
@@ -16,6 +17,7 @@ import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 
 import java.util.Optional;
 import java.util.Random;
+import java.util.function.Predicate;
 
 import static java.lang.Math.*;
 
@@ -26,15 +28,18 @@ public class DragonController {
     private final SplinePath path;
     private final ServerWorld world;
     private final Random random;
+    private final Predicate<BlockPos> canDestroy;
     private final double baseStepPerTick;
 
     private EnderDragonEntity dragon = null;
+    @Getter
     private double dragonProgress = 0;
 
-    public DragonController(SplinePath path, ServerWorld world, Random random) {
+    public DragonController(SplinePath path, ServerWorld world, Random random, Predicate<BlockPos> canDestroy) {
         this.path = path;
         this.world = world;
         this.random = random;
+        this.canDestroy = canDestroy;
 
         double length = path.getLength();
 
@@ -52,18 +57,26 @@ public class DragonController {
         this.dragon = dragon;
     }
 
-    public void start(TaskScheduler scheduler) {
+    public void init(TaskScheduler scheduler) {
         scheduler.interval(this::tick, 1);
     }
 
+    public void startMoving(TaskScheduler scheduler) {
+        scheduler.interval(this::tickMovement, 1);
+    }
+
     private void tick() {
+        if (dragon == null) return;
+
+        destroyBlocks(BlockBox.of(dragon.getBoundingBox().expand(0, 2, 0).offset(0, -2, 0)));
+    }
+
+    private void tickMovement() {
         dragonProgress = max(0, min(1, dragonProgress + baseStepPerTick));
 
         if (dragon == null) return;
 
         setProgress(dragon, dragonProgress);
-
-        destroyBlocks(BlockBox.of(dragon.getBoundingBox().expand(0, 2, 0).offset(0, -2, 0)));
     }
 
     private void setProgress(EnderDragonEntity dragon, double s) {
@@ -85,7 +98,7 @@ public class DragonController {
         int destroyed = 0;
 
         for (BlockPos pos : box) {
-            if (world.getBlockState(pos).isAir()) continue;
+            if (world.getBlockState(pos).isAir() || !canDestroy.test(pos)) continue;
 
             if (world.setBlockState(pos, Blocks.AIR.getDefaultState(), Block.NOTIFY_ALL)) {
                 destroyed++;

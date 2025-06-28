@@ -1,6 +1,7 @@
 package work.lclpnet.ap2.impl.util.world.stage;
 
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Position;
 import work.lclpnet.ap2.api.util.Collider;
 import work.lclpnet.ap2.impl.util.BlockBox;
 
@@ -21,6 +22,10 @@ public interface BlockShape extends Iterable<BlockPos>, Collider {
     }
 
     default boolean contains(BlockPos pos) {
+        return contains(pos.getX(), pos.getY(), pos.getZ());
+    }
+
+    default boolean contains(Position pos) {
         return contains(pos.getX(), pos.getY(), pos.getZ());
     }
 

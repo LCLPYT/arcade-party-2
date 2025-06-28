@@ -1,16 +1,9 @@
 package work.lclpnet.ap2.game.red_light_green_light;
 
-import it.unimi.dsi.fastutil.ints.IntList;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.FireworkExplosionComponent;
-import net.minecraft.component.type.FireworksComponent;
 import net.minecraft.entity.boss.BossBar;
-import net.minecraft.entity.projectile.FireworkRocketEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.scoreboard.AbstractTeam;
 import net.minecraft.scoreboard.Team;
@@ -31,9 +24,9 @@ import work.lclpnet.ap2.impl.game.data.OrderedDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.BlockBox;
+import work.lclpnet.ap2.impl.util.Fireworks;
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
-import work.lclpnet.kibu.access.entity.FireworkEntityAccess;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.player.PlayerMoveCallback;
 import work.lclpnet.kibu.scheduler.Ticks;
@@ -275,16 +268,9 @@ public class RedLightGreenLightInstance extends FFAGameInstance implements Runna
 
         data.add(player);
 
-        var explosion = new FireworkExplosionComponent(FireworkExplosionComponent.Type.LARGE_BALL, IntList.of(0x20FF4D), IntList.of(0x1E7220), false, true);
-
-        ItemStack rocket = new ItemStack(Items.FIREWORK_ROCKET);
-        rocket.set(DataComponentTypes.FIREWORKS, new FireworksComponent(1, List.of(explosion)));
-
         ServerWorld world = getWorld();
-        FireworkRocketEntity firework = new FireworkRocketEntity(world, player.getX(), player.getY(), player.getZ(), rocket);
-        world.spawnEntity(firework);
 
-        FireworkEntityAccess.explode(firework);
+        Fireworks.spawnGoalFirework(player);
 
         Translations translations = gameHandle.getTranslations();
 
