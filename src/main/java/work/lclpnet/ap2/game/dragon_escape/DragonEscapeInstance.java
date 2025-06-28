@@ -92,6 +92,11 @@ public class DragonEscapeInstance extends FFAGameInstance {
         dragonController.spawnDragon();
         dragonController.init(gameHandle.getGameScheduler());
 
+        commons().whenBelowCriticalHeight().then(player -> {
+            softEliminate(player);
+            checkComplete();
+        });
+
         if (DEBUG_PATH) {
             debugPath(path);
         }
