@@ -6,6 +6,7 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -22,14 +23,15 @@ import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.Fireworks;
 import work.lclpnet.ap2.impl.util.SplinePath;
 import work.lclpnet.ap2.impl.util.debug.SplinePathDebugger;
+import work.lclpnet.ap2.impl.util.world.ChunkPersistence;
 import work.lclpnet.ap2.impl.util.world.stage.BlockShape;
-import work.lclpnet.kibu.translate.text.FormatWrapper;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 import work.lclpnet.lobby.game.map.MapUtils;
 
 import java.util.*;
 import java.util.stream.Stream;
 
+import static net.minecraft.util.math.ChunkSectionPos.getSectionCoord;
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
 public class DragonEscapeInstance extends FFAGameInstance {
@@ -79,6 +81,8 @@ public class DragonEscapeInstance extends FFAGameInstance {
 
         this.path = path;
 
+        markChunksPersistent();
+
         teleportPlayers();
 
         ServerWorld world = getWorld();
@@ -90,6 +94,23 @@ public class DragonEscapeInstance extends FFAGameInstance {
 
         if (DEBUG_PATH) {
             debugPath(path);
+        }
+    }
+
+    private void markChunksPersistent() {
+        var persistence = new ChunkPersistence(getWorld(), gameHandle);
+
+        final int SAMPLES = 1000;
+
+        for (int i = 0; i < SAMPLES; i++) {
+            double t = (double) i / (SAMPLES - 1);
+
+            Vec3d pos = path.samplePosition(t);
+
+            int cx = getSectionCoord(pos.getX());
+            int cz = getSectionCoord(pos.getZ());
+
+            persistence.markPersistent(cx, cz);
         }
     }
 
