@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
+import java.util.stream.Stream;
 
 public class DragonEscapeInstance extends FFAGameInstance {
 
@@ -73,7 +74,10 @@ public class DragonEscapeInstance extends FFAGameInstance {
             debugger.renderPath(1000);
 
             if (DEBUG_PROGRESS) {
-                debugger.renderLiveProgress(gameHandle::getParticipants, gameHandle.getGameScheduler());
+                debugger.renderLiveProgress(() -> Stream.concat(
+                        gameHandle.getParticipants().stream(),
+                        dragonController.dragon().stream()
+                ).toList(), gameHandle.getGameScheduler());
             }
         }
     }

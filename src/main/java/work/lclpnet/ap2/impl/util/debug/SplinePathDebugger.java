@@ -1,13 +1,14 @@
 package work.lclpnet.ap2.impl.util.debug;
 
 import net.minecraft.block.Blocks;
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.entity.Entity;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 import work.lclpnet.ap2.impl.scene.Object3d;
 import work.lclpnet.ap2.impl.util.ColorUtil;
 import work.lclpnet.ap2.impl.util.SplinePath;
+import work.lclpnet.ap2.impl.util.math.MathUtil;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 
 import java.util.*;
@@ -15,7 +16,9 @@ import java.util.function.Supplier;
 
 public class SplinePathDebugger {
 
-    private static final boolean DEBUG_SPACING = false;
+    private static final boolean
+            DEBUG_SPACING = false,
+            DEBUG_DIRECTION = false;
 
     private final DebugController debugger;
     private final SplinePath path;
@@ -44,7 +47,9 @@ public class SplinePathDebugger {
         renderer.marker(start, Blocks.YELLOW_CONCRETE.getDefaultState(), 0xeeff00, 0.2f);
 
         for (int i = 1; i < samples; i++) {
-            Vec3d end = path.samplePosition(i * step);
+            double s = i * step;
+
+            Vec3d end = path.samplePosition(s);
 
             renderer.line(start, end, 0.1, Blocks.YELLOW_CONCRETE.getDefaultState());
 
@@ -58,14 +63,26 @@ public class SplinePathDebugger {
                 Vec3d right = dir.crossProduct(Direction.UP.getDoubleVector());
                 Vec3d up = right.crossProduct(dir);
 
-                renderer.text(midpoint.add(up.multiply(0.25)), Text.literal(String.format("%.2f", start.distanceTo(end))));
+                var label = Text.literal(String.format("%.2f", start.distanceTo(end)));
+                renderer.text(midpoint.add(up.multiply(0.25)), label);
+            }
+
+            if (DEBUG_DIRECTION) {
+                Vec3d dir = path.sampleDirection(s).normalize();
+                Vec3d right = dir.crossProduct(Direction.UP.getDoubleVector());
+                Vec3d up = right.crossProduct(dir);
+
+                renderer.arrow(start, dir, Blocks.LIME_TERRACOTTA.getDefaultState());
+
+                var label = Text.literal("(%.2f, %.2f)".formatted(MathUtil.yaw(dir), MathUtil.pitch(dir)));
+                renderer.text(start.add(up.multiply(0.25)), label);
             }
 
             start = end;
         }
     }
 
-    public void renderLiveProgress(Supplier<Iterable<? extends ServerPlayerEntity>> playerGetter, TaskScheduler scheduler) {
+    public void renderLiveProgress(Supplier<Iterable<? extends Entity>> playerGetter, TaskScheduler scheduler) {
         DebugRenderer renderer = debugger.renderer().orElse(null);
 
         if (renderer == null) return;
@@ -73,20 +90,20 @@ public class SplinePathDebugger {
         Random random = new Random();
         Map<UUID, Object3d> markers = new HashMap<>();
 
-        for (ServerPlayerEntity player : playerGetter.get()) {
-            Vec3d pos = path.getNearestPosition(player.getPos());
+        for (Entity entity : playerGetter.get()) {
+            Vec3d pos = path.getNearestPosition(entity.getPos());
 
             int color = ColorUtil.getRandomHsvColor(random, random.nextFloat(110, 360));
 
             Object3d marker = renderer.marker(pos, Blocks.RED_CONCRETE.getDefaultState(), color);
 
-            markers.put(player.getUuid(), marker);
+            markers.put(entity.getUuid(), marker);
         }
 
         scheduler.interval(info -> {
             Set<UUID> removal = new HashSet<>(markers.keySet());
 
-            for (ServerPlayerEntity player : playerGetter.get()) {
+            for (Entity player : playerGetter.get()) {
                 UUID uuid = player.getUuid();
                 Object3d marker = markers.get(uuid);
 

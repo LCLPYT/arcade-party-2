@@ -9,6 +9,8 @@ import work.lclpnet.ap2.impl.util.SplinePath;
 import work.lclpnet.ap2.impl.util.math.MathUtil;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 
+import java.util.Optional;
+
 import static java.lang.Math.max;
 import static java.lang.Math.min;
 
@@ -50,7 +52,9 @@ public class DragonController {
     private void tick() {
         dragonProgress = max(0, min(1, dragonProgress + baseStepPerTick));
 
-        setProgress(dragon, dragonProgress);
+        if (dragon != null) {
+            setProgress(dragon, dragonProgress);
+        }
     }
 
     private void setProgress(EnderDragonEntity dragon, double s) {
@@ -58,9 +62,13 @@ public class DragonController {
 
         dragon.setPosition(pos);
 
-        Vec3d dir = path.sampleDirection(s).normalize();
+        Vec3d dir = path.sampleDirection(s).normalize().multiply(-1);
 
         dragon.setYaw(MathUtil.yaw(dir));
         dragon.setPitch(MathUtil.pitch(dir));
+    }
+
+    public Optional<EnderDragonEntity> dragon() {
+        return Optional.ofNullable(dragon);
     }
 }
