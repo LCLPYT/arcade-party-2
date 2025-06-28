@@ -1,5 +1,6 @@
 package work.lclpnet.ap2.game.dragon_escape;
 
+import net.minecraft.entity.boss.dragon.EnderDragonEntity;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
@@ -18,6 +19,7 @@ import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.SplinePath;
 import work.lclpnet.ap2.impl.util.debug.SplinePathDebugger;
 import work.lclpnet.ap2.impl.util.world.stage.BlockShape;
+import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 import work.lclpnet.lobby.game.map.MapUtils;
 
 import java.util.ArrayList;
@@ -66,7 +68,7 @@ public class DragonEscapeInstance extends FFAGameInstance {
 
         teleportPlayers();
 
-        dragonController = new DragonController(path, getWorld());
+        dragonController = new DragonController(path, getWorld(), random);
         dragonController.spawnDragon();
 
         if (DEBUG_PATH) {
@@ -115,6 +117,14 @@ public class DragonEscapeInstance extends FFAGameInstance {
 
     @Override
     protected void ready() {
+        gameHandle.protect(config -> config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, source) -> {
+            if (source.getAttacker() instanceof EnderDragonEntity ) {
+                // TODO eliminate
+            }
+
+            return false;
+        }));
+
         dragonController.start(gameHandle.getGameScheduler());
     }
 }

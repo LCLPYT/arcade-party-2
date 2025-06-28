@@ -1,33 +1,40 @@
 package work.lclpnet.ap2.game.dragon_escape;
 
+import net.minecraft.block.Block;
+import net.minecraft.block.Blocks;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.boss.dragon.EnderDragonEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.WorldEvents;
 import work.lclpnet.ap2.core.type.ApEnderDragon;
+import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.SplinePath;
 import work.lclpnet.ap2.impl.util.math.MathUtil;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 
 import java.util.Optional;
+import java.util.Random;
 
-import static java.lang.Math.max;
-import static java.lang.Math.min;
+import static java.lang.Math.*;
 
 public class DragonController {
 
-    private static final double BASE_SPEED_BPS = 2d;
+    private static final double BASE_SPEED_BPS = 2.5d;
 
     private final SplinePath path;
     private final ServerWorld world;
+    private final Random random;
     private final double baseStepPerTick;
 
     private EnderDragonEntity dragon = null;
     private double dragonProgress = 0;
 
-    public DragonController(SplinePath path, ServerWorld world) {
+    public DragonController(SplinePath path, ServerWorld world, Random random) {
         this.path = path;
         this.world = world;
+        this.random = random;
 
         double length = path.getLength();
 
@@ -52,9 +59,11 @@ public class DragonController {
     private void tick() {
         dragonProgress = max(0, min(1, dragonProgress + baseStepPerTick));
 
-        if (dragon != null) {
-            setProgress(dragon, dragonProgress);
-        }
+        if (dragon == null) return;
+
+        setProgress(dragon, dragonProgress);
+
+        destroyBlocks(BlockBox.of(dragon.getBoundingBox().expand(0, 2, 0).offset(0, -2, 0)));
     }
 
     private void setProgress(EnderDragonEntity dragon, double s) {
@@ -70,5 +79,29 @@ public class DragonController {
 
     public Optional<EnderDragonEntity> dragon() {
         return Optional.ofNullable(dragon);
+    }
+
+    private void destroyBlocks(BlockBox box) {
+        int destroyed = 0;
+
+        for (BlockPos pos : box) {
+            if (world.getBlockState(pos).isAir()) continue;
+
+            if (world.setBlockState(pos, Blocks.AIR.getDefaultState(), Block.NOTIFY_ALL)) {
+                destroyed++;
+            }
+        }
+
+        if (destroyed <= 0) return;
+
+        var pos = new BlockPos.Mutable();
+
+        int amount = max(1, destroyed / 20);
+
+        for (int i = 0; i < amount; i++) {
+            box.randomBlockPos(pos, random);
+
+            world.syncWorldEvent(WorldEvents.ENDER_DRAGON_BREAKS_BLOCK, pos, 0);
+        }
     }
 }
