@@ -37,8 +37,8 @@ import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 public class DragonEscapeInstance extends FFAGameInstance {
 
     private static final boolean
-            DEBUG_PATH = true,
-            DEBUG_PROGRESS = true;
+            DEBUG_PATH = false,
+            DEBUG_PROGRESS = false;
 
     private final OrderedDataContainer<ServerPlayerEntity, PlayerRef> completed = new OrderedDataContainer<>(PlayerRef::create);
     private final ScoreDataContainer<ServerPlayerEntity, PlayerRef> score = new ScoreDataContainer<>(PlayerRef::create);
@@ -88,7 +88,12 @@ public class DragonEscapeInstance extends FFAGameInstance {
         ServerWorld world = getWorld();
         pseudoElimination = new PseudoElimination(gameHandle, world);
 
-        dragonController = new DragonController(path, world, random, pos -> !goalShape.contains(pos));
+        dragonController = new DragonController(
+                path, world, random,
+                pos -> !goalShape.contains(pos),
+                () -> pseudoElimination.iterateParticipants().iterator()
+        );
+
         dragonController.spawnDragon();
         dragonController.init(gameHandle.getGameScheduler());
 
