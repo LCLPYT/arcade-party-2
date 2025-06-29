@@ -13,7 +13,7 @@ import org.jetbrains.annotations.NotNull;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.map.MapBootstrap;
 import work.lclpnet.ap2.impl.game.FFAGameInstance;
-import work.lclpnet.ap2.impl.game.data.ScoreDataContainer;
+import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedPlayerBossBar;
 import work.lclpnet.ap2.impl.util.world.StackedRoomGenerator;
@@ -34,7 +34,7 @@ import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
 public class AimMasterInstance extends FFAGameInstance implements MapBootstrap {
 
-    private final ScoreDataContainer<ServerPlayerEntity, PlayerRef> data = new ScoreDataContainer<>(PlayerRef::create);
+    private final IntScoreDataContainer<ServerPlayerEntity, PlayerRef> data = new IntScoreDataContainer<>(PlayerRef::create);
 
     //game parameters
     private static final int MIN_SCORE = 18;
@@ -62,7 +62,7 @@ public class AimMasterInstance extends FFAGameInstance implements MapBootstrap {
     }
 
     @Override
-    protected ScoreDataContainer<ServerPlayerEntity, PlayerRef> getData() {
+    protected IntScoreDataContainer<ServerPlayerEntity, PlayerRef> getData() {
         return data;
     }
 

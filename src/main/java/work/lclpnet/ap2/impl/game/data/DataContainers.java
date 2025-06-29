@@ -9,6 +9,6 @@ public class DataContainers {
     public static <T, Ref extends SubjectRef> IntDataContainer<T, Ref> finaleCompatibleScoreContainer(
             MiniGameHandle handle, SubjectRefFactory<T, Ref> refs
     ) {
-        return handle.isFinale() ? new ScoreTimeDataContainer<>(refs) : new ScoreDataContainer<>(refs);
+        return handle.isFinale() ? new ScoreTimeDataContainer<>(refs) : new IntScoreDataContainer<>(refs);
     }
 }

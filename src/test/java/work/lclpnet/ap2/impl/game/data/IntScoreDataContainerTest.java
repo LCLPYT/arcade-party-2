@@ -4,11 +4,11 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-class ScoreDataContainerTest {
+class IntScoreDataContainerTest {
 
     @Test
     void streamOrderedEntries() {
-        var container = new ScoreDataContainer<>(StringRef::new);
+        var container = new IntScoreDataContainer<>(StringRef::new);
 
         container.setScore("Player_A", 12);
         container.setScore("Player_B", 5);

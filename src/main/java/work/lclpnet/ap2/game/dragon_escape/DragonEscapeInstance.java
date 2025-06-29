@@ -7,6 +7,7 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
+import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -15,22 +16,23 @@ import work.lclpnet.ap2.api.game.MiniGameResults;
 import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.impl.game.FFAGameInstance;
 import work.lclpnet.ap2.impl.game.PseudoElimination;
-import work.lclpnet.ap2.impl.game.data.CombinedDataContainer;
-import work.lclpnet.ap2.impl.game.data.OrderedDataContainer;
-import work.lclpnet.ap2.impl.game.data.ScoreDataContainer;
+import work.lclpnet.ap2.impl.game.data.*;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.Fireworks;
 import work.lclpnet.ap2.impl.util.SplinePath;
+import work.lclpnet.ap2.impl.util.TimeHelper;
 import work.lclpnet.ap2.impl.util.debug.SplinePathDebugger;
 import work.lclpnet.ap2.impl.util.world.ChunkPersistence;
 import work.lclpnet.ap2.impl.util.world.stage.BlockShape;
+import work.lclpnet.kibu.translate.text.TranslatedText;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 import work.lclpnet.lobby.game.map.MapUtils;
 
 import java.util.*;
 import java.util.stream.Stream;
 
+import static java.lang.Math.max;
 import static net.minecraft.util.math.ChunkSectionPos.getSectionCoord;
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
@@ -41,15 +43,19 @@ public class DragonEscapeInstance extends FFAGameInstance {
             DEBUG_PROGRESS = false;
 
     private final OrderedDataContainer<ServerPlayerEntity, PlayerRef> completed = new OrderedDataContainer<>(PlayerRef::create);
-    private final ScoreDataContainer<ServerPlayerEntity, PlayerRef> score = new ScoreDataContainer<>(PlayerRef::create);
+    private final DoubleScoreDataContainer<ServerPlayerEntity, PlayerRef> score = new DoubleScoreDataContainer<>(
+            PlayerRef::create, Ordering.DESCENDING, "ap2.score.distance"
+    );
     private final CombinedDataContainer<ServerPlayerEntity, PlayerRef> data = new CombinedDataContainer<>(List.of(completed, score));
     private final Random random = new Random();
     private final Set<UUID> inGoal = new HashSet<>();
 
+    private long startMs = 0;
     private BlockShape goalShape = null;
     private SplinePath path = null;
     private DragonController dragonController = null;
     private PseudoElimination pseudoElimination = null;
+    private double playerStartDistance = 0;
     private double maxScore = Double.NEGATIVE_INFINITY;
     private boolean checkForCompletion = false;
 
@@ -78,6 +84,9 @@ public class DragonEscapeInstance extends FFAGameInstance {
         }
 
         goalShape = MapUtil.readShape(props.getJSONObject("goal-shape"));
+
+        Vec3d playerStartPos = MapUtil.readCenteredVec3d(props.getJSONArray("path-player-start"));
+        playerStartDistance = path.getProgress(playerStartPos) * path.getLength();
 
         this.path = path;
 
@@ -177,6 +186,8 @@ public class DragonEscapeInstance extends FFAGameInstance {
         dragonController.startMoving(gameHandle.getGameScheduler());
 
         gameHandle.getGameScheduler().interval(this::tick, 1);
+
+        startMs = milliTime();
     }
 
     private synchronized void tick() {
@@ -206,7 +217,10 @@ public class DragonEscapeInstance extends FFAGameInstance {
     private void onReachGoal(ServerPlayerEntity player) {
         if (!inGoal.add(player.getUuid()) || winManager.isGameOver()) return;
 
-        completed.add(player);  // TODO add time maybe?
+        double time = (milliTime() - startMs) / 1000.d;
+        TranslatedText duration = TimeHelper.formatTime(gameHandle.getTranslations(), time, "%.2f");
+
+        completed.add(player, duration);
 
         gameHandle.getTranslations().translateText("game.ap2.dragon_escape.goal", styled(player.getNameForScoreboard(), Formatting.YELLOW))
                 .formatted(Formatting.GREEN)
@@ -214,7 +228,7 @@ public class DragonEscapeInstance extends FFAGameInstance {
 
         Fireworks.spawnGoalFirework(player);
     }
-    
+
     private synchronized void softEliminateAndCheck(ServerPlayerEntity player) {
         softEliminate(player);
         checkComplete();
@@ -235,8 +249,7 @@ public class DragonEscapeInstance extends FFAGameInstance {
             maxScore = distance;
         }
 
-        // TODO use double score container
-        score.setScore(player, (int) Math.round(distance));
+        score.setScore(player, distance);
     }
 
     private double getProgress(ServerPlayerEntity player) {
@@ -244,20 +257,18 @@ public class DragonEscapeInstance extends FFAGameInstance {
     }
 
     private double getDistance(ServerPlayerEntity player) {
-        return getProgress(player) * path.getLength();
+        return max(0, (getProgress(player) * path.getLength()) - playerStartDistance);
     }
 
     private synchronized void checkComplete() {
         if (winManager.isGameOver()) return;
-        
+
         if (inGoal.size() >= 3) {
             complete();
             return;
         }
 
-        List<ServerPlayerEntity> remaining = pseudoElimination.streamParticipants()
-                .filter(player -> !inGoal.contains(player.getUuid()))
-                .toList();
+        List<ServerPlayerEntity> remaining = streamRemaining().toList();
 
         if (remaining.size() >= 2) return;
 
@@ -280,9 +291,20 @@ public class DragonEscapeInstance extends FFAGameInstance {
         complete();
     }
 
-    private void complete() {
+    private @NotNull Stream<ServerPlayerEntity> streamRemaining() {
+        return pseudoElimination.streamParticipants()
+                .filter(player -> !inGoal.contains(player.getUuid()));
+    }
+
+    private synchronized void complete() {
         if (winManager.isGameOver()) return;
 
+        streamRemaining().forEach(this::trackScore);
+
         winManager.complete();
+    }
+
+    private static long milliTime() {
+        return System.nanoTime() / 1_000_000;
     }
 }

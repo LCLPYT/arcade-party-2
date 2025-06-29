@@ -27,7 +27,7 @@ import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.core.hook.SpectatePlayerCallback;
 import work.lclpnet.ap2.impl.game.FFAGameInstance;
-import work.lclpnet.ap2.impl.game.data.ScoreDataContainer;
+import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.util.DeathMessages;
 import work.lclpnet.ap2.impl.util.ItemHelper;
@@ -53,7 +53,7 @@ public class OneInTheChamberInstance extends FFAGameInstance {
 
     static final int SCORE_LIMIT = 15;
     static final double RESPAWN_SPACING = 20;
-    private final ScoreDataContainer<ServerPlayerEntity, PlayerRef> data = new ScoreDataContainer<>(PlayerRef::create);
+    private final IntScoreDataContainer<ServerPlayerEntity, PlayerRef> data = new IntScoreDataContainer<>(PlayerRef::create);
     private final Random random = new Random();
     private final OneInTheChamberSpawns respawn = new OneInTheChamberSpawns(gameHandle, random);
     private final SimpleMovementBlocker movementBlocker;

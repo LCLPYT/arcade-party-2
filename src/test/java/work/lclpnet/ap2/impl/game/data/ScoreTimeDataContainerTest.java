@@ -1,7 +1,7 @@
 package work.lclpnet.ap2.impl.game.data;
 
 import org.junit.jupiter.api.Test;
-import work.lclpnet.ap2.impl.game.data.entry.ScoreDataEntry;
+import work.lclpnet.ap2.impl.game.data.entry.IntScoreDataEntry;
 import work.lclpnet.ap2.impl.game.data.entry.ScoreTimeDataEntry;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -35,8 +35,8 @@ class ScoreTimeDataContainerTest {
         container.setScore(playerA, 5);
         container.setScore(playerB, 6);
 
-        assertInstanceOf(ScoreDataEntry.class, container.getEntry(playerA).orElseThrow());
-        assertInstanceOf(ScoreDataEntry.class, container.getEntry(playerB).orElseThrow());
+        assertInstanceOf(IntScoreDataEntry.class, container.getEntry(playerA).orElseThrow());
+        assertInstanceOf(IntScoreDataEntry.class, container.getEntry(playerB).orElseThrow());
     }
 
     @Test
@@ -58,7 +58,7 @@ class ScoreTimeDataContainerTest {
 
         assertInstanceOf(ScoreTimeDataEntry.class, order.getFirst());
         assertInstanceOf(ScoreTimeDataEntry.class, order.get(1));
-        assertInstanceOf(ScoreDataEntry.class, order.get(2));
+        assertInstanceOf(IntScoreDataEntry.class, order.get(2));
 
         assertEquals(1, ((ScoreTimeDataEntry<StringRef>) order.getFirst()).ranking());
         assertEquals(2, ((ScoreTimeDataEntry<StringRef>) order.get(1)).ranking());

@@ -20,7 +20,7 @@ import work.lclpnet.ap2.impl.game.FFAGameInstance;
 import work.lclpnet.ap2.impl.game.PseudoElimination;
 import work.lclpnet.ap2.impl.game.data.IntDataContainer;
 import work.lclpnet.ap2.impl.game.data.Ordering;
-import work.lclpnet.ap2.impl.game.data.ScoreDataContainer;
+import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.BlockBox;
@@ -46,7 +46,7 @@ public class MimicryInstance extends FFAGameInstance implements MapBootstrap {
             REPLAY_MAX_SECONDS = 30,
             NEXT_ROUND_DELAY_SECONDS = 4;
 
-    private final IntDataContainer<ServerPlayerEntity, PlayerRef> dataContainer = new ScoreDataContainer<>(PlayerRef::create, Ordering.DESCENDING, "game.ap2.mimicry.completed");
+    private final IntDataContainer<ServerPlayerEntity, PlayerRef> dataContainer = new IntScoreDataContainer<>(PlayerRef::create, Ordering.DESCENDING, "game.ap2.mimicry.completed");
     private PseudoElimination pseudoElimination;
 
     private MimicryManager manager = null;

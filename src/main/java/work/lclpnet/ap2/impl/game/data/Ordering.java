@@ -2,7 +2,9 @@ package work.lclpnet.ap2.impl.game.data;
 
 import java.util.Comparator;
 import java.util.Optional;
+import java.util.function.ToDoubleFunction;
 import java.util.function.ToIntFunction;
+import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
 
 public enum Ordering {
@@ -17,6 +19,13 @@ public enum Ordering {
         }).stream().boxed().findAny();
     }
 
+    public Optional<Double> best(DoubleStream stream) {
+        return (switch (this) {
+            case DESCENDING -> stream.max();
+            case ASCENDING -> stream.min();
+        }).stream().boxed().findAny();
+    }
+
     public Ordering opposite() {
         return switch (this) {
             case DESCENDING -> ASCENDING;
@@ -24,8 +33,17 @@ public enum Ordering {
         };
     }
 
-    public <T> Comparator<T> order(ToIntFunction<T> keyExtractor) {
+    public <T> Comparator<T> orderInt(ToIntFunction<T> keyExtractor) {
         var comparator = Comparator.comparingInt(keyExtractor);
+
+        return switch (this) {
+            case DESCENDING -> comparator.reversed();
+            case ASCENDING -> comparator;
+        };
+    }
+
+    public <T> Comparator<T> orderDouble(ToDoubleFunction<T> keyExtractor) {
+        var comparator = Comparator.comparingDouble(keyExtractor);
 
         return switch (this) {
             case DESCENDING -> comparator.reversed();

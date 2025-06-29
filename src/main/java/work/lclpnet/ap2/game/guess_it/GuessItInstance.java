@@ -16,7 +16,7 @@ import work.lclpnet.ap2.api.map.MapBootstrap;
 import work.lclpnet.ap2.base.ApConstants;
 import work.lclpnet.ap2.game.guess_it.data.*;
 import work.lclpnet.ap2.impl.game.FFAGameInstance;
-import work.lclpnet.ap2.impl.game.data.ScoreDataContainer;
+import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.ScoreboardUtil;
@@ -48,7 +48,7 @@ public class GuessItInstance extends FFAGameInstance implements MapBootstrap {
     private static final int DELAY_TICKS = Ticks.seconds(5);
     private static final int MIN_ROUNDS = 8, MAX_ROUNDS = 14;
     private static final int MAX_CONSECUTIVE_ERRORS = 5;
-    private final ScoreDataContainer<ServerPlayerEntity, PlayerRef> data = new ScoreDataContainer<>(PlayerRef::create);
+    private final IntScoreDataContainer<ServerPlayerEntity, PlayerRef> data = new IntScoreDataContainer<>(PlayerRef::create);
     private final Random random = new Random();
     private final PlayerChoices choices;
     private final ChallengeResult result;

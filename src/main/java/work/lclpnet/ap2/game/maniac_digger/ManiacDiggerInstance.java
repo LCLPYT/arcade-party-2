@@ -26,7 +26,7 @@ import work.lclpnet.ap2.impl.game.FFAGameInstance;
 import work.lclpnet.ap2.impl.game.data.CombinedDataContainer;
 import work.lclpnet.ap2.impl.game.data.OrderedDataContainer;
 import work.lclpnet.ap2.impl.game.data.Ordering;
-import work.lclpnet.ap2.impl.game.data.ScoreDataContainer;
+import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.map.ServerThreadMapBootstrap;
 import work.lclpnet.ap2.impl.util.ItemHelper;
@@ -43,7 +43,7 @@ import java.util.*;
 public class ManiacDiggerInstance extends FFAGameInstance implements MapBootstrapFunction {
 
     private final OrderedDataContainer<ServerPlayerEntity, PlayerRef> reachedBottom = new OrderedDataContainer<>(PlayerRef::create);
-    private final ScoreDataContainer<ServerPlayerEntity, PlayerRef> score = new ScoreDataContainer<>(PlayerRef::create, Ordering.ASCENDING, "game.ap2.maniac_digger.result");
+    private final IntScoreDataContainer<ServerPlayerEntity, PlayerRef> score = new IntScoreDataContainer<>(PlayerRef::create, Ordering.ASCENDING, "game.ap2.maniac_digger.result");
     private final CombinedDataContainer<ServerPlayerEntity, PlayerRef> data = new CombinedDataContainer<>(List.of(reachedBottom, score));
     private final Map<UUID, MdPipe> pipes = new HashMap<>();
     private final Set<UUID> wrongTool = new HashSet<>();
