@@ -97,10 +97,7 @@ public class DragonEscapeInstance extends FFAGameInstance {
         dragonController.spawnDragon();
         dragonController.init(gameHandle.getGameScheduler());
 
-        commons().whenBelowCriticalHeight().then(player -> {
-            softEliminate(player);
-            checkComplete();
-        });
+        commons().whenBelowCriticalHeight().then(this::softEliminateAndCheck);
 
         if (DEBUG_PATH) {
             debugPath(path);
@@ -171,8 +168,7 @@ public class DragonEscapeInstance extends FFAGameInstance {
     protected void ready() {
         gameHandle.protect(config -> config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, source) -> {
             if (entity instanceof ServerPlayerEntity player && source.getAttacker() instanceof EnderDragonEntity) {
-                softEliminate(player);
-                checkComplete();
+                softEliminateAndCheck(player);
             }
 
             return false;
@@ -218,10 +214,21 @@ public class DragonEscapeInstance extends FFAGameInstance {
 
         Fireworks.spawnGoalFirework(player);
     }
+    
+    private synchronized void softEliminateAndCheck(ServerPlayerEntity player) {
+        softEliminate(player);
+        checkComplete();
+    }
 
     private synchronized void softEliminate(ServerPlayerEntity player) {
         if (!pseudoElimination.eliminate(player) || winManager.isGameOver()) return;
 
+        trackScore(player);
+
+        pseudoElimination.eliminate(player);
+    }
+
+    private void trackScore(ServerPlayerEntity player) {
         double distance = getDistance(player);
 
         if (distance > maxScore) {
@@ -230,8 +237,6 @@ public class DragonEscapeInstance extends FFAGameInstance {
 
         // TODO use double score container
         score.setScore(player, (int) Math.round(distance));
-
-        pseudoElimination.eliminate(player);
     }
 
     private double getProgress(ServerPlayerEntity player) {
@@ -244,6 +249,11 @@ public class DragonEscapeInstance extends FFAGameInstance {
 
     private synchronized void checkComplete() {
         if (winManager.isGameOver()) return;
+        
+        if (inGoal.size() >= 3) {
+            complete();
+            return;
+        }
 
         List<ServerPlayerEntity> remaining = pseudoElimination.streamParticipants()
                 .filter(player -> !inGoal.contains(player.getUuid()))
@@ -258,7 +268,7 @@ public class DragonEscapeInstance extends FFAGameInstance {
             double distance = getDistance(last);
 
             if (distance > maxScore) {
-                completed.add(last, gameHandle.getTranslations().translateText(""));
+                trackScore(last);
                 complete();
                 return;
             }
