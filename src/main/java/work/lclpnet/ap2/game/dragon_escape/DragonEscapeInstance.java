@@ -16,7 +16,10 @@ import work.lclpnet.ap2.api.game.MiniGameResults;
 import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.impl.game.FFAGameInstance;
 import work.lclpnet.ap2.impl.game.PseudoElimination;
-import work.lclpnet.ap2.impl.game.data.*;
+import work.lclpnet.ap2.impl.game.data.CombinedDataContainer;
+import work.lclpnet.ap2.impl.game.data.DoubleScoreDataContainer;
+import work.lclpnet.ap2.impl.game.data.OrderedDataContainer;
+import work.lclpnet.ap2.impl.game.data.Ordering;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.Fireworks;
@@ -34,6 +37,7 @@ import java.util.stream.Stream;
 
 import static java.lang.Math.max;
 import static net.minecraft.util.math.ChunkSectionPos.getSectionCoord;
+import static work.lclpnet.kibu.hook.util.OnGroundDetector.isOnGroundServer;
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
 public class DragonEscapeInstance extends FFAGameInstance {
@@ -49,6 +53,7 @@ public class DragonEscapeInstance extends FFAGameInstance {
     private final CombinedDataContainer<ServerPlayerEntity, PlayerRef> data = new CombinedDataContainer<>(List.of(completed, score));
     private final Random random = new Random();
     private final Set<UUID> inGoal = new HashSet<>();
+    private final Map<UUID, Tracker> trackers = new HashMap<>();
 
     private long startMs = 0;
     private BlockShape goalShape = null;
@@ -56,6 +61,7 @@ public class DragonEscapeInstance extends FFAGameInstance {
     private DragonController dragonController = null;
     private PseudoElimination pseudoElimination = null;
     private double playerStartDistance = 0;
+    private double pathEliminationDistance = 30;
     private double maxScore = Double.NEGATIVE_INFINITY;
     private boolean checkForCompletion = false;
 
@@ -88,6 +94,8 @@ public class DragonEscapeInstance extends FFAGameInstance {
         Vec3d playerStartPos = MapUtil.readCenteredVec3d(props.getJSONArray("path-player-start"));
         playerStartDistance = path.getProgress(playerStartPos) * path.getLength();
 
+        pathEliminationDistance = props.optDouble("path-elimination-distance", pathEliminationDistance);
+
         this.path = path;
 
         markChunksPersistent();
@@ -106,7 +114,11 @@ public class DragonEscapeInstance extends FFAGameInstance {
         dragonController.spawnDragon();
         dragonController.init(gameHandle.getGameScheduler());
 
-        commons().whenBelowCriticalHeight().then(this::softEliminateAndCheck);
+        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
+            Vec3d anchor = path.getNearestPosition(player.getPos());
+
+            trackers.put(player.getUuid(), new Tracker(anchor));
+        }
 
         if (DEBUG_PATH) {
             debugPath(path);
@@ -203,7 +215,14 @@ public class DragonEscapeInstance extends FFAGameInstance {
                 continue;
             }
 
-            if (getProgress(player) <= dragonController.getDragonProgress()) {
+            double progress = getProgress(player);
+
+            updateTracker(player, progress);
+
+            // eliminate the player if they are behind the dragon or not in range of the path
+            if (progress <= dragonController.getDragonProgress() || !player.getPos()
+                    .isInRange(path.samplePosition(progress), pathEliminationDistance)) {
+
                 softEliminate(player);
                 check = true;
             }
@@ -212,6 +231,15 @@ public class DragonEscapeInstance extends FFAGameInstance {
         if (check) {
             checkComplete();
         }
+    }
+
+    private synchronized void updateTracker(ServerPlayerEntity player, double progress) {
+        Tracker tracker = trackers.get(player.getUuid());
+
+        if (tracker == null || progress <= tracker.maxProgress || !isOnGroundServer(player)) return;
+
+        tracker.maxProgress = progress;
+        tracker.anchor = path.samplePosition(progress);
     }
 
     private void onReachGoal(ServerPlayerEntity player) {
@@ -242,7 +270,7 @@ public class DragonEscapeInstance extends FFAGameInstance {
         pseudoElimination.eliminate(player);
     }
 
-    private void trackScore(ServerPlayerEntity player) {
+    private synchronized void trackScore(ServerPlayerEntity player) {
         double distance = getDistance(player);
 
         if (distance > maxScore) {
@@ -256,8 +284,12 @@ public class DragonEscapeInstance extends FFAGameInstance {
         return path.getProgress(player.getPos());
     }
 
-    private double getDistance(ServerPlayerEntity player) {
-        return max(0, (getProgress(player) * path.getLength()) - playerStartDistance);
+    private synchronized double getDistance(ServerPlayerEntity player) {
+        Tracker tracker = trackers.get(player.getUuid());
+
+        double progress = tracker != null ? tracker.maxProgress : getProgress(player);
+
+        return max(0, (progress * path.getLength()) - playerStartDistance);
     }
 
     private synchronized void checkComplete() {
@@ -306,5 +338,14 @@ public class DragonEscapeInstance extends FFAGameInstance {
 
     private static long milliTime() {
         return System.nanoTime() / 1_000_000;
+    }
+
+    private static class Tracker {
+        double maxProgress = 0;
+        Vec3d anchor;
+
+        Tracker(Vec3d anchor) {
+            this.anchor = anchor;
+        }
     }
 }
