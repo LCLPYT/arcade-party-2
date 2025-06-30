@@ -1,0 +1,66 @@
+package work.lclpnet.ap2.game.dragon_escape.kit;
+
+import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.LoreComponent;
+import net.minecraft.item.ItemStack;
+import net.minecraft.registry.DynamicRegistryManager;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.text.Text;
+import net.minecraft.util.Identifier;
+import work.lclpnet.ap2.base.util.IconMaker;
+import work.lclpnet.kibu.hook.HookRegistrar;
+import work.lclpnet.kibu.translate.Translations;
+import work.lclpnet.kibu.translate.text.RootText;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static net.minecraft.util.Formatting.AQUA;
+import static net.minecraft.util.Formatting.GREEN;
+
+public interface KitHandle {
+
+    Identifier gameId();
+
+    HookRegistrar hooks();
+
+    Translations translations();
+
+    DynamicRegistryManager registries();
+
+    default ItemStack createItemStack(Kit kit, ServerPlayerEntity player) {
+        ItemStack stack = kit.createItemStack(registries());
+
+        decorateItemStack(stack, kit, player);
+
+        return stack;
+    }
+
+    default void decorateItemStack(ItemStack stack, Kit kit, ServerPlayerEntity player) {
+        Identifier gameId = gameId();
+        String kitId = kit.id();
+
+        RootText label = translations().translateText(player, "game.%s.%s.kit.%s"
+                .formatted(gameId.getNamespace(), gameId.getPath(), kitId))
+                .formatted(AQUA);
+
+        RootText description = translations().translateText(player, "game.%s.%s.kit.%s.description"
+                .formatted(gameId.getNamespace(), gameId.getPath(), kitId))
+                .formatted(GREEN);
+
+        stack.set(DataComponentTypes.ITEM_NAME, label);
+
+        List<Text> currentLore = stack.getOrDefault(DataComponentTypes.LORE, LoreComponent.DEFAULT).styledLines();
+        List<Text> loreToAdd = IconMaker.wrapText(description, 32);
+        List<Text> newLore = new ArrayList<>(currentLore);
+
+        if (!currentLore.isEmpty()) {
+            // newline between the lore
+            newLore.add(Text.of(""));
+        }
+
+        newLore.addAll(loreToAdd);
+
+        stack.set(DataComponentTypes.LORE, new LoreComponent(newLore));
+    }
+}

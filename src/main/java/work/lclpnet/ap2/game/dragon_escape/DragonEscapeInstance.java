@@ -14,6 +14,9 @@ import org.slf4j.Logger;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.MiniGameResults;
 import work.lclpnet.ap2.api.game.data.DataContainer;
+import work.lclpnet.ap2.game.dragon_escape.kit.KitManager;
+import work.lclpnet.ap2.game.dragon_escape.kit.LeapKit;
+import work.lclpnet.ap2.game.dragon_escape.kit.RecordKitHandle;
 import work.lclpnet.ap2.impl.game.FFAGameInstance;
 import work.lclpnet.ap2.impl.game.PseudoElimination;
 import work.lclpnet.ap2.impl.game.data.CombinedDataContainer;
@@ -76,6 +79,22 @@ public class DragonEscapeInstance extends FFAGameInstance {
 
     @Override
     protected void prepare() {
+        if (!readProps()) return;
+
+        pseudoElimination = new PseudoElimination(gameHandle, getWorld());
+
+        markChunksPersistent();
+        teleportPlayers();
+        setupDragon();
+        setupTrackers();
+        setupKits();
+
+        if (DEBUG_PATH) {
+            debugPath();
+        }
+    }
+
+    private boolean readProps() {
         JSONObject props = getMap().getProperties();
 
         JSONArray keypointsJson = props.getJSONArray("dragon-path");
@@ -86,7 +105,7 @@ public class DragonEscapeInstance extends FFAGameInstance {
         if (path == null) {
             logger.error("Failed to create dragon path, aborting game...");
             gameHandle.complete(MiniGameResults.EMPTY);
-            return;
+            return false;
         }
 
         goalShape = MapUtil.readShape(props.getJSONObject("goal-shape"));
@@ -98,31 +117,37 @@ public class DragonEscapeInstance extends FFAGameInstance {
 
         this.path = path;
 
-        markChunksPersistent();
+        return true;
+    }
 
-        teleportPlayers();
-
-        ServerWorld world = getWorld();
-        pseudoElimination = new PseudoElimination(gameHandle, world);
-
+    private void setupDragon() {
         dragonController = new DragonController(
-                path, world, random,
+                path, getWorld(), random,
                 pos -> !goalShape.contains(pos),
                 () -> pseudoElimination.iterateParticipants().iterator()
         );
 
         dragonController.spawnDragon();
         dragonController.init(gameHandle.getGameScheduler());
+    }
 
+    private void setupTrackers() {
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
             Vec3d anchor = path.getNearestPosition(player.getPos());
 
             trackers.put(player.getUuid(), new Tracker(anchor));
         }
+    }
 
-        if (DEBUG_PATH) {
-            debugPath(path);
-        }
+    private void setupKits() {
+        var kitHandle = RecordKitHandle.of(gameHandle, getWorld().getRegistryManager());
+
+        var kitManager = new KitManager(List.of(
+                new LeapKit(kitHandle, pseudoElimination::isParticipating)
+        ));
+
+        kitManager.init();
+        kitManager.setupPlayerKits(gameHandle.getParticipants());
     }
 
     private void markChunksPersistent() {
@@ -142,7 +167,7 @@ public class DragonEscapeInstance extends FFAGameInstance {
         }
     }
 
-    private void debugPath(SplinePath path) {
+    private void debugPath() {
         var debugger = new SplinePathDebugger(commons().debugController(), path);
         debugger.renderPath(1000);
 

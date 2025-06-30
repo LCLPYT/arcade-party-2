@@ -39,6 +39,10 @@ public class PseudoElimination {
         return toEliminate.contains(player.getUuid());
     }
 
+    public boolean isParticipating(ServerPlayerEntity player) {
+        return participants.isParticipating(player) && !isEliminated(player);
+    }
+
     public synchronized void commit() {
         stream().forEach(participants::remove);
 

@@ -262,6 +262,8 @@
   "game.ap2.dragon_escape.description": "Fliehe vor einem Enderdrachen, indem du Parkour machst.",
   "game.ap2.dragon_escape.task": "Fliehe vor dem Drachen",
   "game.ap2.dragon_escape.goal": "%s hat das Ziel erreicht.",
+  "game.ap2.dragon_escape.kit.leap": "Hüpfer",
+  "game.ap2.dragon_escape.kit.leap.description": "Erhalte eine Axt, welche dich in Blickrichtung hechten lässt, sobald du sie einsetzt.",
   "item.ap2.bow_spleef.triple_shot": "Dreifachschuss",
   "item.ap2.bow_spleef.triple_shot.desc": "Schießt drei Pfeile auf einmal",
   "item.ap2.bow_spleef.burst_shot": "Salvenschuss",
