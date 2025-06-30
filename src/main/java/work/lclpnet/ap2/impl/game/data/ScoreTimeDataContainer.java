@@ -44,6 +44,7 @@ public class ScoreTimeDataContainer<T, Ref extends SubjectRef> extends BaseDataC
         this.detailKey = detailKey;
     }
 
+    @Override
     public void setScore(T subject, int score) {
         synchronized (this) {
             Ref ref = refs.create(subject);

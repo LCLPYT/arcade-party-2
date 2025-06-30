@@ -40,6 +40,7 @@ public class IntScoreDataContainer<T, Ref extends SubjectRef> extends BaseDataCo
         this.detailKey = detailKey;
     }
 
+    @Override
     public void setScore(T subject, int score) {
         Ref ref = refs.create(subject);
 

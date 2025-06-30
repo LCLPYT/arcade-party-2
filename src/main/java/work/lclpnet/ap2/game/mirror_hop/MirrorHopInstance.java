@@ -19,7 +19,8 @@ import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.util.CollisionDetector;
 import work.lclpnet.ap2.impl.game.FFAGameInstance;
-import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer;
+import work.lclpnet.ap2.impl.game.data.DataContainers;
+import work.lclpnet.ap2.impl.game.data.IntDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.BlockBox;
@@ -37,7 +38,7 @@ import java.util.Random;
 
 public class MirrorHopInstance extends FFAGameInstance {
 
-    private final IntScoreDataContainer<ServerPlayerEntity, PlayerRef> data = new IntScoreDataContainer<>(PlayerRef::create);
+    private final IntDataContainer<ServerPlayerEntity, PlayerRef> data;
     private final CollisionDetector collisionDetector = new ChunkedCollisionDetector();
     private final PlayerMovementObserver movementObserver;
     private final MovementBlocker movementBlocker;
@@ -46,8 +47,10 @@ public class MirrorHopInstance extends FFAGameInstance {
 
     public MirrorHopInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
+
         movementObserver = new PlayerMovementObserver(collisionDetector, gameHandle.getParticipants()::isParticipating);
         movementBlocker = new CooldownMovementBlocker(gameHandle.getScheduler());
+        data = DataContainers.finaleCompatibleScoreContainer(gameHandle, PlayerRef::create);
     }
 
     @Override
