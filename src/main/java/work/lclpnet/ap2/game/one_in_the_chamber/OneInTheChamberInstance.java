@@ -82,7 +82,8 @@ public class OneInTheChamberInstance extends FFAGameInstance {
         commons().gameRuleBuilder()
                 .set(GameRules.DO_ENTITY_DROPS, false)
                 .set(GameRules.NATURAL_REGENERATION, false)
-                .set(GameRules.ANNOUNCE_ADVANCEMENTS, false);
+                .set(GameRules.ANNOUNCE_ADVANCEMENTS, false)
+                .set(GameRules.FALL_DAMAGE, false);
 
         JSONArray spawnsJson = getMap().requireProperty("random-spawns");
         respawn.loadSpawnPoints(spawnsJson);
