@@ -62,6 +62,7 @@
   "ap2.hint.mod": "Install the %s mod for the best experience in this game.",
   "ap2.hint.click_open": "Click to open %s",
   "ap2.kit_selector": "Kit selector",
+  "ap2.kit_selector.hint": "Select your kit",
   "game.ap2.title": "ArcadeParty",
   "game.ap2.reached_checkpoint": "Checkpoint reached",
   "game.ap2.spleef": "Spleef",

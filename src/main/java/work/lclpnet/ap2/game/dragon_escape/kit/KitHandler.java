@@ -12,6 +12,7 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Formatting;
 import work.lclpnet.ap2.api.base.Participants;
+import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.kibu.inv.prompt.OptionPrompt;
@@ -119,5 +120,17 @@ public class KitHandler {
                 .get(KIT_SELECTOR_CODEC)
                 .resultOrPartial()
                 .orElse(false);
+    }
+
+    public void selectKitChanger() {
+        for (ServerPlayerEntity player : participants) {
+            PlayerInventoryAccess.setSelectedSlot(player, 8);
+        }
+    }
+
+    public void selectKitItem() {
+        for (ServerPlayerEntity player : participants) {
+            PlayerInventoryAccess.setSelectedSlot(player, 0);
+        }
     }
 }

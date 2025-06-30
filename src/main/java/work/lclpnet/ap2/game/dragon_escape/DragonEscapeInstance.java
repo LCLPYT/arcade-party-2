@@ -34,6 +34,7 @@ import work.lclpnet.ap2.impl.util.world.ChunkPersistence;
 import work.lclpnet.ap2.impl.util.world.stage.BlockShape;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.kibu.hook.util.PlayerUtils;
+import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.translate.text.TranslatedText;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 import work.lclpnet.lobby.game.map.MapUtils;
@@ -51,6 +52,8 @@ public class DragonEscapeInstance extends FFAGameInstance {
     private static final boolean
             DEBUG_PATH = false,
             DEBUG_PROGRESS = false;
+
+    private static final int KIT_SELECTION_TICKS = Ticks.seconds(10);
 
     private final OrderedDataContainer<ServerPlayerEntity, PlayerRef> completed = new OrderedDataContainer<>(PlayerRef::create);
     private final DoubleScoreDataContainer<ServerPlayerEntity, PlayerRef> score = new DoubleScoreDataContainer<>(
@@ -177,10 +180,10 @@ public class DragonEscapeInstance extends FFAGameInstance {
 
         manager.init();
 
-
         kitHandler.init(gameHandle.getHookRegistrar());
         kitHandler.setupPlayerKits();
         kitHandler.enableKitChanger();
+        kitHandler.selectKitChanger();
     }
 
     private void markChunksPersistent() {
@@ -244,6 +247,15 @@ public class DragonEscapeInstance extends FFAGameInstance {
     }
 
     @Override
+    protected void afterInitialDelay() {
+        commons().announcer().announceSubtitle("ap2.kit_selector.hint");
+
+        kitHandler.selectKitChanger();
+
+        gameHandle.getGameScheduler().timeout(super::afterInitialDelay, KIT_SELECTION_TICKS);
+    }
+
+    @Override
     protected void ready() {
         gameHandle.protect(config -> config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, source) -> {
             if (entity instanceof ServerPlayerEntity player && source.getAttacker() instanceof EnderDragonEntity) {
@@ -254,6 +266,8 @@ public class DragonEscapeInstance extends FFAGameInstance {
         }));
 
         kitHandler.disableKitChanger();
+        kitHandler.selectKitItem();
+
         dragonController.startMoving(gameHandle.getGameScheduler());
 
         gameHandle.getGameScheduler().interval(this::tick, 1);
