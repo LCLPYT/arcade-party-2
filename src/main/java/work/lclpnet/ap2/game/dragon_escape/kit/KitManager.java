@@ -5,10 +5,7 @@ import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableBiMap;
 import lombok.Getter;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.NotNull;
-import work.lclpnet.ap2.api.base.Participants;
-import work.lclpnet.kibu.hook.HookRegistrar;
 
 import java.util.HashMap;
 import java.util.List;
@@ -38,7 +35,6 @@ public class KitManager {
         }
 
         this.kitById = ImmutableBiMap.copyOf(kitById);
-
         this.kits = List.copyOf(kits);
     }
 

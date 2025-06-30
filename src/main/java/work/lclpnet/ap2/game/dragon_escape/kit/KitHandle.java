@@ -9,6 +9,7 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import work.lclpnet.ap2.base.util.IconMaker;
 import work.lclpnet.kibu.hook.HookRegistrar;
+import work.lclpnet.kibu.inv.item.ItemStackUtil;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.kibu.translate.text.RootText;
 
@@ -28,25 +29,38 @@ public interface KitHandle {
 
     DynamicRegistryManager registries();
 
-    default ItemStack createItemStack(Kit kit, ServerPlayerEntity player) {
+    default ItemStack createKitIcon(Kit kit, ServerPlayerEntity player) {
         ItemStack stack = kit.createItemStack(registries());
 
-        decorateItemStack(stack, kit, player);
+        decorateItemStack(stack, kit, player, true);
 
         return stack;
     }
 
-    default void decorateItemStack(ItemStack stack, Kit kit, ServerPlayerEntity player) {
+    default ItemStack createItemStack(Kit kit, ServerPlayerEntity player) {
+        ItemStack stack = kit.createItemStack(registries());
+
+        decorateItemStack(stack, kit, player, false);
+
+        return stack;
+    }
+
+    default void decorateItemStack(ItemStack stack, Kit kit, ServerPlayerEntity player, boolean forIcon) {
         Identifier gameId = gameId();
         String kitId = kit.id();
+        Translations translations = translations();
 
-        RootText label = translations().translateText(player, "game.%s.%s.kit.%s"
+        RootText label = translations.translateText(player, "game.%s.%s.kit.%s"
                 .formatted(gameId.getNamespace(), gameId.getPath(), kitId))
                 .formatted(AQUA);
 
-        RootText description = translations().translateText(player, "game.%s.%s.kit.%s.description"
-                .formatted(gameId.getNamespace(), gameId.getPath(), kitId))
-                .formatted(GREEN);
+        String descriptionPath = forIcon ? "description" : "hint";
+        String descriptionKey = "game.%s.%s.kit.%s.%s"
+                .formatted(gameId.getNamespace(), gameId.getPath(), kitId, descriptionPath);
+
+        if (!translations.getTranslator().hasTranslation(translations.getLanguage(player), descriptionKey)) return;
+
+        RootText description = translations.translateText(player, descriptionKey).formatted(GREEN);
 
         stack.set(DataComponentTypes.ITEM_NAME, label);
 
@@ -61,6 +75,6 @@ public interface KitHandle {
 
         newLore.addAll(loreToAdd);
 
-        stack.set(DataComponentTypes.LORE, new LoreComponent(newLore));
+        ItemStackUtil.setLore(stack, newLore);
     }
 }

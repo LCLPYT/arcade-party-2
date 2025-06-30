@@ -4,7 +4,6 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.particle.ParticleTypes;
-import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -16,7 +15,7 @@ import work.lclpnet.kibu.scheduler.Ticks;
 
 import java.util.function.Predicate;
 
-public class LeapKit extends BaseKit {
+public class LeapKit extends SingleItemKit {
 
     public static final String ID = "leap";
 
@@ -29,13 +28,8 @@ public class LeapKit extends BaseKit {
     private final Predicate<ServerPlayerEntity> canUse;
 
     public LeapKit(KitHandle handle, Predicate<ServerPlayerEntity> canUse) {
-        super(handle, ID);
+        super(handle, ID, ITEM, USES);
         this.canUse = canUse;
-    }
-
-    @Override
-    public ItemStack createItemStack(DynamicRegistryManager manager) {
-        return new ItemStack(Items.IRON_AXE);
     }
 
     @Override
@@ -47,23 +41,11 @@ public class LeapKit extends BaseKit {
 
             if (stack.isOf(ITEM) && !player.getItemCooldownManager().isCoolingDown(stack) && canUse.test(player)) {
                 useItem(player, stack);
+                return ActionResult.SUCCESS_SERVER;
             }
 
             return ActionResult.PASS;
         });
-    }
-
-    @Override
-    public void equip(ServerPlayerEntity player) {
-        ItemStack stack = handle.createItemStack(this, player);
-        stack.setCount(USES);
-
-        player.getInventory().setStack(0, stack);
-    }
-
-    @Override
-    public void unequip(ServerPlayerEntity player) {
-        player.getInventory().removeStack(0);
     }
 
     private void useItem(ServerPlayerEntity player, ItemStack stack) {
@@ -78,7 +60,7 @@ public class LeapKit extends BaseKit {
         world.playSound(null, player.getX(), player.getY(), player.getZ(),
                 SoundEvents.ENTITY_WITHER_SHOOT, SoundCategory.PLAYERS, 0.5f, 1.8f);
 
-        world.spawnParticles(ParticleTypes.CLOUD, player.getX(), player.getY(), player.getZ(), 50,
-                0.2, 0.2, 0.2, 0.8);
+        world.spawnParticles(ParticleTypes.CLOUD, player.getX(), player.getY(), player.getZ(), 25,
+                0.2, 0.5, 0.2, 0.2);
     }
 }

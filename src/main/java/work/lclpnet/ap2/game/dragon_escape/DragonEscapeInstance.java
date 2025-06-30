@@ -14,9 +14,7 @@ import org.slf4j.Logger;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.MiniGameResults;
 import work.lclpnet.ap2.api.game.data.DataContainer;
-import work.lclpnet.ap2.game.dragon_escape.kit.KitManager;
-import work.lclpnet.ap2.game.dragon_escape.kit.LeapKit;
-import work.lclpnet.ap2.game.dragon_escape.kit.RecordKitHandle;
+import work.lclpnet.ap2.game.dragon_escape.kit.*;
 import work.lclpnet.ap2.impl.game.FFAGameInstance;
 import work.lclpnet.ap2.impl.game.PseudoElimination;
 import work.lclpnet.ap2.impl.game.data.CombinedDataContainer;
@@ -67,9 +65,13 @@ public class DragonEscapeInstance extends FFAGameInstance {
     private double pathEliminationDistance = 30;
     private double maxScore = Double.NEGATIVE_INFINITY;
     private boolean checkForCompletion = false;
+    private boolean itemUseAllowed = false;
+    private KitHandler kitHandler;
 
     public DragonEscapeInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
+
+        useOldCombat();
     }
 
     @Override
@@ -140,14 +142,21 @@ public class DragonEscapeInstance extends FFAGameInstance {
     }
 
     private void setupKits() {
-        var kitHandle = RecordKitHandle.of(gameHandle, getWorld().getRegistryManager());
+        var handle = RecordKitHandle.of(gameHandle, getWorld().getRegistryManager());
 
-        var kitManager = new KitManager(List.of(
-                new LeapKit(kitHandle, pseudoElimination::isParticipating)
+        var manager = new KitManager(List.of(
+                new LeapKit(handle, pseudoElimination::isParticipating),
+                new EnderPearlKit(handle),
+                new WindChargeKit(handle)
         ));
 
-        kitManager.init();
-        kitManager.setupPlayerKits(gameHandle.getParticipants());
+        manager.init();
+
+        kitHandler = new KitHandler(manager, gameHandle.getParticipants(), gameHandle.getTranslations(), handle);
+
+        kitHandler.init(gameHandle.getHookRegistrar());
+        kitHandler.setupPlayerKits();
+        kitHandler.enableKitChanger();
     }
 
     private void markChunksPersistent() {
@@ -220,11 +229,13 @@ public class DragonEscapeInstance extends FFAGameInstance {
             return false;
         }));
 
+        kitHandler.disableKitChanger();
         dragonController.startMoving(gameHandle.getGameScheduler());
 
         gameHandle.getGameScheduler().interval(this::tick, 1);
 
         startMs = milliTime();
+        itemUseAllowed = true;
     }
 
     private synchronized void tick() {
@@ -356,6 +367,7 @@ public class DragonEscapeInstance extends FFAGameInstance {
     private synchronized void complete() {
         if (winManager.isGameOver()) return;
 
+        itemUseAllowed = false;
         streamRemaining().forEach(this::trackScore);
 
         winManager.complete();
