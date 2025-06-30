@@ -4,6 +4,8 @@ import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.boss.dragon.EnderDragonEntity;
+import net.minecraft.entity.damage.DamageRecord;
+import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.projectile.WindChargeEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -12,6 +14,7 @@ import net.minecraft.util.ActionResult;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.GameRules;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -20,6 +23,7 @@ import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.MiniGameResults;
 import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.core.hook.ExplosionAffectedEntitiesCallback;
+import work.lclpnet.ap2.core.mixin.LivingEntityAccessor;
 import work.lclpnet.ap2.game.dragon_escape.kit.*;
 import work.lclpnet.ap2.impl.game.FFAGameInstance;
 import work.lclpnet.ap2.impl.game.PseudoElimination;
@@ -37,6 +41,8 @@ import work.lclpnet.ap2.impl.util.handler.VisibilityHandler;
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker;
 import work.lclpnet.ap2.impl.util.world.ChunkPersistence;
 import work.lclpnet.ap2.impl.util.world.stage.BlockShape;
+import work.lclpnet.kibu.access.misc.DamageTrackerAccess;
+import work.lclpnet.kibu.hook.entity.EntityHealthCallback;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.kibu.hook.util.PlayerUtils;
 import work.lclpnet.kibu.scheduler.Ticks;
@@ -110,6 +116,8 @@ public class DragonEscapeInstance extends FFAGameInstance {
 
         VisibilityHandler visibilityHandler = commons().addVisibilityChanger(commons().noCollision());
         setupKits(visibilityHandler);
+
+        commons().gameRuleBuilder().set(GameRules.FALL_DAMAGE, false);
 
         if (DEBUG_PATH) {
             debugPath();
@@ -288,11 +296,16 @@ public class DragonEscapeInstance extends FFAGameInstance {
     protected void ready() {
         gameHandle.protect(config -> {
             config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, source) -> {
-                if (entity instanceof ServerPlayerEntity player && source.getAttacker() instanceof EnderDragonEntity) {
-                    softEliminateAndCheck(player);
+                if (!(entity instanceof ServerPlayerEntity player) || !gameHandle.getParticipants().isParticipating(player)) {
+                    return false;
                 }
 
-                return false;
+                if (source.getAttacker() instanceof EnderDragonEntity) {
+                    softEliminateAndCheck(player);
+                    return false;
+                }
+
+                return true;
             });
 
             config.allow(ProtectionTypes.EXPLOSION, arg -> arg.getEntity() instanceof WindChargeEntity);
@@ -308,6 +321,8 @@ public class DragonEscapeInstance extends FFAGameInstance {
             return affected;
         });
 
+        setupSmoothDeath();
+
         kitHandler.disableKitChanger();
         kitHandler.selectKitItem();
         unblockMovement();
@@ -318,6 +333,33 @@ public class DragonEscapeInstance extends FFAGameInstance {
 
         startMs = milliTime();
         itemUseAllowed = true;
+    }
+
+    private void setupSmoothDeath() {
+        gameHandle.getHookRegistrar().registerHook(EntityHealthCallback.HOOK, (entity, health) -> {
+            if (!(entity instanceof ServerPlayerEntity player) || health > 0) return false;
+
+            // the player is dying
+            List<DamageRecord> recentDamage = DamageTrackerAccess.getRecentDamage(entity);
+
+            int size = recentDamage.size();
+
+            if (size == 0) {
+                softEliminateAndCheck(player);
+            } else {
+                DamageRecord damageRecord = recentDamage.get(size - 1);
+                DamageSource source = damageRecord.damageSource();
+
+                // try to use death protector
+                if (((LivingEntityAccessor) player).invokeTryUseDeathProtector(source)) {
+                    return true;
+                }
+
+                softEliminateAndCheck(player);
+            }
+
+            return true;
+        });
     }
 
     private synchronized void tick() {
@@ -344,6 +386,8 @@ public class DragonEscapeInstance extends FFAGameInstance {
                 softEliminate(player);
                 check = true;
             }
+
+            player.setFireTicks(0);
         }
 
         if (check) {
@@ -449,7 +493,6 @@ public class DragonEscapeInstance extends FFAGameInstance {
     private synchronized void complete() {
         if (winManager.isGameOver()) return;
 
-        itemUseAllowed = false;
         streamRemaining().forEach(this::trackScore);
 
         winManager.complete();
