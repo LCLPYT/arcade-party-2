@@ -12,6 +12,7 @@ import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.inv.item.ItemStackUtil;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.kibu.translate.text.RootText;
+import work.lclpnet.kibu.translate.text.TranslatedText;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -47,22 +48,17 @@ public interface KitHandle {
 
     default void decorateItemStack(ItemStack stack, Kit kit, ServerPlayerEntity player, boolean forIcon) {
         Identifier gameId = gameId();
-        String kitId = kit.id();
         Translations translations = translations();
 
-        RootText label = translations.translateText(player, "game.%s.%s.kit.%s"
-                .formatted(gameId.getNamespace(), gameId.getPath(), kitId))
-                .formatted(AQUA);
+        stack.set(DataComponentTypes.ITEM_NAME, kitName(kit).translateFor(player).formatted(AQUA));
 
         String descriptionPath = forIcon ? "description" : "hint";
         String descriptionKey = "game.%s.%s.kit.%s.%s"
-                .formatted(gameId.getNamespace(), gameId.getPath(), kitId, descriptionPath);
+                .formatted(gameId.getNamespace(), gameId.getPath(), kit.id(), descriptionPath);
 
         if (!translations.getTranslator().hasTranslation(translations.getLanguage(player), descriptionKey)) return;
 
         RootText description = translations.translateText(player, descriptionKey).formatted(GREEN);
-
-        stack.set(DataComponentTypes.ITEM_NAME, label);
 
         List<Text> currentLore = stack.getOrDefault(DataComponentTypes.LORE, LoreComponent.DEFAULT).styledLines();
         List<Text> loreToAdd = IconMaker.wrapText(description, 32);
@@ -76,5 +72,11 @@ public interface KitHandle {
         newLore.addAll(loreToAdd);
 
         ItemStackUtil.setLore(stack, newLore);
+    }
+
+    default TranslatedText kitName(Kit kit) {
+        Identifier gameId = gameId();
+
+        return translations().translateText("game.%s.%s.kit.%s".formatted(gameId.getNamespace(), gameId.getPath(), kit.id()));
     }
 }

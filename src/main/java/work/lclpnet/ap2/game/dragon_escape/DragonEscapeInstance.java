@@ -30,6 +30,7 @@ import work.lclpnet.ap2.impl.util.Fireworks;
 import work.lclpnet.ap2.impl.util.SplinePath;
 import work.lclpnet.ap2.impl.util.TimeHelper;
 import work.lclpnet.ap2.impl.util.debug.SplinePathDebugger;
+import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker;
 import work.lclpnet.ap2.impl.util.world.ChunkPersistence;
 import work.lclpnet.ap2.impl.util.world.stage.BlockShape;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
@@ -63,6 +64,7 @@ public class DragonEscapeInstance extends FFAGameInstance {
     private final Random random = new Random();
     private final Set<UUID> inGoal = new HashSet<>();
     private final Map<UUID, Tracker> trackers = new HashMap<>();
+    private final SimpleMovementBlocker movementBlocker;
 
     private long startMs = 0;
     private BlockShape goalShape = null;
@@ -78,6 +80,9 @@ public class DragonEscapeInstance extends FFAGameInstance {
 
     public DragonEscapeInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
+
+        movementBlocker = new SimpleMovementBlocker(gameHandle.getGameScheduler());
+        movementBlocker.setModifySpeedAttribute(false);
 
         useOldCombat();
     }
@@ -98,6 +103,7 @@ public class DragonEscapeInstance extends FFAGameInstance {
         setupDragon();
         setupTrackers();
         setupKits();
+        blockMovement();
 
         if (DEBUG_PATH) {
             debugPath();
@@ -246,6 +252,21 @@ public class DragonEscapeInstance extends FFAGameInstance {
         }
     }
 
+    private void blockMovement() {
+        movementBlocker.init(gameHandle.getHookRegistrar());
+
+        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
+            movementBlocker.disableMovement(player);
+        }
+    }
+
+
+    private void unblockMovement() {
+        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
+            movementBlocker.enableMovement(player);
+        }
+    }
+
     @Override
     protected void afterInitialDelay() {
         commons().announcer().announceSubtitle("ap2.kit_selector.hint");
@@ -267,6 +288,7 @@ public class DragonEscapeInstance extends FFAGameInstance {
 
         kitHandler.disableKitChanger();
         kitHandler.selectKitItem();
+        unblockMovement();
 
         dragonController.startMoving(gameHandle.getGameScheduler());
 

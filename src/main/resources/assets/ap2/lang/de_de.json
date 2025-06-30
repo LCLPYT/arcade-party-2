@@ -63,6 +63,7 @@
   "ap2.hint.click_open": "Klicke zum Öffnen von %s",
   "ap2.kit_selector": "Kit-Auswahl",
   "ap2.kit_selector.hint": "Wähle dein Kit",
+  "ap2.kit_selector.selected": "Kit %s wurde ausgewählt",
   "game.ap2.title": "ArcadeParty",
   "game.ap2.reached_checkpoint": "Checkpoint erreicht",
   "game.ap2.spleef": "Spleef",

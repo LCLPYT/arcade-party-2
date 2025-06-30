@@ -9,6 +9,8 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Formatting;
 import work.lclpnet.ap2.api.base.Participants;
@@ -72,6 +74,12 @@ public class KitHandler {
         if (!mayChangeKit.contains(player.getUuid())) return;
 
         manager.changeKit(player, kit);
+
+        translations.translateText("ap2.kit_selector.selected", kitHandle.kitName(kit).formatted(Formatting.AQUA))
+                .formatted(Formatting.GREEN)
+                .sendTo(player);
+
+        player.playSoundToPlayer(SoundEvents.BLOCK_NOTE_BLOCK_PLING.value(), SoundCategory.NEUTRAL, 0.5f, 2f);
     }
 
     public synchronized boolean canChangeKit(ServerPlayerEntity player) {
