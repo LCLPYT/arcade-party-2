@@ -98,7 +98,7 @@ public class KitHandler {
     public synchronized void enableKitChanger(ServerPlayerEntity player) {
         mayChangeKit.add(player.getUuid());
 
-        var stack = new ItemStack(Items.COMPASS);
+        var stack = new ItemStack(KIT_SELECTOR_ITEM);
 
         stack.set(DataComponentTypes.ITEM_NAME, translations.translateText(player, "ap2.kit_selector")
                 .formatted(Formatting.AQUA));

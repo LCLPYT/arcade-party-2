@@ -159,6 +159,10 @@ public class VisibilityHandler {
         return PendingResult.pass();
     }
 
+    public boolean isVisibilityChanger(ItemStack stack) {
+        return stack.isOf(ITEM);
+    }
+
     @NotNull
     private static List<DataTracker.SerializedEntry<?>> modifyEntries(int size, int i, List<DataTracker.SerializedEntry<?>> entries, byte flags) {
         var newEntries = new ArrayList<DataTracker.SerializedEntry<?>>(size);

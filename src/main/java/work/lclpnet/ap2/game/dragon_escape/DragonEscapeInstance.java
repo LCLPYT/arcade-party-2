@@ -33,6 +33,7 @@ import work.lclpnet.ap2.impl.util.Fireworks;
 import work.lclpnet.ap2.impl.util.SplinePath;
 import work.lclpnet.ap2.impl.util.TimeHelper;
 import work.lclpnet.ap2.impl.util.debug.SplinePathDebugger;
+import work.lclpnet.ap2.impl.util.handler.VisibilityHandler;
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker;
 import work.lclpnet.ap2.impl.util.world.ChunkPersistence;
 import work.lclpnet.ap2.impl.util.world.stage.BlockShape;
@@ -105,8 +106,10 @@ public class DragonEscapeInstance extends FFAGameInstance {
         teleportPlayers();
         setupDragon();
         setupTrackers();
-        setupKits();
         blockMovement();
+
+        VisibilityHandler visibilityHandler = commons().addVisibilityChanger(commons().noCollision());
+        setupKits(visibilityHandler);
 
         if (DEBUG_PATH) {
             debugPath();
@@ -158,7 +161,7 @@ public class DragonEscapeInstance extends FFAGameInstance {
         }
     }
 
-    private void setupKits() {
+    private void setupKits(VisibilityHandler visibilityHandler) {
         var handle = RecordKitHandle.of(gameHandle, getWorld().getRegistryManager());
 
         var manager = new KitManager(List.of(
@@ -174,7 +177,7 @@ public class DragonEscapeInstance extends FFAGameInstance {
 
             ItemStack stack = player.getStackInHand(hand);
 
-            if (itemUseAllowed || kitHandler.isKitSelector(stack)) {
+            if (itemUseAllowed || kitHandler.isKitSelector(stack) || visibilityHandler.isVisibilityChanger(stack)) {
                 return ActionResult.PASS;
             }
 
