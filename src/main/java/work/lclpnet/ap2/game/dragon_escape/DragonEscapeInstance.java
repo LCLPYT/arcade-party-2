@@ -1,9 +1,12 @@
 package work.lclpnet.ap2.game.dragon_escape;
 
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
+import net.minecraft.component.DataComponentTypes;
 import net.minecraft.entity.boss.dragon.EnderDragonEntity;
+import net.minecraft.item.ItemStack;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.util.ActionResult;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
@@ -29,6 +32,8 @@ import work.lclpnet.ap2.impl.util.TimeHelper;
 import work.lclpnet.ap2.impl.util.debug.SplinePathDebugger;
 import work.lclpnet.ap2.impl.util.world.ChunkPersistence;
 import work.lclpnet.ap2.impl.util.world.stage.BlockShape;
+import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
+import work.lclpnet.kibu.hook.util.PlayerUtils;
 import work.lclpnet.kibu.translate.text.TranslatedText;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 import work.lclpnet.lobby.game.map.MapUtils;
@@ -150,9 +155,28 @@ public class DragonEscapeInstance extends FFAGameInstance {
                 new WindChargeKit(handle)
         ));
 
+        kitHandler = new KitHandler(manager, gameHandle.getParticipants(), gameHandle.getTranslations(), handle);
+
+        gameHandle.getHookRegistrar().registerHook(PlayerInteractionHooks.USE_ITEM, (_player, world, hand) -> {
+            if (!(_player instanceof ServerPlayerEntity player)) return ActionResult.PASS;
+
+            ItemStack stack = player.getStackInHand(hand);
+
+            if (itemUseAllowed || kitHandler.isKitSelector(stack)) {
+                return ActionResult.PASS;
+            }
+
+            if (stack.contains(DataComponentTypes.USE_COOLDOWN)) {
+                player.getItemCooldownManager().set(stack, 0);
+            }
+
+            PlayerUtils.syncPlayerItems(player);
+
+            return ActionResult.FAIL;
+        });
+
         manager.init();
 
-        kitHandler = new KitHandler(manager, gameHandle.getParticipants(), gameHandle.getTranslations(), handle);
 
         kitHandler.init(gameHandle.getHookRegistrar());
         kitHandler.setupPlayerKits();

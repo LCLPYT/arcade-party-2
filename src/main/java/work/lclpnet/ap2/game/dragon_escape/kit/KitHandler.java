@@ -112,7 +112,7 @@ public class KitHandler {
         player.getInventory().removeStack(8);
     }
 
-    private boolean isKitSelector(ItemStack stack) {
+    public boolean isKitSelector(ItemStack stack) {
         if (!stack.isOf(KIT_SELECTOR_ITEM)) return false;
 
         return stack.getOrDefault(DataComponentTypes.CUSTOM_DATA, NbtComponent.DEFAULT)
