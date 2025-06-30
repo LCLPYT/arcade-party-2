@@ -2,6 +2,7 @@ package work.lclpnet.ap2.game.dragon_escape.kit;
 
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.LoreComponent;
+import net.minecraft.component.type.TooltipDisplayComponent;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -51,6 +52,12 @@ public interface KitHandle {
         Translations translations = translations();
 
         stack.set(DataComponentTypes.ITEM_NAME, kitName(kit).translateFor(player).formatted(AQUA));
+
+        stack.set(DataComponentTypes.TOOLTIP_DISPLAY, TooltipDisplayComponent.DEFAULT
+                .with(DataComponentTypes.ATTRIBUTE_MODIFIERS, true)
+                .with(DataComponentTypes.UNBREAKABLE, true)
+                .with(DataComponentTypes.ENCHANTMENTS, true)
+                .with(DataComponentTypes.DAMAGE, true));
 
         String descriptionPath = forIcon ? "description" : "hint";
         String descriptionKey = "game.%s.%s.kit.%s.%s"

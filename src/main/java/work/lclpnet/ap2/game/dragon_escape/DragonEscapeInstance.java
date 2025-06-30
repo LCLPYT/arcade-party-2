@@ -2,7 +2,9 @@ package work.lclpnet.ap2.game.dragon_escape;
 
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.component.DataComponentTypes;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.boss.dragon.EnderDragonEntity;
+import net.minecraft.entity.projectile.WindChargeEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -17,6 +19,7 @@ import org.slf4j.Logger;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.MiniGameResults;
 import work.lclpnet.ap2.api.game.data.DataContainer;
+import work.lclpnet.ap2.core.hook.ExplosionAffectedEntitiesCallback;
 import work.lclpnet.ap2.game.dragon_escape.kit.*;
 import work.lclpnet.ap2.impl.game.FFAGameInstance;
 import work.lclpnet.ap2.impl.game.PseudoElimination;
@@ -273,18 +276,34 @@ public class DragonEscapeInstance extends FFAGameInstance {
 
         kitHandler.selectKitChanger();
 
-        gameHandle.getGameScheduler().timeout(super::afterInitialDelay, KIT_SELECTION_TICKS);
+        TranslatedText label = gameHandle.getTranslations().translateText("ap2.kit_selection");
+
+        commons().createTimerTicks(label, KIT_SELECTION_TICKS).whenDone(super::afterInitialDelay);
     }
 
     @Override
     protected void ready() {
-        gameHandle.protect(config -> config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, source) -> {
-            if (entity instanceof ServerPlayerEntity player && source.getAttacker() instanceof EnderDragonEntity) {
-                softEliminateAndCheck(player);
+        gameHandle.protect(config -> {
+            config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, source) -> {
+                if (entity instanceof ServerPlayerEntity player && source.getAttacker() instanceof EnderDragonEntity) {
+                    softEliminateAndCheck(player);
+                }
+
+                return false;
+            });
+
+            config.allow(ProtectionTypes.EXPLOSION, arg -> arg.getEntity() instanceof WindChargeEntity);
+        });
+
+        gameHandle.getHookRegistrar().registerHook(ExplosionAffectedEntitiesCallback.HOOK, (explosion, affected) -> {
+            if (explosion.getEntity() instanceof WindChargeEntity) {
+                LivingEntity owner = explosion.getCausingEntity();
+
+                return owner != null ? List.of(owner) : List.of();
             }
 
-            return false;
-        }));
+            return affected;
+        });
 
         kitHandler.disableKitChanger();
         kitHandler.selectKitItem();

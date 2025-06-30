@@ -23,6 +23,7 @@
     "EntityNavigationAccessor",
     "EntityNavigationMixin",
     "ExplosionImplAccessor",
+    "ExplosionImplMixin",
     "FoxEntityMixin",
     "FrogEntityMixin",
     "FuelRegistryMixin",

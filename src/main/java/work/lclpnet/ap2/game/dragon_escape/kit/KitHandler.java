@@ -29,7 +29,8 @@ import java.util.UUID;
 public class KitHandler {
 
     private static final MapCodec<Boolean> KIT_SELECTOR_CODEC = Codec.BOOL.fieldOf("ap2:kit_selector");
-    private static final Item KIT_SELECTOR_ITEM = Items.COMPASS;
+    private static final Item KIT_SELECTOR_ITEM = Items.NETHER_STAR;
+    public static final int KIT_ITEM_SLOT = 0, KIT_SELECTOR_SLOT = 4;
 
     private final KitManager manager;
     private final Participants participants;
@@ -65,7 +66,7 @@ public class KitHandler {
         RootText title = translations.translateText(player, "ap2.kit_selector");
         List<Kit> kits = manager.getKits();
 
-        OptionPrompt.open(player, title, kits, kit -> kitHandle.createItemStack(kit, player))
+        OptionPrompt.open(player, title, kits, kit -> kitHandle.createKitIcon(kit, player))
                 .thenAccept(optKit -> optKit
                         .ifPresent(kit -> changeKit(player, kit)));
     }
@@ -106,7 +107,7 @@ public class KitHandler {
                 .with(NbtOps.INSTANCE, KIT_SELECTOR_CODEC, true)
                 .getOrThrow());
 
-        player.getInventory().setStack(8, stack);
+        player.getInventory().setStack(KIT_SELECTOR_SLOT, stack);
     }
 
     public void disableKitChanger() {
@@ -118,7 +119,7 @@ public class KitHandler {
 
         player.closeHandledScreen();
 
-        player.getInventory().removeStack(8);
+        player.getInventory().removeStack(KIT_SELECTOR_SLOT);
     }
 
     public boolean isKitSelector(ItemStack stack) {
@@ -132,13 +133,13 @@ public class KitHandler {
 
     public void selectKitChanger() {
         for (ServerPlayerEntity player : participants) {
-            PlayerInventoryAccess.setSelectedSlot(player, 8);
+            PlayerInventoryAccess.setSelectedSlot(player, KIT_SELECTOR_SLOT);
         }
     }
 
     public void selectKitItem() {
         for (ServerPlayerEntity player : participants) {
-            PlayerInventoryAccess.setSelectedSlot(player, 0);
+            PlayerInventoryAccess.setSelectedSlot(player, KIT_ITEM_SLOT);
         }
     }
 }

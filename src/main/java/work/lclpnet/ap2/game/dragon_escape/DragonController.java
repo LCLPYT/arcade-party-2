@@ -25,8 +25,8 @@ import static java.lang.Math.*;
 public class DragonController {
 
     private static final double
-            MIN_SPEED_BPS = 2.0d,
-            MAX_SPEED_BPS = 16.d,
+            MIN_SPEED_BPS = 1.6,
+            MAX_SPEED_BPS = 16.0,
             ACCELERATION_BPS2 = 3.0d,
             ACCELERATION_DISTANCE = 30;
 
