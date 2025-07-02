@@ -8,8 +8,14 @@ import net.minecraft.entity.damage.DamageRecord;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.projectile.WindChargeEntity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.scoreboard.ScoreboardCriterion;
+import net.minecraft.scoreboard.ScoreboardDisplaySlot;
+import net.minecraft.scoreboard.ScoreboardObjective;
+import net.minecraft.scoreboard.number.FixedNumberFormat;
+import net.minecraft.scoreboard.number.StyledNumberFormat;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
@@ -39,6 +45,7 @@ import work.lclpnet.ap2.impl.util.TimeHelper;
 import work.lclpnet.ap2.impl.util.debug.SplinePathDebugger;
 import work.lclpnet.ap2.impl.util.handler.VisibilityHandler;
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker;
+import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.ap2.impl.util.world.ChunkPersistence;
 import work.lclpnet.ap2.impl.util.world.stage.BlockShape;
 import work.lclpnet.kibu.access.misc.DamageTrackerAccess;
@@ -53,7 +60,9 @@ import work.lclpnet.lobby.game.map.MapUtils;
 import java.util.*;
 import java.util.stream.Stream;
 
-import static java.lang.Math.max;
+import static java.lang.Math.*;
+import static net.minecraft.util.Formatting.BOLD;
+import static net.minecraft.util.Formatting.YELLOW;
 import static net.minecraft.util.math.ChunkSectionPos.getSectionCoord;
 import static work.lclpnet.kibu.hook.util.OnGroundDetector.isOnGroundServer;
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
@@ -87,6 +96,7 @@ public class DragonEscapeInstance extends FFAGameInstance {
     private boolean checkForCompletion = false;
     private boolean itemUseAllowed = false;
     private KitHandler kitHandler;
+    private ScoreboardObjective progressObjective;
 
     public DragonEscapeInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
@@ -113,8 +123,10 @@ public class DragonEscapeInstance extends FFAGameInstance {
         setupDragon();
         setupTrackers();
         blockMovement();
+        setupScoreboard();
 
         VisibilityHandler visibilityHandler = commons().addVisibilityChanger(commons().noCollision());
+
         setupKits(visibilityHandler);
 
         commons().gameRuleBuilder().set(GameRules.FALL_DAMAGE, false);
@@ -281,6 +293,18 @@ public class DragonEscapeInstance extends FFAGameInstance {
         }
     }
 
+    private void setupScoreboard() {
+        CustomScoreboardManager scoreboardManager = gameHandle.getScoreboardManager();
+
+        progressObjective = scoreboardManager.createObjective("progress", ScoreboardCriterion.DUMMY,
+                Text.literal("Progress").formatted(YELLOW, BOLD), ScoreboardCriterion.RenderType.INTEGER,
+                StyledNumberFormat.YELLOW);
+
+        updatePlayerProgress();
+
+        scoreboardManager.setDisplay(ScoreboardDisplaySlot.LIST, progressObjective);
+    }
+
     @Override
     protected void afterInitialDelay() {
         commons().announcer().announceSubtitle("ap2.kit_selector.hint");
@@ -364,6 +388,8 @@ public class DragonEscapeInstance extends FFAGameInstance {
 
     private synchronized void tick() {
         if (winManager.isGameOver()) return;
+
+        updatePlayerProgress();
 
         boolean check = checkForCompletion;
 
@@ -452,6 +478,28 @@ public class DragonEscapeInstance extends FFAGameInstance {
         double progress = tracker != null ? tracker.maxProgress : getProgress(player);
 
         return max(0, (progress * path.getLength()) - playerStartDistance);
+    }
+
+    private void updatePlayerProgress() {
+        CustomScoreboardManager scoreboardManager = gameHandle.getScoreboardManager();
+
+        for (ServerPlayerEntity player : pseudoElimination.iterateParticipants()) {
+            double progress = getPlayerProgress(player);
+            int percent = (int) floor(progress * 100);
+
+            var format = new FixedNumberFormat(Text.literal(percent + "%").formatted(YELLOW));
+
+            scoreboardManager.setNumberFormat(player, progressObjective, format);
+        }
+    }
+
+    private double getPlayerProgress(ServerPlayerEntity player) {
+        double playerStartProgress = playerStartDistance / path.getLength();
+        double playerPathLength = path.getLength() - playerStartDistance;
+
+        double corrected = path.getProgress(player.getPos()) - playerStartProgress;
+
+        return max(0.d, min(1.d, corrected * path.getLength() / playerPathLength));
     }
 
     private synchronized void checkComplete() {
