@@ -4,15 +4,16 @@ import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.util.Identifier;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.kibu.hook.HookRegistrar;
+import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.kibu.translate.Translations;
 
 public record RecordKitHandle(
-        Identifier gameId, HookRegistrar hooks, Translations translations, DynamicRegistryManager registries,
-        KitReadView readView
+        Identifier gameId, HookRegistrar hooks, TaskScheduler scheduler, Translations translations,
+        DynamicRegistryManager registries, KitReadView readView
 ) implements KitHandle {
 
     public static RecordKitHandle of(MiniGameHandle gameHandle, DynamicRegistryManager registries, KitReadView readView) {
         return new RecordKitHandle(gameHandle.getGameInfo().getId(), gameHandle.getHookRegistrar(),
-                gameHandle.getTranslations(), registries, readView);
+                gameHandle.getGameScheduler(), gameHandle.getTranslations(), registries, readView);
     }
 }

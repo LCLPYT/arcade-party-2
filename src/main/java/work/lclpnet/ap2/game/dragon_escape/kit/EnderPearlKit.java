@@ -4,6 +4,7 @@ import com.mojang.serialization.MapCodec;
 import net.minecraft.entity.projectile.thrown.EnderPearlEntity;
 import net.minecraft.item.Items;
 import net.minecraft.registry.Registries;
+import net.minecraft.server.network.ServerPlayNetworkHandler;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
@@ -13,6 +14,11 @@ import work.lclpnet.ap2.core.hook.ProjectileShootCallback;
 import work.lclpnet.ap2.impl.util.EntityUtil;
 import work.lclpnet.ap2.impl.util.SplinePath;
 import work.lclpnet.kibu.scheduler.Ticks;
+import work.lclpnet.kibu.scheduler.api.TaskHandle;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
 import static net.minecraft.util.Formatting.RED;
 
@@ -23,9 +29,12 @@ public class EnderPearlKit extends SingleItemKit {
     private static final MapCodec<Vec3d> ORIGIN_CODEC = Vec3d.CODEC.fieldOf("ap2:origin");
 
     private static final double MAX_PROGRESS_SKIP = 0.2;
-    private static final int RETRY_TICKS = Ticks.seconds(2);
+    private static final int
+            RETRY_TICKS = Ticks.seconds(2),
+            REFUND_DELAY_TICKS = Ticks.seconds(10);
 
     private final SplinePath path;
+    private final Map<UUID, TaskHandle> refundTasks = new HashMap<>();
 
     public EnderPearlKit(KitHandle handle, SplinePath path) {
         super(handle, ID, Items.ENDER_PEARL, 1);
@@ -37,11 +46,27 @@ public class EnderPearlKit extends SingleItemKit {
         handle.hooks().registerHook(ProjectileShootCallback.HOOK, (shooter, projectile) -> {
             if (shooter instanceof ServerPlayerEntity player && projectile instanceof EnderPearlEntity && handle.hasKitEquipped(player, this)) {
                 EntityUtil.putCustomData(projectile, ORIGIN_CODEC, player.getPos());
+
+                UUID uuid = projectile.getUuid();
+
+                refundTasks.put(uuid, handle.scheduler().timeout(() -> {
+                    refundTasks.remove(uuid);
+
+                    projectile.discard();
+
+                    refund(player.networkHandler);
+                }, REFUND_DELAY_TICKS));
             }
         });
 
         handle.hooks().registerHook(EnderPearlTeleportCallback.HOOK, (owner, enderPearl, pos) -> {
             if (owner instanceof ServerPlayerEntity player && handle.hasKitEquipped(player, this)) {
+                TaskHandle refundTask = refundTasks.remove(enderPearl.getUuid());
+
+                if (refundTask != null) {
+                    refundTask.cancel();
+                }
+
                 if (canTeleportTo(enderPearl, pos)) return false;
 
                 enderPearl.discard();
@@ -74,5 +99,17 @@ public class EnderPearlKit extends SingleItemKit {
         double progressTo = path.getProgress(target);
 
         return progressTo - progressFrom <= MAX_PROGRESS_SKIP;
+    }
+
+    private void refund(ServerPlayNetworkHandler handler) {
+        if (!handler.isConnectionOpen()) return;
+
+        ServerPlayerEntity player = handler.player;
+
+        if (player == null || player.isDead()) return;
+
+        equip(player);
+
+        player.playSoundToPlayer(SoundEvents.BLOCK_NOTE_BLOCK_BASS.value(), SoundCategory.NEUTRAL, 0.5f, 1f);
     }
 }

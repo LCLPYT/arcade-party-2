@@ -11,6 +11,7 @@ import net.minecraft.util.Identifier;
 import work.lclpnet.ap2.base.util.IconMaker;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.inv.item.ItemStackUtil;
+import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.kibu.translate.text.RootText;
 import work.lclpnet.kibu.translate.text.TranslatedText;
@@ -26,6 +27,8 @@ public interface KitHandle {
     Identifier gameId();
 
     HookRegistrar hooks();
+
+    TaskScheduler scheduler();
 
     Translations translations();
 
