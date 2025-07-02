@@ -438,7 +438,7 @@ public class DragonEscapeInstance extends FFAGameInstance {
         if (!inGoal.add(player.getUuid()) || winManager.isGameOver()) return;
 
         double time = (milliTime() - startMs) / 1000.d;
-        TranslatedText duration = TimeHelper.formatTime(gameHandle.getTranslations(), time, "%.2f");
+        TranslatedText duration = TimeHelper.formatTime(gameHandle.getTranslations(), time, "%02d", "%06.3f");
 
         completed.add(player, duration);
 
