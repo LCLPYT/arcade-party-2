@@ -202,7 +202,7 @@ public class MiningBattleOre {
                 .formatted(Formatting.RED);
 
         for (ServerPlayerEntity other : gameHandle.getParticipants()) {
-            if (other == player) continue;
+            if (other == player || other.hasStatusEffect(StatusEffects.HASTE)) continue;
 
             other.removeStatusEffect(StatusEffects.MINING_FATIGUE);
             other.addStatusEffect(new StatusEffectInstance(StatusEffects.MINING_FATIGUE, 120, 0), player);
