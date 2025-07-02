@@ -13,8 +13,6 @@ import work.lclpnet.kibu.access.VelocityModifier;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.kibu.scheduler.Ticks;
 
-import java.util.function.Predicate;
-
 public class LeapKit extends SingleItemKit {
 
     public static final String ID = "leap";
@@ -25,11 +23,9 @@ public class LeapKit extends SingleItemKit {
             COOLDOWN_TICKS = Ticks.seconds(3);
     private static final double LEAP_STRENGTH = 1.8;
 
-    private final Predicate<ServerPlayerEntity> canUse;
 
-    public LeapKit(KitHandle handle, Predicate<ServerPlayerEntity> canUse) {
+    public LeapKit(KitHandle handle) {
         super(handle, ID, ITEM, USES);
-        this.canUse = canUse;
     }
 
     @Override
@@ -39,7 +35,7 @@ public class LeapKit extends SingleItemKit {
 
             ItemStack stack = player.getStackInHand(hand);
 
-            if (stack.isOf(ITEM) && !player.getItemCooldownManager().isCoolingDown(stack) && canUse.test(player)) {
+            if (stack.isOf(ITEM) && !player.getItemCooldownManager().isCoolingDown(stack)) {
                 useItem(player, stack);
                 return ActionResult.SUCCESS_SERVER;
             }

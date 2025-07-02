@@ -274,6 +274,7 @@
   "game.ap2.dragon_escape.kit.ender_pearl.description": "Get an ender pearl that you can use to teleport. Use at own risk.",
   "game.ap2.dragon_escape.kit.wind_charge": "Wind Charge",
   "game.ap2.dragon_escape.kit.wind_charge.description": "Get wind charges that can be used to boost yourself.",
+  "game.ap2.dragon_escape.teleport_too_far": "You cannot teleport that far...",
   "item.ap2.bow_spleef.triple_shot": "Triple Shot",
   "item.ap2.bow_spleef.triple_shot.desc": "Shoots three arrows at once",
   "item.ap2.bow_spleef.burst_shot": "Burst Shot",

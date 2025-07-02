@@ -31,6 +31,12 @@ public interface KitHandle {
 
     DynamicRegistryManager registries();
 
+    KitReadView readView();
+
+    default boolean hasKitEquipped(ServerPlayerEntity player, Kit kit) {
+        return readView().hasKitEquipped(player, kit);
+    }
+
     default ItemStack createKitIcon(Kit kit, ServerPlayerEntity player) {
         ItemStack stack = kit.createItemStack(registries());
 

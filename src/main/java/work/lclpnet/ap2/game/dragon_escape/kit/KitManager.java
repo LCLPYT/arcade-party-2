@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-public class KitManager {
+public class KitManager implements KitReadView {
 
     @Getter
     private final List<Kit> kits;
@@ -54,10 +54,12 @@ public class KitManager {
         return kits.getFirst();
     }
 
+    @Override
     public synchronized @NotNull Kit getKit(ServerPlayerEntity player) {
         return playerKits.getOrDefault(player.getUuid(), defaultKit());
     }
 
+    @Override
     public synchronized boolean hasKitEquipped(ServerPlayerEntity player, Kit kit) {
         return getKit(player).equals(kit);
     }

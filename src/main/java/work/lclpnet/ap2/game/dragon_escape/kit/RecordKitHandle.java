@@ -7,10 +7,12 @@ import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.translate.Translations;
 
 public record RecordKitHandle(
-        Identifier gameId, HookRegistrar hooks, Translations translations, DynamicRegistryManager registries
+        Identifier gameId, HookRegistrar hooks, Translations translations, DynamicRegistryManager registries,
+        KitReadView readView
 ) implements KitHandle {
 
-    public static RecordKitHandle of(MiniGameHandle gameHandle, DynamicRegistryManager registries) {
-        return new RecordKitHandle(gameHandle.getGameInfo().getId(), gameHandle.getHookRegistrar(), gameHandle.getTranslations(), registries);
+    public static RecordKitHandle of(MiniGameHandle gameHandle, DynamicRegistryManager registries, KitReadView readView) {
+        return new RecordKitHandle(gameHandle.getGameInfo().getId(), gameHandle.getHookRegistrar(),
+                gameHandle.getTranslations(), registries, readView);
     }
 }

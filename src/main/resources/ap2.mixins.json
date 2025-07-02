@@ -19,6 +19,7 @@
     "EnderDragonEntityMixin",
     "EnderDragonFightMixin",
     "EndermanEntityAccessor",
+    "EnderPearlEntityMixin",
     "EntityMixin",
     "EntityNavigationAccessor",
     "EntityNavigationMixin",

@@ -2,7 +2,6 @@ package work.lclpnet.ap2.game.dragon_escape;
 
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.component.DataComponentTypes;
-import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.boss.dragon.EnderDragonEntity;
 import net.minecraft.entity.damage.DamageRecord;
 import net.minecraft.entity.damage.DamageSource;
@@ -29,7 +28,6 @@ import org.slf4j.Logger;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.MiniGameResults;
 import work.lclpnet.ap2.api.game.data.DataContainer;
-import work.lclpnet.ap2.core.hook.ExplosionAffectedEntitiesCallback;
 import work.lclpnet.ap2.core.mixin.LivingEntityAccessor;
 import work.lclpnet.ap2.game.dragon_escape.kit.*;
 import work.lclpnet.ap2.impl.game.FFAGameInstance;
@@ -132,7 +130,9 @@ public class DragonEscapeInstance extends FFAGameInstance {
 
         setupKits(visibilityHandler);
 
-        commons().gameRuleBuilder().set(GameRules.FALL_DAMAGE, false);
+        commons().gameRuleBuilder()
+                .set(GameRules.FALL_DAMAGE, false)
+                .set(GameRules.DO_MOB_SPAWNING, false);
 
         if (DEBUG_PATH) {
             debugPath();
@@ -190,13 +190,16 @@ public class DragonEscapeInstance extends FFAGameInstance {
     }
 
     private void setupKits(VisibilityHandler visibilityHandler) {
-        var handle = RecordKitHandle.of(gameHandle, getWorld().getRegistryManager());
+        var readView = new ProxyKitReadView();
+        var handle = RecordKitHandle.of(gameHandle, getWorld().getRegistryManager(), readView);
 
         var manager = new KitManager(List.of(
-                new LeapKit(handle, pseudoElimination::isParticipating),
-                new EnderPearlKit(handle),
+                new LeapKit(handle),
+                new EnderPearlKit(handle, path),
                 new WindChargeKit(handle)
         ));
+
+        readView.inject(manager);
 
         kitHandler = new KitHandler(manager, gameHandle.getParticipants(), gameHandle.getTranslations(), handle);
 
@@ -347,20 +350,10 @@ public class DragonEscapeInstance extends FFAGameInstance {
             config.allow(ProtectionTypes.EXPLOSION, arg -> arg.getEntity() instanceof WindChargeEntity);
         });
 
-        gameHandle.getHookRegistrar().registerHook(ExplosionAffectedEntitiesCallback.HOOK, (explosion, affected) -> {
-            if (explosion.getEntity() instanceof WindChargeEntity) {
-                LivingEntity owner = explosion.getCausingEntity();
-
-                return owner != null ? List.of(owner) : List.of();
-            }
-
-            return affected;
-        });
-
-        setupSmoothDeath();
-
         kitHandler.disableKitChanger();
         kitHandler.selectKitItem();
+
+        setupSmoothDeath();
         unblockMovement();
 
         dragonController.startMoving(gameHandle.getGameScheduler());
