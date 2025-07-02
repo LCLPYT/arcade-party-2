@@ -90,7 +90,8 @@ public class DragonEscapeInstance extends FFAGameInstance {
     private SplinePath path = null;
     private DragonController dragonController = null;
     private PseudoElimination pseudoElimination = null;
-    private double playerStartDistance = 0;
+    private double playerStartProgress = 0;
+    private double playerPathLength = 0;
     private double pathEliminationDistance = 30;
     private double maxScore = Double.NEGATIVE_INFINITY;
     private boolean checkForCompletion = false;
@@ -153,7 +154,12 @@ public class DragonEscapeInstance extends FFAGameInstance {
         goalShape = MapUtil.readShape(props.getJSONObject("goal-shape"));
 
         Vec3d playerStartPos = MapUtil.readCenteredVec3d(props.getJSONArray("path-player-start"));
-        playerStartDistance = path.getProgress(playerStartPos) * path.getLength();
+        playerStartProgress = path.getProgress(playerStartPos);
+
+        Vec3d playerEndPos = MapUtil.readCenteredVec3d(props.getJSONArray("path-player-end"));
+        double playerEndProgress = path.getProgress(playerEndPos);
+
+        playerPathLength = (playerEndProgress - playerStartProgress) * path.getLength();
 
         pathEliminationDistance = props.optDouble("path-elimination-distance", pathEliminationDistance);
 
@@ -300,7 +306,9 @@ public class DragonEscapeInstance extends FFAGameInstance {
                 Text.literal("Progress").formatted(YELLOW, BOLD), ScoreboardCriterion.RenderType.INTEGER,
                 StyledNumberFormat.YELLOW);
 
-        updatePlayerProgress();
+        for (ServerPlayerEntity player : pseudoElimination.iterateParticipants()) {
+            updatePlayerProgress(player);
+        }
 
         scoreboardManager.setDisplay(ScoreboardDisplaySlot.LIST, progressObjective);
     }
@@ -389,8 +397,6 @@ public class DragonEscapeInstance extends FFAGameInstance {
     private synchronized void tick() {
         if (winManager.isGameOver()) return;
 
-        updatePlayerProgress();
-
         boolean check = checkForCompletion;
 
         for (ServerPlayerEntity player : pseudoElimination.iterateParticipants()) {
@@ -404,6 +410,7 @@ public class DragonEscapeInstance extends FFAGameInstance {
             double progress = getProgress(player);
 
             updateTracker(player, progress);
+            updatePlayerProgress(player);
 
             // eliminate the player if they are behind the dragon or not in range of the path
             if (progress <= dragonController.getDragonProgress() || !player.getPos()
@@ -443,6 +450,14 @@ public class DragonEscapeInstance extends FFAGameInstance {
                 .sendTo(PlayerLookup.all(gameHandle.getServer()));
 
         Fireworks.spawnGoalFirework(player);
+
+        Tracker tracker = trackers.get(player.getUuid());
+
+        if (tracker == null) return;
+
+        tracker.maxProgress = 1;
+
+        updatePlayerProgress(player);
     }
 
     private synchronized void softEliminateAndCheck(ServerPlayerEntity player) {
@@ -477,27 +492,24 @@ public class DragonEscapeInstance extends FFAGameInstance {
 
         double progress = tracker != null ? tracker.maxProgress : getProgress(player);
 
-        return max(0, (progress * path.getLength()) - playerStartDistance);
+        return max(0, (progress - playerStartProgress) * path.getLength());
     }
 
-    private void updatePlayerProgress() {
-        CustomScoreboardManager scoreboardManager = gameHandle.getScoreboardManager();
+    private void updatePlayerProgress(ServerPlayerEntity player) {
+        Tracker tracker = trackers.get(player.getUuid());
 
-        for (ServerPlayerEntity player : pseudoElimination.iterateParticipants()) {
-            double progress = getPlayerProgress(player);
-            int percent = (int) floor(progress * 100);
+        if (tracker == null) return;
 
-            var format = new FixedNumberFormat(Text.literal(percent + "%").formatted(YELLOW));
+        double progress = getPlayerProgress(tracker.maxProgress);
+        int percent = (int) floor(progress * 100);
 
-            scoreboardManager.setNumberFormat(player, progressObjective, format);
-        }
+        var format = new FixedNumberFormat(Text.literal(percent + "%").formatted(YELLOW));
+
+        gameHandle.getScoreboardManager().setNumberFormat(player, progressObjective, format);
     }
 
-    private double getPlayerProgress(ServerPlayerEntity player) {
-        double playerStartProgress = playerStartDistance / path.getLength();
-        double playerPathLength = path.getLength() - playerStartDistance;
-
-        double corrected = path.getProgress(player.getPos()) - playerStartProgress;
+    private double getPlayerProgress(double progress) {
+        double corrected = progress - playerStartProgress;
 
         return max(0.d, min(1.d, corrected * path.getLength() / playerPathLength));
     }
