@@ -63,7 +63,7 @@ public class MiningBattleOre {
         registerOre(RAW_IRON_BLOCK, 4, 0.008f);
         registerOre(DIAMOND_BLOCK, 5, 0.005f);
         registerOre(RAW_GOLD_BLOCK, 5, 0.005f);
-        registerOre(AMETHYST_BLOCK, 0, 0.003F);
+        registerOre(AMETHYST_BLOCK, 0, 0.0025F);
         registerOre(POLISHED_GRANITE, 0, 0.009F);
         registerOre(TNT, 0, 0.005F);
     }
@@ -173,8 +173,13 @@ public class MiningBattleOre {
     }
 
     private void giveHaste(ServerPlayerEntity player) {
+        player.removeStatusEffect(StatusEffects.MINING_FATIGUE);
+
+        StatusEffectInstance statusEffect = player.getStatusEffect(StatusEffects.HASTE);
+        int remainingTicks = statusEffect != null ? statusEffect.getDuration() : 0;
+
         player.removeStatusEffect(StatusEffects.HASTE);
-        player.addStatusEffect(new StatusEffectInstance(StatusEffects.HASTE, 100, 0));
+        player.addStatusEffect(new StatusEffectInstance(StatusEffects.HASTE, remainingTicks + 100, 0));
         player.playSoundToPlayer(SoundEvents.BLOCK_BELL_RESONATE, SoundCategory.BLOCKS, 0.5f, 2f);
 
         var msg = gameHandle.getTranslations().translateText(player, "game.ap2.mining_battle.haste")
@@ -200,7 +205,7 @@ public class MiningBattleOre {
             if (other == player) continue;
 
             other.removeStatusEffect(StatusEffects.MINING_FATIGUE);
-            other.addStatusEffect(new StatusEffectInstance(StatusEffects.MINING_FATIGUE, 150, 0), player);
+            other.addStatusEffect(new StatusEffectInstance(StatusEffects.MINING_FATIGUE, 120, 0), player);
 
             other.sendMessage(otherMsg.translateFor(other));
         }
