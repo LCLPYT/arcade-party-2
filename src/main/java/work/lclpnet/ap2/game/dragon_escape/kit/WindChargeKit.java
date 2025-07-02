@@ -4,6 +4,8 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.projectile.WindChargeEntity;
 import net.minecraft.item.Items;
 import work.lclpnet.ap2.core.hook.ExplosionAffectedEntitiesCallback;
+import work.lclpnet.ap2.impl.game.kit.KitHandle;
+import work.lclpnet.ap2.impl.game.kit.SingleItemKit;
 
 import java.util.List;
 

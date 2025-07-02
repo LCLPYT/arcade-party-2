@@ -9,6 +9,8 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.ActionResult;
+import work.lclpnet.ap2.impl.game.kit.KitHandle;
+import work.lclpnet.ap2.impl.game.kit.SingleItemKit;
 import work.lclpnet.kibu.access.VelocityModifier;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.kibu.scheduler.Ticks;
@@ -22,7 +24,6 @@ public class LeapKit extends SingleItemKit {
             USES = 3,
             COOLDOWN_TICKS = Ticks.seconds(3);
     private static final double LEAP_STRENGTH = 1.8;
-
 
     public LeapKit(KitHandle handle) {
         super(handle, ID, ITEM, USES);

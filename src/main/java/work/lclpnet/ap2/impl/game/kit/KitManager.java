@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.game.dragon_escape.kit;
+package work.lclpnet.ap2.impl.game.kit;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;

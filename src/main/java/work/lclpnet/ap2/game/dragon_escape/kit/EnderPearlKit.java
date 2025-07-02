@@ -11,6 +11,8 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.math.Vec3d;
 import work.lclpnet.ap2.core.hook.EnderPearlTeleportCallback;
 import work.lclpnet.ap2.core.hook.ProjectileShootCallback;
+import work.lclpnet.ap2.impl.game.kit.KitHandle;
+import work.lclpnet.ap2.impl.game.kit.SingleItemKit;
 import work.lclpnet.ap2.impl.util.EntityUtil;
 import work.lclpnet.ap2.impl.util.SplinePath;
 import work.lclpnet.kibu.scheduler.Ticks;

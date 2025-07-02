@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.game.dragon_escape.kit;
+package work.lclpnet.ap2.impl.game.kit;
 
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.DynamicRegistryManager;
