@@ -6,6 +6,7 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.boss.dragon.EnderDragonEntity;
 import net.minecraft.entity.damage.DamageRecord;
 import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.entity.damage.DamageTypes;
 import net.minecraft.entity.projectile.WindChargeEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.scoreboard.ScoreboardCriterion;
@@ -328,7 +329,9 @@ public class DragonEscapeInstance extends FFAGameInstance {
     protected void ready() {
         gameHandle.protect(config -> {
             config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, source) -> {
-                if (!(entity instanceof ServerPlayerEntity player) || !gameHandle.getParticipants().isParticipating(player)) {
+                if (!(entity instanceof ServerPlayerEntity player)
+                        || !gameHandle.getParticipants().isParticipating(player)
+                        || inGoal.contains(player.getUuid())) {
                     return false;
                 }
 
@@ -337,7 +340,7 @@ public class DragonEscapeInstance extends FFAGameInstance {
                     return false;
                 }
 
-                return true;
+                return !source.isOf(DamageTypes.FIREWORKS);
             });
 
             config.allow(ProtectionTypes.EXPLOSION, arg -> arg.getEntity() instanceof WindChargeEntity);
