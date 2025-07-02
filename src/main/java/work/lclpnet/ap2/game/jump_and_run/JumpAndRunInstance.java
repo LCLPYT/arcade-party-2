@@ -30,7 +30,7 @@ import work.lclpnet.ap2.base.resource.ApResources;
 import work.lclpnet.ap2.core.hook.DripLeafTiltCallback;
 import work.lclpnet.ap2.game.jump_and_run.gen.*;
 import work.lclpnet.ap2.impl.game.FFAGameInstance;
-import work.lclpnet.ap2.impl.game.data.ScoreDataContainer;
+import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.util.ApRegistries;
 import work.lclpnet.ap2.impl.util.BlockBox;
@@ -74,7 +74,7 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
 
     private static final boolean DEBUG_ASSISTANCE = false;
 
-    private final ScoreDataContainer<ServerPlayerEntity, PlayerRef> data = new ScoreDataContainer<>(PlayerRef::create);
+    private final IntScoreDataContainer<ServerPlayerEntity, PlayerRef> data = new IntScoreDataContainer<>(PlayerRef::create);
     private final CollisionDetector collisionDetector = new ChunkedCollisionDetector();
     private final PlayerMovementObserver movementObserver;
     private final List<BlockPos> gateBlocks = new ArrayList<>();

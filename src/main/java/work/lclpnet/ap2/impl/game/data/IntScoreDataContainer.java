@@ -1,10 +1,12 @@
 package work.lclpnet.ap2.impl.game.data;
 
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.event.IntScoreEvent;
 import work.lclpnet.ap2.api.game.data.*;
-import work.lclpnet.ap2.impl.game.data.entry.ScoreDataEntry;
+import work.lclpnet.ap2.impl.game.data.entry.IntScoreDataEntry;
 import work.lclpnet.ap2.impl.game.data.entry.ScoreView;
 
 import java.util.*;
@@ -17,27 +19,28 @@ import java.util.stream.Stream;
  * The scores can still be updated after a subject was added.
  * The subject with the highest score is the winner.
  */
-public class ScoreDataContainer<T, Ref extends SubjectRef> extends BaseDataContainer<T, Ref> implements IntDataContainer<T, Ref>  {
+public class IntScoreDataContainer<T, Ref extends SubjectRef> extends BaseDataContainer<T, Ref> implements IntDataContainer<T, Ref>  {
 
-    private final Map<Ref, Integer> scoreMap = new HashMap<>();
+    private final Object2IntMap<Ref> scoreMap = new Object2IntOpenHashMap<>();
     private final List<IntScoreEvent<T>> listeners = new ArrayList<>();
     private final Ordering ordering;
     private final @Nullable String detailKey;
 
-    public ScoreDataContainer(SubjectRefFactory<T, Ref> refs) {
+    public IntScoreDataContainer(SubjectRefFactory<T, Ref> refs) {
         this(refs, Ordering.DESCENDING);
     }
 
-    public ScoreDataContainer(SubjectRefFactory<T, Ref> refs, Ordering ordering) {
+    public IntScoreDataContainer(SubjectRefFactory<T, Ref> refs, Ordering ordering) {
         this(refs, ordering, null);
     }
 
-    public ScoreDataContainer(SubjectRefFactory<T, Ref> refs, Ordering ordering, @Nullable String detailKey) {
+    public IntScoreDataContainer(SubjectRefFactory<T, Ref> refs, Ordering ordering, @Nullable String detailKey) {
         super(refs);
         this.ordering = Objects.requireNonNull(ordering);
         this.detailKey = detailKey;
     }
 
+    @Override
     public void setScore(T subject, int score) {
         Ref ref = refs.create(subject);
 
@@ -74,20 +77,20 @@ public class ScoreDataContainer<T, Ref extends SubjectRef> extends BaseDataConta
 
     @Override
     public synchronized Optional<DataEntry<Ref>> getEntry(Ref ref) {
-        Integer score = scoreMap.get(ref);
-
-        if (score == null) {
+        if (!scoreMap.containsKey(ref)) {
             return Optional.empty();
         }
 
-        return Optional.of(new ScoreDataEntry<>(ref, score, detailKey));
+        int score = scoreMap.getInt(ref);
+
+        return Optional.of(new IntScoreDataEntry<>(ref, score, detailKey));
     }
 
     @Override
-    public synchronized Stream<ScoreDataEntry<Ref>> streamOrderedEntries() {
-        return scoreMap.entrySet().stream()
-                .map(e -> new ScoreDataEntry<>(e.getKey(), e.getValue(), detailKey))
-                .sorted(ordering.order(ScoreView::score));
+    public synchronized Stream<IntScoreDataEntry<Ref>> streamOrderedEntries() {
+        return scoreMap.object2IntEntrySet().stream()
+                .map(e -> new IntScoreDataEntry<>(e.getKey(), e.getIntValue(), detailKey))
+                .sorted(ordering.orderInt(ScoreView::score));
     }
 
     @Override
@@ -114,7 +117,7 @@ public class ScoreDataContainer<T, Ref extends SubjectRef> extends BaseDataConta
     }
 
     private synchronized IntStream scores() {
-        return scoreMap.values().stream().mapToInt(i -> i);
+        return scoreMap.values().intStream();
     }
 
     public synchronized Set<T> getBestSubjects(SubjectRefResolver<T, Ref> resolver) {
@@ -125,7 +128,7 @@ public class ScoreDataContainer<T, Ref extends SubjectRef> extends BaseDataConta
         final int bestScore = best.get();
 
         return scoreMap.keySet().stream()
-                .filter(ref -> scoreMap.get(ref) == bestScore)
+                .filter(ref -> scoreMap.getInt(ref) == bestScore)
                 .map(resolver::resolve)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toUnmodifiableSet());
@@ -138,7 +141,7 @@ public class ScoreDataContainer<T, Ref extends SubjectRef> extends BaseDataConta
 
     @Override
     public synchronized DataContainer<T, Ref> copy() {
-        var copy = new ScoreDataContainer<>(refs, ordering, detailKey);
+        var copy = new IntScoreDataContainer<>(refs, ordering, detailKey);
         copy.scoreMap.putAll(this.scoreMap);
 
         return copy;

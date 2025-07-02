@@ -11,7 +11,7 @@ import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.game.data.DataEntry;
 import work.lclpnet.ap2.api.game.data.SubjectRef;
 import work.lclpnet.ap2.api.game.data.SubjectRefFactory;
-import work.lclpnet.ap2.impl.game.data.entry.ScoreDataEntry;
+import work.lclpnet.ap2.impl.game.data.entry.IntScoreDataEntry;
 import work.lclpnet.ap2.impl.game.data.entry.ScoreTimeDataEntry;
 import work.lclpnet.ap2.impl.game.data.entry.ScoreView;
 
@@ -21,7 +21,7 @@ import java.util.stream.Stream;
 import static java.util.Comparator.comparingLong;
 
 /**
- * A score container that orders the subjects by their integer score, like {@link ScoreDataContainer},
+ * A score container that orders the subjects by their integer score, like {@link IntScoreDataContainer},
  * but the order in which the scores who reached is saved.
  * In case two subjects have the same score, the subject who reached the score first is ranked higher.
  */
@@ -44,6 +44,7 @@ public class ScoreTimeDataContainer<T, Ref extends SubjectRef> extends BaseDataC
         this.detailKey = detailKey;
     }
 
+    @Override
     public void setScore(T subject, int score) {
         synchronized (this) {
             Ref ref = refs.create(subject);
@@ -84,7 +85,7 @@ public class ScoreTimeDataContainer<T, Ref extends SubjectRef> extends BaseDataC
         int ranking = getTimedRanking(ref);
 
         if (ranking == 0) {
-            return Optional.of(new ScoreDataEntry<>(ref, score, detailKey));
+            return Optional.of(new IntScoreDataEntry<>(ref, score, detailKey));
         }
 
         return Optional.of(new ScoreTimeDataEntry<>(ref, score, detailKey, ranking));
@@ -98,7 +99,7 @@ public class ScoreTimeDataContainer<T, Ref extends SubjectRef> extends BaseDataC
                     int ranking = getTimedRanking(ref);
 
                     if (ranking == 0) {
-                        return new ScoreDataEntry<>(ref, e.getIntValue(), detailKey);
+                        return new IntScoreDataEntry<>(ref, e.getIntValue(), detailKey);
                     }
 
                     return new ScoreTimeDataEntry<>(ref, e.getIntValue(), detailKey, ranking);

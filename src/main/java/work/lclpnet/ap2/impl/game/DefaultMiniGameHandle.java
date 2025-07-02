@@ -34,6 +34,7 @@ import work.lclpnet.kibu.translate.bossbar.BossBarProvider;
 import work.lclpnet.lobby.game.api.WorldFacade;
 import work.lclpnet.lobby.game.impl.prot.BasicProtector;
 import work.lclpnet.lobby.game.impl.prot.MutableProtectionConfig;
+import work.lclpnet.lobby.game.util.ProtectorUtils;
 import work.lclpnet.notica.Notica;
 import work.lclpnet.notica.api.SongHandle;
 
@@ -213,6 +214,7 @@ public class DefaultMiniGameHandle implements MiniGameHandle, WorldBorderManager
 
         protector.deactivate();
 
+        ProtectorUtils.allowCreativeOperatorBypass(protectionConfig);
         action.accept(protectionConfig);
 
         protector.activate();

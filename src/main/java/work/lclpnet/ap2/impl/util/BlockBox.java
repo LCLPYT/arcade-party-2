@@ -160,7 +160,11 @@ public class BlockBox implements Pair<BlockPos, BlockPos>, Iterable<BlockPos>, C
                 && this.max.getZ() >= other.min.getZ() && other.max.getZ() >= this.min.getZ();
     }
 
-    public void randomBlockPos(BlockPos.Mutable pos, Random random) {
+    public BlockPos randomBlockPos(Random random) {
+        return randomBlockPos(new BlockPos.Mutable(), random);
+    }
+
+    public BlockPos.Mutable randomBlockPos(BlockPos.Mutable pos, Random random) {
         int minX = min.getX(), minY = min.getY(), minZ = min.getZ();
         int maxX = max.getX(), maxY = max.getY(), maxZ = max.getZ();
 
@@ -169,6 +173,8 @@ public class BlockBox implements Pair<BlockPos, BlockPos>, Iterable<BlockPos>, C
         int z = minZ + random.nextInt(maxZ - minZ + 1);
 
         pos.set(x, y, z);
+
+        return pos;
     }
 
     public Vec3d randomPos(Random random) {
@@ -294,5 +300,9 @@ public class BlockBox implements Pair<BlockPos, BlockPos>, Iterable<BlockPos>, C
 
     public static BlockBox of(BlockPos pos) {
         return new BlockBox(pos, pos);
+    }
+
+    public static BlockBox of(Box box) {
+        return new BlockBox(BlockPos.ofFloored(box.getMinPos()), BlockPos.ofFloored(box.getMaxPos()));
     }
 }

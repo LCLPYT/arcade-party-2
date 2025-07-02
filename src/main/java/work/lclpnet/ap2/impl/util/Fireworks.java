@@ -7,11 +7,13 @@ import net.minecraft.component.type.FireworksComponent;
 import net.minecraft.entity.projectile.FireworkRocketEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.Heightmap;
 import org.jetbrains.annotations.NotNull;
 import work.lclpnet.ap2.api.util.action.Action;
+import work.lclpnet.kibu.access.entity.FireworkEntityAccess;
 import work.lclpnet.kibu.hook.Hook;
 import work.lclpnet.kibu.hook.HookFactory;
 import work.lclpnet.kibu.scheduler.api.RunningTask;
@@ -116,5 +118,18 @@ public class Fireworks {
         }
 
         return IntList.of(colors);
+    }
+
+    public static void spawnGoalFirework(ServerPlayerEntity player) {
+        var explosion = new FireworkExplosionComponent(FireworkExplosionComponent.Type.LARGE_BALL, IntList.of(0x20FF4D), IntList.of(0x1E7220), false, true);
+
+        ItemStack rocket = new ItemStack(Items.FIREWORK_ROCKET);
+        rocket.set(DataComponentTypes.FIREWORKS, new FireworksComponent(1, List.of(explosion)));
+
+        ServerWorld world = player.getServerWorld();
+        FireworkRocketEntity firework = new FireworkRocketEntity(world, player.getX(), player.getY(), player.getZ(), rocket);
+        world.spawnEntity(firework);
+
+        FireworkEntityAccess.explode(firework);
     }
 }

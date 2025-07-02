@@ -13,7 +13,7 @@ class CombinedDataContainerTest {
     @Test
     void getEntry_fromChildren() {
         var first = new OrderedDataContainer<>(StringRef::new);
-        var second = new ScoreDataContainer<>(StringRef::new);
+        var second = new IntScoreDataContainer<>(StringRef::new);
         var container = new CombinedDataContainer<>(List.of(first, second));
 
         second.addScore("bar", 7);
@@ -27,7 +27,7 @@ class CombinedDataContainerTest {
     @Test
     void streamOrderedEntries_inOrderOfChildrenAndWithoutDuplicates() {
         var first = new OrderedDataContainer<>(StringRef::new);
-        var second = new ScoreDataContainer<>(StringRef::new);
+        var second = new IntScoreDataContainer<>(StringRef::new);
         var container = new CombinedDataContainer<>(List.of(first, second));
 
         second.addScore("foo", 5);
@@ -46,7 +46,7 @@ class CombinedDataContainerTest {
     @Test
     void identityIfAbsent_twoChildren_addedToLast() {
         var first = new OrderedDataContainer<>(StringRef::new);
-        var second = new ScoreDataContainer<>(StringRef::new);
+        var second = new IntScoreDataContainer<>(StringRef::new);
         var container = new CombinedDataContainer<>(List.of(first, second));
 
         container.identityIfAbsent("foo");

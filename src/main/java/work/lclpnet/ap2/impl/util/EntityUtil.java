@@ -1,13 +1,21 @@
 package work.lclpnet.ap2.impl.util;
 
+import com.mojang.serialization.MapDecoder;
+import com.mojang.serialization.MapEncoder;
+import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.NbtComponent;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.attribute.EntityAttribute;
 import net.minecraft.entity.attribute.EntityAttributeInstance;
 import net.minecraft.entity.attribute.EntityAttributeModifier;
 import net.minecraft.entity.attribute.EntityAttributes;
+import net.minecraft.nbt.NbtOps;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
+
+import java.util.Optional;
 
 public class EntityUtil {
 
@@ -44,5 +52,17 @@ public class EntityUtil {
         if (instance == null) return;
 
         instance.removeModifier(id);
+    }
+
+    public static <T> void putCustomData(Entity entity, MapEncoder<T> encoder, T value) {
+        entity.setComponent(DataComponentTypes.CUSTOM_DATA, entity.getOrDefault(DataComponentTypes.CUSTOM_DATA, NbtComponent.DEFAULT)
+                .with(NbtOps.INSTANCE, encoder, value)
+                .getOrThrow());
+    }
+
+    public static <T> Optional<T> getCustomData(Entity entity, MapDecoder<T> decoder) {
+        return entity.getOrDefault(DataComponentTypes.CUSTOM_DATA, NbtComponent.DEFAULT)
+                .get(decoder)
+                .resultOrPartial();
     }
 }

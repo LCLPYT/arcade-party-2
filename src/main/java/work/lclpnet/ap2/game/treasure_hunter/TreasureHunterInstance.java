@@ -22,7 +22,7 @@ import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.impl.game.FFAGameInstance;
 import work.lclpnet.ap2.impl.game.data.CombinedDataContainer;
 import work.lclpnet.ap2.impl.game.data.OrderedDataContainer;
-import work.lclpnet.ap2.impl.game.data.ScoreDataContainer;
+import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.BlockBox;
@@ -40,7 +40,7 @@ public class TreasureHunterInstance extends FFAGameInstance {
     private static final float COIN_CHANCE = 0.025f;
     private final Random random = new Random();
     private final OrderedDataContainer<ServerPlayerEntity, PlayerRef> foundChest = new OrderedDataContainer<>(PlayerRef::create);
-    private final ScoreDataContainer<ServerPlayerEntity, PlayerRef> score = new ScoreDataContainer<>(PlayerRef::create);
+    private final IntScoreDataContainer<ServerPlayerEntity, PlayerRef> score = new IntScoreDataContainer<>(PlayerRef::create);
     private final CombinedDataContainer<ServerPlayerEntity, PlayerRef> data = new CombinedDataContainer<>(List.of(foundChest, score));
     private final Set<BlockState> materials = new HashSet<>();
 

@@ -2,6 +2,8 @@ package work.lclpnet.ap2.impl.game;
 
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.entity.boss.BossBar;
+import net.minecraft.scoreboard.AbstractTeam;
+import net.minecraft.scoreboard.Team;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -22,8 +24,12 @@ import work.lclpnet.ap2.base.resource.ApResources;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.GameRuleBuilder;
 import work.lclpnet.ap2.impl.util.debug.DebugController;
+import work.lclpnet.ap2.impl.util.handler.Visibility;
+import work.lclpnet.ap2.impl.util.handler.VisibilityHandler;
+import work.lclpnet.ap2.impl.util.handler.VisibilityManager;
 import work.lclpnet.ap2.impl.util.math.Vec2i;
 import work.lclpnet.ap2.impl.util.movement.TickMovementDetector;
+import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.ap2.impl.util.world.WorldBorderRandomizer;
 import work.lclpnet.kibu.hook.HookFactory;
 import work.lclpnet.kibu.hook.util.PositionRotation;
@@ -205,6 +211,27 @@ public class GameCommons {
         timer.start(gameHandle.getBossBarProvider(), gameHandle.getGameScheduler());
 
         return timer;
+    }
+
+    public Team noCollision() {
+        CustomScoreboardManager scoreboardManager = gameHandle.getScoreboardManager();
+
+        Team team = scoreboardManager.createTeam("team");
+        team.setCollisionRule(AbstractTeam.CollisionRule.NEVER);
+
+        scoreboardManager.joinTeam(gameHandle.getParticipants(), team);
+
+        return team;
+    }
+
+    public VisibilityHandler addVisibilityChanger(Team team) {
+        Translations translations = gameHandle.getTranslations();
+        VisibilityHandler visibility = new VisibilityHandler(new VisibilityManager(team, Visibility.PARTIALLY_VISIBLE), translations, gameHandle.getParticipants());
+        visibility.init(gameHandle.getHookRegistrar());
+
+        visibility.giveItems();
+
+        return visibility;
     }
 
     public void addScore(ServerPlayerEntity player, int score, IntDataSink<ServerPlayerEntity> data) {

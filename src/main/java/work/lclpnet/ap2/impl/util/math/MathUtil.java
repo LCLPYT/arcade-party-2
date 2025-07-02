@@ -10,7 +10,7 @@ import work.lclpnet.kibu.util.math.Matrix3i;
 
 import java.util.Iterator;
 
-import static java.lang.Math.abs;
+import static java.lang.Math.*;
 
 public class MathUtil {
 
@@ -26,17 +26,17 @@ public class MathUtil {
     }
 
     public static Vec3d yaw2vec(float yaw) {
-        double rad = Math.toRadians(yaw);
+        double rad = toRadians(yaw);
 
-        return new Vec3d(Math.sin(-rad), 0, Math.cos(rad));
+        return new Vec3d(sin(-rad), 0, cos(rad));
     }
 
     public static void yaw2vec(float yaw, Vector3d vec) {
-        double rad = Math.toRadians(yaw);
+        double rad = toRadians(yaw);
 
-        vec.x = Math.sin(-rad);
+        vec.x = sin(-rad);
         vec.y = 0;
-        vec.z = Math.cos(rad);
+        vec.z = cos(rad);
     }
 
     public static double angleY(Vec3i dir) {
@@ -44,11 +44,31 @@ public class MathUtil {
     }
 
     public static double angleY(double x, double z) {
-        return Math.atan2(x, z);
+        return atan2(x, z);
     }
 
-    public static float vec2yaw(Vector3dc vec) {
-        return (float) Math.toDegrees(angleY(-vec.x(), vec.z()));
+    public static float yaw(Vector3dc vec) {
+        return yaw(vec.x(), vec.z());
+    }
+
+    public static float yaw(Vec3d vec) {
+        return yaw(vec.getX(), vec.getZ());
+    }
+
+    public static float yaw(double x, double z) {
+        return (float) toDegrees(angleY(-x, z));
+    }
+
+    public static float pitch(Vector3dc vec) {
+        return pitch(vec.y());
+    }
+
+    public static float pitch(Vec3d vec) {
+        return pitch(vec.getY());
+    }
+
+    public static float pitch(double y) {
+        return (float) toDegrees(asin(-y));
     }
 
     public static float rotateYaw(float yaw, Matrix3i mat, Vector3d tmp) {
@@ -56,7 +76,7 @@ public class MathUtil {
 
         mat.transform(tmp.x, tmp.y, tmp.z, tmp);
 
-        return vec2yaw(tmp);
+        return yaw(tmp);
     }
 
     private MathUtil() {}

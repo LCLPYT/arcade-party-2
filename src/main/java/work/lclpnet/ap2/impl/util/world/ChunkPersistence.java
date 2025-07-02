@@ -23,13 +23,13 @@ public class ChunkPersistence {
         gameHandle.whenDone(this::reset);
     }
 
-    public void markPersistent(int chunkX, int chunkZ) {
+    public synchronized void markPersistent(int chunkX, int chunkZ) {
         if (!chunks.add(toLong(chunkX, chunkZ))) return;
 
         setForced(chunkX, chunkZ, true);
     }
 
-    public void removePersistent(int chunkX, int chunkZ) {
+    public synchronized void removePersistent(int chunkX, int chunkZ) {
         if (!chunks.remove(toLong(chunkX, chunkZ))) return;
 
         setForced(chunkX, chunkZ, false);
@@ -54,7 +54,7 @@ public class ChunkPersistence {
      * @param toChunkX End chunkX of the quad, exclusive.
      * @param toChunkZ End chunkZ of the quad, exclusive.
      */
-    public void markQuadPersistent(int fromChunkX, int fromChunkZ, int toChunkX, int toChunkZ) {
+    public synchronized void markQuadPersistent(int fromChunkX, int fromChunkZ, int toChunkX, int toChunkZ) {
         int minX = min(fromChunkX, toChunkX);
         int maxX = max(fromChunkX, toChunkX);
         int minZ = min(fromChunkZ, toChunkZ);
@@ -67,7 +67,9 @@ public class ChunkPersistence {
         }
     }
 
-    public void reset() {
+    public synchronized void reset() {
+        long[] chunks = this.chunks.toLongArray();
+
         for (long chunk : chunks) {
             int cx = getPackedX(chunk);
             int cz = getPackedZ(chunk);

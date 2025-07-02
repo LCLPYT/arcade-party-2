@@ -1,21 +1,15 @@
 package work.lclpnet.ap2.game.mimicry;
 
-import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.particle.ParticleTypes;
 import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.GameMode;
 import net.minecraft.world.World;
-import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.map.MapBootstrap;
@@ -23,9 +17,10 @@ import work.lclpnet.ap2.game.mimicry.data.MimicryManager;
 import work.lclpnet.ap2.game.mimicry.data.MimicryRoom;
 import work.lclpnet.ap2.game.mimicry.data.SequencePlayer;
 import work.lclpnet.ap2.impl.game.FFAGameInstance;
+import work.lclpnet.ap2.impl.game.PseudoElimination;
 import work.lclpnet.ap2.impl.game.data.IntDataContainer;
 import work.lclpnet.ap2.impl.game.data.Ordering;
-import work.lclpnet.ap2.impl.game.data.ScoreDataContainer;
+import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.BlockBox;
@@ -51,8 +46,8 @@ public class MimicryInstance extends FFAGameInstance implements MapBootstrap {
             REPLAY_MAX_SECONDS = 30,
             NEXT_ROUND_DELAY_SECONDS = 4;
 
-    private final IntDataContainer<ServerPlayerEntity, PlayerRef> dataContainer = new ScoreDataContainer<>(PlayerRef::create, Ordering.DESCENDING, "game.ap2.mimicry.completed");
-    private final Set<UUID> toEliminate = new HashSet<>();
+    private final IntDataContainer<ServerPlayerEntity, PlayerRef> dataContainer = new IntScoreDataContainer<>(PlayerRef::create, Ordering.DESCENDING, "game.ap2.mimicry.completed");
+    private PseudoElimination pseudoElimination;
 
     private MimicryManager manager = null;
     private SequencePlayer sequencePlayer = null;
@@ -101,6 +96,8 @@ public class MimicryInstance extends FFAGameInstance implements MapBootstrap {
     protected void prepare() {
         ServerWorld world = getWorld();
 
+        pseudoElimination = new PseudoElimination(gameHandle, world);
+
         manager.eachParticipant((player, room) -> room.teleport(player, world));
 
         gameHandle.getHookRegistrar().registerHook(ServerMessageHooks.ALLOW_CHAT_MESSAGE, (message, sender, params) -> false);
@@ -119,7 +116,7 @@ public class MimicryInstance extends FFAGameInstance implements MapBootstrap {
         if (winManager.isGameOver()
                 || !(player instanceof ServerPlayerEntity serverPlayer)
                 || !gameHandle.getParticipants().isParticipating(serverPlayer)
-                || toEliminate.contains(player.getUuid())) {
+                || pseudoElimination.isEliminated(serverPlayer)) {
             return ActionResult.PASS;
         }
 
@@ -216,14 +213,7 @@ public class MimicryInstance extends FFAGameInstance implements MapBootstrap {
         manager.setReplay(false);
 
         // remove all players who were marked as eliminated this round
-        Participants participants = gameHandle.getParticipants();
-
-        toEliminate.stream()
-                .map(participants::getParticipant)
-                .flatMap(Optional::stream)
-                .forEach(participants::remove);
-
-        toEliminate.clear();
+        pseudoElimination.commit();
     }
 
     private int calcReplaySeconds() {
@@ -245,23 +235,7 @@ public class MimicryInstance extends FFAGameInstance implements MapBootstrap {
     }
 
     private synchronized void softEliminate(ServerPlayerEntity player) {
-        if (phase != Phase.REPLAY
-                || toEliminate.contains(player.getUuid())
-                || !gameHandle.getParticipants().isParticipating(player)) return;
-
-        double x = player.getX(), y = player.getY(), z = player.getZ();
-
-        ServerWorld world = getWorld();
-
-        world.playSound(null, x, y, z, SoundEvents.ENTITY_GENERIC_EXPLODE.value(), SoundCategory.PLAYERS, 1f, 0f);
-        world.spawnParticles(ParticleTypes.LAVA, x, y, z, 100, 0.5, 0.5, 0.5, 0.2);
-
-        gameHandle.getDeathMessages().getDeathMessage(player, null)
-                .sendTo(PlayerLookup.all(gameHandle.getServer()));
-
-        player.changeGameMode(GameMode.SPECTATOR);
-
-        toEliminate.add(player.getUuid());
+        if (phase != Phase.REPLAY || !pseudoElimination.eliminate(player)) return;
 
         checkRoundComplete();
     }
@@ -276,7 +250,7 @@ public class MimicryInstance extends FFAGameInstance implements MapBootstrap {
             return;
         }
 
-        int remainingReplay = notCompleted - toEliminate.size();
+        int remainingReplay = notCompleted - pseudoElimination.size();
 
         if (remainingReplay <= 0) {
             endReplayAndEliminate();
