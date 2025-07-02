@@ -45,6 +45,7 @@ import work.lclpnet.ap2.impl.util.SplinePath;
 import work.lclpnet.ap2.impl.util.TimeHelper;
 import work.lclpnet.ap2.impl.util.debug.SplinePathDebugger;
 import work.lclpnet.ap2.impl.util.handler.VisibilityHandler;
+import work.lclpnet.ap2.impl.util.math.MathUtil;
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.ap2.impl.util.world.ChunkPersistence;
@@ -416,8 +417,8 @@ public class DragonEscapeInstance extends FFAGameInstance {
             updatePlayerProgress(player);
 
             // eliminate the player if they are behind the dragon or not in range of the path
-            if (progress <= dragonController.getDragonProgress() || !player.getPos()
-                    .isInRange(path.samplePosition(progress), pathEliminationDistance)) {
+            if ((pseudoElimination.isParticipating(player) && progress <= dragonController.getDragonProgress())
+                    || !player.getPos().isInRange(path.samplePosition(progress), pathEliminationDistance)) {
 
                 softEliminate(player);
                 check = true;
@@ -469,11 +470,18 @@ public class DragonEscapeInstance extends FFAGameInstance {
     }
 
     private synchronized void softEliminate(ServerPlayerEntity player) {
-        if (!pseudoElimination.eliminate(player) || winManager.isGameOver()) return;
+        if (pseudoElimination.eliminate(player) && !winManager.isGameOver()) {
+            trackScore(player);
+        }
 
-        trackScore(player);
+        Tracker tracker = trackers.get(player.getUuid());
 
-        pseudoElimination.eliminate(player);
+        if (tracker != null) {
+            Vec3d pos = tracker.anchor;
+            Vec3d dir = path.sampleDirection(tracker.maxProgress).normalize();
+
+            player.teleport(getWorld(), pos.getX(), pos.getY(), pos.getZ(), Set.of(), MathUtil.yaw(dir), MathUtil.pitch(dir), true);
+        }
     }
 
     private synchronized void trackScore(ServerPlayerEntity player) {
