@@ -51,6 +51,7 @@ import work.lclpnet.ap2.impl.util.world.stage.BlockShape;
 import work.lclpnet.kibu.access.misc.DamageTrackerAccess;
 import work.lclpnet.kibu.hook.entity.EntityHealthCallback;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
+import work.lclpnet.kibu.hook.util.OnGroundDetector;
 import work.lclpnet.kibu.hook.util.PlayerUtils;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.translate.text.TranslatedText;
@@ -297,7 +298,6 @@ public class DragonEscapeInstance extends FFAGameInstance {
         }
     }
 
-
     private void unblockMovement() {
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
             movementBlocker.enableMovement(player);
@@ -397,7 +397,7 @@ public class DragonEscapeInstance extends FFAGameInstance {
         boolean check = checkForCompletion;
 
         for (ServerPlayerEntity player : pseudoElimination.iterateParticipants()) {
-            if (goalShape.contains(player.getPos()) && !inGoal.contains(player.getUuid())) {
+            if (goalShape.contains(player.getPos()) && !inGoal.contains(player.getUuid()) && OnGroundDetector.isOnGroundServer(player)) {
                 onReachGoal(player);
 
                 check = true;
