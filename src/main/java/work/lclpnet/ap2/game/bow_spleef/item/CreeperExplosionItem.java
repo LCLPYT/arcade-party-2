@@ -63,7 +63,7 @@ public class CreeperExplosionItem implements SpecialItem {
 
                 float pitch = lerp((float) t / DURATION_TICKS, 0.85f, 1.45f);
 
-                ServerWorld world = player.getServerWorld();
+                ServerWorld world = player.getWorld();
                 world.playSound(null, player.getX(), player.getEyeY(), player.getZ(), SoundEvents.ENTITY_CREEPER_HURT, SoundCategory.HOSTILE, 0.2f, pitch);
                 world.spawnParticles(ParticleTypes.FLAME, player.getX(), player.getY(), player.getZ(), 10, 0.1, 0.1, 0.1, 0.15);
 

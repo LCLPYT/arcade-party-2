@@ -43,6 +43,6 @@ public class LightWeightItem implements SpecialItem {
             ctx.removeSpecialItem(player, this);
         }, DURATION);
 
-        player.getServerWorld().playSound(null, player.getX(), player.getEyeY(), player.getZ(), SoundEvents.ENTITY_BREEZE_IDLE_GROUND, SoundCategory.PLAYERS, 0.65f, 1.5f);
+        player.getWorld().playSound(null, player.getX(), player.getEyeY(), player.getZ(), SoundEvents.ENTITY_BREEZE_IDLE_GROUND, SoundCategory.PLAYERS, 0.65f, 1.5f);
     }
 }

@@ -91,7 +91,7 @@ public class VisibilityManager {
     }
 
     private Iterable<? extends Entity> others(ServerPlayerEntity player) {
-        return Iterables.filter(player.getServerWorld().iterateEntities(), other ->
+        return Iterables.filter(player.getWorld().iterateEntities(), other ->
                 other != player && other.getScoreboardTeam() == team && PlayerLookup.tracking(other).contains(player)
                 && !other.hasPassengerDeep(player));
     }

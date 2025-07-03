@@ -1,5 +1,6 @@
 package work.lclpnet.ap2.impl.util;
 
+import com.mojang.datafixers.util.Pair;
 import net.minecraft.block.jukebox.JukeboxSong;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.TooltipDisplayComponent;
@@ -11,6 +12,8 @@ import net.minecraft.item.equipment.ArmorMaterial;
 import net.minecraft.item.equipment.ArmorMaterials;
 import net.minecraft.item.equipment.trim.ArmorTrimMaterial;
 import net.minecraft.item.equipment.trim.ArmorTrimPattern;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.NbtOps;
 import net.minecraft.potion.Potion;
 import net.minecraft.potion.Potions;
 import net.minecraft.registry.*;
@@ -146,5 +149,11 @@ public class ItemHelper {
         var display = stack.getOrDefault(DataComponentTypes.TOOLTIP_DISPLAY, TooltipDisplayComponent.DEFAULT);
 
         stack.set(DataComponentTypes.TOOLTIP_DISPLAY, display.with(DataComponentTypes.UNBREAKABLE, true));
+    }
+
+    public static Optional<ItemStack> fromNbt(RegistryWrapper.WrapperLookup lookup, NbtCompound nbt) {
+        return ItemStack.CODEC.decode(lookup.getOps(NbtOps.INSTANCE), nbt)
+                .resultOrPartial()
+                .map(Pair::getFirst);
     }
 }

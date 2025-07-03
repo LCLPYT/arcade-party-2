@@ -1,7 +1,7 @@
 package work.lclpnet.ap2.core.mixin;
 
 import net.minecraft.entity.MarkerEntity;
-import net.minecraft.nbt.NbtCompound;
+import net.minecraft.storage.WriteView;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -29,10 +29,10 @@ public class MarkerEntityMixin implements ApMarkerEntity {
     }
 
     @Inject(
-            method = "writeCustomDataToNbt",
+            method = "writeCustomData",
             at = @At("HEAD")
     )
-    public void ap2$writeActorData(NbtCompound nbt, CallbackInfo ci) {
+    public void ap2$writeActorData(WriteView view, CallbackInfo ci) {
         if (actor == null) return;
 
         MarkerEntity self = (MarkerEntity) (Object) this;

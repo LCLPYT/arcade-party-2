@@ -275,7 +275,7 @@ public class EggventureInstance extends FFAGameInstance implements MapBootstrap 
     private void onFindEasterEgg(ServerPlayerEntity player, BlockPos pos) {
         if (winManager.isGameOver()) return;
 
-        ServerWorld world = player.getServerWorld();
+        ServerWorld world = player.getWorld();
         world.setBlockState(pos, Blocks.AIR.getDefaultState(), Block.SKIP_DROPS | Block.FORCE_STATE | Block.NOTIFY_LISTENERS);
 
         commons().addScore(player, 1, data);

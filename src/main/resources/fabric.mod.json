@@ -31,7 +31,7 @@
   "accessWidener": "ap2.accesswidener",
   "depends": {
     "fabricloader": ">=0.16.14",
-    "minecraft": "~1.21.5",
+    "minecraft": "~1.21.6",
     "java": ">=21",
     "mg-lobby": "*",
     "kibu": "*",

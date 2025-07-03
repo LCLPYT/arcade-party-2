@@ -179,7 +179,7 @@ public class SpecialItemScene {
             object.startPickup(player, () -> remove(object));
 
             float pitch = (random.nextFloat() - random.nextFloat()) * 1.4F + 2.0F;
-            player.getServerWorld().playSound(null, object.position.x, object.position.y, object.position.z, SoundEvents.ENTITY_ITEM_PICKUP, SoundCategory.PLAYERS, 0.2F, pitch);
+            player.getWorld().playSound(null, object.position.x, object.position.y, object.position.z, SoundEvents.ENTITY_ITEM_PICKUP, SoundCategory.PLAYERS, 0.2F, pitch);
         }
     }
 

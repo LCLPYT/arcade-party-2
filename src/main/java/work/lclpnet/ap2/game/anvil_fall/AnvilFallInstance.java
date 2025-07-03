@@ -124,7 +124,7 @@ public class AnvilFallInstance extends EliminationGameInstance {
     private void onHitByAnvil(ServerPlayerEntity player) {
         if (!gameHandle.getParticipants().isParticipating(player)) return;
 
-        ServerWorld world = player.getServerWorld();
+        ServerWorld world = player.getWorld();
         Vec3d pos = player.getPos();
 
         double x = pos.getX(), y = pos.getY(), z = pos.getZ();

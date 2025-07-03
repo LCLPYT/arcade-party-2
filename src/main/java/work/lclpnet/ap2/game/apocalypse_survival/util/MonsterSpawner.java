@@ -319,7 +319,7 @@ public class MonsterSpawner<S extends BlockShape & BlockShape.WithRadius> {
         navigation.setRangeMultiplier(2.5f);
 
         if (navigation instanceof MobNavigation nav) {
-            nav.setCanPathThroughDoors(true);
+            nav.setCanOpenDoors(true);
             nav.setCanWalkOverFences(true);
         }
     }

@@ -76,7 +76,7 @@ public class CheckpointHelper {
         hooks.registerHook(PlayerMoveCallback.HOOK, (player, from, to) -> {
             if (!predicate.test(player)) return false;
 
-            BlockState state = player.getServerWorld().getBlockState(player.getBlockPos());
+            BlockState state = player.getWorld().getBlockState(player.getBlockPos());
             if (!state.isOf(Blocks.LAVA)) return false;
 
             hook.invoker().act(player);

@@ -22,6 +22,7 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3i;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.impl.util.BlockBox;
+import work.lclpnet.ap2.impl.util.ItemHelper;
 import work.lclpnet.ap2.impl.util.math.AffineIntMatrix;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.kibu.jnbt.CompoundTag;
@@ -89,7 +90,7 @@ public class SbIsland {
 
     public void teleport(ServerPlayerEntity player) {
         double x = spawnWorldPos.getX() + 0.5, y = spawnWorldPos.getY(), z = spawnWorldPos.getZ() + 0.5;
-        ServerWorld world = player.getServerWorld();
+        ServerWorld world = player.getWorld();
 
         player.teleport(world, x, y, z, Set.of(), data.yaw(), 0, true);
     }
@@ -240,7 +241,7 @@ public class SbIsland {
 
                     NbtCompound item = FabricNbtConversion.convert(kibuItem, NbtCompound.class);
 
-                    ItemStack expected = ItemStack.fromNbt(world.getRegistryManager(), item).orElse(ItemStack.EMPTY);
+                    ItemStack expected = ItemHelper.fromNbt(world.getRegistryManager(), item).orElse(ItemStack.EMPTY);
                     ItemStack actual = itemFrame.getHeldItemStack();
 
                     if ((!expected.isEmpty() || !actual.isEmpty()) && !actual.isOf(expected.getItem())) {

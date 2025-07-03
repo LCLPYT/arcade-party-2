@@ -24,7 +24,7 @@ class VanillaTranslationsTest {
 
     @BeforeAll
     static void setUpAll() throws IOException {
-        String version = MinecraftVersion.CURRENT.getName();
+        String version = MinecraftVersion.CURRENT.name();
         Path assetsRoot = Files.createTempDirectory("vt_assets");
 
         // TODO remove network dependency by using a local state of required assets

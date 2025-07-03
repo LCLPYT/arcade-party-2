@@ -39,7 +39,7 @@ public class FakeNoteBlockPlayer {
         if (instrument.canBePitched()) {
             pitch = NoteBlock.getNotePitch(note);
 
-            player.getServerWorld().spawnParticles(player, ParticleTypes.NOTE, false, false,
+            player.getWorld().spawnParticles(player, ParticleTypes.NOTE, false, false,
                     pos.getX() + 0.5d,
                     pos.getY() + 1.2d,
                     pos.getZ() + 0.5d,

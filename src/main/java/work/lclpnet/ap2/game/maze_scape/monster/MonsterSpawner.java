@@ -189,7 +189,7 @@ public class MonsterSpawner {
         navigation.setRangeMultiplier(8f);
 
         if (navigation instanceof MobNavigation nav) {
-            nav.setCanPathThroughDoors(true);
+            nav.setCanOpenDoors(true);
             nav.setCanWalkOverFences(true);
         }
 

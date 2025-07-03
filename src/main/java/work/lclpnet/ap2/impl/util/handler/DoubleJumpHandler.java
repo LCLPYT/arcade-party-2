@@ -68,7 +68,7 @@ public class DoubleJumpHandler {
 
             VelocityModifier.setVelocity(player, player.getRotationVector().multiply(1.3));
 
-            ServerWorld serverWorld = player.getServerWorld();
+            ServerWorld serverWorld = player.getWorld();
 
             double x = player.getX();
             double y = player.getY();

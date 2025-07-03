@@ -52,7 +52,7 @@ public class LeapKit extends SingleItemKit {
 
         VelocityModifier.setVelocity(player, player.getRotationVector().multiply(LEAP_STRENGTH));
 
-        ServerWorld world = player.getServerWorld();
+        ServerWorld world = player.getWorld();
 
         world.playSound(null, player.getX(), player.getY(), player.getZ(),
                 SoundEvents.ENTITY_WITHER_SHOOT, SoundCategory.PLAYERS, 0.5f, 1.8f);

@@ -132,7 +132,7 @@ public class ImpactDetector {
 
     private Iterable<BlockPos> collisions(ServerPlayerEntity player, Box box) {
         // refer to CollisionView::getBlockCollisions
-        return () -> new BlockCollisionSpliterator<>(player.getServerWorld(), player, box, false, (pos, voxelShape) -> pos);
+        return () -> new BlockCollisionSpliterator<>(player.getWorld(), player, box, false, (pos, voxelShape) -> pos);
     }
 
     public @Nullable Vec3d getVelocity(ServerPlayerEntity player) {

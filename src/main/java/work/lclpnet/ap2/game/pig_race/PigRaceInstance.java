@@ -149,7 +149,7 @@ public class PigRaceInstance extends FFAGameInstance {
                 }
 
                 BlockPos pos = vehicle.getBlockPos();
-                BlockState state = player.getServerWorld().getBlockState(pos);
+                BlockState state = player.getWorld().getBlockState(pos);
 
                 if (state.isOf(Blocks.LAVA)) {
                     resetPlayerToCheckpoint(player);
@@ -291,7 +291,7 @@ public class PigRaceInstance extends FFAGameInstance {
     private record PendingPig(double x, double y, double z, float yaw) {
 
         public PigEntity create(ServerPlayerEntity player) {
-            ServerWorld world = player.getServerWorld();
+            ServerWorld world = player.getWorld();
 
             PigEntity pig = new PigEntity(EntityType.PIG, world);
             pig.setInvulnerable(true);

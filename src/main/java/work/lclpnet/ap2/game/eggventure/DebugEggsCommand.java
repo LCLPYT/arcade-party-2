@@ -37,7 +37,7 @@ public class DebugEggsCommand implements KibuCommand {
 
         var inv = new KibuInventory(6, Text.literal("Eggs"));
 
-        var headEntries = player.getServerWorld().getRegistryManager()
+        var headEntries = player.getWorld().getRegistryManager()
                 .getOrThrow(ApRegistries.PLAYER_HEAD)
                 .iterateEntries(PlayerHeadTags.EASTER_EGGS);
 

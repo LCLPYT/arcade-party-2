@@ -123,7 +123,7 @@ public class MiningBattleOre {
     }
 
     private void explode(ServerPlayerEntity player, BlockPos pos) {
-        ServerWorld world = player.getServerWorld();
+        ServerWorld world = player.getWorld();
 
         double x = pos.getX() + 0.5, y = pos.getY() + 0.5, z = pos.getZ() + 0.5;
         Vec3d vec = new Vec3d(x, y, z);

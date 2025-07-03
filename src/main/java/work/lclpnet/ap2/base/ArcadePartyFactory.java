@@ -33,7 +33,7 @@ public class ArcadePartyFactory implements GameFactory {
         loader.addLoader(assetLoader);
 
         // also load vanilla death messages (unavailable until initialized)
-        var assetManager = AssetManager.getShared(MinecraftVersion.CURRENT.getName());
+        var assetManager = AssetManager.getShared(MinecraftVersion.CURRENT.name());
         vanillaTranslations = new VanillaTranslations(assetManager, logger, translationKey -> translationKey.startsWith("death."));
         loader.addLoader(vanillaTranslations.getTranslationLoader());
 

@@ -48,7 +48,7 @@ public class ExplodeAmmoItem implements SpecialItem {
 
             projectile.addCommandTag(TAG_EXPLOSIVE);
             ctx.removeSpecialItem(player, this);
-            player.getServerWorld().playSound(null, player.getX(), player.getEyeY(), player.getZ(), SoundEvents.ENTITY_TNT_PRIMED, SoundCategory.BLOCKS, 0.5f, 1.75f);
+            player.getWorld().playSound(null, player.getX(), player.getEyeY(), player.getZ(), SoundEvents.ENTITY_TNT_PRIMED, SoundCategory.BLOCKS, 0.5f, 1.75f);
         });
 
         hooks.registerHook(impactHook, (projectile, blockPos) -> {

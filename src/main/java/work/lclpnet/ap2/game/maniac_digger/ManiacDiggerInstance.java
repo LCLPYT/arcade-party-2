@@ -139,7 +139,7 @@ public class ManiacDiggerInstance extends FFAGameInstance implements MapBootstra
             return false;
         }
 
-        BlockState state = player.getServerWorld().getBlockState(pos);
+        BlockState state = player.getWorld().getBlockState(pos);
 
         return !(state.getBlock() instanceof StainedGlassBlock) && !state.isOf(Blocks.GLASS);
     }
@@ -177,7 +177,7 @@ public class ManiacDiggerInstance extends FFAGameInstance implements MapBootstra
     }
 
     private void onHitBlock(ServerPlayerEntity player, BlockPos pos) {
-        ServerWorld world = player.getServerWorld();
+        ServerWorld world = player.getWorld();
         BlockState state = world.getBlockState(pos);
         ItemStack stack = player.getMainHandStack();
 

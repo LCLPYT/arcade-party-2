@@ -187,7 +187,7 @@ public class SnowballFightInstance extends EliminationGameInstance {
     }
 
     private void onBreakBlock(ServerPlayerEntity player, BlockPos pos) {
-        BlockState state = player.getServerWorld().getBlockState(pos);
+        BlockState state = player.getWorld().getBlockState(pos);
 
         if (state.isOf(Blocks.SNOW) || state.isOf(Blocks.SNOW_BLOCK) || state.isOf(Blocks.POWDER_SNOW)) {
             addSnowball(player);

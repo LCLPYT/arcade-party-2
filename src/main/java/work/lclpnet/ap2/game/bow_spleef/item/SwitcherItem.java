@@ -55,7 +55,7 @@ public class SwitcherItem implements SpecialItem {
             float victimYaw = victim.getYaw();
             float victimPitch = victim.getPitch();
 
-            ServerWorld world = shooter.getServerWorld();
+            ServerWorld world = shooter.getWorld();
             victim.teleport(world, shooter.getX(), shooter.getY(), shooter.getZ(), Set.of(), shooter.getYaw(), shooter.getPitch(), true);
             shooter.teleport(world, victimPos.getX(), victimPos.getY(), victimPos.getZ(), Set.of(), victimYaw, victimPitch, true);
 

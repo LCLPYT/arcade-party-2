@@ -135,7 +135,7 @@ public class KnockoutInstance extends EliminationGameInstance {
                     .formatted(YELLOW)
                     .sendTo(player);
 
-            player.getServerWorld().spawnParticles(ParticleTypes.WITCH, player.getX(), player.getY(), player.getZ(), 50, 0.5, 1.0, 0.5, 0.1);
+            player.getWorld().spawnParticles(ParticleTypes.WITCH, player.getX(), player.getY(), player.getZ(), 50, 0.5, 1.0, 0.5, 0.1);
             player.playSoundToPlayer(SoundEvents.ENTITY_ZOMBIE_VILLAGER_CONVERTED, SoundCategory.PLAYERS, 0.8f, 1f);
             player.addStatusEffect(new StatusEffectInstance(StatusEffects.GLOWING, Integer.MAX_VALUE, 1, false, false, true));
         });
@@ -201,7 +201,7 @@ public class KnockoutInstance extends EliminationGameInstance {
 
         VelocityModifier.setVelocity(player, vec);
 
-        ServerWorld world = player.getServerWorld();
+        ServerWorld world = player.getWorld();
 
         double x = player.getX(), y = player.getY(), z = player.getZ();
         world.spawnParticles(ParticleTypes.CLOUD, x, y, z, 25, 0.25, 0.25, 0.25, 0.1);

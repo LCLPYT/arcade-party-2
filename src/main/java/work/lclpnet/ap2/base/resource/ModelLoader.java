@@ -14,6 +14,7 @@ import org.joml.Quaternionf;
 import work.lclpnet.ap2.impl.scene.BlockDisplayObject;
 import work.lclpnet.ap2.impl.scene.ItemDisplayObject;
 import work.lclpnet.ap2.impl.scene.Object3d;
+import work.lclpnet.ap2.impl.util.ItemHelper;
 import work.lclpnet.ap2.impl.util.model.TemplateModel;
 
 import java.io.IOException;
@@ -127,7 +128,7 @@ public class ModelLoader {
                 yield new BlockDisplayObject(state);
             }
             case "minecraft:item_display" -> {
-                var stack = ItemStack.fromNbt(lookup, nbt.getCompoundOrEmpty("item")).orElse(ItemStack.EMPTY);
+                var stack = ItemHelper.fromNbt(lookup, nbt.getCompoundOrEmpty("item")).orElse(ItemStack.EMPTY);
                 yield new ItemDisplayObject(stack);
             }
             case null, default -> null;

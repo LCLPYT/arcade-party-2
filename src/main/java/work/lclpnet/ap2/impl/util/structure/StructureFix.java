@@ -1,9 +1,11 @@
 package work.lclpnet.ap2.impl.util.structure;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
+import com.google.gson.JsonParser;
+import com.mojang.serialization.JsonOps;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.registry.RegistryWrapper;
-import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.text.TextCodecs;
 import org.slf4j.Logger;
@@ -94,10 +96,11 @@ public class StructureFix {
 
         String json = stringTag.getValue();
 
-        MutableText text;
+        Text text;
 
         try {
-            text = Text.Serialization.fromJson(json, registries);
+            JsonElement elem = JsonParser.parseString(json);
+            text = TextCodecs.CODEC.parse(registries.getOps(JsonOps.INSTANCE), elem).getOrThrow(JsonParseException::new);
         } catch (JsonParseException ignored) {
             return tag;
         }

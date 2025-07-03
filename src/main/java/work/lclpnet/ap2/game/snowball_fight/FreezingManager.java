@@ -55,7 +55,7 @@ public class FreezingManager {
         idleManager.onEnterIdle().register(player -> {
             translations.translateText("game.ap2.snowball_fight.idle").formatted(YELLOW).sendTo(player);
 
-            player.getServerWorld().spawnParticles(ParticleTypes.SNOWFLAKE, player.getX(), player.getY() + 1, player.getZ(), 50, 0.5, 1.0, 0.5, 0.1);
+            player.getWorld().spawnParticles(ParticleTypes.SNOWFLAKE, player.getX(), player.getY() + 1, player.getZ(), 50, 0.5, 1.0, 0.5, 0.1);
             player.playSoundToPlayer(SoundEvents.BLOCK_AMETHYST_BLOCK_CHIME, SoundCategory.PLAYERS, 1f, 0.5f);
             player.playSoundToPlayer(SoundEvents.BLOCK_AMETHYST_BLOCK_RESONATE, SoundCategory.PLAYERS, 0.25f, 0.8f);
             player.playSoundToPlayer(SoundEvents.ENTITY_BREEZE_IDLE_GROUND, SoundCategory.PLAYERS, 0.2f, 1.8f);
