@@ -91,7 +91,7 @@ public class GuessItInstance extends FFAGameInstance implements MapBootstrap {
         messenger = new ChallengeMessengerImpl(world, gameHandle.getTranslations());
         inputManager = new InputManager(choices, gameHandle.getTranslations(), participants, messenger);
         modifier = new ResetWorldModifier(world, hooks);
-        manager = new GuessItManager(gameHandle, world, random, blockShape, modifier, soundSubtitles);
+        manager = new GuessItManager(gameHandle, world, random, blockShape, modifier, soundSubtitles, commons().debugController());
 
         new AnswerCommand(participants, inputManager).register(gameHandle.getCommandRegistrar());
 

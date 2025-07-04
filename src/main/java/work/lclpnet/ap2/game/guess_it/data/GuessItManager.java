@@ -5,6 +5,7 @@ import org.jetbrains.annotations.NotNull;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.game.guess_it.challenge.*;
 import work.lclpnet.ap2.game.guess_it.util.GuessItDisplay;
+import work.lclpnet.ap2.impl.util.debug.DebugController;
 import work.lclpnet.ap2.impl.util.world.stage.BlockShape;
 import work.lclpnet.lobby.util.WorldModifier;
 
@@ -17,7 +18,7 @@ public class GuessItManager {
     private final List<Challenge> queue = new ArrayList<>();
 
     public GuessItManager(MiniGameHandle gameHandle, ServerWorld world, Random random, BlockShape blockShape,
-                          WorldModifier modifier, SoundSubtitles soundSubtitles) {
+                          WorldModifier modifier, SoundSubtitles soundSubtitles, DebugController debugController) {
         this.random = random;
 
         var stageRadiusHeight = validateStage(blockShape);
@@ -34,7 +35,7 @@ public class GuessItManager {
         challenges.add(new PotionTypeChallenge(gameHandle, random, display));
         challenges.add(new FoodAmountChallenge(gameHandle, random, display));
         challenges.add(new ArmorTrimChallenge(gameHandle, world, random, blockShape, modifier));
-        challenges.add(new BlockCountChallenge<>(gameHandle, random, stageRadiusHeight, modifier));
+        challenges.add(new BlockCountChallenge<>(gameHandle, random, stageRadiusHeight, modifier, debugController));
         challenges.add(new RecordChallenge(gameHandle, world, random, display));
         challenges.add(new AreaChallenge(gameHandle, world, random, blockShape, modifier));
         challenges.add(new MinecartChallenge(gameHandle, world, random, blockShape, modifier));

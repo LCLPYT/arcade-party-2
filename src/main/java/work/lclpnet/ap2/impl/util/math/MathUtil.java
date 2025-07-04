@@ -1,18 +1,18 @@
 package work.lclpnet.ap2.impl.util.math;
 
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.math.Vec3i;
+import net.minecraft.util.math.*;
 import org.joml.Vector3d;
 import org.joml.Vector3dc;
 import work.lclpnet.kibu.util.math.Matrix3i;
 
 import java.util.Iterator;
+import java.util.Random;
 
 import static java.lang.Math.*;
 
 public class MathUtil {
+
+    public static final double PHI = (1.0 + sqrt(5.0)) / 2.0;
 
     @SuppressWarnings("UseCompareMethod")
     public static Vec3i normalize(Vec3i blockPos) {
@@ -77,6 +77,18 @@ public class MathUtil {
         mat.transform(tmp.x, tmp.y, tmp.z, tmp);
 
         return yaw(tmp);
+    }
+
+    public static Vec3d randomUnitVec3d(Random random) {
+        float yaw = (float) (random.nextDouble() * PI * 2);
+        float pitch = (float) (random.nextDouble() * PI - PI * 0.5);
+
+        float h = MathHelper.cos(-yaw);
+        float i = MathHelper.sin(-yaw);
+        float j = MathHelper.cos(pitch);
+        float k = MathHelper.sin(pitch);
+
+        return new Vec3d(i * j, -k, h * j);
     }
 
     private MathUtil() {}
