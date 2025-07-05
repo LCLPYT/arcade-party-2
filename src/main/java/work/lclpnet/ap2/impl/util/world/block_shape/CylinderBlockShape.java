@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.impl.util.world.stage;
+package work.lclpnet.ap2.impl.util.world.block_shape;
 
 import com.google.common.collect.Iterators;
 import com.mojang.serialization.MapCodec;

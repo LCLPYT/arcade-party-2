@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.impl.util.world.stage;
+package work.lclpnet.ap2.impl.util.world.block_shape;
 
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Position;

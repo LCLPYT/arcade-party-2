@@ -6,7 +6,7 @@ import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.game.guess_it.challenge.*;
 import work.lclpnet.ap2.game.guess_it.util.GuessItDisplay;
 import work.lclpnet.ap2.impl.util.debug.DebugController;
-import work.lclpnet.ap2.impl.util.world.stage.BlockShape;
+import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape;
 import work.lclpnet.lobby.util.WorldModifier;
 
 import java.util.*;

@@ -5,9 +5,10 @@ import net.minecraft.block.Blocks;
 import net.minecraft.util.math.BlockPos;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.game.guess_it.data.*;
-import work.lclpnet.ap2.game.guess_it.util.Shapes;
+import work.lclpnet.ap2.game.guess_it.util.BlockCountShapeManager;
+import work.lclpnet.ap2.impl.util.math.shape.Shape;
 import work.lclpnet.ap2.impl.util.debug.DebugController;
-import work.lclpnet.ap2.impl.util.world.stage.BlockShape;
+import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.RunningTask;
 import work.lclpnet.kibu.scheduler.api.SchedulerAction;
@@ -35,7 +36,7 @@ public class BlockCountChallenge<S extends BlockShape & BlockShape.WithRadius & 
     private BlockPos center = null;
     private int maxDistance = -1;
     private BlockState state = null;
-    private Shapes.Shape shape = null;
+    private Shape shape = null;
 
     public BlockCountChallenge(MiniGameHandle gameHandle, Random random, S stage, WorldModifier modifier, DebugController debugController) {
         this.gameHandle = gameHandle;
@@ -58,7 +59,7 @@ public class BlockCountChallenge<S extends BlockShape & BlockShape.WithRadius & 
     @Override
     public void prepare() {
         center = stage.center();
-        shape = Shapes.getRandomShape(random, stage);
+        shape = new BlockCountShapeManager<>(random, stage).getRandomShape();
 
         List<BlockPos> blocks = new ArrayList<>();
 
