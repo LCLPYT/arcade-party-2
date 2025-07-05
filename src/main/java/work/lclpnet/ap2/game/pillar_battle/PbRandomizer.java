@@ -43,6 +43,8 @@ public class PbRandomizer {
         group(ApItemTags.FLOWERS);
         group(ApItemTags.DYES);
         group(ApItemTags.BANNER_PATTERNS);
+        group(ItemTags.HARNESSES);
+        group(ItemTags.SHULKER_BOXES);
 
         // potion items
         itemsClasses.add(new PotionItemClass(Items.POTION));
@@ -52,6 +54,7 @@ public class PbRandomizer {
 
         // special classes
         itemsClasses.add(new EnchantedBookItemClass(registryManager));
+        itemsClasses.add(new GoatHornItemClass(registryManager));
 
         // add remaining items as singletons
         Set<Item> exclude = itemsClasses.stream()
