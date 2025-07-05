@@ -107,7 +107,12 @@ public class MobCountMultiChallenge implements Challenge {
     }
 
     static int getCost(EntityType<?> type) {
-        if (type == EntityType.WARDEN || type == EntityType.ELDER_GUARDIAN || type == EntityType.RAVAGER || type == EntityType.WITHER) {
+        if (type == EntityType.GIANT) {
+            return 10;
+        }
+
+        if (type == EntityType.WARDEN || type == EntityType.ELDER_GUARDIAN || type == EntityType.RAVAGER
+                || type == EntityType.WITHER || type == EntityType.GHAST || type == EntityType.HAPPY_GHAST) {
             return 5;
         }
 

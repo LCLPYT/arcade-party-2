@@ -203,6 +203,8 @@ public class MobSpawner {
         } else if (entity instanceof ChickenEntity chicken) {
             var chickenTypes = world.getRegistryManager().getOrThrow(RegistryKeys.CHICKEN_VARIANT);
             randomizeVariant((ApVariantHolder<RegistryEntry<ChickenVariant>>) chicken, chickenTypes);
+        } else if (entity instanceof HappyGhastEntity happyGhast) {
+            happyGhast.setBaby(random.nextFloat() < 0.6);
         }
     }
 
