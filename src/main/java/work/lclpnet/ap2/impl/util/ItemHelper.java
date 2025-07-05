@@ -5,6 +5,7 @@ import net.minecraft.block.jukebox.JukeboxSong;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.TooltipDisplayComponent;
 import net.minecraft.enchantment.Enchantment;
+import net.minecraft.entity.effect.StatusEffect;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -99,6 +100,10 @@ public class ItemHelper {
         }
 
         return potion;
+    }
+
+    public static @Nullable RegistryEntry<StatusEffect> getRandomStatusEffect(Random random) {
+        return getRandomEntry(Registries.STATUS_EFFECT, random);
     }
 
     public static <T> @Nullable RegistryEntry<T> getRandomEntry(Registry<T> registry, Random random) {

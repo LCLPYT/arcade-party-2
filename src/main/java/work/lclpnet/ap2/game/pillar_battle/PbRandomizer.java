@@ -55,6 +55,7 @@ public class PbRandomizer {
         // special classes
         itemsClasses.add(new EnchantedBookItemClass(registryManager));
         itemsClasses.add(new GoatHornItemClass(registryManager));
+        itemsClasses.add(new SuspiciousStewItemClass());
 
         // add remaining items as singletons
         Set<Item> exclude = itemsClasses.stream()
