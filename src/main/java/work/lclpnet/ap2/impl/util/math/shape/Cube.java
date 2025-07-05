@@ -62,4 +62,9 @@ public class Cube extends Cuboid implements PlatonicShape {
                 {1, 5, 4, 0}
         };
     }
+
+    @Override
+    public double distance(double x, double y, double z) {
+        return Shapes.chebyshevDelta(x, y, z);
+    }
 }
