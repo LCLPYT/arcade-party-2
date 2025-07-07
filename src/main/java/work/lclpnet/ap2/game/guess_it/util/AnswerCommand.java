@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.game.guess_it;
+package work.lclpnet.ap2.game.guess_it.util;
 
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;

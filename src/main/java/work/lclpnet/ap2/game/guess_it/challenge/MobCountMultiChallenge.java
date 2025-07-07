@@ -39,6 +39,11 @@ public class MobCountMultiChallenge implements Challenge {
     }
 
     @Override
+    public String id() {
+        return "mob_count_multi";
+    }
+
+    @Override
     public String getPreparationKey() {
         return GuessItConstants.PREPARE_ESTIMATE;
     }

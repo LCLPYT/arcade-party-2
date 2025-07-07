@@ -52,6 +52,11 @@ public class ArmorTrimChallenge implements Challenge {
     }
 
     @Override
+    public String id() {
+        return "armor_trim";
+    }
+
+    @Override
     public String getPreparationKey() {
         return GuessItConstants.PREPARE_GUESS;
     }

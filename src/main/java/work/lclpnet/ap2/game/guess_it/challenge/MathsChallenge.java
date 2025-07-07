@@ -26,6 +26,11 @@ public class MathsChallenge implements Challenge {
     }
 
     @Override
+    public String id() {
+        return "maths";
+    }
+
+    @Override
     public String getPreparationKey() {
         return GuessItConstants.PREPARE_CALCULATE;
     }

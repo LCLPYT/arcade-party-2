@@ -42,6 +42,11 @@ public class SoundChallenge implements Challenge {
     }
 
     @Override
+    public String id() {
+        return "sound";
+    }
+
+    @Override
     public String getPreparationKey() {
         return GuessItConstants.PREPARE_LISTEN;
     }

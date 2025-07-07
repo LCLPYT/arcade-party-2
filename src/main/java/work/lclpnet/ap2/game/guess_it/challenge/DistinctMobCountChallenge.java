@@ -35,6 +35,11 @@ public class DistinctMobCountChallenge implements Challenge {
     }
 
     @Override
+    public String id() {
+        return "distinct_mob_count";
+    }
+
+    @Override
     public String getPreparationKey() {
         return GuessItConstants.PREPARE_ESTIMATE;
     }

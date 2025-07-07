@@ -2,166 +2,205 @@ package work.lclpnet.ap2.game.guess_it.util;
 
 import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.impl.util.math.MathUtil;
 import work.lclpnet.ap2.impl.util.math.shape.*;
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape;
 
-import java.util.List;
-import java.util.Random;
-import java.util.function.Supplier;
+import java.util.*;
 
 import static java.lang.Math.*;
 
 public class BlockCountShapeManager<S extends BlockShape & BlockShape.WithHeight & BlockShape.WithRadius> {
 
+    private final Map<String, ShapeProvider> shapesById = new HashMap<>();
+    private final List<ShapeProvider> shapes = new ArrayList<>();
     private final Random random;
     private final S stage;
 
     public BlockCountShapeManager(Random random, S stage) {
         this.random = random;
         this.stage = stage;
+
+        registerShapes();
     }
 
-    public @NotNull Shape getRandomShape() {
-        // TODO use restorable queue
+    private void registerShapes() {
         final int maxRadius = min(stage.height() / 2, stage.radius());
         final int maxSquareRadius = (int) floor(sin(Math.PI * 0.25) * stage.radius());
         final Vec3d center = stage.center().toCenterPos();
         final Vec3d origin = stage.origin().toCenterPos();
 
-        List<Supplier<Shape>> shapes = List.of(
-                () -> {
-                    final int minRadius = 4;
+        register("cuboid", () -> {
+            final int minRadius = 4;
 
-                    int width = minRadius + random.nextInt(max(1, maxSquareRadius - minRadius));
-                    int height = minRadius + random.nextInt(max(1, maxSquareRadius - minRadius));
-                    int length = minRadius + random.nextInt(max(1, maxSquareRadius - minRadius));
+            int width = minRadius + random.nextInt(max(1, maxSquareRadius - minRadius));
+            int height = minRadius + random.nextInt(max(1, maxSquareRadius - minRadius));
+            int length = minRadius + random.nextInt(max(1, maxSquareRadius - minRadius));
 
-                    return new Cuboid(origin.add(0, height * 0.5d, 0), width, height, length);
-                },
-                () -> {
-                    final int minRadius = 4;
+            return new Cuboid(origin.add(0, height * 0.5d, 0), width, height, length);
+        });
 
-                    int radius = minRadius + random.nextInt(max(1, maxSquareRadius - minRadius));
+        register("cube", () -> {
+            final int minRadius = 4;
 
-                    return new Cube(origin.add(0, radius, 0), radius);
-                },
-                () -> {
-                    final int minRadius = 4;
+            int radius = minRadius + random.nextInt(max(1, maxSquareRadius - minRadius));
 
-                    int a = min(maxRadius, minRadius + random.nextInt(max(1, stage.radius() - minRadius)));
-                    int b = min(maxRadius, minRadius + random.nextInt(max(1, stage.radius() - minRadius)));
-                    int c = min(maxRadius, minRadius + random.nextInt(max(1, stage.radius() - minRadius)));
+            return new Cube(origin.add(0, radius, 0), radius);
+        });
 
-                    return new Ellipsoid(center, a, b, c);
-                },
-                () -> {
-                    final int minRadius = 4;
+        register("ellipsoid", () -> {
+            final int minRadius = 4;
 
-                    int radius = min(maxRadius, minRadius + random.nextInt(max(1, stage.radius() - minRadius)));
+            int a = min(maxRadius, minRadius + random.nextInt(max(1, stage.radius() - minRadius)));
+            int b = min(maxRadius, minRadius + random.nextInt(max(1, stage.radius() - minRadius)));
+            int c = min(maxRadius, minRadius + random.nextInt(max(1, stage.radius() - minRadius)));
 
-                    return new Sphere(center, radius);
-                },
-                () -> {
-                    final int minRadius = 4;
-                    final int minHeight = 10;
-                    final int maxHeight = stage.height();
+            return new Ellipsoid(center, a, b, c);
+        });
 
-                    int radius = minRadius + random.nextInt(max(1, maxRadius - minRadius));
-                    int height = minHeight + random.nextInt(max(1, maxHeight - minHeight));
+        register("sphere", () -> {
+            final int minRadius = 4;
 
-                    return new Cone(origin, radius, height);
-                },
-                () -> {
-                    final int minRadius = 4;
-                    final int minHeight = 8;
-                    final int maxHeight = stage.height();
+            int radius = min(maxRadius, minRadius + random.nextInt(max(1, stage.radius() - minRadius)));
 
-                    int radius = min(maxRadius, minRadius + random.nextInt(max(1, stage.radius() - minRadius)));
-                    int height = minHeight + random.nextInt(max(1, maxHeight - minHeight));
+            return new Sphere(center, radius);
+        });
 
-                    return new Cylinder(origin, radius, height);
-                },
-                () -> {
-                    final int minRadius = 4;
+        register("cone", () -> {
+            final int minRadius = 4;
+            final int minHeight = 10;
+            final int maxHeight = stage.height();
 
-                    int radius = min(maxRadius, minRadius + random.nextInt(max(1, stage.radius() - minRadius)));
-                    Vec3d normal = MathUtil.randomUnitVec3d(random);
+            int radius = minRadius + random.nextInt(max(1, maxRadius - minRadius));
+            int height = minHeight + random.nextInt(max(1, maxHeight - minHeight));
 
-                    return new Hemisphere(center, radius, normal);
-                },
-                () -> {
-                    final int minRadius = 4;
+            return new Cone(origin, radius, height);
+        });
 
-                    int radius = minRadius + random.nextInt(max(1, maxSquareRadius - minRadius));
+        register("cylinder", () -> {
+            final int minRadius = 4;
+            final int minHeight = 8;
+            final int maxHeight = stage.height();
 
-                    return new Pyramid(origin, radius, radius - 0.5);
-                },
-                () -> {
-                    final int minRadius = 5;
-                    final int minHeight = 8;
-                    final int maxHeight = stage.height();
-                    final double minAngle = toRadians(20);
+            int radius = min(maxRadius, minRadius + random.nextInt(max(1, stage.radius() - minRadius)));
+            int height = minHeight + random.nextInt(max(1, maxHeight - minHeight));
 
-                    int r1 = min(maxRadius, minRadius + random.nextInt(max(1, stage.radius() - minRadius)));
-                    int r2 = min(maxRadius, minRadius + random.nextInt(max(1, stage.radius() - minRadius)));
-                    int r3 = min(maxRadius, minRadius + random.nextInt(max(1, stage.radius() - minRadius)));
+            return new Cylinder(origin, radius, height);
+        });
 
-                    int height = minHeight + random.nextInt(max(1, maxHeight - minHeight));
+        register("hemisphere", () -> {
+            final int minRadius = 4;
 
-                    double alpha = random.nextDouble() * PI;
-                    double beta = alpha + minAngle + random.nextDouble() * (PI - 2 * minAngle);
-                    double gamma = (alpha + beta) / 2 + PI;
+            int radius = min(maxRadius, minRadius + random.nextInt(max(1, stage.radius() - minRadius)));
+            Vec3d normal = MathUtil.randomUnitVec3d(random);
 
-                    Vec3d v1 = origin.add(sin(alpha) * r1, 0, cos(alpha) * r1);
-                    Vec3d v2 = origin.add(sin(beta)  * r2, 0, cos(beta)  * r2);
-                    Vec3d v3 = origin.add(sin(gamma) * r3, 0, cos(gamma) * r3);
+            return new Hemisphere(center, radius, normal);
+        });
 
-                    return new Prism(v1, v2, v3, height, new Vec3d(0, 1, 0));
-                },
-                () -> {
-                    final int minMinorRadius = 2;
-                    final int maxMinorRadius = 5;
+        register("pyramid", () -> {
+            final int minRadius = 4;
 
-                    int minorRadius = minMinorRadius + random.nextInt(maxMinorRadius - minMinorRadius + 1);
+            int radius = minRadius + random.nextInt(max(1, maxSquareRadius - minRadius));
 
-                    final int maxMajorRadius = maxRadius - minorRadius;
-                    final int minMajorRadius = minorRadius + 3;
+            return new Pyramid(origin, radius, radius - 0.5);
+        });
 
-                    int majorRadius = minMajorRadius + random.nextInt(maxMajorRadius - minMajorRadius + 1);
+        register("prism", () -> {
+            final int minRadius = 5;
+            final int minHeight = 8;
+            final int maxHeight = stage.height();
+            final double minAngle = toRadians(20);
 
-                    return new Torus(center, majorRadius, minorRadius);
-                },
-                () -> {
-                    final int minRadius = 6;
+            int r1 = min(maxRadius, minRadius + random.nextInt(max(1, stage.radius() - minRadius)));
+            int r2 = min(maxRadius, minRadius + random.nextInt(max(1, stage.radius() - minRadius)));
+            int r3 = min(maxRadius, minRadius + random.nextInt(max(1, stage.radius() - minRadius)));
 
-                    int radius = min(maxRadius, minRadius + random.nextInt(max(1, stage.radius() - minRadius)));
+            int height = minHeight + random.nextInt(max(1, maxHeight - minHeight));
 
-                    return new Tetrahedron(origin.add(0, radius / 3d, 0), radius);
-                },
-                () -> {
-                    final int minRadius = 4;
+            double alpha = random.nextDouble() * PI;
+            double beta = alpha + minAngle + random.nextDouble() * (PI - 2 * minAngle);
+            double gamma = (alpha + beta) / 2 + PI;
 
-                    int radius = min(maxRadius, minRadius + random.nextInt(max(1, stage.radius() - minRadius)));
+            Vec3d v1 = origin.add(sin(alpha) * r1, 0, cos(alpha) * r1);
+            Vec3d v2 = origin.add(sin(beta)  * r2, 0, cos(beta)  * r2);
+            Vec3d v3 = origin.add(sin(gamma) * r3, 0, cos(gamma) * r3);
 
-                    return new Octahedron(center, radius);
-                },
-                () -> {
-                    final int minRadius = 4;
+            return new Prism(v1, v2, v3, height, new Vec3d(0, 1, 0));
+        });
 
-                    int radius = min(maxRadius, minRadius + random.nextInt(max(1, stage.radius() - minRadius)));
+        register("torus", () -> {
+            final int minMinorRadius = 2;
+            final int maxMinorRadius = 5;
 
-                    return new Icosahedron(center, radius);
-                },
-                () -> {
-                    final int minRadius = 4;
+            int minorRadius = minMinorRadius + random.nextInt(maxMinorRadius - minMinorRadius + 1);
 
-                    int radius = min(maxRadius, minRadius + random.nextInt(max(1, stage.radius() - minRadius)));
+            final int maxMajorRadius = maxRadius - minorRadius;
+            final int minMajorRadius = minorRadius + 3;
 
-                    return new Dodecahedron(center, radius);
-                }
-        );
+            int majorRadius = minMajorRadius + random.nextInt(maxMajorRadius - minMajorRadius + 1);
 
-        return shapes.get(random.nextInt(shapes.size())).get();
+            return new Torus(center, majorRadius, minorRadius);
+        });
+
+        register("tetrahedron", () -> {
+            final int minRadius = 6;
+
+            int radius = min(maxRadius, minRadius + random.nextInt(max(1, stage.radius() - minRadius)));
+
+            return new Tetrahedron(origin.add(0, radius / 3d, 0), radius);
+        });
+
+        register("octahedron", () -> {
+            final int minRadius = 4;
+
+            int radius = min(maxRadius, minRadius + random.nextInt(max(1, stage.radius() - minRadius)));
+
+            return new Octahedron(center, radius);
+        });
+
+        register("icosahedron", () -> {
+            final int minRadius = 4;
+
+            int radius = min(maxRadius, minRadius + random.nextInt(max(1, stage.radius() - minRadius)));
+
+            return new Icosahedron(center, radius);
+        });
+
+        register("dodecahedron", () -> {
+            final int minRadius = 4;
+
+            int radius = min(maxRadius, minRadius + random.nextInt(max(1, stage.radius() - minRadius)));
+
+            return new Dodecahedron(center, radius);
+        });
+    }
+
+    private void register(String id, ShapeProvider provider) {
+        if (shapesById.containsKey(id)) {
+            throw new IllegalStateException("Duplicate shape id \"%s\"".formatted(id));
+        }
+
+        shapesById.put(id, provider);
+        shapes.add(provider);
+    }
+
+    public @NotNull Shape getRandomShape() {
+        // TODO use restorable queue
+        return shapes.get(random.nextInt(shapes.size())).provide();
+    }
+
+    public @Nullable Shape getShape(String id) {
+        ShapeProvider shape = shapesById.get(id);
+
+        return shape == null ? null : shape.provide();
+    }
+
+    public Set<String> getShapes() {
+        return Set.copyOf(shapesById.keySet());
+    }
+
+    private interface ShapeProvider {
+        Shape provide();
     }
 }

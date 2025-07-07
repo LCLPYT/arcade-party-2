@@ -2,6 +2,7 @@ package work.lclpnet.ap2.game.guess_it.data;
 
 import net.minecraft.server.world.ServerWorld;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.game.guess_it.challenge.*;
 import work.lclpnet.ap2.game.guess_it.util.GuessItDisplay;
@@ -14,8 +15,9 @@ import java.util.*;
 public class GuessItManager {
 
     private final Random random;
-    private final Set<Challenge> challenges = new LinkedHashSet<>();
+    private final Map<String, Challenge> challenges = new HashMap<>();
     private final List<Challenge> queue = new ArrayList<>();
+    private final List<ChallengeInit> priority = new ArrayList<>();
 
     public GuessItManager(MiniGameHandle gameHandle, ServerWorld world, Random random, BlockShape blockShape,
                           WorldModifier modifier, SoundSubtitles soundSubtitles, DebugController debugController) {
@@ -25,20 +27,28 @@ public class GuessItManager {
 
         GuessItDisplay display = new GuessItDisplay(world, modifier, blockShape);
 
-        challenges.add(new MathsChallenge(gameHandle, random));
-        challenges.add(new DayTimeChallenge(gameHandle, world, random));
-        challenges.add(new MobCountSingleChallenge(gameHandle, world, random, blockShape, modifier));
-        challenges.add(new MobCountMultiChallenge(gameHandle, world, random, blockShape, modifier));
-        challenges.add(new DistinctMobCountChallenge(gameHandle, world, random, blockShape, modifier));
-        challenges.add(new SoundChallenge(gameHandle, world, random, soundSubtitles));
-        challenges.add(new CakeBitesChallenge(gameHandle, world, random, blockShape, modifier));
-        challenges.add(new PotionTypeChallenge(gameHandle, random, display));
-        challenges.add(new FoodAmountChallenge(gameHandle, random, display));
-        challenges.add(new ArmorTrimChallenge(gameHandle, world, random, blockShape, modifier));
-        challenges.add(new BlockCountChallenge<>(gameHandle, random, stageRadiusHeight, modifier, debugController));
-        challenges.add(new RecordChallenge(gameHandle, world, random, display));
-        challenges.add(new AreaChallenge(gameHandle, world, random, blockShape, modifier));
-        challenges.add(new MinecartChallenge(gameHandle, world, random, blockShape, modifier));
+        registerChallenge(new MathsChallenge(gameHandle, random));
+        registerChallenge(new DayTimeChallenge(gameHandle, world, random));
+        registerChallenge(new MobCountSingleChallenge(gameHandle, world, random, blockShape, modifier));
+        registerChallenge(new MobCountMultiChallenge(gameHandle, world, random, blockShape, modifier));
+        registerChallenge(new DistinctMobCountChallenge(gameHandle, world, random, blockShape, modifier));
+        registerChallenge(new SoundChallenge(gameHandle, world, random, soundSubtitles));
+        registerChallenge(new CakeBitesChallenge(gameHandle, world, random, blockShape, modifier));
+        registerChallenge(new PotionTypeChallenge(gameHandle, random, display));
+        registerChallenge(new FoodAmountChallenge(gameHandle, random, display));
+        registerChallenge(new ArmorTrimChallenge(gameHandle, world, random, blockShape, modifier));
+        registerChallenge(new BlockCountChallenge<>(gameHandle, random, stageRadiusHeight, modifier, debugController));
+        registerChallenge(new RecordChallenge(gameHandle, world, random, display));
+        registerChallenge(new AreaChallenge(gameHandle, world, random, blockShape, modifier));
+        registerChallenge(new MinecartChallenge(gameHandle, world, random, blockShape, modifier));
+    }
+
+    private void registerChallenge(Challenge challenge) {
+        if (challenges.containsKey(challenge.id())) {
+            throw new IllegalStateException("Duplicate challenge id " + challenge.id());
+        }
+
+        challenges.put(challenge.id(), challenge);
     }
 
     @SuppressWarnings("unchecked")
@@ -49,16 +59,30 @@ public class GuessItManager {
     }
 
     @NotNull
-    public Challenge nextChallenge() {
+    public ChallengeInit nextChallenge() {
+        if (!priority.isEmpty()) {
+            return priority.removeFirst();
+        }
+
         if (queue.isEmpty()) {
             if (challenges.isEmpty()) {
                 throw new IllegalStateException("No challenges registered");
             }
 
-            queue.addAll(challenges);
+            queue.addAll(challenges.values());
             Collections.shuffle(queue, random);
         }
 
-        return queue.removeFirst();
+        return new ChallengeInit(queue.removeFirst(), null);
     }
+
+    public void pushChallenge(Challenge challenge, @Nullable Object init) {
+        priority.add(new ChallengeInit(challenge, init));
+    }
+
+    public Collection<Challenge> getChallenges() {
+        return new ArrayList<>(challenges.values());
+    }
+
+    public record ChallengeInit(Challenge challenge, @Nullable Object init) {}
 }

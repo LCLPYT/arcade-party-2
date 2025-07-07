@@ -1,8 +1,18 @@
 package work.lclpnet.ap2.game.guess_it.challenge;
 
+import com.mojang.brigadier.arguments.StringArgumentType;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.suggestion.Suggestions;
+import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.server.command.CommandManager;
+import net.minecraft.server.command.ServerCommandSource;
+import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.game.guess_it.data.*;
 import work.lclpnet.ap2.game.guess_it.util.BlockCountShapeManager;
@@ -16,9 +26,12 @@ import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.lobby.util.WorldModifier;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
 import static java.lang.Math.floor;
+import static net.minecraft.server.command.CommandManager.argument;
 
 public class BlockCountChallenge<S extends BlockShape & BlockShape.WithRadius & BlockShape.WithHeight> implements Challenge, SchedulerAction {
 
@@ -37,6 +50,7 @@ public class BlockCountChallenge<S extends BlockShape & BlockShape.WithRadius & 
     private int maxDistance = -1;
     private BlockState state = null;
     private Shape shape = null;
+    private BlockCountShapeManager<S> shapeManager;
 
     public BlockCountChallenge(MiniGameHandle gameHandle, Random random, S stage, WorldModifier modifier, DebugController debugController) {
         this.gameHandle = gameHandle;
@@ -44,6 +58,11 @@ public class BlockCountChallenge<S extends BlockShape & BlockShape.WithRadius & 
         this.stage = stage;
         this.modifier = modifier;
         this.debugController = debugController;
+    }
+
+    @Override
+    public String id() {
+        return "block_count";
     }
 
     @Override
@@ -57,9 +76,21 @@ public class BlockCountChallenge<S extends BlockShape & BlockShape.WithRadius & 
     }
 
     @Override
+    public void init(@Nullable Object init) {
+        shapeManager = new BlockCountShapeManager<>(random, stage);
+
+        if (init instanceof String shapeStr) {
+            shape = shapeManager.getShape(shapeStr);
+        }
+    }
+
+    @Override
     public void prepare() {
         center = stage.center();
-        shape = new BlockCountShapeManager<>(random, stage).getRandomShape();
+
+        if (shape == null) {
+            shape = shapeManager.getRandomShape();
+        }
 
         List<BlockPos> blocks = new ArrayList<>();
 
@@ -105,6 +136,8 @@ public class BlockCountChallenge<S extends BlockShape & BlockShape.WithRadius & 
 
     @Override
     public void destroy() {
+        shape = null;
+
         if (DEBUG_SHAPES) {
             debugController.exclusive("shape", d -> {});
         }
@@ -149,5 +182,33 @@ public class BlockCountChallenge<S extends BlockShape & BlockShape.WithRadius & 
         int dz = pos.getZ() - center.getZ();
 
         return (int) floor(shape.distance(dx, dy, dz));
+    }
+
+    @Override
+    public void provideInitCommand(LiteralArgumentBuilder<ServerCommandSource> node, Initializer init) {
+        node.then(argument("shape", StringArgumentType.word())
+                .suggests(this::suggestShapes)
+                .executes(ctx -> setShape(ctx, init)));
+    }
+
+    private CompletableFuture<Suggestions> suggestShapes(CommandContext<ServerCommandSource> ctx, SuggestionsBuilder builder) {
+        for (String shape : shapeManager.getShapes()) {
+            builder.suggest(shape);
+        }
+
+        return builder.buildFuture();
+    }
+
+    private int setShape(CommandContext<ServerCommandSource> ctx, Initializer init) {
+        String str = StringArgumentType.getString(ctx, "shape");
+
+        if (!shapeManager.getShapes().contains(str)) {
+            ctx.getSource().sendError(Text.literal("Unknown shape \"%s\"".formatted(str)));
+            return 0;
+        }
+
+        init.accept(ctx, str);
+
+        return 1;
     }
 }

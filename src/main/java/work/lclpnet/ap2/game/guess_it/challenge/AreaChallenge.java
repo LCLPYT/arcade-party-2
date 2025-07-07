@@ -46,6 +46,11 @@ public class AreaChallenge implements Challenge {
     }
 
     @Override
+    public String id() {
+        return "area";
+    }
+
+    @Override
     public String getPreparationKey() {
         return GuessItConstants.PREPARE_GUESS;
     }

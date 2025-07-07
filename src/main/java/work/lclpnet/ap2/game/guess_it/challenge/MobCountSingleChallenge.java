@@ -40,6 +40,11 @@ public class MobCountSingleChallenge implements Challenge {
     }
 
     @Override
+    public String id() {
+        return "mob_count_single";
+    }
+
+    @Override
     public String getPreparationKey() {
         return GuessItConstants.PREPARE_ESTIMATE;
     }

@@ -31,6 +31,11 @@ public class FoodAmountChallenge implements Challenge {
     }
 
     @Override
+    public String id() {
+        return "food_amount";
+    }
+
+    @Override
     public String getPreparationKey() {
         return GuessItConstants.PREPARE_GUESS;
     }

@@ -37,6 +37,11 @@ public class CakeBitesChallenge implements Challenge {
     }
 
     @Override
+    public String id() {
+        return "cake_bites";
+    }
+
+    @Override
     public String getPreparationKey() {
         return GuessItConstants.PREPARE_ESTIMATE;
     }

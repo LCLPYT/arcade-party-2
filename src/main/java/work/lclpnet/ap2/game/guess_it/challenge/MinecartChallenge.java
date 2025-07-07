@@ -62,6 +62,11 @@ public class MinecartChallenge implements Challenge, LongerChallenge, SchedulerA
     }
 
     @Override
+    public String id() {
+        return "minecart";
+    }
+
+    @Override
     public String getPreparationKey() {
         return GuessItConstants.PREPARE_ESTIMATE;
     }
