@@ -7,17 +7,15 @@ import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
-import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.game.guess_it.data.*;
 import work.lclpnet.ap2.game.guess_it.util.BlockCountShapeManager;
-import work.lclpnet.ap2.impl.util.math.shape.Shape;
 import work.lclpnet.ap2.impl.util.debug.DebugController;
+import work.lclpnet.ap2.impl.util.math.shape.Shape;
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.RunningTask;
@@ -27,7 +25,6 @@ import work.lclpnet.lobby.util.WorldModifier;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
 import static java.lang.Math.floor;
@@ -110,7 +107,7 @@ public class BlockCountChallenge<S extends BlockShape & BlockShape.WithRadius & 
                 .mapToInt(Integer::intValue)
                 .max().orElse(-1);
 
-        state = switch (random.nextInt(11)) {
+        state = switch (random.nextInt(12)) {
             case 0 -> Blocks.DIAMOND_BLOCK.getDefaultState();
             case 1 -> Blocks.GOLD_BLOCK.getDefaultState();
             case 2 -> Blocks.EMERALD_BLOCK.getDefaultState();
@@ -121,7 +118,8 @@ public class BlockCountChallenge<S extends BlockShape & BlockShape.WithRadius & 
             case 7 -> Blocks.AMETHYST_BLOCK.getDefaultState();
             case 8 -> Blocks.NETHERITE_BLOCK.getDefaultState();
             case 9 -> Blocks.SMOOTH_QUARTZ.getDefaultState();
-            case 10 -> Blocks.POLISHED_TUFF.getDefaultState();
+            case 10 -> Blocks.CRYING_OBSIDIAN.getDefaultState();
+            case 11 -> Blocks.RESIN_BLOCK.getDefaultState();
             default -> throw new IllegalStateException();
         };
 
