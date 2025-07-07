@@ -1,5 +1,6 @@
 package work.lclpnet.ap2.impl.util.math.shape;
 
+import net.minecraft.util.math.Vec3d;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.debug.DebugController;
 
@@ -12,15 +13,7 @@ public interface Shape {
      */
     BlockBox bounds();
 
-    /**
-     * @param x The x position.
-     * @param y The y position.
-     * @param z The z position.
-     * @return The double distance towards the shape center.
-     */
-    default double distance(double x, double y, double z) {
-        return Shapes.chebyshevDelta(x, y, z);
-    }
+    Vec3d center();
 
     default void debug(DebugController controller) {
     }

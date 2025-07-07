@@ -33,11 +33,6 @@ public class Ellipsoid implements Shape {
                 (int) floor(center.getX() + a), (int) floor(center.getY() + b), (int) floor(center.getZ() + c));
     }
 
-    @Override
-    public double distance(double x, double y, double z) {
-        return Shapes.euclideanDelta(x, y, z);
-    }
-
     public Vec3d center() {
         return center;
     }

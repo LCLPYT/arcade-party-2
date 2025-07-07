@@ -27,7 +27,7 @@ public class BlockCountShapeManager<S extends BlockShape & BlockShape.WithHeight
 
     private void registerShapes() {
         final int maxRadius = min(stage.height() / 2, stage.radius());
-        final int maxSquareRadius = (int) floor(sin(Math.PI * 0.25) * stage.radius());
+        final int maxSquareRadius = (int) floor(sin(PI * 0.25) * stage.radius());
         final Vec3d center = stage.center().toCenterPos();
         final Vec3d origin = stage.origin().toCenterPos();
 
@@ -198,6 +198,50 @@ public class BlockCountShapeManager<S extends BlockShape & BlockShape.WithHeight
 
     public Set<String> getShapes() {
         return Set.copyOf(shapesById.keySet());
+    }
+
+    public double distance(Shape shape, double x, double y, double z) {
+        DistanceFunction distanceFunction = distanceFunction(shape);
+        Vec3d center = shape.center();
+
+        return distanceFunction.distanceTo(x - center.getX(), y - center.getY(), z - center.getZ());
+    }
+
+    public DistanceFunction distanceFunction(Shape shape) {
+        if (shape instanceof Cube || shape instanceof Tetrahedron) {
+            return this::chebyshevDist;
+        }
+
+        if (shape instanceof SphereBoundedShape || shape instanceof Ellipsoid) {
+            return this::euclideanDist;
+        }
+
+        if (shape instanceof Torus t) {
+            return (x, y, z) -> {
+                double qx = sqrt(x * x + z * z);
+                double ringDist = abs(qx - t.majorRadius());
+
+                return sqrt(ringDist * ringDist + y * y);
+            };
+        }
+
+        if (shape instanceof Pyramid p) {
+            return (x, y, z) -> (y + p.center().getY()) - p.origin().getY();
+        }
+
+        return this::chebyshevDist;
+    }
+
+    private double chebyshevDist(double x, double y, double z) {
+        return max(abs(x), max(abs(y), abs(z)));
+    }
+
+    private double euclideanDist(double x, double y, double z) {
+        return sqrt(x * x + y * y + z * z);
+    }
+
+    public interface DistanceFunction {
+        double distanceTo(double x, double y, double z);
     }
 
     private interface ShapeProvider {

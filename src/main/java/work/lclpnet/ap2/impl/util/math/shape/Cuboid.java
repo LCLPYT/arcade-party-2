@@ -34,6 +34,7 @@ public class Cuboid implements Shape {
                 (int) floor(maxX), (int) floor(maxY), (int) floor(maxZ));
     }
 
+    @Override
     public Vec3d center() {
         return new Vec3d((minX + maxX) * 0.5, (minY + maxY) * 0.5, (minZ + maxZ) * 0.5);
     }

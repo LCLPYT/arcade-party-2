@@ -37,4 +37,9 @@ public class Cone implements Shape {
                 (int) floor(origin.getX() - radius), (int) floor(origin.getY()), (int) floor(origin.getZ() - radius),
                 (int) floor(origin.getX() + radius), (int) floor(origin.getY() + height), (int) floor(origin.getZ() + radius));
     }
+
+    @Override
+    public Vec3d center() {
+        return origin.add(0, height / 2, 0);
+    }
 }

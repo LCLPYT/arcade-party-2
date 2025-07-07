@@ -38,10 +38,15 @@ public class Torus implements Shape {
     }
 
     @Override
-    public double distance(double x, double y, double z) {
-        double qx = sqrt(x * x + z * z);
-        double ringDist = abs(qx - 10);
+    public Vec3d center() {
+        return center;
+    }
 
-        return sqrt(ringDist * ringDist + y * y);
+    public double majorRadius() {
+        return majorRadius;
+    }
+
+    public double minorRadius() {
+        return minorRadius;
     }
 }

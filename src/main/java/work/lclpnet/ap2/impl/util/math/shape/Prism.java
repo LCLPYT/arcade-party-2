@@ -74,4 +74,17 @@ public class Prism implements Shape {
         return new BlockBox((int) floor(minX), (int) floor(minY), (int) floor(minZ),
                 (int) floor(maxX), (int) floor(maxY), (int) floor(maxZ));
     }
+
+    @Override
+    public Vec3d center() {
+        double cx = (v1.getX() + v2.getX() + v3.getX()) / 3;
+        double cy = (v1.getY() + v2.getY() + v3.getY()) / 3;
+        double cz = (v1.getZ() + v2.getZ() + v3.getZ()) / 3;
+
+        return new Vec3d(
+                cx + direction.getX() * height / 2,
+                cy + direction.getY() * height / 2,
+                cz + direction.getZ() * height / 2
+        );
+    }
 }

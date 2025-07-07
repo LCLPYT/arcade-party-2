@@ -21,9 +21,4 @@ public interface SphereBoundedShape extends Shape {
                 (int) floor(center.getX() + radius), (int) floor(center.getY() + radius), (int) floor(center.getZ() + radius)
         );
     }
-
-    @Override
-    default double distance(double x, double y, double z) {
-        return Shapes.euclideanDelta(x, y, z);
-    }
 }

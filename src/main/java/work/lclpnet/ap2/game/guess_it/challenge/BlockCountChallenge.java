@@ -43,7 +43,6 @@ public class BlockCountChallenge<S extends BlockShape & BlockShape.WithRadius & 
     private int amount = 0;
     private int distance = 0;
     private Map<Integer, List<BlockPos>> blocksByDistance = null;
-    private BlockPos center = null;
     private int maxDistance = -1;
     private BlockState state = null;
     private Shape shape = null;
@@ -83,8 +82,6 @@ public class BlockCountChallenge<S extends BlockShape & BlockShape.WithRadius & 
 
     @Override
     public void prepare() {
-        center = stage.center();
-
         if (shape == null) {
             shape = shapeManager.getRandomShape();
         }
@@ -175,11 +172,7 @@ public class BlockCountChallenge<S extends BlockShape & BlockShape.WithRadius & 
     }
 
     private int distance(BlockPos pos) {
-        int dx = pos.getX() - center.getX();
-        int dy = pos.getY() - center.getY();
-        int dz = pos.getZ() - center.getZ();
-
-        return (int) floor(shape.distance(dx, dy, dz));
+        return (int) floor(shapeManager.distance(shape, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5));
     }
 
     @Override
