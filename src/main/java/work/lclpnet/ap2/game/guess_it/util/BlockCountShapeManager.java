@@ -3,6 +3,8 @@ package work.lclpnet.ap2.game.guess_it.util;
 import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Quaterniond;
+import org.joml.Vector3d;
 import work.lclpnet.ap2.impl.util.math.MathUtil;
 import work.lclpnet.ap2.impl.util.math.shape.*;
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape;
@@ -10,6 +12,7 @@ import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape;
 import java.util.*;
 
 import static java.lang.Math.*;
+import static java.lang.Math.sqrt;
 
 public class BlockCountShapeManager<S extends BlockShape & BlockShape.WithHeight & BlockShape.WithRadius> {
 
@@ -140,7 +143,14 @@ public class BlockCountShapeManager<S extends BlockShape & BlockShape.WithHeight
 
             int majorRadius = minMajorRadius + random.nextInt(maxMajorRadius - minMajorRadius + 1);
 
-            return new Torus(center, majorRadius, minorRadius);
+            double maxTilt = PI / 5;
+
+            Quaterniond rotation = new Quaterniond()
+                    .rotateZ(random.nextDouble() * 2 * maxTilt - maxTilt)
+                    .rotateY(random.nextDouble() * PI)
+                    .rotateX(PI / 2);
+
+            return new Torus(center, majorRadius, minorRadius, rotation);
         });
 
         register("tetrahedron", () -> {
@@ -218,10 +228,14 @@ public class BlockCountShapeManager<S extends BlockShape & BlockShape.WithHeight
 
         if (shape instanceof Torus t) {
             return (x, y, z) -> {
-                double qx = sqrt(x * x + z * z);
-                double ringDist = abs(qx - t.majorRadius());
+                Vector3d localPoint = new Vector3d(x, y, z);
 
-                return sqrt(ringDist * ringDist + y * y);
+                t.rotation().transformInverse(localPoint);
+
+                double qx = sqrt(localPoint.x * localPoint.x + localPoint.z * localPoint.z);
+                double ringDist = Math.abs(qx - t.majorRadius());
+
+                return sqrt(ringDist * ringDist + localPoint.y * localPoint.y);
             };
         }
 
