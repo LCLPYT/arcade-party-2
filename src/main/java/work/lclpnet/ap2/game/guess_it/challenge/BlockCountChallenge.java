@@ -20,6 +20,7 @@ import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.RunningTask;
 import work.lclpnet.kibu.scheduler.api.SchedulerAction;
+import work.lclpnet.kibu.scheduler.api.TaskHandle;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.lobby.util.WorldModifier;
 
@@ -40,13 +41,14 @@ public class BlockCountChallenge<S extends BlockShape & BlockShape.WithRadius & 
     private final S stage;
     private final WorldModifier modifier;
     private final DebugController debugController;
+    private final BlockCountShapeManager<S> shapeManager;
     private int amount = 0;
     private int distance = 0;
     private Map<Integer, List<BlockPos>> blocksByDistance = null;
     private int maxDistance = -1;
     private BlockState state = null;
     private Shape shape = null;
-    private BlockCountShapeManager<S> shapeManager;
+    private TaskHandle task = null;
 
     public BlockCountChallenge(MiniGameHandle gameHandle, Random random, S stage, WorldModifier modifier, DebugController debugController) {
         this.gameHandle = gameHandle;
@@ -54,6 +56,7 @@ public class BlockCountChallenge<S extends BlockShape & BlockShape.WithRadius & 
         this.stage = stage;
         this.modifier = modifier;
         this.debugController = debugController;
+        this.shapeManager = new BlockCountShapeManager<>(random, stage);
     }
 
     @Override
@@ -73,8 +76,6 @@ public class BlockCountChallenge<S extends BlockShape & BlockShape.WithRadius & 
 
     @Override
     public void init(@Nullable Object init) {
-        shapeManager = new BlockCountShapeManager<>(random, stage);
-
         if (init instanceof String shapeStr) {
             shape = shapeManager.getShape(shapeStr);
         }
@@ -122,7 +123,7 @@ public class BlockCountChallenge<S extends BlockShape & BlockShape.WithRadius & 
 
         distance = 0;
 
-        gameHandle.getGameScheduler().interval(this, 5);
+        task = gameHandle.getGameScheduler().interval(this, 5);
 
         if (DEBUG_SHAPES) {
             debugController.exclusive("shape", shape::debug);
@@ -132,6 +133,10 @@ public class BlockCountChallenge<S extends BlockShape & BlockShape.WithRadius & 
     @Override
     public void destroy() {
         shape = null;
+
+        if (task != null) {
+            task.cancel();
+        }
 
         if (DEBUG_SHAPES) {
             debugController.exclusive("shape", d -> {});
