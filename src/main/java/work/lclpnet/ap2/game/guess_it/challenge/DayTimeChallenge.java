@@ -50,6 +50,11 @@ public class DayTimeChallenge implements Challenge, SchedulerAction {
     }
 
     @Override
+    public String id() {
+        return "day_time";
+    }
+
+    @Override
     public String getPreparationKey() {
         return GuessItConstants.PREPARE_ESTIMATE;
     }

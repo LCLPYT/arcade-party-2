@@ -15,8 +15,8 @@ import work.lclpnet.ap2.api.actor.ActorInit;
 import work.lclpnet.ap2.api.actor.BaseActor;
 import work.lclpnet.ap2.api.util.collision.MovementObserver;
 import work.lclpnet.ap2.impl.util.CodecUtil;
-import work.lclpnet.ap2.impl.util.world.stage.BlockShape;
-import work.lclpnet.ap2.impl.util.world.stage.BlockShapes;
+import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape;
+import work.lclpnet.ap2.impl.util.world.block_shape.BlockShapes;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.player.PlayerJumpCallback;
 

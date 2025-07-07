@@ -51,7 +51,7 @@ import work.lclpnet.ap2.impl.util.math.MathUtil;
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.ap2.impl.util.world.ChunkPersistence;
-import work.lclpnet.ap2.impl.util.world.stage.BlockShape;
+import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape;
 import work.lclpnet.kibu.access.misc.DamageTrackerAccess;
 import work.lclpnet.kibu.hook.entity.EntityHealthCallback;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;

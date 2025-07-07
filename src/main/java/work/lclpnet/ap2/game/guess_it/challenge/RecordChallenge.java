@@ -8,6 +8,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.network.packet.s2c.play.StopSoundS2CPacket;
 import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.registry.Registries;
+import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -21,10 +22,7 @@ import work.lclpnet.ap2.impl.util.ItemHelper;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.translate.Translations;
 
-import java.util.Objects;
-import java.util.Random;
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.*;
 
 public class RecordChallenge implements Challenge {
 
@@ -44,6 +42,11 @@ public class RecordChallenge implements Challenge {
     }
 
     @Override
+    public String id() {
+        return "record";
+    }
+
+    @Override
     public String getPreparationKey() {
         return GuessItConstants.PREPARE_GUESS;
     }
@@ -58,7 +61,7 @@ public class RecordChallenge implements Challenge {
         Translations translations = gameHandle.getTranslations();
         messenger.task(translations.translateText("game.ap2.guess_it.music_disc"));
 
-        var discs = getMusicDiscs();
+        List<Item> discs = getMusicDiscs();
         var opts = OptionMaker.createOptions(discs, 4, random);
 
         correctOption = random.nextInt(opts.size());
@@ -83,10 +86,12 @@ public class RecordChallenge implements Challenge {
                 .toArray(Text[]::new));
     }
 
-    private Set<Item> getMusicDiscs() {
-        return Registries.ITEM.stream()
+    private List<Item> getMusicDiscs() {
+        return Registries.ITEM.streamEntries()
+                .sorted(Comparator.comparing(reference -> reference.registryKey().getValue()))
+                .map(RegistryEntry.Reference::value)
                 .filter(item -> item.getComponents().contains(DataComponentTypes.JUKEBOX_PLAYABLE))
-                .collect(Collectors.toSet());
+                .toList();
     }
 
     @Override

@@ -46,7 +46,8 @@ public class MobRandomizer {
                 EntityType.SNOW_GOLEM, EntityType.SNIFFER, EntityType.DOLPHIN, EntityType.COD, EntityType.SALMON,
                 EntityType.SQUID, EntityType.GLOW_SQUID, EntityType.PUFFERFISH, EntityType.WITCH, EntityType.WARDEN,
                 EntityType.ZOGLIN, EntityType.WITHER, EntityType.TROPICAL_FISH, EntityType.ARMADILLO, EntityType.BREEZE,
-                EntityType.BOGGED, EntityType.TADPOLE, EntityType.CREAKING
+                EntityType.BOGGED, EntityType.TADPOLE, EntityType.CREAKING, EntityType.HAPPY_GHAST, EntityType.GHAST,
+                EntityType.GIANT
         ));
     }
 

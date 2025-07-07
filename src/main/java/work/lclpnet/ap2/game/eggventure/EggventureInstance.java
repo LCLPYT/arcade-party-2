@@ -51,7 +51,7 @@ import work.lclpnet.ap2.impl.util.ColorUtil;
 import work.lclpnet.ap2.impl.util.RayCastUtil;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.ap2.impl.util.world.entity.DynamicEntityManager;
-import work.lclpnet.ap2.impl.util.world.stage.BlockShape;
+import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.kibu.hook.player.PlayerSwingHandHook;

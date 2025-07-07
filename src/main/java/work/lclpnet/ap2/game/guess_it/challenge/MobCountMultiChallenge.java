@@ -8,7 +8,7 @@ import work.lclpnet.ap2.game.guess_it.data.*;
 import work.lclpnet.ap2.game.guess_it.util.MobRandomizer;
 import work.lclpnet.ap2.game.guess_it.util.MobSpawner;
 import work.lclpnet.ap2.impl.util.TextUtil;
-import work.lclpnet.ap2.impl.util.world.stage.BlockShape;
+import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.lobby.util.WorldModifier;
@@ -36,6 +36,11 @@ public class MobCountMultiChallenge implements Challenge {
         this.random = random;
         this.blockShape = blockShape;
         this.modifier = modifier;
+    }
+
+    @Override
+    public String id() {
+        return "mob_count_multi";
     }
 
     @Override
@@ -107,7 +112,12 @@ public class MobCountMultiChallenge implements Challenge {
     }
 
     static int getCost(EntityType<?> type) {
-        if (type == EntityType.WARDEN || type == EntityType.ELDER_GUARDIAN || type == EntityType.RAVAGER || type == EntityType.WITHER) {
+        if (type == EntityType.GIANT) {
+            return 10;
+        }
+
+        if (type == EntityType.WARDEN || type == EntityType.ELDER_GUARDIAN || type == EntityType.RAVAGER
+                || type == EntityType.WITHER || type == EntityType.GHAST || type == EntityType.HAPPY_GHAST) {
             return 5;
         }
 

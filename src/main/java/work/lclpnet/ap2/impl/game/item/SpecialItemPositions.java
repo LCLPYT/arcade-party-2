@@ -10,7 +10,7 @@ import work.lclpnet.ap2.impl.ds.WeightedList;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.debug.DebugController;
-import work.lclpnet.ap2.impl.util.world.stage.BlockShape;
+import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape;
 import work.lclpnet.kibu.util.math.Matrix3i;
 
 import java.util.List;

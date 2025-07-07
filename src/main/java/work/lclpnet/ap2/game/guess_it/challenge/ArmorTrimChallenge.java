@@ -22,7 +22,7 @@ import work.lclpnet.ap2.game.guess_it.data.*;
 import work.lclpnet.ap2.game.guess_it.util.OptionMaker;
 import work.lclpnet.ap2.impl.util.ItemHelper;
 import work.lclpnet.ap2.impl.util.TextUtil;
-import work.lclpnet.ap2.impl.util.world.stage.BlockShape;
+import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.lobby.util.WorldModifier;
@@ -49,6 +49,11 @@ public class ArmorTrimChallenge implements Challenge {
         this.random = random;
         this.blockShape = blockShape;
         this.modifier = modifier;
+    }
+
+    @Override
+    public String id() {
+        return "armor_trim";
     }
 
     @Override

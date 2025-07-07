@@ -1,42 +1,67 @@
 package work.lclpnet.ap2.game.guess_it.challenge;
 
+import com.mojang.brigadier.arguments.StringArgumentType;
+import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.suggestion.Suggestions;
+import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.server.command.ServerCommandSource;
+import net.minecraft.text.Text;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.game.guess_it.data.*;
-import work.lclpnet.ap2.impl.util.world.stage.BlockShape;
+import work.lclpnet.ap2.game.guess_it.util.BlockCountShapeManager;
+import work.lclpnet.ap2.impl.util.debug.DebugController;
+import work.lclpnet.ap2.impl.util.math.shape.Shape;
+import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.RunningTask;
 import work.lclpnet.kibu.scheduler.api.SchedulerAction;
+import work.lclpnet.kibu.scheduler.api.TaskHandle;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.lobby.util.WorldModifier;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
+
+import static java.lang.Math.floor;
+import static net.minecraft.server.command.CommandManager.argument;
 
 public class BlockCountChallenge<S extends BlockShape & BlockShape.WithRadius & BlockShape.WithHeight> implements Challenge, SchedulerAction {
 
+    private static final boolean DEBUG_SHAPES = false;
     private static final int DURATION_TICKS = Ticks.seconds(20);
+
     private final MiniGameHandle gameHandle;
     private final Random random;
     private final S stage;
     private final WorldModifier modifier;
+    private final DebugController debugController;
+    private final BlockCountShapeManager<S> shapeManager;
     private int amount = 0;
     private int distance = 0;
     private Map<Integer, List<BlockPos>> blocksByDistance = null;
-    private int centerX = 0, centerY = 64, centerZ = 0;
     private int maxDistance = -1;
     private BlockState state = null;
     private Shape shape = null;
+    private TaskHandle task = null;
 
-    public BlockCountChallenge(MiniGameHandle gameHandle, Random random, S stage, WorldModifier modifier) {
+    public BlockCountChallenge(MiniGameHandle gameHandle, Random random, S stage, WorldModifier modifier, DebugController debugController) {
         this.gameHandle = gameHandle;
         this.random = random;
         this.stage = stage;
         this.modifier = modifier;
+        this.debugController = debugController;
+        this.shapeManager = new BlockCountShapeManager<>(random, stage);
+    }
+
+    @Override
+    public String id() {
+        return "block_count";
     }
 
     @Override
@@ -50,31 +75,37 @@ public class BlockCountChallenge<S extends BlockShape & BlockShape.WithRadius & 
     }
 
     @Override
+    public void init(@Nullable Object init) {
+        if (init instanceof String shapeStr) {
+            shape = shapeManager.getShape(shapeStr);
+        }
+    }
+
+    @Override
     public void prepare() {
-        BlockPos center = stage.center();
-        centerX = center.getX();
-        centerY = center.getY();
-        centerZ = center.getZ();
+        if (shape == null) {
+            shape = shapeManager.getRandomShape();
+        }
 
-        var shapes = Shape.values();
-        shape = shapes[random.nextInt(shapes.length)];
+        List<BlockPos> blocks = new ArrayList<>();
 
-        List<BlockPos> blocks = switch (shape) {
-            case SPHERE -> generateSphere();
-            case CUBE -> generateCube();
-            case CONE -> generateCone();
-        };
+        for (BlockPos pos : shape.bounds()) {
+            if (shape.contains(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5)) {
+                blocks.add(pos.toImmutable());
+            }
+        }
 
         amount = blocks.size();
         blocksByDistance = blocks.stream()
                 .parallel()
+                .filter(stage::contains)
                 .collect(Collectors.groupingByConcurrent(this::distance));
 
         maxDistance = blocksByDistance.keySet().stream()
                 .mapToInt(Integer::intValue)
                 .max().orElse(-1);
 
-        state = switch (random.nextInt(11)) {
+        state = switch (random.nextInt(12)) {
             case 0 -> Blocks.DIAMOND_BLOCK.getDefaultState();
             case 1 -> Blocks.GOLD_BLOCK.getDefaultState();
             case 2 -> Blocks.EMERALD_BLOCK.getDefaultState();
@@ -85,19 +116,39 @@ public class BlockCountChallenge<S extends BlockShape & BlockShape.WithRadius & 
             case 7 -> Blocks.AMETHYST_BLOCK.getDefaultState();
             case 8 -> Blocks.NETHERITE_BLOCK.getDefaultState();
             case 9 -> Blocks.SMOOTH_QUARTZ.getDefaultState();
-            case 10 -> Blocks.POLISHED_TUFF.getDefaultState();
+            case 10 -> Blocks.CRYING_OBSIDIAN.getDefaultState();
+            case 11 -> Blocks.RESIN_BLOCK.getDefaultState();
             default -> throw new IllegalStateException();
         };
 
         distance = 0;
 
-        gameHandle.getGameScheduler().interval(this, 5);
+        task = gameHandle.getGameScheduler().interval(this, 5);
+
+        if (DEBUG_SHAPES) {
+            debugController.exclusive("shape", shape::debug);
+        }
+    }
+
+    @Override
+    public void destroy() {
+        shape = null;
+
+        if (task != null) {
+            task.cancel();
+        }
+
+        if (DEBUG_SHAPES) {
+            debugController.exclusive("shape", d -> {});
+        }
     }
 
     @Override
     public void begin(InputInterface input, ChallengeMessenger messenger) {
         Translations translations = gameHandle.getTranslations();
-        messenger.task(translations.translateText("game.ap2.guess_it.shape." + shape.name().toLowerCase(Locale.ROOT)));
+
+        String name = shape.getClass().getSimpleName().toLowerCase(Locale.ROOT);
+        messenger.task(translations.translateText("game.ap2.guess_it.shape." + name));
 
         input.expectInput().validateInt(translations);
     }
@@ -126,114 +177,34 @@ public class BlockCountChallenge<S extends BlockShape & BlockShape.WithRadius & 
     }
 
     private int distance(BlockPos pos) {
-        int dx = pos.getX() - centerX;
-        int dy = pos.getY() - centerY;
-        int dz = pos.getZ() - centerZ;
+        return (int) floor(shapeManager.distance(shape, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5));
+    }
 
-        if (shape == Shape.SPHERE) {
-            return (int) Math.floor(Math.sqrt(dx * dx + dy * dy + dz * dz));
+    @Override
+    public void provideInitCommand(LiteralArgumentBuilder<ServerCommandSource> node, Initializer init) {
+        node.then(argument("shape", StringArgumentType.word())
+                .suggests(this::suggestShapes)
+                .executes(ctx -> setShape(ctx, init)));
+    }
+
+    private CompletableFuture<Suggestions> suggestShapes(CommandContext<ServerCommandSource> ctx, SuggestionsBuilder builder) {
+        for (String shape : shapeManager.getShapes()) {
+            builder.suggest(shape);
         }
 
-        return Math.max(Math.abs(dx), Math.max(Math.abs(dy), Math.abs(dz)));
+        return builder.buildFuture();
     }
 
-    @NotNull
-    private List<BlockPos> generateSphere() {
-        int minRadius = 4;
-        int maxRadius = Math.min(stage.height() / 2, stage.radius());
+    private int setShape(CommandContext<ServerCommandSource> ctx, Initializer init) {
+        String str = StringArgumentType.getString(ctx, "shape");
 
-        int radius = Math.min(maxRadius, minRadius + random.nextInt(Math.max(1, stage.radius() - minRadius)));
-
-        var iter = BlockPos.iterate(
-                centerX - radius, centerY - radius, centerZ - radius,
-                centerX + radius, centerY + radius, centerZ + radius);
-
-        List<BlockPos> blocks = new ArrayList<>();
-
-        float cx = centerX + 0.5f, cy = centerY + 0.5f, cz = centerZ + 0.5f;
-        float radiusSq = radius * radius;
-
-        for (BlockPos pos : iter) {
-            float x = pos.getX() + 0.5f, y = pos.getY() + 0.5f, z = pos.getZ() + 0.5f;
-            float dx = x - cx, dy = y - cy, dz = z - cz;
-
-            if (dx * dx + dy * dy + dz * dz < radiusSq) {
-                blocks.add(pos.toImmutable());
-            }
+        if (!shapeManager.getShapes().contains(str)) {
+            ctx.getSource().sendError(Text.literal("Unknown shape \"%s\"".formatted(str)));
+            return 0;
         }
 
-        return blocks;
-    }
+        init.accept(ctx, str);
 
-    @NotNull
-    private List<BlockPos> generateCube() {
-        int minRadius = 4;
-        int maxRadius = (int) Math.floor(Math.sin(Math.PI * 0.25) * stage.radius());
-
-        int radius = minRadius + random.nextInt(Math.max(1, maxRadius - minRadius));
-
-        var iter = BlockPos.iterate(
-                centerX - radius, centerY - radius, centerZ - radius,
-                centerX + radius, centerY + radius, centerZ + radius);
-
-        List<BlockPos> blocks = new ArrayList<>();
-
-        for (BlockPos pos : iter) {
-            blocks.add(pos.toImmutable());
-        }
-
-        return blocks;
-    }
-
-    @NotNull
-    private List<BlockPos> generateCone() {
-        int minRadius = 4;
-        int minHeight = 10;
-
-        int maxHeight = stage.height();
-        int height = minHeight + random.nextInt(Math.max(1, maxHeight - minHeight));
-
-        int maxRadius = Math.min(height / 2, stage.radius());
-        int radius = minRadius + random.nextInt(Math.max(1, maxRadius - minRadius));
-
-        int halfHeight = height / 2;
-        int remainder = height % 2;
-
-        int bottomY = centerY - halfHeight - remainder;
-        int topY = centerY + halfHeight;
-
-        var iter = BlockPos.iterate(
-                centerX - radius, bottomY, centerZ - radius,
-                centerX + radius, topY, centerZ + radius);
-
-        List<BlockPos> blocks = new ArrayList<>();
-
-        Vec3d coneTip = new Vec3d(centerX + 0.5, topY + 0.5, centerZ + 0.5);
-        Vec3d dir = new Vec3d(0, -1, 0);
-
-        for (BlockPos pos : iter) {
-            Vec3d point = pos.toCenterPos();
-
-            if (isInCone(point, coneTip, dir, radius, height)) {
-                blocks.add(pos.toImmutable());
-            }
-        }
-
-        return blocks;
-    }
-
-    private static boolean isInCone(Vec3d p, Vec3d x, Vec3d dir, float radius, float height) {
-        Vec3d px = p.subtract(x);
-        double cone_dist = px.dotProduct(dir);
-        double cone_radius = (cone_dist / height) * radius;
-        double orth_distance = px.subtract(dir.multiply(cone_dist)).length();
-
-        return orth_distance < cone_radius;
-    }
-
-    private enum Shape {
-        SPHERE,
-        CUBE,
-        CONE
+        return 1;
     }
 }

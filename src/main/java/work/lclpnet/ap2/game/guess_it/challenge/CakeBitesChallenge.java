@@ -10,7 +10,7 @@ import net.minecraft.util.math.BlockPos;
 import org.joml.Matrix4f;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.game.guess_it.data.*;
-import work.lclpnet.ap2.impl.util.world.stage.BlockShape;
+import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape;
 import work.lclpnet.kibu.access.entity.DisplayEntityAccess;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.translate.Translations;
@@ -34,6 +34,11 @@ public class CakeBitesChallenge implements Challenge {
         this.random = random;
         this.blockShape = blockShape;
         this.modifier = modifier;
+    }
+
+    @Override
+    public String id() {
+        return "cake_bites";
     }
 
     @Override
