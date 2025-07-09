@@ -102,7 +102,7 @@ public abstract class TeamGameInstance extends BaseGameInstance implements Parti
         return resolver;
     }
 
-    protected final void teleportTeamsToSpawns() {
+    protected void teleportTeamsToSpawns() {
         ServerWorld world = getWorld();
 
         for (Team team : teamManager.getTeams()) {

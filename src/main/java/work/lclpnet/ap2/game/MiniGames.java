@@ -23,6 +23,7 @@ import work.lclpnet.ap2.game.mining_battle.MiningBattleMiniGame;
 import work.lclpnet.ap2.game.mirror_hop.MirrorHopMiniGame;
 import work.lclpnet.ap2.game.musical_minecart.MusicalMinecartMiniGame;
 import work.lclpnet.ap2.game.one_in_the_chamber.OneInTheChamberMiniGame;
+import work.lclpnet.ap2.game.paintball.PaintballMiniGame;
 import work.lclpnet.ap2.game.panda_finder.PandaFinderMiniGame;
 import work.lclpnet.ap2.game.pig_race.PigRaceMiniGame;
 import work.lclpnet.ap2.game.pillar_battle.PillarBattleMiniGame;
@@ -74,5 +75,6 @@ public class MiniGames {
         games.add(new MazeScapeMiniGame());
         games.add(new EggventureMiniGame());
         games.add(new DragonEscapeMiniGame());
+        games.add(new PaintballMiniGame());
     }
 }

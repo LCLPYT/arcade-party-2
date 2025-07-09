@@ -8,6 +8,12 @@ public interface TeamKey {
 
     Formatting colorFormat();
 
+    default int color() {
+        Integer value = colorFormat().getColorValue();
+
+        return value == null ? 0x000000 : value;
+    }
+
     default String getTranslationKey() {
         return "ap2.team." + id();
     }

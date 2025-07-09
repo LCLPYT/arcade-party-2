@@ -18,6 +18,11 @@ public class IndexedSet<E> extends AbstractSet<E> {
         reverseIndex = new HashMap<>(initialCapacity);
     }
 
+    public IndexedSet(IndexedSet<E> src) {
+        index = new ArrayList<>(src.index);
+        reverseIndex = new HashMap<>(src.reverseIndex);
+    }
+
     @Override
     public @NotNull Iterator<E> iterator() {
         Iterator<E> parent = index.iterator();
@@ -115,6 +120,52 @@ public class IndexedSet<E> extends AbstractSet<E> {
         synchronized (this) {
             index.clear();
             reverseIndex.clear();
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <E> IndexedSet<E> copyOf(IndexedSet<E> src) {
+        if (src instanceof IndexedSet.Immutable<E>) {
+            return src;
+        }
+
+        if (src.isEmpty()) {
+            return (IndexedSet<E>) Immutable.EMPTY;
+        }
+
+        return new Immutable<>(src);
+    }
+
+    public static final class Immutable<E> extends IndexedSet<E> {
+
+        public static final Immutable<?> EMPTY = new Immutable<>();
+
+        public Immutable() {
+            super(0);
+        }
+
+        public Immutable(IndexedSet<E> src) {
+            super(src);
+        }
+
+        @Override
+        public boolean add(E e) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public boolean remove(Object o) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public E remove(int idx) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public void clear() {
+            throw new UnsupportedOperationException();
         }
     }
 }
