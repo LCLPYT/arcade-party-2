@@ -35,6 +35,7 @@ import work.lclpnet.kibu.hook.entity.EntityHealthCallback;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks;
 import work.lclpnet.kibu.hook.player.PlayerSpawnLocationCallback;
+import work.lclpnet.kibu.hook.player.PlayerWaypointCallback;
 import work.lclpnet.kibu.scheduler.api.RunningTask;
 import work.lclpnet.kibu.title.Title;
 import work.lclpnet.kibu.translate.Translations;
@@ -73,6 +74,7 @@ public abstract class BaseGameInstance implements MiniGameInstance {
     private int countdownTime = 0;
     private int countdownValue = 0;
     private final Set<ApEffect> activeEffects = new HashSet<>();
+    private boolean locatorBarEnabled = false;
 
     public BaseGameInstance(MiniGameHandle gameHandle) {
         this.gameHandle = gameHandle;
@@ -119,6 +121,7 @@ public abstract class BaseGameInstance implements MiniGameInstance {
 
         applyMapEffects();
         loadMapProperties();
+        configureLocatorBar();
 
         resetPlayers();
 
@@ -131,6 +134,16 @@ public abstract class BaseGameInstance implements MiniGameInstance {
         scheduleCountdown(initialDelay);
 
         gameHandle.getGameScheduler().timeout(this::afterInitialDelay, initialDelay);
+    }
+
+    private void configureLocatorBar() {
+        if (locatorBarEnabled) return;
+
+        gameHandle.getHookRegistrar().registerHook(PlayerWaypointCallback.HOOK, (player, waypoint) -> true);
+
+        if (world != null) {
+            world.getWaypointHandler().clear();
+        }
     }
 
     private void sendMapCredits() {
@@ -360,6 +373,10 @@ public abstract class BaseGameInstance implements MiniGameInstance {
         bossBar.init(gameHandle.getHookRegistrar());
 
         return bossBar;
+    }
+
+    protected void enableLocatorBar() {
+        this.locatorBarEnabled = true;
     }
 
     /**

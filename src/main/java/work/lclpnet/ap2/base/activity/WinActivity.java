@@ -88,6 +88,8 @@ public class WinActivity extends ComponentActivity {
         activityConfigurator.configureProtector();
         activityConfigurator.configureHooks();
 
+        world.getWaypointHandler().clear();
+
         args.playerManager().leaveFinale();
 
         activityConfigurator.resetPlayers();
