@@ -10,6 +10,7 @@ import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.player.PlayerAdvancementPacketCallback;
 import work.lclpnet.kibu.hook.player.PlayerConnectionHooks;
 import work.lclpnet.kibu.hook.player.PlayerRecipeNotificationCallback;
+import work.lclpnet.kibu.hook.player.PlayerWaypointCallback;
 import work.lclpnet.lobby.game.util.ProtectorComponent;
 import work.lclpnet.lobby.game.util.ProtectorUtils;
 
@@ -36,6 +37,7 @@ public class BaseActivityConfigurator {
         hooks.registerHook(PlayerConnectionHooks.JOIN, this::onJoin);
         hooks.registerHook(PlayerAdvancementPacketCallback.HOOK, (player, packet) -> true);
         hooks.registerHook(PlayerRecipeNotificationCallback.HOOK, (player, recipeEntry, displayEntry) -> true);
+        hooks.registerHook(PlayerWaypointCallback.HOOK, (player, waypoint) -> true);
     }
 
     public void resetPlayers() {

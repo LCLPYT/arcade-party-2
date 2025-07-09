@@ -195,6 +195,8 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
         activityConfigurator.resetPlayers();
         activityConfigurator.configureHooks();
 
+        world.getWaypointHandler().clear();
+
         HookRegistrar hooks = component(BuiltinComponents.HOOKS).hooks();
         Scheduler scheduler = component(BuiltinComponents.SCHEDULER).scheduler();
 
