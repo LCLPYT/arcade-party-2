@@ -25,6 +25,14 @@ public interface TeamManager {
 
     void bind(TeamEliminatedListener listener);
 
+    /**
+     * Whether to use team color codes.
+     * This enables colored player name tags above the player model.
+     * However, only a limited number of colors codes exist.
+     * Set this to true, if all your team rgb colors have matching color codes (Formatting).
+     */
+    void setUseColorCodes(boolean useColorCodes);
+
     default void partitionIntoTeams(Participants participants, Set<TeamKey> teams) {
         partitionIntoTeams(participants.getAsSet(), teams);
     }

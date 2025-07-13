@@ -3,6 +3,7 @@ package work.lclpnet.ap2.impl.util;
 import com.mojang.datafixers.util.Pair;
 import net.minecraft.block.jukebox.JukeboxSong;
 import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.DyedColorComponent;
 import net.minecraft.component.type.TooltipDisplayComponent;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.entity.effect.StatusEffect;
@@ -26,6 +27,9 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
+
+import static net.minecraft.component.DataComponentTypes.DYED_COLOR;
+import static net.minecraft.component.DataComponentTypes.TOOLTIP_DISPLAY;
 
 public class ItemHelper {
 
@@ -160,5 +164,14 @@ public class ItemHelper {
         return ItemStack.CODEC.decode(lookup.getOps(NbtOps.INSTANCE), nbt)
                 .resultOrPartial()
                 .map(Pair::getFirst);
+    }
+
+    public static @NotNull ItemStack getLeatherArmor(Item leatherChestplate, int color) {
+        ItemStack chestPlate = new ItemStack(leatherChestplate);
+
+        chestPlate.set(DYED_COLOR, new DyedColorComponent(color));
+        chestPlate.set(TOOLTIP_DISPLAY, TooltipDisplayComponent.DEFAULT.with(DYED_COLOR, true));
+
+        return chestPlate;
     }
 }

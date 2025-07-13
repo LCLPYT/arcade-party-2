@@ -3,23 +3,29 @@ package work.lclpnet.ap2.game.paintball;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.entity.EquipmentSlot;
+import net.minecraft.item.Items;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
+import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import work.lclpnet.ap2.api.ds.Partial;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
+import work.lclpnet.ap2.api.game.team.DyeTeamKey;
 import work.lclpnet.ap2.api.game.team.Team;
-import work.lclpnet.ap2.api.game.team.TeamKey;
 import work.lclpnet.ap2.api.map.MapBootstrapFunction;
+import work.lclpnet.ap2.game.paintball.paint.PaintManager;
+import work.lclpnet.ap2.game.paintball.paint.Paintable;
+import work.lclpnet.ap2.impl.ds.IndexedSet;
 import work.lclpnet.ap2.impl.game.TeamGameInstance;
 import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer;
 import work.lclpnet.ap2.impl.game.data.Ordering;
 import work.lclpnet.ap2.impl.game.data.type.TeamRef;
-import work.lclpnet.ap2.impl.game.team.ApTeamKeys;
+import work.lclpnet.ap2.impl.game.team.ApTeams;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.StreamUtil;
@@ -29,18 +35,20 @@ import work.lclpnet.lobby.game.map.GameMap;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static work.lclpnet.ap2.impl.game.team.ApTeamKeys.complementary;
+import static work.lclpnet.ap2.impl.util.ItemHelper.getLeatherArmor;
 
 public class PaintballInstance extends TeamGameInstance implements MapBootstrapFunction {
 
     private final IntScoreDataContainer<Team, TeamRef> data = new IntScoreDataContainer<>(this::createReference, Ordering.DESCENDING, "game.ap2.paintball.blocks_painted");
     private final Random random = new Random();
 
+    private PaintManager paintManager;
     private List<TeamInstance> teams = null;
     private ResetBlockWorldModifier baseWalls = null;
 
     public PaintballInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
+        getTeamManager().setUseColorCodes(true);
     }
 
     @Override
@@ -51,8 +59,25 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
     @Override
     public void bootstrapWorld(ServerWorld world, GameMap map) {
         teams = setupTeams(map);
+        paintManager = new PaintManager(world);
 
-        // TODO replace base template colors with actual colors
+        replaceTemplateColors(world);
+        closeBases(world);
+    }
+
+    private void replaceTemplateColors(ServerWorld world) {
+        for (TeamInstance team : teams) {
+            DyeTeamKey template = team.templateColor();
+
+            for (BlockPos pos : team.baseBounds()) {
+                BlockState state = world.getBlockState(pos);
+                Paintable paintable = paintManager.paintable(state.getBlock());
+
+                if (paintable == null || !state.isOf(paintable.blockFor(template))) continue;
+
+                paintManager.replace(pos, state, paintable, team.key());
+            }
+        }
     }
 
     @Override
@@ -63,13 +88,12 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
                 .collect(Collectors.toSet()));
 
         teleportTeamsToSpawns();
-
-        closeBases();
+        equipPlayers();
     }
 
     private List<TeamInstance> setupTeams(GameMap map) {
         JSONArray array = map.getProperties().getJSONArray("teams");
-        List<Partial<TeamInstance, TeamKey>> partial = new ArrayList<>(array.length());
+        List<Partial<TeamInstance, DyeTeamKey>> partial = new ArrayList<>(array.length());
 
         for (Object entry : array) {
             if (!(entry instanceof JSONObject json)) {
@@ -81,11 +105,40 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
         }
 
         // choose random team colors, by first choosing a random base color and then choosing according complementary colors
-        var keys = ApTeamKeys.teamKeys();
-        TeamKey base = keys.get(random.nextInt(keys.size()));
-        List<TeamKey> complementary = complementary(base, partial.size());
+        IndexedSet<DyeTeamKey> teamPool = availableTeamColors();
+        DyeTeamKey base = teamPool.get(random.nextInt(teamPool.size()));
+        List<DyeTeamKey> complementary = ApTeams.complementary(base, teamPool, partial.size());
 
         return StreamUtil.zip(partial.stream(), complementary.stream(), Partial::with).toList();
+    }
+
+    private @NotNull IndexedSet<DyeTeamKey> availableTeamColors() {
+        IndexedSet<DyeTeamKey> teamPool = new IndexedSet<>();
+        teamPool.addAll(Arrays.asList(DyeTeamKey.values()));
+
+        teamPool.remove(DyeTeamKey.BLACK);
+        teamPool.remove(DyeTeamKey.DARK_GRAY);
+        teamPool.remove(DyeTeamKey.LIGHT_GRAY);
+        teamPool.remove(DyeTeamKey.WHITE);
+
+        return teamPool;
+    }
+
+    private void equipPlayers() {
+        for (TeamInstance instance : teams) {
+            Team team = getTeamManager().getTeam(instance.key()).orElse(null);
+
+            if (team == null) continue;
+
+            int color = instance.key().color();
+
+            for (ServerPlayerEntity player : team.getPlayers()) {
+                player.equipStack(EquipmentSlot.HEAD, getLeatherArmor(Items.LEATHER_HELMET, color));
+                player.equipStack(EquipmentSlot.CHEST, getLeatherArmor(Items.LEATHER_CHESTPLATE, color));
+                player.equipStack(EquipmentSlot.LEGS, getLeatherArmor(Items.LEATHER_LEGGINGS, color));
+                player.equipStack(EquipmentSlot.FEET, getLeatherArmor(Items.LEATHER_BOOTS, color));
+            }
+        }
     }
 
     @Override
@@ -93,12 +146,10 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
         openBases();
     }
 
-    private void closeBases() {
+    private void closeBases(ServerWorld world) {
         int flags = Block.NOTIFY_LISTENERS | Block.SKIP_DROPS | Block.FORCE_STATE;
 
-        baseWalls = new ResetBlockWorldModifier(getWorld(), flags);
-
-        ServerWorld world = getWorld();
+        baseWalls = new ResetBlockWorldModifier(world, flags);
 
         for (TeamInstance team : teams) {
             BlockBox bounds = team.baseBounds();
@@ -138,16 +189,16 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
         }
     }
 
-    private record TeamInstance(Vec3d spawn, float yaw, BlockBox baseBounds, TeamKey templateColor, TeamKey key) {
+    private record TeamInstance(Vec3d spawn, float yaw, BlockBox baseBounds, DyeTeamKey templateColor, DyeTeamKey key) {
 
-        public static Partial<TeamInstance, TeamKey> fromJson(JSONObject json) {
+        public static Partial<TeamInstance, DyeTeamKey> fromJson(JSONObject json) {
             Vec3d spawn = MapUtil.readCenteredVec3d(json.getJSONArray("spawn"));
             float yaw = MapUtil.readAngle(json.optFloat("yaw", 0));
             BlockBox baseBounds = MapUtil.readBox(json.getJSONArray("base-bounds"));
 
             String teamId = json.getString("template-color");
 
-            TeamKey templateColor = ApTeamKeys.byId(teamId)
+            DyeTeamKey templateColor = Optional.ofNullable(DyeTeamKey.byId(teamId))
                     .orElseThrow(() -> new NoSuchElementException("Unknown team template-color \"%s\"".formatted(teamId)));
 
             return key -> new TeamInstance(spawn, yaw, baseBounds, templateColor, key);

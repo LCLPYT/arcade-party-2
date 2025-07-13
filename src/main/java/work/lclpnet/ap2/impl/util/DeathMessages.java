@@ -78,7 +78,8 @@ public class DeathMessages {
     }
 
     public TranslatedText eliminated(TeamKey key) {
-        var displayName = translations.translateText(key.getTranslationKey()).formatted(key.colorFormat());
+        var displayName = translations.translateText(key.getTranslationKey())
+                .styled(style -> style.withColor(key.color()));
 
         return root(TEAM_ELIMINATED, displayName);
     }

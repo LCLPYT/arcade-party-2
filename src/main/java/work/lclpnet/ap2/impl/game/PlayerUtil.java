@@ -5,6 +5,7 @@ import lombok.Getter;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.entity.player.PlayerAbilities;
 import net.minecraft.item.ItemStack;
+import net.minecraft.network.packet.s2c.play.PlayerListS2CPacket;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.math.Vec3d;
@@ -20,6 +21,8 @@ import work.lclpnet.kibu.hook.util.PlayerUtils;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.lobby.util.PlayerReset;
 
+import java.util.Collection;
+import java.util.EnumSet;
 import java.util.Objects;
 import java.util.Set;
 
@@ -141,6 +144,18 @@ public class PlayerUtil {
 
         setAllowFlight(false);
         effects.clear();
+    }
+
+    public void updatePlayerListNames() {
+        Collection<ServerPlayerEntity> players = PlayerLookup.all(server);
+
+        updatePlayerListNames(players);
+    }
+
+    public void updatePlayerListNames(Collection<ServerPlayerEntity> players) {
+        var packet = new PlayerListS2CPacket(EnumSet.of(PlayerListS2CPacket.Action.UPDATE_DISPLAY_NAME), players);
+
+        server.getPlayerManager().sendToAll(packet);
     }
 
     public static int getLoadingDelayTicks(int players) {

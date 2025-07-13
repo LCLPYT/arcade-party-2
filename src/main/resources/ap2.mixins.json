@@ -42,6 +42,7 @@
     "PathNodeMakerAccessor",
     "PathNodeNavigatorMixin",
     "PigEntityMixin",
+    "PlayerEntityMixin",
     "ProjectileEntityMixin",
     "RabbitEntityMixin",
     "RangedWeaponItemMixin",

@@ -105,7 +105,8 @@ public abstract class TeamEliminationGameInstance extends TeamGameInstance {
             if (!teamManager.isParticipating(team)) continue;
 
             TeamKey key = team.getKey();
-            var displayName = translations.translateText(key.getTranslationKey()).formatted(key.colorFormat());
+            var displayName = translations.translateText(key.getTranslationKey())
+                    .styled(style -> style.withColor(key.color()));
 
             translations.translateText("ap2.game.team_eliminated", displayName)
                     .formatted(GRAY)

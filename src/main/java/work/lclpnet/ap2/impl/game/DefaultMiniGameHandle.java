@@ -1,6 +1,8 @@
 package work.lclpnet.ap2.impl.game;
 
+import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.world.border.WorldBorder;
 import net.minecraft.world.border.WorldBorderListener;
@@ -23,6 +25,7 @@ import work.lclpnet.ap2.base.activity.MiniGameActivity;
 import work.lclpnet.ap2.base.activity.PreparationActivity;
 import work.lclpnet.ap2.base.util.ApBaseArgs;
 import work.lclpnet.ap2.base.util.ScoreManager;
+import work.lclpnet.ap2.core.type.ApServerPlayerEntity;
 import work.lclpnet.ap2.impl.util.DeathMessages;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.kibu.cmd.type.CommandRegistrar;
@@ -305,6 +308,12 @@ public class DefaultMiniGameHandle implements MiniGameHandle, WorldBorderManager
         }
 
         Notica.getInstance(getServer()).getPlayingSongs().forEach(SongHandle::stop);
+
+        for (ServerPlayerEntity player : PlayerLookup.all(getServer())) {
+            ((ApServerPlayerEntity) player).ap2$setPlayerListName(null);
+        }
+
+        getPlayerUtil().updatePlayerListNames();
     }
 
     @Override

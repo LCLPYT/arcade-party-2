@@ -2,17 +2,13 @@ package work.lclpnet.ap2.api.game.team;
 
 import net.minecraft.util.Formatting;
 
-public interface TeamKey {
+public sealed interface TeamKey permits DyeTeamKey {
 
     String id();
 
-    Formatting colorFormat();
+    int color();
 
-    default int color() {
-        Integer value = colorFormat().getColorValue();
-
-        return value == null ? 0x000000 : value;
-    }
+    Formatting formatting();
 
     default String getTranslationKey() {
         return "ap2.team." + id();

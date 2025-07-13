@@ -9,12 +9,9 @@ import net.minecraft.block.ShapeContext;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.block.entity.SkullBlockEntity;
 import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.DyedColorComponent;
 import net.minecraft.component.type.NbtComponent;
-import net.minecraft.component.type.TooltipDisplayComponent;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.registry.DynamicRegistryManager;
@@ -50,8 +47,8 @@ import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.ColorUtil;
 import work.lclpnet.ap2.impl.util.RayCastUtil;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
-import work.lclpnet.ap2.impl.util.world.entity.DynamicEntityManager;
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape;
+import work.lclpnet.ap2.impl.util.world.entity.DynamicEntityManager;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.kibu.hook.player.PlayerSwingHandHook;
@@ -62,10 +59,9 @@ import java.util.List;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 
-import static net.minecraft.component.DataComponentTypes.DYED_COLOR;
-import static net.minecraft.component.DataComponentTypes.TOOLTIP_DISPLAY;
 import static net.minecraft.util.Formatting.BOLD;
 import static net.minecraft.util.Formatting.YELLOW;
+import static work.lclpnet.ap2.impl.util.ItemHelper.getLeatherArmor;
 
 public class EggventureInstance extends FFAGameInstance implements MapBootstrap {
 
@@ -183,20 +179,9 @@ public class EggventureInstance extends FFAGameInstance implements MapBootstrap 
 
             int color = ColorUtil.getRandomHsvColor(random);
 
-            ItemStack chestPlate = new ItemStack(Items.LEATHER_CHESTPLATE);
-            chestPlate.set(DYED_COLOR, new DyedColorComponent(color));
-            chestPlate.set(TOOLTIP_DISPLAY, TooltipDisplayComponent.DEFAULT.with(DYED_COLOR, true));
-            player.equipStack(EquipmentSlot.CHEST, chestPlate);
-
-            ItemStack leggings = new ItemStack(Items.LEATHER_LEGGINGS);
-            leggings.set(DYED_COLOR, new DyedColorComponent(color));
-            leggings.set(TOOLTIP_DISPLAY, TooltipDisplayComponent.DEFAULT.with(DYED_COLOR, true));
-            player.equipStack(EquipmentSlot.LEGS, leggings);
-
-            ItemStack boots = new ItemStack(Items.LEATHER_BOOTS);
-            boots.set(DYED_COLOR, new DyedColorComponent(color));
-            boots.set(TOOLTIP_DISPLAY, TooltipDisplayComponent.DEFAULT.with(DYED_COLOR, true));
-            player.equipStack(EquipmentSlot.FEET, boots);
+            player.equipStack(EquipmentSlot.CHEST, getLeatherArmor(Items.LEATHER_CHESTPLATE, color));
+            player.equipStack(EquipmentSlot.LEGS, getLeatherArmor(Items.LEATHER_LEGGINGS, color));
+            player.equipStack(EquipmentSlot.FEET, getLeatherArmor(Items.LEATHER_BOOTS, color));
         }
 
         CustomScoreboardManager scoreboardManager = gameHandle.getScoreboardManager();

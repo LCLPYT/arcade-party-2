@@ -1,10 +1,14 @@
 package work.lclpnet.ap2.impl.game.team;
 
+import lombok.Setter;
 import net.minecraft.server.PlayerManager;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.text.MutableText;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.game.team.*;
+import work.lclpnet.ap2.core.hook.PlayerDisplayNameCallback;
+import work.lclpnet.ap2.impl.game.PlayerUtil;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.player.PlayerConnectionHooks;
@@ -16,17 +20,21 @@ public class SimpleTeamManager implements TeamManager {
     private final PlayerManager playerManager;
     private final TeamConfig teamConfig;
     private final CustomScoreboardManager scoreboard;
+    private final PlayerUtil playerUtil;
     private final Map<TeamKey, Team> teams = new HashMap<>();
     private final Map<TeamKey, net.minecraft.scoreboard.Team> mcTeams = new HashMap<>();
     private final Map<UUID, Team> playerTeams = new HashMap<>();
     private final Set<TeamKey> eliminated = new HashSet<>();
     @Nullable
     private TeamEliminatedListener listener = null;
+    @Setter
+    private boolean useColorCodes = false;
 
-    public SimpleTeamManager(PlayerManager playerManager, TeamConfig teamConfig, CustomScoreboardManager scoreboard) {
+    public SimpleTeamManager(PlayerManager playerManager, TeamConfig teamConfig, CustomScoreboardManager scoreboard, PlayerUtil playerUtil) {
         this.playerManager = playerManager;
         this.teamConfig = teamConfig;
         this.scoreboard = scoreboard;
+        this.playerUtil = playerUtil;
     }
 
     @Override
@@ -74,6 +82,8 @@ public class SimpleTeamManager implements TeamManager {
         TeamPartitioner partitioner = teamConfig.getPartitioner();
         var partitions = partitioner.splitIntoTeams(notMapped, getTeams());
         partitions.forEach(this::joinTeam);
+
+        playerUtil.updatePlayerListNames(players);
     }
 
     @Override
@@ -113,7 +123,10 @@ public class SimpleTeamManager implements TeamManager {
         }
 
         var mcTeam = scoreboard.createTeam(key.id());
-        mcTeam.setColor(key.colorFormat());
+
+        if (useColorCodes) {
+            mcTeam.setColor(key.formatting());
+        }
 
         mcTeams.put(key, mcTeam);
 
@@ -156,10 +169,12 @@ public class SimpleTeamManager implements TeamManager {
     private void destroyMcTeam(TeamKey key) {
         scoreboard.removeTeam(key.id());
 
-        mcTeams.remove(key);
+        synchronized (this) {
+            mcTeams.remove(key);
+        }
     }
 
-    private void reset() {
+    private synchronized void reset() {
         teams.keySet().forEach(this::destroyMcTeam);
         teams.clear();
         playerTeams.clear();
@@ -169,15 +184,33 @@ public class SimpleTeamManager implements TeamManager {
     public void init(HookRegistrar hooks) {
         // move player back into the minecraft team, as they are automatically removed when quitting by the CustomScoreboardManager
         hooks.registerHook(PlayerConnectionHooks.JOIN, player -> {
-            Team team = playerTeams.get(player.getUuid());
+            net.minecraft.scoreboard.Team mcTeam;
 
-            if (team == null) return;
+            synchronized (this) {
+                Team team = playerTeams.get(player.getUuid());
 
-            var mcTeam = mcTeams.get(team.getKey());
+                if (team == null) return;
+
+                mcTeam = mcTeams.get(team.getKey());
+            }
 
             if (mcTeam != null) {
                 scoreboard.joinTeam(player, mcTeam);
             }
+        });
+
+        hooks.registerHook(PlayerDisplayNameCallback.HOOK, (player, name) -> {
+            Team team;
+
+            synchronized (this) {
+                team = playerTeams.get(player.getUuid());
+
+                if (team == null) return name;
+            }
+
+            MutableText text = name instanceof MutableText ? (MutableText) name : name.copy();
+
+            return text.styled(style -> style.withColor(team.getKey().color()));
         });
     }
 }
