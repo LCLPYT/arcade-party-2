@@ -92,7 +92,8 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
     }
 
     private List<TeamInstance> setupTeams(GameMap map) {
-        JSONArray array = map.getProperties().getJSONArray("teams");
+        JSONObject props = map.getProperties();
+        JSONArray array = props.getJSONArray("teams");
         List<Partial<TeamInstance, DyeTeamKey>> partial = new ArrayList<>(array.length());
 
         for (Object entry : array) {
@@ -105,21 +106,33 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
         }
 
         // choose random team colors, by first choosing a random base color and then choosing according complementary colors
-        IndexedSet<DyeTeamKey> teamPool = availableTeamColors();
-        DyeTeamKey base = teamPool.get(random.nextInt(teamPool.size()));
-        List<DyeTeamKey> complementary = ApTeams.complementary(base, teamPool, partial.size());
+        IndexedSet<DyeTeamKey> colorPool = availableTeamColors(props);
+        DyeTeamKey base = colorPool.get(random.nextInt(colorPool.size()));
+        List<DyeTeamKey> complementary = ApTeams.complementary(base, colorPool, partial.size());
 
         return StreamUtil.zip(partial.stream(), complementary.stream(), Partial::with).toList();
     }
 
-    private @NotNull IndexedSet<DyeTeamKey> availableTeamColors() {
-        IndexedSet<DyeTeamKey> teamPool = new IndexedSet<>();
-        teamPool.addAll(Arrays.asList(DyeTeamKey.values()));
+    private @NotNull IndexedSet<DyeTeamKey> availableTeamColors(JSONObject props) {
+        JSONArray array = props.getJSONArray("available-team-colors");
 
-        teamPool.remove(DyeTeamKey.BLACK);
-        teamPool.remove(DyeTeamKey.DARK_GRAY);
-        teamPool.remove(DyeTeamKey.LIGHT_GRAY);
-        teamPool.remove(DyeTeamKey.WHITE);
+        IndexedSet<DyeTeamKey> teamPool = new IndexedSet<>();
+
+        for (Object item : array) {
+            if (!(item instanceof String id)) {
+                gameHandle.getLogger().warn("Expected team id of type string, but got: {}", item);
+                continue;
+            }
+
+            DyeTeamKey key = DyeTeamKey.byId(id);
+
+            if (key == null) {
+                gameHandle.getLogger().warn("Unknown team color \"{}\"", id);
+                continue;
+            }
+
+            teamPool.add(key);
+        }
 
         return teamPool;
     }
