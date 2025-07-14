@@ -31,6 +31,8 @@ import work.lclpnet.ap2.impl.game.team.ApTeams;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.StreamUtil;
+import work.lclpnet.ap2.impl.util.collision.ChunkedCollisionDetector;
+import work.lclpnet.ap2.impl.util.collision.TickMovementObserver;
 import work.lclpnet.ap2.impl.util.world.ResetBlockWorldModifier;
 import work.lclpnet.lobby.game.map.GameMap;
 
@@ -43,6 +45,7 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
 
     private final IntScoreDataContainer<Team, TeamRef> data = new IntScoreDataContainer<>(this::createReference, Ordering.DESCENDING, "game.ap2.paintball.blocks_painted");
     private final Random random = new Random();
+    private final TickMovementObserver movementObserver;
 
     private PaintManager paintManager;
     private KitHandler kitHandler;
@@ -51,6 +54,10 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
 
     public PaintballInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
+
+        var collisionDetector = new ChunkedCollisionDetector();
+        movementObserver = new TickMovementObserver(collisionDetector, gameHandle.getParticipants()::isParticipating);
+
         getTeamManager().setUseColorCodes(true);
     }
 
@@ -90,6 +97,8 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
                 .map(TeamInstance::key)
                 .collect(Collectors.toSet()));
 
+        movementObserver.init(gameHandle.getGameScheduler(), gameHandle.getHookRegistrar(), gameHandle.getServer());
+
         teleportTeamsToSpawns();
         equipPlayers();
         setupKits();
@@ -101,6 +110,26 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
         ));
 
         kitHandler.setup();
+
+        for (TeamInstance instance : teams) {
+            movementObserver.whenEntering(instance.baseBounds(), player -> {
+                if (isMember(instance, player)) {
+                    kitHandler.enableKitChanger(player);
+                }
+            });
+
+            movementObserver.whenLeaving(instance.baseBounds(), player -> {
+                if (isMember(instance, player)) {
+                    kitHandler.disableKitChanger(player);
+                }
+            });
+        }
+    }
+
+    private boolean isMember(TeamInstance instance, ServerPlayerEntity player) {
+        Team playerTeam = getTeamManager().getTeam(player).orElse(null);
+
+        return playerTeam != null && playerTeam.getKey() == instance.key();
     }
 
     private List<TeamInstance> setupTeams(GameMap map) {
