@@ -292,6 +292,8 @@
   "game.ap2.paintball.description": "Paint as much blocks in your team color as possible.",
   "game.ap2.paintball.task": "Paint blocks",
   "game.ap2.paintball.blocks_painted": "%s blocks painted",
+  "game.ap2.paintball.kit.rifle": "Ink-Rifle",
+  "game.ap2.paintball.kit.rifle.description": "A rapidly firing ink rifle with medium range",
   "item.ap2.bow_spleef.triple_shot": "Triple Shot",
   "item.ap2.bow_spleef.triple_shot.desc": "Shoots three arrows at once",
   "item.ap2.bow_spleef.burst_shot": "Burst Shot",

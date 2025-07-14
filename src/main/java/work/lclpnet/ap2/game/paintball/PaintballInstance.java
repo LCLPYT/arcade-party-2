@@ -18,6 +18,7 @@ import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.game.team.DyeTeamKey;
 import work.lclpnet.ap2.api.game.team.Team;
 import work.lclpnet.ap2.api.map.MapBootstrapFunction;
+import work.lclpnet.ap2.game.paintball.kit.RifleKit;
 import work.lclpnet.ap2.game.paintball.paint.PaintManager;
 import work.lclpnet.ap2.game.paintball.paint.Paintable;
 import work.lclpnet.ap2.impl.ds.IndexedSet;
@@ -25,6 +26,7 @@ import work.lclpnet.ap2.impl.game.TeamGameInstance;
 import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer;
 import work.lclpnet.ap2.impl.game.data.Ordering;
 import work.lclpnet.ap2.impl.game.data.type.TeamRef;
+import work.lclpnet.ap2.impl.game.kit.KitHandler;
 import work.lclpnet.ap2.impl.game.team.ApTeams;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.BlockBox;
@@ -43,6 +45,7 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
     private final Random random = new Random();
 
     private PaintManager paintManager;
+    private KitHandler kitHandler;
     private List<TeamInstance> teams = null;
     private ResetBlockWorldModifier baseWalls = null;
 
@@ -89,6 +92,15 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
 
         teleportTeamsToSpawns();
         equipPlayers();
+        setupKits();
+    }
+
+    private void setupKits() {
+        kitHandler = KitHandler.create(gameHandle, getWorld(), kitHandle -> List.of(
+                new RifleKit(kitHandle)
+        ));
+
+        kitHandler.setup();
     }
 
     private List<TeamInstance> setupTeams(GameMap map) {
@@ -155,8 +167,16 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
     }
 
     @Override
+    protected void afterInitialDelay() {
+        kitHandler.startKitSelectionTimer(commons(), super::afterInitialDelay);
+    }
+
+    @Override
     protected void ready() {
         openBases();
+
+        kitHandler.closeKitChanger();
+        kitHandler.selectKitItem();
     }
 
     private void closeBases(ServerWorld world) {

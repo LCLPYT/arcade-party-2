@@ -29,7 +29,9 @@ import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.MiniGameResults;
 import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.core.mixin.LivingEntityAccessor;
-import work.lclpnet.ap2.game.dragon_escape.kit.*;
+import work.lclpnet.ap2.game.dragon_escape.kit.EnderPearlKit;
+import work.lclpnet.ap2.game.dragon_escape.kit.LeapKit;
+import work.lclpnet.ap2.game.dragon_escape.kit.WindChargeKit;
 import work.lclpnet.ap2.impl.game.FFAGameInstance;
 import work.lclpnet.ap2.impl.game.PseudoElimination;
 import work.lclpnet.ap2.impl.game.data.CombinedDataContainer;
@@ -38,9 +40,6 @@ import work.lclpnet.ap2.impl.game.data.OrderedDataContainer;
 import work.lclpnet.ap2.impl.game.data.Ordering;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.game.kit.KitHandler;
-import work.lclpnet.ap2.impl.game.kit.KitManager;
-import work.lclpnet.ap2.impl.game.kit.ProxyKitReadView;
-import work.lclpnet.ap2.impl.game.kit.RecordKitHandle;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.Fireworks;
 import work.lclpnet.ap2.impl.util.SplinePath;
@@ -57,7 +56,6 @@ import work.lclpnet.kibu.hook.entity.EntityHealthCallback;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.kibu.hook.util.OnGroundDetector;
 import work.lclpnet.kibu.hook.util.PlayerUtils;
-import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.translate.text.TranslatedText;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 import work.lclpnet.lobby.game.map.MapUtils;
@@ -78,7 +76,6 @@ public class DragonEscapeInstance extends FFAGameInstance {
             DEBUG_PATH = false,
             DEBUG_PROGRESS = false;
 
-    private static final int KIT_SELECTION_TICKS = Ticks.seconds(10);
 
     private final OrderedDataContainer<ServerPlayerEntity, PlayerRef> completed = new OrderedDataContainer<>(PlayerRef::create);
     private final DoubleScoreDataContainer<ServerPlayerEntity, PlayerRef> score = new DoubleScoreDataContainer<>(
@@ -195,18 +192,11 @@ public class DragonEscapeInstance extends FFAGameInstance {
     }
 
     private void setupKits(VisibilityHandler visibilityHandler) {
-        var readView = new ProxyKitReadView();
-        var handle = RecordKitHandle.of(gameHandle, getWorld().getRegistryManager(), readView);
-
-        var manager = new KitManager(List.of(
-                new LeapKit(handle),
-                new EnderPearlKit(handle, path),
-                new WindChargeKit(handle)
+        kitHandler = KitHandler.create(gameHandle, getWorld(), kitHandle -> List.of(
+                new LeapKit(kitHandle),
+                new EnderPearlKit(kitHandle, path),
+                new WindChargeKit(kitHandle)
         ));
-
-        readView.inject(manager);
-
-        kitHandler = new KitHandler(manager, gameHandle.getParticipants(), gameHandle.getTranslations(), handle);
 
         gameHandle.getHookRegistrar().registerHook(PlayerInteractionHooks.USE_ITEM, (_player, world, hand) -> {
             if (!(_player instanceof ServerPlayerEntity player)) return ActionResult.PASS;
@@ -226,12 +216,7 @@ public class DragonEscapeInstance extends FFAGameInstance {
             return ActionResult.FAIL;
         });
 
-        manager.init();
-
-        kitHandler.init(gameHandle.getHookRegistrar());
-        kitHandler.setupPlayerKits();
-        kitHandler.enableKitChanger();
-        kitHandler.selectKitChanger();
+        kitHandler.setup();
     }
 
     private void markChunksPersistent() {
@@ -324,13 +309,7 @@ public class DragonEscapeInstance extends FFAGameInstance {
 
     @Override
     protected void afterInitialDelay() {
-        commons().announcer().announceSubtitle("ap2.kit_selector.hint");
-
-        kitHandler.selectKitChanger();
-
-        TranslatedText label = gameHandle.getTranslations().translateText("ap2.kit_selection");
-
-        commons().createTimerTicks(label, KIT_SELECTION_TICKS).whenDone(super::afterInitialDelay);
+        kitHandler.startKitSelectionTimer(commons(), super::afterInitialDelay);
     }
 
     @Override
