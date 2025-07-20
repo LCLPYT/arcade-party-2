@@ -1,10 +1,11 @@
-package work.lclpnet.ap2.impl.scene;
+package work.lclpnet.ap2.impl.scene.object;
 
 import lombok.Getter;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.decoration.DisplayEntity;
 import net.minecraft.item.ItemDisplayContext;
 import net.minecraft.item.ItemStack;
+import work.lclpnet.ap2.impl.scene.MountContext;
 
 @Getter
 public class ItemDisplayObject extends DisplayEntityObject<DisplayEntity.ItemDisplayEntity> {

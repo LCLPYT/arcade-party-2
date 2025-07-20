@@ -9,11 +9,11 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.RotationAxis;
 import org.jetbrains.annotations.Nullable;
-import work.lclpnet.ap2.impl.scene.ItemDisplayObject;
 import work.lclpnet.ap2.impl.scene.Object3d;
-import work.lclpnet.ap2.impl.scene.TranslatedTextDisplayObject;
 import work.lclpnet.ap2.impl.scene.animation.Animatable;
 import work.lclpnet.ap2.impl.scene.animation.AnimationContext;
+import work.lclpnet.ap2.impl.scene.object.ItemDisplayObject;
+import work.lclpnet.ap2.impl.scene.object.TranslatedTextDisplayObject;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.kibu.translate.text.TranslatedText;
 

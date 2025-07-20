@@ -1,5 +1,6 @@
 package work.lclpnet.ap2.impl.game.kit;
 
+import lombok.Getter;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.DynamicRegistryManager;
@@ -7,6 +8,7 @@ import net.minecraft.server.network.ServerPlayerEntity;
 
 public class SingleItemKit extends BaseKit {
 
+    @Getter
     private final Item item;
     private final int count;
 

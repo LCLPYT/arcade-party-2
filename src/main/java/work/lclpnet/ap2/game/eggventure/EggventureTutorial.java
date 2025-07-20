@@ -13,12 +13,12 @@ import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.ds.Resolvable;
 import work.lclpnet.ap2.api.util.heads.PlayerHead;
-import work.lclpnet.ap2.impl.scene.ItemDisplayObject;
 import work.lclpnet.ap2.impl.scene.MixedMountContext;
-import work.lclpnet.ap2.impl.scene.PlayerTextDisplayObject;
 import work.lclpnet.ap2.impl.scene.Scene;
 import work.lclpnet.ap2.impl.scene.animation.Animatable;
 import work.lclpnet.ap2.impl.scene.animation.AnimationContext;
+import work.lclpnet.ap2.impl.scene.object.ItemDisplayObject;
+import work.lclpnet.ap2.impl.scene.object.PlayerTextDisplayObject;
 import work.lclpnet.ap2.impl.util.RayCastUtil;
 import work.lclpnet.ap2.impl.util.world.WorldPosSync;
 import work.lclpnet.ap2.impl.util.world.entity.DynamicEntity;
@@ -108,7 +108,6 @@ public class EggventureTutorial {
         label.position.set(0, 0.1, 0);
         label.scale.set(0.65);
         label.setBillboardMode(DisplayEntity.BillboardMode.CENTER);
-        label.getTransformer().setTeleportOnly(true);
 
         egg.addChild(label);
 

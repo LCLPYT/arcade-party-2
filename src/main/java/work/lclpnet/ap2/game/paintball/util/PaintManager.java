@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.game.paintball.paint;
+package work.lclpnet.ap2.game.paintball.util;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -19,6 +19,7 @@ public class PaintManager {
 
     private final Map<Block, Paintable> paintableBlocks = new HashMap<>();
     private final ServerWorld world;
+    private final Paintable concrete;
 
     public PaintManager(ServerWorld world) {
         this.world = world;
@@ -66,7 +67,7 @@ public class PaintManager {
         });
 
         // concrete
-        paintables.add(team -> switch (team) {
+        concrete = team -> switch (team) {
             case WHITE -> WHITE_CONCRETE;
             case LIGHT_GRAY -> LIGHT_GRAY_CONCRETE;
             case DARK_GRAY -> GRAY_CONCRETE;
@@ -83,7 +84,9 @@ public class PaintManager {
             case LIGHT_BLUE -> LIGHT_BLUE_CONCRETE;
             case MAGENTA -> MAGENTA_CONCRETE;
             case PINK -> PINK_CONCRETE;
-        });
+        };
+
+        paintables.add(concrete);
 
         // concrete powder
         paintables.add(team -> switch (team) {
@@ -315,6 +318,10 @@ public class PaintManager {
 
     public @Nullable Paintable paintable(Block block) {
         return paintableBlocks.get(block);
+    }
+
+    public BlockState getPaintBulletState(DyeTeamKey team) {
+        return concrete.blockFor(team).getDefaultState();
     }
 
     public void replace(BlockPos pos, BlockState current, Paintable paintable, DyeTeamKey target) {

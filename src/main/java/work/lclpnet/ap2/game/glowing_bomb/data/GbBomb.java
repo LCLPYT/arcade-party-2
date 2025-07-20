@@ -8,12 +8,12 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3d;
-import work.lclpnet.ap2.impl.scene.BlockDisplayObject;
-import work.lclpnet.ap2.impl.scene.ItemDisplayObject;
 import work.lclpnet.ap2.impl.scene.Object3d;
 import work.lclpnet.ap2.impl.scene.animation.Animatable;
 import work.lclpnet.ap2.impl.scene.animation.Animation;
 import work.lclpnet.ap2.impl.scene.animation.AnimationContext;
+import work.lclpnet.ap2.impl.scene.object.BlockDisplayObject;
+import work.lclpnet.ap2.impl.scene.object.ItemDisplayObject;
 
 import java.util.ArrayList;
 import java.util.List;

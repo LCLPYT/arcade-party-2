@@ -1,10 +1,11 @@
-package work.lclpnet.ap2.impl.scene;
+package work.lclpnet.ap2.impl.scene.object;
 
 import lombok.Getter;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.decoration.DisplayEntity;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
+import work.lclpnet.ap2.impl.scene.MountContext;
 
 @Getter
 public class TextDisplayObject extends DisplayEntityObject<DisplayEntity.TextDisplayEntity> {

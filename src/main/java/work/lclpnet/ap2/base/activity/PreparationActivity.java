@@ -50,7 +50,7 @@ import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.scene.MixedMountContext;
 import work.lclpnet.ap2.impl.scene.Object3d;
 import work.lclpnet.ap2.impl.scene.Scene;
-import work.lclpnet.ap2.impl.scene.TranslatedTextDisplayObject;
+import work.lclpnet.ap2.impl.scene.object.TranslatedTextDisplayObject;
 import work.lclpnet.ap2.impl.util.ScoreboardUtil;
 import work.lclpnet.ap2.impl.util.music.MusicHelper;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;

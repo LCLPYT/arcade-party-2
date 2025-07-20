@@ -187,11 +187,21 @@ public class Object3d {
 
     /**
      * Set this object to a position in world coordinates.
-     * Does not mutate the given position.
+     * Does not mutate the given position argument.
      * @param pos The position in world / global coordinates.
      */
     public void setWorldPosition(Vector3d pos) {
-        position.set(pos);
+        setWorldPosition(pos.x, pos.y, pos.z);
+    }
+
+    /**
+     * Set this object to a position in world coordinates.
+     * @param x The x position in world / global coordinates.
+     * @param y The y position in world / global coordinates.
+     * @param z The z position in world / global coordinates.
+     */
+    public void setWorldPosition(double x, double y, double z) {
+        position.set(x, y, z);
 
         Object3d parent = parent();
 

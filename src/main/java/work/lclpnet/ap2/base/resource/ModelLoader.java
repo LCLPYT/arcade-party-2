@@ -11,9 +11,9 @@ import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.util.math.AffineTransformation;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Quaternionf;
-import work.lclpnet.ap2.impl.scene.BlockDisplayObject;
-import work.lclpnet.ap2.impl.scene.ItemDisplayObject;
 import work.lclpnet.ap2.impl.scene.Object3d;
+import work.lclpnet.ap2.impl.scene.object.BlockDisplayObject;
+import work.lclpnet.ap2.impl.scene.object.ItemDisplayObject;
 import work.lclpnet.ap2.impl.util.ItemHelper;
 import work.lclpnet.ap2.impl.util.model.TemplateModel;
 
