@@ -7,7 +7,6 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3d;
-import org.joml.Vector3f;
 import work.lclpnet.ap2.impl.scene.MountContext;
 import work.lclpnet.ap2.impl.scene.Mountable;
 import work.lclpnet.ap2.impl.scene.Object3d;
@@ -28,7 +27,6 @@ public class TranslatedTextDisplayObject extends Object3d implements Mountable, 
     private final DisplayEntityTransformer transformer = new DisplayEntityTransformer();
     private final Set<MountContext> contexts = new ObjectArraySet<>(1);
     private final Vector3d worldPos = new Vector3d(0);
-    public final Vector3f origin = new Vector3f();
     private Vec3d mcWorldPos = Vec3d.ZERO;
 
     public TranslatedTextDisplayObject(Translations translations) {
@@ -46,7 +44,7 @@ public class TranslatedTextDisplayObject extends Object3d implements Mountable, 
 
         updateWorldPos();
 
-        if (transformer.update(matrixWorld, origin)) {
+        if (transformer.update(matrixWorld)) {
             controller.getEntities().forEach(transformer::apply);
         }
     }
@@ -68,7 +66,7 @@ public class TranslatedTextDisplayObject extends Object3d implements Mountable, 
     public @Nullable Entity getEntity(ServerPlayerEntity player) {
         return controller.ref(translations.getLanguage(player), display -> {
             updateWorldPos();
-            transformer.update(matrixWorld, origin);
+            transformer.update(matrixWorld);
             transformer.apply(display);
         });
     }

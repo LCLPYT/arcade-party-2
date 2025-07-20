@@ -5,7 +5,6 @@ import lombok.Getter;
 import net.minecraft.entity.decoration.DisplayEntity;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.joml.Vector3f;
 import work.lclpnet.ap2.api.ds.Resolvable;
 import work.lclpnet.ap2.impl.scene.MountContext;
 import work.lclpnet.ap2.impl.scene.Mountable;
@@ -27,7 +26,6 @@ public abstract class DisplayEntityObject<T extends DisplayEntity> extends Objec
     @Getter private int interpolationDuration = 0;
     @Getter private int teleportDuration = 0;
     @Getter private DisplayEntity.BillboardMode billboardMode = DisplayEntity.BillboardMode.FIXED;
-    public final Vector3f origin = new Vector3f();
 
     protected abstract @Nullable T createDisplayEntity(MountContext ctx);
 
@@ -35,7 +33,7 @@ public abstract class DisplayEntityObject<T extends DisplayEntity> extends Objec
     public void updateMatrixWorld(boolean withParent, boolean withChildren) {
         super.updateMatrixWorld(withParent, withChildren);
 
-        entityRef.optional().ifPresent(display -> transformer.updateAndApply(display, origin, matrixWorld));
+        entityRef.optional().ifPresent(display -> transformer.updateAndApply(display, matrixWorld));
     }
 
     @Override
@@ -54,7 +52,7 @@ public abstract class DisplayEntityObject<T extends DisplayEntity> extends Objec
     }
 
     protected void configure(T display) {
-        transformer.updateAndApply(display, origin, matrixWorld);
+        transformer.updateAndApply(display, matrixWorld);
 
         display.setGlowColorOverride(glowColorOverride);
         display.setInterpolationDuration(interpolationDuration);

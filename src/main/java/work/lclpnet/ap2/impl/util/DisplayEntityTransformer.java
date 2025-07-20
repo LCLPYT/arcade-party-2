@@ -7,14 +7,13 @@ import org.joml.*;
 public class DisplayEntityTransformer {
 
     private final Vector3d position = new Vector3d();
-    private final Vector3f translation = new Vector3f();
     private final Vector3d scale = new Vector3d();
     private final Quaternionf rotation = new Quaternionf();
     private final Matrix4f mat4f = new Matrix4f();
     private final Matrix4d prevMatrix = new Matrix4d().scale(Double.NaN);
     private AffineTransformation transformation = new AffineTransformation(mat4f);
 
-    public synchronized boolean update(Matrix4dc matrix, Vector3f origin) {
+    public synchronized boolean update(Matrix4dc matrix) {
         if (matrix.equals(prevMatrix)) return false;
 
         prevMatrix.set(matrix);
@@ -25,7 +24,6 @@ public class DisplayEntityTransformer {
 
         // setup affine transformation
         mat4f.identity()
-                .translate(origin.rotate(rotation, translation))
                 .rotate(rotation)
                 .scale((float) scale.x(), (float) scale.y(), (float) scale.z());
 
@@ -34,8 +32,8 @@ public class DisplayEntityTransformer {
         return true;
     }
 
-    public void updateAndApply(DisplayEntity display, Vector3f origin, Matrix4dc matrix) {
-        if (update(matrix, origin)) {
+    public void updateAndApply(DisplayEntity display, Matrix4dc matrix) {
+        if (update(matrix)) {
             apply(display);
         }
     }

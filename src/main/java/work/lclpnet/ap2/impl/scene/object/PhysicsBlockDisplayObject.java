@@ -1,15 +1,18 @@
 package work.lclpnet.ap2.impl.scene.object;
 
 import com.jme3.math.Quaternion;
+import com.jme3.math.Vector3f;
 import net.minecraft.block.BlockState;
 import net.minecraft.server.world.ServerWorld;
 import org.joml.Quaternionf;
 import work.lclpnet.ap2.impl.scene.MountContext;
+import work.lclpnet.ap2.impl.scene.Mountable;
+import work.lclpnet.ap2.impl.scene.Object3d;
+import work.lclpnet.ap2.impl.scene.Unmountable;
 import work.lclpnet.ap2.impl.scene.animation.Animatable;
 import work.lclpnet.ap2.impl.scene.animation.AnimationContext;
 import work.lclpnet.ap2.impl.scene.simulation.ScenePhysicsElement;
 import work.lclpnet.ap2.impl.scene.simulation.SceneRigidBody;
-import work.lclpnet.kibu.physics.impl.bullet.collision.body.ElementRigidBody;
 import work.lclpnet.kibu.physics.impl.bullet.collision.body.shape.MinecraftShape;
 import work.lclpnet.kibu.physics.impl.bullet.collision.space.MinecraftSpace;
 import work.lclpnet.kibu.physics.impl.util.Frame;
@@ -17,38 +20,24 @@ import work.lclpnet.kibu.physics.util.BlockPhysics;
 
 import static work.lclpnet.kibu.physics.impl.bullet.math.Convert.toMinecraft;
 
-public class PhysicsBlockDisplayObject extends BlockDisplayObject implements ScenePhysicsElement, Animatable {
+public class PhysicsBlockDisplayObject extends Object3d
+        implements ScenePhysicsElement, Mountable, Unmountable, Animatable {
 
     private final com.jme3.math.Vector3f storedPosition = new com.jme3.math.Vector3f();
     private final Quaternionf storedRotation = new Quaternionf();
     private final Quaternion storedJmeRotation = new Quaternion();
-    private final SceneRigidBody rigidBody;
+    protected final SceneRigidBody rigidBody;
+    private final BlockDisplayObject blockDisplay;
     private final ServerWorld world;
 
-    public PhysicsBlockDisplayObject(BlockState blockState, ServerWorld world) {
-        super(blockState);
-
+    public PhysicsBlockDisplayObject(BlockState state, ServerWorld world) {
         this.world = world;
 
-        origin.set(-0.5f);
+        blockDisplay = new BlockDisplayObject(state);
+        blockDisplay.position.set(-0.5f);
+        addChild(blockDisplay);
 
         rigidBody = initRigidBody(world);
-    }
-
-    @Override
-    public void mount(MountContext ctx) {
-        ServerWorld world = ctx.world();
-
-        super.mount(ctx);
-
-        MinecraftSpace.get(world).addCollisionObject(rigidBody);
-    }
-
-    @Override
-    public void unmount(MountContext ctx) {
-        super.unmount(ctx);
-
-        MinecraftSpace.get(ctx.world()).removeCollisionObject(rigidBody);
     }
 
     protected SceneRigidBody initRigidBody(ServerWorld world) {
@@ -60,19 +49,25 @@ public class PhysicsBlockDisplayObject extends BlockDisplayObject implements Sce
     }
 
     protected void updateRigidBody(SceneRigidBody rigidBody) {
-        BlockState state = getBlockState();
+        BlockState state = blockDisplay.getBlockState();
 
-        float mass = BlockPhysics.getMass(state);
-        ElementRigidBody.BuoyancyType buoyancyType = BlockPhysics.getBuoyancyType(state);
-
-        rigidBody.setMass(mass);
-        rigidBody.setBuoyancyType(buoyancyType);
+        rigidBody.setMass(BlockPhysics.getMass(state));
+        rigidBody.setBuoyancyType(BlockPhysics.getBuoyancyType(state));
+        rigidBody.setCollisionShape(this.createShape());
     }
 
     @Override
-    public void setBlockState(BlockState state) {
-        super.setBlockState(state);
+    public void mount(MountContext ctx) {
+        MinecraftSpace.get(ctx.world()).addCollisionObject(rigidBody);
+    }
 
+    @Override
+    public void unmount(MountContext ctx) {
+        MinecraftSpace.get(ctx.world()).removeCollisionObject(rigidBody);
+    }
+
+    public void setBlockState(BlockState state) {
+        blockDisplay.setBlockState(state);
         updateRigidBody(rigidBody);
     }
 
@@ -83,19 +78,18 @@ public class PhysicsBlockDisplayObject extends BlockDisplayObject implements Sce
 
     @Override
     public MinecraftShape.Convex createShape() {
-        return BlockPhysics.getShape(getBlockState(), world);
+        MinecraftShape.Convex shape = BlockPhysics.getShape(blockDisplay.getBlockState(), world);
+        shape.setScale(new Vector3f((float) scale.x, (float) scale.y, (float) scale.z));
+
+        return shape;
     }
 
     @Override
     public void updateAnimation(double dt, AnimationContext ctx) {
-        var display = entityRef.optional().orElse(null);
-
-        if (display == null) return;
-
         Frame frame = rigidBody.getFrame();
         var pos = frame.getLocation(storedPosition, 1f);
 
-        setWorldPosition(pos.x, pos.y, pos.z);
+        this.setWorldPosition(pos.x, pos.y, pos.z);
         rotation.set(toMinecraft(frame.getRotation(storedJmeRotation, 0f), storedRotation));
     }
 }
