@@ -48,7 +48,7 @@ public class PhysicsBlockDisplayObject extends Object3d
         return rigidBody;
     }
 
-    protected void updateRigidBody(SceneRigidBody rigidBody) {
+    public void updateRigidBody(SceneRigidBody rigidBody) {
         BlockState state = blockDisplay.getBlockState();
 
         rigidBody.setMass(BlockPhysics.getMass(state));

@@ -71,7 +71,8 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
         scene.animate(1, gameHandle.getGameScheduler());
 
         paintManager = new PaintManager(world);
-        paintGunManager = new PaintGunManager(scene, paintManager, teams, random);
+        paintGunManager = new PaintGunManager(world, scene, paintManager, teams, random, gameHandle.getParticipants());
+        paintGunManager.init(gameHandle.getHookRegistrar());
 
         replaceTemplateColors(world);
         closeBases(world);

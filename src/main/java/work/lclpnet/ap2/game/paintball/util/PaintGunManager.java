@@ -1,28 +1,70 @@
 package work.lclpnet.ap2.game.paintball.util;
 
+import com.jme3.math.Vector3f;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.ShapeContext;
+import net.minecraft.particle.DustParticleEffect;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
+import net.minecraft.util.hit.BlockHitResult;
+import net.minecraft.util.hit.HitResult;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.RaycastContext;
+import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.impl.scene.Scene;
 import work.lclpnet.ap2.impl.scene.simulation.SceneRigidBody;
-import work.lclpnet.ap2.impl.util.math.MathUtil;
+import work.lclpnet.ap2.impl.util.RayCastUtil;
+import work.lclpnet.kibu.hook.HookRegistrar;
+import work.lclpnet.kibu.physics.api.event.collision.ElementCollisionEvents;
+import work.lclpnet.kibu.physics.impl.bullet.collision.space.MinecraftSpace;
 
 import java.util.Random;
 
+import static work.lclpnet.ap2.impl.util.math.MathUtil.randomUnitVec3d;
 import static work.lclpnet.kibu.physics.impl.bullet.math.Convert.toBullet;
 
 public class PaintGunManager {
 
+    private final ServerWorld world;
     private final Scene scene;
     private final PaintManager paintManager;
     private final PaintballTeams teams;
     private final Random random;
+    private final Participants participants;
 
-    public PaintGunManager(Scene scene, PaintManager paintManager, PaintballTeams teams, Random random) {
+    public PaintGunManager(ServerWorld world, Scene scene, PaintManager paintManager, PaintballTeams teams,
+                           Random random, Participants participants) {
+        this.world = world;
         this.scene = scene;
         this.paintManager = paintManager;
         this.teams = teams;
         this.random = random;
+        this.participants = participants;
+    }
+
+    public void init(HookRegistrar hooks) {
+        MinecraftSpace.get(world).setCollisionEventsEnabled(true);
+
+        hooks.registerHook(ElementCollisionEvents.BLOCK_COLLISION, (element, terrainObject, manifoldId) -> {
+            if (element instanceof PaintballBullet bullet) {
+                onBulletHitTerrain(bullet, terrainObject.getBlockPos());
+            }
+        });
+    }
+
+    private void onBulletHitTerrain(PaintballBullet bullet, BlockPos pos) {
+        ServerPlayerEntity owner = participants.getParticipant(bullet.getOwner()).orElse(null);
+
+        if (owner == null) return;
+
+        PaintballTeam team = teams.teamOf(owner).orElse(null);
+
+        if (team == null || !paintManager.replace(pos, team.key())) return;
+
+        var bulletPos = bullet.getPhysicsLocation(new Vector3f(), 0);
+
+        world.spawnParticles(new DustParticleEffect(team.key().color(), 0.5f), bulletPos.x, bulletPos.y, bulletPos.z, 10, 0.2, 0.2, 0.2, 0.1);
     }
 
     public void shoot(ServerPlayerEntity player) {
@@ -33,19 +75,36 @@ public class PaintGunManager {
 
         if (state == null) return;
 
+        final double spawnDist = 1.4;
+        final double scale = 0.2;
+
         Vec3d dir = player.getRotationVector();
-        Vec3d pos = player.getEyePos().add(dir.multiply(1));
+
+        HitResult hit = RayCastUtil.raycast(
+                player.getWorld(), player.getEyePos(), player.getRotationVector(), spawnDist,
+                RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.ANY, ShapeContext.absent(),
+                entity -> !entity.isSpectator());
+
+        Vec3d pos = hit.getPos();
+
+        if (hit instanceof BlockHitResult blockHit) {
+            pos = pos.add(blockHit.getSide().getDoubleVector().multiply(0.5 * scale));
+        } else if (hit.getType() != HitResult.Type.MISS) {
+            pos = pos.add(player.getRotationVector().multiply(-0.5 * scale));
+        }
 
         var obj = new PaintballBullet(state, player.getWorld());
         obj.position.set(pos.getX(), pos.getY(), pos.getZ());
+        obj.scale.set(scale);
         obj.setOwner(player.getUuid());
 
         SceneRigidBody rigidBody = obj.getRigidBody();
 
         if (rigidBody == null) return;
 
-        rigidBody.setLinearVelocity(toBullet(dir.multiply(10)));
-        rigidBody.setAngularVelocity(toBullet(MathUtil.randomUnitVec3d(random)));
+        obj.updateRigidBody(rigidBody);
+        rigidBody.setLinearVelocity(toBullet(dir.multiply(16)));
+        rigidBody.setAngularVelocity(toBullet(randomUnitVec3d(random)));
         rigidBody.setPhysicsLocation(toBullet(pos));
 
         scene.add(obj);

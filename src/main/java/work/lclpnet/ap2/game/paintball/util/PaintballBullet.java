@@ -5,6 +5,7 @@ import lombok.Setter;
 import net.minecraft.block.BlockState;
 import net.minecraft.server.world.ServerWorld;
 import work.lclpnet.ap2.impl.scene.object.PhysicsBlockDisplayObject;
+import work.lclpnet.kibu.physics.impl.bullet.collision.body.shape.MinecraftShape;
 
 import java.util.UUID;
 
@@ -15,9 +16,13 @@ public class PaintballBullet extends PhysicsBlockDisplayObject {
 
     public PaintballBullet(BlockState blockState, ServerWorld world) {
         super(blockState, world);
+    }
 
-        scale.set(0.2);
+    @Override
+    public MinecraftShape.Convex createShape() {
+        MinecraftShape.Convex shape = super.createShape();
+        shape.setMargin(0.01f);
 
-        updateRigidBody(rigidBody);
+        return shape;
     }
 }

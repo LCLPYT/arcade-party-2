@@ -5,6 +5,7 @@ import work.lclpnet.ap2.api.base.Participants;
 
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 public interface TeamManager {
@@ -15,7 +16,7 @@ public interface TeamManager {
 
     Optional<Team> getTeam(TeamKey key);
 
-    Optional<Team> getTeam(ServerPlayerEntity player);
+    Optional<Team> getTeam(UUID uuid);
 
     void partitionIntoTeams(Set<ServerPlayerEntity> players, Set<TeamKey> teams);
 
@@ -32,6 +33,10 @@ public interface TeamManager {
      * Set this to true, if all your team rgb colors have matching color codes (Formatting).
      */
     void setUseColorCodes(boolean useColorCodes);
+
+    default Optional<Team> getTeam(ServerPlayerEntity player) {
+        return getTeam(player.getUuid());
+    }
 
     default void partitionIntoTeams(Participants participants, Set<TeamKey> teams) {
         partitionIntoTeams(participants.getAsSet(), teams);

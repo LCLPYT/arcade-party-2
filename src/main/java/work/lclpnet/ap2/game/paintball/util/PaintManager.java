@@ -324,13 +324,24 @@ public class PaintManager {
         return concrete.blockFor(team).getDefaultState();
     }
 
-    public void replace(BlockPos pos, BlockState current, Paintable paintable, DyeTeamKey target) {
+    public boolean replace(BlockPos pos, DyeTeamKey target) {
+        BlockState current = world.getBlockState(pos);
+        Paintable paintable = paintable(current.getBlock());
+
+        if (paintable == null) {
+            return false;
+        }
+
+        return replace(pos, current, paintable, target);
+    }
+
+    public boolean replace(BlockPos pos, BlockState current, Paintable paintable, DyeTeamKey target) {
         BlockState baseState = paintable.blockFor(target).getDefaultState();
         BlockState targetState = copyProperties(current, baseState);
 
-        if (current == targetState) return;
+        if (current == targetState) return false;
 
-        world.setBlockState(pos, targetState, Block.FORCE_STATE | Block.NOTIFY_LISTENERS | Block.SKIP_DROPS);
+        return world.setBlockState(pos, targetState, Block.FORCE_STATE | Block.NOTIFY_LISTENERS | Block.SKIP_DROPS);
     }
 
     private BlockState copyProperties(BlockState reference, BlockState state) {

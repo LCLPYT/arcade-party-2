@@ -53,8 +53,8 @@ public class SimpleTeamManager implements TeamManager {
     }
 
     @Override
-    public Optional<Team> getTeam(ServerPlayerEntity player) {
-        return Optional.ofNullable(playerTeams.get(player.getUuid()));
+    public Optional<Team> getTeam(UUID uuid) {
+        return Optional.ofNullable(playerTeams.get(uuid));
     }
 
     @Override
