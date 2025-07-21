@@ -1,5 +1,7 @@
 package work.lclpnet.ap2.game.paintball.util;
 
+import com.jme3.bullet.collision.ManifoldPoints;
+import com.jme3.bullet.collision.PersistentManifolds;
 import com.jme3.math.Vector3f;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.ShapeContext;
@@ -12,6 +14,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.RaycastContext;
 import work.lclpnet.ap2.api.base.Participants;
+import work.lclpnet.ap2.api.game.team.DyeTeamKey;
 import work.lclpnet.ap2.impl.scene.Scene;
 import work.lclpnet.ap2.impl.scene.simulation.SceneRigidBody;
 import work.lclpnet.ap2.impl.util.RayCastUtil;
@@ -20,7 +23,9 @@ import work.lclpnet.kibu.physics.api.event.collision.ElementCollisionEvents;
 import work.lclpnet.kibu.physics.impl.bullet.collision.space.MinecraftSpace;
 
 import java.util.Random;
+import java.util.function.BooleanSupplier;
 
+import static java.lang.Math.max;
 import static work.lclpnet.ap2.impl.util.math.MathUtil.randomUnitVec3d;
 import static work.lclpnet.kibu.physics.impl.bullet.math.Convert.toBullet;
 
@@ -32,15 +37,17 @@ public class PaintGunManager {
     private final PaintballTeams teams;
     private final Random random;
     private final Participants participants;
+    private final BooleanSupplier gameOver;
 
     public PaintGunManager(ServerWorld world, Scene scene, PaintManager paintManager, PaintballTeams teams,
-                           Random random, Participants participants) {
+                           Random random, Participants participants, BooleanSupplier gameOver) {
         this.world = world;
         this.scene = scene;
         this.paintManager = paintManager;
         this.teams = teams;
         this.random = random;
         this.participants = participants;
+        this.gameOver = gameOver;
     }
 
     public void init(HookRegistrar hooks) {
@@ -48,23 +55,71 @@ public class PaintGunManager {
 
         hooks.registerHook(ElementCollisionEvents.BLOCK_COLLISION, (element, terrainObject, manifoldId) -> {
             if (element instanceof PaintballBullet bullet) {
-                onBulletHitTerrain(bullet, terrainObject.getBlockPos());
+                onBulletHitTerrain(bullet, manifoldId);
             }
         });
     }
 
-    private void onBulletHitTerrain(PaintballBullet bullet, BlockPos pos) {
+    private void onBulletHitTerrain(PaintballBullet bullet, long manifoldId) {
+        bullet.startDespawnTimer();
+        bullet.onHit();
+
+        if (gameOver.getAsBoolean() || !bullet.isPainting()) return;
+
         ServerPlayerEntity owner = participants.getParticipant(bullet.getOwner()).orElse(null);
 
         if (owner == null) return;
 
         PaintballTeam team = teams.teamOf(owner).orElse(null);
 
-        if (team == null || !paintManager.replace(pos, team.key())) return;
+        if (team == null) return;
 
-        var bulletPos = bullet.getPhysicsLocation(new Vector3f(), 0);
+        DyeTeamKey key = team.key();
+        final float dist = 0.65f;
+        final boolean bulletIsObjA = PersistentManifolds.getBodyAId(manifoldId) == bullet.getRigidBody().nativeId();
 
-        world.spawnParticles(new DustParticleEffect(team.key().color(), 0.5f), bulletPos.x, bulletPos.y, bulletPos.z, 10, 0.2, 0.2, 0.2, 0.1);
+        for (long pointId : PersistentManifolds.listPointIds(manifoldId)) {
+            Vector3f pos = new Vector3f();
+
+            if (bulletIsObjA) ManifoldPoints.getPositionWorldOnB(pointId, pos);
+            else ManifoldPoints.getPositionWorldOnA(pointId, pos);
+
+            // hit pos
+            tryPaint(bullet, key, pos, 0, 0, 0);
+
+            // cardinal directions
+            tryPaint(bullet, key, pos,  dist,  0,  0);
+            tryPaint(bullet, key, pos,  0,  dist,  0);
+            tryPaint(bullet, key, pos,  0,  0,  dist);
+            tryPaint(bullet, key, pos, -dist,  0,  0);
+            tryPaint(bullet, key, pos,  0, -dist,  0);
+            tryPaint(bullet, key, pos,  0,  0, -dist);
+
+            // diagonal
+            final float d = dist / 3f;
+
+            tryPaint(bullet, key, pos,  d,  d,  d);
+            tryPaint(bullet, key, pos,  d,  d, -d);
+            tryPaint(bullet, key, pos,  d, -d,  d);
+            tryPaint(bullet, key, pos,  d, -d, -d);
+            tryPaint(bullet, key, pos, -d,  d,  d);
+            tryPaint(bullet, key, pos, -d,  d, -d);
+            tryPaint(bullet, key, pos, -d, -d,  d);
+            tryPaint(bullet, key, pos, -d, -d, -d);
+        }
+    }
+
+    private void tryPaint(PaintballBullet bullet, DyeTeamKey teamKey, Vector3f pos, float dx, float dy, float dz) {
+        var blockPos = BlockPos.ofFloored(pos.x + dx, pos.y + dy, pos.z + dz);
+
+        if (!paintManager.replace(blockPos, teamKey)) return;
+
+        world.spawnParticles(new DustParticleEffect(teamKey.color(), 0.5f), pos.x, pos.y, pos.z, 10,
+                0.2, 0.2, 0.2, 0.1);
+
+        if (dx * dx + dy * dy + dz * dz > 0) {
+            bullet.onHit();
+        }
     }
 
     public void shoot(ServerPlayerEntity player) {
@@ -75,10 +130,30 @@ public class PaintGunManager {
 
         if (state == null) return;
 
-        final double spawnDist = 1.4;
         final double scale = 0.2;
 
-        Vec3d dir = player.getRotationVector();
+        Vec3d pos = getProjectileSpawn(player, scale);
+
+        var obj = new PaintballBullet(state, player.getWorld());
+        obj.position.set(pos.getX(), pos.getY(), pos.getZ());
+        obj.scale.set(scale);
+        obj.setOwner(player.getUuid());
+
+        SceneRigidBody rigidBody = obj.getRigidBody();
+
+        obj.updateRigidBody(rigidBody);
+
+        Vec3d velocity = getProjectileVelocity(player);
+
+        rigidBody.setLinearVelocity(toBullet(velocity));
+        rigidBody.setAngularVelocity(toBullet(randomUnitVec3d(random)));
+        rigidBody.setPhysicsLocation(toBullet(pos));
+
+        scene.add(obj);
+    }
+
+    private Vec3d getProjectileSpawn(ServerPlayerEntity player, double scale) {
+        final double spawnDist = 1.4;
 
         HitResult hit = RayCastUtil.raycast(
                 player.getWorld(), player.getEyePos(), player.getRotationVector(), spawnDist,
@@ -93,20 +168,19 @@ public class PaintGunManager {
             pos = pos.add(player.getRotationVector().multiply(-0.5 * scale));
         }
 
-        var obj = new PaintballBullet(state, player.getWorld());
-        obj.position.set(pos.getX(), pos.getY(), pos.getZ());
-        obj.scale.set(scale);
-        obj.setOwner(player.getUuid());
+        return pos;
+    }
 
-        SceneRigidBody rigidBody = obj.getRigidBody();
+    private Vec3d getProjectileVelocity(ServerPlayerEntity player) {
+        final double basePower = 12;
+        final double minPowerScale = 0.65;
+        final double maxPowerScale = 1.0;
 
-        if (rigidBody == null) return;
+        Vec3d dir = player.getRotationVector();
 
-        obj.updateRigidBody(rigidBody);
-        rigidBody.setLinearVelocity(toBullet(dir.multiply(16)));
-        rigidBody.setAngularVelocity(toBullet(randomUnitVec3d(random)));
-        rigidBody.setPhysicsLocation(toBullet(pos));
+        double verticalComponent = max(0, dir.y);
+        double powerScale = maxPowerScale + (minPowerScale - maxPowerScale) * verticalComponent;
 
-        scene.add(obj);
+        return dir.multiply(basePower * powerScale);
     }
 }

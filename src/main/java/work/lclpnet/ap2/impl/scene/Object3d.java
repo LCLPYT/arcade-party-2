@@ -1,6 +1,7 @@
 package work.lclpnet.ap2.impl.scene;
 
 import it.unimi.dsi.fastutil.objects.ObjectArraySet;
+import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4d;
@@ -23,6 +24,8 @@ public class Object3d {
     private final Collection<Object3d> children = new ObjectArraySet<>();
     private Object3d parent = null;
     private int deepCount = 1;
+    @Getter
+    private boolean detached = false;
 
     public void updateMatrix() {
         matrix.translationRotateScale(
@@ -89,7 +92,7 @@ public class Object3d {
         boolean removed = children.remove(child);
 
         for (Object3d obj : child.traverse()) {
-            obj.onDetached();
+            obj.detach();
         }
 
         this.onChildRemoved(child);
@@ -210,16 +213,18 @@ public class Object3d {
         }
     }
 
-    public void detach() {
-        if (parent == null) {
-            for (Object3d obj : traverse()) {
-                obj.onDetached();
-            }
-
-            onDetached();
-        } else {
+    public final void detach() {
+        if (parent != null) {
             parent.removeChild(this);
+            return;
         }
+
+        for (Object3d child : children()) {
+           child.detach();
+        }
+
+        detached = true;
+        onDetached();
     }
 
     public Object3d deepCopy() {

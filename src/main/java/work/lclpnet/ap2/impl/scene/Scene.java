@@ -108,6 +108,8 @@ public class Scene {
     }
 
     private void updateAnimation(double dt) {
+        cleanOldObjects();
+
         if (onUpdateAnimation != null) {
             onUpdateAnimation.updateAnimation(dt, animationContext);
         }
@@ -128,6 +130,14 @@ public class Scene {
             if (rootChanged != null) {
                 rootChanged.updateMatrixWorld();
             }
+        }
+    }
+
+    private void cleanOldObjects() {
+        Object3d[] removal = objects.stream().filter(Object3d::isDetached).toArray(Object3d[]::new);
+
+        for (Object3d obj : removal) {
+            remove(obj);
         }
     }
 

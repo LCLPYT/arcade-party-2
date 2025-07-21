@@ -158,6 +158,11 @@ public class KitHandler {
     }
 
     public void startKitSelectionTimer(GameCommons commons, Runnable onComplete) {
+        if (manager.getKits().size() < 2) {
+            onComplete.run();
+            return;
+        }
+
         commons.announcer().announceSubtitle("ap2.kit_selector.hint");
 
         selectKitChanger();
