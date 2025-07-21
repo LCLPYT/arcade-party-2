@@ -1,5 +1,7 @@
 package work.lclpnet.ap2.game.paintball.util;
 
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.server.world.ServerWorld;
@@ -7,22 +9,39 @@ import net.minecraft.state.property.Property;
 import net.minecraft.util.math.BlockPos;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.game.team.DyeTeamKey;
+import work.lclpnet.ap2.api.game.team.Team;
+import work.lclpnet.ap2.api.game.team.TeamManager;
+import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer;
+import work.lclpnet.ap2.impl.game.data.type.TeamRef;
+import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static java.lang.Math.max;
 import static net.minecraft.block.Blocks.*;
 
 public class PaintManager {
 
-    private final Map<Block, Paintable> paintableBlocks = new HashMap<>();
     private final ServerWorld world;
+    private final PaintballTeams teams;
+    private final TeamManager teamManager;
+    private final IntScoreDataContainer<Team, TeamRef> data;
+    private final BlockShape bounds;
     private final Paintable concrete;
+    private final Map<Block, Paintable> paintableBlocks = new HashMap<>();
+    private final Map<Block, DyeTeamKey> blockTeamMap = new HashMap<>();
+    private final Object2IntMap<DyeTeamKey> count = new Object2IntOpenHashMap<>();
 
-    public PaintManager(ServerWorld world) {
+    public PaintManager(ServerWorld world, PaintballTeams teams, TeamManager teamManager,
+                        IntScoreDataContainer<Team, TeamRef> data, BlockShape bounds) {
         this.world = world;
+        this.teams = teams;
+        this.teamManager = teamManager;
+        this.data = data;
+        this.bounds = bounds;
 
         List<Paintable> paintables = new ArrayList<>();
 
@@ -313,6 +332,11 @@ public class PaintManager {
                 Block block = paintable.blockFor(team);
                 paintableBlocks.put(block, paintable);
             }
+
+            for (PaintballTeam team : teams) {
+                Block block = paintable.blockFor(team.key());
+                blockTeamMap.put(block, team.key());
+            }
         }
     }
 
@@ -335,13 +359,25 @@ public class PaintManager {
         return replace(pos, current, paintable, target);
     }
 
-    public boolean replace(BlockPos pos, BlockState current, Paintable paintable, DyeTeamKey target) {
-        BlockState baseState = paintable.blockFor(target).getDefaultState();
+    public boolean replace(BlockPos pos, BlockState current, Paintable paintable, DyeTeamKey targetTeam) {
+        BlockState baseState = paintable.blockFor(targetTeam).getDefaultState();
         BlockState targetState = copyProperties(current, baseState);
 
         if (current == targetState) return false;
 
+        DyeTeamKey prevTeam = getTeam(current.getBlock());
+
+        if (prevTeam != null) {
+            addCount(prevTeam, -1);
+        }
+
+        addCount(targetTeam, 1);
+
         return world.setBlockState(pos, targetState, Block.FORCE_STATE | Block.NOTIFY_LISTENERS | Block.SKIP_DROPS);
+    }
+
+    private @Nullable DyeTeamKey getTeam(Block block) {
+        return blockTeamMap.get(block);
     }
 
     private BlockState copyProperties(BlockState reference, BlockState state) {
@@ -352,6 +388,42 @@ public class PaintManager {
         }
 
         return state;
+    }
+
+    private void addCount(DyeTeamKey key, int amount) {
+        Team team = teamManager.getTeam(key).orElse(null);
+
+        if (team == null) return;
+
+        synchronized (this) {
+            int score = data.getScore(team);
+            data.setScore(team, max(0, score + amount));
+        }
+    }
+
+    public void countBlocks() {
+        Object2IntMap<DyeTeamKey> count = new Object2IntOpenHashMap<>();
+
+        for (DyeTeamKey value : DyeTeamKey.values()) {
+            count.put(value, 0);
+        }
+
+        for (BlockPos pos : bounds) {
+            BlockState state = world.getBlockState(pos);
+            DyeTeamKey key = getTeam(state.getBlock());
+
+            if (key == null) continue;
+
+            count.computeInt(key, (_k, prev) -> prev + 1);
+        }
+
+        for (var entry : count.object2IntEntrySet()) {
+            teamManager.getTeam(entry.getKey()).ifPresent(team -> {
+                synchronized (this) {
+                    data.setScore(team, entry.getIntValue());
+                }
+            });
+        }
     }
 
     @SuppressWarnings("unchecked")

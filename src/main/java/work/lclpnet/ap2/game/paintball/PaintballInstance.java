@@ -21,12 +21,14 @@ import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer;
 import work.lclpnet.ap2.impl.game.data.Ordering;
 import work.lclpnet.ap2.impl.game.data.type.TeamRef;
 import work.lclpnet.ap2.impl.game.kit.KitHandler;
+import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.scene.Scene;
 import work.lclpnet.ap2.impl.scene.ServerWorldMountContext;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.collision.ChunkedCollisionDetector;
 import work.lclpnet.ap2.impl.util.collision.TickMovementObserver;
 import work.lclpnet.ap2.impl.util.world.ResetBlockWorldModifier;
+import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape;
 import work.lclpnet.lobby.game.map.GameMap;
 
 import java.util.List;
@@ -70,12 +72,16 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
         Scene scene = new Scene(new ServerWorldMountContext(world));
         scene.animate(1, gameHandle.getGameScheduler());
 
-        paintManager = new PaintManager(world);
+        BlockShape bounds = MapUtil.readShape(map, "bounds");
+
+        paintManager = new PaintManager(world, teams, getTeamManager(), data, bounds);
         paintGunManager = new PaintGunManager(world, scene, paintManager, teams, random, gameHandle.getParticipants(), winManager::isGameOver);
         paintGunManager.init(gameHandle.getHookRegistrar());
 
         replaceTemplateColors(world);
         closeBases(world);
+
+        paintManager.countBlocks();
     }
 
     private void replaceTemplateColors(ServerWorld world) {
