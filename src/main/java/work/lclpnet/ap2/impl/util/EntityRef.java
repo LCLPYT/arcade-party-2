@@ -1,18 +1,17 @@
 package work.lclpnet.ap2.impl.util;
 
 import net.minecraft.entity.Entity;
-import net.minecraft.server.world.ServerWorld;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.ds.Resolvable;
 
 import java.util.UUID;
 
-public record EntityRef<T extends Entity>(UUID uuid, ServerWorld world, Class<T> type) implements Resolvable<@Nullable T> {
+public record EntityRef<T extends Entity>(UUID uuid, World world, Class<T> type) implements Resolvable<@Nullable T> {
 
     @SuppressWarnings("unchecked")
     public EntityRef(T entity) {
-        this(entity.getUuid(), requireServerWorld(entity.getWorld()), (Class<T>) entity.getClass());
+        this(entity.getUuid(), entity.getWorld(), (Class<T>) entity.getClass());
     }
 
     @SuppressWarnings("unchecked")
@@ -25,13 +24,5 @@ public record EntityRef<T extends Entity>(UUID uuid, ServerWorld world, Class<T>
         }
 
         return null;
-    }
-
-    private static ServerWorld requireServerWorld(World world) {
-        if (world instanceof ServerWorld serverWorld) {
-            return serverWorld;
-        }
-
-        throw new IllegalArgumentException("ServerWorld is required");
     }
 }

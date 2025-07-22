@@ -69,4 +69,10 @@ public interface TeamManager {
                 .map(t -> t.equals(team))
                 .orElseGet(() -> team != null);
     }
+
+    default boolean areTeamMates(ServerPlayerEntity first, ServerPlayerEntity second) {
+        return getTeam(first)
+                .map(team -> isTeamMember(second, team))
+                .orElse(false);
+    }
 }

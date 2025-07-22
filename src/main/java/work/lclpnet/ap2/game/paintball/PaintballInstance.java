@@ -1,14 +1,17 @@
 package work.lclpnet.ap2.game.paintball;
 
+import com.jme3.math.Vector3f;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.item.Items;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.GameRules;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.game.team.DyeTeamKey;
@@ -24,16 +27,22 @@ import work.lclpnet.ap2.impl.game.kit.KitHandler;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.scene.Scene;
 import work.lclpnet.ap2.impl.scene.ServerWorldMountContext;
+import work.lclpnet.ap2.impl.scene.simulation.EntityCollisionManager;
+import work.lclpnet.ap2.impl.scene.simulation.EntityRefPhysicsElement;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.collision.ChunkedCollisionDetector;
 import work.lclpnet.ap2.impl.util.collision.TickMovementObserver;
 import work.lclpnet.ap2.impl.util.world.ResetBlockWorldModifier;
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape;
+import work.lclpnet.kibu.hook.HookRegistrar;
+import work.lclpnet.kibu.physics.api.event.collision.ElementCollisionEvents;
+import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 import work.lclpnet.lobby.game.map.GameMap;
 
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static work.lclpnet.ap2.impl.util.ItemHelper.getLeatherArmor;
@@ -111,6 +120,13 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
         teleportTeamsToSpawns();
         equipPlayers();
         setupKits();
+
+        var entityCollisions = new EntityCollisionManager(getWorld(), gameHandle::getParticipants);
+        entityCollisions.init(gameHandle.getScheduler());
+
+        commons().gameRuleBuilder()
+                .set(GameRules.NATURAL_REGENERATION, false)
+                .set(GameRules.FALL_DAMAGE, false);
     }
 
     private void setupKits() {
@@ -163,6 +179,49 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
 
         kitHandler.closeKitChanger();
         kitHandler.selectKitItem();
+
+        HookRegistrar hooks = gameHandle.getHookRegistrar();
+        hooks.registerHook(ElementCollisionEvents.ELEMENT_COLLISION, (first, second, manifoldId) -> {
+            if (first instanceof EntityRefPhysicsElement entityElem && second instanceof PaintballBullet bullet) {
+                entityElem.cast().optional().ifPresent(entity -> onBulletCollision(bullet, entity, manifoldId));
+                return;
+            }
+
+            if (second instanceof EntityRefPhysicsElement entityElem && first instanceof PaintballBullet bullet) {
+                entityElem.cast().optional().ifPresent(entity -> onBulletCollision(bullet, entity, manifoldId));
+            }
+        });
+
+        gameHandle.protect(config -> {
+            config.allow(ProtectionTypes.EXPLOSION);
+            config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, source) -> !winManager.isGameOver()
+                    && entity instanceof ServerPlayerEntity player
+                    && gameHandle.getParticipants().isParticipating(player));
+        });
+    }
+
+    private void onBulletCollision(PaintballBullet bullet, Entity entity, long manifoldId) {
+        if (bullet.isFading()
+                || !(entity instanceof ServerPlayerEntity player)
+                || !gameHandle.getParticipants().isParticipating(player))
+            return;
+
+        Vector3f velocity = bullet.getRigidBody().getLinearVelocity(new Vector3f());
+
+        if (velocity.lengthSquared() < 0.2) return;
+
+        bullet.startFading();
+
+        ServerWorld world = getWorld();
+        UUID ownerUuid = bullet.getOwner();
+
+        if (ownerUuid == null) return;
+
+        ServerPlayerEntity owner = gameHandle.getServer().getPlayerManager().getPlayer(ownerUuid);
+
+        if (owner == null || getTeamManager().areTeamMates(owner, player)) return;
+
+        player.damage(world, player.getDamageSources().mobProjectile(owner, owner), 3f);
     }
 
     private void closeBases(ServerWorld world) {
