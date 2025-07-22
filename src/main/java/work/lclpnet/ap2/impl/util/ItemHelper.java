@@ -152,12 +152,14 @@ public class ItemHelper {
         return enchantments.getOrThrow(enchantment);
     }
 
-    public static void setUnbreakable(ItemStack stack) {
+    public static ItemStack unbreakable(ItemStack stack) {
         stack.set(DataComponentTypes.UNBREAKABLE, Unit.INSTANCE);
 
         var display = stack.getOrDefault(DataComponentTypes.TOOLTIP_DISPLAY, TooltipDisplayComponent.DEFAULT);
 
         stack.set(DataComponentTypes.TOOLTIP_DISPLAY, display.with(DataComponentTypes.UNBREAKABLE, true));
+
+        return stack;
     }
 
     public static Optional<ItemStack> fromNbt(RegistryWrapper.WrapperLookup lookup, NbtCompound nbt) {

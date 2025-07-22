@@ -24,12 +24,11 @@ import work.lclpnet.ap2.game.maniac_digger.data.MdGenerator;
 import work.lclpnet.ap2.game.maniac_digger.data.MdPipe;
 import work.lclpnet.ap2.impl.game.FFAGameInstance;
 import work.lclpnet.ap2.impl.game.data.CombinedDataContainer;
+import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer;
 import work.lclpnet.ap2.impl.game.data.OrderedDataContainer;
 import work.lclpnet.ap2.impl.game.data.Ordering;
-import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.map.ServerThreadMapBootstrap;
-import work.lclpnet.ap2.impl.util.ItemHelper;
 import work.lclpnet.ap2.impl.util.world.WorldBorderUtil;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
@@ -39,6 +38,8 @@ import work.lclpnet.lobby.game.map.GameMap;
 import work.lclpnet.lobby.util.PlayerReset;
 
 import java.util.*;
+
+import static work.lclpnet.ap2.impl.util.ItemHelper.unbreakable;
 
 public class ManiacDiggerInstance extends FFAGameInstance implements MapBootstrapFunction {
 
@@ -158,17 +159,10 @@ public class ManiacDiggerInstance extends FFAGameInstance implements MapBootstra
     }
 
     private void giveItems(ServerPlayerEntity player) {
-        ItemStack pickaxe = new ItemStack(Items.IRON_PICKAXE);
-        ItemHelper.setUnbreakable(pickaxe);
-
-        ItemStack shovel = new ItemStack(Items.IRON_SHOVEL);
-        ItemHelper.setUnbreakable(shovel);
-
-        ItemStack axe = new ItemStack(Items.IRON_AXE);
-        ItemHelper.setUnbreakable(axe);
-
-        ItemStack hoe = new ItemStack(Items.IRON_HOE);
-        ItemHelper.setUnbreakable(hoe);
+        ItemStack pickaxe = unbreakable(new ItemStack(Items.IRON_PICKAXE));
+        ItemStack shovel = unbreakable(new ItemStack(Items.IRON_SHOVEL));
+        ItemStack axe = unbreakable(new ItemStack(Items.IRON_AXE));
+        ItemStack hoe = unbreakable(new ItemStack(Items.IRON_HOE));
 
         player.getInventory().setStack(0, axe);
         player.getInventory().setStack(1, pickaxe);

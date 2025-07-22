@@ -1,6 +1,7 @@
 package work.lclpnet.ap2.base.util;
 
 import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.TooltipDisplayComponent;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -8,7 +9,6 @@ import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import work.lclpnet.ap2.api.data.DataManager;
 import work.lclpnet.ap2.api.game.MiniGame;
-import work.lclpnet.kibu.inv.item.ItemStackUtil;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.lobby.game.map.GameMap;
 
@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static net.minecraft.util.Formatting.*;
+import static work.lclpnet.kibu.inv.item.ItemStackUtil.setLore;
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
 public class IconMaker {
@@ -31,7 +32,7 @@ public class IconMaker {
         List<String> authors = map.getAuthors().stream().map(dataManager::string).toList();
 
         if (!authors.isEmpty()) {
-            ItemStackUtil.setLore(icon, wrapText(translations.translateText(player, "ap2.built_by",
+            setLore(icon, wrapText(translations.translateText(player, "ap2.built_by",
                             styled(String.join(", ", authors), YELLOW))
                     .formatted(GREEN), 32));
         }
@@ -49,8 +50,14 @@ public class IconMaker {
         String descriptionKey = game.getDescriptionKey();
         Object[] descArgs = game.getDescriptionArguments();
 
-        ItemStackUtil.setLore(icon, wrapText(translations.translateText(player, descriptionKey, descArgs)
+        setLore(icon, wrapText(translations.translateText(player, descriptionKey, descArgs)
                 .formatted(GREEN), 32));
+
+        icon.set(DataComponentTypes.TOOLTIP_DISPLAY, TooltipDisplayComponent.DEFAULT
+                .with(DataComponentTypes.ATTRIBUTE_MODIFIERS, true)
+                .with(DataComponentTypes.UNBREAKABLE, true)
+                .with(DataComponentTypes.ENCHANTMENTS, true)
+                .with(DataComponentTypes.DAMAGE, true));
 
         return icon;
     }

@@ -21,8 +21,8 @@ import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.impl.game.FFAGameInstance;
 import work.lclpnet.ap2.impl.game.data.CombinedDataContainer;
-import work.lclpnet.ap2.impl.game.data.OrderedDataContainer;
 import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer;
+import work.lclpnet.ap2.impl.game.data.OrderedDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.BlockBox;
@@ -34,6 +34,8 @@ import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 
 import java.util.*;
+
+import static work.lclpnet.ap2.impl.util.ItemHelper.unbreakable;
 
 public class TreasureHunterInstance extends FFAGameInstance {
 
@@ -146,10 +148,9 @@ public class TreasureHunterInstance extends FFAGameInstance {
         var efficiency = ItemHelper.getEnchantment(Enchantments.EFFICIENCY, getWorld().getRegistryManager());
 
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
-            ItemStack stack = new ItemStack(Items.IRON_SHOVEL);
+            ItemStack stack = unbreakable(new ItemStack(Items.IRON_SHOVEL));
 
             stack.addEnchantment(efficiency, 4);
-            ItemHelper.setUnbreakable(stack);
 
             PlayerInventory inventory = player.getInventory();
             inventory.setStack(4, stack);

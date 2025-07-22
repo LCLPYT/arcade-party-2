@@ -19,7 +19,6 @@ import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.impl.game.EliminationGameInstance;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.BlockBox;
-import work.lclpnet.ap2.impl.util.ItemHelper;
 import work.lclpnet.ap2.impl.util.SoundHelper;
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
 import work.lclpnet.kibu.scheduler.Ticks;
@@ -27,6 +26,8 @@ import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 
 import java.util.Objects;
+
+import static work.lclpnet.ap2.impl.util.ItemHelper.unbreakable;
 
 public class SpleefInstance extends EliminationGameInstance {
 
@@ -86,12 +87,10 @@ public class SpleefInstance extends EliminationGameInstance {
 
     private void giveShovelsToPlayers(Translations translations) {
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
-            ItemStack stack = new ItemStack(Items.IRON_SHOVEL);
+            ItemStack stack = unbreakable(new ItemStack(Items.IRON_SHOVEL));
 
             stack.set(DataComponentTypes.CUSTOM_NAME, translations.translateText(player, "game.ap2.spleef.shovel")
                     .styled(style -> style.withItalic(false).withFormatting(Formatting.GOLD)));
-
-            ItemHelper.setUnbreakable(stack);
 
             PlayerInventory inventory = player.getInventory();
             inventory.setStack(4, stack);

@@ -30,7 +30,6 @@ import work.lclpnet.ap2.impl.game.FFAGameInstance;
 import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.util.DeathMessages;
-import work.lclpnet.ap2.impl.util.ItemHelper;
 import work.lclpnet.ap2.impl.util.TextUtil;
 import work.lclpnet.ap2.impl.util.handler.Cooldown;
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker;
@@ -48,6 +47,7 @@ import java.util.Random;
 import java.util.Set;
 
 import static net.minecraft.util.Formatting.*;
+import static work.lclpnet.ap2.impl.util.ItemHelper.unbreakable;
 
 public class OneInTheChamberInstance extends FFAGameInstance {
 
@@ -180,25 +180,22 @@ public class OneInTheChamberInstance extends FFAGameInstance {
     }
 
     private void giveCrossbowToPlayer(ServerPlayerEntity player) {
-        ItemStack stack = new ItemStack(Items.CROSSBOW);
+        ItemStack stack = unbreakable(new ItemStack(Items.CROSSBOW));
+
         stack.set(DataComponentTypes.CHARGED_PROJECTILES, ChargedProjectilesComponent.of(new ItemStack(Items.ARROW)));
 
         stack.set(DataComponentTypes.CUSTOM_NAME, TextUtil.getVanillaName(stack)
                 .styled(style -> style.withItalic(false).withFormatting(GOLD)));
-
-        ItemHelper.setUnbreakable(stack);
 
         PlayerInventory inventory = player.getInventory();
         inventory.setStack(1, stack);
     }
 
     private void giveSwordToPlayer(ServerPlayerEntity player) {
-        ItemStack stack = new ItemStack(Items.STONE_SWORD);
+        ItemStack stack = unbreakable(new ItemStack(Items.STONE_SWORD));
 
         stack.set(DataComponentTypes.CUSTOM_NAME, TextUtil.getVanillaName(stack)
                 .styled(style -> style.withItalic(false).withFormatting(GOLD)));
-
-        ItemHelper.setUnbreakable(stack);
 
         PlayerInventory inventory = player.getInventory();
         inventory.setStack(0, stack);

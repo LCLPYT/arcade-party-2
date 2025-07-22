@@ -29,7 +29,6 @@ import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.ApRegistries;
 import work.lclpnet.ap2.impl.util.BlockBox;
-import work.lclpnet.ap2.impl.util.ItemHelper;
 import work.lclpnet.ap2.impl.util.checkpoint.Checkpoint;
 import work.lclpnet.ap2.impl.util.checkpoint.CheckpointHelper;
 import work.lclpnet.ap2.impl.util.checkpoint.CheckpointManager;
@@ -51,6 +50,8 @@ import work.lclpnet.lobby.game.map.GameMap;
 import work.lclpnet.lobby.game.map.MapUtils;
 
 import java.util.*;
+
+import static work.lclpnet.ap2.impl.util.ItemHelper.unbreakable;
 
 public class PigRaceInstance extends FFAGameInstance {
 
@@ -262,8 +263,8 @@ public class PigRaceInstance extends FFAGameInstance {
     private void giveStick(ServerPlayerEntity player) {
         Translations translations = gameHandle.getTranslations();
 
-        ItemStack stick = new ItemStack(Items.CARROT_ON_A_STICK);
-        ItemHelper.setUnbreakable(stick);
+        ItemStack stick = unbreakable(new ItemStack(Items.CARROT_ON_A_STICK));
+
         stick.set(DataComponentTypes.CUSTOM_NAME, translations.translateText(player, "game.ap2.pig_race.boost")
                 .styled(style -> style.withItalic(false).withFormatting(Formatting.GOLD)));
 

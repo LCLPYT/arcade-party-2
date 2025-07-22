@@ -22,6 +22,8 @@ import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
 
+import static work.lclpnet.ap2.impl.util.ItemHelper.unbreakable;
+
 public class CCKitManager {
 
     private final TeamManager teamManager;
@@ -38,24 +40,19 @@ public class CCKitManager {
     public void giveItems(ServerPlayerEntity player) {
         PlayerInventory inventory = player.getInventory();
 
-        ItemStack sword = new ItemStack(Items.IRON_SWORD);
-        ItemHelper.setUnbreakable(sword);
+        ItemStack sword = unbreakable(new ItemStack(Items.IRON_SWORD));
         inventory.setStack(0, sword);
 
-        ItemStack pickaxe = new ItemStack(Items.IRON_PICKAXE);
-        ItemHelper.setUnbreakable(pickaxe);
+        ItemStack pickaxe = unbreakable(new ItemStack(Items.IRON_PICKAXE));
         inventory.setStack(1, pickaxe);
 
-        ItemStack axe = new ItemStack(Items.IRON_AXE);
-        ItemHelper.setUnbreakable(axe);
+        ItemStack axe = unbreakable(new ItemStack(Items.IRON_AXE));
         inventory.setStack(2, axe);
 
-        ItemStack shovel = new ItemStack(Items.IRON_SHOVEL);
-        ItemHelper.setUnbreakable(shovel);
+        ItemStack shovel = unbreakable(new ItemStack(Items.IRON_SHOVEL));
         inventory.setStack(3, shovel);
 
-        ItemStack hoe = new ItemStack(Items.IRON_HOE);
-        ItemHelper.setUnbreakable(hoe);
+        ItemStack hoe = unbreakable(new ItemStack(Items.IRON_HOE));
         inventory.setStack(4, hoe);
 
         DynamicRegistryManager registryManager = world.getRegistryManager();
@@ -65,28 +62,24 @@ public class CCKitManager {
                 .orElse(ArmorTrimMaterials.IRON);
         var trimMaterial = ItemHelper.getTrimMaterial(registryManager, trimMaterialKey);
 
-        ItemStack helmet = new ItemStack(Items.IRON_HELMET);
+        ItemStack helmet = unbreakable(new ItemStack(Items.IRON_HELMET));
         helmet.set(DataComponentTypes.TRIM, new ArmorTrim(trimMaterial, trimPattern));
         helmet.set(DataComponentTypes.TOOLTIP_DISPLAY, TooltipDisplayComponent.DEFAULT.with(DataComponentTypes.TRIM, true));
-        ItemHelper.setUnbreakable(helmet);
         player.equipStack(EquipmentSlot.HEAD, helmet);
 
-        ItemStack chestPlate = new ItemStack(Items.IRON_CHESTPLATE);
+        ItemStack chestPlate = unbreakable(new ItemStack(Items.IRON_CHESTPLATE));
         chestPlate.set(DataComponentTypes.TRIM, new ArmorTrim(trimMaterial, trimPattern));
         chestPlate.set(DataComponentTypes.TOOLTIP_DISPLAY, TooltipDisplayComponent.DEFAULT.with(DataComponentTypes.TRIM, true));
-        ItemHelper.setUnbreakable(chestPlate);
         player.equipStack(EquipmentSlot.CHEST, chestPlate);
 
-        ItemStack leggings = new ItemStack(Items.IRON_LEGGINGS);
+        ItemStack leggings = unbreakable(new ItemStack(Items.IRON_LEGGINGS));
         leggings.set(DataComponentTypes.TRIM, new ArmorTrim(trimMaterial, trimPattern));
         leggings.set(DataComponentTypes.TOOLTIP_DISPLAY, TooltipDisplayComponent.DEFAULT.with(DataComponentTypes.TRIM, true));
-        ItemHelper.setUnbreakable(leggings);
         player.equipStack(EquipmentSlot.LEGS, leggings);
 
-        ItemStack boots = new ItemStack(Items.IRON_BOOTS);
+        ItemStack boots = unbreakable(new ItemStack(Items.IRON_BOOTS));
         boots.set(DataComponentTypes.TRIM, new ArmorTrim(trimMaterial, trimPattern));
         boots.set(DataComponentTypes.TOOLTIP_DISPLAY, TooltipDisplayComponent.DEFAULT.with(DataComponentTypes.TRIM, true));
-        ItemHelper.setUnbreakable(boots);
         player.equipStack(EquipmentSlot.FEET, boots);
     }
 }

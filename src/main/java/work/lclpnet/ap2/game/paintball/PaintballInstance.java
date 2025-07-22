@@ -1,23 +1,30 @@
 package work.lclpnet.ap2.game.paintball;
 
 import com.jme3.math.Vector3f;
+import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EquipmentSlot;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.damage.DamageTypes;
 import net.minecraft.item.Items;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.GameMode;
 import net.minecraft.world.GameRules;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.game.team.DyeTeamKey;
 import work.lclpnet.ap2.api.game.team.Team;
 import work.lclpnet.ap2.api.map.MapBootstrapFunction;
+import work.lclpnet.ap2.core.hook.SpectatePlayerCallback;
 import work.lclpnet.ap2.game.paintball.kit.RifleKit;
 import work.lclpnet.ap2.game.paintball.util.*;
 import work.lclpnet.ap2.impl.game.TeamGameInstance;
@@ -33,10 +40,13 @@ import work.lclpnet.ap2.impl.scene.simulation.EntityRefPhysicsElement;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.collision.ChunkedCollisionDetector;
 import work.lclpnet.ap2.impl.util.collision.TickMovementObserver;
+import work.lclpnet.ap2.impl.util.handler.Cooldown;
 import work.lclpnet.ap2.impl.util.world.ResetBlockWorldModifier;
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape;
 import work.lclpnet.kibu.hook.HookRegistrar;
+import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks;
 import work.lclpnet.kibu.physics.api.event.collision.ElementCollisionEvents;
+import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 import work.lclpnet.lobby.game.map.GameMap;
 
@@ -47,12 +57,14 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static work.lclpnet.ap2.impl.util.ItemHelper.getLeatherArmor;
+import static work.lclpnet.ap2.impl.util.ItemHelper.unbreakable;
 
 public class PaintballInstance extends TeamGameInstance implements MapBootstrapFunction {
 
     private final IntScoreDataContainer<Team, TeamRef> data = new IntScoreDataContainer<>(this::createReference, Ordering.DESCENDING, "game.ap2.paintball.blocks_painted");
     private final Random random = new Random();
     private final TickMovementObserver movementObserver;
+    private final Cooldown respawnCooldown;
 
     private PaintManager paintManager;
     private KitHandler kitHandler;
@@ -67,6 +79,8 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
         movementObserver = new TickMovementObserver(collisionDetector, gameHandle.getParticipants()::isParticipating);
 
         getTeamManager().setUseColorCodes(true);
+
+        respawnCooldown = new Cooldown(gameHandle.getGameScheduler());
     }
 
     @Override
@@ -161,10 +175,10 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
             int color = instance.key().color();
 
             for (ServerPlayerEntity player : team.getPlayers()) {
-                player.equipStack(EquipmentSlot.HEAD, getLeatherArmor(Items.LEATHER_HELMET, color));
-                player.equipStack(EquipmentSlot.CHEST, getLeatherArmor(Items.LEATHER_CHESTPLATE, color));
-                player.equipStack(EquipmentSlot.LEGS, getLeatherArmor(Items.LEATHER_LEGGINGS, color));
-                player.equipStack(EquipmentSlot.FEET, getLeatherArmor(Items.LEATHER_BOOTS, color));
+                player.equipStack(EquipmentSlot.HEAD, unbreakable(getLeatherArmor(Items.LEATHER_HELMET, color)));
+                player.equipStack(EquipmentSlot.CHEST, unbreakable(getLeatherArmor(Items.LEATHER_CHESTPLATE, color)));
+                player.equipStack(EquipmentSlot.LEGS, unbreakable(getLeatherArmor(Items.LEATHER_LEGGINGS, color)));
+                player.equipStack(EquipmentSlot.FEET, unbreakable(getLeatherArmor(Items.LEATHER_BOOTS, color)));
             }
         }
     }
@@ -181,7 +195,10 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
         kitHandler.closeKitChanger();
         kitHandler.selectKitItem();
 
+        setupRespawnCooldown();
+
         HookRegistrar hooks = gameHandle.getHookRegistrar();
+
         hooks.registerHook(ElementCollisionEvents.ELEMENT_COLLISION, (first, second, manifoldId) -> {
             if (first instanceof EntityRefPhysicsElement entityElem && second instanceof PaintballBullet bullet) {
                 entityElem.cast().optional().ifPresent(entity -> onBulletCollision(bullet, entity));
@@ -193,12 +210,36 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
             }
         });
 
+        hooks.registerHook(ServerLivingEntityHooks.ALLOW_DAMAGE, this::onDamage);
+
+        hooks.registerHook(SpectatePlayerCallback.HOOK, (spectator, target)
+                -> gameHandle.getParticipants().isParticipating(spectator));
+
         gameHandle.protect(config -> {
             config.allow(ProtectionTypes.EXPLOSION);
-            config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, source) -> !winManager.isGameOver()
-                    && source.isOf(DamageTypes.ARROW)
-                    && entity instanceof ServerPlayerEntity player
-                    && gameHandle.getParticipants().isParticipating(player));
+            config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, source)
+                    -> entity instanceof ServerPlayerEntity player
+                    && gameHandle.getParticipants().isParticipating(player)
+                    && (source.isOf(DamageTypes.ARROW) || source.isOf(DamageTypes.EXPLOSION)));
+        });
+    }
+
+    private void setupRespawnCooldown() {
+        TaskScheduler scheduler = gameHandle.getGameScheduler();
+
+        respawnCooldown.setOnCooldownOver(player -> {
+            teams.teamOf(player).ifPresent(pbt -> teleportToTeamSpawn(player, pbt));
+
+            player.getAbilities().setFlySpeed(0);
+            player.sendAbilitiesUpdate();
+
+            // delay game mode change one tick to prevent other players from seeing the teleport
+            scheduler.immediate(() -> {
+                player.getAbilities().setFlySpeed(0.05f);
+                player.sendAbilitiesUpdate();
+
+                player.changeGameMode(gameHandle.getPlayerUtil().getDefaultGameMode());
+            });
         });
     }
 
@@ -254,18 +295,52 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
 
     @Override
     protected void teleportTeamsToSpawns() {
-        ServerWorld world = getWorld();
-
         for (PaintballTeam pbt : teams) {
             Team team = getTeamManager().getTeam(pbt.key()).orElse(null);
 
             if (team == null) continue;
 
-            Vec3d pos = pbt.spawn();
-
             for (ServerPlayerEntity player : team.getPlayers()) {
-                player.teleport(world, pos.getX(), pos.getY(), pos.getZ(), Set.of(), pbt.yaw(), 0, true);
+                teleportToTeamSpawn(player, pbt);
             }
         }
+    }
+
+    private void teleportToTeamSpawn(ServerPlayerEntity player, PaintballTeam pbt) {
+        Vec3d pos = pbt.spawn();
+
+        player.teleport(getWorld(), pos.getX(), pos.getY(), pos.getZ(), Set.of(), pbt.yaw(), 0, true);
+    }
+
+    private boolean onDamage(LivingEntity entity, DamageSource source, float amount) {
+        if (winManager.isGameOver()
+                || !(entity instanceof ServerPlayerEntity victim)
+                || !gameHandle.getParticipants().isParticipating(victim)) return false;
+
+        // respect hurt time, except for explosions
+        if (!source.isOf(DamageTypes.EXPLOSION) && victim.hurtTime > 0) {
+            return false;
+        }
+
+        if ((victim.getHealth() - amount) <= 0) {
+            onLethalDamage(source, victim, amount);
+            return false;
+        }
+
+        return true;
+    }
+
+    private void onLethalDamage(DamageSource source, ServerPlayerEntity player, float amount) {
+        player.getDamageTracker().onDamage(source, amount);
+
+        gameHandle.getDeathMessages().getDeathMessage(player, source)
+                .sendTo(PlayerLookup.all(gameHandle.getServer()));
+
+        getWorld().playSound(null, player.getBlockPos(), SoundEvents.ENTITY_PLAYER_DEATH, SoundCategory.PLAYERS, 0.8f, 0.8f);
+
+        player.changeGameMode(GameMode.SPECTATOR);
+        player.setHealth(20);
+
+        respawnCooldown.setCooldown(player, 50);
     }
 }
