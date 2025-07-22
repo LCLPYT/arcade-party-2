@@ -1,6 +1,7 @@
 package work.lclpnet.ap2.game.paintball.util;
 
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.util.math.BlockPos;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -98,6 +99,16 @@ public class PaintballTeams implements Iterable<PaintballTeam> {
         return teamManager.getTeam(player)
                 .map(Team::getKey)
                 .map(teamsByKey::get);
+    }
+
+    public Optional<PaintballTeam> teamBaseAt(BlockPos pos) {
+        for (PaintballTeam team : teams) {
+            if (team.baseBounds().contains(pos)) {
+                return Optional.of(team);
+            }
+        }
+
+        return Optional.empty();
     }
 
     @Override

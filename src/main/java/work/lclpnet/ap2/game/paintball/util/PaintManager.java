@@ -360,6 +360,11 @@ public class PaintManager {
     }
 
     public boolean replace(BlockPos pos, BlockState current, Paintable paintable, DyeTeamKey targetTeam) {
+        // prevent painting bases of other teams
+        if (teams.teamBaseAt(pos)
+                .map(team -> team.key() != targetTeam)
+                .orElse(false)) return false;
+
         BlockState baseState = paintable.blockFor(targetTeam).getDefaultState();
         BlockState targetState = copyProperties(current, baseState);
 

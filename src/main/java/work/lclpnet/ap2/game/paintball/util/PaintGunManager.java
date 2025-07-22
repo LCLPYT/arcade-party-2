@@ -6,8 +6,11 @@ import com.jme3.math.Vector3f;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.ShapeContext;
 import net.minecraft.particle.DustParticleEffect;
+import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
@@ -150,6 +153,12 @@ public class PaintGunManager {
         rigidBody.setPhysicsLocation(toBullet(pos));
 
         scene.add(obj);
+
+        world.playSound(null, player.getX(), player.getY(), player.getZ(),
+                SoundEvents.ENTITY_ITEM_PICKUP, SoundCategory.PLAYERS, 0.5f, 2f);
+
+        world.spawnParticles(ParticleTypes.SMOKE, player.getX(), player.getEyeY(), player.getZ(), 3,
+                0.2, 0.2, 0.2, 0.1);
     }
 
     private Vec3d getProjectileSpawn(ServerPlayerEntity player, double scale) {

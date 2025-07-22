@@ -314,16 +314,21 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
 
     private boolean onDamage(LivingEntity entity, DamageSource source, float amount) {
         if (winManager.isGameOver()
-                || !(entity instanceof ServerPlayerEntity victim)
-                || !gameHandle.getParticipants().isParticipating(victim)) return false;
+                || !(entity instanceof ServerPlayerEntity player)
+                || !gameHandle.getParticipants().isParticipating(player)) return false;
+
+        PaintballTeam team = teams.teamOf(player).orElse(null);
+
+        // prevent damage in base
+        if (team == null || team.baseBounds().contains(player.getPos())) return false;
 
         // respect hurt time, except for explosions
-        if (!source.isOf(DamageTypes.EXPLOSION) && victim.hurtTime > 0) {
+        if (!source.isOf(DamageTypes.EXPLOSION) && player.hurtTime > 0) {
             return false;
         }
 
-        if ((victim.getHealth() - amount) <= 0) {
-            onLethalDamage(source, victim, amount);
+        if ((player.getHealth() - amount) <= 0) {
+            onLethalDamage(source, player, amount);
             return false;
         }
 
