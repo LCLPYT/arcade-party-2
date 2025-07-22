@@ -78,29 +78,32 @@ public class PaintGunManager {
         if (team == null) return;
 
         DyeTeamKey key = team.key();
-        final float dist = 0.65f;
+        final float d = 0.75f;
         final boolean bulletIsObjA = PersistentManifolds.getBodyAId(manifoldId) == bullet.getRigidBody().nativeId();
 
         for (long pointId : PersistentManifolds.listPointIds(manifoldId)) {
             Vector3f pos = new Vector3f();
+            Vector3f normal = new Vector3f();
 
             if (bulletIsObjA) ManifoldPoints.getPositionWorldOnB(pointId, pos);
             else ManifoldPoints.getPositionWorldOnA(pointId, pos);
+
+            ManifoldPoints.getNormalWorldOnB(pointId, normal);
+
+            pos = pos.subtract(normal.mult(0.1f));
 
             // hit pos
             tryPaint(bullet, key, pos, 0, 0, 0);
 
             // cardinal directions
-            tryPaint(bullet, key, pos,  dist,  0,  0);
-            tryPaint(bullet, key, pos,  0,  dist,  0);
-            tryPaint(bullet, key, pos,  0,  0,  dist);
-            tryPaint(bullet, key, pos, -dist,  0,  0);
-            tryPaint(bullet, key, pos,  0, -dist,  0);
-            tryPaint(bullet, key, pos,  0,  0, -dist);
+            tryPaint(bullet, key, pos,  d,  0,  0);
+            tryPaint(bullet, key, pos,  0,  d,  0);
+            tryPaint(bullet, key, pos,  0,  0,  d);
+            tryPaint(bullet, key, pos, -d,  0,  0);
+            tryPaint(bullet, key, pos,  0, -d,  0);
+            tryPaint(bullet, key, pos,  0,  0, -d);
 
             // diagonal
-            final float d = dist / 3f;
-
             tryPaint(bullet, key, pos,  d,  d,  d);
             tryPaint(bullet, key, pos,  d,  d, -d);
             tryPaint(bullet, key, pos,  d, -d,  d);
@@ -155,10 +158,10 @@ public class PaintGunManager {
         scene.add(obj);
 
         world.playSound(null, player.getX(), player.getY(), player.getZ(),
-                SoundEvents.ENTITY_ITEM_PICKUP, SoundCategory.PLAYERS, 0.5f, 2f);
+                SoundEvents.ENTITY_ITEM_PICKUP, SoundCategory.PLAYERS, 0.2f, 2f);
 
-        world.spawnParticles(ParticleTypes.SMOKE, player.getX(), player.getEyeY(), player.getZ(), 3,
-                0.2, 0.2, 0.2, 0.1);
+        world.spawnParticles(ParticleTypes.SMOKE, player.getX(), player.getEyeY(), player.getZ(), 2,
+                0.3, 0.3, 0.3, 0.2);
     }
 
     private Vec3d getProjectileSpawn(ServerPlayerEntity player, double scale) {
@@ -181,7 +184,7 @@ public class PaintGunManager {
     }
 
     private Vec3d getProjectileVelocity(ServerPlayerEntity player) {
-        final double basePower = 12;
+        final double basePower = 16;
         final double minPowerScale = 0.65;
         final double maxPowerScale = 1.0;
 

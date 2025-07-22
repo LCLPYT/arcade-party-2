@@ -7,6 +7,7 @@ import net.minecraft.server.world.ServerWorld;
 import org.joml.Vector3d;
 import work.lclpnet.ap2.impl.scene.animation.AnimationContext;
 import work.lclpnet.ap2.impl.scene.object.PhysicsBlockDisplayObject;
+import work.lclpnet.ap2.impl.scene.simulation.SceneRigidBody;
 import work.lclpnet.kibu.physics.impl.bullet.collision.body.shape.MinecraftShape;
 
 import java.util.UUID;
@@ -20,7 +21,7 @@ public class PaintballBullet extends PhysicsBlockDisplayObject {
             FADE_TIME_SECONDS = 1.5d;
 
     private static final int
-            MAX_HITS = 6;
+            MAX_HITS = 12;
 
     @Getter @Setter
     private UUID owner = null;
@@ -41,6 +42,12 @@ public class PaintballBullet extends PhysicsBlockDisplayObject {
         shape.setMargin(0.02f);
 
         return shape;
+    }
+
+    @Override
+    public void updateRigidBody(SceneRigidBody rigidBody) {
+        super.updateRigidBody(rigidBody);
+        rigidBody.setMass(.1f);
     }
 
     @Override
