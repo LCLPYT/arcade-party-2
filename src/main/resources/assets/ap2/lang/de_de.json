@@ -292,6 +292,7 @@
   "game.ap2.paintball.description": "Färbe so viele Blöcke in deiner Teamfarbe wie möglich.",
   "game.ap2.paintball.task": "Färbe Blöcke",
   "game.ap2.paintball.blocks_painted": "%s Blöcke gefärbt",
+  "game.ap2.paintball.game_over": "Vorbei!",
   "game.ap2.paintball.kit.rifle": "Tintengewehr",
   "game.ap2.paintball.kit.rifle.description": "Ein schnell-feuerndes Tintengewehr mit mittlerer Reichweite.",
   "item.ap2.bow_spleef.triple_shot": "Dreifachschuss",

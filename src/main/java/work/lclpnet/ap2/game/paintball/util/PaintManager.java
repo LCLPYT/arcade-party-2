@@ -33,7 +33,7 @@ public class PaintManager {
     private final Paintable concrete;
     private final Map<Block, Paintable> paintableBlocks = new HashMap<>();
     private final Map<Block, DyeTeamKey> blockTeamMap = new HashMap<>();
-    private final Object2IntMap<DyeTeamKey> count = new Object2IntOpenHashMap<>();
+    private boolean frozen = false;
 
     public PaintManager(ServerWorld world, PaintballTeams teams, TeamManager teamManager,
                         IntScoreDataContainer<Team, TeamRef> data, BlockShape bounds) {
@@ -360,6 +360,8 @@ public class PaintManager {
     }
 
     public boolean replace(BlockPos pos, BlockState current, Paintable paintable, DyeTeamKey targetTeam) {
+        if (frozen) return false;
+
         // prevent painting bases of other teams
         if (teams.teamBaseAt(pos)
                 .map(team -> team.key() != targetTeam)
@@ -429,6 +431,10 @@ public class PaintManager {
                 }
             });
         }
+    }
+
+    public void freeze() {
+        frozen = true;
     }
 
     @SuppressWarnings("unchecked")
