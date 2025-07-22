@@ -1,16 +1,22 @@
 package work.lclpnet.ap2.impl.util;
 
+import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.projectile.ProjectileEntity;
 import net.minecraft.entity.projectile.thrown.SnowballEntity;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.*;
+import net.minecraft.world.GameRules;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.game.team.Team;
 import work.lclpnet.ap2.api.game.team.TeamKey;
+import work.lclpnet.ap2.core.hook.PlayerDeathMessageCallback;
+import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.kibu.translate.text.TranslatedText;
 
@@ -113,5 +119,20 @@ public class DeathMessages {
         }
 
         return killedBy(player, killer);
+    }
+
+    public void replaceVanillaDeathMessages(ServerWorld world, HookRegistrar hooks) {
+        world.getGameRules().get(GameRules.SHOW_DEATH_MESSAGES).set(false, world.getServer());
+
+        hooks.registerHook(PlayerDeathMessageCallback.HOOK, (player, source, currentMsg) -> {
+            MinecraftServer server = player.getServer();
+
+            if (server == null) return currentMsg;
+
+            TranslatedText msg = getDeathMessage(player, source);
+            msg.sendTo(PlayerLookup.all(server));
+
+            return msg.translateFor(player);  // shown in death screen, but not sent to chat because of the game rule
+        });
     }
 }

@@ -6,6 +6,7 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EquipmentSlot;
+import net.minecraft.entity.damage.DamageTypes;
 import net.minecraft.item.Items;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -183,24 +184,25 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
         HookRegistrar hooks = gameHandle.getHookRegistrar();
         hooks.registerHook(ElementCollisionEvents.ELEMENT_COLLISION, (first, second, manifoldId) -> {
             if (first instanceof EntityRefPhysicsElement entityElem && second instanceof PaintballBullet bullet) {
-                entityElem.cast().optional().ifPresent(entity -> onBulletCollision(bullet, entity, manifoldId));
+                entityElem.cast().optional().ifPresent(entity -> onBulletCollision(bullet, entity));
                 return;
             }
 
             if (second instanceof EntityRefPhysicsElement entityElem && first instanceof PaintballBullet bullet) {
-                entityElem.cast().optional().ifPresent(entity -> onBulletCollision(bullet, entity, manifoldId));
+                entityElem.cast().optional().ifPresent(entity -> onBulletCollision(bullet, entity));
             }
         });
 
         gameHandle.protect(config -> {
             config.allow(ProtectionTypes.EXPLOSION);
             config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, source) -> !winManager.isGameOver()
+                    && source.isOf(DamageTypes.ARROW)
                     && entity instanceof ServerPlayerEntity player
                     && gameHandle.getParticipants().isParticipating(player));
         });
     }
 
-    private void onBulletCollision(PaintballBullet bullet, Entity entity, long manifoldId) {
+    private void onBulletCollision(PaintballBullet bullet, Entity entity) {
         if (bullet.isFading()
                 || !(entity instanceof ServerPlayerEntity player)
                 || !gameHandle.getParticipants().isParticipating(player))
@@ -221,7 +223,7 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
 
         if (owner == null || getTeamManager().areTeamMates(owner, player)) return;
 
-        player.damage(world, player.getDamageSources().mobProjectile(owner, owner), 3f);
+        player.damage(world, player.getDamageSources().create(DamageTypes.ARROW, owner, owner), 3f);
     }
 
     private void closeBases(ServerWorld world) {

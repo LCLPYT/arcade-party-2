@@ -127,6 +127,8 @@ public abstract class BaseGameInstance implements MiniGameInstance {
 
         sendMapCredits();
 
+        gameHandle.getDeathMessages().replaceVanillaDeathMessages(world, gameHandle.getHookRegistrar());
+
         prepare();
 
         int initialDelay = getInitialDelay();

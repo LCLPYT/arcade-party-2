@@ -2,8 +2,9 @@ package work.lclpnet.ap2.core.mixin;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.llamalad7.mixinextras.sugar.Local;
 import net.minecraft.entity.Entity;
-import net.minecraft.server.MinecraftServer;
+import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
@@ -11,7 +12,9 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import work.lclpnet.ap2.core.hook.PlayerDeathMessageCallback;
 import work.lclpnet.ap2.core.hook.SpectatePlayerCallback;
 import work.lclpnet.ap2.core.type.ApServerPlayerEntity;
 
@@ -37,12 +40,6 @@ public class ServerPlayerEntityMixin implements ApServerPlayerEntity {
     @Override
     public void ap2$setPlayerListName(@Nullable Text name) {
         this.playerListName = name;
-
-        var self = (ServerPlayerEntity) (Object) this;
-        MinecraftServer server = self.getServer();
-
-        if (server == null) return;
-
     }
 
     @Inject(
@@ -54,5 +51,17 @@ public class ServerPlayerEntityMixin implements ApServerPlayerEntity {
         if (cir.getReturnValue() == null) {
             cir.setReturnValue(playerListName);
         }
+    }
+
+    @ModifyArg(
+            method = "onDeath",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/network/packet/s2c/play/DeathMessageS2CPacket;<init>(ILnet/minecraft/text/Text;)V"
+            )
+    )
+    private Text ap2$modifyDeathMessage(Text msg, @Local(argsOnly = true) DamageSource source) {
+        var self = (ServerPlayerEntity) (Object) this;
+        return PlayerDeathMessageCallback.HOOK.invoker().modifyDeathMessage(self, source, msg);
     }
 }
