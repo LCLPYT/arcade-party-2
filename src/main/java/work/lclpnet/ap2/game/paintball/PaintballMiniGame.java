@@ -17,7 +17,8 @@ public class PaintballMiniGame implements MiniGame {
 
     @Override
     public boolean canBePlayed(GameStartContext context) {
-        return context.getParticipantCount() % 2 == 0;
+        int count = context.getParticipantCount();
+        return count == 2 || count >= 4;
     }
 
     @Override

@@ -22,9 +22,11 @@ import work.lclpnet.ap2.api.game.team.DyeTeamKey;
 import work.lclpnet.ap2.impl.scene.Scene;
 import work.lclpnet.ap2.impl.scene.simulation.SceneRigidBody;
 import work.lclpnet.ap2.impl.util.RayCastUtil;
+import work.lclpnet.ap2.impl.util.handler.SimpleCooldown;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.physics.api.event.collision.ElementCollisionEvents;
 import work.lclpnet.kibu.physics.impl.bullet.collision.space.MinecraftSpace;
+import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 
 import java.util.Random;
 import java.util.function.BooleanSupplier;
@@ -42,6 +44,7 @@ public class PaintGunManager {
     private final Random random;
     private final Participants participants;
     private final BooleanSupplier gameOver;
+    private final SimpleCooldown cooldown;
     @Setter
     private boolean shootingEnabled = false;
 
@@ -54,9 +57,11 @@ public class PaintGunManager {
         this.random = random;
         this.participants = participants;
         this.gameOver = gameOver;
+
+        cooldown = new SimpleCooldown(world.getServer().getPlayerManager());
     }
 
-    public void init(HookRegistrar hooks) {
+    public void init(HookRegistrar hooks, TaskScheduler scheduler) {
         MinecraftSpace.get(world).setCollisionEventsEnabled(true);
 
         hooks.registerHook(ElementCollisionEvents.BLOCK_COLLISION, (element, terrainObject, manifoldId) -> {
@@ -64,6 +69,8 @@ public class PaintGunManager {
                 onBulletHitTerrain(bullet, manifoldId);
             }
         });
+
+        cooldown.init(scheduler);
     }
 
     private void onBulletHitTerrain(PaintballBullet bullet, long manifoldId) {
@@ -132,7 +139,7 @@ public class PaintGunManager {
     }
 
     public void shoot(ServerPlayerEntity player) {
-        if (!shootingEnabled) return;
+        if (!shootingEnabled || cooldown.isOnCooldown(player)) return;
 
         BlockState state = teams.teamOf(player)
                 .map(PaintballTeam::key)
@@ -140,6 +147,8 @@ public class PaintGunManager {
                 .orElse(null);
 
         if (state == null) return;
+
+        cooldown.setCooldown(player, 3);
 
         final double scale = 0.2;
 

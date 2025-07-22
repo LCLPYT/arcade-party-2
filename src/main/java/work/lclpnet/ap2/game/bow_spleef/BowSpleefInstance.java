@@ -29,8 +29,8 @@ import work.lclpnet.ap2.impl.game.item.SpecialItems;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.ItemHelper;
 import work.lclpnet.ap2.impl.util.SoundHelper;
-import work.lclpnet.ap2.impl.util.handler.Cooldown;
 import work.lclpnet.ap2.impl.util.handler.DoubleJumpHandler;
+import work.lclpnet.ap2.impl.util.handler.VisualCooldown;
 import work.lclpnet.combatctl.impl.CombatStyles;
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
 import work.lclpnet.kibu.hook.Hook;
@@ -63,7 +63,7 @@ public class BowSpleefInstance extends EliminationGameInstance {
     public BowSpleefInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
 
-        var cooldown = new Cooldown(gameHandle.getScheduler());
+        var cooldown = new VisualCooldown(gameHandle.getScheduler());
 
         doubleJumpHandler = new DoubleJumpHandler(player -> !cooldown.isOnCooldown(player) && !heavyWeightItem.isHeavyWeighted(player));
         heavyWeightItem.setDoubleJumpHandler(doubleJumpHandler);

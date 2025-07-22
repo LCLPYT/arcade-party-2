@@ -41,7 +41,7 @@ import work.lclpnet.ap2.impl.scene.simulation.EntityRefPhysicsElement;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.collision.ChunkedCollisionDetector;
 import work.lclpnet.ap2.impl.util.collision.TickMovementObserver;
-import work.lclpnet.ap2.impl.util.handler.Cooldown;
+import work.lclpnet.ap2.impl.util.handler.VisualCooldown;
 import work.lclpnet.ap2.impl.util.title.AnimatedTitle;
 import work.lclpnet.ap2.impl.util.world.ResetBlockWorldModifier;
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape;
@@ -69,7 +69,7 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
     private final IntScoreDataContainer<Team, TeamRef> data = new IntScoreDataContainer<>(this::createReference, Ordering.DESCENDING, "game.ap2.paintball.blocks_painted");
     private final Random random = new Random();
     private final TickMovementObserver movementObserver;
-    private final Cooldown respawnCooldown;
+    private final VisualCooldown respawnCooldown;
 
     private PaintManager paintManager;
     private KitHandler kitHandler;
@@ -86,7 +86,7 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
 
         getTeamManager().setUseColorCodes(true);
 
-        respawnCooldown = new Cooldown(gameHandle.getGameScheduler());
+        respawnCooldown = new VisualCooldown(gameHandle.getGameScheduler());
     }
 
     @Override
@@ -106,7 +106,7 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
 
         paintManager = new PaintManager(world, teams, getTeamManager(), data, bounds);
         paintGunManager = new PaintGunManager(world, scene, paintManager, teams, random, gameHandle.getParticipants(), winManager::isGameOver);
-        paintGunManager.init(gameHandle.getHookRegistrar());
+        paintGunManager.init(gameHandle.getHookRegistrar(), gameHandle.getGameScheduler());
 
         replaceTemplateColors(world);
         closeBases(world);
@@ -373,11 +373,6 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
         teleportPlayersToResults();
 
         gameHandle.getGameScheduler().interval(this::teleportPlayersToResults, 1).whenComplete(() -> {
-            for (ServerPlayerEntity player : PlayerLookup.all(gameHandle.getServer())) {
-                player.changeGameMode(GameMode.SPECTATOR);
-                player.getAbilities().setFlySpeed(0.05f);
-                player.sendAbilitiesUpdate();
-            }
         });
 
         commons().announcer().announce("game.ap2.paintball.game_over", null);
@@ -408,8 +403,15 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
                 .map(this::createReference)
                 .toList();
 
-        animatedTitle.add(new PaintballResultAnimation(teamRefs, data, gameHandle.getServer(),
-                gameHandle.getTranslations(), winManager::complete));
+        animatedTitle.add(new PaintballResultAnimation(teamRefs, data, gameHandle.getServer(), gameHandle.getTranslations(), () -> {
+            for (ServerPlayerEntity player : PlayerLookup.all(gameHandle.getServer())) {
+                player.changeGameMode(GameMode.SPECTATOR);
+                player.getAbilities().setFlySpeed(0.05f);
+                player.sendAbilitiesUpdate();
+            }
+
+            winManager.complete();
+        }));
 
         animatedTitle.start(gameHandle.getGameScheduler(), 1);
 
