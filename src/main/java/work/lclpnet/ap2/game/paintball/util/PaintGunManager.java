@@ -3,6 +3,7 @@ package work.lclpnet.ap2.game.paintball.util;
 import com.jme3.bullet.collision.ManifoldPoints;
 import com.jme3.bullet.collision.PersistentManifolds;
 import com.jme3.math.Vector3f;
+import lombok.Setter;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.ShapeContext;
 import net.minecraft.particle.DustParticleEffect;
@@ -41,6 +42,8 @@ public class PaintGunManager {
     private final Random random;
     private final Participants participants;
     private final BooleanSupplier gameOver;
+    @Setter
+    private boolean shootingEnabled = false;
 
     public PaintGunManager(ServerWorld world, Scene scene, PaintManager paintManager, PaintballTeams teams,
                            Random random, Participants participants, BooleanSupplier gameOver) {
@@ -129,6 +132,8 @@ public class PaintGunManager {
     }
 
     public void shoot(ServerPlayerEntity player) {
+        if (!shootingEnabled) return;
+
         BlockState state = teams.teamOf(player)
                 .map(PaintballTeam::key)
                 .map(paintManager::getPaintBulletState)

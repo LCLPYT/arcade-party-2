@@ -61,6 +61,10 @@ import static work.lclpnet.ap2.impl.util.ItemHelper.unbreakable;
 
 public class PaintballInstance extends TeamGameInstance implements MapBootstrapFunction {
 
+    private static final int
+            MIN_DURATION_SECONDS = 120,
+            MAX_DURATION_SECONDS = 180;
+
     private final IntScoreDataContainer<Team, TeamRef> data = new IntScoreDataContainer<>(this::createReference, Ordering.DESCENDING, "game.ap2.paintball.blocks_painted");
     private final Random random = new Random();
     private final TickMovementObserver movementObserver;
@@ -222,6 +226,13 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
                     && gameHandle.getParticipants().isParticipating(player)
                     && (source.isOf(DamageTypes.ARROW) || source.isOf(DamageTypes.EXPLOSION)));
         });
+
+        paintGunManager.setShootingEnabled(true);
+
+        var subject = gameHandle.getTranslations().translateText(gameHandle.getGameInfo().getTaskKey());
+
+        int duration = MIN_DURATION_SECONDS + random.nextInt(MAX_DURATION_SECONDS - MIN_DURATION_SECONDS + 1);
+        commons().createTimer(subject, duration).whenDone(winManager::complete);
     }
 
     private void setupRespawnCooldown() {
