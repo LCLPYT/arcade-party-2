@@ -28,6 +28,7 @@ import work.lclpnet.ap2.api.map.MapBootstrapFunction;
 import work.lclpnet.ap2.core.hook.SpectatePlayerCallback;
 import work.lclpnet.ap2.game.paintball.kit.RifleKit;
 import work.lclpnet.ap2.game.paintball.kit.ShotgunKit;
+import work.lclpnet.ap2.game.paintball.kit.SniperKit;
 import work.lclpnet.ap2.game.paintball.util.*;
 import work.lclpnet.ap2.impl.game.TeamGameInstance;
 import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer;
@@ -49,12 +50,16 @@ import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks;
 import work.lclpnet.kibu.physics.api.event.collision.ElementCollisionEvents;
+import work.lclpnet.kibu.physics.impl.bullet.collision.space.MinecraftSpace;
+import work.lclpnet.kibu.physics.impl.bullet.collision.space.cache.ChunkCache;
+import work.lclpnet.kibu.physics.impl.bullet.collision.space.generator.TerrainGenerator;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 import work.lclpnet.lobby.game.map.GameMap;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import static work.lclpnet.ap2.impl.util.ItemHelper.getLeatherArmor;
@@ -110,11 +115,32 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
         paintGunManager.init(gameHandle.getHookRegistrar(), gameHandle.getGameScheduler());
 
         replaceTemplateColors(world);
+        buildMapCollisions(world, bounds);
         closeBases(world);
 
         paintManager.countBlocks();
 
         resultSpot = ResultSpot.fromJson(map.getProperties().getJSONObject("result-spot"));
+    }
+
+    private void buildMapCollisions(ServerWorld world, BlockShape bounds) {
+        var space = MinecraftSpace.get(world);
+        space.setAutoLoadTerrain(false);
+
+        ChunkCache chunkCache = space.getChunkCache();
+
+        for (BlockPos pos : bounds) {
+            chunkCache.loadData(pos.toImmutable());
+        }
+
+        // TODO to be optimized using greedy meshing
+
+        // needs to be running on the physics thread
+        CompletableFuture.runAsync(() -> {
+            for (BlockPos pos : bounds) {
+                TerrainGenerator.load(space, pos);
+            }
+        }, space.getWorkerThread()).join();
     }
 
     private void replaceTemplateColors(ServerWorld world) {
@@ -156,7 +182,8 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
     private void setupKits() {
         kitHandler = KitHandler.create(gameHandle, getWorld(), kitHandle -> List.of(
                 new RifleKit(kitHandle, paintGunManager),
-                new ShotgunKit(kitHandle, paintGunManager)
+                new ShotgunKit(kitHandle, paintGunManager),
+                new SniperKit(kitHandle, paintGunManager)
         ));
 
         kitHandler.setup();
@@ -285,7 +312,7 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
 
         player.hurtTime = 0;
         player.timeUntilRegen = 0;
-        player.damage(world, player.getDamageSources().create(DamageTypes.ARROW, owner, owner), paintGun.bulletDamage());
+        player.damage(world, player.getDamageSources().create(DamageTypes.ARROW, owner, owner), paintGun.bullet().damage());
     }
 
     private void closeBases(ServerWorld world) {

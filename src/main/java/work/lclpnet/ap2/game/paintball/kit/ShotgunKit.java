@@ -22,7 +22,11 @@ public class ShotgunKit extends PaintGunKit {
     }
 
     private static PaintGun paintGun() {
-        return new PaintGun(26, 0.15, 18, 7, 7.5,
-                16, 2.5, 0.05f, 2.5f);
+        return new PaintGun(
+                26, 7, 7.5,
+                new PaintGun.BulletSettings(
+                        0.15, 18, 16, 2.5, 0.05f, 2.5f, 15
+                )
+        );
     }
 }

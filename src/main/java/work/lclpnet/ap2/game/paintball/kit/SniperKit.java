@@ -5,19 +5,19 @@ import work.lclpnet.ap2.game.paintball.util.PaintGun;
 import work.lclpnet.ap2.game.paintball.util.PaintGunManager;
 import work.lclpnet.ap2.impl.game.kit.KitHandle;
 
-public class RifleKit extends PaintGunKit {
+public class SniperKit extends PaintGunKit {
 
-    public static final String ID = "rifle";
+    public static final String ID = "sniper";
 
-    public RifleKit(KitHandle handle, PaintGunManager paintGunManager) {
-        super(handle, ID, Items.IRON_HORSE_ARMOR, 1, paintGun(), paintGunManager);
+    public SniperKit(KitHandle handle, PaintGunManager paintGunManager) {
+        super(handle, ID, Items.DIAMOND_HORSE_ARMOR, 1, paintGun(), paintGunManager);
     }
 
     private static PaintGun paintGun() {
         return new PaintGun(
-                3, 1, 0,
+                33, 1, 0,
                 new PaintGun.BulletSettings(
-                        0.2, 16, 12, 2.0, 0.1f, 3.0f, 8
+                        0.3, 100, 1, 1.0, 0.01f, 25f, 4
                 )
         );
     }

@@ -1,5 +1,9 @@
 package work.lclpnet.ap2.game.paintball.util;
 
-public record PaintGun(int cooldownTicks, double bulletSize, double bulletPower, int bulletCount, double bulletSpread,
-                       int maxBulletHits, double bulletDespawnSeconds, float bulletMass, float bulletDamage) {
+public record PaintGun(int cooldownTicks, int bulletCount, double bulletSpread, BulletSettings bullet) {
+
+    public record BulletSettings(
+            double size, double power, double maxHits, double despawnSeconds, float mass, float damage,
+            float maxImpactPower
+    ) {}
 }

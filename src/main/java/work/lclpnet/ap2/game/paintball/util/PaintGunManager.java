@@ -29,6 +29,7 @@ import work.lclpnet.kibu.physics.impl.bullet.collision.space.MinecraftSpace;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 
 import java.util.Random;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.BooleanSupplier;
 
 import static java.lang.Math.*;
@@ -75,9 +76,12 @@ public class PaintGunManager {
 
     private void onBulletHitTerrain(PaintballBullet bullet, long manifoldId) {
         bullet.startDespawnTimer();
-        bullet.onHit();
+
+        limitVelocity(bullet);
 
         if (gameOver.getAsBoolean() || !bullet.isPainting()) return;
+
+        bullet.onHit();
 
         ServerPlayerEntity owner = participants.getParticipant(bullet.getOwner()).orElse(null);
 
@@ -125,6 +129,19 @@ public class PaintGunManager {
         }
     }
 
+    private void limitVelocity(PaintballBullet bullet) {
+        // limit velocity so that ink bullets don't bounce extremely far
+        SceneRigidBody rigidBody = bullet.getRigidBody();
+        var velocity = new Vector3f();
+        rigidBody.getLinearVelocity(velocity);
+
+        final float maxPower = bullet.getPaintGun().bullet().maxImpactPower();
+
+        if (velocity.lengthSquared() > maxPower * maxPower) {
+            rigidBody.setLinearVelocity(velocity.normalize().mult(maxPower));
+        }
+    }
+
     private void tryPaint(PaintballBullet bullet, DyeTeamKey teamKey, Vector3f pos, float dx, float dy, float dz) {
         var blockPos = BlockPos.ofFloored(pos.x + dx, pos.y + dy, pos.z + dz);
 
@@ -150,9 +167,11 @@ public class PaintGunManager {
 
         cooldown.setCooldown(player, paintGun.cooldownTicks());
 
-        for (int i = 0; i < paintGun.bulletCount(); i++) {
-            spawnPaintBullet(player, paintGun, state);
-        }
+        CompletableFuture.runAsync(() -> {
+            for (int i = 0; i < paintGun.bulletCount(); i++) {
+                spawnPaintBullet(player, paintGun, state);
+            }
+        }, MinecraftSpace.get(player.getWorld()).getWorkerThread());
 
         world.playSound(null, player.getX(), player.getEyeY(), player.getZ(),
                 SoundEvents.ENTITY_ITEM_PICKUP, SoundCategory.PLAYERS, 0.2f, 2f);
@@ -162,7 +181,7 @@ public class PaintGunManager {
     }
 
     private void spawnPaintBullet(ServerPlayerEntity player, PaintGun paintGun, BlockState state) {
-        final double scale = paintGun.bulletSize();
+        final double scale = paintGun.bullet().size();
 
         Vec3d dir = player.getRotationVector();
         dir = applySpread(dir, paintGun);
@@ -207,7 +226,7 @@ public class PaintGunManager {
     }
 
     private Vec3d getProjectileVelocity(Vec3d dir, PaintGun paintGun) {
-        final double basePower = paintGun.bulletPower();
+        final double basePower = paintGun.bullet().power();
         final double minPowerScale = 0.65;
         final double maxPowerScale = 1.0;
 

@@ -7,7 +7,6 @@ import net.minecraft.server.world.ServerWorld;
 import org.joml.Vector3d;
 import work.lclpnet.ap2.impl.scene.animation.AnimationContext;
 import work.lclpnet.ap2.impl.scene.object.PhysicsBlockDisplayObject;
-import work.lclpnet.kibu.physics.impl.bullet.collision.body.shape.MinecraftShape;
 
 import java.util.UUID;
 
@@ -32,15 +31,13 @@ public class PaintballBullet extends PhysicsBlockDisplayObject {
         super(blockState, world);
         this.paintGun = paintGun;
 
-        rigidBody.setMass(paintGun.bulletMass());
-    }
+        rigidBody.setMass(paintGun.bullet().mass());
 
-    @Override
-    public MinecraftShape.Convex createShape() {
-        MinecraftShape.Convex shape = super.createShape();
-        shape.setMargin(0.02f);
-
-        return shape;
+        // prevent tunneling at high velocities
+        if (paintGun.bullet().power() >= 20) {
+            rigidBody.setCcdMotionThreshold(1e-4f);
+            rigidBody.setCcdSweptSphereRadius(0.1f);
+        }
     }
 
     @Override
@@ -70,7 +67,7 @@ public class PaintballBullet extends PhysicsBlockDisplayObject {
     public void startDespawnTimer() {
         if (despawnTimer >= 0 || isFading()) return;
 
-        despawnTimer = paintGun.bulletDespawnSeconds();
+        despawnTimer = paintGun.bullet().despawnSeconds();
     }
 
     public boolean isFading() {
@@ -86,7 +83,7 @@ public class PaintballBullet extends PhysicsBlockDisplayObject {
     }
 
     public void onHit() {
-        if (++hits == paintGun.maxBulletHits()) {
+        if (++hits == paintGun.bullet().maxHits()) {
             startFading();
         }
     }
