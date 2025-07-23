@@ -90,7 +90,8 @@ public class PaintGunManager {
         Vector3f hit = new Vector3f();
         bullet.getRigidBody().getPhysicsLocation(hit);
 
-        final float r = bullet.getPaintGun().bullet().paintRadius();
+        var settings = bullet.getPaintGun().bullet();
+        float r = bullet.isSplitOff() ? settings.splitPaintRadius() : bullet.getPaintGun().bullet().paintRadius();
 
         Box box = Box.of(new Vec3d(hit.x, hit.y, hit.z), r * 2, r * 2, r * 2);
 
@@ -102,7 +103,6 @@ public class PaintGunManager {
             if (dx * dx + dy * dy + dz * dz <= r * r && tryPaint(key, pos, hit)) {
                 bullet.onHit();
             }
-
         }
     }
 
@@ -161,7 +161,7 @@ public class PaintGunManager {
 
         Vec3d pos = getProjectileSpawn(player, dir, scale);
 
-        var obj = new PaintballBullet(state, player.getWorld(), paintGun);
+        var obj = new PaintballBullet(state, player.getWorld(), paintGun, scene);
         obj.position.set(pos.getX(), pos.getY(), pos.getZ());
         obj.scale.set(scale);
         obj.setOwner(player.getUuid());

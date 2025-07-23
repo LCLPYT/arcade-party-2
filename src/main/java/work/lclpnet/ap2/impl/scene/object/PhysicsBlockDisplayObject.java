@@ -80,6 +80,10 @@ public class PhysicsBlockDisplayObject extends Object3d
         updateRigidBody(rigidBody);
     }
 
+    public BlockState getBlockState() {
+        return blockDisplay.getBlockState();
+    }
+
     @Override
     @NotNull
     public SceneRigidBody getRigidBody() {
