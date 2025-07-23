@@ -163,7 +163,7 @@ public class PaintballResultAnimation implements TitleAnimation {
         }
 
         public void byTotal(int total) {
-            percent = (double) score / total;
+            percent = total == 0 ? 0 : (double) score / total;
         }
     }
 }
