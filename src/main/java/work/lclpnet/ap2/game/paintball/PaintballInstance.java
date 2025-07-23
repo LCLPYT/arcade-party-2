@@ -311,6 +311,7 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
 
         if (velocity.lengthSquared() < 0.2) return;
 
+        paintGunManager.limitVelocity(bullet);
         bullet.startFading();
 
         ServerWorld world = getWorld();

@@ -106,7 +106,7 @@ public class PaintGunManager {
         }
     }
 
-    private void limitVelocity(PaintballBullet bullet) {
+    public void limitVelocity(PaintballBullet bullet) {
         // limit velocity so that ink bullets don't bounce extremely far
         SceneRigidBody rigidBody = bullet.getRigidBody();
         var velocity = new Vector3f();
