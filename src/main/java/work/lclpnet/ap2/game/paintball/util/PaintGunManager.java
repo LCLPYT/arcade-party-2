@@ -1,7 +1,5 @@
 package work.lclpnet.ap2.game.paintball.util;
 
-import com.jme3.bullet.collision.ManifoldPoints;
-import com.jme3.bullet.collision.PersistentManifolds;
 import com.jme3.math.Vector3f;
 import lombok.Setter;
 import net.minecraft.block.BlockState;
@@ -16,12 +14,14 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.RaycastContext;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.team.DyeTeamKey;
 import work.lclpnet.ap2.impl.scene.Scene;
 import work.lclpnet.ap2.impl.scene.simulation.SceneRigidBody;
+import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.RayCastUtil;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.physics.api.event.collision.ElementCollisionEvents;
@@ -86,41 +86,58 @@ public class PaintGunManager {
         if (team == null) return;
 
         DyeTeamKey key = team.key();
-        final float d = 0.75f;
-        final boolean bulletIsObjA = PersistentManifolds.getBodyAId(manifoldId) == bullet.getRigidBody().nativeId();
 
-        for (long pointId : PersistentManifolds.listPointIds(manifoldId)) {
-            Vector3f pos = new Vector3f();
-            Vector3f normal = new Vector3f();
+        Vector3f hit = new Vector3f();
+        bullet.getRigidBody().getPhysicsLocation(hit);
 
-            if (bulletIsObjA) ManifoldPoints.getPositionWorldOnB(pointId, pos);
-            else ManifoldPoints.getPositionWorldOnA(pointId, pos);
+        final float r = bullet.getPaintGun().bullet().paintRadius();
 
-            ManifoldPoints.getNormalWorldOnB(pointId, normal);
+        Box box = Box.of(new Vec3d(hit.x, hit.y, hit.z), r * 2, r * 2, r * 2);
 
-            pos = pos.subtract(normal.mult(0.1f));
+        for (BlockPos pos : BlockBox.of(box)) {
+            double dx = pos.getX() + 0.5 - hit.x;
+            double dy = pos.getY() + 0.5 - hit.y;
+            double dz = pos.getZ() + 0.5 - hit.z;
 
-            // hit pos
-            tryPaint(bullet, key, pos, 0, 0, 0);
+            if (dx * dx + dy * dy + dz * dz <= r * r && tryPaint(key, pos, hit)) {
+                bullet.onHit();
+            }
 
-            // cardinal directions
-            tryPaint(bullet, key, pos,  d,  0,  0);
-            tryPaint(bullet, key, pos,  0,  d,  0);
-            tryPaint(bullet, key, pos,  0,  0,  d);
-            tryPaint(bullet, key, pos, -d,  0,  0);
-            tryPaint(bullet, key, pos,  0, -d,  0);
-            tryPaint(bullet, key, pos,  0,  0, -d);
-
-            // diagonal
-            tryPaint(bullet, key, pos,  d,  d,  d);
-            tryPaint(bullet, key, pos,  d,  d, -d);
-            tryPaint(bullet, key, pos,  d, -d,  d);
-            tryPaint(bullet, key, pos,  d, -d, -d);
-            tryPaint(bullet, key, pos, -d,  d,  d);
-            tryPaint(bullet, key, pos, -d,  d, -d);
-            tryPaint(bullet, key, pos, -d, -d,  d);
-            tryPaint(bullet, key, pos, -d, -d, -d);
         }
+
+//        final boolean bulletIsObjA = PersistentManifolds.getBodyAId(manifoldId) == bullet.getRigidBody().nativeId();
+//        for (long pointId : PersistentManifolds.listPointIds(manifoldId)) {
+//            Vector3f pos = new Vector3f();
+//            Vector3f normal = new Vector3f();
+//
+//            if (bulletIsObjA) ManifoldPoints.getPositionWorldOnB(pointId, pos);
+//            else ManifoldPoints.getPositionWorldOnA(pointId, pos);
+//
+//            ManifoldPoints.getNormalWorldOnB(pointId, normal);
+//
+//            pos = pos.subtract(normal.mult(0.1f));
+//
+//            // hit pos
+//            tryPaint(bullet, key, pos, 0, 0, 0);
+//
+//            // cardinal directions
+//            tryPaint(bullet, key, pos,  d,  0,  0);
+//            tryPaint(bullet, key, pos,  0,  d,  0);
+//            tryPaint(bullet, key, pos,  0,  0,  d);
+//            tryPaint(bullet, key, pos, -d,  0,  0);
+//            tryPaint(bullet, key, pos,  0, -d,  0);
+//            tryPaint(bullet, key, pos,  0,  0, -d);
+//
+//            // diagonal
+//            tryPaint(bullet, key, pos,  d,  d,  d);
+//            tryPaint(bullet, key, pos,  d,  d, -d);
+//            tryPaint(bullet, key, pos,  d, -d,  d);
+//            tryPaint(bullet, key, pos,  d, -d, -d);
+//            tryPaint(bullet, key, pos, -d,  d,  d);
+//            tryPaint(bullet, key, pos, -d,  d, -d);
+//            tryPaint(bullet, key, pos, -d, -d,  d);
+//            tryPaint(bullet, key, pos, -d, -d, -d);
+//        }
     }
 
     private void limitVelocity(PaintballBullet bullet) {
@@ -136,17 +153,13 @@ public class PaintGunManager {
         }
     }
 
-    private void tryPaint(PaintballBullet bullet, DyeTeamKey teamKey, Vector3f pos, float dx, float dy, float dz) {
-        var blockPos = BlockPos.ofFloored(pos.x + dx, pos.y + dy, pos.z + dz);
-
-        if (!paintManager.replace(blockPos, teamKey)) return;
+    private boolean tryPaint(DyeTeamKey teamKey, BlockPos blockPos, Vector3f pos) {
+        if (!paintManager.replace(blockPos, teamKey)) return false;
 
         world.spawnParticles(new DustParticleEffect(teamKey.color(), 0.5f), pos.x, pos.y, pos.z, 10,
                 0.2, 0.2, 0.2, 0.1);
 
-        if (dx * dx + dy * dy + dz * dz > 0) {
-            bullet.onHit();
-        }
+        return true;
     }
 
     public void shoot(ServerPlayerEntity player, PaintGun paintGun, ItemStack stack) {

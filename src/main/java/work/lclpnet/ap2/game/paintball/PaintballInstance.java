@@ -112,7 +112,7 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
 
         paintManager = new PaintManager(world, teams, getTeamManager(), data, bounds);
         paintGunManager = new PaintGunManager(world, scene, paintManager, teams, random, gameHandle.getParticipants(), winManager::isGameOver);
-        paintGunManager.init(gameHandle.getHookRegistrar(), gameHandle.getGameScheduler());
+        paintGunManager.init(gameHandle.getHookRegistrar());
 
         replaceTemplateColors(world);
         buildMapCollisions(world, bounds);
