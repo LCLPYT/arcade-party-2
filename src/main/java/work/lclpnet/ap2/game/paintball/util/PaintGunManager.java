@@ -63,12 +63,12 @@ public class PaintGunManager {
 
         hooks.registerHook(ElementCollisionEvents.BLOCK_COLLISION, (element, terrainObject, manifoldId) -> {
             if (element instanceof PaintballBullet bullet) {
-                onBulletHitTerrain(bullet, manifoldId);
+                onBulletHitTerrain(bullet);
             }
         });
     }
 
-    private void onBulletHitTerrain(PaintballBullet bullet, long manifoldId) {
+    private void onBulletHitTerrain(PaintballBullet bullet) {
         bullet.startDespawnTimer();
 
         limitVelocity(bullet);
@@ -104,40 +104,6 @@ public class PaintGunManager {
             }
 
         }
-
-//        final boolean bulletIsObjA = PersistentManifolds.getBodyAId(manifoldId) == bullet.getRigidBody().nativeId();
-//        for (long pointId : PersistentManifolds.listPointIds(manifoldId)) {
-//            Vector3f pos = new Vector3f();
-//            Vector3f normal = new Vector3f();
-//
-//            if (bulletIsObjA) ManifoldPoints.getPositionWorldOnB(pointId, pos);
-//            else ManifoldPoints.getPositionWorldOnA(pointId, pos);
-//
-//            ManifoldPoints.getNormalWorldOnB(pointId, normal);
-//
-//            pos = pos.subtract(normal.mult(0.1f));
-//
-//            // hit pos
-//            tryPaint(bullet, key, pos, 0, 0, 0);
-//
-//            // cardinal directions
-//            tryPaint(bullet, key, pos,  d,  0,  0);
-//            tryPaint(bullet, key, pos,  0,  d,  0);
-//            tryPaint(bullet, key, pos,  0,  0,  d);
-//            tryPaint(bullet, key, pos, -d,  0,  0);
-//            tryPaint(bullet, key, pos,  0, -d,  0);
-//            tryPaint(bullet, key, pos,  0,  0, -d);
-//
-//            // diagonal
-//            tryPaint(bullet, key, pos,  d,  d,  d);
-//            tryPaint(bullet, key, pos,  d,  d, -d);
-//            tryPaint(bullet, key, pos,  d, -d,  d);
-//            tryPaint(bullet, key, pos,  d, -d, -d);
-//            tryPaint(bullet, key, pos, -d,  d,  d);
-//            tryPaint(bullet, key, pos, -d,  d, -d);
-//            tryPaint(bullet, key, pos, -d, -d,  d);
-//            tryPaint(bullet, key, pos, -d, -d, -d);
-//        }
     }
 
     private void limitVelocity(PaintballBullet bullet) {
