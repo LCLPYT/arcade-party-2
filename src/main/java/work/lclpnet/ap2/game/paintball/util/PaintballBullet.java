@@ -7,7 +7,6 @@ import net.minecraft.server.world.ServerWorld;
 import org.joml.Vector3d;
 import work.lclpnet.ap2.impl.scene.animation.AnimationContext;
 import work.lclpnet.ap2.impl.scene.object.PhysicsBlockDisplayObject;
-import work.lclpnet.ap2.impl.scene.simulation.SceneRigidBody;
 import work.lclpnet.kibu.physics.impl.bullet.collision.body.shape.MinecraftShape;
 
 import java.util.UUID;
@@ -16,13 +15,10 @@ import static java.lang.Math.max;
 
 public class PaintballBullet extends PhysicsBlockDisplayObject {
 
-    private static final double
-            DESPAWN_SECONDS = 2d,
-            FADE_TIME_SECONDS = 1.5d;
+    private static final double FADE_TIME_SECONDS = 1.5d;
 
-    private static final int
-            MAX_HITS = 12;
-
+    @Getter
+    private final PaintGun paintGun;
     @Getter @Setter
     private UUID owner = null;
     private final Vector3d initialScale = new Vector3d();
@@ -32,8 +28,11 @@ public class PaintballBullet extends PhysicsBlockDisplayObject {
     private boolean painting = true;
     private int hits = 0;
 
-    public PaintballBullet(BlockState blockState, ServerWorld world) {
+    public PaintballBullet(BlockState blockState, ServerWorld world, PaintGun paintGun) {
         super(blockState, world);
+        this.paintGun = paintGun;
+
+        rigidBody.setMass(paintGun.bulletMass());
     }
 
     @Override
@@ -42,12 +41,6 @@ public class PaintballBullet extends PhysicsBlockDisplayObject {
         shape.setMargin(0.02f);
 
         return shape;
-    }
-
-    @Override
-    public void updateRigidBody(SceneRigidBody rigidBody) {
-        super.updateRigidBody(rigidBody);
-        rigidBody.setMass(.1f);
     }
 
     @Override
@@ -77,7 +70,7 @@ public class PaintballBullet extends PhysicsBlockDisplayObject {
     public void startDespawnTimer() {
         if (despawnTimer >= 0 || isFading()) return;
 
-        despawnTimer = DESPAWN_SECONDS;
+        despawnTimer = paintGun.bulletDespawnSeconds();
     }
 
     public boolean isFading() {
@@ -93,7 +86,7 @@ public class PaintballBullet extends PhysicsBlockDisplayObject {
     }
 
     public void onHit() {
-        if (++hits == MAX_HITS) {
+        if (++hits == paintGun.maxBulletHits()) {
             startFading();
         }
     }

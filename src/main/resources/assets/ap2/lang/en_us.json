@@ -307,6 +307,8 @@
   "game.ap2.paintball.game_over": "Game!",
   "game.ap2.paintball.kit.rifle": "Ink-Rifle",
   "game.ap2.paintball.kit.rifle.description": "A rapidly firing ink rifle with medium range",
+  "game.ap2.paintball.kit.shotgun": "Ink-Shotgun",
+  "game.ap2.paintball.kit.shotgun.description": "A strong, short-range ink shotgun with bullet spread and a low firing rate.",
   "item.ap2.bow_spleef.triple_shot": "Triple Shot",
   "item.ap2.bow_spleef.triple_shot.desc": "Shoots three arrows at once",
   "item.ap2.bow_spleef.burst_shot": "Burst Shot",

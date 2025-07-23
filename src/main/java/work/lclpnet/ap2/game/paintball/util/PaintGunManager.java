@@ -31,7 +31,7 @@ import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import java.util.Random;
 import java.util.function.BooleanSupplier;
 
-import static java.lang.Math.max;
+import static java.lang.Math.*;
 import static work.lclpnet.ap2.impl.util.math.MathUtil.randomUnitVec3d;
 import static work.lclpnet.kibu.physics.impl.bullet.math.Convert.toBullet;
 
@@ -138,7 +138,7 @@ public class PaintGunManager {
         }
     }
 
-    public void shoot(ServerPlayerEntity player) {
+    public void shoot(ServerPlayerEntity player, PaintGun paintGun) {
         if (!shootingEnabled || cooldown.isOnCooldown(player)) return;
 
         BlockState state = teams.teamOf(player)
@@ -148,13 +148,28 @@ public class PaintGunManager {
 
         if (state == null) return;
 
-        cooldown.setCooldown(player, 3);
+        cooldown.setCooldown(player, paintGun.cooldownTicks());
 
-        final double scale = 0.2;
+        for (int i = 0; i < paintGun.bulletCount(); i++) {
+            spawnPaintBullet(player, paintGun, state);
+        }
 
-        Vec3d pos = getProjectileSpawn(player, scale);
+        world.playSound(null, player.getX(), player.getEyeY(), player.getZ(),
+                SoundEvents.ENTITY_ITEM_PICKUP, SoundCategory.PLAYERS, 0.2f, 2f);
 
-        var obj = new PaintballBullet(state, player.getWorld());
+        world.spawnParticles(ParticleTypes.SMOKE, player.getX(), player.getEyeY(), player.getZ(), 2,
+                0.3, 0.3, 0.3, 0.2);
+    }
+
+    private void spawnPaintBullet(ServerPlayerEntity player, PaintGun paintGun, BlockState state) {
+        final double scale = paintGun.bulletSize();
+
+        Vec3d dir = player.getRotationVector();
+        dir = applySpread(dir, paintGun);
+
+        Vec3d pos = getProjectileSpawn(player, dir, scale);
+
+        var obj = new PaintballBullet(state, player.getWorld(), paintGun);
         obj.position.set(pos.getX(), pos.getY(), pos.getZ());
         obj.scale.set(scale);
         obj.setOwner(player.getUuid());
@@ -163,26 +178,20 @@ public class PaintGunManager {
 
         obj.updateRigidBody(rigidBody);
 
-        Vec3d velocity = getProjectileVelocity(player);
+        Vec3d velocity = getProjectileVelocity(dir, paintGun);
 
         rigidBody.setLinearVelocity(toBullet(velocity));
         rigidBody.setAngularVelocity(toBullet(randomUnitVec3d(random)));
         rigidBody.setPhysicsLocation(toBullet(pos));
 
         scene.add(obj);
-
-        world.playSound(null, player.getX(), player.getY(), player.getZ(),
-                SoundEvents.ENTITY_ITEM_PICKUP, SoundCategory.PLAYERS, 0.2f, 2f);
-
-        world.spawnParticles(ParticleTypes.SMOKE, player.getX(), player.getEyeY(), player.getZ(), 2,
-                0.3, 0.3, 0.3, 0.2);
     }
 
-    private Vec3d getProjectileSpawn(ServerPlayerEntity player, double scale) {
+    private Vec3d getProjectileSpawn(ServerPlayerEntity player, Vec3d dir, double scale) {
         final double spawnDist = 1.4;
 
         HitResult hit = RayCastUtil.raycast(
-                player.getWorld(), player.getEyePos(), player.getRotationVector(), spawnDist,
+                player.getWorld(), player.getEyePos(), dir, spawnDist,
                 RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.ANY, ShapeContext.absent(),
                 entity -> !entity.isSpectator());
 
@@ -191,22 +200,42 @@ public class PaintGunManager {
         if (hit instanceof BlockHitResult blockHit) {
             pos = pos.add(blockHit.getSide().getDoubleVector().multiply(0.5 * scale));
         } else if (hit.getType() != HitResult.Type.MISS) {
-            pos = pos.add(player.getRotationVector().multiply(-0.5 * scale));
+            pos = pos.add(dir.multiply(-0.5 * scale));
         }
 
         return pos;
     }
 
-    private Vec3d getProjectileVelocity(ServerPlayerEntity player) {
-        final double basePower = 16;
+    private Vec3d getProjectileVelocity(Vec3d dir, PaintGun paintGun) {
+        final double basePower = paintGun.bulletPower();
         final double minPowerScale = 0.65;
         final double maxPowerScale = 1.0;
-
-        Vec3d dir = player.getRotationVector();
 
         double verticalComponent = max(0, dir.y);
         double powerScale = maxPowerScale + (minPowerScale - maxPowerScale) * verticalComponent;
 
         return dir.multiply(basePower * powerScale);
+    }
+
+    private Vec3d applySpread(Vec3d dir, PaintGun paintGun) {
+        double cosMax = cos(toRadians(paintGun.bulletSpread()));
+        double cosTheta = cosMax + (1 - cosMax) * random.nextDouble();
+        double sinTheta = sqrt(1 - cosTheta * cosTheta);
+
+        double phi = random.nextDouble() * 2 * PI;
+
+        Vec3d t = new Vec3d(1, 0, 0);
+
+        if (abs(dir.dotProduct(t)) > 0.999) {
+            t = new Vec3d(0, 1, 0);
+        }
+
+        Vec3d axis = dir.crossProduct(t).normalize();
+        Vec3d perp = dir.crossProduct(axis).normalize();
+
+        return axis.multiply(cos(phi) * sinTheta)
+                .add(perp.multiply(sin(phi) * sinTheta))
+                .add(dir.multiply(cosTheta))
+                .normalize();
     }
 }

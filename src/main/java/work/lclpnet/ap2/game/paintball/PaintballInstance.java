@@ -27,6 +27,7 @@ import work.lclpnet.ap2.api.game.team.Team;
 import work.lclpnet.ap2.api.map.MapBootstrapFunction;
 import work.lclpnet.ap2.core.hook.SpectatePlayerCallback;
 import work.lclpnet.ap2.game.paintball.kit.RifleKit;
+import work.lclpnet.ap2.game.paintball.kit.ShotgunKit;
 import work.lclpnet.ap2.game.paintball.util.*;
 import work.lclpnet.ap2.impl.game.TeamGameInstance;
 import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer;
@@ -154,7 +155,8 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
 
     private void setupKits() {
         kitHandler = KitHandler.create(gameHandle, getWorld(), kitHandle -> List.of(
-                new RifleKit(kitHandle, paintGunManager)
+                new RifleKit(kitHandle, paintGunManager),
+                new ShotgunKit(kitHandle, paintGunManager)
         ));
 
         kitHandler.setup();
@@ -279,7 +281,11 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
 
         if (owner == null || getTeamManager().areTeamMates(owner, player)) return;
 
-        player.damage(world, player.getDamageSources().create(DamageTypes.ARROW, owner, owner), 3f);
+        PaintGun paintGun = bullet.getPaintGun();
+
+        player.hurtTime = 0;
+        player.timeUntilRegen = 0;
+        player.damage(world, player.getDamageSources().create(DamageTypes.ARROW, owner, owner), paintGun.bulletDamage());
     }
 
     private void closeBases(ServerWorld world) {
