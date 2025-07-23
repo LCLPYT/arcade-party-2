@@ -34,6 +34,10 @@ public interface TeamManager {
      */
     void setUseColorCodes(boolean useColorCodes);
 
+    Team registerTeam(TeamKey key);
+
+    void joinTeam(ServerPlayerEntity player, Team team);
+
     default Optional<Team> getTeam(ServerPlayerEntity player) {
         return getTeam(player.getUuid());
     }

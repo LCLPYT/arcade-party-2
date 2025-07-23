@@ -62,7 +62,9 @@ public class SimpleTeamManager implements TeamManager {
         synchronized (this) {
             reset();
 
-            createTeams(keys);
+            for (TeamKey key : keys) {
+                registerTeam(key);
+            }
         }
 
         // use pre-configured team constellations
@@ -109,11 +111,11 @@ public class SimpleTeamManager implements TeamManager {
         return teams.containsKey(team);
     }
 
-    private void createTeams(Set<TeamKey> keys) {
-        for (TeamKey key : keys) {
-            SimpleTeam team = createTeam(key);
-            teams.put(key, team);
-        }
+    @Override
+    public synchronized Team registerTeam(TeamKey key) {
+        SimpleTeam team = createTeam(key);
+        teams.put(key, team);
+        return team;
     }
 
     @NotNull
@@ -137,7 +139,8 @@ public class SimpleTeamManager implements TeamManager {
         return teams.keySet().stream().anyMatch(key -> key.id().equals(id));
     }
 
-    private void joinTeam(ServerPlayerEntity player, Team team) {
+    @Override
+    public void joinTeam(ServerPlayerEntity player, Team team) {
         synchronized (this) {
             team.addPlayer(player);
             playerTeams.put(player.getUuid(), team);
