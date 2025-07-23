@@ -5,16 +5,21 @@ import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.block.BlockState;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.util.math.Vec3d;
 import org.joml.Vector3d;
 import work.lclpnet.ap2.impl.scene.MountContext;
 import work.lclpnet.ap2.impl.scene.Scene;
 import work.lclpnet.ap2.impl.scene.animation.AnimationContext;
 import work.lclpnet.ap2.impl.scene.object.PhysicsBlockDisplayObject;
 import work.lclpnet.ap2.impl.scene.simulation.SceneRigidBody;
+import work.lclpnet.ap2.impl.util.math.MathUtil;
 
+import java.util.Random;
 import java.util.UUID;
 
 import static java.lang.Math.max;
+import static java.lang.Math.toRadians;
+import static work.lclpnet.kibu.physics.impl.bullet.math.Convert.toBullet;
 
 public class PaintballBullet extends PhysicsBlockDisplayObject {
 
@@ -26,6 +31,7 @@ public class PaintballBullet extends PhysicsBlockDisplayObject {
     @Getter
     private final PaintGun paintGun;
     private final Scene scene;
+    private final Random random;
     @Getter @Setter
     private UUID owner = null;
     private final Vector3d initialScale = new Vector3d();
@@ -39,11 +45,13 @@ public class PaintballBullet extends PhysicsBlockDisplayObject {
     private int hits = 0;
     private double splitTimer = 0;
     private int splits = 0;
+    private int age = 0;
 
-    public PaintballBullet(BlockState blockState, ServerWorld world, PaintGun paintGun, Scene scene) {
+    public PaintballBullet(BlockState blockState, ServerWorld world, PaintGun paintGun, Scene scene, Random random) {
         super(blockState, world);
         this.paintGun = paintGun;
         this.scene = scene;
+        this.random = random;
 
         rigidBody.setMass(paintGun.bullet().mass());
 
@@ -90,6 +98,17 @@ public class PaintballBullet extends PhysicsBlockDisplayObject {
         }
 
         tickSplitting(dt);
+
+        if (age++ == 1) {
+            enableTeamCollision();
+        }
+    }
+
+    private void enableTeamCollision() {
+        int groups = rigidBody.getCollideWithGroups();
+        int group = rigidBody.getCollisionGroup();
+
+        rigidBody.setCollideWithGroups(groups | (group >> 1));
     }
 
     private void tickSplitting(double dt) {
@@ -115,7 +134,7 @@ public class PaintballBullet extends PhysicsBlockDisplayObject {
     private void split() {
         splits++;
 
-        var obj = new PaintballBullet(getBlockState(), world, paintGun, scene);
+        var obj = new PaintballBullet(getBlockState(), world, paintGun, scene, random);
         obj.position.set(position);
         obj.scale.set(paintGun.bullet().size() * 0.2f);
         obj.setSplitOff();
@@ -125,7 +144,9 @@ public class PaintballBullet extends PhysicsBlockDisplayObject {
 
         obj.updateRigidBody(rigidBody);
 
-        rigidBody.setLinearVelocity(new Vector3f(0, -5, 0));
+        Vec3d dir = MathUtil.applySpread(new Vec3d(0, -1, 0), toRadians(paintGun.bullet().splitSpread()), random);
+
+        rigidBody.setLinearVelocity(toBullet(dir.multiply(5)));
         rigidBody.setPhysicsLocation(new Vector3f((float) position.x, (float) position.y, (float) position.z));
 
         int collisionGroup = this.rigidBody.getCollisionGroup();

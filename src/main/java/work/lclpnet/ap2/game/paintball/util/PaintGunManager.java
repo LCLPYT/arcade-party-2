@@ -23,6 +23,7 @@ import work.lclpnet.ap2.impl.scene.Scene;
 import work.lclpnet.ap2.impl.scene.simulation.SceneRigidBody;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.RayCastUtil;
+import work.lclpnet.ap2.impl.util.math.MathUtil;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.physics.api.event.collision.ElementCollisionEvents;
 import work.lclpnet.kibu.physics.impl.bullet.collision.space.MinecraftSpace;
@@ -31,7 +32,8 @@ import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BooleanSupplier;
 
-import static java.lang.Math.*;
+import static java.lang.Math.max;
+import static java.lang.Math.toRadians;
 import static work.lclpnet.ap2.impl.util.math.MathUtil.randomUnitVec3d;
 import static work.lclpnet.kibu.physics.impl.bullet.math.Convert.toBullet;
 
@@ -161,7 +163,7 @@ public class PaintGunManager {
 
         Vec3d pos = getProjectileSpawn(player, dir, scale);
 
-        var obj = new PaintballBullet(state, player.getWorld(), paintGun, scene);
+        var obj = new PaintballBullet(state, player.getWorld(), paintGun, scene, random);
         obj.position.set(pos.getX(), pos.getY(), pos.getZ());
         obj.scale.set(scale);
         obj.setOwner(player.getUuid());
@@ -212,24 +214,8 @@ public class PaintGunManager {
     }
 
     private Vec3d applySpread(Vec3d dir, PaintGun paintGun) {
-        double cosMax = cos(toRadians(paintGun.bulletSpread()));
-        double cosTheta = cosMax + (1 - cosMax) * random.nextDouble();
-        double sinTheta = sqrt(1 - cosTheta * cosTheta);
+        double spread = toRadians(paintGun.bulletSpread());
 
-        double phi = random.nextDouble() * 2 * PI;
-
-        Vec3d t = new Vec3d(1, 0, 0);
-
-        if (abs(dir.dotProduct(t)) > 0.999) {
-            t = new Vec3d(0, 1, 0);
-        }
-
-        Vec3d axis = dir.crossProduct(t).normalize();
-        Vec3d perp = dir.crossProduct(axis).normalize();
-
-        return axis.multiply(cos(phi) * sinTheta)
-                .add(perp.multiply(sin(phi) * sinTheta))
-                .add(dir.multiply(cosTheta))
-                .normalize();
+        return MathUtil.applySpread(dir, spread, random);
     }
 }

@@ -4,6 +4,7 @@ public record PaintGun(String id, int cooldownTicks, int bulletCount, double bul
 
     public record BulletSettings(
             double size, double power, double maxHits, double despawnSeconds, float mass, float damage,
-            float maxImpactPower, float paintRadius, float splitTicks, int maxSplits, float splitPaintRadius
+            float maxImpactPower, float paintRadius, float splitTicks, int maxSplits, float splitPaintRadius,
+            float splitSpread
     ) {}
 }

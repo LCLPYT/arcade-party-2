@@ -118,4 +118,26 @@ public class MathUtil {
             }
         };
     }
+
+    public static Vec3d applySpread(Vec3d dir, double spread, Random random) {
+        double cosMax = cos(spread);
+        double cosTheta = cosMax + (1 - cosMax) * random.nextDouble();
+        double sinTheta = sqrt(1 - cosTheta * cosTheta);
+
+        double phi = random.nextDouble() * 2 * PI;
+
+        Vec3d t = new Vec3d(1, 0, 0);
+
+        if (abs(dir.dotProduct(t)) > 0.999) {
+            t = new Vec3d(0, 1, 0);
+        }
+
+        Vec3d axis = dir.crossProduct(t).normalize();
+        Vec3d perp = dir.crossProduct(axis).normalize();
+
+        return axis.multiply(cos(phi) * sinTheta)
+                .add(perp.multiply(sin(phi) * sinTheta))
+                .add(dir.multiply(cosTheta))
+                .normalize();
+    }
 }

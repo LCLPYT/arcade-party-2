@@ -302,7 +302,7 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
     }
 
     private void onBulletCollision(PaintballBullet bullet, Entity entity) {
-        if (bullet.isFading()
+        if (bullet.isFading() || bullet.isSplitOff()
                 || !(entity instanceof ServerPlayerEntity player)
                 || !gameHandle.getParticipants().isParticipating(player))
             return;
