@@ -26,7 +26,8 @@ public class ShotgunKit extends PaintGunKit {
                 ID, 26, 7, 7.5,
                 new PaintGun.BulletSettings(
                         0.15, 18, 16, 2.5, 0.05f, 2.5f, 13,
-                        1.55f, 10, 2, 1.3f, 5
+                        1.55f,
+                        new PaintGun.BulletSplit(10, 2, 1.3f, 5)
                 )
         );
     }

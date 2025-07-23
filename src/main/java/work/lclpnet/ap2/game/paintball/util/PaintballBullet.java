@@ -112,7 +112,7 @@ public class PaintballBullet extends PhysicsBlockDisplayObject {
     }
 
     private void tickSplitting(double dt) {
-        if (splitOff || splits >= paintGun.bullet().maxSplits()) return;
+        if (splitOff || splits >= paintGun.bullet().split().maxSplits()) return;
 
         var velocity = new Vector3f();
         rigidBody.getLinearVelocity(velocity);
@@ -120,7 +120,7 @@ public class PaintballBullet extends PhysicsBlockDisplayObject {
         if (velocity.lengthSquared() < MIN_SPLIT_POWER * MIN_SPLIT_POWER) return;
 
         if (splitTimer <= 0) {
-            splitTimer = paintGun.bullet().splitTicks() / 20;
+            splitTimer = paintGun.bullet().split().splitTicks() / 20f;
             split();
         } else {
             splitTimer = max(0, splitTimer - dt);
@@ -144,7 +144,7 @@ public class PaintballBullet extends PhysicsBlockDisplayObject {
 
         obj.updateRigidBody(rigidBody);
 
-        Vec3d dir = MathUtil.applySpread(new Vec3d(0, -1, 0), toRadians(paintGun.bullet().splitSpread()), random);
+        Vec3d dir = MathUtil.applySpread(new Vec3d(0, -1, 0), toRadians(paintGun.bullet().split().splitSpread()), random);
 
         rigidBody.setLinearVelocity(toBullet(dir.multiply(5)));
         rigidBody.setPhysicsLocation(new Vector3f((float) position.x, (float) position.y, (float) position.z));

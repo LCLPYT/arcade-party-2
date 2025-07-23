@@ -93,7 +93,7 @@ public class PaintGunManager {
         bullet.getRigidBody().getPhysicsLocation(hit);
 
         var settings = bullet.getPaintGun().bullet();
-        float r = bullet.isSplitOff() ? settings.splitPaintRadius() : bullet.getPaintGun().bullet().paintRadius();
+        float r = bullet.isSplitOff() ? settings.split().splitPaintRadius() : bullet.getPaintGun().bullet().paintRadius();
 
         Box box = Box.of(new Vec3d(hit.x, hit.y, hit.z), r * 2, r * 2, r * 2);
 
