@@ -1,14 +1,20 @@
 package work.lclpnet.ap2.game.paintball.kit;
 
+import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.UseCooldownComponent;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.ActionResult;
+import work.lclpnet.ap2.base.ArcadeParty;
 import work.lclpnet.ap2.game.paintball.util.PaintGun;
 import work.lclpnet.ap2.game.paintball.util.PaintGunManager;
 import work.lclpnet.ap2.impl.game.kit.KitHandle;
 import work.lclpnet.ap2.impl.game.kit.SingleItemKit;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
+
+import java.util.Optional;
 
 public class PaintGunKit extends SingleItemKit {
 
@@ -35,9 +41,18 @@ public class PaintGunKit extends SingleItemKit {
                 return ActionResult.PASS;
             }
 
-            paintGunManager.shoot(player, paintGun);
+            paintGunManager.shoot(player, paintGun, stack);
 
             return ActionResult.SUCCESS;
         });
+    }
+
+    @Override
+    public ItemStack createItemStack(DynamicRegistryManager manager) {
+        ItemStack stack = super.createItemStack(manager);
+        var group = Optional.of(ArcadeParty.identifier(paintGun.id()));
+        stack.set(DataComponentTypes.USE_COOLDOWN, new UseCooldownComponent(paintGun.cooldownTicks(), group));
+
+        return stack;
     }
 }

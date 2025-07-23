@@ -15,7 +15,7 @@ public class SniperKit extends PaintGunKit {
 
     private static PaintGun paintGun() {
         return new PaintGun(
-                33, 1, 0,
+                ID, 33, 1, 0,
                 new PaintGun.BulletSettings(
                         0.3, 100, 1, 1.0, 0.01f, 25f, 4
                 )
