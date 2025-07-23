@@ -1,5 +1,7 @@
 package work.lclpnet.ap2.game.paintball.util;
 
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.math.BlockPos;
 import org.jetbrains.annotations.NotNull;
@@ -26,6 +28,7 @@ public class PaintballTeams implements Iterable<PaintballTeam> {
     private final Random random;
     private final Logger logger;
     private final Map<TeamKey, PaintballTeam> teamsByKey = new HashMap<>();
+    private final Object2IntMap<PaintballTeam> teamGroups = new Object2IntOpenHashMap<>();
     private List<PaintballTeam> teams = null;
 
     public PaintballTeams(TeamManager teamManager, GameMap map, Random random, Logger logger) {
@@ -38,8 +41,14 @@ public class PaintballTeams implements Iterable<PaintballTeam> {
     public void setup() {
         this.teams = setupTeams();
 
+        teamGroups.clear();
+        int group = 0x2;
+
         for (PaintballTeam team : teams) {
             teamsByKey.put(team.key(), team);
+            teamGroups.put(team, group);
+
+            group <<= 2;
         }
     }
 
@@ -109,6 +118,49 @@ public class PaintballTeams implements Iterable<PaintballTeam> {
         }
 
         return Optional.empty();
+    }
+
+    public int playerGroup(PaintballTeam team) {
+        return teamGroups.getOrDefault(team, 0x1);
+    }
+
+    public int bulletGroup(ServerPlayerEntity player) {
+        PaintballTeam team = teamOf(player).orElse(null);
+
+        if (team == null) {
+            return 0x1;
+        }
+
+        int group = playerGroup(team);
+
+        return group == 0 || group == 1 ? group : bulletGroup(group);
+    }
+
+    public int bulletGroup(int group) {
+        return group << 1;
+    }
+
+    public int bulletCollisionFlags(ServerPlayerEntity player) {
+        PaintballTeam ownTeam = teamOf(player).orElse(null);
+
+        if (ownTeam == null) {
+            return 0x1;
+        }
+
+        // bullets may collide with everything except the own player group
+        int flags = 0x1;
+
+        for (var entry : teamGroups.object2IntEntrySet()) {
+            int playerGroup = entry.getIntValue();
+
+            flags |= bulletGroup(playerGroup);
+
+            if (entry.getKey() != ownTeam) {
+                flags |= playerGroup;
+            }
+        }
+
+        return flags;
     }
 
     @Override

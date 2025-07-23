@@ -24,6 +24,7 @@ import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.game.team.DyeTeamKey;
 import work.lclpnet.ap2.api.game.team.Team;
+import work.lclpnet.ap2.api.game.team.TeamManager;
 import work.lclpnet.ap2.api.map.MapBootstrapFunction;
 import work.lclpnet.ap2.core.hook.SpectatePlayerCallback;
 import work.lclpnet.ap2.game.paintball.kit.RifleKit;
@@ -170,13 +171,26 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
         teleportTeamsToSpawns();
         equipPlayers();
         setupKits();
-
-        var entityCollisions = new EntityCollisionManager(getWorld(), gameHandle::getParticipants);
-        entityCollisions.init(gameHandle.getScheduler());
+        setupPlayerCollisions();
 
         commons().gameRuleBuilder()
                 .set(GameRules.NATURAL_REGENERATION, false)
                 .set(GameRules.FALL_DAMAGE, false);
+    }
+
+    private void setupPlayerCollisions() {
+        var entityCollisions = new EntityCollisionManager(getWorld(), gameHandle::getParticipants);
+        entityCollisions.init(gameHandle.getScheduler());
+
+        TeamManager teamManager = getTeamManager();
+
+        teams.forEach(pbt -> teamManager.getTeam(pbt.key()).ifPresent(team -> {
+            int group = teams.playerGroup(pbt);
+
+            for (ServerPlayerEntity player : team.getPlayers()) {
+                entityCollisions.getRigidBody(player).ifPresent(rb -> rb.setCollisionGroup(group));
+            }
+        }));
     }
 
     private void setupKits() {

@@ -10,9 +10,11 @@ import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Supplier;
 
+import static java.util.concurrent.CompletableFuture.runAsync;
 import static work.lclpnet.kibu.physics.impl.bullet.math.Convert.toBullet;
 
 public class EntityCollisionManager {
@@ -27,7 +29,9 @@ public class EntityCollisionManager {
     }
 
     public void init(TaskScheduler scheduler) {
-        scheduler.interval(this::tick, 1);
+        tick();
+
+        scheduler.interval(() -> runAsync(this::tick, MinecraftSpace.get(world).getWorkerThread()), 1);
     }
 
     public synchronized void tick() {
@@ -63,6 +67,16 @@ public class EntityCollisionManager {
 
             element.update(entity);
         }
+    }
+
+    public Optional<EntityRefRigidBody> getRigidBody(Entity entity) {
+        Optional<Entry> opt;
+
+        synchronized (this) {
+            opt = Optional.ofNullable(entries.get(entity.getUuid()));
+        }
+
+        return opt.map(e -> e.element.getRigidBody());
     }
 
     private static class Entry {

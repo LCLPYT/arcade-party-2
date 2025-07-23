@@ -175,6 +175,8 @@ public class PaintGunManager {
         rigidBody.setLinearVelocity(toBullet(velocity));
         rigidBody.setAngularVelocity(toBullet(randomUnitVec3d(random)));
         rigidBody.setPhysicsLocation(toBullet(pos));
+        rigidBody.setCollisionGroup(teams.bulletGroup(player));
+        rigidBody.setCollideWithGroups(teams.bulletCollisionFlags(player));
 
         scene.add(obj);
     }
