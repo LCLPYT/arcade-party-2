@@ -1,14 +1,21 @@
 package work.lclpnet.ap2.game.paintball.util;
 
+import net.minecraft.sound.SoundEvent;
+
 /**
  * Configuration for a paint gun.
  * @param id An identifier string.
  * @param cooldownTicks Ticks to cooldown in between shots.
  * @param bulletCount The amount of bullets to fire at once.
  * @param bulletSpread The maximum random bullet spread angle in degrees.
+ * @param ammo The ammo count. Each shot cost one ammo.
+ * @param fireSound The sound to be played when firing.
  * @param bullet Bullet settings
  */
-public record PaintGun(String id, int cooldownTicks, int bulletCount, double bulletSpread, BulletSettings bullet) {
+public record PaintGun(
+        String id, int cooldownTicks, int bulletCount, double bulletSpread, int ammo, SoundCfg fireSound,
+        BulletSettings bullet
+) {
 
     /**
      * Settings for bullets of a paint gun
@@ -38,4 +45,6 @@ public record PaintGun(String id, int cooldownTicks, int bulletCount, double bul
     public record BulletSplit(
             int splitTicks, int maxSplits, float splitPaintRadius, float splitSpread
     ) {}
+
+    public record SoundCfg(SoundEvent sound, float volume, float pitch) {}
 }

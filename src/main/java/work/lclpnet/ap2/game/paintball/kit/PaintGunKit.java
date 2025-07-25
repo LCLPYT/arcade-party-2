@@ -50,9 +50,15 @@ public class PaintGunKit extends SingleItemKit {
     @Override
     public ItemStack createItemStack(DynamicRegistryManager manager) {
         ItemStack stack = super.createItemStack(manager);
-        var group = Optional.of(ArcadeParty.identifier(paintGun.id()));
-        stack.set(DataComponentTypes.USE_COOLDOWN, new UseCooldownComponent(paintGun.cooldownTicks(), group));
+
+        configureItemStack(stack);
 
         return stack;
+    }
+
+    protected void configureItemStack(ItemStack stack) {
+        var group = Optional.of(ArcadeParty.identifier(paintGun.id()));
+        stack.set(DataComponentTypes.USE_COOLDOWN, new UseCooldownComponent(paintGun.cooldownTicks(), group));
+        stack.set(DataComponentTypes.MAX_DAMAGE, paintGun.ammo());
     }
 }

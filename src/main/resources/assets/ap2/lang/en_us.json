@@ -305,6 +305,7 @@
   "game.ap2.paintball.task": "Paint blocks",
   "game.ap2.paintball.blocks_painted": "%s blocks painted",
   "game.ap2.paintball.game_over": "Game!",
+  "game.ap2.paintball.no_ink": "Sneak in ink to reload",
   "game.ap2.paintball.kit.rifle": "Ink-Rifle",
   "game.ap2.paintball.kit.rifle.description": "A rapidly firing ink rifle with medium range",
   "game.ap2.paintball.kit.shotgun": "Ink-Shotgun",

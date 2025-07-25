@@ -4,6 +4,7 @@ import com.jme3.math.Vector3f;
 import lombok.Setter;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.ShapeContext;
+import net.minecraft.component.DataComponentTypes;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.damage.DamageTypes;
 import net.minecraft.item.ItemStack;
@@ -30,6 +31,7 @@ import work.lclpnet.ap2.impl.util.math.MathUtil;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.physics.api.event.collision.ElementCollisionEvents;
 import work.lclpnet.kibu.physics.impl.bullet.collision.space.MinecraftSpace;
+import work.lclpnet.kibu.translate.Translations;
 
 import java.util.Random;
 import java.util.UUID;
@@ -38,6 +40,7 @@ import java.util.function.BooleanSupplier;
 
 import static java.lang.Math.max;
 import static java.lang.Math.toRadians;
+import static net.minecraft.util.Formatting.RED;
 import static work.lclpnet.ap2.impl.util.math.MathUtil.randomUnitVec3d;
 import static work.lclpnet.kibu.physics.impl.bullet.math.Convert.toBullet;
 
@@ -49,18 +52,20 @@ public class PaintGunManager {
     private final PaintballTeams teams;
     private final Random random;
     private final Participants participants;
+    private final Translations translations;
     private final BooleanSupplier gameOver;
     @Setter
     private boolean shootingEnabled = false;
 
     public PaintGunManager(ServerWorld world, Scene scene, PaintManager paintManager, PaintballTeams teams,
-                           Random random, Participants participants, BooleanSupplier gameOver) {
+                           Random random, Participants participants, Translations translations, BooleanSupplier gameOver) {
         this.world = world;
         this.scene = scene;
         this.paintManager = paintManager;
         this.teams = teams;
         this.random = random;
         this.participants = participants;
+        this.translations = translations;
         this.gameOver = gameOver;
     }
 
@@ -183,6 +188,12 @@ public class PaintGunManager {
     public void shoot(ServerPlayerEntity player, PaintGun paintGun, ItemStack stack) {
         if (!shootingEnabled || player.getItemCooldownManager().isCoolingDown(stack)) return;
 
+        if (stack.getDamage() >= stack.getMaxDamage()) {
+            translations.translateText("game.ap2.paintball.no_ink").formatted(RED).sendTo(player, true);
+            player.playSoundToPlayer(SoundEvents.BLOCK_NOTE_BLOCK_BASEDRUM.value(), SoundCategory.PLAYERS, 0.2f, 2f);
+            return;
+        }
+
         BlockState state = teams.teamOf(player)
                 .map(PaintballTeam::key)
                 .map(paintManager::getPaintBulletState)
@@ -192,14 +203,18 @@ public class PaintGunManager {
 
         player.getItemCooldownManager().set(stack, paintGun.cooldownTicks());
 
+        stack.set(DataComponentTypes.DAMAGE, stack.getDamage() + 1);
+
         CompletableFuture.runAsync(() -> {
             for (int i = 0; i < paintGun.bulletCount(); i++) {
                 spawnPaintBullet(player, paintGun, state);
             }
         }, MinecraftSpace.get(player.getWorld()).getWorkerThread());
 
+        var fireSound = paintGun.fireSound();
+
         world.playSound(null, player.getX(), player.getEyeY(), player.getZ(),
-                SoundEvents.ENTITY_ITEM_PICKUP, SoundCategory.PLAYERS, 0.2f, 2f);
+                fireSound.sound(), SoundCategory.PLAYERS, fireSound.volume(), fireSound.pitch());
 
         world.spawnParticles(ParticleTypes.SMOKE, player.getX(), player.getEyeY(), player.getZ(), 2,
                 0.3, 0.3, 0.3, 0.2);

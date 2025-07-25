@@ -3,6 +3,7 @@ package work.lclpnet.ap2.game.paintball.kit;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.registry.DynamicRegistryManager;
+import net.minecraft.sound.SoundEvents;
 import work.lclpnet.ap2.game.paintball.util.PaintGun;
 import work.lclpnet.ap2.game.paintball.util.PaintGunManager;
 import work.lclpnet.ap2.impl.game.kit.KitHandle;
@@ -18,12 +19,18 @@ public class ShotgunKit extends PaintGunKit {
 
     @Override
     public ItemStack createItemStack(DynamicRegistryManager manager) {
-        return ItemHelper.getLeatherArmor(getItem(), 0x1fd122);
+        ItemStack stack = ItemHelper.getLeatherArmor(getItem(), 0x1fd122);
+
+        configureItemStack(stack);
+
+        return stack;
     }
 
     private static PaintGun paintGun() {
         return new PaintGun(
                 ID, 26, 7, 9.0,
+                5,
+                new PaintGun.SoundCfg(SoundEvents.ENTITY_CHICKEN_EGG, 0.3f, 0.5f),
                 new PaintGun.BulletSettings(
                         0.15, 25, 16, 2.0, 0.05f, 3.9f, 8,
                         2.1f, 0.2f,
