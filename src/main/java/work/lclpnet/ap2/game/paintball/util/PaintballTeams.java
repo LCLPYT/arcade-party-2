@@ -2,12 +2,14 @@ package work.lclpnet.ap2.game.paintball.util;
 
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
+import lombok.Getter;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.math.BlockPos;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
+import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.ds.Partial;
 import work.lclpnet.ap2.api.game.team.DyeTeamKey;
 import work.lclpnet.ap2.api.game.team.Team;
@@ -23,17 +25,20 @@ import java.util.stream.Stream;
 
 public class PaintballTeams implements Iterable<PaintballTeam> {
 
+    @Getter
     private final TeamManager teamManager;
     private final GameMap map;
+    private final Participants participants;
     private final Random random;
     private final Logger logger;
     private final Map<TeamKey, PaintballTeam> teamsByKey = new HashMap<>();
     private final Object2IntMap<PaintballTeam> teamGroups = new Object2IntOpenHashMap<>();
     private List<PaintballTeam> teams = null;
 
-    public PaintballTeams(TeamManager teamManager, GameMap map, Random random, Logger logger) {
+    public PaintballTeams(TeamManager teamManager, GameMap map, Participants participants, Random random, Logger logger) {
         this.teamManager = teamManager;
         this.map = map;
+        this.participants = participants;
         this.random = random;
         this.logger = logger;
     }
@@ -106,7 +111,7 @@ public class PaintballTeams implements Iterable<PaintballTeam> {
 
     public Optional<PaintballTeam> teamOf(ServerPlayerEntity player) {
         return teamManager.getTeam(player)
-                .map(Team::getKey)
+                .map(Team::key)
                 .map(teamsByKey::get);
     }
 
@@ -161,6 +166,18 @@ public class PaintballTeams implements Iterable<PaintballTeam> {
         }
 
         return flags;
+    }
+
+    public int playerDeficit(PaintballTeam pbt) {
+        Team team = teamManager.getTeam(pbt).orElse(null);
+
+        if (team == null) return 0;
+
+        final int maxPlayerCount = teamManager.getTeams().stream()
+                .mapToInt(t -> t.getParticipatingPlayers(participants).size())
+                .max().orElse(0);
+
+        return maxPlayerCount - team.getParticipatingPlayers(participants).size();
     }
 
     @Override

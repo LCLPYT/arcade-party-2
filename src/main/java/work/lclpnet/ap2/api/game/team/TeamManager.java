@@ -48,18 +48,18 @@ public interface TeamManager {
 
     default Set<net.minecraft.scoreboard.Team> getMinecraftTeams() {
         return getTeams().stream()
-                .map(Team::getKey)
+                .map(Team::key)
                 .map(this::getMinecraftTeam)
                 .flatMap(Optional::stream)
                 .collect(Collectors.toUnmodifiableSet());
     }
 
     default boolean isParticipating(Team team) {
-        return isParticipating(team.getKey());
+        return isParticipating(team.key());
     }
 
     default boolean isParticipating(ServerPlayerEntity player) {
-        return getTeam(player).map(Team::getKey).map(this::isParticipating).orElse(false);
+        return getTeam(player).map(Team::key).map(this::isParticipating).orElse(false);
     }
 
     default Set<Team> getParticipatingTeams() {
@@ -78,5 +78,9 @@ public interface TeamManager {
         return getTeam(first)
                 .map(team -> isTeamMember(second, team))
                 .orElse(false);
+    }
+
+    default Optional<Team> getTeam(TeamKeyable keyable) {
+        return getTeam(keyable.key());
     }
 }

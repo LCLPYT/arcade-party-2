@@ -104,7 +104,7 @@ public abstract class TeamEliminationGameInstance extends TeamGameInstance {
         for (Team team : teams) {
             if (!teamManager.isParticipating(team)) continue;
 
-            TeamKey key = team.getKey();
+            TeamKey key = team.key();
             var displayName = translations.translateText(key.getTranslationKey())
                     .styled(style -> style.withColor(key.color()));
 

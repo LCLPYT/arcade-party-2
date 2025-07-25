@@ -48,7 +48,7 @@ public class PaintballResultAnimation implements TitleAnimation {
         entries = new ArrayList<>();
 
         for (TeamRef team : teams) {
-            entries.add(new Entry(team.getKey(), data.getScore(team)));
+            entries.add(new Entry(team.key(), data.getScore(team)));
         }
 
         final int total = entries.stream().mapToInt(e -> e.score).sum();

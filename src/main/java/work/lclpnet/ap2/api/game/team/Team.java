@@ -6,12 +6,11 @@ import work.lclpnet.ap2.api.base.Participants;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public interface Team {
-
-    TeamKey getKey();
+public interface Team extends TeamKeyable {
 
     /**
-     * Get all players in this team.
+     * Get all online players in this team.
+     * Those players may or may not be participating.
      * @return A set of players in this team. Modifications on the set do not affect the actual team members.
      */
     Set<ServerPlayerEntity> getPlayers();

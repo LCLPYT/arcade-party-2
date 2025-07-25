@@ -119,6 +119,13 @@ public class MathUtil {
         };
     }
 
+    /**
+     * Apply a random offset to a unit direction vector.
+     * @param dir The direction unit vector.
+     * @param spread The maximum angle between the input vector and the output vector, in radians.
+     * @param random The RNG instance.
+     * @return A randomly offset unit vector, based on the input vector and the spread.
+     */
     public static Vec3d applySpread(Vec3d dir, double spread, Random random) {
         double cosMax = cos(spread);
         double cosTheta = cosMax + (1 - cosMax) * random.nextDouble();

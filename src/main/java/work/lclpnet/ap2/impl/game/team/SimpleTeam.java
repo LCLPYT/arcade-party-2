@@ -23,7 +23,7 @@ public class SimpleTeam implements Team {
     }
 
     @Override
-    public TeamKey getKey() {
+    public TeamKey key() {
         return key;
     }
 

@@ -95,9 +95,9 @@ public class SimpleTeamManager implements TeamManager {
 
     @Override
     public void setTeamEliminated(Team team) {
-        if (!hasTeam(team.getKey())) return;
+        if (!hasTeam(team.key())) return;
 
-        if (eliminated.add(team.getKey()) && listener != null) {
+        if (eliminated.add(team.key()) && listener != null) {
             listener.teamEliminated(team);
         }
     }
@@ -145,7 +145,7 @@ public class SimpleTeamManager implements TeamManager {
             team.addPlayer(player);
             playerTeams.put(player.getUuid(), team);
 
-            var mcTeam = mcTeams.get(team.getKey());
+            var mcTeam = mcTeams.get(team.key());
 
             if (mcTeam != null) {
                 scoreboard.joinTeam(player, mcTeam);
@@ -161,7 +161,7 @@ public class SimpleTeamManager implements TeamManager {
 
             team.removePlayer(player);
 
-            var mcTeam = mcTeams.get(team.getKey());
+            var mcTeam = mcTeams.get(team.key());
 
             if (mcTeam != null) {
                 scoreboard.leaveTeam(player, mcTeam);
@@ -194,7 +194,7 @@ public class SimpleTeamManager implements TeamManager {
 
                 if (team == null) return;
 
-                mcTeam = mcTeams.get(team.getKey());
+                mcTeam = mcTeams.get(team.key());
             }
 
             if (mcTeam != null) {
@@ -213,7 +213,7 @@ public class SimpleTeamManager implements TeamManager {
 
             MutableText text = name instanceof MutableText ? (MutableText) name : name.copy();
 
-            return text.styled(style -> style.withColor(team.getKey().color()));
+            return text.styled(style -> style.withColor(team.key().color()));
         });
     }
 }

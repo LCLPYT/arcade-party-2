@@ -20,11 +20,12 @@ public record PaintGun(String id, int cooldownTicks, int bulletCount, double bul
      * @param damage How much damage the bullet deals when hitting an entity.
      * @param maxImpactPower Maximum magnitude of a bullet when hitting a block. If the bullet velocity magnitude is above this value, the magnitude is clamped.
      * @param paintRadius The sphere radius in which blocks are painted when hitting a block.
+     * @param deficitPaintBoost A paint radius multiplier per missing player in the team.
      * @param split Bullet splitting settings.
      */
     public record BulletSettings(
             double size, double power, double maxHits, double despawnSeconds, float mass, float damage,
-            float maxImpactPower, float paintRadius, BulletSplit split
+            float maxImpactPower, float paintRadius, float deficitPaintBoost, BulletSplit split
     ) {}
 
     /**

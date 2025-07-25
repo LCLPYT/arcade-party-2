@@ -27,6 +27,9 @@ public class PaintballBullet extends PhysicsBlockDisplayObject {
             FADE_TIME_SECONDS = 1.5d,
             MAX_TRAVEL_DIST = 256,
             MIN_SPLIT_POWER = 10;
+    
+    public static final int
+            TEAM_COLLISION_ENABLE_TICKS = 4;
 
     @Getter
     private final PaintGun paintGun;
@@ -99,7 +102,7 @@ public class PaintballBullet extends PhysicsBlockDisplayObject {
 
         tickSplitting(dt);
 
-        if (age++ == 1) {
+        if (age++ == TEAM_COLLISION_ENABLE_TICKS) {
             enableTeamCollision();
         }
     }

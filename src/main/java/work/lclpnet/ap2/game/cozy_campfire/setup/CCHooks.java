@@ -236,8 +236,8 @@ public class CCHooks {
         if (teamManager.isTeamMember(player, team)) return;
 
         // the player is in the base of another team
-        var name = translations.translateText(player, team.getKey().getTranslationKey())
-                .styled(style -> style.withColor(team.getKey().color()));
+        var name = translations.translateText(player, team.key().getTranslationKey())
+                .styled(style -> style.withColor(team.key().color()));
 
         var msg = Text.literal("⚠")
                 .append(translations.translateText(player, "game.ap2.cozy_campfire.base_of", name))

@@ -1,13 +1,12 @@
 package work.lclpnet.ap2.game.paintball;
 
-import com.jme3.math.Vector3f;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
-import net.minecraft.entity.Entity;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.entity.damage.DamageTypes;
 import net.minecraft.item.Items;
@@ -40,7 +39,6 @@ import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.scene.Scene;
 import work.lclpnet.ap2.impl.scene.ServerWorldMountContext;
 import work.lclpnet.ap2.impl.scene.simulation.EntityCollisionManager;
-import work.lclpnet.ap2.impl.scene.simulation.EntityRefPhysicsElement;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.collision.ChunkedCollisionDetector;
 import work.lclpnet.ap2.impl.util.collision.TickMovementObserver;
@@ -50,7 +48,6 @@ import work.lclpnet.ap2.impl.util.world.ResetBlockWorldModifier;
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks;
-import work.lclpnet.kibu.physics.api.event.collision.ElementCollisionEvents;
 import work.lclpnet.kibu.physics.impl.bullet.collision.space.MinecraftSpace;
 import work.lclpnet.kibu.physics.impl.bullet.collision.space.cache.ChunkCache;
 import work.lclpnet.kibu.physics.impl.bullet.collision.space.generator.TerrainGenerator;
@@ -58,8 +55,12 @@ import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 import work.lclpnet.lobby.game.map.GameMap;
+import work.lclpnet.lobby.util.PlayerReset;
 
-import java.util.*;
+import java.util.List;
+import java.util.Optional;
+import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -84,6 +85,7 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
     private ResetBlockWorldModifier baseWalls;
     private PaintGunManager paintGunManager;
     private ResultSpot resultSpot;
+    private boolean started = false;
 
     public PaintballInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
@@ -103,7 +105,7 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
 
     @Override
     public void bootstrapWorld(ServerWorld world, GameMap map) {
-        teams = new PaintballTeams(getTeamManager(), map, random, gameHandle.getLogger());
+        teams = new PaintballTeams(getTeamManager(), map, gameHandle.getParticipants(), random, gameHandle.getLogger());
         teams.setup();
 
         Scene scene = new Scene(new ServerWorldMountContext(world));
@@ -172,6 +174,7 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
         equipPlayers();
         setupKits();
         setupPlayerCollisions();
+        balanceTeams();
 
         commons().gameRuleBuilder()
                 .set(GameRules.NATURAL_REGENERATION, false)
@@ -184,7 +187,7 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
 
         TeamManager teamManager = getTeamManager();
 
-        teams.forEach(pbt -> teamManager.getTeam(pbt.key()).ifPresent(team -> {
+        teams.forEach(pbt -> teamManager.getTeam(pbt).ifPresent(team -> {
             int group = teams.playerGroup(pbt);
 
             for (ServerPlayerEntity player : team.getPlayers()) {
@@ -219,7 +222,7 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
 
     private void equipPlayers() {
         for (PaintballTeam instance : teams) {
-            Team team = getTeamManager().getTeam(instance.key()).orElse(null);
+            Team team = getTeamManager().getTeam(instance).orElse(null);
 
             if (team == null) continue;
 
@@ -247,19 +250,20 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
         kitHandler.selectKitItem();
 
         setupRespawnCooldown();
+        configureHooksAndProtector();
 
+        paintGunManager.setShootingEnabled(true);
+
+        var subject = gameHandle.getTranslations().translateText(gameHandle.getGameInfo().getTaskKey());
+
+        int duration = MIN_DURATION_SECONDS + random.nextInt(MAX_DURATION_SECONDS - MIN_DURATION_SECONDS + 1);
+        commons().createTimer(subject, duration).whenDone(this::beginResults);
+
+        started = true;
+    }
+
+    private void configureHooksAndProtector() {
         HookRegistrar hooks = gameHandle.getHookRegistrar();
-
-        hooks.registerHook(ElementCollisionEvents.ELEMENT_COLLISION, (first, second, manifoldId) -> {
-            if (first instanceof EntityRefPhysicsElement entityElem && second instanceof PaintballBullet bullet) {
-                entityElem.cast().optional().ifPresent(entity -> onBulletCollision(bullet, entity));
-                return;
-            }
-
-            if (second instanceof EntityRefPhysicsElement entityElem && first instanceof PaintballBullet bullet) {
-                entityElem.cast().optional().ifPresent(entity -> onBulletCollision(bullet, entity));
-            }
-        });
 
         hooks.registerHook(ServerLivingEntityHooks.ALLOW_DAMAGE, this::onDamage);
 
@@ -273,13 +277,6 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
                     && gameHandle.getParticipants().isParticipating(player)
                     && (source.isOf(DamageTypes.ARROW) || source.isOf(DamageTypes.EXPLOSION)));
         });
-
-        paintGunManager.setShootingEnabled(true);
-
-        var subject = gameHandle.getTranslations().translateText(gameHandle.getGameInfo().getTaskKey());
-
-        int duration = MIN_DURATION_SECONDS + random.nextInt(MAX_DURATION_SECONDS - MIN_DURATION_SECONDS + 1);
-        commons().createTimer(subject, duration).whenDone(this::beginResults);
     }
 
     private void setupRespawnCooldown() {
@@ -288,6 +285,7 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
         respawnCooldown.setOnCooldownOver(player -> {
             teams.teamOf(player).ifPresent(pbt -> teleportToTeamSpawn(player, pbt));
 
+            player.setHealth(player.getMaxHealth());
             player.getAbilities().setFlySpeed(0);
             player.sendAbilitiesUpdate();
 
@@ -299,35 +297,6 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
                 player.changeGameMode(gameHandle.getPlayerUtil().getDefaultGameMode());
             });
         });
-    }
-
-    private void onBulletCollision(PaintballBullet bullet, Entity entity) {
-        if (bullet.isFading() || bullet.isSplitOff()
-                || !(entity instanceof ServerPlayerEntity player)
-                || !gameHandle.getParticipants().isParticipating(player))
-            return;
-
-        Vector3f velocity = bullet.getRigidBody().getLinearVelocity(new Vector3f());
-
-        if (velocity.lengthSquared() < 0.2) return;
-
-        paintGunManager.limitVelocity(bullet);
-        bullet.startFading();
-
-        ServerWorld world = getWorld();
-        UUID ownerUuid = bullet.getOwner();
-
-        if (ownerUuid == null) return;
-
-        ServerPlayerEntity owner = gameHandle.getServer().getPlayerManager().getPlayer(ownerUuid);
-
-        if (owner == null || getTeamManager().areTeamMates(owner, player)) return;
-
-        PaintGun paintGun = bullet.getPaintGun();
-
-        player.hurtTime = 0;
-        player.timeUntilRegen = 0;
-        player.damage(world, player.getDamageSources().create(DamageTypes.ARROW, owner, owner), paintGun.bullet().damage());
     }
 
     private void closeBases(ServerWorld world) {
@@ -359,7 +328,7 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
     @Override
     protected void teleportTeamsToSpawns() {
         for (PaintballTeam pbt : teams) {
-            Team team = getTeamManager().getTeam(pbt.key()).orElse(null);
+            Team team = getTeamManager().getTeam(pbt).orElse(null);
 
             if (team == null) continue;
 
@@ -445,7 +414,6 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
         var animatedTitle = new AnimatedTitle();
 
         List<TeamRef> teamRefs = teams.stream()
-                .map(PaintballTeam::key)
                 .map(getTeamManager()::getTeam)
                 .flatMap(Optional::stream)
                 .map(this::createReference)
@@ -464,6 +432,32 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
         animatedTitle.start(gameHandle.getGameScheduler(), 1);
 
         gameHandle.whenDone(animatedTitle::stop);
+    }
+
+    @Override
+    public void participantRemoved(ServerPlayerEntity player) {
+        balanceTeams();
+    }
+
+    private void balanceTeams() {
+        for (PaintballTeam team : teams) {
+            Set<ServerPlayerEntity> players = team.participants(getTeamManager(), gameHandle.getParticipants());
+
+            if (players.isEmpty()) continue;
+
+            int deficit = teams.playerDeficit(team);
+            double extraHealthPerPlayer = deficit * 20.d / players.size();
+
+            for (ServerPlayerEntity player : players) {
+                PlayerReset.setAttribute(player, EntityAttributes.MAX_HEALTH, 20.d + extraHealthPerPlayer);
+            }
+        }
+
+        if (started) return;
+
+        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
+            player.setHealth(player.getMaxHealth());
+        }
     }
 
     private record ResultSpot(Vec3d pos, float yaw, float pitch) {

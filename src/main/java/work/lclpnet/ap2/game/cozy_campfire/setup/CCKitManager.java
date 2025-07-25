@@ -58,7 +58,7 @@ public class CCKitManager {
         DynamicRegistryManager registryManager = world.getRegistryManager();
         var trimPattern = patterns.computeIfAbsent(player.getUuid(), uuid -> ItemHelper.getRandomTrimPattern(registryManager, random));
         var trimMaterialKey = teamManager.getTeam(player)
-                .map(team -> team.getKey().equals(CozyCampfireInstance.TEAM_RED) ? ArmorTrimMaterials.REDSTONE : ArmorTrimMaterials.LAPIS)
+                .map(team -> team.key().equals(CozyCampfireInstance.TEAM_RED) ? ArmorTrimMaterials.REDSTONE : ArmorTrimMaterials.LAPIS)
                 .orElse(ArmorTrimMaterials.IRON);
         var trimMaterial = ItemHelper.getTrimMaterial(registryManager, trimMaterialKey);
 

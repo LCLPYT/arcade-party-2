@@ -110,7 +110,7 @@ public abstract class TeamGameInstance extends BaseGameInstance implements Parti
             PositionRotation spawn = getSpawn(team);
 
             if (spawn == null) {
-                gameHandle.getLogger().error("No spawn configured for team {} in map {}", team.getKey().id(), getMap().getDescriptor().getIdentifier());
+                gameHandle.getLogger().error("No spawn configured for team {} in map {}", team.key().id(), getMap().getDescriptor().getIdentifier());
                 continue;
             }
 
@@ -125,7 +125,7 @@ public abstract class TeamGameInstance extends BaseGameInstance implements Parti
 
     @Nullable
     public final PositionRotation getSpawn(Team team) {
-        return getSpawns().get(team.getKey().id());
+        return getSpawns().get(team.key().id());
     }
 
     private Map<String, PositionRotation> getSpawns() {
@@ -144,7 +144,7 @@ public abstract class TeamGameInstance extends BaseGameInstance implements Parti
     }
 
     protected final TeamRef createReference(Team team) {
-        return new TeamRef(team.getKey(), gameHandle.getTranslations());
+        return new TeamRef(team.key(), gameHandle.getTranslations());
     }
 
     @Nullable

@@ -80,7 +80,7 @@ public class DeathMessages {
     }
 
     public TranslatedText eliminated(Team team) {
-        return eliminated(team.getKey());
+        return eliminated(team.key());
     }
 
     public TranslatedText eliminated(TeamKey key) {

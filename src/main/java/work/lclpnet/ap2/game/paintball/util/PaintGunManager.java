@@ -4,6 +4,8 @@ import com.jme3.math.Vector3f;
 import lombok.Setter;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.ShapeContext;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.damage.DamageTypes;
 import net.minecraft.item.ItemStack;
 import net.minecraft.particle.DustParticleEffect;
 import net.minecraft.particle.ParticleTypes;
@@ -20,6 +22,7 @@ import net.minecraft.world.RaycastContext;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.team.DyeTeamKey;
 import work.lclpnet.ap2.impl.scene.Scene;
+import work.lclpnet.ap2.impl.scene.simulation.EntityRefPhysicsElement;
 import work.lclpnet.ap2.impl.scene.simulation.SceneRigidBody;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.RayCastUtil;
@@ -29,6 +32,7 @@ import work.lclpnet.kibu.physics.api.event.collision.ElementCollisionEvents;
 import work.lclpnet.kibu.physics.impl.bullet.collision.space.MinecraftSpace;
 
 import java.util.Random;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BooleanSupplier;
 
@@ -68,6 +72,46 @@ public class PaintGunManager {
                 onBulletHitTerrain(bullet);
             }
         });
+
+        hooks.registerHook(ElementCollisionEvents.ELEMENT_COLLISION, (first, second, manifoldId) -> {
+            if (first instanceof EntityRefPhysicsElement entityElem && second instanceof PaintballBullet bullet) {
+                entityElem.cast().optional().ifPresent(entity -> onBulletHitEntity(bullet, entity));
+                return;
+            }
+
+            if (second instanceof EntityRefPhysicsElement entityElem && first instanceof PaintballBullet bullet) {
+                entityElem.cast().optional().ifPresent(entity -> onBulletHitEntity(bullet, entity));
+            }
+        });
+    }
+
+    private void onBulletHitEntity(PaintballBullet bullet, Entity entity) {
+        if (bullet.isFading() || bullet.isSplitOff()
+                || !(entity instanceof ServerPlayerEntity player)
+                || !participants.isParticipating(player))
+            return;
+
+        Vector3f velocity = bullet.getRigidBody().getLinearVelocity(new Vector3f());
+
+        if (velocity.lengthSquared() < 0.2) return;
+
+        limitVelocity(bullet);
+        bullet.startFading();
+
+        UUID ownerUuid = bullet.getOwner();
+
+        if (ownerUuid == null) return;
+
+        ServerPlayerEntity owner = world.getServer().getPlayerManager().getPlayer(ownerUuid);
+
+        if (owner == null || teams.getTeamManager().areTeamMates(owner, player)) return;
+
+        PaintGun paintGun = bullet.getPaintGun();
+
+        // bypass damage cooldown
+        player.hurtTime = 0;
+        player.timeUntilRegen = 0;
+        player.damage(world, player.getDamageSources().create(DamageTypes.ARROW, owner, owner), paintGun.bullet().damage());
     }
 
     private void onBulletHitTerrain(PaintballBullet bullet) {
@@ -93,7 +137,13 @@ public class PaintGunManager {
         bullet.getRigidBody().getPhysicsLocation(hit);
 
         var settings = bullet.getPaintGun().bullet();
-        float r = bullet.isSplitOff() ? settings.split().splitPaintRadius() : bullet.getPaintGun().bullet().paintRadius();
+
+        float r = bullet.isSplitOff()
+                ? settings.split().splitPaintRadius()
+                : settings.paintRadius();
+
+        int playerDeficit = teams.playerDeficit(team);
+        r *= 1f + (playerDeficit * settings.deficitPaintBoost());
 
         Box box = Box.of(new Vec3d(hit.x, hit.y, hit.z), r * 2, r * 2, r * 2);
 
@@ -159,7 +209,7 @@ public class PaintGunManager {
         final double scale = paintGun.bullet().size();
 
         Vec3d dir = player.getRotationVector();
-        dir = applySpread(dir, paintGun);
+        dir = MathUtil.applySpread(dir, toRadians(paintGun.bulletSpread()), random);
 
         Vec3d pos = getProjectileSpawn(player, dir, scale);
 
@@ -211,11 +261,5 @@ public class PaintGunManager {
         double powerScale = maxPowerScale + (minPowerScale - maxPowerScale) * verticalComponent;
 
         return dir.multiply(basePower * powerScale);
-    }
-
-    private Vec3d applySpread(Vec3d dir, PaintGun paintGun) {
-        double spread = toRadians(paintGun.bulletSpread());
-
-        return MathUtil.applySpread(dir, spread, random);
     }
 }
