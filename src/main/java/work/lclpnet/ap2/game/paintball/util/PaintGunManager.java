@@ -33,7 +33,9 @@ import work.lclpnet.kibu.physics.api.event.collision.ElementCollisionEvents;
 import work.lclpnet.kibu.physics.impl.bullet.collision.space.MinecraftSpace;
 import work.lclpnet.kibu.translate.Translations;
 
+import java.util.HashSet;
 import java.util.Random;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BooleanSupplier;
@@ -54,6 +56,7 @@ public class PaintGunManager {
     private final Participants participants;
     private final Translations translations;
     private final BooleanSupplier gameOver;
+    private final Set<UUID> reloading = new HashSet<>();
     @Setter
     private boolean shootingEnabled = false;
 
@@ -186,7 +189,7 @@ public class PaintGunManager {
     }
 
     public void shoot(ServerPlayerEntity player, PaintGun paintGun, ItemStack stack) {
-        if (!shootingEnabled || player.getItemCooldownManager().isCoolingDown(stack)) return;
+        if (!shootingEnabled || player.getItemCooldownManager().isCoolingDown(stack) || isReloading(player)) return;
 
         if (stack.getDamage() >= stack.getMaxDamage()) {
             translations.translateText("game.ap2.paintball.no_ink").formatted(RED).sendTo(player, true);
@@ -276,5 +279,17 @@ public class PaintGunManager {
         double powerScale = maxPowerScale + (minPowerScale - maxPowerScale) * verticalComponent;
 
         return dir.multiply(basePower * powerScale);
+    }
+
+    public void setReloading(ServerPlayerEntity player) {
+        reloading.add(player.getUuid());
+    }
+
+    public void removeReloading(ServerPlayerEntity player) {
+        reloading.remove(player.getUuid());
+    }
+
+    public boolean isReloading(ServerPlayerEntity player) {
+        return reloading.contains(player.getUuid());
     }
 }

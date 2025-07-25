@@ -16,12 +16,12 @@ public class RifleKit extends PaintGunKit {
 
     private static PaintGun paintGun() {
         return new PaintGun(
-                ID, 3, 1, 0.5, 30,
+                ID, 3, 1, 0.5, 35, 2, 2,
                 new PaintGun.SoundCfg(SoundEvents.ENTITY_ITEM_PICKUP, 0.2f, 2f),
                 new PaintGun.BulletSettings(
                         0.2, 25, 12, 2.0, 0.1f, 3.0f, 4,
                         1.5f, 0.75f,
-                        new PaintGun.BulletSplit(5, 6, 1.1f, 1)
+                        new PaintGun.BulletSplit(4, 6, 1.1f, 1)
                 )
         );
     }

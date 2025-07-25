@@ -1,12 +1,19 @@
 package work.lclpnet.ap2.impl.game.kit;
 
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
 import lombok.Getter;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.server.network.ServerPlayerEntity;
+import work.lclpnet.ap2.impl.util.ItemHelper;
+
+import java.util.Optional;
 
 public class SingleItemKit extends BaseKit {
+
+    private static final MapCodec<String> KIT_CODEC = Codec.STRING.fieldOf("ap2:kit");
 
     @Getter
     private final Item item;
@@ -20,7 +27,15 @@ public class SingleItemKit extends BaseKit {
 
     @Override
     public ItemStack createItemStack(DynamicRegistryManager manager) {
-        return new ItemStack(item);
+        ItemStack stack = new ItemStack(item);
+
+        configureItemStack(stack);
+
+        return stack;
+    }
+
+    public void configureItemStack(ItemStack stack) {
+        ItemHelper.putCustomData(stack, KIT_CODEC, id);
     }
 
     @Override
@@ -34,5 +49,15 @@ public class SingleItemKit extends BaseKit {
     @Override
     public void unequip(ServerPlayerEntity player) {
         player.getInventory().removeStack(KitHandler.KIT_ITEM_SLOT);
+    }
+
+    public static Optional<String> getId(ItemStack stack) {
+        return ItemHelper.getCustomData(stack, KIT_CODEC);
+    }
+
+    public static Optional<SingleItemKit> get(ItemStack stack, KitManager kitManager) {
+        return SingleItemKit.getId(stack)
+                .flatMap(kitManager::byId)
+                .map(k -> k instanceof SingleItemKit sik ? sik : null);
     }
 }

@@ -28,8 +28,7 @@ public class ShotgunKit extends PaintGunKit {
 
     private static PaintGun paintGun() {
         return new PaintGun(
-                ID, 26, 7, 9.0,
-                5,
+                ID, 26, 7, 9.0, 5, 14, 1,
                 new PaintGun.SoundCfg(SoundEvents.ENTITY_CHICKEN_EGG, 0.3f, 0.5f),
                 new PaintGun.BulletSettings(
                         0.15, 25, 16, 2.0, 0.05f, 3.9f, 8,

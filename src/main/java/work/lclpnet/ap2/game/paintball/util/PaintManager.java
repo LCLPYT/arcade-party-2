@@ -383,7 +383,7 @@ public class PaintManager {
         return world.setBlockState(pos, targetState, Block.FORCE_STATE | Block.NOTIFY_LISTENERS | Block.SKIP_DROPS);
     }
 
-    private @Nullable DyeTeamKey getTeam(Block block) {
+    public @Nullable DyeTeamKey getTeam(Block block) {
         return blockTeamMap.get(block);
     }
 

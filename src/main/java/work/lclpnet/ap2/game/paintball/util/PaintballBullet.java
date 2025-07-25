@@ -27,7 +27,7 @@ public class PaintballBullet extends PhysicsBlockDisplayObject {
             FADE_TIME_SECONDS = 1.5d,
             MAX_TRAVEL_DIST = 256,
             MIN_SPLIT_POWER = 10;
-    
+
     public static final int
             TEAM_COLLISION_ENABLE_TICKS = 4;
 
@@ -147,7 +147,13 @@ public class PaintballBullet extends PhysicsBlockDisplayObject {
 
         obj.updateRigidBody(rigidBody);
 
-        Vec3d dir = MathUtil.applySpread(new Vec3d(0, -1, 0), toRadians(paintGun.bullet().split().splitSpread()), random);
+        var parentVelocity = new Vector3f();
+        this.rigidBody.getLinearVelocity(parentVelocity);
+        parentVelocity.normalize();
+
+        double horizontal = 0.2;
+        Vec3d dir = new Vec3d(parentVelocity.x * horizontal, -1, parentVelocity.z * horizontal).normalize();
+        dir = MathUtil.applySpread(dir, toRadians(paintGun.bullet().split().splitSpread()), random);
 
         rigidBody.setLinearVelocity(toBullet(dir.multiply(5)));
         rigidBody.setPhysicsLocation(new Vector3f((float) position.x, (float) position.y, (float) position.z));

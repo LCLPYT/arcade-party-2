@@ -1,10 +1,10 @@
 package work.lclpnet.ap2.game.paintball.kit;
 
+import lombok.Getter;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.UseCooldownComponent;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.ActionResult;
 import work.lclpnet.ap2.base.ArcadeParty;
@@ -18,6 +18,7 @@ import java.util.Optional;
 
 public class PaintGunKit extends SingleItemKit {
 
+    @Getter
     private final PaintGun paintGun;
     private final PaintGunManager paintGunManager;
 
@@ -48,15 +49,9 @@ public class PaintGunKit extends SingleItemKit {
     }
 
     @Override
-    public ItemStack createItemStack(DynamicRegistryManager manager) {
-        ItemStack stack = super.createItemStack(manager);
+    public void configureItemStack(ItemStack stack) {
+        super.configureItemStack(stack);
 
-        configureItemStack(stack);
-
-        return stack;
-    }
-
-    protected void configureItemStack(ItemStack stack) {
         var group = Optional.of(ArcadeParty.identifier(paintGun.id()));
         stack.set(DataComponentTypes.USE_COOLDOWN, new UseCooldownComponent(paintGun.cooldownTicks(), group));
         stack.set(DataComponentTypes.MAX_DAMAGE, paintGun.ammo());

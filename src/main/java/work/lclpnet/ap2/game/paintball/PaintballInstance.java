@@ -18,7 +18,6 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.GameMode;
 import net.minecraft.world.GameRules;
-import org.json.JSONObject;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.game.team.DyeTeamKey;
@@ -30,6 +29,7 @@ import work.lclpnet.ap2.game.paintball.kit.RifleKit;
 import work.lclpnet.ap2.game.paintball.kit.ShotgunKit;
 import work.lclpnet.ap2.game.paintball.kit.SniperKit;
 import work.lclpnet.ap2.game.paintball.util.*;
+import work.lclpnet.ap2.impl.game.GameCommons;
 import work.lclpnet.ap2.impl.game.TeamGameInstance;
 import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer;
 import work.lclpnet.ap2.impl.game.data.Ordering;
@@ -43,7 +43,6 @@ import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.collision.ChunkedCollisionDetector;
 import work.lclpnet.ap2.impl.util.collision.TickMovementObserver;
 import work.lclpnet.ap2.impl.util.handler.VisualCooldown;
-import work.lclpnet.ap2.impl.util.title.AnimatedTitle;
 import work.lclpnet.ap2.impl.util.world.ResetBlockWorldModifier;
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape;
 import work.lclpnet.kibu.hook.HookRegistrar;
@@ -51,7 +50,6 @@ import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks;
 import work.lclpnet.kibu.physics.impl.bullet.collision.space.MinecraftSpace;
 import work.lclpnet.kibu.physics.impl.bullet.collision.space.cache.ChunkCache;
 import work.lclpnet.kibu.physics.impl.bullet.collision.space.generator.TerrainGenerator;
-import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 import work.lclpnet.lobby.game.map.GameMap;
@@ -71,8 +69,7 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
 
     private static final int
             MIN_DURATION_SECONDS = 120,
-            MAX_DURATION_SECONDS = 180,
-            RESULT_DELAY_TICKS = Ticks.seconds(3);
+            MAX_DURATION_SECONDS = 180;
 
     private final IntScoreDataContainer<Team, TeamRef> data = new IntScoreDataContainer<>(this::createReference, Ordering.DESCENDING, "game.ap2.paintball.blocks_painted");
     private final Random random = new Random();
@@ -84,7 +81,7 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
     private PaintballTeams teams;
     private ResetBlockWorldModifier baseWalls;
     private PaintGunManager paintGunManager;
-    private ResultSpot resultSpot;
+    private PaintballResults results;
     private boolean started = false;
 
     public PaintballInstance(MiniGameHandle gameHandle) {
@@ -125,7 +122,14 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
 
         paintManager.countBlocks();
 
-        resultSpot = ResultSpot.fromJson(map.getProperties().getJSONObject("result-spot"));
+        var resultSpot = PaintballResults.ResultSpot.fromJson(map.getProperties().getJSONObject("result-spot"));
+        GameCommons commons = commons(map, world);
+
+        results = new PaintballResults(gameHandle, commons.announcer(), world, resultSpot, data, winManager, () -> teams.stream()
+                .map(getTeamManager()::getTeam)
+                .flatMap(Optional::stream)
+                .map(this::createReference)
+                .toList());
     }
 
     private void buildMapCollisions(ServerWorld world, BlockShape bounds) {
@@ -169,6 +173,10 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
                 .partitionIntoTeams(gameHandle.getParticipants(), teams.stream()
                 .map(PaintballTeam::key)
                 .collect(Collectors.toSet()));
+
+        for (var team : getTeamManager().getMinecraftTeams()) {
+            team.setShowFriendlyInvisibles(true);
+        }
 
         movementObserver.init(gameHandle.getGameScheduler(), gameHandle.getHookRegistrar(), gameHandle.getServer());
 
@@ -262,6 +270,18 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
         commons().createTimer(subject, duration).whenDone(this::beginResults);
 
         started = true;
+
+        var ticker = new PaintballTicker(getWorld(), gameHandle.getParticipants(), teams, paintManager,
+                paintGunManager, kitHandler.getManager());
+
+        ticker.start(gameHandle.getGameScheduler(), gameHandle.getHookRegistrar());
+    }
+
+    private void beginResults() {
+        paintGunManager.setShootingEnabled(false);
+        paintManager.freeze();
+
+        results.beginResults();
     }
 
     private void configureHooksAndProtector() {
@@ -383,59 +403,6 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
         respawnCooldown.setCooldown(player, 50);
     }
 
-    private void beginResults() {
-        gameHandle.resetGameScheduler();
-
-        paintGunManager.setShootingEnabled(false);
-        paintManager.freeze();
-
-        teleportPlayersToResults();
-
-        gameHandle.getGameScheduler().interval(this::teleportPlayersToResults, 1).whenComplete(() -> {
-        });
-
-        commons().announcer().announce("game.ap2.paintball.game_over", null);
-
-        gameHandle.getGameScheduler().timeout(this::showResults, RESULT_DELAY_TICKS);
-    }
-
-    private void teleportPlayersToResults() {
-        ServerWorld world = getWorld();
-        Vec3d pos = resultSpot.pos;
-
-        for (ServerPlayerEntity player : PlayerLookup.all(gameHandle.getServer())) {
-            player.changeGameMode(GameMode.SPECTATOR);
-            player.getAbilities().setFlySpeed(0);
-            player.sendAbilitiesUpdate();
-
-            player.teleport(world, pos.getX(), pos.getY(), pos.getZ(), Set.of(), resultSpot.yaw, resultSpot.pitch, true);
-        }
-    }
-
-    private void showResults() {
-        var animatedTitle = new AnimatedTitle();
-
-        List<TeamRef> teamRefs = teams.stream()
-                .map(getTeamManager()::getTeam)
-                .flatMap(Optional::stream)
-                .map(this::createReference)
-                .toList();
-
-        animatedTitle.add(new PaintballResultAnimation(teamRefs, data, gameHandle.getServer(), gameHandle.getTranslations(), () -> {
-            for (ServerPlayerEntity player : PlayerLookup.all(gameHandle.getServer())) {
-                player.changeGameMode(GameMode.SPECTATOR);
-                player.getAbilities().setFlySpeed(0.05f);
-                player.sendAbilitiesUpdate();
-            }
-
-            winManager.complete();
-        }));
-
-        animatedTitle.start(gameHandle.getGameScheduler(), 1);
-
-        gameHandle.whenDone(animatedTitle::stop);
-    }
-
     @Override
     public void participantRemoved(ServerPlayerEntity player) {
         balanceTeams();
@@ -459,17 +426,6 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
 
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
             player.setHealth(player.getMaxHealth());
-        }
-    }
-
-    private record ResultSpot(Vec3d pos, float yaw, float pitch) {
-
-        public static ResultSpot fromJson(JSONObject json) {
-            Vec3d pos = MapUtil.readCenteredVec3d(json.getJSONArray("pos"));
-            float yaw = MapUtil.readAngle(json.optNumber("yaw", 0));
-            float pitch = MapUtil.readAngle(json.optNumber("pitch", 0));
-
-            return new ResultSpot(pos, yaw, pitch);
         }
     }
 }

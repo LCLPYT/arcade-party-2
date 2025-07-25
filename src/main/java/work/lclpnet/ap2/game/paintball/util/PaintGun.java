@@ -9,12 +9,14 @@ import net.minecraft.sound.SoundEvent;
  * @param bulletCount The amount of bullets to fire at once.
  * @param bulletSpread The maximum random bullet spread angle in degrees.
  * @param ammo The ammo count. Each shot cost one ammo.
+ * @param reloadTicks The amount of ticks it takes to reload the next ink.
+ * @param reloadAmount The amount of ink to reload at once.
  * @param fireSound The sound to be played when firing.
  * @param bullet Bullet settings
  */
 public record PaintGun(
-        String id, int cooldownTicks, int bulletCount, double bulletSpread, int ammo, SoundCfg fireSound,
-        BulletSettings bullet
+        String id, int cooldownTicks, int bulletCount, double bulletSpread, int ammo, int reloadTicks, int reloadAmount,
+        SoundCfg fireSound, BulletSettings bullet
 ) {
 
     /**
