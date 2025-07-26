@@ -1,5 +1,6 @@
 package work.lclpnet.ap2.game.paintball.util;
 
+import it.unimi.dsi.fastutil.Pair;
 import net.minecraft.block.BlockState;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.entity.attribute.EntityAttributes;
@@ -27,6 +28,7 @@ import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 import static java.lang.Math.max;
@@ -90,7 +92,7 @@ public class PaintballTicker {
         }
 
         if (onInk == OnInk.OWN && player.isSneaking()) {
-            player.addStatusEffect(new StatusEffectInstance(StatusEffects.INVISIBILITY, 20, 0, false, false, true));
+            player.addStatusEffect(new StatusEffectInstance(StatusEffects.INVISIBILITY, 20, 0, false, false, false));
             setAttribute(player, EntityAttributes.MOVEMENT_SPEED, 0.14);
             setAttribute(player, EntityAttributes.SNEAKING_SPEED, 1.0);
 
@@ -111,7 +113,6 @@ public class PaintballTicker {
     }
 
     private void tickReload(ServerPlayerEntity player, Entry entry) {
-
         if (entry.outOfCombatTicks >= HEAL_DELAY_TICKS) {
             player.setHealth(player.getHealth() + HEAL_PER_SECOND / 20);
         }
@@ -120,24 +121,25 @@ public class PaintballTicker {
                 new DustParticleEffect(team.key().color(), 0.8f), player.getX(), player.getY(), player.getZ(),
                 2, 0.2, 0, 0.2, 0.2));
 
-        for (ItemStack stack : player.getInventory()) {
-            if (!(SingleItemKit.get(stack, kitManager).orElse(null) instanceof PaintGunKit kit)) continue;
+        Pair<PaintGun, ItemStack> pair = getPaintGunAndStack(player).orElse(null);
 
-            PaintGun paintGun = kit.getPaintGun();
+        if (pair == null) return;
 
-            if (stack.getDamage() <= 0) continue;
+        PaintGun paintGun = pair.left();
+        ItemStack stack = pair.right();
 
-            if (entry.reloadTicks >= paintGun.reloadTicks()) {
-                entry.reloadTicks = 0;
-                stack.set(DataComponentTypes.DAMAGE, max(0, stack.getDamage() - paintGun.reloadAmount()));
-                world.playSound(null, player.getX(), player.getY(), player.getZ(),
-                        SoundEvents.BLOCK_BREWING_STAND_BREW, SoundCategory.PLAYERS, 0.2f, 1f);
-            } else {
-                entry.reloadTicks++;
-            }
+        if (stack.getDamage() <= 0) return;  // nothing to reload
 
-            break;
+        if (entry.reloadTicks < paintGun.reloadTicks()) {
+            entry.reloadTicks++;
+            return;
         }
+
+        entry.reloadTicks = 0;
+        stack.set(DataComponentTypes.DAMAGE, max(0, stack.getDamage() - paintGun.reloadAmount()));
+
+        world.playSound(null, player.getX(), player.getY(), player.getZ(),
+                SoundEvents.BLOCK_BREWING_STAND_BREW, SoundCategory.PLAYERS, 0.2f, 1f);
     }
 
     private @NotNull OnInk standingOnInk(ServerPlayerEntity player) {
@@ -164,6 +166,16 @@ public class PaintballTicker {
         }
 
         return onOwnInk ? OnInk.OWN : OnInk.NONE;
+    }
+
+    public Optional<Pair<PaintGun, ItemStack>> getPaintGunAndStack(ServerPlayerEntity player) {
+        for (ItemStack stack : player.getInventory()) {
+            if (!(SingleItemKit.get(stack, kitManager).orElse(null) instanceof PaintGunKit kit)) continue;
+
+            return Optional.of(Pair.of(kit.getPaintGun(), stack));
+        }
+
+        return Optional.empty();
     }
 
     private enum OnInk { NONE, ENEMY, OWN }

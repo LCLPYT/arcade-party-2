@@ -193,7 +193,7 @@ public class PaintGunManager {
 
         if (stack.getDamage() >= stack.getMaxDamage()) {
             translations.translateText("game.ap2.paintball.no_ink").formatted(RED).sendTo(player, true);
-            player.playSoundToPlayer(SoundEvents.BLOCK_NOTE_BLOCK_BASEDRUM.value(), SoundCategory.PLAYERS, 0.2f, 2f);
+            player.playSoundToPlayer(SoundEvents.BLOCK_NOTE_BLOCK_HAT.value(), SoundCategory.PLAYERS, 0.2f, 2f);
             return;
         }
 
@@ -291,5 +291,9 @@ public class PaintGunManager {
 
     public boolean isReloading(ServerPlayerEntity player) {
         return reloading.contains(player.getUuid());
+    }
+
+    public void refillPaintGun(ItemStack stack) {
+        stack.set(DataComponentTypes.DAMAGE, 0);
     }
 }

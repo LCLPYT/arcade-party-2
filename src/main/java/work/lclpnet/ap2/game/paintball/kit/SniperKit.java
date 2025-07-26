@@ -20,8 +20,8 @@ public class SniperKit extends PaintGunKit {
                 new PaintGun.SoundCfg(SoundEvents.ITEM_MACE_SMASH_AIR, 0.4f, 1f),
                 new PaintGun.BulletSettings(
                         0.3, 100, 1, 1.0, 0.01f, 19.5f, 4,
-                        2.8f, 0.55f,
-                        new PaintGun.BulletSplit(0, 10, 2.2f, 0.5f)
+                        2.8f, 0.15f,
+                        new PaintGun.BulletSplit(0, 9, 2.2f, 0.5f)
                 )
         );
     }

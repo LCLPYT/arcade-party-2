@@ -71,6 +71,7 @@ public class SpecialItems implements SpecialItemContext {
     private @Setter @Getter int spawnMinTicks = Ticks.seconds(4);
     private @Setter @Getter int spawnMaxTicks = Ticks.seconds(7);
     private @Setter @Getter int maxItems = 16;
+    private @Setter @Getter boolean markGlowing = false;
 
     public SpecialItems(MiniGameHandle gameHandle, GameMap map, ServerWorld world, Random random, SpecialItemPositions positions, SpecialItemRegistry registry) {
         this.gameHandle = gameHandle;
@@ -211,8 +212,11 @@ public class SpecialItems implements SpecialItemContext {
         // check if the player already has a special item
         if (hasAnySpecialItem(player)) return false;
 
-        ItemStack stack = object.itemDisplay().getStack().copy();
         SpecialItem item = object.item();
+
+        if (!item.canBePickedUp(player)) return false;
+
+        ItemStack stack = object.itemDisplay().getStack().copy();
 
         stack.set(DataComponentTypes.CUSTOM_NAME, itemName(item).translateFor(player));
 
@@ -223,7 +227,9 @@ public class SpecialItems implements SpecialItemContext {
             player.sendMessage(Text.literal("↓ ").formatted(Formatting.AQUA).append(desc), true);
         });
 
-        player.getInventory().setStack(8, stack);
+        if (item.shouldTransferToInventory(player)) {
+            player.getInventory().setStack(8, stack);
+        }
 
         item.onPickedUp(player, stack, this);
 
@@ -232,7 +238,7 @@ public class SpecialItems implements SpecialItemContext {
 
     private TranslatedText itemName(SpecialItem item) {
         Identifier gameId = gameHandle.getGameInfo().getId();
-        String key = join(".", "item", gameId.getNamespace(), gameId.getPath(), item.id());
+        String key = join(".", "game", gameId.getNamespace(), gameId.getPath(), "item", item.id());
 
         return gameHandle.getTranslations().translateText(key)
                 .styled(style -> style.withItalic(false).withFormatting(Rarity.UNCOMMON.getFormatting()));
@@ -240,7 +246,7 @@ public class SpecialItems implements SpecialItemContext {
 
     private Optional<Text> itemDescription(ServerPlayerEntity player, SpecialItem item) {
         Identifier gameId = gameHandle.getGameInfo().getId();
-        String key = join(".", "item", gameId.getNamespace(), gameId.getPath(), item.id(), "desc");
+        String key = join(".", "game", gameId.getNamespace(), gameId.getPath(), "item", item.id(), "desc");
 
         if (!gameHandle.getTranslations().getTranslator().hasTranslation("en_us", key)) {
             return Optional.empty();
@@ -341,6 +347,10 @@ public class SpecialItems implements SpecialItemContext {
         ItemStack stack = configureStack(item, item.createItemStack(world.getRegistryManager()));
 
         SpecialItemObject obj = scene.spawnItem(pos, item, stack, gameHandle.getTranslations(), itemName(item));
+
+        if (markGlowing) {
+            obj.setGlowing(true);
+        }
 
         scheduleDespawn(obj);
     }

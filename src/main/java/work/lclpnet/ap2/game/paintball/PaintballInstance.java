@@ -25,6 +25,7 @@ import work.lclpnet.ap2.api.game.team.Team;
 import work.lclpnet.ap2.api.game.team.TeamManager;
 import work.lclpnet.ap2.api.map.MapBootstrapFunction;
 import work.lclpnet.ap2.core.hook.SpectatePlayerCallback;
+import work.lclpnet.ap2.game.paintball.item.MedKitItem;
 import work.lclpnet.ap2.game.paintball.kit.RifleKit;
 import work.lclpnet.ap2.game.paintball.kit.ShotgunKit;
 import work.lclpnet.ap2.game.paintball.kit.SniperKit;
@@ -34,6 +35,7 @@ import work.lclpnet.ap2.impl.game.TeamGameInstance;
 import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer;
 import work.lclpnet.ap2.impl.game.data.Ordering;
 import work.lclpnet.ap2.impl.game.data.type.TeamRef;
+import work.lclpnet.ap2.impl.game.item.SpecialItems;
 import work.lclpnet.ap2.impl.game.kit.KitHandler;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.scene.Scene;
@@ -50,7 +52,6 @@ import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks;
 import work.lclpnet.kibu.physics.impl.bullet.collision.space.MinecraftSpace;
 import work.lclpnet.kibu.physics.impl.bullet.collision.space.cache.ChunkCache;
 import work.lclpnet.kibu.physics.impl.bullet.collision.space.generator.TerrainGenerator;
-import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 import work.lclpnet.lobby.game.map.GameMap;
 import work.lclpnet.lobby.util.PlayerReset;
@@ -83,6 +84,8 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
     private PaintGunManager paintGunManager;
     private PaintballResults results;
     private boolean started = false;
+    private SpecialItems specialItems;
+    private PaintballTicker ticker;
 
     public PaintballInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
@@ -118,6 +121,7 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
 
         replaceTemplateColors(world);
         buildMapCollisions(world, bounds);
+        setupSpecialItems(world, map);
         closeBases(world);
 
         paintManager.countBlocks();
@@ -191,6 +195,13 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
                 .set(GameRules.FALL_DAMAGE, false);
     }
 
+    private void setupSpecialItems(ServerWorld world, GameMap map) {
+        specialItems = SpecialItems.create(gameHandle, map, world, random, commons(map, world).debugController(), r -> r
+                .register(new MedKitItem(), 0.5f));
+
+        specialItems.setup();  // TODO fix spawn locations on unreachable places
+    }
+
     private void setupPlayerCollisions() {
         var entityCollisions = new EntityCollisionManager(getWorld(), gameHandle::getParticipants);
         entityCollisions.init(gameHandle.getScheduler());
@@ -259,7 +270,7 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
         kitHandler.closeKitChanger();
         kitHandler.selectKitItem();
 
-        setupRespawnCooldown();
+        respawnCooldown.setOnCooldownOver(this::respawnPlayer);
         configureHooksAndProtector();
 
         paintGunManager.setShootingEnabled(true);
@@ -271,10 +282,12 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
 
         started = true;
 
-        var ticker = new PaintballTicker(getWorld(), gameHandle.getParticipants(), teams, paintManager,
+        ticker = new PaintballTicker(getWorld(), gameHandle.getParticipants(), teams, paintManager,
                 paintGunManager, kitHandler.getManager());
 
         ticker.start(gameHandle.getGameScheduler(), gameHandle.getHookRegistrar());
+
+//        specialItems.spawnPeriodically();
     }
 
     private void beginResults() {
@@ -301,23 +314,22 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
         });
     }
 
-    private void setupRespawnCooldown() {
-        TaskScheduler scheduler = gameHandle.getGameScheduler();
+    private void respawnPlayer(ServerPlayerEntity player) {
+        teams.teamOf(player).ifPresent(pbt -> teleportToTeamSpawn(player, pbt));
 
-        respawnCooldown.setOnCooldownOver(player -> {
-            teams.teamOf(player).ifPresent(pbt -> teleportToTeamSpawn(player, pbt));
+        player.setHealth(player.getMaxHealth());
+        player.getAbilities().setFlySpeed(0);
+        player.sendAbilitiesUpdate();
 
-            player.setHealth(player.getMaxHealth());
-            player.getAbilities().setFlySpeed(0);
+        ticker.getPaintGunAndStack(player)
+                .ifPresent(pair -> paintGunManager.refillPaintGun(pair.right()));
+
+        // delay game mode change one tick to prevent other players from seeing the teleport
+        gameHandle.getGameScheduler().immediate(() -> {
+            player.getAbilities().setFlySpeed(0.05f);
             player.sendAbilitiesUpdate();
 
-            // delay game mode change one tick to prevent other players from seeing the teleport
-            scheduler.immediate(() -> {
-                player.getAbilities().setFlySpeed(0.05f);
-                player.sendAbilitiesUpdate();
-
-                player.changeGameMode(gameHandle.getPlayerUtil().getDefaultGameMode());
-            });
+            player.changeGameMode(gameHandle.getPlayerUtil().getDefaultGameMode());
         });
     }
 

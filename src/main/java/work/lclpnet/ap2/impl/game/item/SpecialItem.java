@@ -37,6 +37,14 @@ public interface SpecialItem {
         return true;
     }
 
+    default boolean canBePickedUp(ServerPlayerEntity player) {
+        return true;
+    }
+
+    default boolean shouldTransferToInventory(ServerPlayerEntity player) {
+        return true;
+    }
+
     /**
      * Called when a player picked up an instance of the special item.
      * @param player The player.

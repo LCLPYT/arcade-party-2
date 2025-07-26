@@ -1,8 +1,10 @@
 package work.lclpnet.ap2.impl.util;
 
+import net.minecraft.entity.Entity;
 import net.minecraft.network.packet.s2c.play.ParticleS2CPacket;
 import net.minecraft.particle.ParticleEffect;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
 
 public class ParticleHelper {
 
@@ -14,5 +16,11 @@ public class ParticleHelper {
         for (ServerPlayerEntity player : players) {
             player.networkHandler.sendPacket(packet);
         }
+    }
+
+    public static <T extends ParticleEffect> void spawnParticleAt(Entity entity, T particle, int count, double dx, double dy, double dz, double speed) {
+        if (!(entity.getWorld() instanceof ServerWorld world)) return;
+
+        world.spawnParticles(particle, entity.getX(), entity.getY(), entity.getZ(), count, dx, dy, dz, speed);
     }
 }

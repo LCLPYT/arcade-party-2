@@ -1,6 +1,7 @@
 package work.lclpnet.ap2.impl.util;
 
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
+import net.minecraft.entity.Entity;
 import net.minecraft.network.packet.s2c.play.PlaySoundS2CPacket;
 import net.minecraft.registry.Registries;
 import net.minecraft.server.MinecraftServer;
@@ -31,6 +32,10 @@ public class SoundHelper {
         var packet = new PlaySoundS2CPacket(entry, category, x, y, z, volume, pitch, seed);
 
         player.networkHandler.sendPacket(packet);
+    }
+
+    public static void playSoundAt(Entity entity, SoundEvent sound, SoundCategory category, float volume, float pitch) {
+        entity.getWorld().playSound(null, entity.getX(), entity.getY(), entity.getZ(), sound, category, volume, pitch);
     }
 
     /**

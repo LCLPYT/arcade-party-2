@@ -125,4 +125,8 @@ public class SpecialItemObject extends Object3d implements Animatable {
     public void setPickupDelay(int delayTicks) {
         pickupDelay = delayTicks / 20.d;
     }
+
+    public void setGlowing(boolean glowing) {
+        itemDisplay.setGlowing(glowing);
+    }
 }
