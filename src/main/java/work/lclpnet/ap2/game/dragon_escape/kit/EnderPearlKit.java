@@ -47,7 +47,7 @@ public class EnderPearlKit extends SingleItemKit {
     public void init() {
         handle.hooks().registerHook(ProjectileShootCallback.HOOK, (shooter, projectile) -> {
             if (shooter instanceof ServerPlayerEntity player && projectile instanceof EnderPearlEntity && handle.hasKitEquipped(player, this)) {
-                EntityUtil.putCustomData(projectile, ORIGIN_CODEC, player.getPos());
+                EntityUtil.sutCustomData(projectile, ORIGIN_CODEC, player.getPos());
 
                 UUID uuid = projectile.getUuid();
 
@@ -77,9 +77,7 @@ public class EnderPearlKit extends SingleItemKit {
                         .formatted(RED)
                         .sendTo(player);
 
-                player.playSoundToPlayer(SoundEvents.BLOCK_NOTE_BLOCK_BASS.value(), SoundCategory.NEUTRAL, 0.5f, 1f);
-
-                equip(player);
+                refund(player.networkHandler);
 
                 player.getItemCooldownManager().set(Registries.ITEM.getId(Items.ENDER_PEARL), RETRY_TICKS);
 

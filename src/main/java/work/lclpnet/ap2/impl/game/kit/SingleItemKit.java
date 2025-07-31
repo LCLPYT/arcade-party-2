@@ -35,7 +35,7 @@ public class SingleItemKit extends BaseKit {
     }
 
     public void configureItemStack(ItemStack stack) {
-        ItemHelper.putCustomData(stack, KIT_CODEC, id);
+        ItemHelper.setCustomData(stack, KIT_CODEC, id);
     }
 
     @Override

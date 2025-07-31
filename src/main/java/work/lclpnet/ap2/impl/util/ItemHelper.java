@@ -180,7 +180,7 @@ public class ItemHelper {
         return chestPlate;
     }
 
-    public static <T> void putCustomData(ItemStack stack, MapEncoder<T> encoder, T value) {
+    public static <T> void setCustomData(ItemStack stack, MapEncoder<T> encoder, T value) {
         stack.set(DataComponentTypes.CUSTOM_DATA, stack.getOrDefault(DataComponentTypes.CUSTOM_DATA, NbtComponent.DEFAULT)
                 .with(NbtOps.INSTANCE, encoder, value)
                 .getOrThrow());

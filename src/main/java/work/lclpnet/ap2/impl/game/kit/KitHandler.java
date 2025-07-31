@@ -196,8 +196,6 @@ public class KitHandler {
 
         readView.inject(manager);
 
-        manager.init();
-
         return new KitHandler(manager, gameHandle.getParticipants(), handle);
     }
 }

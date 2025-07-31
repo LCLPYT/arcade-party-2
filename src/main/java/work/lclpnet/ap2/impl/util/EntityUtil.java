@@ -54,7 +54,7 @@ public class EntityUtil {
         instance.removeModifier(id);
     }
 
-    public static <T> void putCustomData(Entity entity, MapEncoder<T> encoder, T value) {
+    public static <T> void sutCustomData(Entity entity, MapEncoder<T> encoder, T value) {
         entity.setComponent(DataComponentTypes.CUSTOM_DATA, entity.getOrDefault(DataComponentTypes.CUSTOM_DATA, NbtComponent.DEFAULT)
                 .with(NbtOps.INSTANCE, encoder, value)
                 .getOrThrow());
