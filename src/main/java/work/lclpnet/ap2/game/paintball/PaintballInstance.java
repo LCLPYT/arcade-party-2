@@ -1,5 +1,7 @@
 package work.lclpnet.ap2.game.paintball;
 
+import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
+import it.unimi.dsi.fastutil.longs.LongSet;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -18,12 +20,17 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.GameMode;
 import net.minecraft.world.GameRules;
+import org.jetbrains.annotations.NotNull;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.game.team.DyeTeamKey;
 import work.lclpnet.ap2.api.game.team.Team;
 import work.lclpnet.ap2.api.game.team.TeamManager;
+import work.lclpnet.ap2.api.map.MapBootstrap;
 import work.lclpnet.ap2.api.map.MapBootstrapFunction;
+import work.lclpnet.ap2.api.util.world.AdjacentBlocks;
+import work.lclpnet.ap2.api.util.world.BlockPredicate;
+import work.lclpnet.ap2.api.util.world.WorldScanner;
 import work.lclpnet.ap2.core.hook.SpectatePlayerCallback;
 import work.lclpnet.ap2.game.paintball.item.MedKitItem;
 import work.lclpnet.ap2.game.paintball.kit.RifleKit;
@@ -38,6 +45,7 @@ import work.lclpnet.ap2.impl.game.data.type.TeamRef;
 import work.lclpnet.ap2.impl.game.item.SpecialItems;
 import work.lclpnet.ap2.impl.game.kit.KitHandler;
 import work.lclpnet.ap2.impl.map.MapUtil;
+import work.lclpnet.ap2.impl.map.ServerThreadMapBootstrap;
 import work.lclpnet.ap2.impl.scene.Scene;
 import work.lclpnet.ap2.impl.scene.ServerWorldMountContext;
 import work.lclpnet.ap2.impl.scene.simulation.EntityCollisionManager;
@@ -45,7 +53,10 @@ import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.collision.ChunkedCollisionDetector;
 import work.lclpnet.ap2.impl.util.collision.TickMovementObserver;
 import work.lclpnet.ap2.impl.util.handler.VisualCooldown;
+import work.lclpnet.ap2.impl.util.world.BfsWorldScanner;
 import work.lclpnet.ap2.impl.util.world.ResetBlockWorldModifier;
+import work.lclpnet.ap2.impl.util.world.SimpleAdjacentBlocks;
+import work.lclpnet.ap2.impl.util.world.WalkableBlockPredicate;
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks;
@@ -101,6 +112,11 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
     @Override
     protected DataContainer<Team, TeamRef> getData() {
         return data;
+    }
+
+    @Override
+    protected MapBootstrap getMapBootstrap() {
+        return new ServerThreadMapBootstrap(this);
     }
 
     @Override
@@ -196,10 +212,29 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
     }
 
     private void setupSpecialItems(ServerWorld world, GameMap map) {
-        specialItems = SpecialItems.create(gameHandle, map, world, random, commons(map, world).debugController(), r -> r
+        LongSet reachable = findReachablePositions(world, map);
+        BlockPredicate validSpawn = pos -> reachable.contains(pos.asLong());
+
+        specialItems = SpecialItems.create(gameHandle, map, world, random, validSpawn, commons(map, world).debugController(), r -> r
                 .register(new MedKitItem(), 0.5f));
 
-        specialItems.setup();  // TODO fix spawn locations on unreachable places
+        specialItems.setup();
+    }
+
+    private @NotNull LongSet findReachablePositions(ServerWorld world, GameMap map) {
+        BlockBox bounds = SpecialItems.getSpawnArea(map).bounds();
+        BlockPredicate predicate = BlockPredicate.and(bounds::contains, new WalkableBlockPredicate(world));
+        AdjacentBlocks adjacent = new SimpleAdjacentBlocks(predicate, 1);
+        WorldScanner scanner = new BfsWorldScanner(adjacent);
+
+        LongSet spawns = new LongOpenHashSet();
+
+        PaintballTeam anyTeam = teams.iterator().next();
+        BlockPos startPos = BlockPos.ofFloored(anyTeam.spawn());
+
+        scanner.scan(startPos).forEachRemaining(pos -> spawns.add(pos.asLong()));
+
+        return spawns;
     }
 
     private void setupPlayerCollisions() {

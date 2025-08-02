@@ -23,14 +23,17 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.minecraft.world.border.WorldBorder;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.util.world.BlockPredicate;
 import work.lclpnet.ap2.base.util.IconMaker;
 import work.lclpnet.ap2.impl.ds.WeightedList;
+import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.debug.DebugController;
 import work.lclpnet.ap2.impl.util.world.WalkableBlockPredicate;
+import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.kibu.hook.player.PlayerInventoryHooks;
@@ -89,22 +92,29 @@ public class SpecialItems implements SpecialItemContext {
 
     public void init() {
         JSONObject cfg = map.requireProperty("items");
-
         JSONObject overrides = cfg.optJSONObject("overrides");
 
         weightedItems = registry.weightedItems(overrides != null ? overrides : new JSONObject());
-
-        JSONObject areaJson = cfg.getJSONObject("spawn-area");
-        BlockPos mapSpawn = BlockPos.ofFloored(MapUtils.getSpawnPosition(map));
 
         spawnMinTicks = max(1, cfg.optNumber("spawn-min-ticks", spawnMinTicks).intValue());
         spawnMaxTicks = max(1, cfg.optNumber("spawn-max-ticks", spawnMaxTicks).intValue());
         despawnTicks = cfg.optNumber("despawn-ticks", despawnTicks).intValue();
         maxItems = cfg.optNumber("max-items", maxItems).intValue();
 
-        positions.init(areaJson, mapSpawn);
+        BlockShape shape = getSpawnArea(map);
+
+        positions.setShape(shape);
 
         scene.init(gameHandle.getScheduler(), gameHandle.getHookRegistrar());
+    }
+
+    public static @NotNull BlockShape getSpawnArea(GameMap map) {
+        BlockPos mapSpawn = BlockPos.ofFloored(MapUtils.getSpawnPosition(map));
+
+        JSONObject cfg = map.requireProperty("items");
+        JSONObject areaJson = cfg.getJSONObject("spawn-area");
+
+        return MapUtil.readShape(areaJson, mapSpawn);
     }
 
     public void setup() {

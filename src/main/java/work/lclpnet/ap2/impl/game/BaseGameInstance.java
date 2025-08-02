@@ -24,7 +24,7 @@ import work.lclpnet.ap2.api.map.MapBootstrap;
 import work.lclpnet.ap2.api.map.MapBootstrapFunction;
 import work.lclpnet.ap2.api.map.MapFacade;
 import work.lclpnet.ap2.base.ArcadeParty;
-import work.lclpnet.ap2.impl.map.AsyncMapBootstrap;
+import work.lclpnet.ap2.impl.map.ServerThreadMapBootstrap;
 import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedPlayerBossBar;
 import work.lclpnet.ap2.impl.util.effect.ApEffect;
 import work.lclpnet.ap2.impl.util.effect.ApEffects;
@@ -109,7 +109,7 @@ public abstract class BaseGameInstance implements MiniGameInstance {
 
         // if a child class implements the MapBootstrapFunction interface
         if (this instanceof MapBootstrapFunction fun) {
-            return new AsyncMapBootstrap(fun);
+            return new ServerThreadMapBootstrap(fun);
         }
 
         return MapBootstrap.NONE;
