@@ -10,7 +10,6 @@ import org.joml.Vector3d;
 import work.lclpnet.ap2.impl.scene.MountContext;
 import work.lclpnet.ap2.impl.scene.Scene;
 import work.lclpnet.ap2.impl.scene.animation.AnimationContext;
-import work.lclpnet.ap2.impl.scene.object.PhysicsBlockDisplayObject;
 import work.lclpnet.ap2.impl.scene.simulation.SceneRigidBody;
 import work.lclpnet.ap2.impl.util.math.MathUtil;
 
@@ -21,18 +20,15 @@ import static java.lang.Math.max;
 import static java.lang.Math.toRadians;
 import static work.lclpnet.kibu.physics.impl.bullet.math.Convert.toBullet;
 
-public class PaintballBullet extends PhysicsBlockDisplayObject {
+public class PaintballBullet extends PaintballProjectile {
 
     private static final double
             FADE_TIME_SECONDS = 1.5d,
             MAX_TRAVEL_DIST = 256,
             MIN_SPLIT_POWER = 10;
 
-    public static final int
-            TEAM_COLLISION_ENABLE_TICKS = 4;
-
     @Getter
-    private final PaintGun paintGun;
+    private final PaintGun.BulletSettings settings;
     private final Scene scene;
     private final Random random;
     @Getter @Setter
@@ -48,18 +44,17 @@ public class PaintballBullet extends PhysicsBlockDisplayObject {
     private int hits = 0;
     private double splitTimer = 0;
     private int splits = 0;
-    private int age = 0;
 
-    public PaintballBullet(BlockState blockState, ServerWorld world, PaintGun paintGun, Scene scene, Random random) {
+    public PaintballBullet(BlockState blockState, ServerWorld world, PaintGun.BulletSettings settings, Scene scene, Random random) {
         super(blockState, world);
-        this.paintGun = paintGun;
+        this.settings = settings;
         this.scene = scene;
         this.random = random;
 
-        rigidBody.setMass(paintGun.bullet().mass());
+        rigidBody.setMass(settings.mass());
 
         // prevent tunneling at high velocities
-        if (paintGun.bullet().power() >= 20) {
+        if (settings.power() >= 20) {
             rigidBody.setCcdMotionThreshold(1e-4f);
             rigidBody.setCcdSweptSphereRadius(0.1f);
         }
@@ -101,30 +96,22 @@ public class PaintballBullet extends PhysicsBlockDisplayObject {
         }
 
         tickSplitting(dt);
-
-        if (age++ == TEAM_COLLISION_ENABLE_TICKS) {
-            enableTeamCollision();
-        }
-    }
-
-    private void enableTeamCollision() {
-        int groups = rigidBody.getCollideWithGroups();
-        int group = rigidBody.getCollisionGroup();
-
-        rigidBody.setCollideWithGroups(groups | (group >> 1));
     }
 
     private void tickSplitting(double dt) {
-        if (splitOff || splits >= paintGun.bullet().split().maxSplits()) return;
+        if (splitOff || splits >= settings.split().maxSplits()) return;
 
         var velocity = new Vector3f();
         rigidBody.getLinearVelocity(velocity);
 
-        if (velocity.lengthSquared() < MIN_SPLIT_POWER * MIN_SPLIT_POWER) return;
+        if (settings.split().splitTicks() == Integer.MAX_VALUE
+                || velocity.lengthSquared() < MIN_SPLIT_POWER * MIN_SPLIT_POWER) return;
 
         if (splitTimer <= 0) {
-            splitTimer = paintGun.bullet().split().splitTicks() / 20f;
-            split();
+            splitTimer = settings.split().splitTicks() / 20f;
+            splits++;
+
+            this.split();
         } else {
             splitTimer = max(0, splitTimer - dt);
         }
@@ -135,11 +122,9 @@ public class PaintballBullet extends PhysicsBlockDisplayObject {
     }
 
     private void split() {
-        splits++;
-
-        var obj = new PaintballBullet(getBlockState(), world, paintGun, scene, random);
+        var obj = new PaintballBullet(getBlockState(), world, settings, scene, random);
         obj.position.set(position);
-        obj.scale.set(paintGun.bullet().size() * 0.2f);
+        obj.scale.set(settings.size() * 0.2f);
         obj.setSplitOff();
         obj.setOwner(owner);
 
@@ -153,7 +138,7 @@ public class PaintballBullet extends PhysicsBlockDisplayObject {
 
         double horizontal = 0.2;
         Vec3d dir = new Vec3d(parentVelocity.x * horizontal, -1, parentVelocity.z * horizontal).normalize();
-        dir = MathUtil.applySpread(dir, toRadians(paintGun.bullet().split().splitSpread()), random);
+        dir = MathUtil.applySpread(dir, toRadians(settings.split().splitSpread()), random);
 
         rigidBody.setLinearVelocity(toBullet(dir.multiply(5)));
         rigidBody.setPhysicsLocation(new Vector3f((float) position.x, (float) position.y, (float) position.z));
@@ -168,7 +153,7 @@ public class PaintballBullet extends PhysicsBlockDisplayObject {
     public void startDespawnTimer() {
         if (despawnTimer >= 0 || isFading()) return;
 
-        despawnTimer = paintGun.bullet().despawnSeconds();
+        despawnTimer = settings.despawnSeconds();
     }
 
     public boolean isFading() {
@@ -184,7 +169,7 @@ public class PaintballBullet extends PhysicsBlockDisplayObject {
     }
 
     public void onHit() {
-        if (++hits == paintGun.bullet().maxHits() || splitOff) {
+        if (++hits == settings.maxHits() || splitOff) {
             startFading();
         }
     }

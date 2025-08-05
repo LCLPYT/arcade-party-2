@@ -46,7 +46,9 @@ public record PaintGun(
      */
     public record BulletSplit(
             int splitTicks, int maxSplits, float splitPaintRadius, float splitSpread
-    ) {}
+    ) {
+        public static final BulletSplit NO_SPLIT = new BulletSplit(Integer.MAX_VALUE, 0, 0, 0);
+    }
 
     public record SoundCfg(SoundEvent sound, float volume, float pitch) {}
 }

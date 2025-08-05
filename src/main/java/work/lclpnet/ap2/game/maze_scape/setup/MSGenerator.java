@@ -11,7 +11,7 @@ import work.lclpnet.ap2.game.maze_scape.gen.GraphGenerator;
 import work.lclpnet.ap2.game.maze_scape.gen.GraphGenerator.Result;
 import work.lclpnet.ap2.game.maze_scape.gen.Node;
 import work.lclpnet.ap2.game.maze_scape.util.MSStruct;
-import work.lclpnet.ap2.impl.util.FutureUtil;
+import work.lclpnet.ap2.impl.util.ThreadUtil;
 import work.lclpnet.ap2.impl.util.math.AffineIntMatrix;
 import work.lclpnet.ap2.impl.util.structure.StructureUtil;
 import work.lclpnet.ap2.impl.util.world.ResetBlockWorldModifier;
@@ -309,7 +309,7 @@ public class MSGenerator {
         });
 
         // finally place structure on the server thread
-        return future.thenCompose(FutureUtil.onThread(world.getServer(), res -> {
+        return future.thenCompose(ThreadUtil.onThread(world.getServer(), res -> {
             decorate = res.success();
             var graph = res.graph();
 

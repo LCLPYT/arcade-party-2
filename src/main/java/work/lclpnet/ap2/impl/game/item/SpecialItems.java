@@ -37,6 +37,7 @@ import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.kibu.hook.player.PlayerInventoryHooks;
+import work.lclpnet.kibu.hook.player.PlayerSwingHandHook;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.RunningTask;
 import work.lclpnet.kibu.scheduler.api.SchedulerAction;
@@ -127,6 +128,7 @@ public class SpecialItems implements SpecialItemContext {
         hooks.registerHook(PlayerInventoryHooks.DROP_ITEM, this::onDropItem);
         hooks.registerHook(PlayerInteractionHooks.USE_ITEM, this::interact);
         hooks.registerHook(PlayerInventoryHooks.SWAP_HANDS, this::swapHands);
+        hooks.registerHook(PlayerSwingHandHook.HOOK, this::onSwingHand);
 
         for (SpecialItem item : registry.entries()) {
             item.registerHooks(hooks, this);
@@ -212,6 +214,15 @@ public class SpecialItems implements SpecialItemContext {
         return item.onUse(player, stack, hand, this);
     }
 
+    private void onSwingHand(ServerPlayerEntity player, Hand hand) {
+        ItemStack stack = player.getStackInHand(hand);
+        SpecialItem item = get(stack).orElse(null);
+
+        if (item == null || player.getItemCooldownManager().isCoolingDown(stack)) return;
+
+        item.onSwing(player, stack, hand, this);
+    }
+
     private void tickPickup() {
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
             scene.tickPickUp(player);
@@ -219,10 +230,10 @@ public class SpecialItems implements SpecialItemContext {
     }
 
     private boolean pickup(ServerPlayerEntity player, SpecialItemObject object) {
-        // check if the player already has a special item
-        if (hasAnySpecialItem(player)) return false;
-
         SpecialItem item = object.item();
+
+        // check if the player already has a special item
+        if (hasAnySpecialItem(player) && item.shouldTransferToInventory(player)) return false;
 
         if (!item.canBePickedUp(player)) return false;
 

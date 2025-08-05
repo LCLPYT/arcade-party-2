@@ -19,6 +19,7 @@ import work.lclpnet.kibu.physics.impl.bullet.collision.space.MinecraftSpace;
 import work.lclpnet.kibu.physics.impl.util.Frame;
 import work.lclpnet.kibu.physics.util.BlockPhysics;
 
+import static work.lclpnet.ap2.impl.util.ThreadUtil.forceThread;
 import static work.lclpnet.kibu.physics.impl.bullet.math.Convert.toMinecraft;
 
 public class PhysicsBlockDisplayObject extends Object3d
@@ -37,6 +38,8 @@ public class PhysicsBlockDisplayObject extends Object3d
         blockDisplay = new BlockDisplayObject(state);
         blockDisplay.position.set(-0.5f);
         addChild(blockDisplay);
+
+        forceThread(world.getServer());
 
         rigidBody = initRigidBody(world);
     }
@@ -68,10 +71,12 @@ public class PhysicsBlockDisplayObject extends Object3d
     }
 
     public void addPhysics(ServerWorld world) {
+        forceThread(world.getServer());
         MinecraftSpace.get(world).addCollisionObject(rigidBody);
     }
 
     public void removePhysics(ServerWorld world) {
+        forceThread(world.getServer());
         MinecraftSpace.get(world).removeCollisionObject(rigidBody);
     }
 

@@ -2,6 +2,7 @@ package work.lclpnet.ap2.game.paintball.item;
 
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.PotionContentsComponent;
+import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.particle.ParticleTypes;
@@ -14,10 +15,11 @@ import work.lclpnet.ap2.impl.game.item.SpecialItem;
 import work.lclpnet.ap2.impl.game.item.SpecialItemContext;
 import work.lclpnet.ap2.impl.util.ParticleHelper;
 import work.lclpnet.ap2.impl.util.SoundHelper;
+import work.lclpnet.lobby.util.PlayerReset;
 
 public class MedKitItem implements SpecialItem {
 
-    private static final float HEAL_PERCENT = 0.75f;
+    private static final float HEAL_PERCENT = 0.75f, ABSORPTION_AMOUNT = 2f;
 
     @Override
     public String id() {
@@ -34,18 +36,20 @@ public class MedKitItem implements SpecialItem {
     }
 
     @Override
-    public boolean canBePickedUp(ServerPlayerEntity player) {
-        return player.getHealth() < player.getMaxHealth();
-    }
-
-    @Override
     public boolean shouldTransferToInventory(ServerPlayerEntity player) {
         return false;
     }
 
     @Override
     public void onPickedUp(ServerPlayerEntity player, ItemStack stack, SpecialItemContext ctx) {
-        player.heal(player.getMaxHealth() * HEAL_PERCENT);
+        if (player.getHealth() >= player.getMaxHealth()) {
+            float absorption = player.getAbsorptionAmount() + ABSORPTION_AMOUNT;
+            PlayerReset.setAttribute(player, EntityAttributes.MAX_ABSORPTION, absorption);
+            player.setAbsorptionAmount(absorption);
+        } else {
+            player.heal(player.getMaxHealth() * HEAL_PERCENT);
+        }
+
         SoundHelper.playSoundAt(player, SoundEvents.ENTITY_EVOKER_CAST_SPELL, SoundCategory.PLAYERS, 0.5f, 1f);
         ParticleHelper.spawnParticleAt(player, ParticleTypes.HEART, 50, 1, 1, 1, 0);
     }

@@ -1,8 +1,10 @@
 package work.lclpnet.ap2.impl.util.math;
 
+import com.google.common.collect.AbstractIterator;
 import net.minecraft.util.math.*;
 import org.joml.Vector3d;
 import org.joml.Vector3dc;
+import org.joml.Vector3f;
 import work.lclpnet.kibu.util.math.Matrix3i;
 
 import java.util.Iterator;
@@ -146,5 +148,34 @@ public class MathUtil {
                 .add(perp.multiply(sin(phi) * sinTheta))
                 .add(dir.multiply(cosTheta))
                 .normalize();
+    }
+
+    public static Iterable<Vector3f> fibonacciHemisphere(int samples) {
+        double phi = PI * (3 - sqrt(5));
+
+        return () -> new AbstractIterator<>() {
+            final Vector3f vec = new Vector3f();
+            int i = 0;
+
+            @Override
+            protected Vector3f computeNext() {
+                if (i >= samples) {
+                    endOfData();
+                    return null;
+                }
+
+                double y = (double) i / (samples - 1);  // [0..1] for upper hemisphere
+                double r = sqrt(1 - y * y);
+                double theta = (i * phi) % (2 * PI);
+
+                vec.x = (float) (r * cos(theta));
+                vec.z = (float) (r * sin(theta));
+                vec.y = (float) y;
+
+                i++;
+
+                return vec;
+            }
+        };
     }
 }

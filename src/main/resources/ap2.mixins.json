@@ -16,6 +16,7 @@
     "CowEntityMixin",
     "CreakingBrainAccessor",
     "CreakingEntityMixin",
+    "DamageSourceMixin",
     "EnderDragonEntityMixin",
     "EnderDragonFightMixin",
     "EndermanEntityAccessor",

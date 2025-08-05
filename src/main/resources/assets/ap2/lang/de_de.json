@@ -331,6 +331,8 @@
   "game.ap2.paintball.kit.shotgun": "Tintenschrotflinte",
   "game.ap2.paintball.kit.shotgun.description": "Eine starke Tintenschrotflinte mit einer kurzen Reichweite, Schussstreuung und geringer Feuerrate.",
   "game.ap2.paintball.kit.sniper": "Tintenscharfschützengewehr",
-  "game.ap2.paintball.kit.sniper.description": "Ein akkurates Tintenscharfschützengewehr mit hoher Reichweite, hohem Schade und geringer Feuerrate.",
-  "game.ap2.paintball.item.med_kit": "Verbandskasten"
+  "game.ap2.paintball.kit.sniper.description": "Ein akkurates Tintenscharfschützengewehr mit hoher Reichweite, hohem Schaden und geringer Feuerrate.",
+  "game.ap2.paintball.item.med_kit": "Verbandskasten",
+  "game.ap2.paintball.item.ink_grenade": "Tintengranate",
+  "game.ap2.paintball.item.ink_grenade.desc": "Verursacht eine Tintenexplosion nach 4 Sekunden"
 }

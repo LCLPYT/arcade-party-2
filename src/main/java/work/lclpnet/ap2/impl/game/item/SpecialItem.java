@@ -71,5 +71,14 @@ public interface SpecialItem {
         return ActionResult.PASS;
     }
 
+    /**
+     * Called when a player swings the special item, usually by left-clicking / attacking.
+     * @param player The player.
+     * @param stack The item stack.
+     * @param hand The hand in which the player is holding the item being swung. Or null if the item was swung otherwise.
+     * @param ctx The context.
+     */
+    default void onSwing(ServerPlayerEntity player, ItemStack stack, @Nullable Hand hand, SpecialItemContext ctx) {}
+
     default void registerHooks(HookRegistrar hooks, SpecialItemContext ctx) {}
 }

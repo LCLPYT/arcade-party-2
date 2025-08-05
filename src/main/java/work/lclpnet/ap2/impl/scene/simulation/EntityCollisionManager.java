@@ -14,7 +14,6 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Supplier;
 
-import static java.util.concurrent.CompletableFuture.runAsync;
 import static work.lclpnet.kibu.physics.impl.bullet.math.Convert.toBullet;
 
 public class EntityCollisionManager {
@@ -31,7 +30,7 @@ public class EntityCollisionManager {
     public void init(TaskScheduler scheduler) {
         tick();
 
-        scheduler.interval(() -> runAsync(this::tick, MinecraftSpace.get(world).getWorkerThread()), 1);
+        scheduler.interval(this::tick, 1);
     }
 
     public synchronized void tick() {

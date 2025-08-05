@@ -332,5 +332,7 @@
   "game.ap2.paintball.kit.shotgun.description": "A strong, short-range ink shotgun with bullet spread and a low firing rate.",
   "game.ap2.paintball.kit.sniper": "Ink-Sniper",
   "game.ap2.paintball.kit.sniper.description": "A long-range ink sniper rifle with high damage and a low firing rate.",
-  "game.ap2.paintball.item.med_kit": "Medkit"
+  "game.ap2.paintball.item.med_kit": "Medkit",
+  "game.ap2.paintball.item.ink_grenade": "Ink Grenade",
+  "game.ap2.paintball.item.ink_grenade.desc": "Creates an ink explosion after 4 seconds"
 }

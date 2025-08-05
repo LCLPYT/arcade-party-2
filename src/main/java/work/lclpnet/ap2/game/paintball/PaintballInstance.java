@@ -32,6 +32,7 @@ import work.lclpnet.ap2.api.util.world.AdjacentBlocks;
 import work.lclpnet.ap2.api.util.world.BlockPredicate;
 import work.lclpnet.ap2.api.util.world.WorldScanner;
 import work.lclpnet.ap2.core.hook.SpectatePlayerCallback;
+import work.lclpnet.ap2.game.paintball.item.InkGrenadeItem;
 import work.lclpnet.ap2.game.paintball.item.MedKitItem;
 import work.lclpnet.ap2.game.paintball.kit.RifleKit;
 import work.lclpnet.ap2.game.paintball.kit.ShotgunKit;
@@ -71,11 +72,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import static work.lclpnet.ap2.impl.util.ItemHelper.getLeatherArmor;
 import static work.lclpnet.ap2.impl.util.ItemHelper.unbreakable;
+import static work.lclpnet.ap2.impl.util.ThreadUtil.forceThread;
 
 public class PaintballInstance extends TeamGameInstance implements MapBootstrapFunction {
 
@@ -97,6 +98,7 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
     private boolean started = false;
     private SpecialItems specialItems;
     private PaintballTicker ticker;
+    private Scene scene;
 
     public PaintballInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
@@ -124,7 +126,7 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
         teams = new PaintballTeams(getTeamManager(), map, gameHandle.getParticipants(), random, gameHandle.getLogger());
         teams.setup();
 
-        Scene scene = new Scene(new ServerWorldMountContext(world));
+        scene = new Scene(new ServerWorldMountContext(world));
         scene.animate(1, gameHandle.getScheduler());
 
         BlockShape bounds = MapUtil.readShape(map, "bounds");
@@ -165,11 +167,11 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
         // TODO to be optimized using greedy meshing
 
         // needs to be running on the physics thread
-        CompletableFuture.runAsync(() -> {
-            for (BlockPos pos : bounds) {
-                TerrainGenerator.load(space, pos);
-            }
-        }, space.getWorkerThread()).join();
+        forceThread(world.getServer());
+
+        for (BlockPos pos : bounds) {
+            TerrainGenerator.load(space, pos);
+        }
     }
 
     private void replaceTemplateColors(ServerWorld world) {
@@ -212,11 +214,22 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
     }
 
     private void setupSpecialItems(ServerWorld world, GameMap map) {
-        LongSet reachable = findReachablePositions(world, map);
-        BlockPredicate validSpawn = pos -> reachable.contains(pos.asLong());
+        LongSet validSpawns = findReachablePositions(world, map);
+
+        // remove team spawn from valid spawns, so that items don't spawn in team bases
+        for (PaintballTeam team : teams) {
+            for (BlockPos pos : team.baseBounds()) {
+                validSpawns.remove(pos.asLong());
+            }
+        }
+
+        BlockPredicate validSpawn = pos -> validSpawns.contains(pos.asLong());
 
         specialItems = SpecialItems.create(gameHandle, map, world, random, validSpawn, commons(map, world).debugController(), r -> r
-                .register(new MedKitItem(), 0.5f));
+                .register(new MedKitItem(), 0.25f)
+                .register(new InkGrenadeItem(paintGunManager, scene, random, teams), 0.5f));
+
+        specialItems.setMarkGlowing(true);
 
         specialItems.setup();
     }
@@ -322,7 +335,7 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
 
         ticker.start(gameHandle.getGameScheduler(), gameHandle.getHookRegistrar());
 
-//        specialItems.spawnPeriodically();
+        specialItems.spawnPeriodically();
     }
 
     private void beginResults() {
@@ -335,8 +348,6 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
     private void configureHooksAndProtector() {
         HookRegistrar hooks = gameHandle.getHookRegistrar();
 
-        hooks.registerHook(ServerLivingEntityHooks.ALLOW_DAMAGE, this::onDamage);
-
         hooks.registerHook(SpectatePlayerCallback.HOOK, (spectator, target)
                 -> gameHandle.getParticipants().isParticipating(spectator));
 
@@ -345,14 +356,18 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
             config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, source)
                     -> entity instanceof ServerPlayerEntity player
                     && gameHandle.getParticipants().isParticipating(player)
-                    && (source.isOf(DamageTypes.ARROW) || source.isOf(DamageTypes.EXPLOSION)));
+                    && (source.isOf(DamageTypes.ARROW) || source.isOf(DamageTypes.PLAYER_EXPLOSION)));
         });
+
+        hooks.registerHook(ServerLivingEntityHooks.ALLOW_DAMAGE, this::onDamage);
     }
 
     private void respawnPlayer(ServerPlayerEntity player) {
         teams.teamOf(player).ifPresent(pbt -> teleportToTeamSpawn(player, pbt));
 
         player.setHealth(player.getMaxHealth());
+        PlayerReset.resetAttribute(player, EntityAttributes.MAX_ABSORPTION);
+        player.setAbsorptionAmount(0);
         player.getAbilities().setFlySpeed(0);
         player.sendAbilitiesUpdate();
 
@@ -424,7 +439,7 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
         if (team == null || team.baseBounds().contains(player.getPos())) return false;
 
         // respect hurt time, except for explosions
-        if (!source.isOf(DamageTypes.EXPLOSION) && player.hurtTime > 0) {
+        if (!source.isOf(DamageTypes.PLAYER_EXPLOSION) && player.hurtTime > 0) {
             return false;
         }
 
