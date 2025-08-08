@@ -16,7 +16,7 @@ public class RifleKit extends PaintGunKit {
 
     private static PaintGun paintGun() {
         return new PaintGun(
-                ID, 3, 1, 0.5, 35, 2, 2,
+                ID, 3, 1, 0.5, 70, 2, 4,
                 new PaintGun.SoundCfg(SoundEvents.ENTITY_ITEM_PICKUP, 0.2f, 2f),
                 new PaintGun.BulletSettings(
                         0.2, 25, 12, 2.0, 0.1f, 3.0f, 4,

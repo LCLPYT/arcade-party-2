@@ -98,12 +98,13 @@ public class PaintGunManager {
                 || !participants.isParticipating(player))
             return;
 
+        bullet.startFading();
+
         Vector3f velocity = bullet.getRigidBody().getLinearVelocity(new Vector3f());
 
         if (velocity.lengthSquared() < 0.2) return;
 
         limitVelocity(bullet);
-        bullet.startFading();
 
         UUID ownerUuid = bullet.getOwner();
 

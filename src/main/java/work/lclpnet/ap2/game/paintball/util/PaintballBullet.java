@@ -99,7 +99,7 @@ public class PaintballBullet extends PaintballProjectile {
     }
 
     private void tickSplitting(double dt) {
-        if (splitOff || splits >= settings.split().maxSplits()) return;
+        if (splitOff || splits >= settings.split().maxSplits() || isFading()) return;
 
         var velocity = new Vector3f();
         rigidBody.getLinearVelocity(velocity);
