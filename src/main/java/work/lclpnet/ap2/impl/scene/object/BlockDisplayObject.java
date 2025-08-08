@@ -5,13 +5,15 @@ import net.minecraft.block.BlockState;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.decoration.DisplayEntity;
 import work.lclpnet.ap2.impl.scene.MountContext;
+import work.lclpnet.ap2.impl.scene.Scene;
 
 @Getter
 public class BlockDisplayObject extends DisplayEntityObject<DisplayEntity.BlockDisplayEntity> {
 
     private BlockState blockState;
 
-    public BlockDisplayObject(BlockState blockState) {
+    public BlockDisplayObject(Scene scene, BlockState blockState) {
+        super(scene);
         this.blockState = blockState;
     }
 
@@ -28,8 +30,8 @@ public class BlockDisplayObject extends DisplayEntityObject<DisplayEntity.BlockD
     }
 
     @Override
-    public BlockDisplayObject deepCopy() {
-        var copy = new BlockDisplayObject(blockState);
+    public BlockDisplayObject deepCopy(Scene scene) {
+        var copy = new BlockDisplayObject(scene, blockState);
 
         copy.deepCopy(this);
 

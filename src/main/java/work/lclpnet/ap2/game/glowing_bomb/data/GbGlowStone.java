@@ -6,6 +6,7 @@ import org.jetbrains.annotations.Nullable;
 import org.joml.Quaterniond;
 import org.joml.Vector3d;
 import work.lclpnet.ap2.impl.scene.Object3d;
+import work.lclpnet.ap2.impl.scene.Scene;
 import work.lclpnet.ap2.impl.scene.animation.Animatable;
 import work.lclpnet.ap2.impl.scene.animation.Animation;
 import work.lclpnet.ap2.impl.scene.animation.AnimationContext;
@@ -23,10 +24,11 @@ public class GbGlowStone extends Object3d implements Animatable {
     @Nullable
     private Animation yieldAnimation = null;
 
-    public GbGlowStone(double initialAngle, double incline, double orbitSpeed, double rotationSpeed) {
+    public GbGlowStone(Scene scene, double initialAngle, double incline, double orbitSpeed, double rotationSpeed) {
+        super(scene);
         orbitAnimation = new Animation(new OrbitAnimation(initialAngle, incline, orbitSpeed, rotationSpeed)).running();
 
-        BlockDisplayObject glowStone = new BlockDisplayObject(Blocks.GLOWSTONE.getDefaultState());
+        BlockDisplayObject glowStone = new BlockDisplayObject(scene, Blocks.GLOWSTONE.getDefaultState());
         glowStone.position.set(-0.5, -0.5, -0.5);  // center to origin
 
         addChild(glowStone);

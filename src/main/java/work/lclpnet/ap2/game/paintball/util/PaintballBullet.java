@@ -45,8 +45,8 @@ public class PaintballBullet extends PaintballProjectile {
     private double splitTimer = 0;
     private int splits = 0;
 
-    public PaintballBullet(BlockState blockState, ServerWorld world, PaintGun.BulletSettings settings, Scene scene, Random random) {
-        super(blockState, world);
+    public PaintballBullet(Scene scene, BlockState blockState, ServerWorld world, PaintGun.BulletSettings settings, Random random) {
+        super(scene, blockState, world);
         this.settings = settings;
         this.scene = scene;
         this.random = random;
@@ -122,7 +122,7 @@ public class PaintballBullet extends PaintballProjectile {
     }
 
     private void split() {
-        var obj = new PaintballBullet(getBlockState(), world, settings, scene, random);
+        var obj = new PaintballBullet(scene, getBlockState(), world, settings, random);
         obj.position.set(position);
         obj.scale.set(settings.size() * 0.2f);
         obj.setSplitOff();

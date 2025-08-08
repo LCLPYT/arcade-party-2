@@ -5,6 +5,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.util.model.Model;
 import work.lclpnet.ap2.impl.scene.Object3d;
+import work.lclpnet.ap2.impl.scene.Scene;
 import work.lclpnet.ap2.impl.scene.object.BlockDisplayObject;
 
 import java.util.Optional;
@@ -12,14 +13,14 @@ import java.util.Optional;
 public record TemplateModel(Object3d template) implements Model {
 
     @Override
-    public Object3d createInstance() {
-        var wrapper = new Object3d();
-        wrapper.addChild(template.deepCopy());
+    public Object3d createInstance(Scene scene) {
+        var wrapper = new Object3d(scene);
+        wrapper.addChild(template.deepCopy(scene));
         return wrapper;
     }
 
     public TemplateModel copy() {
-        return new TemplateModel(template.deepCopy());
+        return new TemplateModel(template.deepCopy(template.getScene()));
     }
 
     public TemplateModel replace(BlockState from, BlockState to) {

@@ -49,12 +49,12 @@ public class DebugRenderer {
     }
 
     public Object3d line(double x1, double y1, double z1, double x2, double y2, double z2, double thickness, BlockState state) {
-        var base = new BlockDisplayObject(state);
+        var base = new BlockDisplayObject(scene, state);
         
         // base will be pointing in positive x direction, center in y and z plane
         base.position.set(0, -0.5, -0.5);
 
-        var line = new Object3d();
+        var line = new Object3d(scene);
         line.addChild(base);
 
         double dx = x2 - x1;
@@ -76,7 +76,7 @@ public class DebugRenderer {
     }
 
     public Object3d box(BlockBox box, BlockState state) {
-        var obj = new BlockDisplayObject(state);
+        var obj = new BlockDisplayObject(scene, state);
 
         BlockPos pos = box.min();
         obj.position.set(pos.getX(), pos.getY(), pos.getZ());
@@ -88,7 +88,7 @@ public class DebugRenderer {
     }
 
     public Object3d box(Box box, BlockState state) {
-        var obj = new BlockDisplayObject(state);
+        var obj = new BlockDisplayObject(scene, state);
 
         obj.position.set(box.minX, box.minY, box.minZ);
         obj.scale.set(box.getLengthX(), box.getLengthY(), box.getLengthZ());
@@ -113,7 +113,7 @@ public class DebugRenderer {
     }
 
     public Object3d arrow(double x, double y, double z, double angleYRad, double scale, Model model) {
-        Object3d arrow = model.createInstance();
+        Object3d arrow = model.createInstance(scene);
 
         arrow.scale.set(scale);
         arrow.position.set(x, y, z);
@@ -135,10 +135,10 @@ public class DebugRenderer {
     public void arrow(double x, double y, double z, double dx, double dy, double dz, double scale, BlockState state) {
         var model = TemplateModel.replace(arrowModel(state), Blocks.LIME_CONCRETE.getDefaultState(), state);
 
-        Object3d marker = model.createInstance();
+        Object3d marker = model.createInstance(scene);
         marker.position.set(0, 0, 0.5);
 
-        Object3d wrapper = new Object3d();
+        Object3d wrapper = new Object3d(scene);
         wrapper.addChild(marker);
         wrapper.scale.set(scale);
         wrapper.position.set(x, y, z);
@@ -160,14 +160,14 @@ public class DebugRenderer {
     }
 
     public Object3d marker(double x, double y, double z, BlockState state, int glowColor, double scale) {
-        var marker = new BlockDisplayObject(state);
+        var marker = new BlockDisplayObject(scene, state);
 
         marker.position.set(-0.5, -0.5, -0.5);
         marker.setGlowing(true);
         marker.setGlowColorOverride(glowColor);
         marker.setInterpolationDuration(1);
 
-        Object3d wrapper = new Object3d();
+        Object3d wrapper = new Object3d(scene);
         wrapper.position.set(x, y, z);
         wrapper.scale.set(scale);
         wrapper.addChild(marker);
@@ -190,7 +190,7 @@ public class DebugRenderer {
     }
 
     public TextDisplayObject text(double x, double y, double z, Text text, double scale) {
-        var display = new TextDisplayObject(text);
+        var display = new TextDisplayObject(scene, text);
 
         display.position.set(x, y, z);
         display.scale.set(scale);
@@ -220,7 +220,7 @@ public class DebugRenderer {
     }
 
     public void model(Model model, double x, double y, double z, double scale) {
-        Object3d instance = model.createInstance();
+        Object3d instance = model.createInstance(scene);
         instance.position.set(x, y, z);
         instance.scale.set(scale);
 

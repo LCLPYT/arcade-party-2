@@ -2,6 +2,7 @@ package work.lclpnet.ap2.game.paintball.util;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.server.world.ServerWorld;
+import work.lclpnet.ap2.impl.scene.Scene;
 import work.lclpnet.ap2.impl.scene.animation.AnimationContext;
 import work.lclpnet.ap2.impl.scene.object.PhysicsBlockDisplayObject;
 
@@ -12,8 +13,8 @@ public class PaintballProjectile extends PhysicsBlockDisplayObject {
 
     private int age = 0;
 
-    public PaintballProjectile(BlockState state, ServerWorld world) {
-        super(state, world);
+    public PaintballProjectile(Scene scene, BlockState state, ServerWorld world) {
+        super(scene, state, world);
     }
 
     @Override

@@ -239,7 +239,7 @@ public class PaintGunManager {
     }
 
     public void spawnPaintBullet(ServerPlayerEntity player, BlockState state, PaintGun.BulletSettings bulletSettings, Vec3d pos, Vec3d dir) {
-        var obj = new PaintballBullet(state, player.getWorld(), bulletSettings, scene, random);
+        var obj = new PaintballBullet(scene, state, player.getWorld(), bulletSettings, random);
         obj.position.set(pos.getX(), pos.getY(), pos.getZ());
         obj.scale.set(bulletSettings.size());
         obj.setOwner(player.getUuid());

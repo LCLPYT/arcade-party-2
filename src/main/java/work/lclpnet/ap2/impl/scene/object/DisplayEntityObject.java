@@ -1,31 +1,28 @@
 package work.lclpnet.ap2.impl.scene.object;
 
-import it.unimi.dsi.fastutil.objects.ObjectArraySet;
 import lombok.Getter;
 import net.minecraft.entity.decoration.DisplayEntity;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.ds.Resolvable;
-import work.lclpnet.ap2.impl.scene.MountContext;
-import work.lclpnet.ap2.impl.scene.Mountable;
-import work.lclpnet.ap2.impl.scene.Object3d;
-import work.lclpnet.ap2.impl.scene.Unmountable;
+import work.lclpnet.ap2.impl.scene.*;
 import work.lclpnet.ap2.impl.scene.animation.Interpolatable;
 import work.lclpnet.ap2.impl.util.DisplayEntityTransformer;
-
-import java.util.Set;
 
 public abstract class DisplayEntityObject<T extends DisplayEntity> extends Object3d implements Mountable, Unmountable, Interpolatable {
 
     @Getter
     private final DisplayEntityTransformer transformer = new DisplayEntityTransformer();
-    private final Set<MountContext> contexts = new ObjectArraySet<>(1);
     protected @NotNull Resolvable<T> entityRef = Resolvable.none();
     @Getter private boolean glowing = false;
     @Getter private int glowColorOverride = -1;
     @Getter private int interpolationDuration = 0;
     @Getter private int teleportDuration = 0;
     @Getter private DisplayEntity.BillboardMode billboardMode = DisplayEntity.BillboardMode.FIXED;
+
+    public DisplayEntityObject(Scene scene) {
+        super(scene);
+    }
 
     protected abstract @Nullable T createDisplayEntity(MountContext ctx);
 
@@ -47,7 +44,6 @@ public abstract class DisplayEntityObject<T extends DisplayEntity> extends Objec
 
         configure(display);
 
-        contexts.add(ctx);
         entityRef = ctx.spawn(display, this);
     }
 
@@ -75,7 +71,7 @@ public abstract class DisplayEntityObject<T extends DisplayEntity> extends Objec
 
     @Override
     protected void onDetached() {
-        contexts.forEach(this::removeDisplay);
+        removeDisplay(scene.getMountContext());
     }
 
     public void setGlowColorOverride(int glowColorOverride) {
@@ -106,6 +102,5 @@ public abstract class DisplayEntityObject<T extends DisplayEntity> extends Objec
     protected void removeDisplay(MountContext ctx) {
         entityRef.optional().ifPresent(entity -> ctx.remove(entity, this));
         entityRef = Resolvable.none();
-        contexts.remove(ctx);
     }
 }

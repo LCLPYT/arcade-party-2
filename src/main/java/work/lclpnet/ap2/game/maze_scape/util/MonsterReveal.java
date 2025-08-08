@@ -53,11 +53,11 @@ public class MonsterReveal {
 
         for (ServerPlayerEntity player : participants) {
             for (var monster : monsters) {
-                var mark = new DangerMark(player.getUuid(), monster);
+                var mark = new DangerMark(scene, player.getUuid(), monster);
 
                 if (!mark.updatePosition(player)) continue;
 
-                Object3d instance = dangerModel.createInstance();
+                Object3d instance = dangerModel.createInstance(scene);
                 instance.position.set(-0.5, -2.9, -0.5);
 
                 mark.addChild(instance);
@@ -154,11 +154,12 @@ public class MonsterReveal {
         }
     }
 
-    private class DangerMark extends Object3d {
+    private static class DangerMark extends Object3d {
         private final UUID playerUuid;
         private final MonsterData<?> monster;
 
-        private DangerMark(UUID playerUuid, MonsterData<?> monster) {
+        private DangerMark(Scene scene, UUID playerUuid, MonsterData<?> monster) {
+            super(scene);
             this.playerUuid = playerUuid;
             this.monster = monster;
         }

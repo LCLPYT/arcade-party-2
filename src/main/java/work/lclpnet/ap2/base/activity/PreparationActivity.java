@@ -347,7 +347,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
 
         removeGameQueue();
 
-        gameQueueDisplay = new Object3d();
+        gameQueueDisplay = new Object3d(scene);
         gameQueueDisplay.position.set(pos.getX(), pos.getY(), pos.getZ());
         gameQueueDisplay.rotation.setAngleAxis(yaw, new Vector3d(0, 1, 0));
 
@@ -359,7 +359,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
         }
 
         if (miniGame != null) {
-            var obj = new TranslatedTextDisplayObject(translations);
+            var obj = new TranslatedTextDisplayObject(scene, translations);
             var currentTitle = translations.translateText(miniGame.getTitleKey()).formatted(AQUA);
 
             obj.controller().configure(controller -> {
@@ -375,7 +375,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
             gameQueueDisplay.addChild(obj);
         }
 
-        var title = new TranslatedTextDisplayObject(translations);
+        var title = new TranslatedTextDisplayObject(scene, translations);
 
         title.controller().configure(controller -> {
             controller.setText(translations.translateText("ap2.prepare.game_queue").formatted(YELLOW, UNDERLINE, BOLD));
@@ -405,7 +405,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
         Collections.reverse(preview);
 
         for (var entry : preview) {
-            var obj = new TranslatedTextDisplayObject(translations);
+            var obj = new TranslatedTextDisplayObject(gameQueueDisplay.getScene(), translations);
 
             Formatting color = switch (entry.type()) {
                 case REGULAR -> GREEN;

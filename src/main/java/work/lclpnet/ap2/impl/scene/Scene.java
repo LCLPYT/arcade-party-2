@@ -1,5 +1,6 @@
 package work.lclpnet.ap2.impl.scene;
 
+import lombok.Getter;
 import work.lclpnet.ap2.impl.scene.animation.Animatable;
 import work.lclpnet.ap2.impl.scene.animation.AnimationContext;
 import work.lclpnet.ap2.impl.scene.animation.Interpolatable;
@@ -12,6 +13,7 @@ import java.util.Iterator;
 
 public class Scene {
 
+    @Getter
     private final MountContext mountContext;
     private final Collection<Object3d> objects = new ArrayList<>();
     private final Collection<Object3d> toAdd = new ArrayList<>();
@@ -108,8 +110,6 @@ public class Scene {
     }
 
     private void updateAnimation(double dt) {
-        cleanOldObjects();
-
         if (onUpdateAnimation != null) {
             onUpdateAnimation.updateAnimation(dt, animationContext);
         }
@@ -130,14 +130,6 @@ public class Scene {
             if (rootChanged != null) {
                 rootChanged.updateMatrixWorld();
             }
-        }
-    }
-
-    private void cleanOldObjects() {
-        Object3d[] removal = objects.stream().filter(Object3d::isDetached).toArray(Object3d[]::new);
-
-        for (Object3d obj : removal) {
-            remove(obj);
         }
     }
 

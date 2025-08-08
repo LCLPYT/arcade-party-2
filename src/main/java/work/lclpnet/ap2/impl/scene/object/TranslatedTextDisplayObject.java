@@ -7,10 +7,7 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3d;
-import work.lclpnet.ap2.impl.scene.MountContext;
-import work.lclpnet.ap2.impl.scene.Mountable;
-import work.lclpnet.ap2.impl.scene.Object3d;
-import work.lclpnet.ap2.impl.scene.Unmountable;
+import work.lclpnet.ap2.impl.scene.*;
 import work.lclpnet.ap2.impl.scene.animation.Interpolatable;
 import work.lclpnet.ap2.impl.util.DisplayEntityTransformer;
 import work.lclpnet.ap2.impl.util.world.entity.DynamicEntity;
@@ -29,7 +26,8 @@ public class TranslatedTextDisplayObject extends Object3d implements Mountable, 
     private final Vector3d worldPos = new Vector3d(0);
     private Vec3d mcWorldPos = Vec3d.ZERO;
 
-    public TranslatedTextDisplayObject(Translations translations) {
+    public TranslatedTextDisplayObject(Scene scene, Translations translations) {
+        super(scene);
         this.translations = translations;
         controller = new TranslatedTextDisplay.ControllerImpl(null);
     }

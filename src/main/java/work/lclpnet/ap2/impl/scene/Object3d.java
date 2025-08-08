@@ -16,6 +16,8 @@ import java.util.*;
  */
 public class Object3d {
 
+    @Getter
+    protected final Scene scene;
     public final Vector3d position = new Vector3d();
     public final Matrix4d matrix = new Matrix4d();
     public final Matrix4d matrixWorld = new Matrix4d();
@@ -24,8 +26,10 @@ public class Object3d {
     private final Collection<Object3d> children = new ObjectArraySet<>();
     private Object3d parent = null;
     private int deepCount = 1;
-    @Getter
-    private boolean detached = false;
+
+    public Object3d(Scene scene) {
+        this.scene = scene;
+    }
 
     public void updateMatrix() {
         matrix.translationRotateScale(
@@ -87,17 +91,17 @@ public class Object3d {
 
         child.parent = null;
 
+        if (!children.remove(child)) {
+            return false;
+        }
+
         deepCount -= child.deepCount;
 
-        boolean removed = children.remove(child);
-
-        for (Object3d obj : child.traverse()) {
-            obj.detach();
-        }
+        child.detach();
 
         this.onChildRemoved(child);
 
-        return removed;
+        return true;
     }
 
     private void requireAcyclicHierarchy(@NotNull Object3d child) {
@@ -214,27 +218,26 @@ public class Object3d {
     }
 
     public final void detach() {
-        if (parent != null) {
-            parent.removeChild(this);
+        if (parent != null && parent.removeChild(this)) {
+            // removeChild invokes detach once again, if successful, therefore cancel this invocation
             return;
         }
 
-        for (Object3d child : children()) {
-           child.detach();
+        for (Object3d obj : traverse()) {
+            obj.onDetached();
         }
 
-        detached = true;
-        onDetached();
+        scene.remove(this);
     }
 
-    public Object3d deepCopy() {
+    public Object3d deepCopy(Scene scene) {
         var type = this.getClass();
 
         if (type != Object3d.class) {
             throw new UnsupportedOperationException(type.getName() + "::deepCopy");
         }
 
-        var copy = new Object3d();
+        var copy = new Object3d(scene);
 
         copy.deepCopy(this);
 
@@ -259,7 +262,7 @@ public class Object3d {
 
         // copy children of other object
         for (Object3d child : other.children) {
-            Object3d childCopy = child.deepCopy();
+            Object3d childCopy = child.deepCopy(child.scene);
             this.addChild(childCopy);
         }
 

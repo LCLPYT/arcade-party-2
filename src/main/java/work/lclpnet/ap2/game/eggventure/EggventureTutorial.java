@@ -103,8 +103,8 @@ public class EggventureTutorial {
         UUID uuid = player.getUuid();
         var text = translations.translateText(player, "game.ap2.eggventure.find_sample").formatted(GREEN);
 
-        var egg = new TutorialEgg(variant, () -> world.getServer().getPlayerManager().getPlayer(uuid));
-        var label = new PlayerTextDisplayObject(text, player);
+        var egg = new TutorialEgg(scene, variant, () -> world.getServer().getPlayerManager().getPlayer(uuid));
+        var label = new PlayerTextDisplayObject(scene, text, player);
         label.position.set(0, 0.1, 0);
         label.scale.set(0.65);
         label.setBillboardMode(DisplayEntity.BillboardMode.CENTER);
@@ -125,8 +125,8 @@ public class EggventureTutorial {
         private final Resolvable<ServerPlayerEntity> playerRef;
         private final WorldPosSync posSync = new WorldPosSync();
 
-        public TutorialEgg(PlayerHead variant, Resolvable<ServerPlayerEntity> playerRef) {
-            super(variant.createStack());
+        public TutorialEgg(Scene scene, PlayerHead variant, Resolvable<ServerPlayerEntity> playerRef) {
+            super(scene, variant.createStack());
             this.playerRef = playerRef;
         }
 

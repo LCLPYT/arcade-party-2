@@ -10,6 +10,7 @@ import net.minecraft.util.math.Box;
 import net.minecraft.util.math.RotationAxis;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.impl.scene.Object3d;
+import work.lclpnet.ap2.impl.scene.Scene;
 import work.lclpnet.ap2.impl.scene.animation.Animatable;
 import work.lclpnet.ap2.impl.scene.animation.AnimationContext;
 import work.lclpnet.ap2.impl.scene.object.ItemDisplayObject;
@@ -34,21 +35,22 @@ public class SpecialItemObject extends Object3d implements Animatable {
     private @Nullable PickupAnimation pickupAnimation = null;
     @Getter private double pickupDelay = 0;
 
-    public SpecialItemObject(SpecialItem item, ItemStack stack, Translations translations, TranslatedText name) {
-        this(item, stack, translations, name, 0.25);
+    public SpecialItemObject(Scene scene, SpecialItem item, ItemStack stack, Translations translations, TranslatedText name) {
+        this(scene, item, stack, translations, name, 0.25);
     }
 
-    public SpecialItemObject(SpecialItem item, ItemStack stack, Translations translations, TranslatedText name, double size) {
+    public SpecialItemObject(Scene scene, SpecialItem item, ItemStack stack, Translations translations, TranslatedText name, double size) {
+        super(scene);
         this.item = item;
         this.size = size;
 
-        itemDisplay = new ItemDisplayObject(stack);
+        itemDisplay = new ItemDisplayObject(scene, stack);
         itemDisplay.scale.set(size / DEFAULT_SIZE);
         itemDisplay.setItemDisplayContext(ItemDisplayContext.GROUND);
 
         addChild(itemDisplay);
 
-        textDisplay = new TranslatedTextDisplayObject(translations);
+        textDisplay = new TranslatedTextDisplayObject(scene, translations);
         textDisplay.position.set(0, DEFAULT_SIZE * 2, 0);
         textDisplay.scale.set(0.6);
         textDisplay.controller().setText(name);

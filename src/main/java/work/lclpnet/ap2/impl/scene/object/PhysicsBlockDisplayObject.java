@@ -6,10 +6,7 @@ import net.minecraft.block.BlockState;
 import net.minecraft.server.world.ServerWorld;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Quaternionf;
-import work.lclpnet.ap2.impl.scene.MountContext;
-import work.lclpnet.ap2.impl.scene.Mountable;
-import work.lclpnet.ap2.impl.scene.Object3d;
-import work.lclpnet.ap2.impl.scene.Unmountable;
+import work.lclpnet.ap2.impl.scene.*;
 import work.lclpnet.ap2.impl.scene.animation.Animatable;
 import work.lclpnet.ap2.impl.scene.animation.AnimationContext;
 import work.lclpnet.ap2.impl.scene.simulation.ScenePhysicsElement;
@@ -32,10 +29,11 @@ public class PhysicsBlockDisplayObject extends Object3d
     private final BlockDisplayObject blockDisplay;
     protected final ServerWorld world;
 
-    public PhysicsBlockDisplayObject(BlockState state, ServerWorld world) {
+    public PhysicsBlockDisplayObject(Scene scene, BlockState state, ServerWorld world) {
+        super(scene);
         this.world = world;
 
-        blockDisplay = new BlockDisplayObject(state);
+        blockDisplay = new BlockDisplayObject(scene, state);
         blockDisplay.position.set(-0.5f);
         addChild(blockDisplay);
 

@@ -106,7 +106,7 @@ public class InkGrenadeItem implements SpecialItem {
         Vec3d dir = player.getRotationVector();
         Vec3d pos = paintGunManager.getProjectileSpawn(player, dir, SIZE);
 
-        var obj = new InkGrenadeObject(player.getWorld());
+        var obj = new InkGrenadeObject(scene, player.getWorld());
         obj.position.set(pos.getX(), pos.getY(), pos.getZ());
         obj.scale.set(SIZE);
         obj.setThrower(player.getUuid());
@@ -141,8 +141,8 @@ public class InkGrenadeItem implements SpecialItem {
         private double fuseTimer = FUSE_SECONDS;
         private boolean flash = false;
 
-        public InkGrenadeObject(ServerWorld world) {
-            super(Blocks.TNT.getDefaultState(), world);
+        public InkGrenadeObject(Scene scene, ServerWorld world) {
+            super(scene, Blocks.TNT.getDefaultState(), world);
             rigidBody.setMass(MASS);
         }
 
