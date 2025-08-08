@@ -14,6 +14,7 @@ import work.lclpnet.ap2.game.maze_scape.monster.MonsterData;
 import work.lclpnet.ap2.impl.scene.MountContext;
 import work.lclpnet.ap2.impl.scene.Object3d;
 import work.lclpnet.ap2.impl.scene.Scene;
+import work.lclpnet.ap2.impl.scene.animation.Interpolatable;
 import work.lclpnet.ap2.impl.scene.object.BlockDisplayObject;
 import work.lclpnet.ap2.impl.util.model.Models;
 import work.lclpnet.ap2.impl.util.world.entity.DynamicEntity;
@@ -23,6 +24,8 @@ import work.lclpnet.kibu.scheduler.api.TaskHandle;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 
 import java.util.*;
+
+import static work.lclpnet.ap2.impl.util.StreamUtil.instanceOf;
 
 public class MonsterReveal {
 
@@ -55,10 +58,15 @@ public class MonsterReveal {
             for (var monster : monsters) {
                 var mark = new DangerMark(scene, player.getUuid(), monster);
 
-                if (!mark.updatePosition(player)) continue;
+                if (mark.update(player)) continue;
 
                 Object3d instance = dangerModel.createInstance(scene);
                 instance.position.set(-0.5, -2.9, -0.5);
+
+                // manually enable interpolation for block displays
+                instance.stream()
+                        .flatMap(instanceOf(Interpolatable.class))
+                        .forEach(obj -> obj.updateTickRate(1));
 
                 mark.addChild(instance);
                 mark.scale.set(MARKER_SCALE);
@@ -97,7 +105,7 @@ public class MonsterReveal {
             DangerMark mark = it.next();
 
             participants.getParticipant(mark.playerUuid).ifPresent(player -> {
-                if (!mark.updatePosition(player)) {
+                if (mark.update(player)) {
                     it.remove();
                 }
             });
@@ -164,12 +172,12 @@ public class MonsterReveal {
             this.monster = monster;
         }
 
-        public boolean updatePosition(ServerPlayerEntity player) {
+        public boolean update(ServerPlayerEntity player) {
             MobEntity mob = monster.mob();
 
             if (mob == null) {
                 scene.remove(this);
-                return false;
+                return true;
             }
 
             Vec3d playerEyePos = player.getEyePos();
@@ -180,7 +188,7 @@ public class MonsterReveal {
             position.set(pos.getX(), pos.getY(), pos.getZ());
             updateMatrixWorld();
 
-            return true;
+            return false;
         }
     }
 

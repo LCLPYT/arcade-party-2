@@ -9,6 +9,8 @@ import org.joml.Quaterniond;
 import org.joml.Vector3d;
 
 import java.util.*;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 /**
  * A generic 3D-Object that can be placed into a {@link Scene}.
@@ -272,4 +274,9 @@ public class Object3d {
     protected void onDetached() {}
 
     protected void onChildRemoved(Object3d child) {}
+
+    public Stream<Object3d> stream() {
+        var spliterator = Spliterators.spliterator(traverseIterator(), deepCount, 0);
+        return StreamSupport.stream(spliterator, false);
+    }
 }

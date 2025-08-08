@@ -3,6 +3,7 @@ package work.lclpnet.ap2.impl.util;
 import java.util.Iterator;
 import java.util.Spliterator;
 import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static java.lang.Math.min;
@@ -40,5 +41,10 @@ public class StreamUtil {
         var spliteratorC = spliterator(iteratorC, size, characteristics);
 
         return stream(spliteratorC, streamA.isParallel() || streamB.isParallel());
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T, U> Function<T, Stream<? extends U>> instanceOf(Class<? extends U> type) {
+        return t -> type.isInstance(t) ? Stream.of((U) t) : Stream.empty();
     }
 }
