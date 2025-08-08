@@ -2,7 +2,10 @@ package work.lclpnet.ap2.game.paintball.util;
 
 import it.unimi.dsi.fastutil.Pair;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
+import net.minecraft.block.ShapeContext;
 import net.minecraft.component.DataComponentTypes;
+import net.minecraft.entity.EntityDimensions;
 import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
@@ -12,15 +15,23 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
+import net.minecraft.util.hit.BlockHitResult;
+import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
+import net.minecraft.util.math.Direction;
+import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.RaycastContext;
 import org.jetbrains.annotations.NotNull;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.team.DyeTeamKey;
 import work.lclpnet.ap2.game.paintball.kit.PaintGunKit;
+import work.lclpnet.ap2.impl.game.PlayerUtil;
 import work.lclpnet.ap2.impl.game.kit.KitManager;
 import work.lclpnet.ap2.impl.game.kit.SingleItemKit;
 import work.lclpnet.ap2.impl.util.BlockBox;
+import work.lclpnet.ap2.impl.util.RayCastUtil;
+import work.lclpnet.ap2.impl.util.debug.DebugController;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks;
 import work.lclpnet.kibu.scheduler.Ticks;
@@ -32,10 +43,13 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static java.lang.Math.max;
+import static work.lclpnet.kibu.access.VelocityModifier.setVelocity;
 import static work.lclpnet.lobby.util.PlayerReset.resetAttribute;
 import static work.lclpnet.lobby.util.PlayerReset.setAttribute;
 
 public class PaintballTicker {
+
+    private static final boolean DEBUG_WALL_CLIMBING = true;
 
     private static final float HEAL_PER_SECOND = 4.0f;
     private static final int HEAL_DELAY_TICKS = Ticks.seconds(3);
@@ -46,16 +60,18 @@ public class PaintballTicker {
     private final PaintManager paintManager;
     private final PaintGunManager paintGunManager;
     private final KitManager kitManager;
+    private final DebugController debugController;
     private final Map<UUID, Entry> entries = new HashMap<>();
 
     public PaintballTicker(ServerWorld world, Participants participants, PaintballTeams teams, PaintManager paintManager,
-                           PaintGunManager paintGunManager, KitManager kitManager) {
+                           PaintGunManager paintGunManager, KitManager kitManager, DebugController debugController) {
         this.world = world;
         this.participants = participants;
         this.teams = teams;
         this.paintManager = paintManager;
         this.paintGunManager = paintGunManager;
         this.kitManager = kitManager;
+        this.debugController = debugController;
     }
 
     public void start(TaskScheduler scheduler, HookRegistrar hooks) {
@@ -85,7 +101,9 @@ public class PaintballTicker {
         Entry entry = entry(player);
         entry.outOfCombatTicks++;
 
-        OnInk onInk = standingOnInk(player);
+        OnInk onInk = player.isSneaking() && tickWallClimbing(player)
+                ? OnInk.OWN
+                : standingOnInk(player);
 
         if (onInk != OnInk.ENEMY) {
             player.removeStatusEffect(StatusEffects.SLOWNESS);
@@ -110,6 +128,36 @@ public class PaintballTicker {
         if (onInk == OnInk.ENEMY) {
             player.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, 20, 1, false, false, false));
         }
+    }
+
+    private boolean tickWallClimbing(ServerPlayerEntity player) {
+        PaintballTeam playerTeam = teams.teamOf(player).orElse(null);
+
+        if (playerTeam == null) return false;
+
+        Vec3d input = PlayerUtil.getHorizontalInputVector(player);
+
+        if (DEBUG_WALL_CLIMBING) {
+            debugController.exclusive("input_" + player.getNameForScoreboard(), controller
+                    -> controller.renderer().ifPresent(renderer
+                    -> renderer.arrow(player.getPos(), input, 0.5f, Blocks.REDSTONE_BLOCK.getDefaultState())));
+        }
+
+        EntityDimensions dimensions = player.getDimensions(player.getPose());
+        float width = dimensions.width();
+
+        HitResult hit = RayCastUtil.raycastBlocks(world, player.getPos(), input, width, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, ShapeContext.of(player));
+
+        if (hit.getType() != HitResult.Type.BLOCK || !(hit instanceof BlockHitResult blockHit)) return false;
+
+        BlockState collisionState = world.getBlockState(blockHit.getBlockPos());
+        DyeTeamKey collisionTeam = paintManager.getTeam(collisionState.getBlock());
+
+        if (collisionTeam != playerTeam.key()) return false;
+
+        setVelocity(player, player.getVelocity().withAxis(Direction.Axis.Y, 0.25));
+
+        return true;
     }
 
     private void tickReload(ServerPlayerEntity player, Entry entry) {
@@ -143,6 +191,10 @@ public class PaintballTicker {
     }
 
     private @NotNull OnInk standingOnInk(ServerPlayerEntity player) {
+        if (player.isSpectator()) {
+            return OnInk.NONE;
+        }
+
         PaintballTeam team = teams.teamOf(player).orElse(null);
 
         if (team == null) {

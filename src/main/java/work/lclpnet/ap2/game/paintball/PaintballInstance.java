@@ -331,7 +331,7 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
         started = true;
 
         ticker = new PaintballTicker(getWorld(), gameHandle.getParticipants(), teams, paintManager,
-                paintGunManager, kitHandler.getManager());
+                paintGunManager, kitHandler.getManager(), commons().debugController());
 
         ticker.start(gameHandle.getGameScheduler(), gameHandle.getHookRegistrar());
 
