@@ -31,9 +31,9 @@ public class ShotgunKit extends PaintGunKit {
                 ID, 26, 7, 9.0, 14, 14, 3,
                 new PaintGun.SoundCfg(SoundEvents.ENTITY_CHICKEN_EGG, 0.3f, 0.5f),
                 new PaintGun.BulletSettings(
-                        0.15, 25, 16, 1.5, 0.05f, 4f, 7,
+                        0.15, 25, 16, 1.5, 0.05f, 4f, 5,
                         2.0f, 0.1f,
-                        new PaintGun.BulletSplit(10, 2, 1.3f)
+                        new PaintGun.BulletSplit(10, 2, 1.3f, 0)
                 )
         );
     }

@@ -12,6 +12,7 @@ import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.RaycastContext;
+import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3d;
 import work.lclpnet.ap2.impl.scene.MountContext;
 import work.lclpnet.ap2.impl.scene.Scene;
@@ -52,6 +53,7 @@ public class PaintballBullet extends PaintballProjectile {
     private int splits = 0;
     @Getter @Setter
     private boolean playerContact = false;
+    private @Nullable Vec3d lastSplitPos = null;
 
     public PaintballBullet(Scene scene, BlockState blockState, ServerWorld world, PaintGun.BulletSettings settings,
                            PaintGunManager paintManager, DebugController debugController) {
@@ -119,7 +121,6 @@ public class PaintballBullet extends PaintballProjectile {
 
         if (abs(splitTimer) <= 1e-6) {
             splitTimer = settings.split().splitTicks() / 20f;
-            splits++;
 
             split();
         } else {
@@ -129,13 +130,36 @@ public class PaintballBullet extends PaintballProjectile {
 
     private void split() {
         Vector3f loc = getRigidBody().getFrame().getLocation(new Vector3f(), 1);
-        Vec3d start = new Vec3d(loc.x, loc.y, loc.z);
+        Vec3d pos = new Vec3d(loc.x, loc.y, loc.z);
+
+        int subdivisions = settings.split().splitSubdivisions();
+
+        if (lastSplitPos != null && subdivisions > 0) {
+            double frac = 1d / (subdivisions + 1);
+            Vec3d diff = pos.subtract(lastSplitPos);
+
+            for (int i = 1; i <= subdivisions; i++) {
+                Vec3d subPos = lastSplitPos.add(diff.multiply(i * frac));
+                splitAt(subPos);
+            }
+        }
+
+        lastSplitPos = pos;
+
+        splitAt(pos);
+    }
+
+    private void splitAt(Vec3d start) {
+        if (splits >= settings.split().maxSplits()) return;
+
+        splits++;
+
         Vec3d dir = Direction.DOWN.getDoubleVector();
 
         if (DEBUG_SPLITTING) {
             debugController.renderer().ifPresent(renderer -> {
                 renderer.marker(start, Blocks.DIAMOND_BLOCK.getDefaultState(), 0x5555ff);
-                renderer.arrow(start, dir,  Blocks.BLACK_CONCRETE.getDefaultState());
+                renderer.arrow(start, dir, Blocks.BLACK_CONCRETE.getDefaultState());
             });
         }
 
