@@ -33,6 +33,7 @@ import work.lclpnet.ap2.api.util.world.BlockPredicate;
 import work.lclpnet.ap2.api.util.world.WorldScanner;
 import work.lclpnet.ap2.core.hook.SpectatePlayerCallback;
 import work.lclpnet.ap2.game.paintball.item.InkGrenadeItem;
+import work.lclpnet.ap2.game.paintball.item.InkPackItem;
 import work.lclpnet.ap2.game.paintball.item.MedKitItem;
 import work.lclpnet.ap2.game.paintball.kit.RifleKit;
 import work.lclpnet.ap2.game.paintball.kit.ShotgunKit;
@@ -100,7 +101,6 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
     private PaintballResults results;
     private boolean started = false;
     private SpecialItems specialItems;
-    private PaintballTicker ticker;
     private Scene scene;
 
     public PaintballInstance(MiniGameHandle gameHandle) {
@@ -231,7 +231,8 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
 
         specialItems = SpecialItems.create(gameHandle, map, world, random, validSpawn, commons(map, world).debugController(), r -> r
                 .register(new MedKitItem(), 0.25f)
-                .register(new InkGrenadeItem(paintGunManager, scene, random, teams), 0.5f));
+                .register(new InkGrenadeItem(paintGunManager, scene, random, teams), 0.5f)
+                .register(new InkPackItem(paintGunManager), 0.15f));
 
         specialItems.setMarkGlowing(true);
 
@@ -291,6 +292,8 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
                 }
             });
         }
+
+        paintGunManager.injectKitManager(kitHandler.getManager());
     }
 
     private void equipPlayers() {
@@ -334,8 +337,8 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
 
         started = true;
 
-        ticker = new PaintballTicker(getWorld(), gameHandle.getParticipants(), teams, paintManager,
-                paintGunManager, kitHandler.getManager(), vanishManager, commons().debugController());
+        var ticker = new PaintballTicker(getWorld(), gameHandle.getParticipants(), teams, paintManager,
+                paintGunManager, vanishManager, commons().debugController());
 
         ticker.start(gameHandle.getGameScheduler(), gameHandle.getHookRegistrar());
 
@@ -375,8 +378,7 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
         player.getAbilities().setFlySpeed(0);
         player.sendAbilitiesUpdate();
 
-        ticker.getPaintGunAndStack(player)
-                .ifPresent(pair -> paintGunManager.refillPaintGun(pair.right()));
+        paintGunManager.refillPaintGun(player);
 
         // delay game mode change one tick to prevent other players from seeing the teleport
         gameHandle.getGameScheduler().immediate(() -> {

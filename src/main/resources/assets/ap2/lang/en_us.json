@@ -334,5 +334,7 @@
   "game.ap2.paintball.kit.sniper.description": "A long-range ink sniper rifle with high damage and a low firing rate.",
   "game.ap2.paintball.item.med_kit": "Medkit",
   "game.ap2.paintball.item.ink_grenade": "Ink Grenade",
-  "game.ap2.paintball.item.ink_grenade.desc": "Creates an ink explosion after 4 seconds"
+  "game.ap2.paintball.item.ink_grenade.desc": "Creates an ink explosion after 4 seconds",
+  "game.ap2.paintball.item.ink_pack": "Ink Pack",
+  "game.ap2.paintball.item.ink_pack.desc": "Reloads the current ink gun completely"
 }

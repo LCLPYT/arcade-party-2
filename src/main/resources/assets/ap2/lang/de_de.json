@@ -334,5 +334,7 @@
   "game.ap2.paintball.kit.sniper.description": "Ein akkurates Tintenscharfschützengewehr mit hoher Reichweite, hohem Schaden und geringer Feuerrate.",
   "game.ap2.paintball.item.med_kit": "Verbandskasten",
   "game.ap2.paintball.item.ink_grenade": "Tintengranate",
-  "game.ap2.paintball.item.ink_grenade.desc": "Verursacht eine Tintenexplosion nach 4 Sekunden"
+  "game.ap2.paintball.item.ink_grenade.desc": "Verursacht eine Tintenexplosion nach 4 Sekunden",
+  "game.ap2.paintball.item.ink_pack": "Tintenpatrone",
+  "game.ap2.paintball.item.ink_pack.desc": "Lädt die aktuelle Paintball-Waffe komplett voll"
 }

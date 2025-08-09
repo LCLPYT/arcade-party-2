@@ -28,10 +28,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.team.DyeTeamKey;
-import work.lclpnet.ap2.game.paintball.kit.PaintGunKit;
 import work.lclpnet.ap2.impl.game.PlayerUtil;
-import work.lclpnet.ap2.impl.game.kit.KitManager;
-import work.lclpnet.ap2.impl.game.kit.SingleItemKit;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.RayCastUtil;
 import work.lclpnet.ap2.impl.util.VanishManager;
@@ -43,7 +40,6 @@ import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
 
 import static java.lang.Math.max;
@@ -63,20 +59,18 @@ public class PaintballTicker {
     private final PaintballTeams teams;
     private final PaintManager paintManager;
     private final PaintGunManager paintGunManager;
-    private final KitManager kitManager;
     private final VanishManager vanishManager;
     private final DebugController debugController;
     private final Map<UUID, Entry> entries = new HashMap<>();
 
     public PaintballTicker(ServerWorld world, Participants participants, PaintballTeams teams, PaintManager paintManager,
-                           PaintGunManager paintGunManager, KitManager kitManager, VanishManager vanishManager,
+                           PaintGunManager paintGunManager, VanishManager vanishManager,
                            DebugController debugController) {
         this.world = world;
         this.participants = participants;
         this.teams = teams;
         this.paintManager = paintManager;
         this.paintGunManager = paintGunManager;
-        this.kitManager = kitManager;
         this.vanishManager = vanishManager;
         this.debugController = debugController;
     }
@@ -203,7 +197,7 @@ public class PaintballTicker {
     }
 
     private void tickReload(ServerPlayerEntity player, Entry entry) {
-        Pair<PaintGun, ItemStack> pair = getPaintGunAndStack(player).orElse(null);
+        Pair<PaintGun, ItemStack> pair = paintGunManager.getPaintGunAndStack(player).orElse(null);
 
         if (pair == null) return;
 
@@ -254,16 +248,6 @@ public class PaintballTicker {
         return ownInkContactState != null
                 ? Pair.of(OnInk.OWN, ownInkContactState)
                 : Pair.of(OnInk.NONE, null);
-    }
-
-    public Optional<Pair<PaintGun, ItemStack>> getPaintGunAndStack(ServerPlayerEntity player) {
-        for (ItemStack stack : player.getInventory()) {
-            if (!(SingleItemKit.get(stack, kitManager).orElse(null) instanceof PaintGunKit kit)) continue;
-
-            return Optional.of(Pair.of(kit.getPaintGun(), stack));
-        }
-
-        return Optional.empty();
     }
 
     private enum OnInk { NONE, ENEMY, OWN }

@@ -1,6 +1,7 @@
 package work.lclpnet.ap2.game.paintball.util;
 
 import com.jme3.math.Vector3f;
+import it.unimi.dsi.fastutil.Pair;
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.block.BlockState;
@@ -22,8 +23,12 @@ import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.RaycastContext;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.team.DyeTeamKey;
+import work.lclpnet.ap2.game.paintball.kit.PaintGunKit;
+import work.lclpnet.ap2.impl.game.kit.KitManager;
+import work.lclpnet.ap2.impl.game.kit.SingleItemKit;
 import work.lclpnet.ap2.impl.scene.Scene;
 import work.lclpnet.ap2.impl.scene.simulation.EntityRefPhysicsElement;
 import work.lclpnet.ap2.impl.scene.simulation.SceneRigidBody;
@@ -65,6 +70,7 @@ public class PaintGunManager {
     private final Set<UUID> reloading = new HashSet<>();
     @Setter
     private boolean shootingEnabled = false;
+    private @Nullable KitManager kitManager = null;
 
     public PaintGunManager(ServerWorld world, Scene scene, PaintManager paintManager, PaintballTeams teams,
                            Random random, Participants participants, Translations translations,
@@ -78,6 +84,10 @@ public class PaintGunManager {
         this.translations = translations;
         this.debugController = debugController;
         this.gameOver = gameOver;
+    }
+
+    public void injectKitManager(KitManager kitManager) {
+        this.kitManager = kitManager;
     }
 
     public void init(HookRegistrar hooks) {
@@ -320,6 +330,20 @@ public class PaintGunManager {
         return dir.multiply(basePower * powerScale);
     }
 
+    public Optional<Pair<PaintGun, ItemStack>> getPaintGunAndStack(ServerPlayerEntity player) {
+        KitManager kitManager = this.kitManager;
+
+        if (kitManager == null) return Optional.empty();
+
+        for (ItemStack stack : player.getInventory()) {
+            if (!(SingleItemKit.get(stack, kitManager).orElse(null) instanceof PaintGunKit kit)) continue;
+
+            return Optional.of(Pair.of(kit.getPaintGun(), stack));
+        }
+
+        return Optional.empty();
+    }
+
     public void setReloading(ServerPlayerEntity player) {
         reloading.add(player.getUuid());
     }
@@ -334,5 +358,10 @@ public class PaintGunManager {
 
     public void refillPaintGun(ItemStack stack) {
         stack.set(DataComponentTypes.DAMAGE, 0);
+    }
+
+    public void refillPaintGun(ServerPlayerEntity player) {
+        getPaintGunAndStack(player)
+                .ifPresent(pair -> refillPaintGun(pair.right()));
     }
 }
