@@ -51,6 +51,7 @@ import work.lclpnet.ap2.impl.scene.Scene;
 import work.lclpnet.ap2.impl.scene.ServerWorldMountContext;
 import work.lclpnet.ap2.impl.scene.simulation.EntityCollisionManager;
 import work.lclpnet.ap2.impl.util.BlockBox;
+import work.lclpnet.ap2.impl.util.VanishManager;
 import work.lclpnet.ap2.impl.util.collision.ChunkedCollisionDetector;
 import work.lclpnet.ap2.impl.util.collision.TickMovementObserver;
 import work.lclpnet.ap2.impl.util.handler.VisualCooldown;
@@ -88,6 +89,7 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
     private final Random random = new Random();
     private final TickMovementObserver movementObserver;
     private final VisualCooldown respawnCooldown;
+    private final VanishManager vanishManager;
 
     private PaintManager paintManager;
     private KitHandler kitHandler;
@@ -109,6 +111,7 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
         getTeamManager().setUseColorCodes(true);
 
         respawnCooldown = new VisualCooldown(gameHandle.getGameScheduler());
+        vanishManager = VanishManager.setup(gameHandle);
     }
 
     @Override
@@ -331,7 +334,7 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
         started = true;
 
         ticker = new PaintballTicker(getWorld(), gameHandle.getParticipants(), teams, paintManager,
-                paintGunManager, kitHandler.getManager(), commons().debugController());
+                paintGunManager, kitHandler.getManager(), vanishManager, commons().debugController());
 
         ticker.start(gameHandle.getGameScheduler(), gameHandle.getHookRegistrar());
 

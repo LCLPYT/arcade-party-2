@@ -51,6 +51,8 @@ repositories {
     maven {
         url "https://maven.shedaniel.me/"
     }
+
+    mavenLocal()
 }
 
 loom {

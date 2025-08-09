@@ -31,6 +31,7 @@ import work.lclpnet.ap2.impl.game.kit.KitManager;
 import work.lclpnet.ap2.impl.game.kit.SingleItemKit;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.RayCastUtil;
+import work.lclpnet.ap2.impl.util.VanishManager;
 import work.lclpnet.ap2.impl.util.debug.DebugController;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks;
@@ -49,7 +50,7 @@ import static work.lclpnet.lobby.util.PlayerReset.setAttribute;
 
 public class PaintballTicker {
 
-    private static final boolean DEBUG_WALL_CLIMBING = true;
+    private static final boolean DEBUG_WALL_CLIMBING = false;
 
     private static final float HEAL_PER_SECOND = 4.0f;
     private static final int HEAL_DELAY_TICKS = Ticks.seconds(3);
@@ -60,17 +61,20 @@ public class PaintballTicker {
     private final PaintManager paintManager;
     private final PaintGunManager paintGunManager;
     private final KitManager kitManager;
+    private final VanishManager vanishManager;
     private final DebugController debugController;
     private final Map<UUID, Entry> entries = new HashMap<>();
 
     public PaintballTicker(ServerWorld world, Participants participants, PaintballTeams teams, PaintManager paintManager,
-                           PaintGunManager paintGunManager, KitManager kitManager, DebugController debugController) {
+                           PaintGunManager paintGunManager, KitManager kitManager, VanishManager vanishManager,
+                           DebugController debugController) {
         this.world = world;
         this.participants = participants;
         this.teams = teams;
         this.paintManager = paintManager;
         this.paintGunManager = paintGunManager;
         this.kitManager = kitManager;
+        this.vanishManager = vanishManager;
         this.debugController = debugController;
     }
 
@@ -110,7 +114,8 @@ public class PaintballTicker {
         }
 
         if (onInk == OnInk.OWN && player.isSneaking()) {
-            player.addStatusEffect(new StatusEffectInstance(StatusEffects.INVISIBILITY, 20, 0, false, false, false));
+            vanishManager.vanish(player);
+
             setAttribute(player, EntityAttributes.MOVEMENT_SPEED, 0.14);
             setAttribute(player, EntityAttributes.SNEAKING_SPEED, 1.0);
 
@@ -119,7 +124,7 @@ public class PaintballTicker {
             return;
         }
 
-        player.removeStatusEffect(StatusEffects.INVISIBILITY);
+//        vanishManager.show(player);
         resetAttribute(player, EntityAttributes.MOVEMENT_SPEED);
         resetAttribute(player, EntityAttributes.SNEAKING_SPEED);
 
