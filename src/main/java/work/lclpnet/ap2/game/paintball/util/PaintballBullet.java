@@ -37,13 +37,15 @@ public class PaintballBullet extends PaintballProjectile {
     private final Vector3d startPos = new Vector3d();
     private double fadeTime = -1;
     private double despawnTimer = -1;
-    @Getter
+    @Getter @Setter
     private boolean painting = true;
     @Getter
     private boolean splitOff = false;
     private int hits = 0;
     private double splitTimer = 0;
     private int splits = 0;
+    @Getter @Setter
+    private boolean playerContact = false;
 
     public PaintballBullet(Scene scene, BlockState blockState, ServerWorld world, PaintGun.BulletSettings settings, Random random) {
         super(scene, blockState, world);
@@ -68,7 +70,7 @@ public class PaintballBullet extends PaintballProjectile {
     }
 
     @Override
-    public synchronized void updateAnimation(double dt, AnimationContext ctx) {
+    public void updateAnimation(double dt, AnimationContext ctx) {
         super.updateAnimation(dt, ctx);
 
         if (despawnTimer >= 0) {
@@ -98,15 +100,10 @@ public class PaintballBullet extends PaintballProjectile {
         tickSplitting(dt);
     }
 
-    private synchronized void tickSplitting(double dt) {
+    private void tickSplitting(double dt) {
         if (splitOff || splits >= settings.split().maxSplits() || isFading()) return;
 
         if (settings.split().splitTicks() == Integer.MAX_VALUE) return;
-
-//        var velocity = new Vector3f();
-//        rigidBody.getLinearVelocity(velocity);
-//
-//        if (velocity.lengthSquared() < MIN_SPLIT_POWER * MIN_SPLIT_POWER) return;
 
         if (splitTimer <= 0) {
             splitTimer = settings.split().splitTicks() / 20f;
@@ -118,11 +115,15 @@ public class PaintballBullet extends PaintballProjectile {
         }
     }
 
-    public synchronized void setSplitOff() {
+    public void setSplitOff() {
         splitOff = true;
     }
 
     private void split() {
+        var velocity = rigidBody.getLinearVelocity(null);
+
+        if (velocity.lengthSquared() < MIN_SPLIT_POWER * MIN_SPLIT_POWER) return;
+
         var obj = new PaintballBullet(scene, getBlockState(), world, settings, random);
         obj.position.set(position);
         obj.scale.set(settings.size() * 0.2f);
@@ -151,17 +152,17 @@ public class PaintballBullet extends PaintballProjectile {
         scene.add(obj);
     }
 
-    public synchronized void startDespawnTimer() {
+    public void startDespawnTimer() {
         if (despawnTimer >= 0 || isFading()) return;
 
         despawnTimer = settings.despawnSeconds();
     }
 
-    public synchronized boolean isFading() {
+    public boolean isFading() {
         return fadeTime >= 0;
     }
 
-    public synchronized void startFading() {
+    public void startFading() {
         if (isFading()) return;
 
         fadeTime = FADE_TIME_SECONDS;
@@ -169,7 +170,7 @@ public class PaintballBullet extends PaintballProjectile {
         painting = false;
     }
 
-    public synchronized void onHit() {
+    public void onHit() {
         if (++hits == settings.maxHits() || splitOff) {
             startFading();
         }

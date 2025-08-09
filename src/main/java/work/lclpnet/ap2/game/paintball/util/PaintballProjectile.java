@@ -1,5 +1,6 @@
 package work.lclpnet.ap2.game.paintball.util;
 
+import lombok.Getter;
 import net.minecraft.block.BlockState;
 import net.minecraft.server.world.ServerWorld;
 import work.lclpnet.ap2.impl.scene.Scene;
@@ -11,6 +12,7 @@ public class PaintballProjectile extends PhysicsBlockDisplayObject {
     public static final int
             TEAM_COLLISION_ENABLE_TICKS = 4;
 
+    @Getter
     private int age = 0;
 
     public PaintballProjectile(Scene scene, BlockState state, ServerWorld world) {

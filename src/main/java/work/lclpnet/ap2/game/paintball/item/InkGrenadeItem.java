@@ -130,9 +130,9 @@ public class InkGrenadeItem implements SpecialItem {
         private static final float
                 BLINK_SECONDS = 0.5f,
                 FUSE_SECONDS = 4.0f,
-                MASS = 0.1f,
+                MASS = 0.8f,
                 FRAGMENT_SPAWN_RADIUS = 0.2f,
-                EXPLOSION_POWER = 3.8f;
+                EXPLOSION_POWER = 4.5f;
 
         private static final int EXPLOSION_FRAGMENTS = 50;
 

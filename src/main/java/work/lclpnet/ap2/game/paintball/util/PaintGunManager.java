@@ -30,6 +30,7 @@ import work.lclpnet.ap2.impl.scene.simulation.SceneRigidBody;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.RayCastUtil;
 import work.lclpnet.kibu.hook.HookRegistrar;
+import work.lclpnet.kibu.physics.api.PhysicsElement;
 import work.lclpnet.kibu.physics.api.event.collision.ElementCollisionEvents;
 import work.lclpnet.kibu.physics.impl.bullet.collision.space.MinecraftSpace;
 import work.lclpnet.kibu.physics.impl.bullet.thread.PhysicsThread;
@@ -83,22 +84,41 @@ public class PaintGunManager {
         });
 
         hooks.registerHook(ElementCollisionEvents.ELEMENT_COLLISION, (first, second, manifoldId) -> {
-            if (first instanceof EntityRefPhysicsElement entityElem && second instanceof PaintballBullet bullet) {
-                entityElem.cast().optional().ifPresent(entity -> onBulletHitEntity(bullet, entity));
-                return;
-            }
+            if (first instanceof PaintballBullet bullet && bulletCollision(bullet, second)) return;
+            if (second instanceof PaintballBullet bullet && bulletCollision(bullet, first)) return;
 
-            if (second instanceof EntityRefPhysicsElement entityElem && first instanceof PaintballBullet bullet) {
-                entityElem.cast().optional().ifPresent(entity -> onBulletHitEntity(bullet, entity));
+            // prevent ink bullets kicked by a player to kick other ink bullets that paint very far away blocks
+            if (first instanceof PaintballBullet bulletA && second instanceof PaintballBullet bulletB
+                    && (bulletA.isPlayerContact() || bulletB.isPlayerContact())) {
+                bulletA.setPlayerContact(true);
+                bulletB.setPlayerContact(true);
+                bulletA.setPainting(false);
+                bulletB.setPainting(false);
             }
         });
     }
 
+    private boolean bulletCollision(PaintballBullet bullet, PhysicsElement<?> other) {
+        if (bullet.getAge() >= PaintballProjectile.TEAM_COLLISION_ENABLE_TICKS) {
+            // prevent indefinite ink stacking on top of other ink bullet
+            bullet.startDespawnTimer();
+        }
+
+        if (other instanceof EntityRefPhysicsElement entityElem) {
+            entityElem.cast().optional().ifPresent(entity -> onBulletHitEntity(bullet, entity));
+            return true;
+        }
+
+        return false;
+    }
+
     private void onBulletHitEntity(PaintballBullet bullet, Entity entity) {
-        if (bullet.isFading() || bullet.isSplitOff()
-                || !(entity instanceof ServerPlayerEntity player)
-                || !participants.isParticipating(player))
-            return;
+        if (!(entity instanceof ServerPlayerEntity player) || !participants.isParticipating(player)) return;
+
+        bullet.setPlayerContact(true);
+        bullet.setPainting(false);
+
+        if (bullet.isFading() || bullet.isSplitOff() || !bullet.isPainting()) return;
 
         bullet.startFading();
         bullet.forcePhysicsThread();
@@ -124,6 +144,8 @@ public class PaintGunManager {
             player.hurtTime = 0;
             player.timeUntilRegen = 0;
             player.damage(world, player.getDamageSources().create(DamageTypes.ARROW, owner, owner), bulletSettings.damage());
+
+            paintAt(bullet, player.getX(), player.getY(), player.getZ());
         });
     }
 
@@ -138,10 +160,10 @@ public class PaintGunManager {
 
         Vector3f hit = bullet.getRigidBody().getFrame().getLocation(new Vector3f(), 1);
 
-        executeOn(world.getServer(), () -> paintAt(bullet, hit));
+        executeOn(world.getServer(), () -> paintAt(bullet, hit.x, hit.y, hit.z));
     }
 
-    private void paintAt(PaintballBullet bullet, Vector3f hit) {
+    private void paintAt(PaintballBullet bullet, double x, double y, double z) {
         ServerPlayerEntity owner = participants.getParticipant(bullet.getOwner()).orElse(null);
 
         if (owner == null) return;
@@ -161,14 +183,14 @@ public class PaintGunManager {
         int playerDeficit = teams.playerDeficit(team);
         r *= 1f + (playerDeficit * settings.deficitPaintBoost());
 
-        Box box = Box.of(new Vec3d(hit.x, hit.y, hit.z), r * 2, r * 2, r * 2);
+        Box box = Box.of(new Vec3d(x, y, z), r * 2, r * 2, r * 2);
 
         for (BlockPos pos : BlockBox.of(box)) {
-            double dx = pos.getX() + 0.5 - hit.x;
-            double dy = pos.getY() + 0.5 - hit.y;
-            double dz = pos.getZ() + 0.5 - hit.z;
+            double dx = pos.getX() + 0.5 - x;
+            double dy = pos.getY() + 0.5 - y;
+            double dz = pos.getZ() + 0.5 - z;
 
-            if (dx * dx + dy * dy + dz * dz <= r * r && tryPaint(key, pos, hit)) {
+            if (dx * dx + dy * dy + dz * dz <= r * r && tryPaint(key, pos, x, y, z)) {
                 bullet.onHit();
             }
         }
@@ -189,10 +211,10 @@ public class PaintGunManager {
         }
     }
 
-    private boolean tryPaint(DyeTeamKey teamKey, BlockPos blockPos, Vector3f pos) {
+    private boolean tryPaint(DyeTeamKey teamKey, BlockPos blockPos, double x, double y, double z) {
         if (!paintManager.replace(blockPos, teamKey)) return false;
 
-        world.spawnParticles(new DustParticleEffect(teamKey.color(), 0.5f), pos.x, pos.y, pos.z, 10,
+        world.spawnParticles(new DustParticleEffect(teamKey.color(), 0.5f), x, y, z, 10,
                 0.2, 0.2, 0.2, 0.1);
 
         return true;
