@@ -478,6 +478,8 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
     @Override
     public void participantRemoved(ServerPlayerEntity player) {
         balanceTeams();
+
+        super.participantRemoved(player);
     }
 
     private void balanceTeams() {
