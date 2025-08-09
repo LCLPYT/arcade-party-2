@@ -105,7 +105,7 @@ public class PaintGunManager {
     }
 
     private boolean bulletCollision(PaintballBullet bullet, PhysicsElement<?> other) {
-        if (bullet.getAge() >= PaintballProjectile.TEAM_COLLISION_ENABLE_TICKS) {
+        if (bullet.getAgeTicks() >= PaintballProjectile.TEAM_COLLISION_ENABLE_TICKS) {
             // prevent indefinite ink stacking on top of other ink bullet
             bullet.startDespawnTimer();
         }
@@ -124,7 +124,7 @@ public class PaintGunManager {
         bullet.setPlayerContact(true);
         bullet.setPainting(false);
 
-        if (bullet.isFading() || !bullet.isPainting()) return;
+        if (bullet.isFading()) return;
 
         bullet.startFading();
         bullet.forcePhysicsThread();

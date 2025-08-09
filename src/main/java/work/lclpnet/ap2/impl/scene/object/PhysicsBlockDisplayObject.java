@@ -83,7 +83,7 @@ public class PhysicsBlockDisplayObject extends Object3d
     }
 
     public void removePhysics(ServerWorld world) {
-        executePhysics(() -> MinecraftSpace.get(world).addCollisionObject(rigidBody));
+        executePhysics(() -> MinecraftSpace.get(world).removeCollisionObject(rigidBody));
     }
 
     public void setBlockState(BlockState state) {

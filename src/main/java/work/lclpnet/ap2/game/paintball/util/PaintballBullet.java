@@ -18,6 +18,7 @@ import work.lclpnet.ap2.impl.scene.Scene;
 import work.lclpnet.ap2.impl.scene.animation.AnimationContext;
 import work.lclpnet.ap2.impl.util.RayCastUtil;
 import work.lclpnet.ap2.impl.util.debug.DebugController;
+import work.lclpnet.kibu.scheduler.Ticks;
 
 import java.util.UUID;
 
@@ -29,6 +30,8 @@ public class PaintballBullet extends PaintballProjectile {
     private static final double
             FADE_TIME_SECONDS = 1.5d,
             MAX_TRAVEL_DIST = 256;
+
+    private static final int MAX_AGE = Ticks.seconds(8);
 
     private static final boolean DEBUG_SPLITTING = false;
 
@@ -77,6 +80,11 @@ public class PaintballBullet extends PaintballProjectile {
     public void updateAnimation(double dt, AnimationContext ctx) {
         super.updateAnimation(dt, ctx);
 
+        if (getAgeTicks() >= MAX_AGE) {
+            detach();
+            return;
+        }
+
         if (despawnTimer >= 0) {
             despawnTimer = max(despawnTimer - dt, 0d);
 
@@ -105,7 +113,7 @@ public class PaintballBullet extends PaintballProjectile {
     }
 
     private void tickSplitting(double dt) {
-        if (splits >= settings.split().maxSplits() || isFading()) return;
+        if (splits >= settings.split().maxSplits() || isFading() || !painting) return;
 
         if (settings.split().splitTicks() == Integer.MAX_VALUE) return;
 

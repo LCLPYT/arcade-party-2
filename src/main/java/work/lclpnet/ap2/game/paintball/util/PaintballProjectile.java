@@ -13,7 +13,7 @@ public class PaintballProjectile extends PhysicsBlockDisplayObject {
             TEAM_COLLISION_ENABLE_TICKS = 4;
 
     @Getter
-    private int age = 0;
+    private int ageTicks = 0;
 
     public PaintballProjectile(Scene scene, BlockState state, ServerWorld world) {
         super(scene, state, world);
@@ -23,7 +23,7 @@ public class PaintballProjectile extends PhysicsBlockDisplayObject {
     public void updateAnimation(double dt, AnimationContext ctx) {
         super.updateAnimation(dt, ctx);
 
-        if (age++ == TEAM_COLLISION_ENABLE_TICKS) {
+        if (ageTicks++ == TEAM_COLLISION_ENABLE_TICKS) {
             enableTeamCollision();
         }
     }
