@@ -57,4 +57,11 @@ public class ThreadUtil {
 
         throw new IllegalStateException("Called on the wrong thread. Expected to run on " + thread.getName());
     }
+
+    public static boolean onThreadOrDispatch(ThreadExecutor<?> executor, Runnable runnable) {
+        if (executor.isOnThread()) return false;
+
+        executor.execute(runnable);
+        return true;
+    }
 }

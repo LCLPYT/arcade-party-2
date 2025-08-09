@@ -29,7 +29,6 @@ import work.lclpnet.ap2.impl.scene.simulation.EntityRefPhysicsElement;
 import work.lclpnet.ap2.impl.scene.simulation.SceneRigidBody;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.RayCastUtil;
-import work.lclpnet.ap2.impl.util.math.MathUtil;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.physics.api.event.collision.ElementCollisionEvents;
 import work.lclpnet.kibu.physics.impl.bullet.collision.space.MinecraftSpace;
@@ -43,6 +42,7 @@ import static java.lang.Math.max;
 import static java.lang.Math.toRadians;
 import static net.minecraft.util.Formatting.RED;
 import static work.lclpnet.ap2.impl.util.ThreadUtil.executeOn;
+import static work.lclpnet.ap2.impl.util.math.MathUtil.applySpread;
 import static work.lclpnet.ap2.impl.util.math.MathUtil.randomUnitVec3d;
 import static work.lclpnet.kibu.physics.impl.bullet.math.Convert.toBullet;
 
@@ -215,11 +215,9 @@ public class PaintGunManager {
 
         stack.set(DataComponentTypes.DAMAGE, stack.getDamage() + 1);
 
-        executeOn(PhysicsThread.get(world), () -> {
-            for (int i = 0; i < paintGun.bulletCount(); i++) {
-                spawnPaintBulletWithSpread(player, paintGun, state);
-            }
-        });
+        for (int i = 0; i < paintGun.bulletCount(); i++) {
+            spawnPaintBulletWithSpread(player, paintGun, state);
+        }
 
         var fireSound = paintGun.fireSound();
 
@@ -240,12 +238,11 @@ public class PaintGunManager {
         PaintGun.BulletSettings bulletSettings = paintGun.bullet();
         final double scale = bulletSettings.size();
 
-        Vec3d dir = player.getRotationVector();
-        dir = MathUtil.applySpread(dir, toRadians(paintGun.bulletSpread()), random);
+        Vec3d dir = applySpread(player.getRotationVector(), toRadians(paintGun.bulletSpread()), random);
 
         Vec3d pos = getProjectileSpawn(player, dir, scale);
 
-        spawnPaintBullet(player, state, bulletSettings, pos, dir);
+        executeOn(PhysicsThread.get(world), () -> spawnPaintBullet(player, state, bulletSettings, pos, dir));
     }
 
     public void spawnPaintBullet(ServerPlayerEntity player, BlockState state, PaintGun.BulletSettings bulletSettings, Vec3d pos, Vec3d dir) {

@@ -12,14 +12,12 @@ import work.lclpnet.ap2.impl.scene.Scene;
 import work.lclpnet.ap2.impl.scene.animation.AnimationContext;
 import work.lclpnet.ap2.impl.scene.simulation.SceneRigidBody;
 import work.lclpnet.ap2.impl.util.math.MathUtil;
-import work.lclpnet.kibu.physics.impl.bullet.thread.PhysicsThread;
 
 import java.util.Random;
 import java.util.UUID;
 
 import static java.lang.Math.max;
 import static java.lang.Math.toRadians;
-import static work.lclpnet.ap2.impl.util.ThreadUtil.executeOn;
 import static work.lclpnet.kibu.physics.impl.bullet.math.Convert.toBullet;
 
 public class PaintballBullet extends PaintballProjectile {
@@ -114,7 +112,7 @@ public class PaintballBullet extends PaintballProjectile {
             splitTimer = settings.split().splitTicks() / 20f;
             splits++;
 
-            executeOn(PhysicsThread.get(world), this::split);
+            executePhysics(this::split);
         } else {
             splitTimer = max(0, splitTimer - dt);
         }
