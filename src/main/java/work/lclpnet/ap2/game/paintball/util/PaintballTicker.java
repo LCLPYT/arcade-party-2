@@ -124,7 +124,7 @@ public class PaintballTicker {
             return;
         }
 
-//        vanishManager.show(player);
+        vanishManager.show(player);
         resetAttribute(player, EntityAttributes.MOVEMENT_SPEED);
         resetAttribute(player, EntityAttributes.SNEAKING_SPEED);
 

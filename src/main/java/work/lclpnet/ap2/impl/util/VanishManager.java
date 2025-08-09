@@ -1,19 +1,17 @@
 package work.lclpnet.ap2.impl.util;
 
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
-import net.minecraft.network.packet.Packet;
-import net.minecraft.network.packet.s2c.play.PlayerListS2CPacket;
-import net.minecraft.network.packet.s2c.play.PlayerRemoveS2CPacket;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.PlayerManager;
 import net.minecraft.server.network.ServerPlayerEntity;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
+import work.lclpnet.ap2.core.hook.PlayerCanTrackCallback;
 import work.lclpnet.ap2.core.hook.PlayerListEntriesOnJoinCallback;
+import work.lclpnet.ap2.core.mixin.ServerChunkManagerAccessor;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.ServerMessageHooks;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -41,6 +39,12 @@ public class VanishManager {
 
             return true;
         });
+
+        hooks.registerHook(PlayerCanTrackCallback.HOOK, (player, entity) -> {
+            if (!(entity instanceof ServerPlayerEntity subjectPlayer) || subjectPlayer == player) return true;
+
+            return !isVanished(subjectPlayer);
+        });
     }
 
     public synchronized void vanish(ServerPlayerEntity player) {
@@ -48,7 +52,7 @@ public class VanishManager {
             if (!vanished.add(player.getUuid())) return;
         }
 
-        sendToOtherPlayers(new PlayerRemoveS2CPacket(List.of(player.getUuid())), player);
+        updateTrackingOf(player);
     }
 
     public void show(ServerPlayerEntity player) {
@@ -56,16 +60,12 @@ public class VanishManager {
             if (!vanished.remove(player.getUuid())) return;
         }
 
-        sendToOtherPlayers(PlayerListS2CPacket.entryFromPlayer(List.of(player)), player);
+        updateTrackingOf(player);
     }
 
-    private void sendToOtherPlayers(Packet<?> packet, ServerPlayerEntity exclude) {
-        for (ServerPlayerEntity player : PlayerLookup.all(server)) {
-            if (player.networkHandler == exclude.networkHandler) continue;
-
-            System.out.println("sending disconnect of " + exclude.getNameForScoreboard() + " to " + player.getNameForScoreboard());
-            player.networkHandler.sendPacket(packet);
-        }
+    private void updateTrackingOf(ServerPlayerEntity player) {
+        var chunkLoadingManager = ((ServerChunkManagerAccessor) player.getWorld().getChunkManager()).getChunkLoadingManager();
+        chunkLoadingManager.updatePosition(player);
     }
 
     public synchronized boolean isVanished(ServerPlayerEntity player) {
