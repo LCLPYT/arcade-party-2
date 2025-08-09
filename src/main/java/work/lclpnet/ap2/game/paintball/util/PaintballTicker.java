@@ -10,7 +10,9 @@ import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.item.ItemStack;
+import net.minecraft.particle.BlockStateParticleEffect;
 import net.minecraft.particle.DustParticleEffect;
+import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -23,6 +25,7 @@ import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.RaycastContext;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.team.DyeTeamKey;
 import work.lclpnet.ap2.game.paintball.kit.PaintGunKit;
@@ -105,9 +108,22 @@ public class PaintballTicker {
         Entry entry = entry(player);
         entry.outOfCombatTicks++;
 
-        OnInk onInk = player.isSneaking() && tickWallClimbing(player)
-                ? OnInk.OWN
-                : standingOnInk(player);
+        BlockState inkContactState = null;
+
+        if (player.isSneaking()) {
+            inkContactState = tickWallClimbing(player);
+        }
+
+        OnInk onInk;
+
+        if (inkContactState != null) {
+            onInk = OnInk.OWN;
+        } else {
+            var res = standingOnInk(player);
+
+            onInk = res.left();
+            inkContactState = res.right();
+        }
 
         if (onInk != OnInk.ENEMY) {
             player.removeStatusEffect(StatusEffects.SLOWNESS);
@@ -119,8 +135,29 @@ public class PaintballTicker {
             setAttribute(player, EntityAttributes.MOVEMENT_SPEED, 0.14);
             setAttribute(player, EntityAttributes.SNEAKING_SPEED, 1.0);
 
+            if (entry.outOfCombatTicks >= HEAL_DELAY_TICKS) {
+                player.setHealth(player.getHealth() + HEAL_PER_SECOND / 20);
+            }
+
+            BlockState state = inkContactState;
+
+            teams.teamOf(player).ifPresent(team -> {
+                if (state != null) {
+                    world.spawnParticles(
+                            new BlockStateParticleEffect(ParticleTypes.BLOCK, state),
+                            player.getX(), player.getY(), player.getZ(), 2, 0.2, 0, 0.2, 0.2
+                    );
+                } else {
+                    world.spawnParticles(
+                            new DustParticleEffect(team.key().color(), 0.8f),
+                            player.getX(), player.getY(), player.getZ(), 2, 0.2, 0, 0.2, 0.2
+                    );
+                }
+            });
+
             paintGunManager.setReloading(player);
             tickReload(player, entry);
+
             return;
         }
 
@@ -135,10 +172,10 @@ public class PaintballTicker {
         }
     }
 
-    private boolean tickWallClimbing(ServerPlayerEntity player) {
+    private @Nullable BlockState tickWallClimbing(ServerPlayerEntity player) {
         PaintballTeam playerTeam = teams.teamOf(player).orElse(null);
 
-        if (playerTeam == null) return false;
+        if (playerTeam == null) return null;
 
         Vec3d input = PlayerUtil.getHorizontalInputVector(player);
 
@@ -153,27 +190,19 @@ public class PaintballTicker {
 
         BlockHitResult hit = RayCastUtil.raycastBlocks(world, player.getPos(), input, width, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, ShapeContext.of(player));
 
-        if (hit.getType() != HitResult.Type.BLOCK) return false;
+        if (hit.getType() != HitResult.Type.BLOCK) return null;
 
         BlockState collisionState = world.getBlockState(hit.getBlockPos());
         DyeTeamKey collisionTeam = paintManager.getTeam(collisionState.getBlock());
 
-        if (collisionTeam != playerTeam.key()) return false;
+        if (collisionTeam != playerTeam.key()) return null;
 
         setVelocity(player, player.getVelocity().withAxis(Direction.Axis.Y, 0.25));
 
-        return true;
+        return collisionState;
     }
 
     private void tickReload(ServerPlayerEntity player, Entry entry) {
-        if (entry.outOfCombatTicks >= HEAL_DELAY_TICKS) {
-            player.setHealth(player.getHealth() + HEAL_PER_SECOND / 20);
-        }
-
-        teams.teamOf(player).ifPresent(team -> world.spawnParticles(
-                new DustParticleEffect(team.key().color(), 0.8f), player.getX(), player.getY(), player.getZ(),
-                2, 0.2, 0, 0.2, 0.2));
-
         Pair<PaintGun, ItemStack> pair = getPaintGunAndStack(player).orElse(null);
 
         if (pair == null) return;
@@ -195,19 +224,19 @@ public class PaintballTicker {
                 SoundEvents.BLOCK_BREWING_STAND_BREW, SoundCategory.PLAYERS, 0.2f, 1f);
     }
 
-    private @NotNull OnInk standingOnInk(ServerPlayerEntity player) {
+    private @NotNull Pair<OnInk, BlockState> standingOnInk(ServerPlayerEntity player) {
         if (player.isSpectator()) {
-            return OnInk.NONE;
+            return Pair.of(OnInk.NONE, null);
         }
 
         PaintballTeam team = teams.teamOf(player).orElse(null);
 
         if (team == null) {
-            return OnInk.NONE;
+            return Pair.of(OnInk.NONE, null);
         }
 
         double width = player.getDimensions(player.getPose()).width();
-        boolean onOwnInk = false;
+        BlockState ownInkContactState = null;
 
         for (BlockPos pos : BlockBox.of(Box.of(player.getPos(), width, 0.1, width))) {
             BlockState state = world.getBlockState(pos);
@@ -216,13 +245,15 @@ public class PaintballTicker {
             if (paintTeam == null) continue;
 
             if (paintTeam != team.key()) {
-                return OnInk.ENEMY;
+                return Pair.of(OnInk.ENEMY, state);
             }
 
-            onOwnInk = true;
+            ownInkContactState = state;
         }
 
-        return onOwnInk ? OnInk.OWN : OnInk.NONE;
+        return ownInkContactState != null
+                ? Pair.of(OnInk.OWN, ownInkContactState)
+                : Pair.of(OnInk.NONE, null);
     }
 
     public Optional<Pair<PaintGun, ItemStack>> getPaintGunAndStack(ServerPlayerEntity player) {
