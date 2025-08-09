@@ -134,10 +134,11 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
         scene.animate(1, gameHandle.getScheduler());
 
         BlockShape bounds = MapUtil.readShape(map, "bounds");
+        GameCommons commons = commons(map, world);
 
         paintManager = new PaintManager(world, teams, getTeamManager(), data, bounds);
         paintGunManager = new PaintGunManager(world, scene, paintManager, teams, random, gameHandle.getParticipants(),
-                gameHandle.getTranslations(), winManager::isGameOver);
+                gameHandle.getTranslations(), commons.debugController(), winManager::isGameOver);
 
         paintGunManager.init(gameHandle.getHookRegistrar());
 
@@ -149,7 +150,6 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
         paintManager.countBlocks();
 
         var resultSpot = PaintballResults.ResultSpot.fromJson(map.getProperties().getJSONObject("result-spot"));
-        GameCommons commons = commons(map, world);
 
         results = new PaintballResults(gameHandle, commons.announcer(), world, resultSpot, data, winManager, () -> teams.stream()
                 .map(getTeamManager()::getTeam)

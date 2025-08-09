@@ -1,8 +1,10 @@
 package work.lclpnet.ap2.game.paintball.util;
 
+import com.jme3.math.Vector3f;
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
 import net.minecraft.block.ShapeContext;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.hit.BlockHitResult;
@@ -15,9 +17,11 @@ import work.lclpnet.ap2.impl.scene.MountContext;
 import work.lclpnet.ap2.impl.scene.Scene;
 import work.lclpnet.ap2.impl.scene.animation.AnimationContext;
 import work.lclpnet.ap2.impl.util.RayCastUtil;
+import work.lclpnet.ap2.impl.util.debug.DebugController;
 
 import java.util.UUID;
 
+import static java.lang.Math.abs;
 import static java.lang.Math.max;
 
 public class PaintballBullet extends PaintballProjectile {
@@ -26,9 +30,12 @@ public class PaintballBullet extends PaintballProjectile {
             FADE_TIME_SECONDS = 1.5d,
             MAX_TRAVEL_DIST = 256;
 
+    private static final boolean DEBUG_SPLITTING = false;
+
     @Getter
     private final PaintGun.BulletSettings settings;
     private final PaintGunManager paintManager;
+    private final DebugController debugController;
     @Getter @Setter
     private UUID owner = null;
     private final Vector3d initialScale = new Vector3d();
@@ -43,10 +50,12 @@ public class PaintballBullet extends PaintballProjectile {
     @Getter @Setter
     private boolean playerContact = false;
 
-    public PaintballBullet(Scene scene, BlockState blockState, ServerWorld world, PaintGun.BulletSettings settings, PaintGunManager paintManager) {
+    public PaintballBullet(Scene scene, BlockState blockState, ServerWorld world, PaintGun.BulletSettings settings,
+                           PaintGunManager paintManager, DebugController debugController) {
         super(scene, blockState, world);
         this.settings = settings;
         this.paintManager = paintManager;
+        this.debugController = debugController;
 
         rigidBody.setMass(settings.mass());
 
@@ -100,7 +109,7 @@ public class PaintballBullet extends PaintballProjectile {
 
         if (settings.split().splitTicks() == Integer.MAX_VALUE) return;
 
-        if (splitTimer <= 0) {
+        if (abs(splitTimer) <= 1e-6) {
             splitTimer = settings.split().splitTicks() / 20f;
             splits++;
 
@@ -111,8 +120,16 @@ public class PaintballBullet extends PaintballProjectile {
     }
 
     private void split() {
-        Vec3d start = new Vec3d(position.x, position.y, position.z);
+        Vector3f loc = getRigidBody().getFrame().getLocation(new Vector3f(), 1);
+        Vec3d start = new Vec3d(loc.x, loc.y, loc.z);
         Vec3d dir = Direction.DOWN.getDoubleVector();
+
+        if (DEBUG_SPLITTING) {
+            debugController.renderer().ifPresent(renderer -> {
+                renderer.marker(start, Blocks.DIAMOND_BLOCK.getDefaultState(), 0x5555ff);
+                renderer.arrow(start, dir,  Blocks.BLACK_CONCRETE.getDefaultState());
+            });
+        }
 
         BlockHitResult hit = RayCastUtil.raycastBlocks(world, start, dir, 10, RaycastContext.ShapeType.OUTLINE,
                 RaycastContext.FluidHandling.NONE, ShapeContext.absent());
@@ -121,7 +138,7 @@ public class PaintballBullet extends PaintballProjectile {
 
         Vec3d pos = hit.getPos();
 
-        paintManager.paintAt(this, pos.x, pos.y, pos.z, settings.split().splitPaintRadius());
+        paintManager.paintAt(this, pos.x, pos.y, pos.z, settings.split().splitPaintRadius(), false);
     }
 
     public void startDespawnTimer() {

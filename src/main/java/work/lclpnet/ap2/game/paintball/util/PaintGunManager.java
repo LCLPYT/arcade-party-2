@@ -29,6 +29,7 @@ import work.lclpnet.ap2.impl.scene.simulation.EntityRefPhysicsElement;
 import work.lclpnet.ap2.impl.scene.simulation.SceneRigidBody;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.RayCastUtil;
+import work.lclpnet.ap2.impl.util.debug.DebugController;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.physics.api.PhysicsElement;
 import work.lclpnet.kibu.physics.api.event.collision.ElementCollisionEvents;
@@ -59,13 +60,15 @@ public class PaintGunManager {
     private final Random random;
     private final Participants participants;
     private final Translations translations;
+    private final DebugController debugController;
     private final BooleanSupplier gameOver;
     private final Set<UUID> reloading = new HashSet<>();
     @Setter
     private boolean shootingEnabled = false;
 
     public PaintGunManager(ServerWorld world, Scene scene, PaintManager paintManager, PaintballTeams teams,
-                           Random random, Participants participants, Translations translations, BooleanSupplier gameOver) {
+                           Random random, Participants participants, Translations translations,
+                           DebugController debugController, BooleanSupplier gameOver) {
         this.world = world;
         this.scene = scene;
         this.paintManager = paintManager;
@@ -73,6 +76,7 @@ public class PaintGunManager {
         this.random = random;
         this.participants = participants;
         this.translations = translations;
+        this.debugController = debugController;
         this.gameOver = gameOver;
     }
 
@@ -147,7 +151,7 @@ public class PaintGunManager {
             player.timeUntilRegen = 0;
             player.damage(world, player.getDamageSources().create(DamageTypes.ARROW, owner, owner), bulletSettings.damage());
 
-            paintAt(bullet, player.getX(), player.getY(), player.getZ(), HIT_PAINT_RADIUS);
+            paintAt(bullet, player.getX(), player.getY(), player.getZ(), HIT_PAINT_RADIUS, true);
         });
     }
 
@@ -162,10 +166,10 @@ public class PaintGunManager {
 
         Vector3f hit = bullet.getRigidBody().getFrame().getLocation(new Vector3f(), 1);
 
-        executeOn(world.getServer(), () -> paintAt(bullet, hit.x, hit.y, hit.z, bullet.getSettings().paintRadius()));
+        executeOn(world.getServer(), () -> paintAt(bullet, hit.x, hit.y, hit.z, bullet.getSettings().paintRadius(), true));
     }
 
-    public void paintAt(PaintballBullet bullet, double x, double y, double z, double radius) {
+    public void paintAt(PaintballBullet bullet, double x, double y, double z, double radius, boolean shouldCount) {
         ServerPlayerEntity owner = participants.getParticipant(bullet.getOwner()).orElse(null);
 
         if (owner == null) return;
@@ -188,7 +192,7 @@ public class PaintGunManager {
             double dy = pos.getY() + 0.5 - y;
             double dz = pos.getZ() + 0.5 - z;
 
-            if (dx * dx + dy * dy + dz * dz <= radius * radius && tryPaint(key, pos, x, y, z)) {
+            if (dx * dx + dy * dy + dz * dz <= radius * radius && tryPaint(key, pos, x, y, z) && shouldCount) {
                 bullet.onHit();
             }
         }
@@ -266,7 +270,7 @@ public class PaintGunManager {
     }
 
     public void spawnPaintBullet(ServerPlayerEntity player, BlockState state, PaintGun.BulletSettings bulletSettings, Vec3d pos, Vec3d dir) {
-        var obj = new PaintballBullet(scene, state, player.getWorld(), bulletSettings, this);
+        var obj = new PaintballBullet(scene, state, player.getWorld(), bulletSettings, this, debugController);
         obj.position.set(pos.getX(), pos.getY(), pos.getZ());
         obj.scale.set(bulletSettings.size());
         obj.setOwner(player.getUuid());
