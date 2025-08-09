@@ -21,7 +21,7 @@ public class SniperKit extends PaintGunKit {
                 new PaintGun.BulletSettings(
                         0.3, 100, 1, 1.0, 0.01f, 19.5f, 4,
                         2.8f, 0.15f,
-                        new PaintGun.BulletSplit(0, 8, 2.2f, 0.5f)
+                        new PaintGun.BulletSplit(0, 8, 2.2f)
                 )
         );
     }

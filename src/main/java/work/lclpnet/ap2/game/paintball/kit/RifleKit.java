@@ -21,7 +21,7 @@ public class RifleKit extends PaintGunKit {
                 new PaintGun.BulletSettings(
                         0.2, 25, 12, 2.0, 0.1f, 3.0f, 4,
                         1.5f, 0.75f,
-                        new PaintGun.BulletSplit(4, 6, 1.1f, 1)
+                        new PaintGun.BulletSplit(4, 6, 1.1f)
                 )
         );
     }

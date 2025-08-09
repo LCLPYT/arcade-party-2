@@ -1,36 +1,34 @@
 package work.lclpnet.ap2.game.paintball.util;
 
-import com.jme3.math.Vector3f;
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.ShapeContext;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.util.hit.BlockHitResult;
+import net.minecraft.util.hit.HitResult;
+import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.RaycastContext;
 import org.joml.Vector3d;
 import work.lclpnet.ap2.impl.scene.MountContext;
 import work.lclpnet.ap2.impl.scene.Scene;
 import work.lclpnet.ap2.impl.scene.animation.AnimationContext;
-import work.lclpnet.ap2.impl.scene.simulation.SceneRigidBody;
-import work.lclpnet.ap2.impl.util.math.MathUtil;
+import work.lclpnet.ap2.impl.util.RayCastUtil;
 
-import java.util.Random;
 import java.util.UUID;
 
 import static java.lang.Math.max;
-import static java.lang.Math.toRadians;
-import static work.lclpnet.kibu.physics.impl.bullet.math.Convert.toBullet;
 
 public class PaintballBullet extends PaintballProjectile {
 
     private static final double
             FADE_TIME_SECONDS = 1.5d,
-            MAX_TRAVEL_DIST = 256,
-            MIN_SPLIT_POWER = 10;
+            MAX_TRAVEL_DIST = 256;
 
     @Getter
     private final PaintGun.BulletSettings settings;
-    private final Scene scene;
-    private final Random random;
+    private final PaintGunManager paintManager;
     @Getter @Setter
     private UUID owner = null;
     private final Vector3d initialScale = new Vector3d();
@@ -39,19 +37,16 @@ public class PaintballBullet extends PaintballProjectile {
     private double despawnTimer = -1;
     @Getter @Setter
     private boolean painting = true;
-    @Getter
-    private boolean splitOff = false;
     private int hits = 0;
     private double splitTimer = 0;
     private int splits = 0;
     @Getter @Setter
     private boolean playerContact = false;
 
-    public PaintballBullet(Scene scene, BlockState blockState, ServerWorld world, PaintGun.BulletSettings settings, Random random) {
+    public PaintballBullet(Scene scene, BlockState blockState, ServerWorld world, PaintGun.BulletSettings settings, PaintGunManager paintManager) {
         super(scene, blockState, world);
         this.settings = settings;
-        this.scene = scene;
-        this.random = random;
+        this.paintManager = paintManager;
 
         rigidBody.setMass(settings.mass());
 
@@ -101,7 +96,7 @@ public class PaintballBullet extends PaintballProjectile {
     }
 
     private void tickSplitting(double dt) {
-        if (splitOff || splits >= settings.split().maxSplits() || isFading()) return;
+        if (splits >= settings.split().maxSplits() || isFading()) return;
 
         if (settings.split().splitTicks() == Integer.MAX_VALUE) return;
 
@@ -109,47 +104,24 @@ public class PaintballBullet extends PaintballProjectile {
             splitTimer = settings.split().splitTicks() / 20f;
             splits++;
 
-            executePhysics(this::split);
+            split();
         } else {
             splitTimer = max(0, splitTimer - dt);
         }
     }
 
-    public void setSplitOff() {
-        splitOff = true;
-    }
-
     private void split() {
-        var velocity = rigidBody.getLinearVelocity(null);
+        Vec3d start = new Vec3d(position.x, position.y, position.z);
+        Vec3d dir = Direction.DOWN.getDoubleVector();
 
-        if (velocity.lengthSquared() < MIN_SPLIT_POWER * MIN_SPLIT_POWER) return;
+        BlockHitResult hit = RayCastUtil.raycastBlocks(world, start, dir, 10, RaycastContext.ShapeType.OUTLINE,
+                RaycastContext.FluidHandling.NONE, ShapeContext.absent());
 
-        var obj = new PaintballBullet(scene, getBlockState(), world, settings, random);
-        obj.position.set(position);
-        obj.scale.set(settings.size() * 0.2f);
-        obj.setSplitOff();
-        obj.setOwner(owner);
+        if (hit.getType() != HitResult.Type.BLOCK) return;
 
-        SceneRigidBody rigidBody = obj.getRigidBody();
+        Vec3d pos = hit.getPos();
 
-        obj.updateRigidBody(rigidBody);
-
-        var parentVelocity = new Vector3f();
-        this.rigidBody.getLinearVelocity(parentVelocity);
-        parentVelocity.normalize();
-
-        double horizontal = 0.2;
-        Vec3d dir = new Vec3d(parentVelocity.x * horizontal, -1, parentVelocity.z * horizontal).normalize();
-        dir = MathUtil.applySpread(dir, toRadians(settings.split().splitSpread()), random);
-
-        rigidBody.setLinearVelocity(toBullet(dir.multiply(5)));
-        rigidBody.setPhysicsLocation(new Vector3f((float) position.x, (float) position.y, (float) position.z));
-
-        int collisionGroup = this.rigidBody.getCollisionGroup();
-        rigidBody.setCollisionGroup(collisionGroup >> 1);
-        rigidBody.setCollideWithGroups(this.rigidBody.getCollideWithGroups() & ~collisionGroup);
-
-        scene.add(obj);
+        paintManager.paintAt(this, pos.x, pos.y, pos.z, settings.split().splitPaintRadius());
     }
 
     public void startDespawnTimer() {
@@ -171,7 +143,7 @@ public class PaintballBullet extends PaintballProjectile {
     }
 
     public void onHit() {
-        if (++hits == settings.maxHits() || splitOff) {
+        if (++hits == settings.maxHits()) {
             startFading();
         }
     }

@@ -42,12 +42,11 @@ public record PaintGun(
      * @param splitTicks The amount of ticks after which a bullet may split.
      * @param maxSplits The maximum number of splits a bullet can do.
      * @param splitPaintRadius The sphere radius in which blocks are painted when a split bullet hits a block.
-     * @param splitSpread The maximum random spread angle of split bullets, in degrees.
      */
     public record BulletSplit(
-            int splitTicks, int maxSplits, float splitPaintRadius, float splitSpread
+            int splitTicks, int maxSplits, float splitPaintRadius
     ) {
-        public static final BulletSplit NO_SPLIT = new BulletSplit(Integer.MAX_VALUE, 0, 0, 0);
+        public static final BulletSplit NO_SPLIT = new BulletSplit(Integer.MAX_VALUE, 0, 0);
     }
 
     public record SoundCfg(SoundEvent sound, float volume, float pitch) {}

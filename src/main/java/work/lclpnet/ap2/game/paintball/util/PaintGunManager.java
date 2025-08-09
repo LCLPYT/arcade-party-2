@@ -49,6 +49,8 @@ import static work.lclpnet.kibu.physics.impl.bullet.math.Convert.toBullet;
 
 public class PaintGunManager {
 
+    public static final double HIT_PAINT_RADIUS = 1.9;
+
     private final ServerWorld world;
     private final Scene scene;
     @Getter
@@ -118,7 +120,7 @@ public class PaintGunManager {
         bullet.setPlayerContact(true);
         bullet.setPainting(false);
 
-        if (bullet.isFading() || bullet.isSplitOff() || !bullet.isPainting()) return;
+        if (bullet.isFading() || !bullet.isPainting()) return;
 
         bullet.startFading();
         bullet.forcePhysicsThread();
@@ -145,7 +147,7 @@ public class PaintGunManager {
             player.timeUntilRegen = 0;
             player.damage(world, player.getDamageSources().create(DamageTypes.ARROW, owner, owner), bulletSettings.damage());
 
-            paintAt(bullet, player.getX(), player.getY(), player.getZ());
+            paintAt(bullet, player.getX(), player.getY(), player.getZ(), HIT_PAINT_RADIUS);
         });
     }
 
@@ -160,10 +162,10 @@ public class PaintGunManager {
 
         Vector3f hit = bullet.getRigidBody().getFrame().getLocation(new Vector3f(), 1);
 
-        executeOn(world.getServer(), () -> paintAt(bullet, hit.x, hit.y, hit.z));
+        executeOn(world.getServer(), () -> paintAt(bullet, hit.x, hit.y, hit.z, bullet.getSettings().paintRadius()));
     }
 
-    private void paintAt(PaintballBullet bullet, double x, double y, double z) {
+    public void paintAt(PaintballBullet bullet, double x, double y, double z, double radius) {
         ServerPlayerEntity owner = participants.getParticipant(bullet.getOwner()).orElse(null);
 
         if (owner == null) return;
@@ -176,21 +178,17 @@ public class PaintGunManager {
 
         var settings = bullet.getSettings();
 
-        float r = bullet.isSplitOff()
-                ? settings.split().splitPaintRadius()
-                : settings.paintRadius();
-
         int playerDeficit = teams.playerDeficit(team);
-        r *= 1f + (playerDeficit * settings.deficitPaintBoost());
+        radius *= 1f + (playerDeficit * settings.deficitPaintBoost());
 
-        Box box = Box.of(new Vec3d(x, y, z), r * 2, r * 2, r * 2);
+        Box box = Box.of(new Vec3d(x, y, z), radius * 2, radius * 2, radius * 2);
 
         for (BlockPos pos : BlockBox.of(box)) {
             double dx = pos.getX() + 0.5 - x;
             double dy = pos.getY() + 0.5 - y;
             double dz = pos.getZ() + 0.5 - z;
 
-            if (dx * dx + dy * dy + dz * dz <= r * r && tryPaint(key, pos, x, y, z)) {
+            if (dx * dx + dy * dy + dz * dz <= radius * radius && tryPaint(key, pos, x, y, z)) {
                 bullet.onHit();
             }
         }
@@ -268,7 +266,7 @@ public class PaintGunManager {
     }
 
     public void spawnPaintBullet(ServerPlayerEntity player, BlockState state, PaintGun.BulletSettings bulletSettings, Vec3d pos, Vec3d dir) {
-        var obj = new PaintballBullet(scene, state, player.getWorld(), bulletSettings, random);
+        var obj = new PaintballBullet(scene, state, player.getWorld(), bulletSettings, this);
         obj.position.set(pos.getX(), pos.getY(), pos.getZ());
         obj.scale.set(bulletSettings.size());
         obj.setOwner(player.getUuid());

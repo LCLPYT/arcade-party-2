@@ -2,6 +2,7 @@ package work.lclpnet.ap2.impl.util;
 
 import net.minecraft.block.ShapeContext;
 import net.minecraft.entity.Entity;
+import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.Box;
@@ -55,9 +56,9 @@ public class RayCastUtil {
         return start.squaredDistanceTo(entityHit.getPos()) < blockHitDistance * blockHitDistance ? entityHit : blockHit;
     }
 
-    public static HitResult raycastBlocks(BlockView world, Vec3d start, Vec3d direction, double maxDistance,
-                                          RaycastContext.ShapeType shapeType, RaycastContext.FluidHandling fluidHandling,
-                                          ShapeContext shapeContext) {
+    public static BlockHitResult raycastBlocks(BlockView world, Vec3d start, Vec3d direction, double maxDistance,
+                                               RaycastContext.ShapeType shapeType, RaycastContext.FluidHandling fluidHandling,
+                                               ShapeContext shapeContext) {
 
         Vec3d end = start.add(direction.multiply(maxDistance));
 
