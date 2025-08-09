@@ -151,11 +151,11 @@ public class PaintballTicker {
         EntityDimensions dimensions = player.getDimensions(player.getPose());
         float width = dimensions.width();
 
-        HitResult hit = RayCastUtil.raycastBlocks(world, player.getPos(), input, width, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, ShapeContext.of(player));
+        BlockHitResult hit = RayCastUtil.raycastBlocks(world, player.getPos(), input, width, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, ShapeContext.of(player));
 
-        if (hit.getType() != HitResult.Type.BLOCK || !(hit instanceof BlockHitResult blockHit)) return false;
+        if (hit.getType() != HitResult.Type.BLOCK) return false;
 
-        BlockState collisionState = world.getBlockState(blockHit.getBlockPos());
+        BlockState collisionState = world.getBlockState(hit.getBlockPos());
         DyeTeamKey collisionTeam = paintManager.getTeam(collisionState.getBlock());
 
         if (collisionTeam != playerTeam.key()) return false;

@@ -10,6 +10,7 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.core.hook.PlayerListEntriesOnJoinCallback;
 import work.lclpnet.kibu.hook.HookRegistrar;
+import work.lclpnet.kibu.hook.ServerMessageHooks;
 
 import java.util.HashSet;
 import java.util.List;
@@ -29,6 +30,17 @@ public class VanishManager {
         hooks.registerHook(PlayerListEntriesOnJoinCallback.HOOK, players -> players.stream()
                 .filter(player -> !isVanished(player))
                 .toList());
+
+        hooks.registerHook(ServerMessageHooks.ALLOW_CHAT_MESSAGE, (message, sender, params) -> {
+            if (isVanished(sender)) {
+                for (ServerPlayerEntity player : PlayerLookup.all(server)) {
+                    player.networkHandler.sendProfilelessChatMessage(message.getContent(), params);
+                }
+                return false;
+            }
+
+            return true;
+        });
     }
 
     public synchronized void vanish(ServerPlayerEntity player) {
@@ -51,6 +63,7 @@ public class VanishManager {
         for (ServerPlayerEntity player : PlayerLookup.all(server)) {
             if (player.networkHandler == exclude.networkHandler) continue;
 
+            System.out.println("sending disconnect of " + exclude.getNameForScoreboard() + " to " + player.getNameForScoreboard());
             player.networkHandler.sendPacket(packet);
         }
     }
