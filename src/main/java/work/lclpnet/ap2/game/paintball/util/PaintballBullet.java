@@ -12,12 +12,14 @@ import work.lclpnet.ap2.impl.scene.Scene;
 import work.lclpnet.ap2.impl.scene.animation.AnimationContext;
 import work.lclpnet.ap2.impl.scene.simulation.SceneRigidBody;
 import work.lclpnet.ap2.impl.util.math.MathUtil;
+import work.lclpnet.kibu.physics.impl.bullet.thread.PhysicsThread;
 
 import java.util.Random;
 import java.util.UUID;
 
 import static java.lang.Math.max;
 import static java.lang.Math.toRadians;
+import static work.lclpnet.ap2.impl.util.ThreadUtil.executeOn;
 import static work.lclpnet.kibu.physics.impl.bullet.math.Convert.toBullet;
 
 public class PaintballBullet extends PaintballProjectile {
@@ -68,7 +70,7 @@ public class PaintballBullet extends PaintballProjectile {
     }
 
     @Override
-    public void updateAnimation(double dt, AnimationContext ctx) {
+    public synchronized void updateAnimation(double dt, AnimationContext ctx) {
         super.updateAnimation(dt, ctx);
 
         if (despawnTimer >= 0) {
@@ -98,26 +100,27 @@ public class PaintballBullet extends PaintballProjectile {
         tickSplitting(dt);
     }
 
-    private void tickSplitting(double dt) {
+    private synchronized void tickSplitting(double dt) {
         if (splitOff || splits >= settings.split().maxSplits() || isFading()) return;
 
-        var velocity = new Vector3f();
-        rigidBody.getLinearVelocity(velocity);
+        if (settings.split().splitTicks() == Integer.MAX_VALUE) return;
 
-        if (settings.split().splitTicks() == Integer.MAX_VALUE
-                || velocity.lengthSquared() < MIN_SPLIT_POWER * MIN_SPLIT_POWER) return;
+//        var velocity = new Vector3f();
+//        rigidBody.getLinearVelocity(velocity);
+//
+//        if (velocity.lengthSquared() < MIN_SPLIT_POWER * MIN_SPLIT_POWER) return;
 
         if (splitTimer <= 0) {
             splitTimer = settings.split().splitTicks() / 20f;
             splits++;
 
-            this.split();
+            executeOn(PhysicsThread.get(world), this::split);
         } else {
             splitTimer = max(0, splitTimer - dt);
         }
     }
 
-    public void setSplitOff() {
+    public synchronized void setSplitOff() {
         splitOff = true;
     }
 
@@ -150,17 +153,17 @@ public class PaintballBullet extends PaintballProjectile {
         scene.add(obj);
     }
 
-    public void startDespawnTimer() {
+    public synchronized void startDespawnTimer() {
         if (despawnTimer >= 0 || isFading()) return;
 
         despawnTimer = settings.despawnSeconds();
     }
 
-    public boolean isFading() {
+    public synchronized boolean isFading() {
         return fadeTime >= 0;
     }
 
-    public void startFading() {
+    public synchronized void startFading() {
         if (isFading()) return;
 
         fadeTime = FADE_TIME_SECONDS;
@@ -168,7 +171,7 @@ public class PaintballBullet extends PaintballProjectile {
         painting = false;
     }
 
-    public void onHit() {
+    public synchronized void onHit() {
         if (++hits == settings.maxHits() || splitOff) {
             startFading();
         }

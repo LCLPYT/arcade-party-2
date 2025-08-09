@@ -32,15 +32,16 @@ import work.lclpnet.ap2.impl.scene.simulation.SceneRigidBody;
 import work.lclpnet.ap2.impl.util.math.MathUtil;
 import work.lclpnet.ap2.impl.util.world.ExplosionUtil;
 import work.lclpnet.kibu.hook.HookRegistrar;
+import work.lclpnet.kibu.physics.impl.bullet.thread.PhysicsThread;
 
 import java.util.Optional;
 import java.util.Random;
 import java.util.UUID;
 
 import static work.lclpnet.ap2.impl.util.SoundHelper.playSound;
+import static work.lclpnet.ap2.impl.util.ThreadUtil.executeOn;
 import static work.lclpnet.ap2.impl.util.math.MathUtil.randomUnitVec3d;
 import static work.lclpnet.kibu.physics.impl.bullet.math.Convert.toBullet;
-import static work.lclpnet.kibu.physics.impl.bullet.math.Convert.toMinecraft;
 
 public class InkGrenadeItem implements SpecialItem {
 
@@ -95,7 +96,7 @@ public class InkGrenadeItem implements SpecialItem {
     private void throwInkGrenade(ServerPlayerEntity player, ItemStack stack) {
         ServerWorld world = player.getWorld();
 
-        spawnObject(player);
+        executeOn(PhysicsThread.get(world), () -> spawnObject(player));
 
         playSound(world, SoundEvents.BLOCK_END_PORTAL_FRAME_FILL, SoundCategory.PLAYERS, 0.8f, 1.2f);
 
@@ -183,11 +184,11 @@ public class InkGrenadeItem implements SpecialItem {
 
             if (team == null) return;
 
-            Vec3d pos = new Vec3d(toMinecraft(getRigidBody().getPhysicsLocation(null)));
+            Vec3d pos = new Vec3d(position.x, position.y, position.z);
 
             createExplosion(player, pos, team);
 
-            spawnFragments(pos, player, state);
+            executeOn(PhysicsThread.get(world), () -> spawnFragments(pos, player, state));
         }
 
         private void createExplosion(ServerPlayerEntity player, Vec3d pos, PaintballTeam team) {

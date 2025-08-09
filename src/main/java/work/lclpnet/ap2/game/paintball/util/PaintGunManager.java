@@ -33,6 +33,7 @@ import work.lclpnet.ap2.impl.util.math.MathUtil;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.physics.api.event.collision.ElementCollisionEvents;
 import work.lclpnet.kibu.physics.impl.bullet.collision.space.MinecraftSpace;
+import work.lclpnet.kibu.physics.impl.bullet.thread.PhysicsThread;
 import work.lclpnet.kibu.translate.Translations;
 
 import java.util.*;
@@ -41,6 +42,7 @@ import java.util.function.BooleanSupplier;
 import static java.lang.Math.max;
 import static java.lang.Math.toRadians;
 import static net.minecraft.util.Formatting.RED;
+import static work.lclpnet.ap2.impl.util.ThreadUtil.executeOn;
 import static work.lclpnet.ap2.impl.util.math.MathUtil.randomUnitVec3d;
 import static work.lclpnet.kibu.physics.impl.bullet.math.Convert.toBullet;
 
@@ -99,6 +101,7 @@ public class PaintGunManager {
             return;
 
         bullet.startFading();
+        bullet.forcePhysicsThread();
 
         Vector3f velocity = bullet.getRigidBody().getLinearVelocity(new Vector3f());
 
@@ -133,43 +136,47 @@ public class PaintGunManager {
 
         bullet.onHit();
 
-        Vector3f hit = bullet.getRigidBody().getPhysicsLocation(null);
+        Vector3f hit = bullet.getRigidBody().getFrame().getLocation(new Vector3f(), 1);
 
-        world.getServer().execute(() -> {
-            ServerPlayerEntity owner = participants.getParticipant(bullet.getOwner()).orElse(null);
+        executeOn(world.getServer(), () -> paintAt(bullet, hit));
+    }
 
-            if (owner == null) return;
+    private void paintAt(PaintballBullet bullet, Vector3f hit) {
+        ServerPlayerEntity owner = participants.getParticipant(bullet.getOwner()).orElse(null);
 
-            PaintballTeam team = teams.teamOf(owner).orElse(null);
+        if (owner == null) return;
 
-            if (team == null) return;
+        PaintballTeam team = teams.teamOf(owner).orElse(null);
 
-            DyeTeamKey key = team.key();
+        if (team == null) return;
 
-            var settings = bullet.getSettings();
+        DyeTeamKey key = team.key();
 
-            float r = bullet.isSplitOff()
-                    ? settings.split().splitPaintRadius()
-                    : settings.paintRadius();
+        var settings = bullet.getSettings();
 
-            int playerDeficit = teams.playerDeficit(team);
-            r *= 1f + (playerDeficit * settings.deficitPaintBoost());
+        float r = bullet.isSplitOff()
+                ? settings.split().splitPaintRadius()
+                : settings.paintRadius();
 
-            Box box = Box.of(new Vec3d(hit.x, hit.y, hit.z), r * 2, r * 2, r * 2);
+        int playerDeficit = teams.playerDeficit(team);
+        r *= 1f + (playerDeficit * settings.deficitPaintBoost());
 
-            for (BlockPos pos : BlockBox.of(box)) {
-                double dx = pos.getX() + 0.5 - hit.x;
-                double dy = pos.getY() + 0.5 - hit.y;
-                double dz = pos.getZ() + 0.5 - hit.z;
+        Box box = Box.of(new Vec3d(hit.x, hit.y, hit.z), r * 2, r * 2, r * 2);
 
-                if (dx * dx + dy * dy + dz * dz <= r * r && tryPaint(key, pos, hit)) {
-                    bullet.onHit();
-                }
+        for (BlockPos pos : BlockBox.of(box)) {
+            double dx = pos.getX() + 0.5 - hit.x;
+            double dy = pos.getY() + 0.5 - hit.y;
+            double dz = pos.getZ() + 0.5 - hit.z;
+
+            if (dx * dx + dy * dy + dz * dz <= r * r && tryPaint(key, pos, hit)) {
+                bullet.onHit();
             }
-        });
+        }
     }
 
     public void limitVelocity(PaintballBullet bullet) {
+        bullet.forcePhysicsThread();
+
         // limit velocity so that ink bullets don't bounce extremely far
         SceneRigidBody rigidBody = bullet.getRigidBody();
         var velocity = new Vector3f();
@@ -208,9 +215,11 @@ public class PaintGunManager {
 
         stack.set(DataComponentTypes.DAMAGE, stack.getDamage() + 1);
 
-        for (int i = 0; i < paintGun.bulletCount(); i++) {
-            spawnPaintBulletWithSpread(player, paintGun, state);
-        }
+        executeOn(PhysicsThread.get(world), () -> {
+            for (int i = 0; i < paintGun.bulletCount(); i++) {
+                spawnPaintBulletWithSpread(player, paintGun, state);
+            }
+        });
 
         var fireSound = paintGun.fireSound();
 
@@ -257,7 +266,7 @@ public class PaintGunManager {
         rigidBody.setCollisionGroup(teams.bulletGroup(player));
         rigidBody.setCollideWithGroups(teams.bulletCollisionFlags(player));
 
-        world.getServer().execute(() -> scene.add(obj));
+        scene.add(obj);
     }
 
     public Vec3d getProjectileSpawn(ServerPlayerEntity player, Vec3d dir, double projectileSize) {

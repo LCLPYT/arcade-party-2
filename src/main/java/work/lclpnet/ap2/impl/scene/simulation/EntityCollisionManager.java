@@ -6,6 +6,7 @@ import net.minecraft.entity.EntityPose;
 import net.minecraft.world.World;
 import work.lclpnet.ap2.impl.util.EntityRef;
 import work.lclpnet.kibu.physics.impl.bullet.collision.space.MinecraftSpace;
+import work.lclpnet.kibu.physics.impl.bullet.thread.PhysicsThread;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 
 import java.util.HashMap;
@@ -14,6 +15,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Supplier;
 
+import static work.lclpnet.ap2.impl.util.ThreadUtil.executeOn;
 import static work.lclpnet.kibu.physics.impl.bullet.math.Convert.toBullet;
 
 public class EntityCollisionManager {
@@ -28,12 +30,16 @@ public class EntityCollisionManager {
     }
 
     public void init(TaskScheduler scheduler) {
-        tick();
+        tickServer();
 
-        scheduler.interval(this::tick, 1);
+        scheduler.interval(this::tickServer, 1);
     }
 
-    public synchronized void tick() {
+    public void tickServer() {
+        executeOn(PhysicsThread.get(world), this::tickPhysics);
+    }
+
+    public synchronized void tickPhysics() {
         MinecraftSpace space = MinecraftSpace.get(world);
 
         // remove invalid entities and their rigid bodies

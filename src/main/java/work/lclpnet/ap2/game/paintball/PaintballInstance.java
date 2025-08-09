@@ -65,6 +65,7 @@ import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks;
 import work.lclpnet.kibu.physics.impl.bullet.collision.space.MinecraftSpace;
 import work.lclpnet.kibu.physics.impl.bullet.collision.space.cache.ChunkCache;
 import work.lclpnet.kibu.physics.impl.bullet.collision.space.generator.TerrainGenerator;
+import work.lclpnet.kibu.physics.impl.bullet.thread.PhysicsThread;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 import work.lclpnet.lobby.game.map.GameMap;
 import work.lclpnet.lobby.util.PlayerReset;
@@ -77,7 +78,7 @@ import java.util.stream.Collectors;
 
 import static work.lclpnet.ap2.impl.util.ItemHelper.getLeatherArmor;
 import static work.lclpnet.ap2.impl.util.ItemHelper.unbreakable;
-import static work.lclpnet.ap2.impl.util.ThreadUtil.forceThread;
+import static work.lclpnet.ap2.impl.util.ThreadUtil.submitOn;
 
 public class PaintballInstance extends TeamGameInstance implements MapBootstrapFunction {
 
@@ -170,11 +171,11 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
         // TODO to be optimized using greedy meshing
 
         // needs to be running on the physics thread
-        forceThread(world.getServer());
-
-        for (BlockPos pos : bounds) {
-            TerrainGenerator.load(space, pos);
-        }
+        submitOn(PhysicsThread.get(world), () -> {
+            for (BlockPos pos : bounds) {
+                TerrainGenerator.load(space, pos);
+            }
+        }).join();
     }
 
     private void replaceTemplateColors(ServerWorld world) {

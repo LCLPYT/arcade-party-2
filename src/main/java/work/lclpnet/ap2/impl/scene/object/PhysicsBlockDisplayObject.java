@@ -13,9 +13,11 @@ import work.lclpnet.ap2.impl.scene.simulation.ScenePhysicsElement;
 import work.lclpnet.ap2.impl.scene.simulation.SceneRigidBody;
 import work.lclpnet.kibu.physics.impl.bullet.collision.body.shape.MinecraftShape;
 import work.lclpnet.kibu.physics.impl.bullet.collision.space.MinecraftSpace;
+import work.lclpnet.kibu.physics.impl.bullet.thread.PhysicsThread;
 import work.lclpnet.kibu.physics.impl.util.Frame;
 import work.lclpnet.kibu.physics.util.BlockPhysics;
 
+import static work.lclpnet.ap2.impl.util.ThreadUtil.executeOn;
 import static work.lclpnet.ap2.impl.util.ThreadUtil.forceThread;
 import static work.lclpnet.kibu.physics.impl.bullet.math.Convert.toMinecraft;
 
@@ -37,12 +39,14 @@ public class PhysicsBlockDisplayObject extends Object3d
         blockDisplay.position.set(-0.5f);
         addChild(blockDisplay);
 
-        forceThread(world.getServer());
+        forcePhysicsThread();
 
         rigidBody = initRigidBody(world);
     }
 
     protected SceneRigidBody initRigidBody(ServerWorld world) {
+        forcePhysicsThread();
+
         var rigidBody = new SceneRigidBody(this, world);
 
         updateRigidBody(rigidBody);
@@ -51,11 +55,17 @@ public class PhysicsBlockDisplayObject extends Object3d
     }
 
     public void updateRigidBody(SceneRigidBody rigidBody) {
+        forcePhysicsThread();
+
         BlockState state = blockDisplay.getBlockState();
 
         rigidBody.setMass(BlockPhysics.getMass(state));
         rigidBody.setBuoyancyType(BlockPhysics.getBuoyancyType(state));
         rigidBody.setCollisionShape(this.createShape());
+    }
+
+    public final void forcePhysicsThread() {
+        forceThread(PhysicsThread.get(world));
     }
 
     @Override
@@ -69,18 +79,21 @@ public class PhysicsBlockDisplayObject extends Object3d
     }
 
     public void addPhysics(ServerWorld world) {
-        forceThread(world.getServer());
-        MinecraftSpace.get(world).addCollisionObject(rigidBody);
+        executePhysics(() -> MinecraftSpace.get(world).addCollisionObject(rigidBody));
     }
 
     public void removePhysics(ServerWorld world) {
-        forceThread(world.getServer());
-        MinecraftSpace.get(world).removeCollisionObject(rigidBody);
+        executePhysics(() -> MinecraftSpace.get(world).addCollisionObject(rigidBody));
     }
 
     public void setBlockState(BlockState state) {
         blockDisplay.setBlockState(state);
-        updateRigidBody(rigidBody);
+
+        executePhysics(() -> updateRigidBody(rigidBody));
+    }
+
+    public final void executePhysics(Runnable runnable) {
+        executeOn(PhysicsThread.get(world), runnable);
     }
 
     public BlockState getBlockState() {
@@ -95,6 +108,8 @@ public class PhysicsBlockDisplayObject extends Object3d
 
     @Override
     public MinecraftShape.Convex createShape() {
+        forcePhysicsThread();
+
         MinecraftShape.Convex shape = BlockPhysics.getShape(blockDisplay.getBlockState(), world);
         shape.setScale(new Vector3f((float) scale.x, (float) scale.y, (float) scale.z));
 

@@ -9,6 +9,8 @@ import work.lclpnet.ap2.impl.scene.*;
 import work.lclpnet.ap2.impl.scene.animation.Interpolatable;
 import work.lclpnet.ap2.impl.util.DisplayEntityTransformer;
 
+import static work.lclpnet.ap2.impl.util.ThreadUtil.executeOn;
+
 public abstract class DisplayEntityObject<T extends DisplayEntity> extends Object3d implements Mountable, Unmountable, Interpolatable {
 
     @Getter
@@ -44,7 +46,7 @@ public abstract class DisplayEntityObject<T extends DisplayEntity> extends Objec
 
         configure(display);
 
-        entityRef = ctx.spawn(display, this);
+        executeOn(ctx.world().getServer(), () -> entityRef = ctx.spawn(display, this));
     }
 
     protected void configure(T display) {

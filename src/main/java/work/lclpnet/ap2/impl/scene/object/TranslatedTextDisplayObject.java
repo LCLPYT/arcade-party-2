@@ -16,6 +16,8 @@ import work.lclpnet.kibu.translate.Translations;
 
 import java.util.Set;
 
+import static work.lclpnet.ap2.impl.util.ThreadUtil.executeOn;
+
 public class TranslatedTextDisplayObject extends Object3d implements Mountable, Unmountable, Interpolatable, DynamicEntity {
 
     private final Translations translations;
@@ -78,7 +80,8 @@ public class TranslatedTextDisplayObject extends Object3d implements Mountable, 
     public void mount(MountContext ctx) {
         contexts.add(ctx);
         controller.setWorld(ctx.world());
-        ctx.spawn(null, this);
+
+        executeOn(ctx.world().getServer(), () -> ctx.spawn(null, this));
     }
 
     @Override
