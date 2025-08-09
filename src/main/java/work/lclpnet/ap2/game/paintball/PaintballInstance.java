@@ -447,6 +447,12 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
             return false;
         }
 
+        // disallow damaging teammates with explosives
+        if (source.isOf(DamageTypes.PLAYER_EXPLOSION) && source.getAttacker() instanceof ServerPlayerEntity attacker
+                && getTeamManager().areTeamMates(attacker, player)) {
+            return false;
+        }
+
         if ((player.getHealth() - amount) <= 0) {
             onLethalDamage(source, player, amount);
             return false;
