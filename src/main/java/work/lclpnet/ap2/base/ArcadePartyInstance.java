@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import work.lclpnet.activity.manager.ActivityManager;
 import work.lclpnet.ap2.api.base.GameQueue;
 import work.lclpnet.ap2.api.base.MiniGameManager;
+import work.lclpnet.ap2.api.config.Ap2Config;
 import work.lclpnet.ap2.api.game.MiniGame;
 import work.lclpnet.ap2.api.util.music.SongCache;
 import work.lclpnet.ap2.base.activity.PreparationActivity;
@@ -13,14 +14,15 @@ import work.lclpnet.ap2.base.cmd.ForceGameCommand;
 import work.lclpnet.ap2.base.cmd.ScoreCommand;
 import work.lclpnet.ap2.base.util.ApBaseArgs;
 import work.lclpnet.ap2.base.util.ScoreManager;
+import work.lclpnet.ap2.impl.base.FabricMiniGameManager;
 import work.lclpnet.ap2.impl.base.PlayerManagerImpl;
-import work.lclpnet.ap2.impl.base.SimpleMiniGameManager;
 import work.lclpnet.ap2.impl.base.VotedGameQueue;
 import work.lclpnet.ap2.impl.bootstrap.ApBootstrap;
 import work.lclpnet.ap2.impl.game.PlayerUtil;
 import work.lclpnet.ap2.impl.i18n.DynamicLanguageManager;
 import work.lclpnet.ap2.impl.i18n.VanillaTranslations;
 import work.lclpnet.ap2.impl.util.music.MapSongCache;
+import work.lclpnet.config.json.JsonConfigFactory;
 import work.lclpnet.kibu.cmd.impl.CommandStack;
 import work.lclpnet.kibu.hook.HookStack;
 import work.lclpnet.kibu.translate.Translations;
@@ -45,20 +47,23 @@ public class ArcadePartyInstance implements GameInstance {
     private final GameEnvironment environment;
     private final Path cacheDirectory;
     private final VanillaTranslations vanillaTranslations;
+    private final JsonConfigFactory<Ap2Config> configFactory;
     private final Logger logger;
 
     public ArcadePartyInstance(GameEnvironment environment, Path cacheDirectory,
-                               VanillaTranslations vanillaTranslations, Logger logger) {
+                               VanillaTranslations vanillaTranslations, JsonConfigFactory<Ap2Config> configFactory,
+                               Logger logger) {
         this.environment = environment;
         this.cacheDirectory = cacheDirectory;
         this.vanillaTranslations = vanillaTranslations;
+        this.configFactory = configFactory;
         this.logger = logger;
     }
 
     @Override
     public void start(GameOptions options) {
         MinecraftServer server = environment.getServer();
-        ApBootstrap bootstrap = new ApBootstrap(cacheDirectory, logger);
+        ApBootstrap bootstrap = new ApBootstrap(cacheDirectory, configFactory, logger);
 
         bootstrap.loadConfig(ForkJoinPool.commonPool())
                 .thenCompose(configManager -> bootstrap.dispatch(configManager.getConfig(), environment, vanillaTranslations))
@@ -75,7 +80,7 @@ public class ArcadePartyInstance implements GameInstance {
         MinecraftServer server = environment.getServer();
         Translations translations = environment.getTranslations();
 
-        MiniGameManager gameManager = new SimpleMiniGameManager(logger);
+        MiniGameManager gameManager = new FabricMiniGameManager(logger);
         List<MiniGame> votedGames = getVotedGames(gameManager, options);
         GameQueue queue = new VotedGameQueue(gameManager, votedGames, 5);
 
@@ -109,7 +114,7 @@ public class ArcadePartyInstance implements GameInstance {
     }
 
     private List<MiniGame> getVotedGames(MiniGameManager gameManager, GameOptions options) {
-        Map<MiniGame, Integer> voted = options.getVotingResults(ArcadeParty.VOTING_MINI_GAMES, MiniGame.class)
+        Map<MiniGame, Integer> voted = options.getVotingResults(ArcadePartyDefaultGame.VOTING_MINI_GAMES, MiniGame.class)
                 .map(VoteResult::asMap)
                 .orElse(Map.of());
 

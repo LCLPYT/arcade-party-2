@@ -7,8 +7,8 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Identifier;
+import work.lclpnet.ap2.ApConstants;
 import work.lclpnet.ap2.api.base.Participants;
-import work.lclpnet.ap2.base.ArcadeParty;
 import work.lclpnet.ap2.core.hook.FrozenTickChangeCallback;
 import work.lclpnet.ap2.core.hook.PowderedSnowSlowCallback;
 import work.lclpnet.ap2.impl.util.world.CombatIdleManager;
@@ -32,7 +32,7 @@ import static net.minecraft.util.Formatting.YELLOW;
 
 public class FreezingManager {
 
-    private static final Identifier POWDER_SNOW_CANCEL_MODIFIER_ID = ArcadeParty.identifier("powder_snow_cancel");
+    private static final Identifier POWDER_SNOW_CANCEL_MODIFIER_ID = ApConstants.identifier("powder_snow_cancel");
 
     private final TaskScheduler scheduler;
     private final Translations translations;

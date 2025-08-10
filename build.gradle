@@ -1,14 +1,14 @@
 import work.lclpnet.build.task.GithubDeploymentTask
 
 plugins {
-    id 'java'
-    id 'fabric-loom' version "${loom_version}"
-    id 'maven-publish'
-    id 'gradle-build-utils' version '1.7.0'
-    id 'io.freefair.lombok' version '8.11'
+    id "java"
+    id "fabric-loom" version "${loom_version}"
+    id "maven-publish"
+    id "gradle-build-utils" version "1.7.0"
+    id "io.freefair.lombok" version "8.11"
 }
 
-Properties props = buildUtils.loadProperties('publish.properties')
+Properties props = buildUtils.loadProperties("publish.properties")
 
 group = project.maven_group
 version = "${project.mod_version}+${project.minecraft_version}"
@@ -41,7 +41,7 @@ repositories {
     }
 
     maven {
-        url = 'https://maven.nucleoid.xyz/'
+        url = "https://maven.nucleoid.xyz/"
     }
 
     maven {
@@ -53,8 +53,35 @@ repositories {
     }
 }
 
+sourceSets {
+    lib {
+        // the lib sourceSet contains commonly used utilities among minigames and variants
+    }
+
+    main {
+        compileClasspath += lib.output
+        runtimeClasspath += lib.output
+    }
+
+    test {
+        compileClasspath += lib.output
+        runtimeClasspath += lib.output
+    }
+}
+
+// extra source sets need to have the necessary dependencies (atm inherit all; maybe cleanup in the future)
+afterEvaluate {
+    configurations {
+        libImplementation.extendsFrom(implementation)
+        libCompileOnly.extendsFrom(compileOnly)
+        libCompileClasspath.extendsFrom(modCompileClasspathMapped)
+        libRuntimeClasspath.extendsFrom(modRuntimeClasspathMapped)
+        libCompileClasspath.extendsFrom(minecraftNamedCompile)
+        libRuntimeClasspath.extendsFrom(minecraftNamedRuntime)
+    }
+}
+
 loom {
-    // if you want to develop a plugin for dedicated servers, uncomment the following block
     serverOnlyMinecraftJar()
 
     runs {
@@ -69,51 +96,52 @@ loom {
 }
 
 dependencies {
-    minecraft "com.mojang:minecraft:${project.minecraft_version}"
-    mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
-    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+    minecraft("com.mojang:minecraft:${project.minecraft_version}")
+    mappings("net.fabricmc:yarn:${project.yarn_mappings}:v2")
+    modImplementation("net.fabricmc:fabric-loader:${project.loader_version}")
 
     // extra dependencies required for compilation
-    implementation 'org.json:json:20231013'
-    include(implementation('work.lclpnet:json-config4j:1.0.0'))
-    include(implementation('org.apache.commons:commons-compress:1.26.2'))
+    implementation("org.json:json:20231013")
+    compileOnly("org.jetbrains:annotations:26.0.2")
+    include(implementation("work.lclpnet:json-config4j:1.0.0"))
+    include(implementation("org.apache.commons:commons-compress:1.26.2"))
     include(implementation("org.ejml:ejml-core:0.44.0"))
     include(implementation("org.ejml:ejml-simple:0.44.0"))
 
-    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
-    modImplementation "work.lclpnet.mods.kibu:kibu:${project.kibu_version}"
-    modImplementation "work.lclpnet.mods.kibu:kibu-world-api:${project.kibu_world_api_version}"
-    modImplementation "work.lclpnet.mods.kibu:kibu-physics:$project.kibu_physics_version"
-    modImplementation "xyz.nucleoid:fantasy:${project.fantasy_version}"
-    modImplementation "maven.modrinth:sqlite-jdbc:3.41.2.1+20230506"
-    modImplementation "work.lclpnet.mods:combat-control:${project.combat_control_version}"
-    modImplementation "work.lclpnet.mods:notica:${project.notica_version}"
-    modImplementation "work.lclpnet.mods:mg-lobby:${project.lobby_version}"
+    modImplementation("net.fabricmc.fabric-api:fabric-api:${project.fabric_version}")
+    modImplementation("work.lclpnet.mods.kibu:kibu:${project.kibu_version}")
+    modImplementation("work.lclpnet.mods.kibu:kibu-world-api:${project.kibu_world_api_version}")
+    modImplementation("work.lclpnet.mods.kibu:kibu-physics:$project.kibu_physics_version")
+    modImplementation("xyz.nucleoid:fantasy:${project.fantasy_version}")
+    modImplementation("maven.modrinth:sqlite-jdbc:3.41.2.1+20230506")
+    modImplementation("work.lclpnet.mods:combat-control:${project.combat_control_version}")
+    modImplementation("work.lclpnet.mods:notica:${project.notica_version}")
+    modImplementation("work.lclpnet.mods:mg-lobby:${project.lobby_version}")
 
     // optional runtime dependencies (not explicitly required for compilation, but needed to play the game)
-    modLocalRuntime "work.lclpnet.mods:pal:${project.pal_version}"
-    modLocalRuntime "work.lclpnet.mods:ruler:${project.ruler_version}"
-    modLocalRuntime "work.lclpnet.mcserver-api:mcserver-api-fabric:${project.mcserver_api_version}"
-    implementation "work.lclpnet:translations4j:${project.translations4j_version}"
-    implementation "work.lclpnet:translations4j:${project.translations4j_version}:network"
+    modLocalRuntime("work.lclpnet.mods:pal:${project.pal_version}")
+    modLocalRuntime("work.lclpnet.mods:ruler:${project.ruler_version}")
+    modLocalRuntime("work.lclpnet.mcserver-api:mcserver-api-fabric:${project.mcserver_api_version}")
+    implementation("work.lclpnet:translations4j:${project.translations4j_version}")
+    implementation("work.lclpnet:translations4j:${project.translations4j_version}:network")
 
     // optional runtime dependencies (not required to play)
-    modLocalRuntime "work.lclpnet.mods:mc-debug-sender-impl:${project.mc_debug_sender_impl_version}"
-    modLocalRuntime "maven.modrinth:anti-xray:${project.anti_xray_version}"
-    localRuntime "com.moandjiezana.toml:toml4j:${project.toml_version}"
+    modLocalRuntime("work.lclpnet.mods:mc-debug-sender-impl:${project.mc_debug_sender_impl_version}")
+    modLocalRuntime("maven.modrinth:anti-xray:${project.anti_xray_version}")
+    localRuntime("com.moandjiezana.toml:toml4j:${project.toml_version}")
 
     // test dependencies
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
-    testImplementation 'org.mockito:mockito-core:5.6.0'
-    testImplementation 'org.junit.jupiter:junit-jupiter-params:5.8.1'
-    testImplementation "net.fabricmc:fabric-loader-junit:${project.loader_version}"
-    testImplementation 'org.xerial:sqlite-jdbc:3.41.2.2'
+    testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.1")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.8.1")
+    testImplementation("org.mockito:mockito-core:5.6.0")
+    testImplementation("org.junit.jupiter:junit-jupiter-params:5.8.1")
+    testImplementation("net.fabricmc:fabric-loader-junit:${project.loader_version}")
+    testImplementation("org.xerial:sqlite-jdbc:3.41.2.2")
 }
 
 test {
     useJUnitPlatform()
-    systemProperty('fabric.side', 'server')
+    systemProperty("fabric.side", "server")
 }
 
 processResources {
@@ -168,8 +196,8 @@ publishing {
             from components.java
 
             pom {
-                name = 'Arcade Party 2'
-                description = 'Reworked ArcadeParty as Fabric mini-game.'
+                name = "Arcade Party 2"
+                description = "Reworked ArcadeParty as Fabric mini-game."
             }
         }
     }

@@ -8,8 +8,8 @@ import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
+import work.lclpnet.ap2.ApConstants;
 import work.lclpnet.ap2.api.util.music.*;
-import work.lclpnet.ap2.base.ArcadeParty;
 import work.lclpnet.ap2.impl.ds.IndexedSet;
 import work.lclpnet.ap2.impl.util.UriUtil;
 import work.lclpnet.ap2.impl.util.music.SimpleWeightedSong;
@@ -31,7 +31,7 @@ import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
 public class MMSongs {
 
-    public static final Identifier MUSICAL_MINECART_TAG = ArcadeParty.identifier("musical_minecart");
+    public static final Identifier MUSICAL_MINECART_TAG = ApConstants.identifier("musical_minecart");
     private final SongManager songManager;
     private final Translations translations;
     private final Random random;

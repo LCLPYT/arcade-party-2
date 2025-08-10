@@ -4,9 +4,8 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.util.Identifier;
+import work.lclpnet.ap2.ApConstants;
 import work.lclpnet.ap2.api.game.*;
-import work.lclpnet.ap2.base.ApConstants;
-import work.lclpnet.ap2.base.ArcadeParty;
 
 public class MimicryMiniGame implements MiniGame {
 
@@ -27,7 +26,7 @@ public class MimicryMiniGame implements MiniGame {
 
     @Override
     public Identifier getId() {
-        return ArcadeParty.identifier("mimicry");
+        return ApConstants.identifier("mimicry");
     }
 
     @Override

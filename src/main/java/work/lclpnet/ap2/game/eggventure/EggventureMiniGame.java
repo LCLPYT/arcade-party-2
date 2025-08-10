@@ -3,9 +3,8 @@ package work.lclpnet.ap2.game.eggventure;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.util.Identifier;
+import work.lclpnet.ap2.ApConstants;
 import work.lclpnet.ap2.api.game.*;
-import work.lclpnet.ap2.base.ApConstants;
-import work.lclpnet.ap2.base.ArcadeParty;
 import work.lclpnet.ap2.impl.util.ApRegistries;
 import work.lclpnet.ap2.impl.util.heads.PlayerHeads;
 
@@ -28,7 +27,7 @@ public class EggventureMiniGame implements MiniGame {
 
     @Override
     public Identifier getId() {
-        return ArcadeParty.identifier("eggventure");
+        return ApConstants.identifier("eggventure");
     }
 
     @Override

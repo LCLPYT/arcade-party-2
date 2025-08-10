@@ -19,10 +19,44 @@
       "work.lclpnet.ap2.base.ArcadePartyInit"
     ],
     "game-entry": [
-      "work.lclpnet.ap2.base.ArcadeParty"
+      "work.lclpnet.ap2.base.ArcadePartyDefaultGame"
     ],
     "actor_provider": [
       "work.lclpnet.ap2.base.ApActors"
+    ],
+    "ap2:minigame": [
+      "work.lclpnet.ap2.game.spleef.SpleefMiniGame",
+      "work.lclpnet.ap2.game.bow_spleef.BowSpleefMiniGame",
+      "work.lclpnet.ap2.game.mirror_hop.MirrorHopMiniGame",
+      "work.lclpnet.ap2.game.fine_tuning.FineTuningMiniGame",
+      "work.lclpnet.ap2.game.treasure_hunter.TreasureHunterMinigame",
+      "work.lclpnet.ap2.game.one_in_the_chamber.OneInTheChamberMiniGame",
+      "work.lclpnet.ap2.game.anvil_fall.AnvilFallMiniGame",
+      "work.lclpnet.ap2.game.panda_finder.PandaFinderMiniGame",
+      "work.lclpnet.ap2.game.jump_and_run.JumpAndRunMiniGame",
+      "work.lclpnet.ap2.game.tnt_run.TntRunMiniGame",
+      "work.lclpnet.ap2.game.hot_potato.HotPotatoMiniGame",
+      "work.lclpnet.ap2.game.block_dissolve.BlockDissolveMiniGame",
+      "work.lclpnet.ap2.game.cozy_campfire.CozyCampfireMiniGame",
+      "work.lclpnet.ap2.game.mining_battle.MiningBattleMiniGame",
+      "work.lclpnet.ap2.game.knockout.KnockoutMiniGame",
+      "work.lclpnet.ap2.game.musical_minecart.MusicalMinecartMiniGame",
+      "work.lclpnet.ap2.game.guess_it.GuessItMiniGame",
+      "work.lclpnet.ap2.game.pig_race.PigRaceMiniGame",
+      "work.lclpnet.ap2.game.red_light_green_light.RedLightGreenLightMiniGame",
+      "work.lclpnet.ap2.game.snowball_fight.SnowballFightMiniGame",
+      "work.lclpnet.ap2.game.chicken_shooter.ChickenShooterMiniGame",
+      "work.lclpnet.ap2.game.mimicry.MimicryMiniGame",
+      "work.lclpnet.ap2.game.splashy_dropper.SplashyDropperMiniGame",
+      "work.lclpnet.ap2.game.glowing_bomb.GlowingBombMiniGame",
+      "work.lclpnet.ap2.game.maniac_digger.ManiacDiggerMiniGame",
+      "work.lclpnet.ap2.game.apocalypse_survival.ApocalypseSurvivalMiniGame",
+      "work.lclpnet.ap2.game.pillar_battle.PillarBattleMiniGame",
+      "work.lclpnet.ap2.game.aim_master.AimMasterMiniGame",
+      "work.lclpnet.ap2.game.maze_scape.MazeScapeMiniGame",
+      "work.lclpnet.ap2.game.eggventure.EggventureMiniGame",
+      "work.lclpnet.ap2.game.dragon_escape.DragonEscapeMiniGame",
+      "work.lclpnet.ap2.game.paintball.PaintballMiniGame"
     ]
   },
   "mixins": [

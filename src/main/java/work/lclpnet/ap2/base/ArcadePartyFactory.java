@@ -2,8 +2,11 @@ package work.lclpnet.ap2.base;
 
 import net.minecraft.MinecraftVersion;
 import org.slf4j.Logger;
+import work.lclpnet.ap2.ApConstants;
+import work.lclpnet.ap2.api.config.Ap2Config;
 import work.lclpnet.ap2.impl.i18n.VanillaTranslations;
 import work.lclpnet.ap2.impl.util.AssetManager;
+import work.lclpnet.config.json.JsonConfigFactory;
 import work.lclpnet.kibu.translate.util.ModTranslations;
 import work.lclpnet.lobby.game.api.GameEnvironment;
 import work.lclpnet.lobby.game.api.GameFactory;
@@ -16,11 +19,13 @@ import java.nio.file.Path;
 public class ArcadePartyFactory implements GameFactory {
 
     private final Path cacheDirectory;
+    private final JsonConfigFactory<Ap2Config> configFactory;
     private final Logger logger;
     private VanillaTranslations vanillaTranslations = null;
 
-    public ArcadePartyFactory(Path cacheDirectory, Logger logger) {
+    public ArcadePartyFactory(Path cacheDirectory, JsonConfigFactory<Ap2Config> configFactory, Logger logger) {
         this.cacheDirectory = cacheDirectory;
+        this.configFactory = configFactory;
         this.logger = logger;
     }
 
@@ -42,6 +47,6 @@ public class ArcadePartyFactory implements GameFactory {
 
     @Override
     public GameInstance createInstance(GameEnvironment gameEnvironment) {
-        return new ArcadePartyInstance(gameEnvironment, cacheDirectory, vanillaTranslations, logger);
+        return new ArcadePartyInstance(gameEnvironment, cacheDirectory, vanillaTranslations, configFactory, logger);
     }
 }

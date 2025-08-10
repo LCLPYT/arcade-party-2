@@ -7,7 +7,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.ActionResult;
-import work.lclpnet.ap2.base.ArcadeParty;
+import work.lclpnet.ap2.ApConstants;
 import work.lclpnet.ap2.game.paintball.util.PaintGun;
 import work.lclpnet.ap2.game.paintball.util.PaintGunManager;
 import work.lclpnet.ap2.impl.game.kit.KitHandle;
@@ -52,7 +52,7 @@ public class PaintGunKit extends SingleItemKit {
     public void configureItemStack(ItemStack stack) {
         super.configureItemStack(stack);
 
-        var group = Optional.of(ArcadeParty.identifier(paintGun.id()));
+        var group = Optional.of(ApConstants.identifier(paintGun.id()));
         stack.set(DataComponentTypes.USE_COOLDOWN, new UseCooldownComponent(paintGun.cooldownTicks(), group));
         stack.set(DataComponentTypes.MAX_DAMAGE, paintGun.ammo());
     }

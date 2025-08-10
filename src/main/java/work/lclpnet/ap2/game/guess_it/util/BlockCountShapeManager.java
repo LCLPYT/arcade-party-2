@@ -12,7 +12,6 @@ import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape;
 import java.util.*;
 
 import static java.lang.Math.*;
-import static java.lang.Math.sqrt;
 
 public class BlockCountShapeManager<S extends BlockShape & BlockShape.WithHeight & BlockShape.WithRadius> {
 

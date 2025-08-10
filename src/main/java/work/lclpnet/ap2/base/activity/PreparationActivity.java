@@ -28,6 +28,7 @@ import work.lclpnet.activity.component.ComponentBundle;
 import work.lclpnet.activity.component.builtin.BossBarComponent;
 import work.lclpnet.activity.component.builtin.BuiltinComponents;
 import work.lclpnet.activity.manager.ActivityManager;
+import work.lclpnet.ap2.ApConstants;
 import work.lclpnet.ap2.api.base.GameQueue;
 import work.lclpnet.ap2.api.base.PlayerManager;
 import work.lclpnet.ap2.api.data.DataManager;
@@ -36,13 +37,14 @@ import work.lclpnet.ap2.api.game.MiniGame;
 import work.lclpnet.ap2.api.map.MapFacade;
 import work.lclpnet.ap2.api.util.music.SongManager;
 import work.lclpnet.ap2.api.util.music.SongWrapper;
-import work.lclpnet.ap2.base.ApConstants;
 import work.lclpnet.ap2.base.ApMiniGameArgs;
-import work.lclpnet.ap2.base.ArcadeParty;
 import work.lclpnet.ap2.base.api.Skippable;
 import work.lclpnet.ap2.base.cmd.ForceMapCommand;
 import work.lclpnet.ap2.base.cmd.SkipCommand;
-import work.lclpnet.ap2.base.util.*;
+import work.lclpnet.ap2.base.util.ApBaseArgs;
+import work.lclpnet.ap2.base.util.BaseActivityConfigurator;
+import work.lclpnet.ap2.base.util.OptionChooser;
+import work.lclpnet.ap2.base.util.ScoreManager;
 import work.lclpnet.ap2.impl.activity.ArcadePartyComponents;
 import work.lclpnet.ap2.impl.activity.ScoreboardComponent;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
@@ -51,6 +53,7 @@ import work.lclpnet.ap2.impl.scene.MixedMountContext;
 import work.lclpnet.ap2.impl.scene.Object3d;
 import work.lclpnet.ap2.impl.scene.Scene;
 import work.lclpnet.ap2.impl.scene.object.TranslatedTextDisplayObject;
+import work.lclpnet.ap2.impl.util.IconMaker;
 import work.lclpnet.ap2.impl.util.ScoreboardUtil;
 import work.lclpnet.ap2.impl.util.music.MusicHelper;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
@@ -87,10 +90,10 @@ import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
 public class PreparationActivity extends ComponentActivity implements Skippable, GameStartContext {
 
-    public static final Identifier ARCADE_PARTY_GAME_TAG = ArcadeParty.identifier("game");
+    public static final Identifier ARCADE_PARTY_GAME_TAG = ApConstants.identifier("game");
     private static final int GAME_ANNOUNCE_DELAY = Ticks.seconds(3);
     private static final int PREPARATION_TIME = Ticks.seconds(20);
-    private static final Identifier GAME_SONG_ID = ArcadeParty.identifier("ap2_game");
+    private static final Identifier GAME_SONG_ID = ApConstants.identifier("ap2_game");
     private final OptionChooser<MiniGame> gameChooser = new OptionChooser<>();
     private final OptionChooser<GameMap> mapChooser = new OptionChooser<>();
     private final ApBaseArgs args;
@@ -138,7 +141,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
 
     static void setupMap(ApMiniGameArgs miniGameArgs, BiConsumer<ServerWorld, GameMap> onReady) {
         WorldFacade worldFacade = miniGameArgs.worldFacade();
-        Identifier mapId = ArcadeParty.identifier("preparation");
+        Identifier mapId = ApConstants.identifier("preparation");
 
         worldFacade.changeMap(mapId, MapOptions.REUSABLE)
                 .thenCompose(world -> miniGameArgs.mapFacade().getMap(mapId)
@@ -480,7 +483,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
         var label = translationService.translateText("ap2.prepare.next_game_title");
 
         bossBarTimer = BossBarTimer.builder(translationService, label)
-                .withIdentifier(ArcadeParty.identifier("prepare"))
+                .withIdentifier(ApConstants.identifier("prepare"))
                 .withDurationTicks(PREPARATION_TIME)
                 .build();
 

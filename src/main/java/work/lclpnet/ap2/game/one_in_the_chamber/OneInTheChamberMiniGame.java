@@ -5,15 +5,14 @@ import net.minecraft.item.Items;
 import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
+import work.lclpnet.ap2.ApConstants;
 import work.lclpnet.ap2.api.game.*;
-import work.lclpnet.ap2.base.ApConstants;
-import work.lclpnet.ap2.base.ArcadeParty;
 import work.lclpnet.kibu.translate.text.FormatWrapper;
 
 public class OneInTheChamberMiniGame implements MiniGame {
     @Override
     public Identifier getId() {
-        return ArcadeParty.identifier("one_in_the_chamber");
+        return ApConstants.identifier("one_in_the_chamber");
     }
 
     @Override

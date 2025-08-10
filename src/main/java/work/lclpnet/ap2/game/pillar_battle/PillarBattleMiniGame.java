@@ -4,9 +4,8 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.util.Identifier;
+import work.lclpnet.ap2.ApConstants;
 import work.lclpnet.ap2.api.game.*;
-import work.lclpnet.ap2.base.ApConstants;
-import work.lclpnet.ap2.base.ArcadeParty;
 import work.lclpnet.kibu.translate.text.LocalizedFormat;
 
 public class PillarBattleMiniGame implements MiniGame {
@@ -23,7 +22,7 @@ public class PillarBattleMiniGame implements MiniGame {
 
     @Override
     public Identifier getId() {
-        return ArcadeParty.identifier("pillar_battle");
+        return ApConstants.identifier("pillar_battle");
     }
 
     @Override

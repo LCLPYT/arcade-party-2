@@ -14,7 +14,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import work.lclpnet.ap2.base.ArcadeParty;
+import work.lclpnet.ap2.ApConstants;
 import work.lclpnet.ap2.core.mixin.EndermanEntityAccessor;
 import work.lclpnet.ap2.game.maze_scape.monster.behaviour.AccelerationBehaviour;
 import work.lclpnet.ap2.game.maze_scape.monster.behaviour.UnstuckBehaviour;
@@ -54,9 +54,9 @@ public class EndermanData implements MonsterData<EndermanEntity> {
             DEBUG_TARGET_FLEE_POS = false,
             DEBUG_DISABLE_ANGER = false;
     private static final Identifier
-            FLEE_BONUS_ID = ArcadeParty.identifier("flee_bonus"),
-            ANGER_BONUS_ID = ArcadeParty.identifier("anger_bonus"),
-            SCARE_FROZEN_ID = ArcadeParty.identifier("scare_frozen");
+            FLEE_BONUS_ID = ApConstants.identifier("flee_bonus"),
+            ANGER_BONUS_ID = ApConstants.identifier("anger_bonus"),
+            SCARE_FROZEN_ID = ApConstants.identifier("scare_frozen");
 
     private final MonsterArgs args;
     private final CommonData common;
