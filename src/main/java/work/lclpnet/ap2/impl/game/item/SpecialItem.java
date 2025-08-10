@@ -8,6 +8,7 @@ import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.kibu.hook.HookRegistrar;
+import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 
 public interface SpecialItem {
 
@@ -81,4 +82,6 @@ public interface SpecialItem {
     default void onSwing(ServerPlayerEntity player, ItemStack stack, @Nullable Hand hand, SpecialItemContext ctx) {}
 
     default void registerHooks(HookRegistrar hooks, SpecialItemContext ctx) {}
+
+    default void scheduleTasks(TaskScheduler scheduler, SpecialItemContext ctx) {}
 }

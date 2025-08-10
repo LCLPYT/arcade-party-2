@@ -6,7 +6,6 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
-import net.minecraft.particle.ParticleTypes;
 import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -14,15 +13,9 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.event.GameEvent;
-import net.minecraft.world.explosion.AdvancedExplosionBehavior;
-import net.minecraft.world.explosion.Explosion;
-import net.minecraft.world.explosion.ExplosionImpl;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.core.hook.DeathMessageItemCallback;
-import work.lclpnet.ap2.core.mixin.ExplosionImplAccessor;
 import work.lclpnet.ap2.game.paintball.util.*;
 import work.lclpnet.ap2.impl.game.item.SpecialItem;
 import work.lclpnet.ap2.impl.game.item.SpecialItemContext;
@@ -30,11 +23,9 @@ import work.lclpnet.ap2.impl.scene.Scene;
 import work.lclpnet.ap2.impl.scene.animation.AnimationContext;
 import work.lclpnet.ap2.impl.scene.simulation.SceneRigidBody;
 import work.lclpnet.ap2.impl.util.math.MathUtil;
-import work.lclpnet.ap2.impl.util.world.ExplosionUtil;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.physics.impl.bullet.thread.PhysicsThread;
 
-import java.util.Optional;
 import java.util.Random;
 import java.util.UUID;
 
@@ -186,32 +177,9 @@ public class InkGrenadeItem implements SpecialItem {
 
             Vec3d pos = new Vec3d(position.x, position.y, position.z);
 
-            createExplosion(player, pos, team);
+            paintGunManager.getPaintManager().createExplosion(player, pos, team, EXPLOSION_POWER);
 
             executeOn(PhysicsThread.get(world), () -> spawnFragments(pos, player, state));
-        }
-
-        private void createExplosion(ServerPlayerEntity player, Vec3d pos, PaintballTeam team) {
-            var behavior = new AdvancedExplosionBehavior(true, true, Optional.empty(), Optional.empty());
-
-            var explosion = new ExplosionImpl(world, player, null, behavior,
-                    pos, EXPLOSION_POWER, false,
-                    Explosion.DestructionType.KEEP);
-
-            // mimic behaviour of ServerWorld::createExplosion
-            world.emitGameEvent(null, GameEvent.EXPLODE, pos);
-            world.spawnParticles(ParticleTypes.EXPLOSION, pos.x, pos.y, pos.z, 1, 1.0, 0.0, 0.0, 1);
-
-            var access = (ExplosionImplAccessor) explosion;
-
-            for (BlockPos affectedPos : access.invokeGetBlocksToDestroy()) {
-                paintGunManager.getPaintManager().replace(affectedPos, team.key());
-            }
-
-            // calculate damage and knockback
-            access.invokeDamageEntities();
-
-            ExplosionUtil.sendExplosion(world, explosion);
         }
 
         private void spawnFragments(Vec3d pos, ServerPlayerEntity player, BlockState state) {

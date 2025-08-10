@@ -336,5 +336,8 @@
   "game.ap2.paintball.item.ink_grenade": "Tintengranate",
   "game.ap2.paintball.item.ink_grenade.desc": "Verursacht eine Tintenexplosion nach 4 Sekunden",
   "game.ap2.paintball.item.ink_pack": "Tintenpatrone",
-  "game.ap2.paintball.item.ink_pack.desc": "Lädt die aktuelle Paintball-Waffe komplett voll"
+  "game.ap2.paintball.item.ink_pack.desc": "Lädt die aktuelle Paintball-Waffe komplett voll",
+  "game.ap2.paintball.item.tripwire": "Stolperdraht",
+  "game.ap2.paintball.item.tripwire.desc": "Platziere eine explosive Falle an eine Wand",
+  "game.ap2.paintball.item.tripwire.too_long": "Es gibt keine gegenseitige Wand in der Nähe"
 }

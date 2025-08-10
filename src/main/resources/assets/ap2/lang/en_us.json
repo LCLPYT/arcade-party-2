@@ -336,5 +336,8 @@
   "game.ap2.paintball.item.ink_grenade": "Ink Grenade",
   "game.ap2.paintball.item.ink_grenade.desc": "Creates an ink explosion after 4 seconds",
   "game.ap2.paintball.item.ink_pack": "Ink Pack",
-  "game.ap2.paintball.item.ink_pack.desc": "Reloads the current ink gun completely"
+  "game.ap2.paintball.item.ink_pack.desc": "Reloads the current ink gun completely",
+  "game.ap2.paintball.item.tripwire": "Tripwire",
+  "game.ap2.paintball.item.tripwire.desc": "Place on a wall to setup an explosive trap",
+  "game.ap2.paintball.item.tripwire.too_long": "There is no opposing wall nearby"
 }

@@ -21,6 +21,7 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.GameMode;
 import net.minecraft.world.GameRules;
 import org.jetbrains.annotations.NotNull;
+import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.game.team.DyeTeamKey;
@@ -32,9 +33,7 @@ import work.lclpnet.ap2.api.util.world.AdjacentBlocks;
 import work.lclpnet.ap2.api.util.world.BlockPredicate;
 import work.lclpnet.ap2.api.util.world.WorldScanner;
 import work.lclpnet.ap2.core.hook.SpectatePlayerCallback;
-import work.lclpnet.ap2.game.paintball.item.InkGrenadeItem;
-import work.lclpnet.ap2.game.paintball.item.InkPackItem;
-import work.lclpnet.ap2.game.paintball.item.MedKitItem;
+import work.lclpnet.ap2.game.paintball.item.TripWireItem;
 import work.lclpnet.ap2.game.paintball.kit.RifleKit;
 import work.lclpnet.ap2.game.paintball.kit.ShotgunKit;
 import work.lclpnet.ap2.game.paintball.kit.SniperKit;
@@ -101,7 +100,6 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
     private PaintballResults results;
     private boolean started = false;
     private SpecialItems specialItems;
-    private Scene scene;
 
     public PaintballInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
@@ -130,7 +128,7 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
         teams = new PaintballTeams(getTeamManager(), map, gameHandle.getParticipants(), random, gameHandle.getLogger());
         teams.setup();
 
-        scene = new Scene(new ServerWorldMountContext(world));
+        Scene scene = new Scene(new ServerWorldMountContext(world));
         scene.animate(1, gameHandle.getScheduler());
 
         BlockShape bounds = MapUtil.readShape(map, "bounds");
@@ -230,9 +228,11 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
         BlockPredicate validSpawn = pos -> validSpawns.contains(pos.asLong());
 
         specialItems = SpecialItems.create(gameHandle, map, world, random, validSpawn, commons(map, world).debugController(), r -> r
-                .register(new MedKitItem(), 0.25f)
-                .register(new InkGrenadeItem(paintGunManager, scene, random, teams), 0.5f)
-                .register(new InkPackItem(paintGunManager), 0.15f));
+//                .register(new MedKitItem(), 0.25f)
+//                .register(new InkGrenadeItem(paintGunManager, scene, random, teams), 0.5f)
+//                .register(new InkPackItem(paintGunManager), 0.15f)
+                .register(new TripWireItem(gameHandle.getTranslations(), gameHandle.getParticipants(), world, teams, paintManager), 0.15f)
+        );
 
         specialItems.setMarkGlowing(true);
 
@@ -354,15 +354,17 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
 
     private void configureHooksAndProtector() {
         HookRegistrar hooks = gameHandle.getHookRegistrar();
+        Participants participants = gameHandle.getParticipants();
 
         hooks.registerHook(SpectatePlayerCallback.HOOK, (spectator, target)
-                -> gameHandle.getParticipants().isParticipating(spectator));
+                -> participants.isParticipating(spectator));
 
         gameHandle.protect(config -> {
             config.allow(ProtectionTypes.EXPLOSION);
+
             config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, source)
                     -> entity instanceof ServerPlayerEntity player
-                    && gameHandle.getParticipants().isParticipating(player)
+                    && participants.isParticipating(player)
                     && (source.isOf(DamageTypes.ARROW) || source.isOf(DamageTypes.PLAYER_EXPLOSION)));
         });
 

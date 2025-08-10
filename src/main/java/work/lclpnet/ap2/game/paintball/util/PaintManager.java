@@ -4,21 +4,27 @@ import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
+import net.minecraft.particle.ParticleTypes;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.state.property.Property;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.event.GameEvent;
+import net.minecraft.world.explosion.AdvancedExplosionBehavior;
+import net.minecraft.world.explosion.Explosion;
+import net.minecraft.world.explosion.ExplosionImpl;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.game.team.DyeTeamKey;
 import work.lclpnet.ap2.api.game.team.Team;
 import work.lclpnet.ap2.api.game.team.TeamManager;
+import work.lclpnet.ap2.core.mixin.ExplosionImplAccessor;
 import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.TeamRef;
+import work.lclpnet.ap2.impl.util.world.ExplosionUtil;
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static java.lang.Math.max;
 import static net.minecraft.block.Blocks.*;
@@ -431,6 +437,28 @@ public class PaintManager {
                 }
             });
         }
+    }
+
+    public void createExplosion(ServerPlayerEntity player, Vec3d pos, PaintballTeam team, float power) {
+        var behavior = new AdvancedExplosionBehavior(true, true, Optional.empty(), Optional.empty());
+
+        ServerWorld world = player.getWorld();
+
+        var explosion = new ExplosionImpl(world, player, null, behavior, pos, power, false, Explosion.DestructionType.KEEP);
+
+        // mimic behaviour of ServerWorld::createExplosion
+        world.emitGameEvent(null, GameEvent.EXPLODE, pos);
+
+        var access = (ExplosionImplAccessor) explosion;
+
+        for (BlockPos affectedPos : access.invokeGetBlocksToDestroy()) {
+            replace(affectedPos, team.key());
+        }
+
+        // calculate damage and knockback
+        access.invokeDamageEntities();
+
+        ExplosionUtil.sendExplosion(world, explosion, ParticleTypes.EXPLOSION_EMITTER);
     }
 
     public void freeze() {

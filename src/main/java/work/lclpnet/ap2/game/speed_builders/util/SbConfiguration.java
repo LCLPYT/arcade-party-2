@@ -64,8 +64,9 @@ public class SbConfiguration {
                     ProtectionTypes.ITEM_FRAME_SET_ITEM, ProtectionTypes.ITEM_FRAME_ROTATE_ITEM,
                     ProtectionTypes.ITEM_FRAME_REMOVE_ITEM);
 
-            config.allow(ProtectionTypes.USE_ITEM_ON_BLOCK,
-                    (entity, pos) -> entity instanceof ServerPlayerEntity player && canModify(player, pos.up()));
+            config.allow(ProtectionTypes.USE_ITEM_ON_BLOCK, (entity, ctx)
+                    -> entity instanceof ServerPlayerEntity player
+                    && canModify(player, ctx.getBlockPos().up()));
 
             config.allow(ProtectionTypes.MODIFY_INVENTORY);
 

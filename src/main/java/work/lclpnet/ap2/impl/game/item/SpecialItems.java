@@ -124,6 +124,7 @@ public class SpecialItems implements SpecialItemContext {
         scene.onPickup().register(this::pickup);
 
         HookRegistrar hooks = gameHandle.getHookRegistrar();
+        TaskScheduler scheduler = gameHandle.getGameScheduler();
 
         hooks.registerHook(PlayerInventoryHooks.DROP_ITEM, this::onDropItem);
         hooks.registerHook(PlayerInteractionHooks.USE_ITEM, this::interact);
@@ -132,9 +133,10 @@ public class SpecialItems implements SpecialItemContext {
 
         for (SpecialItem item : registry.entries()) {
             item.registerHooks(hooks, this);
+            item.scheduleTasks(scheduler, this);
         }
 
-        gameHandle.getGameScheduler().interval(this::tickPickup, 1);
+        scheduler.interval(this::tickPickup, 1);
     }
 
     private boolean swapHands(ServerPlayerEntity player, int i) {
