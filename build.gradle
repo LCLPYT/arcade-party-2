@@ -55,29 +55,39 @@ repositories {
 
 sourceSets {
     lib {
-        // the lib sourceSet contains commonly used utilities among minigames and variants
+        // contains commonly used utilities among minigames and variants
+    }
+
+    minigames {
+        // contains minigame source
+        compileClasspath += lib.output
+        runtimeClasspath += lib.output
     }
 
     main {
-        compileClasspath += lib.output
-        runtimeClasspath += lib.output
+        compileClasspath += lib.output + minigames.output
+        runtimeClasspath += lib.output + minigames.output
     }
 
     test {
-        compileClasspath += lib.output
-        runtimeClasspath += lib.output
+        compileClasspath += lib.output + minigames.output
+        runtimeClasspath += lib.output + minigames.output
     }
 }
 
 // extra source sets need to have the necessary dependencies (atm inherit all; maybe cleanup in the future)
 afterEvaluate {
     configurations {
-        libImplementation.extendsFrom(implementation)
-        libCompileOnly.extendsFrom(compileOnly)
-        libCompileClasspath.extendsFrom(modCompileClasspathMapped)
-        libRuntimeClasspath.extendsFrom(modRuntimeClasspathMapped)
-        libCompileClasspath.extendsFrom(minecraftNamedCompile)
-        libRuntimeClasspath.extendsFrom(minecraftNamedRuntime)
+        def inheritMain = ['lib', 'minigames']
+
+        inheritMain.each {
+            named("${it}Implementation").get().extendsFrom(implementation)
+            named("${it}CompileOnly").get().extendsFrom(compileOnly)
+            named("${it}CompileClasspath").get().extendsFrom(modCompileClasspathMapped)
+            named("${it}RuntimeClasspath").get().extendsFrom(modRuntimeClasspathMapped)
+            named("${it}CompileClasspath").get().extendsFrom(minecraftNamedCompile)
+            named("${it}RuntimeClasspath").get().extendsFrom(minecraftNamedRuntime)
+        }
     }
 }
 

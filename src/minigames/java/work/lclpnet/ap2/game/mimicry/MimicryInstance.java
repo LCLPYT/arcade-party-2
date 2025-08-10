@@ -19,8 +19,8 @@ import work.lclpnet.ap2.game.mimicry.data.SequencePlayer;
 import work.lclpnet.ap2.impl.game.FFAGameInstance;
 import work.lclpnet.ap2.impl.game.PseudoElimination;
 import work.lclpnet.ap2.impl.game.data.IntDataContainer;
-import work.lclpnet.ap2.impl.game.data.Ordering;
 import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer;
+import work.lclpnet.ap2.impl.game.data.Ordering;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.BlockBox;
@@ -34,7 +34,7 @@ import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.lobby.game.map.GameMap;
 import work.lclpnet.lobby.game.util.BossBarTimer;
 
-import java.util.*;
+import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 
 public class MimicryInstance extends FFAGameInstance implements MapBootstrap {

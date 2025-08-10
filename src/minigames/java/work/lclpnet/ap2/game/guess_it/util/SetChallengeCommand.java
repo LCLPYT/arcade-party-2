@@ -1,8 +1,6 @@
 package work.lclpnet.ap2.game.guess_it.util;
 
 import com.mojang.brigadier.context.CommandContext;
-import com.mojang.brigadier.suggestion.Suggestions;
-import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
@@ -10,8 +8,6 @@ import work.lclpnet.ap2.game.guess_it.data.Challenge;
 import work.lclpnet.ap2.game.guess_it.data.GuessItManager;
 import work.lclpnet.kibu.cmd.type.CommandRegistrar;
 import work.lclpnet.kibu.cmd.type.KibuCommand;
-
-import java.util.concurrent.CompletableFuture;
 
 import static net.minecraft.server.command.CommandManager.literal;
 

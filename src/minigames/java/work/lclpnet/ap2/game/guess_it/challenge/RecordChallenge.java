@@ -22,7 +22,10 @@ import work.lclpnet.ap2.impl.util.ItemHelper;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.translate.Translations;
 
-import java.util.*;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Objects;
+import java.util.Random;
 
 public class RecordChallenge implements Challenge {
 

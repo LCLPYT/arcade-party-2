@@ -20,7 +20,8 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.function.Predicate;
 
-import static java.lang.Math.*;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 
 public class DragonController {
 
