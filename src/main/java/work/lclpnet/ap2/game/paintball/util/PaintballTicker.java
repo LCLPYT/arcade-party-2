@@ -43,6 +43,8 @@ import java.util.Map;
 import java.util.UUID;
 
 import static java.lang.Math.max;
+import static java.lang.Math.random;
+import static work.lclpnet.ap2.impl.util.SoundHelper.playSoundAt;
 import static work.lclpnet.kibu.access.VelocityModifier.setVelocity;
 import static work.lclpnet.lobby.util.PlayerReset.resetAttribute;
 import static work.lclpnet.lobby.util.PlayerReset.setAttribute;
@@ -52,7 +54,9 @@ public class PaintballTicker {
     private static final boolean DEBUG_WALL_CLIMBING = false;
 
     private static final float HEAL_PER_SECOND = 4.0f;
-    private static final int HEAL_DELAY_TICKS = Ticks.seconds(3);
+    private static final int
+            HEAL_DELAY_TICKS = Ticks.seconds(3),
+            SOUND_TICKS = 2;
 
     private final ServerWorld world;
     private final Participants participants;
@@ -131,6 +135,11 @@ public class PaintballTicker {
 
             if (entry.outOfCombatTicks >= HEAL_DELAY_TICKS) {
                 player.setHealth(player.getHealth() + HEAL_PER_SECOND / 20);
+            }
+
+            if (entry.nextSound-- <= 0) {
+                entry.nextSound = SOUND_TICKS;
+                playSoundAt(player, SoundEvents.BLOCK_HONEY_BLOCK_SLIDE, SoundCategory.PLAYERS, 0.40f, 1.65f + (float) random() * 0.2f);
             }
 
             BlockState state = inkContactState;
@@ -214,8 +223,7 @@ public class PaintballTicker {
         entry.reloadTicks = 0;
         stack.set(DataComponentTypes.DAMAGE, max(0, stack.getDamage() - paintGun.reloadAmount()));
 
-        world.playSound(null, player.getX(), player.getY(), player.getZ(),
-                SoundEvents.BLOCK_BREWING_STAND_BREW, SoundCategory.PLAYERS, 0.2f, 1f);
+        player.playSoundToPlayer(SoundEvents.BLOCK_BREWING_STAND_BREW, SoundCategory.PLAYERS, 0.2f, 1f);
     }
 
     private @NotNull Pair<OnInk, BlockState> standingOnInk(ServerPlayerEntity player) {
@@ -255,5 +263,6 @@ public class PaintballTicker {
     private static class Entry {
         int reloadTicks = 0;
         int outOfCombatTicks = 0;
+        int nextSound = 0;
     }
 }
