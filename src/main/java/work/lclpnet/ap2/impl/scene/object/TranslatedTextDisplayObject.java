@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.impl.scene;
+package work.lclpnet.ap2.impl.scene.object;
 
 import it.unimi.dsi.fastutil.objects.ObjectArraySet;
 import lombok.Getter;
@@ -7,6 +7,7 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3d;
+import work.lclpnet.ap2.impl.scene.*;
 import work.lclpnet.ap2.impl.scene.animation.Interpolatable;
 import work.lclpnet.ap2.impl.util.DisplayEntityTransformer;
 import work.lclpnet.ap2.impl.util.world.entity.DynamicEntity;
@@ -14,6 +15,8 @@ import work.lclpnet.ap2.impl.util.world.entity.TranslatedTextDisplay;
 import work.lclpnet.kibu.translate.Translations;
 
 import java.util.Set;
+
+import static work.lclpnet.ap2.impl.util.ThreadUtil.executeOn;
 
 public class TranslatedTextDisplayObject extends Object3d implements Mountable, Unmountable, Interpolatable, DynamicEntity {
 
@@ -25,7 +28,8 @@ public class TranslatedTextDisplayObject extends Object3d implements Mountable, 
     private final Vector3d worldPos = new Vector3d(0);
     private Vec3d mcWorldPos = Vec3d.ZERO;
 
-    public TranslatedTextDisplayObject(Translations translations) {
+    public TranslatedTextDisplayObject(Scene scene, Translations translations) {
+        super(scene);
         this.translations = translations;
         controller = new TranslatedTextDisplay.ControllerImpl(null);
     }
@@ -40,7 +44,7 @@ public class TranslatedTextDisplayObject extends Object3d implements Mountable, 
 
         updateWorldPos();
 
-        if (transformer.update(matrixWorld, worldPos.x, worldPos.y, worldPos.z)) {
+        if (transformer.update(matrixWorld)) {
             controller.getEntities().forEach(transformer::apply);
         }
     }
@@ -62,7 +66,7 @@ public class TranslatedTextDisplayObject extends Object3d implements Mountable, 
     public @Nullable Entity getEntity(ServerPlayerEntity player) {
         return controller.ref(translations.getLanguage(player), display -> {
             updateWorldPos();
-            transformer.update(matrixWorld, worldPos.x, worldPos.y, worldPos.z);
+            transformer.update(matrixWorld);
             transformer.apply(display);
         });
     }
@@ -76,7 +80,8 @@ public class TranslatedTextDisplayObject extends Object3d implements Mountable, 
     public void mount(MountContext ctx) {
         contexts.add(ctx);
         controller.setWorld(ctx.world());
-        ctx.spawn(null, this);
+
+        executeOn(ctx.world().getServer(), () -> ctx.spawn(null, this));
     }
 
     @Override

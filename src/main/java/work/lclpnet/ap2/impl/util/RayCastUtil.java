@@ -2,6 +2,8 @@ package work.lclpnet.ap2.impl.util;
 
 import net.minecraft.block.ShapeContext;
 import net.minecraft.entity.Entity;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.EntityHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.Box;
@@ -16,6 +18,12 @@ import java.util.function.Predicate;
 public class RayCastUtil {
 
     private RayCastUtil() {}
+
+    public static HitResult raycast(ServerPlayerEntity player, double maxDistance, RaycastContext.ShapeType shapeType,
+                                    RaycastContext.FluidHandling fluidHandling, ShapeContext shapeContext, Predicate<Entity> filter) {
+        return raycast(player.getWorld(), player.getEyePos(), player.getRotationVector(), maxDistance, shapeType,
+                fluidHandling, shapeContext, filter);
+    }
 
     /**
      * Ray cast both blocks and entities.
@@ -55,9 +63,9 @@ public class RayCastUtil {
         return start.squaredDistanceTo(entityHit.getPos()) < blockHitDistance * blockHitDistance ? entityHit : blockHit;
     }
 
-    public static HitResult raycastBlocks(BlockView world, Vec3d start, Vec3d direction, double maxDistance,
-                                          RaycastContext.ShapeType shapeType, RaycastContext.FluidHandling fluidHandling,
-                                          ShapeContext shapeContext) {
+    public static BlockHitResult raycastBlocks(BlockView world, Vec3d start, Vec3d direction, double maxDistance,
+                                               RaycastContext.ShapeType shapeType, RaycastContext.FluidHandling fluidHandling,
+                                               ShapeContext shapeContext) {
 
         Vec3d end = start.add(direction.multiply(maxDistance));
 

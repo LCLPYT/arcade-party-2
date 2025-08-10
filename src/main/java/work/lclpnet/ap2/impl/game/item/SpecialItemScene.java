@@ -104,7 +104,7 @@ public class SpecialItemScene {
     }
 
     public SpecialItemObject spawnItem(Vec3d pos, SpecialItem item, ItemStack stack, Translations translations, TranslatedText name) {
-        var obj = new SpecialItemObject(item, stack, translations, name);
+        var obj = new SpecialItemObject(scene, item, stack, translations, name);
         obj.position.set(pos.x, pos.y, pos.z);
 
         scene.add(obj);

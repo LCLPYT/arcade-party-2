@@ -1,10 +1,12 @@
-package work.lclpnet.ap2.impl.scene;
+package work.lclpnet.ap2.impl.scene.object;
 
 import lombok.Getter;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.decoration.DisplayEntity;
 import net.minecraft.text.Text;
 import org.jetbrains.annotations.Nullable;
+import work.lclpnet.ap2.impl.scene.MountContext;
+import work.lclpnet.ap2.impl.scene.Scene;
 
 @Getter
 public class TextDisplayObject extends DisplayEntityObject<DisplayEntity.TextDisplayEntity> {
@@ -12,7 +14,8 @@ public class TextDisplayObject extends DisplayEntityObject<DisplayEntity.TextDis
     private Text text;
     private int background = 1073741824;
 
-    public TextDisplayObject(Text text) {
+    public TextDisplayObject(Scene scene, Text text) {
+        super(scene);
         this.text = text;
     }
 
@@ -30,8 +33,8 @@ public class TextDisplayObject extends DisplayEntityObject<DisplayEntity.TextDis
     }
 
     @Override
-    public TextDisplayObject deepCopy() {
-        var copy = new TextDisplayObject(text);
+    public TextDisplayObject deepCopy(Scene scene) {
+        var copy = new TextDisplayObject(scene, text);
 
         copy.deepCopy(this);
 

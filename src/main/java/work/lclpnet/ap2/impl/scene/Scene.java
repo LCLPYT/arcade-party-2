@@ -1,8 +1,10 @@
 package work.lclpnet.ap2.impl.scene;
 
+import lombok.Getter;
 import work.lclpnet.ap2.impl.scene.animation.Animatable;
 import work.lclpnet.ap2.impl.scene.animation.AnimationContext;
 import work.lclpnet.ap2.impl.scene.animation.Interpolatable;
+import work.lclpnet.ap2.impl.util.ThreadUtil;
 import work.lclpnet.kibu.scheduler.api.TaskHandle;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 
@@ -12,6 +14,7 @@ import java.util.Iterator;
 
 public class Scene {
 
+    @Getter
     private final MountContext mountContext;
     private final Collection<Object3d> objects = new ArrayList<>();
     private final Collection<Object3d> toAdd = new ArrayList<>();
@@ -27,6 +30,8 @@ public class Scene {
     }
 
     public void add(Object3d object) {
+        if (onThreadOrDispatch(() -> add(object))) return;
+
         if (iterating) {
             toAdd.add(object);
             return;
@@ -48,6 +53,8 @@ public class Scene {
     }
 
     public void remove(Object3d object) {
+        if (onThreadOrDispatch(() -> remove(object))) return;
+
         if (iterating) {
             toRemove.add(object);
             return;
@@ -63,6 +70,8 @@ public class Scene {
     }
 
     public void animate(int tickRate, TaskScheduler scheduler) {
+        if (onThreadOrDispatch(() -> animate(tickRate, scheduler))) return;
+
         if (tickRate < 1) {
             throw new IllegalArgumentException("Tick rate must be at least 1");
         }
@@ -90,6 +99,8 @@ public class Scene {
     }
 
     public void stopAnimation() {
+        if (onThreadOrDispatch(this::stopAnimation)) return;
+
         if (animationTask != null) {
             animationTask.cancel();
             animationTask = null;
@@ -102,6 +113,8 @@ public class Scene {
     }
 
     public void clear() {
+        if (onThreadOrDispatch(this::clear)) return;
+
         for (Object3d obj : iterate()) {
             remove(obj);
         }
@@ -162,5 +175,9 @@ public class Scene {
                 }
             };
         };
+    }
+
+    private boolean onThreadOrDispatch(Runnable runnable) {
+        return ThreadUtil.onThreadOrDispatch(mountContext.world().getServer(), runnable);
     }
 }

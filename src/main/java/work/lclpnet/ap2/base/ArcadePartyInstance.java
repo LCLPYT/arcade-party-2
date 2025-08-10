@@ -36,7 +36,7 @@ import java.util.Map.Entry;
 import java.util.concurrent.ForkJoinPool;
 import java.util.stream.Collectors;
 
-import static work.lclpnet.ap2.impl.util.FutureUtil.onThread;
+import static work.lclpnet.ap2.impl.util.ThreadUtil.onThread;
 
 public class ArcadePartyInstance implements GameInstance {
 

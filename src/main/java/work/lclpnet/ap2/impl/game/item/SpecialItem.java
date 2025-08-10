@@ -8,6 +8,7 @@ import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.kibu.hook.HookRegistrar;
+import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 
 public interface SpecialItem {
 
@@ -37,6 +38,14 @@ public interface SpecialItem {
         return true;
     }
 
+    default boolean canBePickedUp(ServerPlayerEntity player) {
+        return true;
+    }
+
+    default boolean shouldTransferToInventory(ServerPlayerEntity player) {
+        return true;
+    }
+
     /**
      * Called when a player picked up an instance of the special item.
      * @param player The player.
@@ -63,5 +72,16 @@ public interface SpecialItem {
         return ActionResult.PASS;
     }
 
+    /**
+     * Called when a player swings the special item, usually by left-clicking / attacking.
+     * @param player The player.
+     * @param stack The item stack.
+     * @param hand The hand in which the player is holding the item being swung. Or null if the item was swung otherwise.
+     * @param ctx The context.
+     */
+    default void onSwing(ServerPlayerEntity player, ItemStack stack, @Nullable Hand hand, SpecialItemContext ctx) {}
+
     default void registerHooks(HookRegistrar hooks, SpecialItemContext ctx) {}
+
+    default void scheduleTasks(TaskScheduler scheduler, SpecialItemContext ctx) {}
 }

@@ -54,6 +54,7 @@ import java.util.Random;
 import java.util.Set;
 
 import static net.minecraft.util.Formatting.YELLOW;
+import static work.lclpnet.ap2.impl.util.ItemHelper.unbreakable;
 
 public class ChickenShooterInstance extends FFAGameInstance implements Runnable {
 
@@ -258,13 +259,11 @@ public class ChickenShooterInstance extends FFAGameInstance implements Runnable 
         var infinity = ItemHelper.getEnchantment(Enchantments.INFINITY, getWorld().getRegistryManager());
 
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
-            ItemStack stack = new ItemStack(Items.BOW);
+            ItemStack stack = unbreakable(new ItemStack(Items.BOW));
 
             stack.addEnchantment(infinity, 1);
             stack.set(DataComponentTypes.CUSTOM_NAME, translations.translateText(player, "game.ap2.chicken_shooter.bow")
                     .styled(style -> style.withItalic(false).withFormatting(Formatting.GOLD)));
-
-            ItemHelper.setUnbreakable(stack);
 
             PlayerInventory inventory = player.getInventory();
             inventory.setStack(4, stack);

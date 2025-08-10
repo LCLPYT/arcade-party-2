@@ -28,7 +28,7 @@ public class CCBaseManager {
     }
 
     private CCBase requireBase(Team team) {
-        return Objects.requireNonNull(bases.get(team), "Base not configured for team " + team.getKey().id());
+        return Objects.requireNonNull(bases.get(team), "Base not configured for team " + team.key().id());
     }
 
     public boolean isInAnyBase(double x, double y, double z) {

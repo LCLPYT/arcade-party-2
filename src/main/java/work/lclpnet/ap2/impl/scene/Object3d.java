@@ -1,6 +1,7 @@
 package work.lclpnet.ap2.impl.scene;
 
 import it.unimi.dsi.fastutil.objects.ObjectArraySet;
+import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4d;
@@ -8,6 +9,8 @@ import org.joml.Quaterniond;
 import org.joml.Vector3d;
 
 import java.util.*;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 /**
  * A generic 3D-Object that can be placed into a {@link Scene}.
@@ -15,6 +18,8 @@ import java.util.*;
  */
 public class Object3d {
 
+    @Getter
+    protected final Scene scene;
     public final Vector3d position = new Vector3d();
     public final Matrix4d matrix = new Matrix4d();
     public final Matrix4d matrixWorld = new Matrix4d();
@@ -23,6 +28,10 @@ public class Object3d {
     private final Collection<Object3d> children = new ObjectArraySet<>();
     private Object3d parent = null;
     private int deepCount = 1;
+
+    public Object3d(Scene scene) {
+        this.scene = scene;
+    }
 
     public void updateMatrix() {
         matrix.translationRotateScale(
@@ -84,17 +93,17 @@ public class Object3d {
 
         child.parent = null;
 
+        if (!children.remove(child)) {
+            return false;
+        }
+
         deepCount -= child.deepCount;
 
-        boolean removed = children.remove(child);
-
-        for (Object3d obj : child.traverse()) {
-            obj.onDetached();
-        }
+        child.detach();
 
         this.onChildRemoved(child);
 
-        return removed;
+        return true;
     }
 
     private void requireAcyclicHierarchy(@NotNull Object3d child) {
@@ -187,11 +196,21 @@ public class Object3d {
 
     /**
      * Set this object to a position in world coordinates.
-     * Does not mutate the given position.
+     * Does not mutate the given position argument.
      * @param pos The position in world / global coordinates.
      */
     public void setWorldPosition(Vector3d pos) {
-        position.set(pos);
+        setWorldPosition(pos.x, pos.y, pos.z);
+    }
+
+    /**
+     * Set this object to a position in world coordinates.
+     * @param x The x position in world / global coordinates.
+     * @param y The y position in world / global coordinates.
+     * @param z The z position in world / global coordinates.
+     */
+    public void setWorldPosition(double x, double y, double z) {
+        position.set(x, y, z);
 
         Object3d parent = parent();
 
@@ -200,26 +219,27 @@ public class Object3d {
         }
     }
 
-    public void detach() {
-        if (parent == null) {
-            for (Object3d obj : traverse()) {
-                obj.onDetached();
-            }
-
-            onDetached();
-        } else {
-            parent.removeChild(this);
+    public final void detach() {
+        if (parent != null && parent.removeChild(this)) {
+            // removeChild invokes detach once again, if successful, therefore cancel this invocation
+            return;
         }
+
+        for (Object3d obj : traverse()) {
+            obj.onDetached();
+        }
+
+        scene.remove(this);
     }
 
-    public Object3d deepCopy() {
+    public Object3d deepCopy(Scene scene) {
         var type = this.getClass();
 
         if (type != Object3d.class) {
             throw new UnsupportedOperationException(type.getName() + "::deepCopy");
         }
 
-        var copy = new Object3d();
+        var copy = new Object3d(scene);
 
         copy.deepCopy(this);
 
@@ -244,7 +264,7 @@ public class Object3d {
 
         // copy children of other object
         for (Object3d child : other.children) {
-            Object3d childCopy = child.deepCopy();
+            Object3d childCopy = child.deepCopy(child.scene);
             this.addChild(childCopy);
         }
 
@@ -254,4 +274,9 @@ public class Object3d {
     protected void onDetached() {}
 
     protected void onChildRemoved(Object3d child) {}
+
+    public Stream<Object3d> stream() {
+        var spliterator = Spliterators.spliterator(traverseIterator(), deepCount, 0);
+        return StreamSupport.stream(spliterator, false);
+    }
 }

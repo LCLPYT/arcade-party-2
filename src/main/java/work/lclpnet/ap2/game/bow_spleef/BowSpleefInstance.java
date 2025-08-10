@@ -29,8 +29,8 @@ import work.lclpnet.ap2.impl.game.item.SpecialItems;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.ItemHelper;
 import work.lclpnet.ap2.impl.util.SoundHelper;
-import work.lclpnet.ap2.impl.util.handler.Cooldown;
 import work.lclpnet.ap2.impl.util.handler.DoubleJumpHandler;
+import work.lclpnet.ap2.impl.util.handler.VisualCooldown;
 import work.lclpnet.combatctl.impl.CombatStyles;
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
 import work.lclpnet.kibu.hook.Hook;
@@ -44,6 +44,8 @@ import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 
 import java.util.Objects;
 import java.util.Random;
+
+import static work.lclpnet.ap2.impl.util.ItemHelper.unbreakable;
 
 public class BowSpleefInstance extends EliminationGameInstance {
 
@@ -61,7 +63,7 @@ public class BowSpleefInstance extends EliminationGameInstance {
     public BowSpleefInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
 
-        var cooldown = new Cooldown(gameHandle.getScheduler());
+        var cooldown = new VisualCooldown(gameHandle.getScheduler());
 
         doubleJumpHandler = new DoubleJumpHandler(player -> !cooldown.isOnCooldown(player) && !heavyWeightItem.isHeavyWeighted(player));
         heavyWeightItem.setDoubleJumpHandler(doubleJumpHandler);
@@ -169,15 +171,13 @@ public class BowSpleefInstance extends EliminationGameInstance {
         var infinity = ItemHelper.getEnchantment(Enchantments.INFINITY, getWorld().getRegistryManager());
 
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
-            ItemStack stack = new ItemStack(Items.BOW);
+            ItemStack stack = unbreakable(new ItemStack(Items.BOW));
 
             stack.set(DataComponentTypes.CUSTOM_NAME, translations.translateText(player, "game.ap2.bow_spleef.bow")
                     .styled(style -> style.withItalic(false).withFormatting(Formatting.GOLD)));
 
             stack.addEnchantment(infinity,1);
             stack.set(DataComponentTypes.ENCHANTMENT_GLINT_OVERRIDE, false);
-
-            ItemHelper.setUnbreakable(stack);
 
             PlayerInventory inventory = player.getInventory();
             inventory.setStack(4, stack);

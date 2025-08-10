@@ -11,9 +11,11 @@ import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.util.math.AffineTransformation;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Quaternionf;
-import work.lclpnet.ap2.impl.scene.BlockDisplayObject;
-import work.lclpnet.ap2.impl.scene.ItemDisplayObject;
 import work.lclpnet.ap2.impl.scene.Object3d;
+import work.lclpnet.ap2.impl.scene.Scene;
+import work.lclpnet.ap2.impl.scene.VoidMountContext;
+import work.lclpnet.ap2.impl.scene.object.BlockDisplayObject;
+import work.lclpnet.ap2.impl.scene.object.ItemDisplayObject;
 import work.lclpnet.ap2.impl.util.ItemHelper;
 import work.lclpnet.ap2.impl.util.model.TemplateModel;
 
@@ -28,6 +30,7 @@ public class ModelLoader {
     private static final Pattern SUMMON_PATTERN = Pattern.compile("(?:execute at @[sp] run )?summon (?:[a-z0-9_.-]+:)?[a-z0-9/._-]+ (~|~?[-+\\d.]+) (~|~?[-+\\d.]+) (~|~?[-+\\d.]+) ");
     private final RegistryWrapper.WrapperLookup lookup;
     private final RegistryWrapper.Impl<Block> blockLookup;
+    private final Scene scene = new Scene(VoidMountContext.INSTANCE);
 
     public ModelLoader(RegistryWrapper.WrapperLookup lookup) {
         this.lookup = lookup;
@@ -64,7 +67,7 @@ public class ModelLoader {
                 throw new IOException("Failed to parse model nbt", e);
             }
 
-            var obj = new Object3d();
+            var obj = new Object3d(scene);
             obj.position.set(x, y, z);
 
             parseChildren(obj, nbt);
@@ -73,7 +76,7 @@ public class ModelLoader {
                 root = obj;
             } else {
                 if (count == 1) {
-                    var newRoot = new Object3d();
+                    var newRoot = new Object3d(scene);
                     newRoot.addChild(root);
                     root = newRoot;
                 }
@@ -125,11 +128,11 @@ public class ModelLoader {
         Object3d obj = switch (id) {
             case "minecraft:block_display" -> {
                 BlockState state = NbtHelper.toBlockState(blockLookup, nbt.getCompoundOrEmpty("block_state"));
-                yield new BlockDisplayObject(state);
+                yield new BlockDisplayObject(scene, state);
             }
             case "minecraft:item_display" -> {
                 var stack = ItemHelper.fromNbt(lookup, nbt.getCompoundOrEmpty("item")).orElse(ItemStack.EMPTY);
-                yield new ItemDisplayObject(stack);
+                yield new ItemDisplayObject(scene, stack);
             }
             case null, default -> null;
         };

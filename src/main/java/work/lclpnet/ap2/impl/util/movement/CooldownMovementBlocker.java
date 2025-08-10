@@ -1,18 +1,18 @@
 package work.lclpnet.ap2.impl.util.movement;
 
 import net.minecraft.server.network.ServerPlayerEntity;
-import work.lclpnet.ap2.impl.util.handler.Cooldown;
+import work.lclpnet.ap2.impl.util.handler.VisualCooldown;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 
 public class CooldownMovementBlocker implements MovementBlocker {
 
-    private final Cooldown cooldown;
+    private final VisualCooldown cooldown;
     private final MovementListener movement = new MovementListener(this);
     private boolean modifySpeedAttribute = true;
 
     public CooldownMovementBlocker(TaskScheduler scheduler) {
-        this.cooldown = new Cooldown(scheduler);
+        this.cooldown = new VisualCooldown(scheduler);
         this.cooldown.setOnCooldownOver(this::resetAttributes);
     }
 

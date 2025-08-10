@@ -4,11 +4,12 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import work.lclpnet.ap2.api.game.data.SubjectRef;
 import work.lclpnet.ap2.api.game.team.TeamKey;
+import work.lclpnet.ap2.api.game.team.TeamKeyable;
 import work.lclpnet.kibu.translate.Translations;
 
 import java.util.Objects;
 
-public class TeamRef implements SubjectRef {
+public class TeamRef implements SubjectRef, TeamKeyable {
 
     private final TeamKey key;
     private final Translations translations;
@@ -18,13 +19,10 @@ public class TeamRef implements SubjectRef {
         this.translations = translations;
     }
 
-    public TeamKey getKey() {
-        return key;
-    }
-
     @Override
     public Text getNameFor(ServerPlayerEntity viewer) {
-        return translations.translateText(viewer, key.getTranslationKey()).formatted(key.colorFormat());
+        return translations.translateText(viewer, key.getTranslationKey())
+                .styled(style -> style.withColor(key.color()));
     }
 
     @Override
@@ -38,5 +36,10 @@ public class TeamRef implements SubjectRef {
     @Override
     public int hashCode() {
         return Objects.hash(key);
+    }
+
+    @Override
+    public TeamKey key() {
+        return key;
     }
 }

@@ -120,6 +120,14 @@ public class BlockBox implements Pair<BlockPos, BlockPos>, Iterable<BlockPos>, C
         return null;
     }
 
+    public boolean isBorder(Vec3i pos) {
+        return isBorder(pos.getX(), pos.getY(), pos.getZ());
+    }
+
+    public boolean isBorder(int x, int y, int z) {
+        return tangentSurface(x, y, z) != null;
+    }
+
     public Vec3d getCenter() {
         return new Vec3d(
                 (min.getX() + max.getX()) * 0.5d,

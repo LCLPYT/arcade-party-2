@@ -15,6 +15,6 @@ public class TeamRefResolver implements SubjectRefResolver<Team, TeamRef> {
 
     @Override
     public @Nullable Team resolve(TeamRef ref) {
-        return teamManager.getTeam(ref.getKey()).orElse(null);
+        return teamManager.getTeam(ref).orElse(null);
     }
 }

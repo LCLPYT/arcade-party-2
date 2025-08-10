@@ -147,7 +147,7 @@ public class GlowingBombInstance extends EliminationGameInstance implements MapB
             return;
         }
 
-        bomb = new GbBomb(this::onBombYielded);
+        bomb = new GbBomb(scene, this::onBombYielded);
         bomb.scale.set(0.4);
         bomb.position.set(pos.getX(), pos.getY(), pos.getZ());
 

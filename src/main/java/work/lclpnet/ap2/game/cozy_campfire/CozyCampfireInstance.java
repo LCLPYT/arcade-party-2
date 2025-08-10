@@ -14,6 +14,7 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.GameRules;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
+import work.lclpnet.ap2.api.game.team.DyeTeamKey;
 import work.lclpnet.ap2.api.game.team.Team;
 import work.lclpnet.ap2.api.game.team.TeamKey;
 import work.lclpnet.ap2.api.game.team.TeamManager;
@@ -21,7 +22,6 @@ import work.lclpnet.ap2.api.map.MapBootstrap;
 import work.lclpnet.ap2.api.util.CollisionDetector;
 import work.lclpnet.ap2.game.cozy_campfire.setup.*;
 import work.lclpnet.ap2.impl.game.TeamEliminationGameInstance;
-import work.lclpnet.ap2.impl.game.team.ApTeamKeys;
 import work.lclpnet.ap2.impl.util.TeamStorage;
 import work.lclpnet.ap2.impl.util.TimeHelper;
 import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedPlayerBossBar;
@@ -44,7 +44,7 @@ import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 public class CozyCampfireInstance extends TeamEliminationGameInstance implements MapBootstrap {
 
     private static final float DAY_TIME_CHANCE = 0.55f, RAIN_CHANCE = 0.6f, THUNDER_CHANCE = 0.15f;
-    public static final TeamKey TEAM_RED = ApTeamKeys.RED, TEAM_BLUE = ApTeamKeys.BLUE;
+    public static final TeamKey TEAM_RED = DyeTeamKey.RED, TEAM_BLUE = DyeTeamKey.BLUE;
     public static final float MOVEMENT_SPEED = 0.15f;
     private final Random random = new Random();
     private final CollisionDetector collisionDetector = new ChunkedCollisionDetector();
@@ -68,6 +68,7 @@ public class CozyCampfireInstance extends TeamEliminationGameInstance implements
         useSurvivalMode();
 
         movementObserver = new PlayerMovementObserver(collisionDetector, gameHandle.getParticipants()::isParticipating);
+        getTeamManager().setUseColorCodes(true);  // colored name tags above the player model
     }
 
     @Override

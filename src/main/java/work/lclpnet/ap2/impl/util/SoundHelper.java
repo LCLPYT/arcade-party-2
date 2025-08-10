@@ -1,6 +1,7 @@
 package work.lclpnet.ap2.impl.util;
 
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
+import net.minecraft.entity.Entity;
 import net.minecraft.network.packet.s2c.play.PlaySoundS2CPacket;
 import net.minecraft.registry.Registries;
 import net.minecraft.server.MinecraftServer;
@@ -8,6 +9,9 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
+import net.minecraft.util.math.Position;
+
+import static java.lang.Math.max;
 
 public class SoundHelper {
 
@@ -23,6 +27,11 @@ public class SoundHelper {
         }
     }
 
+    public static void playSound(ServerPlayerEntity player, SoundEvent sound, SoundCategory category, Position pos,
+                                 float volume, float pitch) {
+        playSound(player, sound, category, pos.getX(), pos.getY(), pos.getZ(), volume, pitch);
+    }
+
     public static void playSound(ServerPlayerEntity player, SoundEvent sound, SoundCategory category,
                                  double x, double y, double z, float volume, float pitch) {
 
@@ -33,6 +42,27 @@ public class SoundHelper {
         player.networkHandler.sendPacket(packet);
     }
 
+    public static void playSoundAt(Entity entity, SoundEvent sound, SoundCategory category, float volume, float pitch) {
+        entity.getWorld().playSound(null, entity.getX(), entity.getY(), entity.getZ(), sound, category, volume, pitch);
+    }
+
+    public static void playSoundFor(SoundEvent sound, SoundCategory category, Position pos, float volume, float pitch,
+                                    Iterable<? extends ServerPlayerEntity> players) {
+        playSoundFor(sound, category, pos.getX(), pos.getY(), pos.getZ(), volume, pitch, players);
+    }
+
+    public static void playSoundFor(SoundEvent sound, SoundCategory category, double x, double y, double z,
+                                    float volume, float pitch, Iterable<? extends ServerPlayerEntity> players) {
+        double range = max(1.0, volume) * 16;
+        double rangeSq = range * range;
+
+        for (ServerPlayerEntity player : players) {
+            if (player.squaredDistanceTo(x, y, z) <= rangeSq) {
+                playSound(player, sound, category, x, y, z, volume, pitch);
+            }
+        }
+    }
+
     /**
      * Get the note pitch for a given note key.
      * @param key The note key, ranging from F#3 (0) to F#5 (24), where one octave is 12 keys.
@@ -40,7 +70,7 @@ public class SoundHelper {
      */
     public static float getPitch(int key) {
         float pitch = (float) Math.pow(2, (key - 12) / 12f);
-        return Math.max(0.5f, Math.min(2.0f, pitch));
+        return max(0.5f, Math.min(2.0f, pitch));
     }
 
     private SoundHelper() {}

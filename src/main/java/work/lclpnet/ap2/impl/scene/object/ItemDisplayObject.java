@@ -1,10 +1,12 @@
-package work.lclpnet.ap2.impl.scene;
+package work.lclpnet.ap2.impl.scene.object;
 
 import lombok.Getter;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.decoration.DisplayEntity;
 import net.minecraft.item.ItemDisplayContext;
 import net.minecraft.item.ItemStack;
+import work.lclpnet.ap2.impl.scene.MountContext;
+import work.lclpnet.ap2.impl.scene.Scene;
 
 @Getter
 public class ItemDisplayObject extends DisplayEntityObject<DisplayEntity.ItemDisplayEntity> {
@@ -12,7 +14,8 @@ public class ItemDisplayObject extends DisplayEntityObject<DisplayEntity.ItemDis
     private ItemStack stack;
     private ItemDisplayContext itemDisplayContext = ItemDisplayContext.NONE;
 
-    public ItemDisplayObject(ItemStack stack) {
+    public ItemDisplayObject(Scene scene, ItemStack stack) {
+        super(scene);
         this.stack = stack;
     }
 
@@ -30,8 +33,8 @@ public class ItemDisplayObject extends DisplayEntityObject<DisplayEntity.ItemDis
     }
 
     @Override
-    public ItemDisplayObject deepCopy() {
-        var copy = new ItemDisplayObject(stack);
+    public ItemDisplayObject deepCopy(Scene scene) {
+        var copy = new ItemDisplayObject(scene, stack);
 
         copy.deepCopy(this);
 

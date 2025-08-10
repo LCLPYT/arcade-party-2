@@ -1,8 +1,12 @@
 package work.lclpnet.ap2.impl.util;
 
 import com.mojang.datafixers.util.Pair;
+import com.mojang.serialization.MapDecoder;
+import com.mojang.serialization.MapEncoder;
 import net.minecraft.block.jukebox.JukeboxSong;
 import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.DyedColorComponent;
+import net.minecraft.component.type.NbtComponent;
 import net.minecraft.component.type.TooltipDisplayComponent;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.entity.effect.StatusEffect;
@@ -26,6 +30,9 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
+
+import static net.minecraft.component.DataComponentTypes.DYED_COLOR;
+import static net.minecraft.component.DataComponentTypes.TOOLTIP_DISPLAY;
 
 public class ItemHelper {
 
@@ -148,17 +155,40 @@ public class ItemHelper {
         return enchantments.getOrThrow(enchantment);
     }
 
-    public static void setUnbreakable(ItemStack stack) {
+    public static ItemStack unbreakable(ItemStack stack) {
         stack.set(DataComponentTypes.UNBREAKABLE, Unit.INSTANCE);
 
         var display = stack.getOrDefault(DataComponentTypes.TOOLTIP_DISPLAY, TooltipDisplayComponent.DEFAULT);
 
         stack.set(DataComponentTypes.TOOLTIP_DISPLAY, display.with(DataComponentTypes.UNBREAKABLE, true));
+
+        return stack;
     }
 
     public static Optional<ItemStack> fromNbt(RegistryWrapper.WrapperLookup lookup, NbtCompound nbt) {
         return ItemStack.CODEC.decode(lookup.getOps(NbtOps.INSTANCE), nbt)
                 .resultOrPartial()
                 .map(Pair::getFirst);
+    }
+
+    public static @NotNull ItemStack getLeatherArmor(Item leatherChestplate, int color) {
+        ItemStack chestPlate = new ItemStack(leatherChestplate);
+
+        chestPlate.set(DYED_COLOR, new DyedColorComponent(color));
+        chestPlate.set(TOOLTIP_DISPLAY, TooltipDisplayComponent.DEFAULT.with(DYED_COLOR, true));
+
+        return chestPlate;
+    }
+
+    public static <T> void setCustomData(ItemStack stack, MapEncoder<T> encoder, T value) {
+        stack.set(DataComponentTypes.CUSTOM_DATA, stack.getOrDefault(DataComponentTypes.CUSTOM_DATA, NbtComponent.DEFAULT)
+                .with(NbtOps.INSTANCE, encoder, value)
+                .getOrThrow());
+    }
+
+    public static <T> Optional<T> getCustomData(ItemStack stack, MapDecoder<T> decoder) {
+        return stack.getOrDefault(DataComponentTypes.CUSTOM_DATA, NbtComponent.DEFAULT)
+                .get(decoder)
+                .resultOrPartial();
     }
 }

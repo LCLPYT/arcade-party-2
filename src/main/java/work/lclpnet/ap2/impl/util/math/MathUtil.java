@@ -1,8 +1,10 @@
 package work.lclpnet.ap2.impl.util.math;
 
+import com.google.common.collect.AbstractIterator;
 import net.minecraft.util.math.*;
 import org.joml.Vector3d;
 import org.joml.Vector3dc;
+import org.joml.Vector3f;
 import work.lclpnet.kibu.util.math.Matrix3i;
 
 import java.util.Iterator;
@@ -115,6 +117,64 @@ public class MathUtil {
                 i++;
 
                 return new Vec3d(x, y, z);
+            }
+        };
+    }
+
+    /**
+     * Apply a random offset to a unit direction vector.
+     * @param dir The direction unit vector.
+     * @param spread The maximum angle between the input vector and the output vector, in radians.
+     * @param random The RNG instance.
+     * @return A randomly offset unit vector, based on the input vector and the spread.
+     */
+    public static Vec3d applySpread(Vec3d dir, double spread, Random random) {
+        double cosMax = cos(spread);
+        double cosTheta = cosMax + (1 - cosMax) * random.nextDouble();
+        double sinTheta = sqrt(1 - cosTheta * cosTheta);
+
+        double phi = random.nextDouble() * 2 * PI;
+
+        Vec3d t = new Vec3d(1, 0, 0);
+
+        if (abs(dir.dotProduct(t)) > 0.999) {
+            t = new Vec3d(0, 1, 0);
+        }
+
+        Vec3d axis = dir.crossProduct(t).normalize();
+        Vec3d perp = dir.crossProduct(axis).normalize();
+
+        return axis.multiply(cos(phi) * sinTheta)
+                .add(perp.multiply(sin(phi) * sinTheta))
+                .add(dir.multiply(cosTheta))
+                .normalize();
+    }
+
+    public static Iterable<Vector3f> fibonacciHemisphere(int samples) {
+        double phi = PI * (3 - sqrt(5));
+
+        return () -> new AbstractIterator<>() {
+            final Vector3f vec = new Vector3f();
+            int i = 0;
+
+            @Override
+            protected Vector3f computeNext() {
+                if (i >= samples) {
+                    endOfData();
+                    return null;
+                }
+
+                double y = (double) i / (samples - 1);  // [0..1] for upper hemisphere
+                double r = sqrt(1 - y * y);
+                double theta = (i * phi) % (2 * PI);
+
+                vec.x = (float) (r * cos(theta));
+                vec.z = (float) (r * sin(theta));
+                vec.y = (float) y;
+
+                i++;
+
+                return vec;
             }
         };
     }

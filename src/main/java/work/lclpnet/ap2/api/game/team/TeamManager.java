@@ -5,6 +5,7 @@ import work.lclpnet.ap2.api.base.Participants;
 
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 public interface TeamManager {
@@ -15,7 +16,7 @@ public interface TeamManager {
 
     Optional<Team> getTeam(TeamKey key);
 
-    Optional<Team> getTeam(ServerPlayerEntity player);
+    Optional<Team> getTeam(UUID uuid);
 
     void partitionIntoTeams(Set<ServerPlayerEntity> players, Set<TeamKey> teams);
 
@@ -25,24 +26,40 @@ public interface TeamManager {
 
     void bind(TeamEliminatedListener listener);
 
+    /**
+     * Whether to use team color codes.
+     * This enables colored player name tags above the player model.
+     * However, only a limited number of colors codes exist.
+     * Set this to true, if all your team rgb colors have matching color codes (Formatting).
+     */
+    void setUseColorCodes(boolean useColorCodes);
+
+    Team registerTeam(TeamKey key);
+
+    void joinTeam(ServerPlayerEntity player, Team team);
+
+    default Optional<Team> getTeam(ServerPlayerEntity player) {
+        return getTeam(player.getUuid());
+    }
+
     default void partitionIntoTeams(Participants participants, Set<TeamKey> teams) {
         partitionIntoTeams(participants.getAsSet(), teams);
     }
 
     default Set<net.minecraft.scoreboard.Team> getMinecraftTeams() {
         return getTeams().stream()
-                .map(Team::getKey)
+                .map(Team::key)
                 .map(this::getMinecraftTeam)
                 .flatMap(Optional::stream)
                 .collect(Collectors.toUnmodifiableSet());
     }
 
     default boolean isParticipating(Team team) {
-        return isParticipating(team.getKey());
+        return isParticipating(team.key());
     }
 
     default boolean isParticipating(ServerPlayerEntity player) {
-        return getTeam(player).map(Team::getKey).map(this::isParticipating).orElse(false);
+        return getTeam(player).map(Team::key).map(this::isParticipating).orElse(false);
     }
 
     default Set<Team> getParticipatingTeams() {
@@ -55,5 +72,15 @@ public interface TeamManager {
         return getTeam(player)
                 .map(t -> t.equals(team))
                 .orElseGet(() -> team != null);
+    }
+
+    default boolean areTeamMates(ServerPlayerEntity first, ServerPlayerEntity second) {
+        return getTeam(first)
+                .map(team -> isTeamMember(second, team))
+                .orElse(false);
+    }
+
+    default Optional<Team> getTeam(TeamKeyable keyable) {
+        return getTeam(keyable.key());
     }
 }

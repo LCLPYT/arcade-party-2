@@ -12,6 +12,7 @@ import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.event.IntScoreEventSource;
 import work.lclpnet.ap2.api.util.scoreboard.CustomScoreboardObjective;
 import work.lclpnet.ap2.api.util.scoreboard.VirtualScoreboardObjective;
+import work.lclpnet.ap2.core.type.ApServerPlayerEntity;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.player.PlayerConnectionHooks;
 import work.lclpnet.kibu.translate.Translations;
@@ -60,6 +61,11 @@ public class CustomScoreboardManager {
 
     public void joinTeam(Entity entity, Team team) {
         scoreboard.addScoreHolderToTeam(entity.getNameForScoreboard(), team);
+
+        // manually set team color as teams themselves don't support arbitrary text color
+        if (entity instanceof ServerPlayerEntity player) {
+            ((ApServerPlayerEntity) player).ap2$setPlayerListName(player.getDisplayName());
+        }
     }
 
     public void leaveTeam(Entity entity, Team team) {

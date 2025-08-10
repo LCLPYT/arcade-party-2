@@ -9,10 +9,12 @@ import static work.lclpnet.ap2.impl.util.AssertionUtils.assertVectorsEqual;
 
 class Object3dTest {
 
+    private final Scene scene = new Scene(VoidMountContext.INSTANCE);
+    
     @Test
     public void testAddChild() {
-        Object3d object = new Object3d();
-        Object3d child = new Object3d();
+        Object3d object = new Object3d(scene);
+        Object3d child = new Object3d(scene);
 
         assertTrue(object.addChild(child));
         assertEquals(1, object.children().size());
@@ -21,8 +23,8 @@ class Object3dTest {
 
     @Test
     public void testRemoveChild() {
-        Object3d object = new Object3d();
-        Object3d child = new Object3d();
+        Object3d object = new Object3d(scene);
+        Object3d child = new Object3d(scene);
 
         object.addChild(child);
         assertTrue(object.removeChild(child));
@@ -32,8 +34,8 @@ class Object3dTest {
 
     @Test
     public void testAddChildThrowsExceptionOnCyclicHierarchy2() {
-        Object3d object = new Object3d();
-        Object3d child = new Object3d();
+        Object3d object = new Object3d(scene);
+        Object3d child = new Object3d(scene);
 
         object.addChild(child);
 
@@ -42,9 +44,9 @@ class Object3dTest {
 
     @Test
     public void testAddChildThrowsExceptionOnCyclicHierarchy3() {
-        Object3d object = new Object3d();
-        Object3d child = new Object3d();
-        Object3d grandChild = new Object3d();
+        Object3d object = new Object3d(scene);
+        Object3d child = new Object3d(scene);
+        Object3d grandChild = new Object3d(scene);
 
         object.addChild(child);
         child.addChild(grandChild);
@@ -54,7 +56,7 @@ class Object3dTest {
 
     @Test
     public void testUpdateMatrix() {
-        Object3d object = new Object3d();
+        Object3d object = new Object3d(scene);
 
         object.position.set(1, 2, 3);
         object.rotation.setAngleAxis(Math.PI / 2, 0, 0, 1);
@@ -73,7 +75,7 @@ class Object3dTest {
 
     @Test
     public void testUpdateMatrixWorldWithoutParent() {
-        Object3d object = new Object3d();
+        Object3d object = new Object3d(scene);
 
         object.position.set(1, 2, 3);
         object.rotation.set(0, 0, 0, 1);
@@ -91,8 +93,8 @@ class Object3dTest {
 
     @Test
     public void testUpdateMatrixWorldWithParent() {
-        Object3d object = new Object3d();
-        Object3d child = new Object3d();
+        Object3d object = new Object3d(scene);
+        Object3d child = new Object3d(scene);
 
         object.position.set(1, 0, 0);
         object.rotation.set(0, 0, 0, 1);
@@ -116,26 +118,26 @@ class Object3dTest {
 
     @Test
     public void testAddChildWithNullThrowsException() {
-        Object3d object = new Object3d();
+        Object3d object = new Object3d(scene);
 
         assertThrows(NullPointerException.class, () -> object.addChild(null));
     }
 
     @Test
     public void testRemoveChildWithNullThrowsException() {
-        Object3d object = new Object3d();
+        Object3d object = new Object3d(scene);
 
         assertThrows(NullPointerException.class, () -> object.removeChild(null));
     }
 
     @Test
     public void testWorldTranslationInitial() {
-        assertVectorsEqual(new Vector3d(), new Object3d().worldTranslation());
+        assertVectorsEqual(new Vector3d(), new Object3d(scene).worldTranslation());
     }
 
     @Test
     public void testWorldTranslationRoot() {
-        Object3d obj = new Object3d();
+        Object3d obj = new Object3d(scene);
         obj.position.set(10, 20, 13);
 
         assertVectorsEqual(new Vector3d(10, 20, 13), obj.worldTranslation());
@@ -143,11 +145,11 @@ class Object3dTest {
 
     @Test
     public void testWorldTranslationChild() {
-        Object3d obj = new Object3d();
+        Object3d obj = new Object3d(scene);
         obj.position.set(10, 20, 13);
         obj.scale.set(0.5);
 
-        Object3d child = new Object3d();
+        Object3d child = new Object3d(scene);
         child.position.set(4, 4, 4);
 
         obj.addChild(child);
@@ -157,7 +159,7 @@ class Object3dTest {
 
     @Test
     public void testWorldTranslationRelative() {
-        Object3d obj = new Object3d();
+        Object3d obj = new Object3d(scene);
         obj.position.set(10, 20, 13);
         obj.scale.set(0.5);
 
@@ -166,7 +168,7 @@ class Object3dTest {
 
     @Test
     public void testLocalPosition() {
-        Object3d obj = new Object3d();
+        Object3d obj = new Object3d(scene);
         obj.position.set(10, 20, 13);
         obj.scale.set(0.5);
 
@@ -175,11 +177,11 @@ class Object3dTest {
 
     @Test
     public void testLocalPositionChild() {
-        Object3d obj = new Object3d();
+        Object3d obj = new Object3d(scene);
         obj.position.set(10, 20, 13);
         obj.scale.set(0.5);
 
-        Object3d child = new Object3d();
+        Object3d child = new Object3d(scene);
         child.position.set(4, 4, 4);
 
         obj.addChild(child);

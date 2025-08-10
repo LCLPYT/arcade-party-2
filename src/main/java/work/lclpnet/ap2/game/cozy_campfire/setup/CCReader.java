@@ -50,7 +50,7 @@ public class CCReader {
         Map<Team, CCBase> bases = new HashMap<>();
 
         for (Team team : teams) {
-            String id = team.getKey().id();
+            String id = team.key().id();
             Identifier mapId = map.getDescriptor().getIdentifier();
 
             if (!basesJson.has(id)) {

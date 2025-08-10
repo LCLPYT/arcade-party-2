@@ -8,12 +8,13 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3d;
-import work.lclpnet.ap2.impl.scene.BlockDisplayObject;
-import work.lclpnet.ap2.impl.scene.ItemDisplayObject;
 import work.lclpnet.ap2.impl.scene.Object3d;
+import work.lclpnet.ap2.impl.scene.Scene;
 import work.lclpnet.ap2.impl.scene.animation.Animatable;
 import work.lclpnet.ap2.impl.scene.animation.Animation;
 import work.lclpnet.ap2.impl.scene.animation.AnimationContext;
+import work.lclpnet.ap2.impl.scene.object.BlockDisplayObject;
+import work.lclpnet.ap2.impl.scene.object.ItemDisplayObject;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,7 +33,8 @@ public class GbBomb extends Object3d implements Animatable {
     private int requiredYieldCount = 0;
     private int yielded = 0;
 
-    public GbBomb(Runnable onYielded) {
+    public GbBomb(Scene scene, Runnable onYielded) {
+        super(scene);
         this.onYielded = onYielded;
 
         double v = 0.0625;
@@ -57,11 +59,11 @@ public class GbBomb extends Object3d implements Animatable {
         frame(-v, 0, -v, v, 1, v);
 
         // glass
-        BlockDisplayObject glass = new BlockDisplayObject(Blocks.TINTED_GLASS.getDefaultState());
+        BlockDisplayObject glass = new BlockDisplayObject(scene, Blocks.TINTED_GLASS.getDefaultState());
         glass.position.set(-0.5, -0.5, -0.5);  // glass center to origin
         addChild(glass);
 
-        lever = new ItemDisplayObject(lampInactiveStack);
+        lever = new ItemDisplayObject(scene, lampInactiveStack);
         lever.position.set(0.875 - 0.5, 1.1875 - 0.5, 0.1875 - 0.5);
         lever.rotation.setAngleAxis(0.5235987755982988, 0, 1, 0);
         lever.scale.set(0.5);
@@ -70,11 +72,11 @@ public class GbBomb extends Object3d implements Animatable {
     }
 
     private void frame(double px, double py, double pz, double sx, double sy, double sz) {
-        BlockDisplayObject frame = new BlockDisplayObject(Blocks.RED_CONCRETE.getDefaultState());
+        BlockDisplayObject frame = new BlockDisplayObject(scene, Blocks.RED_CONCRETE.getDefaultState());
         frame.position.set(-0.5, -0.5, -0.5);  // cube center to origin
         frame.scale.set(sx, sy, sz);
 
-        Object3d pivot = new Object3d();
+        Object3d pivot = new Object3d(scene);
         pivot.position.set(px, py, pz);
         pivot.addChild(frame);
 
@@ -92,7 +94,7 @@ public class GbBomb extends Object3d implements Animatable {
             double orbitSpeed = Math.PI * (random.nextDouble() * 0.4 + 0.55);
             double rotationSpeed = Math.PI * (random.nextDouble() * 0.3 + 1.1);
 
-            GbGlowStone glowStone = new GbGlowStone(initialAngle, i * incline, orbitSpeed, rotationSpeed);
+            GbGlowStone glowStone = new GbGlowStone(scene, initialAngle, i * incline, orbitSpeed, rotationSpeed);
             glowStone.scale.set(0.2);
 
             glowStones.add(glowStone);

@@ -37,6 +37,8 @@ import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
 
+import static work.lclpnet.ap2.impl.util.ItemHelper.unbreakable;
+
 public class MiningBattleInstance extends FFAGameInstance implements MapBootstrapFunction {
 
     private static final int DURATION_SECONDS = 60;
@@ -133,10 +135,8 @@ public class MiningBattleInstance extends FFAGameInstance implements MapBootstra
         var efficiency = ItemHelper.getEnchantment(Enchantments.EFFICIENCY, getWorld().getRegistryManager());
 
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
-            ItemStack pickaxe = new ItemStack(Items.DIAMOND_PICKAXE);
+            ItemStack pickaxe = unbreakable(new ItemStack(Items.DIAMOND_PICKAXE));
             pickaxe.addEnchantment(efficiency, 3);
-
-            ItemHelper.setUnbreakable(pickaxe);
 
             pickaxe.set(DataComponentTypes.CUSTOM_NAME, TextUtil.getVanillaName(pickaxe).styled(style -> style
                     .withFormatting(Formatting.GOLD)

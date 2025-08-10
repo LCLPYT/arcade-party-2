@@ -3,11 +3,9 @@ package work.lclpnet.ap2.impl.game.item;
 import net.minecraft.block.Blocks;
 import net.minecraft.util.math.BlockPos;
 import org.jetbrains.annotations.Nullable;
-import org.json.JSONObject;
 import work.lclpnet.ap2.api.util.world.BlockPredicate;
 import work.lclpnet.ap2.impl.ds.StructureMask;
 import work.lclpnet.ap2.impl.ds.WeightedList;
-import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.debug.DebugController;
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape;
@@ -34,8 +32,8 @@ public class SpecialItemPositions {
         this.debugController = debugController;
     }
 
-    public void init(JSONObject areaJson, BlockPos mapSpawn) {
-        shape = MapUtil.readShape(areaJson, mapSpawn);
+    public void setShape(BlockShape shape) {
+        this.shape = shape;
         mask = StructureMask.createEmpty(shape.bounds());
     }
 

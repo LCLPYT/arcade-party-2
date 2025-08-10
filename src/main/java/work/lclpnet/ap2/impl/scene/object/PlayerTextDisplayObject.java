@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.impl.scene;
+package work.lclpnet.ap2.impl.scene.object;
 
 import net.minecraft.entity.Entity;
 import net.minecraft.server.PlayerManager;
@@ -7,6 +7,7 @@ import net.minecraft.text.Text;
 import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.ds.Resolvable;
+import work.lclpnet.ap2.impl.scene.Scene;
 import work.lclpnet.ap2.impl.util.world.WorldPosSync;
 import work.lclpnet.ap2.impl.util.world.entity.DynamicEntity;
 
@@ -20,8 +21,8 @@ public class PlayerTextDisplayObject extends TextDisplayObject implements Dynami
     private final Resolvable<ServerPlayerEntity> playerRef;
     private final WorldPosSync posSync = new WorldPosSync();
 
-    public PlayerTextDisplayObject(Text text, ServerPlayerEntity player) {
-        super(text);
+    public PlayerTextDisplayObject(Scene scene, Text text, ServerPlayerEntity player) {
+        super(scene, text);
 
         UUID uuid = player.getUuid();
         PlayerManager manager = player.getWorld().getServer().getPlayerManager();

@@ -7,10 +7,7 @@ import lombok.Getter;
 import net.minecraft.server.network.ServerPlayerEntity;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 public class KitManager implements KitReadView {
 
@@ -78,5 +75,9 @@ public class KitManager implements KitReadView {
         if (!kitById.containsValue(kit)) {
             throw new IllegalArgumentException("Invalid kit");
         }
+    }
+
+    public synchronized Optional<Kit> byId(String id) {
+        return Optional.ofNullable(kitById.get(id));
     }
 }

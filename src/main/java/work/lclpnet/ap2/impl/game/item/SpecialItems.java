@@ -23,17 +23,21 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.minecraft.world.border.WorldBorder;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.util.world.BlockPredicate;
 import work.lclpnet.ap2.base.util.IconMaker;
 import work.lclpnet.ap2.impl.ds.WeightedList;
+import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.debug.DebugController;
 import work.lclpnet.ap2.impl.util.world.WalkableBlockPredicate;
+import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.kibu.hook.player.PlayerInventoryHooks;
+import work.lclpnet.kibu.hook.player.PlayerSwingHandHook;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.RunningTask;
 import work.lclpnet.kibu.scheduler.api.SchedulerAction;
@@ -71,6 +75,7 @@ public class SpecialItems implements SpecialItemContext {
     private @Setter @Getter int spawnMinTicks = Ticks.seconds(4);
     private @Setter @Getter int spawnMaxTicks = Ticks.seconds(7);
     private @Setter @Getter int maxItems = 16;
+    private @Setter @Getter boolean markGlowing = false;
 
     public SpecialItems(MiniGameHandle gameHandle, GameMap map, ServerWorld world, Random random, SpecialItemPositions positions, SpecialItemRegistry registry) {
         this.gameHandle = gameHandle;
@@ -88,22 +93,29 @@ public class SpecialItems implements SpecialItemContext {
 
     public void init() {
         JSONObject cfg = map.requireProperty("items");
-
         JSONObject overrides = cfg.optJSONObject("overrides");
 
         weightedItems = registry.weightedItems(overrides != null ? overrides : new JSONObject());
-
-        JSONObject areaJson = cfg.getJSONObject("spawn-area");
-        BlockPos mapSpawn = BlockPos.ofFloored(MapUtils.getSpawnPosition(map));
 
         spawnMinTicks = max(1, cfg.optNumber("spawn-min-ticks", spawnMinTicks).intValue());
         spawnMaxTicks = max(1, cfg.optNumber("spawn-max-ticks", spawnMaxTicks).intValue());
         despawnTicks = cfg.optNumber("despawn-ticks", despawnTicks).intValue();
         maxItems = cfg.optNumber("max-items", maxItems).intValue();
 
-        positions.init(areaJson, mapSpawn);
+        BlockShape shape = getSpawnArea(map);
+
+        positions.setShape(shape);
 
         scene.init(gameHandle.getScheduler(), gameHandle.getHookRegistrar());
+    }
+
+    public static @NotNull BlockShape getSpawnArea(GameMap map) {
+        BlockPos mapSpawn = BlockPos.ofFloored(MapUtils.getSpawnPosition(map));
+
+        JSONObject cfg = map.requireProperty("items");
+        JSONObject areaJson = cfg.getJSONObject("spawn-area");
+
+        return MapUtil.readShape(areaJson, mapSpawn);
     }
 
     public void setup() {
@@ -112,16 +124,19 @@ public class SpecialItems implements SpecialItemContext {
         scene.onPickup().register(this::pickup);
 
         HookRegistrar hooks = gameHandle.getHookRegistrar();
+        TaskScheduler scheduler = gameHandle.getGameScheduler();
 
         hooks.registerHook(PlayerInventoryHooks.DROP_ITEM, this::onDropItem);
         hooks.registerHook(PlayerInteractionHooks.USE_ITEM, this::interact);
         hooks.registerHook(PlayerInventoryHooks.SWAP_HANDS, this::swapHands);
+        hooks.registerHook(PlayerSwingHandHook.HOOK, this::onSwingHand);
 
         for (SpecialItem item : registry.entries()) {
             item.registerHooks(hooks, this);
+            item.scheduleTasks(scheduler, this);
         }
 
-        gameHandle.getGameScheduler().interval(this::tickPickup, 1);
+        scheduler.interval(this::tickPickup, 1);
     }
 
     private boolean swapHands(ServerPlayerEntity player, int i) {
@@ -201,6 +216,15 @@ public class SpecialItems implements SpecialItemContext {
         return item.onUse(player, stack, hand, this);
     }
 
+    private void onSwingHand(ServerPlayerEntity player, Hand hand) {
+        ItemStack stack = player.getStackInHand(hand);
+        SpecialItem item = get(stack).orElse(null);
+
+        if (item == null || player.getItemCooldownManager().isCoolingDown(stack)) return;
+
+        item.onSwing(player, stack, hand, this);
+    }
+
     private void tickPickup() {
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
             scene.tickPickUp(player);
@@ -208,11 +232,14 @@ public class SpecialItems implements SpecialItemContext {
     }
 
     private boolean pickup(ServerPlayerEntity player, SpecialItemObject object) {
+        SpecialItem item = object.item();
+
         // check if the player already has a special item
-        if (hasAnySpecialItem(player)) return false;
+        if (hasAnySpecialItem(player) && item.shouldTransferToInventory(player)) return false;
+
+        if (!item.canBePickedUp(player)) return false;
 
         ItemStack stack = object.itemDisplay().getStack().copy();
-        SpecialItem item = object.item();
 
         stack.set(DataComponentTypes.CUSTOM_NAME, itemName(item).translateFor(player));
 
@@ -223,7 +250,9 @@ public class SpecialItems implements SpecialItemContext {
             player.sendMessage(Text.literal("↓ ").formatted(Formatting.AQUA).append(desc), true);
         });
 
-        player.getInventory().setStack(8, stack);
+        if (item.shouldTransferToInventory(player)) {
+            player.getInventory().setStack(8, stack);
+        }
 
         item.onPickedUp(player, stack, this);
 
@@ -232,7 +261,7 @@ public class SpecialItems implements SpecialItemContext {
 
     private TranslatedText itemName(SpecialItem item) {
         Identifier gameId = gameHandle.getGameInfo().getId();
-        String key = join(".", "item", gameId.getNamespace(), gameId.getPath(), item.id());
+        String key = join(".", "game", gameId.getNamespace(), gameId.getPath(), "item", item.id());
 
         return gameHandle.getTranslations().translateText(key)
                 .styled(style -> style.withItalic(false).withFormatting(Rarity.UNCOMMON.getFormatting()));
@@ -240,7 +269,7 @@ public class SpecialItems implements SpecialItemContext {
 
     private Optional<Text> itemDescription(ServerPlayerEntity player, SpecialItem item) {
         Identifier gameId = gameHandle.getGameInfo().getId();
-        String key = join(".", "item", gameId.getNamespace(), gameId.getPath(), item.id(), "desc");
+        String key = join(".", "game", gameId.getNamespace(), gameId.getPath(), "item", item.id(), "desc");
 
         if (!gameHandle.getTranslations().getTranslator().hasTranslation("en_us", key)) {
             return Optional.empty();
@@ -341,6 +370,10 @@ public class SpecialItems implements SpecialItemContext {
         ItemStack stack = configureStack(item, item.createItemStack(world.getRegistryManager()));
 
         SpecialItemObject obj = scene.spawnItem(pos, item, stack, gameHandle.getTranslations(), itemName(item));
+
+        if (markGlowing) {
+            obj.setGlowing(true);
+        }
 
         scheduleDespawn(obj);
     }
