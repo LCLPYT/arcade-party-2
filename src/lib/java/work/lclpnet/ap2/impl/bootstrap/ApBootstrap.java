@@ -24,9 +24,12 @@ import work.lclpnet.ap2.impl.util.music.SongManagerImpl;
 import work.lclpnet.config.json.JsonConfigFactory;
 import work.lclpnet.lobby.game.api.GameEnvironment;
 import work.lclpnet.lobby.game.api.WorldFacade;
-import work.lclpnet.lobby.game.map.*;
-import work.lclpnet.lobby.game.map.cache.CacheMapRepository;
-import work.lclpnet.lobby.game.map.cache.MapCache;
+import work.lclpnet.lobby.game.asset.*;
+import work.lclpnet.lobby.game.asset.cache.AssetCache;
+import work.lclpnet.lobby.game.map.AssetMapRepository;
+import work.lclpnet.lobby.game.map.MapDescriptor;
+import work.lclpnet.lobby.game.map.MapManager;
+import work.lclpnet.lobby.game.map.RepositoryMapLookup;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -45,10 +48,11 @@ import static java.util.concurrent.CompletableFuture.runAsync;
 
 public class ApBootstrap {
 
+    private static final int CACHE_TTL_SECONDS = 3600;
+
     private final Path cacheDirectory;
     private final JsonConfigFactory<Ap2Config> configFactory;
     private final Logger logger;
-    private volatile MapCache mapCache = null;
 
     public ApBootstrap(Path cacheDirectory, JsonConfigFactory<Ap2Config> configFactory, Logger logger) {
         this.cacheDirectory = cacheDirectory;
@@ -66,27 +70,30 @@ public class ApBootstrap {
         return configManager.init(executor).thenApply(nil -> configManager);
     }
 
-    public MapManager createMapManager(Ap2Config config) {
+    public MapManagerHandle createMapManager(Ap2Config config) {
+        AssetCache cache = createAssetCache(CommonAssets.MAPS);
+
         var repositories = config.mapsSource.stream()
-                .map(this::createMapRepo)
-                .toArray(MapRepository[]::new);
+                .map(uri -> createAssetRepo(uri, cache))
+                .toArray(AssetRepository[]::new);
 
         if (repositories.length == 0) {
             throw new IllegalStateException("Map sources not configured");
         }
 
-        MapRepository mapRepository = new MultiMapRepository(repositories);
+        var assetRepo = new MultiAssetRepository(repositories, logger);
+        var mapRepo = new AssetMapRepository(assetRepo, logger);
 
-        var lookup = new RepositoryMapLookup(mapRepository);
+        var lookup = new RepositoryMapLookup(mapRepo);
 
-        return new MapManager(lookup);
+        return new MapManagerHandle(new MapManager(lookup, logger), cache);
     }
 
-    private MapRepository createMapRepo(URI uri) {
-        UriMapRepository repo = new UriMapRepository(uri, logger);
+    private AssetRepository createAssetRepo(URI uri, @Nullable AssetCache cache) {
+        var repo = new UriAssetRepository(uri, logger);
 
         // if uri is remote, use cache repository
-        if (uri.getHost() == null) {
+        if (cache == null || uri.getHost() == null) {
             return repo;
         }
 
@@ -102,33 +109,16 @@ public class ApBootstrap {
             return repo;
         }
 
-        MapCache mapCache = getMapCache();
-
-        if (mapCache == null) {
-            return repo;
-        }
-
-        return new CacheMapRepository(repo, mapCache);
+        return new CacheAssetRepository(cache, repo, CACHE_TTL_SECONDS, logger);
     }
 
     @Nullable
-    private MapCache getMapCache() {
-        if (mapCache != null) {
-            return mapCache;
-        }
-
-        synchronized (this) {
-            if (mapCache != null) {
-                return mapCache;
-            }
-
-            try {
-                mapCache = MapCache.createUserCache(logger);
-                return mapCache;
-            } catch (IOException e) {
-                logger.error("Failed to create map cache", e);
-                return null;
-            }
+    private AssetCache createAssetCache(String type) {
+        try {
+            return AssetCache.createUserCache(type, logger);
+        } catch (IOException e) {
+            logger.error("Failed to create map cache", e);
+            return null;
         }
     }
 
@@ -166,7 +156,19 @@ public class ApBootstrap {
                                               VanillaTranslations vanillaTranslations) {
 
         MinecraftServer server = environment.getServer();
-        MapManager mapManager = createMapManager(config);
+
+        @SuppressWarnings("resource")
+        MapManagerHandle handle = createMapManager(config);
+
+        environment.whenDone(() -> {
+            try {
+                handle.close();
+            } catch (Exception e) {
+                logger.error("Failed to close MapManagerHandle", e);
+            }
+        });
+
+        MapManager mapManager = handle.mapManager();
 
         WorldFacade worldFacade = environment.getWorldFacade(() -> mapManager);
 
@@ -254,6 +256,13 @@ public class ApBootstrap {
 
     public InputStream openConfigurationFile() {
         return Objects.requireNonNull(getClass().getResourceAsStream("/configuration.json"), "File not found: configuration.json");
+    }
+
+    public record MapManagerHandle(MapManager mapManager, AssetCache cache) implements AutoCloseable {
+        @Override
+        public void close() throws Exception {
+            cache.close();
+        }
     }
 
     public record Result(WorldFacade worldFacade, MapFacade mapFacade, SongManager songManager,

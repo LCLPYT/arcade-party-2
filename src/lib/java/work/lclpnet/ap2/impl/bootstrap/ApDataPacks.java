@@ -14,6 +14,7 @@ import work.lclpnet.lobby.game.map.MapManager;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
@@ -37,23 +38,36 @@ public class ApDataPacks implements GameDataPacks {
         ApBootstrap bootstrap = new ApBootstrap(cacheDirectory, configFactory, logger);
         Identifier dataPacksPath = Objects.requireNonNull(Identifier.of("datapacks", ""));
 
+        List<AutoCloseable> resources = new ArrayList<>();
+
         return bootstrap.loadConfig(executor)
                 .thenApplyAsync(configManager -> {
                     Ap2Config config = configManager.getConfig();
-                    MapManager mapManager = bootstrap.createMapManager(config);
+                    var handle = bootstrap.createMapManager(config);
 
-                    bootstrap.loadMaps(mapManager, new MapDescriptor(dataPacksPath), executor).join();
+                    resources.add(handle);
 
-                    return mapManager;
+                    bootstrap.loadMaps(handle.mapManager(), new MapDescriptor(dataPacksPath), executor).join();
+
+                    return handle.mapManager();
                 }, executor)
                 .thenAcceptAsync(mapManager -> {
                     var maps = mapManager.getCollection().mapsWithPrefix(dataPacksPath);
 
                     fetchDataPacks(mapManager, maps, dataPackSink);
                 })
-                .exceptionally(err -> {
-                    logger.error("Failed to locate data packs");
-                    return null;
+                .whenComplete((nil, err) -> {
+                    if (err != null) {
+                        logger.error("Failed to locate data packs");
+                    }
+
+                    for (AutoCloseable resource : resources) {
+                        try {
+                            resource.close();
+                        } catch (Exception e) {
+                            logger.error("Failed to close resource {}", resource, e);
+                        }
+                    }
                 });
     }
 
