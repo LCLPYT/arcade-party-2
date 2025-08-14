@@ -30,7 +30,7 @@ public class Object3d {
     private int deepCount = 1;
 
     public Object3d(Scene scene) {
-        this.scene = scene;
+        this.scene = Objects.requireNonNull(scene);
     }
 
     public void updateMatrix() {

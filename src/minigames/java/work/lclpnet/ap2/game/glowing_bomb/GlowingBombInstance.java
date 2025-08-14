@@ -120,6 +120,9 @@ public class GlowingBombInstance extends EliminationGameInstance implements MapB
 
         gameHandle.getGameScheduler().interval(this::tickCredits, 1);
 
+        scene = new Scene(new ServerWorldMountContext(getWorld()));
+        scene.animate(1, gameHandle.getGameScheduler());
+
         spawnBomb();
     }
 
@@ -156,11 +159,9 @@ public class GlowingBombInstance extends EliminationGameInstance implements MapB
 
         ServerWorld world = getWorld();
 
-        scene = new Scene(new ServerWorldMountContext(world));
         scene.add(bomb);
 
         TaskScheduler scheduler = gameHandle.getGameScheduler();
-        scene.animate(1, scheduler);
 
         int fuseTicks = MIN_BOMB_FUSE_TICKS + random.nextInt(MAX_BOMB_FUSE_TICKS - MIN_BOMB_FUSE_TICKS + 1);
         scheduler.timeout(this::bombTimerExpired, fuseTicks);
