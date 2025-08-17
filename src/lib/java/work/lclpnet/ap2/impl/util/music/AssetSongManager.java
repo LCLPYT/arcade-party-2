@@ -19,7 +19,6 @@ import work.lclpnet.notica.api.StereoMode;
 import work.lclpnet.notica.util.SongUtils;
 
 import java.io.IOException;
-import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.*;
@@ -115,58 +114,32 @@ public class AssetSongManager implements SongManager {
             for (var group : groupedSongs(songConfigs).entrySet()) {
                 var song = getSong(songPath, group.getKey(), group.getValue(), info);
 
-                if (song != null) {
-                    songs.add(song);
-                }
+                songs.add(song);
             }
         }
 
         return songs;
     }
 
-    @Nullable
     private SimpleWeightedSong getSong(AssetPath songPath, String group, List<SongConfig> variants, SongInfo info) {
-        // TODO migrate to URI
-        Path path = getSongPath(songPath, info);
+        String file = info.file();
+        AssetPath finalSongPath = file != null ? songPath.resolveSibling(file) : songPath;
 
-        if (path == null) return null;
+        Path fileName = finalSongPath.toPath().getFileName();
 
-        Identifier songId = getSongId(group, path.getFileName());
-        Set<LoadableSong> loadableSongs = toLoadable(info, variants, path, songId);
+        Identifier songId = getSongId(group, fileName);
+        Set<LoadableSong> loadableSongs = toLoadable(info, variants, finalSongPath, songId);
 
         return new SimpleWeightedSong(loadableSongs, songId);
     }
 
-    private @NotNull Set<LoadableSong> toLoadable(SongInfo info, List<SongConfig> configs, Path path, Identifier songId) {
+    private @NotNull Set<LoadableSong> toLoadable(SongInfo info, List<SongConfig> configs, AssetPath path, Identifier songId) {
         return configs.stream()
-                .map(config -> config.toLoadable(path, songId, config.optOverride()
+                .map(config -> config.toLoadable(path, assetRepository, songId, config.optOverride()
                         .map(override -> override.override(info.meta()))
                         .map(info::withMeta)
                         .orElse(info)))
                 .collect(Collectors.toSet());
-    }
-
-    @Deprecated
-    private @Nullable Path getSongPath(AssetPath songPath, SongInfo info) {
-        String file = info.file();
-        AssetPath finalSongPath = file != null ? songPath.resolveSibling(file) : songPath;
-        var it = assetRepository.getUris(finalSongPath).iterator();
-
-        if (!it.hasNext()) {
-            logger.error("Failed to obtain URI for song {}, ignoring it...", finalSongPath);
-            return null;
-        }
-
-        URI uri = it.next().resource();
-
-        // TODO return uri
-
-        try {
-            return Path.of(uri);
-        } catch (Exception e) {
-            logger.error("Failed to obtain local path for song {} with URI {}, ignoring it...", finalSongPath, uri);
-            return null;
-        }
     }
 
     @VisibleForTesting
@@ -224,7 +197,7 @@ public class AssetSongManager implements SongManager {
 
         var songPath = dir.resolve(song + ".nbs");
 
-        return Optional.ofNullable(getSong(songPath, "", List.copyOf(configs), info));
+        return Optional.of(getSong(songPath, "", List.copyOf(configs), info));
     }
 
     private @NotNull Identifier getSongId(String group, Path path) {
@@ -320,8 +293,8 @@ public class AssetSongManager implements SongManager {
         public static final SongConfig DEFAULT = new SongConfig(new PlaybackInfo(1.0f, 0, StereoMode.SPATIAL),
                 1.0f, null, null);
 
-        public PathLoadableSong toLoadable(Path path, Identifier songId, SongInfo info) {
-            return new PathLoadableSong(path, songId, playbackInfo, weight, info);
+        public AssetPathLoadableSong toLoadable(AssetPath path, AssetRepository assetRepo, Identifier songId, SongInfo info) {
+            return new AssetPathLoadableSong(path, assetRepo, songId, playbackInfo, weight, info);
         }
 
         @Deprecated  // to be replaced with meta definition
