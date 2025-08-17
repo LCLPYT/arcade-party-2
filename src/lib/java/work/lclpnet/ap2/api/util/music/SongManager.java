@@ -9,5 +9,5 @@ public interface SongManager {
 
     Set<WeightedSong> getSongs(Identifier tag);
 
-    Optional<WeightedSong> getSong(Identifier tag, Identifier id);
+    Optional<WeightedSong> getSong(Identifier tag, String song);
 }

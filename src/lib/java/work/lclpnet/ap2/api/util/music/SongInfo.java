@@ -5,16 +5,16 @@ import org.json.JSONObject;
 
 import java.util.Optional;
 
-public record SongInfo(String from, String license, @Nullable SongInfo.Meta meta) {
+public record SongInfo(String from, String license, @Nullable String file, @Nullable SongInfo.Meta meta) {
 
-    public static final SongInfo EMPTY = new SongInfo("", "", null);
+    public static final SongInfo EMPTY = new SongInfo("", "", null, null);
 
     public Optional<Meta> optMeta() {
         return Optional.ofNullable(meta);
     }
 
     public SongInfo withMeta(Meta meta) {
-        return new SongInfo(from, license, meta);
+        return new SongInfo(from, license, file, meta);
     }
 
     public record Meta(@Nullable String title, @Nullable String author, @Nullable String originalBy, @Nullable String from) {

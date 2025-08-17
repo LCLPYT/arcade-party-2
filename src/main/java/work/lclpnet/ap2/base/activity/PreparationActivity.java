@@ -93,7 +93,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
     public static final Identifier ARCADE_PARTY_GAME_TAG = ApConstants.identifier("game");
     private static final int GAME_ANNOUNCE_DELAY = Ticks.seconds(3);
     private static final int PREPARATION_TIME = Ticks.seconds(20);
-    private static final Identifier GAME_SONG_ID = ApConstants.identifier("ap2_game");
+    private static final String GAME_SONG_ID = "ap2_game";
     private final OptionChooser<MiniGame> gameChooser = new OptionChooser<>();
     private final OptionChooser<GameMap> mapChooser = new OptionChooser<>();
     private final ApBaseArgs args;

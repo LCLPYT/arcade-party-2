@@ -1,20 +1,19 @@
 package work.lclpnet.ap2.api.config;
 
 import com.google.common.collect.ImmutableList;
-import net.minecraft.util.Identifier;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import work.lclpnet.ap2.ApConstants;
 import work.lclpnet.config.json.JsonConfig;
 
 import java.net.URI;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
 
 public class Ap2Config implements JsonConfig {
 
-    public List<URI> mapsSource = List.of(URI.create("https://maps.lclpnet.work/release/"));
-    public Map<Identifier, List<URI>> songSources = new HashMap<>();
+    public List<URI> mapsSource = List.of(URI.create("https://assets.lclpnet.work/release/maps/"));
+    public List<URI> songsSource = List.of(URI.create("https://assets.lclpnet.work/release/songs/"));
 
     public Ap2Config() {}
 
@@ -23,35 +22,9 @@ public class Ap2Config implements JsonConfig {
             this.mapsSource = readUriList(json, "maps_source");
         }
 
-        if (json.has("song_sources")) {
-            JSONObject songSources = json.getJSONObject("song_sources");
-
-            for (String key : songSources.keySet()) {
-                Identifier tag = Identifier.tryParse(key);
-
-                if (tag == null) continue;
-
-                List<URI> uris = readUriList(songSources, key);
-
-                this.songSources.put(tag, uris);
-            }
+        if (json.has("songs_source")) {
+            this.songsSource = readUriList(json, "songs_source");
         }
-    }
-
-    public void putDefaultSongSourceUrl(Identifier id, List<String> sourceUris) {
-        if (songSources.containsKey(id) && !songSources.get(id).isEmpty()) return;
-
-        List<URI> uris = new ArrayList<>(sourceUris.size());
-
-        for (String sourceUri : sourceUris) {
-            try {
-                uris.add(URI.create(sourceUri));
-            } catch (IllegalArgumentException err) {
-                ApConstants.logger.error("Failed to set default song source", err);
-            }
-        }
-
-        songSources.put(id, uris);
     }
 
     @Override
@@ -59,14 +32,7 @@ public class Ap2Config implements JsonConfig {
         JSONObject json = new JSONObject();
 
         writeUriList(json, "maps_source", mapsSource);
-
-        JSONObject songSources = new JSONObject();
-
-        for (Identifier tag : this.songSources.keySet()) {
-            writeUriList(songSources, tag.toString(), this.songSources.get(tag));
-        }
-
-        json.put("song_sources", songSources);
+        writeUriList(json, "songs_source", songsSource);
 
         return json;
     }

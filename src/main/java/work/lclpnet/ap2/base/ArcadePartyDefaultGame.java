@@ -8,8 +8,6 @@ import org.json.JSONObject;
 import work.lclpnet.ap2.ApConstants;
 import work.lclpnet.ap2.api.config.Ap2Config;
 import work.lclpnet.ap2.api.game.MiniGame;
-import work.lclpnet.ap2.base.activity.PreparationActivity;
-import work.lclpnet.ap2.game.musical_minecart.MMSongs;
 import work.lclpnet.ap2.impl.base.FabricMiniGameManager;
 import work.lclpnet.ap2.impl.bootstrap.ApDataPacks;
 import work.lclpnet.ap2.impl.util.IconMaker;
@@ -26,7 +24,6 @@ import work.lclpnet.lobby.game.api.start.GameStatusManager;
 import work.lclpnet.lobby.game.impl.MinecraftGameConfig;
 
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Set;
 
 import static net.minecraft.util.Formatting.AQUA;
@@ -53,7 +50,7 @@ public class ArcadePartyDefaultGame implements Game {
 
     @Override
     public GameFactory createFactory() {
-        return new ArcadePartyFactory(cacheDirectory, CONFIG_FACTORY, ApConstants.logger);
+        return new ArcadePartyFactory(CONFIG_FACTORY, ApConstants.logger);
     }
 
     @Override
@@ -96,24 +93,12 @@ public class ArcadePartyDefaultGame implements Game {
     public static final JsonConfigFactory<Ap2Config> CONFIG_FACTORY = new JsonConfigFactory<>() {
         @Override
         public Ap2Config createDefaultConfig() {
-            return setDefaults(new Ap2Config());
+            return new Ap2Config();
         }
 
         @Override
         public Ap2Config createConfig(JSONObject json) {
-            return setDefaults(new Ap2Config(json));
-        }
-
-        private Ap2Config setDefaults(Ap2Config config) {
-            config.putDefaultSongSourceUrl(MMSongs.MUSICAL_MINECART_TAG, List.of(
-                    "https://lclpnet.work/dl/ap2-musical-minecart-pack1",
-                    "https://lclpnet.work/dl/ap2-musical-minecart-pack2",
-                    "https://lclpnet.work/dl/ap2-musical-minecart-pack3"
-            ));
-
-            config.putDefaultSongSourceUrl(PreparationActivity.ARCADE_PARTY_GAME_TAG, List.of("https://lclpnet.work/dl/ap2-game-sounds"));
-
-            return config;
+            return new Ap2Config(json);
         }
     };
 }

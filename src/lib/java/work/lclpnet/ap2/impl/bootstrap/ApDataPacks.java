@@ -7,6 +7,8 @@ import work.lclpnet.ap2.api.config.Ap2Config;
 import work.lclpnet.config.json.JsonConfigFactory;
 import work.lclpnet.lobby.game.api.data.DataPackSink;
 import work.lclpnet.lobby.game.api.data.GameDataPacks;
+import work.lclpnet.lobby.game.asset.CommonAssets;
+import work.lclpnet.lobby.game.asset.cache.AssetCache;
 import work.lclpnet.lobby.game.map.GameMap;
 import work.lclpnet.lobby.game.map.MapDescriptor;
 import work.lclpnet.lobby.game.map.MapManager;
@@ -35,7 +37,7 @@ public class ApDataPacks implements GameDataPacks {
 
     @Override
     public CompletableFuture<Void> downloadPacks(DataPackSink dataPackSink, Executor executor) {
-        ApBootstrap bootstrap = new ApBootstrap(cacheDirectory, configFactory, logger);
+        ApBootstrap bootstrap = new ApBootstrap(configFactory, logger);
         Identifier dataPacksPath = Objects.requireNonNull(Identifier.of("datapacks", ""));
 
         List<AutoCloseable> resources = new ArrayList<>();
@@ -43,13 +45,15 @@ public class ApDataPacks implements GameDataPacks {
         return bootstrap.loadConfig(executor)
                 .thenApplyAsync(configManager -> {
                     Ap2Config config = configManager.getConfig();
-                    var handle = bootstrap.createMapManager(config);
 
-                    resources.add(handle);
+                    AssetCache cache = bootstrap.createAssetCache(CommonAssets.MAPS);
+                    var mapManager = bootstrap.createMapManager(config, cache);
 
-                    bootstrap.loadMaps(handle.mapManager(), new MapDescriptor(dataPacksPath), executor).join();
+                    resources.add(cache);
 
-                    return handle.mapManager();
+                    bootstrap.loadMaps(mapManager, new MapDescriptor(dataPacksPath), executor).join();
+
+                    return mapManager;
                 }, executor)
                 .thenAcceptAsync(mapManager -> {
                     var maps = mapManager.getCollection().mapsWithPrefix(dataPacksPath);

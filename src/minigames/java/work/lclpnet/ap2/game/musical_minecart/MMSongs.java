@@ -51,10 +51,10 @@ public class MMSongs {
         this.logger = logger;
     }
 
-    public void init() {
-        Set<WeightedSong> songs = songManager.getSongs(MUSICAL_MINECART_TAG);
-
-        this.songs.addAll(songs);
+    public CompletableFuture<Void> init() {
+        return CompletableFuture.runAsync(() -> songManager.getSongs(MUSICAL_MINECART_TAG).stream()
+                .sorted(Comparator.comparing(WeightedSong::getSongId))
+                .forEachOrdered(songs::add));
     }
 
     public CompletableFuture<ConfiguredSong> getNextSong() {
@@ -174,7 +174,7 @@ public class MMSongs {
     public Optional<WeightedSong> getRandomSongById(Identifier id) {
         var matchingSongs = streamSongsById(id).collect(Collectors.toSet());
 
-        return matchingSongs.isEmpty() ? Optional.empty() : Optional.of(new SimpleWeightedSong(matchingSongs));
+        return matchingSongs.isEmpty() ? Optional.empty() : Optional.of(new SimpleWeightedSong(matchingSongs, id));
     }
 
     public @NotNull Stream<LoadableSong> streamSongsById(Identifier id) {
@@ -188,7 +188,7 @@ public class MMSongs {
         return streamSongsById(id)
                 .filter(song -> song.getPlaybackInfo().startTick() == startTick)
                 .findAny()
-                .map(song -> new SimpleWeightedSong(Set.of(song)));
+                .map(song -> new SimpleWeightedSong(Set.of(song), id));
     }
 
     public void pushSong(WeightedSong song) {

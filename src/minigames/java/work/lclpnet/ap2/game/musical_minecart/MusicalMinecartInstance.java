@@ -21,6 +21,7 @@ import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
+import work.lclpnet.ap2.api.map.MapBootstrap;
 import work.lclpnet.ap2.api.util.music.ConfiguredSong;
 import work.lclpnet.ap2.api.util.music.PlaybackInfo;
 import work.lclpnet.ap2.api.util.music.SongManager;
@@ -61,7 +62,7 @@ import static java.lang.Math.*;
 import static net.minecraft.util.Formatting.GREEN;
 import static work.lclpnet.ap2.impl.util.TranslationUtil.transformText;
 
-public class MusicalMinecartInstance extends EliminationGameInstance {
+public class MusicalMinecartInstance extends EliminationGameInstance implements MapBootstrap {
 
     private static final boolean
             DEBUG_INFINITE_SONGS = false,
@@ -103,6 +104,11 @@ public class MusicalMinecartInstance extends EliminationGameInstance {
     }
 
     @Override
+    public CompletableFuture<Void> createWorldBootstrap(ServerWorld world, GameMap map) {
+        return songManager.init();
+    }
+
+    @Override
     protected void prepare() {
         GameMap map = getMap();
 
@@ -118,7 +124,6 @@ public class MusicalMinecartInstance extends EliminationGameInstance {
             this.eliminationDelayTicks = max(0, n.intValue());
         }
 
-        songManager.init();
 
         useRemainingPlayersDisplay();
 

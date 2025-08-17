@@ -1,0 +1,305 @@
+package work.lclpnet.ap2.impl.util.music;
+
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.SetMultimap;
+import net.minecraft.util.Identifier;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.VisibleForTesting;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.slf4j.Logger;
+import work.lclpnet.ap2.ApConstants;
+import work.lclpnet.ap2.api.util.music.*;
+import work.lclpnet.lobby.game.asset.AssetPath;
+import work.lclpnet.lobby.game.asset.AssetRepository;
+import work.lclpnet.notica.api.StereoMode;
+import work.lclpnet.notica.util.SongUtils;
+
+import java.io.IOException;
+import java.net.URI;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+public class AssetSongManager implements SongManager {
+
+    private final AssetRepository assetRepository;
+    private final Logger logger;
+
+    public AssetSongManager(AssetRepository assetRepository, Logger logger) {
+        this.assetRepository = assetRepository;
+        this.logger = logger;
+    }
+
+    @NotNull
+    private static Identifier getSongId(Path path) {
+        Identifier noticaSongId = SongUtils.createSongId(path);
+        
+        return ApConstants.identifier(noticaSongId.getPath());
+    }
+
+    @Override
+    public Set<WeightedSong> getSongs(Identifier tag) {
+        var songDefs = readSongDefinitions(tag);
+
+        try {
+            return readSongs(songDefs);
+        } catch (IOException e) {
+            logger.error("Failed to fetch songs for '{}'", tag, e);
+            return Set.of();
+        }
+    }
+
+    @VisibleForTesting
+    public SetMultimap<AssetPath, SongConfig> readSongDefinitions(Identifier tag) {
+        var dir = AssetPath.of(tag.getNamespace(), tag.getPath());
+        var assetPath = dir.resolve("songs.json");
+
+        try (var in = assetRepository.getStream(assetPath)) {
+            String content = new String(in.resource().readAllBytes(), StandardCharsets.UTF_8);
+            JSONObject json = new JSONObject(content);
+
+            // json specifies: song -> [configs / variants]
+            SetMultimap<AssetPath, SongConfig> songDefs = HashMultimap.create();
+            readSongConfigs(json, dir, songDefs);
+
+            return songDefs;
+        } catch (IOException | JSONException e) {
+            logger.error("Failed to fetch song definitions from '{}'", assetPath, e);
+            return ImmutableSetMultimap.of();
+        }
+    }
+
+    private Set<WeightedSong> readSongs(SetMultimap<AssetPath, SongConfig> songDefs) throws IOException {
+        // read metadata of directories of specified songs
+        Map<AssetPath, SongDirectoryMeta> directoryMeta = songDefs.keySet().stream()
+                .filter(Objects::nonNull)
+                .map(AssetPath::parent)
+                .distinct()
+                .collect(Collectors.toMap(Function.identity(), this::readMeta));
+
+        Set<WeightedSong> songs = new HashSet<>();
+
+        for (AssetPath songPath : songDefs.keySet()) {
+            if (songPath == null || songPath.isEmpty()) continue;
+
+            // last segment is the song name (path/to/song.nbs -> song.nbs)
+            String[] segments = songPath.segments();
+            String songName = segments[segments.length - 1];
+
+            SongDirectoryMeta meta = directoryMeta.getOrDefault(songPath.parent(), SongDirectoryMeta.EMPTY);
+            SongInfo info = meta.info().getOrDefault(songName, SongInfo.EMPTY);
+
+            // each song file can have several configs, representing different versions (or sections) of the song
+            Set<SongConfig> songConfigs = songDefs.get(songPath);
+
+            if (songConfigs.isEmpty()) continue;
+
+            for (var group : groupedSongs(songConfigs).entrySet()) {
+                var song = getSong(songPath, group.getKey(), group.getValue(), info);
+
+                if (song != null) {
+                    songs.add(song);
+                }
+            }
+        }
+
+        return songs;
+    }
+
+    @Nullable
+    private SimpleWeightedSong getSong(AssetPath songPath, String group, List<SongConfig> variants, SongInfo info) {
+        Path path = getSongPath(songPath, info);
+
+        if (path == null) return null;
+
+        Identifier songId = getSongId(group, path.getFileName());
+        Set<LoadableSong> loadableSongs = toLoadable(info, variants, path, songId);
+
+        return new SimpleWeightedSong(loadableSongs, songId);
+    }
+
+    private @NotNull Set<LoadableSong> toLoadable(SongInfo info, List<SongConfig> configs, Path path, Identifier songId) {
+        return configs.stream()
+                .map(config -> config.toLoadable(path, songId, config.optOverride()
+                        .map(override -> override.override(info.meta()))
+                        .map(info::withMeta)
+                        .orElse(info)))
+                .collect(Collectors.toSet());
+    }
+
+    private @Nullable Path getSongPath(AssetPath songPath, SongInfo info) {
+        String file = info.file();
+        AssetPath finalSongPath = file != null ? songPath.resolveSibling(file) : songPath;
+        var it = assetRepository.getUris(finalSongPath).iterator();
+
+        if (!it.hasNext()) {
+            logger.error("Failed to obtain URI for song {}, ignoring it...", finalSongPath);
+            return null;
+        }
+
+        URI uri = it.next().resource();
+
+        try {
+            return Path.of(uri);
+        } catch (Exception e) {
+            logger.error("Failed to obtain local path for song {} with URI {}, ignoring it...", finalSongPath, uri);
+            return null;
+        }
+    }
+
+    @VisibleForTesting
+    public SongDirectoryMeta readMeta(AssetPath path) {
+        var assetPath = path.resolve("meta.json");
+
+        try (var in = assetRepository.getStream(assetPath)) {
+            String content = new String(in.resource().readAllBytes(), StandardCharsets.UTF_8);
+            JSONObject json = new JSONObject(content);
+
+            Map<String, SongInfo> info = new HashMap<>();
+            readSongInfo(json, info);
+
+            return new SongDirectoryMeta(info);
+        } catch (IOException | JSONException e) {
+            logger.debug("Failed to song directory metadata at {} (it's not necessarily required)", assetPath, e);
+            return SongDirectoryMeta.EMPTY;
+        }
+    }
+
+    @Override
+    public Optional<WeightedSong> getSong(Identifier tag, String song) {
+        var dir = AssetPath.of(tag.getNamespace(), tag.getPath());
+        SongDirectoryMeta meta = readMeta(dir);
+        SongInfo info = meta.info().getOrDefault(song, SongInfo.EMPTY);
+
+        // first, try to read song configs from songs.json
+        var defs = readSongDefinitions(tag);
+
+        var configs = defs.get(dir.resolve(song));
+
+        // if no config was defined, use the default
+        if (configs.isEmpty()) {
+            configs = Set.of(SongConfig.DEFAULT);
+        }
+
+        var songPath = dir.resolve(song + ".nbs");
+
+        return Optional.ofNullable(getSong(songPath, "", List.copyOf(configs), info));
+    }
+
+    private @NotNull Identifier getSongId(String group, Path path) {
+        if (group.isBlank()) {
+            return getSongId(path);
+        }
+
+        return ApConstants.identifier(group);
+    }
+
+    @Deprecated  // to be replaced by meta definition
+    private Map<String, List<SongConfig>> groupedSongs(Set<SongConfig> configs) {
+        return configs.stream()
+                .collect(Collectors.groupingBy(cfg -> cfg.optMergeTag().orElse("")));
+    }
+
+    @VisibleForTesting
+    public void readSongInfo(JSONObject json, Map<String, SongInfo> songInfo) {
+        JSONObject infoObj = json.getJSONObject("info");
+
+        for (String key : infoObj.keySet()) {
+            Object val = infoObj.get(key);
+
+            if (!(val instanceof JSONObject info)) continue;
+
+            String from = info.optString("from", "").trim();
+            String license = info.optString("license", "").trim();
+            String file = info.optString("file", key);
+
+            var meta = SongInfo.Meta.fromJson(info.optJSONObject("override", null));
+
+            songInfo.put(key, new SongInfo(from, license, file, meta));
+        }
+    }
+
+    @VisibleForTesting
+    public void readSongConfigs(JSONObject json, AssetPath scope, SetMultimap<AssetPath, SongConfig> configs) {
+        JSONArray songs = json.getJSONArray("songs");
+
+        for (Object entry : songs) {
+            if (!(entry instanceof JSONObject song)) continue;
+
+            if (song.has("scope") && song.has("songs")) {
+                AssetPath childScope = scope.resolve(song.getString("scope"));
+
+                readSongConfigs(song, childScope, configs);
+                continue;
+            }
+
+            String file = song.getString("file");
+            var cfg = parseSongConfig(song);
+
+            configs.put(scope.resolve(file), cfg);
+        }
+    }
+
+    private @NotNull SongConfig parseSongConfig(JSONObject song) {
+        float volume = song.optFloat("volume", 1.0f);
+        int startTick = song.optInt("start", 0);
+        float weight = song.optFloat("weight", 1.0f);
+        String mergeTag = song.optString("merge_tag", null);
+        StereoMode stereoMode = parseStereoMode(song.optString("stereo_mode", StereoMode.SPATIAL.name()));
+        var override = SongInfo.Meta.fromJson(song.optJSONObject("override"));
+
+        var playbackInfo = new PlaybackInfo(volume, startTick, stereoMode);
+
+        return new SongConfig(playbackInfo, weight, mergeTag, override);
+    }
+
+    private StereoMode parseStereoMode(String str) {
+        try {
+            return StereoMode.valueOf(str.toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException e) {
+            logger.error("Invalid stereo mode: {}", str, e);
+            return StereoMode.SPATIAL;
+        }
+    }
+
+    /**
+     * A song config represents a song (section) along with information about how to play the song.
+     * @param playbackInfo Information for the song playback.
+     * @param weight The weight of the section when sampling from all sections of one song file (when choosing a random section of the same song file) (default=1.0).
+     * @param mergeTag An optional tag to treat different song sections as entirely different songs. I.e. groups of the same tag are treated as standalone song file.
+     * @param override Optional meta override, e.g. to specify a different song title. Useful in combination with merge tags.
+     */
+    public record SongConfig(
+            PlaybackInfo playbackInfo,
+            float weight,
+            @Deprecated @Nullable String mergeTag,  // to be replaced with meta definition
+            @Nullable SongInfo.Meta override
+    ) {
+
+        public static final SongConfig DEFAULT = new SongConfig(new PlaybackInfo(1.0f, 0, StereoMode.SPATIAL),
+                1.0f, null, null);
+
+        public PathLoadableSong toLoadable(Path path, Identifier songId, SongInfo info) {
+            return new PathLoadableSong(path, songId, playbackInfo, weight, info);
+        }
+
+        @Deprecated  // to be replaced with meta definition
+        public Optional<String> optMergeTag() {
+            return Optional.ofNullable(mergeTag);
+        }
+
+        public Optional<SongInfo.Meta> optOverride() {
+            return Optional.ofNullable(override);
+        }
+    }
+
+    public record SongDirectoryMeta(Map<String, SongInfo> info) {
+        public static final SongDirectoryMeta EMPTY = new SongDirectoryMeta(Map.of());
+    }
+}
