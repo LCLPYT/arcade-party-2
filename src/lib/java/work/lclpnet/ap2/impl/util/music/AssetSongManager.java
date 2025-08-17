@@ -23,6 +23,7 @@ import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -30,6 +31,7 @@ public class AssetSongManager implements SongManager {
 
     private final AssetRepository assetRepository;
     private final Logger logger;
+    private final Map<Identifier, Map<String, WeightedSong>> cache = new HashMap<>();
 
     public AssetSongManager(AssetRepository assetRepository, Logger logger) {
         this.assetRepository = assetRepository;
@@ -44,7 +46,17 @@ public class AssetSongManager implements SongManager {
     }
 
     @Override
-    public Set<WeightedSong> getSongs(Identifier tag) {
+    public CompletableFuture<Set<WeightedSong>> getSongs(Identifier tag) {
+        Map<String, WeightedSong> cachedTag = cache.getOrDefault(tag, null);
+
+        if (cachedTag != null) {
+            return CompletableFuture.completedFuture(Set.copyOf(cachedTag.values()));
+        }
+
+        return CompletableFuture.supplyAsync(() -> getSongsSync(tag));
+    }
+
+    private Set<WeightedSong> getSongsSync(Identifier tag) {
         var songDefs = readSongDefinitions(tag);
 
         try {
@@ -114,6 +126,7 @@ public class AssetSongManager implements SongManager {
 
     @Nullable
     private SimpleWeightedSong getSong(AssetPath songPath, String group, List<SongConfig> variants, SongInfo info) {
+        // TODO migrate to URI
         Path path = getSongPath(songPath, info);
 
         if (path == null) return null;
@@ -133,6 +146,7 @@ public class AssetSongManager implements SongManager {
                 .collect(Collectors.toSet());
     }
 
+    @Deprecated
     private @Nullable Path getSongPath(AssetPath songPath, SongInfo info) {
         String file = info.file();
         AssetPath finalSongPath = file != null ? songPath.resolveSibling(file) : songPath;
@@ -144,6 +158,8 @@ public class AssetSongManager implements SongManager {
         }
 
         URI uri = it.next().resource();
+
+        // TODO return uri
 
         try {
             return Path.of(uri);
@@ -172,7 +188,26 @@ public class AssetSongManager implements SongManager {
     }
 
     @Override
-    public Optional<WeightedSong> getSong(Identifier tag, String song) {
+    public void cache(WeightedSong song, Identifier tag, String songName) {
+        cache.computeIfAbsent(tag, _tag -> new HashMap<>()).put(songName, song);
+    }
+
+    @Override
+    public CompletableFuture<Optional<WeightedSong>> getSong(Identifier tag, String songName) {
+        var cachedTag = cache.getOrDefault(tag, null);
+
+        if (cachedTag != null) {
+            WeightedSong song = cachedTag.getOrDefault(songName, null);
+
+            if (song != null) {
+                return CompletableFuture.completedFuture(Optional.of(song));
+            }
+        }
+
+        return CompletableFuture.supplyAsync(() -> getSongSync(tag, songName));
+    }
+
+    public @NotNull Optional<WeightedSong> getSongSync(Identifier tag, String song) {
         var dir = AssetPath.of(tag.getNamespace(), tag.getPath());
         SongDirectoryMeta meta = readMeta(dir);
         SongInfo info = meta.info().getOrDefault(song, SongInfo.EMPTY);

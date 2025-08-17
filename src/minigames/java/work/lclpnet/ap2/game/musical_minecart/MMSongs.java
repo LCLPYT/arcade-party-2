@@ -52,7 +52,7 @@ public class MMSongs {
     }
 
     public CompletableFuture<Void> init() {
-        return CompletableFuture.runAsync(() -> songManager.getSongs(MUSICAL_MINECART_TAG).stream()
+        return songManager.getSongs(MUSICAL_MINECART_TAG).thenAccept(s -> s.stream()
                 .sorted(Comparator.comparing(WeightedSong::getSongId))
                 .forEachOrdered(songs::add));
     }
