@@ -111,29 +111,25 @@ public class AssetSongManager implements SongManager {
 
             if (songConfigs.isEmpty()) continue;
 
-            for (var group : groupedSongs(songConfigs).entrySet()) {
-                var song = getSong(songPath, group.getKey(), group.getValue(), info);
+            var song = getSong(songPath, songConfigs, info);
 
-                songs.add(song);
-            }
+            songs.add(song);
         }
 
         return songs;
     }
 
-    private SimpleWeightedSong getSong(AssetPath songPath, String group, List<SongConfig> variants, SongInfo info) {
+    private SimpleWeightedSong getSong(AssetPath songPath, Collection<SongConfig> variants, SongInfo info) {
         String file = info.file();
         AssetPath finalSongPath = file != null ? songPath.resolveSibling(file) : songPath;
 
-        Path fileName = finalSongPath.toPath().getFileName();
-
-        Identifier songId = getSongId(group, fileName);
+        Identifier songId = getSongId(finalSongPath.toPath().getFileName());
         Set<LoadableSong> loadableSongs = toLoadable(info, variants, finalSongPath, songId);
 
         return new SimpleWeightedSong(loadableSongs, songId);
     }
 
-    private @NotNull Set<LoadableSong> toLoadable(SongInfo info, List<SongConfig> configs, AssetPath path, Identifier songId) {
+    private @NotNull Set<LoadableSong> toLoadable(SongInfo info, Collection<SongConfig> configs, AssetPath path, Identifier songId) {
         return configs.stream()
                 .map(config -> config.toLoadable(path, assetRepository, songId, config.optOverride()
                         .map(override -> override.override(info.meta()))
@@ -197,21 +193,7 @@ public class AssetSongManager implements SongManager {
 
         var songPath = dir.resolve(song + ".nbs");
 
-        return Optional.of(getSong(songPath, "", List.copyOf(configs), info));
-    }
-
-    private @NotNull Identifier getSongId(String group, Path path) {
-        if (group.isBlank()) {
-            return getSongId(path);
-        }
-
-        return ApConstants.identifier(group);
-    }
-
-    @Deprecated  // to be replaced by meta definition
-    private Map<String, List<SongConfig>> groupedSongs(Set<SongConfig> configs) {
-        return configs.stream()
-                .collect(Collectors.groupingBy(cfg -> cfg.optMergeTag().orElse("")));
+        return Optional.of(getSong(songPath, configs, info));
     }
 
     @VisibleForTesting
@@ -258,13 +240,12 @@ public class AssetSongManager implements SongManager {
         float volume = song.optFloat("volume", 1.0f);
         int startTick = song.optInt("start", 0);
         float weight = song.optFloat("weight", 1.0f);
-        String mergeTag = song.optString("merge_tag", null);
         StereoMode stereoMode = parseStereoMode(song.optString("stereo_mode", StereoMode.SPATIAL.name()));
         var override = SongInfo.Meta.fromJson(song.optJSONObject("override"));
 
         var playbackInfo = new PlaybackInfo(volume, startTick, stereoMode);
 
-        return new SongConfig(playbackInfo, weight, mergeTag, override);
+        return new SongConfig(playbackInfo, weight, override);
     }
 
     private StereoMode parseStereoMode(String str) {
@@ -280,26 +261,19 @@ public class AssetSongManager implements SongManager {
      * A song config represents a song (section) along with information about how to play the song.
      * @param playbackInfo Information for the song playback.
      * @param weight The weight of the section when sampling from all sections of one song file (when choosing a random section of the same song file) (default=1.0).
-     * @param mergeTag An optional tag to treat different song sections as entirely different songs. I.e. groups of the same tag are treated as standalone song file.
      * @param override Optional meta override, e.g. to specify a different song title. Useful in combination with merge tags.
      */
     public record SongConfig(
             PlaybackInfo playbackInfo,
             float weight,
-            @Deprecated @Nullable String mergeTag,  // to be replaced with meta definition
             @Nullable SongInfo.Meta override
     ) {
 
         public static final SongConfig DEFAULT = new SongConfig(new PlaybackInfo(1.0f, 0, StereoMode.SPATIAL),
-                1.0f, null, null);
+                1.0f, null);
 
         public AssetPathLoadableSong toLoadable(AssetPath path, AssetRepository assetRepo, Identifier songId, SongInfo info) {
             return new AssetPathLoadableSong(path, assetRepo, songId, playbackInfo, weight, info);
-        }
-
-        @Deprecated  // to be replaced with meta definition
-        public Optional<String> optMergeTag() {
-            return Optional.ofNullable(mergeTag);
         }
 
         public Optional<SongInfo.Meta> optOverride() {
