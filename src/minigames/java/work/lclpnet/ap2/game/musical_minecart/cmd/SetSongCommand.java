@@ -52,7 +52,7 @@ public class SetSongCommand implements KibuCommand {
         Identifier id = IdentifierArgumentType.getIdentifier(ctx, "song");
 
         songs.streamSongsById(id)
-                .mapToInt(song -> song.getPlaybackInfo().startTick())
+                .mapToInt(song -> song.getInfo().meta().startTick().orElse(0))
                 .forEach(builder::suggest);
 
         return builder.buildFuture();

@@ -2,7 +2,10 @@ package work.lclpnet.ap2.impl.util.music;
 
 import net.minecraft.util.Identifier;
 import org.slf4j.Logger;
-import work.lclpnet.ap2.api.util.music.*;
+import work.lclpnet.ap2.api.util.music.ConfiguredSong;
+import work.lclpnet.ap2.api.util.music.LoadableSong;
+import work.lclpnet.ap2.api.util.music.SongCache;
+import work.lclpnet.ap2.api.util.music.SongInfo;
 import work.lclpnet.lobby.game.asset.AssetPath;
 import work.lclpnet.lobby.game.asset.AssetRepository;
 import work.lclpnet.notica.api.CheckedSong;
@@ -16,16 +19,13 @@ public class AssetPathLoadableSong implements LoadableSong {
     private final AssetPath path;
     private final AssetRepository assetRepo;
     private final Identifier id;
-    private final PlaybackInfo playbackInfo;
     private final float weight;
     private final SongInfo info;
 
-    public AssetPathLoadableSong(AssetPath path, AssetRepository assetRepo, Identifier id, PlaybackInfo playbackInfo,
-                                 float weight, SongInfo info) {
+    public AssetPathLoadableSong(AssetPath path, AssetRepository assetRepo, Identifier id, float weight, SongInfo info) {
         this.path = path;
         this.assetRepo = assetRepo;
         this.id = id;
-        this.playbackInfo = playbackInfo;
         this.weight = weight;
         this.info = info;
     }
@@ -35,7 +35,7 @@ public class AssetPathLoadableSong implements LoadableSong {
         CheckedSong cached = cache.getCachedSong(path);
 
         if (cached != null) {
-            return CompletableFuture.completedFuture(new ConfiguredSong(cached, playbackInfo, info));
+            return CompletableFuture.completedFuture(new ConfiguredSong(cached, info));
         }
 
         return CompletableFuture.supplyAsync(() -> {
@@ -50,18 +50,13 @@ public class AssetPathLoadableSong implements LoadableSong {
 
             cache.cacheSong(path, song);
 
-            return new ConfiguredSong(song, playbackInfo, info);
+            return new ConfiguredSong(song, info);
         });
     }
 
     @Override
     public Identifier getId() {
         return id;
-    }
-
-    @Override
-    public PlaybackInfo getPlaybackInfo() {
-        return playbackInfo;
     }
 
     @Override

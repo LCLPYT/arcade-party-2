@@ -125,7 +125,7 @@ public class MMSongs {
         boolean hasAuthor = !author.isBlank();
         boolean hasOrigAuthor = !originalAuthor.isBlank();
 
-        String from = optMeta.map(SongInfo.Meta::from).orElseGet(info::from);
+        String from = optMeta.map(SongInfo.Meta::from).orElse("");
 
         if (!from.isBlank()) {
             if (hasAuthor && hasOrigAuthor) {
@@ -186,7 +186,7 @@ public class MMSongs {
 
     public Optional<WeightedSong> getSongByIdAndTime(Identifier id, int startTick) {
         return streamSongsById(id)
-                .filter(song -> song.getPlaybackInfo().startTick() == startTick)
+                .filter(song -> song.getInfo().meta().startTick().orElse(0) == startTick)
                 .findAny()
                 .map(song -> new SimpleWeightedSong(Set.of(song), id));
     }

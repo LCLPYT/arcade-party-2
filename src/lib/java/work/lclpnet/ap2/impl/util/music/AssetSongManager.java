@@ -12,10 +12,12 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.ApConstants;
-import work.lclpnet.ap2.api.util.music.*;
+import work.lclpnet.ap2.api.util.music.LoadableSong;
+import work.lclpnet.ap2.api.util.music.SongInfo;
+import work.lclpnet.ap2.api.util.music.SongManager;
+import work.lclpnet.ap2.api.util.music.WeightedSong;
 import work.lclpnet.lobby.game.asset.AssetPath;
 import work.lclpnet.lobby.game.asset.AssetRepository;
-import work.lclpnet.notica.api.StereoMode;
 import work.lclpnet.notica.util.SongUtils;
 
 import java.io.IOException;
@@ -205,13 +207,12 @@ public class AssetSongManager implements SongManager {
 
             if (!(val instanceof JSONObject info)) continue;
 
-            String from = info.optString("from", "").trim();
             String license = info.optString("license", "").trim();
             String file = info.optString("file", key);
 
-            var meta = SongInfo.Meta.fromJson(info.optJSONObject("override", null));
+            var meta = SongInfo.Meta.fromJson(info);
 
-            songInfo.put(key, new SongInfo(from, license, file, meta));
+            songInfo.put(key, new SongInfo(license, file, meta));
         }
     }
 
@@ -237,43 +238,27 @@ public class AssetSongManager implements SongManager {
     }
 
     private @NotNull SongConfig parseSongConfig(JSONObject song) {
-        float volume = song.optFloat("volume", 1.0f);
-        int startTick = song.optInt("start", 0);
         float weight = song.optFloat("weight", 1.0f);
-        StereoMode stereoMode = parseStereoMode(song.optString("stereo_mode", StereoMode.SPATIAL.name()));
-        var override = SongInfo.Meta.fromJson(song.optJSONObject("override"));
+        var override = SongInfo.Meta.fromJson(song);
 
-        var playbackInfo = new PlaybackInfo(volume, startTick, stereoMode);
-
-        return new SongConfig(playbackInfo, weight, override);
+        return new SongConfig(weight, override);
     }
 
-    private StereoMode parseStereoMode(String str) {
-        try {
-            return StereoMode.valueOf(str.toUpperCase(Locale.ROOT));
-        } catch (IllegalArgumentException e) {
-            logger.error("Invalid stereo mode: {}", str, e);
-            return StereoMode.SPATIAL;
-        }
-    }
 
     /**
      * A song config represents a song (section) along with information about how to play the song.
-     * @param playbackInfo Information for the song playback.
      * @param weight The weight of the section when sampling from all sections of one song file (when choosing a random section of the same song file) (default=1.0).
      * @param override Optional meta override, e.g. to specify a different song title. Useful in combination with merge tags.
      */
     public record SongConfig(
-            PlaybackInfo playbackInfo,
             float weight,
             @Nullable SongInfo.Meta override
     ) {
 
-        public static final SongConfig DEFAULT = new SongConfig(new PlaybackInfo(1.0f, 0, StereoMode.SPATIAL),
-                1.0f, null);
+        public static final SongConfig DEFAULT = new SongConfig(1.0f, null);
 
         public AssetPathLoadableSong toLoadable(AssetPath path, AssetRepository assetRepo, Identifier songId, SongInfo info) {
-            return new AssetPathLoadableSong(path, assetRepo, songId, playbackInfo, weight, info);
+            return new AssetPathLoadableSong(path, assetRepo, songId, weight, info);
         }
 
         public Optional<SongInfo.Meta> optOverride() {

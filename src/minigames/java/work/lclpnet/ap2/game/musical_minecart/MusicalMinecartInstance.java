@@ -23,7 +23,7 @@ import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.map.MapBootstrap;
 import work.lclpnet.ap2.api.util.music.ConfiguredSong;
-import work.lclpnet.ap2.api.util.music.PlaybackInfo;
+import work.lclpnet.ap2.api.util.music.SongInfo;
 import work.lclpnet.ap2.api.util.music.SongManager;
 import work.lclpnet.ap2.core.type.ApVariantHolder;
 import work.lclpnet.ap2.game.musical_minecart.cmd.SetSongCommand;
@@ -46,10 +46,7 @@ import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 import work.lclpnet.lobby.game.map.GameMap;
 import work.lclpnet.lobby.game.util.BossBarTimer;
 import work.lclpnet.notica.Notica;
-import work.lclpnet.notica.api.CheckedSong;
-import work.lclpnet.notica.api.PlaybackOptions;
-import work.lclpnet.notica.api.PlaybackVariant;
-import work.lclpnet.notica.api.SongHandle;
+import work.lclpnet.notica.api.*;
 
 import java.util.HashSet;
 import java.util.List;
@@ -203,11 +200,11 @@ public class MusicalMinecartInstance extends EliminationGameInstance implements 
         var players = PlayerLookup.all(server);
 
         CheckedSong song = config.song();
-        PlaybackInfo playback = config.playbackInfo();
-        var playbackOptions = new PlaybackOptions(playback.volume() * MUSIC_VOLUME, PlaybackVariant.STREAMED, playback.stereoMode());
+        SongInfo.Meta meta = config.info().meta();
+        var playbackOptions = new PlaybackOptions(meta.volume().orElse(1f) * MUSIC_VOLUME, PlaybackVariant.STREAMED, meta.stereoMode().orElse(StereoMode.SPATIAL));
 
         Notica notica = Notica.getInstance(server);
-        songHandle = notica.playSong(song, playbackOptions, playback.startTick(), players);
+        songHandle = notica.playSong(song, playbackOptions, meta.startTick().orElse(0), players);
 
         int delay;
 
