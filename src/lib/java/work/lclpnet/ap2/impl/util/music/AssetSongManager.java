@@ -125,7 +125,8 @@ public class AssetSongManager implements SongManager {
         String file = info.file();
         AssetPath finalSongPath = file != null ? songPath.resolveSibling(file) : songPath;
 
-        Identifier songId = getSongId(finalSongPath.toPath().getFileName());
+        String[] segments = songPath.segments();
+        Identifier songId = getSongId(Path.of(segments[segments.length - 1]));
         Set<LoadableSong> loadableSongs = toLoadable(info, variants, finalSongPath, songId);
 
         return new SimpleWeightedSong(loadableSongs, songId);
@@ -208,7 +209,7 @@ public class AssetSongManager implements SongManager {
             if (!(val instanceof JSONObject info)) continue;
 
             String license = info.optString("license", "").trim();
-            String file = info.optString("file", key);
+            String file = info.optString("file", null);
 
             var meta = SongInfo.Meta.fromJson(info);
 
@@ -230,7 +231,7 @@ public class AssetSongManager implements SongManager {
                 continue;
             }
 
-            String file = song.getString("file");
+            String file = song.getString("song");
             var cfg = parseSongConfig(song);
 
             configs.put(scope.resolve(file), cfg);
