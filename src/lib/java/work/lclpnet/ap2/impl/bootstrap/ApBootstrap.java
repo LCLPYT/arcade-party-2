@@ -1,7 +1,6 @@
 package work.lclpnet.ap2.impl.bootstrap;
 
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -20,7 +19,7 @@ import work.lclpnet.ap2.impl.i18n.VanillaTranslations;
 import work.lclpnet.ap2.impl.map.BalancedMapRandomizer;
 import work.lclpnet.ap2.impl.map.MapFacadeImpl;
 import work.lclpnet.ap2.impl.map.SqliteAsyncMapFrequencyManager;
-import work.lclpnet.ap2.impl.util.music.SongManagerImpl;
+import work.lclpnet.ap2.impl.util.music.AssetSongManager;
 import work.lclpnet.config.json.JsonConfigFactory;
 import work.lclpnet.lobby.game.api.GameEnvironment;
 import work.lclpnet.lobby.game.api.WorldFacade;
@@ -49,13 +48,12 @@ import static java.util.concurrent.CompletableFuture.runAsync;
 public class ApBootstrap {
 
     private static final int CACHE_TTL_SECONDS = 3600;
+    public static final String ASSET_TYPE_SONGS = "songs";
 
-    private final Path cacheDirectory;
     private final JsonConfigFactory<Ap2Config> configFactory;
     private final Logger logger;
 
-    public ApBootstrap(Path cacheDirectory, JsonConfigFactory<Ap2Config> configFactory, Logger logger) {
-        this.cacheDirectory = cacheDirectory;
+    public ApBootstrap(JsonConfigFactory<Ap2Config> configFactory, Logger logger) {
         this.configFactory = configFactory;
         this.logger = logger;
     }
@@ -70,23 +68,25 @@ public class ApBootstrap {
         return configManager.init(executor).thenApply(nil -> configManager);
     }
 
-    public MapManagerHandle createMapManager(Ap2Config config) {
-        AssetCache cache = createAssetCache(CommonAssets.MAPS);
-
-        var repositories = config.mapsSource.stream()
-                .map(uri -> createAssetRepo(uri, cache))
-                .toArray(AssetRepository[]::new);
-
-        if (repositories.length == 0) {
-            throw new IllegalStateException("Map sources not configured");
-        }
-
-        var assetRepo = new MultiAssetRepository(repositories, logger);
+    public MapManager createMapManager(Ap2Config config, @Nullable AssetCache cache) {
+        var assetRepo = createMultiAssetRepo(config.mapsSource, cache, CommonAssets.MAPS);
         var mapRepo = new AssetMapRepository(assetRepo, logger);
 
         var lookup = new RepositoryMapLookup(mapRepo);
 
-        return new MapManagerHandle(new MapManager(lookup, logger), cache);
+        return new MapManager(lookup, logger);
+    }
+
+    private @NotNull MultiAssetRepository createMultiAssetRepo(List<URI> uris, @Nullable AssetCache cache, String type) {
+        var repositories = uris.stream()
+                .map(uri -> createAssetRepo(uri, cache))
+                .toArray(AssetRepository[]::new);
+
+        if (repositories.length == 0) {
+            throw new IllegalStateException("Asset source '%s' is empty".formatted(type));
+        }
+
+        return new MultiAssetRepository(repositories, logger);
     }
 
     private AssetRepository createAssetRepo(URI uri, @Nullable AssetCache cache) {
@@ -113,7 +113,7 @@ public class ApBootstrap {
     }
 
     @Nullable
-    private AssetCache createAssetCache(String type) {
+    public AssetCache createAssetCache(String type) {
         try {
             return AssetCache.createUserCache(type, logger);
         } catch (IOException e) {
@@ -157,40 +157,42 @@ public class ApBootstrap {
 
         MinecraftServer server = environment.getServer();
 
-        @SuppressWarnings("resource")
-        MapManagerHandle handle = createMapManager(config);
+        AssetCache mapsCache = createAssetCache(CommonAssets.MAPS);
+        AssetCache songsCache = createAssetCache(ASSET_TYPE_SONGS);
 
         environment.whenDone(() -> {
             try {
-                handle.close();
+                if (mapsCache != null) mapsCache.close();
             } catch (Exception e) {
-                logger.error("Failed to close MapManagerHandle", e);
+                logger.error("Failed to close maps cache", e);
+            }
+
+            try {
+                if (songsCache != null) songsCache.close();
+            } catch (Exception e) {
+                logger.error("Failed to close songs cache", e);
             }
         });
 
-        MapManager mapManager = handle.mapManager();
-
+        MapManager mapManager = createMapManager(config, mapsCache);
         WorldFacade worldFacade = environment.getWorldFacade(() -> mapManager);
 
         var frequencyManager = createSqliteAsyncMapFrequencyManager(ApConstants.ID, environment);
         var randomizer = createBalancedMapRandomizer(mapManager, frequencyManager);
         MapFacade mapFacade = createMapFacade(server, mapManager, worldFacade, randomizer);
 
-        Path songsDir = cacheDirectory.resolve("songs");
-
-        SongManagerImpl songManager = new SongManagerImpl(songsDir, logger);
+        AssetRepository songRepo = createMultiAssetRepo(config.songsSource, songsCache, ASSET_TYPE_SONGS);
+        AssetSongManager songManager = new AssetSongManager(songRepo, logger);
         MutableDataManager dataManager = new MutableDataManager();
 
         var mapTask = loadAp2Maps(mapManager);
         var sqliteTask = loadSqlite(frequencyManager, server);
-        var songTask = loadSongs(songManager, config);
         var containerTask = loadContainer(dataManager);
         var vanillaTranslationsTask = runAsync(vanillaTranslations::init);
 
         return CompletableFuture.supplyAsync(() -> {
             mapTask.join();
             sqliteTask.join();
-            songTask.join();
             containerTask.join();
             vanillaTranslationsTask.join();
 
@@ -222,29 +224,6 @@ public class ApBootstrap {
                     logger.error("Failed to establish sqlite connection. Fallback to StubMapFrequencyManager", throwable);
                     return null;
                 });
-    }
-
-    @NotNull
-    public CompletableFuture<Void> loadSongs(SongManagerImpl songManager, Ap2Config config) {
-        return runAsync(() -> {
-            for (var entry : config.songSources.entrySet()) {
-                Identifier tag = entry.getKey();
-                List<URI> uris = entry.getValue();
-
-                for (int i = 0; i < uris.size(); i++) {
-                    URI uri = uris.get(i);
-
-                    try {
-                        songManager.loadBundleSync(tag, uri, i);
-                    } catch (IOException e) {
-                        logger.error("Failed to load song bundle with tag {} from {}", tag, uri, e);
-                    }
-                }
-            }
-        }).exceptionally(err -> {
-            logger.error("Failed to load songs", err);
-            return null;
-        });
     }
 
     @NotNull

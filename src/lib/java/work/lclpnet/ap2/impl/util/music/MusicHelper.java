@@ -3,14 +3,12 @@ package work.lclpnet.ap2.impl.util.music;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import org.slf4j.Logger;
-import work.lclpnet.ap2.api.util.music.LoadableSong;
-import work.lclpnet.ap2.api.util.music.SongCache;
-import work.lclpnet.ap2.api.util.music.SongWrapper;
-import work.lclpnet.ap2.api.util.music.WeightedSong;
+import work.lclpnet.ap2.api.util.music.*;
 import work.lclpnet.notica.Notica;
 import work.lclpnet.notica.api.PlaybackOptions;
 import work.lclpnet.notica.api.PlaybackVariant;
 import work.lclpnet.notica.api.SongHandle;
+import work.lclpnet.notica.api.StereoMode;
 
 import java.util.Collection;
 import java.util.Random;
@@ -36,10 +34,11 @@ public class MusicHelper {
                 .thenAccept(config -> {
                     Notica notica = Notica.getInstance(server);
 
-                    var playback = config.playbackInfo();
-                    var playbackOptions = new PlaybackOptions(playback.volume() * volume, PlaybackVariant.STREAMED, playback.stereoMode());
+                    SongInfo.Meta meta = config.info().meta();
 
-                    SongHandle handle = notica.playSong(config.song(), playbackOptions, playback.startTick(), players);
+                    var playbackOptions = new PlaybackOptions(meta.volume().orElse(1f) * volume, PlaybackVariant.STREAMED, meta.stereoMode().orElse(StereoMode.SPATIAL));
+
+                    SongHandle handle = notica.playSong(config.song(), playbackOptions, meta.startTick().orElse(0), players);
 
                     wrapper.setHandle(handle);
                 })

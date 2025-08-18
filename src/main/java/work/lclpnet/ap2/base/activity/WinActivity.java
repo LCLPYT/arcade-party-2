@@ -78,7 +78,14 @@ public class WinActivity extends ComponentActivity {
 
         scheduler = component(BuiltinComponents.SCHEDULER).scheduler();
 
-        PreparationActivity.setupMap(args.miniGameArgs(), this::onReady);
+        PreparationActivity.setupMap(args.miniGameArgs())
+                .whenComplete((res, err) -> {
+                    if (err != null) {
+                        args.miniGameArgs().logger().error("Failed to setup win activity map", err);
+                    } else {
+                        onReady(res.world(), res.map());
+                    }
+                });
     }
 
     private void onReady(ServerWorld world, GameMap map) {

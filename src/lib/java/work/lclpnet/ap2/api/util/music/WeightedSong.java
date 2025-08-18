@@ -1,5 +1,6 @@
 package work.lclpnet.ap2.api.util.music;
 
+import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Random;
@@ -11,4 +12,6 @@ public interface WeightedSong {
     LoadableSong getRandomElement(Random random);
 
     Set<LoadableSong> getAllElements();
+
+    Identifier getSongId();
 }

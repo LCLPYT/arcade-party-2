@@ -14,17 +14,13 @@ import work.lclpnet.lobby.game.api.GameInstance;
 import work.lclpnet.translations.loader.MultiTranslationLoader;
 import work.lclpnet.translations.loader.TranslationLoader;
 
-import java.nio.file.Path;
-
 public class ArcadePartyFactory implements GameFactory {
 
-    private final Path cacheDirectory;
     private final JsonConfigFactory<Ap2Config> configFactory;
     private final Logger logger;
     private VanillaTranslations vanillaTranslations = null;
 
-    public ArcadePartyFactory(Path cacheDirectory, JsonConfigFactory<Ap2Config> configFactory, Logger logger) {
-        this.cacheDirectory = cacheDirectory;
+    public ArcadePartyFactory(JsonConfigFactory<Ap2Config> configFactory, Logger logger) {
         this.configFactory = configFactory;
         this.logger = logger;
     }
@@ -47,6 +43,6 @@ public class ArcadePartyFactory implements GameFactory {
 
     @Override
     public GameInstance createInstance(GameEnvironment gameEnvironment) {
-        return new ArcadePartyInstance(gameEnvironment, cacheDirectory, vanillaTranslations, configFactory, logger);
+        return new ArcadePartyInstance(gameEnvironment, vanillaTranslations, configFactory, logger);
     }
 }

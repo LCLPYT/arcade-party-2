@@ -32,7 +32,6 @@ import work.lclpnet.lobby.game.api.option.GameOptions;
 import work.lclpnet.lobby.game.api.option.VoteResult;
 import work.lclpnet.translations.DefaultLanguageTranslator;
 
-import java.nio.file.Path;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.ForkJoinPool;
@@ -45,16 +44,13 @@ public class ArcadePartyInstance implements GameInstance {
     private static final int WIN_SCORE = 30;
 
     private final GameEnvironment environment;
-    private final Path cacheDirectory;
     private final VanillaTranslations vanillaTranslations;
     private final JsonConfigFactory<Ap2Config> configFactory;
     private final Logger logger;
 
-    public ArcadePartyInstance(GameEnvironment environment, Path cacheDirectory,
-                               VanillaTranslations vanillaTranslations, JsonConfigFactory<Ap2Config> configFactory,
-                               Logger logger) {
+    public ArcadePartyInstance(GameEnvironment environment, VanillaTranslations vanillaTranslations,
+                               JsonConfigFactory<Ap2Config> configFactory, Logger logger) {
         this.environment = environment;
-        this.cacheDirectory = cacheDirectory;
         this.vanillaTranslations = vanillaTranslations;
         this.configFactory = configFactory;
         this.logger = logger;
@@ -63,7 +59,7 @@ public class ArcadePartyInstance implements GameInstance {
     @Override
     public void start(GameOptions options) {
         MinecraftServer server = environment.getServer();
-        ApBootstrap bootstrap = new ApBootstrap(cacheDirectory, configFactory, logger);
+        ApBootstrap bootstrap = new ApBootstrap(configFactory, logger);
 
         bootstrap.loadConfig(ForkJoinPool.commonPool())
                 .thenCompose(configManager -> bootstrap.dispatch(configManager.getConfig(), environment, vanillaTranslations))

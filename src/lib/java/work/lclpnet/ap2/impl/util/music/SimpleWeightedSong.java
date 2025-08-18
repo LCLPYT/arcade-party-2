@@ -1,5 +1,6 @@
 package work.lclpnet.ap2.impl.util.music;
 
+import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.NotNull;
 import work.lclpnet.ap2.api.util.music.LoadableSong;
 import work.lclpnet.ap2.api.util.music.WeightedSong;
@@ -13,14 +14,16 @@ public class SimpleWeightedSong implements WeightedSong {
 
     private final Set<LoadableSong> songs;
     private final WeightedList<LoadableSong> weightedSongs;
+    private final Identifier songId;
 
-    public SimpleWeightedSong(Set<LoadableSong> songs) {
+    public SimpleWeightedSong(Set<LoadableSong> songs, Identifier songId) {
         if (songs.isEmpty()) {
             throw new IllegalArgumentException("Songs cannot be empty");
         }
 
         this.songs = Collections.unmodifiableSet(songs);
         this.weightedSongs = new WeightedList<>();
+        this.songId = songId;
 
         for (LoadableSong song : this.songs) {
             this.weightedSongs.add(song, song.getWeight());
@@ -40,5 +43,10 @@ public class SimpleWeightedSong implements WeightedSong {
     @Override
     public Set<LoadableSong> getAllElements() {
         return songs;
+    }
+
+    @Override
+    public Identifier getSongId() {
+        return songId;
     }
 }

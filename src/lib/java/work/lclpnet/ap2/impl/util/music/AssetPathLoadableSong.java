@@ -2,27 +2,30 @@ package work.lclpnet.ap2.impl.util.music;
 
 import net.minecraft.util.Identifier;
 import org.slf4j.Logger;
-import work.lclpnet.ap2.api.util.music.*;
+import work.lclpnet.ap2.api.util.music.ConfiguredSong;
+import work.lclpnet.ap2.api.util.music.LoadableSong;
+import work.lclpnet.ap2.api.util.music.SongCache;
+import work.lclpnet.ap2.api.util.music.SongInfo;
+import work.lclpnet.lobby.game.asset.AssetPath;
+import work.lclpnet.lobby.game.asset.AssetRepository;
 import work.lclpnet.notica.api.CheckedSong;
 import work.lclpnet.notica.util.ServerSongLoader;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.concurrent.CompletableFuture;
 
-public class PathLoadableSong implements LoadableSong {
+public class AssetPathLoadableSong implements LoadableSong {
 
-    private final Path path;
+    private final AssetPath path;
+    private final AssetRepository assetRepo;
     private final Identifier id;
-    private final PlaybackInfo playbackInfo;
     private final float weight;
     private final SongInfo info;
 
-    public PathLoadableSong(Path path, Identifier id, PlaybackInfo playbackInfo, float weight, SongInfo info) {
+    public AssetPathLoadableSong(AssetPath path, AssetRepository assetRepo, Identifier id, float weight, SongInfo info) {
         this.path = path;
+        this.assetRepo = assetRepo;
         this.id = id;
-        this.playbackInfo = playbackInfo;
         this.weight = weight;
         this.info = info;
     }
@@ -32,14 +35,14 @@ public class PathLoadableSong implements LoadableSong {
         CheckedSong cached = cache.getCachedSong(path);
 
         if (cached != null) {
-            return CompletableFuture.completedFuture(new ConfiguredSong(cached, playbackInfo, info));
+            return CompletableFuture.completedFuture(new ConfiguredSong(cached, info));
         }
 
         return CompletableFuture.supplyAsync(() -> {
             CheckedSong song;
 
-            try (var in = Files.newInputStream(path)) {
-                song = ServerSongLoader.load(in, id);
+            try (var res = assetRepo.getStream(path)) {
+                song = ServerSongLoader.load(res.resource(), id);
             } catch (IOException e) {
                 logger.error("Failed to load song {}", id, e);
                 return null;
@@ -47,18 +50,13 @@ public class PathLoadableSong implements LoadableSong {
 
             cache.cacheSong(path, song);
 
-            return new ConfiguredSong(song, playbackInfo, info);
+            return new ConfiguredSong(song, info);
         });
     }
 
     @Override
     public Identifier getId() {
         return id;
-    }
-
-    @Override
-    public PlaybackInfo getPlaybackInfo() {
-        return playbackInfo;
     }
 
     @Override

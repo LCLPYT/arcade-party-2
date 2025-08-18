@@ -65,8 +65,8 @@ sourceSets {
     }
 
     main {
-        compileClasspath += lib.output + minigames.output  // TODO remove minigames dependency
-        runtimeClasspath += lib.output + minigames.output  // TODO remove minigames dependency
+        compileClasspath += lib.output
+        runtimeClasspath += lib.output + minigames.output
     }
 
     test {

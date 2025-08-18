@@ -35,8 +35,8 @@ import work.lclpnet.ap2.api.data.DataManager;
 import work.lclpnet.ap2.api.game.GameStartContext;
 import work.lclpnet.ap2.api.game.MiniGame;
 import work.lclpnet.ap2.api.map.MapFacade;
-import work.lclpnet.ap2.api.util.music.SongManager;
 import work.lclpnet.ap2.api.util.music.SongWrapper;
+import work.lclpnet.ap2.api.util.music.WeightedSong;
 import work.lclpnet.ap2.base.ApMiniGameArgs;
 import work.lclpnet.ap2.base.api.Skippable;
 import work.lclpnet.ap2.base.cmd.ForceMapCommand;
@@ -81,7 +81,6 @@ import work.lclpnet.lobby.game.util.ProtectorComponent;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.BiConsumer;
 
 import static java.lang.Math.*;
 import static java.util.stream.Collectors.toSet;
@@ -93,7 +92,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
     public static final Identifier ARCADE_PARTY_GAME_TAG = ApConstants.identifier("game");
     private static final int GAME_ANNOUNCE_DELAY = Ticks.seconds(3);
     private static final int PREPARATION_TIME = Ticks.seconds(20);
-    private static final Identifier GAME_SONG_ID = ApConstants.identifier("ap2_game");
+    private static final String GAME_SONG_ID = "ap2_game";
     private final OptionChooser<MiniGame> gameChooser = new OptionChooser<>();
     private final OptionChooser<GameMap> mapChooser = new OptionChooser<>();
     private final ApBaseArgs args;
@@ -112,6 +111,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
     private GameMap map;
     private DynamicEntityManager dynamicEntityManager;
     private Object3d gameQueueDisplay;
+    private @Nullable WeightedSong nextGameSong = null;
 
     public PreparationActivity(ApBaseArgs args) {
         super(args.miniGameArgs().server(), args.miniGameArgs().logger());
@@ -136,21 +136,36 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
 
         activityConfigurator.configureProtector();
 
-        setupMap(args.miniGameArgs(), this::onReady);
+        CompletableFuture.supplyAsync(() -> {
+            var setupFuture = setupMap(args.miniGameArgs());
+            var assetFuture = loadAssets();
+
+            assetFuture.join();
+
+            return setupFuture.join();
+        }).whenComplete((res, err) -> {
+            if (err != null) {
+                args.miniGameArgs().logger().error("Failed to setup preparation activity", err);
+            } else {
+                onReady(res.world, res.map);
+            }
+        });
     }
 
-    static void setupMap(ApMiniGameArgs miniGameArgs, BiConsumer<ServerWorld, GameMap> onReady) {
+    private CompletableFuture<Void> loadAssets() {
+        return args.miniGameArgs().songManager().getSongAndCache(ARCADE_PARTY_GAME_TAG, GAME_SONG_ID)
+                .thenAccept(song -> nextGameSong = song.orElse(null));
+    }
+
+    static CompletableFuture<SetupResult> setupMap(ApMiniGameArgs miniGameArgs) {
         WorldFacade worldFacade = miniGameArgs.worldFacade();
         Identifier mapId = ApConstants.identifier("preparation");
 
-        worldFacade.changeMap(mapId, MapOptions.REUSABLE)
+        return worldFacade.changeMap(mapId, MapOptions.REUSABLE)
                 .thenCompose(world -> miniGameArgs.mapFacade().getMap(mapId)
-                        .thenAccept(map -> onReady.accept(world, map.orElseThrow(()
-                                -> new IllegalStateException("Map %s not found".formatted(mapId))))))
-                .exceptionally(throwable -> {
-                    miniGameArgs.logger().error("Failed to change map", throwable);
-                    return null;
-                });
+                        .thenApply(map -> new SetupResult(world, map
+                                .orElseThrow(() -> new IllegalStateException("Map %s not found".formatted(mapId))))));
+
     }
 
     @Override
@@ -591,15 +606,13 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
         ApMiniGameArgs container = args.miniGameArgs();
         Translations translations = container.translations();
         MinecraftServer server = getServer();
-        SongManager songManager = container.songManager();
         Logger logger = container.logger();
         TaskScheduler scheduler = component(BuiltinComponents.SCHEDULER).scheduler();
         DataManager dataManager = container.dataManager();
 
-        var song = songManager.getSong(PreparationActivity.ARCADE_PARTY_GAME_TAG, GAME_SONG_ID);
-        boolean soundFallback = song.isEmpty();
+        WeightedSong nextGameSong = this.nextGameSong;
 
-        if (soundFallback) {
+        if (nextGameSong == null) {
             logger.warn("Sound {} wasn't found, fallback to default sound", GAME_SONG_ID);
         }
 
@@ -638,15 +651,15 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
 
             animatedTitle.add(new NextGameTitleAnimation(player, gameTitle, playedNextMsg.translateFor(player)));
 
-            if (soundFallback) {
+            if (nextGameSong == null) {
                 player.playSoundToPlayer(SoundEvents.ENTITY_PLAYER_LEVELUP, SoundCategory.PLAYERS, 1, 1);
             }
         }
 
         animatedTitle.start(scheduler, 2);
 
-        if (!soundFallback && !players.isEmpty()) {
-            this.song = MusicHelper.playSong(song.get(), 0.4f, players, server, args.sharedSongCache(), logger);
+        if (nextGameSong != null && !players.isEmpty()) {
+            this.song = MusicHelper.playSong(nextGameSong, 0.4f, players, server, args.sharedSongCache(), logger);
         }
     }
 
@@ -779,4 +792,6 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
     private Optional<MiniGame> getMiniGame() {
         return Optional.ofNullable(miniGame);
     }
+
+    public record SetupResult(ServerWorld world, GameMap map) {}
 }

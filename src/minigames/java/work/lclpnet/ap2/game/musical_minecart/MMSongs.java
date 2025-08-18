@@ -51,10 +51,10 @@ public class MMSongs {
         this.logger = logger;
     }
 
-    public void init() {
-        Set<WeightedSong> songs = songManager.getSongs(MUSICAL_MINECART_TAG);
-
-        this.songs.addAll(songs);
+    public CompletableFuture<Void> init() {
+        return songManager.getSongs(MUSICAL_MINECART_TAG).thenAccept(s -> s.stream()
+                .sorted(Comparator.comparing(WeightedSong::getSongId))
+                .forEachOrdered(songs::add));
     }
 
     public CompletableFuture<ConfiguredSong> getNextSong() {
@@ -125,7 +125,7 @@ public class MMSongs {
         boolean hasAuthor = !author.isBlank();
         boolean hasOrigAuthor = !originalAuthor.isBlank();
 
-        String from = optMeta.map(SongInfo.Meta::from).orElseGet(info::from);
+        String from = optMeta.map(SongInfo.Meta::from).orElse("");
 
         if (!from.isBlank()) {
             if (hasAuthor && hasOrigAuthor) {
@@ -174,7 +174,7 @@ public class MMSongs {
     public Optional<WeightedSong> getRandomSongById(Identifier id) {
         var matchingSongs = streamSongsById(id).collect(Collectors.toSet());
 
-        return matchingSongs.isEmpty() ? Optional.empty() : Optional.of(new SimpleWeightedSong(matchingSongs));
+        return matchingSongs.isEmpty() ? Optional.empty() : Optional.of(new SimpleWeightedSong(matchingSongs, id));
     }
 
     public @NotNull Stream<LoadableSong> streamSongsById(Identifier id) {
@@ -186,9 +186,9 @@ public class MMSongs {
 
     public Optional<WeightedSong> getSongByIdAndTime(Identifier id, int startTick) {
         return streamSongsById(id)
-                .filter(song -> song.getPlaybackInfo().startTick() == startTick)
+                .filter(song -> song.getInfo().meta().startTick().orElse(0) == startTick)
                 .findAny()
-                .map(song -> new SimpleWeightedSong(Set.of(song)));
+                .map(song -> new SimpleWeightedSong(Set.of(song), id));
     }
 
     public void pushSong(WeightedSong song) {
