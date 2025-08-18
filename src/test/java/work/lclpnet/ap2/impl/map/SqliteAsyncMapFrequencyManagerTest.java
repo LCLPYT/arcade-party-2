@@ -5,7 +5,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import work.lclpnet.ap2.base.ArcadeParty;
+import work.lclpnet.ap2.ApConstants;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -58,7 +58,7 @@ class SqliteAsyncMapFrequencyManagerTest {
         try (var manager = new SqliteAsyncMapFrequencyManager(dbFile, logger)) {
             manager.open().join();
 
-            manager.preload(List.of(ArcadeParty.identifier("foo"), ArcadeParty.identifier("bar"))).join();
+            manager.preload(List.of(ApConstants.identifier("foo"), ApConstants.identifier("bar"))).join();
         }
     }
 
@@ -70,7 +70,7 @@ class SqliteAsyncMapFrequencyManagerTest {
         try (var manager = new SqliteAsyncMapFrequencyManager(dbFile, logger)) {
             manager.open().join();
 
-            Identifier id = ArcadeParty.identifier("foo");
+            Identifier id = ApConstants.identifier("foo");
             manager.setFrequencyInternal(id, 5);
             manager.write(id);
         }
@@ -81,7 +81,7 @@ class SqliteAsyncMapFrequencyManagerTest {
         Path dir = Files.createTempDirectory("ap2");
         Path dbFile = dir.resolve("ap.sqlite");
 
-        Identifier id = ArcadeParty.identifier("foo");
+        Identifier id = ApConstants.identifier("foo");
 
         try (var manager = new SqliteAsyncMapFrequencyManager(dbFile, logger)) {
             manager.open().join();

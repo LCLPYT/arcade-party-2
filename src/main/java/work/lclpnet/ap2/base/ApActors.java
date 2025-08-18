@@ -6,9 +6,9 @@ import work.lclpnet.ap2.api.actor.ActorRegistrar;
 import work.lclpnet.ap2.api.actor.ActorType;
 import work.lclpnet.ap2.impl.actor.GravityFieldActor;
 
+import static work.lclpnet.ap2.ApConstants.identifier;
+import static work.lclpnet.ap2.ApConstants.logger;
 import static work.lclpnet.ap2.api.actor.ActorFactory.withData;
-import static work.lclpnet.ap2.base.ArcadeParty.identifier;
-import static work.lclpnet.ap2.base.ArcadeParty.logger;
 
 /**
  * An {@link ActorProvider} that provides all actor types from arcade-party-2.

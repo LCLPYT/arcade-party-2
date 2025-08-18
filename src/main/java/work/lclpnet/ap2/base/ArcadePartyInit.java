@@ -13,19 +13,20 @@ import net.minecraft.resource.ResourceManager;
 import net.minecraft.resource.ResourceType;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Identifier;
+import work.lclpnet.ap2.ApConstants;
 import work.lclpnet.ap2.api.actor.*;
 import work.lclpnet.ap2.api.util.heads.PlayerHead;
-import work.lclpnet.ap2.base.resource.ApResources;
 import work.lclpnet.ap2.core.type.ActorManagerAccess;
 import work.lclpnet.ap2.core.type.ApMarkerEntity;
+import work.lclpnet.ap2.impl.resource.ApResources;
 import work.lclpnet.ap2.impl.util.ApRegistries;
 import work.lclpnet.kibu.hook.entity.ServerEntityHooks;
 
-import static work.lclpnet.ap2.base.ArcadeParty.logger;
+import static work.lclpnet.ap2.ApConstants.logger;
 
 public class ArcadePartyInit implements ModInitializer {
 
-    public static final Identifier RESOURCES_ID = ArcadeParty.identifier("resources");
+    public static final Identifier RESOURCES_ID = ApConstants.identifier("resources");
 
     @Override
     public void onInitialize() {
