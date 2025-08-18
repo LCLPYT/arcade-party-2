@@ -135,7 +135,7 @@ public class AssetSongManager implements SongManager {
     private @NotNull Set<LoadableSong> toLoadable(SongInfo info, Collection<SongConfig> configs, AssetPath path, Identifier songId) {
         return configs.stream()
                 .map(config -> config.toLoadable(path, assetRepository, songId, config.optOverride()
-                        .map(override -> override.override(info.meta()))
+                        .map(override -> override.withParent(info.meta()))
                         .map(info::withMeta)
                         .orElse(info)))
                 .collect(Collectors.toSet());
@@ -150,7 +150,7 @@ public class AssetSongManager implements SongManager {
             JSONObject json = new JSONObject(content);
 
             Map<String, SongInfo> info = new HashMap<>();
-            readSongInfo(json, info);
+            readMetaSongInfo(json, info);
 
             return new SongDirectoryMeta(info);
         } catch (IOException | JSONException e) {
@@ -200,7 +200,7 @@ public class AssetSongManager implements SongManager {
     }
 
     @VisibleForTesting
-    public void readSongInfo(JSONObject json, Map<String, SongInfo> songInfo) {
+    public void readMetaSongInfo(JSONObject json, Map<String, SongInfo> songInfo) {
         JSONObject infoObj = json.getJSONObject("info");
 
         for (String key : infoObj.keySet()) {

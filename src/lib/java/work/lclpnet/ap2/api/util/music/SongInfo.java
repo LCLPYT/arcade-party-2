@@ -26,7 +26,7 @@ public record SongInfo(String license, @Nullable String file, SongInfo.Meta meta
         public static Meta DEFAULT = new Meta(null, null, null, null, Optional.empty(),
                 Optional.empty(), Optional.empty());
 
-        public Meta override(@Nullable Meta parent) {
+        public Meta withParent(@Nullable Meta parent) {
             if (parent == null) {
                 return this;
             }

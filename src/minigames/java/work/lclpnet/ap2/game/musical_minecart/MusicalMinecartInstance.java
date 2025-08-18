@@ -201,7 +201,10 @@ public class MusicalMinecartInstance extends EliminationGameInstance implements 
 
         CheckedSong song = config.song();
         SongInfo.Meta meta = config.info().meta();
-        var playbackOptions = new PlaybackOptions(meta.volume().orElse(1f) * MUSIC_VOLUME, PlaybackVariant.STREAMED, meta.stereoMode().orElse(StereoMode.SPATIAL));
+        float finalVolume = meta.volume().orElse(1f) * MUSIC_VOLUME;
+        StereoMode stereoMode = meta.stereoMode().orElse(StereoMode.SPATIAL);
+
+        var playbackOptions = new PlaybackOptions(finalVolume, PlaybackVariant.STREAMED, stereoMode);
 
         Notica notica = Notica.getInstance(server);
         songHandle = notica.playSong(song, playbackOptions, meta.startTick().orElse(0), players);
