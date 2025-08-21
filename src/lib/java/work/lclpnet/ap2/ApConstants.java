@@ -11,7 +11,7 @@ public final class ApConstants {
             DEVELOPMENT = FabricLoader.getInstance().isDevelopmentEnvironment() || "true".equals(System.getenv("AP2_DEV")),
             DEBUG = FabricLoader.getInstance().isDevelopmentEnvironment();
 
-    public static final String ID = "ap2";
+    public static final String ID = "ap2", LIB_ID = "ap2-lib";
 
     public static final Logger logger = LoggerFactory.getLogger(ID);
 

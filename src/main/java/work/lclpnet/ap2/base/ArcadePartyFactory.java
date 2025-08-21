@@ -30,7 +30,7 @@ public class ArcadePartyFactory implements GameFactory {
         MultiTranslationLoader loader = new MultiTranslationLoader();
 
         // load translations from assets
-        var assetLoader = ModTranslations.assetTranslationLoader(ApConstants.ID, logger);
+        var assetLoader = ModTranslations.assetTranslationLoader(ApConstants.LIB_ID, ApConstants.ID, logger);
         loader.addLoader(assetLoader);
 
         // also load vanilla death messages (unavailable until initialized)

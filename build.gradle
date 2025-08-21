@@ -102,7 +102,7 @@ loom {
         }
     }
 
-    accessWidenerPath = file("src/main/resources/ap2.accesswidener")
+    accessWidenerPath = file("src/lib/resources/ap2.accesswidener")
 }
 
 dependencies {
@@ -154,10 +154,10 @@ test {
     systemProperty("fabric.side", "server")
 }
 
-processResources {
-    inputs.property "version", project.version
+[processResources, processLibResources, processMinigamesResources].each {
+    it.inputs.property "version", project.version
 
-    filesMatching("fabric.mod.json") {
+    it.filesMatching("fabric.mod.json") {
         expand "version": project.version
     }
 }

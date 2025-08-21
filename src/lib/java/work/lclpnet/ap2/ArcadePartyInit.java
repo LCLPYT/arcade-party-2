@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.base;
+package work.lclpnet.ap2;
 
 import com.mojang.serialization.Dynamic;
 import net.fabricmc.api.ModInitializer;
@@ -13,7 +13,6 @@ import net.minecraft.resource.ResourceManager;
 import net.minecraft.resource.ResourceType;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Identifier;
-import work.lclpnet.ap2.ApConstants;
 import work.lclpnet.ap2.api.actor.*;
 import work.lclpnet.ap2.api.util.heads.PlayerHead;
 import work.lclpnet.ap2.core.type.ActorManagerAccess;

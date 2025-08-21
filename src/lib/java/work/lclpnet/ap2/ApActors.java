@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.base;
+package work.lclpnet.ap2;
 
 import net.minecraft.util.Util;
 import work.lclpnet.ap2.api.actor.ActorProvider;
