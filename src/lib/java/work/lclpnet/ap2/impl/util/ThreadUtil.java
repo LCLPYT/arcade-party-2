@@ -58,6 +58,13 @@ public class ThreadUtil {
         throw new IllegalStateException("Called on the wrong thread. Expected to run on " + thread.getName());
     }
 
+    /**
+     * Checks whether currently running on the given {@link ThreadExecutor} thread, in which case false is returned.
+     * Otherwise, the given action is dispatched to the given {@link ThreadExecutor}, in which case true is returned and the caller should prevent further execution.
+     * @param executor The {@link ThreadExecutor} to check and / or dispatch on.
+     * @param runnable The (reference to an) action to be executed.
+     * @return True, if currently running off-thread and whether the runnable was thereby dispatched to the given {@link ThreadExecutor}, false if running of thread and nothing was dispatched.
+     */
     public static boolean onThreadOrDispatch(ThreadExecutor<?> executor, Runnable runnable) {
         if (executor.isOnThread()) return false;
 

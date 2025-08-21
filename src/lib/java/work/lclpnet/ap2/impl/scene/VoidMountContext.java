@@ -23,4 +23,9 @@ public final class VoidMountContext implements MountContext {
 
     @Override
     public <T extends Entity> void remove(@Nullable T entity, Object3d origin) {}
+
+    @Override
+    public boolean onThreadOrDispatch(Runnable runnable) {
+        return false;  // always assume on thread
+    }
 }

@@ -4,7 +4,6 @@ import lombok.Getter;
 import work.lclpnet.ap2.impl.scene.animation.Animatable;
 import work.lclpnet.ap2.impl.scene.animation.AnimationContext;
 import work.lclpnet.ap2.impl.scene.animation.Interpolatable;
-import work.lclpnet.ap2.impl.util.ThreadUtil;
 import work.lclpnet.kibu.scheduler.api.TaskHandle;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 
@@ -178,6 +177,6 @@ public class Scene {
     }
 
     private boolean onThreadOrDispatch(Runnable runnable) {
-        return ThreadUtil.onThreadOrDispatch(mountContext.world().getServer(), runnable);
+        return mountContext.onThreadOrDispatch(runnable);
     }
 }
