@@ -1,3 +1,4 @@
+import net.fabricmc.loom.task.RemapJarTask
 import work.lclpnet.build.task.GithubDeploymentTask
 
 plugins {
@@ -75,12 +76,13 @@ sourceSets {
     }
 }
 
+// extra source sets will have all dependencies of the main source set, as well as their own jar artifact
+def extraSourceSets = ['lib', 'minigames']
+
 // extra source sets need to have the necessary dependencies (atm inherit all; maybe cleanup in the future)
 afterEvaluate {
     configurations {
-        def inheritMain = ['lib', 'minigames']
-
-        inheritMain.each {
+        extraSourceSets.each {
             named("${it}Implementation").get().extendsFrom(implementation)
             named("${it}CompileOnly").get().extendsFrom(compileOnly)
             named("${it}CompileClasspath").get().extendsFrom(modCompileClasspathMapped)
@@ -174,7 +176,41 @@ java {
     targetCompatibility = JavaVersion.VERSION_21
 }
 
-[jar, sourcesJar].each {
+
+def licenseJarTasks = [jar, sourcesJar]
+
+extraSourceSets.each { name ->
+    // add extra jar tasks
+    def defaultJar = tasks.register("${name}Jar", Jar.class) {
+        from(sourceSets.named(name).get().output)
+        archiveClassifier.set("${name}-dev")
+
+        def buildDir = layout.buildDirectory.asFile.getOrElse(new File("build"))
+        destinationDirectory.set(new File(buildDir, "devlibs"))
+
+        description "Builds the standalone ${name} api jar."
+        group 'build'
+    }.get()
+
+    def remappedJar = tasks.register("remap${name.capitalize()}Jar", RemapJarTask.class) {
+        dependsOn defaultJar
+
+        description "Remaps the built ${name} jar to intermediary mappings."
+        group 'fabric'
+        archiveClassifier.set(name)
+        addNestedDependencies = false  // cannot add nested jars to non-mod jars produced by RemapJarTask
+
+        inputFile.convention(defaultJar.archiveFile)
+    }.get()
+
+    [defaultJar, remappedJar].each {
+        tasks.assemble.dependsOn(it)
+    }
+
+    licenseJarTasks.add(defaultJar)
+}
+
+licenseJarTasks.each {
     it.from("LICENSE") {
         rename { "${it}_${project.base.archivesName.get()}" }
     }
