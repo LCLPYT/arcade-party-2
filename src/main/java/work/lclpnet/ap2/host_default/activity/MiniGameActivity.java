@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.base.activity;
+package work.lclpnet.ap2.host_default.activity;
 
 import net.minecraft.server.network.ServerPlayerEntity;
 import work.lclpnet.activity.ComponentActivity;
@@ -9,11 +9,11 @@ import work.lclpnet.ap2.api.base.ParticipantListener;
 import work.lclpnet.ap2.api.base.PlayerManager;
 import work.lclpnet.ap2.api.game.MiniGame;
 import work.lclpnet.ap2.api.game.MiniGameInstance;
-import work.lclpnet.ap2.base.cmd.DrawCommand;
-import work.lclpnet.ap2.base.cmd.RemakeCommand;
-import work.lclpnet.ap2.base.cmd.WinCommand;
-import work.lclpnet.ap2.base.util.ApBaseArgs;
-import work.lclpnet.ap2.base.util.DefaultMiniGameHandle;
+import work.lclpnet.ap2.host_default.cmd.DrawCommand;
+import work.lclpnet.ap2.host_default.cmd.RemakeCommand;
+import work.lclpnet.ap2.host_default.cmd.WinCommand;
+import work.lclpnet.ap2.host_default.util.ApBaseArgs;
+import work.lclpnet.ap2.host_default.util.DefaultMiniGameHandle;
 import work.lclpnet.ap2.impl.activity.ArcadePartyComponents;
 import work.lclpnet.ap2.impl.activity.ScoreboardComponent;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;

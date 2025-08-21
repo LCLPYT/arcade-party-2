@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.base.activity;
+package work.lclpnet.ap2.host_default.activity;
 
 import it.unimi.dsi.fastutil.objects.ObjectIntPair;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
@@ -37,14 +37,14 @@ import work.lclpnet.ap2.api.game.MiniGame;
 import work.lclpnet.ap2.api.map.MapFacade;
 import work.lclpnet.ap2.api.util.music.SongWrapper;
 import work.lclpnet.ap2.api.util.music.WeightedSong;
-import work.lclpnet.ap2.base.ApMiniGameArgs;
-import work.lclpnet.ap2.base.api.Skippable;
-import work.lclpnet.ap2.base.cmd.ForceMapCommand;
-import work.lclpnet.ap2.base.cmd.SkipCommand;
-import work.lclpnet.ap2.base.util.ApBaseArgs;
-import work.lclpnet.ap2.base.util.BaseActivityConfigurator;
-import work.lclpnet.ap2.base.util.OptionChooser;
-import work.lclpnet.ap2.base.util.ScoreManager;
+import work.lclpnet.ap2.host_default.ApMiniGameArgs;
+import work.lclpnet.ap2.host_default.api.Skippable;
+import work.lclpnet.ap2.host_default.cmd.ForceMapCommand;
+import work.lclpnet.ap2.host_default.cmd.SkipCommand;
+import work.lclpnet.ap2.host_default.util.ApBaseArgs;
+import work.lclpnet.ap2.host_default.util.BaseActivityConfigurator;
+import work.lclpnet.ap2.host_default.util.OptionChooser;
+import work.lclpnet.ap2.host_default.util.ScoreManager;
 import work.lclpnet.ap2.impl.activity.ArcadePartyComponents;
 import work.lclpnet.ap2.impl.activity.ScoreboardComponent;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;

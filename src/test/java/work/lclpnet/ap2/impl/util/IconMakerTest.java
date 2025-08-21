@@ -1,7 +1,6 @@
-package work.lclpnet.ap2.base.util;
+package work.lclpnet.ap2.impl.util;
 
 import org.junit.jupiter.api.Test;
-import work.lclpnet.ap2.impl.util.IconMaker;
 
 import java.util.List;
 

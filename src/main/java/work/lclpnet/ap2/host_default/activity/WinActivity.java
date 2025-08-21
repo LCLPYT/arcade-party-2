@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.base.activity;
+package work.lclpnet.ap2.host_default.activity;
 
 import it.unimi.dsi.fastutil.objects.ObjectIntPair;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
@@ -13,9 +13,9 @@ import work.lclpnet.activity.ComponentActivity;
 import work.lclpnet.activity.component.ComponentBundle;
 import work.lclpnet.activity.component.builtin.BuiltinComponents;
 import work.lclpnet.ap2.api.util.action.Action;
-import work.lclpnet.ap2.base.util.ApBaseArgs;
-import work.lclpnet.ap2.base.util.BaseActivityConfigurator;
-import work.lclpnet.ap2.base.util.ScoreManager;
+import work.lclpnet.ap2.host_default.util.ApBaseArgs;
+import work.lclpnet.ap2.host_default.util.BaseActivityConfigurator;
+import work.lclpnet.ap2.host_default.util.ScoreManager;
 import work.lclpnet.ap2.impl.game.Announcer;
 import work.lclpnet.ap2.impl.game.PlayerUtil;
 import work.lclpnet.ap2.impl.game.ResultAnnouncement;

@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.base.cmd;
+package work.lclpnet.ap2.host_default.cmd;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;

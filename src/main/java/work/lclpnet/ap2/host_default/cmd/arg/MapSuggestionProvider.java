@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.base.cmd.arg;
+package work.lclpnet.ap2.host_default.cmd.arg;
 
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.suggestion.SuggestionProvider;

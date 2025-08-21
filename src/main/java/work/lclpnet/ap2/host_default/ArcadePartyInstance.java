@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.base;
+package work.lclpnet.ap2.host_default;
 
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.server.MinecraftServer;
@@ -9,11 +9,11 @@ import work.lclpnet.ap2.api.base.MiniGameManager;
 import work.lclpnet.ap2.api.config.Ap2Config;
 import work.lclpnet.ap2.api.game.MiniGame;
 import work.lclpnet.ap2.api.util.music.SongCache;
-import work.lclpnet.ap2.base.activity.PreparationActivity;
-import work.lclpnet.ap2.base.cmd.ForceGameCommand;
-import work.lclpnet.ap2.base.cmd.ScoreCommand;
-import work.lclpnet.ap2.base.util.ApBaseArgs;
-import work.lclpnet.ap2.base.util.ScoreManager;
+import work.lclpnet.ap2.host_default.activity.PreparationActivity;
+import work.lclpnet.ap2.host_default.cmd.ForceGameCommand;
+import work.lclpnet.ap2.host_default.cmd.ScoreCommand;
+import work.lclpnet.ap2.host_default.util.ApBaseArgs;
+import work.lclpnet.ap2.host_default.util.ScoreManager;
 import work.lclpnet.ap2.impl.base.FabricMiniGameManager;
 import work.lclpnet.ap2.impl.base.PlayerManagerImpl;
 import work.lclpnet.ap2.impl.base.VotedGameQueue;

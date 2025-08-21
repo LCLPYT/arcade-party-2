@@ -1,11 +1,11 @@
-package work.lclpnet.ap2.base.cmd;
+package work.lclpnet.ap2.host_default.cmd;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.Text;
-import work.lclpnet.ap2.base.api.Skippable;
+import work.lclpnet.ap2.host_default.api.Skippable;
 import work.lclpnet.kibu.cmd.type.CommandRegistrar;
 import work.lclpnet.kibu.cmd.type.KibuCommand;
 

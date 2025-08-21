@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.base;
+package work.lclpnet.ap2.host_default;
 
 import net.minecraft.MinecraftVersion;
 import org.slf4j.Logger;

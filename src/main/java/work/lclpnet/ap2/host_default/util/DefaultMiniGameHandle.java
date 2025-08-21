@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.base.util;
+package work.lclpnet.ap2.host_default.util;
 
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.server.MinecraftServer;
@@ -20,10 +20,10 @@ import work.lclpnet.ap2.api.game.MiniGameResults;
 import work.lclpnet.ap2.api.game.team.TeamConfig;
 import work.lclpnet.ap2.api.map.MapFacade;
 import work.lclpnet.ap2.api.util.music.SongManager;
-import work.lclpnet.ap2.base.ApMiniGameArgs;
-import work.lclpnet.ap2.base.activity.MiniGameActivity;
-import work.lclpnet.ap2.base.activity.PreparationActivity;
 import work.lclpnet.ap2.core.type.ApServerPlayerEntity;
+import work.lclpnet.ap2.host_default.ApMiniGameArgs;
+import work.lclpnet.ap2.host_default.activity.MiniGameActivity;
+import work.lclpnet.ap2.host_default.activity.PreparationActivity;
 import work.lclpnet.ap2.impl.game.PlayerUtil;
 import work.lclpnet.ap2.impl.util.DeathMessages;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;

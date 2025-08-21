@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.base.util;
+package work.lclpnet.ap2.host_default.util;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;

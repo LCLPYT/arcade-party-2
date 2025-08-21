@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.base.util;
+package work.lclpnet.ap2.host_default.util;
 
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.server.network.ServerPlayerEntity;
