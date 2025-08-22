@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "id": "ap2-host-default",
+  "id": "ap2",
   "version": "${version}",
   "name": "Arcade Party 2",
   "description": "An arcade minigame for modern Minecraft where the players must win as many challenges as possible in order to win the game!",
@@ -12,28 +12,5 @@
     "homepage": "https://github.com/LCLPYT/arcade-party-2",
     "sources": "https://github.com/LCLPYT/arcade-party-2"
   },
-  "license": "AGPL-3.0",
-  "environment": "server",
-  "entrypoints": {
-    "game-entry": [
-      "work.lclpnet.ap2.base.ArcadePartyDefaultGame"
-    ]
-  },
-  "depends": {
-    "fabricloader": ">=0.16.14",
-    "minecraft": "~1.21.6",
-    "java": ">=21",
-    "ap2-lib": "*",
-    "mg-lobby": "*",
-    "kibu": "*",
-    "notica": "*",
-    "combat-control": "*",
-    "fantasy": "*",
-    "kibu-world-api": "*",
-    "sqlite-jdbc": "*"
-  },
-  "suggests": {
-    "pal": "*",
-    "mcserver-api": "*"
-  }
+  "license": "AGPL-3.0"
 }

@@ -55,5 +55,10 @@
     "ap2-lib": "*",
     "minecraft": "~1.21.6",
     "java": ">=21"
+  },
+  "custom": {
+    "modmenu": {
+      "parent": "ap2"
+    }
   }
 }

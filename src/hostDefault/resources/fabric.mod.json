@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "id": "ap2-lib",
+  "id": "ap2-host-default",
   "version": "${version}",
   "name": "Arcade Party 2",
   "description": "An arcade minigame for modern Minecraft where the players must win as many challenges as possible in order to win the game!",
@@ -15,21 +15,15 @@
   "license": "AGPL-3.0",
   "environment": "server",
   "entrypoints": {
-    "main": [
-      "work.lclpnet.ap2.ArcadePartyInit"
-    ],
-    "actor_provider": [
-      "work.lclpnet.ap2.ApActors"
+    "game-entry": [
+      "work.lclpnet.ap2.host_default.ArcadePartyDefaultGame"
     ]
   },
-  "mixins": [
-    "ap2.mixins.json"
-  ],
-  "accessWidener": "ap2.accesswidener",
   "depends": {
     "fabricloader": ">=0.16.14",
     "minecraft": "~1.21.6",
     "java": ">=21",
+    "ap2-lib": "*",
     "mg-lobby": "*",
     "kibu": "*",
     "notica": "*",

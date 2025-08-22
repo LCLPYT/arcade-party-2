@@ -65,19 +65,24 @@ sourceSets {
         runtimeClasspath += lib.output
     }
 
+    hostDefault {
+        compileClasspath += lib.output
+        runtimeClasspath += lib.output
+    }
+
     main {
         compileClasspath += lib.output
-        runtimeClasspath += lib.output + minigames.output
+        runtimeClasspath += lib.output + minigames.output + hostDefault.output
     }
 
     test {
-        compileClasspath += lib.output + minigames.output
-        runtimeClasspath += lib.output + minigames.output
+        compileClasspath += lib.output + minigames.output + hostDefault.output
+        runtimeClasspath += lib.output + minigames.output + hostDefault.output
     }
 }
 
 // extra source sets will have all dependencies of the main source set, as well as their own jar artifact
-def extraSourceSets = ['lib', 'minigames']
+def extraSourceSets = ['lib', 'minigames', 'hostDefault']
 
 // extra source sets need to have the necessary dependencies (atm inherit all; maybe cleanup in the future)
 afterEvaluate {
@@ -213,6 +218,13 @@ extraSourceSets.each { name ->
 licenseJarTasks.each {
     it.from("LICENSE") {
         rename { "${it}_${project.base.archivesName.get()}" }
+    }
+}
+
+remapJar {
+    extraSourceSets.each {
+        def task = tasks.named("remap${it.capitalize()}Jar", RemapJarTask.class).get()
+        nestedJars.from(task.archiveFile)
     }
 }
 
