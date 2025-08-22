@@ -65,24 +65,27 @@ sourceSets {
         runtimeClasspath += lib.output
     }
 
-    hostDefault {
+    'default' {
+        java.srcDirs = ['src/modes/default/java']
+        resources.srcDirs = ['src/modes/default/resources']
+
         compileClasspath += lib.output
         runtimeClasspath += lib.output
     }
 
     main {
         compileClasspath += lib.output
-        runtimeClasspath += lib.output + minigames.output + hostDefault.output
+        runtimeClasspath += lib.output + minigames.output + named('default').get().output
     }
 
     test {
-        compileClasspath += lib.output + minigames.output + hostDefault.output
-        runtimeClasspath += lib.output + minigames.output + hostDefault.output
+        compileClasspath += lib.output + minigames.output + named('default').get().output
+        runtimeClasspath += lib.output + minigames.output + named('default').get().output
     }
 }
 
 // extra source sets will have all dependencies of the main source set, as well as their own jar artifact
-def extraSourceSets = ['lib', 'minigames', 'hostDefault']
+def extraSourceSets = ['lib', 'minigames', 'default']
 
 // extra source sets need to have the necessary dependencies (atm inherit all; maybe cleanup in the future)
 afterEvaluate {
