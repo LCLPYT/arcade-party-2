@@ -65,27 +65,37 @@ sourceSets {
         runtimeClasspath += lib.output
     }
 
-    'default' {
-        java.srcDirs = ['src/modes/default/java']
-        resources.srcDirs = ['src/modes/default/resources']
-
-        compileClasspath += lib.output
-        runtimeClasspath += lib.output
-    }
-
     main {
         compileClasspath += lib.output
-        runtimeClasspath += lib.output + minigames.output + named('default').get().output
+        runtimeClasspath += lib.output + minigames.output
     }
 
     test {
-        compileClasspath += lib.output + minigames.output + named('default').get().output
-        runtimeClasspath += lib.output + minigames.output + named('default').get().output
+        compileClasspath += lib.output + minigames.output
+        runtimeClasspath += lib.output + minigames.output
     }
 }
 
 // extra source sets will have all dependencies of the main source set, as well as their own jar artifact
-def extraSourceSets = ['lib', 'minigames', 'default']
+def extraSourceSets = ['lib', 'minigames']
+
+apply from: 'src/modes/modes.gradle'
+
+(ext.getProperty('modes') as String[]).each { name ->
+    extraSourceSets.add(name)
+
+    sourceSets.register(name) {
+        java.srcDirs = ["src/modes/$name/java"]
+        resources.srcDirs = ["src/modes/$name/resources"]
+
+        compileClasspath += sourceSets.lib.output
+        runtimeClasspath += sourceSets.lib.output
+
+        sourceSets.main.runtimeClasspath += it.output
+        sourceSets.test.compileClasspath += it.output
+        sourceSets.test.runtimeClasspath += it.output
+    }
+}
 
 // extra source sets need to have the necessary dependencies (atm inherit all; maybe cleanup in the future)
 afterEvaluate {
