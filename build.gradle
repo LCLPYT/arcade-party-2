@@ -18,6 +18,9 @@ base {
     archivesName = project.archives_base_name
 }
 
+/*********************************************************************************************************************\
+ *Repositories
+ \*********************************************************************************************************************/
 repositories {
     mavenCentral()
 
@@ -54,31 +57,29 @@ repositories {
     }
 }
 
+/*********************************************************************************************************************\
+ * Source sets
+ \*********************************************************************************************************************/
 sourceSets {
     lib {
         // contains commonly used utilities among minigames and variants
     }
 
-    minigames {
-        // contains minigame source
+    main {
         compileClasspath += lib.output
         runtimeClasspath += lib.output
     }
 
-    main {
-        compileClasspath += lib.output
-        runtimeClasspath += lib.output + minigames.output
-    }
-
     test {
-        compileClasspath += lib.output + minigames.output
-        runtimeClasspath += lib.output + minigames.output
+        compileClasspath += lib.output
+        runtimeClasspath += lib.output
     }
 }
 
 // extra source sets will have all dependencies of the main source set, as well as their own jar artifact
-def extraSourceSets = ['lib', 'minigames']
+def extraSourceSets = ['lib']
 
+// configure modes
 apply from: 'src/modes/modes.gradle'
 
 (ext.getProperty('modes') as String[]).each { name ->
@@ -87,6 +88,25 @@ apply from: 'src/modes/modes.gradle'
     sourceSets.register(name) {
         java.srcDirs = ["src/modes/$name/java"]
         resources.srcDirs = ["src/modes/$name/resources"]
+
+        compileClasspath += sourceSets.lib.output
+        runtimeClasspath += sourceSets.lib.output
+
+        sourceSets.main.runtimeClasspath += it.output
+        sourceSets.test.compileClasspath += it.output
+        sourceSets.test.runtimeClasspath += it.output
+    }
+}
+
+// configure minigames
+apply from: 'src/minigames/minigames.gradle'
+
+(ext.getProperty('minigames') as String[]).each { name ->
+    extraSourceSets.add(name)
+
+    sourceSets.register(name) {
+        java.srcDirs = ["src/minigames/$name/java"]
+        resources.srcDirs = ["src/minigames/$name/resources"]
 
         compileClasspath += sourceSets.lib.output
         runtimeClasspath += sourceSets.lib.output
@@ -111,20 +131,9 @@ afterEvaluate {
     }
 }
 
-loom {
-    serverOnlyMinecraftJar()
-
-    runs {
-        remove client
-
-        server {
-            vmArgs "-Dfabric-tag-conventions-v2.missingTagTranslationWarning=SILENCED"
-        }
-    }
-
-    accessWidenerPath = file("src/lib/resources/ap2.accesswidener")
-}
-
+/*********************************************************************************************************************\
+ * Dependencies
+ \*********************************************************************************************************************/
 dependencies {
     minecraft("com.mojang:minecraft:${project.minecraft_version}")
     mappings("net.fabricmc:yarn:${project.yarn_mappings}:v2")
@@ -169,19 +178,31 @@ dependencies {
     testImplementation("org.xerial:sqlite-jdbc:3.41.2.2")
 }
 
+/*********************************************************************************************************************\
+ * General
+ \*********************************************************************************************************************/
+loom {
+    serverOnlyMinecraftJar()
+
+    runs {
+        remove client
+
+        server {
+            vmArgs "-Dfabric-tag-conventions-v2.missingTagTranslationWarning=SILENCED"
+        }
+    }
+
+    accessWidenerPath = file("src/lib/resources/ap2.accesswidener")
+}
+
 test {
     useJUnitPlatform()
     systemProperty("fabric.side", "server")
 }
 
-[processResources, processLibResources, processMinigamesResources].each {
-    it.inputs.property "version", project.version
-
-    it.filesMatching("fabric.mod.json") {
-        expand "version": project.version
-    }
-}
-
+/*********************************************************************************************************************\
+ * Tasks
+ \*********************************************************************************************************************/
 tasks.withType(JavaCompile).configureEach {
     it.options.release.set(21)
 }
@@ -194,11 +215,27 @@ java {
     targetCompatibility = JavaVersion.VERSION_21
 }
 
+// resource expansion
+def configureResources(ProcessResources task) {
+    task.inputs.property "version", project.version
+
+    task.filesMatching("fabric.mod.json") {
+        expand "version": project.version
+    }
+}
+
+configureResources(processResources)
+
+extraSourceSets.each { name ->
+    def task = tasks.named("process${name.capitalize()}Resources", ProcessResources).get()
+    configureResources(task)
+}
 
 def licenseJarTasks = [jar, sourcesJar]
 
+// add jar and remapJar tasks for extra source Sets
 extraSourceSets.each { name ->
-    // add extra jar tasks
+    // add extra jar task
     def defaultJar = tasks.register("${name}Jar", Jar.class) {
         from(sourceSets.named(name).get().output)
         archiveClassifier.set("${name}-dev")
@@ -210,6 +247,7 @@ extraSourceSets.each { name ->
         group 'build'
     }.get()
 
+    // add remap jar task
     def remappedJar = tasks.register("remap${name.capitalize()}Jar", RemapJarTask.class) {
         dependsOn defaultJar
 
@@ -228,19 +266,24 @@ extraSourceSets.each { name ->
     licenseJarTasks.add(defaultJar)
 }
 
+// rename LICENSE files
 licenseJarTasks.each {
     it.from("LICENSE") {
         rename { "${it}_${project.base.archivesName.get()}" }
     }
 }
 
+// add extra source set remapped artifacts to main jar output
 remapJar {
     extraSourceSets.each {
-        def task = tasks.named("remap${it.capitalize()}Jar", RemapJarTask.class).get()
+        def task = tasks.named("remap${it.capitalize()}Jar", RemapJarTask).get()
         nestedJars.from(task.archiveFile)
     }
 }
 
+/*********************************************************************************************************************\
+ * Publishing
+ \*********************************************************************************************************************/
 def env = System.getenv()
 
 tasks.register("github", GithubDeploymentTask) {
@@ -265,6 +308,8 @@ publishing {
             artifactId = project.base.archivesName.get()
 
             from components.java
+
+            artifact remapLibJar
 
             pom {
                 name = "Arcade Party 2"
