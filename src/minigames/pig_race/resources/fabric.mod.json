@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "ap2-minigame-pig-race",
+  "version": "${version}",
+  "authors": [
+    "LCLP"
+  ],
+  "license": "AGPL-3.0",
+  "environment": "server",
+  "entrypoints": {
+    "ap2:minigame": [
+      "work.lclpnet.ap2.game.pig_race.PigRaceMiniGame"
+    ]
+  },
+  "depends": {
+    "ap2-lib": "*"
+  },
+  "custom": {
+    "modmenu": {
+      "parent": "ap2-minigames"
+    }
+  }
+}

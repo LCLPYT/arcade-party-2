@@ -20,7 +20,7 @@ ext.setProperty('minigames', [
         'red_light_green_light',
         'snowball_fight',
         'chicken_shooter',
-        'speed_builders',
+//        'speed_builders',
         'mimicry',
         'splashy_dropper',
         'glowing_bomb',
@@ -32,5 +32,4 @@ ext.setProperty('minigames', [
         'eggventure',
         'dragon_escape',
         'paintball',
-        'dance_floor'
 ])

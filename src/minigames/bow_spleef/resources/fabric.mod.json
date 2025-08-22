@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "ap2-minigame-bow-spleef",
+  "version": "${version}",
+  "authors": [
+    "bops"
+  ],
+  "license": "AGPL-3.0",
+  "environment": "server",
+  "entrypoints": {
+    "ap2:minigame": [
+      "work.lclpnet.ap2.game.bow_spleef.BowSpleefMiniGame"
+    ]
+  },
+  "depends": {
+    "ap2-lib": "*"
+  },
+  "custom": {
+    "modmenu": {
+      "parent": "ap2-minigames"
+    }
+  }
+}
