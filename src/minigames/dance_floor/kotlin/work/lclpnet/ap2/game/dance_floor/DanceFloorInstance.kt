@@ -19,15 +19,15 @@ class DanceFloorInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(g
     val random = Random()
     val songHandler = SongHandler(gameHandle, random)
     var loadingSong: CompletableFuture<ConfiguredSong>? = null
-    var songWrapper: SongWrapper? = null
+    var currentSong: SongWrapper? = null
 
     override fun createWorldBootstrap(world: ServerWorld, map: GameMap): CompletableFuture<Void> {
         return songHandler.loadSongs(gameHandle.gameInfo.id)
     }
 
     override fun prepare() {
-        SetSongCommand(songHandler, this::nextSong).register(gameHandle.commandRegistrar)
-        SkipSongCommand(this::nextSong).register(gameHandle.commandRegistrar)
+        SetSongCommand(songHandler, this::nextSong).register(gameHandle.commands)
+        SkipSongCommand(this::nextSong).register(gameHandle.commands)
 
         Hints(gameHandle).sendBeforeReady(this, Hints.Mod.NOTICA)
     }
@@ -40,11 +40,11 @@ class DanceFloorInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(g
     private fun nextSong() {
         if (loadingSong != null) return
 
-        loadingSong = songHandler.getNextSong()
-        songWrapper?.stop()
+        loadingSong = songHandler.loadNextSong()
+        currentSong?.stop()
 
         loadingSong!!.thenAccept { song ->
-            songWrapper = songHandler.play(song, gameHandle.server)
+            currentSong = songHandler.play(song, gameHandle.server)
             loadingSong = null
         }
     }

@@ -95,7 +95,7 @@ public class RedLightGreenLightInstance extends FFAGameInstance implements Runna
         readTrafficLights();
         setTrafficLightStatus(EnumSet.noneOf(TrafficLight.Status.class));
 
-        movementBlocker.init(gameHandle.getHookRegistrar());
+        movementBlocker.init(gameHandle.getHooks());
 
         CustomScoreboardManager scoreboardManager = gameHandle.getScoreboardManager();
         Team team = scoreboardManager.createTeam("team");
@@ -105,7 +105,7 @@ public class RedLightGreenLightInstance extends FFAGameInstance implements Runna
 
     @Override
     protected void ready() {
-        HookRegistrar hooks = gameHandle.getHookRegistrar();
+        HookRegistrar hooks = gameHandle.getHooks();
 
         movementDetector.register(this::onMovedWhileRed);
         movementDetector.init(hooks);

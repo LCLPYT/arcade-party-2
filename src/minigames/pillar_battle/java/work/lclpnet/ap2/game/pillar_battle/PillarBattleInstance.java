@@ -76,7 +76,7 @@ public class PillarBattleInstance extends EliminationGameInstance implements Map
                 .set(GameRules.DO_PATROL_SPAWNING, false)
                 .set(GameRules.KEEP_INVENTORY, false);
 
-        movementBlocker.init(gameHandle.getHookRegistrar());
+        movementBlocker.init(gameHandle.getHooks());
 
         if (pillars == null) return;
 
@@ -139,7 +139,7 @@ public class PillarBattleInstance extends EliminationGameInstance implements Map
         var scheduler = gameHandle.getGameScheduler();
         scheduler.interval(randomizer::giveRandomItems, RANDOM_ITEM_DELAY_TICKS);
 
-        var hooks = gameHandle.getHookRegistrar();
+        var hooks = gameHandle.getHooks();
 
         hooks.registerHook(ServerLivingEntityHooks.ALLOW_DAMAGE, (entity, source, amount) -> {
             if (entity instanceof ServerPlayerEntity player && player.getHungerManager().getFoodLevel() >= 20) {

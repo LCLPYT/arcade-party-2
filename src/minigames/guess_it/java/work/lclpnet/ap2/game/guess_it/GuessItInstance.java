@@ -88,7 +88,7 @@ public class GuessItInstance extends FFAGameInstance implements MapBootstrap {
     protected void prepare() {
         ServerWorld world = getWorld();
         GameMap map = getMap();
-        HookRegistrar hooks = gameHandle.getHookRegistrar();
+        HookRegistrar hooks = gameHandle.getHooks();
         Participants participants = gameHandle.getParticipants();
         BlockShape blockShape = MapUtil.readArea(map);
 
@@ -102,7 +102,7 @@ public class GuessItInstance extends FFAGameInstance implements MapBootstrap {
         modifier = new ResetWorldModifier(world, hooks);
         manager = new GuessItManager(gameHandle, world, random, blockShape, modifier, soundSubtitles, commons().debugController());
 
-        CommandRegistrar commands = gameHandle.getCommandRegistrar();
+        CommandRegistrar commands = gameHandle.getCommands();
 
         new AnswerCommand(participants, inputManager).register(commands);
         new SetChallengeCommand(manager, this::skip).register(commands);
@@ -136,7 +136,7 @@ public class GuessItInstance extends FFAGameInstance implements MapBootstrap {
 
     @Override
     protected void ready() {
-        inputManager.init(gameHandle.getHookRegistrar());
+        inputManager.init(gameHandle.getHooks());
 
         prepareNextChallenge();
     }

@@ -77,7 +77,7 @@ public class PigRaceInstance extends FFAGameInstance {
     protected void prepare() {
         useTaskDisplay();
 
-        HookRegistrar hooks = gameHandle.getHookRegistrar();
+        HookRegistrar hooks = gameHandle.getHooks();
         CustomScoreboardManager scoreboardManager = gameHandle.getScoreboardManager();
         Translations translations = gameHandle.getTranslations();
         Participants participants = gameHandle.getParticipants();
@@ -133,7 +133,7 @@ public class PigRaceInstance extends FFAGameInstance {
     protected void ready() {
         openGate();
 
-        HookRegistrar hooks = gameHandle.getHookRegistrar();
+        HookRegistrar hooks = gameHandle.getHooks();
         Participants participants = gameHandle.getParticipants();
 
         CheckpointHelper.setupResetItem(hooks, winManager::isGameOver, participants::isParticipating)

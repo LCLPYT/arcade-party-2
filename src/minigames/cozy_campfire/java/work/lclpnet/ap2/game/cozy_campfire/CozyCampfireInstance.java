@@ -114,7 +114,7 @@ public class CozyCampfireInstance extends TeamEliminationGameInstance implements
         var args = new CCHooks.Args(fuel, baseManager, kitManager, this::onAddFuel);
 
         hookSetup = new CCHooks(participants, teamManager, this, translations, args);
-        hookSetup.register(gameHandle.getHookRegistrar());
+        hookSetup.register(gameHandle.getHooks());
 
         setupMovementObserver(hookSetup);
 
@@ -155,7 +155,7 @@ public class CozyCampfireInstance extends TeamEliminationGameInstance implements
     }
 
     private void setupMovementObserver(CCHooks hookSetup) {
-        HookRegistrar hooks = gameHandle.getHookRegistrar();
+        HookRegistrar hooks = gameHandle.getHooks();
         MinecraftServer server = gameHandle.getServer();
 
         movementObserver.init(hooks, server);

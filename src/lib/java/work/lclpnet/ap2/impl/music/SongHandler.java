@@ -63,7 +63,7 @@ public class SongHandler {
                 .forEachOrdered(songs::add));
     }
 
-    public CompletableFuture<ConfiguredSong> getNextSong() {
+    public CompletableFuture<ConfiguredSong> loadNextSong() {
         WeightedSong weightedSong;
 
         if (!priority.isEmpty()) {

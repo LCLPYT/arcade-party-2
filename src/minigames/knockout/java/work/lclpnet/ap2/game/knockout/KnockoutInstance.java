@@ -72,13 +72,13 @@ public class KnockoutInstance extends EliminationGameInstance {
     public void start() {
         var movementObserver = new PlayerMovementObserver(new ChunkedCollisionDetector(), gameHandle.getParticipants()::isParticipating);
         var gravityManipulator = new GravityFieldActor.Manipulator();
-        HookRegistrar hooks = gameHandle.getHookRegistrar();
+        HookRegistrar hooks = gameHandle.getHooks();
 
         movementObserver.init(hooks, gameHandle.getServer());
 
         hooks.registerHook(ActorSpawnedCallback.HOOK, actor -> {
             if (actor instanceof GravityFieldActor gravityField) {
-                gravityField.enable(movementObserver, gravityManipulator, gameHandle.getHookRegistrar());
+                gravityField.enable(movementObserver, gravityManipulator, gameHandle.getHooks());
             }
         });
 
@@ -99,7 +99,7 @@ public class KnockoutInstance extends EliminationGameInstance {
     protected void ready() {
         gameHandle.protect(config -> config.allow(ProtectionTypes.ALLOW_DAMAGE, this::canDamage));
 
-        HookRegistrar hooks = gameHandle.getHookRegistrar();
+        HookRegistrar hooks = gameHandle.getHooks();
         TaskScheduler scheduler = gameHandle.getGameScheduler();
         Participants participants = gameHandle.getParticipants();
 

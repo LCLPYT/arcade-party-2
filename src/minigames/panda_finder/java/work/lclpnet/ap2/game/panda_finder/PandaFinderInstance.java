@@ -85,7 +85,7 @@ public class PandaFinderInstance extends FFAGameInstance {
 
     @Override
     protected void ready() {
-        HookRegistrar hooks = gameHandle.getHookRegistrar();
+        HookRegistrar hooks = gameHandle.getHooks();
 
         hooks.registerHook(PlayerInteractionHooks.USE_ENTITY, (player, world, hand, entity, hitResult) -> {
             onUseEntity(player, hand, entity, hitResult);

@@ -111,12 +111,12 @@ public class DefaultMiniGameHandle implements MiniGameHandle, WorldBorderManager
     }
 
     @Override
-    public HookStack getHookRegistrar() {
+    public HookStack getHooks() {
         return args.miniGameArgs().hookStack();
     }
 
     @Override
-    public CommandRegistrar getCommandRegistrar() {
+    public CommandRegistrar getCommands() {
         return args.miniGameArgs().commandStack();
     }
 

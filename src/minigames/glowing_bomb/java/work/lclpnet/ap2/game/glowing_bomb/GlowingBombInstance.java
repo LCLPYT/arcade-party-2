@@ -82,7 +82,7 @@ public class GlowingBombInstance extends EliminationGameInstance implements MapB
 
     @Override
     protected void prepare() {
-        HookRegistrar hooks = gameHandle.getHookRegistrar();
+        HookRegistrar hooks = gameHandle.getHooks();
 
         movementBlocker.init(hooks);
 
@@ -97,7 +97,7 @@ public class GlowingBombInstance extends EliminationGameInstance implements MapB
 
     @Override
     protected void ready() {
-        HookRegistrar hooks = gameHandle.getHookRegistrar();
+        HookRegistrar hooks = gameHandle.getHooks();
         Participants participants = gameHandle.getParticipants();
 
         hooks.registerHook(PlayerInteractionHooks.USE_ITEM, (player, world, hand) -> {

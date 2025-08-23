@@ -94,7 +94,7 @@ public class ChickenShooterInstance extends FFAGameInstance implements Runnable 
         despawnHeight = getMap().requireProperty("despawn-height");
 
         // hooks
-        HookRegistrar hooks = gameHandle.getHookRegistrar();
+        HookRegistrar hooks = gameHandle.getHooks();
 
         hooks.registerHook(ServerLivingEntityHooks.ALLOW_DAMAGE, (entity, source, amount) -> {
             if (!(source.getSource() instanceof ProjectileEntity projectile)

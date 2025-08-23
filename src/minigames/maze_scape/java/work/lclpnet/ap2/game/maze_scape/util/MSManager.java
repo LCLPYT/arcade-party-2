@@ -85,7 +85,7 @@ public class MSManager {
     }
 
     public void init(MiniGameHandle gameHandle) {
-        var hooks = gameHandle.getHookRegistrar();
+        var hooks = gameHandle.getHooks();
 
         hooks.registerHook(LivingEntityAttributeInitCallback.HOOK, this::initAttributes);
         hooks.registerHook(BrainCreationCallback.Warden.HOOK, this::createWardenBrain);

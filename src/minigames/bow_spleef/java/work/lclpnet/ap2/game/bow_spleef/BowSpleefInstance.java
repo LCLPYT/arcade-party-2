@@ -93,7 +93,7 @@ public class BowSpleefInstance extends EliminationGameInstance {
         useNoHealing();
         useRemainingPlayersDisplay();
 
-        HookRegistrar hooks = gameHandle.getHookRegistrar();
+        HookRegistrar hooks = gameHandle.getHooks();
 
         hooks.registerHook(BlockBreakParticleCallback.HOOK, (world, pos, state) -> true);
 
@@ -152,7 +152,7 @@ public class BowSpleefInstance extends EliminationGameInstance {
             config.allow(ProtectionTypes.EXPLOSION);
         });
 
-        HookRegistrar hooks = gameHandle.getHookRegistrar();
+        HookRegistrar hooks = gameHandle.getHooks();
 
         doubleJumpHandler.init(hooks);
         doubleJumpHandler.enable(gameHandle.getParticipants());

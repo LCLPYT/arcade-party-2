@@ -128,7 +128,7 @@ public class MusicalMinecartInstance extends EliminationGameInstance implements 
 
         gameHandle.protect(config -> config.allow(ProtectionTypes.MOUNT));
 
-        CommandRegistrar commands = gameHandle.getCommandRegistrar();
+        CommandRegistrar commands = gameHandle.getCommands();
         new SetSongCommand(songs, this::skipSong).register(commands);
         new SkipSongCommand(this::skipSong).register(commands);
 
@@ -143,7 +143,7 @@ public class MusicalMinecartInstance extends EliminationGameInstance implements 
 
         ready.set(true);
 
-        HookRegistrar hooks = gameHandle.getHookRegistrar();
+        HookRegistrar hooks = gameHandle.getHooks();
 
         hooks.registerHook(EntityMountCallback.HOOK, (entity, vehicle, force) -> {
             if (vehicle.isGlowing()) {
@@ -233,7 +233,7 @@ public class MusicalMinecartInstance extends EliminationGameInstance implements 
     }
 
     private synchronized CompletableFuture<ConfiguredSong> loadNextSong() {
-        return songs.getNextSong();
+        return songs.loadNextSong();
     }
 
     private synchronized void stopMusic() {

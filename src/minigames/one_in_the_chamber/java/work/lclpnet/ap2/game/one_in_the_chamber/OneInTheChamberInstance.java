@@ -88,7 +88,7 @@ public class OneInTheChamberInstance extends FFAGameInstance {
         JSONArray spawnsJson = getMap().requireProperty("random-spawns");
         respawn.loadSpawnPoints(spawnsJson);
 
-        HookRegistrar hooks = gameHandle.getHookRegistrar();
+        HookRegistrar hooks = gameHandle.getHooks();
         movementBlocker.init(hooks);
         respawnCooldown.init(hooks);
 

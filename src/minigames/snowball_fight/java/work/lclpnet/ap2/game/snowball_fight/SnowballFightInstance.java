@@ -68,7 +68,7 @@ public class SnowballFightInstance extends EliminationGameInstance {
     @Override
     protected void ready() {
         Participants participants = gameHandle.getParticipants();
-        HookRegistrar hooks = gameHandle.getHookRegistrar();
+        HookRegistrar hooks = gameHandle.getHooks();
         TaskScheduler scheduler = gameHandle.getGameScheduler();
 
         gameHandle.protect(config -> {

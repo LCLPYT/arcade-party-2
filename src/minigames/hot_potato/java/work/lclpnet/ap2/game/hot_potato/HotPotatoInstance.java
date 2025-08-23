@@ -74,7 +74,7 @@ public class HotPotatoInstance extends EliminationGameInstance implements GameOv
     protected void ready() {
         nextRound();
 
-        HookRegistrar hooks = gameHandle.getHookRegistrar();
+        HookRegistrar hooks = gameHandle.getHooks();
 
         hooks.registerHook(PlayerInteractionHooks.ATTACK_ENTITY, (player, world, hand, entity, hitResult) -> {
             if (player instanceof ServerPlayerEntity serverPlayer && entity instanceof ServerPlayerEntity hitPlayer) {

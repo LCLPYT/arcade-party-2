@@ -96,7 +96,7 @@ public class GameCommons {
             }
         });
 
-        detector.init(gameHandle.getGameScheduler(), gameHandle.getHookRegistrar());
+        detector.init(gameHandle.getGameScheduler(), gameHandle.getHooks());
 
         return Action.create(hook);
     }
@@ -227,7 +227,7 @@ public class GameCommons {
     public VisibilityHandler addVisibilityChanger(Team team) {
         Translations translations = gameHandle.getTranslations();
         VisibilityHandler visibility = new VisibilityHandler(new VisibilityManager(team, Visibility.PARTIALLY_VISIBLE), translations, gameHandle.getParticipants());
-        visibility.init(gameHandle.getHookRegistrar());
+        visibility.init(gameHandle.getHooks());
 
         visibility.giveItems();
 
@@ -323,7 +323,7 @@ public class GameCommons {
             healthDisplay = new HealthDisplay(gameHandle);
         }
 
-        healthDisplay.setup(gameHandle.getHookRegistrar());
+        healthDisplay.setup(gameHandle.getHooks());
     }
 
     public record WorldBorderConfig(int centerX, int centerZ, int maxRadius, int minSize, boolean randomCenter,

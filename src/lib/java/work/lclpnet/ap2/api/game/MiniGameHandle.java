@@ -35,9 +35,9 @@ public interface MiniGameHandle {
 
     MapFacade getMapFacade();
 
-    HookRegistrar getHookRegistrar();
+    HookRegistrar getHooks();
 
-    CommandRegistrar getCommandRegistrar();
+    CommandRegistrar getCommands();
 
     /**
      * Get the mini-game root scheduler.

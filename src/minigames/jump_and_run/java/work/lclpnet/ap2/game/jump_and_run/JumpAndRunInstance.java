@@ -111,7 +111,7 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
                 .set(GameRules.RANDOM_TICK_SPEED, 0)
                 .set(GameRules.DO_DAYLIGHT_CYCLE, false);
 
-        movementObserver.init(gameHandle.getHookRegistrar(), gameHandle.getServer());
+        movementObserver.init(gameHandle.getHooks(), gameHandle.getServer());
 
         bossBar = usePlayerDynamicTaskDisplay(styled(0, YELLOW), styled(jumpAndRun.segments().size(), YELLOW));
         bossBar.setPercent(0);
@@ -151,7 +151,7 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
         scoreboardManager.joinTeam(gameHandle.getParticipants(), team);
 
         VisibilityHandler visibility = new VisibilityHandler(new VisibilityManager(team, Visibility.PARTIALLY_VISIBLE), gameHandle.getTranslations(), gameHandle.getParticipants());
-        visibility.init(gameHandle.getHookRegistrar());
+        visibility.init(gameHandle.getHooks());
         visibility.giveItems();
     }
 
@@ -177,7 +177,7 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
         });
 
         Participants participants = gameHandle.getParticipants();
-        HookRegistrar hooks = gameHandle.getHookRegistrar();
+        HookRegistrar hooks = gameHandle.getHooks();
 
         CheckpointHelper.setupResetItem(hooks, () -> winManager.isGameOver() || !segmentActive, participants::isParticipating)
                 .then(this::resetPlayerToCheckpoint);

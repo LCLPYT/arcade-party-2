@@ -77,7 +77,7 @@ public class AnvilFallInstance extends EliminationGameInstance {
 
         var manager = new VisibilityManager(team, Visibility.PARTIALLY_VISIBLE);
         var handler = new VisibilityHandler(manager, gameHandle.getTranslations(), gameHandle.getParticipants());
-        handler.init(gameHandle.getHookRegistrar());
+        handler.init(gameHandle.getHooks());
     }
 
     @Override
@@ -93,7 +93,7 @@ public class AnvilFallInstance extends EliminationGameInstance {
         setupBossBar();
         startAnvilSpawning();
 
-        gameHandle.getHookRegistrar().registerHook(PlayerMoveCallback.HOOK, this::onPlayerMove);
+        gameHandle.getHooks().registerHook(PlayerMoveCallback.HOOK, this::onPlayerMove);
 
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
             repelPlayer(player, player.getPos());

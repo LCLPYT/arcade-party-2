@@ -41,7 +41,7 @@ public class TntRunInstance extends EliminationGameInstance {
         useNoHealing();
         useRemainingPlayersDisplay();
 
-        HookRegistrar hooks = gameHandle.getHookRegistrar();
+        HookRegistrar hooks = gameHandle.getHooks();
 
         hooks.registerHook(BlockBreakParticleCallback.HOOK, (world, pos, state) -> true);
     }

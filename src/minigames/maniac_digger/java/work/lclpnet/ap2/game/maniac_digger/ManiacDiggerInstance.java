@@ -113,7 +113,7 @@ public class ManiacDiggerInstance extends FFAGameInstance implements MapBootstra
     protected void ready() {
         gameHandle.protect(config -> config.allow(ProtectionTypes.BREAK_BLOCKS, ProtectionTypes.MODIFY_INVENTORY));
 
-        HookRegistrar hooks = gameHandle.getHookRegistrar();
+        HookRegistrar hooks = gameHandle.getHooks();
 
         hooks.registerHook(BlockModificationHooks.BREAK_BLOCK, (world, pos, entity) ->
                 !(entity instanceof ServerPlayerEntity player) || !canBreak(player, pos));

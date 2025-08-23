@@ -129,7 +129,7 @@ public abstract class BaseGameInstance implements MiniGameInstance {
 
         sendMapCredits();
 
-        gameHandle.getDeathMessages().replaceVanillaDeathMessages(world, gameHandle.getHookRegistrar());
+        gameHandle.getDeathMessages().replaceVanillaDeathMessages(world, gameHandle.getHooks());
 
         prepare();
 
@@ -143,7 +143,7 @@ public abstract class BaseGameInstance implements MiniGameInstance {
     private void configureLocatorBar() {
         if (locatorBarEnabled) return;
 
-        gameHandle.getHookRegistrar().registerHook(PlayerWaypointCallback.HOOK, (player, waypoint) -> true);
+        gameHandle.getHooks().registerHook(PlayerWaypointCallback.HOOK, (player, waypoint) -> true);
 
         if (world != null) {
             world.getWaypointHandler().clear();
@@ -273,7 +273,7 @@ public abstract class BaseGameInstance implements MiniGameInstance {
     }
 
     private void registerDefaultHooks() {
-        HookRegistrar hooks = gameHandle.getHookRegistrar();
+        HookRegistrar hooks = gameHandle.getHooks();
         WorldFacade worldFacade = gameHandle.getWorldFacade();
         PlayerUtil playerUtil = gameHandle.getPlayerUtil();
 
@@ -332,7 +332,7 @@ public abstract class BaseGameInstance implements MiniGameInstance {
      * Disables any form of healing. Damage is still allowed.
      */
     protected final void useNoHealing() {
-        HookRegistrar hooks = gameHandle.getHookRegistrar();
+        HookRegistrar hooks = gameHandle.getHooks();
 
         hooks.registerHook(EntityHealthCallback.HOOK, (entity, health)
                 -> health > entity.getHealth());
@@ -374,7 +374,7 @@ public abstract class BaseGameInstance implements MiniGameInstance {
             bossBar.add(player);
         }
 
-        bossBar.init(gameHandle.getHookRegistrar());
+        bossBar.init(gameHandle.getHooks());
 
         return bossBar;
     }
