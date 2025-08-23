@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.host_default.util;
+package work.lclpnet.ap2.mode_default.util;
 
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.server.MinecraftServer;
@@ -21,12 +21,12 @@ import work.lclpnet.ap2.api.game.team.TeamConfig;
 import work.lclpnet.ap2.api.map.MapFacade;
 import work.lclpnet.ap2.api.util.music.SongManager;
 import work.lclpnet.ap2.core.type.ApServerPlayerEntity;
-import work.lclpnet.ap2.host_default.ApMiniGameArgs;
-import work.lclpnet.ap2.host_default.activity.MiniGameActivity;
-import work.lclpnet.ap2.host_default.activity.PreparationActivity;
 import work.lclpnet.ap2.impl.game.PlayerUtil;
 import work.lclpnet.ap2.impl.util.DeathMessages;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
+import work.lclpnet.ap2.mode_default.ApMiniGameArgs;
+import work.lclpnet.ap2.mode_default.activity.MiniGameActivity;
+import work.lclpnet.ap2.mode_default.activity.PreparationActivity;
 import work.lclpnet.kibu.cmd.type.CommandRegistrar;
 import work.lclpnet.kibu.hook.HookStack;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;

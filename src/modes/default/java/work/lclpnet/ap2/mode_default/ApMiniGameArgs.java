@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.host_default;
+package work.lclpnet.ap2.mode_default;
 
 import net.minecraft.server.MinecraftServer;
 import org.slf4j.Logger;
@@ -18,7 +18,7 @@ import work.lclpnet.lobby.game.api.WorldFacade;
  * All objects in this class should be required in the scope of a mini-game, e.g. {@link Translations},
  * {@link HookStack}, {@link SchedulerStack}, {@link WorldFacade} etc.
  * Other stuff that is required for the "base" game cycle, so outside the mini-game scope,
- * should rather go into the {@link work.lclpnet.ap2.host_default.util.ApBaseArgs} container.
+ * should rather go into the {@link work.lclpnet.ap2.mode_default.util.ApBaseArgs} container.
  */
 public record ApMiniGameArgs(
         MinecraftServer server, Logger logger, Translations translations, HookStack hookStack,

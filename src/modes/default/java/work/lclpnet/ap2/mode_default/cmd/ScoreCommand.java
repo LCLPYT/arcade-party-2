@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.host_default.cmd;
+package work.lclpnet.ap2.mode_default.cmd;
 
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.context.CommandContext;
@@ -6,8 +6,8 @@ import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.minecraft.command.argument.EntityArgumentType;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
-import work.lclpnet.ap2.host_default.util.ScoreManager;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
+import work.lclpnet.ap2.mode_default.util.ScoreManager;
 import work.lclpnet.kibu.cmd.type.CommandRegistrar;
 import work.lclpnet.kibu.cmd.type.KibuCommand;
 import work.lclpnet.kibu.translate.Translations;

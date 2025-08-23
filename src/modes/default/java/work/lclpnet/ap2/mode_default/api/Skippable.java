@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.host_default.api;
+package work.lclpnet.ap2.mode_default.api;
 
 public interface Skippable {
 

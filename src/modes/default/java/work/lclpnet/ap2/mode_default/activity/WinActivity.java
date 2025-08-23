@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.host_default.activity;
+package work.lclpnet.ap2.mode_default.activity;
 
 import it.unimi.dsi.fastutil.objects.ObjectIntPair;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
@@ -13,14 +13,14 @@ import work.lclpnet.activity.ComponentActivity;
 import work.lclpnet.activity.component.ComponentBundle;
 import work.lclpnet.activity.component.builtin.BuiltinComponents;
 import work.lclpnet.ap2.api.util.action.Action;
-import work.lclpnet.ap2.host_default.util.ApBaseArgs;
-import work.lclpnet.ap2.host_default.util.BaseActivityConfigurator;
-import work.lclpnet.ap2.host_default.util.ScoreManager;
 import work.lclpnet.ap2.impl.game.Announcer;
 import work.lclpnet.ap2.impl.game.PlayerUtil;
 import work.lclpnet.ap2.impl.game.ResultAnnouncement;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.util.Fireworks;
+import work.lclpnet.ap2.mode_default.util.ApBaseArgs;
+import work.lclpnet.ap2.mode_default.util.BaseActivityConfigurator;
+import work.lclpnet.ap2.mode_default.util.ScoreManager;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.Scheduler;
 import work.lclpnet.kibu.title.Title;

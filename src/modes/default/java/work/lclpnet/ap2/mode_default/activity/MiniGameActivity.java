@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.host_default.activity;
+package work.lclpnet.ap2.mode_default.activity;
 
 import net.minecraft.server.network.ServerPlayerEntity;
 import work.lclpnet.activity.ComponentActivity;
@@ -9,14 +9,14 @@ import work.lclpnet.ap2.api.base.ParticipantListener;
 import work.lclpnet.ap2.api.base.PlayerManager;
 import work.lclpnet.ap2.api.game.MiniGame;
 import work.lclpnet.ap2.api.game.MiniGameInstance;
-import work.lclpnet.ap2.host_default.cmd.DrawCommand;
-import work.lclpnet.ap2.host_default.cmd.RemakeCommand;
-import work.lclpnet.ap2.host_default.cmd.WinCommand;
-import work.lclpnet.ap2.host_default.util.ApBaseArgs;
-import work.lclpnet.ap2.host_default.util.DefaultMiniGameHandle;
 import work.lclpnet.ap2.impl.activity.ArcadePartyComponents;
 import work.lclpnet.ap2.impl.activity.ScoreboardComponent;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
+import work.lclpnet.ap2.mode_default.cmd.DrawCommand;
+import work.lclpnet.ap2.mode_default.cmd.RemakeCommand;
+import work.lclpnet.ap2.mode_default.cmd.WinCommand;
+import work.lclpnet.ap2.mode_default.util.ApBaseArgs;
+import work.lclpnet.ap2.mode_default.util.DefaultMiniGameHandle;
 import work.lclpnet.kibu.cmd.type.CommandRegistrar;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.EntityUsePortalCallback;

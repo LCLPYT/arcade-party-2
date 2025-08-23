@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.host_default;
+package work.lclpnet.ap2.mode_default;
 
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.item.ItemStack;

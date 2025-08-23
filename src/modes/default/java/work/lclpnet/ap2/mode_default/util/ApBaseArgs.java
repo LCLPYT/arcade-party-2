@@ -1,10 +1,10 @@
-package work.lclpnet.ap2.host_default.util;
+package work.lclpnet.ap2.mode_default.util;
 
 import work.lclpnet.ap2.api.base.GameQueue;
 import work.lclpnet.ap2.api.base.PlayerManager;
 import work.lclpnet.ap2.api.util.music.SongCache;
-import work.lclpnet.ap2.host_default.ApMiniGameArgs;
-import work.lclpnet.ap2.host_default.cmd.ForceGameCommand;
+import work.lclpnet.ap2.mode_default.ApMiniGameArgs;
+import work.lclpnet.ap2.mode_default.cmd.ForceGameCommand;
 import work.lclpnet.lobby.game.api.GameFinisher;
 
 /**

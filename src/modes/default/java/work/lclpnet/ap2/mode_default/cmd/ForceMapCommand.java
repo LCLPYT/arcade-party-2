@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.host_default.cmd;
+package work.lclpnet.ap2.mode_default.cmd;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
@@ -8,7 +8,7 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import work.lclpnet.ap2.api.game.MiniGame;
 import work.lclpnet.ap2.api.map.MapFacade;
-import work.lclpnet.ap2.host_default.cmd.arg.MapSuggestionProvider;
+import work.lclpnet.ap2.mode_default.cmd.arg.MapSuggestionProvider;
 import work.lclpnet.kibu.cmd.type.CommandRegistrar;
 import work.lclpnet.kibu.cmd.type.KibuCommand;
 
