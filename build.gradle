@@ -203,6 +203,7 @@ dependencies {
     modImplementation("work.lclpnet.mods:combat-control:${project.combat_control_version}")
     modImplementation("work.lclpnet.mods:notica:${project.notica_version}")
     modImplementation("work.lclpnet.mods:mg-lobby:${project.lobby_version}")
+    modImplementation("net.fabricmc:fabric-language-kotlin:${project.kotlin_version}")
 
     // optional runtime dependencies (not explicitly required for compilation, but needed to play the game)
     modLocalRuntime("work.lclpnet.mods:pal:${project.pal_version}")
