@@ -8,12 +8,16 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.ClickEvent;
 import net.minecraft.text.HoverEvent;
 import net.minecraft.text.Text;
+import work.lclpnet.ap2.api.game.MiniGameHandle;
+import work.lclpnet.ap2.impl.game.BaseGameInstance;
+import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.notica.network.NoticaNetworking;
 
 import java.net.URI;
 import java.util.function.Predicate;
 
+import static java.lang.Math.max;
 import static net.minecraft.util.Formatting.*;
 
 public class Hints {
@@ -21,6 +25,10 @@ public class Hints {
 
     private final Translations translations;
     private final MinecraftServer server;
+
+    public Hints(MiniGameHandle gameHandle) {
+        this(gameHandle.getTranslations(), gameHandle.getServer());
+    }
 
     public Hints(Translations translations, MinecraftServer server) {
         this.translations = translations;
@@ -49,6 +57,13 @@ public class Hints {
             player.sendMessage(hint);
             player.playSoundToPlayer(SoundEvents.ENTITY_CHICKEN_EGG, SoundCategory.PLAYERS, 0.5f, 0.5f);
         }
+    }
+
+    public void sendBeforeReady(BaseGameInstance gameInstance, Mod mod) {
+        MiniGameHandle gameHandle = gameInstance.getGameHandle();
+
+        gameHandle.getGameScheduler().timeout(() -> sendModHint(mod),
+                max(0, gameInstance.getInitialDelay() - Ticks.seconds(3)));
     }
 
     public record Mod(String name, URI link, Predicate<ServerPlayerEntity> installed) {

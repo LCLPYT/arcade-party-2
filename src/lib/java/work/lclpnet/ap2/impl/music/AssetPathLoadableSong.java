@@ -1,11 +1,11 @@
-package work.lclpnet.ap2.impl.util.music;
+package work.lclpnet.ap2.impl.music;
 
 import net.minecraft.util.Identifier;
 import org.slf4j.Logger;
-import work.lclpnet.ap2.api.util.music.ConfiguredSong;
-import work.lclpnet.ap2.api.util.music.LoadableSong;
-import work.lclpnet.ap2.api.util.music.SongCache;
-import work.lclpnet.ap2.api.util.music.SongInfo;
+import work.lclpnet.ap2.api.music.ConfiguredSong;
+import work.lclpnet.ap2.api.music.LoadableSong;
+import work.lclpnet.ap2.api.music.SongCache;
+import work.lclpnet.ap2.api.music.SongInfo;
 import work.lclpnet.lobby.game.asset.AssetPath;
 import work.lclpnet.lobby.game.asset.AssetRepository;
 import work.lclpnet.notica.api.CheckedSong;

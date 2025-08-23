@@ -1,6 +1,8 @@
-package work.lclpnet.ap2.game.musical_minecart;
+package work.lclpnet.ap2.impl.music;
 
 import lombok.Getter;
+import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.text.ClickEvent;
 import net.minecraft.text.HoverEvent;
 import net.minecraft.text.Text;
@@ -8,12 +10,10 @@ import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
-import work.lclpnet.ap2.ApConstants;
-import work.lclpnet.ap2.api.util.music.*;
+import work.lclpnet.ap2.api.game.MiniGameHandle;
+import work.lclpnet.ap2.api.music.*;
 import work.lclpnet.ap2.impl.ds.IndexedSet;
 import work.lclpnet.ap2.impl.util.UriUtil;
-import work.lclpnet.ap2.impl.util.music.SimpleWeightedSong;
-import work.lclpnet.ap2.impl.util.music.VoidSongCache;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.kibu.translate.text.RootText;
 import work.lclpnet.kibu.translate.text.TextTranslatable;
@@ -27,11 +27,13 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static net.minecraft.util.Formatting.*;
+import static work.lclpnet.ap2.impl.util.TranslationUtil.transformText;
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
-public class MMSongs {
+public class SongHandler {
 
-    public static final Identifier MUSICAL_MINECART_TAG = ApConstants.identifier("musical_minecart");
+    public static final float MUSIC_VOLUME = 0.75f;
+
     private final SongManager songManager;
     private final Translations translations;
     private final Random random;
@@ -44,15 +46,19 @@ public class MMSongs {
     private final List<WeightedSong> priority = new ArrayList<>();
     private final SongCache cache = VoidSongCache.INSTANCE;
 
-    public MMSongs(SongManager songManager, Translations translations, Random random, Logger logger) {
+    public SongHandler(MiniGameHandle handle, Random random) {
+        this(handle.getSongManager(), handle.getTranslations(), random, handle.getLogger());
+    }
+
+    public SongHandler(SongManager songManager, Translations translations, Random random, Logger logger) {
         this.songManager = songManager;
         this.translations = translations;
         this.random = random;
         this.logger = logger;
     }
 
-    public CompletableFuture<Void> init() {
-        return songManager.getSongs(MUSICAL_MINECART_TAG).thenAccept(s -> s.stream()
+    public CompletableFuture<Void> loadSongs(Identifier tag) {
+        return songManager.getSongs(tag).thenAccept(s -> s.stream()
                 .sorted(Comparator.comparing(WeightedSong::getSongId))
                 .forEachOrdered(songs::add));
     }
@@ -130,24 +136,24 @@ public class MMSongs {
         if (!from.isBlank()) {
             if (hasAuthor && hasOrigAuthor) {
                 // Song "X" from "Y" by "Z" (original by "W")
-                return translations.translateText("game.ap2.musical_minecart.format.from_by_original",
+                return translations.translateText("ap2.music.format.from_by_original",
                         styled(name, YELLOW), styled(from, AQUA), styled(author, AQUA), styled(originalAuthor, DARK_AQUA)).formatted(GREEN);
             }
 
             if (!hasAuthor && !hasOrigAuthor) {
                 // Song "X" from "Y"
-                return translations.translateText("game.ap2.musical_minecart.format.from",
+                return translations.translateText("ap2.music.format.from",
                         styled(name, YELLOW), styled(from, AQUA)).formatted(GREEN);
             }
 
             // Song "X" from "Y" by "Z"
-            return translations.translateText("game.ap2.musical_minecart.format.from_by",
+            return translations.translateText("ap2.music.format.from_by",
                     styled(name, YELLOW), styled(from, AQUA), styled(hasAuthor ? author : originalAuthor, AQUA)).formatted(GREEN);
         }
 
         if (hasAuthor && hasOrigAuthor) {
             // Song "X" by "Y" (original by "Z")
-            return translations.translateText("game.ap2.musical_minecart.format.by_original",
+            return translations.translateText("ap2.music.format.by_original",
                     styled(name, YELLOW), styled(author, AQUA), styled(originalAuthor, DARK_AQUA)).formatted(GREEN);
         }
 
@@ -159,8 +165,32 @@ public class MMSongs {
         }
 
         // Song "X" by "Y"
-        return translations.translateText("game.ap2.musical_minecart.format.by",
+        return translations.translateText("ap2.music.format.by",
                 styled(name, YELLOW), styled(hasAuthor ? author : originalAuthor, AQUA)).formatted(GREEN);
+    }
+
+    public @Nullable TranslatedText nowPlayingText(ConfiguredSong configuredSong) {
+        TextTranslatable title = getSongTitle(configuredSong.info(), configuredSong.checkedSong().song().metaData());
+
+        if (title == null) return null;
+
+        return transformText(
+                translations.translateText("ap2.music.now_playing", title),
+                text -> Text.literal("🎵 ").append(text).formatted(GREEN),
+                translations
+        );
+    }
+
+    public SongWrapper play(ConfiguredSong song, MinecraftServer server) {
+        var songWrapper = MusicHelper.playSong(song, MUSIC_VOLUME, server);
+
+        TranslatedText nowPlaying = nowPlayingText(song);
+
+        if (nowPlaying != null) {
+            nowPlaying.sendTo(PlayerLookup.all(server));
+        }
+
+        return songWrapper;
     }
 
     public Set<Identifier> getSongIds() {

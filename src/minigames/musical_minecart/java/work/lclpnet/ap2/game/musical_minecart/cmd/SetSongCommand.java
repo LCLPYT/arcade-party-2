@@ -8,8 +8,8 @@ import net.minecraft.command.argument.IdentifierArgumentType;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
-import work.lclpnet.ap2.api.util.music.WeightedSong;
-import work.lclpnet.ap2.game.musical_minecart.MMSongs;
+import work.lclpnet.ap2.api.music.WeightedSong;
+import work.lclpnet.ap2.impl.music.SongHandler;
 import work.lclpnet.kibu.cmd.type.CommandRegistrar;
 import work.lclpnet.kibu.cmd.type.KibuCommand;
 
@@ -20,10 +20,10 @@ import static net.minecraft.server.command.CommandManager.literal;
 
 public class SetSongCommand implements KibuCommand {
 
-    private final MMSongs songs;
+    private final SongHandler songs;
     private final Runnable skipCurrent;
 
-    public SetSongCommand(MMSongs songs, Runnable skipCurrent) {
+    public SetSongCommand(SongHandler songs, Runnable skipCurrent) {
         this.songs = songs;
         this.skipCurrent = skipCurrent;
     }

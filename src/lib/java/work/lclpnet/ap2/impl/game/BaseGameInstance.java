@@ -1,5 +1,6 @@
 package work.lclpnet.ap2.impl.game;
 
+import lombok.Getter;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.entity.boss.BossBar;
 import net.minecraft.entity.damage.DamageTypes;
@@ -63,6 +64,7 @@ import static work.lclpnet.ap2.impl.util.TranslationUtil.quote;
 /// Note that this game instance is not bound be of a specific type, i.e. subclasses can be ob type FFA, TEAM etc.
 public abstract class BaseGameInstance implements MiniGameInstance {
 
+    @Getter
     protected final MiniGameHandle gameHandle;
     protected final ApMapProperties mapProperties = new ApMapProperties();
     @Nullable
@@ -297,7 +299,7 @@ public abstract class BaseGameInstance implements MiniGameInstance {
         });
     }
 
-    protected int getInitialDelay() {
+    public int getInitialDelay() {
         int players = gameHandle.getParticipants().getAsSet().size();
         return PlayerUtil.getLoadingDelayTicks(players);
     }

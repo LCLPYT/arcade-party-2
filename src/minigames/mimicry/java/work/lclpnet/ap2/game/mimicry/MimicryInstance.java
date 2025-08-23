@@ -10,6 +10,7 @@ import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import org.jetbrains.annotations.NotNull;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.map.MapBootstrap;
@@ -65,7 +66,7 @@ public class MimicryInstance extends FFAGameInstance implements MapBootstrap {
     }
 
     @Override
-    public CompletableFuture<Void> createWorldBootstrap(ServerWorld world, GameMap map) {
+    public @NotNull CompletableFuture<Void> createWorldBootstrap(@NotNull ServerWorld world, @NotNull GameMap map) {
         BlockBox buttons = MapUtil.readBox(map.requireProperty("button-box"));
 
         var generator = new StackedRoomGenerator<>(world, map, StackedRoomGenerator.Coordinates.ABSOLUTE, (pos, spawn, yaw, structure) -> {

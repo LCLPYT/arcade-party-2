@@ -19,7 +19,7 @@ import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.MiniGameResults;
 import work.lclpnet.ap2.api.game.team.TeamConfig;
 import work.lclpnet.ap2.api.map.MapFacade;
-import work.lclpnet.ap2.api.util.music.SongManager;
+import work.lclpnet.ap2.api.music.SongManager;
 import work.lclpnet.ap2.core.type.ApServerPlayerEntity;
 import work.lclpnet.ap2.impl.game.PlayerUtil;
 import work.lclpnet.ap2.impl.util.DeathMessages;

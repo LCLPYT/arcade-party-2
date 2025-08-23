@@ -1,8 +1,8 @@
-package work.lclpnet.ap2.impl.util.music;
+package work.lclpnet.ap2.impl.music;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import work.lclpnet.ap2.api.util.music.SongCache;
+import work.lclpnet.ap2.api.music.SongCache;
 import work.lclpnet.notica.api.CheckedSong;
 
 /**

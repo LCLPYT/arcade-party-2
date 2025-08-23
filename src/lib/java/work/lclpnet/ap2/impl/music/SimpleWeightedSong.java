@@ -1,9 +1,9 @@
-package work.lclpnet.ap2.impl.util.music;
+package work.lclpnet.ap2.impl.music;
 
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.NotNull;
-import work.lclpnet.ap2.api.util.music.LoadableSong;
-import work.lclpnet.ap2.api.util.music.WeightedSong;
+import work.lclpnet.ap2.api.music.LoadableSong;
+import work.lclpnet.ap2.api.music.WeightedSong;
 import work.lclpnet.ap2.impl.ds.WeightedList;
 
 import java.util.Collections;

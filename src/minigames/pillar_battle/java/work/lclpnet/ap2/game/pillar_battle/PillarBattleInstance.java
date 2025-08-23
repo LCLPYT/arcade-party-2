@@ -12,6 +12,7 @@ import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.GameRules;
 import net.minecraft.world.border.WorldBorder;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.map.MapBootstrap;
@@ -53,7 +54,7 @@ public class PillarBattleInstance extends EliminationGameInstance implements Map
     }
 
     @Override
-    public CompletableFuture<Void> createWorldBootstrap(ServerWorld world, GameMap map) {
+    public @NotNull CompletableFuture<Void> createWorldBootstrap(@NotNull ServerWorld world, @NotNull GameMap map) {
         var setup = new PbSetup(world, map, gameHandle.getLogger());
 
         return setup.load().thenRun(() -> pillars = setup.placePillars(gameHandle.getParticipants(), random));

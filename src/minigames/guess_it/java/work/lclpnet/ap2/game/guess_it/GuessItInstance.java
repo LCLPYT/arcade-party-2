@@ -9,6 +9,7 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.world.GameRules;
+import org.jetbrains.annotations.NotNull;
 import work.lclpnet.ap2.ApConstants;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
@@ -348,7 +349,7 @@ public class GuessItInstance extends FFAGameInstance implements MapBootstrap {
     }
 
     @Override
-    public CompletableFuture<Void> createWorldBootstrap(ServerWorld world, GameMap map) {
+    public @NotNull CompletableFuture<Void> createWorldBootstrap(@NotNull ServerWorld world, @NotNull GameMap map) {
         return SoundSubtitles.load().thenAccept(sub -> soundSubtitles = sub);
     }
 

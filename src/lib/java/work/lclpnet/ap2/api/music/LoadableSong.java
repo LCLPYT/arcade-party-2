@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.api.util.music;
+package work.lclpnet.ap2.api.music;
 
 import net.minecraft.util.Identifier;
 import org.slf4j.Logger;

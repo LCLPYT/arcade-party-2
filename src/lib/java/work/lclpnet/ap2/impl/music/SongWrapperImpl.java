@@ -1,6 +1,6 @@
-package work.lclpnet.ap2.impl.util.music;
+package work.lclpnet.ap2.impl.music;
 
-import work.lclpnet.ap2.api.util.music.SongWrapper;
+import work.lclpnet.ap2.api.music.SongWrapper;
 import work.lclpnet.notica.api.SongHandle;
 
 public class SongWrapperImpl implements SongWrapper {

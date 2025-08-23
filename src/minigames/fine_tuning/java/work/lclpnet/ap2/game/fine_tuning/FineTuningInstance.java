@@ -2,6 +2,7 @@ package work.lclpnet.ap2.game.fine_tuning;
 
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
@@ -39,7 +40,7 @@ public class FineTuningInstance extends FFAGameInstance implements MapBootstrap 
     }
 
     @Override
-    public CompletableFuture<Void> createWorldBootstrap(ServerWorld world, GameMap gameMap) {
+    public @NotNull CompletableFuture<Void> createWorldBootstrap(@NotNull ServerWorld world, @NotNull GameMap gameMap) {
         setup = new FineTuningSetup(gameHandle, gameMap, world);
         return setup.createRooms();
     }

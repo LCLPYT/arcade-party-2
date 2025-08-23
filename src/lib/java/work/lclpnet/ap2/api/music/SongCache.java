@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.api.util.music;
+package work.lclpnet.ap2.api.music;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

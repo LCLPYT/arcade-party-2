@@ -18,6 +18,7 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.GameRules;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.ApConstants;
 import work.lclpnet.ap2.api.base.Participants;
@@ -96,7 +97,7 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
     }
 
     @Override
-    public CompletableFuture<Void> createWorldBootstrap(ServerWorld world, GameMap map) {
+    public @NotNull CompletableFuture<Void> createWorldBootstrap(@NotNull ServerWorld world, @NotNull GameMap map) {
         world.setTimeOfDay(4000);
 
         var setup = new JumpAndRunSetup(gameHandle, map, world, TARGET_MINUTES);

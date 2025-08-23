@@ -83,7 +83,7 @@ public class EggventureInstance extends FFAGameInstance implements MapBootstrap 
     }
 
     @Override
-    public CompletableFuture<Void> createWorldBootstrap(ServerWorld world, GameMap map) {
+    public @NotNull CompletableFuture<Void> createWorldBootstrap(@NotNull ServerWorld world, @NotNull GameMap map) {
         BlockShape shape = MapUtil.readShape(map, "egg-area");
         List<BlockPos> positions = new ArrayList<>();
 
