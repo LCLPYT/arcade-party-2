@@ -42,6 +42,6 @@ public class TestMiniGame implements MiniGame {
 
     @Override
     public @NotNull MiniGameInstance createInstance(@NotNull MiniGameHandle gameHandle) {
-        return null;
+        throw new UnsupportedOperationException();
     }
 }
