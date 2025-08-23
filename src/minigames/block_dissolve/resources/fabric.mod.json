@@ -16,6 +16,7 @@
     "ap2-lib": "*"
   },
   "custom": {
+    "timestamp": 1704845940,
     "modmenu": {
       "parent": "ap2-minigames"
     }

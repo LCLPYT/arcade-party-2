@@ -4,6 +4,8 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableBiMap;
 import net.fabricmc.loader.api.FabricLoader;
+import net.fabricmc.loader.api.entrypoint.EntrypointContainer;
+import net.fabricmc.loader.api.metadata.CustomValue;
 import net.minecraft.util.Identifier;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.api.base.MiniGameManager;
@@ -22,7 +24,13 @@ public class FabricMiniGameManager implements MiniGameManager {
     private final Set<MiniGame> gameSet;  // use a separate set that is backed by a LinkedHashSet (order preserving)
 
     public FabricMiniGameManager(Logger logger) {
-        List<MiniGame> miniGames = FabricLoader.getInstance().getEntrypoints(MINIGAME_ENTRYPOINT, MiniGame.class);
+        List<MiniGame> miniGames = FabricLoader.getInstance()
+                .getEntrypointContainers(MINIGAME_ENTRYPOINT, MiniGame.class)
+                .stream()
+                .sorted(minigameOrdering())
+                .map(EntrypointContainer::getEntrypoint)
+                .toList();
+
         Set<MiniGame> registry = new LinkedHashSet<>(miniGames);
 
         BiMap<Identifier, MiniGame> byId = HashBiMap.create();
@@ -37,6 +45,14 @@ public class FabricMiniGameManager implements MiniGameManager {
 
         this.games = ImmutableBiMap.copyOf(byId);
         this.gameSet = Collections.unmodifiableSet(registry);
+    }
+
+    private Comparator<EntrypointContainer<MiniGame>> minigameOrdering() {
+        return Comparator.comparingLong(container -> {
+            CustomValue timestamp = container.getProvider().getMetadata().getCustomValue("timestamp");
+
+            return timestamp != null ? timestamp.getAsNumber().longValue() : Long.MAX_VALUE;
+        });
     }
 
     @Override
