@@ -4,6 +4,7 @@ import net.minecraft.MinecraftVersion;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.ApConstants;
 import work.lclpnet.ap2.api.config.Ap2Config;
+import work.lclpnet.ap2.impl.base.FabricMiniGameManager;
 import work.lclpnet.ap2.impl.i18n.VanillaTranslations;
 import work.lclpnet.ap2.impl.util.AssetManager;
 import work.lclpnet.config.json.JsonConfigFactory;
@@ -13,6 +14,12 @@ import work.lclpnet.lobby.game.api.GameFactory;
 import work.lclpnet.lobby.game.api.GameInstance;
 import work.lclpnet.translations.loader.MultiTranslationLoader;
 import work.lclpnet.translations.loader.TranslationLoader;
+import work.lclpnet.translations.loader.UrlArchiveTranslationLoader;
+
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.List;
+import java.util.Objects;
 
 public class ArcadePartyFactory implements GameFactory {
 
@@ -37,6 +44,24 @@ public class ArcadePartyFactory implements GameFactory {
         var assetManager = AssetManager.getShared(MinecraftVersion.CURRENT.name());
         vanillaTranslations = new VanillaTranslations(assetManager, logger, translationKey -> translationKey.startsWith("death."));
         loader.addLoader(vanillaTranslations.getTranslationLoader());
+
+        for (var source : new FabricMiniGameManager(logger).getGameSources()) {
+            var urls = source.rootPaths().stream()
+                    .map(path -> {
+                        try {
+                            return path.toUri().toURL();
+                        } catch (MalformedURLException e) {
+                            logger.error("Failed to convert path {} to url", path, e);
+                            return null;
+                        }
+                    })
+                    .filter(Objects::nonNull)
+                    .toArray(URL[]::new);
+
+            var miniGameTranslations = UrlArchiveTranslationLoader.ofJson(urls, List.of("lang/"), logger);
+
+            loader.addLoader(miniGameTranslations);
+        }
 
         return loader;
     }

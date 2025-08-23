@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import work.lclpnet.ap2.api.base.MiniGameManager;
 import work.lclpnet.ap2.api.game.MiniGame;
 
+import java.nio.file.Path;
 import java.util.*;
 
 /**
@@ -55,6 +56,14 @@ public class FabricMiniGameManager implements MiniGameManager {
         });
     }
 
+    public List<MiniGameSource> getGameSources() {
+        return FabricLoader.getInstance()
+                .getEntrypointContainers(MINIGAME_ENTRYPOINT, MiniGame.class)
+                .stream()
+                .map(container -> new MiniGameSource(container.getProvider().getRootPaths()))
+                .toList();
+    }
+
     @Override
     public Set<MiniGame> getGames() {
         return gameSet;
@@ -64,4 +73,6 @@ public class FabricMiniGameManager implements MiniGameManager {
     public Optional<MiniGame> getGame(Identifier gameId) {
         return Optional.ofNullable(games.get(gameId));
     }
+
+    public record MiniGameSource(List<Path> rootPaths) {}
 }
