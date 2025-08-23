@@ -32,7 +32,7 @@ public class MusicHelper {
         LoadableSong loadable = song.getRandomElement(random);
 
         loadable.load(cache, logger)
-                .thenAccept(config -> playSong(wrapper, config, volume, players, server))
+                .thenAccept(config -> playSong(wrapper, config, volume, config.info().meta().startTick().orElse(0), players, server))
                 .whenComplete((res, err) -> {
                     if (err == null) return;
 
@@ -42,15 +42,15 @@ public class MusicHelper {
         return wrapper;
     }
 
-    public static SongWrapper playSong(ConfiguredSong song, float volume, MinecraftServer server) {
+    public static SongWrapper playSong(ConfiguredSong song, float volume, int startTick, MinecraftServer server) {
         var wrapper = new SongWrapperImpl();
 
-        playSong(wrapper, song, volume, PlayerLookup.all(server), server);
+        playSong(wrapper, song, volume, startTick, PlayerLookup.all(server), server);
 
         return wrapper;
     }
 
-    private static void playSong(SongWrapperImpl wrapper, ConfiguredSong song, float volume,
+    private static void playSong(SongWrapperImpl wrapper, ConfiguredSong song, float volume, int startTick,
                                  Collection<? extends ServerPlayerEntity> players, MinecraftServer server) {
 
         Notica notica = Notica.getInstance(server);
@@ -62,7 +62,7 @@ public class MusicHelper {
 
         var playbackOptions = new PlaybackOptions(finalVolume, PlaybackVariant.STREAMED, stereoMode);
 
-        SongHandle handle = notica.playSong(song.checkedSong(), playbackOptions, meta.startTick().orElse(0), players);
+        SongHandle handle = notica.playSong(song.checkedSong(), playbackOptions, startTick, players);
 
         wrapper.setHandle(handle);
     }
