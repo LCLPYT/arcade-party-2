@@ -182,10 +182,10 @@ public class SongHandler {
     }
 
     public SongWrapper play(ConfiguredSong song, MinecraftServer server) {
-        return play(song, server, song.info().meta().startTick().orElse(0));
+        return play(song, server, song.info().meta().startTick().orElse(0), true);
     }
 
-    public SongWrapper play(ConfiguredSong song, MinecraftServer server, int startTick) {
+    public SongWrapper play(ConfiguredSong song, MinecraftServer server, int startTick, boolean sendText) {
         var songWrapper = MusicHelper.playSong(song, MUSIC_VOLUME, startTick, server);
 
         TranslatedText nowPlaying = nowPlayingText(song);

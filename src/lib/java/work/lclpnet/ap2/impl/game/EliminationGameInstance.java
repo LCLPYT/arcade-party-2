@@ -145,6 +145,10 @@ public abstract class EliminationGameInstance extends FFAGameInstance implements
         this.teleportEliminated = false;
     }
 
+    protected final void eliminateBelowCriticalHeight() {
+        commons().whenBelowCriticalHeight().then(this::eliminate);
+    }
+
     @Override
     public synchronized void eliminateAll(Iterable<? extends ServerPlayerEntity> players) {
         Participants participants = gameHandle.getParticipants();

@@ -552,7 +552,11 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
             song.stop();
         }
 
-        ActivityManager.getInstance().startActivity(activity);
+        try {
+            ActivityManager.getInstance().startActivity(activity);
+        } catch (Throwable t) {
+            args.miniGameArgs().logger().error("Failed to switch activity", t);
+        }
     }
 
     /**
