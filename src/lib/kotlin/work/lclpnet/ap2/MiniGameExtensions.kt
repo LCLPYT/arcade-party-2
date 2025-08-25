@@ -12,3 +12,12 @@ fun BaseGameInstance.timeout(ticks: Int = 0, seconds: Int = 0, action: () -> Uni
 
 fun BaseGameInstance.timeout(ticks: Int = 0, seconds: Int = 0, action: (RunningTask) -> Unit) =
     gameHandle.gameScheduler.timeout(ticks(ticks, seconds), action)!!
+
+fun BaseGameInstance.interval(ticks: Int, action: () -> Unit) =
+    gameHandle.gameScheduler.interval(ticks, action)!!
+
+fun BaseGameInstance.interval(ticks: Int, action: (RunningTask) -> Unit) =
+    gameHandle.gameScheduler.interval(ticks, action)!!
+
+fun BaseGameInstance.translate(key: String, vararg args: Any) =
+    gameHandle.translations.translateText(key, *args)!!

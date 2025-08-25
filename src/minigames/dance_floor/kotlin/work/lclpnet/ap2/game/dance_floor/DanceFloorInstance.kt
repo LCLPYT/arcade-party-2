@@ -9,6 +9,7 @@ import net.minecraft.server.world.ServerWorld
 import net.minecraft.sound.SoundCategory
 import net.minecraft.sound.SoundEvents
 import net.minecraft.util.DyeColor
+import work.lclpnet.ap2.*
 import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.map.MapBootstrap
 import work.lclpnet.ap2.api.music.ConfiguredSong
@@ -18,14 +19,8 @@ import work.lclpnet.ap2.game.dance_floor.cmd.SkipSongCommand
 import work.lclpnet.ap2.impl.game.EliminationGameInstance
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.music.SongHandler
-import work.lclpnet.ap2.impl.util.BlockHelper
-import work.lclpnet.ap2.impl.util.Hints
-import work.lclpnet.ap2.impl.util.ParticleHelper
-import work.lclpnet.ap2.impl.util.SoundHelper
+import work.lclpnet.ap2.impl.util.*
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape
-import work.lclpnet.ap2.players
-import work.lclpnet.ap2.setBlock
-import work.lclpnet.ap2.timeout
 import work.lclpnet.kibu.scheduler.Ticks
 import work.lclpnet.kibu.scheduler.api.TaskHandle
 import work.lclpnet.lobby.game.map.GameMap
@@ -40,6 +35,7 @@ private val INITIAL_DELAY_MAX_TICKS = Ticks.seconds(16)
 private val INITIAL_DELAY_MIN_TICKS = Ticks.seconds(10)
 private val DELAY_HALF_LIFE = Ticks.minutes(1)
 private val TOTAL_MIN_DELAY_TICKS = Ticks.seconds(2)
+private const val PARTICLE_AMOUNT = 3
 
 // TOTAL_MIN_DALY will be reached after the following amount of seconds:
 // DELAY_HALF_LIFE * log((INITIAL_MAX_TICKS + INITIAL_MIN_TICKS) * 0.5 / TOTAL_MIN_DELAY) / log(2)
@@ -55,6 +51,7 @@ class DanceFloorInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(g
     var totalDurationTicks = 0
     val existingColors = mutableSetOf<DyeColor>()
     var task: TaskHandle? = null
+    var newSong = true
 
     init {
         useRemainingPlayersDisplay()
@@ -75,13 +72,27 @@ class DanceFloorInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(g
     override fun ready() {
         eliminateBelowCriticalHeight()
         nextSong()
+
+        val particleShape = MapUtil.readShape(map, "particle-shape")
+
+        interval(7) { ->
+            if (currentSong == null) return@interval
+
+            repeat(PARTICLE_AMOUNT) {
+                val pos = particleShape.bounds().randomPos(Random.asJavaRandom())
+                world.spawnParticles(ParticleTypes.NOTE, pos, 10, 3.0, 2.0, 3.0, 1.0)
+            }
+        }
     }
 
     @Synchronized
     fun nextSong() {
         loadingSong?.cancel(true)
         currentSong?.stop()
+        currentSong = null
         loadingSong = songHandler.loadNextSong()
+        newSong = true
+        songProgress = null
 
         nextCycle()
     }
@@ -100,35 +111,40 @@ class DanceFloorInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(g
     }
 
     private fun randomizeBlocks() {
-        for (pos in floor()) {
+        for (pos in floorShape()) {
             val color = DyeColor.entries.random()
             existingColors.add(color)
             world.setBlock(pos, BlockHelper.getWool(color))
         }
     }
 
-    private fun floor(): BlockShape = MapUtil.readShape(map, "floor")!!
+    private fun floorShape(): BlockShape = MapUtil.readShape(map, "floor")!!
 
     @Synchronized
     fun playSong(song: ConfiguredSong) {
         val startTick = if (songProgress != null) songProgress!! else song.info.meta.startTick.orElse(0)
 
-        currentSong = songHandler.play(song, gameHandle.server, startTick, songProgress == null)
+        currentSong = songHandler.play(song, gameHandle.server, startTick, newSong)
+        newSong = false
 
         val delayTicks = sampleDelayTicks(totalDurationTicks)
+        val songTicks = song.checkedSong().song().tempo().durationTicks(startTick, delayTicks / 20f)
 
         task = timeout(delayTicks) { ->
             totalDurationTicks += delayTicks
-            songProgress = startTick + delayTicks
+            songProgress = startTick + songTicks
             stopMusic()
         }
     }
 
+    @Synchronized
     fun stopMusic() {
         currentSong?.stop()
+        currentSong = null
 
         // give players the correct wool to compare with the floor
-        val block = BlockHelper.getWool(existingColors.random())
+        val dyeColor = existingColors.random()
+        val block = BlockHelper.getWool(dyeColor)
 
         for (player in players()) {
             for (i in 0..8) {
@@ -139,13 +155,17 @@ class DanceFloorInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(g
         SoundHelper.playSound(world, SoundEvents.ENTITY_IRON_GOLEM_HURT, SoundCategory.HOSTILE, 0.9f, 0f)
 
         task = timeout(seconds = 4) { ->
-            SoundHelper.playSound(world, SoundEvents.ENTITY_WITHER_BREAK_BLOCK, SoundCategory.HOSTILE, 0.4f, 1.4f)
+            SoundHelper.playSound(world, SoundEvents.ENTITY_WITHER_BREAK_BLOCK, SoundCategory.HOSTILE, 0.4f, 0.8f)
             removeBlocks(block)
         }
+
+        translate("game.ap2.dance_floor.stand_on", TextUtil.getVanillaName(block))
+            .withColor(dyeColor.signColor)
+            .sendTo(players(), true)
     }
 
     fun removeBlocks(except: Block) {
-        for (pos in floor()) {
+        for (pos in floorShape()) {
             if (world.getBlockState(pos)!!.isOf(except)) continue
 
             world.setBlock(pos, Blocks.AIR)
