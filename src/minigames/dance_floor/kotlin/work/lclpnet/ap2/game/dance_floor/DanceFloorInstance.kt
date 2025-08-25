@@ -25,22 +25,19 @@ import work.lclpnet.kibu.scheduler.Ticks
 import work.lclpnet.kibu.scheduler.api.TaskHandle
 import work.lclpnet.lobby.game.map.GameMap
 import java.util.concurrent.CompletableFuture
-import kotlin.math.exp
-import kotlin.math.ln
+import kotlin.math.max
 import kotlin.math.roundToInt
 import kotlin.random.Random
 import kotlin.random.asJavaRandom
 
-private val INITIAL_DELAY_MAX_TICKS = Ticks.seconds(16)
-private val INITIAL_DELAY_MIN_TICKS = Ticks.seconds(10)
-private val DELAY_HALF_LIFE = Ticks.minutes(1)
-private val TOTAL_MIN_DELAY_TICKS = Ticks.seconds(2)
+private val MIN_DELAY_TICKS = Ticks.seconds(10)
+private val MAX_DELAY_TICKS = Ticks.seconds(16)
+
+private val INITIAL_BLOCK_DELAY_TICKS = Ticks.seconds(5)
+private const val BLOCK_DELAY_TICKS_DECREASE_PER_MINUTE = 30
+private const val TOTAL_MIN_BLOCK_DELAY_TICKS = 5
+
 private const val PARTICLE_AMOUNT = 3
-
-// TOTAL_MIN_DALY will be reached after the following amount of seconds:
-// DELAY_HALF_LIFE * log((INITIAL_MAX_TICKS + INITIAL_MIN_TICKS) * 0.5 / TOTAL_MIN_DELAY) / log(2)
-
-private val DELAY_RATIO = (INITIAL_DELAY_MAX_TICKS - INITIAL_DELAY_MIN_TICKS) / INITIAL_DELAY_MAX_TICKS.toFloat()
 
 class DanceFloorInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gameHandle), MapBootstrap {
 
@@ -82,6 +79,10 @@ class DanceFloorInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(g
                 val pos = particleShape.bounds().randomPos(Random.asJavaRandom())
                 world.spawnParticles(ParticleTypes.NOTE, pos, 10, 3.0, 2.0, 3.0, 1.0)
             }
+        }
+
+        interval(1) { ->
+            totalDurationTicks++
         }
     }
 
@@ -127,11 +128,10 @@ class DanceFloorInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(g
         currentSong = songHandler.play(song, gameHandle.server, startTick, newSong)
         newSong = false
 
-        val delayTicks = sampleDelayTicks(totalDurationTicks)
+        val delayTicks = Random.nextInt(MAX_DELAY_TICKS - MIN_DELAY_TICKS + 1) + MIN_DELAY_TICKS
         val songTicks = song.checkedSong().song().tempo().durationTicks(startTick, delayTicks / 20f)
 
         task = timeout(delayTicks) { ->
-            totalDurationTicks += delayTicks
             songProgress = startTick + songTicks
             stopMusic()
         }
@@ -154,7 +154,13 @@ class DanceFloorInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(g
 
         SoundHelper.playSound(world, SoundEvents.ENTITY_IRON_GOLEM_HURT, SoundCategory.HOSTILE, 0.9f, 0f)
 
-        task = timeout(seconds = 4) { ->
+        val decreaseTicks = (totalDurationTicks * BLOCK_DELAY_TICKS_DECREASE_PER_MINUTE / Ticks.minutes(1).toFloat())
+            .roundToInt()
+            .coerceAtLeast(0)
+
+        val blockDelayTicks = max(TOTAL_MIN_BLOCK_DELAY_TICKS, INITIAL_BLOCK_DELAY_TICKS - decreaseTicks)
+
+        task = timeout(blockDelayTicks) { ->
             SoundHelper.playSound(world, SoundEvents.ENTITY_WITHER_BREAK_BLOCK, SoundCategory.HOSTILE, 0.4f, 0.8f)
             removeBlocks(block)
         }
@@ -171,24 +177,10 @@ class DanceFloorInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(g
             world.setBlock(pos, Blocks.AIR)
         }
 
-        task = timeout(seconds = 5) { ->
+        task = timeout(seconds = 4) { ->
             SoundHelper.playSound(world, SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, SoundCategory.NEUTRAL, 0.5f, 1f)
             nextCycle()
         }
-    }
-
-    fun sampleDelayTicks(timeTicks: Int): Int {
-        val decay = exp(-timeTicks.toDouble() * ln(2.0) / DELAY_HALF_LIFE)
-
-        // average shrinks exponentially
-        val mean = (INITIAL_DELAY_MIN_TICKS + INITIAL_DELAY_MAX_TICKS) * 0.5 * decay
-
-        // reconstruct min and max from avg and ratio
-        val halfRange = mean * DELAY_RATIO
-        val min = (mean - halfRange).roundToInt().coerceAtLeast(TOTAL_MIN_DELAY_TICKS)
-        val max = (mean + halfRange).roundToInt().coerceAtLeast(min)
-
-        return Random.nextInt(max - min + 1) + min
     }
 
     override fun onEliminated(player: ServerPlayerEntity?) {
