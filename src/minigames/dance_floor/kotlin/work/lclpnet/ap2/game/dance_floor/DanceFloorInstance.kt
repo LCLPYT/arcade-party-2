@@ -34,7 +34,7 @@ private val MIN_DELAY_TICKS = Ticks.seconds(10)
 private val MAX_DELAY_TICKS = Ticks.seconds(16)
 
 private val INITIAL_BLOCK_DELAY_TICKS = Ticks.seconds(5)
-private const val BLOCK_DELAY_TICKS_DECREASE_PER_MINUTE = 30
+private const val BLOCK_DELAY_TICKS_DECREASE_PER_MINUTE = 27
 private const val TOTAL_MIN_BLOCK_DELAY_TICKS = 5
 
 private const val PARTICLE_AMOUNT = 3
@@ -64,11 +64,13 @@ class DanceFloorInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(g
         SkipSongCommand(this::nextSong).register(gameHandle.commands)
 
         Hints(gameHandle).sendBeforeReady(this, Hints.Mod.NOTICA)
+
+        preloadNextSong()
     }
 
     override fun ready() {
         eliminateBelowCriticalHeight()
-        nextSong()
+        nextCycle()
 
         val particleShape = MapUtil.readShape(map, "particle-shape")
 
@@ -88,18 +90,20 @@ class DanceFloorInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(g
 
     @Synchronized
     fun nextSong() {
-        loadingSong?.cancel(true)
-        currentSong?.stop()
-        currentSong = null
-        loadingSong = songHandler.loadNextSong()
-        newSong = true
-        songProgress = null
+        task?.cancel()
+
+        resetSong()
+        preloadNextSong()
 
         nextCycle()
     }
 
     private fun nextCycle() {
-        loadingSong?.thenAccept(::playSong)
+        task?.cancel()
+
+        synchronized(this) {
+            loadingSong?.thenAccept(::playSong)
+        }
 
         randomizeBlocks()
 
@@ -128,13 +132,56 @@ class DanceFloorInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(g
         currentSong = songHandler.play(song, gameHandle.server, startTick, newSong)
         newSong = false
 
-        val delayTicks = Random.nextInt(MAX_DELAY_TICKS - MIN_DELAY_TICKS + 1) + MIN_DELAY_TICKS
-        val songTicks = song.checkedSong().song().tempo().durationTicks(startTick, delayTicks / 20f)
+        // check how many song-ticks are left
+        val totalSongTicks = song.checkedSong.song.lastNoteTick().orElseGet { song.checkedSong.song.durationTicks() }
+        val remainingSongTicks = totalSongTicks - startTick
+
+        // sample a random duration in game ticks
+        val randomDelayTicks = Random.nextInt(MAX_DELAY_TICKS - MIN_DELAY_TICKS + 1) + MIN_DELAY_TICKS
+
+        // convert to song ticks, limited by remaining song ticks
+        val songTicks = song.checkedSong.song.tempo()
+            .durationTicks(startTick, randomDelayTicks / 20f)
+            .coerceAtMost(remainingSongTicks)
+
+        // convert clamped back to game time
+        val delaySeconds = song.checkedSong.song.tempo().durationSeconds(startTick, songTicks)
+        val delayTicks = delaySeconds.times(20).roundToInt().coerceAtLeast(0)
 
         task = timeout(delayTicks) { ->
-            songProgress = startTick + songTicks
+            val progress = startTick + songTicks
+
+            if (progress >= totalSongTicks) {
+                resetSong()
+                preloadNextSong()
+            } else {
+                songProgress = progress
+            }
+
             stopMusic()
         }
+    }
+
+    private fun resetSong() {
+        loadingSong?.cancel(true)
+        currentSong?.stop()
+        currentSong = null
+        loadingSong = null
+        newSong = true
+        songProgress = null
+    }
+
+    @Synchronized
+    private fun preloadNextSong(): CompletableFuture<ConfiguredSong> {
+        var current = loadingSong
+
+        if (current != null)
+            return current
+
+        current = songHandler.loadNextSong()
+        loadingSong = current
+
+        return current
     }
 
     @Synchronized
