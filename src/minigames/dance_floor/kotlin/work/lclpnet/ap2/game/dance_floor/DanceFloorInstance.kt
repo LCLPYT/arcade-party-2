@@ -8,7 +8,6 @@ import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.server.world.ServerWorld
 import net.minecraft.sound.SoundCategory
 import net.minecraft.sound.SoundEvents
-import net.minecraft.util.DyeColor
 import work.lclpnet.ap2.*
 import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.map.MapBootstrap
@@ -34,7 +33,7 @@ private val MIN_DELAY_TICKS = Ticks.seconds(10)
 private val MAX_DELAY_TICKS = Ticks.seconds(16)
 
 private val INITIAL_BLOCK_DELAY_TICKS = Ticks.seconds(5)
-private const val BLOCK_DELAY_TICKS_DECREASE_PER_MINUTE = 27
+private const val BLOCK_DELAY_TICKS_DECREASE_PER_MINUTE = 25
 private const val TOTAL_MIN_BLOCK_DELAY_TICKS = 5
 
 private const val PARTICLE_AMOUNT = 3
@@ -46,9 +45,9 @@ class DanceFloorInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(g
     var currentSong: SongWrapper? = null
     var songProgress: Int? = null
     var totalDurationTicks = 0
-    val existingColors = mutableSetOf<DyeColor>()
     var task: TaskHandle? = null
     var newSong = true
+    var blockRandomizer: BlockRandomizer? = null
 
     init {
         useRemainingPlayersDisplay()
@@ -64,6 +63,8 @@ class DanceFloorInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(g
         SkipSongCommand(this::nextSong).register(gameHandle.commands)
 
         Hints(gameHandle).sendBeforeReady(this, Hints.Mod.NOTICA)
+
+        blockRandomizer = BlockRandomizer(floorShape(), world)
 
         preloadNextSong()
     }
@@ -105,23 +106,13 @@ class DanceFloorInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(g
             loadingSong?.thenAccept(::playSong)
         }
 
-        randomizeBlocks()
+        blockRandomizer?.randomizeBlocks()
 
-        // remove blocks from hotbar
         for (player in players()) {
-            for (i in 0..8) {
-                player.inventory.setStack(i, ItemStack.EMPTY)
-            }
+            player.inventory.setStack(4, ItemStack.EMPTY)
         }
     }
 
-    private fun randomizeBlocks() {
-        for (pos in floorShape()) {
-            val color = DyeColor.entries.random()
-            existingColors.add(color)
-            world.setBlock(pos, BlockHelper.getWool(color))
-        }
-    }
 
     private fun floorShape(): BlockShape = MapUtil.readShape(map, "floor")!!
 
@@ -190,13 +181,12 @@ class DanceFloorInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(g
         currentSong = null
 
         // give players the correct wool to compare with the floor
-        val dyeColor = existingColors.random()
+        val dyeColor = blockRandomizer!!.existingColors.random()
         val block = BlockHelper.getWool(dyeColor)
 
         for (player in players()) {
-            for (i in 0..8) {
-                player.inventory.setStack(i, ItemStack(block))
-            }
+            player.inventory.setStack(4, ItemStack(block))
+            player.setSelectedSlot(4)
         }
 
         SoundHelper.playSound(world, SoundEvents.ENTITY_IRON_GOLEM_HURT, SoundCategory.HOSTILE, 0.9f, 0f)
