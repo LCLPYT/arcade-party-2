@@ -4,6 +4,7 @@ import net.minecraft.block.Block
 import net.minecraft.block.Blocks
 import net.minecraft.item.ItemStack
 import net.minecraft.particle.ParticleTypes
+import net.minecraft.scoreboard.AbstractTeam
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.server.world.ServerWorld
 import net.minecraft.sound.SoundCategory
@@ -19,6 +20,9 @@ import work.lclpnet.ap2.impl.game.EliminationGameInstance
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.music.SongHandler
 import work.lclpnet.ap2.impl.util.*
+import work.lclpnet.ap2.impl.util.handler.Visibility
+import work.lclpnet.ap2.impl.util.handler.VisibilityHandler
+import work.lclpnet.ap2.impl.util.handler.VisibilityManager
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape
 import work.lclpnet.kibu.scheduler.Ticks
 import work.lclpnet.kibu.scheduler.api.TaskHandle
@@ -30,10 +34,10 @@ import kotlin.random.Random
 import kotlin.random.asJavaRandom
 
 private val MIN_DELAY_TICKS = Ticks.seconds(10)
-private val MAX_DELAY_TICKS = Ticks.seconds(16)
+private val MAX_DELAY_TICKS = Ticks.seconds(15)
 
 private val INITIAL_BLOCK_DELAY_TICKS = Ticks.seconds(5)
-private const val BLOCK_DELAY_TICKS_DECREASE_PER_MINUTE = 25
+private const val BLOCK_DELAY_TICKS_DECREASE_PER_MINUTE = 26
 private const val TOTAL_MIN_BLOCK_DELAY_TICKS = 5
 
 private const val PARTICLE_AMOUNT = 3
@@ -67,6 +71,7 @@ class DanceFloorInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(g
         blockRandomizer = BlockRandomizer(floorShape(), world)
 
         preloadNextSong()
+        setupTeam()
     }
 
     override fun ready() {
@@ -87,6 +92,23 @@ class DanceFloorInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(g
         interval(1) { ->
             totalDurationTicks++
         }
+    }
+
+    fun setupTeam() {
+        val scoreboardManager = gameHandle.getScoreboardManager()
+        val team = scoreboardManager.createTeam("team")
+        team.setCollisionRule(AbstractTeam.CollisionRule.NEVER)
+        scoreboardManager.joinTeam(gameHandle.getParticipants(), team)
+
+        val visibility = VisibilityHandler(
+            VisibilityManager(team, Visibility.VISIBLE),
+            gameHandle.translations,
+            gameHandle.participants
+        )
+
+        visibility.init(gameHandle.getHooks())
+
+        visibility.giveItems()
     }
 
     @Synchronized
@@ -112,7 +134,6 @@ class DanceFloorInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(g
             player.inventory.setStack(4, ItemStack.EMPTY)
         }
     }
-
 
     private fun floorShape(): BlockShape = MapUtil.readShape(map, "floor")!!
 
