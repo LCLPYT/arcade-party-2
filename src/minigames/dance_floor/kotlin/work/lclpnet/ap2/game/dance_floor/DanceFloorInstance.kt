@@ -129,7 +129,7 @@ class DanceFloorInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(g
     fun playSong(song: ConfiguredSong) {
         val startTick = if (songProgress != null) songProgress!! else song.info.meta.startTick.orElse(0)
 
-        currentSong = songHandler.play(song, gameHandle.server, startTick, newSong)
+        currentSong = songHandler.play(song, gameHandle.server, startTick, newSong, true)
         newSong = false
 
         // check how many song-ticks are left

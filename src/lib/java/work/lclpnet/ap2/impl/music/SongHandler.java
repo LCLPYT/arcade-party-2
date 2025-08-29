@@ -18,6 +18,7 @@ import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.kibu.translate.text.RootText;
 import work.lclpnet.kibu.translate.text.TextTranslatable;
 import work.lclpnet.kibu.translate.text.TranslatedText;
+import work.lclpnet.notica.api.data.LoopOverride;
 import work.lclpnet.notica.api.data.SongMeta;
 
 import java.net.URI;
@@ -181,12 +182,14 @@ public class SongHandler {
         );
     }
 
-    public SongWrapper play(ConfiguredSong song, MinecraftServer server) {
-        return play(song, server, song.info().meta().startTick().orElse(0), true);
-    }
+    public SongWrapper play(ConfiguredSong song, MinecraftServer server, int startTick, boolean sendText, boolean noLoop) {
+        LoopOverride loop = LoopOverride.DEFAULT;
 
-    public SongWrapper play(ConfiguredSong song, MinecraftServer server, int startTick, boolean sendText) {
-        var songWrapper = MusicHelper.playSong(song, MUSIC_VOLUME, startTick, server);
+        if (noLoop) {
+            loop = loop.withEnabled(false);
+        }
+
+        var songWrapper = MusicHelper.playSong(song, MUSIC_VOLUME, loop, startTick, server);
 
         if (!sendText) return songWrapper;
 
