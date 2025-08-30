@@ -210,7 +210,7 @@ class BlockRandomizer(val floorShape: BlockShape, val world: ServerWorld) {
         private var tightness = 4.0
 
         override fun init() {
-            arms = Random.nextInt(2, 8)
+            arms = Random.nextInt(4, 9)
             tightness = Random.nextDouble(2.0, 8.0)
         }
 
