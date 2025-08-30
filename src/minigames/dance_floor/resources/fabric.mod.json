@@ -13,7 +13,6 @@
         "adapter": "kotlin",
         "value": "work.lclpnet.ap2.game.dance_floor.DanceFloorMiniGame"
       }
-
     ]
   },
   "depends": {

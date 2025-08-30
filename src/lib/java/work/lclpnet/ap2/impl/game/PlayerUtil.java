@@ -160,6 +160,7 @@ public class PlayerUtil {
 
         setAllowFlight(false);
         effects.clear();
+        stateOverrides.clear();
     }
 
     public void updatePlayerListNames() {
