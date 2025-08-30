@@ -12,6 +12,7 @@ import net.minecraft.util.PlayerInput;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.GameMode;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.base.PlayerManager;
 import work.lclpnet.ap2.impl.util.effect.ApEffect;
 import work.lclpnet.combatctl.api.CombatControl;
@@ -22,10 +23,7 @@ import work.lclpnet.kibu.hook.util.PlayerUtils;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.lobby.util.PlayerReset;
 
-import java.util.Collection;
-import java.util.EnumSet;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 import static java.lang.Math.*;
 
@@ -36,6 +34,7 @@ public class PlayerUtil {
     private final PlayerManager playerManager;
     private final CombatControl combatControl;
     private final Set<ApEffect> effects = new ObjectOpenHashSet<>(1);
+    private final Map<UUID, State> stateOverrides = new HashMap<>();
     @Getter
     private GameMode defaultGameMode = INITIAL_GAMEMODE;
     @Getter
@@ -84,8 +83,22 @@ public class PlayerUtil {
         players.forEach(effect::remove);
     }
 
+    public void setStateOverride(ServerPlayerEntity player, @Nullable State state) {
+        if (state == null) {
+            stateOverrides.remove(player.getUuid());
+        } else {
+            stateOverrides.put(player.getUuid(), state);
+        }
+    }
+
     @NotNull
     public State getState(ServerPlayerEntity player) {
+        State override = stateOverrides.get(player.getUuid());
+
+        if (override != null) {
+            return override;
+        }
+
         return playerManager.isParticipating(player) ? State.DEFAULT : State.SPECTATOR;
     }
 

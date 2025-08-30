@@ -159,7 +159,7 @@
   "game.ap2.panda_finder.find.aggressive": "an aggressive",
   "game.ap2.panda_finder.cooldown": "Do not guess pandas so often!",
   "game.ap2.jump_and_run": "Jump 'n' Run",
-  "game.ap2.jump_and_run.description": "Complete a randomly generated jump 'n' run segments. The sooner you make it to the goal, the more points you get!",
+  "game.ap2.jump_and_run.description": "Complete randomly generated jump 'n' run segments. The sooner you make it to the goal, the more points you get!",
   "game.ap2.jump_and_run.task": "Complete the Jump 'n' Run %s/%s",
   "game.ap2.jump_and_run.completed_room": "Congratulations, you completed room %s",
   "game.ap2.jump_and_run.last_not_completed": "Room %s was skipped as you were the last one remaining",

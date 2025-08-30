@@ -178,7 +178,10 @@ public abstract class EliminationGameInstance extends FFAGameInstance implements
             participants.remove(player);
 
             playerUtil.resetPlayer(player);
-            worldFacade.teleport(player);
+
+            if (teleportEliminated) {
+                worldFacade.teleport(player);
+            }
         }
     }
 

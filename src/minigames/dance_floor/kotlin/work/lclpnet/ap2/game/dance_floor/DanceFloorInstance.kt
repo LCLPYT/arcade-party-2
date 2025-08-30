@@ -9,6 +9,8 @@ import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.server.world.ServerWorld
 import net.minecraft.sound.SoundCategory
 import net.minecraft.sound.SoundEvents
+import net.minecraft.world.GameMode
+import org.json.JSONObject
 import work.lclpnet.ap2.*
 import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.map.MapBootstrap
@@ -17,6 +19,7 @@ import work.lclpnet.ap2.api.music.SongWrapper
 import work.lclpnet.ap2.game.dance_floor.cmd.SetSongCommand
 import work.lclpnet.ap2.game.dance_floor.cmd.SkipSongCommand
 import work.lclpnet.ap2.impl.game.EliminationGameInstance
+import work.lclpnet.ap2.impl.game.PlayerUtil
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.music.SongHandler
 import work.lclpnet.ap2.impl.util.*
@@ -24,6 +27,7 @@ import work.lclpnet.ap2.impl.util.handler.Visibility
 import work.lclpnet.ap2.impl.util.handler.VisibilityHandler
 import work.lclpnet.ap2.impl.util.handler.VisibilityManager
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape
+import work.lclpnet.kibu.hook.util.PositionRotation
 import work.lclpnet.kibu.scheduler.Ticks
 import work.lclpnet.kibu.scheduler.api.TaskHandle
 import work.lclpnet.lobby.game.map.GameMap
@@ -36,8 +40,8 @@ import kotlin.random.asJavaRandom
 private val MIN_DELAY_TICKS = Ticks.seconds(10)
 private val MAX_DELAY_TICKS = Ticks.seconds(15)
 
-private val INITIAL_BLOCK_DELAY_TICKS = Ticks.seconds(5)
-private const val BLOCK_DELAY_TICKS_DECREASE_PER_MINUTE = 26
+private const val INITIAL_BLOCK_DELAY_TICKS = 70
+private const val BLOCK_DELAY_TICKS_DECREASE_PER_MINUTE = 13
 private const val TOTAL_MIN_BLOCK_DELAY_TICKS = 5
 
 private const val PARTICLE_AMOUNT = 3
@@ -45,6 +49,7 @@ private const val PARTICLE_AMOUNT = 3
 class DanceFloorInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gameHandle), MapBootstrap {
 
     val songHandler = SongHandler(gameHandle, Random.asJavaRandom())
+    val eliminate = mutableSetOf<ServerPlayerEntity>()
     var loadingSong: CompletableFuture<ConfiguredSong>? = null
     var currentSong: SongWrapper? = null
     var songProgress: Int? = null
@@ -52,10 +57,13 @@ class DanceFloorInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(g
     var task: TaskHandle? = null
     var newSong = true
     var blockRandomizer: BlockRandomizer? = null
+    var spectatorSpawns = mutableListOf<PositionRotation>()
+    var visibilityManager: VisibilityManager? = null
 
     init {
         useRemainingPlayersDisplay()
         useSurvivalMode()
+        disableTeleportEliminated()
     }
 
     override fun createWorldBootstrap(world: ServerWorld, map: GameMap): CompletableFuture<Void> {
@@ -72,10 +80,23 @@ class DanceFloorInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(g
 
         preloadNextSong()
         setupTeam()
+
+        readSpectatorSpawns()
+    }
+
+    private fun readSpectatorSpawns() {
+        for (item in map.properties.getJSONArray("spectator-spawns")) {
+            if (item !is JSONObject) continue
+
+            val spawn = MapUtil.readCenteredVec3d(item.getJSONArray("spawn"))
+            val yaw = MapUtil.readAngle(item.optNumber("yaw", 0))
+
+            spectatorSpawns.add(PositionRotation(spawn.x, spawn.y, spawn.z, yaw, 0f))
+        }
     }
 
     override fun ready() {
-        eliminateBelowCriticalHeight()
+        commons().whenBelowCriticalHeight().then { player -> softEliminate(player) }
         nextCycle()
 
         val particleShape = MapUtil.readShape(map, "particle-shape")
@@ -94,17 +115,35 @@ class DanceFloorInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(g
         }
     }
 
+    fun softEliminate(player: ServerPlayerEntity) {
+        if (!gameHandle.participants.isParticipating(player) || eliminate.contains(player)) return
+
+        SoundHelper.playSoundAt(player, SoundEvents.ENTITY_GENERIC_EXPLODE.value(), SoundCategory.PLAYERS, 1f, 0f)
+        ParticleHelper.spawnParticleAt(player, ParticleTypes.LAVA, 100, 0.5, 0.5, 0.5, 0.2)
+
+        gameHandle.playerUtil.resetPlayer(player)
+        visibilityManager?.setVisibilityFor(player, Visibility.VISIBLE)
+
+        val pos = spectatorSpawns.randomOrNull()
+
+        if (pos != null) {
+            player.changeGameMode(GameMode.ADVENTURE)
+            player.teleport(pos)
+        } else {
+            player.changeGameMode(GameMode.SPECTATOR)
+        }
+
+        eliminate.add(player)
+    }
+
     fun setupTeam() {
         val scoreboardManager = gameHandle.getScoreboardManager()
         val team = scoreboardManager.createTeam("team")
         team.setCollisionRule(AbstractTeam.CollisionRule.NEVER)
         scoreboardManager.joinTeam(gameHandle.getParticipants(), team)
 
-        val visibility = VisibilityHandler(
-            VisibilityManager(team, Visibility.VISIBLE),
-            gameHandle.translations,
-            gameHandle.participants
-        )
+        visibilityManager = VisibilityManager(team, Visibility.VISIBLE)
+        val visibility = VisibilityHandler(visibilityManager, gameHandle.translations, gameHandle.participants)
 
         visibility.init(gameHandle.getHooks())
 
@@ -237,12 +276,21 @@ class DanceFloorInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(g
 
         task = timeout(seconds = 4) { ->
             SoundHelper.playSound(world, SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, SoundCategory.NEUTRAL, 0.5f, 1f)
-            nextCycle()
+            checkEliminated()
         }
     }
 
+    private fun checkEliminated() {
+        if (!eliminate.isEmpty()) {
+            eliminate.forEach { player -> gameHandle.playerUtil.setStateOverride(player, PlayerUtil.State.DEFAULT) }
+            eliminateAll(eliminate)
+        }
+
+        if (winManager.isGameOver) return
+
+        nextCycle()
+    }
+
     override fun onEliminated(player: ServerPlayerEntity?) {
-        SoundHelper.playSoundAt(player, SoundEvents.ENTITY_GENERIC_EXPLODE.value(), SoundCategory.PLAYERS, 1f, 0f)
-        ParticleHelper.spawnParticleAt(player, ParticleTypes.LAVA, 100, 0.5, 0.5, 0.5, 0.2)
     }
 }

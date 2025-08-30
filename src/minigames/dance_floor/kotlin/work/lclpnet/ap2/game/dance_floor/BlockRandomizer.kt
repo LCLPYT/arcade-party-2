@@ -16,10 +16,10 @@ import kotlin.random.asJavaRandom
 
 interface Pattern {
     val minColors: Int
-        get() = 16
+        get() = 13
 
     val maxColors: Int
-        get() = 16
+        get() = 13
 
     fun init() {}
 
@@ -40,7 +40,6 @@ class BlockRandomizer(val floorShape: BlockShape, val world: ServerWorld) {
         add(Diagonal(), 0.65f)
         add(Signum(), 0.22f)
         add(Angled(), 0.5f)
-        add(RandomSpot(), 0.22f)
         add(Voronoi(), 1f)
         add(Honeycomb(), 1f)
         add(Spirals(), 0.7f)
@@ -55,7 +54,12 @@ class BlockRandomizer(val floorShape: BlockShape, val world: ServerWorld) {
 
         val pattern = patterns.getRandomElement(Random.asJavaRandom())!!.apply { init() }
         val colors = mutableMapOf<Int, DyeColor>()
-        val options = DyeColor.entries.shuffled().take(Random.nextInt(pattern.minColors, pattern.maxColors + 1))
+        val baseColors = listOf(
+            DyeColor.WHITE, DyeColor.ORANGE, DyeColor.MAGENTA, DyeColor.LIGHT_BLUE, DyeColor.YELLOW, DyeColor.LIME,
+            DyeColor.PINK, DyeColor.CYAN, DyeColor.PURPLE, DyeColor.BLUE, DyeColor.GREEN, DyeColor.RED, DyeColor.BLACK
+        )
+
+        val options = baseColors.shuffled().take(Random.nextInt(pattern.minColors, pattern.maxColors + 1))
         val pool = mutableListOf<DyeColor>()
 
         fun randomColor(): DyeColor {
@@ -127,7 +131,7 @@ class BlockRandomizer(val floorShape: BlockShape, val world: ServerWorld) {
         var refAngle = 0.0
 
         override fun init() {
-            subdivisions = Random.nextInt(2, 9)
+            subdivisions = Random.nextInt(5, 12)
             refAngle = Random.nextDouble() * PI * 2
         }
 
@@ -140,28 +144,11 @@ class BlockRandomizer(val floorShape: BlockShape, val world: ServerWorld) {
         }
     }
 
-    inner class RandomSpot : Pattern {
-        var spot = BlockPos.ORIGIN
-        var radius = 5.0
-
-        override fun init() {
-            val minRadius = 5.0
-            val maxRadius = 12.0
-
-            spot = floorShape.randomBlockPos(Random.asJavaRandom())
-            radius = Random.nextDouble() * (maxRadius - minRadius) + minRadius
-        }
-
-        override fun group(pos: BlockPos): Int {
-            return if (pos.isWithinDistance(spot, radius)) 1 else 0
-        }
-    }
-
-    inner class Voronoi(override val minColors: Int = 6, override val maxColors: Int = 10) : Pattern {
+    inner class Voronoi(override val minColors: Int = 5, override val maxColors: Int = 8) : Pattern {
         private var seeds: List<Vec3d> = emptyList()
 
         override fun init() {
-            val count = Random.nextInt(16, 48)
+            val count = Random.nextInt(28, 52)
             seeds = List(count) { floorShape.randomPos(Random.asJavaRandom()) }
         }
 
@@ -170,8 +157,8 @@ class BlockRandomizer(val floorShape: BlockShape, val world: ServerWorld) {
             var closestDist = Double.MAX_VALUE
 
             for ((i, seed) in seeds.withIndex()) {
-                val dx = (pos.x + 0.5 - seed.x)
-                val dz = (pos.z + 0.5 - seed.z)
+                val dx = pos.x + 0.5 - seed.x
+                val dz = pos.z + 0.5 - seed.z
                 val dist = dx * dx + dz * dz
 
                 if (dist < closestDist) {
@@ -197,16 +184,15 @@ class BlockRandomizer(val floorShape: BlockShape, val world: ServerWorld) {
 
             // Cube coordinates for hex
             val q = x - z / 2
-            val r = z
-            val s = -q - r
+            val s = -q - z
 
             // Round to nearest hex
             val rq = round(q)
-            val rr = round(r)
+            val rr = round(z)
             val rs = round(s)
 
             val dq = abs(rq - q)
-            val dr = abs(rr - r)
+            val dr = abs(rr - z)
             val ds = abs(rs - s)
 
             var qh = rq
@@ -299,7 +285,7 @@ class BlockRandomizer(val floorShape: BlockShape, val world: ServerWorld) {
         private var offsetX = 1.0
 
         override fun init() {
-            scale = Random.nextDouble(0.01, 0.09)
+            scale = Random.nextDouble(0.01, 0.08)
             offsetX = Random.nextDouble(0.5, 1.5)
         }
 
