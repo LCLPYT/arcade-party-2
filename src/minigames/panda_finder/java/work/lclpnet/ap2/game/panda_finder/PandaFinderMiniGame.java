@@ -5,6 +5,7 @@ import net.minecraft.item.Items;
 import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
+import org.jetbrains.annotations.NotNull;
 import work.lclpnet.ap2.ApConstants;
 import work.lclpnet.ap2.api.game.*;
 import work.lclpnet.kibu.translate.text.FormatWrapper;
@@ -12,37 +13,37 @@ import work.lclpnet.kibu.translate.text.FormatWrapper;
 public class PandaFinderMiniGame implements MiniGame {
 
     @Override
-    public Identifier getId() {
+    public @NotNull Identifier getId() {
         return ApConstants.identifier("panda_finder");
     }
 
     @Override
-    public GameType getType() {
+    public @NotNull GameType getType() {
         return GameType.FFA;
     }
 
     @Override
-    public String getAuthor() {
+    public @NotNull String getAuthor() {
         return ApConstants.PERSON_LCLP;
     }
 
     @Override
-    public ItemStack getIcon(DynamicRegistryManager manager) {
+    public @NotNull ItemStack getIcon(@NotNull DynamicRegistryManager manager) {
         return new ItemStack(Items.BAMBOO);
     }
 
     @Override
-    public boolean canBeFinale(GameStartContext context) {
+    public boolean canBeFinale(@NotNull GameStartContext context) {
         return true;
     }
 
     @Override
-    public boolean canBePlayed(GameStartContext context) {
+    public boolean canBePlayed(@NotNull GameStartContext context) {
         return true;
     }
 
     @Override
-    public MiniGameInstance createInstance(MiniGameHandle gameHandle) {
+    public @NotNull MiniGameInstance createInstance(@NotNull MiniGameHandle gameHandle) {
         return new PandaFinderInstance(gameHandle);
     }
 

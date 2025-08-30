@@ -82,7 +82,7 @@ public class MiningBattleInstance extends FFAGameInstance implements MapBootstra
     protected void ready() {
         gameHandle.protect(config -> config.allow(ProtectionTypes.BREAK_BLOCKS, (entity, pos) -> canBeMined(pos)));
 
-        HookRegistrar hooks = gameHandle.getHookRegistrar();
+        HookRegistrar hooks = gameHandle.getHooks();
         Participants participants = gameHandle.getParticipants();
 
         hooks.registerHook(BlockModificationHooks.BREAK_BLOCK, (world, pos, entity) -> {

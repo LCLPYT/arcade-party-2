@@ -83,7 +83,7 @@ public abstract class TeamGameInstance extends BaseGameInstance implements Parti
             teamManager = new SimpleTeamManager(playerManager, teamConfig, scoreboardManager, playerUtil);
         }
 
-        teamManager.init(gameHandle.getHookRegistrar());
+        teamManager.init(gameHandle.getHooks());
         teamManager.bind(this);
 
         return teamManager;

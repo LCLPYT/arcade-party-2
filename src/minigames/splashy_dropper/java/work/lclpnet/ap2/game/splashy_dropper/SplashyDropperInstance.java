@@ -94,7 +94,7 @@ public class SplashyDropperInstance extends FFAGameInstance implements MapBootst
 
         commons().teleportToRandomSpawns(random);
 
-        HookRegistrar hooks = gameHandle.getHookRegistrar();
+        HookRegistrar hooks = gameHandle.getHooks();
         movementBlocker.init(hooks);
 
         ServerWorld world = getWorld();
@@ -135,7 +135,7 @@ public class SplashyDropperInstance extends FFAGameInstance implements MapBootst
 
         Translations translations = gameHandle.getTranslations();
         VisibilityHandler visibility = new VisibilityHandler(new VisibilityManager(team, Visibility.PARTIALLY_VISIBLE), translations, gameHandle.getParticipants());
-        visibility.init(gameHandle.getHookRegistrar());
+        visibility.init(gameHandle.getHooks());
 
         visibility.giveItems();
     }

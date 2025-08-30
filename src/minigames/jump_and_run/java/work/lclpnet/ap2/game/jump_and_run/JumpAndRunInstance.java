@@ -18,6 +18,7 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.GameRules;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.ApConstants;
 import work.lclpnet.ap2.api.base.Participants;
@@ -96,7 +97,7 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
     }
 
     @Override
-    public CompletableFuture<Void> createWorldBootstrap(ServerWorld world, GameMap map) {
+    public @NotNull CompletableFuture<Void> createWorldBootstrap(@NotNull ServerWorld world, @NotNull GameMap map) {
         world.setTimeOfDay(4000);
 
         var setup = new JumpAndRunSetup(gameHandle, map, world, TARGET_MINUTES);
@@ -110,7 +111,7 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
                 .set(GameRules.RANDOM_TICK_SPEED, 0)
                 .set(GameRules.DO_DAYLIGHT_CYCLE, false);
 
-        movementObserver.init(gameHandle.getHookRegistrar(), gameHandle.getServer());
+        movementObserver.init(gameHandle.getHooks(), gameHandle.getServer());
 
         bossBar = usePlayerDynamicTaskDisplay(styled(0, YELLOW), styled(jumpAndRun.segments().size(), YELLOW));
         bossBar.setPercent(0);
@@ -150,7 +151,7 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
         scoreboardManager.joinTeam(gameHandle.getParticipants(), team);
 
         VisibilityHandler visibility = new VisibilityHandler(new VisibilityManager(team, Visibility.PARTIALLY_VISIBLE), gameHandle.getTranslations(), gameHandle.getParticipants());
-        visibility.init(gameHandle.getHookRegistrar());
+        visibility.init(gameHandle.getHooks());
         visibility.giveItems();
     }
 
@@ -176,7 +177,7 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
         });
 
         Participants participants = gameHandle.getParticipants();
-        HookRegistrar hooks = gameHandle.getHookRegistrar();
+        HookRegistrar hooks = gameHandle.getHooks();
 
         CheckpointHelper.setupResetItem(hooks, () -> winManager.isGameOver() || !segmentActive, participants::isParticipating)
                 .then(this::resetPlayerToCheckpoint);

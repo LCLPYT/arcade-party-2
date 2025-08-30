@@ -13,7 +13,7 @@ public record RecordKitHandle(
 ) implements KitHandle {
 
     public static RecordKitHandle of(MiniGameHandle gameHandle, DynamicRegistryManager registries, KitReadView readView) {
-        return new RecordKitHandle(gameHandle.getGameInfo().getId(), gameHandle.getHookRegistrar(),
+        return new RecordKitHandle(gameHandle.getGameInfo().getId(), gameHandle.getHooks(),
                 gameHandle.getGameScheduler(), gameHandle.getTranslations(), registries, readView);
     }
 }

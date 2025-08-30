@@ -198,7 +198,7 @@ public class DragonEscapeInstance extends FFAGameInstance {
                 new WindChargeKit(kitHandle)
         ));
 
-        gameHandle.getHookRegistrar().registerHook(PlayerInteractionHooks.USE_ITEM, (_player, world, hand) -> {
+        gameHandle.getHooks().registerHook(PlayerInteractionHooks.USE_ITEM, (_player, world, hand) -> {
             if (!(_player instanceof ServerPlayerEntity player)) return ActionResult.PASS;
 
             ItemStack stack = player.getStackInHand(hand);
@@ -280,7 +280,7 @@ public class DragonEscapeInstance extends FFAGameInstance {
     }
 
     private void blockMovement() {
-        movementBlocker.init(gameHandle.getHookRegistrar());
+        movementBlocker.init(gameHandle.getHooks());
 
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
             movementBlocker.disableMovement(player);
@@ -348,7 +348,7 @@ public class DragonEscapeInstance extends FFAGameInstance {
     }
 
     private void setupSmoothDeath() {
-        gameHandle.getHookRegistrar().registerHook(EntityHealthCallback.HOOK, (entity, health) -> {
+        gameHandle.getHooks().registerHook(EntityHealthCallback.HOOK, (entity, health) -> {
             if (!(entity instanceof ServerPlayerEntity player) || health > 0) return false;
 
             // the player is dying

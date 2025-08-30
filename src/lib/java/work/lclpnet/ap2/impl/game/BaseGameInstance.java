@@ -1,5 +1,6 @@
 package work.lclpnet.ap2.impl.game;
 
+import lombok.Getter;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.entity.boss.BossBar;
 import net.minecraft.entity.damage.DamageTypes;
@@ -63,6 +64,7 @@ import static work.lclpnet.ap2.impl.util.TranslationUtil.quote;
 /// Note that this game instance is not bound be of a specific type, i.e. subclasses can be ob type FFA, TEAM etc.
 public abstract class BaseGameInstance implements MiniGameInstance {
 
+    @Getter
     protected final MiniGameHandle gameHandle;
     protected final ApMapProperties mapProperties = new ApMapProperties();
     @Nullable
@@ -127,7 +129,7 @@ public abstract class BaseGameInstance implements MiniGameInstance {
 
         sendMapCredits();
 
-        gameHandle.getDeathMessages().replaceVanillaDeathMessages(world, gameHandle.getHookRegistrar());
+        gameHandle.getDeathMessages().replaceVanillaDeathMessages(world, gameHandle.getHooks());
 
         prepare();
 
@@ -141,7 +143,7 @@ public abstract class BaseGameInstance implements MiniGameInstance {
     private void configureLocatorBar() {
         if (locatorBarEnabled) return;
 
-        gameHandle.getHookRegistrar().registerHook(PlayerWaypointCallback.HOOK, (player, waypoint) -> true);
+        gameHandle.getHooks().registerHook(PlayerWaypointCallback.HOOK, (player, waypoint) -> true);
 
         if (world != null) {
             world.getWaypointHandler().clear();
@@ -271,7 +273,7 @@ public abstract class BaseGameInstance implements MiniGameInstance {
     }
 
     private void registerDefaultHooks() {
-        HookRegistrar hooks = gameHandle.getHookRegistrar();
+        HookRegistrar hooks = gameHandle.getHooks();
         WorldFacade worldFacade = gameHandle.getWorldFacade();
         PlayerUtil playerUtil = gameHandle.getPlayerUtil();
 
@@ -297,7 +299,7 @@ public abstract class BaseGameInstance implements MiniGameInstance {
         });
     }
 
-    protected int getInitialDelay() {
+    public int getInitialDelay() {
         int players = gameHandle.getParticipants().getAsSet().size();
         return PlayerUtil.getLoadingDelayTicks(players);
     }
@@ -330,7 +332,7 @@ public abstract class BaseGameInstance implements MiniGameInstance {
      * Disables any form of healing. Damage is still allowed.
      */
     protected final void useNoHealing() {
-        HookRegistrar hooks = gameHandle.getHookRegistrar();
+        HookRegistrar hooks = gameHandle.getHooks();
 
         hooks.registerHook(EntityHealthCallback.HOOK, (entity, health)
                 -> health > entity.getHealth());
@@ -372,7 +374,7 @@ public abstract class BaseGameInstance implements MiniGameInstance {
             bossBar.add(player);
         }
 
-        bossBar.init(gameHandle.getHookRegistrar());
+        bossBar.init(gameHandle.getHooks());
 
         return bossBar;
     }

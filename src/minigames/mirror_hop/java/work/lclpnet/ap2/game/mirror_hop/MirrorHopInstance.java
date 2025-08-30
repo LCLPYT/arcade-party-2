@@ -81,7 +81,7 @@ public class MirrorHopInstance extends FFAGameInstance {
     protected void ready() {
         GameMap map = getMap();
         ServerWorld world = getWorld();
-        HookRegistrar hooks = gameHandle.getHookRegistrar();
+        HookRegistrar hooks = gameHandle.getHooks();
         MinecraftServer server = gameHandle.getServer();
 
         BlockBox goal = MapUtil.readBox(map.requireProperty("goal"));

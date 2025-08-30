@@ -2,8 +2,13 @@ package work.lclpnet.ap2.impl.util.world.block_shape;
 
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Position;
+import net.minecraft.util.math.Vec3d;
 import work.lclpnet.ap2.api.util.Collider;
 import work.lclpnet.ap2.impl.util.BlockBox;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 
 public interface BlockShape extends Iterable<BlockPos>, Collider {
 
@@ -42,6 +47,36 @@ public interface BlockShape extends Iterable<BlockPos>, Collider {
     @Override
     default BlockPos max() {
         return bounds().max();
+    }
+
+    default BlockPos randomBlockPos(Random random) {
+        final int maxTries = 100;
+
+        BlockBox bounds = bounds();
+        var mutable = new BlockPos.Mutable();
+
+        for (int i = 0; i < maxTries; i++) {
+            bounds.randomBlockPos(mutable, random);
+
+            if (contains(mutable)) {
+                return mutable;
+            }
+        }
+
+        // fallback - collect all and choose randomly
+        List<BlockPos> positions = new ArrayList<>();
+
+        for (BlockPos pos : this) {
+            positions.add(pos.toImmutable());
+        }
+
+        return positions.get(random.nextInt(positions.size()));
+    }
+
+    default Vec3d randomPos(Random random) {
+        BlockPos p = randomBlockPos(random);
+
+        return new Vec3d(p.getX() + random.nextDouble(), p.getY() + random.nextDouble(), p.getZ() + random.nextDouble());
     }
 
     interface WithRadius {

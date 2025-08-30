@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "id": "ap2-minigame-dance-floor",
+  "version": "${version}",
+  "authors": [
+    "LCLP"
+  ],
+  "license": "AGPL-3.0",
+  "environment": "server",
+  "entrypoints": {
+    "ap2:minigame": [
+      {
+        "adapter": "kotlin",
+        "value": "work.lclpnet.ap2.game.dance_floor.DanceFloorMiniGame"
+      }
+
+    ]
+  },
+  "depends": {
+    "ap2-lib": "*",
+    "fabric-language-kotlin": ">=1.13.5+kotlin.2.2.10"
+  },
+  "custom": {
+    "timestamp": 1755970341,
+    "modmenu": {
+      "parent": "ap2-minigames"
+    }
+  }
+}

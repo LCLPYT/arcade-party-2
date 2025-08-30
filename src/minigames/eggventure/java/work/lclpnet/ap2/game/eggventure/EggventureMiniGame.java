@@ -3,6 +3,7 @@ package work.lclpnet.ap2.game.eggventure;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.util.Identifier;
+import org.jetbrains.annotations.NotNull;
 import work.lclpnet.ap2.ApConstants;
 import work.lclpnet.ap2.api.game.*;
 import work.lclpnet.ap2.impl.util.ApRegistries;
@@ -11,37 +12,37 @@ import work.lclpnet.ap2.impl.util.heads.PlayerHeads;
 public class EggventureMiniGame implements MiniGame {
 
     @Override
-    public boolean canBeFinale(GameStartContext context) {
+    public boolean canBeFinale(@NotNull GameStartContext context) {
         return true;
     }
 
     @Override
-    public boolean canBePlayed(GameStartContext context) {
+    public boolean canBePlayed(@NotNull GameStartContext context) {
         return true;
     }
 
     @Override
-    public MiniGameInstance createInstance(MiniGameHandle gameHandle) {
+    public @NotNull MiniGameInstance createInstance(@NotNull MiniGameHandle gameHandle) {
         return new EggventureInstance(gameHandle);
     }
 
     @Override
-    public Identifier getId() {
+    public @NotNull Identifier getId() {
         return ApConstants.identifier("eggventure");
     }
 
     @Override
-    public GameType getType() {
+    public @NotNull GameType getType() {
         return GameType.FFA;
     }
 
     @Override
-    public String getAuthor() {
+    public @NotNull String getAuthor() {
         return ApConstants.PERSON_LCLP;
     }
 
     @Override
-    public ItemStack getIcon(DynamicRegistryManager manager) {
+    public @NotNull ItemStack getIcon(@NotNull DynamicRegistryManager manager) {
         return manager.getOrThrow(ApRegistries.PLAYER_HEAD)
                 .getValueOrThrow(PlayerHeads.EASTER_EGG_PINK_PATTERN)
                 .createStack();

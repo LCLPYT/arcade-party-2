@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "id": "ap2-host-default",
+  "id": "ap2-mode-default",
   "version": "${version}",
   "name": "Arcade Party 2",
   "description": "An arcade minigame for modern Minecraft where the players must win as many challenges as possible in order to win the game!",
@@ -16,7 +16,7 @@
   "environment": "server",
   "entrypoints": {
     "game-entry": [
-      "work.lclpnet.ap2.host_default.ArcadePartyDefaultGame"
+      "work.lclpnet.ap2.mode_default.ArcadePartyDefaultGame"
     ]
   },
   "depends": {

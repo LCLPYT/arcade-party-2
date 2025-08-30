@@ -106,7 +106,7 @@ public class SpecialItems implements SpecialItemContext {
 
         positions.setShape(shape);
 
-        scene.init(gameHandle.getScheduler(), gameHandle.getHookRegistrar());
+        scene.init(gameHandle.getScheduler(), gameHandle.getHooks());
     }
 
     public static @NotNull BlockShape getSpawnArea(GameMap map) {
@@ -123,7 +123,7 @@ public class SpecialItems implements SpecialItemContext {
 
         scene.onPickup().register(this::pickup);
 
-        HookRegistrar hooks = gameHandle.getHookRegistrar();
+        HookRegistrar hooks = gameHandle.getHooks();
         TaskScheduler scheduler = gameHandle.getGameScheduler();
 
         hooks.registerHook(PlayerInventoryHooks.DROP_ITEM, this::onDropItem);

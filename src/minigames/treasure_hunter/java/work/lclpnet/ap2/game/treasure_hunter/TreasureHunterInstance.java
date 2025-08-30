@@ -67,7 +67,7 @@ public class TreasureHunterInstance extends FFAGameInstance {
 
         Participants participants = gameHandle.getParticipants();
         Translations translations = gameHandle.getTranslations();
-        HookRegistrar hooks = gameHandle.getHookRegistrar();
+        HookRegistrar hooks = gameHandle.getHooks();
 
         hooks.registerHook(PlayerInteractionHooks.USE_BLOCK, (player, world, hand, hitResult) -> {
             if (!(player instanceof ServerPlayerEntity serverPlayer) || !participants.isParticipating(serverPlayer)

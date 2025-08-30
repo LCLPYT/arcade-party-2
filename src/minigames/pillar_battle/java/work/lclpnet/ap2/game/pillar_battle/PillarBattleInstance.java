@@ -12,6 +12,7 @@ import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.GameRules;
 import net.minecraft.world.border.WorldBorder;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.map.MapBootstrap;
@@ -53,7 +54,7 @@ public class PillarBattleInstance extends EliminationGameInstance implements Map
     }
 
     @Override
-    public CompletableFuture<Void> createWorldBootstrap(ServerWorld world, GameMap map) {
+    public @NotNull CompletableFuture<Void> createWorldBootstrap(@NotNull ServerWorld world, @NotNull GameMap map) {
         var setup = new PbSetup(world, map, gameHandle.getLogger());
 
         return setup.load().thenRun(() -> pillars = setup.placePillars(gameHandle.getParticipants(), random));
@@ -75,7 +76,7 @@ public class PillarBattleInstance extends EliminationGameInstance implements Map
                 .set(GameRules.DO_PATROL_SPAWNING, false)
                 .set(GameRules.KEEP_INVENTORY, false);
 
-        movementBlocker.init(gameHandle.getHookRegistrar());
+        movementBlocker.init(gameHandle.getHooks());
 
         if (pillars == null) return;
 
@@ -138,7 +139,7 @@ public class PillarBattleInstance extends EliminationGameInstance implements Map
         var scheduler = gameHandle.getGameScheduler();
         scheduler.interval(randomizer::giveRandomItems, RANDOM_ITEM_DELAY_TICKS);
 
-        var hooks = gameHandle.getHookRegistrar();
+        var hooks = gameHandle.getHooks();
 
         hooks.registerHook(ServerLivingEntityHooks.ALLOW_DAMAGE, (entity, source, amount) -> {
             if (entity instanceof ServerPlayerEntity player && player.getHungerManager().getFoodLevel() >= 20) {

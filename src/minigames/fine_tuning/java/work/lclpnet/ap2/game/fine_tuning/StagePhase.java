@@ -75,7 +75,7 @@ class StagePhase {
 
         readStageProps();
 
-        movementBlocker.init(gameHandle.getHookRegistrar());
+        movementBlocker.init(gameHandle.getHooks());
 
         gameHandle.getGameScheduler().timeout(this::beginSongPresentation, Ticks.seconds(5));
     }

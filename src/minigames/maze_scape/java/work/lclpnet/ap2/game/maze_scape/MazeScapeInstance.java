@@ -14,6 +14,7 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.shape.VoxelShape;
 import net.minecraft.util.shape.VoxelShapes;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3d;
 import org.slf4j.Logger;
@@ -68,7 +69,7 @@ public class MazeScapeInstance extends EliminationGameInstance implements MapBoo
     }
 
     @Override
-    public CompletableFuture<Void> createWorldBootstrap(ServerWorld world, GameMap map) {
+    public @NotNull CompletableFuture<Void> createWorldBootstrap(@NotNull ServerWorld world, @NotNull GameMap map) {
         world.setTimeOfDay(18_000);
 
         ModelManager modelManager = ApResources.getInstance();
@@ -100,7 +101,7 @@ public class MazeScapeInstance extends EliminationGameInstance implements MapBoo
             return;
         }
 
-        CommandRegistrar commandRegistrar = gameHandle.getCommandRegistrar();
+        CommandRegistrar commandRegistrar = gameHandle.getCommands();
 
         if (ApConstants.DEBUG) {
             new DebugPathCommand(struct, debugController).register(commandRegistrar);
@@ -139,7 +140,7 @@ public class MazeScapeInstance extends EliminationGameInstance implements MapBoo
             manager.spawnMobs();
 
             var reveal = new MonsterReveal(ApResources.getInstance(), manager.participants(), world, manager.monsters());
-            reveal.start(scheduler, gameHandle.getHookRegistrar());
+            reveal.start(scheduler, gameHandle.getHooks());
 
             scheduler.timeout(reveal::stop, MOB_REVEAL_TICKS);
         }, MOB_SPAWN_DELAY_TICKS);

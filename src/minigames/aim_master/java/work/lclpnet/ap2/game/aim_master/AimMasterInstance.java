@@ -67,7 +67,7 @@ public class AimMasterInstance extends FFAGameInstance implements MapBootstrap {
     }
 
     @Override
-    public CompletableFuture<Void> createWorldBootstrap(ServerWorld world, GameMap map) {
+    public @NotNull CompletableFuture<Void> createWorldBootstrap(@NotNull ServerWorld world, @NotNull GameMap map) {
 
         var generator = new StackedRoomGenerator<>(world, map, StackedRoomGenerator.Coordinates.RELATIVE, (pos, spawn, yaw, structure) -> new AimMasterDomain(spawn, yaw, world));
         var positionGenerator = new PositionGenerator(SPHERE_RADIUS, SPHERE_OFFSET, UPWARD_TILT, ELLIPSE_FACTOR, new BlockPos(0, 0, 0), CONE_FOV, TARGET_NUMBER, TARGET_MIN_DISTANCE);
@@ -112,7 +112,7 @@ public class AimMasterInstance extends FFAGameInstance implements MapBootstrap {
         }
 
         //hooks
-        HookRegistrar hooks = gameHandle.getHookRegistrar();
+        HookRegistrar hooks = gameHandle.getHooks();
         hooks.registerHook(PlayerInventoryHooks.SLOT_CHANGE, (player, slot) -> {
             if (!(slot == 4)) PlayerInventoryAccess.setSelectedSlot(player, 4);
         });

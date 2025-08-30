@@ -61,7 +61,7 @@ public class ApocalypseSurvivalInstance extends EliminationGameInstance {
                 .set(GameRules.DO_MOB_GRIEFING, true)
                 .set(GameRules.NATURAL_REGENERATION, false);
 
-        HookRegistrar hooks = gameHandle.getHookRegistrar();
+        HookRegistrar hooks = gameHandle.getHooks();
 
 
         hooks.registerHook(ProjectileHooks.HIT_BLOCK, (projectile, hit) -> {

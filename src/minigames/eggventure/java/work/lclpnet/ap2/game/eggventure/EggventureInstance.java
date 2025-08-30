@@ -83,7 +83,7 @@ public class EggventureInstance extends FFAGameInstance implements MapBootstrap 
     }
 
     @Override
-    public CompletableFuture<Void> createWorldBootstrap(ServerWorld world, GameMap map) {
+    public @NotNull CompletableFuture<Void> createWorldBootstrap(@NotNull ServerWorld world, @NotNull GameMap map) {
         BlockShape shape = MapUtil.readShape(map, "egg-area");
         List<BlockPos> positions = new ArrayList<>();
 
@@ -165,7 +165,7 @@ public class EggventureInstance extends FFAGameInstance implements MapBootstrap 
 
     @Override
     protected void prepare() {
-        new DebugEggsCommand(gameHandle.getLogger()).register(gameHandle.getCommandRegistrar());
+        new DebugEggsCommand(gameHandle.getLogger()).register(gameHandle.getCommands());
 
         var variants = eggVariants(getWorld().getRegistryManager());
 
@@ -201,7 +201,7 @@ public class EggventureInstance extends FFAGameInstance implements MapBootstrap 
         DynamicEntityManager dynamicEntityManager = new DynamicEntityManager(world);
         var tutorial = new EggventureTutorial(world, dynamicEntityManager, random, gameHandle.getTranslations());
 
-        dynamicEntityManager.init(gameHandle.getGameScheduler(), gameHandle.getHookRegistrar());
+        dynamicEntityManager.init(gameHandle.getGameScheduler(), gameHandle.getHooks());
         tutorial.start(gameHandle.getGameScheduler(), gameHandle.getParticipants()).thenRun(super::afterInitialDelay);
     }
 
@@ -215,7 +215,7 @@ public class EggventureInstance extends FFAGameInstance implements MapBootstrap 
             world.setBlockState(pos, Blocks.AIR.getDefaultState());
         }
 
-        HookRegistrar hooks = gameHandle.getHookRegistrar();
+        HookRegistrar hooks = gameHandle.getHooks();
 
         hooks.registerHook(PlayerInteractionHooks.USE_BLOCK, (_player, _world, hand, hitResult) -> {
             BlockPos pos = hitResult.getBlockPos();

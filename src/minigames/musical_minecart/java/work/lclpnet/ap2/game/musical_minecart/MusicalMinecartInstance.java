@@ -15,21 +15,25 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
+import work.lclpnet.ap2.ApConstants;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.map.MapBootstrap;
-import work.lclpnet.ap2.api.util.music.ConfiguredSong;
-import work.lclpnet.ap2.api.util.music.SongInfo;
-import work.lclpnet.ap2.api.util.music.SongManager;
+import work.lclpnet.ap2.api.music.ConfiguredSong;
+import work.lclpnet.ap2.api.music.SongInfo;
+import work.lclpnet.ap2.api.music.SongManager;
 import work.lclpnet.ap2.core.type.ApVariantHolder;
 import work.lclpnet.ap2.game.musical_minecart.cmd.SetSongCommand;
 import work.lclpnet.ap2.game.musical_minecart.cmd.SkipSongCommand;
 import work.lclpnet.ap2.impl.game.EliminationGameInstance;
 import work.lclpnet.ap2.impl.map.MapUtil;
+import work.lclpnet.ap2.impl.music.SongHandler;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.Hints;
 import work.lclpnet.ap2.impl.util.SoundHelper;
@@ -41,7 +45,7 @@ import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.TaskHandle;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.kibu.translate.Translations;
-import work.lclpnet.kibu.translate.text.TextTranslatable;
+import work.lclpnet.kibu.translate.text.TranslatedText;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 import work.lclpnet.lobby.game.map.GameMap;
 import work.lclpnet.lobby.game.util.BossBarTimer;
@@ -56,8 +60,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static java.lang.Math.*;
-import static net.minecraft.util.Formatting.GREEN;
-import static work.lclpnet.ap2.impl.util.TranslationUtil.transformText;
 
 public class MusicalMinecartInstance extends EliminationGameInstance implements MapBootstrap {
 
@@ -74,10 +76,11 @@ public class MusicalMinecartInstance extends EliminationGameInstance implements 
             MAX_DECOYS = 4;
 
     private static final float
-            MUSIC_VOLUME = 0.75f,
             DECOY_CHANCE = 0.15f;
 
-    private final MMSongs songManager;
+    public static final Identifier MUSICAL_MINECART_TAG = ApConstants.identifier("musical_minecart");
+
+    private final SongHandler songs;
     private final Random random = new Random();
     private final Set<MinecartEntity> minecartEntities = new HashSet<>();
     private final AtomicBoolean ready = new AtomicBoolean(false);
@@ -97,12 +100,12 @@ public class MusicalMinecartInstance extends EliminationGameInstance implements 
         SongManager songManager = gameHandle.getSongManager();
         Translations translations = gameHandle.getTranslations();
 
-        this.songManager = new MMSongs(songManager, translations, random, gameHandle.getLogger());
+        this.songs = new SongHandler(songManager, translations, random, gameHandle.getLogger());
     }
 
     @Override
-    public CompletableFuture<Void> createWorldBootstrap(ServerWorld world, GameMap map) {
-        return songManager.init();
+    public @NotNull CompletableFuture<Void> createWorldBootstrap(@NotNull ServerWorld world, @NotNull GameMap map) {
+        return songs.loadSongs(MUSICAL_MINECART_TAG);
     }
 
     @Override
@@ -121,19 +124,15 @@ public class MusicalMinecartInstance extends EliminationGameInstance implements 
             this.eliminationDelayTicks = max(0, n.intValue());
         }
 
-
         useRemainingPlayersDisplay();
 
         gameHandle.protect(config -> config.allow(ProtectionTypes.MOUNT));
 
-        CommandRegistrar commands = gameHandle.getCommandRegistrar();
-        new SetSongCommand(songManager, this::skipSong).register(commands);
+        CommandRegistrar commands = gameHandle.getCommands();
+        new SetSongCommand(songs, this::skipSong).register(commands);
         new SkipSongCommand(this::skipSong).register(commands);
 
-        gameHandle.getGameScheduler().timeout(() -> {
-            var hints = new Hints(gameHandle.getTranslations(), gameHandle.getServer());
-            hints.sendModHint(Hints.Mod.NOTICA);
-        }, max(0, getInitialDelay() - Ticks.seconds(3)));
+        new Hints(gameHandle).sendBeforeReady(this, Hints.Mod.NOTICA);
     }
 
     @Override
@@ -144,7 +143,7 @@ public class MusicalMinecartInstance extends EliminationGameInstance implements 
 
         ready.set(true);
 
-        HookRegistrar hooks = gameHandle.getHookRegistrar();
+        HookRegistrar hooks = gameHandle.getHooks();
 
         hooks.registerHook(EntityMountCallback.HOOK, (entity, vehicle, force) -> {
             if (vehicle.isGlowing()) {
@@ -170,7 +169,7 @@ public class MusicalMinecartInstance extends EliminationGameInstance implements 
 
         var future = nextSong;
 
-        if (songManager.hasPrioritySongs()) {
+        if (songs.hasPrioritySongs()) {
             // do not replace existing nextSong future
             future = loadNextSong();
             intermission = nextSong != null;
@@ -199,9 +198,9 @@ public class MusicalMinecartInstance extends EliminationGameInstance implements 
 
         var players = PlayerLookup.all(server);
 
-        CheckedSong song = config.song();
+        CheckedSong song = config.checkedSong();
         SongInfo.Meta meta = config.info().meta();
-        float finalVolume = meta.volume().orElse(1f) * MUSIC_VOLUME;
+        float finalVolume = meta.volume().orElse(1f) * SongHandler.MUSIC_VOLUME;
         StereoMode stereoMode = meta.stereoMode().orElse(StereoMode.SPATIAL);
 
         var playbackOptions = new PlaybackOptions(finalVolume, PlaybackVariant.STREAMED, stereoMode);
@@ -218,29 +217,23 @@ public class MusicalMinecartInstance extends EliminationGameInstance implements 
         }
 
         if (DEBUG_INFO) {
-            int total = songManager.getSongs().size();
-            int done = total - songManager.getQueue().size();
+            int total = songs.getSongs().size();
+            int done = total - songs.getQueue().size();
 
             timer = commons().createTimerTicks("Queue %s / %s".formatted(done, total), delay);
         }
 
         taskHandles = List.of(gameHandle.getGameScheduler().timeout(this::stopMusic, delay));
 
-        TextTranslatable title = songManager.getSongTitle(config.info(), song.song().metaData());
+        TranslatedText nowPlaying = songs.nowPlayingText(config);
 
-        if (title == null) return;
-
-        Translations translations = gameHandle.getTranslations();
-
-        transformText(
-                translations.translateText("game.ap2.musical_minecart.now_playing", title),
-                text -> Text.literal("🎵 ").append(text).formatted(GREEN),
-                translations
-        ).sendTo(players);
+        if (nowPlaying != null) {
+            nowPlaying.sendTo(players);
+        }
     }
 
     private synchronized CompletableFuture<ConfiguredSong> loadNextSong() {
-        return songManager.getNextSong();
+        return songs.loadNextSong();
     }
 
     private synchronized void stopMusic() {

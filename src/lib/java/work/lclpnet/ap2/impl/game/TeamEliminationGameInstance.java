@@ -35,7 +35,7 @@ public abstract class TeamEliminationGameInstance extends TeamGameInstance {
      * Instantly makes players who would have died spectators and reset them.
      */
     protected final void useSmoothDeath() {
-        HookRegistrar hooks = gameHandle.getHookRegistrar();
+        HookRegistrar hooks = gameHandle.getHooks();
 
         hooks.registerHook(EntityHealthCallback.HOOK, (entity, health) -> {
             if (!(entity instanceof ServerPlayerEntity player) || health > 0) return false;

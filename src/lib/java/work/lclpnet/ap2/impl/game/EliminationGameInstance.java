@@ -99,7 +99,7 @@ public abstract class EliminationGameInstance extends FFAGameInstance implements
      * Instantly makes players who would have died spectators and reset them.
      */
     protected final void useSmoothDeath() {
-        HookRegistrar hooks = gameHandle.getHookRegistrar();
+        HookRegistrar hooks = gameHandle.getHooks();
 
         hooks.registerHook(EntityHealthCallback.HOOK, (entity, health) -> {
             if (!(entity instanceof ServerPlayerEntity player) || health > 0) return false;
@@ -145,6 +145,10 @@ public abstract class EliminationGameInstance extends FFAGameInstance implements
         this.teleportEliminated = false;
     }
 
+    protected final void eliminateBelowCriticalHeight() {
+        commons().whenBelowCriticalHeight().then(this::eliminate);
+    }
+
     @Override
     public synchronized void eliminateAll(Iterable<? extends ServerPlayerEntity> players) {
         Participants participants = gameHandle.getParticipants();
@@ -174,7 +178,10 @@ public abstract class EliminationGameInstance extends FFAGameInstance implements
             participants.remove(player);
 
             playerUtil.resetPlayer(player);
-            worldFacade.teleport(player);
+
+            if (teleportEliminated) {
+                worldFacade.teleport(player);
+            }
         }
     }
 

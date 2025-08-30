@@ -142,7 +142,7 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
         paintGunManager = new PaintGunManager(world, scene, paintManager, teams, random, gameHandle.getParticipants(),
                 gameHandle.getTranslations(), commons.debugController(), winManager::isGameOver);
 
-        paintGunManager.init(gameHandle.getHookRegistrar());
+        paintGunManager.init(gameHandle.getHooks());
 
         replaceTemplateColors(world);
         buildMapCollisions(world, bounds);
@@ -206,7 +206,7 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
             team.setShowFriendlyInvisibles(true);
         }
 
-        movementObserver.init(gameHandle.getGameScheduler(), gameHandle.getHookRegistrar(), gameHandle.getServer());
+        movementObserver.init(gameHandle.getGameScheduler(), gameHandle.getHooks(), gameHandle.getServer());
 
         teleportTeamsToSpawns();
         equipPlayers();
@@ -344,7 +344,7 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
         var ticker = new PaintballTicker(getWorld(), gameHandle.getParticipants(), teams, paintManager,
                 paintGunManager, vanishManager, commons().debugController());
 
-        ticker.start(gameHandle.getGameScheduler(), gameHandle.getHookRegistrar());
+        ticker.start(gameHandle.getGameScheduler(), gameHandle.getHooks());
 
         specialItems.spawnPeriodically();
     }
@@ -357,7 +357,7 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
     }
 
     private void configureHooksAndProtector() {
-        HookRegistrar hooks = gameHandle.getHookRegistrar();
+        HookRegistrar hooks = gameHandle.getHooks();
         Participants participants = gameHandle.getParticipants();
 
         hooks.registerHook(SpectatePlayerCallback.HOOK, (spectator, target)

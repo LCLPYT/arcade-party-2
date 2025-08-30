@@ -95,7 +95,7 @@ public class VanishManager {
 
         gameHandle.whenDone(vanishManager::destroy);
 
-        vanishManager.init(gameHandle.getHookRegistrar());
+        vanishManager.init(gameHandle.getHooks());
 
         return vanishManager;
     }

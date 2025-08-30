@@ -12,6 +12,7 @@ import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.GameRules;
+import org.jetbrains.annotations.NotNull;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.team.DyeTeamKey;
@@ -72,7 +73,7 @@ public class CozyCampfireInstance extends TeamEliminationGameInstance implements
     }
 
     @Override
-    public CompletableFuture<Void> createWorldBootstrap(ServerWorld world, GameMap map) {
+    public @NotNull CompletableFuture<Void> createWorldBootstrap(@NotNull ServerWorld world, @NotNull GameMap map) {
         teamManager = getTeamManager();
         teamManager.partitionIntoTeams(gameHandle.getParticipants(), Set.of(TEAM_RED, TEAM_BLUE));
 
@@ -113,7 +114,7 @@ public class CozyCampfireInstance extends TeamEliminationGameInstance implements
         var args = new CCHooks.Args(fuel, baseManager, kitManager, this::onAddFuel);
 
         hookSetup = new CCHooks(participants, teamManager, this, translations, args);
-        hookSetup.register(gameHandle.getHookRegistrar());
+        hookSetup.register(gameHandle.getHooks());
 
         setupMovementObserver(hookSetup);
 
@@ -154,7 +155,7 @@ public class CozyCampfireInstance extends TeamEliminationGameInstance implements
     }
 
     private void setupMovementObserver(CCHooks hookSetup) {
-        HookRegistrar hooks = gameHandle.getHookRegistrar();
+        HookRegistrar hooks = gameHandle.getHooks();
         MinecraftServer server = gameHandle.getServer();
 
         movementObserver.init(hooks, server);

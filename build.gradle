@@ -1,5 +1,15 @@
+import com.electronwill.nightconfig.core.serde.annotations.SerdeSkipDeserializingIf
 import net.fabricmc.loom.task.RemapJarTask
 import work.lclpnet.build.task.GithubDeploymentTask
+import work.lclpnet.kibu.config.ConfigManager
+
+import static com.electronwill.nightconfig.core.serde.annotations.SerdeSkipDeserializingIf.SkipDeIf.IS_MISSING
+
+buildscript {
+    dependencies {
+        classpath "work.lclpnet.mods.kibu:kibu-config-api:0.1.1"
+    }
+}
 
 plugins {
     id "java"
@@ -7,6 +17,8 @@ plugins {
     id "maven-publish"
     id "gradle-build-utils" version "1.7.0"
     id "io.freefair.lombok" version "8.11"
+    id 'org.jetbrains.kotlin.jvm' version "2.2.10"
+    id 'org.jetbrains.kotlin.plugin.lombok' version '2.2.10'
 }
 
 Properties props = buildUtils.loadProperties("publish.properties")
@@ -19,7 +31,7 @@ base {
 }
 
 /*********************************************************************************************************************\
- *Repositories
+ * Repositories
  \*********************************************************************************************************************/
 repositories {
     mavenCentral()
@@ -76,44 +88,80 @@ sourceSets {
     }
 }
 
+static <C> C loadToml(File file, C config) {
+    try (def manager = new ConfigManager<>(file.toPath(), config)) {
+        manager.load()
+
+        return manager.config()
+    }
+}
+
 // extra source sets will have all dependencies of the main source set, as well as their own jar artifact
 def extraSourceSets = ['lib']
 
 // configure modes
-apply from: 'src/modes/modes.gradle'
+class Mode {
+    String id
+}
 
-(ext.getProperty('modes') as String[]).each { name ->
-    extraSourceSets.add(name)
+class ModesConfig {
+    List<Mode> modes = []
+}
 
-    sourceSets.register(name) {
-        java.srcDirs = ["src/modes/$name/java"]
-        resources.srcDirs = ["src/modes/$name/resources"]
+def modesConfig = loadToml(file("src/modes/modes.toml"), new ModesConfig())
+
+modesConfig.modes.each { mode ->
+    extraSourceSets.add(mode.id)
+
+    sourceSets.register(mode.id) { set ->
+        resources.srcDirs = ["src/modes/${mode.id}/resources"]
+
+        java.srcDirs = ["src/modes/${mode.id}/java"]
 
         compileClasspath += sourceSets.lib.output
         runtimeClasspath += sourceSets.lib.output
 
-        sourceSets.main.runtimeClasspath += it.output
-        sourceSets.test.compileClasspath += it.output
-        sourceSets.test.runtimeClasspath += it.output
+        sourceSets.main.runtimeClasspath += set.output
+        sourceSets.test.compileClasspath += set.output
+        sourceSets.test.runtimeClasspath += set.output
     }
 }
 
 // configure minigames
-apply from: 'src/minigames/minigames.gradle'
+class Minigame {
+    String id
 
-(ext.getProperty('minigames') as String[]).each { name ->
-    extraSourceSets.add(name)
+    @SerdeSkipDeserializingIf([IS_MISSING])
+    List<String> type = ["java"]
 
-    sourceSets.register(name) {
-        java.srcDirs = ["src/minigames/$name/java"]
-        resources.srcDirs = ["src/minigames/$name/resources"]
+    @SerdeSkipDeserializingIf([IS_MISSING])
+    boolean enabled = true
+}
+
+class MinigamesConfig {
+    List<Minigame> minigames = []
+}
+
+def minigamesConfig = loadToml(file("src/minigames/minigames.toml"), new MinigamesConfig())
+
+minigamesConfig.minigames.each { minigame ->
+    if (!minigame.enabled) return
+
+    extraSourceSets.add(minigame.id)
+
+    sourceSets.register(minigame.id) {set ->
+        resources.srcDirs = ["src/minigames/${minigame.id}/resources"]
+
+        minigame.type.each { type ->
+            set."$type".srcDirs = ["src/minigames/${minigame.id}/$type"]
+        }
 
         compileClasspath += sourceSets.lib.output
         runtimeClasspath += sourceSets.lib.output
 
-        sourceSets.main.runtimeClasspath += it.output
-        sourceSets.test.compileClasspath += it.output
-        sourceSets.test.runtimeClasspath += it.output
+        sourceSets.main.runtimeClasspath += set.output
+        sourceSets.test.compileClasspath += set.output
+        sourceSets.test.runtimeClasspath += set.output
     }
 }
 
@@ -156,6 +204,7 @@ dependencies {
     modImplementation("work.lclpnet.mods:combat-control:${project.combat_control_version}")
     modImplementation("work.lclpnet.mods:notica:${project.notica_version}")
     modImplementation("work.lclpnet.mods:mg-lobby:${project.lobby_version}")
+    modImplementation("net.fabricmc:fabric-language-kotlin:${project.kotlin_version}")
 
     // optional runtime dependencies (not explicitly required for compilation, but needed to play the game)
     modLocalRuntime("work.lclpnet.mods:pal:${project.pal_version}")
