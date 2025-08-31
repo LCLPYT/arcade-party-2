@@ -6,7 +6,6 @@ from pathlib import Path
 import questionary
 
 from util.common import validate_icon, load_authors
-from util.inputs import Inputs
 
 
 @dataclass
@@ -76,23 +75,20 @@ def validate_map_id(map_id: str) -> str | None:
     return None
 
 
-def add_map(inputs: Inputs):
-    if inputs.map is None:
-        return
-
+def add_map(game_id: str, opts: MapOptions):
     cfg_dir = Path("run/config")
 
     add_maps_source_to_json(cfg_dir)
 
-    game_dir = cfg_dir / f"assets/maps/ap2/{inputs.game_id}"
+    game_dir = cfg_dir / f"assets/maps/ap2/{game_id}"
     game_dir.mkdir(parents=True, exist_ok=True)
 
-    if not add_to_index(inputs.map, game_dir):
+    if not add_to_index(opts, game_dir):
         return
 
-    create_map(inputs.map, game_dir)
+    create_map(opts, game_dir)
 
-    print(f"✅ Map created successfully. Copy a world to {game_dir / inputs.map.id / "world"} to use it.")
+    print(f"✅ Map created successfully. Copy a world to {game_dir / opts.id / "world"} to use it.")
 
 
 def create_map(opts: MapOptions, game_dir: Path):

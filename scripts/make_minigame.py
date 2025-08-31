@@ -102,7 +102,8 @@ def main():
     create_minigame_class(code_dir, inputs)
     create_instance_class(code_dir, inputs)
 
-    add_map(inputs)
+    if inputs.map is not None:
+        add_map(inputs.game_id, inputs.map)
 
     print(f"\n✅ Minigame '{inputs.game_name}' ({inputs.game_id}) created successfully. Refresh the Gradle project in IntelliJ to use it. Happy coding! 💫")
 
