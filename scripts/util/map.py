@@ -76,11 +76,11 @@ def validate_map_id(map_id: str) -> str | None:
 
 
 def add_map(game_id: str, opts: MapOptions):
-    cfg_dir = Path("run/config")
+    run_dir = Path("run")
 
-    add_maps_source_to_json(cfg_dir)
+    add_maps_source_to_json(run_dir / "config")
 
-    game_dir = cfg_dir / f"assets/maps/ap2/{game_id}"
+    game_dir = run_dir / f"assets/maps/ap2/{game_id}"
     game_dir.mkdir(parents=True, exist_ok=True)
 
     if not add_to_index(opts, game_dir):
@@ -88,7 +88,7 @@ def add_map(game_id: str, opts: MapOptions):
 
     create_map(opts, game_dir)
 
-    print(f"✅ Map created successfully. Copy a world to {game_dir / opts.id / "world"} to use it.")
+    print(f"\n✅ Map created successfully. Copy a world to {game_dir / opts.id / "world"} to use it.")
 
 
 def create_map(opts: MapOptions, game_dir: Path):
@@ -106,8 +106,8 @@ def create_map(opts: MapOptions, game_dir: Path):
         "spawn": opts.spawn
     }
 
-    with open(json_file) as f:
-        json.dump(obj, f)
+    with open(json_file, 'w+') as f:
+        json.dump(obj, f, indent=2)
 
     world_dir = map_dir / "world"
     world_dir.mkdir(parents=True, exist_ok=True)
@@ -136,17 +136,17 @@ def add_to_index(opts: MapOptions, game_dir: Path):
         "icon": f"minecraft:{opts.icon}"
     })
 
-    with open(index_file) as f:
-        json.dump(index, f)
+    with open(index_file, 'w+') as f:
+        json.dump(index, f, indent=2)
 
     return True
 
 
-def add_maps_source_to_json(cfg_dir: Path):
-    ap_dir = cfg_dir / "ap2"
-    ap2_cfg = ap_dir / "config.json"
-
+def add_maps_source_to_json(run_dir: Path):
+    ap_dir = run_dir / "config/ap2"
     ap_dir.mkdir(parents=True, exist_ok=True)
+
+    ap2_cfg = ap_dir / "config.json"
 
     if ap2_cfg.exists():
         with open(ap2_cfg) as f:
@@ -164,5 +164,5 @@ def add_maps_source_to_json(cfg_dir: Path):
     maps_source.append("assets/maps")
     cfg["maps_source"] = maps_source
 
-    with open(ap2_cfg) as f:
-        json.dump(cfg, f)
+    with open(ap2_cfg, "w+") as f:
+        json.dump(cfg, f, indent=2)
