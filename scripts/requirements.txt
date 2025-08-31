@@ -1,0 +1,4 @@
+prompt_toolkit==3.0.52
+questionary==2.1.1
+toml==0.10.2
+wcwidth==0.2.13
