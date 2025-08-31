@@ -13,7 +13,7 @@ def create_minigame_class(code_dir: Path, inputs: Inputs):
     class_file = code_dir / f"{package_path}/{class_name}.{file_ext}"
 
     enum_game_type = "FFA" if inputs.game_type == "ffa" or inputs.game_type == "ffa_elimination" else "TEAM"
-    author_const = inputs.author_key[1:].replace('.', '_').upper()
+    author_const = inputs.author_key.replace('.', '_').upper()
     package_java_path = package_path.replace('/', '.')
 
     if inputs.lang == "kotlin":

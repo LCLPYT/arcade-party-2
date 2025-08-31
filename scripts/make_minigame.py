@@ -9,11 +9,6 @@ from util.inputs import Inputs, read_inputs
 from util.instance_class import create_instance_class
 from util.minigame_class import create_minigame_class
 
-LIB_CONFIG_FILE = Path("src/lib/resources/configuration.json")
-
-AUTHOR_KEYS = ["@person.lclp", "@person.bops"]
-
-
 def write_translation_files(inputs: Inputs, resources_dir: Path):
     lang_json = {
         f"game.ap2.{inputs.game_id}": inputs.game_name,

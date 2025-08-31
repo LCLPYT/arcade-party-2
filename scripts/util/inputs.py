@@ -1,8 +1,16 @@
+import json
 import re
 from dataclasses import dataclass
-from typing import Literal
+from pathlib import Path
+from typing import Literal, Any
 
 import questionary
+import toml
+
+from util.common import TOML_FILE
+
+AUTHOR_KEYS = ["person.lclp", "person.bops"]
+LIB_CONFIG_FILE = Path("src/lib/resources/configuration.json")
 
 @dataclass
 class Inputs:
@@ -28,12 +36,14 @@ def read_inputs() -> Inputs | None:
     game_name = questionary.text("Enter game name:").ask()
     game_desc = questionary.text("Enter game description:").ask()
 
-    authors_map = load_authors()
-    author_key = questionary.select(
-        "Select author (if missing, add in scripts/make_minigame.py):",
-        choices=list(authors_map.keys())
+    key_to_value, value_to_key = load_authors()
+
+    author_value = questionary.select(
+        "Select author (if missing, add in scripts/util/inputs.py):",
+        choices=list(key_to_value.values())
     ).ask()
-    author = authors_map[author_key]
+
+    author_key = value_to_key[author_value]
 
     lang = questionary.select(
         "Select a programming language:",
@@ -90,9 +100,14 @@ def validate_icon(icon: str) -> str | None:
         return "Icon identifier must be lowercase letters and underscores only."
     return None
 
-def load_authors():
+def load_authors() -> tuple[dict[str, str], dict[str, str]]:
     if not LIB_CONFIG_FILE.exists():
         raise FileNotFoundError(f"Config file {LIB_CONFIG_FILE} not found")
     with open(LIB_CONFIG_FILE) as f:
         config = json.load(f)
-    return {k: config.get(k, k) for k in AUTHOR_KEYS}
+
+    # keep both mappings
+    key_to_value = {k: config.get(k, k) for k in AUTHOR_KEYS}
+    value_to_key = {v: k for k, v in key_to_value.items()}
+
+    return key_to_value, value_to_key
