@@ -7,6 +7,7 @@ import toml
 from util.common import pascal_case, TOML_FILE, BASE_DIR
 from util.inputs import Inputs, read_inputs
 from util.instance_class import create_instance_class
+from util.map import add_map
 from util.minigame_class import create_minigame_class
 
 def write_translation_files(inputs: Inputs, resources_dir: Path):
@@ -100,6 +101,8 @@ def main():
 
     create_minigame_class(code_dir, inputs)
     create_instance_class(code_dir, inputs)
+
+    add_map(inputs)
 
     print(f"\n✅ Minigame '{inputs.game_name}' ({inputs.game_id}) created successfully. Refresh the Gradle project in IntelliJ to use it. Happy coding! 💫")
 

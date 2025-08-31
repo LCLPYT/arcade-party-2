@@ -77,6 +77,9 @@ def validate_map_id(map_id: str) -> str | None:
 
 
 def add_map(inputs: Inputs):
+    if inputs.map is None:
+        return
+
     cfg_dir = Path("run/config")
 
     add_maps_source_to_json(cfg_dir)
@@ -84,13 +87,12 @@ def add_map(inputs: Inputs):
     game_dir = cfg_dir / f"assets/maps/ap2/{inputs.game_id}"
     game_dir.mkdir(parents=True, exist_ok=True)
 
-    if inputs.map is None:
-        return
-
     if not add_to_index(inputs.map, game_dir):
         return
 
     create_map(inputs.map, game_dir)
+
+    print(f"✅ Map created successfully. Copy a world to {game_dir / inputs.map.id / "world"} to use it.")
 
 
 def create_map(opts: MapOptions, game_dir: Path):
