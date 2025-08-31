@@ -2,6 +2,8 @@
 A Minigame for Minecraft: Java edition where players compete to win different smaller games.
 Whoever wins the most games wins!
 
+Documentation available at: https://lclpyt.github.io/arcade-party-2-docs/
+
 ## Run using docker
 With [Docker](https://docs.docker.com/) installed, you can use compose to start a production-ready server:
 
