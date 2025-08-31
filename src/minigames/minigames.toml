@@ -1,103 +1,103 @@
 [[minigames]]
-id = 'spleef'
+id = "spleef"
 
 [[minigames]]
-id = 'bow_spleef'
+id = "bow_spleef"
 
 [[minigames]]
-id = 'mirror_hop'
+id = "mirror_hop"
 
 [[minigames]]
-id = 'fine_tuning'
+id = "fine_tuning"
 
 [[minigames]]
-id = 'treasure_hunter'
+id = "treasure_hunter"
 
 [[minigames]]
-id = 'one_in_the_chamber'
+id = "one_in_the_chamber"
 
 [[minigames]]
-id = 'anvil_fall'
+id = "anvil_fall"
 
 [[minigames]]
-id = 'panda_finder'
+id = "panda_finder"
 
 [[minigames]]
-id = 'jump_and_run'
+id = "jump_and_run"
 
 [[minigames]]
-id = 'tnt_run'
+id = "tnt_run"
 
 [[minigames]]
-id = 'hot_potato'
+id = "hot_potato"
 
 [[minigames]]
-id = 'block_dissolve'
+id = "block_dissolve"
 
 [[minigames]]
-id = 'cozy_campfire'
+id = "cozy_campfire"
 
 [[minigames]]
-id = 'mining_battle'
+id = "mining_battle"
 
 [[minigames]]
-id = 'knockout'
+id = "knockout"
 
 [[minigames]]
-id = 'musical_minecart'
+id = "musical_minecart"
 
 [[minigames]]
-id = 'guess_it'
+id = "guess_it"
 
 [[minigames]]
-id = 'pig_race'
+id = "pig_race"
 
 [[minigames]]
-id = 'red_light_green_light'
+id = "red_light_green_light"
 
 [[minigames]]
-id = 'snowball_fight'
+id = "snowball_fight"
 
 [[minigames]]
-id = 'chicken_shooter'
+id = "chicken_shooter"
 
 [[minigames]]
-id = 'speed_builders'
+id = "speed_builders"
 enabled = false
 
 [[minigames]]
-id = 'mimicry'
+id = "mimicry"
 
 [[minigames]]
-id = 'splashy_dropper'
+id = "splashy_dropper"
 
 [[minigames]]
-id = 'glowing_bomb'
+id = "glowing_bomb"
 
 [[minigames]]
-id = 'maniac_digger'
+id = "maniac_digger"
 
 [[minigames]]
-id = 'apocalypse_survival'
+id = "apocalypse_survival"
 
 [[minigames]]
-id = 'pillar_battle'
+id = "pillar_battle"
 
 [[minigames]]
-id = 'aim_master'
+id = "aim_master"
 
 [[minigames]]
-id = 'maze_scape'
+id = "maze_scape"
 
 [[minigames]]
-id = 'eggventure'
+id = "eggventure"
 
 [[minigames]]
-id = 'dragon_escape'
+id = "dragon_escape"
 
 [[minigames]]
-id = 'paintball'
+id = "paintball"
 
 [[minigames]]
-id = 'dance_floor'
-type = ['kotlin']
+id = "dance_floor"
+type = [ "kotlin",]

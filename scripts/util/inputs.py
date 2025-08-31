@@ -81,7 +81,7 @@ def read_inputs() -> Inputs | None:
         print("Aborted.")
         return None
 
-    return Inputs(game_id=game_id, game_name=game_name, game_desc=game_desc, author_key=author, author=author,
+    return Inputs(game_id=game_id, game_name=game_name, game_desc=game_desc, author_key=author, author=author_value,
                   lang=lang, game_type=game_type, can_be_finale=can_be_finale, icon=icon_id)
 
 
