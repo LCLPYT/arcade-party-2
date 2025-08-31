@@ -43,7 +43,7 @@ def read_inputs() -> Inputs | None:
         choices=list(key_to_value.values())
     ).ask()
 
-    author_key = value_to_key[author_value]
+    author = value_to_key[author_value]
 
     lang = questionary.select(
         "Select a programming language:",
@@ -69,7 +69,7 @@ def read_inputs() -> Inputs | None:
     print("\nSummary:")
     print(f"  Game ID: {game_id}")
     print(f"  Programming Language: {lang}")
-    print(f"  Author: {', '.join(author)}")
+    print(f"  Author: {author_value}")
     print(f"  Name: {game_name}")
     print(f"  Description: {game_desc}")
     print(f"  Type: {game_type}")
