@@ -101,7 +101,7 @@ def main():
     create_minigame_class(code_dir, inputs)
     create_instance_class(code_dir, inputs)
 
-    print(f"\n✅ Minigame '{inputs.game_name}' ({inputs.game_id}) created successfully.")
+    print(f"\n✅ Minigame '{inputs.game_name}' ({inputs.game_id}) created successfully. Refresh the Gradle project in IntelliJ to use it. Happy coding! 💫")
 
 
 if __name__ == "__main__":

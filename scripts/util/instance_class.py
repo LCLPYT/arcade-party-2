@@ -42,7 +42,7 @@ import work.lclpnet.ap2.impl.game.data.type.PlayerRef
 
 class {class_name}(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle) {{
     
-    val data = IntScoreDataContainer(PlayerRef::create)
+    private val data = IntScoreDataContainer(PlayerRef::create)
     
     override fun getData() = data
 
@@ -144,7 +144,7 @@ import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer
 
 class {class_name}(gameHandle: MiniGameHandle) : TeamGameInstance(gameHandle) {{
 
-    val data = IntScoreDataContainer(this::createReference)
+    private val data = IntScoreDataContainer(this::createReference)
 
     override fun getData() = data
 

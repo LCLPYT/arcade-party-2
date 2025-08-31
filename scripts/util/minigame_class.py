@@ -33,7 +33,7 @@ class {class_name} : MiniGame {{
     override fun canBePlayed(context: GameStartContext) = true
     override fun getId() = ApConstants.identifier("{inputs.game_id}")
     override fun getType() = GameType.{enum_game_type}
-    override fun getAuthor() = ApConstants."{author_const}"
+    override fun getAuthor() = ApConstants.{author_const}
     override fun getIcon(manager: DynamicRegistryManager) = ItemStack(Items.{inputs.icon.upper()})
     override fun createInstance(gameHandle: MiniGameHandle) = {instance_class_name}(gameHandle)
 }}
@@ -63,7 +63,7 @@ public class {class_name} implements MiniGame {{
 
     @Override
     public @NotNull String getAuthor() {{
-        return ApConstants."{author_const}";
+        return ApConstants.{author_const};
     }}
 
     @Override
