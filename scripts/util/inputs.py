@@ -2,7 +2,7 @@ import json
 import re
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Literal, Any
+from typing import Literal
 
 import questionary
 import toml
@@ -81,7 +81,7 @@ def read_inputs() -> Inputs | None:
         print("Aborted.")
         return None
 
-    return Inputs(game_id=game_id, game_name=game_name, game_desc=game_desc, author_key=author_key, author=author,
+    return Inputs(game_id=game_id, game_name=game_name, game_desc=game_desc, author_key=author, author=author,
                   lang=lang, game_type=game_type, can_be_finale=can_be_finale, icon=icon_id)
 
 
