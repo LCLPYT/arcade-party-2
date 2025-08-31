@@ -34,7 +34,7 @@ def read_inputs() -> Inputs | None:
     game_name = questionary.text("Enter game name:").ask()
     game_desc = questionary.text("Enter game description:").ask()
 
-    key_to_value, value_to_key = load_authors()
+    key_to_value, value_to_key = load_authors(only_devs=True)
 
     author_value = questionary.select(
         "Select author (if missing, add in scripts/util/inputs.py):",

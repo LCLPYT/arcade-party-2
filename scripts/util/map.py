@@ -31,7 +31,7 @@ def read_map_options() -> MapOptions | None:
 
     map_name = questionary.text("Enter map id, e.g. 'my_map':").ask()
 
-    key_to_value, value_to_key = load_authors()
+    key_to_value, value_to_key = load_authors(only_devs=False)
 
     authors = questionary.checkbox(
         "Enter map authors (if missing, add in scripts/util/inputs.py):",

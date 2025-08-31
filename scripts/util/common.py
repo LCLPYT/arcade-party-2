@@ -2,7 +2,7 @@ import re
 import json
 from pathlib import Path
 
-AUTHOR_KEYS = ["person.lclp", "person.bops"]
+DEVS = ["person.lclp", "person.bops"]
 
 BASE_DIR = Path("src/minigames")
 TOML_FILE = BASE_DIR / "minigames.toml"
@@ -17,14 +17,15 @@ def validate_icon(icon: str) -> str | None:
         return "Icon identifier must be lowercase letters and underscores only."
     return None
 
-def load_authors() -> tuple[dict[str, str], dict[str, str]]:
+def load_authors(only_devs: bool) -> tuple[dict[str, str], dict[str, str]]:
     if not LIB_CONFIG_FILE.exists():
         raise FileNotFoundError(f"Config file {LIB_CONFIG_FILE} not found")
     with open(LIB_CONFIG_FILE) as f:
         config = json.load(f)
 
     # keep both mappings
-    key_to_value = {k: config.get(k, k) for k in AUTHOR_KEYS}
+    select_keys = DEVS if not only_devs else config.keys()
+    key_to_value = {k: config.get(k, k) for k in select_keys}
     value_to_key = {v: k for k, v in key_to_value.items()}
 
     return key_to_value, value_to_key
