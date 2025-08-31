@@ -1,16 +1,13 @@
-import json
 import re
 from dataclasses import dataclass
-from pathlib import Path
 from typing import Literal
 
 import questionary
 import toml
 
-from util.common import TOML_FILE
+from util.common import TOML_FILE, validate_icon, load_authors
+from util.map import MapOptions, read_map_options
 
-AUTHOR_KEYS = ["person.lclp", "person.bops"]
-LIB_CONFIG_FILE = Path("src/lib/resources/configuration.json")
 
 @dataclass
 class Inputs:
@@ -23,6 +20,7 @@ class Inputs:
     game_type: Literal["ffa", "ffa_elimination", "team", "team_elimination"]
     can_be_finale: bool
     icon: str
+    map: MapOptions | None
 
 def read_inputs() -> Inputs | None:
     while True:
@@ -66,6 +64,8 @@ def read_inputs() -> Inputs | None:
         else:
             break
 
+    map_options = read_map_options()
+
     print("\nSummary:")
     print(f"  Game ID: {game_id}")
     print(f"  Programming Language: {lang}")
@@ -75,6 +75,7 @@ def read_inputs() -> Inputs | None:
     print(f"  Type: {game_type}")
     print(f"  Can be finale: {can_be_finale}")
     print(f"  Icon: minecraft:{icon_id}")
+    print(f"  Create Map: {map_options if map_options is not None else "No"}")
     confirm = questionary.confirm("Is this correct?").ask()
 
     if not confirm:
@@ -82,7 +83,7 @@ def read_inputs() -> Inputs | None:
         return None
 
     return Inputs(game_id=game_id, game_name=game_name, game_desc=game_desc, author_key=author, author=author_value,
-                  lang=lang, game_type=game_type, can_be_finale=can_be_finale, icon=icon_id)
+                  lang=lang, game_type=game_type, can_be_finale=can_be_finale, icon=icon_id, map=map_options)
 
 
 def validate_game_id(game_id: str) -> str | None:
@@ -94,20 +95,3 @@ def validate_game_id(game_id: str) -> str | None:
             if mg.get("id") == game_id:
                 return f"A minigame with id '{game_id}' already exists."
     return None
-
-def validate_icon(icon: str) -> str | None:
-    if not re.match(r"^[a-z_]+$", icon):
-        return "Icon identifier must be lowercase letters and underscores only."
-    return None
-
-def load_authors() -> tuple[dict[str, str], dict[str, str]]:
-    if not LIB_CONFIG_FILE.exists():
-        raise FileNotFoundError(f"Config file {LIB_CONFIG_FILE} not found")
-    with open(LIB_CONFIG_FILE) as f:
-        config = json.load(f)
-
-    # keep both mappings
-    key_to_value = {k: config.get(k, k) for k in AUTHOR_KEYS}
-    value_to_key = {v: k for k, v in key_to_value.items()}
-
-    return key_to_value, value_to_key
