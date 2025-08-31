@@ -23,13 +23,13 @@ def read_map_options() -> MapOptions | None:
 
     while True:
         map_id = questionary.text("Enter map id, e.g. 'my_map':").ask()
-        err = validate_icon(map_id)
+        err = validate_map_id(map_id)
         if err:
             print(f"Error: {err}")
         else:
             break
 
-    map_name = questionary.text("Enter map id, e.g. 'my_map':").ask()
+    map_name = questionary.text("Enter map name:").ask()
 
     key_to_value, value_to_key = load_authors(only_devs=False)
 
@@ -143,9 +143,10 @@ def add_to_index(opts: MapOptions, game_dir: Path):
 
 
 def add_maps_source_to_json(cfg_dir: Path):
-    ap2_cfg = cfg_dir / "ap2/config.json"
+    ap_dir = cfg_dir / "ap2"
+    ap2_cfg = ap_dir / "config.json"
 
-    ap2_cfg.mkdir(parents=True, exist_ok=True)
+    ap_dir.mkdir(parents=True, exist_ok=True)
 
     if ap2_cfg.exists():
         with open(ap2_cfg) as f:
