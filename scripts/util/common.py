@@ -24,7 +24,7 @@ def load_authors(only_devs: bool) -> tuple[dict[str, str], dict[str, str]]:
         config = json.load(f)
 
     # keep both mappings
-    select_keys = DEVS if not only_devs else config.keys()
+    select_keys = DEVS if only_devs else config.keys()
     key_to_value = {k: config.get(k, k) for k in select_keys}
     value_to_key = {v: k for k, v in key_to_value.items()}
 
