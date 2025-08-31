@@ -8,7 +8,11 @@ def create_instance_class(code_dir: Path, inputs: Inputs):
     file_ext = "kt" if inputs.lang == "kotlin" else "java"
     package_path = f"work/lclpnet/ap2/game/{inputs.game_id}"
     instance_class_name = f"{pascal_case(inputs.game_id)}Instance"
-    instance_file = code_dir / f"{package_path}/{instance_class_name}.{file_ext}"
+    class_dir = code_dir / package_path
+
+    class_dir.mkdir(parents=True, exist_ok=True)
+
+    instance_file = class_dir / f"{instance_class_name}.{file_ext}"
     package_java_path = package_path.replace('/', '.')
 
     if inputs.game_type == "ffa":

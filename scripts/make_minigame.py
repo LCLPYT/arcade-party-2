@@ -15,7 +15,11 @@ def write_translation_files(inputs: Inputs, resources_dir: Path):
         f"game.ap2.{inputs.game_id}.description": inputs.game_desc
     }
 
-    with open(resources_dir / "lang/en_us.json", "w") as f:
+    lang_dir = resources_dir / "lang"
+
+    lang_dir.mkdir(parents=True, exist_ok=True)
+
+    with open(lang_dir / "en_us.json", "w") as f:
         json.dump(lang_json, f, indent=2)
 
 

@@ -9,8 +9,11 @@ def create_minigame_class(code_dir: Path, inputs: Inputs):
     instance_class_name = f"{pascal_case(inputs.game_id)}Instance"
     package_path = f"work/lclpnet/ap2/game/{inputs.game_id}"
     file_ext = "kt" if inputs.lang == "kotlin" else "java"
+    class_dir = code_dir / package_path
 
-    class_file = code_dir / f"{package_path}/{class_name}.{file_ext}"
+    class_dir.mkdir(parents=True, exist_ok=True)
+
+    class_file = class_dir/ f"{class_name}.{file_ext}"
 
     enum_game_type = "FFA" if inputs.game_type == "ffa" or inputs.game_type == "ffa_elimination" else "TEAM"
     author_const = inputs.author_key.replace('.', '_').upper()
