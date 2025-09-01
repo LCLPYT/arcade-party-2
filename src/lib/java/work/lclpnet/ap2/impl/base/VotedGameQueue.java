@@ -1,7 +1,6 @@
 package work.lclpnet.ap2.impl.base;
 
 import work.lclpnet.ap2.api.base.GameQueue;
-import work.lclpnet.ap2.api.base.MiniGameManager;
 import work.lclpnet.ap2.api.game.MiniGame;
 import work.lclpnet.ap2.api.util.QueuePersistence;
 import work.lclpnet.ap2.impl.util.SeamlessQueue;
@@ -29,13 +28,12 @@ public class VotedGameQueue implements GameQueue {
     private final LinkedList<MiniGame> priority = new LinkedList<>();
     private final QueuePersistence<MiniGame> persistence;
 
-    public VotedGameQueue(MiniGameManager gameManager, Iterable<MiniGame> voted, int minimumSize, QueuePersistence<MiniGame> persistence) {
+    public VotedGameQueue(Set<MiniGame> games, Iterable<MiniGame> voted, int minimumSize, QueuePersistence<MiniGame> persistence) {
         this.minimumSize = minimumSize;
         this.persistence = persistence;
 
         voted.forEach(this.voted::offer);
 
-        Set<MiniGame> games = gameManager.getGames();
         int margin = (int) floor(games.size() * MARGIN_PERCENT);
         var transfer = persistence.restore();
 

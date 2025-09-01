@@ -39,6 +39,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ForkJoinPool;
 import java.util.stream.Collectors;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static work.lclpnet.ap2.ApConstants.identifier;
 
 public class ArcadePartyInstance implements GameInstance {
@@ -87,7 +89,10 @@ public class ArcadePartyInstance implements GameInstance {
         var gameQueuePersistence = JsonFileQueuePersistence.create(identifier("game_queue"),
                 gameManager.getGameCodec(), logger);
 
-        return new VotedGameQueue(gameManager, votedGames, 5, gameQueuePersistence);
+        Set<MiniGame> miniGames = gameManager.getGames();
+        int minQueueSize = max(1, min(miniGames.size(), 10));
+
+        return new VotedGameQueue(miniGames, votedGames, minQueueSize, gameQueuePersistence);
     }
 
     private void dispatchGameStart(ApBootstrap.Result result, MiniGameManager gameManager, GameQueue queue) {
