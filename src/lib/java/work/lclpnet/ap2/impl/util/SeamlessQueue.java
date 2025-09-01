@@ -1,19 +1,23 @@
 package work.lclpnet.ap2.impl.util;
 
 import org.jetbrains.annotations.NotNull;
+import work.lclpnet.ap2.api.util.QueueTransfer;
 import work.lclpnet.ap2.impl.ds.IndexedSet;
 
 import java.util.*;
+import java.util.function.Predicate;
 
-import static java.lang.Math.*;
+import static java.lang.Math.ceil;
+import static java.lang.Math.max;
 
 public class SeamlessQueue<T> {
 
-    private final Set<T> pool;
+    private final Set<T> basePool;
+    private final Set<T> filteredPool;
     private final Random random;
-    private final int margin;
     private final List<T> queue = new ArrayList<>();
-    private final SequencedCollection<T> history = new LinkedHashSet<>();
+    private final History<T> realHistory;
+    private final transient History<T> futureHistory;
 
     /**
      * Creates a new seamless queue.
@@ -21,19 +25,26 @@ public class SeamlessQueue<T> {
      * @param random The RNG.
      * @param margin The minimum number of elements before an element is repeated.
      *               Must be less than the size of the base element pool.
-     * @param lastElements Optional information about the last elements; e.g. restored from a past instance.
-     *                     Elements appear in the order they occurred, i.e. last element first, most recent element last.
+     * @param transfer Optional transfer information of a previous queue, e.g. restored from a past instance.
+     *
      */
-    public SeamlessQueue(Set<T> pool, Random random, int margin, List<T> lastElements) {
+    public SeamlessQueue(Set<T> pool, Random random, int margin, QueueTransfer<T> transfer) {
         if (pool.isEmpty()) throw new IllegalArgumentException("Pool is empty");
+
         if (margin >= pool.size()) throw new IllegalArgumentException("Element margin must less than the size of the " +
                 "element pool (is %s but most be at most %s)".formatted(margin, pool.size() - 1));
 
-        this.pool = Set.copyOf(pool);
-        this.random = random;
-        this.margin = max(0, margin);
+        if (margin < 0) throw new IllegalArgumentException("Margin must not be negative");
 
-        pushHistory(lastElements);
+        this.basePool = Set.copyOf(pool);
+        this.filteredPool = new HashSet<>(basePool);
+        this.random = random;
+
+        this.realHistory = new History<>(pool.size());
+        this.futureHistory = new History<>(margin);
+
+        realHistory.push(transfer.history());
+        futureHistory.push(transfer.history());
     }
 
     @NotNull
@@ -41,6 +52,14 @@ public class SeamlessQueue<T> {
         ensureAtLeast(1);
 
         return queue.removeFirst();
+    }
+
+    public synchronized void pushHistory(T element) {
+        realHistory.push(element);
+    }
+    
+    public synchronized void pushUpcoming(T element) {
+        futureHistory.push(element);
     }
 
     public synchronized List<T> peek(int amount) {
@@ -52,7 +71,7 @@ public class SeamlessQueue<T> {
     private void ensureAtLeast(int elements) {
         if (queue.size() >= elements) return;
 
-        int cycles = (int) ceil((double) elements / pool.size());
+        int cycles = (int) ceil((double) elements / filteredPool.size());
 
         for (int i = 0; i < cycles; i++) {
             appendCycle();
@@ -61,7 +80,7 @@ public class SeamlessQueue<T> {
 
     private void appendCycle() {
         // append whole cycle of the pool, so that every element is guaranteed to occur once before the next cycle
-        IndexedSet<T> cycleRemaining = new IndexedSet<>(pool);
+        IndexedSet<T> cycleRemaining = new IndexedSet<>(filteredPool);
         final int amount = cycleRemaining.size();
         List<T> candidates = new ArrayList<>(amount);
 
@@ -69,36 +88,69 @@ public class SeamlessQueue<T> {
             // find all candidates respecting margin
             candidates.clear();
             candidates.addAll(cycleRemaining);
-            candidates.removeIf(history::contains);  // history.size() <= margin
+            candidates.removeIf(futureHistory::contains);  // history.size() <= margin
 
             T elem = candidates.get(random.nextInt(candidates.size()));
             cycleRemaining.remove(elem);
 
             queue.add(elem);
-            pushHistory(elem);
+            futureHistory.push(elem);
         }
     }
 
-    /**
-     * Pushes the given elements onto the history.
-     * @param elements The elements to add. The first element is the oldest occurring, the last element is the most recent.
-     */
-    private void pushHistory(List<T> elements) {
-        history.addAll(elements.subList(0, min(margin, elements.size())));
-        trimHistory();
+    public void filter(Predicate<T> filter) {
+        filteredPool.clear();
+        basePool.stream().filter(filter).forEach(filteredPool::add);
+
+        var invalid = Predicate.not(filter);
+
+        queue.removeIf(invalid);
+        futureHistory.sequence.removeIf(invalid);
     }
 
-    private void pushHistory(T element) {
-        history.add(element);
-
-        trimHistory();
+    public QueueTransfer<T> transfer() {
+        return new QueueTransfer<>(realHistory.copySequence());
     }
 
-    private void trimHistory() {
-        int overhead = max(0, history.size() - margin);
+    private static class History<T> {
 
-        for (int i = 0; i < overhead; i++) {
-            history.removeFirst();
+        private final SequencedCollection<T> sequence;
+        private final int maxSize;
+
+        public History(int maxSize) {
+            this.maxSize = maxSize;
+            sequence = new LinkedHashSet<>(maxSize);
+        }
+
+        public synchronized void push(List<T> elements) {
+            int end = elements.size();
+            int start = max(0, end - maxSize);
+
+            sequence.addAll(elements.subList(start, end));
+
+            trim();
+        }
+
+        public synchronized void push(T element) {
+            sequence.add(element);
+
+            trim();
+        }
+
+        private void trim() {
+            int overhead = max(0, sequence.size() - maxSize);
+
+            for (int i = 0; i < overhead; i++) {
+                sequence.removeFirst();
+            }
+        }
+
+        public boolean contains(T elem) {
+            return sequence.contains(elem);
+        }
+
+        public List<T> copySequence() {
+            return List.copyOf(sequence);
         }
     }
 }

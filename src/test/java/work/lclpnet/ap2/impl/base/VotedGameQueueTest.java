@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 import work.lclpnet.ap2.api.base.GameQueue;
 import work.lclpnet.ap2.api.base.MiniGameManager;
 import work.lclpnet.ap2.impl.game.TestMiniGame;
+import work.lclpnet.ap2.impl.util.VoidQueuePersistence;
 
 import java.util.List;
 import java.util.Set;
@@ -31,7 +32,7 @@ class VotedGameQueueTest {
         when(manager.getGames())
                 .thenReturn(Set.of());
 
-        var queue = new VotedGameQueue(manager, List.of(), 5);
+        var queue = new VotedGameQueue(manager, List.of(), 5, VoidQueuePersistence.instance());
 
         assertThrows(IllegalStateException.class, queue::pollNextGame);
     }
@@ -47,7 +48,7 @@ class VotedGameQueueTest {
         when(manager.getGames())
                 .thenReturn(Set.of(gameA));
 
-        var queue = new VotedGameQueue(manager, List.of(gameC, gameB), 5);
+        var queue = new VotedGameQueue(manager, List.of(gameC, gameB), 5, VoidQueuePersistence.instance());
 
         assertEquals(gameC, queue.pollNextGame());
         assertEquals(gameB, queue.pollNextGame());
@@ -66,7 +67,7 @@ class VotedGameQueueTest {
         when(manager.getGames())
                 .thenReturn(Set.of(game));
 
-        var queue = new VotedGameQueue(manager, List.of(), 5);
+        var queue = new VotedGameQueue(manager, List.of(), 5, VoidQueuePersistence.instance());
 
         assertEquals(List.of(game, game, game, game, game), queue.preview().stream()
                 .map(GameQueue.Entry::game)
@@ -84,7 +85,7 @@ class VotedGameQueueTest {
         when(manager.getGames())
                 .thenReturn(Set.of(gameA));
 
-        var queue = new VotedGameQueue(manager, List.of(gameB), 5);
+        var queue = new VotedGameQueue(manager, List.of(gameB), 5, VoidQueuePersistence.instance());
 
         assertEquals(List.of(gameB, gameA, gameA, gameA, gameA), queue.preview().stream()
                 .map(GameQueue.Entry::game)
@@ -103,7 +104,7 @@ class VotedGameQueueTest {
         when(manager.getGames())
                 .thenReturn(Set.of(gameA));
 
-        var queue = new VotedGameQueue(manager, List.of(gameB), 5);
+        var queue = new VotedGameQueue(manager, List.of(gameB), 5, VoidQueuePersistence.instance());
 
         queue.setNextGame(gameC);
 

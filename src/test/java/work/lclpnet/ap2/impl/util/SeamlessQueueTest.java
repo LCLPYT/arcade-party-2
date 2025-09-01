@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import work.lclpnet.ap2.api.util.QueueTransfer;
 
 import java.util.List;
 import java.util.Random;
@@ -54,7 +55,7 @@ class SeamlessQueueTest {
     @Test
     void new_emptyPool_throws() {
         assertThrows(IllegalArgumentException.class, () ->
-                new SeamlessQueue<>(Set.of(), new Random(), 2, List.of()));
+                new SeamlessQueue<>(Set.of(), new Random(), 2, QueueTransfer.empty()));
     }
 
     @Test
@@ -82,10 +83,18 @@ class SeamlessQueueTest {
         assertEquals(preview, sequence);
     }
 
+    @Test
+    void new_givenHistory_onlyUpToPoolSizeTaken() {
+        var history = List.of('a', 'b', 'c', 'd', 'e', 'f', 'a', 'b');
+        var queue = new SeamlessQueue<>(pool, new Random(), 3, new QueueTransfer<>(history));
+
+        assertEquals(List.of('c', 'd', 'e', 'f', 'a', 'b'), queue.transfer().history());
+    }
+
     @RepeatedTest(200)
     void peek_givenHistory_marginRespected() {
         var history = List.of('a', 'd', 'c');
-        var queue = new SeamlessQueue<>(pool, new Random(), 3, history);
+        var queue = new SeamlessQueue<>(pool, new Random(), 3, new QueueTransfer<>(history));
         var preview = queue.peek(pool.size() * 2);
         var joined = Stream.concat(history.stream(), preview.stream()).toList();
 
@@ -118,6 +127,6 @@ class SeamlessQueueTest {
     }
 
     private @NotNull SeamlessQueue<Character> queue(int margin) {
-        return new SeamlessQueue<>(pool, new Random(), margin, List.of());
+        return new SeamlessQueue<>(pool, new Random(), margin, QueueTransfer.empty());
     }
 }

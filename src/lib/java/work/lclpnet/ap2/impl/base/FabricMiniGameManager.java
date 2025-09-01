@@ -3,12 +3,14 @@ package work.lclpnet.ap2.impl.base;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableBiMap;
+import com.mojang.serialization.Codec;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.entrypoint.EntrypointContainer;
 import net.fabricmc.loader.api.metadata.CustomValue;
 import net.minecraft.util.Identifier;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.api.base.MiniGameManager;
+import work.lclpnet.ap2.api.game.GameInfo;
 import work.lclpnet.ap2.api.game.MiniGame;
 
 import java.nio.file.Path;
@@ -72,6 +74,14 @@ public class FabricMiniGameManager implements MiniGameManager {
     @Override
     public Optional<MiniGame> getGame(Identifier gameId) {
         return Optional.ofNullable(games.get(gameId));
+    }
+
+    @Override
+    public Codec<MiniGame> getGameCodec() {
+        return Identifier.CODEC.xmap(
+                id -> getGame(id).orElseThrow(() -> new NoSuchElementException("Unknown game with id " + id)),
+                GameInfo::getId
+        );
     }
 
     public record MiniGameSource(List<Path> rootPaths) {}
