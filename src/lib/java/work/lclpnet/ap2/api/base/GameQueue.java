@@ -17,7 +17,7 @@ public interface GameQueue {
 
     void setFilter(Predicate<MiniGame> filter);
 
-    enum Type {REGULAR, VOTED, PRIORITY }
+    enum Type { REGULAR, VOTED, PRIORITY }
 
     record Entry(MiniGame game, Type type) {}
 }
