@@ -82,6 +82,16 @@ class SeamlessQueueTest {
         assertEquals(preview, sequence);
     }
 
+    @RepeatedTest(200)
+    void peek_givenHistory_marginRespected() {
+        var history = List.of('a', 'd', 'c');
+        var queue = new SeamlessQueue<>(pool, new Random(), 3, history);
+        var preview = queue.peek(pool.size() * 2);
+        var joined = Stream.concat(history.stream(), preview.stream()).toList();
+
+        assertMarginRespected(3, joined);
+    }
+
     private void assertMarginRespected(int margin, List<Character> sequence) {
         for (char c : pool) {
             int lastIndex = Integer.MIN_VALUE;
@@ -108,7 +118,6 @@ class SeamlessQueueTest {
     }
 
     private @NotNull SeamlessQueue<Character> queue(int margin) {
-        List<Character> prev = List.of();
-        return new SeamlessQueue<>(pool, new Random(), margin, prev);
+        return new SeamlessQueue<>(pool, new Random(), margin, List.of());
     }
 }

@@ -21,7 +21,8 @@ public class SeamlessQueue<T> {
      * @param random The RNG.
      * @param margin The minimum number of elements before an element is repeated.
      *               Must be less than the size of the base element pool.
-     * @param lastElements Optional information about the last elements, restored from a past instance, in reverse order.
+     * @param lastElements Optional information about the last elements; e.g. restored from a past instance.
+     *                     Elements appear in the order they occurred, i.e. last element first, most recent element last.
      */
     public SeamlessQueue(Set<T> pool, Random random, int margin, List<T> lastElements) {
         if (pool.isEmpty()) throw new IllegalArgumentException("Pool is empty");
@@ -80,7 +81,7 @@ public class SeamlessQueue<T> {
 
     /**
      * Pushes the given elements onto the history.
-     * @param elements The elements to add, in reverse order. The first element is the last occurring, the last element is the first occurring.
+     * @param elements The elements to add. The first element is the oldest occurring, the last element is the most recent.
      */
     private void pushHistory(List<T> elements) {
         history.addAll(elements.subList(0, min(margin, elements.size())));
