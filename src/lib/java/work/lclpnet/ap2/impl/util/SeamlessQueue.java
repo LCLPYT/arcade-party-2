@@ -7,6 +7,7 @@ import java.util.*;
 import java.util.function.Predicate;
 
 import static java.lang.Math.max;
+import static java.lang.Math.min;
 
 public class SeamlessQueue<T> {
 
@@ -18,6 +19,7 @@ public class SeamlessQueue<T> {
     private final History<T> futureHistory;
     private final Set<T> realOccurred = new LinkedHashSet<>();
     private final Set<T> futureOccurred = new HashSet<>();
+    private final int baseMargin;
 
     /**
      * Creates a new seamless queue.
@@ -39,6 +41,7 @@ public class SeamlessQueue<T> {
         this.basePool = Set.copyOf(pool);
         this.filteredPool = new HashSet<>(basePool);
         this.random = random;
+        this.baseMargin = margin;
 
         this.realHistory = new History<>(margin);
         this.futureHistory = new History<>(margin);
@@ -139,6 +142,9 @@ public class SeamlessQueue<T> {
 
         queue.removeIf(invalid);
         futureHistory.sequence.removeIf(invalid);
+
+        int newMargin = max(0, min(baseMargin, filteredPool.size() - 1));
+        futureHistory.resize(newMargin);
     }
 
     public QueueTransfer<T> transfer() {
@@ -148,11 +154,17 @@ public class SeamlessQueue<T> {
     private static class History<T> {
 
         private final SequencedCollection<T> sequence;
-        private final int maxSize;
+        private int maxSize;
 
         public History(int maxSize) {
             this.maxSize = maxSize;
             sequence = new LinkedHashSet<>(maxSize);
+        }
+
+        public synchronized void resize(int newSize) {
+            maxSize = newSize;
+
+            trim();
         }
 
         public synchronized void push(List<T> elements) {

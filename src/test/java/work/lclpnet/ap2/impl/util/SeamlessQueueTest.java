@@ -12,6 +12,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -26,6 +27,8 @@ class SeamlessQueueTest {
     void peek_2cyclesMargin2_eachItemExactlyTwice() {
         var queue = queue(2);
         var preview = queue.peek(pool.size() * 2);
+
+        assertEquals(pool.size() * 2, preview.size());
 
         preview.stream()
                 .collect(Collectors.groupingBy(c -> c))
@@ -126,6 +129,103 @@ class SeamlessQueueTest {
         assertNotEquals('f', preview.get(1));
 
         assertMarginRespected(3, Stream.concat(history.stream(), preview.stream()).toList());
+    }
+
+    @RepeatedTest(200)
+    void peek_filter_filtersQueue() {
+        var history = List.of('c', 'b', 'a');
+        var queue = new SeamlessQueue<>(pool, new Random(), 3, new QueueTransfer<>(history, Set.of()));
+
+        var before = queue.peek(18);
+
+        Predicate<Character> filter = c -> c == 'e' || c == 'f';
+        queue.filter(filter);
+
+        var expected = before.stream().filter(filter).toList();
+
+        var after = queue.peek(6);
+
+        assertEquals(expected, after);
+    }
+
+    @RepeatedTest(200)
+    void filter_tooFewMatchingForMargin_marginIsReduced() {
+        var queue = new SeamlessQueue<>(pool, new Random(), 3, new QueueTransfer<>(List.of(), Set.of()));
+
+        Predicate<Character> filter = c -> c == 'e' || c == 'f';
+        queue.filter(filter);
+
+        var preview = queue.peek(60);
+
+        char last = 0;
+
+        for (int i = 0; i < 60; i++) {
+            char c = preview.get(i);
+
+            if (i > 0) {
+                assertEquals(last, c == 'e' ? 'f' : 'e');
+            }
+
+            last = c;
+        }
+    }
+
+    @RepeatedTest(200)
+    void next_filter_resetsFutureOccurredButNotRealOccurredIfBasePoolIsNotCompleted() {
+        var occurred = Set.of('a', 'b', 'c');  // leave d to not leave the base pool completed!
+        var history = List.of('c', 'b', 'a');
+        var queue = new SeamlessQueue<>(pool, new Random(), 2, new QueueTransfer<>(history, occurred));
+
+        Predicate<Character> filter = c -> c == 'e' || c == 'f';
+        queue.filter(filter);
+
+        var before = queue.peek(2);
+        assertEquals(Set.of('e', 'f'), Set.copyOf(before));
+
+        before.forEach(queue::pushElement);
+        assertEquals(Set.of('a', 'b', 'c', 'e', 'f'), queue.transfer().occurred());
+
+        char next = queue.next();
+        queue.pushElement(next);
+
+        assertTrue(filter.test(next));
+        assertEquals(Set.of('a', 'b', 'c', 'e', 'f'), queue.transfer().occurred());
+
+        var after = queue.peek(4);
+
+        after.stream()
+                .collect(Collectors.groupingBy(c -> c))
+                .forEach((key, value) -> assertEquals(2, value.size(),
+                        "Character %s occurrences".formatted(key)));
+    }
+
+    @RepeatedTest(200)
+    void next_filter_resetsRealOccurredWhenBasePoolIsCompleted() {
+        var occurred = Set.of('a', 'b', 'c', 'd');
+        var history = List.of('c', 'b', 'a');
+        var queue = new SeamlessQueue<>(pool, new Random(), 2, new QueueTransfer<>(history, occurred));
+
+        Predicate<Character> filter = c -> c == 'e' || c == 'f';
+        queue.filter(filter);
+
+        var before = queue.peek(2);
+        assertEquals(Set.of('e', 'f'), Set.copyOf(before));
+
+        before.forEach(queue::pushElement);
+        assertEquals(Set.of(), queue.transfer().occurred());
+
+        char next = queue.next();
+        queue.pushElement(next);
+
+        assertTrue(filter.test(next));
+        assertEquals(Set.of(next), queue.transfer().occurred());
+
+        var after = queue.peek(4);
+
+        after.stream()
+                .collect(Collectors.groupingBy(c -> c))
+                .forEach((key, value) -> assertEquals(2, value.size(),
+                        "Character %s occurrences".formatted(key)));
     }
 
     private void assertMarginRespected(int margin, List<Character> sequence) {
