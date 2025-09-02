@@ -94,7 +94,7 @@ public class VotedGameQueue implements GameQueue {
 
     @Override
     public void updateHistory(MiniGame game) {
-        regular.pushHistory(game);
+        regular.pushElement(game);
 
         CompletableFuture.runAsync(() -> persistence.store(regular.transfer()));
     }

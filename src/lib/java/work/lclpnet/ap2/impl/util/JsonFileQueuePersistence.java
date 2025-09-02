@@ -16,7 +16,10 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 public class JsonFileQueuePersistence<T> implements QueuePersistence<T> {
 
@@ -28,8 +31,12 @@ public class JsonFileQueuePersistence<T> implements QueuePersistence<T> {
         this.path = path;
         this.logger = logger;
 
+        Codec<List<T>> listCodec = elementCodec.listOf();
+        Codec<Set<T>> setCodec = listCodec.xmap(LinkedHashSet::new, List::copyOf);
+
         transferCodec = RecordCodecBuilder.create(instance -> instance.group(
-                elementCodec.listOf().fieldOf("elements").forGetter(QueueTransfer::history)
+                listCodec.fieldOf("elements").forGetter(QueueTransfer::history),
+                setCodec.fieldOf("occurred").forGetter(QueueTransfer::occurred)
         ).apply(instance, QueueTransfer::new));
     }
 

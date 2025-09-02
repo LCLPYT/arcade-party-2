@@ -8,6 +8,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import work.lclpnet.ap2.api.util.QueueTransfer;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
@@ -84,21 +85,31 @@ class SeamlessQueueTest {
     }
 
     @Test
-    void new_givenHistory_onlyUpToPoolSizeTaken() {
+    void new_givenHistory_onlyUpToMarginTaken() {
         var history = List.of('a', 'b', 'c', 'd', 'e', 'f', 'a', 'b');
-        var queue = new SeamlessQueue<>(pool, new Random(), 3, new QueueTransfer<>(history));
+        var queue = new SeamlessQueue<>(pool, new Random(), 3, new QueueTransfer<>(history, Set.of()));
 
-        assertEquals(List.of('c', 'd', 'e', 'f', 'a', 'b'), queue.transfer().history());
+        assertEquals(List.of('f', 'a', 'b'), queue.transfer().history());
     }
 
     @RepeatedTest(200)
     void peek_givenHistory_marginRespected() {
         var history = List.of('a', 'd', 'c');
-        var queue = new SeamlessQueue<>(pool, new Random(), 3, new QueueTransfer<>(history));
+        var queue = new SeamlessQueue<>(pool, new Random(), 3, new QueueTransfer<>(history, Set.of()));
         var preview = queue.peek(pool.size() * 2);
         var joined = Stream.concat(history.stream(), preview.stream()).toList();
 
         assertMarginRespected(3, joined);
+    }
+
+    @RepeatedTest(200)
+    void peek_givenOccurredNoHistory_remainingPoolElementsAreSampled() {
+        var occurred = Set.of('a', 'b');
+        var queue = new SeamlessQueue<>(pool, new Random(), 3, new QueueTransfer<>(List.of(), occurred));
+        var preview = queue.peek(pool.size() - occurred.size());
+
+        var expected = pool.stream().filter(e -> !occurred.contains(e)).collect(Collectors.toSet());
+        assertEquals(expected, new HashSet<>(preview));
     }
 
     private void assertMarginRespected(int margin, List<Character> sequence) {

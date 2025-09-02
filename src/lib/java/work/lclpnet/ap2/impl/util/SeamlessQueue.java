@@ -2,12 +2,10 @@ package work.lclpnet.ap2.impl.util;
 
 import org.jetbrains.annotations.NotNull;
 import work.lclpnet.ap2.api.util.QueueTransfer;
-import work.lclpnet.ap2.impl.ds.IndexedSet;
 
 import java.util.*;
 import java.util.function.Predicate;
 
-import static java.lang.Math.ceil;
 import static java.lang.Math.max;
 
 public class SeamlessQueue<T> {
@@ -17,7 +15,9 @@ public class SeamlessQueue<T> {
     private final Random random;
     private final List<T> queue = new ArrayList<>();
     private final History<T> realHistory;
-    private final transient History<T> futureHistory;
+    private final History<T> futureHistory;
+    private final Set<T> realOccurred = new LinkedHashSet<>();
+    private final Set<T> futureOccurred = new HashSet<>();
 
     /**
      * Creates a new seamless queue.
@@ -40,11 +40,22 @@ public class SeamlessQueue<T> {
         this.filteredPool = new HashSet<>(basePool);
         this.random = random;
 
-        this.realHistory = new History<>(pool.size());
+        this.realHistory = new History<>(margin);
         this.futureHistory = new History<>(margin);
 
         realHistory.push(transfer.history());
         futureHistory.push(transfer.history());
+
+        realOccurred.addAll(transfer.occurred());
+        futureOccurred.addAll(transfer.occurred());
+
+        checkDepleted();
+    }
+
+    private void checkDepleted() {
+        if (realOccurred.size() >= basePool.size()) {
+            realOccurred.clear();
+        }
     }
 
     @NotNull
@@ -54,8 +65,11 @@ public class SeamlessQueue<T> {
         return queue.removeFirst();
     }
 
-    public synchronized void pushHistory(T element) {
+    public synchronized void pushElement(T element) {
         realHistory.push(element);
+        realOccurred.add(element);
+
+        checkDepleted();
     }
     
     public synchronized void pushUpcoming(T element) {
@@ -71,31 +85,37 @@ public class SeamlessQueue<T> {
     private void ensureAtLeast(int elements) {
         if (queue.size() >= elements) return;
 
-        int cycles = (int) ceil((double) elements / filteredPool.size());
+        int missing = elements - queue.size();
+        List<T> candidates = new ArrayList<>(filteredPool.size());
 
-        for (int i = 0; i < cycles; i++) {
-            appendCycle();
-        }
-    }
-
-    private void appendCycle() {
-        // append whole cycle of the pool, so that every element is guaranteed to occur once before the next cycle
-        IndexedSet<T> cycleRemaining = new IndexedSet<>(filteredPool);
-        final int amount = cycleRemaining.size();
-        List<T> candidates = new ArrayList<>(amount);
-
-        for (int i = 0; i < amount; i++) {
-            // find all candidates respecting margin
+        for (int i = 0; i < missing; i++) {
             candidates.clear();
-            candidates.addAll(cycleRemaining);
+            
+            remainingElements(candidates);
+            
+            // find all candidates respecting margin
             candidates.removeIf(futureHistory::contains);  // history.size() <= margin
 
             T elem = candidates.get(random.nextInt(candidates.size()));
-            cycleRemaining.remove(elem);
+            futureOccurred.add(elem);
 
             queue.add(elem);
             futureHistory.push(elem);
         }
+    }
+    
+    private void remainingElements(List<T> dst) {
+        for (T elem : filteredPool) {
+            if (!futureOccurred.contains(elem)) {
+                dst.add(elem);
+            }
+        }
+
+        if (!dst.isEmpty()) return;
+        
+        // reset cycle
+        futureOccurred.clear();
+        dst.addAll(filteredPool);
     }
 
     public void filter(Predicate<T> filter) {
@@ -109,7 +129,7 @@ public class SeamlessQueue<T> {
     }
 
     public QueueTransfer<T> transfer() {
-        return new QueueTransfer<>(realHistory.copySequence());
+        return new QueueTransfer<>(realHistory.copySequence(), realOccurred);
     }
 
     private static class History<T> {
