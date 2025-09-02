@@ -94,7 +94,17 @@ public class SeamlessQueue<T> {
             remainingElements(candidates);
             
             // find all candidates respecting margin
-            candidates.removeIf(futureHistory::contains);  // history.size() <= margin
+            candidates.removeIf(futureHistory::contains);
+
+            if (candidates.isEmpty()) {
+                resetCycle(candidates);
+
+                candidates.removeIf(futureHistory::contains);
+            }
+
+            if (candidates.isEmpty()) {
+                throw new IllegalStateException("No candidates found");
+            }
 
             T elem = candidates.get(random.nextInt(candidates.size()));
             futureOccurred.add(elem);
@@ -111,9 +121,12 @@ public class SeamlessQueue<T> {
             }
         }
 
-        if (!dst.isEmpty()) return;
-        
-        // reset cycle
+        if (dst.isEmpty()) {
+            resetCycle(dst);
+        }
+    }
+
+    private void resetCycle(List<T> dst) {
         futureOccurred.clear();
         dst.addAll(filteredPool);
     }

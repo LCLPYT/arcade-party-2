@@ -112,6 +112,22 @@ class SeamlessQueueTest {
         assertEquals(expected, new HashSet<>(preview));
     }
 
+    @RepeatedTest(200)
+    void peek_givenOccurredAndHistory_resetsOccurredIfNeeded() {
+        var occurred = Set.of('a', 'b', 'c', 'd');
+        var history = List.of('e', 'f');
+        var queue = new SeamlessQueue<>(pool, new Random(), 3, new QueueTransfer<>(history, occurred));
+        var preview = queue.peek(6);
+
+        // occurred set leaves only 'e' and 'f', but margin excludes them with a higher priority
+        assertNotEquals('e', preview.getFirst());
+        assertNotEquals('f', preview.getFirst());
+        assertNotEquals('e', preview.get(1));
+        assertNotEquals('f', preview.get(1));
+
+        assertMarginRespected(3, Stream.concat(history.stream(), preview.stream()).toList());
+    }
+
     private void assertMarginRespected(int margin, List<Character> sequence) {
         for (char c : pool) {
             int lastIndex = Integer.MIN_VALUE;
