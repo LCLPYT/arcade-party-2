@@ -35,8 +35,7 @@
     "notica": "*",
     "combat-control": "*",
     "fantasy": "*",
-    "kibu-world-api": "*",
-    "sqlite-jdbc": "*"
+    "kibu-world-api": "*"
   },
   "suggests": {
     "pal": "*",
