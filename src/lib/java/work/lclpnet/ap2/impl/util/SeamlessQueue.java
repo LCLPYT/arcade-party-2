@@ -77,6 +77,7 @@ public class SeamlessQueue<T> {
     
     public synchronized void pushUpcoming(T element) {
         futureHistory.push(element);
+        futureOccurred.add(element);
     }
 
     public synchronized List<T> peek(int amount) {
@@ -103,10 +104,6 @@ public class SeamlessQueue<T> {
                 resetCycle(candidates);
 
                 candidates.removeIf(futureHistory::contains);
-            }
-
-            if (candidates.isEmpty()) {
-                throw new IllegalStateException("No candidates found");
             }
 
             T elem = candidates.get(random.nextInt(candidates.size()));

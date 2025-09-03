@@ -68,6 +68,9 @@ class SeamlessQueueTest {
         assertThrows(IllegalArgumentException.class, () -> queue(pool.size() + 1));
         assertThrows(IllegalArgumentException.class, () -> queue(pool.size() + 2));
         assertThrows(IllegalArgumentException.class, () -> queue(Integer.MAX_VALUE));
+        assertThrows(IllegalArgumentException.class, () -> queue(-1));
+        assertThrows(IllegalArgumentException.class, () -> queue(-2));
+        assertThrows(IllegalArgumentException.class, () -> queue(Integer.MIN_VALUE));
     }
 
     @Test
@@ -226,6 +229,36 @@ class SeamlessQueueTest {
                 .collect(Collectors.groupingBy(c -> c))
                 .forEach((key, value) -> assertEquals(2, value.size(),
                         "Character %s occurrences".formatted(key)));
+    }
+
+    @RepeatedTest(200)
+    void pushUpcoming_addsToFutureOccurred() {
+        var queue = queue(0);
+
+        queue.pushUpcoming('a');
+        queue.pushUpcoming('b');
+        queue.pushUpcoming('c');
+        queue.pushUpcoming('d');
+
+        var preview = queue.peek(2);
+
+        assertEquals(Set.of('e', 'f'), new HashSet<>(preview));
+    }
+
+    @RepeatedTest(200)
+    void pushUpcoming_addsToFutureHistory() {
+        var queue = new SeamlessQueue<>(pool, new Random(), 3, new QueueTransfer<>(List.of('e', 'f', 'd'), Set.of()));
+
+        queue.pushUpcoming('a');
+        queue.pushUpcoming('b');
+        queue.pushUpcoming('c');
+
+        var before = List.of('a', 'b', 'c');
+        var after = queue.peek(3);
+        var joined = Stream.concat(before.stream(), after.stream()).toList();
+
+        assertMarginRespected(3, joined);
+        assertEquals(Set.of('d', 'e', 'f'), new HashSet<>(after));
     }
 
     private void assertMarginRespected(int margin, List<Character> sequence) {
