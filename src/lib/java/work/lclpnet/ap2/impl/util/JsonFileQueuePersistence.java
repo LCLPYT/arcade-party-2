@@ -2,6 +2,9 @@ package work.lclpnet.ap2.impl.util;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
+import com.google.gson.Strictness;
+import com.google.gson.internal.bind.TypeAdapters;
+import com.google.gson.stream.JsonWriter;
 import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.JsonOps;
@@ -13,6 +16,7 @@ import work.lclpnet.ap2.api.util.QueuePersistence;
 import work.lclpnet.ap2.api.util.QueueTransfer;
 
 import java.io.IOException;
+import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -65,9 +69,25 @@ public class JsonFileQueuePersistence<T> implements QueuePersistence<T> {
         }
 
         try (var out = Files.newOutputStream(path)) {
-            out.write(jsonElement.toString().getBytes(StandardCharsets.UTF_8));
+            out.write(toStringWithIndent(jsonElement).getBytes(StandardCharsets.UTF_8));
         } catch (IOException e) {
             logger.error("Failed to write json to {}", path);
+        }
+    }
+
+    private String toStringWithIndent(JsonElement jsonElement) {
+        try {
+            var stringWriter = new StringWriter();
+            var jsonWriter = new JsonWriter(stringWriter);
+
+            jsonWriter.setStrictness(Strictness.LENIENT);
+            jsonWriter.setIndent("  ");
+
+            TypeAdapters.JSON_ELEMENT.write(jsonWriter, jsonElement);
+
+            return stringWriter.toString();
+        } catch (IOException e) {
+            throw new AssertionError("Failed to stringfy", e);
         }
     }
 
