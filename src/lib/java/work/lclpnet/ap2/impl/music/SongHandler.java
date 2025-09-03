@@ -12,7 +12,10 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.music.*;
+import work.lclpnet.ap2.api.util.QueuePersistence;
 import work.lclpnet.ap2.impl.ds.IndexedSet;
+import work.lclpnet.ap2.impl.util.JsonFileQueuePersistence;
+import work.lclpnet.ap2.impl.util.SeamlessQueue;
 import work.lclpnet.ap2.impl.util.UriUtil;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.kibu.translate.text.RootText;
@@ -24,9 +27,11 @@ import work.lclpnet.notica.api.data.SongMeta;
 import java.net.URI;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static java.lang.Math.floor;
 import static net.minecraft.util.Formatting.*;
 import static work.lclpnet.ap2.impl.util.TranslationUtil.transformText;
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
@@ -34,34 +39,53 @@ import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 public class SongHandler {
 
     public static final float MUSIC_VOLUME = 0.75f;
+    public static final float MARGIN_PERCENT = 0.35f;
 
     private final SongManager songManager;
     private final Translations translations;
     private final Random random;
     private final Logger logger;
+    private final QueuePersistence<Identifier> queuePersistence;
     @Getter
     private final Set<WeightedSong> songs = new IndexedSet<>();
-    @Getter
-    private final List<WeightedSong> queue = new ArrayList<>();
+    private final Map<Identifier, WeightedSong> songsById = new HashMap<>();
     @Getter
     private final List<WeightedSong> priority = new ArrayList<>();
     private final SongCache cache = VoidSongCache.INSTANCE;
+    @Getter
+    private SeamlessQueue<WeightedSong> queue = null;
 
     public SongHandler(MiniGameHandle handle, Random random) {
-        this(handle.getSongManager(), handle.getTranslations(), random, handle.getLogger());
+        this(handle.getSongManager(), handle.getTranslations(), random, handle.getLogger(),
+                JsonFileQueuePersistence.create(handle.getGameInfo().identifier("song_queue"),
+                        Identifier.CODEC, handle.getLogger()));
     }
 
-    public SongHandler(SongManager songManager, Translations translations, Random random, Logger logger) {
+    public SongHandler(SongManager songManager, Translations translations, Random random, Logger logger, QueuePersistence<Identifier> queuePersistence) {
         this.songManager = songManager;
         this.translations = translations;
         this.random = random;
         this.logger = logger;
+        this.queuePersistence = queuePersistence;
     }
 
     public CompletableFuture<Void> loadSongs(Identifier tag) {
-        return songManager.getSongs(tag).thenAccept(s -> s.stream()
-                .sorted(Comparator.comparing(WeightedSong::getSongId))
-                .forEachOrdered(songs::add));
+        return CompletableFuture.runAsync(() -> {
+            var songsFuture = songManager.getSongs(tag);
+            var restored = queuePersistence.restore();
+            var songs = songsFuture.join();
+
+            this.songs.clear();
+            this.songs.addAll(songs);
+
+            songsById.clear();
+            songsById.putAll(songs.stream()
+                    .collect(Collectors.toMap(WeightedSong::getSongId, Function.identity())));
+
+            int margin = (int) floor(songs.size() * MARGIN_PERCENT);
+
+            queue = new SeamlessQueue<>(songs, random, margin, restored.map(songsById::get));
+        });
     }
 
     public CompletableFuture<ConfiguredSong> loadNextSong() {
@@ -70,11 +94,7 @@ public class SongHandler {
         if (!priority.isEmpty()) {
             weightedSong = priority.removeFirst();
         } else {
-            if (queue.isEmpty()) {
-                populateQueue();
-            }
-
-            weightedSong = queue.removeFirst();
+            weightedSong = queue.next();
         }
 
         LoadableSong loadable = weightedSong.getRandomElement(random);
@@ -82,16 +102,22 @@ public class SongHandler {
         return loadSong(loadable);
     }
 
-    private CompletableFuture<ConfiguredSong> loadSong(LoadableSong loadable) {
-        return loadable.load(cache, logger);
+    public void pushSongHistory(ConfiguredSong song) {
+        Identifier id = song.checkedSong().id();
+        WeightedSong weightedSong = songsById.get(id);
+
+        if (weightedSong == null) {
+            logger.error("Cannot push unknown song with id '{}'", id);
+            return;
+        }
+
+        queue.pushElement(weightedSong);
+
+        persistQueue();
     }
 
-    private void populateQueue() {
-        if (songs.isEmpty()) throw new IllegalStateException("There are no songs defined");
-
-        queue.clear();
-        queue.addAll(songs);
-        Collections.shuffle(queue, random);
+    private CompletableFuture<ConfiguredSong> loadSong(LoadableSong loadable) {
+        return loadable.load(cache, logger);
     }
 
     @Nullable
@@ -199,6 +225,8 @@ public class SongHandler {
             nowPlaying.sendTo(PlayerLookup.all(server));
         }
 
+        pushSongHistory(song);
+
         return songWrapper;
     }
 
@@ -230,11 +258,19 @@ public class SongHandler {
                 .map(song -> new SimpleWeightedSong(Set.of(song), id));
     }
 
-    public void pushSong(WeightedSong song) {
+    public void pushPrioritySong(WeightedSong song) {
         priority.addFirst(song);
     }
 
     public boolean hasPrioritySongs() {
         return !priority.isEmpty();
+    }
+
+    public void persistQueue() {
+        var seamlessQueue = this.queue;
+
+        if (seamlessQueue == null) return;
+
+        CompletableFuture.runAsync(() -> queuePersistence.store(seamlessQueue.transfer().map(WeightedSong::getSongId)));
     }
 }

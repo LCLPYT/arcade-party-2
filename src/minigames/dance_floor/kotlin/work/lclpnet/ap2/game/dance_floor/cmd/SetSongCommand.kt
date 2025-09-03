@@ -65,7 +65,7 @@ data class SetSongCommand(val songs: SongHandler, val skipCurrent: Runnable) : K
             return 0
         }
 
-        songs.pushSong(song)
+        songs.pushPrioritySong(song)
 
         ctx.getSource()!!.sendMessage(Text.literal("Set song to \"$id\""))
 
@@ -85,7 +85,7 @@ data class SetSongCommand(val songs: SongHandler, val skipCurrent: Runnable) : K
             return 0
         }
 
-        songs.pushSong(song)
+        songs.pushPrioritySong(song)
 
         ctx.getSource()!!.sendMessage(Text.literal("Set song to \"$id\" with time $startTick"))
 

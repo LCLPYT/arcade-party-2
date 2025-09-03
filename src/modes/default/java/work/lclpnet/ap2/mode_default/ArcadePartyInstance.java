@@ -17,6 +17,7 @@ import work.lclpnet.ap2.impl.game.PlayerUtil;
 import work.lclpnet.ap2.impl.i18n.DynamicLanguageManager;
 import work.lclpnet.ap2.impl.i18n.VanillaTranslations;
 import work.lclpnet.ap2.impl.music.MapSongCache;
+import work.lclpnet.ap2.impl.util.JsonFileQueuePersistence;
 import work.lclpnet.ap2.mode_default.activity.PreparationActivity;
 import work.lclpnet.ap2.mode_default.cmd.ForceGameCommand;
 import work.lclpnet.ap2.mode_default.cmd.ScoreCommand;
@@ -34,10 +35,13 @@ import work.lclpnet.translations.DefaultLanguageTranslator;
 
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ForkJoinPool;
 import java.util.stream.Collectors;
 
-import static work.lclpnet.ap2.impl.util.ThreadUtil.onThread;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+import static work.lclpnet.ap2.ApConstants.identifier;
 
 public class ArcadePartyInstance implements GameInstance {
 
@@ -58,27 +62,43 @@ public class ArcadePartyInstance implements GameInstance {
 
     @Override
     public void start(GameOptions options) {
-        MinecraftServer server = environment.getServer();
         ApBootstrap bootstrap = new ApBootstrap(configFactory, logger);
 
         bootstrap.loadConfig(ForkJoinPool.commonPool())
                 .thenCompose(configManager -> bootstrap.dispatch(configManager.getConfig(), environment, vanillaTranslations))
-                .thenCompose(onThread(server, result -> {
-                    dispatchGameStart(result, options);
-                }))
+                .thenCompose(res -> setupMode(res, options))
                 .exceptionally(throwable -> {
                     logger.error("Failed to load ArcadeParty2", throwable);
                     return null;
                 });
     }
 
-    private void dispatchGameStart(ApBootstrap.Result result, GameOptions options) {
+    private CompletableFuture<Void> setupMode(ApBootstrap.Result result, GameOptions options) {
+        MiniGameManager gameManager = new FabricMiniGameManager(logger);
+
+        return CompletableFuture.runAsync(() -> {
+            GameQueue queue = createGameQueue(gameManager, options);
+
+            environment.getServer().execute(() -> dispatchGameStart(result, gameManager, queue));
+        });
+    }
+
+    private GameQueue createGameQueue(MiniGameManager gameManager, GameOptions options) {
+        List<MiniGame> votedGames = getVotedGames(gameManager, options);
+
+        var gameQueuePersistence = JsonFileQueuePersistence.create(identifier("game_queue"),
+                gameManager.getGameCodec(), logger);
+
+        Set<MiniGame> miniGames = gameManager.getGames();
+        int minQueueSize = max(1, min(miniGames.size(), 10));
+
+        return new VotedGameQueue(miniGames, votedGames, minQueueSize, gameQueuePersistence);
+    }
+
+    private void dispatchGameStart(ApBootstrap.Result result, MiniGameManager gameManager, GameQueue queue) {
+
         MinecraftServer server = environment.getServer();
         Translations translations = environment.getTranslations();
-
-        MiniGameManager gameManager = new FabricMiniGameManager(logger);
-        List<MiniGame> votedGames = getVotedGames(gameManager, options);
-        GameQueue queue = new VotedGameQueue(gameManager, votedGames, 5);
 
         PlayerManagerImpl playerManager = new PlayerManagerImpl(server);
         PlayerUtil playerUtil = new PlayerUtil(server, playerManager);

@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import work.lclpnet.activity.manager.ActivityManager;
 import work.lclpnet.activity.util.BossBarHandler;
+import work.lclpnet.ap2.api.base.GameQueue;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.base.WorldBorderManager;
 import work.lclpnet.ap2.api.data.DataManager;
@@ -248,6 +249,9 @@ public class DefaultMiniGameHandle implements MiniGameHandle, WorldBorderManager
         }
 
         adjustScores(results);
+
+        GameQueue queue = args.gameQueue();
+        queue.updateHistory(game);
 
         PreparationActivity activity = new PreparationActivity(args);
         ActivityManager.getInstance().startActivity(activity);
