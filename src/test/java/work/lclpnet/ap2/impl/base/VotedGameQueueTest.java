@@ -23,10 +23,8 @@ class VotedGameQueueTest {
     }
 
     @Test
-    void pollNextGame_noGames_throws() {
-        var queue = new VotedGameQueue(Set.of(), List.of(), 5, VoidQueuePersistence.instance());
-
-        assertThrows(IllegalStateException.class, queue::pollNextGame);
+    void new_noGames_throws() {
+        assertThrows(IllegalArgumentException.class, () -> new VotedGameQueue(Set.of(), List.of(), 5, VoidQueuePersistence.instance()));
     }
 
     @Test
