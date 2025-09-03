@@ -74,7 +74,7 @@ public class SeamlessQueue<T> {
 
         checkDepleted();
     }
-    
+
     public synchronized void pushUpcoming(T element) {
         futureHistory.push(element);
         futureOccurred.add(element);

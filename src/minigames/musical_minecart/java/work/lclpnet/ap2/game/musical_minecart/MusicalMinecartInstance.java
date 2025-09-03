@@ -27,7 +27,6 @@ import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.map.MapBootstrap;
 import work.lclpnet.ap2.api.music.ConfiguredSong;
 import work.lclpnet.ap2.api.music.SongInfo;
-import work.lclpnet.ap2.api.music.SongManager;
 import work.lclpnet.ap2.core.type.ApVariantHolder;
 import work.lclpnet.ap2.game.musical_minecart.cmd.SetSongCommand;
 import work.lclpnet.ap2.game.musical_minecart.cmd.SkipSongCommand;
@@ -80,8 +79,8 @@ public class MusicalMinecartInstance extends EliminationGameInstance implements 
 
     public static final Identifier MUSICAL_MINECART_TAG = ApConstants.identifier("musical_minecart");
 
-    private final SongHandler songs;
     private final Random random = new Random();
+    private final SongHandler songs;
     private final Set<MinecartEntity> minecartEntities = new HashSet<>();
     private final AtomicBoolean ready = new AtomicBoolean(false);
     private boolean intermission = false;  // intermission is true if a priority song inhibited the next queue song
@@ -97,10 +96,7 @@ public class MusicalMinecartInstance extends EliminationGameInstance implements 
     public MusicalMinecartInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
 
-        SongManager songManager = gameHandle.getSongManager();
-        Translations translations = gameHandle.getTranslations();
-
-        this.songs = new SongHandler(songManager, translations, random, gameHandle.getLogger());
+        this.songs = new SongHandler(gameHandle, random);
     }
 
     @Override
@@ -194,6 +190,8 @@ public class MusicalMinecartInstance extends EliminationGameInstance implements 
             nextSong = loadNextSong();
         }
 
+        songs.pushSongHistory(config);
+
         MinecraftServer server = gameHandle.getServer();
 
         var players = PlayerLookup.all(server);
@@ -218,7 +216,7 @@ public class MusicalMinecartInstance extends EliminationGameInstance implements 
 
         if (DEBUG_INFO) {
             int total = songs.getSongs().size();
-            int done = total - songs.getQueue().size();
+            int done = songs.getQueue().transfer().occurred().size();
 
             timer = commons().createTimerTicks("Queue %s / %s".formatted(done, total), delay);
         }

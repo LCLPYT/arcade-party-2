@@ -68,7 +68,7 @@ public class SetSongCommand implements KibuCommand {
             return 0;
         }
 
-        songs.pushSong(song);
+        songs.pushPrioritySong(song);
 
         ctx.getSource().sendMessage(Text.literal("Set song to \"%s\"".formatted(id)));
 
@@ -88,7 +88,7 @@ public class SetSongCommand implements KibuCommand {
             return 0;
         }
 
-        songs.pushSong(song);
+        songs.pushPrioritySong(song);
 
         ctx.getSource().sendMessage(Text.literal("Set song to \"%s\" with time %d".formatted(id, startTick)));
 
