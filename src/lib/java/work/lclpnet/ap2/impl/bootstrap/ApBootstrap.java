@@ -18,6 +18,7 @@ import work.lclpnet.ap2.impl.data.MutableDataManager;
 import work.lclpnet.ap2.impl.i18n.VanillaTranslations;
 import work.lclpnet.ap2.impl.map.BalancedMapRandomizer;
 import work.lclpnet.ap2.impl.map.MapFacadeImpl;
+import work.lclpnet.ap2.impl.map.SeamlessMapRandomizer;
 import work.lclpnet.ap2.impl.map.SqliteAsyncMapFrequencyManager;
 import work.lclpnet.ap2.impl.music.AssetSongManager;
 import work.lclpnet.config.json.JsonConfigFactory;
@@ -178,7 +179,8 @@ public class ApBootstrap {
         WorldFacade worldFacade = environment.getWorldFacade(() -> mapManager);
 
         var frequencyManager = createSqliteAsyncMapFrequencyManager(ApConstants.ID, environment);
-        var randomizer = createBalancedMapRandomizer(mapManager, frequencyManager);
+//        var randomizer = createBalancedMapRandomizer(mapManager, frequencyManager);
+        var randomizer = new SeamlessMapRandomizer(mapManager, new Random(), logger);
         MapFacade mapFacade = createMapFacade(server, mapManager, worldFacade, randomizer);
 
         AssetRepository songRepo = createMultiAssetRepo(config.songsSource, songsCache, ASSET_TYPE_SONGS);
