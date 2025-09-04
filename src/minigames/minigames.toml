@@ -101,3 +101,8 @@ id = "paintball"
 [[minigames]]
 id = "dance_floor"
 type = [ "kotlin",]
+
+[[minigames]]
+id = "killeporter"
+type = [ "kotlin",]
+

@@ -19,3 +19,4 @@ fun <T : ParticleEffect> ServerWorld.spawnParticles(particle: T, pos: Position, 
 fun ServerPlayerEntity.setSelectedSlot(slot: Int) = PlayerInventoryAccess.setSelectedSlot(this, slot)
 
 fun ServerPlayerEntity.teleport(pos: PositionRotation) = teleport(world, pos.x, pos.y, pos.z, emptySet<PositionFlag>(), pos.yaw, pos.pitch, true)
+fun ServerPlayerEntity.teleport(pos: Position) = teleport(world, pos.x, pos.y, pos.z, emptySet<PositionFlag>(), yaw, pitch, true)

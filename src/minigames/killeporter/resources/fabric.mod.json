@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "id": "ap2-minigame-killeporter",
+  "version": "${version}",
+  "authors": [
+    "bops"
+  ],
+  "license": "AGPL-3.0",
+  "environment": "server",
+  "entrypoints": {
+    "ap2:minigame": [
+      {
+        "adapter": "kotlin",
+        "value": "work.lclpnet.ap2.game.killeporter.KilleporterMiniGame"
+      }
+    ]
+  },
+  "depends": {
+    "ap2-lib": "*",
+    "fabric-language-kotlin": ">=1.13.5+kotlin.2.2.10"
+  },
+  "custom": {
+    "timestamp": 1756668055,
+    "modmenu": {
+      "parent": "ap2-minigames"
+    }
+  }
+}
