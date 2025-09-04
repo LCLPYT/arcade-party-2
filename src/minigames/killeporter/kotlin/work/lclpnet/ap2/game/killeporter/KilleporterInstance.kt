@@ -1,12 +1,7 @@
 package work.lclpnet.ap2.game.killeporter
 
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents
-import net.fabricmc.fabric.api.networking.v1.PlayerLookup
-import net.minecraft.entity.LivingEntity
-import net.minecraft.entity.damage.DamageSource
 import net.minecraft.server.network.ServerPlayerEntity
-import net.minecraft.sound.SoundCategory
-import net.minecraft.sound.SoundEvents
 import net.minecraft.util.Formatting
 import net.minecraft.world.GameRules
 import work.lclpnet.ap2.api.game.MiniGameHandle
@@ -19,6 +14,7 @@ import work.lclpnet.ap2.teleport
 import work.lclpnet.ap2.timeout
 import work.lclpnet.ap2.translate
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks
+import work.lclpnet.kibu.hook.util.PositionRotation
 import work.lclpnet.kibu.scheduler.Ticks
 import work.lclpnet.lobby.game.api.prot.scope.EntityDamageSourceScope
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes
@@ -97,11 +93,13 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
     fun playerSwitcher() {
         val shuffledPlayers = players().shuffled()
         val playerCount = shuffledPlayers.count()
-        val positions = shuffledPlayers.map { player -> player.pos }
+        val positionRotations = shuffledPlayers.map { player ->
+            PositionRotation(player.x, player.y, player.z, player.yaw, player.pitch)
+        }
 
         for (p in (0 ..< playerCount)) {
             val previousIndex = floorMod(p-1, playerCount)
-            shuffledPlayers[p].teleport(positions[previousIndex])
+            shuffledPlayers[p].teleport(positionRotations[previousIndex])
             translate("game.ap2.killeporter.switch_message", shuffledPlayers[previousIndex].nameForScoreboard)
                 .formatted(Formatting.GREEN)
                 .sendTo(shuffledPlayers[p], true)
