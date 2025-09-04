@@ -129,6 +129,16 @@ public class MapUtil {
         return readShape(area);
     }
 
+    public static @Nullable BlockShape readOptShape(GameMap map, String key) {
+        JSONObject json = map.getProperties().optJSONObject(key);
+
+        if (json == null) return null;
+
+        BlockPos mapSpawn = BlockPos.ofFloored(MapUtils.getSpawnPosition(map));
+
+        return readShape(json, mapSpawn);
+    }
+
     public static BlockShape readShape(GameMap map, String key) {
         BlockPos mapSpawn = BlockPos.ofFloored(MapUtils.getSpawnPosition(map));
 

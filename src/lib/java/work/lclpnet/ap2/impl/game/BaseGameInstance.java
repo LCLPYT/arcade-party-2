@@ -45,6 +45,7 @@ import work.lclpnet.kibu.translate.bossbar.TranslatedBossBar;
 import work.lclpnet.kibu.translate.text.TextTranslatable;
 import work.lclpnet.lobby.game.api.WorldFacade;
 import work.lclpnet.lobby.game.map.GameMap;
+import work.lclpnet.lobby.game.util.BossBarTimer;
 import work.lclpnet.lobby.game.util.ProtectorUtils;
 
 import java.util.HashSet;
@@ -354,6 +355,12 @@ public abstract class BaseGameInstance implements MiniGameInstance {
         gameHandle.getBossBarHandler().showOnJoin(bossBar);
 
         return bossBar;
+    }
+
+    protected final BossBarTimer useTaskTimer(int seconds) {
+        var subject = gameHandle.getTranslations().translateText(gameHandle.getGameInfo().getTaskKey());
+
+        return commons().createTimer(subject, seconds);
     }
 
     protected final DynamicTranslatedPlayerBossBar usePlayerDynamicTaskDisplay(Object... args) {
