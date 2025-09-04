@@ -33,11 +33,6 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
 
     var kitHandler: KitHandler? = null
 
-    init {
-        disableEliminationMessages()
-        useSurvivalMode()
-    }
-
     override fun prepare() {
 
         commons().gameRuleBuilder()
@@ -52,6 +47,8 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
             .set(GameRules.DO_ENTITY_DROPS, true)
             .set(GameRules.ANNOUNCE_ADVANCEMENTS, false)
 
+        disableEliminationMessages()
+        useSurvivalMode()
         useRemainingPlayersDisplay()
         useSmoothDeath()
         setupKits()
@@ -62,10 +59,9 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
 
                 if (entity is ServerPlayerEntity && entity.hungerManager.foodLevel >= 20) {
                     entity.hungerManager.addExhaustion(8f)
-                    entity.hungerManager.setSaturationLevel(2f)
+                    entity.hungerManager.saturationLevel = 2f
                 }
-
-                onDamage(entity, source, amount)
+                true
             }
         )
     }
@@ -89,34 +85,6 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
         timeout(GAME_DURATION_TICKS) { ->
             winManager.forceWin(players().toSet())
         }
-    }
-
-    fun onDamage(entity: LivingEntity, source: DamageSource, amount: Float): Boolean {
-        if (winManager.isGameOver
-            || entity !is ServerPlayerEntity
-            || !gameHandle.getParticipants().isParticipating(entity)) return false
-        // respect hurt time
-        if (entity.hurtTime > 0) {
-
-            return false
-        }
-        if ((entity.health - amount) <= 0) {
-            onLethalDamage(source, entity, amount)
-            return false
-        }
-
-        return true
-    }
-
-    fun onLethalDamage(source: DamageSource, player: ServerPlayerEntity, amount: Float) {
-        player.damageTracker.onDamage(source, amount)
-
-        gameHandle.getDeathMessages().getDeathMessage(player, source)
-            .sendTo(PlayerLookup.all(gameHandle.getServer()))
-
-        getWorld().playSound(null, player.blockPos, SoundEvents.ENTITY_PLAYER_DEATH, SoundCategory.PLAYERS, 0.8f, 0.8f)
-
-        eliminate(player)
     }
 
     fun switchTimeout() {
