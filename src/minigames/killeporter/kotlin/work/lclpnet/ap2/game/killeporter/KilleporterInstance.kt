@@ -100,9 +100,9 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
         val positions = shuffledPlayers.map { player -> player.pos }
 
         for (p in (0 ..< playerCount)) {
-            val previousPlayer = shuffledPlayers[floorMod(p-1, playerCount)]
-            shuffledPlayers[p].teleport(positions[p])
-            translate("game.ap2.killeporter.switch_message", previousPlayer.nameForScoreboard)
+            val previousIndex = floorMod(p-1, playerCount)
+            shuffledPlayers[p].teleport(positions[previousIndex])
+            translate("game.ap2.killeporter.switch_message", shuffledPlayers[previousIndex].nameForScoreboard)
                 .formatted(Formatting.GREEN)
                 .sendTo(shuffledPlayers[p], true)
         }
