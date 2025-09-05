@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "id": "ap2-minigame-mine-field",
+  "id": "ap2-minigame-minefield",
   "version": "${version}",
   "authors": [
     "LCLP"
@@ -11,7 +11,7 @@
     "ap2:minigame": [
       {
         "adapter": "kotlin",
-        "value": "work.lclpnet.ap2.game.mine_field.MineFieldMiniGame"
+        "value": "work.lclpnet.ap2.game.minefield.MinefieldMiniGame"
       }
     ]
   },

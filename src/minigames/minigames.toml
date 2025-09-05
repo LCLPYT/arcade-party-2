@@ -107,6 +107,6 @@ id = "king_of_the_hill"
 type = [ "kotlin",]
 
 [[minigames]]
-id = "mine_field"
+id = "minefield"
 type = [ "kotlin",]
 

@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.game.mine_field
+package work.lclpnet.ap2.game.minefield
 
 import net.minecraft.block.Blocks
 import net.minecraft.particle.ParticleTypes
@@ -28,7 +28,7 @@ import kotlin.random.asJavaRandom
 
 const val END_TIME_SECONDS = 15
 
-class MineFieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle) {
+class MinefieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle) {
     
     private val data = OrderedDataContainer(PlayerRef::create)
 
@@ -111,7 +111,7 @@ class MineFieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
             }
     }
 
-    fun MineFieldInstance.onStepOnMine(player: ServerPlayerEntity, pos: BlockPos) {
+    fun MinefieldInstance.onStepOnMine(player: ServerPlayerEntity, pos: BlockPos) {
         if (winManager.isGameOver) return
 
         world.setBlock(pos, Blocks.AIR)

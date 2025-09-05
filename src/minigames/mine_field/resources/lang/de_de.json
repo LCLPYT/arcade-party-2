@@ -1,7 +1,0 @@
-{
-  "game.ap2.mine_field": "Minenfeld",
-  "game.ap2.mine_field.description": "Durchquere ein Minenfeld, ohne dass du auf die Minen trittst. Wer als erstes am Ziel ankommt gewinnt!",
-  "game.ap2.mine_field.task": "Erreiche das Ziel",
-  "game.ap2.mine_field.goal": "%s hat das Ziel erreicht. Das Spiel endet in %s Sekunden und du wirst dann je nach Distanz zum Ziel eingestuft.",
-  "game.ap2.mine_field.stepped_on_mine": "Du hast eine Mine ausgelöst"
-}

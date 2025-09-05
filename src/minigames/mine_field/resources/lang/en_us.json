@@ -1,7 +1,0 @@
-{
-  "game.ap2.mine_field": "Mine Field",
-  "game.ap2.mine_field.description": "Step through a mine field without setting of mines. First one to reach the goal wins!",
-  "game.ap2.mine_field.task": "Reach the goal",
-  "game.ap2.mine_field.goal": "%s reached the goal. The game will end in %s seconds and you will be ranked depending on your distance to the goal.",
-  "game.ap2.mine_field.stepped_on_mine": "You stepped on a mine"
-}
