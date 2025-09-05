@@ -1,16 +1,14 @@
 package work.lclpnet.ap2.game.killeporter
 
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents
-import net.fabricmc.fabric.api.networking.v1.PlayerLookup
-import net.minecraft.entity.LivingEntity
-import net.minecraft.entity.damage.DamageSource
 import net.minecraft.server.network.ServerPlayerEntity
-import net.minecraft.sound.SoundCategory
-import net.minecraft.sound.SoundEvents
 import net.minecraft.util.Formatting
 import net.minecraft.world.GameRules
 import work.lclpnet.ap2.api.game.MiniGameHandle
+import work.lclpnet.ap2.game.killeporter.kit.EnderKit
+import work.lclpnet.ap2.game.killeporter.kit.FarmerKit
 import work.lclpnet.ap2.game.killeporter.kit.ToolKit
+import work.lclpnet.ap2.game.killeporter.kit.TridentKit
 import work.lclpnet.ap2.impl.game.EliminationGameInstance
 import work.lclpnet.ap2.impl.game.kit.KitHandle
 import work.lclpnet.ap2.impl.game.kit.KitHandler
@@ -56,7 +54,7 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
 
         gameHandle.hooks.registerHook(
             ServerLivingEntityHooks.ALLOW_DAMAGE,
-            ServerLivingEntityEvents.AllowDamage { entity, source, amount ->
+            ServerLivingEntityEvents.AllowDamage { entity, _, _ ->
 
                 if (entity is ServerPlayerEntity && entity.hungerManager.foodLevel >= 20) {
                     entity.hungerManager.addExhaustion(8f)
@@ -115,7 +113,7 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
 
     private fun setupKits() {
         kitHandler = KitHandler.create(gameHandle, world) { kitHandle: KitHandle ->
-            listOf(ToolKit(kitHandle))
+            listOf(ToolKit(kitHandle), FarmerKit(kitHandle), EnderKit(kitHandle), TridentKit(kitHandle))
         }
         kitHandler?.setup()
     }
