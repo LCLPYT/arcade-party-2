@@ -16,6 +16,14 @@ fun World.setBlock(pos: BlockPos, block: Block) = setBlockState(pos, block.defau
 fun <T : ParticleEffect> ServerWorld.spawnParticles(particle: T, pos: Position, count: Int, offsetX: Double, offsetY: Double, offsetZ: Double, speed: Double) =
     spawnParticles(particle, pos.x, pos.y, pos.z, count, offsetX, offsetY, offsetZ, speed)
 
+fun ServerWorld.setBlocks(blocks: Iterable<BlockPos>, block: Block) {
+    for (pos in blocks) {
+        setBlock(pos, block)
+    }
+}
+
 fun ServerPlayerEntity.setSelectedSlot(slot: Int) = PlayerInventoryAccess.setSelectedSlot(this, slot)
 
+fun ServerPlayerEntity.teleport(pos: BlockPos) = teleport(world, pos.x.toDouble() + 0.5, pos.y.toDouble(), pos.z + 0.5, emptySet<PositionFlag>(), yaw, pitch, true)
+fun ServerPlayerEntity.teleport(pos: Position) = teleport(world, pos.x, pos.y, pos.z, emptySet<PositionFlag>(), yaw, pitch, true)
 fun ServerPlayerEntity.teleport(pos: PositionRotation) = teleport(world, pos.x, pos.y, pos.z, emptySet<PositionFlag>(), pos.yaw, pos.pitch, true)

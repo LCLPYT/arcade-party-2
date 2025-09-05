@@ -344,7 +344,7 @@ public class RedLightGreenLightInstance extends FFAGameInstance implements Runna
                 })
                 .sorted(Comparator.comparingDouble(Grade::distance))
                 .forEachOrdered(grade -> {
-                    var detail = translations.translateText("game.ap2.red_light_green_light.result", LocalizedFormat.format("%.1f", grade.distance));
+                    var detail = translations.translateText("ap2.score.blocks_away", LocalizedFormat.format("%.1f", grade.distance));
                     data.add(grade.player(), detail);
                 });
     }

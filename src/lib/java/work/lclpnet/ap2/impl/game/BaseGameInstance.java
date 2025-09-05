@@ -306,7 +306,7 @@ public abstract class BaseGameInstance implements MiniGameInstance {
         return PlayerUtil.getLoadingDelayTicks(players);
     }
 
-    protected final ServerWorld getWorld() {
+    public final ServerWorld getWorld() {
         if (world == null) {
             throw new IllegalStateException("World not loaded yet");
         }
@@ -314,7 +314,7 @@ public abstract class BaseGameInstance implements MiniGameInstance {
         return world;
     }
 
-    protected final GameMap getMap() {
+    public final GameMap getMap() {
         if (map == null) {
             throw new IllegalStateException("Map not loaded yet");
         }

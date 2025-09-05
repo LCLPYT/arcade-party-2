@@ -44,7 +44,7 @@ import static work.lclpnet.ap2.impl.util.ItemHelper.unbreakable;
 public class ManiacDiggerInstance extends FFAGameInstance implements MapBootstrapFunction {
 
     private final OrderedDataContainer<ServerPlayerEntity, PlayerRef> reachedBottom = new OrderedDataContainer<>(PlayerRef::create);
-    private final IntScoreDataContainer<ServerPlayerEntity, PlayerRef> score = new IntScoreDataContainer<>(PlayerRef::create, Ordering.ASCENDING, "game.ap2.maniac_digger.result");
+    private final IntScoreDataContainer<ServerPlayerEntity, PlayerRef> score = new IntScoreDataContainer<>(PlayerRef::create, Ordering.ASCENDING, "ap2.score.blocks_away");
     private final CombinedDataContainer<ServerPlayerEntity, PlayerRef> data = new CombinedDataContainer<>(List.of(reachedBottom, score));
     private final Map<UUID, MdPipe> pipes = new HashMap<>();
     private final Set<UUID> wrongTool = new HashSet<>();

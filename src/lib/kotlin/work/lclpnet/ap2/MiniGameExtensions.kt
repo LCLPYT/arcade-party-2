@@ -6,7 +6,8 @@ import net.minecraft.server.network.ServerPlayerEntity
 import work.lclpnet.ap2.api.event.IntScoreEventSource
 import work.lclpnet.ap2.impl.game.BaseGameInstance
 import work.lclpnet.ap2.impl.game.FFAGameInstance
-import work.lclpnet.kibu.scheduler.api.RunningTask
+import work.lclpnet.ap2.impl.map.MapUtil
+import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape
 
 fun BaseGameInstance.players() = gameHandle.participants!!
 
@@ -17,13 +18,7 @@ private fun ticks(ticks: Int, seconds: Int): Int = ticks + seconds * 20
 fun BaseGameInstance.timeout(ticks: Int = 0, seconds: Int = 0, action: () -> Unit) =
     gameHandle.gameScheduler.timeout(ticks(ticks, seconds), action)!!
 
-fun BaseGameInstance.timeout(ticks: Int = 0, seconds: Int = 0, action: (RunningTask) -> Unit) =
-    gameHandle.gameScheduler.timeout(ticks(ticks, seconds), action)!!
-
 fun BaseGameInstance.interval(ticks: Int, action: () -> Unit) =
-    gameHandle.gameScheduler.interval(ticks, action)!!
-
-fun BaseGameInstance.interval(ticks: Int, action: (RunningTask) -> Unit) =
     gameHandle.gameScheduler.interval(ticks, action)!!
 
 fun BaseGameInstance.translate(key: String, vararg args: Any) =
@@ -37,3 +32,5 @@ fun FFAGameInstance.setupSidebarScoreboard(data: IntScoreEventSource<ServerPlaye
 
     allPlayers().forEach(objective::add)
 }
+
+fun BaseGameInstance.readShape(key: String): BlockShape = MapUtil.readShape(map, key)
