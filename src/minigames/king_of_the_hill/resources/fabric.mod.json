@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "id": "ap2-minigame-king-of-the-hill",
+  "version": "${version}",
+  "authors": [
+    "LCLP"
+  ],
+  "license": "AGPL-3.0",
+  "environment": "server",
+  "entrypoints": {
+    "ap2:minigame": [
+      {
+        "adapter": "kotlin",
+        "value": "work.lclpnet.ap2.game.king_of_the_hill.KingOfTheHillMiniGame"
+      }
+    ]
+  },
+  "depends": {
+    "ap2-lib": "*",
+    "fabric-language-kotlin": ">=1.13.5+kotlin.2.2.10"
+  },
+  "custom": {
+    "timestamp": 1757006072,
+    "modmenu": {
+      "parent": "ap2-minigames"
+    }
+  }
+}

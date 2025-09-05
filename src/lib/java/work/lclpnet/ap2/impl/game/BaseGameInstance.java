@@ -45,6 +45,7 @@ import work.lclpnet.kibu.translate.bossbar.TranslatedBossBar;
 import work.lclpnet.kibu.translate.text.TextTranslatable;
 import work.lclpnet.lobby.game.api.WorldFacade;
 import work.lclpnet.lobby.game.map.GameMap;
+import work.lclpnet.lobby.game.util.BossBarTimer;
 import work.lclpnet.lobby.game.util.ProtectorUtils;
 
 import java.util.HashSet;
@@ -143,7 +144,8 @@ public abstract class BaseGameInstance implements MiniGameInstance {
     private void configureLocatorBar() {
         if (locatorBarEnabled) return;
 
-        gameHandle.getHooks().registerHook(PlayerWaypointCallback.HOOK, (player, waypoint) -> true);
+        gameHandle.getHooks().registerHook(PlayerWaypointCallback.HOOK, (player, waypoint)
+                -> waypoint instanceof ServerPlayerEntity);  // hide players from locator by default
 
         if (world != null) {
             world.getWaypointHandler().clear();
@@ -354,6 +356,12 @@ public abstract class BaseGameInstance implements MiniGameInstance {
         gameHandle.getBossBarHandler().showOnJoin(bossBar);
 
         return bossBar;
+    }
+
+    protected final BossBarTimer useTaskTimer(int seconds) {
+        var subject = gameHandle.getTranslations().translateText(gameHandle.getGameInfo().getTaskKey());
+
+        return commons().createTimer(subject, seconds);
     }
 
     protected final DynamicTranslatedPlayerBossBar usePlayerDynamicTaskDisplay(Object... args) {
