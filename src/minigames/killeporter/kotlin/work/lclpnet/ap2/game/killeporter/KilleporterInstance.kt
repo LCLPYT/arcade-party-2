@@ -17,6 +17,7 @@ import work.lclpnet.ap2.teleport
 import work.lclpnet.ap2.timeout
 import work.lclpnet.ap2.translate
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks
+import work.lclpnet.kibu.hook.util.PositionRotation
 import work.lclpnet.kibu.scheduler.Ticks
 import work.lclpnet.lobby.game.api.prot.scope.EntityDamageSourceScope
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes
@@ -101,11 +102,14 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
     fun playerSwitcher() {
         val shuffledPlayers = players().shuffled()
         val playerCount = shuffledPlayers.count()
+        val positionRotations = shuffledPlayers.map { player ->
+            PositionRotation(player.x, player.y, player.z, player.yaw, player.pitch)
+        }
 
         for (p in (0 ..< playerCount)) {
-            val previousPlayer = shuffledPlayers[floorMod(p-1, playerCount)]
-            shuffledPlayers[p].teleport(previousPlayer.pos)
-            translate("game.ap2.killeporter.switch_message", previousPlayer.nameForScoreboard)
+            val previousIndex = floorMod(p-1, playerCount)
+            shuffledPlayers[p].teleport(positionRotations[previousIndex])
+            translate("game.ap2.killeporter.switch_message", shuffledPlayers[previousIndex].nameForScoreboard)
                 .formatted(Formatting.GREEN)
                 .sendTo(shuffledPlayers[p], true)
         }
