@@ -2,16 +2,16 @@ package work.lclpnet.ap2.game.eggventure;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.ShapeContext;
+import net.minecraft.block.*;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.block.entity.SkullBlockEntity;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.NbtComponent;
+import net.minecraft.entity.EntityType;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.attribute.EntityAttributes;
+import net.minecraft.entity.decoration.DisplayEntity;
+import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.registry.DynamicRegistryManager;
@@ -28,9 +28,11 @@ import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
+import net.minecraft.util.math.AffineTransformation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.RaycastContext;
 import org.jetbrains.annotations.NotNull;
+import org.joml.Matrix4f;
 import work.lclpnet.ap2.ApConstants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
@@ -42,10 +44,7 @@ import work.lclpnet.ap2.impl.game.data.IntDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.tags.PlayerHeadTags;
-import work.lclpnet.ap2.impl.util.ApRegistries;
-import work.lclpnet.ap2.impl.util.BlockBox;
-import work.lclpnet.ap2.impl.util.ColorUtil;
-import work.lclpnet.ap2.impl.util.RayCastUtil;
+import work.lclpnet.ap2.impl.util.*;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape;
 import work.lclpnet.ap2.impl.util.world.entity.DynamicEntityManager;
@@ -54,14 +53,13 @@ import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.kibu.hook.player.PlayerSwingHandHook;
 import work.lclpnet.lobby.game.map.GameMap;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
-import static net.minecraft.util.Formatting.BOLD;
-import static net.minecraft.util.Formatting.YELLOW;
+import static java.lang.Math.PI;
+import static net.minecraft.util.Formatting.*;
 import static work.lclpnet.ap2.impl.util.ItemHelper.getLeatherArmor;
+import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
 public class EggventureInstance extends FFAGameInstance implements MapBootstrap {
 
@@ -70,6 +68,7 @@ public class EggventureInstance extends FFAGameInstance implements MapBootstrap 
 
     private final IntDataContainer<ServerPlayerEntity, PlayerRef> data;
     private final Random random = new Random();
+    private final Set<BlockPos> remainingPositions = new HashSet<>();
 
     public EggventureInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
@@ -120,6 +119,8 @@ public class EggventureInstance extends FFAGameInstance implements MapBootstrap 
             PlayerHead variant = variants.get(random.nextInt(variants.size()));
 
             world.getBlockEntity(pos, BlockEntityType.SKULL).ifPresent(variant::apply);
+
+            remainingPositions.add(pos);
         }
 
         for (BlockPos pos : positions) {
@@ -254,7 +255,39 @@ public class EggventureInstance extends FFAGameInstance implements MapBootstrap 
 
         var subject = gameHandle.getTranslations().translateText(gameHandle.getGameInfo().getTaskKey());
 
-        commons().createTimer(subject, durationSeconds).whenDone(winManager::complete);
+        commons().createTimer(subject, durationSeconds).whenDone(this::completeAndShowRemaining);
+    }
+
+    private void completeAndShowRemaining() {
+        if (winManager.isGameOver()) return;
+
+        winManager.complete();
+
+        ServerWorld world = getWorld();
+
+        for (BlockPos pos : remainingPositions) {
+            BlockState state = world.getBlockState(pos);
+            ItemStack stack = ItemHelper.getStackWithData(world, pos);
+
+            if (!state.isOf(Blocks.PLAYER_HEAD)) {
+                gameHandle.getLogger().warn("Unexpected block: {}", state);
+                continue;
+            }
+
+            int rotation = state.get(SkullBlock.ROTATION, 0);
+
+            var display = new DisplayEntity.ItemDisplayEntity(EntityType.ITEM_DISPLAY, world);
+            display.setItemStack(stack);
+            display.setPosition(pos.toCenterPos());
+            display.setTransformation(new AffineTransformation(new Matrix4f().rotateY((float) (rotation / -8f * PI))));
+            display.setGlowing(true);
+
+            world.spawnEntity(display);
+        }
+
+        gameHandle.getTranslations().translateText("game.ap2.eggventure.eggs_left", styled(remainingPositions.size(), YELLOW))
+                .formatted(GREEN)
+                .sendTo(gameHandle.getParticipants(), true);
     }
 
     private void onFindEasterEgg(ServerPlayerEntity player, BlockPos pos) {
@@ -272,5 +305,7 @@ public class EggventureInstance extends FFAGameInstance implements MapBootstrap 
         world.spawnParticles(ParticleTypes.CRIMSON_SPORE, x, y, z, 75, 0.25, 0.25, 0.25, 0);
         world.spawnParticles(ParticleTypes.WARPED_SPORE, x, y, z, 75, 0.25, 0.25, 0.25, 0);
         world.spawnParticles(ParticleTypes.GLOW, x, y, z, 25, 0.5, 0.5, 0.5, 0);
+
+        remainingPositions.remove(pos);
     }
 }
