@@ -48,7 +48,7 @@ public class JsonFileQueuePersistence<T> implements QueuePersistence<T> {
     public QueueTransfer<T> restore() {
         return readJson()
                 .flatMap(json -> transferCodec.decode(JsonOps.INSTANCE, json)
-                        .resultOrPartial(err -> logger.error("Failed to decode queue: {}", err)))
+                        .resultOrPartial(err -> logger.error("Failed to decode queue element: {}", err)))
                 .map(Pair::getFirst)
                 .orElseGet(QueueTransfer::empty);
     }
@@ -56,7 +56,7 @@ public class JsonFileQueuePersistence<T> implements QueuePersistence<T> {
     @Override
     public void store(QueueTransfer<T> transfer) {
         transferCodec.encodeStart(JsonOps.INSTANCE, transfer)
-                .resultOrPartial(err -> logger.error("Failed to encode queue: {}", err))
+                .resultOrPartial(err -> logger.error("Failed to encode queue element: {}", err))
                 .ifPresent(this::writeJson);
     }
 

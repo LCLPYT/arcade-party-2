@@ -4,6 +4,7 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableBiMap;
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.DataResult;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.entrypoint.EntrypointContainer;
 import net.fabricmc.loader.api.metadata.CustomValue;
@@ -78,10 +79,9 @@ public class FabricMiniGameManager implements MiniGameManager {
 
     @Override
     public Codec<MiniGame> getGameCodec() {
-        return Identifier.CODEC.xmap(
-                id -> getGame(id).orElseThrow(() -> new NoSuchElementException("Unknown game with id " + id)),
-                GameInfo::getId
-        );
+        return Identifier.CODEC.comapFlatMap(id -> getGame(id)
+                .map(DataResult::success)
+                .orElseGet(() -> DataResult.error(() -> "Unknown game with id " + id)), GameInfo::getId);
     }
 
     public record MiniGameSource(List<Path> rootPaths) {}
