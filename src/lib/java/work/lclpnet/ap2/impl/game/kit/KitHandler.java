@@ -36,7 +36,6 @@ public class KitHandler {
 
     private static final MapCodec<Boolean> KIT_SELECTOR_CODEC = Codec.BOOL.fieldOf("ap2:kit_selector");
     private static final Item KIT_SELECTOR_ITEM = Items.NETHER_STAR;
-    private static final int KIT_SELECTION_TICKS = Ticks.seconds(10);
     public static final int KIT_ITEM_SLOT = 0, KIT_SELECTOR_SLOT = 4;
 
     @Getter
@@ -158,6 +157,10 @@ public class KitHandler {
     }
 
     public void startKitSelectionTimer(GameCommons commons, Runnable onComplete) {
+        startKitSelectionTimer(commons, Ticks.seconds(10), onComplete);
+    }
+
+    public void startKitSelectionTimer(GameCommons commons, int ticks, Runnable onComplete) {
         if (manager.getKits().size() < 2) {
             onComplete.run();
             return;
@@ -169,7 +172,7 @@ public class KitHandler {
 
         TranslatedText label = kitHandle.translations().translateText("ap2.kit_selection");
 
-        commons.createTimerTicks(label, KIT_SELECTION_TICKS).whenDone(onComplete);
+        commons.createTimerTicks(label, ticks).whenDone(onComplete);
     }
 
     /**

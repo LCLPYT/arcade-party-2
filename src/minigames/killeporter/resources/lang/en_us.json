@@ -1,5 +1,13 @@
 {
   "game.ap2.killeporter": "Killeporter",
   "game.ap2.killeporter.description": "You will be swapped randomly with another player every 20-30 seconds.\nYour goal is to be the last one standing.\nPVP is disabled, get creative!",
-  "game.ap2.killeporter.switch_message": "You have been switched with %s!"
+  "game.ap2.killeporter.kit.aqua": "Aqua",
+  "game.ap2.killeporter.kit.aqua.description": "Equipment for water: Trident, Potion of Water Breathing, Bucket of Pufferfish",
+  "game.ap2.killeporter.kit.defence": "Defence",
+  "game.ap2.killeporter.kit.ender": "Ender",
+  "game.ap2.killeporter.kit.lava": "Lava",
+  "game.ap2.killeporter.kit.potion": "Potion",
+  "game.ap2.killeporter.kit.tnt": "TNT",
+  "game.ap2.killeporter.kit.tool": "Tool",
+  "game.ap2.killeporter.kit.witch": "Witch"
 }

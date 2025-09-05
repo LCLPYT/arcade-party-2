@@ -1,33 +1,53 @@
 package work.lclpnet.ap2.game.killeporter
 
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents
+import net.fabricmc.fabric.api.event.player.UseItemCallback
+import net.minecraft.component.DataComponentTypes
+import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.server.network.ServerPlayerEntity
+import net.minecraft.server.world.ServerWorld
+import net.minecraft.util.ActionResult
 import net.minecraft.util.Formatting
+import net.minecraft.util.Hand
 import net.minecraft.world.GameRules
+import net.minecraft.world.World
 import work.lclpnet.ap2.api.game.MiniGameHandle
-import work.lclpnet.ap2.game.killeporter.kit.ToolKit
+import work.lclpnet.ap2.api.map.MapBootstrap
 import work.lclpnet.ap2.impl.game.EliminationGameInstance
 import work.lclpnet.ap2.impl.game.kit.KitHandle
 import work.lclpnet.ap2.impl.game.kit.KitHandler
+import work.lclpnet.ap2.impl.game.kit.PrefabKitLoader
 import work.lclpnet.ap2.players
 import work.lclpnet.ap2.teleport
 import work.lclpnet.ap2.timeout
 import work.lclpnet.ap2.translate
+import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks
+import work.lclpnet.kibu.hook.util.PlayerUtils
 import work.lclpnet.kibu.hook.util.PositionRotation
 import work.lclpnet.kibu.scheduler.Ticks
 import work.lclpnet.lobby.game.api.prot.scope.EntityDamageSourceScope
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes
+import work.lclpnet.lobby.game.map.GameMap
 import java.lang.Math.floorMod
+import java.util.concurrent.CompletableFuture
 import kotlin.random.Random
 
 val MIN_DURATION_TICKS = Ticks.seconds(18)
 val MAX_DURATION_TICKS = Ticks.seconds(32)
 val GAME_DURATION_TICKS = Ticks.minutes(5)
 
-class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gameHandle) {
+class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gameHandle), MapBootstrap {
 
     var kitHandler: KitHandler? = null
+    var kitLoader: PrefabKitLoader? = null
+    var itemUseAllowed = false
+
+    override fun createWorldBootstrap(world: ServerWorld, map: GameMap): CompletableFuture<Void> {
+        kitLoader = PrefabKitLoader(world.registryManager, gameHandle.logger)
+
+        return kitLoader!!.loadHotbar(this)
+    }
 
     override fun prepare() {
 
@@ -63,12 +83,14 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
     }
 
     override fun afterInitialDelay() {
-        kitHandler?.startKitSelectionTimer(commons()) {super.afterInitialDelay()}
+        kitHandler?.startKitSelectionTimer(commons(), Ticks.seconds(15)) {super.afterInitialDelay()}
     }
 
     override fun ready() {
 
         kitHandler?.disableKitChanger()
+
+        itemUseAllowed = true
 
         gameHandle.protect { config ->
             config.allowAll()
@@ -107,9 +129,27 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
     }
 
     private fun setupKits() {
-        kitHandler = KitHandler.create(gameHandle, world) { kitHandle: KitHandle ->
-            listOf(ToolKit(kitHandle))
-        }
+        kitHandler = KitHandler.create(gameHandle, world) { kitHandle: KitHandle -> kitLoader!!.createKits(kitHandle) }
+
+        gameHandle.getHooks().registerHook(
+            PlayerInteractionHooks.USE_ITEM,
+            UseItemCallback { player: PlayerEntity, _: World, hand: Hand ->
+                if (player !is ServerPlayerEntity) return@UseItemCallback ActionResult.PASS
+
+                val stack = player.getStackInHand(hand)
+
+                if (itemUseAllowed || kitHandler!!.isKitSelector(stack)) {
+                    return@UseItemCallback ActionResult.PASS
+                }
+
+                if (stack.contains(DataComponentTypes.USE_COOLDOWN)) {
+                    player.itemCooldownManager.set(stack, 0)
+                }
+
+                PlayerUtils.syncPlayerItems(player)
+                ActionResult.FAIL
+            })
+
         kitHandler?.setup()
     }
 }
