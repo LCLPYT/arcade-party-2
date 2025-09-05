@@ -27,7 +27,8 @@ import kotlin.random.Random
 
 val MIN_DURATION_TICKS = Ticks.seconds(18)
 val MAX_DURATION_TICKS = Ticks.seconds(32)
-val GAME_DURATION_TICKS = Ticks.minutes(5)
+val GAME_DURATION_TICKS = Ticks.minutes(6)
+val NIGHTFALL_TIMEOUT_TICKS = Ticks.minutes(3)
 
 class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gameHandle) {
 
@@ -81,6 +82,11 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
             })
         }
         switchTimeout()
+
+        timeout(NIGHTFALL_TIMEOUT_TICKS) { ->
+            world.timeOfDay = 13000
+            commons().gameRuleBuilder().set(GameRules.DO_MOB_SPAWNING, false)
+        }
 
         timeout(GAME_DURATION_TICKS) { ->
             winManager.forceWin(players().toSet())
