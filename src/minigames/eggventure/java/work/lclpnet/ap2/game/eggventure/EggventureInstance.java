@@ -51,6 +51,7 @@ import work.lclpnet.ap2.impl.util.world.entity.DynamicEntityManager;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.kibu.hook.player.PlayerSwingHandHook;
+import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.lobby.game.map.GameMap;
 
 import java.util.*;
@@ -256,6 +257,21 @@ public class EggventureInstance extends FFAGameInstance implements MapBootstrap 
         var subject = gameHandle.getTranslations().translateText(gameHandle.getGameInfo().getTaskKey());
 
         commons().createTimer(subject, durationSeconds).whenDone(this::completeAndShowRemaining);
+
+        gameHandle.getGameScheduler().interval(20, Ticks.seconds(10), this::checkNearbyEggs);
+    }
+
+    private void checkNearbyEggs() {
+        final double checkDistSq = 20 * 20;
+
+        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
+            if (remainingPositions.stream().anyMatch(pos -> player
+                    .squaredDistanceTo(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5) < checkDistSq)) continue;
+
+            gameHandle.getTranslations().translateText("game.ap2.eggventure.no_eggs_nearby")
+                    .formatted(RED)
+                    .sendTo(player, true);
+        }
     }
 
     private void completeAndShowRemaining() {

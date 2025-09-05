@@ -309,6 +309,7 @@
   "game.ap2.eggventure.task": "Find easter eggs",
   "game.ap2.eggventure.find_sample": "Find these easter eggs",
   "game.ap2.eggventure.eggs_left": "There were %s eggs left",
+  "game.ap2.eggventure.no_eggs_nearby": "No eggs nearby",
   "game.ap2.dragon_escape": "Dragon Escape",
   "game.ap2.dragon_escape.description": "Do parkour while running from an ender dragon.",
   "game.ap2.dragon_escape.task": "Escape the dragon",

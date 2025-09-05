@@ -309,6 +309,7 @@
   "game.ap2.eggventure.task": "Finde Ostereier",
   "game.ap2.eggventure.find_sample": "Finde diese Ostereier",
   "game.ap2.eggventure.eggs_left": "Es gab noch %s Ostereier",
+  "game.ap2.eggventure.no_eggs_nearby": "Keine Ostereier in der Nähe",
   "game.ap2.dragon_escape": "Drachenflucht",
   "game.ap2.dragon_escape.description": "Fliehe vor einem Enderdrachen, indem du Parkour machst.",
   "game.ap2.dragon_escape.task": "Fliehe vor dem Drachen",
