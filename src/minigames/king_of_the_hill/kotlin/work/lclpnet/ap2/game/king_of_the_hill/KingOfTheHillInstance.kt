@@ -51,6 +51,8 @@ class KingOfTheHillInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
             .set(GameRules.DO_WEATHER_CYCLE, false)
             .set(GameRules.FALL_DAMAGE, false)
             .set(GameRules.ANNOUNCE_ADVANCEMENTS, false)
+
+        commons().addWaypoint(goalShape!!.center().toCenterPos(), 0xffd700)
     }
 
     override fun ready() {
@@ -66,7 +68,7 @@ class KingOfTheHillInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
         for (player in players()) {
             val stack = ItemStack(Items.STICK)
             stack.set(DataComponentTypes.ITEM_NAME, name.translateFor(player))
-            stack.addEnchantment(knockback, 3)
+            stack.addEnchantment(knockback, 1)
 
             player.inventory.setStack(4, stack)
 

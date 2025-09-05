@@ -144,7 +144,8 @@ public abstract class BaseGameInstance implements MiniGameInstance {
     private void configureLocatorBar() {
         if (locatorBarEnabled) return;
 
-        gameHandle.getHooks().registerHook(PlayerWaypointCallback.HOOK, (player, waypoint) -> true);
+        gameHandle.getHooks().registerHook(PlayerWaypointCallback.HOOK, (player, waypoint)
+                -> waypoint instanceof ServerPlayerEntity);  // hide players from locator by default
 
         if (world != null) {
             world.getWaypointHandler().clear();
