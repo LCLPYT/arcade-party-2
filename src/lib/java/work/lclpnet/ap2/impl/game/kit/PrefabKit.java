@@ -30,12 +30,12 @@ public class PrefabKit extends BaseKit {
     }
 
     @Override
-    public void equip(ServerPlayerEntity player) {
+    public void equip(ServerPlayerEntity player, KitOptions options) {
         PlayerInventory inventory = player.getInventory();
         final int len = min(inventory.size(), items.size());
 
         for (int i = 0; i < len; i++) {
-            if (i == KitHandler.KIT_SELECTOR_SLOT) continue;
+            if (i == options.kitSelectorSlot()) continue;
 
             ItemStack stack = items.get(i);
             inventory.setStack(i, stack.copy());
@@ -43,12 +43,12 @@ public class PrefabKit extends BaseKit {
     }
 
     @Override
-    public void unequip(ServerPlayerEntity player) {
+    public void unequip(ServerPlayerEntity player, KitOptions options) {
         PlayerInventory inventory = player.getInventory();
         final int len = min(inventory.size(), items.size());
 
         for (int i = 0; i < len; i++) {
-            if (i == KitHandler.KIT_SELECTOR_SLOT) continue;
+            if (i == options.kitSelectorSlot()) continue;
 
             inventory.setStack(i, ItemStack.EMPTY);
         }

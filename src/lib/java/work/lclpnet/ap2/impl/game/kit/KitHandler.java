@@ -36,7 +36,6 @@ public class KitHandler {
 
     private static final MapCodec<Boolean> KIT_SELECTOR_CODEC = Codec.BOOL.fieldOf("ap2:kit_selector");
     private static final Item KIT_SELECTOR_ITEM = Items.NETHER_STAR;
-    public static final int KIT_ITEM_SLOT = 0, KIT_SELECTOR_SLOT = 4;
 
     @Getter
     private final KitManager manager;
@@ -112,7 +111,7 @@ public class KitHandler {
                 .with(NbtOps.INSTANCE, KIT_SELECTOR_CODEC, true)
                 .getOrThrow());
 
-        player.getInventory().setStack(KIT_SELECTOR_SLOT, stack);
+        player.getInventory().setStack(manager.getOptions().kitSelectorSlot(), stack);
     }
 
     public void disableKitChanger() {
@@ -124,7 +123,7 @@ public class KitHandler {
 
         closeKitChanger(player);
 
-        player.getInventory().removeStack(KIT_SELECTOR_SLOT);
+        player.getInventory().removeStack(manager.getOptions().kitSelectorSlot());
     }
 
     public void closeKitChanger() {
@@ -146,13 +145,13 @@ public class KitHandler {
 
     public void selectKitChanger() {
         for (ServerPlayerEntity player : participants) {
-            PlayerInventoryAccess.setSelectedSlot(player, KIT_SELECTOR_SLOT);
+            PlayerInventoryAccess.setSelectedSlot(player, manager.getOptions().kitSelectorSlot());
         }
     }
 
     public void selectKitItem() {
         for (ServerPlayerEntity player : participants) {
-            PlayerInventoryAccess.setSelectedSlot(player, KIT_ITEM_SLOT);
+            PlayerInventoryAccess.setSelectedSlot(player, manager.getOptions().mainItemSlot());
         }
     }
 
