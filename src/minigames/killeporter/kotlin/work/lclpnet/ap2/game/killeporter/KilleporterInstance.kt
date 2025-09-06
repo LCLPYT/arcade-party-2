@@ -114,9 +114,25 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
     }
 
     fun switchTimeout() {
-        timeout(Random.nextInt(MIN_DURATION_TICKS, MAX_DURATION_TICKS+1)) { ->
+
+        val switchTime =  Random.nextInt(MIN_DURATION_TICKS, MAX_DURATION_TICKS+1)
+        val messageTime = Random.nextInt(Ticks.seconds(1), Ticks.seconds(5)+1)
+
+        timeout(switchTime - messageTime) { ->
+            translate("game.ap2.killeporter.switch_announcement")
+            .formatted(Formatting.GREEN)
+            .sendTo(players(), true)}
+
+        timeout(switchTime) { ->
             playerSwitcher()
             switchTimeout()
+        }
+    }
+
+    fun switchAnnouncement() {
+        timeout(MIN_DURATION_TICKS) { ->
+
+            switchAnnouncement()
         }
     }
 
