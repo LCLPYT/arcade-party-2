@@ -1,9 +1,9 @@
 package work.lclpnet.ap2.game.killeporter
 
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents
-import net.minecraft.entity.damage.DamageTypes
 import net.fabricmc.fabric.api.event.player.UseItemCallback
 import net.minecraft.component.DataComponentTypes
+import net.minecraft.entity.damage.DamageTypes
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.server.world.ServerWorld
@@ -37,7 +37,7 @@ import kotlin.random.Random
 val MIN_DURATION_TICKS = Ticks.seconds(18)
 val MAX_DURATION_TICKS = Ticks.seconds(32)
 val GAME_DURATION_TICKS = Ticks.minutes(6)
-val TIME_TO_NIGHTFALL_TICKS = Ticks.minutes(3)
+val TIME_TO_NIGHTFALL_DAYTIME_TICKS = 3600
 
 class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gameHandle), MapBootstrap {
 
@@ -57,7 +57,7 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
 
     override fun prepare() {
 
-        world.timeOfDay = (13000 - TIME_TO_NIGHTFALL_TICKS).toLong()
+        world.timeOfDay = (13000 - TIME_TO_NIGHTFALL_DAYTIME_TICKS).toLong()
 
         commons().gameRuleBuilder()
             .set(GameRules.FALL_DAMAGE, true)
