@@ -4,5 +4,6 @@
   "game.ap2.minefield.task": "Reach the goal",
   "game.ap2.minefield.goal": "%s reached the goal. The game will end in %s seconds and you will be ranked depending on your distance to the goal.",
   "game.ap2.minefield.stepped_on_mine": "You stepped on a mine",
-  "game.ap2.minefield.personal_best": "Personal best"
+  "game.ap2.minefield.personal_best": "Personal best - %sm",
+  "game.ap2.minefield.new_personal_best": "New personal best"
 }

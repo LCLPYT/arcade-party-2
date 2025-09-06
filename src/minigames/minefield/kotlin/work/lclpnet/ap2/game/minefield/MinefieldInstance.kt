@@ -55,6 +55,7 @@ import work.lclpnet.lobby.game.api.prot.scope.EntityDamageSourceScope
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes
 import work.lclpnet.lobby.game.map.GameMap
 import java.util.*
+import kotlin.math.max
 import kotlin.math.sqrt
 import kotlin.random.Random
 import kotlin.random.asJavaRandom
@@ -71,6 +72,7 @@ class MinefieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
     var taskBar: TranslatedBossBar? = null
     var spawnShape: BlockShape? = null
     var goalShape: BlockShape? = null
+    var goalDistance: Double? = null
     var spawnYaw = 0f
     val entries = mutableMapOf<UUID, Entry>()
     var dynamicEntityManager: DynamicEntityManager? = null
@@ -85,10 +87,12 @@ class MinefieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
         val scanPositions = map.properties.getJSONArray("scan-positions")
         val mineDensity = map.properties.optNumber("mine-density", 0.55f).toFloat()
         val scanShape = readShape("scan-shape")
+        val startAnchorPos = MapUtil.readVec3d(map.properties.getJSONArray("start-anchor-pos"))
+
         spawnShape = readShape("spawn-shape")
         goalShape = readShape("goal-shape")
-
         spawnYaw = MapUtil.readAngle(map.properties.optNumber("spawn-yaw", 0))
+        goalDistance = sqrt(goalShape!!.bounds().squaredDistanceTo(startAnchorPos))
 
         val defaultPressurePlates = JSONArray()
         defaultPressurePlates.put(BlockStateUtils.stringify(Blocks.STONE_PRESSURE_PLATE.defaultState))
@@ -274,12 +278,17 @@ class MinefieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
 
         fun update(player: ServerPlayerEntity) {
             val pos = player.pos
-            val dist = sqrt(goalShape!!.bounds().squaredDistanceTo(pos))
+            val dist = sqrt(goalShape!!.bounds().squaredDistanceTo(pos)).coerceAtMost(goalDistance!!)
 
             if (dist >= this.bestDist) return
 
             this.bestDist = dist
-            this.pos = pos;
+            this.pos = pos
+
+            if (marker != null) {
+                player.playSoundToPlayer(SoundEvents.BLOCK_NOTE_BLOCK_PLING.value(), SoundCategory.NEUTRAL, 0.3f, 2f)
+                translate("game.ap2.minefield.new_personal_best").formatted(GREEN).sendTo(player, true)
+            }
 
             removeMarker()
         }
@@ -312,9 +321,15 @@ class MinefieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
 
             val label = DisplayEntity.TextDisplayEntity(EntityType.TEXT_DISPLAY, world)
             label.setTransformation(AffineTransformation(Matrix4f().scale(0.5f)))
-            label.text = translate("game.ap2.minefield.personal_best").formatted(GREEN).translateFor(player)
             label.billboardMode = DisplayEntity.BillboardMode.CENTER
             label.background = 0
+
+            val dist = max(0.0, goalDistance!! - bestDist)
+
+            label.text = translate(
+                "game.ap2.minefield.personal_best",
+                styled(LocalizedFormat.format("%.2f", dist), YELLOW)
+            ).formatted(GREEN).translateFor(player)
 
             this.marker = PlayerSpecificDynamicEntity(marker, player.uuid)
             this.label = PlayerSpecificDynamicEntity(label, player.uuid)
