@@ -36,9 +36,13 @@ import kotlin.random.Random
 val MIN_DURATION_TICKS = Ticks.seconds(18)
 val MAX_DURATION_TICKS = Ticks.seconds(32)
 val GAME_DURATION_TICKS = Ticks.minutes(6)
-val NIGHTFALL_TIMEOUT_TICKS = Ticks.minutes(3)
+val TIME_TO_NIGHTFALL_TICKS = Ticks.minutes(3)
 
 class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gameHandle), MapBootstrap {
+
+    init {
+        useSurvivalMode()
+    }
 
     var kitHandler: KitHandler? = null
     var kitLoader: PrefabKitLoader? = null
@@ -52,20 +56,21 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
 
     override fun prepare() {
 
+        world.timeOfDay = (13000 - TIME_TO_NIGHTFALL_TICKS).toLong()
+
         commons().gameRuleBuilder()
             .set(GameRules.FALL_DAMAGE, true)
             .set(GameRules.DO_FIRE_TICK, true)
             .set(GameRules.DO_INSOMNIA, false)
             .set(GameRules.NATURAL_REGENERATION, true)
             .set(GameRules.KEEP_INVENTORY, false)
-            .set(GameRules.DO_MOB_SPAWNING, false)
+            .set(GameRules.DO_DAYLIGHT_CYCLE, false)
+            .set(GameRules.DO_MOB_SPAWNING, true)
             .set(GameRules.DO_MOB_LOOT, true)
             .set(GameRules.DO_MOB_GRIEFING, true)
             .set(GameRules.DO_ENTITY_DROPS, true)
             .set(GameRules.ANNOUNCE_ADVANCEMENTS, false)
 
-        disableEliminationMessages()
-        useSurvivalMode()
         useRemainingPlayersDisplay()
         useSmoothDeath()
         setupKits()
@@ -93,6 +98,8 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
 
         itemUseAllowed = true
 
+        commons().gameRuleBuilder().set(GameRules.DO_DAYLIGHT_CYCLE, true)
+
         gameHandle.protect { config ->
             config.allowAll()
             config.disallow(ProtectionTypes.ALLOW_DAMAGE, EntityDamageSourceScope { entity, source ->
@@ -100,11 +107,6 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
             })
         }
         switchTimeout()
-
-        timeout(NIGHTFALL_TIMEOUT_TICKS) { ->
-            world.timeOfDay = 13000
-            commons().gameRuleBuilder().set(GameRules.DO_MOB_SPAWNING, false)
-        }
 
         timeout(GAME_DURATION_TICKS) { ->
             winManager.forceWin(players().toSet())
