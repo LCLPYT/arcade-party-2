@@ -44,6 +44,8 @@ import work.lclpnet.kibu.access.entity.ArmorStandAccess;
 import work.lclpnet.kibu.hook.HookFactory;
 import work.lclpnet.kibu.hook.util.PositionRotation;
 import work.lclpnet.kibu.scheduler.Ticks;
+import work.lclpnet.kibu.scheduler.api.RunningTask;
+import work.lclpnet.kibu.scheduler.api.SchedulerAction;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.lobby.game.map.GameMap;
@@ -194,6 +196,38 @@ public class GameCommons {
         worldBorder.setDamagePerBlock(0.8);
 
         return worldBorder;
+    }
+
+    public Action<Runnable> addTimer(BossBar bossBar, int durationSeconds) {
+        return addTimerTicks(bossBar, durationSeconds * 20);
+    }
+
+    public Action<Runnable> addTimerTicks(BossBar bossBar, int durationTicks) {
+        var onEnd = HookFactory.createArrayBacked(Runnable.class, ops -> () -> {
+            for (Runnable op : ops) {
+                op.run();
+            }
+        });
+
+        gameHandle.getGameScheduler().interval(1, new SchedulerAction() {
+            int timer = durationTicks;
+
+            @Override
+            public void run(RunningTask info) {
+                if (timer-- <= 0) {
+                    info.cancel();
+                    bossBar.setPercent(0);
+                    onEnd.invoker().run();
+                    return;
+                }
+
+                if (timer % 20 == 0) {
+                    bossBar.setPercent(((float) timer / durationTicks));
+                }
+            }
+        });
+
+        return Action.create(onEnd);
     }
 
     public BossBarTimer createTimer(Object subject, int durationSeconds) {

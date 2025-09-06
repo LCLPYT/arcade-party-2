@@ -128,7 +128,7 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
     }
 
     @Override
-    public void bootstrapWorld(ServerWorld world, GameMap map) {
+    public void bootstrapWorld(@NotNull ServerWorld world, @NotNull GameMap map) {
         teams = new PaintballTeams(getTeamManager(), map, gameHandle.getParticipants(), random, gameHandle.getLogger());
         teams.setup();
 

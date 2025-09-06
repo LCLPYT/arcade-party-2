@@ -101,7 +101,13 @@ public abstract class BaseGameInstance implements MiniGameInstance {
         Identifier gameId = gameHandle.getGameInfo().getId();
 
         MapBootstrap bootstrap = getMapBootstrap();
-        mapFacade.openRandomMap(gameId, new BootstrapMapOptions(bootstrap::createWorldBootstrap), this::onMapReady);
+
+        mapFacade.openRandomMap(gameId, new BootstrapMapOptions((world, map) -> {
+            this.world = world;
+            this.map = map;
+
+            return bootstrap.createWorldBootstrap(world, map);
+        }), this::onMapReady);
     }
 
     protected MapBootstrap getMapBootstrap() {
@@ -119,9 +125,6 @@ public abstract class BaseGameInstance implements MiniGameInstance {
     }
 
     protected void onMapReady(ServerWorld world, GameMap map) {
-        this.world = world;
-        this.map = map;
-
         applyMapEffects();
         loadMapProperties();
         configureLocatorBar();
@@ -306,7 +309,7 @@ public abstract class BaseGameInstance implements MiniGameInstance {
         return PlayerUtil.getLoadingDelayTicks(players);
     }
 
-    protected final ServerWorld getWorld() {
+    public final ServerWorld getWorld() {
         if (world == null) {
             throw new IllegalStateException("World not loaded yet");
         }
@@ -314,7 +317,7 @@ public abstract class BaseGameInstance implements MiniGameInstance {
         return world;
     }
 
-    protected final GameMap getMap() {
+    public final GameMap getMap() {
         if (map == null) {
             throw new IllegalStateException("Map not loaded yet");
         }

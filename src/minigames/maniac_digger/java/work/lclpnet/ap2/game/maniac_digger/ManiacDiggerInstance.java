@@ -14,6 +14,7 @@ import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
@@ -44,7 +45,7 @@ import static work.lclpnet.ap2.impl.util.ItemHelper.unbreakable;
 public class ManiacDiggerInstance extends FFAGameInstance implements MapBootstrapFunction {
 
     private final OrderedDataContainer<ServerPlayerEntity, PlayerRef> reachedBottom = new OrderedDataContainer<>(PlayerRef::create);
-    private final IntScoreDataContainer<ServerPlayerEntity, PlayerRef> score = new IntScoreDataContainer<>(PlayerRef::create, Ordering.ASCENDING, "game.ap2.maniac_digger.result");
+    private final IntScoreDataContainer<ServerPlayerEntity, PlayerRef> score = new IntScoreDataContainer<>(PlayerRef::create, Ordering.ASCENDING, "ap2.score.blocks_away");
     private final CombinedDataContainer<ServerPlayerEntity, PlayerRef> data = new CombinedDataContainer<>(List.of(reachedBottom, score));
     private final Map<UUID, MdPipe> pipes = new HashMap<>();
     private final Set<UUID> wrongTool = new HashSet<>();
@@ -69,7 +70,7 @@ public class ManiacDiggerInstance extends FFAGameInstance implements MapBootstra
 
 
     @Override
-    public void bootstrapWorld(ServerWorld world, GameMap map) {
+    public void bootstrapWorld(@NotNull ServerWorld world, @NotNull GameMap map) {
         Number winHeight = map.requireProperty("goal-height");
         this.winHeight = winHeight.intValue();
 
