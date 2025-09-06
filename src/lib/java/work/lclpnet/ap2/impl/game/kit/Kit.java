@@ -10,9 +10,9 @@ public interface Kit {
 
     ItemStack createItemStack(DynamicRegistryManager manager);
 
-    default void init() {}
+    default void init(KitOptions options) {}
 
-    default void equip(ServerPlayerEntity player) {}
+    default void equip(ServerPlayerEntity player, KitOptions options) {}
 
-    default void unequip(ServerPlayerEntity player) {}
+    default void unequip(ServerPlayerEntity player, KitOptions options) {}
 }

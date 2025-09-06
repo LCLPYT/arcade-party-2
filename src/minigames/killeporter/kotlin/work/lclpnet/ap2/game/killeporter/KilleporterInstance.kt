@@ -155,6 +155,10 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
     private fun setupKits() {
         kitHandler = KitHandler.create(gameHandle, world) { kitHandle: KitHandle -> kitLoader!!.createKits(kitHandle) }
 
+        kitHandler?.manager?.modifyOptions {
+            it.withKitSelectorSlot(8)
+        }
+
         gameHandle.getHooks().registerHook(
             PlayerInteractionHooks.USE_ITEM,
             UseItemCallback { player: PlayerEntity, _: World, hand: Hand ->

@@ -8,6 +8,7 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
+import java.util.function.UnaryOperator;
 
 public class KitManager implements KitReadView {
 
@@ -15,6 +16,8 @@ public class KitManager implements KitReadView {
     private final List<Kit> kits;
     private final BiMap<String, Kit> kitById;
     private final Map<UUID, Kit> playerKits = new HashMap<>();
+    @Getter
+    private KitOptions options = KitOptions.DEFAULT;
 
     public KitManager(List<Kit> kits) {
         if (kits.isEmpty()) {
@@ -37,8 +40,12 @@ public class KitManager implements KitReadView {
 
     public void init() {
         for (Kit kit : kits) {
-            kit.init();
+            kit.init(options);
         }
+    }
+
+    public void modifyOptions(UnaryOperator<KitOptions> modifier) {
+        options = Objects.requireNonNull(modifier.apply(options));
     }
 
     public void setupPlayerKits(Iterable<? extends ServerPlayerEntity> players) {
@@ -64,11 +71,11 @@ public class KitManager implements KitReadView {
     public synchronized void changeKit(ServerPlayerEntity player, Kit kit) {
         validateKit(kit);
 
-        getKit(player).unequip(player);
+        getKit(player).unequip(player, options);
 
         playerKits.put(player.getUuid(), kit);
 
-        kit.equip(player);
+        kit.equip(player, options);
     }
 
     private void validateKit(Kit kit) {
