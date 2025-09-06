@@ -13,6 +13,7 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.GameRules;
+import org.jetbrains.annotations.NotNull;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
@@ -64,7 +65,7 @@ public class MiningBattleInstance extends FFAGameInstance implements MapBootstra
     }
 
     @Override
-    public void bootstrapWorld(ServerWorld world, GameMap map) {
+    public void bootstrapWorld(@NotNull ServerWorld world, @NotNull GameMap map) {
         GameRules gameRules = world.getGameRules();
         MinecraftServer server = gameHandle.getServer();
 

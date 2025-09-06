@@ -26,4 +26,5 @@ fun ServerPlayerEntity.setSelectedSlot(slot: Int) = PlayerInventoryAccess.setSel
 
 fun ServerPlayerEntity.teleport(pos: BlockPos) = teleport(world, pos.x.toDouble() + 0.5, pos.y.toDouble(), pos.z + 0.5, emptySet<PositionFlag>(), yaw, pitch, true)
 fun ServerPlayerEntity.teleport(pos: Position) = teleport(world, pos.x, pos.y, pos.z, emptySet<PositionFlag>(), yaw, pitch, true)
+fun ServerPlayerEntity.teleport(pos: Position, yaw: Float) = teleport(world, pos.x, pos.y, pos.z, emptySet<PositionFlag>(), yaw, pitch, true)
 fun ServerPlayerEntity.teleport(pos: PositionRotation) = teleport(world, pos.x, pos.y, pos.z, emptySet<PositionFlag>(), pos.yaw, pos.pitch, true)

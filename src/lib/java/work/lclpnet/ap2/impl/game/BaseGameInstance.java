@@ -101,7 +101,13 @@ public abstract class BaseGameInstance implements MiniGameInstance {
         Identifier gameId = gameHandle.getGameInfo().getId();
 
         MapBootstrap bootstrap = getMapBootstrap();
-        mapFacade.openRandomMap(gameId, new BootstrapMapOptions(bootstrap::createWorldBootstrap), this::onMapReady);
+
+        mapFacade.openRandomMap(gameId, new BootstrapMapOptions((world, map) -> {
+            this.world = world;
+            this.map = map;
+
+            return bootstrap.createWorldBootstrap(world, map);
+        }), this::onMapReady);
     }
 
     protected MapBootstrap getMapBootstrap() {
@@ -119,9 +125,6 @@ public abstract class BaseGameInstance implements MiniGameInstance {
     }
 
     protected void onMapReady(ServerWorld world, GameMap map) {
-        this.world = world;
-        this.map = map;
-
         applyMapEffects();
         loadMapProperties();
         configureLocatorBar();
