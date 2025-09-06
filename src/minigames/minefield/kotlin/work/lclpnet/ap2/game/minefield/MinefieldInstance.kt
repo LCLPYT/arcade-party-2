@@ -21,6 +21,7 @@ import net.minecraft.util.math.AffineTransformation
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Vec3d
 import net.minecraft.world.GameMode
+import net.minecraft.world.GameRules
 import org.joml.Matrix4f
 import org.json.JSONArray
 import work.lclpnet.ap2.*
@@ -76,12 +77,9 @@ class MinefieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
     var spawnYaw = 0f
     val entries = mutableMapOf<UUID, Entry>()
     var dynamicEntityManager: DynamicEntityManager? = null
+    var visibility: VisibilityHandler? = null
     
     override fun getData() = data
-
-    init {
-        useNoHealing()
-    }
 
     override fun bootstrapWorld(world: ServerWorld, map: GameMap) {
         val scanPositions = map.properties.getJSONArray("scan-positions")
@@ -135,6 +133,9 @@ class MinefieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
                 Blocks.BLUE_STAINED_GLASS.defaultState
             )
         }
+
+        commons().gameRuleBuilder()
+            .set(GameRules.NATURAL_REGENERATION, false)
     }
 
     override fun prepare() {
@@ -157,11 +158,11 @@ class MinefieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
         scoreboardManager.joinTeam(gameHandle.getParticipants(), team)
 
         val visibilityManager = VisibilityManager(team, Visibility.VISIBLE)
-        val visibility = VisibilityHandler(visibilityManager, gameHandle.translations, gameHandle.participants)
+        visibility = VisibilityHandler(visibilityManager, gameHandle.translations, gameHandle.participants)
 
-        visibility.init(gameHandle.getHooks())
+        visibility!!.init(gameHandle.getHooks())
 
-        visibility.giveItems()
+        visibility!!.giveItems()
     }
 
     override fun ready() {
@@ -241,7 +242,7 @@ class MinefieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
         class Grade(val player: ServerPlayerEntity, val distance: Double)
 
         players().stream()
-            .filter { !inGoal.contains(it.uuid) && !it.isSpectator }
+            .filter { !inGoal.contains(it.uuid) }
             .map { Grade(it, entry(it).bestDist) }
             .sorted(Comparator.comparingDouble { it.distance })
             .forEachOrdered {
@@ -266,6 +267,7 @@ class MinefieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
         timeout(20) {
             player.teleport(spawnShape!!.randomPos(Random.asJavaRandom()), spawnYaw)
             gameHandle.playerUtil.resetPlayer(player)
+            visibility!!.giveItem(player)
         }
     }
 
