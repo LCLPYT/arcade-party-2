@@ -8,6 +8,7 @@ import net.minecraft.entity.damage.DamageTypes
 import net.minecraft.entity.effect.StatusEffectInstance
 import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.particle.ParticleTypes
+import net.minecraft.scoreboard.AbstractTeam
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.server.world.ServerWorld
 import net.minecraft.sound.SoundCategory
@@ -28,6 +29,9 @@ import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.util.Fireworks
 import work.lclpnet.ap2.impl.util.ParticleHelper
 import work.lclpnet.ap2.impl.util.SoundHelper
+import work.lclpnet.ap2.impl.util.handler.Visibility
+import work.lclpnet.ap2.impl.util.handler.VisibilityHandler
+import work.lclpnet.ap2.impl.util.handler.VisibilityManager
 import work.lclpnet.ap2.impl.util.world.BfsWorldScanner
 import work.lclpnet.ap2.impl.util.world.SimpleAdjacentBlocks
 import work.lclpnet.ap2.impl.util.world.WalkableBlockPredicate
@@ -43,6 +47,7 @@ import work.lclpnet.lobby.game.api.prot.scope.EntityDamageSourceScope
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes
 import work.lclpnet.lobby.game.map.GameMap
 import java.util.*
+import kotlin.math.min
 import kotlin.math.sqrt
 import kotlin.random.Random
 import kotlin.random.asJavaRandom
@@ -60,6 +65,7 @@ class MinefieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
     var spawnShape: BlockShape? = null
     var goalShape: BlockShape? = null
     var spawnYaw = 0f
+    val furthestDistances = mutableMapOf<UUID, Double>()
     
     override fun getData() = data
 
@@ -71,8 +77,8 @@ class MinefieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
         val scanPositions = map.properties.getJSONArray("scan-positions")
         val mineDensity = map.properties.optNumber("mine-density", 0.55f).toFloat()
         val scanShape = readShape("scan-shape")
-        val spawnShape = readShape("spawn-shape")
-        val goalShape = readShape("goal-shape")
+        spawnShape = readShape("spawn-shape")
+        goalShape = readShape("goal-shape")
 
         spawnYaw = MapUtil.readAngle(map.properties.optNumber("spawn-yaw", 0))
 
@@ -83,7 +89,7 @@ class MinefieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
         MapUtil.readBlockStates(pressurePlatesJson, pressurePlates, gameHandle.logger)
 
         val predicate = BlockPredicate.and({
-            scanShape.contains(it) && !spawnShape.contains(it) && !goalShape.contains(it)
+            scanShape.contains(it) && !spawnShape!!.contains(it) && !goalShape!!.contains(it)
                     && world.getBlockState(it).getCollisionShape(world, it, ShapeContext.absent()).isEmpty
         }, WalkableBlockPredicate(world))
 
@@ -120,24 +126,42 @@ class MinefieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
     }
 
     override fun prepare() {
-        spawnShape = readShape("spawn-shape")
-
         for (player in players()) {
             player.teleport(spawnShape!!.randomPos(Random.asJavaRandom()))
         }
 
         taskBar = useTaskDisplay()
+
+        setupTeam()
+    }
+
+    fun setupTeam() {
+        val scoreboardManager = gameHandle.getScoreboardManager()
+        val team = scoreboardManager.createTeam("team")
+        team.setCollisionRule(AbstractTeam.CollisionRule.NEVER)
+        scoreboardManager.joinTeam(gameHandle.getParticipants(), team)
+
+        val visibilityManager = VisibilityManager(team, Visibility.VISIBLE)
+        val visibility = VisibilityHandler(visibilityManager, gameHandle.translations, gameHandle.participants)
+
+        visibility.init(gameHandle.getHooks())
+
+        visibility.giveItems()
     }
 
     override fun ready() {
         world.setBlocks(readShape("spawn-gate"), Blocks.AIR)
 
-        goalShape = readShape("goal-shape")
-
         interval(1) {
             for (player in players()) {
                 if (goalShape!!.contains(player.pos)) {
                     onReachGoal(player)
+                } else if (!player.isSpectator) {
+                    furthestDistances.compute(player.uuid) { _, prev ->
+                        val dist = sqrt(goalShape!!.bounds().squaredDistanceTo(player.pos))
+
+                        if (prev == null) dist else min(dist, prev)
+                    }
                 }
             }
         }
@@ -172,6 +196,9 @@ class MinefieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
     fun onReachGoal(player: ServerPlayerEntity) {
         if (!inGoal.add(player.uuid)) return
 
+        data.add(player)
+        furthestDistances[player.uuid] = 0.0
+
         Fireworks.spawnGoalFirework(player)
 
         if (inGoal.size >= gameHandle.getParticipants().count()) {
@@ -200,7 +227,7 @@ class MinefieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
 
         players().stream()
             .filter { !inGoal.contains(it.uuid) && !it.isSpectator }
-            .map { Grade(it, sqrt(goalShape!!.bounds().squaredDistanceTo(it.pos))) }
+            .map { Grade(it, furthestDistances.getOrDefault(it.uuid, Double.MAX_VALUE)) }
             .sorted(Comparator.comparingDouble { it.distance })
             .forEachOrdered {
                 val detail = translate("ap2.score.blocks_away", LocalizedFormat.format("%.1f", it.distance))
