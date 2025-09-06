@@ -1,6 +1,7 @@
 package work.lclpnet.ap2.game.killeporter
 
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents
+import net.minecraft.entity.damage.DamageTypes
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.util.Formatting
 import net.minecraft.world.GameRules
@@ -77,7 +78,7 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
         gameHandle.protect { config ->
             config.allowAll()
             config.disallow(ProtectionTypes.ALLOW_DAMAGE, EntityDamageSourceScope { entity, source ->
-                entity is ServerPlayerEntity && source.attacker is ServerPlayerEntity
+                entity is ServerPlayerEntity && source.attacker is ServerPlayerEntity && source.isOf(DamageTypes.PLAYER_EXPLOSION)
             })
         }
         switchTimeout()
