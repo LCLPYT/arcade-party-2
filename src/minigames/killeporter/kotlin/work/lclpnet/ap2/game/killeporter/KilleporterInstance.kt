@@ -104,7 +104,9 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
         gameHandle.protect { config ->
             config.allowAll()
             config.disallow(ProtectionTypes.ALLOW_DAMAGE, EntityDamageSourceScope { entity, source ->
-                entity is ServerPlayerEntity && source.attacker is ServerPlayerEntity && source.isOf(DamageTypes.PLAYER_EXPLOSION)
+                entity is ServerPlayerEntity
+                        && source.attacker is ServerPlayerEntity
+                        && source.isOf(DamageTypes.PLAYER_EXPLOSION)
             })
         }
         switchTimeout()
@@ -117,7 +119,7 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
     fun switchTimeout() {
 
         val switchTime =  Random.nextInt(MIN_DURATION_TICKS, MAX_DURATION_TICKS+1)
-        val messageTime = Random.nextInt(Ticks.seconds(1), Ticks.seconds(5)+1)
+        val messageTime = Random.nextInt(Ticks.seconds(1), Ticks.seconds(8)+1)
 
         timeout(switchTime - messageTime) { ->
             translate("game.ap2.killeporter.switch_announcement")
