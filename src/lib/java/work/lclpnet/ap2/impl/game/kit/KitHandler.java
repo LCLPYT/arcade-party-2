@@ -36,8 +36,6 @@ public class KitHandler {
 
     private static final MapCodec<Boolean> KIT_SELECTOR_CODEC = Codec.BOOL.fieldOf("ap2:kit_selector");
     private static final Item KIT_SELECTOR_ITEM = Items.NETHER_STAR;
-    private static final int KIT_SELECTION_TICKS = Ticks.seconds(10);
-    public static final int KIT_ITEM_SLOT = 0, KIT_SELECTOR_SLOT = 4;
 
     @Getter
     private final KitManager manager;
@@ -113,7 +111,7 @@ public class KitHandler {
                 .with(NbtOps.INSTANCE, KIT_SELECTOR_CODEC, true)
                 .getOrThrow());
 
-        player.getInventory().setStack(KIT_SELECTOR_SLOT, stack);
+        player.getInventory().setStack(manager.getOptions().kitSelectorSlot(), stack);
     }
 
     public void disableKitChanger() {
@@ -125,7 +123,7 @@ public class KitHandler {
 
         closeKitChanger(player);
 
-        player.getInventory().removeStack(KIT_SELECTOR_SLOT);
+        player.getInventory().removeStack(manager.getOptions().kitSelectorSlot());
     }
 
     public void closeKitChanger() {
@@ -147,17 +145,21 @@ public class KitHandler {
 
     public void selectKitChanger() {
         for (ServerPlayerEntity player : participants) {
-            PlayerInventoryAccess.setSelectedSlot(player, KIT_SELECTOR_SLOT);
+            PlayerInventoryAccess.setSelectedSlot(player, manager.getOptions().kitSelectorSlot());
         }
     }
 
     public void selectKitItem() {
         for (ServerPlayerEntity player : participants) {
-            PlayerInventoryAccess.setSelectedSlot(player, KIT_ITEM_SLOT);
+            PlayerInventoryAccess.setSelectedSlot(player, manager.getOptions().mainItemSlot());
         }
     }
 
     public void startKitSelectionTimer(GameCommons commons, Runnable onComplete) {
+        startKitSelectionTimer(commons, Ticks.seconds(10), onComplete);
+    }
+
+    public void startKitSelectionTimer(GameCommons commons, int ticks, Runnable onComplete) {
         if (manager.getKits().size() < 2) {
             onComplete.run();
             return;
@@ -169,7 +171,7 @@ public class KitHandler {
 
         TranslatedText label = kitHandle.translations().translateText("ap2.kit_selection");
 
-        commons.createTimerTicks(label, KIT_SELECTION_TICKS).whenDone(onComplete);
+        commons.createTimerTicks(label, ticks).whenDone(onComplete);
     }
 
     /**

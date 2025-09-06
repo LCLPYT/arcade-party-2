@@ -10,6 +10,7 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.ActionResult;
 import work.lclpnet.ap2.impl.game.kit.KitHandle;
+import work.lclpnet.ap2.impl.game.kit.KitOptions;
 import work.lclpnet.ap2.impl.game.kit.SingleItemKit;
 import work.lclpnet.kibu.access.VelocityModifier;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
@@ -30,7 +31,7 @@ public class LeapKit extends SingleItemKit {
     }
 
     @Override
-    public void init() {
+    public void init(KitOptions options) {
         handle.hooks().registerHook(PlayerInteractionHooks.USE_ITEM, (_player, world, hand) -> {
             if (!(_player instanceof ServerPlayerEntity player)) return ActionResult.PASS;
 

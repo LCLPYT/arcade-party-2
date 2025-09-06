@@ -60,7 +60,8 @@ public interface KitHandle {
         Identifier gameId = gameId();
         Translations translations = translations();
 
-        stack.set(DataComponentTypes.ITEM_NAME, kitName(kit).translateFor(player).formatted(AQUA));
+        stack.set(DataComponentTypes.CUSTOM_NAME, kitName(kit).translateFor(player).formatted(AQUA)
+                .styled(style -> style.withItalic(false)));
 
         stack.set(DataComponentTypes.TOOLTIP_DISPLAY, TooltipDisplayComponent.DEFAULT
                 .with(DataComponentTypes.ATTRIBUTE_MODIFIERS, true)

@@ -39,16 +39,16 @@ public class SingleItemKit extends BaseKit {
     }
 
     @Override
-    public void equip(ServerPlayerEntity player) {
+    public void equip(ServerPlayerEntity player, KitOptions options) {
         ItemStack stack = handle.createItemStack(this, player);
         stack.setCount(count);
 
-        player.getInventory().setStack(KitHandler.KIT_ITEM_SLOT, stack);
+        player.getInventory().setStack(options.mainItemSlot(), stack);
     }
 
     @Override
-    public void unequip(ServerPlayerEntity player) {
-        player.getInventory().removeStack(KitHandler.KIT_ITEM_SLOT);
+    public void unequip(ServerPlayerEntity player, KitOptions options) {
+        player.getInventory().removeStack(options.mainItemSlot());
     }
 
     public static Optional<String> getId(ItemStack stack) {

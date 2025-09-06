@@ -1,5 +1,15 @@
 {
   "game.ap2.killeporter": "Killeporter",
+  "game.ap2.killeporter.switch_message": "You where swapped with %s!",
   "game.ap2.killeporter.description": "You will be swapped randomly with another player every 20-30 seconds.\nYour goal is to be the last one standing.\nPVP is disabled, get creative!",
-  "game.ap2.killeporter.switch_message": "You have been switched with %s!"
+  "game.ap2.killeporter.switch_announcement": "You will be swapped in the next 5 seconds!",
+  "game.ap2.killeporter.kit.aqua": "Poseidon",
+  "game.ap2.killeporter.kit.defense": "Defence",
+  "game.ap2.killeporter.kit.ender": "Enderman",
+  "game.ap2.killeporter.kit.lava": "Adventurer",
+  "game.ap2.killeporter.kit.potion": "Alchemist",
+  "game.ap2.killeporter.kit.tnt": "Demolition Expert",
+  "game.ap2.killeporter.kit.tool": "Miner",
+  "game.ap2.killeporter.kit.mob": "Necromancer",
+  "game.ap2.killeporter.kit.spawner": "Summoner"
 }
