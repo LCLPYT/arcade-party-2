@@ -3,5 +3,6 @@
   "game.ap2.minefield.description": "Durchquere ein Minenfeld, ohne dass du auf die Minen trittst. Wer als erstes am Ziel ankommt gewinnt!",
   "game.ap2.minefield.task": "Erreiche das Ziel",
   "game.ap2.minefield.goal": "%s hat das Ziel erreicht. Das Spiel endet in %s Sekunden und du wirst dann je nach Distanz zum Ziel eingestuft.",
-  "game.ap2.minefield.stepped_on_mine": "Du hast eine Mine ausgelöst"
+  "game.ap2.minefield.stepped_on_mine": "Du hast eine Mine ausgelöst",
+  "game.ap2.minefield.personal_best": "Dein Rekord"
 }

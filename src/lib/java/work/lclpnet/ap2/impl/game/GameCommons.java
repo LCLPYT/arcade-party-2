@@ -222,7 +222,7 @@ public class GameCommons {
                 }
 
                 if (timer % 20 == 0) {
-                    bossBar.setPercent((timer / 20f / durationTicks));
+                    bossBar.setPercent(((float) timer / durationTicks));
                 }
             }
         });

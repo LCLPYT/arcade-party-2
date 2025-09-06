@@ -4,7 +4,9 @@ import net.minecraft.block.Block
 import net.minecraft.block.BlockState
 import net.minecraft.block.Blocks
 import net.minecraft.block.ShapeContext
+import net.minecraft.entity.EntityType
 import net.minecraft.entity.damage.DamageTypes
+import net.minecraft.entity.decoration.DisplayEntity
 import net.minecraft.entity.effect.StatusEffectInstance
 import net.minecraft.entity.effect.StatusEffects
 import net.minecraft.particle.ParticleTypes
@@ -13,9 +15,13 @@ import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.server.world.ServerWorld
 import net.minecraft.sound.SoundCategory
 import net.minecraft.sound.SoundEvents
+import net.minecraft.util.DyeColor
 import net.minecraft.util.Formatting.*
+import net.minecraft.util.math.AffineTransformation
 import net.minecraft.util.math.BlockPos
+import net.minecraft.util.math.Vec3d
 import net.minecraft.world.GameMode
+import org.joml.Matrix4f
 import org.json.JSONArray
 import work.lclpnet.ap2.*
 import work.lclpnet.ap2.api.game.MiniGameHandle
@@ -36,6 +42,8 @@ import work.lclpnet.ap2.impl.util.world.BfsWorldScanner
 import work.lclpnet.ap2.impl.util.world.SimpleAdjacentBlocks
 import work.lclpnet.ap2.impl.util.world.WalkableBlockPredicate
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape
+import work.lclpnet.ap2.impl.util.world.entity.DynamicEntityManager
+import work.lclpnet.ap2.impl.util.world.entity.PlayerSpecificDynamicEntity
 import work.lclpnet.kibu.hook.world.PressurePlateCallback
 import work.lclpnet.kibu.scheduler.Ticks
 import work.lclpnet.kibu.translate.bossbar.TranslatedBossBar
@@ -47,7 +55,6 @@ import work.lclpnet.lobby.game.api.prot.scope.EntityDamageSourceScope
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes
 import work.lclpnet.lobby.game.map.GameMap
 import java.util.*
-import kotlin.math.min
 import kotlin.math.sqrt
 import kotlin.random.Random
 import kotlin.random.asJavaRandom
@@ -65,7 +72,8 @@ class MinefieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
     var spawnShape: BlockShape? = null
     var goalShape: BlockShape? = null
     var spawnYaw = 0f
-    val furthestDistances = mutableMapOf<UUID, Double>()
+    val entries = mutableMapOf<UUID, Entry>()
+    var dynamicEntityManager: DynamicEntityManager? = null
     
     override fun getData() = data
 
@@ -133,6 +141,9 @@ class MinefieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
         taskBar = useTaskDisplay()
 
         setupTeam()
+
+        dynamicEntityManager = DynamicEntityManager(world)
+        dynamicEntityManager!!.init(gameHandle.gameScheduler, gameHandle.hooks)
     }
 
     fun setupTeam() {
@@ -154,14 +165,12 @@ class MinefieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
 
         interval(1) {
             for (player in players()) {
+                if (player.isSpectator) continue
+
+                entry(player).update(player)
+
                 if (goalShape!!.contains(player.pos)) {
                     onReachGoal(player)
-                } else if (!player.isSpectator) {
-                    furthestDistances.compute(player.uuid) { _, prev ->
-                        val dist = sqrt(goalShape!!.bounds().squaredDistanceTo(player.pos))
-
-                        if (prev == null) dist else min(dist, prev)
-                    }
                 }
             }
         }
@@ -193,11 +202,13 @@ class MinefieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
         }
     }
 
+    fun entry(player: ServerPlayerEntity): Entry = entries.computeIfAbsent(player.uuid) { Entry() }
+
     fun onReachGoal(player: ServerPlayerEntity) {
         if (!inGoal.add(player.uuid)) return
 
         data.add(player)
-        furthestDistances[player.uuid] = 0.0
+        entry(player).done()
 
         Fireworks.spawnGoalFirework(player)
 
@@ -227,7 +238,7 @@ class MinefieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
 
         players().stream()
             .filter { !inGoal.contains(it.uuid) && !it.isSpectator }
-            .map { Grade(it, furthestDistances.getOrDefault(it.uuid, Double.MAX_VALUE)) }
+            .map { Grade(it, entry(it).bestDist) }
             .sorted(Comparator.comparingDouble { it.distance })
             .forEachOrdered {
                 val detail = translate("ap2.score.blocks_away", LocalizedFormat.format("%.1f", it.distance))
@@ -242,6 +253,8 @@ class MinefieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
         ParticleHelper.spawnParticleAt(player, ParticleTypes.EXPLOSION, 1, 0.0, 0.0, 0.0, 0.0)
         SoundHelper.playSoundAt(player, SoundEvents.ENTITY_GENERIC_EXPLODE.value(), SoundCategory.HOSTILE, 0.5f, 1.2f)
 
+        entry(player).checkUpdateMarker(player)
+
         translate("game.ap2.minefield.stepped_on_mine").formatted(RED).sendTo(player, true)
 
         player.changeGameMode(GameMode.SPECTATOR)
@@ -249,6 +262,83 @@ class MinefieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
         timeout(20) {
             player.teleport(spawnShape!!.randomPos(Random.asJavaRandom()), spawnYaw)
             gameHandle.playerUtil.resetPlayer(player)
+        }
+    }
+
+    inner class Entry {
+        var pos: Vec3d? = null
+        var bestDist = Double.MAX_VALUE
+        var marker: PlayerSpecificDynamicEntity<DisplayEntity.BlockDisplayEntity>? = null
+        var label: PlayerSpecificDynamicEntity<DisplayEntity.TextDisplayEntity>? = null
+        var markerDist = Double.MAX_VALUE
+
+        fun update(player: ServerPlayerEntity) {
+            val pos = player.pos
+            val dist = sqrt(goalShape!!.bounds().squaredDistanceTo(pos))
+
+            if (dist >= this.bestDist) return
+
+            this.bestDist = dist
+            this.pos = pos;
+
+            removeMarker()
+        }
+
+        fun checkUpdateMarker(player: ServerPlayerEntity) {
+            if (bestDist >= markerDist) return
+
+            updateMarker(player)
+        }
+
+        fun updateMarker(player: ServerPlayerEntity) {
+            if (pos == null) return
+
+            if (marker == null || label == null) {
+                createMarker(player)
+            }
+
+            marker!!.entity.setPosition(pos)
+            label!!.entity.setPosition(pos!!.add(0.0, 0.6, 0.0))
+
+            markerDist = bestDist
+        }
+
+        fun createMarker(player: ServerPlayerEntity) {
+            val marker = DisplayEntity.BlockDisplayEntity(EntityType.BLOCK_DISPLAY, world)
+            marker.setTransformation(AffineTransformation(Matrix4f().scale(0.5f).translate(-0.5f, 0f, -0.5f)))
+            marker.isGlowing = true
+            marker.glowColorOverride = DyeColor.LIME.entityColor
+            marker.blockState = Blocks.LIME_TERRACOTTA.defaultState
+
+            val label = DisplayEntity.TextDisplayEntity(EntityType.TEXT_DISPLAY, world)
+            label.setTransformation(AffineTransformation(Matrix4f().scale(0.5f)))
+            label.text = translate("game.ap2.minefield.personal_best").formatted(GREEN).translateFor(player)
+            label.billboardMode = DisplayEntity.BillboardMode.CENTER
+            label.background = 0
+
+            this.marker = PlayerSpecificDynamicEntity(marker, player.uuid)
+            this.label = PlayerSpecificDynamicEntity(label, player.uuid)
+
+            dynamicEntityManager!!.add(this.marker)
+            dynamicEntityManager!!.add(this.label)
+        }
+
+        fun done() {
+            bestDist = 0.0
+
+            removeMarker()
+        }
+
+        fun removeMarker() {
+            if (marker != null) {
+                dynamicEntityManager!!.remove(marker)
+                marker = null
+            }
+
+            if (label != null) {
+                dynamicEntityManager!!.remove(label)
+                label = null
+            }
         }
     }
 }
