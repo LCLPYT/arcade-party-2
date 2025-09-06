@@ -1,7 +1,11 @@
 package work.lclpnet.ap2.impl.game;
 
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
+import net.minecraft.entity.EntityType;
+import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.boss.BossBar;
+import net.minecraft.entity.decoration.ArmorStandEntity;
+import net.minecraft.registry.RegistryKey;
 import net.minecraft.scoreboard.AbstractTeam;
 import net.minecraft.scoreboard.Team;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -9,7 +13,11 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Formatting;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.border.WorldBorder;
+import net.minecraft.world.waypoint.Waypoint;
+import net.minecraft.world.waypoint.WaypointStyle;
+import net.minecraft.world.waypoint.WaypointStyles;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
@@ -22,6 +30,7 @@ import work.lclpnet.ap2.api.util.action.Action;
 import work.lclpnet.ap2.api.util.action.PlayerAction;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.resource.ApResources;
+import work.lclpnet.ap2.impl.util.EntityUtil;
 import work.lclpnet.ap2.impl.util.GameRuleBuilder;
 import work.lclpnet.ap2.impl.util.debug.DebugController;
 import work.lclpnet.ap2.impl.util.handler.Visibility;
@@ -31,9 +40,12 @@ import work.lclpnet.ap2.impl.util.math.Vec2i;
 import work.lclpnet.ap2.impl.util.movement.TickMovementDetector;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.ap2.impl.util.world.WorldBorderRandomizer;
+import work.lclpnet.kibu.access.entity.ArmorStandAccess;
 import work.lclpnet.kibu.hook.HookFactory;
 import work.lclpnet.kibu.hook.util.PositionRotation;
 import work.lclpnet.kibu.scheduler.Ticks;
+import work.lclpnet.kibu.scheduler.api.RunningTask;
+import work.lclpnet.kibu.scheduler.api.SchedulerAction;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.lobby.game.map.GameMap;
@@ -186,6 +198,38 @@ public class GameCommons {
         return worldBorder;
     }
 
+    public Action<Runnable> addTimer(BossBar bossBar, int durationSeconds) {
+        return addTimerTicks(bossBar, durationSeconds * 20);
+    }
+
+    public Action<Runnable> addTimerTicks(BossBar bossBar, int durationTicks) {
+        var onEnd = HookFactory.createArrayBacked(Runnable.class, ops -> () -> {
+            for (Runnable op : ops) {
+                op.run();
+            }
+        });
+
+        gameHandle.getGameScheduler().interval(1, new SchedulerAction() {
+            int timer = durationTicks;
+
+            @Override
+            public void run(RunningTask info) {
+                if (timer-- <= 0) {
+                    info.cancel();
+                    bossBar.setPercent(0);
+                    onEnd.invoker().run();
+                    return;
+                }
+
+                if (timer % 20 == 0) {
+                    bossBar.setPercent(((float) timer / durationTicks));
+                }
+            }
+        });
+
+        return Action.create(onEnd);
+    }
+
     public BossBarTimer createTimer(Object subject, int durationSeconds) {
         return createTimer(subject, durationSeconds, BossBar.Color.RED);
     }
@@ -324,6 +368,26 @@ public class GameCommons {
         }
 
         healthDisplay.setup(gameHandle.getHooks());
+    }
+
+    public void addWaypoint(Vec3d pos, int color) {
+        addWaypoint(pos, color, WaypointStyles.DEFAULT);
+    }
+
+    public void addWaypoint(Vec3d pos, int color, RegistryKey<WaypointStyle> style) {
+        var marker = new ArmorStandEntity(EntityType.ARMOR_STAND, world);
+        marker.setPosition(pos);
+        ArmorStandAccess.setSmall(marker, true);
+        ArmorStandAccess.setMarker(marker, true);
+        marker.setInvisible(true);
+
+        Waypoint.Config waypointConfig = marker.getWaypointConfig();
+        waypointConfig.color = Optional.of(color);
+        waypointConfig.style = style;
+        EntityUtil.setAttribute(marker, EntityAttributes.WAYPOINT_TRANSMIT_RANGE, 500.0);
+
+        world.spawnEntity(marker);
+        world.getWaypointHandler().onTrack(marker);
     }
 
     public record WorldBorderConfig(int centerX, int centerZ, int maxRadius, int minSize, boolean randomCenter,

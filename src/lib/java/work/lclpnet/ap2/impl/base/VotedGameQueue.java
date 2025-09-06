@@ -1,12 +1,16 @@
 package work.lclpnet.ap2.impl.base;
 
-import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.base.GameQueue;
-import work.lclpnet.ap2.api.base.MiniGameManager;
 import work.lclpnet.ap2.api.game.MiniGame;
+import work.lclpnet.ap2.api.util.QueuePersistence;
+import work.lclpnet.ap2.impl.util.SeamlessQueue;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Predicate;
+
+import static java.lang.Math.floor;
+import static java.lang.Math.max;
 
 /**
  * A game queue that picks voted games first.
@@ -16,32 +20,29 @@ import java.util.function.Predicate;
  */
 public class VotedGameQueue implements GameQueue {
 
-    private final MiniGameManager gameManager;
-    private final int minimumSize;
-    private final Queue<MiniGame> voted = new LinkedList<>(), regular = new LinkedList<>();
-    private final LinkedList<MiniGame> priority = new LinkedList<>();
-    @Nullable
-    private MiniGame forcedNextGame = null;
-    private Predicate<MiniGame> filter = miniGame -> true;
+    private static final float MARGIN_PERCENT = 0.4f;
 
-    public VotedGameQueue(MiniGameManager gameManager, Iterable<MiniGame> voted, int minimumSize) {
-        this.gameManager = gameManager;
+    private final int minimumSize;
+    private final SeamlessQueue<MiniGame> regular;
+    private final Queue<MiniGame> voted = new LinkedList<>();
+    private final LinkedList<MiniGame> priority = new LinkedList<>();
+    private final QueuePersistence<MiniGame> persistence;
+
+    public VotedGameQueue(Set<MiniGame> games, Iterable<MiniGame> voted, int minimumSize, QueuePersistence<MiniGame> persistence) {
         this.minimumSize = minimumSize;
+        this.persistence = persistence;
 
         voted.forEach(this.voted::offer);
+
+        int margin = (int) floor(games.size() * MARGIN_PERCENT);
+        var transfer = persistence.restore();
+
+        this.regular = new SeamlessQueue<>(games, new Random(), margin, transfer);
+        voted.forEach(regular::pushUpcoming);
     }
 
     @Override
     public synchronized MiniGame pollNextGame() {
-        ensureMinimumSize();
-
-        if (forcedNextGame != null) {
-            MiniGame next = forcedNextGame;
-            forcedNextGame = null;
-
-            return next;
-        }
-
         if (!priority.isEmpty()) {
             return priority.poll();
         }
@@ -50,17 +51,18 @@ public class VotedGameQueue implements GameQueue {
             return voted.poll();
         }
 
-        return regular.poll();
+        return regular.next();
     }
 
     @Override
     public synchronized List<Entry> preview() {
-        ensureMinimumSize();
+        int nonRegularSize = priority.size() + voted.size();
+        int remainingRegular = max(0, minimumSize - nonRegularSize);
 
-        List<Entry> preview = new ArrayList<>(priority.size() + voted.size() + regular.size());
+        List<Entry> preview = new ArrayList<>(priority.size() + voted.size() + remainingRegular);
         priority.forEach(game -> preview.add(new Entry(game, Type.PRIORITY)));
         voted.forEach(game -> preview.add(new Entry(game, Type.VOTED)));
-        regular.forEach(game -> preview.add(new Entry(game, Type.REGULAR)));
+        regular.peek(remainingRegular).forEach(game -> preview.add(new Entry(game, Type.REGULAR)));
 
         return preview;
     }
@@ -82,51 +84,18 @@ public class VotedGameQueue implements GameQueue {
 
     @Override
     public synchronized void setFilter(Predicate<MiniGame> filter) {
-        this.filter = filter;
+        var invalid = Predicate.not(filter);
 
-        var isInvalid = Predicate.not(filter);
+        priority.removeIf(invalid);
+        voted.removeIf(invalid);
 
-        priority.removeIf(isInvalid);
-        voted.removeIf(isInvalid);
-        regular.removeIf(isInvalid);
-
-        ensureMinimumSize();
+        regular.filter(filter);
     }
 
-    private void ensureMinimumSize() {
-        if (size() >= minimumSize) return;
+    @Override
+    public void updateHistory(MiniGame game) {
+        regular.pushElement(game);
 
-        restockRegular();
-    }
-
-    private void restockRegular() {
-        var games = gameManager.getGames().stream()
-                .filter(filter)
-                .toList();
-
-        if (games.isEmpty()) {
-            throw new IllegalStateException("There are no valid games to append to the queue");
-        }
-
-        while (size() < minimumSize) {
-            offerRandomized(games);
-        }
-    }
-
-    /**
-     * Offer a randomized batch of games to the regular queue.
-     *
-     * @param games The games to randomize
-     */
-    private void offerRandomized(List<? extends MiniGame> games) {
-        List<MiniGame> batch = new ArrayList<>(games);
-
-        Collections.shuffle(batch);
-
-        batch.forEach(regular::offer);
-    }
-
-    private int size() {
-        return voted.size() + regular.size();
+        CompletableFuture.runAsync(() -> persistence.store(regular.transfer()));
     }
 }

@@ -4,6 +4,7 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.DynamicCommandExceptionType;
+import lombok.Setter;
 import net.minecraft.command.argument.IdentifierArgumentType;
 import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
@@ -22,14 +23,11 @@ public class ForceGameCommand implements KibuCommand {
     private static final DynamicCommandExceptionType UNKNOWN_GAME = new DynamicCommandExceptionType(id
             -> Text.literal("Unknown game '%s'".formatted(id)));
     private final MiniGameManager miniGameManager;
+    @Setter
     private Consumer<MiniGame> gameEnforcer;
 
     public ForceGameCommand(MiniGameManager miniGameManager, Consumer<MiniGame> gameEnforcer) {
         this.miniGameManager = miniGameManager;
-        this.gameEnforcer = gameEnforcer;
-    }
-
-    public void setGameEnforcer(Consumer<MiniGame> gameEnforcer) {
         this.gameEnforcer = gameEnforcer;
     }
 

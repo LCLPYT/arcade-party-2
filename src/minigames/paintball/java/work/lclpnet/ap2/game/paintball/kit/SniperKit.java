@@ -16,12 +16,12 @@ public class SniperKit extends PaintGunKit {
 
     private static PaintGun paintGun() {
         return new PaintGun(
-                ID, 36, 1, 0, 8, 19, 2,
+                ID, 28, 1, 0, 8, 17, 2,
                 new PaintGun.SoundCfg(SoundEvents.ITEM_MACE_SMASH_AIR, 0.4f, 1f),
                 new PaintGun.BulletSettings(
                         0.3, 100, 1, 1.0, 0.01f, 19.5f, 4,
-                        2.8f, 0.15f,
-                        new PaintGun.BulletSplit(0, 10, 1.45f, 1)
+                        2.9f, 0.1f,
+                        new PaintGun.BulletSplit(0, 12, 1.48f, 1)
                 )
         );
     }

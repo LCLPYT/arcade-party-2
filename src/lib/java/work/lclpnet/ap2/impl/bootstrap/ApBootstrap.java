@@ -9,16 +9,14 @@ import work.lclpnet.ap2.api.config.Ap2Config;
 import work.lclpnet.ap2.api.config.ConfigManager;
 import work.lclpnet.ap2.api.data.DataManager;
 import work.lclpnet.ap2.api.map.MapFacade;
-import work.lclpnet.ap2.api.map.MapFrequencyManager;
 import work.lclpnet.ap2.api.map.MapRandomizer;
 import work.lclpnet.ap2.api.music.SongManager;
 import work.lclpnet.ap2.impl.data.JsonDataSource;
 import work.lclpnet.ap2.impl.data.MapDynamicData;
 import work.lclpnet.ap2.impl.data.MutableDataManager;
 import work.lclpnet.ap2.impl.i18n.VanillaTranslations;
-import work.lclpnet.ap2.impl.map.BalancedMapRandomizer;
 import work.lclpnet.ap2.impl.map.MapFacadeImpl;
-import work.lclpnet.ap2.impl.map.SqliteAsyncMapFrequencyManager;
+import work.lclpnet.ap2.impl.map.SeamlessMapRandomizer;
 import work.lclpnet.ap2.impl.music.AssetSongManager;
 import work.lclpnet.config.json.JsonConfigFactory;
 import work.lclpnet.lobby.game.api.GameEnvironment;
@@ -128,30 +126,6 @@ public class ApBootstrap {
         return new MapFacadeImpl(worldFacade, mapRandomizer, mapManager, server, logger);
     }
 
-    @NotNull
-    public BalancedMapRandomizer createBalancedMapRandomizer(MapManager mapManager, MapFrequencyManager frequencyTracker) {
-        return new BalancedMapRandomizer(mapManager, frequencyTracker, new Random());
-    }
-
-    @NotNull
-    public SqliteAsyncMapFrequencyManager createSqliteAsyncMapFrequencyManager(String pluginId, GameEnvironment environment) {
-        Path dbPath = Path.of("config")
-                .resolve(pluginId)
-                .resolve("map_frequencies.sqlite");
-
-        var manager = new SqliteAsyncMapFrequencyManager(dbPath, logger);
-
-        environment.whenDone(() -> {
-            try {
-                manager.close();
-            } catch (Exception e) {
-                logger.error("Failed to close frequency manager", e);
-            }
-        });
-
-        return manager;
-    }
-
     public CompletableFuture<Result> dispatch(Ap2Config config, GameEnvironment environment,
                                               VanillaTranslations vanillaTranslations) {
 
@@ -177,8 +151,7 @@ public class ApBootstrap {
         MapManager mapManager = createMapManager(config, mapsCache);
         WorldFacade worldFacade = environment.getWorldFacade(() -> mapManager);
 
-        var frequencyManager = createSqliteAsyncMapFrequencyManager(ApConstants.ID, environment);
-        var randomizer = createBalancedMapRandomizer(mapManager, frequencyManager);
+        var randomizer = new SeamlessMapRandomizer(mapManager, new Random(), logger);
         MapFacade mapFacade = createMapFacade(server, mapManager, worldFacade, randomizer);
 
         AssetRepository songRepo = createMultiAssetRepo(config.songsSource, songsCache, ASSET_TYPE_SONGS);
@@ -186,13 +159,11 @@ public class ApBootstrap {
         MutableDataManager dataManager = new MutableDataManager();
 
         var mapTask = loadAp2Maps(mapManager);
-        var sqliteTask = loadSqlite(frequencyManager, server);
         var containerTask = loadContainer(dataManager);
         var vanillaTranslationsTask = runAsync(vanillaTranslations::init);
 
         return CompletableFuture.supplyAsync(() -> {
             mapTask.join();
-            sqliteTask.join();
             containerTask.join();
             vanillaTranslationsTask.join();
 
@@ -218,15 +189,6 @@ public class ApBootstrap {
     }
 
     @NotNull
-    public CompletableFuture<Void> loadSqlite(SqliteAsyncMapFrequencyManager frequencyManager, MinecraftServer server) {
-        return frequencyManager.open(server)
-                .exceptionally(throwable -> {
-                    logger.error("Failed to establish sqlite connection. Fallback to StubMapFrequencyManager", throwable);
-                    return null;
-                });
-    }
-
-    @NotNull
     public CompletableFuture<Void> loadContainer(MutableDataManager dataManager) {
         return runAsync(() -> dataManager.setData(MapDynamicData.builder()
                 .addSource(new JsonDataSource(this::openConfigurationFile, logger))
@@ -235,13 +197,6 @@ public class ApBootstrap {
 
     public InputStream openConfigurationFile() {
         return Objects.requireNonNull(getClass().getResourceAsStream("/configuration.json"), "File not found: configuration.json");
-    }
-
-    public record MapManagerHandle(MapManager mapManager, AssetCache cache) implements AutoCloseable {
-        @Override
-        public void close() throws Exception {
-            cache.close();
-        }
     }
 
     public record Result(WorldFacade worldFacade, MapFacade mapFacade, SongManager songManager,

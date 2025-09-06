@@ -103,6 +103,13 @@ id = "dance_floor"
 type = [ "kotlin",]
 
 [[minigames]]
-id = "killeporter"
+id = "king_of_the_hill"
 type = [ "kotlin",]
 
+[[minigames]]
+id = "minefield"
+type = [ "kotlin",]
+
+[[minigames]]
+id = "killeporter"
+type = [ "kotlin",]

@@ -15,6 +15,7 @@ import net.minecraft.util.ActionResult;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Vec3d;
+import org.jetbrains.annotations.NotNull;
 import org.joml.Vector3d;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
@@ -75,7 +76,7 @@ public class GlowingBombInstance extends EliminationGameInstance implements MapB
     }
 
     @Override
-    public void bootstrapWorld(ServerWorld world, GameMap map) {
+    public void bootstrapWorld(@NotNull ServerWorld world, @NotNull GameMap map) {
         manager = new GbManager(world, map, random, gameHandle.getParticipants(), this::onAnchorFilled);
         manager.setupAnchors();
     }

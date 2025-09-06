@@ -18,6 +18,11 @@ public class IndexedSet<E> extends AbstractSet<E> {
         reverseIndex = new HashMap<>(initialCapacity);
     }
 
+    public IndexedSet(Collection<E> src) {
+        this(src.size());
+        addAll(src);
+    }
+
     public IndexedSet(IndexedSet<E> src) {
         index = new ArrayList<>(src.index);
         reverseIndex = new HashMap<>(src.reverseIndex);

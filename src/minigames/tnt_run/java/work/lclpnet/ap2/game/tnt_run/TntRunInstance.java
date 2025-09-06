@@ -12,6 +12,7 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Box;
+import net.minecraft.util.shape.VoxelShape;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.impl.game.EliminationGameInstance;
@@ -99,9 +100,18 @@ public class TntRunInstance extends EliminationGameInstance {
             BlockPos posUp = pos.up();
 
             BlockState state = world.getBlockState(pos);
-            BlockState above = world.getBlockState(posUp);
 
-            if (state.isAir() || !above.getCollisionShape(world, posUp, ShapeContext.absent()).isEmpty()) continue;
+            if (state.isAir()) continue;
+
+            BlockState above = world.getBlockState(posUp);
+            VoxelShape aboveShape = above.getCollisionShape(world, posUp, ShapeContext.absent());
+
+            // don't remove walls
+            if (!aboveShape.isEmpty()) {
+                Box box = aboveShape.getBoundingBox();
+
+                if (box.getLengthX() >= 1 && box.getLengthZ() >= 1) continue;
+            }
 
             removal.put(pos, BREAK_TICKS);
 

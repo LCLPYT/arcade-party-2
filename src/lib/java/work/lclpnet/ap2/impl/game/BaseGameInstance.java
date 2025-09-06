@@ -45,6 +45,7 @@ import work.lclpnet.kibu.translate.bossbar.TranslatedBossBar;
 import work.lclpnet.kibu.translate.text.TextTranslatable;
 import work.lclpnet.lobby.game.api.WorldFacade;
 import work.lclpnet.lobby.game.map.GameMap;
+import work.lclpnet.lobby.game.util.BossBarTimer;
 import work.lclpnet.lobby.game.util.ProtectorUtils;
 
 import java.util.HashSet;
@@ -100,7 +101,13 @@ public abstract class BaseGameInstance implements MiniGameInstance {
         Identifier gameId = gameHandle.getGameInfo().getId();
 
         MapBootstrap bootstrap = getMapBootstrap();
-        mapFacade.openRandomMap(gameId, new BootstrapMapOptions(bootstrap::createWorldBootstrap), this::onMapReady);
+
+        mapFacade.openRandomMap(gameId, new BootstrapMapOptions((world, map) -> {
+            this.world = world;
+            this.map = map;
+
+            return bootstrap.createWorldBootstrap(world, map);
+        }), this::onMapReady);
     }
 
     protected MapBootstrap getMapBootstrap() {
@@ -118,9 +125,6 @@ public abstract class BaseGameInstance implements MiniGameInstance {
     }
 
     protected void onMapReady(ServerWorld world, GameMap map) {
-        this.world = world;
-        this.map = map;
-
         applyMapEffects();
         loadMapProperties();
         configureLocatorBar();
@@ -143,7 +147,8 @@ public abstract class BaseGameInstance implements MiniGameInstance {
     private void configureLocatorBar() {
         if (locatorBarEnabled) return;
 
-        gameHandle.getHooks().registerHook(PlayerWaypointCallback.HOOK, (player, waypoint) -> true);
+        gameHandle.getHooks().registerHook(PlayerWaypointCallback.HOOK, (player, waypoint)
+                -> waypoint instanceof ServerPlayerEntity);  // hide players from locator by default
 
         if (world != null) {
             world.getWaypointHandler().clear();
@@ -304,7 +309,7 @@ public abstract class BaseGameInstance implements MiniGameInstance {
         return PlayerUtil.getLoadingDelayTicks(players);
     }
 
-    protected final ServerWorld getWorld() {
+    public final ServerWorld getWorld() {
         if (world == null) {
             throw new IllegalStateException("World not loaded yet");
         }
@@ -312,7 +317,7 @@ public abstract class BaseGameInstance implements MiniGameInstance {
         return world;
     }
 
-    protected final GameMap getMap() {
+    public final GameMap getMap() {
         if (map == null) {
             throw new IllegalStateException("Map not loaded yet");
         }
@@ -354,6 +359,12 @@ public abstract class BaseGameInstance implements MiniGameInstance {
         gameHandle.getBossBarHandler().showOnJoin(bossBar);
 
         return bossBar;
+    }
+
+    protected final BossBarTimer useTaskTimer(int seconds) {
+        var subject = gameHandle.getTranslations().translateText(gameHandle.getGameInfo().getTaskKey());
+
+        return commons().createTimer(subject, seconds);
     }
 
     protected final DynamicTranslatedPlayerBossBar usePlayerDynamicTaskDisplay(Object... args) {

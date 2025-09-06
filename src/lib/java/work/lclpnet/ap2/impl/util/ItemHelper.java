@@ -3,6 +3,8 @@ package work.lclpnet.ap2.impl.util;
 import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.MapDecoder;
 import com.mojang.serialization.MapEncoder;
+import net.minecraft.block.BlockState;
+import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.jukebox.JukeboxSong;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.DyedColorComponent;
@@ -10,6 +12,7 @@ import net.minecraft.component.type.NbtComponent;
 import net.minecraft.component.type.TooltipDisplayComponent;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.entity.effect.StatusEffect;
+import net.minecraft.item.BlockItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -23,9 +26,14 @@ import net.minecraft.potion.Potion;
 import net.minecraft.potion.Potions;
 import net.minecraft.registry.*;
 import net.minecraft.registry.entry.RegistryEntry;
+import net.minecraft.server.world.ServerWorld;
+import net.minecraft.storage.NbtWriteView;
+import net.minecraft.util.ErrorReporter;
 import net.minecraft.util.Unit;
+import net.minecraft.util.math.BlockPos;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import work.lclpnet.ap2.ApConstants;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -190,5 +198,31 @@ public class ItemHelper {
         return stack.getOrDefault(DataComponentTypes.CUSTOM_DATA, NbtComponent.DEFAULT)
                 .get(decoder)
                 .resultOrPartial();
+    }
+
+    public static ItemStack getStackWithData(ServerWorld world, BlockPos pos) {
+        BlockState state = world.getBlockState(pos);
+        ItemStack stack = state.getPickStack(world, pos, true);
+
+        if (!stack.isEmpty()) {
+            copyBlockDataToStack(state, world, pos, stack);
+        }
+
+        return stack;
+    }
+
+    public static void copyBlockDataToStack(BlockState state, ServerWorld world, BlockPos pos, ItemStack stack) {
+        BlockEntity blockEntity = state.hasBlockEntity() ? world.getBlockEntity(pos) : null;
+
+        if (blockEntity == null) return;
+
+        try (ErrorReporter.Logging logging = new ErrorReporter.Logging(blockEntity.getReporterContext(), ApConstants.logger)) {
+            NbtWriteView nbtWriteView = NbtWriteView.create(logging, world.getRegistryManager());
+            blockEntity.writeComponentlessData(nbtWriteView);
+            //noinspection deprecation
+            blockEntity.removeFromCopiedStackData(nbtWriteView);
+            BlockItem.setBlockEntityData(stack, blockEntity.getType(), nbtWriteView);
+            stack.applyComponentsFrom(blockEntity.createComponentMap());
+        }
     }
 }

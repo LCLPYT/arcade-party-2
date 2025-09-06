@@ -16,6 +16,7 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.GameRules;
+import org.jetbrains.annotations.NotNull;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.map.MapBootstrap;
@@ -81,7 +82,7 @@ public class SplashyDropperInstance extends FFAGameInstance implements MapBootst
     }
 
     @Override
-    public void bootstrapWorld(ServerWorld world, GameMap map) {
+    public void bootstrapWorld(@NotNull ServerWorld world, @NotNull GameMap map) {
         world.getGameRules().get(GameRules.RANDOM_TICK_SPEED).set(0, world.getServer());
 
         new SdGenerator(world, map, random).generate();

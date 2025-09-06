@@ -45,13 +45,13 @@ public abstract class FFAGameInstance extends BaseGameInstance implements Partic
         winManager.checkForLastRemaining();
     }
 
-    protected final void useScoreboardStatsSync(IntScoreEventSource<ServerPlayerEntity> source, ScoreboardObjective objective) {
+    public final void useScoreboardStatsSync(IntScoreEventSource<ServerPlayerEntity> source, ScoreboardObjective objective) {
         gameHandle.getScoreboardManager().sync(objective, source);
 
         initScores();
     }
 
-    protected final void useScoreboardStatsSync(IntScoreEventSource<ServerPlayerEntity> source, CustomScoreboardObjective objective) {
+    public final void useScoreboardStatsSync(IntScoreEventSource<ServerPlayerEntity> source, CustomScoreboardObjective objective) {
         gameHandle.getScoreboardManager().sync(objective, source);
 
         initScores();
