@@ -17,7 +17,8 @@
   },
   "depends": {
     "ap2-lib": "*",
-    "fabric-language-kotlin": ">=1.13.5+kotlin.2.2.10"
+    "fabric-language-kotlin": ">=1.13.5+kotlin.2.2.10",
+    "pal": ">=0.16.0"
   },
   "custom": {
     "timestamp": 1757006072,

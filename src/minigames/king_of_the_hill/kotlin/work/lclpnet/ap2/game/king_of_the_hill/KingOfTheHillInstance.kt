@@ -10,12 +10,14 @@ import net.minecraft.entity.passive.GoatEntity
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.server.network.ServerPlayerEntity
+import net.minecraft.server.world.ServerWorld
 import net.minecraft.sound.SoundCategory
 import net.minecraft.sound.SoundEvents
 import net.minecraft.util.Formatting
 import net.minecraft.world.GameRules
 import work.lclpnet.ap2.*
 import work.lclpnet.ap2.api.game.MiniGameHandle
+import work.lclpnet.ap2.api.map.MapBootstrapFunction
 import work.lclpnet.ap2.impl.game.FFAGameInstance
 import work.lclpnet.ap2.impl.game.data.DataContainers
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef
@@ -24,12 +26,13 @@ import work.lclpnet.ap2.impl.util.ItemHelper
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape
 import work.lclpnet.lobby.game.api.prot.scope.EntityDamageSourceScope
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes
+import work.lclpnet.lobby.game.map.GameMap
 import kotlin.random.Random
 import kotlin.random.asJavaRandom
 
 const val DURATION_SECONDS = 160
 
-class KingOfTheHillInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle) {
+class KingOfTheHillInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle), MapBootstrapFunction {
     
     private val data = DataContainers.finaleCompatibleScoreContainer(gameHandle, PlayerRef::create)
     var goalShape: BlockShape? = null
@@ -39,6 +42,8 @@ class KingOfTheHillInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
     }
 
     override fun getData() = data!!
+
+    override fun bootstrapWorld(world: ServerWorld, map: GameMap) = createMarkers(world, map)
 
     override fun prepare() {
         commons().teleportToRandomSpawns(Random.asJavaRandom())
