@@ -12,6 +12,9 @@ import work.lclpnet.ap2.game.fine_tuning.melody.Note;
 import java.util.Arrays;
 import java.util.Set;
 
+import static java.lang.Math.abs;
+import static java.lang.Math.max;
+
 class FineTuningRoom {
 
     private final BlockPos pos;
@@ -129,17 +132,42 @@ class FineTuningRoom {
         return new Melody(instrument, currentNotes);
     }
 
-    public int calculateScore(Melody reference) {
+    public int calculateScore(Melody baseMelody, Melody reference) {
         restoreMelody();
 
-        final int maxUnitScore = Note.values().length - 1;
+        Note[] refNotes = reference.notes();
         int score = 0;
 
         for (int i = 0; i < notes.length; i++) {
-            int diff = Math.abs(reference.notes()[i].ordinal() - notes[i]);
-            score += maxUnitScore - diff;
+            int actual = notes[i];
+            int expected = refNotes[i].ordinal();
+            int base = baseMelody.notes()[i].ordinal();
+
+            int offset = abs(expected - base);
+            int diff = abs(expected - actual);
+
+            int noteScore = max(0, offset - diff);
+
+            score += noteScore;
         }
 
         return score;
+    }
+
+    public boolean isComplete(Melody reference) {
+        restoreMelody();
+
+        Note[] refNotes = reference.notes();
+
+        for (int i = 0; i < notes.length; i++) {
+            int actual = notes[i];
+            int expected = refNotes[i].ordinal();
+
+            if (actual != expected) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }
