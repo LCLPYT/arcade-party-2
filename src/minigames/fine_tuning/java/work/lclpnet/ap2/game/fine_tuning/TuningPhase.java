@@ -51,6 +51,8 @@ import static work.lclpnet.ap2.game.fine_tuning.FineTuningInstance.MELODY_COUNT;
 
 class TuningPhase {
 
+    public static final int TUNING_TIME_SECONDS = 40;
+
     private final MiniGameHandle gameHandle;
     private final Map<UUID, FineTuningRoom> rooms;
     private final IntDataContainer<ServerPlayerEntity, PlayerRef> data;
@@ -230,7 +232,7 @@ class TuningPhase {
         timer = BossBarTimer.builder(translations, translations.translateText("game.ap2.fine_tuning.tune"))
                 .withAlertSound(false)
                 .withColor(BossBar.Color.RED)
-                .withDurationTicks(Ticks.seconds(40))
+                .withDurationTicks(Ticks.seconds(TUNING_TIME_SECONDS))
                 .build();
 
         timer.addPlayers(players);
@@ -275,7 +277,7 @@ class TuningPhase {
                 best = player;
             }
 
-            if (score <= worstScore) {
+            if (score <= worstScore && (score > 0 || worst == null || worst == best)) {
                 worstScore = score;
                 worst = player;
             }
@@ -283,7 +285,7 @@ class TuningPhase {
 
         lastInteracted.clear();
 
-        if (best == null) return;
+        if (best == null || worst == null) return;
 
         var bestRoom = rooms.get(best.getUuid());
         var worstRoom = rooms.get(worst.getUuid());
