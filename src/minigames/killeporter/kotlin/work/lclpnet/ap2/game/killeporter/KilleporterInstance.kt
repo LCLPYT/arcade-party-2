@@ -5,6 +5,7 @@ import net.fabricmc.fabric.api.event.player.UseItemCallback
 import net.minecraft.component.DataComponentTypes
 import net.minecraft.entity.damage.DamageTypes
 import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.fluid.Fluids
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.server.world.ServerWorld
 import net.minecraft.util.ActionResult
@@ -26,7 +27,9 @@ import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks
 import work.lclpnet.kibu.hook.util.PlayerUtils
 import work.lclpnet.kibu.hook.util.PositionRotation
+import work.lclpnet.kibu.hook.world.BlockModificationHooks
 import work.lclpnet.kibu.scheduler.Ticks
+import work.lclpnet.kibu.translate.text.FormatWrapper
 import work.lclpnet.lobby.game.api.prot.scope.EntityDamageSourceScope
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes
 import work.lclpnet.lobby.game.map.GameMap
@@ -107,6 +110,14 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
                 entity is ServerPlayerEntity && source.attacker is ServerPlayerEntity && !source.isOf(DamageTypes.PLAYER_EXPLOSION)
             })
         }
+
+        gameHandle.hooks.registerHook(BlockModificationHooks.PLACE_FLUID, BlockModificationHooks.FluidTransferHook { world, pos, entity, fluid ->
+            val minDistSq = 6.0 * 6.0
+            entity is ServerPlayerEntity && fluid.matchesType(Fluids.LAVA) && players().any {
+                it != entity && it.squaredDistanceTo(pos.toCenterPos()) < minDistSq
+            }
+        })
+
         switchTimeout()
 
         timeout(GAME_DURATION_TICKS) { ->
@@ -116,11 +127,12 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
 
     fun switchTimeout() {
 
+        val maxDelaySeconds = 7
         val switchTime =  Random.nextInt(MIN_DURATION_TICKS, MAX_DURATION_TICKS+1)
-        val messageTime = Random.nextInt(Ticks.seconds(1), Ticks.seconds(8)+1)
+        val messageTime = Random.nextInt(Ticks.seconds(1), Ticks.seconds(maxDelaySeconds)+1)
 
         timeout(switchTime - messageTime) { ->
-            translate("game.ap2.killeporter.switch_announcement")
+            translate("game.ap2.killeporter.switch_announcement", FormatWrapper.styled(maxDelaySeconds, Formatting.YELLOW))
             .formatted(Formatting.GREEN)
             .sendTo(players(), true)}
 

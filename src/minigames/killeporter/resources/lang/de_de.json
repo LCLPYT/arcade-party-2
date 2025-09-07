@@ -2,7 +2,7 @@
   "game.ap2.killeporter": "Killeporter",
   "game.ap2.killeporter.switch_message": "Du wurdest mit %s getauscht!",
   "game.ap2.killeporter.description": "Du wirst alle 20-30 zufällig mit einem anderen Spieler getauscht.\nDein Ziel ist es, der letzte überlebende Spieler zu sein.\nPVP ist ausgeschaltet, sei kreativ!",
-  "game.ap2.killeporter.switch_announcement": "Du wirst innerhalb der nächsten 5 Sekunden getauscht!",
+  "game.ap2.killeporter.switch_announcement": "Du wirst innerhalb der nächsten %s Sekunden getauscht!",
   "game.ap2.killeporter.kit.aqua": "Poseidon",
   "game.ap2.killeporter.kit.defense": "Verteidigung",
   "game.ap2.killeporter.kit.ender": "Enderman",
