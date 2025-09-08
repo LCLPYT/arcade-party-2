@@ -11,7 +11,6 @@ import work.lclpnet.ap2.impl.game.FFAGameInstance;
 import work.lclpnet.ap2.impl.game.data.DataContainers;
 import work.lclpnet.ap2.impl.game.data.IntDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
-import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.lobby.game.map.GameMap;
 
 import java.util.Map;
@@ -20,8 +19,7 @@ import java.util.concurrent.CompletableFuture;
 
 public class FineTuningInstance extends FFAGameInstance implements MapBootstrap {
 
-    static final int MELODY_COUNT = 3;
-    static final int REPLAY_COOLDOWN = Ticks.seconds(5);
+    static final int MELODY_COUNT = 2;
     private final IntDataContainer<ServerPlayerEntity, PlayerRef> data;
     private FineTuningSetup setup;
     private TuningPhase tuningPhase;

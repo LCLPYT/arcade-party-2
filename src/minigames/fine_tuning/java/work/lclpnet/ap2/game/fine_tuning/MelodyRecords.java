@@ -15,10 +15,10 @@ class MelodyRecords {
     private final Melody[] melodies = new Melody[MELODY_COUNT];
     private int melodyNumber = 0;
 
-    public void record(ServerPlayerEntity best, Melody bestMelody, ServerPlayerEntity worst, Melody worstMelody) {
+    public void record(Melody reference, ServerPlayerEntity best, Melody bestMelody, ServerPlayerEntity worst, Melody worstMelody) {
         entries.add(new Entry(
-                new MelodyEntry(PlayerRef.create(best), bestMelody),
-                new MelodyEntry(PlayerRef.create(worst), worstMelody)
+                MelodyEntry.create(best, bestMelody, reference),
+                MelodyEntry.create(worst, worstMelody, reference)
         ));
     }
 
@@ -39,5 +39,17 @@ class MelodyRecords {
     }
 
     public record Entry(MelodyEntry best, MelodyEntry worst) {}
-    public record MelodyEntry(PlayerRef playerRef, Melody melody) {}
+
+    public record MelodyEntry(PlayerRef playerRef, Melody melody, int[] offsets) {
+
+        static MelodyEntry create(ServerPlayerEntity player, Melody melody, Melody reference) {
+            int[] offsets = new int[reference.notes().length];
+
+            for (int i = 0; i < offsets.length; i++) {
+                offsets[i] = melody.notes()[i].ordinal() - reference.notes()[i].ordinal();
+            }
+
+            return new MelodyEntry(PlayerRef.create(player), melody, offsets);
+        }
+    }
 }

@@ -62,18 +62,49 @@ public class ColorUtil {
     }
 
     public static double squaredDistance(int color1, int color2) {
-        int r1 = (color1 >> 16) & 0xFF;
-        int g1 = (color1 >> 8) & 0xFF;
-        int b1 = color1 & 0xFF;
+        int r1 = red(color1);
+        int g1 = green(color1);
+        int b1 = blue(color1);
 
-        int r2 = (color2 >> 16) & 0xFF;
-        int g2 = (color2 >> 8) & 0xFF;
-        int b2 = color2 & 0xFF;
+        int r2 = red(color2);
+        int g2 = green(color2);
+        int b2 = blue(color2);
 
         int dr = r1 - r2;
         int dg = g1 - g2;
         int db = b1 - b2;
 
         return dr * dr + dg * dg + db * db;
+    }
+
+    public static int lerpRgb(int start, int end, float t) {
+        // Clamp t between 0 and 1
+        t = Math.max(0, Math.min(1, t));
+
+        int r1 = red(start);
+        int g1 = green(start);
+        int b1 = blue(start);
+
+        int r2 = red(end);
+        int g2 = green(end);
+        int b2 = blue(end);
+
+        int r = (int) (r1 + (r2 - r1) * t);
+        int g = (int) (g1 + (g2 - g1) * t);
+        int b = (int) (b1 + (b2 - b1) * t);
+
+        return (r << 16) | (g << 8) | b;
+    }
+
+    public static int red(int packed) {
+        return (packed >> 16) & 0xFF;
+    }
+
+    public static int green(int packed) {
+        return (packed >> 8) & 0xFF;
+    }
+
+    public static int blue(int packed) {
+        return packed & 0xFF;
     }
 }
