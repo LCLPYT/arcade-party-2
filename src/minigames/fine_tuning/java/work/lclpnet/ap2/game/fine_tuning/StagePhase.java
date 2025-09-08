@@ -164,8 +164,8 @@ class StagePhase {
             if (noteOffset == 0) {
                 label = Text.literal("✅").formatted(Formatting.GREEN);
             } else {
-                float error = (abs(noteOffset) - 1) / (float) (Note.values().length - 1);
-                int color = ColorUtil.lerpRgb(0xb2ef09, 0xef0909, error);
+                float error = (abs(noteOffset) - 1) / (float) (Note.values().length - 1) * 2.2f;
+                int color = ColorUtil.lerpRgb(0xb2ef09, 0x890404, error);
 
                 label = Text.literal((noteOffset > 0 ? "+" : "") + noteOffset).withColor(color);
             }
@@ -173,8 +173,11 @@ class StagePhase {
             var display = new DisplayEntity.TextDisplayEntity(EntityType.TEXT_DISPLAY, world);
             display.setPosition(pos.add(dir.multiply(0.6)));
             display.setText(label);
+            display.setBackground(0);
             display.setTransformation(new AffineTransformation(new Matrix4f()
-                    .rotateTowards((float) dir.getX(), (float) dir.getY(), (float) dir.getZ(), 0, 1, 0)));
+                    .scale(2)
+                    .rotateTowards((float) dir.getX(), (float) dir.getY(), (float) dir.getZ(), 0, 1, 0)
+                    .translate(0, -1 / 8f, 0)));
 
             world.spawnEntity(display);
 

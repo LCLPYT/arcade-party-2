@@ -229,7 +229,7 @@ class TuningPhase {
 
         giveReplayItems();
 
-        timer = BossBarTimer.builder(translations, translations.translateText("game.ap2.fine_tuning.tune"))
+        timer = BossBarTimer.builder(translations, translations.translateText("game.ap2.fine_tuning.tune",melodyNumber + 1, MELODY_COUNT))
                 .withAlertSound(false)
                 .withColor(BossBar.Color.RED)
                 .withDurationTicks(Ticks.seconds(TUNING_TIME_SECONDS))

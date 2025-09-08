@@ -124,7 +124,7 @@
   "game.ap2.fine_tuning.listen": "Remember the melody...",
   "game.ap2.fine_tuning.listen_again": "Listen again...",
   "game.ap2.fine_tuning.repeat": "Now repeat it!",
-  "game.ap2.fine_tuning.tune": "Tune your note blocks",
+  "game.ap2.fine_tuning.tune": "Tune the note blocks %s/%s",
   "game.ap2.fine_tuning.present_melody": "Melody %s",
   "game.ap2.fine_tuning.presentation": "Presentation",
   "game.ap2.fine_tuning.best_was": "best was...",

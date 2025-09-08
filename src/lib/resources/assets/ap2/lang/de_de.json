@@ -124,7 +124,7 @@
   "game.ap2.fine_tuning.listen": "Merk dir die Melodie...",
   "game.ap2.fine_tuning.listen_again": "Noch einmal...",
   "game.ap2.fine_tuning.repeat": "Nun wiederhole sie!",
-  "game.ap2.fine_tuning.tune": "Stimme deine Notenblöcke",
+  "game.ap2.fine_tuning.tune": "Stimme die Notenblöcke %s/%s",
   "game.ap2.fine_tuning.present_melody": "Melodie %s",
   "game.ap2.fine_tuning.presentation": "Präsentation",
   "game.ap2.fine_tuning.best_was": "am besten war...",
