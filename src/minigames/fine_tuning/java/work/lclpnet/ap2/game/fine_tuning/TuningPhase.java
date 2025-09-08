@@ -287,12 +287,12 @@ class TuningPhase {
 
         if (best == null || worst == null) return;
 
-        var bestRoom = rooms.get(best.getUuid());
-        var worstRoom = rooms.get(worst.getUuid());
+        FineTuningRoom bestRoom = rooms.get(best.getUuid());
+        FineTuningRoom worstRoom = rooms.get(worst.getUuid());
 
         if (bestRoom == null || worstRoom == null) return;
 
-        records.record(best, bestRoom.getCurrentMelody(), worst, worstRoom.getCurrentMelody());
+        records.record(melody, best, bestRoom.getCurrentMelody(), worst, worstRoom.getCurrentMelody());
     }
 
     private void stopReplay() {
