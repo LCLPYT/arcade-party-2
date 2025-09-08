@@ -42,10 +42,6 @@ import java.util.UUID;
 
 public class GlowingBombInstance extends EliminationGameInstance implements MapBootstrapFunction {
 
-    private static final int MIN_BOMB_GLOW_STONE = 1;
-    private static final int MAX_BOMB_GLOW_STONE = 3;
-    private static final int MIN_BOMB_FUSE_TICKS = Ticks.seconds(7);
-    private static final int MAX_BOMB_FUSE_TICKS = Ticks.seconds(18);
     private static final int BOMB_PASS_COST = 40;
     private static final int INITIAL_CREDITS = BOMB_PASS_COST * 2;
     private static final int MINIMUM_BOMB_PASS_TICKS = 10;
@@ -53,6 +49,7 @@ public class GlowingBombInstance extends EliminationGameInstance implements MapB
     private final Random random = new Random();
     private final SimpleMovementBlocker movementBlocker;
     private final Object2IntMap<UUID> credits = new Object2IntOpenHashMap<>();
+    private final int initialPlayerCount;
     private GbManager manager = null;
     private Scene scene = null;
     private GbBomb bomb = null;
@@ -63,6 +60,8 @@ public class GlowingBombInstance extends EliminationGameInstance implements MapB
 
     public GlowingBombInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
+
+        initialPlayerCount = gameHandle.getParticipants().count();
 
         disableTeleportEliminated();
 
@@ -155,7 +154,7 @@ public class GlowingBombInstance extends EliminationGameInstance implements MapB
         bomb.scale.set(0.4);
         bomb.position.set(pos.getX(), pos.getY(), pos.getZ());
 
-        int amount = MIN_BOMB_GLOW_STONE + random.nextInt(Math.max(1, MAX_BOMB_GLOW_STONE - MIN_BOMB_GLOW_STONE + 1));
+        int amount = randomAmount();
         bomb.setGlowStoneAmount(amount, random);
 
         ServerWorld world = getWorld();
@@ -164,7 +163,7 @@ public class GlowingBombInstance extends EliminationGameInstance implements MapB
 
         TaskScheduler scheduler = gameHandle.getGameScheduler();
 
-        int fuseTicks = MIN_BOMB_FUSE_TICKS + random.nextInt(MAX_BOMB_FUSE_TICKS - MIN_BOMB_FUSE_TICKS + 1);
+        int fuseTicks = randomFuseTicks();
         scheduler.timeout(this::bombTimerExpired, fuseTicks);
 
         double x = pos.getX(), y = pos.getY(), z = pos.getZ();
@@ -181,6 +180,56 @@ public class GlowingBombInstance extends EliminationGameInstance implements MapB
         mayPass = true;
 
         manager.bombHolder().ifPresent(this::onAcquiredBomb);
+    }
+
+    private int randomFuseTicks() {
+        int minFuseTicks = minFuseTicks();
+        int maxFuseTicks;
+
+        if (initialPlayerCount <= 5) {
+            maxFuseTicks = Ticks.seconds(18);
+        } else if (initialPlayerCount <= 10) {
+            // avg 10s
+            maxFuseTicks = Ticks.seconds(14);
+        } else {
+            // avg 8.75s
+            maxFuseTicks = Ticks.seconds(12);
+        }
+
+        return random.nextInt(minFuseTicks, maxFuseTicks + 1);
+    }
+
+    private int minFuseTicks() {
+        if (initialPlayerCount <= 5) {
+            return Ticks.seconds(7);
+        }
+
+        if (initialPlayerCount <= 10) {
+            return Ticks.seconds(6);
+        }
+
+        return Ticks.seconds(5) + 10;
+    }
+
+    private int randomAmount() {
+        if (initialPlayerCount <= 5) {
+            // 4 player worst case: 3 * 4 * 18s + 3 * 18s = 270s = 4.5min
+            // 4 player avg case: 3 * 2 * 12.5s + 12.5s = 87.5s = 1.5min
+            // 4 player best case: 3 * 2 * 7s = 42s
+            return random.nextInt(1, 4);
+        }
+
+        if (initialPlayerCount <= 10) {
+            // 10 player worst case: 9 * 2 * 14s + 14s = 266s = 4.4min
+            // 10 player avg case: 9 * 2 * 10s + 10s = 190s = 3.17min
+            // 10 player best case: 9 * 2 * 6s = 108s = 1.8min
+            return random.nextInt(2, 4);
+        }
+
+        // 12 player worst case: 11 * 2 * 12s + 12s = 264s = 4.4min
+        // 12 player avg case: 11 * 2 * 8.75s + 8.75s = 201s = 3.4min
+        // 12 player best case: 11 * 5.5s = 60s = 1min
+        return random.nextInt(2, 5);
     }
 
     private void onAcquiredBomb(ServerPlayerEntity player) {
@@ -337,7 +386,7 @@ public class GlowingBombInstance extends EliminationGameInstance implements MapB
         time++;
 
         // don't grant credits if the bomb wasn't passed yet and couldn't have exploded yet because of the minimum fuse time
-        if (!wasPassed && time < MIN_BOMB_FUSE_TICKS) return;
+        if (!wasPassed && time < minFuseTicks()) return;
 
         // grant credits each tick
         manager.bombHolder().ifPresent(player -> credits.computeInt(player.getUuid(), (uuid, count) -> {
