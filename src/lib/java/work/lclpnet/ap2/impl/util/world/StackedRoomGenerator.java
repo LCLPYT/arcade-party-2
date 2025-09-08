@@ -55,7 +55,7 @@ public class StackedRoomGenerator<T> {
         Path path = storage.resolve("schematics").resolve(schematicName);
 
         return readSchematic(path)
-                .thenApply(structure -> placeStructures(map, world, participants.count(), structure))
+                .thenCompose(structure -> world.getServer().submit(() -> placeStructures(map, world, participants.count(), structure)))
                 .thenApply(data -> {
                     var mapping = assignRooms(participants, data);
                     return new Result<>(mapping, data);

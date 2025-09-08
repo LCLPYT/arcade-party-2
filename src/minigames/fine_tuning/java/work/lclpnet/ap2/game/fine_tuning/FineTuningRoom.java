@@ -1,10 +1,13 @@
 package work.lclpnet.ap2.game.fine_tuning;
 
+import lombok.Getter;
+import lombok.Setter;
 import net.minecraft.block.enums.NoteBlockInstrument;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3i;
+import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.game.fine_tuning.melody.FakeNoteBlockPlayer;
 import work.lclpnet.ap2.game.fine_tuning.melody.Melody;
 import work.lclpnet.ap2.game.fine_tuning.melody.Note;
@@ -17,6 +20,7 @@ import static java.lang.Math.max;
 
 class FineTuningRoom {
 
+    @Getter
     private final BlockPos pos;
     private final BlockPos spawn;
     private final float yaw;
@@ -25,6 +29,8 @@ class FineTuningRoom {
     private NoteBlockInstrument[] instruments = null;
     private FakeNoteBlockPlayer nbPlayer = null;
     private boolean temporary = false;
+    @Setter @Getter
+    private @Nullable BlockPos testSignPos = null;
 
     public FineTuningRoom(BlockPos pos, BlockPos spawn, float yaw) {
         this.pos = pos;

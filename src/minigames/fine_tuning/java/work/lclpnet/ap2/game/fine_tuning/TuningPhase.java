@@ -9,6 +9,7 @@ import net.minecraft.entity.boss.BossBar;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.PlayerManager;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -104,7 +105,7 @@ class TuningPhase {
         
         gameHandle.protect(config -> config.allow(ProtectionTypes.USE_BLOCK, (entity, pos) -> {
             BlockState state = entity.getWorld().getBlockState(pos);
-            return state.isOf(Blocks.NOTE_BLOCK);
+            return state.isOf(Blocks.NOTE_BLOCK) || state.isIn(BlockTags.ALL_SIGNS);
         }));
     }
 
@@ -125,6 +126,8 @@ class TuningPhase {
 
             if (state.isOf(Blocks.NOTE_BLOCK)) {
                 onUseNoteBlock(player, pos);
+            } else if (state.isIn(BlockTags.ALL_SIGNS)) {
+                onUseSign(player, pos);
             } else {
                 onUseItem(player);
             }
@@ -132,22 +135,36 @@ class TuningPhase {
             return cancel(player);
         });
 
-        hooks.registerHook(PlayerInteractionHooks.ATTACK_BLOCK, (player, world, hand, pos, direction) -> {
-            if (cannotInteract(player) || !(player instanceof ServerPlayerEntity serverPlayer)
-                || !participants.isParticipating(serverPlayer)) return ActionResult.FAIL;
+        hooks.registerHook(PlayerInteractionHooks.ATTACK_BLOCK, (_player, world, hand, pos, direction) -> {
+            if (cannotInteract(_player) || !(_player instanceof ServerPlayerEntity player)
+                || !participants.isParticipating(player)) return ActionResult.FAIL;
 
             BlockState state = world.getBlockState(pos);
 
-            if (!state.isOf(Blocks.NOTE_BLOCK)) return ActionResult.FAIL;
+            if (state.isOf(Blocks.NOTE_BLOCK)) {
+                FineTuningRoom room = rooms.get(player.getUuid());
 
-            FineTuningRoom room = rooms.get(player.getUuid());
-
-            if (room != null) {
-                room.playNoteBlock(serverPlayer, pos);
+                if (room != null) {
+                    room.playNoteBlock(player, pos);
+                }
+            } else if (state.isIn(BlockTags.ALL_SIGNS)) {
+                onUseSign(player, pos);
             }
 
             return ActionResult.FAIL;
         });
+    }
+
+    private void onUseSign(ServerPlayerEntity player, BlockPos pos) {
+        FineTuningRoom room = rooms.get(player.getUuid());
+
+        if (room == null || completed.contains(player.getUuid())) return;
+
+        BlockPos testSignPos = room.getTestSignPos();
+
+        if (testSignPos == null || !testSignPos.equals(pos)) return;
+
+        triggerReplay(player);
     }
 
     private void onUseNoteBlock(ServerPlayerEntity player, BlockPos pos) {
@@ -227,7 +244,7 @@ class TuningPhase {
 
         playersCanInteract = true;
 
-        giveReplayItems();
+//        giveReplayItems();
 
         timer = BossBarTimer.builder(translations, translations.translateText("game.ap2.fine_tuning.tune",melodyNumber + 1, MELODY_COUNT))
                 .withAlertSound(false)
@@ -240,7 +257,7 @@ class TuningPhase {
 
         timer.whenDone(() -> {
             playersCanInteract = false;
-            takeReplayItems();
+//            takeReplayItems();
             stopReplay();
 
             evaluateScores(server);
@@ -397,10 +414,14 @@ class TuningPhase {
 
         ItemStack stack = player.getStackInHand(Hand.MAIN_HAND);
 
-        if (!(stack.isOf(Items.PLAYER_HEAD))) {
+        if (!(stack.isOf(Items.PLAYER_HEAD)) || completed.contains(player.getUuid())) {
             return false;
         }
 
+        return triggerReplay(serverPlayer);
+    }
+
+    private boolean triggerReplay(ServerPlayerEntity serverPlayer) {
         UUID uuid = serverPlayer.getUuid();
 
         if (replaying.containsKey(uuid)) return false;
