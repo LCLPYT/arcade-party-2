@@ -32,6 +32,7 @@ import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.util.ApRegistries;
 import work.lclpnet.ap2.impl.util.BookUtil;
 import work.lclpnet.ap2.impl.util.heads.PlayerHeads;
+import work.lclpnet.ap2.impl.util.world.entity.DynamicEntityManager;
 import work.lclpnet.kibu.hook.HookContainer;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.kibu.hook.player.PlayerInventoryHooks;
@@ -70,6 +71,7 @@ class TuningPhase {
     private final MelodyRecords records = new MelodyRecords();
     private boolean playersCanInteract = false;
     private Melody melody = null;
+    private DynamicEntityManager dynamicEntityManager = null;
     private int melodyNumber = 0;
     private BossBarTimer timer;
 
@@ -107,6 +109,9 @@ class TuningPhase {
             BlockState state = entity.getWorld().getBlockState(pos);
             return state.isOf(Blocks.NOTE_BLOCK) || state.isIn(BlockTags.ALL_SIGNS);
         }));
+
+        dynamicEntityManager = new DynamicEntityManager(world);
+        dynamicEntityManager.init(gameHandle.getGameScheduler(), gameHandle.getHooks());
     }
 
     private void addNoteBlockHooks() {
@@ -172,7 +177,7 @@ class TuningPhase {
 
         if (room == null || completed.contains(player.getUuid())) return;
 
-        room.useNoteBlock(player, pos);
+        room.useNoteBlock(player, pos, dynamicEntityManager);
         markInteraction(player);
 
         if (!room.isComplete(melody)) return;
@@ -244,7 +249,7 @@ class TuningPhase {
 
         playersCanInteract = true;
 
-//        giveReplayItems();
+        giveReplayItems();
 
         timer = BossBarTimer.builder(translations, translations.translateText("game.ap2.fine_tuning.tune",melodyNumber + 1, MELODY_COUNT))
                 .withAlertSound(false)
@@ -257,8 +262,12 @@ class TuningPhase {
 
         timer.whenDone(() -> {
             playersCanInteract = false;
-//            takeReplayItems();
+            takeReplayItems();
             stopReplay();
+
+            for (FineTuningRoom room : rooms.values()) {
+                room.removeDisplays(dynamicEntityManager);
+            }
 
             evaluateScores(server);
             completed.clear();
@@ -389,6 +398,7 @@ class TuningPhase {
         if (room == null) return null;
 
         room.setTemporaryMelody(melody);
+        room.removeDisplays(dynamicEntityManager);
 
         TaskScheduler scheduler = gameHandle.getGameScheduler();
 
@@ -398,11 +408,11 @@ class TuningPhase {
             room.playNote(player, note);
         }, melody.notes().length);
 
-        return scheduler.interval(task, 1)
-                .whenComplete(() -> {
-                    room.restoreMelody();
-                    onDone.run();
-                });
+        return scheduler.interval(task, 1).whenComplete(() -> {
+            room.restoreMelody();
+            room.markErrors(baseMelody(), melody, dynamicEntityManager, player);
+            onDone.run();
+        });
     }
 
     private boolean onUseItem(PlayerEntity player) {
