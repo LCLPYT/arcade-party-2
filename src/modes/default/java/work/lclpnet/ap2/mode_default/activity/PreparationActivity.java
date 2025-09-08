@@ -165,7 +165,6 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
                 .thenCompose(world -> miniGameArgs.mapFacade().getMap(mapId)
                         .thenApply(map -> new SetupResult(world, map
                                 .orElseThrow(() -> new IllegalStateException("Map %s not found".formatted(mapId))))));
-
     }
 
     @Override

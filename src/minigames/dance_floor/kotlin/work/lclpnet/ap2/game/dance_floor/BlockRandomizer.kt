@@ -16,10 +16,10 @@ import kotlin.random.asJavaRandom
 
 interface Pattern {
     val minColors: Int
-        get() = 13
+        get() = 12
 
     val maxColors: Int
-        get() = 13
+        get() = 12
 
     fun init() {}
 
@@ -38,13 +38,12 @@ class BlockRandomizer(val floorShape: BlockShape, val world: ServerWorld) {
         add(Chebyshev(), 1f)
         add(Parabola(), 1f)
         add(Diagonal(), 0.65f)
-        add(Signum(), 0.22f)
-        add(Angled(), 0.5f)
-        add(Voronoi(), 1f)
+        add(Angled(), 0.3f)
+        add(Voronoi(), 0.5f)
         add(Honeycomb(), 1f)
-        add(Spirals(), 0.7f)
+        add(Spirals(), 0.5f)
         add(PerlinNoise(), 1f)
-        add(Mandelbrot(), 0.4f)
+        add(Mandelbrot(), 0.3f)
     }
 
     val existingColors = mutableListOf<DyeColor>()
@@ -53,10 +52,9 @@ class BlockRandomizer(val floorShape: BlockShape, val world: ServerWorld) {
         existingColors.clear()
 
         val pattern = patterns.getRandomElement(Random.asJavaRandom())!!.apply { init() }
-        val colors = mutableMapOf<Int, DyeColor>()
         val baseColors = listOf(
             DyeColor.WHITE, DyeColor.ORANGE, DyeColor.MAGENTA, DyeColor.LIGHT_BLUE, DyeColor.YELLOW, DyeColor.LIME,
-            DyeColor.PINK, DyeColor.CYAN, DyeColor.PURPLE, DyeColor.BLUE, DyeColor.GREEN, DyeColor.RED, DyeColor.BLACK
+            DyeColor.PINK, DyeColor.PURPLE, DyeColor.BLUE, DyeColor.GREEN, DyeColor.RED, DyeColor.BLACK
         )
 
         val options = baseColors.shuffled().take(Random.nextInt(pattern.minColors, pattern.maxColors + 1))
@@ -71,16 +69,54 @@ class BlockRandomizer(val floorShape: BlockShape, val world: ServerWorld) {
             return pool.removeFirst()
         }
 
+        val groups = mutableMapOf<Int, MutableList<BlockPos>>()
+
         for (pos in floorShape) {
-            val group = pattern.group(pos)
-            val color = colors.computeIfAbsent(group) { randomColor() }
+            val positions = groups.computeIfAbsent(pattern.group(pos)) { mutableListOf() }
+            positions.add(pos.toImmutable())
+        }
+
+        val colorGroups = mutableMapOf<DyeColor, MutableList<BlockPos>>()
+
+        for ((_, positions) in groups) {
+            val color = randomColor()
+            colorGroups.computeIfAbsent(color) { mutableListOf() }.addAll(positions)
+        }
+
+        val totalPositions: Int = colorGroups.values.sumOf { it.size }
+        val mergeThreshold = 0.05f
+
+        val sortedGroups = colorGroups.entries
+            .map { it.key to it.value }
+            .sortedBy { it.second.size }
+            .toMutableList()
+
+        while (sortedGroups.size >= 2) {
+            val (_, group) = sortedGroups[0]
+            val ratio = group.size.toFloat() / totalPositions.toFloat()
+
+            if (ratio >= mergeThreshold || sortedGroups.size <= 1) break
+
+            val (_, nextGroup) = sortedGroups[1]
+            nextGroup.addAll(group)
+
+            sortedGroups.removeAt(0)
+
+            sortedGroups.sortBy { it.second.size }
+        }
+
+        for ((color, positions) in sortedGroups) {
+            if (positions.isEmpty()) continue
 
             existingColors.add(color)
-            world.setBlock(pos, BlockHelper.getWool(color))
+
+            for (pos in positions) {
+                world.setBlock(pos, BlockHelper.getWool(color))
+            }
         }
     }
 
-    class Uniform(override val minColors: Int = 14, override val maxColors: Int = 16) : Pattern {
+    class Uniform(override val minColors: Int = 10, override val maxColors: Int = 12) : Pattern {
         override fun group(pos: BlockPos): Int = Random.nextInt(16)
     }
 
@@ -108,7 +144,7 @@ class BlockRandomizer(val floorShape: BlockShape, val world: ServerWorld) {
         override fun group(pos: BlockPos): Int = pos.getChebyshevDistance(floorShape.center())
     }
 
-    inner class Parabola(override val minColors: Int = 12, override val maxColors: Int = 14) : Pattern {
+    inner class Parabola(override val minColors: Int = 10, override val maxColors: Int = 12) : Pattern {
         override fun group(pos: BlockPos): Int {
             val c = floorShape.center().toCenterPos()
             return pos.getSquaredDistanceFromCenter(c.x, c.y, c.z).roundToInt()
@@ -117,13 +153,6 @@ class BlockRandomizer(val floorShape: BlockShape, val world: ServerWorld) {
 
     inner class Diagonal(override val minColors: Int = 6, override val maxColors: Int = 8) : Pattern {
         override fun group(pos: BlockPos): Int = pos.getManhattanDistance(floorShape.min())
-    }
-
-    inner class Signum() : Pattern {
-        override fun group(pos: BlockPos): Int {
-            val p = pos.subtract(floorShape.center())
-            return hash(sign(p.x.toFloat()), sign(p.z.toFloat()))
-        }
     }
 
     inner class Angled : Pattern {
@@ -144,11 +173,11 @@ class BlockRandomizer(val floorShape: BlockShape, val world: ServerWorld) {
         }
     }
 
-    inner class Voronoi(override val minColors: Int = 5, override val maxColors: Int = 8) : Pattern {
+    inner class Voronoi(override val minColors: Int = 6, override val maxColors: Int = 8) : Pattern {
         private var seeds: List<Vec3d> = emptyList()
 
         override fun init() {
-            val count = Random.nextInt(28, 52)
+            val count = Random.nextInt(65, 80)
             seeds = List(count) { floorShape.randomPos(Random.asJavaRandom()) }
         }
 
@@ -171,11 +200,11 @@ class BlockRandomizer(val floorShape: BlockShape, val world: ServerWorld) {
         }
     }
 
-    class Honeycomb(override val minColors: Int = 8, override val maxColors: Int = 12) : Pattern {
+    class Honeycomb(override val minColors: Int = 7, override val maxColors: Int = 10) : Pattern {
         private var size = 4
 
         override fun init() {
-            size = Random.nextInt(3, 8)
+            size = Random.nextInt(3, 7)
         }
 
         override fun group(pos: BlockPos): Int {
@@ -205,13 +234,13 @@ class BlockRandomizer(val floorShape: BlockShape, val world: ServerWorld) {
         }
     }
 
-    inner class Spirals : Pattern {
+    inner class Spirals(override val minColors: Int = 8, override val maxColors: Int = 8) : Pattern {
         private var arms = 5
         private var tightness = 4.0
 
         override fun init() {
-            arms = Random.nextInt(4, 9)
-            tightness = Random.nextDouble(2.0, 8.0)
+            arms = Random.nextInt(4, 7)
+            tightness = Random.nextDouble(3.0, 8.0)
         }
 
         override fun group(pos: BlockPos): Int {
@@ -285,7 +314,7 @@ class BlockRandomizer(val floorShape: BlockShape, val world: ServerWorld) {
         private var offsetX = 1.0
 
         override fun init() {
-            scale = Random.nextDouble(0.01, 0.08)
+            scale = Random.nextDouble(0.01, 0.06)
             offsetX = Random.nextDouble(0.5, 1.5)
         }
 

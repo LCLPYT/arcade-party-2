@@ -6,11 +6,10 @@ import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.entity.boss.BossBar;
-import net.minecraft.entity.player.ItemCooldownManager;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
-import net.minecraft.registry.Registries;
+import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.PlayerManager;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -20,7 +19,6 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
-import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.ApConstants;
@@ -34,6 +32,7 @@ import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.util.ApRegistries;
 import work.lclpnet.ap2.impl.util.BookUtil;
 import work.lclpnet.ap2.impl.util.heads.PlayerHeads;
+import work.lclpnet.ap2.impl.util.world.entity.DynamicEntityManager;
 import work.lclpnet.kibu.hook.HookContainer;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.kibu.hook.player.PlayerInventoryHooks;
@@ -51,9 +50,10 @@ import java.util.*;
 
 import static net.minecraft.util.Formatting.*;
 import static work.lclpnet.ap2.game.fine_tuning.FineTuningInstance.MELODY_COUNT;
-import static work.lclpnet.ap2.game.fine_tuning.FineTuningInstance.REPLAY_COOLDOWN;
 
 class TuningPhase {
+
+    public static final int TUNING_TIME_SECONDS = 40;
 
     private final MiniGameHandle gameHandle;
     private final Map<UUID, FineTuningRoom> rooms;
@@ -65,12 +65,15 @@ class TuningPhase {
     private final MelodyProvider melodyProvider = new SimpleMelodyProvider(random, new SimpleNotesProvider(random), 5);
     private final Map<UUID, TaskHandle> replaying = new HashMap<>();
     private final LinkedHashSet<UUID> lastInteracted = new LinkedHashSet<>();
+    private final Set<UUID> completed = new HashSet<>();
     private final HookContainer hooks = new HookContainer();
     @Getter
     private final MelodyRecords records = new MelodyRecords();
     private boolean playersCanInteract = false;
     private Melody melody = null;
+    private DynamicEntityManager dynamicEntityManager = null;
     private int melodyNumber = 0;
+    private BossBarTimer timer;
 
     public TuningPhase(MiniGameHandle gameHandle, Map<UUID, FineTuningRoom> rooms,
                        IntDataContainer<ServerPlayerEntity, PlayerRef> data, Runnable onEnd, GameCommons commons,
@@ -104,55 +107,90 @@ class TuningPhase {
         
         gameHandle.protect(config -> config.allow(ProtectionTypes.USE_BLOCK, (entity, pos) -> {
             BlockState state = entity.getWorld().getBlockState(pos);
-            return state.isOf(Blocks.NOTE_BLOCK);
+            return state.isOf(Blocks.NOTE_BLOCK) || state.isIn(BlockTags.ALL_SIGNS);
         }));
+
+        dynamicEntityManager = new DynamicEntityManager(world);
+        dynamicEntityManager.init(gameHandle.getGameScheduler(), gameHandle.getHooks());
     }
 
     private void addNoteBlockHooks() {
         Participants participants = gameHandle.getParticipants();
 
-        hooks.registerHook(PlayerInteractionHooks.USE_BLOCK, (player, world, hand, hitResult) -> {
-            if (!(player instanceof ServerPlayerEntity serverPlayer)) {
+        hooks.registerHook(PlayerInteractionHooks.USE_BLOCK, (_player, world, hand, hitResult) -> {
+            if (!(_player instanceof ServerPlayerEntity player)) {
                 return ActionResult.FAIL;
             }
 
-            if (cannotInteract(player) || !participants.isParticipating(serverPlayer)) {
-                return cancel(serverPlayer);
+            if (cannotInteract(player) || !participants.isParticipating(player)) {
+                return cancel(player);
             }
 
             BlockPos pos = hitResult.getBlockPos();
             BlockState state = world.getBlockState(pos);
 
             if (state.isOf(Blocks.NOTE_BLOCK)) {
-                FineTuningRoom room = rooms.get(player.getUuid());
-
-                if (room != null) {
-                    room.useNoteBlock(serverPlayer, pos);
-                    markInteraction(serverPlayer);
-                }
+                onUseNoteBlock(player, pos);
+            } else if (state.isIn(BlockTags.ALL_SIGNS)) {
+                onUseSign(player, pos);
             } else {
                 onUseItem(player);
             }
 
-            return cancel(serverPlayer);
+            return cancel(player);
         });
 
-        hooks.registerHook(PlayerInteractionHooks.ATTACK_BLOCK, (player, world, hand, pos, direction) -> {
-            if (cannotInteract(player) || !(player instanceof ServerPlayerEntity serverPlayer)
-                || !participants.isParticipating(serverPlayer)) return ActionResult.FAIL;
+        hooks.registerHook(PlayerInteractionHooks.ATTACK_BLOCK, (_player, world, hand, pos, direction) -> {
+            if (cannotInteract(_player) || !(_player instanceof ServerPlayerEntity player)
+                || !participants.isParticipating(player)) return ActionResult.FAIL;
 
             BlockState state = world.getBlockState(pos);
 
-            if (!state.isOf(Blocks.NOTE_BLOCK)) return ActionResult.FAIL;
+            if (state.isOf(Blocks.NOTE_BLOCK)) {
+                FineTuningRoom room = rooms.get(player.getUuid());
 
-            FineTuningRoom room = rooms.get(player.getUuid());
-
-            if (room != null) {
-                room.playNoteBlock(serverPlayer, pos);
+                if (room != null) {
+                    room.playNoteBlock(player, pos);
+                }
+            } else if (state.isIn(BlockTags.ALL_SIGNS)) {
+                onUseSign(player, pos);
             }
 
             return ActionResult.FAIL;
         });
+    }
+
+    private void onUseSign(ServerPlayerEntity player, BlockPos pos) {
+        FineTuningRoom room = rooms.get(player.getUuid());
+
+        if (room == null || completed.contains(player.getUuid())) return;
+
+        BlockPos testSignPos = room.getTestSignPos();
+
+        if (testSignPos == null || !testSignPos.equals(pos)) return;
+
+        triggerReplay(player);
+    }
+
+    private void onUseNoteBlock(ServerPlayerEntity player, BlockPos pos) {
+        FineTuningRoom room = rooms.get(player.getUuid());
+
+        if (room == null || completed.contains(player.getUuid())) return;
+
+        room.useNoteBlock(player, pos, dynamicEntityManager);
+        markInteraction(player);
+
+        if (!room.isComplete(melody)) return;
+
+        completed.add(player.getUuid());
+
+        player.playSoundToPlayer(SoundEvents.ENTITY_PLAYER_LEVELUP, SoundCategory.PLAYERS, 0.5f, 1f);
+
+        gameHandle.getTranslations().translateText("game.ap2.fine_tuning.completed").formatted(GREEN).sendTo(player);
+
+        if (completed.size() < gameHandle.getParticipants().count()) return;
+
+        timer.stop();
     }
 
     public void beginListen() {
@@ -213,10 +251,10 @@ class TuningPhase {
 
         giveReplayItems();
 
-        BossBarTimer timer = BossBarTimer.builder(translations, translations.translateText("game.ap2.fine_tuning.tune"))
+        timer = BossBarTimer.builder(translations, translations.translateText("game.ap2.fine_tuning.tune",melodyNumber + 1, MELODY_COUNT))
                 .withAlertSound(false)
                 .withColor(BossBar.Color.RED)
-                .withDurationTicks(Ticks.seconds(40))
+                .withDurationTicks(Ticks.seconds(TUNING_TIME_SECONDS))
                 .build();
 
         timer.addPlayers(players);
@@ -227,7 +265,12 @@ class TuningPhase {
             takeReplayItems();
             stopReplay();
 
+            for (FineTuningRoom room : rooms.values()) {
+                room.removeDisplays(dynamicEntityManager);
+            }
+
             evaluateScores(server);
+            completed.clear();
 
             if (++melodyNumber == MELODY_COUNT) {
                 onEnd.run();
@@ -240,6 +283,7 @@ class TuningPhase {
     private void evaluateScores(MinecraftServer server) {
         PlayerManager playerManager = server.getPlayerManager();
 
+        Melody baseMelody = baseMelody();
         int bestScore = Integer.MIN_VALUE, worstScore = Integer.MAX_VALUE;
         ServerPlayerEntity best = null, worst = null;
 
@@ -250,7 +294,7 @@ class TuningPhase {
             ServerPlayerEntity player = playerManager.getPlayer(uuid);
             if (player == null) continue;
 
-            int score = room.calculateScore(melody);
+            int score = room.calculateScore(baseMelody, melody);
 
             data.addScore(player, score);
 
@@ -259,7 +303,7 @@ class TuningPhase {
                 best = player;
             }
 
-            if (score <= worstScore) {
+            if (score <= worstScore && (score > 0 || worst == null || worst == best)) {
                 worstScore = score;
                 worst = player;
             }
@@ -267,14 +311,14 @@ class TuningPhase {
 
         lastInteracted.clear();
 
-        if (best == null) return;
+        if (best == null || worst == null) return;
 
-        var bestRoom = rooms.get(best.getUuid());
-        var worstRoom = rooms.get(worst.getUuid());
+        FineTuningRoom bestRoom = rooms.get(best.getUuid());
+        FineTuningRoom worstRoom = rooms.get(worst.getUuid());
 
         if (bestRoom == null || worstRoom == null) return;
 
-        records.record(best, bestRoom.getCurrentMelody(), worst, worstRoom.getCurrentMelody());
+        records.record(melody, best, bestRoom.getCurrentMelody(), worst, worstRoom.getCurrentMelody());
     }
 
     private void stopReplay() {
@@ -297,17 +341,14 @@ class TuningPhase {
                     .styled(style -> style.withItalic(false).withFormatting(YELLOW)));
 
             player.getInventory().setStack(4, stack);
-            player.getItemCooldownManager().set(stack, REPLAY_COOLDOWN);
         }
     }
 
     private void takeReplayItems() {
         Participants participants = gameHandle.getParticipants();
-        Identifier group = Registries.ITEM.getId(Items.PLAYER_HEAD);
 
         for (ServerPlayerEntity player : participants) {
             player.getInventory().setStack(4, ItemStack.EMPTY);
-            player.getItemCooldownManager().remove(group);
         }
     }
 
@@ -357,6 +398,7 @@ class TuningPhase {
         if (room == null) return null;
 
         room.setTemporaryMelody(melody);
+        room.removeDisplays(dynamicEntityManager);
 
         TaskScheduler scheduler = gameHandle.getGameScheduler();
 
@@ -366,11 +408,11 @@ class TuningPhase {
             room.playNote(player, note);
         }, melody.notes().length);
 
-        return scheduler.interval(task, 1)
-                .whenComplete(() -> {
-                    room.restoreMelody();
-                    onDone.run();
-                });
+        return scheduler.interval(task, 1).whenComplete(() -> {
+            room.restoreMelody();
+            room.markErrors(baseMelody(), melody, dynamicEntityManager, player);
+            onDone.run();
+        });
     }
 
     private boolean onUseItem(PlayerEntity player) {
@@ -382,19 +424,17 @@ class TuningPhase {
 
         ItemStack stack = player.getStackInHand(Hand.MAIN_HAND);
 
-        if (!(stack.isOf(Items.PLAYER_HEAD))) {
+        if (!(stack.isOf(Items.PLAYER_HEAD)) || completed.contains(player.getUuid())) {
             return false;
         }
 
-        ItemCooldownManager cooldownManager = player.getItemCooldownManager();
+        return triggerReplay(serverPlayer);
+    }
 
-        if (cooldownManager.isCoolingDown(stack)) {
-            return false;
-        }
-
-        cooldownManager.set(stack, REPLAY_COOLDOWN);
-
+    private boolean triggerReplay(ServerPlayerEntity serverPlayer) {
         UUID uuid = serverPlayer.getUuid();
+
+        if (replaying.containsKey(uuid)) return false;
 
         TaskHandle handle = replayMelody(serverPlayer, () -> replaying.remove(uuid));
 

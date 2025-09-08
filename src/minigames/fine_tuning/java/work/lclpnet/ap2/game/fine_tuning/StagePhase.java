@@ -2,6 +2,9 @@ package work.lclpnet.ap2.game.fine_tuning;
 
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.block.enums.NoteBlockInstrument;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityType;
+import net.minecraft.entity.decoration.DisplayEntity;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -10,9 +13,12 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
+import net.minecraft.util.math.AffineTransformation;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.GameMode;
 import org.jetbrains.annotations.Nullable;
+import org.joml.Matrix4f;
 import org.json.JSONArray;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.game.fine_tuning.melody.FakeNoteBlockPlayer;
@@ -23,6 +29,7 @@ import work.lclpnet.ap2.impl.game.PlayerUtil;
 import work.lclpnet.ap2.impl.game.WinManager;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.map.MapUtil;
+import work.lclpnet.ap2.impl.util.ColorUtil;
 import work.lclpnet.ap2.impl.util.SoundHelper;
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker;
 import work.lclpnet.kibu.scheduler.Ticks;
@@ -33,8 +40,12 @@ import work.lclpnet.lobby.game.api.WorldFacade;
 import work.lclpnet.lobby.game.map.GameMap;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
+import static java.lang.Math.abs;
+import static java.lang.Math.signum;
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
 class StagePhase {
@@ -45,6 +56,7 @@ class StagePhase {
     private final ServerWorld world;
     private final WinManager<ServerPlayerEntity, PlayerRef> winManager;
     private final SimpleMovementBlocker movementBlocker;
+    private final Set<UUID> displays = new HashSet<>();
     private BlockPos presenterPos;
     private float presenterYaw;
     private FakeNoteBlockPlayer nbPlayer;
@@ -127,10 +139,10 @@ class StagePhase {
 
     private void playOriginalMelody() {
         Melody melody = records.getMelody(melodyNumber);
-        playMelody(melody, this::beginBestMelody);
+        playMelody(melody, new int[0], this::beginBestMelody);
     }
 
-    private void playMelody(Melody melody, Runnable onDone) {
+    private void playMelody(Melody melody, int[] offsets, Runnable onDone) {
         MinecraftServer server = gameHandle.getServer();
 
         setMelody(melody);
@@ -139,12 +151,67 @@ class StagePhase {
             for (ServerPlayerEntity player : PlayerLookup.all(server)) {
                 nbPlayer.playAtPlayerPos(player, note);
             }
+
+            if (note < 0 || note >= offsets.length) return;
+
+            int noteOffset = offsets[note];
+
+            Vec3d pos = nbPlayer.getNoteBlock(note).toCenterPos();
+            Vec3d dir = snapToAxis(presenterPos.toCenterPos().subtract(pos));
+
+            Text label;
+
+            if (noteOffset == 0) {
+                label = Text.literal("✅").formatted(Formatting.GREEN);
+            } else {
+                float error = (abs(noteOffset) - 1) / (float) (Note.values().length - 1) * 2.2f;
+                int color = ColorUtil.lerpRgb(0xb2ef09, 0x890404, error);
+
+                label = Text.literal((noteOffset > 0 ? "+" : "") + noteOffset).withColor(color);
+            }
+
+            var display = new DisplayEntity.TextDisplayEntity(EntityType.TEXT_DISPLAY, world);
+            display.setPosition(pos.add(dir.multiply(0.6)));
+            display.setText(label);
+            display.setBackground(0);
+            display.setTransformation(new AffineTransformation(new Matrix4f()
+                    .scale(2)
+                    .rotateTowards((float) dir.getX(), (float) dir.getY(), (float) dir.getZ(), 0, 1, 0)
+                    .translate(0, -1 / 8f, 0)));
+
+            world.spawnEntity(display);
+
+            displays.add(display.getUuid());
         }, melody.notes().length);
 
         TaskScheduler scheduler = gameHandle.getGameScheduler();
 
-        scheduler.interval(melodyPlayer, 1)
-                .whenComplete(() -> scheduler.timeout(onDone, Ticks.seconds(2)));
+        scheduler.interval(melodyPlayer, 1).whenComplete(() -> scheduler.timeout(Ticks.seconds(2), () -> {
+            for (UUID id : displays) {
+                Entity entity = world.getEntity(id);
+
+                if (entity != null) {
+                    entity.discard();
+                }
+            }
+
+            displays.clear();
+            onDone.run();
+        }));
+    }
+
+    private Vec3d snapToAxis(Vec3d dir) {
+        double ax = abs(dir.getX());
+        double ay = abs(dir.getY());
+        double az = abs(dir.getZ());
+
+        if (ax > ay && ax > az) {
+            return new Vec3d(signum(dir.getX()), 0, 0);
+        } else if (az > ay) {
+            return new Vec3d(0, 0, signum(dir.getZ()));
+        } else {
+            return new Vec3d(0, signum(dir.getY()), 0);
+        }
     }
 
     private void beginBestMelody() {
@@ -172,7 +239,7 @@ class StagePhase {
         ServerPlayerEntity player = announcePlayerAndGet(server, name, bestRef);
         WorldFacade worldFacade = gameHandle.getWorldFacade();
 
-        gameHandle.getGameScheduler().timeout(() -> playMelody(bestMelody.melody(), () -> {
+        gameHandle.getGameScheduler().timeout(() -> playMelody(bestMelody.melody(), bestMelody.offsets(), () -> {
             if (player != null) {
                 movementBlocker.enableMovement(player);
                 worldFacade.teleport(player);
@@ -207,7 +274,7 @@ class StagePhase {
         ServerPlayerEntity player = announcePlayerAndGet(server, name, worstRef);
         WorldFacade worldFacade = gameHandle.getWorldFacade();
 
-        gameHandle.getGameScheduler().timeout(() -> playMelody(worstMelody.melody(), () -> {
+        gameHandle.getGameScheduler().timeout(() -> playMelody(worstMelody.melody(), worstMelody.offsets(), () -> {
             if (player != null) {
                 movementBlocker.enableMovement(player);
                 worldFacade.teleport(player);

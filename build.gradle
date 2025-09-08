@@ -204,12 +204,12 @@ dependencies {
     modImplementation("work.lclpnet.mods:notica:${project.notica_version}")
     modImplementation("work.lclpnet.mods:mg-lobby:${project.lobby_version}")
     modImplementation("net.fabricmc:fabric-language-kotlin:${project.kotlin_version}")
+    modImplementation("work.lclpnet.mods:pal:${project.pal_version}")
 
     // runtime dependencies
     modRuntimeOnly("maven.modrinth:sqlite-jdbc:3.41.2.1+20230506")
 
     // optional runtime dependencies (not explicitly required for compilation, but needed to play the game)
-    modLocalRuntime("work.lclpnet.mods:pal:${project.pal_version}")
     modLocalRuntime("work.lclpnet.mods:ruler:${project.ruler_version}")
     modLocalRuntime("work.lclpnet.mcserver-api:mcserver-api-fabric:${project.mcserver_api_version}")
     implementation("work.lclpnet:translations4j:${project.translations4j_version}")
