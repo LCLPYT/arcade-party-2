@@ -21,6 +21,7 @@ import net.minecraft.util.Formatting;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.GameRules;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
@@ -51,9 +52,10 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
 
     private static final int
             LOOK_DURATION_SECONDS = 8,
-            JUDGE_DURATION_TICKS = Ticks.seconds(6),
+            JUDGE_DURATION_TICKS = Ticks.seconds(5),
             JUDGE_ANNOUNCEMENT_TICKS = Ticks.seconds(3),
             DESTROY_DELAY_TICKS = Ticks.seconds(4);
+
     private final Random random;
     private final SbSetup setup;
     private final SbItems items;
@@ -77,7 +79,7 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
     }
 
     @Override
-    public CompletableFuture<Void> createWorldBootstrap(ServerWorld world, GameMap map) {
+    public @NotNull CompletableFuture<Void> createWorldBootstrap(@NotNull ServerWorld world, @NotNull GameMap map) {
         return setup.setup(map, world).thenRun(() -> {
             Participants participants = gameHandle.getParticipants();
 
@@ -124,7 +126,7 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
         config.configureProtection();
         config.registerHooks();
 
-        gameHandle.getHookRegistrar().registerHook(ProjectileHooks.HIT_BLOCK, this::onHitBlock);
+        gameHandle.getHooks().registerHook(ProjectileHooks.HIT_BLOCK, this::onHitBlock);
 
         nextRound();
     }
@@ -175,8 +177,11 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
     private void startBuilding() {
         commons().announcer().announceSubtitle("game.ap2.speed_builders.copy");
 
+        var entities = manager.getPreviewEntities();
+
+        manager.clearIslands();
         manager.setBuildingPhase(true);
-        items.giveBuildingMaterials(gameHandle.getParticipants(), manager.getPreviewEntities());
+        items.giveBuildingMaterials(gameHandle.getParticipants(), entities);
 
         Translations translations = gameHandle.getTranslations();
 

@@ -2,6 +2,7 @@ package work.lclpnet.ap2.game.speed_builders.util;
 
 import it.unimi.dsi.fastutil.objects.Object2LongMap;
 import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
+import lombok.Setter;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
@@ -28,9 +29,10 @@ import java.util.stream.Collectors;
 
 public class SbManager {
 
-    private static final int BASE_BUILD_DURATION_SECONDS = 45;
+    private static final int BASE_BUILD_DURATION_SECONDS = 25;
     private static final int MIN_BUILD_DURATION_SECONDS = 5;
-    private static final int SUCCESSIVE_COMPLETION_REDUCTION_SECONDS = 9;
+    private static final int SUCCESSIVE_COMPLETION_REDUCTION_SECONDS = 7;
+
     private final Map<UUID, SbIsland> islands;
     private final List<SbModule> modules;
     private final MiniGameHandle gameHandle;
@@ -42,8 +44,10 @@ public class SbManager {
     private final Object2LongMap<UUID> lastEdited = new Object2LongOpenHashMap<>();
     private final Set<UUID> edited = new HashSet<>();
     private final Set<UUID> completed = new HashSet<>();
+    @Setter
     private boolean buildingPhase = false;
     private SbModule currentModule = null;
+    @Setter
     private Team team = null;
     private int successiveCompletion = 0;
     private int round = 0;
@@ -75,8 +79,10 @@ public class SbManager {
         return buildingPhase && !completed.contains(player.getUuid());
     }
 
-    public void setBuildingPhase(boolean buildingPhase) {
-        this.buildingPhase = buildingPhase;
+    public void clearIslands() {
+        for (var island : activeIslands()) {
+            island.getValue().clearBuildingArea(world);
+        }
     }
 
     public boolean isWithinBuildingArea(ServerPlayerEntity player, BlockPos pos) {
@@ -103,7 +109,6 @@ public class SbManager {
 
             island.clearBuildingArea(world);
             island.placeModulePreview(module, world, team, scoreboardManager);
-            island.copyPreviewFloorToBuildArea(world);
         }
 
         currentModule = module;
@@ -176,10 +181,6 @@ public class SbManager {
         }
 
         return it.next().getValue().getPreviewEntities(world);
-    }
-
-    public void setTeam(Team team) {
-        this.team = team;
     }
 
     public void onEdit(ServerPlayerEntity player) {

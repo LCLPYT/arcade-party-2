@@ -1,5 +1,6 @@
 package work.lclpnet.ap2.game.speed_builders.data;
 
+import lombok.Getter;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -19,7 +20,6 @@ import net.minecraft.util.TypeFilter;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.math.Vec3i;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.ItemHelper;
@@ -50,8 +50,9 @@ public class SbIsland {
     private final SbIslandData data;
     private final BlockPos spawnWorldPos;
     private final BlockBox buildingArea;
-    private final BlockBox previewArea;
+    @Getter
     private final BlockBox bounds;
+    @Getter
     private final BlockBox movementBounds;
     private final Logger logger;
 
@@ -77,13 +78,6 @@ public class SbIsland {
 
         this.buildingArea = data.buildArea().transform(buildingAreaTranslation);
 
-        Vec3i previewOffset = data.previewOffset();
-        AffineIntMatrix previewAreaTranslation = AffineIntMatrix.makeTranslation(
-                previewOffset.getX(),
-                previewOffset.getY(),
-                previewOffset.getZ());
-
-        this.previewArea = this.buildingArea.transform(previewAreaTranslation);
         this.bounds = bounds;
         this.movementBounds = new BlockBox(bounds.min().add(-4, 0, -4), bounds.max().add(4, 10, 4));
     }
@@ -107,12 +101,12 @@ public class SbIsland {
     }
 
     public void placeModulePreview(SbModule module, ServerWorld world, Team team, CustomScoreboardManager scoreboardManager) {
-        clear(previewArea, world);
+        clear(buildingArea, world);
 
         BlockStructure structure = module.structure();
 
         var options = EnumSet.of(FORCE_STATE, SKIP_AIR, SKIP_DROPS, SKIP_BLOCK_ENTITIES);
-        StructureWriter.placeStructure(structure, world, previewArea.min().down(), Matrix3i.IDENTITY, options);
+        StructureWriter.placeStructure(structure, world, buildingArea.min().down(), Matrix3i.IDENTITY, options);
 
         var entities = getPreviewEntities(world);
 
@@ -135,26 +129,26 @@ public class SbIsland {
     }
 
     public List<? extends Entity> getPreviewEntities(ServerWorld world) {
-        return getEntities(world, previewArea);
+        return getEntities(world, buildingArea);
     }
 
-    public void copyPreviewFloorToBuildArea(ServerWorld world) {
-        BlockPos from = buildingArea.min().down();
-        BlockPos to = buildingArea.max().down(buildingArea.height());
-        Vec3i previewOffset = data.previewOffset();
-        BlockPos.Mutable pointer = new BlockPos.Mutable();
-        int flags = Block.FORCE_STATE | Block.SKIP_DROPS | Block.NOTIFY_LISTENERS;
-
-        for (BlockPos pos : BlockPos.iterate(from, to)) {
-            pointer.set(
-                    pos.getX() + previewOffset.getX(),
-                    pos.getY() + previewOffset.getY(),
-                    pos.getZ() + previewOffset.getZ());
-
-            BlockState state = world.getBlockState(pointer);
-            world.setBlockState(pos, state, flags);
-        }
-    }
+//    public void copyPreviewFloorToBuildArea(ServerWorld world) {
+//        BlockPos from = buildingArea.min().down();
+//        BlockPos to = buildingArea.max().down(buildingArea.height());
+//        Vec3i previewOffset = data.previewOffset();
+//        BlockPos.Mutable pointer = new BlockPos.Mutable();
+//        int flags = Block.FORCE_STATE | Block.SKIP_DROPS | Block.NOTIFY_LISTENERS;
+//
+//        for (BlockPos pos : BlockPos.iterate(from, to)) {
+//            pointer.set(
+//                    pos.getX() + previewOffset.getX(),
+//                    pos.getY() + previewOffset.getY(),
+//                    pos.getZ() + previewOffset.getZ());
+//
+//            BlockState state = world.getBlockState(pointer);
+//            world.setBlockState(pos, state, flags);
+//        }
+//    }
 
     public void clearBuildingArea(ServerWorld world) {
         clear(buildingArea, world);
@@ -348,17 +342,6 @@ public class SbIsland {
     }
 
     public Vec3d getCenter() {
-        Vec3d buildingCenter = buildingArea.getCenter().withAxis(Direction.Axis.Y, buildingArea.min().getY());
-        Vec3d previewCenter = previewArea.getCenter().withAxis(Direction.Axis.Y, previewArea.min().getY());
-
-        return buildingCenter.add(previewCenter).multiply(0.5);
-    }
-
-    public BlockBox getBounds() {
-        return bounds;
-    }
-
-    public BlockBox getMovementBounds() {
-        return movementBounds;
+        return buildingArea.getCenter().withAxis(Direction.Axis.Y, buildingArea.min().getY());
     }
 }
