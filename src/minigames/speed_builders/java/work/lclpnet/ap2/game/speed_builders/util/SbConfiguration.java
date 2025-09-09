@@ -88,7 +88,7 @@ public class SbConfiguration {
     }
 
     public void registerHooks() {
-        HookRegistrar hooks = gameHandle.getHookRegistrar();
+        HookRegistrar hooks = gameHandle.getHooks();
 
         hooks.registerHook(PlayerInteractionHooks.ATTACK_BLOCK, (player, world, hand, pos, direction) -> {
             if (player instanceof ServerPlayerEntity serverPlayer && canModify(serverPlayer, pos) && world instanceof ServerWorld serverWorld) {
