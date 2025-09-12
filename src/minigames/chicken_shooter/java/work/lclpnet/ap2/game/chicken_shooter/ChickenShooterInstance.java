@@ -35,6 +35,7 @@ import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.stats.CommonStats;
 import work.lclpnet.ap2.api.stats.FFAStatsManager;
 import work.lclpnet.ap2.api.stats.Stat;
+import work.lclpnet.ap2.api.stats.StatsDisplay;
 import work.lclpnet.ap2.core.type.ApVariantHolder;
 import work.lclpnet.ap2.impl.game.FFAGameInstance;
 import work.lclpnet.ap2.impl.game.data.DataContainers;
@@ -182,6 +183,12 @@ public class ChickenShooterInstance extends FFAGameInstance implements Runnable 
         var subject = translations.translateText("game.ap2.chicken_shooter.task");
 
         commons().createTimer(subject, durationSeconds).whenDone(winManager::complete);
+
+        StatsDisplay statsDisplay = new StatsDisplay(gameHandle.getTranslations());
+
+        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
+            statsDisplay.open(player);
+        }
     }
 
     private void chickenSpawner() {

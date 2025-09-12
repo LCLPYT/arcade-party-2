@@ -1,5 +1,9 @@
 package work.lclpnet.ap2.impl.util;
 
+import net.minecraft.util.DyeColor;
+
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Random;
 
 import static java.lang.Math.max;
@@ -106,5 +110,11 @@ public class ColorUtil {
 
     public static int blue(int packed) {
         return packed & 0xFF;
+    }
+
+    public static DyeColor closestEntityDyeColor(int rgb) {
+        return Arrays.stream(DyeColor.values())
+                .min(Comparator.comparingDouble(c -> squaredDistance(c.getEntityColor(), rgb)))
+                .orElseThrow();
     }
 }

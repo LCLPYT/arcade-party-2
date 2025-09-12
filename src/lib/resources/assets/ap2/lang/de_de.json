@@ -86,6 +86,7 @@
   "ap2.music.format.by": "%s von %s",
   "ap2.music.format.by_original": "%s von %s (Original von %s)",
   "ap2.music.now_playing": "Jetzt läuft: %s",
+  "ap2.stats": "Spielstatistik",
   "game.ap2.title": "ArcadeParty",
   "game.ap2.reached_checkpoint": "Checkpoint erreicht",
   "game.ap2.spleef": "Spleef",
