@@ -6,9 +6,11 @@ import work.lclpnet.activity.util.BossBarHandler;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.base.WorldBorderManager;
 import work.lclpnet.ap2.api.data.DataManager;
+import work.lclpnet.ap2.api.game.data.SubjectRef;
 import work.lclpnet.ap2.api.game.team.TeamConfig;
 import work.lclpnet.ap2.api.map.MapFacade;
 import work.lclpnet.ap2.api.music.SongManager;
+import work.lclpnet.ap2.api.stats.StatsResult;
 import work.lclpnet.ap2.impl.game.PlayerUtil;
 import work.lclpnet.ap2.impl.util.DeathMessages;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
@@ -21,6 +23,8 @@ import work.lclpnet.lobby.game.api.WorldFacade;
 import work.lclpnet.lobby.game.impl.prot.MutableProtectionConfig;
 
 import java.util.Optional;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
 public interface MiniGameHandle {
@@ -86,4 +90,12 @@ public interface MiniGameHandle {
     void complete(MiniGameResults results);
 
     boolean isFinale();
+
+    /**
+     * Submit the game stats to the stats backend.
+     * This can only be done once per instance.
+     * @param stats The stats to submit.
+     * @return The stats record id future. Uniquely identifies the submitted stats record when present.
+     */
+    CompletableFuture<UUID> submitStats(StatsResult<? extends SubjectRef> stats);
 }

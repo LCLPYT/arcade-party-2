@@ -9,6 +9,7 @@ import work.lclpnet.ap2.api.base.MiniGameManager;
 import work.lclpnet.ap2.api.config.Ap2Config;
 import work.lclpnet.ap2.api.game.MiniGame;
 import work.lclpnet.ap2.api.music.SongCache;
+import work.lclpnet.ap2.api.stats.SessionStatsRecorder;
 import work.lclpnet.ap2.impl.base.FabricMiniGameManager;
 import work.lclpnet.ap2.impl.base.PlayerManagerImpl;
 import work.lclpnet.ap2.impl.base.VotedGameQueue;
@@ -121,8 +122,11 @@ public class ArcadePartyInstance implements GameInstance {
 
         SongCache songCache = new MapSongCache();
 
+        var sessionStats = new SessionStatsRecorder(translations);
+        sessionStats.init(hookStack);
+
         var args = new ApBaseArgs(container, queue, playerManager, forceGameCommand, songCache, scoreManager,
-                environment.getFinisher());
+                environment.getFinisher(), sessionStats);
 
         PreparationActivity preparation = new PreparationActivity(args);
 

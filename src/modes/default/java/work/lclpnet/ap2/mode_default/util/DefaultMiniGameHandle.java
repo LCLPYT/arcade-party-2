@@ -6,6 +6,7 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.world.border.WorldBorder;
 import net.minecraft.world.border.WorldBorderListener;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import work.lclpnet.activity.manager.ActivityManager;
@@ -18,9 +19,11 @@ import work.lclpnet.ap2.api.game.GameInfo;
 import work.lclpnet.ap2.api.game.MiniGame;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.MiniGameResults;
+import work.lclpnet.ap2.api.game.data.SubjectRef;
 import work.lclpnet.ap2.api.game.team.TeamConfig;
 import work.lclpnet.ap2.api.map.MapFacade;
 import work.lclpnet.ap2.api.music.SongManager;
+import work.lclpnet.ap2.api.stats.StatsResult;
 import work.lclpnet.ap2.core.type.ApServerPlayerEntity;
 import work.lclpnet.ap2.impl.game.PlayerUtil;
 import work.lclpnet.ap2.impl.util.DeathMessages;
@@ -42,6 +45,7 @@ import work.lclpnet.notica.Notica;
 import work.lclpnet.notica.api.SongHandle;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
@@ -61,6 +65,7 @@ public class DefaultMiniGameHandle implements MiniGameHandle, WorldBorderManager
     private TaskScheduler scheduler = null;
     private boolean ended = false;
     private volatile DeathMessages deathMessages = null;
+    private volatile @Nullable CompletableFuture<UUID> statsId = null;
 
     public DefaultMiniGameHandle(MiniGame game, ApBaseArgs args, BossBarProvider bossBarProvider,
                                  BossBarHandler bossBarHandler, CustomScoreboardManager scoreboardManager,
@@ -356,5 +361,30 @@ public class DefaultMiniGameHandle implements MiniGameHandle, WorldBorderManager
     @Override
     public boolean isFinale() {
         return args.playerManager().isFinale();
+    }
+
+    @Override
+    public CompletableFuture<UUID> submitStats(StatsResult<? extends SubjectRef> stats) {
+        if (statsId != null) {
+            return statsId;
+        }
+
+        synchronized (this) {
+            if (statsId != null) {
+                return statsId;
+            }
+
+            // in the future, the stats id should be allocated by the stats backend
+            // for now, just generate an id ourselves
+
+            return statsId = CompletableFuture.completedFuture(UUID.randomUUID()).whenComplete((id, err) -> {
+                if (err != null) {
+                    args.miniGameArgs().logger().error("Failed to submit stats", err);
+                    return;
+                }
+
+                args.stats().record(id, stats);
+            });
+        }
     }
 }

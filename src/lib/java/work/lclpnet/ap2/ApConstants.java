@@ -21,7 +21,7 @@ public final class ApConstants {
     public static final String PERSON_BOPS = "@person.bops";
 
     // other
-    public static final String SEPARATOR = "===================================";
+    public static final String SEPARATOR = "=============================================";
     public static final String SCOREBOARD_SEPARATOR = "==============";
     public static final String SCOREBOARD_SEPARATOR_SM = "----------------";
 

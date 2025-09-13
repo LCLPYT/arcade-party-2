@@ -4,6 +4,7 @@ import it.unimi.dsi.fastutil.objects.ObjectIntPair;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
+import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.ApConstants;
 import work.lclpnet.ap2.api.game.data.DataEntry;
 import work.lclpnet.ap2.api.game.data.PlayerSubjectRefFactory;
@@ -49,16 +50,19 @@ public class ResultAnnouncement<Ref extends SubjectRef> {
     }
 
     public void sendTop(int amount, ServerPlayerEntity player) {
-        String results = translations.translate(player, "ap2.results");
-        int len = results.length() + 2;
+        sendTop(amount, player, null);
+    }
 
-        var resultsText = Text.literal(results).formatted(GREEN);
+    public void sendTop(int amount, ServerPlayerEntity player, @Nullable Text actionText) {
+        String results = translations.translate(player, "ap2.results");
+
+        var resultsText = Text.literal(results).formatted(GREEN, BOLD);
 
         var sep = Text.literal(ApConstants.SEPARATOR).formatted(DARK_GREEN, STRIKETHROUGH, BOLD);
         int sepLength = ApConstants.SEPARATOR.length();
         var sepSm = Text.literal("-".repeat(sepLength)).formatted(DARK_GRAY, STRIKETHROUGH);
 
-        sendUpperSeparator(player, len, sepLength, resultsText);
+        sendSeparatorWithText(player, resultsText, sepLength);
 
         if (order.isEmpty()) {
             player.sendMessage(translations.translateText(player, "ap2.no_results").formatted(GRAY));
@@ -67,7 +71,11 @@ public class ResultAnnouncement<Ref extends SubjectRef> {
             sendOwnScoreIfExists(player, sepSm);
         }
 
-        player.sendMessage(sep);
+        if (actionText != null) {
+            sendSeparatorWithText(player, actionText, sepLength);
+        } else {
+            player.sendMessage(sep);
+        }
     }
 
     private void sendOwnScoreIfExists(ServerPlayerEntity player, MutableText sepSm) {
@@ -109,9 +117,11 @@ public class ResultAnnouncement<Ref extends SubjectRef> {
         }
     }
 
-    private void sendUpperSeparator(ServerPlayerEntity player, int len, int sepLength, MutableText resultsText) {
+    private void sendSeparatorWithText(ServerPlayerEntity player, Text label, int sepLength) {
+        int len = label.getString().length() + 2;
+
         if (len - 1 >= sepLength) {
-            player.sendMessage(resultsText);
+            player.sendMessage(label);
             return;
         }
 
@@ -121,7 +131,7 @@ public class ResultAnnouncement<Ref extends SubjectRef> {
         var msg = Text.empty()
                 .append(Text.literal(sepShort).formatted(DARK_GREEN, STRIKETHROUGH, BOLD))
                 .append(Text.literal("[").formatted(DARK_GREEN, BOLD))
-                .append(resultsText.formatted(BOLD))
+                .append(label)
                 .append(Text.literal("]").formatted(DARK_GREEN, BOLD))
                 .append(Text.literal(sepShort + (sepLength - 2 * times - len > 0 ? "=" : ""))
                         .formatted(DARK_GREEN, STRIKETHROUGH, BOLD));

@@ -50,6 +50,7 @@
     "RabbitEntityMixin",
     "RangedWeaponItemMixin",
     "ServerChunkManagerAccessor",
+    "ServerCommonNetworkHandlerMixin",
     "ServerPlayerEntityMixin",
     "ServerWorldMixin",
     "ShulkerEntityAccessor",

@@ -32,10 +32,8 @@ import net.minecraft.world.GameRules;
 import org.json.JSONArray;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
-import work.lclpnet.ap2.api.stats.CommonStats;
 import work.lclpnet.ap2.api.stats.FFAStatsManager;
 import work.lclpnet.ap2.api.stats.Stat;
-import work.lclpnet.ap2.api.stats.StatsDisplay;
 import work.lclpnet.ap2.core.type.ApVariantHolder;
 import work.lclpnet.ap2.impl.game.FFAGameInstance;
 import work.lclpnet.ap2.impl.game.data.DataContainers;
@@ -58,6 +56,7 @@ import java.util.Random;
 import java.util.Set;
 
 import static net.minecraft.util.Formatting.YELLOW;
+import static work.lclpnet.ap2.api.stats.CommonStats.SCORE;
 import static work.lclpnet.ap2.impl.util.ItemHelper.unbreakable;
 
 public class ChickenShooterInstance extends FFAGameInstance implements Runnable {
@@ -68,15 +67,11 @@ public class ChickenShooterInstance extends FFAGameInstance implements Runnable 
     private static final int MIN_DURATION = 40;
     private static final int MAX_DURATION = 60;
 
-    private static final Stat<Integer> SCORE = CommonStats.SCORE;
     private static final Stat<Integer> BABY_CHICKENS = new Stat<>("baby_chickens", 0);
     private static final Stat<Integer> TNT_DETONATED = new Stat<>("tnt_detonated", 0);
     private static final Stat<Integer> CHICKENS_EXPLODED = new Stat<>("chickens_exploded", 0);
 
-    private final FFAStatsManager stats = new FFAStatsManager(Set.of(
-            SCORE, BABY_CHICKENS, TNT_DETONATED, CHICKENS_EXPLODED
-    ));
-
+    private final FFAStatsManager stats;
     private final Random random = new Random();
     private final int durationSeconds = MIN_DURATION + random.nextInt(MAX_DURATION - MIN_DURATION + 1);
     private final IntDataContainer<ServerPlayerEntity, PlayerRef> data;
@@ -90,7 +85,7 @@ public class ChickenShooterInstance extends FFAGameInstance implements Runnable 
         super(gameHandle);
 
         data = DataContainers.finaleCompatibleScoreContainer(gameHandle, PlayerRef::create);
-        data.register((player, score) -> stats.set(player, SCORE, score));
+        stats = createStats(data, SCORE, BABY_CHICKENS, TNT_DETONATED, CHICKENS_EXPLODED);
     }
 
     @Override
@@ -183,12 +178,6 @@ public class ChickenShooterInstance extends FFAGameInstance implements Runnable 
         var subject = translations.translateText("game.ap2.chicken_shooter.task");
 
         commons().createTimer(subject, durationSeconds).whenDone(winManager::complete);
-
-        StatsDisplay statsDisplay = new StatsDisplay(gameHandle.getTranslations());
-
-        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
-            statsDisplay.open(player);
-        }
     }
 
     private void chickenSpawner() {

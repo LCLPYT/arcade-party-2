@@ -8,12 +8,19 @@ import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.WinManagerAccess;
 import work.lclpnet.ap2.api.game.WinManagerView;
 import work.lclpnet.ap2.api.game.data.DataContainer;
+import work.lclpnet.ap2.api.stats.FFAStatsManager;
+import work.lclpnet.ap2.api.stats.Stat;
 import work.lclpnet.ap2.api.util.scoreboard.CustomScoreboardObjective;
 import work.lclpnet.ap2.impl.game.data.type.FFAGameResult;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRefResolver;
 
+import java.util.Arrays;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static work.lclpnet.ap2.api.stats.CommonStats.SCORE;
 
 public abstract class FFAGameInstance extends BaseGameInstance implements ParticipantListener, WinManagerView {
 
@@ -60,6 +67,18 @@ public abstract class FFAGameInstance extends BaseGameInstance implements Partic
     protected final void initScores() {
         gameHandle.getParticipants().forEach(getData()::identityIfAbsent);
     }
+
+    protected final FFAStatsManager createStats(IntScoreEventSource<ServerPlayerEntity> data, Stat<?>... stats) {
+        var set = Stream.concat(Stream.of(SCORE), Arrays.stream(stats)).collect(Collectors.toSet());
+        var manager = new FFAStatsManager(set);
+
+        data.register((player, score) -> manager.set(player, SCORE, score));
+
+        winManager.setStatsManager(manager);
+
+        return manager;
+    }
+
 
     @Override
     public WinManagerAccess getWinManagerAccess() {

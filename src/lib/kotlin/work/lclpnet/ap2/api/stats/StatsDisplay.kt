@@ -11,26 +11,34 @@ import net.minecraft.dialog.type.NoticeDialog
 import net.minecraft.registry.entry.RegistryEntry
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.text.Text
-import net.minecraft.util.Formatting.GOLD
+import net.minecraft.util.Formatting.*
 import work.lclpnet.ap2.api.game.data.SubjectRef
+import work.lclpnet.ap2.component1
+import work.lclpnet.ap2.component2
 import work.lclpnet.kibu.translate.Translations
 import java.util.*
 
-class StatsDisplay<T, Ref : SubjectRef>(val translations: Translations, val order: List<Ref>, val statsManager: StatsManager<T, Ref>) {
+class StatsDisplay(val translations: Translations) {
 
-    fun open(player: ServerPlayerEntity) {
+    fun <Ref : SubjectRef> open(player: ServerPlayerEntity, stats: StatsResult<Ref>) {
         val title = translations.translateText("ap2.stats").formatted(GOLD).translateFor(player)
 
-        val body = mutableListOf<DialogBody>();
+        val body = mutableListOf<DialogBody>()
 
-        for (ref in order) {
-            val name = ref.getNameFor(player)
+        for ((ref, rank) in stats.subjectOrder) {
+            if (ref == null) continue
+
+            val name = ref.getNameFor(player).let {
+                if (it.style.color == null) it.copy().formatted(GRAY)
+                else it
+            }
+
             val icon = ref.getIconStackFor(player.world.registryManager, player)
 
             body.add(ItemDialogBody(
                 icon,
-                Optional.of(PlainMessageDialogBody(name, 200)),
-                true, true, 16, 16
+                Optional.of(PlainMessageDialogBody(Text.literal("#$rank ").formatted(YELLOW).append(name), 200)),
+                true, true, 24, 16
             ))
         }
 
@@ -44,6 +52,6 @@ class StatsDisplay<T, Ref : SubjectRef>(val translations: Translations, val orde
             )
         )
 
-        player.openDialog(RegistryEntry.of(dialog));
+        player.openDialog(RegistryEntry.of(dialog))
     }
 }
