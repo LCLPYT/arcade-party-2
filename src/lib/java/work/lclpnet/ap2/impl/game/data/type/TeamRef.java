@@ -51,4 +51,9 @@ public class TeamRef implements SubjectRef, TeamKeyable {
     public TeamKey key() {
         return key;
     }
+
+    @Override
+    public String getIdentifier() {
+        return key.id();
+    }
 }

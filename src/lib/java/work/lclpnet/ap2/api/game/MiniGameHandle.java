@@ -6,7 +6,6 @@ import work.lclpnet.activity.util.BossBarHandler;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.base.WorldBorderManager;
 import work.lclpnet.ap2.api.data.DataManager;
-import work.lclpnet.ap2.api.game.data.SubjectRef;
 import work.lclpnet.ap2.api.game.team.TeamConfig;
 import work.lclpnet.ap2.api.map.MapFacade;
 import work.lclpnet.ap2.api.music.SongManager;
@@ -97,5 +96,5 @@ public interface MiniGameHandle {
      * @param stats The stats to submit.
      * @return The stats record id future. Uniquely identifies the submitted stats record when present.
      */
-    CompletableFuture<UUID> submitStats(StatsResult<? extends SubjectRef> stats);
+    CompletableFuture<UUID> submitStats(StatsResult stats);
 }

@@ -19,7 +19,6 @@ import work.lclpnet.ap2.api.game.GameInfo;
 import work.lclpnet.ap2.api.game.MiniGame;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.MiniGameResults;
-import work.lclpnet.ap2.api.game.data.SubjectRef;
 import work.lclpnet.ap2.api.game.team.TeamConfig;
 import work.lclpnet.ap2.api.map.MapFacade;
 import work.lclpnet.ap2.api.music.SongManager;
@@ -364,7 +363,7 @@ public class DefaultMiniGameHandle implements MiniGameHandle, WorldBorderManager
     }
 
     @Override
-    public CompletableFuture<UUID> submitStats(StatsResult<? extends SubjectRef> stats) {
+    public CompletableFuture<UUID> submitStats(StatsResult stats) {
         if (statsId != null) {
             return statsId;
         }

@@ -21,4 +21,6 @@ public interface SubjectRef {
      * @return The icon item stack.
      */
     ItemStack getIconStackFor(DynamicRegistryManager registryManager, ServerPlayerEntity viewer);
+
+    String getIdentifier();
 }

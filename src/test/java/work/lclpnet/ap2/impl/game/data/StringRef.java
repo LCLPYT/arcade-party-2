@@ -17,4 +17,9 @@ public record StringRef(String name) implements SubjectRef {
     public ItemStack getIconStackFor(DynamicRegistryManager registryManager, ServerPlayerEntity viewer) {
         return ItemStack.EMPTY;
     }
+
+    @Override
+    public String getIdentifier() {
+        return name;
+    }
 }

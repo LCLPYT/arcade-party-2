@@ -244,6 +244,6 @@ public class WinSequence<T, Ref extends SubjectRef> {
                 .styled(style -> style
                         .withFormatting(AQUA)
                         .withHoverEvent(new HoverEvent.ShowText(translations.translateText(player, "ap2.view_stats.click")))
-                        .withClickEvent(new ClickEvent.Custom(SessionStatsRecorder.PACKET_ID, Optional.of(nbt))));
+                        .withClickEvent(new ClickEvent.Custom(SessionStatsRecorder.SHOW_SUMMARY, Optional.of(nbt))));
     }
 }

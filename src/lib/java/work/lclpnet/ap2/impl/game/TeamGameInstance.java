@@ -34,9 +34,10 @@ public abstract class TeamGameInstance extends BaseGameInstance implements Parti
     public TeamGameInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
 
-        this.winManager = new WinManager<>(gameHandle, this::getData, getTeamManager()::getTeam,
-                this::createReference, this::createReferenceFor,
-                data -> new TeamGameResult(data, getResolver()));
+        var data = new WinManager.Data<>(this::getData, getTeamManager()::getTeam, this::createReference, this::createReferenceFor,
+                dataContainer -> new TeamGameResult(dataContainer, getResolver()));
+
+        this.winManager = new WinManager<>(gameHandle, this::getMap, data);
     }
 
     @Override

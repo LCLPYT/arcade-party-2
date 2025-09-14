@@ -122,7 +122,7 @@ public class ArcadePartyInstance implements GameInstance {
 
         SongCache songCache = new MapSongCache();
 
-        var sessionStats = new SessionStatsRecorder(translations);
+        var sessionStats = new SessionStatsRecorder(translations, logger);
         sessionStats.init(hookStack);
 
         var args = new ApBaseArgs(container, queue, playerManager, forceGameCommand, songCache, scoreManager,

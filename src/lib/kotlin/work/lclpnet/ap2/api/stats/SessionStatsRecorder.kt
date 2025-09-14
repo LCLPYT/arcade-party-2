@@ -3,24 +3,20 @@ package work.lclpnet.ap2.api.stats
 import net.minecraft.nbt.NbtCompound
 import net.minecraft.nbt.NbtElement
 import net.minecraft.server.network.ServerPlayerEntity
-import net.minecraft.sound.SoundCategory
-import net.minecraft.sound.SoundEvents
-import net.minecraft.util.Formatting
 import net.minecraft.util.Identifier
+import org.slf4j.Logger
 import work.lclpnet.ap2.ApConstants
-import work.lclpnet.ap2.api.game.data.SubjectRef
 import work.lclpnet.ap2.core.hook.CustomClickActionCallback
 import work.lclpnet.kibu.hook.HookRegistrar
 import work.lclpnet.kibu.translate.Translations
 import java.util.*
 
+class SessionStatsRecorder(val translations: Translations, val logger: Logger) {
 
-class SessionStatsRecorder(val translations: Translations) {
+    private val records = mutableMapOf<UUID, StatsResult>()
+    private val statsDisplay = StatsDisplay(translations, logger)
 
-    private val records = mutableMapOf<UUID, StatsResult<out SubjectRef>>()
-    private val statsDisplay = StatsDisplay(translations)
-
-    fun record(statsId: UUID, stats: StatsResult<out SubjectRef>) {
+    fun record(statsId: UUID, stats: StatsResult) {
         records[statsId] = stats
     }
 
@@ -33,7 +29,7 @@ class SessionStatsRecorder(val translations: Translations) {
     }
 
     private fun onCustomClickAction(player: ServerPlayerEntity, id: Identifier, payload: Optional<NbtElement>) {
-        if (PACKET_ID != id) return
+        if (SHOW_SUMMARY != id) return
 
         val payload = payload.orElse(null) ?: return
 
@@ -52,20 +48,28 @@ class SessionStatsRecorder(val translations: Translations) {
         val stats = this[id]
 
         if (stats == null) {
-            translations.translateText("ap2.view_stats.unavailable").formatted(Formatting.RED).sendTo(player)
-            player.playSoundToPlayer(SoundEvents.BLOCK_NOTE_BLOCK_BASS.value(), SoundCategory.PLAYERS, 0.5f, 0.5f)
+            statsDisplay.unavailable(player)
             return
         }
 
-        openStats(player, stats)
+        val detail = payload.getString("detail", null)
+
+        if (detail == null) {
+            openSummary(player, stats, id)
+        } else {
+            openDetail(player, stats, detail)
+        }
     }
 
-    fun openStats(player: ServerPlayerEntity, stats: StatsResult<out SubjectRef>) {
-        statsDisplay.open(player, stats)
+    fun openSummary(player: ServerPlayerEntity, stats: StatsResult, id: UUID) {
+        statsDisplay.openSummary(player, stats, id)
+    }
+
+    fun openDetail(player: ServerPlayerEntity, stats: StatsResult, detail: String) {
+        statsDisplay.openDetail(player, stats, detail)
     }
 
     companion object {
-        @JvmField
-        val PACKET_ID = ApConstants.identifier("show_stats")
+        @JvmField val SHOW_SUMMARY = ApConstants.identifier("show_stats")
     }
 }

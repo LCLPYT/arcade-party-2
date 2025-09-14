@@ -31,7 +31,10 @@ public abstract class FFAGameInstance extends BaseGameInstance implements Partic
         super(gameHandle);
 
         this.resolver = new PlayerRefResolver(gameHandle.getServer().getPlayerManager());
-        this.winManager = new WinManager<>(gameHandle, this::getData, Optional::of, PlayerRef::create, PlayerRef::create, FFAGameResult::new);
+
+        var data = new WinManager.Data<>(this::getData, Optional::of, PlayerRef::create, PlayerRef::create, FFAGameResult::new);
+
+        this.winManager = new WinManager<>(gameHandle, this::getMap, data);
     }
 
     @Override
