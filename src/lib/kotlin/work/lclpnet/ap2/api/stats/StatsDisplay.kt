@@ -73,7 +73,7 @@ class StatsDisplay(val translations: Translations, val logger: Logger) {
             body.add(ItemDialogBody(
                 icon,
                 Optional.of(PlainMessageDialogBody(text, 200)),
-                true, true, 24, 16
+                true, false, 24, 16
             ))
         }
     }
