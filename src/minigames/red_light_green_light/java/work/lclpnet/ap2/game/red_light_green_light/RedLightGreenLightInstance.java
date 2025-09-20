@@ -209,7 +209,7 @@ public class RedLightGreenLightInstance extends FFAGameInstance implements Runna
     }
 
     private void onMove(ServerPlayerEntity player) {
-        if (timer <= 0 || inGoal.contains(player.getUuid())) return;
+        if (timer <= 0 || inGoal.contains(player.getUuid()) || !gameHandle.getParticipants().isParticipating(player)) return;
 
         tracker.track(player);
 
