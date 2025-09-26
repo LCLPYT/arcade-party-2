@@ -7,8 +7,8 @@ import net.minecraft.util.math.Vec3i;
 import org.json.JSONArray;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.impl.map.MapUtil;
-import work.lclpnet.ap2.impl.util.BlockBox;
-import work.lclpnet.ap2.impl.util.math.AffineIntMatrix;
+import work.lclpnet.gaco.ds.BlockBox;
+import work.lclpnet.gaco.math.AffineIntMatrix;
 import work.lclpnet.kibu.util.RotationUtil;
 import work.lclpnet.kibu.util.math.Matrix3i;
 

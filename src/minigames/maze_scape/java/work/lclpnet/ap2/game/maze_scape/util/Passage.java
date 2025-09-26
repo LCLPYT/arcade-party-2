@@ -4,12 +4,12 @@ import it.unimi.dsi.fastutil.Pair;
 import net.minecraft.util.math.BlockPos;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import work.lclpnet.ap2.api.ds.UndirectedGraphNode;
 import work.lclpnet.ap2.game.maze_scape.gen.Node;
 import work.lclpnet.ap2.game.maze_scape.setup.Connector3;
 import work.lclpnet.ap2.game.maze_scape.setup.OrientedStructurePiece;
 import work.lclpnet.ap2.game.maze_scape.setup.StructurePiece;
 import work.lclpnet.ap2.impl.util.math.MathUtil;
+import work.lclpnet.gaco.ds.UndirectedGraphNode;
 
 import java.util.ArrayList;
 import java.util.List;

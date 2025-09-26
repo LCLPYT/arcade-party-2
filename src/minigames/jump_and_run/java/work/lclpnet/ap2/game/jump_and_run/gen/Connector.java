@@ -3,7 +3,7 @@ package work.lclpnet.ap2.game.jump_and_run.gen;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3i;
-import work.lclpnet.ap2.impl.util.math.AffineIntMatrix;
+import work.lclpnet.gaco.math.AffineIntMatrix;
 
 public record Connector(BlockPos pos, Direction direction) {
 

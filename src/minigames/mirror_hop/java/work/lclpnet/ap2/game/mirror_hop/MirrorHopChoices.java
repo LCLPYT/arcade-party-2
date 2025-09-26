@@ -4,10 +4,10 @@ import com.google.common.collect.ImmutableList;
 import net.minecraft.util.math.BlockPos;
 import org.json.JSONArray;
 import org.slf4j.Logger;
-import work.lclpnet.ap2.api.util.Collider;
-import work.lclpnet.ap2.api.util.CollisionDetector;
 import work.lclpnet.ap2.impl.map.MapUtil;
-import work.lclpnet.ap2.impl.util.BlockBox;
+import work.lclpnet.gaco.collisions.Collider;
+import work.lclpnet.gaco.collisions.CollisionDetector;
+import work.lclpnet.gaco.ds.BlockBox;
 import work.lclpnet.lobby.game.map.GameMap;
 
 import java.util.List;

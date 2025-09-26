@@ -42,7 +42,6 @@ import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.game.kit.KitHandler;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.Fireworks;
-import work.lclpnet.ap2.impl.util.SplinePath;
 import work.lclpnet.ap2.impl.util.TimeHelper;
 import work.lclpnet.ap2.impl.util.debug.SplinePathDebugger;
 import work.lclpnet.ap2.impl.util.handler.VisibilityHandler;
@@ -51,6 +50,7 @@ import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.ap2.impl.util.world.ChunkPersistence;
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape;
+import work.lclpnet.gaco.math.SplinePath;
 import work.lclpnet.kibu.access.misc.DamageTrackerAccess;
 import work.lclpnet.kibu.hook.entity.EntityHealthCallback;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
@@ -147,7 +147,7 @@ public class DragonEscapeInstance extends FFAGameInstance {
         JSONArray keypointsJson = props.getJSONArray("dragon-path");
         Logger logger = gameHandle.getLogger();
 
-        var path = SplinePath.readCentered(keypointsJson, logger).orElse(null);
+        var path = MapUtil.readSplinePath(keypointsJson, logger).orElse(null);
 
         if (path == null) {
             logger.error("Failed to create dragon path, aborting game...");

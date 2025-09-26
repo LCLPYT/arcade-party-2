@@ -5,8 +5,8 @@ import net.minecraft.server.world.ServerWorld;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.ds.Resolvable;
 import work.lclpnet.ap2.impl.util.EntityRef;
-import work.lclpnet.ap2.impl.util.world.entity.DynamicEntity;
-import work.lclpnet.ap2.impl.util.world.entity.DynamicEntityManager;
+import work.lclpnet.gaco.dynamic_entities.DynamicEntity;
+import work.lclpnet.gaco.dynamic_entities.DynamicEntityManager;
 
 /**
  * A mixed mount context that supports both real and dynamic entities.

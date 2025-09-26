@@ -3,9 +3,9 @@ package work.lclpnet.ap2.game.cozy_campfire.setup;
 import net.minecraft.entity.Entity;
 import net.minecraft.util.math.BlockPos;
 import org.jetbrains.annotations.Nullable;
-import work.lclpnet.ap2.api.util.Collider;
-import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.collision.UnionCollider;
+import work.lclpnet.gaco.collisions.Collider;
+import work.lclpnet.gaco.ds.BlockBox;
 import work.lclpnet.kibu.structure.BlockStructure;
 
 import java.util.List;

@@ -2,7 +2,7 @@ package work.lclpnet.ap2.impl.game.item;
 
 import com.google.common.collect.Iterables;
 import org.json.JSONObject;
-import work.lclpnet.ap2.impl.ds.WeightedList;
+import work.lclpnet.gaco.ds.WeightedList;
 
 import java.util.HashMap;
 import java.util.Map;

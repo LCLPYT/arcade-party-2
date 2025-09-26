@@ -2,7 +2,7 @@ package work.lclpnet.ap2.game.maze_scape.util;
 
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
-import work.lclpnet.ap2.api.ds.UndirectedGraphNode;
+import work.lclpnet.gaco.ds.UndirectedGraphNode;
 
 import java.util.ArrayList;
 import java.util.List;

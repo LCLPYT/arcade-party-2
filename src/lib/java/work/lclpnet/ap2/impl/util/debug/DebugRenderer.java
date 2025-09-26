@@ -15,9 +15,9 @@ import work.lclpnet.ap2.impl.scene.Object3d;
 import work.lclpnet.ap2.impl.scene.Scene;
 import work.lclpnet.ap2.impl.scene.object.BlockDisplayObject;
 import work.lclpnet.ap2.impl.scene.object.TextDisplayObject;
-import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.model.Models;
 import work.lclpnet.ap2.impl.util.model.TemplateModel;
+import work.lclpnet.gaco.ds.BlockBox;
 
 import java.util.NoSuchElementException;
 import java.util.function.Consumer;

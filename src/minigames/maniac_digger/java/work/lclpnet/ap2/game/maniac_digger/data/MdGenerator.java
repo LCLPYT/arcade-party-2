@@ -11,13 +11,13 @@ import net.minecraft.util.math.Vec3i;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
 import org.slf4j.Logger;
-import work.lclpnet.ap2.impl.ds.WeightedList;
+import work.lclpnet.gaco.ds.BlockBox;
+import work.lclpnet.gaco.ds.WeightedList;
 import work.lclpnet.ap2.impl.map.MapUtil;
-import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.BlockHelper;
-import work.lclpnet.ap2.impl.util.math.AffineIntMatrix;
 import work.lclpnet.ap2.impl.util.math.Vec2i;
 import work.lclpnet.ap2.impl.util.structure.StructureUtil;
+import work.lclpnet.gaco.math.AffineIntMatrix;
 import work.lclpnet.kibu.structure.BlockStructure;
 import work.lclpnet.lobby.game.map.GameMap;
 

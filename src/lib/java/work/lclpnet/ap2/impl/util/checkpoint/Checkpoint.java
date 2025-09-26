@@ -5,8 +5,8 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3i;
 import org.json.JSONObject;
 import work.lclpnet.ap2.impl.map.MapUtil;
-import work.lclpnet.ap2.impl.util.BlockBox;
-import work.lclpnet.ap2.impl.util.math.AffineIntMatrix;
+import work.lclpnet.gaco.ds.BlockBox;
+import work.lclpnet.gaco.math.AffineIntMatrix;
 
 public record Checkpoint(BlockPos pos, float yaw, BlockBox bounds) {
 

@@ -10,8 +10,8 @@ import org.joml.Vector3d;
 import work.lclpnet.ap2.impl.scene.*;
 import work.lclpnet.ap2.impl.scene.animation.Interpolatable;
 import work.lclpnet.ap2.impl.util.DisplayEntityTransformer;
-import work.lclpnet.ap2.impl.util.world.entity.DynamicEntity;
-import work.lclpnet.ap2.impl.util.world.entity.TranslatedTextDisplay;
+import work.lclpnet.gaco.dynamic_entities.DynamicEntity;
+import work.lclpnet.gaco.dynamic_entities.TranslatedTextDisplay;
 import work.lclpnet.kibu.translate.Translations;
 
 import java.util.Set;

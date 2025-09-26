@@ -1,7 +1,7 @@
 package work.lclpnet.ap2.impl.util.math.shape;
 
 import net.minecraft.util.math.Vec3d;
-import work.lclpnet.ap2.impl.util.BlockBox;
+import work.lclpnet.gaco.ds.BlockBox;
 
 import static java.lang.Math.*;
 

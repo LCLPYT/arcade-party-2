@@ -7,9 +7,10 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.ChunkSectionPos;
 import net.minecraft.util.math.Position;
-import work.lclpnet.ap2.api.util.Collider;
-import work.lclpnet.ap2.api.util.CollisionDetector;
 import work.lclpnet.ap2.impl.util.math.Vec2i;
+import work.lclpnet.gaco.collisions.Collider;
+import work.lclpnet.gaco.collisions.CollisionDetector;
+import work.lclpnet.gaco.collisions.CollisionInfo;
 
 import java.util.Iterator;
 import java.util.Objects;

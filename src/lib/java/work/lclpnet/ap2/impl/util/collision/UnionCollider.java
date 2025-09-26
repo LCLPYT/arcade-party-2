@@ -1,7 +1,7 @@
 package work.lclpnet.ap2.impl.util.collision;
 
 import net.minecraft.util.math.BlockPos;
-import work.lclpnet.ap2.api.util.Collider;
+import work.lclpnet.gaco.collisions.Collider;
 
 public class UnionCollider implements Collider {
 

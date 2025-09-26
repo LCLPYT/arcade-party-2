@@ -4,11 +4,11 @@ import net.minecraft.block.Blocks;
 import net.minecraft.util.math.BlockPos;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.util.world.BlockPredicate;
-import work.lclpnet.ap2.impl.ds.StructureMask;
-import work.lclpnet.ap2.impl.ds.WeightedList;
-import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.debug.DebugController;
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape;
+import work.lclpnet.gaco.ds.BlockBox;
+import work.lclpnet.gaco.ds.StructureMask;
+import work.lclpnet.gaco.ds.WeightedList;
 import work.lclpnet.kibu.util.math.Matrix3i;
 
 import java.util.List;

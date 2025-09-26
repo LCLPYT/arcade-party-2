@@ -9,7 +9,7 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.api.game.team.Team;
 import work.lclpnet.ap2.impl.map.MapUtil;
-import work.lclpnet.ap2.impl.util.BlockBox;
+import work.lclpnet.gaco.ds.BlockBox;
 import work.lclpnet.kibu.schematic.FabricBlockStateAdapter;
 import work.lclpnet.kibu.schematic.SchematicFormats;
 import work.lclpnet.kibu.structure.BlockStructure;

@@ -6,7 +6,7 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.util.dynamic.Codecs;
 import net.minecraft.util.math.BlockPos;
 import org.jetbrains.annotations.NotNull;
-import work.lclpnet.ap2.impl.util.BlockBox;
+import work.lclpnet.gaco.ds.BlockBox;
 
 import java.util.Iterator;
 import java.util.Optional;

@@ -3,7 +3,7 @@ package work.lclpnet.ap2.game.anvil_fall;
 import net.minecraft.block.BlockState;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.BlockView;
-import work.lclpnet.ap2.impl.util.BlockBox;
+import work.lclpnet.gaco.ds.BlockBox;
 
 import java.util.Random;
 

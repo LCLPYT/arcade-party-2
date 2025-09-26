@@ -9,7 +9,7 @@ import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.ds.Resolvable;
 import work.lclpnet.ap2.impl.scene.Scene;
 import work.lclpnet.ap2.impl.util.world.WorldPosSync;
-import work.lclpnet.ap2.impl.util.world.entity.DynamicEntity;
+import work.lclpnet.gaco.dynamic_entities.DynamicEntity;
 
 import java.util.UUID;
 

@@ -4,7 +4,7 @@ import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.NotNull;
 import work.lclpnet.ap2.api.music.LoadableSong;
 import work.lclpnet.ap2.api.music.WeightedSong;
-import work.lclpnet.ap2.impl.ds.WeightedList;
+import work.lclpnet.gaco.ds.WeightedList;
 
 import java.util.Collections;
 import java.util.Random;

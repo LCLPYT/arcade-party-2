@@ -2,8 +2,8 @@ package work.lclpnet.ap2.impl.util.collision;
 
 import net.minecraft.util.math.Vec3d;
 import org.junit.jupiter.api.Test;
-import work.lclpnet.ap2.api.util.Collider;
-import work.lclpnet.ap2.impl.util.BlockBox;
+import work.lclpnet.gaco.collisions.Collider;
+import work.lclpnet.gaco.ds.BlockBox;
 
 import java.util.Set;
 

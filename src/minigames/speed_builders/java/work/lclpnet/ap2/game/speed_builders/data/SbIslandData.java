@@ -4,7 +4,7 @@ import net.minecraft.util.math.BlockPos;
 import org.json.JSONException;
 import org.json.JSONObject;
 import work.lclpnet.ap2.impl.map.MapUtil;
-import work.lclpnet.ap2.impl.util.BlockBox;
+import work.lclpnet.gaco.ds.BlockBox;
 
 public record SbIslandData(String id, BlockPos spawn, float yaw, BlockBox buildArea) {
 

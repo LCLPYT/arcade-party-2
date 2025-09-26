@@ -2,7 +2,7 @@ package work.lclpnet.ap2.game.aim_master;
 
 import net.minecraft.block.Block;
 import net.minecraft.util.math.BlockPos;
-import work.lclpnet.ap2.impl.ds.IndexedSet;
+import work.lclpnet.gaco.ds.IndexedSet;
 
 import java.util.ArrayList;
 import java.util.HashMap;

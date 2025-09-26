@@ -4,7 +4,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import work.lclpnet.ap2.api.ds.DirectedGraphNode;
+import work.lclpnet.gaco.ds.DirectedGraphNode;
 
 import java.util.ArrayList;
 import java.util.Collections;

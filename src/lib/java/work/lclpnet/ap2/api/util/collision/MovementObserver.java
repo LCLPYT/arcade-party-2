@@ -1,7 +1,7 @@
 package work.lclpnet.ap2.api.util.collision;
 
 import net.minecraft.server.network.ServerPlayerEntity;
-import work.lclpnet.ap2.api.util.Collider;
+import work.lclpnet.gaco.collisions.Collider;
 
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;

@@ -2,11 +2,11 @@ package work.lclpnet.ap2.impl.util.world;
 
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
-import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.collision.BoxCollisionDetector;
-import work.lclpnet.ap2.impl.util.math.AffineIntMatrix;
 import work.lclpnet.ap2.impl.util.math.Vec2i;
 import work.lclpnet.ap2.impl.util.structure.StructureUtil;
+import work.lclpnet.gaco.ds.BlockBox;
+import work.lclpnet.gaco.math.AffineIntMatrix;
 import work.lclpnet.kibu.structure.BlockStructure;
 
 import java.util.List;

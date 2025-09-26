@@ -3,9 +3,10 @@ package work.lclpnet.ap2.impl.util.collision;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.math.Position;
 import org.jetbrains.annotations.NotNull;
-import work.lclpnet.ap2.api.util.Collider;
-import work.lclpnet.ap2.api.util.CollisionDetector;
 import work.lclpnet.ap2.api.util.collision.MovementObserver;
+import work.lclpnet.gaco.collisions.Collider;
+import work.lclpnet.gaco.collisions.CollisionDetector;
+import work.lclpnet.gaco.collisions.CollisionInfo;
 
 import java.util.HashMap;
 import java.util.Map;

@@ -207,6 +207,7 @@ dependencies {
     modImplementation("work.lclpnet.mods:mg-lobby:${project.lobby_version}")
     modImplementation("net.fabricmc:fabric-language-kotlin:${project.kotlin_version}")
     modImplementation("work.lclpnet.mods:pal:${project.pal_version}")
+    modImplementation("work.lclpnet.mods.gaco:gaco:${project.gaco_version}")
 
     // runtime dependencies
     modRuntimeOnly("maven.modrinth:sqlite-jdbc:3.41.2.1+20230506")

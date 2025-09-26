@@ -5,7 +5,7 @@ import net.minecraft.block.Blocks;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3i;
-import work.lclpnet.ap2.impl.util.BlockBox;
+import work.lclpnet.gaco.ds.BlockBox;
 import work.lclpnet.kibu.mc.KibuBlockPos;
 import work.lclpnet.kibu.schematic.FabricStructureWrapper;
 import work.lclpnet.kibu.structure.BlockStructure;

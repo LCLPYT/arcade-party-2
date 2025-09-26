@@ -19,7 +19,7 @@ import work.lclpnet.ap2.impl.scene.simulation.SimpleGravityGradient;
 import work.lclpnet.ap2.impl.scene.simulation.StateVector;
 import work.lclpnet.ap2.impl.scene.simulation.solver.EulerSolver;
 import work.lclpnet.ap2.impl.scene.simulation.solver.NumericalSolver;
-import work.lclpnet.ap2.impl.util.world.entity.DynamicEntityManager;
+import work.lclpnet.gaco.dynamic_entities.DynamicEntityManager;
 import work.lclpnet.kibu.hook.Hook;
 import work.lclpnet.kibu.hook.HookFactory;
 import work.lclpnet.kibu.hook.HookRegistrar;

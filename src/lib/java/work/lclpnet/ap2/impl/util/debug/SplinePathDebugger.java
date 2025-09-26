@@ -7,8 +7,8 @@ import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
 import work.lclpnet.ap2.impl.scene.Object3d;
 import work.lclpnet.ap2.impl.util.ColorUtil;
-import work.lclpnet.ap2.impl.util.SplinePath;
 import work.lclpnet.ap2.impl.util.math.MathUtil;
+import work.lclpnet.gaco.math.SplinePath;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 
 import java.util.*;

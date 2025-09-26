@@ -2,7 +2,7 @@ package work.lclpnet.ap2.impl.util.collision;
 
 import net.minecraft.util.math.BlockPos;
 import org.junit.jupiter.api.Test;
-import work.lclpnet.ap2.impl.util.BlockBox;
+import work.lclpnet.gaco.ds.BlockBox;
 
 import static org.junit.jupiter.api.Assertions.*;
 

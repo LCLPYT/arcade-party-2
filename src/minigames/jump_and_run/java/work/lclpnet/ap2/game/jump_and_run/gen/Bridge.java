@@ -4,9 +4,9 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3i;
 import org.joml.Vector3f;
-import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.checkpoint.Checkpoint;
-import work.lclpnet.ap2.impl.util.math.AffineIntMatrix;
+import work.lclpnet.gaco.ds.BlockBox;
+import work.lclpnet.gaco.math.AffineIntMatrix;
 import work.lclpnet.kibu.structure.BlockStructure;
 import work.lclpnet.kibu.util.math.Matrix3i;
 

@@ -1,6 +1,6 @@
 package work.lclpnet.ap2.impl.util.collision;
 
-import work.lclpnet.ap2.impl.util.BlockBox;
+import work.lclpnet.gaco.ds.BlockBox;
 
 import java.util.HashSet;
 import java.util.Objects;

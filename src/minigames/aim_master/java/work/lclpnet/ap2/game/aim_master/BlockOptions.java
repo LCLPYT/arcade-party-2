@@ -2,7 +2,7 @@ package work.lclpnet.ap2.game.aim_master;
 
 import net.minecraft.block.Block;
 import net.minecraft.block.Blocks;
-import work.lclpnet.ap2.impl.ds.IndexedSet;
+import work.lclpnet.gaco.ds.IndexedSet;
 
 public class BlockOptions {
 

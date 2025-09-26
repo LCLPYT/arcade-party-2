@@ -9,7 +9,7 @@ import work.lclpnet.ap2.api.game.team.DyeTeamKey;
 import work.lclpnet.ap2.api.game.team.TeamKeyable;
 import work.lclpnet.ap2.api.game.team.TeamManager;
 import work.lclpnet.ap2.impl.map.MapUtil;
-import work.lclpnet.ap2.impl.util.BlockBox;
+import work.lclpnet.gaco.ds.BlockBox;
 
 import java.util.NoSuchElementException;
 import java.util.Optional;
