@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.impl.util;
+package work.lclpnet.ap2.impl.ds;
 
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
