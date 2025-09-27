@@ -318,7 +318,8 @@ public class DragonEscapeInstance extends FFAGameInstance {
             config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, source) -> {
                 if (!(entity instanceof ServerPlayerEntity player)
                         || !gameHandle.getParticipants().isParticipating(player)
-                        || inGoal.contains(player.getUuid())) {
+                        || inGoal.contains(player.getUuid())
+                        || source.getAttacker() instanceof ServerPlayerEntity) {
                     return false;
                 }
 
