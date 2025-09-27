@@ -10,13 +10,14 @@ import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
+import work.lclpnet.ap2.ApConstants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.music.*;
-import work.lclpnet.ap2.api.util.QueuePersistence;
-import work.lclpnet.ap2.impl.util.JsonFileQueuePersistence;
-import work.lclpnet.ap2.impl.util.SeamlessQueue;
 import work.lclpnet.ap2.impl.util.UriUtil;
 import work.lclpnet.gaco.ds.IndexedSet;
+import work.lclpnet.gaco.ds.queue.JsonFileQueuePersistence;
+import work.lclpnet.gaco.ds.queue.QueuePersistence;
+import work.lclpnet.gaco.ds.queue.SeamlessQueue;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.kibu.translate.text.RootText;
 import work.lclpnet.kibu.translate.text.TextTranslatable;
@@ -57,7 +58,7 @@ public class SongHandler {
 
     public SongHandler(MiniGameHandle handle, Random random) {
         this(handle.getSongManager(), handle.getTranslations(), random, handle.getLogger(),
-                JsonFileQueuePersistence.create(handle.getGameInfo().identifier("song_queue"),
+                JsonFileQueuePersistence.create(ApConstants.ID, handle.getGameInfo().identifier("song_queue"),
                         Identifier.CODEC, handle.getLogger()));
     }
 
