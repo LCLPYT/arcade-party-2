@@ -8,11 +8,11 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
-import work.lclpnet.ap2.api.util.collision.MovementObserver;
 import work.lclpnet.ap2.impl.util.debug.DebugController;
 import work.lclpnet.ap2.impl.util.math.MathUtil;
-import work.lclpnet.gaco.collisions.Collider;
 import work.lclpnet.gaco.collisions.CollisionDetector;
+import work.lclpnet.gaco.collisions.movement.MovementObserver;
+import work.lclpnet.gaco.ds.Collider;
 
 import java.util.*;
 

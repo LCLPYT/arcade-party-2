@@ -3,8 +3,8 @@ package work.lclpnet.ap2.impl.util.world.block_shape;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Position;
 import net.minecraft.util.math.Vec3d;
-import work.lclpnet.gaco.collisions.Collider;
 import work.lclpnet.gaco.ds.BlockBox;
+import work.lclpnet.gaco.ds.Collider;
 
 import java.util.ArrayList;
 import java.util.List;

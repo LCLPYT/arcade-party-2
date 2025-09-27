@@ -15,9 +15,9 @@ import work.lclpnet.gaco.ds.BlockBox;
 import work.lclpnet.gaco.ds.WeightedList;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.BlockHelper;
-import work.lclpnet.ap2.impl.util.math.Vec2i;
 import work.lclpnet.ap2.impl.util.structure.StructureUtil;
 import work.lclpnet.gaco.math.AffineIntMatrix;
+import work.lclpnet.gaco.math.Vec2i;
 import work.lclpnet.kibu.structure.BlockStructure;
 import work.lclpnet.lobby.game.map.GameMap;
 

@@ -4,7 +4,7 @@ import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.server.network.ServerPlayerEntity;
 import work.lclpnet.ap2.api.base.Participants;
-import work.lclpnet.ap2.api.util.action.PlayerAction;
+import work.lclpnet.gaco.collisions.util.PlayerAction;
 import work.lclpnet.kibu.hook.Hook;
 import work.lclpnet.kibu.hook.HookFactory;
 import work.lclpnet.kibu.hook.HookRegistrar;

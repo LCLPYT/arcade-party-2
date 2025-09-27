@@ -5,9 +5,9 @@ import net.minecraft.util.math.BlockPos;
 import org.json.JSONArray;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.impl.map.MapUtil;
-import work.lclpnet.gaco.collisions.Collider;
 import work.lclpnet.gaco.collisions.CollisionDetector;
 import work.lclpnet.gaco.ds.BlockBox;
+import work.lclpnet.gaco.ds.Collider;
 import work.lclpnet.lobby.game.map.GameMap;
 
 import java.util.List;

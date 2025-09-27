@@ -11,10 +11,10 @@ import work.lclpnet.ap2.game.maze_scape.setup.Connector3;
 import work.lclpnet.ap2.game.maze_scape.setup.OrientedStructurePiece;
 import work.lclpnet.ap2.game.maze_scape.setup.StructureDomain;
 import work.lclpnet.ap2.game.maze_scape.setup.StructurePiece;
-import work.lclpnet.ap2.impl.util.collision.ChunkedCollisionDetector;
-import work.lclpnet.ap2.impl.util.math.Vec2i;
+import work.lclpnet.gaco.collisions.ChunkedCollisionDetector;
 import work.lclpnet.gaco.ds.AStar;
 import work.lclpnet.gaco.ds.BlockBox;
+import work.lclpnet.gaco.math.Vec2i;
 
 import java.util.*;
 

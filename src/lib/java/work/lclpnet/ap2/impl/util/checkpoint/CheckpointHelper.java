@@ -10,7 +10,7 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Formatting;
 import work.lclpnet.ap2.api.util.action.Action;
-import work.lclpnet.ap2.api.util.action.PlayerAction;
+import work.lclpnet.gaco.collisions.util.PlayerAction;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.kibu.hook.player.PlayerMoveCallback;
