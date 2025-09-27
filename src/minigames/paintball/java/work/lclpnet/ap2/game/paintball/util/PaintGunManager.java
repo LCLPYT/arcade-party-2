@@ -29,12 +29,12 @@ import work.lclpnet.ap2.api.game.team.DyeTeamKey;
 import work.lclpnet.ap2.game.paintball.kit.PaintGunKit;
 import work.lclpnet.ap2.impl.game.kit.KitManager;
 import work.lclpnet.ap2.impl.game.kit.SingleItemKit;
-import work.lclpnet.ap2.impl.scene.Scene;
-import work.lclpnet.ap2.impl.scene.simulation.EntityRefPhysicsElement;
-import work.lclpnet.ap2.impl.scene.simulation.SceneRigidBody;
 import work.lclpnet.ap2.impl.util.RayCastUtil;
 import work.lclpnet.ap2.impl.util.debug.DebugController;
 import work.lclpnet.gaco.ds.BlockBox;
+import work.lclpnet.gaco.scene.Scene;
+import work.lclpnet.gaco.scene.physics.EntityRefPhysicsElement;
+import work.lclpnet.gaco.scene.physics.SceneRigidBody;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.physics.api.PhysicsElement;
 import work.lclpnet.kibu.physics.api.event.collision.ElementCollisionEvents;
@@ -48,9 +48,9 @@ import java.util.function.BooleanSupplier;
 import static java.lang.Math.max;
 import static java.lang.Math.toRadians;
 import static net.minecraft.util.Formatting.RED;
-import static work.lclpnet.ap2.impl.util.ThreadUtil.executeOn;
 import static work.lclpnet.ap2.impl.util.math.MathUtil.applySpread;
 import static work.lclpnet.ap2.impl.util.math.MathUtil.randomUnitVec3d;
+import static work.lclpnet.gaco.core.util.ThreadUtil.executeOn;
 import static work.lclpnet.kibu.physics.impl.bullet.math.Convert.toBullet;
 
 public class PaintGunManager {

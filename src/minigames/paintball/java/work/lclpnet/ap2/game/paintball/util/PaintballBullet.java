@@ -14,11 +14,11 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.RaycastContext;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3d;
-import work.lclpnet.ap2.impl.scene.MountContext;
-import work.lclpnet.ap2.impl.scene.Scene;
-import work.lclpnet.ap2.impl.scene.animation.AnimationContext;
 import work.lclpnet.ap2.impl.util.RayCastUtil;
 import work.lclpnet.ap2.impl.util.debug.DebugController;
+import work.lclpnet.gaco.scene.MountContext;
+import work.lclpnet.gaco.scene.Scene;
+import work.lclpnet.gaco.scene.animation.AnimationContext;
 import work.lclpnet.kibu.scheduler.Ticks;
 
 import java.util.UUID;

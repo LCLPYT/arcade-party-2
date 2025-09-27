@@ -1,9 +1,9 @@
 package work.lclpnet.ap2.impl.game.item;
 
 import org.joml.Vector3d;
-import work.lclpnet.ap2.impl.scene.Object3d;
-import work.lclpnet.ap2.impl.scene.animation.Animatable;
-import work.lclpnet.ap2.impl.scene.animation.AnimationContext;
+import work.lclpnet.gaco.scene.Object3d;
+import work.lclpnet.gaco.scene.animation.Animatable;
+import work.lclpnet.gaco.scene.animation.AnimationContext;
 
 import java.util.function.Consumer;
 

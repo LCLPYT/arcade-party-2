@@ -14,7 +14,6 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
-import work.lclpnet.ap2.api.ds.Partial;
 import work.lclpnet.ap2.core.mixin.EntityNavigationAccessor;
 import work.lclpnet.ap2.core.mixin.MobEntityAccessor;
 import work.lclpnet.ap2.core.type.*;
@@ -27,6 +26,7 @@ import work.lclpnet.ap2.impl.ai.BlockedPathFindingPredicate;
 import work.lclpnet.ap2.impl.ai.CollisionPathFindingPredicate;
 import work.lclpnet.ap2.impl.util.EntityUtil;
 import work.lclpnet.ap2.impl.util.GoalModifier;
+import work.lclpnet.gaco.core.api.Partial;
 
 import java.util.ArrayList;
 import java.util.List;

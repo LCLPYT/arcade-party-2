@@ -3,9 +3,9 @@ package work.lclpnet.ap2.game.paintball.util;
 import lombok.Getter;
 import net.minecraft.block.BlockState;
 import net.minecraft.server.world.ServerWorld;
-import work.lclpnet.ap2.impl.scene.Scene;
-import work.lclpnet.ap2.impl.scene.animation.AnimationContext;
-import work.lclpnet.ap2.impl.scene.object.PhysicsBlockDisplayObject;
+import work.lclpnet.gaco.scene.Scene;
+import work.lclpnet.gaco.scene.animation.AnimationContext;
+import work.lclpnet.gaco.scene.physics.PhysicsBlockDisplayObject;
 
 public class PaintballProjectile extends PhysicsBlockDisplayObject {
 
