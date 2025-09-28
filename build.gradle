@@ -206,7 +206,7 @@ dependencies {
     modImplementation("work.lclpnet.mods.gaco:gaco:${project.gaco_version}")
 
     // runtime dependencies
-    modRuntimeOnly("maven.modrinth:sqlite-jdbc:3.41.2.1+20230506")
+    modRuntimeOnly("maven.modrinth:minecraft-sqlite-jdbc:3.49.1.0+2025-07-12")
 
     // optional runtime dependencies (not explicitly required for compilation, but needed to play the game)
     modLocalRuntime("work.lclpnet.mods:ruler:${project.ruler_version}")
