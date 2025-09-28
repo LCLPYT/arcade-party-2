@@ -39,7 +39,7 @@ public record PlayerRef(UUID uuid, String name) implements SubjectRef {
     public ItemStack getIconStackFor(DynamicRegistryManager registryManager, ServerPlayerEntity viewer) {
         ItemStack stack = new ItemStack(Items.PLAYER_HEAD);
 
-        stack.set(DataComponentTypes.PROFILE, new ProfileComponent(Optional.empty(), Optional.of(viewer.getUuid()), new PropertyMap()));
+        stack.set(DataComponentTypes.PROFILE, new ProfileComponent(Optional.empty(), Optional.of(uuid), new PropertyMap()));
 
         return stack;
     }
