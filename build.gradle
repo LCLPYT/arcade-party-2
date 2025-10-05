@@ -86,6 +86,11 @@ sourceSets {
         compileClasspath += lib.output
         runtimeClasspath += lib.output
     }
+
+    genResources {
+        compileClasspath += main.compileClasspath
+        runtimeClasspath += main.runtimeClasspath
+    }
 }
 
 static <C> C loadToml(File file, C config) {
@@ -160,6 +165,7 @@ minigamesConfig.minigames.each { minigame ->
         runtimeClasspath += sourceSets.lib.output
 
         sourceSets.main.runtimeClasspath += set.output
+        sourceSets.genResources.runtimeClasspath += set.output
         sourceSets.test.compileClasspath += set.output
         sourceSets.test.runtimeClasspath += set.output
     }
@@ -239,6 +245,12 @@ loom {
 
         server {
             vmArgs "-Dfabric-tag-conventions-v2.missingTagTranslationWarning=SILENCED"
+        }
+
+        genResources {
+            server()
+            configName = "Generate Resources"
+            source = sourceSets.genResources
         }
     }
 
