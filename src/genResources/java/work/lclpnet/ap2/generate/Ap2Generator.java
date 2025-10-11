@@ -2,6 +2,7 @@ package work.lclpnet.ap2.generate;
 
 import net.fabricmc.api.ModInitializer;
 import org.slf4j.LoggerFactory;
+import work.lclpnet.ap2.impl.map.schema.MapSchemaGenerator;
 
 import java.nio.file.Path;
 

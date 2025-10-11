@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.generate;
+package work.lclpnet.ap2.impl.map.schema;
 
 import com.google.common.collect.AbstractIterator;
 import com.google.common.reflect.ClassPath;
@@ -14,14 +14,8 @@ import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
-import work.lclpnet.ap2.impl.map.schema.MapSchema;
-import work.lclpnet.ap2.impl.map.schema.Property;
-import work.lclpnet.ap2.impl.map.schema.Role;
-import work.lclpnet.gaco.ds.BlockBox;
-import work.lclpnet.gaco.ds.Checkpoint;
-import work.lclpnet.gaco.ds.PositionedBlockSet;
-import work.lclpnet.gaco.math.SplinePath;
-import work.lclpnet.kibu.hook.util.PositionRotation;
+import work.lclpnet.map_api.data.Data;
+import work.lclpnet.map_api.data.DataManagerKt;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -38,7 +32,7 @@ public class MapSchemaGenerator {
     private final Path outputDir;
     private final ClassLoader classLoader;
     private final Logger logger;
-    private final Map<Class<?>, Codec<?>> codecs = new HashMap<>();
+    private final Map<Class<?>, Data<?>> dataByClass = new HashMap<>();
 
     public MapSchemaGenerator(String packagePrefix, Path outputDir, ClassLoader classLoader, Logger logger) {
         this.packagePrefix = packagePrefix;
@@ -46,37 +40,27 @@ public class MapSchemaGenerator {
         this.classLoader = classLoader;
         this.logger = logger;
 
-        registerCodecs();
-    }
-
-    private void registerCodecs() {
-        // TODO register automatically
-        codecs.put(BlockBox.class, BlockBox.CODEC);
-        codecs.put(SplinePath.class, SplinePath.CODEC);
-        codecs.put(Checkpoint.class, Checkpoint.CODEC);
-        codecs.put(PositionedBlockSet.class, PositionedBlockSet.CODEC);
+        for (var data : DataManagerKt.getDATA_TYPES().values()) {
+            this.dataByClass.put(data.type(), data);
+        }
     }
 
     @Nullable
     private String dataId(Class<?> type) {
-        // TODO register automatically
-        if (type == BlockBox.class) {
-            return "block_box";
-        }
+        Data<?> data = dataByClass.get(type);
 
-        if (type == Checkpoint.class) {
-            return "checkpoint";
-        }
+        if (data == null) return null;
 
-        if (type == PositionRotation.class) {
-            return "position";
-        }
+        return data.id();
+    }
 
-        if (type == PositionedBlockSet.class) {
-            return "positioned_block_set";
-        }
+    @Nullable
+    private Codec<?> codec(Class<?> type) {
+        Data<?> data = dataByClass.get(type);
 
-        return null;
+        if (data == null) return null;
+
+        return data.codec();
     }
 
     public void generate() {
@@ -226,9 +210,9 @@ public class MapSchemaGenerator {
             json.put("type", dataId);
         }
 
-        if (value != null) {
-            Codec<?> codec = codecs.get(dataType);
+        Codec<?> codec = codec(dataType);
 
+        if (value != null && codec != null) {
             if (List.class.isAssignableFrom(type)) {
                 codec = codec.listOf();
             }
