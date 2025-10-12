@@ -11,7 +11,7 @@ import work.lclpnet.kibu.hook.util.PositionRotation;
 )
 public class CommonMapSchema {
 
-    @Property(name = "Spawn")
+    @Property(name = "Spawn", ordinal = 0)
     @Role("spawn")
     private PositionRotation spawn = null;
 }

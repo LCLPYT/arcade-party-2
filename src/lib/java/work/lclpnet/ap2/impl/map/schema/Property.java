@@ -12,4 +12,6 @@ public @interface Property {
     String name();
 
     boolean optional() default false;
+
+    int ordinal() default 1000;
 }

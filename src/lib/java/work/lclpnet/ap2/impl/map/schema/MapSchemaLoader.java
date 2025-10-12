@@ -5,10 +5,7 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.impl.util.ReflectionUtil;
 import work.lclpnet.map_api.GameMapApi;
-import work.lclpnet.map_api.data.Data;
-import work.lclpnet.map_api.data.DataInstance;
-import work.lclpnet.map_api.data.DataManagerKt;
-import work.lclpnet.map_api.data.WorldData;
+import work.lclpnet.map_api.data.*;
 
 import java.lang.reflect.Field;
 import java.util.HashMap;
@@ -24,7 +21,7 @@ public class MapSchemaLoader {
     public MapSchemaLoader(Logger logger) {
         this.logger = logger;
 
-        for (var data : DataManagerKt.getDATA_TYPES().values()) {
+        for (var data : DataManager.Companion.getDATA_TYPES().values()) {
             this.dataByClass.put(data.type(), data);
         }
     }
@@ -54,7 +51,7 @@ public class MapSchemaLoader {
     }
 
     public void loadHierarchy(ServerWorld world, Object instance) {
-        var api = GameMapApi.Companion.get(world.getServer());
+        var api = GameMapApi.get(world.getServer());
         WorldData worldData = api.getDataManager().getWorldData(world);
 
         for (var type : ReflectionUtil.iterateHierarchy(instance.getClass())) {

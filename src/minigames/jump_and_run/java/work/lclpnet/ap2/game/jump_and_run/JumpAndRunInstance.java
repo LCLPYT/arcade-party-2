@@ -31,6 +31,7 @@ import work.lclpnet.ap2.game.jump_and_run.gen.*;
 import work.lclpnet.ap2.impl.game.FFAGameInstance;
 import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
+import work.lclpnet.ap2.impl.map.schema.MapSchemaLoader;
 import work.lclpnet.ap2.impl.resource.ApResources;
 import work.lclpnet.ap2.impl.util.ApRegistries;
 import work.lclpnet.ap2.impl.util.SoundHelper;
@@ -124,6 +125,10 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
         initTeam(scoreboardManager);
 
         giveItemsToPlayers();
+
+        MapSchemaLoader loader = new MapSchemaLoader(gameHandle.getLogger());
+        JumpAndRunModuleSchema data = loader.load(getWorld(), JumpAndRunModuleSchema.class);
+        System.out.println(data);
     }
 
     @Override

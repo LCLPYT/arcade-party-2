@@ -16,16 +16,14 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.impl.util.ReflectionUtil;
 import work.lclpnet.map_api.data.Data;
-import work.lclpnet.map_api.data.DataManagerKt;
+import work.lclpnet.map_api.data.DataManager;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class MapSchemaGenerator {
 
@@ -41,7 +39,7 @@ public class MapSchemaGenerator {
         this.classLoader = classLoader;
         this.logger = logger;
 
-        for (var data : DataManagerKt.getDATA_TYPES().values()) {
+        for (var data : DataManager.Companion.getDATA_TYPES().values()) {
             this.dataByClass.put(data.type(), data);
         }
     }
@@ -119,7 +117,13 @@ public class MapSchemaGenerator {
 
         JSONObject properties = new JSONObject();
 
+        List<Class<?>> hierarchy = new ArrayList<>();
+
         for (var type : ReflectionUtil.iterateHierarchy(rootType)) {
+            hierarchy.add(type);
+        }
+
+        for (var type : hierarchy.reversed()) {
             visit(type, properties);
         }
 
@@ -131,18 +135,29 @@ public class MapSchemaGenerator {
     private void visit(Class<?> type, JSONObject schema) {
         Object instance = makeInstance(type);
 
+        record PropField(Field field, Property property) {}
+
+        List<PropField> fields = new ArrayList<>();
+
         for (Field field : type.getDeclaredFields()) {
             Property property = field.getAnnotation(Property.class);
 
             if (property == null) continue;
 
+            fields.add(new PropField(field, property));
+        }
+
+        fields.sort(Comparator.comparingInt(p -> p.property.ordinal()));
+
+        for (PropField propField : fields) {
+            Field field = propField.field;
             String name = field.getName();
 
             if (schema.has(name)) continue;  // overridden by child class
 
             Object value = instance != null ? getValue(field, instance) : null;
 
-            JSONObject json = toSchema(field, property, value);
+            JSONObject json = toSchema(field, propField.property, value);
 
             if (json == null) continue;
 
