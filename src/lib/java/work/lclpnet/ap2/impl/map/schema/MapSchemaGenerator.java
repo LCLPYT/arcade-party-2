@@ -14,17 +14,18 @@ import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
+import work.lclpnet.ap2.impl.util.ReflectionUtil;
 import work.lclpnet.map_api.data.Data;
 import work.lclpnet.map_api.data.DataManagerKt;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class MapSchemaGenerator {
 
@@ -113,17 +114,13 @@ public class MapSchemaGenerator {
     private void processSchema(@NotNull Class<?> rootType, MapSchema info) {
         logger.info("Processing schema \"{}\" ...", schemaId(info));
 
-        Set<Class<?>> visited = new HashSet<>();
         JSONObject schema = new JSONObject();
         schema.put("name", info.name());
 
         JSONObject properties = new JSONObject();
 
-        var type = rootType;
-
-        while (type != null && type != Object.class && visited.add(type)) {
+        for (var type : ReflectionUtil.iterateHierarchy(rootType)) {
             visit(type, properties);
-            type = type.getSuperclass();
         }
 
         schema.put("properties", properties);
@@ -259,30 +256,10 @@ public class MapSchemaGenerator {
     @Nullable
     private Class<?> getDataType(Field field, Class<?> type) {
         if (List.class.isAssignableFrom(type)) {
-            return getGenericType(field);
+            return ReflectionUtil.getGenericType(field, logger);
         }
 
         return type;
-    }
-
-    @Nullable
-    private Class<?> getGenericType(Field field) {
-        Type generic = field.getGenericType();
-
-        if (!(generic instanceof ParameterizedType pt)) {
-            logger.error("Failed to get generic type for field {} (unexpected generic type {})", field, generic);
-            return null;
-        }
-
-        Type ga = pt.getActualTypeArguments()[0];
-
-        if (ga instanceof Class<?> gac) {
-            return gac;
-        }
-
-        logger.error("Failed to get generic argument class for field {} (unexpected generic type {})", field, ga);
-
-        return null;
     }
 
     private void writeSchema(JSONObject schema, MapSchema info) {
