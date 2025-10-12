@@ -45,5 +45,5 @@ public class JumpAndRunModuleSchema extends CommonMapSchema {
 
     @Property(name = "Exit", optional = true, ordinal = 6)
     @Nullable
-    private final Checkpoint exit = null;
+    private final BlockFace exit = null;
 }
