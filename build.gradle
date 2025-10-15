@@ -86,6 +86,11 @@ sourceSets {
         compileClasspath += lib.output
         runtimeClasspath += lib.output
     }
+
+    genResources {
+        compileClasspath += main.compileClasspath
+        runtimeClasspath += main.runtimeClasspath
+    }
 }
 
 static <C> C loadToml(File file, C config) {
@@ -160,6 +165,7 @@ minigamesConfig.minigames.each { minigame ->
         runtimeClasspath += sourceSets.lib.output
 
         sourceSets.main.runtimeClasspath += set.output
+        sourceSets.genResources.runtimeClasspath += set.output
         sourceSets.test.compileClasspath += set.output
         sourceSets.test.runtimeClasspath += set.output
     }
@@ -204,6 +210,7 @@ dependencies {
     modImplementation("net.fabricmc:fabric-language-kotlin:${project.kotlin_version}")
     modImplementation("work.lclpnet.mods:pal:${project.pal_version}")
     modImplementation("work.lclpnet.mods.gaco:gaco:${project.gaco_version}")
+    modImplementation("work.lclpnet.mods.gaco:game-map-api:${project.game_map_api_version}")
 
     // runtime dependencies
     modRuntimeOnly("maven.modrinth:minecraft-sqlite-jdbc:3.49.1.0+2025-07-12")
@@ -239,6 +246,12 @@ loom {
 
         server {
             vmArgs "-Dfabric-tag-conventions-v2.missingTagTranslationWarning=SILENCED"
+        }
+
+        genResources {
+            server()
+            configName = "Generate Resources"
+            source = sourceSets.genResources
         }
     }
 

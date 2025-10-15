@@ -1,6 +1,7 @@
 package work.lclpnet.ap2.impl.map;
 
 import it.unimi.dsi.fastutil.Pair;
+import lombok.Getter;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Identifier;
@@ -10,6 +11,7 @@ import org.slf4j.Logger;
 import work.lclpnet.ap2.api.game.MapReady;
 import work.lclpnet.ap2.api.map.MapFacade;
 import work.lclpnet.ap2.api.map.MapRandomizer;
+import work.lclpnet.gaco.asset.AssetRepository;
 import work.lclpnet.lobby.game.api.MapOptions;
 import work.lclpnet.lobby.game.api.WorldFacade;
 import work.lclpnet.lobby.game.map.GameMap;
@@ -27,14 +29,17 @@ public class MapFacadeImpl implements MapFacade {
     private final WorldFacade worldFacade;
     private final MapRandomizer mapRandomizer;
     private final MapManager mapManager;
+    @Getter
+    private final AssetRepository assetRepository;
     private final MinecraftServer server;
     private final Logger logger;
 
     public MapFacadeImpl(WorldFacade worldFacade, MapRandomizer mapRandomizer, MapManager mapManager,
-                         MinecraftServer server, Logger logger) {
+                         AssetRepository assetRepository, MinecraftServer server, Logger logger) {
         this.worldFacade = worldFacade;
         this.mapRandomizer = mapRandomizer;
         this.mapManager = mapManager;
+        this.assetRepository = assetRepository;
         this.server = server;
         this.logger = logger;
     }

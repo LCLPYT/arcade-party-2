@@ -9,8 +9,13 @@ import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Formatting;
+import net.minecraft.util.math.BlockPos;
+import org.json.JSONObject;
 import work.lclpnet.ap2.api.util.action.Action;
+import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.gaco.collisions.util.PlayerAction;
+import work.lclpnet.gaco.ds.BlockBox;
+import work.lclpnet.gaco.ds.Checkpoint;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.kibu.hook.player.PlayerMoveCallback;
@@ -84,5 +89,13 @@ public class CheckpointHelper {
         });
 
         return Action.create(hook);
+    }
+
+    public static Checkpoint fromJson(JSONObject json) {
+        BlockPos pos = MapUtil.readBlockPos(json.getJSONArray("pos"));
+        float yaw = json.has("yaw") ? MapUtil.readAngle(json.getNumber("yaw")) : 0f;
+        BlockBox box = MapUtil.readBox(json.getJSONArray("bounds"));
+
+        return new Checkpoint(pos.toBottomCenterPos(), yaw, 0f, box);
     }
 }

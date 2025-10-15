@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "id": "ap2-generator",
+  "version": "${version}",
+  "name": "Arcade Party 2 Generator",
+  "description": "Resource generator for Arcade Party 2",
+  "authors": [
+    "LCLP"
+  ],
+  "contact": {
+    "homepage": "https://github.com/LCLPYT/arcade-party-2",
+    "sources": "https://github.com/LCLPYT/arcade-party-2"
+  },
+  "license": "AGPL-3.0",
+  "environment": "server",
+  "entrypoints": {
+    "main": [
+      "work.lclpnet.ap2.generate.Ap2Generator"
+    ]
+  }
+}

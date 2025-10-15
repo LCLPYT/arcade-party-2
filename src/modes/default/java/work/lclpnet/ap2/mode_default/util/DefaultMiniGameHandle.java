@@ -27,9 +27,11 @@ import work.lclpnet.ap2.core.type.ApServerPlayerEntity;
 import work.lclpnet.ap2.impl.game.PlayerUtil;
 import work.lclpnet.ap2.impl.util.DeathMessages;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
+import work.lclpnet.ap2.impl.util.world.SubWorldManager;
 import work.lclpnet.ap2.mode_default.ApMiniGameArgs;
 import work.lclpnet.ap2.mode_default.activity.MiniGameActivity;
 import work.lclpnet.ap2.mode_default.activity.PreparationActivity;
+import work.lclpnet.gaco.asset.AssetRepository;
 import work.lclpnet.kibu.cmd.type.CommandRegistrar;
 import work.lclpnet.kibu.hook.HookStack;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
@@ -37,6 +39,7 @@ import work.lclpnet.kibu.scheduler.util.SchedulerStack;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.kibu.translate.bossbar.BossBarProvider;
 import work.lclpnet.lobby.game.api.WorldFacade;
+import work.lclpnet.lobby.game.impl.WorldContainer;
 import work.lclpnet.lobby.game.impl.prot.BasicProtector;
 import work.lclpnet.lobby.game.impl.prot.MutableProtectionConfig;
 import work.lclpnet.lobby.game.util.ProtectorUtils;
@@ -65,6 +68,8 @@ public class DefaultMiniGameHandle implements MiniGameHandle, WorldBorderManager
     private boolean ended = false;
     private volatile DeathMessages deathMessages = null;
     private volatile @Nullable CompletableFuture<UUID> statsId = null;
+    private volatile @Nullable SubWorldManager subWorldManager = null;
+    private volatile @Nullable WorldContainer worldContainer = null;
 
     public DefaultMiniGameHandle(MiniGame game, ApBaseArgs args, BossBarProvider bossBarProvider,
                                  BossBarHandler bossBarHandler, CustomScoreboardManager scoreboardManager,
@@ -201,6 +206,33 @@ public class DefaultMiniGameHandle implements MiniGameHandle, WorldBorderManager
     }
 
     @Override
+    public SubWorldManager getSubWorldManager() {
+        if (subWorldManager != null) {
+            return subWorldManager;
+        }
+
+        WorldContainer container;
+        SubWorldManager manager;
+
+        synchronized (this) {
+            if (subWorldManager != null) {
+                return subWorldManager;
+            }
+
+            AssetRepository repo = getMapFacade().getAssetRepository();
+            MinecraftServer server = getServer();
+
+            worldContainer = container = new WorldContainer(server);
+            subWorldManager = manager = new SubWorldManager(repo, server, container, logger);
+        }
+
+        container.init();
+        manager.init(getHooks());
+
+        return subWorldManager;
+    }
+
+    @Override
     public void resetGameScheduler() {
         SchedulerStack stack = getGameScheduler();
 
@@ -321,6 +353,10 @@ public class DefaultMiniGameHandle implements MiniGameHandle, WorldBorderManager
         }
 
         getPlayerUtil().updatePlayerListNames();
+
+        var worldContainer = this.worldContainer;
+
+        if (worldContainer != null) worldContainer.unload();
     }
 
     @Override
