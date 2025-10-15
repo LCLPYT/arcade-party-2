@@ -23,8 +23,8 @@ public record JumpModule(String path, Data data) {
 
         Set<ApEffect> effects = ApEffects.fromJson(json.optJSONArray("effects", new JSONArray()), logger);
 
-        return new JumpModule(path, new Data(value, 0, effects));
+        return new JumpModule(path, new Data(value, effects));
     }
 
-    public record Data(float estimatedMinutes, int stackingMargin, Set<ApEffect> effects) {}
+    public record Data(float estimatedMinutes, Set<ApEffect> effects) {}
 }
