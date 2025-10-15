@@ -4,6 +4,7 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.math.Vec3i;
 import org.jetbrains.annotations.NotNull;
@@ -80,5 +81,10 @@ public class BoxBlockShape implements BlockShape {
     @Override
     public Vec3d randomPos(Random random) {
         return box.randomPos(random);
+    }
+
+    @Override
+    public boolean collidesWith(Box other) {
+        return box.collidesWith(other);
     }
 }

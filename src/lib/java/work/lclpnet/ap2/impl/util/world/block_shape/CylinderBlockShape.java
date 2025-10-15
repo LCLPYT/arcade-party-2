@@ -5,6 +5,7 @@ import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.util.dynamic.Codecs;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Box;
 import org.jetbrains.annotations.NotNull;
 import work.lclpnet.gaco.ds.BlockBox;
 
@@ -90,5 +91,20 @@ public class CylinderBlockShape implements BlockShape, BlockShape.WithRadius, Bl
     @Override
     public int height() {
         return height;
+    }
+
+    @Override
+    public boolean collidesWith(Box box) {
+        if (!bounds.collidesWith(box)) {
+            return false;
+        }
+
+        for (BlockPos pos : BlockPos.iterate(box)) {
+            if (contains(pos)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
