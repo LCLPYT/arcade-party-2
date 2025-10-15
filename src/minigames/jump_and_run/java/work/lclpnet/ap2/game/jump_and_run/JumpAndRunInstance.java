@@ -135,6 +135,9 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
         initTeam(scoreboardManager);
 
         giveItemsToPlayers();
+
+        jumpAndRun.setReloadModuleCallback(this::loadAndInitModule);
+        new SetModuleCommand(jumpAndRun, gameHandle.getLogger()).register(gameHandle.getCommands());
     }
 
     @Override
@@ -403,21 +406,36 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
         gameHandle.getTranslations().translateText("game.ap2.jump_and_run.next_segment_wait").formatted(GRAY)
                 .sendTo(PlayerLookup.world(world));
 
+        SoundHelper.playSound(world, SoundEvents.ENTITY_PLAYER_LEVELUP, SoundCategory.PLAYERS, 0.5f, 2f);
+
+        loadAndInitModule();
+    }
+
+    private void loadAndInitModule() {
         var prevFuture = waitFor;
 
         if (prevFuture != null) {
             prevFuture.join();
+            waitFor = null;
+        }
+
+        TaskHandle task = this.task;
+
+        if (task != null) {
+            task.cancel();
         }
 
         jumpAndRun.loadModule().thenRun(() -> gameHandle.getServer().execute(() -> {
             initModule();
 
-            SoundHelper.playSound(world, SoundEvents.ENTITY_PLAYER_LEVELUP, SoundCategory.PLAYERS, 0.5f, 2f);
-
             gameHandle.getGameScheduler().timeout(this::nextSegment, NEXT_PHASE_WAIT_TICKS);
 
             waitFor = jumpAndRun.unloadPreviousModule().whenComplete((res, err) -> waitFor = null);
-        }));
+        })).whenComplete((_res, err) -> {
+            if (err != null) {
+                gameHandle.getLogger().error("Failed to load module", err);
+            }
+        });
     }
 
     private boolean requiredAmountReachedGoal() {

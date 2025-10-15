@@ -35,13 +35,14 @@ public class JumpAndRun {
     private @Nullable Checkpoint generatedStartCheckpoint = null;
     private @Nullable Checkpoint generatedEndCheckpoint = null;
     private @Nullable BlockBox entranceBridgeBounds = null;
+    private @Nullable Runnable reloadModuleCallback = null;
 
     public JumpAndRun(GameMap map, SubWorldManager subWorldManager, List<JumpModule> modules,
                       MapSchemaLoader schemaLoader, MinecraftServer server, JumpAndRunSetup.Parts parts,
                       JumpAndRunGenerator generator) {
         this.map = map;
         this.subWorldManager = subWorldManager;
-        this.modules = modules;
+        this.modules = new ArrayList<>(modules);
         this.schemaLoader = schemaLoader;
         this.server = server;
         this.parts = parts;
@@ -58,6 +59,10 @@ public class JumpAndRun {
 
     public boolean isDone() {
         return moduleIndex >= modules.size();
+    }
+
+    public void setReloadModuleCallback(@Nullable Runnable reloadModuleCallback) {
+        this.reloadModuleCallback = reloadModuleCallback;
     }
 
     public CompletableFuture<SubWorldManager.WorldWithData> loadModule() {
@@ -225,5 +230,16 @@ public class JumpAndRun {
         generator.pushModuleHistory(module);
 
         moduleIndex++;
+    }
+
+    public List<JumpModule> availableModules() {
+        return parts.modules();
+    }
+
+    public void setModule(JumpModule module) {
+        if (isDone() || reloadModuleCallback == null) return;
+
+        modules.set(moduleIndex, module);
+        reloadModuleCallback.run();
     }
 }
