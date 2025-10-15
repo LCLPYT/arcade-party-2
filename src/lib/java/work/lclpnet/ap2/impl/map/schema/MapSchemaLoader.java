@@ -21,7 +21,7 @@ public class MapSchemaLoader {
     public MapSchemaLoader(Logger logger) {
         this.logger = logger;
 
-        for (var data : DataManager.Companion.getDATA_TYPES().values()) {
+        for (var data : DataManager.DATA_TYPES.values()) {
             this.dataByClass.put(data.type(), data);
         }
     }
@@ -35,6 +35,19 @@ public class MapSchemaLoader {
         }
 
         loadHierarchy(world, instance);
+
+        return instance;
+    }
+
+    @Nullable
+    public <T> T load(WorldData data, Class<T> type) {
+        T instance = makeInstance(type);
+
+        if (instance == null) {
+            return null;
+        }
+
+        loadHierarchy(data, instance);
 
         return instance;
     }
@@ -54,6 +67,10 @@ public class MapSchemaLoader {
         var api = GameMapApi.get(world.getServer());
         WorldData worldData = api.getDataManager().getWorldData(world);
 
+        loadHierarchy(worldData, instance);
+    }
+
+    public void loadHierarchy(WorldData worldData, Object instance) {
         for (var type : ReflectionUtil.iterateHierarchy(instance.getClass())) {
             loadClass(type, instance, worldData);
         }

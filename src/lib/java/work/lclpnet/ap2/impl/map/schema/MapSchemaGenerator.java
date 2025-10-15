@@ -39,7 +39,7 @@ public class MapSchemaGenerator {
         this.classLoader = classLoader;
         this.logger = logger;
 
-        for (var data : DataManager.Companion.getDATA_TYPES().values()) {
+        for (var data : DataManager.DATA_TYPES.values()) {
             this.dataByClass.put(data.type(), data);
         }
     }

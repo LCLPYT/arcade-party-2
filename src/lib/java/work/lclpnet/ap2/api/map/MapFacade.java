@@ -5,6 +5,7 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.game.MapReady;
+import work.lclpnet.gaco.asset.AssetRepository;
 import work.lclpnet.lobby.game.api.MapOptions;
 import work.lclpnet.lobby.game.map.GameMap;
 
@@ -34,6 +35,8 @@ public interface MapFacade {
     CompletableFuture<Void> reloadMaps(Identifier gameId);
 
     void forceMap(@Nullable Identifier mapId);
+
+    AssetRepository getAssetRepository();
 
     default void openRandomMap(Identifier gameId, MapReady onReady) {
         openRandomMap(gameId, MapOptions.TEMPORARY, onReady);

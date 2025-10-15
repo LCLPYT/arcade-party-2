@@ -5,6 +5,7 @@ import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.api.config.Ap2Config;
 import work.lclpnet.config.json.JsonConfigFactory;
+import work.lclpnet.gaco.asset.AssetRepository;
 import work.lclpnet.gaco.asset.CommonAssets;
 import work.lclpnet.gaco.asset.cache.AssetCache;
 import work.lclpnet.lobby.game.api.data.DataPackSink;
@@ -47,7 +48,8 @@ public class ApDataPacks implements GameDataPacks {
                     Ap2Config config = configManager.getConfig();
 
                     AssetCache cache = bootstrap.createAssetCache(CommonAssets.MAPS);
-                    var mapManager = bootstrap.createMapManager(config, cache);
+                    AssetRepository repo = bootstrap.createMapAssetRepo(config, cache);
+                    var mapManager = bootstrap.createMapManager(repo);
 
                     resources.add(cache);
 

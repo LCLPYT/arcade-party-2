@@ -30,20 +30,34 @@ public class JumpAndRunModuleSchema extends CommonMapSchema {
 
     @Property(name = "Custom start checkpoint", optional = true, ordinal = 2)
     @Nullable
-    private final Checkpoint start = null;
+    private Checkpoint start = null;
 
     @Property(name = "Custom start gates", optional = true, ordinal = 3)
-    private final List<BlockBox> startGates = List.of();
+    private List<BlockBox> startGates = List.of();
 
     @Property(name = "Entrance", optional = true, ordinal = 4)
     @Nullable
-    private final BlockFace entrance = null;
+    private BlockFace entrance = null;
 
     @Property(name = "Custom end checkpoint", optional = true, ordinal = 5)
     @Nullable
-    private final Checkpoint end = null;
+    private Checkpoint end = null;
 
     @Property(name = "Exit", optional = true, ordinal = 6)
     @Nullable
-    private final BlockFace exit = null;
+    private BlockFace exit = null;
+
+    public void validate() {
+        if (start == null && entrance == null)
+            throw new IllegalStateException("Custom start and entrance cannot both be null");
+
+        if (start != null && entrance != null)
+            throw new IllegalStateException("Custom start and entrance cannot both be set");
+
+        if (end == null && exit == null)
+            throw new IllegalStateException("Custom end and exit cannot both be null");
+
+        if (end != null && exit != null)
+            throw new IllegalStateException("Custom end and exit cannot both be set");
+    }
 }

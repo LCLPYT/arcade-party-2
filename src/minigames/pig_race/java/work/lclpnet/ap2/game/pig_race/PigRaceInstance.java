@@ -27,7 +27,6 @@ import work.lclpnet.ap2.impl.game.data.ScoreTimeDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.ApRegistries;
-import work.lclpnet.ap2.impl.util.checkpoint.Checkpoint;
 import work.lclpnet.ap2.impl.util.checkpoint.CheckpointHelper;
 import work.lclpnet.ap2.impl.util.checkpoint.CheckpointManager;
 import work.lclpnet.ap2.impl.util.handler.Visibility;
@@ -39,6 +38,7 @@ import work.lclpnet.gaco.collisions.ChunkedCollisionDetector;
 import work.lclpnet.gaco.collisions.CollisionDetector;
 import work.lclpnet.gaco.collisions.movement.TickMovementObserver;
 import work.lclpnet.gaco.ds.BlockBox;
+import work.lclpnet.gaco.ds.Checkpoint;
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.ServerPlayConnectionHooks;
@@ -119,7 +119,7 @@ public class PigRaceInstance extends FFAGameInstance {
 
         BlockBox spawnBounds = MapUtil.readBox(getMap().requireProperty("spawn-bounds"));
         JSONObject goalJson = getMap().requireProperty("goal");
-        Checkpoint goal = Checkpoint.fromJson(goalJson);
+        Checkpoint goal = CheckpointHelper.fromJson(goalJson);
 
         teleportPlayers(spawnBounds);
         setupCheckpoints(spawnBounds, goal);
@@ -177,12 +177,12 @@ public class PigRaceInstance extends FFAGameInstance {
             pig.discard();
         }
 
-        BlockPos pos = checkpoint.pos();
+        Vec3d pos = checkpoint.pos();
         double x = pos.getX() + 0.5, y = pos.getY(), z = pos.getZ() + 0.5;
         float yaw = checkpoint.yaw();
 
         pendingPigs.put(player.getUuid(), new PendingPig(x, y, z, yaw));
-        player.teleport(getWorld(), x, y, z, Set.of(), yaw, 0f, true);
+        player.teleport(getWorld(), x, y, z, Set.of(), yaw, checkpoint.pitch(), true);
 
         player.setFireTicks(0);
     }
@@ -197,12 +197,12 @@ public class PigRaceInstance extends FFAGameInstance {
         BlockPos spawnPos = new BlockPos((int) Math.floor(spawn.getX()), (int) Math.floor(spawn.getY()), (int) Math.floor(spawn.getZ()));
         float spawnYaw = MapUtils.getSpawnYaw(map);
 
-        checkpoints.add(new Checkpoint(spawnPos, spawnYaw, spawnBounds));
+        checkpoints.add(new Checkpoint(spawnPos.toBottomCenterPos(), spawnYaw, 0f, spawnBounds));
 
         for (Object obj : array) {
             if (!(obj instanceof JSONObject json)) continue;
 
-            Checkpoint checkpoint = Checkpoint.fromJson(json);
+            Checkpoint checkpoint = CheckpointHelper.fromJson(json);
             checkpoints.add(checkpoint);
         }
 

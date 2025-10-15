@@ -2,16 +2,17 @@ package work.lclpnet.ap2.game.jump_and_run.gen;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3i;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import org.slf4j.Logger;
+import work.lclpnet.ap2.impl.util.math.MathUtil;
+import work.lclpnet.ap2.impl.util.structure.StructureUtil;
 import work.lclpnet.gaco.ds.BlockBox;
+import work.lclpnet.gaco.ds.Checkpoint;
 import work.lclpnet.gaco.ds.WeightedList;
-import work.lclpnet.ap2.impl.util.checkpoint.Checkpoint;
-import work.lclpnet.gaco.math.AffineIntMatrix;
+import work.lclpnet.gaco.math.BlockFace;
 import work.lclpnet.kibu.schematic.FabricBlockStateAdapter;
 import work.lclpnet.kibu.schematic.FabricStructureWrapper;
 import work.lclpnet.kibu.structure.BlockStructure;
@@ -20,7 +21,6 @@ import work.lclpnet.kibu.util.math.Matrix3i;
 
 import java.util.*;
 
-import static java.lang.Math.*;
 import static java.util.Objects.requireNonNull;
 import static net.minecraft.block.HorizontalFacingBlock.FACING;
 
@@ -28,196 +28,87 @@ public class JumpAndRunGenerator {
 
     private final float targetMinutes;
     private final Random random;
-    private final Logger logger;
 
-    public JumpAndRunGenerator(float targetMinutes, Random random, Logger logger) {
+    public JumpAndRunGenerator(float targetMinutes, Random random) {
         this.targetMinutes = targetMinutes;
         this.random = random;
-        this.logger = logger;
     }
 
-    public JumpAndRun generate(JumpAndRunSetup.Parts parts, BlockPos spawnPos) {
-        Direction stackingDir = Direction.SOUTH;
+    public List<JumpModule> generate(JumpAndRunSetup.Parts parts) {
+        WeightedList<JumpModule> rooms = new WeightedList<>();
 
-        WeightedList<JumpRoom> rooms = new WeightedList<>();
-
-        for (JumpRoom room : parts.rooms()) {
-            rooms.add(room, room.metaData().weight());
+        for (var module : parts.modules()) {
+            rooms.add(module, module.data().weight());
         }
 
-        List<Segment> segments = new ArrayList<>();
+        List<JumpModule> modules = new ArrayList<>();
         float minutes = 0;
-        int lastMargin = 0;
 
         while (minutes < targetMinutes && !rooms.isEmpty()) {
-            int i = rooms.getRandomIndex(random);
-            JumpRoom room = rooms.remove(i);
+            int i = rooms.getRandomIndex(random);  // TODO seamless queue
+            JumpModule room = rooms.remove(i);
 
-            SegmentInfo segment = createSegmentParts(room, parts, stackingDir);
-
-            if (segment == null) {
-                logger.warn("Segment for room {} could not be created, skipping it", room.id());
-                continue;
-            }
-
-            JumpRoom.MetaData metaData = room.metaData();
-            int margin = metaData.stackingMargin();
-
-            // pre-margin
-            if (!segments.isEmpty()) {
-                int extraMargin = max(0, margin - lastMargin);
-
-                spawnPos = spawnPos.offset(stackingDir, extraMargin);
-            }
-
-            segment = segment.offset(spawnPos);
-
-            BlockBox bounds = segment.bounds();
-
-            segments.add(new Segment(segment.parts, bounds, segment.checkpoints(), segment.roomInfo, segment.start,
-                    segment.goalBounds(), metaData.effects()));
-
-            minutes += metaData.estimatedMinutes();
-
-            // offset position for next segment
-            Direction.Axis axis = stackingDir.getAxis();
-            int offset = bounds.sideLength(axis) + parts.start().bounds().sideLength(axis) / 2 + margin;
-
-            spawnPos = spawnPos.offset(stackingDir, offset);
-            lastMargin = margin;
+            modules.add(room);
+            minutes += room.data().estimatedMinutes();
         }
 
-        return new JumpAndRun(segments);
+        return modules;
     }
 
-    @Nullable
-    private SegmentInfo createSegmentParts(JumpRoom room, JumpAndRunSetup.Parts parts, Direction stackingDir) {
-        List<JumpPart> segment = new ArrayList<>(5);
+    public record JumpStructure(List<JumpPart> parts, Checkpoint checkpoint) {
 
-        var entrance = room.connectors().entrance();
-        var exit = room.connectors().exit();
-
-        OrientedPart mainPart;
-        JumpRoom.Start start;
-        Checkpoint end;
-
-        // Previously, all the rooms were interconnected. Now, rooms are independent of each other.
-        // Older rooms required both a start and an end connector, on which the bridges to the next rooms were placed.
-        // In the modern version, a room can either have both start and end connectors, only the start connector,
-        // only the end connector, or neither.
-        // Open connectors are connected with the template start or end room of each segment.
-
-        if (entrance != null) {
-            BlockPos spawnPos = BlockPos.ORIGIN;
-
-            OrientedPart startPart = createStart(parts.start(), spawnPos, stackingDir);
-            segment.add(startPart);
-
-            Connector startConnector = requireNonNull(startPart.out());
-            Bridge startBridge = makeBridge(startConnector);
-            segment.add(startBridge);
-
-            mainPart = createMainPart(room, startConnector, entrance);
-
-            double dot = stackingDir.getDoubleVector().dotProduct(Direction.SOUTH.getDoubleVector());
-            float spawnYaw = (float) toDegrees(acos(dot));
-            start = new JumpRoom.Start(spawnPos, spawnYaw, startBridge.bounds(), List.of(startBridge.bounds()));
-        } else {
-            start = room.start().orElse(null);
-
-            if (start == null) {
-                logger.error("Room {} without entrance must define a start", room.id());
-                return null;
+        public void place(ServerWorld world) {
+            for (JumpPart part : parts) {
+                StructureUtil.placeStructureFast(part, world);
             }
-
-            mainPart = createMainPart(room, exit);
         }
-
-        segment.add(mainPart);
-
-        BlockBox goalBounds;
-
-        if (exit != null) {
-            Connector endConnector = requireNonNull(mainPart.out());
-            Bridge endBridge = makeBridge(endConnector);
-            segment.add(endBridge);
-
-            OrientedPart endPart = createEnd(parts.end(), endConnector);
-            segment.add(endPart);
-
-            end = endBridge.asCheckpoint();
-            goalBounds = endPart.bounds();
-        } else {
-            end = room.end().orElse(null);
-
-            if (end == null) {
-                logger.error("Room {} without exit must define an end", room.id());
-                return null;
-            }
-
-            goalBounds = end.bounds();
-        }
-
-        return new SegmentInfo(segment, mainPart.info(), start, end, goalBounds);
     }
 
-    private OrientedPart createMainPart(JumpRoom room, @Nullable Connector exit) {
-        RoomData data = room.createData();
+    public JumpStructure getEntrance(JumpAndRunSetup.Parts parts, BlockFace connector) {
+        OrientedPart part = createEndPart(parts.start(), connector);
 
-        return OrientedPart.createTransformed(room.structure(), BlockPos.ORIGIN, 0, null, exit, data);
+        Connector partConnector = requireNonNull(part.out());
+        Bridge bridge = makeBridge(partConnector);
+
+        BlockPos spawn = requireNonNull(part.spawn(), "Spawn position must be non-null");
+        float yaw = MathUtil.yaw(connector.face().getOpposite().getDoubleVector());
+
+        var checkpoint = new Checkpoint(spawn.toBottomCenterPos(), yaw, 0f, bridge.bounds());
+
+        return new JumpStructure(List.of(part, bridge), checkpoint);
     }
 
-    private static OrientedPart createMainPart(JumpRoom room, Connector connector, Connector entrance) {
-        Direction direction = connector.direction();
-        BlockPos pos = connector.pos();
+    public JumpStructure getExit(JumpAndRunSetup.Parts parts, BlockFace connector) {
+        OrientedPart part = createEndPart(parts.end(), connector);
 
-        int targetRotation = direction.getOpposite().getHorizontalQuarterTurns();
-        int rotation = entrance.direction().getHorizontalQuarterTurns() - targetRotation;
-        Matrix3i rotationMatrix = Matrix3i.makeRotationY(rotation);
+        Connector partConnector = requireNonNull(part.out());
+        Bridge bridge = makeBridge(partConnector);
 
-        BlockPos entrancePos = entrance.pos();
-        Vec3i rotatedEntrance = rotationMatrix.transform(entrancePos);
+        float yaw = MathUtil.yaw(connector.face().getDoubleVector());
 
-        Vec3i bridgeOffset = direction.getVector().multiply(2);
-        BlockPos entranceOffset = pos.subtract(rotatedEntrance).add(bridgeOffset);
+        var checkpoint = new Checkpoint(bridge.spawn().toBottomCenterPos(), yaw, 0f, part.bounds());
 
-        RoomData data = room.createData();
-
-        return OrientedPart.createTransformed(room.structure(), entranceOffset, rotation, entrance, room.connectors().exit(), data);
+        return new JumpStructure(List.of(part, bridge), checkpoint);
     }
 
     @NotNull
-    private OrientedPart createStart(JumpEnd startRoom, BlockPos spawnPos, Direction facing) {
+    private OrientedPart createEndPart(JumpEnd startRoom, BlockFace connector) {
         BlockStructure startStruct = startRoom.structure();
 
-        int targetRotation = facing.getHorizontalQuarterTurns();
-        int rotation = startRoom.exit().direction().getHorizontalQuarterTurns() - targetRotation;
-        Matrix3i rotationMatrix = Matrix3i.makeRotationY(rotation);
+        Connector exit = startRoom.exit();
 
-        BlockPos spawn = requireNonNull(startRoom.spawn(), "Spawn position must be non-null");
-        Vec3i rotatedSpawn = rotationMatrix.transform(spawn);
-        BlockPos startOffset = spawnPos.subtract(rotatedSpawn);
-
-        return OrientedPart.createTransformed(startStruct, startOffset, rotation, null, startRoom.exit(), null);
-    }
-
-    @NotNull
-    private OrientedPart createEnd(JumpEnd endRoom, Connector connector) {
-        BlockStructure endStruct = endRoom.structure();
-
-        Connector exit = endRoom.exit();
-
-        int targetRotation = connector.direction().getOpposite().getHorizontalQuarterTurns();
+        int targetRotation = connector.face().getOpposite().getHorizontalQuarterTurns();
         int rotation = exit.direction().getHorizontalQuarterTurns() - targetRotation;
         Matrix3i rotationMatrix = Matrix3i.makeRotationY(rotation);
 
-        BlockPos exitPos = exit.pos();
-        Vec3i rotatedExit = rotationMatrix.transform(exitPos);
+        Vec3i rotatedExitPos = rotationMatrix.transform(exit.pos());
 
-        Vec3i bridgeOffset = connector.direction().getVector().multiply(2);
-        BlockPos endOffset = connector.pos().subtract(rotatedExit).add(bridgeOffset);
+        BlockPos offset = connector.pos().subtract(rotatedExitPos).offset(connector.face(), 2);
 
-        return OrientedPart.createTransformed(endStruct, endOffset, rotation, null, exit, null);
+        BlockPos spawn = startRoom.spawn();
+        BlockPos transformedSpawn = spawn != null ? rotationMatrix.transform(spawn).add(offset) : null;
+
+        return OrientedPart.createTransformed(startStruct, offset, rotation, null, exit, transformedSpawn);
     }
 
     @NotNull
@@ -276,48 +167,5 @@ public class JumpAndRunGenerator {
 
         blocks.forEach((pos, state) -> structure.setBlockState(adapter.adapt(pos), adapter.adapt(state)));
         return structure;
-    }
-
-    private record SegmentInfo(List<JumpPart> parts, RoomInfo roomInfo, JumpRoom.Start start, Checkpoint end, BlockBox goalBounds) {
-
-        public BlockBox bounds() {
-            return BlockBox.enclosing(parts.stream().map(JumpPart::bounds).toList());
-        }
-
-        public List<Checkpoint> checkpoints() {
-            List<Checkpoint> checkpoints = new ArrayList<>();
-
-            checkpoints.add(start.checkpoint());
-
-            for (JumpPart part : parts) {
-                if (!(part instanceof OrientedPart p)) continue;
-
-                RoomData data = p.info().data();
-
-                if (data == null) continue;
-
-                checkpoints.addAll(data.checkpoints());
-            }
-
-            checkpoints.add(end);
-
-            return checkpoints;
-        }
-
-        public SegmentInfo offset(BlockPos offset) {
-            List<JumpPart> parts = this.parts.stream().map(part -> part.transform(offset)).toList();
-
-            var mat = AffineIntMatrix.makeTranslation(offset);
-
-            BlockPos invOffset = offset.multiply(-1);
-
-            JumpRoom.Start relStart = start.relativize(invOffset);
-            Checkpoint relEnd = end.relativize(invOffset);
-
-            RoomInfo transformedInfo = roomInfo.transform(mat);
-            BlockBox transformedGoalBounds = goalBounds.transform(mat);
-
-            return new SegmentInfo(parts, transformedInfo, relStart, relEnd, transformedGoalBounds);
-        }
     }
 }

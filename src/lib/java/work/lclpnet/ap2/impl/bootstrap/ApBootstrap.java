@@ -66,8 +66,11 @@ public class ApBootstrap {
         return configManager.init(executor).thenApply(nil -> configManager);
     }
 
-    public MapManager createMapManager(Ap2Config config, @Nullable AssetCache cache) {
-        var assetRepo = createMultiAssetRepo(config.mapsSource, cache, CommonAssets.MAPS);
+    public AssetRepository createMapAssetRepo(Ap2Config config, @Nullable AssetCache cache) {
+        return createMultiAssetRepo(config.mapsSource, cache, CommonAssets.MAPS);
+    }
+
+    public MapManager createMapManager(AssetRepository assetRepo) {
         var mapRepo = new AssetMapRepository(assetRepo, logger);
 
         var lookup = new RepositoryMapLookup(mapRepo);
@@ -122,8 +125,8 @@ public class ApBootstrap {
 
     @NotNull
     public MapFacade createMapFacade(MinecraftServer server, MapManager mapManager, WorldFacade worldFacade,
-                                     MapRandomizer mapRandomizer) {
-        return new MapFacadeImpl(worldFacade, mapRandomizer, mapManager, server, logger);
+                                     MapRandomizer mapRandomizer, AssetRepository assetRepo) {
+        return new MapFacadeImpl(worldFacade, mapRandomizer, mapManager, assetRepo, server, logger);
     }
 
     public CompletableFuture<Result> dispatch(Ap2Config config, GameEnvironment environment,
@@ -148,11 +151,12 @@ public class ApBootstrap {
             }
         });
 
-        MapManager mapManager = createMapManager(config, mapsCache);
+        AssetRepository mapAssetRepo = createMapAssetRepo(config, mapsCache);
+        MapManager mapManager = createMapManager(mapAssetRepo);
         WorldFacade worldFacade = environment.getWorldFacade(() -> mapManager);
 
         var randomizer = new SeamlessMapRandomizer(mapManager, new Random(), logger);
-        MapFacade mapFacade = createMapFacade(server, mapManager, worldFacade, randomizer);
+        MapFacade mapFacade = createMapFacade(server, mapManager, worldFacade, randomizer, mapAssetRepo);
 
         AssetRepository songRepo = createMultiAssetRepo(config.songsSource, songsCache, ASSET_TYPE_SONGS);
         AssetSongManager songManager = new AssetSongManager(songRepo, logger);

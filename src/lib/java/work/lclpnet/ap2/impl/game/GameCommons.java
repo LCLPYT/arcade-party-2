@@ -53,6 +53,7 @@ import work.lclpnet.lobby.game.map.MapUtils;
 import work.lclpnet.lobby.game.util.BossBarTimer;
 
 import java.util.*;
+import java.util.function.DoubleSupplier;
 
 import static java.lang.Math.floor;
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
@@ -95,6 +96,10 @@ public class GameCommons {
     }
 
     public Action<PlayerAction> whenBelowY(double minY) {
+        return whenBelowY(() -> minY);
+    }
+
+    public Action<PlayerAction> whenBelowY(DoubleSupplier minY) {
         Participants participants = gameHandle.getParticipants();
 
         var hook = PlayerAction.createHook();
@@ -103,7 +108,7 @@ public class GameCommons {
         detector.register(player -> {
             if (!participants.isParticipating(player)) return;
 
-            if (player.getY() < minY) {
+            if (player.getY() < minY.getAsDouble()) {
                 hook.invoker().act(player);
             }
         });

@@ -12,6 +12,7 @@ import work.lclpnet.ap2.impl.util.debug.DebugController;
 import work.lclpnet.ap2.impl.util.math.MathUtil;
 import work.lclpnet.gaco.collisions.CollisionDetector;
 import work.lclpnet.gaco.collisions.movement.MovementObserver;
+import work.lclpnet.gaco.ds.Checkpoint;
 import work.lclpnet.gaco.ds.Collider;
 
 import java.util.*;
@@ -75,7 +76,7 @@ public class CheckpointManager {
             for (Checkpoint checkpoint : checkpoints) {
                 renderer.box(checkpoint.bounds(), Blocks.GREEN_STAINED_GLASS.getDefaultState());
 
-                Vec3d pos = checkpoint.pos().toBottomCenterPos();
+                Vec3d pos = checkpoint.pos();
 
                 renderer.marker(pos, Blocks.GREEN_CONCRETE.getDefaultState(), 0x00ff00);
                 renderer.arrow(pos, MathUtil.yaw2vec(checkpoint.yaw()), 0.25, Blocks.GREEN_WOOL.getDefaultState());
