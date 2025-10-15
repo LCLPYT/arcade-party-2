@@ -29,7 +29,7 @@ public class JumpAndRunSetup {
         this.map = map;
         this.world = world;
         this.logger = gameHandle.getLogger();
-        this.generator = new JumpAndRunGenerator(targetMinutes, new Random());
+        this.generator = new JumpAndRunGenerator(gameHandle.getGameInfo(), targetMinutes, new Random(), gameHandle.getLogger());
     }
 
     public CompletableFuture<JumpAndRun> setup() {

@@ -27,7 +27,9 @@ import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.map.MapBootstrap;
 import work.lclpnet.ap2.api.util.heads.PlayerHead;
 import work.lclpnet.ap2.core.hook.DripLeafTiltCallback;
-import work.lclpnet.ap2.game.jump_and_run.gen.*;
+import work.lclpnet.ap2.game.jump_and_run.gen.JumpAndRun;
+import work.lclpnet.ap2.game.jump_and_run.gen.JumpAndRunSetup;
+import work.lclpnet.ap2.game.jump_and_run.gen.JumpModule;
 import work.lclpnet.ap2.impl.game.FFAGameInstance;
 import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
@@ -61,7 +63,6 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 import static java.lang.Math.*;
-import static java.lang.Math.max;
 import static net.minecraft.util.Formatting.*;
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
@@ -390,7 +391,9 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
             task.cancel();
         }
 
-        if (!jumpAndRun.hasNextModule()) {
+        jumpAndRun.onModuleCompleted();
+
+        if (jumpAndRun.isDone()) {
             winManager.complete();
             return;
         }
@@ -405,8 +408,6 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
         if (prevFuture != null) {
             prevFuture.join();
         }
-
-        jumpAndRun.nextModule();
 
         jumpAndRun.loadModule().thenRun(() -> gameHandle.getServer().execute(() -> {
             initModule();

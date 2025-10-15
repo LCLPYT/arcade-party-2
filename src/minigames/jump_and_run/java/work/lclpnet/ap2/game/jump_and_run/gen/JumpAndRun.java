@@ -56,12 +56,8 @@ public class JumpAndRun {
         return moduleIndex;
     }
 
-    public boolean hasNextModule() {
-        return moduleIndex < modules.size();
-    }
-
-    public void nextModule() {
-        moduleIndex++;
+    public boolean isDone() {
+        return moduleIndex >= modules.size();
     }
 
     public CompletableFuture<SubWorldManager.WorldWithData> loadModule() {
@@ -220,5 +216,14 @@ public class JumpAndRun {
         }
 
         return schema().getStartGates();
+    }
+
+    public void onModuleCompleted() {
+        if (isDone()) return;
+
+        JumpModule module = module();
+        generator.pushModuleHistory(module);
+
+        moduleIndex++;
     }
 }

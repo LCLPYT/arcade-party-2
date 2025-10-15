@@ -1,5 +1,6 @@
 package work.lclpnet.ap2.game.jump_and_run.gen;
 
+import com.mojang.serialization.Codec;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.server.world.ServerWorld;
@@ -7,11 +8,17 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3i;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import org.slf4j.Logger;
+import work.lclpnet.ap2.ApConstants;
+import work.lclpnet.ap2.api.game.GameInfo;
 import work.lclpnet.ap2.impl.util.math.MathUtil;
 import work.lclpnet.ap2.impl.util.structure.StructureUtil;
 import work.lclpnet.gaco.ds.BlockBox;
 import work.lclpnet.gaco.ds.Checkpoint;
-import work.lclpnet.gaco.ds.WeightedList;
+import work.lclpnet.gaco.ds.queue.JsonFileQueuePersistence;
+import work.lclpnet.gaco.ds.queue.QueuePersistence;
+import work.lclpnet.gaco.ds.queue.SeamlessQueue;
 import work.lclpnet.gaco.math.BlockFace;
 import work.lclpnet.kibu.schematic.FabricBlockStateAdapter;
 import work.lclpnet.kibu.schematic.FabricStructureWrapper;
@@ -20,7 +27,11 @@ import work.lclpnet.kibu.structure.SimpleBlockStructure;
 import work.lclpnet.kibu.util.math.Matrix3i;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
+import static java.lang.Math.floor;
 import static java.util.Objects.requireNonNull;
 import static net.minecraft.block.HorizontalFacingBlock.FACING;
 
@@ -28,35 +39,43 @@ public class JumpAndRunGenerator {
 
     private final float targetMinutes;
     private final Random random;
+    private final QueuePersistence<String> queuePersistence;
+    private @Nullable SeamlessQueue<JumpModule> queue = null;
 
-    public JumpAndRunGenerator(float targetMinutes, Random random) {
+    public JumpAndRunGenerator(GameInfo gameInfo, float targetMinutes, Random random, Logger logger) {
         this.targetMinutes = targetMinutes;
         this.random = random;
+
+        queuePersistence = JsonFileQueuePersistence.create(ApConstants.ID, gameInfo.identifier("module_queue"), Codec.STRING, logger);
     }
 
     public List<JumpModule> generate(JumpAndRunSetup.Parts parts) {
-        WeightedList<JumpModule> rooms = new WeightedList<>();
-
-        for (var module : parts.modules()) {
-            rooms.add(module, module.data().weight());
-        }
+        queue = createQueue(Set.copyOf(parts.modules()));
 
         List<JumpModule> modules = new ArrayList<>();
         float minutes = 0;
 
-        while (minutes < targetMinutes && !rooms.isEmpty()) {
-            int i = rooms.getRandomIndex(random);  // TODO seamless queue
-            JumpModule room = rooms.remove(i);
+        while (minutes < targetMinutes) {
+            JumpModule module = queue.next();
 
-            modules.add(room);
-            minutes += room.data().estimatedMinutes();
+            modules.add(module);
+            
+            minutes += module.data().estimatedMinutes();
         }
 
         return modules;
     }
 
-    public record JumpStructure(List<JumpPart> parts, Checkpoint checkpoint) {
+    private SeamlessQueue<JumpModule> createQueue(Set<JumpModule> pool) {
+        int margin = (int) floor(pool.size() * 0.4f);
 
+        var byPath = pool.stream().collect(Collectors.toMap(JumpModule::path, Function.identity()));
+        var restored = queuePersistence.restore();
+
+        return new SeamlessQueue<>(pool, random, margin, restored.map(byPath::get));
+    }
+
+    public record JumpStructure(List<JumpPart> parts, Checkpoint checkpoint) {
         public void place(ServerWorld world) {
             for (JumpPart part : parts) {
                 StructureUtil.placeStructureFast(part, world);
@@ -167,5 +186,13 @@ public class JumpAndRunGenerator {
 
         blocks.forEach((pos, state) -> structure.setBlockState(adapter.adapt(pos), adapter.adapt(state)));
         return structure;
+    }
+
+    public void pushModuleHistory(JumpModule module) {
+        if (queue == null) return;
+
+        queue.pushElement(module);
+
+        CompletableFuture.runAsync(() -> queuePersistence.store(queue.transfer().map(JumpModule::path)));
     }
 }

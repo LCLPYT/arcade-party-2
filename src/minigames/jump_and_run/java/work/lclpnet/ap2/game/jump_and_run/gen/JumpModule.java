@@ -20,12 +20,11 @@ public record JumpModule(String path, Data data) {
         }
 
         float value = json.optNumber("value", 1f).floatValue();
-        float weight = json.optNumber("weight", 1f).floatValue();
 
         Set<ApEffect> effects = ApEffects.fromJson(json.optJSONArray("effects", new JSONArray()), logger);
 
-        return new JumpModule(path, new Data(value, 0, weight, effects));
+        return new JumpModule(path, new Data(value, 0, effects));
     }
 
-    public record Data(float estimatedMinutes, int stackingMargin, float weight, Set<ApEffect> effects) {}
+    public record Data(float estimatedMinutes, int stackingMargin, Set<ApEffect> effects) {}
 }
