@@ -4,6 +4,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.GameRules;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.game.jump_and_run.JumpAndRunModuleSchema;
 import work.lclpnet.ap2.impl.map.schema.MapSchemaLoader;
@@ -102,6 +103,14 @@ public class JumpAndRun {
     }
 
     private void processWorld() {
+        GameRules gameRules = world().getGameRules();
+        gameRules.get(GameRules.DO_FIRE_TICK).set(false, server);
+        gameRules.get(GameRules.RANDOM_TICK_SPEED).set(0, server);
+        gameRules.get(GameRules.DO_MOB_GRIEFING).set(false, server);
+        gameRules.get(GameRules.DO_DAYLIGHT_CYCLE).set(false, server);
+        gameRules.get(GameRules.DO_WEATHER_CYCLE).set(false, server);
+        gameRules.get(GameRules.FALL_DAMAGE).set(false, server);
+
         var schema = schema();
 
         BlockFace entrance = schema.getEntrance();

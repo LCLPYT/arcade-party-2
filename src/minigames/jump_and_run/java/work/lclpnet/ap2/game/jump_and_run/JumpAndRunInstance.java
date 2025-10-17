@@ -7,7 +7,6 @@ import net.minecraft.component.DataComponentTypes;
 import net.minecraft.entity.damage.DamageTypes;
 import net.minecraft.item.ItemStack;
 import net.minecraft.particle.ParticleTypes;
-import net.minecraft.registry.tag.DamageTypeTags;
 import net.minecraft.scoreboard.*;
 import net.minecraft.scoreboard.number.StyledNumberFormat;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -81,7 +80,7 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
     private final PlayerMovementObserver movementObserver;
     private final List<BlockPos> gateBlocks = new ArrayList<>();
     private JumpAndRun jumpAndRun;
-    private CheckpointManager checkpoints;
+    private CheckpointManager checkpointManager;
     private DynamicTranslatedPlayerBossBar bossBar;
     private volatile boolean segmentActive = false;
     private final Set<UUID> inGoal = new HashSet<>();
@@ -182,7 +181,8 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
             config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, source) -> {
                 if (entity instanceof ServerPlayerEntity player
                         && gameHandle.getParticipants().isParticipating(player)
-                        && (source.isIn(DamageTypeTags.IS_FIRE) || source.isOf(DamageTypes.OUT_OF_WORLD))) {
+                        && (source.isOf(DamageTypes.IN_FIRE) || source.isOf(DamageTypes.LAVA)
+                        || source.isOf(DamageTypes.HOT_FLOOR) || source.isOf(DamageTypes.OUT_OF_WORLD))) {
 
                     resetPlayerToCheckpoint(player);
                 }
@@ -255,7 +255,7 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
     }
 
     private void resetPlayerToCheckpoint(ServerPlayerEntity player) {
-        Checkpoint checkpoint = checkpoints.getCheckpoint(player);
+        Checkpoint checkpoint = checkpointManager.getCheckpoint(player);
 
         Vec3d pos = checkpoint.pos();
         player.teleport(jumpAndRun.world(), pos.getX(), pos.getY(), pos.getZ(), Set.of(), checkpoint.yaw(), checkpoint.pitch(), true);
@@ -327,15 +327,19 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
         collisionDetector.clear();
         movementObserver.clear();
 
-        if (checkpoints != null) {
-            checkpoints.destroy();
+        if (checkpointManager != null) {
+            checkpointManager.destroy();
         }
 
-        checkpoints = new CheckpointManager(jumpAndRun.checkpoints(), commons().debugController());
-        checkpoints.init(collisionDetector, movementObserver, world);
-        CheckpointHelper.notifyWhenReached(checkpoints, gameHandle.getTranslations());
+        List<Checkpoint> checkpoints = jumpAndRun.checkpoints();
+        checkpointManager = new CheckpointManager(checkpoints, commons().debugController());
+        checkpointManager.init(collisionDetector, movementObserver, world);
+        CheckpointHelper.notifyWhenReached(checkpointManager, gameHandle.getTranslations());
 
-        movementObserver.whenEntering(jumpAndRun.endCheckpoint().bounds(), player -> onReachedGoal(player, true));
+        movementObserver.whenEntering(jumpAndRun.endCheckpoint().bounds(), player -> {
+            checkpointManager.grantCheckpoint(player, checkpoints.size() - 1);
+            onReachedGoal(player, true);
+        });
 
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
             bossBar.setArgument(player, 0, styled(jumpAndRun.moduleIndex() + 1, YELLOW));
@@ -388,11 +392,7 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
     private void checkSegmentComplete() {
         if (!requiredAmountReachedGoal()) return;
 
-        TaskHandle task = this.task;
-
-        if (task != null) {
-            task.cancel();
-        }
+        cancelPreviousTask();
 
         jumpAndRun.onModuleCompleted();
 
@@ -419,16 +419,13 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
             waitFor = null;
         }
 
-        TaskHandle task = this.task;
-
-        if (task != null) {
-            task.cancel();
-        }
+        cancelPreviousTask();
 
         jumpAndRun.loadModule().thenRun(() -> gameHandle.getServer().execute(() -> {
             initModule();
 
-            gameHandle.getGameScheduler().timeout(this::nextSegment, NEXT_PHASE_WAIT_TICKS);
+            cancelPreviousTask();
+            task = gameHandle.getGameScheduler().timeout(this::nextSegment, NEXT_PHASE_WAIT_TICKS);
 
             waitFor = jumpAndRun.unloadPreviousModule().whenComplete((res, err) -> waitFor = null);
         })).whenComplete((_res, err) -> {
@@ -436,6 +433,14 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
                 gameHandle.getLogger().error("Failed to load module", err);
             }
         });
+    }
+
+    private void cancelPreviousTask() {
+        TaskHandle task = this.task;
+
+        if (task != null) {
+            task.cancel();
+        }
     }
 
     private boolean requiredAmountReachedGoal() {
