@@ -53,7 +53,7 @@ import static work.lclpnet.ap2.game.fine_tuning.FineTuningInstance.MELODY_COUNT;
 
 class TuningPhase {
 
-    public static final int TUNING_TIME_SECONDS = 40;
+    public static final int TUNING_TIME_SECONDS = 36;
 
     private final MiniGameHandle gameHandle;
     private final Map<UUID, FineTuningRoom> rooms;
