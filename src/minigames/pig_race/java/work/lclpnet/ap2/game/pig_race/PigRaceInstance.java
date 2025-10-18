@@ -21,18 +21,15 @@ import org.json.JSONObject;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
-import work.lclpnet.ap2.api.util.heads.PlayerHead;
 import work.lclpnet.ap2.impl.game.FFAGameInstance;
 import work.lclpnet.ap2.impl.game.data.ScoreTimeDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.map.MapUtil;
-import work.lclpnet.ap2.impl.util.ApRegistries;
 import work.lclpnet.ap2.impl.util.checkpoint.CheckpointHelper;
 import work.lclpnet.ap2.impl.util.checkpoint.CheckpointManager;
 import work.lclpnet.ap2.impl.util.handler.Visibility;
 import work.lclpnet.ap2.impl.util.handler.VisibilityHandler;
 import work.lclpnet.ap2.impl.util.handler.VisibilityManager;
-import work.lclpnet.ap2.impl.util.heads.PlayerHeads;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.gaco.collisions.ChunkedCollisionDetector;
 import work.lclpnet.gaco.collisions.CollisionDetector;
@@ -158,7 +155,11 @@ public class PigRaceInstance extends FFAGameInstance {
             }
         }, 1);
 
-        participants.forEach(this::giveResetItem);
+        CheckpointHelper.giveResetItem(participants, getWorld(), gameHandle.getTranslations(), 8);
+
+        for (ServerPlayerEntity player : participants) {
+            PlayerInventoryAccess.setSelectedSlot(player, 4);
+        }
     }
 
     private Team createTeam() {
@@ -269,24 +270,6 @@ public class PigRaceInstance extends FFAGameInstance {
                 .styled(style -> style.withItalic(false).withFormatting(Formatting.GOLD)));
 
         player.getInventory().setStack(4, stick);
-    }
-
-    private void giveResetItem(ServerPlayerEntity player) {
-        Translations translations = gameHandle.getTranslations();
-
-        PlayerHead head = getWorld().getRegistryManager()
-                .getOrThrow(ApRegistries.PLAYER_HEAD)
-                .getOptionalValue(PlayerHeads.REDSTONE_BLOCK_REFRESH)
-                .orElseThrow();
-
-        ItemStack reset = head.createStack();
-
-        reset.set(DataComponentTypes.CUSTOM_NAME, translations.translateText(player, "ap2.game.reset").formatted(Formatting.RED)
-                .styled(style -> style.withItalic(false)));
-
-        player.getInventory().setStack(8, reset);
-
-        PlayerInventoryAccess.setSelectedSlot(player, 4);
     }
 
     private record PendingPig(double x, double y, double z, float yaw) {

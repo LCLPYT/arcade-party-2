@@ -3,9 +3,7 @@ package work.lclpnet.ap2.game.jump_and_run;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
-import net.minecraft.component.DataComponentTypes;
 import net.minecraft.entity.damage.DamageTypes;
-import net.minecraft.item.ItemStack;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.scoreboard.*;
 import net.minecraft.scoreboard.number.StyledNumberFormat;
@@ -24,7 +22,6 @@ import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.map.MapBootstrap;
-import work.lclpnet.ap2.api.util.heads.PlayerHead;
 import work.lclpnet.ap2.core.hook.DripLeafTiltCallback;
 import work.lclpnet.ap2.game.jump_and_run.gen.JumpAndRun;
 import work.lclpnet.ap2.game.jump_and_run.gen.JumpAndRunSetup;
@@ -32,7 +29,6 @@ import work.lclpnet.ap2.game.jump_and_run.gen.JumpModule;
 import work.lclpnet.ap2.impl.game.FFAGameInstance;
 import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
-import work.lclpnet.ap2.impl.util.ApRegistries;
 import work.lclpnet.ap2.impl.util.SoundHelper;
 import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedPlayerBossBar;
 import work.lclpnet.ap2.impl.util.checkpoint.CheckpointHelper;
@@ -40,7 +36,6 @@ import work.lclpnet.ap2.impl.util.checkpoint.CheckpointManager;
 import work.lclpnet.ap2.impl.util.handler.Visibility;
 import work.lclpnet.ap2.impl.util.handler.VisibilityHandler;
 import work.lclpnet.ap2.impl.util.handler.VisibilityManager;
-import work.lclpnet.ap2.impl.util.heads.PlayerHeads;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.gaco.collisions.ChunkedCollisionDetector;
 import work.lclpnet.gaco.collisions.CollisionDetector;
@@ -208,19 +203,9 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
     }
 
     private void giveItemsToPlayers() {
-        Translations translations = gameHandle.getTranslations();
-        PlayerHead head = getWorld().getRegistryManager()
-                .getOrThrow(ApRegistries.PLAYER_HEAD)
-                .getOptionalValue(PlayerHeads.REDSTONE_BLOCK_REFRESH)
-                .orElseThrow();
+        CheckpointHelper.giveResetItem(gameHandle.getParticipants(), getWorld(), gameHandle.getTranslations(), 4);
 
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
-            ItemStack stack = head.createStack();
-
-            var name = translations.translateText(player, "ap2.game.reset").formatted(Formatting.RED);
-            stack.set(DataComponentTypes.CUSTOM_NAME, name.styled(style -> style.withItalic(false)));
-
-            player.getInventory().setStack(4, stack);
             PlayerInventoryAccess.setSelectedSlot(player, 4);
         }
     }
