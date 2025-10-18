@@ -19,17 +19,20 @@ import java.util.List;
 public class PigRaceSchema extends CommonMapSchema {
 
     @Property(name = "Start spawn box")
-    public BlockBox spawnBounds;
+    private BlockBox spawnBounds;
 
     @Property(name = "Start gates")
-    public List<BlockBox> gates = List.of();
+    private List<BlockBox> gates = List.of();
 
-    @Property(name = "Goal bounds")
-    public BlockBox goalBounds;
+    @Property(name = "Goal checkpoint")
+    private Checkpoint goal;
 
     @Property(name = "Checkpoints")
-    public List<Checkpoint> checkpoints = List.of();
+    private List<Checkpoint> checkpoints = List.of();
 
     @Property(name = "Path")
-    public SplinePath path;
+    private SplinePath path;
+
+    @Property(name = "Progress Markers")
+    private List<Checkpoint> progressMarkers = List.of();
 }

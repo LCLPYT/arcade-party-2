@@ -26,6 +26,8 @@ import work.lclpnet.ap2.api.map.MapBootstrap;
 import work.lclpnet.ap2.api.map.MapBootstrapFunction;
 import work.lclpnet.ap2.api.map.MapFacade;
 import work.lclpnet.ap2.impl.map.ServerThreadMapBootstrap;
+import work.lclpnet.ap2.impl.map.schema.MapSchemaLoader;
+import work.lclpnet.ap2.impl.map.schema.SchemaHolder;
 import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedPlayerBossBar;
 import work.lclpnet.ap2.impl.util.effect.ApEffect;
 import work.lclpnet.ap2.impl.util.effect.ApEffects;
@@ -47,6 +49,8 @@ import work.lclpnet.lobby.game.api.WorldFacade;
 import work.lclpnet.lobby.game.map.GameMap;
 import work.lclpnet.lobby.game.util.BossBarTimer;
 import work.lclpnet.lobby.game.util.ProtectorUtils;
+import work.lclpnet.map_api.GameMapApi;
+import work.lclpnet.map_api.data.WorldData;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -78,6 +82,7 @@ public abstract class BaseGameInstance implements MiniGameInstance {
     private int countdownValue = 0;
     private final Set<ApEffect> activeEffects = new HashSet<>();
     private boolean locatorBarEnabled = false;
+    private @Nullable SchemaHolder<?> schemaHolder = null;
 
     public BaseGameInstance(MiniGameHandle gameHandle) {
         this.gameHandle = gameHandle;
@@ -106,8 +111,43 @@ public abstract class BaseGameInstance implements MiniGameInstance {
             this.world = world;
             this.map = map;
 
-            return bootstrap.createWorldBootstrap(world, map);
+            var future = bootstrap.createWorldBootstrap(world, map);
+
+            var schemaHolder = this.schemaHolder;
+
+            if (schemaHolder != null) {
+                var dataFuture = GameMapApi.get(gameHandle.getServer()).getDataManager()
+                        .awaitWorldData(world.getRegistryKey())
+                        .whenComplete((worldData, err) -> {
+                            if (err != null) {
+                                gameHandle.getLogger().error("Failed to acquire map data", err);
+                                return;
+                            }
+
+                            loadSchema(worldData, schemaHolder);
+                        });
+
+                future.thenRun(() -> {
+                    System.out.println(dataFuture);
+                        dataFuture.join();
+                });
+            }
+
+            return future;
         }), this::onMapReady);
+    }
+
+    private <T> void loadSchema(WorldData data, SchemaHolder<T> holder) {
+        MapSchemaLoader loader = new MapSchemaLoader(gameHandle.getLogger());
+
+        T instance = loader.load(data, holder.getSchemaClass());
+
+        if (instance == null) {
+            gameHandle.getLogger().error("Failed to load schema type, look for any previous errors. Game may not function properly...");
+            return;
+        }
+
+        holder.set(instance);
     }
 
     protected MapBootstrap getMapBootstrap() {
@@ -414,6 +454,14 @@ public abstract class BaseGameInstance implements MiniGameInstance {
         }
 
         return commons;
+    }
+
+    protected final <T> SchemaHolder<T> useSchema(Class<T> schemaClass) {
+        SchemaHolder<T> holder = new SchemaHolder<>(schemaClass);
+
+        this.schemaHolder = holder;
+
+        return holder;
     }
 
     protected abstract void prepare();

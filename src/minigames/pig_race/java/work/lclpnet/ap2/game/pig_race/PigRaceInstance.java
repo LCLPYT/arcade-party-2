@@ -16,8 +16,6 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
-import org.json.JSONArray;
-import org.json.JSONObject;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
@@ -25,7 +23,7 @@ import work.lclpnet.ap2.api.util.heads.PlayerHead;
 import work.lclpnet.ap2.impl.game.FFAGameInstance;
 import work.lclpnet.ap2.impl.game.data.ScoreTimeDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
-import work.lclpnet.ap2.impl.map.MapUtil;
+import work.lclpnet.ap2.impl.map.schema.SchemaHolder;
 import work.lclpnet.ap2.impl.util.ApRegistries;
 import work.lclpnet.ap2.impl.util.checkpoint.CheckpointHelper;
 import work.lclpnet.ap2.impl.util.checkpoint.CheckpointManager;
@@ -45,9 +43,9 @@ import work.lclpnet.kibu.hook.ServerPlayConnectionHooks;
 import work.lclpnet.kibu.hook.entity.EntityDismountCallback;
 import work.lclpnet.kibu.hook.entity.EntityMountCallback;
 import work.lclpnet.kibu.hook.player.PlayerTeleportedCallback;
+import work.lclpnet.kibu.hook.util.PositionRotation;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.lobby.game.map.GameMap;
-import work.lclpnet.lobby.game.map.MapUtils;
 
 import java.util.*;
 
@@ -60,12 +58,16 @@ public class PigRaceInstance extends FFAGameInstance {
     private final CollisionDetector collisionDetector;
     private final TickMovementObserver movementObserver;
     private final Map<UUID, PendingPig> pendingPigs = new HashMap<>();
+    private final SchemaHolder<PigRaceSchema> schemaHolder;
     private CheckpointManager checkpointManager;
 
     public PigRaceInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
+
         collisionDetector = new ChunkedCollisionDetector();
         movementObserver = new TickMovementObserver(collisionDetector, gameHandle.getParticipants()::isParticipating);
+
+        schemaHolder = useSchema(PigRaceSchema.class);
     }
 
     @Override
@@ -75,6 +77,7 @@ public class PigRaceInstance extends FFAGameInstance {
 
     @Override
     protected void prepare() {
+        PigRaceSchema schema = schemaHolder.get();
         useTaskDisplay();
 
         HookRegistrar hooks = gameHandle.getHooks();
@@ -117,9 +120,8 @@ public class PigRaceInstance extends FFAGameInstance {
             }
         });
 
-        BlockBox spawnBounds = MapUtil.readBox(getMap().requireProperty("spawn-bounds"));
-        JSONObject goalJson = getMap().requireProperty("goal");
-        Checkpoint goal = CheckpointHelper.fromJson(goalJson);
+        BlockBox spawnBounds = schema.getSpawnBounds();
+        Checkpoint goal = schema.getGoal();
 
         teleportPlayers(spawnBounds);
         setupCheckpoints(spawnBounds, goal);
@@ -188,26 +190,14 @@ public class PigRaceInstance extends FFAGameInstance {
     }
 
     private void setupCheckpoints(BlockBox spawnBounds, Checkpoint goal) {
-        GameMap map = getMap();
-        JSONArray array = map.requireProperty("checkpoints");
-        List<Checkpoint> checkpoints = new ArrayList<>(array.length());
+        var schema = schemaHolder.get();
 
-        // add the spawn as initial checkpoint
-        Vec3d spawn = MapUtils.getSpawnPosition(map);
-        BlockPos spawnPos = new BlockPos((int) Math.floor(spawn.getX()), (int) Math.floor(spawn.getY()), (int) Math.floor(spawn.getZ()));
-        float spawnYaw = MapUtils.getSpawnYaw(map);
+        List<Checkpoint> checkpoints = new ArrayList<>(schema.getCheckpoints());
 
-        checkpoints.add(new Checkpoint(spawnPos.toBottomCenterPos(), spawnYaw, 0f, spawnBounds));
+        PositionRotation spawn = schema.getSpawn();
+        checkpoints.addFirst(new Checkpoint(new Vec3d(spawn.getX(), spawn.getY(), spawn.getZ()), spawn.getYaw(), spawn.getPitch(), spawnBounds));
 
-        for (Object obj : array) {
-            if (!(obj instanceof JSONObject json)) continue;
-
-            Checkpoint checkpoint = CheckpointHelper.fromJson(json);
-            checkpoints.add(checkpoint);
-        }
-
-        // add the goal as last checkpoint
-        checkpoints.add(goal);
+        checkpoints.addLast(goal);
 
         checkpointManager = new CheckpointManager(checkpoints, commons().debugController());
         checkpointManager.init(collisionDetector, movementObserver, getWorld());
@@ -226,15 +216,14 @@ public class PigRaceInstance extends FFAGameInstance {
     }
 
     private void openGate() {
-        GameMap map = getMap();
         ServerWorld world = getWorld();
-
-        BlockBox bounds = MapUtil.readBox(map.requireProperty("gate"));
 
         BlockState air = Blocks.AIR.getDefaultState();
 
-        for (BlockPos pos : bounds) {
-            world.setBlockState(pos, air);
+        for (BlockBox bounds : schemaHolder.get().getGates()) {
+            for (BlockPos pos : bounds) {
+                world.setBlockState(pos, air);
+            }
         }
     }
 
@@ -242,11 +231,10 @@ public class PigRaceInstance extends FFAGameInstance {
         GameMap map = getMap();
         ServerWorld world = getWorld();
 
-        float yaw = 0;
-
-        if (map.hasProperty("spawn-yaw")) {
-            yaw = MapUtil.readAngle(map.requireProperty("spawn-yaw"));
-        }
+        var schema = schemaHolder.get();
+        PositionRotation spawn = schema.getSpawn();
+        float yaw = spawn.getYaw();
+        float pitch = spawn.getPitch();
 
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
             Vec3d pos = bounds.randomPos(random);
