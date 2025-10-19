@@ -405,9 +405,11 @@ public abstract class BaseGameInstance implements MiniGameInstance {
     }
 
     protected final DynamicTranslatedPlayerBossBar usePlayerDynamicTaskDisplay(Object... args) {
-        GameInfo gameInfo = gameHandle.getGameInfo();
+        return usePlayerDynamicDisplay(gameHandle.getGameInfo().getTaskKey(), args);
+    }
+
+    protected final DynamicTranslatedPlayerBossBar usePlayerDynamicDisplay(String key, Object... args) {
         Identifier id = ApConstants.identifier("task");
-        String key = gameInfo.getTaskKey();
 
         Translations translations = gameHandle.getTranslations();
         BossBarProvider provider = gameHandle.getBossBarProvider();

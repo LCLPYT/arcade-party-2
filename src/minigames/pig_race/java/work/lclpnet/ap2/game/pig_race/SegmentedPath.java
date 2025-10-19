@@ -33,7 +33,7 @@ import static java.lang.Math.max;
 
 public class SegmentedPath {
 
-    public static final boolean DEBUG_PROGRESS = true;
+    public static final boolean DEBUG_PROGRESS = false;
 
     private final List<Segment> segments;
     private final Object2IntMap<UUID> playerSegments = new Object2IntOpenHashMap<>();

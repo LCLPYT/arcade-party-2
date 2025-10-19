@@ -11,17 +11,25 @@ import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.passive.PigEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
+import net.minecraft.particle.ParticleTypes;
 import net.minecraft.scoreboard.AbstractTeam;
 import net.minecraft.scoreboard.Team;
+import net.minecraft.scoreboard.number.BlankNumberFormat;
+import net.minecraft.scoreboard.number.FixedNumberFormat;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import work.lclpnet.ap2.ApConstants;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
+import work.lclpnet.ap2.api.map.MapBootstrap;
+import work.lclpnet.ap2.api.music.WeightedSong;
 import work.lclpnet.ap2.api.util.heads.PlayerHead;
 import work.lclpnet.ap2.impl.game.FFAGameInstance;
 import work.lclpnet.ap2.impl.game.data.CombinedDataContainer;
@@ -30,7 +38,11 @@ import work.lclpnet.ap2.impl.game.data.OrderedDataContainer;
 import work.lclpnet.ap2.impl.game.data.Ordering;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.map.schema.SchemaHolder;
+import work.lclpnet.ap2.impl.music.MusicHelper;
 import work.lclpnet.ap2.impl.util.ApRegistries;
+import work.lclpnet.ap2.impl.util.ParticleHelper;
+import work.lclpnet.ap2.impl.util.ScoreboardUtil;
+import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedPlayerBossBar;
 import work.lclpnet.ap2.impl.util.checkpoint.CheckpointHelper;
 import work.lclpnet.ap2.impl.util.checkpoint.CheckpointManager;
 import work.lclpnet.ap2.impl.util.handler.Visibility;
@@ -38,6 +50,9 @@ import work.lclpnet.ap2.impl.util.handler.VisibilityHandler;
 import work.lclpnet.ap2.impl.util.handler.VisibilityManager;
 import work.lclpnet.ap2.impl.util.heads.PlayerHeads;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
+import work.lclpnet.ap2.impl.util.scoreboard.DynamicScoreHandle;
+import work.lclpnet.ap2.impl.util.scoreboard.DynamicScoreboardObjective;
+import work.lclpnet.ap2.impl.util.scoreboard.ScoreboardLayout;
 import work.lclpnet.gaco.collisions.ChunkedCollisionDetector;
 import work.lclpnet.gaco.collisions.CollisionDetector;
 import work.lclpnet.gaco.collisions.movement.TickMovementObserver;
@@ -52,15 +67,25 @@ import work.lclpnet.kibu.hook.entity.EntityMountCallback;
 import work.lclpnet.kibu.hook.player.PlayerInventoryHooks;
 import work.lclpnet.kibu.hook.player.PlayerTeleportedCallback;
 import work.lclpnet.kibu.hook.util.PositionRotation;
+import work.lclpnet.kibu.title.Title;
 import work.lclpnet.kibu.translate.Translations;
+import work.lclpnet.kibu.translate.text.TranslatedText;
+import work.lclpnet.lobby.game.map.GameMap;
 
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
+import static net.minecraft.util.Formatting.*;
+import static work.lclpnet.ap2.impl.music.MusicHelper.ARCADE_PARTY_GAME_TAG;
 import static work.lclpnet.ap2.impl.util.ItemHelper.unbreakable;
+import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
-public class PigRaceInstance extends FFAGameInstance {
+public class PigRaceInstance extends FFAGameInstance implements MapBootstrap {
+
+    public static final String NEXT_ROUND_SONG_ID = "ap_begin";
+    public static final int STICK_SLOT = 4;
 
     private final OrderedDataContainer<ServerPlayerEntity, PlayerRef> winnerData = new OrderedDataContainer<>(PlayerRef::create);
     private final DoubleScoreDataContainer<ServerPlayerEntity, PlayerRef> distanceData = new DoubleScoreDataContainer<>(PlayerRef::create, Ordering.ASCENDING, "ap2.score.blocks_away");
@@ -71,9 +96,15 @@ public class PigRaceInstance extends FFAGameInstance {
     private final Map<UUID, PendingPig> pendingPigs = new HashMap<>();
     private final SchemaHolder<PigRaceSchema> schemaHolder;
     private final Object2IntMap<UUID> playerRounds = new Object2IntOpenHashMap<>();
+    private final Set<String> prevHolders = new HashSet<>();
+    private final Set<String> holderRemoval = new HashSet<>();
     private CheckpointManager checkpointManager;
     private SegmentedPath path;
     private int rounds = 1;
+    private @Nullable DynamicScoreHandle roundHandle;
+    private DynamicTranslatedPlayerBossBar bossBar;
+    private @Nullable WeightedSong nextRoundSong = null;
+    private DynamicScoreboardObjective objective;
 
     public PigRaceInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
@@ -90,11 +121,22 @@ public class PigRaceInstance extends FFAGameInstance {
     }
 
     @Override
+    public @NotNull CompletableFuture<Void> createWorldBootstrap(@NotNull ServerWorld world, @NotNull GameMap map) {
+        return gameHandle.getSongManager().getSongAndCache(ARCADE_PARTY_GAME_TAG, NEXT_ROUND_SONG_ID)
+                .thenAccept(song -> nextRoundSong = song.orElse(null));
+    }
+
+    @Override
     protected void prepare() {
         rounds = getMap().getProperties().optInt("rounds", rounds);
 
         PigRaceSchema schema = schemaHolder.get();
-        useTaskDisplay();
+
+        if (rounds > 1) {
+            bossBar = usePlayerDynamicDisplay("game.ap2.pig_race.task_rounds", styled(1, YELLOW), styled(rounds, YELLOW));
+        } else {
+            bossBar = usePlayerDynamicTaskDisplay();
+        }
 
         HookRegistrar hooks = gameHandle.getHooks();
         CustomScoreboardManager scoreboardManager = gameHandle.getScoreboardManager();
@@ -153,6 +195,8 @@ public class PigRaceInstance extends FFAGameInstance {
                 gameHandle.getServer(), commons().debugController());
 
         path = segmentedPath;
+
+        setupScoreboard();
     }
 
     private SplinePath augmentPath(PigRaceSchema schema) {
@@ -206,6 +250,94 @@ public class PigRaceInstance extends FFAGameInstance {
             resetPlayerToCheckpoint(player);
             return true;
         });
+
+        addScoreboardRanking();
+
+        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
+            PlayerInventoryAccess.setSelectedSlot(player, STICK_SLOT);
+        }
+    }
+
+    private void setupScoreboard() {
+        CustomScoreboardManager scoreboardManager = gameHandle.getScoreboardManager();
+
+        objective = ScoreboardUtil.setupDynamicSidebar(scoreboardManager, gameHandle.getGameInfo().getTitleKey());
+
+        if (rounds > 1) {
+            TranslatedText text = gameHandle.getTranslations().translateText("game.ap2.pig_race.round").formatted(GREEN);
+            roundHandle = objective.createDynamicText(text, ScoreboardLayout.TOP);
+
+            objective.createNewline(ScoreboardLayout.TOP);
+        }
+    }
+
+    private void addScoreboardRanking() {
+        objective.createText(gameHandle.getTranslations().translateText("ap2.ranking").formatted(YELLOW, BOLD));
+
+        var separator = Text.literal(ApConstants.SCOREBOARD_SEPARATOR_SM).formatted(DARK_GREEN, STRIKETHROUGH);
+        objective.createText(separator);
+
+        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
+            updateRoundDisplay(player);
+            objective.add(player);
+        }
+
+        updateRanking();
+
+        gameHandle.getGameScheduler().interval(this::updateRanking, 1);
+    }
+
+    private void updateRanking() {
+        holderRemoval.addAll(prevHolders);
+
+        record Entry(ServerPlayerEntity player, double distance) {}
+
+        var ranking = new ArrayList<Entry>();
+
+        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
+            double distance = getAbsoluteDistance(player);
+
+            ranking.add(new Entry(player, distance));
+
+            String holder = player.getNameForScoreboard();
+            prevHolders.add(holder);
+            holderRemoval.remove(holder);
+        }
+
+        ranking.sort(Comparator.comparingDouble(Entry::distance).reversed());
+
+        for (String holder : holderRemoval) {
+            objective.removeEntry(holder);
+        }
+
+        holderRemoval.clear();
+
+        for (int i = 0, len = ranking.size(); i < len; i++) {
+            Entry entry = ranking.get(i);
+
+            String holder = entry.player().getNameForScoreboard();
+
+            objective.setScore(holder, len - i);
+            objective.setNumberFormat(holder, BlankNumberFormat.INSTANCE);
+            objective.setDisplayName(holder, Text.literal("#" + (i + 1) + " ").formatted(YELLOW)
+                    .append(Text.literal(holder).formatted(GREEN)));
+        }
+    }
+
+    private void updateRoundDisplay(ServerPlayerEntity player) {
+        if (rounds <= 1) return;
+
+        int round = getRound(player);
+
+        var roundHandle = this.roundHandle;
+
+        if (roundHandle != null) {
+            var fmt = new FixedNumberFormat(Text.literal("%s/%s".formatted(round, rounds)).formatted(YELLOW));
+
+            roundHandle.setNumberFormat(player, fmt);
+        }
+
+        bossBar.setArgument(player, 0, styled(round, YELLOW));
     }
 
     private Team createTeam() {
@@ -255,12 +387,10 @@ public class PigRaceInstance extends FFAGameInstance {
     private synchronized void onEnterGoal(ServerPlayerEntity player) {
         if (winManager.isGameOver() || !path.isInLastSegment(player)) return;
 
-        int round = playerRounds.getOrDefault(player.getUuid(), 1);
+        int round = getRound(player);
 
         if (round < rounds) {
-            playerRounds.put(player.getUuid(), round + 1);
-            checkpointManager.resetCheckpoints(player);
-            player.sendMessage(Text.literal("Round complete."));
+            nextRound(player, round);
             return;
         }
 
@@ -269,16 +399,53 @@ public class PigRaceInstance extends FFAGameInstance {
         for (ServerPlayerEntity other : gameHandle.getParticipants()) {
             if (other == player) continue;
 
-            double progress = path.getProgress(other);
-            double remaining = (1 - progress) * path.getCombinedLength();
-
-            int remainingExtraRounds = max(0, min(rounds - 1, rounds - round));
-            remaining += remainingExtraRounds * path.getCombinedLength();
+            double remaining = getAbsoluteRemaining(other);
 
             distanceData.setScore(other, remaining);
         }
 
         winManager.complete();
+    }
+
+    private double getAbsoluteRemaining(ServerPlayerEntity player) {
+        double remaining = 1 - getAbsoluteProgress(player);
+
+        return remaining * path.getCombinedLength() * rounds;
+    }
+
+    private double getAbsoluteDistance(ServerPlayerEntity player) {
+        return getAbsoluteProgress(player) * path.getCombinedLength() * rounds;
+    }
+
+    private double getAbsoluteProgress(ServerPlayerEntity player) {
+        int round = getRound(player);
+
+        double progress = path.getProgress(player);
+
+        return max(0, min(rounds, (round - 1) + progress)) / rounds;
+    }
+
+    private void nextRound(ServerPlayerEntity player, int round) {
+        playerRounds.put(player.getUuid(), round + 1);
+        checkpointManager.resetCheckpoints(player);
+        updateRoundDisplay(player);
+
+        if (nextRoundSong != null) {
+            MusicHelper.playSong(nextRoundSong, 0.5f, player, gameHandle.getServer(), gameHandle.getSharedSongCache(), gameHandle.getLogger());
+        }
+
+        var text = gameHandle.getTranslations().translateText("game.ap2.pig_race.round_title", Text.literal("#" + (round + 1)).formatted(YELLOW))
+                .formatted(AQUA)
+                .translateFor(player);
+
+        Title.get(player).title(Text.empty(), text, 10, 30, 10);
+
+        ParticleHelper.spawnParticleFor(ParticleTypes.FIREWORK, player.getX(), player.getY(), player.getZ(),
+                100, 1, 1, 1, 0.5, List.of(player));
+    }
+
+    private int getRound(ServerPlayerEntity player) {
+        return playerRounds.getOrDefault(player.getUuid(), 1);
     }
 
     private void openGate() {
@@ -301,9 +468,9 @@ public class PigRaceInstance extends FFAGameInstance {
         float yaw = spawn.getYaw();
 
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
-            Vec3d pos = bounds.randomPos(random);
+            BlockPos pos = bounds.randomBlockPos(random);
 
-            double x = pos.getX(), y = pos.getY(), z = pos.getZ();
+            double x = pos.getX() + 0.5, y = pos.getY(), z = pos.getZ() + 0.5;
 
             pendingPigs.put(player.getUuid(), new PendingPig(x, y, z, yaw));
             player.teleport(world, x, y, z, Set.of(), yaw, 0f, true);
@@ -320,7 +487,9 @@ public class PigRaceInstance extends FFAGameInstance {
         stick.set(DataComponentTypes.CUSTOM_NAME, translations.translateText(player, "game.ap2.pig_race.boost")
                 .styled(style -> style.withItalic(false).withFormatting(Formatting.GOLD)));
 
-        player.getInventory().setStack(4, stick);
+        player.getInventory().setStack(STICK_SLOT, stick);
+
+        PlayerInventoryAccess.setSelectedSlot(player, STICK_SLOT);
     }
 
     private void giveResetItem(ServerPlayerEntity player) {

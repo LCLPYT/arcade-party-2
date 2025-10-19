@@ -8,6 +8,7 @@ import work.lclpnet.ap2.api.base.WorldBorderManager;
 import work.lclpnet.ap2.api.data.DataManager;
 import work.lclpnet.ap2.api.game.team.TeamConfig;
 import work.lclpnet.ap2.api.map.MapFacade;
+import work.lclpnet.ap2.api.music.SongCache;
 import work.lclpnet.ap2.api.music.SongManager;
 import work.lclpnet.ap2.api.stats.StatsResult;
 import work.lclpnet.ap2.impl.game.PlayerUtil;
@@ -76,6 +77,8 @@ public interface MiniGameHandle {
     Optional<TeamConfig> getTeamConfig();
 
     SongManager getSongManager();
+
+    SongCache getSharedSongCache();
 
     DeathMessages getDeathMessages();
 

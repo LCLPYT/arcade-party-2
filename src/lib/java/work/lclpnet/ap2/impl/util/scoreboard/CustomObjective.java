@@ -2,6 +2,7 @@ package work.lclpnet.ap2.impl.util.scoreboard;
 
 import net.minecraft.network.packet.s2c.play.ScoreboardDisplayS2CPacket;
 import net.minecraft.network.packet.s2c.play.ScoreboardObjectiveUpdateS2CPacket;
+import net.minecraft.network.packet.s2c.play.ScoreboardScoreResetS2CPacket;
 import net.minecraft.network.packet.s2c.play.ScoreboardScoreUpdateS2CPacket;
 import net.minecraft.scoreboard.ScoreboardCriterion;
 import net.minecraft.scoreboard.ScoreboardDisplaySlot;
@@ -16,6 +17,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
+/**
+ * Simple controller of a custom objective, providing networking bindings for higher level scoreboard APIs.
+ */
 public final class CustomObjective {
 
     private final String name;
@@ -108,6 +112,14 @@ public final class CustomObjective {
 
     public void setDisplay(ServerPlayerEntity player, ScoreboardDisplaySlot slot) {
        setDisplay(player, this, slot);
+    }
+
+    public void remove(String holder) {
+        entries.remove(holder);
+    }
+
+    public void clear(ServerPlayerEntity player, String holder) {
+        player.networkHandler.sendPacket(new ScoreboardScoreResetS2CPacket(holder, this.vanillaObjective.getName()));
     }
 
     public static void setDisplay(ServerPlayerEntity player, @Nullable CustomObjective objective, ScoreboardDisplaySlot slot) {
