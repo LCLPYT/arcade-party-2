@@ -26,12 +26,14 @@ import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static java.lang.Math.ceil;
+import static java.lang.Math.max;
 
 public class SegmentedPath {
 
-    public static final boolean DEBUG_PROGRESS = false;
+    public static final boolean DEBUG_PROGRESS = true;
 
     private final List<Segment> segments;
     private final Object2IntMap<UUID> playerSegments = new Object2IntOpenHashMap<>();
@@ -83,11 +85,15 @@ public class SegmentedPath {
     }
 
     private void onReachSegmentMarker(ServerPlayerEntity player, Segment segment) {
-        int nextSegmentIndex = (getSegment(player).index() + 1) % segments.size();
+        int nextSegmentIndex = getNextSegmentIndex(player);
 
         if (segment.index() != nextSegmentIndex) return;
 
         playerSegments.put(player.getUuid(), nextSegmentIndex);
+    }
+
+    private int getNextSegmentIndex(ServerPlayerEntity player) {
+        return (getSegment(player).index() + 1) % segments.size();
     }
 
     public Segment getSegment(ServerPlayerEntity player) {
@@ -108,23 +114,26 @@ public class SegmentedPath {
     public static SegmentedPath create(SplinePath path, List<Checkpoint> checkpoints, Logger logger) {
         record UnorderedMarker(BlockBox box, double progress) {}
 
-        var boxes = checkpoints.stream()
+        var markers = checkpoints.stream()
                 .map(checkpoint -> {
                     double progress = path.getProgress(checkpoint.pos());
 
                     return new UnorderedMarker(checkpoint.bounds(), progress);
                 })
                 .sorted(Comparator.comparing(UnorderedMarker::progress))
-                .toList();
+                .collect(Collectors.toCollection(ArrayList::new));
+
+        var first = markers.getFirst();
+        markers.set(0, new UnorderedMarker(first.box, 0));
 
         List<Segment> segments = new ArrayList<>();
 
-        for (int i = 0, boxesSize = boxes.size(); i < boxesSize; i++) {
-            UnorderedMarker box = boxes.get(i);
+        for (int i = 0, boxesSize = markers.size(); i < boxesSize; i++) {
+            UnorderedMarker box = markers.get(i);
             var marker = new Marker(box.box, box.progress);
 
             double from = box.progress();
-            double to = i == boxes.size() - 1 ? 1.0 : boxes.get(i + 1).progress();
+            double to = i == markers.size() - 1 ? 1.0 : markers.get(i + 1).progress();
 
             var subpath = subpath(path, from, to, logger)
                     .orElseThrow(() -> new IllegalStateException("Failed to create subpath for segmented path"));
@@ -139,7 +148,7 @@ public class SegmentedPath {
         final int totalSamples = 100;
 
         double relativeLength = to - from;
-        final int samples = (int) ceil(totalSamples * relativeLength);
+        final int samples = max(2, (int) ceil(totalSamples * relativeLength));
 
         List<Vec3d> keypoints = new ArrayList<>(samples);
 
@@ -149,6 +158,10 @@ public class SegmentedPath {
         }
 
         return SplinePath.create(keypoints, logger);
+    }
+
+    public boolean isInLastSegment(ServerPlayerEntity player) {
+        return getSegmentIndex(player) == segments.size() - 1;
     }
 
     public record Segment(SplinePath path, Marker marker, int index, double relativeLength) {}

@@ -1,6 +1,7 @@
 package work.lclpnet.ap2.game.pig_race;
 
-import lombok.Synchronized;
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.component.DataComponentTypes;
@@ -14,6 +15,7 @@ import net.minecraft.scoreboard.AbstractTeam;
 import net.minecraft.scoreboard.Team;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
@@ -41,6 +43,7 @@ import work.lclpnet.gaco.collisions.CollisionDetector;
 import work.lclpnet.gaco.collisions.movement.TickMovementObserver;
 import work.lclpnet.gaco.ds.BlockBox;
 import work.lclpnet.gaco.ds.Checkpoint;
+import work.lclpnet.gaco.math.SplinePath;
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.ServerPlayConnectionHooks;
@@ -53,6 +56,8 @@ import work.lclpnet.kibu.translate.Translations;
 
 import java.util.*;
 
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 import static work.lclpnet.ap2.impl.util.ItemHelper.unbreakable;
 
 public class PigRaceInstance extends FFAGameInstance {
@@ -65,8 +70,10 @@ public class PigRaceInstance extends FFAGameInstance {
     private final TickMovementObserver movementObserver;
     private final Map<UUID, PendingPig> pendingPigs = new HashMap<>();
     private final SchemaHolder<PigRaceSchema> schemaHolder;
+    private final Object2IntMap<UUID> playerRounds = new Object2IntOpenHashMap<>();
     private CheckpointManager checkpointManager;
     private SegmentedPath path;
+    private int rounds = 1;
 
     public PigRaceInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
@@ -84,6 +91,8 @@ public class PigRaceInstance extends FFAGameInstance {
 
     @Override
     protected void prepare() {
+        rounds = getMap().getProperties().optInt("rounds", rounds);
+
         PigRaceSchema schema = schemaHolder.get();
         useTaskDisplay();
 
@@ -138,12 +147,26 @@ public class PigRaceInstance extends FFAGameInstance {
         visibility.giveItems(0);
 
         List<Checkpoint> progressMarkers = new ArrayList<>(schema.getProgressMarkers());
-        var segmentedPath = SegmentedPath.create(schema.getPath(), progressMarkers, gameHandle.getLogger());
+        var segmentedPath = SegmentedPath.create(augmentPath(schema), progressMarkers, gameHandle.getLogger());
 
         segmentedPath.init(gameHandle.getParticipants(), gameHandle.getGameScheduler(), gameHandle.getHooks(),
                 gameHandle.getServer(), commons().debugController());
 
         path = segmentedPath;
+    }
+
+    private SplinePath augmentPath(PigRaceSchema schema) {
+        SplinePath path = schema.getPath();
+
+        if (rounds <= 1) {
+            return path;
+        }
+
+        var keypoints = new ArrayList<>(path.getKeypoints());
+
+        keypoints.addLast(keypoints.getFirst());
+
+        return SplinePath.create(keypoints, gameHandle.getLogger()).orElseThrow();
     }
 
     @Override
@@ -175,7 +198,9 @@ public class PigRaceInstance extends FFAGameInstance {
             }
         }, 1);
 
-        participants.forEach(this::giveResetItem);
+        if (checkpointManager.getCheckpoints().size() > 2) {
+            participants.forEach(this::giveResetItem);
+        }
 
         hooks.registerHook(PlayerInventoryHooks.SWAP_HANDS, (player, slot) -> {
             resetPlayerToCheckpoint(player);
@@ -224,12 +249,20 @@ public class PigRaceInstance extends FFAGameInstance {
 
         CheckpointHelper.notifyWhenReached(checkpointManager, gameHandle.getTranslations());
 
-        checkpointManager.whenCheckpointReached(this::onReachedCheckpoint);
+        movementObserver.whenEntering(goal.bounds(), this::onEnterGoal);
     }
 
-    @Synchronized
-    private void onReachedCheckpoint(ServerPlayerEntity player, int checkpoint) {
-        if (checkpoint < checkpointManager.getCheckpoints().size() - 1) return;
+    private synchronized void onEnterGoal(ServerPlayerEntity player) {
+        if (winManager.isGameOver() || !path.isInLastSegment(player)) return;
+
+        int round = playerRounds.getOrDefault(player.getUuid(), 1);
+
+        if (round < rounds) {
+            playerRounds.put(player.getUuid(), round + 1);
+            checkpointManager.resetCheckpoints(player);
+            player.sendMessage(Text.literal("Round complete."));
+            return;
+        }
 
         winnerData.add(player);
 
@@ -238,6 +271,9 @@ public class PigRaceInstance extends FFAGameInstance {
 
             double progress = path.getProgress(other);
             double remaining = (1 - progress) * path.getCombinedLength();
+
+            int remainingExtraRounds = max(0, min(rounds - 1, rounds - round));
+            remaining += remainingExtraRounds * path.getCombinedLength();
 
             distanceData.setScore(other, remaining);
         }

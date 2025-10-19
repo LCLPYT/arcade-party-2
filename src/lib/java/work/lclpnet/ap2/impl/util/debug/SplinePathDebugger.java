@@ -106,6 +106,8 @@ public class SplinePathDebugger {
             void changeColor(int color) {
                 if (this.color.getValue() == color) return;
 
+                this.color.setValue(color);
+
                 for (Object3d o : obj.traverse()) {
                     if (o instanceof BlockDisplayObject bdo) {
                         bdo.setGlowColorOverride(color);
