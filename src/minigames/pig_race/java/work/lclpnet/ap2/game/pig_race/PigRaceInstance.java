@@ -1,5 +1,6 @@
 package work.lclpnet.ap2.game.pig_race;
 
+import lombok.Synchronized;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.component.DataComponentTypes;
@@ -21,7 +22,10 @@ import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.util.heads.PlayerHead;
 import work.lclpnet.ap2.impl.game.FFAGameInstance;
-import work.lclpnet.ap2.impl.game.data.ScoreTimeDataContainer;
+import work.lclpnet.ap2.impl.game.data.CombinedDataContainer;
+import work.lclpnet.ap2.impl.game.data.DoubleScoreDataContainer;
+import work.lclpnet.ap2.impl.game.data.OrderedDataContainer;
+import work.lclpnet.ap2.impl.game.data.Ordering;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.map.schema.SchemaHolder;
 import work.lclpnet.ap2.impl.util.ApRegistries;
@@ -53,7 +57,9 @@ import static work.lclpnet.ap2.impl.util.ItemHelper.unbreakable;
 
 public class PigRaceInstance extends FFAGameInstance {
 
-    private final ScoreTimeDataContainer<ServerPlayerEntity, PlayerRef> data = new ScoreTimeDataContainer<>(PlayerRef::create);
+    private final OrderedDataContainer<ServerPlayerEntity, PlayerRef> winnerData = new OrderedDataContainer<>(PlayerRef::create);
+    private final DoubleScoreDataContainer<ServerPlayerEntity, PlayerRef> distanceData = new DoubleScoreDataContainer<>(PlayerRef::create, Ordering.ASCENDING, "ap2.score.blocks_away");
+    private final CombinedDataContainer<ServerPlayerEntity, PlayerRef> combinedData = new CombinedDataContainer<>(List.of(winnerData, distanceData));
     private final Random random = new Random();
     private final CollisionDetector collisionDetector;
     private final TickMovementObserver movementObserver;
@@ -73,7 +79,7 @@ public class PigRaceInstance extends FFAGameInstance {
 
     @Override
     protected DataContainer<ServerPlayerEntity, PlayerRef> getData() {
-        return data;
+        return combinedData;
     }
 
     @Override
@@ -221,12 +227,22 @@ public class PigRaceInstance extends FFAGameInstance {
         checkpointManager.whenCheckpointReached(this::onReachedCheckpoint);
     }
 
+    @Synchronized
     private void onReachedCheckpoint(ServerPlayerEntity player, int checkpoint) {
-        data.setScore(player, checkpoint);
+        if (checkpoint < checkpointManager.getCheckpoints().size() - 1) return;
 
-        if (checkpoint >= checkpointManager.getCheckpoints().size() - 1) {
-            winManager.complete();
+        winnerData.add(player);
+
+        for (ServerPlayerEntity other : gameHandle.getParticipants()) {
+            if (other == player) continue;
+
+            double progress = path.getProgress(other);
+            double remaining = (1 - progress) * path.getCombinedLength();
+
+            distanceData.setScore(other, remaining);
         }
+
+        winManager.complete();
     }
 
     private void openGate() {

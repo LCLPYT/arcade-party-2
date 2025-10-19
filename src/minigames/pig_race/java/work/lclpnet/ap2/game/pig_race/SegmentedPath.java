@@ -2,6 +2,7 @@ package work.lclpnet.ap2.game.pig_race;
 
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
+import lombok.Getter;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
@@ -34,11 +35,14 @@ public class SegmentedPath {
 
     private final List<Segment> segments;
     private final Object2IntMap<UUID> playerSegments = new Object2IntOpenHashMap<>();
+    @Getter
+    private final double combinedLength;
 
     private SegmentedPath(List<Segment> segments) {
         if (segments.isEmpty()) throw new IllegalArgumentException("At least one marker is required");
 
         this.segments = segments;
+        combinedLength = segments.stream().mapToDouble(segment -> segment.path().getLength()).sum();
     }
 
     public void init(Participants participants, TaskScheduler scheduler, HookRegistrar hooks, MinecraftServer server,
