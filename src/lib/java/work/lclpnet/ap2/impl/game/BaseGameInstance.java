@@ -127,10 +127,7 @@ public abstract class BaseGameInstance implements MiniGameInstance {
                             loadSchema(worldData, schemaHolder);
                         });
 
-                future.thenRun(() -> {
-                    System.out.println(dataFuture);
-                        dataFuture.join();
-                });
+                future.thenRun(dataFuture::join);
             }
 
             return future;

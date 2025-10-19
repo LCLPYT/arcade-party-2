@@ -42,10 +42,10 @@ import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.ServerPlayConnectionHooks;
 import work.lclpnet.kibu.hook.entity.EntityDismountCallback;
 import work.lclpnet.kibu.hook.entity.EntityMountCallback;
+import work.lclpnet.kibu.hook.player.PlayerInventoryHooks;
 import work.lclpnet.kibu.hook.player.PlayerTeleportedCallback;
 import work.lclpnet.kibu.hook.util.PositionRotation;
 import work.lclpnet.kibu.translate.Translations;
-import work.lclpnet.lobby.game.map.GameMap;
 
 import java.util.*;
 
@@ -60,6 +60,7 @@ public class PigRaceInstance extends FFAGameInstance {
     private final Map<UUID, PendingPig> pendingPigs = new HashMap<>();
     private final SchemaHolder<PigRaceSchema> schemaHolder;
     private CheckpointManager checkpointManager;
+    private SegmentedPath path;
 
     public PigRaceInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
@@ -129,6 +130,14 @@ public class PigRaceInstance extends FFAGameInstance {
         movementObserver.init(gameHandle.getGameScheduler(), hooks, gameHandle.getServer());
 
         visibility.giveItems(0);
+
+        List<Checkpoint> progressMarkers = new ArrayList<>(schema.getProgressMarkers());
+        var segmentedPath = SegmentedPath.create(schema.getPath(), progressMarkers, gameHandle.getLogger());
+
+        segmentedPath.init(gameHandle.getParticipants(), gameHandle.getGameScheduler(), gameHandle.getHooks(),
+                gameHandle.getServer(), commons().debugController());
+
+        path = segmentedPath;
     }
 
     @Override
@@ -161,6 +170,11 @@ public class PigRaceInstance extends FFAGameInstance {
         }, 1);
 
         participants.forEach(this::giveResetItem);
+
+        hooks.registerHook(PlayerInventoryHooks.SWAP_HANDS, (player, slot) -> {
+            resetPlayerToCheckpoint(player);
+            return true;
+        });
     }
 
     private Team createTeam() {
@@ -228,13 +242,11 @@ public class PigRaceInstance extends FFAGameInstance {
     }
 
     private void teleportPlayers(BlockBox bounds) {
-        GameMap map = getMap();
         ServerWorld world = getWorld();
 
         var schema = schemaHolder.get();
         PositionRotation spawn = schema.getSpawn();
         float yaw = spawn.getYaw();
-        float pitch = spawn.getPitch();
 
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
             Vec3d pos = bounds.randomPos(random);
