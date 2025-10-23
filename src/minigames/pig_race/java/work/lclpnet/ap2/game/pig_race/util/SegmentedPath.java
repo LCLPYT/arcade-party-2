@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.game.pig_race;
+package work.lclpnet.ap2.game.pig_race.util;
 
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
