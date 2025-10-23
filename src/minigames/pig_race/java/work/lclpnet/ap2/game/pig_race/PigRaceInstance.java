@@ -9,6 +9,9 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.attribute.EntityAttributeInstance;
+import net.minecraft.entity.attribute.EntityAttributeModifier;
+import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.entity.passive.PigEntity;
 import net.minecraft.entity.passive.StriderEntity;
 import net.minecraft.item.ItemStack;
@@ -42,6 +45,7 @@ import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.map.schema.SchemaHolder;
 import work.lclpnet.ap2.impl.music.MusicHelper;
 import work.lclpnet.ap2.impl.util.ApRegistries;
+import work.lclpnet.ap2.impl.util.Fireworks;
 import work.lclpnet.ap2.impl.util.ParticleHelper;
 import work.lclpnet.ap2.impl.util.ScoreboardUtil;
 import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedPlayerBossBar;
@@ -109,6 +113,7 @@ public class PigRaceInstance extends FFAGameInstance implements MapBootstrap {
     private @Nullable WeightedSong nextRoundSong = null;
     private DynamicScoreboardObjective objective;
     private Variant variant = Variant.PIG;
+    private double speed = 1.0;
 
     public PigRaceInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
@@ -136,6 +141,8 @@ public class PigRaceInstance extends FFAGameInstance implements MapBootstrap {
 
         JSONObject properties = getMap().getProperties();
         rounds = properties.optInt("rounds", rounds);
+
+        speed = properties.optNumber("speed", 0.0).doubleValue();
 
         PigRaceSchema schema = schemaHolder.get();
 
@@ -172,6 +179,13 @@ public class PigRaceInstance extends FFAGameInstance implements MapBootstrap {
             if (pending == null) return;
 
             var entity = pending.create(player);
+
+            EntityAttributeInstance instance = entity.getAttributeInstance(EntityAttributes.MOVEMENT_SPEED);
+
+            if (instance != null) {
+                instance.addPersistentModifier(new EntityAttributeModifier(gameHandle.getGameInfo().identifier("speed"), speed, EntityAttributeModifier.Operation.ADD_MULTIPLIED_BASE));
+            }
+
             scoreboardManager.joinTeam(entity, team);
             visibilityManager.updateVisibilityOf(entity);
         });
@@ -415,6 +429,8 @@ public class PigRaceInstance extends FFAGameInstance implements MapBootstrap {
             nextRound(player, round);
             return;
         }
+
+        Fireworks.spawnGoalFirework(player);
 
         winnerData.add(player);
 
