@@ -15,6 +15,7 @@ import net.minecraft.entity.passive.StriderEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.particle.ParticleTypes;
+import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.scoreboard.AbstractTeam;
 import net.minecraft.scoreboard.Team;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -22,7 +23,9 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.World;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
@@ -289,17 +292,24 @@ public class PigRaceInstance extends FFAGameInstance implements MapBootstrap {
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
             if (!(player.getVehicle() instanceof LivingEntity vehicle)) continue;
 
-            if (vehicle.isSubmergedInWater()) {
-                resetPlayerToCheckpoint(player);
+            player.setFireTicks(0);
+
+            Box box = vehicle.getType().getDimensions().getBoxAt(vehicle.getPos());
+            World world = vehicle.getWorld();
+
+            for (BlockPos pos : BlockPos.iterate(box)) {
+                BlockState state = world.getBlockState(pos);
+
+                if (state.isIn(BlockTags.FIRE)
+                        || variant != Variant.STRIDER && state.isOf(Blocks.LAVA)
+                        || variant == Variant.STRIDER && state.isOf(Blocks.WATER)) {
+                    resetPlayerToCheckpoint(player);
+                    break;
+                }
             }
 
-            if (variant != Variant.STRIDER) {
-                BlockPos pos = vehicle.getBlockPos();
-                BlockState state = player.getWorld().getBlockState(pos);
-
-                if (state.isOf(Blocks.LAVA)) {
-                    resetPlayerToCheckpoint(player);
-                }
+            if (vehicle.isSubmergedInWater()) {
+                resetPlayerToCheckpoint(player);
             }
 
             updateCatchupSpeed(player, vehicle);
