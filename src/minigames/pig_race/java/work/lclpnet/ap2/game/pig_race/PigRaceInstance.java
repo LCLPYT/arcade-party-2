@@ -8,7 +8,9 @@ import net.minecraft.component.DataComponentTypes;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.EquipmentSlot;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.passive.PigEntity;
+import net.minecraft.entity.passive.StriderEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.particle.ParticleTypes;
@@ -19,11 +21,11 @@ import net.minecraft.scoreboard.number.FixedNumberFormat;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.json.JSONObject;
 import work.lclpnet.ap2.ApConstants;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
@@ -74,6 +76,7 @@ import work.lclpnet.lobby.game.map.GameMap;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
@@ -93,7 +96,7 @@ public class PigRaceInstance extends FFAGameInstance implements MapBootstrap {
     private final Random random = new Random();
     private final CollisionDetector collisionDetector;
     private final TickMovementObserver movementObserver;
-    private final Map<UUID, PendingPig> pendingPigs = new HashMap<>();
+    private final Map<UUID, PendingEntity<?>> pendingEntities = new HashMap<>();
     private final SchemaHolder<PigRaceSchema> schemaHolder;
     private final Object2IntMap<UUID> playerRounds = new Object2IntOpenHashMap<>();
     private final Set<String> prevHolders = new HashSet<>();
@@ -105,6 +108,7 @@ public class PigRaceInstance extends FFAGameInstance implements MapBootstrap {
     private DynamicTranslatedPlayerBossBar bossBar;
     private @Nullable WeightedSong nextRoundSong = null;
     private DynamicScoreboardObjective objective;
+    private Variant variant = Variant.PIG;
 
     public PigRaceInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
@@ -128,7 +132,10 @@ public class PigRaceInstance extends FFAGameInstance implements MapBootstrap {
 
     @Override
     protected void prepare() {
-        rounds = getMap().getProperties().optInt("rounds", rounds);
+        this.variant = getVariant();
+
+        JSONObject properties = getMap().getProperties();
+        rounds = properties.optInt("rounds", rounds);
 
         PigRaceSchema schema = schemaHolder.get();
 
@@ -158,18 +165,18 @@ public class PigRaceInstance extends FFAGameInstance implements MapBootstrap {
             return entity instanceof ServerPlayerEntity && oldVehicle != null && oldVehicle.isAlive();
         });
 
-        // mount a pig, after a player was teleported
+        // mount a new entity, after a player was teleported
         hooks.registerHook(PlayerTeleportedCallback.HOOK, player -> {
-            PendingPig pendingPig = pendingPigs.remove(player.getUuid());
+            var pending = pendingEntities.remove(player.getUuid());
 
-            if (pendingPig == null) return;
+            if (pending == null) return;
 
-            PigEntity pig = pendingPig.create(player);
-            scoreboardManager.joinTeam(pig, team);
-            visibilityManager.updateVisibilityOf(pig);
+            var entity = pending.create(player);
+            scoreboardManager.joinTeam(entity, team);
+            visibilityManager.updateVisibilityOf(entity);
         });
 
-        // remove pigs when player quits
+        // remove entity when player quits
         hooks.registerHook(ServerPlayConnectionHooks.DISCONNECT, (handler, server) -> {
             Entity vehicle = handler.player.getVehicle();
 
@@ -197,6 +204,17 @@ public class PigRaceInstance extends FFAGameInstance implements MapBootstrap {
         path = segmentedPath;
 
         setupScoreboard();
+    }
+
+    private Variant getVariant() {
+        String variant = getMap().getProperties().optString("variant", Variant.PIG.name().toLowerCase(Locale.ROOT));
+
+        try {
+            return Variant.valueOf(variant.toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException ignored) {
+            gameHandle.getLogger().error("Invalid variant \"{}\"", variant);
+            return Variant.PIG;
+        }
     }
 
     private SplinePath augmentPath(PigRaceSchema schema) {
@@ -233,11 +251,13 @@ public class PigRaceInstance extends FFAGameInstance implements MapBootstrap {
                     resetPlayerToCheckpoint(player);
                 }
 
-                BlockPos pos = vehicle.getBlockPos();
-                BlockState state = player.getWorld().getBlockState(pos);
+                if (variant != Variant.STRIDER) {
+                    BlockPos pos = vehicle.getBlockPos();
+                    BlockState state = player.getWorld().getBlockState(pos);
 
-                if (state.isOf(Blocks.LAVA)) {
-                    resetPlayerToCheckpoint(player);
+                    if (state.isOf(Blocks.LAVA)) {
+                        resetPlayerToCheckpoint(player);
+                    }
                 }
             }
         }, 1);
@@ -352,15 +372,17 @@ public class PigRaceInstance extends FFAGameInstance implements MapBootstrap {
     private void resetPlayerToCheckpoint(ServerPlayerEntity player) {
         Checkpoint checkpoint = checkpointManager.getCheckpoint(player);
 
-        if (player.getVehicle() instanceof PigEntity pig) {
-            pig.discard();
+        Entity vehicle = player.getVehicle();
+
+        if (isVehicle(vehicle)) {
+            vehicle.discard();
         }
 
         Vec3d pos = checkpoint.pos();
         double x = pos.getX() + 0.5, y = pos.getY(), z = pos.getZ() + 0.5;
         float yaw = checkpoint.yaw();
 
-        pendingPigs.put(player.getUuid(), new PendingPig(x, y, z, yaw));
+        pendingEntities.put(player.getUuid(), createPending(x, y, z, yaw));
         player.teleport(getWorld(), x, y, z, Set.of(), yaw, checkpoint.pitch(), true);
 
         player.setFireTicks(0);
@@ -472,20 +494,32 @@ public class PigRaceInstance extends FFAGameInstance implements MapBootstrap {
 
             double x = pos.getX() + 0.5, y = pos.getY(), z = pos.getZ() + 0.5;
 
-            pendingPigs.put(player.getUuid(), new PendingPig(x, y, z, yaw));
+            pendingEntities.put(player.getUuid(), createPending(x, y, z, yaw));
             player.teleport(world, x, y, z, Set.of(), yaw, 0f, true);
 
             giveStick(player);
         }
     }
 
+    private PendingEntity<?> createPending(double x, double y, double z, float yaw) {
+        Function<ServerWorld, ? extends LivingEntity> factory = switch (variant) {
+            case PIG -> world -> new PigEntity(EntityType.PIG, world);
+            case STRIDER -> world -> new StriderEntity(EntityType.STRIDER, world);
+        };
+
+        return new PendingEntity<>(x, y, z, yaw, factory);
+    }
+
     private void giveStick(ServerPlayerEntity player) {
         Translations translations = gameHandle.getTranslations();
 
-        ItemStack stick = unbreakable(new ItemStack(Items.CARROT_ON_A_STICK));
+        ItemStack stick = unbreakable(new ItemStack(switch (variant) {
+            case PIG -> Items.CARROT_ON_A_STICK;
+            case STRIDER -> Items.WARPED_FUNGUS_ON_A_STICK;
+        }));
 
         stick.set(DataComponentTypes.CUSTOM_NAME, translations.translateText(player, "game.ap2.pig_race.boost")
-                .styled(style -> style.withItalic(false).withFormatting(Formatting.GOLD)));
+                .styled(style -> style.withItalic(false).withFormatting(GOLD)));
 
         player.getInventory().setStack(STICK_SLOT, stick);
 
@@ -502,7 +536,7 @@ public class PigRaceInstance extends FFAGameInstance implements MapBootstrap {
 
         ItemStack reset = head.createStack();
 
-        reset.set(DataComponentTypes.CUSTOM_NAME, translations.translateText(player, "ap2.game.reset").formatted(Formatting.RED)
+        reset.set(DataComponentTypes.CUSTOM_NAME, translations.translateText(player, "ap2.game.reset").formatted(RED)
                 .styled(style -> style.withItalic(false)));
 
         player.getInventory().setStack(8, reset);
@@ -510,22 +544,28 @@ public class PigRaceInstance extends FFAGameInstance implements MapBootstrap {
         PlayerInventoryAccess.setSelectedSlot(player, 4);
     }
 
-    private record PendingPig(double x, double y, double z, float yaw) {
+    private boolean isVehicle(Entity vehicle) {
+        return vehicle instanceof PigEntity || vehicle instanceof StriderEntity;
+    }
 
-        public PigEntity create(ServerPlayerEntity player) {
+    private record PendingEntity<T extends LivingEntity>(double x, double y, double z, float yaw, Function<ServerWorld, T> factory) {
+
+        public T create(ServerPlayerEntity player) {
             ServerWorld world = player.getWorld();
 
-            PigEntity pig = new PigEntity(EntityType.PIG, world);
-            pig.setInvulnerable(true);
-            pig.setBodyYaw(yaw);
-            pig.setPos(x, y + 0.1, z);
-            pig.equipStack(EquipmentSlot.SADDLE, new ItemStack(Items.SADDLE));
+            T entity = factory.apply(world);
+            entity.setInvulnerable(true);
+            entity.setBodyYaw(yaw);
+            entity.setPos(x, y + 0.1, z);
+            entity.equipStack(EquipmentSlot.SADDLE, new ItemStack(Items.SADDLE));
 
-            world.spawnEntity(pig);
+            world.spawnEntity(entity);
 
-            player.startRiding(pig, true);
+            player.startRiding(entity, true);
 
-            return pig;
+            return entity;
         }
     }
+
+    private enum Variant { PIG, STRIDER }
 }
