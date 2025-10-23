@@ -89,7 +89,6 @@ import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
 public class PreparationActivity extends ComponentActivity implements Skippable, GameStartContext {
 
-    public static final Identifier ARCADE_PARTY_GAME_TAG = ApConstants.identifier("game");
     private static final int GAME_ANNOUNCE_DELAY = Ticks.seconds(3);
     private static final int PREPARATION_TIME = Ticks.seconds(18);
     private static final String GAME_SONG_ID = "ap2_game";
@@ -153,7 +152,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
     }
 
     private CompletableFuture<Void> loadAssets() {
-        return args.miniGameArgs().songManager().getSongAndCache(ARCADE_PARTY_GAME_TAG, GAME_SONG_ID)
+        return args.miniGameArgs().songManager().getSongAndCache(MusicHelper.ARCADE_PARTY_GAME_TAG, GAME_SONG_ID)
                 .thenAccept(song -> nextGameSong = song.orElse(null));
     }
 

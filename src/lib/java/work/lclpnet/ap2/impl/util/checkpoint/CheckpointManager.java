@@ -98,6 +98,10 @@ public class CheckpointManager {
         debugController.destroy();
     }
 
+    public void resetCheckpoints(ServerPlayerEntity player) {
+        playerCheckpoints.put(player.getUuid(), checkpoints.getFirst());
+    }
+
     public interface Listener {
         void accept(ServerPlayerEntity player, int checkpoint);
     }

@@ -1,14 +1,19 @@
 package work.lclpnet.ap2.impl.util.debug;
 
+import it.unimi.dsi.fastutil.objects.Object2IntFunction;
+import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3d;
+import org.apache.commons.lang3.mutable.MutableInt;
 import work.lclpnet.ap2.impl.util.ColorUtil;
 import work.lclpnet.ap2.impl.util.math.MathUtil;
 import work.lclpnet.gaco.math.SplinePath;
 import work.lclpnet.gaco.scene.Object3d;
+import work.lclpnet.gaco.scene.object.BlockDisplayObject;
+import work.lclpnet.gaco.scene.object.DisplayEntityObject;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 
 import java.util.*;
@@ -29,6 +34,10 @@ public class SplinePathDebugger {
     }
 
     public void renderPath(int samples) {
+        renderPath(samples, Blocks.YELLOW_CONCRETE.getDefaultState());
+    }
+
+    public void renderPath(int samples, BlockState pathColor) {
         if (samples < 2) throw new IllegalArgumentException("Need at least 2 samples");
 
         DebugRenderer renderer = debugger.renderer().orElse(null);
@@ -44,17 +53,17 @@ public class SplinePathDebugger {
         Vec3d start = keypoints.getFirst();
         double step = 1.d / (samples - 1);
 
-        renderer.marker(start, Blocks.YELLOW_CONCRETE.getDefaultState(), 0xeeff00, 0.2f);
+        renderer.marker(start, pathColor, 0xeeff00, 0.2f);
 
         for (int i = 1; i < samples; i++) {
             double s = i * step;
 
             Vec3d end = path.samplePosition(s);
 
-            renderer.line(start, end, 0.1, Blocks.YELLOW_CONCRETE.getDefaultState());
+            renderer.line(start, end, 0.1, pathColor);
 
             if (DEBUG_SPACING) {
-                renderer.marker(start, Blocks.YELLOW_CONCRETE.getDefaultState(), 0xeeff00, 0.2f);
+                renderer.marker(start, pathColor, 0xeeff00, 0.2f);
 
                 Vec3d diff = end.subtract(start);
                 Vec3d midpoint = start.add(diff.multiply(0.5));
@@ -83,47 +92,81 @@ public class SplinePathDebugger {
     }
 
     public void renderLiveProgress(Supplier<Iterable<? extends Entity>> playerGetter, TaskScheduler scheduler) {
+        renderLiveProgress(playerGetter, scheduler, entity -> -1);
+    }
+
+    public void renderLiveProgress(Supplier<Iterable<? extends Entity>> entities, TaskScheduler scheduler,
+                                   Object2IntFunction<Entity> markerColor) {
+
         DebugRenderer renderer = debugger.renderer().orElse(null);
 
         if (renderer == null) return;
 
-        Random random = new Random();
-        Map<UUID, Object3d> markers = new HashMap<>();
+        record Marker(Object3d obj, MutableInt color) {
+            void changeColor(int color) {
+                if (this.color.getValue() == color) return;
 
-        for (Entity entity : playerGetter.get()) {
+                this.color.setValue(color);
+
+                for (Object3d o : obj.traverse()) {
+                    if (o instanceof BlockDisplayObject bdo) {
+                        bdo.setGlowColorOverride(color);
+                    }
+                }
+            }
+        }
+
+        Random random = new Random();
+        Map<UUID, Marker> markers = new HashMap<>();
+
+        for (Entity entity : entities.get()) {
             Vec3d pos = path.getNearestPosition(entity.getPos());
 
-            int color = ColorUtil.getRandomHsvColor(random, random.nextFloat(110, 360));
+            int originalColor = markerColor.applyAsInt(entity);
+            int color = originalColor;
 
-            Object3d marker = renderer.marker(pos, Blocks.RED_CONCRETE.getDefaultState(), color);
+            if (color == -1) {
+                color = ColorUtil.getRandomHsvColor(random, random.nextFloat(110, 360));
+            }
 
-            markers.put(entity.getUuid(), marker);
+            Object3d obj = renderer.marker(pos, Blocks.RED_CONCRETE.getDefaultState(), color);
+
+            for (Object3d o : obj.traverse()) {
+                if (o instanceof DisplayEntityObject<?> deo) {
+                    deo.setTeleportDuration(1);
+                }
+            }
+
+            markers.put(entity.getUuid(), new Marker(obj, new MutableInt(originalColor)));
         }
 
         scheduler.interval(info -> {
             Set<UUID> removal = new HashSet<>(markers.keySet());
 
-            for (Entity player : playerGetter.get()) {
-                UUID uuid = player.getUuid();
-                Object3d marker = markers.get(uuid);
+            for (Entity entity : entities.get()) {
+                UUID uuid = entity.getUuid();
+                Marker marker = markers.get(uuid);
 
                 if (marker == null) continue;
 
                 removal.remove(uuid);
 
-                Vec3d pos = path.getNearestPosition(player.getPos());
+                Vec3d pos = path.getNearestPosition(entity.getPos());
 
-                marker.position.set(pos.getX(), pos.getY(), pos.getZ());
-                marker.updateMatrixWorld();
+                marker.obj.position.set(pos.getX(), pos.getY(), pos.getZ());
+                marker.obj.updateMatrixWorld();
+
+                int color = markerColor.apply(entity);
+                marker.changeColor(color);
             }
 
             for (UUID uuid : removal) {
-                Object3d marker = markers.remove(uuid);
+                Marker marker = markers.remove(uuid);
 
                 if (marker != null) {
-                    marker.detach();
+                    marker.obj.detach();
                 }
             }
-        }, 1).whenComplete(() -> markers.values().forEach(Object3d::detach));
+        }, 1).whenComplete(() -> markers.values().forEach(marker -> marker.obj.detach()));
     }
 }

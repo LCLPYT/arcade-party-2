@@ -13,6 +13,8 @@ public interface CustomScoreboardObjective {
 
     void setNumberFormat(String scoreHolder, NumberFormat numberFormat);
 
+    void removeEntry(String scoreHolder);
+
     default void setScore(ServerPlayerEntity player, int score) {
         setScore(player.getNameForScoreboard(), score);
     }
