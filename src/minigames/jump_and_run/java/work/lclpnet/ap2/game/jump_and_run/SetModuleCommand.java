@@ -57,6 +57,11 @@ public class SetModuleCommand implements KibuCommand {
             return 0;
         }
 
+        if (jumpAndRun.module() == module) {
+            ctx.getSource().sendError(Text.literal("Already playing module \"%s\" right now".formatted(path)));
+            return 0;
+        }
+
         try {
             jumpAndRun.setModule(module);
         } catch (Throwable t) {

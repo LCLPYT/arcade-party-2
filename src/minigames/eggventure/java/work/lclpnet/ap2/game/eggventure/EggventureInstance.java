@@ -44,7 +44,11 @@ import work.lclpnet.ap2.impl.game.data.IntDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.tags.PlayerHeadTags;
-import work.lclpnet.ap2.impl.util.*;
+import work.lclpnet.ap2.impl.util.ApRegistries;
+import work.lclpnet.ap2.impl.util.ColorUtil;
+import work.lclpnet.ap2.impl.util.ItemHelper;
+import work.lclpnet.ap2.impl.util.RayCastUtil;
+import work.lclpnet.ap2.impl.util.checkpoint.CheckpointHelper;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape;
 import work.lclpnet.gaco.ds.BlockBox;
@@ -260,6 +264,15 @@ public class EggventureInstance extends FFAGameInstance implements MapBootstrap 
         commons().createTimer(subject, durationSeconds).whenDone(this::completeAndShowRemaining);
 
         gameHandle.getGameScheduler().interval(20, Ticks.seconds(10), this::checkNearbyEggs);
+
+        CheckpointHelper.setupResetItem(hooks, winManager::isGameOver, player -> gameHandle.getParticipants().isParticipating(player))
+                .then(this::reset);
+
+        CheckpointHelper.giveResetItem(gameHandle.getParticipants(), getWorld(), gameHandle.getTranslations(), 4);
+    }
+
+    private void reset(ServerPlayerEntity player) {
+        gameHandle.getWorldFacade().teleport(player);
     }
 
     private void checkNearbyEggs() {

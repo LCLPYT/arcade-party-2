@@ -63,9 +63,8 @@ public class ChickenShooterInstance extends FFAGameInstance implements Runnable 
 
     private static final double BABY_CHANCE = 0.15;
     private static final double TNT_CHANCE = 0.07;
-    private static final double TNT_RADIUS = 6;
-    private static final int MIN_DURATION = 40;
-    private static final int MAX_DURATION = 60;
+    private static final double TNT_RADIUS = 7.5;
+    private static final int DURATION_SECONDS = 50;
 
     private static final Stat<Integer> BABY_CHICKENS = new Stat<>("baby_chickens", 0);
     private static final Stat<Integer> TNT_DETONATED = new Stat<>("tnt_detonated", 0);
@@ -73,7 +72,6 @@ public class ChickenShooterInstance extends FFAGameInstance implements Runnable 
 
     private final FFAStatsManager stats;
     private final Random random = new Random();
-    private final int durationSeconds = MIN_DURATION + random.nextInt(MAX_DURATION - MIN_DURATION + 1);
     private final IntDataContainer<ServerPlayerEntity, PlayerRef> data;
     private final Set<ChickenEntity> chickenSet = new HashSet<>();
     private BlockBox chickenBox = null;
@@ -177,7 +175,7 @@ public class ChickenShooterInstance extends FFAGameInstance implements Runnable 
         // Timer and game end
         var subject = translations.translateText("game.ap2.chicken_shooter.task");
 
-        commons().createTimer(subject, durationSeconds).whenDone(winManager::complete);
+        commons().createTimer(subject, DURATION_SECONDS).whenDone(winManager::complete);
     }
 
     private void chickenSpawner() {
@@ -264,7 +262,7 @@ public class ChickenShooterInstance extends FFAGameInstance implements Runnable 
         int count = 0;
 
         for (ChickenEntity c : affected) {
-            if (c == chicken || chicken.isRemoved()) continue;
+            if (c == chicken || c.isRemoved()) continue;
 
             count++;
             score += killChicken(c, attacker, world);

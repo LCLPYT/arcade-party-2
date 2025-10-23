@@ -204,6 +204,7 @@ public class CozyCampfireInstance extends TeamEliminationGameInstance implements
             world.setWeather(0, 1000, true, thunder);
         } else {
             world.setWeather(1000, 0, false, false);
+            world.setRainGradient(0);
         }
     }
 

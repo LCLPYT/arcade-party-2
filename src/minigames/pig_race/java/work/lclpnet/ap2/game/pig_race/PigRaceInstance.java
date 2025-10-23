@@ -97,7 +97,7 @@ public class PigRaceInstance extends FFAGameInstance implements MapBootstrap {
     private final OrderedDataContainer<ServerPlayerEntity, PlayerRef> winnerData = new OrderedDataContainer<>(PlayerRef::create);
     private final DoubleScoreDataContainer<ServerPlayerEntity, PlayerRef> distanceData = new DoubleScoreDataContainer<>(PlayerRef::create, Ordering.ASCENDING, "ap2.score.blocks_away");
     private final CombinedDataContainer<ServerPlayerEntity, PlayerRef> combinedData = new CombinedDataContainer<>(List.of(winnerData, distanceData));
-    
+
     private final Random random = new Random();
     private final CollisionDetector collisionDetector;
     private final TickMovementObserver movementObserver;

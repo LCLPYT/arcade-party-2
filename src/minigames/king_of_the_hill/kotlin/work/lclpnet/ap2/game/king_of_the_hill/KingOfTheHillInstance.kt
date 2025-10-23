@@ -24,6 +24,8 @@ import work.lclpnet.ap2.impl.game.data.type.PlayerRef
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.util.ItemHelper
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape
+import work.lclpnet.kibu.access.entity.PlayerInventoryAccess
+import work.lclpnet.kibu.hook.player.PlayerInventoryHooks
 import work.lclpnet.lobby.game.api.prot.scope.EntityDamageSourceScope
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes
 import work.lclpnet.lobby.game.map.GameMap
@@ -76,6 +78,7 @@ class KingOfTheHillInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
             stack.addEnchantment(knockback, 1)
 
             player.inventory.setStack(4, stack)
+            PlayerInventoryAccess.setSelectedSlot(player, 4)
 
             player.addStatusEffect(StatusEffectInstance(StatusEffects.RESISTANCE,
                 Integer.MAX_VALUE, 255, false, false, false))
@@ -97,6 +100,12 @@ class KingOfTheHillInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
                 inGoal[0].playSoundToPlayer(SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, SoundCategory.PLAYERS, 0.4f, 1.6f)
             }
         }
+
+        gameHandle.hooks.registerHook(PlayerInventoryHooks.SLOT_CHANGE, PlayerInventoryHooks.SlotChange { player, i ->
+            if (players().isParticipating(player) && i != 4) {
+                PlayerInventoryAccess.setSelectedSlot(player, 4)
+            }
+        })
 
         useTaskTimer(DURATION_SECONDS).whenDone { winManager.complete() }
     }
