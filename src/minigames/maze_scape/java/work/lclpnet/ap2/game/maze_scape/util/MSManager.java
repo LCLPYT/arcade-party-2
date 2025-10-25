@@ -29,6 +29,7 @@ import work.lclpnet.ap2.core.mixin.CreakingBrainAccessor;
 import work.lclpnet.ap2.core.mixin.WardenBrainAccessor;
 import work.lclpnet.ap2.core.type.ApEntity;
 import work.lclpnet.ap2.game.maze_scape.gen.Node;
+import work.lclpnet.ap2.game.maze_scape.monster.CreakingData;
 import work.lclpnet.ap2.game.maze_scape.monster.EndermanData;
 import work.lclpnet.ap2.game.maze_scape.monster.MonsterData;
 import work.lclpnet.ap2.game.maze_scape.monster.MonsterSpawner;
@@ -36,6 +37,7 @@ import work.lclpnet.ap2.game.maze_scape.setup.MSDebugController;
 import work.lclpnet.ap2.game.maze_scape.setup.MSGenerator;
 import work.lclpnet.ap2.game.maze_scape.setup.OrientedStructurePiece;
 import work.lclpnet.ap2.impl.util.EntityUtil;
+import work.lclpnet.kibu.hook.util.PendingResult;
 import work.lclpnet.lobby.game.map.GameMap;
 
 import java.util.*;
@@ -93,6 +95,7 @@ public class MSManager {
         hooks.registerHook(EntityPathFindingCallback.HOOK, this::modifyPathFinding);
         hooks.registerHook(CobwebSlowCallback.HOOK, this::cancelCobwebSlow);
         hooks.registerHook(EntityAfterMoveCallback.HOOK, this::afterMoveTick);
+        hooks.registerHook(CreakingLookedAtCheckCallback.HOOK, this::isCreakingBeingLookedAt);
     }
 
     public void spawnMobs() {
@@ -324,5 +327,13 @@ public class MSManager {
 
         // but look at the target player all the time
         mob.lookAt(EntityAnchorArgumentType.EntityAnchor.EYES, target.getEyePos());
+    }
+
+    private PendingResult<Boolean> isCreakingBeingLookedAt(CreakingEntity creaking) {
+        if (creaking.getWorld() != world || !(monsters.get(creaking.getUuid()) instanceof CreakingData data)) {
+            return PendingResult.pass();
+        }
+
+        return PendingResult.of(data.isBeingLookedAt(creaking));
     }
 }
