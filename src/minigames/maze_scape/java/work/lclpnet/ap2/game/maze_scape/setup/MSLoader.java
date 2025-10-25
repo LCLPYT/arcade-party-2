@@ -21,11 +21,11 @@ import work.lclpnet.ap2.game.maze_scape.util.BlockPalette;
 import work.lclpnet.ap2.game.maze_scape.util.BoxFloodFill;
 import work.lclpnet.ap2.game.maze_scape.util.PlanePredicate;
 import work.lclpnet.ap2.game.maze_scape.util.TransparencyPredicate;
+import work.lclpnet.ap2.impl.map.MapUtil;
+import work.lclpnet.ap2.impl.util.world.WalkableBlockPredicate;
 import work.lclpnet.gaco.ds.BVH;
 import work.lclpnet.gaco.ds.BlockBox;
 import work.lclpnet.gaco.ds.StructureMask;
-import work.lclpnet.ap2.impl.map.MapUtil;
-import work.lclpnet.ap2.impl.util.world.WalkableBlockPredicate;
 import work.lclpnet.kibu.schematic.FabricBlockStateAdapter;
 import work.lclpnet.kibu.schematic.FabricStructureWrapper;
 import work.lclpnet.kibu.schematic.api.SchematicReader;
@@ -44,6 +44,8 @@ import static java.lang.Math.abs;
 import static java.lang.Math.pow;
 
 public class MSLoader {
+
+    public static final boolean DEBUG_PIECES = true;
 
     private final ServerWorld world;
     private final GameMap map;
@@ -79,6 +81,8 @@ public class MSLoader {
         var pieces = new ArrayList<StructurePiece>(piecesConfig.length());
         StructurePiece startPiece = null;
 
+        var debugOffset = DEBUG_PIECES ? new DebugOffset() : null;
+
         for (String name : piecesConfig.keySet()) {
             Path path = dir.resolve(name + ".nbt");
 
@@ -89,7 +93,7 @@ public class MSLoader {
                 continue;
             }
 
-            StructurePiece piece = parsePiece(path, config, clusterDefs);
+            StructurePiece piece = parsePiece(path, config, clusterDefs, debugOffset);
 
             if (piece == null) continue;
 
@@ -164,7 +168,7 @@ public class MSLoader {
     }
 
     @Nullable
-    private StructurePiece parsePiece(Path path, JSONObject config, Map<String, ClusterDef> clusterDefs) {
+    private StructurePiece parsePiece(Path path, JSONObject config, Map<String, ClusterDef> clusterDefs, @Nullable DebugOffset debugOffset) {
         if (!Files.isRegularFile(path)) return null;
 
         BlockStructure struct;
@@ -178,14 +182,21 @@ public class MSLoader {
 
         String name = FilenameUtils.getBaseName(path.getFileName().toString());
 
+        @Nullable
+        var debugger = debugOffset != null ? new MSPieceDebugger(world, struct, name, debugOffset.get(struct)) : null;
+
+        if (debugger != null) debugger.debugStructure();
+
         // scan the structure for jigsaws
         var scanResult = scanner.scan(struct);
 
         var wrapper = new FabricStructureWrapper(struct, adapter);
 
-        StructureMask insideMask = buildStructureMask(wrapper, scanResult.connectors());
+        StructureMask insideMask = buildStructureMask(wrapper, scanResult.connectors(), debugger);
 
-        BVH bounds = buildBounds(insideMask);
+        if (debugger != null) debugger.debugInsideMask(insideMask);
+
+        BVH bounds = buildBounds(insideMask, debugger);
 
         float weight = config.optFloat("weight", 1.0f);
         int maxCount = config.optInt("max-count", -1);
@@ -397,14 +408,16 @@ public class MSLoader {
         return clusters;
     }
 
-    private BVH buildBounds(StructureMask insideMask) {
+    private BVH buildBounds(StructureMask insideMask, @Nullable MSPieceDebugger debugger) {
         // use greedy meshing to obtain cuboid partition mesh of the inside mask
         List<BlockBox> boxes = insideMask.greedyMeshing().generateBoxes();
+
+        if (debugger != null) debugger.debugBvhBoxes(boxes);
 
         return BVH.build(boxes);
     }
 
-    private @NotNull StructureMask buildStructureMask(FabricStructureWrapper wrapper, List<Connector3> connectors) {
+    private @NotNull StructureMask buildStructureMask(FabricStructureWrapper wrapper, List<Connector3> connectors, @Nullable MSPieceDebugger debugger) {
         /*
         generate a mask that separates outside and inside in these steps:
         1. create a structure mask (3d bool array) that contains every non-air block
@@ -422,10 +435,30 @@ public class MSLoader {
             maskCorridor(connector, mask, wrapper);
         }
 
+        if (debugger != null) {
+            debugger.debugClosedCorridorMask(copyMask(mask, structMask));
+        }
+
         // remove every outside position
         maskInside(structMask);
 
         return structMask;
+    }
+
+    private @NotNull StructureMask copyMask(boolean[][][] mask, StructureMask structMask) {
+        boolean[][][] copy = new boolean[mask.length][][];
+
+        for (int i = 0; i < mask.length; i++) {
+            copy[i] = new boolean[mask[i].length][];
+
+            for (int j = 0; j < mask[i].length; j++) {
+                copy[i][j] = new boolean[mask[i][j].length];
+
+                System.arraycopy(mask[i][j], 0, copy[i][j], 0, mask[i][j].length);
+            }
+        }
+
+        return new StructureMask(copy, structMask.width(), structMask.height(), structMask.length());
     }
 
     private void maskInside(StructureMask structMask) {
@@ -484,4 +517,14 @@ public class MSLoader {
             StructurePiece startPiece,
             ConnectorWall defaultConnectorWall
     ) {}
+
+    private static class DebugOffset {
+        BlockPos offset = BlockPos.ORIGIN;
+
+        synchronized BlockPos get(BlockStructure struct) {
+            BlockPos pos = this.offset;
+            this.offset = pos.add(0, 0, struct.getLength() + 5);
+            return pos;
+        }
+    }
 }
