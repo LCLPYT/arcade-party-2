@@ -45,7 +45,7 @@ import static java.lang.Math.pow;
 
 public class MSLoader {
 
-    public static final boolean DEBUG_PIECES = true;
+    public static final boolean DEBUG_PIECES = false;
 
     private final ServerWorld world;
     private final GameMap map;
@@ -192,7 +192,7 @@ public class MSLoader {
 
         var wrapper = new FabricStructureWrapper(struct, adapter);
 
-        StructureMask insideMask = buildStructureMask(wrapper, scanResult.connectors(), debugger);
+        StructureMask insideMask = buildStructureMask(wrapper, scanResult.wallMarkers(), debugger);
 
         if (debugger != null) debugger.debugInsideMask(insideMask);
 
@@ -417,11 +417,11 @@ public class MSLoader {
         return BVH.build(boxes);
     }
 
-    private @NotNull StructureMask buildStructureMask(FabricStructureWrapper wrapper, List<Connector3> connectors, @Nullable MSPieceDebugger debugger) {
+    private @NotNull StructureMask buildStructureMask(FabricStructureWrapper wrapper, List<WallMarker> wallMarkers, @Nullable MSPieceDebugger debugger) {
         /*
         generate a mask that separates outside and inside in these steps:
         1. create a structure mask (3d bool array) that contains every non-air block
-        2. close structure connectors by using plane flood-fill at each connector
+        2. close open walls in structure by using plane flood-fill at each wall marker
         3. use flood fill to detect blocks outside the now closed structure
         */
         BlockStructure struct = wrapper.getStructure();
@@ -431,13 +431,11 @@ public class MSLoader {
         var mask = structMask.mask();
 
         // close open walls at connectors
-        for (Connector3 connector : connectors) {
-            maskCorridor(connector, mask, wrapper);
+        for (WallMarker wallMarker : wallMarkers) {
+            maskCorridor(wallMarker, mask, wrapper);
         }
 
-        if (debugger != null) {
-            debugger.debugClosedCorridorMask(copyMask(mask, structMask));
-        }
+        if (debugger != null) debugger.debugClosedCorridorMask(copyMask(mask, structMask));
 
         // remove every outside position
         maskInside(structMask);
@@ -493,12 +491,12 @@ public class MSLoader {
         System.arraycopy(inside, 0, wallMask, 0, inside.length);
     }
 
-    private void maskCorridor(Connector3 connector, boolean[][][] mask, FabricStructureWrapper wrapper) {
+    private void maskCorridor(WallMarker wallMarker, boolean[][][] mask, FabricStructureWrapper wrapper) {
         BlockStructure struct = wrapper.getStructure();
-        Orientation orientation = connector.orientation();
-        BlockPos connectorPos = connector.pos();
+        Orientation orientation = wallMarker.orientation();
+        BlockPos connectorPos = wallMarker.pos();
 
-        // flood fill plane defined by connector direction
+        // flood fill plane defined by wall marker direction
         Vec3i normal = orientation.getFacing().getVector();
         int width = struct.getWidth(), height = struct.getHeight(), length = struct.getLength();
 
