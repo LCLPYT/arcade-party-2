@@ -67,12 +67,12 @@ public class MonsterSpawner {
         int primaryMobs = max(1, min(primary.size(), players / 2));
         int secondaryMobs = max(1, min(secondary.size(), players / 3));
 
-        for (int i = 0; i < primaryMobs; i++) {
+        for (int i = 0; i < primaryMobs && !primary.isEmpty(); i++) {
             var factory = primary.remove(random.nextInt(primary.size()));
             factory.spawn(spawns.get(), args, consumer);
         }
 
-        for (int i = 0; i < secondaryMobs; i++) {
+        for (int i = 0; i < secondaryMobs && !secondary.isEmpty(); i++) {
             var factory = secondary.remove(random.nextInt(secondary.size()));
             factory.spawn(spawns.get(), args, consumer);
         }
@@ -186,7 +186,7 @@ public class MonsterSpawner {
         EntityUtil.setAttribute(entity, STEP_HEIGHT, 2);
 
         EntityNavigation navigation = entity.getNavigation();
-        navigation.setRangeMultiplier(8f);
+        navigation.setRangeMultiplier(1f);
 
         if (navigation instanceof MobNavigation nav) {
             nav.setCanOpenDoors(true);
