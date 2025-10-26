@@ -21,7 +21,8 @@ public class MSScanner {
     public static final String
             FUNCTION_POOL = "ap2:maze_scape/function",
             FUNCTION_SPAWN = "ap2:spawn",
-            FUNCTION_PIT = "ap2:pit";
+            FUNCTION_PIT = "ap2:pit",
+            FUNCTION_EXTRA_WALL = "ap2:extra_wall";
 
     private final Logger logger;
     private final FabricBlockStateAdapter adapter = FabricBlockStateAdapter.getInstance();
@@ -80,6 +81,7 @@ public class MSScanner {
             switch (name) {
                 case FUNCTION_SPAWN -> scan.spawn = new Vec3d(localPos.getX() + 0.5, localPos.getY() + 1, localPos.getZ() + 0.5);
                 case FUNCTION_PIT -> scan.pitMarkers.add(localPos.toImmutable());
+                case FUNCTION_EXTRA_WALL -> scan.wallMarkers.add(new WallMarker(pos, state.get(Properties.ORIENTATION)));
                 default -> {}
             }
             return;
@@ -92,11 +94,13 @@ public class MSScanner {
             Orientation orientation = state.get(Properties.ORIENTATION);
 
             scan.connectors.add(new Connector3(pos, orientation, name, target));
+            scan.wallMarkers.add(new WallMarker(pos, orientation));
         }
     }
 
     public interface Result {
         List<Connector3> connectors();
+        List<WallMarker> wallMarkers();
         List<BlockPos> jigsaws();
         @Nullable Vec3d spawn();
         List<BlockPos> pitMarkers();
@@ -104,12 +108,18 @@ public class MSScanner {
 
     private static class Scan implements Result {
         final List<Connector3> connectors = new ArrayList<>(2);
+        final List<WallMarker> wallMarkers = new ArrayList<>(2);
         final List<BlockPos> jigsaws = new ArrayList<>(2);
         final List<BlockPos> pitMarkers = new ArrayList<>(0);
         @Nullable Vec3d spawn = null;
 
         public List<Connector3> connectors() {
             return connectors;
+        }
+
+        @Override
+        public List<WallMarker> wallMarkers() {
+            return wallMarkers;
         }
 
         @Override

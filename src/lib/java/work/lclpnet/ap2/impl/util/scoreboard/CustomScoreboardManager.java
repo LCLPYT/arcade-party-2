@@ -145,6 +145,10 @@ public class CustomScoreboardManager {
         playerScore.setScore(score);
     }
 
+    public void removeScore(ScoreHolder holder, ScoreboardObjective objective) {
+        scoreboard.removeScore(holder, objective);
+    }
+
     public void setNumberFormat(ScoreHolder holder, ScoreboardObjective objective, @Nullable NumberFormat format) {
         ScoreAccess playerScore = getOrCreateScore(holder, objective);
 

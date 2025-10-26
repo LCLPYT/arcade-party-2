@@ -9,6 +9,7 @@ import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.team.Team;
 import work.lclpnet.ap2.api.game.team.TeamKey;
 import work.lclpnet.ap2.api.game.team.TeamManager;
+import work.lclpnet.ap2.core.hook.PlayerEliminatedCallback;
 import work.lclpnet.ap2.impl.game.data.EliminationDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.TeamRef;
 import work.lclpnet.ap2.impl.util.DeathMessages;
@@ -56,6 +57,7 @@ public abstract class TeamEliminationGameInstance extends TeamGameInstance {
             deathMessages.eliminated(player).sendTo(PlayerLookup.all(server));
 
             participants.remove(player);
+            onEliminated(player);
         }
 
         resetPlayer(player);
@@ -77,6 +79,7 @@ public abstract class TeamEliminationGameInstance extends TeamGameInstance {
 
         for (ServerPlayerEntity player : team.getPlayers()) {
             participants.remove(player);
+            onEliminated(player);
             resetPlayer(player);
         }
 
@@ -124,6 +127,7 @@ public abstract class TeamEliminationGameInstance extends TeamGameInstance {
         for (Team team : teams) {
             for (ServerPlayerEntity player : team.getPlayers()) {
                 participants.remove(player);
+                onEliminated(player);
                 resetPlayer(player);
             }
         }
@@ -143,5 +147,9 @@ public abstract class TeamEliminationGameInstance extends TeamGameInstance {
     @Override
     public EliminationDataContainer<Team, TeamRef> getData() {
         return data;
+    }
+
+    protected void onEliminated(ServerPlayerEntity player) {
+        PlayerEliminatedCallback.HOOK.invoker().onEliminated(player);
     }
 }

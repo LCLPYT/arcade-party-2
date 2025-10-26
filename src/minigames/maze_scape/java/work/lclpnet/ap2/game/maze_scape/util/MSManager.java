@@ -29,13 +29,14 @@ import work.lclpnet.ap2.core.mixin.CreakingBrainAccessor;
 import work.lclpnet.ap2.core.mixin.WardenBrainAccessor;
 import work.lclpnet.ap2.core.type.ApEntity;
 import work.lclpnet.ap2.game.maze_scape.gen.Node;
+import work.lclpnet.ap2.game.maze_scape.monster.CreakingData;
 import work.lclpnet.ap2.game.maze_scape.monster.EndermanData;
 import work.lclpnet.ap2.game.maze_scape.monster.MonsterData;
 import work.lclpnet.ap2.game.maze_scape.monster.MonsterSpawner;
 import work.lclpnet.ap2.game.maze_scape.setup.MSDebugController;
-import work.lclpnet.ap2.game.maze_scape.setup.MSGenerator;
 import work.lclpnet.ap2.game.maze_scape.setup.OrientedStructurePiece;
 import work.lclpnet.ap2.impl.util.EntityUtil;
+import work.lclpnet.kibu.hook.util.PendingResult;
 import work.lclpnet.lobby.game.map.GameMap;
 
 import java.util.*;
@@ -54,7 +55,6 @@ public class MSManager {
     private final Random random;
     private final Logger logger;
     private final MSTargetManager targetManager;
-    private final int mapChunkRadius;
     private final MSDebugController debugController;
     private final Map<UUID, MonsterData<?>> monsters = new HashMap<>();
     private final MonsterSpawner spawner;
@@ -68,7 +68,6 @@ public class MSManager {
         this.debugController = debugController;
 
         targetManager = new MSTargetManager(struct, participants);
-        mapChunkRadius = MSGenerator.getMaxChunkSize(map);
         spawner = new MonsterSpawner(this, logger, random);
     }
 
@@ -93,6 +92,7 @@ public class MSManager {
         hooks.registerHook(EntityPathFindingCallback.HOOK, this::modifyPathFinding);
         hooks.registerHook(CobwebSlowCallback.HOOK, this::cancelCobwebSlow);
         hooks.registerHook(EntityAfterMoveCallback.HOOK, this::afterMoveTick);
+        hooks.registerHook(CreakingLookedAtCheckCallback.HOOK, this::isCreakingBeingLookedAt);
     }
 
     public void spawnMobs() {
@@ -177,8 +177,7 @@ public class MSManager {
     private void initAttributes(LivingEntity entity) {
         if (entity.getWorld() != world || !isMonsterType(entity)) return;
 
-        // make sure monsters can track down players everywhere in the map
-        EntityUtil.setAttribute(entity, EntityAttributes.FOLLOW_RANGE, 2 * mapChunkRadius * 16);
+        EntityUtil.setAttribute(entity, EntityAttributes.FOLLOW_RANGE, 80);
     }
 
     private static boolean isMonsterType(LivingEntity entity) {
@@ -324,5 +323,13 @@ public class MSManager {
 
         // but look at the target player all the time
         mob.lookAt(EntityAnchorArgumentType.EntityAnchor.EYES, target.getEyePos());
+    }
+
+    private PendingResult<Boolean> isCreakingBeingLookedAt(CreakingEntity creaking) {
+        if (creaking.getWorld() != world || !(monsters.get(creaking.getUuid()) instanceof CreakingData data)) {
+            return PendingResult.pass();
+        }
+
+        return PendingResult.of(data.isBeingLookedAt(creaking));
     }
 }

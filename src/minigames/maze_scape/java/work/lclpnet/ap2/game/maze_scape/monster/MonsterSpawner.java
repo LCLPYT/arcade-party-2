@@ -22,8 +22,8 @@ import work.lclpnet.ap2.game.maze_scape.ai.MoveToTargetGoal;
 import work.lclpnet.ap2.game.maze_scape.util.MSManager;
 import work.lclpnet.ap2.game.maze_scape.util.PitPathFindingPredicate;
 import work.lclpnet.ap2.game.maze_scape.util.RandomGenerator;
+import work.lclpnet.ap2.game.maze_scape.util.TrapdoorPathFindingPredicate;
 import work.lclpnet.ap2.impl.ai.BlockedPathFindingPredicate;
-import work.lclpnet.ap2.impl.ai.CollisionPathFindingPredicate;
 import work.lclpnet.ap2.impl.util.EntityUtil;
 import work.lclpnet.ap2.impl.util.GoalModifier;
 import work.lclpnet.gaco.core.api.Partial;
@@ -36,8 +36,7 @@ import java.util.function.BiConsumer;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
-import static net.minecraft.entity.attribute.EntityAttributes.ATTACK_DAMAGE;
-import static net.minecraft.entity.attribute.EntityAttributes.STEP_HEIGHT;
+import static net.minecraft.entity.attribute.EntityAttributes.*;
 
 public class MonsterSpawner {
 
@@ -59,20 +58,25 @@ public class MonsterSpawner {
     public void spawn(RandomGenerator<Vec3d> spawns, Registrar consumer) {
         Partial<MonsterArgs, UUID> args = uuid -> new MonsterArgs(uuid, manager, logger);
 
-        List<MonsterFactory> primary = new ArrayList<>(List.of(this::spawnWarden, this::spawnSpider));
-        List<MonsterFactory> secondary = new ArrayList<>(List.of(this::spawnEnderman, this::spawnCreaking));
+        List<MonsterFactory> primary = new ArrayList<>();
+        primary.add(this::spawnWarden);
+        primary.add(this::spawnSpider);
+
+        List<MonsterFactory> secondary = new ArrayList<>();
+        secondary.add(this::spawnEnderman);
+        secondary.add(this::spawnCreaking);
 
         final int players = manager.participants().count();
 
         int primaryMobs = max(1, min(primary.size(), players / 2));
         int secondaryMobs = max(1, min(secondary.size(), players / 3));
 
-        for (int i = 0; i < primaryMobs; i++) {
+        for (int i = 0; i < primaryMobs && !primary.isEmpty(); i++) {
             var factory = primary.remove(random.nextInt(primary.size()));
             factory.spawn(spawns.get(), args, consumer);
         }
 
-        for (int i = 0; i < secondaryMobs; i++) {
+        for (int i = 0; i < secondaryMobs && !secondary.isEmpty(); i++) {
             var factory = secondary.remove(random.nextInt(secondary.size()));
             factory.spawn(spawns.get(), args, consumer);
         }
@@ -107,7 +111,6 @@ public class MonsterSpawner {
         EntityUtil.setAttribute(spider, ATTACK_DAMAGE, 5);
 
         ((ApSpider) spider).ap2$setCanClimb(false);
-        ((ApLivingEntity) spider).ap2$setServerSidedScale(0.64f);  // change spider width to ~0.9
 
         GoalSelector goalSelector = resetAi(spider).getGoalSelector();
 
@@ -154,7 +157,8 @@ public class MonsterSpawner {
 
         configureMobCommon(pos, creaking);
 
-        EntityUtil.setAttribute(creaking, ATTACK_DAMAGE, 8);
+        EntityUtil.setAttribute(creaking, ATTACK_DAMAGE, 12);
+        EntityUtil.setAttribute(creaking, MOVEMENT_SPEED, 0.5);
 
         world.spawnEntity(creaking);
 
@@ -179,6 +183,13 @@ public class MonsterSpawner {
         entity.setPersistent();
         entity.setOnGround(true);  // required to perform path finding immediately
 
+        float maxWidth = 0.62f;
+
+        if (entity.getWidth() > maxWidth) {
+            ((ApLivingEntity) entity).ap2$setServerSidedScale(maxWidth / entity.getWidth());
+            entity.calculateDimensions();
+        }
+
         if (DEBUG_SHOW_MOBS) {
             entity.setGlowing(true);
         }
@@ -186,7 +197,7 @@ public class MonsterSpawner {
         EntityUtil.setAttribute(entity, STEP_HEIGHT, 2);
 
         EntityNavigation navigation = entity.getNavigation();
-        navigation.setRangeMultiplier(8f);
+        navigation.setRangeMultiplier(1f);
 
         if (navigation instanceof MobNavigation nav) {
             nav.setCanOpenDoors(true);
@@ -209,9 +220,9 @@ public class MonsterSpawner {
         PathNodeMaker nodeMaker = ((EntityNavigationAccessor) navigation).getNodeMaker();
 
         if (nodeMaker instanceof ApLandPathNodeMaker apPathMaker) {
-            apPathMaker.ap2$addPathFindingPredicate(BlockedPathFindingPredicate.getInstance());
-            apPathMaker.ap2$addPathFindingPredicate(CollisionPathFindingPredicate.getInstance());
-            apPathMaker.ap2$addPathFindingPredicate(new PitPathFindingPredicate(manager.struct()));
+            apPathMaker.ap2$addCustomBlockedPredicate(BlockedPathFindingPredicate.getInstance());
+            apPathMaker.ap2$addCustomBlockedPredicate(new PitPathFindingPredicate(manager.struct()));
+            apPathMaker.ap2$addCustomInvalidPredicate(TrapdoorPathFindingPredicate.getInstance());
         }
     }
 
