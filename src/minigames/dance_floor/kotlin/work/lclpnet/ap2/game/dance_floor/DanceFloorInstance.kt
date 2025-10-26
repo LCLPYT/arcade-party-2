@@ -290,7 +290,4 @@ class DanceFloorInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(g
 
         nextCycle()
     }
-
-    override fun onEliminated(player: ServerPlayerEntity?) {
-    }
 }
