@@ -34,7 +34,6 @@ import work.lclpnet.ap2.game.maze_scape.monster.EndermanData;
 import work.lclpnet.ap2.game.maze_scape.monster.MonsterData;
 import work.lclpnet.ap2.game.maze_scape.monster.MonsterSpawner;
 import work.lclpnet.ap2.game.maze_scape.setup.MSDebugController;
-import work.lclpnet.ap2.game.maze_scape.setup.MSGenerator;
 import work.lclpnet.ap2.game.maze_scape.setup.OrientedStructurePiece;
 import work.lclpnet.ap2.impl.util.EntityUtil;
 import work.lclpnet.kibu.hook.util.PendingResult;
@@ -56,7 +55,6 @@ public class MSManager {
     private final Random random;
     private final Logger logger;
     private final MSTargetManager targetManager;
-    private final int mapChunkRadius;
     private final MSDebugController debugController;
     private final Map<UUID, MonsterData<?>> monsters = new HashMap<>();
     private final MonsterSpawner spawner;
@@ -70,7 +68,6 @@ public class MSManager {
         this.debugController = debugController;
 
         targetManager = new MSTargetManager(struct, participants);
-        mapChunkRadius = MSGenerator.getMaxChunkSize(map);
         spawner = new MonsterSpawner(this, logger, random);
     }
 
@@ -180,7 +177,7 @@ public class MSManager {
     private void initAttributes(LivingEntity entity) {
         if (entity.getWorld() != world || !isMonsterType(entity)) return;
 
-        EntityUtil.setAttribute(entity, EntityAttributes.FOLLOW_RANGE, 64);
+        EntityUtil.setAttribute(entity, EntityAttributes.FOLLOW_RANGE, 80);
     }
 
     private static boolean isMonsterType(LivingEntity entity) {

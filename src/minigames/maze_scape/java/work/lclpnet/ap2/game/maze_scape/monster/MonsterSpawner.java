@@ -36,8 +36,7 @@ import java.util.function.BiConsumer;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
-import static net.minecraft.entity.attribute.EntityAttributes.ATTACK_DAMAGE;
-import static net.minecraft.entity.attribute.EntityAttributes.STEP_HEIGHT;
+import static net.minecraft.entity.attribute.EntityAttributes.*;
 
 public class MonsterSpawner {
 
@@ -108,6 +107,7 @@ public class MonsterSpawner {
 
         ((ApSpider) spider).ap2$setCanClimb(false);
         ((ApLivingEntity) spider).ap2$setServerSidedScale(0.64f);  // change spider width to ~0.9
+        spider.calculateDimensions();
 
         GoalSelector goalSelector = resetAi(spider).getGoalSelector();
 
@@ -154,7 +154,8 @@ public class MonsterSpawner {
 
         configureMobCommon(pos, creaking);
 
-        EntityUtil.setAttribute(creaking, ATTACK_DAMAGE, 8);
+        EntityUtil.setAttribute(creaking, ATTACK_DAMAGE, 12);
+        EntityUtil.setAttribute(creaking, MOVEMENT_SPEED, 0.5);
 
         world.spawnEntity(creaking);
 
