@@ -107,7 +107,10 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
         gameHandle.protect { config ->
             config.allowAll()
             config.disallow(ProtectionTypes.ALLOW_DAMAGE, EntityDamageSourceScope { entity, source ->
-                entity is ServerPlayerEntity && source.attacker is ServerPlayerEntity && !source.isOf(DamageTypes.PLAYER_EXPLOSION)
+                entity is ServerPlayerEntity && source.attacker is ServerPlayerEntity
+                        && !source.isOf(DamageTypes.PLAYER_EXPLOSION)
+                        && !source.isOf(DamageTypes.INDIRECT_MAGIC)
+                        && !source.isOf(DamageTypes.MAGIC)
             })
         }
 
