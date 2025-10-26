@@ -22,8 +22,8 @@ import work.lclpnet.ap2.game.maze_scape.ai.MoveToTargetGoal;
 import work.lclpnet.ap2.game.maze_scape.util.MSManager;
 import work.lclpnet.ap2.game.maze_scape.util.PitPathFindingPredicate;
 import work.lclpnet.ap2.game.maze_scape.util.RandomGenerator;
+import work.lclpnet.ap2.game.maze_scape.util.TrapdoorPathFindingPredicate;
 import work.lclpnet.ap2.impl.ai.BlockedPathFindingPredicate;
-import work.lclpnet.ap2.impl.ai.CollisionPathFindingPredicate;
 import work.lclpnet.ap2.impl.util.EntityUtil;
 import work.lclpnet.ap2.impl.util.GoalModifier;
 import work.lclpnet.gaco.core.api.Partial;
@@ -58,8 +58,13 @@ public class MonsterSpawner {
     public void spawn(RandomGenerator<Vec3d> spawns, Registrar consumer) {
         Partial<MonsterArgs, UUID> args = uuid -> new MonsterArgs(uuid, manager, logger);
 
-        List<MonsterFactory> primary = new ArrayList<>(List.of(this::spawnWarden, this::spawnSpider));
-        List<MonsterFactory> secondary = new ArrayList<>(List.of(this::spawnEnderman, this::spawnCreaking));
+        List<MonsterFactory> primary = new ArrayList<>();
+        primary.add(this::spawnWarden);
+        primary.add(this::spawnSpider);
+
+        List<MonsterFactory> secondary = new ArrayList<>();
+        secondary.add(this::spawnEnderman);
+        secondary.add(this::spawnCreaking);
 
         final int players = manager.participants().count();
 
@@ -106,8 +111,6 @@ public class MonsterSpawner {
         EntityUtil.setAttribute(spider, ATTACK_DAMAGE, 5);
 
         ((ApSpider) spider).ap2$setCanClimb(false);
-        ((ApLivingEntity) spider).ap2$setServerSidedScale(0.64f);  // change spider width to ~0.9
-        spider.calculateDimensions();
 
         GoalSelector goalSelector = resetAi(spider).getGoalSelector();
 
@@ -180,6 +183,13 @@ public class MonsterSpawner {
         entity.setPersistent();
         entity.setOnGround(true);  // required to perform path finding immediately
 
+        float maxWidth = 0.62f;
+
+        if (entity.getWidth() > maxWidth) {
+            ((ApLivingEntity) entity).ap2$setServerSidedScale(maxWidth / entity.getWidth());
+            entity.calculateDimensions();
+        }
+
         if (DEBUG_SHOW_MOBS) {
             entity.setGlowing(true);
         }
@@ -210,9 +220,9 @@ public class MonsterSpawner {
         PathNodeMaker nodeMaker = ((EntityNavigationAccessor) navigation).getNodeMaker();
 
         if (nodeMaker instanceof ApLandPathNodeMaker apPathMaker) {
-            apPathMaker.ap2$addPathFindingPredicate(BlockedPathFindingPredicate.getInstance());
-            apPathMaker.ap2$addPathFindingPredicate(CollisionPathFindingPredicate.getInstance());
-            apPathMaker.ap2$addPathFindingPredicate(new PitPathFindingPredicate(manager.struct()));
+            apPathMaker.ap2$addCustomBlockedPredicate(BlockedPathFindingPredicate.getInstance());
+            apPathMaker.ap2$addCustomBlockedPredicate(new PitPathFindingPredicate(manager.struct()));
+            apPathMaker.ap2$addCustomInvalidPredicate(TrapdoorPathFindingPredicate.getInstance());
         }
     }
 
