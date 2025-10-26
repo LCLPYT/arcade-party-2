@@ -1,20 +1,27 @@
 package work.lclpnet.ap2.game.killeporter
 
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents
+import net.fabricmc.fabric.api.event.player.UseBlockCallback
 import net.fabricmc.fabric.api.event.player.UseItemCallback
+import net.minecraft.block.Blocks
 import net.minecraft.component.DataComponentTypes
 import net.minecraft.entity.damage.DamageTypes
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.fluid.Fluids
+import net.minecraft.inventory.Inventory
+import net.minecraft.item.ItemStack
+import net.minecraft.item.Items
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.server.world.ServerWorld
 import net.minecraft.util.ActionResult
 import net.minecraft.util.Formatting
 import net.minecraft.util.Hand
+import net.minecraft.util.math.BlockPos
 import net.minecraft.world.GameRules
 import net.minecraft.world.World
 import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.map.MapBootstrap
+import work.lclpnet.ap2.impl.ds.WeightedList
 import work.lclpnet.ap2.impl.game.EliminationGameInstance
 import work.lclpnet.ap2.impl.game.kit.KitHandle
 import work.lclpnet.ap2.impl.game.kit.KitHandler
@@ -36,21 +43,38 @@ import work.lclpnet.lobby.game.map.GameMap
 import java.lang.Math.floorMod
 import java.util.concurrent.CompletableFuture
 import kotlin.random.Random
+import kotlin.random.asJavaRandom
 
 val MIN_DURATION_TICKS = Ticks.seconds(18)
 val MAX_DURATION_TICKS = Ticks.seconds(32)
 val GAME_DURATION_TICKS = Ticks.minutes(6)
-val TIME_TO_NIGHTFALL_DAYTIME_TICKS = 3600
+const val TIME_TO_NIGHTFALL_DAYTIME_TICKS = 3600
+
+data class LootEntry(val itemStack: ItemStack, val minCount: Int = 1, val maxCount: Int = 1) {
+    fun generateItemStack(): ItemStack {
+        val count = Random.nextInt(minCount, maxCount+1)
+        return itemStack.copyWithCount(count)
+    }
+}
 
 class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gameHandle), MapBootstrap {
-
-    init {
-        useSurvivalMode()
-    }
 
     var kitHandler: KitHandler? = null
     var kitLoader: PrefabKitLoader? = null
     var itemUseAllowed = false
+    val filledInventories = mutableSetOf<BlockPos>()
+    val inventoryContent = WeightedList<LootEntry>()
+
+    init {
+        useSurvivalMode()
+        inventoryContent.add(LootEntry(ItemStack(Items.TNT), maxCount = 4), 0.2f)
+        inventoryContent.add(LootEntry(ItemStack(Items.COBWEB), maxCount = 6), 0.2f)
+        inventoryContent.add(LootEntry(ItemStack(Items.IRON_PICKAXE)), 0.05f)
+        inventoryContent.add(LootEntry(ItemStack(Items.IRON_HELMET)), 0.05f)
+        inventoryContent.add(LootEntry(ItemStack(Items.IRON_CHESTPLATE)), 0.05f)
+        inventoryContent.add(LootEntry(ItemStack(Items.SAND), minCount = 3, maxCount = 16), 0.3f)
+        inventoryContent.add(LootEntry(ItemStack(Items.WHITE_WOOL), minCount = 3, maxCount = 16), 0.3f)
+    }
 
     override fun createWorldBootstrap(world: ServerWorld, map: GameMap): CompletableFuture<Void> {
         kitLoader = PrefabKitLoader(world.registryManager, gameHandle.logger)
@@ -114,17 +138,59 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
             })
         }
 
-        gameHandle.hooks.registerHook(BlockModificationHooks.PLACE_FLUID, BlockModificationHooks.FluidTransferHook { world, pos, entity, fluid ->
+        gameHandle.hooks.registerHook(
+            BlockModificationHooks.PLACE_FLUID,
+            BlockModificationHooks.FluidTransferHook { world, pos, entity, fluid ->
             val minDistSq = 6.0 * 6.0
             entity is ServerPlayerEntity && fluid.matchesType(Fluids.LAVA) && players().any {
                 it != entity && it.squaredDistanceTo(pos.toCenterPos()) < minDistSq
             }
         })
 
+        gameHandle.hooks.registerHook(
+            PlayerInteractionHooks.USE_BLOCK,
+            UseBlockCallback { player, world, hand, hitResult ->
+                onUseInventory(player, world, hitResult.blockPos)
+                ActionResult.PASS
+            }
+        )
+
+        gameHandle.hooks.registerHook(
+            BlockModificationHooks.BREAK_BLOCK,
+            BlockModificationHooks.BlockModifyHook {world, pos, entity ->
+                if (entity !is ServerPlayerEntity || !world.getBlockState(pos).isOf(Blocks.DECORATED_POT)) {return@BlockModifyHook false}
+                onUseInventory(entity, world, pos)
+                return@BlockModifyHook false
+            }
+        )
+
         switchTimeout()
 
         timeout(GAME_DURATION_TICKS) { ->
             winManager.forceWin(players().toSet())
+        }
+    }
+
+    private fun onUseInventory(player: PlayerEntity, world: World, blockPos: BlockPos) {
+
+        if (player !is ServerPlayerEntity || !gameHandle.participants.isParticipating(player)) return
+
+        val blockEntity = world.getBlockEntity(blockPos)
+
+        if (blockEntity is Inventory && filledInventories.add(blockPos)) {
+
+            blockEntity.clear()
+
+            val invSize = blockEntity.size()
+            val maxSlotsToFill = 5.coerceAtMost(invSize)
+            val slotsToFill = Random.nextInt(1, maxSlotsToFill + 1)
+            val availableSlots = (0..invSize-1).toMutableList()
+
+            repeat (slotsToFill) {
+                val slot = availableSlots.removeAt(Random.nextInt(availableSlots.size))
+                val entry = inventoryContent.getRandomElement(Random.asJavaRandom())
+                blockEntity.setStack(slot, entry!!.generateItemStack())
+            }
         }
     }
 
