@@ -180,8 +180,7 @@ public class MSManager {
     private void initAttributes(LivingEntity entity) {
         if (entity.getWorld() != world || !isMonsterType(entity)) return;
 
-        // make sure monsters can track down players everywhere in the map
-        EntityUtil.setAttribute(entity, EntityAttributes.FOLLOW_RANGE, 2 * mapChunkRadius * 16);
+        EntityUtil.setAttribute(entity, EntityAttributes.FOLLOW_RANGE, 64);
     }
 
     private static boolean isMonsterType(LivingEntity entity) {
