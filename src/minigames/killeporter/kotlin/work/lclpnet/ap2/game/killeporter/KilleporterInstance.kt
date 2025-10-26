@@ -4,6 +4,7 @@ import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents
 import net.fabricmc.fabric.api.event.player.UseBlockCallback
 import net.fabricmc.fabric.api.event.player.UseItemCallback
 import net.minecraft.block.Blocks
+import net.minecraft.block.ChestBlock
 import net.minecraft.component.DataComponentTypes
 import net.minecraft.entity.damage.DamageTypes
 import net.minecraft.entity.player.PlayerEntity
@@ -171,26 +172,38 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
         }
     }
 
-    private fun onUseInventory(player: PlayerEntity, world: World, blockPos: BlockPos) {
+    private fun onUseInventory(player: PlayerEntity, world: World, pos: BlockPos) {
 
         if (player !is ServerPlayerEntity || !gameHandle.participants.isParticipating(player)) return
 
-        val blockEntity = world.getBlockEntity(blockPos)
+        val blockEntity = world.getBlockEntity(pos)
+        val state = world.getBlockState(pos)
+        val block = state.block
 
-        if (blockEntity is Inventory && filledInventories.add(blockPos)) {
+        if (block is ChestBlock) {
+            val inventory = ChestBlock.getInventory(block, state, world, pos, true)
+            if (inventory != null) fillInventory(inventory)
+            filledInventories.add(pos)
+            return
+        }
 
-            blockEntity.clear()
+        if (blockEntity is Inventory && filledInventories.add(pos)) {
+            fillInventory(blockEntity)
+        }
+    }
 
-            val invSize = blockEntity.size()
-            val maxSlotsToFill = 5.coerceAtMost(invSize)
-            val slotsToFill = Random.nextInt(1, maxSlotsToFill + 1)
-            val availableSlots = (0..invSize-1).toMutableList()
+    private fun fillInventory(inventory: Inventory) {
+        inventory.clear()
 
-            repeat (slotsToFill) {
-                val slot = availableSlots.removeAt(Random.nextInt(availableSlots.size))
-                val entry = inventoryContent.getRandomElement(Random.asJavaRandom())
-                blockEntity.setStack(slot, entry!!.generateItemStack())
-            }
+        val invSize = inventory.size()
+        val maxSlotsToFill = 5.coerceAtMost(invSize)
+        val slotsToFill = Random.nextInt(1, maxSlotsToFill + 1)
+        val availableSlots = (0..invSize - 1).toMutableList()
+
+        repeat(slotsToFill) {
+            val slot = availableSlots.removeAt(Random.nextInt(availableSlots.size))
+            val entry = inventoryContent.getRandomElement(Random.asJavaRandom())
+            inventory.setStack(slot, entry!!.generateItemStack())
         }
     }
 
