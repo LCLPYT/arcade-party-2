@@ -255,7 +255,7 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
             filledInventories.clear()
         })
 
-        timeout(GAME_DURATION_TICKS) { ->
+        timeout(GAME_DURATION_TICKS) {
             winManager.forceWin(players().toSet())
         }
     }
@@ -290,7 +290,7 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
         inventory.clear()
 
         val invSize = inventory.size()
-        val availableSlots = (0..invSize - 1).toMutableList()
+        val availableSlots = (0..<invSize).toMutableList()
         val maxSlotsToFill = 5.coerceAtMost(invSize)
 
         val slotsToFill = if (state.block == Blocks.DECORATED_POT) {
@@ -310,19 +310,19 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
         val switchTime =  Random.nextInt(MIN_DURATION_TICKS, MAX_DURATION_TICKS+1)
         val messageTime = Random.nextInt(Ticks.seconds(1), Ticks.seconds(maxDelaySeconds)+1)
 
-        timeout(switchTime - messageTime) { ->
+        timeout(switchTime - messageTime) {
             translate("game.ap2.killeporter.switch_announcement", FormatWrapper.styled(maxDelaySeconds, Formatting.YELLOW))
             .formatted(Formatting.GREEN)
             .sendTo(players(), true)}
 
-        timeout(switchTime) { ->
+        timeout(switchTime) {
             playerSwitcher()
             switchTimeout()
         }
     }
 
     fun switchAnnouncement() {
-        timeout(MIN_DURATION_TICKS) { ->
+        timeout(MIN_DURATION_TICKS) {
 
             switchAnnouncement()
         }
