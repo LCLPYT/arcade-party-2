@@ -210,7 +210,7 @@ class MinefieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
     fun entry(player: ServerPlayerEntity): Entry = entries.computeIfAbsent(player.uuid) { Entry() }
 
     fun onReachGoal(player: ServerPlayerEntity) {
-        if (!inGoal.add(player.uuid)) return
+        if (!inGoal.add(player.uuid) || !players().isParticipating(player)) return
 
         data.add(player)
         entry(player).done()

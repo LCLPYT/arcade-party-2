@@ -11,6 +11,7 @@ import work.lclpnet.ap2.ApConstants;
 import work.lclpnet.ap2.game.paintball.util.PaintGun;
 import work.lclpnet.ap2.game.paintball.util.PaintGunManager;
 import work.lclpnet.ap2.impl.game.kit.KitHandle;
+import work.lclpnet.ap2.impl.game.kit.KitOptions;
 import work.lclpnet.ap2.impl.game.kit.SingleItemKit;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 
@@ -30,7 +31,7 @@ public class PaintGunKit extends SingleItemKit {
     }
 
     @Override
-    public void init() {
+    public void init(KitOptions options) {
         handle.hooks().registerHook(PlayerInteractionHooks.USE_ITEM, (_player, world, hand) -> {
             if (!(_player instanceof ServerPlayerEntity player)) {
                 return ActionResult.PASS;

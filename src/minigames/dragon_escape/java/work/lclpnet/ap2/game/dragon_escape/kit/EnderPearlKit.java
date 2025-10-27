@@ -12,6 +12,7 @@ import net.minecraft.util.math.Vec3d;
 import work.lclpnet.ap2.core.hook.EnderPearlTeleportCallback;
 import work.lclpnet.ap2.core.hook.ProjectileShootCallback;
 import work.lclpnet.ap2.impl.game.kit.KitHandle;
+import work.lclpnet.ap2.impl.game.kit.KitOptions;
 import work.lclpnet.ap2.impl.game.kit.SingleItemKit;
 import work.lclpnet.ap2.impl.util.EntityUtil;
 import work.lclpnet.gaco.math.SplinePath;
@@ -44,7 +45,7 @@ public class EnderPearlKit extends SingleItemKit {
     }
 
     @Override
-    public void init() {
+    public void init(KitOptions options) {
         handle.hooks().registerHook(ProjectileShootCallback.HOOK, (shooter, projectile) -> {
             if (shooter instanceof ServerPlayerEntity player && projectile instanceof EnderPearlEntity && handle.hasKitEquipped(player, this)) {
                 EntityUtil.sutCustomData(projectile, ORIGIN_CODEC, player.getPos());
@@ -56,7 +57,7 @@ public class EnderPearlKit extends SingleItemKit {
 
                     projectile.discard();
 
-                    refund(player.networkHandler);
+                    refund(player.networkHandler, options);
                 }, REFUND_DELAY_TICKS));
             }
         });
@@ -77,7 +78,7 @@ public class EnderPearlKit extends SingleItemKit {
                         .formatted(RED)
                         .sendTo(player);
 
-                refund(player.networkHandler);
+                refund(player.networkHandler, options);
 
                 player.getItemCooldownManager().set(Registries.ITEM.getId(Items.ENDER_PEARL), RETRY_TICKS);
 
@@ -101,14 +102,14 @@ public class EnderPearlKit extends SingleItemKit {
         return progressTo - progressFrom <= MAX_PROGRESS_SKIP;
     }
 
-    private void refund(ServerPlayNetworkHandler handler) {
+    private void refund(ServerPlayNetworkHandler handler, KitOptions options) {
         if (!handler.isConnectionOpen()) return;
 
         ServerPlayerEntity player = handler.player;
 
         if (player == null || player.isDead()) return;
 
-        equip(player);
+        equip(player, options);
 
         player.playSoundToPlayer(SoundEvents.BLOCK_NOTE_BLOCK_BASS.value(), SoundCategory.NEUTRAL, 0.5f, 1f);
     }
