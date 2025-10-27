@@ -91,6 +91,7 @@
   "ap2.view_stats": "Statistik ansehen",
   "ap2.view_stats.click": "Klicke, um die Spielstatistik anzuzeigen",
   "ap2.view_stats.unavailable": "Diese Statistik kann leider nicht mehr angezeigt werden",
+  "ap2.view_stats.name": "Name",
   "ap2.stats.score": "Punktestand",
   "game.ap2.title": "ArcadeParty",
   "game.ap2.reached_checkpoint": "Checkpoint erreicht",

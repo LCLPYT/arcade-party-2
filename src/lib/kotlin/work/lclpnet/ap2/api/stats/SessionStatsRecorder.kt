@@ -52,21 +52,11 @@ class SessionStatsRecorder(val translations: Translations, val logger: Logger) {
             return
         }
 
-        val detail = payload.getString("detail", null)
-
-        if (detail == null) {
-            openSummary(player, stats, id)
-        } else {
-            openDetail(player, stats, detail)
-        }
+        openSummary(player, stats)
     }
 
-    fun openSummary(player: ServerPlayerEntity, stats: StatsResult, id: UUID) {
-        statsDisplay.openSummary(player, stats, id)
-    }
-
-    fun openDetail(player: ServerPlayerEntity, stats: StatsResult, detail: String) {
-        statsDisplay.openDetail(player, stats, detail)
+    fun openSummary(player: ServerPlayerEntity, stats: StatsResult) {
+        statsDisplay.openSummary(player, stats)
     }
 
     companion object {

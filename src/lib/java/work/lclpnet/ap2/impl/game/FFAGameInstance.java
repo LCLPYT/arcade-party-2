@@ -16,6 +16,7 @@ import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRefResolver;
 
 import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -72,7 +73,7 @@ public abstract class FFAGameInstance extends BaseGameInstance implements Partic
     }
 
     protected final FFAStatsManager createStats(IntScoreEventSource<ServerPlayerEntity> data, Stat<?>... stats) {
-        var set = Stream.concat(Stream.of(SCORE), Arrays.stream(stats)).collect(Collectors.toSet());
+        var set = Stream.concat(Stream.of(SCORE), Arrays.stream(stats)).collect(Collectors.toCollection(LinkedHashSet::new));
         var manager = new FFAStatsManager(set);
 
         data.register((player, score) -> manager.set(player, SCORE, score));
