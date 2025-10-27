@@ -3,8 +3,10 @@ package work.lclpnet.ap2.game.killeporter
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents
 import net.fabricmc.fabric.api.event.player.UseBlockCallback
 import net.fabricmc.fabric.api.event.player.UseItemCallback
+import net.minecraft.block.BlockState
 import net.minecraft.block.Blocks
 import net.minecraft.block.ChestBlock
+import net.minecraft.block.DoubleBlockProperties
 import net.minecraft.component.DataComponentTypes
 import net.minecraft.entity.damage.DamageTypes
 import net.minecraft.entity.player.PlayerEntity
@@ -179,26 +181,35 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
         val blockEntity = world.getBlockEntity(pos)
         val state = world.getBlockState(pos)
         val block = state.block
-
-        if (block is ChestBlock) {
-            val inventory = ChestBlock.getInventory(block, state, world, pos, true)
-            if (inventory != null) fillInventory(inventory)
-            filledInventories.add(pos)
-            return
-        }
+        val inventoryToFill: Inventory?
 
         if (blockEntity is Inventory && filledInventories.add(pos)) {
-            fillInventory(blockEntity)
+
+            if (block is ChestBlock) {
+                inventoryToFill = ChestBlock.getInventory(block, state, world, pos, false)
+                if (ChestBlock.getDoubleBlockType(state) != DoubleBlockProperties.Type.SINGLE) {
+                    val neighborDir = ChestBlock.getFacing(state)
+                    val otherPos = pos.offset(neighborDir)
+                    filledInventories.add(otherPos)
+                }
+            }
+            else inventoryToFill = blockEntity
+
+            fillInventory(inventoryToFill!!, state)
         }
     }
 
-    private fun fillInventory(inventory: Inventory) {
+    private fun fillInventory(inventory: Inventory, state: BlockState) {
+
         inventory.clear()
 
         val invSize = inventory.size()
-        val maxSlotsToFill = 5.coerceAtMost(invSize)
-        val slotsToFill = Random.nextInt(1, maxSlotsToFill + 1)
         val availableSlots = (0..invSize - 1).toMutableList()
+        val maxSlotsToFill = 5.coerceAtMost(invSize)
+
+        val slotsToFill = if (state.block == Blocks.DECORATED_POT) {
+            Random.nextInt(0, maxSlotsToFill + 1)
+        } else { Random.nextInt(1, maxSlotsToFill + 1) }
 
         repeat(slotsToFill) {
             val slot = availableSlots.removeAt(Random.nextInt(availableSlots.size))
