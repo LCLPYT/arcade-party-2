@@ -71,15 +71,18 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
     init {
         useSurvivalMode()
 
-        inventoryContent.add(LootEntry(ItemStack(Items.TNT), maxCount = 4), 0.1f)
+        inventoryContent.add(LootEntry(ItemStack(Items.TNT), maxCount = 2), 0.5f)
         inventoryContent.add(LootEntry(ItemStack(Items.COBWEB), maxCount = 6), 0.2f)
         inventoryContent.add(LootEntry(ItemStack(Items.IRON_PICKAXE)), 0.05f)
         inventoryContent.add(LootEntry(ItemStack(Items.IRON_HELMET)), 0.05f)
         inventoryContent.add(LootEntry(ItemStack(Items.IRON_CHESTPLATE)), 0.05f)
         inventoryContent.add(LootEntry(ItemStack(Items.FLINT_AND_STEEL)), 0.05f)
-        inventoryContent.add(LootEntry(ItemStack(Items.ENDER_PEARL)), 0.05f)
+        inventoryContent.add(LootEntry(ItemStack(Items.BUCKET)), 0.1f)
+        inventoryContent.add(LootEntry(ItemStack(Items.ENDER_PEARL), maxCount = 2), 0.05f)
+        inventoryContent.add(LootEntry(ItemStack(Items.CHORUS_FRUIT), maxCount = 2), 0.05f)
         inventoryContent.add(LootEntry(ItemStack(Items.SAND), minCount = 3, maxCount = 16), 0.3f)
         inventoryContent.add(LootEntry(ItemStack(Items.WHITE_WOOL), minCount = 3, maxCount = 16), 0.3f)
+        inventoryContent.add(LootEntry(ItemStack(Items.HAY_BLOCK), maxCount = 6), 0.3f)
     }
 
     override fun createWorldBootstrap(world: ServerWorld, map: GameMap): CompletableFuture<Void> {
