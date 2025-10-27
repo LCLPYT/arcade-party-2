@@ -16,12 +16,15 @@ import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.server.world.ServerWorld
+import net.minecraft.sound.SoundCategory
+import net.minecraft.sound.SoundEvents
 import net.minecraft.util.ActionResult
 import net.minecraft.util.Formatting
 import net.minecraft.util.Hand
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.GameRules
 import net.minecraft.world.World
+import work.lclpnet.ap2.*
 import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.map.MapBootstrap
 import work.lclpnet.ap2.impl.ds.WeightedList
@@ -29,10 +32,7 @@ import work.lclpnet.ap2.impl.game.EliminationGameInstance
 import work.lclpnet.ap2.impl.game.kit.KitHandle
 import work.lclpnet.ap2.impl.game.kit.KitHandler
 import work.lclpnet.ap2.impl.game.kit.PrefabKitLoader
-import work.lclpnet.ap2.players
-import work.lclpnet.ap2.teleport
-import work.lclpnet.ap2.timeout
-import work.lclpnet.ap2.translate
+import work.lclpnet.ap2.impl.util.SoundHelper
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks
 import work.lclpnet.kibu.hook.util.PlayerUtils
@@ -180,6 +180,12 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
         )
 
         switchTimeout()
+
+        gameHandle.gameScheduler.interval(20*60*3, 20*60*3, Runnable {
+            SoundHelper.playSound(world, SoundEvents.BLOCK_CHEST_OPEN, SoundCategory.BLOCKS, 0.8f, 0.5f)
+            translate("game.ap2.killeporter.chest_refill").formatted(Formatting.AQUA).sendTo(allPlayers())
+            filledInventories.clear()
+        })
 
         timeout(GAME_DURATION_TICKS) { ->
             winManager.forceWin(players().toSet())

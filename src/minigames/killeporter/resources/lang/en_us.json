@@ -11,5 +11,6 @@
   "game.ap2.killeporter.kit.3_tnt": "Demolition Expert",
   "game.ap2.killeporter.kit.1_tool": "Miner",
   "game.ap2.killeporter.kit.7_mob": "Necromancer",
-  "game.ap2.killeporter.kit.9_spawner": "Summoner"
+  "game.ap2.killeporter.kit.9_spawner": "Summoner",
+  "game.ap2.killeporter.chest_refill": "All Containers have been refilled!"
 }
