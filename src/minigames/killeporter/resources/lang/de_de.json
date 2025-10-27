@@ -3,13 +3,13 @@
   "game.ap2.killeporter.switch_message": "Du wurdest mit %s getauscht!",
   "game.ap2.killeporter.description": "Du wirst alle 20-30 zufällig mit einem anderen Spieler getauscht.\nDein Ziel ist es, der letzte überlebende Spieler zu sein.\nPVP ist ausgeschaltet, sei kreativ!",
   "game.ap2.killeporter.switch_announcement": "Du wirst innerhalb der nächsten %s Sekunden getauscht!",
-  "game.ap2.killeporter.kit.aqua": "Poseidon",
-  "game.ap2.killeporter.kit.defense": "Verteidigung",
-  "game.ap2.killeporter.kit.ender": "Enderman",
-  "game.ap2.killeporter.kit.lava": "Abenteurer",
-  "game.ap2.killeporter.kit.potion": "Alchemist",
-  "game.ap2.killeporter.kit.tnt": "Sprengmeister",
-  "game.ap2.killeporter.kit.tool": "Minenarbeiter",
-  "game.ap2.killeporter.kit.mob": "Nekromant",
-  "game.ap2.killeporter.kit.spawner": "Beschwörer"
+  "game.ap2.killeporter.kit.6_aqua": "Poseidon",
+  "game.ap2.killeporter.kit.4_defense": "Verteidigung",
+  "game.ap2.killeporter.kit.5_ender": "Enderman",
+  "game.ap2.killeporter.kit.0_lava": "Abenteurer",
+  "game.ap2.killeporter.kit.8_potion": "Alchemist",
+  "game.ap2.killeporter.kit.3_tnt": "Sprengmeister",
+  "game.ap2.killeporter.kit.1_tool": "Minenarbeiter",
+  "game.ap2.killeporter.kit.7_mob": "Nekromant",
+  "game.ap2.killeporter.kit.9_spawner": "Beschwörer"
 }

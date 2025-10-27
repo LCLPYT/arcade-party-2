@@ -70,11 +70,14 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
 
     init {
         useSurvivalMode()
-        inventoryContent.add(LootEntry(ItemStack(Items.TNT), maxCount = 4), 0.2f)
+
+        inventoryContent.add(LootEntry(ItemStack(Items.TNT), maxCount = 4), 0.1f)
         inventoryContent.add(LootEntry(ItemStack(Items.COBWEB), maxCount = 6), 0.2f)
         inventoryContent.add(LootEntry(ItemStack(Items.IRON_PICKAXE)), 0.05f)
         inventoryContent.add(LootEntry(ItemStack(Items.IRON_HELMET)), 0.05f)
         inventoryContent.add(LootEntry(ItemStack(Items.IRON_CHESTPLATE)), 0.05f)
+        inventoryContent.add(LootEntry(ItemStack(Items.FLINT_AND_STEEL)), 0.05f)
+        inventoryContent.add(LootEntry(ItemStack(Items.ENDER_PEARL)), 0.05f)
         inventoryContent.add(LootEntry(ItemStack(Items.SAND), minCount = 3, maxCount = 16), 0.3f)
         inventoryContent.add(LootEntry(ItemStack(Items.WHITE_WOOL), minCount = 3, maxCount = 16), 0.3f)
     }
@@ -164,6 +167,15 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
                 if (entity !is ServerPlayerEntity || !world.getBlockState(pos).isOf(Blocks.DECORATED_POT)) {return@BlockModifyHook false}
                 onUseInventory(entity, world, pos)
                 return@BlockModifyHook false
+            }
+        )
+
+        gameHandle.hooks.registerHook(
+            BlockModificationHooks.PLACE_BLOCK,
+            BlockModificationHooks.PlaceBlockHook {world, pos, entity, state ->
+                if (entity !is ServerPlayerEntity) {return@PlaceBlockHook false}
+                filledInventories.add(pos)
+                return@PlaceBlockHook false
             }
         )
 
