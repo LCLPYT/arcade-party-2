@@ -1,5 +1,10 @@
 package work.lclpnet.ap2.game.killeporter
 
+import com.google.gson.Gson
+import com.google.gson.JsonObject
+import com.mojang.serialization.Codec
+import com.mojang.serialization.JsonOps
+import com.mojang.serialization.codecs.RecordCodecBuilder
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents
 import net.fabricmc.fabric.api.event.player.UseBlockCallback
 import net.fabricmc.fabric.api.event.player.UseItemCallback
@@ -13,7 +18,6 @@ import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.fluid.Fluids
 import net.minecraft.inventory.Inventory
 import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.server.world.ServerWorld
 import net.minecraft.sound.SoundCategory
@@ -32,6 +36,7 @@ import work.lclpnet.ap2.impl.game.EliminationGameInstance
 import work.lclpnet.ap2.impl.game.kit.KitHandle
 import work.lclpnet.ap2.impl.game.kit.KitHandler
 import work.lclpnet.ap2.impl.game.kit.PrefabKitLoader
+import work.lclpnet.ap2.impl.util.CodecUtil
 import work.lclpnet.ap2.impl.util.SoundHelper
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks
@@ -44,7 +49,10 @@ import work.lclpnet.lobby.game.api.prot.scope.EntityDamageSourceScope
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes
 import work.lclpnet.lobby.game.map.GameMap
 import java.lang.Math.floorMod
+import java.nio.charset.StandardCharsets
 import java.util.concurrent.CompletableFuture
+import kotlin.math.max
+import kotlin.math.min
 import kotlin.random.Random
 import kotlin.random.asJavaRandom
 
@@ -54,9 +62,55 @@ val GAME_DURATION_TICKS = Ticks.minutes(6)
 const val TIME_TO_NIGHTFALL_DAYTIME_TICKS = 3600
 
 data class LootEntry(val itemStack: ItemStack, val minCount: Int = 1, val maxCount: Int = 1) {
+
     fun generateItemStack(): ItemStack {
         val count = Random.nextInt(minCount, maxCount+1)
         return itemStack.copyWithCount(count)
+    }
+
+    companion object {
+        val CODEC: Codec<LootEntry> = RecordCodecBuilder.create { instance ->
+            instance.group(
+                ItemStack.CODEC.fieldOf("item").forGetter { it.itemStack },
+                CodecUtil.POSITIVE_INT.fieldOf("min").orElse(1).forGetter { it.minCount },
+                CodecUtil.POSITIVE_INT.fieldOf("max").orElse(1).forGetter { it.maxCount },
+            ).apply(instance) { stack, i, j ->
+                LootEntry(stack, min(i, j), max(i, j))
+            }
+        }
+    }
+}
+
+data class LootTableEntry(val entry: LootEntry, val weight: Float) {
+
+    companion object {
+        val CODEC: Codec<LootTableEntry> = RecordCodecBuilder.create { instance ->
+            instance.group(
+                LootEntry.CODEC.fieldOf("entry").forGetter { it.entry },
+                Codec.FLOAT.fieldOf("weight").forGetter { it.weight },
+            ).apply(instance) { entry, weight ->
+                LootTableEntry(entry, weight)
+            }
+        }
+    }
+}
+
+data class LootTable(val entries: List<LootTableEntry>) {
+
+    fun loadInto(list: WeightedList<LootEntry>) {
+        for ((entry, weight) in entries) {
+            list.add(entry, weight)
+        }
+    }
+
+    companion object {
+        val CODEC: Codec<LootTable> = RecordCodecBuilder.create { instance ->
+            instance.group(
+                LootTableEntry.CODEC.listOf().fieldOf("entries").forGetter { it.entries }
+            ).apply(instance) { entries ->
+                LootTable(entries)
+            }
+        }
     }
 }
 
@@ -70,25 +124,36 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
 
     init {
         useSurvivalMode()
-
-        inventoryContent.add(LootEntry(ItemStack(Items.TNT), maxCount = 2), 0.5f)
-        inventoryContent.add(LootEntry(ItemStack(Items.COBWEB), maxCount = 6), 0.2f)
-        inventoryContent.add(LootEntry(ItemStack(Items.IRON_PICKAXE)), 0.05f)
-        inventoryContent.add(LootEntry(ItemStack(Items.IRON_HELMET)), 0.05f)
-        inventoryContent.add(LootEntry(ItemStack(Items.IRON_CHESTPLATE)), 0.05f)
-        inventoryContent.add(LootEntry(ItemStack(Items.FLINT_AND_STEEL)), 0.05f)
-        inventoryContent.add(LootEntry(ItemStack(Items.BUCKET)), 0.1f)
-        inventoryContent.add(LootEntry(ItemStack(Items.ENDER_PEARL), maxCount = 2), 0.05f)
-        inventoryContent.add(LootEntry(ItemStack(Items.CHORUS_FRUIT), maxCount = 2), 0.05f)
-        inventoryContent.add(LootEntry(ItemStack(Items.SAND), minCount = 3, maxCount = 16), 0.3f)
-        inventoryContent.add(LootEntry(ItemStack(Items.WHITE_WOOL), minCount = 3, maxCount = 16), 0.3f)
-        inventoryContent.add(LootEntry(ItemStack(Items.HAY_BLOCK), maxCount = 6), 0.3f)
     }
 
     override fun createWorldBootstrap(world: ServerWorld, map: GameMap): CompletableFuture<Void> {
         kitLoader = PrefabKitLoader(world.registryManager, gameHandle.logger)
 
-        return kitLoader!!.loadHotbar(this)
+        val kitFuture = kitLoader!!.loadHotbar(this)
+
+        val lootFuture = CompletableFuture.runAsync {
+            val lootTable = loadLootTable()
+
+            lootTable?.loadInto(inventoryContent)
+        }
+
+        return CompletableFuture.allOf(kitFuture, lootFuture)
+    }
+
+    fun loadLootTable(): LootTable? {
+        this::class.java.getResourceAsStream("/loot/containers.json").use {
+            if (it == null) return@use null
+
+            val content = String(it.readAllBytes(), StandardCharsets.UTF_8)
+            val json = Gson().fromJson(content, JsonObject::class.java)
+
+            return LootTable.CODEC.decode(JsonOps.INSTANCE, json)
+                .resultOrPartial { err -> gameHandle.logger.error("Failed to parse loot table: {}", err) }
+                .map { res -> res.first }
+                .orElse(null)
+        }
+
+        return null
     }
 
     override fun prepare() {
@@ -149,7 +214,7 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
 
         gameHandle.hooks.registerHook(
             BlockModificationHooks.PLACE_FLUID,
-            BlockModificationHooks.FluidTransferHook { world, pos, entity, fluid ->
+            BlockModificationHooks.FluidTransferHook { _, pos, entity, fluid ->
             val minDistSq = 6.0 * 6.0
             entity is ServerPlayerEntity && fluid.matchesType(Fluids.LAVA) && players().any {
                 it != entity && it.squaredDistanceTo(pos.toCenterPos()) < minDistSq
@@ -158,7 +223,7 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
 
         gameHandle.hooks.registerHook(
             PlayerInteractionHooks.USE_BLOCK,
-            UseBlockCallback { player, world, hand, hitResult ->
+            UseBlockCallback { player, world, _, hitResult ->
                 onUseInventory(player, world, hitResult.blockPos)
                 ActionResult.PASS
             }
@@ -175,7 +240,7 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
 
         gameHandle.hooks.registerHook(
             BlockModificationHooks.PLACE_BLOCK,
-            BlockModificationHooks.PlaceBlockHook {world, pos, entity, state ->
+            BlockModificationHooks.PlaceBlockHook { _, pos, entity, _ ->
                 if (entity !is ServerPlayerEntity) {return@PlaceBlockHook false}
                 filledInventories.add(pos)
                 return@PlaceBlockHook false

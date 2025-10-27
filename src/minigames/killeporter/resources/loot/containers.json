@@ -1,0 +1,13 @@
+{
+  "entries": [
+    {
+      "entry": {
+        "item": {
+          "id": "minecraft:tnt"
+        },
+        "max": 2
+      },
+      "weight": 0.5
+    }
+  ]
+}
