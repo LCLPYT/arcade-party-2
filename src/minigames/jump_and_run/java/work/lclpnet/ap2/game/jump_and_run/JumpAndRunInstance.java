@@ -3,11 +3,8 @@ package work.lclpnet.ap2.game.jump_and_run;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
-import net.minecraft.component.DataComponentTypes;
 import net.minecraft.entity.damage.DamageTypes;
-import net.minecraft.item.ItemStack;
 import net.minecraft.particle.ParticleTypes;
-import net.minecraft.registry.tag.DamageTypeTags;
 import net.minecraft.scoreboard.*;
 import net.minecraft.scoreboard.number.StyledNumberFormat;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -17,39 +14,40 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.GameRules;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import work.lclpnet.ap2.ApConstants;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.map.MapBootstrap;
-import work.lclpnet.ap2.api.util.CollisionDetector;
-import work.lclpnet.ap2.api.util.heads.PlayerHead;
 import work.lclpnet.ap2.core.hook.DripLeafTiltCallback;
-import work.lclpnet.ap2.game.jump_and_run.gen.*;
+import work.lclpnet.ap2.game.jump_and_run.gen.JumpAndRun;
+import work.lclpnet.ap2.game.jump_and_run.gen.JumpAndRunSetup;
+import work.lclpnet.ap2.game.jump_and_run.gen.JumpModule;
 import work.lclpnet.ap2.impl.game.FFAGameInstance;
 import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
-import work.lclpnet.ap2.impl.resource.ApResources;
-import work.lclpnet.ap2.impl.util.ApRegistries;
-import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.SoundHelper;
 import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedPlayerBossBar;
-import work.lclpnet.ap2.impl.util.checkpoint.Checkpoint;
 import work.lclpnet.ap2.impl.util.checkpoint.CheckpointHelper;
 import work.lclpnet.ap2.impl.util.checkpoint.CheckpointManager;
-import work.lclpnet.ap2.impl.util.collision.ChunkedCollisionDetector;
-import work.lclpnet.ap2.impl.util.collision.PlayerMovementObserver;
 import work.lclpnet.ap2.impl.util.handler.Visibility;
 import work.lclpnet.ap2.impl.util.handler.VisibilityHandler;
 import work.lclpnet.ap2.impl.util.handler.VisibilityManager;
-import work.lclpnet.ap2.impl.util.heads.PlayerHeads;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
+import work.lclpnet.gaco.collisions.ChunkedCollisionDetector;
+import work.lclpnet.gaco.collisions.CollisionDetector;
+import work.lclpnet.gaco.collisions.movement.PlayerMovementObserver;
+import work.lclpnet.gaco.ds.BlockBox;
+import work.lclpnet.gaco.ds.Checkpoint;
+import work.lclpnet.gaco.ds.PositionedBlockSet;
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
 import work.lclpnet.kibu.hook.HookRegistrar;
+import work.lclpnet.kibu.hook.util.PositionRotation;
 import work.lclpnet.kibu.scheduler.Ticks;
+import work.lclpnet.kibu.scheduler.api.TaskHandle;
 import work.lclpnet.kibu.title.Title;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
@@ -58,8 +56,7 @@ import work.lclpnet.lobby.game.map.GameMap;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
-import static java.lang.Math.max;
-import static java.lang.Math.min;
+import static java.lang.Math.*;
 import static net.minecraft.util.Formatting.*;
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
@@ -73,22 +70,30 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
     private static final float
             TARGET_MINUTES = 4.0f;  // target completion time of the jump and run (approximate)
 
-    private static final boolean DEBUG_ASSISTANCE = false;
-
     private final IntScoreDataContainer<ServerPlayerEntity, PlayerRef> data = new IntScoreDataContainer<>(PlayerRef::create);
     private final CollisionDetector collisionDetector = new ChunkedCollisionDetector();
     private final PlayerMovementObserver movementObserver;
     private final List<BlockPos> gateBlocks = new ArrayList<>();
     private JumpAndRun jumpAndRun;
-    private CheckpointManager checkpoints;
+    private CheckpointManager checkpointManager;
     private DynamicTranslatedPlayerBossBar bossBar;
-    private volatile int segmentIndex = 0;
     private volatile boolean segmentActive = false;
     private final Set<UUID> inGoal = new HashSet<>();
+    private @Nullable CompletableFuture<?> waitFor = null;
+    private @Nullable TaskHandle task = null;
 
     public JumpAndRunInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
+
         movementObserver = new PlayerMovementObserver(collisionDetector, gameHandle.getParticipants()::isParticipating);
+
+        gameHandle.whenDone(() -> {
+            var future = waitFor;
+
+            if (future != null) {
+                future.join();
+            }
+        });
     }
 
     @Override
@@ -113,10 +118,10 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
 
         movementObserver.init(gameHandle.getHooks(), gameHandle.getServer());
 
-        bossBar = usePlayerDynamicTaskDisplay(styled(0, YELLOW), styled(jumpAndRun.segments().size(), YELLOW));
+        bossBar = usePlayerDynamicTaskDisplay(styled(0, YELLOW), styled(jumpAndRun.modules().size(), YELLOW));
         bossBar.setPercent(0);
 
-        setSegment(0);
+        initModule();
 
         CustomScoreboardManager scoreboardManager = gameHandle.getScoreboardManager();
 
@@ -124,6 +129,9 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
         initTeam(scoreboardManager);
 
         giveItemsToPlayers();
+
+        jumpAndRun.setReloadModuleCallback(this::loadAndInitModule);
+        new SetModuleCommand(jumpAndRun, gameHandle.getLogger()).register(gameHandle.getCommands());
     }
 
     @Override
@@ -161,14 +169,15 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
 
         gameHandle.protect(config -> {
             config.allow(ProtectionTypes.USE_BLOCK, (entity, pos) -> {
-                BlockState state = entity.getWorld().getBlockState(pos);
+                BlockState state = jumpAndRun.world().getBlockState(pos);
                 return state.isOf(Blocks.SHULKER_BOX);
             });
 
             config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, source) -> {
                 if (entity instanceof ServerPlayerEntity player
                         && gameHandle.getParticipants().isParticipating(player)
-                        && (source.isIn(DamageTypeTags.IS_FIRE) || source.isOf(DamageTypes.OUT_OF_WORLD))) {
+                        && (source.isOf(DamageTypes.IN_FIRE) || source.isOf(DamageTypes.LAVA)
+                        || source.isOf(DamageTypes.HOT_FLOOR) || source.isOf(DamageTypes.OUT_OF_WORLD))) {
 
                     resetPlayerToCheckpoint(player);
                 }
@@ -185,7 +194,7 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
         CheckpointHelper.whenFallingIntoLava(hooks, participants::isParticipating)
                 .then(this::resetPlayerToCheckpoint);
 
-        commons().whenBelowY(getWorld().getBottomY())
+        commons().whenBelowY(() -> jumpAndRun.world().getBottomY())
                 .then(this::resetPlayerToCheckpoint);
 
         // disable drip leaf tilt for players in goal
@@ -194,25 +203,15 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
     }
 
     private void giveItemsToPlayers() {
-        Translations translations = gameHandle.getTranslations();
-        PlayerHead head = getWorld().getRegistryManager()
-                .getOrThrow(ApRegistries.PLAYER_HEAD)
-                .getOptionalValue(PlayerHeads.REDSTONE_BLOCK_REFRESH)
-                .orElseThrow();
+        CheckpointHelper.giveResetItem(gameHandle.getParticipants(), getWorld(), gameHandle.getTranslations(), 4);
 
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
-            ItemStack stack = head.createStack();
-
-            var name = translations.translateText(player, "ap2.game.reset").formatted(Formatting.RED);
-            stack.set(DataComponentTypes.CUSTOM_NAME, name.styled(style -> style.withItalic(false)));
-
-            player.getInventory().setStack(4, stack);
             PlayerInventoryAccess.setSelectedSlot(player, 4);
         }
     }
 
     private void openGate() {
-        ServerWorld world = getWorld();
+        ServerWorld world = jumpAndRun.world();
         BlockState air = Blocks.AIR.getDefaultState();
 
         for (BlockPos pos : gateBlocks) {
@@ -222,11 +221,11 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
         gateBlocks.clear();
     }
 
-    private void closeGate(Segment segment) {
+    private void closeGate() {
         gateBlocks.clear();
 
-        List<BlockBox> gate = segment.start().gate();
-        ServerWorld world = getWorld();
+        List<BlockBox> gate = jumpAndRun.startGates();
+        ServerWorld world = jumpAndRun.world();
 
         BlockState state = Blocks.WHITE_STAINED_GLASS.getDefaultState();
 
@@ -241,48 +240,46 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
     }
 
     private void resetPlayerToCheckpoint(ServerPlayerEntity player) {
-        Checkpoint checkpoint = checkpoints.getCheckpoint(player);
+        Checkpoint checkpoint = checkpointManager.getCheckpoint(player);
 
-        BlockPos pos = checkpoint.pos();
-        player.teleport(getWorld(), pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, Set.of(), checkpoint.yaw(), 0f, true);
+        Vec3d pos = checkpoint.pos();
+        player.teleport(jumpAndRun.world(), pos.getX(), pos.getY(), pos.getZ(), Set.of(), checkpoint.yaw(), checkpoint.pitch(), true);
 
         player.setFireTicks(0);
     }
 
     private void delayAssistance() {
-        Segment segment = currentSegment();
+        var module = jumpAndRun.module();
+        var schema = jumpAndRun.schema();
 
-        if (segment == null) return;
+        PositionedBlockSet assistance = schema.getAssistance();
 
-        RoomData data = segment.roomInfo().data();
+        if (assistance.blocks().isEmpty()) return;
 
-        if (data == null || data.assistance().blocks().isEmpty()) return;
+        float weight = 1f + (module.data().estimatedMinutes() - 1f) * 0.5f;
+        int timeout = max(ASSISTANCE_TICKS_BASE, round(ASSISTANCE_TICKS_BASE * weight));
 
-        float weight = 1f + (data.value() - 1f) * 0.5f;
-        int timeout = Math.max(ASSISTANCE_TICKS_BASE, Math.round(ASSISTANCE_TICKS_BASE * weight));
+        TaskHandle prevTask = task;
 
-        gameHandle.getGameScheduler().timeout(() -> placeAssistance(segment.roomInfo()), timeout);
+        if (prevTask != null) task.cancel();
+
+        task = gameHandle.getGameScheduler().timeout(() -> placeAssistance(assistance), timeout);
     }
 
-    private void placeAssistance(RoomInfo room) {
-        RoomData data = room.data();
+    private void placeAssistance(PositionedBlockSet assistance) {
+        ServerWorld world = jumpAndRun.world();
 
-        if (data == null) return;
+        assistance.forEach(pb -> {
+            BlockPos pos = pb.pos();
 
-        ServerWorld world = getWorld();
-
-        data.assistance().forEach((state, pos) -> {
-            world.setBlockState(pos, state);
+            world.setBlockState(pos, pb.state());
             world.spawnParticles(ParticleTypes.CLOUD, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5,
                     5, 0.3, 0.3, 0.3, 0.1);
         });
 
-        BlockBox bounds = room.bounds();
         Translations translations = gameHandle.getTranslations();
 
-        for (ServerPlayerEntity player : PlayerLookup.all(gameHandle.getServer())) {
-            if (!bounds.contains(player.getX(), player.getY(), player.getZ())) continue;
-
+        for (ServerPlayerEntity player : PlayerLookup.world(world)) {
             player.playSoundToPlayer(SoundEvents.BLOCK_BELL_USE, SoundCategory.BLOCKS, 1f, 1.7f);
 
             var msg = translations.translateText(player, "game.ap2.jump_and_run.assistance")
@@ -292,77 +289,48 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
         }
     }
 
-    private void setSegment(int i) {
-        segmentIndex = i;
+    private void initModule() {
         segmentActive = false;
         inGoal.clear();
 
-        Segment segment = currentSegment();
+        JumpModule module = jumpAndRun.module();
 
-        if (segment == null) return;
+        if (module == null) return;
 
-        closeGate(segment);
+        closeGate();
 
-        BlockPos spawn = segment.start().spawn();
-        ServerWorld world = getWorld();
+        PositionRotation spawn = jumpAndRun.spawn();
+        ServerWorld world = jumpAndRun.world();
 
         disableEffects();
-        enableEffects(segment.effects());
+        enableEffects(module.data().effects());
 
-        float yaw = segment.start().spawnYaw();
-
-        for (ServerPlayerEntity player : PlayerLookup.world(world)) {
-            player.teleport(world, spawn.getX() + 0.5, spawn.getY(), spawn.getZ() + 0.5, Set.of(), yaw, 0f, true);
+        for (ServerPlayerEntity player : PlayerLookup.all(gameHandle.getServer())) {
+            player.teleport(world, spawn.getX(), spawn.getY(), spawn.getZ(), Set.of(), spawn.getYaw(), spawn.getPitch(), true);
         }
 
         collisionDetector.clear();
         movementObserver.clear();
 
-        if (checkpoints != null) {
-            checkpoints.destroy();
+        if (checkpointManager != null) {
+            checkpointManager.destroy();
         }
 
-        checkpoints = new CheckpointManager(segment.checkpoints(), commons().debugController());
-        checkpoints.init(collisionDetector, movementObserver, world);
-        CheckpointHelper.notifyWhenReached(checkpoints, gameHandle.getTranslations());
+        List<Checkpoint> checkpoints = jumpAndRun.checkpoints();
+        checkpointManager = new CheckpointManager(checkpoints, commons().debugController());
+        checkpointManager.init(collisionDetector, movementObserver, world);
+        CheckpointHelper.notifyWhenReached(checkpointManager, gameHandle.getTranslations());
 
-        movementObserver.whenEntering(segment.goalBounds(), player -> onReachedGoal(player, true));
+        movementObserver.whenEntering(jumpAndRun.endCheckpoint().bounds(), player -> {
+            checkpointManager.grantCheckpoint(player, checkpoints.size() - 1);
+            onReachedGoal(player, true);
+        });
 
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
-            bossBar.setArgument(player, 0, styled(segmentIndex, YELLOW));
+            bossBar.setArgument(player, 0, styled(jumpAndRun.moduleIndex() + 1, YELLOW));
         }
 
-        bossBar.setPercent((float) (segmentIndex) / jumpAndRun.segments().size());
-
-        debugAssistance();
-    }
-
-    private void debugAssistance() {
-        if (!ApConstants.DEBUG || !DEBUG_ASSISTANCE) return;
-
-        var debugController = commons().debugController();
-
-        debugController.destroy();
-        debugController.init(ApResources.getInstance(), getWorld());
-
-        Segment segment = currentSegment();
-
-        if (segment == null) return;
-
-        RoomData data = segment.roomInfo().data();
-
-        if (data == null) return;
-
-        debugController.renderer().ifPresent(renderer -> data.assistance().forEach((state, pos) ->
-                renderer.marker(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5, state, 0, 0.5)));
-    }
-
-    private @Nullable Segment currentSegment() {
-        List<Segment> segments = jumpAndRun.segments();
-
-        if (segmentIndex < 0 || segmentIndex >= segments.size()) return null;
-
-        return segments.get(segmentIndex);
+        bossBar.setPercent((float) (jumpAndRun.moduleIndex()) / jumpAndRun.modules().size());
     }
 
     private void onReachedGoal(ServerPlayerEntity player, boolean reached) {
@@ -372,7 +340,7 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
 
         player.playSoundToPlayer(SoundEvents.ENTITY_PLAYER_LEVELUP, SoundCategory.PLAYERS, 0.5f, 2f);
 
-        int room = segmentIndex + 1;
+        int room = jumpAndRun.moduleIndex() + 1;
 
         String key = reached ? "game.ap2.jump_and_run.completed_room" : "game.ap2.jump_and_run.last_not_completed";
 
@@ -381,7 +349,7 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
 
         bossBar.setArgument(player, 0, styled(room, YELLOW));
 
-        int segments = jumpAndRun.segments().size();
+        int segments = jumpAndRun.modules().size();
 
         if (segments > 0) {
             bossBar.getBossBar(player).setPercent((float) (room) / segments);
@@ -409,20 +377,55 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
     private void checkSegmentComplete() {
         if (!requiredAmountReachedGoal()) return;
 
-        int nextSegment = segmentIndex + 1;
+        cancelPreviousTask();
 
-        if (nextSegment >= jumpAndRun.segments().size()) {
+        jumpAndRun.onModuleCompleted();
+
+        if (jumpAndRun.isDone()) {
             winManager.complete();
             return;
         }
 
-        gameHandle.getTranslations().translateText("game.ap2.jump_and_run.next_segment_wait").formatted(GRAY).sendTo(PlayerLookup.world(getWorld()));
+        ServerWorld world = jumpAndRun.world();
 
-        setSegment(nextSegment);
+        gameHandle.getTranslations().translateText("game.ap2.jump_and_run.next_segment_wait").formatted(GRAY)
+                .sendTo(PlayerLookup.world(world));
 
-        SoundHelper.playSound(getWorld(), SoundEvents.ENTITY_PLAYER_LEVELUP, SoundCategory.PLAYERS, 0.5f, 2f);
+        SoundHelper.playSound(world, SoundEvents.ENTITY_PLAYER_LEVELUP, SoundCategory.PLAYERS, 0.5f, 2f);
 
-        gameHandle.getGameScheduler().timeout(this::nextSegment, NEXT_PHASE_WAIT_TICKS);
+        loadAndInitModule();
+    }
+
+    private void loadAndInitModule() {
+        var prevFuture = waitFor;
+
+        if (prevFuture != null) {
+            prevFuture.join();
+            waitFor = null;
+        }
+
+        cancelPreviousTask();
+
+        jumpAndRun.loadModule().thenRun(() -> gameHandle.getServer().execute(() -> {
+            initModule();
+
+            cancelPreviousTask();
+            task = gameHandle.getGameScheduler().timeout(this::nextSegment, NEXT_PHASE_WAIT_TICKS);
+
+            waitFor = jumpAndRun.unloadPreviousModule().whenComplete((res, err) -> waitFor = null);
+        })).whenComplete((_res, err) -> {
+            if (err != null) {
+                gameHandle.getLogger().error("Failed to load module", err);
+            }
+        });
+    }
+
+    private void cancelPreviousTask() {
+        TaskHandle task = this.task;
+
+        if (task != null) {
+            task.cancel();
+        }
     }
 
     private boolean requiredAmountReachedGoal() {
@@ -434,7 +437,7 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
     }
 
     private void nextSegment() {
-        gameHandle.getTranslations().translateText("ap2.go").formatted(RED).acceptEach(PlayerLookup.world(getWorld()), (player, text) -> {
+        gameHandle.getTranslations().translateText("ap2.go").formatted(RED).acceptEach(PlayerLookup.world(jumpAndRun.world()), (player, text) -> {
             Title.get(player).title(text, Text.empty(), 5, 20, 5);
             player.playSoundToPlayer(SoundEvents.ENTITY_CHICKEN_EGG, SoundCategory.PLAYERS, 1, 0);
         });

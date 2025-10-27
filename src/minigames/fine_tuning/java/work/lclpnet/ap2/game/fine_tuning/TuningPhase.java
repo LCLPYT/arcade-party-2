@@ -32,7 +32,7 @@ import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.util.ApRegistries;
 import work.lclpnet.ap2.impl.util.BookUtil;
 import work.lclpnet.ap2.impl.util.heads.PlayerHeads;
-import work.lclpnet.ap2.impl.util.world.entity.DynamicEntityManager;
+import work.lclpnet.gaco.dynamic_entities.DynamicEntityManager;
 import work.lclpnet.kibu.hook.HookContainer;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.kibu.hook.player.PlayerInventoryHooks;
@@ -53,7 +53,7 @@ import static work.lclpnet.ap2.game.fine_tuning.FineTuningInstance.MELODY_COUNT;
 
 class TuningPhase {
 
-    public static final int TUNING_TIME_SECONDS = 40;
+    public static final int TUNING_TIME_SECONDS = 36;
 
     private final MiniGameHandle gameHandle;
     private final Map<UUID, FineTuningRoom> rooms;

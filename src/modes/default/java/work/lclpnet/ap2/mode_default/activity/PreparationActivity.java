@@ -42,10 +42,6 @@ import work.lclpnet.ap2.impl.activity.ScoreboardComponent;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.music.MusicHelper;
-import work.lclpnet.ap2.impl.scene.MixedMountContext;
-import work.lclpnet.ap2.impl.scene.Object3d;
-import work.lclpnet.ap2.impl.scene.Scene;
-import work.lclpnet.ap2.impl.scene.object.TranslatedTextDisplayObject;
 import work.lclpnet.ap2.impl.util.IconMaker;
 import work.lclpnet.ap2.impl.util.ScoreboardUtil;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
@@ -53,7 +49,6 @@ import work.lclpnet.ap2.impl.util.scoreboard.DynamicScoreboardObjective;
 import work.lclpnet.ap2.impl.util.scoreboard.ScoreboardLayout;
 import work.lclpnet.ap2.impl.util.title.AnimatedTitle;
 import work.lclpnet.ap2.impl.util.title.NextGameTitleAnimation;
-import work.lclpnet.ap2.impl.util.world.entity.DynamicEntityManager;
 import work.lclpnet.ap2.mode_default.ApMiniGameArgs;
 import work.lclpnet.ap2.mode_default.api.Skippable;
 import work.lclpnet.ap2.mode_default.cmd.ForceMapCommand;
@@ -62,6 +57,11 @@ import work.lclpnet.ap2.mode_default.util.ApBaseArgs;
 import work.lclpnet.ap2.mode_default.util.BaseActivityConfigurator;
 import work.lclpnet.ap2.mode_default.util.OptionChooser;
 import work.lclpnet.ap2.mode_default.util.ScoreManager;
+import work.lclpnet.gaco.dynamic_entities.DynamicEntityManager;
+import work.lclpnet.gaco.scene.MixedMountContext;
+import work.lclpnet.gaco.scene.Object3d;
+import work.lclpnet.gaco.scene.Scene;
+import work.lclpnet.gaco.scene.object.TranslatedTextDisplayObject;
 import work.lclpnet.kibu.cmd.type.CommandRegistrar;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
@@ -89,7 +89,6 @@ import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
 public class PreparationActivity extends ComponentActivity implements Skippable, GameStartContext {
 
-    public static final Identifier ARCADE_PARTY_GAME_TAG = ApConstants.identifier("game");
     private static final int GAME_ANNOUNCE_DELAY = Ticks.seconds(3);
     private static final int PREPARATION_TIME = Ticks.seconds(18);
     private static final String GAME_SONG_ID = "ap2_game";
@@ -153,7 +152,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
     }
 
     private CompletableFuture<Void> loadAssets() {
-        return args.miniGameArgs().songManager().getSongAndCache(ARCADE_PARTY_GAME_TAG, GAME_SONG_ID)
+        return args.miniGameArgs().songManager().getSongAndCache(MusicHelper.ARCADE_PARTY_GAME_TAG, GAME_SONG_ID)
                 .thenAccept(song -> nextGameSong = song.orElse(null));
     }
 

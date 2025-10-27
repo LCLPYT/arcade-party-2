@@ -11,7 +11,7 @@ import org.joml.Vector3d;
 import work.lclpnet.ap2.game.maze_scape.setup.OrientedStructurePiece;
 import work.lclpnet.ap2.game.maze_scape.util.MSManager;
 import work.lclpnet.ap2.game.maze_scape.util.Passage;
-import work.lclpnet.ap2.impl.scene.Object3d;
+import work.lclpnet.gaco.scene.Object3d;
 import work.lclpnet.kibu.scheduler.Ticks;
 
 import java.util.List;

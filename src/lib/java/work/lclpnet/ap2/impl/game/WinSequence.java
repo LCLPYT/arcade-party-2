@@ -2,10 +2,13 @@ package work.lclpnet.ap2.impl.game;
 
 import it.unimi.dsi.fastutil.objects.ObjectIntPair;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
+import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
+import net.minecraft.text.ClickEvent;
+import net.minecraft.text.HoverEvent;
 import net.minecraft.text.Text;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.MiniGameResults;
@@ -13,6 +16,7 @@ import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.game.data.GenericGameResult;
 import work.lclpnet.ap2.api.game.data.PlayerSubjectRefFactory;
 import work.lclpnet.ap2.api.game.data.SubjectRef;
+import work.lclpnet.ap2.api.stats.SessionStatsRecorder;
 import work.lclpnet.ap2.api.util.action.Action;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.game.data.type.TeamRef;
@@ -23,28 +27,36 @@ import work.lclpnet.kibu.scheduler.api.RunningTask;
 import work.lclpnet.kibu.scheduler.api.SchedulerAction;
 import work.lclpnet.kibu.title.Title;
 import work.lclpnet.kibu.translate.Translations;
+import work.lclpnet.kibu.translate.text.RootText;
 import work.lclpnet.kibu.translate.text.TranslatedText;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import static net.minecraft.util.Formatting.*;
 
 public class WinSequence<T, Ref extends SubjectRef> {
 
+    public static final int POST_GAME_SECONDS = 7;
+
     private final MiniGameHandle gameHandle;
     private final DataContainer<T, Ref> data;
     private final PlayerSubjectRefFactory<Ref> refs;
     private final GenericGameResult<Ref> winners;
     private final MiniGameResults.Status status;
+    private final CompletableFuture<Optional<UUID>> statsId;
 
     public WinSequence(MiniGameHandle gameHandle, DataContainer<T, Ref> data, PlayerSubjectRefFactory<Ref> refs,
-                       GenericGameResult<Ref> winners, MiniGameResults.Status status) {
+                       GenericGameResult<Ref> winners, MiniGameResults.Status status, CompletableFuture<Optional<UUID>> statsId) {
         this.gameHandle = gameHandle;
         this.data = data;
         this.refs = refs;
         this.winners = winners;
         this.status = status;
+        this.statsId = statsId;
     }
 
     public Action<Runnable> start() {
@@ -98,7 +110,7 @@ public class WinSequence<T, Ref extends SubjectRef> {
 
     private void announceGameOver() {
         announceWinners();
-        broadcastTop3();
+        broadcastResults();
 
         gameHandle.getScheduler().timeout(() -> {
             var resultsMap = winners.getPlayerResults().stream().collect(Collectors.toMap(
@@ -107,7 +119,7 @@ public class WinSequence<T, Ref extends SubjectRef> {
             ));
 
             gameHandle.complete(new MiniGameResults(status, resultsMap));
-        }, Ticks.seconds(7));
+        }, Ticks.seconds(POST_GAME_SECONDS));
     }
 
     private void announceWinners() {
@@ -202,13 +214,36 @@ public class WinSequence<T, Ref extends SubjectRef> {
         player.playSoundToPlayer(SoundEvents.ENTITY_BLAZE_DEATH, SoundCategory.PLAYERS, 1, 1);
     }
 
-    private void broadcastTop3() {
+    private void broadcastResults() {
         List<ObjectIntPair<Ref>> order = winners.getSubjectResults();
 
         var announcement = new ResultAnnouncement<>(gameHandle.getTranslations(), refs, order, data::getEntry);
 
+        var statsId = this.statsId.getNow(Optional.empty()).orElse(null);
+
         for (ServerPlayerEntity player : PlayerLookup.all(gameHandle.getServer())) {
-            announcement.sendTop(3, player);
+            if (statsId == null) {
+                announcement.sendTop(5, player);
+                continue;
+            }
+
+            var statsMsg = getStatsMessage(player, statsId);
+
+            announcement.sendTop(5, player, statsMsg);
         }
+    }
+
+    private RootText getStatsMessage(ServerPlayerEntity player, UUID statsId) {
+        var nbt = new NbtCompound();
+        nbt.putString("id", statsId.toString());
+
+        var translations = gameHandle.getTranslations();
+
+        return translations.translateText(player, "ap2.view_stats")
+                .append(" ↗")
+                .styled(style -> style
+                        .withFormatting(AQUA)
+                        .withHoverEvent(new HoverEvent.ShowText(translations.translateText(player, "ap2.view_stats.click")))
+                        .withClickEvent(new ClickEvent.Custom(SessionStatsRecorder.SHOW_SUMMARY, Optional.of(nbt))));
     }
 }

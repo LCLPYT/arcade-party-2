@@ -2,8 +2,8 @@ package work.lclpnet.ap2.impl.base;
 
 import work.lclpnet.ap2.api.base.GameQueue;
 import work.lclpnet.ap2.api.game.MiniGame;
-import work.lclpnet.ap2.api.util.QueuePersistence;
-import work.lclpnet.ap2.impl.util.SeamlessQueue;
+import work.lclpnet.gaco.ds.queue.QueuePersistence;
+import work.lclpnet.gaco.ds.queue.SeamlessQueue;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;

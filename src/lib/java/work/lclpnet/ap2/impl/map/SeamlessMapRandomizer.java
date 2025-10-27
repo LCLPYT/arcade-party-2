@@ -3,9 +3,10 @@ package work.lclpnet.ap2.impl.map;
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
+import work.lclpnet.ap2.ApConstants;
 import work.lclpnet.ap2.api.map.MapRandomizer;
-import work.lclpnet.ap2.impl.util.JsonFileQueuePersistence;
-import work.lclpnet.ap2.impl.util.SeamlessQueue;
+import work.lclpnet.gaco.ds.queue.JsonFileQueuePersistence;
+import work.lclpnet.gaco.ds.queue.SeamlessQueue;
 import work.lclpnet.lobby.game.map.GameMap;
 import work.lclpnet.lobby.game.map.MapManager;
 
@@ -58,7 +59,7 @@ public class SeamlessMapRandomizer implements MapRandomizer {
 
         return Optional.of(CompletableFuture.supplyAsync(() -> {
             Identifier queueId = gameId.withSuffixedPath("/map_queue");
-            var queuePersistence = JsonFileQueuePersistence.create(queueId, Identifier.CODEC, logger);
+            var queuePersistence = JsonFileQueuePersistence.create(ApConstants.ID, queueId, Identifier.CODEC, logger);
             var transfer = queuePersistence.restore();
 
             var queue = new SeamlessQueue<>(mapIds, random, margin, transfer);

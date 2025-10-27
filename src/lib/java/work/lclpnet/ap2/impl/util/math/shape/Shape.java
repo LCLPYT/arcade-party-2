@@ -1,8 +1,8 @@
 package work.lclpnet.ap2.impl.util.math.shape;
 
 import net.minecraft.util.math.Vec3d;
-import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.debug.DebugController;
+import work.lclpnet.gaco.ds.BlockBox;
 
 public interface Shape {
 

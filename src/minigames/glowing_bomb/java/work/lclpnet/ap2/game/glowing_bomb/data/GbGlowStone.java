@@ -5,16 +5,16 @@ import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Quaterniond;
 import org.joml.Vector3d;
-import work.lclpnet.ap2.impl.scene.Object3d;
-import work.lclpnet.ap2.impl.scene.Scene;
-import work.lclpnet.ap2.impl.scene.animation.Animatable;
-import work.lclpnet.ap2.impl.scene.animation.Animation;
-import work.lclpnet.ap2.impl.scene.animation.AnimationContext;
-import work.lclpnet.ap2.impl.scene.object.BlockDisplayObject;
-import work.lclpnet.ap2.impl.scene.simulation.SimpleGravityGradient;
-import work.lclpnet.ap2.impl.scene.simulation.StateVector;
-import work.lclpnet.ap2.impl.scene.simulation.solver.NumericalSolver;
-import work.lclpnet.ap2.impl.scene.simulation.solver.RungeKuttaSolver;
+import work.lclpnet.gaco.math.solver.NumericalSolver;
+import work.lclpnet.gaco.math.solver.RungeKuttaSolver;
+import work.lclpnet.gaco.math.solver.SimpleGravityGradient;
+import work.lclpnet.gaco.math.solver.StateVector;
+import work.lclpnet.gaco.scene.Object3d;
+import work.lclpnet.gaco.scene.Scene;
+import work.lclpnet.gaco.scene.animation.Animatable;
+import work.lclpnet.gaco.scene.animation.Animation;
+import work.lclpnet.gaco.scene.animation.AnimationContext;
+import work.lclpnet.gaco.scene.object.BlockDisplayObject;
 
 import static java.lang.Math.PI;
 

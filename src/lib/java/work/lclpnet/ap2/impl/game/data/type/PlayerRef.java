@@ -1,10 +1,18 @@
 package work.lclpnet.ap2.impl.game.data.type;
 
+import com.mojang.authlib.properties.PropertyMap;
+import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.ProfileComponent;
+import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
+import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
+import org.jetbrains.annotations.NotNull;
 import work.lclpnet.ap2.api.game.data.SubjectRef;
 
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 
 public record PlayerRef(UUID uuid, String name) implements SubjectRef {
@@ -27,7 +35,25 @@ public record PlayerRef(UUID uuid, String name) implements SubjectRef {
         return Text.literal(name);
     }
 
+    @Override
+    public ItemStack getIconStackFor(DynamicRegistryManager registryManager, ServerPlayerEntity viewer) {
+        ItemStack stack = new ItemStack(Items.PLAYER_HEAD);
+
+        stack.set(DataComponentTypes.PROFILE, new ProfileComponent(Optional.empty(), Optional.of(uuid), new PropertyMap()));
+
+        return stack;
+    }
+
+    @Override
+    public String getIdentifier() {
+        return uuid.toString();
+    }
+
     public static PlayerRef create(ServerPlayerEntity player) {
         return new PlayerRef(player.getUuid(), player.getNameForScoreboard());
+    }
+
+    public static @NotNull PlayerRef createForUuid(@NotNull UUID uuid) {
+        return new PlayerRef(uuid, "?");
     }
 }

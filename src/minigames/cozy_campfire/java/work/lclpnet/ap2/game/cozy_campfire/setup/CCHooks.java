@@ -1,11 +1,13 @@
 package work.lclpnet.ap2.game.cozy_campfire.setup;
 
 import net.minecraft.block.BlockState;
+import net.minecraft.block.Blocks;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.damage.DamageTypes;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.entity.vehicle.BoatEntity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.registry.tag.BlockTags;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -21,15 +23,16 @@ import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.team.Team;
 import work.lclpnet.ap2.api.game.team.TeamManager;
 import work.lclpnet.ap2.api.game.team.TeamSpawnAccess;
-import work.lclpnet.ap2.api.util.Collider;
-import work.lclpnet.ap2.api.util.CollisionDetector;
-import work.lclpnet.ap2.impl.util.collision.PlayerMovementObserver;
+import work.lclpnet.gaco.collisions.CollisionDetector;
+import work.lclpnet.gaco.collisions.movement.PlayerMovementObserver;
+import work.lclpnet.gaco.ds.Collider;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks;
 import work.lclpnet.kibu.hook.player.PlayerSpawnLocationCallback;
 import work.lclpnet.kibu.hook.util.PlayerUtils;
 import work.lclpnet.kibu.hook.util.PositionRotation;
+import work.lclpnet.kibu.hook.world.BlockModificationHooks;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.lobby.game.api.prot.ProtectionConfig;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
@@ -109,6 +112,9 @@ public class CCHooks {
         });
 
         config.allow(ProtectionTypes.ENTITY_ITEM_DROP, (entity, itemEntity) -> fuel.isFuel(itemEntity.getStack()));
+
+        config.allow(ProtectionTypes.USE_ITEM_ON_BLOCK, (player, obj) -> obj.getStack().isOf(Items.LADDER));
+        config.allow(ProtectionTypes.PLACE_BLOCKS, (entity, blockPos) -> true);  // filter with hook in ::register
     }
 
     public void register(HookRegistrar hooks) {
@@ -138,6 +144,9 @@ public class CCHooks {
 
             return true;
         });
+
+        hooks.registerHook(BlockModificationHooks.PLACE_BLOCK, (world, pos, entity, state)
+                -> !state.isOf(Blocks.LADDER));
     }
 
     public void configureBaseRegionEvents(CollisionDetector collisions, PlayerMovementObserver observer) {

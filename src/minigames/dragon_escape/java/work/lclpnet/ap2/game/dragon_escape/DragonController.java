@@ -11,9 +11,9 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.WorldEvents;
 import work.lclpnet.ap2.core.type.ApEnderDragon;
-import work.lclpnet.ap2.impl.util.BlockBox;
-import work.lclpnet.ap2.impl.util.SplinePath;
 import work.lclpnet.ap2.impl.util.math.MathUtil;
+import work.lclpnet.gaco.ds.BlockBox;
+import work.lclpnet.gaco.math.SplinePath;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 
 import java.util.Optional;

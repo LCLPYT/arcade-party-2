@@ -4,11 +4,13 @@ import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.server.MinecraftServer;
 import org.slf4j.Logger;
 import work.lclpnet.activity.manager.ActivityManager;
+import work.lclpnet.ap2.ApConstants;
 import work.lclpnet.ap2.api.base.GameQueue;
 import work.lclpnet.ap2.api.base.MiniGameManager;
 import work.lclpnet.ap2.api.config.Ap2Config;
 import work.lclpnet.ap2.api.game.MiniGame;
 import work.lclpnet.ap2.api.music.SongCache;
+import work.lclpnet.ap2.api.stats.SessionStatsRecorder;
 import work.lclpnet.ap2.impl.base.FabricMiniGameManager;
 import work.lclpnet.ap2.impl.base.PlayerManagerImpl;
 import work.lclpnet.ap2.impl.base.VotedGameQueue;
@@ -17,13 +19,13 @@ import work.lclpnet.ap2.impl.game.PlayerUtil;
 import work.lclpnet.ap2.impl.i18n.DynamicLanguageManager;
 import work.lclpnet.ap2.impl.i18n.VanillaTranslations;
 import work.lclpnet.ap2.impl.music.MapSongCache;
-import work.lclpnet.ap2.impl.util.JsonFileQueuePersistence;
 import work.lclpnet.ap2.mode_default.activity.PreparationActivity;
 import work.lclpnet.ap2.mode_default.cmd.ForceGameCommand;
 import work.lclpnet.ap2.mode_default.cmd.ScoreCommand;
 import work.lclpnet.ap2.mode_default.util.ApBaseArgs;
 import work.lclpnet.ap2.mode_default.util.ScoreManager;
 import work.lclpnet.config.json.JsonConfigFactory;
+import work.lclpnet.gaco.ds.queue.JsonFileQueuePersistence;
 import work.lclpnet.kibu.cmd.impl.CommandStack;
 import work.lclpnet.kibu.hook.HookStack;
 import work.lclpnet.kibu.translate.Translations;
@@ -86,7 +88,7 @@ public class ArcadePartyInstance implements GameInstance {
     private GameQueue createGameQueue(MiniGameManager gameManager, GameOptions options) {
         List<MiniGame> votedGames = getVotedGames(gameManager, options);
 
-        var gameQueuePersistence = JsonFileQueuePersistence.create(identifier("game_queue"),
+        var gameQueuePersistence = JsonFileQueuePersistence.create(ApConstants.ID, identifier("game_queue"),
                 gameManager.getGameCodec(), logger);
 
         Set<MiniGame> miniGames = gameManager.getGames();
@@ -121,8 +123,11 @@ public class ArcadePartyInstance implements GameInstance {
 
         SongCache songCache = new MapSongCache();
 
+        var sessionStats = new SessionStatsRecorder(translations, logger);
+        sessionStats.init(hookStack);
+
         var args = new ApBaseArgs(container, queue, playerManager, forceGameCommand, songCache, scoreManager,
-                environment.getFinisher());
+                environment.getFinisher(), sessionStats);
 
         PreparationActivity preparation = new PreparationActivity(args);
 

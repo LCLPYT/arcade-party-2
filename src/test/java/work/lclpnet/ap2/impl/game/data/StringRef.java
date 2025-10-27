@@ -1,5 +1,7 @@
 package work.lclpnet.ap2.impl.game.data;
 
+import net.minecraft.item.ItemStack;
+import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import work.lclpnet.ap2.api.game.data.SubjectRef;
@@ -9,5 +11,15 @@ public record StringRef(String name) implements SubjectRef {
     @Override
     public Text getNameFor(ServerPlayerEntity player) {
         return Text.literal(name);
+    }
+
+    @Override
+    public ItemStack getIconStackFor(DynamicRegistryManager registryManager, ServerPlayerEntity viewer) {
+        return ItemStack.EMPTY;
+    }
+
+    @Override
+    public String getIdentifier() {
+        return name;
     }
 }

@@ -6,7 +6,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import work.lclpnet.ap2.impl.util.AssetManager;
+import work.lclpnet.kibu.assets.AssetManager;
 import work.lclpnet.translations.DefaultLanguageTranslator;
 
 import java.io.IOException;

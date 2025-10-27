@@ -28,6 +28,9 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+/**
+ * One vanilla objective for each language.
+ */
 public class TranslatedScoreboardObjective implements
         CustomScoreboardObjective,
         StyleTransformer<TranslatedScoreboardObjective>,
@@ -301,6 +304,26 @@ public class TranslatedScoreboardObjective implements
         setDisplayName(handle.getHolder(), text);
 
         return handle;
+    }
+
+    @Override
+    public void removeEntry(String scoreHolder) {
+        scores.removeInt(scoreHolder);
+        entries.remove(scoreHolder);
+
+        updateObjectives(objective -> {
+            objective.remove(scoreHolder);
+
+            Set<UUID> uuids = objectivePlayers.getOrDefault(objective, Set.of());
+
+            for (UUID uuid : uuids) {
+                ServerPlayerEntity player = playerManager.getPlayer(uuid);
+
+                if (player == null) continue;
+
+                objective.clear(player, scoreHolder);
+            }
+        });
     }
 
     private @NotNull ScoreHandle createHandle(int position) {

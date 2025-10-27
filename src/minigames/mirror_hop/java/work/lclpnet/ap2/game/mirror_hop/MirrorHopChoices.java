@@ -1,13 +1,15 @@
 package work.lclpnet.ap2.game.mirror_hop;
 
 import com.google.common.collect.ImmutableList;
+import lombok.Getter;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Box;
 import org.json.JSONArray;
 import org.slf4j.Logger;
-import work.lclpnet.ap2.api.util.Collider;
-import work.lclpnet.ap2.api.util.CollisionDetector;
 import work.lclpnet.ap2.impl.map.MapUtil;
-import work.lclpnet.ap2.impl.util.BlockBox;
+import work.lclpnet.gaco.collisions.CollisionDetector;
+import work.lclpnet.gaco.ds.BlockBox;
+import work.lclpnet.gaco.ds.Collider;
 import work.lclpnet.lobby.game.map.GameMap;
 
 import java.util.List;
@@ -122,43 +124,33 @@ public class MirrorHopChoices {
 
     public static class Platform implements Collider {
 
+        @Getter
         private final BlockBox ground;
-        private final int minBx, minBy, minBz;
-        private final int maxBx, maxBy, maxBz;
+        private final BlockBox bounds;
 
         public Platform(BlockBox ground) {
             this.ground = ground;
-
-            BlockPos min = ground.min();
-            this.minBx = min.getX();
-            this.minBy = min.getY();
-            this.minBz = min.getZ();
-
-            BlockPos max = ground.max();
-            this.maxBx = max.getX() + 1;
-            this.maxBy = max.getY() + 3;
-            this.maxBz = max.getZ() + 1;
+            this.bounds = new BlockBox(ground.min(), ground.max().add(1, 3, 1));
         }
 
         @Override
         public boolean collidesWith(double x, double y, double z) {
-            return x >= minBx && x < maxBx
-                   && y >= minBy && y < maxBy
-                   && z >= minBz && z < maxBz;
+            return bounds.collidesWith(x, y, z);
+        }
+
+        @Override
+        public boolean collidesWith(Box box) {
+            return bounds.collidesWith(box);
         }
 
         @Override
         public BlockPos min() {
-            return ground.min();  // height is not important, therefore ground can be used
+            return bounds.min();
         }
 
         @Override
         public BlockPos max() {
-            return ground.max();  // height is not important, therefore ground can be used
-        }
-
-        public BlockBox getGround() {
-            return ground;
+            return bounds.max();
         }
     }
 }

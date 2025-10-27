@@ -3,7 +3,9 @@ package work.lclpnet.ap2.impl.music;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.util.Identifier;
 import org.slf4j.Logger;
+import work.lclpnet.ap2.ApConstants;
 import work.lclpnet.ap2.api.music.*;
 import work.lclpnet.notica.Notica;
 import work.lclpnet.notica.api.PlaybackOptions;
@@ -13,13 +15,20 @@ import work.lclpnet.notica.api.StereoMode;
 import work.lclpnet.notica.api.data.LoopOverride;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Random;
 
 public class MusicHelper {
 
+    public static final Identifier ARCADE_PARTY_GAME_TAG = ApConstants.identifier("game");
     private static final Random random = new Random();
 
     private MusicHelper() {}
+
+    public static SongWrapper playSong(WeightedSong song, float volume, ServerPlayerEntity player,
+                                       MinecraftServer server, SongCache cache, Logger logger) {
+        return playSong(song, volume, List.of(player), server, cache, logger, random);
+    }
 
     public static SongWrapper playSong(WeightedSong song, float volume, Collection<? extends ServerPlayerEntity> players,
                                        MinecraftServer server, SongCache cache, Logger logger) {

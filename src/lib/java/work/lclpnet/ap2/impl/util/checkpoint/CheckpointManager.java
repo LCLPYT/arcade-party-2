@@ -8,11 +8,12 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
-import work.lclpnet.ap2.api.util.Collider;
-import work.lclpnet.ap2.api.util.CollisionDetector;
-import work.lclpnet.ap2.api.util.collision.MovementObserver;
 import work.lclpnet.ap2.impl.util.debug.DebugController;
 import work.lclpnet.ap2.impl.util.math.MathUtil;
+import work.lclpnet.gaco.collisions.CollisionDetector;
+import work.lclpnet.gaco.collisions.movement.MovementObserver;
+import work.lclpnet.gaco.ds.Checkpoint;
+import work.lclpnet.gaco.ds.Collider;
 
 import java.util.*;
 
@@ -75,7 +76,7 @@ public class CheckpointManager {
             for (Checkpoint checkpoint : checkpoints) {
                 renderer.box(checkpoint.bounds(), Blocks.GREEN_STAINED_GLASS.getDefaultState());
 
-                Vec3d pos = checkpoint.pos().toBottomCenterPos();
+                Vec3d pos = checkpoint.pos();
 
                 renderer.marker(pos, Blocks.GREEN_CONCRETE.getDefaultState(), 0x00ff00);
                 renderer.arrow(pos, MathUtil.yaw2vec(checkpoint.yaw()), 0.25, Blocks.GREEN_WOOL.getDefaultState());
@@ -95,6 +96,10 @@ public class CheckpointManager {
 
     public void destroy() {
         debugController.destroy();
+    }
+
+    public void resetCheckpoints(ServerPlayerEntity player) {
+        playerCheckpoints.put(player.getUuid(), checkpoints.getFirst());
     }
 
     public interface Listener {

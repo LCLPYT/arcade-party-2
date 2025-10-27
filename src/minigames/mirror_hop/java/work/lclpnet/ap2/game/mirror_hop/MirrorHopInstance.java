@@ -17,7 +17,6 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
-import work.lclpnet.ap2.api.util.CollisionDetector;
 import work.lclpnet.ap2.impl.game.FFAGameInstance;
 import work.lclpnet.ap2.impl.game.data.CombinedDataContainer;
 import work.lclpnet.ap2.impl.game.data.IntDataContainer;
@@ -25,13 +24,14 @@ import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer;
 import work.lclpnet.ap2.impl.game.data.OrderedDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.map.MapUtil;
-import work.lclpnet.ap2.impl.util.BlockBox;
-import work.lclpnet.ap2.impl.util.collision.ChunkedCollisionDetector;
-import work.lclpnet.ap2.impl.util.collision.PlayerMovementObserver;
 import work.lclpnet.ap2.impl.util.effect.ApEffects;
 import work.lclpnet.ap2.impl.util.movement.CooldownMovementBlocker;
 import work.lclpnet.ap2.impl.util.movement.MovementBlocker;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
+import work.lclpnet.gaco.collisions.ChunkedCollisionDetector;
+import work.lclpnet.gaco.collisions.CollisionDetector;
+import work.lclpnet.gaco.collisions.movement.PlayerMovementObserver;
+import work.lclpnet.gaco.ds.BlockBox;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.lobby.game.map.GameMap;
@@ -53,7 +53,7 @@ public class MirrorHopInstance extends FFAGameInstance {
     public MirrorHopInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
 
-        movementObserver = new PlayerMovementObserver(collisionDetector, gameHandle.getParticipants()::isParticipating);
+        movementObserver = new PlayerMovementObserver(collisionDetector, gameHandle.getParticipants()::isParticipating, true, 0e-5);
         movementBlocker = new CooldownMovementBlocker(gameHandle.getScheduler());
         winnerData = new OrderedDataContainer<>(PlayerRef::create);
         scoreData = new IntScoreDataContainer<>(PlayerRef::create);

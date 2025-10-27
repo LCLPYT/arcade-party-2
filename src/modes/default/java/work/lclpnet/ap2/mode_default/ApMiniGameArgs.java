@@ -7,6 +7,7 @@ import work.lclpnet.ap2.api.data.DataManager;
 import work.lclpnet.ap2.api.map.MapFacade;
 import work.lclpnet.ap2.api.music.SongManager;
 import work.lclpnet.ap2.impl.game.PlayerUtil;
+import work.lclpnet.gaco.asset.AssetRepository;
 import work.lclpnet.kibu.cmd.impl.CommandStack;
 import work.lclpnet.kibu.hook.HookStack;
 import work.lclpnet.kibu.scheduler.util.SchedulerStack;

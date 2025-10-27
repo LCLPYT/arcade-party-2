@@ -8,7 +8,7 @@ import net.minecraft.util.math.BlockPos;
 import org.json.JSONObject;
 import work.lclpnet.ap2.game.knockout.util.DistanceIterator;
 import work.lclpnet.ap2.impl.map.MapUtil;
-import work.lclpnet.ap2.impl.util.math.Vec2i;
+import work.lclpnet.gaco.math.Vec2i;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.RunningTask;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;

@@ -1,10 +1,14 @@
 package work.lclpnet.ap2.impl.game.data.type;
 
+import net.minecraft.item.ItemStack;
+import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
 import work.lclpnet.ap2.api.game.data.SubjectRef;
 import work.lclpnet.ap2.api.game.team.TeamKey;
 import work.lclpnet.ap2.api.game.team.TeamKeyable;
+import work.lclpnet.ap2.impl.util.BlockHelper;
+import work.lclpnet.ap2.impl.util.ColorUtil;
 import work.lclpnet.kibu.translate.Translations;
 
 import java.util.Objects;
@@ -26,6 +30,11 @@ public class TeamRef implements SubjectRef, TeamKeyable {
     }
 
     @Override
+    public ItemStack getIconStackFor(DynamicRegistryManager registryManager, ServerPlayerEntity viewer) {
+        return new ItemStack(BlockHelper.getWool(ColorUtil.closestEntityDyeColor(key.color())));
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
@@ -41,5 +50,10 @@ public class TeamRef implements SubjectRef, TeamKeyable {
     @Override
     public TeamKey key() {
         return key;
+    }
+
+    @Override
+    public String getIdentifier() {
+        return key.id();
     }
 }

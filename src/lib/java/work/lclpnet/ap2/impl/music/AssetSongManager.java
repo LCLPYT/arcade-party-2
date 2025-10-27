@@ -16,8 +16,8 @@ import work.lclpnet.ap2.api.music.LoadableSong;
 import work.lclpnet.ap2.api.music.SongInfo;
 import work.lclpnet.ap2.api.music.SongManager;
 import work.lclpnet.ap2.api.music.WeightedSong;
-import work.lclpnet.lobby.game.asset.AssetPath;
-import work.lclpnet.lobby.game.asset.AssetRepository;
+import work.lclpnet.gaco.asset.AssetPath;
+import work.lclpnet.gaco.asset.AssetRepository;
 import work.lclpnet.notica.util.SongUtils;
 
 import java.io.IOException;

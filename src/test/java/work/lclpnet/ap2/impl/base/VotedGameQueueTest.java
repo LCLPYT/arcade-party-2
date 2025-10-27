@@ -6,7 +6,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import work.lclpnet.ap2.api.base.GameQueue;
 import work.lclpnet.ap2.impl.game.TestMiniGame;
-import work.lclpnet.ap2.impl.util.VoidQueuePersistence;
+import work.lclpnet.gaco.ds.queue.VoidQueuePersistence;
 
 import java.util.List;
 import java.util.Set;

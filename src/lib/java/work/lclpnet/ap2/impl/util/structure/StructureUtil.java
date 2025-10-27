@@ -6,8 +6,8 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.Vec3i;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.api.util.Printable;
-import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.world.MappedBlockStructure;
+import work.lclpnet.gaco.ds.BlockBox;
 import work.lclpnet.kibu.schematic.FabricBlockStateAdapter;
 import work.lclpnet.kibu.schematic.SchematicFormats;
 import work.lclpnet.kibu.schematic.api.Cuboid;
@@ -47,8 +47,7 @@ public class StructureUtil {
     }
 
     public static BlockBox getBounds(Cuboid structure) {
-        return new BlockBox(0, 0, 0,
-                structure.getWidth() - 1, structure.getHeight() - 1, structure.getLength() - 1);
+        return BlockBox.ofBounds(structure);
     }
 
     public static BlockStructure map(BlockStructure structure, UnaryOperator<BlockState> mapper) {

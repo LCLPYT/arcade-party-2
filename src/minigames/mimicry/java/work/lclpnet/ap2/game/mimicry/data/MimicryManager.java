@@ -14,8 +14,8 @@ import net.minecraft.util.Formatting;
 import net.minecraft.util.math.BlockPos;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
-import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.SoundHelper;
+import work.lclpnet.gaco.ds.BlockBox;
 import work.lclpnet.kibu.scheduler.api.TaskHandle;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 

@@ -27,7 +27,6 @@ import work.lclpnet.ap2.impl.game.data.DataContainers;
 import work.lclpnet.ap2.impl.game.data.IntDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.map.ServerThreadMapBootstrap;
-import work.lclpnet.ap2.impl.util.collision.GroundDetector;
 import work.lclpnet.ap2.impl.util.handler.Visibility;
 import work.lclpnet.ap2.impl.util.handler.VisibilityHandler;
 import work.lclpnet.ap2.impl.util.handler.VisibilityManager;
@@ -36,6 +35,7 @@ import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.ap2.impl.util.world.BfsWorldScanner;
 import work.lclpnet.ap2.impl.util.world.SimpleAdjacentBlocks;
 import work.lclpnet.combatctl.impl.CombatStyles;
+import work.lclpnet.gaco.collisions.util.GroundDetector;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.util.PositionRotation;
 import work.lclpnet.kibu.translate.Translations;
@@ -160,7 +160,7 @@ public class SplashyDropperInstance extends FFAGameInstance implements MapBootst
         ServerWorld world = getWorld();
 
         outer: for (ServerPlayerEntity player : gameHandle.getParticipants()) {
-            if (player.getY() >= minSpawnY) continue;
+            if (player.getY() >= minSpawnY - 1) continue;
 
             if (world.getFluidState(player.getBlockPos()).isIn(FluidTags.WATER)) {
                 onLandInWater(player);
@@ -202,8 +202,6 @@ public class SplashyDropperInstance extends FFAGameInstance implements MapBootst
     }
 
     private void onHitGround(ServerPlayerEntity player) {
-        commons().teleportToRandomSpawn(player, random);
-
         commons().teleportToRandomSpawn(player, random);
 
         gameHandle.getGameScheduler().immediate(() -> player.playSoundToPlayer(SoundEvents.ENTITY_ZOMBIE_ATTACK_IRON_DOOR, SoundCategory.PLAYERS, 0.25f, 0.5f));

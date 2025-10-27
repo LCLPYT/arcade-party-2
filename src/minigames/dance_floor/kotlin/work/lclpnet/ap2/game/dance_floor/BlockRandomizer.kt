@@ -4,7 +4,7 @@ import net.minecraft.server.world.ServerWorld
 import net.minecraft.util.DyeColor
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Vec3d
-import work.lclpnet.ap2.impl.ds.WeightedList
+import work.lclpnet.gaco.ds.WeightedList
 import work.lclpnet.ap2.impl.util.BlockHelper
 import work.lclpnet.ap2.impl.util.math.MathUtil
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape

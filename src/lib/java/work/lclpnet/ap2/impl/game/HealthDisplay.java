@@ -3,14 +3,18 @@ package work.lclpnet.ap2.impl.game;
 import net.minecraft.scoreboard.ScoreboardCriterion;
 import net.minecraft.scoreboard.ScoreboardDisplaySlot;
 import net.minecraft.scoreboard.ScoreboardObjective;
+import net.minecraft.scoreboard.number.BlankNumberFormat;
 import net.minecraft.scoreboard.number.FixedNumberFormat;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
+import work.lclpnet.ap2.core.hook.PlayerEliminatedCallback;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.EntityHealthCallback;
+
+import static java.lang.Math.*;
 
 public class HealthDisplay {
 
@@ -44,17 +48,22 @@ public class HealthDisplay {
 
             return false;
         });
+
+        hooks.registerHook(PlayerEliminatedCallback.HOOK, player -> {
+            manager.setScore(player, objective, 0);
+            manager.setNumberFormat(player, objective, BlankNumberFormat.INSTANCE);
+        });
     }
 
     private void update(ServerPlayerEntity player, float health, ScoreboardObjective objective) {
         CustomScoreboardManager manager = gameHandle.getScoreboardManager();
 
-        manager.setScore(player, objective, (int) Math.ceil(health));
+        manager.setScore(player, objective, (int) ceil(health));
         manager.setNumberFormat(player, objective, new FixedNumberFormat(healthText(health)));
     }
 
     private Text healthText(float health) {
-        int hearts = Math.max(0, Math.min(20, (int) Math.ceil(health)));
+        int hearts = max(0, min(20, (int) ceil(health)));
         boolean half = hearts % 2 == 1;
         hearts >>= 1;
 

@@ -17,8 +17,8 @@ import work.lclpnet.ap2.game.fine_tuning.melody.FakeNoteBlockPlayer;
 import work.lclpnet.ap2.game.fine_tuning.melody.Melody;
 import work.lclpnet.ap2.game.fine_tuning.melody.Note;
 import work.lclpnet.ap2.impl.util.ColorUtil;
-import work.lclpnet.ap2.impl.util.world.entity.DynamicEntityManager;
-import work.lclpnet.ap2.impl.util.world.entity.PlayerSpecificDynamicEntity;
+import work.lclpnet.gaco.dynamic_entities.DynamicEntityManager;
+import work.lclpnet.gaco.dynamic_entities.PlayerSpecificDynamicEntity;
 
 import java.util.ArrayList;
 import java.util.Arrays;

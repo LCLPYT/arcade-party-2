@@ -50,19 +50,19 @@ import work.lclpnet.ap2.impl.game.item.SpecialItems;
 import work.lclpnet.ap2.impl.game.kit.KitHandler;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.map.ServerThreadMapBootstrap;
-import work.lclpnet.ap2.impl.scene.Scene;
-import work.lclpnet.ap2.impl.scene.ServerWorldMountContext;
-import work.lclpnet.ap2.impl.scene.simulation.EntityCollisionManager;
-import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.VanishManager;
-import work.lclpnet.ap2.impl.util.collision.ChunkedCollisionDetector;
-import work.lclpnet.ap2.impl.util.collision.TickMovementObserver;
 import work.lclpnet.ap2.impl.util.handler.VisualCooldown;
 import work.lclpnet.ap2.impl.util.world.BfsWorldScanner;
 import work.lclpnet.ap2.impl.util.world.ResetBlockWorldModifier;
 import work.lclpnet.ap2.impl.util.world.SimpleAdjacentBlocks;
 import work.lclpnet.ap2.impl.util.world.WalkableBlockPredicate;
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape;
+import work.lclpnet.gaco.collisions.ChunkedCollisionDetector;
+import work.lclpnet.gaco.collisions.movement.TickMovementObserver;
+import work.lclpnet.gaco.ds.BlockBox;
+import work.lclpnet.gaco.scene.Scene;
+import work.lclpnet.gaco.scene.ServerWorldMountContext;
+import work.lclpnet.gaco.scene.physics.EntityCollisionManager;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks;
 import work.lclpnet.kibu.physics.impl.bullet.collision.space.MinecraftSpace;
@@ -81,7 +81,7 @@ import java.util.stream.Collectors;
 
 import static work.lclpnet.ap2.impl.util.ItemHelper.getLeatherArmor;
 import static work.lclpnet.ap2.impl.util.ItemHelper.unbreakable;
-import static work.lclpnet.ap2.impl.util.ThreadUtil.submitOn;
+import static work.lclpnet.gaco.core.util.ThreadUtil.submitOn;
 
 public class PaintballInstance extends TeamGameInstance implements MapBootstrapFunction {
 

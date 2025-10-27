@@ -16,6 +16,7 @@ import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.EliminationController;
 import work.lclpnet.ap2.api.game.GameInfo;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
+import work.lclpnet.ap2.core.hook.PlayerEliminatedCallback;
 import work.lclpnet.ap2.core.mixin.LivingEntityAccessor;
 import work.lclpnet.ap2.impl.game.data.EliminationDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
@@ -190,8 +191,6 @@ public abstract class EliminationGameInstance extends FFAGameInstance implements
         Participants participants = gameHandle.getParticipants();
 
         if (participants.isParticipating(player)) {
-            onEliminated(player);
-
             if (eliminatedMessages) {
                 DeathMessages deathMessages = gameHandle.getDeathMessages();
                 MinecraftServer server = gameHandle.getServer();
@@ -202,6 +201,7 @@ public abstract class EliminationGameInstance extends FFAGameInstance implements
             }
 
             participants.remove(player);
+            onEliminated(player);
         }
 
         WorldFacade worldFacade = gameHandle.getWorldFacade();
@@ -214,5 +214,7 @@ public abstract class EliminationGameInstance extends FFAGameInstance implements
         }
     }
 
-    protected void onEliminated(ServerPlayerEntity player) {}
+    protected void onEliminated(ServerPlayerEntity player) {
+        PlayerEliminatedCallback.HOOK.invoker().onEliminated(player);
+    }
 }

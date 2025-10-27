@@ -11,13 +11,13 @@ import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.util.math.AffineTransformation;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Quaternionf;
-import work.lclpnet.ap2.impl.scene.Object3d;
-import work.lclpnet.ap2.impl.scene.Scene;
-import work.lclpnet.ap2.impl.scene.VoidMountContext;
-import work.lclpnet.ap2.impl.scene.object.BlockDisplayObject;
-import work.lclpnet.ap2.impl.scene.object.ItemDisplayObject;
 import work.lclpnet.ap2.impl.util.ItemHelper;
 import work.lclpnet.ap2.impl.util.model.TemplateModel;
+import work.lclpnet.gaco.scene.Object3d;
+import work.lclpnet.gaco.scene.Scene;
+import work.lclpnet.gaco.scene.VoidMountContext;
+import work.lclpnet.gaco.scene.object.BlockDisplayObject;
+import work.lclpnet.gaco.scene.object.ItemDisplayObject;
 
 import java.io.IOException;
 import java.io.InputStream;

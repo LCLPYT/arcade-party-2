@@ -10,11 +10,12 @@ import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
-import work.lclpnet.ap2.impl.util.BlockBox;
-import work.lclpnet.ap2.impl.util.math.Vec2i;
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape;
 import work.lclpnet.ap2.impl.util.world.block_shape.BoxBlockShape;
 import work.lclpnet.ap2.impl.util.world.block_shape.CylinderBlockShape;
+import work.lclpnet.gaco.ds.BlockBox;
+import work.lclpnet.gaco.math.SplinePath;
+import work.lclpnet.gaco.math.Vec2i;
 import work.lclpnet.kibu.util.BlockStateUtils;
 import work.lclpnet.lobby.game.map.GameMap;
 import work.lclpnet.lobby.game.map.MapUtils;
@@ -200,6 +201,22 @@ public class MapUtil {
 
         return d;
     }
+
+    public static Optional<SplinePath> readSplinePath(JSONArray json, Logger logger) {
+        List<Vec3d> keypoints = new ArrayList<>(json.length());
+
+        for (Object item : json) {
+            if (!(item instanceof JSONArray tuple)) {
+                logger.error("Invalid spline path element: {}", item);
+                continue;
+            }
+
+            keypoints.add(MapUtil.readCenteredVec3d(tuple));
+        }
+
+        return SplinePath.create(keypoints, logger);
+    }
+
 
     private MapUtil() {}
 }

@@ -15,7 +15,7 @@ import work.lclpnet.ap2.impl.game.kit.KitHandle;
 import work.lclpnet.ap2.impl.game.kit.KitOptions;
 import work.lclpnet.ap2.impl.game.kit.SingleItemKit;
 import work.lclpnet.ap2.impl.util.EntityUtil;
-import work.lclpnet.ap2.impl.util.SplinePath;
+import work.lclpnet.gaco.math.SplinePath;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.TaskHandle;
 

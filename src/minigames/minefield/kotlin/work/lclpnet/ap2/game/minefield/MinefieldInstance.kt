@@ -28,7 +28,7 @@ import work.lclpnet.ap2.*
 import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.map.MapBootstrapFunction
 import work.lclpnet.ap2.api.util.world.BlockPredicate
-import work.lclpnet.ap2.impl.ds.StructureMask
+import work.lclpnet.gaco.ds.StructureMask
 import work.lclpnet.ap2.impl.game.FFAGameInstance
 import work.lclpnet.ap2.impl.game.data.OrderedDataContainer
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef
@@ -43,8 +43,8 @@ import work.lclpnet.ap2.impl.util.world.BfsWorldScanner
 import work.lclpnet.ap2.impl.util.world.SimpleAdjacentBlocks
 import work.lclpnet.ap2.impl.util.world.WalkableBlockPredicate
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape
-import work.lclpnet.ap2.impl.util.world.entity.DynamicEntityManager
-import work.lclpnet.ap2.impl.util.world.entity.PlayerSpecificDynamicEntity
+import work.lclpnet.gaco.dynamic_entities.DynamicEntityManager
+import work.lclpnet.gaco.dynamic_entities.PlayerSpecificDynamicEntity
 import work.lclpnet.kibu.hook.world.PressurePlateCallback
 import work.lclpnet.kibu.scheduler.Ticks
 import work.lclpnet.kibu.translate.bossbar.TranslatedBossBar

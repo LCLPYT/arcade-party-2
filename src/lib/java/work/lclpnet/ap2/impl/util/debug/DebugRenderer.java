@@ -11,13 +11,13 @@ import net.minecraft.util.math.Position;
 import net.minecraft.util.math.Vec3d;
 import work.lclpnet.ap2.api.util.model.Model;
 import work.lclpnet.ap2.api.util.model.ModelManager;
-import work.lclpnet.ap2.impl.scene.Object3d;
-import work.lclpnet.ap2.impl.scene.Scene;
-import work.lclpnet.ap2.impl.scene.object.BlockDisplayObject;
-import work.lclpnet.ap2.impl.scene.object.TextDisplayObject;
-import work.lclpnet.ap2.impl.util.BlockBox;
 import work.lclpnet.ap2.impl.util.model.Models;
 import work.lclpnet.ap2.impl.util.model.TemplateModel;
+import work.lclpnet.gaco.ds.BlockBox;
+import work.lclpnet.gaco.scene.Object3d;
+import work.lclpnet.gaco.scene.Scene;
+import work.lclpnet.gaco.scene.object.BlockDisplayObject;
+import work.lclpnet.gaco.scene.object.TextDisplayObject;
 
 import java.util.NoSuchElementException;
 import java.util.function.Consumer;

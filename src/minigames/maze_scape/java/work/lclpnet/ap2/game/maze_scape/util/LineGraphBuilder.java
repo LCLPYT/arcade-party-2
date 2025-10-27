@@ -2,7 +2,7 @@ package work.lclpnet.ap2.game.maze_scape.util;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import org.jetbrains.annotations.Nullable;
-import work.lclpnet.ap2.api.ds.UndirectedGraphNode;
+import work.lclpnet.gaco.ds.UndirectedGraphNode;
 
 import java.util.*;
 import java.util.function.BiFunction;

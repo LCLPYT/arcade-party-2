@@ -6,8 +6,8 @@ import work.lclpnet.ap2.api.music.ConfiguredSong;
 import work.lclpnet.ap2.api.music.LoadableSong;
 import work.lclpnet.ap2.api.music.SongCache;
 import work.lclpnet.ap2.api.music.SongInfo;
-import work.lclpnet.lobby.game.asset.AssetPath;
-import work.lclpnet.lobby.game.asset.AssetRepository;
+import work.lclpnet.gaco.asset.AssetPath;
+import work.lclpnet.gaco.asset.AssetRepository;
 import work.lclpnet.notica.api.CheckedSong;
 import work.lclpnet.notica.util.ServerSongLoader;
 

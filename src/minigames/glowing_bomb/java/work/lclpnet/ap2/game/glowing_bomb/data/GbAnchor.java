@@ -5,7 +5,7 @@ import net.minecraft.block.RespawnAnchorBlock;
 import net.minecraft.entity.decoration.DisplayEntity;
 import net.minecraft.util.math.Vec3d;
 import org.jetbrains.annotations.Nullable;
-import work.lclpnet.ap2.impl.util.EntityRef;
+import work.lclpnet.gaco.core.api.EntityRef;
 import work.lclpnet.kibu.access.entity.DisplayEntityAccess;
 
 import java.util.UUID;

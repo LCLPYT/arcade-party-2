@@ -19,7 +19,7 @@ import net.minecraft.world.explosion.ExplosionImpl;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.core.mixin.ExplosionImplAccessor;
-import work.lclpnet.ap2.impl.ds.WeightedList;
+import work.lclpnet.gaco.ds.WeightedList;
 import work.lclpnet.ap2.impl.util.SoundHelper;
 import work.lclpnet.kibu.translate.Translations;
 

@@ -33,12 +33,13 @@ import work.lclpnet.kibu.scheduler.api.TaskHandle
 import work.lclpnet.lobby.game.map.GameMap
 import java.util.concurrent.CompletableFuture
 import kotlin.math.max
+import kotlin.math.round
 import kotlin.math.roundToInt
 import kotlin.random.Random
 import kotlin.random.asJavaRandom
 
-private val MIN_DELAY_TICKS = Ticks.seconds(9)
-private val MAX_DELAY_TICKS = Ticks.seconds(14)
+private val MIN_DELAY_TICKS = Ticks.seconds(6)
+private val MAX_DELAY_TICKS = Ticks.seconds(10)
 
 private const val INITIAL_BLOCK_DELAY_TICKS = 68
 private const val BLOCK_DELAY_TICKS_DECREASE_PER_MINUTE = 13
@@ -59,6 +60,8 @@ class DanceFloorInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(g
     var blockRandomizer: BlockRandomizer? = null
     var spectatorSpawns = mutableListOf<PositionRotation>()
     var visibilityManager: VisibilityManager? = null
+    var delayTicks = MAX_DELAY_TICKS
+    var round = 1
 
     init {
         useRemainingPlayersDisplay()
@@ -187,19 +190,21 @@ class DanceFloorInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(g
         val totalSongTicks = song.checkedSong.song.lastNoteTick().orElseGet { song.checkedSong.song.durationTicks() }
         val remainingSongTicks = totalSongTicks - startTick
 
-        // sample a random duration in game ticks
-        val randomDelayTicks = Random.nextInt(MAX_DELAY_TICKS - MIN_DELAY_TICKS + 1) + MIN_DELAY_TICKS
-
         // convert to song ticks, limited by remaining song ticks
         val songTicks = song.checkedSong.song.tempo()
-            .durationTicks(startTick, randomDelayTicks / 20f)
+            .durationTicks(startTick, delayTicks / 20f)
             .coerceAtMost(remainingSongTicks)
+
+        // decrease ticks
+        val decrease = round(20f / round.toFloat()).toInt()
+        delayTicks = max(MIN_DELAY_TICKS, delayTicks - decrease)
+        round++
 
         // convert clamped back to game time
         val delaySeconds = song.checkedSong.song.tempo().durationSeconds(startTick, songTicks)
-        val delayTicks = delaySeconds.times(20).roundToInt().coerceAtLeast(0)
+        val realDelayTicks = delaySeconds.times(20).roundToInt().coerceAtLeast(0)
 
-        task = timeout(delayTicks) {
+        task = timeout(realDelayTicks) {
             val progress = startTick + songTicks
 
             if (progress >= totalSongTicks) {
@@ -289,8 +294,5 @@ class DanceFloorInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(g
         if (winManager.isGameOver) return
 
         nextCycle()
-    }
-
-    override fun onEliminated(player: ServerPlayerEntity?) {
     }
 }

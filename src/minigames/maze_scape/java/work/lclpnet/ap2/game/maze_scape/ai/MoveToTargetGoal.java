@@ -13,11 +13,14 @@ import java.util.function.Supplier;
 
 public class MoveToTargetGoal extends Goal {
 
+    private static final int UPDATE_INTERVAL_TICKS = 5;
+
     protected final PathAwareEntity mob;
     protected final double speed;
     protected final Supplier<@Nullable BlockPos> targetSupplier;
     protected @Nullable Path path = null;
     protected @Nullable BlockPos targetPos = null, prevTargetPos = null;
+    private int updateTimer = 0;
 
     public MoveToTargetGoal(PathAwareEntity mob, double speed) {
         this(mob, speed, () -> targetEntityPos(mob));
@@ -57,9 +60,19 @@ public class MoveToTargetGoal extends Goal {
 
         if (nav.isIdle()) return false;
 
+        if (pos.equals(targetPos) || updateTimer++ % UPDATE_INTERVAL_TICKS != 0) {
+            return true;
+        }
+
         updatePath(pos);
 
         return this.path != null;
+    }
+
+    @Override
+    public void stop() {
+        super.stop();
+        updateTimer = 0;
     }
 
     @Override

@@ -4,7 +4,7 @@ import org.jetbrains.annotations.Blocking;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import org.slf4j.Logger;
-import work.lclpnet.ap2.impl.util.AssetManager;
+import work.lclpnet.kibu.assets.AssetManager;
 import work.lclpnet.translations.loader.CachedMultiTranslationLoader;
 import work.lclpnet.translations.loader.TranslationLoader;
 import work.lclpnet.translations.loader.UrlArchiveTranslationLoader;

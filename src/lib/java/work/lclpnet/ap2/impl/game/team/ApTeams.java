@@ -1,7 +1,7 @@
 package work.lclpnet.ap2.impl.game.team;
 
 import work.lclpnet.ap2.api.game.team.TeamKey;
-import work.lclpnet.ap2.impl.ds.IndexedSet;
+import work.lclpnet.gaco.ds.IndexedSet;
 
 import java.util.*;
 

@@ -3,10 +3,8 @@ package work.lclpnet.ap2.game.jump_and_run.gen;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Direction;
 import net.minecraft.util.math.Vec3i;
-import org.joml.Vector3f;
-import work.lclpnet.ap2.impl.util.BlockBox;
-import work.lclpnet.ap2.impl.util.checkpoint.Checkpoint;
-import work.lclpnet.ap2.impl.util.math.AffineIntMatrix;
+import work.lclpnet.gaco.ds.BlockBox;
+import work.lclpnet.gaco.math.AffineIntMatrix;
 import work.lclpnet.kibu.structure.BlockStructure;
 import work.lclpnet.kibu.util.math.Matrix3i;
 
@@ -52,11 +50,8 @@ public final class Bridge implements JumpPart {
         return bounds;
     }
 
-    public Checkpoint asCheckpoint() {
-        Vector3f vec = direction.getUnitVector();
-        double yaw = Math.atan2(-vec.x, vec.z);
-
-        return new Checkpoint(spawn, (float) Math.toDegrees(yaw), bounds);
+    public BlockPos spawn() {
+        return spawn;
     }
 
     @Override

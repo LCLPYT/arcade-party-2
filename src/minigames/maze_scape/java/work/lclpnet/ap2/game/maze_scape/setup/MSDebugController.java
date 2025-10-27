@@ -13,11 +13,11 @@ import work.lclpnet.ap2.api.util.model.ModelManager;
 import work.lclpnet.ap2.game.maze_scape.gen.Node;
 import work.lclpnet.ap2.game.maze_scape.util.MSStruct;
 import work.lclpnet.ap2.game.maze_scape.util.Passage;
-import work.lclpnet.ap2.impl.scene.Object3d;
 import work.lclpnet.ap2.impl.util.debug.DebugController;
 import work.lclpnet.ap2.impl.util.math.MathUtil;
 import work.lclpnet.ap2.impl.util.model.Models;
 import work.lclpnet.ap2.impl.util.model.TemplateModel;
+import work.lclpnet.gaco.scene.Object3d;
 
 import java.util.*;
 

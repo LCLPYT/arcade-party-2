@@ -1,7 +1,7 @@
 package work.lclpnet.ap2.game.aim_master;
 
 import net.minecraft.util.math.BlockPos;
-import work.lclpnet.ap2.impl.util.BlockBox;
+import work.lclpnet.gaco.ds.BlockBox;
 
 import java.util.ArrayList;
 import java.util.Random;
