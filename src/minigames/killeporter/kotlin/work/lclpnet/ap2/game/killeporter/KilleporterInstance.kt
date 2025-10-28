@@ -31,13 +31,13 @@ import net.minecraft.world.World
 import work.lclpnet.ap2.*
 import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.map.MapBootstrap
-import work.lclpnet.ap2.impl.ds.WeightedList
 import work.lclpnet.ap2.impl.game.EliminationGameInstance
 import work.lclpnet.ap2.impl.game.kit.KitHandle
 import work.lclpnet.ap2.impl.game.kit.KitHandler
 import work.lclpnet.ap2.impl.game.kit.PrefabKitLoader
 import work.lclpnet.ap2.impl.util.CodecUtil
 import work.lclpnet.ap2.impl.util.SoundHelper
+import work.lclpnet.gaco.ds.WeightedList
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks
 import work.lclpnet.kibu.hook.util.PlayerUtils

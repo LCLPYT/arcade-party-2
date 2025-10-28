@@ -7,7 +7,7 @@ import net.minecraft.registry.RegistryOps;
 import net.minecraft.registry.RegistryWrapper;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
-import work.lclpnet.ap2.api.ds.Partial;
+import work.lclpnet.gaco.core.api.Partial;
 
 import java.io.DataInputStream;
 import java.io.IOException;
