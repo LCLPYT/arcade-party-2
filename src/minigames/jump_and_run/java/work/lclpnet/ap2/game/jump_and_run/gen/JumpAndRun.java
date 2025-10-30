@@ -110,6 +110,7 @@ public class JumpAndRun {
         gameRules.get(GameRules.DO_DAYLIGHT_CYCLE).set(false, server);
         gameRules.get(GameRules.DO_WEATHER_CYCLE).set(false, server);
         gameRules.get(GameRules.FALL_DAMAGE).set(false, server);
+        gameRules.get(GameRules.ANNOUNCE_ADVANCEMENTS).set(false, server);
 
         var schema = schema();
 
