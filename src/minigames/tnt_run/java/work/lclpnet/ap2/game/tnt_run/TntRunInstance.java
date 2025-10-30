@@ -48,7 +48,7 @@ public class TntRunInstance extends EliminationGameInstance {
     }
 
     @Override
-    protected void ready() {
+    protected void go() {
         groundDetector = new GroundDetector(getWorld(), BLOCK_MARGIN);
 
         commons().whenBelowCriticalHeight().then(this::eliminate);

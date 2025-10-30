@@ -104,7 +104,7 @@ public class RedLightGreenLightInstance extends FFAGameInstance implements Runna
     }
 
     @Override
-    protected void ready() {
+    protected void go() {
         HookRegistrar hooks = gameHandle.getHooks();
 
         movementDetector.register(this::onMovedWhileRed);

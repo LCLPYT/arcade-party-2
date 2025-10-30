@@ -165,7 +165,7 @@ class MinefieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
         visibility!!.giveItems()
     }
 
-    override fun ready() {
+    override fun go() {
         world.setBlocks(readShape("spawn-gate"), Blocks.AIR)
 
         interval(1) {

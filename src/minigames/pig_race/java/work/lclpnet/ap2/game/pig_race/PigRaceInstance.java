@@ -252,7 +252,7 @@ public class PigRaceInstance extends FFAGameInstance implements MapBootstrap {
     }
 
     @Override
-    protected void ready() {
+    protected void go() {
         openGate();
 
         HookRegistrar hooks = gameHandle.getHooks();

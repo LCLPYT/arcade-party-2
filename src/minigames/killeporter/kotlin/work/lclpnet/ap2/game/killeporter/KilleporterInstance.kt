@@ -194,7 +194,7 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
         kitHandler?.startKitSelectionTimer(commons(), Ticks.seconds(15)) {super.afterInitialDelay()}
     }
 
-    override fun ready() {
+    override fun go() {
 
         kitHandler?.disableKitChanger()
 

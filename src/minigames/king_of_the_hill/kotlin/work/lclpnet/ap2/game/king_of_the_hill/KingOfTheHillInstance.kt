@@ -62,7 +62,7 @@ class KingOfTheHillInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
         commons().addWaypoint(goalShape!!.center().toCenterPos(), 0xffd700)
     }
 
-    override fun ready() {
+    override fun go() {
         val readShape = MapUtil.readOptShape(map, "spawn-remove-shape")
 
         readShape?.forEach { pos ->

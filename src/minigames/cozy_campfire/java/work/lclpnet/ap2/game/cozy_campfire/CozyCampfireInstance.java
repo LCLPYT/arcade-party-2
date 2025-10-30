@@ -124,7 +124,7 @@ public class CozyCampfireInstance extends TeamEliminationGameInstance implements
     }
 
     @Override
-    protected void ready() {
+    protected void go() {
         gameHandle.protect(hookSetup::configure);
 
         gameHandle.getGameScheduler().interval(this::tick, 1);

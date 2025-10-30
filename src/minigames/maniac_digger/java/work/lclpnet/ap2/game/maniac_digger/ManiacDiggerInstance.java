@@ -111,7 +111,7 @@ public class ManiacDiggerInstance extends FFAGameInstance implements MapBootstra
     }
 
     @Override
-    protected void ready() {
+    protected void go() {
         gameHandle.protect(config -> config.allow(ProtectionTypes.BREAK_BLOCKS, ProtectionTypes.MODIFY_INVENTORY));
 
         HookRegistrar hooks = gameHandle.getHooks();

@@ -160,7 +160,7 @@ public class GuessItInstance extends FFAGameInstance implements MapBootstrap {
     }
 
     @Override
-    protected void ready() {
+    protected void go() {
         inputManager.init(gameHandle.getHooks());
 
         prepareNextChallenge();

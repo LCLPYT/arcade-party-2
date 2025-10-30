@@ -143,7 +143,7 @@ public class BowSpleefInstance extends EliminationGameInstance {
     }
 
     @Override
-    protected void ready() {
+    protected void go() {
         gameHandle.protect(config -> {
             config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, damageSource)
                     -> damageSource.isOf(DamageTypes.OUTSIDE_BORDER)

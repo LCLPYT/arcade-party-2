@@ -97,7 +97,7 @@ public class GlowingBombInstance extends EliminationGameInstance implements MapB
     }
 
     @Override
-    protected void ready() {
+    protected void go() {
         HookRegistrar hooks = gameHandle.getHooks();
         Participants participants = gameHandle.getParticipants();
 

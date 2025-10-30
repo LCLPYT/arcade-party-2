@@ -121,7 +121,7 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
     }
 
     @Override
-    protected void ready() {
+    protected void go() {
         SbConfiguration config = new SbConfiguration(gameHandle, manager, items);
         config.configureProtection();
         config.registerHooks();

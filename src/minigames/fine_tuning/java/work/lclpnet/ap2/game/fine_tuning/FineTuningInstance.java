@@ -58,7 +58,7 @@ public class FineTuningInstance extends FFAGameInstance implements MapBootstrap 
     }
 
     @Override
-    protected void ready() {
+    protected void go() {
         tuningPhase.beginListen();
     }
 

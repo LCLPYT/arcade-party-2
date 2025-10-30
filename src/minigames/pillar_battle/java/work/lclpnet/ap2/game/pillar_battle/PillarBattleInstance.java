@@ -110,7 +110,7 @@ public class PillarBattleInstance extends EliminationGameInstance implements Map
     }
 
     @Override
-    protected void ready() {
+    protected void go() {
         Translations translations = gameHandle.getTranslations();
 
         gameHandle.protect(config -> {

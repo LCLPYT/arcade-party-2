@@ -100,7 +100,7 @@ public class AimMasterInstance extends FFAGameInstance implements MapBootstrap {
     }
 
     @Override
-    protected void ready() {
+    protected void go() {
 
         var sequenceItems = sequence.getItems();
 

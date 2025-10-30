@@ -204,7 +204,7 @@ public class EggventureInstance extends FFAGameInstance implements MapBootstrap 
     }
 
     @Override
-    protected void ready() {
+    protected void go() {
         GameMap map = getMap();
         BlockBox gate = MapUtil.readBox(map.requireProperty("gate"));
         ServerWorld world = getWorld();

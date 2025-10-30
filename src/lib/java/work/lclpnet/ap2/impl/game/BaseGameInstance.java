@@ -313,7 +313,7 @@ public abstract class BaseGameInstance implements MiniGameInstance {
                     player.playSoundToPlayer(SoundEvents.ENTITY_CHICKEN_EGG, SoundCategory.PLAYERS, 1, 0);
                 });
 
-        ready();
+        go();
     }
 
     private void registerDefaultHooks() {
@@ -467,5 +467,5 @@ public abstract class BaseGameInstance implements MiniGameInstance {
 
     protected abstract void prepare();
 
-    protected abstract void ready();
+    protected abstract void go();
 }

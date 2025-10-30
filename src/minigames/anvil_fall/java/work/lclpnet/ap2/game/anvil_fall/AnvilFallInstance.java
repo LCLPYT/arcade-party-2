@@ -81,7 +81,7 @@ public class AnvilFallInstance extends EliminationGameInstance {
     }
 
     @Override
-    protected void ready() {
+    protected void go() {
         gameHandle.protect(config -> config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, damageSource) -> {
             if (damageSource.isOf(DamageTypes.FALLING_ANVIL) && entity instanceof ServerPlayerEntity serverPlayer) {
                 onHitByAnvil(serverPlayer);

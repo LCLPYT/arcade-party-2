@@ -71,7 +71,7 @@ public class HotPotatoInstance extends EliminationGameInstance implements GameOv
     }
 
     @Override
-    protected void ready() {
+    protected void go() {
         nextRound();
 
         HookRegistrar hooks = gameHandle.getHooks();

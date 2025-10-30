@@ -141,7 +141,7 @@ public class MazeScapeInstance extends EliminationGameInstance implements MapBoo
     }
 
     @Override
-    protected void ready() {
+    protected void go() {
         if (MSLoader.DEBUG_PIECES) return;
 
         ServerWorld world = getWorld();

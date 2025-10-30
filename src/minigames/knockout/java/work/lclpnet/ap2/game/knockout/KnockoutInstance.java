@@ -96,7 +96,7 @@ public class KnockoutInstance extends EliminationGameInstance {
     }
 
     @Override
-    protected void ready() {
+    protected void go() {
         gameHandle.protect(config -> config.allow(ProtectionTypes.ALLOW_DAMAGE, this::canDamage));
 
         HookRegistrar hooks = gameHandle.getHooks();

@@ -164,7 +164,7 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
     }
 
     @Override
-    protected void ready() {
+    protected void go() {
         beginSegment();
 
         gameHandle.protect(config -> {

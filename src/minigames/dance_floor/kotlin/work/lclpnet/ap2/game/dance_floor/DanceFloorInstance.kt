@@ -98,7 +98,7 @@ class DanceFloorInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(g
         }
     }
 
-    override fun ready() {
+    override fun go() {
         commons().whenBelowCriticalHeight().then { player -> softEliminate(player) }
         nextCycle()
 

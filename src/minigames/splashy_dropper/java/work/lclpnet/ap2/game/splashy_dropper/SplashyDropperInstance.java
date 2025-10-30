@@ -114,7 +114,7 @@ public class SplashyDropperInstance extends FFAGameInstance implements MapBootst
     }
 
     @Override
-    protected void ready() {
+    protected void go() {
         Translations translations = gameHandle.getTranslations();
         var subject = translations.translateText(gameHandle.getGameInfo().getTaskKey());
 

@@ -85,7 +85,7 @@ public class MirrorHopInstance extends FFAGameInstance {
     }
 
     @Override
-    protected void ready() {
+    protected void go() {
         GameMap map = getMap();
         ServerWorld world = getWorld();
         HookRegistrar hooks = gameHandle.getHooks();

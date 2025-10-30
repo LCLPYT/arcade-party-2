@@ -323,7 +323,7 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
     }
 
     @Override
-    protected void ready() {
+    protected void go() {
         openBases();
 
         kitHandler.closeKitChanger();

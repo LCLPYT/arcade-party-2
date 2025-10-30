@@ -106,7 +106,7 @@ public class MimicryInstance extends FFAGameInstance implements MapBootstrap {
     }
 
     @Override
-    protected void ready() {
+    protected void go() {
         sequencePlayer = new SequencePlayer(manager, gameHandle.getGameScheduler(), getWorld());
 
         nextSequence();

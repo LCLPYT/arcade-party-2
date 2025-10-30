@@ -313,7 +313,7 @@ public class DragonEscapeInstance extends FFAGameInstance {
     }
 
     @Override
-    protected void ready() {
+    protected void go() {
         gameHandle.protect(config -> {
             config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, source) -> {
                 if (!(entity instanceof ServerPlayerEntity player)

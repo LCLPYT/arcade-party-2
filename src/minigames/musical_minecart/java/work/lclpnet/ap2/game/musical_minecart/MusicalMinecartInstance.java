@@ -132,7 +132,7 @@ public class MusicalMinecartInstance extends EliminationGameInstance implements 
     }
 
     @Override
-    protected void ready() {
+    protected void go() {
         nextSong();
 
         gameHandle.getGameScheduler().interval(this::tickParticle, 7);

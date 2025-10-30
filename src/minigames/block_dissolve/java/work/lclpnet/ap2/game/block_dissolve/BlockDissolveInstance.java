@@ -69,7 +69,7 @@ public class BlockDissolveInstance extends EliminationGameInstance {
     }
 
     @Override
-    protected void ready() {
+    protected void go() {
         commons().whenBelowCriticalHeight().then(this::eliminate);
 
         startDissolve();
