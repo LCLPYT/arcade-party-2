@@ -106,7 +106,7 @@ public class HotPotatoInstance extends EliminationGameInstance implements GameOv
         }
 
         TranslatedBossBar bossBar = dynamicBossBar.getBossBar();
-        TaskScheduler scheduler = gameHandle.getGameScheduler();
+        TaskScheduler scheduler = gameHandle.getScheduler();
 
         markAndReschedule(scheduler);
 
@@ -165,7 +165,7 @@ public class HotPotatoInstance extends EliminationGameInstance implements GameOv
 
         if (winManager.isGameOver()) return;
 
-        gameHandle.getGameScheduler().timeout(this::nextRound, Ticks.seconds(3));
+        gameHandle.getScheduler().timeout(this::nextRound, Ticks.seconds(3));
     }
 
     @Override
@@ -232,7 +232,7 @@ public class HotPotatoInstance extends EliminationGameInstance implements GameOv
 
 
         if (delay > 0) {
-            gameHandle.getScheduler().timeout(() -> FireworkEntityAccess.explode(firework), delay);
+            gameHandle.getRootScheduler().timeout(() -> FireworkEntityAccess.explode(firework), delay);
         } else {
             FireworkEntityAccess.explode(firework);
         }

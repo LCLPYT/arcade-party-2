@@ -69,7 +69,7 @@ public class SnowballFightInstance extends EliminationGameInstance {
     protected void go() {
         Participants participants = gameHandle.getParticipants();
         HookRegistrar hooks = gameHandle.getHooks();
-        TaskScheduler scheduler = gameHandle.getGameScheduler();
+        TaskScheduler scheduler = gameHandle.getScheduler();
 
         gameHandle.protect(config -> {
             config.allow(ProtectionTypes.BREAK_BLOCKS, (entity, pos) -> {

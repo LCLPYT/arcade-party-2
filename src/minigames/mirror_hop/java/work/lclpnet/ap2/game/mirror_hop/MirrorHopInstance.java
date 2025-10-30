@@ -54,7 +54,7 @@ public class MirrorHopInstance extends FFAGameInstance {
         super(gameHandle);
 
         movementObserver = new PlayerMovementObserver(collisionDetector, gameHandle.getParticipants()::isParticipating, true, 0e-5);
-        movementBlocker = new CooldownMovementBlocker(gameHandle.getScheduler());
+        movementBlocker = new CooldownMovementBlocker(gameHandle.getRootScheduler());
         winnerData = new OrderedDataContainer<>(PlayerRef::create);
         scoreData = new IntScoreDataContainer<>(PlayerRef::create);
         combinedData = new CombinedDataContainer<>(List.of(winnerData, scoreData));

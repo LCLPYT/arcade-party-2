@@ -113,7 +113,7 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
 
         getTeamManager().setUseColorCodes(true);
 
-        respawnCooldown = new VisualCooldown(gameHandle.getGameScheduler());
+        respawnCooldown = new VisualCooldown(gameHandle.getScheduler());
         vanishManager = VanishManager.setup(gameHandle);
     }
 
@@ -133,7 +133,7 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
         teams.setup();
 
         scene = new Scene(new ServerWorldMountContext(world));
-        scene.animate(1, gameHandle.getScheduler());
+        scene.animate(1, gameHandle.getRootScheduler());
 
         BlockShape bounds = MapUtil.readShape(map, "bounds");
         GameCommons commons = commons(map, world);
@@ -206,7 +206,7 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
             team.setShowFriendlyInvisibles(true);
         }
 
-        movementObserver.init(gameHandle.getGameScheduler(), gameHandle.getHooks(), gameHandle.getServer());
+        movementObserver.init(gameHandle.getScheduler(), gameHandle.getHooks(), gameHandle.getServer());
 
         teleportTeamsToSpawns();
         equipPlayers();
@@ -261,7 +261,7 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
 
     private void setupPlayerCollisions() {
         var entityCollisions = new EntityCollisionManager(getWorld(), gameHandle::getParticipants);
-        entityCollisions.init(gameHandle.getScheduler());
+        entityCollisions.init(gameHandle.getRootScheduler());
 
         TeamManager teamManager = getTeamManager();
 
@@ -344,7 +344,7 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
         var ticker = new PaintballTicker(getWorld(), gameHandle.getParticipants(), teams, paintManager,
                 paintGunManager, vanishManager, commons().debugController());
 
-        ticker.start(gameHandle.getGameScheduler(), gameHandle.getHooks());
+        ticker.start(gameHandle.getScheduler(), gameHandle.getHooks());
 
         specialItems.spawnPeriodically();
     }
@@ -387,7 +387,7 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
         paintGunManager.refillPaintGun(player);
 
         // delay game mode change one tick to prevent other players from seeing the teleport
-        gameHandle.getGameScheduler().immediate(() -> {
+        gameHandle.getScheduler().immediate(() -> {
             player.getAbilities().setFlySpeed(0.05f);
             player.sendAbilitiesUpdate();
 

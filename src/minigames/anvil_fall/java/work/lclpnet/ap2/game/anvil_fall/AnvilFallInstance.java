@@ -151,7 +151,7 @@ public class AnvilFallInstance extends EliminationGameInstance {
     private void startAnvilSpawning() {
         amountDisplay.setArgument(0, FormatWrapper.styled(20 / INITIAL_DELAY, Formatting.YELLOW));
 
-        gameHandle.getGameScheduler().interval(new Runnable() {
+        gameHandle.getScheduler().interval(new Runnable() {
             int delay = INITIAL_DELAY;
             int cooldown = 0;
             int anvilAmount = 1;

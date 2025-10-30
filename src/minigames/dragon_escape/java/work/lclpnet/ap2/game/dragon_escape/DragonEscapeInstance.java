@@ -104,7 +104,7 @@ public class DragonEscapeInstance extends FFAGameInstance {
     public DragonEscapeInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
 
-        movementBlocker = new SimpleMovementBlocker(gameHandle.getGameScheduler());
+        movementBlocker = new SimpleMovementBlocker(gameHandle.getScheduler());
         movementBlocker.setModifySpeedAttribute(false);
 
         useOldCombat();
@@ -180,7 +180,7 @@ public class DragonEscapeInstance extends FFAGameInstance {
         );
 
         dragonController.spawnDragon();
-        dragonController.init(gameHandle.getGameScheduler());
+        dragonController.init(gameHandle.getScheduler());
     }
 
     private void setupTrackers() {
@@ -245,7 +245,7 @@ public class DragonEscapeInstance extends FFAGameInstance {
         debugger.renderLiveProgress(() -> Stream.concat(
                 pseudoElimination.streamParticipants(),
                 dragonController.dragon().stream()
-        ).toList(), gameHandle.getGameScheduler());
+        ).toList(), gameHandle.getScheduler());
     }
 
     private void teleportPlayers() {
@@ -340,9 +340,9 @@ public class DragonEscapeInstance extends FFAGameInstance {
         setupSmoothDeath();
         unblockMovement();
 
-        dragonController.startMoving(gameHandle.getGameScheduler());
+        dragonController.startMoving(gameHandle.getScheduler());
 
-        gameHandle.getGameScheduler().interval(this::tick, 1);
+        gameHandle.getScheduler().interval(this::tick, 1);
 
         startMs = milliTime();
         itemUseAllowed = true;

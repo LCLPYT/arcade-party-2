@@ -112,7 +112,7 @@ public class GameCommons {
             }
         });
 
-        detector.init(gameHandle.getGameScheduler(), gameHandle.getHooks());
+        detector.init(gameHandle.getScheduler(), gameHandle.getHooks());
 
         return Action.create(hook);
     }
@@ -122,7 +122,7 @@ public class GameCommons {
     }
 
     public Action<Runnable> scheduleWorldBorderShrink(long delayTicks, long durationTicks, long finalDelayTicks, Random random) {
-        TaskScheduler scheduler = gameHandle.getGameScheduler();
+        TaskScheduler scheduler = gameHandle.getScheduler();
 
         var hook = HookFactory.createArrayBacked(Runnable.class, callbacks -> () -> {
             for (Runnable callback : callbacks) {
@@ -210,7 +210,7 @@ public class GameCommons {
             }
         });
 
-        gameHandle.getGameScheduler().interval(1, new SchedulerAction() {
+        gameHandle.getScheduler().interval(1, new SchedulerAction() {
             int timer = durationTicks;
 
             @Override
@@ -253,7 +253,7 @@ public class GameCommons {
                 .build();
 
         timer.addPlayers(PlayerLookup.all(gameHandle.getServer()));
-        timer.start(gameHandle.getBossBarProvider(), gameHandle.getGameScheduler());
+        timer.start(gameHandle.getBossBarProvider(), gameHandle.getScheduler());
 
         return timer;
     }

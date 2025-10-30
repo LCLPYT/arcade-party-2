@@ -249,7 +249,7 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
 
         switchTimeout()
 
-        gameHandle.gameScheduler.interval(20*60*3, 20*60*3, Runnable {
+        gameHandle.scheduler.interval(20*60*3, 20*60*3, Runnable {
             SoundHelper.playSound(world, SoundEvents.BLOCK_CHEST_OPEN, SoundCategory.BLOCKS, 0.8f, 0.5f)
             translate("game.ap2.killeporter.chest_refill").formatted(Formatting.AQUA).sendTo(allPlayers())
             filledInventories.clear()

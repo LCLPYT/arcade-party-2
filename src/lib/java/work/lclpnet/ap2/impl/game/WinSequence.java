@@ -77,7 +77,7 @@ public class WinSequence<T, Ref extends SubjectRef> {
             }
         });
 
-        gameHandle.getScheduler().interval(new SchedulerAction() {
+        gameHandle.getRootScheduler().interval(new SchedulerAction() {
             int t = 0;
             int i = 0;
 
@@ -112,7 +112,7 @@ public class WinSequence<T, Ref extends SubjectRef> {
         announceWinners();
         broadcastResults();
 
-        gameHandle.getScheduler().timeout(() -> {
+        gameHandle.getRootScheduler().timeout(() -> {
             var resultsMap = winners.getPlayerResults().stream().collect(Collectors.toMap(
                     ObjectIntPair::left,
                     pair -> new MiniGameResults.PlayerResult(pair.left(), pair.rightInt())

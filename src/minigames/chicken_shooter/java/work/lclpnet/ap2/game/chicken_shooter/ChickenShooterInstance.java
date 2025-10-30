@@ -181,7 +181,7 @@ public class ChickenShooterInstance extends FFAGameInstance implements Runnable 
     private void chickenSpawner() {
         JSONArray spawnBounds = getMap().requireProperty("spawn-bounds");
         chickenBox = MapUtil.readBox(spawnBounds);
-        gameHandle.getGameScheduler().interval(this, 1);
+        gameHandle.getScheduler().interval(this, 1);
     }
 
     @SuppressWarnings("unchecked")

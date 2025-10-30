@@ -107,7 +107,7 @@ public class MimicryInstance extends FFAGameInstance implements MapBootstrap {
 
     @Override
     protected void go() {
-        sequencePlayer = new SequencePlayer(manager, gameHandle.getGameScheduler(), getWorld());
+        sequencePlayer = new SequencePlayer(manager, gameHandle.getScheduler(), getWorld());
 
         nextSequence();
 
@@ -149,7 +149,7 @@ public class MimicryInstance extends FFAGameInstance implements MapBootstrap {
 
         commons().announcer().announceSubtitle("game.ap2.mimicry.attention");
 
-        gameHandle.getGameScheduler().timeout(this::playSequence, PREPARE_TICKS);
+        gameHandle.getScheduler().timeout(this::playSequence, PREPARE_TICKS);
     }
 
     private synchronized void removeTimer() {
@@ -202,7 +202,7 @@ public class MimicryInstance extends FFAGameInstance implements MapBootstrap {
 
         onRoundOver();
 
-        gameHandle.getGameScheduler().timeout(this::nextSequence, Ticks.seconds(NEXT_ROUND_DELAY_SECONDS));
+        gameHandle.getScheduler().timeout(this::nextSequence, Ticks.seconds(NEXT_ROUND_DELAY_SECONDS));
     }
 
     private synchronized void onRoundOver() {
@@ -233,7 +233,7 @@ public class MimicryInstance extends FFAGameInstance implements MapBootstrap {
 
         onRoundOver();
 
-        gameHandle.getGameScheduler().timeout(this::nextSequence, 30);
+        gameHandle.getScheduler().timeout(this::nextSequence, 30);
     }
 
     private synchronized void softEliminate(ServerPlayerEntity player) {

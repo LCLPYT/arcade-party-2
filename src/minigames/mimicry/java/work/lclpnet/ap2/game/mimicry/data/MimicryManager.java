@@ -146,7 +146,7 @@ public class MimicryManager {
             handle.cancel();
         }
 
-        TaskScheduler scheduler = gameHandle.getGameScheduler();
+        TaskScheduler scheduler = gameHandle.getScheduler();
 
         // defer deactivation 15 ticks
         deactivation.put(uuid, scheduler.timeout(() -> room.resetActiveButton(world), 15));

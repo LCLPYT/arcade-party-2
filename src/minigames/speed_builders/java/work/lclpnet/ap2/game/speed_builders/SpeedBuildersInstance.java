@@ -117,7 +117,7 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
             scoreboardManager.joinTeam(player, team);
         }
 
-        gameHandle.getScheduler().interval(manager::tick, 1);
+        gameHandle.getRootScheduler().interval(manager::tick, 1);
     }
 
     @Override
@@ -212,7 +212,7 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
         announcer.withTimes(5, 50, 0)
                 .announce("game.ap2.speed_builders.time_up", null);
 
-        TaskScheduler scheduler = gameHandle.getGameScheduler();
+        TaskScheduler scheduler = gameHandle.getScheduler();
 
         scheduler.timeout(() -> announcer.silent()
                 .withTimes(0, 35, 5)
@@ -232,7 +232,7 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
     private void announceJudgementDone() {
         commons().announcer().announceSubtitle("game.ap2.speed_builders.judgement");
 
-        gameHandle.getGameScheduler().timeout(this::announceJudgement, JUDGE_ANNOUNCEMENT_TICKS);
+        gameHandle.getScheduler().timeout(this::announceJudgement, JUDGE_ANNOUNCEMENT_TICKS);
     }
 
     private void announceJudgement() {
@@ -256,7 +256,7 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
 
         manager.getIsland(worst).ifPresent(destruction::setAelosLookingTowards);
 
-        gameHandle.getGameScheduler().timeout(() -> fireChargeTowardsPlayerIsland(worst.getUuid()), DESTROY_DELAY_TICKS);
+        gameHandle.getScheduler().timeout(() -> fireChargeTowardsPlayerIsland(worst.getUuid()), DESTROY_DELAY_TICKS);
     }
 
     private void fireChargeTowardsPlayerIsland(UUID worstUuid) {
@@ -284,7 +284,7 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
 
         ServerWorld world = getWorld();
 
-        gameHandle.getGameScheduler().interval(task -> {
+        gameHandle.getScheduler().interval(task -> {
             if (!charge.isAlive()) {
                 task.cancel();
                 return;
@@ -294,7 +294,7 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
         }, 1);
 
         // make sure the island is destroyed, if the projectile somehow misses ¯\_(ツ)_/¯
-        gameHandle.getGameScheduler().timeout(() -> {
+        gameHandle.getScheduler().timeout(() -> {
             if (charge.isAlive()) {
                 charge.discard();
             }
@@ -354,7 +354,7 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
 
         VelocityModifier.setVelocity(player, velocity.add(0, 1.5, 0).normalize().multiply(3));
 
-        gameHandle.getGameScheduler().timeout(() -> {
+        gameHandle.getScheduler().timeout(() -> {
             ServerPlayerEntity futurePlayer = playerManager.getPlayer(playerToEliminate);
 
             if (futurePlayer != null) {
@@ -406,6 +406,6 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
                 .withSound(SoundEvents.ENTITY_BREEZE_IDLE_AIR, SoundCategory.HOSTILE, 1f, 1.2f)
                 .announceSubtitle("game.ap2.speed_builders.impressed");
 
-        gameHandle.getGameScheduler().timeout(this::nextRoundOrGameOver, Ticks.seconds(3));
+        gameHandle.getScheduler().timeout(this::nextRoundOrGameOver, Ticks.seconds(3));
     }
 }

@@ -63,7 +63,7 @@ public class DefaultMiniGameHandle implements MiniGameHandle, WorldBorderManager
     private MutableProtectionConfig protectionConfig;
     private volatile BasicProtector protector = null;
     private volatile List<Runnable> whenDone = null;
-    private TaskScheduler scheduler = null;
+    private TaskScheduler rootScheduler = null;
     private boolean ended = false;
     private volatile DeathMessages deathMessages = null;
     private volatile @Nullable CompletableFuture<UUID> statsId = null;
@@ -90,7 +90,7 @@ public class DefaultMiniGameHandle implements MiniGameHandle, WorldBorderManager
         container.commandStack().push();
         container.schedulerStack().push();
 
-        scheduler = container.schedulerStack().current();
+        rootScheduler = container.schedulerStack().current();
 
         container.schedulerStack().push();
     }
@@ -131,12 +131,12 @@ public class DefaultMiniGameHandle implements MiniGameHandle, WorldBorderManager
     }
 
     @Override
-    public TaskScheduler getScheduler() {
-        return scheduler;
+    public TaskScheduler getRootScheduler() {
+        return rootScheduler;
     }
 
     @Override
-    public SchedulerStack getGameScheduler() {
+    public SchedulerStack getScheduler() {
         return args.miniGameArgs().schedulerStack();
     }
 
@@ -239,7 +239,7 @@ public class DefaultMiniGameHandle implements MiniGameHandle, WorldBorderManager
 
     @Override
     public void resetGameScheduler() {
-        SchedulerStack stack = getGameScheduler();
+        SchedulerStack stack = getScheduler();
 
         stack.pop();
         stack.push();

@@ -152,7 +152,7 @@ public class MazeScapeInstance extends EliminationGameInstance implements MapBoo
 
         manager.init(gameHandle);
 
-        TaskScheduler scheduler = gameHandle.getGameScheduler();
+        TaskScheduler scheduler = gameHandle.getScheduler();
         scheduler.interval(manager::updateMobs, MOB_UPDATE_DELAY_TICKS, MOB_SPAWN_DELAY_TICKS);
         scheduler.interval(manager::tick, 1);
         scheduler.interval(this::checkPits, 1);

@@ -138,7 +138,7 @@ public class PandaFinderInstance extends FFAGameInstance {
             return;
         }
 
-        gameHandle.getGameScheduler().timeout(this::nextRound, Ticks.seconds(3));
+        gameHandle.getScheduler().timeout(this::nextRound, Ticks.seconds(3));
     }
 
     private void scanWorld() {

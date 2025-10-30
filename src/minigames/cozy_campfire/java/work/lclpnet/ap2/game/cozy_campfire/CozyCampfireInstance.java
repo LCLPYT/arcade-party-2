@@ -127,7 +127,7 @@ public class CozyCampfireInstance extends TeamEliminationGameInstance implements
     protected void go() {
         gameHandle.protect(hookSetup::configure);
 
-        gameHandle.getGameScheduler().interval(this::tick, 1);
+        gameHandle.getScheduler().interval(this::tick, 1);
 
         baseManager.openDoors(getWorld());
     }

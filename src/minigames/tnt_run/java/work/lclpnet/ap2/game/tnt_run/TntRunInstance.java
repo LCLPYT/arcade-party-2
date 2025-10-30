@@ -53,7 +53,7 @@ public class TntRunInstance extends EliminationGameInstance {
 
         commons().whenBelowCriticalHeight().then(this::eliminate);
 
-        gameHandle.getGameScheduler().interval(this::tick, 1);
+        gameHandle.getScheduler().interval(this::tick, 1);
     }
 
     private void tick() {

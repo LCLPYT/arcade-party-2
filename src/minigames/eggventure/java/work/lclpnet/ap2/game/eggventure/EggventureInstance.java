@@ -199,8 +199,8 @@ public class EggventureInstance extends FFAGameInstance implements MapBootstrap 
         DynamicEntityManager dynamicEntityManager = new DynamicEntityManager(world);
         var tutorial = new EggventureTutorial(world, dynamicEntityManager, random, gameHandle.getTranslations());
 
-        dynamicEntityManager.init(gameHandle.getGameScheduler(), gameHandle.getHooks());
-        tutorial.start(gameHandle.getGameScheduler(), gameHandle.getParticipants()).thenRun(super::afterInitialDelay);
+        dynamicEntityManager.init(gameHandle.getScheduler(), gameHandle.getHooks());
+        tutorial.start(gameHandle.getScheduler(), gameHandle.getParticipants()).thenRun(super::afterInitialDelay);
     }
 
     @Override
@@ -254,7 +254,7 @@ public class EggventureInstance extends FFAGameInstance implements MapBootstrap 
 
         commons().createTimer(subject, durationSeconds).whenDone(this::completeAndShowRemaining);
 
-        gameHandle.getGameScheduler().interval(20, Ticks.seconds(10), this::checkNearbyEggs);
+        gameHandle.getScheduler().interval(20, Ticks.seconds(10), this::checkNearbyEggs);
 
         CheckpointHelper.setupResetItem(hooks, winManager::isGameOver, player -> gameHandle.getParticipants().isParticipating(player))
                 .then(this::reset);

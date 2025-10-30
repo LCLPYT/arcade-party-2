@@ -63,7 +63,7 @@ public class BowSpleefInstance extends EliminationGameInstance {
     public BowSpleefInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
 
-        var cooldown = new VisualCooldown(gameHandle.getScheduler());
+        var cooldown = new VisualCooldown(gameHandle.getRootScheduler());
 
         doubleJumpHandler = new DoubleJumpHandler(player -> !cooldown.isOnCooldown(player) && !heavyWeightItem.isHeavyWeighted(player));
         heavyWeightItem.setDoubleJumpHandler(doubleJumpHandler);

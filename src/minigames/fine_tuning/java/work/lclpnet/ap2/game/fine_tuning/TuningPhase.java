@@ -111,7 +111,7 @@ class TuningPhase {
         }));
 
         dynamicEntityManager = new DynamicEntityManager(world);
-        dynamicEntityManager.init(gameHandle.getGameScheduler(), gameHandle.getHooks());
+        dynamicEntityManager.init(gameHandle.getScheduler(), gameHandle.getHooks());
     }
 
     private void addNoteBlockHooks() {
@@ -196,7 +196,7 @@ class TuningPhase {
     public void beginListen() {
         commons.announcer().announceSubtitle("game.ap2.fine_tuning.listen");
 
-        gameHandle.getGameScheduler().timeout(this::playNextMelody, 40);
+        gameHandle.getScheduler().timeout(this::playNextMelody, 40);
     }
 
     private void playNextMelody() {
@@ -209,7 +209,7 @@ class TuningPhase {
 
     private void playMelody(Runnable onDone) {
         Participants participants = gameHandle.getParticipants();
-        TaskScheduler scheduler = gameHandle.getGameScheduler();
+        TaskScheduler scheduler = gameHandle.getScheduler();
 
         PlayMelodyTask task = new PlayMelodyTask(note -> {
             for (ServerPlayerEntity player : participants) {
@@ -229,13 +229,13 @@ class TuningPhase {
                 .withSound(SoundEvents.ENTITY_CHICKEN_EGG, SoundCategory.RECORDS, 0.5f, 0f)
                 .announceSubtitle("game.ap2.fine_tuning.listen_again");
 
-        gameHandle.getGameScheduler().timeout(() -> playMelody(this::beginTune), 40);
+        gameHandle.getScheduler().timeout(() -> playMelody(this::beginTune), 40);
     }
 
     private void beginTune() {
         MinecraftServer server = gameHandle.getServer();
         Translations translations = gameHandle.getTranslations();
-        TaskScheduler scheduler = gameHandle.getGameScheduler();
+        TaskScheduler scheduler = gameHandle.getScheduler();
         BossBarProvider bossBarProvider = gameHandle.getBossBarProvider();
 
         var players = PlayerLookup.all(server);
@@ -400,7 +400,7 @@ class TuningPhase {
         room.setTemporaryMelody(melody);
         room.removeDisplays(dynamicEntityManager);
 
-        TaskScheduler scheduler = gameHandle.getGameScheduler();
+        TaskScheduler scheduler = gameHandle.getScheduler();
 
         PlayMelodyTask task = new PlayMelodyTask(note -> {
             if (!player.isAlive()) return;

@@ -135,7 +135,7 @@ public class MusicalMinecartInstance extends EliminationGameInstance implements 
     protected void go() {
         nextSong();
 
-        gameHandle.getGameScheduler().interval(this::tickParticle, 7);
+        gameHandle.getScheduler().interval(this::tickParticle, 7);
 
         ready.set(true);
 
@@ -221,7 +221,7 @@ public class MusicalMinecartInstance extends EliminationGameInstance implements 
             timer = commons().createTimerTicks("Queue %s / %s".formatted(done, total), delay);
         }
 
-        taskHandles = List.of(gameHandle.getGameScheduler().timeout(this::stopMusic, delay));
+        taskHandles = List.of(gameHandle.getScheduler().timeout(this::stopMusic, delay));
 
         TranslatedText nowPlaying = songs.nowPlayingText(config);
 
@@ -261,7 +261,7 @@ public class MusicalMinecartInstance extends EliminationGameInstance implements 
             player.sendMessage(msg, true);
         }
 
-        TaskScheduler scheduler = gameHandle.getGameScheduler();
+        TaskScheduler scheduler = gameHandle.getScheduler();
 
         taskHandles = List.of(
                 scheduler.timeout(this::markFreeMinecarts, eliminationDelayTicks / 2),
@@ -368,7 +368,7 @@ public class MusicalMinecartInstance extends EliminationGameInstance implements 
 
         int passDelay = max(0, NEXT_SONG_DELAY_TICKS - Ticks.seconds(1));
 
-        TaskScheduler scheduler = gameHandle.getGameScheduler();
+        TaskScheduler scheduler = gameHandle.getScheduler();
 
         scheduler.timeout(() -> {
             for (ServerPlayerEntity player : participants) {

@@ -88,7 +88,7 @@ public class SoundChallenge implements Challenge {
     private void playFirst() {
         playSound();
 
-        gameHandle.getGameScheduler().timeout(this::prepareSecond, REPEAT_DELAY_TICKS);
+        gameHandle.getScheduler().timeout(this::prepareSecond, REPEAT_DELAY_TICKS);
     }
 
     private void prepareSecond() {
@@ -101,7 +101,7 @@ public class SoundChallenge implements Challenge {
             Title.get(player).title(Text.empty(), msg.translateFor(player));
         }
 
-        gameHandle.getGameScheduler().timeout(this::playSound, SOUND_DELAY_TICKS);
+        gameHandle.getScheduler().timeout(this::playSound, SOUND_DELAY_TICKS);
     }
 
     private void randomizePitch() {

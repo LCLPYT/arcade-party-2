@@ -105,7 +105,7 @@ public class ApocalypseSurvivalInstance extends EliminationGameInstance {
             config.allow(ProtectionTypes.MOB_GRIEFING, ProtectionTypes.EXPLOSION);
         });
 
-        gameHandle.getGameScheduler().interval(this::tick, 1);
+        gameHandle.getScheduler().interval(this::tick, 1);
     }
 
     @Override

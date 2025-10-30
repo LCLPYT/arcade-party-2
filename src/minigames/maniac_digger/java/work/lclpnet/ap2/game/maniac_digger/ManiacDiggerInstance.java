@@ -127,7 +127,7 @@ public class ManiacDiggerInstance extends FFAGameInstance implements MapBootstra
             return ActionResult.PASS;
         });
 
-        gameHandle.getGameScheduler().interval(this::checkGoal, 1);
+        gameHandle.getScheduler().interval(this::checkGoal, 1);
     }
 
     private boolean canBreak(ServerPlayerEntity player, BlockPos pos) {

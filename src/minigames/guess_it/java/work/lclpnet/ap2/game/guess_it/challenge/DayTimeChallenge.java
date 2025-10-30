@@ -156,7 +156,7 @@ public class DayTimeChallenge implements Challenge, SchedulerAction {
         timeStart = start;
         timeEnd = end;
 
-        animation = gameHandle.getGameScheduler().interval(this, 1);
+        animation = gameHandle.getScheduler().interval(this, 1);
     }
 
     @Override

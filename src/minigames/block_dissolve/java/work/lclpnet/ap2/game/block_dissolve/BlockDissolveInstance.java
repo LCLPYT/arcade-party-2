@@ -90,7 +90,7 @@ public class BlockDissolveInstance extends EliminationGameInstance {
     }
 
     private void startDissolve() {
-        gameHandle.getGameScheduler().interval(this::tick, 1);
+        gameHandle.getScheduler().interval(this::tick, 1);
     }
 
     private void tick(RunningTask info) {

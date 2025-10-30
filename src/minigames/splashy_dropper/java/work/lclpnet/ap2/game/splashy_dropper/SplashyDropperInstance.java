@@ -63,7 +63,7 @@ public class SplashyDropperInstance extends FFAGameInstance implements MapBootst
 
         data = DataContainers.finaleCompatibleScoreContainer(gameHandle, PlayerRef::create);
 
-        movementBlocker = new SimpleMovementBlocker(gameHandle.getScheduler());
+        movementBlocker = new SimpleMovementBlocker(gameHandle.getRootScheduler());
         movementBlocker.setModifySpeedAttribute(false);
 
         gameHandle.getPlayerUtil().setDefaultCombatStyle(CombatStyles.CLASSIC
@@ -121,7 +121,7 @@ public class SplashyDropperInstance extends FFAGameInstance implements MapBootst
         int duration = MIN_DURATION_SECONDS + random.nextInt(MAX_DURATION_SECONDS - MIN_DURATION_SECONDS + 1);
         commons().createTimer(subject, duration).whenDone(winManager::complete);
 
-        gameHandle.getGameScheduler().interval(this::tick, 1);
+        gameHandle.getScheduler().interval(this::tick, 1);
 
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
             movementBlocker.enableMovement(player);
@@ -196,7 +196,7 @@ public class SplashyDropperInstance extends FFAGameInstance implements MapBootst
             default -> 1.4f;
         };
 
-        gameHandle.getGameScheduler().immediate(() -> player.playSoundToPlayer(SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, SoundCategory.PLAYERS, 0.5f, pitch));
+        gameHandle.getScheduler().immediate(() -> player.playSoundToPlayer(SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, SoundCategory.PLAYERS, 0.5f, pitch));
 
         commons().teleportToRandomSpawn(player, random);
     }
@@ -204,7 +204,7 @@ public class SplashyDropperInstance extends FFAGameInstance implements MapBootst
     private void onHitGround(ServerPlayerEntity player) {
         commons().teleportToRandomSpawn(player, random);
 
-        gameHandle.getGameScheduler().immediate(() -> player.playSoundToPlayer(SoundEvents.ENTITY_ZOMBIE_ATTACK_IRON_DOOR, SoundCategory.PLAYERS, 0.25f, 0.5f));
+        gameHandle.getScheduler().immediate(() -> player.playSoundToPlayer(SoundEvents.ENTITY_ZOMBIE_ATTACK_IRON_DOOR, SoundCategory.PLAYERS, 0.25f, 0.5f));
     }
 
     private int removeWater(BlockPos pos) {

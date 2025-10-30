@@ -62,7 +62,7 @@ public class Hints {
     public void sendBeforeReady(BaseGameInstance gameInstance, Mod mod) {
         MiniGameHandle gameHandle = gameInstance.getGameHandle();
 
-        gameHandle.getGameScheduler().timeout(() -> sendModHint(mod),
+        gameHandle.getScheduler().timeout(() -> sendModHint(mod),
                 max(0, gameInstance.getInitialDelay() - Ticks.seconds(3)));
     }
 

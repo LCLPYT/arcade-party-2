@@ -118,7 +118,7 @@ public class GuessItInstance extends FFAGameInstance implements MapBootstrap {
         modifier = new ResetWorldModifier(world, hooks);
 
         var dynamicEntityManager = new DynamicEntityManager(world);
-        dynamicEntityManager.init(gameHandle.getScheduler(), hooks);
+        dynamicEntityManager.init(gameHandle.getRootScheduler(), hooks);
         dynamicEntities = new DynamicEntityModifier(dynamicEntityManager);
 
         manager = new GuessItManager(gameHandle, world, random, blockShape, modifier, soundSubtitles,
@@ -237,7 +237,7 @@ public class GuessItInstance extends FFAGameInstance implements MapBootstrap {
 
         int expected = ++transaction;
 
-        currentTask = gameHandle.getGameScheduler().timeout(() -> {
+        currentTask = gameHandle.getScheduler().timeout(() -> {
             if (transaction != expected) return;
 
             beginChallenge();
@@ -249,7 +249,7 @@ public class GuessItInstance extends FFAGameInstance implements MapBootstrap {
 
         ServerWorld world = getWorld();
         Translations translations = gameHandle.getTranslations();
-        TaskScheduler scheduler = gameHandle.getGameScheduler();
+        TaskScheduler scheduler = gameHandle.getScheduler();
 
         var players = PlayerLookup.world(world);
 
@@ -367,7 +367,7 @@ public class GuessItInstance extends FFAGameInstance implements MapBootstrap {
 
         int expected = ++transaction;
 
-        currentTask = gameHandle.getGameScheduler().timeout(() -> {
+        currentTask = gameHandle.getScheduler().timeout(() -> {
             if (transaction != expected) return;
 
             prepareNextChallenge();

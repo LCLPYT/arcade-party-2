@@ -66,7 +66,7 @@ public class GlowingBombInstance extends EliminationGameInstance implements MapB
 
         disableTeleportEliminated();
 
-        movementBlocker = new SimpleMovementBlocker(gameHandle.getGameScheduler());
+        movementBlocker = new SimpleMovementBlocker(gameHandle.getScheduler());
         movementBlocker.setModifySpeedAttribute(false);
     }
 
@@ -119,10 +119,10 @@ public class GlowingBombInstance extends EliminationGameInstance implements MapB
             return ActionResult.PASS;
         });
 
-        gameHandle.getGameScheduler().interval(this::tickCredits, 1);
+        gameHandle.getScheduler().interval(this::tickCredits, 1);
 
         scene = new Scene(new ServerWorldMountContext(getWorld()));
-        scene.animate(1, gameHandle.getGameScheduler());
+        scene.animate(1, gameHandle.getScheduler());
 
         spawnBomb();
     }
@@ -162,7 +162,7 @@ public class GlowingBombInstance extends EliminationGameInstance implements MapB
 
         scene.add(bomb);
 
-        TaskScheduler scheduler = gameHandle.getGameScheduler();
+        TaskScheduler scheduler = gameHandle.getScheduler();
 
         int fuseTicks = randomFuseTicks();
         scheduler.timeout(this::bombTimerExpired, fuseTicks);
@@ -325,7 +325,7 @@ public class GlowingBombInstance extends EliminationGameInstance implements MapB
             bombDelayedSpawn.cancel();
         }
 
-        bombDelayedSpawn = gameHandle.getGameScheduler().timeout(this::spawnBomb, Ticks.seconds(4));
+        bombDelayedSpawn = gameHandle.getScheduler().timeout(this::spawnBomb, Ticks.seconds(4));
     }
 
     private void checkForWinner() {
@@ -349,7 +349,7 @@ public class GlowingBombInstance extends EliminationGameInstance implements MapB
     }
 
     private void onAnchorFilled(GbAnchor anchor) {
-        gameHandle.getGameScheduler().timeout(() -> explodeAnchor(anchor), 30);
+        gameHandle.getScheduler().timeout(() -> explodeAnchor(anchor), 30);
     }
 
     private void explodeAnchor(GbAnchor anchor) {

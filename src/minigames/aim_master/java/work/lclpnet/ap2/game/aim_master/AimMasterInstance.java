@@ -157,7 +157,7 @@ public class AimMasterInstance extends FFAGameInstance implements MapBootstrap {
 
         //play victory animation
         Task task = new Task(winner, domain, sequence);
-        TaskHandle taskHandle = gameHandle.getScheduler().interval(task, 5);
+        TaskHandle taskHandle = gameHandle.getRootScheduler().interval(task, 5);
 
         winManager.complete().then(taskHandle::cancel);
     }

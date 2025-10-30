@@ -110,7 +110,7 @@ public class MinecartChallenge implements Challenge, LongerChallenge, SchedulerA
         };
 
         running = 0;
-        gameHandle.getGameScheduler().interval(this, 1);
+        gameHandle.getScheduler().interval(this, 1);
     }
 
     @Override

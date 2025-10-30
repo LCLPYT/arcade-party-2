@@ -49,11 +49,11 @@ public class PaintballResults {
 
         teleportPlayersToResults();
 
-        gameHandle.getGameScheduler().interval(this::teleportPlayersToResults, 1);
+        gameHandle.getScheduler().interval(this::teleportPlayersToResults, 1);
 
         announcer.announce("game.ap2.paintball.game_over", null);
 
-        gameHandle.getGameScheduler().timeout(this::showResults, RESULT_DELAY_TICKS);
+        gameHandle.getScheduler().timeout(this::showResults, RESULT_DELAY_TICKS);
     }
 
     private void teleportPlayersToResults() {
@@ -81,7 +81,7 @@ public class PaintballResults {
             winManager.complete();
         }));
 
-        animatedTitle.start(gameHandle.getGameScheduler(), 1);
+        animatedTitle.start(gameHandle.getScheduler(), 1);
 
         gameHandle.whenDone(animatedTitle::stop);
     }

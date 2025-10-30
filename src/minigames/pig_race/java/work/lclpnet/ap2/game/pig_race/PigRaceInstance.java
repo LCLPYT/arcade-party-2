@@ -159,14 +159,14 @@ public class PigRaceInstance extends FFAGameInstance implements MapBootstrap {
         teleportPlayers(spawnBounds);
         setupCheckpoints(spawnBounds, goal);
 
-        movementObserver.init(gameHandle.getGameScheduler(), gameHandle.getHooks(), gameHandle.getServer());
+        movementObserver.init(gameHandle.getScheduler(), gameHandle.getHooks(), gameHandle.getServer());
 
         visibility.giveItems(0);
 
         List<Checkpoint> progressMarkers = new ArrayList<>(schema.getProgressMarkers());
         var segmentedPath = SegmentedPath.create(augmentPath(schema, rounds), progressMarkers, gameHandle.getLogger());
 
-        segmentedPath.init(gameHandle.getParticipants(), gameHandle.getGameScheduler(), gameHandle.getHooks(),
+        segmentedPath.init(gameHandle.getParticipants(), gameHandle.getScheduler(), gameHandle.getHooks(),
                 gameHandle.getServer(), commons().debugController());
 
         var bossBar = createBossBar(rounds);
@@ -262,7 +262,7 @@ public class PigRaceInstance extends FFAGameInstance implements MapBootstrap {
                 .then(this::resetPlayerToCheckpoint);
 
         // reset players who have fallen into the lava / water
-        gameHandle.getGameScheduler().interval(this::tick, 1);
+        gameHandle.getScheduler().interval(this::tick, 1);
 
         if (checkpointManager.getCheckpoints().size() > 2) {
             participants.forEach(this::giveResetItem);
@@ -278,7 +278,7 @@ public class PigRaceInstance extends FFAGameInstance implements MapBootstrap {
         progress.update();
         scoreboard.updateRanking();
 
-        gameHandle.getGameScheduler().interval(() -> {
+        gameHandle.getScheduler().interval(() -> {
             progress.update();
             scoreboard.updateRanking();
         }, 1);

@@ -208,7 +208,7 @@ public class SbConfiguration {
     }
 
     private void destroyBlockDelayed(ServerWorld world, BlockPos pos, ServerPlayerEntity player) {
-        gameHandle.getGameScheduler().timeout(() -> {
+        gameHandle.getScheduler().timeout(() -> {
             BlockState state = world.getBlockState(pos);
 
             if (state.isAir()) return;

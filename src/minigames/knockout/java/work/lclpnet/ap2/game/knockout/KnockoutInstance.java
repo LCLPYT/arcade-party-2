@@ -100,7 +100,7 @@ public class KnockoutInstance extends EliminationGameInstance {
         gameHandle.protect(config -> config.allow(ProtectionTypes.ALLOW_DAMAGE, this::canDamage));
 
         HookRegistrar hooks = gameHandle.getHooks();
-        TaskScheduler scheduler = gameHandle.getGameScheduler();
+        TaskScheduler scheduler = gameHandle.getScheduler();
         Participants participants = gameHandle.getParticipants();
 
         hooks.registerHook(EntityDamageCallback.HOOK, (entity, source, damage) -> {
@@ -175,7 +175,7 @@ public class KnockoutInstance extends EliminationGameInstance {
     }
 
     private void beginCrumble() {
-        crumble.start(gameHandle.getGameScheduler());
+        crumble.start(gameHandle.getScheduler());
     }
 
     private boolean canDamage(Entity entity, DamageSource source) {

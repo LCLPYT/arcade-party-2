@@ -69,7 +69,7 @@ class StagePhase {
         this.map = map;
         this.world = world;
         this.winManager = winManager;
-        this.movementBlocker = new SimpleMovementBlocker(gameHandle.getScheduler());
+        this.movementBlocker = new SimpleMovementBlocker(gameHandle.getRootScheduler());
         this.movementBlocker.setModifySpeedAttribute(false);
     }
 
@@ -89,7 +89,7 @@ class StagePhase {
 
         movementBlocker.init(gameHandle.getHooks());
 
-        gameHandle.getGameScheduler().timeout(this::beginSongPresentation, Ticks.seconds(5));
+        gameHandle.getScheduler().timeout(this::beginSongPresentation, Ticks.seconds(5));
     }
 
     private void readStageProps() {
@@ -119,7 +119,7 @@ class StagePhase {
                 .acceptEach(PlayerLookup.all(server), (player, text)
                         -> Title.get(player).title(text, Text.empty(), 5, 30, 5));
 
-        gameHandle.getGameScheduler().timeout(this::presentNextMelody, 40);
+        gameHandle.getScheduler().timeout(this::presentNextMelody, 40);
     }
 
     private void presentNextMelody() {
@@ -134,7 +134,7 @@ class StagePhase {
                 .acceptEach(PlayerLookup.all(server), (player, text)
                         -> Title.get(player).title(text, Text.empty(), 5, 30, 5));
 
-        gameHandle.getGameScheduler().timeout(this::playOriginalMelody, 40);
+        gameHandle.getScheduler().timeout(this::playOriginalMelody, 40);
     }
 
     private void playOriginalMelody() {
@@ -184,7 +184,7 @@ class StagePhase {
             displays.add(display.getUuid());
         }, melody.notes().length);
 
-        TaskScheduler scheduler = gameHandle.getGameScheduler();
+        TaskScheduler scheduler = gameHandle.getScheduler();
 
         scheduler.interval(melodyPlayer, 1).whenComplete(() -> scheduler.timeout(Ticks.seconds(2), () -> {
             for (UUID id : displays) {
@@ -225,7 +225,7 @@ class StagePhase {
                 .acceptEach(PlayerLookup.all(server), (player, text)
                         -> Title.get(player).title(Text.empty(), text, 5, 50, 0));
 
-        gameHandle.getGameScheduler().timeout(this::announceBest, 55);
+        gameHandle.getScheduler().timeout(this::announceBest, 55);
     }
 
     private void announceBest() {
@@ -239,7 +239,7 @@ class StagePhase {
         ServerPlayerEntity player = announcePlayerAndGet(server, name, bestRef);
         WorldFacade worldFacade = gameHandle.getWorldFacade();
 
-        gameHandle.getGameScheduler().timeout(() -> playMelody(bestMelody.melody(), bestMelody.offsets(), () -> {
+        gameHandle.getScheduler().timeout(() -> playMelody(bestMelody.melody(), bestMelody.offsets(), () -> {
             if (player != null) {
                 movementBlocker.enableMovement(player);
                 worldFacade.teleport(player);
@@ -260,7 +260,7 @@ class StagePhase {
                 .acceptEach(PlayerLookup.all(server), (player, text)
                         -> Title.get(player).title(Text.empty(), text, 5, 30, 5));
 
-        gameHandle.getGameScheduler().timeout(this::announceWorst, 40);
+        gameHandle.getScheduler().timeout(this::announceWorst, 40);
     }
 
     private void announceWorst() {
@@ -274,7 +274,7 @@ class StagePhase {
         ServerPlayerEntity player = announcePlayerAndGet(server, name, worstRef);
         WorldFacade worldFacade = gameHandle.getWorldFacade();
 
-        gameHandle.getGameScheduler().timeout(() -> playMelody(worstMelody.melody(), worstMelody.offsets(), () -> {
+        gameHandle.getScheduler().timeout(() -> playMelody(worstMelody.melody(), worstMelody.offsets(), () -> {
             if (player != null) {
                 movementBlocker.enableMovement(player);
                 worldFacade.teleport(player);

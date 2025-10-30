@@ -14,6 +14,6 @@ public record RecordKitHandle(
 
     public static RecordKitHandle of(MiniGameHandle gameHandle, DynamicRegistryManager registries, KitReadView readView) {
         return new RecordKitHandle(gameHandle.getGameInfo().getId(), gameHandle.getHooks(),
-                gameHandle.getGameScheduler(), gameHandle.getTranslations(), registries, readView);
+                gameHandle.getScheduler(), gameHandle.getTranslations(), registries, readView);
     }
 }

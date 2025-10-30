@@ -180,7 +180,7 @@ public abstract class BaseGameInstance implements MiniGameInstance {
 
         scheduleCountdown(initialDelay);
 
-        gameHandle.getGameScheduler().timeout(this::afterInitialDelay, initialDelay);
+        gameHandle.getScheduler().timeout(this::afterInitialDelay, initialDelay);
     }
 
     private void configureLocatorBar() {
@@ -216,7 +216,7 @@ public abstract class BaseGameInstance implements MiniGameInstance {
 
         if (countdownValue <= 0) return;
 
-        gameHandle.getGameScheduler()
+        gameHandle.getScheduler()
                 .interval(this::tickCountdown, 1, durationTicks - countdownValue * 20L)
                 .whenComplete(this::clearCountdown);
     }

@@ -62,10 +62,10 @@ public class OneInTheChamberInstance extends FFAGameInstance {
     public OneInTheChamberInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
 
-        movementBlocker = new SimpleMovementBlocker(gameHandle.getScheduler());
+        movementBlocker = new SimpleMovementBlocker(gameHandle.getRootScheduler());
         movementBlocker.setModifySpeedAttribute(false);
 
-        respawnCooldown = new VisualCooldown(gameHandle.getGameScheduler());
+        respawnCooldown = new VisualCooldown(gameHandle.getScheduler());
 
         useOldCombat();
     }
@@ -120,7 +120,7 @@ public class OneInTheChamberInstance extends FFAGameInstance {
 
         hooks.registerHook(SpectatePlayerCallback.HOOK, (spectator, target) -> gameHandle.getParticipants().isParticipating(spectator));
 
-        TaskScheduler scheduler = gameHandle.getGameScheduler();
+        TaskScheduler scheduler = gameHandle.getScheduler();
 
         respawnCooldown.setOnCooldownOver(player -> {
             BlockPos randomSpawn = respawn.getRandomSpawn();

@@ -104,7 +104,7 @@ public class SpecialItems implements SpecialItemContext {
 
         positions.setShape(shape);
 
-        scene.init(gameHandle.getScheduler(), gameHandle.getHooks());
+        scene.init(gameHandle.getRootScheduler(), gameHandle.getHooks());
     }
 
     public static @NotNull BlockShape getSpawnArea(GameMap map) {
@@ -122,7 +122,7 @@ public class SpecialItems implements SpecialItemContext {
         scene.onPickup().register(this::pickup);
 
         HookRegistrar hooks = gameHandle.getHooks();
-        TaskScheduler scheduler = gameHandle.getGameScheduler();
+        TaskScheduler scheduler = gameHandle.getScheduler();
 
         hooks.registerHook(PlayerInventoryHooks.DROP_ITEM, this::onDropItem);
         hooks.registerHook(PlayerInteractionHooks.USE_ITEM, this::interact);
@@ -304,7 +304,7 @@ public class SpecialItems implements SpecialItemContext {
 
     @Override
     public TaskScheduler scheduler() {
-        return gameHandle.getGameScheduler();
+        return gameHandle.getScheduler();
     }
 
     @Override
@@ -375,7 +375,7 @@ public class SpecialItems implements SpecialItemContext {
     private void scheduleDespawn(SpecialItemObject obj) {
         if (despawnTicks <= 0) return;
 
-        gameHandle.getGameScheduler().interval(new SchedulerAction() {
+        gameHandle.getScheduler().interval(new SchedulerAction() {
             int timer = 0;
             int particle = 0;
 
@@ -402,7 +402,7 @@ public class SpecialItems implements SpecialItemContext {
     }
 
     public void spawnPeriodically() {
-        gameHandle.getGameScheduler().interval(new Runnable() {
+        gameHandle.getScheduler().interval(new Runnable() {
             int timer = 0;
             int next = randomInterval();
 
@@ -426,7 +426,7 @@ public class SpecialItems implements SpecialItemContext {
     public void syncWithWorldBorder() {
         WorldBorder border = world.getWorldBorder();
 
-        gameHandle.getGameScheduler().interval(new Runnable() {
+        gameHandle.getScheduler().interval(new Runnable() {
             double prevSize = Double.NaN, prevCenterX = Double.NaN, prevCenterZ = Double.NaN;
 
             @Override

@@ -66,7 +66,7 @@ public class RedLightGreenLightInstance extends FFAGameInstance implements Runna
 
     public RedLightGreenLightInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
-        movementBlocker = new SimpleMovementBlocker(gameHandle.getGameScheduler());
+        movementBlocker = new SimpleMovementBlocker(gameHandle.getScheduler());
     }
 
     @Override
@@ -119,7 +119,7 @@ public class RedLightGreenLightInstance extends FFAGameInstance implements Runna
         scheduleNextStop();
         setStatus(TrafficLight.Status.GREEN);
 
-        gameHandle.getGameScheduler().interval(this, 1);
+        gameHandle.getScheduler().interval(this, 1);
     }
 
     private void readTrafficLights() {

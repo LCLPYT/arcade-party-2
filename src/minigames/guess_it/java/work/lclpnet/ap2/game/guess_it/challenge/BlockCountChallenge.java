@@ -123,7 +123,7 @@ public class BlockCountChallenge<S extends BlockShape & BlockShape.WithRadius & 
 
         distance = 0;
 
-        task = gameHandle.getGameScheduler().interval(this, 5);
+        task = gameHandle.getScheduler().interval(this, 5);
 
         if (DEBUG_SHAPES) {
             debugController.exclusive("shape", shape::debug);

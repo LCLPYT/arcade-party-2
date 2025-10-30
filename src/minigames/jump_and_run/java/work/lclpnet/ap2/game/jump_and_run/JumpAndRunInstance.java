@@ -263,7 +263,7 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
 
         if (prevTask != null) task.cancel();
 
-        task = gameHandle.getGameScheduler().timeout(() -> placeAssistance(assistance), timeout);
+        task = gameHandle.getScheduler().timeout(() -> placeAssistance(assistance), timeout);
     }
 
     private void placeAssistance(PositionedBlockSet assistance) {
@@ -410,7 +410,7 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
             initModule();
 
             cancelPreviousTask();
-            task = gameHandle.getGameScheduler().timeout(this::nextSegment, NEXT_PHASE_WAIT_TICKS);
+            task = gameHandle.getScheduler().timeout(this::nextSegment, NEXT_PHASE_WAIT_TICKS);
 
             waitFor = jumpAndRun.unloadPreviousModule().whenComplete((res, err) -> waitFor = null);
         })).whenComplete((_res, err) -> {

@@ -148,7 +148,7 @@ class MinefieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
         setupTeam()
 
         dynamicEntityManager = DynamicEntityManager(world)
-        dynamicEntityManager!!.init(gameHandle.gameScheduler, gameHandle.hooks)
+        dynamicEntityManager!!.init(gameHandle.scheduler, gameHandle.hooks)
     }
 
     fun setupTeam() {
