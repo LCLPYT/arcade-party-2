@@ -5,6 +5,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.game.guess_it.challenge.*;
+import work.lclpnet.ap2.game.guess_it.util.DynamicEntityModifier;
 import work.lclpnet.ap2.game.guess_it.util.GuessItDisplay;
 import work.lclpnet.ap2.impl.util.debug.DebugController;
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape;
@@ -22,7 +23,7 @@ public class GuessItManager {
 
     public GuessItManager(MiniGameHandle gameHandle, ServerWorld world, Random random, BlockShape blockShape,
                           WorldModifier modifier, SoundSubtitles soundSubtitles, DebugController debugController,
-                          IndexedSet<UUID> mannequinUuids) {
+                          IndexedSet<UUID> mannequinUuids, DynamicEntityModifier dynamicEntities) {
 
         this.random = random;
 
@@ -31,12 +32,12 @@ public class GuessItManager {
         GuessItDisplay display = new GuessItDisplay(world, modifier, blockShape);
 
         registerChallenge(new MathsChallenge(gameHandle, random));
-        registerChallenge(new DayTimeChallenge(gameHandle, world, random));
+        registerChallenge(new DayTimeChallenge(gameHandle, world, random, blockShape, dynamicEntities));
         registerChallenge(new MobCountSingleChallenge(gameHandle, world, random, blockShape, modifier, mannequinUuids));
         registerChallenge(new MobCountMultiChallenge(gameHandle, world, random, blockShape, modifier, mannequinUuids));
         registerChallenge(new DistinctMobCountChallenge(gameHandle, world, random, blockShape, modifier, mannequinUuids));
         registerChallenge(new SoundChallenge(gameHandle, world, random, soundSubtitles));
-        registerChallenge(new CakeBitesChallenge(gameHandle, world, random, blockShape, modifier));
+        registerChallenge(new CakeBitesChallenge(gameHandle, world, random, blockShape, modifier, dynamicEntities));
         registerChallenge(new PotionTypeChallenge(gameHandle, random, display));
         registerChallenge(new FoodAmountChallenge(gameHandle, random, display));
         registerChallenge(new ArmorTrimChallenge(gameHandle, world, random, blockShape, modifier));

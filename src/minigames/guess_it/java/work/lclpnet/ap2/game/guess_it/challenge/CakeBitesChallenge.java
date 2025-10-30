@@ -7,9 +7,11 @@ import net.minecraft.entity.decoration.DisplayEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.AffineTransformation;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
 import org.joml.Matrix4f;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.game.guess_it.data.*;
+import work.lclpnet.ap2.game.guess_it.util.DynamicEntityModifier;
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape;
 import work.lclpnet.kibu.access.entity.DisplayEntityAccess;
 import work.lclpnet.kibu.scheduler.Ticks;
@@ -26,14 +28,16 @@ public class CakeBitesChallenge implements Challenge {
     private final Random random;
     private final BlockShape blockShape;
     private final WorldModifier modifier;
+    private final DynamicEntityModifier dynamicEntities;
     private int amount = 0;
 
-    public CakeBitesChallenge(MiniGameHandle gameHandle, ServerWorld world, Random random, BlockShape blockShape, WorldModifier modifier) {
+    public CakeBitesChallenge(MiniGameHandle gameHandle, ServerWorld world, Random random, BlockShape blockShape, WorldModifier modifier, DynamicEntityModifier dynamicEntities) {
         this.gameHandle = gameHandle;
         this.world = world;
         this.random = random;
         this.blockShape = blockShape;
         this.modifier = modifier;
+        this.dynamicEntities = dynamicEntities;
     }
 
     @Override
@@ -61,6 +65,12 @@ public class CakeBitesChallenge implements Challenge {
         amount = random.nextInt(7);
 
         createCake();
+
+        BlockPos origin = blockShape.origin();
+
+        addHint(dynamicEntities, world, gameHandle.getTranslations(),
+                new Vec3d(origin.getX() + 0.5, origin.getY() + 4.5, origin.getZ() + 0.5),
+                "game.ap2.guess_it.cake_bites.hint");
     }
 
     private void createCake() {
@@ -69,14 +79,7 @@ public class CakeBitesChallenge implements Challenge {
 
         float scale = 7;
 
-        AffineTransformation transformation = new AffineTransformation(new Matrix4f(
-                scale, 0, 0, 0,
-                0, scale, 0, 0,
-                0, 0, scale, 0,
-                0, 0, 0, 1
-        ));
-
-        DisplayEntityAccess.setTransformation(display, transformation);
+        DisplayEntityAccess.setTransformation(display, new AffineTransformation(new Matrix4f().scale(7)));
 
         BlockPos origin = blockShape.origin();
         double x = origin.getX() + 0.5 - scale * 0.5;

@@ -11,11 +11,14 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.GlobalPos;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.GameRules;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.game.guess_it.data.*;
+import work.lclpnet.ap2.game.guess_it.util.DynamicEntityModifier;
 import work.lclpnet.ap2.game.guess_it.util.MinecraftDayTime;
+import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.RunningTask;
 import work.lclpnet.kibu.scheduler.api.SchedulerAction;
@@ -38,15 +41,20 @@ public class DayTimeChallenge implements Challenge, SchedulerAction {
     private final MiniGameHandle gameHandle;
     private final ServerWorld world;
     private final Random random;
+    private final BlockShape blockShape;
+    private final DynamicEntityModifier dynamicEntities;
     private int timeStart = 6000, timeEnd = 6000;
     private int correctTime = 6000, prevTime = 6000;
     private int tick = 0;
     private TaskHandle animation = null;
 
-    public DayTimeChallenge(MiniGameHandle gameHandle, ServerWorld world, Random random) {
+    public DayTimeChallenge(MiniGameHandle gameHandle, ServerWorld world, Random random,
+                            BlockShape blockShape, DynamicEntityModifier dynamicEntities) {
         this.gameHandle = gameHandle;
         this.world = world;
         this.random = random;
+        this.blockShape = blockShape;
+        this.dynamicEntities = dynamicEntities;
     }
 
     @Override
@@ -95,7 +103,14 @@ public class DayTimeChallenge implements Challenge, SchedulerAction {
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
             player.getInventory().setStack(4, stack.copy());
         }
+
+        BlockPos origin = blockShape.origin();
+
+        addHint(dynamicEntities, world, gameHandle.getTranslations(),
+                new Vec3d(origin.getX() + 0.5, origin.getY() + 1, origin.getZ() + 0.5),
+                "game.ap2.guess_it.daytime.hint");
     }
+
 
     @Override
     public void evaluate(PlayerChoices choices, ChallengeResult result) {

@@ -20,6 +20,7 @@ import work.lclpnet.ap2.api.map.MapBootstrap;
 import work.lclpnet.ap2.core.hook.CopperGolemTurnIntoStatueCallback;
 import work.lclpnet.ap2.game.guess_it.data.*;
 import work.lclpnet.ap2.game.guess_it.util.AnswerCommand;
+import work.lclpnet.ap2.game.guess_it.util.DynamicEntityModifier;
 import work.lclpnet.ap2.game.guess_it.util.SetChallengeCommand;
 import work.lclpnet.ap2.game.guess_it.util.SkipChallengeCommand;
 import work.lclpnet.ap2.impl.game.FFAGameInstance;
@@ -32,6 +33,7 @@ import work.lclpnet.ap2.impl.util.scoreboard.ScoreHandle;
 import work.lclpnet.ap2.impl.util.scoreboard.ScoreboardLayout;
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape;
 import work.lclpnet.gaco.ds.IndexedSet;
+import work.lclpnet.gaco.dynamic_entities.DynamicEntityManager;
 import work.lclpnet.kibu.cmd.type.CommandRegistrar;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.*;
@@ -69,6 +71,7 @@ public class GuessItInstance extends FFAGameInstance implements MapBootstrap {
     private SoundSubtitles soundSubtitles = null;
     private IndexedSet<UUID> mannequinUuids = null;
     private ResetWorldModifier modifier = null;
+    private DynamicEntityModifier dynamicEntities = null;
     private ScoreHandle roundHandle = null;
     private int round = 0;
     private int rounds = 10;
@@ -113,7 +116,13 @@ public class GuessItInstance extends FFAGameInstance implements MapBootstrap {
         messenger = new ChallengeMessengerImpl(world, gameHandle.getTranslations());
         inputManager = new InputManager(choices, gameHandle.getTranslations(), participants, messenger);
         modifier = new ResetWorldModifier(world, hooks);
-        manager = new GuessItManager(gameHandle, world, random, blockShape, modifier, soundSubtitles, commons().debugController(), mannequinUuids);
+
+        var dynamicEntityManager = new DynamicEntityManager(world);
+        dynamicEntityManager.init(gameHandle.getScheduler(), hooks);
+        dynamicEntities = new DynamicEntityModifier(dynamicEntityManager);
+
+        manager = new GuessItManager(gameHandle, world, random, blockShape, modifier, soundSubtitles,
+                commons().debugController(), mannequinUuids, dynamicEntities);
 
         CommandRegistrar commands = gameHandle.getCommands();
 
@@ -188,6 +197,7 @@ public class GuessItInstance extends FFAGameInstance implements MapBootstrap {
 
     private synchronized void prepareNextChallenge() {
         modifier.undo();
+        dynamicEntities.reset();
 
         if (challenge != null) {
             try {
