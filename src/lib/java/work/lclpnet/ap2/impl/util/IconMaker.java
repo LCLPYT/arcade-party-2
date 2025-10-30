@@ -41,7 +41,7 @@ public class IconMaker {
     }
 
     public static ItemStack createIcon(MiniGame game, ServerPlayerEntity player, Translations translations) {
-        DynamicRegistryManager registryManager = player.getWorld().getRegistryManager();
+        DynamicRegistryManager registryManager = player.getEntityWorld().getRegistryManager();
         ItemStack icon = game.getIcon(registryManager);
 
         icon.set(DataComponentTypes.CUSTOM_NAME, translations.translateText(player, game.getTitleKey())

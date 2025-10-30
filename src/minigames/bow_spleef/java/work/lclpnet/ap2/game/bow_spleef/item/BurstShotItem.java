@@ -49,7 +49,7 @@ public class BurstShotItem implements SpecialItem {
     }
 
     private void shoot(ServerPlayerEntity player, ItemStack weaponStack, int useTicks) {
-        ServerWorld world = player.getWorld();
+        ServerWorld world = player.getEntityWorld();
         ItemStack projectileStack = new ItemStack(Items.ARROW);
         var arrow = ((ArrowItem) Items.ARROW).createArrow(world, projectileStack, player, weaponStack);
         float useProgress = BowItem.getPullProgress(useTicks);

@@ -24,7 +24,7 @@ fun ServerWorld.setBlocks(blocks: Iterable<BlockPos>, block: Block) {
 
 fun ServerPlayerEntity.setSelectedSlot(slot: Int) = PlayerInventoryAccess.setSelectedSlot(this, slot)
 
-fun ServerPlayerEntity.teleport(pos: BlockPos) = teleport(world, pos.x.toDouble() + 0.5, pos.y.toDouble(), pos.z + 0.5, emptySet<PositionFlag>(), yaw, pitch, true)
-fun ServerPlayerEntity.teleport(pos: Position) = teleport(world, pos.x, pos.y, pos.z, emptySet<PositionFlag>(), yaw, pitch, true)
-fun ServerPlayerEntity.teleport(pos: Position, yaw: Float) = teleport(world, pos.x, pos.y, pos.z, emptySet<PositionFlag>(), yaw, pitch, true)
-fun ServerPlayerEntity.teleport(pos: PositionRotation) = teleport(world, pos.x, pos.y, pos.z, emptySet<PositionFlag>(), pos.yaw, pos.pitch, true)
+fun ServerPlayerEntity.teleport(pos: BlockPos) = teleport(entityWorld, pos.x.toDouble() + 0.5, pos.y.toDouble(), pos.z + 0.5, emptySet<PositionFlag>(), yaw, pitch, true)
+fun ServerPlayerEntity.teleport(pos: Position) = teleport(entityWorld, pos.x, pos.y, pos.z, emptySet<PositionFlag>(), yaw, pitch, true)
+fun ServerPlayerEntity.teleport(pos: Position, yaw: Float) = teleport(entityWorld, pos.x, pos.y, pos.z, emptySet<PositionFlag>(), yaw, pitch, true)
+fun ServerPlayerEntity.teleport(pos: PositionRotation) = teleport(entityWorld, pos.x, pos.y, pos.z, emptySet<PositionFlag>(), pos.yaw, pos.pitch, true)

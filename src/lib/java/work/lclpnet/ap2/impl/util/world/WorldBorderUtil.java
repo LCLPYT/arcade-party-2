@@ -17,14 +17,14 @@ public class WorldBorderUtil {
 
     public static void setWarningBlocks(ServerPlayerEntity player, int warningBlocks) {
         var packet = WorldBorderWarningBlocksChangedS2CPacketAccess.withWarningBlocks(
-                new WorldBorderWarningBlocksChangedS2CPacket(player.getWorld().getWorldBorder()),
+                new WorldBorderWarningBlocksChangedS2CPacket(player.getEntityWorld().getWorldBorder()),
                 warningBlocks);
 
         player.networkHandler.sendPacket(packet);
     }
 
     public static void resetWarningBlocks(ServerPlayerEntity player) {
-        var packet = new WorldBorderWarningBlocksChangedS2CPacket(player.getWorld().getWorldBorder());
+        var packet = new WorldBorderWarningBlocksChangedS2CPacket(player.getEntityWorld().getWorldBorder());
 
         player.networkHandler.sendPacket(packet);
     }

@@ -226,7 +226,7 @@ class FineTuningRoom {
         BlockPos pos = noteBlocks[note];
         float margin = 0.015f;
 
-        var display = new DisplayEntity.BlockDisplayEntity(EntityType.BLOCK_DISPLAY, viewer.getWorld());
+        var display = new DisplayEntity.BlockDisplayEntity(EntityType.BLOCK_DISPLAY, viewer.getEntityWorld());
         display.setPos(pos.getX() + margin, pos.getY() + margin, pos.getZ() + margin);
         display.setBlockState(Blocks.NOTE_BLOCK.getDefaultState());
         display.setTransformation(new AffineTransformation(new Matrix4f().scale(1 - margin * 2)));

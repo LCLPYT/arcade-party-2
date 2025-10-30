@@ -1,5 +1,7 @@
 package work.lclpnet.ap2.api.util.heads;
 
+import com.google.common.collect.ImmutableMultimap;
+import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import com.mojang.authlib.properties.PropertyMap;
 import com.mojang.serialization.Codec;
@@ -11,10 +13,10 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.util.Uuids;
 import org.jetbrains.annotations.NotNull;
+import work.lclpnet.ap2.core.mixin.SkullBlockEntityAccessor;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
-import java.util.Optional;
 import java.util.UUID;
 
 public record PlayerHead(UUID uuid, String textureId, String texture) {
@@ -36,14 +38,15 @@ public record PlayerHead(UUID uuid, String textureId, String texture) {
     }
 
     public @NotNull ProfileComponent createProfileComponent() {
-        var properties = new PropertyMap();
-        properties.put("textures", new Property("textures", texture));
+        var properties = new PropertyMap(ImmutableMultimap.of(
+                "textures", new Property("textures", texture)
+        ));
 
-        return new ProfileComponent(Optional.empty(), Optional.of(uuid), properties);
+        return ProfileComponent.ofStatic(new GameProfile(uuid, "", properties));
     }
 
     public void apply(SkullBlockEntity skull) {
-        skull.setOwner(createProfileComponent());
+        ((SkullBlockEntityAccessor) skull).setOwner(createProfileComponent());
     }
 
     public static String getBase64Texture(String textureId) {

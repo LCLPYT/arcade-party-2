@@ -126,7 +126,7 @@ public class Fireworks {
         ItemStack rocket = new ItemStack(Items.FIREWORK_ROCKET);
         rocket.set(DataComponentTypes.FIREWORKS, new FireworksComponent(1, List.of(explosion)));
 
-        ServerWorld world = player.getWorld();
+        ServerWorld world = player.getEntityWorld();
         FireworkRocketEntity firework = new FireworkRocketEntity(world, player.getX(), player.getY(), player.getZ(), rocket);
         world.spawnEntity(firework);
 

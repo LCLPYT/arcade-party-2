@@ -120,7 +120,7 @@ public class SplinePathDebugger {
         Map<UUID, Marker> markers = new HashMap<>();
 
         for (Entity entity : entities.get()) {
-            Vec3d pos = path.getNearestPosition(entity.getPos());
+            Vec3d pos = path.getNearestPosition(entity.getEntityPos());
 
             int originalColor = markerColor.applyAsInt(entity);
             int color = originalColor;
@@ -151,7 +151,7 @@ public class SplinePathDebugger {
 
                 removal.remove(uuid);
 
-                Vec3d pos = path.getNearestPosition(entity.getPos());
+                Vec3d pos = path.getNearestPosition(entity.getEntityPos());
 
                 marker.obj.position.set(pos.getX(), pos.getY(), pos.getZ());
                 marker.obj.updateMatrixWorld();

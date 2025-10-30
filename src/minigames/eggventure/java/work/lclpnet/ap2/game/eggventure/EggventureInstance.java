@@ -5,8 +5,6 @@ import com.mojang.serialization.MapCodec;
 import net.minecraft.block.*;
 import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.block.entity.SkullBlockEntity;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.NbtComponent;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.attribute.EntityAttributes;
@@ -44,10 +42,7 @@ import work.lclpnet.ap2.impl.game.data.IntDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.tags.PlayerHeadTags;
-import work.lclpnet.ap2.impl.util.ApRegistries;
-import work.lclpnet.ap2.impl.util.ColorUtil;
-import work.lclpnet.ap2.impl.util.ItemHelper;
-import work.lclpnet.ap2.impl.util.RayCastUtil;
+import work.lclpnet.ap2.impl.util.*;
 import work.lclpnet.ap2.impl.util.checkpoint.CheckpointHelper;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape;
@@ -150,11 +145,7 @@ public class EggventureInstance extends FFAGameInstance implements MapBootstrap 
 
         if (skull == null) return false;
 
-        return skull.getComponents()
-                .getOrDefault(DataComponentTypes.CUSTOM_DATA, NbtComponent.DEFAULT)
-                .get(NBT_CODEC)
-                .result()
-                .orElse(false);
+        return CustomNbt.get(skull.getComponents(), NBT_CODEC).orElse(false);
     }
 
     static @NotNull List<PlayerHead> eggVariants(DynamicRegistryManager registryManager) {
@@ -323,7 +314,7 @@ public class EggventureInstance extends FFAGameInstance implements MapBootstrap 
     private void onFindEasterEgg(ServerPlayerEntity player, BlockPos pos) {
         if (winManager.isGameOver()) return;
 
-        ServerWorld world = player.getWorld();
+        ServerWorld world = player.getEntityWorld();
         world.setBlockState(pos, Blocks.AIR.getDefaultState(), Block.SKIP_DROPS | Block.FORCE_STATE | Block.NOTIFY_LISTENERS);
 
         commons().addScore(player, 1, data);

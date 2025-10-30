@@ -30,7 +30,7 @@ public class TripleShotItem implements SpecialItem {
     @Override
     public void onPickedUp(ServerPlayerEntity player, ItemStack stack, SpecialItemContext ctx) {
         ItemStack bow = player.getInventory().getStack(4);
-        addEnchant(bow, player.getWorld().getRegistryManager());
+        addEnchant(bow, player.getEntityWorld().getRegistryManager());
 
         player.playSoundToPlayer(SoundEvents.BLOCK_ENCHANTMENT_TABLE_USE, SoundCategory.PLAYERS, 0.4f, 1.35f);
     }

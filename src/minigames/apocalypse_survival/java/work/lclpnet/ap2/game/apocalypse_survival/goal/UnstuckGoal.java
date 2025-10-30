@@ -40,12 +40,12 @@ public class UnstuckGoal extends Goal {
 
     @Override
     public void start() {
-        lastPos = mob.getPos();
+        lastPos = mob.getEntityPos();
     }
 
     @Override
     public void tick() {
-        Vec3d currentPos = mob.getPos();
+        Vec3d currentPos = mob.getEntityPos();
 
         if (towardsTargetTicks > 0 && flingTarget != null) {
             towardsTargetTicks--;
@@ -70,7 +70,7 @@ public class UnstuckGoal extends Goal {
         destroyBlockage();
         destroyHideout();
 
-        PlayerEntity nearbyPlayer = mob.getWorld().getClosestPlayer(mob, 10);
+        PlayerEntity nearbyPlayer = mob.getEntityWorld().getClosestPlayer(mob, 10);
 
         if (nearbyPlayer != null) {
             flingTarget = nearbyPlayer.getEyePos();
@@ -94,7 +94,7 @@ public class UnstuckGoal extends Goal {
         // target in reach, check if it is hiding below a trapdoor
         BlockPos aboveTarget = target.getBlockPos().up();
 
-        World world = mob.getWorld();
+        World world = mob.getEntityWorld();
         BlockState state = world.getBlockState(aboveTarget);
 
         if (state.isIn(BlockTags.WOODEN_TRAPDOORS)) {
@@ -106,7 +106,7 @@ public class UnstuckGoal extends Goal {
     }
 
     private void destroyBlockage() {
-        World world = mob.getWorld();
+        World world = mob.getEntityWorld();
 
         BlockPos.stream(mob.getBoundingBox())
                 .filter(pos -> world.getBlockState(pos).isOf(Blocks.COBWEB))

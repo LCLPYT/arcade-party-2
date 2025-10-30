@@ -16,6 +16,7 @@ import net.minecraft.world.explosion.ExplosionBehavior;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.impl.game.item.SpecialItem;
 import work.lclpnet.ap2.impl.game.item.SpecialItemContext;
+import work.lclpnet.ap2.impl.util.world.ExplosionUtil;
 import work.lclpnet.kibu.hook.util.PlayerUtils;
 import work.lclpnet.kibu.scheduler.api.RunningTask;
 import work.lclpnet.kibu.scheduler.api.SchedulerAction;
@@ -63,7 +64,7 @@ public class CreeperExplosionItem implements SpecialItem {
 
                 float pitch = lerp((float) t / DURATION_TICKS, 0.85f, 1.45f);
 
-                ServerWorld world = player.getWorld();
+                ServerWorld world = player.getEntityWorld();
                 world.playSound(null, player.getX(), player.getEyeY(), player.getZ(), SoundEvents.ENTITY_CREEPER_HURT, SoundCategory.HOSTILE, 0.2f, pitch);
                 world.spawnParticles(ParticleTypes.FLAME, player.getX(), player.getY(), player.getZ(), 10, 0.1, 0.1, 0.1, 0.15);
 
@@ -83,6 +84,7 @@ public class CreeperExplosionItem implements SpecialItem {
                 world.createExplosion(player, null, behaviour, player.getX(), player.getY(), player.getZ(),
                         3.5f, false,
                         World.ExplosionSourceType.BLOCK, ParticleTypes.EXPLOSION, ParticleTypes.EXPLOSION_EMITTER,
+                        ExplosionUtil.EXPLOSION_BLOCK_PARTICLES,
                         SoundEvents.ENTITY_GENERIC_EXPLODE);
 
                 world.spawnParticles(ParticleTypes.EXPLOSION_EMITTER, player.getX(), player.getY(), player.getZ(), 1, 0.1, 0.1, 0.1, 0.15);

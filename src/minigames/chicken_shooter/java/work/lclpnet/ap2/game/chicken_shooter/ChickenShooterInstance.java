@@ -215,7 +215,7 @@ public class ChickenShooterInstance extends FFAGameInstance implements Runnable 
     private void spawnTNT(ChickenEntity chicken, ServerWorld world) {
         TntEntity tnt = new TntEntity(EntityType.TNT, world);
         tnt.setFuse(Integer.MAX_VALUE);
-        tnt.startRiding(chicken, true);
+        tnt.startRiding(chicken, true, false);
         world.spawnEntity(tnt);
     }
 
@@ -255,10 +255,10 @@ public class ChickenShooterInstance extends FFAGameInstance implements Runnable 
         attacker.playSoundToPlayer(SoundEvents.ENTITY_TNT_PRIMED, SoundCategory.PLAYERS, 0.8f, 1.8f);
         attacker.playSoundToPlayer(SoundEvents.ENTITY_GENERIC_EXPLODE.value(), SoundCategory.PLAYERS, 0.8f, 0.7f);
 
-        Vec3d tntPos = tnt.getPos();
+        Vec3d tntPos = tnt.getEntityPos();
 
         int score = 0;
-        var affected = world.getEntitiesByType(TypeFilter.instanceOf(ChickenEntity.class), chickenEntity -> tntPos.isInRange(chickenEntity.getPos(), TNT_RADIUS));
+        var affected = world.getEntitiesByType(TypeFilter.instanceOf(ChickenEntity.class), chickenEntity -> tntPos.isInRange(chickenEntity.getEntityPos(), TNT_RADIUS));
         int count = 0;
 
         for (ChickenEntity c : affected) {

@@ -107,18 +107,13 @@ public class VisibilityChecker {
             return BlockHitResult.createMissed(to, Direction.getFacing(dir.x, dir.y, dir.z), BlockPos.ofFloored(to));
         });
 
-        return hit.getType() != HitResult.Type.MISS;
+        return hit != null && hit.getType() != HitResult.Type.MISS;
     }
 
     public static Matrix4d viewProjectionMatrix(ServerPlayerEntity player, double fovRadians, double screenAspectRatio, Matrix4d mat) {
-        MinecraftServer server = player.getServer();
-        int viewDistance;
+        MinecraftServer server = player.getEntityWorld().getServer();
 
-        if (server == null) {
-            viewDistance = 2;
-        } else {
-            viewDistance = Math.max(2, Math.min(player.getViewDistance(), server.getPlayerManager().getViewDistance()));
-        }
+        int viewDistance = Math.max(2, Math.min(player.getViewDistance(), server.getPlayerManager().getViewDistance()));
 
         Quaterniond rotation = new Quaterniond()
                 .rotationYXZ(Math.PI - player.getYaw() * Math.PI / 180.0, -player.getPitch() * Math.PI / 180.0, 0.0F)

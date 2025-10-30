@@ -136,7 +136,7 @@ public class VisibilityHandler {
         }
 
         // check if the packet target entity is another player
-        Entity entity = networkHandler.player.getWorld().getEntityById(id);
+        Entity entity = networkHandler.player.getEntityWorld().getEntityById(id);
 
         if (!(entity instanceof ServerPlayerEntity) || entity == networkHandler.player) {
             return PendingResult.pass();

@@ -53,7 +53,7 @@ public class GravityFieldActor extends BaseActor {
         observer.whenLeaving(shape, this::onLeaveField);
 
         jumpCallback = player -> {
-            if (player.getWorld() == world && shape.contains(player.getX(), player.getY(), player.getZ())) {
+            if (player.getEntityWorld() == world && shape.contains(player.getX(), player.getY(), player.getZ())) {
                 onPlayerJumped(player);
             }
             return false;
@@ -82,11 +82,11 @@ public class GravityFieldActor extends BaseActor {
 
         if (abs(gravity - strength) > 1e-5) return;
 
-        player.getWorld().spawnParticles(ParticleTypes.CLOUD, player.getX(), player.getY() + 0.25, player.getZ(), 10, 0.2, 0.2, 0.2, 0.1);
+        player.getEntityWorld().spawnParticles(ParticleTypes.CLOUD, player.getX(), player.getY() + 0.25, player.getZ(), 10, 0.2, 0.2, 0.2, 0.1);
     }
 
     private void onEnterField(ServerPlayerEntity player) {
-        if (manipulator != null && player.getWorld() == world) {
+        if (manipulator != null && player.getEntityWorld() == world) {
             double change = manipulator.add(player, this);
 
             onGravityChanged(player, change);
@@ -94,7 +94,7 @@ public class GravityFieldActor extends BaseActor {
     }
 
     private void onLeaveField(ServerPlayerEntity player) {
-        if (manipulator != null && player.getWorld() == world) {
+        if (manipulator != null && player.getEntityWorld() == world) {
             double change = manipulator.remove(player, this);
 
             onGravityChanged(player, change);
@@ -104,7 +104,7 @@ public class GravityFieldActor extends BaseActor {
     public void onGravityChanged(ServerPlayerEntity player, double gravityDelta) {
         if (gravityDelta < 0) {
             player.playSoundToPlayer(SoundEvents.ENTITY_BREEZE_IDLE_GROUND, SoundCategory.PLAYERS, 0.55f, 1.5f);
-            player.getWorld().spawnParticles(ParticleTypes.CLOUD, player.getX(), player.getY(), player.getZ(), 10, 0.2, 0.2, 0.2, 0.1);
+            player.getEntityWorld().spawnParticles(ParticleTypes.CLOUD, player.getX(), player.getY(), player.getZ(), 10, 0.2, 0.2, 0.2, 0.1);
         } else if (gravityDelta > 0) {
             player.playSoundToPlayer(SoundEvents.ENTITY_EVOKER_CAST_SPELL, SoundCategory.PLAYERS, 0.35f, 0.75f);
         }

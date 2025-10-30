@@ -32,7 +32,7 @@ public class ParticleHelper {
     }
 
     public static <T extends ParticleEffect> void spawnParticleAt(Entity entity, T particle, int count, double dx, double dy, double dz, double speed) {
-        if (!(entity.getWorld() instanceof ServerWorld world)) return;
+        if (!(entity.getEntityWorld() instanceof ServerWorld world)) return;
 
         world.spawnParticles(particle, entity.getX(), entity.getY(), entity.getZ(), count, dx, dy, dz, speed);
     }

@@ -41,7 +41,7 @@ public class AttackGoal extends Goal {
 
     @Override
     public boolean canStart() {
-        long l = this.mob.getWorld().getTime();
+        long l = this.mob.getEntityWorld().getTime();
 
         if (l - this.lastUpdateTime < UPDATE_TICKS) {
             return false;

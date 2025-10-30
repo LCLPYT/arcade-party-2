@@ -323,7 +323,7 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
         Vec3d velocity;
 
         if (projectile != null) {
-            impactPos = projectile.getPos();
+            impactPos = projectile.getEntityPos();
             velocity = projectile.getVelocity().normalize();
         } else {
             impactPos = islandToDestroy.getCenter();

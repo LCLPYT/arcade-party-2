@@ -28,7 +28,6 @@ import work.lclpnet.ap2.*
 import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.map.MapBootstrapFunction
 import work.lclpnet.ap2.api.util.world.BlockPredicate
-import work.lclpnet.gaco.ds.StructureMask
 import work.lclpnet.ap2.impl.game.FFAGameInstance
 import work.lclpnet.ap2.impl.game.data.OrderedDataContainer
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef
@@ -43,6 +42,7 @@ import work.lclpnet.ap2.impl.util.world.BfsWorldScanner
 import work.lclpnet.ap2.impl.util.world.SimpleAdjacentBlocks
 import work.lclpnet.ap2.impl.util.world.WalkableBlockPredicate
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape
+import work.lclpnet.gaco.ds.StructureMask
 import work.lclpnet.gaco.dynamic_entities.DynamicEntityManager
 import work.lclpnet.gaco.dynamic_entities.PlayerSpecificDynamicEntity
 import work.lclpnet.kibu.hook.world.PressurePlateCallback
@@ -174,7 +174,7 @@ class MinefieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
 
                 entry(player).update(player)
 
-                if (goalShape!!.contains(player.pos)) {
+                if (goalShape!!.contains(player.entityPos)) {
                     onReachGoal(player)
                 }
             }
@@ -279,7 +279,7 @@ class MinefieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
         var markerDist = Double.MAX_VALUE
 
         fun update(player: ServerPlayerEntity) {
-            val pos = player.pos
+            val pos = player.entityPos
             val dist = sqrt(goalShape!!.bounds().squaredDistanceTo(pos)).coerceAtMost(goalDistance!!)
 
             if (dist >= this.bestDist) return

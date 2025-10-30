@@ -14,7 +14,7 @@ import work.lclpnet.ap2.core.hook.ProjectileShootCallback;
 import work.lclpnet.ap2.impl.game.kit.KitHandle;
 import work.lclpnet.ap2.impl.game.kit.KitOptions;
 import work.lclpnet.ap2.impl.game.kit.SingleItemKit;
-import work.lclpnet.ap2.impl.util.EntityUtil;
+import work.lclpnet.ap2.impl.util.CustomNbt;
 import work.lclpnet.gaco.math.SplinePath;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.TaskHandle;
@@ -48,7 +48,7 @@ public class EnderPearlKit extends SingleItemKit {
     public void init(KitOptions options) {
         handle.hooks().registerHook(ProjectileShootCallback.HOOK, (shooter, projectile) -> {
             if (shooter instanceof ServerPlayerEntity player && projectile instanceof EnderPearlEntity && handle.hasKitEquipped(player, this)) {
-                EntityUtil.sutCustomData(projectile, ORIGIN_CODEC, player.getPos());
+                CustomNbt.set(projectile, ORIGIN_CODEC, player.getEntityPos());
 
                 UUID uuid = projectile.getUuid();
 
@@ -92,7 +92,7 @@ public class EnderPearlKit extends SingleItemKit {
     }
 
     private boolean canTeleportTo(EnderPearlEntity enderPearl, Vec3d target) {
-        Vec3d origin = EntityUtil.getCustomData(enderPearl, ORIGIN_CODEC).orElse(null);
+        Vec3d origin = CustomNbt.get(enderPearl, ORIGIN_CODEC).orElse(null);
 
         if (origin == null) return false;
 

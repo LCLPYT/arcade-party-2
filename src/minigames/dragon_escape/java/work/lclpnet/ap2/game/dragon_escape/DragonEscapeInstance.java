@@ -185,7 +185,7 @@ public class DragonEscapeInstance extends FFAGameInstance {
 
     private void setupTrackers() {
         for (ServerPlayerEntity player : gameHandle.getParticipants()) {
-            Vec3d anchor = path.getNearestPosition(player.getPos());
+            Vec3d anchor = path.getNearestPosition(player.getEntityPos());
 
             trackers.put(player.getUuid(), new Tracker(anchor));
         }
@@ -381,7 +381,7 @@ public class DragonEscapeInstance extends FFAGameInstance {
         boolean check = checkForCompletion;
 
         for (ServerPlayerEntity player : pseudoElimination.iterateParticipants()) {
-            if (goalShape.contains(player.getPos()) && !inGoal.contains(player.getUuid()) && OnGroundDetector.isOnGroundServer(player)) {
+            if (goalShape.contains(player.getEntityPos()) && !inGoal.contains(player.getUuid()) && OnGroundDetector.isOnGroundServer(player)) {
                 onReachGoal(player);
 
                 check = true;
@@ -395,7 +395,7 @@ public class DragonEscapeInstance extends FFAGameInstance {
 
             // eliminate the player if they are behind the dragon or not in range of the path
             if ((pseudoElimination.isParticipating(player) && progress <= dragonController.getDragonProgress())
-                    || !player.getPos().isInRange(path.samplePosition(progress), pathEliminationDistance)) {
+                    || !player.getEntityPos().isInRange(path.samplePosition(progress), pathEliminationDistance)) {
 
                 softEliminate(player);
                 check = true;
@@ -472,7 +472,7 @@ public class DragonEscapeInstance extends FFAGameInstance {
     }
 
     private double getProgress(ServerPlayerEntity player) {
-        return path.getProgress(player.getPos());
+        return path.getProgress(player.getEntityPos());
     }
 
     private synchronized double getDistance(ServerPlayerEntity player) {

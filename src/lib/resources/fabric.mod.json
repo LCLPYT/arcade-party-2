@@ -45,5 +45,6 @@
     "modmenu": {
       "parent": "ap2"
     }
-  }
+  },
+  "provides": ["cloth-config"]
 }

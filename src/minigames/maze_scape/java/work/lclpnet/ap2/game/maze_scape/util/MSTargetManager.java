@@ -48,7 +48,7 @@ public class MSTargetManager {
             if (mob == null) continue;
 
             for (ServerPlayerEntity player : participants) {
-                double distance = distanceBetween(player.getPos(), mob.getPos());
+                double distance = distanceBetween(player.getEntityPos(), mob.getEntityPos());
 
                 if (!isNaN(distance) && isFinite(distance) && distance >= 0) {
                     entries.add(new Entry(distance, monster, player));

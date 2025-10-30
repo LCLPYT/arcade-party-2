@@ -165,7 +165,7 @@ public class EggventureTutorial {
             if (player == null) return;
 
             HitResult hit = RayCastUtil.raycast(
-                    player.getWorld(), player.getEyePos(), player.getRotationVector(), PLAYER_DIST,
+                    player.getEntityWorld(), player.getEyePos(), player.getRotationVector(), PLAYER_DIST,
                     RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.ANY, ShapeContext.absent(),
                     entity -> !entity.isSpectator());
 

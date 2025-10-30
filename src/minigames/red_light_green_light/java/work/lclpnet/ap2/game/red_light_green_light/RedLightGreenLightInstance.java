@@ -213,7 +213,7 @@ public class RedLightGreenLightInstance extends FFAGameInstance implements Runna
 
         tracker.track(player);
 
-        if (goal.contains(player.getPos())) {
+        if (goal.contains(player.getEntityPos())) {
             onGoalReached(player);
         }
     }
@@ -339,7 +339,7 @@ public class RedLightGreenLightInstance extends FFAGameInstance implements Runna
         gameHandle.getParticipants().stream()
                 .filter(player -> !inGoal.contains(player.getUuid()))
                 .map(player -> {
-                    double distanceSq = goal.squaredDistanceTo(player.getPos());
+                    double distanceSq = goal.squaredDistanceTo(player.getEntityPos());
                     return new Grade(player, Math.sqrt(distanceSq));
                 })
                 .sorted(Comparator.comparingDouble(Grade::distance))

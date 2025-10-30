@@ -73,7 +73,7 @@ public class SbDestruction {
 
         world.spawnEntity(charge);
 
-        SoundHelper.playSound(aelos.getServer(), SoundEvents.ENTITY_BREEZE_SHOOT, SoundCategory.HOSTILE, 1.5f, 1.0f);
+        SoundHelper.playSound(aelos.getEntityWorld().getServer(), SoundEvents.ENTITY_BREEZE_SHOOT, SoundCategory.HOSTILE, 1.5f, 1.0f);
 
         return charge;
     }

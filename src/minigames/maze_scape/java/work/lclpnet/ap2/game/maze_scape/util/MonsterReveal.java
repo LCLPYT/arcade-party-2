@@ -196,7 +196,7 @@ public class MonsterReveal {
 
         @Override
         public Vec3d getPosition() {
-            return entity.getPos();
+            return entity.getEntityPos();
         }
 
         @Override

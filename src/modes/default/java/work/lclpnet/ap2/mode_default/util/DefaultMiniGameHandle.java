@@ -5,7 +5,6 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.world.border.WorldBorder;
-import net.minecraft.world.border.WorldBorderListener;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,7 +62,6 @@ public class DefaultMiniGameHandle implements MiniGameHandle, WorldBorderManager
     private final AtomicBoolean remake;
     private MutableProtectionConfig protectionConfig;
     private volatile BasicProtector protector = null;
-    private WorldBorderListener worldBorderListener = null;
     private volatile List<Runnable> whenDone = null;
     private TaskScheduler scheduler = null;
     private boolean ended = false;
@@ -71,6 +69,7 @@ public class DefaultMiniGameHandle implements MiniGameHandle, WorldBorderManager
     private volatile @Nullable CompletableFuture<UUID> statsId = null;
     private volatile @Nullable SubWorldManager subWorldManager = null;
     private volatile @Nullable WorldContainer worldContainer = null;
+    private @Nullable ServerWorld world = null;
 
     public DefaultMiniGameHandle(MiniGame game, ApBaseArgs args, BossBarProvider bossBarProvider,
                                  BossBarHandler bossBarHandler, CustomScoreboardManager scoreboardManager,
@@ -367,36 +366,12 @@ public class DefaultMiniGameHandle implements MiniGameHandle, WorldBorderManager
 
     @Override
     public WorldBorder getWorldBorder() {
-        return getServer().getOverworld().getWorldBorder();
+        return Objects.requireNonNull(world, "World is not set yet").getWorldBorder();
     }
 
     @Override
-    public void setupWorldBorder(ServerWorld world) {
-        WorldBorder mainBorder = getServer().getOverworld().getWorldBorder();
-        WorldBorder worldBorder = world.getWorldBorder();
-
-        if (worldBorderListener != null) {
-            mainBorder.removeListener(worldBorderListener);
-        }
-
-        worldBorderListener = new WorldBorderListener.WorldBorderSyncer(worldBorder);
-        mainBorder.addListener(worldBorderListener);
-    }
-
-    @Override
-    public void resetWorldBorder() {
-        WorldBorder worldBorder = getServer().getOverworld().getWorldBorder();
-
-        worldBorder.setCenter(0.5, 0.5);
-        worldBorder.setSize(worldBorder.getMaxRadius());
-        worldBorder.setSafeZone(5);
-        worldBorder.setDamagePerBlock(0.2);
-        worldBorder.setWarningTime(15);
-        worldBorder.setWarningBlocks(5);
-
-        if (worldBorderListener != null) {
-            worldBorder.removeListener(worldBorderListener);
-        }
+    public void setWorld(@Nullable ServerWorld world) {
+        this.world = world;
     }
 
     @Override

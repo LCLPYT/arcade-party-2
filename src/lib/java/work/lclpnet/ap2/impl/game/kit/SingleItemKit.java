@@ -7,7 +7,7 @@ import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.server.network.ServerPlayerEntity;
-import work.lclpnet.ap2.impl.util.ItemHelper;
+import work.lclpnet.ap2.impl.util.CustomNbt;
 
 import java.util.Optional;
 
@@ -35,7 +35,7 @@ public class SingleItemKit extends BaseKit {
     }
 
     public void configureItemStack(ItemStack stack) {
-        ItemHelper.setCustomData(stack, KIT_CODEC, id);
+        CustomNbt.set(stack, KIT_CODEC, id);
     }
 
     @Override
@@ -52,7 +52,7 @@ public class SingleItemKit extends BaseKit {
     }
 
     public static Optional<String> getId(ItemStack stack) {
-        return ItemHelper.getCustomData(stack, KIT_CODEC);
+        return CustomNbt.get(stack, KIT_CODEC);
     }
 
     public static Optional<SingleItemKit> get(ItemStack stack, KitManager kitManager) {

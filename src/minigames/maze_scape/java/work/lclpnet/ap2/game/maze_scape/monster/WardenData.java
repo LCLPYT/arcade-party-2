@@ -74,7 +74,7 @@ public class WardenData implements MonsterData<WardenEntity> {
     }
 
     private void fireSonicBoom(WardenEntity warden, LivingEntity target) {
-        Vec3d chest = warden.getPos().add(warden.getAttachments().getPoint(EntityAttachmentType.WARDEN_CHEST, 0, warden.getYaw()));
+        Vec3d chest = warden.getEntityPos().add(warden.getAttachments().getPoint(EntityAttachmentType.WARDEN_CHEST, 0, warden.getYaw()));
         Vec3d line = target.getEyePos().subtract(chest);
         Vec3d dir = line.normalize();
 

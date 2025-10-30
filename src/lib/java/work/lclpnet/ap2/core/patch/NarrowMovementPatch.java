@@ -24,7 +24,7 @@ public class NarrowMovementPatch {
 
         Box boxAtNodePos = entity.getDimensions(entity.getPose()).getBoxAt(dx, y, dz);
 
-        World world = entity.getWorld();
+        World world = entity.getEntityWorld();
         var blockCollisions = world.getBlockCollisions(entity, boxAtNodePos);
 
         for (VoxelShape collision : blockCollisions) {

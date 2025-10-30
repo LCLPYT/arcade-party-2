@@ -64,7 +64,7 @@ public class VanishManager {
     }
 
     private void updateTrackingOf(ServerPlayerEntity player) {
-        var chunkLoadingManager = ((ServerChunkManagerAccessor) player.getWorld().getChunkManager()).getChunkLoadingManager();
+        var chunkLoadingManager = ((ServerChunkManagerAccessor) player.getEntityWorld().getChunkManager()).getChunkLoadingManager();
         chunkLoadingManager.updatePosition(player);
     }
 

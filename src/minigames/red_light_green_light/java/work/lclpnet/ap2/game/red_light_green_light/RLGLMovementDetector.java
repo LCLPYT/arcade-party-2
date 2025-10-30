@@ -37,7 +37,7 @@ class RLGLMovementDetector {
     }
 
     public void fixPosition(ServerPlayerEntity player) {
-        fixed.put(player.getUuid(), player.getPos());
+        fixed.put(player.getUuid(), player.getEntityPos());
 
         if (MovementListener.isMovementInput(player.getPlayerInput())) {
             hook.invoker().act(player);

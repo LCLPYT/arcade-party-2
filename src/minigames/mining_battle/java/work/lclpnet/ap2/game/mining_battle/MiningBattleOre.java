@@ -4,7 +4,6 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -19,13 +18,13 @@ import net.minecraft.world.explosion.ExplosionImpl;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.core.mixin.ExplosionImplAccessor;
-import work.lclpnet.gaco.ds.WeightedList;
 import work.lclpnet.ap2.impl.util.SoundHelper;
+import work.lclpnet.ap2.impl.util.world.ExplosionUtil;
+import work.lclpnet.gaco.ds.WeightedList;
 import work.lclpnet.kibu.translate.Translations;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Random;
 import java.util.function.BiConsumer;
 import java.util.function.Predicate;
@@ -123,7 +122,7 @@ public class MiningBattleOre {
     }
 
     private void explode(ServerPlayerEntity player, BlockPos pos) {
-        ServerWorld world = player.getWorld();
+        ServerWorld world = player.getEntityWorld();
 
         double x = pos.getX() + 0.5, y = pos.getY() + 0.5, z = pos.getZ() + 0.5;
         Vec3d vec = new Vec3d(x, y, z);
@@ -162,14 +161,7 @@ public class MiningBattleOre {
         // calculate damage and knockback
         access.invokeDamageEntities();
 
-        // send explosion packets
-        for (ServerPlayerEntity other : world.getPlayers()) {
-            if (!(other.squaredDistanceTo(x, y, z) < 4096.0)) continue;
-
-            var knockback = Optional.ofNullable(explosion.getKnockbackByPlayer().get(other));
-
-            other.networkHandler.sendPacket(new ExplosionS2CPacket(vec, knockback, ParticleTypes.EXPLOSION, SoundEvents.ENTITY_GENERIC_EXPLODE));
-        }
+        ExplosionUtil.sendExplosion(world, explosion, ParticleTypes.EXPLOSION);
     }
 
     private void giveHaste(ServerPlayerEntity player) {
@@ -189,7 +181,7 @@ public class MiningBattleOre {
     }
 
     private void weakenOthers(ServerPlayerEntity player) {
-        SoundHelper.playSound(player.getServer(), SoundEvents.ENTITY_RAVAGER_CELEBRATE, SoundCategory.HOSTILE, 0.5f, 1f);
+        SoundHelper.playSound(player.getEntityWorld().getServer(), SoundEvents.ENTITY_RAVAGER_CELEBRATE, SoundCategory.HOSTILE, 0.5f, 1f);
 
         Translations translations = gameHandle.getTranslations();
 

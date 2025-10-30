@@ -712,7 +712,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
         MinecraftServer server = getServer();
 
         for (ServerPlayerEntity player : PlayerLookup.all(server)) {
-            if (server.getPermissionLevel(player.getGameProfile()) < 2) continue;
+            if (server.getPermissionLevel(player.getPlayerConfigEntry()) < 2) continue;
 
             ItemStack gameSelector = new ItemStack(Items.TOTEM_OF_UNDYING);
             gameSelector.set(DataComponentTypes.CUSTOM_NAME, Text.literal("Select Game").styled(style -> style.withItalic(false).withFormatting(YELLOW)));
@@ -731,7 +731,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
 
         hooks.registerHook(PlayerInteractionHooks.USE_ITEM, (player, world, hand) -> {
             if (!(player instanceof ServerPlayerEntity serverPlayer)
-                || server.getPermissionLevel(serverPlayer.getGameProfile()) < 2) {
+                || server.getPermissionLevel(serverPlayer.getPlayerConfigEntry()) < 2) {
 
                 return ActionResult.PASS;
             }

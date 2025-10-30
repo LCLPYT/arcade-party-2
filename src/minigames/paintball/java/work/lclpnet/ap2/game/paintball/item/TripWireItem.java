@@ -187,7 +187,7 @@ public class TripWireItem implements SpecialItem {
 
             if (hit.getType() != HitResult.Type.ENTITY || !(hit instanceof EntityHitResult entityHit)) return false;
 
-            paintManager.createExplosion(owner, entityHit.getEntity().getPos(), ownerTeam, EXPLOSION_POWER);
+            paintManager.createExplosion(owner, entityHit.getEntity().getEntityPos(), ownerTeam, EXPLOSION_POWER);
 
             return true;
         }

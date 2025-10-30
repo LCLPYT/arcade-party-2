@@ -23,7 +23,6 @@ import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
 import work.lclpnet.ap2.ApConstants;
 import work.lclpnet.ap2.api.base.Participants;
-import work.lclpnet.ap2.api.base.WorldBorderManager;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.sink.IntDataSink;
 import work.lclpnet.ap2.api.util.action.Action;
@@ -191,9 +190,6 @@ public class GameCommons {
     }
 
     public WorldBorder setupWorldBorder(WorldBorderConfig config) {
-        WorldBorderManager manager = gameHandle.getWorldBorderManager();
-        manager.setupWorldBorder(world);
-
         WorldBorder worldBorder = gameHandle.getWorldBorderManager().getWorldBorder();
         worldBorder.setCenter(config.centerX() + 0.5, config.centerZ() + 0.5);
         worldBorder.setSize(config.maxRadius());

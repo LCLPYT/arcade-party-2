@@ -107,7 +107,7 @@ public class DragonController {
         double minDist = Double.POSITIVE_INFINITY;
 
         for (ServerPlayerEntity player : remainingPlayers) {
-            double progress = path.getProgress(player.getPos());
+            double progress = path.getProgress(player.getEntityPos());
             double dist = progress - origin;
 
             if (dist >= 0 && dist < minDist) {

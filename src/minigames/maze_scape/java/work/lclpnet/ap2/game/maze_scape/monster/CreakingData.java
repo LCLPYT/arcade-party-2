@@ -48,6 +48,6 @@ public class CreakingData implements MonsterData<CreakingEntity> {
     }
 
     public boolean isBeingLookedAt(CreakingEntity mob) {
-        return visibilityChecker.isAnyoneLookingAt(mob, mob.getPos(), args.manager().participants());
+        return visibilityChecker.isAnyoneLookingAt(mob, mob.getEntityPos(), args.manager().participants());
     }
 }

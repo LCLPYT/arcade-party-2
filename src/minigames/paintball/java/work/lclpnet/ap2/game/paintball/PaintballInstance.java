@@ -448,7 +448,7 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
         PaintballTeam team = teams.teamOf(player).orElse(null);
 
         // prevent damage in base
-        if (team == null || team.baseBounds().contains(player.getPos())) return false;
+        if (team == null || team.baseBounds().contains(player.getEntityPos())) return false;
 
         // respect hurt time, except for explosions
         if (!source.isOf(DamageTypes.PLAYER_EXPLOSION) && player.hurtTime > 0) {

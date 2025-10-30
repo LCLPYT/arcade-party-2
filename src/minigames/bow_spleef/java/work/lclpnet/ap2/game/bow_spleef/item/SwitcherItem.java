@@ -51,11 +51,11 @@ public class SwitcherItem implements SpecialItem {
                     || !(projectile.getOwner() instanceof ServerPlayerEntity shooter)
                     || !(hit.getEntity() instanceof ServerPlayerEntity victim)) return;
 
-            Vec3d victimPos = victim.getPos();
+            Vec3d victimPos = victim.getEntityPos();
             float victimYaw = victim.getYaw();
             float victimPitch = victim.getPitch();
 
-            ServerWorld world = shooter.getWorld();
+            ServerWorld world = shooter.getEntityWorld();
             victim.teleport(world, shooter.getX(), shooter.getY(), shooter.getZ(), Set.of(), shooter.getYaw(), shooter.getPitch(), true);
             shooter.teleport(world, victimPos.getX(), victimPos.getY(), victimPos.getZ(), Set.of(), victimYaw, victimPitch, true);
 

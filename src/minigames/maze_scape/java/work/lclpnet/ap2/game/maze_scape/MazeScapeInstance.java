@@ -217,7 +217,7 @@ public class MazeScapeInstance extends EliminationGameInstance implements MapBoo
     private void checkInPit(ServerPlayerEntity player) {
         if (struct == null) return;
 
-        var node = struct.nodeAt(player.getPos());
+        var node = struct.nodeAt(player.getEntityPos());
 
         if (node == null) return;
 

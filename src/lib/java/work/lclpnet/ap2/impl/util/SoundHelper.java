@@ -43,7 +43,7 @@ public class SoundHelper {
     }
 
     public static void playSoundAt(Entity entity, SoundEvent sound, SoundCategory category, float volume, float pitch) {
-        entity.getWorld().playSound(null, entity.getX(), entity.getY(), entity.getZ(), sound, category, volume, pitch);
+        entity.getEntityWorld().playSound(null, entity.getX(), entity.getY(), entity.getZ(), sound, category, volume, pitch);
     }
 
     public static void playSoundFor(SoundEvent sound, SoundCategory category, Position pos, float volume, float pitch,

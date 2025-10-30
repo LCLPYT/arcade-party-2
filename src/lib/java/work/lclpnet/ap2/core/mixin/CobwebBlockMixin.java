@@ -20,7 +20,7 @@ public class CobwebBlockMixin {
             at = @At("HEAD"),
             cancellable = true
     )
-    public void ap2$onCobwebCollision(BlockState state, World world, BlockPos pos, Entity entity, EntityCollisionHandler handler, CallbackInfo ci) {
+    public void ap2$onCobwebCollision(BlockState state, World world, BlockPos pos, Entity entity, EntityCollisionHandler handler, boolean bl, CallbackInfo ci) {
         if (CobwebSlowCallback.HOOK.invoker().cancelSlow(entity, pos)) {
             ci.cancel();
         }

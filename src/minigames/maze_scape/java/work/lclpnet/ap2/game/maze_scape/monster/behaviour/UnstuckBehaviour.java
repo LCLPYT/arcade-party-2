@@ -48,7 +48,7 @@ public class UnstuckBehaviour implements MonsterBehaviour {
     @Override
     public void init(MobEntity mob) {
         if (DEBUG_AVG_POS) {
-            Vec3d pos = mob != null ? mob.getPos() : Vec3d.ZERO;
+            Vec3d pos = mob != null ? mob.getEntityPos() : Vec3d.ZERO;
 
             avgPosMarker = manager.debugController().parent().renderer()
                     .map(renderer -> renderer.marker(pos.x, pos.y, pos.z, Blocks.GREEN_CONCRETE.getDefaultState(), 0x00ff00))
@@ -58,7 +58,7 @@ public class UnstuckBehaviour implements MonsterBehaviour {
 
     @Override
     public void tick(MobEntity mob) {
-        posBuf.update(mob.getPos());
+        posBuf.update(mob.getEntityPos());
 
         if (DEBUG_AVG_POS && avgPosMarker != null) {
             avgPosMarker.position.set(posBuf.avg.x, posBuf.avg.y, posBuf.avg.z);
@@ -79,7 +79,7 @@ public class UnstuckBehaviour implements MonsterBehaviour {
 
         if (target == null) return;
 
-        var navPath = manager.struct().findPath(mob.getPos(), target.getPos());
+        var navPath = manager.struct().findPath(mob.getEntityPos(), target.getEntityPos());
 
         if (navPath.isEmpty()) return;
 
@@ -88,7 +88,7 @@ public class UnstuckBehaviour implements MonsterBehaviour {
         if (passagePath.size() < 2) {
             if (++unstuckFailCount >= MAX_FAILED_UNSTUCK_ATTEMPTS) {
                 unstuckFailCount = 0;
-                teleport(mob, target.getPos());
+                teleport(mob, target.getEntityPos());
             }
 
             return;
@@ -121,7 +121,7 @@ public class UnstuckBehaviour implements MonsterBehaviour {
     }
 
     static void teleport(Entity entity, Vec3d pos) {
-        if (entity.getWorld() instanceof ServerWorld world) {
+        if (entity.getEntityWorld() instanceof ServerWorld world) {
             entity.teleport(world, pos.getX(), pos.getY(), pos.getZ(), Set.of(), entity.getYaw(), entity.getPitch(), true);
         }
     }

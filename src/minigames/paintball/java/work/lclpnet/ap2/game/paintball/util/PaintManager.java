@@ -442,7 +442,7 @@ public class PaintManager {
     public void createExplosion(ServerPlayerEntity player, Vec3d pos, PaintballTeam team, float power) {
         var behavior = new AdvancedExplosionBehavior(true, true, Optional.empty(), Optional.empty());
 
-        ServerWorld world = player.getWorld();
+        ServerWorld world = player.getEntityWorld();
 
         var explosion = new ExplosionImpl(world, player, null, behavior, pos, power, false, Explosion.DestructionType.KEEP);
 

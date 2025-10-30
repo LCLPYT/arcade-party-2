@@ -60,7 +60,7 @@ public class OneInTheChamberSpawns {
 
         return gameHandle.getParticipants().stream()
                 .filter(player -> !player.isSpectator())
-                .mapToDouble(player -> player.getPos().squaredDistanceTo(x, y, z))
+                .mapToDouble(player -> player.getEntityPos().squaredDistanceTo(x, y, z))
                 .min().orElse(Double.MAX_VALUE);
     }
 }

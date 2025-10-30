@@ -4,11 +4,9 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import lombok.Getter;
 import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.NbtComponent;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
-import net.minecraft.nbt.NbtOps;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
@@ -18,6 +16,7 @@ import net.minecraft.util.Formatting;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.impl.game.GameCommons;
+import work.lclpnet.ap2.impl.util.CustomNbt;
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
@@ -107,9 +106,7 @@ public class KitHandler {
         stack.set(DataComponentTypes.ITEM_NAME, kitHandle.translations().translateText(player, "ap2.kit_selector")
                 .formatted(Formatting.AQUA));
 
-        stack.set(DataComponentTypes.CUSTOM_DATA, stack.getOrDefault(DataComponentTypes.CUSTOM_DATA, NbtComponent.DEFAULT)
-                .with(NbtOps.INSTANCE, KIT_SELECTOR_CODEC, true)
-                .getOrThrow());
+        CustomNbt.set(stack, KIT_SELECTOR_CODEC, true);
 
         player.getInventory().setStack(manager.getOptions().kitSelectorSlot(), stack);
     }
@@ -137,10 +134,7 @@ public class KitHandler {
     public boolean isKitSelector(ItemStack stack) {
         if (!stack.isOf(KIT_SELECTOR_ITEM)) return false;
 
-        return stack.getOrDefault(DataComponentTypes.CUSTOM_DATA, NbtComponent.DEFAULT)
-                .get(KIT_SELECTOR_CODEC)
-                .resultOrPartial()
-                .orElse(false);
+        return CustomNbt.get(stack, KIT_SELECTOR_CODEC).orElse(false);
     }
 
     public void selectKitChanger() {

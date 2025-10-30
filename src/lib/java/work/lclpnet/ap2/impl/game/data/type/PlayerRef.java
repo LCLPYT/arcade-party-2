@@ -1,6 +1,5 @@
 package work.lclpnet.ap2.impl.game.data.type;
 
-import com.mojang.authlib.properties.PropertyMap;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.ProfileComponent;
 import net.minecraft.item.ItemStack;
@@ -12,7 +11,6 @@ import org.jetbrains.annotations.NotNull;
 import work.lclpnet.ap2.api.game.data.SubjectRef;
 
 import java.util.Objects;
-import java.util.Optional;
 import java.util.UUID;
 
 public record PlayerRef(UUID uuid, String name) implements SubjectRef {
@@ -39,7 +37,7 @@ public record PlayerRef(UUID uuid, String name) implements SubjectRef {
     public ItemStack getIconStackFor(DynamicRegistryManager registryManager, ServerPlayerEntity viewer) {
         ItemStack stack = new ItemStack(Items.PLAYER_HEAD);
 
-        stack.set(DataComponentTypes.PROFILE, new ProfileComponent(Optional.empty(), Optional.of(uuid), new PropertyMap()));
+        stack.set(DataComponentTypes.PROFILE, ProfileComponent.ofDynamic(uuid));
 
         return stack;
     }

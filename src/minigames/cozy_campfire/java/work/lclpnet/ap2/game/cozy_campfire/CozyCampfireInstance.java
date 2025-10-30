@@ -280,7 +280,7 @@ public class CozyCampfireInstance extends TeamEliminationGameInstance implements
 
         stack.setCount(0);
 
-        if (player.getWorld() instanceof ServerWorld world) {
+        if (player.getEntityWorld() instanceof ServerWorld world) {
             double x = pos.getX() + 0.5, y = pos.getY() + 0.5, z = pos.getZ();
 
             world.playSound(null, x, y, z, SoundEvents.BLOCK_FIRE_EXTINGUISH, SoundCategory.BLOCKS, 0.2f, 1f);

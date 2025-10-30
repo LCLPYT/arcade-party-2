@@ -21,7 +21,7 @@ public class RayCastUtil {
 
     public static HitResult raycast(ServerPlayerEntity player, double maxDistance, RaycastContext.ShapeType shapeType,
                                     RaycastContext.FluidHandling fluidHandling, ShapeContext shapeContext, Predicate<Entity> filter) {
-        return raycast(player.getWorld(), player.getEyePos(), player.getRotationVector(), maxDistance, shapeType,
+        return raycast(player.getEntityWorld(), player.getEyePos(), player.getRotationVector(), maxDistance, shapeType,
                 fluidHandling, shapeContext, filter);
     }
 

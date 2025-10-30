@@ -305,7 +305,7 @@ public class MusicalMinecartInstance extends EliminationGameInstance implements 
     @SuppressWarnings("unchecked")
     private void createDecoyEntity(ServerWorld world, MinecartEntity minecart) {
         var frog = new FrogEntity(EntityType.FROG, world);
-        frog.setPosition(minecart.getPos());
+        frog.setPosition(minecart.getEntityPos());
 
         var frogTypes = world.getRegistryManager().getOrThrow(RegistryKeys.FROG_VARIANT).getIndexedEntries();
 

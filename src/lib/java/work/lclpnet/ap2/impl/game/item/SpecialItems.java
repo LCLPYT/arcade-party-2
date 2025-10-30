@@ -1,17 +1,14 @@
 package work.lclpnet.ap2.impl.game.item;
 
-import com.mojang.serialization.DataResult;
 import com.mojang.serialization.MapCodec;
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.DamageResistantComponent;
 import net.minecraft.component.type.LoreComponent;
-import net.minecraft.component.type.NbtComponent;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtOps;
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.registry.tag.DamageTypeTags;
 import net.minecraft.screen.slot.Slot;
@@ -29,6 +26,7 @@ import org.json.JSONObject;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.util.world.BlockPredicate;
 import work.lclpnet.ap2.impl.map.MapUtil;
+import work.lclpnet.ap2.impl.util.CustomNbt;
 import work.lclpnet.ap2.impl.util.IconMaker;
 import work.lclpnet.ap2.impl.util.debug.DebugController;
 import work.lclpnet.ap2.impl.util.world.WalkableBlockPredicate;
@@ -315,9 +313,7 @@ public class SpecialItems implements SpecialItemContext {
     }
 
     public Optional<SpecialItem> get(ItemStack stack) {
-        NbtComponent component = stack.getOrDefault(DataComponentTypes.CUSTOM_DATA, NbtComponent.DEFAULT);
-        DataResult<NbtCompound> res = component.get(NBT_CODEC);
-        NbtCompound nbt = res.resultOrPartial().orElse(null);
+        NbtCompound nbt = CustomNbt.get(stack, NBT_CODEC).orElse(null);
 
         if (nbt == null) {
             return Optional.empty();
@@ -333,9 +329,7 @@ public class SpecialItems implements SpecialItemContext {
         var nbt = new NbtCompound();
         nbt.putString(ID_KEY, item.id());
 
-        stack.set(DataComponentTypes.CUSTOM_DATA, stack.getOrDefault(DataComponentTypes.CUSTOM_DATA, NbtComponent.DEFAULT)
-                .with(NbtOps.INSTANCE, NBT_CODEC, nbt)
-                .getOrThrow());
+        CustomNbt.set(stack, NBT_CODEC, nbt);
 
         stack.set(DataComponentTypes.DAMAGE_RESISTANT, new DamageResistantComponent(DamageTypeTags.IS_FIRE));
         stack.set(DataComponentTypes.RARITY, Rarity.UNCOMMON);

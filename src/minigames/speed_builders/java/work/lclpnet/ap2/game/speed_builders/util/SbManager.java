@@ -225,7 +225,7 @@ public class SbManager {
 
             SbIsland island = entry.getValue();
 
-            if (island.getMovementBounds().contains(player.getPos())) continue;
+            if (island.getMovementBounds().contains(player.getEntityPos())) continue;
 
             island.teleport(player);
         }

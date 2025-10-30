@@ -208,7 +208,7 @@ public class MinecartChallenge implements Challenge, LongerChallenge, SchedulerA
         modifier.spawnEntity(minecart);
         modifier.spawnEntity(villager);
 
-        villager.startRiding(minecart, true);
+        villager.startRiding(minecart, true, false);
 
         powerPos = firstTrack.pos.down();
         minecartUuid = minecart.getUuid();

@@ -24,7 +24,7 @@ public class SameRoomBehaviour<T extends MobEntity> implements MonsterBehaviour 
     public void tick(MobEntity mob) {
         LivingEntity target = mob.getTarget();
 
-        if (target == null || !isInSameRoom(mob.getPos(), target.getPos())) {
+        if (target == null || !isInSameRoom(mob.getEntityPos(), target.getEntityPos())) {
             sameRoomTimer = 0;
             return;
         }

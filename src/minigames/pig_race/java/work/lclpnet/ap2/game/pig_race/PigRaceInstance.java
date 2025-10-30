@@ -294,8 +294,8 @@ public class PigRaceInstance extends FFAGameInstance implements MapBootstrap {
 
             player.setFireTicks(0);
 
-            Box box = vehicle.getType().getDimensions().getBoxAt(vehicle.getPos());
-            World world = vehicle.getWorld();
+            Box box = vehicle.getType().getDimensions().getBoxAt(vehicle.getEntityPos());
+            World world = vehicle.getEntityWorld();
 
             for (BlockPos pos : BlockPos.iterate(box)) {
                 BlockState state = world.getBlockState(pos);
@@ -512,7 +512,7 @@ public class PigRaceInstance extends FFAGameInstance implements MapBootstrap {
     private record PendingEntity<T extends LivingEntity>(double x, double y, double z, float yaw, Function<ServerWorld, T> factory) {
 
         public T create(ServerPlayerEntity player) {
-            ServerWorld world = player.getWorld();
+            ServerWorld world = player.getEntityWorld();
 
             T entity = factory.apply(world);
             entity.setInvulnerable(true);
@@ -522,7 +522,7 @@ public class PigRaceInstance extends FFAGameInstance implements MapBootstrap {
 
             world.spawnEntity(entity);
 
-            player.startRiding(entity, true);
+            player.startRiding(entity, true, false);
 
             return entity;
         }

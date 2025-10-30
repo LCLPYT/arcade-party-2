@@ -68,7 +68,7 @@ public class HeavyWeightItem implements SpecialItem {
             setHeavyWeighted(player);
 
             Vec3d pos = hit.getPos();
-            ServerWorld world = player.getWorld();
+            ServerWorld world = player.getEntityWorld();
             world.playSound(null, pos.x, pos.y, pos.z, SoundEvents.ENTITY_BLAZE_HURT, SoundCategory.HOSTILE, 0.5f, 0.65f);
             world.spawnParticles(ParticleTypes.FALLING_NECTAR, pos.x, pos.y + 1, pos.z, 100, 0.25, 0.5, 0.25, 1);
 

@@ -280,7 +280,7 @@ public class PaintGunManager {
     }
 
     public void spawnPaintBullet(ServerPlayerEntity player, BlockState state, PaintGun.BulletSettings bulletSettings, Vec3d pos, Vec3d dir) {
-        var obj = new PaintballBullet(scene, state, player.getWorld(), bulletSettings, this, debugController);
+        var obj = new PaintballBullet(scene, state, player.getEntityWorld(), bulletSettings, this, debugController);
         obj.position.set(pos.getX(), pos.getY(), pos.getZ());
         obj.scale.set(bulletSettings.size());
         obj.setOwner(player.getUuid());
@@ -304,7 +304,7 @@ public class PaintGunManager {
         final double spawnDist = 1.4;
 
         HitResult hit = RayCastUtil.raycast(
-                player.getWorld(), player.getEyePos(), dir, spawnDist,
+                player.getEntityWorld(), player.getEyePos(), dir, spawnDist,
                 RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.ANY, ShapeContext.absent(),
                 entity -> !entity.isSpectator());
 

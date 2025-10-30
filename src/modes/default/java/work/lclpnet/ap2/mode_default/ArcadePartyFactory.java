@@ -1,6 +1,6 @@
 package work.lclpnet.ap2.mode_default;
 
-import net.minecraft.MinecraftVersion;
+import net.minecraft.SharedConstants;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.ApConstants;
 import work.lclpnet.ap2.api.config.Ap2Config;
@@ -41,7 +41,7 @@ public class ArcadePartyFactory implements GameFactory {
         loader.addLoader(assetLoader);
 
         // also load vanilla death messages (unavailable until initialized)
-        var assetManager = AssetManager.getShared(MinecraftVersion.CURRENT.name());
+        var assetManager = AssetManager.getShared(SharedConstants.getGameVersion().name());
         vanillaTranslations = new VanillaTranslations(assetManager, logger, translationKey -> translationKey.startsWith("death."));
         loader.addLoader(vanillaTranslations.getTranslationLoader());
 

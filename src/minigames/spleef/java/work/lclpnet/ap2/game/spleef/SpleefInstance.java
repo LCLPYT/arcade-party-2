@@ -51,7 +51,7 @@ public class SpleefInstance extends EliminationGameInstance {
     protected void ready() {
         gameHandle.protect(config -> {
             config.allow(ProtectionTypes.BREAK_BLOCKS, (entity, pos) -> {
-                World world = entity.getWorld();
+                World world = entity.getEntityWorld();
                 BlockState state = world.getBlockState(pos);
 
                 return state.isOf(Blocks.SNOW_BLOCK);

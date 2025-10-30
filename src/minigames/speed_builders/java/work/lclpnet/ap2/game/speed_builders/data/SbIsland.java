@@ -84,7 +84,7 @@ public class SbIsland {
 
     public void teleport(ServerPlayerEntity player) {
         double x = spawnWorldPos.getX() + 0.5, y = spawnWorldPos.getY(), z = spawnWorldPos.getZ() + 0.5;
-        ServerWorld world = player.getWorld();
+        ServerWorld world = player.getEntityWorld();
 
         player.teleport(world, x, y, z, Set.of(), data.yaw(), 0, true);
     }

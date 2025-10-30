@@ -93,7 +93,7 @@ class KingOfTheHillInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
         }
 
         interval(20) { ->
-            val inGoal = players().stream().filter { goalShape!!.contains(it.pos) }.toList()
+            val inGoal = players().stream().filter { goalShape!!.contains(it.entityPos) }.toList()
 
             if (inGoal.size == 1) {
                 commons().addScore(inGoal[0], 1, data)

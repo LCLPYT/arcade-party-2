@@ -132,7 +132,7 @@ public class PillarBattleInstance extends EliminationGameInstance implements Map
             movementBlocker.enableMovement(player);
         }
 
-        commons().whenBelowCriticalHeight().then(player -> player.damage(player.getWorld(), player.getDamageSources().outOfWorld(), player.getHealth()));
+        commons().whenBelowCriticalHeight().then(player -> player.damage(player.getEntityWorld(), player.getDamageSources().outOfWorld(), player.getHealth()));
 
         var randomizer = new PbRandomizer(random, gameHandle.getParticipants(), getWorld().getRegistryManager());
 

@@ -16,9 +16,9 @@ public class TrapdoorPathFindingPredicate implements PathFindingPredicate {
 
     @Override
     public boolean canReach(int x, int y, int z, MobEntity entity, BlockPos from) {
-        World world = entity.getWorld();
+        World world = entity.getEntityWorld();
         BlockState fromState = world.getBlockState(from.down());
-        BlockState toState = entity.getWorld().getBlockState(new BlockPos(x, y - 1, z));
+        BlockState toState = entity.getEntityWorld().getBlockState(new BlockPos(x, y - 1, z));
 
         return !isOpenTrapdoor(fromState) || !isOpenTrapdoor(toState) || y != from.getY();
     }

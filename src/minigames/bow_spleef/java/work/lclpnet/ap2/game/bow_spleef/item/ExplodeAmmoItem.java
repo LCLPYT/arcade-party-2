@@ -17,6 +17,7 @@ import work.lclpnet.ap2.core.hook.ProjectileShootCallback;
 import work.lclpnet.ap2.game.bow_spleef.BowSpleefInstance;
 import work.lclpnet.ap2.impl.game.item.SpecialItem;
 import work.lclpnet.ap2.impl.game.item.SpecialItemContext;
+import work.lclpnet.ap2.impl.util.world.ExplosionUtil;
 import work.lclpnet.kibu.hook.Hook;
 import work.lclpnet.kibu.hook.HookRegistrar;
 
@@ -48,11 +49,11 @@ public class ExplodeAmmoItem implements SpecialItem {
 
             projectile.addCommandTag(TAG_EXPLOSIVE);
             ctx.removeSpecialItem(player, this);
-            player.getWorld().playSound(null, player.getX(), player.getEyeY(), player.getZ(), SoundEvents.ENTITY_TNT_PRIMED, SoundCategory.BLOCKS, 0.5f, 1.75f);
+            player.getEntityWorld().playSound(null, player.getX(), player.getEyeY(), player.getZ(), SoundEvents.ENTITY_TNT_PRIMED, SoundCategory.BLOCKS, 0.5f, 1.75f);
         });
 
         hooks.registerHook(impactHook, (projectile, blockPos) -> {
-            if (!(projectile.getWorld() instanceof ServerWorld world)
+            if (!(projectile.getEntityWorld() instanceof ServerWorld world)
                     || !projectile.getCommandTags().contains(TAG_EXPLOSIVE)) return;
 
             var behaviour = new ExplosionBehavior() {
@@ -67,6 +68,7 @@ public class ExplodeAmmoItem implements SpecialItem {
 
             world.createExplosion(projectile, null, behaviour, pos.x, pos.y, pos.z, 3f, false,
                     World.ExplosionSourceType.BLOCK, ParticleTypes.EXPLOSION, ParticleTypes.EXPLOSION_EMITTER,
+                    ExplosionUtil.EXPLOSION_BLOCK_PARTICLES,
                     SoundEvents.ENTITY_GENERIC_EXPLODE);
         });
     }

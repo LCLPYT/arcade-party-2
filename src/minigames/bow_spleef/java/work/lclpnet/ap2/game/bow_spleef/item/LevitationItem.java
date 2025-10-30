@@ -40,7 +40,7 @@ public class LevitationItem implements SpecialItem {
         player.addStatusEffect(new StatusEffectInstance(StatusEffects.LEVITATION, DURATION, 4));
         ctx.scheduler().timeout(() -> ctx.removeSpecialItem(player, this), DURATION);
 
-        player.getWorld().playSound(null, player.getX(), player.getEyeY(), player.getZ(), SoundEvents.ENTITY_ILLUSIONER_PREPARE_BLINDNESS, SoundCategory.PLAYERS, 0.5f, 2f);
+        player.getEntityWorld().playSound(null, player.getX(), player.getEyeY(), player.getZ(), SoundEvents.ENTITY_ILLUSIONER_PREPARE_BLINDNESS, SoundCategory.PLAYERS, 0.5f, 2f);
 
         return ActionResult.SUCCESS_SERVER;
     }

@@ -70,7 +70,7 @@ public class ImpactDetector {
     public void checkImpact(ServerPlayerEntity player) {
         Entry entry = entry(player);
         Vec3d prevPos = entry.pos;
-        Vec3d currentPos = player.getPos();
+        Vec3d currentPos = player.getEntityPos();
 
         entry.pos = currentPos;
 
@@ -100,7 +100,7 @@ public class ImpactDetector {
 
         // predict future horizontal position
         Vec3d dir = velocity.multiply(1.0, 0.0, 1.0).multiply(1.d / speed);
-        Vec3d pos = player.getPos();
+        Vec3d pos = player.getEntityPos();
         Vec3d futurePos1 = pos.add(dir.multiply(0.2)).add(0, 0.01, 0);
         Vec3d futurePos2 = pos.add(dir.multiply(0.4)).add(0, 0.01, 0);
 
@@ -132,7 +132,7 @@ public class ImpactDetector {
 
     private Iterable<BlockPos> collisions(ServerPlayerEntity player, Box box) {
         // refer to CollisionView::getBlockCollisions
-        return () -> new BlockCollisionSpliterator<>(player.getWorld(), player, box, false, (pos, voxelShape) -> pos);
+        return () -> new BlockCollisionSpliterator<>(player.getEntityWorld(), player, box, false, (pos, voxelShape) -> pos);
     }
 
     public @Nullable Vec3d getVelocity(ServerPlayerEntity player) {

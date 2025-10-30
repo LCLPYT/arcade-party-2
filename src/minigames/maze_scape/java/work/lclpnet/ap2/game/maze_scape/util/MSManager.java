@@ -148,7 +148,7 @@ public class MSManager {
                 .map(OrientedStructurePiece::spawn)
                 .stream()
                 .flatMapToDouble(nodeSpawn -> participants.stream()
-                        .flatMap(player -> struct.findPath(player.getPos(), nodeSpawn).stream())
+                        .flatMap(player -> struct.findPath(player.getEntityPos(), nodeSpawn).stream())
                         .mapToDouble(NavPath::length))
                 .min()
                 .ifPresent(minDist -> minDistances.put(node, minDist)));
@@ -175,7 +175,7 @@ public class MSManager {
     }
 
     private void initAttributes(LivingEntity entity) {
-        if (entity.getWorld() != world || !isMonsterType(entity)) return;
+        if (entity.getEntityWorld() != world || !isMonsterType(entity)) return;
 
         EntityUtil.setAttribute(entity, EntityAttributes.FOLLOW_RANGE, 80);
     }
@@ -188,7 +188,7 @@ public class MSManager {
     }
 
     private @Nullable Brain<WardenEntity> createWardenBrain(WardenEntity warden, Supplier<Brain<WardenEntity>> brainSupplier) {
-        if (warden.getWorld() != world) return null;
+        if (warden.getEntityWorld() != world) return null;
 
         var brain = brainSupplier.get();
 
@@ -219,7 +219,7 @@ public class MSManager {
     }
 
     private @Nullable Brain<CreakingEntity> createCreakingBrain(CreakingEntity creaking, Supplier<Brain<CreakingEntity>> brainSupplier) {
-        if (creaking.getWorld() != world) return null;
+        if (creaking.getEntityWorld() != world) return null;
 
         var brain = brainSupplier.get();
 
@@ -262,7 +262,7 @@ public class MSManager {
     }
 
     private @Nullable Path findPartialPath(Entity entity, BlockPos target, Function<BlockPos, Path> pathFinder) {
-        var navPath = struct.findPath(entity.getPos(), target.toBottomCenterPos());
+        var navPath = struct.findPath(entity.getEntityPos(), target.toBottomCenterPos());
 
         if (navPath.isEmpty()) {
             return null;
@@ -290,7 +290,7 @@ public class MSManager {
     }
 
     private boolean cancelCobwebSlow(Entity entity, BlockPos blockPos) {
-        return entity.getWorld() == world && monsters.containsKey(entity.getUuid());
+        return entity.getEntityWorld() == world && monsters.containsKey(entity.getUuid());
     }
 
     public Participants participants() {
@@ -306,7 +306,7 @@ public class MSManager {
     }
 
     private void afterMoveTick(MobEntity mob) {
-        if (mob.getWorld() != world || !(monsters.get(mob.getUuid()) instanceof EndermanData data)) return;
+        if (mob.getEntityWorld() != world || !(monsters.get(mob.getUuid()) instanceof EndermanData data)) return;
 
         // make the enderman always face the target player while fleeing
         LivingEntity target = mob.getTarget();
@@ -326,7 +326,7 @@ public class MSManager {
     }
 
     private PendingResult<Boolean> isCreakingBeingLookedAt(CreakingEntity creaking) {
-        if (creaking.getWorld() != world || !(monsters.get(creaking.getUuid()) instanceof CreakingData data)) {
+        if (creaking.getEntityWorld() != world || !(monsters.get(creaking.getUuid()) instanceof CreakingData data)) {
             return PendingResult.pass();
         }
 

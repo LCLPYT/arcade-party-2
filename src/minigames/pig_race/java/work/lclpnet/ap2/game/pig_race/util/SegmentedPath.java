@@ -106,7 +106,7 @@ public class SegmentedPath {
 
     public double getProgress(ServerPlayerEntity player) {
         Segment segment = getSegment(player);
-        double relativeProgress = segment.path().getProgress(player.getPos());
+        double relativeProgress = segment.path().getProgress(player.getEntityPos());
 
         return segment.marker().progress() + relativeProgress * segment.relativeLength();
     }

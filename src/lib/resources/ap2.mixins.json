@@ -54,6 +54,7 @@
     "ServerPlayerEntityMixin",
     "ServerWorldMixin",
     "ShulkerEntityAccessor",
+    "SkullBlockEntityAccessor",
     "SpiderEntityMixin",
     "WardenBrainAccessor",
     "WardenBrainMixin",

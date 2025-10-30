@@ -1,14 +1,11 @@
 package work.lclpnet.ap2.impl.util;
 
 import com.mojang.datafixers.util.Pair;
-import com.mojang.serialization.MapDecoder;
-import com.mojang.serialization.MapEncoder;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.jukebox.JukeboxSong;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.DyedColorComponent;
-import net.minecraft.component.type.NbtComponent;
 import net.minecraft.component.type.TooltipDisplayComponent;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.entity.effect.StatusEffect;
@@ -186,18 +183,6 @@ public class ItemHelper {
         chestPlate.set(TOOLTIP_DISPLAY, TooltipDisplayComponent.DEFAULT.with(DYED_COLOR, true));
 
         return chestPlate;
-    }
-
-    public static <T> void setCustomData(ItemStack stack, MapEncoder<T> encoder, T value) {
-        stack.set(DataComponentTypes.CUSTOM_DATA, stack.getOrDefault(DataComponentTypes.CUSTOM_DATA, NbtComponent.DEFAULT)
-                .with(NbtOps.INSTANCE, encoder, value)
-                .getOrThrow());
-    }
-
-    public static <T> Optional<T> getCustomData(ItemStack stack, MapDecoder<T> decoder) {
-        return stack.getOrDefault(DataComponentTypes.CUSTOM_DATA, NbtComponent.DEFAULT)
-                .get(decoder)
-                .resultOrPartial();
     }
 
     public static ItemStack getStackWithData(ServerWorld world, BlockPos pos) {

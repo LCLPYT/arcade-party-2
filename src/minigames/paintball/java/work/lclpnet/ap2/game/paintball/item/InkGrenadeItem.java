@@ -85,7 +85,7 @@ public class InkGrenadeItem implements SpecialItem {
     }
 
     private void throwInkGrenade(ServerPlayerEntity player, ItemStack stack) {
-        ServerWorld world = player.getWorld();
+        ServerWorld world = player.getEntityWorld();
 
         executeOn(PhysicsThread.get(world), () -> spawnObject(player));
 
@@ -98,7 +98,7 @@ public class InkGrenadeItem implements SpecialItem {
         Vec3d dir = player.getRotationVector();
         Vec3d pos = paintGunManager.getProjectileSpawn(player, dir, SIZE);
 
-        var obj = new InkGrenadeObject(scene, player.getWorld());
+        var obj = new InkGrenadeObject(scene, player.getEntityWorld());
         obj.position.set(pos.getX(), pos.getY(), pos.getZ());
         obj.scale.set(SIZE);
         obj.setThrower(player.getUuid());

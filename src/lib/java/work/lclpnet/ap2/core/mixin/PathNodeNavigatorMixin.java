@@ -29,7 +29,7 @@ public class PathNodeNavigatorMixin {
         MobEntity entity = ((PathNodeMakerAccessor) this.pathNodeMaker).getEntity();
 
         if (((ApEntity) entity).ap2$isPatchNarrowMovement()) {
-            ((ApPath) path).ap2$patchNarrowMovement();
+            ((ApPath) (Object) path).ap2$patchNarrowMovement();
         }
     }
 }

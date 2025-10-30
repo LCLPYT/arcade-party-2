@@ -41,7 +41,7 @@ public class EndermanEscape {
     }
 
     public Optional<Path> findEscapePath(EndermanEntity mob) {
-        Vec3d mobPos = mob.getPos();
+        Vec3d mobPos = mob.getEntityPos();
         var entityNode = struct.nodeAt(mobPos);
 
         if (entityNode == null) return Optional.empty();
@@ -118,7 +118,7 @@ public class EndermanEscape {
         for (ServerPlayerEntity player : participants) {
             if (player.squaredDistanceTo(startPos) > maxDistSq) continue;
 
-            Vec3d playerDir = player.getPos().subtract(startPos).withAxis(Direction.Axis.Y, 0).normalize();
+            Vec3d playerDir = player.getEntityPos().subtract(startPos).withAxis(Direction.Axis.Y, 0).normalize();
 
             if (!isUnit(playerDir)) continue;
 

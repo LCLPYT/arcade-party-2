@@ -2,8 +2,6 @@ package work.lclpnet.ap2.api.actor;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.NbtComponent;
 import net.minecraft.entity.MarkerEntity;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtOps;
@@ -13,6 +11,7 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import work.lclpnet.ap2.core.type.ApMarkerEntity;
+import work.lclpnet.ap2.impl.util.CustomNbt;
 
 import java.util.LinkedHashSet;
 import java.util.Objects;
@@ -34,7 +33,7 @@ public class ActorManager implements Tickable {
 
     public void spawn(Actor actor, @Nullable MarkerEntity marker) {
         if (marker != null) {
-            actor.setPosition(marker.getPos());
+            actor.setPosition(marker.getEntityPos());
 
             ((ApMarkerEntity) marker).ap2$setActor(actor);
         }
@@ -92,9 +91,7 @@ public class ActorManager implements Tickable {
     }
 
     public static Optional<ActorInfo> getActorNbt(MarkerEntity marker) {
-        NbtComponent customData = marker.getOrDefault(DataComponentTypes.CUSTOM_DATA, NbtComponent.DEFAULT);
-
-        return customData.get(ACTOR_INFO_CODEC).result();
+        return CustomNbt.get(marker, ACTOR_INFO_CODEC);
     }
 
     public static void writeActorNbt(MarkerEntity marker, Actor actor) {
@@ -113,12 +110,7 @@ public class ActorManager implements Tickable {
 
         var info = new ActorInfo(id, actorNbt);
 
-        NbtComponent customData = marker.get(DataComponentTypes.CUSTOM_DATA);
-
-        if (customData == null) return;
-
-        customData.with(NbtOps.INSTANCE, ACTOR_INFO_CODEC, info)
-                .ifSuccess(component -> marker.setComponent(DataComponentTypes.CUSTOM_DATA, component));
+        CustomNbt.set(marker, ACTOR_INFO_CODEC, info);
     }
 
     public record ActorInfo(Identifier type, NbtCompound nbt) {

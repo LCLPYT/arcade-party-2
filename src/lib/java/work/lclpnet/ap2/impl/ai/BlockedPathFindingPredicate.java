@@ -17,7 +17,7 @@ public class BlockedPathFindingPredicate implements PathFindingPredicate {
 
     @Override
     public boolean canReach(int x, int y, int z, MobEntity entity, BlockPos from) {
-        World world = entity.getWorld();
+        World world = entity.getEntityWorld();
         var to = new BlockPos(x, y, z);
         var prev = new BlockPos.Mutable();
 

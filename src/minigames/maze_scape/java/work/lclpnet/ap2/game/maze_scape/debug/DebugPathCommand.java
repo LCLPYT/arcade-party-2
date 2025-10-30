@@ -102,7 +102,7 @@ public class DebugPathCommand implements KibuCommand {
     private Passage getPassage(CommandContext<ServerCommandSource> ctx) throws CommandSyntaxException {
         ServerPlayerEntity player = ctx.getSource().getPlayerOrThrow();
 
-        Passage passage = struct.nearestPassageTo(player.getPos());
+        Passage passage = struct.nearestPassageTo(player.getEntityPos());
 
         if (passage == null) {
             throw NO_PASSAGE_FOUND.create();

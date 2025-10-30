@@ -22,7 +22,7 @@ public class MobNavigationMixin implements ApMobNavigation {
     }
 
     @WrapOperation(
-            method = "findPathTo(Lnet/minecraft/util/math/BlockPos;I)Lnet/minecraft/entity/ai/pathing/Path;",
+            method = "retargetToSolidBlock",
             at = @At(
                     value = "INVOKE",
                     target = "Lnet/minecraft/block/BlockState;isSolid()Z"
@@ -37,7 +37,7 @@ public class MobNavigationMixin implements ApMobNavigation {
     }
 
     @WrapOperation(
-            method = "findPathTo(Lnet/minecraft/util/math/BlockPos;I)Lnet/minecraft/entity/ai/pathing/Path;",
+            method = "retargetToSolidBlock",
             at = @At(
                     value = "INVOKE",
                     target = "Lnet/minecraft/block/BlockState;isAir()Z"

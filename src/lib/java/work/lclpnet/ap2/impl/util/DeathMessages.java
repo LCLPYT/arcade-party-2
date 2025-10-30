@@ -125,9 +125,7 @@ public class DeathMessages {
         world.getGameRules().get(GameRules.SHOW_DEATH_MESSAGES).set(false, world.getServer());
 
         hooks.registerHook(PlayerDeathMessageCallback.HOOK, (player, source, currentMsg) -> {
-            MinecraftServer server = player.getServer();
-
-            if (server == null) return currentMsg;
+            MinecraftServer server = player.getEntityWorld().getServer();
 
             TranslatedText msg = getDeathMessage(player, source);
             msg.sendTo(PlayerLookup.all(server));

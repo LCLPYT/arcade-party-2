@@ -70,9 +70,9 @@ public class OptionChooser<T> {
         if (event.action() != SlotActionType.PICKUP) return;
 
         ServerPlayerEntity player = event.player();
-        MinecraftServer server = player.getServer();
+        MinecraftServer server = player.getEntityWorld().getServer();
 
-        if (server == null || server.getPermissionLevel(player.getGameProfile()) < 2) return;
+        if (server.getPermissionLevel(player.getPlayerConfigEntry()) < 2) return;
 
         Inventory inventory = event.inventory();
 

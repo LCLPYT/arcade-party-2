@@ -137,7 +137,7 @@ public class CCHooks {
         });
 
         hooks.registerHook(ServerLivingEntityHooks.ALLOW_DAMAGE, (entity, source, amount) -> {
-            if (source.isOf(DamageTypes.FREEZE) && amount < Float.MAX_VALUE && entity.getWorld() instanceof ServerWorld world) {
+            if (source.isOf(DamageTypes.FREEZE) && amount < Float.MAX_VALUE && entity.getEntityWorld() instanceof ServerWorld world) {
                 entity.damage(world, entity.getDamageSources().freeze(), Float.MAX_VALUE);
                 return false;
             }
@@ -179,7 +179,7 @@ public class CCHooks {
     private void onUseBlock(Entity entity, BlockPos pos) {
         if (!(entity instanceof ServerPlayerEntity player)) return;
 
-        BlockState state = entity.getWorld().getBlockState(pos);
+        BlockState state = entity.getEntityWorld().getBlockState(pos);
         if (!state.isIn(BlockTags.CAMPFIRES)) return;
 
         ItemStack stack = getHeldFuel(player);

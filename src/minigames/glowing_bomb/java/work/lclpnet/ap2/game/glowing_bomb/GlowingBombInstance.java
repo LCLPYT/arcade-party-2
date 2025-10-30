@@ -6,6 +6,7 @@ import net.minecraft.component.DataComponentTypes;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.particle.ParticleTypes;
+import net.minecraft.particle.TintedParticleEffect;
 import net.minecraft.registry.Registries;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
@@ -297,7 +298,7 @@ public class GlowingBombInstance extends EliminationGameInstance implements MapB
         double x = pos.x(), y = pos.y(), z = pos.z();
 
         world.playSound(null, x, y, z, SoundEvents.BLOCK_RESPAWN_ANCHOR_DEPLETE.value(), SoundCategory.HOSTILE, 0.9f, 1.0f);
-        world.spawnParticles(ParticleTypes.FLASH, x, y, z, 1, 0, 0, 0, 1);
+        world.spawnParticles(TintedParticleEffect.create(ParticleTypes.FLASH, 0x8f509e), x, y, z, 1, 0, 0, 0, 1);
         world.spawnParticles(ParticleTypes.SMALL_FLAME, x, y, z, 20, 0.1, 0.1, 0.1, 0.1);
 
         GbAnchor anchor = manager.bombAnchor();

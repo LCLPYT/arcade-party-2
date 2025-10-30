@@ -32,11 +32,11 @@ public class TrapdoorJumpPatch {
         double tz = moveControl.getTargetZ();
 
         Vec3d target = new Vec3d(tx, entity.getY(), tz);
-        Vec3d start = entity.getPos();
+        Vec3d start = entity.getEntityPos();
 
         Vector3f dir = target.subtract(start).toVector3f().normalize();
 
-        World world = entity.getWorld();
+        World world = entity.getEntityWorld();
 
         BlockHitResult result = RayCaster.rayCast(start, target, pos -> {
             BlockState state = world.getBlockState(pos);

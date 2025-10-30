@@ -23,7 +23,7 @@ public class MovementTracker {
     }
 
     public void track(ServerPlayerEntity player) {
-        getEntry(player).update(player.getPos());
+        getEntry(player).update(player.getEntityPos());
     }
 
     @Nullable

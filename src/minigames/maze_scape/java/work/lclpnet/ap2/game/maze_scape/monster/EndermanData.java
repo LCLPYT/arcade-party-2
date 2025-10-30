@@ -117,7 +117,7 @@ public class EndermanData implements MonsterData<EndermanEntity> {
             if (--fleeTargetTimeout == 0) {
                 stopFleeing(mob);
             }
-        } else if (fleeTargetPos != null && fleeTargetPos.getSquaredDistance(mob.getPos()) <= 1.44)  {
+        } else if (fleeTargetPos != null && fleeTargetPos.getSquaredDistance(mob.getEntityPos()) <= 1.44)  {
             fleeTargetTimeout = FLEE_TIMEOUT_TICKS;
         }
 
@@ -161,7 +161,7 @@ public class EndermanData implements MonsterData<EndermanEntity> {
 
         if (mob == null) return;
 
-        ServerPlayerEntity looking = visibilityChecker.getAnyoneLookingAt(mob, mob.getPos(), args.manager().participants());
+        ServerPlayerEntity looking = visibilityChecker.getAnyoneLookingAt(mob, mob.getEntityPos(), args.manager().participants());
 
         if (looking != null) {
             onLookedAt(mob, looking);
@@ -250,7 +250,7 @@ public class EndermanData implements MonsterData<EndermanEntity> {
     }
 
     private void playSoundFar(@NotNull ServerPlayerEntity player, EndermanEntity mob, SoundEvent sound, float volume, float pitch) {
-        World world = mob.getWorld();
+        World world = mob.getEntityWorld();
 
         double dist = 16 * volume;
 
