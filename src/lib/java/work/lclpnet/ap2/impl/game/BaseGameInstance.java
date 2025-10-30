@@ -111,6 +111,8 @@ public abstract class BaseGameInstance implements MiniGameInstance {
             this.world = world;
             this.map = map;
 
+            gameHandle.setWorld(world);
+
             var future = bootstrap.createWorldBootstrap(world, map);
 
             var schemaHolder = this.schemaHolder;
