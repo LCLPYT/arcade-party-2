@@ -7,12 +7,14 @@ import work.lclpnet.ap2.game.guess_it.data.*;
 import work.lclpnet.ap2.game.guess_it.util.MobRandomizer;
 import work.lclpnet.ap2.game.guess_it.util.MobSpawner;
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape;
+import work.lclpnet.gaco.ds.IndexedSet;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.lobby.util.WorldModifier;
 
 import java.util.List;
 import java.util.Random;
+import java.util.UUID;
 
 import static work.lclpnet.ap2.impl.util.world.PositionUtil.findGroundPositions;
 
@@ -24,14 +26,16 @@ public class DistinctMobCountChallenge implements Challenge {
     private final Random random;
     private final BlockShape blockShape;
     private final WorldModifier modifier;
+    private final IndexedSet<UUID> mannequinUuids;
     private int amount = 0;
 
-    public DistinctMobCountChallenge(MiniGameHandle gameHandle, ServerWorld world, Random random, BlockShape blockShape, WorldModifier modifier) {
+    public DistinctMobCountChallenge(MiniGameHandle gameHandle, ServerWorld world, Random random, BlockShape blockShape, WorldModifier modifier, IndexedSet<UUID> mannequinUuids) {
         this.gameHandle = gameHandle;
         this.world = world;
         this.random = random;
         this.blockShape = blockShape;
         this.modifier = modifier;
+        this.mannequinUuids = mannequinUuids;
     }
 
     @Override
@@ -69,7 +73,7 @@ public class DistinctMobCountChallenge implements Challenge {
         }
 
         MobRandomizer randomizer = new MobRandomizer(types);
-        MobSpawner spawner = new MobSpawner(world, random);
+        MobSpawner spawner = new MobSpawner(world, random, mannequinUuids);
 
         int budget = MobCountMultiChallenge.MIN_BUDGET + random.nextInt(MobCountMultiChallenge.RANDOM_BUDGET);
 

@@ -1,10 +1,14 @@
 package work.lclpnet.ap2.game.guess_it.util;
 
+import net.minecraft.block.Oxidizable;
+import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.ProfileComponent;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.ai.brain.MemoryModuleType;
+import net.minecraft.entity.decoration.MannequinEntity;
 import net.minecraft.entity.mob.*;
 import net.minecraft.entity.passive.*;
 import net.minecraft.item.ItemStack;
@@ -25,6 +29,7 @@ import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.core.mixin.ShulkerEntityAccessor;
 import work.lclpnet.ap2.core.type.ApVariantHolder;
 import work.lclpnet.ap2.impl.util.world.SizedSpaceFinder;
+import work.lclpnet.gaco.ds.IndexedSet;
 import work.lclpnet.kibu.access.entity.GoatEntityAccess;
 import work.lclpnet.kibu.access.entity.HorseEntityAccess;
 import work.lclpnet.kibu.access.entity.LlamaEntityAccess;
@@ -36,15 +41,18 @@ import work.lclpnet.lobby.util.WorldModifier;
 import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
+import java.util.UUID;
 
 public class MobSpawner {
 
     private final ServerWorld world;
     private final Random random;
+    private final IndexedSet<UUID> mannequinUuids;
 
-    public MobSpawner(ServerWorld world, Random random) {
+    public MobSpawner(ServerWorld world, Random random, IndexedSet<UUID> mannequinUuids) {
         this.world = world;
         this.random = random;
+        this.mannequinUuids = mannequinUuids;
     }
 
     public void spawnEntity(EntityType<?> type, Vec3d pos, WorldModifier modifier) {
@@ -70,6 +78,8 @@ public class MobSpawner {
 
     @SuppressWarnings("unchecked")
     public void randomizeEntity(Entity entity) {
+        entity.setAngles(random.nextFloat() * 360, random.nextFloat() * 180 - 90);
+
         if (random.nextFloat() < 0.005) {
             entity.setCustomName(Text.literal("Dinnerbone"));
         }
@@ -205,6 +215,14 @@ public class MobSpawner {
             randomizeVariant((ApVariantHolder<RegistryEntry<ChickenVariant>>) chicken, chickenTypes);
         } else if (entity instanceof HappyGhastEntity happyGhast) {
             happyGhast.setBaby(random.nextFloat() < 0.6);
+        } else if (entity instanceof CopperGolemEntity copperGolem) {
+            copperGolem.setOxidationLevel(randomElement(Oxidizable.OxidationLevel.values()));
+        } else if (entity instanceof MannequinEntity mannequin) {
+            if (!mannequinUuids.isEmpty()) {
+                UUID uuid = mannequinUuids.get(random.nextInt(mannequinUuids.size()));
+
+                mannequin.setComponent(DataComponentTypes.PROFILE, ProfileComponent.ofDynamic(uuid));
+            }
         }
     }
 

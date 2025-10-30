@@ -10,11 +10,14 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
 import net.minecraft.world.GameRules;
 import org.jetbrains.annotations.NotNull;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import work.lclpnet.ap2.ApConstants;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.map.MapBootstrap;
+import work.lclpnet.ap2.core.hook.CopperGolemTurnIntoStatueCallback;
 import work.lclpnet.ap2.game.guess_it.data.*;
 import work.lclpnet.ap2.game.guess_it.util.AnswerCommand;
 import work.lclpnet.ap2.game.guess_it.util.SetChallengeCommand;
@@ -28,6 +31,7 @@ import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.ap2.impl.util.scoreboard.ScoreHandle;
 import work.lclpnet.ap2.impl.util.scoreboard.ScoreboardLayout;
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape;
+import work.lclpnet.gaco.ds.IndexedSet;
 import work.lclpnet.kibu.cmd.type.CommandRegistrar;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.*;
@@ -41,8 +45,8 @@ import work.lclpnet.lobby.game.map.GameMap;
 import work.lclpnet.lobby.game.util.BossBarTimer;
 import work.lclpnet.lobby.util.ResetWorldModifier;
 
-import java.util.Objects;
-import java.util.Random;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 import static net.minecraft.util.Formatting.*;
@@ -63,6 +67,7 @@ public class GuessItInstance extends FFAGameInstance implements MapBootstrap {
     private GuessItManager manager = null;
     private Challenge challenge = null;
     private SoundSubtitles soundSubtitles = null;
+    private IndexedSet<UUID> mannequinUuids = null;
     private ResetWorldModifier modifier = null;
     private ScoreHandle roundHandle = null;
     private int round = 0;
@@ -85,6 +90,14 @@ public class GuessItInstance extends FFAGameInstance implements MapBootstrap {
     }
 
     @Override
+    public @NotNull CompletableFuture<Void> createWorldBootstrap(@NotNull ServerWorld world, @NotNull GameMap map) {
+        var soundSubtitlesFuture = SoundSubtitles.load().thenAccept(sub -> soundSubtitles = sub);
+        var mannequinUuidsFuture = loadMannequinUuids().thenAccept(ids -> mannequinUuids = new IndexedSet<>(ids));
+
+        return CompletableFuture.allOf(soundSubtitlesFuture, mannequinUuidsFuture);
+    }
+
+    @Override
     protected void prepare() {
         ServerWorld world = getWorld();
         GameMap map = getMap();
@@ -100,7 +113,7 @@ public class GuessItInstance extends FFAGameInstance implements MapBootstrap {
         messenger = new ChallengeMessengerImpl(world, gameHandle.getTranslations());
         inputManager = new InputManager(choices, gameHandle.getTranslations(), participants, messenger);
         modifier = new ResetWorldModifier(world, hooks);
-        manager = new GuessItManager(gameHandle, world, random, blockShape, modifier, soundSubtitles, commons().debugController());
+        manager = new GuessItManager(gameHandle, world, random, blockShape, modifier, soundSubtitles, commons().debugController(), mannequinUuids);
 
         CommandRegistrar commands = gameHandle.getCommands();
 
@@ -130,6 +143,9 @@ public class GuessItInstance extends FFAGameInstance implements MapBootstrap {
 
         // prevent boss mobs from creating boss bars for players
         hooks.registerHook(EntityBossBarCallback.HOOK, (entity, bossBar, player) -> true);
+
+        // prevent copper golems from turning into statues and leaving blocks
+        hooks.registerHook(CopperGolemTurnIntoStatueCallback.HOOK, copperGolem -> true);
 
         commons().teleportToRandomSpawns(random);
     }
@@ -348,11 +364,6 @@ public class GuessItInstance extends FFAGameInstance implements MapBootstrap {
         }, DELAY_TICKS);
     }
 
-    @Override
-    public @NotNull CompletableFuture<Void> createWorldBootstrap(@NotNull ServerWorld world, @NotNull GameMap map) {
-        return SoundSubtitles.load().thenAccept(sub -> soundSubtitles = sub);
-    }
-
     private synchronized void skip() {
         transaction++;
 
@@ -370,5 +381,38 @@ public class GuessItInstance extends FFAGameInstance implements MapBootstrap {
 
         round--;
         prepareNextChallenge();
+    }
+
+    private CompletableFuture<Set<UUID>> loadMannequinUuids() {
+        return CompletableFuture.supplyAsync(this::loadMannequinUuidsSync);
+    }
+
+    private Set<UUID> loadMannequinUuidsSync() {
+        var in = getClass().getResourceAsStream("/mannequin_players.json");
+
+        if (in == null) return Set.of();
+
+        try (in) {
+            String content = new String(in.readAllBytes(), StandardCharsets.UTF_8);
+            JSONObject json = new JSONObject(content);
+            JSONArray array = json.getJSONArray("uuids");
+
+            Set<UUID> uuids = new HashSet<>(array.length());
+
+            for (Object uuid : array) {
+                if (!(uuid instanceof String str)) continue;
+
+                try {
+                    uuids.add(UUID.fromString(str));
+                } catch (IllegalArgumentException e) {
+                    gameHandle.getLogger().error("Malformed uuid: {}", str, e);
+                }
+            }
+
+            return uuids;
+        } catch (Throwable t) {
+            gameHandle.getLogger().error("Failed to load mannequin player uuids", t);
+            return Set.of();
+        }
     }
 }

@@ -23,6 +23,7 @@ import work.lclpnet.ap2.game.guess_it.data.*;
 import work.lclpnet.ap2.game.guess_it.util.MobSpawner;
 import work.lclpnet.ap2.impl.util.world.SimpleAdjacentBlocks;
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape;
+import work.lclpnet.gaco.ds.IndexedSet;
 import work.lclpnet.kibu.access.entity.FireworkEntityAccess;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.RunningTask;
@@ -202,7 +203,7 @@ public class MinecartChallenge implements Challenge, LongerChallenge, SchedulerA
         minecart.setPos(x, y, z);
 
         VillagerEntity villager = new VillagerEntity(EntityType.VILLAGER, world);
-        new MobSpawner(world, random).randomizeEntity(villager);
+        new MobSpawner(world, random, new IndexedSet<>()).randomizeEntity(villager);
         villager.setPos(x, y, z);
 
         modifier.spawnEntity(minecart);

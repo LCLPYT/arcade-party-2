@@ -13,6 +13,7 @@
     "CatEntityMixin",
     "ChickenEntityMixin",
     "CobwebBlockMixin",
+    "CopperGolemEntityMixin",
     "CowEntityMixin",
     "CreakingBrainAccessor",
     "CreakingEntityMixin",
