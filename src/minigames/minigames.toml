@@ -112,3 +112,8 @@ type = [ "kotlin",]
 [[minigames]]
 id = "killeporter"
 type = [ "kotlin",]
+
+[[minigames]]
+id = "button_master"
+type = [ "kotlin",]
+
