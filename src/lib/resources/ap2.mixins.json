@@ -36,6 +36,7 @@
     "LivingEntityMixin",
     "LlamaEntityMixin",
     "MarkerEntityMixin",
+    "MinecraftServerMixin",
     "MobEntityAccessor",
     "MobNavigationMixin",
     "MooshroomEntityMixin",
