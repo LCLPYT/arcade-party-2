@@ -11,7 +11,7 @@ import net.minecraft.util.math.Vec3d;
 import org.joml.Matrix4d;
 import org.joml.Vector4d;
 import work.lclpnet.ap2.game.maze_scape.setup.MSDebugController;
-import work.lclpnet.ap2.game.maze_scape.util.VisibilityChecker;
+import work.lclpnet.ap2.impl.util.VisibilityChecker;
 import work.lclpnet.ap2.impl.util.debug.DebugRenderer;
 import work.lclpnet.gaco.scene.Object3d;
 import work.lclpnet.kibu.cmd.type.CommandRegistrar;
