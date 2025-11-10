@@ -1,5 +1,6 @@
-package work.lclpnet.ap2.game.maze_scape.util;
+package work.lclpnet.ap2.impl.util;
 
+import lombok.Getter;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.ShapeContext;
 import net.minecraft.entity.Entity;
@@ -20,8 +21,8 @@ import org.joml.Quaterniond;
 import org.joml.Vector4d;
 import work.lclpnet.ap2.impl.util.math.MathUtil;
 
-import static java.lang.Math.abs;
-import static java.lang.Math.toRadians;
+import static java.lang.Math.*;
+import static java.lang.Math.min;
 
 public class VisibilityChecker {
 
@@ -30,6 +31,7 @@ public class VisibilityChecker {
             PLAYER_ASPECT_RATIO = 1920 / 1080.d;
 
     private final BlockView blockView;
+    @Getter
     private final Matrix4d viewProjMat = new Matrix4d();
 
     public VisibilityChecker(BlockView blockView) {
@@ -54,24 +56,28 @@ public class VisibilityChecker {
     }
 
     public boolean isVisibleByAt(Entity entity, ServerPlayerEntity player, Vec3d pos) {
-        // check if the entity is within the players (estimated) view frustum
-        Vector4d ndc = new Vector4d();
-        Vec3d playerEyePos = player.getEyePos();
-
         viewProjectionMatrix(player, PLAYER_FOV, PLAYER_ASPECT_RATIO, viewProjMat);
 
-        // first, check entity eye pos
+        // check if the entity is within the players (estimated) view frustum
+        Vec3d playerEyePos = player.getEyePos();
         Vec3d entityEyePos = new Vec3d(pos.getX(), pos.getY() + entity.getStandingEyeHeight(), pos.getZ());
 
-        if (canSee(viewProjMat, playerEyePos, entityEyePos, ndc)) {
+        Box bounds = entity.getDimensions(entity.getPose()).getBoxAt(pos);  // add some margin
+
+        return isBoxVisible(playerEyePos, bounds, entityEyePos);
+    }
+
+    public boolean isBoxVisible(Vec3d cameraPos, Box box, Vec3d quickCheckPos) {
+        // check if the box is within an estimated view frustum
+        Vector4d ndc = new Vector4d();
+
+        if (canSee(viewProjMat, cameraPos, quickCheckPos, ndc)) {
             return true;
         }
 
-        // else, check bounding box corners
-        Box bounds = entity.getDimensions(entity.getPose()).getBoxAt(pos);  // add some margin
-
-        for (Vec3d corner : MathUtil.corners(bounds)) {
-            if (canSee(viewProjMat, playerEyePos, corner, ndc)) {
+        // need to check bounding box corners
+        for (Vec3d corner : MathUtil.corners(box)) {
+            if (canSee(viewProjMat, cameraPos, corner, ndc)) {
                 return true;
             }
         }
@@ -113,10 +119,17 @@ public class VisibilityChecker {
     public static Matrix4d viewProjectionMatrix(ServerPlayerEntity player, double fovRadians, double screenAspectRatio, Matrix4d mat) {
         MinecraftServer server = player.getEntityWorld().getServer();
 
-        int viewDistance = Math.max(2, Math.min(player.getViewDistance(), server.getPlayerManager().getViewDistance()));
+        int viewDistance = max(2, min(player.getViewDistance(), server.getPlayerManager().getViewDistance()));
+
+        return viewProjectionMatrix(player.getX(), player.getEyeY(), player.getZ(), player.getYaw(), player.getPitch(),
+                viewDistance, fovRadians, screenAspectRatio, mat);
+    }
+
+    public static Matrix4d viewProjectionMatrix(double cameraX, double cameraY, double cameraZ, float yaw, float pitch,
+                                                int viewDistance, double fovRadians, double screenAspectRatio, Matrix4d mat) {
 
         Quaterniond rotation = new Quaterniond()
-                .rotationYXZ(Math.PI - player.getYaw() * Math.PI / 180.0, -player.getPitch() * Math.PI / 180.0, 0.0F)
+                .rotationYXZ(Math.PI - yaw * Math.PI / 180.0, -pitch * Math.PI / 180.0, 0.0F)
                 .conjugate();
 
         int zFar = viewDistance * 16;
@@ -124,6 +137,6 @@ public class VisibilityChecker {
         return mat.identity()
                 .perspective(fovRadians, screenAspectRatio, 0.05, zFar)
                 .rotate(rotation)
-                .translate(-player.getX(), -player.getEyeY(), -player.getZ());
+                .translate(-cameraX, -cameraY, -cameraZ);
     }
 }

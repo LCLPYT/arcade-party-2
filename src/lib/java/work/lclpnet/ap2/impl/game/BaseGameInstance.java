@@ -139,7 +139,14 @@ public abstract class BaseGameInstance implements MiniGameInstance {
     private <T> void loadSchema(WorldData data, SchemaHolder<T> holder) {
         MapSchemaLoader loader = new MapSchemaLoader(gameHandle.getLogger());
 
-        T instance = loader.load(data, holder.getSchemaClass());
+        T instance;
+
+        try {
+            instance = loader.load(data, holder.getSchemaClass());
+        } catch (Throwable t) {
+            gameHandle.getLogger().error("Failed to load map schema", t);
+            return;
+        }
 
         if (instance == null) {
             gameHandle.getLogger().error("Failed to load schema type, look for any previous errors. Game may not function properly...");
