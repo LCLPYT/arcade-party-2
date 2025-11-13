@@ -6,6 +6,8 @@ import work.lclpnet.ap2.impl.map.schema.CommonMapSchema
 import work.lclpnet.ap2.impl.map.schema.MapSchema
 import work.lclpnet.ap2.impl.map.schema.Property
 import work.lclpnet.gaco.ds.BlockBox
+import work.lclpnet.gaco.math.BlockFace
+import work.lclpnet.kibu.hook.util.PositionRotation
 
 @MapSchema(
     namespace = ApConstants.ID,
@@ -19,4 +21,10 @@ class ButtonMasterSchema : CommonMapSchema() {
 
     @Property(name = "Scanner bounds")
     val scanBox: BlockBox? = null
+
+    @Property(name = "Button Master Spawn")
+    val buttonMasterSpawn: PositionRotation? = null
+
+    @Property(name = "Capsules")
+    val capsules = listOf<BlockFace>()
 }
