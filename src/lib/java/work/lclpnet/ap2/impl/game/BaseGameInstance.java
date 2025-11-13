@@ -33,6 +33,7 @@ import work.lclpnet.ap2.impl.util.effect.ApEffect;
 import work.lclpnet.ap2.impl.util.effect.ApEffects;
 import work.lclpnet.ap2.impl.util.property.ApMapProperties;
 import work.lclpnet.combatctl.impl.CombatStyles;
+import work.lclpnet.gaco.asset.AssetPath;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.EntityHealthCallback;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
@@ -52,7 +53,10 @@ import work.lclpnet.lobby.game.util.ProtectorUtils;
 import work.lclpnet.map_api.GameMapApi;
 import work.lclpnet.map_api.data.WorldData;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -470,6 +474,16 @@ public abstract class BaseGameInstance implements MiniGameInstance {
         this.schemaHolder = holder;
 
         return holder;
+    }
+
+    public InputStream asset(AssetPath path) throws IOException {
+        return gameHandle.getMapFacade().getAssetRepository().getStream(path).resource();
+    }
+
+    public AssetPath assetPath(String path) {
+        String mapPath = Objects.requireNonNull(map, "Map not loaded yet").getDescriptor().getMapPath();
+
+        return AssetPath.of(mapPath, path);
     }
 
     protected abstract void prepare();
