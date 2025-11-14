@@ -1,13 +1,17 @@
 package work.lclpnet.ap2
 
 import net.minecraft.block.Block
+import net.minecraft.entity.LivingEntity
+import net.minecraft.entity.attribute.EntityAttribute
 import net.minecraft.network.packet.s2c.play.PositionFlag
 import net.minecraft.particle.ParticleEffect
+import net.minecraft.registry.entry.RegistryEntry
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.server.world.ServerWorld
 import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Position
 import net.minecraft.world.World
+import work.lclpnet.ap2.impl.util.EntityUtil
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess
 import work.lclpnet.kibu.hook.util.PositionRotation
 
@@ -28,3 +32,9 @@ fun ServerPlayerEntity.teleport(pos: BlockPos) = teleport(entityWorld, pos.x.toD
 fun ServerPlayerEntity.teleport(pos: Position) = teleport(entityWorld, pos.x, pos.y, pos.z, emptySet<PositionFlag>(), yaw, pitch, true)
 fun ServerPlayerEntity.teleport(pos: Position, yaw: Float) = teleport(entityWorld, pos.x, pos.y, pos.z, emptySet<PositionFlag>(), yaw, pitch, true)
 fun ServerPlayerEntity.teleport(pos: PositionRotation) = teleport(entityWorld, pos.x, pos.y, pos.z, emptySet<PositionFlag>(), pos.yaw, pos.pitch, true)
+
+fun LivingEntity.setAttribute(attribute: RegistryEntry<EntityAttribute>, value: Double)
+    = EntityUtil.setAttribute(this, attribute, value)
+
+fun LivingEntity.resetAttribute(attribute: RegistryEntry<EntityAttribute>)
+        = EntityUtil.resetAttribute(this, attribute)
