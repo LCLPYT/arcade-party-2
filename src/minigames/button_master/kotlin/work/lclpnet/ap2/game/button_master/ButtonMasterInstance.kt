@@ -2,6 +2,7 @@ package work.lclpnet.ap2.game.button_master
 
 import net.fabricmc.fabric.api.event.player.UseBlockCallback
 import net.minecraft.block.Blocks
+import net.minecraft.entity.attribute.EntityAttributes
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.registry.tag.BlockTags
 import net.minecraft.server.network.ServerPlayerEntity
@@ -23,7 +24,11 @@ import work.lclpnet.ap2.impl.util.VisibilityChecker
 import work.lclpnet.ap2.impl.util.world.BfsWorldScanner
 import work.lclpnet.ap2.impl.util.world.CardinalAdjacentBlocks
 import work.lclpnet.ap2.players
+import work.lclpnet.ap2.resetAttribute
+import work.lclpnet.ap2.setAttribute
+import work.lclpnet.ap2.setBlocks
 import work.lclpnet.ap2.teleport
+import work.lclpnet.ap2.toMinecraft
 import work.lclpnet.ap2.translate
 import work.lclpnet.gaco.ds.BlockBox
 import work.lclpnet.gaco.ds.StructureMask
@@ -32,7 +37,6 @@ import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks
 import work.lclpnet.kibu.schematic.FabricBlockStateAdapter
 import work.lclpnet.kibu.schematic.SchematicFormats
 import work.lclpnet.kibu.structure.BlockStructure
-import work.lclpnet.kibu.translate.text.FormatWrapper
 import work.lclpnet.kibu.translate.text.FormatWrapper.styled
 import work.lclpnet.kibu.util.math.Matrix3i
 import work.lclpnet.lobby.game.map.GameMap
@@ -44,6 +48,7 @@ import kotlin.math.min
 
 const val DEBUG_VALID_POSITIONS = false
 const val DEBUG_BUTTON_POSITION = true
+const val DEBUG_CAPSULE_BOUNDS = false
 const val EJECT_SECONDS = 15
 
 class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gameHandle), MapBootstrap {
@@ -189,6 +194,7 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
         searchingButton = false
 
         player.teleport(schemaHolder.get().buttonMasterSpawn!!)
+        player.setAttribute(EntityAttributes.JUMP_STRENGTH, 0.0)
 
         teleportToCapsules(players().filter { it != player })
 
@@ -219,12 +225,48 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
         // TODO
     }
 
-    private fun removeExcessCapsules(count: Int) {
-        // TODO
+    private fun removeExcessCapsules(requiredCapsules: Int) {
+        val schema = schemaHolder.get()
+        val capsules = schema.capsules
+        val capsuleSchematic = requireNotNull(capsuleSchematic)
+
+        require(requiredCapsules <= capsules.size) { "Not enough capsules (need $requiredCapsules, got ${capsules.size}" }
+
+        val schematicOffset = capsuleSchematic.origin.toMinecraft()
+        val capsuleButton = schema.capsuleButton!!
+        val referenceBounds = BlockBox.ofBounds(capsuleSchematic)
+        val buttonToOriginOffset = capsuleButton.pos.subtract(schematicOffset)
+
+        for (i in requiredCapsules ..< capsules.size) {
+            val capsule = capsules[i]
+
+            val rotation = Matrix3i.makeRotationY(
+                    capsule.face.horizontalQuarterTurns - capsuleButton.face.horizontalQuarterTurns
+            )
+
+            val localOffset = capsule.pos.subtract(capsuleButton.pos)
+
+            val capsuleBounds = referenceBounds
+                .translate(buttonToOriginOffset.multiply(-1))
+                .transform(rotation)
+                .translate(buttonToOriginOffset)
+                .translate(localOffset)
+                .translate(schematicOffset)
+
+            if (DEBUG_CAPSULE_BOUNDS) {
+                commons().debugController().renderer().ifPresent { it.box(capsuleBounds, Blocks.YELLOW_STAINED_GLASS.defaultState) }
+            }
+
+            world.setBlocks(capsuleBounds, Blocks.AIR)
+        }
     }
 
     fun beginNextRound() {
-        teleportRemainingToSpawn()
+        for (player in players()) {
+            gameHandle.worldFacade.teleport(player)
+
+            player.resetAttribute(EntityAttributes.JUMP_STRENGTH)
+        }
 
         nextRound()
     }
@@ -258,15 +300,6 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
             commons().debugController().renderer().ifPresent {
                 currentButtonMarker = it.marker(pos.toCenterPos(), Blocks.BLUE_STAINED_GLASS.defaultState, DyeColor.BLUE.entityColor)
             }
-        }
-    }
-
-    private fun teleportRemainingToSpawn() {
-        val spawnPos = MapUtils.getSpawnPosition(map)
-        val spawnYaw = MapUtils.getSpawnYaw(map)
-
-        players().forEach {
-            it.teleport(spawnPos, spawnYaw)
         }
     }
 }

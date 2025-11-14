@@ -27,4 +27,7 @@ class ButtonMasterSchema : CommonMapSchema() {
 
     @Property(name = "Capsules")
     val capsules = listOf<BlockFace>()
+
+    @Property(name = "Capsule Schematic Button")
+    val capsuleButton: BlockFace? = null
 }
