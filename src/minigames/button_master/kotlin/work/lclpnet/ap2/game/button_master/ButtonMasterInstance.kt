@@ -16,11 +16,14 @@ import net.minecraft.util.math.BlockPos
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
 import net.minecraft.world.World
+import org.joml.Vector3d
 import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.map.MapBootstrap
+import work.lclpnet.ap2.asVec3d
 import work.lclpnet.ap2.impl.game.EliminationGameInstance
 import work.lclpnet.ap2.impl.map.schema.SchemaHolder
 import work.lclpnet.ap2.impl.util.VisibilityChecker
+import work.lclpnet.ap2.impl.util.math.MathUtil
 import work.lclpnet.ap2.impl.util.world.BfsWorldScanner
 import work.lclpnet.ap2.impl.util.world.CardinalAdjacentBlocks
 import work.lclpnet.ap2.players
@@ -32,8 +35,10 @@ import work.lclpnet.ap2.toMinecraft
 import work.lclpnet.ap2.translate
 import work.lclpnet.gaco.ds.BlockBox
 import work.lclpnet.gaco.ds.StructureMask
+import work.lclpnet.gaco.math.BlockFace
 import work.lclpnet.gaco.scene.Object3d
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks
+import work.lclpnet.kibu.hook.util.PositionRotation
 import work.lclpnet.kibu.schematic.FabricBlockStateAdapter
 import work.lclpnet.kibu.schematic.SchematicFormats
 import work.lclpnet.kibu.structure.BlockStructure
@@ -49,6 +54,7 @@ import kotlin.math.min
 const val DEBUG_VALID_POSITIONS = false
 const val DEBUG_BUTTON_POSITION = true
 const val DEBUG_CAPSULE_BOUNDS = false
+const val DEBUG_CAPSULE_SPAWNS = false
 const val EJECT_SECONDS = 15
 
 class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gameHandle), MapBootstrap {
@@ -70,8 +76,8 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
     }
 
     override fun prepare() {
-        removeExcessCapsules(players().count() - 1)
         scanWorld()
+        debugCapsules()
     }
 
     fun scanWorld() {
@@ -140,6 +146,28 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
             }
 
             commons().debugController().visualizeStructureMask(mask, minPos, Matrix3i.IDENTITY, Blocks.GREEN_STAINED_GLASS.defaultState)
+        }
+    }
+
+    private fun debugCapsules() {
+        val schema = schemaHolder.get()
+
+        for (capsule in schema.capsules) {
+            if (DEBUG_CAPSULE_BOUNDS) {
+                val capsuleBounds = getCapsuleBounds(capsule)
+
+                commons().debugController().renderer().ifPresent {
+                    it.box(capsuleBounds, Blocks.YELLOW_STAINED_GLASS.defaultState)
+                }
+            }
+
+            if (DEBUG_CAPSULE_SPAWNS) {
+                val capsuleSpawn = getCapsuleSpawn(capsule)
+
+                commons().debugController().renderer().ifPresent {
+                    it.arrow(capsuleSpawn.asVec3d(), MathUtil.yaw2vec(capsuleSpawn.yaw), Blocks.LIME_TERRACOTTA.defaultState)
+                }
+            }
         }
     }
 
@@ -214,7 +242,7 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
         translate(
             "game.ap2.button_master.choose_capsule",
             styled(EJECT_SECONDS, Formatting.YELLOW)
-        ).sendTo(player)
+        ).formatted(Formatting.AQUA).sendTo(player)
 
         this.ejectTimer = ejectTimer
     }
@@ -222,40 +250,70 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
     private fun teleportToCapsules(players: List<ServerPlayerEntity>) {
         removeExcessCapsules(players.size)
 
-        // TODO
-    }
-
-    private fun removeExcessCapsules(requiredCapsules: Int) {
         val schema = schemaHolder.get()
         val capsules = schema.capsules
+
+        for ((i, player) in players.shuffled().withIndex()) {
+            val spawn = getCapsuleSpawn(capsules[i])
+            player.teleport(spawn)
+        }
+    }
+
+    fun getCapsuleSpawn(capsule: BlockFace): PositionRotation {
+        val schema = schemaHolder.get()
+        val referenceSpawn = schema.capsuleSpawn!!.asVec3d()
+        val referenceButton = schema.capsuleButton!!
+        val schematicOffset = requireNotNull(capsuleSchematic).origin.toMinecraft()
+        val buttonToOriginOffset = referenceButton.pos.subtract(schematicOffset)
+        val localSpawn = referenceSpawn.subtract(referenceButton.pos.toCenterPos())
+
+        val rotation = Matrix3i.makeRotationY(
+            capsule.face.horizontalQuarterTurns - referenceButton.face.horizontalQuarterTurns
+        )
+
+        val localOffset = capsule.pos.subtract(referenceButton.pos)
+
+        val capsuleSpawn = rotation.transform(localSpawn)
+            .add(localOffset.toCenterPos())
+            .add(Vec3d.of(buttonToOriginOffset))
+            .add(Vec3d.of(schematicOffset))
+
+        val yaw = MathUtil.rotateYaw(schema.capsuleSpawn.yaw, rotation, Vector3d())
+
+        return PositionRotation(capsuleSpawn.x, capsuleSpawn.y, capsuleSpawn.z, yaw, 0f)
+    }
+
+    fun getCapsuleBounds(capsule: BlockFace): BlockBox {
+        val schema = schemaHolder.get()
         val capsuleSchematic = requireNotNull(capsuleSchematic)
-
-        require(requiredCapsules <= capsules.size) { "Not enough capsules (need $requiredCapsules, got ${capsules.size}" }
-
         val schematicOffset = capsuleSchematic.origin.toMinecraft()
         val capsuleButton = schema.capsuleButton!!
         val referenceBounds = BlockBox.ofBounds(capsuleSchematic)
         val buttonToOriginOffset = capsuleButton.pos.subtract(schematicOffset)
 
+        val rotation = Matrix3i.makeRotationY(
+            capsule.face.horizontalQuarterTurns - capsuleButton.face.horizontalQuarterTurns
+        )
+
+        val localOffset = capsule.pos.subtract(capsuleButton.pos)
+
+        return referenceBounds
+            .translate(buttonToOriginOffset.multiply(-1))
+            .transform(rotation)
+            .translate(buttonToOriginOffset)
+            .translate(localOffset)
+            .translate(schematicOffset)
+    }
+
+    private fun removeExcessCapsules(requiredCapsules: Int) {
+        val schema = schemaHolder.get()
+        val capsules = schema.capsules
+
+        require(requiredCapsules <= capsules.size) { "Not enough capsules (need $requiredCapsules, got ${capsules.size}" }
+
         for (i in requiredCapsules ..< capsules.size) {
             val capsule = capsules[i]
-
-            val rotation = Matrix3i.makeRotationY(
-                    capsule.face.horizontalQuarterTurns - capsuleButton.face.horizontalQuarterTurns
-            )
-
-            val localOffset = capsule.pos.subtract(capsuleButton.pos)
-
-            val capsuleBounds = referenceBounds
-                .translate(buttonToOriginOffset.multiply(-1))
-                .transform(rotation)
-                .translate(buttonToOriginOffset)
-                .translate(localOffset)
-                .translate(schematicOffset)
-
-            if (DEBUG_CAPSULE_BOUNDS) {
-                commons().debugController().renderer().ifPresent { it.box(capsuleBounds, Blocks.YELLOW_STAINED_GLASS.defaultState) }
-            }
+            val capsuleBounds = getCapsuleBounds(capsule)
 
             world.setBlocks(capsuleBounds, Blocks.AIR)
         }
