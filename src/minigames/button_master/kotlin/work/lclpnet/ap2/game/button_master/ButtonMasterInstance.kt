@@ -1,10 +1,14 @@
 package work.lclpnet.ap2.game.button_master
 
 import net.fabricmc.fabric.api.event.player.UseBlockCallback
+import net.minecraft.block.Block
+import net.minecraft.block.BlockState
 import net.minecraft.block.Blocks
+import net.minecraft.block.ButtonBlock
 import net.minecraft.entity.attribute.EntityAttributes
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.registry.tag.BlockTags
+import net.minecraft.scoreboard.AbstractTeam
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.server.world.ServerWorld
 import net.minecraft.util.ActionResult
@@ -44,6 +48,7 @@ import work.lclpnet.kibu.scheduler.api.TaskHandle
 import work.lclpnet.kibu.schematic.FabricBlockStateAdapter
 import work.lclpnet.kibu.schematic.SchematicFormats
 import work.lclpnet.kibu.structure.BlockStructure
+import work.lclpnet.kibu.translate.bossbar.TranslatedBossBar
 import work.lclpnet.kibu.translate.text.FormatWrapper.styled
 import work.lclpnet.kibu.util.math.Matrix3i
 import work.lclpnet.lobby.game.map.GameMap
@@ -55,7 +60,7 @@ import kotlin.math.max
 import kotlin.math.min
 
 const val DEBUG_VALID_POSITIONS = false
-const val DEBUG_BUTTON_POSITION = true
+const val DEBUG_BUTTON_POSITION = false
 const val DEBUG_CAPSULE_BOUNDS = false
 const val DEBUG_CAPSULE_SPAWNS = false
 const val EJECT_SECONDS = 15
@@ -63,7 +68,8 @@ const val EJECT_SECONDS = 15
 enum class GameState {
     SEARCHING_BUTTON,
     CHOOSE_EJECT,
-    EJECTING
+    EJECTING,
+    IDLE
 }
 
 class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gameHandle), MapBootstrap {
@@ -72,7 +78,7 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
     val validPositions = mutableListOf<BlockPos>()
     var currentButtonMarker: Object3d? = null
     var currentButtonPos: BlockPos? = null
-    var gameState = GameState.SEARCHING_BUTTON
+    var gameState = GameState.IDLE
     var capsuleSchematic: BlockStructure? = null
     var ejectTimer: BossBarTimer? = null
     val capsuleButtons = mutableMapOf<BlockPos, BlockFace>()
@@ -80,6 +86,7 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
     var buttonMasterUuid: UUID? = null
     var ejectedPlayer: UUID? = null
     var task: TaskHandle? = null
+    var taskBar: TranslatedBossBar? = null
 
     override fun createWorldBootstrap(world: ServerWorld, map: GameMap): CompletableFuture<Void> {
         return CompletableFuture.runAsync {
@@ -92,6 +99,14 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
     override fun prepare() {
         scanWorld()
         setupCapsules()
+        setupTeam()
+    }
+
+    private fun setupTeam() {
+        val scoreboardManager = gameHandle.getScoreboardManager()
+        val team = scoreboardManager.createTeam("team")
+        team.nameTagVisibilityRule = AbstractTeam.VisibilityRule.NEVER
+        scoreboardManager.joinTeam(gameHandle.getParticipants(), team)
     }
 
     fun scanWorld() {
@@ -196,17 +211,21 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
     }
 
     fun canPlaceButtonAt(world: ServerWorld, pos: BlockPos): Boolean {
-        return Blocks.OAK_BUTTON.stateManager.states.any {
+        return buttonStates(Blocks.OAK_BUTTON).any {
             it.canPlaceAt(world, pos)
         }
     }
 
     override fun go() {
+        taskBar = useTaskDisplay()
+
         nextRound()
 
         gameHandle.hooks.registerHook(PlayerInteractionHooks.USE_BLOCK, UseBlockCallback { entity, world, hand, result ->
             onUseBlock(entity, world, hand, result)
         })
+
+        eliminateBelowCriticalHeight()
     }
 
     fun onUseBlock(
@@ -257,6 +276,7 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
     fun becomeButtonMaster(player: ServerPlayerEntity) {
         buttonMasterUuid = player.uuid
         gameState = GameState.CHOOSE_EJECT
+        taskBar?.isVisible = false
 
         player.teleport(schemaHolder.get().buttonMasterSpawn!!)
         player.setAttribute(EntityAttributes.JUMP_STRENGTH, 0.0)
@@ -381,6 +401,7 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
 
     fun nextRound() {
         gameState = GameState.SEARCHING_BUTTON
+        taskBar?.isVisible = true
 
         removeExcessCapsules(players().count() - 1)
 
@@ -396,7 +417,7 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
 
         val buttonBlock = Blocks.BAMBOO_BUTTON
 
-        val states = buttonBlock.stateManager.states.filter { it.canPlaceAt(world, pos) }
+        val states = buttonStates(buttonBlock).filter { it.canPlaceAt(world, pos) }
 
         require(states.isNotEmpty()) { "No valid button state found" }
 
@@ -411,6 +432,10 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
                 currentButtonMarker = it.marker(pos.toCenterPos(), Blocks.BLUE_STAINED_GLASS.defaultState, DyeColor.BLUE.entityColor)
             }
         }
+    }
+
+    fun buttonStates(block: Block): List<BlockState> {
+        return block.stateManager.states.filter { it.get(ButtonBlock.POWERED) == false }
     }
 
     override fun onEliminated(player: ServerPlayerEntity?) {
