@@ -39,6 +39,8 @@ import work.lclpnet.gaco.math.BlockFace
 import work.lclpnet.gaco.scene.Object3d
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks
 import work.lclpnet.kibu.hook.util.PositionRotation
+import work.lclpnet.kibu.scheduler.Ticks
+import work.lclpnet.kibu.scheduler.api.TaskHandle
 import work.lclpnet.kibu.schematic.FabricBlockStateAdapter
 import work.lclpnet.kibu.schematic.SchematicFormats
 import work.lclpnet.kibu.structure.BlockStructure
@@ -47,6 +49,7 @@ import work.lclpnet.kibu.util.math.Matrix3i
 import work.lclpnet.lobby.game.map.GameMap
 import work.lclpnet.lobby.game.map.MapUtils
 import work.lclpnet.lobby.game.util.BossBarTimer
+import java.util.UUID
 import java.util.concurrent.CompletableFuture
 import kotlin.math.max
 import kotlin.math.min
@@ -57,15 +60,26 @@ const val DEBUG_CAPSULE_BOUNDS = false
 const val DEBUG_CAPSULE_SPAWNS = false
 const val EJECT_SECONDS = 15
 
+enum class GameState {
+    SEARCHING_BUTTON,
+    CHOOSE_EJECT,
+    EJECTING
+}
+
 class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gameHandle), MapBootstrap {
 
     val schemaHolder: SchemaHolder<ButtonMasterSchema> = useSchema(ButtonMasterSchema::class.java)
     val validPositions = mutableListOf<BlockPos>()
     var currentButtonMarker: Object3d? = null
     var currentButtonPos: BlockPos? = null
-    var searchingButton = true
+    var gameState = GameState.SEARCHING_BUTTON
     var capsuleSchematic: BlockStructure? = null
     var ejectTimer: BossBarTimer? = null
+    val capsuleButtons = mutableMapOf<BlockPos, BlockFace>()
+    val capsulePlayers = mutableMapOf<BlockFace, UUID>()
+    var buttonMasterUuid: UUID? = null
+    var ejectedPlayer: UUID? = null
+    var task: TaskHandle? = null
 
     override fun createWorldBootstrap(world: ServerWorld, map: GameMap): CompletableFuture<Void> {
         return CompletableFuture.runAsync {
@@ -77,7 +91,7 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
 
     override fun prepare() {
         scanWorld()
-        debugCapsules()
+        setupCapsules()
     }
 
     fun scanWorld() {
@@ -149,10 +163,12 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
         }
     }
 
-    private fun debugCapsules() {
+    private fun setupCapsules() {
         val schema = schemaHolder.get()
 
         for (capsule in schema.capsules) {
+            capsuleButtons[capsule.pos] = capsule
+
             if (DEBUG_CAPSULE_BOUNDS) {
                 val capsuleBounds = getCapsuleBounds(capsule)
 
@@ -208,18 +224,39 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
         if (!state.isIn(BlockTags.BUTTONS))
             return ActionResult.PASS
 
-        if (searchingButton) {
+        if (gameState == GameState.SEARCHING_BUTTON) {
             becomeButtonMaster(entity)
             return ActionResult.SUCCESS_SERVER
         }
 
-        // TODO find capsule to open
+        if (gameState != GameState.CHOOSE_EJECT || buttonMasterUuid != entity.uuid)
+            return ActionResult.PASS
+
+        val capsule = capsuleButtons[result.blockPos] ?: return ActionResult.PASS
+
+        eject(capsule)
 
         return ActionResult.PASS
     }
 
+    private fun eject(capsule: BlockFace) {
+        gameState = GameState.EJECTING
+
+        val spawn = getCapsuleSpawn(capsule)
+
+        world.setBlockState(BlockPos.ofFloored(spawn).down(), Blocks.AIR.defaultState)
+
+        val uuid = capsulePlayers[capsule] ?: return
+        val player = players().getParticipant(uuid).orElse(null) ?: return
+
+        task = gameHandle.scheduler.timeout(Ticks.seconds(5), Runnable {
+            eliminate(player)
+        })
+    }
+
     fun becomeButtonMaster(player: ServerPlayerEntity) {
-        searchingButton = false
+        buttonMasterUuid = player.uuid
+        gameState = GameState.CHOOSE_EJECT
 
         player.teleport(schemaHolder.get().buttonMasterSpawn!!)
         player.setAttribute(EntityAttributes.JUMP_STRENGTH, 0.0)
@@ -253,9 +290,13 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
         val schema = schemaHolder.get()
         val capsules = schema.capsules
 
+        capsulePlayers.clear()
+
         for ((i, player) in players.shuffled().withIndex()) {
             val spawn = getCapsuleSpawn(capsules[i])
             player.teleport(spawn)
+
+            capsulePlayers[capsules[i]] = player.uuid
         }
     }
 
@@ -320,6 +361,15 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
     }
 
     fun beginNextRound() {
+        buttonMasterUuid = null
+        ejectedPlayer = null
+
+        task?.cancel()
+        task = null
+
+        ejectTimer?.stop()
+        ejectTimer = null
+
         for (player in players()) {
             gameHandle.worldFacade.teleport(player)
 
@@ -330,7 +380,9 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
     }
 
     fun nextRound() {
-        searchingButton = true
+        gameState = GameState.SEARCHING_BUTTON
+
+        removeExcessCapsules(players().count() - 1)
 
         val lastPos = currentButtonPos
 
@@ -359,5 +411,13 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
                 currentButtonMarker = it.marker(pos.toCenterPos(), Blocks.BLUE_STAINED_GLASS.defaultState, DyeColor.BLUE.entityColor)
             }
         }
+    }
+
+    override fun onEliminated(player: ServerPlayerEntity?) {
+        super.onEliminated(player)
+
+        if (winManager.isGameOver || gameState == GameState.SEARCHING_BUTTON) return
+
+        beginNextRound()
     }
 }
