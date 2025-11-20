@@ -1,16 +1,11 @@
 package work.lclpnet.ap2.game.button_master
 
-import com.google.common.collect.ImmutableMultimap
-import com.mojang.authlib.GameProfile
-import com.mojang.authlib.properties.Property
-import com.mojang.authlib.properties.PropertyMap
 import net.fabricmc.fabric.api.event.player.UseBlockCallback
 import net.minecraft.block.Block
 import net.minecraft.block.BlockState
 import net.minecraft.block.Blocks
 import net.minecraft.block.ButtonBlock
 import net.minecraft.component.DataComponentTypes
-import net.minecraft.component.type.ProfileComponent
 import net.minecraft.entity.EquipmentSlot
 import net.minecraft.entity.attribute.EntityAttributes
 import net.minecraft.entity.player.PlayerEntity
@@ -46,6 +41,7 @@ import work.lclpnet.ap2.impl.util.VisibilityChecker
 import work.lclpnet.ap2.impl.util.math.MathUtil
 import work.lclpnet.ap2.impl.util.world.BfsWorldScanner
 import work.lclpnet.ap2.impl.util.world.CardinalAdjacentBlocks
+import work.lclpnet.ap2.impl.util.world.ResetBlockWorldModifier
 import work.lclpnet.gaco.ds.BlockBox
 import work.lclpnet.gaco.ds.StructureMask
 import work.lclpnet.gaco.math.BlockFace
@@ -63,6 +59,7 @@ import work.lclpnet.kibu.util.math.Matrix3i
 import work.lclpnet.lobby.game.map.GameMap
 import work.lclpnet.lobby.game.map.MapUtils
 import work.lclpnet.lobby.game.util.BossBarTimer
+import work.lclpnet.lobby.util.ResetWorldModifier
 import java.util.*
 import java.util.concurrent.CompletableFuture
 import kotlin.math.max
@@ -101,8 +98,11 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
     var ejectedPlayer: UUID? = null
     var task: TaskHandle? = null
     var taskBar: TranslatedBossBar? = null
+    var wallBlocks: ResetWorldModifier? = null
 
     override fun createWorldBootstrap(world: ServerWorld, map: GameMap): CompletableFuture<Void> {
+        wallBlocks = ResetWorldModifier(world, gameHandle.hooks)
+
         return CompletableFuture.runAsync {
             asset(assetPath("capsule.schem")).use {
                 capsuleSchematic = SchematicFormats.SPONGE_V2.reader().read(it, FabricBlockStateAdapter.getInstance())
@@ -115,6 +115,21 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
         setupCapsules()
         setupTeam()
         equipPlayers()
+        closeWall()
+    }
+
+    private fun closeWall() {
+        val world = this.world
+        val wallBlocks = wallBlocks ?: return
+        val wallState = Blocks.WHITE_STAINED_GLASS.defaultState
+
+        for (box in schemaHolder.get().startWalls) {
+            for (pos in box) {
+                if (world.getBlockState(pos).isFullCube(world, pos)) continue
+
+                wallBlocks.setBlockState(pos, wallState)
+            }
+        }
     }
 
     private fun equipPlayers() {
@@ -483,6 +498,8 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
                 currentButtonMarker = it.marker(pos.toCenterPos(), Blocks.BLUE_STAINED_GLASS.defaultState, DyeColor.BLUE.entityColor)
             }
         }
+
+        wallBlocks?.undo()
     }
 
     fun buttonStates(block: Block): List<BlockState> {

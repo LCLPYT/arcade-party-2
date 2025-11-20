@@ -33,4 +33,7 @@ class ButtonMasterSchema : CommonMapSchema() {
 
     @Property(name = "Capsule Schematic Spawn")
     val capsuleSpawn: PositionRotation? = null
+
+    @Property(name = "Start Walls")
+    val startWalls = listOf<BlockBox>()
 }
