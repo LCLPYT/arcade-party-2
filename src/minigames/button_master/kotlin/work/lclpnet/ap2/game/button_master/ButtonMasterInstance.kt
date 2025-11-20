@@ -1,12 +1,26 @@
 package work.lclpnet.ap2.game.button_master
 
+import com.google.common.collect.ImmutableMultimap
+import com.mojang.authlib.GameProfile
+import com.mojang.authlib.properties.Property
+import com.mojang.authlib.properties.PropertyMap
 import net.fabricmc.fabric.api.event.player.UseBlockCallback
 import net.minecraft.block.Block
 import net.minecraft.block.BlockState
 import net.minecraft.block.Blocks
 import net.minecraft.block.ButtonBlock
+import net.minecraft.component.DataComponentTypes
+import net.minecraft.component.type.ProfileComponent
+import net.minecraft.entity.EquipmentSlot
 import net.minecraft.entity.attribute.EntityAttributes
 import net.minecraft.entity.player.PlayerEntity
+import net.minecraft.item.ItemStack
+import net.minecraft.item.Items
+import net.minecraft.item.equipment.trim.ArmorTrim
+import net.minecraft.item.equipment.trim.ArmorTrimMaterials
+import net.minecraft.item.equipment.trim.ArmorTrimPatterns
+import net.minecraft.registry.RegistryKey
+import net.minecraft.registry.RegistryKeys
 import net.minecraft.registry.tag.BlockTags
 import net.minecraft.scoreboard.AbstractTeam
 import net.minecraft.server.network.ServerPlayerEntity
@@ -21,22 +35,17 @@ import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec3d
 import net.minecraft.world.World
 import org.joml.Vector3d
+import work.lclpnet.ap2.*
 import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.map.MapBootstrap
-import work.lclpnet.ap2.asVec3d
+import work.lclpnet.ap2.api.util.heads.PlayerHead
 import work.lclpnet.ap2.impl.game.EliminationGameInstance
 import work.lclpnet.ap2.impl.map.schema.SchemaHolder
+import work.lclpnet.ap2.impl.util.ApRegistries
 import work.lclpnet.ap2.impl.util.VisibilityChecker
 import work.lclpnet.ap2.impl.util.math.MathUtil
 import work.lclpnet.ap2.impl.util.world.BfsWorldScanner
 import work.lclpnet.ap2.impl.util.world.CardinalAdjacentBlocks
-import work.lclpnet.ap2.players
-import work.lclpnet.ap2.resetAttribute
-import work.lclpnet.ap2.setAttribute
-import work.lclpnet.ap2.setBlocks
-import work.lclpnet.ap2.teleport
-import work.lclpnet.ap2.toMinecraft
-import work.lclpnet.ap2.translate
 import work.lclpnet.gaco.ds.BlockBox
 import work.lclpnet.gaco.ds.StructureMask
 import work.lclpnet.gaco.math.BlockFace
@@ -54,7 +63,7 @@ import work.lclpnet.kibu.util.math.Matrix3i
 import work.lclpnet.lobby.game.map.GameMap
 import work.lclpnet.lobby.game.map.MapUtils
 import work.lclpnet.lobby.game.util.BossBarTimer
-import java.util.UUID
+import java.util.*
 import java.util.concurrent.CompletableFuture
 import kotlin.math.max
 import kotlin.math.min
@@ -64,6 +73,11 @@ const val DEBUG_BUTTON_POSITION = false
 const val DEBUG_CAPSULE_BOUNDS = false
 const val DEBUG_CAPSULE_SPAWNS = false
 const val EJECT_SECONDS = 15
+
+val ASTRONAUT_HEAD: RegistryKey<PlayerHead> = RegistryKey.of(
+    ApRegistries.PLAYER_HEAD,
+    ApConstants.identifier("astronaut")
+)
 
 enum class GameState {
     SEARCHING_BUTTON,
@@ -100,6 +114,36 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
         scanWorld()
         setupCapsules()
         setupTeam()
+        equipPlayers()
+    }
+
+    private fun equipPlayers() {
+        val trimPatterns = world.registryManager.getOrThrow(RegistryKeys.TRIM_PATTERN)
+        val trimMaterials = world.registryManager.getOrThrow(RegistryKeys.TRIM_MATERIAL)
+
+        val silenceTrim = trimPatterns.getOrThrow(ArmorTrimPatterns.SILENCE)
+        val wildTrim = trimPatterns.getOrThrow(ArmorTrimPatterns.WILD)
+
+        val quartz = trimMaterials.getOrThrow(ArmorTrimMaterials.QUARTZ)
+
+        val chestplate = ItemStack(Items.NETHERITE_CHESTPLATE)
+        chestplate.set(DataComponentTypes.TRIM, ArmorTrim(quartz, silenceTrim))
+
+        val leggings = ItemStack(Items.NETHERITE_LEGGINGS)
+        leggings.set(DataComponentTypes.TRIM, ArmorTrim(quartz, silenceTrim))
+
+        val boots = ItemStack(Items.NETHERITE_BOOTS)
+        boots.set(DataComponentTypes.TRIM, ArmorTrim(quartz, wildTrim))
+
+        val head = world.registryManager.getOrThrow(ApRegistries.PLAYER_HEAD)
+            .getValueOrThrow(ASTRONAUT_HEAD).createStack()
+
+        for (player in players()) {
+            player.equipStack(EquipmentSlot.HEAD, head.copy())
+            player.equipStack(EquipmentSlot.CHEST, chestplate.copy())
+            player.equipStack(EquipmentSlot.LEGS, leggings.copy())
+            player.equipStack(EquipmentSlot.FEET, boots.copy())
+        }
     }
 
     private fun setupTeam() {
@@ -289,11 +333,7 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
         )
 
         ejectTimer.whenDone {
-            eliminate(player)
-
-            if (!winManager.isGameOver) {
-                beginNextRound()
-            }
+            eliminateButtonMaster()
         }
 
         translate(
@@ -302,6 +342,17 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
         ).formatted(Formatting.AQUA).sendTo(player)
 
         this.ejectTimer = ejectTimer
+    }
+
+    private fun eliminateButtonMaster() {
+        val uuid = buttonMasterUuid ?: return
+        val buttonMaster = players().getParticipant(uuid).orElse(null) ?: return
+
+        eliminate(buttonMaster)
+
+        if (!winManager.isGameOver) {
+            beginNextRound()
+        }
     }
 
     private fun teleportToCapsules(players: List<ServerPlayerEntity>) {
