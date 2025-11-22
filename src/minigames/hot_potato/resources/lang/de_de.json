@@ -1,0 +1,7 @@
+{
+  "game.ap2.hot_potato": "Heiße Kartoffel",
+  "game.ap2.hot_potato.description": "Ein zufälliger Spieler erhält die heiße Kartoffel. Die Kartoffel kann an andere Spieler weiter gegeben werden. Nach %s Sekunden fliegt der Spieler mit der heißen Kartoffel raus!",
+  "game.ap2.hot_potato.item": "Heiße Kartoffel",
+  "game.ap2.hot_potato.title": "Du",
+  "game.ap2.hot_potato.subtitle": "bist die heiße Kartoffel"
+}

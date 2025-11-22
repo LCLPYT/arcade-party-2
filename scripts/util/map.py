@@ -78,7 +78,7 @@ def validate_map_id(map_id: str) -> str | None:
 def add_map(game_id: str, opts: MapOptions):
     run_dir = Path("run")
 
-    add_maps_source_to_json(run_dir / "config")
+    add_maps_source_to_json(run_dir)
 
     game_dir = run_dir / f"assets/maps/ap2/{game_id}"
     game_dir.mkdir(parents=True, exist_ok=True)

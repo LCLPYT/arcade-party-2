@@ -1,0 +1,15 @@
+{
+  "game.ap2.panda_finder": "Panda Safari",
+  "game.ap2.panda_finder.description": "Finde einen Panda von einem Bild. Es gewinnt der Spieler, der zuerst %s Punkte erreicht!",
+  "game.ap2.panda_finder.task": "Finde den Panda %s/%s",
+  "game.ap2.panda_finder.panda_found": "%s hat den Panda gefunden!",
+  "game.ap2.panda_finder.find": "Finde einen %s Panda!",
+  "game.ap2.panda_finder.find.normal": "normalen",
+  "game.ap2.panda_finder.find.lazy": "faulen",
+  "game.ap2.panda_finder.find.worried": "besorgten",
+  "game.ap2.panda_finder.find.playful": "verspielten",
+  "game.ap2.panda_finder.find.brown": "braunen",
+  "game.ap2.panda_finder.find.weak": "schwachen",
+  "game.ap2.panda_finder.find.aggressive": "aggressiven",
+  "game.ap2.panda_finder.cooldown": "Rate nicht so viele Pandas!"
+}

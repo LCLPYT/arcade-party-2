@@ -1,0 +1,5 @@
+{
+  "game.ap2.one_in_the_chamber": "One in the Chamber",
+  "game.ap2.one_in_the_chamber.description": "Your crossbow one hits, but you only have one shot! Gain another by killing someone. First reaching %s kills wins!",
+  "game.ap2.one_in_the_chamber.task": "Reach %s kills"
+}

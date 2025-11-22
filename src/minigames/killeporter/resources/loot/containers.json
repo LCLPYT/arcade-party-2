@@ -6,7 +6,7 @@
         "min": 1,
         "max": 2
       },
-      "weight": 0.5
+      "weight": 0.1
     },
     {
       "entry": {
@@ -26,6 +26,30 @@
     },
     {
       "entry": {
+        "item": { "id": "minecraft:stone_pickaxe" },
+        "min": 1,
+        "max": 1
+      },
+      "weight": 0.1
+    },
+    {
+      "entry": {
+        "item": { "id": "minecraft:iron_shovel" },
+        "min": 1,
+        "max": 1
+      },
+      "weight": 0.05
+    },
+    {
+      "entry": {
+        "item": { "id": "minecraft:stone_shovel" },
+        "min": 1,
+        "max": 1
+      },
+      "weight": 0.1
+    },
+    {
+      "entry": {
         "item": { "id": "minecraft:iron_helmet" },
         "min": 1,
         "max": 1
@@ -42,7 +66,7 @@
     },
     {
       "entry": {
-        "item": { "id": "minecraft:flint_and_steel" },
+        "item": { "id": "minecraft:shield" },
         "min": 1,
         "max": 1
       },
@@ -50,11 +74,19 @@
     },
     {
       "entry": {
-        "item": { "id": "minecraft:bucket" },
+        "item": { "id": "minecraft:flint_and_steel" },
         "min": 1,
         "max": 1
       },
       "weight": 0.1
+    },
+    {
+      "entry": {
+        "item": { "id": "minecraft:bucket" },
+        "min": 1,
+        "max": 1
+      },
+      "weight": 0.2
     },
     {
       "entry": {
@@ -67,10 +99,18 @@
     {
       "entry": {
         "item": { "id": "minecraft:chorus_fruit" },
-        "min": 1,
-        "max": 2
+        "min": 2,
+        "max": 4
       },
-      "weight": 0.05
+      "weight": 0.1
+    },
+    {
+      "entry": {
+        "item": { "id": "minecraft:magma_block" },
+        "min": 1,
+        "max": 4
+      },
+      "weight": 0.1
     },
     {
       "entry": {
@@ -78,7 +118,7 @@
         "min": 3,
         "max": 16
       },
-      "weight": 0.3
+      "weight": 0.2
     },
     {
       "entry": {
@@ -86,7 +126,15 @@
         "min": 3,
         "max": 16
       },
-      "weight": 0.3
+      "weight": 0.15
+    },
+    {
+      "entry": {
+        "item": { "id": "minecraft:oak_planks" },
+        "min": 2,
+        "max": 6
+      },
+      "weight": 0.1
     },
     {
       "entry": {
@@ -94,7 +142,15 @@
         "min": 1,
         "max": 6
       },
-      "weight": 0.3
+      "weight": 0.2
+    },
+    {
+      "entry": {
+        "item": { "id": "minecraft:bread" },
+        "min": 2,
+        "max": 6
+      },
+      "weight": 0.2
     }
   ]
 }
