@@ -111,7 +111,9 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
     }
 
     override fun prepare() {
-        scanWorld()
+        val positions = ButtonPositions(world, map, schemaHolder.get(), commons(), gameHandle)
+        validPositions.addAll(positions.scanWorld())
+
         setupCapsules()
         setupTeam()
         equipPlayers()
@@ -168,74 +170,6 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
         scoreboardManager.joinTeam(gameHandle.getParticipants(), team)
     }
 
-    fun scanWorld() {
-        val world = world
-        val schema = schemaHolder.get()
-        val box = requireNotNull(schema.scanBox)
-        val scanPos = requireNotNull(schema.scanPos)
-
-        val adjacentBlocks = CardinalAdjacentBlocks {
-            box.contains(it) && world.getBlockState(it).isAir
-        }
-
-        val scanner = BfsWorldScanner(adjacentBlocks)
-        val it = scanner.scan(scanPos)
-        val checker = VisibilityChecker(world)
-
-        val spawnPos = MapUtils.getSpawnPosition(map).add(0.0, 1.62, 0.0)
-        val spawnYaw = MapUtils.getSpawnYaw(map)
-
-        VisibilityChecker.viewProjectionMatrix(
-            spawnPos.x,
-            spawnPos.y,
-            spawnPos.z,
-            spawnYaw,
-            0f,
-            10,
-            VisibilityChecker.PLAYER_FOV,
-            VisibilityChecker.PLAYER_ASPECT_RATIO,
-            checker.viewProjMat
-        )
-
-        while (it.hasNext()) {
-            val pos = it.next()
-
-            if (canPlaceButtonAt(world, pos) && notVisibleFromSpawn(checker, pos, spawnPos)) {
-                validPositions.add(pos)
-            }
-        }
-
-        if (validPositions.isEmpty()) {
-            gameHandle.logger.error("Didn't find any valid positions")
-            return
-        }
-
-        val minPos = validPositions.first().mutableCopy()
-        val maxPos = validPositions.first().mutableCopy()
-
-        for (pos in validPositions) {
-            minPos.set(
-                min(minPos.x, pos.x),
-                min(minPos.y, pos.y),
-                min(minPos.z, pos.z),
-            )
-            maxPos.set(
-                max(maxPos.x, pos.x),
-                max(maxPos.y, pos.y),
-                max(maxPos.z, pos.z),
-            )
-        }
-
-        if (DEBUG_VALID_POSITIONS) {
-            val mask = StructureMask.createEmpty(BlockBox(minPos, maxPos))
-
-            for (pos in validPositions) {
-                mask.setVoxelAt(pos.x - minPos.x, pos.y - minPos.y, pos.z - minPos.z, true)
-            }
-
-            commons().debugController().visualizeStructureMask(mask, minPos, Matrix3i.IDENTITY, Blocks.GREEN_STAINED_GLASS.defaultState)
-        }
-    }
 
     private fun setupCapsules() {
         val schema = schemaHolder.get()
@@ -258,20 +192,6 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
                     it.arrow(capsuleSpawn.asVec3d(), MathUtil.yaw2vec(capsuleSpawn.yaw), Blocks.LIME_TERRACOTTA.defaultState)
                 }
             }
-        }
-    }
-
-    private fun notVisibleFromSpawn(
-        checker: VisibilityChecker,
-        pos: BlockPos,
-        cameraPos: Vec3d
-    ): Boolean {
-        return !checker.isBoxVisible(cameraPos, Box.from(Vec3d(pos)), pos.toCenterPos())
-    }
-
-    fun canPlaceButtonAt(world: ServerWorld, pos: BlockPos): Boolean {
-        return buttonStates(Blocks.OAK_BUTTON).any {
-            it.canPlaceAt(world, pos)
         }
     }
 
@@ -436,7 +356,9 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
         val schema = schemaHolder.get()
         val capsules = schema.capsules
 
-        require(requiredCapsules <= capsules.size) { "Not enough capsules (need $requiredCapsules, got ${capsules.size}" }
+        require(requiredCapsules <= capsules.size) {
+            "Not enough capsules (need $requiredCapsules, got ${capsules.size}"
+        }
 
         for (i in requiredCapsules ..< capsules.size) {
             val capsule = capsules[i]
@@ -500,10 +422,6 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
         }
 
         wallBlocks?.undo()
-    }
-
-    fun buttonStates(block: Block): List<BlockState> {
-        return block.stateManager.states.filter { it.get(ButtonBlock.POWERED) == false }
     }
 
     override fun onEliminated(player: ServerPlayerEntity?) {
