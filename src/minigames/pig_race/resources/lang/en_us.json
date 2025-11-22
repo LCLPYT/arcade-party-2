@@ -1,0 +1,9 @@
+{
+  "game.ap2.pig_race": "Pig Race",
+  "game.ap2.pig_race.description": "Race for the finish line while riding on a pig.",
+  "game.ap2.pig_race.task": "Reach the goal",
+  "game.ap2.pig_race.task_rounds": "Complete rounds %s/%s",
+  "game.ap2.pig_race.boost": "Boost",
+  "game.ap2.pig_race.round": "Round",
+  "game.ap2.pig_race.round_title": "Round %s"
+}

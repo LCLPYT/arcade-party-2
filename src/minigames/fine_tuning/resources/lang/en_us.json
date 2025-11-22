@@ -1,0 +1,19 @@
+{
+  "game.ap2.fine_tuning": "Fine Tuning",
+  "game.ap2.fine_tuning.description": "Tune note blocks so that they play a given melody.\nWhoever tunes their note blocks most accurate wins!",
+  "game.ap2.fine_tuning.replay": "Replay",
+  "game.ap2.fine_tuning.listen": "Remember the melody...",
+  "game.ap2.fine_tuning.listen_again": "Listen again...",
+  "game.ap2.fine_tuning.repeat": "Now repeat it!",
+  "game.ap2.fine_tuning.tune": "Tune the note blocks %s/%s",
+  "game.ap2.fine_tuning.present_melody": "Melody %s",
+  "game.ap2.fine_tuning.presentation": "Presentation",
+  "game.ap2.fine_tuning.best_was": "best was...",
+  "game.ap2.fine_tuning.worst_was": "worst was...",
+  "game.ap2.fine_tuning.controls.title": "Controls",
+  "game.ap2.fine_tuning.controls.note_up": "Higher note",
+  "game.ap2.fine_tuning.controls.note_down": "Lower note",
+  "game.ap2.fine_tuning.controls.test": "Test note",
+  "game.ap2.fine_tuning.completed": "Congratulations, you completed the melody!",
+  "game.ap2.fine_tuning.test": "Click to test"
+}
