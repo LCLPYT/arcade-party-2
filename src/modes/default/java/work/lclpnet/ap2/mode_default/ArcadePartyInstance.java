@@ -24,6 +24,7 @@ import work.lclpnet.ap2.mode_default.cmd.ForceGameCommand;
 import work.lclpnet.ap2.mode_default.cmd.ScoreCommand;
 import work.lclpnet.ap2.mode_default.util.ApBaseArgs;
 import work.lclpnet.ap2.mode_default.util.ScoreManager;
+import work.lclpnet.ap2.util.TablistManager;
 import work.lclpnet.config.json.JsonConfigFactory;
 import work.lclpnet.gaco.ds.queue.JsonFileQueuePersistence;
 import work.lclpnet.kibu.cmd.impl.CommandStack;
@@ -126,8 +127,10 @@ public class ArcadePartyInstance implements GameInstance {
         var sessionStats = new SessionStatsRecorder(translations, logger);
         sessionStats.init(hookStack);
 
+        var tablistManager = new TablistManager(translations, server);
+
         var args = new ApBaseArgs(container, queue, playerManager, forceGameCommand, songCache, scoreManager,
-                environment.getFinisher(), sessionStats);
+                environment.getFinisher(), sessionStats, tablistManager);
 
         PreparationActivity preparation = new PreparationActivity(args);
 

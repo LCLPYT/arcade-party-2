@@ -91,6 +91,9 @@ public class MiniGameActivity extends ComponentActivity {
         if (maxDurationTicks > 0) {
             scheduler.timeout(() -> DrawCommand.dispatchDraw(instance, handle), maxDurationTicks);
         }
+
+        args.tablistManager().setStatus(args.miniGameArgs().translations().translateText(miniGame.getTitleKey()));
+        args.tablistManager().update();
     }
 
     @Override

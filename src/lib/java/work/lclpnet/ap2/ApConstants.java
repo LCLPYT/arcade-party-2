@@ -24,6 +24,8 @@ public final class ApConstants {
     public static final String SEPARATOR = "=============================================";
     public static final String SCOREBOARD_SEPARATOR = "==============";
     public static final String SCOREBOARD_SEPARATOR_SM = "----------------";
+    public static final String TABLIST_SEPARATOR = "========================";
+    public static final String TABLIST_SEPARATOR_SM = "------------------------";
 
     private ApConstants() {}
 
