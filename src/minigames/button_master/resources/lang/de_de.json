@@ -1,0 +1,7 @@
+{
+  "game.ap2.button_master": "Knopfmeister",
+  "game.ap2.button_master.description": "Finde den Knopf und drücke ihn als Erster. Du darfst danach einen Spieler zufällig eliminieren.",
+  "game.ap2.button_master.task": "Finde den Knopf",
+  "game.ap2.button_master.eject": "Rauswurf",
+  "game.ap2.button_master.choose_capsule": "Öffne in den nächsten %s Sekunden eine Kapsel oder fliege selber raus!"
+}

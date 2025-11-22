@@ -67,7 +67,7 @@ class ButtonPositions(
 
         if (validPositions.isEmpty()) {
             gameHandle.logger.error("Didn't find any valid positions")
-            return
+            return listOf()
         }
 
         val minPos = validPositions.first().mutableCopy()
