@@ -1,0 +1,9 @@
+{
+  "game.ap2.jump_and_run": "Jump 'n' Run",
+  "game.ap2.jump_and_run.description": "Schaffe möglichst schnell die zufällig generierten Jump 'n' Runs. Je früher du es schaffst, desto mehr Punkte erhältst du!",
+  "game.ap2.jump_and_run.task": "Schaffe das Jump 'n' Run %s/%s",
+  "game.ap2.jump_and_run.completed_room": "Glückwunsch! Du hast den %s Raum geschafft",
+  "game.ap2.jump_and_run.last_not_completed": "Der %s Raum wurde übersprungen, weil du als Letztes übrig warst",
+  "game.ap2.jump_and_run.assistance": "Dieser Raum wurde vereinfacht, damit du besser voran kommst",
+  "game.ap2.jump_and_run.next_segment_wait": "Bereite dich auf das nächste Jump 'n' Run vor..."
+}

@@ -1,0 +1,5 @@
+{
+  "game.ap2.knockout": "Knockout",
+  "game.ap2.knockout.description": "Punch your enemies into the void. The knock-back gets increasingly stronger the more a player is hit.",
+  "game.ap2.knockout.idle": "You are now visible to other players, because you were out-of-combat for too long"
+}

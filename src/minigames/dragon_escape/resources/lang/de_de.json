@@ -1,0 +1,14 @@
+{
+  "game.ap2.dragon_escape": "Drachenflucht",
+  "game.ap2.dragon_escape.description": "Fliehe vor einem Enderdrachen, indem du Parkour machst.",
+  "game.ap2.dragon_escape.task": "Fliehe vor dem Drachen",
+  "game.ap2.dragon_escape.goal": "%s hat das Ziel erreicht.",
+  "game.ap2.dragon_escape.kit.leap": "Sprung-Axt",
+  "game.ap2.dragon_escape.kit.leap.description": "Erhalte eine Axt, welche dich in Blickrichtung hechten lässt, sobald du sie einsetzt.",
+  "game.ap2.dragon_escape.kit.leap.hint": "Lässt dich in Blickrichtung hechten sobald du sie einsetzt.",
+  "game.ap2.dragon_escape.kit.ender_pearl": "Enderperle",
+  "game.ap2.dragon_escape.kit.ender_pearl.description": "Erhalte eine Enderperle, welche du zum Teleportieren nutzen kannst. Nutzung auf eigene Gefahr.",
+  "game.ap2.dragon_escape.kit.wind_charge": "Windkugel",
+  "game.ap2.dragon_escape.kit.wind_charge.description": "Erhalte Windkugeln, mit denen du dich selber boosten kannst",
+  "game.ap2.dragon_escape.teleport_too_far": "Du kannst dich nicht so weit teleportieren..."
+}

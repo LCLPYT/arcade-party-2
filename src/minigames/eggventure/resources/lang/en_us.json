@@ -1,0 +1,8 @@
+{
+  "game.ap2.eggventure": "Eggventure",
+  "game.ap2.eggventure.description": "Find as many easter eggs as possible.",
+  "game.ap2.eggventure.task": "Find easter eggs",
+  "game.ap2.eggventure.find_sample": "Find these easter eggs",
+  "game.ap2.eggventure.eggs_left": "There were %s eggs left",
+  "game.ap2.eggventure.no_eggs_nearby": "No eggs nearby"
+}
