@@ -1,0 +1,9 @@
+{
+  "game.ap2.pig_race": "Schweinerennen",
+  "game.ap2.pig_race.description": "Erreiche als erster das Ziel. Jeder Spieler reitet auf einem Schwein.",
+  "game.ap2.pig_race.task": "Erreiche das Ziel",
+  "game.ap2.pig_race.task_rounds": "Absolviere Runden %s / %s",
+  "game.ap2.pig_race.boost": "Anschub",
+  "game.ap2.pig_race.round": "Runde",
+  "game.ap2.pig_race.round_title": "Runde %s"
+}

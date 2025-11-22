@@ -1,0 +1,22 @@
+{
+  "game.ap2.paintball": "Paintball",
+  "game.ap2.paintball.description": "Paint as much blocks in your team color as possible.",
+  "game.ap2.paintball.task": "Paint blocks",
+  "game.ap2.paintball.blocks_painted": "%s blocks painted",
+  "game.ap2.paintball.game_over": "Game!",
+  "game.ap2.paintball.no_ink": "Sneak in ink to reload",
+  "game.ap2.paintball.kit.rifle": "Ink-Rifle",
+  "game.ap2.paintball.kit.rifle.description": "A rapidly firing ink rifle with medium range",
+  "game.ap2.paintball.kit.shotgun": "Ink-Shotgun",
+  "game.ap2.paintball.kit.shotgun.description": "A strong, short-range ink shotgun with bullet spread and a low firing rate.",
+  "game.ap2.paintball.kit.sniper": "Ink-Sniper",
+  "game.ap2.paintball.kit.sniper.description": "A long-range ink sniper rifle with high damage and a low firing rate.",
+  "game.ap2.paintball.item.med_kit": "Medkit",
+  "game.ap2.paintball.item.ink_grenade": "Ink Grenade",
+  "game.ap2.paintball.item.ink_grenade.desc": "Creates an ink explosion after 4 seconds",
+  "game.ap2.paintball.item.ink_pack": "Ink Pack",
+  "game.ap2.paintball.item.ink_pack.desc": "Reloads the current ink gun completely",
+  "game.ap2.paintball.item.tripwire": "Tripwire",
+  "game.ap2.paintball.item.tripwire.desc": "Place on a wall to setup an explosive trap",
+  "game.ap2.paintball.item.tripwire.too_long": "There is no opposing wall nearby"
+}

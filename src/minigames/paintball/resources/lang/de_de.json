@@ -1,0 +1,22 @@
+{
+  "game.ap2.paintball": "Paintball",
+  "game.ap2.paintball.description": "Färbe so viele Blöcke in deiner Teamfarbe wie möglich.",
+  "game.ap2.paintball.task": "Färbe Blöcke",
+  "game.ap2.paintball.blocks_painted": "%s Blöcke gefärbt",
+  "game.ap2.paintball.game_over": "Vorbei!",
+  "game.ap2.paintball.no_ink": "Ducke in Tinte zum Nachladen",
+  "game.ap2.paintball.kit.rifle": "Tintengewehr",
+  "game.ap2.paintball.kit.rifle.description": "Ein schnell-feuerndes Tintengewehr mit mittlerer Reichweite.",
+  "game.ap2.paintball.kit.shotgun": "Tintenschrotflinte",
+  "game.ap2.paintball.kit.shotgun.description": "Eine starke Tintenschrotflinte mit einer kurzen Reichweite, Schussstreuung und geringer Feuerrate.",
+  "game.ap2.paintball.kit.sniper": "Tintenscharfschützengewehr",
+  "game.ap2.paintball.kit.sniper.description": "Ein akkurates Tintenscharfschützengewehr mit hoher Reichweite, hohem Schaden und geringer Feuerrate.",
+  "game.ap2.paintball.item.med_kit": "Verbandskasten",
+  "game.ap2.paintball.item.ink_grenade": "Tintengranate",
+  "game.ap2.paintball.item.ink_grenade.desc": "Verursacht eine Tintenexplosion nach 4 Sekunden",
+  "game.ap2.paintball.item.ink_pack": "Tintenpatrone",
+  "game.ap2.paintball.item.ink_pack.desc": "Lädt die aktuelle Paintball-Waffe komplett voll",
+  "game.ap2.paintball.item.tripwire": "Stolperdraht",
+  "game.ap2.paintball.item.tripwire.desc": "Platziere eine explosive Falle an eine Wand",
+  "game.ap2.paintball.item.tripwire.too_long": "Es gibt keine gegenseitige Wand in der Nähe"
+}
