@@ -6,6 +6,7 @@ import work.lclpnet.ap2.api.music.SongCache;
 import work.lclpnet.ap2.api.stats.SessionStatsRecorder;
 import work.lclpnet.ap2.mode_default.ApMiniGameArgs;
 import work.lclpnet.ap2.mode_default.cmd.ForceGameCommand;
+import work.lclpnet.ap2.util.TablistManager;
 import work.lclpnet.lobby.game.api.GameFinisher;
 
 /**
@@ -19,5 +20,6 @@ import work.lclpnet.lobby.game.api.GameFinisher;
  */
 public record ApBaseArgs(
         ApMiniGameArgs miniGameArgs, GameQueue gameQueue, PlayerManager playerManager, ForceGameCommand forceGameCommand,
-        SongCache sharedSongCache, ScoreManager scoreManager, GameFinisher finisher, SessionStatsRecorder stats
+        SongCache sharedSongCache, ScoreManager scoreManager, GameFinisher finisher, SessionStatsRecorder stats,
+        TablistManager tablistManager
 ) {}

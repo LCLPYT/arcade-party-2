@@ -16,6 +16,7 @@ import work.lclpnet.ap2.impl.game.PlayerUtil;
 import work.lclpnet.ap2.impl.util.DeathMessages;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.ap2.impl.util.world.SubWorldManager;
+import work.lclpnet.ap2.util.TablistManager;
 import work.lclpnet.kibu.cmd.type.CommandRegistrar;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
@@ -86,6 +87,8 @@ public interface MiniGameHandle {
     DataManager getDataManager();
 
     SubWorldManager getSubWorldManager();
+
+    TablistManager getTablistManager();
 
     void resetGameScheduler();
 

@@ -31,6 +31,7 @@ import work.lclpnet.ap2.impl.util.world.SubWorldManager;
 import work.lclpnet.ap2.mode_default.ApMiniGameArgs;
 import work.lclpnet.ap2.mode_default.activity.MiniGameActivity;
 import work.lclpnet.ap2.mode_default.activity.PreparationActivity;
+import work.lclpnet.ap2.util.TablistManager;
 import work.lclpnet.gaco.asset.AssetRepository;
 import work.lclpnet.kibu.cmd.type.CommandRegistrar;
 import work.lclpnet.kibu.hook.HookStack;
@@ -235,6 +236,11 @@ public class DefaultMiniGameHandle implements MiniGameHandle, WorldBorderManager
         manager.init(getHooks());
 
         return subWorldManager;
+    }
+
+    @Override
+    public TablistManager getTablistManager() {
+        return args.tablistManager();
     }
 
     @Override

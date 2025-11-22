@@ -411,6 +411,7 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
 
         val state = states.random()
 
+        currentButtonPos = pos
         world.setBlockState(pos, state)
 
         if (DEBUG_BUTTON_POSITION) {
