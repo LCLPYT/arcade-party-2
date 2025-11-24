@@ -16,9 +16,6 @@ import work.lclpnet.kibu.hook.util.PositionRotation
 )
 class ButtonMasterSchema : CommonMapSchema() {
 
-    @Property(name = "Scan start position")
-    val scanPos: BlockPos? = null
-
     @Property(name = "Scanner bounds")
     val scanBox: BlockBox? = null
 

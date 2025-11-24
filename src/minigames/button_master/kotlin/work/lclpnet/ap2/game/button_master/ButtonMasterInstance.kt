@@ -112,6 +112,7 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
 
     override fun prepare() {
         val positions = ButtonPositions(world, map, schemaHolder.get(), commons(), gameHandle)
+
         validPositions.addAll(positions.scanWorld())
 
         setupCapsules()
