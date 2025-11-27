@@ -17,6 +17,8 @@ import net.minecraft.registry.tag.BlockTags
 import net.minecraft.scoreboard.AbstractTeam
 import net.minecraft.server.network.ServerPlayerEntity
 import net.minecraft.server.world.ServerWorld
+import net.minecraft.sound.SoundCategory
+import net.minecraft.sound.SoundEvents
 import net.minecraft.util.ActionResult
 import net.minecraft.util.DyeColor
 import net.minecraft.util.Formatting
@@ -31,12 +33,15 @@ import work.lclpnet.ap2.api.util.heads.PlayerHead
 import work.lclpnet.ap2.impl.game.EliminationGameInstance
 import work.lclpnet.ap2.impl.map.schema.SchemaHolder
 import work.lclpnet.ap2.impl.util.ApRegistries
+import work.lclpnet.ap2.impl.util.SoundHelper
 import work.lclpnet.ap2.util.scene.ApSceneRenderer
 import work.lclpnet.ap2.util.scene.PlayerMountContext
 import work.lclpnet.gaco.dynamic_entities.DynamicEntityManager
 import work.lclpnet.gaco.math.BlockFace
+import work.lclpnet.gaco.scene.MountContext
 import work.lclpnet.gaco.scene.Object3d
 import work.lclpnet.gaco.scene.Scene
+import work.lclpnet.gaco.scene.ServerWorldMountContext
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks
 import work.lclpnet.kibu.scheduler.Ticks
 import work.lclpnet.kibu.scheduler.api.TaskHandle
@@ -53,6 +58,7 @@ import java.util.concurrent.CompletableFuture
 const val DEBUG_VALID_POSITIONS = false
 const val DEBUG_BUTTON_POSITION = false
 const val EJECT_SECONDS = 15
+const val BUTTON_REVEAL_SECONDS = 45
 
 val ASTRONAUT_HEAD: RegistryKey<PlayerHead> = RegistryKey.of(
     ApRegistries.PLAYER_HEAD,
@@ -226,6 +232,8 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
         buttonMasterUuid = player.uuid
         gameState = GameState.CHOOSE_EJECT
         taskBar?.isVisible = false
+        task?.cancel()
+        scene?.clear()
 
         player.teleport(schemaHolder.get().buttonMasterSpawn!!)
         player.setAttribute(EntityAttributes.JUMP_STRENGTH, 0.0)
@@ -325,6 +333,21 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
         }
 
         wallBlocks?.undo()
+
+        task = gameHandle.scheduler.timeout(BUTTON_REVEAL_SECONDS * 20, Runnable {
+            markButton()
+        })
+    }
+
+    private fun markButton() {
+        val pos = currentButtonPos ?: return
+        val renderer = renderer(ServerWorldMountContext(world))
+
+        renderer.markBlock(pos, world.getBlockState(pos), 0x00ff00)
+
+        SoundHelper.playSound(world, SoundEvents.BLOCK_BELL_USE, SoundCategory.BLOCKS, 1f, 1.7f)
+
+        translate("game.ap2.button_master.revealed").formatted(Formatting.AQUA).sendTo(allPlayers())
     }
 
     override fun onEliminated(player: ServerPlayerEntity?) {
@@ -338,9 +361,15 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
     fun rendererFor(player: ServerPlayerEntity): ApSceneRenderer? {
         val dynamicEntityManager = dynamicEntityManager ?: return null
 
-        val scene = Scene(PlayerMountContext(world, dynamicEntityManager, player.uuid))
+        val mountContext = PlayerMountContext(world, dynamicEntityManager, player.uuid)
 
-        this.scene = scene;
+        return renderer(mountContext)
+    }
+
+    private fun renderer(mountContext: MountContext): ApSceneRenderer {
+        val scene = Scene(mountContext)
+
+        this.scene = scene
 
         return ApSceneRenderer(scene)
     }
