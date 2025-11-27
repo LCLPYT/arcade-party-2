@@ -51,13 +51,16 @@ public class KnockoutInstance extends EliminationGameInstance {
             CRITICAL_THRESHOLD = 2.5,
             IMPACT_STRENGTH_THRESHOLD = 0.6,
             MIN_IMPACT_CHARGE = 1.6,
-            IMPACT_DESTRUCTION_MULTIPLIER = 0.35;
+            IMPACT_DESTRUCTION_MULTIPLIER = 0.35,
+            IDLE_DAMAGE_MULTIPLIER = 3.0;
 
     private static final int IDLE_GLOW_TICKS = Ticks.seconds(15);
 
     private final Object2DoubleMap<UUID> charge = new Object2DoubleOpenHashMap<>();
     private final Object2BooleanMap<UUID> hit = new Object2BooleanOpenHashMap<>();
     private final Object2DoubleMap<BlockPos> blockDestruction = new Object2DoubleOpenHashMap<>();
+    private final CombatIdleManager idleManager;
+
     private KnockoutWorldCrumble crumble = null;
     private ImpactDetector impactDetector;
     private DestroyStageManager destroyStageManager;
@@ -66,6 +69,8 @@ public class KnockoutInstance extends EliminationGameInstance {
         super(gameHandle);
 
         useOldCombat();
+
+        idleManager = new CombatIdleManager(gameHandle.getParticipants(), IDLE_GLOW_TICKS);
     }
 
     @Override
@@ -127,8 +132,6 @@ public class KnockoutInstance extends EliminationGameInstance {
 
         scheduler.interval(this::sendChargeDisplay, Ticks.seconds(2));
 
-        var idleManager = new CombatIdleManager(participants, IDLE_GLOW_TICKS);
-
         idleManager.onEnterIdle().register(player -> {
             gameHandle.getTranslations()
                     .translateText("game.ap2.knockout.idle")
@@ -189,7 +192,16 @@ public class KnockoutInstance extends EliminationGameInstance {
 
     private void onDamage(ServerPlayerEntity player, ServerPlayerEntity attacker, float damage) {
         double increment = damage > 2.0 ? CHARGE_CRITICAL_INCREMENT : CHARGE_INCREMENT;
-        double power = charge.computeDouble(player.getUuid(), (uuid, old) -> (old == null ? 0 : old) + increment);
+
+        if (idleManager.isOutOfCombat(player)) {
+            increment *= IDLE_DAMAGE_MULTIPLIER;
+            
+            idleManager.resetCombat(player);
+        }
+
+        double finalIncrement = increment;
+        double power = charge.computeDouble(player.getUuid(), (uuid, old)
+                -> (old == null ? 0 : old) + finalIncrement);
 
         synchronized (this) {
             hit.put(player.getUuid(), true);
