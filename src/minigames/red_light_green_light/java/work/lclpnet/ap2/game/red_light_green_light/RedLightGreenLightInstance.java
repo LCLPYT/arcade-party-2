@@ -15,6 +15,7 @@ import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.RaycastContext;
+import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
@@ -49,6 +50,7 @@ public class RedLightGreenLightInstance extends FFAGameInstance implements Runna
     private static final int WARN_TIME_MIN_TICKS = 35, WARN_TIME_MAX_TICKS = 70;
     private static final int FROZEN_MIN_TICKS = 60, FROZEN_MAX_TICKS = 105;
     private static final int END_TIME_SECONDS = 15;
+
     private final SimpleMovementBlocker movementBlocker;
     private final OrderedDataContainer<ServerPlayerEntity, PlayerRef> data = new OrderedDataContainer<>(PlayerRef::create);
     private final Random random = new Random();
@@ -56,6 +58,7 @@ public class RedLightGreenLightInstance extends FFAGameInstance implements Runna
     private final Set<UUID> moved = new HashSet<>();
     private final List<TrafficLight> trafficLights = new ArrayList<>();
     private final RLGLMovementDetector movementDetector = new RLGLMovementDetector();
+
     private MovementTracker tracker = null;
     private TranslatedBossBar taskBar = null;
     private BlockBox goal;
@@ -63,6 +66,7 @@ public class RedLightGreenLightInstance extends FFAGameInstance implements Runna
     private int warn = 0;
     private int go = 0;
     private int gameEnd = -1;
+    private @Nullable EnderWatchers enderWatchers = null;
 
     public RedLightGreenLightInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
@@ -80,6 +84,15 @@ public class RedLightGreenLightInstance extends FFAGameInstance implements Runna
 
         GameMap map = getMap();
         ServerWorld world = getWorld();
+
+        var boundsJson = map.getProperties().optJSONArray("ender-watchers-bounds");
+
+        if (boundsJson != null) {
+            BlockBox bounds = MapUtil.readBox(boundsJson);
+
+            enderWatchers = new EnderWatchers(bounds, world, commons().debugController());
+            enderWatchers.scan();
+        }
 
         goal = MapUtil.readBox(map.requireProperty("goal"));
         tracker = new MovementTracker(goal);
@@ -220,6 +233,7 @@ public class RedLightGreenLightInstance extends FFAGameInstance implements Runna
 
     private void onMovedWhileRed(ServerPlayerEntity player) {
         if (winManager.isGameOver()
+                || !player.getGameMode().isSurvivalLike()
                 || !gameHandle.getParticipants().isParticipating(player)
                 || inGoal.contains(player.getUuid())
                 || !moved.add(player.getUuid())) return;
