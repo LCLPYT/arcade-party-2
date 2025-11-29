@@ -32,7 +32,6 @@ public class CombatIdleManager {
     public CombatIdleManager(Participants participants, int triggerTicks) {
         this.participants = participants;
         this.triggerTicks = triggerTicks;
-
     }
 
     public Hook<PlayerAction> onEnterIdle() {
@@ -58,6 +57,10 @@ public class CombatIdleManager {
     public void onAttack(ServerPlayerEntity player) {
         if (!participants.isParticipating(player)) return;
 
+        resetCombat(player);
+    }
+
+    public void resetCombat(ServerPlayerEntity player) {
         int before = outOfCombat.put(player.getUuid(), 0);
 
         if (before >= triggerTicks) {
@@ -75,5 +78,9 @@ public class CombatIdleManager {
                 onEnterIdle.invoker().act(player);
             }
         }
+    }
+
+    public boolean isOutOfCombat(ServerPlayerEntity player) {
+        return outOfCombat.getOrDefault(player.getUuid(), 0) >= triggerTicks;
     }
 }
