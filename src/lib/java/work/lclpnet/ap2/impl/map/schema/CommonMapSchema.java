@@ -13,5 +13,5 @@ public class CommonMapSchema {
 
     @Property(name = "Spawn", ordinal = 0)
     @Role("spawn")
-    private PositionRotation spawn = null;
+    private final PositionRotation spawn = null;
 }

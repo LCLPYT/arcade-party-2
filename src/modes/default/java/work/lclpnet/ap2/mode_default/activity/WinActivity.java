@@ -78,6 +78,9 @@ public class WinActivity extends ComponentActivity {
 
         scheduler = component(BuiltinComponents.SCHEDULER).scheduler();
 
+        args.tablistManager().setStatus(args.miniGameArgs().translations().translateText("ap2.status.game_over"));
+        args.tablistManager().update();
+
         PreparationActivity.setupMap(args.miniGameArgs())
                 .whenComplete((res, err) -> {
                     if (err != null) {

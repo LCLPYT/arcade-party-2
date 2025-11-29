@@ -57,6 +57,7 @@ import work.lclpnet.ap2.mode_default.util.ApBaseArgs;
 import work.lclpnet.ap2.mode_default.util.BaseActivityConfigurator;
 import work.lclpnet.ap2.mode_default.util.OptionChooser;
 import work.lclpnet.ap2.mode_default.util.ScoreManager;
+import work.lclpnet.ap2.util.TablistManagerKt;
 import work.lclpnet.gaco.dynamic_entities.DynamicEntityManager;
 import work.lclpnet.gaco.scene.MixedMountContext;
 import work.lclpnet.gaco.scene.Object3d;
@@ -134,6 +135,9 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
         super.start();
 
         activityConfigurator.configureProtector();
+
+        args.tablistManager().setPreparation();
+        args.tablistManager().update();
 
         CompletableFuture.supplyAsync(() -> {
             var setupFuture = setupMap(args.miniGameArgs());

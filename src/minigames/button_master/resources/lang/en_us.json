@@ -1,0 +1,8 @@
+{
+  "game.ap2.button_master": "Button Master",
+  "game.ap2.button_master.description": "Find and press the button first to become the button master. You may then decide which player to eliminate at random.",
+  "game.ap2.button_master.task": "Find the button",
+  "game.ap2.button_master.eject": "Player Ejection",
+  "game.ap2.button_master.choose_capsule": "Choose a capsule to open within the next %s seconds, or be eliminated yourself!",
+  "game.ap2.button_master.revealed": "The button is now revealed to speed up the game"
+}

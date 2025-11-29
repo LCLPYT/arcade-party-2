@@ -50,7 +50,7 @@ class {class_name}(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle) {{
         
     }}
 
-    override fun ready() {{
+    override fun go() {{
         
     }}
 }}
@@ -84,7 +84,7 @@ public class {class_name} extends FFAGameInstance {{
     }}
 
     @Override
-    protected void ready() {{
+    protected void go() {{
 
     }}
 }}
@@ -104,7 +104,7 @@ class {class_name}(gameHandle: MiniGameHandle) : EliminationGameInstance(gameHan
 
     }}
 
-    override fun ready() {{
+    override fun go() {{
 
     }}
 }}
@@ -127,7 +127,7 @@ public class {class_name} extends EliminationGameInstance {{
     }}
 
     @Override
-    protected void ready() {{
+    protected void go() {{
 
     }}
 }}
@@ -152,7 +152,7 @@ class {class_name}(gameHandle: MiniGameHandle) : TeamGameInstance(gameHandle) {{
 
     }}
 
-    override fun ready() {{
+    override fun go() {{
 
     }}
 }}
@@ -186,7 +186,7 @@ public class {class_name} extends TeamGameInstance {{
     }}
 
     @Override
-    protected void ready() {{
+    protected void go() {{
 
     }}
 }}
@@ -206,7 +206,7 @@ class {class_name}(gameHandle: MiniGameHandle) : TeamEliminationGameInstance(gam
 
     }}
 
-    override fun ready() {{
+    override fun go() {{
 
     }}
 }}
@@ -229,7 +229,7 @@ public class {class_name} extends TeamEliminationGameInstance {{
     }}
 
     @Override
-    protected void ready() {{
+    protected void go() {{
 
     }}
 }}
