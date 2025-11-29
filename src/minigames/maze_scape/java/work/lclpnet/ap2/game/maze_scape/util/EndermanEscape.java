@@ -15,6 +15,7 @@ import work.lclpnet.ap2.game.maze_scape.setup.Connector3;
 import work.lclpnet.ap2.game.maze_scape.setup.MSDebugController;
 import work.lclpnet.ap2.game.maze_scape.setup.OrientedStructurePiece;
 import work.lclpnet.ap2.game.maze_scape.setup.StructurePiece;
+import work.lclpnet.ap2.impl.util.VisibilityChecker;
 
 import java.util.*;
 

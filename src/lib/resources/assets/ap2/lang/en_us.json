@@ -93,6 +93,9 @@
   "ap2.view_stats.unavailable": "Unfortunately, this statistic is not available anymore",
   "ap2.view_stats.name": "Name",
   "ap2.stats.score": "Score",
+  "ap2.status.preparation": "Preparing next minigame",
+  "ap2.status.game_over": "Game Over",
+  "ap2.playing_on": "Playing on %s",
   "game.ap2.title": "ArcadeParty",
   "game.ap2.reached_checkpoint": "Checkpoint reached"
 }
