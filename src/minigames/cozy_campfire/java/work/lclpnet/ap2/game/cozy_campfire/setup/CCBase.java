@@ -1,7 +1,7 @@
 package work.lclpnet.ap2.game.cozy_campfire.setup;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.entity.Entity;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.gaco.collisions.UnionCollider;
 import work.lclpnet.gaco.ds.BlockBox;
@@ -24,7 +24,7 @@ public record CCBase(
     }
 
     public boolean isEntity(Entity entity) {
-        return entityUuid.equals(entity.getUuid());
+        return entityUuid.equals(entity.getUUID());
     }
 
     public boolean isInside(double x, double y, double z) {

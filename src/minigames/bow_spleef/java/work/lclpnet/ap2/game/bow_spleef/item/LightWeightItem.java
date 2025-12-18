@@ -1,16 +1,16 @@
 package work.lclpnet.ap2.game.bow_spleef.item;
 
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.registry.DynamicRegistryManager;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import work.lclpnet.ap2.impl.game.item.SpecialItem;
 import work.lclpnet.ap2.impl.game.item.SpecialItemContext;
 import work.lclpnet.kibu.scheduler.Ticks;
 
-import static net.minecraft.entity.attribute.EntityAttributes.GRAVITY;
+import static net.minecraft.world.entity.ai.attributes.Attributes.GRAVITY;
 import static work.lclpnet.lobby.util.PlayerReset.resetAttribute;
 import static work.lclpnet.lobby.util.PlayerReset.setAttribute;
 
@@ -24,18 +24,18 @@ public class LightWeightItem implements SpecialItem {
     }
 
     @Override
-    public ItemStack createItemStack(DynamicRegistryManager registryManager) {
+    public ItemStack createItemStack(RegistryAccess registryManager) {
         return new ItemStack(Items.FEATHER);
     }
 
     @Override
-    public boolean canBeDropped(ServerPlayerEntity player, ItemStack stack) {
+    public boolean canBeDropped(ServerPlayer player, ItemStack stack) {
         return false;
     }
 
     @Override
-    public void onPickedUp(ServerPlayerEntity player, ItemStack stack, SpecialItemContext ctx) {
-        player.getItemCooldownManager().set(stack, DURATION);
+    public void onPickedUp(ServerPlayer player, ItemStack stack, SpecialItemContext ctx) {
+        player.getCooldowns().addCooldown(stack, DURATION);
         setAttribute(player, GRAVITY, 0.035);
 
         ctx.scheduler().timeout(() -> {
@@ -43,6 +43,6 @@ public class LightWeightItem implements SpecialItem {
             ctx.removeSpecialItem(player, this);
         }, DURATION);
 
-        player.getEntityWorld().playSound(null, player.getX(), player.getEyeY(), player.getZ(), SoundEvents.ENTITY_BREEZE_IDLE_GROUND, SoundCategory.PLAYERS, 0.65f, 1.5f);
+        player.level().playSound(null, player.getX(), player.getEyeY(), player.getZ(), SoundEvents.BREEZE_IDLE_GROUND, SoundSource.PLAYERS, 0.65f, 1.5f);
     }
 }

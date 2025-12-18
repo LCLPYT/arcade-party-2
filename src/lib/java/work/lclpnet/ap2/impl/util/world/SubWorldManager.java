@@ -1,11 +1,11 @@
 package work.lclpnet.ap2.impl.util.world;
 
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.registry.RegistryKeys;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.Identifier;
-import net.minecraft.world.level.storage.LevelStorage;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.storage.LevelStorageSource;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import work.lclpnet.gaco.asset.AssetPath;
@@ -48,7 +48,7 @@ public class SubWorldManager {
         unloader.init(hooks);
     }
 
-    public CompletableFuture<ServerWorld> loadWorld(AssetPath path, Identifier id) {
+    public CompletableFuture<ServerLevel> loadWorld(AssetPath path, ResourceLocation id) {
         return CompletableFuture.runAsync(() -> obtainWorld(path, id)).thenCompose(nil -> server.submit(() -> {
             RuntimeWorldHandle handle = KibuWorlds.getInstance().getWorldManager(server)
                     .openPersistentWorld(id)
@@ -60,19 +60,19 @@ public class SubWorldManager {
         }));
     }
 
-    public CompletableFuture<WorldWithData> loadWorldWithData(AssetPath path, Identifier id) {
-        var key = RegistryKey.of(RegistryKeys.WORLD, id);
+    public CompletableFuture<WorldWithData> loadWorldWithData(AssetPath path, ResourceLocation id) {
+        var key = ResourceKey.create(Registries.DIMENSION, id);
 
         var dataFuture = GameMapApi.get(server).getDataManager().awaitWorldData(key);
 
         return loadWorld(path, id).thenCompose(world -> dataFuture.thenApply(data -> new WorldWithData(world, data)));
     }
 
-    private void obtainWorld(AssetPath path, Identifier id) {
-        var registryKey = RegistryKey.of(RegistryKeys.WORLD, id);
+    private void obtainWorld(AssetPath path, ResourceLocation id) {
+        var registryKey = ResourceKey.create(Registries.DIMENSION, id);
 
-        LevelStorage.Session session = ((MinecraftServerAccessor) server).getSession();
-        Path directory = session.getWorldDirectory(registryKey);
+        LevelStorageSource.LevelStorageAccess session = ((MinecraftServerAccessor) server).getSession();
+        Path directory = session.getDimensionPath(registryKey);
 
         try {
             if (Files.exists(directory)) {
@@ -102,9 +102,9 @@ public class SubWorldManager {
         throw new IOException("Failed to copy world source: No map could be copied successfully. Please check the debug log for more details");
     }
 
-    public CompletableFuture<Void> unloadWorld(ServerWorld world) {
-        return unloader.unloadMap(world.getRegistryKey());
+    public CompletableFuture<Void> unloadWorld(ServerLevel world) {
+        return unloader.unloadMap(world.dimension());
     }
 
-    public record WorldWithData(ServerWorld world, WorldData data) {}
+    public record WorldWithData(ServerLevel world, WorldData data) {}
 }

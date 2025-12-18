@@ -2,13 +2,13 @@ package work.lclpnet.ap2.game.guess_it.data;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
-import net.minecraft.entity.decoration.Brightness;
-import net.minecraft.entity.decoration.DisplayEntity;
-import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.math.AffineTransformation;
-import net.minecraft.util.math.Vec3d;
+import com.mojang.math.Transformation;
+import net.minecraft.ChatFormatting;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.Brightness;
+import net.minecraft.world.entity.Display;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import work.lclpnet.ap2.game.guess_it.util.DynamicEntityModifier;
@@ -37,22 +37,22 @@ public interface Challenge {
 
     default void init(@Nullable Object init) {}
 
-    default void provideInitCommand(LiteralArgumentBuilder<ServerCommandSource> node, Initializer init) {}
+    default void provideInitCommand(LiteralArgumentBuilder<CommandSourceStack> node, Initializer init) {}
 
-    default void addHint(DynamicEntityModifier dynamicEntities, ServerWorld world, Translations translations, Vec3d pos, String key) {
+    default void addHint(DynamicEntityModifier dynamicEntities, ServerLevel world, Translations translations, Vec3 pos, String key) {
         var label = new TranslatedTextDisplay(world, translations);
 
         var controller = label.controller();
-        controller.setBillboardMode(DisplayEntity.BillboardMode.CENTER);
-        controller.setTransformation(new AffineTransformation(new Matrix4f().scale(3)));
+        controller.setBillboardMode(Display.BillboardConstraints.CENTER);
+        controller.setTransformation(new Transformation(new Matrix4f().scale(3)));
         controller.setPosition(pos);
-        controller.setText(translations.translateText(key).formatted(Formatting.GREEN));
+        controller.setText(translations.translateText(key).formatted(ChatFormatting.GREEN));
         controller.setBrightness(new Brightness(15, 15));
 
         dynamicEntities.spawn(label);
     }
 
     interface Initializer {
-        void accept(CommandContext<ServerCommandSource> ctx, Object config);
+        void accept(CommandContext<CommandSourceStack> ctx, Object config);
     }
 }

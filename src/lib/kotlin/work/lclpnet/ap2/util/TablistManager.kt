@@ -1,12 +1,11 @@
 package work.lclpnet.ap2.util
 
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup
-import net.minecraft.network.packet.s2c.play.PlayerListHeaderS2CPacket
+import net.minecraft.ChatFormatting.*
+import net.minecraft.network.chat.Component
+import net.minecraft.network.protocol.game.ClientboundTabListPacket
 import net.minecraft.server.MinecraftServer
-import net.minecraft.server.network.ServerPlayerEntity
-import net.minecraft.text.Text
-import net.minecraft.util.Formatting
-import net.minecraft.util.Formatting.*
+import net.minecraft.server.level.ServerPlayer
 import work.lclpnet.ap2.ApConstants
 import work.lclpnet.kibu.translate.Translations
 import work.lclpnet.kibu.translate.text.TextTranslatable
@@ -26,15 +25,15 @@ class TablistManager(
         }
     }
 
-    fun update(player: ServerPlayerEntity) {
-        val header = mutableListOf<Text>()
-        val footer = mutableListOf<Text>()
+    fun update(player: ServerPlayer) {
+        val header = mutableListOf<Component>()
+        val footer = mutableListOf<Component>()
 
         header.add(translations.translateText("game.ap2.title")
             .formatted(GOLD, BOLD)
             .translateFor(player))
 
-        header.add(Text.literal(ApConstants.TABLIST_SEPARATOR).formatted(DARK_GREEN, BOLD, STRIKETHROUGH))
+        header.add(Component.literal(ApConstants.TABLIST_SEPARATOR).withStyle(DARK_GREEN, BOLD, STRIKETHROUGH))
 
         val status = status
 
@@ -42,28 +41,28 @@ class TablistManager(
             header.add(
                 status.translateTo(translations.getLanguage(player))
                 .copy()
-                .formatted(GREEN)
+                .withStyle(GREEN)
             )
 
-            header.add(Text.literal(ApConstants.TABLIST_SEPARATOR_SM).formatted(DARK_GREEN, STRIKETHROUGH))
+            header.add(Component.literal(ApConstants.TABLIST_SEPARATOR_SM).withStyle(DARK_GREEN, STRIKETHROUGH))
         }
 
-        footer.add(Text.literal(ApConstants.TABLIST_SEPARATOR).formatted(DARK_GREEN, BOLD, STRIKETHROUGH))
+        footer.add(Component.literal(ApConstants.TABLIST_SEPARATOR).withStyle(DARK_GREEN, BOLD, STRIKETHROUGH))
 
         footer.add(translations.translateText(
             "ap2.playing_on",
-            Text.literal(BRANDING).formatted(YELLOW, BOLD)
+            Component.literal(BRANDING).withStyle(YELLOW, BOLD)
         ).formatted(AQUA).translateFor(player))
 
-        val mergedHeader = header.reduceOrNull { x, y -> Text.empty().append(x).append("\n").append(y) }
-        val mergedFooter = footer.reduceOrNull { x, y -> Text.empty().append(x).append("\n").append(y) }
+        val mergedHeader = header.reduceOrNull { x, y -> Component.empty().append(x).append("\n").append(y) }
+        val mergedFooter = footer.reduceOrNull { x, y -> Component.empty().append(x).append("\n").append(y) }
 
-        val packet = PlayerListHeaderS2CPacket(
-            mergedHeader ?: Text.empty(),
-            mergedFooter ?: Text.empty()
+        val packet = ClientboundTabListPacket(
+            mergedHeader ?: Component.empty(),
+            mergedFooter ?: Component.empty()
         )
 
-        player.networkHandler.sendPacket(packet)
+        player.connection.send(packet)
     }
 
     fun setPreparation() {

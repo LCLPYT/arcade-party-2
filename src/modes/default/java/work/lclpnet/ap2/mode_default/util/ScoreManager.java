@@ -2,8 +2,8 @@ package work.lclpnet.ap2.mode_default.util;
 
 import it.unimi.dsi.fastutil.objects.ObjectIntPair;
 import lombok.Getter;
-import net.minecraft.server.PlayerManager;
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.players.PlayerList;
 import work.lclpnet.ap2.api.game.data.DataEntry;
 import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
@@ -20,8 +20,8 @@ import static java.util.stream.Collectors.toSet;
 
 public class ScoreManager {
 
-    private final IntScoreDataContainer<ServerPlayerEntity, PlayerRef> data = new IntScoreDataContainer<>(PlayerRef::create);
-    private final PlayerManager playerManager;
+    private final IntScoreDataContainer<ServerPlayer, PlayerRef> data = new IntScoreDataContainer<>(PlayerRef::create);
+    private final PlayerList playerManager;
     @Getter
     private final int targetScore;
     private final Hook<Runnable> onChange = HookFactory.createArrayBacked(Runnable.class, hooks -> () -> {
@@ -32,7 +32,7 @@ public class ScoreManager {
     @Getter
     private int round = 0;
 
-    public ScoreManager(PlayerManager playerManager, int targetScore) {
+    public ScoreManager(PlayerList playerManager, int targetScore) {
         this.playerManager = playerManager;
         this.targetScore = targetScore;
     }
@@ -89,7 +89,7 @@ public class ScoreManager {
                         .map(DataEntry::subject));
     }
 
-    public Stream<ServerPlayerEntity> getFinalists() {
+    public Stream<ServerPlayer> getFinalists() {
         return getWinningPlayers()
                 .map(PlayerRef::uuid)
                 .map(playerManager::getPlayer)
@@ -114,7 +114,7 @@ public class ScoreManager {
         }
 
         // check if there is exactly one online winning player among the possibly offline winners
-        Set<ServerPlayerEntity> onlineWinners = getFinalists().collect(toSet());
+        Set<ServerPlayer> onlineWinners = getFinalists().collect(toSet());
 
         if (onlineWinners.size() == 1) {
             return Optional.of(onlineWinners.iterator().next())

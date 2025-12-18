@@ -1,10 +1,10 @@
 package work.lclpnet.ap2.game.maze_scape.ai;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.ai.goal.Goal;
-import net.minecraft.entity.mob.PathAwareEntity;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.util.Hand;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.PathfinderMob;
+import net.minecraft.world.entity.ai.goal.Goal;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.EnumSet;
@@ -15,13 +15,13 @@ public class AttackGoal extends Goal {
             ATTACK_TIME_TICKS = 20,
             UPDATE_TICKS = 20;
 
-    protected final PathAwareEntity mob;
+    protected final PathfinderMob mob;
     private int cooldown;
     private long lastUpdateTime;
 
-    public AttackGoal(PathAwareEntity mob) {
+    public AttackGoal(PathfinderMob mob) {
         this.mob = mob;
-        setControls(EnumSet.of(Control.LOOK));
+        setFlags(EnumSet.of(Flag.LOOK));
     }
 
     protected @Nullable LivingEntity target() {
@@ -35,13 +35,13 @@ public class AttackGoal extends Goal {
     }
 
     @Override
-    public boolean shouldRunEveryTick() {
+    public boolean requiresUpdateEveryTick() {
         return true;
     }
 
     @Override
-    public boolean canStart() {
-        long l = this.mob.getEntityWorld().getTime();
+    public boolean canUse() {
+        long l = this.mob.level().getGameTime();
 
         if (l - this.lastUpdateTime < UPDATE_TICKS) {
             return false;
@@ -55,21 +55,21 @@ public class AttackGoal extends Goal {
     }
 
     @Override
-    public boolean shouldContinue() {
+    public boolean canContinueToUse() {
         LivingEntity target = target();
 
-        return target != null && (!(target instanceof ServerPlayerEntity player) || !player.isCreative());
+        return target != null && (!(target instanceof ServerPlayer player) || !player.isCreative());
     }
 
     @Override
     public void start() {
-        mob.setAttacking(true);
+        mob.setAggressive(true);
         cooldown = 0;
     }
 
     @Override
     public void stop() {
-        mob.setAttacking(false);
+        mob.setAggressive(false);
     }
 
     @Override
@@ -78,14 +78,14 @@ public class AttackGoal extends Goal {
 
         if (target == null) return;
 
-        mob.getLookControl().lookAt(target, 30.0f, 30.0f);
+        mob.getLookControl().setLookAt(target, 30.0f, 30.0f);
 
         cooldown = Math.max(cooldown - 1, 0);
 
-        if (cooldown == 0 && mob.isInAttackRange(target) && mob.getVisibilityCache().canSee(target)) {
-            cooldown = getTickCount(ATTACK_TIME_TICKS);
-            mob.swingHand(Hand.MAIN_HAND);
-            mob.tryAttack(getServerWorld(mob), target);
+        if (cooldown == 0 && mob.isWithinMeleeAttackRange(target) && mob.getSensing().hasLineOfSight(target)) {
+            cooldown = adjustedTickDelay(ATTACK_TIME_TICKS);
+            mob.swing(InteractionHand.MAIN_HAND);
+            mob.doHurtTarget(getServerLevel(mob), target);
         }
     }
 }

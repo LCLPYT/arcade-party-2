@@ -1,9 +1,9 @@
 package work.lclpnet.ap2.game.pillar_battle.item;
 
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.PotionContentsComponent;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.alchemy.PotionContents;
 import work.lclpnet.ap2.impl.util.ItemHelper;
 
 import java.util.Random;
@@ -23,7 +23,7 @@ public class PotionItemClass implements ItemClass {
 
         var potion = ItemHelper.getRandomPotion(random);
 
-        stack.set(DataComponentTypes.POTION_CONTENTS, new PotionContentsComponent(potion));
+        stack.set(DataComponents.POTION_CONTENTS, new PotionContents(potion));
 
         return stack;
     }

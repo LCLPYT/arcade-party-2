@@ -1,6 +1,6 @@
 package work.lclpnet.ap2.impl.util.property;
 
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.ApConstants;
 
@@ -10,23 +10,23 @@ import java.util.Objects;
 
 public class ApMapProperties {
 
-    public static final Identifier ALLOW_BLOCK_INTERACTION = ApConstants.identifier("allow-block-interaction");
+    public static final ResourceLocation ALLOW_BLOCK_INTERACTION = ApConstants.identifier("allow-block-interaction");
 
-    private final Map<Identifier, Object> map = new HashMap<>();
+    private final Map<ResourceLocation, Object> map = new HashMap<>();
 
-    public void set(Identifier id, Object value) {
+    public void set(ResourceLocation id, Object value) {
         Objects.requireNonNull(id, "Id must not be null");
 
         map.put(id, value);
     }
 
-    public boolean has(Identifier id) {
+    public boolean has(ResourceLocation id) {
         return map.containsKey(id);
     }
 
     @SuppressWarnings("unchecked")
     @Nullable
-    public <T> T get(Identifier id, Class<T> type) {
+    public <T> T get(ResourceLocation id, Class<T> type) {
         Object o = map.get(id);
 
         if (o == null || !type.isAssignableFrom(o.getClass())) return null;
@@ -34,7 +34,7 @@ public class ApMapProperties {
         return (T) o;
     }
 
-    public boolean getBoolean(Identifier id, boolean defaultValue) {
+    public boolean getBoolean(ResourceLocation id, boolean defaultValue) {
         Object o = map.get(id);
 
         if (o instanceof Boolean bool) {

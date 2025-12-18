@@ -1,9 +1,9 @@
 package work.lclpnet.ap2.game.maze_scape.monster;
 
-import net.minecraft.entity.mob.MobEntity;
+import net.minecraft.world.entity.Mob;
 import org.jetbrains.annotations.Nullable;
 
-public interface MonsterData<T extends MobEntity> {
+public interface MonsterData<T extends Mob> {
 
     @Nullable T mob();
 

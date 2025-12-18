@@ -2,8 +2,8 @@ package work.lclpnet.ap2.impl.util.scoreboard;
 
 import lombok.Getter;
 import lombok.Setter;
-import net.minecraft.scoreboard.number.NumberFormat;
-import net.minecraft.text.Text;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.numbers.NumberFormat;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
@@ -11,11 +11,11 @@ import java.util.Objects;
 @Getter @Setter
 public final class CustomScoreboardEntry {
 
-    private @Nullable Text display;
+    private @Nullable Component display;
     private NumberFormat numberFormat;
     private int score;
 
-    public CustomScoreboardEntry(@Nullable Text display, NumberFormat numberFormat, int score) {
+    public CustomScoreboardEntry(@Nullable Component display, NumberFormat numberFormat, int score) {
         this.display = display;
         this.numberFormat = numberFormat;
         this.score = score;

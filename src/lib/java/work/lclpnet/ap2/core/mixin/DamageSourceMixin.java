@@ -1,9 +1,9 @@
 package work.lclpnet.ap2.core.mixin;
 
 import com.llamalad7.mixinextras.sugar.Local;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.item.ItemStack;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
@@ -13,7 +13,7 @@ import work.lclpnet.ap2.core.hook.DeathMessageItemCallback;
 public class DamageSourceMixin {
 
     @ModifyVariable(
-            method = "getDeathMessage",
+            method = "getLocalizedDeathMessage",
             at = @At(
                     value = "LOAD",
                     ordinal = 0

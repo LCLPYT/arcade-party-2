@@ -1,15 +1,15 @@
 package work.lclpnet.ap2.game.mimicry;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.registry.tag.BlockTags;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Hand;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.BlockHitResult;
 import org.jetbrains.annotations.NotNull;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
@@ -47,7 +47,7 @@ public class MimicryInstance extends FFAGameInstance implements MapBootstrap {
             REPLAY_MAX_SECONDS = 30,
             NEXT_ROUND_DELAY_SECONDS = 4;
 
-    private final IntDataContainer<ServerPlayerEntity, PlayerRef> dataContainer = new IntScoreDataContainer<>(PlayerRef::create, Ordering.DESCENDING, "game.ap2.mimicry.completed");
+    private final IntDataContainer<ServerPlayer, PlayerRef> dataContainer = new IntScoreDataContainer<>(PlayerRef::create, Ordering.DESCENDING, "game.ap2.mimicry.completed");
     private PseudoElimination pseudoElimination;
 
     private MimicryManager manager = null;
@@ -61,12 +61,12 @@ public class MimicryInstance extends FFAGameInstance implements MapBootstrap {
     }
 
     @Override
-    protected DataContainer<ServerPlayerEntity, PlayerRef> getData() {
+    protected DataContainer<ServerPlayer, PlayerRef> getData() {
         return dataContainer;
     }
 
     @Override
-    public @NotNull CompletableFuture<Void> createWorldBootstrap(@NotNull ServerWorld world, @NotNull GameMap map) {
+    public @NotNull CompletableFuture<Void> createWorldBootstrap(@NotNull ServerLevel world, @NotNull GameMap map) {
         BlockBox buttons = MapUtil.readBox(map.requireProperty("button-box"));
 
         var generator = new StackedRoomGenerator<>(world, map, StackedRoomGenerator.Coordinates.ABSOLUTE, (pos, spawn, yaw, structure) -> {
@@ -95,7 +95,7 @@ public class MimicryInstance extends FFAGameInstance implements MapBootstrap {
 
     @Override
     protected void prepare() {
-        ServerWorld world = getWorld();
+        ServerLevel world = getWorld();
 
         pseudoElimination = new PseudoElimination(gameHandle, world);
 
@@ -114,32 +114,32 @@ public class MimicryInstance extends FFAGameInstance implements MapBootstrap {
         gameHandle.getHooks().registerHook(PlayerInteractionHooks.USE_BLOCK, this::onUseBlock);
     }
 
-    private ActionResult onUseBlock(PlayerEntity player, World world, Hand hand, BlockHitResult hitResult) {
+    private InteractionResult onUseBlock(Player player, Level world, InteractionHand hand, BlockHitResult hitResult) {
         if (winManager.isGameOver()
-                || !(player instanceof ServerPlayerEntity serverPlayer)
+                || !(player instanceof ServerPlayer serverPlayer)
                 || !gameHandle.getParticipants().isParticipating(serverPlayer)
                 || pseudoElimination.isEliminated(serverPlayer)) {
-            return ActionResult.PASS;
+            return InteractionResult.PASS;
         }
 
         BlockPos pos = hitResult.getBlockPos();
 
-        if (!world.getBlockState(pos).isIn(BlockTags.BUTTONS)) {
-            return ActionResult.PASS;
+        if (!world.getBlockState(pos).is(BlockTags.BUTTONS)) {
+            return InteractionResult.PASS;
         }
 
         if (!manager.onInputButton(serverPlayer, pos)) {
-            return ActionResult.FAIL;
+            return InteractionResult.FAIL;
         }
 
         var msg = gameHandle.getTranslations().translateText(serverPlayer, "game.ap2.mimicry.wrong_button")
-                .formatted(Formatting.RED);
+                .formatted(ChatFormatting.RED);
 
-        serverPlayer.sendMessage(msg);
+        serverPlayer.sendSystemMessage(msg);
 
         softEliminate(serverPlayer);
 
-        return ActionResult.FAIL;
+        return InteractionResult.FAIL;
     }
 
     private synchronized void nextSequence() {
@@ -222,7 +222,7 @@ public class MimicryInstance extends FFAGameInstance implements MapBootstrap {
         return Math.max(REPLAY_MIN_SECONDS, Math.min(REPLAY_MAX_SECONDS, manager.sequenceLength() * REPLAY_SECONDS_PER_NOTE));
     }
 
-    private void onCompleted(ServerPlayerEntity player) {
+    private void onCompleted(ServerPlayer player) {
         commons().addScore(player, 1, dataContainer);
 
         checkRoundComplete();
@@ -236,7 +236,7 @@ public class MimicryInstance extends FFAGameInstance implements MapBootstrap {
         gameHandle.getScheduler().timeout(this::nextSequence, 30);
     }
 
-    private synchronized void softEliminate(ServerPlayerEntity player) {
+    private synchronized void softEliminate(ServerPlayer player) {
         if (phase != Phase.REPLAY || !pseudoElimination.eliminate(player)) return;
 
         checkRoundComplete();

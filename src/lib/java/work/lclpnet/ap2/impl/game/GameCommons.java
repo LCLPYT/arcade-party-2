@@ -1,23 +1,23 @@
 package work.lclpnet.ap2.impl.game;
 
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.entity.boss.BossBar;
-import net.minecraft.entity.decoration.ArmorStandEntity;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.scoreboard.AbstractTeam;
-import net.minecraft.scoreboard.Team;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.border.WorldBorder;
-import net.minecraft.world.waypoint.Waypoint;
-import net.minecraft.world.waypoint.WaypointStyle;
-import net.minecraft.world.waypoint.WaypointStyles;
+import net.minecraft.ChatFormatting;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.BossEvent;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.decoration.ArmorStand;
+import net.minecraft.world.level.border.WorldBorder;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.scores.PlayerTeam;
+import net.minecraft.world.scores.Team;
+import net.minecraft.world.waypoints.Waypoint;
+import net.minecraft.world.waypoints.WaypointStyleAsset;
+import net.minecraft.world.waypoints.WaypointStyleAssets;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONObject;
@@ -61,14 +61,14 @@ public class GameCommons {
 
     private final MiniGameHandle gameHandle;
     private final GameMap map;
-    private final ServerWorld world;
+    private final ServerLevel world;
     private final DebugController debugController;
     private volatile Announcer announcer = null;
     private volatile List<PositionRotation> spawns = null;
     private volatile GameRuleBuilder gameRuleBuilder = null;
     private volatile HealthDisplay healthDisplay = null;
 
-    public GameCommons(MiniGameHandle gameHandle, GameMap map, ServerWorld world) {
+    public GameCommons(MiniGameHandle gameHandle, GameMap map, ServerLevel world) {
         this.gameHandle = gameHandle;
         this.map = map;
         this.world = world;
@@ -141,10 +141,10 @@ public class GameCommons {
                 randomizer.randomizeCenter(worldBorder, config, random);
             }
 
-            worldBorder.interpolateSize(worldBorder.getSize(), config.minSize(), durationTicks * 50L);
+            worldBorder.lerpSizeBetween(worldBorder.getSize(), config.minSize(), durationTicks * 50L);
 
-            for (ServerPlayerEntity player : PlayerLookup.world(world)) {
-                player.playSoundToPlayer(SoundEvents.ENTITY_WITHER_DEATH, SoundCategory.HOSTILE, 1, 0);
+            for (ServerPlayer player : PlayerLookup.world(world)) {
+                player.playNotifySound(SoundEvents.WITHER_DEATH, SoundSource.HOSTILE, 1, 0);
             }
         }, delayTicks);
 
@@ -199,11 +199,11 @@ public class GameCommons {
         return worldBorder;
     }
 
-    public Action<Runnable> addTimer(BossBar bossBar, int durationSeconds) {
+    public Action<Runnable> addTimer(BossEvent bossBar, int durationSeconds) {
         return addTimerTicks(bossBar, durationSeconds * 20);
     }
 
-    public Action<Runnable> addTimerTicks(BossBar bossBar, int durationTicks) {
+    public Action<Runnable> addTimerTicks(BossEvent bossBar, int durationTicks) {
         var onEnd = HookFactory.createArrayBacked(Runnable.class, ops -> () -> {
             for (Runnable op : ops) {
                 op.run();
@@ -217,13 +217,13 @@ public class GameCommons {
             public void run(RunningTask info) {
                 if (timer-- <= 0) {
                     info.cancel();
-                    bossBar.setPercent(0);
+                    bossBar.setProgress(0);
                     onEnd.invoker().run();
                     return;
                 }
 
                 if (timer % 20 == 0) {
-                    bossBar.setPercent(((float) timer / durationTicks));
+                    bossBar.setProgress(((float) timer / durationTicks));
                 }
             }
         });
@@ -232,18 +232,18 @@ public class GameCommons {
     }
 
     public BossBarTimer createTimer(Object subject, int durationSeconds) {
-        return createTimer(subject, durationSeconds, BossBar.Color.RED);
+        return createTimer(subject, durationSeconds, BossEvent.BossBarColor.RED);
     }
 
-    public BossBarTimer createTimer(Object subject, int durationSeconds, BossBar.Color color) {
+    public BossBarTimer createTimer(Object subject, int durationSeconds, BossEvent.BossBarColor color) {
         return createTimerTicks(subject, Ticks.seconds(durationSeconds), color);
     }
 
     public BossBarTimer createTimerTicks(Object subject, int durationTicks) {
-        return createTimerTicks(subject, durationTicks, BossBar.Color.RED);
+        return createTimerTicks(subject, durationTicks, BossEvent.BossBarColor.RED);
     }
 
-    public BossBarTimer createTimerTicks(Object subject, int durationTicks, BossBar.Color color) {
+    public BossBarTimer createTimerTicks(Object subject, int durationTicks, BossEvent.BossBarColor color) {
         Translations translations = gameHandle.getTranslations();
 
         BossBarTimer timer = BossBarTimer.builder(translations, subject)
@@ -258,18 +258,18 @@ public class GameCommons {
         return timer;
     }
 
-    public Team noCollision() {
+    public PlayerTeam noCollision() {
         CustomScoreboardManager scoreboardManager = gameHandle.getScoreboardManager();
 
-        Team team = scoreboardManager.createTeam("team");
-        team.setCollisionRule(AbstractTeam.CollisionRule.NEVER);
+        PlayerTeam team = scoreboardManager.createTeam("team");
+        team.setCollisionRule(Team.CollisionRule.NEVER);
 
         scoreboardManager.joinTeam(gameHandle.getParticipants(), team);
 
         return team;
     }
 
-    public VisibilityHandler addVisibilityChanger(Team team) {
+    public VisibilityHandler addVisibilityChanger(PlayerTeam team) {
         Translations translations = gameHandle.getTranslations();
         VisibilityHandler visibility = new VisibilityHandler(new VisibilityManager(team, Visibility.PARTIALLY_VISIBLE), translations, gameHandle.getParticipants());
         visibility.init(gameHandle.getHooks());
@@ -279,17 +279,17 @@ public class GameCommons {
         return visibility;
     }
 
-    public void addScore(ServerPlayerEntity player, int score, IntDataSink<ServerPlayerEntity> data) {
+    public void addScore(ServerPlayer player, int score, IntDataSink<ServerPlayer> data) {
         data.addScore(player, score);
 
         String key = score == 1 ? "ap2.gain_point" : "ap2.gain_points";
 
         var msg = gameHandle.getTranslations().translateText(player, key,
-                        styled(score, Formatting.YELLOW),
-                        styled(data.getScore(player), Formatting.AQUA))
-                .formatted(Formatting.GREEN);
+                        styled(score, ChatFormatting.YELLOW),
+                        styled(data.getScore(player), ChatFormatting.AQUA))
+                .formatted(ChatFormatting.GREEN);
 
-        player.sendMessage(msg, true);
+        player.displayClientMessage(msg, true);
     }
 
     public Announcer announcer() {
@@ -313,24 +313,24 @@ public class GameCommons {
 
         var spawns = new ArrayList<>(pool);
 
-        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
+        for (ServerPlayer player : gameHandle.getParticipants()) {
             if (spawns.isEmpty()) {
                 spawns.addAll(pool);
             }
 
             PositionRotation spawn = spawns.remove(random.nextInt(spawns.size()));
-            player.teleport(world, spawn.getX(), spawn.getY(), spawn.getZ(), Set.of(), spawn.getYaw(), spawn.getPitch(), true);
+            player.teleportTo(world, spawn.x(), spawn.y(), spawn.z(), Set.of(), spawn.getYaw(), spawn.getPitch(), true);
         }
     }
 
     @Nullable
-    public PositionRotation teleportToRandomSpawn(ServerPlayerEntity player, Random random) {
+    public PositionRotation teleportToRandomSpawn(ServerPlayer player, Random random) {
         List<PositionRotation> spawns = getSpawns();
 
         if (spawns.isEmpty()) return null;
 
         PositionRotation spawn = spawns.get(random.nextInt(spawns.size()));
-        player.teleport(world, spawn.getX(), spawn.getY(), spawn.getZ(), Set.of(), spawn.getYaw(), spawn.getPitch(), true);
+        player.teleportTo(world, spawn.x(), spawn.y(), spawn.z(), Set.of(), spawn.getYaw(), spawn.getPitch(), true);
 
         return spawn;
     }
@@ -371,24 +371,24 @@ public class GameCommons {
         healthDisplay.setup(gameHandle.getHooks());
     }
 
-    public void addWaypoint(Vec3d pos, int color) {
-        addWaypoint(pos, color, WaypointStyles.DEFAULT);
+    public void addWaypoint(Vec3 pos, int color) {
+        addWaypoint(pos, color, WaypointStyleAssets.DEFAULT);
     }
 
-    public void addWaypoint(Vec3d pos, int color, RegistryKey<WaypointStyle> style) {
-        var marker = new ArmorStandEntity(EntityType.ARMOR_STAND, world);
-        marker.setPosition(pos);
+    public void addWaypoint(Vec3 pos, int color, ResourceKey<WaypointStyleAsset> style) {
+        var marker = new ArmorStand(EntityType.ARMOR_STAND, world);
+        marker.setPos(pos);
         ArmorStandAccess.setSmall(marker, true);
         ArmorStandAccess.setMarker(marker, true);
         marker.setInvisible(true);
 
-        Waypoint.Config waypointConfig = marker.getWaypointConfig();
+        Waypoint.Icon waypointConfig = marker.waypointIcon();
         waypointConfig.color = Optional.of(color);
         waypointConfig.style = style;
-        EntityUtil.setAttribute(marker, EntityAttributes.WAYPOINT_TRANSMIT_RANGE, 500.0);
+        EntityUtil.setAttribute(marker, Attributes.WAYPOINT_TRANSMIT_RANGE, 500.0);
 
-        world.spawnEntity(marker);
-        world.getWaypointHandler().onTrack(marker);
+        world.addFreshEntity(marker);
+        world.getWaypointManager().trackWaypoint(marker);
     }
 
     public record WorldBorderConfig(int centerX, int centerZ, int maxRadius, int minSize, boolean randomCenter,

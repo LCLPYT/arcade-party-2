@@ -1,16 +1,17 @@
 package work.lclpnet.ap2.game.aim_master;
 
-import net.minecraft.block.*;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.hit.HitResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.*;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.impl.util.TextUtil;
 import work.lclpnet.lobby.util.RayCaster;
@@ -18,16 +19,16 @@ import work.lclpnet.lobby.util.RayCaster;
 import java.util.Map;
 import java.util.Set;
 
-import static net.minecraft.util.Formatting.GOLD;
+import static net.minecraft.ChatFormatting.GOLD;
 
 public class AimMasterDomain {
 
     private final BlockPos spawn;
-    private final ServerWorld world;
+    private final ServerLevel world;
     private final float yaw;
     private BlockPos offsetTarget = null;
 
-    public AimMasterDomain(BlockPos spawn, float yaw, ServerWorld world) {
+    public AimMasterDomain(BlockPos spawn, float yaw, ServerLevel world) {
         this.spawn = spawn;
         this.yaw = yaw;
         this.world = world;
@@ -38,51 +39,51 @@ public class AimMasterDomain {
         return offsetTarget;
     }
 
-    public void teleport(ServerPlayerEntity player) {
-        player.teleport(world, spawn.getX() + 0.5, spawn.getY(), spawn.getZ() + 0.5, Set.of(), yaw, 0, true);
+    public void teleport(ServerPlayer player) {
+        player.teleportTo(world, spawn.getX() + 0.5, spawn.getY(), spawn.getZ() + 0.5, Set.of(), yaw, 0, true);
     }
 
-    public void setBlocks(AimMasterSequence.Item item, ServerPlayerEntity player) {
+    public void setBlocks(AimMasterSequence.Item item, ServerPlayer player) {
         Map<BlockPos, Block> blockMap = item.blockMap();
 
         for (BlockPos pos : blockMap.keySet()) {
-            BlockPos offsetPos = pos.add(spawn);
+            BlockPos offsetPos = pos.offset(spawn);
             BlockPos target = item.target();
-            offsetTarget = target.add(spawn);
+            offsetTarget = target.offset(spawn);
 
             Block block = blockMap.get(pos);
 
-            world.setBlockState(offsetPos, getState(block));
+            world.setBlockAndUpdate(offsetPos, getState(block));
 
             // give target Item
             ItemStack stack = new ItemStack(blockMap.get(target));
 
-            stack.set(DataComponentTypes.CUSTOM_NAME, TextUtil.getVanillaName(stack)
-                    .styled(style -> style.withItalic(false).withFormatting(GOLD)));
+            stack.set(DataComponents.CUSTOM_NAME, TextUtil.getVanillaName(stack)
+                    .withStyle(style -> style.withItalic(false).applyFormat(GOLD)));
 
-            PlayerInventory inventory = player.getInventory();
-            inventory.setStack(4, stack);
+            Inventory inventory = player.getInventory();
+            inventory.setItem(4, stack);
         }
     }
 
     private static BlockState getState(Block block) {
-        if (block instanceof LeavesBlock) return block.getDefaultState().with(LeavesBlock.PERSISTENT, true);
-        if (block instanceof ObserverBlock) return block.getDefaultState().with(FacingBlock.FACING, Direction.NORTH);
-        return block.getDefaultState();
+        if (block instanceof LeavesBlock) return block.defaultBlockState().setValue(LeavesBlock.PERSISTENT, true);
+        if (block instanceof ObserverBlock) return block.defaultBlockState().setValue(DirectionalBlock.FACING, Direction.NORTH);
+        return block.defaultBlockState();
     }
 
     public void removeBlocks(AimMasterSequence.Item item) {
         Map<BlockPos, Block> blockMap = item.blockMap();
         for (BlockPos pos : blockMap.keySet()) {
-            BlockPos offsetPos = pos.add(spawn);
-            world.setBlockState(offsetPos, getState(Blocks.AIR));
+            BlockPos offsetPos = pos.offset(spawn);
+            world.setBlockAndUpdate(offsetPos, getState(Blocks.AIR));
             offsetTarget = null;
         }
     }
 
-    public boolean rayCaster(ServerPlayerEntity player, int radius) {
-        Vec3d start = player.getEyePos();
-        Vec3d end = player.getEyePos().add(player.getRotationVector().multiply(radius * 2));
+    public boolean rayCaster(ServerPlayer player, int radius) {
+        Vec3 start = player.getEyePosition();
+        Vec3 end = player.getEyePosition().add(player.getLookAngle().scale(radius * 2));
 
         BlockHitResult res = RayCaster.rayCast(start, end, pos -> pos.equals(offsetTarget));
 

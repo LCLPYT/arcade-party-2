@@ -1,10 +1,10 @@
 package work.lclpnet.ap2.impl.util.handler;
 
-import net.minecraft.particle.ParticleTypes;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import work.lclpnet.ap2.api.util.action.Action;
 import work.lclpnet.kibu.access.VelocityModifier;
 import work.lclpnet.kibu.hook.Hook;
@@ -20,11 +20,11 @@ import java.util.function.Predicate;
 
 public class DoubleJumpHandler {
 
-    private final Predicate<ServerPlayerEntity> predicate;
+    private final Predicate<ServerPlayer> predicate;
     private final Hook<OnDoubleJump> hook;
     private final Set<UUID> enabled = new HashSet<>();
 
-    public DoubleJumpHandler(Predicate<ServerPlayerEntity> predicate) {
+    public DoubleJumpHandler(Predicate<ServerPlayer> predicate) {
         this.predicate = predicate;
 
         hook = HookFactory.createArrayBacked(OnDoubleJump.class, hooks -> player -> {
@@ -34,20 +34,20 @@ public class DoubleJumpHandler {
         });
     }
 
-    public void enable(Iterable<? extends ServerPlayerEntity> players) {
+    public void enable(Iterable<? extends ServerPlayer> players) {
         players.forEach(this::enable);
     }
 
-    public void enable(ServerPlayerEntity player) {
-        enabled.add(player.getUuid());
-        player.getAbilities().allowFlying = true;
-        player.sendAbilitiesUpdate();
+    public void enable(ServerPlayer player) {
+        enabled.add(player.getUUID());
+        player.getAbilities().mayfly = true;
+        player.onUpdateAbilities();
     }
 
-    public void disable(ServerPlayerEntity player) {
-        enabled.remove(player.getUuid());
-        player.getAbilities().allowFlying = false;
-        player.sendAbilitiesUpdate();
+    public void disable(ServerPlayer player) {
+        enabled.remove(player.getUUID());
+        player.getAbilities().mayfly = false;
+        player.onUpdateAbilities();
     }
 
     public Action<OnDoubleJump> onDoubleJump() {
@@ -66,20 +66,20 @@ public class DoubleJumpHandler {
 
             hook.invoker().accept(player);
 
-            VelocityModifier.setVelocity(player, player.getRotationVector().multiply(1.3));
+            VelocityModifier.setVelocity(player, player.getLookAngle().scale(1.3));
 
-            ServerWorld serverWorld = player.getEntityWorld();
+            ServerLevel serverWorld = player.level();
 
             double x = player.getX();
             double y = player.getY();
             double z = player.getZ();
 
-            serverWorld.spawnParticles(ParticleTypes.CLOUD, x, y, z, 10, 0.1, 0.1, 0.1, 0.1);
-            serverWorld.playSound(null, x, y, z, SoundEvents.ENTITY_BLAZE_SHOOT, SoundCategory.PLAYERS, 1, 1);
+            serverWorld.sendParticles(ParticleTypes.CLOUD, x, y, z, 10, 0.1, 0.1, 0.1, 0.1);
+            serverWorld.playSound(null, x, y, z, SoundEvents.BLAZE_SHOOT, SoundSource.PLAYERS, 1, 1);
 
             return true;
         });
     }
 
-    public interface OnDoubleJump extends Consumer<ServerPlayerEntity> {}
+    public interface OnDoubleJump extends Consumer<ServerPlayer> {}
 }

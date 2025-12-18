@@ -1,6 +1,6 @@
 package work.lclpnet.ap2.api.game.team;
 
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.NotNull;
 import work.lclpnet.ap2.impl.game.team.UniformTeamPartitioner;
 
@@ -13,7 +13,7 @@ public interface TeamConfig {
     TeamPartitioner getPartitioner();
 
     @NotNull
-    Map<ServerPlayerEntity, TeamKey> getMapping();
+    Map<ServerPlayer, TeamKey> getMapping();
 
     static TeamConfig defaultConfig() {
         UniformTeamPartitioner partitioner = new UniformTeamPartitioner(new Random());
@@ -25,7 +25,7 @@ public interface TeamConfig {
             }
 
             @Override
-            public @NotNull Map<ServerPlayerEntity, TeamKey> getMapping() {
+            public @NotNull Map<ServerPlayer, TeamKey> getMapping() {
                 return Map.of();
             }
         };

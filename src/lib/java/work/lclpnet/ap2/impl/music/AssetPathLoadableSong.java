@@ -1,6 +1,6 @@
 package work.lclpnet.ap2.impl.music;
 
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.api.music.ConfiguredSong;
 import work.lclpnet.ap2.api.music.LoadableSong;
@@ -18,11 +18,11 @@ public class AssetPathLoadableSong implements LoadableSong {
 
     private final AssetPath path;
     private final AssetRepository assetRepo;
-    private final Identifier id;
+    private final ResourceLocation id;
     private final float weight;
     private final SongInfo info;
 
-    public AssetPathLoadableSong(AssetPath path, AssetRepository assetRepo, Identifier id, float weight, SongInfo info) {
+    public AssetPathLoadableSong(AssetPath path, AssetRepository assetRepo, ResourceLocation id, float weight, SongInfo info) {
         this.path = path;
         this.assetRepo = assetRepo;
         this.id = id;
@@ -55,7 +55,7 @@ public class AssetPathLoadableSong implements LoadableSong {
     }
 
     @Override
-    public Identifier getId() {
+    public ResourceLocation getId() {
         return id;
     }
 

@@ -2,30 +2,30 @@ package work.lclpnet.ap2.game.panda_finder;
 
 import it.unimi.dsi.fastutil.ints.IntList;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.FireworkExplosionComponent;
-import net.minecraft.component.type.FireworksComponent;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.effect.StatusEffectInstance;
-import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.entity.passive.PandaEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.projectile.FireworkRocketEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.scoreboard.ScoreboardCriterion;
-import net.minecraft.scoreboard.ScoreboardDisplaySlot;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Hand;
-import net.minecraft.util.hit.EntityHitResult;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.animal.Panda;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.projectile.FireworkRocketEntity;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.component.FireworkExplosion;
+import net.minecraft.world.item.component.Fireworks;
+import net.minecraft.world.phys.EntityHitResult;
+import net.minecraft.world.scores.DisplaySlot;
+import net.minecraft.world.scores.criteria.ObjectiveCriteria;
 import org.json.JSONObject;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
@@ -60,7 +60,7 @@ import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 public class PandaFinderInstance extends FFAGameInstance {
 
     public static final int WIN_SCORE = 3;
-    private final IntScoreDataContainer<ServerPlayerEntity, PlayerRef> data = new IntScoreDataContainer<>(PlayerRef::create);
+    private final IntScoreDataContainer<ServerPlayer, PlayerRef> data = new IntScoreDataContainer<>(PlayerRef::create);
     private final Random random = new Random();
     private final SpamManager spamManager = new SpamManager();
     private PandaManager pandaManager;
@@ -71,7 +71,7 @@ public class PandaFinderInstance extends FFAGameInstance {
     }
 
     @Override
-    protected DataContainer<ServerPlayerEntity, PlayerRef> getData() {
+    protected DataContainer<ServerPlayer, PlayerRef> getData() {
         return data;
     }
 
@@ -80,7 +80,7 @@ public class PandaFinderInstance extends FFAGameInstance {
         scanWorld();
         readImages();
 
-        bossBar = usePlayerDynamicTaskDisplay(styled(0, Formatting.YELLOW), styled(3, Formatting.YELLOW));
+        bossBar = usePlayerDynamicTaskDisplay(styled(0, ChatFormatting.YELLOW), styled(3, ChatFormatting.YELLOW));
     }
 
     @Override
@@ -89,12 +89,12 @@ public class PandaFinderInstance extends FFAGameInstance {
 
         hooks.registerHook(PlayerInteractionHooks.USE_ENTITY, (player, world, hand, entity, hitResult) -> {
             onUseEntity(player, hand, entity, hitResult);
-            return ActionResult.PASS;
+            return InteractionResult.PASS;
         });
 
         hooks.registerHook(PlayerInteractionHooks.ATTACK_ENTITY, (player, world, hand, entity, hitResult) -> {
             onUseEntity(player, hand, entity, hitResult);
-            return ActionResult.PASS;
+            return InteractionResult.PASS;
         });
 
         setupScoreboard();
@@ -106,12 +106,12 @@ public class PandaFinderInstance extends FFAGameInstance {
         CustomScoreboardManager scoreboardManager = gameHandle.getScoreboardManager();
 
         TranslatedScoreboardObjective objective = scoreboardManager.translateObjective("score",
-                        ScoreboardCriterion.RenderType.INTEGER, "ap2.score")
-                .formatted(Formatting.YELLOW, Formatting.BOLD);
+                        ObjectiveCriteria.RenderType.INTEGER, "ap2.score")
+                .formatted(ChatFormatting.YELLOW, ChatFormatting.BOLD);
 
-        objective.setSlot(ScoreboardDisplaySlot.SIDEBAR);
+        objective.setSlot(DisplaySlot.SIDEBAR);
 
-        for (ServerPlayerEntity player : PlayerLookup.all(gameHandle.getServer())) {
+        for (ServerPlayer player : PlayerLookup.all(gameHandle.getServer())) {
             objective.add(player);
         }
 
@@ -126,8 +126,8 @@ public class PandaFinderInstance extends FFAGameInstance {
         Translations translations = gameHandle.getTranslations();
 
         pandaManager.getLocalizedPandaGene().ifPresent(key -> translations.translateText("game.ap2.panda_finder.find",
-                        styled(translations.translateText(key), Formatting.YELLOW))
-                .formatted(Formatting.GREEN).sendTo(players));
+                        styled(translations.translateText(key), ChatFormatting.YELLOW))
+                .formatted(ChatFormatting.GREEN).sendTo(players));
     }
 
     private void onRoundOver() {
@@ -147,7 +147,7 @@ public class PandaFinderInstance extends FFAGameInstance {
         BlockBox bounds = MapUtil.readBox(map.requireProperty("bounds"));
         BlockBox exclude = MapUtil.readBox(map.requireProperty("search-exclude"));
 
-        ServerWorld world = getWorld();
+        ServerLevel world = getWorld();
 
         BlockPredicate predicate = new NotOccupiedBlockPredicate(world).and(pos -> {
             int x = pos.getX(), y = pos.getY(), z = pos.getZ();
@@ -169,9 +169,9 @@ public class PandaFinderInstance extends FFAGameInstance {
         pandaManager.readImages(images);
     }
 
-    private void onUseEntity(PlayerEntity player, Hand hand, Entity entity, EntityHitResult hitResult) {
-        if (!(entity instanceof PandaEntity panda) || !(player instanceof ServerPlayerEntity serverPlayer)
-            || player.hasStatusEffect(StatusEffects.BLINDNESS) || hand != Hand.MAIN_HAND
+    private void onUseEntity(Player player, InteractionHand hand, Entity entity, EntityHitResult hitResult) {
+        if (!(entity instanceof Panda panda) || !(player instanceof ServerPlayer serverPlayer)
+            || player.hasEffect(MobEffects.BLINDNESS) || hand != InteractionHand.MAIN_HAND
             || hitResult != null) return;
 
         if (spamManager.interact(serverPlayer)) {
@@ -184,19 +184,19 @@ public class PandaFinderInstance extends FFAGameInstance {
         pandaFound(serverPlayer, panda);
     }
 
-    private void onCooldownReached(ServerPlayerEntity player) {
-        player.sendMessage(gameHandle.getTranslations().translateText(player, "game.ap2.panda_finder.cooldown")
-                .formatted(Formatting.RED));
+    private void onCooldownReached(ServerPlayer player) {
+        player.sendSystemMessage(gameHandle.getTranslations().translateText(player, "game.ap2.panda_finder.cooldown")
+                .formatted(ChatFormatting.RED));
 
-        player.playSoundToPlayer(SoundEvents.ENTITY_BLAZE_HURT, SoundCategory.HOSTILE, 0.5f, 1.5f);
-        player.addStatusEffect(new StatusEffectInstance(StatusEffects.BLINDNESS, Ticks.seconds(3), 1, false, false));
+        player.playNotifySound(SoundEvents.BLAZE_HURT, SoundSource.HOSTILE, 0.5f, 1.5f);
+        player.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, Ticks.seconds(3), 1, false, false));
     }
 
-    private void pandaFound(ServerPlayerEntity player, PandaEntity panda) {
+    private void pandaFound(ServerPlayer player, Panda panda) {
         pandaManager.setFound();
 
         data.addScore(player, 1);
-        bossBar.setArgument(player, 0, styled(data.getScore(player), Formatting.YELLOW));
+        bossBar.setArgument(player, 0, styled(data.getScore(player), ChatFormatting.YELLOW));
 
         Translations translations = gameHandle.getTranslations();
         MinecraftServer server = gameHandle.getServer();
@@ -204,26 +204,26 @@ public class PandaFinderInstance extends FFAGameInstance {
         var players = PlayerLookup.all(server);
 
         translations.translateText("game.ap2.panda_finder.panda_found",
-                        styled(player.getNameForScoreboard(), Formatting.YELLOW))
-                .formatted(Formatting.GRAY).sendTo(players);
+                        styled(player.getScoreboardName(), ChatFormatting.YELLOW))
+                .formatted(ChatFormatting.GRAY).sendTo(players);
 
         Participants participants = gameHandle.getParticipants();
 
-        for (ServerPlayerEntity serverPlayer : players) {
+        for (ServerPlayer serverPlayer : players) {
             if (participants.isParticipating(serverPlayer) && serverPlayer != player) {
-                serverPlayer.playSoundToPlayer(SoundEvents.ENTITY_WITHER_HURT, SoundCategory.PLAYERS, 0.5f, 1f);
+                serverPlayer.playNotifySound(SoundEvents.WITHER_HURT, SoundSource.PLAYERS, 0.5f, 1f);
             } else {
-                serverPlayer.playSoundToPlayer(SoundEvents.ENTITY_PLAYER_LEVELUP, SoundCategory.PLAYERS, 0.5f, 1f);
+                serverPlayer.playNotifySound(SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 0.5f, 1f);
             }
         }
 
         ItemStack rocket = new ItemStack(Items.FIREWORK_ROCKET);
-        FireworkExplosionComponent explosion = new FireworkExplosionComponent(FireworkExplosionComponent.Type.SMALL_BALL, IntList.of(0xff0000), IntList.of(), false, false);
-        rocket.set(DataComponentTypes.FIREWORKS, new FireworksComponent(1, List.of(explosion)));
+        FireworkExplosion explosion = new FireworkExplosion(FireworkExplosion.Shape.SMALL_BALL, IntList.of(0xff0000), IntList.of(), false, false);
+        rocket.set(DataComponents.FIREWORKS, new Fireworks(1, List.of(explosion)));
 
-        ServerWorld world = getWorld();
+        ServerLevel world = getWorld();
         FireworkRocketEntity firework = new FireworkRocketEntity(world, panda.getX(), panda.getY(), panda.getZ(), rocket);
-        world.spawnEntity(firework);
+        world.addFreshEntity(firework);
         FireworkEntityAccess.explode(firework);
 
         onRoundOver();

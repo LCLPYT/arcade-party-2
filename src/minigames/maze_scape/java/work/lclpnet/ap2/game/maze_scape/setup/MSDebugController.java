@@ -1,12 +1,12 @@
 package work.lclpnet.ap2.game.maze_scape.setup;
 
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.text.Text;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.math.Vec3i;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.network.chat.Component;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.core.Vec3i;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.util.model.Model;
 import work.lclpnet.ap2.api.util.model.ModelManager;
@@ -40,11 +40,11 @@ public class MSDebugController {
         spawnMarker = modelManager.getModel(Models.CROSS).orElseThrow();
         Model arrow = modelManager.getModel(Models.ARROW).orElseThrow();
         childMarker = arrow;
-        passageMarker = TemplateModel.replace(arrow, Blocks.LIME_CONCRETE.getDefaultState(), Blocks.LIGHT_BLUE_CONCRETE.getDefaultState());
+        passageMarker = TemplateModel.replace(arrow, Blocks.LIME_CONCRETE.defaultBlockState(), Blocks.LIGHT_BLUE_CONCRETE.defaultBlockState());
     }
 
     public void visualizeSpawn(OrientedStructurePiece oriented) {
-        Vec3d pos = oriented.spawn();
+        Vec3 pos = oriented.spawn();
 
         if (pos == null) return;
 
@@ -53,7 +53,7 @@ public class MSDebugController {
                 renderer.model(spawnMarker, pos, 0.75);
             }
 
-            var text = Text.literal(oriented.piece().name() + " r" + oriented.rotation());
+            var text = Component.literal(oriented.piece().name() + " r" + oriented.rotation());
             renderer.text(pos.add(0, 0.2, 0), text, 0.3f);
         });
     }
@@ -157,7 +157,7 @@ public class MSDebugController {
 
         struct.passagesOf(struct.graph().root()).forEach(queue::offer);
 
-        BlockState material = Blocks.BLUE_CONCRETE.getDefaultState();
+        BlockState material = Blocks.BLUE_CONCRETE.defaultBlockState();
 
         while (!queue.isEmpty()) {
             Passage passage = queue.poll();
@@ -174,7 +174,7 @@ public class MSDebugController {
     @Nullable
     public Object3d visualizePassage(Passage from, Passage to, BlockState material) {
         return parent.renderer()
-                .map(renderer -> renderer.line(to.pos().toBottomCenterPos(), from.pos().toBottomCenterPos(), 0.03125, material))
+                .map(renderer -> renderer.line(to.pos().getBottomCenter(), from.pos().getBottomCenter(), 0.03125, material))
                 .orElse(null);
     }
 }

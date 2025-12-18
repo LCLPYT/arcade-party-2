@@ -1,8 +1,8 @@
 package work.lclpnet.ap2.impl.game;
 
-import net.minecraft.server.PlayerManager;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.players.PlayerList;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.base.ParticipantListener;
@@ -53,7 +53,7 @@ public abstract class TeamGameInstance extends BaseGameInstance implements Parti
     }
 
     @Override
-    public void participantRemoved(ServerPlayerEntity player) {
+    public void participantRemoved(ServerPlayer player) {
         if (teamManager == null) return;
 
         Team team = teamManager.getTeam(player).orElse(null);
@@ -76,7 +76,7 @@ public abstract class TeamGameInstance extends BaseGameInstance implements Parti
         synchronized (this) {
             if (teamManager != null) return teamManager;
 
-            PlayerManager playerManager = gameHandle.getServer().getPlayerManager();
+            PlayerList playerManager = gameHandle.getServer().getPlayerList();
             TeamConfig teamConfig = gameHandle.getTeamConfig().orElseGet(TeamConfig::defaultConfig);
             CustomScoreboardManager scoreboardManager = gameHandle.getScoreboardManager();
             PlayerUtil playerUtil = gameHandle.getPlayerUtil();
@@ -105,7 +105,7 @@ public abstract class TeamGameInstance extends BaseGameInstance implements Parti
     }
 
     protected void teleportTeamsToSpawns() {
-        ServerWorld world = getWorld();
+        ServerLevel world = getWorld();
 
         for (Team team : teamManager.getTeams()) {
             PositionRotation spawn = getSpawn(team);
@@ -115,11 +115,11 @@ public abstract class TeamGameInstance extends BaseGameInstance implements Parti
                 continue;
             }
 
-            double x = spawn.getX(), y = spawn.getY(), z = spawn.getZ();
+            double x = spawn.x(), y = spawn.y(), z = spawn.z();
             float yaw = spawn.getYaw(), pitch = spawn.getPitch();
 
-            for (ServerPlayerEntity player : team.getPlayers()) {
-                player.teleport(world, x, y, z, Set.of(), yaw, pitch, true);
+            for (ServerPlayer player : team.getPlayers()) {
+                player.teleportTo(world, x, y, z, Set.of(), yaw, pitch, true);
             }
         }
     }
@@ -149,7 +149,7 @@ public abstract class TeamGameInstance extends BaseGameInstance implements Parti
     }
 
     @Nullable
-    protected final TeamRef createReferenceFor(ServerPlayerEntity player) {
+    protected final TeamRef createReferenceFor(ServerPlayer player) {
         var team = teamManager.getTeam(player);
 
         return team.map(this::createReference).orElse(null);

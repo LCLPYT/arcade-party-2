@@ -1,7 +1,7 @@
 package work.lclpnet.ap2.core.hook;
 
-import net.minecraft.entity.projectile.ProjectileEntity;
-import net.minecraft.util.hit.EntityHitResult;
+import net.minecraft.world.entity.projectile.Projectile;
+import net.minecraft.world.phys.EntityHitResult;
 import work.lclpnet.kibu.hook.Hook;
 import work.lclpnet.kibu.hook.HookFactory;
 
@@ -14,5 +14,5 @@ public interface ProjectileHitEntityCallback {
         }
     });
 
-    void onHitEntity(ProjectileEntity projectile, EntityHitResult hit);
+    void onHitEntity(Projectile projectile, EntityHitResult hit);
 }

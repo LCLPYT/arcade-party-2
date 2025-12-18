@@ -1,16 +1,16 @@
 package work.lclpnet.ap2.api.game;
 
-import net.minecraft.item.ItemStack;
-import net.minecraft.registry.DynamicRegistryManager;
-import net.minecraft.util.Identifier;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
 public interface GameInfo {
 
     /**
-     * @return A unique {@link Identifier} for the game.
+     * @return A unique {@link ResourceLocation} for the game.
      */
-    @NotNull Identifier getId();
+    @NotNull ResourceLocation getId();
 
     /**
      * @return The type of the game.
@@ -19,16 +19,16 @@ public interface GameInfo {
 
     @NotNull String getAuthor();
 
-    @NotNull ItemStack getIcon(@NotNull DynamicRegistryManager manager);
+    @NotNull ItemStack getIcon(@NotNull RegistryAccess manager);
 
     default @NotNull String getTitleKey() {
-        Identifier id = getId();
+        ResourceLocation id = getId();
 
         return "game.%s.%s".formatted(id.getNamespace(), id.getPath());
     }
 
     default @NotNull String getDescriptionKey() {
-        Identifier id = getId();
+        ResourceLocation id = getId();
 
         return "game.%s.%s.description".formatted(id.getNamespace(), id.getPath());
     }
@@ -38,7 +38,7 @@ public interface GameInfo {
     }
 
     default @NotNull String getTaskKey() {
-        Identifier id = getId();
+        ResourceLocation id = getId();
 
         return "game.%s.%s.task".formatted(id.getNamespace(), id.getPath());
     }
@@ -47,9 +47,9 @@ public interface GameInfo {
         return new Object[0];
     }
 
-    default @NotNull Identifier identifier(@NotNull String subPath) {
-        Identifier gameId = getId();
+    default @NotNull ResourceLocation identifier(@NotNull String subPath) {
+        ResourceLocation gameId = getId();
 
-        return Identifier.of(gameId.getNamespace(), gameId.getPath().concat("/").concat(subPath));
+        return ResourceLocation.fromNamespaceAndPath(gameId.getNamespace(), gameId.getPath().concat("/").concat(subPath));
     }
 }

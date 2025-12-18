@@ -1,7 +1,7 @@
 package work.lclpnet.ap2.game.guess_it.challenge;
 
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.phys.Vec3;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.game.guess_it.data.*;
 import work.lclpnet.ap2.game.guess_it.util.MobRandomizer;
@@ -22,14 +22,14 @@ public class DistinctMobCountChallenge implements Challenge {
 
     private static final int DURATION_TICKS = Ticks.seconds(21);
     private final MiniGameHandle gameHandle;
-    private final ServerWorld world;
+    private final ServerLevel world;
     private final Random random;
     private final BlockShape blockShape;
     private final WorldModifier modifier;
     private final IndexedSet<UUID> mannequinUuids;
     private int amount = 0;
 
-    public DistinctMobCountChallenge(MiniGameHandle gameHandle, ServerWorld world, Random random, BlockShape blockShape, WorldModifier modifier, IndexedSet<UUID> mannequinUuids) {
+    public DistinctMobCountChallenge(MiniGameHandle gameHandle, ServerLevel world, Random random, BlockShape blockShape, WorldModifier modifier, IndexedSet<UUID> mannequinUuids) {
         this.gameHandle = gameHandle;
         this.world = world;
         this.random = random;
@@ -66,7 +66,7 @@ public class DistinctMobCountChallenge implements Challenge {
 
         types = MobRandomizer.trimTypes(types, random, amount);
 
-        List<Vec3d> spaces = MobSpawner.findSpawns(world, types).findSpaces(findGroundPositions(blockShape, world));
+        List<Vec3> spaces = MobSpawner.findSpawns(world, types).findSpaces(findGroundPositions(blockShape, world));
 
         if (spaces.isEmpty()) {
             throw new IllegalStateException("No spawn spaces found");
@@ -83,7 +83,7 @@ public class DistinctMobCountChallenge implements Challenge {
 
             budget -= cost;
 
-            Vec3d pos = spaces.get(random.nextInt(spaces.size()));
+            Vec3 pos = spaces.get(random.nextInt(spaces.size()));
             spawner.spawnEntity(type, pos, modifier);
         }
     }

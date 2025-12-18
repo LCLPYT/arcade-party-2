@@ -1,6 +1,6 @@
 package work.lclpnet.ap2.impl.util.math.face;
 
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.phys.Vec3;
 
-public record Polygon(Vec3d[] vertices) implements Face {
+public record Polygon(Vec3[] vertices) implements Face {
 }

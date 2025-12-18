@@ -1,8 +1,8 @@
 package work.lclpnet.ap2.game.guess_it.data;
 
-import net.minecraft.registry.Registries;
-import net.minecraft.sound.SoundEvent;
-import net.minecraft.util.Identifier;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvent;
 import org.json.JSONObject;
 
 import java.io.FileNotFoundException;
@@ -61,8 +61,8 @@ public class SoundSubtitles {
             if (!key.startsWith(prefix)) continue;
 
             String rest = key.substring(prefix.length());
-            Identifier id = Identifier.of(rest);
-            SoundEvent soundEvent = Registries.SOUND_EVENT.get(id);
+            ResourceLocation id = ResourceLocation.parse(rest);
+            SoundEvent soundEvent = BuiltInRegistries.SOUND_EVENT.getValue(id);
 
             if (soundEvent != null) {
                 soundEvents.add(soundEvent);

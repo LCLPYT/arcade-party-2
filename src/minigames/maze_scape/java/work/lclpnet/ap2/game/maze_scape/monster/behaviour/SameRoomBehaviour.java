@@ -1,13 +1,13 @@
 package work.lclpnet.ap2.game.maze_scape.monster.behaviour;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.phys.Vec3;
 import work.lclpnet.ap2.game.maze_scape.util.MSStruct;
 
 import java.util.function.BiConsumer;
 
-public class SameRoomBehaviour<T extends MobEntity> implements MonsterBehaviour {
+public class SameRoomBehaviour<T extends Mob> implements MonsterBehaviour {
 
     private final MSStruct struct;
     private final int timeout;
@@ -21,10 +21,10 @@ public class SameRoomBehaviour<T extends MobEntity> implements MonsterBehaviour 
     }
 
     @Override
-    public void tick(MobEntity mob) {
+    public void tick(Mob mob) {
         LivingEntity target = mob.getTarget();
 
-        if (target == null || !isInSameRoom(mob.getEntityPos(), target.getEntityPos())) {
+        if (target == null || !isInSameRoom(mob.position(), target.position())) {
             sameRoomTimer = 0;
             return;
         }
@@ -37,11 +37,11 @@ public class SameRoomBehaviour<T extends MobEntity> implements MonsterBehaviour 
     }
 
     @SuppressWarnings("unchecked")
-    private void trigger(MobEntity mob, LivingEntity target) {
+    private void trigger(Mob mob, LivingEntity target) {
         action.accept((T) mob, target);
     }
 
-    private boolean isInSameRoom(Vec3d first, Vec3d second) {
+    private boolean isInSameRoom(Vec3 first, Vec3 second) {
         var wardenNode = struct.nodeAt(first);
         var targetNode = struct.nodeAt(second);
 

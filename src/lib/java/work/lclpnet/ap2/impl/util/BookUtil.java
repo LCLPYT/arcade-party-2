@@ -1,11 +1,11 @@
 package work.lclpnet.ap2.impl.util;
 
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.WrittenBookContentComponent;
-import net.minecraft.item.ItemStack;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.RawFilteredPair;
-import net.minecraft.text.Text;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.server.network.Filterable;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.WrittenBookContent;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,17 +21,17 @@ public class BookUtil {
 
     public static class Builder {
         private final String title, author;
-        private final List<Text> pages = new ArrayList<>();
+        private final List<Component> pages = new ArrayList<>();
 
         private Builder(String title, String author) {
             this.title = title;
             this.author = author;
         }
 
-        public Builder addPage(Text... lines) {
-            MutableText root = Text.empty();
+        public Builder addPage(Component... lines) {
+            MutableComponent root = Component.empty();
 
-            for (Text line : lines) {
+            for (Component line : lines) {
                 root.append(line);
             }
 
@@ -41,13 +41,13 @@ public class BookUtil {
         }
 
         public void applyTo(ItemStack stack) {
-            var titlePair = new RawFilteredPair<>(title, Optional.empty());
+            var titlePair = new Filterable<>(title, Optional.empty());
 
             var pagePairs = pages.stream()
-                    .map(page -> new RawFilteredPair<>(page, Optional.empty()))
+                    .map(page -> new Filterable<>(page, Optional.empty()))
                     .toList();
 
-            stack.set(DataComponentTypes.WRITTEN_BOOK_CONTENT, new WrittenBookContentComponent(titlePair, author, 0, pagePairs, true));
+            stack.set(DataComponents.WRITTEN_BOOK_CONTENT, new WrittenBookContent(titlePair, author, 0, pagePairs, true));
         }
     }
 }

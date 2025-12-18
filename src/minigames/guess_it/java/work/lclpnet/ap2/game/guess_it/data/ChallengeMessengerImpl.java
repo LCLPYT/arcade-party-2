@@ -1,26 +1,26 @@
 package work.lclpnet.ap2.game.guess_it.data;
 
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.text.ClickEvent;
-import net.minecraft.text.HoverEvent;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.ClickEvent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.HoverEvent;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.kibu.translate.text.TranslatedText;
 
-import static net.minecraft.util.Formatting.*;
+import static net.minecraft.ChatFormatting.*;
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
 public class ChallengeMessengerImpl implements ChallengeMessenger {
 
-    private final ServerWorld world;
+    private final ServerLevel world;
     private final Translations translations;
     private TranslatedText task = null;
-    private Text[] options = null;
+    private Component[] options = null;
 
-    public ChallengeMessengerImpl(ServerWorld world, Translations translations) {
+    public ChallengeMessengerImpl(ServerLevel world, Translations translations) {
         this.world = world;
         this.translations = translations;
     }
@@ -31,21 +31,21 @@ public class ChallengeMessengerImpl implements ChallengeMessenger {
     }
 
     @Override
-    public void options(Text[] options) {
+    public void options(Component[] options) {
         this.options = options;
     }
 
     public void send() {
         if (task == null) return;
 
-        var msg = task.formatted(Formatting.DARK_GREEN, BOLD);
+        var msg = task.formatted(ChatFormatting.DARK_GREEN, BOLD);
 
-        for (ServerPlayerEntity player : PlayerLookup.world(world)) {
+        for (ServerPlayer player : PlayerLookup.world(world)) {
             for (int i = 0; i < 20; i++) {
-                player.sendMessage(Text.empty());
+                player.sendSystemMessage(Component.empty());
             }
 
-            player.sendMessage(msg.translateFor(player));
+            player.sendSystemMessage(msg.translateFor(player));
         }
 
         if (options != null) {
@@ -58,24 +58,24 @@ public class ChallengeMessengerImpl implements ChallengeMessenger {
         options = null;
     }
 
-    private void sendOptions(Text[] options) {
+    private void sendOptions(Component[] options) {
         var players = PlayerLookup.world(world);
         char letter = 'A';
 
-        for (Text option : options) {
+        for (Component option : options) {
             ClickEvent clickEvent = new ClickEvent.RunCommand("/answer " + letter);
 
-            for (ServerPlayerEntity player : players) {
+            for (ServerPlayer player : players) {
                 var hoverMsg = translations.translateText(player, "game.ap2.guess_it.hover_option", styled(letter, YELLOW))
                         .formatted(GREEN);
 
                 HoverEvent hoverEvent = new HoverEvent.ShowText(hoverMsg);
 
-                Text msg = Text.literal(letter + ") ").formatted(YELLOW)
-                        .append(option.copy().formatted(AQUA))
-                        .styled(style -> style.withClickEvent(clickEvent).withHoverEvent(hoverEvent));
+                Component msg = Component.literal(letter + ") ").withStyle(YELLOW)
+                        .append(option.copy().withStyle(AQUA))
+                        .withStyle(style -> style.withClickEvent(clickEvent).withHoverEvent(hoverEvent));
 
-                player.sendMessage(msg);
+                player.sendSystemMessage(msg);
             }
 
             letter++;

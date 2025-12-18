@@ -1,30 +1,30 @@
 package work.lclpnet.ap2.game.maze_scape.setup;
 
-import net.minecraft.block.enums.Orientation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Vec3i;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.FrontAndTop;
+import net.minecraft.core.Vec3i;
 import org.jetbrains.annotations.Nullable;
 
-public record Connector3(BlockPos pos, Orientation orientation, String name, String target) {
+public record Connector3(BlockPos pos, FrontAndTop orientation, String name, String target) {
 
     public Vec3i direction() {
-        return orientation.getFacing().getVector();
+        return orientation.front().getUnitVec3i();
     }
 
     public int rotateToFace(Connector3 other) {
-        return rotateToFace(this.orientation.getFacing(), other.orientation.getFacing());
+        return rotateToFace(this.orientation.front(), other.orientation.front());
     }
 
     @Nullable
     public Connector3 createOpposing() {
-        Direction facing = orientation.getFacing();
+        Direction facing = orientation.front();
 
-        Orientation opposingOrientation = Orientation.byDirections(facing.getOpposite(), orientation.getRotation());
+        FrontAndTop opposingOrientation = FrontAndTop.fromFrontAndTop(facing.getOpposite(), orientation.top());
 
         if (opposingOrientation == null) return null;
 
-        BlockPos opposingPos = pos.add(facing.getVector());
+        BlockPos opposingPos = pos.offset(facing.getUnitVec3i());
 
         // target and name must be inverted for the opposing connector
         return new Connector3(opposingPos, opposingOrientation, target, name);
@@ -38,8 +38,8 @@ public record Connector3(BlockPos pos, Orientation orientation, String name, Str
      * @return The amount of counter-clockwise rotation as a multiple of 90 degrees. (1=90, 2=180 ...)
      */
     public static int rotateToFace(Direction face, Direction other) {
-        int rotation = face.getHorizontalQuarterTurns();
-        int otherRotation = other.getHorizontalQuarterTurns();
+        int rotation = face.get2DDataValue();
+        int otherRotation = other.get2DDataValue();
 
         return Math.floorMod(-1 * (rotation - otherRotation + 2), 4);
     }

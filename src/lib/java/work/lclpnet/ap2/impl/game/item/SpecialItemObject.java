@@ -1,13 +1,13 @@
 package work.lclpnet.ap2.impl.game.item;
 
+import com.mojang.math.Axis;
 import lombok.Getter;
-import net.minecraft.entity.decoration.DisplayEntity;
-import net.minecraft.item.ItemDisplayContext;
-import net.minecraft.item.ItemStack;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.RotationAxis;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Display;
+import net.minecraft.world.item.ItemDisplayContext;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.phys.AABB;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.gaco.scene.Object3d;
 import work.lclpnet.gaco.scene.Scene;
@@ -19,7 +19,7 @@ import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.kibu.translate.text.TranslatedText;
 
 import static java.lang.Math.max;
-import static net.minecraft.util.math.MathHelper.sin;
+import static net.minecraft.util.Mth.sin;
 
 public class SpecialItemObject extends Object3d implements Animatable {
 
@@ -30,7 +30,7 @@ public class SpecialItemObject extends Object3d implements Animatable {
     private final ItemDisplayObject itemDisplay;
     private final TranslatedTextDisplayObject textDisplay;
     private double age = 0;
-    private Box boundingBox;
+    private AABB boundingBox;
     @Getter private boolean pickedUp = false;
     private @Nullable PickupAnimation pickupAnimation = null;
     @Getter private double pickupDelay = 0;
@@ -54,7 +54,7 @@ public class SpecialItemObject extends Object3d implements Animatable {
         textDisplay.position.set(0, DEFAULT_SIZE * 2, 0);
         textDisplay.scale.set(0.6);
         textDisplay.controller().setText(name);
-        textDisplay.controller().setBillboardMode(DisplayEntity.BillboardMode.CENTER);
+        textDisplay.controller().setBillboardMode(Display.BillboardConstraints.CENTER);
 
         addChild(textDisplay);
 
@@ -69,8 +69,8 @@ public class SpecialItemObject extends Object3d implements Animatable {
         return item;
     }
 
-    public Box boxAt(double x, double y, double z) {
-        return new Box(
+    public AABB boxAt(double x, double y, double z) {
+        return new AABB(
                 x - size, y, z - size,
                 x + size, y + 2 * size, z + size);
     }
@@ -79,8 +79,8 @@ public class SpecialItemObject extends Object3d implements Animatable {
         boundingBox = boxAt(position.x, position.y, position.z);
     }
 
-    public boolean isOnGround(ServerWorld world) {
-        Box box = boxAt(position.x, position.y - 0.05, position.z);
+    public boolean isOnGround(ServerLevel world) {
+        AABB box = boxAt(position.x, position.y - 0.05, position.z);
         return world.getBlockCollisions(null, box).iterator().hasNext();
     }
 
@@ -104,7 +104,7 @@ public class SpecialItemObject extends Object3d implements Animatable {
             return;
         }
 
-        itemDisplay.rotation.set(RotationAxis.POSITIVE_Y.rotation((float) age + ageOffset));
+        itemDisplay.rotation.set(Axis.YP.rotation((float) age + ageOffset));
 
         double offsetY = (sin((float) age * 2.f + this.ageOffset) * 0.1F + 0.1F) + 0.25F * itemDisplay.scale.y;
 
@@ -112,11 +112,11 @@ public class SpecialItemObject extends Object3d implements Animatable {
         textDisplay.position.set(0.d, offsetY + 2 * DEFAULT_SIZE, 0.d);
     }
 
-    public boolean intersects(Box box) {
+    public boolean intersects(AABB box) {
         return boundingBox.intersects(box);
     }
 
-    public void startPickup(ServerPlayerEntity player, Runnable whenDone) {
+    public void startPickup(ServerPlayer player, Runnable whenDone) {
         if (pickedUp) return;
 
         pickedUp = true;

@@ -1,18 +1,18 @@
 package work.lclpnet.ap2.impl.util.math.shape;
 
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.phys.Vec3;
 import work.lclpnet.ap2.impl.util.math.face.Face;
 
 import static java.lang.Math.abs;
 
 public class Octahedron implements PlatonicShape {
 
-    private final Vec3d center;
+    private final Vec3 center;
     private final double radius;
-    private final Vec3d[] vertices;
+    private final Vec3[] vertices;
     private final Face[] faces;
 
-    public Octahedron(Vec3d center, double radius) {
+    public Octahedron(Vec3 center, double radius) {
         this.center = center;
         this.radius = radius;
         this.vertices = PlatonicShape.super.vertices();
@@ -20,7 +20,7 @@ public class Octahedron implements PlatonicShape {
     }
 
     @Override
-    public Vec3d center() {
+    public Vec3 center() {
         return center;
     }
 
@@ -30,7 +30,7 @@ public class Octahedron implements PlatonicShape {
     }
 
     @Override
-    public Vec3d[] vertices() {
+    public Vec3[] vertices() {
         return vertices;
     }
 
@@ -41,11 +41,11 @@ public class Octahedron implements PlatonicShape {
 
     @Override
     public boolean contains(double x, double y, double z) {
-        return abs(x - center.getX()) + abs(y - center.getY()) + abs(z - center.getZ()) < radius;
+        return abs(x - center.x()) + abs(y - center.y()) + abs(z - center.z()) < radius;
     }
 
     @Override
-    public Vec3d[] unitVertices() {
+    public Vec3[] unitVertices() {
         return normalize(dualVertices(Cube.UNIT));
     }
 

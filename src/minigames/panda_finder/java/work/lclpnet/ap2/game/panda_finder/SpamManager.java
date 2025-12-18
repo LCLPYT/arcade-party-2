@@ -1,6 +1,6 @@
 package work.lclpnet.ap2.game.panda_finder;
 
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.level.ServerPlayer;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -13,8 +13,8 @@ public class SpamManager {
 
     private final Map<UUID, Record> records = new HashMap<>();
 
-    public boolean interact(ServerPlayerEntity player) {
-        Record record = records.computeIfAbsent(player.getUuid(), uuid -> new Record());
+    public boolean interact(ServerPlayer player) {
+        Record record = records.computeIfAbsent(player.getUUID(), uuid -> new Record());
         return record.interact();
     }
 

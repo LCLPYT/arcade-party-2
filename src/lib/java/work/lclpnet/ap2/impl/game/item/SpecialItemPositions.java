@@ -1,7 +1,7 @@
 package work.lclpnet.ap2.impl.game.item;
 
-import net.minecraft.block.Blocks;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.Blocks;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.util.world.BlockPredicate;
 import work.lclpnet.ap2.impl.util.debug.DebugController;
@@ -60,7 +60,7 @@ public class SpecialItemPositions {
 
         if (DEBUG_SPAWNS) {
             debugController.exclusive("spawn_boxes", controller ->
-                    controller.visualizeBoxes(boxes, minPos, Matrix3i.IDENTITY, Blocks.LIME_STAINED_GLASS.getDefaultState()));
+                    controller.visualizeBoxes(boxes, minPos, Matrix3i.IDENTITY, Blocks.LIME_STAINED_GLASS.defaultBlockState()));
         }
     }
 
@@ -75,7 +75,7 @@ public class SpecialItemPositions {
             return Optional.empty();
         }
 
-        var pos = new BlockPos.Mutable();
+        var pos = new BlockPos.MutableBlockPos();
         box.randomBlockPos(pos, random);
         pos.move(shape.bounds().min());
 

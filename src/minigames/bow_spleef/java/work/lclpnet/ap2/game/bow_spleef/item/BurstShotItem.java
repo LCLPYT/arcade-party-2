@@ -1,15 +1,15 @@
 package work.lclpnet.ap2.game.bow_spleef.item;
 
-import net.minecraft.entity.projectile.ProjectileEntity;
-import net.minecraft.item.ArrowItem;
-import net.minecraft.item.BowItem;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.registry.DynamicRegistryManager;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.projectile.Projectile;
+import net.minecraft.world.item.ArrowItem;
+import net.minecraft.world.item.BowItem;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import work.lclpnet.ap2.core.hook.RangedWeaponUsedCallback;
 import work.lclpnet.ap2.impl.game.item.SpecialItem;
 import work.lclpnet.ap2.impl.game.item.SpecialItemContext;
@@ -27,20 +27,20 @@ public class BurstShotItem implements SpecialItem {
     }
 
     @Override
-    public ItemStack createItemStack(DynamicRegistryManager registryManager) {
+    public ItemStack createItemStack(RegistryAccess registryManager) {
         return new ItemStack(Items.BLAZE_POWDER);
     }
 
     @Override
     public void registerHooks(HookRegistrar hooks, SpecialItemContext ctx) {
         hooks.registerHook(RangedWeaponUsedCallback.HOOK, (entity, stack, remainingUseTicks) -> {
-            if (!(entity instanceof ServerPlayerEntity player)
-                    || stack != player.getInventory().getStack(4)
+            if (!(entity instanceof ServerPlayer player)
+                    || stack != player.getInventory().getItem(4)
                     || !(stack.getItem() instanceof BowItem bow)
                     || !ctx.hasSpecialItem(player, this)) return;
 
             ctx.removeSpecialItem(player, this);
-            int useTicks = bow.getMaxUseTime(stack, player) - remainingUseTicks;
+            int useTicks = bow.getUseDuration(stack, player) - remainingUseTicks;
 
             for (int i = 1; i < BURST_COUNT; i++) {
                 ctx.scheduler().timeout(() -> shoot(player, stack, useTicks), BURST_INTERVAL_TICKS * i);
@@ -48,16 +48,16 @@ public class BurstShotItem implements SpecialItem {
         });
     }
 
-    private void shoot(ServerPlayerEntity player, ItemStack weaponStack, int useTicks) {
-        ServerWorld world = player.getEntityWorld();
+    private void shoot(ServerPlayer player, ItemStack weaponStack, int useTicks) {
+        ServerLevel world = player.level();
         ItemStack projectileStack = new ItemStack(Items.ARROW);
         var arrow = ((ArrowItem) Items.ARROW).createArrow(world, projectileStack, player, weaponStack);
-        float useProgress = BowItem.getPullProgress(useTicks);
+        float useProgress = BowItem.getPowerForTime(useTicks);
         float speed = useProgress * 3.0F;
 
-        ProjectileEntity.spawn(arrow, world, projectileStack, projectile ->
-                projectile.setVelocity(player, player.getPitch(), player.getYaw(), 0.0F, speed, 1));
+        Projectile.spawnProjectile(arrow, world, projectileStack, projectile ->
+                projectile.shootFromRotation(player, player.getXRot(), player.getYRot(), 0.0F, speed, 1));
 
-        world.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.ENTITY_ARROW_SHOOT, SoundCategory.PLAYERS, 1.0F, 1.0F / (world.getRandom().nextFloat() * 0.4F + 1.2F) + useProgress * 0.5F);
+        world.playSound(null, player.getX(), player.getY(), player.getZ(), SoundEvents.ARROW_SHOOT, SoundSource.PLAYERS, 1.0F, 1.0F / (world.getRandom().nextFloat() * 0.4F + 1.2F) + useProgress * 0.5F);
     }
 }

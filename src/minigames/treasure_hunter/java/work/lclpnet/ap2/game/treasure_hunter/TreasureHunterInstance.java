@@ -1,21 +1,21 @@
 package work.lclpnet.ap2.game.treasure_hunter;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.enchantment.Enchantments;
-import net.minecraft.entity.ItemEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.GameRules;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.enchantment.Enchantments;
+import net.minecraft.world.level.GameRules;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
@@ -41,9 +41,9 @@ public class TreasureHunterInstance extends FFAGameInstance {
 
     private static final float COIN_CHANCE = 0.025f;
     private final Random random = new Random();
-    private final OrderedDataContainer<ServerPlayerEntity, PlayerRef> foundChest = new OrderedDataContainer<>(PlayerRef::create);
-    private final IntScoreDataContainer<ServerPlayerEntity, PlayerRef> score = new IntScoreDataContainer<>(PlayerRef::create);
-    private final CombinedDataContainer<ServerPlayerEntity, PlayerRef> data = new CombinedDataContainer<>(List.of(foundChest, score));
+    private final OrderedDataContainer<ServerPlayer, PlayerRef> foundChest = new OrderedDataContainer<>(PlayerRef::create);
+    private final IntScoreDataContainer<ServerPlayer, PlayerRef> score = new IntScoreDataContainer<>(PlayerRef::create);
+    private final CombinedDataContainer<ServerPlayer, PlayerRef> data = new CombinedDataContainer<>(List.of(foundChest, score));
     private final Set<BlockState> materials = new HashSet<>();
 
     public TreasureHunterInstance(MiniGameHandle gameHandle) {
@@ -53,15 +53,15 @@ public class TreasureHunterInstance extends FFAGameInstance {
     }
 
     @Override
-    protected DataContainer<ServerPlayerEntity, PlayerRef> getData() {
+    protected DataContainer<ServerPlayer, PlayerRef> getData() {
         return data;
     }
 
     @Override
     protected void prepare() {
         commons().gameRuleBuilder()
-                .set(GameRules.DO_TILE_DROPS, false)
-                .set(GameRules.DO_ENTITY_DROPS, false);
+                .set(GameRules.RULE_DOBLOCKDROPS, false)
+                .set(GameRules.RULE_DOENTITYDROPS, false);
 
         MapUtil.readBlockStates(getMap().requireProperty("materials"), materials, gameHandle.getLogger());
 
@@ -70,31 +70,31 @@ public class TreasureHunterInstance extends FFAGameInstance {
         HookRegistrar hooks = gameHandle.getHooks();
 
         hooks.registerHook(PlayerInteractionHooks.USE_BLOCK, (player, world, hand, hitResult) -> {
-            if (!(player instanceof ServerPlayerEntity serverPlayer) || !participants.isParticipating(serverPlayer)
-                || !world.getBlockState(hitResult.getBlockPos()).isOf(Blocks.CHEST)) {
-                return ActionResult.PASS;
+            if (!(player instanceof ServerPlayer serverPlayer) || !participants.isParticipating(serverPlayer)
+                || !world.getBlockState(hitResult.getBlockPos()).is(Blocks.CHEST)) {
+                return InteractionResult.PASS;
             }
 
             if (winManager.isGameOver()) {
-                return ActionResult.FAIL;
+                return InteractionResult.FAIL;
             }
 
-            player.playSoundToPlayer(SoundEvents.BLOCK_AMETHYST_BLOCK_RESONATE, SoundCategory.BLOCKS, 1.2f, 1.8f);
-            player.playSoundToPlayer(SoundEvents.BLOCK_CHEST_LOCKED, SoundCategory.BLOCKS, 0.2f, 0.5f);
+            player.playNotifySound(SoundEvents.AMETHYST_BLOCK_RESONATE, SoundSource.BLOCKS, 1.2f, 1.8f);
+            player.playNotifySound(SoundEvents.CHEST_LOCKED, SoundSource.BLOCKS, 0.2f, 0.5f);
 
             var scoreEntry = score.getEntry(serverPlayer)
                     .<Object>map(entry -> entry.toText(translations))
-                    .orElse(Text.literal("-"));
+                    .orElse(Component.literal("-"));
 
             var detail = translations.translateText("game.ap2.treasure_hunter.found_treasure", scoreEntry);
             foundChest.add(serverPlayer, detail);
             winManager.complete();
 
-            return ActionResult.SUCCESS_SERVER;
+            return InteractionResult.SUCCESS_SERVER;
         });
 
         hooks.registerHook(PlayerInteractionHooks.BREAK_BLOCK, (world, player, pos, state, blockEntity) -> {
-            if (!(player instanceof ServerPlayerEntity serverPlayer) || !participants.isParticipating(serverPlayer)) {
+            if (!(player instanceof ServerPlayer serverPlayer) || !participants.isParticipating(serverPlayer)) {
                 return true;
             }
 
@@ -114,14 +114,14 @@ public class TreasureHunterInstance extends FFAGameInstance {
     protected void go() {
         gameHandle.protect(config -> {
             config.allow(ProtectionTypes.BREAK_BLOCKS, (entity, pos) -> {
-                World world = entity.getEntityWorld();
+                Level world = entity.level();
                 BlockState state = world.getBlockState(pos);
 
                 return materials.contains(state);
             });
 
             config.allow(ProtectionTypes.PICKUP_ITEM, (player, item) -> {
-                if (player instanceof ServerPlayerEntity serverPlayer && item.getStack().isOf(Items.SUNFLOWER)) {
+                if (player instanceof ServerPlayer serverPlayer && item.getItem().is(Items.SUNFLOWER)) {
                     item.discard();
                     giveCoin(serverPlayer);
                 }
@@ -133,33 +133,33 @@ public class TreasureHunterInstance extends FFAGameInstance {
         giveShovelsToPlayers();
     }
 
-    private void spawnCoin(BlockPos pos, World world) {
+    private void spawnCoin(BlockPos pos, Level world) {
         ItemEntity coin = new ItemEntity(world, pos.getX(), pos.getY(), pos.getZ(), new ItemStack(Items.SUNFLOWER));
-        world.spawnEntity(coin);
+        world.addFreshEntity(coin);
     }
 
-    private void giveCoin(ServerPlayerEntity player) {
-        player.playSoundToPlayer(SoundEvents.ENTITY_ARROW_HIT_PLAYER, SoundCategory.BLOCKS, 0.7f, 1.55f);
+    private void giveCoin(ServerPlayer player) {
+        player.playNotifySound(SoundEvents.ARROW_HIT_PLAYER, SoundSource.BLOCKS, 0.7f, 1.55f);
 
         commons().addScore(player, 1, score);
     }
 
     private void giveShovelsToPlayers() {
-        var efficiency = ItemHelper.getEnchantment(Enchantments.EFFICIENCY, getWorld().getRegistryManager());
+        var efficiency = ItemHelper.getEnchantment(Enchantments.EFFICIENCY, getWorld().registryAccess());
 
-        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
+        for (ServerPlayer player : gameHandle.getParticipants()) {
             ItemStack stack = unbreakable(new ItemStack(Items.IRON_SHOVEL));
 
-            stack.addEnchantment(efficiency, 4);
+            stack.enchant(efficiency, 4);
 
-            PlayerInventory inventory = player.getInventory();
-            inventory.setStack(4, stack);
+            Inventory inventory = player.getInventory();
+            inventory.setItem(4, stack);
             PlayerInventoryAccess.setSelectedSlot(player, 4);
         }
     }
 
     private void placeChest() {
-        ServerWorld world = getWorld();
+        ServerLevel world = getWorld();
         BlockBox box = MapUtil.readBox(getMap().requireProperty("chest-area"));
         List<BlockPos> chestAreaList = new ArrayList<>();
 
@@ -167,13 +167,13 @@ public class TreasureHunterInstance extends FFAGameInstance {
             BlockState state = world.getBlockState(block);
 
             if (materials.contains(state)) {
-                chestAreaList.add(block.toImmutable());
+                chestAreaList.add(block.immutable());
             }
         }
 
         int randomIndex = random.nextInt(chestAreaList.size());
 
         BlockPos chestPos = chestAreaList.get(randomIndex);
-        world.setBlockState(chestPos, Blocks.CHEST.getDefaultState());
+        world.setBlockAndUpdate(chestPos, Blocks.CHEST.defaultBlockState());
     }
 }

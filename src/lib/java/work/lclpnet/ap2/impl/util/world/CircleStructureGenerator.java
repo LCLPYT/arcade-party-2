@@ -1,7 +1,7 @@
 package work.lclpnet.ap2.impl.util.world;
 
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
 import work.lclpnet.ap2.impl.util.structure.StructureUtil;
 import work.lclpnet.gaco.collisions.BoxCollisionDetector;
 import work.lclpnet.gaco.ds.BlockBox;
@@ -15,7 +15,7 @@ import static java.lang.Math.*;
 
 public class CircleStructureGenerator {
 
-    public static void placeStructures(List<BlockStructure> structures, ServerWorld world, double spacing, PositionFunction position) {
+    public static void placeStructures(List<BlockStructure> structures, ServerLevel world, double spacing, PositionFunction position) {
         int minRadius = computeMinimumRadius(structures, spacing);
 
         // offsets are relative to the origin
@@ -24,7 +24,7 @@ public class CircleStructureGenerator {
         placeStructures(structures, world, offsets, position);
     }
 
-    public static void placeStructures(List<BlockStructure> structures, ServerWorld world, Vec2i[] offsets, PositionFunction position) {
+    public static void placeStructures(List<BlockStructure> structures, ServerLevel world, Vec2i[] offsets, PositionFunction position) {
         int count = structures.size();
 
         for (int i = 0; i < count; i++) {

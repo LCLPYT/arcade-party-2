@@ -1,32 +1,40 @@
 package work.lclpnet.ap2.game.guess_it.util;
 
-import net.minecraft.block.Oxidizable;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.ProfileComponent;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.entity.SpawnReason;
-import net.minecraft.entity.ai.brain.MemoryModuleType;
-import net.minecraft.entity.decoration.MannequinEntity;
-import net.minecraft.entity.mob.*;
-import net.minecraft.entity.passive.*;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.Registry;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.text.Text;
-import net.minecraft.util.DyeColor;
+import net.minecraft.core.Holder;
+import net.minecraft.core.IdMap;
+import net.minecraft.core.Registry;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Unit;
-import net.minecraft.util.collection.IndexedIterable;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.village.VillagerData;
-import net.minecraft.village.VillagerDataContainer;
+import net.minecraft.world.entity.*;
+import net.minecraft.world.entity.ai.memory.MemoryModuleType;
+import net.minecraft.world.entity.animal.*;
+import net.minecraft.world.entity.animal.axolotl.Axolotl;
+import net.minecraft.world.entity.animal.coppergolem.CopperGolem;
+import net.minecraft.world.entity.animal.frog.Frog;
+import net.minecraft.world.entity.animal.frog.FrogVariant;
+import net.minecraft.world.entity.animal.goat.Goat;
+import net.minecraft.world.entity.animal.horse.*;
+import net.minecraft.world.entity.animal.sheep.Sheep;
+import net.minecraft.world.entity.animal.wolf.Wolf;
+import net.minecraft.world.entity.animal.wolf.WolfVariant;
+import net.minecraft.world.entity.decoration.Mannequin;
+import net.minecraft.world.entity.monster.*;
+import net.minecraft.world.entity.monster.piglin.AbstractPiglin;
+import net.minecraft.world.entity.monster.warden.Warden;
+import net.minecraft.world.entity.npc.VillagerData;
+import net.minecraft.world.entity.npc.VillagerDataHolder;
+import net.minecraft.world.item.DyeColor;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.component.ResolvableProfile;
+import net.minecraft.world.level.block.WeatheringCopper;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
-import work.lclpnet.ap2.core.mixin.ShulkerEntityAccessor;
+import work.lclpnet.ap2.core.mixin.ShulkerAccessor;
 import work.lclpnet.ap2.core.type.ApVariantHolder;
 import work.lclpnet.ap2.impl.util.world.SizedSpaceFinder;
 import work.lclpnet.gaco.ds.IndexedSet;
@@ -45,17 +53,17 @@ import java.util.UUID;
 
 public class MobSpawner {
 
-    private final ServerWorld world;
+    private final ServerLevel world;
     private final Random random;
     private final IndexedSet<UUID> mannequinUuids;
 
-    public MobSpawner(ServerWorld world, Random random, IndexedSet<UUID> mannequinUuids) {
+    public MobSpawner(ServerLevel world, Random random, IndexedSet<UUID> mannequinUuids) {
         this.world = world;
         this.random = random;
         this.mannequinUuids = mannequinUuids;
     }
 
-    public void spawnEntity(EntityType<?> type, Vec3d pos, WorldModifier modifier) {
+    public void spawnEntity(EntityType<?> type, Vec3 pos, WorldModifier modifier) {
         Entity entity = createEntity(type, pos);
 
         if (entity != null) {
@@ -64,12 +72,12 @@ public class MobSpawner {
     }
 
     @Nullable
-    public <T extends Entity> T createEntity(EntityType<T> type, Vec3d pos) {
-        T entity = type.create(world, SpawnReason.COMMAND);
+    public <T extends Entity> T createEntity(EntityType<T> type, Vec3 pos) {
+        T entity = type.create(world, EntitySpawnReason.COMMAND);
 
         if (entity == null) return null;
 
-        entity.setPosition(pos);
+        entity.setPos(pos);
 
         randomizeEntity(entity);
 
@@ -78,59 +86,59 @@ public class MobSpawner {
 
     @SuppressWarnings("unchecked")
     public void randomizeEntity(Entity entity) {
-        entity.setAngles(random.nextFloat() * 360, random.nextFloat() * 180 - 90);
+        entity.absSnapRotationTo(random.nextFloat() * 360, random.nextFloat() * 180 - 90);
 
         if (random.nextFloat() < 0.005) {
-            entity.setCustomName(Text.literal("Dinnerbone"));
+            entity.setCustomName(Component.literal("Dinnerbone"));
         }
 
-        if (entity instanceof MobEntity mob) {
-            mob.setPersistent();
+        if (entity instanceof Mob mob) {
+            mob.setPersistenceRequired();
 
             if (random.nextFloat() < 0.045) {
                 mob.setBaby(true);
             }
         }
 
-        if (entity instanceof AbstractHorseEntity horse) {
+        if (entity instanceof AbstractHorse horse) {
             if (random.nextFloat() < 0.05f) {
-                horse.equipStack(EquipmentSlot.SADDLE, new ItemStack(Items.SADDLE));
+                horse.setItemSlot(EquipmentSlot.SADDLE, new ItemStack(Items.SADDLE));
             }
         }
 
-        if (entity instanceof AxolotlEntity axolotl) {
-            randomizeVariant((ApVariantHolder<AxolotlEntity.Variant>) axolotl, AxolotlEntity.Variant.values());
-        } else if (entity instanceof RabbitEntity rabbit) {
+        if (entity instanceof Axolotl axolotl) {
+            randomizeVariant((ApVariantHolder<Axolotl.Variant>) axolotl, Axolotl.Variant.values());
+        } else if (entity instanceof Rabbit rabbit) {
             if (random.nextFloat() < 0.125f) {  // 1 / 8 chance
-                rabbit.setCustomName(Text.literal("Toast"));
+                rabbit.setCustomName(Component.literal("Toast"));
             } else {
-                randomizeVariant((ApVariantHolder<RabbitEntity.Variant>) rabbit, RabbitEntity.Variant.values());
+                randomizeVariant((ApVariantHolder<Rabbit.Variant>) rabbit, Rabbit.Variant.values());
             }
-        } else if (entity instanceof CatEntity cat) {
-            var catTypes = world.getRegistryManager().getOrThrow(RegistryKeys.CAT_VARIANT);
-            randomizeVariant((ApVariantHolder<RegistryEntry<CatVariant>>) cat, catTypes);
-        } else if (entity instanceof SheepEntity sheep) {
+        } else if (entity instanceof Cat cat) {
+            var catTypes = world.registryAccess().lookupOrThrow(Registries.CAT_VARIANT);
+            randomizeVariant((ApVariantHolder<Holder<CatVariant>>) cat, catTypes);
+        } else if (entity instanceof Sheep sheep) {
             if (random.nextFloat() < 0.01f) {
                 sheep.setSheared(true);
             }
 
             if (random.nextFloat() < 0.01f) {
-                sheep.setCustomName(Text.literal("jeb_"));
+                sheep.setCustomName(Component.literal("jeb_"));
             } else {
                 sheep.setColor(randomElement(DyeColor.values()));
             }
-        } else if (entity instanceof DonkeyEntity donkey) {
+        } else if (entity instanceof Donkey donkey) {
             if (random.nextFloat() < 0.04f) {
-                donkey.setHasChest(true);
+                donkey.setChest(true);
             }
-        } else if (entity instanceof FoxEntity fox) {
-            randomizeVariant((ApVariantHolder<FoxEntity.Variant>) fox, FoxEntity.Variant.values());
-        } else if (entity instanceof FrogEntity frog) {
-            var frogTypes = world.getRegistryManager().getOrThrow(RegistryKeys.FROG_VARIANT);
-            randomizeVariant((ApVariantHolder<RegistryEntry<FrogVariant>>) frog, frogTypes);
-        } else if (entity instanceof GoatEntity goat) {
+        } else if (entity instanceof Fox fox) {
+            randomizeVariant((ApVariantHolder<Fox.Variant>) fox, Fox.Variant.values());
+        } else if (entity instanceof Frog frog) {
+            var frogTypes = world.registryAccess().lookupOrThrow(Registries.FROG_VARIANT);
+            randomizeVariant((ApVariantHolder<Holder<FrogVariant>>) frog, frogTypes);
+        } else if (entity instanceof Goat goat) {
             if (random.nextFloat() < 0.05f) {
-                goat.setScreaming(true);
+                goat.setScreamingGoat(true);
             }
 
             if (random.nextFloat() < 0.1f) {
@@ -140,99 +148,99 @@ public class MobSpawner {
             if (random.nextFloat() < 0.1f) {
                 GoatEntityAccess.setRightHorn(goat, false);
             }
-        } else if (entity instanceof HorseEntity horse) {
-            HorseColor color = randomElement(HorseColor.values());
-            HorseMarking marking = randomElement(HorseMarking.values());
+        } else if (entity instanceof Horse horse) {
+            net.minecraft.world.entity.animal.horse.Variant color = randomElement(net.minecraft.world.entity.animal.horse.Variant.values());
+            Markings marking = randomElement(Markings.values());
 
             HorseEntityAccess.setVariant(horse, color, marking);
-        } else if (entity instanceof LlamaEntity llama) {
-            randomizeVariant((ApVariantHolder<LlamaEntity.Variant>) llama, LlamaEntity.Variant.values());
+        } else if (entity instanceof Llama llama) {
+            randomizeVariant((ApVariantHolder<Llama.Variant>) llama, Llama.Variant.values());
 
-            if (!(entity instanceof TraderLlamaEntity) && random.nextFloat() < 0.6) {
+            if (!(entity instanceof TraderLlama) && random.nextFloat() < 0.6) {
                 DyeColor color = randomElement(DyeColor.values());
 
                 LlamaEntityAccess.setCarpetColor(llama, color);
             }
-        } else if (entity instanceof SlimeEntity slime) {
+        } else if (entity instanceof Slime slime) {
             slime.setSize(random.nextInt(5), false);
-        } else if (entity instanceof MooshroomEntity mooshroom) {
-            randomizeVariant((ApVariantHolder<MooshroomEntity.Variant>) mooshroom, MooshroomEntity.Variant.values());
-        } else if (entity instanceof MuleEntity mule) {
+        } else if (entity instanceof MushroomCow mooshroom) {
+            randomizeVariant((ApVariantHolder<MushroomCow.Variant>) mooshroom, MushroomCow.Variant.values());
+        } else if (entity instanceof Mule mule) {
             if (random.nextFloat() < 0.04f) {
-                mule.setHasChest(true);
+                mule.setChest(true);
             }
-        } else if (entity instanceof PandaEntity panda) {
-            PandaEntity.Gene gene = randomElement(PandaEntity.Gene.values());
+        } else if (entity instanceof Panda panda) {
+            Panda.Gene gene = randomElement(Panda.Gene.values());
             panda.setMainGene(gene);
             panda.setHiddenGene(gene);
-        } else if (entity instanceof ParrotEntity parrot) {
-            randomizeVariant((ApVariantHolder<ParrotEntity.Variant>) parrot, ParrotEntity.Variant.values());
-        } else if (entity instanceof PhantomEntity phantom) {
+        } else if (entity instanceof Parrot parrot) {
+            randomizeVariant((ApVariantHolder<Parrot.Variant>) parrot, Parrot.Variant.values());
+        } else if (entity instanceof Phantom phantom) {
             if (random.nextFloat() < 0.35f) {
                 phantom.setPhantomSize(random.nextInt(4));
             }
-        } else if (entity instanceof ShulkerEntity shulker) {
+        } else if (entity instanceof Shulker shulker) {
             if (random.nextFloat() < 0.9411765f) {  // 1 / 17 chance to be default color
-                ((ShulkerEntityAccessor) shulker).invokeSetColor(Optional.of(randomElement(DyeColor.values())));
+                ((ShulkerAccessor) shulker).invokeSetVariant(Optional.of(randomElement(DyeColor.values())));
             }
-        } else if (entity instanceof VillagerDataContainer villager) {
-            var types = Registries.VILLAGER_TYPE.getIndexedEntries();
-            var professions = Registries.VILLAGER_PROFESSION.getIndexedEntries();
+        } else if (entity instanceof VillagerDataHolder villager) {
+            var types = BuiltInRegistries.VILLAGER_TYPE.asHolderIdMap();
+            var professions = BuiltInRegistries.VILLAGER_PROFESSION.asHolderIdMap();
 
             villager.setVillagerData(new VillagerData(randomElement(types), randomElement(professions), 2));
-        } else if (entity instanceof SnowGolemEntity snowGolem) {
+        } else if (entity instanceof SnowGolem snowGolem) {
             if (random.nextFloat() < 0.5) {
-                snowGolem.setHasPumpkin(false);
+                snowGolem.setPumpkin(false);
             }
-        } else if (entity instanceof TropicalFishEntity tropicalFish) {
-            var variety = randomElement(TropicalFishEntity.Pattern.values());
+        } else if (entity instanceof TropicalFish tropicalFish) {
+            var variety = randomElement(TropicalFish.Pattern.values());
             DyeColor baseColor = randomElement(DyeColor.values());
             DyeColor patternColor = randomElement(DyeColor.values());
 
             TropicalFishEntityAccess.setVariant(tropicalFish, variety, baseColor, patternColor);
-        } else if (entity instanceof AbstractPiglinEntity piglin) {
+        } else if (entity instanceof AbstractPiglin piglin) {
             piglin.setImmuneToZombification(true);
-        } else if (entity instanceof VexEntity vex) {
+        } else if (entity instanceof Vex vex) {
             VexEntityBehaviour.setForceClipping(vex, true);
-        } else if (entity instanceof WardenEntity warden) {
+        } else if (entity instanceof Warden warden) {
             // prevent warden from digging into the ground
             var brain = warden.getBrain();
-            brain.remember(MemoryModuleType.DIG_COOLDOWN, Unit.INSTANCE, Ticks.minutes(10));
-        } else if (entity instanceof WolfEntity wolf) {
-            randomizeVariant((ApVariantHolder<RegistryEntry<WolfVariant>>) wolf, world.getRegistryManager().getOrThrow(RegistryKeys.WOLF_VARIANT));
-        } else if (entity instanceof BoggedEntity bogged) {
+            brain.setMemoryWithExpiry(MemoryModuleType.DIG_COOLDOWN, Unit.INSTANCE, Ticks.minutes(10));
+        } else if (entity instanceof Wolf wolf) {
+            randomizeVariant((ApVariantHolder<Holder<WolfVariant>>) wolf, world.registryAccess().lookupOrThrow(Registries.WOLF_VARIANT));
+        } else if (entity instanceof Bogged bogged) {
             if (random.nextFloat() < 0.2) {
                 bogged.setSheared(true);
             }
-        } else if (entity instanceof PigEntity pig) {
-            var pigTypes = world.getRegistryManager().getOrThrow(RegistryKeys.PIG_VARIANT);
-            randomizeVariant((ApVariantHolder<RegistryEntry<PigVariant>>) pig, pigTypes);
-        } else if (entity instanceof CowEntity cow) {
-            var cowTypes = world.getRegistryManager().getOrThrow(RegistryKeys.COW_VARIANT);
-            randomizeVariant((ApVariantHolder<RegistryEntry<CowVariant>>) cow, cowTypes);
-        } else if (entity instanceof ChickenEntity chicken) {
-            var chickenTypes = world.getRegistryManager().getOrThrow(RegistryKeys.CHICKEN_VARIANT);
-            randomizeVariant((ApVariantHolder<RegistryEntry<ChickenVariant>>) chicken, chickenTypes);
-        } else if (entity instanceof HappyGhastEntity happyGhast) {
+        } else if (entity instanceof Pig pig) {
+            var pigTypes = world.registryAccess().lookupOrThrow(Registries.PIG_VARIANT);
+            randomizeVariant((ApVariantHolder<Holder<PigVariant>>) pig, pigTypes);
+        } else if (entity instanceof Cow cow) {
+            var cowTypes = world.registryAccess().lookupOrThrow(Registries.COW_VARIANT);
+            randomizeVariant((ApVariantHolder<Holder<CowVariant>>) cow, cowTypes);
+        } else if (entity instanceof Chicken chicken) {
+            var chickenTypes = world.registryAccess().lookupOrThrow(Registries.CHICKEN_VARIANT);
+            randomizeVariant((ApVariantHolder<Holder<ChickenVariant>>) chicken, chickenTypes);
+        } else if (entity instanceof HappyGhast happyGhast) {
             happyGhast.setBaby(random.nextFloat() < 0.6);
-        } else if (entity instanceof CopperGolemEntity copperGolem) {
-            copperGolem.setOxidationLevel(randomElement(Oxidizable.OxidationLevel.values()));
-        } else if (entity instanceof MannequinEntity mannequin) {
+        } else if (entity instanceof CopperGolem copperGolem) {
+            copperGolem.setWeatherState(randomElement(WeatheringCopper.WeatherState.values()));
+        } else if (entity instanceof Mannequin mannequin) {
             if (!mannequinUuids.isEmpty()) {
                 UUID uuid = mannequinUuids.get(random.nextInt(mannequinUuids.size()));
 
-                mannequin.setComponent(DataComponentTypes.PROFILE, ProfileComponent.ofDynamic(uuid));
+                mannequin.setComponent(DataComponents.PROFILE, ResolvableProfile.createUnresolved(uuid));
             }
         }
     }
 
-    private <T> void randomizeVariant(ApVariantHolder<RegistryEntry<T>> holder, Registry<T> registry) {
-        var variants = registry.getIndexedEntries();
+    private <T> void randomizeVariant(ApVariantHolder<Holder<T>> holder, Registry<T> registry) {
+        var variants = registry.asHolderIdMap();
 
         randomizeVariant(holder, variants);
     }
 
-    private <T> void randomizeVariant(ApVariantHolder<T> holder, IndexedIterable<T> variants) {
+    private <T> void randomizeVariant(ApVariantHolder<T> holder, IdMap<T> variants) {
         T variant = randomElement(variants);
         holder.ap2$setVariant(variant);
     }
@@ -242,12 +250,12 @@ public class MobSpawner {
         holder.ap2$setVariant(variant);
     }
 
-    private <T> T randomElement(IndexedIterable<T> variants) {
+    private <T> T randomElement(IdMap<T> variants) {
         if (variants.size() <= 0) {
             throw new IllegalStateException("Empty variants");
         }
 
-        return variants.get(random.nextInt(variants.size()));
+        return variants.byId(random.nextInt(variants.size()));
     }
 
     private <T> T randomElement(T[] variants) {
@@ -258,7 +266,7 @@ public class MobSpawner {
         return variants[random.nextInt(variants.length)];
     }
 
-    public static SizedSpaceFinder findSpawns(ServerWorld world, Set<EntityType<?>> types) {
+    public static SizedSpaceFinder findSpawns(ServerLevel world, Set<EntityType<?>> types) {
         float maxWidth = (float) types.stream().mapToDouble(type -> type.getDimensions().width()).max().orElse(1);
         float maxHeight = (float) types.stream().mapToDouble(type -> type.getDimensions().height()).max().orElse(2);
 

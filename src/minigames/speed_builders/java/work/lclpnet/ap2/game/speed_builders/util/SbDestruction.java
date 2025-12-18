@@ -1,26 +1,26 @@
 package work.lclpnet.ap2.game.speed_builders.util;
 
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.command.argument.EntityAnchorArgumentType;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.FallingBlockEntity;
-import net.minecraft.entity.mob.BreezeEntity;
-import net.minecraft.entity.projectile.BreezeWindChargeEntity;
-import net.minecraft.particle.ParticleTypes;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.event.GameEvent;
-import net.minecraft.world.explosion.Explosion;
-import net.minecraft.world.explosion.ExplosionImpl;
-import work.lclpnet.ap2.core.mixin.ExplosionImplAccessor;
+import net.minecraft.commands.arguments.EntityAnchorArgument;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.item.FallingBlockEntity;
+import net.minecraft.world.entity.monster.breeze.Breeze;
+import net.minecraft.world.entity.projectile.windcharge.BreezeWindCharge;
+import net.minecraft.world.level.Explosion;
+import net.minecraft.world.level.ServerExplosion;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.gameevent.GameEvent;
+import net.minecraft.world.phys.Vec3;
+import work.lclpnet.ap2.core.mixin.ServerExplosionAccessor;
 import work.lclpnet.ap2.game.speed_builders.data.SbIsland;
 import work.lclpnet.ap2.impl.util.ParticleHelper;
 import work.lclpnet.ap2.impl.util.SoundHelper;
@@ -33,20 +33,20 @@ import java.util.UUID;
 public class SbDestruction {
 
     private static final float LAUNCHED_PERCENTAGE = 0.4f;
-    private final ServerWorld world;
+    private final ServerLevel world;
     private final Random random;
     private final UUID aelosId;
 
-    public SbDestruction(ServerWorld world, Random random, UUID aelosId) {
+    public SbDestruction(ServerLevel world, Random random, UUID aelosId) {
         this.world = world;
         this.random = random;
         this.aelosId = aelosId;
     }
 
-    private BreezeEntity aelos() {
+    private Breeze aelos() {
         Entity entity = world.getEntity(aelosId);
 
-        if (entity instanceof BreezeEntity breeze) {
+        if (entity instanceof Breeze breeze) {
             return breeze;
         }
 
@@ -54,70 +54,70 @@ public class SbDestruction {
     }
 
     public void setAelosLookingTowards(SbIsland island) {
-        BreezeEntity aelos = aelos();
-        Vec3d center = island.getCenter();
+        Breeze aelos = aelos();
+        Vec3 center = island.getCenter();
 
-        aelos.lookAt(EntityAnchorArgumentType.EntityAnchor.EYES, center);
+        aelos.lookAt(EntityAnchorArgument.Anchor.EYES, center);
     }
 
-    public BreezeWindChargeEntity fireProjectile(SbIsland island) {
-        BreezeEntity aelos = aelos();
+    public BreezeWindCharge fireProjectile(SbIsland island) {
+        Breeze aelos = aelos();
 
-        Vec3d center = island.getCenter();
-        Vec3d chargePos = getChargePos(aelos);
-        Vec3d dir = center.subtract(chargePos);
+        Vec3 center = island.getCenter();
+        Vec3 chargePos = getChargePos(aelos);
+        Vec3 dir = center.subtract(chargePos);
 
-        BreezeWindChargeEntity charge = new BreezeWindChargeEntity(aelos, world);
-        charge.setVelocity(dir.getX(), dir.getY(), dir.getZ(), 0.9f, 0);
-        charge.setPosition(chargePos);
+        BreezeWindCharge charge = new BreezeWindCharge(aelos, world);
+        charge.shoot(dir.x(), dir.y(), dir.z(), 0.9f, 0);
+        charge.setPos(chargePos);
 
-        world.spawnEntity(charge);
+        world.addFreshEntity(charge);
 
-        SoundHelper.playSound(aelos.getEntityWorld().getServer(), SoundEvents.ENTITY_BREEZE_SHOOT, SoundCategory.HOSTILE, 1.5f, 1.0f);
+        SoundHelper.playSound(aelos.level().getServer(), SoundEvents.BREEZE_SHOOT, SoundSource.HOSTILE, 1.5f, 1.0f);
 
         return charge;
     }
 
-    public void destroyIsland(SbIsland island, Vec3d impactPos, Vec3d velocity) {
-        var explosion = new ExplosionImpl(world, null, null, null,
+    public void destroyIsland(SbIsland island, Vec3 impactPos, Vec3 velocity) {
+        var explosion = new ServerExplosion(world, null, null, null,
                 impactPos, 25, false,
-                Explosion.DestructionType.KEEP);
+                Explosion.BlockInteraction.KEEP);
 
-        var access = (ExplosionImplAccessor) explosion;
+        var access = (ServerExplosionAccessor) explosion;
 
-        world.emitGameEvent(null, GameEvent.EXPLODE, impactPos);
+        world.gameEvent(null, GameEvent.EXPLODE, impactPos);
         addEffects(impactPos);
 
         velocity = velocity.normalize();
 
-        int flags = Block.FORCE_STATE | Block.NOTIFY_LISTENERS | Block.SKIP_DROPS;
+        int flags = Block.UPDATE_KNOWN_SHAPE | Block.UPDATE_CLIENTS | Block.UPDATE_SUPPRESS_DROPS;
 
-        for (BlockPos pos : access.invokeGetBlocksToDestroy()) {
+        for (BlockPos pos : access.invokeCalculateExplodedPositions()) {
             if (!island.getBounds().contains(pos)) continue;
 
             BlockState state = world.getBlockState(pos);
 
             if (state.isAir()) continue;
 
-            world.setBlockState(pos, Blocks.AIR.getDefaultState(), flags);
+            world.setBlock(pos, Blocks.AIR.defaultBlockState(), flags);
 
             if (random.nextFloat() >= LAUNCHED_PERCENTAGE) continue;
 
             FallingBlockEntity fallingBlock = new FallingBlockEntity(EntityType.FALLING_BLOCK, world);
-            fallingBlock.setPos(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
-            fallingBlock.timeFalling = 1;
+            fallingBlock.setPosRaw(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
+            fallingBlock.time = 1;
             FallingBlockAccess.setDropItem(fallingBlock, false);
             FallingBlockAccess.setDestroyedOnLanding(fallingBlock, true);
             FallingBlockAccess.setBlockState(fallingBlock, state);
 
             VelocityModifier.setVelocity(fallingBlock, velocity);
 
-            world.spawnEntity(fallingBlock);
+            world.addFreshEntity(fallingBlock);
         }
     }
 
-    private void addEffects(Vec3d pos) {
-        double x = pos.getX(), z = pos.getZ(), y = pos.getY();
+    private void addEffects(Vec3 pos) {
+        double x = pos.x(), z = pos.z(), y = pos.y();
 
         ParticleHelper.spawnForceParticle(ParticleTypes.GUST, x, y, z, 300,
                 7, 7, 7, 0, PlayerLookup.world(world));
@@ -128,18 +128,18 @@ public class SbDestruction {
         ParticleHelper.spawnForceParticle(ParticleTypes.CLOUD, x, y, z, 200,
                 1, 1, 1, 1, PlayerLookup.world(world));
 
-        for (ServerPlayerEntity player : PlayerLookup.around(world, pos, 32)) {
-            Vec3d eyePos = player.getEyePos();
-            Vec3d soundPos = eyePos.add(pos.subtract(eyePos).normalize().multiply(8));
+        for (ServerPlayer player : PlayerLookup.around(world, pos, 32)) {
+            Vec3 eyePos = player.getEyePosition();
+            Vec3 soundPos = eyePos.add(pos.subtract(eyePos).normalize().scale(8));
 
-            double sx = soundPos.getX(), sy = soundPos.getY(), sz = soundPos.getZ();
+            double sx = soundPos.x(), sy = soundPos.y(), sz = soundPos.z();
 
-            SoundHelper.playSound(player, SoundEvents.ENTITY_GENERIC_EXPLODE.value(), SoundCategory.PLAYERS, sx, sy, sz, 1, 1.2f);
-            SoundHelper.playSound(player, SoundEvents.ENTITY_GENERIC_EXPLODE.value(), SoundCategory.PLAYERS, sx, sy, sz, 0.5f, 0.5f);
+            SoundHelper.playSound(player, SoundEvents.GENERIC_EXPLODE.value(), SoundSource.PLAYERS, sx, sy, sz, 1, 1.2f);
+            SoundHelper.playSound(player, SoundEvents.GENERIC_EXPLODE.value(), SoundSource.PLAYERS, sx, sy, sz, 0.5f, 0.5f);
         }
     }
 
-    public static Vec3d getChargePos(BreezeEntity aelos) {
-        return new Vec3d(aelos.getX(), aelos.getBodyY(0.8), aelos.getZ());
+    public static Vec3 getChargePos(Breeze aelos) {
+        return new Vec3(aelos.getX(), aelos.getY(0.8), aelos.getZ());
     }
 }

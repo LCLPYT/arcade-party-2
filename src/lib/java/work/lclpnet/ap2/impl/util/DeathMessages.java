@@ -1,16 +1,20 @@
 package work.lclpnet.ap2.impl.util;
 
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.projectile.ProjectileEntity;
-import net.minecraft.entity.projectile.thrown.SnowballEntity;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.ComponentContents;
+import net.minecraft.network.chat.HoverEvent;
+import net.minecraft.network.chat.Style;
+import net.minecraft.network.chat.contents.TranslatableContents;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.text.*;
-import net.minecraft.world.GameRules;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.projectile.Projectile;
+import net.minecraft.world.entity.projectile.Snowball;
+import net.minecraft.world.level.GameRules;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.game.team.Team;
@@ -22,8 +26,8 @@ import work.lclpnet.kibu.translate.text.TranslatedText;
 
 import java.util.Arrays;
 
-import static net.minecraft.util.Formatting.GRAY;
-import static net.minecraft.util.Formatting.YELLOW;
+import static net.minecraft.ChatFormatting.GRAY;
+import static net.minecraft.ChatFormatting.YELLOW;
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
 public class DeathMessages {
@@ -48,18 +52,18 @@ public class DeathMessages {
         return text.formatted(GRAY);
     }
 
-    public Object wrap(PlayerEntity player) {
+    public Object wrap(Player player) {
         return wrap(player.getDisplayName());
     }
 
     public Object wrap(Object obj) {
-        if (obj instanceof Text text) {
+        if (obj instanceof Component text) {
             Style style = text.getStyle();
             HoverEvent hoverEvent = style.getHoverEvent();
 
             // text with entity hover action indicates an entity display name
             // if the display name already has a color, keep it as is
-            if (hoverEvent != null && hoverEvent.getAction() == HoverEvent.Action.SHOW_ENTITY && style.getColor() != null) {
+            if (hoverEvent != null && hoverEvent.action() == HoverEvent.Action.SHOW_ENTITY && style.getColor() != null) {
                 return text;
             }
         }
@@ -67,15 +71,15 @@ public class DeathMessages {
         return styled(obj, YELLOW);
     }
 
-    public TranslatedText eliminated(ServerPlayerEntity player) {
+    public TranslatedText eliminated(ServerPlayer player) {
         return root(ELIMINATED, wrap(player));
     }
 
-    public TranslatedText killedBy(ServerPlayerEntity victim, ServerPlayerEntity killer) {
+    public TranslatedText killedBy(ServerPlayer victim, ServerPlayer killer) {
         return root(KILLED_BY, wrap(victim), wrap(killer));
     }
 
-    public TranslatedText shotBy(ServerPlayerEntity victim, ServerPlayerEntity killer) {
+    public TranslatedText shotBy(ServerPlayer victim, ServerPlayer killer) {
         return root(SHOT_BY, wrap(victim), wrap(killer));
     }
 
@@ -91,10 +95,10 @@ public class DeathMessages {
     }
 
     @NotNull
-    public TranslatedText getDeathMessage(ServerPlayerEntity player, @Nullable DamageSource source) {
-        TextContent content = player.getDamageTracker().getDeathMessage().getContent();
+    public TranslatedText getDeathMessage(ServerPlayer player, @Nullable DamageSource source) {
+        ComponentContents content = player.getCombatTracker().getDeathMessage().getContents();
 
-        if (content instanceof TranslatableTextContent translated) {
+        if (content instanceof TranslatableContents translated) {
             String key = translated.getKey();
 
             if (translations.getTranslator().hasTranslation("en_us", key)) {
@@ -106,26 +110,26 @@ public class DeathMessages {
             return eliminated(player);
         }
 
-        Entity attacker = source.getAttacker();
+        Entity attacker = source.getEntity();
 
-        if (!(attacker instanceof ServerPlayerEntity killer)) {
+        if (!(attacker instanceof ServerPlayer killer)) {
             return eliminated(player);
         }
 
-        Entity directSource = source.getSource();
+        Entity directSource = source.getDirectEntity();
 
-        if (directSource instanceof ProjectileEntity && !(directSource instanceof SnowballEntity)) {
+        if (directSource instanceof Projectile && !(directSource instanceof Snowball)) {
             return shotBy(player, killer);
         }
 
         return killedBy(player, killer);
     }
 
-    public void replaceVanillaDeathMessages(ServerWorld world, HookRegistrar hooks) {
-        world.getGameRules().get(GameRules.SHOW_DEATH_MESSAGES).set(false, world.getServer());
+    public void replaceVanillaDeathMessages(ServerLevel world, HookRegistrar hooks) {
+        world.getGameRules().getRule(GameRules.RULE_SHOWDEATHMESSAGES).set(false, world.getServer());
 
         hooks.registerHook(PlayerDeathMessageCallback.HOOK, (player, source, currentMsg) -> {
-            MinecraftServer server = player.getEntityWorld().getServer();
+            MinecraftServer server = player.level().getServer();
 
             TranslatedText msg = getDeathMessage(player, source);
             msg.sendTo(PlayerLookup.all(server));

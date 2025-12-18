@@ -1,20 +1,20 @@
 package work.lclpnet.ap2.impl.util.math.shape;
 
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.phys.Vec3;
 import work.lclpnet.ap2.impl.util.math.face.Face;
 
 import static work.lclpnet.ap2.impl.util.math.MathUtil.PHI;
 
 public class Icosahedron implements PlatonicShape {
 
-    public static Icosahedron UNIT = new Icosahedron(Vec3d.ZERO, 1.d);
+    public static Icosahedron UNIT = new Icosahedron(Vec3.ZERO, 1.d);
 
-    private final Vec3d center;
+    private final Vec3 center;
     private final double radius;
-    private final Vec3d[] vertices;
+    private final Vec3[] vertices;
     private final Face[] faces;
 
-    public Icosahedron(Vec3d center, double radius) {
+    public Icosahedron(Vec3 center, double radius) {
         this.center = center;
         this.radius = radius;
         this.vertices = PlatonicShape.super.vertices();
@@ -22,7 +22,7 @@ public class Icosahedron implements PlatonicShape {
     }
 
     @Override
-    public Vec3d[] vertices() {
+    public Vec3[] vertices() {
         return vertices;
     }
 
@@ -32,7 +32,7 @@ public class Icosahedron implements PlatonicShape {
     }
 
     @Override
-    public Vec3d center() {
+    public Vec3 center() {
         return center;
     }
 
@@ -42,23 +42,23 @@ public class Icosahedron implements PlatonicShape {
     }
 
     @Override
-    public Vec3d[] unitVertices() {
+    public Vec3[] unitVertices() {
         double a = 1.0;
         double b = 1.0 / PHI;
 
-        return new Vec3d[]{
-                new Vec3d(0, b, -a),
-                new Vec3d(b, a, 0),
-                new Vec3d(-b, a, 0),
-                new Vec3d(0, b, a),
-                new Vec3d(0, -b, a),
-                new Vec3d(-a, 0, b),
-                new Vec3d(0, -b, -a),
-                new Vec3d(a, 0, -b),
-                new Vec3d(a, 0, b),
-                new Vec3d(-a, 0, -b),
-                new Vec3d(b, -a, 0),
-                new Vec3d(-b, -a, 0)
+        return new Vec3[]{
+                new Vec3(0, b, -a),
+                new Vec3(b, a, 0),
+                new Vec3(-b, a, 0),
+                new Vec3(0, b, a),
+                new Vec3(0, -b, a),
+                new Vec3(-a, 0, b),
+                new Vec3(0, -b, -a),
+                new Vec3(a, 0, -b),
+                new Vec3(a, 0, b),
+                new Vec3(-a, 0, -b),
+                new Vec3(b, -a, 0),
+                new Vec3(-b, -a, 0)
         };
     }
 

@@ -1,10 +1,10 @@
 package work.lclpnet.ap2.impl.game.kit;
 
 import com.mojang.serialization.Dynamic;
-import net.minecraft.item.ItemStack;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.*;
-import net.minecraft.registry.RegistryOps;
-import net.minecraft.registry.RegistryWrapper;
+import net.minecraft.resources.RegistryOps;
+import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import work.lclpnet.gaco.core.api.Partial;
@@ -23,11 +23,11 @@ import java.util.concurrent.CompletableFuture;
 
 public class PrefabKitLoader {
 
-    private final RegistryWrapper.WrapperLookup registries;
+    private final HolderLookup.Provider registries;
     private final Logger logger;
     private final List<Partial<PrefabKit, KitHandle>> kits = new ArrayList<>();
 
-    public PrefabKitLoader(RegistryWrapper.WrapperLookup registries, Logger logger) {
+    public PrefabKitLoader(HolderLookup.Provider registries, Logger logger) {
         this.registries = registries;
         this.logger = logger;
     }
@@ -112,26 +112,26 @@ public class PrefabKitLoader {
             return Optional.empty();
         }
 
-        NbtCompound nbt;
+        CompoundTag nbt;
 
         try (var dataIn = new DataInputStream(in)) {
-            nbt = NbtIo.readCompound(dataIn, NbtSizeTracker.of(1024 * 1024 * 4));
+            nbt = NbtIo.read(dataIn, NbtAccounter.create(1024 * 1024 * 4));
         } catch (IOException e) {
             logger.error("Failed to read items from {}", resource, e);
             return Optional.empty();
         }
 
-        NbtList list = nbt.getListOrEmpty("0");
+        ListTag list = nbt.getListOrEmpty("0");
 
         List<ItemStack> items = new ArrayList<>(9);
 
-        for (NbtElement element : list) {
-            if (!(element instanceof NbtCompound entry)) continue;
+        for (Tag element : list) {
+            if (!(element instanceof CompoundTag entry)) continue;
 
             var dynamic = new Dynamic<>(NbtOps.INSTANCE, entry);
 
             ItemStack stack = ItemStack.OPTIONAL_CODEC
-                    .parse(RegistryOps.withRegistry(dynamic, registries))
+                    .parse(RegistryOps.injectRegistryContext(dynamic, registries))
                     .resultOrPartial(error -> logger.warn("Could not parse hotbar item: {}", error))
                     .orElse(ItemStack.EMPTY);
 

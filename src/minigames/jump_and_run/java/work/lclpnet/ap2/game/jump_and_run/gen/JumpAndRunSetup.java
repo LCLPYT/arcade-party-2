@@ -1,6 +1,6 @@
 package work.lclpnet.ap2.game.jump_and_run.gen;
 
-import net.minecraft.server.world.ServerWorld;
+import net.minecraft.server.level.ServerLevel;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -20,11 +20,11 @@ public class JumpAndRunSetup {
 
     private final MiniGameHandle gameHandle;
     private final GameMap map;
-    private final ServerWorld world;
+    private final ServerLevel world;
     private final Logger logger;
     private final JumpAndRunGenerator generator;
 
-    public JumpAndRunSetup(MiniGameHandle gameHandle, GameMap map, ServerWorld world, float targetMinutes) {
+    public JumpAndRunSetup(MiniGameHandle gameHandle, GameMap map, ServerLevel world, float targetMinutes) {
         this.gameHandle = gameHandle;
         this.map = map;
         this.world = world;
@@ -63,7 +63,7 @@ public class JumpAndRunSetup {
 
     private Parts readPartsSync() throws IOException {
         var session = ((MinecraftServerAccessor) gameHandle.getServer()).getSession();
-        Path storage = session.getWorldDirectory(world.getRegistryKey());
+        Path storage = session.getDimensionPath(world.dimension());
 
         Path schematicsDir = storage.resolve("schematics");
 
@@ -101,7 +101,7 @@ public class JumpAndRunSetup {
     private Optional<BlockStructure> readStructure(String id, Path schematicsDir) {
         Path path = schematicsDir.resolve(id.concat(".schem"));
 
-        return StructureUtil.readAndFixStructure(path, logger, world.getRegistryManager());
+        return StructureUtil.readAndFixStructure(path, logger, world.registryAccess());
     }
 
     public record Parts(List<JumpModule> modules, JumpEnd start, JumpEnd end) {}

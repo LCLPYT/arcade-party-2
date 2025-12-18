@@ -1,8 +1,8 @@
 package work.lclpnet.ap2.game.dragon_escape.kit;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.projectile.WindChargeEntity;
-import net.minecraft.item.Items;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.projectile.windcharge.WindCharge;
+import net.minecraft.world.item.Items;
 import work.lclpnet.ap2.core.hook.ExplosionAffectedEntitiesCallback;
 import work.lclpnet.ap2.impl.game.kit.KitHandle;
 import work.lclpnet.ap2.impl.game.kit.KitOptions;
@@ -23,8 +23,8 @@ public class WindChargeKit extends SingleItemKit {
     @Override
     public void init(KitOptions options) {
         handle.hooks().registerHook(ExplosionAffectedEntitiesCallback.HOOK, (explosion, affected) -> {
-            if (explosion.getEntity() instanceof WindChargeEntity) {
-                LivingEntity owner = explosion.getCausingEntity();
+            if (explosion.getDirectSourceEntity() instanceof WindCharge) {
+                LivingEntity owner = explosion.getIndirectSourceEntity();
 
                 return owner != null ? List.of(owner) : List.of();
             }

@@ -1,22 +1,22 @@
 package work.lclpnet.ap2.game.fine_tuning;
 
+import com.mojang.math.Transformation;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
-import net.minecraft.block.enums.NoteBlockInstrument;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.decoration.DisplayEntity;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.math.AffineTransformation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.GameMode;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.Display;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.level.GameType;
+import net.minecraft.world.level.block.state.properties.NoteBlockInstrument;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import org.json.JSONArray;
@@ -53,8 +53,8 @@ class StagePhase {
     private final MiniGameHandle gameHandle;
     private final MelodyRecords records;
     private final GameMap map;
-    private final ServerWorld world;
-    private final WinManager<ServerPlayerEntity, PlayerRef> winManager;
+    private final ServerLevel world;
+    private final WinManager<ServerPlayer, PlayerRef> winManager;
     private final SimpleMovementBlocker movementBlocker;
     private final Set<UUID> displays = new HashSet<>();
     private BlockPos presenterPos;
@@ -62,8 +62,8 @@ class StagePhase {
     private FakeNoteBlockPlayer nbPlayer;
     private int melodyNumber = 0;
 
-    public StagePhase(MiniGameHandle gameHandle, MelodyRecords records, GameMap map, ServerWorld world,
-                      WinManager<ServerPlayerEntity, PlayerRef> winManager) {
+    public StagePhase(MiniGameHandle gameHandle, MelodyRecords records, GameMap map, ServerLevel world,
+                      WinManager<ServerPlayer, PlayerRef> winManager) {
         this.gameHandle = gameHandle;
         this.records = records;
         this.map = map;
@@ -78,9 +78,9 @@ class StagePhase {
         WorldFacade worldFacade = gameHandle.getWorldFacade();
         PlayerUtil playerUtil = gameHandle.getPlayerUtil();
 
-        playerUtil.setDefaultGameMode(GameMode.ADVENTURE);
+        playerUtil.setDefaultGameMode(GameType.ADVENTURE);
 
-        for (ServerPlayerEntity player : PlayerLookup.all(server)) {
+        for (ServerPlayer player : PlayerLookup.all(server)) {
             playerUtil.resetPlayer(player);
             worldFacade.teleport(player);
         }
@@ -112,12 +112,12 @@ class StagePhase {
         MinecraftServer server = gameHandle.getServer();
         Translations translations = gameHandle.getTranslations();
 
-        SoundHelper.playSound(server, SoundEvents.BLOCK_NOTE_BLOCK_PLING.value(), SoundCategory.RECORDS, 0.5f, 0f);
+        SoundHelper.playSound(server, SoundEvents.NOTE_BLOCK_PLING.value(), SoundSource.RECORDS, 0.5f, 0f);
 
         translations.translateText("game.ap2.fine_tuning.presentation")
-                .formatted(Formatting.DARK_GREEN)
+                .formatted(ChatFormatting.DARK_GREEN)
                 .acceptEach(PlayerLookup.all(server), (player, text)
-                        -> Title.get(player).title(text, Text.empty(), 5, 30, 5));
+                        -> Title.get(player).title(text, Component.empty(), 5, 30, 5));
 
         gameHandle.getScheduler().timeout(this::presentNextMelody, 40);
     }
@@ -126,13 +126,13 @@ class StagePhase {
         MinecraftServer server = gameHandle.getServer();
         Translations translations = gameHandle.getTranslations();
 
-        SoundHelper.playSound(server, SoundEvents.BLOCK_NOTE_BLOCK_PLING.value(), SoundCategory.RECORDS, 0.5f, 0f);
+        SoundHelper.playSound(server, SoundEvents.NOTE_BLOCK_PLING.value(), SoundSource.RECORDS, 0.5f, 0f);
 
         translations.translateText("game.ap2.fine_tuning.present_melody",
-                        styled("#" + (melodyNumber + 1), Formatting.YELLOW))
-                .formatted(Formatting.AQUA)
+                        styled("#" + (melodyNumber + 1), ChatFormatting.YELLOW))
+                .formatted(ChatFormatting.AQUA)
                 .acceptEach(PlayerLookup.all(server), (player, text)
-                        -> Title.get(player).title(text, Text.empty(), 5, 30, 5));
+                        -> Title.get(player).title(text, Component.empty(), 5, 30, 5));
 
         gameHandle.getScheduler().timeout(this::playOriginalMelody, 40);
     }
@@ -148,7 +148,7 @@ class StagePhase {
         setMelody(melody);
 
         var melodyPlayer = new PlayMelodyTask(note -> {
-            for (ServerPlayerEntity player : PlayerLookup.all(server)) {
+            for (ServerPlayer player : PlayerLookup.all(server)) {
                 nbPlayer.playAtPlayerPos(player, note);
             }
 
@@ -156,32 +156,32 @@ class StagePhase {
 
             int noteOffset = offsets[note];
 
-            Vec3d pos = nbPlayer.getNoteBlock(note).toCenterPos();
-            Vec3d dir = snapToAxis(presenterPos.toCenterPos().subtract(pos));
+            Vec3 pos = nbPlayer.getNoteBlock(note).getCenter();
+            Vec3 dir = snapToAxis(presenterPos.getCenter().subtract(pos));
 
-            Text label;
+            Component label;
 
             if (noteOffset == 0) {
-                label = Text.literal("✅").formatted(Formatting.GREEN);
+                label = Component.literal("✅").withStyle(ChatFormatting.GREEN);
             } else {
                 float error = (abs(noteOffset) - 1) / (float) (Note.values().length - 1) * 2.2f;
                 int color = ColorUtil.lerpRgb(0xb2ef09, 0x890404, error);
 
-                label = Text.literal((noteOffset > 0 ? "+" : "") + noteOffset).withColor(color);
+                label = Component.literal((noteOffset > 0 ? "+" : "") + noteOffset).withColor(color);
             }
 
-            var display = new DisplayEntity.TextDisplayEntity(EntityType.TEXT_DISPLAY, world);
-            display.setPosition(pos.add(dir.multiply(0.6)));
+            var display = new Display.TextDisplay(EntityType.TEXT_DISPLAY, world);
+            display.setPos(pos.add(dir.scale(0.6)));
             display.setText(label);
-            display.setBackground(0);
-            display.setTransformation(new AffineTransformation(new Matrix4f()
+            display.setBackgroundColor(0);
+            display.setTransformation(new Transformation(new Matrix4f()
                     .scale(2)
-                    .rotateTowards((float) dir.getX(), (float) dir.getY(), (float) dir.getZ(), 0, 1, 0)
+                    .rotateTowards((float) dir.x(), (float) dir.y(), (float) dir.z(), 0, 1, 0)
                     .translate(0, -1 / 8f, 0)));
 
-            world.spawnEntity(display);
+            world.addFreshEntity(display);
 
-            displays.add(display.getUuid());
+            displays.add(display.getUUID());
         }, melody.notes().length);
 
         TaskScheduler scheduler = gameHandle.getScheduler();
@@ -200,17 +200,17 @@ class StagePhase {
         }));
     }
 
-    private Vec3d snapToAxis(Vec3d dir) {
-        double ax = abs(dir.getX());
-        double ay = abs(dir.getY());
-        double az = abs(dir.getZ());
+    private Vec3 snapToAxis(Vec3 dir) {
+        double ax = abs(dir.x());
+        double ay = abs(dir.y());
+        double az = abs(dir.z());
 
         if (ax > ay && ax > az) {
-            return new Vec3d(signum(dir.getX()), 0, 0);
+            return new Vec3(signum(dir.x()), 0, 0);
         } else if (az > ay) {
-            return new Vec3d(0, 0, signum(dir.getZ()));
+            return new Vec3(0, 0, signum(dir.z()));
         } else {
-            return new Vec3d(0, signum(dir.getY()), 0);
+            return new Vec3(0, signum(dir.y()), 0);
         }
     }
 
@@ -218,12 +218,12 @@ class StagePhase {
         MinecraftServer server = gameHandle.getServer();
         Translations translations = gameHandle.getTranslations();
 
-        SoundHelper.playSound(server, SoundEvents.BLOCK_NOTE_BLOCK_PLING.value(), SoundCategory.RECORDS, 0.5f, 0f);
+        SoundHelper.playSound(server, SoundEvents.NOTE_BLOCK_PLING.value(), SoundSource.RECORDS, 0.5f, 0f);
 
         translations.translateText("game.ap2.fine_tuning.best_was")
-                .formatted(Formatting.GREEN)
+                .formatted(ChatFormatting.GREEN)
                 .acceptEach(PlayerLookup.all(server), (player, text)
-                        -> Title.get(player).title(Text.empty(), text, 5, 50, 0));
+                        -> Title.get(player).title(Component.empty(), text, 5, 50, 0));
 
         gameHandle.getScheduler().timeout(this::announceBest, 55);
     }
@@ -231,12 +231,12 @@ class StagePhase {
     private void announceBest() {
         var bestMelody = records.getBestMelody(melodyNumber);
         PlayerRef bestRef = bestMelody.playerRef();
-        MutableText name = Text.literal(bestRef.name()).formatted(Formatting.GREEN);
+        MutableComponent name = Component.literal(bestRef.name()).withStyle(ChatFormatting.GREEN);
 
         MinecraftServer server = gameHandle.getServer();
-        SoundHelper.playSound(server, SoundEvents.UI_LOOM_TAKE_RESULT, SoundCategory.NEUTRAL, 0.5f, 1f);
+        SoundHelper.playSound(server, SoundEvents.UI_LOOM_TAKE_RESULT, SoundSource.NEUTRAL, 0.5f, 1f);
 
-        ServerPlayerEntity player = announcePlayerAndGet(server, name, bestRef);
+        ServerPlayer player = announcePlayerAndGet(server, name, bestRef);
         WorldFacade worldFacade = gameHandle.getWorldFacade();
 
         gameHandle.getScheduler().timeout(() -> playMelody(bestMelody.melody(), bestMelody.offsets(), () -> {
@@ -253,12 +253,12 @@ class StagePhase {
         MinecraftServer server = gameHandle.getServer();
         Translations translations = gameHandle.getTranslations();
 
-        SoundHelper.playSound(server, SoundEvents.BLOCK_NOTE_BLOCK_PLING.value(), SoundCategory.RECORDS, 0.5f, 0f);
+        SoundHelper.playSound(server, SoundEvents.NOTE_BLOCK_PLING.value(), SoundSource.RECORDS, 0.5f, 0f);
 
         translations.translateText("game.ap2.fine_tuning.worst_was")
-                .formatted(Formatting.RED)
+                .formatted(ChatFormatting.RED)
                 .acceptEach(PlayerLookup.all(server), (player, text)
-                        -> Title.get(player).title(Text.empty(), text, 5, 30, 5));
+                        -> Title.get(player).title(Component.empty(), text, 5, 30, 5));
 
         gameHandle.getScheduler().timeout(this::announceWorst, 40);
     }
@@ -266,12 +266,12 @@ class StagePhase {
     private void announceWorst() {
         var worstMelody = records.getWorstMelody(melodyNumber);
         PlayerRef worstRef = worstMelody.playerRef();
-        MutableText name = Text.literal(worstRef.name()).formatted(Formatting.RED);
+        MutableComponent name = Component.literal(worstRef.name()).withStyle(ChatFormatting.RED);
 
         MinecraftServer server = gameHandle.getServer();
-        SoundHelper.playSound(server, SoundEvents.UI_LOOM_TAKE_RESULT, SoundCategory.NEUTRAL, 0.5f, 0f);
+        SoundHelper.playSound(server, SoundEvents.UI_LOOM_TAKE_RESULT, SoundSource.NEUTRAL, 0.5f, 0f);
 
-        ServerPlayerEntity player = announcePlayerAndGet(server, name, worstRef);
+        ServerPlayer player = announcePlayerAndGet(server, name, worstRef);
         WorldFacade worldFacade = gameHandle.getWorldFacade();
 
         gameHandle.getScheduler().timeout(() -> playMelody(worstMelody.melody(), worstMelody.offsets(), () -> {
@@ -289,15 +289,15 @@ class StagePhase {
     }
 
     @Nullable
-    private ServerPlayerEntity announcePlayerAndGet(MinecraftServer server, MutableText name, PlayerRef ref) {
-        for (ServerPlayerEntity player : PlayerLookup.all(server)) {
-            Title.get(player).title(name, Text.empty(), 5, 30, 5);
+    private ServerPlayer announcePlayerAndGet(MinecraftServer server, MutableComponent name, PlayerRef ref) {
+        for (ServerPlayer player : PlayerLookup.all(server)) {
+            Title.get(player).title(name, Component.empty(), 5, 30, 5);
         }
 
-        ServerPlayerEntity player = server.getPlayerManager().getPlayer(ref.uuid());
+        ServerPlayer player = server.getPlayerList().getPlayer(ref.uuid());
 
         if (player != null) {
-            player.teleport(world, presenterPos.getX() + 0.5, presenterPos.getY(), presenterPos.getZ() + 0.5, Set.of(), presenterYaw, 0, true);
+            player.teleportTo(world, presenterPos.getX() + 0.5, presenterPos.getY(), presenterPos.getZ() + 0.5, Set.of(), presenterYaw, 0, true);
             movementBlocker.disableMovement(player);
         }
 

@@ -2,9 +2,9 @@ package work.lclpnet.ap2.mode_default.cmd;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
-import net.minecraft.server.command.CommandManager;
-import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.text.Text;
+import net.minecraft.commands.Commands;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.network.chat.Component;
 import work.lclpnet.ap2.mode_default.api.Skippable;
 import work.lclpnet.kibu.cmd.type.CommandRegistrar;
 import work.lclpnet.kibu.cmd.type.KibuCommand;
@@ -22,22 +22,22 @@ public class SkipCommand implements KibuCommand {
         registrar.registerCommand(command());
     }
 
-    private LiteralArgumentBuilder<ServerCommandSource> command() {
-        return CommandManager.literal("skip")
-                .requires(s -> s.hasPermissionLevel(2))
+    private LiteralArgumentBuilder<CommandSourceStack> command() {
+        return Commands.literal("skip")
+                .requires(s -> s.hasPermission(2))
                 .executes(this::skip);
     }
 
-    private int skip(CommandContext<ServerCommandSource> ctx) {
-        ServerCommandSource source = ctx.getSource();
+    private int skip(CommandContext<CommandSourceStack> ctx) {
+        CommandSourceStack source = ctx.getSource();
 
         if (skippable.isSkip()) {
-            source.sendMessage(Text.literal("Already skipped"));
+            source.sendSystemMessage(Component.literal("Already skipped"));
             return 0;
         }
 
         skippable.setSkip(true);
-        source.sendMessage(Text.literal("Skipped the preparation phase"));
+        source.sendSystemMessage(Component.literal("Skipped the preparation phase"));
 
         return 1;
     }

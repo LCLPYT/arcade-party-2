@@ -1,19 +1,19 @@
 package work.lclpnet.ap2.impl.util.math.shape;
 
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.phys.Vec3;
 
 public interface PlatonicShape extends Polyhedron, SphereBoundedShape {
 
-    Vec3d[] unitVertices();
+    Vec3[] unitVertices();
 
     @Override
-    default Vec3d[] vertices() {
-        Vec3d[] vertices = unitVertices();
-        Vec3d center = center();
+    default Vec3[] vertices() {
+        Vec3[] vertices = unitVertices();
+        Vec3 center = center();
         double radius = radius();
 
         for (int i = 0; i < vertices.length; i++) {
-            vertices[i] = vertices[i].multiply(radius).add(center);
+            vertices[i] = vertices[i].scale(radius).add(center);
         }
 
         return vertices;

@@ -1,21 +1,21 @@
 package work.lclpnet.ap2.impl.util.math.shape;
 
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.phys.Vec3;
 
 public class Hemisphere implements SphereBoundedShape {
 
-    private final Vec3d center;
+    private final Vec3 center;
     private final double radius;
-    private final Vec3d normal;
+    private final Vec3 normal;
 
-    public Hemisphere(Vec3d center, double radius, Vec3d normal) {
+    public Hemisphere(Vec3 center, double radius, Vec3 normal) {
         this.center = center;
         this.radius = radius;
         this.normal = normal;
     }
 
     @Override
-    public Vec3d center() {
+    public Vec3 center() {
         return center;
     }
 
@@ -26,9 +26,9 @@ public class Hemisphere implements SphereBoundedShape {
 
     @Override
     public boolean contains(double x, double y, double z) {
-        double dx = x - center.getX();
-        double dy = y - center.getY();
-        double dz = z - center.getZ();
+        double dx = x - center.x();
+        double dy = y - center.y();
+        double dz = z - center.z();
 
         boolean inSphere = (dx * dx + dy * dy + dz * dz) < radius * radius;
 
@@ -36,6 +36,6 @@ public class Hemisphere implements SphereBoundedShape {
             return false;
         }
 
-        return (dx * normal.getX() + dy * normal.getY() + dz * normal.getZ()) >= 0;
+        return (dx * normal.x() + dy * normal.y() + dz * normal.z()) >= 0;
     }
 }

@@ -2,7 +2,7 @@ package work.lclpnet.ap2.impl.util.world;
 
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.level.ServerPlayer;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.gaco.collisions.util.PlayerAction;
 import work.lclpnet.kibu.hook.Hook;
@@ -46,7 +46,7 @@ public class CombatIdleManager {
         scheduler.interval(this::tick, 1);
 
         hooks.registerHook(ServerLivingEntityHooks.ALLOW_DAMAGE, (entity, source, amount) -> {
-            if (source.getAttacker() instanceof ServerPlayerEntity player) {
+            if (source.getEntity() instanceof ServerPlayer player) {
                 onAttack(player);
             }
 
@@ -54,14 +54,14 @@ public class CombatIdleManager {
         });
     }
 
-    public void onAttack(ServerPlayerEntity player) {
+    public void onAttack(ServerPlayer player) {
         if (!participants.isParticipating(player)) return;
 
         resetCombat(player);
     }
 
-    public void resetCombat(ServerPlayerEntity player) {
-        int before = outOfCombat.put(player.getUuid(), 0);
+    public void resetCombat(ServerPlayer player) {
+        int before = outOfCombat.put(player.getUUID(), 0);
 
         if (before >= triggerTicks) {
             onLeaveIdle.invoker().act(player);
@@ -71,8 +71,8 @@ public class CombatIdleManager {
     private void tick() {
         outOfCombat.keySet().removeIf(uuid -> !participants.isParticipating(uuid));
 
-        for (ServerPlayerEntity player : participants) {
-            int ticks = outOfCombat.computeInt(player.getUuid(), (uuid, t) -> t == null ? 1 : t + 1);
+        for (ServerPlayer player : participants) {
+            int ticks = outOfCombat.computeInt(player.getUUID(), (uuid, t) -> t == null ? 1 : t + 1);
 
             if (ticks == triggerTicks) {
                 onEnterIdle.invoker().act(player);
@@ -80,7 +80,7 @@ public class CombatIdleManager {
         }
     }
 
-    public boolean isOutOfCombat(ServerPlayerEntity player) {
-        return outOfCombat.getOrDefault(player.getUuid(), 0) >= triggerTicks;
+    public boolean isOutOfCombat(ServerPlayer player) {
+        return outOfCombat.getOrDefault(player.getUUID(), 0) >= triggerTicks;
     }
 }

@@ -1,6 +1,6 @@
 package work.lclpnet.ap2.impl.util.movement;
 
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.level.ServerPlayer;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.scheduler.api.TaskHandle;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
@@ -25,16 +25,16 @@ public class SimpleMovementBlocker implements MovementBlocker {
         movement.registerListeners(hooks);
     }
 
-    public void disableMovement(ServerPlayerEntity player) {
+    public void disableMovement(ServerPlayer player) {
         applyAttributes(player);
 
-        TaskHandle prev = blocked.put(player.getUuid(), null);
+        TaskHandle prev = blocked.put(player.getUUID(), null);
 
         if (prev != null) prev.cancel();
     }
 
     @Override
-    public void disableMovement(ServerPlayerEntity player, int durationTicks) {
+    public void disableMovement(ServerPlayer player, int durationTicks) {
         if (durationTicks <= 0) {
             disableMovement(player);
             return;
@@ -43,23 +43,23 @@ public class SimpleMovementBlocker implements MovementBlocker {
         applyAttributes(player);
 
         TaskHandle task = scheduler.timeout(() -> enableMovement(player), durationTicks);
-        TaskHandle prev = blocked.put(player.getUuid(), task);
+        TaskHandle prev = blocked.put(player.getUUID(), task);
 
         if (prev != null) prev.cancel();
     }
 
     @Override
-    public void enableMovement(ServerPlayerEntity player) {
+    public void enableMovement(ServerPlayer player) {
         resetAttributes(player);
 
-        TaskHandle task = blocked.remove(player.getUuid());
+        TaskHandle task = blocked.remove(player.getUUID());
 
         if (task != null) task.cancel();
     }
 
     @Override
-    public boolean isMovementDisabled(ServerPlayerEntity player) {
-        return blocked.containsKey(player.getUuid());
+    public boolean isMovementDisabled(ServerPlayer player) {
+        return blocked.containsKey(player.getUUID());
     }
 
     @Override
@@ -72,7 +72,7 @@ public class SimpleMovementBlocker implements MovementBlocker {
         return modifySpeedAttribute;
     }
 
-    private void applyAttributes(ServerPlayerEntity player) {
+    private void applyAttributes(ServerPlayer player) {
         if (modifySpeedAttribute) {
             MovementListener.modifySpeedAttribute(player);
         }
@@ -80,7 +80,7 @@ public class SimpleMovementBlocker implements MovementBlocker {
         MovementListener.modifyJumpAttribute(player);
     }
 
-    private void resetAttributes(ServerPlayerEntity player) {
+    private void resetAttributes(ServerPlayer player) {
         if (modifySpeedAttribute) {
             MovementListener.resetSpeedAttributes(player);
         }

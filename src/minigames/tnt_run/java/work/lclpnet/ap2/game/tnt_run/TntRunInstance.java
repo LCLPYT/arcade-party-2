@@ -2,17 +2,17 @@ package work.lclpnet.ap2.game.tnt_run;
 
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.ShapeContext;
-import net.minecraft.entity.Entity;
-import net.minecraft.network.packet.s2c.play.PositionFlag;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.shape.VoxelShape;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.Relative;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.impl.game.EliminationGameInstance;
@@ -25,7 +25,7 @@ import java.util.List;
 
 public class TntRunInstance extends EliminationGameInstance {
 
-    private static final BlockState MARKED_STATE = Blocks.RED_TERRACOTTA.getDefaultState();
+    private static final BlockState MARKED_STATE = Blocks.RED_TERRACOTTA.defaultBlockState();
     private static final double BLOCK_MARGIN = 0.35;
     private static final int BREAK_TICKS = 10;
     private final Object2IntMap<BlockPos> removal = new Object2IntOpenHashMap<>();
@@ -63,7 +63,7 @@ public class TntRunInstance extends EliminationGameInstance {
 
         groundBlocks.clear();
 
-        for (ServerPlayerEntity player : participants) {
+        for (ServerPlayer player : participants) {
             groundDetector.collectBlocksBelow(player, groundBlocks);
         }
 
@@ -71,8 +71,8 @@ public class TntRunInstance extends EliminationGameInstance {
     }
 
     private void tickRemoval() {
-        ServerWorld world = getWorld();
-        int flags = Block.FORCE_STATE | Block.NOTIFY_LISTENERS | Block.SKIP_DROPS;
+        ServerLevel world = getWorld();
+        int flags = Block.UPDATE_KNOWN_SHAPE | Block.UPDATE_CLIENTS | Block.UPDATE_SUPPRESS_DROPS;
 
         var it = removal.object2IntEntrySet().iterator();
 
@@ -87,45 +87,45 @@ public class TntRunInstance extends EliminationGameInstance {
 
             BlockPos key = entry.getKey();
             it.remove();
-            world.setBlockState(key, Blocks.AIR.getDefaultState(), flags);
+            world.setBlock(key, Blocks.AIR.defaultBlockState(), flags);
         }
     }
 
     private void markForRemovalBelow() {
-        ServerWorld world = getWorld();
+        ServerLevel world = getWorld();
 
         for (BlockPos pos : groundBlocks) {
             if (removal.containsKey(pos)) continue;
 
-            BlockPos posUp = pos.up();
+            BlockPos posUp = pos.above();
 
             BlockState state = world.getBlockState(pos);
 
             if (state.isAir()) continue;
 
             BlockState above = world.getBlockState(posUp);
-            VoxelShape aboveShape = above.getCollisionShape(world, posUp, ShapeContext.absent());
+            VoxelShape aboveShape = above.getCollisionShape(world, posUp, CollisionContext.empty());
 
             // don't remove walls
             if (!aboveShape.isEmpty()) {
-                Box box = aboveShape.getBoundingBox();
+                AABB box = aboveShape.bounds();
 
-                if (box.getLengthX() >= 1 && box.getLengthZ() >= 1) continue;
+                if (box.getXsize() >= 1 && box.getZsize() >= 1) continue;
             }
 
             removal.put(pos, BREAK_TICKS);
 
             if (state.getCollisionShape(world, pos).isEmpty()) continue;
 
-            Box markedCollisionBox = MARKED_STATE.getCollisionShape(world, pos).getBoundingBox().offset(pos);
-            List<Entity> colliding = world.getOtherEntities(null, markedCollisionBox, entity -> !entity.isSpectator());
+            AABB markedCollisionBox = MARKED_STATE.getCollisionShape(world, pos).bounds().move(pos);
+            List<Entity> colliding = world.getEntities((Entity) null, markedCollisionBox, entity -> !entity.isSpectator());
 
             for (Entity entity : colliding) {
                 double dy = markedCollisionBox.maxY - entity.getY();
-                entity.teleport(world, 0, dy, 0, PositionFlag.VALUES, 0, 0, false);
+                entity.teleportTo(world, 0, dy, 0, Relative.ALL, 0, 0, false);
             }
 
-            world.setBlockState(pos, MARKED_STATE);
+            world.setBlockAndUpdate(pos, MARKED_STATE);
         }
     }
 }

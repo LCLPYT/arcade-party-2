@@ -1,17 +1,17 @@
 package work.lclpnet.ap2.game.maze_scape.setup;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.Falling;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.decoration.DisplayEntity;
-import net.minecraft.fluid.Fluids;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.text.Text;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.Display;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.Fallable;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.material.Fluids;
 import work.lclpnet.ap2.impl.util.structure.StructureUtil;
 import work.lclpnet.gaco.ds.BlockBox;
 import work.lclpnet.gaco.ds.StructureMask;
@@ -20,7 +20,7 @@ import work.lclpnet.kibu.structure.BlockStructure;
 import java.util.List;
 import java.util.function.Predicate;
 
-public record MSPieceDebugger(ServerWorld world, BlockStructure struct, String name, BlockPos offset) {
+public record MSPieceDebugger(ServerLevel world, BlockStructure struct, String name, BlockPos offset) {
 
     public void debugStructure() {
         var origin = offset(0);
@@ -33,11 +33,11 @@ public record MSPieceDebugger(ServerWorld world, BlockStructure struct, String n
     }
 
     public void debugInsideMask(StructureMask mask) {
-        submit(() -> placeMask(1, mask, "Final mask", Blocks.LAPIS_BLOCK.getDefaultState()));
+        submit(() -> placeMask(1, mask, "Final mask", Blocks.LAPIS_BLOCK.defaultBlockState()));
     }
 
     public void debugClosedCorridorMask(StructureMask mask) {
-        submit(() -> placeMask(2, mask, "Corridors closed", Blocks.EMERALD_BLOCK.getDefaultState()));
+        submit(() -> placeMask(2, mask, "Corridors closed", Blocks.EMERALD_BLOCK.defaultBlockState()));
     }
 
     public void debugBvhBoxes(List<BlockBox> boxes) {
@@ -54,7 +54,7 @@ public record MSPieceDebugger(ServerWorld world, BlockStructure struct, String n
         var origin = offset(index);
         addText(origin, detail);
 
-        var pos = new BlockPos.Mutable();
+        var pos = new BlockPos.MutableBlockPos();
 
         for (int y = 0; y < mask.height(); y++) {
             for (int x = 0; x < mask.width(); x++) {
@@ -63,24 +63,24 @@ public record MSPieceDebugger(ServerWorld world, BlockStructure struct, String n
 
                     pos.set(origin.getX() + x, origin.getY() + y, origin.getZ() + z);
 
-                    world.setBlockState(pos, state, Block.FORCE_STATE | Block.SKIP_DROPS);
+                    world.setBlock(pos, state, Block.UPDATE_KNOWN_SHAPE | Block.UPDATE_SUPPRESS_DROPS);
                 }
             }
         }
     }
 
     private void placeBoxes(List<BlockBox> boxes, BlockPos origin) {
-        List<BlockState> states = Registries.BLOCK.streamEntries()
-                .map(RegistryEntry.Reference::value)
-                .filter(Predicate.not(block -> block instanceof Falling))
-                .map(Block::getDefaultState)
+        List<BlockState> states = BuiltInRegistries.BLOCK.listElements()
+                .map(Holder.Reference::value)
+                .filter(Predicate.not(block -> block instanceof Fallable))
+                .map(Block::defaultBlockState)
                 .filter(Predicate.not(BlockState::isAir))
-                .filter(Predicate.not(BlockState::isTransparent))
-                .filter(state -> state.getFluidState().isOf(Fluids.EMPTY))
+                .filter(Predicate.not(BlockState::propagatesSkylightDown))
+                .filter(state -> state.getFluidState().is(Fluids.EMPTY))
                 .limit(boxes.size())
                 .toList();
 
-        var mut = new BlockPos.Mutable();
+        var mut = new BlockPos.MutableBlockPos();
 
         for (int i = 0, len = boxes.size(); i < len; i++) {
             BlockState state = states.get(i % states.size());
@@ -88,19 +88,19 @@ public record MSPieceDebugger(ServerWorld world, BlockStructure struct, String n
 
             for (BlockPos pos : box) {
                 mut.set(origin.getX() + pos.getX(), origin.getY() + pos.getY(), origin.getZ() + pos.getZ());
-                world.setBlockState(mut, state, Block.FORCE_STATE | Block.SKIP_DROPS);
+                world.setBlock(mut, state, Block.UPDATE_KNOWN_SHAPE | Block.UPDATE_SUPPRESS_DROPS);
             }
         }
     }
 
     private void addText(BlockPos origin, String detail) {
-        var display = new DisplayEntity.TextDisplayEntity(EntityType.TEXT_DISPLAY, world);
+        var display = new Display.TextDisplay(EntityType.TEXT_DISPLAY, world);
 
-        display.setPos(origin.getX(), origin.getY() + struct.getHeight() + 1, origin.getZ());
-        display.setText(Text.literal(name + " - " + detail));
-        display.setBillboardMode(DisplayEntity.BillboardMode.CENTER);
+        display.setPosRaw(origin.getX(), origin.getY() + struct.getHeight() + 1, origin.getZ());
+        display.setText(Component.literal(name + " - " + detail));
+        display.setBillboardConstraints(Display.BillboardConstraints.CENTER);
 
-        world.spawnEntity(display);
+        world.addFreshEntity(display);
     }
 
     private void submit(Runnable task) {
@@ -108,6 +108,6 @@ public record MSPieceDebugger(ServerWorld world, BlockStructure struct, String n
     }
 
     private BlockPos offset(int index) {
-        return this.offset.add(index * (struct.getWidth() + 5), 0, 0);
+        return this.offset.offset(index * (struct.getWidth() + 5), 0, 0);
     }
 }

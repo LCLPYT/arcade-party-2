@@ -1,6 +1,6 @@
 package work.lclpnet.ap2.impl.music;
 
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 import work.lclpnet.ap2.api.music.LoadableSong;
 import work.lclpnet.ap2.api.music.WeightedSong;
@@ -14,9 +14,9 @@ public class SimpleWeightedSong implements WeightedSong {
 
     private final Set<LoadableSong> songs;
     private final WeightedList<LoadableSong> weightedSongs;
-    private final Identifier songId;
+    private final ResourceLocation songId;
 
-    public SimpleWeightedSong(Set<LoadableSong> songs, Identifier songId) {
+    public SimpleWeightedSong(Set<LoadableSong> songs, ResourceLocation songId) {
         if (songs.isEmpty()) {
             throw new IllegalArgumentException("Songs cannot be empty");
         }
@@ -46,7 +46,7 @@ public class SimpleWeightedSong implements WeightedSong {
     }
 
     @Override
-    public Identifier getSongId() {
+    public ResourceLocation getSongId() {
         return songId;
     }
 }

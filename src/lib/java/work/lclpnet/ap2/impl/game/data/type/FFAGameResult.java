@@ -1,7 +1,7 @@
 package work.lclpnet.ap2.impl.game.data.type;
 
 import it.unimi.dsi.fastutil.objects.ObjectIntPair;
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.level.ServerPlayer;
 import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.game.data.GenericGameResult;
 
@@ -15,7 +15,7 @@ public class FFAGameResult implements GenericGameResult<PlayerRef> {
     private final List<ObjectIntPair<PlayerRef>> results;
     private final Set<PlayerRef> refs;
 
-    public FFAGameResult(DataContainer<ServerPlayerEntity, PlayerRef> data) {
+    public FFAGameResult(DataContainer<ServerPlayer, PlayerRef> data) {
         var byRank = data.streamEntriesRanked().toList();
 
         this.results = byRank.stream()

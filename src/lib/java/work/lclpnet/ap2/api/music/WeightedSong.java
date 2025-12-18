@@ -1,6 +1,6 @@
 package work.lclpnet.ap2.api.music;
 
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Random;
@@ -13,5 +13,5 @@ public interface WeightedSong {
 
     Set<LoadableSong> getAllElements();
 
-    Identifier getSongId();
+    ResourceLocation getSongId();
 }

@@ -1,12 +1,12 @@
 package work.lclpnet.ap2.game.maze_scape.monster;
 
-import net.minecraft.block.Blocks;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.effect.StatusEffectInstance;
-import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.entity.mob.SpiderEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.monster.Spider;
+import net.minecraft.world.level.block.Blocks;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.game.maze_scape.monster.behaviour.AccelerationBehaviour;
 import work.lclpnet.ap2.game.maze_scape.monster.behaviour.SameRoomBehaviour;
@@ -17,7 +17,7 @@ import work.lclpnet.kibu.scheduler.Ticks;
 import java.util.List;
 import java.util.Random;
 
-public class SpiderData implements MonsterData<SpiderEntity> {
+public class SpiderData implements MonsterData<Spider> {
 
     private static final int
             COBWEB_DELAY_MIN_TICKS = Ticks.seconds(6),
@@ -46,12 +46,12 @@ public class SpiderData implements MonsterData<SpiderEntity> {
     }
 
     @Override
-    public void init(SpiderEntity spider) {
+    public void init(Spider spider) {
         common.init(spider);
     }
 
     @Override
-    public void tick(SpiderEntity spider) {
+    public void tick(Spider spider) {
         common.tick(spider);
 
         if (nextCobweb-- <= 0) {
@@ -61,38 +61,38 @@ public class SpiderData implements MonsterData<SpiderEntity> {
     }
 
     @Override
-    public void onKillAcquired(SpiderEntity spider) {
+    public void onKillAcquired(Spider spider) {
         common.onKillAcquired(spider);
     }
 
     @Override
-    public @Nullable SpiderEntity mob() {
-        if (common.mob() instanceof SpiderEntity spider) {
+    public @Nullable Spider mob() {
+        if (common.mob() instanceof Spider spider) {
             return spider;
         }
 
         return null;
     }
 
-    private void cobwebSpecial(SpiderEntity spider, LivingEntity target) {
-        putCobweb(target.getBlockPos());
-        target.damage(common.manager().world(), spider.getDamageSources().indirectMagic(spider, spider), 2);
-        target.addStatusEffect(new StatusEffectInstance(StatusEffects.POISON, Ticks.seconds(5), 0));
+    private void cobwebSpecial(Spider spider, LivingEntity target) {
+        putCobweb(target.blockPosition());
+        target.hurtServer(common.manager().world(), spider.damageSources().indirectMagic(spider, spider), 2);
+        target.addEffect(new MobEffectInstance(MobEffects.POISON, Ticks.seconds(5), 0));
     }
 
     private void placeCobweb() {
-        SpiderEntity spider = mob();
+        Spider spider = mob();
 
         if (spider == null) return;
 
-        putCobweb(spider.getBlockPos());
+        putCobweb(spider.blockPosition());
     }
 
     private void putCobweb(BlockPos blockPos) {
-        ServerWorld world = common.manager().world();
+        ServerLevel world = common.manager().world();
 
         if (!world.getBlockState(blockPos).isAir()) return;
 
-        world.setBlockState(blockPos, Blocks.COBWEB.getDefaultState());
+        world.setBlockAndUpdate(blockPos, Blocks.COBWEB.defaultBlockState());
     }
 }

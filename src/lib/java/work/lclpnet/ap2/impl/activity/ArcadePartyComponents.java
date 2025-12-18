@@ -7,7 +7,7 @@ public class ArcadePartyComponents {
 
     public static final ComponentKey<ScoreboardComponent> SCORE_BOARD = context -> {
         MinecraftServer server = context.getServer();
-        return new ScoreboardComponent(server.getScoreboard(), server.getPlayerManager());
+        return new ScoreboardComponent(server.getScoreboard(), server.getPlayerList());
     };
 
     private ArcadePartyComponents() {}

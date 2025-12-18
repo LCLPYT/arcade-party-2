@@ -1,17 +1,16 @@
 package work.lclpnet.ap2.game.cozy_campfire;
 
-import net.minecraft.item.ItemStack;
-import net.minecraft.particle.ParticleTypes;
-import net.minecraft.scoreboard.AbstractTeam;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.world.GameRules;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.Mth;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.GameRules;
 import org.jetbrains.annotations.NotNull;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
@@ -73,7 +72,7 @@ public class CozyCampfireInstance extends TeamEliminationGameInstance implements
     }
 
     @Override
-    public @NotNull CompletableFuture<Void> createWorldBootstrap(@NotNull ServerWorld world, @NotNull GameMap map) {
+    public @NotNull CompletableFuture<Void> createWorldBootstrap(@NotNull ServerLevel world, @NotNull GameMap map) {
         teamManager = getTeamManager();
         teamManager.partitionIntoTeams(gameHandle.getParticipants(), Set.of(TEAM_RED, TEAM_BLUE));
 
@@ -90,9 +89,9 @@ public class CozyCampfireInstance extends TeamEliminationGameInstance implements
     @Override
     protected void prepare() {
         teamManager.getMinecraftTeams().forEach(team -> {
-            team.setFriendlyFireAllowed(false);
-            team.setShowFriendlyInvisibles(true);
-            team.setCollisionRule(AbstractTeam.CollisionRule.PUSH_OTHER_TEAMS);
+            team.setAllowFriendlyFire(false);
+            team.setSeeFriendlyInvisibles(true);
+            team.setCollisionRule(net.minecraft.world.scores.Team.CollisionRule.PUSH_OTHER_TEAMS);
         });
 
         readMapFuelInfo();
@@ -105,7 +104,7 @@ public class CozyCampfireInstance extends TeamEliminationGameInstance implements
         CCKitManager kitManager = new CCKitManager(teamManager, getWorld(), random);
         Participants participants = gameHandle.getParticipants();
 
-        for (ServerPlayerEntity player : participants) {
+        for (ServerPlayer player : participants) {
             kitManager.giveItems(player);
             PlayerReset.modifyWalkSpeed(player, MOVEMENT_SPEED);
         }
@@ -185,26 +184,26 @@ public class CozyCampfireInstance extends TeamEliminationGameInstance implements
         this.startingFuel = this.fuelPerSecond * this.startingFuelSeconds;
     }
 
-    private void setupGameRules(GameMap map, ServerWorld world) {
+    private void setupGameRules(GameMap map, ServerLevel world) {
         commons(map, world).gameRuleBuilder()
-                .set(GameRules.SNOW_ACCUMULATION_HEIGHT, 0)
-                .set(GameRules.DO_WEATHER_CYCLE, false)
-                .set(GameRules.DO_DAYLIGHT_CYCLE, false);
+                .set(GameRules.RULE_SNOW_ACCUMULATION_HEIGHT, 0)
+                .set(GameRules.RULE_WEATHER_CYCLE, false)
+                .set(GameRules.RULE_DAYLIGHT, false);
     }
 
-    private void randomizeWorldConditions(ServerWorld world) {
+    private void randomizeWorldConditions(ServerLevel world) {
         if (random.nextFloat() <= DAY_TIME_CHANCE) {
-            world.setTimeOfDay(6000);
+            world.setDayTime(6000);
         } else {
-            world.setTimeOfDay(18000);
+            world.setDayTime(18000);
         }
 
         if (random.nextFloat() <= RAIN_CHANCE) {
             boolean thunder = random.nextFloat() <= (THUNDER_CHANCE / RAIN_CHANCE);  // conditional probability
-            world.setWeather(0, 1000, true, thunder);
+            world.setWeatherParameters(0, 1000, true, thunder);
         } else {
-            world.setWeather(1000, 0, false, false);
-            world.setRainGradient(0);
+            world.setWeatherParameters(1000, 0, false, false);
+            world.setRainLevel(0);
         }
     }
 
@@ -222,7 +221,7 @@ public class CozyCampfireInstance extends TeamEliminationGameInstance implements
         seconds %= 60;
 
         return gameHandle.getTranslations().translateText("game.ap2.cozy_campfire.time", minutes, seconds)
-                .formatted(Formatting.YELLOW);
+                .formatted(ChatFormatting.YELLOW);
     }
 
     private int getRemainingTime(int fuel, int playerCount) {
@@ -275,16 +274,16 @@ public class CozyCampfireInstance extends TeamEliminationGameInstance implements
         bossBar.setPercent(team, fuel.percent());
     }
 
-    public void onAddFuel(ServerPlayerEntity player, BlockPos pos, Team team, ItemStack stack) {
+    public void onAddFuel(ServerPlayer player, BlockPos pos, Team team, ItemStack stack) {
         int value = this.fuel.getValue(stack);
 
         stack.setCount(0);
 
-        if (player.getEntityWorld() instanceof ServerWorld world) {
+        if (player.level() instanceof ServerLevel world) {
             double x = pos.getX() + 0.5, y = pos.getY() + 0.5, z = pos.getZ();
 
-            world.playSound(null, x, y, z, SoundEvents.BLOCK_FIRE_EXTINGUISH, SoundCategory.BLOCKS, 0.2f, 1f);
-            world.spawnParticles(ParticleTypes.LARGE_SMOKE, x, y, z, 7, 0.1, 0.1, 0.1, 0);
+            world.playSound(null, x, y, z, SoundEvents.FIRE_EXTINGUISH, SoundSource.BLOCKS, 0.2f, 1f);
+            world.sendParticles(ParticleTypes.LARGE_SMOKE, x, y, z, 7, 0.1, 0.1, 0.1, 0);
         }
 
         if (value <= 0) return;
@@ -301,12 +300,12 @@ public class CozyCampfireInstance extends TeamEliminationGameInstance implements
         Translations translations = gameHandle.getTranslations();
 
         var added = LocalizedFormat.format("%.2f", (float) value / (fuelPerSecond * playersFactor(team)));
-        var msg = translations.translateText("game.ap2.cozy_campfire.fuel_added", styled(added, Formatting.YELLOW))
-                .formatted(Formatting.GREEN);
+        var msg = translations.translateText("game.ap2.cozy_campfire.fuel_added", styled(added, ChatFormatting.YELLOW))
+                .formatted(ChatFormatting.GREEN);
 
-        for (ServerPlayerEntity player : team.getPlayers()) {
-            player.sendMessage(msg.translateFor(player), true);
-            player.playSoundToPlayer(SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, SoundCategory.PLAYERS, 0.2f, 1.8f);
+        for (ServerPlayer player : team.getPlayers()) {
+            player.displayClientMessage(msg.translateFor(player), true);
+            player.playNotifySound(SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 0.2f, 1.8f);
         }
     }
 
@@ -330,7 +329,7 @@ public class CozyCampfireInstance extends TeamEliminationGameInstance implements
         float percent() {
             if (max == 0) return 0f;
 
-            return MathHelper.clamp((float) count / max, 0f, 1f);
+            return Mth.clamp((float) count / max, 0f, 1f);
         }
     }
 }

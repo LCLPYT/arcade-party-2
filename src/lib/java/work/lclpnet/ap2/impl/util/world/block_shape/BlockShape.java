@@ -1,8 +1,8 @@
 package work.lclpnet.ap2.impl.util.world.block_shape;
 
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Position;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Position;
+import net.minecraft.world.phys.Vec3;
 import work.lclpnet.gaco.ds.BlockBox;
 import work.lclpnet.gaco.ds.Collider;
 
@@ -31,7 +31,7 @@ public interface BlockShape extends Iterable<BlockPos>, Collider {
     }
 
     default boolean contains(Position pos) {
-        return contains(pos.getX(), pos.getY(), pos.getZ());
+        return contains(pos.x(), pos.y(), pos.z());
     }
 
     @Override
@@ -53,7 +53,7 @@ public interface BlockShape extends Iterable<BlockPos>, Collider {
         final int maxTries = 100;
 
         BlockBox bounds = bounds();
-        var mutable = new BlockPos.Mutable();
+        var mutable = new BlockPos.MutableBlockPos();
 
         for (int i = 0; i < maxTries; i++) {
             bounds.randomBlockPos(mutable, random);
@@ -67,16 +67,16 @@ public interface BlockShape extends Iterable<BlockPos>, Collider {
         List<BlockPos> positions = new ArrayList<>();
 
         for (BlockPos pos : this) {
-            positions.add(pos.toImmutable());
+            positions.add(pos.immutable());
         }
 
         return positions.get(random.nextInt(positions.size()));
     }
 
-    default Vec3d randomPos(Random random) {
+    default Vec3 randomPos(Random random) {
         BlockPos p = randomBlockPos(random);
 
-        return new Vec3d(p.getX() + random.nextDouble(), p.getY() + random.nextDouble(), p.getZ() + random.nextDouble());
+        return new Vec3(p.getX() + random.nextDouble(), p.getY() + random.nextDouble(), p.getZ() + random.nextDouble());
     }
 
     interface WithRadius {

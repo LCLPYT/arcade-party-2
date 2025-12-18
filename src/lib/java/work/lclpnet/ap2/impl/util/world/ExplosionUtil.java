@@ -1,45 +1,45 @@
 package work.lclpnet.ap2.impl.util.world;
 
-import net.minecraft.network.packet.s2c.play.ExplosionS2CPacket;
-import net.minecraft.particle.BlockParticleEffect;
-import net.minecraft.particle.ParticleEffect;
-import net.minecraft.particle.ParticleTypes;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.collection.Pool;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.explosion.ExplosionImpl;
+import net.minecraft.core.particles.ExplosionParticleInfo;
+import net.minecraft.core.particles.ParticleOptions;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.network.protocol.game.ClientboundExplodePacket;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.util.random.WeightedList;
+import net.minecraft.world.level.ServerExplosion;
+import net.minecraft.world.phys.Vec3;
 
 import java.util.Optional;
 
 public class ExplosionUtil {
 
-    public static final Pool<BlockParticleEffect> EXPLOSION_BLOCK_PARTICLES = Pool.<BlockParticleEffect>builder()
-            .add(new BlockParticleEffect(ParticleTypes.POOF, 0.5F, 1.0F))
-            .add(new BlockParticleEffect(ParticleTypes.SMOKE, 1.0F, 1.0F))
+    public static final WeightedList<ExplosionParticleInfo> EXPLOSION_BLOCK_PARTICLES = WeightedList.<ExplosionParticleInfo>builder()
+            .add(new ExplosionParticleInfo(ParticleTypes.POOF, 0.5F, 1.0F))
+            .add(new ExplosionParticleInfo(ParticleTypes.SMOKE, 1.0F, 1.0F))
             .build();
 
-    public static void sendExplosion(ServerWorld world, ExplosionImpl explosion) {
-        ParticleEffect particleEffect = explosion.isSmall() ? ParticleTypes.EXPLOSION : ParticleTypes.EXPLOSION_EMITTER;
+    public static void sendExplosion(ServerLevel world, ServerExplosion explosion) {
+        ParticleOptions particleEffect = explosion.isSmall() ? ParticleTypes.EXPLOSION : ParticleTypes.EXPLOSION_EMITTER;
 
         sendExplosion(world, explosion, particleEffect);
     }
 
-    public static void sendExplosion(ServerWorld world, ExplosionImpl explosion, ParticleEffect particleEffect) {
+    public static void sendExplosion(ServerLevel world, ServerExplosion explosion, ParticleOptions particleEffect) {
         sendExplosion(world, explosion, particleEffect, EXPLOSION_BLOCK_PARTICLES);
     }
 
-    public static void sendExplosion(ServerWorld world, ExplosionImpl explosion, ParticleEffect particleEffect, Pool<BlockParticleEffect> blockParticles) {
-        Vec3d pos = explosion.getPosition();
+    public static void sendExplosion(ServerLevel world, ServerExplosion explosion, ParticleOptions particleEffect, WeightedList<ExplosionParticleInfo> blockParticles) {
+        Vec3 pos = explosion.center();
 
         // send explosion packets
-        for (ServerPlayerEntity other : world.getPlayers()) {
-            if (!(other.squaredDistanceTo(pos.x, pos.y, pos.z) < 4096.0)) continue;
+        for (ServerPlayer other : world.players()) {
+            if (!(other.distanceToSqr(pos.x, pos.y, pos.z) < 4096.0)) continue;
 
-            Optional<Vec3d> knockback = Optional.ofNullable(explosion.getKnockbackByPlayer().get(other));
+            Optional<Vec3> knockback = Optional.ofNullable(explosion.getHitPlayers().get(other));
 
-            other.networkHandler.sendPacket(new ExplosionS2CPacket(pos, explosion.getPower(), 0, knockback, particleEffect, SoundEvents.ENTITY_GENERIC_EXPLODE, blockParticles));
+            other.connection.send(new ClientboundExplodePacket(pos, explosion.radius(), 0, knockback, particleEffect, SoundEvents.GENERIC_EXPLODE, blockParticles));
         }
     }
 }

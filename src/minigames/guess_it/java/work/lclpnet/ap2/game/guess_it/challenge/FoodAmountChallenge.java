@@ -1,10 +1,10 @@
 package work.lclpnet.ap2.game.guess_it.challenge;
 
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.FoodComponent;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.registry.Registries;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.world.food.FoodProperties;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.game.guess_it.data.*;
 import work.lclpnet.ap2.game.guess_it.util.GuessItDisplay;
@@ -53,7 +53,7 @@ public class FoodAmountChallenge implements Challenge {
         input.expectInput().validateFloat(translations, 1);
 
         Item food = selectRandomFood();
-        FoodComponent foodComponent = food.getComponents().get(DataComponentTypes.FOOD);
+        FoodProperties foodComponent = food.components().get(DataComponents.FOOD);
 
         if (foodComponent == null) {
             throw new IllegalStateException("Item has no food component");
@@ -75,8 +75,8 @@ public class FoodAmountChallenge implements Challenge {
     }
 
     private Item selectRandomFood() {
-        var food = Registries.ITEM.stream()
-                .filter(item -> item.getComponents().contains(DataComponentTypes.FOOD))
+        var food = BuiltInRegistries.ITEM.stream()
+                .filter(item -> item.components().has(DataComponents.FOOD))
                 .collect(Collectors.toSet());
 
         return food.stream().skip(random.nextInt(food.size())).findFirst().orElseThrow();

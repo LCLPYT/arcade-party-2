@@ -1,8 +1,8 @@
 package work.lclpnet.ap2.core.hook;
 
-import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.damagesource.DamageSource;
 import work.lclpnet.kibu.hook.Hook;
 import work.lclpnet.kibu.hook.HookFactory;
 
@@ -16,5 +16,5 @@ public interface PlayerDeathMessageCallback {
         return currentMsg;
     });
 
-    Text modifyDeathMessage(ServerPlayerEntity player, DamageSource source, Text currentMsg);
+    Component modifyDeathMessage(ServerPlayer player, DamageSource source, Component currentMsg);
 }

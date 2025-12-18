@@ -1,7 +1,7 @@
 package work.lclpnet.ap2.util.scene
 
-import net.minecraft.entity.Entity
-import net.minecraft.server.world.ServerWorld
+import net.minecraft.server.level.ServerLevel
+import net.minecraft.world.entity.Entity
 import work.lclpnet.gaco.core.api.Resolvable
 import work.lclpnet.gaco.dynamic_entities.DynamicEntity
 import work.lclpnet.gaco.dynamic_entities.DynamicEntityManager
@@ -9,10 +9,9 @@ import work.lclpnet.gaco.dynamic_entities.PlayerSpecificDynamicEntity
 import work.lclpnet.gaco.scene.MountContext
 import work.lclpnet.gaco.scene.Object3d
 import java.util.*
-import kotlin.collections.set
 
 class PlayerMountContext(
-    val world: ServerWorld,
+    val world: ServerLevel,
     val dynamicEntityManager: DynamicEntityManager,
     val viewerUuid: UUID
 ) : MountContext {

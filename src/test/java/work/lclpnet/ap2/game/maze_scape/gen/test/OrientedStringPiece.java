@@ -1,6 +1,6 @@
 package work.lclpnet.ap2.game.maze_scape.gen.test;
 
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.game.maze_scape.gen.Node;
 import work.lclpnet.ap2.game.maze_scape.gen.OrientedPiece;
@@ -49,7 +49,7 @@ public final class OrientedStringPiece implements OrientedPiece<StringConnector,
         int ox = -Math.min(0, dimensions.getX() + 1);
         int oy = -Math.min(0, dimensions.getY() + 1);
 
-        var pos = new BlockPos.Mutable();
+        var pos = new BlockPos.MutableBlockPos();
 
         for (int yi = 0; yi < baseHeight; yi++) {
             for (int xi = 0; xi < baseWidth; xi++) {

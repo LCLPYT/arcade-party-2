@@ -2,12 +2,12 @@ package work.lclpnet.ap2.impl.game;
 
 import com.google.common.collect.Iterables;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
-import net.minecraft.particle.ParticleTypes;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.world.GameMode;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.level.GameType;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.impl.util.DeathMessages;
@@ -22,24 +22,24 @@ public class PseudoElimination {
 
     private final Participants participants;
     private final DeathMessages deathMessages;
-    private final ServerWorld world;
+    private final ServerLevel world;
     private final Set<UUID> toEliminate = new HashSet<>();
 
-    public PseudoElimination(MiniGameHandle handle, ServerWorld world) {
+    public PseudoElimination(MiniGameHandle handle, ServerLevel world) {
         this(handle.getParticipants(), handle.getDeathMessages(), world);
     }
 
-    public PseudoElimination(Participants participants, DeathMessages deathMessages, ServerWorld world) {
+    public PseudoElimination(Participants participants, DeathMessages deathMessages, ServerLevel world) {
         this.participants = participants;
         this.deathMessages = deathMessages;
         this.world = world;
     }
 
-    public synchronized boolean isEliminated(ServerPlayerEntity player) {
-        return toEliminate.contains(player.getUuid());
+    public synchronized boolean isEliminated(ServerPlayer player) {
+        return toEliminate.contains(player.getUUID());
     }
 
-    public boolean isParticipating(ServerPlayerEntity player) {
+    public boolean isParticipating(ServerPlayer player) {
         return participants.isParticipating(player) && !isEliminated(player);
     }
 
@@ -49,25 +49,25 @@ public class PseudoElimination {
         toEliminate.clear();
     }
 
-    public synchronized boolean eliminate(ServerPlayerEntity player) {
+    public synchronized boolean eliminate(ServerPlayer player) {
         if (isEliminated(player) || !participants.isParticipating(player)) return false;
 
         double x = player.getX(), y = player.getY(), z = player.getZ();
 
-        world.playSound(null, x, y, z, SoundEvents.ENTITY_GENERIC_EXPLODE.value(), SoundCategory.PLAYERS, 1f, 0f);
-        world.spawnParticles(ParticleTypes.LAVA, x, y, z, 100, 0.5, 0.5, 0.5, 0.2);
+        world.playSound(null, x, y, z, SoundEvents.GENERIC_EXPLODE.value(), SoundSource.PLAYERS, 1f, 0f);
+        world.sendParticles(ParticleTypes.LAVA, x, y, z, 100, 0.5, 0.5, 0.5, 0.2);
 
         deathMessages.getDeathMessage(player, null)
                 .sendTo(PlayerLookup.all(world.getServer()));
 
-        player.changeGameMode(GameMode.SPECTATOR);
+        player.setGameMode(GameType.SPECTATOR);
 
-        toEliminate.add(player.getUuid());
+        toEliminate.add(player.getUUID());
 
         return true;
     }
 
-    public Stream<ServerPlayerEntity> stream() {
+    public Stream<ServerPlayer> stream() {
         return toEliminate.stream()
                 .map(participants::getParticipant)
                 .flatMap(Optional::stream);
@@ -77,11 +77,11 @@ public class PseudoElimination {
         return toEliminate.size();
     }
 
-    public Stream<ServerPlayerEntity> streamParticipants() {
+    public Stream<ServerPlayer> streamParticipants() {
         return participants.stream().filter(player -> !isEliminated(player));
     }
 
-    public Iterable<ServerPlayerEntity> iterateParticipants() {
+    public Iterable<ServerPlayer> iterateParticipants() {
         return Iterables.filter(participants, player -> !isEliminated(player));
     }
 }

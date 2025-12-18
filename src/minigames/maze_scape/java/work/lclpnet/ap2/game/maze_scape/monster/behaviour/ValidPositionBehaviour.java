@@ -1,8 +1,8 @@
 package work.lclpnet.ap2.game.maze_scape.monster.behaviour;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.phys.Vec3;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.game.maze_scape.setup.OrientedStructurePiece;
 import work.lclpnet.ap2.game.maze_scape.util.MSManager;
@@ -20,7 +20,7 @@ public class ValidPositionBehaviour implements MonsterBehaviour {
     }
 
     @Override
-    public void tick(MobEntity mob) {
+    public void tick(Mob mob) {
         var node = manager.struct().nodeAt(mob.getX(), mob.getY(), mob.getZ());
 
         if (node == null) {
@@ -36,7 +36,7 @@ public class ValidPositionBehaviour implements MonsterBehaviour {
         }
 
         if (oriented.isPitAt(mob.getBlockX(), mob.getBlockY(), mob.getBlockZ())) {
-            Vec3d spawn = oriented.spawn();
+            Vec3 spawn = oriented.spawn();
 
             if (spawn == null) {
                 teleportToDistantPos(mob);

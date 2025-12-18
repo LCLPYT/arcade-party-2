@@ -3,8 +3,8 @@ package work.lclpnet.ap2.game.paintball.util;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import lombok.Getter;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -14,10 +14,10 @@ import work.lclpnet.ap2.api.game.team.DyeTeamKey;
 import work.lclpnet.ap2.api.game.team.Team;
 import work.lclpnet.ap2.api.game.team.TeamKey;
 import work.lclpnet.ap2.api.game.team.TeamManager;
-import work.lclpnet.gaco.core.api.Partial;
-import work.lclpnet.gaco.ds.IndexedSet;
 import work.lclpnet.ap2.impl.game.team.ApTeams;
 import work.lclpnet.ap2.impl.util.StreamUtil;
+import work.lclpnet.gaco.core.api.Partial;
+import work.lclpnet.gaco.ds.IndexedSet;
 import work.lclpnet.lobby.game.map.GameMap;
 
 import java.util.*;
@@ -103,13 +103,13 @@ public class PaintballTeams implements Iterable<PaintballTeam> {
         return teamPool;
     }
 
-    public boolean isMember(PaintballTeam pbt, ServerPlayerEntity player) {
+    public boolean isMember(PaintballTeam pbt, ServerPlayer player) {
         return teamOf(player)
                 .map(team -> team == pbt)
                 .orElse(false);
     }
 
-    public Optional<PaintballTeam> teamOf(ServerPlayerEntity player) {
+    public Optional<PaintballTeam> teamOf(ServerPlayer player) {
         return teamManager.getTeam(player)
                 .map(Team::key)
                 .map(teamsByKey::get);
@@ -129,7 +129,7 @@ public class PaintballTeams implements Iterable<PaintballTeam> {
         return teamGroups.getOrDefault(team, 0x1);
     }
 
-    public int bulletGroup(ServerPlayerEntity player) {
+    public int bulletGroup(ServerPlayer player) {
         PaintballTeam team = teamOf(player).orElse(null);
 
         if (team == null) {
@@ -145,7 +145,7 @@ public class PaintballTeams implements Iterable<PaintballTeam> {
         return group << 1;
     }
 
-    public int bulletCollisionFlags(ServerPlayerEntity player) {
+    public int bulletCollisionFlags(ServerPlayer player) {
         PaintballTeam ownTeam = teamOf(player).orElse(null);
 
         if (ownTeam == null) {

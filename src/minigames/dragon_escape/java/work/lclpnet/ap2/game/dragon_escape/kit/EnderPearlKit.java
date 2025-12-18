@@ -1,14 +1,14 @@
 package work.lclpnet.ap2.game.dragon_escape.kit;
 
 import com.mojang.serialization.MapCodec;
-import net.minecraft.entity.projectile.thrown.EnderPearlEntity;
-import net.minecraft.item.Items;
-import net.minecraft.registry.Registries;
-import net.minecraft.server.network.ServerPlayNetworkHandler;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.network.ServerGamePacketListenerImpl;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.projectile.ThrownEnderpearl;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.phys.Vec3;
 import work.lclpnet.ap2.core.hook.EnderPearlTeleportCallback;
 import work.lclpnet.ap2.core.hook.ProjectileShootCallback;
 import work.lclpnet.ap2.impl.game.kit.KitHandle;
@@ -23,13 +23,13 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import static net.minecraft.util.Formatting.RED;
+import static net.minecraft.ChatFormatting.RED;
 
 public class EnderPearlKit extends SingleItemKit {
 
     public static final String ID = "ender_pearl";
 
-    private static final MapCodec<Vec3d> ORIGIN_CODEC = Vec3d.CODEC.fieldOf("ap2:origin");
+    private static final MapCodec<Vec3> ORIGIN_CODEC = Vec3.CODEC.fieldOf("ap2:origin");
 
     private static final double MAX_PROGRESS_SKIP = 0.2;
     private static final int
@@ -47,24 +47,24 @@ public class EnderPearlKit extends SingleItemKit {
     @Override
     public void init(KitOptions options) {
         handle.hooks().registerHook(ProjectileShootCallback.HOOK, (shooter, projectile) -> {
-            if (shooter instanceof ServerPlayerEntity player && projectile instanceof EnderPearlEntity && handle.hasKitEquipped(player, this)) {
-                CustomNbt.set(projectile, ORIGIN_CODEC, player.getEntityPos());
+            if (shooter instanceof ServerPlayer player && projectile instanceof ThrownEnderpearl && handle.hasKitEquipped(player, this)) {
+                CustomNbt.set(projectile, ORIGIN_CODEC, player.position());
 
-                UUID uuid = projectile.getUuid();
+                UUID uuid = projectile.getUUID();
 
                 refundTasks.put(uuid, handle.scheduler().timeout(() -> {
                     refundTasks.remove(uuid);
 
                     projectile.discard();
 
-                    refund(player.networkHandler, options);
+                    refund(player.connection, options);
                 }, REFUND_DELAY_TICKS));
             }
         });
 
         handle.hooks().registerHook(EnderPearlTeleportCallback.HOOK, (owner, enderPearl, pos) -> {
-            if (owner instanceof ServerPlayerEntity player && handle.hasKitEquipped(player, this)) {
-                TaskHandle refundTask = refundTasks.remove(enderPearl.getUuid());
+            if (owner instanceof ServerPlayer player && handle.hasKitEquipped(player, this)) {
+                TaskHandle refundTask = refundTasks.remove(enderPearl.getUUID());
 
                 if (refundTask != null) {
                     refundTask.cancel();
@@ -78,9 +78,9 @@ public class EnderPearlKit extends SingleItemKit {
                         .formatted(RED)
                         .sendTo(player);
 
-                refund(player.networkHandler, options);
+                refund(player.connection, options);
 
-                player.getItemCooldownManager().set(Registries.ITEM.getId(Items.ENDER_PEARL), RETRY_TICKS);
+                player.getCooldowns().addCooldown(BuiltInRegistries.ITEM.getKey(Items.ENDER_PEARL), RETRY_TICKS);
 
                 return true;
             }
@@ -91,8 +91,8 @@ public class EnderPearlKit extends SingleItemKit {
         });
     }
 
-    private boolean canTeleportTo(EnderPearlEntity enderPearl, Vec3d target) {
-        Vec3d origin = CustomNbt.get(enderPearl, ORIGIN_CODEC).orElse(null);
+    private boolean canTeleportTo(ThrownEnderpearl enderPearl, Vec3 target) {
+        Vec3 origin = CustomNbt.get(enderPearl, ORIGIN_CODEC).orElse(null);
 
         if (origin == null) return false;
 
@@ -102,15 +102,15 @@ public class EnderPearlKit extends SingleItemKit {
         return progressTo - progressFrom <= MAX_PROGRESS_SKIP;
     }
 
-    private void refund(ServerPlayNetworkHandler handler, KitOptions options) {
-        if (!handler.isConnectionOpen()) return;
+    private void refund(ServerGamePacketListenerImpl handler, KitOptions options) {
+        if (!handler.isAcceptingMessages()) return;
 
-        ServerPlayerEntity player = handler.player;
+        ServerPlayer player = handler.player;
 
-        if (player == null || player.isDead()) return;
+        if (player == null || player.isDeadOrDying()) return;
 
         equip(player, options);
 
-        player.playSoundToPlayer(SoundEvents.BLOCK_NOTE_BLOCK_BASS.value(), SoundCategory.NEUTRAL, 0.5f, 1f);
+        player.playNotifySound(SoundEvents.NOTE_BLOCK_BASS.value(), SoundSource.NEUTRAL, 0.5f, 1f);
     }
 }

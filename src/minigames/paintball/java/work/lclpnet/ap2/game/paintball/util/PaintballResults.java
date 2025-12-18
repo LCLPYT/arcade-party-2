@@ -1,10 +1,10 @@
 package work.lclpnet.ap2.game.paintball.util;
 
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.GameMode;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.GameType;
+import net.minecraft.world.phys.Vec3;
 import org.json.JSONObject;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.team.Team;
@@ -26,13 +26,13 @@ public class PaintballResults {
 
     private final MiniGameHandle gameHandle;
     private final Announcer announcer;
-    private final ServerWorld world;
+    private final ServerLevel world;
     private final ResultSpot resultSpot;
     private final Supplier<List<TeamRef>> teamRefs;
     private final IntScoreDataContainer<Team, TeamRef> data;
     private final WinManager<Team, TeamRef> winManager;
 
-    public PaintballResults(MiniGameHandle gameHandle, Announcer announcer, ServerWorld world, ResultSpot resultSpot,
+    public PaintballResults(MiniGameHandle gameHandle, Announcer announcer, ServerLevel world, ResultSpot resultSpot,
                             IntScoreDataContainer<Team, TeamRef> data, WinManager<Team, TeamRef> winManager,
                             Supplier<List<TeamRef>> teamRefs) {
         this.gameHandle = gameHandle;
@@ -57,14 +57,14 @@ public class PaintballResults {
     }
 
     private void teleportPlayersToResults() {
-        Vec3d pos = resultSpot.pos;
+        Vec3 pos = resultSpot.pos;
 
-        for (ServerPlayerEntity player : PlayerLookup.all(gameHandle.getServer())) {
-            player.changeGameMode(GameMode.SPECTATOR);
-            player.getAbilities().setFlySpeed(0);
-            player.sendAbilitiesUpdate();
+        for (ServerPlayer player : PlayerLookup.all(gameHandle.getServer())) {
+            player.setGameMode(GameType.SPECTATOR);
+            player.getAbilities().setFlyingSpeed(0);
+            player.onUpdateAbilities();
 
-            player.teleport(world, pos.getX(), pos.getY(), pos.getZ(), Set.of(), resultSpot.yaw, resultSpot.pitch, true);
+            player.teleportTo(world, pos.x(), pos.y(), pos.z(), Set.of(), resultSpot.yaw, resultSpot.pitch, true);
         }
     }
 
@@ -72,10 +72,10 @@ public class PaintballResults {
         var animatedTitle = new AnimatedTitle();
 
         animatedTitle.add(new PaintballResultAnimation(teamRefs.get(), data, gameHandle.getServer(), gameHandle.getTranslations(), () -> {
-            for (ServerPlayerEntity player : PlayerLookup.all(gameHandle.getServer())) {
-                player.changeGameMode(GameMode.SPECTATOR);
-                player.getAbilities().setFlySpeed(0.05f);
-                player.sendAbilitiesUpdate();
+            for (ServerPlayer player : PlayerLookup.all(gameHandle.getServer())) {
+                player.setGameMode(GameType.SPECTATOR);
+                player.getAbilities().setFlyingSpeed(0.05f);
+                player.onUpdateAbilities();
             }
 
             winManager.complete();
@@ -86,10 +86,10 @@ public class PaintballResults {
         gameHandle.whenDone(animatedTitle::stop);
     }
 
-    public record ResultSpot(Vec3d pos, float yaw, float pitch) {
+    public record ResultSpot(Vec3 pos, float yaw, float pitch) {
 
         public static ResultSpot fromJson(JSONObject json) {
-            Vec3d pos = MapUtil.readCenteredVec3d(json.getJSONArray("pos"));
+            Vec3 pos = MapUtil.readCenteredVec3d(json.getJSONArray("pos"));
             float yaw = MapUtil.readAngle(json.optNumber("yaw", 0));
             float pitch = MapUtil.readAngle(json.optNumber("pitch", 0));
 

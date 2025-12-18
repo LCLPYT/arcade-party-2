@@ -1,13 +1,13 @@
 package work.lclpnet.ap2.impl.ai;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.block.TrapdoorBlock;
-import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.registry.tag.BlockTags;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Direction;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.TrapDoorBlock;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.ai.PathFindingPredicate;
 
@@ -16,15 +16,15 @@ public class BlockedPathFindingPredicate implements PathFindingPredicate {
     private BlockedPathFindingPredicate() {}
 
     @Override
-    public boolean canReach(int x, int y, int z, MobEntity entity, BlockPos from) {
-        World world = entity.getEntityWorld();
+    public boolean canReach(int x, int y, int z, Mob entity, BlockPos from) {
+        Level world = entity.level();
         var to = new BlockPos(x, y, z);
-        var prev = new BlockPos.Mutable();
+        var prev = new BlockPos.MutableBlockPos();
 
         int dx = x - from.getX();
         int dz = z - from.getZ();
 
-        Direction dir = Direction.fromVector(dx, 0, dz, null);
+        Direction dir = Direction.getNearest(dx, 0, dz, null);
 
         if (dir != null) {
             return !isBidiBlocked(world, to, dir, prev, entity);
@@ -36,23 +36,23 @@ public class BlockedPathFindingPredicate implements PathFindingPredicate {
         }
 
         // check x direction first
-        dir = Direction.fromVector(dx, 0, 0, null);
+        dir = Direction.getNearest(dx, 0, 0, null);
 
         if (dir != null && isBidiBlocked(world, to, dir, prev, entity)) {
             return false;
         }
 
         // then check z direction
-        dir = Direction.fromVector(0, 0, dz, null);
+        dir = Direction.getNearest(0, 0, dz, null);
 
         return dir == null || !isBidiBlocked(world, to, dir, prev, entity);
     }
 
 
-    private boolean isBidiBlocked(World world, BlockPos to, Direction dir, BlockPos.Mutable from, MobEntity entity) {
-        from.set(to.getX() - dir.getOffsetX(),
-                to.getY() - dir.getOffsetY(),
-                to.getZ() - dir.getOffsetZ());
+    private boolean isBidiBlocked(Level world, BlockPos to, Direction dir, BlockPos.MutableBlockPos from, Mob entity) {
+        from.set(to.getX() - dir.getStepX(),
+                to.getY() - dir.getStepY(),
+                to.getZ() - dir.getStepZ());
 
         // check if current position is blocked
         if (isBlockedByTrapdoor(world, to, dir, from, entity)) {
@@ -63,17 +63,17 @@ public class BlockedPathFindingPredicate implements PathFindingPredicate {
         return isBlockedByTrapdoor(world, from, dir.getOpposite(), null, entity);
     }
 
-    private boolean isBlockedByTrapdoor(World world, BlockPos pos, Direction dir, @Nullable BlockPos from, MobEntity entity) {
+    private boolean isBlockedByTrapdoor(Level world, BlockPos pos, Direction dir, @Nullable BlockPos from, Mob entity) {
         BlockState state = world.getBlockState(pos);
 
-        if (!state.isIn(BlockTags.TRAPDOORS) || !state.contains(TrapdoorBlock.FACING)
-            || !state.contains(TrapdoorBlock.OPEN) || !state.get(TrapdoorBlock.OPEN)
-            || state.get(TrapdoorBlock.FACING) != dir) {
+        if (!state.is(BlockTags.TRAPDOORS) || !state.hasProperty(TrapDoorBlock.FACING)
+            || !state.hasProperty(TrapDoorBlock.OPEN) || !state.getValue(TrapDoorBlock.OPEN)
+            || state.getValue(TrapDoorBlock.FACING) != dir) {
             return false;
         }
 
         // direct way is blocked by trapdoor, check if there is space to jump over the trapdoor
-        Box box = entity.getDimensions(entity.getPose()).getBoxAt(pos.getX() + 0.5, pos.getY() + 1, pos.getZ() + 0.5);
+        AABB box = entity.getDimensions(entity.getPose()).makeBoundingBox(pos.getX() + 0.5, pos.getY() + 1, pos.getZ() + 0.5);
         var blockCollisions = world.getBlockCollisions(entity, box);
 
         if (blockCollisions.iterator().hasNext()) {
@@ -85,10 +85,10 @@ public class BlockedPathFindingPredicate implements PathFindingPredicate {
         }
 
         // make sure the position from where to jump is safe
-        BlockPos jumpSurface = from.down();
+        BlockPos jumpSurface = from.below();
         state = world.getBlockState(jumpSurface);
 
-        return !state.isSideSolidFullSquare(world, jumpSurface, Direction.UP);
+        return !state.isFaceSturdy(world, jumpSurface, Direction.UP);
     }
 
     public static BlockedPathFindingPredicate getInstance() {

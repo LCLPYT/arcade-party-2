@@ -1,8 +1,8 @@
 package work.lclpnet.ap2.game.red_light_green_light;
 
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.util.PlayerInput;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Input;
+import net.minecraft.world.phys.Vec3;
 import work.lclpnet.ap2.impl.util.movement.MovementListener;
 import work.lclpnet.gaco.collisions.util.PlayerAction;
 import work.lclpnet.kibu.hook.Hook;
@@ -20,7 +20,7 @@ class RLGLMovementDetector {
 
     private static final double MIN_DISTANCE_SQ = 0.2 * 0.2;
     private final Hook<PlayerAction> hook = PlayerAction.createHook();
-    private final Map<UUID, Vec3d> fixed = new HashMap<>();
+    private final Map<UUID, Vec3> fixed = new HashMap<>();
 
     public void init(HookRegistrar hooks) {
         hooks.registerHook(PlayerMoveCallback.HOOK, (player, from, to) -> {
@@ -28,7 +28,7 @@ class RLGLMovementDetector {
             return false;
         });
 
-        hooks.registerHook(PlayerConnectionHooks.QUIT, player -> fixed.remove(player.getUuid()));
+        hooks.registerHook(PlayerConnectionHooks.QUIT, player -> fixed.remove(player.getUUID()));
         hooks.registerHook(PlayerInputCallback.HOOK, this::onInput);
     }
 
@@ -36,38 +36,38 @@ class RLGLMovementDetector {
         hook.register(action);
     }
 
-    public void fixPosition(ServerPlayerEntity player) {
-        fixed.put(player.getUuid(), player.getEntityPos());
+    public void fixPosition(ServerPlayer player) {
+        fixed.put(player.getUUID(), player.position());
 
-        if (MovementListener.isMovementInput(player.getPlayerInput())) {
+        if (MovementListener.isMovementInput(player.getLastClientInput())) {
             hook.invoker().act(player);
         }
     }
 
-    public void unfixPosition(ServerPlayerEntity player) {
-        fixed.remove(player.getUuid());
+    public void unfixPosition(ServerPlayer player) {
+        fixed.remove(player.getUUID());
     }
 
     public void unfixAll() {
         fixed.clear();
     }
 
-    private void onMove(ServerPlayerEntity player, PositionRotation to) {
-        Vec3d pos = fixed.getOrDefault(player.getUuid(), null);
+    private void onMove(ServerPlayer player, PositionRotation to) {
+        Vec3 pos = fixed.getOrDefault(player.getUUID(), null);
 
         if (pos == null) return;
 
-        double dx = pos.x - to.getX();
-        double dy = pos.y - to.getY();
-        double dz = pos.z - to.getZ();
+        double dx = pos.x - to.x();
+        double dy = pos.y - to.y();
+        double dz = pos.z - to.z();
 
         if (dx * dx + dy * dy + dz * dz >= MIN_DISTANCE_SQ) {
             hook.invoker().act(player);
         }
     }
 
-    private void onInput(ServerPlayerEntity player, PlayerInput input) {
-        if (fixed.containsKey(player.getUuid()) && MovementListener.isMovementInput(input)) {
+    private void onInput(ServerPlayer player, Input input) {
+        if (fixed.containsKey(player.getUUID()) && MovementListener.isMovementInput(input)) {
             hook.invoker().act(player);
         }
     }

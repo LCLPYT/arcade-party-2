@@ -1,7 +1,7 @@
 package work.lclpnet.ap2.core.hook;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.projectile.ProjectileEntity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.projectile.Projectile;
 import work.lclpnet.kibu.hook.Hook;
 import work.lclpnet.kibu.hook.HookFactory;
 
@@ -14,5 +14,5 @@ public interface ProjectileShootCallback {
         }
     });
 
-    void onShoot(LivingEntity shooter, ProjectileEntity projectile);
+    void onShoot(LivingEntity shooter, Projectile projectile);
 }

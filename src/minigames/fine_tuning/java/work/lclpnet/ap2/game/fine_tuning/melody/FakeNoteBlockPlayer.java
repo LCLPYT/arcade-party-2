@@ -1,11 +1,11 @@
 package work.lclpnet.ap2.game.fine_tuning.melody;
 
-import net.minecraft.block.NoteBlock;
-import net.minecraft.block.enums.NoteBlockInstrument;
-import net.minecraft.particle.ParticleTypes;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.level.block.NoteBlock;
+import net.minecraft.world.level.block.state.properties.NoteBlockInstrument;
 import work.lclpnet.ap2.impl.util.SoundHelper;
 
 public class FakeNoteBlockPlayer {
@@ -20,26 +20,26 @@ public class FakeNoteBlockPlayer {
         this.instruments = instruments;
     }
 
-    public void play(ServerPlayerEntity player, int index) {
+    public void play(ServerPlayer player, int index) {
         BlockPos pos = noteBlocks[index];
         playAt(player, index, pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
     }
 
-    public void playAtPlayerPos(ServerPlayerEntity player, int index) {
+    public void playAtPlayerPos(ServerPlayer player, int index) {
         playAt(player, index, player.getX(), player.getY(), player.getZ());
     }
 
-    private void playAt(ServerPlayerEntity player, int index, double x, double y, double z) {
+    private void playAt(ServerPlayer player, int index, double x, double y, double z) {
         int note = notes[index];
         BlockPos pos = noteBlocks[index];
 
         NoteBlockInstrument instrument = instruments[index];
         float pitch;
 
-        if (instrument.canBePitched()) {
-            pitch = NoteBlock.getNotePitch(note);
+        if (instrument.isTunable()) {
+            pitch = NoteBlock.getPitchFromNote(note);
 
-            player.getEntityWorld().spawnParticles(player, ParticleTypes.NOTE, false, false,
+            player.level().sendParticles(player, ParticleTypes.NOTE, false, false,
                     pos.getX() + 0.5d,
                     pos.getY() + 1.2d,
                     pos.getZ() + 0.5d,
@@ -52,7 +52,7 @@ public class FakeNoteBlockPlayer {
             pitch = 1.0f;
         }
 
-        SoundHelper.playSound(player, instrument.getSound().value(), SoundCategory.RECORDS, x, y, z, 3f, pitch);
+        SoundHelper.playSound(player, instrument.getSoundEvent().value(), SoundSource.RECORDS, x, y, z, 3f, pitch);
     }
 
     public BlockPos getNoteBlock(int index) {

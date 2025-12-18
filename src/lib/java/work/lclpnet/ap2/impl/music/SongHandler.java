@@ -2,11 +2,11 @@ package work.lclpnet.ap2.impl.music;
 
 import lombok.Getter;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
+import net.minecraft.network.chat.ClickEvent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.HoverEvent;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.text.ClickEvent;
-import net.minecraft.text.HoverEvent;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -33,7 +33,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.lang.Math.floor;
-import static net.minecraft.util.Formatting.*;
+import static net.minecraft.ChatFormatting.*;
 import static work.lclpnet.ap2.impl.util.TranslationUtil.transformText;
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
@@ -46,10 +46,10 @@ public class SongHandler {
     private final Translations translations;
     private final Random random;
     private final Logger logger;
-    private final QueuePersistence<Identifier> queuePersistence;
+    private final QueuePersistence<ResourceLocation> queuePersistence;
     @Getter
     private final Set<WeightedSong> songs = new IndexedSet<>();
-    private final Map<Identifier, WeightedSong> songsById = new HashMap<>();
+    private final Map<ResourceLocation, WeightedSong> songsById = new HashMap<>();
     @Getter
     private final List<WeightedSong> priority = new ArrayList<>();
     private final SongCache cache = VoidSongCache.INSTANCE;
@@ -59,10 +59,10 @@ public class SongHandler {
     public SongHandler(MiniGameHandle handle, Random random) {
         this(handle.getSongManager(), handle.getTranslations(), random, handle.getLogger(),
                 JsonFileQueuePersistence.create(ApConstants.ID, handle.getGameInfo().identifier("song_queue"),
-                        Identifier.CODEC, handle.getLogger()));
+                        ResourceLocation.CODEC, handle.getLogger()));
     }
 
-    public SongHandler(SongManager songManager, Translations translations, Random random, Logger logger, QueuePersistence<Identifier> queuePersistence) {
+    public SongHandler(SongManager songManager, Translations translations, Random random, Logger logger, QueuePersistence<ResourceLocation> queuePersistence) {
         this.songManager = songManager;
         this.translations = translations;
         this.random = random;
@@ -70,7 +70,7 @@ public class SongHandler {
         this.queuePersistence = queuePersistence;
     }
 
-    public CompletableFuture<Void> loadSongs(Identifier tag) {
+    public CompletableFuture<Void> loadSongs(ResourceLocation tag) {
         return CompletableFuture.runAsync(() -> {
             var songsFuture = songManager.getSongs(tag);
             var restored = queuePersistence.restore();
@@ -104,7 +104,7 @@ public class SongHandler {
     }
 
     public void pushSongHistory(ConfiguredSong song) {
-        Identifier id = song.checkedSong().id();
+        ResourceLocation id = song.checkedSong().id();
         WeightedSong weightedSong = songsById.get(id);
 
         if (weightedSong == null) {
@@ -133,14 +133,14 @@ public class SongHandler {
             return title;
         }
 
-        return language -> title.translateTo(language).append(Text.literal(" ⚖").formatted(LIGHT_PURPLE).styled(style -> {
+        return language -> title.translateTo(language).append(Component.literal(" ⚖").withStyle(LIGHT_PURPLE).withStyle(style -> {
             List<URI> uris = UriUtil.findUris(license, 1);
 
             if (!uris.isEmpty()) {
                 style = style.withClickEvent(new ClickEvent.OpenUrl(uris.getLast()));
             }
 
-            return style.withHoverEvent(new HoverEvent.ShowText(Text.literal(license).formatted(GRAY)));
+            return style.withHoverEvent(new HoverEvent.ShowText(Component.literal(license).withStyle(GRAY)));
         }));
     }
 
@@ -187,7 +187,7 @@ public class SongHandler {
 
         if (!hasAuthor && !hasOrigAuthor) {
             // Song "X"
-            var text = RootText.create().append(Text.literal(name).formatted(YELLOW));
+            var text = RootText.create().append(Component.literal(name).withStyle(YELLOW));
 
             return TranslatedText.create(s -> text, translations::getLanguage);
         }
@@ -204,7 +204,7 @@ public class SongHandler {
 
         return transformText(
                 translations.translateText("ap2.music.now_playing", title),
-                text -> Text.literal("🎵 ").append(text).formatted(GREEN),
+                text -> Component.literal("🎵 ").append(text).withStyle(GREEN),
                 translations
         );
     }
@@ -231,7 +231,7 @@ public class SongHandler {
         return songWrapper;
     }
 
-    public Set<Identifier> getSongIds() {
+    public Set<ResourceLocation> getSongIds() {
         return songs.stream()
                 .map(WeightedSong::getAllElements)
                 .flatMap(Collection::stream)
@@ -239,20 +239,20 @@ public class SongHandler {
                 .collect(Collectors.toSet());
     }
 
-    public Optional<WeightedSong> getRandomSongById(Identifier id) {
+    public Optional<WeightedSong> getRandomSongById(ResourceLocation id) {
         var matchingSongs = streamSongsById(id).collect(Collectors.toSet());
 
         return matchingSongs.isEmpty() ? Optional.empty() : Optional.of(new SimpleWeightedSong(matchingSongs, id));
     }
 
-    public @NotNull Stream<LoadableSong> streamSongsById(Identifier id) {
+    public @NotNull Stream<LoadableSong> streamSongsById(ResourceLocation id) {
         return songs.stream()
                 .map(WeightedSong::getAllElements)
                 .flatMap(Collection::stream)
                 .filter(song -> id.equals(song.getId()));
     }
 
-    public Optional<WeightedSong> getSongByIdAndTime(Identifier id, int startTick) {
+    public Optional<WeightedSong> getSongByIdAndTime(ResourceLocation id, int startTick) {
         return streamSongsById(id)
                 .filter(song -> song.getInfo().meta().startTick().orElse(0) == startTick)
                 .findAny()

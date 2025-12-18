@@ -1,20 +1,20 @@
 package work.lclpnet.ap2.game.red_light_green_light;
 
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.entity.boss.BossBar;
-import net.minecraft.particle.ParticleTypes;
-import net.minecraft.scoreboard.AbstractTeam;
-import net.minecraft.scoreboard.Team;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.RaycastContext;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.BossEvent;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.scores.PlayerTeam;
+import net.minecraft.world.scores.Team;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
@@ -40,7 +40,7 @@ import work.lclpnet.lobby.util.RayCaster;
 
 import java.util.*;
 
-import static net.minecraft.util.Formatting.*;
+import static net.minecraft.ChatFormatting.*;
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
 public class RedLightGreenLightInstance extends FFAGameInstance implements Runnable {
@@ -50,7 +50,7 @@ public class RedLightGreenLightInstance extends FFAGameInstance implements Runna
     private static final int FROZEN_MIN_TICKS = 60, FROZEN_MAX_TICKS = 105;
     private static final int END_TIME_SECONDS = 15;
     private final SimpleMovementBlocker movementBlocker;
-    private final OrderedDataContainer<ServerPlayerEntity, PlayerRef> data = new OrderedDataContainer<>(PlayerRef::create);
+    private final OrderedDataContainer<ServerPlayer, PlayerRef> data = new OrderedDataContainer<>(PlayerRef::create);
     private final Random random = new Random();
     private final Set<UUID> inGoal = new HashSet<>();
     private final Set<UUID> moved = new HashSet<>();
@@ -70,7 +70,7 @@ public class RedLightGreenLightInstance extends FFAGameInstance implements Runna
     }
 
     @Override
-    protected DataContainer<ServerPlayerEntity, PlayerRef> getData() {
+    protected DataContainer<ServerPlayer, PlayerRef> getData() {
         return data;
     }
 
@@ -79,7 +79,7 @@ public class RedLightGreenLightInstance extends FFAGameInstance implements Runna
         taskBar = useTaskDisplay();
 
         GameMap map = getMap();
-        ServerWorld world = getWorld();
+        ServerLevel world = getWorld();
 
         goal = MapUtil.readBox(map.requireProperty("goal"));
         tracker = new MovementTracker(goal);
@@ -87,9 +87,9 @@ public class RedLightGreenLightInstance extends FFAGameInstance implements Runna
         BlockBox spawnArea = MapUtil.readBox(map.requireProperty("spawn-area"));
         float yaw = MapUtils.getSpawnYaw(map);
 
-        for (ServerPlayerEntity participant : gameHandle.getParticipants()) {
-            Vec3d pos = spawnArea.randomPos(random);
-            participant.teleport(world, pos.getX(), pos.getY(), pos.getZ(), Set.of(), yaw, 0f, true);
+        for (ServerPlayer participant : gameHandle.getParticipants()) {
+            Vec3 pos = spawnArea.randomPos(random);
+            participant.teleportTo(world, pos.x(), pos.y(), pos.z(), Set.of(), yaw, 0f, true);
         }
 
         readTrafficLights();
@@ -98,8 +98,8 @@ public class RedLightGreenLightInstance extends FFAGameInstance implements Runna
         movementBlocker.init(gameHandle.getHooks());
 
         CustomScoreboardManager scoreboardManager = gameHandle.getScoreboardManager();
-        Team team = scoreboardManager.createTeam("team");
-        team.setCollisionRule(AbstractTeam.CollisionRule.NEVER);
+        PlayerTeam team = scoreboardManager.createTeam("team");
+        team.setCollisionRule(Team.CollisionRule.NEVER);
         scoreboardManager.joinTeam(gameHandle.getParticipants(), team);
     }
 
@@ -141,7 +141,7 @@ public class RedLightGreenLightInstance extends FFAGameInstance implements Runna
             movementDetector.unfixAll();
 
             for (UUID uuid : moved) {
-                ServerPlayerEntity player = gameHandle.getServer().getPlayerManager().getPlayer(uuid);
+                ServerPlayer player = gameHandle.getServer().getPlayerList().getPlayer(uuid);
 
                 if (player == null) continue;
 
@@ -150,8 +150,8 @@ public class RedLightGreenLightInstance extends FFAGameInstance implements Runna
 
             moved.clear();
         } else if (status == TrafficLight.Status.RED) {
-            for (ServerPlayerEntity player : gameHandle.getParticipants()) {
-                if (inGoal.contains(player.getUuid())) continue;
+            for (ServerPlayer player : gameHandle.getParticipants()) {
+                if (inGoal.contains(player.getUUID())) continue;
 
                 movementDetector.fixPosition(player);
             }
@@ -160,9 +160,9 @@ public class RedLightGreenLightInstance extends FFAGameInstance implements Runna
         setTrafficLightStatus(EnumSet.of(status));
 
         taskBar.setColor(switch (status) {
-            case RED -> BossBar.Color.RED;
-            case YELLOW -> BossBar.Color.YELLOW;
-            case GREEN -> BossBar.Color.GREEN;
+            case RED -> BossEvent.BossBarColor.RED;
+            case YELLOW -> BossEvent.BossBarColor.YELLOW;
+            case GREEN -> BossEvent.BossBarColor.GREEN;
         });
 
         String key = switch (status) {
@@ -177,13 +177,13 @@ public class RedLightGreenLightInstance extends FFAGameInstance implements Runna
             case GREEN -> GREEN;
         });
 
-        ServerWorld world = getWorld();
+        ServerLevel world = getWorld();
 
-        for (ServerPlayerEntity player : PlayerLookup.world(world)) {
+        for (ServerPlayer player : PlayerLookup.world(world)) {
             switch (status) {
-                case RED -> player.playSoundToPlayer(SoundEvents.ENTITY_BREEZE_SHOOT, SoundCategory.NEUTRAL, 1f, 0.5f);
-                case YELLOW -> player.playSoundToPlayer(SoundEvents.BLOCK_NOTE_BLOCK_PLING.value(), SoundCategory.PLAYERS, 1f, 0.5f);
-                case GREEN -> player.playSoundToPlayer(SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, SoundCategory.NEUTRAL, 1f, 1f);
+                case RED -> player.playNotifySound(SoundEvents.BREEZE_SHOOT, SoundSource.NEUTRAL, 1f, 0.5f);
+                case YELLOW -> player.playNotifySound(SoundEvents.NOTE_BLOCK_PLING.value(), SoundSource.PLAYERS, 1f, 0.5f);
+                case GREEN -> player.playNotifySound(SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.NEUTRAL, 1f, 1f);
             }
 
             Title.get(player).title(msg.translateFor(player));
@@ -191,7 +191,7 @@ public class RedLightGreenLightInstance extends FFAGameInstance implements Runna
     }
 
     private void setTrafficLightStatus(EnumSet<TrafficLight.Status> status) {
-        ServerWorld world = getWorld();
+        ServerLevel world = getWorld();
 
         for (TrafficLight light : trafficLights) {
             light.set(status, world);
@@ -200,75 +200,75 @@ public class RedLightGreenLightInstance extends FFAGameInstance implements Runna
 
     private void openGate() {
         BlockBox gate = MapUtil.readBox(getMap().requireProperty("gate"));
-        ServerWorld world = getWorld();
-        BlockState air = Blocks.AIR.getDefaultState();
+        ServerLevel world = getWorld();
+        BlockState air = Blocks.AIR.defaultBlockState();
 
         for (BlockPos pos : gate) {
-            world.setBlockState(pos, air);
+            world.setBlockAndUpdate(pos, air);
         }
     }
 
-    private void onMove(ServerPlayerEntity player) {
-        if (timer <= 0 || inGoal.contains(player.getUuid()) || !gameHandle.getParticipants().isParticipating(player)) return;
+    private void onMove(ServerPlayer player) {
+        if (timer <= 0 || inGoal.contains(player.getUUID()) || !gameHandle.getParticipants().isParticipating(player)) return;
 
         tracker.track(player);
 
-        if (goal.contains(player.getEntityPos())) {
+        if (goal.contains(player.position())) {
             onGoalReached(player);
         }
     }
 
-    private void onMovedWhileRed(ServerPlayerEntity player) {
+    private void onMovedWhileRed(ServerPlayer player) {
         if (winManager.isGameOver()
                 || !gameHandle.getParticipants().isParticipating(player)
-                || inGoal.contains(player.getUuid())
-                || !moved.add(player.getUuid())) return;
+                || inGoal.contains(player.getUUID())
+                || !moved.add(player.getUUID())) return;
 
         movementDetector.unfixPosition(player);
         punish(player);
     }
 
-    private void punish(ServerPlayerEntity player) {
-        ServerWorld world = getWorld();
+    private void punish(ServerPlayer player) {
+        ServerLevel world = getWorld();
 
         double x = player.getX(), y = player.getY(), z = player.getZ();
-        world.spawnParticles(ParticleTypes.CRIT, x, y, z, 100, 0.1, 0.1, 0.1, 1);
+        world.sendParticles(ParticleTypes.CRIT, x, y, z, 100, 0.1, 0.1, 0.1, 1);
 
         // find a suitable position to reset the player to
-        Vec3d pos = tracker.getMostDistantPos(player);
+        Vec3 pos = tracker.getMostDistantPos(player);
 
         if (pos != null) {
-            world.playSound(player, x, y, z, SoundEvents.ENTITY_ZOMBIE_ATTACK_WOODEN_DOOR, SoundCategory.PLAYERS, 0.5f, 1f);
+            world.playSound(player, x, y, z, SoundEvents.ZOMBIE_ATTACK_WOODEN_DOOR, SoundSource.PLAYERS, 0.5f, 1f);
 
-            x = pos.getX();
+            x = pos.x();
             y = findSuitableY(world, pos);
-            z = pos.getZ();
+            z = pos.z();
 
-            player.teleport(world, x, y, z, Set.of(), player.getYaw(), player.getPitch(), true);
-            player.playSoundToPlayer(SoundEvents.ENTITY_ZOMBIE_ATTACK_WOODEN_DOOR, SoundCategory.PLAYERS, 0.5f, 1f);
+            player.teleportTo(world, x, y, z, Set.of(), player.getYRot(), player.getXRot(), true);
+            player.playNotifySound(SoundEvents.ZOMBIE_ATTACK_WOODEN_DOOR, SoundSource.PLAYERS, 0.5f, 1f);
         } else {
-            world.playSound(null, player.getBlockPos(), SoundEvents.ENTITY_ZOMBIE_ATTACK_WOODEN_DOOR, SoundCategory.PLAYERS, 0.5f, 1f);
+            world.playSound(null, player.blockPosition(), SoundEvents.ZOMBIE_ATTACK_WOODEN_DOOR, SoundSource.PLAYERS, 0.5f, 1f);
         }
 
         movementBlocker.disableMovement(player);
 
         var msg = gameHandle.getTranslations().translateText(player, "game.ap2.red_light_green_light.moved").formatted(RED);
-        player.sendMessage(msg);
+        player.sendSystemMessage(msg);
     }
 
-    private double findSuitableY(ServerWorld world, Vec3d pos) {
-        var ctx = new RayCaster.GenericRaycastContext(pos, pos.subtract(0, 10, 0), RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE);
+    private double findSuitableY(ServerLevel world, Vec3 pos) {
+        var ctx = new RayCaster.GenericRaycastContext(pos, pos.subtract(0, 10, 0), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE);
         BlockHitResult hit = RayCaster.rayCastBlockCollision(world, ctx);
 
-        return ((int) Math.round(hit.getPos().getY() * 20)) / 20d;
+        return ((int) Math.round(hit.getLocation().y() * 20)) / 20d;
     }
 
-    private void onGoalReached(ServerPlayerEntity player) {
-        if (!inGoal.add(player.getUuid())) return;
+    private void onGoalReached(ServerPlayer player) {
+        if (!inGoal.add(player.getUUID())) return;
 
         data.add(player);
 
-        ServerWorld world = getWorld();
+        ServerLevel world = getWorld();
 
         Fireworks.spawnGoalFirework(player);
 
@@ -278,7 +278,7 @@ public class RedLightGreenLightInstance extends FFAGameInstance implements Runna
             winManager.complete();
         } else if (gameEnd == -1) {
             translations.translateText("game.ap2.red_light_green_light.goal",
-                            styled(player.getNameForScoreboard(), YELLOW),
+                            styled(player.getScoreboardName(), YELLOW),
                             styled(END_TIME_SECONDS, YELLOW))
                     .formatted(GREEN)
                     .sendTo(PlayerLookup.world(world));
@@ -302,7 +302,7 @@ public class RedLightGreenLightInstance extends FFAGameInstance implements Runna
             int ticksUntilEnd = gameEnd--;
 
             if (ticksUntilEnd % 20 == 0) {
-                taskBar.setPercent(ticksUntilEnd / 20f / END_TIME_SECONDS);
+                taskBar.setProgress(ticksUntilEnd / 20f / END_TIME_SECONDS);
             }
 
             if (ticksUntilEnd == 0) {
@@ -337,9 +337,9 @@ public class RedLightGreenLightInstance extends FFAGameInstance implements Runna
 
         // grade players who are not yet in the goal by their distance to the goal
         gameHandle.getParticipants().stream()
-                .filter(player -> !inGoal.contains(player.getUuid()))
+                .filter(player -> !inGoal.contains(player.getUUID()))
                 .map(player -> {
-                    double distanceSq = goal.squaredDistanceTo(player.getEntityPos());
+                    double distanceSq = goal.squaredDistanceTo(player.position());
                     return new Grade(player, Math.sqrt(distanceSq));
                 })
                 .sorted(Comparator.comparingDouble(Grade::distance))
@@ -349,5 +349,5 @@ public class RedLightGreenLightInstance extends FFAGameInstance implements Runna
                 });
     }
 
-    private record Grade(ServerPlayerEntity player, double distance) {}
+    private record Grade(ServerPlayer player, double distance) {}
 }

@@ -1,6 +1,6 @@
 package work.lclpnet.ap2.impl.tags;
 
-import net.minecraft.registry.tag.TagKey;
+import net.minecraft.tags.TagKey;
 import work.lclpnet.ap2.api.util.heads.PlayerHead;
 import work.lclpnet.ap2.impl.util.ApRegistries;
 
@@ -14,6 +14,6 @@ public class PlayerHeadTags {
     private PlayerHeadTags() {}
 
     private static TagKey<PlayerHead> of(String path) {
-        return TagKey.of(ApRegistries.PLAYER_HEAD, identifier(path));
+        return TagKey.create(ApRegistries.PLAYER_HEAD, identifier(path));
     }
 }

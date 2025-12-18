@@ -2,11 +2,11 @@ package work.lclpnet.ap2.game.mining_battle;
 
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 import it.unimi.dsi.fastutil.longs.LongList;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.NotNull;
 import work.lclpnet.gaco.ds.BlockBox;
 
@@ -24,28 +24,28 @@ public class MiningBattleGenerator {
         this.material = material;
     }
 
-    public void generateOre(ServerWorld world) {
-        var rel = new BlockPos.Mutable();
+    public void generateOre(ServerLevel world) {
+        var rel = new BlockPos.MutableBlockPos();
 
         LongList positions = scanWorld(world, rel);
 
         placeOres(world, positions, rel);
     }
 
-    private void placeOres(ServerWorld world, LongList positions, BlockPos.Mutable rel) {
+    private void placeOres(ServerLevel world, LongList positions, BlockPos.MutableBlockPos rel) {
         for (long packed : positions) {
             BlockState newState = ore.getRandomState();
 
             if (newState == null) continue;
 
-            rel.set(BlockPos.unpackLongX(packed), BlockPos.unpackLongY(packed), BlockPos.unpackLongZ(packed));
+            rel.set(BlockPos.getX(packed), BlockPos.getY(packed), BlockPos.getZ(packed));
 
-            world.setBlockState(rel, newState, Block.FORCE_STATE | Block.SKIP_DROPS);
+            world.setBlock(rel, newState, Block.UPDATE_KNOWN_SHAPE | Block.UPDATE_SUPPRESS_DROPS);
         }
     }
 
     @NotNull
-    private LongList scanWorld(ServerWorld world, BlockPos.Mutable rel) {
+    private LongList scanWorld(ServerLevel world, BlockPos.MutableBlockPos rel) {
         LongList positions = new LongArrayList();
 
         for (BlockPos pos : box) {
@@ -59,15 +59,15 @@ public class MiningBattleGenerator {
         return positions;
     }
 
-    private boolean isExposed(ServerWorld world, BlockPos pos, BlockPos.Mutable rel) {
+    private boolean isExposed(ServerLevel world, BlockPos pos, BlockPos.MutableBlockPos rel) {
         final int x = pos.getX(), y = pos.getY(), z = pos.getZ();
 
         for (Direction dir : Direction.values()) {
-            rel.set(x + dir.getOffsetX(), y + dir.getOffsetY(), z + dir.getOffsetZ());
+            rel.set(x + dir.getStepX(), y + dir.getStepY(), z + dir.getStepZ());
 
             BlockState state = world.getBlockState(rel);
 
-            if (!state.isOpaqueFullCube()) return true;
+            if (!state.isSolidRender()) return true;
         }
 
         return false;

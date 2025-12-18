@@ -1,8 +1,8 @@
 package work.lclpnet.ap2.impl.util.world;
 
 import com.google.common.collect.AbstractIterator;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import work.lclpnet.ap2.api.util.world.AdjacentBlocks;
 
 import java.util.Iterator;
@@ -18,7 +18,7 @@ public class CardinalAdjacentBlocks implements AdjacentBlocks {
 
     @Override
     public Iterator<BlockPos> getAdjacent(BlockPos pos) {
-        var mut = new BlockPos.Mutable();
+        var mut = new BlockPos.MutableBlockPos();
 
         return new AbstractIterator<>() {
             int i = 0;
@@ -26,7 +26,7 @@ public class CardinalAdjacentBlocks implements AdjacentBlocks {
             @Override
             protected BlockPos computeNext() {
                 while (i < 6) {
-                    mut.set(pos, Direction.values()[i++]);
+                    mut.setWithOffset(pos, Direction.values()[i++]);
 
                     if (predicate.test(mut)) {
                         return mut;

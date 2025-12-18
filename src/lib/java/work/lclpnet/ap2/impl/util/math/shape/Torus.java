@@ -1,6 +1,6 @@
 package work.lclpnet.ap2.impl.util.math.shape;
 
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Quaterniondc;
 import org.joml.Vector3d;
@@ -11,13 +11,13 @@ import static java.lang.Math.sqrt;
 
 public class Torus implements Shape {
 
-    private final Vec3d center;
+    private final Vec3 center;
     private final double majorRadius;
     private final double minorRadius;
     private final Quaterniondc rotation;
     private final BlockBox bounds;
 
-    public Torus(Vec3d center, double majorRadius, double minorRadius, Quaterniondc rotation) {
+    public Torus(Vec3 center, double majorRadius, double minorRadius, Quaterniondc rotation) {
         this.center = center;
         this.majorRadius = majorRadius;
         this.minorRadius = minorRadius;
@@ -34,7 +34,7 @@ public class Torus implements Shape {
         for (Vector3d corner : localCorners) {
             rotation.transform(corner);
 
-            corner.add(center.getX(), center.getY(), center.getZ());
+            corner.add(center.x(), center.y(), center.z());
 
             min.min(corner);
             max.max(corner);
@@ -63,7 +63,7 @@ public class Torus implements Shape {
 
     @Override
     public boolean contains(double x, double y, double z) {
-        Vector3d local = new Vector3d(x - center.getX(), y - center.getY(), z - center.getZ());
+        Vector3d local = new Vector3d(x - center.x(), y - center.y(), z - center.z());
 
         rotation.transformInverse(local);
 
@@ -82,7 +82,7 @@ public class Torus implements Shape {
     }
 
     @Override
-    public Vec3d center() {
+    public Vec3 center() {
         return center;
     }
 

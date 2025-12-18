@@ -1,6 +1,5 @@
 package work.lclpnet.ap2.game.button_master
 
-import net.minecraft.util.math.BlockPos
 import work.lclpnet.ap2.ApConstants
 import work.lclpnet.ap2.impl.map.schema.CommonMapSchema
 import work.lclpnet.ap2.impl.map.schema.MapSchema

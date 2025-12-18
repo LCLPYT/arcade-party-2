@@ -1,20 +1,20 @@
 package work.lclpnet.ap2.impl.game.data;
 
-import net.minecraft.item.ItemStack;
-import net.minecraft.registry.DynamicRegistryManager;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
 import work.lclpnet.ap2.api.game.data.SubjectRef;
 
 public record StringRef(String name) implements SubjectRef {
 
     @Override
-    public Text getNameFor(ServerPlayerEntity player) {
-        return Text.literal(name);
+    public Component getNameFor(ServerPlayer player) {
+        return Component.literal(name);
     }
 
     @Override
-    public ItemStack getIconStackFor(DynamicRegistryManager registryManager, ServerPlayerEntity viewer) {
+    public ItemStack getIconStackFor(RegistryAccess registryManager, ServerPlayer viewer) {
         return ItemStack.EMPTY;
     }
 

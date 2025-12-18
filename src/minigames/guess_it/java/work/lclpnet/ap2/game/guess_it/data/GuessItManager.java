@@ -1,6 +1,6 @@
 package work.lclpnet.ap2.game.guess_it.data;
 
-import net.minecraft.server.world.ServerWorld;
+import net.minecraft.server.level.ServerLevel;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
@@ -21,7 +21,7 @@ public class GuessItManager {
     private final List<Challenge> queue = new ArrayList<>();
     private final List<ChallengeInit> priority = new ArrayList<>();
 
-    public GuessItManager(MiniGameHandle gameHandle, ServerWorld world, Random random, BlockShape blockShape,
+    public GuessItManager(MiniGameHandle gameHandle, ServerLevel world, Random random, BlockShape blockShape,
                           WorldModifier modifier, SoundSubtitles soundSubtitles, DebugController debugController,
                           IndexedSet<UUID> mannequinUuids, DynamicEntityModifier dynamicEntities) {
 

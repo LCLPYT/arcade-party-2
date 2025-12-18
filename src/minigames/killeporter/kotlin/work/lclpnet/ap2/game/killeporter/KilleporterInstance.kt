@@ -8,26 +8,26 @@ import com.mojang.serialization.codecs.RecordCodecBuilder
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents
 import net.fabricmc.fabric.api.event.player.UseBlockCallback
 import net.fabricmc.fabric.api.event.player.UseItemCallback
-import net.minecraft.block.BlockState
-import net.minecraft.block.Blocks
-import net.minecraft.block.ChestBlock
-import net.minecraft.block.DoubleBlockProperties
-import net.minecraft.component.DataComponentTypes
-import net.minecraft.entity.damage.DamageTypes
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.fluid.Fluids
-import net.minecraft.inventory.Inventory
-import net.minecraft.item.ItemStack
-import net.minecraft.server.network.ServerPlayerEntity
-import net.minecraft.server.world.ServerWorld
-import net.minecraft.sound.SoundCategory
-import net.minecraft.sound.SoundEvents
-import net.minecraft.util.ActionResult
-import net.minecraft.util.Formatting
-import net.minecraft.util.Hand
-import net.minecraft.util.math.BlockPos
-import net.minecraft.world.GameRules
-import net.minecraft.world.World
+import net.minecraft.ChatFormatting
+import net.minecraft.core.BlockPos
+import net.minecraft.core.component.DataComponents
+import net.minecraft.server.level.ServerLevel
+import net.minecraft.server.level.ServerPlayer
+import net.minecraft.sounds.SoundEvents
+import net.minecraft.sounds.SoundSource
+import net.minecraft.world.Container
+import net.minecraft.world.InteractionHand
+import net.minecraft.world.InteractionResult
+import net.minecraft.world.damagesource.DamageTypes
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.level.GameRules
+import net.minecraft.world.level.Level
+import net.minecraft.world.level.block.Blocks
+import net.minecraft.world.level.block.ChestBlock
+import net.minecraft.world.level.block.DoubleBlockCombiner
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.material.Fluids
 import work.lclpnet.ap2.*
 import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.map.MapBootstrap
@@ -126,8 +126,8 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
         useSurvivalMode()
     }
 
-    override fun createWorldBootstrap(world: ServerWorld, map: GameMap): CompletableFuture<Void> {
-        kitLoader = PrefabKitLoader(world.registryManager, gameHandle.logger)
+    override fun createWorldBootstrap(world: ServerLevel, map: GameMap): CompletableFuture<Void> {
+        kitLoader = PrefabKitLoader(world.registryAccess(), gameHandle.logger)
 
         val kitFuture = kitLoader!!.loadHotbar(this)
 
@@ -158,20 +158,20 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
 
     override fun prepare() {
 
-        world.timeOfDay = (13000 - TIME_TO_NIGHTFALL_DAYTIME_TICKS).toLong()
+        world.setDayTime((13000 - TIME_TO_NIGHTFALL_DAYTIME_TICKS).toLong())
 
         commons().gameRuleBuilder()
-            .set(GameRules.FALL_DAMAGE, true)
-            .set(GameRules.DO_FIRE_TICK, true)
-            .set(GameRules.DO_INSOMNIA, false)
-            .set(GameRules.NATURAL_REGENERATION, true)
-            .set(GameRules.KEEP_INVENTORY, false)
-            .set(GameRules.DO_DAYLIGHT_CYCLE, false)
-            .set(GameRules.DO_MOB_SPAWNING, true)
-            .set(GameRules.DO_MOB_LOOT, true)
-            .set(GameRules.DO_MOB_GRIEFING, true)
-            .set(GameRules.DO_ENTITY_DROPS, true)
-            .set(GameRules.ANNOUNCE_ADVANCEMENTS, false)
+            .set(GameRules.RULE_FALL_DAMAGE, true)
+            .set(GameRules.RULE_DOFIRETICK, true)
+            .set(GameRules.RULE_DOINSOMNIA, false)
+            .set(GameRules.RULE_NATURAL_REGENERATION, true)
+            .set(GameRules.RULE_KEEPINVENTORY, false)
+            .set(GameRules.RULE_DAYLIGHT, false)
+            .set(GameRules.RULE_DOMOBSPAWNING, true)
+            .set(GameRules.RULE_DOMOBLOOT, true)
+            .set(GameRules.RULE_MOBGRIEFING, true)
+            .set(GameRules.RULE_DOENTITYDROPS, true)
+            .set(GameRules.RULE_ANNOUNCE_ADVANCEMENTS, false)
 
         useRemainingPlayersDisplay()
         useSmoothDeath()
@@ -181,9 +181,9 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
             ServerLivingEntityHooks.ALLOW_DAMAGE,
             ServerLivingEntityEvents.AllowDamage { entity, _, _ ->
 
-                if (entity is ServerPlayerEntity && entity.hungerManager.foodLevel >= 20) {
-                    entity.hungerManager.addExhaustion(8f)
-                    entity.hungerManager.saturationLevel = 2f
+                if (entity is ServerPlayer && entity.foodData.foodLevel >= 20) {
+                    entity.foodData.addExhaustion(8f)
+                    entity.foodData.setSaturation(2f)
                 }
                 true
             }
@@ -200,15 +200,15 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
 
         itemUseAllowed = true
 
-        commons().gameRuleBuilder().set(GameRules.DO_DAYLIGHT_CYCLE, true)
+        commons().gameRuleBuilder().set(GameRules.RULE_DAYLIGHT, true)
 
         gameHandle.protect { config ->
             config.allowAll()
             config.disallow(ProtectionTypes.ALLOW_DAMAGE, EntityDamageSourceScope { entity, source ->
-                entity is ServerPlayerEntity && source.attacker is ServerPlayerEntity
-                        && !source.isOf(DamageTypes.PLAYER_EXPLOSION)
-                        && !source.isOf(DamageTypes.INDIRECT_MAGIC)
-                        && !source.isOf(DamageTypes.MAGIC)
+                entity is ServerPlayer && source.entity is ServerPlayer
+                        && !source.`is`(DamageTypes.PLAYER_EXPLOSION)
+                        && !source.`is`(DamageTypes.INDIRECT_MAGIC)
+                        && !source.`is`(DamageTypes.MAGIC)
             })
         }
 
@@ -216,8 +216,8 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
             BlockModificationHooks.PLACE_FLUID,
             BlockModificationHooks.FluidTransferHook { _, pos, entity, fluid ->
             val minDistSq = 6.0 * 6.0
-            entity is ServerPlayerEntity && fluid.matchesType(Fluids.LAVA) && players().any {
-                it != entity && it.squaredDistanceTo(pos.toCenterPos()) < minDistSq
+            entity is ServerPlayer && fluid.isSame(Fluids.LAVA) && players().any {
+                it != entity && it.distanceToSqr(pos.center) < minDistSq
             }
         })
 
@@ -225,14 +225,14 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
             PlayerInteractionHooks.USE_BLOCK,
             UseBlockCallback { player, world, _, hitResult ->
                 onUseInventory(player, world, hitResult.blockPos)
-                ActionResult.PASS
+                InteractionResult.PASS
             }
         )
 
         gameHandle.hooks.registerHook(
             BlockModificationHooks.BREAK_BLOCK,
             BlockModificationHooks.BlockModifyHook {world, pos, entity ->
-                if (entity !is ServerPlayerEntity || !world.getBlockState(pos).isOf(Blocks.DECORATED_POT)) {return@BlockModifyHook false}
+                if (entity !is ServerPlayer || !world.getBlockState(pos).`is`(Blocks.DECORATED_POT)) {return@BlockModifyHook false}
                 onUseInventory(entity, world, pos)
                 return@BlockModifyHook false
             }
@@ -241,7 +241,7 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
         gameHandle.hooks.registerHook(
             BlockModificationHooks.PLACE_BLOCK,
             BlockModificationHooks.PlaceBlockHook { _, pos, entity, _ ->
-                if (entity !is ServerPlayerEntity) {return@PlaceBlockHook false}
+                if (entity !is ServerPlayer) {return@PlaceBlockHook false}
                 filledInventories.add(pos)
                 return@PlaceBlockHook false
             }
@@ -250,8 +250,8 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
         switchTimeout()
 
         gameHandle.scheduler.interval(20*60*3, 20*60*3, Runnable {
-            SoundHelper.playSound(world, SoundEvents.BLOCK_CHEST_OPEN, SoundCategory.BLOCKS, 0.8f, 0.5f)
-            translate("game.ap2.killeporter.chest_refill").formatted(Formatting.AQUA).sendTo(allPlayers())
+            SoundHelper.playSound(world, SoundEvents.CHEST_OPEN, SoundSource.BLOCKS, 0.8f, 0.5f)
+            translate("game.ap2.killeporter.chest_refill").formatted(ChatFormatting.AQUA).sendTo(allPlayers())
             filledInventories.clear()
         })
 
@@ -260,22 +260,22 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
         }
     }
 
-    private fun onUseInventory(player: PlayerEntity, world: World, pos: BlockPos) {
+    private fun onUseInventory(player: Player, world: Level, pos: BlockPos) {
 
-        if (player !is ServerPlayerEntity || !gameHandle.participants.isParticipating(player)) return
+        if (player !is ServerPlayer || !gameHandle.participants.isParticipating(player)) return
 
         val blockEntity = world.getBlockEntity(pos)
         val state = world.getBlockState(pos)
         val block = state.block
-        val inventoryToFill: Inventory?
+        val inventoryToFill: Container?
 
-        if (blockEntity is Inventory && filledInventories.add(pos)) {
+        if (blockEntity is Container && filledInventories.add(pos)) {
 
             if (block is ChestBlock) {
-                inventoryToFill = ChestBlock.getInventory(block, state, world, pos, false)
-                if (ChestBlock.getDoubleBlockType(state) != DoubleBlockProperties.Type.SINGLE) {
-                    val neighborDir = ChestBlock.getFacing(state)
-                    val otherPos = pos.offset(neighborDir)
+                inventoryToFill = ChestBlock.getContainer(block, state, world, pos, false)
+                if (ChestBlock.getBlockType(state) != DoubleBlockCombiner.BlockType.SINGLE) {
+                    val neighborDir = ChestBlock.getConnectedDirection(state)
+                    val otherPos = pos.relative(neighborDir)
                     filledInventories.add(otherPos)
                 }
             }
@@ -285,11 +285,11 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
         }
     }
 
-    private fun fillInventory(inventory: Inventory, state: BlockState) {
+    private fun fillInventory(inventory: Container, state: BlockState) {
 
-        inventory.clear()
+        inventory.clearContent()
 
-        val invSize = inventory.size()
+        val invSize = inventory.containerSize
         val availableSlots = (0..<invSize).toMutableList()
         val maxSlotsToFill = 5.coerceAtMost(invSize)
 
@@ -300,7 +300,7 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
         repeat(slotsToFill) {
             val slot = availableSlots.removeAt(Random.nextInt(availableSlots.size))
             val entry = inventoryContent.getRandomElement(Random.asJavaRandom())
-            inventory.setStack(slot, entry!!.generateItemStack())
+            inventory.setItem(slot, entry!!.generateItemStack())
         }
     }
 
@@ -311,8 +311,8 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
         val messageTime = Random.nextInt(Ticks.seconds(1), Ticks.seconds(maxDelaySeconds)+1)
 
         timeout(switchTime - messageTime) {
-            translate("game.ap2.killeporter.switch_announcement", FormatWrapper.styled(maxDelaySeconds, Formatting.YELLOW))
-            .formatted(Formatting.GREEN)
+            translate("game.ap2.killeporter.switch_announcement", FormatWrapper.styled(maxDelaySeconds, ChatFormatting.YELLOW))
+            .formatted(ChatFormatting.GREEN)
             .sendTo(players(), true)}
 
         timeout(switchTime) {
@@ -332,14 +332,14 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
         val shuffledPlayers = players().shuffled()
         val playerCount = shuffledPlayers.count()
         val positionRotations = shuffledPlayers.map { player ->
-            PositionRotation(player.x, player.y, player.z, player.yaw, player.pitch)
+            PositionRotation(player.x, player.y, player.z, player.yRot, player.xRot)
         }
 
         for (p in (0 ..< playerCount)) {
             val previousIndex = floorMod(p-1, playerCount)
             shuffledPlayers[p].teleport(positionRotations[previousIndex])
-            translate("game.ap2.killeporter.switch_message", shuffledPlayers[previousIndex].nameForScoreboard)
-                .formatted(Formatting.GREEN)
+            translate("game.ap2.killeporter.switch_message", shuffledPlayers[previousIndex].scoreboardName)
+                .formatted(ChatFormatting.GREEN)
                 .sendTo(shuffledPlayers[p], true)
         }
     }
@@ -353,21 +353,21 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
 
         gameHandle.getHooks().registerHook(
             PlayerInteractionHooks.USE_ITEM,
-            UseItemCallback { player: PlayerEntity, _: World, hand: Hand ->
-                if (player !is ServerPlayerEntity) return@UseItemCallback ActionResult.PASS
+            UseItemCallback { player: Player, _: Level, hand: InteractionHand ->
+                if (player !is ServerPlayer) return@UseItemCallback InteractionResult.PASS
 
-                val stack = player.getStackInHand(hand)
+                val stack = player.getItemInHand(hand)
 
                 if (itemUseAllowed || kitHandler!!.isKitSelector(stack)) {
-                    return@UseItemCallback ActionResult.PASS
+                    return@UseItemCallback InteractionResult.PASS
                 }
 
-                if (stack.contains(DataComponentTypes.USE_COOLDOWN)) {
-                    player.itemCooldownManager.set(stack, 0)
+                if (stack.has(DataComponents.USE_COOLDOWN)) {
+                    player.cooldowns.addCooldown(stack, 0)
                 }
 
                 PlayerUtils.syncPlayerItems(player)
-                ActionResult.FAIL
+                InteractionResult.FAIL
             })
 
         kitHandler?.setup()

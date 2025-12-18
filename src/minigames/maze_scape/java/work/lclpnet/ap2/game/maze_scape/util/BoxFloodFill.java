@@ -2,13 +2,13 @@ package work.lclpnet.ap2.game.maze_scape.util;
 
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
 
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.function.Consumer;
 
-import static net.minecraft.util.math.BlockPos.asLong;
+import static net.minecraft.core.BlockPos.asLong;
 
 public class BoxFloodFill {
 

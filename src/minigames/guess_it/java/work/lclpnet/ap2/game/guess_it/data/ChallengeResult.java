@@ -1,6 +1,6 @@
 package work.lclpnet.ap2.game.guess_it.data;
 
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
@@ -12,12 +12,12 @@ public class ChallengeResult {
     private final Map<UUID, Integer> pointsGained = new HashMap<>();
     private Object correctAnswer = null;
 
-    public void grant(ServerPlayerEntity player, int points) {
-        pointsGained.put(player.getUuid(), points);
+    public void grant(ServerPlayer player, int points) {
+        pointsGained.put(player.getUUID(), points);
     }
 
-    public int getPointsGained(ServerPlayerEntity player) {
-        return pointsGained.getOrDefault(player.getUuid(), 0);
+    public int getPointsGained(ServerPlayer player) {
+        return pointsGained.getOrDefault(player.getUUID(), 0);
     }
 
     public void clear() {
@@ -34,9 +34,9 @@ public class ChallengeResult {
         return correctAnswer;
     }
 
-    public void grantIfCorrect(Iterable<ServerPlayerEntity> participants, int correctResult,
-                          Function<ServerPlayerEntity, OptionalInt> choiceFunction) {
-        for (ServerPlayerEntity player : participants) {
+    public void grantIfCorrect(Iterable<ServerPlayer> participants, int correctResult,
+                               Function<ServerPlayer, OptionalInt> choiceFunction) {
+        for (ServerPlayer player : participants) {
             var optChoice = choiceFunction.apply(player);
 
             if (optChoice.isEmpty()) continue;
@@ -50,8 +50,8 @@ public class ChallengeResult {
         }
     }
 
-    public void grantClosest3(Collection<ServerPlayerEntity> participants, int correctResult,
-                              Function<ServerPlayerEntity, OptionalInt> valueFunction) {
+    public void grantClosest3(Collection<ServerPlayer> participants, int correctResult,
+                              Function<ServerPlayer, OptionalInt> valueFunction) {
         grantClosest3Diff(participants, player -> {
             var value = valueFunction.apply(player);
 
@@ -61,11 +61,11 @@ public class ChallengeResult {
         });
     }
 
-    public void grantClosest3Diff(Collection<ServerPlayerEntity> participants, Function<ServerPlayerEntity, OptionalInt> diffFunction) {
-        Map<ServerPlayerEntity, Integer> absPlayerDiff = new HashMap<>(participants.size());
+    public void grantClosest3Diff(Collection<ServerPlayer> participants, Function<ServerPlayer, OptionalInt> diffFunction) {
+        Map<ServerPlayer, Integer> absPlayerDiff = new HashMap<>(participants.size());
 
         // collect absolute difference to correct result for every player
-        for (ServerPlayerEntity player : participants) {
+        for (ServerPlayer player : participants) {
             OptionalInt diff = diffFunction.apply(player);
 
             if (diff.isPresent()) {
@@ -88,7 +88,7 @@ public class ChallengeResult {
             int points = 3 - i;
 
             for (var playerEntry : playerEntries) {
-                ServerPlayerEntity player = playerEntry.getKey();
+                ServerPlayer player = playerEntry.getKey();
 
                 grant(player, points);
             }

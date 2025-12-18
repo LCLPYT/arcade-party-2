@@ -1,8 +1,8 @@
 package work.lclpnet.ap2.impl.i18n;
 
-import net.minecraft.Bootstrap;
 import net.minecraft.SharedConstants;
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.Bootstrap;
+import net.minecraft.server.level.ServerPlayer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,7 +21,7 @@ import static org.mockito.Mockito.*;
 class DynamicLanguageManagerTest {
 
     private static final Logger logger = LoggerFactory.getLogger(DynamicLanguageManagerTest.class);
-    private Map<ServerPlayerEntity, String> playerLanguage;
+    private Map<ServerPlayer, String> playerLanguage;
     private DynamicLanguageManager languageManager;
     private int updateCount;
     private HookContainer hooks;
@@ -29,8 +29,8 @@ class DynamicLanguageManagerTest {
 
     @BeforeAll
     public static void bootstrap() {
-        SharedConstants.createGameVersion();
-        Bootstrap.initialize();
+        SharedConstants.tryDetectVersion();
+        Bootstrap.bootStrap();
     }
 
     @BeforeEach
@@ -79,7 +79,7 @@ class DynamicLanguageManagerTest {
     void simulateJoin_english() {
         languageManager.init(hooks, List.of());
 
-        ServerPlayerEntity player = player();
+        ServerPlayer player = player();
         playerLanguage.put(player, "en_us");
 
         PlayerConnectionHooks.JOIN.invoker().act(player);
@@ -97,7 +97,7 @@ class DynamicLanguageManagerTest {
     void simulateJoin_german() {
         languageManager.init(hooks, List.of());
 
-        ServerPlayerEntity player = player();
+        ServerPlayer player = player();
         playerLanguage.put(player, "de_de");
 
         PlayerConnectionHooks.JOIN.invoker().act(player);
@@ -112,7 +112,7 @@ class DynamicLanguageManagerTest {
     void simulateJoin_german_twice() {
         languageManager.init(hooks, List.of());
 
-        ServerPlayerEntity playerOne = player(), playerTwo = player();
+        ServerPlayer playerOne = player(), playerTwo = player();
         playerLanguage.put(playerOne, "de_de");
         playerLanguage.put(playerTwo, "de_de");
 
@@ -129,7 +129,7 @@ class DynamicLanguageManagerTest {
     void simulateQuit_english() {
         languageManager.init(hooks, List.of());
 
-        ServerPlayerEntity player = player();
+        ServerPlayer player = player();
         playerLanguage.put(player, "en_us");
 
         PlayerConnectionHooks.JOIN.invoker().act(player);
@@ -145,7 +145,7 @@ class DynamicLanguageManagerTest {
     void simulateQuit_german() {
         languageManager.init(hooks, List.of());
 
-        ServerPlayerEntity player = player();
+        ServerPlayer player = player();
         playerLanguage.put(player, "de_de");
 
         PlayerConnectionHooks.JOIN.invoker().act(player);
@@ -161,7 +161,7 @@ class DynamicLanguageManagerTest {
     void simulateChangeLanguage() {
         languageManager.init(hooks, List.of());
 
-        ServerPlayerEntity player = player();
+        ServerPlayer player = player();
         playerLanguage.put(player, "de_de");
 
         PlayerConnectionHooks.JOIN.invoker().act(player);
@@ -177,7 +177,7 @@ class DynamicLanguageManagerTest {
     void simulateChangeLanguage_withOtherPlayers() {
         languageManager.init(hooks, List.of());
 
-        ServerPlayerEntity playerOne = player(), playerTwo = player();
+        ServerPlayer playerOne = player(), playerTwo = player();
         playerLanguage.put(playerOne, "de_de");
         playerLanguage.put(playerTwo, "de_de");
 
@@ -193,7 +193,7 @@ class DynamicLanguageManagerTest {
 
     @Test
     void init_withPlayers_updateBatched() {
-        ServerPlayerEntity playerOne = player(), playerTwo = player();
+        ServerPlayer playerOne = player(), playerTwo = player();
         playerLanguage.put(playerOne, "de_de");
         playerLanguage.put(playerTwo, "ja_jp");
 
@@ -205,11 +205,11 @@ class DynamicLanguageManagerTest {
         assertEquals(1, updateCount);
     }
 
-    ServerPlayerEntity player() {
-        ServerPlayerEntity player = mock();
+    ServerPlayer player() {
+        ServerPlayer player = mock();
         UUID uuid = UUID.randomUUID();
 
-        when(player.getUuid()).thenReturn(uuid);
+        when(player.getUUID()).thenReturn(uuid);
 
         return player;
     }

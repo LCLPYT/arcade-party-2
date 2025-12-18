@@ -1,27 +1,27 @@
 package work.lclpnet.ap2.game.minefield
 
-import net.minecraft.block.Block
-import net.minecraft.block.BlockState
-import net.minecraft.block.Blocks
-import net.minecraft.block.ShapeContext
-import net.minecraft.entity.EntityType
-import net.minecraft.entity.damage.DamageTypes
-import net.minecraft.entity.decoration.DisplayEntity
-import net.minecraft.entity.effect.StatusEffectInstance
-import net.minecraft.entity.effect.StatusEffects
-import net.minecraft.particle.ParticleTypes
-import net.minecraft.scoreboard.AbstractTeam
-import net.minecraft.server.network.ServerPlayerEntity
-import net.minecraft.server.world.ServerWorld
-import net.minecraft.sound.SoundCategory
-import net.minecraft.sound.SoundEvents
-import net.minecraft.util.DyeColor
-import net.minecraft.util.Formatting.*
-import net.minecraft.util.math.AffineTransformation
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Vec3d
-import net.minecraft.world.GameMode
-import net.minecraft.world.GameRules
+import com.mojang.math.Transformation
+import net.minecraft.ChatFormatting.*
+import net.minecraft.core.BlockPos
+import net.minecraft.core.particles.ParticleTypes
+import net.minecraft.server.level.ServerLevel
+import net.minecraft.server.level.ServerPlayer
+import net.minecraft.sounds.SoundEvents
+import net.minecraft.sounds.SoundSource
+import net.minecraft.world.damagesource.DamageTypes
+import net.minecraft.world.effect.MobEffectInstance
+import net.minecraft.world.effect.MobEffects
+import net.minecraft.world.entity.Display
+import net.minecraft.world.entity.EntityType
+import net.minecraft.world.item.DyeColor
+import net.minecraft.world.level.GameRules
+import net.minecraft.world.level.GameType
+import net.minecraft.world.level.block.Block
+import net.minecraft.world.level.block.Blocks
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.phys.Vec3
+import net.minecraft.world.phys.shapes.CollisionContext
+import net.minecraft.world.scores.Team
 import org.joml.Matrix4f
 import org.json.JSONArray
 import work.lclpnet.ap2.*
@@ -81,7 +81,7 @@ class MinefieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
     
     override fun getData() = data
 
-    override fun bootstrapWorld(world: ServerWorld, map: GameMap) {
+    override fun bootstrapWorld(world: ServerLevel, map: GameMap) {
         val scanPositions = map.properties.getJSONArray("scan-positions")
         val mineDensity = map.properties.optNumber("mine-density", 0.55f).toFloat()
         val scanShape = readShape("scan-shape")
@@ -93,14 +93,14 @@ class MinefieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
         goalDistance = sqrt(goalShape!!.bounds().squaredDistanceTo(startAnchorPos))
 
         val defaultPressurePlates = JSONArray()
-        defaultPressurePlates.put(BlockStateUtils.stringify(Blocks.STONE_PRESSURE_PLATE.defaultState))
+        defaultPressurePlates.put(BlockStateUtils.stringify(Blocks.STONE_PRESSURE_PLATE.defaultBlockState()))
         val pressurePlatesJson = map.properties.optJSONArray("pressure-plates", defaultPressurePlates)
         val pressurePlates = mutableSetOf<BlockState>()
         MapUtil.readBlockStates(pressurePlatesJson, pressurePlates, gameHandle.logger)
 
         val predicate = BlockPredicate.and({
             scanShape.contains(it) && !spawnShape!!.contains(it) && !goalShape!!.contains(it)
-                    && world.getBlockState(it).getCollisionShape(world, it, ShapeContext.absent()).isEmpty
+                    && world.getBlockState(it).getCollisionShape(world, it, CollisionContext.empty()).isEmpty
         }, WalkableBlockPredicate(world))
 
         val scanner =  BfsWorldScanner(SimpleAdjacentBlocks(predicate, 1))
@@ -118,7 +118,7 @@ class MinefieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
 
                 if (Random.nextFloat() > mineDensity) return@forEach
 
-                world.setBlockState(it, pressurePlates.random(), Block.FORCE_STATE or Block.SKIP_DROPS)
+                world.setBlock(it, pressurePlates.random(), Block.UPDATE_KNOWN_SHAPE or Block.UPDATE_SUPPRESS_DROPS)
             }
         }
 
@@ -130,12 +130,12 @@ class MinefieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
                 boxes,
                 minPos,
                 Matrix3i.IDENTITY,
-                Blocks.BLUE_STAINED_GLASS.defaultState
+                Blocks.BLUE_STAINED_GLASS.defaultBlockState()
             )
         }
 
         commons().gameRuleBuilder()
-            .set(GameRules.NATURAL_REGENERATION, false)
+            .set(GameRules.RULE_NATURAL_REGENERATION, false)
     }
 
     override fun prepare() {
@@ -154,7 +154,7 @@ class MinefieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
     fun setupTeam() {
         val scoreboardManager = gameHandle.getScoreboardManager()
         val team = scoreboardManager.createTeam("team")
-        team.setCollisionRule(AbstractTeam.CollisionRule.NEVER)
+        team.setCollisionRule(Team.CollisionRule.NEVER)
         scoreboardManager.joinTeam(gameHandle.getParticipants(), team)
 
         val visibilityManager = VisibilityManager(team, Visibility.VISIBLE)
@@ -174,14 +174,14 @@ class MinefieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
 
                 entry(player).update(player)
 
-                if (goalShape!!.contains(player.entityPos)) {
+                if (goalShape!!.contains(player.position())) {
                     onReachGoal(player)
                 }
             }
         }
 
         gameHandle.hooks.registerHook(PressurePlateCallback.HOOK, PressurePlateCallback { _, pos, entity ->
-            if (entity is ServerPlayerEntity && players().isParticipating(entity)) {
+            if (entity is ServerPlayer && players().isParticipating(entity)) {
                 onStepOnMine(entity, pos)
             }
 
@@ -190,7 +190,7 @@ class MinefieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
 
         gameHandle.protect {
             it.allow(ProtectionTypes.ALLOW_DAMAGE, EntityDamageSourceScope { entity, source ->
-                entity is ServerPlayerEntity && players().isParticipating(entity) && source.isOf(DamageTypes.MAGIC)
+                entity is ServerPlayer && players().isParticipating(entity) && source.`is`(DamageTypes.MAGIC)
             })
         }
 
@@ -199,17 +199,17 @@ class MinefieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
         if (waterPoison) {
             interval(1) {
                 for (player in players()) {
-                    if (player.isTouchingWater) {
-                        player.addStatusEffect(StatusEffectInstance(StatusEffects.POISON, Ticks.seconds(8)))
+                    if (player.isInWater) {
+                        player.addEffect(MobEffectInstance(MobEffects.POISON, Ticks.seconds(8)))
                     }
                 }
             }
         }
     }
 
-    fun entry(player: ServerPlayerEntity): Entry = entries.computeIfAbsent(player.uuid) { Entry() }
+    fun entry(player: ServerPlayer): Entry = entries.computeIfAbsent(player.uuid) { Entry() }
 
-    fun onReachGoal(player: ServerPlayerEntity) {
+    fun onReachGoal(player: ServerPlayer) {
         if (!inGoal.add(player.uuid) || !players().isParticipating(player)) return
 
         data.add(player)
@@ -225,7 +225,7 @@ class MinefieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
         if (gameEnd == -1) {
             translate(
                 "game.ap2.minefield.goal",
-                styled(player.nameForScoreboard, YELLOW),
+                styled(player.scoreboardName, YELLOW),
                 styled(END_TIME_SECONDS, YELLOW)
             ).formatted(GREEN).sendTo(allPlayers())
 
@@ -239,7 +239,7 @@ class MinefieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
     }
 
     fun gradePlayers() {
-        class Grade(val player: ServerPlayerEntity, val distance: Double)
+        class Grade(val player: ServerPlayer, val distance: Double)
 
         players().stream()
             .filter { !inGoal.contains(it.uuid) }
@@ -251,18 +251,18 @@ class MinefieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
             }
     }
 
-    fun MinefieldInstance.onStepOnMine(player: ServerPlayerEntity, pos: BlockPos) {
+    fun MinefieldInstance.onStepOnMine(player: ServerPlayer, pos: BlockPos) {
         if (winManager.isGameOver || player.isSpectator || inGoal.contains(player.uuid)) return
 
         world.setBlock(pos, Blocks.AIR)
         ParticleHelper.spawnParticleAt(player, ParticleTypes.EXPLOSION, 1, 0.0, 0.0, 0.0, 0.0)
-        SoundHelper.playSoundAt(player, SoundEvents.ENTITY_GENERIC_EXPLODE.value(), SoundCategory.HOSTILE, 0.5f, 1.2f)
+        SoundHelper.playSoundAt(player, SoundEvents.GENERIC_EXPLODE.value(), SoundSource.HOSTILE, 0.5f, 1.2f)
 
         entry(player).checkUpdateMarker(player)
 
         translate("game.ap2.minefield.stepped_on_mine").formatted(RED).sendTo(player, true)
 
-        player.changeGameMode(GameMode.SPECTATOR)
+        player.setGameMode(GameType.SPECTATOR)
 
         timeout(20) {
             player.teleport(spawnShape!!.randomPos(Random.asJavaRandom()), spawnYaw)
@@ -272,14 +272,14 @@ class MinefieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
     }
 
     inner class Entry {
-        var pos: Vec3d? = null
+        var pos: Vec3? = null
         var bestDist = Double.MAX_VALUE
-        var marker: PlayerSpecificDynamicEntity<DisplayEntity.BlockDisplayEntity>? = null
-        var label: PlayerSpecificDynamicEntity<DisplayEntity.TextDisplayEntity>? = null
+        var marker: PlayerSpecificDynamicEntity<Display.BlockDisplay>? = null
+        var label: PlayerSpecificDynamicEntity<Display.TextDisplay>? = null
         var markerDist = Double.MAX_VALUE
 
-        fun update(player: ServerPlayerEntity) {
-            val pos = player.entityPos
+        fun update(player: ServerPlayer) {
+            val pos = player.position()
             val dist = sqrt(goalShape!!.bounds().squaredDistanceTo(pos)).coerceAtMost(goalDistance!!)
 
             if (dist >= this.bestDist) return
@@ -288,43 +288,43 @@ class MinefieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
             this.pos = pos
 
             if (marker != null) {
-                player.playSoundToPlayer(SoundEvents.BLOCK_NOTE_BLOCK_PLING.value(), SoundCategory.NEUTRAL, 0.3f, 2f)
+                player.playNotifySound(SoundEvents.NOTE_BLOCK_PLING.value(), SoundSource.NEUTRAL, 0.3f, 2f)
                 translate("game.ap2.minefield.new_personal_best").formatted(GREEN).sendTo(player, true)
             }
 
             removeMarker()
         }
 
-        fun checkUpdateMarker(player: ServerPlayerEntity) {
+        fun checkUpdateMarker(player: ServerPlayer) {
             if (bestDist >= markerDist) return
 
             updateMarker(player)
         }
 
-        fun updateMarker(player: ServerPlayerEntity) {
-            if (pos == null) return
+        fun updateMarker(player: ServerPlayer) {
+            val pos = pos ?: return
 
             if (marker == null || label == null) {
                 createMarker(player)
             }
 
-            marker!!.entity.setPosition(pos)
-            label!!.entity.setPosition(pos!!.add(0.0, 0.6, 0.0))
+            marker!!.entity.setPos(pos)
+            label!!.entity.setPos(pos.add(0.0, 0.6, 0.0))
 
             markerDist = bestDist
         }
 
-        fun createMarker(player: ServerPlayerEntity) {
-            val marker = DisplayEntity.BlockDisplayEntity(EntityType.BLOCK_DISPLAY, world)
-            marker.setTransformation(AffineTransformation(Matrix4f().scale(0.5f).translate(-0.5f, 0f, -0.5f)))
-            marker.isGlowing = true
-            marker.glowColorOverride = DyeColor.LIME.entityColor
-            marker.blockState = Blocks.LIME_TERRACOTTA.defaultState
+        fun createMarker(player: ServerPlayer) {
+            val marker = Display.BlockDisplay(EntityType.BLOCK_DISPLAY, world)
+            marker.setTransformation(Transformation(Matrix4f().scale(0.5f).translate(-0.5f, 0f, -0.5f)))
+            marker.setGlowingTag(true)
+            marker.glowColorOverride = DyeColor.LIME.textureDiffuseColor
+            marker.blockState = Blocks.LIME_TERRACOTTA.defaultBlockState()
 
-            val label = DisplayEntity.TextDisplayEntity(EntityType.TEXT_DISPLAY, world)
-            label.setTransformation(AffineTransformation(Matrix4f().scale(0.5f)))
-            label.billboardMode = DisplayEntity.BillboardMode.CENTER
-            label.background = 0
+            val label = Display.TextDisplay(EntityType.TEXT_DISPLAY, world)
+            label.setTransformation(Transformation(Matrix4f().scale(0.5f)))
+            label.billboardConstraints = Display.BillboardConstraints.CENTER
+            label.backgroundColor = 0
 
             val dist = max(0.0, goalDistance!! - bestDist)
 

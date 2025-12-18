@@ -1,13 +1,15 @@
 package work.lclpnet.ap2.impl.util.scoreboard;
 
 import lombok.Getter;
-import net.minecraft.entity.Entity;
-import net.minecraft.scoreboard.*;
-import net.minecraft.scoreboard.number.NumberFormat;
-import net.minecraft.scoreboard.number.StyledNumberFormat;
-import net.minecraft.server.PlayerManager;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.numbers.NumberFormat;
+import net.minecraft.network.chat.numbers.StyledFormat;
+import net.minecraft.server.ServerScoreboard;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.players.PlayerList;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.scores.*;
+import net.minecraft.world.scores.criteria.ObjectiveCriteria;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.event.IntScoreEventSource;
 import work.lclpnet.ap2.api.util.scoreboard.CustomScoreboardObjective;
@@ -29,12 +31,12 @@ public class CustomScoreboardManager {
     private final ServerScoreboard scoreboard;
     @Getter
     private final Translations translations;
-    private final PlayerManager playerManager;
-    private final Set<Team> teams = new HashSet<>();
-    private final Set<ScoreboardObjective> objectives = new HashSet<>();
+    private final PlayerList playerManager;
+    private final Set<PlayerTeam> teams = new HashSet<>();
+    private final Set<Objective> objectives = new HashSet<>();
     private final List<VirtualScoreboardObjective> virtualObjectives = new ArrayList<>();
 
-    public CustomScoreboardManager(ServerScoreboard scoreboard, Translations translations, PlayerManager playerManager) {
+    public CustomScoreboardManager(ServerScoreboard scoreboard, Translations translations, PlayerList playerManager) {
         this.scoreboard = scoreboard;
         this.translations = translations;
         this.playerManager = playerManager;
@@ -54,38 +56,38 @@ public class CustomScoreboardManager {
         });
 
         hookRegistrar.registerHook(PlayerConnectionHooks.QUIT, player -> {
-            Team team = scoreboard.getScoreHolderTeam(player.getNameForScoreboard());
+            PlayerTeam team = scoreboard.getPlayersTeam(player.getScoreboardName());
             if (team != null) leaveTeam(player, team);
         });
     }
 
-    public void joinTeam(Entity entity, Team team) {
-        scoreboard.addScoreHolderToTeam(entity.getNameForScoreboard(), team);
+    public void joinTeam(Entity entity, PlayerTeam team) {
+        scoreboard.addPlayerToTeam(entity.getScoreboardName(), team);
 
         // manually set team color as teams themselves don't support arbitrary text color
-        if (entity instanceof ServerPlayerEntity player) {
+        if (entity instanceof ServerPlayer player) {
             ((ApServerPlayerEntity) player).ap2$setPlayerListName(player.getDisplayName());
         }
     }
 
-    public void leaveTeam(Entity entity, Team team) {
-        String entityName = entity.getNameForScoreboard();
+    public void leaveTeam(Entity entity, PlayerTeam team) {
+        String entityName = entity.getScoreboardName();
 
-        if (scoreboard.getScoreHolderTeam(entityName) != team) return;
+        if (scoreboard.getPlayersTeam(entityName) != team) return;
 
-        scoreboard.removeScoreHolderFromTeam(entityName, team);
+        scoreboard.removePlayerFromTeam(entityName, team);
     }
 
-    public void joinTeam(Iterable<? extends Entity> players, Team team) {
+    public void joinTeam(Iterable<? extends Entity> players, PlayerTeam team) {
         for (Entity entity : players) {
             joinTeam(entity, team);
         }
     }
 
-    public Team createTeam(String name) {
+    public PlayerTeam createTeam(String name) {
         removeTeam(name);
 
-        Team team = scoreboard.addTeam(name);
+        PlayerTeam team = scoreboard.addPlayerTeam(name);
 
         synchronized (this) {
             teams.add(team);
@@ -95,27 +97,27 @@ public class CustomScoreboardManager {
     }
 
     public void removeTeam(String name) {
-        Team team = scoreboard.getTeam(name);
+        PlayerTeam team = scoreboard.getPlayerTeam(name);
 
         if (team == null) return;
 
-        scoreboard.removeTeam(team);
+        scoreboard.removePlayerTeam(team);
 
         synchronized (this) {
             teams.remove(team);
         }
     }
 
-    public ScoreboardObjective createObjective(String name, ScoreboardCriterion criterion, Text displayName,
-                                               ScoreboardCriterion.RenderType renderType) {
-        return createObjective(name, criterion, displayName, renderType, StyledNumberFormat.RED);
+    public Objective createObjective(String name, ObjectiveCriteria criterion, Component displayName,
+                                     ObjectiveCriteria.RenderType renderType) {
+        return createObjective(name, criterion, displayName, renderType, StyledFormat.SIDEBAR_DEFAULT);
     }
 
-    public ScoreboardObjective createObjective(String name, ScoreboardCriterion criterion, Text displayName,
-                                               ScoreboardCriterion.RenderType renderType, NumberFormat numberFormat) {
+    public Objective createObjective(String name, ObjectiveCriteria criterion, Component displayName,
+                                     ObjectiveCriteria.RenderType renderType, NumberFormat numberFormat) {
         removeObjective(name);
 
-        ScoreboardObjective objective = scoreboard.addObjective(name, criterion, displayName, renderType,
+        Objective objective = scoreboard.addObjective(name, criterion, displayName, renderType,
                 true, numberFormat);
 
         synchronized (this) {
@@ -126,7 +128,7 @@ public class CustomScoreboardManager {
     }
 
     private void removeObjective(String name) {
-        ScoreboardObjective objective = scoreboard.getNullableObjective(name);
+        Objective objective = scoreboard.getObjective(name);
 
         if (objective == null) return;
 
@@ -137,58 +139,58 @@ public class CustomScoreboardManager {
         }
     }
 
-    public void setScore(ScoreHolder player, ScoreboardObjective objective, int score) {
+    public void setScore(ScoreHolder player, Objective objective, int score) {
         ScoreAccess playerScore = getOrCreateScore(player, objective);
 
         if (playerScore == null) return;
 
-        playerScore.setScore(score);
+        playerScore.set(score);
     }
 
-    public void removeScore(ScoreHolder holder, ScoreboardObjective objective) {
-        scoreboard.removeScore(holder, objective);
+    public void removeScore(ScoreHolder holder, Objective objective) {
+        scoreboard.resetSinglePlayerScore(holder, objective);
     }
 
-    public void setNumberFormat(ScoreHolder holder, ScoreboardObjective objective, @Nullable NumberFormat format) {
+    public void setNumberFormat(ScoreHolder holder, Objective objective, @Nullable NumberFormat format) {
         ScoreAccess playerScore = getOrCreateScore(holder, objective);
 
         if (playerScore == null) return;
 
-        playerScore.setNumberFormat(format);
+        playerScore.numberFormatOverride(format);
     }
 
-    public void setDisplayText(ScoreHolder holder, ScoreboardObjective objective, @Nullable Text text) {
+    public void setDisplayText(ScoreHolder holder, Objective objective, @Nullable Component text) {
         ScoreAccess playerScore = getOrCreateScore(holder, objective);
 
         if (playerScore == null) return;
 
-        playerScore.setDisplayText(text);
+        playerScore.display(text);
     }
 
     @Nullable
-    public ScoreAccess getOrCreateScore(ScoreHolder holder, ScoreboardObjective objective) {
+    public ScoreAccess getOrCreateScore(ScoreHolder holder, Objective objective) {
         if (!objectives.contains(objective)) return null;  // objective is not associated with this instance
 
-        return scoreboard.getOrCreateScore(holder, objective);
+        return scoreboard.getOrCreatePlayerScore(holder, objective);
     }
 
-    public void setDisplay(ScoreboardDisplaySlot slot, ScoreboardObjective objective) {
-        scoreboard.setObjectiveSlot(slot, objective);
+    public void setDisplay(DisplaySlot slot, Objective objective) {
+        scoreboard.setDisplayObjective(slot, objective);
     }
 
-    public void sync(ScoreboardObjective objective, IntScoreEventSource<ServerPlayerEntity> source) {
+    public void sync(Objective objective, IntScoreEventSource<ServerPlayer> source) {
         source.register((player, score) -> setScore(player, objective, score));
     }
 
-    public void sync(CustomScoreboardObjective objective, IntScoreEventSource<ServerPlayerEntity> source) {
+    public void sync(CustomScoreboardObjective objective, IntScoreEventSource<ServerPlayer> source) {
         source.register(objective::setScore);
     }
 
     public TranslatedScoreboardObjective translateObjective(String name, String translationKey, Object... args) {
-        return translateObjective(name, ScoreboardCriterion.RenderType.INTEGER, translationKey, args);
+        return translateObjective(name, ObjectiveCriteria.RenderType.INTEGER, translationKey, args);
     }
 
-    public TranslatedScoreboardObjective translateObjective(String name, ScoreboardCriterion.RenderType renderType,
+    public TranslatedScoreboardObjective translateObjective(String name, ObjectiveCriteria.RenderType renderType,
                                                             String translationKey, Object... args) {
         var objective = new TranslatedScoreboardObjective(translations, playerManager, name, renderType, translationKey, args);
 
@@ -197,12 +199,12 @@ public class CustomScoreboardManager {
         return objective;
     }
 
-    public DynamicScoreboardObjective createDynamicObjective(String name, Function<ServerPlayerEntity, Text> title) {
-        return createDynamicObjective(name, ScoreboardCriterion.RenderType.INTEGER, title);
+    public DynamicScoreboardObjective createDynamicObjective(String name, Function<ServerPlayer, Component> title) {
+        return createDynamicObjective(name, ObjectiveCriteria.RenderType.INTEGER, title);
     }
 
-    public DynamicScoreboardObjective createDynamicObjective(String name, ScoreboardCriterion.RenderType renderType,
-                                                             Function<ServerPlayerEntity, Text> title) {
+    public DynamicScoreboardObjective createDynamicObjective(String name, ObjectiveCriteria.RenderType renderType,
+                                                             Function<ServerPlayer, Component> title) {
         var objective = new DynamicScoreboardObjective(name, renderType, title, playerManager);
 
         virtualObjectives.add(objective);
@@ -211,7 +213,7 @@ public class CustomScoreboardManager {
     }
 
     public synchronized void unload() {
-        teams.forEach(scoreboard::removeTeam);
+        teams.forEach(scoreboard::removePlayerTeam);
         teams.clear();
 
         virtualObjectives.forEach(VirtualScoreboardObjective::unload);

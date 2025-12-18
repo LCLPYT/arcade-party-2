@@ -1,22 +1,22 @@
 package work.lclpnet.ap2.game.maze_scape;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.block.ShapeContext;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.damage.DamageTypes;
-import net.minecraft.entity.effect.StatusEffectInstance;
-import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.entity.player.PlayerAbilities;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.function.BooleanBiFunction;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.shape.VoxelShape;
-import net.minecraft.util.shape.VoxelShapes;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.Mth;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.damagesource.DamageTypes;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Abilities;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.shapes.BooleanOp;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3d;
@@ -72,8 +72,8 @@ public class MazeScapeInstance extends EliminationGameInstance implements MapBoo
     }
 
     @Override
-    public @NotNull CompletableFuture<Void> createWorldBootstrap(@NotNull ServerWorld world, @NotNull GameMap map) {
-        world.setTimeOfDay(18_000);
+    public @NotNull CompletableFuture<Void> createWorldBootstrap(@NotNull ServerLevel world, @NotNull GameMap map) {
+        world.setDayTime(18_000);
 
         ModelManager modelManager = ApResources.getInstance();
 
@@ -104,12 +104,12 @@ public class MazeScapeInstance extends EliminationGameInstance implements MapBoo
     @Override
     protected void prepare() {
         if (MSLoader.DEBUG_PIECES) {
-            for (ServerPlayerEntity player : gameHandle.getParticipants()) {
-                PlayerAbilities abilities = player.getAbilities();
-                abilities.allowFlying = true;
+            for (ServerPlayer player : gameHandle.getParticipants()) {
+                Abilities abilities = player.getAbilities();
+                abilities.mayfly = true;
                 abilities.flying = true;
-                player.sendAbilitiesUpdate();
-                player.addStatusEffect(new StatusEffectInstance(StatusEffects.NIGHT_VISION, Integer.MAX_VALUE, 0, false, false, false));
+                player.onUpdateAbilities();
+                player.addEffect(new MobEffectInstance(MobEffects.NIGHT_VISION, Integer.MAX_VALUE, 0, false, false, false));
             }
             return;
         }
@@ -144,7 +144,7 @@ public class MazeScapeInstance extends EliminationGameInstance implements MapBoo
     protected void go() {
         if (MSLoader.DEBUG_PIECES) return;
 
-        ServerWorld world = getWorld();
+        ServerLevel world = getWorld();
         Participants participants = gameHandle.getParticipants();
 
         manager = new MSManager(world, getMap(), struct, participants, random,
@@ -170,12 +170,12 @@ public class MazeScapeInstance extends EliminationGameInstance implements MapBoo
     }
 
     @Override
-    public void eliminate(ServerPlayerEntity player, @Nullable DamageSource source) {
+    public void eliminate(ServerPlayer player, @Nullable DamageSource source) {
         super.eliminate(player, source);
 
         if (source == null || manager == null) return;
 
-        Entity attacker = source.getAttacker();
+        Entity attacker = source.getEntity();
 
         if (attacker != null) {
             manager.onKillAcquired(attacker);
@@ -189,7 +189,7 @@ public class MazeScapeInstance extends EliminationGameInstance implements MapBoo
 
         if (oriented == null) return;
 
-        Vec3d spawn = oriented.spawn();
+        Vec3 spawn = oriented.spawn();
 
         if (spawn == null) return;
 
@@ -199,25 +199,25 @@ public class MazeScapeInstance extends EliminationGameInstance implements MapBoo
         float yaw = MapUtils.getSpawnYaw(map);
         yaw = MathUtil.rotateYaw(yaw, transformation, new Vector3d());
 
-        ServerWorld world = getWorld();
+        ServerLevel world = getWorld();
 
-        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
-            player.teleport(world, spawn.getX(), spawn.getY(), spawn.getZ(), Set.of(), yaw, 0, true);
+        for (ServerPlayer player : gameHandle.getParticipants()) {
+            player.teleportTo(world, spawn.x(), spawn.y(), spawn.z(), Set.of(), yaw, 0, true);
         }
     }
 
     private boolean allowDamage(Entity entity, DamageSource source) {
-        return !source.isOf(DamageTypes.PLAYER_ATTACK);
+        return !source.is(DamageTypes.PLAYER_ATTACK);
     }
 
     private void checkPits() {
         gameHandle.getParticipants().forEach(this::checkInPit);
     }
 
-    private void checkInPit(ServerPlayerEntity player) {
+    private void checkInPit(ServerPlayer player) {
         if (struct == null) return;
 
-        var node = struct.nodeAt(player.getEntityPos());
+        var node = struct.nodeAt(player.position());
 
         if (node == null) return;
 
@@ -225,30 +225,30 @@ public class MazeScapeInstance extends EliminationGameInstance implements MapBoo
 
         if (oriented == null) return;
 
-        Box box = player.getBoundingBox();
+        AABB box = player.getBoundingBox();
 
         // check if bottom face of bounding box is completely within a pit
         double eps = 1e-6;
 
-        int minX = MathHelper.floor(box.minX - eps);
-        int minZ = MathHelper.floor(box.minZ - eps);
-        int maxX = MathHelper.floor(box.maxX + eps);
-        int maxZ = MathHelper.floor(box.maxZ + eps);
-        int by = MathHelper.floor(box.minY);
+        int minX = Mth.floor(box.minX - eps);
+        int minZ = Mth.floor(box.minZ - eps);
+        int maxX = Mth.floor(box.maxX + eps);
+        int maxZ = Mth.floor(box.maxZ + eps);
+        int by = Mth.floor(box.minY);
 
-        if (!BlockPos.stream(minX, by, minZ, maxX, by, maxZ).allMatch(oriented::isPitAt)) return;
+        if (!BlockPos.betweenClosedStream(minX, by, minZ, maxX, by, maxZ).allMatch(oriented::isPitAt)) return;
 
         // check if on ground
         double delta = 0.1;
-        int minY = MathHelper.floor(box.minY - delta);
-        int maxY = MathHelper.floor(box.minY + delta);
+        int minY = Mth.floor(box.minY - delta);
+        int maxY = Mth.floor(box.minY + delta);
 
-        ServerWorld world = getWorld();
-        ShapeContext context = ShapeContext.of(player);
-        Box collisionBox = box.withMinY(box.minY - delta).withMaxY(box.minY + delta);
-        VoxelShape boxShape = VoxelShapes.cuboid(collisionBox);
+        ServerLevel world = getWorld();
+        CollisionContext context = CollisionContext.of(player);
+        AABB collisionBox = box.setMinY(box.minY - delta).setMaxY(box.minY + delta);
+        VoxelShape boxShape = Shapes.create(collisionBox);
 
-        if (BlockPos.stream(minX, minY, minZ, maxX, maxY, maxZ)
+        if (BlockPos.betweenClosedStream(minX, minY, minZ, maxX, maxY, maxZ)
                 .filter(pos -> !oriented.isPitAt(pos))  // blocks marked as pit are considered air
                 .noneMatch(pos -> collides(pos, world, context, collisionBox, boxShape))) return;
 
@@ -258,7 +258,7 @@ public class MazeScapeInstance extends EliminationGameInstance implements MapBoo
         eliminate(player, msg.root(FELL_INTO_PIT, msg.wrap(player)));
     }
 
-    private static boolean collides(BlockPos pos, ServerWorld world, ShapeContext context, Box collisionBox, VoxelShape boxShape) {
+    private static boolean collides(BlockPos pos, ServerLevel world, CollisionContext context, AABB collisionBox, VoxelShape boxShape) {
         BlockState state = world.getBlockState(pos);
         VoxelShape shape = state.getCollisionShape(world, pos, context);
 
@@ -266,12 +266,12 @@ public class MazeScapeInstance extends EliminationGameInstance implements MapBoo
         int y = pos.getY();
         int z = pos.getZ();
 
-        if (shape == VoxelShapes.fullCube()) {
+        if (shape == Shapes.block()) {
             return collisionBox.intersects(x, y, z, x + 1.0, y + 1.0, z + 1.0);
         }
 
-        VoxelShape offset = shape.offset(x, y, z);
+        VoxelShape offset = shape.move(x, y, z);
 
-        return !offset.isEmpty() && VoxelShapes.matchesAnywhere(offset, boxShape, BooleanBiFunction.AND);
+        return !offset.isEmpty() && Shapes.joinIsNotEmpty(offset, boxShape, BooleanOp.AND);
     }
 }

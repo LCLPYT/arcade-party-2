@@ -1,9 +1,9 @@
 package work.lclpnet.ap2.core.mixin;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.ai.pathing.Path;
-import net.minecraft.entity.ai.pathing.PathNode;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.pathfinder.Node;
+import net.minecraft.world.level.pathfinder.Path;
+import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -19,7 +19,7 @@ import java.util.List;
 @Mixin(Path.class)
 public class PathMixin implements ApPath {
 
-    @Shadow @Final private List<PathNode> nodes;
+    @Shadow @Final private List<Node> nodes;
     @Unique private boolean patchNarrowMovement = false;
 
     @Override
@@ -43,16 +43,16 @@ public class PathMixin implements ApPath {
        │   │          │   │
     */
     @Inject(
-            method = "getNodePosition(Lnet/minecraft/entity/Entity;I)Lnet/minecraft/util/math/Vec3d;",
+            method = "getEntityPosAtNode(Lnet/minecraft/world/entity/Entity;I)Lnet/minecraft/world/phys/Vec3;",
             at = @At("HEAD"),
             cancellable = true
     )
-    public void ap2$patchNarrowMovement(Entity entity, int index, CallbackInfoReturnable<Vec3d> cir) {
+    public void ap2$patchNarrowMovement(Entity entity, int index, CallbackInfoReturnable<Vec3> cir) {
         if (!patchNarrowMovement) return;
 
-        PathNode node = this.nodes.get(index);
+        Node node = this.nodes.get(index);
 
-        Vec3d pos = NarrowMovementPatch.getNodePosition(entity, node.x, node.y, node.z);
+        Vec3 pos = NarrowMovementPatch.getNodePosition(entity, node.x, node.y, node.z);
 
         if (pos == null) return;
 

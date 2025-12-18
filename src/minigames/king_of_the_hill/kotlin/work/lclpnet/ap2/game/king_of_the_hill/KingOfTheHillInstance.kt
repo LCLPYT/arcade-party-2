@@ -1,20 +1,20 @@
 package work.lclpnet.ap2.game.king_of_the_hill
 
-import net.minecraft.block.Blocks
-import net.minecraft.component.DataComponentTypes
-import net.minecraft.enchantment.Enchantments
-import net.minecraft.entity.damage.DamageTypes
-import net.minecraft.entity.effect.StatusEffectInstance
-import net.minecraft.entity.effect.StatusEffects
-import net.minecraft.entity.passive.GoatEntity
-import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
-import net.minecraft.server.network.ServerPlayerEntity
-import net.minecraft.server.world.ServerWorld
-import net.minecraft.sound.SoundCategory
-import net.minecraft.sound.SoundEvents
-import net.minecraft.util.Formatting
-import net.minecraft.world.GameRules
+import net.minecraft.ChatFormatting
+import net.minecraft.core.component.DataComponents
+import net.minecraft.server.level.ServerLevel
+import net.minecraft.server.level.ServerPlayer
+import net.minecraft.sounds.SoundEvents
+import net.minecraft.sounds.SoundSource
+import net.minecraft.world.damagesource.DamageTypes
+import net.minecraft.world.effect.MobEffectInstance
+import net.minecraft.world.effect.MobEffects
+import net.minecraft.world.entity.animal.goat.Goat
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
+import net.minecraft.world.item.enchantment.Enchantments
+import net.minecraft.world.level.GameRules
+import net.minecraft.world.level.block.Blocks
 import work.lclpnet.ap2.*
 import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.map.MapBootstrapFunction
@@ -45,7 +45,7 @@ class KingOfTheHillInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
 
     override fun getData() = data!!
 
-    override fun bootstrapWorld(world: ServerWorld, map: GameMap) = createMarkers(world, map)
+    override fun bootstrapWorld(world: ServerLevel, map: GameMap) = createMarkers(world, map)
 
     override fun prepare() {
         commons().teleportToRandomSpawns(Random.asJavaRandom())
@@ -54,12 +54,12 @@ class KingOfTheHillInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
         setupSidebarScoreboard(data)
 
         commons().gameRuleBuilder()
-            .set(GameRules.SNOW_ACCUMULATION_HEIGHT, 0)
-            .set(GameRules.DO_WEATHER_CYCLE, false)
-            .set(GameRules.FALL_DAMAGE, false)
-            .set(GameRules.ANNOUNCE_ADVANCEMENTS, false)
+            .set(GameRules.RULE_SNOW_ACCUMULATION_HEIGHT, 0)
+            .set(GameRules.RULE_WEATHER_CYCLE, false)
+            .set(GameRules.RULE_FALL_DAMAGE, false)
+            .set(GameRules.RULE_ANNOUNCE_ADVANCEMENTS, false)
 
-        commons().addWaypoint(goalShape!!.center().toCenterPos(), 0xffd700)
+        commons().addWaypoint(goalShape!!.center().center, 0xffd700)
     }
 
     override fun go() {
@@ -69,35 +69,37 @@ class KingOfTheHillInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
             world.setBlock(pos, Blocks.AIR)
         }
 
-        val name = translate("game.ap2.king_of_the_hill.knockback_stick").formatted(Formatting.GOLD)
-        val knockback = ItemHelper.getEnchantment(Enchantments.KNOCKBACK, world.registryManager)
+        val name = translate("game.ap2.king_of_the_hill.knockback_stick").formatted(ChatFormatting.GOLD)
+        val knockback = ItemHelper.getEnchantment(Enchantments.KNOCKBACK, world.registryAccess())
 
         for (player in players()) {
             val stack = ItemStack(Items.STICK)
-            stack.set(DataComponentTypes.ITEM_NAME, name.translateFor(player))
-            stack.addEnchantment(knockback, 1)
+            stack.set(DataComponents.ITEM_NAME, name.translateFor(player))
+            stack.enchant(knockback, 1)
 
-            player.inventory.setStack(4, stack)
+            player.inventory.setItem(4, stack)
             PlayerInventoryAccess.setSelectedSlot(player, 4)
 
-            player.addStatusEffect(StatusEffectInstance(StatusEffects.RESISTANCE,
+            player.addEffect(
+                MobEffectInstance(
+                    MobEffects.RESISTANCE,
                 Integer.MAX_VALUE, 255, false, false, false))
         }
 
         gameHandle.protect { config ->
             config.allow(ProtectionTypes.ALLOW_DAMAGE, EntityDamageSourceScope {entity, source ->
-                entity is ServerPlayerEntity
+                entity is ServerPlayer
                         && players().isParticipating(entity)
-                        && (source.isOf(DamageTypes.PLAYER_ATTACK) || source.attacker is GoatEntity)
+                        && (source.`is`(DamageTypes.PLAYER_ATTACK) || source.entity is Goat)
             })
         }
 
         interval(20) { ->
-            val inGoal = players().stream().filter { goalShape!!.contains(it.entityPos) }.toList()
+            val inGoal = players().stream().filter { goalShape!!.contains(it.position()) }.toList()
 
             if (inGoal.size == 1) {
                 commons().addScore(inGoal[0], 1, data)
-                inGoal[0].playSoundToPlayer(SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, SoundCategory.PLAYERS, 0.4f, 1.6f)
+                inGoal[0].playNotifySound(SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 0.4f, 1.6f)
             }
         }
 

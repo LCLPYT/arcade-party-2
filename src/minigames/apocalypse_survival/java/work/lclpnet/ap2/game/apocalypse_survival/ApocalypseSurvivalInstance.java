@@ -1,15 +1,16 @@
 package work.lclpnet.ap2.game.apocalypse_survival;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.damage.DamageTypes;
-import net.minecraft.entity.mob.*;
-import net.minecraft.entity.projectile.PersistentProjectileEntity;
-import net.minecraft.entity.projectile.ProjectileEntity;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.world.GameRules;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.damagesource.DamageTypes;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.monster.*;
+import net.minecraft.world.entity.projectile.AbstractArrow;
+import net.minecraft.world.entity.projectile.Projectile;
+import net.minecraft.world.level.GameRules;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.game.apocalypse_survival.util.AsSetup;
@@ -44,7 +45,7 @@ public class ApocalypseSurvivalInstance extends EliminationGameInstance {
         useTaskDisplay();
         useSmoothDeath();
 
-        ServerWorld world = getWorld();
+        ServerLevel world = getWorld();
         GameMap map = getMap();
         Participants participants = gameHandle.getParticipants();
 
@@ -57,15 +58,15 @@ public class ApocalypseSurvivalInstance extends EliminationGameInstance {
         spawners = setup.readSpawners();
 
         commons().gameRuleBuilder()
-                .set(GameRules.FALL_DAMAGE, true)
-                .set(GameRules.DO_MOB_GRIEFING, true)
-                .set(GameRules.NATURAL_REGENERATION, false);
+                .set(GameRules.RULE_FALL_DAMAGE, true)
+                .set(GameRules.RULE_MOBGRIEFING, true)
+                .set(GameRules.RULE_NATURAL_REGENERATION, false);
 
         HookRegistrar hooks = gameHandle.getHooks();
 
 
         hooks.registerHook(ProjectileHooks.HIT_BLOCK, (projectile, hit) -> {
-            if (projectile instanceof PersistentProjectileEntity) {
+            if (projectile instanceof AbstractArrow) {
                 projectile.discard();
             }
         });
@@ -75,24 +76,24 @@ public class ApocalypseSurvivalInstance extends EliminationGameInstance {
 
 
             switch (entity) {
-                case ZombieEntity zombie -> targetManager.addZombie(zombie);
-                case SkeletonEntity skeleton -> targetManager.addSkeleton(skeleton);
-                case PhantomEntity phantom -> targetManager.addPhantom(phantom);
-                case VindicatorEntity vindicator -> targetManager.addVindicator(vindicator);
-                case VexEntity vex -> VexEntityBehaviour.setForceClipping(vex, true);
+                case Zombie zombie -> targetManager.addZombie(zombie);
+                case Skeleton skeleton -> targetManager.addSkeleton(skeleton);
+                case Phantom phantom -> targetManager.addPhantom(phantom);
+                case Vindicator vindicator -> targetManager.addVindicator(vindicator);
+                case Vex vex -> VexEntityBehaviour.setForceClipping(vex, true);
                 default -> {}
             }
         });
 
         hooks.registerHook(ServerEntityHooks.ENTITY_UNLOAD, (entity, relWorld) -> {
-            if (relWorld == world && entity instanceof MobEntity mob) {
+            if (relWorld == world && entity instanceof Mob mob) {
                 targetManager.removeMob(mob);
             }
         });
 
-        for (ServerPlayerEntity player : participants) {
-            PlayerReset.setAttribute(player, EntityAttributes.SAFE_FALL_DISTANCE, 5.0);
-            PlayerReset.setAttribute(player, EntityAttributes.FALL_DAMAGE_MULTIPLIER, 0.5);
+        for (ServerPlayer player : participants) {
+            PlayerReset.setAttribute(player, Attributes.SAFE_FALL_DISTANCE, 5.0);
+            PlayerReset.setAttribute(player, Attributes.FALL_DAMAGE_MULTIPLIER, 0.5);
         }
 
         commons().displayHealth();
@@ -109,7 +110,7 @@ public class ApocalypseSurvivalInstance extends EliminationGameInstance {
     }
 
     @Override
-    public void participantRemoved(ServerPlayerEntity player) {
+    public void participantRemoved(ServerPlayer player) {
         targetManager.removeParticipant(player);
 
         // put time survived msg
@@ -123,11 +124,11 @@ public class ApocalypseSurvivalInstance extends EliminationGameInstance {
     }
 
     private boolean allowDamage(Entity entity, DamageSource source) {
-        if (entity instanceof MobEntity && (source.isOf(DamageTypes.FALL) || source.getSource() instanceof ProjectileEntity)) {
+        if (entity instanceof Mob && (source.is(DamageTypes.FALL) || source.getDirectEntity() instanceof Projectile)) {
             return false;
         }
 
-        return !source.isOf(DamageTypes.PLAYER_ATTACK);
+        return !source.is(DamageTypes.PLAYER_ATTACK);
     }
 
     private void tick() {

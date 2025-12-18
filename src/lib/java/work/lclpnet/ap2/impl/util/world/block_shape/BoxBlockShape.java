@@ -3,10 +3,10 @@ package work.lclpnet.ap2.impl.util.world.block_shape;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.math.Vec3i;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Vec3i;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
 import work.lclpnet.gaco.ds.BlockBox;
 
@@ -35,8 +35,8 @@ public class BoxBlockShape implements BlockShape {
 
     public BoxBlockShape(BlockBox box) {
         this.box = box;
-        this.center = BlockPos.ofFloored(box.getCenter());
-        this.origin = center.withY(box.min().getY());
+        this.center = BlockPos.containing(box.getCenter());
+        this.origin = center.atY(box.min().getY());
     }
 
     @Override
@@ -79,12 +79,12 @@ public class BoxBlockShape implements BlockShape {
     }
 
     @Override
-    public Vec3d randomPos(Random random) {
+    public Vec3 randomPos(Random random) {
         return box.randomPos(random);
     }
 
     @Override
-    public boolean collidesWith(Box other) {
+    public boolean collidesWith(AABB other) {
         return box.collidesWith(other);
     }
 }

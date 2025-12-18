@@ -3,11 +3,11 @@ package work.lclpnet.ap2.mode_default.cmd;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import net.minecraft.command.argument.EntityArgumentType;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.arguments.EntityArgument;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Player;
 import org.jetbrains.annotations.NotNull;
 import work.lclpnet.ap2.api.game.*;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
@@ -20,8 +20,8 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static net.minecraft.server.command.CommandManager.argument;
-import static net.minecraft.server.command.CommandManager.literal;
+import static net.minecraft.commands.Commands.argument;
+import static net.minecraft.commands.Commands.literal;
 
 public class WinCommand implements KibuCommand {
 
@@ -38,22 +38,22 @@ public class WinCommand implements KibuCommand {
         registrar.registerCommand(command());
     }
 
-    private LiteralArgumentBuilder<ServerCommandSource> command() {
+    private LiteralArgumentBuilder<CommandSourceStack> command() {
         return literal("win")
-                .requires(s -> s.hasPermissionLevel(2))
+                .requires(s -> s.hasPermission(2))
                 .executes(this::winSelf)
                 .then(literal("now")
                         .executes(this::winSelfNow))
-                .then(argument("players", EntityArgumentType.players())
+                .then(argument("players", EntityArgument.players())
                         .executes(this::winPlayers)
                         .then(literal("now")
                                 .executes(this::winPlayersNow)));
     }
 
-    private int winSelf(CommandContext<ServerCommandSource> ctx) throws CommandSyntaxException {
-        ServerPlayerEntity player = ctx.getSource().getPlayerOrThrow();
+    private int winSelf(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        ServerPlayer player = ctx.getSource().getPlayerOrException();
 
-        ctx.getSource().sendMessage(Text.literal("Made yourself the winner of the current mini game"));
+        ctx.getSource().sendSystemMessage(Component.literal("Made yourself the winner of the current mini game"));
 
         if (miniGame instanceof WinManagerView view) {
             WinManagerAccess winManagerAccess = view.getWinManagerAccess();
@@ -65,17 +65,17 @@ public class WinCommand implements KibuCommand {
         return 1;
     }
 
-    private int winSelfNow(CommandContext<ServerCommandSource> ctx) throws CommandSyntaxException {
-        ServerPlayerEntity player = ctx.getSource().getPlayerOrThrow();
+    private int winSelfNow(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        ServerPlayer player = ctx.getSource().getPlayerOrException();
 
-        ctx.getSource().sendMessage(Text.literal("Made yourself the winner of the current mini game"));
+        ctx.getSource().sendSystemMessage(Component.literal("Made yourself the winner of the current mini game"));
 
         complete(player);
 
         return 1;
     }
 
-    private int winPlayers(CommandContext<ServerCommandSource> ctx) throws CommandSyntaxException {
+    private int winPlayers(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
         var players = getWinners(ctx);
 
         if (miniGame instanceof WinManagerView view) {
@@ -88,7 +88,7 @@ public class WinCommand implements KibuCommand {
         return 1;
     }
 
-    private int winPlayersNow(CommandContext<ServerCommandSource> ctx) throws CommandSyntaxException {
+    private int winPlayersNow(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
         var players = getWinners(ctx);
 
         complete(players);
@@ -96,14 +96,14 @@ public class WinCommand implements KibuCommand {
         return 1;
     }
 
-    private void complete(ServerPlayerEntity winner) {
+    private void complete(ServerPlayer winner) {
         PlayerRef ref = PlayerRef.create(winner);
         var res = new MiniGameResults.PlayerResult(ref, 1);
 
         gameHandle.complete(new MiniGameResults(MiniGameResults.Status.SUCCESS, Map.of(ref, res)));
     }
 
-    private void complete(Set<ServerPlayerEntity> winners) {
+    private void complete(Set<ServerPlayer> winners) {
         var entries = winners.stream()
                 .map(PlayerRef::create)
                 .collect(Collectors.toMap(Function.identity(), ref -> new MiniGameResults.PlayerResult(ref, 1)));
@@ -112,22 +112,22 @@ public class WinCommand implements KibuCommand {
     }
 
     @NotNull
-    private static Set<ServerPlayerEntity> getWinners(CommandContext<ServerCommandSource> ctx) throws CommandSyntaxException {
-        var players = new HashSet<>(EntityArgumentType.getPlayers(ctx, "players"));
+    private static Set<ServerPlayer> getWinners(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        var players = new HashSet<>(EntityArgument.getPlayers(ctx, "players"));
 
         int count = players.size();
 
-        ServerCommandSource source = ctx.getSource();
+        CommandSourceStack source = ctx.getSource();
 
         if (count == 1) {
-            ServerPlayerEntity winner = players.iterator().next();
-            source.sendMessage(Text.literal("Made %s the winner of the current mini game".formatted(winner.getNameForScoreboard())));
+            ServerPlayer winner = players.iterator().next();
+            source.sendSystemMessage(Component.literal("Made %s the winner of the current mini game".formatted(winner.getScoreboardName())));
         } else {
             String names = players.stream()
-                    .map(PlayerEntity::getNameForScoreboard)
+                    .map(Player::getScoreboardName)
                     .collect(Collectors.joining(", "));
 
-            source.sendMessage(Text.literal("Made %s the winners of the current mini game".formatted(names)));
+            source.sendSystemMessage(Component.literal("Made %s the winners of the current mini game".formatted(names)));
         }
         return players;
     }

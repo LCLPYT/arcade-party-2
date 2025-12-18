@@ -1,9 +1,9 @@
 package work.lclpnet.ap2.game.pig_race;
 
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.registry.DynamicRegistryManager;
-import net.minecraft.util.Identifier;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import org.jetbrains.annotations.NotNull;
 import work.lclpnet.ap2.ApConstants;
 import work.lclpnet.ap2.api.game.*;
@@ -26,7 +26,7 @@ public class PigRaceMiniGame implements MiniGame {
     }
 
     @Override
-    public @NotNull Identifier getId() {
+    public @NotNull ResourceLocation getId() {
         return ApConstants.identifier("pig_race");
     }
 
@@ -41,7 +41,7 @@ public class PigRaceMiniGame implements MiniGame {
     }
 
     @Override
-    public @NotNull ItemStack getIcon(@NotNull DynamicRegistryManager manager) {
+    public @NotNull ItemStack getIcon(@NotNull RegistryAccess manager) {
         return new ItemStack(Items.CARROT_ON_A_STICK);
     }
 }

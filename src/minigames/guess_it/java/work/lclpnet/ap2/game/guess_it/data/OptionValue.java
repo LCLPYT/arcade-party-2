@@ -7,8 +7,8 @@ import work.lclpnet.kibu.translate.text.TranslatedText;
 
 import java.util.Optional;
 
-import static net.minecraft.util.Formatting.RED;
-import static net.minecraft.util.Formatting.YELLOW;
+import static net.minecraft.ChatFormatting.RED;
+import static net.minecraft.ChatFormatting.YELLOW;
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
 public class OptionValue {

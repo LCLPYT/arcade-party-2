@@ -2,10 +2,10 @@ package work.lclpnet.ap2.mode_default.cmd;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
-import net.minecraft.command.argument.IdentifierArgumentType;
-import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.arguments.ResourceLocationArgument;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import work.lclpnet.ap2.api.game.MiniGame;
 import work.lclpnet.ap2.api.map.MapFacade;
 import work.lclpnet.ap2.mode_default.cmd.arg.MapSuggestionProvider;
@@ -15,8 +15,8 @@ import work.lclpnet.kibu.cmd.type.KibuCommand;
 import java.util.Optional;
 import java.util.function.Supplier;
 
-import static net.minecraft.server.command.CommandManager.argument;
-import static net.minecraft.server.command.CommandManager.literal;
+import static net.minecraft.commands.Commands.argument;
+import static net.minecraft.commands.Commands.literal;
 
 public class ForceMapCommand implements KibuCommand {
 
@@ -33,20 +33,20 @@ public class ForceMapCommand implements KibuCommand {
         registrar.registerCommand(command());
     }
 
-    private LiteralArgumentBuilder<ServerCommandSource> command() {
+    private LiteralArgumentBuilder<CommandSourceStack> command() {
         return literal("forcemap")
-                .requires(s -> s.hasPermissionLevel(2))
-                .then(argument("mapId", IdentifierArgumentType.identifier())
+                .requires(s -> s.hasPermission(2))
+                .then(argument("mapId", ResourceLocationArgument.id())
                         .suggests(new MapSuggestionProvider(mapFacade, gameSupplier))
                         .executes(this::forceMap));
     }
 
-    private int forceMap(CommandContext<ServerCommandSource> ctx) {
-        Identifier mapId = IdentifierArgumentType.getIdentifier(ctx, "mapId");
+    private int forceMap(CommandContext<CommandSourceStack> ctx) {
+        ResourceLocation mapId = ResourceLocationArgument.getId(ctx, "mapId");
 
         mapFacade.forceMap(mapId);
 
-        ctx.getSource().sendMessage(Text.literal("Next map will be \"%s\"".formatted(mapId)));
+        ctx.getSource().sendSystemMessage(Component.literal("Next map will be \"%s\"".formatted(mapId)));
 
         return 1;
     }

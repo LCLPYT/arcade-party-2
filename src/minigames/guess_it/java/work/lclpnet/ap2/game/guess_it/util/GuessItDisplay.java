@@ -1,11 +1,11 @@
 package work.lclpnet.ap2.game.guess_it.util;
 
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.decoration.DisplayEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.AffineTransformation;
-import net.minecraft.util.math.BlockPos;
+import com.mojang.math.Transformation;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.Display;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.item.ItemStack;
 import org.joml.Matrix4f;
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape;
 import work.lclpnet.kibu.access.entity.DisplayEntityAccess;
@@ -13,25 +13,25 @@ import work.lclpnet.lobby.util.WorldModifier;
 
 public class GuessItDisplay {
 
-    private final ServerWorld world;
+    private final ServerLevel world;
     private final WorldModifier modifier;
     private final BlockShape blockShape;
 
-    public GuessItDisplay(ServerWorld world, WorldModifier modifier, BlockShape blockShape) {
+    public GuessItDisplay(ServerLevel world, WorldModifier modifier, BlockShape blockShape) {
         this.world = world;
         this.modifier = modifier;
         this.blockShape = blockShape;
     }
 
     public void displayItem(ItemStack stack) {
-        var display = new DisplayEntity.ItemDisplayEntity(EntityType.ITEM_DISPLAY, world);
+        var display = new Display.ItemDisplay(EntityType.ITEM_DISPLAY, world);
 
         DisplayEntityAccess.setItemStack(display, stack);
-        DisplayEntityAccess.setBillboardMode(display, DisplayEntity.BillboardMode.CENTER);
+        DisplayEntityAccess.setBillboardMode(display, Display.BillboardConstraints.CENTER);
 
         float scale = 8;
 
-        AffineTransformation transformation = new AffineTransformation(new Matrix4f(
+        Transformation transformation = new Transformation(new Matrix4f(
                 -scale, 0, 0, 0,
                 0, scale, 0, 0,
                 0, 0, -scale, 0,
@@ -46,7 +46,7 @@ public class GuessItDisplay {
         double y = origin.getY() + scale;
         double z = origin.getZ() + 0.5;
 
-        display.setPos(x, y, z);
+        display.setPosRaw(x, y, z);
 
         modifier.spawnEntity(display);
     }

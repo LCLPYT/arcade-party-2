@@ -1,11 +1,11 @@
 package work.lclpnet.ap2.core.mixin;
 
-import net.minecraft.block.BigDripleafBlock;
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityCollisionHandler;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.InsideBlockEffectApplier;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.BigDripleafBlock;
+import net.minecraft.world.level.block.state.BlockState;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -16,14 +16,14 @@ import work.lclpnet.ap2.core.hook.DripLeafTiltCallback;
 public abstract class BigDripLeafBlockMixin {
 
     @Inject(
-            method = "onEntityCollision",
+            method = "entityInside",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/block/BigDripleafBlock;changeTilt(Lnet/minecraft/block/BlockState;Lnet/minecraft/world/World;Lnet/minecraft/util/math/BlockPos;Lnet/minecraft/block/enums/Tilt;Lnet/minecraft/sound/SoundEvent;)V"
+                    target = "Lnet/minecraft/world/level/block/BigDripleafBlock;setTiltAndScheduleTick(Lnet/minecraft/world/level/block/state/BlockState;Lnet/minecraft/world/level/Level;Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/properties/Tilt;Lnet/minecraft/sounds/SoundEvent;)V"
             ),
             cancellable = true
     )
-    private void ap2$onDripLeafCollision(BlockState state, World world, BlockPos pos, Entity entity, EntityCollisionHandler handler, boolean bl, CallbackInfo ci) {
+    private void ap2$onDripLeafCollision(BlockState state, Level world, BlockPos pos, Entity entity, InsideBlockEffectApplier handler, boolean bl, CallbackInfo ci) {
         if (DripLeafTiltCallback.HOOK.invoker().onTilt(entity, pos)) {
             ci.cancel();
         }

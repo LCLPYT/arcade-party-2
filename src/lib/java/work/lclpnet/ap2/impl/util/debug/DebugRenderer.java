@@ -1,11 +1,14 @@
 package work.lclpnet.ap2.impl.util.debug;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.entity.decoration.DisplayEntity;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.*;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Position;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.Display;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 import work.lclpnet.ap2.api.util.model.Model;
 import work.lclpnet.ap2.api.util.model.ModelManager;
 import work.lclpnet.ap2.impl.util.model.Models;
@@ -41,8 +44,8 @@ public class DebugRenderer {
         }
     }
 
-    public Object3d line(Vec3d start, Vec3d end, double thickness, BlockState state) {
-        return line(start.getX(), start.getY(), start.getZ(), end.getX(), end.getY(), end.getZ(), thickness, state);
+    public Object3d line(Vec3 start, Vec3 end, double thickness, BlockState state) {
+        return line(start.x(), start.y(), start.z(), end.x(), end.y(), end.z(), thickness, state);
     }
 
     public Object3d line(double x1, double y1, double z1, double x2, double y2, double z2, double thickness, BlockState state) {
@@ -84,11 +87,11 @@ public class DebugRenderer {
         return obj;
     }
 
-    public Object3d box(Box box, BlockState state) {
+    public Object3d box(AABB box, BlockState state) {
         var obj = new BlockDisplayObject(scene, state);
 
         obj.position.set(box.minX, box.minY, box.minZ);
-        obj.scale.set(box.getLengthX(), box.getLengthY(), box.getLengthZ());
+        obj.scale.set(box.getXsize(), box.getYsize(), box.getZsize());
 
         display(obj);
 
@@ -97,12 +100,12 @@ public class DebugRenderer {
 
     private Model crossModel(BlockState state) {
         Model baseModel = modelManager.getModel(Models.CROSS).orElseThrow();
-        return TemplateModel.replace(baseModel, Blocks.RED_CONCRETE.getDefaultState(), state);
+        return TemplateModel.replace(baseModel, Blocks.RED_CONCRETE.defaultBlockState(), state);
     }
 
     private Model arrowModel(BlockState state) {
         Model baseModel = modelManager.getModel(Models.ARROW).orElseThrow();
-        return TemplateModel.replace(baseModel, Blocks.LIME_CONCRETE.getDefaultState(), state);
+        return TemplateModel.replace(baseModel, Blocks.LIME_CONCRETE.defaultBlockState(), state);
     }
 
     public Object3d arrow(double x, double y, double z, double angleYRad, double scale, BlockState state) {
@@ -121,16 +124,16 @@ public class DebugRenderer {
         return arrow;
     }
 
-    public void arrow(Vec3d pos, Vec3d dir, BlockState color) {
+    public void arrow(Vec3 pos, Vec3 dir, BlockState color) {
         arrow(pos, dir, 0.5, color);
     }
 
-    public void arrow(Vec3d pos, Vec3d dir, double scale, BlockState color) {
+    public void arrow(Vec3 pos, Vec3 dir, double scale, BlockState color) {
         arrow(pos.x, pos.y, pos.z, dir.x, dir.y, dir.z, scale, color);
     }
 
     public void arrow(double x, double y, double z, double dx, double dy, double dz, double scale, BlockState state) {
-        var model = TemplateModel.replace(arrowModel(state), Blocks.LIME_CONCRETE.getDefaultState(), state);
+        var model = TemplateModel.replace(arrowModel(state), Blocks.LIME_CONCRETE.defaultBlockState(), state);
 
         Object3d marker = model.createInstance(scene);
         marker.position.set(0, 0, 0.5);
@@ -144,11 +147,11 @@ public class DebugRenderer {
         display(wrapper);
     }
 
-    public Object3d marker(Vec3d pos, BlockState state, int glowColor) {
+    public Object3d marker(Vec3 pos, BlockState state, int glowColor) {
         return marker(pos.x, pos.y, pos.z, state, glowColor);
     }
 
-    public Object3d marker(Vec3d pos, BlockState state, int glowColor, double scale) {
+    public Object3d marker(Vec3 pos, BlockState state, int glowColor, double scale) {
         return marker(pos.x, pos.y, pos.z, state, glowColor, scale);
     }
 
@@ -174,24 +177,24 @@ public class DebugRenderer {
         return wrapper;
     }
 
-    public TextDisplayObject text(Vec3d pos, Text text) {
+    public TextDisplayObject text(Vec3 pos, Component text) {
         return text(pos, text, 0.25);
     }
 
-    public TextDisplayObject text(double x, double y, double z, Text text) {
+    public TextDisplayObject text(double x, double y, double z, Component text) {
         return text(x, y, z, text, 0.25);
     }
 
-    public TextDisplayObject text(Vec3d pos, Text text, double scale) {
-        return text(pos.getX(), pos.getY(), pos.getZ(), text, scale);
+    public TextDisplayObject text(Vec3 pos, Component text, double scale) {
+        return text(pos.x(), pos.y(), pos.z(), text, scale);
     }
 
-    public TextDisplayObject text(double x, double y, double z, Text text, double scale) {
+    public TextDisplayObject text(double x, double y, double z, Component text, double scale) {
         var display = new TextDisplayObject(scene, text);
 
         display.position.set(x, y, z);
         display.scale.set(scale);
-        display.setBillboardMode(DisplayEntity.BillboardMode.CENTER);
+        display.setBillboardMode(Display.BillboardConstraints.CENTER);
         display.setBackground(0);
 
         display(display);
@@ -206,14 +209,14 @@ public class DebugRenderer {
         line(x1, y, z1, x1, y, z2, thickness, color);
     }
 
-    public void model(Identifier modelId, double x, double y, double z, double scale) {
+    public void model(ResourceLocation modelId, double x, double y, double z, double scale) {
         Model model = modelManager.getModel(modelId).orElseThrow(() -> new NoSuchElementException("Unknown model: " + modelId));
 
         model(model, x, y, z, scale);
     }
 
     public void model(Model model, Position pos, double scale) {
-        model(model, pos.getX(), pos.getY(), pos.getZ(), scale);
+        model(model, pos.x(), pos.y(), pos.z(), scale);
     }
 
     public void model(Model model, double x, double y, double z, double scale) {
@@ -224,7 +227,7 @@ public class DebugRenderer {
         display(instance);
     }
 
-    public void labeledCross(double x, double y, double z, BlockState color, Text label) {
+    public void labeledCross(double x, double y, double z, BlockState color, Component label) {
         Model model = crossModel(color);
 
         model(model, x, y, z, 0.75);

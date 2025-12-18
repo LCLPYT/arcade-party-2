@@ -1,12 +1,12 @@
 package work.lclpnet.ap2.game.bow_spleef.item;
 
-import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.registry.DynamicRegistryManager;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Hand;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.impl.game.item.SpecialItem;
 import work.lclpnet.ap2.impl.game.item.SpecialItemContext;
@@ -27,39 +27,39 @@ public class TripleJumpItem implements SpecialItem {
     }
 
     @Override
-    public ItemStack createItemStack(DynamicRegistryManager registryManager) {
+    public ItemStack createItemStack(RegistryAccess registryManager) {
         return new ItemStack(Items.GOLDEN_BOOTS, 3);
     }
 
     @Override
-    public void onDropped(ServerPlayerEntity player) {
-        tripleJump.remove(player.getUuid());
+    public void onDropped(ServerPlayer player) {
+        tripleJump.remove(player.getUUID());
     }
 
     @Override
-    public ActionResult onUse(ServerPlayerEntity player, ItemStack stack, @Nullable Hand hand, SpecialItemContext ctx) {
+    public InteractionResult onUse(ServerPlayer player, ItemStack stack, @Nullable InteractionHand hand, SpecialItemContext ctx) {
         PlayerUtils.syncPlayerItems(player);
-        return ActionResult.FAIL;
+        return InteractionResult.FAIL;
     }
 
-    public boolean handleExtraJump(ServerPlayerEntity player, SpecialItemContext ctx) {
-        UUID uuid = player.getUuid();
+    public boolean handleExtraJump(ServerPlayer player, SpecialItemContext ctx) {
+        UUID uuid = player.getUUID();
 
         if (tripleJump.contains(uuid)) {
             tripleJump.remove(uuid);
 
-            ItemStack stack = player.getInventory().getStack(8);
+            ItemStack stack = player.getInventory().getItem(8);
             int maxDamage = stack.getMaxDamage();
-            int damage = stack.getDamage();
+            int damage = stack.getDamageValue();
             int dmg = (int) Math.ceil((float) maxDamage / USES);
 
             if (damage + dmg >= maxDamage) {
                 ctx.removeSpecialItem(player, this);
             } else {
                 if (player.getInventory().getSelectedSlot() == 8) {
-                    stack.damage(dmg, player, EquipmentSlot.MAINHAND);
+                    stack.hurtAndBreak(dmg, player, EquipmentSlot.MAINHAND);
                 } else {
-                    stack.damage(dmg, player);
+                    stack.hurtWithoutBreaking(dmg, player);
                 }
             }
 

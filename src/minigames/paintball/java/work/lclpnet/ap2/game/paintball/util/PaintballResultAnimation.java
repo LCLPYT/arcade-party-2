@@ -1,12 +1,12 @@
 package work.lclpnet.ap2.game.paintball.util;
 
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.Text;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import work.lclpnet.ap2.api.game.team.Team;
 import work.lclpnet.ap2.api.game.team.TeamKey;
 import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer;
@@ -85,11 +85,11 @@ public class PaintballResultAnimation implements TitleAnimation {
         final float minPitch = 0.5f, maxPitch = 1.6f;
         float pitch = minPitch + progress * (maxPitch - minPitch);
 
-        SoundHelper.playSound(server, SoundEvents.BLOCK_BREWING_STAND_BREW, SoundCategory.NEUTRAL, 0.2f, pitch);
+        SoundHelper.playSound(server, SoundEvents.BREWING_STAND_BREW, SoundSource.NEUTRAL, 0.2f, pitch);
     }
 
     private void playFinalSound() {
-        SoundHelper.playSound(server, SoundEvents.BLOCK_NOTE_BLOCK_PLING.value(), SoundCategory.NEUTRAL, 0.5f, 2.f);
+        SoundHelper.playSound(server, SoundEvents.NOTE_BLOCK_PLING.value(), SoundSource.NEUTRAL, 0.5f, 2.f);
     }
 
     private void updateTitle(double t) {
@@ -101,16 +101,16 @@ public class PaintballResultAnimation implements TitleAnimation {
                 .map(val -> min(val, lerpedValue) * 100)
                 .toArray();
 
-        for (ServerPlayerEntity player : PlayerLookup.all(server)) {
+        for (ServerPlayer player : PlayerLookup.all(server)) {
             Locale locale = translations.getLocale(player);
-            Text msg = createMessage(interpolated, locale);
+            Component msg = createMessage(interpolated, locale);
 
-            Title.get(player).title(Text.empty(), msg);
+            Title.get(player).title(Component.empty(), msg);
         }
     }
 
-    private Text createMessage(double[] interpolated, Locale locale) {
-        MutableText root = Text.empty();
+    private Component createMessage(double[] interpolated, Locale locale) {
+        MutableComponent root = Component.empty();
         int i = 0;
 
         final int totalChars = 35;
@@ -121,11 +121,11 @@ public class PaintballResultAnimation implements TitleAnimation {
 
         for (Entry entry : entries) {
             if (i > 0) {
-                root.append(Text.literal(spacer));
+                root.append(Component.literal(spacer));
             }
 
             String str = String.format(locale, "%.1f%%", interpolated[i]);
-            root.append(Text.literal(str).withColor(entry.key.color()));
+            root.append(Component.literal(str).withColor(entry.key.color()));
             i++;
         }
 
@@ -134,21 +134,21 @@ public class PaintballResultAnimation implements TitleAnimation {
 
     @Override
     public void begin() {
-        for (ServerPlayerEntity player : players()) {
+        for (ServerPlayer player : players()) {
             Title.get(player).times(0, 20, 0);
         }
     }
 
     @Override
     public void destroy() {
-        for (ServerPlayerEntity player : players()) {
+        for (ServerPlayer player : players()) {
             Title.get(player).resetTimes();
         }
 
         callback.run();
     }
 
-    private Iterable<? extends ServerPlayerEntity> players() {
+    private Iterable<? extends ServerPlayer> players() {
         return PlayerLookup.all(server);
     }
 

@@ -1,6 +1,6 @@
 package work.lclpnet.ap2.game.aim_master;
 
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
 import work.lclpnet.gaco.ds.BlockBox;
 
 import java.util.ArrayList;
@@ -59,7 +59,7 @@ public class PositionGenerator {
                     double angle = getAngle(x, y, z);
 
                     if (angle <= fov) {
-                        validBlockPositions.add(pos.toImmutable());
+                        validBlockPositions.add(pos.immutable());
                     }
                 }
             }

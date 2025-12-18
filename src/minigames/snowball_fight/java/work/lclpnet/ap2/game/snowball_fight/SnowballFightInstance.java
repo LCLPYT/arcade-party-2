@@ -1,27 +1,27 @@
 package work.lclpnet.ap2.game.snowball_fight;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.entity.attribute.EntityAttributeInstance;
-import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.damage.DamageTypes;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.entity.projectile.ProjectileEntity;
-import net.minecraft.entity.projectile.thrown.SnowballEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.particle.BlockStateParticleEffect;
-import net.minecraft.particle.ParticleTypes;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.BlockParticleOption;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.damagesource.DamageTypes;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.projectile.Projectile;
+import net.minecraft.world.entity.projectile.Snowball;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
@@ -73,7 +73,7 @@ public class SnowballFightInstance extends EliminationGameInstance {
 
         gameHandle.protect(config -> {
             config.allow(ProtectionTypes.BREAK_BLOCKS, (entity, pos) -> {
-                if (entity instanceof ServerPlayerEntity player && participants.isParticipating(player) && !winManager.isGameOver()) {
+                if (entity instanceof ServerPlayer player && participants.isParticipating(player) && !winManager.isGameOver()) {
                     onBreakBlock(player, pos);
                 }
 
@@ -81,16 +81,16 @@ public class SnowballFightInstance extends EliminationGameInstance {
             });
 
             config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, damageSource)
-                    -> damageSource.isOf(DamageTypes.OUTSIDE_BORDER)
-                    || damageSource.isOf(DamageTypes.FREEZE)
-                    || entity instanceof ServerPlayerEntity damaged
+                    -> damageSource.is(DamageTypes.OUTSIDE_BORDER)
+                    || damageSource.is(DamageTypes.FREEZE)
+                    || entity instanceof ServerPlayer damaged
                     && participants.isParticipating(damaged)
-                    && damageSource.getSource() instanceof ProjectileEntity && damageSource.getAttacker() != entity);
+                    && damageSource.getDirectEntity() instanceof Projectile && damageSource.getEntity() != entity);
         });
 
         hooks.registerHook(ServerLivingEntityHooks.ALLOW_DAMAGE, (entity, source, amount) -> {
-            if (source.getSource() instanceof SnowballEntity && Math.abs(amount) < 1e-4f && entity.getEntityWorld() instanceof ServerWorld world) {
-                entity.damage(world, source, SNOWBALL_DAMAGE);
+            if (source.getDirectEntity() instanceof Snowball && Math.abs(amount) < 1e-4f && entity.level() instanceof ServerLevel world) {
+                entity.hurtServer(world, source, SNOWBALL_DAMAGE);
                 return false;
             }
 
@@ -98,17 +98,17 @@ public class SnowballFightInstance extends EliminationGameInstance {
         });
 
         hooks.registerHook(PlayerInteractionHooks.USE_ITEM, (player, world, hand) -> {
-            ItemStack stack = player.getStackInHand(hand);
+            ItemStack stack = player.getItemInHand(hand);
 
-            if (stack.isOf(Items.SNOWBALL) && stack.getCount() == 1) {
+            if (stack.is(Items.SNOWBALL) && stack.getCount() == 1) {
                 onDepleteStack(player);
             }
 
-            return ActionResult.PASS;
+            return InteractionResult.PASS;
         });
 
-        for (ServerPlayerEntity player : participants) {
-            EntityAttributeInstance attribute = player.getAttributeInstance(EntityAttributes.BLOCK_BREAK_SPEED);
+        for (ServerPlayer player : participants) {
+            AttributeInstance attribute = player.getAttribute(Attributes.BLOCK_BREAK_SPEED);
 
             if (attribute != null) {
                 attribute.setBaseValue(100);
@@ -124,46 +124,46 @@ public class SnowballFightInstance extends EliminationGameInstance {
     }
 
     @Override
-    public void eliminate(ServerPlayerEntity player, @Nullable DamageSource source) {
+    public void eliminate(ServerPlayer player, @Nullable DamageSource source) {
         if (source != null) {
-            ServerWorld world = getWorld();
+            ServerLevel world = getWorld();
 
-            world.playSound(null, player.getBlockPos(), SoundEvents.ENTITY_PLAYER_DEATH, SoundCategory.PLAYERS, 0.5f, 1f);
+            world.playSound(null, player.blockPosition(), SoundEvents.PLAYER_DEATH, SoundSource.PLAYERS, 0.5f, 1f);
 
             double x = player.getX();
             double y = player.getY() + 1;
             double z = player.getZ();
 
-            var effect = new BlockStateParticleEffect(ParticleTypes.FALLING_DUST, Blocks.LIGHT_BLUE_CONCRETE.getDefaultState());
-            world.spawnParticles(effect, x, y, z, 50, 0.2, 1, 0.2, 1);
+            var effect = new BlockParticleOption(ParticleTypes.FALLING_DUST, Blocks.LIGHT_BLUE_CONCRETE.defaultBlockState());
+            world.sendParticles(effect, x, y, z, 50, 0.2, 1, 0.2, 1);
 
-            world.spawnParticles(ParticleTypes.SNOWFLAKE, x, y, z, 50, 0.2, 1, 0.2, 0.05);
+            world.sendParticles(ParticleTypes.SNOWFLAKE, x, y, z, 50, 0.2, 1, 0.2, 0.05);
         }
 
         super.eliminate(player, source);
     }
 
-    private static void onDepleteStack(PlayerEntity player) {
-        PlayerInventory inventory = player.getInventory();
+    private static void onDepleteStack(Player player) {
+        Inventory inventory = player.getInventory();
 
         int selected = inventory.getSelectedSlot();
-        int size = inventory.size();
+        int size = inventory.getContainerSize();
 
         for (int i = 0; i < size; i++) {
             if (i == selected) continue;
 
-            ItemStack stack = inventory.getStack(i);
-            if (!stack.isOf(Items.SNOWBALL)) continue;
+            ItemStack stack = inventory.getItem(i);
+            if (!stack.is(Items.SNOWBALL)) continue;
 
-            inventory.setStack(i, ItemStack.EMPTY);
-            stack.increment(1);
-            inventory.setStack(selected, stack);
+            inventory.setItem(i, ItemStack.EMPTY);
+            stack.grow(1);
+            inventory.setItem(selected, stack);
             break;
         }
     }
 
     private void teleportPlayers() {
-        ServerWorld world = getWorld();
+        ServerLevel world = getWorld();
         GameMap map = getMap();
         Participants participants = gameHandle.getParticipants();
         Random random = new Random();
@@ -172,36 +172,36 @@ public class SnowballFightInstance extends EliminationGameInstance {
         double spacing = spacingValue != null ? spacingValue.doubleValue() : 16;
 
         SnowballFightSpawns spawns = new SnowballFightSpawns(spacing);
-        List<Vec3d> available = spawns.findSpawns(world, map);
-        List<Vec3d> spacedSpawns = spawns.generateSpacedSpawns(available, participants.count(), random);
+        List<Vec3> available = spawns.findSpawns(world, map);
+        List<Vec3> spacedSpawns = spawns.generateSpacedSpawns(available, participants.count(), random);
 
         int i = 0;
 
-        for (ServerPlayerEntity player : participants) {
-            Vec3d spawn = spacedSpawns.get(i++);
+        for (ServerPlayer player : participants) {
+            Vec3 spawn = spacedSpawns.get(i++);
 
             float yaw = random.nextFloat(360) - 180;
 
-            player.teleport(world, spawn.getX(), spawn.getY(), spawn.getZ(), Set.of(), yaw, 0, true);
+            player.teleportTo(world, spawn.x(), spawn.y(), spawn.z(), Set.of(), yaw, 0, true);
         }
     }
 
-    private void onBreakBlock(ServerPlayerEntity player, BlockPos pos) {
-        BlockState state = player.getEntityWorld().getBlockState(pos);
+    private void onBreakBlock(ServerPlayer player, BlockPos pos) {
+        BlockState state = player.level().getBlockState(pos);
 
-        if (state.isOf(Blocks.SNOW) || state.isOf(Blocks.SNOW_BLOCK) || state.isOf(Blocks.POWDER_SNOW)) {
+        if (state.is(Blocks.SNOW) || state.is(Blocks.SNOW_BLOCK) || state.is(Blocks.POWDER_SNOW)) {
             addSnowball(player);
         }
     }
 
-    private void addSnowball(ServerPlayerEntity player) {
-        if (player.getInventory().count(Items.SNOWBALL) < MAX_SNOWBALL_STACKS * Items.SNOWBALL.getMaxCount()) {
-            player.getInventory().insertStack(new ItemStack(Items.SNOWBALL, 1));
+    private void addSnowball(ServerPlayer player) {
+        if (player.getInventory().countItem(Items.SNOWBALL) < MAX_SNOWBALL_STACKS * Items.SNOWBALL.getDefaultMaxStackSize()) {
+            player.getInventory().add(new ItemStack(Items.SNOWBALL, 1));
             return;
         }
 
         gameHandle.getTranslations().translateText("game.ap2.snowball_fight.max_snowballs")
-                .formatted(Formatting.RED)
+                .formatted(ChatFormatting.RED)
                 .sendTo(player, true);
     }
 }

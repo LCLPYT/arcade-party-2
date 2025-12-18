@@ -1,8 +1,8 @@
 package work.lclpnet.ap2.impl.tags;
 
-import net.minecraft.item.Item;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.registry.tag.TagKey;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.item.Item;
 import work.lclpnet.ap2.ApConstants;
 
 public class ApItemTags {
@@ -14,7 +14,7 @@ public class ApItemTags {
             TRIM_TEMPLATES = of("trim_templates");
 
     private static TagKey<Item> of(String path) {
-        return TagKey.of(RegistryKeys.ITEM, ApConstants.identifier(path));
+        return TagKey.create(Registries.ITEM, ApConstants.identifier(path));
     }
 
     private ApItemTags() {}

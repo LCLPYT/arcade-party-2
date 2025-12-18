@@ -3,23 +3,23 @@ package work.lclpnet.ap2.game.paintball;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.damage.DamageTypes;
-import net.minecraft.item.Items;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.GameMode;
-import net.minecraft.world.GameRules;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.damagesource.DamageTypes;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.GameRules;
+import net.minecraft.world.level.GameType;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
@@ -128,7 +128,7 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
     }
 
     @Override
-    public void bootstrapWorld(@NotNull ServerWorld world, @NotNull GameMap map) {
+    public void bootstrapWorld(@NotNull ServerLevel world, @NotNull GameMap map) {
         teams = new PaintballTeams(getTeamManager(), map, gameHandle.getParticipants(), random, gameHandle.getLogger());
         teams.setup();
 
@@ -160,14 +160,14 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
                 .toList());
     }
 
-    private void buildMapCollisions(ServerWorld world, BlockShape bounds) {
+    private void buildMapCollisions(ServerLevel world, BlockShape bounds) {
         var space = MinecraftSpace.get(world);
         space.setAutoLoadTerrain(false);
 
         ChunkCache chunkCache = space.getChunkCache();
 
         for (BlockPos pos : bounds) {
-            chunkCache.loadData(pos.toImmutable());
+            chunkCache.loadData(pos.immutable());
         }
 
         // TODO to be optimized using greedy meshing
@@ -180,7 +180,7 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
         }).join();
     }
 
-    private void replaceTemplateColors(ServerWorld world) {
+    private void replaceTemplateColors(ServerLevel world) {
         for (PaintballTeam team : teams) {
             DyeTeamKey template = team.templateColor();
 
@@ -188,7 +188,7 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
                 BlockState state = world.getBlockState(pos);
                 Paintable paintable = paintManager.paintable(state.getBlock());
 
-                if (paintable == null || !state.isOf(paintable.blockFor(template))) continue;
+                if (paintable == null || !state.is(paintable.blockFor(template))) continue;
 
                 paintManager.replace(pos, state, paintable, team.key());
             }
@@ -203,7 +203,7 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
                 .collect(Collectors.toSet()));
 
         for (var team : getTeamManager().getMinecraftTeams()) {
-            team.setShowFriendlyInvisibles(true);
+            team.setSeeFriendlyInvisibles(true);
         }
 
         movementObserver.init(gameHandle.getScheduler(), gameHandle.getHooks(), gameHandle.getServer());
@@ -215,11 +215,11 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
         balanceTeams();
 
         commons().gameRuleBuilder()
-                .set(GameRules.NATURAL_REGENERATION, false)
-                .set(GameRules.FALL_DAMAGE, false);
+                .set(GameRules.RULE_NATURAL_REGENERATION, false)
+                .set(GameRules.RULE_FALL_DAMAGE, false);
     }
 
-    private void setupSpecialItems(ServerWorld world, GameMap map) {
+    private void setupSpecialItems(ServerLevel world, GameMap map) {
         LongSet validSpawns = findReachablePositions(world, map);
 
         // remove team spawn from valid spawns, so that items don't spawn in team bases
@@ -243,7 +243,7 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
         specialItems.setup();
     }
 
-    private @NotNull LongSet findReachablePositions(ServerWorld world, GameMap map) {
+    private @NotNull LongSet findReachablePositions(ServerLevel world, GameMap map) {
         BlockBox bounds = SpecialItems.getSpawnArea(map).bounds();
         BlockPredicate predicate = BlockPredicate.and(bounds::contains, new WalkableBlockPredicate(world));
         AdjacentBlocks adjacent = new SimpleAdjacentBlocks(predicate, 1);
@@ -252,7 +252,7 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
         LongSet spawns = new LongOpenHashSet();
 
         PaintballTeam anyTeam = teams.iterator().next();
-        BlockPos startPos = BlockPos.ofFloored(anyTeam.spawn());
+        BlockPos startPos = BlockPos.containing(anyTeam.spawn());
 
         scanner.scan(startPos).forEachRemaining(pos -> spawns.add(pos.asLong()));
 
@@ -268,7 +268,7 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
         teams.forEach(pbt -> teamManager.getTeam(pbt).ifPresent(team -> {
             int group = teams.playerGroup(pbt);
 
-            for (ServerPlayerEntity player : team.getPlayers()) {
+            for (ServerPlayer player : team.getPlayers()) {
                 entityCollisions.getRigidBody(player).ifPresent(rb -> rb.setCollisionGroup(group));
             }
         }));
@@ -308,11 +308,11 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
 
             int color = instance.key().color();
 
-            for (ServerPlayerEntity player : team.getPlayers()) {
-                player.equipStack(EquipmentSlot.HEAD, unbreakable(getLeatherArmor(Items.LEATHER_HELMET, color)));
-                player.equipStack(EquipmentSlot.CHEST, unbreakable(getLeatherArmor(Items.LEATHER_CHESTPLATE, color)));
-                player.equipStack(EquipmentSlot.LEGS, unbreakable(getLeatherArmor(Items.LEATHER_LEGGINGS, color)));
-                player.equipStack(EquipmentSlot.FEET, unbreakable(getLeatherArmor(Items.LEATHER_BOOTS, color)));
+            for (ServerPlayer player : team.getPlayers()) {
+                player.setItemSlot(EquipmentSlot.HEAD, unbreakable(getLeatherArmor(Items.LEATHER_HELMET, color)));
+                player.setItemSlot(EquipmentSlot.CHEST, unbreakable(getLeatherArmor(Items.LEATHER_CHESTPLATE, color)));
+                player.setItemSlot(EquipmentSlot.LEGS, unbreakable(getLeatherArmor(Items.LEATHER_LEGGINGS, color)));
+                player.setItemSlot(EquipmentSlot.FEET, unbreakable(getLeatherArmor(Items.LEATHER_BOOTS, color)));
             }
         }
     }
@@ -367,36 +367,36 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
             config.allow(ProtectionTypes.EXPLOSION);
 
             config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, source)
-                    -> entity instanceof ServerPlayerEntity player
+                    -> entity instanceof ServerPlayer player
                     && participants.isParticipating(player)
-                    && (source.isOf(DamageTypes.ARROW) || source.isOf(DamageTypes.PLAYER_EXPLOSION)));
+                    && (source.is(DamageTypes.ARROW) || source.is(DamageTypes.PLAYER_EXPLOSION)));
         });
 
         hooks.registerHook(ServerLivingEntityHooks.ALLOW_DAMAGE, this::onDamage);
     }
 
-    private void respawnPlayer(ServerPlayerEntity player) {
+    private void respawnPlayer(ServerPlayer player) {
         teams.teamOf(player).ifPresent(pbt -> teleportToTeamSpawn(player, pbt));
 
         player.setHealth(player.getMaxHealth());
-        PlayerReset.resetAttribute(player, EntityAttributes.MAX_ABSORPTION);
+        PlayerReset.resetAttribute(player, Attributes.MAX_ABSORPTION);
         player.setAbsorptionAmount(0);
-        player.getAbilities().setFlySpeed(0);
-        player.sendAbilitiesUpdate();
+        player.getAbilities().setFlyingSpeed(0);
+        player.onUpdateAbilities();
 
         paintGunManager.refillPaintGun(player);
 
         // delay game mode change one tick to prevent other players from seeing the teleport
         gameHandle.getScheduler().immediate(() -> {
-            player.getAbilities().setFlySpeed(0.05f);
-            player.sendAbilitiesUpdate();
+            player.getAbilities().setFlyingSpeed(0.05f);
+            player.onUpdateAbilities();
 
-            player.changeGameMode(gameHandle.getPlayerUtil().getDefaultGameMode());
+            player.setGameMode(gameHandle.getPlayerUtil().getDefaultGameMode());
         });
     }
 
-    private void closeBases(ServerWorld world) {
-        int flags = Block.NOTIFY_LISTENERS | Block.SKIP_DROPS | Block.FORCE_STATE;
+    private void closeBases(ServerLevel world) {
+        int flags = Block.UPDATE_CLIENTS | Block.UPDATE_SUPPRESS_DROPS | Block.UPDATE_KNOWN_SHAPE;
 
         baseWalls = new ResetBlockWorldModifier(world, flags);
 
@@ -410,7 +410,7 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
 
                 if (!state.getCollisionShape(world, pos).isEmpty()) continue;
 
-                baseWalls.setBlockState(pos, Blocks.BARRIER.getDefaultState(), flags);
+                baseWalls.setBlockState(pos, Blocks.BARRIER.defaultBlockState(), flags);
             }
         }
     }
@@ -428,35 +428,35 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
 
             if (team == null) continue;
 
-            for (ServerPlayerEntity player : team.getPlayers()) {
+            for (ServerPlayer player : team.getPlayers()) {
                 teleportToTeamSpawn(player, pbt);
             }
         }
     }
 
-    private void teleportToTeamSpawn(ServerPlayerEntity player, PaintballTeam pbt) {
-        Vec3d pos = pbt.spawn();
+    private void teleportToTeamSpawn(ServerPlayer player, PaintballTeam pbt) {
+        Vec3 pos = pbt.spawn();
 
-        player.teleport(getWorld(), pos.getX(), pos.getY(), pos.getZ(), Set.of(), pbt.yaw(), 0, true);
+        player.teleportTo(getWorld(), pos.x(), pos.y(), pos.z(), Set.of(), pbt.yaw(), 0, true);
     }
 
     private boolean onDamage(LivingEntity entity, DamageSource source, float amount) {
         if (winManager.isGameOver()
-                || !(entity instanceof ServerPlayerEntity player)
+                || !(entity instanceof ServerPlayer player)
                 || !gameHandle.getParticipants().isParticipating(player)) return false;
 
         PaintballTeam team = teams.teamOf(player).orElse(null);
 
         // prevent damage in base
-        if (team == null || team.baseBounds().contains(player.getEntityPos())) return false;
+        if (team == null || team.baseBounds().contains(player.position())) return false;
 
         // respect hurt time, except for explosions
-        if (!source.isOf(DamageTypes.PLAYER_EXPLOSION) && player.hurtTime > 0) {
+        if (!source.is(DamageTypes.PLAYER_EXPLOSION) && player.hurtTime > 0) {
             return false;
         }
 
         // disallow damaging teammates with explosives
-        if (source.isOf(DamageTypes.PLAYER_EXPLOSION) && source.getAttacker() instanceof ServerPlayerEntity attacker
+        if (source.is(DamageTypes.PLAYER_EXPLOSION) && source.getEntity() instanceof ServerPlayer attacker
                 && getTeamManager().areTeamMates(attacker, player)) {
             return false;
         }
@@ -469,22 +469,22 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
         return true;
     }
 
-    private void onLethalDamage(DamageSource source, ServerPlayerEntity player, float amount) {
-        player.getDamageTracker().onDamage(source, amount);
+    private void onLethalDamage(DamageSource source, ServerPlayer player, float amount) {
+        player.getCombatTracker().recordDamage(source, amount);
 
         gameHandle.getDeathMessages().getDeathMessage(player, source)
                 .sendTo(PlayerLookup.all(gameHandle.getServer()));
 
-        getWorld().playSound(null, player.getBlockPos(), SoundEvents.ENTITY_PLAYER_DEATH, SoundCategory.PLAYERS, 0.8f, 0.8f);
+        getWorld().playSound(null, player.blockPosition(), SoundEvents.PLAYER_DEATH, SoundSource.PLAYERS, 0.8f, 0.8f);
 
-        player.changeGameMode(GameMode.SPECTATOR);
+        player.setGameMode(GameType.SPECTATOR);
         player.setHealth(20);
 
         respawnCooldown.setCooldown(player, 50);
     }
 
     @Override
-    public void participantRemoved(ServerPlayerEntity player) {
+    public void participantRemoved(ServerPlayer player) {
         balanceTeams();
 
         super.participantRemoved(player);
@@ -492,21 +492,21 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
 
     private void balanceTeams() {
         for (PaintballTeam team : teams) {
-            Set<ServerPlayerEntity> players = team.participants(getTeamManager(), gameHandle.getParticipants());
+            Set<ServerPlayer> players = team.participants(getTeamManager(), gameHandle.getParticipants());
 
             if (players.isEmpty()) continue;
 
             int deficit = teams.playerDeficit(team);
             double extraHealthPerPlayer = deficit * 20.d / players.size();
 
-            for (ServerPlayerEntity player : players) {
-                PlayerReset.setAttribute(player, EntityAttributes.MAX_HEALTH, 20.d + extraHealthPerPlayer);
+            for (ServerPlayer player : players) {
+                PlayerReset.setAttribute(player, Attributes.MAX_HEALTH, 20.d + extraHealthPerPlayer);
             }
         }
 
         if (started) return;
 
-        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
+        for (ServerPlayer player : gameHandle.getParticipants()) {
             player.setHealth(player.getMaxHealth());
         }
     }

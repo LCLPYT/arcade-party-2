@@ -1,8 +1,8 @@
 package work.lclpnet.ap2.impl.game.team;
 
-import net.minecraft.Bootstrap;
 import net.minecraft.SharedConstants;
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.Bootstrap;
+import net.minecraft.server.level.ServerPlayer;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.RepeatedTest;
 import org.junit.jupiter.api.Test;
@@ -22,8 +22,8 @@ class UniformTeamPartitionerTest {
 
     @BeforeAll
     public static void bootstrap() {
-        SharedConstants.createGameVersion();
-        Bootstrap.initialize();
+        SharedConstants.tryDetectVersion();
+        Bootstrap.bootStrap();
     }
 
     @Test
@@ -47,7 +47,7 @@ class UniformTeamPartitionerTest {
     void splitIntoTeams_single() {
         var part = new UniformTeamPartitioner(new Random());
 
-        ServerPlayerEntity playerA = player("a");
+        ServerPlayer playerA = player("a");
         Team teamRed = team(), teamBlue = team();
 
         Set<Team> teams = Set.of(teamRed, teamBlue);
@@ -61,7 +61,7 @@ class UniformTeamPartitionerTest {
     void splitIntoTeams_notSameTeam() {
         var part = new UniformTeamPartitioner(new Random());
 
-        ServerPlayerEntity playerA = player("a"), playerB = player("b");
+        ServerPlayer playerA = player("a"), playerB = player("b");
         Team teamRed = team(), teamBlue = team();
 
         var players = Set.of(playerA, playerB);
@@ -76,7 +76,7 @@ class UniformTeamPartitionerTest {
     void splitIntoTeams_preConfigured() {
         var part = new UniformTeamPartitioner(new Random());
 
-        ServerPlayerEntity playerA = player("a"), playerB = player("b");
+        ServerPlayer playerA = player("a"), playerB = player("b");
         Team teamRed = team(), teamBlue = team(Set.of(playerA));
 
         var players = Set.of(playerB);
@@ -91,7 +91,7 @@ class UniformTeamPartitionerTest {
     void splitIntoTeams_preConfigured_complex() {
         var part = new UniformTeamPartitioner(new Random());
 
-        ServerPlayerEntity
+        ServerPlayer
                 playerA = player("a"),
                 playerB = player("b"),
                 playerC = player("c"),
@@ -115,7 +115,7 @@ class UniformTeamPartitionerTest {
         return team(Set.of());
     }
 
-    private static Team team(Set<ServerPlayerEntity> members) {
+    private static Team team(Set<ServerPlayer> members) {
         Team team = mock();
 
         when(team.getPlayers()).thenReturn(members);
@@ -124,12 +124,12 @@ class UniformTeamPartitionerTest {
         return team;
     }
 
-    private static ServerPlayerEntity player(String name) {
-        ServerPlayerEntity player = mock();
+    private static ServerPlayer player(String name) {
+        ServerPlayer player = mock();
         UUID uuid = UUID.randomUUID();
 
-        when(player.getUuid()).thenReturn(uuid);
-        when(player.getNameForScoreboard()).thenReturn(name);
+        when(player.getUUID()).thenReturn(uuid);
+        when(player.getScoreboardName()).thenReturn(name);
 
         return player;
     }

@@ -2,7 +2,7 @@ package work.lclpnet.ap2.impl.base;
 
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.level.ServerPlayer;
 import work.lclpnet.ap2.api.base.ParticipantListener;
 import work.lclpnet.ap2.api.base.PlayerManager;
 
@@ -29,12 +29,12 @@ public class PlayerManagerImpl implements PlayerManager {
     }
 
     @Override
-    public Set<ServerPlayerEntity> getAsSet() {
+    public Set<ServerPlayer> getAsSet() {
         try {
             readLock.lock();
 
             return PlayerLookup.all(server).stream()
-                    .filter(player -> participants.contains(player.getUuid()))
+                    .filter(player -> participants.contains(player.getUUID()))
                     .collect(Collectors.toUnmodifiableSet());
         } finally {
             readLock.unlock();
@@ -55,7 +55,7 @@ public class PlayerManagerImpl implements PlayerManager {
     }
 
     @Override
-    public boolean offer(ServerPlayerEntity player) {
+    public boolean offer(ServerPlayer player) {
         Objects.requireNonNull(player);
 
         try {
@@ -69,7 +69,7 @@ public class PlayerManagerImpl implements PlayerManager {
         try {
             writeLock.lock();
 
-            participants.add(player.getUuid());
+            participants.add(player.getUUID());
             return true;
         } finally {
             writeLock.unlock();
@@ -104,7 +104,7 @@ public class PlayerManagerImpl implements PlayerManager {
 
             if (finale) {
                 // remove finalists who left
-                participants.removeIf(uuid -> server.getPlayerManager().getPlayer(uuid) == null);
+                participants.removeIf(uuid -> server.getPlayerList().getPlayer(uuid) == null);
             } else {
                 addAllPlayers();
             }
@@ -118,13 +118,13 @@ public class PlayerManagerImpl implements PlayerManager {
         participants.clear();
 
         PlayerLookup.all(server).stream()
-                .map(ServerPlayerEntity::getUuid)
+                .map(ServerPlayer::getUUID)
                 .filter(uuid -> !permanentSpectators.contains(uuid))
                 .forEach(participants::add);
     }
 
     @Override
-    public void enterFinale(Set<? extends ServerPlayerEntity> finalists) {
+    public void enterFinale(Set<? extends ServerPlayer> finalists) {
         try {
             writeLock.lock();
 
@@ -132,7 +132,7 @@ public class PlayerManagerImpl implements PlayerManager {
             participants.clear();
 
             finalists.stream()
-                    .map(ServerPlayerEntity::getUuid)
+                    .map(ServerPlayer::getUUID)
                     .forEach(participants::add);
         } finally {
             writeLock.unlock();
@@ -140,44 +140,44 @@ public class PlayerManagerImpl implements PlayerManager {
     }
 
     @Override
-    public boolean isPermanentSpectator(ServerPlayerEntity player) {
+    public boolean isPermanentSpectator(ServerPlayer player) {
         try {
             readLock.lock();
 
-            return permanentSpectators.contains(player.getUuid());
+            return permanentSpectators.contains(player.getUUID());
         } finally {
             readLock.unlock();
         }
     }
 
     @Override
-    public void addPermanentSpectator(ServerPlayerEntity player) {
+    public void addPermanentSpectator(ServerPlayer player) {
         try {
             writeLock.lock();
 
-            permanentSpectators.add(player.getUuid());
+            permanentSpectators.add(player.getUUID());
         } finally {
             writeLock.unlock();
         }
     }
 
     @Override
-    public void removePermanentSpectator(ServerPlayerEntity player) {
+    public void removePermanentSpectator(ServerPlayer player) {
         try {
             writeLock.lock();
 
-            permanentSpectators.remove(player.getUuid());
+            permanentSpectators.remove(player.getUUID());
         } finally {
             writeLock.unlock();
         }
     }
 
     @Override
-    public void remove(ServerPlayerEntity player) {
+    public void remove(ServerPlayer player) {
         try {
             writeLock.lock();
 
-            if (participants.remove(player.getUuid()) && listener != null) {
+            if (participants.remove(player.getUUID()) && listener != null) {
                 listener.participantRemoved(player);
             }
         } finally {
@@ -191,12 +191,12 @@ public class PlayerManagerImpl implements PlayerManager {
     }
 
     @Override
-    public Optional<ServerPlayerEntity> getParticipant(UUID uuid) {
+    public Optional<ServerPlayer> getParticipant(UUID uuid) {
         if (!participants.contains(uuid)) {
             return Optional.empty();
         }
 
-        return Optional.ofNullable(server.getPlayerManager().getPlayer(uuid));
+        return Optional.ofNullable(server.getPlayerList().getPlayer(uuid));
     }
 
     @Override

@@ -1,12 +1,12 @@
 package work.lclpnet.ap2.impl.util;
 
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.TooltipDisplayComponent;
-import net.minecraft.item.ItemStack;
-import net.minecraft.registry.DynamicRegistryManager;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Style;
-import net.minecraft.text.Text;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.TooltipDisplay;
 import work.lclpnet.ap2.api.data.DataManager;
 import work.lclpnet.ap2.api.game.MiniGame;
 import work.lclpnet.kibu.translate.Translations;
@@ -15,19 +15,19 @@ import work.lclpnet.lobby.game.map.GameMap;
 import java.util.ArrayList;
 import java.util.List;
 
-import static net.minecraft.util.Formatting.*;
+import static net.minecraft.ChatFormatting.*;
 import static work.lclpnet.kibu.inv.item.ItemStackUtil.setLore;
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
 public class IconMaker {
 
-    public static ItemStack createIcon(GameMap map, ServerPlayerEntity player, Translations translations, DataManager dataManager) {
+    public static ItemStack createIcon(GameMap map, ServerPlayer player, Translations translations, DataManager dataManager) {
         ItemStack icon = new ItemStack(map.getIcon());
 
         String name = map.getName(translations.getLanguage(player));
 
-        icon.set(DataComponentTypes.CUSTOM_NAME, Text.literal(name)
-                .styled(style -> style.withItalic(false).withFormatting(AQUA)));
+        icon.set(DataComponents.CUSTOM_NAME, Component.literal(name)
+                .withStyle(style -> style.withItalic(false).applyFormat(AQUA)));
 
         List<String> authors = map.getAuthors().stream().map(dataManager::string).toList();
 
@@ -40,12 +40,12 @@ public class IconMaker {
         return icon;
     }
 
-    public static ItemStack createIcon(MiniGame game, ServerPlayerEntity player, Translations translations) {
-        DynamicRegistryManager registryManager = player.getEntityWorld().getRegistryManager();
+    public static ItemStack createIcon(MiniGame game, ServerPlayer player, Translations translations) {
+        RegistryAccess registryManager = player.level().registryAccess();
         ItemStack icon = game.getIcon(registryManager);
 
-        icon.set(DataComponentTypes.CUSTOM_NAME, translations.translateText(player, game.getTitleKey())
-                .styled(style -> style.withItalic(false).withFormatting(AQUA)));
+        icon.set(DataComponents.CUSTOM_NAME, translations.translateText(player, game.getTitleKey())
+                .styled(style -> style.withItalic(false).applyFormat(AQUA)));
 
         String descriptionKey = game.getDescriptionKey();
         Object[] descArgs = game.getDescriptionArguments();
@@ -53,20 +53,20 @@ public class IconMaker {
         setLore(icon, wrapText(translations.translateText(player, descriptionKey, descArgs)
                 .formatted(GREEN), 32));
 
-        icon.set(DataComponentTypes.TOOLTIP_DISPLAY, TooltipDisplayComponent.DEFAULT
-                .with(DataComponentTypes.ATTRIBUTE_MODIFIERS, true)
-                .with(DataComponentTypes.UNBREAKABLE, true)
-                .with(DataComponentTypes.ENCHANTMENTS, true)
-                .with(DataComponentTypes.DAMAGE, true));
+        icon.set(DataComponents.TOOLTIP_DISPLAY, TooltipDisplay.DEFAULT
+                .withHidden(DataComponents.ATTRIBUTE_MODIFIERS, true)
+                .withHidden(DataComponents.UNBREAKABLE, true)
+                .withHidden(DataComponents.ENCHANTMENTS, true)
+                .withHidden(DataComponents.DAMAGE, true));
 
         return icon;
     }
 
-    public static List<Text> wrapText(Text text, int charsPerLine) {
+    public static List<Component> wrapText(Component text, int charsPerLine) {
         Style style = text.getStyle();
 
         return wrapText(text.getString(), charsPerLine).stream()
-                .<Text>map(line -> Text.literal(line).setStyle(style))
+                .<Component>map(line -> Component.literal(line).setStyle(style))
                 .toList();
     }
 

@@ -1,63 +1,63 @@
 package work.lclpnet.ap2.impl.util;
 
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
-import net.minecraft.entity.Entity;
-import net.minecraft.network.packet.s2c.play.PlaySoundS2CPacket;
-import net.minecraft.registry.Registries;
+import net.minecraft.core.Position;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.protocol.game.ClientboundSoundPacket;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvent;
-import net.minecraft.util.math.Position;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.Entity;
 
 import static java.lang.Math.max;
 
 public class SoundHelper {
 
-    public static void playSound(MinecraftServer server, SoundEvent sound, SoundCategory category, float volume, float pitch) {
-        for (ServerPlayerEntity player : PlayerLookup.all(server)) {
-            player.playSoundToPlayer(sound, category, volume, pitch);
+    public static void playSound(MinecraftServer server, SoundEvent sound, SoundSource category, float volume, float pitch) {
+        for (ServerPlayer player : PlayerLookup.all(server)) {
+            player.playNotifySound(sound, category, volume, pitch);
         }
     }
 
-    public static void playSound(ServerWorld world, SoundEvent sound, SoundCategory category, float volume, float pitch) {
-        for (ServerPlayerEntity player : PlayerLookup.world(world)) {
-            player.playSoundToPlayer(sound, category, volume, pitch);
+    public static void playSound(ServerLevel world, SoundEvent sound, SoundSource category, float volume, float pitch) {
+        for (ServerPlayer player : PlayerLookup.world(world)) {
+            player.playNotifySound(sound, category, volume, pitch);
         }
     }
 
-    public static void playSound(ServerPlayerEntity player, SoundEvent sound, SoundCategory category, Position pos,
+    public static void playSound(ServerPlayer player, SoundEvent sound, SoundSource category, Position pos,
                                  float volume, float pitch) {
-        playSound(player, sound, category, pos.getX(), pos.getY(), pos.getZ(), volume, pitch);
+        playSound(player, sound, category, pos.x(), pos.y(), pos.z(), volume, pitch);
     }
 
-    public static void playSound(ServerPlayerEntity player, SoundEvent sound, SoundCategory category,
+    public static void playSound(ServerPlayer player, SoundEvent sound, SoundSource category,
                                  double x, double y, double z, float volume, float pitch) {
 
-        var entry = Registries.SOUND_EVENT.getEntry(sound);
+        var entry = BuiltInRegistries.SOUND_EVENT.wrapAsHolder(sound);
         long seed = player.getRandom().nextLong();
-        var packet = new PlaySoundS2CPacket(entry, category, x, y, z, volume, pitch, seed);
+        var packet = new ClientboundSoundPacket(entry, category, x, y, z, volume, pitch, seed);
 
-        player.networkHandler.sendPacket(packet);
+        player.connection.send(packet);
     }
 
-    public static void playSoundAt(Entity entity, SoundEvent sound, SoundCategory category, float volume, float pitch) {
-        entity.getEntityWorld().playSound(null, entity.getX(), entity.getY(), entity.getZ(), sound, category, volume, pitch);
+    public static void playSoundAt(Entity entity, SoundEvent sound, SoundSource category, float volume, float pitch) {
+        entity.level().playSound(null, entity.getX(), entity.getY(), entity.getZ(), sound, category, volume, pitch);
     }
 
-    public static void playSoundFor(SoundEvent sound, SoundCategory category, Position pos, float volume, float pitch,
-                                    Iterable<? extends ServerPlayerEntity> players) {
-        playSoundFor(sound, category, pos.getX(), pos.getY(), pos.getZ(), volume, pitch, players);
+    public static void playSoundFor(SoundEvent sound, SoundSource category, Position pos, float volume, float pitch,
+                                    Iterable<? extends ServerPlayer> players) {
+        playSoundFor(sound, category, pos.x(), pos.y(), pos.z(), volume, pitch, players);
     }
 
-    public static void playSoundFor(SoundEvent sound, SoundCategory category, double x, double y, double z,
-                                    float volume, float pitch, Iterable<? extends ServerPlayerEntity> players) {
+    public static void playSoundFor(SoundEvent sound, SoundSource category, double x, double y, double z,
+                                    float volume, float pitch, Iterable<? extends ServerPlayer> players) {
         double range = max(1.0, volume) * 16;
         double rangeSq = range * range;
 
-        for (ServerPlayerEntity player : players) {
-            if (player.squaredDistanceTo(x, y, z) <= rangeSq) {
+        for (ServerPlayer player : players) {
+            if (player.distanceToSqr(x, y, z) <= rangeSq) {
                 playSound(player, sound, category, x, y, z, volume, pitch);
             }
         }

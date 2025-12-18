@@ -1,10 +1,10 @@
 package work.lclpnet.ap2.game.maze_scape.setup.wall;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.enums.Orientation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3i;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.FrontAndTop;
+import net.minecraft.core.Vec3i;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
 import work.lclpnet.ap2.game.maze_scape.setup.Connector3;
 import work.lclpnet.ap2.game.maze_scape.setup.OrientedStructurePiece;
 import work.lclpnet.ap2.game.maze_scape.util.BlockPalette;
@@ -31,8 +31,8 @@ public class PaletteConnectorWall implements ConnectorWall {
         // determine connector position in rotated local space
         BlockPos connectorPos = connector.pos();
 
-        Orientation orientation = connector.orientation();
-        Vec3i normal = orientation.getFacing().getVector();
+        FrontAndTop orientation = connector.orientation();
+        Vec3i normal = orientation.front().getUnitVec3i();
         FabricStructureWrapper room = oriented.piece().wrapper();
 
         BVH bounds = oriented.bounds();
@@ -47,11 +47,11 @@ public class PaletteConnectorWall implements ConnectorWall {
         var plane = new PlanePredicate(connectorPos, normal);
         var notWall = new NotWallPredicate(room, oriented.inverseTransformation());
 
-        int flags = Block.FORCE_STATE | Block.SKIP_DROPS;
+        int flags = Block.UPDATE_KNOWN_SHAPE | Block.UPDATE_SUPPRESS_DROPS;
 
         new BoxFloodFill(mx, my, mz, bounds.width(), bounds.height(), bounds.length()).execute(
                 // start above connector
-                connectorPos.offset(orientation.getRotation()),
+                connectorPos.relative(orientation.top()),
                 // place random block from palette
                 pos -> {
                     BlockState state = palette.sample(random);

@@ -1,6 +1,6 @@
 package work.lclpnet.ap2.game.fine_tuning.melody;
 
-import net.minecraft.block.enums.NoteBlockInstrument;
+import net.minecraft.world.level.block.state.properties.NoteBlockInstrument;
 
 import java.util.Arrays;
 import java.util.Random;

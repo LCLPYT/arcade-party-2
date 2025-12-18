@@ -1,9 +1,9 @@
 package work.lclpnet.ap2.game.speed_builders;
 
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.registry.DynamicRegistryManager;
-import net.minecraft.util.Identifier;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import work.lclpnet.ap2.ApConstants;
 import work.lclpnet.ap2.api.game.*;
 
@@ -25,7 +25,7 @@ public class SpeedBuildersMiniGame implements MiniGame {
     }
 
     @Override
-    public Identifier getId() {
+    public ResourceLocation getId() {
         return ApConstants.identifier("speed_builders");
     }
 
@@ -40,7 +40,7 @@ public class SpeedBuildersMiniGame implements MiniGame {
     }
 
     @Override
-    public ItemStack getIcon(DynamicRegistryManager manager) {
+    public ItemStack getIcon(RegistryAccess manager) {
         return new ItemStack(Items.BRICKS);
     }
 }

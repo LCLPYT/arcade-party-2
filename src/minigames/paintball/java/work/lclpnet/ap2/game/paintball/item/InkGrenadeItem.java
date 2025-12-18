@@ -2,18 +2,18 @@ package work.lclpnet.ap2.game.paintball.item;
 
 import lombok.Getter;
 import lombok.Setter;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.registry.DynamicRegistryManager;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.core.hook.DeathMessageItemCallback;
 import work.lclpnet.ap2.game.paintball.util.*;
@@ -61,7 +61,7 @@ public class InkGrenadeItem implements SpecialItem {
     }
 
     @Override
-    public ItemStack createItemStack(DynamicRegistryManager registryManager) {
+    public ItemStack createItemStack(RegistryAccess registryManager) {
         return new ItemStack(Items.TNT);
     }
 
@@ -71,41 +71,41 @@ public class InkGrenadeItem implements SpecialItem {
     }
 
     @Override
-    public ActionResult onUse(ServerPlayerEntity player, ItemStack stack, @Nullable Hand hand, SpecialItemContext ctx) {
-        if (hand == Hand.OFF_HAND) return ActionResult.PASS;
+    public InteractionResult onUse(ServerPlayer player, ItemStack stack, @Nullable InteractionHand hand, SpecialItemContext ctx) {
+        if (hand == InteractionHand.OFF_HAND) return InteractionResult.PASS;
 
         throwInkGrenade(player, stack);
 
-        return ActionResult.SUCCESS_SERVER;
+        return InteractionResult.SUCCESS_SERVER;
     }
 
     @Override
-    public void onSwing(ServerPlayerEntity player, ItemStack stack, @Nullable Hand hand, SpecialItemContext ctx) {
+    public void onSwing(ServerPlayer player, ItemStack stack, @Nullable InteractionHand hand, SpecialItemContext ctx) {
         throwInkGrenade(player, stack);
     }
 
-    private void throwInkGrenade(ServerPlayerEntity player, ItemStack stack) {
-        ServerWorld world = player.getEntityWorld();
+    private void throwInkGrenade(ServerPlayer player, ItemStack stack) {
+        ServerLevel world = player.level();
 
         executeOn(PhysicsThread.get(world), () -> spawnObject(player));
 
-        playSound(world, SoundEvents.BLOCK_END_PORTAL_FRAME_FILL, SoundCategory.PLAYERS, 0.8f, 1.2f);
+        playSound(world, SoundEvents.END_PORTAL_FRAME_FILL, SoundSource.PLAYERS, 0.8f, 1.2f);
 
-        stack.decrementUnlessCreative(1, player);
+        stack.consume(1, player);
     }
 
-    private void spawnObject(ServerPlayerEntity player) {
-        Vec3d dir = player.getRotationVector();
-        Vec3d pos = paintGunManager.getProjectileSpawn(player, dir, SIZE);
+    private void spawnObject(ServerPlayer player) {
+        Vec3 dir = player.getLookAngle();
+        Vec3 pos = paintGunManager.getProjectileSpawn(player, dir, SIZE);
 
-        var obj = new InkGrenadeObject(scene, player.getEntityWorld());
-        obj.position.set(pos.getX(), pos.getY(), pos.getZ());
+        var obj = new InkGrenadeObject(scene, player.level());
+        obj.position.set(pos.x(), pos.y(), pos.z());
         obj.scale.set(SIZE);
-        obj.setThrower(player.getUuid());
+        obj.setThrower(player.getUUID());
 
         SceneRigidBody rigidBody = obj.getRigidBody();
 
-        rigidBody.setLinearVelocity(toBullet(dir.multiply(THROW_POWER)));
+        rigidBody.setLinearVelocity(toBullet(dir.scale(THROW_POWER)));
         rigidBody.setAngularVelocity(toBullet(randomUnitVec3d(random)));
         rigidBody.setPhysicsLocation(toBullet(pos));
         rigidBody.setCollisionGroup(teams.bulletGroup(player));
@@ -133,8 +133,8 @@ public class InkGrenadeItem implements SpecialItem {
         private double fuseTimer = FUSE_SECONDS;
         private boolean flash = false;
 
-        public InkGrenadeObject(Scene scene, ServerWorld world) {
-            super(scene, Blocks.TNT.getDefaultState(), world);
+        public InkGrenadeObject(Scene scene, ServerLevel world) {
+            super(scene, Blocks.TNT.defaultBlockState(), world);
             rigidBody.setMass(MASS);
         }
 
@@ -148,7 +148,7 @@ public class InkGrenadeItem implements SpecialItem {
             if (blinkTimer >= BLINK_SECONDS) {
                 blinkTimer -= BLINK_SECONDS;
 
-                BlockState newState = flash ? Blocks.TNT.getDefaultState() : Blocks.WHITE_CONCRETE.getDefaultState();
+                BlockState newState = flash ? Blocks.TNT.defaultBlockState() : Blocks.WHITE_CONCRETE.defaultBlockState();
                 flash = !flash;
 
                 setBlockState(newState);
@@ -163,7 +163,7 @@ public class InkGrenadeItem implements SpecialItem {
         private void explode() {
             this.detach();
 
-            ServerPlayerEntity player = world.getServer().getPlayerManager().getPlayer(thrower);
+            ServerPlayer player = world.getServer().getPlayerList().getPlayer(thrower);
 
             if (player == null) return;
 
@@ -175,17 +175,17 @@ public class InkGrenadeItem implements SpecialItem {
 
             if (team == null) return;
 
-            Vec3d pos = new Vec3d(position.x, position.y, position.z);
+            Vec3 pos = new Vec3(position.x, position.y, position.z);
 
             paintGunManager.getPaintManager().createExplosion(player, pos, team, EXPLOSION_POWER);
 
             executeOn(PhysicsThread.get(world), () -> spawnFragments(pos, player, state));
         }
 
-        private void spawnFragments(Vec3d pos, ServerPlayerEntity player, BlockState state) {
+        private void spawnFragments(Vec3 pos, ServerPlayer player, BlockState state) {
             for (var offset : MathUtil.fibonacciHemisphere(EXPLOSION_FRAGMENTS)) {
-                Vec3d dir = new Vec3d(offset.x, offset.y, offset.z);
-                Vec3d fragPos = pos.add(dir.multiply(FRAGMENT_SPAWN_RADIUS));
+                Vec3 dir = new Vec3(offset.x, offset.y, offset.z);
+                Vec3 fragPos = pos.add(dir.scale(FRAGMENT_SPAWN_RADIUS));
 
                 paintGunManager.spawnPaintBullet(player, state, bulletSettings, fragPos, dir);
             }

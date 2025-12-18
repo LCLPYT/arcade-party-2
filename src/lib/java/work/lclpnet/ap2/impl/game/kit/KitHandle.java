@@ -1,13 +1,13 @@
 package work.lclpnet.ap2.impl.game.kit;
 
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.LoreComponent;
-import net.minecraft.component.type.TooltipDisplayComponent;
-import net.minecraft.item.ItemStack;
-import net.minecraft.registry.DynamicRegistryManager;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.ItemLore;
+import net.minecraft.world.item.component.TooltipDisplay;
 import work.lclpnet.ap2.impl.util.IconMaker;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.inv.item.ItemStackUtil;
@@ -19,12 +19,12 @@ import work.lclpnet.kibu.translate.text.TranslatedText;
 import java.util.ArrayList;
 import java.util.List;
 
-import static net.minecraft.util.Formatting.AQUA;
-import static net.minecraft.util.Formatting.GREEN;
+import static net.minecraft.ChatFormatting.AQUA;
+import static net.minecraft.ChatFormatting.GREEN;
 
 public interface KitHandle {
 
-    Identifier gameId();
+    ResourceLocation gameId();
 
     HookRegistrar hooks();
 
@@ -32,15 +32,15 @@ public interface KitHandle {
 
     Translations translations();
 
-    DynamicRegistryManager registries();
+    RegistryAccess registries();
 
     KitReadView readView();
 
-    default boolean hasKitEquipped(ServerPlayerEntity player, Kit kit) {
+    default boolean hasKitEquipped(ServerPlayer player, Kit kit) {
         return readView().hasKitEquipped(player, kit);
     }
 
-    default ItemStack createKitIcon(Kit kit, ServerPlayerEntity player) {
+    default ItemStack createKitIcon(Kit kit, ServerPlayer player) {
         ItemStack stack = kit.createItemStack(registries());
 
         decorateItemStack(stack, kit, player, true);
@@ -48,7 +48,7 @@ public interface KitHandle {
         return stack;
     }
 
-    default ItemStack createItemStack(Kit kit, ServerPlayerEntity player) {
+    default ItemStack createItemStack(Kit kit, ServerPlayer player) {
         ItemStack stack = kit.createItemStack(registries());
 
         decorateItemStack(stack, kit, player, false);
@@ -56,18 +56,18 @@ public interface KitHandle {
         return stack;
     }
 
-    default void decorateItemStack(ItemStack stack, Kit kit, ServerPlayerEntity player, boolean forIcon) {
-        Identifier gameId = gameId();
+    default void decorateItemStack(ItemStack stack, Kit kit, ServerPlayer player, boolean forIcon) {
+        ResourceLocation gameId = gameId();
         Translations translations = translations();
 
-        stack.set(DataComponentTypes.CUSTOM_NAME, kitName(kit).translateFor(player).formatted(AQUA)
+        stack.set(DataComponents.CUSTOM_NAME, kitName(kit).translateFor(player).formatted(AQUA)
                 .styled(style -> style.withItalic(false)));
 
-        stack.set(DataComponentTypes.TOOLTIP_DISPLAY, TooltipDisplayComponent.DEFAULT
-                .with(DataComponentTypes.ATTRIBUTE_MODIFIERS, true)
-                .with(DataComponentTypes.UNBREAKABLE, true)
-                .with(DataComponentTypes.ENCHANTMENTS, true)
-                .with(DataComponentTypes.DAMAGE, true));
+        stack.set(DataComponents.TOOLTIP_DISPLAY, TooltipDisplay.DEFAULT
+                .withHidden(DataComponents.ATTRIBUTE_MODIFIERS, true)
+                .withHidden(DataComponents.UNBREAKABLE, true)
+                .withHidden(DataComponents.ENCHANTMENTS, true)
+                .withHidden(DataComponents.DAMAGE, true));
 
         String descriptionPath = forIcon ? "description" : "hint";
         String descriptionKey = "game.%s.%s.kit.%s.%s"
@@ -77,13 +77,13 @@ public interface KitHandle {
 
         RootText description = translations.translateText(player, descriptionKey).formatted(GREEN);
 
-        List<Text> currentLore = stack.getOrDefault(DataComponentTypes.LORE, LoreComponent.DEFAULT).styledLines();
-        List<Text> loreToAdd = IconMaker.wrapText(description, 32);
-        List<Text> newLore = new ArrayList<>(currentLore);
+        List<Component> currentLore = stack.getOrDefault(DataComponents.LORE, ItemLore.EMPTY).styledLines();
+        List<Component> loreToAdd = IconMaker.wrapText(description, 32);
+        List<Component> newLore = new ArrayList<>(currentLore);
 
         if (!currentLore.isEmpty()) {
             // newline between the lore
-            newLore.add(Text.of(""));
+            newLore.add(Component.nullToEmpty(""));
         }
 
         newLore.addAll(loreToAdd);
@@ -92,7 +92,7 @@ public interface KitHandle {
     }
 
     default TranslatedText kitName(Kit kit) {
-        Identifier gameId = gameId();
+        ResourceLocation gameId = gameId();
 
         return translations().translateText("game.%s.%s.kit.%s".formatted(gameId.getNamespace(), gameId.getPath(), kit.id()));
     }

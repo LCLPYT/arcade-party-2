@@ -2,21 +2,25 @@ package work.lclpnet.ap2.game.cozy_campfire.setup;
 
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.item.*;
-import net.minecraft.loot.context.LootContextParameters;
-import net.minecraft.loot.context.LootWorldContext;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.tag.ItemTags;
-import net.minecraft.registry.tag.TagKey;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.tags.ItemTags;
+import net.minecraft.tags.TagKey;
+import net.minecraft.util.Mth;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.entity.FuelValues;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.storage.loot.LootParams;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
+import net.minecraft.world.phys.Vec3;
 import work.lclpnet.ap2.core.type.ApFuelRegistry;
 
 import java.util.HashSet;
@@ -27,20 +31,20 @@ public class CCFuel {
 
     private final Set<Block> breakableBlocks = new HashSet<>();
     private final Object2IntMap<Item> fuel = new Object2IntOpenHashMap<>();
-    private final ServerWorld world;
+    private final ServerLevel world;
     private final CCBaseManager baseManager;
 
-    public CCFuel(ServerWorld world, CCBaseManager baseManager) {
+    public CCFuel(ServerLevel world, CCBaseManager baseManager) {
         this.world = world;
         this.baseManager = baseManager;
     }
 
     public void registerFuel(int fuelPerSecond) {
         // vanilla materials
-        FuelRegistry fuelRegistry = world.getFuelRegistry();
+        FuelValues fuelRegistry = world.fuelValues();
         ApFuelRegistry fuelAccess = (ApFuelRegistry) fuelRegistry;
 
-        for (Item item : fuelRegistry.getFuelItems()) {
+        for (Item item : fuelRegistry.fuelItems()) {
             int fuelTicks = fuelAccess.ap2$getFuelTicks(item);
 
             if (fuelTicks > 0) {
@@ -75,8 +79,8 @@ public class CCFuel {
     }
 
     private void addFuel(TagKey<Item> tag, int time) {
-        for (var entry : Registries.ITEM.iterateEntries(tag)) {
-            if (entry.isIn(ItemTags.NON_FLAMMABLE_WOOD)) continue;
+        for (var entry : BuiltInRegistries.ITEM.getTagOrEmpty(tag)) {
+            if (entry.is(ItemTags.NON_FLAMMABLE_WOOD)) continue;
 
             Item item = entry.value();
 
@@ -89,13 +93,13 @@ public class CCFuel {
         int upperBound = fuelPerSecond * 5;  // at most 5 seconds
 
         fuel.forEach((item, value) -> {
-            int clamped = MathHelper.clamp(value, lowerBound, upperBound);
+            int clamped = Mth.clamp(value, lowerBound, upperBound);
 
             fuel.put(item, clamped);
         });
     }
 
-    public boolean isFuel(ServerPlayerEntity player, BlockPos pos) {
+    public boolean isFuel(ServerPlayer player, BlockPos pos) {
         double x = pos.getX() + 0.5, y = pos.getY() + 0.5, z = pos.getZ() + 0.5;
 
         // prevent breaking fuel blocks in bases
@@ -107,16 +111,16 @@ public class CCFuel {
 
         if (breakableBlocks.contains(state.getBlock())) return true;
 
-        ItemStack stack = player.getMainHandStack();
+        ItemStack stack = player.getMainHandItem();
         BlockEntity blockEntity = world.getBlockEntity(pos);
 
-        LootWorldContext.Builder builder = new LootWorldContext.Builder(world)
-                .add(LootContextParameters.ORIGIN, Vec3d.ofCenter(pos))
-                .add(LootContextParameters.TOOL, stack)
-                .addOptional(LootContextParameters.THIS_ENTITY, player)
-                .addOptional(LootContextParameters.BLOCK_ENTITY, blockEntity);
+        LootParams.Builder builder = new LootParams.Builder(world)
+                .withParameter(LootContextParams.ORIGIN, Vec3.atCenterOf(pos))
+                .withParameter(LootContextParams.TOOL, stack)
+                .withOptionalParameter(LootContextParams.THIS_ENTITY, player)
+                .withOptionalParameter(LootContextParams.BLOCK_ENTITY, blockEntity);
 
-        return state.getDroppedStacks(builder).stream().anyMatch(this::isFuel);
+        return state.getDrops(builder).stream().anyMatch(this::isFuel);
     }
 
     public boolean isFuel(ItemStack stack) {

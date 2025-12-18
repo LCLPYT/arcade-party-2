@@ -1,21 +1,21 @@
 package work.lclpnet.ap2.game.splashy_dropper;
 
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.ShapeContext;
-import net.minecraft.registry.tag.FluidTags;
-import net.minecraft.scoreboard.AbstractTeam;
-import net.minecraft.scoreboard.ScoreboardDisplaySlot;
-import net.minecraft.scoreboard.Team;
-import net.minecraft.scoreboard.number.StyledNumberFormat;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.GameRules;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.numbers.StyledFormat;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.tags.FluidTags;
+import net.minecraft.world.level.GameRules;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.scores.DisplaySlot;
+import net.minecraft.world.scores.PlayerTeam;
+import net.minecraft.world.scores.Team;
 import org.jetbrains.annotations.NotNull;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
@@ -45,12 +45,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-import static net.minecraft.util.Formatting.YELLOW;
+import static net.minecraft.ChatFormatting.YELLOW;
 
 public class SplashyDropperInstance extends FFAGameInstance implements MapBootstrapFunction {
 
     private static final int MIN_DURATION_SECONDS = 50, MAX_DURATION_SECONDS = 75;
-    private final IntDataContainer<ServerPlayerEntity, PlayerRef> data;
+    private final IntDataContainer<ServerPlayer, PlayerRef> data;
     private final Random random = new Random();
     private final List<BlockPos> blocksBelow = new ArrayList<>();
     private final SimpleMovementBlocker movementBlocker;
@@ -71,7 +71,7 @@ public class SplashyDropperInstance extends FFAGameInstance implements MapBootst
     }
 
     @Override
-    protected DataContainer<ServerPlayerEntity, PlayerRef> getData() {
+    protected DataContainer<ServerPlayer, PlayerRef> getData() {
         return data;
     }
 
@@ -82,8 +82,8 @@ public class SplashyDropperInstance extends FFAGameInstance implements MapBootst
     }
 
     @Override
-    public void bootstrapWorld(@NotNull ServerWorld world, @NotNull GameMap map) {
-        world.getGameRules().get(GameRules.RANDOM_TICK_SPEED).set(0, world.getServer());
+    public void bootstrapWorld(@NotNull ServerLevel world, @NotNull GameMap map) {
+        world.getGameRules().getRule(GameRules.RULE_RANDOMTICKING).set(0, world.getServer());
 
         new SdGenerator(world, map, random).generate();
     }
@@ -98,18 +98,18 @@ public class SplashyDropperInstance extends FFAGameInstance implements MapBootst
         HookRegistrar hooks = gameHandle.getHooks();
         movementBlocker.init(hooks);
 
-        ServerWorld world = getWorld();
-        var adj = new SimpleAdjacentBlocks(pos -> world.getFluidState(pos).isIn(FluidTags.WATER), 0);
+        ServerLevel world = getWorld();
+        var adj = new SimpleAdjacentBlocks(pos -> world.getFluidState(pos).is(FluidTags.WATER), 0);
         worldScanner = new BfsWorldScanner(adj);
 
         groundDetector = new GroundDetector(world, 0.35);
 
-        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
+        for (ServerPlayer player : gameHandle.getParticipants()) {
             movementBlocker.disableMovement(player);
         }
 
         minSpawnY = commons().getSpawns().stream()
-                .mapToDouble(PositionRotation::getY)
+                .mapToDouble(PositionRotation::y)
                 .min().orElse(70);
     }
 
@@ -123,15 +123,15 @@ public class SplashyDropperInstance extends FFAGameInstance implements MapBootst
 
         gameHandle.getScheduler().interval(this::tick, 1);
 
-        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
+        for (ServerPlayer player : gameHandle.getParticipants()) {
             movementBlocker.enableMovement(player);
         }
     }
 
     private void setupTeam() {
         CustomScoreboardManager scoreboardManager = gameHandle.getScoreboardManager();
-        Team team = scoreboardManager.createTeam("team");
-        team.setCollisionRule(AbstractTeam.CollisionRule.NEVER);
+        PlayerTeam team = scoreboardManager.createTeam("team");
+        team.setCollisionRule(Team.CollisionRule.NEVER);
         scoreboardManager.joinTeam(gameHandle.getParticipants(), team);
 
         Translations translations = gameHandle.getTranslations();
@@ -143,13 +143,13 @@ public class SplashyDropperInstance extends FFAGameInstance implements MapBootst
 
     private void setupObjective() {
         var objective = gameHandle.getScoreboardManager().translateObjective("score", "game.ap2.chicken_shooter.points")
-                .formatted(YELLOW, Formatting.BOLD);
+                .formatted(YELLOW, ChatFormatting.BOLD);
 
         useScoreboardStatsSync(data, objective);
-        objective.setSlot(ScoreboardDisplaySlot.LIST);
-        objective.setNumberFormat(StyledNumberFormat.YELLOW);
+        objective.setSlot(DisplaySlot.LIST);
+        objective.setNumberFormat(StyledFormat.PLAYER_LIST_DEFAULT);
 
-        for (ServerPlayerEntity player : PlayerLookup.all(gameHandle.getServer())) {
+        for (ServerPlayer player : PlayerLookup.all(gameHandle.getServer())) {
             objective.add(player);
         }
     }
@@ -157,12 +157,12 @@ public class SplashyDropperInstance extends FFAGameInstance implements MapBootst
     private void tick() {
         if (winManager.isGameOver()) return;
 
-        ServerWorld world = getWorld();
+        ServerLevel world = getWorld();
 
-        outer: for (ServerPlayerEntity player : gameHandle.getParticipants()) {
+        outer: for (ServerPlayer player : gameHandle.getParticipants()) {
             if (player.getY() >= minSpawnY - 1) continue;
 
-            if (world.getFluidState(player.getBlockPos()).isIn(FluidTags.WATER)) {
+            if (world.getFluidState(player.blockPosition()).is(FluidTags.WATER)) {
                 onLandInWater(player);
                 continue;
             }
@@ -173,7 +173,7 @@ public class SplashyDropperInstance extends FFAGameInstance implements MapBootst
             for (BlockPos pos : blocksBelow) {
                 BlockState state = world.getBlockState(pos);
 
-                if (state.getCollisionShape(world, pos, ShapeContext.of(player)).isEmpty()) continue;
+                if (state.getCollisionShape(world, pos, CollisionContext.of(player)).isEmpty()) continue;
 
                 onHitGround(player);
 
@@ -182,8 +182,8 @@ public class SplashyDropperInstance extends FFAGameInstance implements MapBootst
         }
     }
 
-    private void onLandInWater(ServerPlayerEntity player) {
-        int count = removeWater(player.getBlockPos());
+    private void onLandInWater(ServerPlayer player) {
+        int count = removeWater(player.blockPosition());
         int score = (int) Math.round(Math.sqrt(count));
 
         score = Math.max(0, Math.min(3, 4 - score));
@@ -196,27 +196,27 @@ public class SplashyDropperInstance extends FFAGameInstance implements MapBootst
             default -> 1.4f;
         };
 
-        gameHandle.getScheduler().immediate(() -> player.playSoundToPlayer(SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, SoundCategory.PLAYERS, 0.5f, pitch));
+        gameHandle.getScheduler().immediate(() -> player.playNotifySound(SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 0.5f, pitch));
 
         commons().teleportToRandomSpawn(player, random);
     }
 
-    private void onHitGround(ServerPlayerEntity player) {
+    private void onHitGround(ServerPlayer player) {
         commons().teleportToRandomSpawn(player, random);
 
-        gameHandle.getScheduler().immediate(() -> player.playSoundToPlayer(SoundEvents.ENTITY_ZOMBIE_ATTACK_IRON_DOOR, SoundCategory.PLAYERS, 0.25f, 0.5f));
+        gameHandle.getScheduler().immediate(() -> player.playNotifySound(SoundEvents.ZOMBIE_ATTACK_IRON_DOOR, SoundSource.PLAYERS, 0.25f, 0.5f));
     }
 
     private int removeWater(BlockPos pos) {
-        ServerWorld world = getWorld();
+        ServerLevel world = getWorld();
         var it = worldScanner.scan(pos);
         int count = 0;
-        BlockState air = Blocks.AIR.getDefaultState();
+        BlockState air = Blocks.AIR.defaultBlockState();
 
         while (it.hasNext()) {
             BlockPos waterPos = it.next();
 
-            world.setBlockState(waterPos, air);
+            world.setBlockAndUpdate(waterPos, air);
 
             count++;
         }

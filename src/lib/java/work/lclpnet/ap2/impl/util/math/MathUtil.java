@@ -1,7 +1,11 @@
 package work.lclpnet.ap2.impl.util.math;
 
 import com.google.common.collect.AbstractIterator;
-import net.minecraft.util.math.*;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Vec3i;
+import net.minecraft.util.Mth;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 import org.joml.Vector3d;
 import org.joml.Vector3dc;
 import org.joml.Vector3f;
@@ -27,10 +31,10 @@ public class MathUtil {
         );
     }
 
-    public static Vec3d yaw2vec(float yaw) {
+    public static Vec3 yaw2vec(float yaw) {
         double rad = toRadians(yaw);
 
-        return new Vec3d(sin(-rad), 0, cos(rad));
+        return new Vec3(sin(-rad), 0, cos(rad));
     }
 
     public static void yaw2vec(float yaw, Vector3d vec) {
@@ -53,8 +57,8 @@ public class MathUtil {
         return yaw(vec.x(), vec.z());
     }
 
-    public static float yaw(Vec3d vec) {
-        return yaw(vec.getX(), vec.getZ());
+    public static float yaw(Vec3 vec) {
+        return yaw(vec.x(), vec.z());
     }
 
     public static float yaw(double x, double z) {
@@ -65,8 +69,8 @@ public class MathUtil {
         return pitch(vec.y());
     }
 
-    public static float pitch(Vec3d vec) {
-        return pitch(vec.getY());
+    public static float pitch(Vec3 vec) {
+        return pitch(vec.y());
     }
 
     public static float pitch(double y) {
@@ -81,16 +85,16 @@ public class MathUtil {
         return yaw(tmp);
     }
 
-    public static Vec3d randomUnitVec3d(Random random) {
+    public static Vec3 randomUnitVec3d(Random random) {
         float yaw = (float) (random.nextDouble() * PI * 2);
         float pitch = (float) (random.nextDouble() * PI - PI * 0.5);
 
-        float h = MathHelper.cos(-yaw);
-        float i = MathHelper.sin(-yaw);
-        float j = MathHelper.cos(pitch);
-        float k = MathHelper.sin(pitch);
+        float h = Mth.cos(-yaw);
+        float i = Mth.sin(-yaw);
+        float j = Mth.cos(pitch);
+        float k = Mth.sin(pitch);
 
-        return new Vec3d(i * j, -k, h * j);
+        return new Vec3(i * j, -k, h * j);
     }
 
     private MathUtil() {}
@@ -99,7 +103,7 @@ public class MathUtil {
         return abs(a.getX() - b.getX()) + abs(a.getY() - b.getY()) + abs(a.getZ() - b.getZ());
     }
 
-    public static Iterable<Vec3d> corners(Box box) {
+    public static Iterable<Vec3> corners(AABB box) {
         return () -> new Iterator<>() {
             int i = 0;
 
@@ -109,14 +113,14 @@ public class MathUtil {
             }
 
             @Override
-            public Vec3d next() {
+            public Vec3 next() {
                 double x = (i & 1) == 0 ? box.minX : box.maxX;
                 double y = (i & 4) == 0 ? box.minY : box.maxY;
                 double z = (i & 2) == 0 ? box.minZ : box.maxZ;
 
                 i++;
 
-                return new Vec3d(x, y, z);
+                return new Vec3(x, y, z);
             }
         };
     }
@@ -128,25 +132,25 @@ public class MathUtil {
      * @param random The RNG instance.
      * @return A randomly offset unit vector, based on the input vector and the spread.
      */
-    public static Vec3d applySpread(Vec3d dir, double spread, Random random) {
+    public static Vec3 applySpread(Vec3 dir, double spread, Random random) {
         double cosMax = cos(spread);
         double cosTheta = cosMax + (1 - cosMax) * random.nextDouble();
         double sinTheta = sqrt(1 - cosTheta * cosTheta);
 
         double phi = random.nextDouble() * 2 * PI;
 
-        Vec3d t = new Vec3d(1, 0, 0);
+        Vec3 t = new Vec3(1, 0, 0);
 
-        if (abs(dir.dotProduct(t)) > 0.999) {
-            t = new Vec3d(0, 1, 0);
+        if (abs(dir.dot(t)) > 0.999) {
+            t = new Vec3(0, 1, 0);
         }
 
-        Vec3d axis = dir.crossProduct(t).normalize();
-        Vec3d perp = dir.crossProduct(axis).normalize();
+        Vec3 axis = dir.cross(t).normalize();
+        Vec3 perp = dir.cross(axis).normalize();
 
-        return axis.multiply(cos(phi) * sinTheta)
-                .add(perp.multiply(sin(phi) * sinTheta))
-                .add(dir.multiply(cosTheta))
+        return axis.scale(cos(phi) * sinTheta)
+                .add(perp.scale(sin(phi) * sinTheta))
+                .add(dir.scale(cosTheta))
                 .normalize();
     }
 

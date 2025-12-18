@@ -1,12 +1,12 @@
 package work.lclpnet.ap2.impl.util.effect;
 
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.level.ServerPlayer;
 
 public interface ApEffect {
 
-    void apply(ServerPlayerEntity player);
+    void apply(ServerPlayer player);
 
-    void remove(ServerPlayerEntity player);
+    void remove(ServerPlayer player);
 
     /**
      * @return Whether this effect should be applied to everyone or only to participants.

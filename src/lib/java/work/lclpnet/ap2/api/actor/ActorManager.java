@@ -2,11 +2,11 @@ package work.lclpnet.ap2.api.actor;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
-import net.minecraft.entity.MarkerEntity;
-import net.minecraft.nbt.NbtCompound;
+import net.minecraft.Util;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.Util;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.Marker;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,9 +31,9 @@ public class ActorManager implements Tickable {
     private final Set<Actor> actors = new LinkedHashSet<>();
     private final Set<Tickable> tickables = new LinkedHashSet<>();
 
-    public void spawn(Actor actor, @Nullable MarkerEntity marker) {
+    public void spawn(Actor actor, @Nullable Marker marker) {
         if (marker != null) {
-            actor.setPosition(marker.getEntityPos());
+            actor.setPosition(marker.position());
 
             ((ApMarkerEntity) marker).ap2$setActor(actor);
         }
@@ -45,7 +45,7 @@ public class ActorManager implements Tickable {
         ActorSpawnedCallback.HOOK.invoker().onSpawned(actor);
     }
 
-    public void discard(Actor actor, @Nullable MarkerEntity marker) {
+    public void discard(Actor actor, @Nullable Marker marker) {
         if (marker != null) {
             ((ApMarkerEntity) marker).ap2$setActor(null);
         }
@@ -90,21 +90,21 @@ public class ActorManager implements Tickable {
         }
     }
 
-    public static Optional<ActorInfo> getActorNbt(MarkerEntity marker) {
+    public static Optional<ActorInfo> getActorNbt(Marker marker) {
         return CustomNbt.get(marker, ACTOR_INFO_CODEC);
     }
 
-    public static void writeActorNbt(MarkerEntity marker, Actor actor) {
-        NbtCompound actorCompound = new NbtCompound();
-        NbtCompound actorNbt = actorCompound;
+    public static void writeActorNbt(Marker marker, Actor actor) {
+        CompoundTag actorCompound = new CompoundTag();
+        CompoundTag actorNbt = actorCompound;
 
         ActorData<?> data = actor.createData();
-        Identifier id = actor.getType().id();
+        ResourceLocation id = actor.getType().id();
 
         if (data != null) {
             actorNbt = data.encode(NbtOps.INSTANCE, actorCompound)
-                    .map(elem -> (NbtCompound) elem)
-                    .resultOrPartial(Util.addPrefix("Encoding actor data for %s: ".formatted(id), logger::error))
+                    .map(elem -> (CompoundTag) elem)
+                    .resultOrPartial(Util.prefix("Encoding actor data for %s: ".formatted(id), logger::error))
                     .orElse(actorCompound);
         }
 
@@ -113,17 +113,17 @@ public class ActorManager implements Tickable {
         CustomNbt.set(marker, ACTOR_INFO_CODEC, info);
     }
 
-    public record ActorInfo(Identifier type, NbtCompound nbt) {
+    public record ActorInfo(ResourceLocation type, CompoundTag nbt) {
 
-        public static final MapCodec<Identifier> TYPE_CODEC = Identifier.CODEC.fieldOf(ACTOR_TYPE_NBT_KEY);
+        public static final MapCodec<ResourceLocation> TYPE_CODEC = ResourceLocation.CODEC.fieldOf(ACTOR_TYPE_NBT_KEY);
 
-        public static final Codec<ActorInfo> CODEC = NbtCompound.CODEC.flatXmap(
+        public static final Codec<ActorInfo> CODEC = CompoundTag.CODEC.flatXmap(
                 nbt -> NbtOps.INSTANCE.getMap(nbt)
                         .flatMap(mapLike -> TYPE_CODEC.decode(NbtOps.INSTANCE, mapLike))
                         .map(id -> new ActorInfo(id, nbt)),
                 actorInfo -> NbtOps.INSTANCE.getMap(actorInfo.nbt()).flatMap(mapLike -> TYPE_CODEC.encode(actorInfo.type(), NbtOps.INSTANCE, NbtOps.INSTANCE.mapBuilder())
                         .build(actorInfo.nbt())
-                        .map(d -> (NbtCompound) d))
+                        .map(d -> (CompoundTag) d))
         );
     }
 }

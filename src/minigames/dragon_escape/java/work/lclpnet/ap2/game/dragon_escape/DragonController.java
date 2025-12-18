@@ -1,15 +1,15 @@
 package work.lclpnet.ap2.game.dragon_escape;
 
 import lombok.Getter;
-import net.minecraft.block.Block;
-import net.minecraft.block.Blocks;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.boss.dragon.EnderDragonEntity;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.WorldEvents;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.boss.enderdragon.EnderDragon;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.LevelEvent;
+import net.minecraft.world.phys.Vec3;
 import work.lclpnet.ap2.core.type.ApEnderDragon;
 import work.lclpnet.ap2.impl.util.math.MathUtil;
 import work.lclpnet.gaco.ds.BlockBox;
@@ -32,18 +32,18 @@ public class DragonController {
             ACCELERATION_DISTANCE = 30;
 
     private final SplinePath path;
-    private final ServerWorld world;
+    private final ServerLevel world;
     private final Random random;
     private final Predicate<BlockPos> canDestroy;
-    private final Iterable<ServerPlayerEntity> remainingPlayers;
+    private final Iterable<ServerPlayer> remainingPlayers;
 
-    private EnderDragonEntity dragon = null;
+    private EnderDragon dragon = null;
     @Getter
     private double dragonProgress = 0;
     private double speedBps = 0;
 
-    public DragonController(SplinePath path, ServerWorld world, Random random, Predicate<BlockPos> canDestroy,
-                            Iterable<ServerPlayerEntity> remainingPlayers) {
+    public DragonController(SplinePath path, ServerLevel world, Random random, Predicate<BlockPos> canDestroy,
+                            Iterable<ServerPlayer> remainingPlayers) {
         this.path = path;
         this.world = world;
         this.random = random;
@@ -52,12 +52,12 @@ public class DragonController {
     }
 
     public void spawnDragon() {
-        EnderDragonEntity dragon = new EnderDragonEntity(EntityType.ENDER_DRAGON, world);
+        EnderDragon dragon = new EnderDragon(EntityType.ENDER_DRAGON, world);
         ((ApEnderDragon) dragon).ap2$setManuallyManaged();
 
         setProgress(dragon, 0);
 
-        world.spawnEntity(dragon);
+        world.addFreshEntity(dragon);
 
         this.dragon = dragon;
     }
@@ -73,7 +73,7 @@ public class DragonController {
     private void tick() {
         if (dragon == null) return;
 
-        destroyBlocks(BlockBox.of(dragon.getBoundingBox().expand(0, 2, 0).offset(0, -2, 0)));
+        destroyBlocks(BlockBox.of(dragon.getBoundingBox().inflate(0, 2, 0).move(0, -2, 0)));
     }
 
     private void tickMovement() {
@@ -106,8 +106,8 @@ public class DragonController {
         final double origin = dragonProgress;
         double minDist = Double.POSITIVE_INFINITY;
 
-        for (ServerPlayerEntity player : remainingPlayers) {
-            double progress = path.getProgress(player.getEntityPos());
+        for (ServerPlayer player : remainingPlayers) {
+            double progress = path.getProgress(player.position());
             double dist = progress - origin;
 
             if (dist >= 0 && dist < minDist) {
@@ -123,18 +123,18 @@ public class DragonController {
         return minDist * path.getLength();
     }
 
-    private void setProgress(EnderDragonEntity dragon, double s) {
-        Vec3d pos = path.samplePosition(s);
+    private void setProgress(EnderDragon dragon, double s) {
+        Vec3 pos = path.samplePosition(s);
 
-        dragon.setPosition(pos);
+        dragon.setPos(pos);
 
-        Vec3d dir = path.sampleDirection(s).normalize().multiply(-1);
+        Vec3 dir = path.sampleDirection(s).normalize().scale(-1);
 
-        dragon.setYaw(MathUtil.yaw(dir));
-        dragon.setPitch(MathUtil.pitch(dir));
+        dragon.setYRot(MathUtil.yaw(dir));
+        dragon.setXRot(MathUtil.pitch(dir));
     }
 
-    public Optional<EnderDragonEntity> dragon() {
+    public Optional<EnderDragon> dragon() {
         return Optional.ofNullable(dragon);
     }
 
@@ -144,21 +144,21 @@ public class DragonController {
         for (BlockPos pos : box) {
             if (world.getBlockState(pos).isAir() || !canDestroy.test(pos)) continue;
 
-            if (world.setBlockState(pos, Blocks.AIR.getDefaultState(), Block.NOTIFY_ALL)) {
+            if (world.setBlock(pos, Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL)) {
                 destroyed++;
             }
         }
 
         if (destroyed <= 0) return;
 
-        var pos = new BlockPos.Mutable();
+        var pos = new BlockPos.MutableBlockPos();
 
         int amount = max(1, destroyed / 20);
 
         for (int i = 0; i < amount; i++) {
             box.randomBlockPos(pos, random);
 
-            world.syncWorldEvent(WorldEvents.ENDER_DRAGON_BREAKS_BLOCK, pos, 0);
+            world.levelEvent(LevelEvent.PARTICLES_DRAGON_BLOCK_BREAK, pos, 0);
         }
     }
 }

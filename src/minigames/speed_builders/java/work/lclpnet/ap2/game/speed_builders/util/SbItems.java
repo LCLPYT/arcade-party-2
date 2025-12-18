@@ -1,18 +1,18 @@
 package work.lclpnet.ap2.game.speed_builders.util;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.enums.BedPart;
-import net.minecraft.block.enums.DoubleBlockHalf;
-import net.minecraft.block.enums.SlabType;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.decoration.GlowItemFrameEntity;
-import net.minecraft.entity.decoration.ItemFrameEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.state.property.Properties;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.decoration.GlowItemFrame;
+import net.minecraft.world.entity.decoration.ItemFrame;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BedPart;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
+import net.minecraft.world.level.block.state.properties.SlabType;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.game.speed_builders.data.SbModule;
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
@@ -58,15 +58,15 @@ public class SbItems {
 
             stacks.add(stack);
 
-            if (entity instanceof ItemFrameEntity frame && !frame.getHeldItemStack().isEmpty()) {
-                Item item = frame instanceof GlowItemFrameEntity ? Items.GLOW_ITEM_FRAME : Items.ITEM_FRAME;
+            if (entity instanceof ItemFrame frame && !frame.getItem().isEmpty()) {
+                Item item = frame instanceof GlowItemFrame ? Items.GLOW_ITEM_FRAME : Items.ITEM_FRAME;
                 stacks.add(new ItemStack(item));
             }
         }
     }
 
     public @Nullable ItemStack getEntitySummon(Entity entity) {
-        return entity.getPickBlockStack();
+        return entity.getPickResult();
     }
 
     private void collectBlockMaterials(BlockStructure structure, FabricBlockStateAdapter adapter, List<ItemStack> stacks) {
@@ -84,8 +84,8 @@ public class SbItems {
             if (state == null) continue;
 
             if (!waterRequired) {
-                if ((state.getProperties().contains(Properties.WATERLOGGED) && state.get(Properties.WATERLOGGED))
-                    || state.isOf(Blocks.WATER_CAULDRON)) {
+                if ((state.getProperties().contains(BlockStateProperties.WATERLOGGED) && state.getValue(BlockStateProperties.WATERLOGGED))
+                    || state.is(Blocks.WATER_CAULDRON)) {
                     waterRequired = true;
                 }
             }
@@ -109,7 +109,7 @@ public class SbItems {
         count *= stack.getCount();
         stack.setCount(1);
 
-        int maxCount = stack.getMaxCount();
+        int maxCount = stack.getMaxStackSize();
 
         while (count > 0) {
             int decrement = Math.min(count, maxCount);
@@ -120,12 +120,12 @@ public class SbItems {
         }
     }
 
-    public void giveBuildingMaterials(Iterable<? extends ServerPlayerEntity> players, List<? extends Entity> entities) {
+    public void giveBuildingMaterials(Iterable<? extends ServerPlayer> players, List<? extends Entity> entities) {
         List<ItemStack> stacks = getBuildingMaterials(entities);
 
-        for (ServerPlayerEntity player : players) {
+        for (ServerPlayer player : players) {
             for (ItemStack stack : stacks) {
-                player.getInventory().insertStack(stack.copy());
+                player.getInventory().add(stack.copy());
             }
 
             PlayerInventoryAccess.setSelectedSlot(player, 0);
@@ -135,8 +135,8 @@ public class SbItems {
     public ItemStack getSourceStack(BlockState state) {
         var properties = state.getProperties();
 
-        if (properties.contains(Properties.SLAB_TYPE)) {
-            SlabType slabType = state.get(Properties.SLAB_TYPE);
+        if (properties.contains(BlockStateProperties.SLAB_TYPE)) {
+            SlabType slabType = state.getValue(BlockStateProperties.SLAB_TYPE);
 
             if (slabType == SlabType.DOUBLE) {
                 return new ItemStack(state.getBlock().asItem(), 2);
@@ -149,16 +149,16 @@ public class SbItems {
     public ItemStack getMaterialStack(BlockState state) {
         var properties = state.getProperties();
 
-        if (properties.contains(Properties.DOUBLE_BLOCK_HALF)) {
-            DoubleBlockHalf half = state.get(Properties.DOUBLE_BLOCK_HALF);
+        if (properties.contains(BlockStateProperties.DOUBLE_BLOCK_HALF)) {
+            DoubleBlockHalf half = state.getValue(BlockStateProperties.DOUBLE_BLOCK_HALF);
 
             if (half == DoubleBlockHalf.UPPER) {
                 return ItemStack.EMPTY;
             }
         }
 
-        if (properties.contains(Properties.BED_PART)) {
-            BedPart part = state.get(Properties.BED_PART);
+        if (properties.contains(BlockStateProperties.BED_PART)) {
+            BedPart part = state.getValue(BlockStateProperties.BED_PART);
 
             if (part == BedPart.HEAD) {
                 return ItemStack.EMPTY;

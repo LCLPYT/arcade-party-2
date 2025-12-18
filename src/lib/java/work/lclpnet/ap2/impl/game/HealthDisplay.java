@@ -1,13 +1,13 @@
 package work.lclpnet.ap2.impl.game;
 
-import net.minecraft.scoreboard.ScoreboardCriterion;
-import net.minecraft.scoreboard.ScoreboardDisplaySlot;
-import net.minecraft.scoreboard.ScoreboardObjective;
-import net.minecraft.scoreboard.number.BlankNumberFormat;
-import net.minecraft.scoreboard.number.FixedNumberFormat;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.Text;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.numbers.BlankFormat;
+import net.minecraft.network.chat.numbers.FixedFormat;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.scores.DisplaySlot;
+import net.minecraft.world.scores.Objective;
+import net.minecraft.world.scores.criteria.ObjectiveCriteria;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.core.hook.PlayerEliminatedCallback;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
@@ -27,13 +27,13 @@ public class HealthDisplay {
     public void setup(HookRegistrar hooks) {
         CustomScoreboardManager manager = gameHandle.getScoreboardManager();
 
-        ScoreboardObjective objective = manager.createObjective("health_name", ScoreboardCriterion.DUMMY, Text.empty(), ScoreboardCriterion.RenderType.HEARTS);
+        Objective objective = manager.createObjective("health_name", ObjectiveCriteria.DUMMY, Component.empty(), ObjectiveCriteria.RenderType.HEARTS);
         objective.setDisplayAutoUpdate(false);
 
-        manager.setDisplay(ScoreboardDisplaySlot.BELOW_NAME, objective);
-        manager.setDisplay(ScoreboardDisplaySlot.LIST, objective);
+        manager.setDisplay(DisplaySlot.BELOW_NAME, objective);
+        manager.setDisplay(DisplaySlot.LIST, objective);
 
-        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
+        for (ServerPlayer player : gameHandle.getParticipants()) {
             float health = player.getHealth();
             update(player, health, objective);
         }
@@ -41,7 +41,7 @@ public class HealthDisplay {
         hooks.registerHook(EntityHealthCallback.HOOK, (entity, health) -> {
             float oldHealth = entity.getHealth();
 
-            if (entity instanceof ServerPlayerEntity player && gameHandle.getParticipants().isParticipating(player) && health < oldHealth) {
+            if (entity instanceof ServerPlayer player && gameHandle.getParticipants().isParticipating(player) && health < oldHealth) {
                 // update the scoreboard
                 update(player, health, objective);
             }
@@ -51,31 +51,31 @@ public class HealthDisplay {
 
         hooks.registerHook(PlayerEliminatedCallback.HOOK, player -> {
             manager.setScore(player, objective, 0);
-            manager.setNumberFormat(player, objective, BlankNumberFormat.INSTANCE);
+            manager.setNumberFormat(player, objective, BlankFormat.INSTANCE);
         });
     }
 
-    private void update(ServerPlayerEntity player, float health, ScoreboardObjective objective) {
+    private void update(ServerPlayer player, float health, Objective objective) {
         CustomScoreboardManager manager = gameHandle.getScoreboardManager();
 
         manager.setScore(player, objective, (int) ceil(health));
-        manager.setNumberFormat(player, objective, new FixedNumberFormat(healthText(health)));
+        manager.setNumberFormat(player, objective, new FixedFormat(healthText(health)));
     }
 
-    private Text healthText(float health) {
+    private Component healthText(float health) {
         int hearts = max(0, min(20, (int) ceil(health)));
         boolean half = hearts % 2 == 1;
         hearts >>= 1;
 
-        MutableText text = Text.literal(" " + "♥".repeat(hearts)).withColor(0xff1313);
+        MutableComponent text = Component.literal(" " + "♥".repeat(hearts)).withColor(0xff1313);
 
         if (half) {
-            text.append(Text.literal("♡").withColor(0xff1313));
+            text.append(Component.literal("♡").withColor(0xff1313));
             hearts += 1;
         }
 
         if (hearts < 10) {
-            text.append(Text.literal("♡".repeat(10 - hearts)).withColor(0x282828));
+            text.append(Component.literal("♡".repeat(10 - hearts)).withColor(0x282828));
         }
 
         return text;

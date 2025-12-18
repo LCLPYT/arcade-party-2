@@ -1,8 +1,8 @@
 package work.lclpnet.ap2.game.guess_it.challenge;
 
-import net.minecraft.entity.EntityType;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.phys.Vec3;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.game.guess_it.data.*;
 import work.lclpnet.ap2.game.guess_it.util.MobRandomizer;
@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 
-import static net.minecraft.util.Formatting.YELLOW;
+import static net.minecraft.ChatFormatting.YELLOW;
 import static work.lclpnet.ap2.impl.util.world.PositionUtil.findGroundPositions;
 
 public class MobCountMultiChallenge implements Challenge {
@@ -26,14 +26,14 @@ public class MobCountMultiChallenge implements Challenge {
     private static final int DURATION_TICKS = Ticks.seconds(16);
     static final int MIN_BUDGET = 43, RANDOM_BUDGET = 97;
     private final MiniGameHandle gameHandle;
-    private final ServerWorld world;
+    private final ServerLevel world;
     private final Random random;
     private final BlockShape blockShape;
     private final WorldModifier modifier;
     private final IndexedSet<UUID> mannequinUuids;
     private int amount = 0;
 
-    public MobCountMultiChallenge(MiniGameHandle gameHandle, ServerWorld world, Random random, BlockShape blockShape, WorldModifier modifier, IndexedSet<UUID> mannequinUuids) {
+    public MobCountMultiChallenge(MiniGameHandle gameHandle, ServerLevel world, Random random, BlockShape blockShape, WorldModifier modifier, IndexedSet<UUID> mannequinUuids) {
         this.gameHandle = gameHandle;
         this.world = world;
         this.random = random;
@@ -74,7 +74,7 @@ public class MobCountMultiChallenge implements Challenge {
             throw new IllegalStateException("There must be at least two entity types");
         }
 
-        List<Vec3d> spaces = MobSpawner.findSpawns(world, types).findSpaces(findGroundPositions(blockShape, world));
+        List<Vec3> spaces = MobSpawner.findSpawns(world, types).findSpaces(findGroundPositions(blockShape, world));
 
         if (spaces.isEmpty()) {
             throw new IllegalStateException("No spawn spaces found");
@@ -89,7 +89,7 @@ public class MobCountMultiChallenge implements Challenge {
         MobSpawner spawner = new MobSpawner(world, random, mannequinUuids);
 
         for (int i = 0; i < amount; i++) {
-            Vec3d spawn = spaces.get(random.nextInt(spaces.size()));
+            Vec3 spawn = spaces.get(random.nextInt(spaces.size()));
             spawner.spawnEntity(searched, spawn, modifier);
         }
 
@@ -99,11 +99,11 @@ public class MobCountMultiChallenge implements Challenge {
 
             budget -= cost;
 
-            Vec3d spawn = spaces.get(random.nextInt(spaces.size()));
+            Vec3 spawn = spaces.get(random.nextInt(spaces.size()));
             spawner.spawnEntity(type, spawn, modifier);
         }
 
-        var entityName = TextUtil.getVanillaName(searched).formatted(YELLOW);
+        var entityName = TextUtil.getVanillaName(searched).withStyle(YELLOW);
 
         messenger.task(translations.translateText("game.ap2.guess_it.mob.guess", entityName, YELLOW));
     }

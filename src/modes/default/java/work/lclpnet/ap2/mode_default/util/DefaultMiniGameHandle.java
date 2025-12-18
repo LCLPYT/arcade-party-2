@@ -2,9 +2,9 @@ package work.lclpnet.ap2.mode_default.util;
 
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.world.border.WorldBorder;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.border.WorldBorder;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -70,7 +70,7 @@ public class DefaultMiniGameHandle implements MiniGameHandle, WorldBorderManager
     private volatile @Nullable CompletableFuture<UUID> statsId = null;
     private volatile @Nullable SubWorldManager subWorldManager = null;
     private volatile @Nullable WorldContainer worldContainer = null;
-    private @Nullable ServerWorld world = null;
+    private @Nullable ServerLevel world = null;
 
     public DefaultMiniGameHandle(MiniGame game, ApBaseArgs args, BossBarProvider bossBarProvider,
                                  BossBarHandler bossBarHandler, CustomScoreboardManager scoreboardManager,
@@ -359,7 +359,7 @@ public class DefaultMiniGameHandle implements MiniGameHandle, WorldBorderManager
 
         Notica.getInstance(getServer()).getPlayingSongs().forEach(SongHandle::stop);
 
-        for (ServerPlayerEntity player : PlayerLookup.all(getServer())) {
+        for (ServerPlayer player : PlayerLookup.all(getServer())) {
             ((ApServerPlayerEntity) player).ap2$setPlayerListName(null);
         }
 
@@ -376,7 +376,7 @@ public class DefaultMiniGameHandle implements MiniGameHandle, WorldBorderManager
     }
 
     @Override
-    public void setWorld(@Nullable ServerWorld world) {
+    public void setWorld(@Nullable ServerLevel world) {
         this.world = world;
     }
 

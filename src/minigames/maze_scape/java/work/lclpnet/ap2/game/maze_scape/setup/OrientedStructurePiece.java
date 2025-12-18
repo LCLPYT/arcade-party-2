@@ -1,10 +1,10 @@
 package work.lclpnet.ap2.game.maze_scape.setup;
 
-import net.minecraft.block.enums.Orientation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.math.Vec3i;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.FrontAndTop;
+import net.minecraft.core.Vec3i;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.game.maze_scape.gen.Node;
 import work.lclpnet.ap2.game.maze_scape.gen.OrientedPiece;
@@ -26,7 +26,7 @@ public class OrientedStructurePiece implements OrientedPiece<Connector3, Structu
     private final Matrix3i mat;
     private final BVH bounds;
     private final List<BlockBox> extraGeneratorBounds;
-    private final @Nullable Vec3d spawn;
+    private final @Nullable Vec3 spawn;
     private final @Nullable Connector3 parentConnector;
     @Nullable private volatile Matrix3i invMat = null;
     @Nullable private Cluster cluster = null;
@@ -53,17 +53,17 @@ public class OrientedStructurePiece implements OrientedPiece<Connector3, Structu
 
             // find connector position
             BlockPos connectorPos = mat.transform(connector.pos());
-            var newConnectorPos = pos.add(connectorPos);
+            var newConnectorPos = pos.offset(connectorPos);
 
             // transform facing vector
-            Vec3i vec = mat.transform(connector.orientation().getFacing().getVector());
-            Direction dir = Direction.fromVector(vec.getX(), vec.getY(), vec.getZ(), null);
+            Vec3i vec = mat.transform(connector.orientation().front().getUnitVec3i());
+            Direction dir = Direction.getNearest(vec.getX(), vec.getY(), vec.getZ(), null);
 
             if (dir == null) {
                 throw new IllegalArgumentException("Invalid transformation: Direction is not canonical");
             }
 
-            var newOrientation = Orientation.byDirections(dir, connector.orientation().getRotation());
+            var newOrientation = FrontAndTop.fromFrontAndTop(dir, connector.orientation().top());
 
             if (newOrientation == null) {
                 throw new IllegalArgumentException("Invalid transformation: Invalid orientation");
@@ -81,10 +81,10 @@ public class OrientedStructurePiece implements OrientedPiece<Connector3, Structu
         this.connectors = connectors;
         this.parentConnector = parentConnector;
 
-        Vec3d spawn = piece.spawn();
+        Vec3 spawn = piece.spawn();
 
         if (spawn != null) {
-            spawn = mat.transform(spawn.getX() - 0.5, spawn.getY() - 0.5, spawn.getZ() - 0.5)
+            spawn = mat.transform(spawn.x() - 0.5, spawn.y() - 0.5, spawn.z() - 0.5)
                     .add(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5);
         }
 
@@ -160,7 +160,7 @@ public class OrientedStructurePiece implements OrientedPiece<Connector3, Structu
     }
 
     @Nullable
-    public Vec3d spawn() {
+    public Vec3 spawn() {
         return spawn;
     }
 

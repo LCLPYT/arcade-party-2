@@ -1,18 +1,18 @@
 package work.lclpnet.ap2.game.bow_spleef.item;
 
 import lombok.Setter;
-import net.minecraft.entity.projectile.thrown.EggEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.particle.ParticleTypes;
-import net.minecraft.registry.DynamicRegistryManager;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.projectile.ThrownEgg;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.core.hook.ProjectileHitEntityCallback;
 import work.lclpnet.ap2.core.hook.ProjectileShootCallback;
@@ -27,8 +27,8 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
-import static net.minecraft.entity.attribute.EntityAttributes.GRAVITY;
-import static net.minecraft.entity.attribute.EntityAttributes.MOVEMENT_SPEED;
+import static net.minecraft.world.entity.ai.attributes.Attributes.GRAVITY;
+import static net.minecraft.world.entity.ai.attributes.Attributes.MOVEMENT_SPEED;
 import static work.lclpnet.lobby.util.PlayerReset.resetAttribute;
 import static work.lclpnet.lobby.util.PlayerReset.setAttribute;
 
@@ -45,32 +45,32 @@ public class HeavyWeightItem implements SpecialItem {
     }
 
     @Override
-    public ItemStack createItemStack(DynamicRegistryManager registryManager) {
+    public ItemStack createItemStack(RegistryAccess registryManager) {
         return new ItemStack(Items.EGG);
     }
 
     @Override
     public void registerHooks(HookRegistrar hooks, SpecialItemContext ctx) {
         hooks.registerHook(ProjectileShootCallback.HOOK, (shooter, projectile) -> {
-            if (!(shooter instanceof ServerPlayerEntity player)
-                    || !(projectile instanceof EggEntity)
+            if (!(shooter instanceof ServerPlayer player)
+                    || !(projectile instanceof ThrownEgg)
                     || !ctx.hasSpecialItem(player, this)) return;
 
-            projectile.addCommandTag(TAG_HEAVY_WEIGHT);
+            projectile.addTag(TAG_HEAVY_WEIGHT);
             ctx.removeSpecialItem(player, this);
         });
 
         hooks.registerHook(ProjectileHitEntityCallback.HOOK, (projectile, hit) -> {
-            if (!projectile.getCommandTags().contains(TAG_HEAVY_WEIGHT)
-                    || !(hit.getEntity() instanceof ServerPlayerEntity player)
-                    || heavyWeighted.contains(player.getUuid())) return;
+            if (!projectile.getTags().contains(TAG_HEAVY_WEIGHT)
+                    || !(hit.getEntity() instanceof ServerPlayer player)
+                    || heavyWeighted.contains(player.getUUID())) return;
 
             setHeavyWeighted(player);
 
-            Vec3d pos = hit.getPos();
-            ServerWorld world = player.getEntityWorld();
-            world.playSound(null, pos.x, pos.y, pos.z, SoundEvents.ENTITY_BLAZE_HURT, SoundCategory.HOSTILE, 0.5f, 0.65f);
-            world.spawnParticles(ParticleTypes.FALLING_NECTAR, pos.x, pos.y + 1, pos.z, 100, 0.25, 0.5, 0.25, 1);
+            Vec3 pos = hit.getLocation();
+            ServerLevel world = player.level();
+            world.playSound(null, pos.x, pos.y, pos.z, SoundEvents.BLAZE_HURT, SoundSource.HOSTILE, 0.5f, 0.65f);
+            world.sendParticles(ParticleTypes.FALLING_NECTAR, pos.x, pos.y + 1, pos.z, 100, 0.25, 0.5, 0.25, 1);
 
             ctx.translations().translateText("game.ap2.bow_spleef.heavy_weighted")
                     .styled(style -> style.withColor(0xff0000))
@@ -81,13 +81,13 @@ public class HeavyWeightItem implements SpecialItem {
     }
 
     @Override
-    public ActionResult onUse(ServerPlayerEntity player, ItemStack stack, @Nullable Hand hand, SpecialItemContext ctx) {
+    public InteractionResult onUse(ServerPlayer player, ItemStack stack, @Nullable InteractionHand hand, SpecialItemContext ctx) {
         PlayerInventoryAccess.setSelectedSlot(player, 8);
-        return ActionResult.PASS;
+        return InteractionResult.PASS;
     }
 
-    private void setHeavyWeighted(ServerPlayerEntity player) {
-        if (!heavyWeighted.add(player.getUuid())) return;
+    private void setHeavyWeighted(ServerPlayer player) {
+        if (!heavyWeighted.add(player.getUUID())) return;
 
         if  (doubleJumpHandler != null) {
             doubleJumpHandler.disable(player);
@@ -97,8 +97,8 @@ public class HeavyWeightItem implements SpecialItem {
         setAttribute(player, MOVEMENT_SPEED, 0.075);
     }
 
-    private void removeHeavyWeighted(ServerPlayerEntity player) {
-        if (!heavyWeighted.remove(player.getUuid())) return;
+    private void removeHeavyWeighted(ServerPlayer player) {
+        if (!heavyWeighted.remove(player.getUUID())) return;
 
         if (doubleJumpHandler != null) {
             doubleJumpHandler.enable(player);
@@ -108,7 +108,7 @@ public class HeavyWeightItem implements SpecialItem {
         resetAttribute(player, MOVEMENT_SPEED);
     }
 
-    public boolean isHeavyWeighted(ServerPlayerEntity player) {
-        return heavyWeighted.contains(player.getUuid());
+    public boolean isHeavyWeighted(ServerPlayer player) {
+        return heavyWeighted.contains(player.getUUID());
     }
 }

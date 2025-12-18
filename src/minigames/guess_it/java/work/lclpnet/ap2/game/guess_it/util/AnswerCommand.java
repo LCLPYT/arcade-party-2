@@ -4,16 +4,16 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.server.level.ServerPlayer;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.game.guess_it.data.InputManager;
 import work.lclpnet.kibu.cmd.type.CommandRegistrar;
 import work.lclpnet.kibu.cmd.type.KibuCommand;
 
 import static com.mojang.brigadier.arguments.StringArgumentType.string;
-import static net.minecraft.server.command.CommandManager.argument;
-import static net.minecraft.server.command.CommandManager.literal;
+import static net.minecraft.commands.Commands.argument;
+import static net.minecraft.commands.Commands.literal;
 
 public class AnswerCommand implements KibuCommand {
 
@@ -30,18 +30,18 @@ public class AnswerCommand implements KibuCommand {
         registrar.registerCommand(command());
     }
 
-    private LiteralArgumentBuilder<ServerCommandSource> command() {
+    private LiteralArgumentBuilder<CommandSourceStack> command() {
         return literal("answer")
                 .requires(s -> {
-                    ServerPlayerEntity player = s.getPlayer();
+                    ServerPlayer player = s.getPlayer();
                     return player != null && participants.isParticipating(player);
                 })
                 .then(argument("input", string())
                         .executes(this::doAnswer));
     }
 
-    private int doAnswer(CommandContext<ServerCommandSource> ctx) throws CommandSyntaxException {
-        ServerPlayerEntity player = ctx.getSource().getPlayerOrThrow();
+    private int doAnswer(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        ServerPlayer player = ctx.getSource().getPlayerOrException();
         String input = StringArgumentType.getString(ctx, "input");
 
         inputManager.input(player, input);

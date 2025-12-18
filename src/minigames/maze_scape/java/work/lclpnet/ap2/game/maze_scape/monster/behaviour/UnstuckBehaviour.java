@@ -1,11 +1,11 @@
 package work.lclpnet.ap2.game.maze_scape.monster.behaviour;
 
-import net.minecraft.block.Blocks;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3d;
 import work.lclpnet.ap2.game.maze_scape.setup.OrientedStructurePiece;
@@ -46,19 +46,19 @@ public class UnstuckBehaviour implements MonsterBehaviour {
     }
 
     @Override
-    public void init(MobEntity mob) {
+    public void init(Mob mob) {
         if (DEBUG_AVG_POS) {
-            Vec3d pos = mob != null ? mob.getEntityPos() : Vec3d.ZERO;
+            Vec3 pos = mob != null ? mob.position() : Vec3.ZERO;
 
             avgPosMarker = manager.debugController().parent().renderer()
-                    .map(renderer -> renderer.marker(pos.x, pos.y, pos.z, Blocks.GREEN_CONCRETE.getDefaultState(), 0x00ff00))
+                    .map(renderer -> renderer.marker(pos.x, pos.y, pos.z, Blocks.GREEN_CONCRETE.defaultBlockState(), 0x00ff00))
                     .orElse(null);
         }
     }
 
     @Override
-    public void tick(MobEntity mob) {
-        posBuf.update(mob.getEntityPos());
+    public void tick(Mob mob) {
+        posBuf.update(mob.position());
 
         if (DEBUG_AVG_POS && avgPosMarker != null) {
             avgPosMarker.position.set(posBuf.avg.x, posBuf.avg.y, posBuf.avg.z);
@@ -74,12 +74,12 @@ public class UnstuckBehaviour implements MonsterBehaviour {
         }
     }
 
-    private void unstuck(MobEntity mob) {
+    private void unstuck(Mob mob) {
         LivingEntity target = mob.getTarget();
 
         if (target == null) return;
 
-        var navPath = manager.struct().findPath(mob.getEntityPos(), target.getEntityPos());
+        var navPath = manager.struct().findPath(mob.position(), target.position());
 
         if (navPath.isEmpty()) return;
 
@@ -88,7 +88,7 @@ public class UnstuckBehaviour implements MonsterBehaviour {
         if (passagePath.size() < 2) {
             if (++unstuckFailCount >= MAX_FAILED_UNSTUCK_ATTEMPTS) {
                 unstuckFailCount = 0;
-                teleport(mob, target.getEntityPos());
+                teleport(mob, target.position());
             }
 
             return;
@@ -117,12 +117,12 @@ public class UnstuckBehaviour implements MonsterBehaviour {
 
         lastUnstuck = next;
 
-        teleport(mob, next.pos().toBottomCenterPos());
+        teleport(mob, next.pos().getBottomCenter());
     }
 
-    static void teleport(Entity entity, Vec3d pos) {
-        if (entity.getEntityWorld() instanceof ServerWorld world) {
-            entity.teleport(world, pos.getX(), pos.getY(), pos.getZ(), Set.of(), entity.getYaw(), entity.getPitch(), true);
+    static void teleport(Entity entity, Vec3 pos) {
+        if (entity.level() instanceof ServerLevel world) {
+            entity.teleportTo(world, pos.x(), pos.y(), pos.z(), Set.of(), entity.getYRot(), entity.getXRot(), true);
         }
     }
 
@@ -142,8 +142,8 @@ public class UnstuckBehaviour implements MonsterBehaviour {
             avg = new Vector3d(0);
         }
 
-        public void update(Vec3d pos) {
-            buf[cursor].set(pos.getX(), pos.getY(), pos.getZ());
+        public void update(Vec3 pos) {
+            buf[cursor].set(pos.x(), pos.y(), pos.z());
             cursor = (cursor + 1) % buf.length;
             count = Math.min(count + 1, buf.length);
 

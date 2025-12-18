@@ -1,6 +1,6 @@
 package work.lclpnet.ap2.core.type;
 
-import net.minecraft.item.Item;
+import net.minecraft.world.item.Item;
 
 public interface ApFuelRegistry {
 

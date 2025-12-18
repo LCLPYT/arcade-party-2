@@ -1,37 +1,37 @@
 package work.lclpnet.ap2.api.base;
 
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 import java.util.stream.Stream;
 
-public interface Participants extends Iterable<ServerPlayerEntity> {
+public interface Participants extends Iterable<ServerPlayer> {
 
     /**
      * @return The currently participating players.
      */
-    Set<ServerPlayerEntity> getAsSet();
+    Set<ServerPlayer> getAsSet();
 
-    void remove(ServerPlayerEntity player);
+    void remove(ServerPlayer player);
 
     boolean isParticipating(UUID uuid);
 
     @NotNull
     @Override
-    default Iterator<ServerPlayerEntity> iterator() {
+    default Iterator<ServerPlayer> iterator() {
         return getAsSet().iterator();
     }
 
-    default boolean isParticipating(ServerPlayerEntity player) {
-        return isParticipating(player.getUuid());
+    default boolean isParticipating(ServerPlayer player) {
+        return isParticipating(player.getUUID());
     }
 
     default int count() {
         return getAsSet().size();
     }
 
-    default Optional<ServerPlayerEntity> getRandomParticipant(Random random) {
+    default Optional<ServerPlayer> getRandomParticipant(Random random) {
         int count = count();
 
         if (count <= 0) {
@@ -41,13 +41,13 @@ public interface Participants extends Iterable<ServerPlayerEntity> {
         return stream().skip(random.nextInt(count)).findFirst();
     }
 
-    default Optional<ServerPlayerEntity> getParticipant(UUID uuid) {
+    default Optional<ServerPlayer> getParticipant(UUID uuid) {
         return stream()
-                .filter(player -> player.getUuid().equals(uuid))
+                .filter(player -> player.getUUID().equals(uuid))
                 .findAny();
     }
 
-    default Stream<ServerPlayerEntity> stream() {
+    default Stream<ServerPlayer> stream() {
         return getAsSet().stream();
     }
 }

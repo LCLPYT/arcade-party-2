@@ -1,7 +1,7 @@
 package work.lclpnet.ap2.mode_default.util;
 
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.level.ServerPlayer;
 import work.lclpnet.activity.ComponentActivity;
 import work.lclpnet.activity.component.builtin.BuiltinComponents;
 import work.lclpnet.ap2.api.base.PlayerManager;
@@ -48,7 +48,7 @@ public class BaseActivityConfigurator {
                 .forEach(playerUtil::resetPlayer);
     }
 
-    private void onJoin(ServerPlayerEntity player) {
+    private void onJoin(ServerPlayer player) {
         PlayerManager playerManager = args.playerManager();
 
         boolean spectator = playerManager.isPermanentSpectator(player) || !playerManager.offer(player);

@@ -1,23 +1,23 @@
 package work.lclpnet.ap2.game.paintball.item;
 
-import net.minecraft.block.ShapeContext;
-import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.particle.DustParticleEffect;
-import net.minecraft.registry.DynamicRegistryManager;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Hand;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.hit.EntityHitResult;
-import net.minecraft.util.hit.HitResult;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.RaycastContext;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.core.particles.DustParticleOptions;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.EntityHitResult;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.shapes.CollisionContext;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.team.Team;
@@ -46,12 +46,12 @@ public class TripWireItem implements SpecialItem {
 
     private final Translations translations;
     private final Participants participants;
-    private final ServerWorld world;
+    private final ServerLevel world;
     private final PaintballTeams teams;
     private final PaintManager paintManager;
     private final Set<Tripwire> tripwires = new HashSet<>();
 
-    public TripWireItem(Translations translations, Participants participants, ServerWorld world, PaintballTeams teams,
+    public TripWireItem(Translations translations, Participants participants, ServerLevel world, PaintballTeams teams,
                         PaintManager paintManager) {
         this.translations = translations;
         this.participants = participants;
@@ -66,58 +66,58 @@ public class TripWireItem implements SpecialItem {
     }
 
     @Override
-    public ItemStack createItemStack(DynamicRegistryManager registryManager) {
+    public ItemStack createItemStack(RegistryAccess registryManager) {
         return new ItemStack(Items.TRIPWIRE_HOOK);
     }
 
     @Override
-    public ActionResult onUse(ServerPlayerEntity player, ItemStack stack, @Nullable Hand hand, SpecialItemContext ctx) {
-        double range = player.getAttributeValue(EntityAttributes.BLOCK_INTERACTION_RANGE);
+    public InteractionResult onUse(ServerPlayer player, ItemStack stack, @Nullable InteractionHand hand, SpecialItemContext ctx) {
+        double range = player.getAttributeValue(Attributes.BLOCK_INTERACTION_RANGE);
 
-        HitResult hit = raycast(player, range, RaycastContext.ShapeType.OUTLINE,
-                RaycastContext.FluidHandling.NONE, ShapeContext.absent(), entity -> !entity.isSpectator());
+        HitResult hit = raycast(player, range, ClipContext.Block.OUTLINE,
+                ClipContext.Fluid.NONE, CollisionContext.empty(), entity -> !entity.isSpectator());
 
         if (hit.getType() != HitResult.Type.BLOCK || !(hit instanceof BlockHitResult blockHit)) {
-            return ActionResult.PASS;
+            return InteractionResult.PASS;
         }
 
-        Vec3d pos = blockHit.getPos();
-        Vec3d dir = blockHit.getSide().getDoubleVector();
+        Vec3 pos = blockHit.getLocation();
+        Vec3 dir = blockHit.getDirection().getUnitVec3();
 
-        BlockHitResult opposingHit = raycastBlocks(world, pos.add(dir.multiply(TRIPWIRE_MARGIN)), dir, MAX_LENGTH,
-                RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.NONE, ShapeContext.absent());
+        BlockHitResult opposingHit = raycastBlocks(world, pos.add(dir.scale(TRIPWIRE_MARGIN)), dir, MAX_LENGTH,
+                ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, CollisionContext.empty());
 
         if (opposingHit.getType() != HitResult.Type.BLOCK) {
             translations.translateText("game.ap2.paintball.item.tripwire.too_long")
-                    .formatted(Formatting.RED)
+                    .formatted(ChatFormatting.RED)
                     .sendTo(player);
 
-            player.playSoundToPlayer(SoundEvents.BLOCK_NOTE_BLOCK_BASS.value(), SoundCategory.BLOCKS, 0.2f, 1f);
+            player.playNotifySound(SoundEvents.NOTE_BLOCK_BASS.value(), SoundSource.BLOCKS, 0.2f, 1f);
 
-            return ActionResult.FAIL;
+            return InteractionResult.FAIL;
         }
 
-        stack.decrementUnlessCreative(1, player);
+        stack.consume(1, player);
 
-        double length = opposingHit.getPos().subtract(pos).length();
+        double length = opposingHit.getLocation().subtract(pos).length();
 
-        tripwires.add(new Tripwire(pos, dir, length, player.getUuid()));
+        tripwires.add(new Tripwire(pos, dir, length, player.getUUID()));
 
         float activateVolume = 0.45f, activatePitch = 1.78f;
         float placeVolume = 0.5f, placePitch = 1.3f;
 
         teams.getTeamManager().getTeam(player).ifPresentOrElse(
                 team -> {
-                    playSoundFor(SoundEvents.BLOCK_BEACON_ACTIVATE, SoundCategory.PLAYERS, pos, activateVolume, activatePitch, team.getPlayers());
-                    playSoundFor(SoundEvents.BLOCK_IRON_PLACE, SoundCategory.PLAYERS, pos, placeVolume, placePitch, team.getPlayers());
+                    playSoundFor(SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, pos, activateVolume, activatePitch, team.getPlayers());
+                    playSoundFor(SoundEvents.IRON_PLACE, SoundSource.PLAYERS, pos, placeVolume, placePitch, team.getPlayers());
                 },
                 () -> {
-                    playSound(player, SoundEvents.BLOCK_BEACON_ACTIVATE, SoundCategory.PLAYERS, pos, activateVolume, activatePitch);
-                    playSound(player, SoundEvents.BLOCK_BEACON_ACTIVATE, SoundCategory.PLAYERS, pos, placeVolume, placePitch);
+                    playSound(player, SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, pos, activateVolume, activatePitch);
+                    playSound(player, SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, pos, placeVolume, placePitch);
                 }
         );
 
-        return ActionResult.SUCCESS_SERVER;
+        return InteractionResult.SUCCESS_SERVER;
     }
 
     @Override
@@ -137,13 +137,13 @@ public class TripWireItem implements SpecialItem {
                 DISPLAY_LASER_TICKS = 4,
                 EXPLOSION_POWER = 3.5f;
 
-        private final Vec3d pos;
-        private final Vec3d dir;
+        private final Vec3 pos;
+        private final Vec3 dir;
         private final double length;
         private final UUID ownerUuid;
         private int timer = 0;
 
-        private Tripwire(Vec3d pos, Vec3d dir, double length, UUID ownerUuid) {
+        private Tripwire(Vec3 pos, Vec3 dir, double length, UUID ownerUuid) {
             this.pos = pos;
             this.dir = dir;
             this.length = length;
@@ -151,7 +151,7 @@ public class TripWireItem implements SpecialItem {
         }
 
         public boolean tick() {
-            ServerPlayerEntity player = participants.getParticipant(ownerUuid).orElse(null);
+            ServerPlayer player = participants.getParticipant(ownerUuid).orElse(null);
 
             if (player == null) return true;
 
@@ -172,22 +172,22 @@ public class TripWireItem implements SpecialItem {
 
         private void showTo(Team team) {
             for (double d = 0; d <= length; d += DISPLAY_LASER_SPACING) {
-                DustParticleEffect effect = new DustParticleEffect(team.key().color(), DISPLAY_LASER_SIZE);
+                DustParticleOptions effect = new DustParticleOptions(team.key().color(), DISPLAY_LASER_SIZE);
 
                 spawnParticleFor(effect, pos.x + dir.x * d, pos.y + dir.y * d, pos.z + dir.z * d,
                         1, 0, 0, 0, 0, team.getPlayers());
             }
         }
 
-        private boolean checkExplosion(ServerPlayerEntity owner, PaintballTeam ownerTeam) {
-            HitResult hit = raycastEntities(world, pos.add(dir.multiply(TRIPWIRE_MARGIN)), dir, length, entity
-                    -> entity instanceof ServerPlayerEntity player
+        private boolean checkExplosion(ServerPlayer owner, PaintballTeam ownerTeam) {
+            HitResult hit = raycastEntities(world, pos.add(dir.scale(TRIPWIRE_MARGIN)), dir, length, entity
+                    -> entity instanceof ServerPlayer player
                     && participants.isParticipating(player)
                     && teams.teamOf(player).map(pbt -> pbt.key() != ownerTeam.key()).orElse(false));
 
             if (hit.getType() != HitResult.Type.ENTITY || !(hit instanceof EntityHitResult entityHit)) return false;
 
-            paintManager.createExplosion(owner, entityHit.getEntity().getEntityPos(), ownerTeam, EXPLOSION_POWER);
+            paintManager.createExplosion(owner, entityHit.getEntity().position(), ownerTeam, EXPLOSION_POWER);
 
             return true;
         }

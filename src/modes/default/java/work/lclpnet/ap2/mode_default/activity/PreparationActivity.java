@@ -2,22 +2,22 @@ package work.lclpnet.ap2.mode_default.activity;
 
 import it.unimi.dsi.fastutil.objects.ObjectIntPair;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.entity.decoration.DisplayEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.scoreboard.number.FixedNumberFormat;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.numbers.FixedFormat;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.Display;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3d;
 import org.json.JSONObject;
@@ -57,7 +57,6 @@ import work.lclpnet.ap2.mode_default.util.ApBaseArgs;
 import work.lclpnet.ap2.mode_default.util.BaseActivityConfigurator;
 import work.lclpnet.ap2.mode_default.util.OptionChooser;
 import work.lclpnet.ap2.mode_default.util.ScoreManager;
-import work.lclpnet.ap2.util.TablistManagerKt;
 import work.lclpnet.gaco.dynamic_entities.DynamicEntityManager;
 import work.lclpnet.gaco.scene.MixedMountContext;
 import work.lclpnet.gaco.scene.Object3d;
@@ -85,7 +84,7 @@ import java.util.concurrent.CompletableFuture;
 
 import static java.lang.Math.*;
 import static java.util.stream.Collectors.toSet;
-import static net.minecraft.util.Formatting.*;
+import static net.minecraft.ChatFormatting.*;
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
 public class PreparationActivity extends ComponentActivity implements Skippable, GameStartContext {
@@ -107,7 +106,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
     private SongWrapper song = null;
     private CompletableFuture<Void> whenTasksDone = null;
     private @Nullable Runnable onScoreUpdate = null;
-    private ServerWorld world;
+    private ServerLevel world;
     private GameMap map;
     private DynamicEntityManager dynamicEntityManager;
     private Object3d gameQueueDisplay;
@@ -162,7 +161,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
 
     static CompletableFuture<SetupResult> setupMap(ApMiniGameArgs miniGameArgs) {
         WorldFacade worldFacade = miniGameArgs.worldFacade();
-        Identifier mapId = ApConstants.identifier("preparation");
+        ResourceLocation mapId = ApConstants.identifier("preparation");
 
         return worldFacade.changeMap(mapId, MapOptions.REUSABLE)
                 .thenCompose(world -> miniGameArgs.mapFacade().getMap(mapId)
@@ -183,7 +182,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
         super.stop();
     }
 
-    private void onReady(ServerWorld world, GameMap map) {
+    private void onReady(ServerLevel world, GameMap map) {
         this.world = world;
         this.map = map;
 
@@ -215,7 +214,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
         activityConfigurator.resetPlayers();
         activityConfigurator.configureHooks();
 
-        world.getWaypointHandler().clear();
+        world.getWaypointManager().breakAllConnections();
 
         HookRegistrar hooks = component(BuiltinComponents.HOOKS).hooks();
         Scheduler scheduler = component(BuiltinComponents.SCHEDULER).scheduler();
@@ -256,7 +255,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
             miniGame = pickNextGame();
         }
 
-        Identifier gameId = miniGame.getId();
+        ResourceLocation gameId = miniGame.getId();
 
         whenTasksDone = args.miniGameArgs().mapFacade().reloadMaps(gameId).exceptionally(err -> {
             args.miniGameArgs().logger().error("Failed to reload maps for {}", gameId, err);
@@ -279,7 +278,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
         var objective = ScoreboardUtil.setupDynamicSidebar(scoreboard, "game.%s.title".formatted(ApConstants.ID));
 
         // header
-        var round = new FixedNumberFormat(Text.literal(String.valueOf(scoreManager.getRound())).formatted(YELLOW));
+        var round = new FixedFormat(Component.literal(String.valueOf(scoreManager.getRound())).withStyle(YELLOW));
         objective.createText(translations.translateText("ap2.prepare.round").formatted(GREEN)).setNumberFormat(round);
 
         if (args.playerManager().isFinale()) {
@@ -306,24 +305,24 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
         objective.createNewline(ScoreboardLayout.BOTTOM);
 
         // display objective for all players
-        for (ServerPlayerEntity player : PlayerLookup.all(args.miniGameArgs().server())) {
+        for (ServerPlayer player : PlayerLookup.all(args.miniGameArgs().server())) {
             objective.add(player);
         }
     }
 
     private void addFinalistsToScoreboard(DynamicScoreboardObjective objective) {
-        Set<ServerPlayerEntity> finalists = args.scoreManager().getFinalists().collect(toSet());
+        Set<ServerPlayer> finalists = args.scoreManager().getFinalists().collect(toSet());
         Translations translations = args.miniGameArgs().translations();
 
         objective.createNewline(ScoreboardLayout.TOP);
 
         objective.createText(translations.translateText("ap2.finale").formatted(YELLOW, BOLD));
 
-        var separator = Text.literal(ApConstants.SCOREBOARD_SEPARATOR_SM).formatted(DARK_GREEN, STRIKETHROUGH);
+        var separator = Component.literal(ApConstants.SCOREBOARD_SEPARATOR_SM).withStyle(DARK_GREEN, STRIKETHROUGH);
         objective.createText(separator);
 
-        for (ServerPlayerEntity finalist : finalists) {
-            objective.createText(Text.literal("• " + finalist.getNameForScoreboard()).formatted(GREEN));
+        for (ServerPlayer finalist : finalists) {
+            objective.createText(Component.literal("• " + finalist.getScoreboardName()).withStyle(GREEN));
         }
     }
 
@@ -336,7 +335,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
 
             objective.createText(translations.translateText("ap2.score").formatted(YELLOW, BOLD));
 
-            var separator = Text.literal(ApConstants.SCOREBOARD_SEPARATOR_SM).formatted(DARK_GREEN, STRIKETHROUGH);
+            var separator = Component.literal(ApConstants.SCOREBOARD_SEPARATOR_SM).withStyle(DARK_GREEN, STRIKETHROUGH);
             objective.createText(separator);
         }
 
@@ -352,8 +351,8 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
 
             objective.setScore(ref.name(), score);
 
-            objective.setDisplayName(ref.name(), Text.literal("#%d ".formatted(rank)).formatted(YELLOW)
-                    .append(Text.literal(ref.name()).formatted(GREEN)));
+            objective.setDisplayName(ref.name(), Component.literal("#%d ".formatted(rank)).withStyle(YELLOW)
+                    .append(Component.literal(ref.name()).withStyle(GREEN)));
         }
     }
 
@@ -362,7 +361,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
 
         if (gameQueue == null) return;
 
-        Vec3d pos = MapUtil.readVec3d(gameQueue.getJSONArray("pos"));
+        Vec3 pos = MapUtil.readVec3d(gameQueue.getJSONArray("pos"));
         double height = max(1, gameQueue.getDouble("height"));
         double yaw = Math.toRadians(gameQueue.optDouble("yaw", 0d) + 90.f);
 
@@ -373,7 +372,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
         removeGameQueue();
 
         gameQueueDisplay = new Object3d(scene);
-        gameQueueDisplay.position.set(pos.getX(), pos.getY(), pos.getZ());
+        gameQueueDisplay.position.set(pos.x(), pos.y(), pos.z());
         gameQueueDisplay.rotation.setAngleAxis(yaw, new Vector3d(0, 1, 0));
 
         double offsetY = 0;
@@ -388,9 +387,9 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
             var currentTitle = translations.translateText(miniGame.getTitleKey()).formatted(AQUA);
 
             obj.controller().configure(controller -> {
-                controller.setText(lang -> Text.literal("→ ").formatted(YELLOW)
+                controller.setText(lang -> Component.literal("→ ").withStyle(YELLOW)
                                 .append(currentTitle.translateTo(lang)));
-                controller.setDisplayFlags(DisplayEntity.TextDisplayEntity.DEFAULT_BACKGROUND_FLAG);
+                controller.setDisplayFlags(Display.TextDisplay.FLAG_USE_DEFAULT_BACKGROUND);
             });
 
             obj.position.set(0, offsetY, 0);
@@ -404,7 +403,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
 
         title.controller().configure(controller -> {
             controller.setText(translations.translateText("ap2.prepare.game_queue").formatted(YELLOW, UNDERLINE, BOLD));
-            controller.setDisplayFlags(DisplayEntity.TextDisplayEntity.DEFAULT_BACKGROUND_FLAG);
+            controller.setDisplayFlags(Display.TextDisplay.FLAG_USE_DEFAULT_BACKGROUND);
         });
 
         title.position.set(0, offsetY, 0);
@@ -432,7 +431,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
         for (var entry : preview) {
             var obj = new TranslatedTextDisplayObject(gameQueueDisplay.getScene(), translations);
 
-            Formatting color = switch (entry.type()) {
+            ChatFormatting color = switch (entry.type()) {
                 case REGULAR -> GREEN;
                 case VOTED -> GOLD;
                 case PRIORITY -> LIGHT_PURPLE;
@@ -444,13 +443,13 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
                 TranslatedText text = translations.translateText(entry.game().getTitleKey()).formatted(color);
 
                 if (mayPossiblyNotBePlayed) {
-                    controller.setText(lang -> Text.literal("⏳ ").formatted(WHITE)
+                    controller.setText(lang -> Component.literal("⏳ ").withStyle(WHITE)
                             .append(text.translateTo(lang).formatted(ITALIC)));
                 } else {
                     controller.setText(text);
                 }
 
-                controller.setDisplayFlags(DisplayEntity.TextDisplayEntity.DEFAULT_BACKGROUND_FLAG);
+                controller.setDisplayFlags(Display.TextDisplay.FLAG_USE_DEFAULT_BACKGROUND);
             });
 
             obj.position.set(0, offsetY, 0);
@@ -634,36 +633,36 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
         animatedTitle = new AnimatedTitle();
 
         var playedNextMsg = translations.translateText("ap2.prepare.will_be_played_next").formatted(GREEN);
-        var separator = Text.literal(ApConstants.SEPARATOR).formatted(DARK_GREEN, STRIKETHROUGH, BOLD);
+        var separator = Component.literal(ApConstants.SEPARATOR).withStyle(DARK_GREEN, STRIKETHROUGH, BOLD);
         String author = dataManager.string(miniGame.getAuthor());
 
         var players = PlayerLookup.all(server);
 
-        for (ServerPlayerEntity player : players) {
-            player.sendMessage(separator);
+        for (ServerPlayer player : players) {
+            player.sendSystemMessage(separator);
 
             var gameTitle = translations.translateText(player, miniGame.getTitleKey()).formatted(AQUA, BOLD);
-            player.sendMessage(gameTitle);
+            player.sendSystemMessage(gameTitle);
 
             String descriptionKey = miniGame.getDescriptionKey();
             Object[] descArgs = miniGame.getDescriptionArguments();
 
             var description = translations.translateText(player, descriptionKey, descArgs).formatted(GREEN);
 
-            player.sendMessage(description);
+            player.sendSystemMessage(description);
 
             var createdBy = translations.translateText(player, "ap2.prepare.created_by",
                     styled(author, YELLOW)).formatted(GRAY, ITALIC);
 
-            player.sendMessage(Text.literal(""));
-            player.sendMessage(createdBy);
+            player.sendSystemMessage(Component.literal(""));
+            player.sendSystemMessage(createdBy);
 
-            player.sendMessage(separator);
+            player.sendSystemMessage(separator);
 
             animatedTitle.add(new NextGameTitleAnimation(player, gameTitle, playedNextMsg.translateFor(player)));
 
             if (nextGameSong == null) {
-                player.playSoundToPlayer(SoundEvents.ENTITY_PLAYER_LEVELUP, SoundCategory.PLAYERS, 1, 1);
+                player.playNotifySound(SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 1, 1);
             }
         }
 
@@ -697,8 +696,8 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
         var msg = translations.translateText("ap2.prepare.game_cannot_be_played", gameTitle).formatted(RED);
 
         msg.acceptEach(PlayerLookup.all(getServer()), (player, text) -> {
-            player.sendMessage(text);
-            player.playSoundToPlayer(SoundEvents.ENTITY_WITHER_HURT, SoundCategory.PLAYERS, 0.4f, 0.9f);
+            player.sendSystemMessage(text);
+            player.playNotifySound(SoundEvents.WITHER_HURT, SoundSource.PLAYERS, 0.4f, 0.9f);
         });
     }
 
@@ -715,70 +714,70 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
     private void giveDevelopmentItems(HookRegistrar hooks) {
         MinecraftServer server = getServer();
 
-        for (ServerPlayerEntity player : PlayerLookup.all(server)) {
-            if (server.getPermissionLevel(player.getPlayerConfigEntry()) < 2) continue;
+        for (ServerPlayer player : PlayerLookup.all(server)) {
+            if (server.getProfilePermissions(player.nameAndId()) < 2) continue;
 
             ItemStack gameSelector = new ItemStack(Items.TOTEM_OF_UNDYING);
-            gameSelector.set(DataComponentTypes.CUSTOM_NAME, Text.literal("Select Game").styled(style -> style.withItalic(false).withFormatting(YELLOW)));
+            gameSelector.set(DataComponents.CUSTOM_NAME, Component.literal("Select Game").withStyle(style -> style.withItalic(false).applyFormat(YELLOW)));
 
             ItemStack mapSelector = new ItemStack(Items.HEART_OF_THE_SEA);
-            mapSelector.set(DataComponentTypes.CUSTOM_NAME, Text.literal("Select Map").styled(style -> style.withItalic(false).withFormatting(YELLOW)));
+            mapSelector.set(DataComponents.CUSTOM_NAME, Component.literal("Select Map").withStyle(style -> style.withItalic(false).applyFormat(YELLOW)));
 
             ItemStack skip = new ItemStack(Items.EMERALD_BLOCK);
-            skip.set(DataComponentTypes.CUSTOM_NAME, Text.literal("Skip Preparation").styled(style -> style.withItalic(false).withFormatting(GREEN)));
+            skip.set(DataComponents.CUSTOM_NAME, Component.literal("Skip Preparation").withStyle(style -> style.withItalic(false).applyFormat(GREEN)));
 
-            PlayerInventory inventory = player.getInventory();
-            inventory.setStack(0, gameSelector);
-            inventory.setStack(1, skip);
-            inventory.setStack(8, mapSelector);
+            Inventory inventory = player.getInventory();
+            inventory.setItem(0, gameSelector);
+            inventory.setItem(1, skip);
+            inventory.setItem(8, mapSelector);
         }
 
         hooks.registerHook(PlayerInteractionHooks.USE_ITEM, (player, world, hand) -> {
-            if (!(player instanceof ServerPlayerEntity serverPlayer)
-                || server.getPermissionLevel(serverPlayer.getPlayerConfigEntry()) < 2) {
+            if (!(player instanceof ServerPlayer serverPlayer)
+                || server.getProfilePermissions(serverPlayer.nameAndId()) < 2) {
 
-                return ActionResult.PASS;
+                return InteractionResult.PASS;
             }
 
-            ItemStack stack = player.getStackInHand(hand);
+            ItemStack stack = player.getItemInHand(hand);
 
-            if (stack.isOf(Items.TOTEM_OF_UNDYING)) {
+            if (stack.is(Items.TOTEM_OF_UNDYING)) {
                 openGamePicker(serverPlayer);
-            } else if (stack.isOf(Items.EMERALD_BLOCK)) {
+            } else if (stack.is(Items.EMERALD_BLOCK)) {
                 setSkip(true);
-                player.sendMessage(Text.literal("Skipped the preparation phase"), false);
-            } else if (stack.isOf(Items.HEART_OF_THE_SEA)) {
+                player.displayClientMessage(Component.literal("Skipped the preparation phase"), false);
+            } else if (stack.is(Items.HEART_OF_THE_SEA)) {
                 openMapPicker(serverPlayer);
             }
 
-            return ActionResult.SUCCESS_SERVER;
+            return InteractionResult.SUCCESS_SERVER;
         });
 
         gameChooser.listen(hooks, (game, player) -> {
             forceGame(game);
-            player.sendMessage(Text.literal("Forcing mini-game \"%s\"".formatted(game.getId())));
+            player.sendSystemMessage(Component.literal("Forcing mini-game \"%s\"".formatted(game.getId())));
         });
 
         mapChooser.listen(hooks, (gameMap, player) -> {
-            Identifier mapId = gameMap.getDescriptor().getIdentifier();
+            ResourceLocation mapId = gameMap.getDescriptor().getIdentifier();
             args.miniGameArgs().mapFacade().forceMap(mapId);
-            player.sendMessage(Text.literal("Next map will be \"%s\"".formatted(mapId)));
+            player.sendSystemMessage(Component.literal("Next map will be \"%s\"".formatted(mapId)));
         });
     }
 
-    private void openGamePicker(ServerPlayerEntity player) {
+    private void openGamePicker(ServerPlayer player) {
         var games = args.miniGameArgs().miniGames().getGames().stream().toList();
         Translations translations = args.miniGameArgs().translations();
 
-        RestrictedInventory inv = gameChooser.createInventory(games, Text.literal("Force Game"),
+        RestrictedInventory inv = gameChooser.createInventory(games, Component.literal("Force Game"),
                 game -> IconMaker.createIcon(game, player, translations));
 
         inv.open(player);
     }
 
-    private void openMapPicker(ServerPlayerEntity player) {
+    private void openMapPicker(ServerPlayer player) {
         if (miniGame == null) {
-            player.sendMessage(Text.literal("No maps found").formatted(RED));
+            player.sendSystemMessage(Component.literal("No maps found").withStyle(RED));
             return;
         }
 
@@ -788,7 +787,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
         container.mapFacade().getMaps(miniGame.getId()).thenAccept(maps -> {
             Translations translations = container.translations();
 
-            RestrictedInventory inv = mapChooser.createInventory(maps, Text.literal("Force Map"),
+            RestrictedInventory inv = mapChooser.createInventory(maps, Component.literal("Force Map"),
                     map -> IconMaker.createIcon(map, player, translations, dataManager));
 
             inv.open(player);
@@ -796,7 +795,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
     }
 
     @Override
-    public Set<ServerPlayerEntity> getParticipants() {
+    public Set<ServerPlayer> getParticipants() {
         return args.playerManager().getAsSet();
     }
 
@@ -804,5 +803,5 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
         return Optional.ofNullable(miniGame);
     }
 
-    public record SetupResult(ServerWorld world, GameMap map) {}
+    public record SetupResult(ServerLevel world, GameMap map) {}
 }

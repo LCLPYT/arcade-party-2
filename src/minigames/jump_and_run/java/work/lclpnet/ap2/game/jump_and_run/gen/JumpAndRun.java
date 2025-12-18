@@ -1,10 +1,10 @@
 package work.lclpnet.ap2.game.jump_and_run.gen;
 
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.GameRules;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.GameRules;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.game.jump_and_run.JumpAndRunModuleSchema;
 import work.lclpnet.ap2.impl.map.schema.MapSchemaLoader;
@@ -31,7 +31,7 @@ public class JumpAndRun {
     private final JumpAndRunSetup.Parts parts;
     private final JumpAndRunGenerator generator;
     private int moduleIndex = 0;
-    private @Nullable ServerWorld world = null, prevWorld = null;
+    private @Nullable ServerLevel world = null, prevWorld = null;
     private @Nullable JumpAndRunModuleSchema schema = null;
     private @Nullable Checkpoint generatedStartCheckpoint = null;
     private @Nullable Checkpoint generatedEndCheckpoint = null;
@@ -73,7 +73,7 @@ public class JumpAndRun {
                 .resolve("modules")
                 .resolve(module.path() + ".tar.xz");
 
-        Identifier id = map.getDescriptor().getIdentifier().withSuffixedPath("/modules/" + module.path());
+        ResourceLocation id = map.getDescriptor().getIdentifier().withSuffix("/modules/" + module.path());
 
         return subWorldManager.loadWorldWithData(path, id).thenCompose(res -> {
             setCurrent(res);
@@ -104,13 +104,13 @@ public class JumpAndRun {
 
     private void processWorld() {
         GameRules gameRules = world().getGameRules();
-        gameRules.get(GameRules.DO_FIRE_TICK).set(false, server);
-        gameRules.get(GameRules.RANDOM_TICK_SPEED).set(0, server);
-        gameRules.get(GameRules.DO_MOB_GRIEFING).set(false, server);
-        gameRules.get(GameRules.DO_DAYLIGHT_CYCLE).set(false, server);
-        gameRules.get(GameRules.DO_WEATHER_CYCLE).set(false, server);
-        gameRules.get(GameRules.FALL_DAMAGE).set(false, server);
-        gameRules.get(GameRules.ANNOUNCE_ADVANCEMENTS).set(false, server);
+        gameRules.getRule(GameRules.RULE_DOFIRETICK).set(false, server);
+        gameRules.getRule(GameRules.RULE_RANDOMTICKING).set(0, server);
+        gameRules.getRule(GameRules.RULE_MOBGRIEFING).set(false, server);
+        gameRules.getRule(GameRules.RULE_DAYLIGHT).set(false, server);
+        gameRules.getRule(GameRules.RULE_WEATHER_CYCLE).set(false, server);
+        gameRules.getRule(GameRules.RULE_FALL_DAMAGE).set(false, server);
+        gameRules.getRule(GameRules.RULE_ANNOUNCE_ADVANCEMENTS).set(false, server);
 
         var schema = schema();
 
@@ -152,7 +152,7 @@ public class JumpAndRun {
         return Objects.requireNonNull(schema);
     }
 
-    public ServerWorld world() {
+    public ServerLevel world() {
         return Objects.requireNonNull(world);
     }
 
@@ -193,7 +193,7 @@ public class JumpAndRun {
     }
 
     public CompletableFuture<Void> unloadPreviousModule() {
-        ServerWorld world = prevWorld;
+        ServerLevel world = prevWorld;
 
         if (world == null) {
             return CompletableFuture.completedFuture(null);
@@ -218,9 +218,9 @@ public class JumpAndRun {
 
     public PositionRotation spawn() {
         Checkpoint start = startCheckpoint();
-        Vec3d pos = start.pos();
+        Vec3 pos = start.pos();
 
-        return new PositionRotation(pos.getX(), pos.getY(), pos.getZ(), start.yaw(), start.pitch());
+        return new PositionRotation(pos.x(), pos.y(), pos.z(), start.yaw(), start.pitch());
     }
 
     public List<BlockBox> startGates() {

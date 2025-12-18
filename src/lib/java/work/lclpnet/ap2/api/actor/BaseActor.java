@@ -1,17 +1,17 @@
 package work.lclpnet.ap2.api.actor;
 
 import lombok.Getter;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.phys.Vec3;
 
 import java.util.Objects;
 
 @Getter
 public class BaseActor implements Actor {
 
-    protected final ServerWorld world;
+    protected final ServerLevel world;
     protected final ActorType<?> type;
-    private Vec3d position = Vec3d.ZERO;
+    private Vec3 position = Vec3.ZERO;
 
     public BaseActor(ActorInit init) {
         this.world = init.world();
@@ -19,7 +19,7 @@ public class BaseActor implements Actor {
     }
 
     @Override
-    public void setPosition(Vec3d pos) {
+    public void setPosition(Vec3 pos) {
         position = Objects.requireNonNull(pos, "Position is null");
     }
 }

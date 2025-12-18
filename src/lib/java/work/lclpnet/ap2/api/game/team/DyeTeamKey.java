@@ -1,6 +1,6 @@
 package work.lclpnet.ap2.api.game.team;
 
-import net.minecraft.util.Formatting;
+import net.minecraft.ChatFormatting;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.impl.util.ColorUtil;
 
@@ -9,28 +9,28 @@ import java.util.Optional;
 
 public enum DyeTeamKey implements TeamKey {
 
-    WHITE(Formatting.WHITE),
-    LIGHT_GRAY(Formatting.GRAY),
-    DARK_GRAY(Formatting.DARK_GRAY),
-    BLACK(Formatting.BLACK),
+    WHITE(ChatFormatting.WHITE),
+    LIGHT_GRAY(ChatFormatting.GRAY),
+    DARK_GRAY(ChatFormatting.DARK_GRAY),
+    BLACK(ChatFormatting.BLACK),
     BROWN(0x603b1f),
-    RED(Formatting.RED),
+    RED(ChatFormatting.RED),
     ORANGE(0xe16100),
-    YELLOW(Formatting.YELLOW),
-    LIME(Formatting.GREEN),
-    DARK_GREEN(Formatting.DARK_GREEN),
+    YELLOW(ChatFormatting.YELLOW),
+    LIME(ChatFormatting.GREEN),
+    DARK_GREEN(ChatFormatting.DARK_GREEN),
     CYAN(0x157788),
     LIGHT_BLUE(0x2389c7),
-    BLUE(Formatting.BLUE),
+    BLUE(ChatFormatting.BLUE),
     PURPLE(0x65209d),
     MAGENTA(0xaa31a0),
     PINK(0xd6658f);
 
     private final int color;
-    private final Formatting formatting;
+    private final ChatFormatting formatting;
 
-    DyeTeamKey(Formatting formatting) {
-        this.color = Optional.ofNullable(formatting.getColorValue()).orElse(0x000000);
+    DyeTeamKey(ChatFormatting formatting) {
+        this.color = Optional.ofNullable(formatting.getColor()).orElse(0x000000);
         this.formatting = formatting;
     }
 
@@ -39,12 +39,12 @@ public enum DyeTeamKey implements TeamKey {
         this.formatting = closestFormatting(color);
     }
 
-    private Formatting closestFormatting(int color) {
+    private ChatFormatting closestFormatting(int color) {
         double minDist = Double.POSITIVE_INFINITY;
-        Formatting closest = null;
+        ChatFormatting closest = null;
 
-        for (Formatting formatting : Formatting.values()) {
-            Integer colorValue = formatting.getColorValue();
+        for (ChatFormatting formatting : ChatFormatting.values()) {
+            Integer colorValue = formatting.getColor();
 
             if (colorValue == null) continue;
 
@@ -74,7 +74,7 @@ public enum DyeTeamKey implements TeamKey {
     }
 
     @Override
-    public Formatting formatting() {
+    public ChatFormatting formatting() {
         return formatting;
     }
 

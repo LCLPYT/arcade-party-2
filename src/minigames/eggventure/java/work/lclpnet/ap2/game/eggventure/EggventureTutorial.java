@@ -1,14 +1,14 @@
 package work.lclpnet.ap2.game.eggventure;
 
-import net.minecraft.block.ShapeContext;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.decoration.DisplayEntity;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.hit.HitResult;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.RaycastContext;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Display;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.shapes.CollisionContext;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.util.heads.PlayerHead;
@@ -30,7 +30,7 @@ import work.lclpnet.kibu.translate.Translations;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
-import static net.minecraft.util.Formatting.GREEN;
+import static net.minecraft.ChatFormatting.GREEN;
 
 public class EggventureTutorial {
 
@@ -38,20 +38,20 @@ public class EggventureTutorial {
             DURATION_TICKS = Ticks.seconds(4),
             EGG_SWITCH_TICKS = 10;
 
-    private final ServerWorld world;
+    private final ServerLevel world;
     private final Scene scene;
     private final Random random;
     private final Translations translations;
     private final Collection<TutorialEgg> eggs = new ArrayList<>();
     private final List<PlayerHead> variants;
 
-    public EggventureTutorial(ServerWorld world, DynamicEntityManager dynamicEntityManager, Random random, Translations translations) {
+    public EggventureTutorial(ServerLevel world, DynamicEntityManager dynamicEntityManager, Random random, Translations translations) {
         this.world = world;
         this.random = random;
         this.translations = translations;
 
         scene = new Scene(new MixedMountContext(world, dynamicEntityManager));
-        variants = EggventureInstance.eggVariants(world.getRegistryManager());
+        variants = EggventureInstance.eggVariants(world.registryAccess());
     }
 
     public CompletableFuture<Void> start(TaskScheduler scheduler, Participants participants) {
@@ -59,7 +59,7 @@ public class EggventureTutorial {
             throw new IllegalStateException("There are no egg variants defined");
         }
 
-        for (ServerPlayerEntity player : participants) {
+        for (ServerPlayer player : participants) {
             PlayerHead variant = variants.get(random.nextInt(variants.size()));
 
             startTutorial(player, variant);
@@ -99,15 +99,15 @@ public class EggventureTutorial {
         }
     }
 
-    private void startTutorial(ServerPlayerEntity player, PlayerHead variant) {
-        UUID uuid = player.getUuid();
+    private void startTutorial(ServerPlayer player, PlayerHead variant) {
+        UUID uuid = player.getUUID();
         var text = translations.translateText(player, "game.ap2.eggventure.find_sample").formatted(GREEN);
 
-        var egg = new TutorialEgg(scene, variant, () -> world.getServer().getPlayerManager().getPlayer(uuid));
+        var egg = new TutorialEgg(scene, variant, () -> world.getServer().getPlayerList().getPlayer(uuid));
         var label = new PlayerTextDisplayObject(scene, text, player);
         label.position.set(0, 0.1, 0);
         label.scale.set(0.65);
-        label.setBillboardMode(DisplayEntity.BillboardMode.CENTER);
+        label.setBillboardMode(Display.BillboardConstraints.CENTER);
 
         egg.addChild(label);
 
@@ -122,10 +122,10 @@ public class EggventureTutorial {
                 PLAYER_DIST = 2.5,
                 EGG_RADIUS = 0.25;
 
-        private final Resolvable<ServerPlayerEntity> playerRef;
+        private final Resolvable<ServerPlayer> playerRef;
         private final WorldPosSync posSync = new WorldPosSync();
 
-        public TutorialEgg(Scene scene, PlayerHead variant, Resolvable<ServerPlayerEntity> playerRef) {
+        public TutorialEgg(Scene scene, PlayerHead variant, Resolvable<ServerPlayer> playerRef) {
             super(scene, variant.createStack());
             this.playerRef = playerRef;
         }
@@ -138,13 +138,13 @@ public class EggventureTutorial {
         }
 
         @Override
-        public Vec3d getPosition() {
+        public Vec3 getPosition() {
             return posSync.mcWorldPos();
         }
 
         @Override
-        public @Nullable Entity getEntity(ServerPlayerEntity player) {
-            ServerPlayerEntity owner = playerRef.optional().orElse(null);
+        public @Nullable Entity getEntity(ServerPlayer player) {
+            ServerPlayer owner = playerRef.optional().orElse(null);
 
             if (owner == null || player != owner) {
                 return null;
@@ -154,30 +154,30 @@ public class EggventureTutorial {
         }
 
         @Override
-        public void cleanup(ServerPlayerEntity player) {
+        public void cleanup(ServerPlayer player) {
             // no need to clean the entity really, as the object should already have been removed
         }
 
         @Override
         public void updateAnimation(double dt, AnimationContext ctx) {
-            ServerPlayerEntity player = playerRef.optional().orElse(null);
+            ServerPlayer player = playerRef.optional().orElse(null);
 
             if (player == null) return;
 
             HitResult hit = RayCastUtil.raycast(
-                    player.getEntityWorld(), player.getEyePos(), player.getRotationVector(), PLAYER_DIST,
-                    RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.ANY, ShapeContext.absent(),
+                    player.level(), player.getEyePosition(), player.getLookAngle(), PLAYER_DIST,
+                    ClipContext.Block.OUTLINE, ClipContext.Fluid.ANY, CollisionContext.empty(),
                     entity -> !entity.isSpectator());
 
-            Vec3d pos = hit.getPos();
+            Vec3 pos = hit.getLocation();
 
             if (hit instanceof BlockHitResult blockHit) {
-                pos = pos.add(blockHit.getSide().getDoubleVector().multiply(EGG_RADIUS));
+                pos = pos.add(blockHit.getDirection().getUnitVec3().scale(EGG_RADIUS));
             } else if (hit.getType() != HitResult.Type.MISS) {
-                pos = pos.add(player.getRotationVector().multiply(-EGG_RADIUS));
+                pos = pos.add(player.getLookAngle().scale(-EGG_RADIUS));
             }
 
-            position.set(pos.getX(), pos.getY() + EGG_RADIUS, pos.getZ());
+            position.set(pos.x(), pos.y() + EGG_RADIUS, pos.z());
         }
     }
 }

@@ -1,9 +1,7 @@
 package work.lclpnet.ap2.core.hook;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.ai.brain.Brain;
-import net.minecraft.entity.mob.CreakingEntity;
-import net.minecraft.entity.mob.WardenEntity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.Brain;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.kibu.hook.Hook;
 import work.lclpnet.kibu.hook.HookFactory;
@@ -14,11 +12,11 @@ public interface BrainCreationCallback<T extends LivingEntity> {
 
     @Nullable Brain<T> createBrain(T entity, Supplier<Brain<T>> brainGetter);
 
-    interface Warden extends BrainCreationCallback<WardenEntity> {
+    interface Warden extends BrainCreationCallback<net.minecraft.world.entity.monster.warden.Warden> {
         Hook<Warden> HOOK = HookFactory.createArrayBacked(Warden.class, hooks -> (entity, handleGetter) -> invoke(hooks, entity, handleGetter));
     }
 
-    interface Creaking extends BrainCreationCallback<CreakingEntity> {
+    interface Creaking extends BrainCreationCallback<net.minecraft.world.entity.monster.creaking.Creaking> {
         Hook<Creaking> HOOK = HookFactory.createArrayBacked(Creaking.class, hooks -> (entity, handleGetter) -> invoke(hooks, entity, handleGetter));
     }
 

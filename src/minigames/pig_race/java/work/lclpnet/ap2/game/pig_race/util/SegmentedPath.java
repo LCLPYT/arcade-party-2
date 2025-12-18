@@ -3,15 +3,15 @@ package work.lclpnet.ap2.game.pig_race.util;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import lombok.Getter;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
+import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.util.DyeColor;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.DyeColor;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.impl.util.debug.DebugController;
@@ -71,42 +71,42 @@ public class SegmentedPath {
         for (Segment segment : segments) {
             var debugger = new SplinePathDebugger(debugController, segment.path);
 
-            BlockState pathColor = colors[segment.index() % colors.length].getDefaultState();
+            BlockState pathColor = colors[segment.index() % colors.length].defaultBlockState();
             debugger.renderPath((int) Math.ceil(1000 * segment.relativeLength()), pathColor);
 
             debugger.renderLiveProgress(() -> participants, scheduler, entity -> {
-                if (!(entity instanceof ServerPlayerEntity player)) return -1;
+                if (!(entity instanceof ServerPlayer player)) return -1;
 
                 return getSegmentIndex(player) == segment.index()
-                        ? DyeColor.LIME.getEntityColor()
-                        : DyeColor.RED.getEntityColor();
+                        ? DyeColor.LIME.getTextureDiffuseColor()
+                        : DyeColor.RED.getTextureDiffuseColor();
             });
         }
     }
 
-    private void onReachSegmentMarker(ServerPlayerEntity player, Segment segment) {
+    private void onReachSegmentMarker(ServerPlayer player, Segment segment) {
         int nextSegmentIndex = getNextSegmentIndex(player);
 
         if (segment.index() != nextSegmentIndex) return;
 
-        playerSegments.put(player.getUuid(), nextSegmentIndex);
+        playerSegments.put(player.getUUID(), nextSegmentIndex);
     }
 
-    private int getNextSegmentIndex(ServerPlayerEntity player) {
+    private int getNextSegmentIndex(ServerPlayer player) {
         return (getSegment(player).index() + 1) % segments.size();
     }
 
-    public Segment getSegment(ServerPlayerEntity player) {
+    public Segment getSegment(ServerPlayer player) {
         return segments.get(getSegmentIndex(player));
     }
 
-    private int getSegmentIndex(ServerPlayerEntity player) {
-        return playerSegments.getOrDefault(player.getUuid(), 0);
+    private int getSegmentIndex(ServerPlayer player) {
+        return playerSegments.getOrDefault(player.getUUID(), 0);
     }
 
-    public double getProgress(ServerPlayerEntity player) {
+    public double getProgress(ServerPlayer player) {
         Segment segment = getSegment(player);
-        double relativeProgress = segment.path().getProgress(player.getEntityPos());
+        double relativeProgress = segment.path().getProgress(player.position());
 
         return segment.marker().progress() + relativeProgress * segment.relativeLength();
     }
@@ -150,17 +150,17 @@ public class SegmentedPath {
         double relativeLength = to - from;
         final int samples = max(2, (int) ceil(totalSamples * relativeLength));
 
-        List<Vec3d> keypoints = new ArrayList<>(samples);
+        List<Vec3> keypoints = new ArrayList<>(samples);
 
         for (int i = 0; i < samples; i++) {
-            Vec3d pos = path.samplePosition(from + i * relativeLength / (samples - 1));
+            Vec3 pos = path.samplePosition(from + i * relativeLength / (samples - 1));
             keypoints.add(pos);
         }
 
         return SplinePath.create(keypoints, logger);
     }
 
-    public boolean isInLastSegment(ServerPlayerEntity player) {
+    public boolean isInLastSegment(ServerPlayer player) {
         return getSegmentIndex(player) == segments.size() - 1;
     }
 
@@ -174,7 +174,7 @@ public class SegmentedPath {
         }
 
         @Override
-        public boolean collidesWith(Box box) {
+        public boolean collidesWith(AABB box) {
             return this.box.collidesWith(box);
         }
 

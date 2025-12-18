@@ -1,7 +1,7 @@
 package work.lclpnet.ap2.core.mixin;
 
-import net.minecraft.block.entity.SkullBlockEntity;
-import net.minecraft.component.type.ProfileComponent;
+import net.minecraft.world.level.block.entity.SkullBlockEntity;
+import net.minecraft.world.item.component.ResolvableProfile;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
@@ -10,5 +10,5 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 public interface SkullBlockEntityAccessor {
 
     @Accessor
-    void setOwner(@Nullable ProfileComponent owner);
+    void setOwner(@Nullable ResolvableProfile owner);
 }

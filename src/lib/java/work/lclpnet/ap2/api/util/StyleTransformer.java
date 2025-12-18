@@ -1,7 +1,7 @@
 package work.lclpnet.ap2.api.util;
 
-import net.minecraft.text.Style;
-import net.minecraft.util.Formatting;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Style;
 
 import java.util.function.UnaryOperator;
 
@@ -28,12 +28,12 @@ public interface StyleTransformer<Self extends StyleTransformer<Self>> {
     /**
      * Fills the absent parts of the style with definitions from {@code styleOverride}.
      *
-     * @see Style#withParent(Style)
+     * @see Style#applyTo(Style)
      *
      * @param styleOverride the style that provides definitions for absent definitions in the title text's style
      */
     default Self fillStyle(Style styleOverride) {
-        this.setStyle(styleOverride.withParent(this.getStyle()));
+        this.setStyle(styleOverride.applyTo(this.getStyle()));
         return (Self) this;
     }
 
@@ -42,8 +42,8 @@ public interface StyleTransformer<Self extends StyleTransformer<Self>> {
      *
      * @param formattings an array of formattings
      */
-    default Self formatted(Formatting... formattings) {
-        this.setStyle(this.getStyle().withFormatting(formattings));
+    default Self formatted(ChatFormatting... formattings) {
+        this.setStyle(this.getStyle().applyFormats(formattings));
         return (Self) this;
     }
 
@@ -52,8 +52,8 @@ public interface StyleTransformer<Self extends StyleTransformer<Self>> {
      *
      * @param formatting a formatting
      */
-    default Self formatted(Formatting formatting) {
-        this.setStyle(this.getStyle().withFormatting(formatting));
+    default Self formatted(ChatFormatting formatting) {
+        this.setStyle(this.getStyle().applyFormat(formatting));
         return (Self) this;
     }
 }

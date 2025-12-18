@@ -1,9 +1,9 @@
 package work.lclpnet.ap2.impl.util.scoreboard;
 
 import lombok.Getter;
-import net.minecraft.scoreboard.number.NumberFormat;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.numbers.NumberFormat;
+import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.Nullable;
 
 public class DynamicScoreHandle {
@@ -17,15 +17,15 @@ public class DynamicScoreHandle {
         this.objective = objective;
     }
 
-    public void setScore(ServerPlayerEntity player, int score) {
+    public void setScore(ServerPlayer player, int score) {
         objective.setScore(player, holder, score);
     }
 
-    public void setDisplay(ServerPlayerEntity player, @Nullable Text text) {
+    public void setDisplay(ServerPlayer player, @Nullable Component text) {
         objective.setDisplayName(player, holder, text);
     }
 
-    public void setNumberFormat(ServerPlayerEntity player, NumberFormat numberFormat) {
+    public void setNumberFormat(ServerPlayer player, NumberFormat numberFormat) {
         objective.setNumberFormat(player, holder, numberFormat);
     }
 }

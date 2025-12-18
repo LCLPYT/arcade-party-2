@@ -1,10 +1,10 @@
 package work.lclpnet.ap2.game.maniac_digger.data;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.math.Vec3i;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Vec3i;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
 import work.lclpnet.gaco.ds.BlockBox;
 import work.lclpnet.kibu.mc.KibuBlockPos;
 import work.lclpnet.kibu.schematic.FabricStructureWrapper;
@@ -14,15 +14,15 @@ import java.util.function.Function;
 
 public class MdPipePlan {
 
-    public static final BlockState WALL_MATERIAL = Blocks.BEDROCK.getDefaultState();
+    public static final BlockState WALL_MATERIAL = Blocks.BEDROCK.defaultBlockState();
     private final FabricStructureWrapper struct;
     private final int diameter;
-    private final Vec3d spawn;
+    private final Vec3 spawn;
     private final BlockBox bounds;
     private final Function<BlockPos, BlockState> fillMaterial;
-    private final BlockPos.Mutable tmpPos = new BlockPos.Mutable();
+    private final BlockPos.MutableBlockPos tmpPos = new BlockPos.MutableBlockPos();
 
-    public MdPipePlan(Vec3i dimensions, int diameter, Vec3d spawn, BlockBox bounds, Function<BlockPos, BlockState> fillMaterial) {
+    public MdPipePlan(Vec3i dimensions, int diameter, Vec3 spawn, BlockBox bounds, Function<BlockPos, BlockState> fillMaterial) {
         var structure = FabricStructureWrapper.createArrayStructure(dimensions.getX(), dimensions.getY(), dimensions.getZ(), new KibuBlockPos());
         this.struct = new FabricStructureWrapper(structure);
         this.diameter = diameter;
@@ -40,7 +40,7 @@ public class MdPipePlan {
 
         for (int x = 0; x < diameter; x++) {
             for (int z = 0; z < diameter; z++) {
-                tmpPos.set(pos, x, 0, z);
+                tmpPos.setWithOffset(pos, x, 0, z);
 
                 if (!struct.getBlockState(tmpPos).isAir()) continue;
 
@@ -54,7 +54,7 @@ public class MdPipePlan {
         }
     }
 
-    public void placeHorizontal(BlockPos.Mutable pos, BlockPos.Mutable pos2) {
+    public void placeHorizontal(BlockPos.MutableBlockPos pos, BlockPos.MutableBlockPos pos2) {
         if (pos.getY() != pos2.getY()) {
             throw new IllegalStateException("Positions are on different heights");
         }
@@ -88,7 +88,7 @@ public class MdPipePlan {
         fixFloor(pos2);
     }
 
-    private void clearWall(BlockPos.Mutable pos, BlockPos.Mutable pos2) {
+    private void clearWall(BlockPos.MutableBlockPos pos, BlockPos.MutableBlockPos pos2) {
         int dx = (int) Math.signum(pos2.getX() - pos.getX());
         int dz = (int) Math.signum(pos2.getZ() - pos.getZ());
 
@@ -102,32 +102,32 @@ public class MdPipePlan {
         int ax = dx == 0 ? 1 : 0;
         int az = dz == 0 ? 1 : 0;
 
-        BlockState air = Blocks.AIR.getDefaultState();
+        BlockState air = Blocks.AIR.defaultBlockState();
 
-        tmpPos.set(pos, ox + ax, 1, oz + az);
+        tmpPos.setWithOffset(pos, ox + ax, 1, oz + az);
         struct.setBlockState(tmpPos, air);
-        tmpPos.set(pos, ox + 2 * ax, 1, oz + 2 * az);
+        tmpPos.setWithOffset(pos, ox + 2 * ax, 1, oz + 2 * az);
         struct.setBlockState(tmpPos, air);
-        tmpPos.set(pos, ox + ax, 2, oz + az);
+        tmpPos.setWithOffset(pos, ox + ax, 2, oz + az);
         struct.setBlockState(tmpPos, air);
-        tmpPos.set(pos, ox + 2 * ax, 2, oz + 2 * az);
+        tmpPos.setWithOffset(pos, ox + 2 * ax, 2, oz + 2 * az);
         struct.setBlockState(tmpPos, air);
     }
 
-    private void fixFloor(BlockPos.Mutable pos) {
-        tmpPos.set(pos, 1, 0, 1);
+    private void fixFloor(BlockPos.MutableBlockPos pos) {
+        tmpPos.setWithOffset(pos, 1, 0, 1);
         BlockState material = this.fillMaterial.apply(tmpPos);
         struct.setBlockState(tmpPos, material);
 
-        tmpPos.set(pos, 2, 0, 1);
+        tmpPos.setWithOffset(pos, 2, 0, 1);
         material = this.fillMaterial.apply(tmpPos);
         struct.setBlockState(tmpPos, material);
 
-        tmpPos.set(pos, 1, 0, 2);
+        tmpPos.setWithOffset(pos, 1, 0, 2);
         material = this.fillMaterial.apply(tmpPos);
         struct.setBlockState(tmpPos, material);
 
-        tmpPos.set(pos, 2, 0, 2);
+        tmpPos.setWithOffset(pos, 2, 0, 2);
         material = this.fillMaterial.apply(tmpPos);
         struct.setBlockState(tmpPos, material);
     }
@@ -136,7 +136,7 @@ public class MdPipePlan {
         struct.setBlockState(pos, state);
     }
 
-    public Vec3d getSpawn() {
+    public Vec3 getSpawn() {
         return spawn;
     }
 

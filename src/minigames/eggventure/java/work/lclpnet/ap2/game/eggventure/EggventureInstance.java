@@ -1,34 +1,38 @@
 package work.lclpnet.ap2.game.eggventure;
 
+import com.mojang.math.Transformation;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
-import net.minecraft.block.*;
-import net.minecraft.block.entity.BlockEntityType;
-import net.minecraft.block.entity.SkullBlockEntity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.entity.decoration.DisplayEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.particle.ParticleTypes;
-import net.minecraft.registry.DynamicRegistryManager;
-import net.minecraft.scoreboard.ScoreboardCriterion;
-import net.minecraft.scoreboard.ScoreboardDisplaySlot;
-import net.minecraft.scoreboard.ScoreboardObjective;
-import net.minecraft.scoreboard.number.StyledNumberFormat;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Hand;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.hit.HitResult;
-import net.minecraft.util.math.AffineTransformation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.RaycastContext;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.numbers.StyledFormat;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.Display;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.SkullBlock;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.entity.SkullBlockEntity;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.scores.DisplaySlot;
+import net.minecraft.world.scores.Objective;
+import net.minecraft.world.scores.criteria.ObjectiveCriteria;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Matrix4f;
 import work.lclpnet.ap2.ApConstants;
@@ -58,7 +62,7 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
 import static java.lang.Math.PI;
-import static net.minecraft.util.Formatting.*;
+import static net.minecraft.ChatFormatting.*;
 import static work.lclpnet.ap2.impl.util.ItemHelper.getLeatherArmor;
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
@@ -67,7 +71,7 @@ public class EggventureInstance extends FFAGameInstance implements MapBootstrap 
     private static final boolean DEBUG_EGG_POSITIONS = false;
     private static final MapCodec<Boolean> NBT_CODEC = Codec.BOOL.fieldOf("easter_egg");
 
-    private final IntDataContainer<ServerPlayerEntity, PlayerRef> data;
+    private final IntDataContainer<ServerPlayer, PlayerRef> data;
     private final Random random = new Random();
     private final Set<BlockPos> remainingPositions = new HashSet<>();
 
@@ -78,18 +82,18 @@ public class EggventureInstance extends FFAGameInstance implements MapBootstrap 
     }
 
     @Override
-    protected DataContainer<ServerPlayerEntity, PlayerRef> getData() {
+    protected DataContainer<ServerPlayer, PlayerRef> getData() {
         return data;
     }
 
     @Override
-    public @NotNull CompletableFuture<Void> createWorldBootstrap(@NotNull ServerWorld world, @NotNull GameMap map) {
+    public @NotNull CompletableFuture<Void> createWorldBootstrap(@NotNull ServerLevel world, @NotNull GameMap map) {
         BlockShape shape = MapUtil.readShape(map, "egg-area");
         List<BlockPos> positions = new ArrayList<>();
 
         for (BlockPos pos : shape) {
             if (isEasterEgg(world, pos)) {
-                positions.add(pos.toImmutable());
+                positions.add(pos.immutable());
             }
         }
 
@@ -97,7 +101,7 @@ public class EggventureInstance extends FFAGameInstance implements MapBootstrap 
         int maxEggs = map.requireProperty("max-eggs");
         int eggs = minEggs + random.nextInt(maxEggs - minEggs + 1);
 
-        List<PlayerHead> variants = eggVariants(world.getRegistryManager());
+        List<PlayerHead> variants = eggVariants(world.registryAccess());
 
         if (variants.isEmpty()) {
             throw new IllegalStateException("There are no egg variants defined");
@@ -114,7 +118,7 @@ public class EggventureInstance extends FFAGameInstance implements MapBootstrap 
 
             if (DEBUG_EGG_POSITIONS) {
                 debugController.renderer().ifPresent(renderer
-                        -> renderer.marker(pos.toCenterPos(), Blocks.GREEN_TERRACOTTA.getDefaultState(), 0x00ff00));
+                        -> renderer.marker(pos.getCenter(), Blocks.GREEN_TERRACOTTA.defaultBlockState(), 0x00ff00));
             }
 
             PlayerHead variant = variants.get(random.nextInt(variants.size()));
@@ -125,33 +129,33 @@ public class EggventureInstance extends FFAGameInstance implements MapBootstrap 
         }
 
         for (BlockPos pos : positions) {
-            world.setBlockState(pos, Blocks.AIR.getDefaultState(), Block.SKIP_DROPS | Block.FORCE_STATE);
+            world.setBlock(pos, Blocks.AIR.defaultBlockState(), Block.UPDATE_SUPPRESS_DROPS | Block.UPDATE_KNOWN_SHAPE);
 
             if (DEBUG_EGG_POSITIONS) {
                 debugController.renderer().ifPresent(renderer
-                        -> renderer.marker(pos.toCenterPos(), Blocks.BLUE_TERRACOTTA.getDefaultState(), 0x0000ff));
+                        -> renderer.marker(pos.getCenter(), Blocks.BLUE_TERRACOTTA.defaultBlockState(), 0x0000ff));
             }
         }
 
         return CompletableFuture.completedFuture(null);
     }
 
-    private boolean isEasterEgg(ServerWorld world, BlockPos pos) {
+    private boolean isEasterEgg(ServerLevel world, BlockPos pos) {
         BlockState state = world.getBlockState(pos);
 
-        if (!state.isOf(Blocks.PLAYER_HEAD) && !state.isOf(Blocks.PLAYER_WALL_HEAD)) return false;
+        if (!state.is(Blocks.PLAYER_HEAD) && !state.is(Blocks.PLAYER_WALL_HEAD)) return false;
 
         SkullBlockEntity skull = world.getBlockEntity(pos, BlockEntityType.SKULL).orElse(null);
 
         if (skull == null) return false;
 
-        return CustomNbt.get(skull.getComponents(), NBT_CODEC).orElse(false);
+        return CustomNbt.get(skull.components(), NBT_CODEC).orElse(false);
     }
 
-    static @NotNull List<PlayerHead> eggVariants(DynamicRegistryManager registryManager) {
+    static @NotNull List<PlayerHead> eggVariants(RegistryAccess registryManager) {
         var headEntries = registryManager
-                .getOrThrow(ApRegistries.PLAYER_HEAD)
-                .iterateEntries(PlayerHeadTags.EASTER_EGGS);
+                .lookupOrThrow(ApRegistries.PLAYER_HEAD)
+                .getTagOrEmpty(PlayerHeadTags.EASTER_EGGS);
 
         List<PlayerHead> heads = new ArrayList<>();
 
@@ -165,37 +169,37 @@ public class EggventureInstance extends FFAGameInstance implements MapBootstrap 
     protected void prepare() {
         new DebugEggsCommand(gameHandle.getLogger()).register(gameHandle.getCommands());
 
-        var variants = eggVariants(getWorld().getRegistryManager());
+        var variants = eggVariants(getWorld().registryAccess());
 
         if (variants.isEmpty()) {
             throw new IllegalStateException("There are no egg variants defined");
         }
 
-        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
+        for (ServerPlayer player : gameHandle.getParticipants()) {
             PlayerHead variant = variants.get(random.nextInt(variants.size()));
-            player.equipStack(EquipmentSlot.HEAD, variant.createStack());
+            player.setItemSlot(EquipmentSlot.HEAD, variant.createStack());
 
             int color = ColorUtil.getRandomHsvColor(random);
 
-            player.equipStack(EquipmentSlot.CHEST, getLeatherArmor(Items.LEATHER_CHESTPLATE, color));
-            player.equipStack(EquipmentSlot.LEGS, getLeatherArmor(Items.LEATHER_LEGGINGS, color));
-            player.equipStack(EquipmentSlot.FEET, getLeatherArmor(Items.LEATHER_BOOTS, color));
+            player.setItemSlot(EquipmentSlot.CHEST, getLeatherArmor(Items.LEATHER_CHESTPLATE, color));
+            player.setItemSlot(EquipmentSlot.LEGS, getLeatherArmor(Items.LEATHER_LEGGINGS, color));
+            player.setItemSlot(EquipmentSlot.FEET, getLeatherArmor(Items.LEATHER_BOOTS, color));
         }
 
         CustomScoreboardManager scoreboardManager = gameHandle.getScoreboardManager();
 
-        ScoreboardObjective objective = scoreboardManager.createObjective("points", ScoreboardCriterion.DUMMY,
-                Text.literal("Points").formatted(YELLOW, BOLD), ScoreboardCriterion.RenderType.INTEGER,
-                StyledNumberFormat.YELLOW);
+        Objective objective = scoreboardManager.createObjective("points", ObjectiveCriteria.DUMMY,
+                Component.literal("Points").withStyle(YELLOW, BOLD), ObjectiveCriteria.RenderType.INTEGER,
+                StyledFormat.PLAYER_LIST_DEFAULT);
 
         useScoreboardStatsSync(data, objective);
 
-        scoreboardManager.setDisplay(ScoreboardDisplaySlot.LIST, objective);
+        scoreboardManager.setDisplay(DisplaySlot.LIST, objective);
     }
 
     @Override
     protected void afterInitialDelay() {
-        ServerWorld world = getWorld();
+        ServerLevel world = getWorld();
         DynamicEntityManager dynamicEntityManager = new DynamicEntityManager(world);
         var tutorial = new EggventureTutorial(world, dynamicEntityManager, random, gameHandle.getTranslations());
 
@@ -207,10 +211,10 @@ public class EggventureInstance extends FFAGameInstance implements MapBootstrap 
     protected void go() {
         GameMap map = getMap();
         BlockBox gate = MapUtil.readBox(map.requireProperty("gate"));
-        ServerWorld world = getWorld();
+        ServerLevel world = getWorld();
 
         for (BlockPos pos : gate) {
-            world.setBlockState(pos, Blocks.AIR.getDefaultState());
+            world.setBlockAndUpdate(pos, Blocks.AIR.defaultBlockState());
         }
 
         HookRegistrar hooks = gameHandle.getHooks();
@@ -218,23 +222,23 @@ public class EggventureInstance extends FFAGameInstance implements MapBootstrap 
         hooks.registerHook(PlayerInteractionHooks.USE_BLOCK, (_player, _world, hand, hitResult) -> {
             BlockPos pos = hitResult.getBlockPos();
 
-            if (_player instanceof ServerPlayerEntity player
+            if (_player instanceof ServerPlayer player
                     && gameHandle.getParticipants().isParticipating(player)
-                    && hand == Hand.MAIN_HAND
+                    && hand == InteractionHand.MAIN_HAND
                     && isEasterEgg(world, pos)) {
                 onFindEasterEgg(player, pos);
             }
 
-            return ActionResult.PASS;
+            return InteractionResult.PASS;
         });
 
         hooks.registerHook(PlayerSwingHandHook.HOOK, (player, hand) -> {
-            if (hand != Hand.MAIN_HAND || !gameHandle.getParticipants().isParticipating(player)) return;
+            if (hand != InteractionHand.MAIN_HAND || !gameHandle.getParticipants().isParticipating(player)) return;
 
-            double range = player.getAttributeValue(EntityAttributes.BLOCK_INTERACTION_RANGE);
+            double range = player.getAttributeValue(Attributes.BLOCK_INTERACTION_RANGE);
 
-            HitResult hit = RayCastUtil.raycast(world, player.getEyePos(), player.getRotationVector(), range,
-                    RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.NONE, ShapeContext.absent(),
+            HitResult hit = RayCastUtil.raycast(world, player.getEyePosition(), player.getLookAngle(), range,
+                    net.minecraft.world.level.ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, CollisionContext.empty(),
                     entity -> !entity.isSpectator());
 
             if (!(hit instanceof BlockHitResult blockHit)) return;
@@ -262,16 +266,16 @@ public class EggventureInstance extends FFAGameInstance implements MapBootstrap 
         CheckpointHelper.giveResetItem(gameHandle.getParticipants(), getWorld(), gameHandle.getTranslations(), 4);
     }
 
-    private void reset(ServerPlayerEntity player) {
+    private void reset(ServerPlayer player) {
         gameHandle.getWorldFacade().teleport(player);
     }
 
     private void checkNearbyEggs() {
         final double checkDistSq = 20 * 20;
 
-        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
+        for (ServerPlayer player : gameHandle.getParticipants()) {
             if (remainingPositions.stream().anyMatch(pos -> player
-                    .squaredDistanceTo(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5) < checkDistSq)) continue;
+                    .distanceToSqr(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5) < checkDistSq)) continue;
 
             gameHandle.getTranslations().translateText("game.ap2.eggventure.no_eggs_nearby")
                     .formatted(RED)
@@ -284,26 +288,26 @@ public class EggventureInstance extends FFAGameInstance implements MapBootstrap 
 
         winManager.complete();
 
-        ServerWorld world = getWorld();
+        ServerLevel world = getWorld();
 
         for (BlockPos pos : remainingPositions) {
             BlockState state = world.getBlockState(pos);
             ItemStack stack = ItemHelper.getStackWithData(world, pos);
 
-            if (!state.isOf(Blocks.PLAYER_HEAD)) {
+            if (!state.is(Blocks.PLAYER_HEAD)) {
                 gameHandle.getLogger().warn("Unexpected block: {}", state);
                 continue;
             }
 
-            int rotation = state.get(SkullBlock.ROTATION, 0);
+            int rotation = state.getValueOrElse(SkullBlock.ROTATION, 0);
 
-            var display = new DisplayEntity.ItemDisplayEntity(EntityType.ITEM_DISPLAY, world);
+            var display = new Display.ItemDisplay(EntityType.ITEM_DISPLAY, world);
             display.setItemStack(stack);
-            display.setPosition(pos.toCenterPos());
-            display.setTransformation(new AffineTransformation(new Matrix4f().rotateY((float) (rotation / -8f * PI))));
-            display.setGlowing(true);
+            display.setPos(pos.getCenter());
+            display.setTransformation(new Transformation(new Matrix4f().rotateY((float) (rotation / -8f * PI))));
+            display.setGlowingTag(true);
 
-            world.spawnEntity(display);
+            world.addFreshEntity(display);
         }
 
         gameHandle.getTranslations().translateText("game.ap2.eggventure.eggs_left", styled(remainingPositions.size(), YELLOW))
@@ -311,21 +315,21 @@ public class EggventureInstance extends FFAGameInstance implements MapBootstrap 
                 .sendTo(gameHandle.getParticipants(), true);
     }
 
-    private void onFindEasterEgg(ServerPlayerEntity player, BlockPos pos) {
+    private void onFindEasterEgg(ServerPlayer player, BlockPos pos) {
         if (winManager.isGameOver()) return;
 
-        ServerWorld world = player.getEntityWorld();
-        world.setBlockState(pos, Blocks.AIR.getDefaultState(), Block.SKIP_DROPS | Block.FORCE_STATE | Block.NOTIFY_LISTENERS);
+        ServerLevel world = player.level();
+        world.setBlock(pos, Blocks.AIR.defaultBlockState(), Block.UPDATE_SUPPRESS_DROPS | Block.UPDATE_KNOWN_SHAPE | Block.UPDATE_CLIENTS);
 
         commons().addScore(player, 1, data);
 
         double x = pos.getX() + 0.5, y = pos.getY(), z = pos.getZ() + 0.5;
-        world.playSound(null, x, y, z, SoundEvents.ENTITY_ALLAY_ITEM_THROWN, SoundCategory.PLAYERS, 1f, 1f);
-        player.playSoundToPlayer(SoundEvents.ENTITY_ARROW_HIT_PLAYER, SoundCategory.PLAYERS, 0.75f, 1.2f);
+        world.playSound(null, x, y, z, SoundEvents.ALLAY_THROW, SoundSource.PLAYERS, 1f, 1f);
+        player.playNotifySound(SoundEvents.ARROW_HIT_PLAYER, SoundSource.PLAYERS, 0.75f, 1.2f);
 
-        world.spawnParticles(ParticleTypes.CRIMSON_SPORE, x, y, z, 75, 0.25, 0.25, 0.25, 0);
-        world.spawnParticles(ParticleTypes.WARPED_SPORE, x, y, z, 75, 0.25, 0.25, 0.25, 0);
-        world.spawnParticles(ParticleTypes.GLOW, x, y, z, 25, 0.5, 0.5, 0.5, 0);
+        world.sendParticles(ParticleTypes.CRIMSON_SPORE, x, y, z, 75, 0.25, 0.25, 0.25, 0);
+        world.sendParticles(ParticleTypes.WARPED_SPORE, x, y, z, 75, 0.25, 0.25, 0.25, 0);
+        world.sendParticles(ParticleTypes.GLOW, x, y, z, 25, 0.5, 0.5, 0.5, 0);
 
         remainingPositions.remove(pos);
     }

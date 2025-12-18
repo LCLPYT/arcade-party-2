@@ -2,23 +2,23 @@ package work.lclpnet.ap2.game.paintball.util;
 
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.particle.ParticleTypes;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.state.property.Property;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.event.GameEvent;
-import net.minecraft.world.explosion.AdvancedExplosionBehavior;
-import net.minecraft.world.explosion.Explosion;
-import net.minecraft.world.explosion.ExplosionImpl;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.Explosion;
+import net.minecraft.world.level.ServerExplosion;
+import net.minecraft.world.level.SimpleExplosionDamageCalculator;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.Property;
+import net.minecraft.world.level.gameevent.GameEvent;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.game.team.DyeTeamKey;
 import work.lclpnet.ap2.api.game.team.Team;
 import work.lclpnet.ap2.api.game.team.TeamManager;
-import work.lclpnet.ap2.core.mixin.ExplosionImplAccessor;
+import work.lclpnet.ap2.core.mixin.ServerExplosionAccessor;
 import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.TeamRef;
 import work.lclpnet.ap2.impl.util.world.ExplosionUtil;
@@ -27,11 +27,11 @@ import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape;
 import java.util.*;
 
 import static java.lang.Math.max;
-import static net.minecraft.block.Blocks.*;
+import static net.minecraft.world.level.block.Blocks.*;
 
 public class PaintManager {
 
-    private final ServerWorld world;
+    private final ServerLevel world;
     private final PaintballTeams teams;
     private final TeamManager teamManager;
     private final IntScoreDataContainer<Team, TeamRef> data;
@@ -41,7 +41,7 @@ public class PaintManager {
     private final Map<Block, DyeTeamKey> blockTeamMap = new HashMap<>();
     private boolean frozen = false;
 
-    public PaintManager(ServerWorld world, PaintballTeams teams, TeamManager teamManager,
+    public PaintManager(ServerLevel world, PaintballTeams teams, TeamManager teamManager,
                         IntScoreDataContainer<Team, TeamRef> data, BlockShape bounds) {
         this.world = world;
         this.teams = teams;
@@ -351,7 +351,7 @@ public class PaintManager {
     }
 
     public BlockState getPaintBulletState(DyeTeamKey team) {
-        return concrete.blockFor(team).getDefaultState();
+        return concrete.blockFor(team).defaultBlockState();
     }
 
     public boolean replace(BlockPos pos, DyeTeamKey target) {
@@ -373,7 +373,7 @@ public class PaintManager {
                 .map(team -> team.key() != targetTeam)
                 .orElse(false)) return false;
 
-        BlockState baseState = paintable.blockFor(targetTeam).getDefaultState();
+        BlockState baseState = paintable.blockFor(targetTeam).defaultBlockState();
         BlockState targetState = copyProperties(current, baseState);
 
         if (current == targetState) return false;
@@ -386,7 +386,7 @@ public class PaintManager {
 
         addCount(targetTeam, 1);
 
-        return world.setBlockState(pos, targetState, Block.FORCE_STATE | Block.NOTIFY_LISTENERS | Block.SKIP_DROPS);
+        return world.setBlock(pos, targetState, Block.UPDATE_KNOWN_SHAPE | Block.UPDATE_CLIENTS | Block.UPDATE_SUPPRESS_DROPS);
     }
 
     public @Nullable DyeTeamKey getTeam(Block block) {
@@ -395,7 +395,7 @@ public class PaintManager {
 
     private BlockState copyProperties(BlockState reference, BlockState state) {
         for (var property : reference.getProperties()) {
-            var value = reference.get(property);
+            var value = reference.getValue(property);
 
             state = withProperty(state, property, value);
         }
@@ -439,24 +439,24 @@ public class PaintManager {
         }
     }
 
-    public void createExplosion(ServerPlayerEntity player, Vec3d pos, PaintballTeam team, float power) {
-        var behavior = new AdvancedExplosionBehavior(true, true, Optional.empty(), Optional.empty());
+    public void createExplosion(ServerPlayer player, Vec3 pos, PaintballTeam team, float power) {
+        var behavior = new SimpleExplosionDamageCalculator(true, true, Optional.empty(), Optional.empty());
 
-        ServerWorld world = player.getEntityWorld();
+        ServerLevel world = player.level();
 
-        var explosion = new ExplosionImpl(world, player, null, behavior, pos, power, false, Explosion.DestructionType.KEEP);
+        var explosion = new ServerExplosion(world, player, null, behavior, pos, power, false, Explosion.BlockInteraction.KEEP);
 
         // mimic behaviour of ServerWorld::createExplosion
-        world.emitGameEvent(null, GameEvent.EXPLODE, pos);
+        world.gameEvent(null, GameEvent.EXPLODE, pos);
 
-        var access = (ExplosionImplAccessor) explosion;
+        var access = (ServerExplosionAccessor) explosion;
 
-        for (BlockPos affectedPos : access.invokeGetBlocksToDestroy()) {
+        for (BlockPos affectedPos : access.invokeCalculateExplodedPositions()) {
             replace(affectedPos, team.key());
         }
 
         // calculate damage and knockback
-        access.invokeDamageEntities();
+        access.invokeHurtEntities();
 
         ExplosionUtil.sendExplosion(world, explosion, ParticleTypes.EXPLOSION_EMITTER);
     }
@@ -467,6 +467,6 @@ public class PaintManager {
 
     @SuppressWarnings("unchecked")
     private <T extends Comparable<T>, V extends T> BlockState withProperty(BlockState state, Property<T> property, Object value) {
-        return state.withIfExists(property, (V) value);
+        return state.trySetValue(property, (V) value);
     }
 }

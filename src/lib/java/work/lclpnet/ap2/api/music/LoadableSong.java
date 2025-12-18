@@ -1,6 +1,6 @@
 package work.lclpnet.ap2.api.music;
 
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import org.slf4j.Logger;
 
 import java.util.concurrent.CompletableFuture;
@@ -13,7 +13,7 @@ public interface LoadableSong {
      */
     CompletableFuture<ConfiguredSong> load(SongCache cache, Logger logger);
 
-    Identifier getId();
+    ResourceLocation getId();
 
     float getWeight();
 

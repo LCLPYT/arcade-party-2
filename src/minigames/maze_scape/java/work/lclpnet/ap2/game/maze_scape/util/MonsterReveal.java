@@ -1,10 +1,10 @@
 package work.lclpnet.ap2.game.maze_scape.util;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.util.model.Model;
@@ -40,7 +40,7 @@ public class MonsterReveal {
     private final List<DangerMark> marks = new ArrayList<>();
     private @Nullable TaskHandle tickHandle = null;
 
-    public MonsterReveal(ModelManager modelManager, Participants participants, ServerWorld world, Collection<MonsterData<?>> monsters) {
+    public MonsterReveal(ModelManager modelManager, Participants participants, ServerLevel world, Collection<MonsterData<?>> monsters) {
         this.modelManager = modelManager;
         this.participants = participants;
         this.monsters = monsters;
@@ -54,9 +54,9 @@ public class MonsterReveal {
 
         Model dangerModel = modelManager.getModel(Models.DANGER).orElseThrow();
 
-        for (ServerPlayerEntity player : participants) {
+        for (ServerPlayer player : participants) {
             for (var monster : monsters) {
-                var mark = new DangerMark(scene, player.getUuid(), monster);
+                var mark = new DangerMark(scene, player.getUUID(), monster);
 
                 if (mark.update(player)) continue;
 
@@ -112,7 +112,7 @@ public class MonsterReveal {
         }
     }
 
-    private record DangerMountContext(ServerWorld world, DynamicEntityManager manager, Map<DangerMark, DangerMarkEntity> marks) implements MountContext {
+    private record DangerMountContext(ServerLevel world, DynamicEntityManager manager, Map<DangerMark, DangerMarkEntity> marks) implements MountContext {
 
         @Override
         public <T extends Entity> Resolvable<T> spawn(@Nullable T entity, Object3d origin) {
@@ -172,20 +172,20 @@ public class MonsterReveal {
             this.monster = monster;
         }
 
-        public boolean update(ServerPlayerEntity player) {
-            MobEntity mob = monster.mob();
+        public boolean update(ServerPlayer player) {
+            Mob mob = monster.mob();
 
             if (mob == null) {
                 scene.remove(this);
                 return true;
             }
 
-            Vec3d playerEyePos = player.getEyePos();
-            Vec3d dir = mob.getEyePos().subtract(playerEyePos).normalize();
+            Vec3 playerEyePos = player.getEyePosition();
+            Vec3 dir = mob.getEyePosition().subtract(playerEyePos).normalize();
 
-            Vec3d pos = playerEyePos.add(dir.multiply(MARKER_DISTANCE));
+            Vec3 pos = playerEyePos.add(dir.scale(MARKER_DISTANCE));
 
-            position.set(pos.getX(), pos.getY(), pos.getZ());
+            position.set(pos.x(), pos.y(), pos.z());
             updateMatrixWorld();
 
             return false;
@@ -195,13 +195,13 @@ public class MonsterReveal {
     private record DangerMarkEntity(Entity entity, UUID playerUuid) implements DynamicEntity {
 
         @Override
-        public Vec3d getPosition() {
-            return entity.getEntityPos();
+        public Vec3 getPosition() {
+            return entity.position();
         }
 
         @Override
-        public Entity getEntity(ServerPlayerEntity player) {
-            if (player.getUuid().equals(playerUuid)) {
+        public Entity getEntity(ServerPlayer player) {
+            if (player.getUUID().equals(playerUuid)) {
                 return entity;
             }
 
@@ -209,6 +209,6 @@ public class MonsterReveal {
         }
 
         @Override
-        public void cleanup(ServerPlayerEntity player) {}
+        public void cleanup(ServerPlayer player) {}
     }
 }

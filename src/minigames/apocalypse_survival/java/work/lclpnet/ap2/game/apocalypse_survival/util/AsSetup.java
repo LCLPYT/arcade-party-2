@@ -1,6 +1,6 @@
 package work.lclpnet.ap2.game.apocalypse_survival.util;
 
-import net.minecraft.server.world.ServerWorld;
+import net.minecraft.server.level.ServerLevel;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import work.lclpnet.ap2.impl.map.MapUtil;
@@ -14,11 +14,11 @@ import java.util.Random;
 public class AsSetup {
 
     private final GameMap map;
-    private final ServerWorld world;
+    private final ServerLevel world;
     private final Random random;
     private final TargetManager targetManager;
 
-    public AsSetup(GameMap map, ServerWorld world, Random random, TargetManager targetManager) {
+    public AsSetup(GameMap map, ServerLevel world, Random random, TargetManager targetManager) {
         this.map = map;
         this.world = world;
         this.random = random;

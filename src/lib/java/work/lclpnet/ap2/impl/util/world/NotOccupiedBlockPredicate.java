@@ -1,24 +1,24 @@
 package work.lclpnet.ap2.impl.util.world;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.world.BlockView;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.block.state.BlockState;
 import work.lclpnet.ap2.api.util.world.BlockPredicate;
 
 public class NotOccupiedBlockPredicate implements BlockPredicate {
 
-    private final BlockView world;
+    private final BlockGetter world;
 
-    public NotOccupiedBlockPredicate(BlockView world) {
+    public NotOccupiedBlockPredicate(BlockGetter world) {
         this.world = world;
     }
 
     @Override
     public boolean test(BlockPos pos) {
-        BlockState below = world.getBlockState(pos.down());
+        BlockState below = world.getBlockState(pos.below());
 
-        return below.isSideSolidFullSquare(world, pos, Direction.UP) && isAir(pos) && isAir(pos.up());
+        return below.isFaceSturdy(world, pos, Direction.UP) && isAir(pos) && isAir(pos.above());
     }
 
     private boolean isAir(BlockPos adj) {

@@ -1,7 +1,7 @@
 package work.lclpnet.ap2.game.glowing_bomb.data;
 
-import net.minecraft.block.Blocks;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Quaterniond;
 import org.joml.Vector3d;
@@ -28,7 +28,7 @@ public class GbGlowStone extends Object3d implements Animatable {
         super(scene);
         orbitAnimation = new Animation(new OrbitAnimation(initialAngle, incline, orbitSpeed, rotationSpeed)).running();
 
-        BlockDisplayObject glowStone = new BlockDisplayObject(scene, Blocks.GLOWSTONE.getDefaultState());
+        BlockDisplayObject glowStone = new BlockDisplayObject(scene, Blocks.GLOWSTONE.defaultBlockState());
         glowStone.position.set(-0.5, -0.5, -0.5);  // center to origin
 
         addChild(glowStone);
@@ -112,8 +112,8 @@ public class GbGlowStone extends Object3d implements Animatable {
             this.gradient = new SimpleGravityGradient(GRAVITY_ACCELERATION);
             this.solver = RungeKuttaSolver.INSTANCE;
 
-            Vec3d anchorPos = anchor.pos();
-            targetPos = new Vector3d(anchorPos.getX() + 0.5, anchorPos.getY() + 0.5, anchorPos.getZ() + 0.5);
+            Vec3 anchorPos = anchor.pos();
+            targetPos = new Vector3d(anchorPos.x() + 0.5, anchorPos.y() + 0.5, anchorPos.z() + 0.5);
 
             Vector3d worldPos = worldTranslation();
             Vector3d velocity = gradient.getLaunchVelocity(worldPos, targetPos, 2);

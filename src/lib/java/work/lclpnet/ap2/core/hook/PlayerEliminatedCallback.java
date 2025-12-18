@@ -1,6 +1,6 @@
 package work.lclpnet.ap2.core.hook;
 
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.level.ServerPlayer;
 import work.lclpnet.kibu.hook.Hook;
 import work.lclpnet.kibu.hook.HookFactory;
 
@@ -12,5 +12,5 @@ public interface PlayerEliminatedCallback {
         }
     });
 
-    void onEliminated(ServerPlayerEntity player);
+    void onEliminated(ServerPlayer player);
 }

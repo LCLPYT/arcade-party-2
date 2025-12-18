@@ -1,6 +1,6 @@
 package work.lclpnet.ap2.game.fine_tuning;
 
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.level.ServerPlayer;
 import work.lclpnet.ap2.game.fine_tuning.melody.Melody;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 
@@ -15,7 +15,7 @@ class MelodyRecords {
     private final Melody[] melodies = new Melody[MELODY_COUNT];
     private int melodyNumber = 0;
 
-    public void record(Melody reference, ServerPlayerEntity best, Melody bestMelody, ServerPlayerEntity worst, Melody worstMelody) {
+    public void record(Melody reference, ServerPlayer best, Melody bestMelody, ServerPlayer worst, Melody worstMelody) {
         entries.add(new Entry(
                 MelodyEntry.create(best, bestMelody, reference),
                 MelodyEntry.create(worst, worstMelody, reference)
@@ -42,7 +42,7 @@ class MelodyRecords {
 
     public record MelodyEntry(PlayerRef playerRef, Melody melody, int[] offsets) {
 
-        static MelodyEntry create(ServerPlayerEntity player, Melody melody, Melody reference) {
+        static MelodyEntry create(ServerPlayer player, Melody melody, Melody reference) {
             int[] offsets = new int[reference.notes().length];
 
             for (int i = 0; i < offsets.length; i++) {

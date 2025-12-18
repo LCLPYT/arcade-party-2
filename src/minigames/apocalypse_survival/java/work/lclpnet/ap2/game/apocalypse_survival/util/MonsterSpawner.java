@@ -1,21 +1,25 @@
 package work.lclpnet.ap2.game.apocalypse_survival.util;
 
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.SpawnReason;
-import net.minecraft.entity.ai.goal.*;
-import net.minecraft.entity.ai.pathing.EntityNavigation;
-import net.minecraft.entity.ai.pathing.MobNavigation;
-import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.entity.mob.*;
-import net.minecraft.entity.projectile.ProjectileUtil;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.particle.ParticleTypes;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.EntitySpawnReason;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.goal.*;
+import net.minecraft.world.entity.ai.navigation.GroundPathNavigation;
+import net.minecraft.world.entity.ai.navigation.PathNavigation;
+import net.minecraft.world.entity.monster.AbstractSkeleton;
+import net.minecraft.world.entity.monster.Drowned;
+import net.minecraft.world.entity.monster.Zombie;
+import net.minecraft.world.entity.monster.ZombifiedPiglin;
+import net.minecraft.world.entity.projectile.ProjectileUtil;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
-import work.lclpnet.ap2.core.mixin.MobEntityAccessor;
+import work.lclpnet.ap2.core.mixin.MobAccessor;
 import work.lclpnet.ap2.game.apocalypse_survival.goal.RoamGoal;
 import work.lclpnet.ap2.game.apocalypse_survival.goal.UnstuckGoal;
 import work.lclpnet.ap2.impl.util.EntityUtil;
@@ -33,19 +37,19 @@ public class MonsterSpawner<S extends BlockShape & BlockShape.WithRadius> {
             MOB_MIN_TICKS = Ticks.seconds(1),
             MOB_MAX_TICKS = Ticks.seconds(3) + 10,
             MOB_LIMIT = 150;
-    private final ServerWorld world;
+    private final ServerLevel world;
     private final S stage;
     private final Random random;
     private final TargetManager targetManager;
-    private final WeightedList<EntityType<? extends ZombieEntity>> zombieTypes;
-    private final WeightedList<EntityType<? extends AbstractSkeletonEntity>> skeletonTypes;
+    private final WeightedList<EntityType<? extends Zombie>> zombieTypes;
+    private final WeightedList<EntityType<? extends AbstractSkeleton>> skeletonTypes;
     private final WeightedList<SpawnType> spawnTypes = new WeightedList<>();
     private int timeTicks = 0;
     private int nextParticle = 0;
     private int nextMob;
     private int mobCount = 0;
 
-    public MonsterSpawner(ServerWorld world, S stage, Random random, TargetManager targetManager) {
+    public MonsterSpawner(ServerLevel world, S stage, Random random, TargetManager targetManager) {
         this.world = world;
         this.stage = stage;
         this.random = random;
@@ -103,7 +107,7 @@ public class MonsterSpawner<S extends BlockShape & BlockShape.WithRadius> {
         BlockPos center = stage.center();
         int offset = stage.radius() / 2;
 
-        world.spawnParticles(ParticleTypes.REVERSE_PORTAL, center.getX() + 0.5, center.getY() + 0.5, center.getZ() + 0.5,
+        world.sendParticles(ParticleTypes.REVERSE_PORTAL, center.getX() + 0.5, center.getY() + 0.5, center.getZ() + 0.5,
                 30, offset, offset, offset, 0.15);
     }
 
@@ -128,41 +132,41 @@ public class MonsterSpawner<S extends BlockShape & BlockShape.WithRadius> {
 
         zombie.setCanBreakDoors(true);
 
-        double baseSpeed = zombie.getAttributeBaseValue(EntityAttributes.MOVEMENT_SPEED);
+        double baseSpeed = zombie.getAttributeBaseValue(Attributes.MOVEMENT_SPEED);
 
         if (zombie.isBaby())  {
             baseSpeed *= 0.75;
         } else if (random.nextFloat() < 0.05) {
             // change scale
             float scale = random.nextFloat(0.75f, 1.8f);
-            EntityUtil.setAttribute(zombie, EntityAttributes.SCALE, scale);
+            EntityUtil.setAttribute(zombie, Attributes.SCALE, scale);
 
             baseSpeed *= Math.min(1.12, Math.max(0.75, 1 / Math.pow(scale, 1.15)));
         }
 
-        if (zombie instanceof DrownedEntity) {
+        if (zombie instanceof Drowned) {
             baseSpeed *= 0.87;
-        } else if (zombie instanceof ZombifiedPiglinEntity) {
+        } else if (zombie instanceof ZombifiedPiglin) {
             baseSpeed *= 0.9;
         }
 
-        EntityUtil.setAttribute(zombie, EntityAttributes.MOVEMENT_SPEED, baseSpeed);
+        EntityUtil.setAttribute(zombie, Attributes.MOVEMENT_SPEED, baseSpeed);
 
         // adjust goals
-        var mobAccess = (MobEntityAccessor) zombie;
+        var mobAccess = (MobAccessor) zombie;
 
         GoalSelector goalSelector = mobAccess.getGoalSelector();
 
         GoalModifier.clear(goalSelector);
         GoalModifier.clear(mobAccess.getTargetSelector());
 
-        goalSelector.add(1, new BreakDoorGoal(zombie, difficulty -> true));
-        goalSelector.add(2, new ZombieAttackGoal(zombie, 1.4, false));
-        goalSelector.add(7, new RoamGoal(zombie, targetManager, 1.25));
-        goalSelector.add(8, new UnstuckGoal(zombie, random));
+        goalSelector.addGoal(1, new BreakDoorGoal(zombie, difficulty -> true));
+        goalSelector.addGoal(2, new ZombieAttackGoal(zombie, 1.4, false));
+        goalSelector.addGoal(7, new RoamGoal(zombie, targetManager, 1.25));
+        goalSelector.addGoal(8, new UnstuckGoal(zombie, random));
 
-        if (zombie instanceof DrownedEntity drowned) {
-            goalSelector.add(2, new DrownedEntity.TridentAttackGoal(drowned, 1.0, 60, 10.0F));
+        if (zombie instanceof Drowned drowned) {
+            goalSelector.addGoal(2, new Drowned.DrownedTridentAttackGoal(drowned, 1.0, 60, 10.0F));
         }
 
         // spawn mob
@@ -174,47 +178,47 @@ public class MonsterSpawner<S extends BlockShape & BlockShape.WithRadius> {
 
         if (skeleton == null) return;
 
-        double baseSpeed = skeleton.getAttributeBaseValue(EntityAttributes.MOVEMENT_SPEED);
+        double baseSpeed = skeleton.getAttributeBaseValue(Attributes.MOVEMENT_SPEED);
 
         if (random.nextFloat() < 0.075) {
             // change scale
             float scale = random.nextFloat(0.75f, 2.5f);
-            EntityUtil.setAttribute(skeleton, EntityAttributes.SCALE, scale);
+            EntityUtil.setAttribute(skeleton, Attributes.SCALE, scale);
 
             double scaleSpeedFactor = Math.min(1.1, Math.max(0.6, 1 / Math.pow(scale, 1.15)));
             baseSpeed *= scaleSpeedFactor;
         }
 
-        EntityUtil.setAttribute(skeleton, EntityAttributes.MOVEMENT_SPEED, baseSpeed);
+        EntityUtil.setAttribute(skeleton, Attributes.MOVEMENT_SPEED, baseSpeed);
 
         // adjust goals
-        var mobAccess = (MobEntityAccessor) skeleton;
+        var mobAccess = (MobAccessor) skeleton;
 
         GoalSelector goalSelector = mobAccess.getGoalSelector();
 
         GoalModifier.clear(goalSelector);
         GoalModifier.clear(mobAccess.getTargetSelector());
 
-        goalSelector.add(1, new BreakDoorGoal(skeleton, difficulty -> true));
-        goalSelector.add(7, new RoamGoal(skeleton, targetManager, 1.25));
-        goalSelector.add(8, new UnstuckGoal(skeleton, random));
+        goalSelector.addGoal(1, new BreakDoorGoal(skeleton, difficulty -> true));
+        goalSelector.addGoal(7, new RoamGoal(skeleton, targetManager, 1.25));
+        goalSelector.addGoal(8, new UnstuckGoal(skeleton, random));
 
-        ItemStack stack = skeleton.getStackInHand(ProjectileUtil.getHandPossiblyHolding(skeleton, Items.BOW));
+        ItemStack stack = skeleton.getItemInHand(ProjectileUtil.getWeaponHoldingHand(skeleton, Items.BOW));
 
-        if (stack.isOf(Items.BOW)) {
-            goalSelector.add(4, new BowAttackGoal<>(skeleton, 1.1, 20, 15.0F));
+        if (stack.is(Items.BOW)) {
+            goalSelector.addGoal(4, new RangedBowAttackGoal<>(skeleton, 1.1, 20, 15.0F));
         } else {
-            goalSelector.add(4, new MeleeAttackGoal(skeleton, 1.4, false) {
+            goalSelector.addGoal(4, new MeleeAttackGoal(skeleton, 1.4, false) {
                 @Override
                 public void start() {
                     super.start();
-                    skeleton.setAttacking(true);
+                    skeleton.setAggressive(true);
                 }
 
                 @Override
                 public void stop() {
                     super.stop();
-                    skeleton.setAttacking(false);
+                    skeleton.setAggressive(false);
                 }
             });
         }
@@ -231,11 +235,11 @@ public class MonsterSpawner<S extends BlockShape & BlockShape.WithRadius> {
 
         // resize maybe
         if (random.nextFloat() < 0.25f) {
-            EntityUtil.setAttribute(phantom, EntityAttributes.SCALE, random.nextFloat(0.2f, 5.0f));
+            EntityUtil.setAttribute(phantom, Attributes.SCALE, random.nextFloat(0.2f, 5.0f));
         }
 
         // adjust goals
-        var mobAccess = (MobEntityAccessor) phantom;
+        var mobAccess = (MobAccessor) phantom;
 
         GoalModifier.clear(mobAccess.getTargetSelector());
 
@@ -247,7 +251,7 @@ public class MonsterSpawner<S extends BlockShape & BlockShape.WithRadius> {
 
         if (ghast == null) return;
 
-        EntityUtil.setAttribute(ghast, EntityAttributes.SCALE, random.nextFloat(0.2f, 1.0f));
+        EntityUtil.setAttribute(ghast, Attributes.SCALE, random.nextFloat(0.2f, 1.0f));
 
         spawnMobInWorld(ghast);
     }
@@ -257,17 +261,17 @@ public class MonsterSpawner<S extends BlockShape & BlockShape.WithRadius> {
 
         if (vindicator == null) return;
 
-        double baseSpeed = vindicator.getAttributeBaseValue(EntityAttributes.MOVEMENT_SPEED);
+        double baseSpeed = vindicator.getAttributeBaseValue(Attributes.MOVEMENT_SPEED);
 
         if (random.nextFloat() < 0.05) {
             // change scale
             float scale = random.nextFloat(0.75f, 1.3f);
-            EntityUtil.setAttribute(vindicator, EntityAttributes.SCALE, scale);
+            EntityUtil.setAttribute(vindicator, Attributes.SCALE, scale);
 
             baseSpeed *= Math.min(1.12, Math.max(0.75, 1 / Math.pow(scale, 1.15)));
         }
 
-        EntityUtil.setAttribute(vindicator, EntityAttributes.MOVEMENT_SPEED, baseSpeed);
+        EntityUtil.setAttribute(vindicator, Attributes.MOVEMENT_SPEED, baseSpeed);
 
         spawnMobInWorld(vindicator);
     }
@@ -281,7 +285,7 @@ public class MonsterSpawner<S extends BlockShape & BlockShape.WithRadius> {
     }
 
     @Nullable
-    private <T extends MobEntity> T createMob(WeightedList<EntityType<? extends T>> types) {
+    private <T extends Mob> T createMob(WeightedList<EntityType<? extends T>> types) {
         // select random zombie type
         var type = types.getRandomElement(random);
 
@@ -291,8 +295,8 @@ public class MonsterSpawner<S extends BlockShape & BlockShape.WithRadius> {
     }
 
     @Nullable
-    private <T extends MobEntity> T createMob(EntityType<? extends T> type) {
-        T mob = type.create(world, null, stage.origin(), SpawnReason.COMMAND, false, false);
+    private <T extends Mob> T createMob(EntityType<? extends T> type) {
+        T mob = type.create(world, null, stage.origin(), EntitySpawnReason.COMMAND, false, false);
 
         if (mob == null) return null;
 
@@ -301,32 +305,32 @@ public class MonsterSpawner<S extends BlockShape & BlockShape.WithRadius> {
         return mob;
     }
 
-    private void configureMob(MobEntity mob) {
+    private void configureMob(Mob mob) {
         BlockPos pos = stage.origin();
 
-        mob.setPersistent();
-        mob.setPosition(Vec3d.ofBottomCenter(pos));
+        mob.setPersistenceRequired();
+        mob.setPos(Vec3.atBottomCenterOf(pos));
 
         // adjust follow range, so that the mob will follow far players
-        var followRange = mob.getAttributeInstance(EntityAttributes.FOLLOW_RANGE);
+        var followRange = mob.getAttribute(Attributes.FOLLOW_RANGE);
 
         if (followRange != null) {
             followRange.setBaseValue(100);
         }
 
-        EntityNavigation navigation = mob.getNavigation();
+        PathNavigation navigation = mob.getNavigation();
 
         // adjust range multiplier to find longer paths using the A* Algorithm
-        navigation.setRangeMultiplier(2.5f);
+        navigation.setMaxVisitedNodesMultiplier(2.5f);
 
-        if (navigation instanceof MobNavigation nav) {
+        if (navigation instanceof GroundPathNavigation nav) {
             nav.setCanOpenDoors(true);
             nav.setCanWalkOverFences(true);
         }
     }
 
-    private void spawnMobInWorld(MobEntity mob) {
-        world.spawnEntity(mob);
+    private void spawnMobInWorld(Mob mob) {
+        world.addFreshEntity(mob);
         mobCount++;
     }
 

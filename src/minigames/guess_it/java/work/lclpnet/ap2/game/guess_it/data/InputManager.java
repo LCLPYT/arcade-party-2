@@ -1,12 +1,12 @@
 package work.lclpnet.ap2.game.guess_it.data;
 
 import it.unimi.dsi.fastutil.Pair;
-import net.minecraft.network.message.MessageType;
-import net.minecraft.network.message.SignedMessage;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
+import net.minecraft.network.chat.ChatType;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.PlayerChatMessage;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.kibu.hook.HookRegistrar;
@@ -14,7 +14,7 @@ import work.lclpnet.kibu.hook.ServerMessageHooks;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.kibu.translate.text.TranslatedText;
 
-import static net.minecraft.util.Formatting.*;
+import static net.minecraft.ChatFormatting.*;
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
 public class InputManager implements InputInterface {
@@ -41,12 +41,12 @@ public class InputManager implements InputInterface {
         });
     }
 
-    private void onChat(SignedMessage signedMessage, ServerPlayerEntity player, MessageType.Parameters parameters) {
+    private void onChat(PlayerChatMessage signedMessage, ServerPlayer player, ChatType.Bound parameters) {
         String input = signedMessage.signedBody().content();
         input(player, input);
     }
 
-    public void input(ServerPlayerEntity player, String input) {
+    public void input(ServerPlayer player, String input) {
         if (!participants.isParticipating(player) || locked) return;
 
         Pair<String, @Nullable TranslatedText> res;
@@ -54,8 +54,8 @@ public class InputManager implements InputInterface {
         if (inputValue != null) {
             if (inputValue.isOnce() && hasAnswered(player)) {
                 var msg = translations.translateText(player, "game.ap2.guess_it.already_answered").formatted(RED);
-                player.sendMessage(msg);
-                player.playSoundToPlayer(SoundEvents.ENTITY_BLAZE_HURT, SoundCategory.PLAYERS, 0.5f, 0f);
+                player.sendSystemMessage(msg);
+                player.playNotifySound(SoundEvents.BLAZE_HURT, SoundSource.PLAYERS, 0.5f, 0f);
                 return;
             }
 
@@ -69,7 +69,7 @@ public class InputManager implements InputInterface {
         TranslatedText err = res.right();
 
         if (err != null) {
-            player.sendMessage(err.translateFor(player));
+            player.sendSystemMessage(err.translateFor(player));
             return;
         }
 
@@ -77,16 +77,16 @@ public class InputManager implements InputInterface {
         onAnswer(player, transformedInput);
     }
 
-    private void onAnswer(ServerPlayerEntity player, String input) {
+    private void onAnswer(ServerPlayer player, String input) {
         choices.set(player, input);
 
         var msg = translations.translateText(player, "game.ap2.guess_it.guessed", styled(input, YELLOW)).formatted(GREEN);
-        player.playSoundToPlayer(SoundEvents.BLOCK_NOTE_BLOCK_PLING.value(), SoundCategory.PLAYERS, 0.75f, 1.5f);
+        player.playNotifySound(SoundEvents.NOTE_BLOCK_PLING.value(), SoundSource.PLAYERS, 0.75f, 1.5f);
 
-        player.sendMessage(msg);
+        player.sendSystemMessage(msg);
     }
 
-    private boolean hasAnswered(ServerPlayerEntity player) {
+    private boolean hasAnswered(ServerPlayer player) {
         return choices.getInt(player).isPresent();
     }
 
@@ -100,7 +100,7 @@ public class InputManager implements InputInterface {
     }
 
     @Override
-    public void expectSelection(Text... options) {
+    public void expectSelection(Component... options) {
         reset();
         messenger.options(options);
 

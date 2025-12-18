@@ -1,12 +1,12 @@
 package work.lclpnet.ap2.game.paintball.kit;
 
 import lombok.Getter;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.UseCooldownComponent;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.util.ActionResult;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.UseCooldown;
 import work.lclpnet.ap2.ApConstants;
 import work.lclpnet.ap2.game.paintball.util.PaintGun;
 import work.lclpnet.ap2.game.paintball.util.PaintGunManager;
@@ -33,19 +33,19 @@ public class PaintGunKit extends SingleItemKit {
     @Override
     public void init(KitOptions options) {
         handle.hooks().registerHook(PlayerInteractionHooks.USE_ITEM, (_player, world, hand) -> {
-            if (!(_player instanceof ServerPlayerEntity player)) {
-                return ActionResult.PASS;
+            if (!(_player instanceof ServerPlayer player)) {
+                return InteractionResult.PASS;
             }
 
-            ItemStack stack = player.getStackInHand(hand);
+            ItemStack stack = player.getItemInHand(hand);
 
-            if (!stack.isOf(getItem())) {
-                return ActionResult.PASS;
+            if (!stack.is(getItem())) {
+                return InteractionResult.PASS;
             }
 
             paintGunManager.shoot(player, paintGun, stack);
 
-            return ActionResult.SUCCESS;
+            return InteractionResult.SUCCESS;
         });
     }
 
@@ -54,7 +54,7 @@ public class PaintGunKit extends SingleItemKit {
         super.configureItemStack(stack);
 
         var group = Optional.of(ApConstants.identifier(paintGun.id()));
-        stack.set(DataComponentTypes.USE_COOLDOWN, new UseCooldownComponent(paintGun.cooldownTicks(), group));
-        stack.set(DataComponentTypes.MAX_DAMAGE, paintGun.ammo());
+        stack.set(DataComponents.USE_COOLDOWN, new UseCooldown(paintGun.cooldownTicks(), group));
+        stack.set(DataComponents.MAX_DAMAGE, paintGun.ammo());
     }
 }

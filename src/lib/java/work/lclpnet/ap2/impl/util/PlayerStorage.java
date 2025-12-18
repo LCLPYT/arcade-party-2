@@ -1,6 +1,6 @@
 package work.lclpnet.ap2.impl.util;
 
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.level.ServerPlayer;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -12,35 +12,35 @@ import java.util.function.Supplier;
 public class PlayerStorage<T> {
 
     private final Map<UUID, T> storage = new HashMap<>();
-    private final Function<ServerPlayerEntity, T> factory;
+    private final Function<ServerPlayer, T> factory;
 
-    public PlayerStorage(Function<ServerPlayerEntity, T> factory, Map<ServerPlayerEntity, T> initial) {
+    public PlayerStorage(Function<ServerPlayer, T> factory, Map<ServerPlayer, T> initial) {
         this.factory = factory;
 
         if (initial != null) {
             for (var entry : initial.entrySet()) {
-                storage.put(entry.getKey().getUuid(), entry.getValue());
+                storage.put(entry.getKey().getUUID(), entry.getValue());
             }
         }
     }
 
-    public T get(ServerPlayerEntity player) {
+    public T get(ServerPlayer player) {
         return get(player, factory);
     }
 
-    public T get(ServerPlayerEntity player, Supplier<T> supplier) {
+    public T get(ServerPlayer player, Supplier<T> supplier) {
         return get(player, p -> supplier.get());
     }
 
-    public T get(ServerPlayerEntity player, Function<ServerPlayerEntity, T> factory) {
-        return storage.computeIfAbsent(player.getUuid(), u -> factory.apply(player));
+    public T get(ServerPlayer player, Function<ServerPlayer, T> factory) {
+        return storage.computeIfAbsent(player.getUUID(), u -> factory.apply(player));
     }
 
-    public Optional<T> optional(ServerPlayerEntity player) {
-        return Optional.ofNullable(storage.get(player.getUuid()));
+    public Optional<T> optional(ServerPlayer player) {
+        return Optional.ofNullable(storage.get(player.getUUID()));
     }
 
-    public static <T> PlayerStorage<T> create(Function<ServerPlayerEntity, T> factory) {
+    public static <T> PlayerStorage<T> create(Function<ServerPlayer, T> factory) {
         return new PlayerStorage<>(factory, null);
     }
 
@@ -48,7 +48,7 @@ public class PlayerStorage<T> {
         return new PlayerStorage<>(team -> supplier.get(), null);
     }
 
-    public static <T> PlayerStorage<T> ofFixed(Map<ServerPlayerEntity, T> values) {
+    public static <T> PlayerStorage<T> ofFixed(Map<ServerPlayer, T> values) {
         return new PlayerStorage<>(team -> {
             throw new UnsupportedOperationException("Default factory is undefined");
         }, values);

@@ -1,16 +1,16 @@
 package work.lclpnet.ap2.game.splashy_dropper.data;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import work.lclpnet.gaco.ds.IndexedSet;
-import work.lclpnet.gaco.ds.WeightedList;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape;
+import work.lclpnet.gaco.ds.IndexedSet;
+import work.lclpnet.gaco.ds.WeightedList;
 import work.lclpnet.lobby.game.map.GameMap;
 
 import java.util.HashSet;
@@ -20,12 +20,12 @@ import java.util.stream.Collectors;
 
 public class SdGenerator {
 
-    private static final int PLACEMENT_FLAGS = Block.FORCE_STATE | Block.SKIP_DROPS;
-    private final ServerWorld world;
+    private static final int PLACEMENT_FLAGS = Block.UPDATE_KNOWN_SHAPE | Block.UPDATE_SUPPRESS_DROPS;
+    private final ServerLevel world;
     private final GameMap map;
     private final Random random;
 
-    public SdGenerator(ServerWorld world, GameMap map, Random random) {
+    public SdGenerator(ServerLevel world, GameMap map, Random random) {
         this.world = world;
         this.map = map;
         this.random = random;
@@ -84,7 +84,7 @@ public class SdGenerator {
         Set<BlockPos> space = new HashSet<>();
 
         for (BlockPos pos : blockShape) {
-            space.add(pos.toImmutable());
+            space.add(pos.immutable());
         }
 
         // create mutable pool of shapes and their possible spaces
@@ -102,12 +102,12 @@ public class SdGenerator {
             return space.get(random.nextInt(space.size()));
         }
 
-        public void placeAt(BlockPos pos, ServerWorld world) {
-            BlockState water = Blocks.WATER.getDefaultState();
+        public void placeAt(BlockPos pos, ServerLevel world) {
+            BlockState water = Blocks.WATER.defaultBlockState();
 
             for (BlockPos shapePos : shape.positions()) {
-                shapePos = pos.add(shapePos);
-                world.setBlockState(shapePos, water, PLACEMENT_FLAGS);
+                shapePos = pos.offset(shapePos);
+                world.setBlock(shapePos, water, PLACEMENT_FLAGS);
             }
         }
 
@@ -115,7 +115,7 @@ public class SdGenerator {
             var it = shape.combinedPositions();
 
             while (it.hasNext()) {
-                BlockPos occupied = pos.add(it.next());
+                BlockPos occupied = pos.offset(it.next());
 
                 for (BlockPos selfPos : this.shape.positions()) {
                     space.remove(occupied.subtract(selfPos));

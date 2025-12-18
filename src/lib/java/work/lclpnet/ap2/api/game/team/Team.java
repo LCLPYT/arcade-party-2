@@ -1,6 +1,6 @@
 package work.lclpnet.ap2.api.game.team;
 
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.level.ServerPlayer;
 import work.lclpnet.ap2.api.base.Participants;
 
 import java.util.Set;
@@ -13,11 +13,11 @@ public interface Team extends TeamKeyable {
      * Those players may or may not be participating.
      * @return A set of players in this team. Modifications on the set do not affect the actual team members.
      */
-    Set<ServerPlayerEntity> getPlayers();
+    Set<ServerPlayer> getPlayers();
 
-    void addPlayer(ServerPlayerEntity player);
+    void addPlayer(ServerPlayer player);
 
-    void removePlayer(ServerPlayerEntity player);
+    void removePlayer(ServerPlayer player);
 
     /**
      * Get the total amount of players in this team.
@@ -31,7 +31,7 @@ public interface Team extends TeamKeyable {
      * @param participants The {@link Participants} manager.
      * @return A set of participants of this team. Modifications on the set do not affect the actual team participants.
      */
-    default Set<ServerPlayerEntity> getParticipatingPlayers(Participants participants) {
+    default Set<ServerPlayer> getParticipatingPlayers(Participants participants) {
         return getPlayers().stream()
                 .filter(participants::isParticipating)
                 .collect(Collectors.toUnmodifiableSet());

@@ -1,9 +1,9 @@
 package work.lclpnet.ap2.impl.game;
 
 import it.unimi.dsi.fastutil.objects.ObjectIntPair;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.Text;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.ApConstants;
 import work.lclpnet.ap2.api.game.data.DataEntry;
@@ -18,7 +18,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 
-import static net.minecraft.util.Formatting.*;
+import static net.minecraft.ChatFormatting.*;
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
 public class ResultAnnouncement<Ref extends SubjectRef> {
@@ -49,23 +49,23 @@ public class ResultAnnouncement<Ref extends SubjectRef> {
         }
     }
 
-    public void sendTop(int amount, ServerPlayerEntity player) {
+    public void sendTop(int amount, ServerPlayer player) {
         sendTop(amount, player, null);
     }
 
-    public void sendTop(int amount, ServerPlayerEntity player, @Nullable Text actionText) {
+    public void sendTop(int amount, ServerPlayer player, @Nullable Component actionText) {
         String results = translations.translate(player, "ap2.results");
 
-        var resultsText = Text.literal(results).formatted(GREEN, BOLD);
+        var resultsText = Component.literal(results).withStyle(GREEN, BOLD);
 
-        var sep = Text.literal(ApConstants.SEPARATOR).formatted(DARK_GREEN, STRIKETHROUGH, BOLD);
+        var sep = Component.literal(ApConstants.SEPARATOR).withStyle(DARK_GREEN, STRIKETHROUGH, BOLD);
         int sepLength = ApConstants.SEPARATOR.length();
-        var sepSm = Text.literal("-".repeat(sepLength)).formatted(DARK_GRAY, STRIKETHROUGH);
+        var sepSm = Component.literal("-".repeat(sepLength)).withStyle(DARK_GRAY, STRIKETHROUGH);
 
         sendSeparatorWithText(player, resultsText, sepLength);
 
         if (order.isEmpty()) {
-            player.sendMessage(translations.translateText(player, "ap2.no_results").formatted(GRAY));
+            player.sendSystemMessage(translations.translateText(player, "ap2.no_results").formatted(GRAY));
         } else {
             sendRankList(amount, player);
             sendOwnScoreIfExists(player, sepSm);
@@ -74,11 +74,11 @@ public class ResultAnnouncement<Ref extends SubjectRef> {
         if (actionText != null) {
             sendSeparatorWithText(player, actionText, sepLength);
         } else {
-            player.sendMessage(sep);
+            player.sendSystemMessage(sep);
         }
     }
 
-    private void sendOwnScoreIfExists(ServerPlayerEntity player, MutableText sepSm) {
+    private void sendOwnScoreIfExists(ServerPlayer player, MutableComponent sepSm) {
         var ownRef = refs.create(player);
 
         if (ownRef == null || !placement.containsKey(ownRef)) return;
@@ -89,7 +89,7 @@ public class ResultAnnouncement<Ref extends SubjectRef> {
         sendOwnScore(player, entry, playerIndex, sepSm);
     }
 
-    private void sendRankList(int amount, ServerPlayerEntity player) {
+    private void sendRankList(int amount, ServerPlayer player) {
 
         for (int i = 0; i < amount; i++) {
             if (order.size() <= i) break;
@@ -100,58 +100,58 @@ public class ResultAnnouncement<Ref extends SubjectRef> {
             var entry = entryByRef.getOrDefault(subject, null);
             var text = entry != null ? entry.toText(translations) : null;
 
-            Text subjectName = subject.getNameFor(player);
+            Component subjectName = subject.getNameFor(player);
 
             if (subjectName.getStyle().getColor() == null) {
-                subjectName = subjectName.copy().formatted(GRAY);
+                subjectName = subjectName.copy().withStyle(GRAY);
             }
 
-            MutableText msg = Text.literal("#%s ".formatted(rankEntry.rightInt())).formatted(YELLOW)
+            MutableComponent msg = Component.literal("#%s ".formatted(rankEntry.rightInt())).withStyle(YELLOW)
                     .append(subjectName);
 
             if (text != null) {
                 msg.append(" ").append(text.translateFor(player));
             }
 
-            player.sendMessage(msg);
+            player.sendSystemMessage(msg);
         }
     }
 
-    private void sendSeparatorWithText(ServerPlayerEntity player, Text label, int sepLength) {
+    private void sendSeparatorWithText(ServerPlayer player, Component label, int sepLength) {
         int len = label.getString().length() + 2;
 
         if (len - 1 >= sepLength) {
-            player.sendMessage(label);
+            player.sendSystemMessage(label);
             return;
         }
 
         int times = (sepLength - len) / 2;
         String sepShort = "=".repeat(times);
 
-        var msg = Text.empty()
-                .append(Text.literal(sepShort).formatted(DARK_GREEN, STRIKETHROUGH, BOLD))
-                .append(Text.literal("[").formatted(DARK_GREEN, BOLD))
+        var msg = Component.empty()
+                .append(Component.literal(sepShort).withStyle(DARK_GREEN, STRIKETHROUGH, BOLD))
+                .append(Component.literal("[").withStyle(DARK_GREEN, BOLD))
                 .append(label)
-                .append(Text.literal("]").formatted(DARK_GREEN, BOLD))
-                .append(Text.literal(sepShort + (sepLength - 2 * times - len > 0 ? "=" : ""))
-                        .formatted(DARK_GREEN, STRIKETHROUGH, BOLD));
+                .append(Component.literal("]").withStyle(DARK_GREEN, BOLD))
+                .append(Component.literal(sepShort + (sepLength - 2 * times - len > 0 ? "=" : ""))
+                        .withStyle(DARK_GREEN, STRIKETHROUGH, BOLD));
 
-        player.sendMessage(msg);
+        player.sendSystemMessage(msg);
     }
 
-    private void sendOwnScore(ServerPlayerEntity player, DataEntry<Ref> entry, int ranking, MutableText sepSm) {
-        player.sendMessage(sepSm);
+    private void sendOwnScore(ServerPlayer player, DataEntry<Ref> entry, int ranking, MutableComponent sepSm) {
+        player.sendSystemMessage(sepSm);
 
         var extra = entry.toText(translations);
 
         if (extra == null) {
-            player.sendMessage(translations.translateText(player, "ap2.you_placed",
+            player.sendSystemMessage(translations.translateText(player, "ap2.you_placed",
                     styled("#" + ranking, YELLOW)).formatted(GRAY));
             return;
         }
 
         RootText translatedExtra = extra.translateFor(player);
-        player.sendMessage(translations.translateText(player, "ap2.you_placed_value",
+        player.sendSystemMessage(translations.translateText(player, "ap2.you_placed_value",
                 styled("#" + ranking, YELLOW),
                 translatedExtra.formatted(YELLOW)).formatted(GRAY));
     }

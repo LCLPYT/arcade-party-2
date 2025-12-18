@@ -1,13 +1,13 @@
 package work.lclpnet.ap2.game.guess_it.challenge;
 
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
-import net.minecraft.network.packet.s2c.play.StopSoundS2CPacket;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvent;
-import net.minecraft.text.Text;
-import net.minecraft.util.math.MathHelper;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.game.ClientboundStopSoundPacket;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.Mth;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.game.guess_it.data.*;
 import work.lclpnet.ap2.game.guess_it.util.OptionMaker;
@@ -18,8 +18,8 @@ import work.lclpnet.kibu.translate.Translations;
 
 import java.util.Random;
 
-import static net.minecraft.util.Formatting.BOLD;
-import static net.minecraft.util.Formatting.DARK_GREEN;
+import static net.minecraft.ChatFormatting.BOLD;
+import static net.minecraft.ChatFormatting.DARK_GREEN;
 
 public class SoundChallenge implements Challenge {
 
@@ -27,14 +27,14 @@ public class SoundChallenge implements Challenge {
     private static final int SOUND_DELAY_TICKS = 30;
     private static final int REPEAT_DELAY_TICKS = Ticks.seconds(4);
     private final MiniGameHandle gameHandle;
-    private final ServerWorld world;
+    private final ServerLevel world;
     private final Random random;
     private final SoundSubtitles soundSubtitles;
     private SoundEvent correct = null;
     private float pitch = 1f;
     private int correctOption = -1;
 
-    public SoundChallenge(MiniGameHandle gameHandle, ServerWorld world, Random random, SoundSubtitles soundSubtitles) {
+    public SoundChallenge(MiniGameHandle gameHandle, ServerLevel world, Random random, SoundSubtitles soundSubtitles) {
         this.gameHandle = gameHandle;
         this.world = world;
         this.random = random;
@@ -70,7 +70,7 @@ public class SoundChallenge implements Challenge {
 
         var options = soundOptions.stream()
                 .map(TextUtil::getVanillaName)
-                .toArray(Text[]::new);
+                .toArray(Component[]::new);
 
         input.expectSelection(options);
 
@@ -97,32 +97,32 @@ public class SoundChallenge implements Challenge {
         var msg = gameHandle.getTranslations().translateText("game.ap2.guess_it.again")
                 .formatted(DARK_GREEN, BOLD);
 
-        for (ServerPlayerEntity player : PlayerLookup.world(world)) {
-            Title.get(player).title(Text.empty(), msg.translateFor(player));
+        for (ServerPlayer player : PlayerLookup.world(world)) {
+            Title.get(player).title(Component.empty(), msg.translateFor(player));
         }
 
         gameHandle.getScheduler().timeout(this::playSound, SOUND_DELAY_TICKS);
     }
 
     private void randomizePitch() {
-        float keyOffset = MathHelper.clamp(12f, 0f, 24f);
+        float keyOffset = Mth.clamp(12f, 0f, 24f);
         float key = random.nextFloat(keyOffset);
 
         pitch = (float) Math.pow(2, (key - keyOffset * 0.5) / keyOffset);
-        pitch = MathHelper.clamp(pitch, 0.5f, 2f);
+        pitch = Mth.clamp(pitch, 0.5f, 2f);
     }
 
     private void playSound() {
-        for (ServerPlayerEntity player : PlayerLookup.world(world)) {
-            player.playSoundToPlayer(correct, SoundCategory.MASTER, 1f, pitch);
+        for (ServerPlayer player : PlayerLookup.world(world)) {
+            player.playNotifySound(correct, SoundSource.MASTER, 1f, pitch);
         }
     }
 
     private void stopSound() {
-        var packet = new StopSoundS2CPacket(correct.id(), SoundCategory.MASTER);
+        var packet = new ClientboundStopSoundPacket(correct.location(), SoundSource.MASTER);
 
-        for (ServerPlayerEntity player : PlayerLookup.world(world)) {
-            player.networkHandler.sendPacket(packet);
+        for (ServerPlayer player : PlayerLookup.world(world)) {
+            player.connection.send(packet);
         }
     }
 

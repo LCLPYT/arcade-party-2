@@ -5,10 +5,10 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import it.unimi.dsi.fastutil.objects.ObjectArraySet;
 import lombok.Getter;
 import lombok.Setter;
-import net.minecraft.particle.ParticleTypes;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.actor.ActorData;
 import work.lclpnet.ap2.api.actor.ActorInit;
@@ -24,7 +24,7 @@ import java.util.Set;
 import java.util.WeakHashMap;
 
 import static java.lang.Math.abs;
-import static net.minecraft.entity.attribute.EntityAttributes.GRAVITY;
+import static net.minecraft.world.entity.ai.attributes.Attributes.GRAVITY;
 import static work.lclpnet.lobby.util.PlayerReset.setAttribute;
 
 public class GravityFieldActor extends BaseActor {
@@ -53,7 +53,7 @@ public class GravityFieldActor extends BaseActor {
         observer.whenLeaving(shape, this::onLeaveField);
 
         jumpCallback = player -> {
-            if (player.getEntityWorld() == world && shape.contains(player.getX(), player.getY(), player.getZ())) {
+            if (player.level() == world && shape.contains(player.getX(), player.getY(), player.getZ())) {
                 onPlayerJumped(player);
             }
             return false;
@@ -75,38 +75,38 @@ public class GravityFieldActor extends BaseActor {
         }
     }
 
-    private void onPlayerJumped(ServerPlayerEntity player) {
+    private void onPlayerJumped(ServerPlayer player) {
         if (strength > GRAVITY.value().getDefaultValue()) return;
 
         double gravity = player.getAttributeBaseValue(GRAVITY);
 
         if (abs(gravity - strength) > 1e-5) return;
 
-        player.getEntityWorld().spawnParticles(ParticleTypes.CLOUD, player.getX(), player.getY() + 0.25, player.getZ(), 10, 0.2, 0.2, 0.2, 0.1);
+        player.level().sendParticles(ParticleTypes.CLOUD, player.getX(), player.getY() + 0.25, player.getZ(), 10, 0.2, 0.2, 0.2, 0.1);
     }
 
-    private void onEnterField(ServerPlayerEntity player) {
-        if (manipulator != null && player.getEntityWorld() == world) {
+    private void onEnterField(ServerPlayer player) {
+        if (manipulator != null && player.level() == world) {
             double change = manipulator.add(player, this);
 
             onGravityChanged(player, change);
         }
     }
 
-    private void onLeaveField(ServerPlayerEntity player) {
-        if (manipulator != null && player.getEntityWorld() == world) {
+    private void onLeaveField(ServerPlayer player) {
+        if (manipulator != null && player.level() == world) {
             double change = manipulator.remove(player, this);
 
             onGravityChanged(player, change);
         }
     }
 
-    public void onGravityChanged(ServerPlayerEntity player, double gravityDelta) {
+    public void onGravityChanged(ServerPlayer player, double gravityDelta) {
         if (gravityDelta < 0) {
-            player.playSoundToPlayer(SoundEvents.ENTITY_BREEZE_IDLE_GROUND, SoundCategory.PLAYERS, 0.55f, 1.5f);
-            player.getEntityWorld().spawnParticles(ParticleTypes.CLOUD, player.getX(), player.getY(), player.getZ(), 10, 0.2, 0.2, 0.2, 0.1);
+            player.playNotifySound(SoundEvents.BREEZE_IDLE_GROUND, SoundSource.PLAYERS, 0.55f, 1.5f);
+            player.level().sendParticles(ParticleTypes.CLOUD, player.getX(), player.getY(), player.getZ(), 10, 0.2, 0.2, 0.2, 0.1);
         } else if (gravityDelta > 0) {
-            player.playSoundToPlayer(SoundEvents.ENTITY_EVOKER_CAST_SPELL, SoundCategory.PLAYERS, 0.35f, 0.75f);
+            player.playNotifySound(SoundEvents.EVOKER_CAST_SPELL, SoundSource.PLAYERS, 0.35f, 0.75f);
         }
     }
 
@@ -123,9 +123,9 @@ public class GravityFieldActor extends BaseActor {
     }
 
     public static class Manipulator {
-        private final WeakHashMap<ServerPlayerEntity, Entry> entries = new WeakHashMap<>();
+        private final WeakHashMap<ServerPlayer, Entry> entries = new WeakHashMap<>();
 
-        synchronized double add(ServerPlayerEntity player, GravityFieldActor field) {
+        synchronized double add(ServerPlayer player, GravityFieldActor field) {
             var entry = entries.computeIfAbsent(player, p
                     -> new Entry(new ObjectArraySet<>(1), p.getAttributeBaseValue(GRAVITY)));
 
@@ -136,7 +136,7 @@ public class GravityFieldActor extends BaseActor {
             return update(player, entry);
         }
 
-        synchronized double remove(ServerPlayerEntity player, GravityFieldActor field) {
+        synchronized double remove(ServerPlayer player, GravityFieldActor field) {
             var entry = entries.getOrDefault(player, null);
 
             if (entry == null || !entry.fields.remove(field)) {
@@ -152,7 +152,7 @@ public class GravityFieldActor extends BaseActor {
             return change;
         }
 
-        double update(ServerPlayerEntity player, Entry entry) {
+        double update(ServerPlayer player, Entry entry) {
             var strength = entry.fields.stream()
                     .mapToDouble(GravityFieldActor::getStrength)
                     .max()

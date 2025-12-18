@@ -1,6 +1,6 @@
 package work.lclpnet.ap2.game.maze_scape.monster;
 
-import net.minecraft.entity.mob.MobEntity;
+import net.minecraft.world.entity.Mob;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.game.maze_scape.monster.behaviour.MonsterBehaviour;
 import work.lclpnet.ap2.game.maze_scape.util.MSManager;
@@ -8,7 +8,7 @@ import work.lclpnet.ap2.game.maze_scape.util.MSManager;
 import java.util.List;
 import java.util.UUID;
 
-class CommonData implements MonsterData<MobEntity> {
+class CommonData implements MonsterData<Mob> {
 
     private final UUID uuid;
     private final MSManager manager;
@@ -21,8 +21,8 @@ class CommonData implements MonsterData<MobEntity> {
     }
 
     @Override
-    public @Nullable MobEntity mob() {
-        if (manager.world().getEntity(uuid) instanceof MobEntity mob) {
+    public @Nullable Mob mob() {
+        if (manager.world().getEntity(uuid) instanceof Mob mob) {
             return mob;
         }
 
@@ -34,21 +34,21 @@ class CommonData implements MonsterData<MobEntity> {
     }
 
     @Override
-    public void init(MobEntity mob) {
+    public void init(Mob mob) {
         for (MonsterBehaviour behaviour : behaviours) {
             behaviour.init(mob);
         }
     }
 
     @Override
-    public void tick(MobEntity mob) {
+    public void tick(Mob mob) {
         for (MonsterBehaviour behaviour : behaviours) {
             behaviour.tick(mob);
         }
     }
 
     @Override
-    public void onKillAcquired(MobEntity mob) {
+    public void onKillAcquired(Mob mob) {
         for (MonsterBehaviour behaviour : behaviours) {
             behaviour.onKillAcquired(mob);
         }

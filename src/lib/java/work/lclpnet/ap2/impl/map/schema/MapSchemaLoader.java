@@ -1,11 +1,14 @@
 package work.lclpnet.ap2.impl.map.schema;
 
-import net.minecraft.server.world.ServerWorld;
+import net.minecraft.server.level.ServerLevel;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.impl.util.ReflectionUtil;
 import work.lclpnet.map_api.GameMapApi;
-import work.lclpnet.map_api.data.*;
+import work.lclpnet.map_api.data.Data;
+import work.lclpnet.map_api.data.DataInstance;
+import work.lclpnet.map_api.data.DataManager;
+import work.lclpnet.map_api.data.WorldData;
 
 import java.lang.reflect.Field;
 import java.util.HashMap;
@@ -27,7 +30,7 @@ public class MapSchemaLoader {
     }
 
     @Nullable
-    public <T> T load(ServerWorld world, Class<T> type) {
+    public <T> T load(ServerLevel world, Class<T> type) {
         T instance = makeInstance(type);
 
         if (instance == null) {
@@ -63,7 +66,7 @@ public class MapSchemaLoader {
         }
     }
 
-    public void loadHierarchy(ServerWorld world, Object instance) {
+    public void loadHierarchy(ServerLevel world, Object instance) {
         var api = GameMapApi.get(world.getServer());
         WorldData worldData = api.getDataManager().getWorldData(world);
 

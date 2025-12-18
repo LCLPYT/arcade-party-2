@@ -2,45 +2,45 @@ package work.lclpnet.ap2.impl.util.world;
 
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import it.unimi.dsi.fastutil.longs.LongSet;
-import net.minecraft.server.world.ServerChunkManager;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.ChunkPos;
-import net.minecraft.world.chunk.ChunkStatus;
+import net.minecraft.server.level.ServerChunkCache;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.chunk.status.ChunkStatus;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
-import static net.minecraft.util.math.ChunkPos.*;
+import static net.minecraft.world.level.ChunkPos.*;
 
 public class ChunkPersistence {
 
-    private final ServerWorld world;
+    private final ServerLevel world;
     private final LongSet chunks = new LongOpenHashSet();
 
-    public ChunkPersistence(ServerWorld world, MiniGameHandle gameHandle) {
+    public ChunkPersistence(ServerLevel world, MiniGameHandle gameHandle) {
         this.world = world;
 
         gameHandle.whenDone(this::reset);
     }
 
     public synchronized void markPersistent(int chunkX, int chunkZ) {
-        if (!chunks.add(toLong(chunkX, chunkZ))) return;
+        if (!chunks.add(asLong(chunkX, chunkZ))) return;
 
         setForced(chunkX, chunkZ, true);
     }
 
     public synchronized void removePersistent(int chunkX, int chunkZ) {
-        if (!chunks.remove(toLong(chunkX, chunkZ))) return;
+        if (!chunks.remove(asLong(chunkX, chunkZ))) return;
 
         setForced(chunkX, chunkZ, false);
     }
 
     private void setForced(int chunkX, int chunkZ, boolean forced) {
         ChunkPos pos = new ChunkPos(chunkX, chunkZ);
-        ServerChunkManager chunkManager = world.getChunkManager();
-        chunkManager.setChunkForced(pos, forced);
+        ServerChunkCache chunkManager = world.getChunkSource();
+        chunkManager.updateChunkForced(pos, forced);
 
-        if (forced && !chunkManager.isChunkLoaded(chunkX, chunkZ)) {
+        if (forced && !chunkManager.hasChunk(chunkX, chunkZ)) {
             chunkManager.getChunk(chunkX, chunkZ, ChunkStatus.FULL, true);
         }
     }
@@ -71,8 +71,8 @@ public class ChunkPersistence {
         long[] chunks = this.chunks.toLongArray();
 
         for (long chunk : chunks) {
-            int cx = getPackedX(chunk);
-            int cz = getPackedZ(chunk);
+            int cx = getX(chunk);
+            int cz = getZ(chunk);
 
             removePersistent(cx, cz);
         }

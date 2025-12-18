@@ -1,12 +1,12 @@
 package work.lclpnet.ap2.impl.util.model;
 
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.ResourceLocation;
 
 import static work.lclpnet.ap2.ApConstants.identifier;
 
 public class Models {
 
-    public static final Identifier
+    public static final ResourceLocation
             CROSS = identifier("cross"),
             ARROW = identifier("arrow"),
             DANGER = identifier("danger");

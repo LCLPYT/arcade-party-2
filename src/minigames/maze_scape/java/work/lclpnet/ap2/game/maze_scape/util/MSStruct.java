@@ -1,8 +1,8 @@
 package work.lclpnet.ap2.game.maze_scape.util;
 
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Position;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Position;
+import net.minecraft.util.Mth;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.game.maze_scape.gen.Graph;
@@ -19,7 +19,7 @@ import work.lclpnet.gaco.math.Vec2i;
 import java.util.*;
 
 import static java.lang.Math.abs;
-import static net.minecraft.util.math.ChunkSectionPos.getSectionCoord;
+import static net.minecraft.core.SectionPos.blockToSectionCoord;
 
 public final class MSStruct {
 
@@ -44,7 +44,7 @@ public final class MSStruct {
                 return null;
             }
 
-            BlockPos pos = connectors.getFirst().pos().up();
+            BlockPos pos = connectors.getFirst().pos().above();
 
             return new Passage(pos, from, to);
         });
@@ -134,12 +134,12 @@ public final class MSStruct {
 
     @Nullable
     public Node<Connector3, StructurePiece, OrientedStructurePiece> nodeAt(Position pos) {
-        return nodeAt(pos.getX(), pos.getY(), pos.getZ());
+        return nodeAt(pos.x(), pos.y(), pos.z());
     }
 
     @Nullable
     public Node<Connector3, StructurePiece, OrientedStructurePiece> nodeAt(double x, double y, double z) {
-        Chunk chunk = chunkAt(MathHelper.floor(x), MathHelper.floor(z));
+        Chunk chunk = chunkAt(Mth.floor(x), Mth.floor(z));
 
         if (chunk == null || chunk.nodes == null) {
             return null;
@@ -161,8 +161,8 @@ public final class MSStruct {
     @Nullable
     private Chunk chunkAt(int x, int z) {
         int size = bounds.maxChunkSize();
-        int cx = getSectionCoord(x) + size;
-        int cz = getSectionCoord(z) + size;
+        int cx = blockToSectionCoord(x) + size;
+        int cz = blockToSectionCoord(z) + size;
 
         if (cx < 0 || cx >= size * 2 || cz < 0 || cz >= size * 2) {
             return null;
@@ -214,7 +214,7 @@ public final class MSStruct {
 
         for (Passage passage : passages) {
             BlockPos p = passage.pos();
-            double dist = abs(pos.getX() - p.getX()) + abs(pos.getY() - p.getY()) + abs(pos.getZ() - p.getZ());
+            double dist = abs(pos.x() - p.getX()) + abs(pos.y() - p.getY()) + abs(pos.z() - p.getZ());
 
             if (dist < minDist) {
                 minDist = dist;

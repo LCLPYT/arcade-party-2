@@ -1,6 +1,6 @@
 package work.lclpnet.ap2.api.base;
 
-import net.minecraft.world.border.WorldBorder;
+import net.minecraft.world.level.border.WorldBorder;
 
 public interface WorldBorderManager {
 

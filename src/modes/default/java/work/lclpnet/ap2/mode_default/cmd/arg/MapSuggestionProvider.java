@@ -4,8 +4,8 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
-import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.util.Identifier;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.resources.ResourceLocation;
 import work.lclpnet.ap2.api.game.MiniGame;
 import work.lclpnet.ap2.api.map.MapFacade;
 
@@ -14,7 +14,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-public class MapSuggestionProvider implements SuggestionProvider<ServerCommandSource> {
+public class MapSuggestionProvider implements SuggestionProvider<CommandSourceStack> {
 
     private final MapFacade mapFacade;
     private final Supplier<Optional<MiniGame>> gameSupplier;
@@ -25,7 +25,7 @@ public class MapSuggestionProvider implements SuggestionProvider<ServerCommandSo
     }
 
     @Override
-    public CompletableFuture<Suggestions> getSuggestions(CommandContext<ServerCommandSource> context, SuggestionsBuilder builder) {
+    public CompletableFuture<Suggestions> getSuggestions(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
         return gameSupplier.get()
                 .map(buildSuggestions(builder))
                 .orElseGet(builder::buildFuture);
@@ -33,7 +33,7 @@ public class MapSuggestionProvider implements SuggestionProvider<ServerCommandSo
 
     private Function<MiniGame, CompletableFuture<Suggestions>> buildSuggestions(SuggestionsBuilder builder) {
         return miniGame -> mapFacade.getMapIds(miniGame.getId()).thenApply(mapIds -> {
-            mapIds.stream().map(Identifier::toString).forEach(builder::suggest);
+            mapIds.stream().map(ResourceLocation::toString).forEach(builder::suggest);
 
             return builder.build();
         });

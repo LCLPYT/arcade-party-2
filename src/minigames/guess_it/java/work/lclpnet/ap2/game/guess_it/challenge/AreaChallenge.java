@@ -1,13 +1,13 @@
 package work.lclpnet.ap2.game.guess_it.challenge;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.Text;
-import net.minecraft.util.DyeColor;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.DyeColor;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.util.world.AdjacentBlocks;
 import work.lclpnet.ap2.game.guess_it.data.*;
@@ -31,13 +31,13 @@ public class AreaChallenge implements Challenge {
 
     private static final int DURATION_TICKS = Ticks.seconds(16);
     private final MiniGameHandle gameHandle;
-    private final ServerWorld world;
+    private final ServerLevel world;
     private final Random random;
     private final BlockShape blockShape;
     private final WorldModifier modifier;
     private Areas areas = null;
 
-    public AreaChallenge(MiniGameHandle gameHandle, ServerWorld world, Random random, BlockShape blockShape, WorldModifier modifier) {
+    public AreaChallenge(MiniGameHandle gameHandle, ServerLevel world, Random random, BlockShape blockShape, WorldModifier modifier) {
         this.gameHandle = gameHandle;
         this.world = world;
         this.random = random;
@@ -76,21 +76,21 @@ public class AreaChallenge implements Challenge {
 
         var blockStates = opts.stream()
                 .map(blockFunction)
-                .map(Block::getDefaultState)
+                .map(Block::defaultBlockState)
                 .toList();
 
         randomizeArea(blockStates);
 
         input.expectSelection(blockStates.stream()
                 .map(TextUtil::getVanillaName)
-                .toArray(Text[]::new));
+                .toArray(Component[]::new));
     }
 
     @Override
     public void evaluate(PlayerChoices choices, ChallengeResult result) {
         result.setCorrectAnswer(areas.getBiggestAreaText());
 
-        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
+        for (ServerPlayer player : gameHandle.getParticipants()) {
             var optChoice = choices.getOption(player);
 
             if (optChoice.isEmpty()) continue;
@@ -107,7 +107,7 @@ public class AreaChallenge implements Challenge {
         Set<BlockPos> open = new HashSet<>();
 
         for (BlockPos pos : findGroundPositions(blockShape, world)) {
-            open.add(pos.toImmutable());
+            open.add(pos.immutable());
         }
 
         List<BlockPos> startingPoints = OptionMaker.createOptions(open, 4, random);
@@ -173,17 +173,17 @@ public class AreaChallenge implements Challenge {
             return props[index].getCount() == maxCount;
         }
 
-        public Text getBiggestAreaText() {
+        public Component getBiggestAreaText() {
             return IntStream.range(0, props.length)
                     .filter(i -> props[i].getCount() == maxCount)
                     .mapToObj(blockStates::get)
-                    .reduce(Text.empty(), (text, state) -> {
+                    .reduce(Component.empty(), (text, state) -> {
                         if (!text.getString().isEmpty()) {
                             text.append(", ");
                         }
 
                         return text.append(TextUtil.getVanillaName(state));
-                    }, MutableText::append);
+                    }, MutableComponent::append);
         }
     }
 
@@ -209,7 +209,7 @@ public class AreaChallenge implements Challenge {
 
                 for (BlockPos adjPos : adjacent.iterate(pos)) {
                     reserve.accept(adjPos);
-                    next.add(adjPos.toImmutable());
+                    next.add(adjPos.immutable());
                 }
             }
 

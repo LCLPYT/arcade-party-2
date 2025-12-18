@@ -1,13 +1,13 @@
 package work.lclpnet.ap2.game.apocalypse_survival.util;
 
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.mob.MobEntity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 import java.util.function.Supplier;
 
-public class Pursuit<T extends MobEntity> {
+public class Pursuit<T extends Mob> {
 
     private final Supplier<@Nullable LivingEntity> targetGetter;
     private final int capacity;
@@ -63,7 +63,7 @@ public class Pursuit<T extends MobEntity> {
         if (target == null) return;
 
         byDistance.addAll(pursuers);
-        byDistance.sort(Comparator.comparingDouble(target::squaredDistanceTo));
+        byDistance.sort(Comparator.comparingDouble(target::distanceToSqr));
     }
 
     public void setNeedsUpdate() {

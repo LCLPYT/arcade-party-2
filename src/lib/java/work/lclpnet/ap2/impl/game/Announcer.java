@@ -1,12 +1,12 @@
 package work.lclpnet.ap2.impl.game;
 
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvent;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.kibu.title.Title;
 import work.lclpnet.kibu.translate.Translations;
@@ -14,16 +14,16 @@ import work.lclpnet.kibu.translate.text.TranslatedText;
 
 import java.util.function.Supplier;
 
-import static net.minecraft.util.Formatting.AQUA;
-import static net.minecraft.util.Formatting.DARK_GREEN;
+import static net.minecraft.ChatFormatting.AQUA;
+import static net.minecraft.ChatFormatting.DARK_GREEN;
 
 public class Announcer {
 
     private final Translations translations;
-    private final Supplier<Iterable<ServerPlayerEntity>> players;
+    private final Supplier<Iterable<ServerPlayer>> players;
     @Nullable
-    private SoundEvent sound = SoundEvents.BLOCK_NOTE_BLOCK_PLING.value();
-    private SoundCategory category = SoundCategory.RECORDS;
+    private SoundEvent sound = SoundEvents.NOTE_BLOCK_PLING.value();
+    private SoundSource category = SoundSource.RECORDS;
     private float volume = 0.5f;
     private float pitch = 0.5f;
     private int fadeInTicks = 5;
@@ -34,14 +34,14 @@ public class Announcer {
         this(translations, () -> PlayerLookup.all(server));
     }
 
-    public Announcer(Translations translations, Supplier<Iterable<ServerPlayerEntity>> players) {
+    public Announcer(Translations translations, Supplier<Iterable<ServerPlayer>> players) {
         this.translations = translations;
         this.players = players;
     }
 
     public Announcer withDefaults() {
-        this.sound = SoundEvents.BLOCK_NOTE_BLOCK_PLING.value();
-        this.category = SoundCategory.RECORDS;
+        this.sound = SoundEvents.NOTE_BLOCK_PLING.value();
+        this.category = SoundSource.RECORDS;
         this.volume = 0.5f;
         this.pitch = 0.5f;
         this.fadeInTicks = 5;
@@ -55,9 +55,9 @@ public class Announcer {
         return this;
     }
 
-    public Announcer withSound(@Nullable SoundEvent sound, SoundCategory category, float volume, float pitch) {
+    public Announcer withSound(@Nullable SoundEvent sound, SoundSource category, float volume, float pitch) {
         this.sound = sound;
-        this.category = category == null ? SoundCategory.NEUTRAL : category;
+        this.category = category == null ? SoundSource.NEUTRAL : category;
         this.volume = Math.max(0f, volume);
         this.pitch = Math.max(0.5f, Math.min(2f, pitch));
         return this;
@@ -82,15 +82,15 @@ public class Announcer {
     }
 
     public void announce(@Nullable TranslatedText title, @Nullable TranslatedText subtitle) {
-        for (ServerPlayerEntity player : players.get()) {
-            Text titleText = title != null ? title.translateFor(player) : Text.empty();
-            Text subTitleText = subtitle != null ? subtitle.translateFor(player) : Text.empty();
+        for (ServerPlayer player : players.get()) {
+            Component titleText = title != null ? title.translateFor(player) : Component.empty();
+            Component subTitleText = subtitle != null ? subtitle.translateFor(player) : Component.empty();
 
             Title.get(player).title(titleText, subTitleText, fadeInTicks, stayTicks, fadeOutTicks);
 
             if (sound == null) continue;
 
-            player.playSoundToPlayer(sound, category, volume, pitch);
+            player.playNotifySound(sound, category, volume, pitch);
         }
     }
 }

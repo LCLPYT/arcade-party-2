@@ -1,12 +1,12 @@
 package work.lclpnet.ap2.game.maze_scape.monster.behaviour;
 
-import net.minecraft.entity.mob.MobEntity;
+import net.minecraft.world.entity.Mob;
 
 public interface MonsterBehaviour {
 
-    void tick(MobEntity mob);
+    void tick(Mob mob);
 
-    default void init(MobEntity mob) {}
+    default void init(Mob mob) {}
 
-    default void onKillAcquired(MobEntity mob) {}
+    default void onKillAcquired(Mob mob) {}
 }

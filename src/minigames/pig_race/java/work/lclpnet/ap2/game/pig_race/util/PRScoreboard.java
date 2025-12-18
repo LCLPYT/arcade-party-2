@@ -1,9 +1,9 @@
 package work.lclpnet.ap2.game.pig_race.util;
 
-import net.minecraft.scoreboard.number.BlankNumberFormat;
-import net.minecraft.scoreboard.number.FixedNumberFormat;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.numbers.BlankFormat;
+import net.minecraft.network.chat.numbers.FixedFormat;
+import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.ApConstants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
@@ -19,7 +19,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import static net.minecraft.util.Formatting.*;
+import static net.minecraft.ChatFormatting.*;
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
 public class PRScoreboard {
@@ -56,10 +56,10 @@ public class PRScoreboard {
     public void addScoreboardRanking() {
         objective.createText(gameHandle.getTranslations().translateText("ap2.ranking").formatted(YELLOW, BOLD));
 
-        var separator = Text.literal(ApConstants.SCOREBOARD_SEPARATOR_SM).formatted(DARK_GREEN, STRIKETHROUGH);
+        var separator = Component.literal(ApConstants.SCOREBOARD_SEPARATOR_SM).withStyle(DARK_GREEN, STRIKETHROUGH);
         objective.createText(separator);
 
-        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
+        for (ServerPlayer player : gameHandle.getParticipants()) {
             updateRoundDisplay(player);
             objective.add(player);
         }
@@ -68,19 +68,19 @@ public class PRScoreboard {
     public void updateRanking() {
         holderRemoval.addAll(prevHolders);
 
-        List<ServerPlayerEntity> ranking = progress.getRanking();
+        List<ServerPlayer> ranking = progress.getRanking();
 
         for (int i = 0, len = ranking.size(); i < len; i++) {
-            ServerPlayerEntity player = ranking.get(i);
-            String holder = player.getNameForScoreboard();
+            ServerPlayer player = ranking.get(i);
+            String holder = player.getScoreboardName();
 
             prevHolders.add(holder);
             holderRemoval.remove(holder);
 
             objective.setScore(holder, len - i);
-            objective.setNumberFormat(holder, BlankNumberFormat.INSTANCE);
-            objective.setDisplayName(holder, Text.literal("#" + (i + 1) + " ").formatted(YELLOW)
-                    .append(Text.literal(holder).formatted(GREEN)));
+            objective.setNumberFormat(holder, BlankFormat.INSTANCE);
+            objective.setDisplayName(holder, Component.literal("#" + (i + 1) + " ").withStyle(YELLOW)
+                    .append(Component.literal(holder).withStyle(GREEN)));
         }
 
         for (String holder : holderRemoval) {
@@ -91,7 +91,7 @@ public class PRScoreboard {
         holderRemoval.clear();
     }
 
-    public void updateRoundDisplay(ServerPlayerEntity player) {
+    public void updateRoundDisplay(ServerPlayer player) {
         int rounds = progress.getRounds();
 
         if (rounds <= 1) return;
@@ -101,7 +101,7 @@ public class PRScoreboard {
         var roundHandle = this.roundHandle;
 
         if (roundHandle != null) {
-            var fmt = new FixedNumberFormat(Text.literal("%s/%s".formatted(round, rounds)).formatted(YELLOW));
+            var fmt = new FixedFormat(Component.literal("%s/%s".formatted(round, rounds)).withStyle(YELLOW));
 
             roundHandle.setNumberFormat(player, fmt);
         }

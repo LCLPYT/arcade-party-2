@@ -1,14 +1,14 @@
 package work.lclpnet.ap2.api.util.scoreboard;
 
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.level.ServerPlayer;
 
 public interface VirtualScoreboardObjective {
 
-    void add(ServerPlayerEntity player);
+    void add(ServerPlayer player);
 
-    void remove(ServerPlayerEntity player);
+    void remove(ServerPlayer player);
 
-    void update(ServerPlayerEntity player);
+    void update(ServerPlayer player);
 
     void unload();
 }

@@ -2,10 +2,10 @@ package work.lclpnet.ap2.game.snowball_fight;
 
 import it.unimi.dsi.fastutil.objects.Object2DoubleMap;
 import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
-import net.minecraft.entity.EntityType;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.phys.Vec3;
 import work.lclpnet.ap2.api.util.world.AdjacentBlocks;
 import work.lclpnet.ap2.api.util.world.BlockPredicate;
 import work.lclpnet.ap2.api.util.world.WorldScanner;
@@ -28,13 +28,13 @@ public class SnowballFightSpawns {
         this.spacingSquared = spacing * spacing;
     }
 
-    public List<Vec3d> findSpawns(ServerWorld world, GameMap map) {
+    public List<Vec3> findSpawns(ServerLevel world, GameMap map) {
         BlockBox bounds = MapUtil.readBox(map.requireProperty("bounds"));
-        Vec3d spawnPosition = MapUtils.getSpawnPosition(map);
+        Vec3 spawnPosition = MapUtils.getSpawnPosition(map);
         BlockPos start = new BlockPos(
-                (int) Math.floor(spawnPosition.getX()),
-                (int) Math.floor(spawnPosition.getY()),
-                (int) Math.floor(spawnPosition.getZ()));
+                (int) Math.floor(spawnPosition.x()),
+                (int) Math.floor(spawnPosition.y()),
+                (int) Math.floor(spawnPosition.z()));
 
         BlockPredicate predicate = BlockPredicate.and(bounds::contains, new WalkableBlockPredicate(world));
         AdjacentBlocks adjacent = new SimpleAdjacentBlocks(predicate, 1);
@@ -44,16 +44,16 @@ public class SnowballFightSpawns {
         return spaceFinder.findSpaces(scanner.scan(start));
     }
 
-    public List<Vec3d> generateSpacedSpawns(List<Vec3d> spawns, int count, Random random) {
+    public List<Vec3> generateSpacedSpawns(List<Vec3> spawns, int count, Random random) {
         if (count <= 0 || spawns.isEmpty()) {
             return List.of();
         }
 
-        List<Vec3d> spaced = new ArrayList<>();
-        var spawnsByDistance = new Object2DoubleOpenHashMap<Vec3d>(spawns.size());
+        List<Vec3> spaced = new ArrayList<>();
+        var spawnsByDistance = new Object2DoubleOpenHashMap<Vec3>(spawns.size());
         boolean distanceDirty = false;
 
-        for (Vec3d spawn : spawns) {
+        for (Vec3 spawn : spawns) {
             spawnsByDistance.put(spawn, Double.MAX_VALUE);
         }
 
@@ -66,11 +66,11 @@ public class SnowballFightSpawns {
             var distantSpawns = spawnsByDistance.object2DoubleEntrySet().stream()
                     .filter(entry -> entry.getDoubleValue() >= spacingSquared)
                     .map(Map.Entry::getKey)
-                    .toArray(Vec3d[]::new);
+                    .toArray(Vec3[]::new);
 
             if (distantSpawns.length == 0) break;
 
-            Vec3d spawn = distantSpawns[random.nextInt(distantSpawns.length)];
+            Vec3 spawn = distantSpawns[random.nextInt(distantSpawns.length)];
             spaced.add(spawn);
 
             distanceDirty = true;
@@ -98,19 +98,19 @@ public class SnowballFightSpawns {
         return spaced;
     }
 
-    private void updateDistances(Object2DoubleOpenHashMap<Vec3d> spawnsByDistance, List<Vec3d> spaced) {
+    private void updateDistances(Object2DoubleOpenHashMap<Vec3> spawnsByDistance, List<Vec3> spaced) {
         var it = spawnsByDistance.object2DoubleEntrySet().fastIterator();
 
         while (it.hasNext()) {
             var entry = it.next();
-            Vec3d pos = entry.getKey();
+            Vec3 pos = entry.getKey();
             entry.setValue(distanceSq(pos, spaced));
         }
     }
 
-    private double distanceSq(Vec3d pos, List<Vec3d> spaced) {
+    private double distanceSq(Vec3 pos, List<Vec3> spaced) {
         return spaced.stream()
-                .mapToDouble(x -> x.squaredDistanceTo(pos))
+                .mapToDouble(x -> x.distanceToSqr(pos))
                 .min().orElse(Double.MAX_VALUE);
     }
 }

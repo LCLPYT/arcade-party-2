@@ -2,16 +2,16 @@ package work.lclpnet.ap2.game.apocalypse_survival.util;
 
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.base.Participants;
 
 import java.util.*;
 import java.util.function.Supplier;
 
-public class PursuitClass<T extends MobEntity> {
+public class PursuitClass<T extends Mob> {
 
     private static final int INITIAL_FORCED_TARGET_SECONDS = 10;
     private final Participants participants;
@@ -26,8 +26,8 @@ public class PursuitClass<T extends MobEntity> {
         this.capacityPerPlayer = capacityPerPlayer;
         this.pursuitMap = new HashMap<>(participants.count());
 
-        for (ServerPlayerEntity player : participants) {
-            UUID uuid = player.getUuid();
+        for (ServerPlayer player : participants) {
+            UUID uuid = player.getUUID();
 
             Supplier<@Nullable LivingEntity> playerGetter = () -> participants.getParticipant(uuid).orElse(null);
 
@@ -48,8 +48,8 @@ public class PursuitClass<T extends MobEntity> {
         stopPursuit(mob);
     }
 
-    public void removeParticipant(ServerPlayerEntity player) {
-        pursuitMap.remove(player.getUuid());
+    public void removeParticipant(ServerPlayer player) {
+        pursuitMap.remove(player.getUUID());
     }
 
     private void forceTargetInitially(T mob) {
@@ -57,11 +57,11 @@ public class PursuitClass<T extends MobEntity> {
         if (mobs.size() >= participants.count() * capacityPerPlayer) return;
 
         // mobs will be forced to target the player with the least pursuers initially, so that mobs will spread evenly
-        ServerPlayerEntity player = playerWithLeastPursuers().orElse(null);
+        ServerPlayer player = playerWithLeastPursuers().orElse(null);
 
         if (player == null) return;
 
-        var pursuit = pursuitMap.get(player.getUuid());
+        var pursuit = pursuitMap.get(player.getUUID());
 
         if (pursuit == null) return;
 
@@ -83,8 +83,8 @@ public class PursuitClass<T extends MobEntity> {
             // forcedTarget will end either after the configured duration or if another mob replaces it as pursuer
             if (forcedTarget.containsKey(mob) && shouldKeepForcedTarget(mob)) continue;
 
-            for (ServerPlayerEntity player : playersByDistance(mob)) {
-                var pursuit = pursuitMap.get(player.getUuid());
+            for (ServerPlayer player : playersByDistance(mob)) {
+                var pursuit = pursuitMap.get(player.getUUID());
 
                 if (pursuit == null) continue;
 
@@ -96,7 +96,7 @@ public class PursuitClass<T extends MobEntity> {
                 // check if the current mob can replace the most distant pursuer because it is closer to the player
                 T mostDistant = pursuit.getMostDistantPursuer();
 
-                if (mostDistant == null || mob.squaredDistanceTo(player) >= mostDistant.squaredDistanceTo(player)) {
+                if (mostDistant == null || mob.distanceToSqr(player) >= mostDistant.distanceToSqr(player)) {
                     continue;
                 }
 
@@ -123,9 +123,9 @@ public class PursuitClass<T extends MobEntity> {
         return true;
     }
 
-    private Iterable<ServerPlayerEntity> playersByDistance(T mob) {
+    private Iterable<ServerPlayer> playersByDistance(T mob) {
         return () -> participants.stream()
-                .sorted(Comparator.comparingDouble(mob::squaredDistanceTo))
+                .sorted(Comparator.comparingDouble(mob::distanceToSqr))
                 .iterator();
     }
 
@@ -155,9 +155,9 @@ public class PursuitClass<T extends MobEntity> {
         forcedTarget.removeInt(mob);
     }
 
-    private Optional<ServerPlayerEntity> playerWithLeastPursuers() {
+    private Optional<ServerPlayer> playerWithLeastPursuers() {
         return participants.stream().min(Comparator.comparingInt(player -> {
-            var pursuit = pursuitMap.get(player.getUuid());
+            var pursuit = pursuitMap.get(player.getUUID());
 
             if (pursuit == null) {
                 // player not registered in pursuit map, should not happen

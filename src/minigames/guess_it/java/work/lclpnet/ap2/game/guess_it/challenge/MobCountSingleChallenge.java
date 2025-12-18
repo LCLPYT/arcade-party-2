@@ -1,9 +1,9 @@
 package work.lclpnet.ap2.game.guess_it.challenge;
 
-import net.minecraft.entity.EntityType;
-import net.minecraft.registry.Registries;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.phys.Vec3;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.game.guess_it.data.*;
 import work.lclpnet.ap2.game.guess_it.util.MobRandomizer;
@@ -20,21 +20,21 @@ import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 
-import static net.minecraft.util.Formatting.YELLOW;
+import static net.minecraft.ChatFormatting.YELLOW;
 import static work.lclpnet.ap2.impl.util.world.PositionUtil.findGroundPositions;
 
 public class MobCountSingleChallenge implements Challenge {
 
     private static final int DURATION_TICKS = Ticks.seconds(16);
     private final MiniGameHandle gameHandle;
-    private final ServerWorld world;
+    private final ServerLevel world;
     private final Random random;
     private final BlockShape blockShape;
     private final WorldModifier modifier;
     private final IndexedSet<UUID> mannequinUuids;
     private int amount = 0;
 
-    public MobCountSingleChallenge(MiniGameHandle gameHandle, ServerWorld world, Random random, BlockShape blockShape, WorldModifier modifier, IndexedSet<UUID> mannequinUuids) {
+    public MobCountSingleChallenge(MiniGameHandle gameHandle, ServerLevel world, Random random, BlockShape blockShape, WorldModifier modifier, IndexedSet<UUID> mannequinUuids) {
         this.gameHandle = gameHandle;
         this.world = world;
         this.random = random;
@@ -70,20 +70,20 @@ public class MobCountSingleChallenge implements Challenge {
         amount = getRandomAmount(type);
 
         SizedSpaceFinder spaceFinder = SizedSpaceFinder.create(world, type);
-        List<Vec3d> spaces = spaceFinder.findSpaces(findGroundPositions(blockShape, world));
+        List<Vec3> spaces = spaceFinder.findSpaces(findGroundPositions(blockShape, world));
 
         if (spaces.isEmpty()) {
-            throw new IllegalStateException("There are no spaces that support " + Registries.ENTITY_TYPE.getId(type));
+            throw new IllegalStateException("There are no spaces that support " + BuiltInRegistries.ENTITY_TYPE.getKey(type));
         }
 
         MobSpawner spawner = new MobSpawner(world, random, mannequinUuids);
 
         for (int i = 0; i < amount; i++) {
-            Vec3d pos = spaces.get(random.nextInt(spaces.size()));
+            Vec3 pos = spaces.get(random.nextInt(spaces.size()));
             spawner.spawnEntity(type, pos, modifier);
         }
 
-        var entityName = TextUtil.getVanillaName(type).formatted(YELLOW);
+        var entityName = TextUtil.getVanillaName(type).withStyle(YELLOW);
 
         messenger.task(translations.translateText("game.ap2.guess_it.mob.guess", entityName, YELLOW));
     }

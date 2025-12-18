@@ -1,16 +1,16 @@
 package work.lclpnet.ap2.game.glowing_bomb.data;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.decoration.DisplayEntity;
-import net.minecraft.particle.ParticleTypes;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.Display;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.impl.map.MapUtil;
@@ -23,18 +23,18 @@ import java.util.function.Consumer;
 
 public class GbManager {
 
-    private final ServerWorld world;
+    private final ServerLevel world;
     private final GameMap map;
     private final Random random;
     private final Participants participants;
     private final Consumer<GbAnchor> onFull;
     private final List<UUID> orderedPlayers = new ArrayList<>();
     private final Map<UUID, GbAnchor> anchors = new HashMap<>();
-    private Vec3d circleCenter = null;
+    private Vec3 circleCenter = null;
     private UUID bombHolder = null;
     private int playerIndex = -1;
 
-    public GbManager(ServerWorld world, GameMap map, Random random, Participants participants, Consumer<GbAnchor> onFull) {
+    public GbManager(ServerLevel world, GameMap map, Random random, Participants participants, Consumer<GbAnchor> onFull) {
         this.world = world;
         this.map = map;
         this.random = random;
@@ -44,70 +44,70 @@ public class GbManager {
 
     public void setupAnchors() {
         BlockPos center = MapUtil.readBlockPos(map.requireProperty("circle-center"));
-        circleCenter = Vec3d.ofBottomCenter(center);
+        circleCenter = Vec3.atBottomCenterOf(center);
 
         int pieces = participants.count();
         double radius = CircleStructureGenerator.calculateRadiusExact(pieces, 2);
         double angleStep = Math.PI * 2 / pieces;
         int cx = center.getX(), cy = center.getY(), cz = center.getZ();
 
-        BlockState state = Blocks.RESPAWN_ANCHOR.getDefaultState();
+        BlockState state = Blocks.RESPAWN_ANCHOR.defaultBlockState();
 
         int i = 0;
 
-        for (ServerPlayerEntity player : participants) {
+        for (ServerPlayer player : participants) {
             double angle = angleStep * i++;
-            Vec3d pos = new Vec3d(
+            Vec3 pos = new Vec3(
                     cx + Math.sin(angle) * radius,
                     cy,
                     cz + Math.cos(angle) * radius);
 
-            var display = new DisplayEntity.BlockDisplayEntity(EntityType.BLOCK_DISPLAY, world);
-            display.setPosition(pos);
+            var display = new Display.BlockDisplay(EntityType.BLOCK_DISPLAY, world);
+            display.setPos(pos);
             DisplayEntityAccess.setBlockState(display, state);
 
-            world.spawnEntity(display);
+            world.addFreshEntity(display);
 
-            UUID uuid = player.getUuid();
+            UUID uuid = player.getUUID();
             anchors.put(uuid, new GbAnchor(uuid, pos, display));
             orderedPlayers.add(uuid);
         }
     }
 
     public void teleportPlayers() {
-        for (ServerPlayerEntity player : participants) {
+        for (ServerPlayer player : participants) {
             teleport(player);
         }
     }
 
-    private void teleport(ServerPlayerEntity player) {
-        GbAnchor anchor = anchors.get(player.getUuid());
+    private void teleport(ServerPlayer player) {
+        GbAnchor anchor = anchors.get(player.getUUID());
 
         if (anchor == null) return;
 
-        Vec3d center = anchor.pos().add(0.5, 0, 0.5);
-        Vec3d dir = center.subtract(circleCenter).normalize();
+        Vec3 center = anchor.pos().add(0.5, 0, 0.5);
+        Vec3 dir = center.subtract(circleCenter).normalize();
 
-        if (dir.lengthSquared() < 1e-4) {
+        if (dir.lengthSqr() < 1e-4) {
             dir = switch (random.nextInt(4)) {
-                case 0 -> new Vec3d(1, 0, 0);
-                case 1 -> new Vec3d(0, 0, 1);
-                case 2 -> new Vec3d(-1, 0, 0);
-                default -> new Vec3d(0, 0, -1);
+                case 0 -> new Vec3(1, 0, 0);
+                case 1 -> new Vec3(0, 0, 1);
+                case 2 -> new Vec3(-1, 0, 0);
+                default -> new Vec3(0, 0, -1);
             };
         }
 
         // find intersection point of cube with r=1 at center with direction vector
-        double dx = dir.getX(), dz = dir.getZ();
+        double dx = dir.x(), dz = dir.z();
 
         double tx = Math.abs(dx) > 1e-4 ? 1 / Math.abs(dx) : Double.POSITIVE_INFINITY;
         double tz = Math.abs(dz) > 1e-4 ? 1 / Math.abs(dz) : Double.POSITIVE_INFINITY;
 
-        Vec3d pos = center.add(dir.multiply(Math.min(tx, tz)));
+        Vec3 pos = center.add(dir.scale(Math.min(tx, tz)));
 
         float yaw = (float) Math.toDegrees(Math.atan2(dx, -dz));
 
-        player.teleport(world, pos.getX(), pos.getY(), pos.getZ(), Set.of(), yaw, 0, true);
+        player.teleportTo(world, pos.x(), pos.y(), pos.z(), Set.of(), yaw, 0, true);
     }
 
     public boolean assignBomb() {
@@ -119,13 +119,13 @@ public class GbManager {
 
         if (holder.isEmpty()) return false;
 
-        bombHolder = holder.get().getUuid();
+        bombHolder = holder.get().getUUID();
 
         return true;
     }
 
     @Nullable
-    public Vec3d bombLocation() {
+    public Vec3 bombLocation() {
         if (bombHolder == null || !participants.isParticipating(bombHolder)) return null;
 
         GbAnchor anchor = anchors.get(bombHolder);
@@ -142,28 +142,28 @@ public class GbManager {
         return anchors.get(bombHolder);
     }
 
-    public Optional<ServerPlayerEntity> bombHolder() {
+    public Optional<ServerPlayer> bombHolder() {
         return Optional.ofNullable(bombHolder).flatMap(participants::getParticipant);
     }
 
     public void addCharge(GbAnchor anchor) {
-        Vec3d pos = anchor.pos();
-        double x = pos.getX() + 0.5, y = pos.getY() + 0.5, z = pos.getZ() + 0.5;
+        Vec3 pos = anchor.pos();
+        double x = pos.x() + 0.5, y = pos.y() + 0.5, z = pos.z() + 0.5;
 
         int charges = anchor.charges();
 
         if (charges >= 4) {
             // already full
-            world.playSound(null, x, y, z, SoundEvents.BLOCK_GLASS_BREAK, SoundCategory.PLAYERS, 0.5f, 1.5f);
+            world.playSound(null, x, y, z, SoundEvents.GLASS_BREAK, SoundSource.PLAYERS, 0.5f, 1.5f);
             return;
         }
 
         anchor.setCharges(charges + 1);
 
-        world.spawnParticles(ParticleTypes.WITCH, x, y, z, 30, 0.1, 0.1, 0.1, 0.5);
+        world.sendParticles(ParticleTypes.WITCH, x, y, z, 30, 0.1, 0.1, 0.1, 0.5);
 
         float pitch = charges < 3 ? 1.0f : 1.1f;
-        world.playSound(null, x, y, z, SoundEvents.BLOCK_RESPAWN_ANCHOR_CHARGE, SoundCategory.PLAYERS, 1, pitch);
+        world.playSound(null, x, y, z, SoundEvents.RESPAWN_ANCHOR_CHARGE, SoundSource.PLAYERS, 1, pitch);
 
         if (charges == 3) {
             onFull.accept(anchor);
@@ -177,8 +177,8 @@ public class GbManager {
         anchor.discard();
     }
 
-    public void removeAnchorOf(ServerPlayerEntity player) {
-        UUID uuid = player.getUuid();
+    public void removeAnchorOf(ServerPlayer player) {
+        UUID uuid = player.getUUID();
         orderedPlayers.remove(uuid);
         GbAnchor anchor = anchors.remove(uuid);
 
@@ -187,12 +187,12 @@ public class GbManager {
         }
     }
 
-    public boolean hasBomb(ServerPlayerEntity player) {
-        return player.getUuid().equals(bombHolder);
+    public boolean hasBomb(ServerPlayer player) {
+        return player.getUUID().equals(bombHolder);
     }
 
     @Nullable
-    public ServerPlayerEntity nextBombHolder() {
+    public ServerPlayer nextBombHolder() {
         if (orderedPlayers.isEmpty()) return null;
 
         int nextIndex = Math.floorMod(playerIndex - 1,  orderedPlayers.size());

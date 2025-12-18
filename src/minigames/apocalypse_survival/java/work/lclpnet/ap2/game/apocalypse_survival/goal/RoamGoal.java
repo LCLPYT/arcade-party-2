@@ -1,8 +1,8 @@
 package work.lclpnet.ap2.game.apocalypse_survival.goal;
 
-import net.minecraft.entity.ai.goal.Goal;
-import net.minecraft.entity.mob.PathAwareEntity;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.entity.PathfinderMob;
+import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.game.apocalypse_survival.util.TargetManager;
 
@@ -10,22 +10,22 @@ import java.util.EnumSet;
 
 public class RoamGoal extends Goal {
 
-    private final PathAwareEntity mob;
+    private final PathfinderMob mob;
     private final TargetManager targetManager;
     private final double speed;
-    private @Nullable Vec3d target = null;
+    private @Nullable Vec3 target = null;
 
-    public RoamGoal(PathAwareEntity mob, TargetManager targetManager, double speed) {
+    public RoamGoal(PathfinderMob mob, TargetManager targetManager, double speed) {
         this.mob = mob;
         this.targetManager = targetManager;
         this.speed = speed;
 
-        setControls(EnumSet.of(Control.MOVE));
+        setFlags(EnumSet.of(Flag.MOVE));
     }
 
     @Override
-    public boolean canStart() {
-        if (mob.hasControllingPassenger() || mob.getTarget() != null || mob.getNavigation().isFollowingPath()) {
+    public boolean canUse() {
+        if (mob.hasControllingPassenger() || mob.getTarget() != null || mob.getNavigation().isInProgress()) {
             return false;
         }
 
@@ -35,8 +35,8 @@ public class RoamGoal extends Goal {
     }
 
     @Override
-    public boolean shouldContinue() {
-        return !mob.getNavigation().isIdle() && !mob.hasControllingPassenger();
+    public boolean canContinueToUse() {
+        return !mob.getNavigation().isDone() && !mob.hasControllingPassenger();
 
     }
 
@@ -44,7 +44,7 @@ public class RoamGoal extends Goal {
     public void start() {
         if (target == null) return;
 
-        mob.getNavigation().startMovingTo(target.getX(), target.getY(), target.getZ(), speed);
+        mob.getNavigation().moveTo(target.x(), target.y(), target.z(), speed);
     }
 
     @Override
