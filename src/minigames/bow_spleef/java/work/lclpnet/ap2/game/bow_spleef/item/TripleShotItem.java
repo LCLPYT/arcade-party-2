@@ -13,6 +13,7 @@ import work.lclpnet.ap2.core.hook.RangedWeaponUsedCallback;
 import work.lclpnet.ap2.impl.game.item.SpecialItem;
 import work.lclpnet.ap2.impl.game.item.SpecialItemContext;
 import work.lclpnet.ap2.impl.util.ItemHelper;
+import work.lclpnet.kibu.access.entity.ServerPlayerAccess;
 import work.lclpnet.kibu.hook.HookRegistrar;
 
 public class TripleShotItem implements SpecialItem {
@@ -32,7 +33,7 @@ public class TripleShotItem implements SpecialItem {
         ItemStack bow = player.getInventory().getItem(4);
         addEnchant(bow, player.level().registryAccess());
 
-        player.playNotifySound(SoundEvents.ENCHANTMENT_TABLE_USE, SoundSource.PLAYERS, 0.4f, 1.35f);
+        ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.ENCHANTMENT_TABLE_USE, SoundSource.PLAYERS, 0.4f, 1.35f);
     }
 
     @Override

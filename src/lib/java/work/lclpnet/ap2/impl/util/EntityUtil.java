@@ -1,7 +1,7 @@
 package work.lclpnet.ap2.impl.util;
 
 import net.minecraft.core.Holder;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.Attribute;
@@ -30,7 +30,7 @@ public class EntityUtil {
         setAttribute(entity, attribute, attribute.value().getDefaultValue());
     }
 
-    public static void addAttributeModifier(LivingEntity entity, Holder<Attribute> attribute, ResourceLocation id, double value, AttributeModifier.Operation operation) {
+    public static void addAttributeModifier(LivingEntity entity, Holder<Attribute> attribute, Identifier id, double value, AttributeModifier.Operation operation) {
         AttributeInstance instance = entity.getAttribute(attribute);
 
         if (instance == null || instance.hasModifier(id)) return;
@@ -38,7 +38,7 @@ public class EntityUtil {
         instance.addTransientModifier(new AttributeModifier(id, value, operation));
     }
 
-    public static void removeAttributeModifier(LivingEntity entity, Holder<Attribute> attribute, ResourceLocation id) {
+    public static void removeAttributeModifier(LivingEntity entity, Holder<Attribute> attribute, Identifier id) {
         AttributeInstance instance = entity.getAttribute(attribute);
 
         if (instance == null) return;

@@ -40,6 +40,7 @@ import work.lclpnet.gaco.collisions.movement.TickMovementDetector;
 import work.lclpnet.gaco.collisions.util.PlayerAction;
 import work.lclpnet.gaco.math.Vec2i;
 import work.lclpnet.kibu.access.entity.ArmorStandAccess;
+import work.lclpnet.kibu.access.entity.ServerPlayerAccess;
 import work.lclpnet.kibu.hook.HookFactory;
 import work.lclpnet.kibu.hook.util.PositionRotation;
 import work.lclpnet.kibu.scheduler.Ticks;
@@ -141,10 +142,10 @@ public class GameCommons {
                 randomizer.randomizeCenter(worldBorder, config, random);
             }
 
-            worldBorder.lerpSizeBetween(worldBorder.getSize(), config.minSize(), durationTicks * 50L);
+            worldBorder.lerpSizeBetween(worldBorder.getSize(), config.minSize(), durationTicks * 50L, world.getGameTime());
 
             for (ServerPlayer player : PlayerLookup.world(world)) {
-                player.playNotifySound(SoundEvents.WITHER_DEATH, SoundSource.HOSTILE, 1, 0);
+                ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.WITHER_DEATH, SoundSource.HOSTILE, 1, 0);
             }
         }, delayTicks);
 

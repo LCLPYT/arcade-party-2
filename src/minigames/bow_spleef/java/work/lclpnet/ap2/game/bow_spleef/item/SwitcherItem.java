@@ -7,7 +7,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
-import net.minecraft.world.entity.projectile.Snowball;
+import net.minecraft.world.entity.projectile.throwableitemprojectile.Snowball;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.Vec3;
@@ -17,6 +17,7 @@ import work.lclpnet.ap2.core.hook.ProjectileShootCallback;
 import work.lclpnet.ap2.impl.game.item.SpecialItem;
 import work.lclpnet.ap2.impl.game.item.SpecialItemContext;
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
+import work.lclpnet.kibu.access.entity.ServerPlayerAccess;
 import work.lclpnet.kibu.hook.HookRegistrar;
 
 import java.util.Set;
@@ -59,8 +60,8 @@ public class SwitcherItem implements SpecialItem {
             victim.teleportTo(world, shooter.getX(), shooter.getY(), shooter.getZ(), Set.of(), shooter.getYRot(), shooter.getXRot(), true);
             shooter.teleportTo(world, victimPos.x(), victimPos.y(), victimPos.z(), Set.of(), victimYaw, victimPitch, true);
 
-            victim.playNotifySound(SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.5f, 2f);
-            shooter.playNotifySound(SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.5f, 2f);
+            ServerPlayerAccess.playSoundToPlayer(victim, SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.5f, 2f);
+            ServerPlayerAccess.playSoundToPlayer(shooter, SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.5f, 2f);
         });
     }
 

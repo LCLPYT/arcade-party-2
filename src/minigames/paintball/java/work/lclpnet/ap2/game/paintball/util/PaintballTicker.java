@@ -33,6 +33,7 @@ import work.lclpnet.ap2.impl.util.RayCastUtil;
 import work.lclpnet.ap2.impl.util.VanishManager;
 import work.lclpnet.ap2.impl.util.debug.DebugController;
 import work.lclpnet.gaco.ds.BlockBox;
+import work.lclpnet.kibu.access.entity.ServerPlayerAccess;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks;
 import work.lclpnet.kibu.scheduler.Ticks;
@@ -223,7 +224,7 @@ public class PaintballTicker {
         entry.reloadTicks = 0;
         stack.set(DataComponents.DAMAGE, max(0, stack.getDamageValue() - paintGun.reloadAmount()));
 
-        player.playNotifySound(SoundEvents.BREWING_STAND_BREW, SoundSource.PLAYERS, 0.2f, 1f);
+        ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.BREWING_STAND_BREW, SoundSource.PLAYERS, 0.2f, 1f);
     }
 
     private @NotNull Pair<OnInk, BlockState> standingOnInk(ServerPlayer player) {

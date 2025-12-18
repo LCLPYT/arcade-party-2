@@ -10,6 +10,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
+import work.lclpnet.kibu.access.entity.ServerPlayerAccess;
 
 import static java.lang.Math.max;
 
@@ -17,13 +18,13 @@ public class SoundHelper {
 
     public static void playSound(MinecraftServer server, SoundEvent sound, SoundSource category, float volume, float pitch) {
         for (ServerPlayer player : PlayerLookup.all(server)) {
-            player.playNotifySound(sound, category, volume, pitch);
+            ServerPlayerAccess.playSoundToPlayer(player, sound, category, volume, pitch);
         }
     }
 
     public static void playSound(ServerLevel world, SoundEvent sound, SoundSource category, float volume, float pitch) {
         for (ServerPlayer player : PlayerLookup.world(world)) {
-            player.playNotifySound(sound, category, volume, pitch);
+            ServerPlayerAccess.playSoundToPlayer(player, sound, category, volume, pitch);
         }
     }
 

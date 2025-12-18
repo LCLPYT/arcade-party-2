@@ -12,10 +12,10 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantments;
-import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.gamerules.GameRules;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
@@ -28,6 +28,7 @@ import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.ItemHelper;
 import work.lclpnet.gaco.ds.BlockBox;
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
+import work.lclpnet.kibu.access.entity.ServerPlayerAccess;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.kibu.translate.Translations;
@@ -60,8 +61,8 @@ public class TreasureHunterInstance extends FFAGameInstance {
     @Override
     protected void prepare() {
         commons().gameRuleBuilder()
-                .set(GameRules.RULE_DOBLOCKDROPS, false)
-                .set(GameRules.RULE_DOENTITYDROPS, false);
+                .set(GameRules.BLOCK_DROPS, false)
+                .set(GameRules.ENTITY_DROPS, false);
 
         MapUtil.readBlockStates(getMap().requireProperty("materials"), materials, gameHandle.getLogger());
 
@@ -79,8 +80,8 @@ public class TreasureHunterInstance extends FFAGameInstance {
                 return InteractionResult.FAIL;
             }
 
-            player.playNotifySound(SoundEvents.AMETHYST_BLOCK_RESONATE, SoundSource.BLOCKS, 1.2f, 1.8f);
-            player.playNotifySound(SoundEvents.CHEST_LOCKED, SoundSource.BLOCKS, 0.2f, 0.5f);
+            ServerPlayerAccess.playSoundToPlayer(serverPlayer, SoundEvents.AMETHYST_BLOCK_RESONATE, SoundSource.BLOCKS, 1.2f, 1.8f);
+            ServerPlayerAccess.playSoundToPlayer(serverPlayer, SoundEvents.CHEST_LOCKED, SoundSource.BLOCKS, 0.2f, 0.5f);
 
             var scoreEntry = score.getEntry(serverPlayer)
                     .<Object>map(entry -> entry.toText(translations))
@@ -139,7 +140,7 @@ public class TreasureHunterInstance extends FFAGameInstance {
     }
 
     private void giveCoin(ServerPlayer player) {
-        player.playNotifySound(SoundEvents.ARROW_HIT_PLAYER, SoundSource.BLOCKS, 0.7f, 1.55f);
+        ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.ARROW_HIT_PLAYER, SoundSource.BLOCKS, 0.7f, 1.55f);
 
         commons().addScore(player, 1, score);
     }

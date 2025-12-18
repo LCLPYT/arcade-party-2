@@ -13,8 +13,8 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.Projectile;
-import net.minecraft.world.entity.projectile.Snowball;
-import net.minecraft.world.level.GameRules;
+import net.minecraft.world.entity.projectile.throwableitemprojectile.Snowball;
+import net.minecraft.world.level.gamerules.GameRules;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.game.team.Team;
@@ -126,7 +126,7 @@ public class DeathMessages {
     }
 
     public void replaceVanillaDeathMessages(ServerLevel world, HookRegistrar hooks) {
-        world.getGameRules().getRule(GameRules.RULE_SHOWDEATHMESSAGES).set(false, world.getServer());
+        world.getGameRules().set(GameRules.SHOW_DEATH_MESSAGES, false, world.getServer());
 
         hooks.registerHook(PlayerDeathMessageCallback.HOOK, (player, source, currentMsg) -> {
             MinecraftServer server = player.level().getServer();

@@ -1,7 +1,7 @@
 package work.lclpnet.ap2.game.dragon_escape.kit;
 
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.projectile.windcharge.WindCharge;
+import net.minecraft.world.entity.projectile.hurtingprojectile.windcharge.WindCharge;
 import net.minecraft.world.item.Items;
 import work.lclpnet.ap2.core.hook.ExplosionAffectedEntitiesCallback;
 import work.lclpnet.ap2.impl.game.kit.KitHandle;

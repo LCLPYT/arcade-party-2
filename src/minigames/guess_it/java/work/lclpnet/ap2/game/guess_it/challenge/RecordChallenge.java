@@ -19,6 +19,7 @@ import work.lclpnet.ap2.game.guess_it.data.*;
 import work.lclpnet.ap2.game.guess_it.util.GuessItDisplay;
 import work.lclpnet.ap2.game.guess_it.util.OptionMaker;
 import work.lclpnet.ap2.impl.util.ItemHelper;
+import work.lclpnet.kibu.access.entity.ServerPlayerAccess;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.translate.Translations;
 
@@ -77,7 +78,7 @@ public class RecordChallenge implements Challenge {
             SoundEvent sound = song.soundEvent().value();
 
             for (ServerPlayer player : PlayerLookup.world(world)) {
-                player.playNotifySound(sound, SoundSource.RECORDS, 0.5f, 1f);
+                ServerPlayerAccess.playSoundToPlayer(player, sound, SoundSource.RECORDS, 0.5f, 1f);
             }
         });
 
@@ -91,7 +92,7 @@ public class RecordChallenge implements Challenge {
 
     private List<Item> getMusicDiscs() {
         return BuiltInRegistries.ITEM.listElements()
-                .sorted(Comparator.comparing(reference -> reference.key().location()))
+                .sorted(Comparator.comparing(reference -> reference.key().identifier()))
                 .map(Holder.Reference::value)
                 .filter(item -> item.components().has(DataComponents.JUKEBOX_PLAYABLE))
                 .toList();

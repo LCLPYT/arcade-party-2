@@ -5,7 +5,7 @@ import com.mojang.brigadier.suggestion.SuggestionProvider;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import work.lclpnet.ap2.api.game.MiniGame;
 import work.lclpnet.ap2.api.map.MapFacade;
 
@@ -33,7 +33,7 @@ public class MapSuggestionProvider implements SuggestionProvider<CommandSourceSt
 
     private Function<MiniGame, CompletableFuture<Suggestions>> buildSuggestions(SuggestionsBuilder builder) {
         return miniGame -> mapFacade.getMapIds(miniGame.getId()).thenApply(mapIds -> {
-            mapIds.stream().map(ResourceLocation::toString).forEach(builder::suggest);
+            mapIds.stream().map(Identifier::toString).forEach(builder::suggest);
 
             return builder.build();
         });

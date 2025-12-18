@@ -2,6 +2,7 @@ package work.lclpnet.ap2.impl.util.world;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Vec3i;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import work.lclpnet.ap2.api.base.Participants;
@@ -49,13 +50,19 @@ public class StackedRoomGenerator<T> {
      */
     public CompletableFuture<Result<T>> generate(Participants participants) {
         String schematicName = map.requireProperty("room-schematic");
-        var session = ((MinecraftServerAccessor) world.getServer()).getSession();
+        MinecraftServer server = world.getServer();
+
+        if (server == null) {
+            return CompletableFuture.failedFuture(new NullPointerException("Server of level is null"));
+        }
+
+        var session = ((MinecraftServerAccessor) server).getStorageSource();
         Path storage = session.getDimensionPath(world.dimension());
 
         Path path = storage.resolve("schematics").resolve(schematicName);
 
         return readSchematic(path)
-                .thenCompose(structure -> world.getServer().submit(() -> placeStructures(map, world, participants.count(), structure)))
+                .thenCompose(structure -> server.submit(() -> placeStructures(map, world, participants.count(), structure)))
                 .thenApply(data -> {
                     var mapping = assignRooms(participants, data);
                     return new Result<>(mapping, data);

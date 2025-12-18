@@ -1,6 +1,6 @@
 package work.lclpnet.ap2.api.map;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.lobby.game.map.GameMap;
 
@@ -8,7 +8,7 @@ import java.util.concurrent.CompletableFuture;
 
 public interface MapRandomizer {
 
-    CompletableFuture<GameMap> nextMap(ResourceLocation gameId);
+    CompletableFuture<GameMap> nextMap(Identifier gameId);
 
-    void forceMap(@Nullable ResourceLocation mapId);
+    void forceMap(@Nullable Identifier mapId);
 }

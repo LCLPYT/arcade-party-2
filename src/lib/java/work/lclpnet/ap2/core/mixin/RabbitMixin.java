@@ -1,6 +1,6 @@
 package work.lclpnet.ap2.core.mixin;
 
-import net.minecraft.world.entity.animal.Rabbit;
+import net.minecraft.world.entity.animal.rabbit.Rabbit;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import work.lclpnet.ap2.core.type.ApVariantHolder;

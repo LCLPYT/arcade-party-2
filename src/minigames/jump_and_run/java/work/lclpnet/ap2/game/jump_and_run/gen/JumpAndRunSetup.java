@@ -62,7 +62,7 @@ public class JumpAndRunSetup {
     }
 
     private Parts readPartsSync() throws IOException {
-        var session = ((MinecraftServerAccessor) gameHandle.getServer()).getSession();
+        var session = ((MinecraftServerAccessor) gameHandle.getServer()).getStorageSource();
         Path storage = session.getDimensionPath(world.dimension());
 
         Path schematicsDir = storage.resolve("schematics");

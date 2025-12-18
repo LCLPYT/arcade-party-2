@@ -9,9 +9,9 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.FluidTags;
-import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.scores.DisplaySlot;
 import net.minecraft.world.scores.PlayerTeam;
@@ -36,6 +36,7 @@ import work.lclpnet.ap2.impl.util.world.BfsWorldScanner;
 import work.lclpnet.ap2.impl.util.world.SimpleAdjacentBlocks;
 import work.lclpnet.combatctl.impl.CombatStyles;
 import work.lclpnet.gaco.collisions.util.GroundDetector;
+import work.lclpnet.kibu.access.entity.ServerPlayerAccess;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.util.PositionRotation;
 import work.lclpnet.kibu.translate.Translations;
@@ -83,7 +84,7 @@ public class SplashyDropperInstance extends FFAGameInstance implements MapBootst
 
     @Override
     public void bootstrapWorld(@NotNull ServerLevel world, @NotNull GameMap map) {
-        world.getGameRules().getRule(GameRules.RULE_RANDOMTICKING).set(0, world.getServer());
+        world.getGameRules().set(GameRules.RANDOM_TICK_SPEED, 0, world.getServer());
 
         new SdGenerator(world, map, random).generate();
     }
@@ -196,7 +197,7 @@ public class SplashyDropperInstance extends FFAGameInstance implements MapBootst
             default -> 1.4f;
         };
 
-        gameHandle.getScheduler().immediate(() -> player.playNotifySound(SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 0.5f, pitch));
+        gameHandle.getScheduler().immediate(() -> ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 0.5f, pitch));
 
         commons().teleportToRandomSpawn(player, random);
     }
@@ -204,7 +205,7 @@ public class SplashyDropperInstance extends FFAGameInstance implements MapBootst
     private void onHitGround(ServerPlayer player) {
         commons().teleportToRandomSpawn(player, random);
 
-        gameHandle.getScheduler().immediate(() -> player.playNotifySound(SoundEvents.ZOMBIE_ATTACK_IRON_DOOR, SoundSource.PLAYERS, 0.25f, 0.5f));
+        gameHandle.getScheduler().immediate(() -> ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.ZOMBIE_ATTACK_IRON_DOOR, SoundSource.PLAYERS, 0.25f, 0.5f));
     }
 
     private int removeWater(BlockPos pos) {

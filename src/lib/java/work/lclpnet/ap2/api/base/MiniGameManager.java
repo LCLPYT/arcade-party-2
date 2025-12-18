@@ -1,7 +1,7 @@
 package work.lclpnet.ap2.api.base;
 
 import com.mojang.serialization.Codec;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import work.lclpnet.ap2.api.game.MiniGame;
 
 import java.util.Optional;
@@ -11,7 +11,7 @@ public interface MiniGameManager {
 
     Set<MiniGame> getGames();
 
-    Optional<MiniGame> getGame(ResourceLocation gameId);
+    Optional<MiniGame> getGame(Identifier gameId);
 
     Codec<MiniGame> getGameCodec();
 }

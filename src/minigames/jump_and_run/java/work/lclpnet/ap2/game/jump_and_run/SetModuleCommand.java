@@ -5,6 +5,7 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.game.jump_and_run.gen.JumpAndRun;
@@ -30,7 +31,7 @@ public class SetModuleCommand implements KibuCommand {
     @Override
     public void register(CommandRegistrar registrar) {
         registrar.registerCommand(literal("ap2:set_module")
-                .requires(s -> s.hasPermission(2))
+                .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
                 .then(argument("module", StringArgumentType.string())
                         .suggests(this::suggestMaps)
                         .executes(this::setMap)));

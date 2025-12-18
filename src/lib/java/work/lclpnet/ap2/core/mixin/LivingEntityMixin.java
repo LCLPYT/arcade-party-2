@@ -70,7 +70,7 @@ public class LivingEntityMixin implements ApLivingEntity {
             method = "removeFrost",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/world/entity/ai/attributes/AttributeInstance;removeModifier(Lnet/minecraft/resources/ResourceLocation;)Z"
+                    target = "Lnet/minecraft/world/entity/ai/attributes/AttributeInstance;removeModifier(Lnet/minecraft/resources/Identifier;)Z"
             ),
             cancellable = true
     )

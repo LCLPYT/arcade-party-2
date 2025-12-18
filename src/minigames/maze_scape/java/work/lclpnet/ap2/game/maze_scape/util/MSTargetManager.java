@@ -2,7 +2,7 @@ package work.lclpnet.ap2.game.maze_scape.util;
 
 import net.minecraft.core.Position;
 import net.minecraft.network.syncher.SynchedEntityData;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
@@ -99,7 +99,7 @@ public class MSTargetManager {
                 AttributeInstance instance = enderman.getAttribute(Attributes.MOVEMENT_SPEED);
 
                 if (instance != null) {
-                    instance.removeModifier(ResourceLocation.withDefaultNamespace("attacking"));
+                    instance.removeModifier(Identifier.withDefaultNamespace("attacking"));
                 }
 
                 SynchedEntityData dataTracker = enderman.getEntityData();

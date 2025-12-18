@@ -1,9 +1,9 @@
 package work.lclpnet.ap2.game.jump_and_run.gen;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.level.GameRules;
+import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.game.jump_and_run.JumpAndRunModuleSchema;
@@ -73,7 +73,7 @@ public class JumpAndRun {
                 .resolve("modules")
                 .resolve(module.path() + ".tar.xz");
 
-        ResourceLocation id = map.getDescriptor().getIdentifier().withSuffix("/modules/" + module.path());
+        Identifier id = map.getDescriptor().getIdentifier().withSuffix("/modules/" + module.path());
 
         return subWorldManager.loadWorldWithData(path, id).thenCompose(res -> {
             setCurrent(res);
@@ -104,13 +104,13 @@ public class JumpAndRun {
 
     private void processWorld() {
         GameRules gameRules = world().getGameRules();
-        gameRules.getRule(GameRules.RULE_DOFIRETICK).set(false, server);
-        gameRules.getRule(GameRules.RULE_RANDOMTICKING).set(0, server);
-        gameRules.getRule(GameRules.RULE_MOBGRIEFING).set(false, server);
-        gameRules.getRule(GameRules.RULE_DAYLIGHT).set(false, server);
-        gameRules.getRule(GameRules.RULE_WEATHER_CYCLE).set(false, server);
-        gameRules.getRule(GameRules.RULE_FALL_DAMAGE).set(false, server);
-        gameRules.getRule(GameRules.RULE_ANNOUNCE_ADVANCEMENTS).set(false, server);
+        gameRules.set(GameRules.FIRE_SPREAD_RADIUS_AROUND_PLAYER, 0, server);
+        gameRules.set(GameRules.RANDOM_TICK_SPEED, 0, server);
+        gameRules.set(GameRules.MOB_GRIEFING, false, server);
+        gameRules.set(GameRules.ADVANCE_TIME, false, server);
+        gameRules.set(GameRules.ADVANCE_WEATHER, false, server);
+        gameRules.set(GameRules.FALL_DAMAGE, false, server);
+        gameRules.set(GameRules.SHOW_ADVANCEMENT_MESSAGES, false, server);
 
         var schema = schema();
 

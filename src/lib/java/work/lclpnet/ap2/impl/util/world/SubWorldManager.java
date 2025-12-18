@@ -1,8 +1,8 @@
 package work.lclpnet.ap2.impl.util.world;
 
 import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.storage.LevelStorageSource;
@@ -48,7 +48,7 @@ public class SubWorldManager {
         unloader.init(hooks);
     }
 
-    public CompletableFuture<ServerLevel> loadWorld(AssetPath path, ResourceLocation id) {
+    public CompletableFuture<ServerLevel> loadWorld(AssetPath path, Identifier id) {
         return CompletableFuture.runAsync(() -> obtainWorld(path, id)).thenCompose(nil -> server.submit(() -> {
             RuntimeWorldHandle handle = KibuWorlds.getInstance().getWorldManager(server)
                     .openPersistentWorld(id)
@@ -60,7 +60,7 @@ public class SubWorldManager {
         }));
     }
 
-    public CompletableFuture<WorldWithData> loadWorldWithData(AssetPath path, ResourceLocation id) {
+    public CompletableFuture<WorldWithData> loadWorldWithData(AssetPath path, Identifier id) {
         var key = ResourceKey.create(Registries.DIMENSION, id);
 
         var dataFuture = GameMapApi.get(server).getDataManager().awaitWorldData(key);
@@ -68,10 +68,10 @@ public class SubWorldManager {
         return loadWorld(path, id).thenCompose(world -> dataFuture.thenApply(data -> new WorldWithData(world, data)));
     }
 
-    private void obtainWorld(AssetPath path, ResourceLocation id) {
+    private void obtainWorld(AssetPath path, Identifier id) {
         var registryKey = ResourceKey.create(Registries.DIMENSION, id);
 
-        LevelStorageSource.LevelStorageAccess session = ((MinecraftServerAccessor) server).getSession();
+        LevelStorageSource.LevelStorageAccess session = ((MinecraftServerAccessor) server).getStorageSource();
         Path directory = session.getDimensionPath(registryKey);
 
         try {

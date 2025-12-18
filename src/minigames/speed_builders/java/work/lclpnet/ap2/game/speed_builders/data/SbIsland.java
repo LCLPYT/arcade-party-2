@@ -5,7 +5,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
@@ -199,7 +199,7 @@ public class SbIsland {
 
             pointer.set(mx + rx, my + ry - 1, mz + rz);
 
-            ResourceLocation identifier = ResourceLocation.tryParse(entity.getId());
+            Identifier identifier = Identifier.tryParse(entity.getId());
 
             if (identifier == null) {
                 // invalid entity, treat as correct
@@ -211,7 +211,7 @@ public class SbIsland {
             for (Entity en : presentEntities) {
                 if (!pointer.equals(en.blockPosition())) continue;
 
-                ResourceLocation id = BuiltInRegistries.ENTITY_TYPE.getKey(en.getType());
+                Identifier id = BuiltInRegistries.ENTITY_TYPE.getKey(en.getType());
 
                 if (!identifier.equals(id)) {
                     logger.info("Entity differs: ({}, {}, {}) expected {} but got {}",

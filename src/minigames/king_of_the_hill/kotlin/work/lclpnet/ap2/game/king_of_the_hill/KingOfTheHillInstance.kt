@@ -13,8 +13,8 @@ import net.minecraft.world.entity.animal.goat.Goat
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.world.item.enchantment.Enchantments
-import net.minecraft.world.level.GameRules
 import net.minecraft.world.level.block.Blocks
+import net.minecraft.world.level.gamerules.GameRules
 import work.lclpnet.ap2.*
 import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.map.MapBootstrapFunction
@@ -54,10 +54,10 @@ class KingOfTheHillInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
         setupSidebarScoreboard(data)
 
         commons().gameRuleBuilder()
-            .set(GameRules.RULE_SNOW_ACCUMULATION_HEIGHT, 0)
-            .set(GameRules.RULE_WEATHER_CYCLE, false)
-            .set(GameRules.RULE_FALL_DAMAGE, false)
-            .set(GameRules.RULE_ANNOUNCE_ADVANCEMENTS, false)
+            .set(GameRules.MAX_SNOW_ACCUMULATION_HEIGHT, 0)
+            .set(GameRules.ADVANCE_WEATHER, false)
+            .set(GameRules.FALL_DAMAGE, false)
+            .set(GameRules.SHOW_ADVANCEMENT_MESSAGES, false)
 
         commons().addWaypoint(goalShape!!.center().center, 0xffd700)
     }

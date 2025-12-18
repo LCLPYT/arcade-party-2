@@ -2,6 +2,7 @@ package work.lclpnet.ap2.game.guess_it.util;
 
 import com.mojang.brigadier.context.CommandContext;
 import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.game.guess_it.data.Challenge;
@@ -24,7 +25,7 @@ public class SetChallengeCommand implements KibuCommand {
     @Override
     public void register(CommandRegistrar commands) {
         var root = literal("ap2:set_challenge")
-                .requires(s -> s.hasPermission(2));
+                .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS));
 
         for (Challenge challenge : manager.getChallenges()) {
             var node = literal(challenge.id())

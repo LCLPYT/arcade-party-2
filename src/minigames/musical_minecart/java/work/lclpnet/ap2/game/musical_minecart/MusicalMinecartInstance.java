@@ -6,7 +6,7 @@ import net.minecraft.core.Holder;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -16,7 +16,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.animal.frog.Frog;
 import net.minecraft.world.entity.animal.frog.FrogVariant;
-import net.minecraft.world.entity.vehicle.Minecart;
+import net.minecraft.world.entity.vehicle.minecart.Minecart;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -36,6 +36,7 @@ import work.lclpnet.ap2.impl.music.SongHandler;
 import work.lclpnet.ap2.impl.util.Hints;
 import work.lclpnet.ap2.impl.util.SoundHelper;
 import work.lclpnet.gaco.ds.BlockBox;
+import work.lclpnet.kibu.access.entity.ServerPlayerAccess;
 import work.lclpnet.kibu.cmd.type.CommandRegistrar;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.EntityDismountCallback;
@@ -77,7 +78,7 @@ public class MusicalMinecartInstance extends EliminationGameInstance implements 
     private static final float
             DECOY_CHANCE = 0.15f;
 
-    public static final ResourceLocation MUSICAL_MINECART_TAG = ApConstants.identifier("musical_minecart");
+    public static final Identifier MUSICAL_MINECART_TAG = ApConstants.identifier("musical_minecart");
 
     private final Random random = new Random();
     private final SongHandler songs;
@@ -372,7 +373,7 @@ public class MusicalMinecartInstance extends EliminationGameInstance implements 
 
         scheduler.timeout(() -> {
             for (ServerPlayer player : participants) {
-                player.playNotifySound(SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.NEUTRAL, 0.5f, 1f);
+                ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.NEUTRAL, 0.5f, 1f);
             }
         }, passDelay);
 

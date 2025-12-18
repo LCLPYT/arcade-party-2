@@ -1,6 +1,6 @@
 package work.lclpnet.ap2.api.actor;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 
-public record ActorType<A extends Actor>(ResourceLocation id, ActorFactory<A> factory) {
+public record ActorType<A extends Actor>(Identifier id, ActorFactory<A> factory) {
 }

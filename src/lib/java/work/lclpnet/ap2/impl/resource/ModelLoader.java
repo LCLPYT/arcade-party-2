@@ -10,7 +10,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
-import org.joml.Quaternionf;
+import org.joml.Quaternionfc;
 import work.lclpnet.ap2.impl.util.ItemHelper;
 import work.lclpnet.ap2.impl.util.model.TemplateModel;
 import work.lclpnet.gaco.scene.Object3d;
@@ -147,8 +147,8 @@ public class ModelLoader {
         obj.position.set(transformation.getTranslation());
 
         // rotation = leftRotation * rightRotation
-        Quaternionf right = transformation.getRightRotation();
-        obj.rotation.set(transformation.getLeftRotation()).mul(right.x, right.y, right.z, right.w);
+        Quaternionfc right = transformation.getRightRotation();
+        obj.rotation.set(transformation.getLeftRotation()).mul(right.x(), right.y(), right.z(), right.w());
 
         root.addChild(obj);
     }

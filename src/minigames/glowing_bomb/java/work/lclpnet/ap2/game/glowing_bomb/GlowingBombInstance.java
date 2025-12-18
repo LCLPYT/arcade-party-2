@@ -7,7 +7,7 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.particles.ColorParticleOption;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
@@ -244,7 +244,7 @@ public class GlowingBombInstance extends EliminationGameInstance implements MapB
         int creditCount = credits.getOrDefault(player.getUUID(), 0);
         int cooldown = MINIMUM_BOMB_PASS_TICKS + Math.max(0, BOMB_PASS_COST - creditCount);
 
-        ResourceLocation cooldownGroup = BuiltInRegistries.ITEM.getKey(Items.GLOWSTONE);
+        Identifier cooldownGroup = BuiltInRegistries.ITEM.getKey(Items.GLOWSTONE);
 
         player.getCooldowns().addCooldown(cooldownGroup, cooldown);
     }

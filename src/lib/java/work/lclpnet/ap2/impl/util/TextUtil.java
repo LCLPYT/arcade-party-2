@@ -1,12 +1,12 @@
 package work.lclpnet.ap2.impl.util;
 
-import net.minecraft.Util;
 import net.minecraft.core.Holder;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvent;
+import net.minecraft.util.Util;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -41,7 +41,7 @@ public class TextUtil {
     }
 
     public static MutableComponent getVanillaName(Holder<TrimPattern> pattern) {
-        ResourceLocation id = pattern.unwrapKey().map(ResourceKey::location).orElse(null);
+        Identifier id = pattern.unwrapKey().map(ResourceKey::identifier).orElse(null);
         return Component.translatable(Util.makeDescriptionId("trim_pattern", id));
     }
 

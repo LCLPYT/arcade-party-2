@@ -15,16 +15,16 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.animal.Chicken;
-import net.minecraft.world.entity.animal.ChickenVariant;
+import net.minecraft.world.entity.animal.chicken.Chicken;
+import net.minecraft.world.entity.animal.chicken.ChickenVariant;
 import net.minecraft.world.entity.item.PrimedTnt;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantments;
-import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.entity.EntityTypeTest;
+import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.scores.DisplaySlot;
 import net.minecraft.world.scores.PlayerTeam;
@@ -44,6 +44,7 @@ import work.lclpnet.ap2.impl.util.ItemHelper;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.gaco.ds.BlockBox;
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
+import work.lclpnet.kibu.access.entity.ServerPlayerAccess;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.ProjectileCanHitCallback;
 import work.lclpnet.kibu.hook.entity.ProjectileHooks;
@@ -96,8 +97,8 @@ public class ChickenShooterInstance extends FFAGameInstance implements Runnable 
         ServerLevel world = getWorld();
 
         commons().gameRuleBuilder()
-                .set(GameRules.RULE_DOENTITYDROPS, false)
-                .set(GameRules.RULE_ANNOUNCE_ADVANCEMENTS, false);
+                .set(GameRules.ENTITY_DROPS, false)
+                .set(GameRules.SHOW_ADVANCEMENT_MESSAGES, false);
 
         despawnHeight = getMap().requireProperty("despawn-height");
 
@@ -113,7 +114,7 @@ public class ChickenShooterInstance extends FFAGameInstance implements Runnable 
             if (winManager.isGameOver() || !(source.getEntity() instanceof ServerPlayer attacker)) return false;
 
             float pitch = chicken.isBaby() ? 1.4f : 0.8f;
-            attacker.playNotifySound(SoundEvents.ARROW_HIT_PLAYER, SoundSource.PLAYERS, 0.8f, pitch);
+            ServerPlayerAccess.playSoundToPlayer(attacker, SoundEvents.ARROW_HIT_PLAYER, SoundSource.PLAYERS, 0.8f, pitch);
 
             int score = killChicken(chicken, attacker, world);
 
@@ -252,8 +253,8 @@ public class ChickenShooterInstance extends FFAGameInstance implements Runnable 
 
     private int tntExplode(Chicken chicken, PrimedTnt tnt, ServerLevel world, ServerPlayer attacker, double x, double y, double z) {
         world.sendParticles(ParticleTypes.EXPLOSION, x, y, z, 4, 0.5, 0.5, 0.5, 1);
-        attacker.playNotifySound(SoundEvents.TNT_PRIMED, SoundSource.PLAYERS, 0.8f, 1.8f);
-        attacker.playNotifySound(SoundEvents.GENERIC_EXPLODE.value(), SoundSource.PLAYERS, 0.8f, 0.7f);
+        ServerPlayerAccess.playSoundToPlayer(attacker, SoundEvents.TNT_PRIMED, SoundSource.PLAYERS, 0.8f, 1.8f);
+        ServerPlayerAccess.playSoundToPlayer(attacker, SoundEvents.GENERIC_EXPLODE.value(), SoundSource.PLAYERS, 0.8f, 0.7f);
 
         Vec3 tntPos = tnt.position();
 

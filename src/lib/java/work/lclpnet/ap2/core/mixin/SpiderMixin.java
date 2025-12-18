@@ -1,7 +1,7 @@
 package work.lclpnet.ap2.core.mixin;
 
 import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
-import net.minecraft.world.entity.monster.Spider;
+import net.minecraft.world.entity.monster.spider.Spider;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -21,7 +21,7 @@ public class SpiderMixin implements ApSpider {
             method = "tick",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/world/entity/monster/Spider;setClimbing(Z)V"
+                    target = "Lnet/minecraft/world/entity/monster/spider/Spider;setClimbing(Z)V"
             )
     )
     private boolean ap2$modifyClimbCondition(Spider instance, boolean climbing) {

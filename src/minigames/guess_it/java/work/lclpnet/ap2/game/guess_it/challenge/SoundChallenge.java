@@ -12,6 +12,7 @@ import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.game.guess_it.data.*;
 import work.lclpnet.ap2.game.guess_it.util.OptionMaker;
 import work.lclpnet.ap2.impl.util.TextUtil;
+import work.lclpnet.kibu.access.entity.ServerPlayerAccess;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.title.Title;
 import work.lclpnet.kibu.translate.Translations;
@@ -114,7 +115,7 @@ public class SoundChallenge implements Challenge {
 
     private void playSound() {
         for (ServerPlayer player : PlayerLookup.world(world)) {
-            player.playNotifySound(correct, SoundSource.MASTER, 1f, pitch);
+            ServerPlayerAccess.playSoundToPlayer(player, correct, SoundSource.MASTER, 1f, pitch);
         }
     }
 

@@ -1,14 +1,14 @@
 package work.lclpnet.ap2.impl.game.kit;
 
 import net.minecraft.core.RegistryAccess;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.kibu.translate.Translations;
 
 public record RecordKitHandle(
-        ResourceLocation gameId, HookRegistrar hooks, TaskScheduler scheduler, Translations translations,
+        Identifier gameId, HookRegistrar hooks, TaskScheduler scheduler, Translations translations,
         RegistryAccess registries, KitReadView readView
 ) implements KitHandle {
 

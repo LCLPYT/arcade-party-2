@@ -28,6 +28,7 @@ import work.lclpnet.ap2.impl.util.world.DestroyStageManager;
 import work.lclpnet.gaco.collisions.ChunkedCollisionDetector;
 import work.lclpnet.gaco.collisions.movement.PlayerMovementObserver;
 import work.lclpnet.kibu.access.VelocityModifier;
+import work.lclpnet.kibu.access.entity.ServerPlayerAccess;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.EntityDamageCallback;
 import work.lclpnet.kibu.scheduler.Ticks;
@@ -139,7 +140,7 @@ public class KnockoutInstance extends EliminationGameInstance {
                     .sendTo(player);
 
             player.level().sendParticles(ParticleTypes.WITCH, player.getX(), player.getY(), player.getZ(), 50, 0.5, 1.0, 0.5, 0.1);
-            player.playNotifySound(SoundEvents.ZOMBIE_VILLAGER_CONVERTED, SoundSource.PLAYERS, 0.8f, 1f);
+            ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.ZOMBIE_VILLAGER_CONVERTED, SoundSource.PLAYERS, 0.8f, 1f);
             player.addEffect(new MobEffectInstance(MobEffects.GLOWING, Integer.MAX_VALUE, 1, false, false, true));
         });
 

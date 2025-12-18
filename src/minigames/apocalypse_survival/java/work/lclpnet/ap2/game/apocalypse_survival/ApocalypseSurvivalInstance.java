@@ -7,10 +7,14 @@ import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.monster.*;
-import net.minecraft.world.entity.projectile.AbstractArrow;
+import net.minecraft.world.entity.monster.Phantom;
+import net.minecraft.world.entity.monster.Vex;
+import net.minecraft.world.entity.monster.illager.Vindicator;
+import net.minecraft.world.entity.monster.skeleton.Skeleton;
+import net.minecraft.world.entity.monster.zombie.Zombie;
 import net.minecraft.world.entity.projectile.Projectile;
-import net.minecraft.world.level.GameRules;
+import net.minecraft.world.entity.projectile.arrow.AbstractArrow;
+import net.minecraft.world.level.gamerules.GameRules;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.game.apocalypse_survival.util.AsSetup;
@@ -58,9 +62,9 @@ public class ApocalypseSurvivalInstance extends EliminationGameInstance {
         spawners = setup.readSpawners();
 
         commons().gameRuleBuilder()
-                .set(GameRules.RULE_FALL_DAMAGE, true)
-                .set(GameRules.RULE_MOBGRIEFING, true)
-                .set(GameRules.RULE_NATURAL_REGENERATION, false);
+                .set(GameRules.FALL_DAMAGE, true)
+                .set(GameRules.MOB_GRIEFING, true)
+                .set(GameRules.NATURAL_HEALTH_REGENERATION, false);
 
         HookRegistrar hooks = gameHandle.getHooks();
 

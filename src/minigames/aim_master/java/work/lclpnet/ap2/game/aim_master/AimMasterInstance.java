@@ -18,6 +18,7 @@ import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedPlayerBossBar;
 import work.lclpnet.ap2.impl.util.world.StackedRoomGenerator;
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
+import work.lclpnet.kibu.access.entity.ServerPlayerAccess;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.kibu.hook.player.PlayerInventoryHooks;
@@ -137,7 +138,7 @@ public class AimMasterInstance extends FFAGameInstance implements MapBootstrap {
             ServerLevel serverWorld = serverPlayer.level();
 
             if (target!=null) serverWorld.sendParticles(ParticleTypes.ELECTRIC_SPARK, target.getX(), target.getY(), target.getZ(), 12, 0.4, 0.4, 0.4, 0.01);
-            player.playNotifySound(SoundEvents.ARROW_HIT_PLAYER, SoundSource.PLAYERS, 0.5f, 0.8f);
+            ServerPlayerAccess.playSoundToPlayer(serverPlayer, SoundEvents.ARROW_HIT_PLAYER, SoundSource.PLAYERS, 0.5f, 0.8f);
 
             if (newScore >= scoreGoal) win(serverPlayer);
             else manager.advancePlayer(serverPlayer);
@@ -145,7 +146,7 @@ public class AimMasterInstance extends FFAGameInstance implements MapBootstrap {
             return InteractionResult.FAIL;
         }
 
-        player.playNotifySound(SoundEvents.NOTE_BLOCK_BASS.value(), SoundSource.PLAYERS, 0.3f, 0.2f);
+        ServerPlayerAccess.playSoundToPlayer(serverPlayer, SoundEvents.NOTE_BLOCK_BASS.value(), SoundSource.PLAYERS, 0.3f, 0.2f);
 
         return InteractionResult.PASS;
     }

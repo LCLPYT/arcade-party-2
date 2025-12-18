@@ -4,6 +4,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.FrontAndTop;
 import net.minecraft.core.Vec3i;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
@@ -58,7 +59,7 @@ public class MSLoader {
         this.map = map;
         this.world = world;
         this.logger = logger;
-        this.schematicReader = VanillaStructureFormat.get(world.getServer()).reader();
+        this.schematicReader = VanillaStructureFormat.get(Objects.requireNonNull(world.getServer())).reader();
         this.scanner = new MSScanner(logger);
     }
 
@@ -69,7 +70,9 @@ public class MSLoader {
     private @NotNull Result loadSync() {
         var clusterDefs = parseClusterDefinitions(map.getProperty("clusters"));
 
-        var session = ((MinecraftServerAccessor) world.getServer()).getSession();
+        MinecraftServer server = Objects.requireNonNull(world.getServer());
+
+        var session = ((MinecraftServerAccessor) server).getStorageSource();
         Path dir = session.getDimensionPath(world.dimension()).resolve("structures");
 
         JSONObject wallCfg = map.requireProperty("default-connector-wall");

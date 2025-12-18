@@ -1,7 +1,7 @@
 package work.lclpnet.ap2.game.snowball_fight;
 
 import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -12,6 +12,7 @@ import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.core.hook.FrozenTickChangeCallback;
 import work.lclpnet.ap2.core.hook.PowderedSnowSlowCallback;
 import work.lclpnet.ap2.impl.util.world.CombatIdleManager;
+import work.lclpnet.kibu.access.entity.ServerPlayerAccess;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.scheduler.api.RunningTask;
 import work.lclpnet.kibu.scheduler.api.SchedulerAction;
@@ -32,7 +33,7 @@ import static net.minecraft.world.entity.ai.attributes.Attributes.MOVEMENT_SPEED
 
 public class FreezingManager {
 
-    private static final ResourceLocation POWDER_SNOW_CANCEL_MODIFIER_ID = ApConstants.identifier("powder_snow_cancel");
+    private static final Identifier POWDER_SNOW_CANCEL_MODIFIER_ID = ApConstants.identifier("powder_snow_cancel");
 
     private final TaskScheduler scheduler;
     private final Translations translations;
@@ -56,9 +57,9 @@ public class FreezingManager {
             translations.translateText("game.ap2.snowball_fight.idle").formatted(YELLOW).sendTo(player);
 
             player.level().sendParticles(ParticleTypes.SNOWFLAKE, player.getX(), player.getY() + 1, player.getZ(), 50, 0.5, 1.0, 0.5, 0.1);
-            player.playNotifySound(SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 1f, 0.5f);
-            player.playNotifySound(SoundEvents.AMETHYST_BLOCK_RESONATE, SoundSource.PLAYERS, 0.25f, 0.8f);
-            player.playNotifySound(SoundEvents.BREEZE_IDLE_GROUND, SoundSource.PLAYERS, 0.2f, 1.8f);
+            ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 1f, 0.5f);
+            ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.AMETHYST_BLOCK_RESONATE, SoundSource.PLAYERS, 0.25f, 0.8f);
+            ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.BREEZE_IDLE_GROUND, SoundSource.PLAYERS, 0.2f, 1.8f);
 
             startFreezing(player);
         });

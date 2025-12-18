@@ -8,6 +8,7 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import org.jetbrains.annotations.Nullable;
+import work.lclpnet.kibu.access.entity.ServerPlayerAccess;
 import work.lclpnet.kibu.title.Title;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.kibu.translate.text.TranslatedText;
@@ -90,7 +91,7 @@ public class Announcer {
 
             if (sound == null) continue;
 
-            player.playNotifySound(sound, category, volume, pitch);
+            ServerPlayerAccess.playSoundToPlayer(player, sound, category, volume, pitch);
         }
     }
 }

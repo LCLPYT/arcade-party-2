@@ -14,11 +14,11 @@ import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.entity.Display
 import net.minecraft.world.entity.EntityType
 import net.minecraft.world.item.DyeColor
-import net.minecraft.world.level.GameRules
 import net.minecraft.world.level.GameType
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.gamerules.GameRules
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.phys.shapes.CollisionContext
 import net.minecraft.world.scores.Team
@@ -45,6 +45,7 @@ import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape
 import work.lclpnet.gaco.ds.StructureMask
 import work.lclpnet.gaco.dynamic_entities.DynamicEntityManager
 import work.lclpnet.gaco.dynamic_entities.PlayerSpecificDynamicEntity
+import work.lclpnet.kibu.access.entity.ServerPlayerAccess
 import work.lclpnet.kibu.hook.world.PressurePlateCallback
 import work.lclpnet.kibu.scheduler.Ticks
 import work.lclpnet.kibu.translate.bossbar.TranslatedBossBar
@@ -135,7 +136,7 @@ class MinefieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
         }
 
         commons().gameRuleBuilder()
-            .set(GameRules.RULE_NATURAL_REGENERATION, false)
+            .set(GameRules.NATURAL_HEALTH_REGENERATION, false)
     }
 
     override fun prepare() {
@@ -288,7 +289,7 @@ class MinefieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
             this.pos = pos
 
             if (marker != null) {
-                player.playNotifySound(SoundEvents.NOTE_BLOCK_PLING.value(), SoundSource.NEUTRAL, 0.3f, 2f)
+                ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.NOTE_BLOCK_PLING.value(), SoundSource.NEUTRAL, 0.3f, 2f)
                 translate("game.ap2.minefield.new_personal_best").formatted(GREEN).sendTo(player, true)
             }
 

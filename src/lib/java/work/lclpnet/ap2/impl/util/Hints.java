@@ -10,6 +10,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.impl.game.BaseGameInstance;
+import work.lclpnet.kibu.access.entity.ServerPlayerAccess;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.notica.network.NoticaNetworking;
@@ -55,7 +56,7 @@ public class Hints {
                     .formatted(RED, BOLD);
 
             player.sendSystemMessage(hint);
-            player.playNotifySound(SoundEvents.CHICKEN_EGG, SoundSource.PLAYERS, 0.5f, 0.5f);
+            ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.CHICKEN_EGG, SoundSource.PLAYERS, 0.5f, 0.5f);
         }
     }
 

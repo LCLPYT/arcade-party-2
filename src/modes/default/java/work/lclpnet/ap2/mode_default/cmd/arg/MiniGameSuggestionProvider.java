@@ -5,7 +5,7 @@ import com.mojang.brigadier.suggestion.SuggestionProvider;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import work.lclpnet.ap2.api.base.MiniGameManager;
 import work.lclpnet.ap2.api.game.GameInfo;
 
@@ -23,7 +23,7 @@ public class MiniGameSuggestionProvider implements SuggestionProvider<CommandSou
     public CompletableFuture<Suggestions> getSuggestions(CommandContext<CommandSourceStack> context, SuggestionsBuilder builder) {
         miniGameManager.getGames().stream()
                 .map(GameInfo::getId)
-                .map(ResourceLocation::toString)
+                .map(Identifier::toString)
                 .forEach(builder::suggest);
 
         return builder.buildFuture();

@@ -1,6 +1,6 @@
 package work.lclpnet.ap2;
 
-import net.minecraft.Util;
+import net.minecraft.util.Util;
 import work.lclpnet.ap2.api.actor.ActorProvider;
 import work.lclpnet.ap2.api.actor.ActorRegistrar;
 import work.lclpnet.ap2.api.actor.ActorType;

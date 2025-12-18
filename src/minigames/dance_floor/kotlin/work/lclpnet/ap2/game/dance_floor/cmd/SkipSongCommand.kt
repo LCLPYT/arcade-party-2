@@ -11,7 +11,7 @@ class SkipSongCommand(val skipCurrent: Runnable) : KibuCommand {
     override fun register(registrar: CommandRegistrar) {
         registrar.registerCommand(
             Commands.literal("ap2:skip")
-            .requires { s -> s.hasPermission(2) }
+            .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
             .executes { ctx ->
                 ctx.source.sendSystemMessage(Component.literal("Skipped the current song"))
                 skipCurrent.run()

@@ -21,6 +21,7 @@ import work.lclpnet.ap2.core.mixin.ServerExplosionAccessor;
 import work.lclpnet.ap2.impl.util.SoundHelper;
 import work.lclpnet.ap2.impl.util.world.ExplosionUtil;
 import work.lclpnet.gaco.ds.WeightedList;
+import work.lclpnet.kibu.access.entity.ServerPlayerAccess;
 import work.lclpnet.kibu.translate.Translations;
 
 import java.util.HashMap;
@@ -172,7 +173,7 @@ public class MiningBattleOre {
 
         player.removeEffect(MobEffects.HASTE);
         player.addEffect(new MobEffectInstance(MobEffects.HASTE, remainingTicks + 100, 0));
-        player.playNotifySound(SoundEvents.BELL_RESONATE, SoundSource.BLOCKS, 0.5f, 2f);
+        ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.BELL_RESONATE, SoundSource.BLOCKS, 0.5f, 2f);
 
         var msg = gameHandle.getTranslations().translateText(player, "game.ap2.mining_battle.haste")
                 .formatted(ChatFormatting.GREEN);

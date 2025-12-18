@@ -16,7 +16,7 @@ import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.animal.Panda;
+import net.minecraft.world.entity.animal.panda.Panda;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.FireworkRocketEntity;
 import net.minecraft.world.item.ItemStack;
@@ -46,6 +46,7 @@ import work.lclpnet.ap2.impl.util.world.SimpleAdjacentBlocks;
 import work.lclpnet.ap2.impl.util.world.SizedSpaceFinder;
 import work.lclpnet.gaco.ds.BlockBox;
 import work.lclpnet.kibu.access.entity.FireworkEntityAccess;
+import work.lclpnet.kibu.access.entity.ServerPlayerAccess;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.kibu.scheduler.Ticks;
@@ -188,7 +189,7 @@ public class PandaFinderInstance extends FFAGameInstance {
         player.sendSystemMessage(gameHandle.getTranslations().translateText(player, "game.ap2.panda_finder.cooldown")
                 .formatted(ChatFormatting.RED));
 
-        player.playNotifySound(SoundEvents.BLAZE_HURT, SoundSource.HOSTILE, 0.5f, 1.5f);
+        ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.BLAZE_HURT, SoundSource.HOSTILE, 0.5f, 1.5f);
         player.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, Ticks.seconds(3), 1, false, false));
     }
 
@@ -211,9 +212,9 @@ public class PandaFinderInstance extends FFAGameInstance {
 
         for (ServerPlayer serverPlayer : players) {
             if (participants.isParticipating(serverPlayer) && serverPlayer != player) {
-                serverPlayer.playNotifySound(SoundEvents.WITHER_HURT, SoundSource.PLAYERS, 0.5f, 1f);
+                ServerPlayerAccess.playSoundToPlayer(serverPlayer, SoundEvents.WITHER_HURT, SoundSource.PLAYERS, 0.5f, 1f);
             } else {
-                serverPlayer.playNotifySound(SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 0.5f, 1f);
+                ServerPlayerAccess.playSoundToPlayer(serverPlayer, SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 0.5f, 1f);
             }
         }
 

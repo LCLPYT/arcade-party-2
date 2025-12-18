@@ -18,6 +18,7 @@ import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.impl.game.GameCommons;
 import work.lclpnet.ap2.impl.util.CustomNbt;
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
+import work.lclpnet.kibu.access.entity.ServerPlayerAccess;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.kibu.inv.prompt.OptionPrompt;
@@ -83,7 +84,7 @@ public class KitHandler {
                 .formatted(ChatFormatting.GREEN)
                 .sendTo(player);
 
-        player.playNotifySound(SoundEvents.NOTE_BLOCK_PLING.value(), SoundSource.NEUTRAL, 0.5f, 2f);
+        ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.NOTE_BLOCK_PLING.value(), SoundSource.NEUTRAL, 0.5f, 2f);
     }
 
     public synchronized boolean canChangeKit(ServerPlayer player) {

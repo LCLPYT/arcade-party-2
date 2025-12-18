@@ -14,14 +14,15 @@ import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.gamerules.GameRules;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.impl.game.EliminationGameInstance;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.gaco.ds.BlockBox;
+import work.lclpnet.kibu.access.entity.ServerPlayerAccess;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.RunningTask;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
@@ -47,8 +48,8 @@ public class BlockDissolveInstance extends EliminationGameInstance {
     @Override
     protected void prepare() {
         commons().gameRuleBuilder()
-                .set(GameRules.RULE_RANDOMTICKING, 0)
-                .set(GameRules.RULE_DO_VINES_SPREAD, false);
+                .set(GameRules.RANDOM_TICK_SPEED, 0)
+                .set(GameRules.SPREAD_VINES, false);
 
         useNoHealing();
         useSmoothDeath();
@@ -109,7 +110,7 @@ public class BlockDissolveInstance extends EliminationGameInstance {
 
             if (warningTimer % WARNING_PERIOD_TICKS == 0) {
                 for (ServerPlayer player : PlayerLookup.all(server)) {
-                    player.playNotifySound(SoundEvents.NOTE_BLOCK_PLING.value(), SoundSource.BLOCKS, 1f, 0f);
+                    ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.NOTE_BLOCK_PLING.value(), SoundSource.BLOCKS, 1f, 0f);
                 }
             }
 
@@ -118,7 +119,7 @@ public class BlockDissolveInstance extends EliminationGameInstance {
                 warningTimer = 0;
 
                 for (ServerPlayer player : PlayerLookup.all(server)) {
-                    player.playNotifySound(SoundEvents.WITHER_BREAK_BLOCK, SoundSource.BLOCKS, 1f, 0f);
+                    ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.WITHER_BREAK_BLOCK, SoundSource.BLOCKS, 1f, 0f);
                 }
 
                 for (int i = 0; i < WARNING_AMOUNT; i++) {
@@ -227,6 +228,6 @@ public class BlockDissolveInstance extends EliminationGameInstance {
         }
 
         inventory.setItem(0, stack);
-        player.playNotifySound(SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.6f, 2f);
+        ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.6f, 2f);
     }
 }

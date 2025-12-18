@@ -15,8 +15,8 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.monster.breeze.Breeze;
 import net.minecraft.world.entity.player.Abilities;
 import net.minecraft.world.entity.projectile.Projectile;
-import net.minecraft.world.entity.projectile.windcharge.BreezeWindCharge;
-import net.minecraft.world.level.GameRules;
+import net.minecraft.world.entity.projectile.hurtingprojectile.windcharge.BreezeWindCharge;
+import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.scores.PlayerTeam;
@@ -34,6 +34,7 @@ import work.lclpnet.ap2.impl.game.EliminationGameInstance;
 import work.lclpnet.ap2.impl.util.ParticleHelper;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.kibu.access.VelocityModifier;
+import work.lclpnet.kibu.access.entity.ServerPlayerAccess;
 import work.lclpnet.kibu.behaviour.world.ServerWorldBehaviour;
 import work.lclpnet.kibu.hook.entity.ProjectileHooks;
 import work.lclpnet.kibu.scheduler.Ticks;
@@ -90,7 +91,7 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
             manager = new SbManager(islands, setup.getModules(), gameHandle, world, random, this::allPlayersCompleted);
             destruction = new SbDestruction(world, random, aelosId);
 
-            world.getGameRules().getRule(GameRules.RULE_DOBLOCKDROPS).set(true, gameHandle.getServer());
+            world.getGameRules().set(GameRules.BLOCK_DROPS, true, gameHandle.getServer());
         });
     }
 
@@ -149,7 +150,7 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
 
     private void setupGameRules() {
         commons().gameRuleBuilder()
-                .set(GameRules.RULE_RANDOMTICKING, 0);
+                .set(GameRules.RANDOM_TICK_SPEED, 0);
     }
 
     private void nextRound() {
@@ -251,7 +252,7 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
 
         for (ServerPlayer player : PlayerLookup.all(server)) {
             Title.get(player).title(title, subtitle.translateFor(player), 5, 50, 5);
-            player.playNotifySound(SoundEvents.BREEZE_HURT, SoundSource.PLAYERS, 1f, 0.5f);
+            ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.BREEZE_HURT, SoundSource.PLAYERS, 1f, 0.5f);
         }
 
         manager.getIsland(worst).ifPresent(destruction::setAelosLookingTowards);

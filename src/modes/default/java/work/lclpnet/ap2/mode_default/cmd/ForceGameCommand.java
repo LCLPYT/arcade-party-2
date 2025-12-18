@@ -7,9 +7,9 @@ import com.mojang.brigadier.exceptions.DynamicCommandExceptionType;
 import lombok.Setter;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
-import net.minecraft.commands.arguments.ResourceLocationArgument;
+import net.minecraft.commands.arguments.IdentifierArgument;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import work.lclpnet.ap2.api.base.MiniGameManager;
 import work.lclpnet.ap2.api.game.MiniGame;
 import work.lclpnet.ap2.mode_default.cmd.arg.MiniGameSuggestionProvider;
@@ -38,14 +38,14 @@ public class ForceGameCommand implements KibuCommand {
 
     private LiteralArgumentBuilder<CommandSourceStack> command() {
         return Commands.literal("forcegame")
-                .requires(s -> s.hasPermission(2))
-                .then(Commands.argument("gameId", ResourceLocationArgument.id())
+                .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
+                .then(Commands.argument("gameId", IdentifierArgument.id())
                         .suggests(new MiniGameSuggestionProvider(miniGameManager))
                         .executes(this::forceGame));
     }
 
     private int forceGame(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
-        ResourceLocation gameId = ResourceLocationArgument.getId(ctx, "gameId");
+        Identifier gameId = IdentifierArgument.getId(ctx, "gameId");
         MiniGame game = miniGameManager.getGame(gameId).orElseThrow(() -> UNKNOWN_GAME.create(gameId));
 
         gameEnforcer.accept(game);

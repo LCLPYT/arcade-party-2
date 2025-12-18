@@ -17,6 +17,7 @@ import work.lclpnet.ap2.impl.util.CodecUtil;
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape;
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShapes;
 import work.lclpnet.gaco.collisions.movement.MovementObserver;
+import work.lclpnet.kibu.access.entity.ServerPlayerAccess;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.player.PlayerJumpCallback;
 
@@ -103,10 +104,10 @@ public class GravityFieldActor extends BaseActor {
 
     public void onGravityChanged(ServerPlayer player, double gravityDelta) {
         if (gravityDelta < 0) {
-            player.playNotifySound(SoundEvents.BREEZE_IDLE_GROUND, SoundSource.PLAYERS, 0.55f, 1.5f);
+            ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.BREEZE_IDLE_GROUND, SoundSource.PLAYERS, 0.55f, 1.5f);
             player.level().sendParticles(ParticleTypes.CLOUD, player.getX(), player.getY(), player.getZ(), 10, 0.2, 0.2, 0.2, 0.1);
         } else if (gravityDelta > 0) {
-            player.playNotifySound(SoundEvents.EVOKER_CAST_SPELL, SoundSource.PLAYERS, 0.35f, 0.75f);
+            ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.EVOKER_CAST_SPELL, SoundSource.PLAYERS, 0.35f, 0.75f);
         }
     }
 

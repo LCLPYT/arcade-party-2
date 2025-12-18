@@ -2,7 +2,7 @@ package work.lclpnet.ap2.api.stats
 
 import net.minecraft.nbt.CompoundTag
 import net.minecraft.nbt.Tag
-import net.minecraft.resources.ResourceLocation
+import net.minecraft.resources.Identifier
 import net.minecraft.server.level.ServerPlayer
 import org.slf4j.Logger
 import work.lclpnet.ap2.ApConstants
@@ -28,14 +28,14 @@ class SessionStatsRecorder(val translations: Translations, val logger: Logger) {
         })
     }
 
-    private fun onCustomClickAction(player: ServerPlayer, id: ResourceLocation, payload: Optional<Tag>) {
+    private fun onCustomClickAction(player: ServerPlayer, id: Identifier, payload: Optional<Tag>) {
         if (SHOW_SUMMARY != id) return
 
         val payload = payload.orElse(null) ?: return
 
         if (payload !is CompoundTag) return
 
-        val idStr = payload.getStringOr("id", null) ?: return
+        val idStr = payload.getString("id").orElse(null) ?: return
 
         val id: UUID?
 

@@ -3,7 +3,7 @@ package work.lclpnet.ap2.impl.game;
 import it.unimi.dsi.fastutil.Pair;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.ChatFormatting;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -68,7 +68,7 @@ public abstract class EliminationGameInstance extends FFAGameInstance implements
     protected final DynamicTranslatedBossBar useRemainingPlayersDisplay() {
         GameInfo gameInfo = gameHandle.getGameInfo();
         Translations translations = gameHandle.getTranslations();
-        ResourceLocation id = gameInfo.identifier("remaining");
+        Identifier id = gameInfo.identifier("remaining");
 
         var title = remainingTitle();
 

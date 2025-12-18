@@ -4,7 +4,7 @@ import lombok.Getter;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
@@ -34,6 +34,7 @@ import work.lclpnet.ap2.impl.util.effect.ApEffects;
 import work.lclpnet.ap2.impl.util.property.ApMapProperties;
 import work.lclpnet.combatctl.impl.CombatStyles;
 import work.lclpnet.gaco.asset.AssetPath;
+import work.lclpnet.kibu.access.entity.ServerPlayerAccess;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.EntityHealthCallback;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
@@ -107,7 +108,7 @@ public abstract class BaseGameInstance implements MiniGameInstance {
 
     protected void openMap() {
         MapFacade mapFacade = gameHandle.getMapFacade();
-        ResourceLocation gameId = gameHandle.getGameInfo().getId();
+        Identifier gameId = gameHandle.getGameInfo().getId();
 
         MapBootstrap bootstrap = getMapBootstrap();
 
@@ -268,7 +269,7 @@ public abstract class BaseGameInstance implements MiniGameInstance {
         Logger logger = gameHandle.getLogger();
 
         for (String key : config.keySet()) {
-            ResourceLocation id = ResourceLocation.tryParse(key);
+            Identifier id = Identifier.tryParse(key);
 
             if (id == null) {
                 logger.warn("Invalid map property identifier {}", key);
@@ -321,7 +322,7 @@ public abstract class BaseGameInstance implements MiniGameInstance {
         gameHandle.getTranslations().translateText("ap2.go").formatted(RED)
                 .acceptEach(PlayerLookup.all(gameHandle.getServer()), (player, text) -> {
                     Title.get(player).title(text, Component.empty(), 5, 20, 5);
-                    player.playNotifySound(SoundEvents.CHICKEN_EGG, SoundSource.PLAYERS, 1, 0);
+                    ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.CHICKEN_EGG, SoundSource.PLAYERS, 1, 0);
                 });
 
         go();
@@ -396,7 +397,7 @@ public abstract class BaseGameInstance implements MiniGameInstance {
     protected final TranslatedBossBar useTaskDisplay() {
         GameInfo gameInfo = gameHandle.getGameInfo();
         Translations translations = gameHandle.getTranslations();
-        ResourceLocation id = gameInfo.identifier("task");
+        Identifier id = gameInfo.identifier("task");
 
         TranslatedBossBar bossBar = translations.translateBossBar(id, gameInfo.getTaskKey(), gameInfo.getTaskArguments())
                 .with(gameHandle.getBossBarProvider())
@@ -422,7 +423,7 @@ public abstract class BaseGameInstance implements MiniGameInstance {
     }
 
     protected final DynamicTranslatedPlayerBossBar usePlayerDynamicDisplay(String key, Object... args) {
-        ResourceLocation id = ApConstants.identifier("task");
+        Identifier id = ApConstants.identifier("task");
 
         Translations translations = gameHandle.getTranslations();
         BossBarProvider provider = gameHandle.getBossBarProvider();

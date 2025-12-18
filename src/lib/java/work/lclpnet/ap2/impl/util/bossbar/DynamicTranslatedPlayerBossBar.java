@@ -2,7 +2,7 @@ package work.lclpnet.ap2.impl.util.bossbar;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Style;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.bossevents.CustomBossEvent;
 import net.minecraft.server.level.ServerBossEvent;
 import net.minecraft.server.level.ServerPlayer;
@@ -23,7 +23,7 @@ import java.util.function.UnaryOperator;
 
 public class DynamicTranslatedPlayerBossBar implements PlayerBossBar {
 
-    private final ResourceLocation id;
+    private final Identifier id;
     private final Translations translations;
     private final BossBarProvider bossBarProvider;
     private final Map<UUID, Entry> entries = new WeakHashMap<>();
@@ -35,7 +35,7 @@ public class DynamicTranslatedPlayerBossBar implements PlayerBossBar {
     private boolean visible = true;
     private Style titleStyle = Style.EMPTY;
 
-    public DynamicTranslatedPlayerBossBar(ResourceLocation id, String translationKey, Object[] arguments,
+    public DynamicTranslatedPlayerBossBar(Identifier id, String translationKey, Object[] arguments,
                                           Translations translations, BossBarProvider bossBarProvider) {
         this.id = id;
         this.translationKey = translationKey;
@@ -50,7 +50,7 @@ public class DynamicTranslatedPlayerBossBar implements PlayerBossBar {
     }
 
     private ServerBossEvent createBossBar(ServerPlayer player) {
-        ResourceLocation suffixedId = id.withSuffix("/" + player.getScoreboardName().toLowerCase(Locale.ROOT));
+        Identifier suffixedId = id.withSuffix("/" + player.getScoreboardName().toLowerCase(Locale.ROOT));
         RootText title = translations.translateText(player, translationKey, arguments).setStyle(titleStyle);
 
         CustomBossEvent bossBar = bossBarProvider.createBossBar(suffixedId, title);

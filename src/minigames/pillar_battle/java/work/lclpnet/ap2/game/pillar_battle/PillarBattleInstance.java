@@ -9,9 +9,9 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.boss.enderdragon.EnderDragon;
 import net.minecraft.world.entity.boss.enderdragon.phases.EnderDragonPhase;
-import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.border.WorldBorder;
 import net.minecraft.world.level.dimension.end.EndDragonFight;
+import net.minecraft.world.level.gamerules.GameRules;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
@@ -20,6 +20,7 @@ import work.lclpnet.ap2.core.type.ApDragonFight;
 import work.lclpnet.ap2.impl.game.EliminationGameInstance;
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker;
 import work.lclpnet.ap2.impl.util.world.WorldBorderUtil;
+import work.lclpnet.kibu.access.entity.ServerPlayerAccess;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.ServerEntityHooks;
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks;
@@ -66,15 +67,14 @@ public class PillarBattleInstance extends EliminationGameInstance implements Map
         useSmoothDeath();
 
         commons().gameRuleBuilder()
-                .set(GameRules.RULE_FALL_DAMAGE, true)
-                .set(GameRules.RULE_FALL_DAMAGE, true)
-                .set(GameRules.RULE_DOFIRETICK, true)
-                .set(GameRules.RULE_DOINSOMNIA, false)
-                .set(GameRules.RULE_NATURAL_REGENERATION, true)
-                .set(GameRules.RULE_MOBGRIEFING, true)
-                .set(GameRules.RULE_DO_TRADER_SPAWNING, false)
-                .set(GameRules.RULE_DO_PATROL_SPAWNING, false)
-                .set(GameRules.RULE_KEEPINVENTORY, false);
+                .set(GameRules.FALL_DAMAGE, true)
+                .set(GameRules.FIRE_SPREAD_RADIUS_AROUND_PLAYER, 128)
+                .set(GameRules.SPAWN_PHANTOMS, false)
+                .set(GameRules.NATURAL_HEALTH_REGENERATION, true)
+                .set(GameRules.MOB_GRIEFING, true)
+                .set(GameRules.SPAWN_WANDERING_TRADERS, false)
+                .set(GameRules.SPAWN_PATROLS, false)
+                .set(GameRules.KEEP_INVENTORY, false);
 
         movementBlocker.init(gameHandle.getHooks());
 
@@ -120,7 +120,7 @@ public class PillarBattleInstance extends EliminationGameInstance implements Map
                 if (entity instanceof ServerPlayer player && outOfBounds(block)) {
                     var msg = translations.translateText(player, "game.ap2.pillar_battle.out_of_bounds").formatted(ChatFormatting.RED);
                     player.displayClientMessage(msg, true);
-                    player.playNotifySound(SoundEvents.NOTE_BLOCK_BASS.value(), SoundSource.BLOCKS, 0f, 0.5f);
+                    ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.NOTE_BLOCK_BASS.value(), SoundSource.BLOCKS, 0f, 0.5f);
                     return true;
                 }
 
@@ -243,7 +243,7 @@ public class PillarBattleInstance extends EliminationGameInstance implements Map
                     .styled(style -> style.withColor(0xff0000).withBold(true));
 
             player.displayClientMessage(msg, true);
-            player.playNotifySound(SoundEvents.NOTE_BLOCK_PLING.value(), SoundSource.HOSTILE, 0.3f, 0.5f);
+            ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.NOTE_BLOCK_PLING.value(), SoundSource.HOSTILE, 0.3f, 0.5f);
         }
     }
 
