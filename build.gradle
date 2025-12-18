@@ -30,6 +30,8 @@ base {
     archivesName = project.archives_base_name
 }
 
+int javaVersion = Integer.parseInt(project.java_version)
+
 /*********************************************************************************************************************\
  * Repositories
  \*********************************************************************************************************************/
@@ -268,23 +270,33 @@ test {
  * Tasks
  \*********************************************************************************************************************/
 tasks.withType(JavaCompile).configureEach {
-    it.options.release.set(21)
+    it.options.release.set(javaVersion)
 }
 
 java {
     // Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
     withSourcesJar()
 
-    sourceCompatibility = JavaVersion.VERSION_21
-    targetCompatibility = JavaVersion.VERSION_21
+    sourceCompatibility = JavaVersion.toVersion(javaVersion)
+    targetCompatibility = JavaVersion.toVersion(javaVersion)
+}
+
+kotlin {
+    jvmToolchain(javaVersion)
 }
 
 // resource expansion
 def configureResources(ProcessResources task) {
     task.inputs.property "version", project.version
+    task.inputs.property "loader_version", project.loader_version
+    task.inputs.property "minecraft_compat", project.minecraft_compat
+    task.inputs.property "java_version", project.java_version
 
     task.filesMatching("fabric.mod.json") {
-        expand "version": project.version
+        expand "version": project.version,
+                "loader_version": project.loader_version,
+                "minecraft_compat": project.minecraft_compat,
+                "java_version": project.java_version
     }
 }
 
