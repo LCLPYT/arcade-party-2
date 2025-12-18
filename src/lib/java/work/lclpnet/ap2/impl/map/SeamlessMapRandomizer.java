@@ -1,6 +1,6 @@
 package work.lclpnet.ap2.impl.map;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.ApConstants;
@@ -27,7 +27,7 @@ public class SeamlessMapRandomizer implements MapRandomizer {
     private final MapManager mapManager;
     private final Random random;
     private final Logger logger;
-    private @Nullable ResourceLocation forcedMap = null;
+    private @Nullable Identifier forcedMap = null;
 
     public SeamlessMapRandomizer(MapManager mapManager, Random random, Logger logger) {
         this.mapManager = mapManager;
@@ -36,7 +36,7 @@ public class SeamlessMapRandomizer implements MapRandomizer {
     }
 
     @Override
-    public CompletableFuture<GameMap> nextMap(ResourceLocation gameId) {
+    public CompletableFuture<GameMap> nextMap(Identifier gameId) {
         var mapIds = mapManager.getCollection()
                 .mapIdsWithPrefix(gameId)
                 .collect(Collectors.toSet());
@@ -50,7 +50,7 @@ public class SeamlessMapRandomizer implements MapRandomizer {
                 .orElseThrow(() -> new NoSuchElementException("No maps found for game: " + gameId));
     }
 
-    private Optional<CompletableFuture<GameMap>> getRandomMap(ResourceLocation gameId, Set<ResourceLocation> mapIds) {
+    private Optional<CompletableFuture<GameMap>> getRandomMap(Identifier gameId, Set<Identifier> mapIds) {
         if (mapIds.isEmpty()) {
             return Optional.empty();
         }
@@ -58,13 +58,13 @@ public class SeamlessMapRandomizer implements MapRandomizer {
         int margin = max(0, (int) floor(mapIds.size() * MARGIN_PERCENT));
 
         return Optional.of(CompletableFuture.supplyAsync(() -> {
-            ResourceLocation queueId = gameId.withSuffix("/map_queue");
-            var queuePersistence = JsonFileQueuePersistence.create(ApConstants.ID, queueId, ResourceLocation.CODEC, logger);
+            Identifier queueId = gameId.withSuffix("/map_queue");
+            var queuePersistence = JsonFileQueuePersistence.create(ApConstants.ID, queueId, Identifier.CODEC, logger);
             var transfer = queuePersistence.restore();
 
             var queue = new SeamlessQueue<>(mapIds, random, margin, transfer);
 
-            ResourceLocation next = queue.next();
+            Identifier next = queue.next();
 
             GameMap map = getMapById(next).join();
             queue.pushElement(next);
@@ -75,11 +75,11 @@ public class SeamlessMapRandomizer implements MapRandomizer {
     }
 
     @Override
-    public void forceMap(@Nullable ResourceLocation mapId) {
+    public void forceMap(@Nullable Identifier mapId) {
         this.forcedMap = mapId;
     }
 
-    private CompletableFuture<GameMap> getMapById(ResourceLocation mapId) {
+    private CompletableFuture<GameMap> getMapById(Identifier mapId) {
         var optMap = mapManager.getCollection().getMap(mapId);
 
         return optMap.map(CompletableFuture::completedFuture).orElseGet(() -> {

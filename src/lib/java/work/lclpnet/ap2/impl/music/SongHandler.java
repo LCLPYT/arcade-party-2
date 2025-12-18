@@ -5,7 +5,7 @@ import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.HoverEvent;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -46,10 +46,10 @@ public class SongHandler {
     private final Translations translations;
     private final Random random;
     private final Logger logger;
-    private final QueuePersistence<ResourceLocation> queuePersistence;
+    private final QueuePersistence<Identifier> queuePersistence;
     @Getter
     private final Set<WeightedSong> songs = new IndexedSet<>();
-    private final Map<ResourceLocation, WeightedSong> songsById = new HashMap<>();
+    private final Map<Identifier, WeightedSong> songsById = new HashMap<>();
     @Getter
     private final List<WeightedSong> priority = new ArrayList<>();
     private final SongCache cache = VoidSongCache.INSTANCE;
@@ -59,10 +59,10 @@ public class SongHandler {
     public SongHandler(MiniGameHandle handle, Random random) {
         this(handle.getSongManager(), handle.getTranslations(), random, handle.getLogger(),
                 JsonFileQueuePersistence.create(ApConstants.ID, handle.getGameInfo().identifier("song_queue"),
-                        ResourceLocation.CODEC, handle.getLogger()));
+                        Identifier.CODEC, handle.getLogger()));
     }
 
-    public SongHandler(SongManager songManager, Translations translations, Random random, Logger logger, QueuePersistence<ResourceLocation> queuePersistence) {
+    public SongHandler(SongManager songManager, Translations translations, Random random, Logger logger, QueuePersistence<Identifier> queuePersistence) {
         this.songManager = songManager;
         this.translations = translations;
         this.random = random;
@@ -70,7 +70,7 @@ public class SongHandler {
         this.queuePersistence = queuePersistence;
     }
 
-    public CompletableFuture<Void> loadSongs(ResourceLocation tag) {
+    public CompletableFuture<Void> loadSongs(Identifier tag) {
         return CompletableFuture.runAsync(() -> {
             var songsFuture = songManager.getSongs(tag);
             var restored = queuePersistence.restore();
@@ -104,7 +104,7 @@ public class SongHandler {
     }
 
     public void pushSongHistory(ConfiguredSong song) {
-        ResourceLocation id = song.checkedSong().id();
+        Identifier id = song.checkedSong().id();
         WeightedSong weightedSong = songsById.get(id);
 
         if (weightedSong == null) {
@@ -231,7 +231,7 @@ public class SongHandler {
         return songWrapper;
     }
 
-    public Set<ResourceLocation> getSongIds() {
+    public Set<Identifier> getSongIds() {
         return songs.stream()
                 .map(WeightedSong::getAllElements)
                 .flatMap(Collection::stream)
@@ -239,20 +239,20 @@ public class SongHandler {
                 .collect(Collectors.toSet());
     }
 
-    public Optional<WeightedSong> getRandomSongById(ResourceLocation id) {
+    public Optional<WeightedSong> getRandomSongById(Identifier id) {
         var matchingSongs = streamSongsById(id).collect(Collectors.toSet());
 
         return matchingSongs.isEmpty() ? Optional.empty() : Optional.of(new SimpleWeightedSong(matchingSongs, id));
     }
 
-    public @NotNull Stream<LoadableSong> streamSongsById(ResourceLocation id) {
+    public @NotNull Stream<LoadableSong> streamSongsById(Identifier id) {
         return songs.stream()
                 .map(WeightedSong::getAllElements)
                 .flatMap(Collection::stream)
                 .filter(song -> id.equals(song.getId()));
     }
 
-    public Optional<WeightedSong> getSongByIdAndTime(ResourceLocation id, int startTick) {
+    public Optional<WeightedSong> getSongByIdAndTime(Identifier id, int startTick) {
         return streamSongsById(id)
                 .filter(song -> song.getInfo().meta().startTick().orElse(0) == startTick)
                 .findAny()

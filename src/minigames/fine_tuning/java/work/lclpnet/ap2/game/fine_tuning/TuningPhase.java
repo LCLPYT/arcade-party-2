@@ -33,6 +33,7 @@ import work.lclpnet.ap2.impl.util.ApRegistries;
 import work.lclpnet.ap2.impl.util.BookUtil;
 import work.lclpnet.ap2.impl.util.heads.PlayerHeads;
 import work.lclpnet.gaco.dynamic_entities.DynamicEntityManager;
+import work.lclpnet.kibu.access.entity.ServerPlayerAccess;
 import work.lclpnet.kibu.hook.HookContainer;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.kibu.hook.player.PlayerInventoryHooks;
@@ -184,7 +185,7 @@ class TuningPhase {
 
         completed.add(player.getUUID());
 
-        player.playNotifySound(SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 0.5f, 1f);
+        ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 0.5f, 1f);
 
         gameHandle.getTranslations().translateText("game.ap2.fine_tuning.completed").formatted(GREEN).sendTo(player);
 

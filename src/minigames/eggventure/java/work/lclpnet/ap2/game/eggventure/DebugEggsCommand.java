@@ -3,6 +3,7 @@ package work.lclpnet.ap2.game.eggventure;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -14,6 +15,7 @@ import work.lclpnet.kibu.cmd.type.CommandRegistrar;
 import work.lclpnet.kibu.cmd.type.KibuCommand;
 import work.lclpnet.kibu.inv.type.KibuInventory;
 
+import static net.minecraft.commands.Commands.LEVEL_GAMEMASTERS;
 import static net.minecraft.commands.Commands.literal;
 
 
@@ -28,7 +30,7 @@ public class DebugEggsCommand implements KibuCommand {
     @Override
     public void register(CommandRegistrar registrar) {
         registrar.registerCommand(literal("ap2:eggs")
-                .requires(s -> s.hasPermission(2))
+                .requires(Commands.hasPermission(LEVEL_GAMEMASTERS))
                 .executes(this::showEggsInventory));
     }
 

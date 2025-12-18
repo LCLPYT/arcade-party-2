@@ -3,6 +3,7 @@ package work.lclpnet.ap2.game.maze_scape.debug;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.block.Blocks;
@@ -34,7 +35,7 @@ public class DebugFrustumCommand implements KibuCommand {
     @Override
     public void register(CommandRegistrar commandRegistrar) {
         commandRegistrar.registerCommand(literal("ap2:debug_frustum")
-                .requires(s -> s.hasPermission(2))
+                .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
                 .then(literal("show")
                         .executes(this::showSelf))
                 .then(literal("clear")

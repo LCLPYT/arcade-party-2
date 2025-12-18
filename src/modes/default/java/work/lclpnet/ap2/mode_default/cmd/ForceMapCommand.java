@@ -3,9 +3,10 @@ package work.lclpnet.ap2.mode_default.cmd;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.commands.arguments.ResourceLocationArgument;
+import net.minecraft.commands.Commands;
+import net.minecraft.commands.arguments.IdentifierArgument;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import work.lclpnet.ap2.api.game.MiniGame;
 import work.lclpnet.ap2.api.map.MapFacade;
 import work.lclpnet.ap2.mode_default.cmd.arg.MapSuggestionProvider;
@@ -35,14 +36,14 @@ public class ForceMapCommand implements KibuCommand {
 
     private LiteralArgumentBuilder<CommandSourceStack> command() {
         return literal("forcemap")
-                .requires(s -> s.hasPermission(2))
-                .then(argument("mapId", ResourceLocationArgument.id())
+                .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
+                .then(argument("mapId", IdentifierArgument.id())
                         .suggests(new MapSuggestionProvider(mapFacade, gameSupplier))
                         .executes(this::forceMap));
     }
 
     private int forceMap(CommandContext<CommandSourceStack> ctx) {
-        ResourceLocation mapId = ResourceLocationArgument.getId(ctx, "mapId");
+        Identifier mapId = IdentifierArgument.getId(ctx, "mapId");
 
         mapFacade.forceMap(mapId);
 

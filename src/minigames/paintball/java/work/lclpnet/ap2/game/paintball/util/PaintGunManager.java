@@ -35,6 +35,7 @@ import work.lclpnet.gaco.ds.BlockBox;
 import work.lclpnet.gaco.scene.Scene;
 import work.lclpnet.gaco.scene.physics.EntityRefPhysicsElement;
 import work.lclpnet.gaco.scene.physics.SceneRigidBody;
+import work.lclpnet.kibu.access.entity.ServerPlayerAccess;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.physics.api.PhysicsElement;
 import work.lclpnet.kibu.physics.api.event.collision.ElementCollisionEvents;
@@ -237,7 +238,7 @@ public class PaintGunManager {
 
         if (stack.getDamageValue() >= stack.getMaxDamage()) {
             translations.translateText("game.ap2.paintball.no_ink").formatted(RED).sendTo(player, true);
-            player.playNotifySound(SoundEvents.NOTE_BLOCK_HAT.value(), SoundSource.PLAYERS, 0.2f, 2f);
+            ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.NOTE_BLOCK_HAT.value(), SoundSource.PLAYERS, 0.2f, 2f);
             return;
         }
 

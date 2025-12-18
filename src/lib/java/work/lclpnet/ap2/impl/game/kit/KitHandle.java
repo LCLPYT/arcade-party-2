@@ -3,7 +3,7 @@ package work.lclpnet.ap2.impl.game.kit;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemLore;
@@ -24,7 +24,7 @@ import static net.minecraft.ChatFormatting.GREEN;
 
 public interface KitHandle {
 
-    ResourceLocation gameId();
+    Identifier gameId();
 
     HookRegistrar hooks();
 
@@ -57,7 +57,7 @@ public interface KitHandle {
     }
 
     default void decorateItemStack(ItemStack stack, Kit kit, ServerPlayer player, boolean forIcon) {
-        ResourceLocation gameId = gameId();
+        Identifier gameId = gameId();
         Translations translations = translations();
 
         stack.set(DataComponents.CUSTOM_NAME, kitName(kit).translateFor(player).formatted(AQUA)
@@ -92,7 +92,7 @@ public interface KitHandle {
     }
 
     default TranslatedText kitName(Kit kit) {
-        ResourceLocation gameId = gameId();
+        Identifier gameId = gameId();
 
         return translations().translateText("game.%s.%s.kit.%s".formatted(gameId.getNamespace(), gameId.getPath(), kit.id()));
     }

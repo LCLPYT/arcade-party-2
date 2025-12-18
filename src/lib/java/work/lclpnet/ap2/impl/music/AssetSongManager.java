@@ -3,7 +3,7 @@ package work.lclpnet.ap2.impl.music;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.SetMultimap;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.VisibleForTesting;
@@ -32,7 +32,7 @@ public class AssetSongManager implements SongManager {
 
     private final AssetRepository assetRepository;
     private final Logger logger;
-    private final Map<ResourceLocation, Map<String, WeightedSong>> cache = new HashMap<>();
+    private final Map<Identifier, Map<String, WeightedSong>> cache = new HashMap<>();
 
     public AssetSongManager(AssetRepository assetRepository, Logger logger) {
         this.assetRepository = assetRepository;
@@ -40,14 +40,14 @@ public class AssetSongManager implements SongManager {
     }
 
     @NotNull
-    private static ResourceLocation getSongId(Path path) {
-        ResourceLocation noticaSongId = SongUtils.createSongId(path);
+    private static Identifier getSongId(Path path) {
+        Identifier noticaSongId = SongUtils.createSongId(path);
         
         return ApConstants.identifier(noticaSongId.getPath());
     }
 
     @Override
-    public CompletableFuture<Set<WeightedSong>> getSongs(ResourceLocation tag) {
+    public CompletableFuture<Set<WeightedSong>> getSongs(Identifier tag) {
         Map<String, WeightedSong> cachedTag = cache.getOrDefault(tag, null);
 
         if (cachedTag != null) {
@@ -57,7 +57,7 @@ public class AssetSongManager implements SongManager {
         return CompletableFuture.supplyAsync(() -> getSongsSync(tag));
     }
 
-    private Set<WeightedSong> getSongsSync(ResourceLocation tag) {
+    private Set<WeightedSong> getSongsSync(Identifier tag) {
         var songDefs = readSongDefinitions(tag);
 
         try {
@@ -69,7 +69,7 @@ public class AssetSongManager implements SongManager {
     }
 
     @VisibleForTesting
-    public SetMultimap<AssetPath, SongConfig> readSongDefinitions(ResourceLocation tag) {
+    public SetMultimap<AssetPath, SongConfig> readSongDefinitions(Identifier tag) {
         var dir = AssetPath.of(tag.getNamespace(), tag.getPath());
         var assetPath = dir.resolve("songs.json");
 
@@ -126,13 +126,13 @@ public class AssetSongManager implements SongManager {
         AssetPath finalSongPath = file != null ? songPath.resolveSibling(file) : songPath;
 
         String[] segments = songPath.segments();
-        ResourceLocation songId = getSongId(Path.of(segments[segments.length - 1]));
+        Identifier songId = getSongId(Path.of(segments[segments.length - 1]));
         Set<LoadableSong> loadableSongs = toLoadable(info, variants, finalSongPath, songId);
 
         return new SimpleWeightedSong(loadableSongs, songId);
     }
 
-    private @NotNull Set<LoadableSong> toLoadable(SongInfo info, Collection<SongConfig> configs, AssetPath path, ResourceLocation songId) {
+    private @NotNull Set<LoadableSong> toLoadable(SongInfo info, Collection<SongConfig> configs, AssetPath path, Identifier songId) {
         return configs.stream()
                 .map(config -> config.toLoadable(path, assetRepository, songId, config.optOverride()
                         .map(override -> override.withParent(info.meta()))
@@ -160,12 +160,12 @@ public class AssetSongManager implements SongManager {
     }
 
     @Override
-    public void cache(WeightedSong song, ResourceLocation tag, String songName) {
+    public void cache(WeightedSong song, Identifier tag, String songName) {
         cache.computeIfAbsent(tag, _tag -> new HashMap<>()).put(songName, song);
     }
 
     @Override
-    public CompletableFuture<Optional<WeightedSong>> getSong(ResourceLocation tag, String songName) {
+    public CompletableFuture<Optional<WeightedSong>> getSong(Identifier tag, String songName) {
         var cachedTag = cache.getOrDefault(tag, null);
 
         if (cachedTag != null) {
@@ -179,7 +179,7 @@ public class AssetSongManager implements SongManager {
         return CompletableFuture.supplyAsync(() -> getSongSync(tag, songName));
     }
 
-    public @NotNull Optional<WeightedSong> getSongSync(ResourceLocation tag, String song) {
+    public @NotNull Optional<WeightedSong> getSongSync(Identifier tag, String song) {
         var dir = AssetPath.of(tag.getNamespace(), tag.getPath());
         SongDirectoryMeta meta = readMeta(dir);
         SongInfo info = meta.info().getOrDefault(song, SongInfo.EMPTY);
@@ -258,7 +258,7 @@ public class AssetSongManager implements SongManager {
 
         public static final SongConfig DEFAULT = new SongConfig(1.0f, null);
 
-        public AssetPathLoadableSong toLoadable(AssetPath path, AssetRepository assetRepo, ResourceLocation songId, SongInfo info) {
+        public AssetPathLoadableSong toLoadable(AssetPath path, AssetRepository assetRepo, Identifier songId, SongInfo info) {
             return new AssetPathLoadableSong(path, assetRepo, songId, weight, info);
         }
 

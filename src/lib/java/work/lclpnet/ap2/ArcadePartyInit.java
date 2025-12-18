@@ -8,7 +8,7 @@ import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.packs.PackType;
 import net.minecraft.server.packs.resources.ResourceManager;
@@ -25,7 +25,7 @@ import static work.lclpnet.ap2.ApConstants.logger;
 
 public class ArcadePartyInit implements ModInitializer {
 
-    public static final ResourceLocation RESOURCES_ID = ApConstants.identifier("resources");
+    public static final Identifier RESOURCES_ID = ApConstants.identifier("resources");
 
     @Override
     public void onInitialize() {
@@ -33,7 +33,7 @@ public class ArcadePartyInit implements ModInitializer {
 
         ResourceManagerHelper.get(PackType.SERVER_DATA).registerReloadListener(RESOURCES_ID, lookup -> new SimpleSynchronousResourceReloadListener() {
             @Override
-            public ResourceLocation getFabricId() {
+            public Identifier getFabricId() {
                 return RESOURCES_ID;
             }
 
@@ -57,7 +57,7 @@ public class ArcadePartyInit implements ModInitializer {
 
             actorRegistry.getType(data.type()).ifPresentOrElse(
                     type -> createActor(world, marker, type, data.nbt()),
-                    () -> logger.warn("Unknown actor type {} in world {} at {}", data.type(), world.dimension().location(), marker.blockPosition())
+                    () -> logger.warn("Unknown actor type {} in world {} at {}", data.type(), world.dimension().identifier(), marker.blockPosition())
             );
         });
 

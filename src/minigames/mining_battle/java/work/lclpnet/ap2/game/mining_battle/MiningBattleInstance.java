@@ -11,8 +11,8 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.enchantment.Enchantments;
-import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.gamerules.GameRules;
 import org.jetbrains.annotations.NotNull;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
@@ -28,6 +28,7 @@ import work.lclpnet.ap2.impl.map.ServerThreadMapBootstrap;
 import work.lclpnet.ap2.impl.util.ItemHelper;
 import work.lclpnet.ap2.impl.util.TextUtil;
 import work.lclpnet.gaco.ds.BlockBox;
+import work.lclpnet.kibu.access.entity.ServerPlayerAccess;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.world.BlockModificationHooks;
 import work.lclpnet.kibu.translate.Translations;
@@ -69,7 +70,7 @@ public class MiningBattleInstance extends FFAGameInstance implements MapBootstra
         GameRules gameRules = world.getGameRules();
         MinecraftServer server = gameHandle.getServer();
 
-        gameRules.getRule(GameRules.RULE_DOBLOCKDROPS).set(false, server);
+        gameRules.set(GameRules.BLOCK_DROPS, false, server);
 
         placeOres(world, map);
     }
@@ -120,15 +121,15 @@ public class MiningBattleInstance extends FFAGameInstance implements MapBootstra
         commons().addScore(player, points, data);
 
         if (points <= 1) {
-            player.playNotifySound(SoundEvents.ENCHANTMENT_TABLE_USE, SoundSource.BLOCKS, 0.5f, 2f);
+            ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.ENCHANTMENT_TABLE_USE, SoundSource.BLOCKS, 0.5f, 2f);
         } else if (points == 2) {
-            player.playNotifySound(SoundEvents.BREWING_STAND_BREW, SoundSource.BLOCKS, 0.5f, 2f);
+            ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.BREWING_STAND_BREW, SoundSource.BLOCKS, 0.5f, 2f);
         } else if (points < 5) {
-            player.playNotifySound(SoundEvents.END_PORTAL_SPAWN, SoundSource.BLOCKS, 0.3f, 1f);
+            ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.END_PORTAL_SPAWN, SoundSource.BLOCKS, 0.3f, 1f);
         } else {
-            player.playNotifySound(SoundEvents.EVOKER_CAST_SPELL, SoundSource.BLOCKS, 0.5f, 1f);
-            player.playNotifySound(SoundEvents.WITHER_SPAWN, SoundSource.BLOCKS, 0.325f, 1.2f);
-            player.playNotifySound(SoundEvents.END_PORTAL_SPAWN, SoundSource.BLOCKS, 0.225f, 0f);
+            ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.EVOKER_CAST_SPELL, SoundSource.BLOCKS, 0.5f, 1f);
+            ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.WITHER_SPAWN, SoundSource.BLOCKS, 0.325f, 1.2f);
+            ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.END_PORTAL_SPAWN, SoundSource.BLOCKS, 0.225f, 0f);
         }
     }
 

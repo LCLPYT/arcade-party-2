@@ -2,10 +2,10 @@ package work.lclpnet.ap2.api.actor;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
-import net.minecraft.Util;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
+import net.minecraft.util.Util;
 import net.minecraft.world.entity.Marker;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -99,7 +99,7 @@ public class ActorManager implements Tickable {
         CompoundTag actorNbt = actorCompound;
 
         ActorData<?> data = actor.createData();
-        ResourceLocation id = actor.getType().id();
+        Identifier id = actor.getType().id();
 
         if (data != null) {
             actorNbt = data.encode(NbtOps.INSTANCE, actorCompound)
@@ -113,9 +113,9 @@ public class ActorManager implements Tickable {
         CustomNbt.set(marker, ACTOR_INFO_CODEC, info);
     }
 
-    public record ActorInfo(ResourceLocation type, CompoundTag nbt) {
+    public record ActorInfo(Identifier type, CompoundTag nbt) {
 
-        public static final MapCodec<ResourceLocation> TYPE_CODEC = ResourceLocation.CODEC.fieldOf(ACTOR_TYPE_NBT_KEY);
+        public static final MapCodec<Identifier> TYPE_CODEC = Identifier.CODEC.fieldOf(ACTOR_TYPE_NBT_KEY);
 
         public static final Codec<ActorInfo> CODEC = CompoundTag.CODEC.flatXmap(
                 nbt -> NbtOps.INSTANCE.getMap(nbt)

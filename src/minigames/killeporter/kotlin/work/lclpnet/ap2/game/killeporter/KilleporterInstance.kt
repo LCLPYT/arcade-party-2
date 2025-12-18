@@ -21,12 +21,12 @@ import net.minecraft.world.InteractionResult
 import net.minecraft.world.damagesource.DamageTypes
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.ItemStack
-import net.minecraft.world.level.GameRules
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.ChestBlock
 import net.minecraft.world.level.block.DoubleBlockCombiner
 import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.gamerules.GameRules
 import net.minecraft.world.level.material.Fluids
 import work.lclpnet.ap2.*
 import work.lclpnet.ap2.api.game.MiniGameHandle
@@ -161,17 +161,17 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
         world.setDayTime((13000 - TIME_TO_NIGHTFALL_DAYTIME_TICKS).toLong())
 
         commons().gameRuleBuilder()
-            .set(GameRules.RULE_FALL_DAMAGE, true)
-            .set(GameRules.RULE_DOFIRETICK, true)
-            .set(GameRules.RULE_DOINSOMNIA, false)
-            .set(GameRules.RULE_NATURAL_REGENERATION, true)
-            .set(GameRules.RULE_KEEPINVENTORY, false)
-            .set(GameRules.RULE_DAYLIGHT, false)
-            .set(GameRules.RULE_DOMOBSPAWNING, true)
-            .set(GameRules.RULE_DOMOBLOOT, true)
-            .set(GameRules.RULE_MOBGRIEFING, true)
-            .set(GameRules.RULE_DOENTITYDROPS, true)
-            .set(GameRules.RULE_ANNOUNCE_ADVANCEMENTS, false)
+            .set(GameRules.FALL_DAMAGE, true)
+            .set(GameRules.FIRE_SPREAD_RADIUS_AROUND_PLAYER, 0)
+            .set(GameRules.SPAWN_PHANTOMS, false)
+            .set(GameRules.NATURAL_HEALTH_REGENERATION, true)
+            .set(GameRules.KEEP_INVENTORY, false)
+            .set(GameRules.ADVANCE_TIME, false)
+            .set(GameRules.SPAWN_MOBS, true)
+            .set(GameRules.MOB_DROPS, true)
+            .set(GameRules.MOB_GRIEFING, true)
+            .set(GameRules.ENTITY_DROPS, true)
+            .set(GameRules.SHOW_ADVANCEMENT_MESSAGES, false)
 
         useRemainingPlayersDisplay()
         useSmoothDeath()
@@ -200,7 +200,7 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
 
         itemUseAllowed = true
 
-        commons().gameRuleBuilder().set(GameRules.RULE_DAYLIGHT, true)
+        commons().gameRuleBuilder().set(GameRules.ADVANCE_TIME, true)
 
         gameHandle.protect { config ->
             config.allowAll()

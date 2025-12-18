@@ -105,7 +105,7 @@ public class PbSetup {
     }
 
     private Path getWorldDirectory(ServerLevel world) {
-        var session = ((MinecraftServerAccessor) world.getServer()).getSession();
+        var session = ((MinecraftServerAccessor) Objects.requireNonNull(world.getServer())).getStorageSource();
 
         return session.getDimensionPath(world.dimension());
     }

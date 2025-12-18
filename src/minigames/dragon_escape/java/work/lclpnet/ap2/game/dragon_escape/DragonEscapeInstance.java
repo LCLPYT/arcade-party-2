@@ -14,9 +14,9 @@ import net.minecraft.world.damagesource.CombatEntry;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.boss.enderdragon.EnderDragon;
-import net.minecraft.world.entity.projectile.windcharge.WindCharge;
+import net.minecraft.world.entity.projectile.hurtingprojectile.windcharge.WindCharge;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.GameRules;
+import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.scores.DisplaySlot;
 import net.minecraft.world.scores.Objective;
@@ -133,8 +133,8 @@ public class DragonEscapeInstance extends FFAGameInstance {
         setupKits(visibilityHandler);
 
         commons().gameRuleBuilder()
-                .set(GameRules.RULE_FALL_DAMAGE, false)
-                .set(GameRules.RULE_DOMOBSPAWNING, false);
+                .set(GameRules.FALL_DAMAGE, false)
+                .set(GameRules.SPAWN_MOBS, false);
 
         if (DEBUG_PATH) {
             debugPath();

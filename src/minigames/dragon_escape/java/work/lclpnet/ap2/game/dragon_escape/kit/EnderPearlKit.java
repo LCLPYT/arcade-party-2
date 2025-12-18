@@ -6,7 +6,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
-import net.minecraft.world.entity.projectile.ThrownEnderpearl;
+import net.minecraft.world.entity.projectile.throwableitemprojectile.ThrownEnderpearl;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.phys.Vec3;
 import work.lclpnet.ap2.core.hook.EnderPearlTeleportCallback;
@@ -16,6 +16,7 @@ import work.lclpnet.ap2.impl.game.kit.KitOptions;
 import work.lclpnet.ap2.impl.game.kit.SingleItemKit;
 import work.lclpnet.ap2.impl.util.CustomNbt;
 import work.lclpnet.gaco.math.SplinePath;
+import work.lclpnet.kibu.access.entity.ServerPlayerAccess;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.TaskHandle;
 
@@ -111,6 +112,6 @@ public class EnderPearlKit extends SingleItemKit {
 
         equip(player, options);
 
-        player.playNotifySound(SoundEvents.NOTE_BLOCK_BASS.value(), SoundSource.NEUTRAL, 0.5f, 1f);
+        ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.NOTE_BLOCK_BASS.value(), SoundSource.NEUTRAL, 0.5f, 1f);
     }
 }

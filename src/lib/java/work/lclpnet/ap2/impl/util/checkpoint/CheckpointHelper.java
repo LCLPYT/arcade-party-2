@@ -24,6 +24,7 @@ import work.lclpnet.ap2.impl.util.heads.PlayerHeads;
 import work.lclpnet.gaco.collisions.util.PlayerAction;
 import work.lclpnet.gaco.ds.BlockBox;
 import work.lclpnet.gaco.ds.Checkpoint;
+import work.lclpnet.kibu.access.entity.ServerPlayerAccess;
 import work.lclpnet.kibu.hook.Hook;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
@@ -42,7 +43,7 @@ public class CheckpointHelper {
             var msg = translations.translateText(player, "game.ap2.reached_checkpoint").formatted(ChatFormatting.GREEN);
 
             player.displayClientMessage(msg, true);
-            player.playNotifySound(SoundEvents.RESPAWN_ANCHOR_SET_SPAWN, SoundSource.BLOCKS, 0.4f, 1f);
+            ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.RESPAWN_ANCHOR_SET_SPAWN, SoundSource.BLOCKS, 0.4f, 1f);
         });
     }
 

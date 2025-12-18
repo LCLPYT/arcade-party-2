@@ -16,8 +16,8 @@ import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.ChargedProjectiles;
-import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.GameType;
+import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.world.scores.DisplaySlot;
 import net.minecraft.world.scores.Objective;
 import net.minecraft.world.scores.criteria.ObjectiveCriteria;
@@ -35,6 +35,7 @@ import work.lclpnet.ap2.impl.util.handler.VisualCooldown;
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
+import work.lclpnet.kibu.access.entity.ServerPlayerAccess;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.ProjectileHooks;
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks;
@@ -80,10 +81,10 @@ public class OneInTheChamberInstance extends FFAGameInstance {
         ServerLevel world = getWorld();
 
         commons().gameRuleBuilder()
-                .set(GameRules.RULE_DOENTITYDROPS, false)
-                .set(GameRules.RULE_NATURAL_REGENERATION, false)
-                .set(GameRules.RULE_ANNOUNCE_ADVANCEMENTS, false)
-                .set(GameRules.RULE_FALL_DAMAGE, false);
+                .set(GameRules.ENTITY_DROPS, false)
+                .set(GameRules.NATURAL_HEALTH_REGENERATION, false)
+                .set(GameRules.SHOW_ADVANCEMENT_MESSAGES, false)
+                .set(GameRules.FALL_DAMAGE, false);
 
         JSONArray spawnsJson = getMap().requireProperty("random-spawns");
         respawn.loadSpawnPoints(spawnsJson);
@@ -248,7 +249,7 @@ public class OneInTheChamberInstance extends FFAGameInstance {
         killer.displayClientMessage(Component.literal("+1 ").append(TextUtil.getVanillaName(Items.ARROW))
                 .withStyle(GOLD), true);
 
-        killer.playNotifySound(SoundEvents.CROSSBOW_QUICK_CHARGE_3.value(), SoundSource.PLAYERS, 1f, 1f);
+        ServerPlayerAccess.playSoundToPlayer(killer, SoundEvents.CROSSBOW_QUICK_CHARGE_3.value(), SoundSource.PLAYERS, 1f, 1f);
 
         giveCrossbowToPlayer(killer);
         killer.setHealth(20);
@@ -260,6 +261,6 @@ public class OneInTheChamberInstance extends FFAGameInstance {
             winManager.complete();
         }
 
-        killer.playNotifySound(SoundEvents.ARROW_HIT_PLAYER, SoundSource.PLAYERS, 0.8f, 0.8f);
+        ServerPlayerAccess.playSoundToPlayer(killer, SoundEvents.ARROW_HIT_PLAYER, SoundSource.PLAYERS, 0.8f, 0.8f);
     }
 }

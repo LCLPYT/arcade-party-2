@@ -1,7 +1,8 @@
 package work.lclpnet.ap2.game.cozy_campfire.setup;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
@@ -41,7 +42,9 @@ public class CCReader {
     }
 
     public Map<Team, CCBase> _readBases(Set<Team> teams) {
-        var session = ((MinecraftServerAccessor) world.getServer()).getSession();
+        MinecraftServer server = Objects.requireNonNull(world.getServer());
+
+        var session = ((MinecraftServerAccessor) server).getStorageSource();
         Path storage = session.getDimensionPath(world.dimension());
         Path schematicsDir = storage.resolve("schematics");
 
@@ -51,7 +54,7 @@ public class CCReader {
 
         for (Team team : teams) {
             String id = team.key().id();
-            ResourceLocation mapId = map.getDescriptor().getIdentifier();
+            Identifier mapId = map.getDescriptor().getIdentifier();
 
             if (!basesJson.has(id)) {
                 logger.error("No base configured for team {} in map {}", id, mapId);
@@ -71,7 +74,7 @@ public class CCReader {
     }
 
     @Nullable
-    private CCBase readBase(JSONObject json, String teamId, ResourceLocation mapId, Path schematicsDir) {
+    private CCBase readBase(JSONObject json, String teamId, Identifier mapId, Path schematicsDir) {
         if (!json.has("bounds")) {
             logger.error("Base of team {} in map {} does not contain property 'bounds'", teamId, mapId);
             return null;

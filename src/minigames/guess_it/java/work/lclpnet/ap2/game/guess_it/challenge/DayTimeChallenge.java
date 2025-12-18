@@ -11,7 +11,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.LodestoneTracker;
-import net.minecraft.world.level.GameRules;
+import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.world.phys.Vec3;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
@@ -168,7 +168,7 @@ public class DayTimeChallenge implements Challenge, SchedulerAction {
 
         world.setDayTime(time);
 
-        var packet = new ClientboundSetTimePacket(world.getGameTime(), world.getDayTime(), world.getGameRules().getBoolean(GameRules.RULE_DAYLIGHT));
+        var packet = new ClientboundSetTimePacket(world.getGameTime(), world.getDayTime(), world.getGameRules().get(GameRules.ADVANCE_TIME));
 
         for (ServerPlayer player : PlayerLookup.world(world)) {
             player.connection.send(packet);

@@ -1,7 +1,7 @@
 package work.lclpnet.ap2.api.map;
 
 import it.unimi.dsi.fastutil.Pair;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.game.MapReady;
@@ -22,23 +22,23 @@ public interface MapFacade {
      * @param mapOptions The map options.
      * @return A future that completes if the map was opened.
      */
-    CompletableFuture<Pair<ServerLevel, GameMap>> openRandomMap(ResourceLocation gameId, MapOptions mapOptions);
+    CompletableFuture<Pair<ServerLevel, GameMap>> openRandomMap(Identifier gameId, MapOptions mapOptions);
 
-    void openRandomMap(ResourceLocation gameId, MapOptions options, MapReady onReady);
+    void openRandomMap(Identifier gameId, MapOptions options, MapReady onReady);
 
-    CompletableFuture<List<ResourceLocation>> getMapIds(ResourceLocation gameId);
+    CompletableFuture<List<Identifier>> getMapIds(Identifier gameId);
 
-    CompletableFuture<List<GameMap>> getMaps(ResourceLocation gameId);
+    CompletableFuture<List<GameMap>> getMaps(Identifier gameId);
 
-    CompletableFuture<Optional<GameMap>> getMap(ResourceLocation mapId);
+    CompletableFuture<Optional<GameMap>> getMap(Identifier mapId);
 
-    CompletableFuture<Void> reloadMaps(ResourceLocation gameId);
+    CompletableFuture<Void> reloadMaps(Identifier gameId);
 
-    void forceMap(@Nullable ResourceLocation mapId);
+    void forceMap(@Nullable Identifier mapId);
 
     AssetRepository getAssetRepository();
 
-    default void openRandomMap(ResourceLocation gameId, MapReady onReady) {
+    default void openRandomMap(Identifier gameId, MapReady onReady) {
         openRandomMap(gameId, MapOptions.TEMPORARY, onReady);
     }
 
@@ -48,7 +48,7 @@ public interface MapFacade {
      * @param gameId The game identifier.
      * @return A future that completes if the map was opened.
      */
-    default CompletableFuture<Pair<ServerLevel, GameMap>> openRandomMap(ResourceLocation gameId) {
+    default CompletableFuture<Pair<ServerLevel, GameMap>> openRandomMap(Identifier gameId) {
         return openRandomMap(gameId, MapOptions.TEMPORARY);
     }
 }

@@ -9,7 +9,7 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.DamageTypeTags;
@@ -262,7 +262,7 @@ public class SpecialItems implements SpecialItemContext {
     }
 
     private TranslatedText itemName(SpecialItem item) {
-        ResourceLocation gameId = gameHandle.getGameInfo().getId();
+        Identifier gameId = gameHandle.getGameInfo().getId();
         String key = join(".", "game", gameId.getNamespace(), gameId.getPath(), "item", item.id());
 
         return gameHandle.getTranslations().translateText(key)
@@ -270,7 +270,7 @@ public class SpecialItems implements SpecialItemContext {
     }
 
     private Optional<Component> itemDescription(ServerPlayer player, SpecialItem item) {
-        ResourceLocation gameId = gameHandle.getGameInfo().getId();
+        Identifier gameId = gameHandle.getGameInfo().getId();
         String key = join(".", "game", gameId.getNamespace(), gameId.getPath(), "item", item.id(), "desc");
 
         if (!gameHandle.getTranslations().getTranslator().hasTranslation("en_us", key)) {

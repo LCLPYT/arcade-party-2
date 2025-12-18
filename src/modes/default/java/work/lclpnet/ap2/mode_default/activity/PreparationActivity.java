@@ -3,10 +3,11 @@ package work.lclpnet.ap2.mode_default.activity;
 import it.unimi.dsi.fastutil.objects.ObjectIntPair;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.ChatFormatting;
+import net.minecraft.commands.Commands;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.numbers.FixedFormat;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -62,6 +63,7 @@ import work.lclpnet.gaco.scene.MixedMountContext;
 import work.lclpnet.gaco.scene.Object3d;
 import work.lclpnet.gaco.scene.Scene;
 import work.lclpnet.gaco.scene.object.TranslatedTextDisplayObject;
+import work.lclpnet.kibu.access.entity.ServerPlayerAccess;
 import work.lclpnet.kibu.cmd.type.CommandRegistrar;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
@@ -161,7 +163,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
 
     static CompletableFuture<SetupResult> setupMap(ApMiniGameArgs miniGameArgs) {
         WorldFacade worldFacade = miniGameArgs.worldFacade();
-        ResourceLocation mapId = ApConstants.identifier("preparation");
+        Identifier mapId = ApConstants.identifier("preparation");
 
         return worldFacade.changeMap(mapId, MapOptions.REUSABLE)
                 .thenCompose(world -> miniGameArgs.mapFacade().getMap(mapId)
@@ -255,7 +257,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
             miniGame = pickNextGame();
         }
 
-        ResourceLocation gameId = miniGame.getId();
+        Identifier gameId = miniGame.getId();
 
         whenTasksDone = args.miniGameArgs().mapFacade().reloadMaps(gameId).exceptionally(err -> {
             args.miniGameArgs().logger().error("Failed to reload maps for {}", gameId, err);
@@ -662,7 +664,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
             animatedTitle.add(new NextGameTitleAnimation(player, gameTitle, playedNextMsg.translateFor(player)));
 
             if (nextGameSong == null) {
-                player.playNotifySound(SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 1, 1);
+                ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 1, 1);
             }
         }
 
@@ -697,7 +699,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
 
         msg.acceptEach(PlayerLookup.all(getServer()), (player, text) -> {
             player.sendSystemMessage(text);
-            player.playNotifySound(SoundEvents.WITHER_HURT, SoundSource.PLAYERS, 0.4f, 0.9f);
+            ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.WITHER_HURT, SoundSource.PLAYERS, 0.4f, 0.9f);
         });
     }
 
@@ -715,7 +717,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
         MinecraftServer server = getServer();
 
         for (ServerPlayer player : PlayerLookup.all(server)) {
-            if (server.getProfilePermissions(player.nameAndId()) < 2) continue;
+            if (!Commands.LEVEL_GAMEMASTERS.check(server.getProfilePermissions(player.nameAndId()))) continue;
 
             ItemStack gameSelector = new ItemStack(Items.TOTEM_OF_UNDYING);
             gameSelector.set(DataComponents.CUSTOM_NAME, Component.literal("Select Game").withStyle(style -> style.withItalic(false).applyFormat(YELLOW)));
@@ -734,7 +736,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
 
         hooks.registerHook(PlayerInteractionHooks.USE_ITEM, (player, world, hand) -> {
             if (!(player instanceof ServerPlayer serverPlayer)
-                || server.getProfilePermissions(serverPlayer.nameAndId()) < 2) {
+                || !Commands.LEVEL_GAMEMASTERS.check(server.getProfilePermissions(serverPlayer.nameAndId()))) {
 
                 return InteractionResult.PASS;
             }
@@ -759,7 +761,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
         });
 
         mapChooser.listen(hooks, (gameMap, player) -> {
-            ResourceLocation mapId = gameMap.getDescriptor().getIdentifier();
+            Identifier mapId = gameMap.getDescriptor().getIdentifier();
             args.miniGameArgs().mapFacade().forceMap(mapId);
             player.sendSystemMessage(Component.literal("Next map will be \"%s\"".formatted(mapId)));
         });

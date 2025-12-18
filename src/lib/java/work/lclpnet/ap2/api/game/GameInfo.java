@@ -1,16 +1,16 @@
 package work.lclpnet.ap2.api.game;
 
 import net.minecraft.core.RegistryAccess;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
 public interface GameInfo {
 
     /**
-     * @return A unique {@link ResourceLocation} for the game.
+     * @return A unique {@link Identifier} for the game.
      */
-    @NotNull ResourceLocation getId();
+    @NotNull Identifier getId();
 
     /**
      * @return The type of the game.
@@ -22,13 +22,13 @@ public interface GameInfo {
     @NotNull ItemStack getIcon(@NotNull RegistryAccess manager);
 
     default @NotNull String getTitleKey() {
-        ResourceLocation id = getId();
+        Identifier id = getId();
 
         return "game.%s.%s".formatted(id.getNamespace(), id.getPath());
     }
 
     default @NotNull String getDescriptionKey() {
-        ResourceLocation id = getId();
+        Identifier id = getId();
 
         return "game.%s.%s.description".formatted(id.getNamespace(), id.getPath());
     }
@@ -38,7 +38,7 @@ public interface GameInfo {
     }
 
     default @NotNull String getTaskKey() {
-        ResourceLocation id = getId();
+        Identifier id = getId();
 
         return "game.%s.%s.task".formatted(id.getNamespace(), id.getPath());
     }
@@ -47,9 +47,9 @@ public interface GameInfo {
         return new Object[0];
     }
 
-    default @NotNull ResourceLocation identifier(@NotNull String subPath) {
-        ResourceLocation gameId = getId();
+    default @NotNull Identifier identifier(@NotNull String subPath) {
+        Identifier gameId = getId();
 
-        return ResourceLocation.fromNamespaceAndPath(gameId.getNamespace(), gameId.getPath().concat("/").concat(subPath));
+        return Identifier.fromNamespaceAndPath(gameId.getNamespace(), gameId.getPath().concat("/").concat(subPath));
     }
 }

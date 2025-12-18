@@ -6,7 +6,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Position;
 import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
@@ -15,10 +15,10 @@ import net.minecraft.world.BossEvent;
 import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.item.FallingBlockEntity;
-import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.block.AnvilBlock;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.scores.PlayerTeam;
@@ -35,6 +35,7 @@ import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.gaco.ds.BlockBox;
 import work.lclpnet.kibu.access.VelocityModifier;
 import work.lclpnet.kibu.access.entity.FallingBlockAccess;
+import work.lclpnet.kibu.access.entity.ServerPlayerAccess;
 import work.lclpnet.kibu.hook.player.PlayerMoveCallback;
 import work.lclpnet.kibu.hook.util.PositionRotation;
 import work.lclpnet.kibu.scheduler.Ticks;
@@ -67,8 +68,8 @@ public class AnvilFallInstance extends EliminationGameInstance {
     @Override
     protected void prepare() {
         commons().gameRuleBuilder()
-                .set(GameRules.RULE_DOENTITYDROPS, false)
-                .set(GameRules.RULE_FALL_DAMAGE, true);
+                .set(GameRules.ENTITY_DROPS, false)
+                .set(GameRules.FALL_DAMAGE, true);
 
         scanWorld();
 
@@ -107,7 +108,7 @@ public class AnvilFallInstance extends EliminationGameInstance {
     private void setupBossBar() {
         GameInfo gameInfo = gameHandle.getGameInfo();
         Translations translations = gameHandle.getTranslations();
-        ResourceLocation id = gameInfo.identifier("status");
+        Identifier id = gameInfo.identifier("status");
 
         String key = "game.ap2.anvil_fall.status";
         Object[] args = new Object[] {FormatWrapper.styled(0, ChatFormatting.YELLOW)};
@@ -256,6 +257,6 @@ public class AnvilFallInstance extends EliminationGameInstance {
 
         Vec3 vec = new Vec3(center.x() - to.x(), 0.5, center.z() - to.z());
         VelocityModifier.setVelocity(player, vec.normalize().scale(0.5));
-        player.playNotifySound(SoundEvents.ALLAY_HURT, SoundSource.PLAYERS, 0.5f, 2f);
+        ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.ALLAY_HURT, SoundSource.PLAYERS, 0.5f, 2f);
     }
 }

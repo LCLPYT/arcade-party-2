@@ -1,7 +1,7 @@
 package work.lclpnet.ap2.core.mixin;
 
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.entity.animal.coppergolem.CopperGolem;
+import net.minecraft.world.entity.animal.golem.CopperGolem;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;

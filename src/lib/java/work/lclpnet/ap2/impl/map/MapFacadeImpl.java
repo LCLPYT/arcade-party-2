@@ -2,10 +2,10 @@ package work.lclpnet.ap2.impl.map;
 
 import it.unimi.dsi.fastutil.Pair;
 import lombok.Getter;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.level.GameRules;
+import net.minecraft.world.level.gamerules.GameRules;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.api.game.MapReady;
@@ -45,10 +45,10 @@ public class MapFacadeImpl implements MapFacade {
     }
 
     @Override
-    public CompletableFuture<Pair<ServerLevel, GameMap>> openRandomMap(ResourceLocation gameId, MapOptions mapOptions) {
+    public CompletableFuture<Pair<ServerLevel, GameMap>> openRandomMap(Identifier gameId, MapOptions mapOptions) {
         return mapRandomizer.nextMap(gameId)
                 .thenCompose(map -> {
-                    ResourceLocation id = map.getDescriptor().getIdentifier();
+                    Identifier id = map.getDescriptor().getIdentifier();
                     return worldFacade.changeMap(id, mapOptions).thenApply(world -> Pair.of(world, map));
                 })
                 .thenApply(pair -> {
@@ -58,7 +58,7 @@ public class MapFacadeImpl implements MapFacade {
     }
 
     @Override
-    public void openRandomMap(ResourceLocation gameId, MapOptions options, MapReady callback) {
+    public void openRandomMap(Identifier gameId, MapOptions options, MapReady callback) {
         openRandomMap(gameId, options)
                 .thenCompose(pair -> server.submit(() -> callback.onReady(pair.left(), pair.right())))
                 .exceptionally(throwable -> {
@@ -68,8 +68,8 @@ public class MapFacadeImpl implements MapFacade {
     }
 
     @Override
-    public CompletableFuture<List<ResourceLocation>> getMapIds(ResourceLocation gameId) {
-        List<ResourceLocation> mapIds = mapManager.getCollection()
+    public CompletableFuture<List<Identifier>> getMapIds(Identifier gameId) {
+        List<Identifier> mapIds = mapManager.getCollection()
                 .mapIdsWithPrefix(gameId)
                 .sorted()
                 .toList();
@@ -78,7 +78,7 @@ public class MapFacadeImpl implements MapFacade {
     }
 
     @Override
-    public CompletableFuture<List<GameMap>> getMaps(ResourceLocation gameId) {
+    public CompletableFuture<List<GameMap>> getMaps(Identifier gameId) {
         List<GameMap> maps = mapManager.getCollection()
                 .mapsWithPrefix(gameId)
                 .sorted(Comparator.comparing(map -> map.getDescriptor().getIdentifier()))
@@ -88,14 +88,14 @@ public class MapFacadeImpl implements MapFacade {
     }
 
     @Override
-    public CompletableFuture<Optional<GameMap>> getMap(ResourceLocation mapId) {
+    public CompletableFuture<Optional<GameMap>> getMap(Identifier mapId) {
         var optMap = mapManager.getCollection().getMap(mapId);
 
         return CompletableFuture.completedFuture(optMap);
     }
 
     @Override
-    public CompletableFuture<Void> reloadMaps(ResourceLocation gameId) {
+    public CompletableFuture<Void> reloadMaps(Identifier gameId) {
         return CompletableFuture.runAsync(() -> {
             try {
                 mapManager.loadAll(new MapDescriptor(gameId));
@@ -106,13 +106,13 @@ public class MapFacadeImpl implements MapFacade {
     }
 
     @Override
-    public void forceMap(@Nullable ResourceLocation mapId) {
+    public void forceMap(@Nullable Identifier mapId) {
         mapRandomizer.forceMap(mapId);
     }
 
     private void setupWorld(ServerLevel world) {
         GameRules gameRules = world.getGameRules();
-        gameRules.getRule(GameRules.RULE_DO_IMMEDIATE_RESPAWN).set(true, server);
-        gameRules.getRule(GameRules.RULE_ANNOUNCE_ADVANCEMENTS).set(false, server);
+        gameRules.set(GameRules.IMMEDIATE_RESPAWN, true, server);
+        gameRules.set(GameRules.SHOW_ADVANCEMENT_MESSAGES, false, server);
     }
 }

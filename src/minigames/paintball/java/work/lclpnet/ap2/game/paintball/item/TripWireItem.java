@@ -26,6 +26,7 @@ import work.lclpnet.ap2.game.paintball.util.PaintballTeam;
 import work.lclpnet.ap2.game.paintball.util.PaintballTeams;
 import work.lclpnet.ap2.impl.game.item.SpecialItem;
 import work.lclpnet.ap2.impl.game.item.SpecialItemContext;
+import work.lclpnet.kibu.access.entity.ServerPlayerAccess;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.kibu.translate.Translations;
 
@@ -92,7 +93,7 @@ public class TripWireItem implements SpecialItem {
                     .formatted(ChatFormatting.RED)
                     .sendTo(player);
 
-            player.playNotifySound(SoundEvents.NOTE_BLOCK_BASS.value(), SoundSource.BLOCKS, 0.2f, 1f);
+            ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.NOTE_BLOCK_BASS.value(), SoundSource.BLOCKS, 0.2f, 1f);
 
             return InteractionResult.FAIL;
         }

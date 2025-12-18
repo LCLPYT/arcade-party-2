@@ -27,6 +27,7 @@ import work.lclpnet.ap2.impl.util.Fireworks;
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.gaco.ds.BlockBox;
+import work.lclpnet.kibu.access.entity.ServerPlayerAccess;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.player.PlayerMoveCallback;
 import work.lclpnet.kibu.scheduler.Ticks;
@@ -181,9 +182,9 @@ public class RedLightGreenLightInstance extends FFAGameInstance implements Runna
 
         for (ServerPlayer player : PlayerLookup.world(world)) {
             switch (status) {
-                case RED -> player.playNotifySound(SoundEvents.BREEZE_SHOOT, SoundSource.NEUTRAL, 1f, 0.5f);
-                case YELLOW -> player.playNotifySound(SoundEvents.NOTE_BLOCK_PLING.value(), SoundSource.PLAYERS, 1f, 0.5f);
-                case GREEN -> player.playNotifySound(SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.NEUTRAL, 1f, 1f);
+                case RED -> ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.BREEZE_SHOOT, SoundSource.NEUTRAL, 1f, 0.5f);
+                case YELLOW -> ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.NOTE_BLOCK_PLING.value(), SoundSource.PLAYERS, 1f, 0.5f);
+                case GREEN -> ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.NEUTRAL, 1f, 1f);
             }
 
             Title.get(player).title(msg.translateFor(player));
@@ -245,7 +246,7 @@ public class RedLightGreenLightInstance extends FFAGameInstance implements Runna
             z = pos.z();
 
             player.teleportTo(world, x, y, z, Set.of(), player.getYRot(), player.getXRot(), true);
-            player.playNotifySound(SoundEvents.ZOMBIE_ATTACK_WOODEN_DOOR, SoundSource.PLAYERS, 0.5f, 1f);
+            ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.ZOMBIE_ATTACK_WOODEN_DOOR, SoundSource.PLAYERS, 0.5f, 1f);
         } else {
             world.playSound(null, player.blockPosition(), SoundEvents.ZOMBIE_ATTACK_WOODEN_DOOR, SoundSource.PLAYERS, 0.5f, 1f);
         }

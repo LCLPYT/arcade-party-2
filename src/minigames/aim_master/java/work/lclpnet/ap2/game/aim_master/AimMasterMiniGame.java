@@ -1,7 +1,7 @@
 package work.lclpnet.ap2.game.aim_master;
 
 import net.minecraft.core.RegistryAccess;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import org.jetbrains.annotations.NotNull;
@@ -26,7 +26,7 @@ public class AimMasterMiniGame implements MiniGame {
     }
 
     @Override
-    public @NotNull ResourceLocation getId() {
+    public @NotNull Identifier getId() {
         return ApConstants.identifier("aim_master");
     }
 

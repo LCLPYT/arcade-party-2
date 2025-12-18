@@ -8,7 +8,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.BossEvent;
-import net.minecraft.world.level.GameRules;
+import net.minecraft.world.level.gamerules.GameRules;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -34,6 +34,7 @@ import work.lclpnet.ap2.impl.util.scoreboard.ScoreboardLayout;
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape;
 import work.lclpnet.gaco.ds.IndexedSet;
 import work.lclpnet.gaco.dynamic_entities.DynamicEntityManager;
+import work.lclpnet.kibu.access.entity.ServerPlayerAccess;
 import work.lclpnet.kibu.cmd.type.CommandRegistrar;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.*;
@@ -109,7 +110,7 @@ public class GuessItInstance extends FFAGameInstance implements MapBootstrap {
         BlockShape blockShape = MapUtil.readArea(map);
 
         commons().gameRuleBuilder()
-                .set(GameRules.RULE_REDUCEDDEBUGINFO, true);
+                .set(GameRules.REDUCED_DEBUG_INFO, true);
 
         rounds = MIN_ROUNDS + random.nextInt(MAX_ROUNDS - MIN_ROUNDS + 1);
 
@@ -224,7 +225,7 @@ public class GuessItInstance extends FFAGameInstance implements MapBootstrap {
         // send preparation title
         for (ServerPlayer player : PlayerLookup.world(world)) {
             Title.get(player).title(Component.empty(), prepareMsg.translateFor(player));
-            player.playNotifySound(SoundEvents.END_PORTAL_FRAME_FILL, SoundSource.NEUTRAL, 1f, 0.5f);
+            ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.END_PORTAL_FRAME_FILL, SoundSource.NEUTRAL, 1f, 0.5f);
         }
 
         try {
@@ -255,7 +256,7 @@ public class GuessItInstance extends FFAGameInstance implements MapBootstrap {
 
         if (challenge.shouldPlayBeginSound()) {
             for (ServerPlayer player : players) {
-                player.playNotifySound(SoundEvents.BREEZE_SHOOT, SoundSource.NEUTRAL, 1f, 0.5f);
+                ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.BREEZE_SHOOT, SoundSource.NEUTRAL, 1f, 0.5f);
             }
         }
 
@@ -342,7 +343,7 @@ public class GuessItInstance extends FFAGameInstance implements MapBootstrap {
             if (points > 0) {
                 data.addScore(player, points);
 
-                player.playNotifySound(SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 0.5f, 1.5f);
+                ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 0.5f, 1.5f);
 
                 if (solutionMsg != null) {
                     player.sendSystemMessage(solutionMsg.translateFor(player).formatted(GREEN));
@@ -351,7 +352,7 @@ public class GuessItInstance extends FFAGameInstance implements MapBootstrap {
                 continue;
             }
 
-            player.playNotifySound(SoundEvents.WITHER_HURT, SoundSource.PLAYERS, 0.3f, 1.3f);
+            ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.WITHER_HURT, SoundSource.PLAYERS, 0.3f, 1.3f);
 
             if (solutionMsg != null) {
                 player.sendSystemMessage(solutionMsg.translateFor(player).formatted(RED));

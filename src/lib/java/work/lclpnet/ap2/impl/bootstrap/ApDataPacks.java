@@ -1,6 +1,6 @@
 package work.lclpnet.ap2.impl.bootstrap;
 
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.api.config.Ap2Config;
@@ -39,7 +39,7 @@ public class ApDataPacks implements GameDataPacks {
     @Override
     public CompletableFuture<Void> downloadPacks(DataPackSink dataPackSink, Executor executor) {
         ApBootstrap bootstrap = new ApBootstrap(configFactory, logger);
-        ResourceLocation dataPacksPath = Objects.requireNonNull(ResourceLocation.fromNamespaceAndPath("datapacks", ""));
+        Identifier dataPacksPath = Objects.requireNonNull(Identifier.fromNamespaceAndPath("datapacks", ""));
 
         List<AutoCloseable> resources = new ArrayList<>();
 

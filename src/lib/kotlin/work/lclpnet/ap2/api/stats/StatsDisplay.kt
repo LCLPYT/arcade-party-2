@@ -11,6 +11,7 @@ import net.minecraft.sounds.SoundSource
 import org.slf4j.Logger
 import work.lclpnet.ap2.component1
 import work.lclpnet.ap2.component2
+import work.lclpnet.kibu.access.entity.ServerPlayerAccess
 import work.lclpnet.kibu.translate.Translations
 import java.util.*
 
@@ -120,6 +121,6 @@ class StatsDisplay(val translations: Translations, val logger: Logger) {
 
     fun unavailable(player: ServerPlayer) {
         translations.translateText("ap2.view_stats.unavailable").formatted(RED).sendTo(player)
-        player.playNotifySound(SoundEvents.NOTE_BLOCK_BASS.value(), SoundSource.PLAYERS, 0.5f, 0.5f)
+        ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.NOTE_BLOCK_BASS.value(), SoundSource.PLAYERS, 0.5f, 0.5f)
     }
 }

@@ -10,7 +10,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.GameRules;
+import net.minecraft.world.level.gamerules.GameRules;
 import org.jetbrains.annotations.NotNull;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
@@ -28,6 +28,7 @@ import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedTeamBossBar;
 import work.lclpnet.gaco.collisions.ChunkedCollisionDetector;
 import work.lclpnet.gaco.collisions.CollisionDetector;
 import work.lclpnet.gaco.collisions.movement.PlayerMovementObserver;
+import work.lclpnet.kibu.access.entity.ServerPlayerAccess;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.kibu.translate.text.LocalizedFormat;
@@ -35,6 +36,7 @@ import work.lclpnet.lobby.game.map.GameMap;
 import work.lclpnet.lobby.util.PlayerReset;
 
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -80,7 +82,7 @@ public class CozyCampfireInstance extends TeamEliminationGameInstance implements
 
         return setup.readBases(teamManager.getTeams())
                 .thenAccept(bases -> baseManager = new CCBaseManager(bases, teamManager))
-                .thenCompose(nil -> world.getServer().submit(() -> {
+                .thenCompose(nil -> Objects.requireNonNull(world.getServer()).submit(() -> {
                     setupGameRules(map, world);
                     randomizeWorldConditions(world);
                 }));
@@ -186,9 +188,9 @@ public class CozyCampfireInstance extends TeamEliminationGameInstance implements
 
     private void setupGameRules(GameMap map, ServerLevel world) {
         commons(map, world).gameRuleBuilder()
-                .set(GameRules.RULE_SNOW_ACCUMULATION_HEIGHT, 0)
-                .set(GameRules.RULE_WEATHER_CYCLE, false)
-                .set(GameRules.RULE_DAYLIGHT, false);
+                .set(GameRules.MAX_SNOW_ACCUMULATION_HEIGHT, 0)
+                .set(GameRules.ADVANCE_WEATHER, false)
+                .set(GameRules.ADVANCE_TIME, false);
     }
 
     private void randomizeWorldConditions(ServerLevel world) {
@@ -305,7 +307,7 @@ public class CozyCampfireInstance extends TeamEliminationGameInstance implements
 
         for (ServerPlayer player : team.getPlayers()) {
             player.displayClientMessage(msg.translateFor(player), true);
-            player.playNotifySound(SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 0.2f, 1.8f);
+            ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 0.2f, 1.8f);
         }
     }
 

@@ -8,7 +8,7 @@ import com.mojang.serialization.DataResult;
 import net.fabricmc.loader.api.FabricLoader;
 import net.fabricmc.loader.api.entrypoint.EntrypointContainer;
 import net.fabricmc.loader.api.metadata.CustomValue;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.api.base.MiniGameManager;
 import work.lclpnet.ap2.api.game.GameInfo;
@@ -24,7 +24,7 @@ public class FabricMiniGameManager implements MiniGameManager {
 
     public static final String MINIGAME_ENTRYPOINT = "ap2:minigame";
 
-    private final BiMap<ResourceLocation, MiniGame> games;
+    private final BiMap<Identifier, MiniGame> games;
     private final Set<MiniGame> gameSet;  // use a separate set that is backed by a LinkedHashSet (order preserving)
 
     public FabricMiniGameManager(Logger logger) {
@@ -37,10 +37,10 @@ public class FabricMiniGameManager implements MiniGameManager {
 
         Set<MiniGame> registry = new LinkedHashSet<>(miniGames);
 
-        BiMap<ResourceLocation, MiniGame> byId = HashBiMap.create();
+        BiMap<Identifier, MiniGame> byId = HashBiMap.create();
 
         for (MiniGame miniGame : registry) {
-            ResourceLocation id = miniGame.getId();
+            Identifier id = miniGame.getId();
 
             if (byId.put(id, miniGame) != null) {
                 logger.warn("Mini game id collision with id {}", id);
@@ -73,13 +73,13 @@ public class FabricMiniGameManager implements MiniGameManager {
     }
 
     @Override
-    public Optional<MiniGame> getGame(ResourceLocation gameId) {
+    public Optional<MiniGame> getGame(Identifier gameId) {
         return Optional.ofNullable(games.get(gameId));
     }
 
     @Override
     public Codec<MiniGame> getGameCodec() {
-        return ResourceLocation.CODEC.comapFlatMap(id -> getGame(id)
+        return Identifier.CODEC.comapFlatMap(id -> getGame(id)
                 .map(DataResult::success)
                 .orElseGet(() -> DataResult.error(() -> "Unknown game with id " + id)), GameInfo::getId);
     }

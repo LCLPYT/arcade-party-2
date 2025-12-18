@@ -3,7 +3,7 @@ package work.lclpnet.ap2.impl.util.debug;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Position;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.Display;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
@@ -209,7 +209,7 @@ public class DebugRenderer {
         line(x1, y, z1, x1, y, z2, thickness, color);
     }
 
-    public void model(ResourceLocation modelId, double x, double y, double z, double scale) {
+    public void model(Identifier modelId, double x, double y, double z, double scale) {
         Model model = modelManager.getModel(modelId).orElseThrow(() -> new NoSuchElementException("Unknown model: " + modelId));
 
         model(model, x, y, z, scale);

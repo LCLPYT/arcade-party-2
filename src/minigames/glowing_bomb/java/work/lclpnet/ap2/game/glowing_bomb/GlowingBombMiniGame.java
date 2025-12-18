@@ -1,7 +1,7 @@
 package work.lclpnet.ap2.game.glowing_bomb;
 
 import net.minecraft.core.RegistryAccess;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import org.jetbrains.annotations.NotNull;
@@ -26,7 +26,7 @@ public class GlowingBombMiniGame implements MiniGame {
     }
 
     @Override
-    public @NotNull ResourceLocation getId() {
+    public @NotNull Identifier getId() {
         return ApConstants.identifier("glowing_bomb");
     }
 

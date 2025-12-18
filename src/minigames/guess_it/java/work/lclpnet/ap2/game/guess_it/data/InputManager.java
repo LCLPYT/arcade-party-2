@@ -9,6 +9,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.base.Participants;
+import work.lclpnet.kibu.access.entity.ServerPlayerAccess;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.ServerMessageHooks;
 import work.lclpnet.kibu.translate.Translations;
@@ -55,7 +56,7 @@ public class InputManager implements InputInterface {
             if (inputValue.isOnce() && hasAnswered(player)) {
                 var msg = translations.translateText(player, "game.ap2.guess_it.already_answered").formatted(RED);
                 player.sendSystemMessage(msg);
-                player.playNotifySound(SoundEvents.BLAZE_HURT, SoundSource.PLAYERS, 0.5f, 0f);
+                ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.BLAZE_HURT, SoundSource.PLAYERS, 0.5f, 0f);
                 return;
             }
 
@@ -81,7 +82,7 @@ public class InputManager implements InputInterface {
         choices.set(player, input);
 
         var msg = translations.translateText(player, "game.ap2.guess_it.guessed", styled(input, YELLOW)).formatted(GREEN);
-        player.playNotifySound(SoundEvents.NOTE_BLOCK_PLING.value(), SoundSource.PLAYERS, 0.75f, 1.5f);
+        ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.NOTE_BLOCK_PLING.value(), SoundSource.PLAYERS, 0.75f, 1.5f);
 
         player.sendSystemMessage(msg);
     }

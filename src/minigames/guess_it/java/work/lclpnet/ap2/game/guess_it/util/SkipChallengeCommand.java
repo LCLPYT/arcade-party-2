@@ -2,6 +2,7 @@ package work.lclpnet.ap2.game.guess_it.util;
 
 import com.mojang.brigadier.context.CommandContext;
 import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 import work.lclpnet.kibu.cmd.type.CommandRegistrar;
 import work.lclpnet.kibu.cmd.type.KibuCommand;
@@ -19,7 +20,7 @@ public class SkipChallengeCommand implements KibuCommand {
     @Override
     public void register(CommandRegistrar commands) {
         commands.registerCommand(literal("ap2:skip_challenge")
-                .requires(s -> s.hasPermission(2))
+                .requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
                 .executes(this::skipChallenge));
     }
 

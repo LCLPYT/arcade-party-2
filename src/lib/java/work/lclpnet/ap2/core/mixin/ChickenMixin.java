@@ -1,8 +1,8 @@
 package work.lclpnet.ap2.core.mixin;
 
 import net.minecraft.core.Holder;
-import net.minecraft.world.entity.animal.Chicken;
-import net.minecraft.world.entity.animal.ChickenVariant;
+import net.minecraft.world.entity.animal.chicken.Chicken;
+import net.minecraft.world.entity.animal.chicken.ChickenVariant;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import work.lclpnet.ap2.core.type.ApVariantHolder;

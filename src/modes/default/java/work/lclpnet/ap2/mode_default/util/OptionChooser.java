@@ -2,6 +2,7 @@ package work.lclpnet.ap2.mode_default.util;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
@@ -12,6 +13,7 @@ import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.Nullable;
+import work.lclpnet.kibu.access.entity.ServerPlayerAccess;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.player.PlayerInventoryHooks;
 import work.lclpnet.kibu.inv.type.RestrictedInventory;
@@ -72,7 +74,9 @@ public class OptionChooser<T> {
         ServerPlayer player = event.player();
         MinecraftServer server = player.level().getServer();
 
-        if (server.getProfilePermissions(player.nameAndId()) < 2) return;
+        if (server == null) return;
+
+        if (!Commands.LEVEL_GAMEMASTERS.check(server.getProfilePermissions(player.nameAndId()))) return;
 
         Container inventory = event.inventory();
 
@@ -91,7 +95,7 @@ public class OptionChooser<T> {
         action.accept(item, player);
 
         player.closeContainer();
-        player.playNotifySound(SoundEvents.NOTE_BLOCK_PLING.value(), SoundSource.PLAYERS, 0.5f, 2f);
+        ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.NOTE_BLOCK_PLING.value(), SoundSource.PLAYERS, 0.5f, 2f);
     }
 
     public static class ChooserInventory<T> {

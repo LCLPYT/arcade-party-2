@@ -14,11 +14,11 @@ import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
 import work.lclpnet.ap2.api.base.Participants;
@@ -215,8 +215,8 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
         balanceTeams();
 
         commons().gameRuleBuilder()
-                .set(GameRules.RULE_NATURAL_REGENERATION, false)
-                .set(GameRules.RULE_FALL_DAMAGE, false);
+                .set(GameRules.NATURAL_HEALTH_REGENERATION, false)
+                .set(GameRules.FALL_DAMAGE, false);
     }
 
     private void setupSpecialItems(ServerLevel world, GameMap map) {

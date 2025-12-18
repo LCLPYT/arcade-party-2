@@ -1,7 +1,7 @@
 package work.lclpnet.ap2.impl.music;
 
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import org.slf4j.Logger;
@@ -20,7 +20,7 @@ import java.util.Random;
 
 public class MusicHelper {
 
-    public static final ResourceLocation ARCADE_PARTY_GAME_TAG = ApConstants.identifier("game");
+    public static final Identifier ARCADE_PARTY_GAME_TAG = ApConstants.identifier("game");
     private static final Random random = new Random();
 
     private MusicHelper() {}

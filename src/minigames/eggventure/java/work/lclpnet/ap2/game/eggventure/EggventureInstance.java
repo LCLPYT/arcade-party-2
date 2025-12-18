@@ -52,6 +52,7 @@ import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape;
 import work.lclpnet.gaco.ds.BlockBox;
 import work.lclpnet.gaco.dynamic_entities.DynamicEntityManager;
+import work.lclpnet.kibu.access.entity.ServerPlayerAccess;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.kibu.hook.player.PlayerSwingHandHook;
@@ -325,7 +326,7 @@ public class EggventureInstance extends FFAGameInstance implements MapBootstrap 
 
         double x = pos.getX() + 0.5, y = pos.getY(), z = pos.getZ() + 0.5;
         world.playSound(null, x, y, z, SoundEvents.ALLAY_THROW, SoundSource.PLAYERS, 1f, 1f);
-        player.playNotifySound(SoundEvents.ARROW_HIT_PLAYER, SoundSource.PLAYERS, 0.75f, 1.2f);
+        ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.ARROW_HIT_PLAYER, SoundSource.PLAYERS, 0.75f, 1.2f);
 
         world.sendParticles(ParticleTypes.CRIMSON_SPORE, x, y, z, 75, 0.25, 0.25, 0.25, 0);
         world.sendParticles(ParticleTypes.WARPED_SPORE, x, y, z, 75, 0.25, 0.25, 0.25, 0);

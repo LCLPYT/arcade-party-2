@@ -22,6 +22,7 @@ import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.game.speed_builders.data.SbIsland;
 import work.lclpnet.ap2.game.speed_builders.data.SbModule;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
+import work.lclpnet.kibu.access.entity.ServerPlayerAccess;
 
 import java.util.*;
 import java.util.function.BiConsumer;
@@ -254,7 +255,7 @@ public class SbManager {
 
         logger.info("Player {} has completed the building", player.getScoreboardName());
 
-        player.playNotifySound(SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 0.75f, 1.1f);
+        ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 0.75f, 1.1f);
 
         var msg = gameHandle.getTranslations().translateText(player, "game.ap2.speed_builders.completed")
                 .formatted(ChatFormatting.GREEN);

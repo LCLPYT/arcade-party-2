@@ -1,3 +1,3 @@
 accessWidener v2 named
-accessible class net/minecraft/world/entity/monster/Drowned$DrownedTridentAttackGoal
+accessible class net/minecraft/world/entity/monster/zombie/Drowned$DrownedTridentAttackGoal
 accessible class net/minecraft/world/entity/ai/control/MoveControl$Operation

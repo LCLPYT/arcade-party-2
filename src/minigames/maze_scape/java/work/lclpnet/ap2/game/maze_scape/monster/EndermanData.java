@@ -1,7 +1,7 @@
 package work.lclpnet.ap2.game.maze_scape.monster;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
@@ -24,6 +24,7 @@ import work.lclpnet.ap2.game.maze_scape.util.MSManager;
 import work.lclpnet.ap2.game.maze_scape.util.MSStruct;
 import work.lclpnet.ap2.impl.util.VisibilityChecker;
 import work.lclpnet.ap2.impl.util.debug.DebugController;
+import work.lclpnet.kibu.access.entity.ServerPlayerAccess;
 import work.lclpnet.kibu.scheduler.Ticks;
 
 import java.util.List;
@@ -53,7 +54,7 @@ public class EndermanData implements MonsterData<EnderMan> {
     private static final boolean
             DEBUG_TARGET_FLEE_POS = false,
             DEBUG_DISABLE_ANGER = false;
-    private static final ResourceLocation
+    private static final Identifier
             FLEE_BONUS_ID = ApConstants.identifier("flee_bonus"),
             ANGER_BONUS_ID = ApConstants.identifier("anger_bonus"),
             SCARE_FROZEN_ID = ApConstants.identifier("scare_frozen");
@@ -256,7 +257,7 @@ public class EndermanData implements MonsterData<EnderMan> {
 
         if (player.distanceToSqr(mob) >= dist * dist) {
             world.playSound(player, mob.blockPosition(), sound, mob.getSoundSource(), volume, pitch);
-            player.playNotifySound(sound, mob.getSoundSource(), volume, pitch);
+            ServerPlayerAccess.playSoundToPlayer(player, sound, mob.getSoundSource(), volume, pitch);
         } else {
             world.playSound(null, mob.blockPosition(), sound, mob.getSoundSource(), volume, pitch);
         }

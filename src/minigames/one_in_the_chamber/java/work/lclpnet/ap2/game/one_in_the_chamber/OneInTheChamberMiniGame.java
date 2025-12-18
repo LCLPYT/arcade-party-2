@@ -2,7 +2,7 @@ package work.lclpnet.ap2.game.one_in_the_chamber;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.RegistryAccess;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import org.jetbrains.annotations.NotNull;
@@ -12,7 +12,7 @@ import work.lclpnet.kibu.translate.text.FormatWrapper;
 
 public class OneInTheChamberMiniGame implements MiniGame {
     @Override
-    public @NotNull ResourceLocation getId() {
+    public @NotNull Identifier getId() {
         return ApConstants.identifier("one_in_the_chamber");
     }
 

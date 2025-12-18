@@ -12,7 +12,7 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.entity.vehicle.Boat;
+import net.minecraft.world.entity.vehicle.boat.Boat;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
@@ -26,6 +26,7 @@ import work.lclpnet.ap2.api.game.team.TeamSpawnAccess;
 import work.lclpnet.gaco.collisions.CollisionDetector;
 import work.lclpnet.gaco.collisions.movement.PlayerMovementObserver;
 import work.lclpnet.gaco.ds.Collider;
+import work.lclpnet.kibu.access.entity.ServerPlayerAccess;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks;
@@ -253,14 +254,14 @@ public class CCHooks {
                 .append("⚠").withStyle(style -> style.withColor(0xff0000));
 
         player.displayClientMessage(msg, true);
-        player.playNotifySound(SoundEvents.BREEZE_LAND, SoundSource.PLAYERS, 0.5f, 1.2f);
+        ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.BREEZE_LAND, SoundSource.PLAYERS, 0.5f, 1.2f);
     }
 
     private void onLeaveBaseOf(ServerPlayer player, Team team) {
         if (teamManager.isTeamMember(player, team)) return;
 
         // player leaves the base of another team
-        player.playNotifySound(SoundEvents.BREEZE_LAND, SoundSource.PLAYERS, 0.5f, 0.8f);
+        ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.BREEZE_LAND, SoundSource.PLAYERS, 0.5f, 0.8f);
     }
 
     public record Args(CCFuel fuel, CCBaseManager baseManager, CCKitManager kitManager, CCFuelListener fuelListener) {}

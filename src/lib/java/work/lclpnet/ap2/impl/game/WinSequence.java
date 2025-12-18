@@ -21,6 +21,7 @@ import work.lclpnet.ap2.api.util.action.Action;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.game.data.type.TeamRef;
 import work.lclpnet.ap2.impl.util.SoundHelper;
+import work.lclpnet.kibu.access.entity.ServerPlayerAccess;
 import work.lclpnet.kibu.hook.HookFactory;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.RunningTask;
@@ -207,11 +208,11 @@ public class WinSequence<T, Ref extends SubjectRef> {
     }
 
     private static void playWinSound(ServerPlayer player) {
-        player.playNotifySound(SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 1, 0);
+        ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 1, 0);
     }
 
     private static void playLooseSound(ServerPlayer player) {
-        player.playNotifySound(SoundEvents.BLAZE_DEATH, SoundSource.PLAYERS, 1, 1);
+        ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.BLAZE_DEATH, SoundSource.PLAYERS, 1, 1);
     }
 
     private void broadcastResults() {

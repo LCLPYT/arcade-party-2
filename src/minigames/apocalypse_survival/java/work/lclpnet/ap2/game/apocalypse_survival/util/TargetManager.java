@@ -2,7 +2,11 @@ package work.lclpnet.ap2.game.apocalypse_survival.util;
 
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Mob;
-import net.minecraft.world.entity.monster.*;
+import net.minecraft.world.entity.monster.Phantom;
+import net.minecraft.world.entity.monster.illager.Vindicator;
+import net.minecraft.world.entity.monster.skeleton.AbstractSkeleton;
+import net.minecraft.world.entity.monster.skeleton.Skeleton;
+import net.minecraft.world.entity.monster.zombie.Zombie;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.lobby.game.map.GameMap;
 

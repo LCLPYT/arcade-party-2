@@ -11,9 +11,9 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.damagesource.DamageTypes;
-import net.minecraft.world.level.GameRules;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.scores.DisplaySlot;
 import net.minecraft.world.scores.Objective;
@@ -48,6 +48,7 @@ import work.lclpnet.gaco.ds.BlockBox;
 import work.lclpnet.gaco.ds.Checkpoint;
 import work.lclpnet.gaco.ds.PositionedBlockSet;
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
+import work.lclpnet.kibu.access.entity.ServerPlayerAccess;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.util.PositionRotation;
 import work.lclpnet.kibu.scheduler.Ticks;
@@ -117,8 +118,8 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
     @Override
     protected void prepare() {
         commons().gameRuleBuilder()
-                .set(GameRules.RULE_RANDOMTICKING, 0)
-                .set(GameRules.RULE_DAYLIGHT, false);
+                .set(GameRules.RANDOM_TICK_SPEED, 0)
+                .set(GameRules.ADVANCE_TIME, false);
 
         movementObserver.init(gameHandle.getHooks(), gameHandle.getServer());
 
@@ -284,7 +285,7 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
         Translations translations = gameHandle.getTranslations();
 
         for (ServerPlayer player : PlayerLookup.world(world)) {
-            player.playNotifySound(SoundEvents.BELL_BLOCK, SoundSource.BLOCKS, 1f, 1.7f);
+            ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.BELL_BLOCK, SoundSource.BLOCKS, 1f, 1.7f);
 
             var msg = translations.translateText(player, "game.ap2.jump_and_run.assistance")
                     .formatted(ChatFormatting.GRAY);
@@ -342,7 +343,7 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
 
         data.addScore(player, max(0, REACH_GOAL_REQUIRED - inGoal.size() + 1));
 
-        player.playNotifySound(SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 0.5f, 2f);
+        ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 0.5f, 2f);
 
         int room = jumpAndRun.moduleIndex() + 1;
 
@@ -443,7 +444,7 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
     private void nextSegment() {
         gameHandle.getTranslations().translateText("ap2.go").formatted(RED).acceptEach(PlayerLookup.world(jumpAndRun.world()), (player, text) -> {
             Title.get(player).title(text, Component.empty(), 5, 20, 5);
-            player.playNotifySound(SoundEvents.CHICKEN_EGG, SoundSource.PLAYERS, 1, 0);
+            ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.CHICKEN_EGG, SoundSource.PLAYERS, 1, 0);
         });
 
         beginSegment();
