@@ -298,7 +298,10 @@ extraSourceSets.each { name ->
 def licenseJarTasks = [jar, sourcesJar]
 
 // add jar and remapJar tasks for extra source Sets
-extraSourceSets.each { name ->
+Jar prevJarTask = null
+RemapJarTask prevRemapTask = null
+
+for (name in extraSourceSets) {
     // add extra jar task
     def defaultJar = tasks.register("${name}Jar", Jar.class) {
         from(sourceSets.named(name).get().output)
@@ -322,6 +325,17 @@ extraSourceSets.each { name ->
 
         inputFile.convention(defaultJar.archiveFile)
     }.get()
+
+    if (prevJarTask != null) {
+        defaultJar.mustRunAfter(prevJarTask)
+    }
+
+    if (prevRemapTask != null) {
+        remappedJar.mustRunAfter(prevRemapTask)
+    }
+
+    prevJarTask = defaultJar
+    prevRemapTask = remappedJar
 
     [defaultJar, remappedJar].each {
         tasks.assemble.dependsOn(it)
