@@ -1,6 +1,6 @@
 package work.lclpnet.ap2.game.maze_scape.util;
 
-import net.minecraft.util.math.Position;
+import net.minecraft.core.Position;
 
 import java.util.List;
 
@@ -13,9 +13,9 @@ public record NavPath(Position from, List<Passage> path, Position to) {
 
     public double length() {
         if (path.isEmpty()) {
-            double dx = to.getX() - from.getX();
-            double dy = to.getY() - from.getY();
-            double dz = to.getZ() - from.getZ();
+            double dx = to.x() - from.x();
+            double dy = to.y() - from.y();
+            double dz = to.z() - from.z();
 
             return sqrt(dx * dx + dy * dy + dz * dz);
         }
@@ -26,13 +26,13 @@ public record NavPath(Position from, List<Passage> path, Position to) {
         // sum estimated distance between passages
         for (int i = 1, len = path.size(); i < len; i++) {
             var next = path.get(i);
-            distance += sqrt(last.pos().getSquaredDistance(next.pos()));
+            distance += sqrt(last.pos().distSqr(next.pos()));
             last = next;
         }
 
         // add estimated distance between exact from / to position and their respective passage
-        distance += sqrt(path.getFirst().pos().getSquaredDistance(from));
-        distance += sqrt(path.getLast().pos().getSquaredDistance(to));
+        distance += sqrt(path.getFirst().pos().distToCenterSqr(from));
+        distance += sqrt(path.getLast().pos().distToCenterSqr(to));
 
         return distance;
     }

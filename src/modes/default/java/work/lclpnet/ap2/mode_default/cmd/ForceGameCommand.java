@@ -5,11 +5,11 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.DynamicCommandExceptionType;
 import lombok.Setter;
-import net.minecraft.command.argument.IdentifierArgumentType;
-import net.minecraft.server.command.CommandManager;
-import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
+import net.minecraft.commands.arguments.ResourceLocationArgument;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import work.lclpnet.ap2.api.base.MiniGameManager;
 import work.lclpnet.ap2.api.game.MiniGame;
 import work.lclpnet.ap2.mode_default.cmd.arg.MiniGameSuggestionProvider;
@@ -21,7 +21,7 @@ import java.util.function.Consumer;
 public class ForceGameCommand implements KibuCommand {
 
     private static final DynamicCommandExceptionType UNKNOWN_GAME = new DynamicCommandExceptionType(id
-            -> Text.literal("Unknown game '%s'".formatted(id)));
+            -> Component.literal("Unknown game '%s'".formatted(id)));
     private final MiniGameManager miniGameManager;
     @Setter
     private Consumer<MiniGame> gameEnforcer;
@@ -36,20 +36,20 @@ public class ForceGameCommand implements KibuCommand {
         registrar.registerCommand(command());
     }
 
-    private LiteralArgumentBuilder<ServerCommandSource> command() {
-        return CommandManager.literal("forcegame")
-                .requires(s -> s.hasPermissionLevel(2))
-                .then(CommandManager.argument("gameId", IdentifierArgumentType.identifier())
+    private LiteralArgumentBuilder<CommandSourceStack> command() {
+        return Commands.literal("forcegame")
+                .requires(s -> s.hasPermission(2))
+                .then(Commands.argument("gameId", ResourceLocationArgument.id())
                         .suggests(new MiniGameSuggestionProvider(miniGameManager))
                         .executes(this::forceGame));
     }
 
-    private int forceGame(CommandContext<ServerCommandSource> ctx) throws CommandSyntaxException {
-        Identifier gameId = IdentifierArgumentType.getIdentifier(ctx, "gameId");
+    private int forceGame(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        ResourceLocation gameId = ResourceLocationArgument.getId(ctx, "gameId");
         MiniGame game = miniGameManager.getGame(gameId).orElseThrow(() -> UNKNOWN_GAME.create(gameId));
 
         gameEnforcer.accept(game);
-        ctx.getSource().sendMessage(Text.literal("Forcing \"%s\" as next game".formatted(gameId)));
+        ctx.getSource().sendSystemMessage(Component.literal("Forcing \"%s\" as next game".formatted(gameId)));
 
         return 1;
     }

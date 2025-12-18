@@ -1,9 +1,9 @@
 package work.lclpnet.ap2.impl.util.title;
 
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Style;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
+import net.minecraft.server.level.ServerPlayer;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.title.Title;
 
@@ -19,11 +19,11 @@ public class NextGameTitleAnimation implements TitleAnimation {
     private int pos = 0;
     private int subTime = 0;
 
-    public NextGameTitleAnimation(ServerPlayerEntity player, Text text, Text subText) {
-        this(player, text.getString(), text.getStyle(), text.getStyle().withColor(Formatting.WHITE), subText.getString(), subText.getStyle());
+    public NextGameTitleAnimation(ServerPlayer player, Component text, Component subText) {
+        this(player, text.getString(), text.getStyle(), text.getStyle().withColor(ChatFormatting.WHITE), subText.getString(), subText.getStyle());
     }
 
-    public NextGameTitleAnimation(ServerPlayerEntity player, String text, Style primaryStyle, Style secondaryStyle,
+    public NextGameTitleAnimation(ServerPlayer player, String text, Style primaryStyle, Style secondaryStyle,
                                   String subText, Style subStyle) {
         this.handler = Title.get(player);
         this.text = text;
@@ -39,14 +39,14 @@ public class NextGameTitleAnimation implements TitleAnimation {
             // the title is complete, now show the subtitle
             if (subTime++ == 0) {
                 handler.times(0, DURATION_NO_FADE_TICKS, FADE_OUT_TICKS);
-                handler.title(Text.literal(text).setStyle(primaryStyle), Text.literal(subText).setStyle(subStyle));
+                handler.title(Component.literal(text).setStyle(primaryStyle), Component.literal(subText).setStyle(subStyle));
             }
 
             return subTime > DURATION_TICKS;
         }
 
-        var primary = Text.literal(text.substring(0, pos)).setStyle(primaryStyle);
-        var secondary = Text.literal(String.valueOf(text.charAt(pos))).setStyle(secondaryStyle);
+        var primary = Component.literal(text.substring(0, pos)).setStyle(primaryStyle);
+        var secondary = Component.literal(String.valueOf(text.charAt(pos))).setStyle(secondaryStyle);
 
         handler.title(primary.append(secondary));
         pos++;

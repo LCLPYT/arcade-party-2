@@ -2,8 +2,8 @@ package work.lclpnet.ap2.impl.util.handler;
 
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
-import net.minecraft.server.PlayerManager;
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.players.PlayerList;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.kibu.scheduler.api.TaskHandle;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
@@ -16,12 +16,12 @@ import java.util.function.Consumer;
 public class SimpleCooldown implements Cooldown {
 
     private final Object2IntMap<UUID> cooldown = new Object2IntOpenHashMap<>();
-    private final PlayerManager playerManager;
+    private final PlayerList playerManager;
     private final List<UUID> completions = new ArrayList<>();
     private TaskHandle task = null;
-    private @Nullable Consumer<ServerPlayerEntity> onCooldownOver = null;
+    private @Nullable Consumer<ServerPlayer> onCooldownOver = null;
 
-    public SimpleCooldown(PlayerManager playerManager) {
+    public SimpleCooldown(PlayerList playerManager) {
         this.playerManager = playerManager;
     }
 
@@ -58,7 +58,7 @@ public class SimpleCooldown implements Cooldown {
 
         if (onCooldownOver == null) return;
 
-        ServerPlayerEntity player = playerManager.getPlayer(uuid);
+        ServerPlayer player = playerManager.getPlayer(uuid);
 
         if (player != null) {
             onCooldownOver.accept(player);
@@ -66,18 +66,18 @@ public class SimpleCooldown implements Cooldown {
     }
 
     @Override
-    public synchronized void setCooldown(ServerPlayerEntity player, int cooldownTicks) {
-        cooldown.put(player.getUuid(), cooldownTicks);
+    public synchronized void setCooldown(ServerPlayer player, int cooldownTicks) {
+        cooldown.put(player.getUUID(), cooldownTicks);
     }
 
     @Override
-    public synchronized boolean isOnCooldown(ServerPlayerEntity player) {
-        return cooldown.containsKey(player.getUuid());
+    public synchronized boolean isOnCooldown(ServerPlayer player) {
+        return cooldown.containsKey(player.getUUID());
     }
 
     @Override
-    public synchronized void resetCooldown(ServerPlayerEntity player) {
-        cooldown.removeInt(player.getUuid());
+    public synchronized void resetCooldown(ServerPlayer player) {
+        cooldown.removeInt(player.getUUID());
     }
 
     @Override
@@ -86,7 +86,7 @@ public class SimpleCooldown implements Cooldown {
     }
 
     @Override
-    public synchronized void setOnCooldownOver(@Nullable Consumer<ServerPlayerEntity> onCooldownOver) {
+    public synchronized void setOnCooldownOver(@Nullable Consumer<ServerPlayer> onCooldownOver) {
         this.onCooldownOver = onCooldownOver;
     }
 }

@@ -1,20 +1,20 @@
 package work.lclpnet.ap2.impl.util.effect;
 
-import net.minecraft.entity.effect.StatusEffect;
-import net.minecraft.entity.effect.StatusEffectInstance;
-import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.core.Holder;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.effect.MobEffectInstance;
 
-public record PotionApEffect(RegistryEntry<StatusEffect> effect, int amplifier) implements ApEffect {
+public record PotionApEffect(Holder<MobEffect> effect, int amplifier) implements ApEffect {
 
     @Override
-    public void apply(ServerPlayerEntity player) {
-        var instance = new StatusEffectInstance(this.effect, -1, this.amplifier, false, false, false);
-        player.addStatusEffect(instance);
+    public void apply(ServerPlayer player) {
+        var instance = new MobEffectInstance(this.effect, -1, this.amplifier, false, false, false);
+        player.addEffect(instance);
     }
 
     @Override
-    public void remove(ServerPlayerEntity player) {
-        player.removeStatusEffect(this.effect);
+    public void remove(ServerPlayer player) {
+        player.removeEffect(this.effect);
     }
 }

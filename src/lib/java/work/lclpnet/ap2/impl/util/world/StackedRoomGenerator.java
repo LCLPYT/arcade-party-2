@@ -1,9 +1,9 @@
 package work.lclpnet.ap2.impl.util.world;
 
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3i;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Vec3i;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.math.MathUtil;
@@ -30,12 +30,12 @@ import java.util.concurrent.CompletableFuture;
  */
 public class StackedRoomGenerator<T> {
 
-    private final ServerWorld world;
+    private final ServerLevel world;
     private final GameMap map;
     private final Coordinates coordinates;
     private final RoomFactory<T> roomFactory;
 
-    public StackedRoomGenerator(ServerWorld world, GameMap map, Coordinates coordinates, RoomFactory<T> roomFactory) {
+    public StackedRoomGenerator(ServerLevel world, GameMap map, Coordinates coordinates, RoomFactory<T> roomFactory) {
         this.world = world;
         this.map = map;
         this.coordinates = coordinates;
@@ -50,7 +50,7 @@ public class StackedRoomGenerator<T> {
     public CompletableFuture<Result<T>> generate(Participants participants) {
         String schematicName = map.requireProperty("room-schematic");
         var session = ((MinecraftServerAccessor) world.getServer()).getSession();
-        Path storage = session.getWorldDirectory(world.getRegistryKey());
+        Path storage = session.getDimensionPath(world.dimension());
 
         Path path = storage.resolve("schematics").resolve(schematicName);
 
@@ -78,7 +78,7 @@ public class StackedRoomGenerator<T> {
         });
     }
 
-    private GeneratorData placeStructures(GameMap map, ServerWorld world, int roomCount, BlockStructure structure) {
+    private GeneratorData placeStructures(GameMap map, ServerLevel world, int roomCount, BlockStructure structure) {
         BlockPos roomStart = MapUtil.readBlockPos(map.requireProperty("room-start"));
 
         Vec3i roomDirection = MathUtil.normalize(MapUtil.readBlockPos(map.requireProperty("room-direction")));
@@ -100,7 +100,7 @@ public class StackedRoomGenerator<T> {
                 ry * (height + spacing),
                 rz * (length + spacing));
 
-        var pos = new BlockPos.Mutable();
+        var pos = new BlockPos.MutableBlockPos();
 
         for (int i = 0; i < roomCount; i++) {
             pos.set(sx + i * roomOffset.getX(),
@@ -120,7 +120,7 @@ public class StackedRoomGenerator<T> {
         if (coordinates == Coordinates.ABSOLUTE) {
             // spawnOffset is given in absolute schematic coordinates => relativize them
             KibuBlockPos origin = data.structure().getOrigin();
-            spawnOffset = spawnOffset.add(-origin.getX(), -origin.getY(), -origin.getZ());
+            spawnOffset = spawnOffset.offset(-origin.getX(), -origin.getY(), -origin.getZ());
         }
 
         int i = 0;
@@ -130,13 +130,13 @@ public class StackedRoomGenerator<T> {
         BlockPos roomStart = data.roomStart();
         Vec3i roomOffset = data.roomOffset();
 
-        for (ServerPlayerEntity player : participants) {
-            BlockPos roomPos = roomStart.add(roomOffset.multiply(i++));
-            BlockPos spawn = roomPos.add(spawnOffset);
+        for (ServerPlayer player : participants) {
+            BlockPos roomPos = roomStart.offset(roomOffset.multiply(i++));
+            BlockPos spawn = roomPos.offset(spawnOffset);
 
             T room = roomFactory.createRoom(roomPos, spawn, yaw, data.structure());
 
-            rooms.put(player.getUuid(), room);
+            rooms.put(player.getUUID(), room);
         }
 
         return rooms;

@@ -1,11 +1,11 @@
 package work.lclpnet.ap2.game.glowing_bomb.data;
 
-import net.minecraft.block.Blocks;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.particle.ParticleTypes;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.block.Blocks;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3d;
 import work.lclpnet.gaco.scene.Object3d;
@@ -59,7 +59,7 @@ public class GbBomb extends Object3d implements Animatable {
         frame(-v, 0, -v, v, 1, v);
 
         // glass
-        BlockDisplayObject glass = new BlockDisplayObject(scene, Blocks.TINTED_GLASS.getDefaultState());
+        BlockDisplayObject glass = new BlockDisplayObject(scene, Blocks.TINTED_GLASS.defaultBlockState());
         glass.position.set(-0.5, -0.5, -0.5);  // glass center to origin
         addChild(glass);
 
@@ -72,7 +72,7 @@ public class GbBomb extends Object3d implements Animatable {
     }
 
     private void frame(double px, double py, double pz, double sx, double sy, double sz) {
-        BlockDisplayObject frame = new BlockDisplayObject(scene, Blocks.RED_CONCRETE.getDefaultState());
+        BlockDisplayObject frame = new BlockDisplayObject(scene, Blocks.RED_CONCRETE.defaultBlockState());
         frame.position.set(-0.5, -0.5, -0.5);  // cube center to origin
         frame.scale.set(sx, sy, sz);
 
@@ -161,7 +161,7 @@ public class GbBomb extends Object3d implements Animatable {
                 Vector3d fusePos = new Vector3d(0, 0.65, 0);
                 matrixWorld.transformPosition(fusePos);
 
-                ctx.world().spawnParticles(ParticleTypes.SMOKE, fusePos.x(), fusePos.y(), fusePos.z(), 0, 0, 1, 0, 0.05);
+                ctx.world().sendParticles(ParticleTypes.SMOKE, fusePos.x(), fusePos.y(), fusePos.z(), 0, 0, 1, 0, 0.05);
             }
 
             if (lever.getStack() == lampActiveStack) {
@@ -182,7 +182,7 @@ public class GbBomb extends Object3d implements Animatable {
                 Vector3d pos = new Vector3d(0, 0, 0);
                 matrixWorld.transformPosition(pos);
 
-                ctx.world().playSound(null, pos.x(), pos.y(), pos.z(), SoundEvents.ITEM_LODESTONE_COMPASS_LOCK, SoundCategory.PLAYERS, 0.75f, 1);
+                ctx.world().playSound(null, pos.x(), pos.y(), pos.z(), SoundEvents.LODESTONE_COMPASS_LOCK, SoundSource.PLAYERS, 0.75f, 1);
             }
 
             rotationY = (rotationY + ROTATION_SPEED * dt) % (Math.PI * 2);
@@ -234,7 +234,7 @@ public class GbBomb extends Object3d implements Animatable {
 
             Vector3d pos = worldTranslation();
 
-            ctx.world().playSound(null, pos.x(), pos.y(), pos.z(), SoundEvents.BLOCK_CRAFTER_CRAFT, SoundCategory.HOSTILE, 1f, 1.25f);
+            ctx.world().playSound(null, pos.x(), pos.y(), pos.z(), SoundEvents.CRAFTER_CRAFT, SoundSource.HOSTILE, 1f, 1.25f);
         }
     }
 }

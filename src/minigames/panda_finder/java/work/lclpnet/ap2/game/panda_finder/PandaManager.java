@@ -2,16 +2,16 @@ package work.lclpnet.ap2.game.panda_finder;
 
 
 import com.mojang.serialization.JavaOps;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.MapIdComponent;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.passive.PandaEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.animal.Panda;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.saveddata.maps.MapId;
+import net.minecraft.world.phys.Vec3;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -24,16 +24,16 @@ public class PandaManager {
     private static final int PANDA_COUNT = 100;
     private static final int SEARCHED_PANDA_COUNT = 5;
     private final Logger logger;
-    private final List<Vec3d> spawns;
+    private final List<Vec3> spawns;
     private final Random random;
-    private final ServerWorld world;
+    private final ServerLevel world;
     private final Participants participants;
-    private final Set<PandaEntity> pandas = new HashSet<>();
-    private Map<PandaEntity.Gene, List<Integer>> imagesByGene = null;
-    private PandaEntity.Gene current = null;
+    private final Set<Panda> pandas = new HashSet<>();
+    private Map<Panda.Gene, List<Integer>> imagesByGene = null;
+    private Panda.Gene current = null;
     private int currentMapId = -1;
 
-    public PandaManager(Logger logger, List<Vec3d> spawns, Random random, ServerWorld world, Participants participants) {
+    public PandaManager(Logger logger, List<Vec3> spawns, Random random, ServerLevel world, Participants participants) {
         this.logger = logger;
         this.participants = participants;
 
@@ -45,12 +45,12 @@ public class PandaManager {
     }
 
     public void next() {
-        PandaEntity.Gene[] genes = PandaEntity.Gene.values();
+        Panda.Gene[] genes = Panda.Gene.values();
         current = genes[random.nextInt(genes.length)];
 
         randomizeImage();
 
-        for (ServerPlayerEntity player : participants) {
+        for (ServerPlayer player : participants) {
             giveImageTo(player);
         }
 
@@ -71,23 +71,23 @@ public class PandaManager {
     }
 
     private void populate() {
-        PandaEntity.Gene[] otherGenes = Arrays.stream(PandaEntity.Gene.values())
+        Panda.Gene[] otherGenes = Arrays.stream(Panda.Gene.values())
                 .filter(gene -> gene != current)
-                .toArray(PandaEntity.Gene[]::new);
+                .toArray(Panda.Gene[]::new);
 
         int remain = SEARCHED_PANDA_COUNT;
         final float chance = SEARCHED_PANDA_COUNT / (float) PANDA_COUNT;
 
         for (int i = 0; i < PANDA_COUNT; i++) {
-            Vec3d pos = randomPosition();
+            Vec3 pos = randomPosition();
 
-            PandaEntity panda = new PandaEntity(EntityType.PANDA, world);
+            Panda panda = new Panda(EntityType.PANDA, world);
 
             pandas.add(panda);
 
             boolean searched = i > PANDA_COUNT - remain - 1 || (remain > 0 && random.nextFloat() < chance);
 
-            PandaEntity.Gene gene;
+            Panda.Gene gene;
 
             if (searched) {
                 gene = current;
@@ -101,35 +101,35 @@ public class PandaManager {
 
             panda.setBaby(random.nextFloat() < 0.05);
 
-            panda.setPosition(pos);
+            panda.setPos(pos);
 
-            world.spawnEntity(panda);
+            world.addFreshEntity(panda);
         }
     }
 
-    private Vec3d randomPosition() {
+    private Vec3 randomPosition() {
         return spawns.get(random.nextInt(spawns.size()));
     }
 
     private void clear() {
-        for (PandaEntity panda : pandas) {
+        for (Panda panda : pandas) {
             panda.discard();
         }
     }
 
-    public boolean isSearchedPanda(PandaEntity panda) {
+    public boolean isSearchedPanda(Panda panda) {
         return panda.getMainGene() == current;
     }
 
     public Optional<String> getLocalizedPandaGene() {
         return Optional.ofNullable(current)
-                .map(gene -> "game.ap2.panda_finder.find.".concat(gene.asString()));
+                .map(gene -> "game.ap2.panda_finder.find.".concat(gene.getSerializedName()));
     }
 
     public synchronized void setFound() {
-        for (PandaEntity panda : pandas) {
+        for (Panda panda : pandas) {
             if (isSearchedPanda(panda)) {
-                panda.setGlowing(true);
+                panda.setGlowingTag(true);
             }
         }
 
@@ -137,10 +137,10 @@ public class PandaManager {
     }
 
     public void readImages(JSONObject images) {
-        Map<PandaEntity.Gene, List<Integer>> imagesByGene = new HashMap<>();
+        Map<Panda.Gene, List<Integer>> imagesByGene = new HashMap<>();
 
         for (String key : images.keySet()) {
-            var gene = PandaEntity.Gene.CODEC.parse(JavaOps.INSTANCE, key).result().orElse(null);
+            var gene = Panda.Gene.CODEC.parse(JavaOps.INSTANCE, key).result().orElse(null);
 
             if (gene == null) {
                 logger.warn("Invalid panda gene named '{}'", key);
@@ -165,15 +165,15 @@ public class PandaManager {
         this.imagesByGene = imagesByGene;
     }
 
-    public void giveImageTo(ServerPlayerEntity player) {
+    public void giveImageTo(ServerPlayer player) {
         if (currentMapId == -1) {
-            player.setStackInHand(Hand.OFF_HAND, ItemStack.EMPTY);
+            player.setItemInHand(InteractionHand.OFF_HAND, ItemStack.EMPTY);
             return;
         }
 
         ItemStack filledMap = new ItemStack(Items.FILLED_MAP);
-        filledMap.set(DataComponentTypes.MAP_ID, new MapIdComponent(currentMapId));
+        filledMap.set(DataComponents.MAP_ID, new MapId(currentMapId));
 
-        player.setStackInHand(Hand.OFF_HAND, filledMap);
+        player.setItemInHand(InteractionHand.OFF_HAND, filledMap);
     }
 }

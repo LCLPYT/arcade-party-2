@@ -1,13 +1,13 @@
 package work.lclpnet.ap2.impl.util.world;
 
-import net.minecraft.entity.EntityDimensions;
-import net.minecraft.entity.EntityType;
-import net.minecraft.util.function.BooleanBiFunction;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.shape.VoxelShape;
-import net.minecraft.util.shape.VoxelShapes;
-import net.minecraft.world.BlockView;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.entity.EntityDimensions;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.shapes.BooleanOp;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.util.world.SpaceFinder;
 
@@ -19,10 +19,10 @@ import java.util.stream.StreamSupport;
 
 public class SizedSpaceFinder implements SpaceFinder {
 
-    private final BlockView blockView;
+    private final BlockGetter blockView;
     private final float halfWidth, height, halfLength;
 
-    public SizedSpaceFinder(BlockView blockView, float width, float height, float length) {
+    public SizedSpaceFinder(BlockGetter blockView, float width, float height, float length) {
         this.blockView = blockView;
         this.halfWidth = width * 0.5f;
         this.height = height;
@@ -30,7 +30,7 @@ public class SizedSpaceFinder implements SpaceFinder {
     }
 
     @Override
-    public List<Vec3d> findSpaces(Iterator<BlockPos> positions) {
+    public List<Vec3> findSpaces(Iterator<BlockPos> positions) {
         var spliterator = Spliterators.spliteratorUnknownSize(positions, 0);
 
         return StreamSupport.stream(spliterator, false)
@@ -40,14 +40,14 @@ public class SizedSpaceFinder implements SpaceFinder {
     }
 
     @Nullable
-    private Vec3d spaceAt(BlockPos pos) {
+    private Vec3 spaceAt(BlockPos pos) {
         final double minX = pos.getX(), minY = pos.getY(), minZ = pos.getZ();
         final double maxX = minX + 1, maxY = minY + 1, maxZ = minZ + 1;
 
         for (double x = minX; x <= maxX; x += 0.5)
             for (double z = minZ; z <= maxZ; z += 0.5)
                 for (double y = minY; y <= maxY; y += 0.5)
-                    if (hasSpace(x, y, z)) return new Vec3d(x, y, z);
+                    if (hasSpace(x, y, z)) return new Vec3(x, y, z);
 
         return null;
     }
@@ -56,9 +56,9 @@ public class SizedSpaceFinder implements SpaceFinder {
         double minX = x - halfWidth, minZ = z - halfLength;
         double maxX = x + halfWidth, maxY = y + height, maxZ = z + halfLength;
 
-        VoxelShape space = VoxelShapes.cuboidUnchecked(minX, y, minZ, maxX, maxY, maxZ);
+        VoxelShape space = Shapes.create(minX, y, minZ, maxX, maxY, maxZ);
 
-        return BlockPos.stream(
+        return BlockPos.betweenClosedStream(
                 (int) Math.floor(minX),
                 (int) Math.floor(y),
                 (int) Math.floor(minZ),
@@ -67,13 +67,13 @@ public class SizedSpaceFinder implements SpaceFinder {
                 (int) Math.ceil(maxZ)
         ).noneMatch(pos -> {
             VoxelShape shape = blockView.getBlockState(pos).getCollisionShape(blockView, pos)
-                    .offset(pos.getX(), pos.getY(), pos.getZ());
+                    .move(pos.getX(), pos.getY(), pos.getZ());
 
-            return VoxelShapes.matchesAnywhere(shape, space, BooleanBiFunction.AND);
+            return Shapes.joinIsNotEmpty(shape, space, BooleanOp.AND);
         });
     }
 
-    public static SizedSpaceFinder create(BlockView blockView, EntityType<?> entityType) {
+    public static SizedSpaceFinder create(BlockGetter blockView, EntityType<?> entityType) {
         EntityDimensions dimensions = entityType.getDimensions();
 
         int width = (int) Math.ceil(dimensions.width());

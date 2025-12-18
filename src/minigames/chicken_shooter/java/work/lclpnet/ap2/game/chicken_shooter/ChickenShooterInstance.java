@@ -1,34 +1,34 @@
 package work.lclpnet.ap2.game.chicken_shooter;
 
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.enchantment.Enchantments;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.TntEntity;
-import net.minecraft.entity.effect.StatusEffectInstance;
-import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.entity.passive.ChickenEntity;
-import net.minecraft.entity.passive.ChickenVariant;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.entity.projectile.ProjectileEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.particle.ParticleTypes;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.scoreboard.AbstractTeam;
-import net.minecraft.scoreboard.ScoreboardDisplaySlot;
-import net.minecraft.scoreboard.Team;
-import net.minecraft.scoreboard.number.StyledNumberFormat;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.TypeFilter;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.GameRules;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.network.chat.numbers.StyledFormat;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.animal.Chicken;
+import net.minecraft.world.entity.animal.ChickenVariant;
+import net.minecraft.world.entity.item.PrimedTnt;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.projectile.Projectile;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.enchantment.Enchantments;
+import net.minecraft.world.level.GameRules;
+import net.minecraft.world.level.entity.EntityTypeTest;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.scores.DisplaySlot;
+import net.minecraft.world.scores.PlayerTeam;
+import net.minecraft.world.scores.Team;
 import org.json.JSONArray;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
@@ -55,7 +55,7 @@ import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
 
-import static net.minecraft.util.Formatting.YELLOW;
+import static net.minecraft.ChatFormatting.YELLOW;
 import static work.lclpnet.ap2.api.stats.CommonStats.SCORE;
 import static work.lclpnet.ap2.impl.util.ItemHelper.unbreakable;
 
@@ -72,8 +72,8 @@ public class ChickenShooterInstance extends FFAGameInstance implements Runnable 
 
     private final FFAStatsManager stats;
     private final Random random = new Random();
-    private final IntDataContainer<ServerPlayerEntity, PlayerRef> data;
-    private final Set<ChickenEntity> chickenSet = new HashSet<>();
+    private final IntDataContainer<ServerPlayer, PlayerRef> data;
+    private final Set<Chicken> chickenSet = new HashSet<>();
     private BlockBox chickenBox = null;
     private int despawnHeight = 0;
     private int time = 0;
@@ -87,17 +87,17 @@ public class ChickenShooterInstance extends FFAGameInstance implements Runnable 
     }
 
     @Override
-    protected DataContainer<ServerPlayerEntity, PlayerRef> getData() {
+    protected DataContainer<ServerPlayer, PlayerRef> getData() {
         return data;
     }
 
     @Override
     protected void prepare() {
-        ServerWorld world = getWorld();
+        ServerLevel world = getWorld();
 
         commons().gameRuleBuilder()
-                .set(GameRules.DO_ENTITY_DROPS, false)
-                .set(GameRules.ANNOUNCE_ADVANCEMENTS, false);
+                .set(GameRules.RULE_DOENTITYDROPS, false)
+                .set(GameRules.RULE_ANNOUNCE_ADVANCEMENTS, false);
 
         despawnHeight = getMap().requireProperty("despawn-height");
 
@@ -105,15 +105,15 @@ public class ChickenShooterInstance extends FFAGameInstance implements Runnable 
         HookRegistrar hooks = gameHandle.getHooks();
 
         hooks.registerHook(ServerLivingEntityHooks.ALLOW_DAMAGE, (entity, source, amount) -> {
-            if (!(source.getSource() instanceof ProjectileEntity projectile)
-                    || !(entity instanceof ChickenEntity chicken)) return false;
+            if (!(source.getDirectEntity() instanceof Projectile projectile)
+                    || !(entity instanceof Chicken chicken)) return false;
 
             projectile.discard();
 
-            if (winManager.isGameOver() || !(source.getAttacker() instanceof ServerPlayerEntity attacker)) return false;
+            if (winManager.isGameOver() || !(source.getEntity() instanceof ServerPlayer attacker)) return false;
 
             float pitch = chicken.isBaby() ? 1.4f : 0.8f;
-            attacker.playSoundToPlayer(SoundEvents.ENTITY_ARROW_HIT_PLAYER, SoundCategory.PLAYERS, 0.8f, pitch);
+            attacker.playNotifySound(SoundEvents.ARROW_HIT_PLAYER, SoundSource.PLAYERS, 0.8f, pitch);
 
             int score = killChicken(chicken, attacker, world);
 
@@ -125,36 +125,36 @@ public class ChickenShooterInstance extends FFAGameInstance implements Runnable 
         hooks.registerHook(ProjectileHooks.HIT_BLOCK, (projectile, hit) -> projectile.discard());
 
         // projectiles can only hit chickens (will pass through players)
-        hooks.registerHook(ProjectileCanHitCallback.HOOK, (projectile, entity) -> entity instanceof ChickenEntity);
+        hooks.registerHook(ProjectileCanHitCallback.HOOK, (projectile, entity) -> entity instanceof Chicken);
 
         // Setup Scoreboard
         CustomScoreboardManager scoreboardManager = gameHandle.getScoreboardManager();
 
         var objective = scoreboardManager.translateObjective("score", "game.ap2.chicken_shooter.points")
-                .formatted(YELLOW, Formatting.BOLD);
+                .formatted(YELLOW, ChatFormatting.BOLD);
 
         useScoreboardStatsSync(data, objective);
-        objective.setSlot(ScoreboardDisplaySlot.LIST);
-        objective.setNumberFormat(StyledNumberFormat.YELLOW);
+        objective.setSlot(DisplaySlot.LIST);
+        objective.setNumberFormat(StyledFormat.PLAYER_LIST_DEFAULT);
 
-        for (ServerPlayerEntity player : PlayerLookup.all(gameHandle.getServer())) {
+        for (ServerPlayer player : PlayerLookup.all(gameHandle.getServer())) {
             objective.add(player);
         }
 
-        Team team = scoreboardManager.createTeam("team");
-        team.setShowFriendlyInvisibles(true);
-        team.setCollisionRule(AbstractTeam.CollisionRule.NEVER);
+        PlayerTeam team = scoreboardManager.createTeam("team");
+        team.setSeeFriendlyInvisibles(true);
+        team.setCollisionRule(Team.CollisionRule.NEVER);
 
-        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
+        for (ServerPlayer player : gameHandle.getParticipants()) {
             scoreboardManager.joinTeam(player, team);
-            player.addStatusEffect(new StatusEffectInstance(StatusEffects.INVISIBILITY, Integer.MAX_VALUE, 1, false, false, false));
+            player.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, Integer.MAX_VALUE, 1, false, false, false));
         }
     }
 
     @Override
     protected void go() {
         gameHandle.protect(config -> config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, damageSource)
-                -> damageSource.getSource() instanceof ProjectileEntity && entity instanceof ChickenEntity));
+                -> damageSource.getDirectEntity() instanceof Projectile && entity instanceof Chicken));
 
         Translations translations = gameHandle.getTranslations();
 
@@ -186,17 +186,17 @@ public class ChickenShooterInstance extends FFAGameInstance implements Runnable 
 
     @SuppressWarnings("unchecked")
     private void spawnChicken() {
-        ServerWorld world = getWorld();
-        BlockPos.Mutable randomPos = new BlockPos.Mutable();
+        ServerLevel world = getWorld();
+        BlockPos.MutableBlockPos randomPos = new BlockPos.MutableBlockPos();
         chickenBox.randomBlockPos(randomPos, random);
 
-        ChickenEntity chicken = new ChickenEntity(EntityType.CHICKEN, world);
+        Chicken chicken = new Chicken(EntityType.CHICKEN, world);
 
-        var variants = world.getRegistryManager().getOrThrow(RegistryKeys.CHICKEN_VARIANT).getIndexedEntries();
+        var variants = world.registryAccess().lookupOrThrow(Registries.CHICKEN_VARIANT).asHolderIdMap();
 
         if (variants.size() >= 1) {
-            var variant = variants.get(random.nextInt(variants.size()));
-            ((ApVariantHolder<RegistryEntry<ChickenVariant>>) chicken).ap2$setVariant(variant);
+            var variant = variants.byId(random.nextInt(variants.size()));
+            ((ApVariantHolder<Holder<ChickenVariant>>) chicken).ap2$setVariant(variant);
         }
 
         if (random.nextFloat() < BABY_CHANCE) {
@@ -205,21 +205,21 @@ public class ChickenShooterInstance extends FFAGameInstance implements Runnable 
             spawnTNT(chicken, world);
         }
 
-        chicken.setPos(randomPos.getX() + 0.5, randomPos.getY(), randomPos.getZ() + 0.5);
-        world.spawnEntity(chicken);
+        chicken.setPosRaw(randomPos.getX() + 0.5, randomPos.getY(), randomPos.getZ() + 0.5);
+        world.addFreshEntity(chicken);
 
         chickenSet.add(chicken);
     }
 
 
-    private void spawnTNT(ChickenEntity chicken, ServerWorld world) {
-        TntEntity tnt = new TntEntity(EntityType.TNT, world);
+    private void spawnTNT(Chicken chicken, ServerLevel world) {
+        PrimedTnt tnt = new PrimedTnt(EntityType.TNT, world);
         tnt.setFuse(Integer.MAX_VALUE);
         tnt.startRiding(chicken, true, false);
-        world.spawnEntity(tnt);
+        world.addFreshEntity(tnt);
     }
 
-    private int killChicken(ChickenEntity chicken, ServerPlayerEntity attacker, ServerWorld world) {
+    private int killChicken(Chicken chicken, ServerPlayer attacker, ServerLevel world) {
         if (chicken.isRemoved()) return 0;
 
         int score = 0;
@@ -228,9 +228,9 @@ public class ChickenShooterInstance extends FFAGameInstance implements Runnable 
         double y = chicken.getY();
         double z = chicken.getZ();
 
-        world.spawnParticles(ParticleTypes.ELECTRIC_SPARK, x, y, z, 8, 0.4, 0.4, 0.4, 0.2);
+        world.sendParticles(ParticleTypes.ELECTRIC_SPARK, x, y, z, 8, 0.4, 0.4, 0.4, 0.2);
 
-        TntEntity tnt = chicken.getFirstPassenger() instanceof TntEntity t ? t : null;
+        PrimedTnt tnt = chicken.getFirstPassenger() instanceof PrimedTnt t ? t : null;
 
         chicken.discard();
         chickenSet.remove(chicken);
@@ -250,18 +250,18 @@ public class ChickenShooterInstance extends FFAGameInstance implements Runnable 
         return score;
     }
 
-    private int tntExplode(ChickenEntity chicken, TntEntity tnt, ServerWorld world, ServerPlayerEntity attacker, double x, double y, double z) {
-        world.spawnParticles(ParticleTypes.EXPLOSION, x, y, z, 4, 0.5, 0.5, 0.5, 1);
-        attacker.playSoundToPlayer(SoundEvents.ENTITY_TNT_PRIMED, SoundCategory.PLAYERS, 0.8f, 1.8f);
-        attacker.playSoundToPlayer(SoundEvents.ENTITY_GENERIC_EXPLODE.value(), SoundCategory.PLAYERS, 0.8f, 0.7f);
+    private int tntExplode(Chicken chicken, PrimedTnt tnt, ServerLevel world, ServerPlayer attacker, double x, double y, double z) {
+        world.sendParticles(ParticleTypes.EXPLOSION, x, y, z, 4, 0.5, 0.5, 0.5, 1);
+        attacker.playNotifySound(SoundEvents.TNT_PRIMED, SoundSource.PLAYERS, 0.8f, 1.8f);
+        attacker.playNotifySound(SoundEvents.GENERIC_EXPLODE.value(), SoundSource.PLAYERS, 0.8f, 0.7f);
 
-        Vec3d tntPos = tnt.getEntityPos();
+        Vec3 tntPos = tnt.position();
 
         int score = 0;
-        var affected = world.getEntitiesByType(TypeFilter.instanceOf(ChickenEntity.class), chickenEntity -> tntPos.isInRange(chickenEntity.getEntityPos(), TNT_RADIUS));
+        var affected = world.getEntities(EntityTypeTest.forClass(Chicken.class), chickenEntity -> tntPos.closerThan(chickenEntity.position(), TNT_RADIUS));
         int count = 0;
 
-        for (ChickenEntity c : affected) {
+        for (Chicken c : affected) {
             if (c == chicken || c.isRemoved()) continue;
 
             count++;
@@ -276,21 +276,21 @@ public class ChickenShooterInstance extends FFAGameInstance implements Runnable 
     }
 
     private void giveBowsToPlayers(Translations translations) {
-        var infinity = ItemHelper.getEnchantment(Enchantments.INFINITY, getWorld().getRegistryManager());
+        var infinity = ItemHelper.getEnchantment(Enchantments.INFINITY, getWorld().registryAccess());
 
-        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
+        for (ServerPlayer player : gameHandle.getParticipants()) {
             ItemStack stack = unbreakable(new ItemStack(Items.BOW));
 
-            stack.addEnchantment(infinity, 1);
-            stack.set(DataComponentTypes.CUSTOM_NAME, translations.translateText(player, "game.ap2.chicken_shooter.bow")
-                    .styled(style -> style.withItalic(false).withFormatting(Formatting.GOLD)));
+            stack.enchant(infinity, 1);
+            stack.set(DataComponents.CUSTOM_NAME, translations.translateText(player, "game.ap2.chicken_shooter.bow")
+                    .styled(style -> style.withItalic(false).applyFormat(ChatFormatting.GOLD)));
 
-            PlayerInventory inventory = player.getInventory();
-            inventory.setStack(4, stack);
+            Inventory inventory = player.getInventory();
+            inventory.setItem(4, stack);
 
             PlayerInventoryAccess.setSelectedSlot(player, 4);
 
-            inventory.setStack(9, new ItemStack(Items.ARROW));
+            inventory.setItem(9, new ItemStack(Items.ARROW));
         }
     }
 
@@ -309,12 +309,12 @@ public class ChickenShooterInstance extends FFAGameInstance implements Runnable 
             double z = chicken.getZ() + 0.5;
 
             if (y < despawnHeight) {
-                if (chicken.getFirstPassenger() instanceof TntEntity tnt) {
+                if (chicken.getFirstPassenger() instanceof PrimedTnt tnt) {
                     tnt.discard();
                 }
 
                 chicken.discard();
-                getWorld().spawnParticles(ParticleTypes.CLOUD, x, y, z, 3, 0.2, 0.2, 0.2, 0.02);
+                getWorld().sendParticles(ParticleTypes.CLOUD, x, y, z, 3, 0.2, 0.2, 0.2, 0.02);
                 return true;
             }
 

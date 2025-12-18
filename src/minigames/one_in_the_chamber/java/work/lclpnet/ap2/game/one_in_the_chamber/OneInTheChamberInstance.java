@@ -1,26 +1,26 @@
 package work.lclpnet.ap2.game.one_in_the_chamber;
 
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.ChargedProjectilesComponent;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.entity.damage.DamageTypes;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.entity.projectile.ProjectileEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.scoreboard.ScoreboardCriterion;
-import net.minecraft.scoreboard.ScoreboardDisplaySlot;
-import net.minecraft.scoreboard.ScoreboardObjective;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.GameMode;
-import net.minecraft.world.GameRules;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.damagesource.DamageTypes;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.projectile.Projectile;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.component.ChargedProjectiles;
+import net.minecraft.world.level.GameRules;
+import net.minecraft.world.level.GameType;
+import net.minecraft.world.scores.DisplaySlot;
+import net.minecraft.world.scores.Objective;
+import net.minecraft.world.scores.criteria.ObjectiveCriteria;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
@@ -46,14 +46,14 @@ import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 import java.util.Random;
 import java.util.Set;
 
-import static net.minecraft.util.Formatting.*;
+import static net.minecraft.ChatFormatting.*;
 import static work.lclpnet.ap2.impl.util.ItemHelper.unbreakable;
 
 public class OneInTheChamberInstance extends FFAGameInstance {
 
     static final int SCORE_LIMIT = 15;
     static final double RESPAWN_SPACING = 20;
-    private final IntScoreDataContainer<ServerPlayerEntity, PlayerRef> data = new IntScoreDataContainer<>(PlayerRef::create);
+    private final IntScoreDataContainer<ServerPlayer, PlayerRef> data = new IntScoreDataContainer<>(PlayerRef::create);
     private final Random random = new Random();
     private final OneInTheChamberSpawns respawn = new OneInTheChamberSpawns(gameHandle, random);
     private final SimpleMovementBlocker movementBlocker;
@@ -71,19 +71,19 @@ public class OneInTheChamberInstance extends FFAGameInstance {
     }
 
     @Override
-    protected DataContainer<ServerPlayerEntity, PlayerRef> getData() {
+    protected DataContainer<ServerPlayer, PlayerRef> getData() {
         return data;
     }
 
     @Override
     protected void prepare() {
-        ServerWorld world = getWorld();
+        ServerLevel world = getWorld();
 
         commons().gameRuleBuilder()
-                .set(GameRules.DO_ENTITY_DROPS, false)
-                .set(GameRules.NATURAL_REGENERATION, false)
-                .set(GameRules.ANNOUNCE_ADVANCEMENTS, false)
-                .set(GameRules.FALL_DAMAGE, false);
+                .set(GameRules.RULE_DOENTITYDROPS, false)
+                .set(GameRules.RULE_NATURAL_REGENERATION, false)
+                .set(GameRules.RULE_ANNOUNCE_ADVANCEMENTS, false)
+                .set(GameRules.RULE_FALL_DAMAGE, false);
 
         JSONArray spawnsJson = getMap().requireProperty("random-spawns");
         respawn.loadSpawnPoints(spawnsJson);
@@ -95,23 +95,23 @@ public class OneInTheChamberInstance extends FFAGameInstance {
         useTaskDisplay();
 
         CustomScoreboardManager scoreboardManager = gameHandle.getScoreboardManager();
-        ScoreboardObjective objective = scoreboardManager.createObjective("kills", ScoreboardCriterion.DUMMY,
-                Text.literal("Kills").formatted(YELLOW, BOLD), ScoreboardCriterion.RenderType.INTEGER);
+        Objective objective = scoreboardManager.createObjective("kills", ObjectiveCriteria.DUMMY,
+                Component.literal("Kills").withStyle(YELLOW, BOLD), ObjectiveCriteria.RenderType.INTEGER);
 
         useScoreboardStatsSync(data, objective);
 
-        scoreboardManager.setDisplay(ScoreboardDisplaySlot.SIDEBAR, objective);
+        scoreboardManager.setDisplay(DisplaySlot.SIDEBAR, objective);
 
-        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
+        for (ServerPlayer player : gameHandle.getParticipants()) {
             BlockPos pos = respawn.getRandomSpawn();
 
-            player.teleport(world, pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, Set.of(), player.getYaw(), player.getPitch(), true);
+            player.teleportTo(world, pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, Set.of(), player.getYRot(), player.getXRot(), true);
 
             movementBlocker.disableMovement(player);
         }
 
         hooks.registerHook(PlayerInventoryHooks.MODIFY_INVENTORY, event
-                -> !event.player().isCreativeLevelTwoOp());
+                -> !event.player().canUseGameMasterBlocks());
 
         hooks.registerHook(ProjectileHooks.HIT_BLOCK,(projectile, hit)
                 -> projectile.discard());
@@ -125,18 +125,18 @@ public class OneInTheChamberInstance extends FFAGameInstance {
         respawnCooldown.setOnCooldownOver(player -> {
             BlockPos randomSpawn = respawn.getRandomSpawn();
 
-            player.teleport(world, randomSpawn.getX() + 0.5, randomSpawn.getY(), randomSpawn.getZ() + 0.5, Set.of(), player.getYaw(), player.getPitch(), true);
+            player.teleportTo(world, randomSpawn.getX() + 0.5, randomSpawn.getY(), randomSpawn.getZ() + 0.5, Set.of(), player.getYRot(), player.getXRot(), true);
             giveCrossbowToPlayer(player);
 
-            player.getAbilities().setFlySpeed(0);
-            player.sendAbilitiesUpdate();
+            player.getAbilities().setFlyingSpeed(0);
+            player.onUpdateAbilities();
 
             // delay game mode change one tick to prevent other players from seeing the teleport
             scheduler.immediate(() -> {
-                player.getAbilities().setFlySpeed(0.05f);
-                player.sendAbilitiesUpdate();
+                player.getAbilities().setFlyingSpeed(0.05f);
+                player.onUpdateAbilities();
 
-                player.changeGameMode(gameHandle.getPlayerUtil().getDefaultGameMode());
+                player.setGameMode(gameHandle.getPlayerUtil().getDefaultGameMode());
             });
         });
     }
@@ -145,20 +145,20 @@ public class OneInTheChamberInstance extends FFAGameInstance {
     protected void go() {
         gameHandle.protect(config -> {
             config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, damageSource)
-                    -> entity instanceof ServerPlayerEntity &&
-                    (damageSource.isOf(DamageTypes.ARROW) || damageSource.isOf(DamageTypes.PLAYER_ATTACK)));
+                    -> entity instanceof ServerPlayer &&
+                    (damageSource.is(DamageTypes.ARROW) || damageSource.is(DamageTypes.PLAYER_ATTACK)));
 
             config.allow(ProtectionTypes.MOUNT);
         });
 
-        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
+        for (ServerPlayer player : gameHandle.getParticipants()) {
             giveCrossbowToPlayer(player);
             giveSwordToPlayer(player);
             movementBlocker.enableMovement(player);
         }
     }
 
-    private void killPlayer(ServerPlayerEntity player, @Nullable ServerPlayerEntity killer, boolean shot) {
+    private void killPlayer(ServerPlayer player, @Nullable ServerPlayer killer, boolean shot) {
         DeathMessages deathMessages = gameHandle.getDeathMessages();
 
         TranslatedText text;
@@ -171,41 +171,41 @@ public class OneInTheChamberInstance extends FFAGameInstance {
 
         text.formatted(GRAY).sendTo(PlayerLookup.all(gameHandle.getServer()));
 
-        getWorld().playSound(null, player.getBlockPos(), SoundEvents.ENTITY_PLAYER_DEATH, SoundCategory.PLAYERS, 0.8f, 0.8f);
+        getWorld().playSound(null, player.blockPosition(), SoundEvents.PLAYER_DEATH, SoundSource.PLAYERS, 0.8f, 0.8f);
 
-        player.changeGameMode(GameMode.SPECTATOR);
+        player.setGameMode(GameType.SPECTATOR);
         player.setHealth(20);
 
         respawnCooldown.setCooldown(player, 50);
     }
 
-    private void giveCrossbowToPlayer(ServerPlayerEntity player) {
+    private void giveCrossbowToPlayer(ServerPlayer player) {
         ItemStack stack = unbreakable(new ItemStack(Items.CROSSBOW));
 
-        stack.set(DataComponentTypes.CHARGED_PROJECTILES, ChargedProjectilesComponent.of(new ItemStack(Items.ARROW)));
+        stack.set(DataComponents.CHARGED_PROJECTILES, ChargedProjectiles.of(new ItemStack(Items.ARROW)));
 
-        stack.set(DataComponentTypes.CUSTOM_NAME, TextUtil.getVanillaName(stack)
-                .styled(style -> style.withItalic(false).withFormatting(GOLD)));
+        stack.set(DataComponents.CUSTOM_NAME, TextUtil.getVanillaName(stack)
+                .withStyle(style -> style.withItalic(false).applyFormat(GOLD)));
 
-        PlayerInventory inventory = player.getInventory();
-        inventory.setStack(1, stack);
+        Inventory inventory = player.getInventory();
+        inventory.setItem(1, stack);
     }
 
-    private void giveSwordToPlayer(ServerPlayerEntity player) {
+    private void giveSwordToPlayer(ServerPlayer player) {
         ItemStack stack = unbreakable(new ItemStack(Items.STONE_SWORD));
 
-        stack.set(DataComponentTypes.CUSTOM_NAME, TextUtil.getVanillaName(stack)
-                .styled(style -> style.withItalic(false).withFormatting(GOLD)));
+        stack.set(DataComponents.CUSTOM_NAME, TextUtil.getVanillaName(stack)
+                .withStyle(style -> style.withItalic(false).applyFormat(GOLD)));
 
-        PlayerInventory inventory = player.getInventory();
-        inventory.setStack(0, stack);
+        Inventory inventory = player.getInventory();
+        inventory.setItem(0, stack);
         PlayerInventoryAccess.setSelectedSlot(player, 0);
     }
 
     private boolean onDamage(LivingEntity entity, DamageSource source, float amount) {
-        if (!(entity instanceof ServerPlayerEntity player) || winManager.isGameOver()) return false;
+        if (!(entity instanceof ServerPlayer player) || winManager.isGameOver()) return false;
 
-        if (source.getSource() instanceof ProjectileEntity projectile) {
+        if (source.getDirectEntity() instanceof Projectile projectile) {
             onProjectileDamage(player, projectile);
             return false;
         }
@@ -220,8 +220,8 @@ public class OneInTheChamberInstance extends FFAGameInstance {
         return true;
     }
 
-    private void onLethalDamage(DamageSource source, ServerPlayerEntity player) {
-        if (source.getAttacker() instanceof ServerPlayerEntity attacker && player != attacker) {
+    private void onLethalDamage(DamageSource source, ServerPlayer player) {
+        if (source.getEntity() instanceof ServerPlayer attacker && player != attacker) {
             killPlayer(player, attacker, false);
             onKillGained(attacker);
         } else {
@@ -229,10 +229,10 @@ public class OneInTheChamberInstance extends FFAGameInstance {
         }
     }
 
-    private void onProjectileDamage(ServerPlayerEntity player, ProjectileEntity projectile) {
+    private void onProjectileDamage(ServerPlayer player, Projectile projectile) {
         projectile.discard();
 
-        if (!(projectile.getOwner() instanceof ServerPlayerEntity owner)) return;
+        if (!(projectile.getOwner() instanceof ServerPlayer owner)) return;
 
         if (owner == player) {
             giveCrossbowToPlayer(owner);
@@ -244,11 +244,11 @@ public class OneInTheChamberInstance extends FFAGameInstance {
         onKillGained(owner);
     }
 
-    private void onKillGained(ServerPlayerEntity killer) {
-        killer.sendMessage(Text.literal("+1 ").append(TextUtil.getVanillaName(Items.ARROW))
-                .formatted(GOLD), true);
+    private void onKillGained(ServerPlayer killer) {
+        killer.displayClientMessage(Component.literal("+1 ").append(TextUtil.getVanillaName(Items.ARROW))
+                .withStyle(GOLD), true);
 
-        killer.playSoundToPlayer(SoundEvents.ITEM_CROSSBOW_QUICK_CHARGE_3.value(), SoundCategory.PLAYERS, 1f, 1f);
+        killer.playNotifySound(SoundEvents.CROSSBOW_QUICK_CHARGE_3.value(), SoundSource.PLAYERS, 1f, 1f);
 
         giveCrossbowToPlayer(killer);
         killer.setHealth(20);
@@ -260,6 +260,6 @@ public class OneInTheChamberInstance extends FFAGameInstance {
             winManager.complete();
         }
 
-        killer.playSoundToPlayer(SoundEvents.ENTITY_ARROW_HIT_PLAYER, SoundCategory.PLAYERS, 0.8f, 0.8f);
+        killer.playNotifySound(SoundEvents.ARROW_HIT_PLAYER, SoundSource.PLAYERS, 0.8f, 0.8f);
     }
 }

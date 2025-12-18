@@ -1,16 +1,16 @@
 package work.lclpnet.ap2.game.bow_spleef.item;
 
-import net.minecraft.entity.projectile.thrown.SnowballEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.registry.DynamicRegistryManager;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.projectile.Snowball;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.core.hook.ProjectileHitEntityCallback;
 import work.lclpnet.ap2.core.hook.ProjectileShootCallback;
@@ -31,42 +31,42 @@ public class SwitcherItem implements SpecialItem {
     }
 
     @Override
-    public ItemStack createItemStack(DynamicRegistryManager registryManager) {
+    public ItemStack createItemStack(RegistryAccess registryManager) {
         return new ItemStack(Items.SNOWBALL);
     }
 
     @Override
     public void registerHooks(HookRegistrar hooks, SpecialItemContext ctx) {
         hooks.registerHook(ProjectileShootCallback.HOOK, (shooter, projectile) -> {
-            if (!(shooter instanceof ServerPlayerEntity player)
-                    || !(projectile instanceof SnowballEntity)
+            if (!(shooter instanceof ServerPlayer player)
+                    || !(projectile instanceof Snowball)
                     || !ctx.hasSpecialItem(player, this)) return;
 
-            projectile.addCommandTag(TAG_SWITCHER);
+            projectile.addTag(TAG_SWITCHER);
             ctx.removeSpecialItem(player, this);
         });
 
         hooks.registerHook(ProjectileHitEntityCallback.HOOK, (projectile, hit) -> {
-            if (!projectile.getCommandTags().contains(TAG_SWITCHER)
-                    || !(projectile.getOwner() instanceof ServerPlayerEntity shooter)
-                    || !(hit.getEntity() instanceof ServerPlayerEntity victim)) return;
+            if (!projectile.getTags().contains(TAG_SWITCHER)
+                    || !(projectile.getOwner() instanceof ServerPlayer shooter)
+                    || !(hit.getEntity() instanceof ServerPlayer victim)) return;
 
-            Vec3d victimPos = victim.getEntityPos();
-            float victimYaw = victim.getYaw();
-            float victimPitch = victim.getPitch();
+            Vec3 victimPos = victim.position();
+            float victimYaw = victim.getYRot();
+            float victimPitch = victim.getXRot();
 
-            ServerWorld world = shooter.getEntityWorld();
-            victim.teleport(world, shooter.getX(), shooter.getY(), shooter.getZ(), Set.of(), shooter.getYaw(), shooter.getPitch(), true);
-            shooter.teleport(world, victimPos.getX(), victimPos.getY(), victimPos.getZ(), Set.of(), victimYaw, victimPitch, true);
+            ServerLevel world = shooter.level();
+            victim.teleportTo(world, shooter.getX(), shooter.getY(), shooter.getZ(), Set.of(), shooter.getYRot(), shooter.getXRot(), true);
+            shooter.teleportTo(world, victimPos.x(), victimPos.y(), victimPos.z(), Set.of(), victimYaw, victimPitch, true);
 
-            victim.playSoundToPlayer(SoundEvents.ENTITY_ITEM_PICKUP, SoundCategory.PLAYERS, 0.5f, 2f);
-            shooter.playSoundToPlayer(SoundEvents.ENTITY_ITEM_PICKUP, SoundCategory.PLAYERS, 0.5f, 2f);
+            victim.playNotifySound(SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.5f, 2f);
+            shooter.playNotifySound(SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.5f, 2f);
         });
     }
 
     @Override
-    public ActionResult onUse(ServerPlayerEntity player, ItemStack stack, @Nullable Hand hand, SpecialItemContext ctx) {
+    public InteractionResult onUse(ServerPlayer player, ItemStack stack, @Nullable InteractionHand hand, SpecialItemContext ctx) {
         PlayerInventoryAccess.setSelectedSlot(player, 8);
-        return ActionResult.PASS;
+        return InteractionResult.PASS;
     }
 }

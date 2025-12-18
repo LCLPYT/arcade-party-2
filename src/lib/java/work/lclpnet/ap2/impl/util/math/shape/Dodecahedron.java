@@ -1,16 +1,16 @@
 package work.lclpnet.ap2.impl.util.math.shape;
 
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.phys.Vec3;
 import work.lclpnet.ap2.impl.util.math.face.Face;
 
 public class Dodecahedron implements PlatonicShape {
 
-    private final Vec3d center;
+    private final Vec3 center;
     private final double radius;
-    private final Vec3d[] vertices;
+    private final Vec3[] vertices;
     private final Face[] faces;
 
-    public Dodecahedron(Vec3d center, double radius) {
+    public Dodecahedron(Vec3 center, double radius) {
         this.center = center;
         this.radius = radius;
         this.vertices = PlatonicShape.super.vertices();
@@ -18,7 +18,7 @@ public class Dodecahedron implements PlatonicShape {
     }
 
     @Override
-    public Vec3d center() {
+    public Vec3 center() {
         return center;
     }
 
@@ -28,7 +28,7 @@ public class Dodecahedron implements PlatonicShape {
     }
 
     @Override
-    public Vec3d[] vertices() {
+    public Vec3[] vertices() {
         return vertices;
     }
 
@@ -38,7 +38,7 @@ public class Dodecahedron implements PlatonicShape {
     }
 
     @Override
-    public Vec3d[] unitVertices() {
+    public Vec3[] unitVertices() {
         return normalize(dualVertices(Icosahedron.UNIT));
     }
 

@@ -1,14 +1,14 @@
 package work.lclpnet.ap2.game.dance_floor
 
-import net.minecraft.server.world.ServerWorld
-import net.minecraft.util.DyeColor
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Vec3d
-import work.lclpnet.gaco.ds.WeightedList
+import net.minecraft.core.BlockPos
+import net.minecraft.server.level.ServerLevel
+import net.minecraft.world.item.DyeColor
+import net.minecraft.world.phys.Vec3
 import work.lclpnet.ap2.impl.util.BlockHelper
 import work.lclpnet.ap2.impl.util.math.MathUtil
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape
 import work.lclpnet.ap2.setBlock
+import work.lclpnet.gaco.ds.WeightedList
 import java.util.Objects.hash
 import kotlin.math.*
 import kotlin.random.Random
@@ -26,7 +26,7 @@ interface Pattern {
     fun group(pos: BlockPos): Int
 }
 
-class BlockRandomizer(val floorShape: BlockShape, val world: ServerWorld) {
+class BlockRandomizer(val floorShape: BlockShape, val world: ServerLevel) {
 
     val patterns = WeightedList<Pattern>().apply {
         add(Uniform(), 0.9f)
@@ -73,7 +73,7 @@ class BlockRandomizer(val floorShape: BlockShape, val world: ServerWorld) {
 
         for (pos in floorShape) {
             val positions = groups.computeIfAbsent(pattern.group(pos)) { mutableListOf() }
-            positions.add(pos.toImmutable())
+            positions.add(pos.immutable())
         }
 
         val colorGroups = mutableMapOf<DyeColor, MutableList<BlockPos>>()
@@ -133,26 +133,26 @@ class BlockRandomizer(val floorShape: BlockShape, val world: ServerWorld) {
     }
 
     inner class Circles(override val minColors: Int = 6, override val maxColors: Int = 8) : Pattern {
-        override fun group(pos: BlockPos): Int = sqrt(pos.getSquaredDistance(floorShape.center())).roundToInt()
+        override fun group(pos: BlockPos): Int = sqrt(pos.distSqr(floorShape.center())).roundToInt()
     }
 
     inner class Taxicab(override val minColors: Int = 7, override val maxColors: Int = 9) : Pattern {
-        override fun group(pos: BlockPos): Int = pos.getManhattanDistance(floorShape.center())
+        override fun group(pos: BlockPos): Int = pos.distManhattan(floorShape.center())
     }
 
     inner class Chebyshev(override val minColors: Int = 6, override val maxColors: Int = 9) : Pattern {
-        override fun group(pos: BlockPos): Int = pos.getChebyshevDistance(floorShape.center())
+        override fun group(pos: BlockPos): Int = pos.distChessboard(floorShape.center())
     }
 
     inner class Parabola(override val minColors: Int = 10, override val maxColors: Int = 12) : Pattern {
         override fun group(pos: BlockPos): Int {
-            val c = floorShape.center().toCenterPos()
-            return pos.getSquaredDistanceFromCenter(c.x, c.y, c.z).roundToInt()
+            val c = floorShape.center().center
+            return pos.distToCenterSqr(c.x, c.y, c.z).roundToInt()
         }
     }
 
     inner class Diagonal(override val minColors: Int = 6, override val maxColors: Int = 8) : Pattern {
-        override fun group(pos: BlockPos): Int = pos.getManhattanDistance(floorShape.min())
+        override fun group(pos: BlockPos): Int = pos.distManhattan(floorShape.min())
     }
 
     inner class Angled : Pattern {
@@ -165,7 +165,7 @@ class BlockRandomizer(val floorShape: BlockShape, val world: ServerWorld) {
         }
 
         override fun group(pos: BlockPos): Int {
-            val dir = pos.toCenterPos().subtract(Vec3d.ofCenter(floorShape.center())).normalize()
+            val dir = pos.center.subtract(Vec3.atCenterOf(floorShape.center())).normalize()
             val angleY = MathUtil.angleY(dir.x, dir.z)
             val angle = (angleY + refAngle + 2 * PI) % (2 * PI)
 
@@ -174,7 +174,7 @@ class BlockRandomizer(val floorShape: BlockShape, val world: ServerWorld) {
     }
 
     inner class Voronoi(override val minColors: Int = 6, override val maxColors: Int = 8) : Pattern {
-        private var seeds: List<Vec3d> = emptyList()
+        private var seeds: List<Vec3> = emptyList()
 
         override fun init() {
             val count = Random.nextInt(65, 80)

@@ -2,17 +2,17 @@ package work.lclpnet.ap2.impl.game;
 
 import lombok.Getter;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
-import net.minecraft.entity.boss.BossBar;
-import net.minecraft.entity.damage.DamageTypes;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
-import net.minecraft.world.GameMode;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.BossEvent;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.damagesource.DamageTypes;
+import net.minecraft.world.level.GameType;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -60,7 +60,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static net.minecraft.util.Formatting.*;
+import static net.minecraft.ChatFormatting.*;
 import static work.lclpnet.ap2.impl.util.TranslationUtil.quote;
 
 /// A game instance that:
@@ -77,7 +77,7 @@ public abstract class BaseGameInstance implements MiniGameInstance {
     protected final MiniGameHandle gameHandle;
     protected final ApMapProperties mapProperties = new ApMapProperties();
     @Nullable
-    private ServerWorld world = null;
+    private ServerLevel world = null;
     @Nullable
     private GameMap map = null;
     @Nullable
@@ -107,7 +107,7 @@ public abstract class BaseGameInstance implements MiniGameInstance {
 
     protected void openMap() {
         MapFacade mapFacade = gameHandle.getMapFacade();
-        Identifier gameId = gameHandle.getGameInfo().getId();
+        ResourceLocation gameId = gameHandle.getGameInfo().getId();
 
         MapBootstrap bootstrap = getMapBootstrap();
 
@@ -123,7 +123,7 @@ public abstract class BaseGameInstance implements MiniGameInstance {
 
             if (schemaHolder != null) {
                 var dataFuture = GameMapApi.get(gameHandle.getServer()).getDataManager()
-                        .awaitWorldData(world.getRegistryKey())
+                        .awaitWorldData(world.dimension())
                         .whenComplete((worldData, err) -> {
                             if (err != null) {
                                 gameHandle.getLogger().error("Failed to acquire map data", err);
@@ -174,7 +174,7 @@ public abstract class BaseGameInstance implements MiniGameInstance {
         return MapBootstrap.NONE;
     }
 
-    protected void onMapReady(ServerWorld world, GameMap map) {
+    protected void onMapReady(ServerLevel world, GameMap map) {
         applyMapEffects();
         loadMapProperties();
         configureLocatorBar();
@@ -198,10 +198,10 @@ public abstract class BaseGameInstance implements MiniGameInstance {
         if (locatorBarEnabled) return;
 
         gameHandle.getHooks().registerHook(PlayerWaypointCallback.HOOK, (player, waypoint)
-                -> waypoint instanceof ServerPlayerEntity);  // hide players from locator by default
+                -> waypoint instanceof ServerPlayer);  // hide players from locator by default
 
         if (world != null) {
-            world.getWaypointHandler().clear();
+            world.getWaypointManager().breakAllConnections();
         }
     }
 
@@ -210,16 +210,16 @@ public abstract class BaseGameInstance implements MiniGameInstance {
 
         DataManager dataManager = gameHandle.getDataManager();
 
-        TextTranslatable name = quote(lang -> Text.literal(map.getName(lang)).formatted(AQUA, BOLD));
+        TextTranslatable name = quote(lang -> Component.literal(map.getName(lang)).withStyle(AQUA, BOLD));
 
-        Text authors = Text.literal(map.getAuthors().stream()
+        Component authors = Component.literal(map.getAuthors().stream()
                         .map(dataManager::string)
                         .collect(Collectors.joining(", ")))
-                .formatted(YELLOW, BOLD);
+                .withStyle(YELLOW, BOLD);
 
         gameHandle.getTranslations().translateText("ap2.map.by", name, authors)
                 .formatted(GREEN, BOLD)
-                .sendTo(getWorld().getPlayers());
+                .sendTo(getWorld().players());
     }
 
     private void scheduleCountdown(int durationTicks) {
@@ -241,23 +241,23 @@ public abstract class BaseGameInstance implements MiniGameInstance {
             task.cancel();
         }
 
-        Formatting color = switch (countdownValue) {
+        ChatFormatting color = switch (countdownValue) {
             case 3 -> RED;
             case 2 -> GOLD;
             case 1 -> YELLOW;
             default -> GREEN;
         };
 
-        var msg = Text.literal(String.valueOf(countdownValue--)).formatted(color, BOLD);
+        var msg = Component.literal(String.valueOf(countdownValue--)).withStyle(color, BOLD);
 
-        for (ServerPlayerEntity player : PlayerLookup.all(gameHandle.getServer())) {
-            player.sendMessage(msg, true);
+        for (ServerPlayer player : PlayerLookup.all(gameHandle.getServer())) {
+            player.displayClientMessage(msg, true);
         }
     }
 
     private void clearCountdown() {
-        for (ServerPlayerEntity player : PlayerLookup.all(gameHandle.getServer())) {
-            player.sendMessage(Text.empty(), true);
+        for (ServerPlayer player : PlayerLookup.all(gameHandle.getServer())) {
+            player.displayClientMessage(Component.empty(), true);
         }
     }
 
@@ -268,7 +268,7 @@ public abstract class BaseGameInstance implements MiniGameInstance {
         Logger logger = gameHandle.getLogger();
 
         for (String key : config.keySet()) {
-            Identifier id = Identifier.tryParse(key);
+            ResourceLocation id = ResourceLocation.tryParse(key);
 
             if (id == null) {
                 logger.warn("Invalid map property identifier {}", key);
@@ -320,8 +320,8 @@ public abstract class BaseGameInstance implements MiniGameInstance {
     protected void afterInitialDelay() {
         gameHandle.getTranslations().translateText("ap2.go").formatted(RED)
                 .acceptEach(PlayerLookup.all(gameHandle.getServer()), (player, text) -> {
-                    Title.get(player).title(text, Text.empty(), 5, 20, 5);
-                    player.playSoundToPlayer(SoundEvents.ENTITY_CHICKEN_EGG, SoundCategory.PLAYERS, 1, 0);
+                    Title.get(player).title(text, Component.empty(), 5, 20, 5);
+                    player.playNotifySound(SoundEvents.CHICKEN_EGG, SoundSource.PLAYERS, 1, 0);
                 });
 
         go();
@@ -333,7 +333,7 @@ public abstract class BaseGameInstance implements MiniGameInstance {
         PlayerUtil playerUtil = gameHandle.getPlayerUtil();
 
         hooks.registerHook(ServerLivingEntityHooks.ALLOW_DAMAGE, (entity, source, amount) -> {
-            if (!source.isOf(DamageTypes.OUT_OF_WORLD) || !(entity instanceof ServerPlayerEntity player)) return true;
+            if (!source.is(DamageTypes.FELL_OUT_OF_WORLD) || !(entity instanceof ServerPlayer player)) return true;
 
             if (player.isSpectator()) {
                 worldFacade.teleport(player);
@@ -347,10 +347,10 @@ public abstract class BaseGameInstance implements MiniGameInstance {
 
         hooks.registerHook(PlayerInteractionHooks.USE_BLOCK, (player, world1, hand, hitResult) -> {
             if (player.isCreative() || mapProperties.getBoolean(ApMapProperties.ALLOW_BLOCK_INTERACTION, true)) {
-                return ActionResult.PASS;
+                return InteractionResult.PASS;
             }
 
-            return ActionResult.FAIL;
+            return InteractionResult.FAIL;
         });
     }
 
@@ -359,7 +359,7 @@ public abstract class BaseGameInstance implements MiniGameInstance {
         return PlayerUtil.getLoadingDelayTicks(players);
     }
 
-    public final ServerWorld getWorld() {
+    public final ServerLevel getWorld() {
         if (world == null) {
             throw new IllegalStateException("World not loaded yet");
         }
@@ -376,7 +376,7 @@ public abstract class BaseGameInstance implements MiniGameInstance {
     }
 
     protected final void useSurvivalMode() {
-        gameHandle.getPlayerUtil().setDefaultGameMode(GameMode.SURVIVAL);
+        gameHandle.getPlayerUtil().setDefaultGameMode(GameType.SURVIVAL);
     }
 
     protected final void useOldCombat() {
@@ -396,13 +396,13 @@ public abstract class BaseGameInstance implements MiniGameInstance {
     protected final TranslatedBossBar useTaskDisplay() {
         GameInfo gameInfo = gameHandle.getGameInfo();
         Translations translations = gameHandle.getTranslations();
-        Identifier id = gameInfo.identifier("task");
+        ResourceLocation id = gameInfo.identifier("task");
 
         TranslatedBossBar bossBar = translations.translateBossBar(id, gameInfo.getTaskKey(), gameInfo.getTaskArguments())
                 .with(gameHandle.getBossBarProvider())
-                .formatted(Formatting.GREEN);
+                .formatted(ChatFormatting.GREEN);
 
-        bossBar.setColor(BossBar.Color.GREEN);
+        bossBar.setColor(BossEvent.BossBarColor.GREEN);
 
         bossBar.addPlayers(PlayerLookup.all(gameHandle.getServer()));
 
@@ -422,18 +422,18 @@ public abstract class BaseGameInstance implements MiniGameInstance {
     }
 
     protected final DynamicTranslatedPlayerBossBar usePlayerDynamicDisplay(String key, Object... args) {
-        Identifier id = ApConstants.identifier("task");
+        ResourceLocation id = ApConstants.identifier("task");
 
         Translations translations = gameHandle.getTranslations();
         BossBarProvider provider = gameHandle.getBossBarProvider();
 
         var bossBar = new DynamicTranslatedPlayerBossBar(id, key, args, translations, provider)
-                .formatted(Formatting.GREEN);
+                .formatted(ChatFormatting.GREEN);
 
-        bossBar.setColor(BossBar.Color.GREEN);
+        bossBar.setColor(BossEvent.BossBarColor.GREEN);
         bossBar.setPercent(1f);
 
-        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
+        for (ServerPlayer player : gameHandle.getParticipants()) {
             bossBar.add(player);
         }
 
@@ -449,14 +449,14 @@ public abstract class BaseGameInstance implements MiniGameInstance {
     /**
      * Get or create {@link GameCommons} for this game.
      * This method should only be called after the map is ready.
-     * If the {@link GameCommons} already need to be accessed during bootstrap, {@link #commons(GameMap, ServerWorld)} should be used instead.
+     * If the {@link GameCommons} already need to be accessed during bootstrap, {@link #commons(GameMap, ServerLevel)} should be used instead.
      * @return The {@link GameCommons} singleton in scope of this game instance.
      */
     protected final GameCommons commons() {
         return commons(getMap(), getWorld());
     }
 
-    protected final GameCommons commons(GameMap map, ServerWorld world) {
+    protected final GameCommons commons(GameMap map, ServerLevel world) {
         if (commons != null) return commons;
 
         synchronized (this) {

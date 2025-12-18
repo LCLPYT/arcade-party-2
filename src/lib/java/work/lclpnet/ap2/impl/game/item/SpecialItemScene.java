@@ -2,14 +2,14 @@ package work.lclpnet.ap2.impl.game.item;
 
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
-import net.minecraft.entity.Entity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 import org.joml.Vector3d;
 import work.lclpnet.gaco.dynamic_entities.DynamicEntityManager;
 import work.lclpnet.gaco.math.solver.*;
@@ -53,12 +53,12 @@ public class SpecialItemScene {
     private final double minY;
     private StateVector state = new StateVector(new Vector3d[0]);
 
-    public SpecialItemScene(Random random, ServerWorld world) {
+    public SpecialItemScene(Random random, ServerLevel world) {
         this.random = random;
         dynamicEntityManager = new DynamicEntityManager(world);
         this.scene = new Scene(new MixedMountContext(world, dynamicEntityManager));
         indices.defaultReturnValue(-1);
-        minY = world.getBottomY() - 20.d;
+        minY = world.getMinY() - 20.d;
     }
 
     public void init(TaskScheduler scheduler, HookRegistrar hooks) {
@@ -99,7 +99,7 @@ public class SpecialItemScene {
         removal.forEach(this::remove);
     }
 
-    public SpecialItemObject spawnItem(Vec3d pos, SpecialItem item, ItemStack stack, Translations translations, TranslatedText name) {
+    public SpecialItemObject spawnItem(Vec3 pos, SpecialItem item, ItemStack stack, Translations translations, TranslatedText name) {
         var obj = new SpecialItemObject(scene, item, stack, translations, name);
         obj.position.set(pos.x, pos.y, pos.z);
 
@@ -154,16 +154,16 @@ public class SpecialItemScene {
         }
     }
 
-    public void tickPickUp(ServerPlayerEntity player) {
+    public void tickPickUp(ServerPlayer player) {
         if (player.isSpectator() || player.getHealth() <= 0.f) return;
 
-        Box box;
+        AABB box;
         Entity vehicle = player.getVehicle();
 
         if (vehicle != null && !vehicle.isRemoved()) {
-            box = player.getBoundingBox().union(vehicle.getBoundingBox()).expand(1.0, 0.0, 1.0);
+            box = player.getBoundingBox().minmax(vehicle.getBoundingBox()).inflate(1.0, 0.0, 1.0);
         } else {
-            box = player.getBoundingBox().expand(1.0, 0.5, 1.0);
+            box = player.getBoundingBox().inflate(1.0, 0.5, 1.0);
         }
 
         for (SpecialItemObject object : objects) {
@@ -175,7 +175,7 @@ public class SpecialItemScene {
             object.startPickup(player, () -> remove(object));
 
             float pitch = (random.nextFloat() - random.nextFloat()) * 1.4F + 2.0F;
-            player.getEntityWorld().playSound(null, object.position.x, object.position.y, object.position.z, SoundEvents.ENTITY_ITEM_PICKUP, SoundCategory.PLAYERS, 0.2F, pitch);
+            player.level().playSound(null, object.position.x, object.position.y, object.position.z, SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.2F, pitch);
         }
     }
 
@@ -193,6 +193,6 @@ public class SpecialItemScene {
 
     public interface SpecialItemPickup {
 
-        boolean shouldPickup(ServerPlayerEntity player, SpecialItemObject object);
+        boolean shouldPickup(ServerPlayer player, SpecialItemObject object);
     }
 }

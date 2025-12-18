@@ -1,26 +1,26 @@
 package work.lclpnet.ap2.impl.util.world;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.ShapeContext;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.shape.VoxelShape;
-import net.minecraft.world.BlockView;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import work.lclpnet.ap2.api.util.world.BlockPredicate;
 
-import static net.minecraft.util.math.Direction.Axis.*;
+import static net.minecraft.core.Direction.Axis.*;
 
 public class WalkableBlockPredicate implements BlockPredicate {
 
-    private final BlockView world;
+    private final BlockGetter world;
     private final int verticalSpace;
 
-    public WalkableBlockPredicate(BlockView world) {
+    public WalkableBlockPredicate(BlockGetter world) {
         this(world, 2);
     }
 
-    public WalkableBlockPredicate(BlockView world, int verticalSpace) {
+    public WalkableBlockPredicate(BlockGetter world, int verticalSpace) {
         this.world = world;
         this.verticalSpace = verticalSpace;
     }
@@ -29,12 +29,12 @@ public class WalkableBlockPredicate implements BlockPredicate {
     public boolean test(BlockPos pos) {
         // verify position itself is free
         BlockState state = world.getBlockState(pos);
-        VoxelShape shape = state.getCollisionShape(world, pos, ShapeContext.absent());
+        VoxelShape shape = state.getCollisionShape(world, pos, CollisionContext.empty());
 
         if (!shape.isEmpty()) {
-            double minX = shape.getMin(X), maxX = shape.getMax(X);
-            double minY = shape.getMin(Y), maxY = shape.getMax(Y);
-            double minZ = shape.getMin(Z), maxZ = shape.getMax(Z);
+            double minX = shape.min(X), maxX = shape.max(X);
+            double minY = shape.min(Y), maxY = shape.max(Y);
+            double minZ = shape.min(Z), maxZ = shape.max(Z);
 
             // support slim blocks like doors
             boolean spaceX = maxX - minX <= 0.4 && (isClose(minX, 0) || isClose(maxX, 1));
@@ -46,11 +46,11 @@ public class WalkableBlockPredicate implements BlockPredicate {
         }
 
         // verify position below is solid
-        var queryPos = new BlockPos.Mutable(pos.getX(), pos.getY() - 1, pos.getZ());
+        var queryPos = new BlockPos.MutableBlockPos(pos.getX(), pos.getY() - 1, pos.getZ());
 
         state = world.getBlockState(queryPos);
 
-        if (state.isOf(Blocks.LADDER)) {
+        if (state.is(Blocks.LADDER)) {
             return false;
         }
 
@@ -60,9 +60,9 @@ public class WalkableBlockPredicate implements BlockPredicate {
             return false;
         }
 
-        double maxY = shape.getMax(Y);
+        double maxY = shape.max(Y);
 
-        if (maxY < 0.8 || maxY - shape.getMin(Y) > 1 || length(shape, X) < 0.4 || length(shape, Z) < 0.4) {
+        if (maxY < 0.8 || maxY - shape.min(Y) > 1 || length(shape, X) < 0.4 || length(shape, Z) < 0.4) {
             return false;
         }
 
@@ -83,7 +83,7 @@ public class WalkableBlockPredicate implements BlockPredicate {
     }
 
     private static double length(VoxelShape shape, Direction.Axis axis) {
-        return shape.getMax(axis) - shape.getMin(axis);
+        return shape.max(axis) - shape.min(axis);
     }
 
     private static boolean isClose(double a, double b) {

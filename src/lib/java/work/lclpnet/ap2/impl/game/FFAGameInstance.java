@@ -1,7 +1,7 @@
 package work.lclpnet.ap2.impl.game;
 
-import net.minecraft.scoreboard.ScoreboardObjective;
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.scores.Objective;
 import work.lclpnet.ap2.api.base.ParticipantListener;
 import work.lclpnet.ap2.api.event.IntScoreEventSource;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
@@ -26,12 +26,12 @@ import static work.lclpnet.ap2.api.stats.CommonStats.SCORE;
 public abstract class FFAGameInstance extends BaseGameInstance implements ParticipantListener, WinManagerView {
 
     protected final PlayerRefResolver resolver;
-    protected final WinManager<ServerPlayerEntity, PlayerRef> winManager;
+    protected final WinManager<ServerPlayer, PlayerRef> winManager;
 
     public FFAGameInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
 
-        this.resolver = new PlayerRefResolver(gameHandle.getServer().getPlayerManager());
+        this.resolver = new PlayerRefResolver(gameHandle.getServer().getPlayerList());
 
         var data = new WinManager.Data<>(this::getData, Optional::of, PlayerRef::create, PlayerRef::create, FFAGameResult::new);
 
@@ -51,18 +51,18 @@ public abstract class FFAGameInstance extends BaseGameInstance implements Partic
     }
 
     @Override
-    public void participantRemoved(ServerPlayerEntity player) {
+    public void participantRemoved(ServerPlayer player) {
         // this will be called when a participant quits or is eliminated
         winManager.checkForLastRemaining();
     }
 
-    public final void useScoreboardStatsSync(IntScoreEventSource<ServerPlayerEntity> source, ScoreboardObjective objective) {
+    public final void useScoreboardStatsSync(IntScoreEventSource<ServerPlayer> source, Objective objective) {
         gameHandle.getScoreboardManager().sync(objective, source);
 
         initScores();
     }
 
-    public final void useScoreboardStatsSync(IntScoreEventSource<ServerPlayerEntity> source, CustomScoreboardObjective objective) {
+    public final void useScoreboardStatsSync(IntScoreEventSource<ServerPlayer> source, CustomScoreboardObjective objective) {
         gameHandle.getScoreboardManager().sync(objective, source);
 
         initScores();
@@ -72,7 +72,7 @@ public abstract class FFAGameInstance extends BaseGameInstance implements Partic
         gameHandle.getParticipants().forEach(getData()::identityIfAbsent);
     }
 
-    protected final FFAStatsManager createStats(IntScoreEventSource<ServerPlayerEntity> data, Stat<?>... stats) {
+    protected final FFAStatsManager createStats(IntScoreEventSource<ServerPlayer> data, Stat<?>... stats) {
         var set = Stream.concat(Stream.of(SCORE), Arrays.stream(stats)).collect(Collectors.toCollection(LinkedHashSet::new));
         var manager = new FFAStatsManager(set);
 
@@ -89,5 +89,5 @@ public abstract class FFAGameInstance extends BaseGameInstance implements Partic
         return new WinManagerAccessImpl<>(winManager, Optional::of, getData());
     }
 
-    protected abstract DataContainer<ServerPlayerEntity, PlayerRef> getData();
+    protected abstract DataContainer<ServerPlayer, PlayerRef> getData();
 }

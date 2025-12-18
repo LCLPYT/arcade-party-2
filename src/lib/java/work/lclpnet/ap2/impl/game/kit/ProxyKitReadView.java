@@ -1,6 +1,6 @@
 package work.lclpnet.ap2.impl.game.kit;
 
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -13,12 +13,12 @@ public class ProxyKitReadView implements KitReadView {
     }
 
     @Override
-    public @NotNull Kit getKit(ServerPlayerEntity player) {
+    public @NotNull Kit getKit(ServerPlayer player) {
         return delegate().getKit(player);
     }
 
     @Override
-    public boolean hasKitEquipped(ServerPlayerEntity player, Kit kit) {
+    public boolean hasKitEquipped(ServerPlayer player, Kit kit) {
         return delegate().hasKitEquipped(player, kit);
     }
 

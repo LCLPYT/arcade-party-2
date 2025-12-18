@@ -1,6 +1,6 @@
 package work.lclpnet.ap2.impl.map;
 
-import net.minecraft.server.world.ServerWorld;
+import net.minecraft.server.level.ServerLevel;
 import org.jetbrains.annotations.NotNull;
 import work.lclpnet.ap2.api.map.MapBootstrap;
 import work.lclpnet.ap2.api.map.MapBootstrapFunction;
@@ -22,7 +22,7 @@ public class ServerThreadMapBootstrap implements MapBootstrap {
     }
 
     @Override
-    public @NotNull CompletableFuture<Void> createWorldBootstrap(@NotNull ServerWorld world, @NotNull GameMap map) {
+    public @NotNull CompletableFuture<Void> createWorldBootstrap(@NotNull ServerLevel world, @NotNull GameMap map) {
         // execute the operation on the next server tick, this introduces a delay
         return world.getServer().submit(() -> op.bootstrapWorld(world, map));
     }

@@ -1,6 +1,6 @@
 package work.lclpnet.ap2.core.hook;
 
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.level.ServerPlayer;
 import work.lclpnet.kibu.hook.Hook;
 import work.lclpnet.kibu.hook.HookFactory;
 
@@ -21,5 +21,5 @@ public interface PlayerListEntriesOnJoinCallback {
         return players;
     });
 
-    Collection<ServerPlayerEntity> shouldBeSent(Collection<ServerPlayerEntity> players);
+    Collection<ServerPlayer> shouldBeSent(Collection<ServerPlayer> players);
 }

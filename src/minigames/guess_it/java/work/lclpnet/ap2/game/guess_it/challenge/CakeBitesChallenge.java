@@ -1,13 +1,13 @@
 package work.lclpnet.ap2.game.guess_it.challenge;
 
-import net.minecraft.block.Blocks;
-import net.minecraft.block.CakeBlock;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.decoration.DisplayEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.AffineTransformation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
+import com.mojang.math.Transformation;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.Display;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.CakeBlock;
+import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.game.guess_it.data.*;
@@ -24,14 +24,14 @@ public class CakeBitesChallenge implements Challenge {
 
     private static final int DURATION_TICKS = Ticks.seconds(14);
     private final MiniGameHandle gameHandle;
-    private final ServerWorld world;
+    private final ServerLevel world;
     private final Random random;
     private final BlockShape blockShape;
     private final WorldModifier modifier;
     private final DynamicEntityModifier dynamicEntities;
     private int amount = 0;
 
-    public CakeBitesChallenge(MiniGameHandle gameHandle, ServerWorld world, Random random, BlockShape blockShape, WorldModifier modifier, DynamicEntityModifier dynamicEntities) {
+    public CakeBitesChallenge(MiniGameHandle gameHandle, ServerLevel world, Random random, BlockShape blockShape, WorldModifier modifier, DynamicEntityModifier dynamicEntities) {
         this.gameHandle = gameHandle;
         this.world = world;
         this.random = random;
@@ -69,24 +69,24 @@ public class CakeBitesChallenge implements Challenge {
         BlockPos origin = blockShape.origin();
 
         addHint(dynamicEntities, world, gameHandle.getTranslations(),
-                new Vec3d(origin.getX() + 0.5, origin.getY() + 4.5, origin.getZ() + 0.5),
+                new Vec3(origin.getX() + 0.5, origin.getY() + 4.5, origin.getZ() + 0.5),
                 "game.ap2.guess_it.cake_bites.hint");
     }
 
     private void createCake() {
-        var display = new DisplayEntity.BlockDisplayEntity(EntityType.BLOCK_DISPLAY, world);
-        DisplayEntityAccess.setBlockState(display, Blocks.CAKE.getDefaultState().with(CakeBlock.BITES, amount));
+        var display = new Display.BlockDisplay(EntityType.BLOCK_DISPLAY, world);
+        DisplayEntityAccess.setBlockState(display, Blocks.CAKE.defaultBlockState().setValue(CakeBlock.BITES, amount));
 
         float scale = 7;
 
-        DisplayEntityAccess.setTransformation(display, new AffineTransformation(new Matrix4f().scale(7)));
+        DisplayEntityAccess.setTransformation(display, new Transformation(new Matrix4f().scale(7)));
 
         BlockPos origin = blockShape.origin();
         double x = origin.getX() + 0.5 - scale * 0.5;
         double y = origin.getY();
         double z = origin.getZ() + 0.5 - scale * 0.5;
 
-        display.setPos(x, y, z);
+        display.setPosRaw(x, y, z);
 
         modifier.spawnEntity(display);
     }

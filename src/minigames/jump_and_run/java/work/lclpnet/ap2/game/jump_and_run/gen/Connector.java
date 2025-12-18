@@ -1,15 +1,15 @@
 package work.lclpnet.ap2.game.jump_and_run.gen;
 
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Vec3i;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.Vec3i;
 import work.lclpnet.gaco.math.AffineIntMatrix;
 
 public record Connector(BlockPos pos, Direction direction) {
 
     public Connector transform(AffineIntMatrix mat4) {
-        Vec3i vec = mat4.transformVector(this.direction.getVector());
-        Direction dir = Direction.fromVector(vec.getX(), vec.getY(), vec.getZ(), null);
+        Vec3i vec = mat4.transformVector(this.direction.getUnitVec3i());
+        Direction dir = Direction.getNearest(vec.getX(), vec.getY(), vec.getZ(), null);
 
         if (dir == null) throw new IllegalArgumentException("Invalid transformation: Direction is not canonical");
 

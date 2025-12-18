@@ -1,7 +1,7 @@
 package work.lclpnet.ap2.impl.util.effect;
 
-import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.effect.MobEffects;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
 import org.slf4j.Logger;
@@ -11,16 +11,16 @@ import java.util.*;
 
 public class ApEffects {
 
-    private static final Map<Identifier, ApEffect> effects = new HashMap<>();
-    public static final ApEffect DARKNESS = new PotionApEffect(StatusEffects.DARKNESS, 0);
-    public static final ApEffect NIGHT_VISION = new PotionApEffect(StatusEffects.NIGHT_VISION, 0);
+    private static final Map<ResourceLocation, ApEffect> effects = new HashMap<>();
+    public static final ApEffect DARKNESS = new PotionApEffect(MobEffects.DARKNESS, 0);
+    public static final ApEffect NIGHT_VISION = new PotionApEffect(MobEffects.NIGHT_VISION, 0);
 
     static {
         register(ApConstants.identifier("darkness"), DARKNESS);
         register(ApConstants.identifier("night_vision"), NIGHT_VISION);
     }
 
-    private static void register(Identifier id, ApEffect effect) {
+    private static void register(ResourceLocation id, ApEffect effect) {
         Objects.requireNonNull(id);
         Objects.requireNonNull(effect);
 
@@ -30,7 +30,7 @@ public class ApEffects {
     private ApEffects() {}
 
     @Nullable
-    public static ApEffect tryFrom(Identifier id) {
+    public static ApEffect tryFrom(ResourceLocation id) {
         return effects.get(id);
     }
 
@@ -43,7 +43,7 @@ public class ApEffects {
                 continue;
             }
 
-            Identifier id = Identifier.of(str);
+            ResourceLocation id = ResourceLocation.parse(str);
             ApEffect effect = ApEffects.tryFrom(id);
 
             if (effect == null) {

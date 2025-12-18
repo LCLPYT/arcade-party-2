@@ -1,7 +1,7 @@
 package work.lclpnet.ap2.game.one_in_the_chamber;
 
 import it.unimi.dsi.fastutil.Pair;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
 import org.json.JSONArray;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.impl.map.MapUtil;
@@ -60,7 +60,7 @@ public class OneInTheChamberSpawns {
 
         return gameHandle.getParticipants().stream()
                 .filter(player -> !player.isSpectator())
-                .mapToDouble(player -> player.getEntityPos().squaredDistanceTo(x, y, z))
+                .mapToDouble(player -> player.position().distanceToSqr(x, y, z))
                 .min().orElse(Double.MAX_VALUE);
     }
 }

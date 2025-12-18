@@ -1,9 +1,9 @@
 package work.lclpnet.ap2.game.glowing_bomb.data;
 
-import net.minecraft.block.Blocks;
-import net.minecraft.block.RespawnAnchorBlock;
-import net.minecraft.entity.decoration.DisplayEntity;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.entity.Display;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.RespawnAnchorBlock;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.gaco.core.api.EntityRef;
 import work.lclpnet.kibu.access.entity.DisplayEntityAccess;
@@ -13,18 +13,18 @@ import java.util.UUID;
 public class GbAnchor {
 
     private final UUID owner;
-    private final Vec3d pos;
-    private final EntityRef<DisplayEntity.BlockDisplayEntity> displayRef;
+    private final Vec3 pos;
+    private final EntityRef<Display.BlockDisplay> displayRef;
     private int charges = 0;
 
-    public GbAnchor(UUID owner, Vec3d pos, DisplayEntity.BlockDisplayEntity display) {
+    public GbAnchor(UUID owner, Vec3 pos, Display.BlockDisplay display) {
         this.owner = owner;
         this.pos = pos;
         this.displayRef = new EntityRef<>(display);
     }
 
     @Nullable
-    private DisplayEntity.BlockDisplayEntity display() {
+    private Display.BlockDisplay display() {
         return displayRef.resolve();
     }
 
@@ -32,7 +32,7 @@ public class GbAnchor {
         return charges;
     }
 
-    public Vec3d pos() {
+    public Vec3 pos() {
         return pos;
     }
 
@@ -47,7 +47,7 @@ public class GbAnchor {
 
         if (display == null) return;
 
-        DisplayEntityAccess.setBlockState(display, Blocks.RESPAWN_ANCHOR.getDefaultState().with(RespawnAnchorBlock.CHARGES, this.charges));
+        DisplayEntityAccess.setBlockState(display, Blocks.RESPAWN_ANCHOR.defaultBlockState().setValue(RespawnAnchorBlock.CHARGE, this.charges));
     }
 
     public void discard() {

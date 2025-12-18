@@ -9,7 +9,7 @@ import work.lclpnet.kibu.translate.Translations;
 
 import java.util.Random;
 
-import static net.minecraft.util.Formatting.YELLOW;
+import static net.minecraft.ChatFormatting.YELLOW;
 import static work.lclpnet.ap2.game.guess_it.math.Term.*;
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 

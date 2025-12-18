@@ -4,10 +4,10 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
 import com.mojang.serialization.JsonOps;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.NbtOps;
-import net.minecraft.registry.RegistryWrapper;
-import net.minecraft.text.Text;
-import net.minecraft.text.TextCodecs;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.ComponentSerialization;
 import org.slf4j.Logger;
 import work.lclpnet.kibu.jnbt.CompoundTag;
 import work.lclpnet.kibu.jnbt.ListTag;
@@ -22,10 +22,10 @@ import work.lclpnet.kibu.structure.BlockStructure;
 
 public class StructureFix {
 
-    private final RegistryWrapper.WrapperLookup registries;
+    private final HolderLookup.Provider registries;
     private final Logger logger;
 
-    public StructureFix(RegistryWrapper.WrapperLookup registries, Logger logger) {
+    public StructureFix(HolderLookup.Provider registries, Logger logger) {
         this.registries = registries;
         this.logger = logger;
     }
@@ -96,16 +96,16 @@ public class StructureFix {
 
         String json = stringTag.getValue();
 
-        Text text;
+        Component text;
 
         try {
             JsonElement elem = JsonParser.parseString(json);
-            text = TextCodecs.CODEC.parse(registries.getOps(JsonOps.INSTANCE), elem).getOrThrow(JsonParseException::new);
+            text = ComponentSerialization.CODEC.parse(registries.createSerializationContext(JsonOps.INSTANCE), elem).getOrThrow(JsonParseException::new);
         } catch (JsonParseException ignored) {
             return tag;
         }
 
-        var nbtElement = TextCodecs.CODEC.encodeStart(NbtOps.INSTANCE, text)
+        var nbtElement = ComponentSerialization.CODEC.encodeStart(NbtOps.INSTANCE, text)
                 .resultOrPartial(err -> logger.error("Failed to encode {} as nbt element: {}", text, err))
                 .orElse(null);
 

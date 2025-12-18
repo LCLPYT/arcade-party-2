@@ -1,7 +1,7 @@
 package work.lclpnet.ap2.core.hook;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.text.Text;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.player.Player;
 import work.lclpnet.kibu.hook.Hook;
 import work.lclpnet.kibu.hook.HookFactory;
 
@@ -15,5 +15,5 @@ public interface PlayerDisplayNameCallback {
         return name;
     });
 
-    Text modifyDisplayName(PlayerEntity player, Text name);
+    Component modifyDisplayName(Player player, Component name);
 }

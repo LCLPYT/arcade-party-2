@@ -2,12 +2,12 @@ package work.lclpnet.ap2.game.maze_scape.debug;
 
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4d;
 import org.joml.Vector4d;
 import work.lclpnet.ap2.game.maze_scape.setup.MSDebugController;
@@ -20,7 +20,7 @@ import work.lclpnet.kibu.cmd.type.KibuCommand;
 import java.util.ArrayList;
 import java.util.List;
 
-import static net.minecraft.server.command.CommandManager.literal;
+import static net.minecraft.commands.Commands.literal;
 
 public class DebugFrustumCommand implements KibuCommand {
 
@@ -34,20 +34,20 @@ public class DebugFrustumCommand implements KibuCommand {
     @Override
     public void register(CommandRegistrar commandRegistrar) {
         commandRegistrar.registerCommand(literal("ap2:debug_frustum")
-                .requires(s -> s.hasPermissionLevel(2))
+                .requires(s -> s.hasPermission(2))
                 .then(literal("show")
                         .executes(this::showSelf))
                 .then(literal("clear")
                         .executes(this::clear)));
     }
 
-    private int showSelf(CommandContext<ServerCommandSource> ctx) throws CommandSyntaxException {
-        ServerPlayerEntity player = ctx.getSource().getPlayerOrThrow();
+    private int showSelf(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        ServerPlayer player = ctx.getSource().getPlayerOrException();
 
         DebugRenderer renderer = debugger.parent().renderer().orElse(null);
 
         if (renderer == null) {
-            ctx.getSource().sendError(Text.literal("Debug renderer not initialized"));
+            ctx.getSource().sendFailure(Component.literal("Debug renderer not initialized"));
             return 0;
         }
 
@@ -55,26 +55,26 @@ public class DebugFrustumCommand implements KibuCommand {
 
         Matrix4d invViewProj = VisibilityChecker.viewProjectionMatrix(player, Math.toRadians(90), 1920 / 1080f, new Matrix4d()).invert();
 
-        final Vec3d[] frustum = {
-                new Vec3d(-1, -1, -1),
-                new Vec3d( 1, -1, -1),
-                new Vec3d( 1,  1, -1),
-                new Vec3d(-1,  1, -1),
-                new Vec3d(-1, -1,  1),
-                new Vec3d( 1, -1,  1),
-                new Vec3d( 1,  1,  1),
-                new Vec3d(-1,  1,  1)};
+        final Vec3[] frustum = {
+                new Vec3(-1, -1, -1),
+                new Vec3( 1, -1, -1),
+                new Vec3( 1,  1, -1),
+                new Vec3(-1,  1, -1),
+                new Vec3(-1, -1,  1),
+                new Vec3( 1, -1,  1),
+                new Vec3( 1,  1,  1),
+                new Vec3(-1,  1,  1)};
 
         for (int i = 0; i < frustum.length; i++) {
             Vector4d hom = new Vector4d(frustum[i].x, frustum[i].y, frustum[i].z, 1.d);
 
             invViewProj.transform(hom);
 
-            frustum[i] = new Vec3d(hom.x / hom.w, hom.y / hom.w, hom.z / hom.w);
+            frustum[i] = new Vec3(hom.x / hom.w, hom.y / hom.w, hom.z / hom.w);
         }
 
         double thickness = 0.005;
-        BlockState state = Blocks.BLACK_CONCRETE.getDefaultState();
+        BlockState state = Blocks.BLACK_CONCRETE.defaultBlockState();
 
         for (int i = 0; i < 4; i++) {
             lines.add(renderer.line(frustum[i], frustum[(i + 1) % 4], thickness, state));
@@ -82,7 +82,7 @@ public class DebugFrustumCommand implements KibuCommand {
             lines.add(renderer.line(frustum[i], frustum[i + 4], thickness, state));
         }
 
-        ctx.getSource().sendMessage(Text.literal("Showing your camera view frustum"));
+        ctx.getSource().sendSystemMessage(Component.literal("Showing your camera view frustum"));
 
         return 1;
     }
@@ -92,10 +92,10 @@ public class DebugFrustumCommand implements KibuCommand {
         lines.clear();
     }
 
-    private int clear(CommandContext<ServerCommandSource> ctx) {
+    private int clear(CommandContext<CommandSourceStack> ctx) {
         reset();
 
-        ctx.getSource().sendMessage(Text.literal("Frustum visualization cleared"));
+        ctx.getSource().sendSystemMessage(Component.literal("Frustum visualization cleared"));
 
         return 1;
     }

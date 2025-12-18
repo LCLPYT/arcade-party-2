@@ -2,14 +2,14 @@ package work.lclpnet.ap2.impl.game;
 
 import it.unimi.dsi.fastutil.objects.ObjectIntPair;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
-import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.ClickEvent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.ClickEvent;
-import net.minecraft.text.HoverEvent;
-import net.minecraft.text.Text;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.MiniGameResults;
 import work.lclpnet.ap2.api.game.data.DataContainer;
@@ -36,7 +36,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
-import static net.minecraft.util.Formatting.*;
+import static net.minecraft.ChatFormatting.*;
 
 public class WinSequence<T, Ref extends SubjectRef> {
 
@@ -63,12 +63,12 @@ public class WinSequence<T, Ref extends SubjectRef> {
         Translations translations = gameHandle.getTranslations();
         MinecraftServer server = gameHandle.getServer();
 
-        for (ServerPlayerEntity player : PlayerLookup.all(server)) {
+        for (ServerPlayer player : PlayerLookup.all(server)) {
             var msg = translations.translateText(player, "ap2.game.winner_is");
 
-            Title.get(player).title(Text.empty(), msg.formatted(DARK_GREEN), 5, 100, 5);
+            Title.get(player).title(Component.empty(), msg.formatted(DARK_GREEN), 5, 100, 5);
 
-            player.sendMessage(msg.formatted(GRAY));
+            player.sendSystemMessage(msg.formatted(GRAY));
         }
 
         var hook = HookFactory.createArrayBacked(Runnable.class, actions -> () -> {
@@ -85,7 +85,7 @@ public class WinSequence<T, Ref extends SubjectRef> {
             public void run(RunningTask info) {
                 if (t++ == 0) {
                     i++;
-                    SoundHelper.playSound(server, SoundEvents.BLOCK_NOTE_BLOCK_HAT.value(), SoundCategory.RECORDS, 0.7f, 2f);
+                    SoundHelper.playSound(server, SoundEvents.NOTE_BLOCK_HAT.value(), SoundSource.RECORDS, 0.7f, 2f);
                 }
 
                 if (i < 5) {
@@ -143,10 +143,10 @@ public class WinSequence<T, Ref extends SubjectRef> {
         Translations translations = gameHandle.getTranslations();
         TranslatedText won = translations.translateText("ap2.won").formatted(DARK_GREEN);
 
-        for (ServerPlayerEntity player : PlayerLookup.all(gameHandle.getServer())) {
+        for (ServerPlayer player : PlayerLookup.all(gameHandle.getServer())) {
             var ref = refs.create(player);
 
-            Text winnerName = winner.getNameFor(player);
+            Component winnerName = winner.getNameFor(player);
 
             if (winner.equals(ref)) {
                 playWinSound(player);
@@ -159,7 +159,7 @@ public class WinSequence<T, Ref extends SubjectRef> {
             }
 
             if (winnerName.getStyle().getColor() == null) {
-                winnerName = winnerName.copy().formatted(AQUA);
+                winnerName = winnerName.copy().withStyle(AQUA);
             }
 
             Title.get(player).title(winnerName, won.translateFor(player), 5, 100, 5);
@@ -172,7 +172,7 @@ public class WinSequence<T, Ref extends SubjectRef> {
 
         TranslatedText nobody = translations.translateText("ap2.nobody").formatted(AQUA);
 
-        for (ServerPlayerEntity player : PlayerLookup.all(gameHandle.getServer())) {
+        for (ServerPlayer player : PlayerLookup.all(gameHandle.getServer())) {
             playLooseSound(player);
             Title.get(player).title(nobody.translateFor(player), won.translateFor(player), 5, 100, 5);
         }
@@ -189,7 +189,7 @@ public class WinSequence<T, Ref extends SubjectRef> {
 
         var winningPlayersRefs = winners.getWinningPlayers();
 
-        for (ServerPlayerEntity player : PlayerLookup.all(gameHandle.getServer())) {
+        for (ServerPlayer player : PlayerLookup.all(gameHandle.getServer())) {
             TranslatedText subtitle;
 
             PlayerRef ref = PlayerRef.create(player);
@@ -206,12 +206,12 @@ public class WinSequence<T, Ref extends SubjectRef> {
         }
     }
 
-    private static void playWinSound(ServerPlayerEntity player) {
-        player.playSoundToPlayer(SoundEvents.ENTITY_PLAYER_LEVELUP, SoundCategory.PLAYERS, 1, 0);
+    private static void playWinSound(ServerPlayer player) {
+        player.playNotifySound(SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 1, 0);
     }
 
-    private static void playLooseSound(ServerPlayerEntity player) {
-        player.playSoundToPlayer(SoundEvents.ENTITY_BLAZE_DEATH, SoundCategory.PLAYERS, 1, 1);
+    private static void playLooseSound(ServerPlayer player) {
+        player.playNotifySound(SoundEvents.BLAZE_DEATH, SoundSource.PLAYERS, 1, 1);
     }
 
     private void broadcastResults() {
@@ -221,7 +221,7 @@ public class WinSequence<T, Ref extends SubjectRef> {
 
         var statsId = this.statsId.getNow(Optional.empty()).orElse(null);
 
-        for (ServerPlayerEntity player : PlayerLookup.all(gameHandle.getServer())) {
+        for (ServerPlayer player : PlayerLookup.all(gameHandle.getServer())) {
             if (statsId == null) {
                 announcement.sendTop(5, player);
                 continue;
@@ -233,8 +233,8 @@ public class WinSequence<T, Ref extends SubjectRef> {
         }
     }
 
-    private RootText getStatsMessage(ServerPlayerEntity player, UUID statsId) {
-        var nbt = new NbtCompound();
+    private RootText getStatsMessage(ServerPlayer player, UUID statsId) {
+        var nbt = new CompoundTag();
         nbt.putString("id", statsId.toString());
 
         var translations = gameHandle.getTranslations();
@@ -242,7 +242,7 @@ public class WinSequence<T, Ref extends SubjectRef> {
         return translations.translateText(player, "ap2.view_stats")
                 .append(" ↗")
                 .styled(style -> style
-                        .withFormatting(AQUA)
+                        .applyFormat(AQUA)
                         .withHoverEvent(new HoverEvent.ShowText(translations.translateText(player, "ap2.view_stats.click")))
                         .withClickEvent(new ClickEvent.Custom(SessionStatsRecorder.SHOW_SUMMARY, Optional.of(nbt))));
     }

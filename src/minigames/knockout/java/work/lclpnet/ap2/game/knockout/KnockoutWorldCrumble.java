@@ -1,10 +1,10 @@
 package work.lclpnet.ap2.game.knockout;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 import org.json.JSONObject;
 import work.lclpnet.ap2.game.knockout.util.DistanceIterator;
 import work.lclpnet.ap2.impl.map.MapUtil;
@@ -17,7 +17,7 @@ import work.lclpnet.lobby.game.map.GameMap;
 public class KnockoutWorldCrumble {
 
     private static final int DEFAULT_DELAY_SECONDS = 90, DEFAULT_PERIOD_TICKS = Ticks.seconds(1);
-    private final ServerWorld world;
+    private final ServerLevel world;
     private final GameMap map;
     private short[][] distances = null;
     private int centerX = 0, centerZ = 0;
@@ -27,7 +27,7 @@ public class KnockoutWorldCrumble {
     private int delaySeconds = DEFAULT_DELAY_SECONDS;
     private int periodTicks = DEFAULT_PERIOD_TICKS;
 
-    public KnockoutWorldCrumble(ServerWorld world, GameMap map) {
+    public KnockoutWorldCrumble(ServerLevel world, GameMap map) {
         this.world = world;
         this.map = map;
     }
@@ -67,7 +67,7 @@ public class KnockoutWorldCrumble {
 
         for (int r = maxDistance; r >= 0 ; r--) {
             for (BlockPos pos : iterateBlocks(r)) {
-                if (world.isAir(pos)) continue;
+                if (world.isEmptyBlock(pos)) continue;
 
                 return (short) Math.round(Math.sqrt(Math.pow(centerX - pos.getX(), 2) + Math.pow(centerZ - pos.getZ(), 2)));
             }
@@ -114,31 +114,31 @@ public class KnockoutWorldCrumble {
     }
 
     private void markBlocks() {
-        BlockState markerState = Blocks.RED_TERRACOTTA.getDefaultState();
+        BlockState markerState = Blocks.RED_TERRACOTTA.defaultBlockState();
 
         for (BlockPos pos : iterateBlocks(currentDistance)) {
             BlockState state = world.getBlockState(pos);
 
-            if (!state.isFullCube(world, pos)) continue;
+            if (!state.isCollisionShapeFullBlock(world, pos)) continue;
 
-            world.setBlockState(pos, markerState, Block.FORCE_STATE | Block.SKIP_DROPS | Block.NOTIFY_LISTENERS);
+            world.setBlock(pos, markerState, Block.UPDATE_KNOWN_SHAPE | Block.UPDATE_SUPPRESS_DROPS | Block.UPDATE_CLIENTS);
         }
     }
 
     private void removeBlocks() {
-        BlockState air = Blocks.AIR.getDefaultState();
+        BlockState air = Blocks.AIR.defaultBlockState();
 
         for (BlockPos pos : iterateBlocks(currentDistance)) {
             BlockState state = world.getBlockState(pos);
 
             if (state.isAir()) continue;
 
-            world.setBlockState(pos, air, Block.FORCE_STATE | Block.SKIP_DROPS | Block.NOTIFY_LISTENERS);
+            world.setBlock(pos, air, Block.UPDATE_KNOWN_SHAPE | Block.UPDATE_SUPPRESS_DROPS | Block.UPDATE_CLIENTS);
         }
     }
 
     private Iterable<BlockPos> iterateBlocks(int targetDistance) {
-        return () -> new DistanceIterator(radius, centerX, centerZ, world.getBottomY(), world.getTopYInclusive(), distances, targetDistance);
+        return () -> new DistanceIterator(radius, centerX, centerZ, world.getMinY(), world.getMaxY(), distances, targetDistance);
     }
 
     public int getDelaySeconds() {

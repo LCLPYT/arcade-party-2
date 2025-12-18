@@ -2,8 +2,8 @@ package work.lclpnet.ap2.mode_default.cmd;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
-import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.text.Text;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.network.chat.Component;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.MiniGameInstance;
 import work.lclpnet.ap2.api.game.MiniGameResults;
@@ -11,7 +11,7 @@ import work.lclpnet.ap2.api.game.WinManagerView;
 import work.lclpnet.kibu.cmd.type.CommandRegistrar;
 import work.lclpnet.kibu.cmd.type.KibuCommand;
 
-import static net.minecraft.server.command.CommandManager.literal;
+import static net.minecraft.commands.Commands.literal;
 
 public class DrawCommand implements KibuCommand {
 
@@ -28,24 +28,24 @@ public class DrawCommand implements KibuCommand {
         registrar.registerCommand(command());
     }
 
-    private LiteralArgumentBuilder<ServerCommandSource> command() {
+    private LiteralArgumentBuilder<CommandSourceStack> command() {
         return literal("draw")
-                .requires(s -> s.hasPermissionLevel(2))
+                .requires(s -> s.hasPermission(2))
                 .executes(this::draw)
                 .then(literal("now")
                         .executes(this::drawNow));
     }
 
-    private int draw(CommandContext<ServerCommandSource> ctx) {
-        ctx.getSource().sendMessage(Text.literal("Ended the current mini game with a draw"));
+    private int draw(CommandContext<CommandSourceStack> ctx) {
+        ctx.getSource().sendSystemMessage(Component.literal("Ended the current mini game with a draw"));
 
         dispatchDraw(miniGame, gameHandle);
 
         return 1;
     }
 
-    private int drawNow(CommandContext<ServerCommandSource> ctx) {
-        ctx.getSource().sendMessage(Text.literal("Ended the current mini game with a draw"));
+    private int drawNow(CommandContext<CommandSourceStack> ctx) {
+        ctx.getSource().sendSystemMessage(Component.literal("Ended the current mini game with a draw"));
 
         gameHandle.complete(MiniGameResults.EMPTY);
 

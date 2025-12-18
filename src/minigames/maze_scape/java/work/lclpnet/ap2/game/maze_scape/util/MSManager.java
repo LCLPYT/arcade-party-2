@@ -4,29 +4,33 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import it.unimi.dsi.fastutil.objects.Object2DoubleMap;
 import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
-import net.minecraft.block.Blocks;
-import net.minecraft.command.argument.EntityAnchorArgumentType;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.ai.brain.Activity;
-import net.minecraft.entity.ai.brain.Brain;
-import net.minecraft.entity.ai.brain.MemoryModuleType;
-import net.minecraft.entity.ai.brain.task.LookAtMobTask;
-import net.minecraft.entity.ai.brain.task.MeleeAttackTask;
-import net.minecraft.entity.ai.brain.task.RangedApproachTask;
-import net.minecraft.entity.ai.pathing.Path;
-import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.entity.mob.*;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.commands.arguments.EntityAnchorArgument;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.Brain;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.behavior.MeleeAttack;
+import net.minecraft.world.entity.ai.behavior.SetEntityLookTarget;
+import net.minecraft.world.entity.ai.behavior.SetWalkTargetFromAttackTargetIfTargetOutOfReach;
+import net.minecraft.world.entity.ai.memory.MemoryModuleType;
+import net.minecraft.world.entity.monster.EnderMan;
+import net.minecraft.world.entity.monster.Spider;
+import net.minecraft.world.entity.monster.creaking.Creaking;
+import net.minecraft.world.entity.monster.warden.Warden;
+import net.minecraft.world.entity.schedule.Activity;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.pathfinder.Path;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.core.hook.*;
-import work.lclpnet.ap2.core.mixin.CreakingBrainAccessor;
-import work.lclpnet.ap2.core.mixin.WardenBrainAccessor;
+import work.lclpnet.ap2.core.mixin.CreakingAiAccessor;
+import work.lclpnet.ap2.core.mixin.WardenAiAccessor;
 import work.lclpnet.ap2.core.type.ApEntity;
 import work.lclpnet.ap2.game.maze_scape.gen.Node;
 import work.lclpnet.ap2.game.maze_scape.monster.CreakingData;
@@ -49,7 +53,7 @@ public class MSManager {
 
     private static final boolean DEBUG_MOB_SPAWNS = false;
 
-    private final ServerWorld world;
+    private final ServerLevel world;
     private final MSStruct struct;
     private final Participants participants;
     private final Random random;
@@ -59,7 +63,7 @@ public class MSManager {
     private final Map<UUID, MonsterData<?>> monsters = new HashMap<>();
     private final MonsterSpawner spawner;
 
-    public MSManager(ServerWorld world, GameMap map, MSStruct struct, Participants participants, Random random, Logger logger, MSDebugController debugController) {
+    public MSManager(ServerLevel world, GameMap map, MSStruct struct, Participants participants, Random random, Logger logger, MSDebugController debugController) {
         this.world = world;
         this.struct = struct;
         this.participants = participants;
@@ -71,7 +75,7 @@ public class MSManager {
         spawner = new MonsterSpawner(this, logger, random);
     }
 
-    public ServerWorld world() {
+    public ServerLevel world() {
         return world;
     }
 
@@ -106,8 +110,8 @@ public class MSManager {
 
         if (DEBUG_MOB_SPAWNS) {
             debugController.parent().renderer().ifPresent(renderer -> {
-                for (Vec3d pos : spawns.source()) {
-                    renderer.marker(pos.x, pos.y + 0.5, pos.z, Blocks.YELLOW_CONCRETE.getDefaultState(), 0xffff00);
+                for (Vec3 pos : spawns.source()) {
+                    renderer.marker(pos.x, pos.y + 0.5, pos.z, Blocks.YELLOW_CONCRETE.defaultBlockState(), 0xffff00);
                 }
             });
         }
@@ -139,7 +143,7 @@ public class MSManager {
      * The spawns are chosen, such so that they are not near any players, if possible.
      * @return A list of spawn positions, is <b>not guaranteed</b> to be of the requested size, if anything is configured wrong.
      */
-    public @Nullable RandomGenerator<Vec3d> spawns() {
+    public @Nullable RandomGenerator<Vec3> spawns() {
         var nodes = struct.graph().nodes();
         Object2DoubleMap<Object> minDistances = new Object2DoubleOpenHashMap<>(nodes.size());
 
@@ -148,7 +152,7 @@ public class MSManager {
                 .map(OrientedStructurePiece::spawn)
                 .stream()
                 .flatMapToDouble(nodeSpawn -> participants.stream()
-                        .flatMap(player -> struct.findPath(player.getEntityPos(), nodeSpawn).stream())
+                        .flatMap(player -> struct.findPath(player.position(), nodeSpawn).stream())
                         .mapToDouble(NavPath::length))
                 .min()
                 .ifPresent(minDist -> minDistances.put(node, minDist)));
@@ -175,81 +179,81 @@ public class MSManager {
     }
 
     private void initAttributes(LivingEntity entity) {
-        if (entity.getEntityWorld() != world || !isMonsterType(entity)) return;
+        if (entity.level() != world || !isMonsterType(entity)) return;
 
-        EntityUtil.setAttribute(entity, EntityAttributes.FOLLOW_RANGE, 80);
+        EntityUtil.setAttribute(entity, Attributes.FOLLOW_RANGE, 80);
     }
 
     private static boolean isMonsterType(LivingEntity entity) {
-        return entity instanceof WardenEntity
-                || entity instanceof SpiderEntity
-                || entity instanceof EndermanEntity
-                || entity instanceof CreakingEntity;
+        return entity instanceof Warden
+                || entity instanceof Spider
+                || entity instanceof EnderMan
+                || entity instanceof Creaking;
     }
 
-    private @Nullable Brain<WardenEntity> createWardenBrain(WardenEntity warden, Supplier<Brain<WardenEntity>> brainSupplier) {
-        if (warden.getEntityWorld() != world) return null;
+    private @Nullable Brain<Warden> createWardenBrain(Warden warden, Supplier<Brain<Warden>> brainSupplier) {
+        if (warden.level() != world) return null;
 
         var brain = brainSupplier.get();
 
         // adjusted activities from WardenBrain::create
-        WardenBrainAccessor.invokeAddCoreActivities(brain);  // don't add emerge and dig activities
-        WardenBrainAccessor.invokeAddIdleActivities(brain);
-        WardenBrainAccessor.invokeAddRoarActivities(brain);
-        WardenBrainAccessor.invokeAddInvestigateActivities(brain);
-        WardenBrainAccessor.invokeAddSniffActivities(brain);
+        WardenAiAccessor.invokeInitCoreActivity(brain);  // don't add emerge and dig activities
+        WardenAiAccessor.invokeInitIdleActivity(brain);
+        WardenAiAccessor.invokeInitRoarActivity(brain);
+        WardenAiAccessor.invokeInitInvestigateActivity(brain);
+        WardenAiAccessor.invokeInitSniffingActivity(brain);
 
         // custom fight activity
-        brain.setTaskList(
+        brain.addActivityAndRemoveMemoryWhenStopped(
                 Activity.FIGHT,
                 10,
                 ImmutableList.of(
-                        LookAtMobTask.create(entity -> isTargeting(warden, entity), (float)warden.getAttributeValue(EntityAttributes.FOLLOW_RANGE)),
-                        RangedApproachTask.create(1.2F),
-                        MeleeAttackTask.create(18)
+                        SetEntityLookTarget.create(entity -> isTargeting(warden, entity), (float)warden.getAttributeValue(Attributes.FOLLOW_RANGE)),
+                        SetWalkTargetFromAttackTargetIfTargetOutOfReach.create(1.2F),
+                        MeleeAttack.create(18)
                 ),
                 MemoryModuleType.ATTACK_TARGET
         );
 
         brain.setCoreActivities(ImmutableSet.of(Activity.CORE));
         brain.setDefaultActivity(Activity.IDLE);
-        brain.resetPossibleActivities();
+        brain.useDefaultActivity();
 
         return brain;
     }
 
-    private @Nullable Brain<CreakingEntity> createCreakingBrain(CreakingEntity creaking, Supplier<Brain<CreakingEntity>> brainSupplier) {
-        if (creaking.getEntityWorld() != world) return null;
+    private @Nullable Brain<Creaking> createCreakingBrain(Creaking creaking, Supplier<Brain<Creaking>> brainSupplier) {
+        if (creaking.level() != world) return null;
 
         var brain = brainSupplier.get();
 
         // adjusted activities from CreakingBrain::create
-        CreakingBrainAccessor.invokeAddCoreTasks(brain);
+        CreakingAiAccessor.invokeInitCoreActivity(brain);
 
         // custom fight activity
-        brain.setTaskList(
+        brain.addActivityAndRemoveMemoryWhenStopped(
                 Activity.FIGHT,
                 10,
                 ImmutableList.of(
-                        RangedApproachTask.create(1.0F),
-                        MeleeAttackTask.create(CreakingEntity::isUnrooted, 40)
+                        SetWalkTargetFromAttackTargetIfTargetOutOfReach.create(1.0F),
+                        MeleeAttack.create(Creaking::canMove, 40)
                 ),
                 MemoryModuleType.ATTACK_TARGET
         );
 
         brain.setCoreActivities(ImmutableSet.of(Activity.CORE));
         brain.setDefaultActivity(Activity.IDLE);
-        brain.resetPossibleActivities();
+        brain.useDefaultActivity();
 
         return brain;
     }
 
-    private static boolean isTargeting(WardenEntity warden, LivingEntity entity) {
-        return warden.getBrain().getOptionalRegisteredMemory(MemoryModuleType.ATTACK_TARGET).filter(x -> x == entity).isPresent();
+    private static boolean isTargeting(Warden warden, LivingEntity entity) {
+        return warden.getBrain().getMemory(MemoryModuleType.ATTACK_TARGET).filter(x -> x == entity).isPresent();
     }
 
     private @Nullable Path modifyPathFinding(Entity entity, @Nullable Path path, Set<BlockPos> targets, Function<BlockPos, @Nullable Path> pathFinder) {
-        if (!monsters.containsKey(entity.getUuid()) || (path != null && path.reachesTarget())) {
+        if (!monsters.containsKey(entity.getUUID()) || (path != null && path.canReach())) {
             return path;
         }
 
@@ -257,12 +261,12 @@ public class MSManager {
         return targets.stream()
                 .map(target -> findPartialPath(entity, target, pathFinder))
                 .filter(Objects::nonNull)
-                .min(Comparator.comparingInt(Path::getLength))
+                .min(Comparator.comparingInt(Path::getNodeCount))
                 .orElse(path);
     }
 
     private @Nullable Path findPartialPath(Entity entity, BlockPos target, Function<BlockPos, Path> pathFinder) {
-        var navPath = struct.findPath(entity.getEntityPos(), target.toBottomCenterPos());
+        var navPath = struct.findPath(entity.position(), target.getBottomCenter());
 
         if (navPath.isEmpty()) {
             return null;
@@ -278,7 +282,7 @@ public class MSManager {
             Passage passage = passages.get(i);
             Path partial = pathFinder.apply(passage.pos());
 
-            if (partial != null && partial.reachesTarget() && partial.getLength() > 2) {
+            if (partial != null && partial.canReach() && partial.getNodeCount() > 2) {
                 return partial;
             }
 
@@ -290,7 +294,7 @@ public class MSManager {
     }
 
     private boolean cancelCobwebSlow(Entity entity, BlockPos blockPos) {
-        return entity.getEntityWorld() == world && monsters.containsKey(entity.getUuid());
+        return entity.level() == world && monsters.containsKey(entity.getUUID());
     }
 
     public Participants participants() {
@@ -298,15 +302,15 @@ public class MSManager {
     }
 
     public void onKillAcquired(Entity entity) {
-        MonsterData<?> data = monsters.get(entity.getUuid());
+        MonsterData<?> data = monsters.get(entity.getUUID());
 
         if (data == null) return;
 
         data.onKillAcquired();
     }
 
-    private void afterMoveTick(MobEntity mob) {
-        if (mob.getEntityWorld() != world || !(monsters.get(mob.getUuid()) instanceof EndermanData data)) return;
+    private void afterMoveTick(Mob mob) {
+        if (mob.level() != world || !(monsters.get(mob.getUUID()) instanceof EndermanData data)) return;
 
         // make the enderman always face the target player while fleeing
         LivingEntity target = mob.getTarget();
@@ -319,14 +323,14 @@ public class MSManager {
 
         // store original yaw for movement calculation
         handle.ap2$setUseMovementYaw(true);
-        handle.ap2$setMovementYaw(mob.getYaw());
+        handle.ap2$setMovementYaw(mob.getYRot());
 
         // but look at the target player all the time
-        mob.lookAt(EntityAnchorArgumentType.EntityAnchor.EYES, target.getEyePos());
+        mob.lookAt(EntityAnchorArgument.Anchor.EYES, target.getEyePosition());
     }
 
-    private PendingResult<Boolean> isCreakingBeingLookedAt(CreakingEntity creaking) {
-        if (creaking.getEntityWorld() != world || !(monsters.get(creaking.getUuid()) instanceof CreakingData data)) {
+    private PendingResult<Boolean> isCreakingBeingLookedAt(Creaking creaking) {
+        if (creaking.level() != world || !(monsters.get(creaking.getUUID()) instanceof CreakingData data)) {
             return PendingResult.pass();
         }
 

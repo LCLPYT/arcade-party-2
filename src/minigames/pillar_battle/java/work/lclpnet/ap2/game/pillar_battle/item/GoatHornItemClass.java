@@ -1,31 +1,31 @@
 package work.lclpnet.ap2.game.pillar_battle.item;
 
-import net.minecraft.item.*;
-import net.minecraft.registry.DynamicRegistryManager;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.registry.tag.InstrumentTags;
-import net.minecraft.registry.tag.TagKey;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.tags.InstrumentTags;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.item.*;
 
 import java.util.Random;
 import java.util.stream.Stream;
 
 public class GoatHornItemClass implements ItemClass {
 
-    private final DynamicRegistryManager registryManager;
+    private final RegistryAccess registryManager;
 
-    public GoatHornItemClass(DynamicRegistryManager registryManager) {
+    public GoatHornItemClass(RegistryAccess registryManager) {
         this.registryManager = registryManager;
     }
 
     @Override
     public ItemStack getRandomStack(Random random) {
-        var subRandom = net.minecraft.util.math.random.Random.create(random.nextLong());
+        var subRandom = net.minecraft.util.RandomSource.create(random.nextLong());
         TagKey<Instrument> tagKey = InstrumentTags.GOAT_HORNS;
 
         return registryManager
-                .getOrThrow(RegistryKeys.INSTRUMENT)
-                .getRandomEntry(tagKey, subRandom)
-                .map(instrument -> GoatHornItem.getStackForInstrument(Items.GOAT_HORN, instrument))
+                .lookupOrThrow(Registries.INSTRUMENT)
+                .getRandomElementOf(tagKey, subRandom)
+                .map(instrument -> InstrumentItem.create(Items.GOAT_HORN, instrument))
                 .orElseGet(() -> new ItemStack(Items.GOAT_HORN));
     }
 

@@ -1,7 +1,7 @@
 package work.lclpnet.ap2.impl.activity;
 
-import net.minecraft.scoreboard.ServerScoreboard;
-import net.minecraft.server.PlayerManager;
+import net.minecraft.server.ServerScoreboard;
+import net.minecraft.server.players.PlayerList;
 import work.lclpnet.activity.component.Component;
 import work.lclpnet.activity.component.ComponentBundle;
 import work.lclpnet.activity.component.ComponentView;
@@ -19,7 +19,7 @@ public class ScoreboardComponent implements Component, DependentComponent {
     private final Lazy<CustomScoreboardManager, Translations> scoreboardManager;
     private HookRegistrar hooks;
 
-    public ScoreboardComponent(ServerScoreboard scoreboard, PlayerManager playerManager) {
+    public ScoreboardComponent(ServerScoreboard scoreboard, PlayerList playerManager) {
         this.scoreboardManager = new Lazy<>(translations -> new CustomScoreboardManager(scoreboard, translations, playerManager));
     }
 

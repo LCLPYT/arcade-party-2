@@ -1,13 +1,13 @@
 package work.lclpnet.ap2.game.maze_scape.setup;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.block.enums.Orientation;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.math.Vec3i;
-import net.minecraft.util.shape.VoxelShape;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.FrontAndTop;
+import net.minecraft.core.Vec3i;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import org.apache.commons.io.FilenameUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -47,14 +47,14 @@ public class MSLoader {
 
     public static final boolean DEBUG_PIECES = false;
 
-    private final ServerWorld world;
+    private final ServerLevel world;
     private final GameMap map;
     private final Logger logger;
     private final FabricBlockStateAdapter adapter = FabricBlockStateAdapter.getInstance();
     private final SchematicReader schematicReader;
     private final MSScanner scanner;
 
-    public MSLoader(ServerWorld world, GameMap map, Logger logger) {
+    public MSLoader(ServerLevel world, GameMap map, Logger logger) {
         this.map = map;
         this.world = world;
         this.logger = logger;
@@ -70,7 +70,7 @@ public class MSLoader {
         var clusterDefs = parseClusterDefinitions(map.getProperty("clusters"));
 
         var session = ((MinecraftServerAccessor) world.getServer()).getSession();
-        Path dir = session.getWorldDirectory(world.getRegistryKey()).resolve("structures");
+        Path dir = session.getDimensionPath(world.dimension()).resolve("structures");
 
         JSONObject wallCfg = map.requireProperty("default-connector-wall");
         var defaultConnectorWall = parseConnectorWall(wallCfg, dir);
@@ -209,7 +209,7 @@ public class MSLoader {
 
         Set<ClusterDef> clusters = parseClusters(path, config, clusterDefs);
 
-        Vec3d spawnPos = Optional.ofNullable(scanResult.spawn())
+        Vec3 spawnPos = Optional.ofNullable(scanResult.spawn())
                 .orElseGet(() -> findSpawnPos(wrapper, insideMask));
 
         StructureMask pit = buildPitMask(wrapper, scanResult.pitMarkers());
@@ -252,7 +252,7 @@ public class MSLoader {
         int length = struct.getLength();
 
         boolean[][][] mask = new boolean[width][height][length];
-        var queryPos = new BlockPos.Mutable();
+        var queryPos = new BlockPos.MutableBlockPos();
         BoxFloodFill floodFill = null;
 
         // initiate flood fill from each marker, but without ascending.
@@ -278,12 +278,12 @@ public class MSLoader {
                     queryPos.set(x, y, z);
 
                     BlockState state = wrapper.getBlockState(queryPos);
-                    VoxelShape shape = state.getSidesShape(wrapper, queryPos);
+                    VoxelShape shape = state.getBlockSupportShape(wrapper, queryPos);
 
                     if (!shape.isEmpty()) {
-                        double w = shape.getMax(Direction.Axis.X) - shape.getMin(Direction.Axis.X);
-                        double h = shape.getMax(Direction.Axis.Y) - shape.getMin(Direction.Axis.Y);
-                        double l = shape.getMax(Direction.Axis.Z) - shape.getMin(Direction.Axis.Z);
+                        double w = shape.max(Direction.Axis.X) - shape.min(Direction.Axis.X);
+                        double h = shape.max(Direction.Axis.Y) - shape.min(Direction.Axis.Y);
+                        double l = shape.max(Direction.Axis.Z) - shape.min(Direction.Axis.Z);
 
                         // surface
                         if (abs(w - 1.0) < 1e-4 && abs(l - 1.0) < 1e-4 && h > 0.4) break;
@@ -296,7 +296,7 @@ public class MSLoader {
 
                 queryPos.set(x, y, z);
 
-                return !wrapper.getBlockState(queryPos).isFullCube(world, queryPos);
+                return !wrapper.getBlockState(queryPos).isCollisionShapeFullBlock(world, queryPos);
             });
         }
 
@@ -304,8 +304,8 @@ public class MSLoader {
     }
 
     @Nullable
-    private Vec3d findSpawnPos(FabricStructureWrapper wrapper, StructureMask insideMask) {
-        var pos = new BlockPos.Mutable();
+    private Vec3 findSpawnPos(FabricStructureWrapper wrapper, StructureMask insideMask) {
+        var pos = new BlockPos.MutableBlockPos();
         var walkable = new WalkableBlockPredicate(wrapper, 3);  // warden is 3 blocks tall
 
         int width = insideMask.width();
@@ -316,7 +316,7 @@ public class MSLoader {
         float verticalWeight = 0.3f;
 
         // find the most central walkable position
-        var best = new BlockPos.Mutable();
+        var best = new BlockPos.MutableBlockPos();
         double bestDistanceSq = Double.MAX_VALUE;
 
         for (int y = 1; y < height - 1; y++) {  // no need to scan the bottom / top layer
@@ -353,22 +353,22 @@ public class MSLoader {
         return adjustSpawn(wrapper, insideMask, best, walkable);
     }
 
-    private Vec3d adjustSpawn(FabricStructureWrapper wrapper, StructureMask insideMask, BlockPos spawn, WalkableBlockPredicate walkable) {
-        Vec3d adjustment = Vec3d.ZERO;
+    private Vec3 adjustSpawn(FabricStructureWrapper wrapper, StructureMask insideMask, BlockPos spawn, WalkableBlockPredicate walkable) {
+        Vec3 adjustment = Vec3.ZERO;
 
         // check each horizontal neighbour if there is a wall (or the outside). If yes, try to move the spawn away from it
-        for (Direction direction : Direction.Type.HORIZONTAL) {
-            BlockPos adj = spawn.offset(direction);
+        for (Direction direction : Direction.Plane.HORIZONTAL) {
+            BlockPos adj = spawn.relative(direction);
 
             if (!insideMask.isVoxelAt(adj.getX(), adj.getY(), adj.getZ()) ||
                 !wrapper.getBlockState(adj).getCollisionShape(wrapper, adj).isEmpty()) {
 
                 // try to adjust spawn in the opposite direction
-                adjustment = adjustment.add(-direction.getOffsetX(), 0, -direction.getOffsetZ());
+                adjustment = adjustment.add(-direction.getStepX(), 0, -direction.getStepZ());
             }
         }
 
-        BlockPos adjusted = BlockPos.ofFloored(Vec3d.ofBottomCenter(spawn).add(adjustment.normalize()));
+        BlockPos adjusted = BlockPos.containing(Vec3.atBottomCenterOf(spawn).add(adjustment.normalize()));
 
         if (insideMask.isVoxelAt(adjusted.getX(), adjusted.getY(), adjusted.getZ())
             && walkable.test(adjusted)
@@ -377,7 +377,7 @@ public class MSLoader {
             spawn = adjusted;
         }
 
-        return Vec3d.ofBottomCenter(spawn);
+        return Vec3.atBottomCenterOf(spawn);
     }
 
     private Set<ClusterDef> parseClusters(Path path, JSONObject config, Map<String, ClusterDef> clusterDefs) {
@@ -493,14 +493,14 @@ public class MSLoader {
 
     private void maskCorridor(WallMarker wallMarker, boolean[][][] mask, FabricStructureWrapper wrapper) {
         BlockStructure struct = wrapper.getStructure();
-        Orientation orientation = wallMarker.orientation();
+        FrontAndTop orientation = wallMarker.orientation();
         BlockPos connectorPos = wallMarker.pos();
 
         // flood fill plane defined by wall marker direction
-        Vec3i normal = orientation.getFacing().getVector();
+        Vec3i normal = orientation.front().getUnitVec3i();
         int width = struct.getWidth(), height = struct.getHeight(), length = struct.getLength();
 
-        BlockPos start = connectorPos.offset(orientation.getRotation());
+        BlockPos start = connectorPos.relative(orientation.top());
         var plane = new PlanePredicate(connectorPos, normal);
         var transparent = new TransparencyPredicate(wrapper);
 
@@ -517,11 +517,11 @@ public class MSLoader {
     ) {}
 
     private static class DebugOffset {
-        BlockPos offset = BlockPos.ORIGIN;
+        BlockPos offset = BlockPos.ZERO;
 
         synchronized BlockPos get(BlockStructure struct) {
             BlockPos pos = this.offset;
-            this.offset = pos.add(0, 0, struct.getLength() + 5);
+            this.offset = pos.offset(0, 0, struct.getLength() + 5);
             return pos;
         }
     }

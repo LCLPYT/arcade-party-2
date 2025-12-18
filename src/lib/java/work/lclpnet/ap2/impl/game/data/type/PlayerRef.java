@@ -1,12 +1,12 @@
 package work.lclpnet.ap2.impl.game.data.type;
 
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.ProfileComponent;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.registry.DynamicRegistryManager;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.component.ResolvableProfile;
 import org.jetbrains.annotations.NotNull;
 import work.lclpnet.ap2.api.game.data.SubjectRef;
 
@@ -29,15 +29,15 @@ public record PlayerRef(UUID uuid, String name) implements SubjectRef {
     }
 
     @Override
-    public Text getNameFor(ServerPlayerEntity viewer) {
-        return Text.literal(name);
+    public Component getNameFor(ServerPlayer viewer) {
+        return Component.literal(name);
     }
 
     @Override
-    public ItemStack getIconStackFor(DynamicRegistryManager registryManager, ServerPlayerEntity viewer) {
+    public ItemStack getIconStackFor(RegistryAccess registryManager, ServerPlayer viewer) {
         ItemStack stack = new ItemStack(Items.PLAYER_HEAD);
 
-        stack.set(DataComponentTypes.PROFILE, ProfileComponent.ofDynamic(uuid));
+        stack.set(DataComponents.PROFILE, ResolvableProfile.createUnresolved(uuid));
 
         return stack;
     }
@@ -47,8 +47,8 @@ public record PlayerRef(UUID uuid, String name) implements SubjectRef {
         return uuid.toString();
     }
 
-    public static PlayerRef create(ServerPlayerEntity player) {
-        return new PlayerRef(player.getUuid(), player.getNameForScoreboard());
+    public static PlayerRef create(ServerPlayer player) {
+        return new PlayerRef(player.getUUID(), player.getScoreboardName());
     }
 
     public static @NotNull PlayerRef createForUuid(@NotNull UUID uuid) {

@@ -1,17 +1,17 @@
 package work.lclpnet.ap2.game.guess_it.challenge;
 
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.PotionContentsComponent;
-import net.minecraft.entity.effect.StatusEffect;
-import net.minecraft.entity.effect.StatusEffectInstance;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.potion.Potion;
-import net.minecraft.potion.Potions;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.text.Text;
+import net.minecraft.core.Holder;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.effect.MobEffect;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.alchemy.Potion;
+import net.minecraft.world.item.alchemy.PotionContents;
+import net.minecraft.world.item.alchemy.Potions;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.game.guess_it.data.*;
 import work.lclpnet.ap2.game.guess_it.util.GuessItDisplay;
@@ -73,8 +73,8 @@ public class PotionTypeChallenge implements Challenge {
                 .map(potion -> {
                     ItemStack stack = new ItemStack(item);
 
-                    var potionEntry = Registries.POTION.getEntry(potion);
-                    stack.set(DataComponentTypes.POTION_CONTENTS, new PotionContentsComponent(potionEntry));
+                    var potionEntry = BuiltInRegistries.POTION.wrapAsHolder(potion);
+                    stack.set(DataComponents.POTION_CONTENTS, new PotionContents(potionEntry));
 
                     return stack;
                 })
@@ -87,11 +87,11 @@ public class PotionTypeChallenge implements Challenge {
 
         input.expectSelection(options.stream()
                 .map(TextUtil::getVanillaName)
-                .toArray(Text[]::new));
+                .toArray(Component[]::new));
     }
 
     private static Set<Potion> getPotions() {
-        var allPotions = Registries.POTION.stream().collect(Collectors.toSet());
+        var allPotions = BuiltInRegistries.POTION.stream().collect(Collectors.toSet());
 
         allPotions.remove(Potions.AWKWARD.value());
         allPotions.remove(Potions.MUNDANE.value());
@@ -99,7 +99,7 @@ public class PotionTypeChallenge implements Challenge {
         allPotions.remove(Potions.WATER.value());
 
         // filter multiple length of the same status effect
-        Set<Set<RegistryEntry<StatusEffect>>> effects = new HashSet<>();
+        Set<Set<Holder<MobEffect>>> effects = new HashSet<>();
 
         var it = allPotions.iterator();
 
@@ -107,7 +107,7 @@ public class PotionTypeChallenge implements Challenge {
             Potion potion = it.next();
 
             var effectSet = potion.getEffects().stream()
-                    .map(StatusEffectInstance::getEffectType)
+                    .map(MobEffectInstance::getEffect)
                     .collect(Collectors.toSet());
 
             if (!effects.add(effectSet)) {

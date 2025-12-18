@@ -1,6 +1,6 @@
 package work.lclpnet.ap2.game.guess_it.util;
 
-import net.minecraft.entity.EntityType;
+import net.minecraft.world.entity.EntityType;
 
 import java.util.*;
 

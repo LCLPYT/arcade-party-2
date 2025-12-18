@@ -2,7 +2,7 @@ package work.lclpnet.ap2.impl.game;
 
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
@@ -22,7 +22,7 @@ import work.lclpnet.lobby.game.api.WorldFacade;
 import java.util.HashSet;
 import java.util.Set;
 
-import static net.minecraft.util.Formatting.GRAY;
+import static net.minecraft.ChatFormatting.GRAY;
 
 public abstract class TeamEliminationGameInstance extends TeamGameInstance {
 
@@ -39,7 +39,7 @@ public abstract class TeamEliminationGameInstance extends TeamGameInstance {
         HookRegistrar hooks = gameHandle.getHooks();
 
         hooks.registerHook(EntityHealthCallback.HOOK, (entity, health) -> {
-            if (!(entity instanceof ServerPlayerEntity player) || health > 0) return false;
+            if (!(entity instanceof ServerPlayer player) || health > 0) return false;
 
             eliminate(player);
 
@@ -47,7 +47,7 @@ public abstract class TeamEliminationGameInstance extends TeamGameInstance {
         });
     }
 
-    protected void eliminate(ServerPlayerEntity player) {
+    protected void eliminate(ServerPlayer player) {
         Participants participants = gameHandle.getParticipants();
 
         if (participants.isParticipating(player)) {
@@ -63,7 +63,7 @@ public abstract class TeamEliminationGameInstance extends TeamGameInstance {
         resetPlayer(player);
     }
 
-    private void resetPlayer(ServerPlayerEntity player) {
+    private void resetPlayer(ServerPlayer player) {
         WorldFacade worldFacade = gameHandle.getWorldFacade();
         PlayerUtil playerUtil = gameHandle.getPlayerUtil();
 
@@ -77,7 +77,7 @@ public abstract class TeamEliminationGameInstance extends TeamGameInstance {
         // eliminate all remaining team players first
         Participants participants = gameHandle.getParticipants();
 
-        for (ServerPlayerEntity player : team.getPlayers()) {
+        for (ServerPlayer player : team.getPlayers()) {
             participants.remove(player);
             onEliminated(player);
             resetPlayer(player);
@@ -125,7 +125,7 @@ public abstract class TeamEliminationGameInstance extends TeamGameInstance {
 
         // deliberately use teams instead of toEliminate, to make sure there are no participating members anymore
         for (Team team : teams) {
-            for (ServerPlayerEntity player : team.getPlayers()) {
+            for (ServerPlayer player : team.getPlayers()) {
                 participants.remove(player);
                 onEliminated(player);
                 resetPlayer(player);
@@ -149,7 +149,7 @@ public abstract class TeamEliminationGameInstance extends TeamGameInstance {
         return data;
     }
 
-    protected void onEliminated(ServerPlayerEntity player) {
+    protected void onEliminated(ServerPlayer player) {
         PlayerEliminatedCallback.HOOK.invoker().onEliminated(player);
     }
 }

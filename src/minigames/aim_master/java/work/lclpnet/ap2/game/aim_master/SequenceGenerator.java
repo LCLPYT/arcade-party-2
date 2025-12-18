@@ -1,7 +1,7 @@
 package work.lclpnet.ap2.game.aim_master;
 
-import net.minecraft.block.Block;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.Block;
 import work.lclpnet.gaco.ds.IndexedSet;
 
 import java.util.ArrayList;

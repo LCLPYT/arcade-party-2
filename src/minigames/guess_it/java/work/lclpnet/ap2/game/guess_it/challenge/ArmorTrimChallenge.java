@@ -1,22 +1,22 @@
 package work.lclpnet.ap2.game.guess_it.challenge;
 
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.TooltipDisplayComponent;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.entity.mob.GiantEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.equipment.ArmorMaterial;
-import net.minecraft.item.equipment.ArmorMaterials;
-import net.minecraft.item.equipment.trim.ArmorTrim;
-import net.minecraft.item.equipment.trim.ArmorTrimMaterial;
-import net.minecraft.item.equipment.trim.ArmorTrimPattern;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.text.Text;
-import net.minecraft.util.collection.IndexedIterable;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.core.Holder;
+import net.minecraft.core.IdMap;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.monster.Giant;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.TooltipDisplay;
+import net.minecraft.world.item.equipment.ArmorMaterial;
+import net.minecraft.world.item.equipment.ArmorMaterials;
+import net.minecraft.world.item.equipment.trim.ArmorTrim;
+import net.minecraft.world.item.equipment.trim.TrimMaterial;
+import net.minecraft.world.item.equipment.trim.TrimPattern;
+import net.minecraft.world.phys.Vec3;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.game.guess_it.data.*;
 import work.lclpnet.ap2.game.guess_it.util.OptionMaker;
@@ -34,16 +34,16 @@ public class ArmorTrimChallenge implements Challenge {
 
     private static final int DURATION_TICKS = Ticks.seconds(14);
     private final MiniGameHandle gameHandle;
-    private final ServerWorld world;
+    private final ServerLevel world;
     private final Random random;
     private final BlockShape blockShape;
     private final WorldModifier modifier;
-    private RegistryEntry<ArmorTrimPattern> correct = null;
-    private RegistryEntry<ArmorTrimMaterial> material = null;
+    private Holder<TrimPattern> correct = null;
+    private Holder<TrimMaterial> material = null;
     private ArmorMaterial armorMaterial = null;
     private int correctOption = -1;
 
-    public ArmorTrimChallenge(MiniGameHandle gameHandle, ServerWorld world, Random random, BlockShape blockShape, WorldModifier modifier) {
+    public ArmorTrimChallenge(MiniGameHandle gameHandle, ServerLevel world, Random random, BlockShape blockShape, WorldModifier modifier) {
         this.gameHandle = gameHandle;
         this.world = world;
         this.random = random;
@@ -78,11 +78,11 @@ public class ArmorTrimChallenge implements Challenge {
 
         correct = opts.get(correctOption);
 
-        material = ItemHelper.getRandomTrimMaterial(world.getRegistryManager(), random);
+        material = ItemHelper.getRandomTrimMaterial(world.registryAccess(), random);
 
         armorMaterial = switch (random.nextInt(6)) {
             case 0 -> ArmorMaterials.LEATHER;
-            case 1 -> ArmorMaterials.CHAIN;
+            case 1 -> ArmorMaterials.CHAINMAIL;
             case 2 -> ArmorMaterials.IRON;
             case 3 -> ArmorMaterials.GOLD;
             case 4 -> ArmorMaterials.DIAMOND;
@@ -94,7 +94,7 @@ public class ArmorTrimChallenge implements Challenge {
 
         input.expectSelection(opts.stream()
                 .map(TextUtil::getVanillaName)
-                .toArray(Text[]::new));
+                .toArray(Component[]::new));
     }
 
     @Override
@@ -104,7 +104,7 @@ public class ArmorTrimChallenge implements Challenge {
     }
 
     private void spawnGiants() {
-        Vec3d pos = Vec3d.ofBottomCenter(blockShape.origin());
+        Vec3 pos = Vec3.atBottomCenterOf(blockShape.origin());
 
         int spacing = 7;
         spawnGiant(pos.add(spacing, 0, 0), -90);
@@ -113,37 +113,37 @@ public class ArmorTrimChallenge implements Challenge {
         spawnGiant(pos.add(0, 0, -spacing), 180);
     }
 
-    private void spawnGiant(Vec3d pos, float yaw) {
-        GiantEntity giant = new GiantEntity(EntityType.GIANT, world);
-        giant.setPersistent();
-        giant.setAiDisabled(true);
-        giant.setHeadYaw(yaw);
-        giant.setPos(pos.getX(), pos.getY(), pos.getZ());
+    private void spawnGiant(Vec3 pos, float yaw) {
+        Giant giant = new Giant(EntityType.GIANT, world);
+        giant.setPersistenceRequired();
+        giant.setNoAi(true);
+        giant.setYHeadRot(yaw);
+        giant.setPosRaw(pos.x(), pos.y(), pos.z());
 
         ItemStack helmet = new ItemStack(Objects.requireNonNull(ItemHelper.getHelmet(armorMaterial)));
-        helmet.set(DataComponentTypes.TRIM, new ArmorTrim(material, correct));
-        helmet.set(DataComponentTypes.TOOLTIP_DISPLAY, TooltipDisplayComponent.DEFAULT.with(DataComponentTypes.TRIM, true));
-        giant.equipStack(EquipmentSlot.HEAD, helmet);
+        helmet.set(DataComponents.TRIM, new ArmorTrim(material, correct));
+        helmet.set(DataComponents.TOOLTIP_DISPLAY, TooltipDisplay.DEFAULT.withHidden(DataComponents.TRIM, true));
+        giant.setItemSlot(EquipmentSlot.HEAD, helmet);
 
         ItemStack chestPlate = new ItemStack(Objects.requireNonNull(ItemHelper.getChestPlate(armorMaterial)));
-        chestPlate.set(DataComponentTypes.TRIM, new ArmorTrim(material, correct));
-        chestPlate.set(DataComponentTypes.TOOLTIP_DISPLAY, TooltipDisplayComponent.DEFAULT.with(DataComponentTypes.TRIM, true));
-        giant.equipStack(EquipmentSlot.CHEST, chestPlate);
+        chestPlate.set(DataComponents.TRIM, new ArmorTrim(material, correct));
+        chestPlate.set(DataComponents.TOOLTIP_DISPLAY, TooltipDisplay.DEFAULT.withHidden(DataComponents.TRIM, true));
+        giant.setItemSlot(EquipmentSlot.CHEST, chestPlate);
 
         ItemStack leggings = new ItemStack(Objects.requireNonNull(ItemHelper.getLeggings(armorMaterial)));
-        leggings.set(DataComponentTypes.TRIM, new ArmorTrim(material, correct));
-        leggings.set(DataComponentTypes.TOOLTIP_DISPLAY, TooltipDisplayComponent.DEFAULT.with(DataComponentTypes.TRIM, true));
-        giant.equipStack(EquipmentSlot.LEGS, leggings);
+        leggings.set(DataComponents.TRIM, new ArmorTrim(material, correct));
+        leggings.set(DataComponents.TOOLTIP_DISPLAY, TooltipDisplay.DEFAULT.withHidden(DataComponents.TRIM, true));
+        giant.setItemSlot(EquipmentSlot.LEGS, leggings);
 
         ItemStack boots = new ItemStack(Objects.requireNonNull(ItemHelper.getBoots(armorMaterial)));
-        boots.set(DataComponentTypes.TRIM, new ArmorTrim(material, correct));
-        boots.set(DataComponentTypes.TOOLTIP_DISPLAY, TooltipDisplayComponent.DEFAULT.with(DataComponentTypes.TRIM, true));
-        giant.equipStack(EquipmentSlot.FEET, boots);
+        boots.set(DataComponents.TRIM, new ArmorTrim(material, correct));
+        boots.set(DataComponents.TOOLTIP_DISPLAY, TooltipDisplay.DEFAULT.withHidden(DataComponents.TRIM, true));
+        giant.setItemSlot(EquipmentSlot.FEET, boots);
 
         modifier.spawnEntity(giant);
     }
 
-    private IndexedIterable<RegistryEntry<ArmorTrimPattern>> getTrimPatterns() {
-        return world.getRegistryManager().getOrThrow(RegistryKeys.TRIM_PATTERN).getIndexedEntries();
+    private IdMap<Holder<TrimPattern>> getTrimPatterns() {
+        return world.registryAccess().lookupOrThrow(Registries.TRIM_PATTERN).asHolderIdMap();
     }
 }

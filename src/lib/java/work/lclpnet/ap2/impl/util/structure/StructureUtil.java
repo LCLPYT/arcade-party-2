@@ -1,9 +1,9 @@
 package work.lclpnet.ap2.impl.util.structure;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.registry.RegistryWrapper;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.Vec3i;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.core.Vec3i;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.block.state.BlockState;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.api.util.Printable;
 import work.lclpnet.ap2.impl.util.world.MappedBlockStructure;
@@ -31,18 +31,18 @@ public class StructureUtil {
 
     private StructureUtil() {}
 
-    public static void placeStructureFast(Printable printable, ServerWorld world) {
+    public static void placeStructureFast(Printable printable, ServerLevel world) {
         BlockStructure structure = printable.structure();
         Vec3i pos = printable.printOffset();
 
         StructureWriter.placeStructure(structure, world, pos, printable.printMatrix(), FAST_NO_VIEWERS);
     }
 
-    public static void placeStructureFast(BlockStructure structure, ServerWorld world, Vec3i pos) {
+    public static void placeStructureFast(BlockStructure structure, ServerLevel world, Vec3i pos) {
         placeStructureFast(structure, world, pos, Matrix3i.IDENTITY);
     }
 
-    public static void placeStructureFast(BlockStructure structure, ServerWorld world, Vec3i pos, Matrix3i transformation) {
+    public static void placeStructureFast(BlockStructure structure, ServerLevel world, Vec3i pos, Matrix3i transformation) {
         StructureWriter.placeStructure(structure, world, pos, transformation, FAST_NO_VIEWERS);
     }
 
@@ -60,7 +60,7 @@ public class StructureUtil {
         return map(structure, state -> state == target ? replacement : state);
     }
 
-    public static Optional<BlockStructure> readAndFixStructure(Path path, Logger logger, RegistryWrapper.WrapperLookup registries) {
+    public static Optional<BlockStructure> readAndFixStructure(Path path, Logger logger, HolderLookup.Provider registries) {
         return readStructure(path, logger)
                 .map(structure -> new StructureFix(registries, logger).fixStructure(structure));
     }

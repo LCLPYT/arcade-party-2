@@ -1,10 +1,10 @@
 package work.lclpnet.ap2.game.button_master
 
-import net.minecraft.block.Blocks
-import net.minecraft.server.network.ServerPlayerEntity
-import net.minecraft.server.world.ServerWorld
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Vec3d
+import net.minecraft.core.BlockPos
+import net.minecraft.server.level.ServerLevel
+import net.minecraft.server.level.ServerPlayer
+import net.minecraft.world.level.block.Blocks
+import net.minecraft.world.phys.Vec3
 import org.joml.Vector3d
 import work.lclpnet.ap2.asVec3d
 import work.lclpnet.ap2.impl.game.GameCommons
@@ -18,13 +18,13 @@ import work.lclpnet.gaco.math.BlockFace
 import work.lclpnet.kibu.hook.util.PositionRotation
 import work.lclpnet.kibu.structure.BlockStructure
 import work.lclpnet.kibu.util.math.Matrix3i
-import java.util.UUID
+import java.util.*
 
 const val DEBUG_CAPSULE_BOUNDS = false
 const val DEBUG_CAPSULE_SPAWNS = false
 
 class ButtonMasterCapsules(
-    val world: ServerWorld,
+    val world: ServerLevel,
     val schema: ButtonMasterSchema,
     val capsuleSchematic: BlockStructure,
     val commons: GameCommons
@@ -40,7 +40,7 @@ class ButtonMasterCapsules(
                 val capsuleBounds = getCapsuleBounds(capsule)
 
                 commons.debugController().renderer().ifPresent {
-                    it.box(capsuleBounds, Blocks.YELLOW_STAINED_GLASS.defaultState)
+                    it.box(capsuleBounds, Blocks.YELLOW_STAINED_GLASS.defaultBlockState())
                 }
             }
 
@@ -48,13 +48,13 @@ class ButtonMasterCapsules(
                 val capsuleSpawn = getCapsuleSpawn(capsule)
 
                 commons.debugController().renderer().ifPresent {
-                    it.arrow(capsuleSpawn.asVec3d(), MathUtil.yaw2vec(capsuleSpawn.yaw), Blocks.LIME_TERRACOTTA.defaultState)
+                    it.arrow(capsuleSpawn.asVec3d(), MathUtil.yaw2vec(capsuleSpawn.yaw), Blocks.LIME_TERRACOTTA.defaultBlockState())
                 }
             }
         }
     }
 
-    fun teleportToCapsules(players: List<ServerPlayerEntity>) {
+    fun teleportToCapsules(players: List<ServerPlayer>) {
         removeExcessCapsules(players.size)
 
         val capsules = schema.capsules
@@ -74,18 +74,18 @@ class ButtonMasterCapsules(
         val referenceButton = schema.capsuleButton!!
         val schematicOffset = requireNotNull(capsuleSchematic).origin.toMinecraft()
         val buttonToOriginOffset = referenceButton.pos.subtract(schematicOffset)
-        val localSpawn = referenceSpawn.subtract(referenceButton.pos.toCenterPos())
+        val localSpawn = referenceSpawn.subtract(referenceButton.pos.center)
 
         val rotation = Matrix3i.makeRotationY(
-            capsule.face.horizontalQuarterTurns - referenceButton.face.horizontalQuarterTurns
+            capsule.face.get2DDataValue() - referenceButton.face.get2DDataValue()
         )
 
         val localOffset = capsule.pos.subtract(referenceButton.pos)
 
         val capsuleSpawn = rotation.transform(localSpawn)
-            .add(localOffset.toCenterPos())
-            .add(Vec3d.of(buttonToOriginOffset))
-            .add(Vec3d.of(schematicOffset))
+            .add(localOffset.center)
+            .add(Vec3.atLowerCornerOf(buttonToOriginOffset))
+            .add(Vec3.atLowerCornerOf(schematicOffset))
 
         val yaw = MathUtil.rotateYaw(schema.capsuleSpawn.yaw, rotation, Vector3d())
 
@@ -100,7 +100,7 @@ class ButtonMasterCapsules(
         val buttonToOriginOffset = capsuleButton.pos.subtract(schematicOffset)
 
         val rotation = Matrix3i.makeRotationY(
-            capsule.face.horizontalQuarterTurns - capsuleButton.face.horizontalQuarterTurns
+            capsule.face.get2DDataValue() - capsuleButton.face.get2DDataValue()
         )
 
         val localOffset = capsule.pos.subtract(capsuleButton.pos)

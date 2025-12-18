@@ -1,18 +1,18 @@
 package work.lclpnet.ap2.game.mining_battle;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.enchantment.Enchantments;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.GameRules;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.enchantment.Enchantments;
+import net.minecraft.world.level.GameRules;
+import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.NotNull;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
@@ -43,7 +43,7 @@ import static work.lclpnet.ap2.impl.util.ItemHelper.unbreakable;
 public class MiningBattleInstance extends FFAGameInstance implements MapBootstrapFunction {
 
     private static final int DURATION_SECONDS = 60;
-    private final IntDataContainer<ServerPlayerEntity, PlayerRef> data;
+    private final IntDataContainer<ServerPlayer, PlayerRef> data;
     private final MiningBattleOre ore;
     private final Set<BlockState> material = new HashSet<>();
     private BlockBox box = null;
@@ -65,11 +65,11 @@ public class MiningBattleInstance extends FFAGameInstance implements MapBootstra
     }
 
     @Override
-    public void bootstrapWorld(@NotNull ServerWorld world, @NotNull GameMap map) {
+    public void bootstrapWorld(@NotNull ServerLevel world, @NotNull GameMap map) {
         GameRules gameRules = world.getGameRules();
         MinecraftServer server = gameHandle.getServer();
 
-        gameRules.get(GameRules.DO_TILE_DROPS).set(false, server);
+        gameRules.getRule(GameRules.RULE_DOBLOCKDROPS).set(false, server);
 
         placeOres(world, map);
     }
@@ -87,7 +87,7 @@ public class MiningBattleInstance extends FFAGameInstance implements MapBootstra
         Participants participants = gameHandle.getParticipants();
 
         hooks.registerHook(BlockModificationHooks.BREAK_BLOCK, (world, pos, entity) -> {
-            if (!(entity instanceof ServerPlayerEntity player) || !participants.isParticipating(player)
+            if (!(entity instanceof ServerPlayer player) || !participants.isParticipating(player)
                 || winManager.isGameOver() || isOutsideMiningArea(pos)) return false;
 
             BlockState state = world.getBlockState(pos);
@@ -105,7 +105,7 @@ public class MiningBattleInstance extends FFAGameInstance implements MapBootstra
         commons().createTimer(subject, DURATION_SECONDS).whenDone(winManager::complete);
     }
 
-    private void placeOres(ServerWorld world, GameMap map) {
+    private void placeOres(ServerLevel world, GameMap map) {
         ore.init();
 
         box = MapUtil.readBox(map.requireProperty("mining-box"));
@@ -116,34 +116,34 @@ public class MiningBattleInstance extends FFAGameInstance implements MapBootstra
         new MiningBattleGenerator(ore, box, material).generateOre(world);
     }
 
-    private void onGainPoints(ServerPlayerEntity player, int points) {
+    private void onGainPoints(ServerPlayer player, int points) {
         commons().addScore(player, points, data);
 
         if (points <= 1) {
-            player.playSoundToPlayer(SoundEvents.BLOCK_ENCHANTMENT_TABLE_USE, SoundCategory.BLOCKS, 0.5f, 2f);
+            player.playNotifySound(SoundEvents.ENCHANTMENT_TABLE_USE, SoundSource.BLOCKS, 0.5f, 2f);
         } else if (points == 2) {
-            player.playSoundToPlayer(SoundEvents.BLOCK_BREWING_STAND_BREW, SoundCategory.BLOCKS, 0.5f, 2f);
+            player.playNotifySound(SoundEvents.BREWING_STAND_BREW, SoundSource.BLOCKS, 0.5f, 2f);
         } else if (points < 5) {
-            player.playSoundToPlayer(SoundEvents.BLOCK_END_PORTAL_SPAWN, SoundCategory.BLOCKS, 0.3f, 1f);
+            player.playNotifySound(SoundEvents.END_PORTAL_SPAWN, SoundSource.BLOCKS, 0.3f, 1f);
         } else {
-            player.playSoundToPlayer(SoundEvents.ENTITY_EVOKER_CAST_SPELL, SoundCategory.BLOCKS, 0.5f, 1f);
-            player.playSoundToPlayer(SoundEvents.ENTITY_WITHER_SPAWN, SoundCategory.BLOCKS, 0.325f, 1.2f);
-            player.playSoundToPlayer(SoundEvents.BLOCK_END_PORTAL_SPAWN, SoundCategory.BLOCKS, 0.225f, 0f);
+            player.playNotifySound(SoundEvents.EVOKER_CAST_SPELL, SoundSource.BLOCKS, 0.5f, 1f);
+            player.playNotifySound(SoundEvents.WITHER_SPAWN, SoundSource.BLOCKS, 0.325f, 1.2f);
+            player.playNotifySound(SoundEvents.END_PORTAL_SPAWN, SoundSource.BLOCKS, 0.225f, 0f);
         }
     }
 
     private void giveItems() {
-        var efficiency = ItemHelper.getEnchantment(Enchantments.EFFICIENCY, getWorld().getRegistryManager());
+        var efficiency = ItemHelper.getEnchantment(Enchantments.EFFICIENCY, getWorld().registryAccess());
 
-        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
+        for (ServerPlayer player : gameHandle.getParticipants()) {
             ItemStack pickaxe = unbreakable(new ItemStack(Items.DIAMOND_PICKAXE));
-            pickaxe.addEnchantment(efficiency, 3);
+            pickaxe.enchant(efficiency, 3);
 
-            pickaxe.set(DataComponentTypes.CUSTOM_NAME, TextUtil.getVanillaName(pickaxe).styled(style -> style
-                    .withFormatting(Formatting.GOLD)
+            pickaxe.set(DataComponents.CUSTOM_NAME, TextUtil.getVanillaName(pickaxe).withStyle(style -> style
+                    .applyFormat(ChatFormatting.GOLD)
                     .withItalic(false)));
 
-            player.getInventory().setStack(4, pickaxe);
+            player.getInventory().setItem(4, pickaxe);
         }
     }
 
@@ -154,14 +154,14 @@ public class MiningBattleInstance extends FFAGameInstance implements MapBootstra
     private boolean canBeMined(BlockPos pos) {
         if (isOutsideMiningArea(pos)) return false;
 
-        ServerWorld world = getWorld();
+        ServerLevel world = getWorld();
         BlockState state = world.getBlockState(pos);
 
         return material.contains(state) || ore.isOre(state);
     }
 
     @Override
-    protected DataContainer<ServerPlayerEntity, PlayerRef> getData() {
+    protected DataContainer<ServerPlayer, PlayerRef> getData() {
         return data;
     }
 }

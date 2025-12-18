@@ -1,14 +1,14 @@
 package work.lclpnet.ap2.game.button_master
 
-import net.minecraft.block.Block
-import net.minecraft.block.BlockState
-import net.minecraft.block.Blocks
-import net.minecraft.block.ButtonBlock
-import net.minecraft.block.enums.BlockFace
-import net.minecraft.server.world.ServerWorld
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Box
-import net.minecraft.util.math.Vec3d
+import net.minecraft.core.BlockPos
+import net.minecraft.server.level.ServerLevel
+import net.minecraft.world.level.block.Block
+import net.minecraft.world.level.block.Blocks
+import net.minecraft.world.level.block.ButtonBlock
+import net.minecraft.world.level.block.state.BlockState
+import net.minecraft.world.level.block.state.properties.AttachFace
+import net.minecraft.world.phys.AABB
+import net.minecraft.world.phys.Vec3
 import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.impl.game.GameCommons
 import work.lclpnet.ap2.impl.util.VisibilityChecker
@@ -24,7 +24,7 @@ import kotlin.math.max
 import kotlin.math.min
 
 class ButtonPositions(
-    val world: ServerWorld,
+    val world: ServerLevel,
     val map: GameMap,
     val schema: ButtonMasterSchema,
     val commons: GameCommons,
@@ -53,8 +53,8 @@ class ButtonPositions(
     private fun debugValidPositions(positions: List<ScannerNode>) {
         val positions = positions.map { it.pos }
 
-        val minPos = positions.first().mutableCopy()
-        val maxPos = positions.first().mutableCopy()
+        val minPos = positions.first().mutable()
+        val maxPos = positions.first().mutable()
 
         for (pos in positions) {
             minPos.set(
@@ -76,12 +76,12 @@ class ButtonPositions(
         }
 
         commons.debugController()
-            .visualizeStructureMask(mask, minPos, Matrix3i.IDENTITY, Blocks.GREEN_STAINED_GLASS.defaultState)
+            .visualizeStructureMask(mask, minPos, Matrix3i.IDENTITY, Blocks.GREEN_STAINED_GLASS.defaultBlockState())
     }
 
     fun findPositionsBfs(list: MutableList<ScannerNode>) {
         val box = requireNotNull(schema.scanBox)
-        val scanPos = BlockPos.ofFloored(schema.spawn).up()
+        val scanPos = BlockPos.containing(schema.spawn).above()
 
         val adjacentBlocks = CardinalAdjacentBlocks {
             box.contains(it) && world.getBlockState(it).isAir
@@ -125,7 +125,7 @@ class ButtonPositions(
     }
 
     private fun filterNotVisible(
-        spawnEyePos: Vec3d,
+        spawnEyePos: Vec3,
         yaw: Float,
         pitch: Float,
         checker: VisibilityChecker,
@@ -151,20 +151,20 @@ class ButtonPositions(
     private fun notVisibleFromSpawn(
         checker: VisibilityChecker,
         pos: BlockPos,
-        cameraPos: Vec3d
+        cameraPos: Vec3
     ): Boolean {
-        return !checker.isBoxVisible(cameraPos, Box.from(Vec3d(pos)), pos.toCenterPos())
+        return !checker.isBoxVisible(cameraPos, AABB.unitCubeFromLowerCorner(Vec3(pos)), pos.center)
     }
 
-    fun canPlaceButtonAt(world: ServerWorld, pos: BlockPos): Boolean {
+    fun canPlaceButtonAt(world: ServerLevel, pos: BlockPos): Boolean {
         return buttonStates(Blocks.OAK_BUTTON).any {
-            it.canPlaceAt(world, pos)
+            it.canSurvive(world, pos)
         }
     }
 }
 
 fun buttonStates(block: Block): List<BlockState> {
-    return block.stateManager.states.filter {
-        it.get(ButtonBlock.POWERED) == false && it.get(ButtonBlock.FACE) != BlockFace.FLOOR
+    return block.stateDefinition.possibleStates.filter {
+        it.getValue(ButtonBlock.POWERED) == false && it.getValue(ButtonBlock.FACE) != AttachFace.FLOOR
     }
 }

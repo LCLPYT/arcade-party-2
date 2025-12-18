@@ -6,13 +6,13 @@ import net.fabricmc.fabric.api.event.registry.DynamicRegistries;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.entity.MarkerEntity;
-import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
-import net.minecraft.resource.ResourceManager;
-import net.minecraft.resource.ResourceType;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.packs.PackType;
+import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.world.entity.Marker;
 import work.lclpnet.ap2.api.actor.*;
 import work.lclpnet.ap2.api.util.heads.PlayerHead;
 import work.lclpnet.ap2.core.type.ActorManagerAccess;
@@ -25,20 +25,20 @@ import static work.lclpnet.ap2.ApConstants.logger;
 
 public class ArcadePartyInit implements ModInitializer {
 
-    public static final Identifier RESOURCES_ID = ApConstants.identifier("resources");
+    public static final ResourceLocation RESOURCES_ID = ApConstants.identifier("resources");
 
     @Override
     public void onInitialize() {
         registerDynamicRegistries();
 
-        ResourceManagerHelper.get(ResourceType.SERVER_DATA).registerReloadListener(RESOURCES_ID, lookup -> new SimpleSynchronousResourceReloadListener() {
+        ResourceManagerHelper.get(PackType.SERVER_DATA).registerReloadListener(RESOURCES_ID, lookup -> new SimpleSynchronousResourceReloadListener() {
             @Override
-            public Identifier getFabricId() {
+            public ResourceLocation getFabricId() {
                 return RESOURCES_ID;
             }
 
             @Override
-            public void reload(ResourceManager manager) {
+            public void onResourceManagerReload(ResourceManager manager) {
                 ApResources.getInstance().reload(manager, lookup);
             }
         });
@@ -49,7 +49,7 @@ public class ArcadePartyInit implements ModInitializer {
                 provider -> provider.provideActors(actorRegistry::register));
 
         ServerEntityHooks.ENTITY_LOAD.register((entity, world) -> {
-            if (!(entity instanceof MarkerEntity marker)) return;
+            if (!(entity instanceof Marker marker)) return;
 
             ActorManager.ActorInfo data = ActorManager.getActorNbt(marker).orElse(null);
 
@@ -57,12 +57,12 @@ public class ArcadePartyInit implements ModInitializer {
 
             actorRegistry.getType(data.type()).ifPresentOrElse(
                     type -> createActor(world, marker, type, data.nbt()),
-                    () -> logger.warn("Unknown actor type {} in world {} at {}", data.type(), world.getRegistryKey().getValue(), marker.getBlockPos())
+                    () -> logger.warn("Unknown actor type {} in world {} at {}", data.type(), world.dimension().location(), marker.blockPosition())
             );
         });
 
         ServerEntityHooks.ENTITY_UNLOAD.register((entity, world) -> {
-            if (!(entity instanceof MarkerEntity marker)) return;
+            if (!(entity instanceof Marker marker)) return;
 
             Actor actor = ((ApMarkerEntity) marker).ap2$getActor();
 
@@ -72,7 +72,7 @@ public class ArcadePartyInit implements ModInitializer {
         });
     }
 
-    private void createActor(ServerWorld world, MarkerEntity marker, ActorType<?> type, NbtCompound data) {
+    private void createActor(ServerLevel world, Marker marker, ActorType<?> type, CompoundTag data) {
         var dataSource = new Dynamic<>(NbtOps.INSTANCE, data);
         var init = new ActorInit(world, type, dataSource);
 

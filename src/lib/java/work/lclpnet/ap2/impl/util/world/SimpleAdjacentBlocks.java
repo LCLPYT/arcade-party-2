@@ -1,6 +1,6 @@
 package work.lclpnet.ap2.impl.util.world;
 
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.util.world.AdjacentBlocks;
@@ -32,7 +32,7 @@ public class SimpleAdjacentBlocks implements AdjacentBlocks {
         return new Iterator<>() {
             boolean done = false, hasNext = false;
             int i = 0;
-            final BlockPos.Mutable current = new BlockPos.Mutable();
+            final BlockPos.MutableBlockPos current = new BlockPos.MutableBlockPos();
 
             @Override
             public boolean hasNext() {
@@ -96,10 +96,10 @@ public class SimpleAdjacentBlocks implements AdjacentBlocks {
     private BlockPos validate(BlockPos adj) {
         if (predicate.test(adj)) return adj;
 
-        BlockPos offset = adj.up();
+        BlockPos offset = adj.above();
         if (predicate.test(offset)) return offset;
 
-        offset = adj.down();
+        offset = adj.below();
         if (predicate.test(offset)) return offset;
 
         return null;

@@ -1,10 +1,10 @@
 package work.lclpnet.ap2.game.maze_scape.setup;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.block.enums.Orientation;
-import net.minecraft.state.property.Properties;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.FrontAndTop;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import work.lclpnet.kibu.jnbt.CompoundTag;
@@ -34,7 +34,7 @@ public class MSScanner {
     public Result scan(BlockStructure struct) {
         var origin = struct.getOrigin();
         int ox = origin.getX(), oy = origin.getY(), oz = origin.getZ();
-        var localPos = new BlockPos.Mutable();
+        var localPos = new BlockPos.MutableBlockPos();
         var scan = new Scan();
 
         for (var pos : struct.getBlockPositions()) {
@@ -65,13 +65,13 @@ public class MSScanner {
         return scan;
     }
 
-    private void visitJigsaw(BlockPos.Mutable localPos, BlockState state, CompoundTag nbt, Scan scan) {
+    private void visitJigsaw(BlockPos.MutableBlockPos localPos, BlockState state, CompoundTag nbt, Scan scan) {
         String name = nbt.getString("name");
 
         // make sure the jigsaw block name is not empty
         if (name.isEmpty() || name.equals("minecraft:empty")) return;
 
-        BlockPos pos = localPos.toImmutable();
+        BlockPos pos = localPos.immutable();
         scan.jigsaws.add(pos);
 
         String pool = nbt.getString("pool");
@@ -79,9 +79,9 @@ public class MSScanner {
         if (FUNCTION_POOL.equals(pool)) {
             // found a function jigsaw
             switch (name) {
-                case FUNCTION_SPAWN -> scan.spawn = new Vec3d(localPos.getX() + 0.5, localPos.getY() + 1, localPos.getZ() + 0.5);
-                case FUNCTION_PIT -> scan.pitMarkers.add(localPos.toImmutable());
-                case FUNCTION_EXTRA_WALL -> scan.wallMarkers.add(new WallMarker(pos, state.get(Properties.ORIENTATION)));
+                case FUNCTION_SPAWN -> scan.spawn = new Vec3(localPos.getX() + 0.5, localPos.getY() + 1, localPos.getZ() + 0.5);
+                case FUNCTION_PIT -> scan.pitMarkers.add(localPos.immutable());
+                case FUNCTION_EXTRA_WALL -> scan.wallMarkers.add(new WallMarker(pos, state.getValue(BlockStateProperties.ORIENTATION)));
                 default -> {}
             }
             return;
@@ -91,7 +91,7 @@ public class MSScanner {
 
         if (!target.isEmpty() && !target.equals("minecraft:empty")) {
             // found a connector
-            Orientation orientation = state.get(Properties.ORIENTATION);
+            FrontAndTop orientation = state.getValue(BlockStateProperties.ORIENTATION);
 
             scan.connectors.add(new Connector3(pos, orientation, name, target));
             scan.wallMarkers.add(new WallMarker(pos, orientation));
@@ -102,7 +102,7 @@ public class MSScanner {
         List<Connector3> connectors();
         List<WallMarker> wallMarkers();
         List<BlockPos> jigsaws();
-        @Nullable Vec3d spawn();
+        @Nullable Vec3 spawn();
         List<BlockPos> pitMarkers();
     }
 
@@ -111,7 +111,7 @@ public class MSScanner {
         final List<WallMarker> wallMarkers = new ArrayList<>(2);
         final List<BlockPos> jigsaws = new ArrayList<>(2);
         final List<BlockPos> pitMarkers = new ArrayList<>(0);
-        @Nullable Vec3d spawn = null;
+        @Nullable Vec3 spawn = null;
 
         public List<Connector3> connectors() {
             return connectors;
@@ -127,7 +127,7 @@ public class MSScanner {
             return jigsaws;
         }
 
-        public @Nullable Vec3d spawn() {
+        public @Nullable Vec3 spawn() {
             return spawn;
         }
 

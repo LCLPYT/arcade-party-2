@@ -1,24 +1,24 @@
 package work.lclpnet.ap2.impl.util.math.shape;
 
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.phys.Vec3;
 import work.lclpnet.gaco.ds.BlockBox;
 
 import static java.lang.Math.floor;
 
 public interface SphereBoundedShape extends Shape {
 
-    Vec3d center();
+    Vec3 center();
 
     double radius();
 
     @Override
     default BlockBox bounds() {
-        Vec3d center = center();
+        Vec3 center = center();
         double radius = radius();
 
         return new BlockBox(
-                (int) floor(center.getX() - radius), (int) floor(center.getY() - radius), (int) floor(center.getZ() - radius),
-                (int) floor(center.getX() + radius), (int) floor(center.getY() + radius), (int) floor(center.getZ() + radius)
+                (int) floor(center.x() - radius), (int) floor(center.y() - radius), (int) floor(center.z() - radius),
+                (int) floor(center.x() + radius), (int) floor(center.y() + radius), (int) floor(center.z() + radius)
         );
     }
 }

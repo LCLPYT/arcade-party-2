@@ -1,6 +1,6 @@
 package work.lclpnet.ap2.game.guess_it.data;
 
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.level.ServerPlayer;
 import work.lclpnet.kibu.translate.Translations;
 
 import java.text.NumberFormat;
@@ -16,18 +16,18 @@ public class PlayerChoices {
         this.translations = translations;
     }
 
-    public void set(ServerPlayerEntity player, String choice) {
-        choices.put(player.getUuid(), choice);
+    public void set(ServerPlayer player, String choice) {
+        choices.put(player.getUUID(), choice);
     }
 
-    public Optional<String> get(ServerPlayerEntity player) {
-        String c = choices.get(player.getUuid());
+    public Optional<String> get(ServerPlayer player) {
+        String c = choices.get(player.getUUID());
 
         return Optional.ofNullable(c);
     }
 
-    public OptionalInt getInt(ServerPlayerEntity player) {
-        String c = choices.get(player.getUuid());
+    public OptionalInt getInt(ServerPlayer player) {
+        String c = choices.get(player.getUUID());
 
         if (c == null) {
             return OptionalInt.empty();
@@ -41,8 +41,8 @@ public class PlayerChoices {
         }
     }
 
-    public Optional<Float> getFloat(ServerPlayerEntity player) {
-        String c = choices.get(player.getUuid());
+    public Optional<Float> getFloat(ServerPlayer player) {
+        String c = choices.get(player.getUUID());
 
         if (c == null) {
             return Optional.empty();
@@ -59,8 +59,8 @@ public class PlayerChoices {
         }
     }
 
-    public OptionalInt getOption(ServerPlayerEntity player) {
-        String in = choices.get(player.getUuid());
+    public OptionalInt getOption(ServerPlayer player) {
+        String in = choices.get(player.getUUID());
 
         if (in == null || in.length() != 1) {
             return OptionalInt.empty();

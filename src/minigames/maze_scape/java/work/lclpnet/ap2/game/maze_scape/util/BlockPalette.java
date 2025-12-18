@@ -1,6 +1,6 @@
 package work.lclpnet.ap2.game.maze_scape.util;
 
-import net.minecraft.block.BlockState;
+import net.minecraft.world.level.block.state.BlockState;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;

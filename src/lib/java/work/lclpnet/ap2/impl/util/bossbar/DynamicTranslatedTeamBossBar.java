@@ -2,8 +2,8 @@ package work.lclpnet.ap2.impl.util.bossbar;
 
 import it.unimi.dsi.fastutil.objects.Object2FloatMap;
 import it.unimi.dsi.fastutil.objects.Object2FloatOpenHashMap;
-import net.minecraft.entity.boss.ServerBossBar;
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.level.ServerBossEvent;
+import net.minecraft.server.level.ServerPlayer;
 import work.lclpnet.ap2.api.game.team.Team;
 import work.lclpnet.ap2.api.game.team.TeamManager;
 import work.lclpnet.ap2.api.util.bossbar.PlayerBossBar;
@@ -21,19 +21,19 @@ public class DynamicTranslatedTeamBossBar implements PlayerBossBar {
     }
 
     @Override
-    public ServerBossBar getBossBar(ServerPlayerEntity player) {
-        ServerBossBar bossBar = delegate.getBossBar(player);
+    public ServerBossEvent getBossBar(ServerPlayer player) {
+        ServerBossEvent bossBar = delegate.getBossBar(player);
 
         teamManager.getTeam(player).ifPresent(team -> {
             float percent = getPercent(team);
-            bossBar.setPercent(percent);
+            bossBar.setProgress(percent);
         });
 
         return bossBar;
     }
 
     @Override
-    public void remove(ServerPlayerEntity player) {
+    public void remove(ServerPlayer player) {
         delegate.remove(player);
     }
 
@@ -42,19 +42,19 @@ public class DynamicTranslatedTeamBossBar implements PlayerBossBar {
     }
 
     public void setTranslationKey(Team team, String translationKey) {
-        for (ServerPlayerEntity player : team.getPlayers()) {
+        for (ServerPlayer player : team.getPlayers()) {
             delegate.setTranslationKey(player, translationKey);
         }
     }
 
     public void setArguments(Team team, Object[] arguments) {
-        for (ServerPlayerEntity player : team.getPlayers()) {
+        for (ServerPlayer player : team.getPlayers()) {
             delegate.setArguments(player, arguments);
         }
     }
 
     public void setArgument(Team team, int i, Object argument) {
-        for (ServerPlayerEntity player : team.getPlayers()) {
+        for (ServerPlayer player : team.getPlayers()) {
             delegate.setArgument(player, i, argument);
         }
     }
@@ -67,9 +67,9 @@ public class DynamicTranslatedTeamBossBar implements PlayerBossBar {
     }
 
     public void setPercent(Team team, float percent) {
-        for (ServerPlayerEntity player : team.getPlayers()) {
-            ServerBossBar bossBar = delegate.getBossBar(player);
-            bossBar.setPercent(percent);
+        for (ServerPlayer player : team.getPlayers()) {
+            ServerBossEvent bossBar = delegate.getBossBar(player);
+            bossBar.setProgress(percent);
 
             this.percent.put(team, percent);
         }

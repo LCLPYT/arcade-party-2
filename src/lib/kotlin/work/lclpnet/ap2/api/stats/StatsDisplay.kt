@@ -1,17 +1,13 @@
 package work.lclpnet.ap2.api.stats
 
-import net.minecraft.dialog.AfterAction
-import net.minecraft.dialog.DialogActionButtonData
-import net.minecraft.dialog.DialogButtonData
-import net.minecraft.dialog.DialogCommonData
-import net.minecraft.dialog.body.DialogBody
-import net.minecraft.dialog.type.MultiActionDialog
-import net.minecraft.registry.entry.RegistryEntry
-import net.minecraft.server.network.ServerPlayerEntity
-import net.minecraft.sound.SoundCategory
-import net.minecraft.sound.SoundEvents
-import net.minecraft.text.Text
-import net.minecraft.util.Formatting.*
+import net.minecraft.ChatFormatting.*
+import net.minecraft.core.Holder
+import net.minecraft.network.chat.Component
+import net.minecraft.server.dialog.*
+import net.minecraft.server.dialog.body.DialogBody
+import net.minecraft.server.level.ServerPlayer
+import net.minecraft.sounds.SoundEvents
+import net.minecraft.sounds.SoundSource
 import org.slf4j.Logger
 import work.lclpnet.ap2.component1
 import work.lclpnet.ap2.component2
@@ -20,7 +16,7 @@ import java.util.*
 
 class StatsDisplay(val translations: Translations, val logger: Logger) {
 
-    fun openSummary(player: ServerPlayerEntity, stats: StatsResult) {
+    fun openSummary(player: ServerPlayer, stats: StatsResult) {
         val body = mutableListOf<DialogBody>()
 
         if (stats !is FFAStatsResult) {
@@ -30,21 +26,23 @@ class StatsDisplay(val translations: Translations, val logger: Logger) {
 
         val schema = stats.results.entries.firstOrNull()?.value ?: return
 
-        val buttons = mutableListOf<DialogActionButtonData>()
+        val buttons = mutableListOf<ActionButton>()
 
         val playerWidth = 100
         val statWidth = 85
         val maxStatColumns = 4
         val columns = schema.entries().size.coerceAtMost(maxStatColumns) + 1
 
-        buttons.add(DialogActionButtonData(
-            DialogButtonData(translations.translateText("ap2.view_stats.name").translateFor(player), playerWidth),
+        buttons.add(
+            ActionButton(
+            CommonButtonData(translations.translateText("ap2.view_stats.name").translateFor(player), playerWidth),
             Optional.empty()
         ))
 
         for ((stat, _) in schema.entries().take(maxStatColumns)) {
-            buttons.add(DialogActionButtonData(
-                DialogButtonData(Text.literal(labelOf(stats, stat, player)), statWidth),
+            buttons.add(
+                ActionButton(
+                CommonButtonData(Component.literal(labelOf(stats, stat, player)), statWidth),
                 Optional.empty()
             ))
         }
@@ -55,14 +53,15 @@ class StatsDisplay(val translations: Translations, val logger: Logger) {
             val result = stats.results[ref] ?: continue
 
             val name = ref.getNameFor(player).let {
-                if (it.style.color == null) it.copy().formatted(GREEN)
+                if (it.style.color == null) it.copy().withStyle(GREEN)
                 else it
             }
 
-            buttons.add(DialogActionButtonData(
-                DialogButtonData(
-                    Text.literal("#$rank ")
-                        .formatted(YELLOW)
+            buttons.add(
+                ActionButton(
+                CommonButtonData(
+                    Component.literal("#$rank ")
+                        .withStyle(YELLOW)
                         .append(name),
                     playerWidth
                 ),
@@ -70,8 +69,9 @@ class StatsDisplay(val translations: Translations, val logger: Logger) {
             ))
 
             for ((_, value) in result.entries().take(maxStatColumns)) {
-                buttons.add(DialogActionButtonData(
-                    DialogButtonData(Text.literal(value.toString()), statWidth),
+                buttons.add(
+                    ActionButton(
+                    CommonButtonData(Component.literal(value.toString()), statWidth),
                     Optional.empty()
                 ))
             }
@@ -79,28 +79,29 @@ class StatsDisplay(val translations: Translations, val logger: Logger) {
 
         val title = translations.translateText("ap2.stats").formatted(GOLD).translateFor(player)
 
-        val commonData = DialogCommonData(
-            title, Optional.empty(), true, false, AfterAction.NONE, body, listOf()
+        val commonData = CommonDialogData(
+            title, Optional.empty(), true, false, DialogAction.NONE, body, listOf()
         )
 
         val dialog = MultiActionDialog(
             commonData,
             buttons,
-            Optional.of(DialogActionButtonData(
-                DialogButtonData(Text.translatable("gui.back"), 150),
+            Optional.of(
+                ActionButton(
+                CommonButtonData(Component.translatable("gui.back"), 150),
                 Optional.empty()
             )),
             columns
         )
 
-        player.openDialog(RegistryEntry.of(dialog))
+        player.openDialog(Holder.direct(dialog))
     }
     private fun labelOf(
         statsResult: FFAStatsResult,
         stat: Stat<*>,
-        player: ServerPlayerEntity
+        player: ServerPlayer
     ): String {
-        val gameKey = statsResult.gameId.toTranslationKey().replace('/', '.')
+        val gameKey = statsResult.gameId.toLanguageKey().replace('/', '.')
         val gameStatKey = "game.$gameKey.stat.${stat.id}"
 
         val label = translations.translate(player, gameStatKey)
@@ -117,8 +118,8 @@ class StatsDisplay(val translations: Translations, val logger: Logger) {
         }
     }
 
-    fun unavailable(player: ServerPlayerEntity) {
+    fun unavailable(player: ServerPlayer) {
         translations.translateText("ap2.view_stats.unavailable").formatted(RED).sendTo(player)
-        player.playSoundToPlayer(SoundEvents.BLOCK_NOTE_BLOCK_BASS.value(), SoundCategory.PLAYERS, 0.5f, 0.5f)
+        player.playNotifySound(SoundEvents.NOTE_BLOCK_BASS.value(), SoundSource.PLAYERS, 0.5f, 0.5f)
     }
 }

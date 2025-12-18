@@ -1,6 +1,6 @@
 package work.lclpnet.ap2.impl.util.math.shape;
 
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.phys.Vec3;
 import work.lclpnet.gaco.ds.BlockBox;
 
 import static java.lang.Math.*;
@@ -9,9 +9,9 @@ public class Cuboid implements Shape {
 
     private final double minX, minY, minZ, maxX, maxY, maxZ;
 
-    public Cuboid(Vec3d center, double width, double height, double length) {
-        this(center.getX() - width / 2, center.getY() - height / 2, center.getZ() - length / 2,
-                center.getX() + width / 2, center.getY() + height / 2, center.getZ() + length / 2);
+    public Cuboid(Vec3 center, double width, double height, double length) {
+        this(center.x() - width / 2, center.y() - height / 2, center.z() - length / 2,
+                center.x() + width / 2, center.y() + height / 2, center.z() + length / 2);
     }
 
     public Cuboid(double minX, double minY, double minZ, double maxX, double maxY, double maxZ) {
@@ -35,7 +35,7 @@ public class Cuboid implements Shape {
     }
 
     @Override
-    public Vec3d center() {
-        return new Vec3d((minX + maxX) * 0.5, (minY + maxY) * 0.5, (minZ + maxZ) * 0.5);
+    public Vec3 center() {
+        return new Vec3((minX + maxX) * 0.5, (minY + maxY) * 0.5, (minZ + maxZ) * 0.5);
     }
 }

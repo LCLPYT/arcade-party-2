@@ -1,8 +1,8 @@
 package work.lclpnet.ap2.game.anvil_fall;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.BlockView;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.block.state.BlockState;
 import work.lclpnet.gaco.ds.BlockBox;
 
 import java.util.Random;
@@ -106,14 +106,14 @@ public class AnvilFallSetup {
         return startY + random.nextInt(height[i]);
     }
 
-    public static AnvilFallSetup scanWorld(BlockView world, BlockBox box, Random random) {
+    public static AnvilFallSetup scanWorld(BlockGetter world, BlockBox box, Random random) {
         BlockPos min = box.min(), max = box.max();
 
         final int xMin = min.getX(), yMin = min.getY(), zMin = min.getZ();
         final int xMax = max.getX(), yMax = max.getY(), zMax = max.getZ();
         final int width = xMax - xMin + 1, length = zMax - zMin + 1;
 
-        BlockPos.Mutable pos = new BlockPos.Mutable();
+        BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
 
         byte[] heights = new byte[width * length];
 

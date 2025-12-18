@@ -1,7 +1,7 @@
 package work.lclpnet.ap2.game.pillar_battle.item;
 
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 
 import java.util.Random;
 import java.util.stream.Stream;

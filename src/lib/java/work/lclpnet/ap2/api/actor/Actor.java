@@ -1,18 +1,18 @@
 package work.lclpnet.ap2.api.actor;
 
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
 public interface Actor {
 
     ActorType<?> getType();
 
-    Vec3d getPosition();
+    Vec3 getPosition();
 
-    void setPosition(Vec3d pos);
+    void setPosition(Vec3 pos);
 
-    ServerWorld getWorld();
+    ServerLevel getWorld();
 
     default void onSpawn() {}
 

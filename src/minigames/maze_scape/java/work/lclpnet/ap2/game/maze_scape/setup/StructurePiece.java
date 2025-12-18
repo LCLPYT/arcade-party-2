@@ -1,7 +1,7 @@
 package work.lclpnet.ap2.game.maze_scape.setup;
 
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.game.maze_scape.gen.Piece;
 import work.lclpnet.gaco.ds.BVH;
@@ -26,7 +26,7 @@ public record StructurePiece(
         boolean updateBlocks,
         boolean noUnstuck,
         List<BlockBox> extraGeneratorBounds,
-        @Nullable Vec3d spawn,
+        @Nullable Vec3 spawn,
         List<BlockPos> jigsaws,
         StructureMask pit
 ) implements Piece<Connector3> {

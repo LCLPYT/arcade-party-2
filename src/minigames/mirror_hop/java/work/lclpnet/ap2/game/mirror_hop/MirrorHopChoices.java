@@ -2,8 +2,8 @@ package work.lclpnet.ap2.game.mirror_hop;
 
 import com.google.common.collect.ImmutableList;
 import lombok.Getter;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.phys.AABB;
 import org.json.JSONArray;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.impl.map.MapUtil;
@@ -130,7 +130,7 @@ public class MirrorHopChoices {
 
         public Platform(BlockBox ground) {
             this.ground = ground;
-            this.bounds = new BlockBox(ground.min(), ground.max().add(1, 3, 1));
+            this.bounds = new BlockBox(ground.min(), ground.max().offset(1, 3, 1));
         }
 
         @Override
@@ -139,7 +139,7 @@ public class MirrorHopChoices {
         }
 
         @Override
-        public boolean collidesWith(Box box) {
+        public boolean collidesWith(AABB box) {
             return bounds.collidesWith(box);
         }
 

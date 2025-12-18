@@ -2,7 +2,7 @@ package work.lclpnet.ap2.game.maze_scape.setup;
 
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
 import work.lclpnet.ap2.game.maze_scape.gen.GeneratorDomain;
 import work.lclpnet.ap2.game.maze_scape.gen.Node;
 import work.lclpnet.gaco.ds.BVH;
@@ -114,7 +114,7 @@ public class StructureDomain implements GeneratorDomain<Connector3, StructurePie
                 var mat = Matrix3i.makeRotationY(rotation);
 
                 var rotatedOtherPos = mat.transform(otherConnector.pos());
-                BlockPos pos = connectorPos.add(connector.direction()).subtract(rotatedOtherPos);
+                BlockPos pos = connectorPos.offset(connector.direction()).subtract(rotatedOtherPos);
 
                 BVH bvh = piece.bounds().transform(new AffineIntMatrix(mat, pos));
 

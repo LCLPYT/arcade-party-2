@@ -6,12 +6,12 @@ import com.mojang.authlib.properties.Property;
 import com.mojang.authlib.properties.PropertyMap;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.minecraft.block.entity.SkullBlockEntity;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.ProfileComponent;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.util.Uuids;
+import net.minecraft.core.UUIDUtil;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.component.ResolvableProfile;
+import net.minecraft.world.level.block.entity.SkullBlockEntity;
 import org.jetbrains.annotations.NotNull;
 import work.lclpnet.ap2.core.mixin.SkullBlockEntityAccessor;
 
@@ -22,7 +22,7 @@ import java.util.UUID;
 public record PlayerHead(UUID uuid, String textureId, String texture) {
 
     public static final Codec<PlayerHead> CODEC = RecordCodecBuilder.create(instance -> instance.group(
-            Uuids.INT_STREAM_CODEC.fieldOf("uuid").forGetter(PlayerHead::uuid),
+            UUIDUtil.CODEC.fieldOf("uuid").forGetter(PlayerHead::uuid),
             Codec.STRING.fieldOf("texture").forGetter(PlayerHead::textureId)
     ).apply(instance, PlayerHead::new));
 
@@ -32,17 +32,17 @@ public record PlayerHead(UUID uuid, String textureId, String texture) {
 
     public ItemStack createStack() {
         ItemStack stack = new ItemStack(Items.PLAYER_HEAD);
-        stack.set(DataComponentTypes.PROFILE, createProfileComponent());
+        stack.set(DataComponents.PROFILE, createProfileComponent());
 
         return stack;
     }
 
-    public @NotNull ProfileComponent createProfileComponent() {
+    public @NotNull ResolvableProfile createProfileComponent() {
         var properties = new PropertyMap(ImmutableMultimap.of(
                 "textures", new Property("textures", texture)
         ));
 
-        return ProfileComponent.ofStatic(new GameProfile(uuid, "", properties));
+        return ResolvableProfile.createResolved(new GameProfile(uuid, "", properties));
     }
 
     public void apply(SkullBlockEntity skull) {

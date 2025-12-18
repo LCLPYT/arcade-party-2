@@ -2,8 +2,8 @@ package work.lclpnet.ap2.mode_default.cmd;
 
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
-import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.text.Text;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.network.chat.Component;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.MiniGameResults;
 import work.lclpnet.kibu.cmd.type.CommandRegistrar;
@@ -11,7 +11,7 @@ import work.lclpnet.kibu.cmd.type.KibuCommand;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static net.minecraft.server.command.CommandManager.literal;
+import static net.minecraft.commands.Commands.literal;
 
 public class RemakeCommand implements KibuCommand {
 
@@ -28,18 +28,18 @@ public class RemakeCommand implements KibuCommand {
         registrar.registerCommand(command());
     }
 
-    private LiteralArgumentBuilder<ServerCommandSource> command() {
+    private LiteralArgumentBuilder<CommandSourceStack> command() {
         return literal("remake")
-                .requires(s -> s.hasPermissionLevel(2))
+                .requires(s -> s.hasPermission(2))
                 .executes(this::remake);
     }
 
-    private int remake(CommandContext<ServerCommandSource> ctx) {
+    private int remake(CommandContext<CommandSourceStack> ctx) {
         if (remake.getAndSet(true)) {
             return 0;
         }
 
-        ctx.getSource().sendMessage(Text.literal("Restarting the current mini game..."));
+        ctx.getSource().sendSystemMessage(Component.literal("Restarting the current mini game..."));
 
         handle.complete(MiniGameResults.EMPTY);
 

@@ -1,16 +1,16 @@
 package work.lclpnet.ap2.game.fine_tuning;
 
+import com.mojang.math.Transformation;
 import lombok.Getter;
 import lombok.Setter;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.enums.NoteBlockInstrument;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.decoration.DisplayEntity;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.AffineTransformation;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3i;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Vec3i;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Display;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.properties.NoteBlockInstrument;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4f;
 import work.lclpnet.ap2.game.fine_tuning.melody.FakeNoteBlockPlayer;
@@ -34,7 +34,7 @@ class FineTuningRoom {
     private final BlockPos pos;
     private final BlockPos spawn;
     private final float yaw;
-    private final List<@Nullable PlayerSpecificDynamicEntity<DisplayEntity.BlockDisplayEntity>> displays = new ArrayList<>(5);
+    private final List<@Nullable PlayerSpecificDynamicEntity<Display.BlockDisplay>> displays = new ArrayList<>(5);
     private BlockPos[] noteBlocks = null;
     private int[] notes = null, tmpNotes = null;
     private NoteBlockInstrument[] instruments = null;
@@ -53,7 +53,7 @@ class FineTuningRoom {
         BlockPos[] noteBlocks = new BlockPos[relNoteBlock.length];
 
         for (int j = 0; j < relNoteBlock.length; j++) {
-            noteBlocks[j] = pos.add(relNoteBlock[j]);
+            noteBlocks[j] = pos.offset(relNoteBlock[j]);
         }
 
         this.noteBlocks = noteBlocks;
@@ -76,18 +76,18 @@ class FineTuningRoom {
         }
     }
 
-    public void teleport(ServerPlayerEntity player, ServerWorld world) {
+    public void teleport(ServerPlayer player, ServerLevel world) {
         double x = spawn.getX() + 0.5, y = spawn.getY(), z = spawn.getZ() + 0.5;
 
-        player.teleport(world, x, y, z, Set.of(), yaw, 0.0F, true);
+        player.teleportTo(world, x, y, z, Set.of(), yaw, 0.0F, true);
     }
 
-    public void useNoteBlock(ServerPlayerEntity player, BlockPos pos, DynamicEntityManager manager) {
+    public void useNoteBlock(ServerPlayer player, BlockPos pos, DynamicEntityManager manager) {
         int index = getNoteBlock(pos);
 
         if (index == -1) return;
 
-        int transpose = player.isSneaking() ? -1 : 1;
+        int transpose = player.isShiftKeyDown() ? -1 : 1;
 
         setNote(index, notes[index] + transpose);
 
@@ -95,7 +95,7 @@ class FineTuningRoom {
         removeDisplay(index, manager);
     }
 
-    public void playNoteBlock(ServerPlayerEntity player, BlockPos pos) {
+    public void playNoteBlock(ServerPlayer player, BlockPos pos) {
         int index = getNoteBlock(pos);
 
         if (index == -1) return;
@@ -103,7 +103,7 @@ class FineTuningRoom {
         playNote(player, index);
     }
 
-    public void playNote(ServerPlayerEntity player, int index) {
+    public void playNote(ServerPlayer player, int index) {
         nbPlayer.play(player, index);
     }
 
@@ -198,7 +198,7 @@ class FineTuningRoom {
         return true;
     }
 
-    public void markErrors(Melody baseMelody, Melody reference, DynamicEntityManager manager, ServerPlayerEntity player) {
+    public void markErrors(Melody baseMelody, Melody reference, DynamicEntityManager manager, ServerPlayer player) {
         removeDisplays(manager);
 
         restoreMelody();
@@ -220,22 +220,22 @@ class FineTuningRoom {
         }
     }
 
-    public void addDisplay(int note, float error, DynamicEntityManager manager, ServerPlayerEntity viewer) {
+    public void addDisplay(int note, float error, DynamicEntityManager manager, ServerPlayer viewer) {
         if (note < 0 || note >= displays.size()) return;
 
         BlockPos pos = noteBlocks[note];
         float margin = 0.015f;
 
-        var display = new DisplayEntity.BlockDisplayEntity(EntityType.BLOCK_DISPLAY, viewer.getEntityWorld());
-        display.setPos(pos.getX() + margin, pos.getY() + margin, pos.getZ() + margin);
-        display.setBlockState(Blocks.NOTE_BLOCK.getDefaultState());
-        display.setTransformation(new AffineTransformation(new Matrix4f().scale(1 - margin * 2)));
-        display.setGlowing(true);
+        var display = new Display.BlockDisplay(EntityType.BLOCK_DISPLAY, viewer.level());
+        display.setPosRaw(pos.getX() + margin, pos.getY() + margin, pos.getZ() + margin);
+        display.setBlockState(Blocks.NOTE_BLOCK.defaultBlockState());
+        display.setTransformation(new Transformation(new Matrix4f().scale(1 - margin * 2)));
+        display.setGlowingTag(true);
 
         int color = ColorUtil.lerpRgb(0xefe409, 0x890404, error);
         display.setGlowColorOverride(color);
 
-        var dynamic = new PlayerSpecificDynamicEntity<>(display, viewer.getUuid());
+        var dynamic = new PlayerSpecificDynamicEntity<>(display, viewer.getUUID());
 
         displays.set(note, dynamic);
         manager.add(dynamic);

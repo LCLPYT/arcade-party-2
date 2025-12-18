@@ -106,7 +106,7 @@ public class ArcadePartyInstance implements GameInstance {
         PlayerManagerImpl playerManager = new PlayerManagerImpl(server);
         PlayerUtil playerUtil = new PlayerUtil(server, playerManager);
 
-        ScoreManager scoreManager = new ScoreManager(server.getPlayerManager(), WIN_SCORE);
+        ScoreManager scoreManager = new ScoreManager(server.getPlayerList(), WIN_SCORE);
         CommandStack commandStack = environment.getCommandStack();
 
         ForceGameCommand forceGameCommand = new ForceGameCommand(gameManager, queue::setNextGame);

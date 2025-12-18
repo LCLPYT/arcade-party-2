@@ -1,31 +1,31 @@
 package work.lclpnet.ap2.game.button_master
 
 import net.fabricmc.fabric.api.event.player.UseBlockCallback
-import net.minecraft.block.Blocks
-import net.minecraft.component.DataComponentTypes
-import net.minecraft.entity.EquipmentSlot
-import net.minecraft.entity.attribute.EntityAttributes
-import net.minecraft.entity.player.PlayerEntity
-import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
-import net.minecraft.item.equipment.trim.ArmorTrim
-import net.minecraft.item.equipment.trim.ArmorTrimMaterials
-import net.minecraft.item.equipment.trim.ArmorTrimPatterns
-import net.minecraft.registry.RegistryKey
-import net.minecraft.registry.RegistryKeys
-import net.minecraft.registry.tag.BlockTags
-import net.minecraft.scoreboard.AbstractTeam
-import net.minecraft.server.network.ServerPlayerEntity
-import net.minecraft.server.world.ServerWorld
-import net.minecraft.sound.SoundCategory
-import net.minecraft.sound.SoundEvents
-import net.minecraft.util.ActionResult
-import net.minecraft.util.DyeColor
-import net.minecraft.util.Formatting
-import net.minecraft.util.Hand
-import net.minecraft.util.hit.BlockHitResult
-import net.minecraft.util.math.BlockPos
-import net.minecraft.world.World
+import net.minecraft.world.level.block.Blocks
+import net.minecraft.core.component.DataComponents
+import net.minecraft.world.entity.EquipmentSlot
+import net.minecraft.world.entity.ai.attributes.Attributes
+import net.minecraft.world.entity.player.Player
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
+import net.minecraft.world.item.equipment.trim.ArmorTrim
+import net.minecraft.world.item.equipment.trim.TrimMaterials
+import net.minecraft.world.item.equipment.trim.TrimPatterns
+import net.minecraft.resources.ResourceKey
+import net.minecraft.core.registries.Registries
+import net.minecraft.tags.BlockTags
+import net.minecraft.world.scores.Team
+import net.minecraft.server.level.ServerPlayer
+import net.minecraft.server.level.ServerLevel
+import net.minecraft.sounds.SoundSource
+import net.minecraft.sounds.SoundEvents
+import net.minecraft.world.InteractionResult
+import net.minecraft.world.item.DyeColor
+import net.minecraft.ChatFormatting
+import net.minecraft.world.InteractionHand
+import net.minecraft.world.phys.BlockHitResult
+import net.minecraft.core.BlockPos
+import net.minecraft.world.level.Level
 import work.lclpnet.ap2.*
 import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.map.MapBootstrap
@@ -60,7 +60,7 @@ const val DEBUG_BUTTON_POSITION = false
 const val EJECT_SECONDS = 15
 const val BUTTON_REVEAL_SECONDS = 45
 
-val ASTRONAUT_HEAD: RegistryKey<PlayerHead> = RegistryKey.of(
+val ASTRONAUT_HEAD: ResourceKey<PlayerHead> = ResourceKey.create(
     ApRegistries.PLAYER_HEAD,
     ApConstants.identifier("astronaut")
 )
@@ -90,7 +90,7 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
     var dynamicEntityManager: DynamicEntityManager? = null
     var capsules: ButtonMasterCapsules? = null
 
-    override fun createWorldBootstrap(world: ServerWorld, map: GameMap): CompletableFuture<Void> {
+    override fun createWorldBootstrap(world: ServerLevel, map: GameMap): CompletableFuture<Void> {
         wallBlocks = ResetWorldModifier(world, gameHandle.hooks)
 
         return CompletableFuture.runAsync {
@@ -122,11 +122,11 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
     private fun closeWall() {
         val world = this.world
         val wallBlocks = wallBlocks ?: return
-        val wallState = Blocks.WHITE_STAINED_GLASS.defaultState
+        val wallState = Blocks.WHITE_STAINED_GLASS.defaultBlockState()
 
         for (box in schemaHolder.get().startWalls) {
             for (pos in box) {
-                if (world.getBlockState(pos).isFullCube(world, pos)) continue
+                if (world.getBlockState(pos).isCollisionShapeFullBlock(world, pos)) continue
 
                 wallBlocks.setBlockState(pos, wallState)
             }
@@ -134,38 +134,38 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
     }
 
     private fun equipPlayers() {
-        val trimPatterns = world.registryManager.getOrThrow(RegistryKeys.TRIM_PATTERN)
-        val trimMaterials = world.registryManager.getOrThrow(RegistryKeys.TRIM_MATERIAL)
+        val trimPatterns = world.registryAccess().lookupOrThrow(Registries.TRIM_PATTERN)
+        val trimMaterials = world.registryAccess().lookupOrThrow(Registries.TRIM_MATERIAL)
 
-        val silenceTrim = trimPatterns.getOrThrow(ArmorTrimPatterns.SILENCE)
-        val wildTrim = trimPatterns.getOrThrow(ArmorTrimPatterns.WILD)
+        val silenceTrim = trimPatterns.getOrThrow(TrimPatterns.SILENCE)
+        val wildTrim = trimPatterns.getOrThrow(TrimPatterns.WILD)
 
-        val quartz = trimMaterials.getOrThrow(ArmorTrimMaterials.QUARTZ)
+        val quartz = trimMaterials.getOrThrow(TrimMaterials.QUARTZ)
 
         val chestplate = ItemStack(Items.NETHERITE_CHESTPLATE)
-        chestplate.set(DataComponentTypes.TRIM, ArmorTrim(quartz, silenceTrim))
+        chestplate.set(DataComponents.TRIM, ArmorTrim(quartz, silenceTrim))
 
         val leggings = ItemStack(Items.NETHERITE_LEGGINGS)
-        leggings.set(DataComponentTypes.TRIM, ArmorTrim(quartz, silenceTrim))
+        leggings.set(DataComponents.TRIM, ArmorTrim(quartz, silenceTrim))
 
         val boots = ItemStack(Items.NETHERITE_BOOTS)
-        boots.set(DataComponentTypes.TRIM, ArmorTrim(quartz, wildTrim))
+        boots.set(DataComponents.TRIM, ArmorTrim(quartz, wildTrim))
 
-        val head = world.registryManager.getOrThrow(ApRegistries.PLAYER_HEAD)
+        val head = world.registryAccess().lookupOrThrow(ApRegistries.PLAYER_HEAD)
             .getValueOrThrow(ASTRONAUT_HEAD).createStack()
 
         for (player in players()) {
-            player.equipStack(EquipmentSlot.HEAD, head.copy())
-            player.equipStack(EquipmentSlot.CHEST, chestplate.copy())
-            player.equipStack(EquipmentSlot.LEGS, leggings.copy())
-            player.equipStack(EquipmentSlot.FEET, boots.copy())
+            player.setItemSlot(EquipmentSlot.HEAD, head.copy())
+            player.setItemSlot(EquipmentSlot.CHEST, chestplate.copy())
+            player.setItemSlot(EquipmentSlot.LEGS, leggings.copy())
+            player.setItemSlot(EquipmentSlot.FEET, boots.copy())
         }
     }
 
     private fun setupTeam() {
         val scoreboardManager = gameHandle.getScoreboardManager()
         val team = scoreboardManager.createTeam("team")
-        team.nameTagVisibilityRule = AbstractTeam.VisibilityRule.NEVER
+        team.setNameTagVisibility(Team.Visibility.NEVER)
         scoreboardManager.joinTeam(gameHandle.getParticipants(), team)
     }
 
@@ -184,33 +184,33 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
     }
 
     fun onUseBlock(
-        entity: PlayerEntity,
-        _world: World,
-        hand: Hand,
+        entity: Player,
+        _world: Level,
+        hand: InteractionHand,
         result: BlockHitResult
-    ): ActionResult {
-        if (entity !is ServerPlayerEntity) {
-            return ActionResult.PASS
+    ): InteractionResult {
+        if (entity !is ServerPlayer) {
+            return InteractionResult.PASS
         }
 
         val state = world.getBlockState(result.blockPos)
 
-        if (!state.isIn(BlockTags.BUTTONS))
-            return ActionResult.PASS
+        if (!state.`is`(BlockTags.BUTTONS))
+            return InteractionResult.PASS
 
         if (gameState == GameState.SEARCHING_BUTTON) {
             becomeButtonMaster(entity)
-            return ActionResult.SUCCESS_SERVER
+            return InteractionResult.SUCCESS_SERVER
         }
 
         if (gameState != GameState.CHOOSE_EJECT || buttonMasterUuid != entity.uuid)
-            return ActionResult.PASS
+            return InteractionResult.PASS
 
-        val capsule = capsules?.buttons[result.blockPos] ?: return ActionResult.PASS
+        val capsule = capsules?.buttons[result.blockPos] ?: return InteractionResult.PASS
 
         eject(capsule)
 
-        return ActionResult.PASS
+        return InteractionResult.PASS
     }
 
     private fun eject(capsule: BlockFace) {
@@ -218,7 +218,7 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
 
         val spawn = capsules?.getCapsuleSpawn(capsule) ?: return
 
-        world.setBlockState(BlockPos.ofFloored(spawn).down(), Blocks.AIR.defaultState)
+        world.setBlockAndUpdate(BlockPos.containing(spawn).below(), Blocks.AIR.defaultBlockState())
 
         val uuid = capsules?.players[capsule] ?: return
         val player = players().getParticipant(uuid).orElse(null) ?: return
@@ -228,7 +228,7 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
         })
     }
 
-    fun becomeButtonMaster(player: ServerPlayerEntity) {
+    fun becomeButtonMaster(player: ServerPlayer) {
         buttonMasterUuid = player.uuid
         gameState = GameState.CHOOSE_EJECT
         taskBar?.isVisible = false
@@ -236,7 +236,7 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
         scene?.clear()
 
         player.teleport(schemaHolder.get().buttonMasterSpawn!!)
-        player.setAttribute(EntityAttributes.JUMP_STRENGTH, 0.0)
+        player.setAttribute(Attributes.JUMP_STRENGTH, 0.0)
 
         capsules?.teleportToCapsules(players().filter { it != player })
 
@@ -251,8 +251,8 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
 
         translate(
             "game.ap2.button_master.choose_capsule",
-            styled(EJECT_SECONDS, Formatting.YELLOW)
-        ).formatted(Formatting.AQUA).sendTo(player)
+            styled(EJECT_SECONDS, ChatFormatting.YELLOW)
+        ).formatted(ChatFormatting.AQUA).sendTo(player)
 
         this.ejectTimer = ejectTimer
 
@@ -291,7 +291,7 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
         for (player in players()) {
             gameHandle.worldFacade.teleport(player)
 
-            player.resetAttribute(EntityAttributes.JUMP_STRENGTH)
+            player.resetAttribute(Attributes.JUMP_STRENGTH)
         }
 
         nextRound()
@@ -306,7 +306,7 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
         val lastPos = currentButtonPos
 
         if (lastPos != null) {
-            world.setBlockState(lastPos, Blocks.AIR.defaultState)
+            world.setBlockAndUpdate(lastPos, Blocks.AIR.defaultBlockState())
         }
 
         require(validPositions.isNotEmpty()) { "No valid position found" }
@@ -315,20 +315,20 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
 
         val buttonBlock = Blocks.BAMBOO_BUTTON
 
-        val states = buttonStates(buttonBlock).filter { it.canPlaceAt(world, pos) }
+        val states = buttonStates(buttonBlock).filter { it.canSurvive(world, pos) }
 
         require(states.isNotEmpty()) { "No valid button state found" }
 
         val state = states.random()
 
         currentButtonPos = pos
-        world.setBlockState(pos, state)
+        world.setBlockAndUpdate(pos, state)
 
         if (DEBUG_BUTTON_POSITION) {
             currentButtonMarker?.detach()
 
             commons().debugController().renderer().ifPresent {
-                currentButtonMarker = it.marker(pos.toCenterPos(), Blocks.BLUE_STAINED_GLASS.defaultState, DyeColor.BLUE.entityColor)
+                currentButtonMarker = it.marker(pos.center, Blocks.BLUE_STAINED_GLASS.defaultBlockState(), DyeColor.BLUE.textureDiffuseColor)
             }
         }
 
@@ -345,12 +345,12 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
 
         renderer.markBlock(pos, world.getBlockState(pos), 0x00ff00)
 
-        SoundHelper.playSound(world, SoundEvents.BLOCK_BELL_USE, SoundCategory.BLOCKS, 1f, 1.7f)
+        SoundHelper.playSound(world, SoundEvents.BELL_BLOCK, SoundSource.BLOCKS, 1f, 1.7f)
 
-        translate("game.ap2.button_master.revealed").formatted(Formatting.AQUA).sendTo(allPlayers())
+        translate("game.ap2.button_master.revealed").formatted(ChatFormatting.AQUA).sendTo(allPlayers())
     }
 
-    override fun onEliminated(player: ServerPlayerEntity?) {
+    override fun onEliminated(player: ServerPlayer?) {
         super.onEliminated(player)
 
         if (winManager.isGameOver || gameState == GameState.SEARCHING_BUTTON) return
@@ -358,7 +358,7 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
         beginNextRound()
     }
 
-    fun rendererFor(player: ServerPlayerEntity): ApSceneRenderer? {
+    fun rendererFor(player: ServerPlayer): ApSceneRenderer? {
         val dynamicEntityManager = dynamicEntityManager ?: return null
 
         val mountContext = PlayerMountContext(world, dynamicEntityManager, player.uuid)

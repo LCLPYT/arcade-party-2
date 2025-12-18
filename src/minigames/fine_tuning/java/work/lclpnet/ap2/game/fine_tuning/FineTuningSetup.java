@@ -1,15 +1,15 @@
 package work.lclpnet.ap2.game.fine_tuning;
 
 import lombok.Getter;
-import net.minecraft.block.entity.BlockEntityType;
-import net.minecraft.block.entity.SignBlockEntity;
-import net.minecraft.block.entity.SignText;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.text.Text;
-import net.minecraft.util.DyeColor;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3i;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Vec3i;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.DyeColor;
+import net.minecraft.world.level.block.entity.BlockEntityType;
+import net.minecraft.world.level.block.entity.SignBlockEntity;
+import net.minecraft.world.level.block.entity.SignText;
 import org.json.JSONArray;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.api.base.Participants;
@@ -26,11 +26,11 @@ class FineTuningSetup {
 
     private final MiniGameHandle gameHandle;
     private final GameMap map;
-    private final ServerWorld world;
+    private final ServerLevel world;
     @Getter
     private final Map<UUID, FineTuningRoom> rooms = new HashMap<>();
 
-    public FineTuningSetup(MiniGameHandle gameHandle, GameMap map, ServerWorld world) {
+    public FineTuningSetup(MiniGameHandle gameHandle, GameMap map, ServerLevel world) {
         this.gameHandle = gameHandle;
         this.map = map;
         this.world = world;
@@ -56,18 +56,18 @@ class FineTuningSetup {
         var testMsg = gameHandle.getTranslations().translateText("game.ap2.fine_tuning.test");
 
         for (var entry : rooms.entrySet()) {
-            ServerPlayerEntity player = participants.getParticipant(entry.getKey()).orElse(null);
+            ServerPlayer player = participants.getParticipant(entry.getKey()).orElse(null);
 
             if (player == null) continue;
 
             FineTuningRoom room = entry.getValue();
-            BlockPos testSignPos = room.getPos().add(testSignRelPos);
+            BlockPos testSignPos = room.getPos().offset(testSignRelPos);
 
             SignBlockEntity sign = world.getBlockEntity(testSignPos, BlockEntityType.SIGN).orElse(null);
 
             if (sign == null) continue;
 
-            Text[] lines = new Text[] {Text.empty(), testMsg.translateFor(player), Text.literal("▶"), Text.empty()};
+            Component[] lines = new Component[] {Component.empty(), testMsg.translateFor(player), Component.literal("▶"), Component.empty()};
             sign.setText(new SignText(lines, lines, DyeColor.BLUE, false), true);
 
             room.setTestSignPos(testSignPos);
@@ -98,8 +98,8 @@ class FineTuningSetup {
     }
 
     void teleportParticipants(Vec3i[] noteBlockLocations) {
-        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
-            FineTuningRoom room = rooms.get(player.getUuid());
+        for (ServerPlayer player : gameHandle.getParticipants()) {
+            FineTuningRoom room = rooms.get(player.getUUID());
 
             if (room == null) continue;
 

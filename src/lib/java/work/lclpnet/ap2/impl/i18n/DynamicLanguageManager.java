@@ -2,7 +2,7 @@ package work.lclpnet.ap2.impl.i18n;
 
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.VisibleForTesting;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.player.PlayerConnectionHooks;
@@ -16,12 +16,12 @@ import java.util.function.Function;
 public class DynamicLanguageManager {
 
     private final VanillaTranslations translations;
-    private final Function<ServerPlayerEntity, String> languageGetter;
+    private final Function<ServerPlayer, String> languageGetter;
     private final Runnable updateCallback;
     private final Map<UUID, String> playerLanguage = new HashMap<>();
     @VisibleForTesting final Object2IntMap<String> languageUserCount;
 
-    public DynamicLanguageManager(VanillaTranslations translations, Function<ServerPlayerEntity, String> languageGetter,
+    public DynamicLanguageManager(VanillaTranslations translations, Function<ServerPlayer, String> languageGetter,
                                   Runnable updateCallback) {
         this.translations = translations;
         this.languageGetter = languageGetter;
@@ -31,7 +31,7 @@ public class DynamicLanguageManager {
         languageUserCount.defaultReturnValue(0);
     }
 
-    public void init(HookRegistrar hooks, Iterable<ServerPlayerEntity> allPlayers) {
+    public void init(HookRegistrar hooks, Iterable<ServerPlayer> allPlayers) {
         // register hooks
         hooks.registerHook(PlayerConnectionHooks.JOIN, this::onJoin);
         hooks.registerHook(PlayerConnectionHooks.QUIT, this::onQuit);
@@ -39,10 +39,10 @@ public class DynamicLanguageManager {
 
         // sync state with currently online players
         synchronized (this) {
-            for (ServerPlayerEntity player : allPlayers) {
+            for (ServerPlayer player : allPlayers) {
                 String lang = languageGetter.apply(player);
 
-                String oldLang = playerLanguage.put(player.getUuid(), lang);
+                String oldLang = playerLanguage.put(player.getUUID(), lang);
 
                 if (oldLang != null) {
                     if (oldLang.equals(lang)) continue;
@@ -73,28 +73,28 @@ public class DynamicLanguageManager {
         });
     }
 
-    private void onJoin(ServerPlayerEntity player) {
+    private void onJoin(ServerPlayer player) {
         String lang = languageGetter.apply(player);
         changeLanguage(player, lang);
     }
 
-    private void onQuit(ServerPlayerEntity player) {
+    private void onQuit(ServerPlayer player) {
         String lang = languageGetter.apply(player);
 
         synchronized (this) {
-            playerLanguage.remove(player.getUuid());
+            playerLanguage.remove(player.getUUID());
 
             int newUserCount = decrementUserCount(lang);
             unloadLanguageIfNoUsers(lang, newUserCount);
         }
     }
 
-    private void onLanguageChanged(ServerPlayerEntity player, String language, LanguageChangedCallback.Reason reason) {
+    private void onLanguageChanged(ServerPlayer player, String language, LanguageChangedCallback.Reason reason) {
         changeLanguage(player, language);
     }
 
-    private synchronized void changeLanguage(ServerPlayerEntity player, String language) {
-        String oldLang = playerLanguage.put(player.getUuid(), language);
+    private synchronized void changeLanguage(ServerPlayer player, String language) {
+        String oldLang = playerLanguage.put(player.getUUID(), language);
 
         if (oldLang != null) {
             if (oldLang.equals(language)) return;

@@ -1,9 +1,9 @@
 package work.lclpnet.ap2.mode_default;
 
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.util.Formatting;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import org.json.JSONObject;
 import work.lclpnet.ap2.ApConstants;
 import work.lclpnet.ap2.api.config.Ap2Config;
@@ -26,7 +26,7 @@ import work.lclpnet.lobby.game.impl.MinecraftGameConfig;
 import java.nio.file.Path;
 import java.util.Set;
 
-import static net.minecraft.util.Formatting.AQUA;
+import static net.minecraft.ChatFormatting.AQUA;
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
 public class ArcadePartyDefaultGame implements Game {
@@ -62,8 +62,8 @@ public class ArcadePartyDefaultGame implements Game {
     public void configureStatusManager(GameStatusManager manager) {
         Translations translations = manager.getContext().getTranslations();
 
-        var msg = translations.translateText("lobby.game.not_enough_players", styled(MIN_REQUIRED_PLAYERS, Formatting.YELLOW))
-                .formatted(Formatting.RED);
+        var msg = translations.translateText("lobby.game.not_enough_players", styled(MIN_REQUIRED_PLAYERS, ChatFormatting.YELLOW))
+                .formatted(ChatFormatting.RED);
 
         manager.setCannotStartMessage(msg::translateFor);
         manager.setCannotStartBossBarValue(translations.translateText("lobby.game.waiting_for_players"));
@@ -80,7 +80,7 @@ public class ArcadePartyDefaultGame implements Game {
         config.registerVoting(VOTING_MINI_GAMES, new OptionVoting<>(
                 player -> {
                     var stack = new ItemStack(Items.PAPER);
-                    stack.set(DataComponentTypes.ITEM_NAME, gameVotingName.translateFor(player).formatted(AQUA));
+                    stack.set(DataComponents.ITEM_NAME, gameVotingName.translateFor(player).formatted(AQUA));
                     return stack;
                 },
                 gameVotingName::translateFor,

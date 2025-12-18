@@ -1,24 +1,28 @@
 package work.lclpnet.ap2.game.anvil_fall;
 
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
-import net.minecraft.block.AnvilBlock;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.FallingBlockEntity;
-import net.minecraft.entity.boss.BossBar;
-import net.minecraft.entity.damage.DamageTypes;
-import net.minecraft.particle.ParticleTypes;
-import net.minecraft.scoreboard.AbstractTeam;
-import net.minecraft.scoreboard.Team;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.*;
-import net.minecraft.world.GameRules;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.Position;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.BossEvent;
+import net.minecraft.world.damagesource.DamageTypes;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.item.FallingBlockEntity;
+import net.minecraft.world.level.GameRules;
+import net.minecraft.world.level.block.AnvilBlock;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.scores.PlayerTeam;
+import net.minecraft.world.scores.Team;
 import work.lclpnet.ap2.api.game.GameInfo;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.impl.game.EliminationGameInstance;
@@ -54,7 +58,7 @@ public class AnvilFallInstance extends EliminationGameInstance {
     private DynamicTranslatedBossBar amountDisplay = null;
     private AnvilFallSetup setup;
     private BlockBox playArea = null;
-    private Vec3d center;
+    private Vec3 center;
 
     public AnvilFallInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
@@ -63,15 +67,15 @@ public class AnvilFallInstance extends EliminationGameInstance {
     @Override
     protected void prepare() {
         commons().gameRuleBuilder()
-                .set(GameRules.DO_ENTITY_DROPS, false)
-                .set(GameRules.FALL_DAMAGE, true);
+                .set(GameRules.RULE_DOENTITYDROPS, false)
+                .set(GameRules.RULE_FALL_DAMAGE, true);
 
         scanWorld();
 
         CustomScoreboardManager scoreboardManager = gameHandle.getScoreboardManager();
 
-        Team team = scoreboardManager.createTeam("team");
-        team.setCollisionRule(AbstractTeam.CollisionRule.NEVER);
+        PlayerTeam team = scoreboardManager.createTeam("team");
+        team.setCollisionRule(Team.CollisionRule.NEVER);
 
         scoreboardManager.joinTeam(gameHandle.getParticipants(), team);
 
@@ -83,7 +87,7 @@ public class AnvilFallInstance extends EliminationGameInstance {
     @Override
     protected void go() {
         gameHandle.protect(config -> config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, damageSource) -> {
-            if (damageSource.isOf(DamageTypes.FALLING_ANVIL) && entity instanceof ServerPlayerEntity serverPlayer) {
+            if (damageSource.is(DamageTypes.FALLING_ANVIL) && entity instanceof ServerPlayer serverPlayer) {
                 onHitByAnvil(serverPlayer);
             }
 
@@ -95,48 +99,48 @@ public class AnvilFallInstance extends EliminationGameInstance {
 
         gameHandle.getHooks().registerHook(PlayerMoveCallback.HOOK, this::onPlayerMove);
 
-        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
-            repelPlayer(player, player.getEntityPos());
+        for (ServerPlayer player : gameHandle.getParticipants()) {
+            repelPlayer(player, player.position());
         }
     }
 
     private void setupBossBar() {
         GameInfo gameInfo = gameHandle.getGameInfo();
         Translations translations = gameHandle.getTranslations();
-        Identifier id = gameInfo.identifier("status");
+        ResourceLocation id = gameInfo.identifier("status");
 
         String key = "game.ap2.anvil_fall.status";
-        Object[] args = new Object[] {FormatWrapper.styled(0, Formatting.YELLOW)};
+        Object[] args = new Object[] {FormatWrapper.styled(0, ChatFormatting.YELLOW)};
 
         TranslatedBossBar bossBar = translations.translateBossBar(id, key, args)
                 .with(gameHandle.getBossBarProvider())
-                .formatted(Formatting.GREEN);
+                .formatted(ChatFormatting.GREEN);
 
         amountDisplay = new DynamicTranslatedBossBar(bossBar, key, args);
 
-        bossBar.setColor(BossBar.Color.GREEN);
+        bossBar.setColor(BossEvent.BossBarColor.GREEN);
 
         bossBar.addPlayers(PlayerLookup.all(gameHandle.getServer()));
 
         gameHandle.getBossBarHandler().showOnJoin(bossBar);
     }
 
-    private void onHitByAnvil(ServerPlayerEntity player) {
+    private void onHitByAnvil(ServerPlayer player) {
         if (!gameHandle.getParticipants().isParticipating(player)) return;
 
-        ServerWorld world = player.getEntityWorld();
-        Vec3d pos = player.getEntityPos();
+        ServerLevel world = player.level();
+        Vec3 pos = player.position();
 
-        double x = pos.getX(), y = pos.getY(), z = pos.getZ();
+        double x = pos.x(), y = pos.y(), z = pos.z();
 
-        world.playSound(null, x, y, z, SoundEvents.BLOCK_ANVIL_LAND, SoundCategory.PLAYERS, 1f, 0.7f);
-        world.spawnParticles(ParticleTypes.LAVA, x, y, z, 25, 0.1, 0.1, 0.1, 0f);
+        world.playSound(null, x, y, z, SoundEvents.ANVIL_LAND, SoundSource.PLAYERS, 1f, 0.7f);
+        world.sendParticles(ParticleTypes.LAVA, x, y, z, 25, 0.1, 0.1, 0.1, 0f);
 
         eliminate(player);
     }
 
     private void scanWorld() {
-        ServerWorld world = getWorld();
+        ServerLevel world = getWorld();
         GameMap map = getMap();
         BlockBox box = MapUtil.readBox(map.requireProperty("anvil-box"));
 
@@ -145,11 +149,11 @@ public class AnvilFallInstance extends EliminationGameInstance {
         playArea = MapUtil.readBox(map.requireProperty("play-area"));
 
         BlockPos spawn = MapUtil.readBlockPos(map.requireProperty("spawn"));
-        center = new Vec3d(spawn.getX() + 0.5, 0, spawn.getZ() + 0.5);
+        center = new Vec3(spawn.getX() + 0.5, 0, spawn.getZ() + 0.5);
     }
 
     private void startAnvilSpawning() {
-        amountDisplay.setArgument(0, FormatWrapper.styled(20 / INITIAL_DELAY, Formatting.YELLOW));
+        amountDisplay.setArgument(0, FormatWrapper.styled(20 / INITIAL_DELAY, ChatFormatting.YELLOW));
 
         gameHandle.getScheduler().interval(new Runnable() {
             int delay = INITIAL_DELAY;
@@ -178,9 +182,9 @@ public class AnvilFallInstance extends EliminationGameInstance {
 
                     if (delay > 0) {
                         Object obj = 20 % delay == 0 ? 20 / delay : "%.2f".formatted(20f / delay);
-                        amountDisplay.setArgument(0, FormatWrapper.styled(obj, Formatting.YELLOW));
+                        amountDisplay.setArgument(0, FormatWrapper.styled(obj, ChatFormatting.YELLOW));
                     } else {
-                        amountDisplay.setArgument(0, FormatWrapper.styled(20, Formatting.YELLOW));
+                        amountDisplay.setArgument(0, FormatWrapper.styled(20, ChatFormatting.YELLOW));
                     }
 
                     spawnRandomAnvil();
@@ -194,7 +198,7 @@ public class AnvilFallInstance extends EliminationGameInstance {
 
                 if (prevAmount != anvilAmount) {
                     prevAmount = anvilAmount;
-                    amountDisplay.setArgument(0, FormatWrapper.styled(anvilAmount * 20, Formatting.YELLOW));
+                    amountDisplay.setArgument(0, FormatWrapper.styled(anvilAmount * 20, ChatFormatting.YELLOW));
                 }
 
                 final int count = Math.min(anvilAmount, 256);
@@ -209,7 +213,7 @@ public class AnvilFallInstance extends EliminationGameInstance {
     private void spawnRandomAnvil() {
         if (winManager.isGameOver()) return;
 
-        ServerWorld world = getWorld();
+        ServerLevel world = getWorld();
 
         // bias position towards a uniformly random chosen participant
         BlockPos pos = gameHandle.getParticipants().getRandomParticipant(random)
@@ -223,35 +227,35 @@ public class AnvilFallInstance extends EliminationGameInstance {
                 .orElseGet(setup::getRandomPosition);
 
         Direction randomDirection = directions[random.nextInt(directions.length)];
-        BlockState state = Blocks.ANVIL.getDefaultState().with(AnvilBlock.FACING, randomDirection);
+        BlockState state = Blocks.ANVIL.defaultBlockState().setValue(AnvilBlock.FACING, randomDirection);
 
         FallingBlockEntity anvil = new FallingBlockEntity(EntityType.FALLING_BLOCK, world);
-        anvil.setPos(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
+        anvil.setPosRaw(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
         anvil.setSilent(true);
-        anvil.timeFalling = 1;
-        anvil.setHurtEntities(2.0f, 40);
+        anvil.time = 1;
+        anvil.setHurtsEntities(2.0f, 40);
         FallingBlockAccess.setDropItem(anvil, false);
         FallingBlockAccess.setDestroyedOnLanding(anvil, true);
         FallingBlockAccess.setBlockState(anvil, state);
 
-        world.spawnEntity(anvil);
+        world.addFreshEntity(anvil);
     }
 
-    private boolean onPlayerMove(ServerPlayerEntity player, PositionRotation from, PositionRotation to) {
+    private boolean onPlayerMove(ServerPlayer player, PositionRotation from, PositionRotation to) {
         repelPlayer(player, to);
 
         return false;
     }
 
-    private void repelPlayer(ServerPlayerEntity player, Position to) {
+    private void repelPlayer(ServerPlayer player, Position to) {
         if (playArea == null || !gameHandle.getParticipants().isParticipating(player)) return;
 
-        Box boundingBox = player.getBoundingBox();
+        AABB boundingBox = player.getBoundingBox();
 
-        if (playArea.contains(boundingBox.shrink(1e-9, 0, 1e-9))) return;
+        if (playArea.contains(boundingBox.contract(1e-9, 0, 1e-9))) return;
 
-        Vec3d vec = new Vec3d(center.getX() - to.getX(), 0.5, center.getZ() - to.getZ());
-        VelocityModifier.setVelocity(player, vec.normalize().multiply(0.5));
-        player.playSoundToPlayer(SoundEvents.ENTITY_ALLAY_HURT, SoundCategory.PLAYERS, 0.5f, 2f);
+        Vec3 vec = new Vec3(center.x() - to.x(), 0.5, center.z() - to.z());
+        VelocityModifier.setVelocity(player, vec.normalize().scale(0.5));
+        player.playNotifySound(SoundEvents.ALLAY_HURT, SoundSource.PLAYERS, 0.5f, 2f);
     }
 }

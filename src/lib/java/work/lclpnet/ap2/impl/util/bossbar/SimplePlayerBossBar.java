@@ -1,7 +1,7 @@
 package work.lclpnet.ap2.impl.util.bossbar;
 
-import net.minecraft.entity.boss.ServerBossBar;
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.level.ServerBossEvent;
+import net.minecraft.server.level.ServerPlayer;
 import work.lclpnet.ap2.api.util.bossbar.PlayerBossBar;
 
 import java.util.Map;
@@ -11,21 +11,21 @@ import java.util.function.Function;
 
 public class SimplePlayerBossBar implements PlayerBossBar {
 
-    private final Function<ServerPlayerEntity, ServerBossBar> factory;
-    private final Map<UUID, ServerBossBar> bossBars = new WeakHashMap<>();
+    private final Function<ServerPlayer, ServerBossEvent> factory;
+    private final Map<UUID, ServerBossEvent> bossBars = new WeakHashMap<>();
 
-    public SimplePlayerBossBar(Function<ServerPlayerEntity, ServerBossBar> factory) {
+    public SimplePlayerBossBar(Function<ServerPlayer, ServerBossEvent> factory) {
         this.factory = factory;
     }
 
     @Override
-    public ServerBossBar getBossBar(ServerPlayerEntity player) {
-        return bossBars.computeIfAbsent(player.getUuid(), uuid -> factory.apply(player));
+    public ServerBossEvent getBossBar(ServerPlayer player) {
+        return bossBars.computeIfAbsent(player.getUUID(), uuid -> factory.apply(player));
     }
 
     @Override
-    public void remove(ServerPlayerEntity player) {
-        ServerBossBar bossBar = bossBars.remove(player.getUuid());
+    public void remove(ServerPlayer player) {
+        ServerBossEvent bossBar = bossBars.remove(player.getUUID());
         if (bossBar == null) return;
 
         bossBar.removePlayer(player);

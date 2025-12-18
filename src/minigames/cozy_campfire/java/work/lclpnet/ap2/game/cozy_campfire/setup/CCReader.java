@@ -1,8 +1,8 @@
 package work.lclpnet.ap2.game.cozy_campfire.setup;
 
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -27,10 +27,10 @@ import static java.util.concurrent.CompletableFuture.supplyAsync;
 public class CCReader {
 
     private final GameMap map;
-    private final ServerWorld world;
+    private final ServerLevel world;
     private final Logger logger;
 
-    public CCReader(GameMap map, ServerWorld world, Logger logger) {
+    public CCReader(GameMap map, ServerLevel world, Logger logger) {
         this.map = map;
         this.world = world;
         this.logger = logger;
@@ -42,7 +42,7 @@ public class CCReader {
 
     public Map<Team, CCBase> _readBases(Set<Team> teams) {
         var session = ((MinecraftServerAccessor) world.getServer()).getSession();
-        Path storage = session.getWorldDirectory(world.getRegistryKey());
+        Path storage = session.getDimensionPath(world.dimension());
         Path schematicsDir = storage.resolve("schematics");
 
         JSONObject basesJson = map.requireProperty("bases");
@@ -51,7 +51,7 @@ public class CCReader {
 
         for (Team team : teams) {
             String id = team.key().id();
-            Identifier mapId = map.getDescriptor().getIdentifier();
+            ResourceLocation mapId = map.getDescriptor().getIdentifier();
 
             if (!basesJson.has(id)) {
                 logger.error("No base configured for team {} in map {}", id, mapId);
@@ -71,7 +71,7 @@ public class CCReader {
     }
 
     @Nullable
-    private CCBase readBase(JSONObject json, String teamId, Identifier mapId, Path schematicsDir) {
+    private CCBase readBase(JSONObject json, String teamId, ResourceLocation mapId, Path schematicsDir) {
         if (!json.has("bounds")) {
             logger.error("Base of team {} in map {} does not contain property 'bounds'", teamId, mapId);
             return null;

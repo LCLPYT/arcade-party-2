@@ -1,6 +1,6 @@
 package work.lclpnet.ap2.game.paintball.util;
 
-import net.minecraft.sound.SoundEvent;
+import net.minecraft.sounds.SoundEvent;
 
 /**
  * Configuration for a paint gun.

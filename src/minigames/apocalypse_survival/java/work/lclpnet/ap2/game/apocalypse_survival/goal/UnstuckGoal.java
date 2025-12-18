@@ -1,17 +1,17 @@
 package work.lclpnet.ap2.game.apocalypse_survival.goal;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.ai.goal.Goal;
-import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.registry.tag.BlockTags;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.goal.Goal;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.kibu.access.VelocityModifier;
 
@@ -21,40 +21,40 @@ public class UnstuckGoal extends Goal {
 
     private static final double TOLERANCE = 1.5 * 1.5;
     private static final int SCAN_TICKS = 50;
-    private final MobEntity mob;
+    private final Mob mob;
     private final Random random;
-    private Vec3d lastPos = null;
+    private Vec3 lastPos = null;
     private int notMovedTicks = 0;
-    private @Nullable Vec3d flingTarget = null;
+    private @Nullable Vec3 flingTarget = null;
     private int towardsTargetTicks = 0;
 
-    public UnstuckGoal(MobEntity mob, Random random) {
+    public UnstuckGoal(Mob mob, Random random) {
         this.mob = mob;
         this.random = random;
     }
 
     @Override
-    public boolean canStart() {
+    public boolean canUse() {
         return true;
     }
 
     @Override
     public void start() {
-        lastPos = mob.getEntityPos();
+        lastPos = mob.position();
     }
 
     @Override
     public void tick() {
-        Vec3d currentPos = mob.getEntityPos();
+        Vec3 currentPos = mob.position();
 
         if (towardsTargetTicks > 0 && flingTarget != null) {
             towardsTargetTicks--;
-            Vec3d vel = flingTarget.subtract(currentPos).normalize().multiply(0.6);
+            Vec3 vel = flingTarget.subtract(currentPos).normalize().scale(0.6);
             VelocityModifier.setVelocity(mob, vel);
             return;
         }
 
-        if (lastPos.squaredDistanceTo(currentPos) > TOLERANCE) {
+        if (lastPos.distanceToSqr(currentPos) > TOLERANCE) {
             lastPos = currentPos;
             notMovedTicks = 0;
             return;
@@ -70,10 +70,10 @@ public class UnstuckGoal extends Goal {
         destroyBlockage();
         destroyHideout();
 
-        PlayerEntity nearbyPlayer = mob.getEntityWorld().getClosestPlayer(mob, 10);
+        Player nearbyPlayer = mob.level().getNearestPlayer(mob, 10);
 
         if (nearbyPlayer != null) {
-            flingTarget = nearbyPlayer.getEyePos();
+            flingTarget = nearbyPlayer.getEyePosition();
             towardsTargetTicks = 4;
             return;
         }
@@ -81,35 +81,35 @@ public class UnstuckGoal extends Goal {
         float pitch = -45 - random.nextFloat() * 25;
         float yaw = random.nextFloat() * 360;
 
-        Vec3d direction = Vec3d.fromPolar(pitch, yaw);
+        Vec3 direction = Vec3.directionFromRotation(pitch, yaw);
 
-        VelocityModifier.setVelocity(mob, direction.multiply(0.6));
+        VelocityModifier.setVelocity(mob, direction.scale(0.6));
     }
 
     private void destroyHideout() {
         LivingEntity target = mob.getTarget();
 
-        if (target == null || mob.squaredDistanceTo(target) > TOLERANCE) return;
+        if (target == null || mob.distanceToSqr(target) > TOLERANCE) return;
 
         // target in reach, check if it is hiding below a trapdoor
-        BlockPos aboveTarget = target.getBlockPos().up();
+        BlockPos aboveTarget = target.blockPosition().above();
 
-        World world = mob.getEntityWorld();
+        Level world = mob.level();
         BlockState state = world.getBlockState(aboveTarget);
 
-        if (state.isIn(BlockTags.WOODEN_TRAPDOORS)) {
-            world.breakBlock(aboveTarget, false, mob);
+        if (state.is(BlockTags.WOODEN_TRAPDOORS)) {
+            world.destroyBlock(aboveTarget, false, mob);
 
             world.playSound(null, aboveTarget.getX() + 0.5, aboveTarget.getY() + 0.5, aboveTarget.getZ() + 0.5,
-                    SoundEvents.ENTITY_ZOMBIE_BREAK_WOODEN_DOOR, SoundCategory.HOSTILE, 0.75f, 1f);
+                    SoundEvents.ZOMBIE_BREAK_WOODEN_DOOR, SoundSource.HOSTILE, 0.75f, 1f);
         }
     }
 
     private void destroyBlockage() {
-        World world = mob.getEntityWorld();
+        Level world = mob.level();
 
-        BlockPos.stream(mob.getBoundingBox())
-                .filter(pos -> world.getBlockState(pos).isOf(Blocks.COBWEB))
-                .forEach(pos -> world.breakBlock(pos, false, mob));
+        BlockPos.betweenClosedStream(mob.getBoundingBox())
+                .filter(pos -> world.getBlockState(pos).is(Blocks.COBWEB))
+                .forEach(pos -> world.destroyBlock(pos, false, mob));
     }
 }

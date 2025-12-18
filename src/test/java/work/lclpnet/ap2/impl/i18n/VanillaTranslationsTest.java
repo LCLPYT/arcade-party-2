@@ -1,6 +1,6 @@
 package work.lclpnet.ap2.impl.i18n;
 
-import net.minecraft.MinecraftVersion;
+import net.minecraft.DetectedVersion;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,7 +24,7 @@ class VanillaTranslationsTest {
 
     @BeforeAll
     static void setUpAll() throws IOException {
-        String version = MinecraftVersion.create().name();
+        String version = DetectedVersion.tryDetectVersion().name();
         Path assetsRoot = Files.createTempDirectory("vt_assets");
 
         // TODO remove network dependency by using a local state of required assets

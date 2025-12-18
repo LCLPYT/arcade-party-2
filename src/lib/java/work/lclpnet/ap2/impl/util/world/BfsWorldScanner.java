@@ -1,6 +1,6 @@
 package work.lclpnet.ap2.impl.util.world;
 
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
 import work.lclpnet.ap2.api.util.world.AdjacentBlocks;
 import work.lclpnet.ap2.api.util.world.WorldScanner;
 
@@ -41,7 +41,7 @@ public class BfsWorldScanner implements WorldScanner {
                 for (BlockPos adj : adjacentBlocks.iterate(pos)) {
                     if (known.contains(adj)) continue;
 
-                    BlockPos immutable = adj.toImmutable();
+                    BlockPos immutable = adj.immutable();
                     queue.add(immutable);
                     known.add(immutable);
                 }

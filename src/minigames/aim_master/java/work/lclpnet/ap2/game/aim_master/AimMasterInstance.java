@@ -1,14 +1,14 @@
 package work.lclpnet.ap2.game.aim_master;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.particle.ParticleTypes;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
 import org.jetbrains.annotations.NotNull;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.map.MapBootstrap;
@@ -34,7 +34,7 @@ import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
 public class AimMasterInstance extends FFAGameInstance implements MapBootstrap {
 
-    private final IntScoreDataContainer<ServerPlayerEntity, PlayerRef> data = new IntScoreDataContainer<>(PlayerRef::create);
+    private final IntScoreDataContainer<ServerPlayer, PlayerRef> data = new IntScoreDataContainer<>(PlayerRef::create);
 
     //game parameters
     private static final int MIN_SCORE = 18;
@@ -62,12 +62,12 @@ public class AimMasterInstance extends FFAGameInstance implements MapBootstrap {
     }
 
     @Override
-    protected IntScoreDataContainer<ServerPlayerEntity, PlayerRef> getData() {
+    protected IntScoreDataContainer<ServerPlayer, PlayerRef> getData() {
         return data;
     }
 
     @Override
-    public @NotNull CompletableFuture<Void> createWorldBootstrap(@NotNull ServerWorld world, @NotNull GameMap map) {
+    public @NotNull CompletableFuture<Void> createWorldBootstrap(@NotNull ServerLevel world, @NotNull GameMap map) {
 
         var generator = new StackedRoomGenerator<>(world, map, StackedRoomGenerator.Coordinates.RELATIVE, (pos, spawn, yaw, structure) -> new AimMasterDomain(spawn, yaw, world));
         var positionGenerator = new PositionGenerator(SPHERE_RADIUS, SPHERE_OFFSET, UPWARD_TILT, ELLIPSE_FACTOR, new BlockPos(0, 0, 0), CONE_FOV, TARGET_NUMBER, TARGET_MIN_DISTANCE);
@@ -91,11 +91,11 @@ public class AimMasterInstance extends FFAGameInstance implements MapBootstrap {
     @Override
     protected void prepare() {
 
-        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
-            AimMasterDomain domain = manager.getDomains().get(player.getUuid());
+        for (ServerPlayer player : gameHandle.getParticipants()) {
+            AimMasterDomain domain = manager.getDomains().get(player.getUUID());
             domain.teleport(player);
         }
-        bossBar = usePlayerDynamicTaskDisplay(styled(scoreGoal, Formatting.YELLOW));
+        bossBar = usePlayerDynamicTaskDisplay(styled(scoreGoal, ChatFormatting.YELLOW));
         bossBar.setPercent(0);
     }
 
@@ -104,8 +104,8 @@ public class AimMasterInstance extends FFAGameInstance implements MapBootstrap {
 
         var sequenceItems = sequence.getItems();
 
-        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
-            AimMasterDomain domain = manager.getDomains().get(player.getUuid());
+        for (ServerPlayer player : gameHandle.getParticipants()) {
+            AimMasterDomain domain = manager.getDomains().get(player.getUUID());
             domain.teleport(player);
             PlayerInventoryAccess.setSelectedSlot(player, 4);
             domain.setBlocks(sequenceItems.getFirst(), player);
@@ -121,37 +121,37 @@ public class AimMasterInstance extends FFAGameInstance implements MapBootstrap {
         hooks.registerHook(PlayerSwingHandHook.HOOK, (player, hand) -> invokeRayCaster(player));
     }
 
-    private @NotNull ActionResult invokeRayCaster(PlayerEntity player) {
-        if (winManager.isGameOver()) return ActionResult.FAIL;
+    private @NotNull InteractionResult invokeRayCaster(Player player) {
+        if (winManager.isGameOver()) return InteractionResult.FAIL;
 
-        AimMasterDomain domain = manager.getDomains().get(player.getUuid());
-        ServerPlayerEntity serverPlayer = (ServerPlayerEntity) player;
+        AimMasterDomain domain = manager.getDomains().get(player.getUUID());
+        ServerPlayer serverPlayer = (ServerPlayer) player;
 
         if (domain.rayCaster(serverPlayer, SPHERE_RADIUS)) {
 
             data.addScore(serverPlayer, 1);
             int newScore = data.getScore(serverPlayer);
-            bossBar.getBossBar(serverPlayer).setPercent((float) newScore / scoreGoal);
+            bossBar.getBossBar(serverPlayer).setProgress((float) newScore / scoreGoal);
 
             BlockPos target = domain.getCurrentTarget();
-            ServerWorld serverWorld = serverPlayer.getEntityWorld();
+            ServerLevel serverWorld = serverPlayer.level();
 
-            if (target!=null) serverWorld.spawnParticles(ParticleTypes.ELECTRIC_SPARK, target.getX(), target.getY(), target.getZ(), 12, 0.4, 0.4, 0.4, 0.01);
-            player.playSoundToPlayer(SoundEvents.ENTITY_ARROW_HIT_PLAYER, SoundCategory.PLAYERS, 0.5f, 0.8f);
+            if (target!=null) serverWorld.sendParticles(ParticleTypes.ELECTRIC_SPARK, target.getX(), target.getY(), target.getZ(), 12, 0.4, 0.4, 0.4, 0.01);
+            player.playNotifySound(SoundEvents.ARROW_HIT_PLAYER, SoundSource.PLAYERS, 0.5f, 0.8f);
 
             if (newScore >= scoreGoal) win(serverPlayer);
             else manager.advancePlayer(serverPlayer);
 
-            return ActionResult.FAIL;
+            return InteractionResult.FAIL;
         }
 
-        player.playSoundToPlayer(SoundEvents.BLOCK_NOTE_BLOCK_BASS.value(), SoundCategory.PLAYERS, 0.3f, 0.2f);
+        player.playNotifySound(SoundEvents.NOTE_BLOCK_BASS.value(), SoundSource.PLAYERS, 0.3f, 0.2f);
 
-        return ActionResult.PASS;
+        return InteractionResult.PASS;
     }
 
-    protected void win(ServerPlayerEntity winner) {
-        var domain = manager.getDomains().get(winner.getUuid());
+    protected void win(ServerPlayer winner) {
+        var domain = manager.getDomains().get(winner.getUUID());
 
         domain.removeBlocks(sequence.getItems().getLast());
 
@@ -164,12 +164,12 @@ public class AimMasterInstance extends FFAGameInstance implements MapBootstrap {
 
     private static class Task implements SchedulerAction {
 
-        private final ServerPlayerEntity player;
+        private final ServerPlayer player;
         private final AimMasterDomain domain;
         private final AimMasterSequence sequence;
         int time = 0;
 
-        private Task(ServerPlayerEntity player, AimMasterDomain domain, AimMasterSequence sequence) {
+        private Task(ServerPlayer player, AimMasterDomain domain, AimMasterSequence sequence) {
             this.player = player;
             this.domain = domain;
             this.sequence = sequence;

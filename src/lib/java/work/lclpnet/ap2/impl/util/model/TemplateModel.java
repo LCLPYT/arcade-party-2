@@ -1,7 +1,7 @@
 package work.lclpnet.ap2.impl.util.model;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.util.model.Model;
@@ -35,7 +35,7 @@ public record TemplateModel(Object3d template) implements Model {
     }
 
     public static @NotNull TemplateModel replace(@Nullable Model model, Block from, Block to) {
-        return replace(model, from.getDefaultState(), to.getDefaultState());
+        return replace(model, from.defaultBlockState(), to.defaultBlockState());
     }
 
     public static @NotNull TemplateModel replace(@Nullable Model model, BlockState from, BlockState to) {

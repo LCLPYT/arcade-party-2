@@ -1,14 +1,14 @@
 package work.lclpnet.ap2.impl.util.scoreboard;
 
 import lombok.Setter;
-import net.minecraft.scoreboard.ScoreboardCriterion;
-import net.minecraft.scoreboard.ScoreboardDisplaySlot;
-import net.minecraft.scoreboard.number.BlankNumberFormat;
-import net.minecraft.scoreboard.number.NumberFormat;
-import net.minecraft.scoreboard.number.StyledNumberFormat;
-import net.minecraft.server.PlayerManager;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.numbers.BlankFormat;
+import net.minecraft.network.chat.numbers.NumberFormat;
+import net.minecraft.network.chat.numbers.StyledFormat;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.players.PlayerList;
+import net.minecraft.world.scores.DisplaySlot;
+import net.minecraft.world.scores.criteria.ObjectiveCriteria;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.util.scoreboard.CustomScoreboardObjective;
@@ -33,21 +33,21 @@ public class DynamicScoreboardObjective implements
         VirtualScoreboardObjective {
 
     private final String name;
-    private final ScoreboardCriterion.RenderType renderType;
-    private final Function<ServerPlayerEntity, Text> title;
-    private final PlayerManager playerManager;
+    private final ObjectiveCriteria.RenderType renderType;
+    private final Function<ServerPlayer, Component> title;
+    private final PlayerList playerManager;
     private final Map<UUID, CustomObjective> objectives = new HashMap<>();
     private final ScoreboardLayout layout = new ScoreboardLayout();
     private final Map<String, DynamicEntry> entries = new HashMap<>();
 
-    private ScoreboardDisplaySlot slot = null;
+    private DisplaySlot slot = null;
     @Setter
-    private NumberFormat defaultNumberFormat = StyledNumberFormat.RED;
+    private NumberFormat defaultNumberFormat = StyledFormat.SIDEBAR_DEFAULT;
     @Setter
-    private BiFunction<ServerPlayerEntity, String, Text> defaultDisplay = (player, holder) -> Text.literal(holder);
+    private BiFunction<ServerPlayer, String, Component> defaultDisplay = (player, holder) -> Component.literal(holder);
 
-    public DynamicScoreboardObjective(String name, ScoreboardCriterion.RenderType renderType,
-                                      Function<ServerPlayerEntity, Text> title, PlayerManager playerManager) {
+    public DynamicScoreboardObjective(String name, ObjectiveCriteria.RenderType renderType,
+                                      Function<ServerPlayer, Component> title, PlayerList playerManager) {
         this.name = name;
         this.renderType = renderType;
         this.title = title;
@@ -55,7 +55,7 @@ public class DynamicScoreboardObjective implements
     }
 
     @Override
-    public void add(ServerPlayerEntity player) {
+    public void add(ServerPlayer player) {
         CustomObjective objective = getOrCreateObjective(player);
 
         entries.values().forEach(dynamicEntry -> dynamicEntry.put(player, objective));
@@ -65,13 +65,13 @@ public class DynamicScoreboardObjective implements
         objective.syncScores(player);
     }
 
-    private @NotNull CustomObjective getOrCreateObjective(ServerPlayerEntity player) {
-        return objectives.computeIfAbsent(player.getUuid(), uuid -> createObjective(player));
+    private @NotNull CustomObjective getOrCreateObjective(ServerPlayer player) {
+        return objectives.computeIfAbsent(player.getUUID(), uuid -> createObjective(player));
     }
 
     @Override
-    public void remove(ServerPlayerEntity player) {
-        CustomObjective objective = objectives.remove(player.getUuid());
+    public void remove(ServerPlayer player) {
+        CustomObjective objective = objectives.remove(player.getUUID());
 
         if (objective == null) return;
 
@@ -80,24 +80,24 @@ public class DynamicScoreboardObjective implements
     }
 
     @Override
-    public void update(ServerPlayerEntity player) {
-        if (!objectives.containsKey(player.getUuid())) return;
+    public void update(ServerPlayer player) {
+        if (!objectives.containsKey(player.getUUID())) return;
 
         remove(player);
         add(player);
     }
 
-    protected @NotNull CustomObjective createObjective(ServerPlayerEntity player) {
-        String objectiveName = name + "_" + player.getNameForScoreboard();
-        Text display = title.apply(player);
+    protected @NotNull CustomObjective createObjective(ServerPlayer player) {
+        String objectiveName = name + "_" + player.getScoreboardName();
+        Component display = title.apply(player);
 
-        return new CustomObjective(objectiveName, display, renderType, StyledNumberFormat.RED);
+        return new CustomObjective(objectiveName, display, renderType, StyledFormat.SIDEBAR_DEFAULT);
     }
 
-    public void setSlot(@Nullable ScoreboardDisplaySlot slot) {
+    public void setSlot(@Nullable DisplaySlot slot) {
         if (slot == this.slot) return;
 
-        ScoreboardDisplaySlot prevSlot = this.slot;
+        DisplaySlot prevSlot = this.slot;
         this.slot = slot;
 
         eachObjective((player, objective) -> {
@@ -119,7 +119,7 @@ public class DynamicScoreboardObjective implements
         modifyEntry(scoreHolder, e -> e.setScore(score));
     }
 
-    public void setScore(ServerPlayerEntity player, String scoreHolder, int score) {
+    public void setScore(ServerPlayer player, String scoreHolder, int score) {
         DynamicEntry entry = getOrCreateEntry(scoreHolder);
 
         entry.getOrCreatePlayerEntry(player).score = score;
@@ -128,7 +128,7 @@ public class DynamicScoreboardObjective implements
     }
 
     @Override
-    public void setDisplayName(String scoreHolder, @Nullable Text display) {
+    public void setDisplayName(String scoreHolder, @Nullable Component display) {
         DynamicEntry entry = getOrCreateEntry(scoreHolder);
         entry.displayName = player -> display;
 
@@ -137,7 +137,7 @@ public class DynamicScoreboardObjective implements
         modifyEntry(scoreHolder, e -> e.setDisplay(display));
     }
 
-    public void setDisplayName(ServerPlayerEntity player, String scoreHolder, @Nullable Text display) {
+    public void setDisplayName(ServerPlayer player, String scoreHolder, @Nullable Component display) {
         DynamicEntry entry = getOrCreateEntry(scoreHolder);
 
         entry.getOrCreatePlayerEntry(player).display = display;
@@ -155,7 +155,7 @@ public class DynamicScoreboardObjective implements
         modifyEntry(scoreHolder, e -> e.setNumberFormat(numberFormat));
     }
 
-    public void setNumberFormat(ServerPlayerEntity player, String scoreHolder, NumberFormat numberFormat) {
+    public void setNumberFormat(ServerPlayer player, String scoreHolder, NumberFormat numberFormat) {
         DynamicEntry entry = getOrCreateEntry(scoreHolder);
 
         entry.getOrCreatePlayerEntry(player).numberFormat = numberFormat;
@@ -195,7 +195,7 @@ public class DynamicScoreboardObjective implements
     }
 
     @Override
-    public ScoreHandle createText(Text line, int position) {
+    public ScoreHandle createText(Component line, int position) {
         return createText(p -> line, position);
     }
 
@@ -204,11 +204,11 @@ public class DynamicScoreboardObjective implements
         return createText(line::translateFor, position);
     }
 
-    public ScoreHandle createText(Function<ServerPlayerEntity, @Nullable Text> textFactory, int position) {
+    public ScoreHandle createText(Function<ServerPlayer, @Nullable Component> textFactory, int position) {
         String holder = UUID.randomUUID().toString();
         int score = layout.resolvePosition(position);
 
-        var entry = new DynamicEntry(holder, score, BlankNumberFormat.INSTANCE, textFactory);
+        var entry = new DynamicEntry(holder, score, BlankFormat.INSTANCE, textFactory);
 
         setDynamicEntry(holder, entry);
 
@@ -219,11 +219,11 @@ public class DynamicScoreboardObjective implements
         return createDynamicText(line::translateFor, position);
     }
 
-    public DynamicScoreHandle createDynamicText(Function<ServerPlayerEntity, @Nullable Text> textFactory, int position) {
+    public DynamicScoreHandle createDynamicText(Function<ServerPlayer, @Nullable Component> textFactory, int position) {
         String holder = UUID.randomUUID().toString();
         int score = layout.resolvePosition(position);
 
-        var entry = new DynamicEntry(holder, score, BlankNumberFormat.INSTANCE, textFactory);
+        var entry = new DynamicEntry(holder, score, BlankFormat.INSTANCE, textFactory);
 
         setDynamicEntry(holder, entry);
 
@@ -235,9 +235,9 @@ public class DynamicScoreboardObjective implements
         eachObjective((player, objective) -> objective.syncScore(player, scoreHolder));
     }
 
-    protected void eachObjective(BiConsumer<ServerPlayerEntity, CustomObjective> action) {
+    protected void eachObjective(BiConsumer<ServerPlayer, CustomObjective> action) {
         objectives.forEach((uuid, objective) -> {
-            ServerPlayerEntity player = playerManager.getPlayer(uuid);
+            ServerPlayer player = playerManager.getPlayer(uuid);
 
             if (player != null) {
                 action.accept(player, objective);
@@ -249,7 +249,7 @@ public class DynamicScoreboardObjective implements
         objectives.values().forEach(action);
     }
 
-    protected void modifyEntry(ServerPlayerEntity player, String scoreHolder, Consumer<CustomScoreboardEntry> action) {
+    protected void modifyEntry(ServerPlayer player, String scoreHolder, Consumer<CustomScoreboardEntry> action) {
         CustomObjective objective = getOrCreateObjective(player);
 
         var customEntry = objective.getEntry(scoreHolder).orElseGet(() -> {
@@ -280,26 +280,26 @@ public class DynamicScoreboardObjective implements
         private final String holder;
         private int defaultScore;
         private NumberFormat defaultNumberFormat;
-        private Function<ServerPlayerEntity, @Nullable Text> displayName;
+        private Function<ServerPlayer, @Nullable Component> displayName;
         private final Map<UUID, DynamicPlayerEntry> playerEntries = new HashMap<>();
 
-        private DynamicEntry(String holder, int defaultScore, NumberFormat defaultNumberFormat, Function<ServerPlayerEntity, @Nullable Text> displayName) {
+        private DynamicEntry(String holder, int defaultScore, NumberFormat defaultNumberFormat, Function<ServerPlayer, @Nullable Component> displayName) {
             this.holder = holder;
             this.defaultScore = defaultScore;
             this.defaultNumberFormat = defaultNumberFormat;
             this.displayName = displayName;
         }
 
-        public void put(ServerPlayerEntity player, CustomObjective objective) {
+        public void put(ServerPlayer player, CustomObjective objective) {
             objective.setEntry(holder, createEntry(player));
         }
 
-        public CustomScoreboardEntry createEntry(ServerPlayerEntity player) {
+        public CustomScoreboardEntry createEntry(ServerPlayer player) {
             return getOrCreatePlayerEntry(player).createEntry();
         }
 
-        private @NotNull DynamicPlayerEntry getOrCreatePlayerEntry(ServerPlayerEntity player) {
-            return playerEntries.computeIfAbsent(player.getUuid(), uuid -> {
+        private @NotNull DynamicPlayerEntry getOrCreatePlayerEntry(ServerPlayer player) {
+            return playerEntries.computeIfAbsent(player.getUUID(), uuid -> {
                 var wrapper = new DynamicPlayerEntry();
                 wrapper.display = displayName.apply(player);
                 wrapper.score = defaultScore;
@@ -319,7 +319,7 @@ public class DynamicScoreboardObjective implements
     private static final class DynamicPlayerEntry {
         private int score;
         private NumberFormat numberFormat;
-        private @Nullable Text display;
+        private @Nullable Component display;
 
         public CustomScoreboardEntry createEntry() {
             return new CustomScoreboardEntry(display, numberFormat, score);

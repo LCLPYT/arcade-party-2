@@ -3,10 +3,10 @@ package work.lclpnet.ap2.impl.game.kit;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import lombok.Getter;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.registry.DynamicRegistryManager;
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import work.lclpnet.ap2.impl.util.CustomNbt;
 
 import java.util.Optional;
@@ -26,7 +26,7 @@ public class SingleItemKit extends BaseKit {
     }
 
     @Override
-    public ItemStack createItemStack(DynamicRegistryManager manager) {
+    public ItemStack createItemStack(RegistryAccess manager) {
         ItemStack stack = new ItemStack(item);
 
         configureItemStack(stack);
@@ -39,16 +39,16 @@ public class SingleItemKit extends BaseKit {
     }
 
     @Override
-    public void equip(ServerPlayerEntity player, KitOptions options) {
+    public void equip(ServerPlayer player, KitOptions options) {
         ItemStack stack = handle.createItemStack(this, player);
         stack.setCount(count);
 
-        player.getInventory().setStack(options.mainItemSlot(), stack);
+        player.getInventory().setItem(options.mainItemSlot(), stack);
     }
 
     @Override
-    public void unequip(ServerPlayerEntity player, KitOptions options) {
-        player.getInventory().removeStack(options.mainItemSlot());
+    public void unequip(ServerPlayer player, KitOptions options) {
+        player.getInventory().removeItemNoUpdate(options.mainItemSlot());
     }
 
     public static Optional<String> getId(ItemStack stack) {

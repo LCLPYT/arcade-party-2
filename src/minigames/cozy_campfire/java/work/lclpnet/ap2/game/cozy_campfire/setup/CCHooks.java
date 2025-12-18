@@ -1,23 +1,23 @@
 package work.lclpnet.ap2.game.cozy_campfire.setup;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.damage.DamageTypes;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.entity.vehicle.BoatEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.registry.tag.BlockTags;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.damagesource.DamageTypes;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.vehicle.Boat;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.team.Team;
@@ -64,15 +64,15 @@ public class CCHooks {
         config.allow(ProtectionTypes.PICKUP_ITEM, ProtectionTypes.SWAP_HAND_ITEMS, ProtectionTypes.PICKUP_PROJECTILE);
 
         config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, damageSource) -> {
-            if (entity instanceof ServerPlayerEntity player) {
+            if (entity instanceof ServerPlayer player) {
                 return participants.isParticipating(player) && !baseManager.isInBase(player);
             }
 
-            return entity instanceof BoatEntity;  // allow damaging boats
+            return entity instanceof Boat;  // allow damaging boats
         });
 
         config.allow(ProtectionTypes.BREAK_BLOCKS, (entity, pos) -> {
-            if (!(entity instanceof ServerPlayerEntity player)) return false;
+            if (!(entity instanceof ServerPlayer player)) return false;
 
             return fuel.isFuel(player, pos);
         });
@@ -83,7 +83,7 @@ public class CCHooks {
             if (inInventory || slot < 0 || slot > 8) return true;
 
             // drop hot-bar item via the drop key while not in inventory
-            ItemStack stack = player.getInventory().getStack(slot);
+            ItemStack stack = player.getInventory().getItem(slot);
 
             return fuel.isFuel(stack);
         });
@@ -111,9 +111,9 @@ public class CCHooks {
             return false;
         });
 
-        config.allow(ProtectionTypes.ENTITY_ITEM_DROP, (entity, itemEntity) -> fuel.isFuel(itemEntity.getStack()));
+        config.allow(ProtectionTypes.ENTITY_ITEM_DROP, (entity, itemEntity) -> fuel.isFuel(itemEntity.getItem()));
 
-        config.allow(ProtectionTypes.USE_ITEM_ON_BLOCK, (player, obj) -> obj.getStack().isOf(Items.LADDER));
+        config.allow(ProtectionTypes.USE_ITEM_ON_BLOCK, (player, obj) -> obj.getItemInHand().is(Items.LADDER));
         config.allow(ProtectionTypes.PLACE_BLOCKS, (entity, blockPos) -> true);  // filter with hook in ::register
     }
 
@@ -121,7 +121,7 @@ public class CCHooks {
         hooks.registerHook(PlayerSpawnLocationCallback.HOOK, this::onSpawnLocation);
 
         hooks.registerHook(ServerLivingEntityHooks.ALLOW_DEATH, (entity, damageSource, damageAmount) -> {
-            if (entity instanceof ServerPlayerEntity player) {
+            if (entity instanceof ServerPlayer player) {
                 onDeath(player);
             }
 
@@ -129,16 +129,16 @@ public class CCHooks {
         });
 
         hooks.registerHook(PlayerInteractionHooks.USE_ENTITY, (player, world, hand, entity, hitResult) -> {
-            if (player instanceof ServerPlayerEntity serverPlayer) {
+            if (player instanceof ServerPlayer serverPlayer) {
                 onUseEntity(serverPlayer, hand, entity);
             }
 
-            return ActionResult.FAIL;
+            return InteractionResult.FAIL;
         });
 
         hooks.registerHook(ServerLivingEntityHooks.ALLOW_DAMAGE, (entity, source, amount) -> {
-            if (source.isOf(DamageTypes.FREEZE) && amount < Float.MAX_VALUE && entity.getEntityWorld() instanceof ServerWorld world) {
-                entity.damage(world, entity.getDamageSources().freeze(), Float.MAX_VALUE);
+            if (source.is(DamageTypes.FREEZE) && amount < Float.MAX_VALUE && entity.level() instanceof ServerLevel world) {
+                entity.hurtServer(world, entity.damageSources().freeze(), Float.MAX_VALUE);
                 return false;
             }
 
@@ -146,7 +146,7 @@ public class CCHooks {
         });
 
         hooks.registerHook(BlockModificationHooks.PLACE_BLOCK, (world, pos, entity, state)
-                -> !state.isOf(Blocks.LADDER));
+                -> !state.is(Blocks.LADDER));
     }
 
     public void configureBaseRegionEvents(CollisionDetector collisions, PlayerMovementObserver observer) {
@@ -163,8 +163,8 @@ public class CCHooks {
         }
     }
 
-    private void onUseEntity(ServerPlayerEntity player, Hand hand, Entity entity) {
-        ItemStack stack = player.getStackInHand(hand);
+    private void onUseEntity(ServerPlayer player, InteractionHand hand, Entity entity) {
+        ItemStack stack = player.getItemInHand(hand);
         if (!args.fuel().isFuel(stack)) return;
 
         Team team = args.baseManager().getEntityTeam(entity).orElse(null);
@@ -177,10 +177,10 @@ public class CCHooks {
     }
 
     private void onUseBlock(Entity entity, BlockPos pos) {
-        if (!(entity instanceof ServerPlayerEntity player)) return;
+        if (!(entity instanceof ServerPlayer player)) return;
 
-        BlockState state = entity.getEntityWorld().getBlockState(pos);
-        if (!state.isIn(BlockTags.CAMPFIRES)) return;
+        BlockState state = entity.level().getBlockState(pos);
+        if (!state.is(BlockTags.CAMPFIRES)) return;
 
         ItemStack stack = getHeldFuel(player);
         if (stack == null || stack.isEmpty()) return;
@@ -192,15 +192,15 @@ public class CCHooks {
     }
 
     @Nullable
-    private ItemStack getHeldFuel(ServerPlayerEntity player) {
+    private ItemStack getHeldFuel(ServerPlayer player) {
         CCFuel fuel = args.fuel();
-        ItemStack stack = player.getMainHandStack();
+        ItemStack stack = player.getMainHandItem();
 
         if (fuel.isFuel(stack)) return stack;
 
         if (!stack.isEmpty()) return null;
 
-        stack = player.getOffHandStack();
+        stack = player.getOffhandItem();
 
         if (fuel.isFuel(stack)) return stack;
 
@@ -210,7 +210,7 @@ public class CCHooks {
     private void onSpawnLocation(PlayerSpawnLocationCallback.LocationData data) {
         if (data.isJoin()) return;
 
-        ServerPlayerEntity player = data.getPlayer();
+        ServerPlayer player = data.getPlayer();
 
         Team team = teamManager.getTeam(player).orElse(null);
         if (team == null) return;
@@ -218,7 +218,7 @@ public class CCHooks {
         PositionRotation spawn = spawnAccess.getSpawn(team);
         if (spawn == null) return;
 
-        data.setPosition(new Vec3d(spawn.getX(), spawn.getY(), spawn.getZ()));
+        data.setPosition(new Vec3(spawn.x(), spawn.y(), spawn.z()));
         data.setYaw(spawn.getYaw());
         data.setPitch(spawn.getPitch());
 
@@ -226,41 +226,41 @@ public class CCHooks {
         PlayerReset.modifyWalkSpeed(player, MOVEMENT_SPEED);
     }
 
-    private void onDeath(ServerPlayerEntity player) {
-        PlayerInventory inventory = player.getInventory();
+    private void onDeath(ServerPlayer player) {
+        Inventory inventory = player.getInventory();
 
         CCFuel fuel = args.fuel();
 
         // remove non-fuel items so that they won't be dropped
-        for (int i = 0; i < inventory.size(); ++i) {
-            ItemStack stack = inventory.getStack(i);
+        for (int i = 0; i < inventory.getContainerSize(); ++i) {
+            ItemStack stack = inventory.getItem(i);
 
             if (fuel.isFuel(stack)) continue;
 
-            inventory.removeStack(i);
+            inventory.removeItemNoUpdate(i);
         }
     }
 
-    private void onEnterBaseOf(ServerPlayerEntity player, Team team) {
+    private void onEnterBaseOf(ServerPlayer player, Team team) {
         if (teamManager.isTeamMember(player, team)) return;
 
         // the player is in the base of another team
         var name = translations.translateText(player, team.key().getTranslationKey())
                 .styled(style -> style.withColor(team.key().color()));
 
-        var msg = Text.literal("⚠")
+        var msg = Component.literal("⚠")
                 .append(translations.translateText(player, "game.ap2.cozy_campfire.base_of", name))
-                .append("⚠").styled(style -> style.withColor(0xff0000));
+                .append("⚠").withStyle(style -> style.withColor(0xff0000));
 
-        player.sendMessage(msg, true);
-        player.playSoundToPlayer(SoundEvents.ENTITY_BREEZE_LAND, SoundCategory.PLAYERS, 0.5f, 1.2f);
+        player.displayClientMessage(msg, true);
+        player.playNotifySound(SoundEvents.BREEZE_LAND, SoundSource.PLAYERS, 0.5f, 1.2f);
     }
 
-    private void onLeaveBaseOf(ServerPlayerEntity player, Team team) {
+    private void onLeaveBaseOf(ServerPlayer player, Team team) {
         if (teamManager.isTeamMember(player, team)) return;
 
         // player leaves the base of another team
-        player.playSoundToPlayer(SoundEvents.ENTITY_BREEZE_LAND, SoundCategory.PLAYERS, 0.5f, 0.8f);
+        player.playNotifySound(SoundEvents.BREEZE_LAND, SoundSource.PLAYERS, 0.5f, 0.8f);
     }
 
     public record Args(CCFuel fuel, CCBaseManager baseManager, CCKitManager kitManager, CCFuelListener fuelListener) {}

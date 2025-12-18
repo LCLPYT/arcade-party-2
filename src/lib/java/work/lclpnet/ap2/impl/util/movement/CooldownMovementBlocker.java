@@ -1,6 +1,6 @@
 package work.lclpnet.ap2.impl.util.movement;
 
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.level.ServerPlayer;
 import work.lclpnet.ap2.impl.util.handler.VisualCooldown;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
@@ -22,12 +22,12 @@ public class CooldownMovementBlocker implements MovementBlocker {
     }
 
     @Override
-    public void enableMovement(ServerPlayerEntity player) {
+    public void enableMovement(ServerPlayer player) {
         cooldown.resetCooldown(player);
     }
 
     @Override
-    public void disableMovement(ServerPlayerEntity player, int durationTicks) {
+    public void disableMovement(ServerPlayer player, int durationTicks) {
         if (durationTicks <= 0) return;
 
         applyAttributes(player);
@@ -36,7 +36,7 @@ public class CooldownMovementBlocker implements MovementBlocker {
     }
 
     @Override
-    public boolean isMovementDisabled(ServerPlayerEntity player) {
+    public boolean isMovementDisabled(ServerPlayer player) {
         return cooldown.isOnCooldown(player);
     }
 
@@ -50,7 +50,7 @@ public class CooldownMovementBlocker implements MovementBlocker {
         return modifySpeedAttribute;
     }
 
-    private void applyAttributes(ServerPlayerEntity player) {
+    private void applyAttributes(ServerPlayer player) {
         if (modifySpeedAttribute) {
             MovementListener.modifySpeedAttribute(player);
         }
@@ -58,7 +58,7 @@ public class CooldownMovementBlocker implements MovementBlocker {
         MovementListener.modifyJumpAttribute(player);
     }
 
-    private void resetAttributes(ServerPlayerEntity player) {
+    private void resetAttributes(ServerPlayer player) {
         if (modifySpeedAttribute) {
             MovementListener.resetSpeedAttributes(player);
         }

@@ -1,10 +1,10 @@
 package work.lclpnet.ap2.impl.game.kit;
 
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.registry.DynamicRegistryManager;
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 
 import java.util.List;
 
@@ -21,7 +21,7 @@ public class PrefabKit extends BaseKit {
     }
 
     @Override
-    public ItemStack createItemStack(DynamicRegistryManager manager) {
+    public ItemStack createItemStack(RegistryAccess manager) {
         if (items.isEmpty()) {
             return new ItemStack(Items.BARRIER);
         }
@@ -30,27 +30,27 @@ public class PrefabKit extends BaseKit {
     }
 
     @Override
-    public void equip(ServerPlayerEntity player, KitOptions options) {
-        PlayerInventory inventory = player.getInventory();
-        final int len = min(inventory.size(), items.size());
+    public void equip(ServerPlayer player, KitOptions options) {
+        Inventory inventory = player.getInventory();
+        final int len = min(inventory.getContainerSize(), items.size());
 
         for (int i = 0; i < len; i++) {
             if (i == options.kitSelectorSlot()) continue;
 
             ItemStack stack = items.get(i);
-            inventory.setStack(i, stack.copy());
+            inventory.setItem(i, stack.copy());
         }
     }
 
     @Override
-    public void unequip(ServerPlayerEntity player, KitOptions options) {
-        PlayerInventory inventory = player.getInventory();
-        final int len = min(inventory.size(), items.size());
+    public void unequip(ServerPlayer player, KitOptions options) {
+        Inventory inventory = player.getInventory();
+        final int len = min(inventory.getContainerSize(), items.size());
 
         for (int i = 0; i < len; i++) {
             if (i == options.kitSelectorSlot()) continue;
 
-            inventory.setStack(i, ItemStack.EMPTY);
+            inventory.setItem(i, ItemStack.EMPTY);
         }
     }
 }

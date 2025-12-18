@@ -1,9 +1,9 @@
 package work.lclpnet.ap2.game.mimicry.data;
 
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import work.lclpnet.ap2.impl.util.SoundHelper;
 import work.lclpnet.kibu.scheduler.api.RunningTask;
 import work.lclpnet.kibu.scheduler.api.SchedulerAction;
@@ -14,11 +14,11 @@ public class SequencePlayer implements SchedulerAction {
 
     private final MimicryManager manager;
     private final TaskScheduler scheduler;
-    private final ServerWorld world;
+    private final ServerLevel world;
     private int t;
     private int periodTicks = 12;
 
-    public SequencePlayer(MimicryManager manager, TaskScheduler scheduler, ServerWorld world) {
+    public SequencePlayer(MimicryManager manager, TaskScheduler scheduler, ServerLevel world) {
         this.manager = manager;
         this.scheduler = scheduler;
         this.world = world;
@@ -57,7 +57,7 @@ public class SequencePlayer implements SchedulerAction {
         manager.eachParticipant((player, room) -> {
             BlockPos pos = room.buttonPos(button);
 
-            SoundHelper.playSound(player, SoundEvents.BLOCK_NOTE_BLOCK_BIT.value(), SoundCategory.PLAYERS, pos.getX(), pos.getY(), pos.getZ(), 0.5f, pitch);
+            SoundHelper.playSound(player, SoundEvents.NOTE_BLOCK_BIT.value(), SoundSource.PLAYERS, pos.getX(), pos.getY(), pos.getZ(), 0.5f, pitch);
 
             room.setButtonActive(button, world);
         });

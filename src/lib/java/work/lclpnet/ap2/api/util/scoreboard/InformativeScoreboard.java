@@ -1,17 +1,17 @@
 package work.lclpnet.ap2.api.util.scoreboard;
 
-import net.minecraft.text.Text;
+import net.minecraft.network.chat.Component;
 import work.lclpnet.ap2.impl.util.scoreboard.ScoreHandle;
 import work.lclpnet.ap2.impl.util.scoreboard.ScoreboardLayout;
 import work.lclpnet.kibu.translate.text.TranslatedText;
 
 public interface InformativeScoreboard {
 
-    ScoreHandle createText(Text text, int position);
+    ScoreHandle createText(Component text, int position);
 
     ScoreHandle createText(TranslatedText text, int position);
 
-    default ScoreHandle createText(Text text) {
+    default ScoreHandle createText(Component text) {
         return createText(text, ScoreboardLayout.TOP);
     }
 
@@ -20,6 +20,6 @@ public interface InformativeScoreboard {
     }
 
     default void createNewline(int position) {
-        createText(Text.empty(), position);
+        createText(Component.empty(), position);
     }
 }

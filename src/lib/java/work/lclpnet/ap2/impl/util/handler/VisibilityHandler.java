@@ -1,21 +1,21 @@
 package work.lclpnet.ap2.impl.util.handler;
 
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.data.DataTracker;
-import net.minecraft.entity.player.ItemCooldownManager;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.network.packet.Packet;
-import net.minecraft.network.packet.s2c.play.EntityTrackerUpdateS2CPacket;
-import net.minecraft.server.network.ServerCommonNetworkHandler;
-import net.minecraft.server.network.ServerPlayNetworkHandler;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Style;
-import net.minecraft.text.Text;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Formatting;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
+import net.minecraft.network.protocol.Packet;
+import net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket;
+import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.network.ServerCommonPacketListenerImpl;
+import net.minecraft.server.network.ServerGamePacketListenerImpl;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemCooldowns;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import org.jetbrains.annotations.NotNull;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.kibu.access.entity.EntityAccess;
@@ -28,7 +28,7 @@ import work.lclpnet.kibu.translate.Translations;
 import java.util.ArrayList;
 import java.util.List;
 
-import static net.minecraft.util.Formatting.*;
+import static net.minecraft.ChatFormatting.*;
 
 public class VisibilityHandler {
 
@@ -47,29 +47,29 @@ public class VisibilityHandler {
 
     public void init(HookRegistrar hooks) {
         hooks.registerHook(PlayerInteractionHooks.USE_ITEM, (player, world, hand) -> {
-            if (!(player instanceof ServerPlayerEntity serverPlayer) || !participants.isParticipating(serverPlayer)) {
-                return ActionResult.PASS;
+            if (!(player instanceof ServerPlayer serverPlayer) || !participants.isParticipating(serverPlayer)) {
+                return InteractionResult.PASS;
             }
 
-            ItemStack stack = player.getStackInHand(hand);
+            ItemStack stack = player.getItemInHand(hand);
 
-            if (!stack.isOf(ITEM)) {
-                return ActionResult.PASS;
+            if (!stack.is(ITEM)) {
+                return InteractionResult.PASS;
             }
 
-            ItemCooldownManager cooldownManager = serverPlayer.getItemCooldownManager();
+            ItemCooldowns cooldownManager = serverPlayer.getCooldowns();
 
-            if (cooldownManager.isCoolingDown(stack)) {
-                return ActionResult.FAIL;
+            if (cooldownManager.isOnCooldown(stack)) {
+                return InteractionResult.FAIL;
             }
 
-            cooldownManager.set(stack, ITEM_COOLDOWN_TICKS);
+            cooldownManager.addCooldown(stack, ITEM_COOLDOWN_TICKS);
 
             manager.toggleVisibilityFor(serverPlayer);
 
             updateItemName(serverPlayer, stack);
 
-            return ActionResult.FAIL;
+            return InteractionResult.FAIL;
         });
 
         hooks.registerHook(ServerSendPacketCallback.HOOK, this::ensureRelativePlayerVisibility);
@@ -82,23 +82,23 @@ public class VisibilityHandler {
     }
 
     public void giveItems(int slot) {
-        for (ServerPlayerEntity player : participants) {
+        for (ServerPlayer player : participants) {
             giveItem(player, slot);
         }
     }
 
-    public void giveItem(ServerPlayerEntity player) {
+    public void giveItem(ServerPlayer player) {
         giveItem(player, 8);
     }
 
-    public void giveItem(ServerPlayerEntity player, int slot) {
+    public void giveItem(ServerPlayer player, int slot) {
         ItemStack stack = new ItemStack(ITEM);
         updateItemName(player, stack);
 
-        player.getInventory().setStack(slot, stack);
+        player.getInventory().setItem(slot, stack);
     }
 
-    public Text getItemNameFor(ServerPlayerEntity player) {
+    public Component getItemNameFor(ServerPlayer player) {
         Visibility visibility = manager.getVisibilityFor(player);
 
         String name = switch (visibility) {
@@ -107,7 +107,7 @@ public class VisibilityHandler {
             case INVISIBLE -> "invisible";
         };
 
-        Formatting formatting = switch (visibility) {
+        ChatFormatting formatting = switch (visibility) {
             case VISIBLE -> GREEN;
             case PARTIALLY_VISIBLE -> YELLOW;
             case INVISIBLE -> RED;
@@ -119,26 +119,26 @@ public class VisibilityHandler {
                 .setStyle(Style.EMPTY.withItalic(false).withColor(DARK_GREEN));
     }
 
-    public void updateItemName(ServerPlayerEntity player, ItemStack stack) {
-        stack.set(DataComponentTypes.CUSTOM_NAME, getItemNameFor(player));
+    public void updateItemName(ServerPlayer player, ItemStack stack) {
+        stack.set(DataComponents.CUSTOM_NAME, getItemNameFor(player));
     }
 
-    private PendingResult<Packet<?>> ensureRelativePlayerVisibility(Packet<?> packet, ServerCommonNetworkHandler handler) {
+    private PendingResult<Packet<?>> ensureRelativePlayerVisibility(Packet<?> packet, ServerCommonPacketListenerImpl handler) {
         // When a player should not see other participants, or only partially, they have to be invisible for the player.
         // This hook intercepts EntityTrackerUpdateS2CPacket targeting other players and ensures they are invisible.
         // Needs to be done this obscurely, because this needs manipulation of entity data for each player individually.
 
         // filter packet and visibility, this hook only needs to modify packets when other players should be invisible
-        if (!(packet instanceof EntityTrackerUpdateS2CPacket(int id, List<DataTracker.SerializedEntry<?>> trackedValues))
-            || !(handler instanceof ServerPlayNetworkHandler networkHandler)
+        if (!(packet instanceof ClientboundSetEntityDataPacket(int id, List<SynchedEntityData.DataValue<?>> trackedValues))
+            || !(handler instanceof ServerGamePacketListenerImpl networkHandler)
             || manager.getVisibilityFor(networkHandler.player) == Visibility.VISIBLE) {
             return PendingResult.pass();
         }
 
         // check if the packet target entity is another player
-        Entity entity = networkHandler.player.getEntityWorld().getEntityById(id);
+        Entity entity = networkHandler.player.level().getEntity(id);
 
-        if (!(entity instanceof ServerPlayerEntity) || entity == networkHandler.player) {
+        if (!(entity instanceof ServerPlayer) || entity == networkHandler.player) {
             return PendingResult.pass();
         }
 
@@ -158,7 +158,7 @@ public class VisibilityHandler {
             }
 
             var newEntries = modifyEntries(size, i, trackedValues, flags);
-            var modifiedPacket = new EntityTrackerUpdateS2CPacket(id, newEntries);
+            var modifiedPacket = new ClientboundSetEntityDataPacket(id, newEntries);
 
             return PendingResult.of(modifiedPacket);  // retain the old packet
         }
@@ -168,12 +168,12 @@ public class VisibilityHandler {
     }
 
     public boolean isVisibilityChanger(ItemStack stack) {
-        return stack.isOf(ITEM);
+        return stack.is(ITEM);
     }
 
     @NotNull
-    private static List<DataTracker.SerializedEntry<?>> modifyEntries(int size, int i, List<DataTracker.SerializedEntry<?>> entries, byte flags) {
-        var newEntries = new ArrayList<DataTracker.SerializedEntry<?>>(size);
+    private static List<SynchedEntityData.DataValue<?>> modifyEntries(int size, int i, List<SynchedEntityData.DataValue<?>> entries, byte flags) {
+        var newEntries = new ArrayList<SynchedEntityData.DataValue<?>>(size);
 
         // copy entries before the flags entry
         for (int j = 0; j < i; j++) {
@@ -182,7 +182,7 @@ public class VisibilityHandler {
 
         // add a modified flags entry with the invisibility flag set
         flags = EntityAccess.setFlag(flags, EntityAccess.INVISIBLE_FLAG_INDEX, true);
-        newEntries.add(DataTracker.SerializedEntry.of(EntityAccess.FLAGS, flags));
+        newEntries.add(SynchedEntityData.DataValue.create(EntityAccess.FLAGS, flags));
 
         // copy entries after the flags entry
         for (int j = i + 1; j < size; j++) {

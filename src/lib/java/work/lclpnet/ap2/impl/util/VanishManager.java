@@ -2,12 +2,12 @@ package work.lclpnet.ap2.impl.util;
 
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.PlayerManager;
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.players.PlayerList;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.core.hook.PlayerCanTrackCallback;
 import work.lclpnet.ap2.core.hook.PlayerListEntriesOnJoinCallback;
-import work.lclpnet.ap2.core.mixin.ServerChunkManagerAccessor;
+import work.lclpnet.ap2.core.mixin.ServerChunkCacheAccessor;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.ServerMessageHooks;
 
@@ -31,8 +31,8 @@ public class VanishManager {
 
         hooks.registerHook(ServerMessageHooks.ALLOW_CHAT_MESSAGE, (message, sender, params) -> {
             if (isVanished(sender)) {
-                for (ServerPlayerEntity player : PlayerLookup.all(server)) {
-                    player.networkHandler.sendProfilelessChatMessage(message.getContent(), params);
+                for (ServerPlayer player : PlayerLookup.all(server)) {
+                    player.connection.sendDisguisedChatMessage(message.decoratedContent(), params);
                 }
                 return false;
             }
@@ -41,35 +41,35 @@ public class VanishManager {
         });
 
         hooks.registerHook(PlayerCanTrackCallback.HOOK, (player, entity) -> {
-            if (!(entity instanceof ServerPlayerEntity subjectPlayer) || subjectPlayer == player) return true;
+            if (!(entity instanceof ServerPlayer subjectPlayer) || subjectPlayer == player) return true;
 
             return !isVanished(subjectPlayer);
         });
     }
 
-    public synchronized void vanish(ServerPlayerEntity player) {
+    public synchronized void vanish(ServerPlayer player) {
         synchronized (this) {
-            if (!vanished.add(player.getUuid())) return;
+            if (!vanished.add(player.getUUID())) return;
         }
 
         updateTrackingOf(player);
     }
 
-    public void show(ServerPlayerEntity player) {
+    public void show(ServerPlayer player) {
         synchronized (this) {
-            if (!vanished.remove(player.getUuid())) return;
+            if (!vanished.remove(player.getUUID())) return;
         }
 
         updateTrackingOf(player);
     }
 
-    private void updateTrackingOf(ServerPlayerEntity player) {
-        var chunkLoadingManager = ((ServerChunkManagerAccessor) player.getEntityWorld().getChunkManager()).getChunkLoadingManager();
-        chunkLoadingManager.updatePosition(player);
+    private void updateTrackingOf(ServerPlayer player) {
+        var chunkLoadingManager = ((ServerChunkCacheAccessor) player.level().getChunkSource()).getChunkMap();
+        chunkLoadingManager.move(player);
     }
 
-    public synchronized boolean isVanished(ServerPlayerEntity player) {
-        return vanished.contains(player.getUuid());
+    public synchronized boolean isVanished(ServerPlayer player) {
+        return vanished.contains(player.getUUID());
     }
 
     public void destroy() {
@@ -79,10 +79,10 @@ public class VanishManager {
             vanished = this.vanished.toArray(UUID[]::new);
         }
 
-        PlayerManager playerManager = server.getPlayerManager();
+        PlayerList playerManager = server.getPlayerList();
 
         for (UUID uuid : vanished) {
-            ServerPlayerEntity player = playerManager.getPlayer(uuid);
+            ServerPlayer player = playerManager.getPlayer(uuid);
 
             if (player != null) {
                 show(player);

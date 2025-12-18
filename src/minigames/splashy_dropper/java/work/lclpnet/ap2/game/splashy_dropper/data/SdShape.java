@@ -1,6 +1,6 @@
 package work.lclpnet.ap2.game.splashy_dropper.data;
 
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
 
 import java.util.HashSet;
 import java.util.Iterator;
@@ -25,7 +25,7 @@ public record SdShape(BlockPos[] positions, BlockPos[] adjacent) {
 
     public boolean hasSpace(Set<BlockPos> space, BlockPos pos) {
         for (BlockPos shapePos : positions) {
-            if (!space.contains(pos.add(shapePos))) {
+            if (!space.contains(pos.offset(shapePos))) {
                 return false;
             }
         }
@@ -60,8 +60,8 @@ public record SdShape(BlockPos[] positions, BlockPos[] adjacent) {
             throw new IllegalArgumentException("Square dimensions must be positive");
         }
 
-        var positions = BlockPos.stream(0, 0, 0, width - 1, 0, length - 1)
-                .map(BlockPos::toImmutable)
+        var positions = BlockPos.betweenClosedStream(0, 0, 0, width - 1, 0, length - 1)
+                .map(BlockPos::immutable)
                 .toArray(BlockPos[]::new);
 
         return new SdShape(positions);
@@ -72,7 +72,7 @@ public record SdShape(BlockPos[] positions, BlockPos[] adjacent) {
 
         for (BlockPos pos : positions) {
             for (int i = 0; i < ADJ_OFFSETS.length; i += 2) {
-                set.add(pos.add(ADJ_OFFSETS[i], 0, ADJ_OFFSETS[i + 1]));
+                set.add(pos.offset(ADJ_OFFSETS[i], 0, ADJ_OFFSETS[i + 1]));
             }
         }
 

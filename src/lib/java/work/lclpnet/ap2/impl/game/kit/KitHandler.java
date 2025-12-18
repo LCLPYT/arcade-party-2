@@ -3,16 +3,16 @@ package work.lclpnet.ap2.impl.game.kit;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import lombok.Getter;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Formatting;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.impl.game.GameCommons;
@@ -50,22 +50,22 @@ public class KitHandler {
 
     public void init(HookRegistrar hooks) {
         hooks.registerHook(PlayerInteractionHooks.USE_ITEM, (_player, world, hand) -> {
-            if (!(_player instanceof ServerPlayerEntity player) || !participants.isParticipating(player)) {
-                return ActionResult.PASS;
+            if (!(_player instanceof ServerPlayer player) || !participants.isParticipating(player)) {
+                return InteractionResult.PASS;
             }
 
-            ItemStack stack = player.getStackInHand(hand);
+            ItemStack stack = player.getItemInHand(hand);
 
             if (isKitSelector(stack) && canChangeKit(player)) {
                 openKitSelector(player);
-                return ActionResult.SUCCESS_SERVER;
+                return InteractionResult.SUCCESS_SERVER;
             }
 
-            return ActionResult.PASS;
+            return InteractionResult.PASS;
         });
     }
 
-    public synchronized void openKitSelector(ServerPlayerEntity player) {
+    public synchronized void openKitSelector(ServerPlayer player) {
         RootText title = kitHandle.translations().translateText(player, "ap2.kit_selector");
         List<Kit> kits = manager.getKits();
 
@@ -74,20 +74,20 @@ public class KitHandler {
                         .ifPresent(kit -> changeKit(player, kit)));
     }
 
-    public synchronized void changeKit(ServerPlayerEntity player, Kit kit) {
-        if (!mayChangeKit.contains(player.getUuid())) return;
+    public synchronized void changeKit(ServerPlayer player, Kit kit) {
+        if (!mayChangeKit.contains(player.getUUID())) return;
 
         manager.changeKit(player, kit);
 
-        kitHandle.translations().translateText("ap2.kit_selector.selected", kitHandle.kitName(kit).formatted(Formatting.AQUA))
-                .formatted(Formatting.GREEN)
+        kitHandle.translations().translateText("ap2.kit_selector.selected", kitHandle.kitName(kit).formatted(ChatFormatting.AQUA))
+                .formatted(ChatFormatting.GREEN)
                 .sendTo(player);
 
-        player.playSoundToPlayer(SoundEvents.BLOCK_NOTE_BLOCK_PLING.value(), SoundCategory.NEUTRAL, 0.5f, 2f);
+        player.playNotifySound(SoundEvents.NOTE_BLOCK_PLING.value(), SoundSource.NEUTRAL, 0.5f, 2f);
     }
 
-    public synchronized boolean canChangeKit(ServerPlayerEntity player) {
-        return mayChangeKit.contains(player.getUuid());
+    public synchronized boolean canChangeKit(ServerPlayer player) {
+        return mayChangeKit.contains(player.getUUID());
     }
 
     public void setupPlayerKits() {
@@ -98,53 +98,53 @@ public class KitHandler {
         participants.forEach(this::enableKitChanger);
     }
 
-    public synchronized void enableKitChanger(ServerPlayerEntity player) {
-        mayChangeKit.add(player.getUuid());
+    public synchronized void enableKitChanger(ServerPlayer player) {
+        mayChangeKit.add(player.getUUID());
 
         var stack = new ItemStack(KIT_SELECTOR_ITEM);
 
-        stack.set(DataComponentTypes.ITEM_NAME, kitHandle.translations().translateText(player, "ap2.kit_selector")
-                .formatted(Formatting.AQUA));
+        stack.set(DataComponents.ITEM_NAME, kitHandle.translations().translateText(player, "ap2.kit_selector")
+                .formatted(ChatFormatting.AQUA));
 
         CustomNbt.set(stack, KIT_SELECTOR_CODEC, true);
 
-        player.getInventory().setStack(manager.getOptions().kitSelectorSlot(), stack);
+        player.getInventory().setItem(manager.getOptions().kitSelectorSlot(), stack);
     }
 
     public void disableKitChanger() {
         participants.forEach(this::disableKitChanger);
     }
 
-    public synchronized void disableKitChanger(ServerPlayerEntity player) {
-        mayChangeKit.remove(player.getUuid());
+    public synchronized void disableKitChanger(ServerPlayer player) {
+        mayChangeKit.remove(player.getUUID());
 
         closeKitChanger(player);
 
-        player.getInventory().removeStack(manager.getOptions().kitSelectorSlot());
+        player.getInventory().removeItemNoUpdate(manager.getOptions().kitSelectorSlot());
     }
 
     public void closeKitChanger() {
         participants.forEach(this::closeKitChanger);
     }
 
-    public void closeKitChanger(ServerPlayerEntity player) {
-        player.closeHandledScreen();
+    public void closeKitChanger(ServerPlayer player) {
+        player.closeContainer();
     }
 
     public boolean isKitSelector(ItemStack stack) {
-        if (!stack.isOf(KIT_SELECTOR_ITEM)) return false;
+        if (!stack.is(KIT_SELECTOR_ITEM)) return false;
 
         return CustomNbt.get(stack, KIT_SELECTOR_CODEC).orElse(false);
     }
 
     public void selectKitChanger() {
-        for (ServerPlayerEntity player : participants) {
+        for (ServerPlayer player : participants) {
             PlayerInventoryAccess.setSelectedSlot(player, manager.getOptions().kitSelectorSlot());
         }
     }
 
     public void selectKitItem() {
-        for (ServerPlayerEntity player : participants) {
+        for (ServerPlayer player : participants) {
             PlayerInventoryAccess.setSelectedSlot(player, manager.getOptions().mainItemSlot());
         }
     }
@@ -184,9 +184,9 @@ public class KitHandler {
         selectKitChanger();
     }
 
-    public static KitHandler create(MiniGameHandle gameHandle, ServerWorld world, Function<KitHandle, List<Kit>> kitsFactory) {
+    public static KitHandler create(MiniGameHandle gameHandle, ServerLevel world, Function<KitHandle, List<Kit>> kitsFactory) {
         var readView = new ProxyKitReadView();
-        var handle = RecordKitHandle.of(gameHandle, world.getRegistryManager(), readView);
+        var handle = RecordKitHandle.of(gameHandle, world.registryAccess(), readView);
 
         var manager = new KitManager(kitsFactory.apply(handle));
 

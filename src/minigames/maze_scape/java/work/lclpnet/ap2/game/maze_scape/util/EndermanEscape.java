@@ -1,13 +1,12 @@
 package work.lclpnet.ap2.game.maze_scape.util;
 
-import net.minecraft.block.Blocks;
-import net.minecraft.entity.ai.pathing.Path;
-import net.minecraft.entity.ai.pathing.PathNode;
-import net.minecraft.entity.mob.EndermanEntity;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.monster.EnderMan;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.pathfinder.Path;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.game.maze_scape.gen.Node;
@@ -41,8 +40,8 @@ public class EndermanEscape {
         this.debugController = debugController;
     }
 
-    public Optional<Path> findEscapePath(EndermanEntity mob) {
-        Vec3d mobPos = mob.getEntityPos();
+    public Optional<Path> findEscapePath(EnderMan mob) {
+        Vec3 mobPos = mob.position();
         var entityNode = struct.nodeAt(mobPos);
 
         if (entityNode == null) return Optional.empty();
@@ -64,7 +63,7 @@ public class EndermanEscape {
 
             if (oriented == null) continue;
 
-            Vec3d spawn = oriented.spawn();
+            Vec3 spawn = oriented.spawn();
 
             if (spawn != null) {
                 Path path = escapePath(spawn, mob);
@@ -75,7 +74,7 @@ public class EndermanEscape {
             }
 
             for (Passage passage : struct.passagesOf(node)) {
-                Path path = escapePath(passage.pos().toBottomCenterPos(), mob);
+                Path path = escapePath(passage.pos().getBottomCenter(), mob);
 
                 if (path != null) {
                     if (leadingToAny(mobPos, path)) continue;
@@ -94,36 +93,36 @@ public class EndermanEscape {
         if (DEBUG_FLEE_POSITIONS) {
             debugController.parent().renderer().ifPresent(renderer -> debugController.parent().exclusive("flee_positions", c -> paths.stream()
                     .map(Path::getTarget)
-                    .map(BlockPos::toBottomCenterPos)
-                    .forEach(pos -> renderer.marker(pos, Blocks.MAGENTA_TERRACOTTA.getDefaultState(), 0xd808db))));
+                    .map(BlockPos::getBottomCenter)
+                    .forEach(pos -> renderer.marker(pos, Blocks.MAGENTA_TERRACOTTA.defaultBlockState(), 0xd808db))));
         }
 
-        return paths.stream().min(Comparator.comparingInt(Path::getLength));
+        return paths.stream().min(Comparator.comparingInt(Path::getNodeCount));
     }
 
-    private @Nullable Path escapePath(Vec3d pos, EndermanEntity mob) {
+    private @Nullable Path escapePath(Vec3 pos, EnderMan mob) {
         if (visibilityChecker.isAnyoneLookingAt(mob, pos, participants)) {
             return null;
         }
 
-        return mob.getNavigation().findPathTo(BlockPos.ofFloored(pos), 0);
+        return mob.getNavigation().createPath(BlockPos.containing(pos), 0);
     }
 
-    private boolean leadingToAny(Vec3d startPos, Path path) {
-        Vec3d startingDir = startingDirection(BlockPos.ofFloored(startPos), path).withAxis(Direction.Axis.Y, 0).normalize();
+    private boolean leadingToAny(Vec3 startPos, Path path) {
+        Vec3 startingDir = startingDirection(BlockPos.containing(startPos), path).with(Direction.Axis.Y, 0).normalize();
 
         if (!isUnit(startingDir)) return false;
 
         final double maxDistSq = 32 * 32;
 
-        for (ServerPlayerEntity player : participants) {
-            if (player.squaredDistanceTo(startPos) > maxDistSq) continue;
+        for (ServerPlayer player : participants) {
+            if (player.distanceToSqr(startPos) > maxDistSq) continue;
 
-            Vec3d playerDir = player.getEntityPos().subtract(startPos).withAxis(Direction.Axis.Y, 0).normalize();
+            Vec3 playerDir = player.position().subtract(startPos).with(Direction.Axis.Y, 0).normalize();
 
             if (!isUnit(playerDir)) continue;
 
-            double angle = acos(playerDir.dotProduct(startingDir));
+            double angle = acos(playerDir.dot(startingDir));
 
             if (angle < toRadians(FLEE_MIN_ANGLE_DEG)) {
                 return true;
@@ -133,15 +132,15 @@ public class EndermanEscape {
         return false;
     }
 
-    private static boolean isUnit(Vec3d playerDir) {
-        return abs(playerDir.lengthSquared() - 1) < 1e-4;
+    private static boolean isUnit(Vec3 playerDir) {
+        return abs(playerDir.lengthSqr() - 1) < 1e-4;
     }
 
-    private Vec3d startingDirection(BlockPos start, Path path) {
-        int samples = min(4, path.getLength() - 1);
+    private Vec3 startingDirection(BlockPos start, Path path) {
+        int samples = min(4, path.getNodeCount() - 1);
 
         if (samples <= 0) {
-            return Vec3d.ZERO;
+            return Vec3.ZERO;
         }
 
         final int sx = start.getX(), sy = start.getY(), sz = start.getZ();
@@ -149,12 +148,12 @@ public class EndermanEscape {
 
         // first position is the start pos, don't count it as it will be zero
         for (int i = 1; i <= samples; i++) {
-            PathNode node = path.getNode(i);
-            BlockPos pos = node.getBlockPos();
+            var node = path.getNode(i);
+            BlockPos pos = node.asBlockPos();
 
             if (DEBUG_FLEE_PATHS) {
                 debugController.parent().renderer().ifPresent(renderer ->
-                        renderer.marker(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, Blocks.BLACK_CONCRETE.getDefaultState(), 0));
+                        renderer.marker(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5, Blocks.BLACK_CONCRETE.defaultBlockState(), 0));
             }
 
             x += (pos.getX() - sx);
@@ -162,6 +161,6 @@ public class EndermanEscape {
             z += (pos.getZ() - sz);
         }
 
-        return new Vec3d(x / samples, y / samples, z / samples).normalize();
+        return new Vec3(x / samples, y / samples, z / samples).normalize();
     }
 }

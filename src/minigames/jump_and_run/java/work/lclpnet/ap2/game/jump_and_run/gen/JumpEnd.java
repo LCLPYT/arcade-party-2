@@ -1,7 +1,7 @@
 package work.lclpnet.ap2.game.jump_and_run.gen;
 
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.impl.util.structure.StructureUtil;
 import work.lclpnet.gaco.ds.BlockBox;

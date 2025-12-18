@@ -1,6 +1,6 @@
 package work.lclpnet.ap2.api.game.data;
 
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -9,8 +9,8 @@ import org.jetbrains.annotations.Nullable;
  * If the player has no subject, null will be returned.
  * @param <Ref> The SubjectRef type.
  */
-public interface PlayerSubjectRefFactory<Ref extends SubjectRef> extends SubjectRefFactory<ServerPlayerEntity, Ref> {
+public interface PlayerSubjectRefFactory<Ref extends SubjectRef> extends SubjectRefFactory<ServerPlayer, Ref> {
 
     @Nullable
-    Ref create(ServerPlayerEntity subject);
+    Ref create(ServerPlayer subject);
 }

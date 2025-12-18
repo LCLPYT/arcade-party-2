@@ -2,10 +2,10 @@ package work.lclpnet.ap2.core.mixin;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.ai.control.MoveControl;
-import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.registry.tag.TagKey;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.control.MoveControl;
+import net.minecraft.world.level.block.state.BlockState;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -20,15 +20,15 @@ import work.lclpnet.ap2.core.type.ApEntity;
 @Mixin(MoveControl.class)
 public class MoveControlMixin {
 
-    @Shadow @Final protected MobEntity entity;
+    @Shadow @Final protected Mob mob;
 
-    @Shadow protected MoveControl.State state;
+    @Shadow protected MoveControl.Operation operation;
 
     @WrapOperation(
             method = "tick",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/block/BlockState;isIn(Lnet/minecraft/registry/tag/TagKey;)Z",
+                    target = "Lnet/minecraft/world/level/block/state/BlockState;is(Lnet/minecraft/tags/TagKey;)Z",
                     ordinal = 0
             )
     )
@@ -38,7 +38,7 @@ public class MoveControlMixin {
         }
 
         // if enabled, prevent jumping when passing open trapdoors
-        if (!((ApEntity) this.entity).ap2$isPatchTrapdoorJumping()) {
+        if (!((ApEntity) this.mob).ap2$isPatchTrapdoorJumping()) {
             return false;
         }
 
@@ -49,15 +49,15 @@ public class MoveControlMixin {
             method = "tick",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/block/BlockState;getCollisionShape(Lnet/minecraft/world/BlockView;Lnet/minecraft/util/math/BlockPos;)Lnet/minecraft/util/shape/VoxelShape;"
+                    target = "Lnet/minecraft/world/level/block/state/BlockState;getCollisionShape(Lnet/minecraft/world/level/BlockGetter;Lnet/minecraft/core/BlockPos;)Lnet/minecraft/world/phys/shapes/VoxelShape;"
             )
     )
     public void ap2$customJumpBehaviour(CallbackInfo ci) {
-        if (!((ApEntity) this.entity).ap2$isPatchTrapdoorJumping()) return;
+        if (!((ApEntity) this.mob).ap2$isPatchTrapdoorJumping()) return;
 
-        if (TrapdoorJumpPatch.shouldJump(entity)) {
-            this.entity.getJumpControl().setActive();
-            this.state = MoveControl.State.JUMPING;
+        if (TrapdoorJumpPatch.shouldJump(mob)) {
+            this.mob.getJumpControl().jump();
+            this.operation = MoveControl.Operation.JUMPING;
         }
     }
 
@@ -66,19 +66,19 @@ public class MoveControlMixin {
             at = @At("RETURN")
     )
     public void ap2$afterMoveTick(CallbackInfo ci) {
-        EntityAfterMoveCallback.HOOK.invoker().afterMoveTick(entity);
+        EntityAfterMoveCallback.HOOK.invoker().afterMoveTick(mob);
     }
 
     @ModifyArg(
             method = "tick",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/entity/ai/control/MoveControl;wrapDegrees(FFF)F"
+                    target = "Lnet/minecraft/world/entity/ai/control/MoveControl;rotlerp(FFF)F"
             ),
             index = 0
     )
     private float ap2$modifyMovementYaw(float yaw) {
-        var handle = (ApEntity) entity;
+        var handle = (ApEntity) mob;
 
         if (handle.ap2$isUseMovementYaw()) {
             return handle.ap2$getMovementYaw();

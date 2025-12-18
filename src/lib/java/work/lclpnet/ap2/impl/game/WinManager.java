@@ -2,7 +2,7 @@ package work.lclpnet.ap2.impl.game;
 
 import lombok.Getter;
 import lombok.Setter;
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.game.GameOverListener;
@@ -136,7 +136,7 @@ public class WinManager<T, Ref extends SubjectRef> {
 
     public record Data<T, Ref extends SubjectRef>(
             Supplier<DataContainer<T, Ref>> supplier,
-            Function<ServerPlayerEntity, Optional<T>> subjectMapper,
+            Function<ServerPlayer, Optional<T>> subjectMapper,
             SubjectRefFactory<T, Ref> subjectRefs,
             PlayerSubjectRefFactory<Ref> playerRefs,
             Function<DataContainer<T, Ref>, GenericGameResult<Ref>> winnersFactory

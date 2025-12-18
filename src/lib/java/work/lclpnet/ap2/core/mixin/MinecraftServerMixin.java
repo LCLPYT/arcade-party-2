@@ -1,7 +1,7 @@
 package work.lclpnet.ap2.core.mixin;
 
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.PlayerConfigEntry;
+import net.minecraft.server.players.NameAndId;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -15,11 +15,11 @@ public class MinecraftServerMixin {
     private boolean onlineMode;
 
     @Inject(
-            method = "getPermissionLevel",
+            method = "getProfilePermissions",
             at = @At("RETURN"),
             cancellable = true
     )
-    private void ap2$offlineModePermissionLevel(PlayerConfigEntry player, CallbackInfoReturnable<Integer> cir) {
+    private void ap2$offlineModePermissionLevel(NameAndId player, CallbackInfoReturnable<Integer> cir) {
         if (onlineMode) return;
 
         String property = System.getProperty("ap2.offline_all_operators", "false");

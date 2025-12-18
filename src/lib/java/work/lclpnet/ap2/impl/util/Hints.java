@@ -1,13 +1,13 @@
 package work.lclpnet.ap2.impl.util;
 
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
+import net.minecraft.network.chat.ClickEvent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.HoverEvent;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.ClickEvent;
-import net.minecraft.text.HoverEvent;
-import net.minecraft.text.Text;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.impl.game.BaseGameInstance;
 import work.lclpnet.kibu.scheduler.Ticks;
@@ -18,7 +18,7 @@ import java.net.URI;
 import java.util.function.Predicate;
 
 import static java.lang.Math.max;
-import static net.minecraft.util.Formatting.*;
+import static net.minecraft.ChatFormatting.*;
 
 public class Hints {
 
@@ -36,14 +36,14 @@ public class Hints {
     }
 
     public void sendModHint(Mod mod) {
-        for (ServerPlayerEntity player : PlayerLookup.all(server)) {
+        for (ServerPlayer player : PlayerLookup.all(server)) {
             if (mod.installed().test(player)) continue;
 
-            var modLabel = Text.literal(mod.name() + " ↗")
-                    .styled(style -> style
+            var modLabel = Component.literal(mod.name() + " ↗")
+                    .withStyle(style -> style
                             .withColor(0x145ee8)
                             .withBold(false)
-                            .withUnderline(true)
+                            .withUnderlined(true)
                             .withHoverEvent(new HoverEvent.ShowText(translations.translateText(player, "ap2.hint.click_open", mod.link().toString())))
                             .withClickEvent(new ClickEvent.OpenUrl(mod.link())));
 
@@ -54,8 +54,8 @@ public class Hints {
             var hint = translations.translateText(player, "ap2.hint", sub)
                     .formatted(RED, BOLD);
 
-            player.sendMessage(hint);
-            player.playSoundToPlayer(SoundEvents.ENTITY_CHICKEN_EGG, SoundCategory.PLAYERS, 0.5f, 0.5f);
+            player.sendSystemMessage(hint);
+            player.playNotifySound(SoundEvents.CHICKEN_EGG, SoundSource.PLAYERS, 0.5f, 0.5f);
         }
     }
 
@@ -66,7 +66,7 @@ public class Hints {
                 max(0, gameInstance.getInitialDelay() - Ticks.seconds(3)));
     }
 
-    public record Mod(String name, URI link, Predicate<ServerPlayerEntity> installed) {
+    public record Mod(String name, URI link, Predicate<ServerPlayer> installed) {
 
         public static final Mod NOTICA = new Mod(
                 "Notica",

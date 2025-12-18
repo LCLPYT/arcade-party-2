@@ -1,6 +1,6 @@
 package work.lclpnet.ap2.util.world
 
-import net.minecraft.util.math.BlockPos
+import net.minecraft.core.BlockPos
 import work.lclpnet.ap2.api.util.world.AdjacentBlocks
 
 data class ScannerNode(
@@ -35,7 +35,7 @@ class BfsContextScanner(val adjacentBlocks: AdjacentBlocks) {
                 for (pos in adjacentBlocks.getAdjacent(node.pos)) {
                     if (known.contains(pos)) continue
 
-                    val copy = pos.toImmutable()
+                    val copy = pos.immutable()
 
                     queue.add(ScannerNode(copy, node.distance + 1))
                     known.add(copy)

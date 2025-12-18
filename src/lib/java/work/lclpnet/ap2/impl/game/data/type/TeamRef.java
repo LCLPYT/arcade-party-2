@@ -1,9 +1,9 @@
 package work.lclpnet.ap2.impl.game.data.type;
 
-import net.minecraft.item.ItemStack;
-import net.minecraft.registry.DynamicRegistryManager;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
 import work.lclpnet.ap2.api.game.data.SubjectRef;
 import work.lclpnet.ap2.api.game.team.TeamKey;
 import work.lclpnet.ap2.api.game.team.TeamKeyable;
@@ -24,13 +24,13 @@ public class TeamRef implements SubjectRef, TeamKeyable {
     }
 
     @Override
-    public Text getNameFor(ServerPlayerEntity viewer) {
+    public Component getNameFor(ServerPlayer viewer) {
         return translations.translateText(viewer, key.getTranslationKey())
                 .styled(style -> style.withColor(key.color()));
     }
 
     @Override
-    public ItemStack getIconStackFor(DynamicRegistryManager registryManager, ServerPlayerEntity viewer) {
+    public ItemStack getIconStackFor(RegistryAccess registryManager, ServerPlayer viewer) {
         return new ItemStack(BlockHelper.getWool(ColorUtil.closestEntityDyeColor(key.color())));
     }
 

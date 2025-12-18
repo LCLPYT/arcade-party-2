@@ -1,13 +1,13 @@
 package work.lclpnet.ap2.game.maze_scape.monster;
 
-import net.minecraft.entity.mob.CreakingEntity;
+import net.minecraft.world.entity.monster.creaking.Creaking;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.game.maze_scape.monster.behaviour.ValidPositionBehaviour;
 import work.lclpnet.ap2.impl.util.VisibilityChecker;
 
 import java.util.List;
 
-public class CreakingData implements MonsterData<CreakingEntity> {
+public class CreakingData implements MonsterData<Creaking> {
 
     private final MonsterArgs args;
     private final CommonData common;
@@ -24,8 +24,8 @@ public class CreakingData implements MonsterData<CreakingEntity> {
     }
 
     @Override
-    public @Nullable CreakingEntity mob() {
-        if (common.mob() instanceof CreakingEntity creaking) {
+    public @Nullable Creaking mob() {
+        if (common.mob() instanceof Creaking creaking) {
             return creaking;
         }
 
@@ -33,21 +33,21 @@ public class CreakingData implements MonsterData<CreakingEntity> {
     }
 
     @Override
-    public void init(CreakingEntity mob) {
+    public void init(Creaking mob) {
         common.init(mob);
     }
 
     @Override
-    public void tick(CreakingEntity mob) {
+    public void tick(Creaking mob) {
         common.tick(mob);
     }
 
     @Override
-    public void onKillAcquired(CreakingEntity mob) {
+    public void onKillAcquired(Creaking mob) {
         common.onKillAcquired(mob);
     }
 
-    public boolean isBeingLookedAt(CreakingEntity mob) {
-        return visibilityChecker.isAnyoneLookingAt(mob, mob.getEntityPos(), args.manager().participants());
+    public boolean isBeingLookedAt(Creaking mob) {
+        return visibilityChecker.isAnyoneLookingAt(mob, mob.position(), args.manager().participants());
     }
 }

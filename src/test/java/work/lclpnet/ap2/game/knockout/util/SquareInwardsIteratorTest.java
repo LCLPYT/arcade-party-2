@@ -1,6 +1,6 @@
 package work.lclpnet.ap2.game.knockout.util;
 
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -16,7 +16,7 @@ class SquareInwardsIteratorTest {
         var list = new ArrayList<BlockPos>(25);
 
         while (it.hasNext()) {
-            list.add(it.next().toImmutable());
+            list.add(it.next().immutable());
         }
 
         assertEquals(25, list.size());

@@ -5,11 +5,11 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.text.Text;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.game.guess_it.data.*;
@@ -29,7 +29,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import static java.lang.Math.floor;
-import static net.minecraft.server.command.CommandManager.argument;
+import static net.minecraft.commands.Commands.argument;
 
 public class BlockCountChallenge<S extends BlockShape & BlockShape.WithRadius & BlockShape.WithHeight> implements Challenge, SchedulerAction {
 
@@ -91,7 +91,7 @@ public class BlockCountChallenge<S extends BlockShape & BlockShape.WithRadius & 
 
         for (BlockPos pos : shape.bounds()) {
             if (shape.contains(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5)) {
-                blocks.add(pos.toImmutable());
+                blocks.add(pos.immutable());
             }
         }
 
@@ -106,18 +106,18 @@ public class BlockCountChallenge<S extends BlockShape & BlockShape.WithRadius & 
                 .max().orElse(-1);
 
         state = switch (random.nextInt(12)) {
-            case 0 -> Blocks.DIAMOND_BLOCK.getDefaultState();
-            case 1 -> Blocks.GOLD_BLOCK.getDefaultState();
-            case 2 -> Blocks.EMERALD_BLOCK.getDefaultState();
-            case 3 -> Blocks.IRON_BLOCK.getDefaultState();
-            case 4 -> Blocks.REDSTONE_BLOCK.getDefaultState();
-            case 5 -> Blocks.LAPIS_BLOCK.getDefaultState();
-            case 6 -> Blocks.COAL_BLOCK.getDefaultState();
-            case 7 -> Blocks.AMETHYST_BLOCK.getDefaultState();
-            case 8 -> Blocks.NETHERITE_BLOCK.getDefaultState();
-            case 9 -> Blocks.SMOOTH_QUARTZ.getDefaultState();
-            case 10 -> Blocks.CRYING_OBSIDIAN.getDefaultState();
-            case 11 -> Blocks.RESIN_BLOCK.getDefaultState();
+            case 0 -> Blocks.DIAMOND_BLOCK.defaultBlockState();
+            case 1 -> Blocks.GOLD_BLOCK.defaultBlockState();
+            case 2 -> Blocks.EMERALD_BLOCK.defaultBlockState();
+            case 3 -> Blocks.IRON_BLOCK.defaultBlockState();
+            case 4 -> Blocks.REDSTONE_BLOCK.defaultBlockState();
+            case 5 -> Blocks.LAPIS_BLOCK.defaultBlockState();
+            case 6 -> Blocks.COAL_BLOCK.defaultBlockState();
+            case 7 -> Blocks.AMETHYST_BLOCK.defaultBlockState();
+            case 8 -> Blocks.NETHERITE_BLOCK.defaultBlockState();
+            case 9 -> Blocks.SMOOTH_QUARTZ.defaultBlockState();
+            case 10 -> Blocks.CRYING_OBSIDIAN.defaultBlockState();
+            case 11 -> Blocks.RESIN_BLOCK.defaultBlockState();
             default -> throw new IllegalStateException();
         };
 
@@ -181,13 +181,13 @@ public class BlockCountChallenge<S extends BlockShape & BlockShape.WithRadius & 
     }
 
     @Override
-    public void provideInitCommand(LiteralArgumentBuilder<ServerCommandSource> node, Initializer init) {
+    public void provideInitCommand(LiteralArgumentBuilder<CommandSourceStack> node, Initializer init) {
         node.then(argument("shape", StringArgumentType.word())
                 .suggests(this::suggestShapes)
                 .executes(ctx -> setShape(ctx, init)));
     }
 
-    private CompletableFuture<Suggestions> suggestShapes(CommandContext<ServerCommandSource> ctx, SuggestionsBuilder builder) {
+    private CompletableFuture<Suggestions> suggestShapes(CommandContext<CommandSourceStack> ctx, SuggestionsBuilder builder) {
         for (String shape : shapeManager.getShapes()) {
             builder.suggest(shape);
         }
@@ -195,11 +195,11 @@ public class BlockCountChallenge<S extends BlockShape & BlockShape.WithRadius & 
         return builder.buildFuture();
     }
 
-    private int setShape(CommandContext<ServerCommandSource> ctx, Initializer init) {
+    private int setShape(CommandContext<CommandSourceStack> ctx, Initializer init) {
         String str = StringArgumentType.getString(ctx, "shape");
 
         if (!shapeManager.getShapes().contains(str)) {
-            ctx.getSource().sendError(Text.literal("Unknown shape \"%s\"".formatted(str)));
+            ctx.getSource().sendFailure(Component.literal("Unknown shape \"%s\"".formatted(str)));
             return 0;
         }
 

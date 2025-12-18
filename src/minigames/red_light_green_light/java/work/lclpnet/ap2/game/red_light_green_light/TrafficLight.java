@@ -1,9 +1,9 @@
 package work.lclpnet.ap2.game.red_light_green_light;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 import org.json.JSONObject;
 import work.lclpnet.ap2.impl.map.MapUtil;
 
@@ -11,25 +11,25 @@ import java.util.EnumSet;
 
 public record TrafficLight(BlockPos red, BlockPos yellow, BlockPos green) {
 
-    public void set(EnumSet<Status> status, ServerWorld world) {
-        BlockState off = Blocks.BLACK_CONCRETE.getDefaultState();
+    public void set(EnumSet<Status> status, ServerLevel world) {
+        BlockState off = Blocks.BLACK_CONCRETE.defaultBlockState();
 
         if (status.contains(Status.RED)) {
-            world.setBlockState(red, Blocks.RED_CONCRETE.getDefaultState());
+            world.setBlockAndUpdate(red, Blocks.RED_CONCRETE.defaultBlockState());
         } else {
-            world.setBlockState(red, off);
+            world.setBlockAndUpdate(red, off);
         }
 
         if (status.contains(Status.YELLOW)) {
-            world.setBlockState(yellow, Blocks.YELLOW_CONCRETE.getDefaultState());
+            world.setBlockAndUpdate(yellow, Blocks.YELLOW_CONCRETE.defaultBlockState());
         } else {
-            world.setBlockState(yellow, off);
+            world.setBlockAndUpdate(yellow, off);
         }
 
         if (status.contains(Status.GREEN)) {
-            world.setBlockState(green, Blocks.LIME_CONCRETE.getDefaultState());
+            world.setBlockAndUpdate(green, Blocks.LIME_CONCRETE.defaultBlockState());
         } else {
-            world.setBlockState(green, off);
+            world.setBlockAndUpdate(green, off);
         }
     }
 

@@ -1,6 +1,6 @@
 package work.lclpnet.ap2.api.game.team;
 
-import net.minecraft.util.Formatting;
+import net.minecraft.ChatFormatting;
 
 public sealed interface TeamKey permits DyeTeamKey {
 
@@ -8,7 +8,7 @@ public sealed interface TeamKey permits DyeTeamKey {
 
     int color();
 
-    Formatting formatting();
+    ChatFormatting formatting();
 
     default String getTranslationKey() {
         return "ap2.team." + id();

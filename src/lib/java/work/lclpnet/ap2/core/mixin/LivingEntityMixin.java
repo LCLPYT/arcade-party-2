@@ -1,8 +1,8 @@
 package work.lclpnet.ap2.core.mixin;
 
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.level.Level;
 import org.objectweb.asm.Opcodes;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -23,12 +23,12 @@ public class LivingEntityMixin implements ApLivingEntity {
             method = "<init>",
             at = @At(
                     value = "FIELD",
-                    target = "Lnet/minecraft/entity/LivingEntity;attributes:Lnet/minecraft/entity/attribute/AttributeContainer;",
+                    target = "Lnet/minecraft/world/entity/LivingEntity;attributes:Lnet/minecraft/world/entity/ai/attributes/AttributeMap;",
                     opcode = Opcodes.PUTFIELD,
                     shift = At.Shift.AFTER
             )
     )
-    public void ap2$afterAttributesInitialized(EntityType<?> entityType, World world, CallbackInfo ci) {
+    public void ap2$afterAttributesInitialized(EntityType<?> entityType, Level world, CallbackInfo ci) {
         var self = (LivingEntity) (Object) this;
 
         LivingEntityAttributeInitCallback.HOOK.invoker().onAttributesInitialized(self);
@@ -51,10 +51,10 @@ public class LivingEntityMixin implements ApLivingEntity {
     }
 
     @Inject(
-            method = "addPowderSnowSlowIfNeeded",
+            method = "tryAddFrost",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/entity/attribute/EntityAttributeInstance;addTemporaryModifier(Lnet/minecraft/entity/attribute/EntityAttributeModifier;)V"
+                    target = "Lnet/minecraft/world/entity/ai/attributes/AttributeInstance;addTransientModifier(Lnet/minecraft/world/entity/ai/attributes/AttributeModifier;)V"
             ),
             cancellable = true
     )
@@ -67,10 +67,10 @@ public class LivingEntityMixin implements ApLivingEntity {
     }
 
     @Inject(
-            method = "removePowderSnowSlow",
+            method = "removeFrost",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/entity/attribute/EntityAttributeInstance;removeModifier(Lnet/minecraft/util/Identifier;)Z"
+                    target = "Lnet/minecraft/world/entity/ai/attributes/AttributeInstance;removeModifier(Lnet/minecraft/resources/ResourceLocation;)Z"
             ),
             cancellable = true
     )

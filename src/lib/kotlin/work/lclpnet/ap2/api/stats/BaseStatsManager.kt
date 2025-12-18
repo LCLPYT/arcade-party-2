@@ -1,8 +1,8 @@
 package work.lclpnet.ap2.api.stats
 
 import it.unimi.dsi.fastutil.objects.ObjectIntPair
-import net.minecraft.server.network.ServerPlayerEntity
-import net.minecraft.util.Identifier
+import net.minecraft.resources.ResourceLocation
+import net.minecraft.server.level.ServerPlayer
 import work.lclpnet.ap2.api.game.GameInfo
 import work.lclpnet.ap2.api.game.data.GenericGameResult
 import work.lclpnet.ap2.api.game.data.SubjectRef
@@ -34,7 +34,7 @@ class Stats(stats: StatSet) {
 }
 
 interface StatsResult {
-    val gameId: Identifier
+    val gameId: ResourceLocation
     val mapId: MapDescriptor
     fun type(): String
 }
@@ -89,7 +89,7 @@ interface StatsManager<Ref : SubjectRef> {
 }
 
 class FFAStatsResult(
-    override val gameId: Identifier,
+    override val gameId: ResourceLocation,
     override val mapId: MapDescriptor,
     val order: List<ObjectIntPair<PlayerRef>>,
     val results: Map<PlayerRef, Stats>
@@ -97,7 +97,7 @@ class FFAStatsResult(
     override fun type() = "ffa"
 }
 
-class FFAStatsManager(stats: StatSet) : BaseStatsManager<ServerPlayerEntity, PlayerRef>(stats, PlayerRef::create), StatsManager<PlayerRef> {
+class FFAStatsManager(stats: StatSet) : BaseStatsManager<ServerPlayer, PlayerRef>(stats, PlayerRef::create), StatsManager<PlayerRef> {
 
     override fun getResult(gameInfo: GameInfo, map: GameMap, result: GenericGameResult<PlayerRef>): FFAStatsResult {
         val results = getEntries()

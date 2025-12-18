@@ -1,14 +1,14 @@
 package work.lclpnet.ap2.game.maze_scape.monster;
 
-import net.minecraft.entity.EntityAttachmentType;
-import net.minecraft.entity.EntityStatuses;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.mob.WardenEntity;
-import net.minecraft.particle.ParticleTypes;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.util.Mth;
+import net.minecraft.world.entity.EntityAttachment;
+import net.minecraft.world.entity.EntityEvent;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.monster.warden.Warden;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.game.maze_scape.monster.behaviour.AccelerationBehaviour;
 import work.lclpnet.ap2.game.maze_scape.monster.behaviour.SameRoomBehaviour;
@@ -18,9 +18,9 @@ import work.lclpnet.kibu.scheduler.Ticks;
 
 import java.util.List;
 
-import static net.minecraft.entity.attribute.EntityAttributes.KNOCKBACK_RESISTANCE;
+import static net.minecraft.world.entity.ai.attributes.Attributes.KNOCKBACK_RESISTANCE;
 
-public class WardenData implements MonsterData<WardenEntity> {
+public class WardenData implements MonsterData<Warden> {
 
     private static final int
             SONIC_BOOM_TRIGGER_TICKS = Ticks.seconds(18),
@@ -40,12 +40,12 @@ public class WardenData implements MonsterData<WardenEntity> {
     }
 
     @Override
-    public void init(WardenEntity mob) {
+    public void init(Warden mob) {
         common.init(mob);
     }
 
     @Override
-    public void tick(WardenEntity warden) {
+    public void tick(Warden warden) {
         common.tick(warden);
 
         if (sonicBoomTarget != null) {
@@ -63,43 +63,43 @@ public class WardenData implements MonsterData<WardenEntity> {
     }
 
     @Override
-    public void onKillAcquired(WardenEntity mob) {
+    public void onKillAcquired(Warden mob) {
         common.onKillAcquired(mob);
     }
 
-    private void triggerSonicBoom(WardenEntity warden, LivingEntity target) {
+    private void triggerSonicBoom(Warden warden, LivingEntity target) {
         sonicBoomTarget = target;
-        common.manager().world().sendEntityStatus(warden, EntityStatuses.SONIC_BOOM);
-        warden.playSound(SoundEvents.ENTITY_WARDEN_SONIC_CHARGE, 3.0f, 1.0f);
+        common.manager().world().broadcastEntityEvent(warden, EntityEvent.SONIC_CHARGE);
+        warden.playSound(SoundEvents.WARDEN_SONIC_CHARGE, 3.0f, 1.0f);
     }
 
-    private void fireSonicBoom(WardenEntity warden, LivingEntity target) {
-        Vec3d chest = warden.getEntityPos().add(warden.getAttachments().getPoint(EntityAttachmentType.WARDEN_CHEST, 0, warden.getYaw()));
-        Vec3d line = target.getEyePos().subtract(chest);
-        Vec3d dir = line.normalize();
+    private void fireSonicBoom(Warden warden, LivingEntity target) {
+        Vec3 chest = warden.position().add(warden.getAttachments().get(EntityAttachment.WARDEN_CHEST, 0, warden.getYRot()));
+        Vec3 line = target.getEyePosition().subtract(chest);
+        Vec3 dir = line.normalize();
 
-        ServerWorld world = common.manager().world();
+        ServerLevel world = common.manager().world();
 
-        int i = MathHelper.floor(line.length()) + 7;
+        int i = Mth.floor(line.length()) + 7;
 
         for (int j = 1; j < i; ++j) {
-            Vec3d pos = chest.add(dir.multiply(j));
-            world.spawnParticles(ParticleTypes.SONIC_BOOM, pos.x, pos.y, pos.z, 1, 0.0, 0.0, 0.0, 0.0);
+            Vec3 pos = chest.add(dir.scale(j));
+            world.sendParticles(ParticleTypes.SONIC_BOOM, pos.x, pos.y, pos.z, 1, 0.0, 0.0, 0.0, 0.0);
         }
 
-        warden.playSound(SoundEvents.ENTITY_WARDEN_SONIC_BOOM, 3.0f, 1.0f);
+        warden.playSound(SoundEvents.WARDEN_SONIC_BOOM, 3.0f, 1.0f);
 
-        if (target.damage(world, world.getDamageSources().sonicBoom(warden), 10.0f)) {
+        if (target.hurtServer(world, world.damageSources().sonicBoom(warden), 10.0f)) {
             double vertical = 0.5 * (1.0 - target.getAttributeValue(KNOCKBACK_RESISTANCE));
             double horizontal = 2.5 * (1.0 - target.getAttributeValue(KNOCKBACK_RESISTANCE));
 
-            target.addVelocity(dir.getX() * horizontal, dir.getY() * vertical, dir.getZ() * horizontal);
+            target.push(dir.x() * horizontal, dir.y() * vertical, dir.z() * horizontal);
         }
     }
 
     @Override
-    public @Nullable WardenEntity mob() {
-        if (common.mob() instanceof WardenEntity warden) {
+    public @Nullable Warden mob() {
+        if (common.mob() instanceof Warden warden) {
             return warden;
         }
 

@@ -1,7 +1,7 @@
 package work.lclpnet.ap2.game.jump_and_run.gen;
 
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3i;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Vec3i;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.impl.util.structure.StructureUtil;
 import work.lclpnet.gaco.ds.BlockBox;
@@ -19,7 +19,7 @@ public final class OrientedPart implements JumpPart {
     private final BlockBox bounds;
     private final @Nullable Connector in, out;
     private final Matrix3i matrix;
-    private final @Nullable  BlockPos spawn;
+    private final @Nullable BlockPos spawn;
 
     public OrientedPart(BlockStructure structure, Vec3i offset, int rotation, BlockBox bounds,
                         @Nullable Connector in, @Nullable Connector out, @Nullable BlockPos spawn) {
@@ -56,13 +56,13 @@ public final class OrientedPart implements JumpPart {
     public OrientedPart transform(BlockPos offset) {
         var mat4 = AffineIntMatrix.makeTranslation(offset);
 
-        Vec3i translatedOffset = this.offset.add(offset);
+        Vec3i translatedOffset = this.offset.offset(offset);
         BlockBox transformedBounds = this.bounds.transform(mat4);
         var translatedIn = in != null ? in.transform(mat4) : null;
         var translatedOut = out != null ? out.transform(mat4) : null;
 
         return new OrientedPart(structure, translatedOffset, rotation, transformedBounds, translatedIn, translatedOut,
-                spawn != null ? spawn.add(offset) : null);
+                spawn != null ? spawn.offset(offset) : null);
     }
 
     @Override

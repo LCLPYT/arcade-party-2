@@ -2,20 +2,20 @@ package work.lclpnet.ap2.game.glowing_bomb;
 
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.particle.ParticleTypes;
-import net.minecraft.particle.TintedParticleEffect;
-import net.minecraft.registry.Registries;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.particles.ColorParticleOption;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Vector3d;
 import work.lclpnet.ap2.api.base.Participants;
@@ -76,7 +76,7 @@ public class GlowingBombInstance extends EliminationGameInstance implements MapB
     }
 
     @Override
-    public void bootstrapWorld(@NotNull ServerWorld world, @NotNull GameMap map) {
+    public void bootstrapWorld(@NotNull ServerLevel world, @NotNull GameMap map) {
         manager = new GbManager(world, map, random, gameHandle.getParticipants(), this::onAnchorFilled);
         manager.setupAnchors();
     }
@@ -89,7 +89,7 @@ public class GlowingBombInstance extends EliminationGameInstance implements MapB
 
         manager.teleportPlayers();
 
-        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
+        for (ServerPlayer player : gameHandle.getParticipants()) {
             movementBlocker.disableMovement(player);
         }
 
@@ -102,21 +102,21 @@ public class GlowingBombInstance extends EliminationGameInstance implements MapB
         Participants participants = gameHandle.getParticipants();
 
         hooks.registerHook(PlayerInteractionHooks.USE_ITEM, (player, world, hand) -> {
-            if (!(player instanceof ServerPlayerEntity serverPlayer) || !participants.isParticipating(serverPlayer)) {
-                return ActionResult.PASS;
+            if (!(player instanceof ServerPlayer serverPlayer) || !participants.isParticipating(serverPlayer)) {
+                return InteractionResult.PASS;
             }
 
-            ItemStack stack = serverPlayer.getStackInHand(hand);
+            ItemStack stack = serverPlayer.getItemInHand(hand);
 
-            if (stack.isOf(Items.GLOWSTONE)) {
-                if (manager.hasBomb(serverPlayer) && !player.getItemCooldownManager().isCoolingDown(stack)) {
+            if (stack.is(Items.GLOWSTONE)) {
+                if (manager.hasBomb(serverPlayer) && !player.getCooldowns().isOnCooldown(stack)) {
                     passBomb(serverPlayer);
                 }
 
-                return ActionResult.FAIL;
+                return InteractionResult.FAIL;
             }
 
-            return ActionResult.PASS;
+            return InteractionResult.PASS;
         });
 
         gameHandle.getScheduler().interval(this::tickCredits, 1);
@@ -128,12 +128,12 @@ public class GlowingBombInstance extends EliminationGameInstance implements MapB
     }
 
     @Override
-    protected void onEliminated(ServerPlayerEntity player) {
+    protected void onEliminated(ServerPlayer player) {
         movementBlocker.enableMovement(player);
     }
 
     @Override
-    public void participantRemoved(ServerPlayerEntity player) {
+    public void participantRemoved(ServerPlayer player) {
         manager.removeAnchorOf(player);
         super.participantRemoved(player);
     }
@@ -144,7 +144,7 @@ public class GlowingBombInstance extends EliminationGameInstance implements MapB
             return;
         }
 
-        Vec3d pos = manager.bombLocation();
+        Vec3 pos = manager.bombLocation();
 
         if (pos == null) {
             checkForWinner();
@@ -153,12 +153,12 @@ public class GlowingBombInstance extends EliminationGameInstance implements MapB
 
         bomb = new GbBomb(scene, this::onBombYielded);
         bomb.scale.set(0.4);
-        bomb.position.set(pos.getX(), pos.getY(), pos.getZ());
+        bomb.position.set(pos.x(), pos.y(), pos.z());
 
         int amount = randomAmount();
         bomb.setGlowStoneAmount(amount, random);
 
-        ServerWorld world = getWorld();
+        ServerLevel world = getWorld();
 
         scene.add(bomb);
 
@@ -167,13 +167,13 @@ public class GlowingBombInstance extends EliminationGameInstance implements MapB
         int fuseTicks = randomFuseTicks();
         scheduler.timeout(this::bombTimerExpired, fuseTicks);
 
-        double x = pos.getX(), y = pos.getY(), z = pos.getZ();
+        double x = pos.x(), y = pos.y(), z = pos.z();
 
-        world.playSound(null, x, y, z, SoundEvents.ITEM_TRIDENT_RETURN, SoundCategory.HOSTILE, 0.75f, 0.5f);
-        world.spawnParticles(ParticleTypes.REVERSE_PORTAL, x, y, z, 15, 0.1, 0.1, 0.1, 0.2);
+        world.playSound(null, x, y, z, SoundEvents.TRIDENT_RETURN, SoundSource.HOSTILE, 0.75f, 0.5f);
+        world.sendParticles(ParticleTypes.REVERSE_PORTAL, x, y, z, 15, 0.1, 0.1, 0.1, 0.2);
 
-        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
-            credits.put(player.getUuid(), INITIAL_CREDITS);
+        for (ServerPlayer player : gameHandle.getParticipants()) {
+            credits.put(player.getUUID(), INITIAL_CREDITS);
         }
 
         time = 0;
@@ -233,31 +233,31 @@ public class GlowingBombInstance extends EliminationGameInstance implements MapB
         return random.nextInt(2, 5);
     }
 
-    private void onAcquiredBomb(ServerPlayerEntity player) {
+    private void onAcquiredBomb(ServerPlayer player) {
         ItemStack stack = new ItemStack(Items.GLOWSTONE, bomb != null ? bomb.getGlowStoneAmount() : 1);
-        stack.set(DataComponentTypes.CUSTOM_NAME, gameHandle.getTranslations().translateText(player, "game.ap2.glowing_bomb.pass")
-                .styled(style -> style.withItalic(false).withFormatting(Formatting.GOLD)));
+        stack.set(DataComponents.CUSTOM_NAME, gameHandle.getTranslations().translateText(player, "game.ap2.glowing_bomb.pass")
+                .styled(style -> style.withItalic(false).applyFormat(ChatFormatting.GOLD)));
 
-        player.getInventory().setStack(4, stack);
+        player.getInventory().setItem(4, stack);
         PlayerInventoryAccess.setSelectedSlot(player, 4);
 
-        int creditCount = credits.getOrDefault(player.getUuid(), 0);
+        int creditCount = credits.getOrDefault(player.getUUID(), 0);
         int cooldown = MINIMUM_BOMB_PASS_TICKS + Math.max(0, BOMB_PASS_COST - creditCount);
 
-        Identifier cooldownGroup = Registries.ITEM.getId(Items.GLOWSTONE);
+        ResourceLocation cooldownGroup = BuiltInRegistries.ITEM.getKey(Items.GLOWSTONE);
 
-        player.getItemCooldownManager().set(cooldownGroup, cooldown);
+        player.getCooldowns().addCooldown(cooldownGroup, cooldown);
     }
 
-    private void onPassedBomb(ServerPlayerEntity player) {
-        player.getInventory().setStack(4, ItemStack.EMPTY);
+    private void onPassedBomb(ServerPlayer player) {
+        player.getInventory().setItem(4, ItemStack.EMPTY);
     }
 
-    private void passBomb(ServerPlayerEntity player) {
+    private void passBomb(ServerPlayer player) {
         if (winManager.isGameOver() || !mayPass) return;
 
         // remove credits
-        UUID uuid = player.getUuid();
+        UUID uuid = player.getUUID();
         int creditCount = credits.getOrDefault(uuid, 0);
 
         if (creditCount < BOMB_PASS_COST) return;
@@ -265,7 +265,7 @@ public class GlowingBombInstance extends EliminationGameInstance implements MapB
         credits.put(uuid, Math.max(0, creditCount - BOMB_PASS_COST));
 
         // pass bomb
-        ServerPlayerEntity nextHolder = manager.nextBombHolder();
+        ServerPlayer nextHolder = manager.nextBombHolder();
 
         if (nextHolder == null) {
             nextHolder = player;
@@ -280,26 +280,26 @@ public class GlowingBombInstance extends EliminationGameInstance implements MapB
 
         if (bomb == null) return;
 
-        Vec3d pos = manager.bombLocation();
+        Vec3 pos = manager.bombLocation();
 
         if (pos == null) return;
 
-        double x = pos.getX(), y = pos.getY(), z = pos.getZ();
+        double x = pos.x(), y = pos.y(), z = pos.z();
         bomb.position.set(x, y, z);
-        getWorld().playSound(null, x, y, z, SoundEvents.BLOCK_BEEHIVE_ENTER, SoundCategory.HOSTILE, 0.75f, 1.4f);
+        getWorld().playSound(null, x, y, z, SoundEvents.BEEHIVE_ENTER, SoundSource.HOSTILE, 0.75f, 1.4f);
     }
 
     private void bombTimerExpired() {
         mayPass = false;
         manager.bombHolder().ifPresent(this::onPassedBomb);
 
-        ServerWorld world = getWorld();
+        ServerLevel world = getWorld();
         Vector3d pos = bomb.worldTranslation();
         double x = pos.x(), y = pos.y(), z = pos.z();
 
-        world.playSound(null, x, y, z, SoundEvents.BLOCK_RESPAWN_ANCHOR_DEPLETE.value(), SoundCategory.HOSTILE, 0.9f, 1.0f);
-        world.spawnParticles(TintedParticleEffect.create(ParticleTypes.FLASH, 0x8f509e), x, y, z, 1, 0, 0, 0, 1);
-        world.spawnParticles(ParticleTypes.SMALL_FLAME, x, y, z, 20, 0.1, 0.1, 0.1, 0.1);
+        world.playSound(null, x, y, z, SoundEvents.RESPAWN_ANCHOR_DEPLETE.value(), SoundSource.HOSTILE, 0.9f, 1.0f);
+        world.sendParticles(ColorParticleOption.create(ParticleTypes.FLASH, 0x8f509e), x, y, z, 1, 0, 0, 0, 1);
+        world.sendParticles(ParticleTypes.SMALL_FLAME, x, y, z, 20, 0.1, 0.1, 0.1, 0.1);
 
         GbAnchor anchor = manager.bombAnchor();
 
@@ -337,9 +337,9 @@ public class GlowingBombInstance extends EliminationGameInstance implements MapB
             Vector3d pos = bomb.worldTranslation();
             double x = pos.x(), y = pos.y(), z = pos.z();
 
-            ServerWorld world = getWorld();
-            world.playSound(null, x, y, z, SoundEvents.BLOCK_DECORATED_POT_INSERT, SoundCategory.HOSTILE, 1f, 0f);
-            world.spawnParticles(ParticleTypes.SMALL_FLAME, x, y, z, 20, 0.1, 0.1, 0.1, 0.1);
+            ServerLevel world = getWorld();
+            world.playSound(null, x, y, z, SoundEvents.DECORATED_POT_INSERT, SoundSource.HOSTILE, 1f, 0f);
+            world.sendParticles(ParticleTypes.SMALL_FLAME, x, y, z, 20, 0.1, 0.1, 0.1, 0.1);
 
             scene.remove(bomb);
             bomb = null;
@@ -355,18 +355,18 @@ public class GlowingBombInstance extends EliminationGameInstance implements MapB
     private void explodeAnchor(GbAnchor anchor) {
         if (winManager.isGameOver()) return;
 
-        ServerWorld world = getWorld();
+        ServerLevel world = getWorld();
 
-        Vec3d pos = anchor.pos();
-        double x = pos.getX() + 0.5, y = pos.getY() + 0.5, z = pos.getZ() + 0.5;
+        Vec3 pos = anchor.pos();
+        double x = pos.x() + 0.5, y = pos.y() + 0.5, z = pos.z() + 0.5;
 
-        world.spawnParticles(ParticleTypes.EXPLOSION, x, y, z, 200, 1, 1, 1, 0.5);
-        world.playSound(null, x, y, z, SoundEvents.ENTITY_GENERIC_EXPLODE.value(), SoundCategory.HOSTILE, 0.9f, 1.2f);
+        world.sendParticles(ParticleTypes.EXPLOSION, x, y, z, 200, 1, 1, 1, 0.5);
+        world.playSound(null, x, y, z, SoundEvents.GENERIC_EXPLODE.value(), SoundSource.HOSTILE, 0.9f, 1.2f);
 
         manager.removeAnchor(anchor);
 
         UUID owner = anchor.owner();
-        ServerPlayerEntity player = gameHandle.getServer().getPlayerManager().getPlayer(owner);
+        ServerPlayer player = gameHandle.getServer().getPlayerList().getPlayer(owner);
 
         if (player == null) {
             checkForWinnerOrNext();
@@ -390,7 +390,7 @@ public class GlowingBombInstance extends EliminationGameInstance implements MapB
         if (!wasPassed && time < minFuseTicks()) return;
 
         // grant credits each tick
-        manager.bombHolder().ifPresent(player -> credits.computeInt(player.getUuid(), (uuid, count) -> {
+        manager.bombHolder().ifPresent(player -> credits.computeInt(player.getUUID(), (uuid, count) -> {
             if (count == null) count = 0;
 
             return count + CREDITS_PER_TICK;

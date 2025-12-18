@@ -1,10 +1,10 @@
 package work.lclpnet.ap2.impl.util.handler;
 
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.player.PlayerConnectionHooks;
@@ -24,7 +24,7 @@ public class VisualCooldown implements Cooldown {
     private final Map<UUID, TaskHandle> tasks = new HashMap<>();
     private boolean initialized = false;
     @Nullable
-    private Consumer<ServerPlayerEntity> onCooldownOver = null;
+    private Consumer<ServerPlayer> onCooldownOver = null;
 
     public VisualCooldown(TaskScheduler scheduler) {
         this.scheduler = scheduler;
@@ -39,7 +39,7 @@ public class VisualCooldown implements Cooldown {
     }
 
     @Override
-    public void setCooldown(ServerPlayerEntity player, int cooldownTicks) {
+    public void setCooldown(ServerPlayer player, int cooldownTicks) {
         if (cooldownTicks <= 0) {
             resetCooldown(player);
             return;
@@ -49,16 +49,16 @@ public class VisualCooldown implements Cooldown {
     }
 
     @Override
-    public boolean isOnCooldown(ServerPlayerEntity player) {
+    public boolean isOnCooldown(ServerPlayer player) {
         synchronized (this) {
-            return tasks.containsKey(player.getUuid());
+            return tasks.containsKey(player.getUUID());
         }
     }
 
     @Override
-    public void resetCooldown(ServerPlayerEntity player) {
+    public void resetCooldown(ServerPlayer player) {
         synchronized (this) {
-            TaskHandle task = tasks.remove(player.getUuid());
+            TaskHandle task = tasks.remove(player.getUUID());
 
             if (task != null) {
                 task.cancel();
@@ -80,41 +80,41 @@ public class VisualCooldown implements Cooldown {
         }
     }
 
-    private void enqueueTask(ServerPlayerEntity player, int cooldownTicks) {
+    private void enqueueTask(ServerPlayer player, int cooldownTicks) {
         Task task = new Task(player, cooldownTicks);
 
         synchronized (this) {
             TaskHandle handle = scheduler.interval(task, 1)
                     .whenComplete(() -> onCooldownOver(player));
 
-            tasks.put(player.getUuid(), handle);
+            tasks.put(player.getUUID(), handle);
         }
     }
 
-    private void onCooldownOver(ServerPlayerEntity player) {
+    private void onCooldownOver(ServerPlayer player) {
         resetCooldown(player);
 
         if (onCooldownOver != null) {
             onCooldownOver.accept(player);
         }
 
-        player.sendMessage(Text.empty(), true);
-        player.playSoundToPlayer(SoundEvents.BLOCK_NOTE_BLOCK_PLING.value(), SoundCategory.PLAYERS, 0.2f, 2);
+        player.displayClientMessage(Component.empty(), true);
+        player.playNotifySound(SoundEvents.NOTE_BLOCK_PLING.value(), SoundSource.PLAYERS, 0.2f, 2);
     }
 
     @Override
-    public void setOnCooldownOver(@Nullable Consumer<ServerPlayerEntity> onCooldownOver) {
+    public void setOnCooldownOver(@Nullable Consumer<ServerPlayer> onCooldownOver) {
         this.onCooldownOver = onCooldownOver;
     }
 
     private static class Task implements SchedulerAction {
 
-        private final ServerPlayerEntity player;
+        private final ServerPlayer player;
         private final float ticks;
         private int remain;
         private int lastSent = -1;
 
-        private Task(ServerPlayerEntity player, int ticks) {
+        private Task(ServerPlayer player, int ticks) {
             if (ticks <= 0) throw new IllegalArgumentException("Ticks must be positive");
 
             this.player = player;
@@ -139,10 +139,10 @@ public class VisualCooldown implements Cooldown {
 
             lastSent = boxes;
 
-            var msg = Text.literal("▌".repeat(boxes)).formatted(Formatting.GREEN)
-                    .append(Text.literal("▌".repeat(10 - boxes)).formatted(Formatting.GRAY));
+            var msg = Component.literal("▌".repeat(boxes)).withStyle(ChatFormatting.GREEN)
+                    .append(Component.literal("▌".repeat(10 - boxes)).withStyle(ChatFormatting.GRAY));
 
-            player.sendMessage(msg, true);
+            player.displayClientMessage(msg, true);
         }
     }
 }

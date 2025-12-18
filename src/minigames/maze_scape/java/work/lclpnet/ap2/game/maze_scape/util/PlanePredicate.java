@@ -1,6 +1,6 @@
 package work.lclpnet.ap2.game.maze_scape.util;
 
-import net.minecraft.util.math.Vec3i;
+import net.minecraft.core.Vec3i;
 
 public class PlanePredicate implements Int3Predicate {
     final int ox, oy, oz;

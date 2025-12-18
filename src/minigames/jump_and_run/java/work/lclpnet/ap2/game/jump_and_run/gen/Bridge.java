@@ -1,8 +1,8 @@
 package work.lclpnet.ap2.game.jump_and_run.gen;
 
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Vec3i;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.Vec3i;
 import work.lclpnet.gaco.ds.BlockBox;
 import work.lclpnet.gaco.math.AffineIntMatrix;
 import work.lclpnet.kibu.structure.BlockStructure;
@@ -58,6 +58,6 @@ public final class Bridge implements JumpPart {
     public Bridge transform(BlockPos offset) {
         var matrix = AffineIntMatrix.makeTranslation(offset);
 
-        return new Bridge(structure, bounds.transform(matrix), spawn.add(offset), direction, this.offset.add(offset));
+        return new Bridge(structure, bounds.transform(matrix), spawn.offset(offset), direction, this.offset.offset(offset));
     }
 }

@@ -1,6 +1,6 @@
 package work.lclpnet.ap2.core.mixin;
 
-import net.minecraft.entity.Entity;
+import net.minecraft.world.entity.Entity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -59,10 +59,10 @@ public class EntityMixin implements ApEntity {
     }
 
     @ModifyArg(
-            method = "updateVelocity",
+            method = "moveRelative",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/entity/Entity;movementInputToVelocity(Lnet/minecraft/util/math/Vec3d;FF)Lnet/minecraft/util/math/Vec3d;"
+                    target = "Lnet/minecraft/world/entity/Entity;getInputVector(Lnet/minecraft/world/phys/Vec3;FF)Lnet/minecraft/world/phys/Vec3;"
             ),
             index = 2
     )
@@ -71,7 +71,7 @@ public class EntityMixin implements ApEntity {
     }
 
     @Inject(
-            method = "setFrozenTicks",
+            method = "setTicksFrozen",
             at = @At("HEAD"),
             cancellable = true
     )

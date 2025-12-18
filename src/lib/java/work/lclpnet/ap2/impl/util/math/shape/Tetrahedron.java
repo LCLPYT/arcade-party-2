@@ -1,6 +1,6 @@
 package work.lclpnet.ap2.impl.util.math.shape;
 
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.phys.Vec3;
 import work.lclpnet.ap2.impl.util.math.face.Face;
 import work.lclpnet.gaco.ds.BlockBox;
 
@@ -9,12 +9,12 @@ import static java.lang.Math.sqrt;
 
 public class Tetrahedron implements PlatonicShape {
 
-    private final Vec3d center;
+    private final Vec3 center;
     private final double radius;
-    private final Vec3d[] vertices;
+    private final Vec3[] vertices;
     private final Face[] faces;
 
-    public Tetrahedron(Vec3d center, double radius) {
+    public Tetrahedron(Vec3 center, double radius) {
         this.center = center;
         this.radius = radius;
         this.vertices = PlatonicShape.super.vertices();
@@ -22,7 +22,7 @@ public class Tetrahedron implements PlatonicShape {
     }
 
     @Override
-    public Vec3d center() {
+    public Vec3 center() {
         return center;
     }
 
@@ -32,7 +32,7 @@ public class Tetrahedron implements PlatonicShape {
     }
 
     @Override
-    public Vec3d[] vertices() {
+    public Vec3[] vertices() {
         return vertices;
     }
 
@@ -42,17 +42,17 @@ public class Tetrahedron implements PlatonicShape {
     }
 
     @Override
-    public Vec3d[] unitVertices() {
+    public Vec3[] unitVertices() {
         double a = 1.0 / 3.0;
         double b = sqrt(8.0 / 9.0);
         double c = sqrt(2.0 / 9.0);
         double d = sqrt(2.0 / 3.0);
 
-        return new Vec3d[]{
-                new Vec3d(0, 1, 0),
-                new Vec3d(-c, -a, d),
-                new Vec3d(-c, -a, -d),
-                new Vec3d(b, -a, 0)
+        return new Vec3[]{
+                new Vec3(0, 1, 0),
+                new Vec3(-c, -a, d),
+                new Vec3(-c, -a, -d),
+                new Vec3(b, -a, 0)
         };
     }
 
@@ -69,8 +69,8 @@ public class Tetrahedron implements PlatonicShape {
     @Override
     public BlockBox bounds() {
         return new BlockBox(
-                (int) floor(center.getX() - radius), (int) floor(center.getY() - radius / 3d), (int) floor(center.getZ() - radius),
-                (int) floor(center.getX() + radius), (int) floor(center.getY() + radius), (int) floor(center.getZ() + radius)
+                (int) floor(center.x() - radius), (int) floor(center.y() - radius / 3d), (int) floor(center.z() - radius),
+                (int) floor(center.x() + radius), (int) floor(center.y() + radius), (int) floor(center.z() + radius)
         );
     }
 }

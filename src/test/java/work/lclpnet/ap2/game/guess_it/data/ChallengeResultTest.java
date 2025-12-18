@@ -1,8 +1,8 @@
 package work.lclpnet.ap2.game.guess_it.data;
 
-import net.minecraft.Bootstrap;
 import net.minecraft.SharedConstants;
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.Bootstrap;
+import net.minecraft.server.level.ServerPlayer;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -18,16 +18,16 @@ class ChallengeResultTest {
 
     @BeforeAll
     public static void bootstrap() {
-        SharedConstants.createGameVersion();
-        Bootstrap.initialize();
+        SharedConstants.tryDetectVersion();
+        Bootstrap.bootStrap();
     }
 
     @Test
     void grantClosest3() {
         var res = new ChallengeResult();
-        ServerPlayerEntity a = player(), b = player(), c = player(), d = player(), e = player();
+        ServerPlayer a = player(), b = player(), c = player(), d = player(), e = player();
 
-        Map<ServerPlayerEntity, Integer> score = Map.of(a, 5, b, 10, c, 6, d, 1, e, 5);
+        Map<ServerPlayer, Integer> score = Map.of(a, 5, b, 10, c, 6, d, 1, e, 5);
 
         res.grantClosest3(score.keySet(), 7, player -> OptionalInt.of(score.get(player)));
 
@@ -38,10 +38,10 @@ class ChallengeResultTest {
         assertEquals(0, res.getPointsGained(d));
     }
 
-    private static ServerPlayerEntity player() {
-        ServerPlayerEntity player = mock();
+    private static ServerPlayer player() {
+        ServerPlayer player = mock();
 
-        when(player.getUuid()).thenReturn(UUID.randomUUID());
+        when(player.getUUID()).thenReturn(UUID.randomUUID());
 
         return player;
     }

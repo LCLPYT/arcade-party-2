@@ -1,29 +1,29 @@
 package work.lclpnet.ap2.game.paintball.util;
 
 import it.unimi.dsi.fastutil.Pair;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.ShapeContext;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.entity.EntityDimensions;
-import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.entity.effect.StatusEffectInstance;
-import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.item.ItemStack;
-import net.minecraft.particle.BlockStateParticleEffect;
-import net.minecraft.particle.DustParticleEffect;
-import net.minecraft.particle.ParticleTypes;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.hit.HitResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.RaycastContext;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.particles.BlockParticleOption;
+import net.minecraft.core.particles.DustParticleOptions;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.EntityDimensions;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.shapes.CollisionContext;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.base.Participants;
@@ -58,7 +58,7 @@ public class PaintballTicker {
             HEAL_DELAY_TICKS = Ticks.seconds(3),
             SOUND_TICKS = 2;
 
-    private final ServerWorld world;
+    private final ServerLevel world;
     private final Participants participants;
     private final PaintballTeams teams;
     private final PaintManager paintManager;
@@ -67,7 +67,7 @@ public class PaintballTicker {
     private final DebugController debugController;
     private final Map<UUID, Entry> entries = new HashMap<>();
 
-    public PaintballTicker(ServerWorld world, Participants participants, PaintballTeams teams, PaintManager paintManager,
+    public PaintballTicker(ServerLevel world, Participants participants, PaintballTeams teams, PaintManager paintManager,
                            PaintGunManager paintGunManager, VanishManager vanishManager,
                            DebugController debugController) {
         this.world = world;
@@ -84,7 +84,7 @@ public class PaintballTicker {
 
         // needs to be registered after the PaintballInstance ALLOW_DAMAGE hook
         hooks.registerHook(ServerLivingEntityHooks.ALLOW_DAMAGE, (entity, source, amount) -> {
-            if (entity instanceof ServerPlayerEntity player && participants.isParticipating(player)) {
+            if (entity instanceof ServerPlayer player && participants.isParticipating(player)) {
                 entry(player).outOfCombatTicks = 0;
             }
 
@@ -92,23 +92,23 @@ public class PaintballTicker {
         });
     }
 
-    private @NotNull Entry entry(ServerPlayerEntity player) {
-        return entries.computeIfAbsent(player.getUuid(), u -> new Entry());
+    private @NotNull Entry entry(ServerPlayer player) {
+        return entries.computeIfAbsent(player.getUUID(), u -> new Entry());
     }
 
     private void tick() {
-        for (ServerPlayerEntity player : participants) {
+        for (ServerPlayer player : participants) {
             tickPlayer(player);
         }
     }
 
-    private void tickPlayer(ServerPlayerEntity player) {
+    private void tickPlayer(ServerPlayer player) {
         Entry entry = entry(player);
         entry.outOfCombatTicks++;
 
         BlockState inkContactState = null;
 
-        if (player.isSneaking()) {
+        if (player.isShiftKeyDown()) {
             inkContactState = tickWallClimbing(player);
         }
 
@@ -124,14 +124,14 @@ public class PaintballTicker {
         }
 
         if (onInk != OnInk.ENEMY) {
-            player.removeStatusEffect(StatusEffects.SLOWNESS);
+            player.removeEffect(MobEffects.SLOWNESS);
         }
 
-        if (onInk == OnInk.OWN && player.isSneaking()) {
+        if (onInk == OnInk.OWN && player.isShiftKeyDown()) {
             vanishManager.vanish(player);
 
-            setAttribute(player, EntityAttributes.MOVEMENT_SPEED, 0.14);
-            setAttribute(player, EntityAttributes.SNEAKING_SPEED, 1.0);
+            setAttribute(player, Attributes.MOVEMENT_SPEED, 0.14);
+            setAttribute(player, Attributes.SNEAKING_SPEED, 1.0);
 
             if (entry.outOfCombatTicks >= HEAL_DELAY_TICKS) {
                 player.setHealth(player.getHealth() + HEAL_PER_SECOND / 20);
@@ -139,20 +139,20 @@ public class PaintballTicker {
 
             if (entry.nextSound-- <= 0) {
                 entry.nextSound = SOUND_TICKS;
-                playSoundAt(player, SoundEvents.BLOCK_HONEY_BLOCK_SLIDE, SoundCategory.PLAYERS, 0.40f, 1.65f + (float) random() * 0.2f);
+                playSoundAt(player, SoundEvents.HONEY_BLOCK_SLIDE, SoundSource.PLAYERS, 0.40f, 1.65f + (float) random() * 0.2f);
             }
 
             BlockState state = inkContactState;
 
             teams.teamOf(player).ifPresent(team -> {
                 if (state != null) {
-                    world.spawnParticles(
-                            new BlockStateParticleEffect(ParticleTypes.BLOCK, state),
+                    world.sendParticles(
+                            new BlockParticleOption(ParticleTypes.BLOCK, state),
                             player.getX(), player.getY(), player.getZ(), 2, 0.2, 0, 0.2, 0.2
                     );
                 } else {
-                    world.spawnParticles(
-                            new DustParticleEffect(team.key().color(), 0.8f),
+                    world.sendParticles(
+                            new DustParticleOptions(team.key().color(), 0.8f),
                             player.getX(), player.getY(), player.getZ(), 2, 0.2, 0, 0.2, 0.2
                     );
                 }
@@ -165,33 +165,33 @@ public class PaintballTicker {
         }
 
         vanishManager.show(player);
-        resetAttribute(player, EntityAttributes.MOVEMENT_SPEED);
-        resetAttribute(player, EntityAttributes.SNEAKING_SPEED);
+        resetAttribute(player, Attributes.MOVEMENT_SPEED);
+        resetAttribute(player, Attributes.SNEAKING_SPEED);
 
         paintGunManager.removeReloading(player);
 
         if (onInk == OnInk.ENEMY) {
-            player.addStatusEffect(new StatusEffectInstance(StatusEffects.SLOWNESS, 20, 1, false, false, false));
+            player.addEffect(new MobEffectInstance(MobEffects.SLOWNESS, 20, 1, false, false, false));
         }
     }
 
-    private @Nullable BlockState tickWallClimbing(ServerPlayerEntity player) {
+    private @Nullable BlockState tickWallClimbing(ServerPlayer player) {
         PaintballTeam playerTeam = teams.teamOf(player).orElse(null);
 
         if (playerTeam == null) return null;
 
-        Vec3d input = PlayerUtil.getHorizontalInputVector(player);
+        Vec3 input = PlayerUtil.getHorizontalInputVector(player);
 
         if (DEBUG_WALL_CLIMBING) {
-            debugController.exclusive("input_" + player.getNameForScoreboard(), controller
+            debugController.exclusive("input_" + player.getScoreboardName(), controller
                     -> controller.renderer().ifPresent(renderer
-                    -> renderer.arrow(player.getEntityPos(), input, 0.5f, Blocks.REDSTONE_BLOCK.getDefaultState())));
+                    -> renderer.arrow(player.position(), input, 0.5f, Blocks.REDSTONE_BLOCK.defaultBlockState())));
         }
 
         EntityDimensions dimensions = player.getDimensions(player.getPose());
         float width = dimensions.width();
 
-        BlockHitResult hit = RayCastUtil.raycastBlocks(world, player.getEntityPos(), input, width, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, ShapeContext.of(player));
+        BlockHitResult hit = RayCastUtil.raycastBlocks(world, player.position(), input, width, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, CollisionContext.of(player));
 
         if (hit.getType() != HitResult.Type.BLOCK) return null;
 
@@ -200,12 +200,12 @@ public class PaintballTicker {
 
         if (collisionTeam != playerTeam.key()) return null;
 
-        setVelocity(player, player.getVelocity().withAxis(Direction.Axis.Y, 0.25));
+        setVelocity(player, player.getDeltaMovement().with(Direction.Axis.Y, 0.25));
 
         return collisionState;
     }
 
-    private void tickReload(ServerPlayerEntity player, Entry entry) {
+    private void tickReload(ServerPlayer player, Entry entry) {
         Pair<PaintGun, ItemStack> pair = paintGunManager.getPaintGunAndStack(player).orElse(null);
 
         if (pair == null) return;
@@ -213,7 +213,7 @@ public class PaintballTicker {
         PaintGun paintGun = pair.left();
         ItemStack stack = pair.right();
 
-        if (stack.getDamage() <= 0) return;  // nothing to reload
+        if (stack.getDamageValue() <= 0) return;  // nothing to reload
 
         if (entry.reloadTicks < paintGun.reloadTicks()) {
             entry.reloadTicks++;
@@ -221,12 +221,12 @@ public class PaintballTicker {
         }
 
         entry.reloadTicks = 0;
-        stack.set(DataComponentTypes.DAMAGE, max(0, stack.getDamage() - paintGun.reloadAmount()));
+        stack.set(DataComponents.DAMAGE, max(0, stack.getDamageValue() - paintGun.reloadAmount()));
 
-        player.playSoundToPlayer(SoundEvents.BLOCK_BREWING_STAND_BREW, SoundCategory.PLAYERS, 0.2f, 1f);
+        player.playNotifySound(SoundEvents.BREWING_STAND_BREW, SoundSource.PLAYERS, 0.2f, 1f);
     }
 
-    private @NotNull Pair<OnInk, BlockState> standingOnInk(ServerPlayerEntity player) {
+    private @NotNull Pair<OnInk, BlockState> standingOnInk(ServerPlayer player) {
         if (player.isSpectator()) {
             return Pair.of(OnInk.NONE, null);
         }
@@ -240,7 +240,7 @@ public class PaintballTicker {
         double width = player.getDimensions(player.getPose()).width();
         BlockState ownInkContactState = null;
 
-        for (BlockPos pos : BlockBox.of(Box.of(player.getEntityPos(), width, 0.1, width))) {
+        for (BlockPos pos : BlockBox.of(AABB.ofSize(player.position(), width, 0.1, width))) {
             BlockState state = world.getBlockState(pos);
             DyeTeamKey paintTeam = paintManager.getTeam(state.getBlock());
 

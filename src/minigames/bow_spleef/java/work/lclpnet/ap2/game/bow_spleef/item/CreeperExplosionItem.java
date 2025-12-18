@@ -1,18 +1,18 @@
 package work.lclpnet.ap2.game.bow_spleef.item;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.particle.ParticleTypes;
-import net.minecraft.registry.DynamicRegistryManager;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Hand;
-import net.minecraft.world.World;
-import net.minecraft.world.explosion.ExplosionBehavior;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.ExplosionDamageCalculator;
+import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.impl.game.item.SpecialItem;
 import work.lclpnet.ap2.impl.game.item.SpecialItemContext;
@@ -26,7 +26,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import static net.minecraft.util.math.MathHelper.lerp;
+import static net.minecraft.util.Mth.lerp;
 
 public class CreeperExplosionItem implements SpecialItem {
 
@@ -39,61 +39,61 @@ public class CreeperExplosionItem implements SpecialItem {
     }
 
     @Override
-    public ItemStack createItemStack(DynamicRegistryManager registryManager) {
+    public ItemStack createItemStack(RegistryAccess registryManager) {
         return new ItemStack(Items.CREEPER_HEAD);
     }
 
     @Override
-    public boolean canBeDropped(ServerPlayerEntity player, ItemStack stack) {
-        return !tasks.containsKey(player.getUuid());
+    public boolean canBeDropped(ServerPlayer player, ItemStack stack) {
+        return !tasks.containsKey(player.getUUID());
     }
 
     @Override
-    public ActionResult onUse(ServerPlayerEntity player, ItemStack stack, @Nullable Hand hand, SpecialItemContext ctx) {
-        if (tasks.containsKey(player.getUuid())) return ActionResult.FAIL;
+    public InteractionResult onUse(ServerPlayer player, ItemStack stack, @Nullable InteractionHand hand, SpecialItemContext ctx) {
+        if (tasks.containsKey(player.getUUID())) return InteractionResult.FAIL;
 
-        tasks.put(player.getUuid(), ctx.scheduler().interval(new SchedulerAction() {
+        tasks.put(player.getUUID(), ctx.scheduler().interval(new SchedulerAction() {
             int t = 0;
 
             @Override
             public void run(RunningTask task) {
-                if (player.isDisconnected()) {
+                if (player.hasDisconnected()) {
                     task.cancel();
                     return;
                 }
 
                 float pitch = lerp((float) t / DURATION_TICKS, 0.85f, 1.45f);
 
-                ServerWorld world = player.getEntityWorld();
-                world.playSound(null, player.getX(), player.getEyeY(), player.getZ(), SoundEvents.ENTITY_CREEPER_HURT, SoundCategory.HOSTILE, 0.2f, pitch);
-                world.spawnParticles(ParticleTypes.FLAME, player.getX(), player.getY(), player.getZ(), 10, 0.1, 0.1, 0.1, 0.15);
+                ServerLevel world = player.level();
+                world.playSound(null, player.getX(), player.getEyeY(), player.getZ(), SoundEvents.CREEPER_HURT, SoundSource.HOSTILE, 0.2f, pitch);
+                world.sendParticles(ParticleTypes.FLAME, player.getX(), player.getY(), player.getZ(), 10, 0.1, 0.1, 0.1, 0.15);
 
                 if (t++ < DURATION_TICKS) return;
 
                 task.cancel();
                 ctx.removeSpecialItem(player, CreeperExplosionItem.this);
 
-                var behaviour = new ExplosionBehavior() {
+                var behaviour = new ExplosionDamageCalculator() {
 
                     @Override
-                    public float getKnockbackModifier(Entity entity) {
+                    public float getKnockbackMultiplier(Entity entity) {
                         return 2.5f;
                     }
                 };
 
-                world.createExplosion(player, null, behaviour, player.getX(), player.getY(), player.getZ(),
+                world.explode(player, null, behaviour, player.getX(), player.getY(), player.getZ(),
                         3.5f, false,
-                        World.ExplosionSourceType.BLOCK, ParticleTypes.EXPLOSION, ParticleTypes.EXPLOSION_EMITTER,
+                        Level.ExplosionInteraction.BLOCK, ParticleTypes.EXPLOSION, ParticleTypes.EXPLOSION_EMITTER,
                         ExplosionUtil.EXPLOSION_BLOCK_PARTICLES,
-                        SoundEvents.ENTITY_GENERIC_EXPLODE);
+                        SoundEvents.GENERIC_EXPLODE);
 
-                world.spawnParticles(ParticleTypes.EXPLOSION_EMITTER, player.getX(), player.getY(), player.getZ(), 1, 0.1, 0.1, 0.1, 0.15);
+                world.sendParticles(ParticleTypes.EXPLOSION_EMITTER, player.getX(), player.getY(), player.getZ(), 1, 0.1, 0.1, 0.1, 0.15);
             }
-        }, 1).whenComplete(() -> tasks.remove(player.getUuid())));
+        }, 1).whenComplete(() -> tasks.remove(player.getUUID())));
 
-        player.getItemCooldownManager().set(stack, DURATION_TICKS);
+        player.getCooldowns().addCooldown(stack, DURATION_TICKS);
         PlayerUtils.syncPlayerItems(player);
 
-        return ActionResult.SUCCESS_SERVER;
+        return InteractionResult.SUCCESS_SERVER;
     }
 }

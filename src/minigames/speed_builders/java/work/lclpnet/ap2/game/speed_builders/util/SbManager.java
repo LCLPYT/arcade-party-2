@@ -3,18 +3,18 @@ package work.lclpnet.ap2.game.speed_builders.util;
 import it.unimi.dsi.fastutil.objects.Object2LongMap;
 import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
 import lombok.Setter;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.scoreboard.Team;
-import net.minecraft.server.PlayerManager;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.players.PlayerList;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.scores.PlayerTeam;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.api.base.Participants;
@@ -36,7 +36,7 @@ public class SbManager {
     private final Map<UUID, SbIsland> islands;
     private final List<SbModule> modules;
     private final MiniGameHandle gameHandle;
-    private final ServerWorld world;
+    private final ServerLevel world;
     private final Logger logger;
     private final Random random;
     private final Runnable allPlayersCompleted;
@@ -48,11 +48,11 @@ public class SbManager {
     private boolean buildingPhase = false;
     private SbModule currentModule = null;
     @Setter
-    private Team team = null;
+    private PlayerTeam team = null;
     private int successiveCompletion = 0;
     private int round = 0;
 
-    public SbManager(Map<UUID, SbIsland> islands, List<SbModule> modules, MiniGameHandle gameHandle, ServerWorld world,
+    public SbManager(Map<UUID, SbIsland> islands, List<SbModule> modules, MiniGameHandle gameHandle, ServerLevel world,
                      Random random, Runnable allPlayersCompleted) {
         this.islands = islands;
         this.modules = Collections.unmodifiableList(modules);
@@ -63,11 +63,11 @@ public class SbManager {
         this.allPlayersCompleted = allPlayersCompleted;
     }
 
-    public void eachIsland(BiConsumer<SbIsland, ServerPlayerEntity> action) {
-        PlayerManager playerManager = gameHandle.getServer().getPlayerManager();
+    public void eachIsland(BiConsumer<SbIsland, ServerPlayer> action) {
+        PlayerList playerManager = gameHandle.getServer().getPlayerList();
 
         islands.forEach((uuid, island) -> {
-            ServerPlayerEntity player = playerManager.getPlayer(uuid);
+            ServerPlayer player = playerManager.getPlayer(uuid);
 
             if (player != null) {
                 action.accept(island, player);
@@ -75,8 +75,8 @@ public class SbManager {
         });
     }
 
-    public boolean canModify(ServerPlayerEntity player) {
-        return buildingPhase && !completed.contains(player.getUuid());
+    public boolean canModify(ServerPlayer player) {
+        return buildingPhase && !completed.contains(player.getUUID());
     }
 
     public void clearIslands() {
@@ -85,18 +85,18 @@ public class SbManager {
         }
     }
 
-    public boolean isWithinBuildingArea(ServerPlayerEntity player, BlockPos pos) {
-        SbIsland island = islands.get(player.getUuid());
+    public boolean isWithinBuildingArea(ServerPlayer player, BlockPos pos) {
+        SbIsland island = islands.get(player.getUUID());
 
         return island != null && island.isWithinBuildingArea(pos);
     }
 
     public synchronized void setModule(SbModule module) {
         CustomScoreboardManager scoreboardManager = gameHandle.getScoreboardManager();
-        PlayerManager playerManager = gameHandle.getServer().getPlayerManager();
+        PlayerList playerManager = gameHandle.getServer().getPlayerList();
 
         for (var entry : activeIslands()) {
-            ServerPlayerEntity player = playerManager.getPlayer(entry.getKey());
+            ServerPlayer player = playerManager.getPlayer(entry.getKey());
 
             if (player == null) continue;
 
@@ -128,7 +128,7 @@ public class SbManager {
         return queue.removeFirst();
     }
 
-    public Optional<ServerPlayerEntity> getWorstPlayer() {
+    public Optional<ServerPlayer> getWorstPlayer() {
         var evaluation = evaluate();
         var minScore = evaluation.values().stream().mapToInt(Integer::intValue).min().orElse(0);
 
@@ -136,8 +136,8 @@ public class SbManager {
                 // find players with minScore
                 .filter(entry -> entry.getValue() == minScore)
                 // sort by last edited
-                .sorted(Comparator.<Map.Entry<ServerPlayerEntity, Integer>>comparingLong(entry ->
-                        lastEdited.getOrDefault(entry.getKey().getUuid(), Long.MAX_VALUE)).reversed())
+                .sorted(Comparator.<Map.Entry<ServerPlayer, Integer>>comparingLong(entry ->
+                        lastEdited.getOrDefault(entry.getKey().getUUID(), Long.MAX_VALUE)).reversed())
                 // map to actual player
                 .map(Map.Entry::getKey)
                 .findFirst();
@@ -151,16 +151,16 @@ public class SbManager {
                 .collect(Collectors.toSet());
     }
 
-    private Map<ServerPlayerEntity, Integer> evaluate() {
+    private Map<ServerPlayer, Integer> evaluate() {
         if (currentModule == null) {
             return Map.of();
         }
 
-        PlayerManager playerManager = gameHandle.getServer().getPlayerManager();
-        Map<ServerPlayerEntity, Integer> scores = new HashMap<>();
+        PlayerList playerManager = gameHandle.getServer().getPlayerList();
+        Map<ServerPlayer, Integer> scores = new HashMap<>();
 
         for (var entry : activeIslands()) {
-            ServerPlayerEntity player = playerManager.getPlayer(entry.getKey());
+            ServerPlayer player = playerManager.getPlayer(entry.getKey());
 
             if (player == null) continue;
 
@@ -183,12 +183,12 @@ public class SbManager {
         return it.next().getValue().getPreviewEntities(world);
     }
 
-    public void onEdit(ServerPlayerEntity player) {
-        if (currentModule == null || completed.contains(player.getUuid())) return;
+    public void onEdit(ServerPlayer player) {
+        if (currentModule == null || completed.contains(player.getUUID())) return;
 
-        lastEdited.put(player.getUuid(), System.currentTimeMillis());
+        lastEdited.put(player.getUUID(), System.currentTimeMillis());
 
-        edited.add(player.getUuid());
+        edited.add(player.getUUID());
     }
 
     public void tick() {
@@ -200,12 +200,12 @@ public class SbManager {
         if (edited.isEmpty()) return;
 
         Participants participants = gameHandle.getParticipants();
-        PlayerManager playerManager = gameHandle.getServer().getPlayerManager();
+        PlayerList playerManager = gameHandle.getServer().getPlayerList();
 
         for (UUID uuid : edited) {
             if (!participants.isParticipating(uuid)) continue;
 
-            ServerPlayerEntity player = playerManager.getPlayer(uuid);
+            ServerPlayer player = playerManager.getPlayer(uuid);
 
             if (player == null) continue;
 
@@ -216,50 +216,50 @@ public class SbManager {
     }
 
     private void checkPlayerPositions() {
-        PlayerManager playerManager = gameHandle.getServer().getPlayerManager();
+        PlayerList playerManager = gameHandle.getServer().getPlayerList();
 
         for (var entry : activeIslands()) {
-            ServerPlayerEntity player = playerManager.getPlayer(entry.getKey());
+            ServerPlayer player = playerManager.getPlayer(entry.getKey());
 
-            if (player == null || !player.getAbilities().allowFlying) continue;
+            if (player == null || !player.getAbilities().mayfly) continue;
 
             SbIsland island = entry.getValue();
 
-            if (island.getMovementBounds().contains(player.getEntityPos())) continue;
+            if (island.getMovementBounds().contains(player.position())) continue;
 
             island.teleport(player);
         }
     }
 
-    private void onEdited(ServerPlayerEntity player) {
+    private void onEdited(ServerPlayer player) {
         // check if the player's used all the materials
-        PlayerInventory inventory = player.getInventory();
+        Inventory inventory = player.getInventory();
 
-        for (int i = 0, size = inventory.size(); i < size; i++) {
-            ItemStack stack = inventory.getStack(i);
+        for (int i = 0, size = inventory.getContainerSize(); i < size; i++) {
+            ItemStack stack = inventory.getItem(i);
 
-            if (stack.isEmpty() || stack.isOf(Items.WATER_BUCKET) || stack.isOf(Items.LAVA_BUCKET)) continue;
+            if (stack.isEmpty() || stack.is(Items.WATER_BUCKET) || stack.is(Items.LAVA_BUCKET)) continue;
 
             return;
         }
 
-        logger.info("Player {} has no items left", player.getNameForScoreboard());
+        logger.info("Player {} has no items left", player.getScoreboardName());
 
         // the player used all the materials, check if the building is complete
-        SbIsland island = islands.get(player.getUuid());
+        SbIsland island = islands.get(player.getUUID());
 
         if (island == null || !island.isCompleted(world, currentModule)) return;
 
-        if (!completed.add(player.getUuid())) return;
+        if (!completed.add(player.getUUID())) return;
 
-        logger.info("Player {} has completed the building", player.getNameForScoreboard());
+        logger.info("Player {} has completed the building", player.getScoreboardName());
 
-        player.playSoundToPlayer(SoundEvents.ENTITY_PLAYER_LEVELUP, SoundCategory.PLAYERS, 0.75f, 1.1f);
+        player.playNotifySound(SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 0.75f, 1.1f);
 
         var msg = gameHandle.getTranslations().translateText(player, "game.ap2.speed_builders.completed")
-                .formatted(Formatting.GREEN);
+                .formatted(ChatFormatting.GREEN);
 
-        player.sendMessage(msg);
+        player.sendSystemMessage(msg);
 
         checkOverallCompletion();
     }
@@ -271,16 +271,16 @@ public class SbManager {
         allPlayersCompleted.run();
     }
 
-    public Optional<SbIsland> getIsland(ServerPlayerEntity player) {
-        return Optional.ofNullable(islands.get(player.getUuid()));
+    public Optional<SbIsland> getIsland(ServerPlayer player) {
+        return Optional.ofNullable(islands.get(player.getUUID()));
     }
 
     public boolean allIslandsComplete() {
-        PlayerManager playerManager = gameHandle.getServer().getPlayerManager();
+        PlayerList playerManager = gameHandle.getServer().getPlayerList();
 
         return islands.entrySet().stream().allMatch(entry -> {
             UUID uuid = entry.getKey();
-            ServerPlayerEntity player = playerManager.getPlayer(uuid);
+            ServerPlayer player = playerManager.getPlayer(uuid);
 
             if (player == null) {
                 // do not count offline players
@@ -323,8 +323,8 @@ public class SbManager {
         round++;
     }
 
-    public int getRoundsCompleted(ServerPlayerEntity player, boolean winner) {
-        if (completed.contains(player.getUuid()) || winner) {
+    public int getRoundsCompleted(ServerPlayer player, boolean winner) {
+        if (completed.contains(player.getUUID()) || winner) {
             return round + 1;
         }
 

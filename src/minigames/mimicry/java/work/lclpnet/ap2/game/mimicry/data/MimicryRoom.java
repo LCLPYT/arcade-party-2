@@ -1,12 +1,12 @@
 package work.lclpnet.ap2.game.mimicry.data;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.state.property.Properties;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import work.lclpnet.gaco.ds.BlockBox;
 
 import java.util.Objects;
@@ -28,42 +28,42 @@ public final class MimicryRoom {
         this.buttons = buttons;
     }
 
-    public void teleport(ServerPlayerEntity player, ServerWorld world) {
+    public void teleport(ServerPlayer player, ServerLevel world) {
         double x = spawn.getX() + 0.5, y = spawn.getY(), z = spawn.getZ() + 0.5;
 
-        player.teleport(world, x, y, z, Set.of(), yaw, 0.0F, true);
+        player.teleportTo(world, x, y, z, Set.of(), yaw, 0.0F, true);
     }
 
     public int buttonIndex(BlockPos pos) {
         return buttons.posToIndexYZX(pos);
     }
 
-    public void setButtonActive(int i, ServerWorld world) {
+    public void setButtonActive(int i, ServerLevel world) {
         resetActiveButton(world);
 
         BlockPos buttonPos = buttonPos(i);
 
         BlockState state = world.getBlockState(buttonPos);
 
-        if (!state.contains(Properties.HORIZONTAL_FACING)) return;
+        if (!state.hasProperty(BlockStateProperties.HORIZONTAL_FACING)) return;
 
-        Direction facing = state.get(Properties.HORIZONTAL_FACING);
-        BlockPos base = buttonPos.offset(facing.getOpposite());
+        Direction facing = state.getValue(BlockStateProperties.HORIZONTAL_FACING);
+        BlockPos base = buttonPos.relative(facing.getOpposite());
 
         activeButtonPos = base;
         prevButtonBase = world.getBlockState(base);
 
-        world.setBlockState(base, Blocks.LIME_CONCRETE.getDefaultState());
+        world.setBlockAndUpdate(base, Blocks.LIME_CONCRETE.defaultBlockState());
     }
 
     public BlockPos buttonPos(int i) {
         return buttons.indexToPosYZX(i);
     }
 
-    public void resetActiveButton(ServerWorld world) {
+    public void resetActiveButton(ServerLevel world) {
         if (activeButtonPos == null || prevButtonBase == null) return;
 
-        world.setBlockState(activeButtonPos, prevButtonBase);
+        world.setBlockAndUpdate(activeButtonPos, prevButtonBase);
     }
 
     public BlockPos pos() {

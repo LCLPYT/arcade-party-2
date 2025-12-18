@@ -3,14 +3,14 @@ package work.lclpnet.ap2.impl.game;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import lombok.Getter;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
-import net.minecraft.entity.player.PlayerAbilities;
-import net.minecraft.item.ItemStack;
-import net.minecraft.network.packet.s2c.play.PlayerListS2CPacket;
+import net.minecraft.network.protocol.game.ClientboundPlayerInfoUpdatePacket;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.util.PlayerInput;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.GameMode;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Abilities;
+import net.minecraft.world.entity.player.Input;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.GameType;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.base.PlayerManager;
@@ -29,14 +29,14 @@ import static java.lang.Math.*;
 
 public class PlayerUtil {
 
-    public static final GameMode INITIAL_GAMEMODE = GameMode.ADVENTURE;
+    public static final GameType INITIAL_GAMEMODE = GameType.ADVENTURE;
     private final MinecraftServer server;
     private final PlayerManager playerManager;
     private final CombatControl combatControl;
     private final Set<ApEffect> effects = new ObjectOpenHashSet<>(1);
     private final Map<UUID, State> stateOverrides = new HashMap<>();
     @Getter
-    private GameMode defaultGameMode = INITIAL_GAMEMODE;
+    private GameType defaultGameMode = INITIAL_GAMEMODE;
     @Getter
     private CombatStyle defaultCombatStyle = CombatStyles.MODERN;
     @Getter
@@ -48,7 +48,7 @@ public class PlayerUtil {
         this.combatControl = CombatControl.get(server);
     }
 
-    public void setDefaultGameMode(@NotNull GameMode defaultGameMode) {
+    public void setDefaultGameMode(@NotNull GameType defaultGameMode) {
         Objects.requireNonNull(defaultGameMode);
         this.defaultGameMode = defaultGameMode;
     }
@@ -62,8 +62,8 @@ public class PlayerUtil {
         this.allowFlight = allowFlight;
 
         playerManager.forEach(player -> {
-            player.getAbilities().allowFlying = allowFlight;
-            player.sendAbilitiesUpdate();
+            player.getAbilities().mayfly = allowFlight;
+            player.onUpdateAbilities();
         });
     }
 
@@ -83,17 +83,17 @@ public class PlayerUtil {
         players.forEach(effect::remove);
     }
 
-    public void setStateOverride(ServerPlayerEntity player, @Nullable State state) {
+    public void setStateOverride(ServerPlayer player, @Nullable State state) {
         if (state == null) {
-            stateOverrides.remove(player.getUuid());
+            stateOverrides.remove(player.getUUID());
         } else {
-            stateOverrides.put(player.getUuid(), state);
+            stateOverrides.put(player.getUUID(), state);
         }
     }
 
     @NotNull
-    public State getState(ServerPlayerEntity player) {
-        State override = stateOverrides.get(player.getUuid());
+    public State getState(ServerPlayer player) {
+        State override = stateOverrides.get(player.getUUID());
 
         if (override != null) {
             return override;
@@ -102,51 +102,51 @@ public class PlayerUtil {
         return playerManager.isParticipating(player) ? State.DEFAULT : State.SPECTATOR;
     }
 
-    public void resetPlayer(ServerPlayerEntity player) {
+    public void resetPlayer(ServerPlayer player) {
         resetPlayer(player, getState(player));
     }
 
-    public void resetPlayer(ServerPlayerEntity player, State state) {
-        player.changeGameMode(state == State.DEFAULT ? defaultGameMode : GameMode.SPECTATOR);
-        player.clearStatusEffects();
-        player.getInventory().clear();
+    public void resetPlayer(ServerPlayer player, State state) {
+        player.setGameMode(state == State.DEFAULT ? defaultGameMode : GameType.SPECTATOR);
+        player.removeAllEffects();
+        player.getInventory().clearContent();
         PlayerUtils.setCursorStack(player, ItemStack.EMPTY);
 
-        player.getHungerManager().setFoodLevel(20);
+        player.getFoodData().setFoodLevel(20);
         player.setAbsorptionAmount(0F);
-        player.setExperienceLevel(0);
+        player.setExperienceLevels(0);
         player.setExperiencePoints(0);
-        player.setFireTicks(0);
-        player.setOnFire(false);
-        player.setStuckArrowCount(0);
-        VelocityModifier.setVelocity(player, Vec3d.ZERO);
+        player.setRemainingFireTicks(0);
+        player.setSharedFlagOnFire(false);
+        player.setArrowCount(0);
+        VelocityModifier.setVelocity(player, Vec3.ZERO);
 
         PlayerReset.resetAttributes(player);
 
         player.setHealth(player.getMaxHealth());
-        player.dismountVehicle();
+        player.removeVehicle();
 
         PlayerReset.resetSpawnPoint(player);
 
-        PlayerAbilities abilities = player.getAbilities();
-        abilities.setFlySpeed(0.05f);
+        Abilities abilities = player.getAbilities();
+        abilities.setFlyingSpeed(0.05f);
         PlayerReset.modifyWalkSpeed(player, 0.1f, false);
 
         switch (state) {
             case DEFAULT -> {
                 abilities.flying = false;
-                abilities.allowFlying = allowFlight;
+                abilities.mayfly = allowFlight;
                 abilities.invulnerable = false;
             }
             case SPECTATOR -> {
                 abilities.flying = true;
-                abilities.allowFlying = true;
+                abilities.mayfly = true;
                 abilities.invulnerable = true;
             }
             default -> {}
         }
 
-        player.sendAbilitiesUpdate();
+        player.onUpdateAbilities();
 
         effects.forEach(effect -> effect.apply(player));
 
@@ -164,22 +164,22 @@ public class PlayerUtil {
     }
 
     public void updatePlayerListNames() {
-        Collection<ServerPlayerEntity> players = PlayerLookup.all(server);
+        Collection<ServerPlayer> players = PlayerLookup.all(server);
 
         updatePlayerListNames(players);
     }
 
-    public void updatePlayerListNames(Collection<ServerPlayerEntity> players) {
-        var packet = new PlayerListS2CPacket(EnumSet.of(PlayerListS2CPacket.Action.UPDATE_DISPLAY_NAME), players);
+    public void updatePlayerListNames(Collection<ServerPlayer> players) {
+        var packet = new ClientboundPlayerInfoUpdatePacket(EnumSet.of(ClientboundPlayerInfoUpdatePacket.Action.UPDATE_DISPLAY_NAME), players);
 
-        server.getPlayerManager().sendToAll(packet);
+        server.getPlayerList().broadcastAll(packet);
     }
 
     public static int getLoadingDelayTicks(int players) {
         return Ticks.seconds(5) + players * 10;
     }
 
-    public static Vec3d getRelativeHorizontalInputVector(PlayerInput input) {
+    public static Vec3 getRelativeHorizontalInputVector(Input input) {
         double x = 0, y = 0, z = 0;
 
         if (input.forward()) z += 1;
@@ -191,18 +191,18 @@ public class PlayerUtil {
         double lenSq = x * x + y * y + z * z;
 
         if (abs(lenSq) < 1e-6) {
-            return Vec3d.ZERO;
+            return Vec3.ZERO;
         }
 
         double len = sqrt(lenSq);
 
-        return new Vec3d(x / len, y / len, z / len);
+        return new Vec3(x / len, y / len, z / len);
     }
 
-    public static Vec3d getHorizontalInputVector(ServerPlayerEntity player) {
-        Vec3d relInput = getRelativeHorizontalInputVector(player.getPlayerInput());
+    public static Vec3 getHorizontalInputVector(ServerPlayer player) {
+        Vec3 relInput = getRelativeHorizontalInputVector(player.getLastClientInput());
 
-        return relInput.rotateY((float) toRadians(-player.getYaw()));
+        return relInput.yRot((float) toRadians(-player.getYRot()));
     }
 
     public enum State {

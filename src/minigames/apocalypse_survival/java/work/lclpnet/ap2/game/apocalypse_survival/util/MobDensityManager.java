@@ -1,9 +1,9 @@
 package work.lclpnet.ap2.game.apocalypse_survival.util;
 
-import net.minecraft.entity.ai.FuzzyTargeting;
-import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.entity.mob.PathAwareEntity;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.PathfinderMob;
+import net.minecraft.world.entity.ai.util.LandRandomPos;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.gaco.ds.IndexedSet;
 import work.lclpnet.lobby.game.map.GameMap;
@@ -19,17 +19,17 @@ public class MobDensityManager {
     private final int cellsX, cellsZ;
     private final int[] cells;
     private final IndexedSet<Integer> cellsWithLeast;
-    private final Map<MobEntity, MobPos> mobs = new HashMap<>();
+    private final Map<Mob, MobPos> mobs = new HashMap<>();
     private int minMobCount = 0;
 
     public MobDensityManager(GameMap map, Random random) {
         this.random = random;
 
-        Vec3d spawn = MapUtils.getSpawnPosition(map);
+        Vec3 spawn = MapUtils.getSpawnPosition(map);
         Number radiusNum = map.requireProperty("bounding-box-radius");
 
-        centerX = spawn.getX();
-        centerZ = spawn.getZ();
+        centerX = spawn.x();
+        centerZ = spawn.z();
 
         double radius = radiusNum.doubleValue();
 
@@ -76,14 +76,14 @@ public class MobDensityManager {
         return centerZ + CELL_SIZE * (Math.floorDiv(cell,  cellsX) - cellsZ * 0.5);
     }
 
-    public void startTracking(MobEntity mob) {
+    public void startTracking(Mob mob) {
         MobPos mobPos = new MobPos(mob);
         mobs.put(mob, mobPos);
 
         updateMobPos(mobPos);
     }
 
-    public void stopTracking(MobEntity mob) {
+    public void stopTracking(Mob mob) {
         MobPos mobPos = mobs.remove(mob);
 
         if (mobPos == null) return;
@@ -92,12 +92,12 @@ public class MobDensityManager {
     }
 
     @Nullable
-    public Vec3d startGuarding(PathAwareEntity mob) {
+    public Vec3 startGuarding(PathfinderMob mob) {
         MobPos mobPos = mobs.get(mob);
 
         if (mobPos == null) return null;  // not tracked
 
-        Vec3d guardPos = findGuardPos(mob);
+        Vec3 guardPos = findGuardPos(mob);
 
         if (guardPos == null) return null;
 
@@ -108,7 +108,7 @@ public class MobDensityManager {
         return guardPos;
     }
 
-    public void stopGuarding(PathAwareEntity mob) {
+    public void stopGuarding(PathfinderMob mob) {
         MobPos mobPos = mobs.get(mob);
 
         if (mobPos == null) return;
@@ -173,13 +173,13 @@ public class MobDensityManager {
     }
 
     @Nullable
-    private Vec3d findGuardPos(PathAwareEntity mob) {
+    private Vec3 findGuardPos(PathfinderMob mob) {
         int cell = cellWithLeastMobs();
 
         double x = getX(cell) + 0.5 * CELL_SIZE;
         double z = getZ(cell) + 0.5 * CELL_SIZE;
 
-        return FuzzyTargeting.findTo(mob, 20, 10, new Vec3d(x, mob.getY(), z));
+        return LandRandomPos.getPosTowards(mob, 20, 10, new Vec3(x, mob.getY(), z));
     }
 
     public void update() {
@@ -189,18 +189,18 @@ public class MobDensityManager {
     }
 
     private static class MobPos {
-        final MobEntity mob;
-        Vec3d guardPos = null;
+        final Mob mob;
+        Vec3 guardPos = null;
         int cell;
         boolean hasCell = false;
 
-        MobPos(MobEntity mob) {
+        MobPos(Mob mob) {
             this.mob = mob;
         }
 
         double getX() {
             if (guardPos != null) {
-                return guardPos.getX();
+                return guardPos.x();
             }
 
             return mob.getX();
@@ -208,7 +208,7 @@ public class MobDensityManager {
 
         double getZ() {
             if (guardPos != null) {
-                return guardPos.getZ();
+                return guardPos.z();
             }
 
             return mob.getZ();

@@ -2,15 +2,15 @@ package work.lclpnet.ap2.mode_default.util;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
-import net.minecraft.inventory.Inventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.screen.slot.Slot;
-import net.minecraft.screen.slot.SlotActionType;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.Container;
+import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.Slot;
+import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.player.PlayerInventoryHooks;
@@ -23,10 +23,10 @@ import java.util.function.Function;
 
 public class OptionChooser<T> {
 
-    private final WeakHashMap<Inventory, ChooserInventory<T>> inventories = new WeakHashMap<>();
+    private final WeakHashMap<Container, ChooserInventory<T>> inventories = new WeakHashMap<>();
 
     @Nullable
-    public T get(Inventory inv, int slot) {
+    public T get(Container inv, int slot) {
         ChooserInventory<T> chooser = inventories.get(inv);
 
         if (chooser == null) return null;
@@ -38,7 +38,7 @@ public class OptionChooser<T> {
         inventories.put(inv, new ChooserInventory<>(items));
     }
 
-    public RestrictedInventory createInventory(Collection<T> items, Text title, Function<T, ItemStack> iconFactory) {
+    public RestrictedInventory createInventory(Collection<T> items, Component title, Function<T, ItemStack> iconFactory) {
         int rows = Math.max(1, Math.min(6, (int) Math.ceil(items.size() / 9d)));
 
         RestrictedInventory inv = new RestrictedInventory(rows, title);
@@ -51,7 +51,7 @@ public class OptionChooser<T> {
 
             ItemStack icon = iconFactory.apply(item);
 
-            inv.setStack(i++, icon);
+            inv.setItem(i++, icon);
         }
 
         this.registerInventory(inv, items);
@@ -59,22 +59,22 @@ public class OptionChooser<T> {
         return inv;
     }
 
-    public void listen(HookRegistrar hooks, BiConsumer<T, ServerPlayerEntity> action) {
+    public void listen(HookRegistrar hooks, BiConsumer<T, ServerPlayer> action) {
         hooks.registerHook(PlayerInventoryHooks.MODIFY_INVENTORY, event -> {
             this.onModifyInventory(event, action);
             return false;
         });
     }
 
-    private void onModifyInventory(PlayerInventoryHooks.ClickEvent event, BiConsumer<T, ServerPlayerEntity> action) {
-        if (event.action() != SlotActionType.PICKUP) return;
+    private void onModifyInventory(PlayerInventoryHooks.ClickEvent event, BiConsumer<T, ServerPlayer> action) {
+        if (event.action() != ClickType.PICKUP) return;
 
-        ServerPlayerEntity player = event.player();
-        MinecraftServer server = player.getEntityWorld().getServer();
+        ServerPlayer player = event.player();
+        MinecraftServer server = player.level().getServer();
 
-        if (server.getPermissionLevel(player.getPlayerConfigEntry()) < 2) return;
+        if (server.getProfilePermissions(player.nameAndId()) < 2) return;
 
-        Inventory inventory = event.inventory();
+        Container inventory = event.inventory();
 
         if (inventory == null) return;
 
@@ -82,7 +82,7 @@ public class OptionChooser<T> {
 
         if (slot == null) return;
 
-        int slotIndex = slot.getIndex();
+        int slotIndex = slot.getContainerSlot();
 
         T item = get(inventory, slotIndex);
 
@@ -90,8 +90,8 @@ public class OptionChooser<T> {
 
         action.accept(item, player);
 
-        player.closeHandledScreen();
-        player.playSoundToPlayer(SoundEvents.BLOCK_NOTE_BLOCK_PLING.value(), SoundCategory.PLAYERS, 0.5f, 2f);
+        player.closeContainer();
+        player.playNotifySound(SoundEvents.NOTE_BLOCK_PLING.value(), SoundSource.PLAYERS, 0.5f, 2f);
     }
 
     public static class ChooserInventory<T> {

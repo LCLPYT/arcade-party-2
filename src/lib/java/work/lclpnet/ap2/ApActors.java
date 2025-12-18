@@ -1,6 +1,6 @@
 package work.lclpnet.ap2;
 
-import net.minecraft.util.Util;
+import net.minecraft.Util;
 import work.lclpnet.ap2.api.actor.ActorProvider;
 import work.lclpnet.ap2.api.actor.ActorRegistrar;
 import work.lclpnet.ap2.api.actor.ActorType;
@@ -18,7 +18,7 @@ import static work.lclpnet.ap2.api.actor.ActorFactory.withData;
 public class ApActors implements ActorProvider {
 
     public static final ActorType<GravityFieldActor> GRAVITY_FIELD = new ActorType<>(identifier("gravity_field"), withData(GravityFieldActor.Data.CODEC,
-            Util.addPrefix("Parse GravityField data: ", logger::error),
+            Util.prefix("Parse GravityField data: ", logger::error),
             GravityFieldActor::new));
 
     @Override

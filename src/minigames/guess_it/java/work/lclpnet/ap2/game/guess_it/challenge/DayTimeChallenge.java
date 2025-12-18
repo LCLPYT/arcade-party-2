@@ -1,18 +1,18 @@
 package work.lclpnet.ap2.game.guess_it.challenge;
 
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.LodestoneTrackerComponent;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.network.packet.s2c.play.WorldTimeUpdateS2CPacket;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.GlobalPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.GameRules;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.GlobalPos;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.network.protocol.game.ClientboundSetTimePacket;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.Mth;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.component.LodestoneTracker;
+import net.minecraft.world.level.GameRules;
+import net.minecraft.world.phys.Vec3;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.game.guess_it.data.*;
@@ -29,8 +29,8 @@ import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Random;
 
-import static net.minecraft.util.Formatting.RED;
-import static net.minecraft.util.Formatting.YELLOW;
+import static net.minecraft.ChatFormatting.RED;
+import static net.minecraft.ChatFormatting.YELLOW;
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
 public class DayTimeChallenge implements Challenge, SchedulerAction {
@@ -39,7 +39,7 @@ public class DayTimeChallenge implements Challenge, SchedulerAction {
             ANIMATION_DURATION_TICKS = Ticks.seconds(2),
             DURATION_TICKS = Ticks.seconds(20);
     private final MiniGameHandle gameHandle;
-    private final ServerWorld world;
+    private final ServerLevel world;
     private final Random random;
     private final BlockShape blockShape;
     private final DynamicEntityModifier dynamicEntities;
@@ -48,7 +48,7 @@ public class DayTimeChallenge implements Challenge, SchedulerAction {
     private int tick = 0;
     private TaskHandle animation = null;
 
-    public DayTimeChallenge(MiniGameHandle gameHandle, ServerWorld world, Random random,
+    public DayTimeChallenge(MiniGameHandle gameHandle, ServerLevel world, Random random,
                             BlockShape blockShape, DynamicEntityModifier dynamicEntities) {
         this.gameHandle = gameHandle;
         this.world = world;
@@ -74,7 +74,7 @@ public class DayTimeChallenge implements Challenge, SchedulerAction {
 
     @Override
     public void prepare() {
-        prevTime = (int) world.getTimeOfDay();
+        prevTime = (int) world.getDayTime();
         correctTime = random.nextInt(24000);
 
         animateTime(prevTime, correctTime);
@@ -91,23 +91,23 @@ public class DayTimeChallenge implements Challenge, SchedulerAction {
         // create compass that points north
         ItemStack stack = new ItemStack(Items.COMPASS);
 
-        stack.set(DataComponentTypes.LODESTONE_TRACKER, new LodestoneTrackerComponent(
-                Optional.of(new GlobalPos(world.getRegistryKey(), BlockPos.ORIGIN.north(10000))),
+        stack.set(DataComponents.LODESTONE_TRACKER, new LodestoneTracker(
+                Optional.of(new GlobalPos(world.dimension(), BlockPos.ZERO.north(10000))),
                 false));
 
-        stack.set(DataComponentTypes.CUSTOM_NAME, Items.COMPASS.getName().copy()
-                .styled(style -> style.withItalic(false)));
+        stack.set(DataComponents.CUSTOM_NAME, Items.COMPASS.getName().copy()
+                .withStyle(style -> style.withItalic(false)));
 
-        stack.set(DataComponentTypes.ENCHANTMENT_GLINT_OVERRIDE, false);
+        stack.set(DataComponents.ENCHANTMENT_GLINT_OVERRIDE, false);
 
-        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
-            player.getInventory().setStack(4, stack.copy());
+        for (ServerPlayer player : gameHandle.getParticipants()) {
+            player.getInventory().setItem(4, stack.copy());
         }
 
         BlockPos origin = blockShape.origin();
 
         addHint(dynamicEntities, world, gameHandle.getTranslations(),
-                new Vec3d(origin.getX() + 0.5, origin.getY() + 1, origin.getZ() + 0.5),
+                new Vec3(origin.getX() + 0.5, origin.getY() + 1, origin.getZ() + 0.5),
                 "game.ap2.guess_it.daytime.hint");
     }
 
@@ -136,14 +136,14 @@ public class DayTimeChallenge implements Challenge, SchedulerAction {
 
         animateTime(correctTime, prevTime);
 
-        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
-            player.getInventory().setStack(4, ItemStack.EMPTY);
+        for (ServerPlayer player : gameHandle.getParticipants()) {
+            player.getInventory().setItem(4, ItemStack.EMPTY);
         }
     }
 
     @Override
     public void destroy() {
-        world.setTimeOfDay(prevTime);
+        world.setDayTime(prevTime);
 
         if (animation != null) {
             animation.cancel();
@@ -166,12 +166,12 @@ public class DayTimeChallenge implements Challenge, SchedulerAction {
 
         int time = getInterpolatedTime(progress);
 
-        world.setTimeOfDay(time);
+        world.setDayTime(time);
 
-        var packet = new WorldTimeUpdateS2CPacket(world.getTime(), world.getTimeOfDay(), world.getGameRules().getBoolean(GameRules.DO_DAYLIGHT_CYCLE));
+        var packet = new ClientboundSetTimePacket(world.getGameTime(), world.getDayTime(), world.getGameRules().getBoolean(GameRules.RULE_DAYLIGHT));
 
-        for (ServerPlayerEntity player : PlayerLookup.world(world)) {
-            player.networkHandler.sendPacket(packet);
+        for (ServerPlayer player : PlayerLookup.world(world)) {
+            player.connection.send(packet);
         }
 
         if (t >= ANIMATION_DURATION_TICKS) {
@@ -187,13 +187,13 @@ public class DayTimeChallenge implements Challenge, SchedulerAction {
 
         if (timeStart > timeEnd && forwardDiff <= backwardDiff) {
             // advance time forwards, wrapping at 0 am
-            time = Math.floorMod(MathHelper.lerp(progress, timeStart, timeEnd + 24000), 24000);
+            time = Math.floorMod(Mth.lerpInt(progress, timeStart, timeEnd + 24000), 24000);
         } else if (timeStart < timeEnd && forwardDiff >= backwardDiff) {
             // advance time backwards, wrapping at 0 am
-            time = Math.floorMod(MathHelper.lerp(progress, timeStart + 24000, timeEnd), 24000);
+            time = Math.floorMod(Mth.lerpInt(progress, timeStart + 24000, timeEnd), 24000);
         } else {
             // advance time without wrapping
-            time = MathHelper.lerp(progress, timeStart, timeEnd);
+            time = Mth.lerpInt(progress, timeStart, timeEnd);
         }
 
         return time;

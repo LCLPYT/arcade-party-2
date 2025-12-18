@@ -1,38 +1,38 @@
 package work.lclpnet.ap2.core.patch;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.shape.VoxelShape;
-import net.minecraft.world.World;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.Nullable;
 
 import static java.lang.Math.*;
-import static net.minecraft.util.math.Direction.Axis.X;
-import static net.minecraft.util.math.Direction.Axis.Z;
+import static net.minecraft.core.Direction.Axis.X;
+import static net.minecraft.core.Direction.Axis.Z;
 
 
 public class NarrowMovementPatch {
 
     @Nullable
-    public static Vec3d getNodePosition(Entity entity, int x, int y, int z) {
-        double hitBoxOffset = ((int) (entity.getWidth() + 1.0F)) * 0.5;
+    public static Vec3 getNodePosition(Entity entity, int x, int y, int z) {
+        double hitBoxOffset = ((int) (entity.getBbWidth() + 1.0F)) * 0.5;
 
         // default node position
         double dx = x + hitBoxOffset;
         double dz = z + hitBoxOffset;
 
-        Box boxAtNodePos = entity.getDimensions(entity.getPose()).getBoxAt(dx, y, dz);
+        AABB boxAtNodePos = entity.getDimensions(entity.getPose()).makeBoundingBox(dx, y, dz);
 
-        World world = entity.getEntityWorld();
+        Level world = entity.level();
         var blockCollisions = world.getBlockCollisions(entity, boxAtNodePos);
 
         for (VoxelShape collision : blockCollisions) {
             // calculate amount of intersection on each axis (overlap distance)
-            double collisionMinX = collision.getMin(X);
-            double collisionMinZ = collision.getMin(Z);
-            double overlapX = min(collision.getMax(X), boxAtNodePos.maxX) - max(collisionMinX, boxAtNodePos.minX);
-            double overlapZ = min(collision.getMax(Z), boxAtNodePos.maxZ) - max(collisionMinZ, boxAtNodePos.minZ);
+            double collisionMinX = collision.min(X);
+            double collisionMinZ = collision.min(Z);
+            double overlapX = min(collision.max(X), boxAtNodePos.maxX) - max(collisionMinX, boxAtNodePos.minX);
+            double overlapZ = min(collision.max(Z), boxAtNodePos.maxZ) - max(collisionMinZ, boxAtNodePos.minZ);
 
             // if overlap is about the same along both axes, the collision cannot be resolved without error
             if (abs(overlapX - overlapZ) < 0.1) continue;
@@ -56,14 +56,14 @@ public class NarrowMovementPatch {
             // small buffer
             minOverlap += 0.125;
 
-            Vec3d adjusted = new Vec3d(
+            Vec3 adjusted = new Vec3(
                     dx + mtvX * minOverlap,
                     y,
                     dz + mtvZ * minOverlap
             );
 
             // check if adjusted box still collides
-            Box adjustedBox = entity.getType().getDimensions().getBoxAt(adjusted.x, adjusted.y, adjusted.z);
+            AABB adjustedBox = entity.getType().getDimensions().makeBoundingBox(adjusted.x, adjusted.y, adjusted.z);
 
             if (world.getBlockCollisions(entity, adjustedBox).iterator().hasNext()) {
                 // there are collisions at the adjusted position, abort

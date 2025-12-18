@@ -3,15 +3,15 @@ package work.lclpnet.ap2.game.paintball.util;
 import com.jme3.math.Vector3f;
 import lombok.Getter;
 import lombok.Setter;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.block.ShapeContext;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.hit.HitResult;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.RaycastContext;
+import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.shapes.CollisionContext;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3d;
 import work.lclpnet.ap2.impl.util.RayCastUtil;
@@ -53,9 +53,9 @@ public class PaintballBullet extends PaintballProjectile {
     private int splits = 0;
     @Getter @Setter
     private boolean playerContact = false;
-    private @Nullable Vec3d lastSplitPos = null;
+    private @Nullable Vec3 lastSplitPos = null;
 
-    public PaintballBullet(Scene scene, BlockState blockState, ServerWorld world, PaintGun.BulletSettings settings,
+    public PaintballBullet(Scene scene, BlockState blockState, ServerLevel world, PaintGun.BulletSettings settings,
                            PaintGunManager paintManager, DebugController debugController) {
         super(scene, blockState, world);
         this.settings = settings;
@@ -107,7 +107,7 @@ public class PaintballBullet extends PaintballProjectile {
         }
 
         // remove out of world
-        if (position.y < world.getBottomY() - 40 || position.distanceSquared(startPos) > MAX_TRAVEL_DIST * MAX_TRAVEL_DIST) {
+        if (position.y < world.getMinY() - 40 || position.distanceSquared(startPos) > MAX_TRAVEL_DIST * MAX_TRAVEL_DIST) {
             detach();
         }
 
@@ -130,16 +130,16 @@ public class PaintballBullet extends PaintballProjectile {
 
     private void split() {
         Vector3f loc = getRigidBody().getFrame().getLocation(new Vector3f(), 1);
-        Vec3d pos = new Vec3d(loc.x, loc.y, loc.z);
+        Vec3 pos = new Vec3(loc.x, loc.y, loc.z);
 
         int subdivisions = settings.split().splitSubdivisions();
 
         if (lastSplitPos != null && subdivisions > 0) {
             double frac = 1d / (subdivisions + 1);
-            Vec3d diff = pos.subtract(lastSplitPos);
+            Vec3 diff = pos.subtract(lastSplitPos);
 
             for (int i = 1; i <= subdivisions; i++) {
-                Vec3d subPos = lastSplitPos.add(diff.multiply(i * frac));
+                Vec3 subPos = lastSplitPos.add(diff.scale(i * frac));
                 splitAt(subPos);
             }
         }
@@ -149,26 +149,26 @@ public class PaintballBullet extends PaintballProjectile {
         splitAt(pos);
     }
 
-    private void splitAt(Vec3d start) {
+    private void splitAt(Vec3 start) {
         if (splits >= settings.split().maxSplits()) return;
 
         splits++;
 
-        Vec3d dir = Direction.DOWN.getDoubleVector();
+        Vec3 dir = Direction.DOWN.getUnitVec3();
 
         if (DEBUG_SPLITTING) {
             debugController.renderer().ifPresent(renderer -> {
-                renderer.marker(start, Blocks.DIAMOND_BLOCK.getDefaultState(), 0x5555ff);
-                renderer.arrow(start, dir, Blocks.BLACK_CONCRETE.getDefaultState());
+                renderer.marker(start, Blocks.DIAMOND_BLOCK.defaultBlockState(), 0x5555ff);
+                renderer.arrow(start, dir, Blocks.BLACK_CONCRETE.defaultBlockState());
             });
         }
 
-        BlockHitResult hit = RayCastUtil.raycastBlocks(world, start, dir, 10, RaycastContext.ShapeType.OUTLINE,
-                RaycastContext.FluidHandling.NONE, ShapeContext.absent());
+        BlockHitResult hit = RayCastUtil.raycastBlocks(world, start, dir, 10, ClipContext.Block.OUTLINE,
+                ClipContext.Fluid.NONE, CollisionContext.empty());
 
         if (hit.getType() != HitResult.Type.BLOCK) return;
 
-        Vec3d pos = hit.getPos();
+        Vec3 pos = hit.getLocation();
 
         paintManager.paintAt(this, pos.x, pos.y, pos.z, settings.split().splitPaintRadius(), false);
     }

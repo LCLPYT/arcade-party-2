@@ -1,10 +1,10 @@
 package work.lclpnet.ap2.impl.map;
 
 import it.unimi.dsi.fastutil.Pair;
-import net.minecraft.block.BlockState;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.core.BlockPos;
+import net.minecraft.util.Mth;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
@@ -57,24 +57,24 @@ public class MapUtil {
         return Optional.of(new BlockPos(tuple.getInt(0), tuple.getInt(1), tuple.getInt(2)));
     }
 
-    public static Vec3d readVec3d(JSONArray tuple) {
+    public static Vec3 readVec3d(JSONArray tuple) {
         return optVec3d(tuple).orElseThrow(() -> new IllegalArgumentException("Tuple must be of size 3"));
     }
 
-    public static Optional<Vec3d> optVec3d(JSONArray tuple) {
+    public static Optional<Vec3> optVec3d(JSONArray tuple) {
         if (tuple.length() < 3) return Optional.empty();
 
-        return Optional.of(new Vec3d(tuple.getDouble(0), tuple.getDouble(1), tuple.getDouble(2)));
+        return Optional.of(new Vec3(tuple.getDouble(0), tuple.getDouble(1), tuple.getDouble(2)));
     }
 
-    public static Vec3d readCenteredVec3d(JSONArray tuple) {
+    public static Vec3 readCenteredVec3d(JSONArray tuple) {
         return optCenteredVec3d(tuple).orElseThrow(() -> new IllegalArgumentException("Tuple must be of size 3"));
     }
 
-    public static Optional<Vec3d> optCenteredVec3d(JSONArray tuple) {
+    public static Optional<Vec3> optCenteredVec3d(JSONArray tuple) {
         if (tuple.length() < 3) return Optional.empty();
 
-        return Optional.of(new Vec3d(
+        return Optional.of(new Vec3(
                 centeredDouble(tuple.getDouble(0)),
                 centeredDouble(tuple.getDouble(1)),
                 centeredDouble(tuple.getDouble(2))
@@ -105,7 +105,7 @@ public class MapUtil {
      * @return An angle in degrees between [-180, 180).
      */
     public static float readAngle(Number number) {
-        return MathHelper.wrapDegrees(readFloat(number));
+        return Mth.wrapDegrees(readFloat(number));
     }
 
     public static BlockState readBlockState(String string) {
@@ -135,13 +135,13 @@ public class MapUtil {
 
         if (json == null) return null;
 
-        BlockPos mapSpawn = BlockPos.ofFloored(MapUtils.getSpawnPosition(map));
+        BlockPos mapSpawn = BlockPos.containing(MapUtils.getSpawnPosition(map));
 
         return readShape(json, mapSpawn);
     }
 
     public static BlockShape readShape(GameMap map, String key) {
-        BlockPos mapSpawn = BlockPos.ofFloored(MapUtils.getSpawnPosition(map));
+        BlockPos mapSpawn = BlockPos.containing(MapUtils.getSpawnPosition(map));
 
         return readShape(map.requireProperty(key), mapSpawn);
     }
@@ -203,7 +203,7 @@ public class MapUtil {
     }
 
     public static Optional<SplinePath> readSplinePath(JSONArray json, Logger logger) {
-        List<Vec3d> keypoints = new ArrayList<>(json.length());
+        List<Vec3> keypoints = new ArrayList<>(json.length());
 
         for (Object item : json) {
             if (!(item instanceof JSONArray tuple)) {

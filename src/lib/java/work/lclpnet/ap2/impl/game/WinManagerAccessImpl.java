@@ -1,6 +1,6 @@
 package work.lclpnet.ap2.impl.game;
 
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.level.ServerPlayer;
 import work.lclpnet.ap2.api.game.WinManagerAccess;
 import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.game.data.SubjectRef;
@@ -13,10 +13,10 @@ import java.util.stream.Collectors;
 public class WinManagerAccessImpl<T, Ref extends SubjectRef> implements WinManagerAccess {
 
     private final WinManager<T, Ref> winManager;
-    private final Function<ServerPlayerEntity, Optional<T>> mapper;
+    private final Function<ServerPlayer, Optional<T>> mapper;
     private final DataContainer<T, Ref> data;
 
-    public WinManagerAccessImpl(WinManager<T, Ref> winManager, Function<ServerPlayerEntity, Optional<T>> mapper,
+    public WinManagerAccessImpl(WinManager<T, Ref> winManager, Function<ServerPlayer, Optional<T>> mapper,
                                 DataContainer<T, Ref> data) {
         this.winManager = winManager;
         this.mapper = mapper;
@@ -30,12 +30,12 @@ public class WinManagerAccessImpl<T, Ref extends SubjectRef> implements WinManag
     }
 
     @Override
-    public void win(ServerPlayerEntity player) {
+    public void win(ServerPlayer player) {
         mapper.apply(player).ifPresentOrElse(winner -> winManager.forceWin(Set.of(winner)), this::draw);
     }
 
     @Override
-    public void win(Set<ServerPlayerEntity> players) {
+    public void win(Set<ServerPlayer> players) {
         var winners = players.stream()
                 .map(mapper)
                 .flatMap(Optional::stream)

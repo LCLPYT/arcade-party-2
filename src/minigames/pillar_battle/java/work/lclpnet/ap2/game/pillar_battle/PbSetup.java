@@ -1,16 +1,16 @@
 package work.lclpnet.ap2.game.pillar_battle;
 
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.api.base.Participants;
-import work.lclpnet.gaco.ds.IndexedSet;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.world.CircleStructureGenerator;
+import work.lclpnet.gaco.ds.IndexedSet;
 import work.lclpnet.kibu.hook.util.PositionRotation;
 import work.lclpnet.kibu.mc.BlockStateAdapter;
 import work.lclpnet.kibu.schematic.FabricBlockStateAdapter;
@@ -29,12 +29,12 @@ import java.util.stream.Collectors;
 
 public class PbSetup {
 
-    private final ServerWorld world;
+    private final ServerLevel world;
     private final GameMap map;
     private final Logger logger;
     private @Nullable IndexedSet<PillarInfo> availablePillars = null;
 
-    public PbSetup(ServerWorld world, GameMap map, Logger logger) {
+    public PbSetup(ServerLevel world, GameMap map, Logger logger) {
         this.world = world;
         this.map = map;
         this.logger = logger;
@@ -104,10 +104,10 @@ public class PbSetup {
         return new PillarInfo(struct, spawn);
     }
 
-    private Path getWorldDirectory(ServerWorld world) {
+    private Path getWorldDirectory(ServerLevel world) {
         var session = ((MinecraftServerAccessor) world.getServer()).getSession();
 
-        return session.getWorldDirectory(world.getRegistryKey());
+        return session.getDimensionPath(world.dimension());
     }
 
     @Nullable
@@ -139,8 +139,8 @@ public class PbSetup {
 
         CircleStructureGenerator.placeStructures(structs, world, offsetResult.offsets(), (i, struct, offset) -> {
             BlockPos pillarSpawn = spawns.get(i);
-            BlockPos pos = center.add(offset.x(), -pillarSpawn.getY(), offset.z());
-            BlockPos spawn = pos.add(pillarSpawn);
+            BlockPos pos = center.offset(offset.x(), -pillarSpawn.getY(), offset.z());
+            BlockPos spawn = pos.offset(pillarSpawn);
 
             float yaw = (float) Math.toDegrees(Math.atan2(offset.x(), -offset.z()));
 
@@ -172,8 +172,8 @@ public class PbSetup {
         var playerOrder = participants.stream().collect(Collectors.toCollection(ArrayList::new));
         Collections.shuffle(playerOrder, random);
 
-        for (ServerPlayerEntity player : playerOrder) {
-            playerIds.add(player.getUuid());
+        for (ServerPlayer player : playerOrder) {
+            playerIds.add(player.getUUID());
 
             if (pool.isEmpty()) {
                 // refill pool if empty

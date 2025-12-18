@@ -1,20 +1,20 @@
 package work.lclpnet.ap2.impl.util;
 
 import lombok.Getter;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.ShapeContext;
-import net.minecraft.entity.Entity;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.hit.HitResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.shape.VoxelShape;
-import net.minecraft.world.BlockView;
-import net.minecraft.world.RaycastContext;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Matrix4d;
 import org.joml.Quaterniond;
@@ -22,7 +22,6 @@ import org.joml.Vector4d;
 import work.lclpnet.ap2.impl.util.math.MathUtil;
 
 import static java.lang.Math.*;
-import static java.lang.Math.min;
 
 public class VisibilityChecker {
 
@@ -30,21 +29,21 @@ public class VisibilityChecker {
             PLAYER_FOV = toRadians(90),
             PLAYER_ASPECT_RATIO = 1920 / 1080.d;
 
-    private final BlockView blockView;
+    private final BlockGetter blockView;
     @Getter
     private final Matrix4d viewProjMat = new Matrix4d();
 
-    public VisibilityChecker(BlockView blockView) {
+    public VisibilityChecker(BlockGetter blockView) {
         this.blockView = blockView;
     }
 
-    public boolean isAnyoneLookingAt(Entity mob, Vec3d pos, Iterable<? extends ServerPlayerEntity> players) {
+    public boolean isAnyoneLookingAt(Entity mob, Vec3 pos, Iterable<? extends ServerPlayer> players) {
         return getAnyoneLookingAt(mob, pos, players) != null;
     }
 
     @Nullable
-    public ServerPlayerEntity getAnyoneLookingAt(Entity mob, Vec3d pos, Iterable<? extends ServerPlayerEntity> players) {
-        for (ServerPlayerEntity player : players) {
+    public ServerPlayer getAnyoneLookingAt(Entity mob, Vec3 pos, Iterable<? extends ServerPlayer> players) {
+        for (ServerPlayer player : players) {
             if (player.isSpectator()) continue;
 
             if (isVisibleByAt(mob, player, pos)) {
@@ -55,19 +54,19 @@ public class VisibilityChecker {
         return null;
     }
 
-    public boolean isVisibleByAt(Entity entity, ServerPlayerEntity player, Vec3d pos) {
+    public boolean isVisibleByAt(Entity entity, ServerPlayer player, Vec3 pos) {
         viewProjectionMatrix(player, PLAYER_FOV, PLAYER_ASPECT_RATIO, viewProjMat);
 
         // check if the entity is within the players (estimated) view frustum
-        Vec3d playerEyePos = player.getEyePos();
-        Vec3d entityEyePos = new Vec3d(pos.getX(), pos.getY() + entity.getStandingEyeHeight(), pos.getZ());
+        Vec3 playerEyePos = player.getEyePosition();
+        Vec3 entityEyePos = new Vec3(pos.x(), pos.y() + entity.getEyeHeight(), pos.z());
 
-        Box bounds = entity.getDimensions(entity.getPose()).getBoxAt(pos);  // add some margin
+        AABB bounds = entity.getDimensions(entity.getPose()).makeBoundingBox(pos);  // add some margin
 
         return isBoxVisible(playerEyePos, bounds, entityEyePos);
     }
 
-    public boolean isBoxVisible(Vec3d cameraPos, Box box, Vec3d quickCheckPos) {
+    public boolean isBoxVisible(Vec3 cameraPos, AABB box, Vec3 quickCheckPos) {
         // check if the box is within an estimated view frustum
         Vector4d ndc = new Vector4d();
 
@@ -76,7 +75,7 @@ public class VisibilityChecker {
         }
 
         // need to check bounding box corners
-        for (Vec3d corner : MathUtil.corners(box)) {
+        for (Vec3 corner : MathUtil.corners(box)) {
             if (canSee(viewProjMat, cameraPos, corner, ndc)) {
                 return true;
             }
@@ -85,7 +84,7 @@ public class VisibilityChecker {
         return false;
     }
 
-    public boolean canSee(Matrix4d viewProjMat, Vec3d eyePos, Vec3d pos, Vector4d ndc) {
+    public boolean canSee(Matrix4d viewProjMat, Vec3 eyePos, Vec3 pos, Vector4d ndc) {
         ndc.set(pos.x, pos.y, pos.z, 1.0);
         viewProjMat.transform(ndc);
         ndc.div(ndc.w);
@@ -96,32 +95,32 @@ public class VisibilityChecker {
         return !occluded(eyePos, pos, blockView);
     }
 
-    public static boolean occluded(Vec3d from, Vec3d to, BlockView view) {
-        var hit = BlockView.raycast(from, to, null, (ctx, pos) -> {
+    public static boolean occluded(Vec3 from, Vec3 to, BlockGetter view) {
+        var hit = BlockGetter.traverseBlocks(from, to, null, (ctx, pos) -> {
             BlockState state = view.getBlockState(pos);
 
             // ray should pass through non-opaque blocks
-            if (!state.isOpaque()) {
+            if (!state.canOcclude()) {
                 return null;
             }
 
-            VoxelShape shape = RaycastContext.ShapeType.VISUAL.get(state, view, pos, ShapeContext.absent());
+            VoxelShape shape = ClipContext.Block.VISUAL.get(state, view, pos, CollisionContext.empty());
 
-            return view.raycastBlock(from, to, pos, shape, state);
+            return view.clipWithInteractionOverride(from, to, pos, shape, state);
         }, o -> {
-            Vec3d dir = from.subtract(to);
-            return BlockHitResult.createMissed(to, Direction.getFacing(dir.x, dir.y, dir.z), BlockPos.ofFloored(to));
+            Vec3 dir = from.subtract(to);
+            return BlockHitResult.miss(to, Direction.getApproximateNearest(dir.x, dir.y, dir.z), BlockPos.containing(to));
         });
 
         return hit != null && hit.getType() != HitResult.Type.MISS;
     }
 
-    public static Matrix4d viewProjectionMatrix(ServerPlayerEntity player, double fovRadians, double screenAspectRatio, Matrix4d mat) {
-        MinecraftServer server = player.getEntityWorld().getServer();
+    public static Matrix4d viewProjectionMatrix(ServerPlayer player, double fovRadians, double screenAspectRatio, Matrix4d mat) {
+        MinecraftServer server = player.level().getServer();
 
-        int viewDistance = max(2, min(player.getViewDistance(), server.getPlayerManager().getViewDistance()));
+        int viewDistance = max(2, min(player.requestedViewDistance(), server.getPlayerList().getViewDistance()));
 
-        return viewProjectionMatrix(player.getX(), player.getEyeY(), player.getZ(), player.getYaw(), player.getPitch(),
+        return viewProjectionMatrix(player.getX(), player.getEyeY(), player.getZ(), player.getYRot(), player.getXRot(),
                 viewDistance, fovRadians, screenAspectRatio, mat);
     }
 

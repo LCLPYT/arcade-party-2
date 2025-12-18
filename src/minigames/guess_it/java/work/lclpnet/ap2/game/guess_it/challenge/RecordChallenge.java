@@ -1,19 +1,19 @@
 package work.lclpnet.ap2.game.guess_it.challenge;
 
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
-import net.minecraft.block.jukebox.JukeboxSong;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.network.packet.s2c.play.StopSoundS2CPacket;
-import net.minecraft.registry.DynamicRegistryManager;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvent;
-import net.minecraft.text.Text;
+import net.minecraft.core.Holder;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.game.ClientboundStopSoundPacket;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.JukeboxSong;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.game.guess_it.data.*;
 import work.lclpnet.ap2.game.guess_it.util.GuessItDisplay;
@@ -31,13 +31,13 @@ public class RecordChallenge implements Challenge {
 
     private static final int DURATION_TICKS = Ticks.seconds(15);
     private final MiniGameHandle gameHandle;
-    private final ServerWorld world;
+    private final ServerLevel world;
     private final Random random;
     private final GuessItDisplay display;
     private Item correct = null;
     private int correctOption = -1;
 
-    public RecordChallenge(MiniGameHandle gameHandle, ServerWorld world, Random random, GuessItDisplay display) {
+    public RecordChallenge(MiniGameHandle gameHandle, ServerLevel world, Random random, GuessItDisplay display) {
         this.gameHandle = gameHandle;
         this.world = world;
         this.random = random;
@@ -72,12 +72,12 @@ public class RecordChallenge implements Challenge {
 
         display.displayItem(new ItemStack(correct));
 
-        DynamicRegistryManager registryManager = world.getRegistryManager();
+        RegistryAccess registryManager = world.registryAccess();
         ItemHelper.getJukeboxSong(correct, registryManager).ifPresent(song -> {
             SoundEvent sound = song.soundEvent().value();
 
-            for (ServerPlayerEntity player : PlayerLookup.world(world)) {
-                player.playSoundToPlayer(sound, SoundCategory.RECORDS, 0.5f, 1f);
+            for (ServerPlayer player : PlayerLookup.world(world)) {
+                player.playNotifySound(sound, SoundSource.RECORDS, 0.5f, 1f);
             }
         });
 
@@ -86,20 +86,20 @@ public class RecordChallenge implements Challenge {
                         .map(JukeboxSong::description)
                         .orElse(null))
                 .filter(Objects::nonNull)
-                .toArray(Text[]::new));
+                .toArray(Component[]::new));
     }
 
     private List<Item> getMusicDiscs() {
-        return Registries.ITEM.streamEntries()
-                .sorted(Comparator.comparing(reference -> reference.registryKey().getValue()))
-                .map(RegistryEntry.Reference::value)
-                .filter(item -> item.getComponents().contains(DataComponentTypes.JUKEBOX_PLAYABLE))
+        return BuiltInRegistries.ITEM.listElements()
+                .sorted(Comparator.comparing(reference -> reference.key().location()))
+                .map(Holder.Reference::value)
+                .filter(item -> item.components().has(DataComponents.JUKEBOX_PLAYABLE))
                 .toList();
     }
 
     @Override
     public void evaluate(PlayerChoices choices, ChallengeResult result) {
-        Text answer = ItemHelper.getJukeboxSong(this.correct, world.getRegistryManager())
+        Component answer = ItemHelper.getJukeboxSong(this.correct, world.registryAccess())
                 .map(JukeboxSong::description)
                 .orElse(null);
 
@@ -109,12 +109,12 @@ public class RecordChallenge implements Challenge {
 
     @Override
     public void destroy() {
-        ItemHelper.getJukeboxSong(correct, world.getRegistryManager()).ifPresent(song -> {
+        ItemHelper.getJukeboxSong(correct, world.registryAccess()).ifPresent(song -> {
             SoundEvent sound = song.soundEvent().value();
-            StopSoundS2CPacket packet = new StopSoundS2CPacket(sound.id(), SoundCategory.RECORDS);
+            ClientboundStopSoundPacket packet = new ClientboundStopSoundPacket(sound.location(), SoundSource.RECORDS);
 
-            for (ServerPlayerEntity player : PlayerLookup.world(world)) {
-                player.networkHandler.sendPacket(packet);
+            for (ServerPlayer player : PlayerLookup.world(world)) {
+                player.connection.send(packet);
             }
         });
     }

@@ -1,7 +1,7 @@
 package work.lclpnet.ap2.api.ai;
 
-import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.entity.Mob;
 
 public interface PathFindingPredicate {
 
@@ -15,5 +15,5 @@ public interface PathFindingPredicate {
      * @param from The parent position in the path to be constructed.
      * @return Whether the way from the previous position towards the next is passable by the entity.
      */
-    boolean canReach(int x, int y, int z, MobEntity entity, BlockPos from);
+    boolean canReach(int x, int y, int z, Mob entity, BlockPos from);
 }

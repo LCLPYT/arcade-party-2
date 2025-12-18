@@ -2,13 +2,13 @@ package work.lclpnet.ap2.mode_default.activity;
 
 import it.unimi.dsi.fastutil.objects.ObjectIntPair;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.phys.Vec3;
 import work.lclpnet.activity.ComponentActivity;
 import work.lclpnet.activity.component.ComponentBundle;
 import work.lclpnet.activity.component.builtin.BuiltinComponents;
@@ -33,7 +33,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Random;
 
-import static net.minecraft.util.Formatting.GRAY;
+import static net.minecraft.ChatFormatting.GRAY;
 import static work.lclpnet.ap2.impl.util.SoundHelper.playSound;
 
 public class WinActivity extends ComponentActivity {
@@ -52,7 +52,7 @@ public class WinActivity extends ComponentActivity {
     private final Translations translations;
     private final Random random = new Random();
     private Scheduler scheduler;
-    private ServerWorld world;
+    private ServerLevel world;
     private GameMap map;
 
     public WinActivity(ApBaseArgs args) {
@@ -91,14 +91,14 @@ public class WinActivity extends ComponentActivity {
                 });
     }
 
-    private void onReady(ServerWorld world, GameMap map) {
+    private void onReady(ServerLevel world, GameMap map) {
         this.world = world;
         this.map = map;
 
         activityConfigurator.configureProtector();
         activityConfigurator.configureHooks();
 
-        world.getWaypointHandler().clear();
+        world.getWaypointManager().breakAllConnections();
 
         args.playerManager().leaveFinale();
 
@@ -117,20 +117,20 @@ public class WinActivity extends ComponentActivity {
     private void announceWinner() {
         PlayerRef winner = args.scoreManager().getFinalWinner().orElseThrow();
 
-        for (ServerPlayerEntity player : players()) {
-            Title.get(player).title(Text.literal(winner.name()).formatted(Formatting.AQUA), Text.empty(), 5, 50, 0);
+        for (ServerPlayer player : players()) {
+            Title.get(player).title(Component.literal(winner.name()).withStyle(ChatFormatting.AQUA), Component.empty(), 5, 50, 0);
         }
 
-        playSound(world, SoundEvents.ENTITY_PLAYER_LEVELUP, SoundCategory.PLAYERS, 1f, 1f);
-        playSound(world, SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundCategory.RECORDS, 0.8f, 0f);
+        playSound(world, SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 1f, 1f);
+        playSound(world, SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundSource.RECORDS, 0.8f, 0f);
 
         beginFireworks().then(this::onFireworksOver);
 
         scheduler.timeout(() -> {
-            for (ServerPlayerEntity player : players()) {
+            for (ServerPlayer player : players()) {
                 Title.get(player).title(
-                        Text.literal(winner.name()).formatted(Formatting.AQUA),
-                        translations.translateText(player, "ap2.awards.won_party").formatted(Formatting.DARK_GREEN),
+                        Component.literal(winner.name()).withStyle(ChatFormatting.AQUA),
+                        translations.translateText(player, "ap2.awards.won_party").formatted(ChatFormatting.DARK_GREEN),
                         0, 100, 5
                 );
             }
@@ -140,14 +140,14 @@ public class WinActivity extends ComponentActivity {
     }
 
     private Action<Runnable> beginFireworks() {
-        Vec3d spawn = MapUtils.getSpawnPosition(map);
+        Vec3 spawn = MapUtils.getSpawnPosition(map);
         var fireworks = new Fireworks(world, spawn, 30.d, random);
 
         return fireworks.start(scheduler, FIREWORKS_DURATION_TICKS, FIREWORKS_MIN_DELAY_TICKS, FIREWORKS_MAX_DELAY_TICKS);
     }
 
     private void announceStats() {
-        playSound(world, SoundEvents.ENTITY_CHICKEN_EGG, SoundCategory.PLAYERS, 1f, 0.5f);
+        playSound(world, SoundEvents.CHICKEN_EGG, SoundSource.PLAYERS, 1f, 0.5f);
 
         ScoreManager scoreManager = args.scoreManager();
 
@@ -157,7 +157,7 @@ public class WinActivity extends ComponentActivity {
 
         var announcement = new ResultAnnouncement<>(translations, PlayerRef::create, order, scoreManager::getEntry);
 
-        for (ServerPlayerEntity player : players()) {
+        for (ServerPlayer player : players()) {
             announcement.sendTop(5, player);
         }
     }
@@ -172,7 +172,7 @@ public class WinActivity extends ComponentActivity {
         args.finisher().finishGame();
     }
 
-    private Iterable<ServerPlayerEntity> players() {
+    private Iterable<ServerPlayer> players() {
         return world != null ? PlayerLookup.world(world) : List.of();
     }
 }

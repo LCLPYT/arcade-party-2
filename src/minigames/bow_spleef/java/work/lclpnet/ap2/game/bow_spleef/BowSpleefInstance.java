@@ -1,24 +1,24 @@
 package work.lclpnet.ap2.game.bow_spleef;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.enchantment.Enchantments;
-import net.minecraft.entity.damage.DamageTypes;
-import net.minecraft.entity.passive.ChickenEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.entity.projectile.ArrowEntity;
-import net.minecraft.entity.projectile.FishingBobberEntity;
-import net.minecraft.entity.projectile.ProjectileEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.particle.ParticleTypes;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.damagesource.DamageTypes;
+import net.minecraft.world.entity.animal.Chicken;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.projectile.Arrow;
+import net.minecraft.world.entity.projectile.FishingHook;
+import net.minecraft.world.entity.projectile.Projectile;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.enchantment.Enchantments;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 import org.json.JSONArray;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.core.hook.EntitySpawnCallback;
@@ -104,19 +104,19 @@ public class BowSpleefInstance extends EliminationGameInstance {
         });
 
         hooks.registerHook(ProjectileHooks.HIT_BLOCK, (projectile, hit) -> {
-            if (projectile instanceof ArrowEntity) {
+            if (projectile instanceof Arrow) {
                 impactHook.invoker().onImpact(projectile, hit.getBlockPos());
             }
         });
 
         hooks.registerHook(ProjectileHitEntityCallback.HOOK, (projectile, hit) -> {
-            if (projectile instanceof ArrowEntity) {
-                impactHook.invoker().onImpact(projectile, hit.getEntity().getBlockPos().down());
+            if (projectile instanceof Arrow) {
+                impactHook.invoker().onImpact(projectile, hit.getEntity().blockPosition().below());
             }
         });
 
         // don't spawn chickens from thrown eggs
-        hooks.registerHook(EntitySpawnCallback.HOOK, (entity, world) -> entity instanceof ChickenEntity);
+        hooks.registerHook(EntitySpawnCallback.HOOK, (entity, world) -> entity instanceof Chicken);
 
         commons().whenBelowCriticalHeight().then(this::eliminate);
 
@@ -146,8 +146,8 @@ public class BowSpleefInstance extends EliminationGameInstance {
     protected void go() {
         gameHandle.protect(config -> {
             config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, damageSource)
-                    -> damageSource.isOf(DamageTypes.OUTSIDE_BORDER)
-                    || (damageSource.isOf(DamageTypes.THROWN) && damageSource.getSource() instanceof FishingBobberEntity));
+                    -> damageSource.is(DamageTypes.OUTSIDE_BORDER)
+                    || (damageSource.is(DamageTypes.THROWN) && damageSource.getDirectEntity() instanceof FishingHook));
 
             config.allow(ProtectionTypes.EXPLOSION);
         });
@@ -168,49 +168,49 @@ public class BowSpleefInstance extends EliminationGameInstance {
     }
 
     private void giveBowsToPlayers(Translations translations) {
-        var infinity = ItemHelper.getEnchantment(Enchantments.INFINITY, getWorld().getRegistryManager());
+        var infinity = ItemHelper.getEnchantment(Enchantments.INFINITY, getWorld().registryAccess());
 
-        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
+        for (ServerPlayer player : gameHandle.getParticipants()) {
             ItemStack stack = unbreakable(new ItemStack(Items.BOW));
 
-            stack.set(DataComponentTypes.CUSTOM_NAME, translations.translateText(player, "game.ap2.bow_spleef.bow")
-                    .styled(style -> style.withItalic(false).withFormatting(Formatting.GOLD)));
+            stack.set(DataComponents.CUSTOM_NAME, translations.translateText(player, "game.ap2.bow_spleef.bow")
+                    .styled(style -> style.withItalic(false).applyFormat(ChatFormatting.GOLD)));
 
-            stack.addEnchantment(infinity,1);
-            stack.set(DataComponentTypes.ENCHANTMENT_GLINT_OVERRIDE, false);
+            stack.enchant(infinity,1);
+            stack.set(DataComponents.ENCHANTMENT_GLINT_OVERRIDE, false);
 
-            PlayerInventory inventory = player.getInventory();
-            inventory.setStack(4, stack);
+            Inventory inventory = player.getInventory();
+            inventory.setItem(4, stack);
 
             PlayerInventoryAccess.setSelectedSlot(player, 4);
 
-            inventory.setStack(9,new ItemStack(Items.ARROW));
+            inventory.setItem(9,new ItemStack(Items.ARROW));
         }
     }
 
-    private void removeBlocks(BlockPos pos, ServerWorld world) {
+    private void removeBlocks(BlockPos pos, ServerLevel world) {
         int x = pos.getX();
         int y = pos.getY();
         int z = pos.getZ();
 
-        for (BlockPos p : BlockPos.iterate(
+        for (BlockPos p : BlockPos.betweenClosed(
                 x - 1, y - 1, z - 1,
                 x + 1, y + 1, z + 1)) {
 
-            world.setBlockState(p, Blocks.AIR.getDefaultState());
+            world.setBlockAndUpdate(p, Blocks.AIR.defaultBlockState());
         }
         double cx = x + 0.5;
         double cz = z + 0.5;
 
-        world.spawnParticles(ParticleTypes.ELECTRIC_SPARK, cx, y, cz, 60, 1, 0.6, 1, 0.01);
-        world.spawnParticles(ParticleTypes.FLAME, cx, y, cz, 30, 1, 0.6, 1, 0.04);
-        world.playSound(null, x, y, z, SoundEvents.ENTITY_DRAGON_FIREBALL_EXPLODE, SoundCategory.AMBIENT, 0.12f, 0f);
+        world.sendParticles(ParticleTypes.ELECTRIC_SPARK, cx, y, cz, 60, 1, 0.6, 1, 0.01);
+        world.sendParticles(ParticleTypes.FLAME, cx, y, cz, 30, 1, 0.6, 1, 0.04);
+        world.playSound(null, x, y, z, SoundEvents.DRAGON_FIREBALL_EXPLODE, SoundSource.AMBIENT, 0.12f, 0f);
 
         specialItems.positions().update();
     }
 
     private void removeBlocksUnder() {
-        ServerWorld world = getWorld();
+        ServerLevel world = getWorld();
 
         JSONArray spawnJson = Objects.requireNonNull(getMap().getProperty("spawn"), "Spawn not configured");
         BlockPos spawn = MapUtil.readBlockPos(spawnJson);
@@ -219,16 +219,16 @@ public class BowSpleefInstance extends EliminationGameInstance {
         int y = spawn.getY();
         int z = spawn.getZ();
 
-        BlockState air = Blocks.AIR.getDefaultState();
+        BlockState air = Blocks.AIR.defaultBlockState();
 
-        SoundHelper.playSound(gameHandle.getServer(), SoundEvents.ENTITY_WITHER_DEATH, SoundCategory.AMBIENT, 0.8f, 1f);
+        SoundHelper.playSound(gameHandle.getServer(), SoundEvents.WITHER_DEATH, SoundSource.AMBIENT, 0.8f, 1f);
 
-        for (BlockPos pos : BlockPos.iterate(x - 3, y - 30, z - 3, x + 3, y + 10, z + 3)) {
-            world.setBlockState(pos, air);
+        for (BlockPos pos : BlockPos.betweenClosed(x - 3, y - 30, z - 3, x + 3, y + 10, z + 3)) {
+            world.setBlockAndUpdate(pos, air);
         }
     }
 
     public interface Impact {
-        void onImpact(ProjectileEntity projectile, BlockPos pos);
+        void onImpact(Projectile projectile, BlockPos pos);
     }
 }

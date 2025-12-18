@@ -1,6 +1,6 @@
 package work.lclpnet.ap2.game.guess_it.util;
 
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Quaterniond;
@@ -30,8 +30,8 @@ public class BlockCountShapeManager<S extends BlockShape & BlockShape.WithHeight
     private void registerShapes() {
         final int maxRadius = min(stage.height() / 2, stage.radius());
         final int maxSquareRadius = (int) floor(sin(PI * 0.25) * stage.radius());
-        final Vec3d center = stage.center().toCenterPos();
-        final Vec3d origin = stage.origin().toCenterPos();
+        final Vec3 center = stage.center().getCenter();
+        final Vec3 origin = stage.origin().getCenter();
 
         register("cuboid", () -> {
             final int minRadius = 4;
@@ -95,7 +95,7 @@ public class BlockCountShapeManager<S extends BlockShape & BlockShape.WithHeight
             final int minRadius = 4;
 
             int radius = min(maxRadius, minRadius + random.nextInt(max(1, stage.radius() - minRadius)));
-            Vec3d normal = MathUtil.randomUnitVec3d(random);
+            Vec3 normal = MathUtil.randomUnitVec3d(random);
 
             return new Hemisphere(center, radius, normal);
         });
@@ -124,11 +124,11 @@ public class BlockCountShapeManager<S extends BlockShape & BlockShape.WithHeight
             double beta = alpha + minAngle + random.nextDouble() * (PI - 2 * minAngle);
             double gamma = (alpha + beta) / 2 + PI;
 
-            Vec3d v1 = origin.add(sin(alpha) * r1, 0, cos(alpha) * r1);
-            Vec3d v2 = origin.add(sin(beta)  * r2, 0, cos(beta)  * r2);
-            Vec3d v3 = origin.add(sin(gamma) * r3, 0, cos(gamma) * r3);
+            Vec3 v1 = origin.add(sin(alpha) * r1, 0, cos(alpha) * r1);
+            Vec3 v2 = origin.add(sin(beta)  * r2, 0, cos(beta)  * r2);
+            Vec3 v3 = origin.add(sin(gamma) * r3, 0, cos(gamma) * r3);
 
-            return new Prism(v1, v2, v3, height, new Vec3d(0, 1, 0));
+            return new Prism(v1, v2, v3, height, new Vec3(0, 1, 0));
         });
 
         register("torus", () -> {
@@ -211,9 +211,9 @@ public class BlockCountShapeManager<S extends BlockShape & BlockShape.WithHeight
 
     public double distance(Shape shape, double x, double y, double z) {
         DistanceFunction distanceFunction = distanceFunction(shape);
-        Vec3d center = shape.center();
+        Vec3 center = shape.center();
 
-        return distanceFunction.distanceTo(x - center.getX(), y - center.getY(), z - center.getZ());
+        return distanceFunction.distanceTo(x - center.x(), y - center.y(), z - center.z());
     }
 
     public DistanceFunction distanceFunction(Shape shape) {
@@ -239,7 +239,7 @@ public class BlockCountShapeManager<S extends BlockShape & BlockShape.WithHeight
         }
 
         if (shape instanceof Pyramid p) {
-            return (x, y, z) -> (y + p.center().getY()) - p.origin().getY();
+            return (x, y, z) -> (y + p.center().y()) - p.origin().y();
         }
 
         return this::chebyshevDist;

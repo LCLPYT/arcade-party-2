@@ -1,17 +1,17 @@
 package work.lclpnet.ap2.game.pillar_battle;
 
-import net.minecraft.entity.boss.dragon.EnderDragonEntity;
-import net.minecraft.entity.boss.dragon.EnderDragonFight;
-import net.minecraft.entity.boss.dragon.phase.PhaseType;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.GameRules;
-import net.minecraft.world.border.WorldBorder;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.boss.enderdragon.EnderDragon;
+import net.minecraft.world.entity.boss.enderdragon.phases.EnderDragonPhase;
+import net.minecraft.world.level.GameRules;
+import net.minecraft.world.level.border.WorldBorder;
+import net.minecraft.world.level.dimension.end.EndDragonFight;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
@@ -54,7 +54,7 @@ public class PillarBattleInstance extends EliminationGameInstance implements Map
     }
 
     @Override
-    public @NotNull CompletableFuture<Void> createWorldBootstrap(@NotNull ServerWorld world, @NotNull GameMap map) {
+    public @NotNull CompletableFuture<Void> createWorldBootstrap(@NotNull ServerLevel world, @NotNull GameMap map) {
         var setup = new PbSetup(world, map, gameHandle.getLogger());
 
         return setup.load().thenRun(() -> pillars = setup.placePillars(gameHandle.getParticipants(), random));
@@ -66,32 +66,32 @@ public class PillarBattleInstance extends EliminationGameInstance implements Map
         useSmoothDeath();
 
         commons().gameRuleBuilder()
-                .set(GameRules.FALL_DAMAGE, true)
-                .set(GameRules.FALL_DAMAGE, true)
-                .set(GameRules.DO_FIRE_TICK, true)
-                .set(GameRules.DO_INSOMNIA, false)
-                .set(GameRules.NATURAL_REGENERATION, true)
-                .set(GameRules.DO_MOB_GRIEFING, true)
-                .set(GameRules.DO_TRADER_SPAWNING, false)
-                .set(GameRules.DO_PATROL_SPAWNING, false)
-                .set(GameRules.KEEP_INVENTORY, false);
+                .set(GameRules.RULE_FALL_DAMAGE, true)
+                .set(GameRules.RULE_FALL_DAMAGE, true)
+                .set(GameRules.RULE_DOFIRETICK, true)
+                .set(GameRules.RULE_DOINSOMNIA, false)
+                .set(GameRules.RULE_NATURAL_REGENERATION, true)
+                .set(GameRules.RULE_MOBGRIEFING, true)
+                .set(GameRules.RULE_DO_TRADER_SPAWNING, false)
+                .set(GameRules.RULE_DO_PATROL_SPAWNING, false)
+                .set(GameRules.RULE_KEEPINVENTORY, false);
 
         movementBlocker.init(gameHandle.getHooks());
 
         if (pillars == null) return;
 
         var spawns = pillars.spawns();
-        ServerWorld world = getWorld();
+        ServerLevel world = getWorld();
 
-        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
-            var spawn = spawns.get(player.getUuid());
+        for (ServerPlayer player : gameHandle.getParticipants()) {
+            var spawn = spawns.get(player.getUUID());
 
             if (spawn == null) {
-                gameHandle.getLogger().error("Failed to find spawn for {}", player.getNameForScoreboard());
+                gameHandle.getLogger().error("Failed to find spawn for {}", player.getScoreboardName());
                 continue;
             }
 
-            player.teleport(world, spawn.getX(), spawn.getY(), spawn.getZ(), Set.of(), spawn.getYaw(), spawn.getPitch(), true);
+            player.teleportTo(world, spawn.x(), spawn.y(), spawn.z(), Set.of(), spawn.getYaw(), spawn.getPitch(), true);
 
             movementBlocker.disableMovement(player);
         }
@@ -117,10 +117,10 @@ public class PillarBattleInstance extends EliminationGameInstance implements Map
             config.allowAll();
 
             config.disallow((entity, block) -> {
-                if (entity instanceof ServerPlayerEntity player && outOfBounds(block)) {
-                    var msg = translations.translateText(player, "game.ap2.pillar_battle.out_of_bounds").formatted(Formatting.RED);
-                    player.sendMessage(msg, true);
-                    player.playSoundToPlayer(SoundEvents.BLOCK_NOTE_BLOCK_BASS.value(), SoundCategory.BLOCKS, 0f, 0.5f);
+                if (entity instanceof ServerPlayer player && outOfBounds(block)) {
+                    var msg = translations.translateText(player, "game.ap2.pillar_battle.out_of_bounds").formatted(ChatFormatting.RED);
+                    player.displayClientMessage(msg, true);
+                    player.playNotifySound(SoundEvents.NOTE_BLOCK_BASS.value(), SoundSource.BLOCKS, 0f, 0.5f);
                     return true;
                 }
 
@@ -128,13 +128,13 @@ public class PillarBattleInstance extends EliminationGameInstance implements Map
             }, ProtectionTypes.PLACE_BLOCKS, ProtectionTypes.PLACE_FLUID);
         });
 
-        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
+        for (ServerPlayer player : gameHandle.getParticipants()) {
             movementBlocker.enableMovement(player);
         }
 
-        commons().whenBelowCriticalHeight().then(player -> player.damage(player.getEntityWorld(), player.getDamageSources().outOfWorld(), player.getHealth()));
+        commons().whenBelowCriticalHeight().then(player -> player.hurtServer(player.level(), player.damageSources().fellOutOfWorld(), player.getHealth()));
 
-        var randomizer = new PbRandomizer(random, gameHandle.getParticipants(), getWorld().getRegistryManager());
+        var randomizer = new PbRandomizer(random, gameHandle.getParticipants(), getWorld().registryAccess());
 
         var scheduler = gameHandle.getScheduler();
         scheduler.interval(randomizer::giveRandomItems, RANDOM_ITEM_DELAY_TICKS);
@@ -142,9 +142,9 @@ public class PillarBattleInstance extends EliminationGameInstance implements Map
         var hooks = gameHandle.getHooks();
 
         hooks.registerHook(ServerLivingEntityHooks.ALLOW_DAMAGE, (entity, source, amount) -> {
-            if (entity instanceof ServerPlayerEntity player && player.getHungerManager().getFoodLevel() >= 20) {
-                player.getHungerManager().addExhaustion(12);
-                player.getHungerManager().setSaturationLevel(0);
+            if (entity instanceof ServerPlayer player && player.getFoodData().getFoodLevel() >= 20) {
+                player.getFoodData().addExhaustion(12);
+                player.getFoodData().setSaturation(0);
             }
 
             return true;
@@ -161,17 +161,17 @@ public class PillarBattleInstance extends EliminationGameInstance implements Map
         BlockPos center = pillars.center();
 
         hooks.registerHook(ServerEntityHooks.ENTITY_LOAD, (entity, world) -> {
-            if (!(entity instanceof EnderDragonEntity dragon)) return;
+            if (!(entity instanceof EnderDragon dragon)) return;
 
-            var data = new EnderDragonFight.Data(false, false, false, false,
-                    Optional.of(dragon.getUuid()), Optional.of(center), Optional.of(List.of()));
+            var data = new EndDragonFight.Data(false, false, false, false,
+                    Optional.of(dragon.getUUID()), Optional.of(center), Optional.of(List.of()));
 
-            EnderDragonFight fight = new EnderDragonFight(world, random.nextLong(), data, center);
+            EndDragonFight fight = new EndDragonFight(world, random.nextLong(), data, center);
             ((ApDragonFight) fight).ap2$setTemporary();
 
-            dragon.setFight(fight);
+            dragon.setDragonFight(fight);
             dragon.setFightOrigin(center);
-            dragon.getPhaseManager().setPhase(PhaseType.HOLDING_PATTERN);
+            dragon.getPhaseManager().setPhase(EnderDragonPhase.HOLDING_PATTERN);
         });
     }
 
@@ -202,8 +202,8 @@ public class PillarBattleInstance extends EliminationGameInstance implements Map
 
         WorldBorder realBorder = getWorld().getWorldBorder();
 
-        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
-            UUID uuid = player.getUuid();
+        for (ServerPlayer player : gameHandle.getParticipants()) {
+            UUID uuid = player.getUUID();
             Warning warning = warnings.computeIfAbsent(uuid, u -> new Warning());
 
             double dx = totalRadius - Math.abs(cx + 0.5 - player.getX());
@@ -217,7 +217,7 @@ public class PillarBattleInstance extends EliminationGameInstance implements Map
                     WorldBorderUtil.init(player, realBorder);
 
                     if (System.currentTimeMillis() - warning.lastWarning < 62 * 50) {
-                        player.sendMessage(Text.empty(), true);
+                        player.displayClientMessage(Component.empty(), true);
                     }
                 }
                 continue;
@@ -242,8 +242,8 @@ public class PillarBattleInstance extends EliminationGameInstance implements Map
             var msg = translations.translateText(player, "game.ap2.pillar_battle.border_warn")
                     .styled(style -> style.withColor(0xff0000).withBold(true));
 
-            player.sendMessage(msg, true);
-            player.playSoundToPlayer(SoundEvents.BLOCK_NOTE_BLOCK_PLING.value(), SoundCategory.HOSTILE, 0.3f, 0.5f);
+            player.displayClientMessage(msg, true);
+            player.playNotifySound(SoundEvents.NOTE_BLOCK_PLING.value(), SoundSource.HOSTILE, 0.3f, 0.5f);
         }
     }
 

@@ -1,23 +1,23 @@
 package work.lclpnet.ap2.game.musical_minecart;
 
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.passive.FrogEntity;
-import net.minecraft.entity.passive.FrogVariant;
-import net.minecraft.entity.vehicle.MinecartEntity;
-import net.minecraft.particle.ParticleTypes;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.registry.entry.RegistryEntry;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.animal.frog.Frog;
+import net.minecraft.world.entity.animal.frog.FrogVariant;
+import net.minecraft.world.entity.vehicle.Minecart;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
@@ -77,11 +77,11 @@ public class MusicalMinecartInstance extends EliminationGameInstance implements 
     private static final float
             DECOY_CHANCE = 0.15f;
 
-    public static final Identifier MUSICAL_MINECART_TAG = ApConstants.identifier("musical_minecart");
+    public static final ResourceLocation MUSICAL_MINECART_TAG = ApConstants.identifier("musical_minecart");
 
     private final Random random = new Random();
     private final SongHandler songs;
-    private final Set<MinecartEntity> minecartEntities = new HashSet<>();
+    private final Set<Minecart> minecartEntities = new HashSet<>();
     private final AtomicBoolean ready = new AtomicBoolean(false);
     private boolean intermission = false;  // intermission is true if a priority song inhibited the next queue song
     private BlockBox bounds = null, particleBox = null;
@@ -100,7 +100,7 @@ public class MusicalMinecartInstance extends EliminationGameInstance implements 
     }
 
     @Override
-    public @NotNull CompletableFuture<Void> createWorldBootstrap(@NotNull ServerWorld world, @NotNull GameMap map) {
+    public @NotNull CompletableFuture<Void> createWorldBootstrap(@NotNull ServerLevel world, @NotNull GameMap map) {
         return songs.loadSongs(MUSICAL_MINECART_TAG);
     }
 
@@ -142,16 +142,16 @@ public class MusicalMinecartInstance extends EliminationGameInstance implements 
         HookRegistrar hooks = gameHandle.getHooks();
 
         hooks.registerHook(EntityMountCallback.HOOK, (entity, vehicle, force) -> {
-            if (vehicle.isGlowing()) {
-                vehicle.setGlowing(false);
+            if (vehicle.isCurrentlyGlowing()) {
+                vehicle.setGlowingTag(false);
             }
 
             return false;
         });
 
         hooks.registerHook(EntityDismountCallback.HOOK, (entity, vehicle) -> {
-            if (minecartsGlowing && vehicle instanceof MinecartEntity) {
-                vehicle.setGlowing(true);
+            if (minecartsGlowing && vehicle instanceof Minecart) {
+                vehicle.setGlowingTag(true);
             }
 
             return false;
@@ -247,18 +247,18 @@ public class MusicalMinecartInstance extends EliminationGameInstance implements 
 
         spawnMinecarts();
 
-        SoundHelper.playSound(gameHandle.getServer(), SoundEvents.ENTITY_IRON_GOLEM_HURT, SoundCategory.HOSTILE, 0.9f, 0f);
+        SoundHelper.playSound(gameHandle.getServer(), SoundEvents.IRON_GOLEM_HURT, SoundSource.HOSTILE, 0.9f, 0f);
 
         Translations translations = gameHandle.getTranslations();
         Participants participants = gameHandle.getParticipants();
 
-        for (ServerPlayerEntity player : participants) {
-            var msg = Text.literal("⚠ ")
+        for (ServerPlayer player : participants) {
+            var msg = Component.literal("⚠ ")
                     .append(translations.translateText(player, "game.ap2.musical_minecart.deadline")
                             .styled(s -> s.withColor(0xff0000).withBold(true)))
                     .append(" ⚠").withColor(0xffff00);
 
-            player.sendMessage(msg, true);
+            player.displayClientMessage(msg, true);
         }
 
         TaskScheduler scheduler = gameHandle.getScheduler();
@@ -282,18 +282,18 @@ public class MusicalMinecartInstance extends EliminationGameInstance implements 
         }
 
         int total = count + decoys;
-        var pos = new BlockPos.Mutable();
+        var pos = new BlockPos.MutableBlockPos();
 
-        ServerWorld world = getWorld();
+        ServerLevel world = getWorld();
 
         for (int i = 0; i < total; i++) {
             bounds.randomBlockPos(pos, random);
 
-            var minecart = new MinecartEntity(EntityType.MINECART, world);
-            minecart.setPos(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
+            var minecart = new Minecart(EntityType.MINECART, world);
+            minecart.setPosRaw(pos.getX() + 0.5, pos.getY(), pos.getZ() + 0.5);
             minecart.setInvulnerable(true);
 
-            world.spawnEntity(minecart);
+            world.addFreshEntity(minecart);
             minecartEntities.add(minecart);
 
             if (i >= count) {
@@ -303,39 +303,39 @@ public class MusicalMinecartInstance extends EliminationGameInstance implements 
     }
 
     @SuppressWarnings("unchecked")
-    private void createDecoyEntity(ServerWorld world, MinecartEntity minecart) {
-        var frog = new FrogEntity(EntityType.FROG, world);
-        frog.setPosition(minecart.getEntityPos());
+    private void createDecoyEntity(ServerLevel world, Minecart minecart) {
+        var frog = new Frog(EntityType.FROG, world);
+        frog.setPos(minecart.position());
 
-        var frogTypes = world.getRegistryManager().getOrThrow(RegistryKeys.FROG_VARIANT).getIndexedEntries();
+        var frogTypes = world.registryAccess().lookupOrThrow(Registries.FROG_VARIANT).asHolderIdMap();
 
         if (frogTypes.size() <= 0) return;
 
-        var variant = frogTypes.get(random.nextInt(frogTypes.size()));
+        var variant = frogTypes.byId(random.nextInt(frogTypes.size()));
 
         if (variant != null) {
-            ((ApVariantHolder<RegistryEntry<FrogVariant>>) frog).ap2$setVariant(variant);
+            ((ApVariantHolder<Holder<FrogVariant>>) frog).ap2$setVariant(variant);
         }
 
-        world.spawnEntity(frog);
+        world.addFreshEntity(frog);
         frog.startRiding(minecart);
     }
 
     private void markFreeMinecarts() {
         minecartsGlowing = true;
 
-        for (MinecartEntity minecart : minecartEntities) {
-            if (minecart.getPassengerList().isEmpty()) {
-                minecart.setGlowing(true);
+        for (Minecart minecart : minecartEntities) {
+            if (minecart.getPassengers().isEmpty()) {
+                minecart.setGlowingTag(true);
             }
         }
     }
 
     private void removeMinecarts() {
-        for (MinecartEntity minecart : minecartEntities) {
+        for (Minecart minecart : minecartEntities) {
             // remove all non-player passengers
-            minecart.getPassengerList().stream()
-                    .filter(entity -> !(entity instanceof ServerPlayerEntity))
+            minecart.getPassengers().stream()
+                    .filter(entity -> !(entity instanceof ServerPlayer))
                     .forEach(Entity::discard);
 
             minecart.discard();
@@ -346,18 +346,18 @@ public class MusicalMinecartInstance extends EliminationGameInstance implements 
     }
 
     private void eliminatePlayers() {
-        ServerWorld world = getWorld();
+        ServerLevel world = getWorld();
         Participants participants = gameHandle.getParticipants();
 
-        Set<ServerPlayerEntity> toEliminate = new HashSet<>();
+        Set<ServerPlayer> toEliminate = new HashSet<>();
 
-        for (ServerPlayerEntity player : participants) {
-            if (player.getVehicle() instanceof MinecartEntity) continue;
+        for (ServerPlayer player : participants) {
+            if (player.getVehicle() instanceof Minecart) continue;
 
             double x = player.getX(), y = player.getY(), z = player.getZ();
 
-            world.playSound(null, x, y, z, SoundEvents.ENTITY_GENERIC_EXPLODE.value(), SoundCategory.PLAYERS, 1f, 0f);
-            world.spawnParticles(ParticleTypes.LAVA, x, y, z, 100, 0.5, 0.5, 0.5, 0.2);
+            world.playSound(null, x, y, z, SoundEvents.GENERIC_EXPLODE.value(), SoundSource.PLAYERS, 1f, 0f);
+            world.sendParticles(ParticleTypes.LAVA, x, y, z, 100, 0.5, 0.5, 0.5, 0.2);
 
             toEliminate.add(player);
         }
@@ -371,8 +371,8 @@ public class MusicalMinecartInstance extends EliminationGameInstance implements 
         TaskScheduler scheduler = gameHandle.getScheduler();
 
         scheduler.timeout(() -> {
-            for (ServerPlayerEntity player : participants) {
-                player.playSoundToPlayer(SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, SoundCategory.NEUTRAL, 0.5f, 1f);
+            for (ServerPlayer player : participants) {
+                player.playNotifySound(SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.NEUTRAL, 0.5f, 1f);
             }
         }, passDelay);
 
@@ -382,12 +382,12 @@ public class MusicalMinecartInstance extends EliminationGameInstance implements 
     private void tickParticle() {
         if (particleBox == null || songHandle == null) return;
 
-        ServerWorld world = getWorld();
+        ServerLevel world = getWorld();
 
         for (int i = 0; i < PARTICLE_AMOUNT; i++) {
-            Vec3d pos = particleBox.randomPos(random);
+            Vec3 pos = particleBox.randomPos(random);
 
-            world.spawnParticles(ParticleTypes.NOTE, pos.getX(), pos.getY(), pos.getZ(), 10,
+            world.sendParticles(ParticleTypes.NOTE, pos.x(), pos.y(), pos.z(), 10,
                     3, 2, 3, 1);
         }
     }

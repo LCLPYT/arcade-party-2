@@ -1,7 +1,7 @@
 package work.lclpnet.ap2.game.maze_scape.util;
 
 import it.unimi.dsi.fastutil.Pair;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.game.maze_scape.gen.Node;

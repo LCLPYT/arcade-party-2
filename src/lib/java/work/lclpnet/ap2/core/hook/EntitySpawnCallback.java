@@ -1,7 +1,7 @@
 package work.lclpnet.ap2.core.hook;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.server.world.ServerWorld;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.Entity;
 import work.lclpnet.kibu.hook.Hook;
 import work.lclpnet.kibu.hook.HookFactory;
 
@@ -20,5 +20,5 @@ public interface EntitySpawnCallback {
         return cancel;
     });
 
-    boolean onSpawn(Entity entity, ServerWorld world);
+    boolean onSpawn(Entity entity, ServerLevel world);
 }

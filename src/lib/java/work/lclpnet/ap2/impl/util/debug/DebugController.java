@@ -1,8 +1,8 @@
 package work.lclpnet.ap2.impl.util.debug;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.ApConstants;
 import work.lclpnet.ap2.api.util.model.ModelManager;
@@ -25,7 +25,7 @@ public class DebugController {
     private @Nullable ThreadLocal<@Nullable List<Object3d>> group = null;
     private volatile StopWatchImpl stopWatch = null;
 
-    public synchronized void init(ModelManager modelManager, ServerWorld world) {
+    public synchronized void init(ModelManager modelManager, ServerLevel world) {
         destroy();
 
         scene = new Scene(new ServerWorldMountContext(world));

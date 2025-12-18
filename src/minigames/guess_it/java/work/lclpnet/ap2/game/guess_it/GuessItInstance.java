@@ -1,14 +1,14 @@
 package work.lclpnet.ap2.game.guess_it;
 
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
-import net.minecraft.entity.boss.BossBar;
-import net.minecraft.scoreboard.number.FixedNumberFormat;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
-import net.minecraft.world.GameRules;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.numbers.FixedFormat;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.BossEvent;
+import net.minecraft.world.level.GameRules;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -51,7 +51,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
-import static net.minecraft.util.Formatting.*;
+import static net.minecraft.ChatFormatting.*;
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
 public class GuessItInstance extends FFAGameInstance implements MapBootstrap {
@@ -60,7 +60,7 @@ public class GuessItInstance extends FFAGameInstance implements MapBootstrap {
     private static final int DELAY_TICKS = Ticks.seconds(5);
     private static final int MIN_ROUNDS = 8, MAX_ROUNDS = 14;
     private static final int MAX_CONSECUTIVE_ERRORS = 5;
-    private final IntScoreDataContainer<ServerPlayerEntity, PlayerRef> data = new IntScoreDataContainer<>(PlayerRef::create);
+    private final IntScoreDataContainer<ServerPlayer, PlayerRef> data = new IntScoreDataContainer<>(PlayerRef::create);
     private final Random random = new Random();
     private final PlayerChoices choices;
     private final ChallengeResult result;
@@ -88,12 +88,12 @@ public class GuessItInstance extends FFAGameInstance implements MapBootstrap {
     }
 
     @Override
-    protected DataContainer<ServerPlayerEntity, PlayerRef> getData() {
+    protected DataContainer<ServerPlayer, PlayerRef> getData() {
         return data;
     }
 
     @Override
-    public @NotNull CompletableFuture<Void> createWorldBootstrap(@NotNull ServerWorld world, @NotNull GameMap map) {
+    public @NotNull CompletableFuture<Void> createWorldBootstrap(@NotNull ServerLevel world, @NotNull GameMap map) {
         var soundSubtitlesFuture = SoundSubtitles.load().thenAccept(sub -> soundSubtitles = sub);
         var mannequinUuidsFuture = loadMannequinUuids().thenAccept(ids -> mannequinUuids = new IndexedSet<>(ids));
 
@@ -102,14 +102,14 @@ public class GuessItInstance extends FFAGameInstance implements MapBootstrap {
 
     @Override
     protected void prepare() {
-        ServerWorld world = getWorld();
+        ServerLevel world = getWorld();
         GameMap map = getMap();
         HookRegistrar hooks = gameHandle.getHooks();
         Participants participants = gameHandle.getParticipants();
         BlockShape blockShape = MapUtil.readArea(map);
 
         commons().gameRuleBuilder()
-                .set(GameRules.REDUCED_DEBUG_INFO, true);
+                .set(GameRules.RULE_REDUCEDDEBUGINFO, true);
 
         rounds = MIN_ROUNDS + random.nextInt(MAX_ROUNDS - MIN_ROUNDS + 1);
 
@@ -145,7 +145,7 @@ public class GuessItInstance extends FFAGameInstance implements MapBootstrap {
         hooks.registerHook(EntityTargetCallback.HOOK, (entity, target) -> true);
 
         // prevent mobs from applying effects to players
-        hooks.registerHook(EntityStatusEffectCallback.HOOK, (entity, effect, source) -> entity instanceof ServerPlayerEntity && source != null);
+        hooks.registerHook(EntityStatusEffectCallback.HOOK, (entity, effect, source) -> entity instanceof ServerPlayer && source != null);
 
         // prevent wither shooting skulls
         hooks.registerHook(WitherShootCallback.HOOK, (wither, targetX, targetY, targetZ) -> true);
@@ -181,10 +181,10 @@ public class GuessItInstance extends FFAGameInstance implements MapBootstrap {
         // score heading
         objective.createText(translations.translateText("ap2.score").formatted(YELLOW, BOLD));
 
-        var separator = Text.literal(ApConstants.SCOREBOARD_SEPARATOR_SM).formatted(DARK_GREEN, STRIKETHROUGH);
+        var separator = Component.literal(ApConstants.SCOREBOARD_SEPARATOR_SM).withStyle(DARK_GREEN, STRIKETHROUGH);
         objective.createText(separator);
 
-        for (ServerPlayerEntity player : PlayerLookup.all(gameHandle.getServer())) {
+        for (ServerPlayer player : PlayerLookup.all(gameHandle.getServer())) {
             objective.add(player);
         }
 
@@ -192,7 +192,7 @@ public class GuessItInstance extends FFAGameInstance implements MapBootstrap {
     }
 
     private void updateRoundDisplay() {
-        roundHandle.setNumberFormat(new FixedNumberFormat(Text.literal("%s/%s".formatted(round, rounds)).formatted(YELLOW)));
+        roundHandle.setNumberFormat(new FixedFormat(Component.literal("%s/%s".formatted(round, rounds)).withStyle(YELLOW)));
     }
 
     private synchronized void prepareNextChallenge() {
@@ -213,7 +213,7 @@ public class GuessItInstance extends FFAGameInstance implements MapBootstrap {
         var challengeInit = manager.nextChallenge();
 
         challenge = challengeInit.challenge();
-        ServerWorld world = getWorld();
+        ServerLevel world = getWorld();
         Translations translations = gameHandle.getTranslations();
 
         var prepareMsg = translations.translateText("game.ap2.guess_it.prepare." + challenge.getPreparationKey())
@@ -222,9 +222,9 @@ public class GuessItInstance extends FFAGameInstance implements MapBootstrap {
         challenge.init(challengeInit.init());
 
         // send preparation title
-        for (ServerPlayerEntity player : PlayerLookup.world(world)) {
-            Title.get(player).title(Text.empty(), prepareMsg.translateFor(player));
-            player.playSoundToPlayer(SoundEvents.BLOCK_END_PORTAL_FRAME_FILL, SoundCategory.NEUTRAL, 1f, 0.5f);
+        for (ServerPlayer player : PlayerLookup.world(world)) {
+            Title.get(player).title(Component.empty(), prepareMsg.translateFor(player));
+            player.playNotifySound(SoundEvents.END_PORTAL_FRAME_FILL, SoundSource.NEUTRAL, 1f, 0.5f);
         }
 
         try {
@@ -247,15 +247,15 @@ public class GuessItInstance extends FFAGameInstance implements MapBootstrap {
     private synchronized void beginChallenge() {
         Objects.requireNonNull(challenge, "Challenge cannot be null");
 
-        ServerWorld world = getWorld();
+        ServerLevel world = getWorld();
         Translations translations = gameHandle.getTranslations();
         TaskScheduler scheduler = gameHandle.getScheduler();
 
         var players = PlayerLookup.world(world);
 
         if (challenge.shouldPlayBeginSound()) {
-            for (ServerPlayerEntity player : players) {
-                player.playSoundToPlayer(SoundEvents.ENTITY_BREEZE_SHOOT, SoundCategory.NEUTRAL, 1f, 0.5f);
+            for (ServerPlayer player : players) {
+                player.playNotifySound(SoundEvents.BREEZE_SHOOT, SoundSource.NEUTRAL, 1f, 0.5f);
             }
         }
 
@@ -277,7 +277,7 @@ public class GuessItInstance extends FFAGameInstance implements MapBootstrap {
 
         timer = BossBarTimer.builder(translations, translations.translateText("game.ap2.guess_it.answer"))
                 .withAlertSound(true)
-                .withColor(BossBar.Color.RED)
+                .withColor(BossEvent.BossBarColor.RED)
                 .withDurationTicks(durationTicks)
                 .build();
 
@@ -332,29 +332,29 @@ public class GuessItInstance extends FFAGameInstance implements MapBootstrap {
             solutionMsg = translations.translateText("game.ap2.guess_it.solution", styled(correctAnswer, YELLOW));
         }
 
-        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
+        for (ServerPlayer player : gameHandle.getParticipants()) {
             int points = result.getPointsGained(player);
 
             var msg = translations.translateText(player, "game.ap2.guess_it.gain_points", styled(points, YELLOW)).formatted(GREEN);
 
-            player.sendMessage(msg, true);
+            player.displayClientMessage(msg, true);
 
             if (points > 0) {
                 data.addScore(player, points);
 
-                player.playSoundToPlayer(SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, SoundCategory.PLAYERS, 0.5f, 1.5f);
+                player.playNotifySound(SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 0.5f, 1.5f);
 
                 if (solutionMsg != null) {
-                    player.sendMessage(solutionMsg.translateFor(player).formatted(GREEN));
+                    player.sendSystemMessage(solutionMsg.translateFor(player).formatted(GREEN));
                 }
 
                 continue;
             }
 
-            player.playSoundToPlayer(SoundEvents.ENTITY_WITHER_HURT, SoundCategory.PLAYERS, 0.3f, 1.3f);
+            player.playNotifySound(SoundEvents.WITHER_HURT, SoundSource.PLAYERS, 0.3f, 1.3f);
 
             if (solutionMsg != null) {
-                player.sendMessage(solutionMsg.translateFor(player).formatted(RED));
+                player.sendSystemMessage(solutionMsg.translateFor(player).formatted(RED));
             }
         }
 

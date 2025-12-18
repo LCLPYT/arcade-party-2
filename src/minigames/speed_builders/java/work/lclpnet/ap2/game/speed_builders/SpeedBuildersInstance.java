@@ -1,26 +1,26 @@
 package work.lclpnet.ap2.game.speed_builders;
 
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.boss.BossBar;
-import net.minecraft.entity.mob.BreezeEntity;
-import net.minecraft.entity.player.PlayerAbilities;
-import net.minecraft.entity.projectile.BreezeWindChargeEntity;
-import net.minecraft.entity.projectile.ProjectileEntity;
-import net.minecraft.particle.ParticleTypes;
-import net.minecraft.scoreboard.AbstractTeam;
-import net.minecraft.scoreboard.Team;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.PlayerManager;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.GameRules;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.players.PlayerList;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.BossEvent;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.monster.breeze.Breeze;
+import net.minecraft.world.entity.player.Abilities;
+import net.minecraft.world.entity.projectile.Projectile;
+import net.minecraft.world.entity.projectile.windcharge.BreezeWindCharge;
+import net.minecraft.world.level.GameRules;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.scores.PlayerTeam;
+import net.minecraft.world.scores.Team;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.base.Participants;
@@ -79,7 +79,7 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
     }
 
     @Override
-    public @NotNull CompletableFuture<Void> createWorldBootstrap(@NotNull ServerWorld world, @NotNull GameMap map) {
+    public @NotNull CompletableFuture<Void> createWorldBootstrap(@NotNull ServerLevel world, @NotNull GameMap map) {
         return setup.setup(map, world).thenRun(() -> {
             Participants participants = gameHandle.getParticipants();
 
@@ -90,7 +90,7 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
             manager = new SbManager(islands, setup.getModules(), gameHandle, world, random, this::allPlayersCompleted);
             destruction = new SbDestruction(world, random, aelosId);
 
-            world.getGameRules().get(GameRules.DO_TILE_DROPS).set(true, gameHandle.getServer());
+            world.getGameRules().getRule(GameRules.RULE_DOBLOCKDROPS).set(true, gameHandle.getServer());
         });
     }
 
@@ -98,21 +98,21 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
     protected void prepare() {
         setupGameRules();
 
-        ServerWorld world = getWorld();
+        ServerLevel world = getWorld();
         ServerWorldBehaviour.setFluidTicksEnabled(world, false);
 
         manager.eachIsland(SbIsland::teleport);
 
         CustomScoreboardManager scoreboardManager = gameHandle.getScoreboardManager();
-        Team team = scoreboardManager.createTeam("team");
-        team.setCollisionRule(AbstractTeam.CollisionRule.NEVER);
+        PlayerTeam team = scoreboardManager.createTeam("team");
+        team.setCollisionRule(Team.CollisionRule.NEVER);
         manager.setTeam(team);
 
-        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
-            PlayerAbilities abilities = player.getAbilities();
-            abilities.allowFlying = true;
+        for (ServerPlayer player : gameHandle.getParticipants()) {
+            Abilities abilities = player.getAbilities();
+            abilities.mayfly = true;
             abilities.flying = true;
-            player.sendAbilitiesUpdate();
+            player.onUpdateAbilities();
 
             scoreboardManager.joinTeam(player, team);
         }
@@ -132,12 +132,12 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
     }
 
     @Override
-    protected void onEliminated(ServerPlayerEntity player) {
+    protected void onEliminated(ServerPlayer player) {
         putScoreDetail(player, false);
     }
 
     @Override
-    public void participantRemoved(ServerPlayerEntity player) {
+    public void participantRemoved(ServerPlayer player) {
         Participants participants = gameHandle.getParticipants();
 
         if (participants.count() == 1) {
@@ -149,7 +149,7 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
 
     private void setupGameRules() {
         commons().gameRuleBuilder()
-                .set(GameRules.RANDOM_TICK_SPEED, 0);
+                .set(GameRules.RULE_RANDOMTICKING, 0);
     }
 
     private void nextRound() {
@@ -163,7 +163,7 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
         Translations translations = gameHandle.getTranslations();
 
         TranslatedText label = translations.translateText("game.ap2.speed_builders.prepare_label");
-        timer = commons().createTimer(label, LOOK_DURATION_SECONDS, BossBar.Color.YELLOW);
+        timer = commons().createTimer(label, LOOK_DURATION_SECONDS, BossEvent.BossBarColor.YELLOW);
 
         int transaction = timerTransaction;
 
@@ -222,8 +222,8 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
     }
 
     private void onLeaveBuildingPhase() {
-        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
-            player.getInventory().clear();
+        for (ServerPlayer player : gameHandle.getParticipants()) {
+            player.getInventory().clearContent();
         }
 
         manager.setBuildingPhase(false);
@@ -243,24 +243,24 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
             return;
         }
 
-        ServerPlayerEntity worst = worstPlayer.get();
-        var title = Text.literal(worst.getNameForScoreboard()).formatted(Formatting.AQUA);
-        var subtitle = gameHandle.getTranslations().translateText("game.ap2.speed_builders.will_eliminate").formatted(Formatting.DARK_GREEN);
+        ServerPlayer worst = worstPlayer.get();
+        var title = Component.literal(worst.getScoreboardName()).withStyle(ChatFormatting.AQUA);
+        var subtitle = gameHandle.getTranslations().translateText("game.ap2.speed_builders.will_eliminate").formatted(ChatFormatting.DARK_GREEN);
 
         MinecraftServer server = gameHandle.getServer();
 
-        for (ServerPlayerEntity player : PlayerLookup.all(server)) {
+        for (ServerPlayer player : PlayerLookup.all(server)) {
             Title.get(player).title(title, subtitle.translateFor(player), 5, 50, 5);
-            player.playSoundToPlayer(SoundEvents.ENTITY_BREEZE_HURT, SoundCategory.PLAYERS, 1f, 0.5f);
+            player.playNotifySound(SoundEvents.BREEZE_HURT, SoundSource.PLAYERS, 1f, 0.5f);
         }
 
         manager.getIsland(worst).ifPresent(destruction::setAelosLookingTowards);
 
-        gameHandle.getScheduler().timeout(() -> fireChargeTowardsPlayerIsland(worst.getUuid()), DESTROY_DELAY_TICKS);
+        gameHandle.getScheduler().timeout(() -> fireChargeTowardsPlayerIsland(worst.getUUID()), DESTROY_DELAY_TICKS);
     }
 
     private void fireChargeTowardsPlayerIsland(UUID worstUuid) {
-        ServerPlayerEntity worst = gameHandle.getServer().getPlayerManager().getPlayer(worstUuid);
+        ServerPlayer worst = gameHandle.getServer().getPlayerList().getPlayer(worstUuid);
 
         if (worst == null) {
             nextRoundOrGameOver();
@@ -280,9 +280,9 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
         islandToDestroy = island;
         playerToEliminate = worstUuid;
 
-        BreezeWindChargeEntity charge = destruction.fireProjectile(island);
+        BreezeWindCharge charge = destruction.fireProjectile(island);
 
-        ServerWorld world = getWorld();
+        ServerLevel world = getWorld();
 
         gameHandle.getScheduler().interval(task -> {
             if (!charge.isAlive()) {
@@ -290,7 +290,7 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
                 return;
             }
 
-            ParticleHelper.spawnForceParticle(ParticleTypes.FIREWORK, charge.getX(), charge.getY(), charge.getZ(), 50, 0, 0, 0, 0.25f, world.getPlayers());
+            ParticleHelper.spawnForceParticle(ParticleTypes.FIREWORK, charge.getX(), charge.getY(), charge.getZ(), 50, 0, 0, 0, 0.25f, world.players());
         }, 1);
 
         // make sure the island is destroyed, if the projectile somehow misses ¯\_(ツ)_/¯
@@ -303,33 +303,33 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
         }, Ticks.seconds(10));
     }
 
-    private void putScoreDetail(ServerPlayerEntity player, boolean winner) {
+    private void putScoreDetail(ServerPlayer player, boolean winner) {
         int completed = manager.getRoundsCompleted(player, winner);
         var detail = gameHandle.getTranslations().translateText("game.ap2.speed_builders.survived", completed);
 
         getData().add(player, detail);
     }
 
-    private void onHitBlock(ProjectileEntity projectile, BlockHitResult hit) {
-        if (!(projectile instanceof BreezeWindChargeEntity) || islandToDestroy == null) return;
+    private void onHitBlock(Projectile projectile, BlockHitResult hit) {
+        if (!(projectile instanceof BreezeWindCharge) || islandToDestroy == null) return;
 
         destroyIsland(projectile);
     }
 
-    private void destroyIsland(@Nullable ProjectileEntity projectile) {
+    private void destroyIsland(@Nullable Projectile projectile) {
         if (islandToDestroy == null) return;  // the island was already destroyed
 
-        Vec3d impactPos;
-        Vec3d velocity;
+        Vec3 impactPos;
+        Vec3 velocity;
 
         if (projectile != null) {
-            impactPos = projectile.getEntityPos();
-            velocity = projectile.getVelocity().normalize();
+            impactPos = projectile.position();
+            velocity = projectile.getDeltaMovement().normalize();
         } else {
             impactPos = islandToDestroy.getCenter();
             Entity entity = getWorld().getEntity(aelosId);
 
-            if (entity instanceof BreezeEntity breeze) {
+            if (entity instanceof Breeze breeze) {
                 velocity = impactPos.subtract(SbDestruction.getChargePos(breeze)).normalize();
             } else {
                 velocity = impactPos.normalize();
@@ -340,8 +340,8 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
 
         islandToDestroy = null;
 
-        PlayerManager playerManager = gameHandle.getServer().getPlayerManager();
-        ServerPlayerEntity player = playerManager.getPlayer(playerToEliminate);
+        PlayerList playerManager = gameHandle.getServer().getPlayerList();
+        ServerPlayer player = playerManager.getPlayer(playerToEliminate);
 
         if (player == null) {
             nextRoundOrGameOver();
@@ -349,13 +349,13 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
         }
 
         player.getAbilities().flying = false;
-        player.getAbilities().allowFlying = false;
-        player.sendAbilitiesUpdate();
+        player.getAbilities().mayfly = false;
+        player.onUpdateAbilities();
 
-        VelocityModifier.setVelocity(player, velocity.add(0, 1.5, 0).normalize().multiply(3));
+        VelocityModifier.setVelocity(player, velocity.add(0, 1.5, 0).normalize().scale(3));
 
         gameHandle.getScheduler().timeout(() -> {
-            ServerPlayerEntity futurePlayer = playerManager.getPlayer(playerToEliminate);
+            ServerPlayer futurePlayer = playerManager.getPlayer(playerToEliminate);
 
             if (futurePlayer != null) {
                 eliminate(futurePlayer);
@@ -384,7 +384,7 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
             return;
         }
 
-        ServerPlayerEntity winner = it.next();
+        ServerPlayer winner = it.next();
 
         putScoreDetail(winner, true);
 
@@ -403,7 +403,7 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
         onLeaveBuildingPhase();
 
         commons().announcer()
-                .withSound(SoundEvents.ENTITY_BREEZE_IDLE_AIR, SoundCategory.HOSTILE, 1f, 1.2f)
+                .withSound(SoundEvents.BREEZE_IDLE_AIR, SoundSource.HOSTILE, 1f, 1.2f)
                 .announceSubtitle("game.ap2.speed_builders.impressed");
 
         gameHandle.getScheduler().timeout(this::nextRoundOrGameOver, Ticks.seconds(3));

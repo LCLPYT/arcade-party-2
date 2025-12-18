@@ -3,21 +3,21 @@ package work.lclpnet.ap2.game.block_dissolve;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 import it.unimi.dsi.fastutil.longs.LongList;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.entity.projectile.ProjectileEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.particle.ParticleTypes;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.GameRules;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.entity.projectile.Projectile;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.GameRules;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.impl.game.EliminationGameInstance;
 import work.lclpnet.ap2.impl.map.MapUtil;
@@ -47,8 +47,8 @@ public class BlockDissolveInstance extends EliminationGameInstance {
     @Override
     protected void prepare() {
         commons().gameRuleBuilder()
-                .set(GameRules.RANDOM_TICK_SPEED, 0)
-                .set(GameRules.DO_VINES_SPREAD, false);
+                .set(GameRules.RULE_RANDOMTICKING, 0)
+                .set(GameRules.RULE_DO_VINES_SPREAD, false);
 
         useNoHealing();
         useSmoothDeath();
@@ -56,7 +56,7 @@ public class BlockDissolveInstance extends EliminationGameInstance {
 
         gameHandle.protect(config -> {
             config.allow(ProtectionTypes.MOUNT);
-            config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, source) -> source.getSource() instanceof ProjectileEntity);
+            config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, source) -> source.getDirectEntity() instanceof Projectile);
         });
 
         Object physics = getMap().getProperty("block_physics");
@@ -78,7 +78,7 @@ public class BlockDissolveInstance extends EliminationGameInstance {
     private void scanWorld() {
         BlockBox bounds = MapUtil.readBox(getMap().requireProperty("bounds"));
 
-        ServerWorld world = getWorld();
+        ServerLevel world = getWorld();
 
         for (BlockPos pos : bounds) {
             BlockState state = world.getBlockState(pos);
@@ -108,8 +108,8 @@ public class BlockDissolveInstance extends EliminationGameInstance {
             warningTimer++;
 
             if (warningTimer % WARNING_PERIOD_TICKS == 0) {
-                for (ServerPlayerEntity player : PlayerLookup.all(server)) {
-                    player.playSoundToPlayer(SoundEvents.BLOCK_NOTE_BLOCK_PLING.value(), SoundCategory.BLOCKS, 1f, 0f);
+                for (ServerPlayer player : PlayerLookup.all(server)) {
+                    player.playNotifySound(SoundEvents.NOTE_BLOCK_PLING.value(), SoundSource.BLOCKS, 1f, 0f);
                 }
             }
 
@@ -117,8 +117,8 @@ public class BlockDissolveInstance extends EliminationGameInstance {
                 warning = false;
                 warningTimer = 0;
 
-                for (ServerPlayerEntity player : PlayerLookup.all(server)) {
-                    player.playSoundToPlayer(SoundEvents.ENTITY_WITHER_BREAK_BLOCK, SoundCategory.BLOCKS, 1f, 0f);
+                for (ServerPlayer player : PlayerLookup.all(server)) {
+                    player.playNotifySound(SoundEvents.WITHER_BREAK_BLOCK, SoundSource.BLOCKS, 1f, 0f);
                 }
 
                 for (int i = 0; i < WARNING_AMOUNT; i++) {
@@ -189,44 +189,44 @@ public class BlockDissolveInstance extends EliminationGameInstance {
 
         int idx = random.nextInt(size);
 
-        BlockPos pos = BlockPos.fromLong(markedBlocks.removeLong(idx));
-        ServerWorld world = getWorld();
+        BlockPos pos = BlockPos.of(markedBlocks.removeLong(idx));
+        ServerLevel world = getWorld();
 
-        int flags = Block.NOTIFY_LISTENERS | Block.SKIP_DROPS;
+        int flags = Block.UPDATE_CLIENTS | Block.UPDATE_SUPPRESS_DROPS;
 
         if (physics) {
-            flags |= Block.NOTIFY_NEIGHBORS;
+            flags |= Block.UPDATE_NEIGHBORS;
         } else {
-            flags |= Block.FORCE_STATE;
+            flags |= Block.UPDATE_KNOWN_SHAPE;
         }
 
-        world.setBlockState(pos, Blocks.AIR.getDefaultState(), flags);
+        world.setBlock(pos, Blocks.AIR.defaultBlockState(), flags);
 
         double x = pos.getX() + 0.5, y = pos.getY() + 0.5, z = pos.getZ() + 0.5;
 
-        world.spawnParticles(ParticleTypes.FLAME, x, y, z, 10, 0.2, 0.2, 0.2, 0.1);
-        world.playSound(null, x, y, z, SoundEvents.ITEM_FIRECHARGE_USE, SoundCategory.BLOCKS, 0.3f, 0.75f);
+        world.sendParticles(ParticleTypes.FLAME, x, y, z, 10, 0.2, 0.2, 0.2, 0.1);
+        world.playSound(null, x, y, z, SoundEvents.FIRECHARGE_USE, SoundSource.BLOCKS, 0.3f, 0.75f);
     }
 
     private void giveSnowball() {
-        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
+        for (ServerPlayer player : gameHandle.getParticipants()) {
             giveSnowball(player);
         }
     }
 
-    private void giveSnowball(ServerPlayerEntity player) {
-        PlayerInventory inventory = player.getInventory();
-        ItemStack stack = inventory.getStack(0);
+    private void giveSnowball(ServerPlayer player) {
+        Inventory inventory = player.getInventory();
+        ItemStack stack = inventory.getItem(0);
 
-        if (!stack.isOf(Items.SNOWBALL)) {
+        if (!stack.is(Items.SNOWBALL)) {
             stack = new ItemStack(Items.SNOWBALL);
         } else if (stack.getCount() >= MAX_SNOWBALLS) {
             return;
         } else {
-            stack.increment(1);
+            stack.grow(1);
         }
 
-        inventory.setStack(0, stack);
-        player.playSoundToPlayer(SoundEvents.ENTITY_ITEM_PICKUP, SoundCategory.PLAYERS, 0.6f, 2f);
+        inventory.setItem(0, stack);
+        player.playNotifySound(SoundEvents.ITEM_PICKUP, SoundSource.PLAYERS, 0.6f, 2f);
     }
 }

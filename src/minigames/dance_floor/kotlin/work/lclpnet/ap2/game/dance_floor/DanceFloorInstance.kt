@@ -1,15 +1,15 @@
 package work.lclpnet.ap2.game.dance_floor
 
-import net.minecraft.block.Block
-import net.minecraft.block.Blocks
-import net.minecraft.item.ItemStack
-import net.minecraft.particle.ParticleTypes
-import net.minecraft.scoreboard.AbstractTeam
-import net.minecraft.server.network.ServerPlayerEntity
-import net.minecraft.server.world.ServerWorld
-import net.minecraft.sound.SoundCategory
-import net.minecraft.sound.SoundEvents
-import net.minecraft.world.GameMode
+import net.minecraft.core.particles.ParticleTypes
+import net.minecraft.server.level.ServerLevel
+import net.minecraft.server.level.ServerPlayer
+import net.minecraft.sounds.SoundEvents
+import net.minecraft.sounds.SoundSource
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.level.GameType
+import net.minecraft.world.level.block.Block
+import net.minecraft.world.level.block.Blocks
+import net.minecraft.world.scores.Team
 import org.json.JSONObject
 import work.lclpnet.ap2.*
 import work.lclpnet.ap2.api.game.MiniGameHandle
@@ -50,7 +50,7 @@ private const val PARTICLE_AMOUNT = 3
 class DanceFloorInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gameHandle), MapBootstrap {
 
     val songHandler = SongHandler(gameHandle, Random.asJavaRandom())
-    val eliminate = mutableSetOf<ServerPlayerEntity>()
+    val eliminate = mutableSetOf<ServerPlayer>()
     var loadingSong: CompletableFuture<ConfiguredSong>? = null
     var currentSong: SongWrapper? = null
     var songProgress: Int? = null
@@ -69,7 +69,7 @@ class DanceFloorInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(g
         disableTeleportEliminated()
     }
 
-    override fun createWorldBootstrap(world: ServerWorld, map: GameMap): CompletableFuture<Void> {
+    override fun createWorldBootstrap(world: ServerLevel, map: GameMap): CompletableFuture<Void> {
         return songHandler.loadSongs(gameHandle.gameInfo.id)
     }
 
@@ -118,10 +118,10 @@ class DanceFloorInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(g
         }
     }
 
-    fun softEliminate(player: ServerPlayerEntity) {
+    fun softEliminate(player: ServerPlayer) {
         if (!gameHandle.participants.isParticipating(player) || eliminate.contains(player)) return
 
-        SoundHelper.playSoundAt(player, SoundEvents.ENTITY_GENERIC_EXPLODE.value(), SoundCategory.PLAYERS, 1f, 0f)
+        SoundHelper.playSoundAt(player, SoundEvents.GENERIC_EXPLODE.value(), SoundSource.PLAYERS, 1f, 0f)
         ParticleHelper.spawnParticleAt(player, ParticleTypes.LAVA, 100, 0.5, 0.5, 0.5, 0.2)
 
         gameHandle.playerUtil.resetPlayer(player)
@@ -130,10 +130,10 @@ class DanceFloorInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(g
         val pos = spectatorSpawns.randomOrNull()
 
         if (pos != null) {
-            player.changeGameMode(GameMode.ADVENTURE)
+            player.setGameMode(GameType.ADVENTURE)
             player.teleport(pos)
         } else {
-            player.changeGameMode(GameMode.SPECTATOR)
+            player.setGameMode(GameType.SPECTATOR)
         }
 
         eliminate.add(player)
@@ -142,7 +142,7 @@ class DanceFloorInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(g
     fun setupTeam() {
         val scoreboardManager = gameHandle.getScoreboardManager()
         val team = scoreboardManager.createTeam("team")
-        team.setCollisionRule(AbstractTeam.CollisionRule.NEVER)
+        team.setCollisionRule(Team.CollisionRule.NEVER)
         scoreboardManager.joinTeam(gameHandle.getParticipants(), team)
 
         visibilityManager = VisibilityManager(team, Visibility.VISIBLE)
@@ -173,7 +173,7 @@ class DanceFloorInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(g
         blockRandomizer?.randomizeBlocks()
 
         for (player in players()) {
-            player.inventory.setStack(4, ItemStack.EMPTY)
+            player.inventory.setItem(4, ItemStack.EMPTY)
         }
     }
 
@@ -250,11 +250,11 @@ class DanceFloorInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(g
         val block = BlockHelper.getWool(dyeColor)
 
         for (player in players()) {
-            player.inventory.setStack(4, ItemStack(block))
+            player.inventory.setItem(4, ItemStack(block))
             player.setSelectedSlot(4)
         }
 
-        SoundHelper.playSound(world, SoundEvents.ENTITY_IRON_GOLEM_HURT, SoundCategory.HOSTILE, 0.9f, 0f)
+        SoundHelper.playSound(world, SoundEvents.IRON_GOLEM_HURT, SoundSource.HOSTILE, 0.9f, 0f)
 
         val decreaseTicks = (totalDurationTicks * BLOCK_DELAY_TICKS_DECREASE_PER_MINUTE / Ticks.minutes(1).toFloat())
             .roundToInt()
@@ -263,24 +263,24 @@ class DanceFloorInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(g
         val blockDelayTicks = max(TOTAL_MIN_BLOCK_DELAY_TICKS, INITIAL_BLOCK_DELAY_TICKS - decreaseTicks)
 
         task = timeout(blockDelayTicks) {
-            SoundHelper.playSound(world, SoundEvents.ENTITY_WITHER_BREAK_BLOCK, SoundCategory.HOSTILE, 0.4f, 0.8f)
+            SoundHelper.playSound(world, SoundEvents.WITHER_BREAK_BLOCK, SoundSource.HOSTILE, 0.4f, 0.8f)
             removeBlocks(block)
         }
 
         translate("game.ap2.dance_floor.stand_on", TextUtil.getVanillaName(block))
-            .withColor(dyeColor.signColor)
+            .withColor(dyeColor.textColor)
             .sendTo(players(), true)
     }
 
     fun removeBlocks(except: Block) {
         for (pos in floorShape()) {
-            if (world.getBlockState(pos)!!.isOf(except)) continue
+            if (world.getBlockState(pos)!!.`is`(except)) continue
 
             world.setBlock(pos, Blocks.AIR)
         }
 
         task = timeout(seconds = 4) {
-            SoundHelper.playSound(world, SoundEvents.ENTITY_EXPERIENCE_ORB_PICKUP, SoundCategory.NEUTRAL, 0.5f, 1f)
+            SoundHelper.playSound(world, SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.NEUTRAL, 0.5f, 1f)
             checkEliminated()
         }
     }

@@ -1,17 +1,17 @@
 package work.lclpnet.ap2.game.pillar_battle;
 
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.registry.DynamicRegistryManager;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.tag.ItemTags;
-import net.minecraft.registry.tag.TagKey;
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.tags.ItemTags;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.game.pillar_battle.item.*;
-import work.lclpnet.gaco.ds.IndexedSet;
 import work.lclpnet.ap2.impl.tags.ApItemTags;
+import work.lclpnet.gaco.ds.IndexedSet;
 
 import java.util.Random;
 import java.util.Set;
@@ -21,10 +21,10 @@ public class PbRandomizer {
 
     private final Random random;
     private final Participants participants;
-    private final DynamicRegistryManager registryManager;
+    private final RegistryAccess registryManager;
     private final IndexedSet<ItemClass> itemsClasses = new IndexedSet<>();
 
-    public PbRandomizer(Random random, Participants participants, DynamicRegistryManager registryManager) {
+    public PbRandomizer(Random random, Participants participants, RegistryAccess registryManager) {
         this.random = random;
         this.participants = participants;
         this.registryManager = registryManager;
@@ -62,7 +62,7 @@ public class PbRandomizer {
                 .flatMap(ItemClass::stream)
                 .collect(Collectors.toSet());
 
-        Registries.ITEM.stream()
+        BuiltInRegistries.ITEM.stream()
                 .filter(item -> !exclude.contains(item))
                 .map(SingletonItemClass::new)
                 .forEach(itemsClasses::add);
@@ -77,15 +77,15 @@ public class PbRandomizer {
     }
 
     public void giveRandomItems() {
-        for (ServerPlayerEntity player : participants) {
+        for (ServerPlayer player : participants) {
             giveRandomItem(player);
         }
     }
 
-    private void giveRandomItem(ServerPlayerEntity player) {
+    private void giveRandomItem(ServerPlayer player) {
         ItemStack stack = getRandomStack();
 
-        player.giveItemStack(stack);
+        player.addItem(stack);
     }
 
     private ItemStack getRandomStack() {

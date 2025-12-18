@@ -1,15 +1,15 @@
 package work.lclpnet.ap2.api.util.bossbar;
 
-import net.minecraft.entity.boss.ServerBossBar;
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.level.ServerBossEvent;
+import net.minecraft.server.level.ServerPlayer;
 
 public interface PlayerBossBar {
 
-    ServerBossBar getBossBar(ServerPlayerEntity player);
+    ServerBossEvent getBossBar(ServerPlayer player);
 
-    void remove(ServerPlayerEntity player);
+    void remove(ServerPlayer player);
 
-    default void add(ServerPlayerEntity player) {
+    default void add(ServerPlayer player) {
         getBossBar(player).addPlayer(player);
     }
 }

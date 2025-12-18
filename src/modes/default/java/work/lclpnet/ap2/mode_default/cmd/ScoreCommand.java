@@ -3,9 +3,9 @@ package work.lclpnet.ap2.mode_default.cmd;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import net.minecraft.command.argument.EntityArgumentType;
-import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.arguments.EntityArgument;
+import net.minecraft.server.level.ServerPlayer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.mode_default.util.ScoreManager;
 import work.lclpnet.kibu.cmd.type.CommandRegistrar;
@@ -16,10 +16,10 @@ import java.util.Collection;
 import java.util.List;
 
 import static com.mojang.brigadier.arguments.IntegerArgumentType.integer;
-import static net.minecraft.server.command.CommandManager.argument;
-import static net.minecraft.server.command.CommandManager.literal;
-import static net.minecraft.util.Formatting.GREEN;
-import static net.minecraft.util.Formatting.YELLOW;
+import static net.minecraft.ChatFormatting.GREEN;
+import static net.minecraft.ChatFormatting.YELLOW;
+import static net.minecraft.commands.Commands.argument;
+import static net.minecraft.commands.Commands.literal;
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
 public class ScoreCommand implements KibuCommand {
@@ -35,74 +35,74 @@ public class ScoreCommand implements KibuCommand {
     @Override
     public void register(CommandRegistrar registrar) {
         registrar.registerCommand(literal("score")
-                .requires(s -> s.hasPermissionLevel(2))
+                .requires(s -> s.hasPermission(2))
                 .then(literal("get")
                         .executes(this::getScoreSelf)
-                        .then(argument("targets", EntityArgumentType.players())
+                        .then(argument("targets", EntityArgument.players())
                                 .executes(this::getScore)))
                 .then(literal("set")
                         .then(argument("amount", integer(0))
                                 .executes(this::setScoreSelf)
-                                .then(argument("targets", EntityArgumentType.players())
+                                .then(argument("targets", EntityArgument.players())
                                         .executes(this::setScore))))
                 .then(literal("add")
                         .then(argument("amount", integer(0))
                                 .executes(this::addScoreSelf)
-                                .then(argument("targets", EntityArgumentType.players())
+                                .then(argument("targets", EntityArgument.players())
                                         .executes(this::addScore)))));
     }
 
-    private int addScoreSelf(CommandContext<ServerCommandSource> ctx) throws CommandSyntaxException {
-        ServerPlayerEntity player = ctx.getSource().getPlayerOrThrow();
+    private int addScoreSelf(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        ServerPlayer player = ctx.getSource().getPlayerOrException();
         int amount = IntegerArgumentType.getInteger(ctx, "amount");
 
         return addScoreFor(ctx, List.of(player), amount);
     }
 
-    private int addScore(CommandContext<ServerCommandSource> ctx) throws CommandSyntaxException {
-        var players = EntityArgumentType.getPlayers(ctx, "targets");
+    private int addScore(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        var players = EntityArgument.getPlayers(ctx, "targets");
         int amount = IntegerArgumentType.getInteger(ctx, "amount");
 
         return addScoreFor(ctx, players, amount);
     }
 
-    private int setScoreSelf(CommandContext<ServerCommandSource> ctx) throws CommandSyntaxException {
-        ServerPlayerEntity player = ctx.getSource().getPlayerOrThrow();
+    private int setScoreSelf(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        ServerPlayer player = ctx.getSource().getPlayerOrException();
         int amount = IntegerArgumentType.getInteger(ctx, "amount");
 
         return setScoreFor(ctx, List.of(player), amount);
     }
 
-    private int setScore(CommandContext<ServerCommandSource> ctx) throws CommandSyntaxException {
-        var players = EntityArgumentType.getPlayers(ctx, "targets");
+    private int setScore(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        var players = EntityArgument.getPlayers(ctx, "targets");
         int amount = IntegerArgumentType.getInteger(ctx, "amount");
 
         return setScoreFor(ctx, players, amount);
     }
 
-    private int getScoreSelf(CommandContext<ServerCommandSource> ctx) throws CommandSyntaxException {
-        ServerPlayerEntity player = ctx.getSource().getPlayerOrThrow();
+    private int getScoreSelf(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        ServerPlayer player = ctx.getSource().getPlayerOrException();
 
         return getScoreFor(ctx, List.of(player));
     }
 
-    private int getScore(CommandContext<ServerCommandSource> ctx) throws CommandSyntaxException {
-        var players = EntityArgumentType.getPlayers(ctx, "targets");
+    private int getScore(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        var players = EntityArgument.getPlayers(ctx, "targets");
 
         return getScoreFor(ctx,  players);
     }
 
-    private int setScoreFor(CommandContext<ServerCommandSource> ctx, Collection<ServerPlayerEntity> players, int amount) {
-        for (ServerPlayerEntity player : players) {
+    private int setScoreFor(CommandContext<CommandSourceStack> ctx, Collection<ServerPlayer> players, int amount) {
+        for (ServerPlayer player : players) {
             scoreManager.setScore(PlayerRef.create(player), amount);
         }
 
         if (players.size() == 1) {
-           ctx.getSource().sendMessage(translations.translateText(ctx.getSource(), "ap2.command.score.set.single",
-                   styled(players.iterator().next().getNameForScoreboard(), YELLOW),
+           ctx.getSource().sendSystemMessage(translations.translateText(ctx.getSource(), "ap2.command.score.set.single",
+                   styled(players.iterator().next().getScoreboardName(), YELLOW),
                    styled(amount, YELLOW)).formatted(GREEN));
         } else {
-            ctx.getSource().sendMessage(translations.translateText(ctx.getSource(), "ap2.command.score.set.multiple",
+            ctx.getSource().sendSystemMessage(translations.translateText(ctx.getSource(), "ap2.command.score.set.multiple",
                     styled(amount, YELLOW),
                     styled(players.size(), YELLOW)).formatted(GREEN));
         }
@@ -110,17 +110,17 @@ public class ScoreCommand implements KibuCommand {
         return players.size();
     }
 
-    private int addScoreFor(CommandContext<ServerCommandSource> ctx, Collection<ServerPlayerEntity> players, int amount) {
-        for (ServerPlayerEntity player : players) {
+    private int addScoreFor(CommandContext<CommandSourceStack> ctx, Collection<ServerPlayer> players, int amount) {
+        for (ServerPlayer player : players) {
             scoreManager.addScore(PlayerRef.create(player), amount);
         }
 
         if (players.size() == 1) {
-            ctx.getSource().sendMessage(translations.translateText(ctx.getSource(), "ap2.command.score.add.single",
+            ctx.getSource().sendSystemMessage(translations.translateText(ctx.getSource(), "ap2.command.score.add.single",
                     styled(amount, YELLOW),
-                    styled(players.iterator().next().getNameForScoreboard(), YELLOW)).formatted(GREEN));
+                    styled(players.iterator().next().getScoreboardName(), YELLOW)).formatted(GREEN));
         } else {
-            ctx.getSource().sendMessage(translations.translateText(ctx.getSource(), "ap2.command.score.add.multiple",
+            ctx.getSource().sendSystemMessage(translations.translateText(ctx.getSource(), "ap2.command.score.add.multiple",
                     styled(amount, YELLOW),
                     styled(players.size(), YELLOW)).formatted(GREEN));
         }
@@ -128,26 +128,26 @@ public class ScoreCommand implements KibuCommand {
         return players.size();
     }
 
-    private int getScoreFor(CommandContext<ServerCommandSource> ctx, Collection<ServerPlayerEntity> players) {
-        ServerCommandSource src = ctx.getSource();
+    private int getScoreFor(CommandContext<CommandSourceStack> ctx, Collection<ServerPlayer> players) {
+        CommandSourceStack src = ctx.getSource();
 
         if (players.size() == 1) {
             PlayerRef ref = PlayerRef.create(players.iterator().next());
             int score = scoreManager.getScore(ref);
 
-            src.sendMessage(translations.translateText(src, "ap2.command.score.get.single",
+            src.sendSystemMessage(translations.translateText(src, "ap2.command.score.get.single",
                     styled(ref.name(), YELLOW),
                     styled(score, YELLOW)).formatted(GREEN));
 
             return 1;
         }
 
-        src.sendMessage(translations.translateText(src, "ap2.command.score.get.multiple_header").formatted(GREEN));
+        src.sendSystemMessage(translations.translateText(src, "ap2.command.score.get.multiple_header").formatted(GREEN));
 
-        for (ServerPlayerEntity player : players) {
+        for (ServerPlayer player : players) {
             PlayerRef ref = PlayerRef.create(player);
 
-            src.sendMessage(translations.translateText(src, "ap2.command.score.get.row",
+            src.sendSystemMessage(translations.translateText(src, "ap2.command.score.get.row",
                     styled(ref.name(), YELLOW),
                     styled(scoreManager.getScore(ref), YELLOW)).formatted(GREEN));
         }

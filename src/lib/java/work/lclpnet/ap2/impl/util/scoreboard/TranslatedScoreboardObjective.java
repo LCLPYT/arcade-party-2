@@ -4,15 +4,15 @@ import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import lombok.Getter;
 import lombok.Setter;
-import net.minecraft.scoreboard.ScoreboardCriterion;
-import net.minecraft.scoreboard.ScoreboardDisplaySlot;
-import net.minecraft.scoreboard.number.BlankNumberFormat;
-import net.minecraft.scoreboard.number.NumberFormat;
-import net.minecraft.scoreboard.number.StyledNumberFormat;
-import net.minecraft.server.PlayerManager;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Style;
-import net.minecraft.text.Text;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
+import net.minecraft.network.chat.numbers.BlankFormat;
+import net.minecraft.network.chat.numbers.NumberFormat;
+import net.minecraft.network.chat.numbers.StyledFormat;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.players.PlayerList;
+import net.minecraft.world.scores.DisplaySlot;
+import net.minecraft.world.scores.criteria.ObjectiveCriteria;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.util.StyleTransformer;
@@ -38,26 +38,26 @@ public class TranslatedScoreboardObjective implements
         VirtualScoreboardObjective {
 
     private final Translations translations;
-    private final PlayerManager playerManager;
+    private final PlayerList playerManager;
     private final String name;
-    private final ScoreboardCriterion.RenderType renderType;
+    private final ObjectiveCriteria.RenderType renderType;
     private final Map<CustomObjective, Set<UUID>> objectivePlayers = new HashMap<>();
     private final Map<String, CustomObjective> localizedObjectives = new HashMap<>();
     private final Map<UUID, String> players = new HashMap<>();
     private final Object2IntMap<String> scores = new Object2IntOpenHashMap<>();
     private final Map<String, CustomEntry> entries = new HashMap<>();
     private final ScoreboardLayout layout = new ScoreboardLayout();
-    private CustomEntry defaultEntry = new CustomEntry(null, null, StyledNumberFormat.RED);
+    private CustomEntry defaultEntry = new CustomEntry(null, null, StyledFormat.SIDEBAR_DEFAULT);
     private String translationKey;
     private Object[] args;
-    private ScoreboardDisplaySlot slot = null;
+    private DisplaySlot slot = null;
     @Setter @Getter
     private Style style = Style.EMPTY;
     @Nullable
-    private Function<String, @Nullable Text> displayFunction = null;
+    private Function<String, @Nullable Component> displayFunction = null;
 
-    public TranslatedScoreboardObjective(Translations translations, PlayerManager playerManager, String name,
-                                         ScoreboardCriterion.RenderType renderType, String translationKey, Object[] args) {
+    public TranslatedScoreboardObjective(Translations translations, PlayerList playerManager, String name,
+                                         ObjectiveCriteria.RenderType renderType, String translationKey, Object[] args) {
         this.translations = translations;
         this.playerManager = playerManager;
         this.name = name;
@@ -67,9 +67,9 @@ public class TranslatedScoreboardObjective implements
     }
 
     @Override
-    public void add(ServerPlayerEntity player) {
+    public void add(ServerPlayer player) {
         final String language = translations.getLanguage(player);
-        final UUID uuid = player.getUuid();
+        final UUID uuid = player.getUUID();
 
         final String oldLanguage = players.get(uuid);
 
@@ -93,8 +93,8 @@ public class TranslatedScoreboardObjective implements
     }
 
     @Override
-    public void remove(ServerPlayerEntity player) {
-        UUID uuid = player.getUuid();
+    public void remove(ServerPlayer player) {
+        UUID uuid = player.getUUID();
         String lang = players.remove(uuid);
         if (lang == null) return;
 
@@ -110,8 +110,8 @@ public class TranslatedScoreboardObjective implements
     }
 
     @Override
-    public void update(ServerPlayerEntity player) {
-        if (!players.containsKey(player.getUuid())) return;
+    public void update(ServerPlayer player) {
+        if (!players.containsKey(player.getUUID())) return;
 
         // adding the player will update the language
         add(player);
@@ -124,7 +124,7 @@ public class TranslatedScoreboardObjective implements
 
     @NotNull
     private CustomObjective createLocalizedObjective(String language) {
-        Text localizedTitle = getLocalizedTitle(language);
+        Component localizedTitle = getLocalizedTitle(language);
 
         String suffix = language.replaceAll("[^a-zA-Z0-9._-]", "");  // remove invalid characters
         String localizedName = name + "_" + (suffix);
@@ -133,7 +133,7 @@ public class TranslatedScoreboardObjective implements
     }
 
     @NotNull
-    private Text getLocalizedTitle(String language) {
+    private Component getLocalizedTitle(String language) {
         RootText rootText = translations.translateText(language, translationKey, args);
         rootText.setStyle(style);
 
@@ -145,7 +145,7 @@ public class TranslatedScoreboardObjective implements
         this.args = args;
 
         for (var entry : localizedObjectives.entrySet()) {
-            Text localizedTitle = getLocalizedTitle(entry.getKey());
+            Component localizedTitle = getLocalizedTitle(entry.getKey());
 
             CustomObjective objective = entry.getValue();
             objective.setTitle(localizedTitle);
@@ -153,7 +153,7 @@ public class TranslatedScoreboardObjective implements
             Set<UUID> uuids = objectivePlayers.get(objective);
 
             for (UUID uuid : uuids) {
-                ServerPlayerEntity player = playerManager.getPlayer(uuid);
+                ServerPlayer player = playerManager.getPlayer(uuid);
                 if (player == null) continue;
 
                 objective.update(player);
@@ -167,14 +167,14 @@ public class TranslatedScoreboardObjective implements
         }
     }
 
-    public void setSlot(@Nullable ScoreboardDisplaySlot slot) {
+    public void setSlot(@Nullable DisplaySlot slot) {
         if (slot == this.slot) return;
 
-        ScoreboardDisplaySlot prevSlot = this.slot;
+        DisplaySlot prevSlot = this.slot;
         this.slot = slot;
 
         for (var entry : players.entrySet()) {
-            ServerPlayerEntity player = playerManager.getPlayer(entry.getKey());
+            ServerPlayer player = playerManager.getPlayer(entry.getKey());
 
             if (player == null) continue;
 
@@ -205,7 +205,7 @@ public class TranslatedScoreboardObjective implements
     }
 
     @Override
-    public void setDisplayName(String scoreHolder, @Nullable Text display) {
+    public void setDisplayName(String scoreHolder, @Nullable Component display) {
         CustomEntry entry = getEntry(scoreHolder);
         entries.put(scoreHolder, entry.withDisplay(display));
         syncEntry(scoreHolder);
@@ -224,7 +224,7 @@ public class TranslatedScoreboardObjective implements
         syncEntry(scoreHolder);
     }
 
-    public void setDisplayName(@Nullable Function<String, @Nullable Text> displayFunction) {
+    public void setDisplayName(@Nullable Function<String, @Nullable Component> displayFunction) {
         this.displayFunction = displayFunction;
     }
 
@@ -238,7 +238,7 @@ public class TranslatedScoreboardObjective implements
         }
 
         return entries.computeIfAbsent(scoreHolder, s -> {
-            Text display = displayFunction.apply(scoreHolder);
+            Component display = displayFunction.apply(scoreHolder);
             return defaultEntry.withDisplay(display);
         });
     }
@@ -248,10 +248,10 @@ public class TranslatedScoreboardObjective implements
         updateObjectives(objective -> syncScore(objective, scoreHolder, score));
     }
 
-    private void syncScores(CustomObjective objective, ServerPlayerEntity player) {
+    private void syncScores(CustomObjective objective, ServerPlayer player) {
         scores.forEach((scoreHolder, score) -> {
             var entry = getEntry(scoreHolder);
-            Text display = getScoreHolderDisplay(entry, player);
+            Component display = getScoreHolderDisplay(entry, player);
             NumberFormat format = entry.numberFormat();
 
             objective.sendScore(player, scoreHolder, score, display, format);
@@ -266,18 +266,18 @@ public class TranslatedScoreboardObjective implements
         NumberFormat format = entry.numberFormat();
 
         for (UUID uuid : uuids) {
-            ServerPlayerEntity player = playerManager.getPlayer(uuid);
+            ServerPlayer player = playerManager.getPlayer(uuid);
             if (player == null) continue;
 
-            Text display = getScoreHolderDisplay(entry, player);
+            Component display = getScoreHolderDisplay(entry, player);
 
             objective.sendScore(player, scoreHolder, score, display, format);
         }
     }
 
     @Nullable
-    private Text getScoreHolderDisplay(CustomEntry entry, ServerPlayerEntity viewer) {
-        Text display = entry.display();
+    private Component getScoreHolderDisplay(CustomEntry entry, ServerPlayer viewer) {
+        Component display = entry.display();
         TextTranslatable translatedDisplay = entry.translatedDisplay();
 
         if (translatedDisplay == null) {
@@ -290,7 +290,7 @@ public class TranslatedScoreboardObjective implements
     }
 
     @Override
-    public ScoreHandle createText(Text text, int position) {
+    public ScoreHandle createText(Component text, int position) {
         ScoreHandle handle = createHandle(position);
         handle.setDisplay(text);
 
@@ -317,7 +317,7 @@ public class TranslatedScoreboardObjective implements
             Set<UUID> uuids = objectivePlayers.getOrDefault(objective, Set.of());
 
             for (UUID uuid : uuids) {
-                ServerPlayerEntity player = playerManager.getPlayer(uuid);
+                ServerPlayer player = playerManager.getPlayer(uuid);
 
                 if (player == null) continue;
 
@@ -332,7 +332,7 @@ public class TranslatedScoreboardObjective implements
 
         setScore(holder, layout.resolvePosition(position));
 
-        handle.setNumberFormat(BlankNumberFormat.INSTANCE);
+        handle.setNumberFormat(BlankFormat.INSTANCE);
         return handle;
     }
 
@@ -340,7 +340,7 @@ public class TranslatedScoreboardObjective implements
     public void unload() {
         objectivePlayers.forEach((objective, uuids) -> {
             for (UUID uuid : uuids) {
-                ServerPlayerEntity player = playerManager.getPlayer(uuid);
+                ServerPlayer player = playerManager.getPlayer(uuid);
                 if (player == null) continue;
 
                 objective.remove(player);
@@ -348,10 +348,10 @@ public class TranslatedScoreboardObjective implements
         });
     }
 
-    public record CustomEntry(@Nullable Text display, @Nullable TextTranslatable translatedDisplay,
+    public record CustomEntry(@Nullable Component display, @Nullable TextTranslatable translatedDisplay,
                               NumberFormat numberFormat) {
 
-        public CustomEntry withDisplay(@Nullable Text display) {
+        public CustomEntry withDisplay(@Nullable Component display) {
             return new CustomEntry(display, null, this.numberFormat);
         }
 

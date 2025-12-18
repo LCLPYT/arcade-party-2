@@ -1,8 +1,8 @@
 package work.lclpnet.ap2
 
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup
-import net.minecraft.scoreboard.ScoreboardDisplaySlot
-import net.minecraft.server.network.ServerPlayerEntity
+import net.minecraft.server.level.ServerPlayer
+import net.minecraft.world.scores.DisplaySlot
 import work.lclpnet.ap2.api.event.IntScoreEventSource
 import work.lclpnet.ap2.impl.game.BaseGameInstance
 import work.lclpnet.ap2.impl.game.FFAGameInstance
@@ -24,11 +24,11 @@ fun BaseGameInstance.interval(ticks: Int, action: () -> Unit) =
 fun BaseGameInstance.translate(key: String, vararg args: Any) =
     gameHandle.translations.translateText(key, *args)!!
 
-fun FFAGameInstance.setupSidebarScoreboard(data: IntScoreEventSource<ServerPlayerEntity>) {
+fun FFAGameInstance.setupSidebarScoreboard(data: IntScoreEventSource<ServerPlayer>) {
     val objective = gameHandle.scoreboardManager.translateObjective("points", "ap2.score")
 
     useScoreboardStatsSync(data, objective)
-    objective.setSlot(ScoreboardDisplaySlot.SIDEBAR)
+    objective.setSlot(DisplaySlot.SIDEBAR)
 
     allPlayers().forEach(objective::add)
 }

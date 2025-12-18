@@ -3,7 +3,7 @@ package work.lclpnet.ap2.game.pig_race.util;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import lombok.Getter;
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.level.ServerPlayer;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 
 import java.util.*;
@@ -30,10 +30,10 @@ public class PRProgress {
     public void update() {
         var ranking = new ArrayList<Entry>();
 
-        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
+        for (ServerPlayer player : gameHandle.getParticipants()) {
             double distance = getAbsoluteDistance(player);
 
-            ranking.add(new Entry(player.getUuid(), distance));
+            ranking.add(new Entry(player.getUUID(), distance));
         }
 
         ranking.sort(Comparator.comparingDouble(Entry::distance).reversed());
@@ -48,7 +48,7 @@ public class PRProgress {
         return ranking.isEmpty() ? 0 : ranking.getFirst().distance;
     }
 
-    public synchronized List<ServerPlayerEntity> getRanking() {
+    public synchronized List<ServerPlayer> getRanking() {
         return ranking.stream()
                 .map(Entry::uuid)
                 .map(gameHandle.getParticipants()::getParticipant)
@@ -56,17 +56,17 @@ public class PRProgress {
                 .toList();
     }
 
-    public double getAbsoluteRemaining(ServerPlayerEntity player) {
+    public double getAbsoluteRemaining(ServerPlayer player) {
         double remaining = 1 - getAbsoluteProgress(player);
 
         return remaining * path.getCombinedLength() * rounds;
     }
 
-    public double getAbsoluteDistance(ServerPlayerEntity player) {
+    public double getAbsoluteDistance(ServerPlayer player) {
         return getAbsoluteProgress(player) * path.getCombinedLength() * rounds;
     }
 
-    public double getAbsoluteProgress(ServerPlayerEntity player) {
+    public double getAbsoluteProgress(ServerPlayer player) {
         int round = getRound(player);
 
         double progress = path.getProgress(player);
@@ -74,12 +74,12 @@ public class PRProgress {
         return max(0, min(rounds, (round - 1) + progress)) / rounds;
     }
 
-    public int getRound(ServerPlayerEntity player) {
-        return playerRounds.getOrDefault(player.getUuid(), 1);
+    public int getRound(ServerPlayer player) {
+        return playerRounds.getOrDefault(player.getUUID(), 1);
     }
 
-    public void incrementRound(ServerPlayerEntity player) {
-        playerRounds.put(player.getUuid(), getRound(player) + 1);
+    public void incrementRound(ServerPlayer player) {
+        playerRounds.put(player.getUUID(), getRound(player) + 1);
     }
 
     record Entry(UUID uuid, double distance) {}

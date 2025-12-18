@@ -1,6 +1,6 @@
 package work.lclpnet.ap2.mode_default.activity;
 
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.level.ServerPlayer;
 import work.lclpnet.activity.ComponentActivity;
 import work.lclpnet.activity.component.ComponentBundle;
 import work.lclpnet.activity.component.builtin.BossBarComponent;
@@ -112,11 +112,11 @@ public class MiniGameActivity extends ComponentActivity {
         registrar.registerHook(PlayerConnectionHooks.QUIT, this::onQuit);
     }
 
-    private void onJoin(ServerPlayerEntity player) {
+    private void onJoin(ServerPlayer player) {
         args.miniGameArgs().playerUtil().resetPlayer(player);
     }
 
-    private void onQuit(ServerPlayerEntity player) {
+    private void onQuit(ServerPlayer player) {
         args.playerManager().remove(player);
     }
 }

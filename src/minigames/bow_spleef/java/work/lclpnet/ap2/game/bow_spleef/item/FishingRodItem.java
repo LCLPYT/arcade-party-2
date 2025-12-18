@@ -1,10 +1,10 @@
 package work.lclpnet.ap2.game.bow_spleef.item;
 
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.entity.EquipmentSlot;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.registry.DynamicRegistryManager;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import work.lclpnet.ap2.impl.game.item.SpecialItem;
 import work.lclpnet.ap2.impl.game.item.SpecialItemContext;
 import work.lclpnet.kibu.hook.HookRegistrar;
@@ -20,10 +20,10 @@ public class FishingRodItem implements SpecialItem {
     }
 
     @Override
-    public ItemStack createItemStack(DynamicRegistryManager registryManager) {
+    public ItemStack createItemStack(RegistryAccess registryManager) {
         ItemStack stack = new ItemStack(Items.FISHING_ROD);
 
-        stack.set(DataComponentTypes.MAX_DAMAGE, USES * 3);
+        stack.set(DataComponents.MAX_DAMAGE, USES * 3);
 
         return stack;
     }
@@ -32,11 +32,11 @@ public class FishingRodItem implements SpecialItem {
     public void registerHooks(HookRegistrar hooks, SpecialItemContext ctx) {
         hooks.registerHook(PlayerInventoryHooks.SLOT_CHANGE, (player, i) -> {
             if (!ctx.hasSpecialItem(player, this)
-                    || player.fishHook == null
-                    || player.fishHook.isRemoved()
-                    || player.fishHook.getHookedEntity() == null) return;
+                    || player.fishing == null
+                    || player.fishing.isRemoved()
+                    || player.fishing.getHookedIn() == null) return;
 
-            player.getInventory().getStack(8).damage(3, player, EquipmentSlot.MAINHAND);
+            player.getInventory().getItem(8).hurtAndBreak(3, player, EquipmentSlot.MAINHAND);
         });
     }
 }

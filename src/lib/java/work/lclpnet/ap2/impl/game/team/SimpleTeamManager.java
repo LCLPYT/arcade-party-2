@@ -1,9 +1,9 @@
 package work.lclpnet.ap2.impl.game.team;
 
 import lombok.Setter;
-import net.minecraft.server.PlayerManager;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.MutableText;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.players.PlayerList;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.game.team.*;
@@ -17,12 +17,12 @@ import java.util.*;
 
 public class SimpleTeamManager implements TeamManager {
 
-    private final PlayerManager playerManager;
+    private final PlayerList playerManager;
     private final TeamConfig teamConfig;
     private final CustomScoreboardManager scoreboard;
     private final PlayerUtil playerUtil;
     private final Map<TeamKey, Team> teams = new HashMap<>();
-    private final Map<TeamKey, net.minecraft.scoreboard.Team> mcTeams = new HashMap<>();
+    private final Map<TeamKey, net.minecraft.world.scores.PlayerTeam> mcTeams = new HashMap<>();
     private final Map<UUID, Team> playerTeams = new HashMap<>();
     private final Set<TeamKey> eliminated = new HashSet<>();
     @Nullable
@@ -30,7 +30,7 @@ public class SimpleTeamManager implements TeamManager {
     @Setter
     private boolean useColorCodes = false;
 
-    public SimpleTeamManager(PlayerManager playerManager, TeamConfig teamConfig, CustomScoreboardManager scoreboard, PlayerUtil playerUtil) {
+    public SimpleTeamManager(PlayerList playerManager, TeamConfig teamConfig, CustomScoreboardManager scoreboard, PlayerUtil playerUtil) {
         this.playerManager = playerManager;
         this.teamConfig = teamConfig;
         this.scoreboard = scoreboard;
@@ -43,7 +43,7 @@ public class SimpleTeamManager implements TeamManager {
     }
 
     @Override
-    public Optional<net.minecraft.scoreboard.Team> getMinecraftTeam(TeamKey key) {
+    public Optional<net.minecraft.world.scores.PlayerTeam> getMinecraftTeam(TeamKey key) {
         return Optional.ofNullable(mcTeams.get(key));
     }
 
@@ -58,7 +58,7 @@ public class SimpleTeamManager implements TeamManager {
     }
 
     @Override
-    public synchronized void partitionIntoTeams(Set<ServerPlayerEntity> players, Set<TeamKey> keys) {
+    public synchronized void partitionIntoTeams(Set<ServerPlayer> players, Set<TeamKey> keys) {
         synchronized (this) {
             reset();
 
@@ -78,7 +78,7 @@ public class SimpleTeamManager implements TeamManager {
         });
 
         // distribute the rest of the players
-        Set<ServerPlayerEntity> notMapped = new HashSet<>(players);
+        Set<ServerPlayer> notMapped = new HashSet<>(players);
         notMapped.removeAll(mapping.keySet());
 
         TeamPartitioner partitioner = teamConfig.getPartitioner();
@@ -140,10 +140,10 @@ public class SimpleTeamManager implements TeamManager {
     }
 
     @Override
-    public void joinTeam(ServerPlayerEntity player, Team team) {
+    public void joinTeam(ServerPlayer player, Team team) {
         synchronized (this) {
             team.addPlayer(player);
-            playerTeams.put(player.getUuid(), team);
+            playerTeams.put(player.getUUID(), team);
 
             var mcTeam = mcTeams.get(team.key());
 
@@ -153,9 +153,9 @@ public class SimpleTeamManager implements TeamManager {
         }
     }
 
-    private void leaveTeam(ServerPlayerEntity player) {
+    private void leaveTeam(ServerPlayer player) {
         synchronized (this) {
-            Team team = playerTeams.remove(player.getUuid());
+            Team team = playerTeams.remove(player.getUUID());
 
             if (team == null) return;
 
@@ -187,10 +187,10 @@ public class SimpleTeamManager implements TeamManager {
     public void init(HookRegistrar hooks) {
         // move player back into the minecraft team, as they are automatically removed when quitting by the CustomScoreboardManager
         hooks.registerHook(PlayerConnectionHooks.JOIN, player -> {
-            net.minecraft.scoreboard.Team mcTeam;
+            net.minecraft.world.scores.PlayerTeam mcTeam;
 
             synchronized (this) {
-                Team team = playerTeams.get(player.getUuid());
+                Team team = playerTeams.get(player.getUUID());
 
                 if (team == null) return;
 
@@ -206,14 +206,14 @@ public class SimpleTeamManager implements TeamManager {
             Team team;
 
             synchronized (this) {
-                team = playerTeams.get(player.getUuid());
+                team = playerTeams.get(player.getUUID());
 
                 if (team == null) return name;
             }
 
-            MutableText text = name instanceof MutableText ? (MutableText) name : name.copy();
+            MutableComponent text = name instanceof MutableComponent ? (MutableComponent) name : name.copy();
 
-            return text.styled(style -> style.withColor(team.key().color()));
+            return text.withStyle(style -> style.withColor(team.key().color()));
         });
     }
 }

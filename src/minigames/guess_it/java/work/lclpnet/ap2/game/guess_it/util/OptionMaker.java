@@ -2,7 +2,7 @@ package work.lclpnet.ap2.game.guess_it.util;
 
 import it.unimi.dsi.fastutil.ints.IntArraySet;
 import it.unimi.dsi.fastutil.ints.IntSet;
-import net.minecraft.util.collection.IndexedIterable;
+import net.minecraft.core.IdMap;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -22,8 +22,8 @@ public class OptionMaker {
         return createOptions(pool.size(), optionCount, random, pool::get);
     }
 
-    public static <T> List<T> createOptions(IndexedIterable<T> pool, int optionCount, Random random) {
-        return createOptions(pool.size(), optionCount, random, pool::getOrThrow);
+    public static <T> List<T> createOptions(IdMap<T> pool, int optionCount, Random random) {
+        return createOptions(pool.size(), optionCount, random, pool::byIdOrThrow);
     }
 
     private static <T> List<T> createOptions(int poolSize, int optionCount, Random random, IntFunction<T> indexFunction) {

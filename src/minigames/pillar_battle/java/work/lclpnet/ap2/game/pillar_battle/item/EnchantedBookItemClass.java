@@ -1,14 +1,14 @@
 package work.lclpnet.ap2.game.pillar_battle.item;
 
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.ItemEnchantmentsComponent;
-import net.minecraft.enchantment.Enchantment;
-import net.minecraft.enchantment.EnchantmentHelper;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.registry.DynamicRegistryManager;
-import net.minecraft.registry.RegistryKeys;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
+import net.minecraft.world.item.enchantment.ItemEnchantments;
 import work.lclpnet.ap2.impl.util.ItemHelper;
 
 import java.util.Random;
@@ -16,9 +16,9 @@ import java.util.stream.Stream;
 
 public class EnchantedBookItemClass implements ItemClass {
 
-    private final DynamicRegistryManager registryManager;
+    private final RegistryAccess registryManager;
 
-    public EnchantedBookItemClass(DynamicRegistryManager registryManager) {
+    public EnchantedBookItemClass(RegistryAccess registryManager) {
         this.registryManager = registryManager;
     }
 
@@ -26,7 +26,7 @@ public class EnchantedBookItemClass implements ItemClass {
     public ItemStack getRandomStack(Random random) {
         ItemStack stack = new ItemStack(Items.ENCHANTED_BOOK);
 
-        var registry = registryManager.getOrThrow(RegistryKeys.ENCHANTMENT);
+        var registry = registryManager.lookupOrThrow(Registries.ENCHANTMENT);
         var entry = ItemHelper.getRandomEntry(registry, random);
 
         if (entry == null) return stack;
@@ -36,10 +36,10 @@ public class EnchantedBookItemClass implements ItemClass {
         int minLevel = enchantment.getMinLevel();
         int level = minLevel + random.nextInt(enchantment.getMaxLevel() - minLevel + 1);
 
-        var builder = new ItemEnchantmentsComponent.Builder(EnchantmentHelper.getEnchantments(stack));
+        var builder = new ItemEnchantments.Mutable(EnchantmentHelper.getEnchantmentsForCrafting(stack));
         builder.set(entry, level);
 
-        stack.set(DataComponentTypes.STORED_ENCHANTMENTS, builder.build());
+        stack.set(DataComponents.STORED_ENCHANTMENTS, builder.toImmutable());
 
         return stack;
     }

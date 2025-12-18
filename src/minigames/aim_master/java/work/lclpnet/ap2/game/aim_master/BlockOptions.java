@@ -1,7 +1,7 @@
 package work.lclpnet.ap2.game.aim_master;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.Blocks;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import work.lclpnet.gaco.ds.IndexedSet;
 
 public class BlockOptions {

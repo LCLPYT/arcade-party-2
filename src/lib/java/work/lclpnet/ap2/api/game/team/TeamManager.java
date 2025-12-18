@@ -1,6 +1,6 @@
 package work.lclpnet.ap2.api.game.team;
 
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.level.ServerPlayer;
 import work.lclpnet.ap2.api.base.Participants;
 
 import java.util.Optional;
@@ -12,13 +12,13 @@ public interface TeamManager {
 
     Set<Team> getTeams();
 
-    Optional<net.minecraft.scoreboard.Team> getMinecraftTeam(TeamKey key);
+    Optional<net.minecraft.world.scores.PlayerTeam> getMinecraftTeam(TeamKey key);
 
     Optional<Team> getTeam(TeamKey key);
 
     Optional<Team> getTeam(UUID uuid);
 
-    void partitionIntoTeams(Set<ServerPlayerEntity> players, Set<TeamKey> teams);
+    void partitionIntoTeams(Set<ServerPlayer> players, Set<TeamKey> teams);
 
     boolean isParticipating(TeamKey key);
 
@@ -36,17 +36,17 @@ public interface TeamManager {
 
     Team registerTeam(TeamKey key);
 
-    void joinTeam(ServerPlayerEntity player, Team team);
+    void joinTeam(ServerPlayer player, Team team);
 
-    default Optional<Team> getTeam(ServerPlayerEntity player) {
-        return getTeam(player.getUuid());
+    default Optional<Team> getTeam(ServerPlayer player) {
+        return getTeam(player.getUUID());
     }
 
     default void partitionIntoTeams(Participants participants, Set<TeamKey> teams) {
         partitionIntoTeams(participants.getAsSet(), teams);
     }
 
-    default Set<net.minecraft.scoreboard.Team> getMinecraftTeams() {
+    default Set<net.minecraft.world.scores.PlayerTeam> getMinecraftTeams() {
         return getTeams().stream()
                 .map(Team::key)
                 .map(this::getMinecraftTeam)
@@ -58,7 +58,7 @@ public interface TeamManager {
         return isParticipating(team.key());
     }
 
-    default boolean isParticipating(ServerPlayerEntity player) {
+    default boolean isParticipating(ServerPlayer player) {
         return getTeam(player).map(Team::key).map(this::isParticipating).orElse(false);
     }
 
@@ -68,13 +68,13 @@ public interface TeamManager {
                 .collect(Collectors.toUnmodifiableSet());
     }
 
-    default boolean isTeamMember(ServerPlayerEntity player, Team team) {
+    default boolean isTeamMember(ServerPlayer player, Team team) {
         return getTeam(player)
                 .map(t -> t.equals(team))
                 .orElseGet(() -> team != null);
     }
 
-    default boolean areTeamMates(ServerPlayerEntity first, ServerPlayerEntity second) {
+    default boolean areTeamMates(ServerPlayer first, ServerPlayer second) {
         return getTeam(first)
                 .map(team -> isTeamMember(second, team))
                 .orElse(false);

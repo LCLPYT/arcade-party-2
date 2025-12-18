@@ -5,13 +5,13 @@ import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import lombok.Setter;
-import net.minecraft.server.PlayerManager;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.players.PlayerList;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.impl.util.SoundHelper;
@@ -29,8 +29,8 @@ public class MimicryManager {
     private final Map<UUID, MimicryRoom> rooms;
     private final BlockBox buttons;
     private final Random random;
-    private final ServerWorld world;
-    private final Consumer<ServerPlayerEntity> completeCallback;
+    private final ServerLevel world;
+    private final Consumer<ServerPlayer> completeCallback;
     private final IntList sequence = new IntArrayList();
     private final Object2IntMap<UUID> progress = new Object2IntOpenHashMap<>();
     private final float[] buttonPitches;
@@ -39,7 +39,7 @@ public class MimicryManager {
     private final Map<UUID, TaskHandle> deactivation = new HashMap<>();
 
     public MimicryManager(MiniGameHandle gameHandle, Map<UUID, MimicryRoom> rooms, BlockBox buttons, Random random,
-                          ServerWorld world, Consumer<ServerPlayerEntity> completeCallback) {
+                          ServerLevel world, Consumer<ServerPlayer> completeCallback) {
         this.rooms = rooms;
         this.gameHandle = gameHandle;
         this.buttons = buttons;
@@ -55,14 +55,14 @@ public class MimicryManager {
         }
     }
 
-    public void eachParticipant(BiConsumer<ServerPlayerEntity, MimicryRoom> action) {
+    public void eachParticipant(BiConsumer<ServerPlayer, MimicryRoom> action) {
         Participants participants = gameHandle.getParticipants();
-        PlayerManager playerManager = gameHandle.getServer().getPlayerManager();
+        PlayerList playerManager = gameHandle.getServer().getPlayerList();
 
         rooms.forEach((uuid, room) -> {
             if (!participants.isParticipating(uuid)) return;
 
-            ServerPlayerEntity player = playerManager.getPlayer(uuid);
+            ServerPlayer player = playerManager.getPlayer(uuid);
 
             if (player == null) return;
 
@@ -99,10 +99,10 @@ public class MimicryManager {
      * @param pos The button position.
      * @return True, if the player should be eliminated.
      */
-    public boolean onInputButton(ServerPlayerEntity player, BlockPos pos) {
+    public boolean onInputButton(ServerPlayer player, BlockPos pos) {
         if (!replay) return false;
 
-        UUID uuid = player.getUuid();
+        UUID uuid = player.getUUID();
         MimicryRoom room = rooms.get(uuid);
 
         if (room == null) return false;
@@ -125,7 +125,7 @@ public class MimicryManager {
         progress.put(uuid, newOffset);
 
         float pitch = getButtonPitch(button);
-        SoundHelper.playSound(player, SoundEvents.BLOCK_NOTE_BLOCK_BIT.value(), SoundCategory.PLAYERS,
+        SoundHelper.playSound(player, SoundEvents.NOTE_BLOCK_BIT.value(), SoundSource.PLAYERS,
                 pos.getX(), pos.getY(), pos.getZ(), 0.5f, pitch);
 
         activateButton(room, button, uuid);
@@ -152,21 +152,21 @@ public class MimicryManager {
         deactivation.put(uuid, scheduler.timeout(() -> room.resetActiveButton(world), 15));
     }
 
-    private void onCompleteSequence(ServerPlayerEntity player) {
+    private void onCompleteSequence(ServerPlayer player) {
         var msg = gameHandle.getTranslations().translateText(player, "game.ap2.mimicry.correct")
-                .formatted(Formatting.GREEN);
+                .formatted(ChatFormatting.GREEN);
 
-        player.sendMessage(msg);
-        player.playSoundToPlayer(SoundEvents.ENTITY_PLAYER_LEVELUP, SoundCategory.PLAYERS, 0.5f, 1.5f);
+        player.sendSystemMessage(msg);
+        player.playNotifySound(SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 0.5f, 1.5f);
 
         completeCallback.accept(player);
     }
 
-    public List<ServerPlayerEntity> getPlayersToEliminate() {
+    public List<ServerPlayer> getPlayersToEliminate() {
         int sequenceLength = sequenceLength();
 
         return gameHandle.getParticipants().stream()
-                .filter(player -> progress.getOrDefault(player.getUuid(), 0) < sequenceLength)
+                .filter(player -> progress.getOrDefault(player.getUUID(), 0) < sequenceLength)
                 .toList();
     }
 

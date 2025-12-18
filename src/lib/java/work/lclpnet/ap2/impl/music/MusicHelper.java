@@ -1,9 +1,9 @@
 package work.lclpnet.ap2.impl.music;
 
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.util.Identifier;
+import net.minecraft.server.level.ServerPlayer;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.ApConstants;
 import work.lclpnet.ap2.api.music.*;
@@ -20,22 +20,22 @@ import java.util.Random;
 
 public class MusicHelper {
 
-    public static final Identifier ARCADE_PARTY_GAME_TAG = ApConstants.identifier("game");
+    public static final ResourceLocation ARCADE_PARTY_GAME_TAG = ApConstants.identifier("game");
     private static final Random random = new Random();
 
     private MusicHelper() {}
 
-    public static SongWrapper playSong(WeightedSong song, float volume, ServerPlayerEntity player,
+    public static SongWrapper playSong(WeightedSong song, float volume, ServerPlayer player,
                                        MinecraftServer server, SongCache cache, Logger logger) {
         return playSong(song, volume, List.of(player), server, cache, logger, random);
     }
 
-    public static SongWrapper playSong(WeightedSong song, float volume, Collection<? extends ServerPlayerEntity> players,
+    public static SongWrapper playSong(WeightedSong song, float volume, Collection<? extends ServerPlayer> players,
                                        MinecraftServer server, SongCache cache, Logger logger) {
         return playSong(song, volume, players, server, cache, logger, random);
     }
 
-    public static SongWrapper playSong(WeightedSong song, float volume, Collection<? extends ServerPlayerEntity> players,
+    public static SongWrapper playSong(WeightedSong song, float volume, Collection<? extends ServerPlayer> players,
                                        MinecraftServer server, SongCache cache, Logger logger, Random random) {
 
         SongWrapperImpl wrapper = new SongWrapperImpl();
@@ -67,7 +67,7 @@ public class MusicHelper {
 
     private static void playSong(SongWrapperImpl wrapper, ConfiguredSong song, float volume,
                                  LoopOverride loop, int startTick,
-                                 Collection<? extends ServerPlayerEntity> players, MinecraftServer server) {
+                                 Collection<? extends ServerPlayer> players, MinecraftServer server) {
 
         Notica notica = Notica.getInstance(server);
 

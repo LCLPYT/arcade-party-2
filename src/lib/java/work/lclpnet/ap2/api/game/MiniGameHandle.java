@@ -1,7 +1,7 @@
 package work.lclpnet.ap2.api.game;
 
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.world.ServerWorld;
+import net.minecraft.server.level.ServerLevel;
 import org.slf4j.Logger;
 import work.lclpnet.activity.util.BossBarHandler;
 import work.lclpnet.ap2.api.base.Participants;
@@ -100,7 +100,7 @@ public interface MiniGameHandle {
 
     boolean isFinale();
 
-    void setWorld(ServerWorld world);
+    void setWorld(ServerLevel world);
 
     /**
      * Submit the game stats to the stats backend.

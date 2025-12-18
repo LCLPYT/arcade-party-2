@@ -1,7 +1,7 @@
 package work.lclpnet.ap2.impl.util;
 
-import net.minecraft.text.Style;
-import net.minecraft.text.Text;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.Style;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.kibu.translate.text.RootText;
 import work.lclpnet.kibu.translate.text.TextTranslatable;
@@ -9,7 +9,7 @@ import work.lclpnet.kibu.translate.text.TranslatedText;
 
 import java.util.function.UnaryOperator;
 
-import static net.minecraft.text.Text.literal;
+import static net.minecraft.network.chat.Component.literal;
 
 public class TranslationUtil {
 
@@ -17,7 +17,7 @@ public class TranslationUtil {
 
     public static TextTranslatable quote(TextTranslatable other) {
         return language -> {
-            Text inner = other.translateTo(language);
+            Component inner = other.translateTo(language);
             Style style = inner.getStyle();
 
             return switch (language) {
@@ -29,7 +29,7 @@ public class TranslationUtil {
         };
     }
 
-    public static TextTranslatable transform(TextTranslatable translatable, UnaryOperator<Text> action) {
+    public static TextTranslatable transform(TextTranslatable translatable, UnaryOperator<Component> action) {
         return language -> action.apply(translatable.translateTo(language));
     }
 
@@ -40,7 +40,7 @@ public class TranslationUtil {
         );
     }
 
-    public static TranslatedText transformText(TextTranslatable translatable, UnaryOperator<Text> action, Translations translations) {
+    public static TranslatedText transformText(TextTranslatable translatable, UnaryOperator<Component> action, Translations translations) {
         return asTranslatedText(transform(translatable, action), translations);
     }
 }

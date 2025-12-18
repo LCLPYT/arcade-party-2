@@ -1,9 +1,9 @@
 package work.lclpnet.ap2.api.game.data;
 
-import net.minecraft.item.ItemStack;
-import net.minecraft.registry.DynamicRegistryManager;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
 
 public interface SubjectRef {
 
@@ -12,15 +12,15 @@ public interface SubjectRef {
      * @param viewer The viewer (to whom the name is translated for).
      * @return The translated text.
      */
-    Text getNameFor(ServerPlayerEntity viewer);
+    Component getNameFor(ServerPlayer viewer);
 
     /**
      * Gets an item stack as icon for the subject.
-     * @param registryManager The {@link DynamicRegistryManager}.
+     * @param registryManager The {@link RegistryAccess}.
      * @param viewer The viewer.
      * @return The icon item stack.
      */
-    ItemStack getIconStackFor(DynamicRegistryManager registryManager, ServerPlayerEntity viewer);
+    ItemStack getIconStackFor(RegistryAccess registryManager, ServerPlayer viewer);
 
     String getIdentifier();
 }

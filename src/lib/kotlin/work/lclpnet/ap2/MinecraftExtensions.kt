@@ -1,40 +1,48 @@
 package work.lclpnet.ap2
 
-import net.minecraft.block.Block
-import net.minecraft.entity.LivingEntity
-import net.minecraft.entity.attribute.EntityAttribute
-import net.minecraft.network.packet.s2c.play.PositionFlag
-import net.minecraft.particle.ParticleEffect
-import net.minecraft.registry.entry.RegistryEntry
-import net.minecraft.server.network.ServerPlayerEntity
-import net.minecraft.server.world.ServerWorld
-import net.minecraft.util.math.BlockPos
-import net.minecraft.util.math.Position
-import net.minecraft.world.World
+import net.minecraft.core.BlockPos
+import net.minecraft.core.Holder
+import net.minecraft.core.Position
+import net.minecraft.core.particles.ParticleOptions
+import net.minecraft.server.level.ServerLevel
+import net.minecraft.server.level.ServerPlayer
+import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.entity.Relative
+import net.minecraft.world.entity.ai.attributes.Attribute
+import net.minecraft.world.level.Level
+import net.minecraft.world.level.block.Block
 import work.lclpnet.ap2.impl.util.EntityUtil
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess
 import work.lclpnet.kibu.hook.util.PositionRotation
 
-fun World.setBlock(pos: BlockPos, block: Block) = setBlockState(pos, block.defaultState)
+fun Level.setBlock(pos: BlockPos, block: Block) = setBlockAndUpdate(pos, block.defaultBlockState())
 
-fun <T : ParticleEffect> ServerWorld.spawnParticles(particle: T, pos: Position, count: Int, offsetX: Double, offsetY: Double, offsetZ: Double, speed: Double) =
-    spawnParticles(particle, pos.x, pos.y, pos.z, count, offsetX, offsetY, offsetZ, speed)
+fun <T : ParticleOptions> ServerLevel.spawnParticles(particle: T, pos: Position, count: Int, offsetX: Double, offsetY: Double, offsetZ: Double, speed: Double) =
+    sendParticles(particle, pos.x(), pos.y(), pos.z(), count, offsetX, offsetY, offsetZ, speed)
 
-fun ServerWorld.setBlocks(blocks: Iterable<BlockPos>, block: Block) {
+fun ServerLevel.setBlocks(blocks: Iterable<BlockPos>, block: Block) {
     for (pos in blocks) {
         setBlock(pos, block)
     }
 }
 
-fun ServerPlayerEntity.setSelectedSlot(slot: Int) = PlayerInventoryAccess.setSelectedSlot(this, slot)
+fun ServerPlayer.setSelectedSlot(slot: Int) = PlayerInventoryAccess.setSelectedSlot(this, slot)
 
-fun ServerPlayerEntity.teleport(pos: BlockPos) = teleport(entityWorld, pos.x.toDouble() + 0.5, pos.y.toDouble(), pos.z + 0.5, emptySet<PositionFlag>(), yaw, pitch, true)
-fun ServerPlayerEntity.teleport(pos: Position) = teleport(entityWorld, pos.x, pos.y, pos.z, emptySet<PositionFlag>(), yaw, pitch, true)
-fun ServerPlayerEntity.teleport(pos: Position, yaw: Float) = teleport(entityWorld, pos.x, pos.y, pos.z, emptySet<PositionFlag>(), yaw, pitch, true)
-fun ServerPlayerEntity.teleport(pos: PositionRotation) = teleport(entityWorld, pos.x, pos.y, pos.z, emptySet<PositionFlag>(), pos.yaw, pos.pitch, true)
+fun ServerPlayer.teleport(pos: BlockPos) = teleportTo(
+    level(), pos.x.toDouble() + 0.5, pos.y.toDouble(), pos.z + 0.5, emptySet<Relative>(),
+    yRot,
+    xRot, true)
+fun ServerPlayer.teleport(pos: Position) = teleportTo(
+    level(), pos.x(), pos.y(), pos.z(), emptySet<Relative>(),
+    yRot,
+    xRot, true)
+fun ServerPlayer.teleport(pos: Position, yaw: Float) = teleportTo(
+    level(), pos.x(), pos.y(), pos.z(), emptySet<Relative>(), yaw,
+    xRot, true)
+fun ServerPlayer.teleport(pos: PositionRotation) = teleportTo(level(), pos.x(), pos.y(), pos.z(), emptySet<Relative>(), pos.yaw, pos.pitch, true)
 
-fun LivingEntity.setAttribute(attribute: RegistryEntry<EntityAttribute>, value: Double)
+fun LivingEntity.setAttribute(attribute: Holder<Attribute>, value: Double)
     = EntityUtil.setAttribute(this, attribute, value)
 
-fun LivingEntity.resetAttribute(attribute: RegistryEntry<EntityAttribute>)
+fun LivingEntity.resetAttribute(attribute: Holder<Attribute>)
         = EntityUtil.resetAttribute(this, attribute)

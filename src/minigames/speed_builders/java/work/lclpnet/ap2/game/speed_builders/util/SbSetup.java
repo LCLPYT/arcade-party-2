@@ -1,13 +1,13 @@
 package work.lclpnet.ap2.game.speed_builders.util;
 
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.attribute.EntityAttributeInstance;
-import net.minecraft.entity.attribute.EntityAttributes;
-import net.minecraft.entity.mob.BreezeEntity;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3i;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Vec3i;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.monster.breeze.Breeze;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -56,7 +56,7 @@ public class SbSetup {
         this.logger = logger;
     }
 
-    public CompletableFuture<Void> setup(GameMap map, ServerWorld world) {
+    public CompletableFuture<Void> setup(GameMap map, ServerLevel world) {
         return loadAvailableIslands(map, world)
                 .thenApply(islands -> this.islandProtos = List.copyOf(islands))
                 .thenComposeAsync(islands -> loadModules(world, buildAreaDimensions(islands)))
@@ -74,7 +74,7 @@ public class SbSetup {
         return new Vec3i(buildArea.width(), buildArea.height(), buildArea.length());
     }
 
-    public Map<UUID, SbIsland> createIslands(Participants participants, ServerWorld world) {
+    public Map<UUID, SbIsland> createIslands(Participants participants, ServerLevel world) {
         // preconditions
         Objects.requireNonNull(islandProtos, "Island prototypes must be loaded");
         Objects.requireNonNull(centerIsland, "Center island must be loaded");
@@ -93,8 +93,8 @@ public class SbSetup {
         List<BlockStructure> structures = new ArrayList<>(count);
         List<UUID> players = new ArrayList<>(count);
 
-        for (ServerPlayerEntity player : participants) {
-            players.add(player.getUuid());
+        for (ServerPlayer player : participants) {
+            players.add(player.getUUID());
 
             SbIslandProto island = islandProtos.get(random.nextInt(islandProtos.size()));
             islandData.add(island.data());
@@ -134,7 +134,7 @@ public class SbSetup {
         return islandMapping;
     }
 
-    private void placeCenterIsland(ServerWorld world) {
+    private void placeCenterIsland(ServerLevel world) {
         BlockStructure structure = centerIsland.structure();
 
         BlockPos structSpawn = centerIsland.spawn();
@@ -147,26 +147,26 @@ public class SbSetup {
 
         StructureUtil.placeStructureFast(structure, world, pos);
 
-        BlockPos spawn = structSpawn.add(
+        BlockPos spawn = structSpawn.offset(
                 pos.getX() - origin.getX(),
                 pos.getY() - origin.getY(),
                 pos.getZ() - origin.getZ());
 
-        BreezeEntity breeze = new BreezeEntity(EntityType.BREEZE, world);
-        breeze.setPos(spawn.getX() + 0.5, spawn.getY(), spawn.getZ() + 0.5);
-        breeze.setAiDisabled(true);
-        breeze.setPersistent();
-        breeze.setYaw(0);
+        Breeze breeze = new Breeze(EntityType.BREEZE, world);
+        breeze.setPosRaw(spawn.getX() + 0.5, spawn.getY(), spawn.getZ() + 0.5);
+        breeze.setNoAi(true);
+        breeze.setPersistenceRequired();
+        breeze.setYRot(0);
 
-        EntityAttributeInstance instance = breeze.getAttributeInstance(EntityAttributes.SCALE);
+        AttributeInstance instance = breeze.getAttribute(Attributes.SCALE);
 
         if (instance != null) {
             instance.setBaseValue(10);
         }
 
-        world.spawnEntity(breeze);
+        world.addFreshEntity(breeze);
 
-        aelosId = breeze.getUuid();
+        aelosId = breeze.getUUID();
     }
 
     private int getMinRadius(List<BlockStructure> structures) {
@@ -186,7 +186,7 @@ public class SbSetup {
         return Objects.requireNonNull(aelosId, "Aelos not created yet");
     }
 
-    private CompletableFuture<Set<SbIslandProto>> loadAvailableIslands(GameMap map, ServerWorld world) {
+    private CompletableFuture<Set<SbIslandProto>> loadAvailableIslands(GameMap map, ServerLevel world) {
         JSONArray islandsArray = map.requireProperty("islands");
 
         return CompletableFuture.supplyAsync(() -> {
@@ -243,7 +243,7 @@ public class SbSetup {
         });
     }
 
-    private CompletableFuture<@Nullable CenterIsland> loadCenterIsland(GameMap map, ServerWorld world) {
+    private CompletableFuture<@Nullable CenterIsland> loadCenterIsland(GameMap map, ServerLevel world) {
         JSONObject json = map.requireProperty("center-island");
         String id = json.getString("id");
 
@@ -261,7 +261,7 @@ public class SbSetup {
         });
     }
 
-    private CompletableFuture<Set<SbModule>> loadModules(ServerWorld world, Vec3i dimensions) {
+    private CompletableFuture<Set<SbModule>> loadModules(ServerLevel world, Vec3i dimensions) {
         Path dir = getWorldDirectory(world).resolve("schematics").resolve("module");
 
         return CompletableFuture.supplyAsync(() -> {
@@ -319,9 +319,9 @@ public class SbSetup {
         }
     }
 
-    private Path getWorldDirectory(ServerWorld world) {
+    private Path getWorldDirectory(ServerLevel world) {
         var session = ((MinecraftServerAccessor) world.getServer()).getSession();
 
-        return session.getWorldDirectory(world.getRegistryKey());
+        return session.getDimensionPath(world.dimension());
     }
 }

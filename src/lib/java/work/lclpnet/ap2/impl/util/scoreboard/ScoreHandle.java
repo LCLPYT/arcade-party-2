@@ -1,8 +1,8 @@
 package work.lclpnet.ap2.impl.util.scoreboard;
 
 import lombok.Getter;
-import net.minecraft.scoreboard.number.NumberFormat;
-import net.minecraft.text.Text;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.numbers.NumberFormat;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.util.scoreboard.CustomScoreboardObjective;
 
@@ -21,7 +21,7 @@ public class ScoreHandle {
         objective.setScore(holder, score);
     }
 
-    public void setDisplay(@Nullable Text text) {
+    public void setDisplay(@Nullable Component text) {
         objective.setDisplayName(holder, text);
     }
 

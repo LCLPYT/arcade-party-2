@@ -4,24 +4,24 @@ import com.jme3.math.Vector3f;
 import it.unimi.dsi.fastutil.Pair;
 import lombok.Getter;
 import lombok.Setter;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.ShapeContext;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.damage.DamageTypes;
-import net.minecraft.item.ItemStack;
-import net.minecraft.particle.DustParticleEffect;
-import net.minecraft.particle.ParticleTypes;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.hit.HitResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.RaycastContext;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.particles.DustParticleOptions;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.damagesource.DamageTypes;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.shapes.CollisionContext;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.base.Participants;
@@ -47,7 +47,7 @@ import java.util.function.BooleanSupplier;
 
 import static java.lang.Math.max;
 import static java.lang.Math.toRadians;
-import static net.minecraft.util.Formatting.RED;
+import static net.minecraft.ChatFormatting.RED;
 import static work.lclpnet.ap2.impl.util.math.MathUtil.applySpread;
 import static work.lclpnet.ap2.impl.util.math.MathUtil.randomUnitVec3d;
 import static work.lclpnet.gaco.core.util.ThreadUtil.executeOn;
@@ -57,7 +57,7 @@ public class PaintGunManager {
 
     public static final double HIT_PAINT_RADIUS = 1.9;
 
-    private final ServerWorld world;
+    private final ServerLevel world;
     private final Scene scene;
     @Getter
     private final PaintManager paintManager;
@@ -72,7 +72,7 @@ public class PaintGunManager {
     private boolean shootingEnabled = false;
     private @Nullable KitManager kitManager = null;
 
-    public PaintGunManager(ServerWorld world, Scene scene, PaintManager paintManager, PaintballTeams teams,
+    public PaintGunManager(ServerLevel world, Scene scene, PaintManager paintManager, PaintballTeams teams,
                            Random random, Participants participants, Translations translations,
                            DebugController debugController, BooleanSupplier gameOver) {
         this.world = world;
@@ -129,7 +129,7 @@ public class PaintGunManager {
     }
 
     private void onBulletHitEntity(PaintballBullet bullet, Entity entity) {
-        if (!(entity instanceof ServerPlayerEntity player) || !participants.isParticipating(player)) return;
+        if (!(entity instanceof ServerPlayer player) || !participants.isParticipating(player)) return;
 
         bullet.setPlayerContact(true);
         bullet.setPainting(false);
@@ -150,7 +150,7 @@ public class PaintGunManager {
         if (ownerUuid == null) return;
 
         world.getServer().execute(() -> {
-            ServerPlayerEntity owner = world.getServer().getPlayerManager().getPlayer(ownerUuid);
+            ServerPlayer owner = world.getServer().getPlayerList().getPlayer(ownerUuid);
 
             if (owner == null || teams.getTeamManager().areTeamMates(owner, player)) return;
 
@@ -158,8 +158,8 @@ public class PaintGunManager {
 
             // bypass damage cooldown
             player.hurtTime = 0;
-            player.timeUntilRegen = 0;
-            player.damage(world, player.getDamageSources().create(DamageTypes.ARROW, owner, owner), bulletSettings.damage());
+            player.invulnerableTime = 0;
+            player.hurtServer(world, player.damageSources().source(DamageTypes.ARROW, owner, owner), bulletSettings.damage());
 
             paintAt(bullet, player.getX(), player.getY(), player.getZ(), HIT_PAINT_RADIUS, true);
         });
@@ -180,7 +180,7 @@ public class PaintGunManager {
     }
 
     public void paintAt(PaintballBullet bullet, double x, double y, double z, double radius, boolean shouldCount) {
-        ServerPlayerEntity owner = participants.getParticipant(bullet.getOwner()).orElse(null);
+        ServerPlayer owner = participants.getParticipant(bullet.getOwner()).orElse(null);
 
         if (owner == null) return;
 
@@ -195,7 +195,7 @@ public class PaintGunManager {
         int playerDeficit = teams.playerDeficit(team);
         radius *= 1f + (playerDeficit * settings.deficitPaintBoost());
 
-        Box box = Box.of(new Vec3d(x, y, z), radius * 2, radius * 2, radius * 2);
+        AABB box = AABB.ofSize(new Vec3(x, y, z), radius * 2, radius * 2, radius * 2);
 
         for (BlockPos pos : BlockBox.of(box)) {
             double dx = pos.getX() + 0.5 - x;
@@ -226,18 +226,18 @@ public class PaintGunManager {
     private boolean tryPaint(DyeTeamKey teamKey, BlockPos blockPos, double x, double y, double z) {
         if (!paintManager.replace(blockPos, teamKey)) return false;
 
-        world.spawnParticles(new DustParticleEffect(teamKey.color(), 0.5f), x, y, z, 10,
+        world.sendParticles(new DustParticleOptions(teamKey.color(), 0.5f), x, y, z, 10,
                 0.2, 0.2, 0.2, 0.1);
 
         return true;
     }
 
-    public void shoot(ServerPlayerEntity player, PaintGun paintGun, ItemStack stack) {
-        if (!shootingEnabled || player.getItemCooldownManager().isCoolingDown(stack) || isReloading(player)) return;
+    public void shoot(ServerPlayer player, PaintGun paintGun, ItemStack stack) {
+        if (!shootingEnabled || player.getCooldowns().isOnCooldown(stack) || isReloading(player)) return;
 
-        if (stack.getDamage() >= stack.getMaxDamage()) {
+        if (stack.getDamageValue() >= stack.getMaxDamage()) {
             translations.translateText("game.ap2.paintball.no_ink").formatted(RED).sendTo(player, true);
-            player.playSoundToPlayer(SoundEvents.BLOCK_NOTE_BLOCK_HAT.value(), SoundCategory.PLAYERS, 0.2f, 2f);
+            player.playNotifySound(SoundEvents.NOTE_BLOCK_HAT.value(), SoundSource.PLAYERS, 0.2f, 2f);
             return;
         }
 
@@ -245,9 +245,9 @@ public class PaintGunManager {
 
         if (state == null) return;
 
-        player.getItemCooldownManager().set(stack, paintGun.cooldownTicks());
+        player.getCooldowns().addCooldown(stack, paintGun.cooldownTicks());
 
-        stack.set(DataComponentTypes.DAMAGE, stack.getDamage() + 1);
+        stack.set(DataComponents.DAMAGE, stack.getDamageValue() + 1);
 
         for (int i = 0; i < paintGun.bulletCount(); i++) {
             spawnPaintBulletWithSpread(player, paintGun, state);
@@ -256,40 +256,40 @@ public class PaintGunManager {
         var fireSound = paintGun.fireSound();
 
         world.playSound(null, player.getX(), player.getEyeY(), player.getZ(),
-                fireSound.sound(), SoundCategory.PLAYERS, fireSound.volume(), fireSound.pitch());
+                fireSound.sound(), SoundSource.PLAYERS, fireSound.volume(), fireSound.pitch());
 
-        world.spawnParticles(ParticleTypes.SMOKE, player.getX(), player.getEyeY(), player.getZ(), 2,
+        world.sendParticles(ParticleTypes.SMOKE, player.getX(), player.getEyeY(), player.getZ(), 2,
                 0.3, 0.3, 0.3, 0.2);
     }
 
-    public @NotNull Optional<BlockState> getPaintBulletState(ServerPlayerEntity player) {
+    public @NotNull Optional<BlockState> getPaintBulletState(ServerPlayer player) {
         return teams.teamOf(player)
                 .map(PaintballTeam::key)
                 .map(paintManager::getPaintBulletState);
     }
 
-    public void spawnPaintBulletWithSpread(ServerPlayerEntity player, PaintGun paintGun, BlockState state) {
+    public void spawnPaintBulletWithSpread(ServerPlayer player, PaintGun paintGun, BlockState state) {
         PaintGun.BulletSettings bulletSettings = paintGun.bullet();
         final double scale = bulletSettings.size();
 
-        Vec3d dir = applySpread(player.getRotationVector(), toRadians(paintGun.bulletSpread()), random);
+        Vec3 dir = applySpread(player.getLookAngle(), toRadians(paintGun.bulletSpread()), random);
 
-        Vec3d pos = getProjectileSpawn(player, dir, scale);
+        Vec3 pos = getProjectileSpawn(player, dir, scale);
 
         executeOn(PhysicsThread.get(world), () -> spawnPaintBullet(player, state, bulletSettings, pos, dir));
     }
 
-    public void spawnPaintBullet(ServerPlayerEntity player, BlockState state, PaintGun.BulletSettings bulletSettings, Vec3d pos, Vec3d dir) {
-        var obj = new PaintballBullet(scene, state, player.getEntityWorld(), bulletSettings, this, debugController);
-        obj.position.set(pos.getX(), pos.getY(), pos.getZ());
+    public void spawnPaintBullet(ServerPlayer player, BlockState state, PaintGun.BulletSettings bulletSettings, Vec3 pos, Vec3 dir) {
+        var obj = new PaintballBullet(scene, state, player.level(), bulletSettings, this, debugController);
+        obj.position.set(pos.x(), pos.y(), pos.z());
         obj.scale.set(bulletSettings.size());
-        obj.setOwner(player.getUuid());
+        obj.setOwner(player.getUUID());
 
         SceneRigidBody rigidBody = obj.getRigidBody();
 
         obj.updateRigidBody(rigidBody);
 
-        Vec3d velocity = getProjectileVelocity(dir, bulletSettings);
+        Vec3 velocity = getProjectileVelocity(dir, bulletSettings);
 
         rigidBody.setLinearVelocity(toBullet(velocity));
         rigidBody.setAngularVelocity(toBullet(randomUnitVec3d(random)));
@@ -300,26 +300,26 @@ public class PaintGunManager {
         scene.add(obj);
     }
 
-    public Vec3d getProjectileSpawn(ServerPlayerEntity player, Vec3d dir, double projectileSize) {
+    public Vec3 getProjectileSpawn(ServerPlayer player, Vec3 dir, double projectileSize) {
         final double spawnDist = 1.4;
 
         HitResult hit = RayCastUtil.raycast(
-                player.getEntityWorld(), player.getEyePos(), dir, spawnDist,
-                RaycastContext.ShapeType.OUTLINE, RaycastContext.FluidHandling.ANY, ShapeContext.absent(),
+                player.level(), player.getEyePosition(), dir, spawnDist,
+                ClipContext.Block.OUTLINE, ClipContext.Fluid.ANY, CollisionContext.empty(),
                 entity -> !entity.isSpectator());
 
-        Vec3d pos = hit.getPos();
+        Vec3 pos = hit.getLocation();
 
         if (hit instanceof BlockHitResult blockHit) {
-            pos = pos.add(blockHit.getSide().getDoubleVector().multiply(0.5 * projectileSize));
+            pos = pos.add(blockHit.getDirection().getUnitVec3().scale(0.5 * projectileSize));
         } else if (hit.getType() != HitResult.Type.MISS) {
-            pos = pos.add(dir.multiply(-0.5 * projectileSize));
+            pos = pos.add(dir.scale(-0.5 * projectileSize));
         }
 
         return pos;
     }
 
-    private Vec3d getProjectileVelocity(Vec3d dir, PaintGun.BulletSettings bulletSettings) {
+    private Vec3 getProjectileVelocity(Vec3 dir, PaintGun.BulletSettings bulletSettings) {
         final double basePower = bulletSettings.power();
         final double minPowerScale = 0.65;
         final double maxPowerScale = 1.0;
@@ -327,10 +327,10 @@ public class PaintGunManager {
         double verticalComponent = max(0, dir.y);
         double powerScale = maxPowerScale + (minPowerScale - maxPowerScale) * verticalComponent;
 
-        return dir.multiply(basePower * powerScale);
+        return dir.scale(basePower * powerScale);
     }
 
-    public Optional<Pair<PaintGun, ItemStack>> getPaintGunAndStack(ServerPlayerEntity player) {
+    public Optional<Pair<PaintGun, ItemStack>> getPaintGunAndStack(ServerPlayer player) {
         KitManager kitManager = this.kitManager;
 
         if (kitManager == null) return Optional.empty();
@@ -344,23 +344,23 @@ public class PaintGunManager {
         return Optional.empty();
     }
 
-    public void setReloading(ServerPlayerEntity player) {
-        reloading.add(player.getUuid());
+    public void setReloading(ServerPlayer player) {
+        reloading.add(player.getUUID());
     }
 
-    public void removeReloading(ServerPlayerEntity player) {
-        reloading.remove(player.getUuid());
+    public void removeReloading(ServerPlayer player) {
+        reloading.remove(player.getUUID());
     }
 
-    public boolean isReloading(ServerPlayerEntity player) {
-        return reloading.contains(player.getUuid());
+    public boolean isReloading(ServerPlayer player) {
+        return reloading.contains(player.getUUID());
     }
 
     public void refillPaintGun(ItemStack stack) {
-        stack.set(DataComponentTypes.DAMAGE, 0);
+        stack.set(DataComponents.DAMAGE, 0);
     }
 
-    public void refillPaintGun(ServerPlayerEntity player) {
+    public void refillPaintGun(ServerPlayer player) {
         getPaintGunAndStack(player)
                 .ifPresent(pair -> refillPaintGun(pair.right()));
     }

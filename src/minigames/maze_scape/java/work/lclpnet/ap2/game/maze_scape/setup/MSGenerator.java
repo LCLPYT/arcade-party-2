@@ -1,10 +1,10 @@
 package work.lclpnet.ap2.game.maze_scape.setup;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.core.BlockPos;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.game.maze_scape.gen.Graph;
 import work.lclpnet.ap2.game.maze_scape.gen.GraphGenerator;
@@ -36,7 +36,7 @@ import static work.lclpnet.kibu.util.StructureWriter.Option.*;
 public class MSGenerator {
 
     private static final EnumSet<StructureWriter.Option> UPDATE_NEIGHBOURS_OPTS = EnumSet.of(SKIP_AIR, FORCE_STATE, SKIP_PLAYER_SYNC, SKIP_DROPS);
-    public static final int PLACE_FLAGS = Block.FORCE_STATE | Block.SKIP_DROPS;
+    public static final int PLACE_FLAGS = Block.UPDATE_KNOWN_SHAPE | Block.UPDATE_SUPPRESS_DROPS;
     public static final boolean
             DEBUG_GENERATOR = false,
             DEBUG_SPAWNS = false,
@@ -45,7 +45,7 @@ public class MSGenerator {
             DEBUG_PASSAGES = false;
     private static final int GENERATOR_MAX_TRIES = 5;
     private static final int GENERATOR_MAX_DURATION_MS = 15_000;
-    private final ServerWorld world;
+    private final ServerLevel world;
     private final GameMap map;
     private final MSLoader.Result loaded;
     private final Random random;
@@ -60,7 +60,7 @@ public class MSGenerator {
     private GraphGenerator<Connector3, StructurePiece, OrientedStructurePiece> generator;
     private boolean decorate = true;
 
-    public MSGenerator(ServerWorld world, GameMap map, MSLoader.Result loaded, Random random, long seed, Logger logger,
+    public MSGenerator(ServerLevel world, GameMap map, MSLoader.Result loaded, Random random, long seed, Logger logger,
                        MSDebugController debugger) {
         this.world = world;
         this.map = map;
@@ -83,8 +83,8 @@ public class MSGenerator {
         // this will determine the bounding box that the generated pieces must be generated in
         int maxChunkSize = getMaxChunkSize(map);
 
-        int bottomY = world.getBottomY();
-        int topY = world.getTopYInclusive();
+        int bottomY = world.getMinY();
+        int topY = world.getMaxY();
 
         bounds = new StructureDomain.BoundsCfg(maxChunkSize, bottomY, topY);
         domain = new StructureDomain(loaded.pieces(), random, deadEndStart, bounds);
@@ -177,7 +177,7 @@ public class MSGenerator {
         }
 
         if (DEBUG_PITS) {
-            debugger.parent().visualizeStructureMask(oriented.piece().pit(), oriented.pos(), oriented.transformation(), Blocks.RED_STAINED_GLASS.getDefaultState());
+            debugger.parent().visualizeStructureMask(oriented.piece().pit(), oriented.pos(), oriented.transformation(), Blocks.RED_STAINED_GLASS.defaultBlockState());
         }
 
         return true;
@@ -190,7 +190,7 @@ public class MSGenerator {
         StructurePiece piece = oriented.piece();
         BlockStructure struct = piece.wrapper().getStructure();
 
-        var placedPos = new BlockPos.Mutable();
+        var placedPos = new BlockPos.MutableBlockPos();
         var kibuPos = new KibuBlockPos.Mutable();
 
         for (BlockPos pos : piece.jigsaws()) {
@@ -222,7 +222,7 @@ public class MSGenerator {
             // determine actual location
             transformation.transform(pos.getX(), pos.getY(), pos.getZ(), placedPos);
 
-            world.setBlockState(placedPos, state, PLACE_FLAGS);
+            world.setBlock(placedPos, state, PLACE_FLAGS);
         }
     }
 

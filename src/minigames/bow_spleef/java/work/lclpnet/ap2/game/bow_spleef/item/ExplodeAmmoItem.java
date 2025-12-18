@@ -1,18 +1,18 @@
 package work.lclpnet.ap2.game.bow_spleef.item;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.projectile.ArrowEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.particle.ParticleTypes;
-import net.minecraft.registry.DynamicRegistryManager;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.World;
-import net.minecraft.world.explosion.ExplosionBehavior;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.projectile.Arrow;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.ExplosionDamageCalculator;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.Vec3;
 import work.lclpnet.ap2.core.hook.ProjectileShootCallback;
 import work.lclpnet.ap2.game.bow_spleef.BowSpleefInstance;
 import work.lclpnet.ap2.impl.game.item.SpecialItem;
@@ -36,40 +36,40 @@ public class ExplodeAmmoItem implements SpecialItem {
     }
 
     @Override
-    public ItemStack createItemStack(DynamicRegistryManager registryManager) {
+    public ItemStack createItemStack(RegistryAccess registryManager) {
         return new ItemStack(Items.TNT);
     }
 
     @Override
     public void registerHooks(HookRegistrar hooks, SpecialItemContext ctx) {
         hooks.registerHook(ProjectileShootCallback.HOOK, (shooter, projectile) -> {
-            if (!(shooter instanceof ServerPlayerEntity player)
-                    || !(projectile instanceof ArrowEntity)
+            if (!(shooter instanceof ServerPlayer player)
+                    || !(projectile instanceof Arrow)
                     || !ctx.hasSpecialItem(player, this)) return;
 
-            projectile.addCommandTag(TAG_EXPLOSIVE);
+            projectile.addTag(TAG_EXPLOSIVE);
             ctx.removeSpecialItem(player, this);
-            player.getEntityWorld().playSound(null, player.getX(), player.getEyeY(), player.getZ(), SoundEvents.ENTITY_TNT_PRIMED, SoundCategory.BLOCKS, 0.5f, 1.75f);
+            player.level().playSound(null, player.getX(), player.getEyeY(), player.getZ(), SoundEvents.TNT_PRIMED, SoundSource.BLOCKS, 0.5f, 1.75f);
         });
 
         hooks.registerHook(impactHook, (projectile, blockPos) -> {
-            if (!(projectile.getEntityWorld() instanceof ServerWorld world)
-                    || !projectile.getCommandTags().contains(TAG_EXPLOSIVE)) return;
+            if (!(projectile.level() instanceof ServerLevel world)
+                    || !projectile.getTags().contains(TAG_EXPLOSIVE)) return;
 
-            var behaviour = new ExplosionBehavior() {
+            var behaviour = new ExplosionDamageCalculator() {
 
                 @Override
-                public float getKnockbackModifier(Entity entity) {
+                public float getKnockbackMultiplier(Entity entity) {
                     return 2f;
                 }
             };
 
-            Vec3d pos = blockPos.up().toCenterPos();
+            Vec3 pos = blockPos.above().getCenter();
 
-            world.createExplosion(projectile, null, behaviour, pos.x, pos.y, pos.z, 3f, false,
-                    World.ExplosionSourceType.BLOCK, ParticleTypes.EXPLOSION, ParticleTypes.EXPLOSION_EMITTER,
+            world.explode(projectile, null, behaviour, pos.x, pos.y, pos.z, 3f, false,
+                    Level.ExplosionInteraction.BLOCK, ParticleTypes.EXPLOSION, ParticleTypes.EXPLOSION_EMITTER,
                     ExplosionUtil.EXPLOSION_BLOCK_PARTICLES,
-                    SoundEvents.ENTITY_GENERIC_EXPLODE);
+                    SoundEvents.GENERIC_EXPLODE);
         });
     }
 }

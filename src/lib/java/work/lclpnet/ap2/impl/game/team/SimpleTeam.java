@@ -1,7 +1,7 @@
 package work.lclpnet.ap2.impl.game.team;
 
-import net.minecraft.server.PlayerManager;
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.players.PlayerList;
 import work.lclpnet.ap2.api.game.team.Team;
 import work.lclpnet.ap2.api.game.team.TeamKey;
 
@@ -14,10 +14,10 @@ import java.util.stream.Collectors;
 public class SimpleTeam implements Team {
 
     private final TeamKey key;
-    private final PlayerManager playerManager;
+    private final PlayerList playerManager;
     private final Set<UUID> players = new HashSet<>();
 
-    public SimpleTeam(TeamKey key, PlayerManager playerManager) {
+    public SimpleTeam(TeamKey key, PlayerList playerManager) {
         this.key = key;
         this.playerManager = playerManager;
     }
@@ -28,7 +28,7 @@ public class SimpleTeam implements Team {
     }
 
     @Override
-    public Set<ServerPlayerEntity> getPlayers() {
+    public Set<ServerPlayer> getPlayers() {
         return players.stream()
                 .map(playerManager::getPlayer)
                 .filter(Objects::nonNull)
@@ -36,13 +36,13 @@ public class SimpleTeam implements Team {
     }
 
     @Override
-    public void addPlayer(ServerPlayerEntity player) {
-        players.add(player.getUuid());
+    public void addPlayer(ServerPlayer player) {
+        players.add(player.getUUID());
     }
 
     @Override
-    public void removePlayer(ServerPlayerEntity player) {
-        players.remove(player.getUuid());
+    public void removePlayer(ServerPlayer player) {
+        players.remove(player.getUUID());
     }
 
     @Override

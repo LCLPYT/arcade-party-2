@@ -1,15 +1,15 @@
 package work.lclpnet.ap2.impl.util.scoreboard;
 
-import net.minecraft.network.packet.s2c.play.ScoreboardDisplayS2CPacket;
-import net.minecraft.network.packet.s2c.play.ScoreboardObjectiveUpdateS2CPacket;
-import net.minecraft.network.packet.s2c.play.ScoreboardScoreResetS2CPacket;
-import net.minecraft.network.packet.s2c.play.ScoreboardScoreUpdateS2CPacket;
-import net.minecraft.scoreboard.ScoreboardCriterion;
-import net.minecraft.scoreboard.ScoreboardDisplaySlot;
-import net.minecraft.scoreboard.ScoreboardObjective;
-import net.minecraft.scoreboard.number.NumberFormat;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.numbers.NumberFormat;
+import net.minecraft.network.protocol.game.ClientboundResetScorePacket;
+import net.minecraft.network.protocol.game.ClientboundSetDisplayObjectivePacket;
+import net.minecraft.network.protocol.game.ClientboundSetObjectivePacket;
+import net.minecraft.network.protocol.game.ClientboundSetScorePacket;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.scores.DisplaySlot;
+import net.minecraft.world.scores.Objective;
+import net.minecraft.world.scores.criteria.ObjectiveCriteria;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
@@ -23,19 +23,19 @@ import java.util.Optional;
 public final class CustomObjective {
 
     private final String name;
-    private final ScoreboardObjective vanillaObjective;
+    private final Objective vanillaObjective;
     private final Map<String, CustomScoreboardEntry> entries = new HashMap<>();
-    private Text title;
+    private Component title;
 
-    public CustomObjective(String name, Text title, ScoreboardCriterion.RenderType renderType, NumberFormat numberFormat) {
+    public CustomObjective(String name, Component title, ObjectiveCriteria.RenderType renderType, NumberFormat numberFormat) {
         this.name = name;
         this.title = title;
 
-        this.vanillaObjective = new ScoreboardObjective(null, name, ScoreboardCriterion.DUMMY, title,
+        this.vanillaObjective = new Objective(null, name, ObjectiveCriteria.DUMMY, title,
                 renderType, false, numberFormat);
     }
 
-    ScoreboardObjective vanillaObjective() {
+    Objective vanillaObjective() {
         return vanillaObjective;
     }
 
@@ -43,7 +43,7 @@ public final class CustomObjective {
         return name;
     }
 
-    public Text display() {
+    public Component display() {
         return title;
     }
 
@@ -66,7 +66,7 @@ public final class CustomObjective {
         return "Objective[name=%s, title=%s]".formatted(name, title);
     }
 
-    public void setTitle(Text title) {
+    public void setTitle(Component title) {
         this.title = Objects.requireNonNull(title);
     }
 
@@ -78,27 +78,27 @@ public final class CustomObjective {
         return Optional.ofNullable(entries.getOrDefault(holder, null));
     }
 
-    public void add(ServerPlayerEntity player) {
-        var packet = new ScoreboardObjectiveUpdateS2CPacket(this.vanillaObjective(), ScoreboardObjectiveUpdateS2CPacket.ADD_MODE);
-        player.networkHandler.sendPacket(packet);
+    public void add(ServerPlayer player) {
+        var packet = new ClientboundSetObjectivePacket(this.vanillaObjective(), ClientboundSetObjectivePacket.METHOD_ADD);
+        player.connection.send(packet);
     }
 
-    public void remove(ServerPlayerEntity player) {
-        var packet = new ScoreboardObjectiveUpdateS2CPacket(this.vanillaObjective(), ScoreboardObjectiveUpdateS2CPacket.REMOVE_MODE);
-        player.networkHandler.sendPacket(packet);
+    public void remove(ServerPlayer player) {
+        var packet = new ClientboundSetObjectivePacket(this.vanillaObjective(), ClientboundSetObjectivePacket.METHOD_REMOVE);
+        player.connection.send(packet);
     }
 
-    public void update(ServerPlayerEntity player) {
-        var packet = new ScoreboardObjectiveUpdateS2CPacket(this.vanillaObjective(), ScoreboardObjectiveUpdateS2CPacket.UPDATE_MODE);
-        player.networkHandler.sendPacket(packet);
+    public void update(ServerPlayer player) {
+        var packet = new ClientboundSetObjectivePacket(this.vanillaObjective(), ClientboundSetObjectivePacket.METHOD_CHANGE);
+        player.connection.send(packet);
     }
 
-    public void sendScore(ServerPlayerEntity player, String scoreHolder, int score, Text display, NumberFormat format) {
-        var packet = new ScoreboardScoreUpdateS2CPacket(scoreHolder, this.name(), score, Optional.ofNullable(display), Optional.ofNullable(format));
-        player.networkHandler.sendPacket(packet);
+    public void sendScore(ServerPlayer player, String scoreHolder, int score, Component display, NumberFormat format) {
+        var packet = new ClientboundSetScorePacket(scoreHolder, this.name(), score, Optional.ofNullable(display), Optional.ofNullable(format));
+        player.connection.send(packet);
     }
 
-    public void syncScore(ServerPlayerEntity player, String holder) {
+    public void syncScore(ServerPlayer player, String holder) {
         CustomScoreboardEntry entry = entries.getOrDefault(holder, null);
 
         if (entry == null) return;
@@ -106,11 +106,11 @@ public final class CustomObjective {
         sendScore(player, holder, entry.getScore(), entry.getDisplay(), entry.getNumberFormat());
     }
 
-    public void syncScores(ServerPlayerEntity player) {
+    public void syncScores(ServerPlayer player) {
         entries.keySet().forEach((holder) -> syncScore(player, holder));
     }
 
-    public void setDisplay(ServerPlayerEntity player, ScoreboardDisplaySlot slot) {
+    public void setDisplay(ServerPlayer player, DisplaySlot slot) {
        setDisplay(player, this, slot);
     }
 
@@ -118,14 +118,14 @@ public final class CustomObjective {
         entries.remove(holder);
     }
 
-    public void clear(ServerPlayerEntity player, String holder) {
-        player.networkHandler.sendPacket(new ScoreboardScoreResetS2CPacket(holder, this.vanillaObjective.getName()));
+    public void clear(ServerPlayer player, String holder) {
+        player.connection.send(new ClientboundResetScorePacket(holder, this.vanillaObjective.getName()));
     }
 
-    public static void setDisplay(ServerPlayerEntity player, @Nullable CustomObjective objective, ScoreboardDisplaySlot slot) {
+    public static void setDisplay(ServerPlayer player, @Nullable CustomObjective objective, DisplaySlot slot) {
         // could be that ScoreboardObjectiveUpdateS2CPacket with ScoreboardObjectiveUpdateS2CPacket.REMOVE_MODE has to be sent
-        var packet = new ScoreboardDisplayS2CPacket(slot, objective != null ? objective.vanillaObjective() : null);
+        var packet = new ClientboundSetDisplayObjectivePacket(slot, objective != null ? objective.vanillaObjective() : null);
 
-        player.networkHandler.sendPacket(packet);
+        player.connection.send(packet);
     }
 }

@@ -1,6 +1,6 @@
 package work.lclpnet.ap2.game.speed_builders.data;
 
-import net.minecraft.util.math.Vec3i;
+import net.minecraft.core.Vec3i;
 import work.lclpnet.kibu.structure.BlockStructure;
 
 public record SbModule(String id, BlockStructure structure) {

@@ -1,7 +1,7 @@
 package work.lclpnet.ap2.core.hook;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
 import work.lclpnet.kibu.hook.Hook;
 import work.lclpnet.kibu.hook.HookFactory;
 
@@ -17,5 +17,5 @@ public interface PlayerCanTrackCallback {
         return true;
     });
 
-    boolean canTrack(ServerPlayerEntity player, Entity entity);
+    boolean canTrack(ServerPlayer player, Entity entity);
 }

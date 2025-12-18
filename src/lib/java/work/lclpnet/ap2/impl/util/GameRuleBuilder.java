@@ -1,7 +1,7 @@
 package work.lclpnet.ap2.impl.util;
 
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.world.GameRules;
+import net.minecraft.world.level.GameRules;
 
 public class GameRuleBuilder {
 
@@ -19,8 +19,8 @@ public class GameRuleBuilder {
      * @param value The rule boolean value.
      * @return This builder instance.
      */
-    public GameRuleBuilder set(GameRules.Key<GameRules.BooleanRule> key, boolean value) {
-        gameRules.get(key).set(value, server);
+    public GameRuleBuilder set(GameRules.Key<GameRules.BooleanValue> key, boolean value) {
+        gameRules.getRule(key).set(value, server);
         return this;
     }
 
@@ -30,8 +30,8 @@ public class GameRuleBuilder {
      * @param value The rule integer value.
      * @return This builder instance.
      */
-    public GameRuleBuilder set(GameRules.Key<GameRules.IntRule> key, int value) {
-        gameRules.get(key).set(value, server);
+    public GameRuleBuilder set(GameRules.Key<GameRules.IntegerValue> key, int value) {
+        gameRules.getRule(key).set(value, server);
         return this;
     }
 }

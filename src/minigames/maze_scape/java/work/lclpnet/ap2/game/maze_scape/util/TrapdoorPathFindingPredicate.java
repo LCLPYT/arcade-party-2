@@ -1,30 +1,30 @@
 package work.lclpnet.ap2.game.maze_scape.util;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.block.TrapdoorBlock;
-import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.registry.tag.BlockTags;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.core.BlockPos;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.TrapDoorBlock;
+import net.minecraft.world.level.block.state.BlockState;
 import work.lclpnet.ap2.api.ai.PathFindingPredicate;
 
-import static net.minecraft.block.TrapdoorBlock.OPEN;
+import static net.minecraft.world.level.block.TrapDoorBlock.OPEN;
 
 public class TrapdoorPathFindingPredicate implements PathFindingPredicate {
 
     private TrapdoorPathFindingPredicate() {}
 
     @Override
-    public boolean canReach(int x, int y, int z, MobEntity entity, BlockPos from) {
-        World world = entity.getEntityWorld();
-        BlockState fromState = world.getBlockState(from.down());
-        BlockState toState = entity.getEntityWorld().getBlockState(new BlockPos(x, y - 1, z));
+    public boolean canReach(int x, int y, int z, Mob entity, BlockPos from) {
+        Level world = entity.level();
+        BlockState fromState = world.getBlockState(from.below());
+        BlockState toState = entity.level().getBlockState(new BlockPos(x, y - 1, z));
 
         return !isOpenTrapdoor(fromState) || !isOpenTrapdoor(toState) || y != from.getY();
     }
 
     private boolean isOpenTrapdoor(BlockState state) {
-        return state.isIn(BlockTags.TRAPDOORS) && state.contains(OPEN) && state.get(TrapdoorBlock.OPEN);
+        return state.is(BlockTags.TRAPDOORS) && state.hasProperty(OPEN) && state.getValue(TrapDoorBlock.OPEN);
     }
 
     public static TrapdoorPathFindingPredicate getInstance() {

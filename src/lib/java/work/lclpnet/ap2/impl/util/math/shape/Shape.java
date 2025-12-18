@@ -1,6 +1,6 @@
 package work.lclpnet.ap2.impl.util.math.shape;
 
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.phys.Vec3;
 import work.lclpnet.ap2.impl.util.debug.DebugController;
 import work.lclpnet.gaco.ds.BlockBox;
 
@@ -13,7 +13,7 @@ public interface Shape {
      */
     BlockBox bounds();
 
-    Vec3d center();
+    Vec3 center();
 
     default void debug(DebugController controller) {
     }

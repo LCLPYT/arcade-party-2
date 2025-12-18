@@ -1,9 +1,9 @@
 package work.lclpnet.ap2.game.maze_scape.setup.wall;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.game.maze_scape.setup.Connector3;
 import work.lclpnet.ap2.game.maze_scape.setup.OrientedStructurePiece;
@@ -44,10 +44,10 @@ public class StructureConnectorWall implements ConnectorWall {
 
         BlockPos offset = connectorPos.subtract(rotatedOtherPos);
         int ox = offset.getX(), oy = offset.getY(), oz = offset.getZ();
-        var pos = new BlockPos.Mutable();
+        var pos = new BlockPos.MutableBlockPos();
 
         var adapter = FabricBlockStateAdapter.getInstance();
-        int flags = Block.FORCE_STATE | Block.SKIP_DROPS;
+        int flags = Block.UPDATE_KNOWN_SHAPE | Block.UPDATE_SUPPRESS_DROPS;
 
         for (var kibuPos : struct.getBlockPositions()) {
             var kibuState = struct.getBlockState(kibuPos);
@@ -61,7 +61,7 @@ public class StructureConnectorWall implements ConnectorWall {
                 continue;
             }
 
-            if (state.isOf(Blocks.JIGSAW)) continue;
+            if (state.is(Blocks.JIGSAW)) continue;
 
             mat.transform(kibuPos.getX(), kibuPos.getY(), kibuPos.getZ(), pos);
             pos.set(pos.getX() + ox, pos.getY() + oy, pos.getZ() + oz);

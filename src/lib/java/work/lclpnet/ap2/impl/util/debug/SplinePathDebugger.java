@@ -1,12 +1,12 @@
 package work.lclpnet.ap2.impl.util.debug;
 
 import it.unimi.dsi.fastutil.objects.Object2IntFunction;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.entity.Entity;
-import net.minecraft.text.Text;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.core.Direction;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
 import org.apache.commons.lang3.mutable.MutableInt;
 import work.lclpnet.ap2.impl.util.ColorUtil;
 import work.lclpnet.ap2.impl.util.math.MathUtil;
@@ -34,7 +34,7 @@ public class SplinePathDebugger {
     }
 
     public void renderPath(int samples) {
-        renderPath(samples, Blocks.YELLOW_CONCRETE.getDefaultState());
+        renderPath(samples, Blocks.YELLOW_CONCRETE.defaultBlockState());
     }
 
     public void renderPath(int samples, BlockState pathColor) {
@@ -44,13 +44,13 @@ public class SplinePathDebugger {
 
         if (renderer == null) return;
 
-        List<Vec3d> keypoints = path.getKeypoints();
+        List<Vec3> keypoints = path.getKeypoints();
 
-        for (Vec3d keypoint : keypoints) {
-            renderer.marker(keypoint, Blocks.ORANGE_CONCRETE.getDefaultState(), 0xeeff00, 0.5f);
+        for (Vec3 keypoint : keypoints) {
+            renderer.marker(keypoint, Blocks.ORANGE_CONCRETE.defaultBlockState(), 0xeeff00, 0.5f);
         }
 
-        Vec3d start = keypoints.getFirst();
+        Vec3 start = keypoints.getFirst();
         double step = 1.d / (samples - 1);
 
         renderer.marker(start, pathColor, 0xeeff00, 0.2f);
@@ -58,33 +58,33 @@ public class SplinePathDebugger {
         for (int i = 1; i < samples; i++) {
             double s = i * step;
 
-            Vec3d end = path.samplePosition(s);
+            Vec3 end = path.samplePosition(s);
 
             renderer.line(start, end, 0.1, pathColor);
 
             if (DEBUG_SPACING) {
                 renderer.marker(start, pathColor, 0xeeff00, 0.2f);
 
-                Vec3d diff = end.subtract(start);
-                Vec3d midpoint = start.add(diff.multiply(0.5));
+                Vec3 diff = end.subtract(start);
+                Vec3 midpoint = start.add(diff.scale(0.5));
 
-                Vec3d dir = diff.normalize();
-                Vec3d right = dir.crossProduct(Direction.UP.getDoubleVector());
-                Vec3d up = right.crossProduct(dir);
+                Vec3 dir = diff.normalize();
+                Vec3 right = dir.cross(Direction.UP.getUnitVec3());
+                Vec3 up = right.cross(dir);
 
-                var label = Text.literal(String.format("%.2f", start.distanceTo(end)));
-                renderer.text(midpoint.add(up.multiply(0.25)), label);
+                var label = Component.literal(String.format("%.2f", start.distanceTo(end)));
+                renderer.text(midpoint.add(up.scale(0.25)), label);
             }
 
             if (DEBUG_DIRECTION) {
-                Vec3d dir = path.sampleDirection(s).normalize();
-                Vec3d right = dir.crossProduct(Direction.UP.getDoubleVector());
-                Vec3d up = right.crossProduct(dir);
+                Vec3 dir = path.sampleDirection(s).normalize();
+                Vec3 right = dir.cross(Direction.UP.getUnitVec3());
+                Vec3 up = right.cross(dir);
 
-                renderer.arrow(start, dir, Blocks.LIME_TERRACOTTA.getDefaultState());
+                renderer.arrow(start, dir, Blocks.LIME_TERRACOTTA.defaultBlockState());
 
-                var label = Text.literal("(%.2f, %.2f)".formatted(MathUtil.yaw(dir), MathUtil.pitch(dir)));
-                renderer.text(start.add(up.multiply(0.25)), label);
+                var label = Component.literal("(%.2f, %.2f)".formatted(MathUtil.yaw(dir), MathUtil.pitch(dir)));
+                renderer.text(start.add(up.scale(0.25)), label);
             }
 
             start = end;
@@ -120,7 +120,7 @@ public class SplinePathDebugger {
         Map<UUID, Marker> markers = new HashMap<>();
 
         for (Entity entity : entities.get()) {
-            Vec3d pos = path.getNearestPosition(entity.getEntityPos());
+            Vec3 pos = path.getNearestPosition(entity.position());
 
             int originalColor = markerColor.applyAsInt(entity);
             int color = originalColor;
@@ -129,7 +129,7 @@ public class SplinePathDebugger {
                 color = ColorUtil.getRandomHsvColor(random, random.nextFloat(110, 360));
             }
 
-            Object3d obj = renderer.marker(pos, Blocks.RED_CONCRETE.getDefaultState(), color);
+            Object3d obj = renderer.marker(pos, Blocks.RED_CONCRETE.defaultBlockState(), color);
 
             for (Object3d o : obj.traverse()) {
                 if (o instanceof DisplayEntityObject<?> deo) {
@@ -137,23 +137,23 @@ public class SplinePathDebugger {
                 }
             }
 
-            markers.put(entity.getUuid(), new Marker(obj, new MutableInt(originalColor)));
+            markers.put(entity.getUUID(), new Marker(obj, new MutableInt(originalColor)));
         }
 
         scheduler.interval(info -> {
             Set<UUID> removal = new HashSet<>(markers.keySet());
 
             for (Entity entity : entities.get()) {
-                UUID uuid = entity.getUuid();
+                UUID uuid = entity.getUUID();
                 Marker marker = markers.get(uuid);
 
                 if (marker == null) continue;
 
                 removal.remove(uuid);
 
-                Vec3d pos = path.getNearestPosition(entity.getEntityPos());
+                Vec3 pos = path.getNearestPosition(entity.position());
 
-                marker.obj.position.set(pos.getX(), pos.getY(), pos.getZ());
+                marker.obj.position.set(pos.x(), pos.y(), pos.z());
                 marker.obj.updateMatrixWorld();
 
                 int color = markerColor.apply(entity);

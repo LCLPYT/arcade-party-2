@@ -1,21 +1,22 @@
 package work.lclpnet.ap2.game.guess_it.challenge;
 
 import it.unimi.dsi.fastutil.ints.IntList;
-import net.minecraft.block.*;
-import net.minecraft.block.enums.RailShape;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.FireworkExplosionComponent;
-import net.minecraft.component.type.FireworksComponent;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.passive.VillagerEntity;
-import net.minecraft.entity.projectile.FireworkRocketEntity;
-import net.minecraft.entity.vehicle.MinecartEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.npc.Villager;
+import net.minecraft.world.entity.projectile.FireworkRocketEntity;
+import net.minecraft.world.entity.vehicle.Minecart;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.component.FireworkExplosion;
+import net.minecraft.world.item.component.Fireworks;
+import net.minecraft.world.level.block.*;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.RailShape;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.util.world.AdjacentBlocks;
@@ -34,7 +35,7 @@ import work.lclpnet.lobby.util.WorldModifier;
 
 import java.util.*;
 
-import static net.minecraft.util.math.Direction.*;
+import static net.minecraft.core.Direction.*;
 import static work.lclpnet.ap2.impl.util.world.PositionUtil.findGroundPositions;
 
 public class MinecartChallenge implements Challenge, LongerChallenge, SchedulerAction {
@@ -43,7 +44,7 @@ public class MinecartChallenge implements Challenge, LongerChallenge, SchedulerA
     private static final int DURATION_TICKS = Ticks.seconds(16);
     private static final int MAX_RUNTIME_TICKS = Ticks.seconds(35);
     private final MiniGameHandle gameHandle;
-    private final ServerWorld world;
+    private final ServerLevel world;
     private final Random random;
     private final BlockShape blockShape;
     private final WorldModifier modifier;
@@ -54,7 +55,7 @@ public class MinecartChallenge implements Challenge, LongerChallenge, SchedulerA
     private int finalTime = 0;
     private int running = 0;
 
-    public MinecartChallenge(MiniGameHandle gameHandle, ServerWorld world, Random random, BlockShape blockShape, WorldModifier modifier) {
+    public MinecartChallenge(MiniGameHandle gameHandle, ServerLevel world, Random random, BlockShape blockShape, WorldModifier modifier) {
         this.gameHandle = gameHandle;
         this.world = world;
         this.random = random;
@@ -99,10 +100,10 @@ public class MinecartChallenge implements Challenge, LongerChallenge, SchedulerA
     @Override
     public void evaluateDeferred(Runnable callback) {
         long startTime = System.currentTimeMillis();
-        modifier.setBlockState(powerPos, Blocks.REDSTONE_BLOCK.getDefaultState(), Block.FORCE_STATE | Block.NOTIFY_LISTENERS);
+        modifier.setBlockState(powerPos, Blocks.REDSTONE_BLOCK.defaultBlockState(), Block.UPDATE_KNOWN_SHAPE | Block.UPDATE_CLIENTS);
 
-        BlockPos up = powerPos.up();
-        modifier.setBlockState(up, world.getBlockState(up).with(PoweredRailBlock.POWERED, true), Block.FORCE_STATE | Block.NOTIFY_LISTENERS);
+        BlockPos up = powerPos.above();
+        modifier.setBlockState(up, world.getBlockState(up).setValue(PoweredRailBlock.POWERED, true), Block.UPDATE_KNOWN_SHAPE | Block.UPDATE_CLIENTS);
 
         onDone = () -> {
             finalTime = (int) (System.currentTimeMillis() - startTime);
@@ -124,16 +125,16 @@ public class MinecartChallenge implements Challenge, LongerChallenge, SchedulerA
 
         if (entity == null) return;
 
-        entity.getPassengersDeep().forEach(Entity::discard);
+        entity.getIndirectPassengers().forEach(Entity::discard);
         entity.discard();
 
-        FireworkExplosionComponent explosion = new FireworkExplosionComponent(FireworkExplosionComponent.Type.SMALL_BALL, IntList.of(0xff0000), IntList.of(), false, false);
+        FireworkExplosion explosion = new FireworkExplosion(FireworkExplosion.Shape.SMALL_BALL, IntList.of(0xff0000), IntList.of(), false, false);
 
         ItemStack rocket = new ItemStack(Items.FIREWORK_ROCKET);
-        rocket.set(DataComponentTypes.FIREWORKS, new FireworksComponent(1, List.of(explosion)));
+        rocket.set(DataComponents.FIREWORKS, new Fireworks(1, List.of(explosion)));
 
         FireworkRocketEntity firework = new FireworkRocketEntity(world, entity.getX(), entity.getY(), entity.getZ(), rocket);
-        world.spawnEntity(firework);
+        world.addFreshEntity(firework);
 
         FireworkEntityAccess.explode(firework);
     }
@@ -146,7 +147,7 @@ public class MinecartChallenge implements Challenge, LongerChallenge, SchedulerA
         Set<BlockPos> positions = new HashSet<>();
 
         for (BlockPos pos : findGroundPositions(blockShape, world)) {
-            positions.add(pos.toImmutable());
+            positions.add(pos.immutable());
         }
 
         if (positions.isEmpty()) {
@@ -173,46 +174,46 @@ public class MinecartChallenge implements Challenge, LongerChallenge, SchedulerA
 
             if (last) {
                 shape = getRailShape(dir, null);
-                state = Blocks.DETECTOR_RAIL.getDefaultState().with(DetectorRailBlock.SHAPE, shape);
+                state = Blocks.DETECTOR_RAIL.defaultBlockState().setValue(DetectorRailBlock.SHAPE, shape);
             } else if (nextPower-- <= 0 && dir == nextDir) {
                 nextPower = 5 + random.nextInt(9);
-                state = Blocks.POWERED_RAIL.getDefaultState()
-                        .with(PoweredRailBlock.SHAPE, shape)
-                        .with(PoweredRailBlock.POWERED, true);
+                state = Blocks.POWERED_RAIL.defaultBlockState()
+                        .setValue(PoweredRailBlock.SHAPE, shape)
+                        .setValue(PoweredRailBlock.POWERED, true);
             } else {
-                state = Blocks.RAIL.getDefaultState().with(RailBlock.SHAPE, shape);
+                state = Blocks.RAIL.defaultBlockState().setValue(RailBlock.SHAPE, shape);
             }
 
-            if (i > 0 && state.isOf(Blocks.POWERED_RAIL)) {
-                modifier.setBlockState(track.pos.down(), Blocks.REDSTONE_BLOCK.getDefaultState(), Block.NOTIFY_LISTENERS);
+            if (i > 0 && state.is(Blocks.POWERED_RAIL)) {
+                modifier.setBlockState(track.pos.below(), Blocks.REDSTONE_BLOCK.defaultBlockState(), Block.UPDATE_CLIENTS);
             }
 
-            modifier.setBlockState(track.pos, state, Block.NOTIFY_LISTENERS | Block.FORCE_STATE);
+            modifier.setBlockState(track.pos, state, Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE);
         }
 
         PosDir firstTrack = tracks[0];
-        BlockPos buffer = firstTrack.pos.offset(firstTrack.dir.getOpposite());
+        BlockPos buffer = firstTrack.pos.relative(firstTrack.dir.getOpposite());
 
-        modifier.setBlockState(buffer, Blocks.POLISHED_ANDESITE.getDefaultState(), Block.NOTIFY_LISTENERS | Block.FORCE_STATE);
+        modifier.setBlockState(buffer, Blocks.POLISHED_ANDESITE.defaultBlockState(), Block.UPDATE_CLIENTS | Block.UPDATE_KNOWN_SHAPE);
 
         double x = firstTrack.pos.getX() + 0.5;
         double y = firstTrack.pos.getY();
         double z = firstTrack.pos.getZ() + 0.5;
 
-        MinecartEntity minecart = new MinecartEntity(EntityType.MINECART, world);
-        minecart.setPos(x, y, z);
+        Minecart minecart = new Minecart(EntityType.MINECART, world);
+        minecart.setPosRaw(x, y, z);
 
-        VillagerEntity villager = new VillagerEntity(EntityType.VILLAGER, world);
+        Villager villager = new Villager(EntityType.VILLAGER, world);
         new MobSpawner(world, random, new IndexedSet<>()).randomizeEntity(villager);
-        villager.setPos(x, y, z);
+        villager.setPosRaw(x, y, z);
 
         modifier.spawnEntity(minecart);
         modifier.spawnEntity(villager);
 
         villager.startRiding(minecart, true, false);
 
-        powerPos = firstTrack.pos.down();
-        minecartUuid = minecart.getUuid();
+        powerPos = firstTrack.pos.below();
+        minecartUuid = minecart.getUUID();
         goal = tracks[tracks.length - 1].pos;
     }
 
@@ -276,7 +277,7 @@ public class MinecartChallenge implements Challenge, LongerChallenge, SchedulerA
                 int dx = pos.getX() - start.getX();
                 int dz = pos.getZ() - start.getZ();
 
-                Direction dir = Direction.fromVector(dx, 0, dz, null);
+                Direction dir = Direction.getNearest(dx, 0, dz, null);
 
                 if (dir != null) {
                     directions.add(dir);
@@ -293,15 +294,15 @@ public class MinecartChallenge implements Challenge, LongerChallenge, SchedulerA
             closed.add(start);
 
             // force the second path position
-            BlockPos buffer = start.offset(direction);
+            BlockPos buffer = start.relative(direction);
             open.add(buffer);
 
             // block possible tracks besides the first track
-            closed.add(start.offset(direction.rotateYClockwise()));
-            closed.add(start.offset(direction.rotateYCounterclockwise()));
+            closed.add(start.relative(direction.getClockWise()));
+            closed.add(start.relative(direction.getCounterClockWise()));
 
             // ensure that there is buffer space in the other direction
-            buffer = start.offset(direction.getOpposite());
+            buffer = start.relative(direction.getOpposite());
             closed.add(buffer);
 
             while (!path.isEmpty() && path.size() < length) {
@@ -321,7 +322,7 @@ public class MinecartChallenge implements Challenge, LongerChallenge, SchedulerA
                 for (BlockPos pos : adjacent.iterate(next.pos)) {
                     if (closed.contains(pos)) continue;
 
-                    open.add(pos.toImmutable());
+                    open.add(pos.immutable());
                 }
             }
 
@@ -347,7 +348,7 @@ public class MinecartChallenge implements Challenge, LongerChallenge, SchedulerA
             }
 
             // go straight
-            BlockPos newPos = current.pos.offset(current.dir);
+            BlockPos newPos = current.pos.relative(current.dir);
 
             if (open.contains(newPos)) {
                 return new PosDir(newPos, current.dir);
@@ -365,7 +366,7 @@ public class MinecartChallenge implements Challenge, LongerChallenge, SchedulerA
         private PosDir turn(PosDir current) {
             Turn turn = Turn.values()[random.nextInt(Turn.values().length)];
             Direction newDir = turnDirection(current.dir, turn);
-            BlockPos newPos = current.pos.offset(newDir);
+            BlockPos newPos = current.pos.relative(newDir);
 
             if (open.contains(newPos)) {
                 return new PosDir(newPos, newDir);
@@ -374,7 +375,7 @@ public class MinecartChallenge implements Challenge, LongerChallenge, SchedulerA
             // try to turn the other way
             turn = turn.opposite();
             newDir = turnDirection(current.dir, turn);
-            newPos = current.pos.offset(newDir);
+            newPos = current.pos.relative(newDir);
 
             if (open.contains(newPos)) {
                 return new PosDir(newPos, newDir);
@@ -385,8 +386,8 @@ public class MinecartChallenge implements Challenge, LongerChallenge, SchedulerA
 
         private static Direction turnDirection(Direction direction, Turn turn) {
             return switch (turn) {
-                case LEFT -> direction.rotateYCounterclockwise();
-                case RIGHT -> direction.rotateYClockwise();
+                case LEFT -> direction.getCounterClockWise();
+                case RIGHT -> direction.getClockWise();
             };
         }
     }

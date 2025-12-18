@@ -1,9 +1,9 @@
 package work.lclpnet.ap2.impl.util.world;
 
-import net.minecraft.network.packet.s2c.play.WorldBorderInitializeS2CPacket;
-import net.minecraft.network.packet.s2c.play.WorldBorderWarningBlocksChangedS2CPacket;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.world.border.WorldBorder;
+import net.minecraft.network.protocol.game.ClientboundInitializeBorderPacket;
+import net.minecraft.network.protocol.game.ClientboundSetBorderWarningDistancePacket;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.border.WorldBorder;
 import org.jetbrains.annotations.NotNull;
 import work.lclpnet.kibu.access.network.packet.WorldBorderWarningBlocksChangedS2CPacketAccess;
 
@@ -11,26 +11,26 @@ public class WorldBorderUtil {
 
     private WorldBorderUtil() {}
 
-    public static void setWarning(ServerPlayerEntity player) {
+    public static void setWarning(ServerPlayer player) {
         setWarningBlocks(player, Integer.MAX_VALUE);
     }
 
-    public static void setWarningBlocks(ServerPlayerEntity player, int warningBlocks) {
+    public static void setWarningBlocks(ServerPlayer player, int warningBlocks) {
         var packet = WorldBorderWarningBlocksChangedS2CPacketAccess.withWarningBlocks(
-                new WorldBorderWarningBlocksChangedS2CPacket(player.getEntityWorld().getWorldBorder()),
+                new ClientboundSetBorderWarningDistancePacket(player.level().getWorldBorder()),
                 warningBlocks);
 
-        player.networkHandler.sendPacket(packet);
+        player.connection.send(packet);
     }
 
-    public static void resetWarningBlocks(ServerPlayerEntity player) {
-        var packet = new WorldBorderWarningBlocksChangedS2CPacket(player.getEntityWorld().getWorldBorder());
+    public static void resetWarningBlocks(ServerPlayer player) {
+        var packet = new ClientboundSetBorderWarningDistancePacket(player.level().getWorldBorder());
 
-        player.networkHandler.sendPacket(packet);
+        player.connection.send(packet);
     }
 
-    public static void init(ServerPlayerEntity player, WorldBorder border) {
-        player.networkHandler.sendPacket(new WorldBorderInitializeS2CPacket(border));
+    public static void init(ServerPlayer player, WorldBorder border) {
+        player.connection.send(new ClientboundInitializeBorderPacket(border));
     }
 
     public static @NotNull WorldBorder createBorder(double centerX, double centerZ, double size) {

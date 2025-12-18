@@ -1,9 +1,9 @@
 package work.lclpnet.ap2.game.cozy_campfire.setup;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
 import work.lclpnet.ap2.api.game.team.Team;
 import work.lclpnet.ap2.api.game.team.TeamManager;
 import work.lclpnet.kibu.structure.BlockStructure;
@@ -35,7 +35,7 @@ public class CCBaseManager {
         return bases.values().stream().anyMatch(base -> base.isInside(x, y, z));
     }
 
-    public boolean isInBase(ServerPlayerEntity player) {
+    public boolean isInBase(ServerPlayer player) {
         Team team = teamManager.getTeam(player).orElse(null);
         if (team == null) return false;
 
@@ -66,7 +66,7 @@ public class CCBaseManager {
                 .findAny();
     }
 
-    public void openDoors(ServerWorld world) {
+    public void openDoors(ServerLevel world) {
         var opts = EnumSet.of(FORCE_STATE, SKIP_DROPS, SKIP_NEIGHBOUR_UPDATE);
 
         for (CCBase base : bases.values()) {

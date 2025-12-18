@@ -1,6 +1,6 @@
 package work.lclpnet.ap2.game.knockout.util;
 
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -24,7 +24,7 @@ class DistanceIteratorTest {
         var list = new ArrayList<BlockPos>(24);
 
         while (it.hasNext()) {
-            list.add(it.next().toImmutable());
+            list.add(it.next().immutable());
         }
 
         assertEquals(24, list.size());

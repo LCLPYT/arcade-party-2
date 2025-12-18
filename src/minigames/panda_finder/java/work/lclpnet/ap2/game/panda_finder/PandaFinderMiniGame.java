@@ -1,10 +1,10 @@
 package work.lclpnet.ap2.game.panda_finder;
 
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.registry.DynamicRegistryManager;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import org.jetbrains.annotations.NotNull;
 import work.lclpnet.ap2.ApConstants;
 import work.lclpnet.ap2.api.game.*;
@@ -13,7 +13,7 @@ import work.lclpnet.kibu.translate.text.FormatWrapper;
 public class PandaFinderMiniGame implements MiniGame {
 
     @Override
-    public @NotNull Identifier getId() {
+    public @NotNull ResourceLocation getId() {
         return ApConstants.identifier("panda_finder");
     }
 
@@ -28,7 +28,7 @@ public class PandaFinderMiniGame implements MiniGame {
     }
 
     @Override
-    public @NotNull ItemStack getIcon(@NotNull DynamicRegistryManager manager) {
+    public @NotNull ItemStack getIcon(@NotNull RegistryAccess manager) {
         return new ItemStack(Items.BAMBOO);
     }
 
@@ -49,6 +49,6 @@ public class PandaFinderMiniGame implements MiniGame {
 
     @Override
     public Object[] getDescriptionArguments() {
-        return new Object[] { FormatWrapper.styled(PandaFinderInstance.WIN_SCORE, Formatting.YELLOW) };
+        return new Object[] { FormatWrapper.styled(PandaFinderInstance.WIN_SCORE, ChatFormatting.YELLOW) };
     }
 }

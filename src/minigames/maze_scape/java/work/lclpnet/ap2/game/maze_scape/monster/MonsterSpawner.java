@@ -1,21 +1,25 @@
 package work.lclpnet.ap2.game.maze_scape.monster;
 
 import com.google.common.collect.ImmutableList;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.ai.brain.Activity;
-import net.minecraft.entity.ai.brain.MemoryModuleType;
-import net.minecraft.entity.ai.goal.*;
-import net.minecraft.entity.ai.pathing.EntityNavigation;
-import net.minecraft.entity.ai.pathing.MobNavigation;
-import net.minecraft.entity.ai.pathing.PathNodeMaker;
-import net.minecraft.entity.mob.*;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.goal.*;
+import net.minecraft.world.entity.ai.memory.MemoryModuleType;
+import net.minecraft.world.entity.ai.navigation.GroundPathNavigation;
+import net.minecraft.world.entity.ai.navigation.PathNavigation;
+import net.minecraft.world.entity.monster.EnderMan;
+import net.minecraft.world.entity.monster.Spider;
+import net.minecraft.world.entity.monster.creaking.Creaking;
+import net.minecraft.world.entity.monster.warden.Warden;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.entity.schedule.Activity;
+import net.minecraft.world.level.pathfinder.NodeEvaluator;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
-import work.lclpnet.ap2.core.mixin.EntityNavigationAccessor;
-import work.lclpnet.ap2.core.mixin.MobEntityAccessor;
+import work.lclpnet.ap2.core.mixin.MobAccessor;
+import work.lclpnet.ap2.core.mixin.PathNavigationAccessor;
 import work.lclpnet.ap2.core.type.*;
 import work.lclpnet.ap2.game.maze_scape.ai.AttackGoal;
 import work.lclpnet.ap2.game.maze_scape.ai.MoveToTargetGoal;
@@ -36,7 +40,7 @@ import java.util.function.BiConsumer;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
-import static net.minecraft.entity.attribute.EntityAttributes.*;
+import static net.minecraft.world.entity.ai.attributes.Attributes.*;
 
 public class MonsterSpawner {
 
@@ -45,7 +49,7 @@ public class MonsterSpawner {
     private final MSManager manager;
     private final Logger logger;
     private final Random random;
-    private final ServerWorld world;
+    private final ServerLevel world;
 
     public MonsterSpawner(MSManager manager, Logger logger, Random random) {
         this.manager = manager;
@@ -55,7 +59,7 @@ public class MonsterSpawner {
         world = manager.world();
     }
 
-    public void spawn(RandomGenerator<Vec3d> spawns, Registrar consumer) {
+    public void spawn(RandomGenerator<Vec3> spawns, Registrar consumer) {
         Partial<MonsterArgs, UUID> args = uuid -> new MonsterArgs(uuid, manager, logger);
 
         List<MonsterFactory> primary = new ArrayList<>();
@@ -82,29 +86,29 @@ public class MonsterSpawner {
         }
     }
 
-    private void spawnWarden(Vec3d pos, Partial<MonsterArgs, UUID> args, Registrar registrar) {
-        var warden = new WardenEntity(EntityType.WARDEN, world);
+    private void spawnWarden(Vec3 pos, Partial<MonsterArgs, UUID> args, Registrar registrar) {
+        var warden = new Warden(EntityType.WARDEN, world);
 
         configureMobCommon(pos, warden);
 
         EntityUtil.setAttribute(warden, ATTACK_DAMAGE, 10);
 
         var brain = warden.getBrain();
-        brain.setTaskList(Activity.EMERGE, 5, ImmutableList.of(), MemoryModuleType.IS_EMERGING);
-        brain.setTaskList(Activity.DIG, 5, ImmutableList.of(), MemoryModuleType.DIG_COOLDOWN);
-        brain.resetPossibleActivities();
+        brain.addActivityAndRemoveMemoryWhenStopped(Activity.EMERGE, 5, ImmutableList.of(), MemoryModuleType.IS_EMERGING);
+        brain.addActivityAndRemoveMemoryWhenStopped(Activity.DIG, 5, ImmutableList.of(), MemoryModuleType.DIG_COOLDOWN);
+        brain.useDefaultActivity();
 
-        world.spawnEntity(warden);
+        world.addFreshEntity(warden);
 
-        UUID uuid = warden.getUuid();
+        UUID uuid = warden.getUUID();
         var data = new WardenData(args.with(uuid));
 
         registrar.accept(uuid, data);
     }
 
     @SuppressWarnings("DataFlowIssue")
-    private void spawnSpider(Vec3d pos, Partial<MonsterArgs, UUID> args, Registrar registrar) {
-        var spider = new SpiderEntity(EntityType.SPIDER, world);
+    private void spawnSpider(Vec3 pos, Partial<MonsterArgs, UUID> args, Registrar registrar) {
+        var spider = new Spider(EntityType.SPIDER, world);
 
         configureMobCommon(pos, spider);
 
@@ -114,62 +118,62 @@ public class MonsterSpawner {
 
         GoalSelector goalSelector = resetAi(spider).getGoalSelector();
 
-        goalSelector.add(1, new SwimGoal(spider));
-        goalSelector.add(3, new PounceAtTargetGoal(spider, 0.4f));
-        goalSelector.add(4, new MoveToTargetGoal(spider, 1.0));
-        goalSelector.add(4, new AttackGoal(spider));
-        goalSelector.add(6, new LookAtEntityGoal(spider, PlayerEntity.class, 8.0f));
-        goalSelector.add(6, new LookAroundGoal(spider));
+        goalSelector.addGoal(1, new FloatGoal(spider));
+        goalSelector.addGoal(3, new LeapAtTargetGoal(spider, 0.4f));
+        goalSelector.addGoal(4, new MoveToTargetGoal(spider, 1.0));
+        goalSelector.addGoal(4, new AttackGoal(spider));
+        goalSelector.addGoal(6, new LookAtPlayerGoal(spider, Player.class, 8.0f));
+        goalSelector.addGoal(6, new RandomLookAroundGoal(spider));
 
-        world.spawnEntity(spider);
+        world.addFreshEntity(spider);
 
-        UUID uuid = spider.getUuid();
+        UUID uuid = spider.getUUID();
         var data = new SpiderData(args.with(uuid), random);
 
         registrar.accept(uuid, data);
     }
 
-    private void spawnEnderman(Vec3d pos, Partial<MonsterArgs, UUID> args, Registrar registrar) {
-        var enderman = new EndermanEntity(EntityType.ENDERMAN, world);
+    private void spawnEnderman(Vec3 pos, Partial<MonsterArgs, UUID> args, Registrar registrar) {
+        var enderman = new EnderMan(EntityType.ENDERMAN, world);
 
         configureMobCommon(pos, enderman);
 
         EntityUtil.setAttribute(enderman, ATTACK_DAMAGE, 20);
         enderman.setSilent(true);
 
-        UUID uuid = enderman.getUuid();
+        UUID uuid = enderman.getUUID();
         var data = new EndermanData(args.with(uuid), manager.struct());
 
         GoalSelector goalSelector = resetAi(enderman).getGoalSelector();
 
-        goalSelector.add(0, new SwimGoal(enderman));
-        goalSelector.add(4, new MoveToTargetGoal(enderman, 1.0, data::targetPos));
-        goalSelector.add(4, new AttackGoal(enderman));
-        goalSelector.add(6, new LookAroundGoal(enderman));
+        goalSelector.addGoal(0, new FloatGoal(enderman));
+        goalSelector.addGoal(4, new MoveToTargetGoal(enderman, 1.0, data::targetPos));
+        goalSelector.addGoal(4, new AttackGoal(enderman));
+        goalSelector.addGoal(6, new RandomLookAroundGoal(enderman));
 
-        world.spawnEntity(enderman);
+        world.addFreshEntity(enderman);
 
         registrar.accept(uuid, data);
     }
 
-    private void spawnCreaking(Vec3d pos, Partial<MonsterArgs, UUID> args, Registrar registrar) {
-        var creaking = new CreakingEntity(EntityType.CREAKING, world);
+    private void spawnCreaking(Vec3 pos, Partial<MonsterArgs, UUID> args, Registrar registrar) {
+        var creaking = new Creaking(EntityType.CREAKING, world);
 
         configureMobCommon(pos, creaking);
 
         EntityUtil.setAttribute(creaking, ATTACK_DAMAGE, 12);
         EntityUtil.setAttribute(creaking, MOVEMENT_SPEED, 0.5);
 
-        world.spawnEntity(creaking);
+        world.addFreshEntity(creaking);
 
-        UUID uuid = creaking.getUuid();
+        UUID uuid = creaking.getUUID();
         var data = new CreakingData(args.with(uuid));
 
         registrar.accept(uuid, data);
     }
 
-    private static @NotNull MobEntityAccessor resetAi(MobEntity mob) {
-        var access = (MobEntityAccessor) mob;
+    private static @NotNull MobAccessor resetAi(Mob mob) {
+        var access = (MobAccessor) mob;
 
         GoalModifier.clear(access.getGoalSelector());
         GoalModifier.clear(access.getTargetSelector());
@@ -177,29 +181,29 @@ public class MonsterSpawner {
         return access;
     }
 
-    private void configureMobCommon(Vec3d pos, MobEntity entity) {
-        entity.setPosition(pos);
+    private void configureMobCommon(Vec3 pos, Mob entity) {
+        entity.setPos(pos);
         entity.setInvulnerable(true);
-        entity.setPersistent();
+        entity.setPersistenceRequired();
         entity.setOnGround(true);  // required to perform path finding immediately
 
         float maxWidth = 0.62f;
 
-        if (entity.getWidth() > maxWidth) {
-            ((ApLivingEntity) entity).ap2$setServerSidedScale(maxWidth / entity.getWidth());
-            entity.calculateDimensions();
+        if (entity.getBbWidth() > maxWidth) {
+            ((ApLivingEntity) entity).ap2$setServerSidedScale(maxWidth / entity.getBbWidth());
+            entity.refreshDimensions();
         }
 
         if (DEBUG_SHOW_MOBS) {
-            entity.setGlowing(true);
+            entity.setGlowingTag(true);
         }
 
         EntityUtil.setAttribute(entity, STEP_HEIGHT, 2);
 
-        EntityNavigation navigation = entity.getNavigation();
-        navigation.setRangeMultiplier(1f);
+        PathNavigation navigation = entity.getNavigation();
+        navigation.setMaxVisitedNodesMultiplier(1f);
 
-        if (navigation instanceof MobNavigation nav) {
+        if (navigation instanceof GroundPathNavigation nav) {
             nav.setCanOpenDoors(true);
             nav.setCanWalkOverFences(true);
         }
@@ -217,7 +221,7 @@ public class MonsterSpawner {
         apEntity.ap2$patchTrapdoorJumping();
 
         // adjust PathNodeMaker
-        PathNodeMaker nodeMaker = ((EntityNavigationAccessor) navigation).getNodeMaker();
+        NodeEvaluator nodeMaker = ((PathNavigationAccessor) navigation).getNodeEvaluator();
 
         if (nodeMaker instanceof ApLandPathNodeMaker apPathMaker) {
             apPathMaker.ap2$addCustomBlockedPredicate(BlockedPathFindingPredicate.getInstance());
@@ -227,7 +231,7 @@ public class MonsterSpawner {
     }
 
     private interface MonsterFactory {
-        void spawn(Vec3d pos, Partial<MonsterArgs, UUID> args, Registrar registrar);
+        void spawn(Vec3 pos, Partial<MonsterArgs, UUID> args, Registrar registrar);
     }
 
     public interface Registrar extends BiConsumer<UUID, MonsterData<?>> {}

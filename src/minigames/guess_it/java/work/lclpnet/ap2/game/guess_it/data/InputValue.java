@@ -1,7 +1,7 @@
 package work.lclpnet.ap2.game.guess_it.data;
 
 import it.unimi.dsi.fastutil.Pair;
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.kibu.translate.text.TranslatedText;
@@ -12,8 +12,8 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.function.Function;
 
-import static net.minecraft.util.Formatting.RED;
-import static net.minecraft.util.Formatting.YELLOW;
+import static net.minecraft.ChatFormatting.RED;
+import static net.minecraft.ChatFormatting.YELLOW;
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
 @SuppressWarnings("UnusedReturnValue")
@@ -42,7 +42,7 @@ public class InputValue {
         return this;
     }
 
-    public Pair<String, @Nullable TranslatedText> validate(String input, ServerPlayerEntity player) {
+    public Pair<String, @Nullable TranslatedText> validate(String input, ServerPlayer player) {
         for (InputRule rule : rules) {
             var res = rule.parser().parse(input, player);
 
@@ -60,7 +60,7 @@ public class InputValue {
         return once;
     }
 
-    private static Optional<String> floatValue(String s, ServerPlayerEntity player, Translations translations, int precision) {
+    private static Optional<String> floatValue(String s, ServerPlayer player, Translations translations, int precision) {
         s = s.replace(',', '.');
 
         float f;
@@ -78,7 +78,7 @@ public class InputValue {
         return Optional.of(str);
     }
 
-    public static Optional<String> intValue(String s, ServerPlayerEntity player) {
+    public static Optional<String> intValue(String s, ServerPlayer player) {
         try {
             int i = Integer.parseInt(s, 10);
             return Optional.of(String.valueOf(i));
@@ -88,7 +88,7 @@ public class InputValue {
     }
 
     public interface InputParser {
-        Optional<String> parse(String input, ServerPlayerEntity player);
+        Optional<String> parse(String input, ServerPlayer player);
     }
 
     private record InputRule(InputParser parser, Function<String, TranslatedText> errorMessage) {}

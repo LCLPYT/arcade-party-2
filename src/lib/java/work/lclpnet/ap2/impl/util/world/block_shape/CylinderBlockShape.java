@@ -3,9 +3,9 @@ package work.lclpnet.ap2.impl.util.world.block_shape;
 import com.google.common.collect.Iterators;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.minecraft.util.dynamic.Codecs;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Box;
+import net.minecraft.core.BlockPos;
+import net.minecraft.util.ExtraCodecs;
+import net.minecraft.world.phys.AABB;
 import org.jetbrains.annotations.NotNull;
 import work.lclpnet.gaco.ds.BlockBox;
 
@@ -18,8 +18,8 @@ public class CylinderBlockShape implements BlockShape, BlockShape.WithRadius, Bl
 
     public static final MapCodec<CylinderBlockShape> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
             BlockPos.CODEC.fieldOf("origin").forGetter(CylinderBlockShape::origin),
-            Codecs.POSITIVE_INT.fieldOf("radius").forGetter(CylinderBlockShape::radius),
-            Codecs.POSITIVE_INT.optionalFieldOf("height").forGetter(shape -> Optional.of(shape.height()))
+            ExtraCodecs.POSITIVE_INT.fieldOf("radius").forGetter(CylinderBlockShape::radius),
+            ExtraCodecs.POSITIVE_INT.optionalFieldOf("height").forGetter(shape -> Optional.of(shape.height()))
     ).apply(instance, (pos, radius, height) -> new CylinderBlockShape(pos, radius, height.orElse(1))));
 
     private final BlockPos origin;
@@ -37,8 +37,8 @@ public class CylinderBlockShape implements BlockShape, BlockShape.WithRadius, Bl
         this.radius = radius;
         this.radiusSq = radius * radius;
         this.height = height;
-        this.bounds = new BlockBox(origin.add(-radius, 0, -radius), origin.add(radius, height - 1, radius));
-        this.center = origin.add(0, height / 2, 0);
+        this.bounds = new BlockBox(origin.offset(-radius, 0, -radius), origin.offset(radius, height - 1, radius));
+        this.center = origin.offset(0, height / 2, 0);
     }
 
     @Override
@@ -94,12 +94,12 @@ public class CylinderBlockShape implements BlockShape, BlockShape.WithRadius, Bl
     }
 
     @Override
-    public boolean collidesWith(Box box) {
+    public boolean collidesWith(AABB box) {
         if (!bounds.collidesWith(box)) {
             return false;
         }
 
-        for (BlockPos pos : BlockPos.iterate(box)) {
+        for (BlockPos pos : BlockPos.betweenClosed(box)) {
             if (contains(pos)) {
                 return true;
             }

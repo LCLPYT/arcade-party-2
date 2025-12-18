@@ -1,6 +1,6 @@
 package work.lclpnet.ap2.game.anvil_fall;
 
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;

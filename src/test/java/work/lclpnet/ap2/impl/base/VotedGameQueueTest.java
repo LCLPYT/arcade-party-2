@@ -1,7 +1,7 @@
 package work.lclpnet.ap2.impl.base;
 
-import net.minecraft.Bootstrap;
 import net.minecraft.SharedConstants;
+import net.minecraft.server.Bootstrap;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import work.lclpnet.ap2.api.base.GameQueue;
@@ -18,8 +18,8 @@ class VotedGameQueueTest {
 
     @BeforeAll
     public static void bootstrap() {
-        SharedConstants.createGameVersion();
-        Bootstrap.initialize();
+        SharedConstants.tryDetectVersion();
+        Bootstrap.bootStrap();
     }
 
     @Test

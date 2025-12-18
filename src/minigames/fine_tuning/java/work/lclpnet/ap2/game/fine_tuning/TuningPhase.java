@@ -2,24 +2,24 @@ package work.lclpnet.ap2.game.fine_tuning;
 
 import lombok.Getter;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.entity.boss.BossBar;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.registry.tag.BlockTags;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.PlayerManager;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.text.Text;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Hand;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.players.PlayerList;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.world.BossEvent;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.ApConstants;
 import work.lclpnet.ap2.api.base.Participants;
@@ -48,7 +48,7 @@ import work.lclpnet.lobby.game.util.BossBarTimer;
 
 import java.util.*;
 
-import static net.minecraft.util.Formatting.*;
+import static net.minecraft.ChatFormatting.*;
 import static work.lclpnet.ap2.game.fine_tuning.FineTuningInstance.MELODY_COUNT;
 
 class TuningPhase {
@@ -57,10 +57,10 @@ class TuningPhase {
 
     private final MiniGameHandle gameHandle;
     private final Map<UUID, FineTuningRoom> rooms;
-    private final IntDataContainer<ServerPlayerEntity, PlayerRef> data;
+    private final IntDataContainer<ServerPlayer, PlayerRef> data;
     private final Runnable onEnd;
     private final GameCommons commons;
-    private final ServerWorld world;
+    private final ServerLevel world;
     private final Random random = new Random();
     private final MelodyProvider melodyProvider = new SimpleMelodyProvider(random, new SimpleNotesProvider(random), 5);
     private final Map<UUID, TaskHandle> replaying = new HashMap<>();
@@ -76,8 +76,8 @@ class TuningPhase {
     private BossBarTimer timer;
 
     public TuningPhase(MiniGameHandle gameHandle, Map<UUID, FineTuningRoom> rooms,
-                       IntDataContainer<ServerPlayerEntity, PlayerRef> data, Runnable onEnd, GameCommons commons,
-                       ServerWorld world) {
+                       IntDataContainer<ServerPlayer, PlayerRef> data, Runnable onEnd, GameCommons commons,
+                       ServerLevel world) {
         this.gameHandle = gameHandle;
         this.rooms = rooms;
         this.data = data;
@@ -90,24 +90,24 @@ class TuningPhase {
         gameHandle.whenDone(this::unload);
 
         addNoteBlockHooks();
-        hooks.registerHook(PlayerInventoryHooks.MODIFY_INVENTORY, event -> !event.player().isCreativeLevelTwoOp());
+        hooks.registerHook(PlayerInventoryHooks.MODIFY_INVENTORY, event -> !event.player().canUseGameMasterBlocks());
 
         hooks.registerHook(PlayerInteractionHooks.USE_ITEM, (player, world, hand) -> {
             if (onUseItem(player)) {
-                return ActionResult.SUCCESS_SERVER;
+                return InteractionResult.SUCCESS_SERVER;
             }
 
-            return ActionResult.PASS;
+            return InteractionResult.PASS;
         });
 
         hooks.registerHook(PlayerInteractionHooks.ATTACK_BLOCK, (player, world, hand, pos, direction) -> {
             onUseItem(player);
-            return ActionResult.PASS;
+            return InteractionResult.PASS;
         });
         
         gameHandle.protect(config -> config.allow(ProtectionTypes.USE_BLOCK, (entity, pos) -> {
-            BlockState state = entity.getEntityWorld().getBlockState(pos);
-            return state.isOf(Blocks.NOTE_BLOCK) || state.isIn(BlockTags.ALL_SIGNS);
+            BlockState state = entity.level().getBlockState(pos);
+            return state.is(Blocks.NOTE_BLOCK) || state.is(BlockTags.ALL_SIGNS);
         }));
 
         dynamicEntityManager = new DynamicEntityManager(world);
@@ -118,8 +118,8 @@ class TuningPhase {
         Participants participants = gameHandle.getParticipants();
 
         hooks.registerHook(PlayerInteractionHooks.USE_BLOCK, (_player, world, hand, hitResult) -> {
-            if (!(_player instanceof ServerPlayerEntity player)) {
-                return ActionResult.FAIL;
+            if (!(_player instanceof ServerPlayer player)) {
+                return InteractionResult.FAIL;
             }
 
             if (cannotInteract(player) || !participants.isParticipating(player)) {
@@ -129,9 +129,9 @@ class TuningPhase {
             BlockPos pos = hitResult.getBlockPos();
             BlockState state = world.getBlockState(pos);
 
-            if (state.isOf(Blocks.NOTE_BLOCK)) {
+            if (state.is(Blocks.NOTE_BLOCK)) {
                 onUseNoteBlock(player, pos);
-            } else if (state.isIn(BlockTags.ALL_SIGNS)) {
+            } else if (state.is(BlockTags.ALL_SIGNS)) {
                 onUseSign(player, pos);
             } else {
                 onUseItem(player);
@@ -141,29 +141,29 @@ class TuningPhase {
         });
 
         hooks.registerHook(PlayerInteractionHooks.ATTACK_BLOCK, (_player, world, hand, pos, direction) -> {
-            if (cannotInteract(_player) || !(_player instanceof ServerPlayerEntity player)
-                || !participants.isParticipating(player)) return ActionResult.FAIL;
+            if (cannotInteract(_player) || !(_player instanceof ServerPlayer player)
+                || !participants.isParticipating(player)) return InteractionResult.FAIL;
 
             BlockState state = world.getBlockState(pos);
 
-            if (state.isOf(Blocks.NOTE_BLOCK)) {
-                FineTuningRoom room = rooms.get(player.getUuid());
+            if (state.is(Blocks.NOTE_BLOCK)) {
+                FineTuningRoom room = rooms.get(player.getUUID());
 
                 if (room != null) {
                     room.playNoteBlock(player, pos);
                 }
-            } else if (state.isIn(BlockTags.ALL_SIGNS)) {
+            } else if (state.is(BlockTags.ALL_SIGNS)) {
                 onUseSign(player, pos);
             }
 
-            return ActionResult.FAIL;
+            return InteractionResult.FAIL;
         });
     }
 
-    private void onUseSign(ServerPlayerEntity player, BlockPos pos) {
-        FineTuningRoom room = rooms.get(player.getUuid());
+    private void onUseSign(ServerPlayer player, BlockPos pos) {
+        FineTuningRoom room = rooms.get(player.getUUID());
 
-        if (room == null || completed.contains(player.getUuid())) return;
+        if (room == null || completed.contains(player.getUUID())) return;
 
         BlockPos testSignPos = room.getTestSignPos();
 
@@ -172,19 +172,19 @@ class TuningPhase {
         triggerReplay(player);
     }
 
-    private void onUseNoteBlock(ServerPlayerEntity player, BlockPos pos) {
-        FineTuningRoom room = rooms.get(player.getUuid());
+    private void onUseNoteBlock(ServerPlayer player, BlockPos pos) {
+        FineTuningRoom room = rooms.get(player.getUUID());
 
-        if (room == null || completed.contains(player.getUuid())) return;
+        if (room == null || completed.contains(player.getUUID())) return;
 
         room.useNoteBlock(player, pos, dynamicEntityManager);
         markInteraction(player);
 
         if (!room.isComplete(melody)) return;
 
-        completed.add(player.getUuid());
+        completed.add(player.getUUID());
 
-        player.playSoundToPlayer(SoundEvents.ENTITY_PLAYER_LEVELUP, SoundCategory.PLAYERS, 0.5f, 1f);
+        player.playNotifySound(SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 0.5f, 1f);
 
         gameHandle.getTranslations().translateText("game.ap2.fine_tuning.completed").formatted(GREEN).sendTo(player);
 
@@ -212,8 +212,8 @@ class TuningPhase {
         TaskScheduler scheduler = gameHandle.getScheduler();
 
         PlayMelodyTask task = new PlayMelodyTask(note -> {
-            for (ServerPlayerEntity player : participants) {
-                FineTuningRoom room = rooms.get(player.getUuid());
+            for (ServerPlayer player : participants) {
+                FineTuningRoom room = rooms.get(player.getUUID());
                 if (room == null) continue;
 
                 room.playNote(player, note);
@@ -226,7 +226,7 @@ class TuningPhase {
 
     private void listenAgain() {
         commons.announcer()
-                .withSound(SoundEvents.ENTITY_CHICKEN_EGG, SoundCategory.RECORDS, 0.5f, 0f)
+                .withSound(SoundEvents.CHICKEN_EGG, SoundSource.RECORDS, 0.5f, 0f)
                 .announceSubtitle("game.ap2.fine_tuning.listen_again");
 
         gameHandle.getScheduler().timeout(() -> playMelody(this::beginTune), 40);
@@ -242,7 +242,7 @@ class TuningPhase {
 
         translations.translateText("game.ap2.fine_tuning.repeat").formatted(GREEN)
                 .acceptEach(players, (player, text)
-                        -> Title.get(player).title(Text.empty(), text, 5, 30, 5));
+                        -> Title.get(player).title(Component.empty(), text, 5, 30, 5));
 
         Melody shuffled = baseMelody();
         rooms.values().forEach(room -> room.setMelody(shuffled));
@@ -253,7 +253,7 @@ class TuningPhase {
 
         timer = BossBarTimer.builder(translations, translations.translateText("game.ap2.fine_tuning.tune",melodyNumber + 1, MELODY_COUNT))
                 .withAlertSound(false)
-                .withColor(BossBar.Color.RED)
+                .withColor(BossEvent.BossBarColor.RED)
                 .withDurationTicks(Ticks.seconds(TUNING_TIME_SECONDS))
                 .build();
 
@@ -281,17 +281,17 @@ class TuningPhase {
     }
 
     private void evaluateScores(MinecraftServer server) {
-        PlayerManager playerManager = server.getPlayerManager();
+        PlayerList playerManager = server.getPlayerList();
 
         Melody baseMelody = baseMelody();
         int bestScore = Integer.MIN_VALUE, worstScore = Integer.MAX_VALUE;
-        ServerPlayerEntity best = null, worst = null;
+        ServerPlayer best = null, worst = null;
 
         for (UUID uuid : participantsInteractionOrder()) {
             FineTuningRoom room = rooms.get(uuid);
             if (room == null) continue;
 
-            ServerPlayerEntity player = playerManager.getPlayer(uuid);
+            ServerPlayer player = playerManager.getPlayer(uuid);
             if (player == null) continue;
 
             int score = room.calculateScore(baseMelody, melody);
@@ -313,8 +313,8 @@ class TuningPhase {
 
         if (best == null || worst == null) return;
 
-        FineTuningRoom bestRoom = rooms.get(best.getUuid());
-        FineTuningRoom worstRoom = rooms.get(worst.getUuid());
+        FineTuningRoom bestRoom = rooms.get(best.getUUID());
+        FineTuningRoom worstRoom = rooms.get(worst.getUUID());
 
         if (bestRoom == null || worstRoom == null) return;
 
@@ -330,25 +330,25 @@ class TuningPhase {
         Translations translations = gameHandle.getTranslations();
         Participants participants = gameHandle.getParticipants();
 
-        PlayerHead head = world.getRegistryManager()
-                .getOrThrow(ApRegistries.PLAYER_HEAD)
-                .getOptionalValue(PlayerHeads.GEODE_ARROW_FORWARD)
+        PlayerHead head = world.registryAccess()
+                .lookupOrThrow(ApRegistries.PLAYER_HEAD)
+                .getOptional(PlayerHeads.GEODE_ARROW_FORWARD)
                 .orElseThrow();
 
-        for (ServerPlayerEntity player : participants) {
+        for (ServerPlayer player : participants) {
             ItemStack stack = head.createStack();
-            stack.set(DataComponentTypes.CUSTOM_NAME, translations.translateText(player, "game.ap2.fine_tuning.replay")
-                    .styled(style -> style.withItalic(false).withFormatting(YELLOW)));
+            stack.set(DataComponents.CUSTOM_NAME, translations.translateText(player, "game.ap2.fine_tuning.replay")
+                    .styled(style -> style.withItalic(false).applyFormat(YELLOW)));
 
-            player.getInventory().setStack(4, stack);
+            player.getInventory().setItem(4, stack);
         }
     }
 
     private void takeReplayItems() {
         Participants participants = gameHandle.getParticipants();
 
-        for (ServerPlayerEntity player : participants) {
-            player.getInventory().setStack(4, ItemStack.EMPTY);
+        for (ServerPlayer player : participants) {
+            player.getInventory().setItem(4, ItemStack.EMPTY);
         }
     }
 
@@ -359,8 +359,8 @@ class TuningPhase {
         return new Melody(melody.instrument(), notes);
     }
 
-    private void markInteraction(PlayerEntity player) {
-        UUID uuid = player.getUuid();
+    private void markInteraction(Player player) {
+        UUID uuid = player.getUUID();
         lastInteracted.remove(uuid);
         lastInteracted.add(uuid);
     }
@@ -374,25 +374,25 @@ class TuningPhase {
 
         // complement with players who didn't interact
 
-        for (ServerPlayerEntity player : participants) {
-            order.add(player.getUuid());
+        for (ServerPlayer player : participants) {
+            order.add(player.getUUID());
         }
 
         return order;
     }
 
-    private boolean cannotInteract(PlayerEntity player) {
-        return !playersCanInteract || replaying.containsKey(player.getUuid());
+    private boolean cannotInteract(Player player) {
+        return !playersCanInteract || replaying.containsKey(player.getUUID());
     }
 
-    private static ActionResult cancel(ServerPlayerEntity player) {
+    private static InteractionResult cancel(ServerPlayer player) {
         PlayerUtils.syncPlayerItems(player);
-        return ActionResult.FAIL;
+        return InteractionResult.FAIL;
     }
 
     @Nullable
-    private TaskHandle replayMelody(ServerPlayerEntity player, Runnable onDone) {
-        UUID uuid = player.getUuid();
+    private TaskHandle replayMelody(ServerPlayer player, Runnable onDone) {
+        UUID uuid = player.getUUID();
         FineTuningRoom room = rooms.get(uuid);
 
         if (room == null) return null;
@@ -415,24 +415,24 @@ class TuningPhase {
         });
     }
 
-    private boolean onUseItem(PlayerEntity player) {
+    private boolean onUseItem(Player player) {
         Participants participants = gameHandle.getParticipants();
 
-        if (!(player instanceof ServerPlayerEntity serverPlayer) || !participants.isParticipating(serverPlayer)) {
+        if (!(player instanceof ServerPlayer serverPlayer) || !participants.isParticipating(serverPlayer)) {
             return false;
         }
 
-        ItemStack stack = player.getStackInHand(Hand.MAIN_HAND);
+        ItemStack stack = player.getItemInHand(InteractionHand.MAIN_HAND);
 
-        if (!(stack.isOf(Items.PLAYER_HEAD)) || completed.contains(player.getUuid())) {
+        if (!(stack.is(Items.PLAYER_HEAD)) || completed.contains(player.getUUID())) {
             return false;
         }
 
         return triggerReplay(serverPlayer);
     }
 
-    private boolean triggerReplay(ServerPlayerEntity serverPlayer) {
-        UUID uuid = serverPlayer.getUuid();
+    private boolean triggerReplay(ServerPlayer serverPlayer) {
+        UUID uuid = serverPlayer.getUUID();
 
         if (replaying.containsKey(uuid)) return false;
 
@@ -451,7 +451,7 @@ class TuningPhase {
         Translations translations = gameHandle.getTranslations();
         Participants participants = gameHandle.getParticipants();
 
-        for (ServerPlayerEntity player : participants) {
+        for (ServerPlayer player : participants) {
             ItemStack stack = new ItemStack(Items.WRITTEN_BOOK);
 
             String controls = translations.translate(player, "game.ap2.fine_tuning.controls.title");
@@ -459,20 +459,20 @@ class TuningPhase {
             BookUtil.builder(controls, ApConstants.PERSON_LCLP)
                     .addPage(translations.translateText(player, "game.ap2.fine_tuning.controls.note_up")
                                     .formatted(DARK_BLUE, BOLD).append(":\n"),
-                            Text.keybind("key.use").formatted(DARK_GREEN).append("\n\n"),
+                            Component.keybind("key.use").withStyle(DARK_GREEN).append("\n\n"),
                             translations.translateText(player, "game.ap2.fine_tuning.controls.note_down")
                                     .formatted(DARK_BLUE, BOLD).append(":\n"),
-                            Text.keybind("key.sneak").formatted(DARK_GREEN).append(" + ")
-                                    .append(Text.keybind("key.use").append("\n\n")),
+                            Component.keybind("key.sneak").withStyle(DARK_GREEN).append(" + ")
+                                    .append(Component.keybind("key.use").append("\n\n")),
                             translations.translateText(player, "game.ap2.fine_tuning.controls.test")
                                     .formatted(DARK_BLUE, BOLD).append(":\n"),
-                            Text.keybind("key.attack").formatted(DARK_GREEN))
+                            Component.keybind("key.attack").withStyle(DARK_GREEN))
                     .applyTo(stack);
 
-            stack.set(DataComponentTypes.CUSTOM_NAME, Text.literal(controls)
-                    .styled(style -> style.withItalic(false).withFormatting(GREEN)));
+            stack.set(DataComponents.CUSTOM_NAME, Component.literal(controls)
+                    .withStyle(style -> style.withItalic(false).applyFormat(GREEN)));
 
-            player.getInventory().setStack(8, stack);
+            player.getInventory().setItem(8, stack);
         }
     }
 }

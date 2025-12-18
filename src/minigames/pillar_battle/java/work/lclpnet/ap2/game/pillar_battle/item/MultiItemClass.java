@@ -1,9 +1,9 @@
 package work.lclpnet.ap2.game.pillar_battle.item;
 
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.tag.TagKey;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -23,7 +23,7 @@ public record MultiItemClass(List<Item> items) implements ItemClass {
     public static MultiItemClass ofTag(TagKey<Item> tag) {
         List<Item> items = new ArrayList<>();
 
-        for (var entry : Registries.ITEM.iterateEntries(tag)) {
+        for (var entry : BuiltInRegistries.ITEM.getTagOrEmpty(tag)) {
             items.add(entry.value());
         }
 

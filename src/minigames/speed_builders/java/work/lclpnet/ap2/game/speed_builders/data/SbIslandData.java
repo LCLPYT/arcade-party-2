@@ -1,6 +1,6 @@
 package work.lclpnet.ap2.game.speed_builders.data;
 
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
 import org.json.JSONException;
 import org.json.JSONObject;
 import work.lclpnet.ap2.impl.map.MapUtil;

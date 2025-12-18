@@ -4,7 +4,7 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableBiMap;
 import lombok.Getter;
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -48,8 +48,8 @@ public class KitManager implements KitReadView {
         options = Objects.requireNonNull(modifier.apply(options));
     }
 
-    public void setupPlayerKits(Iterable<? extends ServerPlayerEntity> players) {
-        for (ServerPlayerEntity player : players) {
+    public void setupPlayerKits(Iterable<? extends ServerPlayer> players) {
+        for (ServerPlayer player : players) {
             changeKit(player, defaultKit());
         }
     }
@@ -59,21 +59,21 @@ public class KitManager implements KitReadView {
     }
 
     @Override
-    public synchronized @NotNull Kit getKit(ServerPlayerEntity player) {
-        return playerKits.getOrDefault(player.getUuid(), defaultKit());
+    public synchronized @NotNull Kit getKit(ServerPlayer player) {
+        return playerKits.getOrDefault(player.getUUID(), defaultKit());
     }
 
     @Override
-    public synchronized boolean hasKitEquipped(ServerPlayerEntity player, Kit kit) {
+    public synchronized boolean hasKitEquipped(ServerPlayer player, Kit kit) {
         return getKit(player).equals(kit);
     }
 
-    public synchronized void changeKit(ServerPlayerEntity player, Kit kit) {
+    public synchronized void changeKit(ServerPlayer player, Kit kit) {
         validateKit(kit);
 
         getKit(player).unequip(player, options);
 
-        playerKits.put(player.getUuid(), kit);
+        playerKits.put(player.getUUID(), kit);
 
         kit.equip(player, options);
     }

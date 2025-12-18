@@ -1,7 +1,7 @@
 package work.lclpnet.ap2;
 
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.util.Identifier;
+import net.minecraft.resources.ResourceLocation;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,7 +30,7 @@ public final class ApConstants {
     private ApConstants() {}
 
     @NotNull
-    public static Identifier identifier(String path) {
-        return Identifier.of(ID, path);
+    public static ResourceLocation identifier(String path) {
+        return ResourceLocation.fromNamespaceAndPath(ID, path);
     }
 }

@@ -1,8 +1,8 @@
 package work.lclpnet.ap2.core.hook;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.projectile.thrown.EnderPearlEntity;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.projectile.ThrownEnderpearl;
+import net.minecraft.world.phys.Vec3;
 import work.lclpnet.kibu.hook.Hook;
 import work.lclpnet.kibu.hook.HookFactory;
 
@@ -20,5 +20,5 @@ public interface EnderPearlTeleportCallback {
         return cancel;
     });
 
-    boolean onTeleport(Entity owner, EnderPearlEntity enderPearl, Vec3d pos);
+    boolean onTeleport(Entity owner, ThrownEnderpearl enderPearl, Vec3 pos);
 }

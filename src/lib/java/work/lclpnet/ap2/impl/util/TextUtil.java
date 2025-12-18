@@ -1,48 +1,48 @@
 package work.lclpnet.ap2.impl.util;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.EntityType;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.equipment.trim.ArmorTrimPattern;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.sound.SoundEvent;
-import net.minecraft.text.MutableText;
-import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.Util;
+import net.minecraft.Util;
+import net.minecraft.core.Holder;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.sounds.SoundEvent;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.equipment.trim.TrimPattern;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
 
 public class TextUtil {
 
-    public static MutableText getVanillaName(Item item) {
+    public static MutableComponent getVanillaName(Item item) {
         return item.getName().copy();
     }
 
-    public static MutableText getVanillaName(ItemStack stack) {
-        return stack.getName().copy();
+    public static MutableComponent getVanillaName(ItemStack stack) {
+        return stack.getHoverName().copy();
     }
 
-    public static MutableText getVanillaName(Block block) {
-        return Text.translatable(block.getTranslationKey());
+    public static MutableComponent getVanillaName(Block block) {
+        return Component.translatable(block.getDescriptionId());
     }
 
-    public static MutableText getVanillaName(BlockState state) {
+    public static MutableComponent getVanillaName(BlockState state) {
         return getVanillaName(state.getBlock());
     }
 
-    public static MutableText getVanillaName(EntityType<?> entityType) {
-        return Text.translatable(entityType.getTranslationKey());
+    public static MutableComponent getVanillaName(EntityType<?> entityType) {
+        return Component.translatable(entityType.getDescriptionId());
     }
 
-    public static MutableText getVanillaName(SoundEvent soundEvent) {
-        return Text.translatable("subtitles." + soundEvent.id().getPath());
+    public static MutableComponent getVanillaName(SoundEvent soundEvent) {
+        return Component.translatable("subtitles." + soundEvent.location().getPath());
     }
 
-    public static MutableText getVanillaName(RegistryEntry<ArmorTrimPattern> pattern) {
-        Identifier id = pattern.getKey().map(RegistryKey::getValue).orElse(null);
-        return Text.translatable(Util.createTranslationKey("trim_pattern", id));
+    public static MutableComponent getVanillaName(Holder<TrimPattern> pattern) {
+        ResourceLocation id = pattern.unwrapKey().map(ResourceKey::location).orElse(null);
+        return Component.translatable(Util.makeDescriptionId("trim_pattern", id));
     }
 
     private TextUtil() {}

@@ -1,19 +1,19 @@
 package work.lclpnet.ap2.game.spleef;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.entity.damage.DamageTypes;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.World;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.damagesource.DamageTypes;
+import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 import org.json.JSONArray;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.impl.game.EliminationGameInstance;
@@ -51,14 +51,14 @@ public class SpleefInstance extends EliminationGameInstance {
     protected void go() {
         gameHandle.protect(config -> {
             config.allow(ProtectionTypes.BREAK_BLOCKS, (entity, pos) -> {
-                World world = entity.getEntityWorld();
+                Level world = entity.level();
                 BlockState state = world.getBlockState(pos);
 
-                return state.isOf(Blocks.SNOW_BLOCK);
+                return state.is(Blocks.SNOW_BLOCK);
             });
 
             config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, damageSource)
-                    -> damageSource.isOf(DamageTypes.LAVA) || damageSource.isOf(DamageTypes.OUTSIDE_BORDER));
+                    -> damageSource.is(DamageTypes.LAVA) || damageSource.is(DamageTypes.OUTSIDE_BORDER));
         });
 
         Translations translations = gameHandle.getTranslations();
@@ -70,30 +70,30 @@ public class SpleefInstance extends EliminationGameInstance {
     }
 
     private void removeBlocks() {
-        ServerWorld world = getWorld();
-        BlockState air = Blocks.AIR.getDefaultState();
+        ServerLevel world = getWorld();
+        BlockState air = Blocks.AIR.defaultBlockState();
 
         JSONArray areaJson = Objects.requireNonNull(getMap().getProperty("snow-area"), "Snow area undefined");
         BlockBox box = MapUtil.readBox(areaJson);
 
-        for (BlockPos pos : BlockPos.iterate(box.first(), box.second())) {
-            if (world.getBlockState(pos).isOf(Blocks.SNOW_BLOCK)) {
-                world.setBlockState(pos, air);
+        for (BlockPos pos : BlockPos.betweenClosed(box.first(), box.second())) {
+            if (world.getBlockState(pos).is(Blocks.SNOW_BLOCK)) {
+                world.setBlockAndUpdate(pos, air);
             }
         }
 
-        SoundHelper.playSound(gameHandle.getServer(), SoundEvents.ENTITY_WITHER_DEATH, SoundCategory.AMBIENT, 0.8f, 1f);
+        SoundHelper.playSound(gameHandle.getServer(), SoundEvents.WITHER_DEATH, SoundSource.AMBIENT, 0.8f, 1f);
     }
 
     private void giveShovelsToPlayers(Translations translations) {
-        for (ServerPlayerEntity player : gameHandle.getParticipants()) {
+        for (ServerPlayer player : gameHandle.getParticipants()) {
             ItemStack stack = unbreakable(new ItemStack(Items.IRON_SHOVEL));
 
-            stack.set(DataComponentTypes.CUSTOM_NAME, translations.translateText(player, "game.ap2.spleef.shovel")
-                    .styled(style -> style.withItalic(false).withFormatting(Formatting.GOLD)));
+            stack.set(DataComponents.CUSTOM_NAME, translations.translateText(player, "game.ap2.spleef.shovel")
+                    .styled(style -> style.withItalic(false).applyFormat(ChatFormatting.GOLD)));
 
-            PlayerInventory inventory = player.getInventory();
-            inventory.setStack(4, stack);
+            Inventory inventory = player.getInventory();
+            inventory.setItem(4, stack);
             PlayerInventoryAccess.setSelectedSlot(player, 4);
         }
     }

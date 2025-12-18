@@ -1,52 +1,52 @@
 package work.lclpnet.ap2.core.patch;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.ai.control.MoveControl;
-import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.registry.tag.BlockTags;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.hit.HitResult;
-import net.minecraft.util.math.Direction;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.World;
+import net.minecraft.core.Direction;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.control.MoveControl;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
 import org.joml.Vector3f;
 import work.lclpnet.lobby.util.RayCaster;
 
 import static java.lang.Math.*;
-import static net.minecraft.block.HorizontalFacingBlock.FACING;
-import static net.minecraft.block.TrapdoorBlock.OPEN;
+import static net.minecraft.world.level.block.HorizontalDirectionalBlock.FACING;
+import static net.minecraft.world.level.block.TrapDoorBlock.OPEN;
 
 public class TrapdoorJumpPatch {
 
     private TrapdoorJumpPatch() {}
 
     public static boolean preventJumping(BlockState state) {
-        return state.isIn(BlockTags.TRAPDOORS) && state.contains(OPEN) && state.get(OPEN);
+        return state.is(BlockTags.TRAPDOORS) && state.hasProperty(OPEN) && state.getValue(OPEN);
     }
 
-    public static boolean shouldJump(MobEntity entity) {
-        if (!entity.getNavigation().isFollowingPath()) return false;
+    public static boolean shouldJump(Mob entity) {
+        if (!entity.getNavigation().isInProgress()) return false;
 
         MoveControl moveControl = entity.getMoveControl();
-        double tx = moveControl.getTargetX();
-        double tz = moveControl.getTargetZ();
+        double tx = moveControl.getWantedX();
+        double tz = moveControl.getWantedZ();
 
-        Vec3d target = new Vec3d(tx, entity.getY(), tz);
-        Vec3d start = entity.getEntityPos();
+        Vec3 target = new Vec3(tx, entity.getY(), tz);
+        Vec3 start = entity.position();
 
         Vector3f dir = target.subtract(start).toVector3f().normalize();
 
-        World world = entity.getEntityWorld();
+        Level world = entity.level();
 
         BlockHitResult result = RayCaster.rayCast(start, target, pos -> {
             BlockState state = world.getBlockState(pos);
 
-            if (!state.isIn(BlockTags.TRAPDOORS) || !state.contains(FACING) || !state.contains(OPEN) || !state.get(OPEN)) {
+            if (!state.is(BlockTags.TRAPDOORS) || !state.hasProperty(FACING) || !state.hasProperty(OPEN) || !state.getValue(OPEN)) {
                 return false;
             }
 
-            Direction facing = state.get(FACING);
-            float dot = facing.getUnitVector().dot(dir);
+            Direction facing = state.getValue(FACING);
+            float dot = facing.step().dot(dir);
 
             return abs(dot) >= cos(PI / 4);
         });

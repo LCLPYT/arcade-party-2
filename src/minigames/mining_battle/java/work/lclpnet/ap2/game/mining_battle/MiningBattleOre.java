@@ -1,23 +1,23 @@
 package work.lclpnet.ap2.game.mining_battle;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.BlockState;
-import net.minecraft.entity.effect.StatusEffectInstance;
-import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.particle.ParticleTypes;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.event.GameEvent;
-import net.minecraft.world.explosion.Explosion;
-import net.minecraft.world.explosion.ExplosionImpl;
+import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.level.Explosion;
+import net.minecraft.world.level.ServerExplosion;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.gameevent.GameEvent;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
-import work.lclpnet.ap2.core.mixin.ExplosionImplAccessor;
+import work.lclpnet.ap2.core.mixin.ServerExplosionAccessor;
 import work.lclpnet.ap2.impl.util.SoundHelper;
 import work.lclpnet.ap2.impl.util.world.ExplosionUtil;
 import work.lclpnet.gaco.ds.WeightedList;
@@ -29,20 +29,20 @@ import java.util.Random;
 import java.util.function.BiConsumer;
 import java.util.function.Predicate;
 
-import static net.minecraft.block.Blocks.*;
+import static net.minecraft.world.level.block.Blocks.*;
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
 public class MiningBattleOre {
 
     private final Random random;
     private final MiniGameHandle gameHandle;
-    private final BiConsumer<ServerPlayerEntity, Integer> scoreConsumer;
+    private final BiConsumer<ServerPlayer, Integer> scoreConsumer;
     private final Predicate<BlockPos> valid;
     private final Map<Block, Ore> lookup = new HashMap<>();
     private final WeightedList<Ore> ores = new WeightedList<>();
 
     public MiningBattleOre(Random random, MiniGameHandle gameHandle,
-                           BiConsumer<ServerPlayerEntity, Integer> scoreConsumer, Predicate<BlockPos> valid) {
+                           BiConsumer<ServerPlayer, Integer> scoreConsumer, Predicate<BlockPos> valid) {
         this.random = random;
         this.gameHandle = gameHandle;
         this.scoreConsumer = scoreConsumer;
@@ -95,21 +95,21 @@ public class MiningBattleOre {
         Block block = ore.block();
         if (block == null) return null;
 
-        return block.getDefaultState();
+        return block.defaultBlockState();
     }
 
-    public void onOreBroken(ServerPlayerEntity player, BlockPos pos, BlockState broken) {
-        if (broken.isOf(AMETHYST_BLOCK)) {
+    public void onOreBroken(ServerPlayer player, BlockPos pos, BlockState broken) {
+        if (broken.is(AMETHYST_BLOCK)) {
             weakenOthers(player);
             return;
         }
 
-        if (broken.isOf(POLISHED_GRANITE)) {
+        if (broken.is(POLISHED_GRANITE)) {
             giveHaste(player);
             return;
         }
 
-        if (broken.isOf(TNT)) {
+        if (broken.is(TNT)) {
             explode(player, pos);
             return;
         }
@@ -121,29 +121,29 @@ public class MiningBattleOre {
         }
     }
 
-    private void explode(ServerPlayerEntity player, BlockPos pos) {
-        ServerWorld world = player.getEntityWorld();
+    private void explode(ServerPlayer player, BlockPos pos) {
+        ServerLevel world = player.level();
 
         double x = pos.getX() + 0.5, y = pos.getY() + 0.5, z = pos.getZ() + 0.5;
-        Vec3d vec = new Vec3d(x, y, z);
+        Vec3 vec = new Vec3(x, y, z);
         float power = 2.1f;
 
-        var explosion = new ExplosionImpl(world, null, null, null,
+        var explosion = new ServerExplosion(world, null, null, null,
                 vec, power, false,
-                Explosion.DestructionType.KEEP);
+                Explosion.BlockInteraction.KEEP);
 
-        var access = (ExplosionImplAccessor) explosion;
+        var access = (ServerExplosionAccessor) explosion;
 
         // mimic behaviour of ServerWorld::createExplosion
-        world.emitGameEvent(null, GameEvent.EXPLODE, vec);
-        world.spawnParticles(ParticleTypes.EXPLOSION, x, y, z, 1, 1.0, 0.0, 0.0, 1);
+        world.gameEvent(null, GameEvent.EXPLODE, vec);
+        world.sendParticles(ParticleTypes.EXPLOSION, x, y, z, 1, 1.0, 0.0, 0.0, 1);
 
-        BlockState air = AIR.getDefaultState();
+        BlockState air = AIR.defaultBlockState();
 
         int totalValue = 0;
 
         // manually destroy blocks (and count value)
-        for (BlockPos exPos : access.invokeGetBlocksToDestroy()) {
+        for (BlockPos exPos : access.invokeCalculateExplodedPositions()) {
             if (!valid.test(exPos)) continue;
 
             BlockState exState = world.getBlockState(exPos);
@@ -151,7 +151,7 @@ public class MiningBattleOre {
 
             totalValue += getValue(exState);
 
-            world.setBlockState(exPos, air);
+            world.setBlockAndUpdate(exPos, air);
         }
 
         if (totalValue > 0) {
@@ -159,47 +159,47 @@ public class MiningBattleOre {
         }
 
         // calculate damage and knockback
-        access.invokeDamageEntities();
+        access.invokeHurtEntities();
 
         ExplosionUtil.sendExplosion(world, explosion, ParticleTypes.EXPLOSION);
     }
 
-    private void giveHaste(ServerPlayerEntity player) {
-        player.removeStatusEffect(StatusEffects.MINING_FATIGUE);
+    private void giveHaste(ServerPlayer player) {
+        player.removeEffect(MobEffects.MINING_FATIGUE);
 
-        StatusEffectInstance statusEffect = player.getStatusEffect(StatusEffects.HASTE);
+        MobEffectInstance statusEffect = player.getEffect(MobEffects.HASTE);
         int remainingTicks = statusEffect != null ? statusEffect.getDuration() : 0;
 
-        player.removeStatusEffect(StatusEffects.HASTE);
-        player.addStatusEffect(new StatusEffectInstance(StatusEffects.HASTE, remainingTicks + 100, 0));
-        player.playSoundToPlayer(SoundEvents.BLOCK_BELL_RESONATE, SoundCategory.BLOCKS, 0.5f, 2f);
+        player.removeEffect(MobEffects.HASTE);
+        player.addEffect(new MobEffectInstance(MobEffects.HASTE, remainingTicks + 100, 0));
+        player.playNotifySound(SoundEvents.BELL_RESONATE, SoundSource.BLOCKS, 0.5f, 2f);
 
         var msg = gameHandle.getTranslations().translateText(player, "game.ap2.mining_battle.haste")
-                .formatted(Formatting.GREEN);
+                .formatted(ChatFormatting.GREEN);
 
-        player.sendMessage(msg);
+        player.sendSystemMessage(msg);
     }
 
-    private void weakenOthers(ServerPlayerEntity player) {
-        SoundHelper.playSound(player.getEntityWorld().getServer(), SoundEvents.ENTITY_RAVAGER_CELEBRATE, SoundCategory.HOSTILE, 0.5f, 1f);
+    private void weakenOthers(ServerPlayer player) {
+        SoundHelper.playSound(player.level().getServer(), SoundEvents.RAVAGER_CELEBRATE, SoundSource.HOSTILE, 0.5f, 1f);
 
         Translations translations = gameHandle.getTranslations();
 
         var playerMsg = translations.translateText(player, "game.ap2.mining_battle.weakened")
-                .formatted(Formatting.GREEN);
+                .formatted(ChatFormatting.GREEN);
 
-        player.sendMessage(playerMsg);
+        player.sendSystemMessage(playerMsg);
 
-        var otherMsg = translations.translateText("game.ap2.mining_battle.weakened_by", styled(player.getNameForScoreboard(), Formatting.YELLOW))
-                .formatted(Formatting.RED);
+        var otherMsg = translations.translateText("game.ap2.mining_battle.weakened_by", styled(player.getScoreboardName(), ChatFormatting.YELLOW))
+                .formatted(ChatFormatting.RED);
 
-        for (ServerPlayerEntity other : gameHandle.getParticipants()) {
-            if (other == player || other.hasStatusEffect(StatusEffects.HASTE)) continue;
+        for (ServerPlayer other : gameHandle.getParticipants()) {
+            if (other == player || other.hasEffect(MobEffects.HASTE)) continue;
 
-            other.removeStatusEffect(StatusEffects.MINING_FATIGUE);
-            other.addStatusEffect(new StatusEffectInstance(StatusEffects.MINING_FATIGUE, 120, 0), player);
+            other.removeEffect(MobEffects.MINING_FATIGUE);
+            other.addEffect(new MobEffectInstance(MobEffects.MINING_FATIGUE, 120, 0), player);
 
-            other.sendMessage(otherMsg.translateFor(other));
+            other.sendSystemMessage(otherMsg.translateFor(other));
         }
     }
 

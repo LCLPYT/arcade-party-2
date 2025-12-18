@@ -1,13 +1,13 @@
 package work.lclpnet.ap2.game.knockout.util;
 
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
 
 import java.util.Iterator;
 
 public abstract class AbstractHeightIterator implements Iterator<BlockPos> {
 
     private boolean hasNext = false, done = false, has2d = false;
-    private final BlockPos.Mutable current = new BlockPos.Mutable();
+    private final BlockPos.MutableBlockPos current = new BlockPos.MutableBlockPos();
     protected final int radius;
     protected final int centerX, centerZ;
     protected final int minY, maxY;

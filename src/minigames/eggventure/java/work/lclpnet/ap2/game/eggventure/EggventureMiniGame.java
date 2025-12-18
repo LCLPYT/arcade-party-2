@@ -1,8 +1,8 @@
 package work.lclpnet.ap2.game.eggventure;
 
-import net.minecraft.item.ItemStack;
-import net.minecraft.registry.DynamicRegistryManager;
-import net.minecraft.util.Identifier;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import work.lclpnet.ap2.ApConstants;
 import work.lclpnet.ap2.api.game.*;
@@ -27,7 +27,7 @@ public class EggventureMiniGame implements MiniGame {
     }
 
     @Override
-    public @NotNull Identifier getId() {
+    public @NotNull ResourceLocation getId() {
         return ApConstants.identifier("eggventure");
     }
 
@@ -42,8 +42,8 @@ public class EggventureMiniGame implements MiniGame {
     }
 
     @Override
-    public @NotNull ItemStack getIcon(@NotNull DynamicRegistryManager manager) {
-        return manager.getOrThrow(ApRegistries.PLAYER_HEAD)
+    public @NotNull ItemStack getIcon(@NotNull RegistryAccess manager) {
+        return manager.lookupOrThrow(ApRegistries.PLAYER_HEAD)
                 .getValueOrThrow(PlayerHeads.EASTER_EGG_PINK_PATTERN)
                 .createStack();
     }

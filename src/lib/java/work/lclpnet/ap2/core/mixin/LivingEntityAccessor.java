@@ -1,9 +1,9 @@
 package work.lclpnet.ap2.core.mixin;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.server.world.ServerWorld;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Invoker;
@@ -12,11 +12,11 @@ import org.spongepowered.asm.mixin.gen.Invoker;
 public interface LivingEntityAccessor {
 
     @Invoker
-    boolean invokeTryUseDeathProtector(DamageSource source);
+    boolean invokeCheckTotemDeathProtection(DamageSource source);
 
     @Invoker
-    void invokeDropInventory(ServerWorld world);
+    void invokeDropEquipment(ServerLevel world);
 
     @Invoker
-    void invokeDropExperience(ServerWorld world, @Nullable Entity attacker);
+    void invokeDropExperience(ServerLevel world, @Nullable Entity attacker);
 }

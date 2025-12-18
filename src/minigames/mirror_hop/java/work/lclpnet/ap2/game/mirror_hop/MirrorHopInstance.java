@@ -1,20 +1,20 @@
 package work.lclpnet.ap2.game.mirror_hop;
 
-import net.minecraft.block.BlockState;
-import net.minecraft.block.Blocks;
-import net.minecraft.entity.effect.StatusEffectInstance;
-import net.minecraft.entity.effect.StatusEffects;
-import net.minecraft.particle.BlockStateParticleEffect;
-import net.minecraft.particle.ParticleTypes;
-import net.minecraft.scoreboard.AbstractTeam;
-import net.minecraft.scoreboard.Team;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.particles.BlockParticleOption;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.sound.SoundCategory;
-import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.scores.PlayerTeam;
+import net.minecraft.world.scores.Team;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.impl.game.FFAGameInstance;
@@ -41,9 +41,9 @@ import java.util.Random;
 
 public class MirrorHopInstance extends FFAGameInstance {
 
-    private final OrderedDataContainer<ServerPlayerEntity, PlayerRef> winnerData;
-    private final IntDataContainer<ServerPlayerEntity, PlayerRef> scoreData;
-    private final CombinedDataContainer<ServerPlayerEntity, PlayerRef> combinedData;
+    private final OrderedDataContainer<ServerPlayer, PlayerRef> winnerData;
+    private final IntDataContainer<ServerPlayer, PlayerRef> scoreData;
+    private final CombinedDataContainer<ServerPlayer, PlayerRef> combinedData;
     private final CollisionDetector collisionDetector = new ChunkedCollisionDetector();
     private final PlayerMovementObserver movementObserver;
     private final MovementBlocker movementBlocker;
@@ -61,7 +61,7 @@ public class MirrorHopInstance extends FFAGameInstance {
     }
 
     @Override
-    protected DataContainer<ServerPlayerEntity, PlayerRef> getData() {
+    protected DataContainer<ServerPlayer, PlayerRef> getData() {
         return combinedData;
     }
 
@@ -75,9 +75,9 @@ public class MirrorHopInstance extends FFAGameInstance {
 
         CustomScoreboardManager scoreboardManager = gameHandle.getScoreboardManager();
 
-        Team team = scoreboardManager.createTeam("team");
-        team.setShowFriendlyInvisibles(true);
-        team.setCollisionRule(AbstractTeam.CollisionRule.NEVER);
+        PlayerTeam team = scoreboardManager.createTeam("team");
+        team.setSeeFriendlyInvisibles(true);
+        team.setCollisionRule(Team.CollisionRule.NEVER);
 
         scoreboardManager.joinTeam(gameHandle.getParticipants(), team);
 
@@ -87,7 +87,7 @@ public class MirrorHopInstance extends FFAGameInstance {
     @Override
     protected void go() {
         GameMap map = getMap();
-        ServerWorld world = getWorld();
+        ServerLevel world = getWorld();
         HookRegistrar hooks = gameHandle.getHooks();
         MinecraftServer server = gameHandle.getServer();
 
@@ -130,60 +130,60 @@ public class MirrorHopInstance extends FFAGameInstance {
         removeGate(map, world);
     }
 
-    private void playerFell(ServerPlayerEntity player) {
+    private void playerFell(ServerPlayer player) {
         gameHandle.getWorldFacade().teleport(player);
 
         int ticks = Ticks.seconds(4);
         movementBlocker.disableMovement(player, ticks);
 
-        StatusEffectInstance invisibility = new StatusEffectInstance(StatusEffects.INVISIBILITY, ticks, 1, false, false, false);
-        player.addStatusEffect(invisibility);
+        MobEffectInstance invisibility = new MobEffectInstance(MobEffects.INVISIBILITY, ticks, 1, false, false, false);
+        player.addEffect(invisibility);
     }
 
-    private static void removeGate(GameMap map, ServerWorld world) {
+    private static void removeGate(GameMap map, ServerLevel world) {
         var gate = MapUtil.readBox(map.requireProperty("gate"));
 
-        BlockState air = Blocks.AIR.getDefaultState();
+        BlockState air = Blocks.AIR.defaultBlockState();
 
         for (BlockPos pos : gate) {
-            world.setBlockState(pos, air);
+            world.setBlockAndUpdate(pos, air);
         }
     }
 
     private void solidifyPlatform(MirrorHopChoices.Platform platform) {
         BlockBox ground = platform.getGround();
-        ServerWorld world = getWorld();
+        ServerLevel world = getWorld();
         GameMap map = getMap();
 
         BlockState solid = MapUtil.readBlockState(map.requireProperty("solid_material"));
 
         for (BlockPos pos : ground) {
-            world.setBlockState(pos, solid);
+            world.setBlockAndUpdate(pos, solid);
         }
 
-        Vec3d center = platform.getGround().getCenter();
-        double x = center.getX(), y = center.getY() + 1, z = center.getZ();
+        Vec3 center = platform.getGround().getCenter();
+        double x = center.x(), y = center.y() + 1, z = center.z();
 
-        world.playSound(null, x, y, z, SoundEvents.BLOCK_AMETHYST_BLOCK_RESONATE, SoundCategory.BLOCKS, 0.3f, 1);
-        world.spawnParticles(ParticleTypes.EGG_CRACK, x, y, z, 10, 0.8, 0.5, 0.8, 0.1);
+        world.playSound(null, x, y, z, SoundEvents.AMETHYST_BLOCK_RESONATE, SoundSource.BLOCKS, 0.3f, 1);
+        world.sendParticles(ParticleTypes.EGG_CRACK, x, y, z, 10, 0.8, 0.5, 0.8, 0.1);
     }
 
     private void breakPlatform(MirrorHopChoices.Platform platform) {
         BlockBox ground = platform.getGround();
-        ServerWorld world = getWorld();
+        ServerLevel world = getWorld();
 
-        BlockState air = Blocks.AIR.getDefaultState();
+        BlockState air = Blocks.AIR.defaultBlockState();
 
         for (BlockPos pos : ground) {
-            world.setBlockState(pos.down(), air);
+            world.setBlockAndUpdate(pos.below(), air);
         }
 
-        Vec3d center = platform.getGround().getCenter();
-        double x = center.getX(), y = center.getY(), z = center.getZ();
+        Vec3 center = platform.getGround().getCenter();
+        double x = center.x(), y = center.y(), z = center.z();
 
-        world.playSound(null, x, y + 1, z, SoundEvents.ENTITY_WITHER_BREAK_BLOCK, SoundCategory.BLOCKS, 0.3f, 0);
+        world.playSound(null, x, y + 1, z, SoundEvents.WITHER_BREAK_BLOCK, SoundSource.BLOCKS, 0.3f, 0);
 
-        var particleEffect = new BlockStateParticleEffect(ParticleTypes.BLOCK, Blocks.WHITE_CONCRETE_POWDER.getDefaultState());
-        world.spawnParticles(particleEffect, x, y, z, 10, 0.8, 0.5, 0.8, 0.5);
+        var particleEffect = new BlockParticleOption(ParticleTypes.BLOCK, Blocks.WHITE_CONCRETE_POWDER.defaultBlockState());
+        world.sendParticles(particleEffect, x, y, z, 10, 0.8, 0.5, 0.8, 0.5);
     }
 }

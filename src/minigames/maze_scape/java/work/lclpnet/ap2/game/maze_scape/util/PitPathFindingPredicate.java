@@ -1,7 +1,7 @@
 package work.lclpnet.ap2.game.maze_scape.util;
 
-import net.minecraft.entity.mob.MobEntity;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.entity.Mob;
 import work.lclpnet.ap2.api.ai.PathFindingPredicate;
 import work.lclpnet.ap2.game.maze_scape.setup.OrientedStructurePiece;
 
@@ -14,7 +14,7 @@ public class PitPathFindingPredicate implements PathFindingPredicate {
     }
 
     @Override
-    public boolean canReach(int x, int y, int z, MobEntity entity, BlockPos from) {
+    public boolean canReach(int x, int y, int z, Mob entity, BlockPos from) {
         var node = struct.nodeAt(x, y, z);
 
         if (node == null) {

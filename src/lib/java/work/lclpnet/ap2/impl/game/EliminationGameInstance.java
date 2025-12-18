@@ -2,15 +2,15 @@ package work.lclpnet.ap2.impl.game;
 
 import it.unimi.dsi.fastutil.Pair;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.boss.BossBar;
-import net.minecraft.entity.damage.DamageRecord;
-import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.ChatFormatting;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.BossEvent;
+import net.minecraft.world.damagesource.CombatEntry;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.Entity;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.EliminationController;
@@ -37,7 +37,7 @@ import java.util.Set;
 
 public abstract class EliminationGameInstance extends FFAGameInstance implements EliminationController {
 
-    private final EliminationDataContainer<ServerPlayerEntity, PlayerRef> data = new EliminationDataContainer<>(PlayerRef::create);
+    private final EliminationDataContainer<ServerPlayer, PlayerRef> data = new EliminationDataContainer<>(PlayerRef::create);
     private DynamicTranslatedBossBar remainingDisplay = null;
     private boolean eliminatedMessages = true;
     private boolean teleportEliminated = true;
@@ -47,7 +47,7 @@ public abstract class EliminationGameInstance extends FFAGameInstance implements
     }
 
     @Override
-    public void participantRemoved(ServerPlayerEntity player) {
+    public void participantRemoved(ServerPlayer player) {
         // make sure the player is tracked as eliminated
         data.add(player);
 
@@ -61,24 +61,24 @@ public abstract class EliminationGameInstance extends FFAGameInstance implements
     }
 
     @Override
-    protected EliminationDataContainer<ServerPlayerEntity, PlayerRef> getData() {
+    protected EliminationDataContainer<ServerPlayer, PlayerRef> getData() {
         return data;
     }
 
     protected final DynamicTranslatedBossBar useRemainingPlayersDisplay() {
         GameInfo gameInfo = gameHandle.getGameInfo();
         Translations translations = gameHandle.getTranslations();
-        Identifier id = gameInfo.identifier("remaining");
+        ResourceLocation id = gameInfo.identifier("remaining");
 
         var title = remainingTitle();
 
         TranslatedBossBar bossBar = translations.translateBossBar(id, title.left(), title.right())
                 .with(gameHandle.getBossBarProvider())
-                .formatted(Formatting.GREEN);
+                .formatted(ChatFormatting.GREEN);
 
         remainingDisplay = new DynamicTranslatedBossBar(bossBar, title.left(), title.right());
 
-        bossBar.setColor(BossBar.Color.GREEN);
+        bossBar.setColor(BossEvent.BossBarColor.GREEN);
 
         bossBar.addPlayers(PlayerLookup.all(gameHandle.getServer()));
 
@@ -91,7 +91,7 @@ public abstract class EliminationGameInstance extends FFAGameInstance implements
         int remaining = gameHandle.getParticipants().count();
 
         String key = remaining != 1 ? "ap2.game.remaining" : "ap2.game.remaining_single";
-        Object[] args = new Object[] {FormatWrapper.styled(remaining, Formatting.YELLOW)};
+        Object[] args = new Object[] {FormatWrapper.styled(remaining, ChatFormatting.YELLOW)};
 
         return Pair.of(key, args);
     }
@@ -103,10 +103,10 @@ public abstract class EliminationGameInstance extends FFAGameInstance implements
         HookRegistrar hooks = gameHandle.getHooks();
 
         hooks.registerHook(EntityHealthCallback.HOOK, (entity, health) -> {
-            if (!(entity instanceof ServerPlayerEntity player) || health > 0) return false;
+            if (!(entity instanceof ServerPlayer player) || health > 0) return false;
 
             // the player is dying
-            List<DamageRecord> recentDamage = DamageTrackerAccess.getRecentDamage(entity);
+            List<CombatEntry> recentDamage = DamageTrackerAccess.getRecentDamage(entity);
 
             int size = recentDamage.size();
 
@@ -114,15 +114,15 @@ public abstract class EliminationGameInstance extends FFAGameInstance implements
                 onDeath(player, null);
                 eliminate(player);
             } else {
-                DamageRecord damageRecord = recentDamage.get(size - 1);
-                DamageSource source = damageRecord.damageSource();
+                CombatEntry damageRecord = recentDamage.get(size - 1);
+                DamageSource source = damageRecord.source();
 
                 // try to use death protector
-                if (((LivingEntityAccessor) player).invokeTryUseDeathProtector(source)) {
+                if (((LivingEntityAccessor) player).invokeCheckTotemDeathProtection(source)) {
                     return true;
                 }
 
-                onDeath(player, source.getAttacker());
+                onDeath(player, source.getEntity());
                 eliminate(player, source);
             }
 
@@ -130,11 +130,11 @@ public abstract class EliminationGameInstance extends FFAGameInstance implements
         });
     }
 
-    protected void onDeath(ServerPlayerEntity player, @Nullable Entity attacker) {
+    protected void onDeath(ServerPlayer player, @Nullable Entity attacker) {
         var accessor = (LivingEntityAccessor) player;
 
-        ServerWorld world = getWorld();
-        accessor.invokeDropInventory(world);
+        ServerLevel world = getWorld();
+        accessor.invokeDropEquipment(world);
         accessor.invokeDropExperience(world, attacker);
     }
 
@@ -151,14 +151,14 @@ public abstract class EliminationGameInstance extends FFAGameInstance implements
     }
 
     @Override
-    public synchronized void eliminateAll(Iterable<? extends ServerPlayerEntity> players) {
+    public synchronized void eliminateAll(Iterable<? extends ServerPlayer> players) {
         Participants participants = gameHandle.getParticipants();
         DeathMessages deathMessages = gameHandle.getDeathMessages();
         MinecraftServer server = gameHandle.getServer();
 
-        Set<ServerPlayerEntity> toEliminate = new HashSet<>();
+        Set<ServerPlayer> toEliminate = new HashSet<>();
 
-        for (ServerPlayerEntity player : players) {
+        for (ServerPlayer player : players) {
             if (!participants.isParticipating(player)) continue;
 
             toEliminate.add(player);
@@ -175,7 +175,7 @@ public abstract class EliminationGameInstance extends FFAGameInstance implements
         WorldFacade worldFacade = gameHandle.getWorldFacade();
         PlayerUtil playerUtil = gameHandle.getPlayerUtil();
 
-        for (ServerPlayerEntity player : toEliminate) {
+        for (ServerPlayer player : toEliminate) {
             participants.remove(player);
 
             playerUtil.resetPlayer(player);
@@ -187,7 +187,7 @@ public abstract class EliminationGameInstance extends FFAGameInstance implements
     }
 
     @Override
-    public void eliminate(ServerPlayerEntity player, @Nullable DamageSource source, @Nullable TranslatedText customMsg) {
+    public void eliminate(ServerPlayer player, @Nullable DamageSource source, @Nullable TranslatedText customMsg) {
         Participants participants = gameHandle.getParticipants();
 
         if (participants.isParticipating(player)) {
@@ -214,7 +214,7 @@ public abstract class EliminationGameInstance extends FFAGameInstance implements
         }
     }
 
-    protected void onEliminated(ServerPlayerEntity player) {
+    protected void onEliminated(ServerPlayer player) {
         PlayerEliminatedCallback.HOOK.invoker().onEliminated(player);
     }
 }

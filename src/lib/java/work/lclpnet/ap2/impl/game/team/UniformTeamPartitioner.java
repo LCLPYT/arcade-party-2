@@ -2,7 +2,7 @@ package work.lclpnet.ap2.impl.game.team;
 
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.NotNull;
 import work.lclpnet.ap2.api.game.team.Team;
 import work.lclpnet.ap2.api.game.team.TeamPartitioner;
@@ -18,7 +18,7 @@ public class UniformTeamPartitioner implements TeamPartitioner {
     }
 
     @Override
-    public @NotNull Map<ServerPlayerEntity, Team> splitIntoTeams(Set<ServerPlayerEntity> players, Set<Team> teams) {
+    public @NotNull Map<ServerPlayer, Team> splitIntoTeams(Set<ServerPlayer> players, Set<Team> teams) {
         if (teams.isEmpty()) {
             throw new IllegalArgumentException("Teams must not be empty");
         }
@@ -30,11 +30,11 @@ public class UniformTeamPartitioner implements TeamPartitioner {
         PriorityQueue<Team> queue = new PriorityQueue<>(Comparator.comparingInt(playerCount::getInt));
         queue.addAll(teams);
 
-        List<ServerPlayerEntity> playerList = new ArrayList<>(players);
-        Map<ServerPlayerEntity, Team> mapping = new HashMap<>();
+        List<ServerPlayer> playerList = new ArrayList<>(players);
+        Map<ServerPlayer, Team> mapping = new HashMap<>();
 
         while (!playerList.isEmpty()) {
-            ServerPlayerEntity player = playerList.remove(random.nextInt(playerList.size()));
+            ServerPlayer player = playerList.remove(random.nextInt(playerList.size()));
 
             Team team = Objects.requireNonNull(queue.poll(), "Team is null");
 

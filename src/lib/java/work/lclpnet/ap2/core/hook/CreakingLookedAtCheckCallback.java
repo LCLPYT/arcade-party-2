@@ -1,6 +1,6 @@
 package work.lclpnet.ap2.core.hook;
 
-import net.minecraft.entity.mob.CreakingEntity;
+import net.minecraft.world.entity.monster.creaking.Creaking;
 import work.lclpnet.kibu.hook.Hook;
 import work.lclpnet.kibu.hook.HookFactory;
 import work.lclpnet.kibu.hook.util.PendingResult;
@@ -19,5 +19,5 @@ public interface CreakingLookedAtCheckCallback {
         return PendingResult.pass();
     });
 
-    PendingResult<Boolean> isBeingLookedAt(CreakingEntity creaking);
+    PendingResult<Boolean> isBeingLookedAt(Creaking creaking);
 }

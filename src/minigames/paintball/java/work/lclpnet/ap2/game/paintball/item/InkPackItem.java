@@ -1,9 +1,9 @@
 package work.lclpnet.ap2.game.paintball.item;
 
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.registry.DynamicRegistryManager;
-import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import work.lclpnet.ap2.game.paintball.util.PaintGunManager;
 import work.lclpnet.ap2.impl.game.item.SpecialItem;
 import work.lclpnet.ap2.impl.game.item.SpecialItemContext;
@@ -22,17 +22,17 @@ public class InkPackItem implements SpecialItem {
     }
 
     @Override
-    public ItemStack createItemStack(DynamicRegistryManager registryManager) {
+    public ItemStack createItemStack(RegistryAccess registryManager) {
         return new ItemStack(Items.INK_SAC);
     }
 
     @Override
-    public boolean shouldTransferToInventory(ServerPlayerEntity player) {
+    public boolean shouldTransferToInventory(ServerPlayer player) {
         return false;
     }
 
     @Override
-    public void onPickedUp(ServerPlayerEntity player, ItemStack stack, SpecialItemContext ctx) {
+    public void onPickedUp(ServerPlayer player, ItemStack stack, SpecialItemContext ctx) {
         paintGunManager.refillPaintGun(player);
     }
 }

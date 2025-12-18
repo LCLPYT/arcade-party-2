@@ -1,7 +1,7 @@
 package work.lclpnet.ap2.game.fine_tuning;
 
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.NotNull;
 import org.json.JSONArray;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
@@ -20,7 +20,7 @@ import java.util.concurrent.CompletableFuture;
 public class FineTuningInstance extends FFAGameInstance implements MapBootstrap {
 
     static final int MELODY_COUNT = 2;
-    private final IntDataContainer<ServerPlayerEntity, PlayerRef> data;
+    private final IntDataContainer<ServerPlayer, PlayerRef> data;
     private FineTuningSetup setup;
     private TuningPhase tuningPhase;
 
@@ -33,12 +33,12 @@ public class FineTuningInstance extends FFAGameInstance implements MapBootstrap 
     }
 
     @Override
-    protected DataContainer<ServerPlayerEntity, PlayerRef> getData() {
+    protected DataContainer<ServerPlayer, PlayerRef> getData() {
         return data;
     }
 
     @Override
-    public @NotNull CompletableFuture<Void> createWorldBootstrap(@NotNull ServerWorld world, @NotNull GameMap gameMap) {
+    public @NotNull CompletableFuture<Void> createWorldBootstrap(@NotNull ServerLevel world, @NotNull GameMap gameMap) {
         setup = new FineTuningSetup(gameHandle, gameMap, world);
         return setup.createRooms();
     }

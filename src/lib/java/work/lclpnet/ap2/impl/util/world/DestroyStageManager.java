@@ -1,9 +1,9 @@
 package work.lclpnet.ap2.impl.util.world;
 
-import net.minecraft.network.packet.s2c.play.BlockBreakingProgressS2CPacket;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.protocol.game.ClientboundBlockDestructionPacket;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 
 import static java.lang.Math.floorMod;
 
@@ -17,14 +17,14 @@ public class DestroyStageManager {
             MAX_Y = (1 << Y_BITS) - 1,
             MIN_ID = 1 << RESERVED_BITS;
 
-    private final ServerWorld world;
+    private final ServerLevel world;
     private final int rangeSq;
 
-    public DestroyStageManager(ServerWorld world) {
+    public DestroyStageManager(ServerLevel world) {
         this(world, 400);
     }
 
-    public DestroyStageManager(ServerWorld world, int range) {
+    public DestroyStageManager(ServerLevel world, int range) {
         this.world = world;
         this.rangeSq = range * range;
     }
@@ -39,9 +39,9 @@ public class DestroyStageManager {
      */
     public void setDestroyStage(BlockPos pos, int progress) {
         int id = id(pos);
-        var packet = new BlockBreakingProgressS2CPacket(id, pos, progress);
+        var packet = new ClientboundBlockDestructionPacket(id, pos, progress);
 
-        for (ServerPlayerEntity player : world.getPlayers()) {
+        for (ServerPlayer player : world.players()) {
             int dx = player.getBlockX() - pos.getX();
             int dy = player.getBlockY() - pos.getY();
             int dz = player.getBlockZ() - pos.getZ();
@@ -50,7 +50,7 @@ public class DestroyStageManager {
 
             if (distSq > rangeSq) continue;
 
-            player.networkHandler.sendPacket(packet);
+            player.connection.send(packet);
         }
     }
 
