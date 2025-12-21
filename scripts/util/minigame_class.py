@@ -22,9 +22,9 @@ def create_minigame_class(code_dir: Path, inputs: Inputs):
     if inputs.lang == "kotlin":
         content = f"""package {package_java_path}
 
-import net.minecraft.item.ItemStack
-import net.minecraft.item.Items
-import net.minecraft.registry.DynamicRegistryManager
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
+import net.minecraft.core.RegistryAccess
 import work.lclpnet.ap2.ApConstants
 import work.lclpnet.ap2.api.game.*
 
@@ -34,16 +34,16 @@ class {class_name} : MiniGame {{
     override fun getId() = ApConstants.identifier("{inputs.game_id}")
     override fun getType() = GameType.{enum_game_type}
     override fun getAuthor() = ApConstants.{author_const}
-    override fun getIcon(manager: DynamicRegistryManager) = ItemStack(Items.{inputs.icon.upper()})
+    override fun getIcon(manager: RegistryAccess) = ItemStack(Items.{inputs.icon.upper()})
     override fun createInstance(gameHandle: MiniGameHandle) = {instance_class_name}(gameHandle)
 }}
 """
     else:
         content = f"""package {package_java_path};
 
-import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
-import net.minecraft.registry.DynamicRegistryManager;
+import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.Items
+import net.minecraft.core.RegistryAccess
 import net.minecraft.util.Identifier;
 import org.jetbrains.annotations.NotNull;
 import work.lclpnet.ap2.ApConstants;
@@ -67,7 +67,7 @@ public class {class_name} implements MiniGame {{
     }}
 
     @Override
-    public @NotNull ItemStack getIcon(@NotNull DynamicRegistryManager manager) {{
+    public @NotNull ItemStack getIcon(@NotNull RegistryAccess manager) {{
         return new ItemStack(Items.{inputs.icon.upper()});
     }}
 
