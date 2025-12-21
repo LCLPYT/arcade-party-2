@@ -1,47 +1,103 @@
-package work.lclpnet.ap2.game.snowball_fight;
+package work.lclpnet.ap2.impl.util.world;
 
 import it.unimi.dsi.fastutil.objects.Object2DoubleMap;
 import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.Vec3;
+import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.util.world.AdjacentBlocks;
 import work.lclpnet.ap2.api.util.world.BlockPredicate;
 import work.lclpnet.ap2.api.util.world.WorldScanner;
 import work.lclpnet.ap2.impl.map.MapUtil;
-import work.lclpnet.ap2.impl.util.world.BfsWorldScanner;
-import work.lclpnet.ap2.impl.util.world.SimpleAdjacentBlocks;
-import work.lclpnet.ap2.impl.util.world.SizedSpaceFinder;
-import work.lclpnet.ap2.impl.util.world.WalkableBlockPredicate;
+import work.lclpnet.ap2.impl.util.debug.DebugController;
 import work.lclpnet.gaco.ds.BlockBox;
+import work.lclpnet.gaco.ds.StructureMask;
+import work.lclpnet.kibu.util.math.Matrix3i;
 import work.lclpnet.lobby.game.map.GameMap;
 import work.lclpnet.lobby.game.map.MapUtils;
 
 import java.util.*;
 
-public class SnowballFightSpawns {
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+
+public class SpawnFinder {
+
+    private static final boolean DEBUG_SCANNER = false;
 
     private final double spacingSquared;
+    private final @Nullable DebugController debugController;
 
-    public SnowballFightSpawns(double spacing) {
+    public SpawnFinder(double spacing, @Nullable DebugController debugController) {
         this.spacingSquared = spacing * spacing;
+        this.debugController = debugController;
     }
 
     public List<Vec3> findSpawns(ServerLevel world, GameMap map) {
         BlockBox bounds = MapUtil.readBox(map.requireProperty("bounds"));
+
         Vec3 spawnPosition = MapUtils.getSpawnPosition(map);
+
         BlockPos start = new BlockPos(
                 (int) Math.floor(spawnPosition.x()),
                 (int) Math.floor(spawnPosition.y()),
-                (int) Math.floor(spawnPosition.z()));
+                (int) Math.floor(spawnPosition.z())
+        );
 
+        return findSpawns(world, bounds, start);
+    }
+
+    public List<Vec3> findSpawns(ServerLevel world, BlockBox bounds, BlockPos start) {
         BlockPredicate predicate = BlockPredicate.and(bounds::contains, new WalkableBlockPredicate(world));
-        AdjacentBlocks adjacent = new SimpleAdjacentBlocks(predicate, 1);
+        AdjacentBlocks adjacent = new SimpleAdjacentBlocks(predicate, 1, 4);
         WorldScanner scanner = new BfsWorldScanner(adjacent);
 
+        if (DEBUG_SCANNER) {
+            debugScanner(scanner, start);
+        }
+
         SizedSpaceFinder spaceFinder = SizedSpaceFinder.create(world, EntityType.PLAYER);
+
         return spaceFinder.findSpaces(scanner.scan(start));
+    }
+
+    private void debugScanner(WorldScanner scanner, BlockPos start) {
+        if (debugController == null) return;
+
+        var positions = new ArrayList<BlockPos>();
+        var it = scanner.scan(start);
+
+        while (it.hasNext()) {
+            positions.add(it.next());
+        }
+
+        var minPos = positions.getFirst().mutable();
+        var maxPos = positions.getFirst().mutable();
+
+        for (BlockPos pos : positions) {
+            minPos.set(
+                    min(minPos.getX(), pos.getX()),
+                    min(minPos.getY(), pos.getY()),
+                    min(minPos.getZ(), pos.getZ())
+            );
+
+            maxPos.set(
+                    max(maxPos.getX(), pos.getX()),
+                    max(maxPos.getY(), pos.getY()),
+                    max(maxPos.getZ(), pos.getZ())
+            );
+        }
+
+        var mask = StructureMask.createEmpty(new BlockBox(minPos, maxPos));
+
+        for (BlockPos pos : positions) {
+            mask.setVoxelAt(pos.getX() - minPos.getX(), pos.getY() - minPos.getY(), pos.getZ() - minPos.getZ(), true);
+        }
+
+        debugController.visualizeStructureMask(mask, minPos, Matrix3i.IDENTITY, Blocks.GREEN_STAINED_GLASS.defaultBlockState());
     }
 
     public List<Vec3> generateSpacedSpawns(List<Vec3> spawns, int count, Random random) {
