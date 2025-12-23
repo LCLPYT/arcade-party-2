@@ -24,16 +24,6 @@
         },
         {
           "type": "minecraft:item",
-          "name": "minecraft:fishing_rod",
-          "weight": 15
-        },
-        {
-          "type": "minecraft:item",
-          "name": "minecraft:bow",
-          "weight": 15
-        },
-        {
-          "type": "minecraft:item",
           "name": "minecraft:stone_spear",
           "weight": 2
         },
@@ -60,9 +50,7 @@
           "options": [
             "minecraft:sharpness",
             "minecraft:knockback",
-            "minecraft:fire_aspect",
-            "minecraft:punch",
-            "minecraft:power"
+            "minecraft:fire_aspect"
           ],
           "conditions": [
             {
@@ -70,6 +58,42 @@
               "chance": 0.2
             }
           ]
+        }
+      ]
+    },
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:bow"
+        },
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:fishing_rod"
+        }
+      ],
+      "functions": [
+        {
+          "function": "minecraft:enchant_with_levels",
+          "levels": 1,
+          "options": [
+            "minecraft:power",
+            "minecraft:punch",
+            "minecraft:flame"
+          ],
+          "conditions": [
+            {
+              "condition": "minecraft:random_chance",
+              "chance": 0.2
+            }
+          ]
+        }
+      ],
+      "conditions": [
+        {
+          "condition": "minecraft:random_chance",
+          "chance": 0.4
         }
       ]
     },
