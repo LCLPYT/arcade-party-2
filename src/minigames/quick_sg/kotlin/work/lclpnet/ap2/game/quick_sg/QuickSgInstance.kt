@@ -3,12 +3,16 @@ package work.lclpnet.ap2.game.quick_sg
 import net.fabricmc.fabric.api.event.player.UseBlockCallback
 import net.minecraft.core.BlockPos
 import net.minecraft.core.registries.Registries
+import net.minecraft.network.protocol.game.ClientboundSetDefaultSpawnPositionPacket
 import net.minecraft.resources.ResourceKey
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.InteractionResult
+import net.minecraft.world.item.Items
 import net.minecraft.world.level.block.Blocks
+import net.minecraft.world.level.storage.LevelData
 import net.minecraft.world.level.storage.loot.LootTable
 import work.lclpnet.ap2.api.game.MiniGameHandle
+import work.lclpnet.ap2.eachTick
 import work.lclpnet.ap2.impl.game.EliminationGameInstance
 import work.lclpnet.ap2.impl.map.schema.SchemaHolder
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker
@@ -148,5 +152,31 @@ class QuickSgInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(game
         mayLoot = true
 
         commons().scheduleWorldBorderShrink(WORLD_BORDER_DELAY, WORLD_BORDER_TIME, 0)
+
+        eachTick {
+            for (player in players()) {
+                updateCompass(player)
+            }
+        }
+    }
+
+    private fun updateCompass(player: ServerPlayer) {
+        val server = world.server ?: return
+
+        if (!player.inventory.contains { it.`is`(Items.COMPASS) }) return
+
+        val closestEnemy = players()
+            .filter { it != player }
+            .minByOrNull { it.distanceToSqr(player) }
+
+        player.connection.send(ClientboundSetDefaultSpawnPositionPacket(when {
+            closestEnemy != null -> LevelData.RespawnData.of(
+                world.level.dimension(),
+                closestEnemy.blockPosition(),
+                0f,
+                0f
+            )
+            else -> server.respawnData
+        }))
     }
 }
