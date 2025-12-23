@@ -74,10 +74,7 @@ class QuickSgInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(game
             movementBlocker.disableMovement(it)
         }
 
-        val team = gameHandle.scoreboardManager.createTeam("team")
-        team.nameTagVisibility = Team.Visibility.NEVER
-
-        gameHandle.scoreboardManager.joinTeam(players(), team)
+        commons().hideNameTags()
     }
 
     private fun teleportPlayers() {

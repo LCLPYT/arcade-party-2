@@ -392,6 +392,20 @@ public class GameCommons {
         world.getWaypointManager().trackWaypoint(marker);
     }
 
+    public PlayerTeam hideNameTags() {
+        var team = gameHandle.getScoreboardManager().createTeam("team");
+
+        hideNameTags(team);
+
+        return team;
+    }
+
+    public void hideNameTags(PlayerTeam team) {
+        team.setNameTagVisibility(Team.Visibility.NEVER);
+
+        gameHandle.getScoreboardManager().joinTeam(gameHandle.getParticipants(), team);
+    }
+
     public record WorldBorderConfig(
             int centerX,
             int centerZ,
