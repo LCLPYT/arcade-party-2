@@ -114,5 +114,6 @@ public class MapFacadeImpl implements MapFacade {
         GameRules gameRules = world.getGameRules();
         gameRules.set(GameRules.IMMEDIATE_RESPAWN, true, server);
         gameRules.set(GameRules.SHOW_ADVANCEMENT_MESSAGES, false, server);
+        gameRules.set(GameRules.PVP, true, server);
     }
 }
