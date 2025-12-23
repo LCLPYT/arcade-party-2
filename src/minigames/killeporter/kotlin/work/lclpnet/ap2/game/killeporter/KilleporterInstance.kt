@@ -1,10 +1,5 @@
 package work.lclpnet.ap2.game.killeporter
 
-import com.google.gson.Gson
-import com.google.gson.JsonObject
-import com.mojang.serialization.Codec
-import com.mojang.serialization.JsonOps
-import com.mojang.serialization.codecs.RecordCodecBuilder
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents
 import net.fabricmc.fabric.api.event.player.UseBlockCallback
 import net.fabricmc.fabric.api.event.player.UseItemCallback
@@ -20,12 +15,10 @@ import net.minecraft.world.InteractionHand
 import net.minecraft.world.InteractionResult
 import net.minecraft.world.damagesource.DamageTypes
 import net.minecraft.world.entity.player.Player
-import net.minecraft.world.item.ItemStack
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.ChestBlock
 import net.minecraft.world.level.block.DoubleBlockCombiner
-import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.gamerules.GameRules
 import net.minecraft.world.level.material.Fluids
 import work.lclpnet.ap2.*
@@ -35,8 +28,11 @@ import work.lclpnet.ap2.impl.game.EliminationGameInstance
 import work.lclpnet.ap2.impl.game.kit.KitHandle
 import work.lclpnet.ap2.impl.game.kit.KitHandler
 import work.lclpnet.ap2.impl.game.kit.PrefabKitLoader
-import work.lclpnet.ap2.impl.util.CodecUtil
 import work.lclpnet.ap2.impl.util.SoundHelper
+import work.lclpnet.ap2.util.loot.JsonLootLoader
+import work.lclpnet.ap2.util.loot.LazyLootContainerManager
+import work.lclpnet.ap2.util.loot.LootEntry
+import work.lclpnet.ap2.util.loot.LootFiller
 import work.lclpnet.gaco.ds.WeightedList
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks
@@ -49,10 +45,7 @@ import work.lclpnet.lobby.game.api.prot.scope.EntityDamageSourceScope
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes
 import work.lclpnet.lobby.game.map.GameMap
 import java.lang.Math.floorMod
-import java.nio.charset.StandardCharsets
 import java.util.concurrent.CompletableFuture
-import kotlin.math.max
-import kotlin.math.min
 import kotlin.random.Random
 import kotlin.random.asJavaRandom
 
@@ -61,66 +54,13 @@ val MAX_DURATION_TICKS = Ticks.seconds(32)
 val GAME_DURATION_TICKS = Ticks.minutes(6)
 const val TIME_TO_NIGHTFALL_DAYTIME_TICKS = 3600
 
-data class LootEntry(val itemStack: ItemStack, val minCount: Int = 1, val maxCount: Int = 1) {
-
-    fun generateItemStack(): ItemStack {
-        val count = Random.nextInt(minCount, maxCount+1)
-        return itemStack.copyWithCount(count)
-    }
-
-    companion object {
-        val CODEC: Codec<LootEntry> = RecordCodecBuilder.create { instance ->
-            instance.group(
-                ItemStack.CODEC.fieldOf("item").forGetter { it.itemStack },
-                CodecUtil.POSITIVE_INT.fieldOf("min").orElse(1).forGetter { it.minCount },
-                CodecUtil.POSITIVE_INT.fieldOf("max").orElse(1).forGetter { it.maxCount },
-            ).apply(instance) { stack, i, j ->
-                LootEntry(stack, min(i, j), max(i, j))
-            }
-        }
-    }
-}
-
-data class LootTableEntry(val entry: LootEntry, val weight: Float) {
-
-    companion object {
-        val CODEC: Codec<LootTableEntry> = RecordCodecBuilder.create { instance ->
-            instance.group(
-                LootEntry.CODEC.fieldOf("entry").forGetter { it.entry },
-                Codec.FLOAT.fieldOf("weight").forGetter { it.weight },
-            ).apply(instance) { entry, weight ->
-                LootTableEntry(entry, weight)
-            }
-        }
-    }
-}
-
-data class LootTable(val entries: List<LootTableEntry>) {
-
-    fun loadInto(list: WeightedList<LootEntry>) {
-        for ((entry, weight) in entries) {
-            list.add(entry, weight)
-        }
-    }
-
-    companion object {
-        val CODEC: Codec<LootTable> = RecordCodecBuilder.create { instance ->
-            instance.group(
-                LootTableEntry.CODEC.listOf().fieldOf("entries").forGetter { it.entries }
-            ).apply(instance) { entries ->
-                LootTable(entries)
-            }
-        }
-    }
-}
-
 class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gameHandle), MapBootstrap {
 
     var kitHandler: KitHandler? = null
     var kitLoader: PrefabKitLoader? = null
     var itemUseAllowed = false
-    val filledInventories = mutableSetOf<BlockPos>()
-    val inventoryContent = WeightedList<LootEntry>()
+    val loot = WeightedList<LootEntry>()
+    var lootContainerManager: LazyLootContainerManager? = null
 
     init {
         useSurvivalMode()
@@ -132,33 +72,22 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
         val kitFuture = kitLoader!!.loadHotbar(this)
 
         val lootFuture = CompletableFuture.runAsync {
-            val lootTable = loadLootTable()
-
-            lootTable?.loadInto(inventoryContent)
+            JsonLootLoader(gameHandle.logger)
+                .fromResource(this::class.java)
+                ?.loadInto(loot)
         }
 
         return CompletableFuture.allOf(kitFuture, lootFuture)
     }
 
-    fun loadLootTable(): LootTable? {
-        this::class.java.getResourceAsStream("/loot/containers.json").use {
-            if (it == null) return@use null
-
-            val content = String(it.readAllBytes(), StandardCharsets.UTF_8)
-            val json = Gson().fromJson(content, JsonObject::class.java)
-
-            return LootTable.CODEC.decode(JsonOps.INSTANCE, json)
-                .resultOrPartial { err -> gameHandle.logger.error("Failed to parse loot table: {}", err) }
-                .map { res -> res.first }
-                .orElse(null)
-        }
-
-        return null
-    }
-
     override fun prepare() {
+        lootContainerManager = LazyLootContainerManager(
+            players(),
+            world,
+            KilleporterLootFiller(loot),
+        ).also { it.setup(gameHandle.hooks) }
 
-        world.setDayTime((13000 - TIME_TO_NIGHTFALL_DAYTIME_TICKS).toLong())
+        world.dayTime = (13000 - TIME_TO_NIGHTFALL_DAYTIME_TICKS).toLong()
 
         commons().gameRuleBuilder()
             .set(GameRules.FALL_DAMAGE, true)
@@ -180,11 +109,11 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
         gameHandle.hooks.registerHook(
             ServerLivingEntityHooks.ALLOW_DAMAGE,
             ServerLivingEntityEvents.AllowDamage { entity, _, _ ->
-
                 if (entity is ServerPlayer && entity.foodData.foodLevel >= 20) {
                     entity.foodData.addExhaustion(8f)
                     entity.foodData.setSaturation(2f)
                 }
+
                 true
             }
         )
@@ -195,7 +124,6 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
     }
 
     override fun go() {
-
         kitHandler?.disableKitChanger()
 
         itemUseAllowed = true
@@ -222,28 +150,13 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
         })
 
         gameHandle.hooks.registerHook(
-            PlayerInteractionHooks.USE_BLOCK,
-            UseBlockCallback { player, world, _, hitResult ->
-                onUseInventory(player, world, hitResult.blockPos)
-                InteractionResult.PASS
-            }
-        )
-
-        gameHandle.hooks.registerHook(
             BlockModificationHooks.BREAK_BLOCK,
-            BlockModificationHooks.BlockModifyHook {world, pos, entity ->
-                if (entity !is ServerPlayer || !world.getBlockState(pos).`is`(Blocks.DECORATED_POT)) {return@BlockModifyHook false}
-                onUseInventory(entity, world, pos)
-                return@BlockModifyHook false
-            }
-        )
+            BlockModificationHooks.BlockModifyHook { world, pos, entity ->
+                if (entity is ServerPlayer && world.getBlockState(pos).`is`(Blocks.DECORATED_POT)) {
+                    lootContainerManager?.touch(pos)
+                }
 
-        gameHandle.hooks.registerHook(
-            BlockModificationHooks.PLACE_BLOCK,
-            BlockModificationHooks.PlaceBlockHook { _, pos, entity, _ ->
-                if (entity !is ServerPlayer) {return@PlaceBlockHook false}
-                filledInventories.add(pos)
-                return@PlaceBlockHook false
+                false
             }
         )
 
@@ -252,55 +165,11 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
         gameHandle.scheduler.interval(20*60*3, 20*60*3, Runnable {
             SoundHelper.playSound(world, SoundEvents.CHEST_OPEN, SoundSource.BLOCKS, 0.8f, 0.5f)
             translate("game.ap2.killeporter.chest_refill").formatted(ChatFormatting.AQUA).sendTo(allPlayers())
-            filledInventories.clear()
+            lootContainerManager?.reset()
         })
 
         timeout(GAME_DURATION_TICKS) {
             winManager.forceWin(players().toSet())
-        }
-    }
-
-    private fun onUseInventory(player: Player, world: Level, pos: BlockPos) {
-
-        if (player !is ServerPlayer || !gameHandle.participants.isParticipating(player)) return
-
-        val blockEntity = world.getBlockEntity(pos)
-        val state = world.getBlockState(pos)
-        val block = state.block
-        val inventoryToFill: Container?
-
-        if (blockEntity is Container && filledInventories.add(pos)) {
-
-            if (block is ChestBlock) {
-                inventoryToFill = ChestBlock.getContainer(block, state, world, pos, false)
-                if (ChestBlock.getBlockType(state) != DoubleBlockCombiner.BlockType.SINGLE) {
-                    val neighborDir = ChestBlock.getConnectedDirection(state)
-                    val otherPos = pos.relative(neighborDir)
-                    filledInventories.add(otherPos)
-                }
-            }
-            else inventoryToFill = blockEntity
-
-            fillInventory(inventoryToFill!!, state)
-        }
-    }
-
-    private fun fillInventory(inventory: Container, state: BlockState) {
-
-        inventory.clearContent()
-
-        val invSize = inventory.containerSize
-        val availableSlots = (0..<invSize).toMutableList()
-        val maxSlotsToFill = 5.coerceAtMost(invSize)
-
-        val slotsToFill = if (state.block == Blocks.DECORATED_POT) {
-            Random.nextInt(0, maxSlotsToFill + 1)
-        } else { Random.nextInt(1, maxSlotsToFill + 1) }
-
-        repeat(slotsToFill) {
-            val slot = availableSlots.removeAt(Random.nextInt(availableSlots.size))
-            val entry = inventoryContent.getRandomElement(Random.asJavaRandom())
-            inventory.setItem(slot, entry!!.generateItemStack())
         }
     }
 
@@ -323,7 +192,6 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
 
     fun switchAnnouncement() {
         timeout(MIN_DURATION_TICKS) {
-
             switchAnnouncement()
         }
     }
@@ -371,5 +239,34 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
             })
 
         kitHandler?.setup()
+    }
+}
+
+class KilleporterLootFiller(
+    val loot: WeightedList<LootEntry>,
+) : LootFiller {
+
+    override fun fill(
+        pos: BlockPos,
+        level: ServerLevel,
+        container: Container
+    ) {
+        val state = level.getBlockState(pos)
+
+        container.clearContent()
+
+        val invSize = container.containerSize
+        val availableSlots = (0..<invSize).toMutableList()
+        val maxSlotsToFill = 5.coerceAtMost(invSize)
+
+        val slotsToFill = if (state.block == Blocks.DECORATED_POT) {
+            Random.nextInt(0, maxSlotsToFill + 1)
+        } else { Random.nextInt(1, maxSlotsToFill + 1) }
+
+        repeat(slotsToFill) {
+            val slot = availableSlots.removeAt(Random.nextInt(availableSlots.size))
+            val entry = loot.getRandomElement(Random.asJavaRandom())
+            container.setItem(slot, entry!!.generateItemStack())
+        }
     }
 }
