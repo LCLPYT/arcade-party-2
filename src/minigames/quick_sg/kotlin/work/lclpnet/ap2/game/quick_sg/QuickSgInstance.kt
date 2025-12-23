@@ -11,7 +11,6 @@ import net.minecraft.world.item.Items
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.storage.LevelData
 import net.minecraft.world.level.storage.loot.LootTable
-import net.minecraft.world.scores.Team
 import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.eachTick
 import work.lclpnet.ap2.impl.game.EliminationGameInstance
