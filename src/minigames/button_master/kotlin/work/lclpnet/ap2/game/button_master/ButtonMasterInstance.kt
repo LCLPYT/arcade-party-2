@@ -34,6 +34,7 @@ import work.lclpnet.ap2.impl.game.EliminationGameInstance
 import work.lclpnet.ap2.impl.map.schema.SchemaHolder
 import work.lclpnet.ap2.impl.util.ApRegistries
 import work.lclpnet.ap2.impl.util.SoundHelper
+import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker
 import work.lclpnet.ap2.util.scene.ApSceneRenderer
 import work.lclpnet.ap2.util.scene.PlayerMountContext
 import work.lclpnet.gaco.dynamic_entities.DynamicEntityManager
@@ -77,6 +78,10 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
     val schemaHolder: SchemaHolder<ButtonMasterSchema> = useSchema(ButtonMasterSchema::class.java)
     val validPositions = mutableListOf<BlockPos>()
 
+    val movementBlocker = SimpleMovementBlocker(gameHandle.scheduler).also {
+        it.setModifySpeedAttribute(false)
+    }
+
     var currentButtonMarker: Object3d? = null
     var currentButtonPos: BlockPos? = null
     var gameState = GameState.IDLE
@@ -113,6 +118,7 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
         validPositions.addAll(positions.scanWorld())
 
         capsules?.setup()
+        movementBlocker.init(gameHandle.hooks)
 
         setupTeam()
         equipPlayers()
@@ -223,6 +229,8 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
         val uuid = capsules?.players[capsule] ?: return
         val player = players().getParticipant(uuid).orElse(null) ?: return
 
+        movementBlocker.enableMovement(player)
+
         task = gameHandle.scheduler.timeout(Ticks.seconds(5), Runnable {
             eliminate(player)
         })
@@ -238,7 +246,11 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
         player.teleport(schemaHolder.get().buttonMasterSpawn!!)
         player.setAttribute(Attributes.JUMP_STRENGTH, 0.0)
 
-        capsules?.teleportToCapsules(players().filter { it != player })
+        val otherPlayers = players().filter { it != player }
+
+        capsules?.teleportToCapsules(otherPlayers)
+
+        otherPlayers.forEach { movementBlocker.disableMovement(it) }
 
         val ejectTimer = commons().createTimer(
             translate("game.ap2.button_master.eject"),
@@ -289,6 +301,7 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
         scene = null
 
         for (player in players()) {
+            movementBlocker.enableMovement(player)
             gameHandle.worldFacade.teleport(player)
 
             player.resetAttribute(Attributes.JUMP_STRENGTH)
