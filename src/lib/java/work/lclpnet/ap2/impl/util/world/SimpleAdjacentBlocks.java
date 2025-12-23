@@ -8,6 +8,8 @@ import work.lclpnet.ap2.api.util.world.BlockPredicate;
 
 import java.util.Iterator;
 
+import static java.lang.Math.max;
+
 /**
  * An adjacent block iterator that provides neighbours in the four horizontal directions.
  * Steps of one block up or down are also supported.
@@ -15,11 +17,16 @@ import java.util.Iterator;
 public class SimpleAdjacentBlocks implements AdjacentBlocks {
 
     private final BlockPredicate predicate;
-    private final int verticalStep;
+    private final int stepUp, stepDown;
 
     public SimpleAdjacentBlocks(BlockPredicate predicate, int verticalStep) {
+        this(predicate, verticalStep, verticalStep);
+    }
+
+    public SimpleAdjacentBlocks(BlockPredicate predicate, int stepUp, int stepDown) {
         this.predicate = predicate;
-        this.verticalStep = verticalStep;
+        this.stepUp = stepUp;
+        this.stepDown = stepDown;
     }
 
     @Override
@@ -79,12 +86,18 @@ public class SimpleAdjacentBlocks implements AdjacentBlocks {
             private boolean invalid() {
                 if (predicate.test(current)) return false;
 
-                for (int j = 1; j <= verticalStep; j++) {
-                    current.setY(y + j);
-                    if (predicate.test(current)) return false;
+                int verticalStep = max(stepUp, stepDown);
 
-                    current.setY(y - j);
-                    if (predicate.test(current)) return false;
+                for (int j = 1; j <= verticalStep; j++) {
+                    if (j <= stepUp) {
+                        current.setY(y + j);
+                        if (predicate.test(current)) return false;
+                    }
+
+                    if (j <= stepDown) {
+                        current.setY(y - j);
+                        if (predicate.test(current)) return false;
+                    }
                 }
 
                 return true;

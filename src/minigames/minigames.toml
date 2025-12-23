@@ -117,3 +117,7 @@ type = [ "kotlin",]
 id = "button_master"
 type = [ "kotlin",]
 
+[[minigames]]
+id = "quick_sg"
+type = [ "kotlin",]
+

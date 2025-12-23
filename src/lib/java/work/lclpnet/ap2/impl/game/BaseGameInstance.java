@@ -35,6 +35,7 @@ import work.lclpnet.ap2.impl.util.property.ApMapProperties;
 import work.lclpnet.combatctl.impl.CombatStyles;
 import work.lclpnet.gaco.asset.AssetPath;
 import work.lclpnet.kibu.access.entity.ServerPlayerAccess;
+import work.lclpnet.kibu.hook.Hook;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.EntityHealthCallback;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
@@ -485,6 +486,14 @@ public abstract class BaseGameInstance implements MiniGameInstance {
         String mapPath = Objects.requireNonNull(map, "Map not loaded yet").getDescriptor().getMapPath();
 
         return AssetPath.of(mapPath, path);
+    }
+
+    protected final <T> void registerHook(Hook<T> hook, T listener) {
+        gameHandle.getHooks().registerHook(hook, listener);
+    }
+
+    protected final boolean isParticipating(ServerPlayer player) {
+        return gameHandle.getParticipants().isParticipating(player);
     }
 
     protected abstract void prepare();

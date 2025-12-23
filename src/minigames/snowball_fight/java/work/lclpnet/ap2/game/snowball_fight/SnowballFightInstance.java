@@ -26,6 +26,7 @@ import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.impl.game.EliminationGameInstance;
+import work.lclpnet.ap2.impl.util.world.SpawnFinder;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks;
@@ -171,7 +172,7 @@ public class SnowballFightInstance extends EliminationGameInstance {
         Number spacingValue = map.getProperty("spawn-spacing");
         double spacing = spacingValue != null ? spacingValue.doubleValue() : 16;
 
-        SnowballFightSpawns spawns = new SnowballFightSpawns(spacing);
+        SpawnFinder spawns = new SpawnFinder(spacing, commons().debugController());
         List<Vec3> available = spawns.findSpawns(world, map);
         List<Vec3> spacedSpawns = spawns.generateSpacedSpawns(available, participants.count(), random);
 
