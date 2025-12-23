@@ -11,6 +11,7 @@ import net.minecraft.world.item.Items
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.storage.LevelData
 import net.minecraft.world.level.storage.loot.LootTable
+import net.minecraft.world.scores.Team
 import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.eachTick
 import work.lclpnet.ap2.impl.game.EliminationGameInstance
@@ -72,6 +73,11 @@ class QuickSgInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(game
         players().forEach {
             movementBlocker.disableMovement(it)
         }
+
+        val team = gameHandle.scoreboardManager.createTeam("team")
+        team.nameTagVisibility = Team.Visibility.NEVER
+
+        gameHandle.scoreboardManager.joinTeam(players(), team)
     }
 
     private fun teleportPlayers() {
@@ -138,7 +144,7 @@ class QuickSgInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(game
             level != world || entity !is ServerPlayer || !isParticipating(entity) || !playerMade.contains(pos)
         })
 
-        registerHook(PlayerInteractionHooks.USE_BLOCK, UseBlockCallback { player, level, hand, result ->
+        registerHook(PlayerInteractionHooks.USE_BLOCK, UseBlockCallback { player, _, _, _ ->
             when {
                 !mayLoot || player !is ServerPlayer || !isParticipating(player) -> InteractionResult.FAIL
                 else -> InteractionResult.PASS
