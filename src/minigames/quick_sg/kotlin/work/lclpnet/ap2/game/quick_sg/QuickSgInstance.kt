@@ -1,39 +1,33 @@
 package work.lclpnet.ap2.game.quick_sg
 
 import net.fabricmc.fabric.api.event.player.UseBlockCallback
-import net.fabricmc.fabric.api.event.registry.DynamicRegistries
 import net.minecraft.core.BlockPos
-import net.minecraft.core.Registry
 import net.minecraft.core.registries.Registries
 import net.minecraft.resources.ResourceKey
-import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.InteractionResult
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.storage.loot.LootTable
 import work.lclpnet.ap2.api.game.MiniGameHandle
-import work.lclpnet.ap2.api.map.MapBootstrap
-import work.lclpnet.ap2.util.loot.LazyLootContainerManager
-import work.lclpnet.ap2.util.loot.SimpleLootFiller
 import work.lclpnet.ap2.impl.game.EliminationGameInstance
 import work.lclpnet.ap2.impl.map.schema.SchemaHolder
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker
 import work.lclpnet.ap2.impl.util.world.SpawnFinder
 import work.lclpnet.ap2.players
 import work.lclpnet.ap2.teleport
-import work.lclpnet.ap2.util.loot.JsonLootLoader
-import work.lclpnet.ap2.util.loot.LootEntry
+import work.lclpnet.ap2.toTicks
+import work.lclpnet.ap2.util.loot.LazyLootContainerManager
 import work.lclpnet.ap2.util.loot.VanillaLootTableFiller
-import work.lclpnet.gaco.ds.WeightedList
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks
 import work.lclpnet.kibu.hook.world.BlockModificationHooks
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes
-import work.lclpnet.lobby.game.map.GameMap
-import java.util.concurrent.CompletableFuture
+import java.util.concurrent.TimeUnit
 import kotlin.random.Random
 import kotlin.random.asJavaRandom
 
 const val DEBUG_SPAWNS = false
+val WORLD_BORDER_DELAY = TimeUnit.MINUTES.toTicks(2)
+val WORLD_BORDER_TIME = TimeUnit.MINUTES.toTicks(2)
 
 class QuickSgInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gameHandle) {
 
@@ -152,5 +146,7 @@ class QuickSgInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(game
         }
 
         mayLoot = true
+
+        commons().scheduleWorldBorderShrink(WORLD_BORDER_DELAY, WORLD_BORDER_TIME, 0)
     }
 }

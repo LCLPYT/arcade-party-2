@@ -142,7 +142,7 @@ public class GameCommons {
                 randomizer.randomizeCenter(worldBorder, config, random);
             }
 
-            worldBorder.lerpSizeBetween(worldBorder.getSize(), config.minSize(), durationTicks * 50L, world.getGameTime());
+            worldBorder.lerpSizeBetween(worldBorder.getSize(), config.minSize(), durationTicks, world.getGameTime());
 
             for (ServerPlayer player : PlayerLookup.world(world)) {
                 ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.WITHER_DEATH, SoundSource.HOSTILE, 1, 0);
@@ -392,9 +392,14 @@ public class GameCommons {
         world.getWaypointManager().trackWaypoint(marker);
     }
 
-    public record WorldBorderConfig(int centerX, int centerZ, int maxRadius, int minSize, boolean randomCenter,
-                                    boolean alignRandomCenter) {
-
+    public record WorldBorderConfig(
+            int centerX,
+            int centerZ,
+            int maxRadius,
+            int minSize,
+            boolean randomCenter,
+            boolean alignRandomCenter
+    ) {
         public double align(double v) {
             return alignRandomCenter ? floor(v) + 0.5 : v;
         }
