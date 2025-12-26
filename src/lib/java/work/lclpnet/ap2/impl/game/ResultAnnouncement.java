@@ -3,7 +3,10 @@ package work.lclpnet.ap2.impl.game;
 import it.unimi.dsi.fastutil.objects.ObjectIntPair;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.contents.objects.ObjectInfo;
+import net.minecraft.network.chat.contents.objects.PlayerSprite;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.component.ResolvableProfile;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.ApConstants;
 import work.lclpnet.ap2.api.game.data.DataEntry;
@@ -90,7 +93,6 @@ public class ResultAnnouncement<Ref extends SubjectRef> {
     }
 
     private void sendRankList(int amount, ServerPlayer player) {
-
         for (int i = 0; i < amount; i++) {
             if (order.size() <= i) break;
 

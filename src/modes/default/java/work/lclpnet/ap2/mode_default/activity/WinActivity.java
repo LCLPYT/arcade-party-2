@@ -118,7 +118,13 @@ public class WinActivity extends ComponentActivity {
         PlayerRef winner = args.scoreManager().getFinalWinner().orElseThrow();
 
         for (ServerPlayer player : players()) {
-            Title.get(player).title(Component.literal(winner.name()).withStyle(ChatFormatting.AQUA), Component.empty(), 5, 50, 0);
+            Title.get(player).title(
+                    winner.getNameFor(player).copy().withStyle(ChatFormatting.AQUA),
+                    Component.empty(),
+                    5,
+                    50,
+                    0
+            );
         }
 
         playSound(world, SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 1f, 1f);
@@ -129,7 +135,7 @@ public class WinActivity extends ComponentActivity {
         scheduler.timeout(() -> {
             for (ServerPlayer player : players()) {
                 Title.get(player).title(
-                        Component.literal(winner.name()).withStyle(ChatFormatting.AQUA),
+                        winner.getNameFor(player).copy().withStyle(ChatFormatting.AQUA),
                         translations.translateText(player, "ap2.awards.won_party").formatted(ChatFormatting.DARK_GREEN),
                         0, 100, 5
                 );
