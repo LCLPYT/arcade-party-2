@@ -1,8 +1,10 @@
 package work.lclpnet.ap2.impl.game.data.type;
 
+import net.minecraft.ChatFormatting;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.contents.objects.PlayerSprite;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -30,7 +32,11 @@ public record PlayerRef(UUID uuid, String name) implements SubjectRef {
 
     @Override
     public Component getNameFor(ServerPlayer viewer) {
-        return Component.literal(name);
+        return Component.empty()
+                .append(Component.object(new PlayerSprite(ResolvableProfile.createUnresolved(uuid), true))
+                        .withStyle(ChatFormatting.WHITE))
+                .append(" ")
+                .append(name);
     }
 
     @Override
