@@ -1,31 +1,31 @@
 package work.lclpnet.ap2.game.button_master
 
 import net.fabricmc.fabric.api.event.player.UseBlockCallback
-import net.minecraft.world.level.block.Blocks
+import net.minecraft.ChatFormatting
+import net.minecraft.core.BlockPos
 import net.minecraft.core.component.DataComponents
+import net.minecraft.core.registries.Registries
+import net.minecraft.resources.ResourceKey
+import net.minecraft.server.level.ServerLevel
+import net.minecraft.server.level.ServerPlayer
+import net.minecraft.sounds.SoundEvents
+import net.minecraft.sounds.SoundSource
+import net.minecraft.tags.BlockTags
+import net.minecraft.world.InteractionHand
+import net.minecraft.world.InteractionResult
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.ai.attributes.Attributes
 import net.minecraft.world.entity.player.Player
+import net.minecraft.world.item.DyeColor
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.world.item.equipment.trim.ArmorTrim
 import net.minecraft.world.item.equipment.trim.TrimMaterials
 import net.minecraft.world.item.equipment.trim.TrimPatterns
-import net.minecraft.resources.ResourceKey
-import net.minecraft.core.registries.Registries
-import net.minecraft.tags.BlockTags
-import net.minecraft.world.scores.Team
-import net.minecraft.server.level.ServerPlayer
-import net.minecraft.server.level.ServerLevel
-import net.minecraft.sounds.SoundSource
-import net.minecraft.sounds.SoundEvents
-import net.minecraft.world.InteractionResult
-import net.minecraft.world.item.DyeColor
-import net.minecraft.ChatFormatting
-import net.minecraft.world.InteractionHand
-import net.minecraft.world.phys.BlockHitResult
-import net.minecraft.core.BlockPos
 import net.minecraft.world.level.Level
+import net.minecraft.world.level.block.Blocks
+import net.minecraft.world.phys.BlockHitResult
+import net.minecraft.world.scores.Team
 import work.lclpnet.ap2.*
 import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.map.MapBootstrap
@@ -46,8 +46,6 @@ import work.lclpnet.gaco.scene.ServerWorldMountContext
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks
 import work.lclpnet.kibu.scheduler.Ticks
 import work.lclpnet.kibu.scheduler.api.TaskHandle
-import work.lclpnet.kibu.schematic.FabricBlockStateAdapter
-import work.lclpnet.kibu.schematic.SchematicFormats
 import work.lclpnet.kibu.translate.bossbar.TranslatedBossBar
 import work.lclpnet.kibu.translate.text.FormatWrapper.styled
 import work.lclpnet.lobby.game.map.GameMap
@@ -98,12 +96,8 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
     override fun createWorldBootstrap(world: ServerLevel, map: GameMap): CompletableFuture<Void> {
         wallBlocks = ResetWorldModifier(world, gameHandle.hooks)
 
-        return CompletableFuture.runAsync {
-            asset(assetPath("capsule.schem")).use {
-                val capsuleSchematic = SchematicFormats.SPONGE_V2.reader().read(it, FabricBlockStateAdapter.getInstance())
-
-                capsules = ButtonMasterCapsules(world, schemaHolder.get(), capsuleSchematic, commons())
-            }
+        return schematic(assetPath("capsule.schem")).thenAccept {
+            capsules = ButtonMasterCapsules(world, schemaHolder.get(), it, commons())
         }
     }
 
