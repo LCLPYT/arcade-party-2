@@ -121,7 +121,7 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : EliminationGameInstanc
 
         while (playerCount > 0) {
             // stack arenas in same level in x direction and stack levels in z direction
-            origin.setX(0)
+            origin.x = 0
             origin.z += maxLength
             maxLength = 0
 
@@ -147,7 +147,9 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : EliminationGameInstanc
 
             leveledInstanced.add(arenasInRound)
 
-            playerCount -= matchups * 2
+            if (playerCount <= 2) break
+
+            playerCount = matchups + playerCount % 2
         }
 
         return leveledInstanced
