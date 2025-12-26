@@ -42,6 +42,9 @@ import work.lclpnet.lobby.util.RayCaster;
 import java.util.*;
 
 import static net.minecraft.util.Formatting.*;
+import static net.minecraft.util.Formatting.GREEN;
+import static net.minecraft.util.Formatting.RED;
+import static net.minecraft.util.Formatting.YELLOW;
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
 public class RedLightGreenLightInstance extends FFAGameInstance implements Runnable {
@@ -200,6 +203,14 @@ public class RedLightGreenLightInstance extends FFAGameInstance implements Runna
             }
 
             Title.get(player).title(msg.translateFor(player));
+        }
+
+        if (enderWatchers != null) {
+            switch (status) {
+                case RED -> enderWatchers.show();
+                case YELLOW -> enderWatchers.warn();
+                case GREEN -> enderWatchers.hide();
+            }
         }
     }
 

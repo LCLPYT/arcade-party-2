@@ -61,6 +61,18 @@ public class EnderWatchers {
         }
     }
 
+    public void warn() {
+
+    }
+
+    public void show() {
+
+    }
+
+    public void hide() {
+
+    }
+
     private boolean isEnderWatcher(BlockState state, BlockPos pos) {
         if (!state.isOf(Blocks.PLAYER_HEAD) && !state.isOf(Blocks.PLAYER_WALL_HEAD)) return false;
 
