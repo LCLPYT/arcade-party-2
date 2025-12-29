@@ -1,166 +1,149 @@
 package work.lclpnet.ap2.game.pvp_tournament.tournament
 
+import work.lclpnet.ap2.impl.game.data.type.PlayerRef
 import java.nio.file.Path
 import kotlin.io.path.writeText
+import kotlin.math.max
 
-data class Point(val x: Double, val y: Double)
+private class VisualNode(
+    val match: Match? = null,
+    val player: PlayerRef? = null,
+) {
+    var x: Double = 0.0
+    var y: Double = 0.0
+    val children = mutableListOf<VisualNode>()
 
-fun line(x1: Double, y1: Double, x2: Double, y2: Double): String {
-    return """<line x1="$x1" y1="$y1" x2="$x2" y2="$y2" class="match-line" />"""
+    val isLeaf: Boolean get() = children.isEmpty()
 }
 
-fun circle(cx: Double, cy: Double, r: Int): String {
-    return """<circle cx="$cx" cy="$cy" r="$r" class="point" />"""
+fun generateSvg(tournament: Tournament, outPath: Path) {
+    val simplifiedTournament = tournament.simplified()
+    val finale = simplifiedTournament.finale
+
+    val rootNode = buildVisualTree(finale)
+
+    val rowHeight = 40.0
+    val colWidth = 100.0
+    val padding = 20.0
+    val dotRadius = 4.0
+
+    // Assign Y coordinates (Leaves get fixed rows, parents are averaged)
+    val leaves = collectLeaves(rootNode)
+    leaves.forEachIndexed { index, node ->
+        node.y = padding + index * rowHeight
+    }
+    assignParentY(rootNode)
+
+    // Assign X coordinates (Leaves at 0, parents based on max child depth)
+    assignXCoordinates(rootNode, padding + 100.0, colWidth) // Extra padding for names
+
+    // Determine Canvas Size
+    val maxX = getMaxX(rootNode) + padding
+    val maxY = leaves.size * rowHeight + padding * 2
+
+    // Generate SVG Content
+    val svg = StringBuilder()
+    svg.append("""<svg width="$maxX" height="$maxY" xmlns="http://www.w3.org/2000/svg">""")
+    svg.append("""<style>text { font-family: sans-serif; font-size: 12px; dominant-baseline: middle; }</style>""")
+
+    // Background
+    svg.append("""<rect width="100%" height="100%" fill="white" />""")
+
+    // Recursive Render
+    renderNode(svg, rootNode, dotRadius)
+
+    svg.append("</svg>")
+
+    outPath.writeText(svg.toString())
 }
 
-fun text(x: Double, y: Double, content: String, anchor: String = "middle"): String {
-    // Escape XML special chars
-    val safeContent = content
-        .replace("&", "&amp;")
-        .replace("<", "&lt;")
-        .replace(">", "&gt;")
+// --- Helper Functions ---
 
-    return """<text x="$x" y="$y" text-anchor="$anchor" class="winner-text">$safeContent</text>"""
+private fun buildVisualTree(match: Match): VisualNode {
+    val node = VisualNode(match = match)
+
+    // Process Left
+    if (match.leftChild != null) {
+        node.children.add(buildVisualTree(match.leftChild!!))
+    } else if (match.leftPlayer != null) {
+        node.children.add(VisualNode(player = match.leftPlayer))
+    }
+
+    // Process Right
+    if (match.rightChild != null) {
+        node.children.add(buildVisualTree(match.rightChild!!))
+    } else if (match.rightPlayer != null) {
+        node.children.add(VisualNode(player = match.rightPlayer))
+    }
+
+    return node
 }
 
-class TournamentSvgVisualizer {
+private fun collectLeaves(node: VisualNode): List<VisualNode> {
+    if (node.isLeaf) return listOf(node)
+    return node.children.flatMap { collectLeaves(it) }
+}
 
-    fun generateSvg(tournament: Tournament, outPath: Path) {
-        // 1. Identify the Root (The Final Match)
-        // We assume the root is the match that has no "winnerNext" within this specific tree context.
-        // If there are multiple (e.g., disconnected brackets), we pick the first one found or handle list.
-        // For this implementation, we visualize the main tree ending at the final.
-        val rootMatch = tournament.matches.firstOrNull { it.winnerNext == null }
-            ?: throw IllegalArgumentException("No final match found (circular dependency or empty tournament).")
+private fun assignParentY(node: VisualNode): Double {
+    if (node.isLeaf) return node.y
 
-        // 2. Configuration for Layout
-        val nodeWidth = 150.0  // Horizontal space per round
-        val nodeHeight = 60.0  // Vertical space per player slot
-        val padding = 50.0
+    val childYs = node.children.map { assignParentY(it) }
+    node.y = childYs.average()
+    return node.y
+}
 
-        // 3. Layout Calculation
-        // We need to determine the (x, y) coordinates for every match.
-        // Strategy:
-        // - X is determined by depth from the root (Root is at max X).
-        // - Y is determined by the "leaf" position in a flattened list.
+private fun assignXCoordinates(node: VisualNode, startX: Double, colWidth: Double): Double {
+    if (node.isLeaf) {
+        node.x = startX
+        return 0.0
+    }
 
-        val layout = HashMap<Match, Point>()
+    val maxChildDepth = node.children.maxOf { child ->
+        // Recursively calculate depth, but we don't need the return value for positioning child,
+        // we need it to determine current node X
+        assignXCoordinates(child, startX, colWidth)
+    }
 
-        // Calculate the maximum depth to determine canvas width
-        fun getDepth(m: Match): Int {
-            if (m.getChildren().isEmpty()) return 0
-            return 1 + m.getChildren().maxOf { getDepth(it) }
-        }
-        val maxDepth = getDepth(rootMatch)
-        val totalWidth = (maxDepth + 1) * nodeWidth + (padding * 2)
+    val currentDepth = maxChildDepth + 1
 
-        // Helper to assign Y coordinates based on leaf traversal
-        // Returns the vertical center of the subtree rooted at 'match'
-        var currentLeafCounter = 0.0
+    node.x = startX + (currentDepth * colWidth)
 
-        fun calculateLayout(match: Match, depth: Int): Point {
-            val children = match.getChildren()
+    return currentDepth
+}
 
-            val x = totalWidth - padding - (depth * nodeWidth)
-            val y: Double
+private fun getMaxX(node: VisualNode): Double {
+    val childMax = if (node.children.isNotEmpty()) node.children.maxOf { getMaxX(it) } else 0.0
 
-            if (children.isEmpty()) {
-                // It's a leaf node match (first round)
-                // Position based on the running counter
-                y = padding + (currentLeafCounter * nodeHeight)
-                currentLeafCounter++
-            } else {
-                // It's an internal node
-                // Reorder logic: We can swap left/right here if needed to avoid crossing,
-                // but in a strict tree, standard DFS ensures no crossing.
-                // We ensure we process children recursively first.
-                val childPositions = children.map { calculateLayout(it, depth + 1) }
+    return max(node.x, childMax)
+}
 
-                // The Y of this match is the average Y of its immediate children
-                y = childPositions.map { it.y }.average()
-            }
+private fun renderNode(sb: StringBuilder, node: VisualNode, radius: Double) {
+    val strokeColor = "#333"
 
-            val point = Point(x, y)
-            layout[match] = point
-            return point
+    // Render connections to children
+    if (node.children.isNotEmpty()) {
+        val childYMin = node.children.minOf { it.y }
+        val childYMax = node.children.maxOf { it.y }
+
+        // Draw horizontal lines from children to current X
+        node.children.forEach { child ->
+            sb.appendLine("""<line x1="${child.x}" y1="${child.y}" x2="${node.x}" y2="${child.y}" stroke="$strokeColor" stroke-width="2" />""")
+
+            // Recursively render child
+            renderNode(sb, child, radius)
         }
 
-        // Execute layout
-        calculateLayout(rootMatch, 0)
+        // Draw Vertical connection line at Node X
+        sb.appendLine("""<line x1="${node.x}" y1="$childYMin" x2="${node.x}" y2="$childYMax" stroke="$strokeColor" stroke-width="2" />""")
+    }
 
-        // Calculate total height based on leaves processed
-        val totalHeight = (currentLeafCounter * nodeHeight) + (padding * 2)
+    // Render Dot for current node
+    val fillColor = if (node.match?.completed == true || node.player != null) "#4CAF50" else "#ccc"
+    sb.appendLine("""<circle cx="${node.x}" cy="${node.y}" r="$radius" fill="$fillColor" />""")
 
-        // 4. Generate SVG Content
-        val sb = StringBuilder()
-        sb.append("""<svg width="$totalWidth" height="$totalHeight" xmlns="http://www.w3.org/2000/svg">""")
-
-        // Styles
-        sb.append("""
-        <style>
-            .match-line { stroke: #333; stroke-width: 2; fill: none; }
-            .winner-text { font-family: sans-serif; font-size: 12px; text-anchor: middle; dominant-baseline: middle; fill: #000; }
-            .player-label { font-family: sans-serif; font-size: 10px; fill: #666; }
-            .point { fill: #333; }
-        </style>
-    """.trimIndent())
-
-        // Helper to draw
-        fun drawTree(match: Match) {
-            val currentPos = layout[match] ?: return
-
-            // Draw children connectors
-            val children = match.getChildren()
-
-            if (children.isNotEmpty()) {
-                val childPositions = children.mapNotNull { layout[it] }
-
-                // 1. Horizontal lines from children to current X
-                // The prompt says: "horizontal lines originate from the winners of the child match...
-                // and continue until the x-coordinate of the current winner."
-                // However, visually, we usually stop slightly before to create the fork.
-                // Let's follow instructions strictly: Line from Child(x,y) to (Current(x), Child(y))
-
-                for (childPos in childPositions) {
-                    sb.appendLine(line(childPos.x, childPos.y, currentPos.x, childPos.y))
-                }
-
-                // 2. Vertical line connecting the horizontal lines
-                // Connects (Current(x), TopChild(y)) to (Current(x), BottomChild(y))
-                val minChildY = childPositions.minOf { it.y }
-                val maxChildY = childPositions.maxOf { it.y }
-                sb.appendLine(line(currentPos.x, minChildY, currentPos.x, maxChildY))
-
-                // Recurse
-                children.forEach { drawTree(it) }
-            } else {
-                // Leaf match: Draw lines for the raw players feeding into this match
-                // This represents the initial state before any match has occurred
-                val offset = nodeWidth / 2
-                val startX = currentPos.x - offset
-
-                // Upper input (Left Player)
-                sb.appendLine(line(startX, currentPos.y - 10, currentPos.x, currentPos.y - 10)) // simple fork
-                sb.appendLine(line(startX, currentPos.y + 10, currentPos.x, currentPos.y + 10))
-                sb.appendLine(line(currentPos.x, currentPos.y - 10, currentPos.x, currentPos.y + 10))
-
-                // Draw player names for the leaf inputs
-                val p1 = match.leftPlayer?.name ?: "TBD"
-                val p2 = match.rightPlayer?.name ?: "TBD"
-                sb.appendLine(text(startX - 5, currentPos.y - 10, p1, "end"))
-                sb.appendLine(text(startX - 5, currentPos.y + 10, p2, "end"))
-            }
-
-            // Draw the current winner point/text
-            val winnerName = match.winner?.name ?: "?"
-            sb.appendLine(circle(currentPos.x, currentPos.y, 3))
-            sb.appendLine(text(currentPos.x, currentPos.y - 10, winnerName))
-        }
-
-        drawTree(rootMatch)
-
-        sb.append("</svg>")
-
-        outPath.writeText(sb.toString())
+    // Render Text for Players (Leaves)
+    if (node.isLeaf && node.player != null) {
+        // Text anchor end to put it to the left of the point
+        sb.appendLine("""<text x="${node.x - 10}" y="${node.y}" text-anchor="end">${node.player.name}</text>""")
     }
 }

@@ -13,7 +13,7 @@ import work.lclpnet.ap2.api.game.data.SubjectRef;
 import java.util.Objects;
 import java.util.UUID;
 
-public record PlayerRef(UUID uuid, String name) implements SubjectRef {
+public record PlayerRef(@NotNull UUID uuid, @NotNull String name) implements SubjectRef {
 
     @Override
     public boolean equals(Object o) {

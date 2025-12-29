@@ -30,9 +30,10 @@ class TournamentSvgVisualizerTest {
     fun generateSvg(n: Int) {
         val builder = SingleEliminationTournamentBuilder(ByeTracker())
         val players = mutableListOf<PlayerRef>()
+        var char = 'A'
 
         repeat(n) {
-            val player = PlayerRef.createForUuid(UUID.randomUUID())
+            val player = PlayerRef(UUID.randomUUID(), char++.toString())
 
             players.add(player)
         }
@@ -42,7 +43,7 @@ class TournamentSvgVisualizerTest {
         svgPath?.let {
             val outPath = it.resolve("t_$n.svg")
 
-            TournamentSvgVisualizer().generateSvg(tournament, outPath)
+            generateSvg(tournament, outPath)
 
             println("Wrote $outPath")
         }
