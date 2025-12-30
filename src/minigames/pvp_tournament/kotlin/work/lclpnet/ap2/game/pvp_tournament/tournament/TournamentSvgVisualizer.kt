@@ -16,134 +16,137 @@ private class VisualNode(
     val isLeaf: Boolean get() = children.isEmpty()
 }
 
-fun generateSvg(tournament: Tournament, outPath: Path) {
-    val simplifiedTournament = tournament.simplified()
-    val finale = simplifiedTournament.finale
+class TournamentSvgVisualizer {
 
-    val rootNode = buildVisualTree(finale)
+    fun generateSvg(tournament: Tournament, outPath: Path) {
+        val simplifiedTournament = tournament.simplified()
+        val finale = simplifiedTournament.finale
 
-    val rowHeight = 40.0
-    val colWidth = 100.0
-    val padding = 20.0
-    val dotRadius = 4.0
+        val rootNode = buildVisualTree(finale)
 
-    // Assign Y coordinates (Leaves get fixed rows, parents are averaged)
-    val leaves = collectLeaves(rootNode)
-    leaves.forEachIndexed { index, node ->
-        node.y = padding + index * rowHeight
-    }
-    assignParentY(rootNode)
+        val rowHeight = 40.0
+        val colWidth = 100.0
+        val padding = 20.0
+        val dotRadius = 4.0
 
-    // Assign X coordinates (Leaves at 0, parents based on max child depth)
-    assignXCoordinates(rootNode, padding + 100.0, colWidth) // Extra padding for names
+        // Assign Y coordinates (Leaves get fixed rows, parents are averaged)
+        val leaves = collectLeaves(rootNode)
+        leaves.forEachIndexed { index, node ->
+            node.y = padding + index * rowHeight
+        }
+        assignParentY(rootNode)
 
-    // Determine Canvas Size
-    val maxX = getMaxX(rootNode) + padding
-    val maxY = leaves.size * rowHeight + padding * 2
+        // Assign X coordinates (Leaves at 0, parents based on max child depth)
+        assignXCoordinates(rootNode, padding + 100.0, colWidth) // Extra padding for names
 
-    // Generate SVG Content
-    val svg = StringBuilder()
-    svg.append("""<svg width="$maxX" height="$maxY" xmlns="http://www.w3.org/2000/svg">""")
-    svg.append("""<style>text { font-family: sans-serif; font-size: 12px; dominant-baseline: middle; }</style>""")
+        // Determine Canvas Size
+        val maxX = getMaxX(rootNode) + padding
+        val maxY = leaves.size * rowHeight + padding * 2
 
-    // Background
-    svg.append("""<rect width="100%" height="100%" fill="white" />""")
+        // Generate SVG Content
+        val svg = StringBuilder()
+        svg.append("""<svg width="$maxX" height="$maxY" xmlns="http://www.w3.org/2000/svg">""")
+        svg.append("""<style>text { font-family: sans-serif; font-size: 12px; dominant-baseline: middle; }</style>""")
 
-    // Recursive Render
-    renderNode(svg, rootNode, dotRadius)
+        // Background
+        svg.append("""<rect width="100%" height="100%" fill="white" />""")
 
-    svg.append("</svg>")
+        // Recursive Render
+        renderNode(svg, rootNode, dotRadius)
 
-    outPath.writeText(svg.toString())
-}
+        svg.append("</svg>")
 
-// --- Helper Functions ---
-
-private fun buildVisualTree(match: Match): VisualNode {
-    val node = VisualNode(match = match)
-
-    // Process Left
-    if (match.leftChild != null) {
-        node.children.add(buildVisualTree(match.leftChild!!))
-    } else if (match.leftPlayer != null) {
-        node.children.add(VisualNode(player = match.leftPlayer))
+        outPath.writeText(svg.toString())
     }
 
-    // Process Right
-    if (match.rightChild != null) {
-        node.children.add(buildVisualTree(match.rightChild!!))
-    } else if (match.rightPlayer != null) {
-        node.children.add(VisualNode(player = match.rightPlayer))
-    }
+    private fun buildVisualTree(match: Match): VisualNode {
+        val node = VisualNode(match = match)
 
-    return node
-}
-
-private fun collectLeaves(node: VisualNode): List<VisualNode> {
-    if (node.isLeaf) return listOf(node)
-    return node.children.flatMap { collectLeaves(it) }
-}
-
-private fun assignParentY(node: VisualNode): Double {
-    if (node.isLeaf) return node.y
-
-    val childYs = node.children.map { assignParentY(it) }
-    node.y = childYs.average()
-    return node.y
-}
-
-private fun assignXCoordinates(node: VisualNode, startX: Double, colWidth: Double): Double {
-    if (node.isLeaf) {
-        node.x = startX
-        return 0.0
-    }
-
-    val maxChildDepth = node.children.maxOf { child ->
-        // Recursively calculate depth, but we don't need the return value for positioning child,
-        // we need it to determine current node X
-        assignXCoordinates(child, startX, colWidth)
-    }
-
-    val currentDepth = maxChildDepth + 1
-
-    node.x = startX + (currentDepth * colWidth)
-
-    return currentDepth
-}
-
-private fun getMaxX(node: VisualNode): Double {
-    val childMax = if (node.children.isNotEmpty()) node.children.maxOf { getMaxX(it) } else 0.0
-
-    return max(node.x, childMax)
-}
-
-private fun renderNode(sb: StringBuilder, node: VisualNode, radius: Double) {
-    val strokeColor = "#333"
-
-    // Render connections to children
-    if (node.children.isNotEmpty()) {
-        val childYMin = node.children.minOf { it.y }
-        val childYMax = node.children.maxOf { it.y }
-
-        // Draw horizontal lines from children to current X
-        node.children.forEach { child ->
-            sb.appendLine("""<line x1="${child.x}" y1="${child.y}" x2="${node.x}" y2="${child.y}" stroke="$strokeColor" stroke-width="2" />""")
-
-            // Recursively render child
-            renderNode(sb, child, radius)
+        // Process Left
+        if (match.leftChild != null) {
+            node.children.add(buildVisualTree(match.leftChild!!))
+        } else if (match.leftPlayer != null) {
+            node.children.add(VisualNode(player = match.leftPlayer))
         }
 
-        // Draw Vertical connection line at Node X
-        sb.appendLine("""<line x1="${node.x}" y1="$childYMin" x2="${node.x}" y2="$childYMax" stroke="$strokeColor" stroke-width="2" />""")
+        // Process Right
+        if (match.rightChild != null) {
+            node.children.add(buildVisualTree(match.rightChild!!))
+        } else if (match.rightPlayer != null) {
+            node.children.add(VisualNode(player = match.rightPlayer))
+        }
+
+        return node
     }
 
-    // Render Dot for current node
-    val fillColor = if (node.match?.completed == true || node.player != null) "#4CAF50" else "#ccc"
-    sb.appendLine("""<circle cx="${node.x}" cy="${node.y}" r="$radius" fill="$fillColor" />""")
+    private fun collectLeaves(node: VisualNode): List<VisualNode> {
+        if (node.isLeaf) return listOf(node)
+        return node.children.flatMap { collectLeaves(it) }
+    }
 
-    // Render Text for Players (Leaves)
-    if (node.isLeaf && node.player != null) {
-        // Text anchor end to put it to the left of the point
-        sb.appendLine("""<text x="${node.x - 10}" y="${node.y}" text-anchor="end">${node.player.name}</text>""")
+    private fun assignParentY(node: VisualNode): Double {
+        if (node.isLeaf) return node.y
+
+        val childYs = node.children.map { assignParentY(it) }
+        node.y = childYs.average()
+        return node.y
+    }
+
+    private fun assignXCoordinates(node: VisualNode, startX: Double, colWidth: Double): Double {
+        if (node.isLeaf) {
+            node.x = startX
+            return 0.0
+        }
+
+        val maxChildDepth = node.children.maxOf { child ->
+            // Recursively calculate depth, but we don't need the return value for positioning child,
+            // we need it to determine current node X
+            assignXCoordinates(child, startX, colWidth)
+        }
+
+        val currentDepth = maxChildDepth + 1
+
+        node.x = startX + (currentDepth * colWidth)
+
+        return currentDepth
+    }
+
+    private fun getMaxX(node: VisualNode): Double {
+        val childMax = if (node.children.isNotEmpty()) node.children.maxOf { getMaxX(it) } else 0.0
+
+        return max(node.x, childMax)
+    }
+
+    private fun renderNode(sb: StringBuilder, node: VisualNode, radius: Double) {
+        val strokeColor = "#000"
+        val nodeColor = "#000"
+        val leafNodeColor = "#4CAF50"
+
+        // Render connections to children
+        if (node.children.isNotEmpty()) {
+            val childYMin = node.children.minOf { it.y }
+            val childYMax = node.children.maxOf { it.y }
+
+            // Draw horizontal lines from children to current X
+            node.children.forEach { child ->
+                sb.appendLine("""<line x1="${child.x}" y1="${child.y}" x2="${node.x}" y2="${child.y}" stroke="$strokeColor" stroke-width="2" />""")
+
+                // Recursively render child
+                renderNode(sb, child, radius)
+            }
+
+            // Draw Vertical connection line at Node X
+            sb.appendLine("""<line x1="${node.x}" y1="$childYMin" x2="${node.x}" y2="$childYMax" stroke="$strokeColor" stroke-width="2" />""")
+        }
+
+        // Render Dot for current node
+        val fillColor = if (node.match?.completed == true || node.player != null) leafNodeColor else nodeColor
+        sb.appendLine("""<circle cx="${node.x}" cy="${node.y}" r="$radius" fill="$fillColor" />""")
+
+        // Render Text for Players (Leaves)
+        if (node.isLeaf && node.player != null) {
+            // Text anchor end to put it to the left of the point
+            sb.appendLine("""<text x="${node.x - 10}" y="${node.y}" text-anchor="end">${node.player.name}</text>""")
+        }
     }
 }

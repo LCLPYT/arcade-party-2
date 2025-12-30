@@ -43,7 +43,7 @@ class TournamentSvgVisualizerTest {
         svgPath?.let {
             val outPath = it.resolve("t_$n.svg")
 
-            generateSvg(tournament, outPath)
+            TournamentSvgVisualizer().generateSvg(tournament, outPath)
 
             println("Wrote $outPath")
         }
