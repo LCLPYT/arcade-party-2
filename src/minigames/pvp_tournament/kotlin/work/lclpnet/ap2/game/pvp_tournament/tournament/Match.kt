@@ -12,16 +12,36 @@ class Match(
 ) {
     var winner: PlayerRef? = null
         private set
-
     var completed: Boolean = false
         private set
 
-    @Synchronized
-    fun complete(winner: PlayerRef?) {
-        if (completed) return
+    val players: List<PlayerRef>
+        get() = listOfNotNull(leftPlayer, rightPlayer)
 
-        this.winner = winner
+    @Synchronized
+    fun complete(winner: PlayerRef?): Boolean {
+        if (completed) return false
+
         completed = true
+        this.winner = winner
+
+        val loser = when (winner) {
+            leftPlayer -> rightPlayer
+            rightPlayer -> leftPlayer
+            else -> null
+        }
+
+        winnerNext?.let {
+            it.acceptPlayerFromChildMatch(winner, this)
+            it.propagateByeMatch()
+        }
+
+        loserNext?.let {
+            it.acceptPlayerFromChildMatch(loser, this)
+            it.propagateByeMatch()
+        }
+
+        return true
     }
 
     @Synchronized
@@ -32,8 +52,17 @@ class Match(
         }
     }
 
+    @Synchronized
+    fun propagateByeMatch() {
+        if (!isBye()) return
+
+        val winner = byeMatchWinner() ?: return
+
+        complete(winner)
+    }
+
     fun isBye(): Boolean =
-        // no parent, and exactly one winner
+        // no children and exactly one winner
         (leftChild == null && rightChild == null && byeMatchWinner() != null)
                 // only left child and no right player
                 || (leftChild != null && rightChild == null && rightPlayer == null)
