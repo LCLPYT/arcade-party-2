@@ -10,8 +10,11 @@ import java.awt.image.BufferedImage
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.*
+import javax.imageio.ImageIO
+import kotlin.io.path.outputStream
+import kotlin.io.path.writeText
 
-class TournamentSvgVisualizerTest {
+class TournamentVisualizerTest {
 
     companion object {
 
@@ -34,7 +37,8 @@ class TournamentSvgVisualizerTest {
     fun base_n(n: Int) {
         val tournament = tournament(n)
 
-        writeImage(tournament, dir!!.resolve("base_$n.svg"))
+        writeSvg(tournament, dir!!.resolve("base_$n.svg"))
+        writePng(tournament, dir!!.resolve("base_$n.png"))
     }
 
     @ParameterizedTest
@@ -46,7 +50,8 @@ class TournamentSvgVisualizerTest {
             completeLevelRandomly(tournament)
         }
 
-        writeImage(tournament, dir!!.resolve("progressed_$n.svg"))
+        writeSvg(tournament, dir!!.resolve("progressed_$n.svg"))
+        writePng(tournament, dir!!.resolve("progressed_$n.png"))
     }
 
     private fun completeLevelRandomly(tournament: Tournament) {
@@ -56,14 +61,32 @@ class TournamentSvgVisualizerTest {
             .forEach { it.complete(it.players.random()) }
     }
 
-    private fun writeImage(
+    private fun writeSvg(
         tournament: Tournament,
         outPath: Path
     ) {
-        TournamentSvgVisualizer {
+        val svg = TournamentVisualizer {
             // use default skin for every player
             defaultIcon!!
-        }.generateSvg(tournament, outPath)
+        }.generateSvg(tournament)
+
+        outPath.writeText(svg)
+
+        println("Wrote $outPath")
+    }
+
+    private fun writePng(
+        tournament: Tournament,
+        outPath: Path
+    ) {
+        val img = TournamentVisualizer {
+            // use default skin for every player
+            defaultIcon!!
+        }.generateImage(tournament)
+
+        outPath.outputStream().use {
+            ImageIO.write(img, "png", it)
+        }
 
         println("Wrote $outPath")
     }
