@@ -60,6 +60,15 @@ class SkinFetcher(
         @JvmStatic
         fun sharedSkinDirectory(): Path = OsUtil.getCacheDir().resolve("kibu").resolve("mc_assets")
             .resolve("skins")
+
+        @JvmStatic
+        suspend fun loadDefaultSkin(): BufferedImage? = withContext(Dispatchers.IO) {
+            val url = requireNotNull(this::class.java.getResource("/steve.png")) {
+                "Default skin texture not found"
+            }
+
+            ImageIO.read(url)
+        }
     }
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
@@ -70,13 +79,7 @@ class SkinFetcher(
 
     suspend fun defaultSkin(): BufferedImage? =
         defaultSkin ?: defaultSkinMutex.withLock {
-            defaultSkin ?: withContext(Dispatchers.IO) {
-                val url = requireNotNull(this::class.java.getResource("/steve.png")) {
-                    "Default skin texture not found"
-                }
-
-                ImageIO.read(url)
-            }?.also { defaultSkin = it }
+            defaultSkin ?: loadDefaultSkin()?.also { defaultSkin = it }
         }
 
     suspend fun fetchSkin(uuid: UUID): BufferedImage? {

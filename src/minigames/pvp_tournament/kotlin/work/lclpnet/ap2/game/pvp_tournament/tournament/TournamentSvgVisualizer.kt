@@ -1,23 +1,38 @@
 package work.lclpnet.ap2.game.pvp_tournament.tournament
 
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef
+import java.awt.image.BufferedImage
+import java.io.ByteArrayOutputStream
 import java.nio.file.Path
+import java.util.Base64
+import javax.imageio.ImageIO
 import kotlin.io.path.writeText
 import kotlin.math.max
 
 private class VisualNode(
-    val match: Match? = null,
-    val player: PlayerRef? = null,
+    val match: Match,
+    player: PlayerRef? = null,
 ) {
     var x: Double = 0.0
     var y: Double = 0.0
     val children = mutableListOf<VisualNode>()
 
+    val player: PlayerRef? = when {
+        player != null -> player
+        match.winner != null -> match.winner
+        else -> null
+    }
+
     val isLeaf: Boolean get() = children.isEmpty()
 }
 
-class TournamentSvgVisualizer {
+fun interface PlayerIcons {
+    fun get(player: PlayerRef): BufferedImage
+}
 
+class TournamentSvgVisualizer(
+    val playerIcons: PlayerIcons,
+) {
     fun generateSvg(tournament: Tournament, outPath: Path) {
         val simplifiedTournament = tournament.simplified()
         val finale = simplifiedTournament.finale
@@ -46,7 +61,10 @@ class TournamentSvgVisualizer {
         // Generate SVG Content
         val svg = StringBuilder()
         svg.append("""<svg width="$maxX" height="$maxY" xmlns="http://www.w3.org/2000/svg">""")
-        svg.append("""<style>text { font-family: sans-serif; font-size: 12px; dominant-baseline: middle; }</style>""")
+        svg.append("""<style>
+            text { font-family: sans-serif; font-size: 12px; dominant-baseline: middle; }
+            image { image-rendering: pixelated; image-rendering: crisp-edges; }
+            </style>""".trimIndent())
 
         // Background
         svg.append("""<rect width="100%" height="100%" fill="white" />""")
@@ -66,14 +84,14 @@ class TournamentSvgVisualizer {
         if (match.leftChild != null) {
             node.children.add(buildVisualTree(match.leftChild!!))
         } else if (match.leftPlayer != null) {
-            node.children.add(VisualNode(player = match.leftPlayer))
+            node.children.add(VisualNode(match = match, player = match.leftPlayer))
         }
 
         // Process Right
         if (match.rightChild != null) {
             node.children.add(buildVisualTree(match.rightChild!!))
         } else if (match.rightPlayer != null) {
-            node.children.add(VisualNode(player = match.rightPlayer))
+            node.children.add(VisualNode(match = match, player = match.rightPlayer))
         }
 
         return node
@@ -120,7 +138,6 @@ class TournamentSvgVisualizer {
     private fun renderNode(sb: StringBuilder, node: VisualNode, radius: Double) {
         val strokeColor = "#000"
         val nodeColor = "#000"
-        val leafNodeColor = "#4CAF50"
 
         // Render connections to children
         if (node.children.isNotEmpty()) {
@@ -140,13 +157,31 @@ class TournamentSvgVisualizer {
         }
 
         // Render Dot for current node
-        val fillColor = if (node.match?.completed == true || node.player != null) leafNodeColor else nodeColor
-        sb.appendLine("""<circle cx="${node.x}" cy="${node.y}" r="$radius" fill="$fillColor" />""")
+        sb.appendLine("""<circle cx="${node.x}" cy="${node.y}" r="$radius" fill="$nodeColor" />""")
 
-        // Render Text for Players (Leaves)
-        if (node.isLeaf && node.player != null) {
-            // Text anchor end to put it to the left of the point
-            sb.appendLine("""<text x="${node.x - 10}" y="${node.y}" text-anchor="end">${node.player.name}</text>""")
+        // Render Players Icon
+        val player = when {
+            node.isLeaf -> if (node.player != node.match.winner) node.player else null
+            node.player != null && node.match.winnerNext?.winner != node.player -> node.player
+            else -> null
         }
+
+        if (player != null) {
+            val icon = playerIcons.get(player)
+
+            sb.appendLine(getSquareImageSvg(icon, node.x, node.y, 32.0))
+        }
+    }
+
+    fun getSquareImageSvg(image: BufferedImage, centerX: Double, centerY: Double, size: Double): String {
+        val out = ByteArrayOutputStream()
+        ImageIO.write(image, "png", out)
+
+        val encoded = Base64.getEncoder().encodeToString(out.toByteArray())
+
+        return """<image x="${centerX - size / 2}"
+                   y="${centerY - size / 2}"
+                   width="$size" height="$size"
+                   href="data:image/png;base64,$encoded"/>"""
     }
 }
