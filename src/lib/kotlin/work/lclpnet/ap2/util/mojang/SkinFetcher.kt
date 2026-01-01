@@ -9,7 +9,6 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.utils.io.jvm.javaio.*
-import io.netty.handler.codec.http.HttpResponseStatus
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -83,10 +82,27 @@ class SkinFetcher(
     suspend fun fetchSkin(uuid: UUID): BufferedImage? {
         logger.debug("Requested skin for player with uuid {}", uuid)
 
+        return executeWithLock(uuid) {
+            fetchSkinInternal(uuid)
+        }
+    }
+
+    suspend fun fetchSkin(profile: Profile): BufferedImage? {
+        logger.debug("Requested skin for profile {}", profile.id)
+
+        return executeWithLock(profile.id) {
+            loadSkinCatching(profile) ?: defaultSkin()
+        }
+    }
+
+    private suspend fun executeWithLock(
+        uuid: UUID,
+        action: suspend () -> BufferedImage?
+    ): BufferedImage? {
         val deferred = inFlightMutex.withLock {
             inFlight[uuid] ?: scope.async {
                 try {
-                    fetchSkinInternal(uuid)
+                    action()
                 } finally {
                     @Suppress("DeferredResultUnused")
                     inFlightMutex.withLock {
@@ -110,7 +126,7 @@ class SkinFetcher(
             return defaultSkin()
         } ?: return defaultSkin()
 
-        val skin = loadSkin(result.value)
+        val skin = loadSkinCatching(result.value)
 
         if (skin != null) {
             return skin
@@ -135,7 +151,17 @@ class SkinFetcher(
             return defaultSkin()
         } ?: return defaultSkin()
 
-        return loadSkin(freshProfile) ?: defaultSkin()
+        return loadSkinCatching(freshProfile) ?: defaultSkin()
+    }
+
+    private suspend fun loadSkinCatching(profile: Profile): BufferedImage? = try {
+        loadSkin(profile)
+    } catch (err: Throwable) {
+        if (err is CancellationException) throw err
+
+        logger.error("Failed to load skin of profile {}", profile, err)
+
+        null
     }
 
     private data class FetchResult<T>(
