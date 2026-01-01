@@ -4,9 +4,7 @@ import io.ktor.client.*
 import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.Assertions.assertNotSame
-import org.junit.jupiter.api.Assertions.assertSame
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -79,6 +77,22 @@ class SkinFetcherTest {
 
             assertNotNull(skin)
             assertSame(defaultSkin.await(), skin)
+        }
+    }
+
+    @Test
+    fun fetchSkin_concurrent() {
+        val uuid = UUID.fromString("853c80ef-3c37-49fd-aa49-938b674adae6")
+
+        runBlocking {
+            val first = async { skinFetcher!!.fetchSkin(uuid) }
+            val second = async { skinFetcher!!.fetchSkin(uuid) }
+
+            val firstSkin = first.await()
+            val secondSkin = second.await()
+
+            assertNotNull(firstSkin)
+            assertSame(firstSkin, secondSkin)
         }
     }
 }
