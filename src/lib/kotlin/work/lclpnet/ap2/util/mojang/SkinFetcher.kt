@@ -10,6 +10,7 @@ import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.utils.io.jvm.javaio.*
 import kotlinx.coroutines.*
+import kotlinx.coroutines.future.future
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.io.IOException
@@ -20,10 +21,13 @@ import work.lclpnet.gaco.asset.AssetPath
 import work.lclpnet.gaco.asset.cache.AssetCache
 import work.lclpnet.gaco.asset.cache.SqliteCacheIndex
 import work.lclpnet.kibu.assets.OsUtil
+import java.awt.Color
 import java.awt.image.BufferedImage
 import java.nio.charset.StandardCharsets
+import java.nio.file.Files
 import java.nio.file.Path
 import java.util.*
+import java.util.concurrent.CompletableFuture
 import javax.imageio.ImageIO
 import kotlin.io.path.*
 
@@ -45,13 +49,28 @@ class SkinFetcher(
             }
         }
 
+        /**
+         * Java API for creating a shared asset cache for the mojang api.
+         */
+        @OptIn(DelicateCoroutinesApi::class)
         @JvmStatic
-        fun sharedAssetCache(logger: Logger): AssetCache {
+        fun sharedAssetCacheAsync(logger: Logger): CompletableFuture<AssetCache> {
+            return GlobalScope.future { sharedAssetCache(logger) }
+        }
+
+        suspend fun sharedAssetCache(logger: Logger): AssetCache {
             val root = OsUtil.getCacheDir().resolve("kibu").resolve("mojang_api")
-            val indexPath = root.resolve("index.sqlite")
+
+            val index = withContext(Dispatchers.IO) {
+                Files.createDirectories(root)
+
+                val indexPath = root.resolve("index.sqlite")
+
+                SqliteCacheIndex.createSqliteIndex(indexPath, logger)
+            }
 
             return AssetCache(
-                SqliteCacheIndex.createSqliteIndex(indexPath, logger),
+                index,
                 root,
                 logger
             )
@@ -68,6 +87,39 @@ class SkinFetcher(
             }
 
             ImageIO.read(url)
+        }
+
+        @JvmStatic
+        fun getFaceTexture(skinImage: BufferedImage): BufferedImage {
+            val face = BufferedImage(8, 8, BufferedImage.TYPE_INT_ARGB)
+
+            val graphics = face.createGraphics()
+
+            // face texture
+            graphics.drawImage(
+                skinImage.getSubimage(8, 8, 8, 8),
+                0,
+                0,
+                8,
+                8,
+                Color.WHITE,
+                null
+            )
+
+            // hat texture
+            graphics.drawImage(
+                skinImage.getSubimage(40, 8, 8, 8),
+                0,
+                0,
+                8,
+                8,
+                Color(0, true),
+                null
+            )
+
+            graphics.dispose()
+
+            return face
         }
     }
 
