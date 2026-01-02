@@ -3,6 +3,7 @@ package work.lclpnet.ap2.game.pvp_tournament.tournament
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef
 
 class Match(
+    var round: Int,
     var leftChild: Match? = null,
     var rightChild: Match? = null,
     var leftPlayer: PlayerRef? = null,
