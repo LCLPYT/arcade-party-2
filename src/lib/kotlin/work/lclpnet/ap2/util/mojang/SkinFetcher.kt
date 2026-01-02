@@ -16,7 +16,7 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.io.IOException
 import kotlinx.serialization.json.Json
 import org.slf4j.Logger
-import work.lclpnet.ap2.toUndashedString
+import work.lclpnet.ap2.ext.toUndashedString
 import work.lclpnet.gaco.asset.AssetPath
 import work.lclpnet.gaco.asset.cache.AssetCache
 import work.lclpnet.gaco.asset.cache.SqliteCacheIndex

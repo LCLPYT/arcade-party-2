@@ -48,6 +48,10 @@ class SwissTournamentBuilder(
     }
 
     private fun buildMatchups(players: List<Player>): MutableList<Matchup> {
+        if (players.size % 2 == 1 && matchesPerPlayer % 2 != 0) {
+            error("An even number of matches per player is required for an odd number of players (players=${players.size}, matchesPerPlayer=$matchesPerPlayer)")
+        }
+
         // For an even number of players, any target match count works
         // For an odd number of players, the target match count needs to be even as one player must receive a
         // "bye" each round. In the final round, all players who still have open matches due to byes will play their

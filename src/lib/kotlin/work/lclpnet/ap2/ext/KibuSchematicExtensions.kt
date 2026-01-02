@@ -1,4 +1,4 @@
-package work.lclpnet.ap2
+package work.lclpnet.ap2.ext
 
 import net.minecraft.core.BlockPos
 import work.lclpnet.kibu.mc.KibuBlockPos
