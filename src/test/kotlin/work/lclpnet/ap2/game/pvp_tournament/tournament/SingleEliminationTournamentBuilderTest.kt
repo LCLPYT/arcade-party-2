@@ -5,6 +5,8 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef
 import java.util.*
+import kotlin.math.ceil
+import kotlin.math.log2
 import kotlin.math.max
 
 class SingleEliminationTournamentBuilderTest {
@@ -37,6 +39,10 @@ class SingleEliminationTournamentBuilderTest {
 
         assertAllMatchesConnectedAsChildren(tournament)
         assertAllMatchesConnectedAsParents(tournament)
+
+        val expectedMaxRound = max(1, ceil(log2(n.toFloat())).toInt())
+
+        assertEquals(expectedMaxRound, tournament.matches.maxOf { it.round })
     }
 
     private fun assertAllMatchesConnectedAsParents(tournament: Tournament) {
