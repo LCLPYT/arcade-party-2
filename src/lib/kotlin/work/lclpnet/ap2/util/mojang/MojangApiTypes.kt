@@ -8,8 +8,8 @@ import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.Json
-import work.lclpnet.ap2.toUndashedString
-import work.lclpnet.ap2.uuidFromUndashedString
+import work.lclpnet.ap2.ext.toUndashedString
+import work.lclpnet.ap2.ext.uuidFromUndashedString
 import java.util.*
 import kotlin.io.encoding.Base64
 

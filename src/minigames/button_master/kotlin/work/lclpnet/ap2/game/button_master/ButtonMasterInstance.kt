@@ -30,6 +30,12 @@ import work.lclpnet.ap2.*
 import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.map.MapBootstrap
 import work.lclpnet.ap2.api.util.heads.PlayerHead
+import work.lclpnet.ap2.ext.allPlayers
+import work.lclpnet.ap2.ext.players
+import work.lclpnet.ap2.ext.resetAttribute
+import work.lclpnet.ap2.ext.setAttribute
+import work.lclpnet.ap2.ext.teleport
+import work.lclpnet.ap2.ext.translate
 import work.lclpnet.ap2.impl.game.EliminationGameInstance
 import work.lclpnet.ap2.impl.map.schema.SchemaHolder
 import work.lclpnet.ap2.impl.util.ApRegistries

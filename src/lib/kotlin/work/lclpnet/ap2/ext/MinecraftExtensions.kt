@@ -1,4 +1,4 @@
-package work.lclpnet.ap2
+package work.lclpnet.ap2.ext
 
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Holder
@@ -13,6 +13,8 @@ import net.minecraft.world.entity.Relative
 import net.minecraft.world.entity.ai.attributes.Attribute
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.block.Block
+import net.minecraft.world.phys.Vec3
+import work.lclpnet.ap2.impl.map.MapUtil.centeredDouble
 import work.lclpnet.ap2.impl.util.EntityUtil
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess
 import work.lclpnet.kibu.access.entity.ServerPlayerAccess
@@ -67,3 +69,9 @@ fun LivingEntity.setAttribute(attribute: Holder<Attribute>, value: Double)
 
 fun LivingEntity.resetAttribute(attribute: Holder<Attribute>)
         = EntityUtil.resetAttribute(this, attribute)
+
+fun Vec3.centered() = Vec3(
+    centeredDouble(x),
+    centeredDouble(y),
+    centeredDouble(z),
+)

@@ -1,4 +1,4 @@
-package work.lclpnet.ap2
+package work.lclpnet.ap2.ext
 
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup
 import net.minecraft.server.level.ServerPlayer
