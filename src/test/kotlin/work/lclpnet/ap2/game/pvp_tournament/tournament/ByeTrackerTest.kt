@@ -9,7 +9,7 @@ class ByeTrackerTest {
     fun byeCountInTree() {
         val bt = ByeTracker()
 
-        val match = Match().also { bt.register(it) }
+        val match = Match(0).also { bt.register(it) }
 
         assertEquals(0, bt.byeCountInTree(match))
     }
@@ -18,8 +18,8 @@ class ByeTrackerTest {
     fun addByeCountIncremented() {
         val bt = ByeTracker()
 
-        val a = Match().also { bt.register(it) }
-        val b = Match().also { bt.register(it) }
+        val a = Match(0).also { bt.register(it) }
+        val b = Match(0).also { bt.register(it) }
 
         bt.addBye(a)
 
@@ -31,10 +31,10 @@ class ByeTrackerTest {
     fun mergeTreeSummed() {
         val bt = ByeTracker()
 
-        val a = Match().also { bt.register(it) }
-        val b = Match().also { bt.register(it) }
-        val c = Match().also { bt.register(it) }
-        val d = Match().also { bt.register(it) }
+        val a = Match(0).also { bt.register(it) }
+        val b = Match(0).also { bt.register(it) }
+        val c = Match(0).also { bt.register(it) }
+        val d = Match(0).also { bt.register(it) }
 
         bt.addBye(a)
         bt.addBye(b)
