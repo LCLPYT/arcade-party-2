@@ -31,9 +31,9 @@ import work.lclpnet.ap2.ext.allPlayers
 import work.lclpnet.ap2.ext.interval
 import work.lclpnet.ap2.ext.players
 import work.lclpnet.ap2.ext.readShape
-import work.lclpnet.ap2.ext.setBlock
-import work.lclpnet.ap2.ext.setBlocks
-import work.lclpnet.ap2.ext.teleport
+import work.lclpnet.ap2.ext.mc.setBlock
+import work.lclpnet.ap2.ext.mc.setBlocks
+import work.lclpnet.ap2.ext.mc.teleport
 import work.lclpnet.ap2.ext.timeout
 import work.lclpnet.ap2.ext.translate
 import work.lclpnet.ap2.impl.game.FFAGameInstance

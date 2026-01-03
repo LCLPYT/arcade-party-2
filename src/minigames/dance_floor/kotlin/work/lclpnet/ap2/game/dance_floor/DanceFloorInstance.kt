@@ -17,10 +17,10 @@ import work.lclpnet.ap2.api.music.ConfiguredSong
 import work.lclpnet.ap2.api.music.SongWrapper
 import work.lclpnet.ap2.ext.interval
 import work.lclpnet.ap2.ext.players
-import work.lclpnet.ap2.ext.setBlock
-import work.lclpnet.ap2.ext.setSelectedSlot
-import work.lclpnet.ap2.ext.spawnParticles
-import work.lclpnet.ap2.ext.teleport
+import work.lclpnet.ap2.ext.mc.setBlock
+import work.lclpnet.ap2.ext.mc.setSelectedSlot
+import work.lclpnet.ap2.ext.mc.spawnParticles
+import work.lclpnet.ap2.ext.mc.teleport
 import work.lclpnet.ap2.ext.timeout
 import work.lclpnet.ap2.ext.translate
 import work.lclpnet.ap2.ext.withColor

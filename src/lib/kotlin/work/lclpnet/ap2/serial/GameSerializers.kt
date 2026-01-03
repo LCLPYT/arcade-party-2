@@ -7,6 +7,7 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import net.minecraft.world.phys.Vec3
 import work.lclpnet.ap2.ext.centered
+import work.lclpnet.ap2.ext.mc.centered
 import work.lclpnet.kibu.hook.util.PositionRotation
 
 object CenteredVec3Serializer : KSerializer<Vec3> {

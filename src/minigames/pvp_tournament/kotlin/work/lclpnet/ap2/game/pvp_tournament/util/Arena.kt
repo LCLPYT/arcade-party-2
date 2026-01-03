@@ -1,15 +1,13 @@
-package work.lclpnet.ap2.game.pvp_tournament
+package work.lclpnet.ap2.game.pvp_tournament.util
 
 import kotlinx.serialization.Serializable
 import net.minecraft.core.BlockPos
-import org.json.JSONArray
-import org.json.JSONObject
-import org.slf4j.Logger
+import work.lclpnet.ap2.ext.mc.minus
 import work.lclpnet.ap2.ext.transform
-import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.serial.CenteredPositionRotation
 import work.lclpnet.gaco.math.AffineIntMatrix
 import work.lclpnet.kibu.hook.util.PositionRotation
+import work.lclpnet.kibu.schematic.FabricBlockStateAdapter
 import work.lclpnet.kibu.structure.BlockStructure
 
 @Serializable
@@ -33,7 +31,9 @@ data class ArenaInstance(
     val origin: BlockPos,
 ) {
     val spawns: List<PositionRotation> get() {
-        val mat = AffineIntMatrix.makeTranslation(origin.multiply(-1))
+        val structureOrigin = FabricBlockStateAdapter.getInstance().revert(arena.structure.origin)
+
+        val mat = AffineIntMatrix.makeTranslation(origin - structureOrigin)
 
         return arena.data.spawns.map { it.transform(mat) }
     }

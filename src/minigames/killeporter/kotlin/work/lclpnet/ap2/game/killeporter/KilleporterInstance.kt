@@ -22,7 +22,7 @@ import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.map.MapBootstrap
 import work.lclpnet.ap2.ext.allPlayers
 import work.lclpnet.ap2.ext.players
-import work.lclpnet.ap2.ext.teleport
+import work.lclpnet.ap2.ext.mc.teleport
 import work.lclpnet.ap2.ext.timeout
 import work.lclpnet.ap2.ext.translate
 import work.lclpnet.ap2.impl.game.EliminationGameInstance

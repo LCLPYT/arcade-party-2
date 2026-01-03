@@ -9,8 +9,8 @@ import org.joml.Vector3d
 import work.lclpnet.ap2.ext.asVec3d
 import work.lclpnet.ap2.impl.game.GameCommons
 import work.lclpnet.ap2.impl.util.math.MathUtil
-import work.lclpnet.ap2.ext.setBlocks
-import work.lclpnet.ap2.ext.teleport
+import work.lclpnet.ap2.ext.mc.setBlocks
+import work.lclpnet.ap2.ext.mc.teleport
 import work.lclpnet.ap2.ext.toMinecraft
 import work.lclpnet.ap2.util.scene.ApSceneRenderer
 import work.lclpnet.gaco.ds.BlockBox

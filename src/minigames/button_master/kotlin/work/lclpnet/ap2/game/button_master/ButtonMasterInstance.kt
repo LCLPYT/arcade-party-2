@@ -32,9 +32,9 @@ import work.lclpnet.ap2.api.map.MapBootstrap
 import work.lclpnet.ap2.api.util.heads.PlayerHead
 import work.lclpnet.ap2.ext.allPlayers
 import work.lclpnet.ap2.ext.players
-import work.lclpnet.ap2.ext.resetAttribute
-import work.lclpnet.ap2.ext.setAttribute
-import work.lclpnet.ap2.ext.teleport
+import work.lclpnet.ap2.ext.mc.resetAttribute
+import work.lclpnet.ap2.ext.mc.setAttribute
+import work.lclpnet.ap2.ext.mc.teleport
 import work.lclpnet.ap2.ext.translate
 import work.lclpnet.ap2.impl.game.EliminationGameInstance
 import work.lclpnet.ap2.impl.map.schema.SchemaHolder

@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.game.pvp_tournament.tournament
+package work.lclpnet.ap2.game.pvp_tournament.gen
 
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef
 import kotlin.math.max
