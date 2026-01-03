@@ -7,7 +7,7 @@ import net.minecraft.world.phys.Vec3
 import work.lclpnet.ap2.impl.util.BlockHelper
 import work.lclpnet.ap2.impl.util.math.MathUtil
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape
-import work.lclpnet.ap2.ext.setBlock
+import work.lclpnet.ap2.ext.mc.setBlock
 import work.lclpnet.gaco.ds.WeightedList
 import java.util.Objects.hash
 import kotlin.math.*

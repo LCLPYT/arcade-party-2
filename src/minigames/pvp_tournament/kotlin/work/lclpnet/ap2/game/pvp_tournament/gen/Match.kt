@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.game.pvp_tournament.tournament
+package work.lclpnet.ap2.game.pvp_tournament.gen
 
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef
 
@@ -88,4 +88,13 @@ class Match(
         leftChild == null && rightChild == null
 
     fun isFinale() = winnerNext == null
+
+    fun hasPlayer(ref: PlayerRef) =
+        leftPlayer == ref || rightPlayer == ref
+
+    fun participant(ref: PlayerRef): Int = when (ref) {
+        leftPlayer -> 0
+        rightPlayer -> 1
+        else -> -1
+    }
 }

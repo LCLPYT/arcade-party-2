@@ -1,5 +1,6 @@
 package work.lclpnet.ap2.game.pvp_tournament
 
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
@@ -7,12 +8,14 @@ import net.minecraft.core.BlockPos
 import net.minecraft.server.level.ServerLevel
 import org.json.JSONObject
 import org.slf4j.Logger
-import work.lclpnet.ap2.api.base.Participants
-import work.lclpnet.ap2.game.pvp_tournament.tournament.ByeTracker
-import work.lclpnet.ap2.game.pvp_tournament.tournament.Match
-import work.lclpnet.ap2.game.pvp_tournament.tournament.SingleEliminationTournamentBuilder
-import work.lclpnet.ap2.game.pvp_tournament.tournament.SwissTournamentBuilder
-import work.lclpnet.ap2.game.pvp_tournament.tournament.Tournament
+import work.lclpnet.ap2.game.pvp_tournament.gen.ByeTracker
+import work.lclpnet.ap2.game.pvp_tournament.gen.Match
+import work.lclpnet.ap2.game.pvp_tournament.gen.SingleEliminationTournamentBuilder
+import work.lclpnet.ap2.game.pvp_tournament.gen.SwissTournamentBuilder
+import work.lclpnet.ap2.game.pvp_tournament.gen.Tournament
+import work.lclpnet.ap2.game.pvp_tournament.util.Arena
+import work.lclpnet.ap2.game.pvp_tournament.util.ArenaData
+import work.lclpnet.ap2.game.pvp_tournament.util.ArenaInstance
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef
 import work.lclpnet.ap2.impl.util.structure.StructureUtil
 import work.lclpnet.kibu.structure.BlockStructure
@@ -31,7 +34,7 @@ const val ARENA_PADDING_Z = 30
 class TournamentSetup(
     val logger: Logger,
     val map: GameMap,
-    val players: Participants,
+    val players: List<PlayerRef>,
     val schematicLoader: (String) -> BlockStructure,
 ) {
     suspend fun setup(variant: TournamentVariant): TournamentResult {
@@ -47,7 +50,7 @@ class TournamentSetup(
             TournamentVariant.SWISS_STYLE -> SwissTournamentBuilder(4)
         }
 
-        val tournament = builder.build(players.map { PlayerRef.create(it) })
+        val tournament = builder.build(players)
 
         val arenaInstances = generateArenasByRound(tournament, arenas, variant)
 
@@ -62,8 +65,15 @@ class TournamentSetup(
                 null
             }
         }.mapNotNull {
-            Json.decodeFromString<ArenaData>(it.toString())
-//            arenaDataFromJson(it, logger)
+            try {
+                Json.decodeFromString<ArenaData>(it.toString())
+            } catch (err: Throwable) {
+                if (err is CancellationException) throw err
+
+                logger.error("Failed to decode arena data from {}", it, err)
+
+                null
+            }
         }
     }
 
@@ -93,7 +103,7 @@ class TournamentSetup(
                 val arena = if (variant != TournamentVariant.SWISS_STYLE && match.isFinale()) {
                     arenas.filter { it.data.finale }.ifEmpty { arenas }
                 } else {
-                    arenas
+                    arenas.filter { !it.data.finale }.ifEmpty { arenas }
                 }.random()
 
                 val width = arena.structure.width

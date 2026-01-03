@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.game.pvp_tournament.tournament
+package work.lclpnet.ap2.game.pvp_tournament.gen
 
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.params.ParameterizedTest
