@@ -22,7 +22,6 @@ import work.lclpnet.ap2.ext.mc.teleportTo
 import work.lclpnet.ap2.game.pvp_tournament.gen.Match
 import work.lclpnet.ap2.game.pvp_tournament.util.ArenaInstance
 import work.lclpnet.ap2.game.pvp_tournament.util.KITS_1V1
-import work.lclpnet.ap2.game.pvp_tournament.util.Kit
 import work.lclpnet.ap2.game.pvp_tournament.util.MatchKitManager
 import work.lclpnet.ap2.impl.game.FFAGameInstance
 import work.lclpnet.ap2.impl.game.WinSequence
@@ -53,15 +52,22 @@ class MatchData(
 ) {
     val tasks = mutableListOf<TaskHandle>()
     val npcs = mutableListOf<EntityRef<Mannequin>>()
+    val players = mutableListOf<UUID>()
     var started = false
 
     val participants: List<Avatar>
         get() =
             match.players.mapNotNull { entity(it) }
 
-    fun entity(player: PlayerRef): Avatar? = allPlayers.getParticipant(player.uuid).orElse(null) ?: npcs
-        .find { it.uuid == player.uuid }
-        ?.resolve()
+    fun entity(ref: PlayerRef): Avatar? {
+        val player = allPlayers.getParticipant(ref.uuid).orElse(null)
+
+        if (player != null) {
+            return if (player.uuid in players) { player } else null
+        }
+
+        return npcs.find { it.uuid == ref.uuid }?.resolve()
+    }
 
     fun teleport(entity: Avatar) {
         val ref = match.players.find { it.uuid == entity.uuid } ?: return
@@ -141,7 +147,7 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
     }
 
     override fun prepare() {
-        playerRefs.forEach { setupForNextMatch(it) }
+        playerRefs.forEach { setupPlayerForNextMatch(it) }
         players().forEach { movementBlocker.disableMovement(it) }
     }
 
@@ -182,18 +188,18 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
         }
     }
 
-    fun setupForNextMatch(ref: PlayerRef): Boolean {
+    fun setupPlayerForNextMatch(ref: PlayerRef): Match? {
         val match = nextMatch(ref)
 
         if (match == null) {
             makeSpectator(ref)
-            return false
+            return null
         }
 
         val arena = tournamentResult!!.arenas[match] ?: error("No arena for match $match")
         val kit = kitManager[match]
 
-        val data = initMatchData(match, arena, kit)
+        val data = initMatchData(match, arena)
 
         val player = players().getParticipant(ref.uuid).orElse(null)
 
@@ -202,6 +208,8 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
             kit.equip(player)
 
             CombatControl.get(server).setStyle(player, kit.combatStyle)
+
+            data.players += player.uuid
         } else {
             val npc = Mannequin(EntityType.MANNEQUIN, world)
             npc.uuid = ref.uuid
@@ -217,10 +225,10 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
 
             kit.equip(npc)
 
-            data.npcs.add(EntityRef(npc))
+            data.npcs += EntityRef(npc)
         }
 
-        return true
+        return match
     }
 
     private fun makeSpectator(ref: PlayerRef) {
@@ -246,8 +254,7 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
     @Synchronized
     private fun initMatchData(
         match: Match,
-        arena: ArenaInstance,
-        kit: Kit
+        arena: ArenaInstance
     ): MatchData = matchData.computeIfAbsent(match) {
         MatchData(it, arena, world, players())
     }
@@ -305,8 +312,6 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
         val data = synchronized(this) {
             val data = matchData[match] ?: return
 
-            if (!data.started) return
-
             data.started = false
             matchData.remove(match)
 
@@ -357,15 +362,39 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
             return
         }
 
+        if (winner == null) {
+            match.winnerNext?.let { checkMatchStatus(it) }
+            match.loserNext?.let { checkMatchStatus(it) }
+        }
+
         runAfter(5.seconds) {
             data.npcs.mapNotNull { it.resolve() }.forEach { it.discard() }
             data.npcs.clear()
 
             match.players.forEach { ref ->
-                if (!setupForNextMatch(ref)) {
+                val nextMatch = setupPlayerForNextMatch(ref)
+
+                if (nextMatch == null) {
                     setPlacementLostInMatch(ref, match)
+                } else {
+                    checkMatchStatus(nextMatch)
                 }
             }
+        }
+    }
+
+    private fun checkMatchStatus(match: Match) {
+        if (match.completed) {
+            // the match could have been completed by a draw in one of the child matches
+            completeMatch(match, match.winner)
+            return
+        }
+
+        val data = synchronized(this) { matchData[match] } ?: return
+
+        if (data.participants.size >= 2 && !data.started) {
+            // if both players are present, start the match
+            startMatch(match)
         }
     }
 
