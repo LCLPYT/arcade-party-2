@@ -19,6 +19,9 @@ class Match(
     val players: List<PlayerRef>
         get() = listOfNotNull(leftPlayer, rightPlayer)
 
+    val completedAsDraw: Boolean
+        get() = completed && winner == null
+
     @Synchronized
     fun complete(winner: PlayerRef?): Boolean {
         if (completed) return false
@@ -60,18 +63,33 @@ class Match(
     fun propagateByeMatch() {
         if (!isBye()) return
 
+        val leftChild = leftChild
+        val rightChild = rightChild
+
+        if (leftChild != null && leftChild.completedAsDraw && rightChild != null && rightChild.completedAsDraw) {
+            complete(null)
+            return
+        }
+
         val winner = byeMatchWinner() ?: return
 
         complete(winner)
     }
 
-    fun isBye(): Boolean =
-        // no children and exactly one winner
-        (leftChild == null && rightChild == null && byeMatchWinner() != null)
-                // only left child and no right player
-                || (leftChild != null && rightChild == null && rightPlayer == null)
-                // only right child and no left player
-                || (leftChild == null && rightChild != null && leftPlayer == null)
+    fun isBye(): Boolean {
+        fun incoming(child: Match?) =
+            child != null && !child.completedAsDraw
+
+        return when {
+            incoming(leftChild) && incoming(rightChild) -> false
+            // only left child and no right player
+            incoming(leftChild) -> rightPlayer == null
+            // only right child and no left player
+            incoming(rightChild) -> leftPlayer == null
+            // no children and not two players
+            else -> leftPlayer == null || rightPlayer == null
+        }
+    }
 
     fun byeMatchChild(): Match? = when {
         leftChild != null && rightChild == null -> leftChild
