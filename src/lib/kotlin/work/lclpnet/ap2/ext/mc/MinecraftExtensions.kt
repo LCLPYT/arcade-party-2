@@ -5,6 +5,7 @@ import net.minecraft.core.Holder
 import net.minecraft.core.Position
 import net.minecraft.core.particles.ParticleOptions
 import net.minecraft.server.level.ServerLevel
+import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.Relative
@@ -63,5 +64,20 @@ fun Entity.teleport(level: ServerLevel, pos: PositionRotation) = teleportTo(
     pos.pitch,
     true
 )
+
+fun Entity.teleportTo(other: Entity) {
+    val level = other.level() as? ServerLevel ?: return
+
+    teleportTo(
+        level,
+        other.x,
+        other.y,
+        other.z,
+        emptySet<Relative>(),
+        other.xRot,
+        other.yRot,
+        true
+    )
+}
 
 fun ItemStack.unbreakable(): ItemStack = ItemHelper.unbreakable(this)

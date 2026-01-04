@@ -8,7 +8,10 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.BossEvent;
+import net.minecraft.world.damagesource.CombatEntry;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.level.border.WorldBorder;
@@ -26,6 +29,7 @@ import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.sink.IntDataSink;
 import work.lclpnet.ap2.api.util.action.Action;
+import work.lclpnet.ap2.core.mixin.LivingEntityAccessor;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.resource.ApResources;
 import work.lclpnet.ap2.impl.util.EntityUtil;
@@ -41,6 +45,7 @@ import work.lclpnet.gaco.collisions.util.PlayerAction;
 import work.lclpnet.gaco.math.Vec2i;
 import work.lclpnet.kibu.access.entity.ArmorStandAccess;
 import work.lclpnet.kibu.access.entity.ServerPlayerAccess;
+import work.lclpnet.kibu.access.misc.DamageTrackerAccess;
 import work.lclpnet.kibu.hook.HookFactory;
 import work.lclpnet.kibu.hook.util.PositionRotation;
 import work.lclpnet.kibu.scheduler.Ticks;
@@ -53,6 +58,7 @@ import work.lclpnet.lobby.game.map.MapUtils;
 import work.lclpnet.lobby.game.util.BossBarTimer;
 
 import java.util.*;
+import java.util.function.BiConsumer;
 import java.util.function.DoubleSupplier;
 
 import static java.lang.Math.floor;
@@ -400,6 +406,31 @@ public class GameCommons {
         gameHandle.getScoreboardManager().joinTeam(gameHandle.getParticipants(), team);
 
         return team;
+    }
+
+    public static <T extends LivingEntity> boolean handleCustomDeath(T entity, float health, BiConsumer<T, DamageSource> action) {
+        if (health > 0) return false;
+
+        // the entity is dying
+        List<CombatEntry> recentDamage = DamageTrackerAccess.getRecentDamage(entity);
+
+        int size = recentDamage.size();
+
+        if (size == 0) {
+            action.accept(entity, entity.damageSources().generic());
+        } else {
+            CombatEntry damageRecord = recentDamage.get(size - 1);
+            DamageSource source = damageRecord.source();
+
+            // try to use death protector
+            if (((LivingEntityAccessor) entity).invokeCheckTotemDeathProtection(source)) {
+                return true;
+            }
+
+            action.accept(entity, source);
+        }
+
+        return true;
     }
 
     public record WorldBorderConfig(

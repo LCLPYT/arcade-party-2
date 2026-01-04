@@ -8,7 +8,7 @@ import net.minecraft.world.item.ItemStack
 import work.lclpnet.combatctl.api.CombatStyle
 import work.lclpnet.combatctl.impl.CombatStyles
 
-data class Kit(
+class Kit(
     val id: String,
     val combatStyle: CombatStyle = CombatStyles.CLASSIC,
 ) {
