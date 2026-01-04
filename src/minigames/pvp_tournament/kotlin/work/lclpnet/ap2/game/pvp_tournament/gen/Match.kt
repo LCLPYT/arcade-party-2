@@ -24,6 +24,9 @@ class Match(
         if (completed) return false
 
         completed = true
+
+        val winner = if (leftPlayer == winner || rightPlayer == winner) winner else null
+
         this.winner = winner
 
         val loser = when (winner) {
@@ -96,5 +99,11 @@ class Match(
         leftPlayer -> 0
         rightPlayer -> 1
         else -> -1
+    }
+
+    fun other(ref: PlayerRef): PlayerRef? = when(ref) {
+        leftPlayer -> rightPlayer
+        rightPlayer -> leftPlayer
+        else -> null
     }
 }

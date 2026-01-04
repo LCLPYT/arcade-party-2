@@ -156,7 +156,7 @@ public class WinSequence<T, Ref extends SubjectRef> {
                     winnerName = translations.translateText("ap2.your_team").translateFor(player);
                 }
             } else {
-                playLooseSound(player);
+                playLoseSound(player);
             }
 
             if (winnerName.getStyle().getColor() == null) {
@@ -174,7 +174,7 @@ public class WinSequence<T, Ref extends SubjectRef> {
         TranslatedText nobody = translations.translateText("ap2.nobody").formatted(AQUA);
 
         for (ServerPlayer player : PlayerLookup.all(gameHandle.getServer())) {
-            playLooseSound(player);
+            playLoseSound(player);
             Title.get(player).title(nobody.translateFor(player), won.translateFor(player), 5, 100, 5);
         }
     }
@@ -200,18 +200,18 @@ public class WinSequence<T, Ref extends SubjectRef> {
                 playWinSound(player);
             } else {
                 subtitle = youLost;
-                playLooseSound(player);
+                playLoseSound(player);
             }
 
             Title.get(player).title(gameOver.translateFor(player), subtitle.translateFor(player), 5, 100, 5);
         }
     }
 
-    private static void playWinSound(ServerPlayer player) {
+    public static void playWinSound(ServerPlayer player) {
         ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 1, 0);
     }
 
-    private static void playLooseSound(ServerPlayer player) {
+    public static void playLoseSound(ServerPlayer player) {
         ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.BLAZE_DEATH, SoundSource.PLAYERS, 1, 1);
     }
 

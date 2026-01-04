@@ -49,13 +49,9 @@ class SkinFetcher(
             }
         }
 
-        /**
-         * Java API for creating a shared asset cache for the mojang api.
-         */
-        @OptIn(DelicateCoroutinesApi::class)
         @JvmStatic
-        fun sharedAssetCacheAsync(logger: Logger): CompletableFuture<AssetCache> {
-            return GlobalScope.future { sharedAssetCache(logger) }
+        fun sharedAssetCacheBlocking(logger: Logger): AssetCache {
+            return runBlocking { sharedAssetCache(logger) }
         }
 
         suspend fun sharedAssetCache(logger: Logger): AssetCache {

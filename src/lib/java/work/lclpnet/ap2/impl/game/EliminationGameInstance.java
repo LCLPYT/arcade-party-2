@@ -103,30 +103,12 @@ public abstract class EliminationGameInstance extends FFAGameInstance implements
         HookRegistrar hooks = gameHandle.getHooks();
 
         hooks.registerHook(EntityHealthCallback.HOOK, (entity, health) -> {
-            if (!(entity instanceof ServerPlayer player) || health > 0) return false;
+            if (!(entity instanceof ServerPlayer p)) return false;
 
-            // the player is dying
-            List<CombatEntry> recentDamage = DamageTrackerAccess.getRecentDamage(entity);
-
-            int size = recentDamage.size();
-
-            if (size == 0) {
-                onDeath(player, null);
-                eliminate(player);
-            } else {
-                CombatEntry damageRecord = recentDamage.get(size - 1);
-                DamageSource source = damageRecord.source();
-
-                // try to use death protector
-                if (((LivingEntityAccessor) player).invokeCheckTotemDeathProtection(source)) {
-                    return true;
-                }
-
+            return GameCommons.handleCustomDeath(p, health, (player, source) -> {
                 onDeath(player, source.getEntity());
                 eliminate(player, source);
-            }
-
-            return true;
+            });
         });
     }
 

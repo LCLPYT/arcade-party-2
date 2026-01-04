@@ -29,6 +29,7 @@
     "LivingEntityAccessor",
     "LivingEntityMixin",
     "LlamaMixin",
+    "MannequinAccessor",
     "MarkerMixin",
     "MinecraftServerMixin",
     "MobAccessor",

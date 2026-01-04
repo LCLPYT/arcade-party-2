@@ -4,36 +4,93 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.future.future
+import net.minecraft.ChatFormatting
+import net.minecraft.network.chat.Component
 import net.minecraft.server.level.ServerLevel
+import net.minecraft.server.level.ServerPlayer
+import net.minecraft.world.entity.Avatar
 import net.minecraft.world.entity.EntityType
 import net.minecraft.world.entity.decoration.Mannequin
+import net.minecraft.world.level.GameType
+import work.lclpnet.ap2.api.base.Participants
 import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.map.MapBootstrap
-import work.lclpnet.ap2.ext.logger
-import work.lclpnet.ap2.ext.players
+import work.lclpnet.ap2.core.mixin.MannequinAccessor
+import work.lclpnet.ap2.ext.*
 import work.lclpnet.ap2.ext.mc.teleport
+import work.lclpnet.ap2.ext.mc.teleportTo
+import work.lclpnet.ap2.game.pvp_tournament.gen.Match
+import work.lclpnet.ap2.game.pvp_tournament.util.ArenaInstance
 import work.lclpnet.ap2.game.pvp_tournament.util.KITS_1V1
-import work.lclpnet.ap2.game.pvp_tournament.util.KitManager
+import work.lclpnet.ap2.game.pvp_tournament.util.Kit
+import work.lclpnet.ap2.game.pvp_tournament.util.MatchKitManager
 import work.lclpnet.ap2.impl.game.FFAGameInstance
+import work.lclpnet.ap2.impl.game.WinSequence
 import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer
+import work.lclpnet.ap2.impl.game.data.Ordering
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker
 import work.lclpnet.ap2.util.PvpBehavior
+import work.lclpnet.combatctl.api.CombatControl
+import work.lclpnet.gaco.core.api.EntityRef
+import work.lclpnet.kibu.scheduler.api.TaskHandle
+import work.lclpnet.kibu.title.Title
 import work.lclpnet.lobby.game.map.GameMap
 import java.util.*
 import java.util.concurrent.CompletableFuture
+import kotlin.time.Duration.Companion.seconds
 
 enum class TournamentVariant {
     SINGLE_ELIMINATION,
     SWISS_STYLE,
 }
 
+class MatchData(
+    val match: Match,
+    val arena: ArenaInstance,
+    val level: ServerLevel,
+    private val allPlayers: Participants,
+) {
+    val tasks = mutableListOf<TaskHandle>()
+    val npcs = mutableListOf<EntityRef<Mannequin>>()
+    var started = false
+
+    val participants: List<Avatar>
+        get() =
+            match.players.mapNotNull { entity(it) }
+
+    fun entity(player: PlayerRef): Avatar? = allPlayers.getParticipant(player.uuid).orElse(null) ?: npcs
+        .find { it.uuid == player.uuid }
+        ?.resolve()
+
+    fun teleport(entity: Avatar) {
+        val ref = match.players.find { it.uuid == entity.uuid } ?: return
+        val spawn = arena.spawns[match.participant(ref)]
+
+        entity.teleport(level, spawn)
+    }
+
+    fun ref(entity: Avatar): PlayerRef? = when (entity.uuid) {
+        null -> null
+        match.leftPlayer?.uuid -> match.leftPlayer
+        match.rightPlayer?.uuid -> match.rightPlayer
+        else -> null
+    }
+}
+
 const val DEBUG_FILL_WITH_NPC = true
+val SUDDEN_DEATH_DELAY = 40.seconds
+val MATCH_DRAW_DELAY = 100.seconds
 
 class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle), MapBootstrap {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    private val data = IntScoreDataContainer(PlayerRef::create)
+    private val data = IntScoreDataContainer(
+        PlayerRef::create,
+        Ordering.ASCENDING,
+        "game.ap2.pvp_tournament.placed"
+    )
+    private val matchData = mutableMapOf<Match, MatchData>()
 
     val movementBlocker = SimpleMovementBlocker(gameHandle.scheduler).also {
         it.setModifySpeedAttribute(false)
@@ -48,18 +105,23 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
             addAll(players().map { PlayerRef.create(it) })
 
             repeat(extraPlayers) {
-                add(PlayerRef(UUID.randomUUID(), "NPC #$it"))
+                add(PlayerRef(UUID.randomUUID(), "NPC #${it + 1}"))
             }
         }
     } else {
         players().map { PlayerRef.create(it) }
     }
 
-    val kitManager = KitManager(KITS_1V1)
+    val kitManager = MatchKitManager(KITS_1V1)
+    var pvp: PvpBehavior? = null
 
     var tournamentResult: TournamentResult? = null
 
     override fun getData() = data
+
+    init {
+        useSurvivalMode()
+    }
 
     override fun createWorldBootstrap(
         world: ServerLevel,
@@ -79,38 +141,237 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
     }
 
     override fun prepare() {
-        playerRefs.forEach { ref ->
-            val match = tournamentResult!!.tournament.matches
-                .filter { it.hasPlayer(ref) }
-                .minBy { it.round }
+        playerRefs.forEach { setupForNextMatch(it) }
+        players().forEach { movementBlocker.disableMovement(it) }
+    }
 
-            val arena = tournamentResult!!.arenas[match] ?: error("No arena for match $match")
-            val spawn = arena.spawns[match.participant(ref)]
-            val kit = kitManager[match]
+    override fun go() {
+        pvp = PvpBehavior(gameHandle, world).also { it.configure() }
 
-            val player = players().getParticipant(ref.uuid).orElse(null)
+        players().forEach {
+            // disallow pvp behavior by default, enable when match is started
+            pvp!!.disallow(it)
 
-            if (player != null) {
-                player.teleport(spawn)
+            movementBlocker.enableMovement(it)
+        }
 
-                movementBlocker.disableMovement(player)
+        val matches = tournamentResult!!.tournament.matches
 
-                kit.equip(player)
+        val minRound = matches.minOf { it.round }
+
+        matches.filter { it.round == minRound }.forEach { startMatch(it) }
+
+        onDeathOf<ServerPlayer> { player, _ ->
+            val data = matchDataOf(player)
+
+            if (data != null) {
+                loseMatch(data, player)
+            }
+
+            makeSpectator(player)
+        }
+
+        onDeathOf<Mannequin> { npc, _ ->
+            val data = matchDataOf(npc)
+
+            if (data != null) {
+                loseMatch(data, npc)
+            }
+
+            npc.discard()
+        }
+    }
+
+    fun setupForNextMatch(ref: PlayerRef): Boolean {
+        val match = nextMatch(ref)
+
+        if (match == null) {
+            makeSpectator(ref)
+            return false
+        }
+
+        val arena = tournamentResult!!.arenas[match] ?: error("No arena for match $match")
+        val kit = kitManager[match]
+
+        val data = initMatchData(match, arena, kit)
+
+        val player = players().getParticipant(ref.uuid).orElse(null)
+
+        if (player != null) {
+            data.teleport(player)
+            kit.equip(player)
+
+            CombatControl.get(server).setStyle(player, kit.combatStyle)
+        } else {
+            val npc = Mannequin(EntityType.MANNEQUIN, world)
+            npc.uuid = ref.uuid
+            npc.customName = Component.literal(ref.name)
+            npc.isCustomNameVisible = true
+
+            @Suppress("KotlinConstantConditions")
+            (npc as MannequinAccessor).invokeSetHideDescription(true)
+
+            data.teleport(npc)
+
+            world.addFreshEntity(npc)
+
+            kit.equip(npc)
+
+            data.npcs.add(EntityRef(npc))
+        }
+
+        return true
+    }
+
+    private fun makeSpectator(ref: PlayerRef) {
+        val player = players().getParticipant(ref.uuid).orElse(null) ?: return
+
+        makeSpectator(player)
+    }
+
+    private fun makeSpectator(player: ServerPlayer) {
+        player.setGameMode(GameType.SPECTATOR)
+
+        val nearestPlayer = players()
+            .filter { !it.isSpectator && it.level() == player.level() }
+            .minByOrNull { it.distanceToSqr(player) } ?: return
+
+        player.teleportTo(nearestPlayer)
+    }
+
+    private fun nextMatch(ref: PlayerRef): Match? = tournamentResult!!.tournament.matches
+        .filter { it.hasPlayer(ref) && !it.completed }
+        .minByOrNull { it.round }
+
+    @Synchronized
+    private fun initMatchData(
+        match: Match,
+        arena: ArenaInstance,
+        kit: Kit
+    ): MatchData = matchData.computeIfAbsent(match) {
+        MatchData(it, arena, world, players())
+    }
+
+    fun matchDataOf(entity: Avatar) =
+        matchData.values.find { entity in it.participants }
+
+    fun startMatch(match: Match) {
+        val data = synchronized(this) {
+            val data = matchData[match] ?: return
+
+            if (data.started) return
+
+            data.started = true
+
+            data
+        }
+
+        data.participants.forEach { pvp!!.allow(it) }
+
+        data.tasks.add(runAfter(SUDDEN_DEATH_DELAY) {
+            var damagePerSecond = 2f
+            var timer = 0
+
+            data.tasks.add(runEvery(1.seconds) {
+                // if both participants would die at the same time though sudden death, end in draw
+                if (data.participants.all { it.health <= damagePerSecond }) {
+                    completeMatch(match, null)
+                    return@runEvery
+                }
+
+                data.participants.forEach {
+                    it.hurtServer(world, it.damageSources().magic(), damagePerSecond)
+                }
+
+                if (++timer % 10 == 0) {
+                    damagePerSecond += 2f
+                }
+            })
+        })
+
+        data.tasks.add(runAfter(MATCH_DRAW_DELAY) {
+            completeMatch(match, null)
+        })
+    }
+
+    fun loseMatch(data: MatchData, loser: Avatar) {
+        val ref = data.ref(loser) ?: return
+        val winner = data.match.other(ref) ?: return
+
+        completeMatch(data.match, winner)
+    }
+
+    fun completeMatch(match: Match, winner: PlayerRef?) {
+        val data = synchronized(this) {
+            val data = matchData[match] ?: return
+
+            if (!data.started) return
+
+            data.started = false
+            matchData.remove(match)
+
+            data
+        }
+
+        data.tasks.forEach { it.cancel() }
+        data.tasks.clear()
+
+        data.participants.forEach { pvp!!.disallow(it) }
+
+        data.participants.filterIsInstance<ServerPlayer>().forEach { player ->
+            if (winner?.uuid == player.uuid) {
+                WinSequence.playWinSound(player)
             } else {
-                val npc = Mannequin(EntityType.MANNEQUIN, world)
+                WinSequence.playLoseSound(player)
+            }
 
-                npc.teleport(world, spawn)
+            val title = if (winner != null) {
+                winner.getNameFor(player).copy().withStyle(ChatFormatting.AQUA)
+            } else {
+                translate("ap2.nobody")
+                    .formatted(ChatFormatting.AQUA)
+                    .translateFor(player)
+            }
 
-                world.addFreshEntity(npc)
+            Title.get(player).title(
+                title,
+                translate("game.ap2.pvp_tournament.won_match")
+                    .formatted(ChatFormatting.DARK_GREEN)
+                    .translateFor(player)
+            )
+        }
 
-                kit.equip(npc)
+        match.complete(winner)
+
+        // TODO respect swiss style tournament
+        if (match.isFinale()) {
+            if (winner != null) {
+                this.data.setScore(winner, 1)
+
+                match.other(winner)?.let {
+                    setPlacementLostInMatch(it, match)
+                }
+            }
+
+            winManager.complete()
+            return
+        }
+
+        runAfter(5.seconds) {
+            data.npcs.mapNotNull { it.resolve() }.forEach { it.discard() }
+            data.npcs.clear()
+
+            match.players.forEach { ref ->
+                if (!setupForNextMatch(ref)) {
+                    setPlacementLostInMatch(ref, match)
+                }
             }
         }
     }
 
-    override fun go() {
-        PvpBehavior(gameHandle, world).configure()
+    fun setPlacementLostInMatch(ref: PlayerRef, match: Match) {
+        val maxPlacement = tournamentResult!!.tournament.matches.maxOf { it.round } + 2
 
-        players().forEach { movementBlocker.enableMovement(it) }
+        data.setScore(ref, maxPlacement - match.round)
     }
 }

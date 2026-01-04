@@ -3,7 +3,7 @@ package work.lclpnet.ap2.game.pvp_tournament.util
 import work.lclpnet.ap2.game.pvp_tournament.gen.Match
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef
 
-class KitManager(
+class MatchKitManager(
     val kits: List<Kit>,
 ) {
     init {

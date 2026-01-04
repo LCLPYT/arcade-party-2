@@ -11,7 +11,7 @@ import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.storage.LevelData
 import net.minecraft.world.level.storage.loot.LootTable
 import work.lclpnet.ap2.api.game.MiniGameHandle
-import work.lclpnet.ap2.ext.eachTick
+import work.lclpnet.ap2.ext.runEveryTick
 import work.lclpnet.ap2.impl.game.EliminationGameInstance
 import work.lclpnet.ap2.impl.map.schema.SchemaHolder
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker
@@ -117,7 +117,7 @@ class QuickSgInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(game
 
         commons().scheduleWorldBorderShrink(WORLD_BORDER_DELAY, WORLD_BORDER_TIME, 0)
 
-        eachTick {
+        runEveryTick {
             for (player in players()) {
                 updateCompass(player)
             }
