@@ -15,6 +15,7 @@ import net.minecraft.world.entity.monster.zombie.Zombie;
 import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.entity.projectile.arrow.AbstractArrow;
 import net.minecraft.world.level.gamerules.GameRules;
+import org.jspecify.annotations.NonNull;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.game.apocalypse_survival.util.AsSetup;
@@ -114,7 +115,7 @@ public class ApocalypseSurvivalInstance extends EliminationGameInstance {
     }
 
     @Override
-    public void participantRemoved(ServerPlayer player) {
+    public void participantRemoved(@NonNull ServerPlayer player) {
         targetManager.removeParticipant(player);
 
         // put time survived msg

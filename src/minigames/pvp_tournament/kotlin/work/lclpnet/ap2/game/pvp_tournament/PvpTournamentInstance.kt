@@ -188,6 +188,16 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
         }
     }
 
+    override fun participantRemoved(player: ServerPlayer) {
+        super.participantRemoved(player)
+
+        val data = matchDataOf(player)
+
+        if (!winManager.isGameOver && data != null) {
+            loseMatch(data, player)
+        }
+    }
+
     fun setupPlayerForNextMatch(ref: PlayerRef): Match? {
         val match = nextMatch(ref)
 

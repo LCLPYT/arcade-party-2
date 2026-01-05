@@ -18,6 +18,7 @@ import net.minecraft.world.item.component.FireworkExplosion;
 import net.minecraft.world.item.component.Fireworks;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.scores.PlayerTeam;
+import org.jspecify.annotations.NonNull;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.GameOverListener;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
@@ -179,7 +180,7 @@ public class HotPotatoInstance extends EliminationGameInstance implements GameOv
     }
 
     @Override
-    public void participantRemoved(ServerPlayer player) {
+    public void participantRemoved(@NonNull ServerPlayer player) {
         super.participantRemoved(player);
 
         if (markedPlayer != player) return;
