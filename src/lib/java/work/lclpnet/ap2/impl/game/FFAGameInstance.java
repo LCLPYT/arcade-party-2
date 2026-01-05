@@ -2,6 +2,7 @@ package work.lclpnet.ap2.impl.game;
 
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.scores.Objective;
+import org.jetbrains.annotations.NotNull;
 import work.lclpnet.ap2.api.base.ParticipantListener;
 import work.lclpnet.ap2.api.event.IntScoreEventSource;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
@@ -51,7 +52,7 @@ public abstract class FFAGameInstance extends BaseGameInstance implements Partic
     }
 
     @Override
-    public void participantRemoved(ServerPlayer player) {
+    public void participantRemoved(@NotNull ServerPlayer player) {
         // this will be called when a participant quits or is eliminated
         winManager.checkForLastRemaining();
     }

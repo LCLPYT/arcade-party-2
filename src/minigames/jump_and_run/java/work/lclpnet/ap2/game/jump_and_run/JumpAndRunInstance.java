@@ -22,6 +22,7 @@ import net.minecraft.world.scores.Team;
 import net.minecraft.world.scores.criteria.ObjectiveCriteria;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
@@ -140,7 +141,7 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
     }
 
     @Override
-    public void participantRemoved(ServerPlayer player) {
+    public void participantRemoved(@NonNull ServerPlayer player) {
         super.participantRemoved(player);
 
         if (!winManager.isGameOver()) {
