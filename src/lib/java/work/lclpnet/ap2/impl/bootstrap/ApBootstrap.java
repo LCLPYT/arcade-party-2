@@ -18,6 +18,8 @@ import work.lclpnet.ap2.impl.i18n.VanillaTranslations;
 import work.lclpnet.ap2.impl.map.MapFacadeImpl;
 import work.lclpnet.ap2.impl.map.SeamlessMapRandomizer;
 import work.lclpnet.ap2.impl.music.AssetSongManager;
+import work.lclpnet.ap2.util.AssetManager;
+import work.lclpnet.ap2.util.mojang.SkinFetcher;
 import work.lclpnet.config.json.JsonConfigFactory;
 import work.lclpnet.gaco.asset.*;
 import work.lclpnet.gaco.asset.cache.AssetCache;
@@ -42,6 +44,7 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.ForkJoinPool;
 
 import static java.util.concurrent.CompletableFuture.runAsync;
+import static java.util.concurrent.CompletableFuture.supplyAsync;
 
 public class ApBootstrap {
 
@@ -50,10 +53,12 @@ public class ApBootstrap {
 
     private final JsonConfigFactory<Ap2Config> configFactory;
     private final Logger logger;
+    private final Cleanup cleanup;
 
-    public ApBootstrap(JsonConfigFactory<Ap2Config> configFactory, Logger logger) {
+    public ApBootstrap(JsonConfigFactory<Ap2Config> configFactory, Logger logger, Cleanup cleanup) {
         this.configFactory = configFactory;
         this.logger = logger;
+        this.cleanup = cleanup;
     }
 
     public CompletableFuture<ConfigManager> loadConfig(Executor executor) {
@@ -165,14 +170,34 @@ public class ApBootstrap {
         var mapTask = loadAp2Maps(mapManager);
         var containerTask = loadContainer(dataManager);
         var vanillaTranslationsTask = runAsync(vanillaTranslations::init);
+        var assetManagerTask = supplyAsync(this::createAssetManagerBlocking);
 
-        return CompletableFuture.supplyAsync(() -> {
+        return supplyAsync(() -> {
             mapTask.join();
             containerTask.join();
             vanillaTranslationsTask.join();
+            var assetManager = assetManagerTask.join();
 
-            return new Result(worldFacade, mapFacade, songManager, dataManager);
+            return new Result(worldFacade, mapFacade, songManager, dataManager, assetManager);
         });
+    }
+
+    private AssetManager createAssetManagerBlocking() {
+        var httpClient = SkinFetcher.createHttpClient();
+
+        cleanup.whenDone(httpClient::close);
+
+        var mojangAssetCache = SkinFetcher.sharedAssetCacheBlocking(logger);
+
+        cleanup.whenDone(() -> {
+            try {
+                mojangAssetCache.close();
+            } catch (Exception e) {
+                logger.error("Failed to close mojang asset cache", e);
+            }
+        });
+
+        return new AssetManager(httpClient, mojangAssetCache);
     }
 
     @NotNull
@@ -203,6 +228,15 @@ public class ApBootstrap {
         return Objects.requireNonNull(getClass().getResourceAsStream("/configuration.json"), "File not found: configuration.json");
     }
 
-    public record Result(WorldFacade worldFacade, MapFacade mapFacade, SongManager songManager,
-                         DataManager dataManager) {}
+    public record Result(
+            WorldFacade worldFacade,
+            MapFacade mapFacade,
+            SongManager songManager,
+            DataManager dataManager,
+            AssetManager assetManager
+    ) {}
+
+    public interface Cleanup {
+        void whenDone(Runnable action);
+    }
 }

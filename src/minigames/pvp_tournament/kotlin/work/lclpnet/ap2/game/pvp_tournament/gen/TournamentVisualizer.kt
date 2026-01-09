@@ -37,7 +37,7 @@ private class VisualNode(
 }
 
 fun interface PlayerIcons {
-    fun get(player: PlayerRef): BufferedImage
+    suspend fun get(player: PlayerRef): BufferedImage
 }
 
 class TournamentVisualizer(
@@ -49,7 +49,7 @@ class TournamentVisualizer(
     private val padding = 20.0
     private val dotRadius = 4.0
 
-    fun generateImage(tournament: Tournament): BufferedImage {
+    suspend fun generateImage(tournament: Tournament): BufferedImage {
         val (rootNode, width, height) = calculateLayout(tournament)
 
         val image = BufferedImage(width.toInt(), height.toInt(), BufferedImage.TYPE_INT_ARGB)
@@ -70,7 +70,7 @@ class TournamentVisualizer(
         return image
     }
 
-    fun generateSvg(tournament: Tournament): String {
+    suspend fun generateSvg(tournament: Tournament): String {
         val (rootNode, width, height) = calculateLayout(tournament)
 
         val svg = StringBuilder()
@@ -111,7 +111,7 @@ class TournamentVisualizer(
         return LayoutResult(rootNode, maxX, maxY)
     }
 
-    private fun renderNodeToGraphics(g: Graphics2D, node: VisualNode, radius: Double) {
+    private suspend fun renderNodeToGraphics(g: Graphics2D, node: VisualNode, radius: Double) {
         g.stroke = BasicStroke(2f)
         g.color = Color.BLACK
 
@@ -150,7 +150,7 @@ class TournamentVisualizer(
         }
     }
 
-    private fun renderNodeToSvg(sb: StringBuilder, node: VisualNode, radius: Double) {
+    private suspend fun renderNodeToSvg(sb: StringBuilder, node: VisualNode, radius: Double) {
         if (node.children.isNotEmpty()) {
             val childYMin = node.children.minOf { it.y }
             val childYMax = node.children.maxOf { it.y }

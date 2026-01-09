@@ -65,7 +65,7 @@ public class ArcadePartyInstance implements GameInstance {
 
     @Override
     public void start(GameOptions options) {
-        ApBootstrap bootstrap = new ApBootstrap(configFactory, logger);
+        ApBootstrap bootstrap = new ApBootstrap(configFactory, logger, environment::whenDone);
 
         bootstrap.loadConfig(ForkJoinPool.commonPool())
                 .thenCompose(configManager -> bootstrap.dispatch(configManager.getConfig(), environment, vanillaTranslations))
@@ -99,7 +99,6 @@ public class ArcadePartyInstance implements GameInstance {
     }
 
     private void dispatchGameStart(ApBootstrap.Result result, MiniGameManager gameManager, GameQueue queue) {
-
         MinecraftServer server = environment.getServer();
         Translations translations = environment.getTranslations();
 
@@ -130,7 +129,7 @@ public class ArcadePartyInstance implements GameInstance {
         var tablistManager = new TablistManager(translations, server);
 
         var args = new ApBaseArgs(container, queue, playerManager, forceGameCommand, songCache, scoreManager,
-                environment.getFinisher(), sessionStats, tablistManager);
+                environment.getFinisher(), sessionStats, tablistManager, result.assetManager());
 
         PreparationActivity preparation = new PreparationActivity(args);
 
