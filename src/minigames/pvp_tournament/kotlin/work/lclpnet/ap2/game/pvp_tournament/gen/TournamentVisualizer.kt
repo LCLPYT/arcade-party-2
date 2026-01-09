@@ -42,12 +42,13 @@ fun interface PlayerIcons {
 
 class TournamentVisualizer(
     val playerIcons: PlayerIcons,
+    val scale: Int = 1,
 ) {
     // Shared constants
-    private val rowHeight = 40.0
-    private val colWidth = 100.0
-    private val padding = 20.0
-    private val dotRadius = 4.0
+    private val rowHeight = 10.0 * scale
+    private val colWidth = 25.0 * scale
+    private val padding = 5.0 * scale
+    private val dotRadius = 1.0 * scale
 
     suspend fun generateImage(tournament: Tournament): BufferedImage {
         val (rootNode, width, height) = calculateLayout(tournament)
@@ -75,7 +76,12 @@ class TournamentVisualizer(
 
         val svg = StringBuilder()
         svg.append("""<svg width="$width" height="$height" xmlns="http://www.w3.org/2000/svg">""")
-        svg.append("""<style>text { font-family: sans-serif; font-size: 12px; dominant-baseline: middle; } image { image-rendering: pixelated; image-rendering: crisp-edges; }</style>""")
+        svg.append("""
+            <style>
+            text { font-family: sans-serif; font-size: ${3 * scale}px; dominant-baseline: middle; } 
+            image { image-rendering: pixelated; image-rendering: crisp-edges; }
+            </style>
+            """.trimIndent())
         svg.append("""<rect width="100%" height="100%" fill="white" />""")
 
         renderNodeToSvg(svg, rootNode, dotRadius)
@@ -112,7 +118,7 @@ class TournamentVisualizer(
     }
 
     private suspend fun renderNodeToGraphics(g: Graphics2D, node: VisualNode, radius: Double) {
-        g.stroke = BasicStroke(2f)
+        g.stroke = BasicStroke(max(1.0f, 0.5f * scale))
         g.color = Color.BLACK
 
         // Render connections
@@ -140,7 +146,7 @@ class TournamentVisualizer(
 
         if (player != null) {
             val icon = playerIcons.get(player)
-            val iconSize = 32.0
+            val iconSize = 8.0 * scale
 
             // Draw image centered at node.x, node.y
             val xPos = (node.x - iconSize / 2).toInt()
@@ -156,11 +162,11 @@ class TournamentVisualizer(
             val childYMax = node.children.maxOf { it.y }
 
             node.children.forEach { child ->
-                sb.appendLine("""<line x1="${child.x}" y1="${child.y}" x2="${node.x}" y2="${child.y}" stroke="#000" stroke-width="2" />""")
+                sb.appendLine("""<line x1="${child.x}" y1="${child.y}" x2="${node.x}" y2="${child.y}" stroke="#000" stroke-width="${max(1.0, 0.5 * scale)}" />""")
                 renderNodeToSvg(sb, child, radius)
             }
 
-            sb.appendLine("""<line x1="${node.x}" y1="$childYMin" x2="${node.x}" y2="$childYMax" stroke="#000" stroke-width="2" />""")
+            sb.appendLine("""<line x1="${node.x}" y1="$childYMin" x2="${node.x}" y2="$childYMax" stroke="#000" stroke-width="${max(1.0, 0.5 * scale)}" />""")
         }
 
         sb.appendLine("""<circle cx="${node.x}" cy="${node.y}" r="$radius" fill="#000" />""")
@@ -170,7 +176,7 @@ class TournamentVisualizer(
         if (player != null) {
             val icon = playerIcons.get(player)
 
-            sb.appendLine(getSquareImageSvg(icon, node.x, node.y, 32.0))
+            sb.appendLine(getSquareImageSvg(icon, node.x, node.y, 8.0 * scale))
         }
     }
 
