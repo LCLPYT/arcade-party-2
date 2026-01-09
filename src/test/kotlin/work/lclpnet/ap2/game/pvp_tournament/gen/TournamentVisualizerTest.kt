@@ -125,7 +125,7 @@ class TournamentVisualizerTest {
         outPath: Path,
         icons: PlayerIcons = { defaultIcon!! },
     ) {
-        val svg = runBlocking { TournamentVisualizer(icons).generateSvg(tournament) }
+        val svg = runBlocking { TournamentVisualizer(icons, scale = 4).generateSvg(tournament) }
 
         outPath.writeText(svg)
 
