@@ -1,8 +1,10 @@
 package work.lclpnet.ap2.game.pvp_tournament
 
+import eu.pb4.mapcanvas.api.core.CanvasColor
 import eu.pb4.mapcanvas.api.core.DrawableCanvas
 import eu.pb4.mapcanvas.api.core.PlayerCanvas
 import kotlinx.coroutines.*
+import kotlinx.coroutines.future.await
 import kotlinx.coroutines.future.future
 import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.Component
@@ -11,7 +13,6 @@ import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.entity.Avatar
 import net.minecraft.world.entity.EntityType
-import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.decoration.Mannequin
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.GameType
@@ -24,6 +25,7 @@ import work.lclpnet.ap2.ext.mc.teleport
 import work.lclpnet.ap2.ext.mc.teleportTo
 import work.lclpnet.ap2.game.pvp_tournament.gen.Match
 import work.lclpnet.ap2.game.pvp_tournament.gen.SkinPlayerIcons
+import work.lclpnet.ap2.game.pvp_tournament.gen.Tournament
 import work.lclpnet.ap2.game.pvp_tournament.gen.TournamentVisualizer
 import work.lclpnet.ap2.game.pvp_tournament.util.ArenaInstance
 import work.lclpnet.ap2.game.pvp_tournament.util.KITS_1V1
@@ -159,35 +161,35 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
     override fun createWorldBootstrap(
         world: ServerLevel,
         map: GameMap
-    ): CompletableFuture<Void> {
-        val skinsPreload = scope.future {
-            players().map {
-                launch { playerIcons.preload(it.gameProfile) }
-            }.joinAll()
+    ): CompletableFuture<Void> = scope.future {
+        val playerSkins = players().map {
+            launch { playerIcons.preload(it.gameProfile) }
         }
-        
+
         val setup = TournamentSetup(logger, map, playerRefs) { path ->
             schematicBlocking(assetPath(path))
         }
 
-        return scope.future {
-            setup.setup(TournamentVariant.SINGLE_ELIMINATION).also { tournamentResult = it }
-        }.thenCompose { result ->
-            gameHandle.server.submit {
-                setup.placeArenas(world, result.arenas.values)
-            }
-        }.thenCombine(skinsPreload) { _, _ -> null }
+        val result = setup.setup(TournamentVariant.SINGLE_ELIMINATION)
+
+        tournamentResult = result
+
+        val arenaPlacement = gameHandle.server.submit {
+            setup.placeArenas(world, result.arenas.values)
+        }
+
+        playerSkins.joinAll()
+
+        updateCanvas(result.tournament)
+
+        arenaPlacement.await()
     }
 
     override fun prepare() {
-        playerRefs.forEach { setupPlayerForNextMatch(it) }
-        players().forEach { movementBlocker.disableMovement(it) }
-
         preventMovingOfFilledMaps()
 
-        scope.launch {
-            updateCanvas()
-        }
+        playerRefs.forEach { setupPlayerForNextMatch(it) }
+        players().forEach { movementBlocker.disableMovement(it) }
     }
 
     private fun preventMovingOfFilledMaps() {
@@ -208,9 +210,9 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
         })
     }
 
-    private suspend fun updateCanvas() {
+    private suspend fun updateCanvas(tournament: Tournament) {
         val visualizer = TournamentVisualizer(playerIcons)
-        val image = visualizer.generateImage(tournamentResult!!.tournament)
+        val image = visualizer.generateImage(tournament)
         val raw = MapColorUtil.toBytes(image)
 
         val imgStartX = max(0, (image.width - canvas.width) / 2)
@@ -221,20 +223,24 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
         val canvasX = (canvas.width - image.width) / 2
         val canvasY = (canvas.height - image.height) / 2
 
-        for (imgY in imgStartY..<imgEndY) {
-            for (imgX in imgStartX..<imgEndX) {
-                val canvasX = imgX - imgStartX + canvasX
-                val canvasY = imgY - imgStartY + canvasY
+        synchronized(canvas) {
+            canvas.fill(CanvasColor.CLEAR)
 
-                canvas.setRaw(
-                    canvasX,
-                    canvasY,
-                    raw[imgY * image.width + imgX]
-                )
+            for (imgY in imgStartY..<imgEndY) {
+                for (imgX in imgStartX..<imgEndX) {
+                    val canvasX = imgX - imgStartX + canvasX
+                    val canvasY = imgY - imgStartY + canvasY
+
+                    canvas.setRaw(
+                        canvasX,
+                        canvasY,
+                        raw[imgY * image.width + imgX]
+                    )
+                }
             }
-        }
 
-        canvas.sendUpdates()
+            canvas.sendUpdates()
+        }
     }
 
     override fun go() {
@@ -458,6 +464,8 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
         }
 
         match.complete(winner)
+
+        scope.launch { updateCanvas(tournamentResult!!.tournament) }
 
         // TODO respect swiss style tournament
         if (match.isFinale()) {
