@@ -125,7 +125,7 @@ class TournamentVisualizerTest {
         outPath: Path,
         icons: PlayerIcons = { defaultIcon!! },
     ) {
-        val svg = TournamentVisualizer(icons).generateSvg(tournament)
+        val svg = runBlocking { TournamentVisualizer(icons).generateSvg(tournament) }
 
         outPath.writeText(svg)
 
@@ -137,7 +137,9 @@ class TournamentVisualizerTest {
         outPath: Path,
         icons: PlayerIcons = { defaultIcon!! },
     ) {
-        val img = TournamentVisualizer(icons).generateImage(tournament)
+        val img = runBlocking {
+            TournamentVisualizer(icons).generateImage(tournament)
+        }
 
         outPath.outputStream().use {
             ImageIO.write(img, "png", it)

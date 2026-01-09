@@ -220,6 +220,7 @@ dependencies {
     modImplementation("work.lclpnet.mods:pal:${project.pal_version}")
     modImplementation("work.lclpnet.mods.gaco:gaco:${project.gaco_version}")
     modImplementation("work.lclpnet.mods.gaco:game-map-api:${project.game_map_api_version}")
+    modImplementation("eu.pb4:map-canvas-api:${project.map_canvas_api_version}")
 
     // runtime dependencies
     modRuntimeOnly("maven.modrinth:minecraft-sqlite-jdbc:3.49.1.0+2025-07-12")

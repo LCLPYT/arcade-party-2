@@ -1,5 +1,6 @@
 package work.lclpnet.ap2.util.mojang
 
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.descriptors.PrimitiveKind
@@ -8,6 +9,7 @@ import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonIgnoreUnknownKeys
 import work.lclpnet.ap2.ext.toUndashedString
 import work.lclpnet.ap2.ext.uuidFromUndashedString
 import java.util.*
@@ -32,6 +34,8 @@ data class Property(
 )
 
 @Serializable
+@OptIn(ExperimentalSerializationApi::class)
+@JsonIgnoreUnknownKeys
 data class Textures(
     val timestamp: Long,
     @Serializable(with = UuidWithoutDashes::class)
