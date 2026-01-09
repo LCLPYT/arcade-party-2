@@ -12,6 +12,7 @@ import java.io.ByteArrayOutputStream
 import java.util.Base64
 import javax.imageio.ImageIO
 import kotlin.math.max
+import kotlin.math.roundToInt
 
 private class VisualNode(
     val match: Match,
@@ -116,9 +117,6 @@ class TournamentVisualizer(
     }
 
     private suspend fun renderNodeToGraphics(g: Graphics2D, node: VisualNode, radius: Double) {
-        g.stroke = BasicStroke(max(1.0f, 0.5f * scale))
-        g.color = Color.BLACK
-
         // Render connections
         if (node.children.isNotEmpty()) {
             val childYMin = node.children.minOf { it.y }
@@ -126,18 +124,27 @@ class TournamentVisualizer(
 
             node.children.forEach { child ->
                 // Horizontal line from child to parent X
+                g.stroke = BasicStroke(max(1.0f, 0.5f * scale))
+                g.color = Color.BLACK
+
                 g.draw(Line2D.Double(child.x, child.y, node.x, child.y))
+
                 renderNodeToGraphics(g, child, radius)
             }
 
             // Vertical line connecting children
+            g.stroke = BasicStroke(max(1.0f, 0.5f * scale))
+            g.color = Color.BLACK
+
             g.draw(Line2D.Double(node.x, childYMin, node.x, childYMax))
         }
 
         // Render Dot
         // fillOval expects top-left corner, so subtract radius
-        val shape = Ellipse2D.Double(node.x - radius, node.y - radius, radius * 2, radius * 2)
-        g.fill(shape)
+        g.stroke = BasicStroke(max(1.0f, 0.5f * scale))
+        g.color = Color.BLACK
+
+        g.fill(Ellipse2D.Double(node.x - radius, node.y - radius, radius * 2, radius * 2))
 
         // Render Player Icon
         val player = node.resolvePlayerToShow()
@@ -151,6 +158,25 @@ class TournamentVisualizer(
             val yPos = (node.y - iconSize / 2).toInt()
 
             g.drawImage(icon, xPos, yPos, iconSize.toInt(), iconSize.toInt(), null)
+        } else if (node.match.completedAsDraw) {
+            val len = 3.0 * scale
+
+            g.stroke = BasicStroke(max(1.0f, 0.5f * scale))
+            g.color = Color.BLUE
+
+            g.draw(Line2D.Double(
+                node.x - len,
+                node.y - len,
+                node.x + len,
+                node.y + len
+            ))
+
+            g.draw(Line2D.Double(
+                node.x - len,
+                node.y + len,
+                node.x + len,
+                node.y - len
+            ))
         }
     }
 
@@ -175,6 +201,28 @@ class TournamentVisualizer(
             val icon = playerIcons.get(player)
 
             sb.appendLine(getSquareImageSvg(icon, node.x, node.y, 8.0 * scale))
+        } else if (node.match.completedAsDraw) {
+            val len = 3.0 * scale
+
+            sb.appendLine("""
+                <line 
+                x1="${node.x - len}" 
+                y1="${node.y - len}" 
+                x2="${node.x + len}" 
+                y2="${node.y + len}" 
+                stroke="#00f" 
+                stroke-width="${max(1.0, 0.5 * scale)}" 
+                />""".trimIndent())
+
+            sb.appendLine("""
+                <line 
+                x1="${node.x - len}" 
+                y1="${node.y + len}" 
+                x2="${node.x + len}" 
+                y2="${node.y - len}" 
+                stroke="#00f" 
+                stroke-width="${max(1.0, 0.5 * scale)}" 
+                />""".trimIndent())
         }
     }
 
