@@ -46,8 +46,10 @@ import work.lclpnet.kibu.map.MapColorUtil
 import work.lclpnet.kibu.scheduler.api.TaskHandle
 import work.lclpnet.kibu.title.Title
 import work.lclpnet.lobby.game.map.GameMap
+import java.nio.file.Files
 import java.util.*
 import java.util.concurrent.CompletableFuture
+import kotlin.io.path.writeText
 import kotlin.math.max
 import kotlin.time.Duration.Companion.seconds
 
@@ -98,6 +100,8 @@ class MatchData(
 }
 
 const val DEBUG_FILL_WITH_NPC = true
+const val DEBUG_PROGRESSION = true
+
 val SUDDEN_DEATH_DELAY = 40.seconds
 val MATCH_DRAW_DELAY = 100.seconds
 
@@ -147,10 +151,15 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
         }
     }
 
+    val progressionDebugDir = if (DEBUG_PROGRESSION) {
+        Files.createTempDirectory("ap2_1v1").also { logger.info("Writing progression debugging to $it") }
+    } else null
+
     val kitManager = MatchKitManager(KITS_1V1)
     
     var pvp: PvpBehavior? = null
     var tournamentResult: TournamentResult? = null
+    var progressionCounter = 0
 
     override fun getData() = data
 
@@ -441,6 +450,16 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
         data.participants.forEach { pvp!!.disallow(it) }
 
         match.complete(winner)
+
+        progressionDebugDir?.let { dir ->
+            runBlocking {
+                val visualizer = TournamentVisualizer(playerIcons, scale = 4)
+                val svg = visualizer.generateSvg(tournamentResult!!.tournament)
+                val id = progressionCounter++
+
+                dir.resolve("$id.svg").writeText(svg)
+            }
+        }
 
         scope.launch { updateCanvas(tournamentResult!!.tournament) }
 
