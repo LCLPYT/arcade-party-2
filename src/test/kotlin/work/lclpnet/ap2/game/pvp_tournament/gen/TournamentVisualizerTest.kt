@@ -62,6 +62,53 @@ class TournamentVisualizerTest {
         writePng(tournament, dir!!.resolve("progressed_$n.png"))
     }
 
+    @Test
+    fun draw_3() {
+        val playerA = PlayerRef(UUID.randomUUID(), "A")
+        val playerB = PlayerRef(UUID.randomUUID(), "B")
+        val playerC = PlayerRef(UUID.randomUUID(), "C")
+
+        val finale = Match(round = 2, rightPlayer = playerC)
+        val leftChild = Match(round = 1, leftPlayer = playerA, rightPlayer = playerB, winnerNext = finale)
+
+        finale.leftChild = leftChild
+
+        val tournament = Tournament(setOf(leftChild, finale), setOf(playerA, playerB, playerC))
+
+        // draw
+        leftChild.complete(null)
+
+        writeSvg(tournament, dir!!.resolve("draw_3.svg"))
+    }
+
+    @Test
+    fun draw_4() {
+        val playerA = PlayerRef(UUID.randomUUID(), "A")
+        val playerB = PlayerRef(UUID.randomUUID(), "B")
+        val playerC = PlayerRef(UUID.randomUUID(), "C")
+        val playerD = PlayerRef(UUID.randomUUID(), "D")
+
+        val finale = Match(round = 2)
+        val leftChild = Match(round = 1, leftPlayer = playerA, rightPlayer = playerB, winnerNext = finale)
+        val rightChild = Match(round = 1, leftPlayer = playerC, rightPlayer = playerD, winnerNext = finale)
+
+        finale.leftChild = leftChild
+        finale.rightChild = rightChild
+
+        val tournament = Tournament(
+            setOf(leftChild, rightChild, finale),
+            setOf(playerA, playerB, playerC, playerD),
+        )
+
+        leftChild.complete(null)
+
+        writePng(tournament, dir!!.resolve("draw_4_1.png"))
+
+        rightChild.complete(null)
+
+        writePng(tournament, dir!!.resolve("draw_4_2.png"))
+    }
+
     @Disabled
     @Test
     fun progressed_withRealPlayers() {

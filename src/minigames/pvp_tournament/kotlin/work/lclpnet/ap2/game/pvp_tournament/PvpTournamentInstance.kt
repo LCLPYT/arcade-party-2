@@ -161,7 +161,7 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
     override fun createWorldBootstrap(
         world: ServerLevel,
         map: GameMap
-    ): CompletableFuture<Void> = scope.future {
+    ): CompletableFuture<Void?> = scope.future {
         val playerSkins = players().map {
             launch { playerIcons.preload(it.gameProfile) }
         }
@@ -176,7 +176,7 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
 
         val arenaPlacement = gameHandle.server.submit {
             setup.placeArenas(world, result.arenas.values)
-        }
+        } as CompletableFuture<Void?>
 
         playerSkins.joinAll()
 
@@ -440,6 +440,24 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
 
         data.participants.forEach { pvp!!.disallow(it) }
 
+        match.complete(winner)
+
+        scope.launch { updateCanvas(tournamentResult!!.tournament) }
+
+        // TODO respect swiss style tournament
+        if (match.isFinale()) {
+            if (winner != null) {
+                this.data.setScore(winner, 1)
+
+                match.other(winner)?.let {
+                    setPlacementLostInMatch(it, match)
+                }
+            }
+
+            winManager.complete()
+            return
+        }
+
         data.participants.filterIsInstance<ServerPlayer>().forEach { player ->
             if (winner?.uuid == player.uuid) {
                 WinSequence.playWinSound(player)
@@ -461,24 +479,6 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
                     .formatted(ChatFormatting.DARK_GREEN)
                     .translateFor(player)
             )
-        }
-
-        match.complete(winner)
-
-        scope.launch { updateCanvas(tournamentResult!!.tournament) }
-
-        // TODO respect swiss style tournament
-        if (match.isFinale()) {
-            if (winner != null) {
-                this.data.setScore(winner, 1)
-
-                match.other(winner)?.let {
-                    setPlacementLostInMatch(it, match)
-                }
-            }
-
-            winManager.complete()
-            return
         }
 
         if (winner == null) {
