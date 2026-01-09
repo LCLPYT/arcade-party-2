@@ -62,7 +62,6 @@ class TournamentVisualizer(
 
         // background
         g2d.color = Color.WHITE
-        g2d.fillRect(0, 0, width.toInt(), height.toInt())
 
         renderNodeToGraphics(g2d, rootNode, dotRadius)
 
@@ -82,7 +81,6 @@ class TournamentVisualizer(
             image { image-rendering: pixelated; image-rendering: crisp-edges; }
             </style>
             """.trimIndent())
-        svg.append("""<rect width="100%" height="100%" fill="white" />""")
 
         renderNodeToSvg(svg, rootNode, dotRadius)
 
@@ -112,7 +110,7 @@ class TournamentVisualizer(
 
         // Dimensions
         val maxX = getMaxX(rootNode) + padding
-        val maxY = leaves.size * rowHeight + padding * 2
+        val maxY = (leaves.size - 1) * rowHeight + padding * 2
 
         return LayoutResult(rootNode, maxX, maxY)
     }

@@ -46,7 +46,7 @@ import work.lclpnet.kibu.title.Title
 import work.lclpnet.lobby.game.map.GameMap
 import java.util.*
 import java.util.concurrent.CompletableFuture
-import kotlin.math.min
+import kotlin.math.max
 import kotlin.time.Duration.Companion.seconds
 
 enum class TournamentVariant {
@@ -211,16 +211,26 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
     private suspend fun updateCanvas() {
         val visualizer = TournamentVisualizer(playerIcons)
         val image = visualizer.generateImage(tournamentResult!!.tournament)
+        val raw = MapColorUtil.toBytes(image)
 
-        val width = min(image.width, canvas.width)
-        val height = min(image.height, canvas.height)
+        val imgStartX = max(0, (image.width - canvas.width) / 2)
+        val imgStartY = max(0, (image.height - canvas.height) / 2)
+        val imgEndX = imgStartX + image.width - 2 * imgStartX
+        val imgEndY = imgStartY + image.height - 2 * imgStartY
 
-        val region = image.getSubimage(0, 0, width, height)
-        val raw = MapColorUtil.toBytes(region)
+        val canvasX = (canvas.width - image.width) / 2
+        val canvasY = (canvas.height - image.height) / 2
 
-        for (y in 0..<height) {
-            for (x in 0..<width) {
-                canvas.setRaw(x, y, raw[y * width + x])
+        for (imgY in imgStartY..<imgEndY) {
+            for (imgX in imgStartX..<imgEndX) {
+                val canvasX = imgX - imgStartX + canvasX
+                val canvasY = imgY - imgStartY + canvasY
+
+                canvas.setRaw(
+                    canvasX,
+                    canvasY,
+                    raw[imgY * image.width + imgX]
+                )
             }
         }
 
@@ -369,7 +379,7 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
 
         data.participants.forEach {
             // tournament state is displayed on a map in the offhand, replace it with the offhand item of the kit
-            it.setItemInHand(InteractionHand.OFF_HAND, data.kit[EquipmentSlot.OFFHAND])
+//            it.setItemInHand(InteractionHand.OFF_HAND, data.kit[EquipmentSlot.OFFHAND])
 
             pvp!!.allow(it)
         }
@@ -416,6 +426,8 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
 
             data
         }
+
+        println("Match between ${match.players.joinToString { it.name }} completed with winner ${winner?.name}")
 
         data.tasks.forEach { it.cancel() }
         data.tasks.clear()
