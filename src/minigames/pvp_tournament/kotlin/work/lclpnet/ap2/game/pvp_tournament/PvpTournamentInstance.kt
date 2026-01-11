@@ -1,8 +1,5 @@
 package work.lclpnet.ap2.game.pvp_tournament
 
-import eu.pb4.mapcanvas.api.core.CanvasColor
-import eu.pb4.mapcanvas.api.core.DrawableCanvas
-import eu.pb4.mapcanvas.api.core.PlayerCanvas
 import kotlinx.coroutines.*
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.future.future
@@ -17,21 +14,14 @@ import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.decoration.Mannequin
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.GameType
-import work.lclpnet.ap2.api.base.Participants
 import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.map.MapBootstrap
 import work.lclpnet.ap2.core.mixin.MannequinAccessor
 import work.lclpnet.ap2.ext.*
-import work.lclpnet.ap2.ext.mc.teleport
 import work.lclpnet.ap2.ext.mc.teleportTo
 import work.lclpnet.ap2.game.pvp_tournament.gen.Match
-import work.lclpnet.ap2.game.pvp_tournament.gen.SkinPlayerIcons
-import work.lclpnet.ap2.game.pvp_tournament.gen.Tournament
 import work.lclpnet.ap2.game.pvp_tournament.gen.TournamentVisualizer
-import work.lclpnet.ap2.game.pvp_tournament.util.ArenaInstance
-import work.lclpnet.ap2.game.pvp_tournament.util.KITS_1V1
-import work.lclpnet.ap2.game.pvp_tournament.util.Kit
-import work.lclpnet.ap2.game.pvp_tournament.util.MatchKitManager
+import work.lclpnet.ap2.game.pvp_tournament.util.*
 import work.lclpnet.ap2.impl.game.FFAGameInstance
 import work.lclpnet.ap2.impl.game.WinSequence
 import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer
@@ -39,83 +29,33 @@ import work.lclpnet.ap2.impl.game.data.Ordering
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker
 import work.lclpnet.ap2.util.PvpBehavior
-import work.lclpnet.ap2.util.mojang.SkinFetcher
 import work.lclpnet.combatctl.api.CombatControl
 import work.lclpnet.gaco.core.api.EntityRef
 import work.lclpnet.kibu.hook.player.PlayerInventoryHooks
-import work.lclpnet.kibu.map.MapColorUtil
-import work.lclpnet.kibu.scheduler.api.TaskHandle
 import work.lclpnet.kibu.title.Title
 import work.lclpnet.lobby.game.map.GameMap
 import java.nio.file.Files
 import java.util.*
 import java.util.concurrent.CompletableFuture
 import kotlin.io.path.writeText
-import kotlin.math.max
 import kotlin.time.Duration.Companion.seconds
+
+const val DEBUG_FILL_WITH_NPC = true
+val SUDDEN_DEATH_DELAY = 40.seconds
+val MATCH_DRAW_DELAY = 100.seconds
 
 enum class TournamentVariant {
     SINGLE_ELIMINATION,
     SWISS_STYLE,
 }
 
-class MatchData(
-    val match: Match,
-    val arena: ArenaInstance,
-    val kit: Kit,
-    val level: ServerLevel,
-    private val allPlayers: Participants,
-) {
-    val tasks = mutableListOf<TaskHandle>()
-    val npcs = mutableListOf<EntityRef<Mannequin>>()
-    val players = mutableListOf<UUID>()
-    var started = false
-
-    val participants: List<Avatar>
-        get() =
-            match.players.mapNotNull { entity(it) }
-
-    fun entity(ref: PlayerRef): Avatar? {
-        val player = allPlayers.getParticipant(ref.uuid).orElse(null)
-
-        if (player != null) {
-            return if (player.uuid in players) { player } else null
-        }
-
-        return npcs.find { it.uuid == ref.uuid }?.resolve()
-    }
-
-    fun teleport(entity: Avatar) {
-        val ref = match.players.find { it.uuid == entity.uuid } ?: return
-        val spawn = arena.spawns[match.participant(ref)]
-
-        entity.teleport(level, spawn)
-    }
-
-    fun ref(entity: Avatar): PlayerRef? = when (entity.uuid) {
-        null -> null
-        match.leftPlayer?.uuid -> match.leftPlayer
-        match.rightPlayer?.uuid -> match.rightPlayer
-        else -> null
-    }
-}
-
-const val DEBUG_FILL_WITH_NPC = true
-const val DEBUG_PROGRESSION = true
-
-val SUDDEN_DEATH_DELAY = 40.seconds
-val MATCH_DRAW_DELAY = 100.seconds
-
 class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle), MapBootstrap {
 
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    private val data = IntScoreDataContainer(
-        PlayerRef::create,
-        Ordering.ASCENDING,
-        ""
-    )
-
-    private val matchData = mutableMapOf<Match, MatchData>()
+    val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    val data = IntScoreDataContainer(PlayerRef::create, Ordering.ASCENDING, "")
+    val matchData = mutableMapOf<Match, MatchData>()
+    val kitManager = MatchKitManager(KITS_1V1)
+    val visualizer = CanvasVisualizer(gameHandle, scope)
 
     val movementBlocker = SimpleMovementBlocker(gameHandle.scheduler).also {
         it.setModifySpeedAttribute(false)
@@ -136,32 +76,9 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
     } else {
         players().map { PlayerRef.create(it) }
     }
-    
-    val playerIcons = SkinPlayerIcons(
-        SkinFetcher(
-            gameHandle.assetManager.httpClient,
-            gameHandle.assetManager.mojangAssetCache,
-            SkinFetcher.sharedSkinDirectory(),
-            logger
-        )
-    )
 
-    val canvas: PlayerCanvas = DrawableCanvas.create().also { canvas ->
-        gameHandle.whenDone {
-            allPlayers().forEach { canvas.removePlayer(it) }  // temporary fix, until https://github.com/Patbox/map-canvas-api/issues/8 is fixed
-            canvas.destroy()
-        }
-    }
-
-    val progressionDebugDir = if (DEBUG_PROGRESSION) {
-        Files.createTempDirectory("ap2_1v1").also { logger.info("Writing progression debugging to $it") }
-    } else null
-
-    val kitManager = MatchKitManager(KITS_1V1)
-    
     var pvp: PvpBehavior? = null
     var tournamentResult: TournamentResult? = null
-    var progressionCounter = 0
 
     override fun getData() = data
 
@@ -173,9 +90,7 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
         world: ServerLevel,
         map: GameMap
     ): CompletableFuture<Void?> = scope.future {
-        val playerSkins = players().map {
-            launch { playerIcons.preload(it.gameProfile) }
-        }
+        val playerSkins = visualizer.preloadPlayerSkins()
 
         val setup = TournamentSetup(logger, map, playerRefs) { path ->
             schematicBlocking(assetPath(path))
@@ -191,67 +106,16 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
 
         playerSkins.joinAll()
 
-        updateCanvas(result.tournament)
+        visualizer.updateCanvas(result.tournament)
 
         arenaPlacement.await()
     }
 
     override fun prepare() {
-        preventMovingOfFilledMaps()
+        visualizer.preventMovingOfFilledMaps()
 
         playerRefs.forEach { setupPlayerForNextMatch(it) }
         players().forEach { movementBlocker.disableMovement(it) }
-    }
-
-    private fun preventMovingOfFilledMaps() {
-        registerHook(PlayerInventoryHooks.SWAP_HANDS, PlayerInventoryHooks.SwapHands { player, _ ->
-            player.offhandItem.`is`(Items.FILLED_MAP)
-        })
-
-        registerHook(PlayerInventoryHooks.MODIFY_INVENTORY, PlayerInventoryHooks.InventoryModify { event ->
-            val stack = event.clickedStack()
-
-            stack != null && stack.`is`(Items.FILLED_MAP)
-        })
-
-        registerHook(PlayerInventoryHooks.DROP_ITEM, PlayerInventoryHooks.DropItem { player, i, _ ->
-            val slot = player.inventory.getSlot(i)
-
-            slot != null && slot.get().`is`(Items.FILLED_MAP)
-        })
-    }
-
-    private suspend fun updateCanvas(tournament: Tournament) {
-        val visualizer = TournamentVisualizer(playerIcons)
-        val image = visualizer.generateImage(tournament)
-        val raw = MapColorUtil.toBytes(image)
-
-        val imgStartX = max(0, (image.width - canvas.width) / 2)
-        val imgStartY = max(0, (image.height - canvas.height) / 2)
-        val imgEndX = imgStartX + image.width - 2 * imgStartX
-        val imgEndY = imgStartY + image.height - 2 * imgStartY
-
-        val canvasX = (canvas.width - image.width) / 2
-        val canvasY = (canvas.height - image.height) / 2
-
-        synchronized(canvas) {
-            canvas.fill(CanvasColor.CLEAR)
-
-            for (imgY in imgStartY..<imgEndY) {
-                for (imgX in imgStartX..<imgEndX) {
-                    val canvasX = imgX - imgStartX + canvasX
-                    val canvasY = imgY - imgStartY + canvasY
-
-                    canvas.setRaw(
-                        canvasX,
-                        canvasY,
-                        raw[imgY * image.width + imgX]
-                    )
-                }
-            }
-
-            canvas.sendUpdates()
-        }
     }
 
     override fun go() {
@@ -325,9 +189,9 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
 
             CombatControl.get(server).setStyle(player, kit.combatStyle)
 
-            player.setItemInHand(InteractionHand.OFF_HAND, canvas.asStack())
+            player.setItemInHand(InteractionHand.OFF_HAND, visualizer.getStack())
 
-            canvas.addPlayer(player)
+            visualizer.add(player)
 
             data.players += player.uuid
         } else {
@@ -394,6 +258,8 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
             data
         }
 
+        logger.debug("Match between {} has been started", match.players.joinToString { it.name })
+
         data.participants.forEach {
             // tournament state is displayed on a map in the offhand, replace it with the offhand item of the kit
             it.setItemInHand(InteractionHand.OFF_HAND, data.kit[EquipmentSlot.OFFHAND])
@@ -422,6 +288,7 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
             })
         })
 
+        // fallback, in case the players somehow manage to survive the sudden death
         data.tasks.add(runAfter(MATCH_DRAW_DELAY) {
             completeMatch(match, null)
         })
@@ -444,7 +311,7 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
             data
         }
 
-        println("Match between ${match.players.joinToString { it.name }} completed with winner ${winner?.name}")
+        logger.debug("Match between {} completed with winner {}", match.players.joinToString { it.name }, winner?.name)
 
         data.tasks.forEach { it.cancel() }
         data.tasks.clear()
@@ -453,21 +320,7 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
 
         match.complete(winner)
 
-        progressionDebugDir?.let { dir ->
-            runBlocking {
-                val visualizer = TournamentVisualizer(playerIcons, scale = 4)
-                val svg = visualizer.generateSvg(tournamentResult!!.tournament)
-                val id = progressionCounter++
-
-                dir.resolve("$id.svg").writeText(svg)
-            }
-        }
-
-        val tournamentCopy = synchronized(this) {
-            tournamentResult!!.tournament.copy()
-        }
-
-        scope.launch { updateCanvas(tournamentCopy) }
+        visualizer.launchUpdate(tournamentResult!!.tournament)
 
         if (isGameComplete(match)) {
             if (winner != null) {
