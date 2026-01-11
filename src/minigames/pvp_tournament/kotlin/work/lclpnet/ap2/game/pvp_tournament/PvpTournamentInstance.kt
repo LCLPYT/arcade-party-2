@@ -13,6 +13,7 @@ import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.entity.Avatar
 import net.minecraft.world.entity.EntityType
+import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.decoration.Mannequin
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.GameType
@@ -395,7 +396,7 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
 
         data.participants.forEach {
             // tournament state is displayed on a map in the offhand, replace it with the offhand item of the kit
-//            it.setItemInHand(InteractionHand.OFF_HAND, data.kit[EquipmentSlot.OFFHAND])
+            it.setItemInHand(InteractionHand.OFF_HAND, data.kit[EquipmentSlot.OFFHAND])
 
             pvp!!.allow(it)
         }
