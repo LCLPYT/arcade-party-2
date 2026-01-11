@@ -461,10 +461,13 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
             }
         }
 
-        scope.launch { updateCanvas(tournamentResult!!.tournament) }
+        val tournamentCopy = synchronized(this) {
+            tournamentResult!!.tournament.copy()
+        }
 
-        // TODO respect swiss style tournament
-        if (match.isFinale()) {
+        scope.launch { updateCanvas(tournamentCopy) }
+
+        if (isGameComplete(match)) {
             if (winner != null) {
                 this.data.setScore(winner, 1)
 
@@ -519,6 +522,13 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
                 }
             }
         }
+    }
+
+    private tailrec fun isGameComplete(match: Match): Boolean {
+        // TODO respect swiss style tournament
+        val next = match.winnerNext ?: return match.completed
+
+        return isGameComplete(next)
     }
 
     private fun checkMatchStatus(match: Match) {

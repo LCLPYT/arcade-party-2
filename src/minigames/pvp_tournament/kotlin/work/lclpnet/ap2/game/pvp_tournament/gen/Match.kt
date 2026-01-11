@@ -124,4 +124,20 @@ class Match(
         rightPlayer -> leftPlayer
         else -> null
     }
+
+    /**
+     * Creates a copy of this match, but without copying related matches.
+     */
+    fun shallowCopy(): Match {
+        val match = Match(
+            round = round,
+            leftPlayer = leftPlayer,
+            rightPlayer = rightPlayer,
+        )
+
+        match.winner = winner
+        match.completed = completed
+
+        return match
+    }
 }

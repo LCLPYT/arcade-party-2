@@ -97,8 +97,7 @@ class TournamentVisualizer(
     )
 
     private fun calculateLayout(tournament: Tournament): LayoutResult {
-        val simplifiedTournament = tournament.simplified()
-        val finale = simplifiedTournament.finale
+        val finale = tournament.finale
         val rootNode = buildVisualTree(finale)
 
         // Y Coords
