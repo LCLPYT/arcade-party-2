@@ -57,6 +57,37 @@ data class Tournament(
 
         return Tournament(newMatches, players)
     }
+
+    fun deepCopy(): Tournament {
+        val orderedMatches = matches.toList()
+
+        val matchCopies = orderedMatches.map {
+            // children and next matches are set later
+            it.shallowCopy()
+        }
+
+        fun getCopy(match: Match?): Match? {
+            val index = orderedMatches.indexOf(match)
+
+            if (index == -1) return null
+
+            return matchCopies[index]
+        }
+
+        for (match in orderedMatches) {
+            val copy = getCopy(match) ?: continue
+
+            copy.leftChild = getCopy(match.leftChild)
+            copy.rightChild = getCopy(match.rightChild)
+            copy.winnerNext = getCopy(match.winnerNext)
+            copy.loserNext = getCopy(match.loserNext)
+        }
+
+        return Tournament(
+            matches = matchCopies.toSet(),
+            players = players.toSet(),
+        )
+    }
 }
 
 interface TournamentBuilder {
