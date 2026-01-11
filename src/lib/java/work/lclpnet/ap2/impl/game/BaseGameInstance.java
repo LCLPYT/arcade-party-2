@@ -32,6 +32,7 @@ import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedPlayerBossBar;
 import work.lclpnet.ap2.impl.util.effect.ApEffect;
 import work.lclpnet.ap2.impl.util.effect.ApEffects;
 import work.lclpnet.ap2.impl.util.property.ApMapProperties;
+import work.lclpnet.ap2.util.SubtitleCountdown;
 import work.lclpnet.combatctl.impl.CombatStyles;
 import work.lclpnet.gaco.asset.AssetPath;
 import work.lclpnet.kibu.access.entity.ServerPlayerAccess;
@@ -64,7 +65,6 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import static net.minecraft.ChatFormatting.*;
@@ -196,9 +196,9 @@ public abstract class BaseGameInstance implements MiniGameInstance {
 
         int initialDelay = getInitialDelay();
 
-        scheduleCountdown(initialDelay);
+        var countdown = new SubtitleCountdown(gameHandle.getServer(), gameHandle.getScheduler());
 
-        gameHandle.getScheduler().timeout(this::afterInitialDelay, initialDelay);
+        countdown.schedule(initialDelay, this::afterInitialDelay);
     }
 
     private void configureLocatorBar() {
@@ -325,13 +325,19 @@ public abstract class BaseGameInstance implements MiniGameInstance {
     }
 
     protected void afterInitialDelay() {
-        gameHandle.getTranslations().translateText("ap2.go").formatted(RED)
-                .acceptEach(PlayerLookup.all(gameHandle.getServer()), (player, text) -> {
-                    Title.get(player).title(text, Component.empty(), 5, 20, 5);
-                    ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.CHICKEN_EGG, SoundSource.PLAYERS, 1, 0);
-                });
+        PlayerLookup.all(gameHandle.getServer()).forEach(this::sendGo);
 
         go();
+    }
+
+    protected void sendGo(ServerPlayer player) {
+        var text = gameHandle.getTranslations().translateText("ap2.go")
+                .formatted(RED)
+                .translateFor(player);
+
+        Title.get(player).title(text, Component.empty(), 5, 20, 5);
+
+        ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.CHICKEN_EGG, SoundSource.PLAYERS, 1, 0);
     }
 
     private void registerDefaultHooks() {

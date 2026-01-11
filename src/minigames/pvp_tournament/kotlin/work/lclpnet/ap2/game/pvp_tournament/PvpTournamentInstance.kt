@@ -1,8 +1,11 @@
 package work.lclpnet.ap2.game.pvp_tournament
 
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.future.future
+import kotlinx.coroutines.joinAll
 import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.Component
 import net.minecraft.server.level.ServerLevel
@@ -12,7 +15,6 @@ import net.minecraft.world.entity.Avatar
 import net.minecraft.world.entity.EntityType
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.decoration.Mannequin
-import net.minecraft.world.item.Items
 import net.minecraft.world.level.GameType
 import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.map.MapBootstrap
@@ -20,7 +22,6 @@ import work.lclpnet.ap2.core.mixin.MannequinAccessor
 import work.lclpnet.ap2.ext.*
 import work.lclpnet.ap2.ext.mc.teleportTo
 import work.lclpnet.ap2.game.pvp_tournament.gen.Match
-import work.lclpnet.ap2.game.pvp_tournament.gen.TournamentVisualizer
 import work.lclpnet.ap2.game.pvp_tournament.util.*
 import work.lclpnet.ap2.impl.game.FFAGameInstance
 import work.lclpnet.ap2.impl.game.WinSequence
@@ -29,15 +30,13 @@ import work.lclpnet.ap2.impl.game.data.Ordering
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker
 import work.lclpnet.ap2.util.PvpBehavior
+import work.lclpnet.ap2.util.SubtitleCountdown
 import work.lclpnet.combatctl.api.CombatControl
 import work.lclpnet.gaco.core.api.EntityRef
-import work.lclpnet.kibu.hook.player.PlayerInventoryHooks
 import work.lclpnet.kibu.title.Title
 import work.lclpnet.lobby.game.map.GameMap
-import java.nio.file.Files
 import java.util.*
 import java.util.concurrent.CompletableFuture
-import kotlin.io.path.writeText
 import kotlin.time.Duration.Companion.seconds
 
 const val DEBUG_FILL_WITH_NPC = true
@@ -52,7 +51,7 @@ enum class TournamentVariant {
 class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle), MapBootstrap {
 
     val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    val data = IntScoreDataContainer(PlayerRef::create, Ordering.ASCENDING, "")
+    private val data = IntScoreDataContainer(PlayerRef::create, Ordering.ASCENDING, "")
     val matchData = mutableMapOf<Match, MatchData>()
     val kitManager = MatchKitManager(KITS_1V1)
     val visualizer = CanvasVisualizer(gameHandle, scope)
@@ -247,6 +246,26 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
     fun matchDataOf(entity: Avatar) =
         matchData.values.find { entity in it.participants }
 
+    fun startMatchWithCountdown(match: Match) {
+        val data = synchronized(this) {
+            matchData[match] ?: return
+        }
+
+        data.participants.filterIsInstance<ServerPlayer>().forEach {
+            data.teleport(it)
+
+            movementBlocker.disableMovement(it)
+        }
+
+        SubtitleCountdown(server, gameHandle.scheduler).schedule(3.seconds) {
+            data.participants.filterIsInstance<ServerPlayer>().forEach {
+                sendGo(it)
+            }
+
+            startMatch(match)
+        }
+    }
+
     fun startMatch(match: Match) {
         val data = synchronized(this) {
             val data = matchData[match] ?: return
@@ -265,6 +284,10 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
             it.setItemInHand(InteractionHand.OFF_HAND, data.kit[EquipmentSlot.OFFHAND])
 
             pvp!!.allow(it)
+
+            if (it is ServerPlayer) {
+                movementBlocker.enableMovement(it)
+            }
         }
 
         data.tasks.add(runAfter(SUDDEN_DEATH_DELAY) {
@@ -397,7 +420,7 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
 
         if (data.participants.size >= 2 && !data.started) {
             // if both players are present, start the match
-            startMatch(match)
+            startMatchWithCountdown(match)
         }
     }
 
