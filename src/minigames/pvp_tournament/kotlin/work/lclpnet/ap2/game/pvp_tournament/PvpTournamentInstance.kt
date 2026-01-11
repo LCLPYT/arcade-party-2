@@ -111,8 +111,9 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
     private val data = IntScoreDataContainer(
         PlayerRef::create,
         Ordering.ASCENDING,
-        "game.ap2.pvp_tournament.placed"
+        ""
     )
+
     private val matchData = mutableMapOf<Match, MatchData>()
 
     val movementBlocker = SimpleMovementBlocker(gameHandle.scheduler).also {
