@@ -377,7 +377,10 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
                 title,
                 translate("game.ap2.pvp_tournament.won_match")
                     .formatted(ChatFormatting.DARK_GREEN)
-                    .translateFor(player)
+                    .translateFor(player),
+                5,
+                100,
+                5
             )
         }
 
