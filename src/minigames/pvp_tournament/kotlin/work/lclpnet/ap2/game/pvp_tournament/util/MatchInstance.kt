@@ -9,9 +9,9 @@ import work.lclpnet.ap2.game.pvp_tournament.gen.Match
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef
 import work.lclpnet.gaco.core.api.EntityRef
 import work.lclpnet.kibu.scheduler.api.TaskHandle
-import java.util.UUID
+import java.util.*
 
-class MatchData(
+class MatchInstance(
     val match: Match,
     val arena: ArenaInstance,
     val kit: Kit,

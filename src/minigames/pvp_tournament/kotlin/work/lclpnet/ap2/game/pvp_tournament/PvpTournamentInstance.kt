@@ -52,7 +52,7 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
 
     val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val data = IntScoreDataContainer(PlayerRef::create, Ordering.ASCENDING, "")
-    val matchData = mutableMapOf<Match, MatchData>()
+    val matchInstances = mutableMapOf<Match, MatchInstance>()
     val kitManager = MatchKitManager(KITS_1V1)
     val visualizer = CanvasVisualizer(gameHandle, scope)
 
@@ -134,7 +134,7 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
         matches.filter { it.round == minRound }.forEach { startMatch(it) }
 
         onDeathOf<ServerPlayer> { player, _ ->
-            val data = matchDataOf(player)
+            val data = matchInstanceOf(player)
 
             if (data != null) {
                 loseMatch(data, player)
@@ -144,7 +144,7 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
         }
 
         onDeathOf<Mannequin> { npc, _ ->
-            val data = matchDataOf(npc)
+            val data = matchInstanceOf(npc)
 
             if (data != null) {
                 loseMatch(data, npc)
@@ -152,12 +152,44 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
 
             npc.discard()
         }
+
+        registerDebugCommands()
+    }
+
+    private fun registerDebugCommands() {
+        WinMatchCommand(
+            win = { ctx, player, winner ->
+                val inst = matchInstanceOf(player)
+
+                if (inst == null) {
+                    ctx.sendFailure(Component.literal("${player.scoreboardName} is not in a match currently"))
+                    return@WinMatchCommand
+                }
+
+                if (winner != null && !inst.match.players.contains(winner)) {
+                    ctx.sendFailure(Component.literal("Player ${winner.name} is not participating in the current match"))
+                    return@WinMatchCommand
+                }
+
+                completeMatch(inst.match, winner)
+            },
+            participants = { player ->
+                val inst = matchInstanceOf(player)
+
+                inst?.match?.players?.map { it.name } ?: emptyList()
+            },
+            resolvePlayer = { matchOf, name ->
+                val inst = matchInstanceOf(matchOf)
+
+                inst?.match?.players?.find { it.name == name }
+            }
+        ).register(gameHandle.commands)
     }
 
     override fun participantRemoved(player: ServerPlayer) {
         super.participantRemoved(player)
 
-        val data = matchDataOf(player)
+        val data = matchInstanceOf(player)
 
         if (!winManager.isGameOver && data != null) {
             loseMatch(data, player)
@@ -175,7 +207,7 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
         val arena = tournamentResult!!.arenas[match] ?: error("No arena for match $match")
         val kit = kitManager[match]
 
-        val data = initMatchData(match, arena, kit)
+        val data = initMatchInstance(match, arena, kit)
 
         val player = players().getParticipant(ref.uuid).orElse(null)
 
@@ -235,30 +267,35 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
         .minByOrNull { it.round }
 
     @Synchronized
-    private fun initMatchData(
+    private fun initMatchInstance(
         match: Match,
         arena: ArenaInstance,
         kit: Kit
-    ): MatchData = matchData.computeIfAbsent(match) {
-        MatchData(it, arena, kit, world, players())
+    ): MatchInstance = matchInstances.computeIfAbsent(match) {
+        MatchInstance(it, arena, kit, world, players())
     }
 
-    fun matchDataOf(entity: Avatar) =
-        matchData.values.find { entity in it.participants }
+    fun matchInstanceOf(entity: Avatar) =
+        matchInstances.values.find { entity in it.participants }
 
     fun startMatchWithCountdown(match: Match) {
-        val data = synchronized(this) {
-            matchData[match] ?: return
+        val inst = synchronized(this) { matchInstances[match] }
+
+        if (inst == null) {
+            logger.debug("Cannot schedule match start as match instance does not exist: {}", match)
+            return
         }
 
-        data.participants.filterIsInstance<ServerPlayer>().forEach {
-            data.teleport(it)
+        logger.debug("Scheduler match start: {}", match)
+
+        inst.participants.filterIsInstance<ServerPlayer>().forEach {
+            inst.teleport(it)
 
             movementBlocker.disableMovement(it)
         }
 
         SubtitleCountdown(server, gameHandle.scheduler).schedule(3.seconds) {
-            data.participants.filterIsInstance<ServerPlayer>().forEach {
+            inst.participants.filterIsInstance<ServerPlayer>().forEach {
                 sendGo(it)
             }
 
@@ -268,13 +305,21 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
 
     fun startMatch(match: Match) {
         val data = synchronized(this) {
-            val data = matchData[match] ?: return
+            val inst = matchInstances[match]
 
-            if (data.started) return
+            if (inst == null) {
+                logger.debug("Cannot start match as match instance does not exist: {}", match)
+                return
+            }
 
-            data.started = true
+            if (inst.started) {
+                logger.debug("Match instance already started: {}", match)
+                return
+            }
 
-            data
+            inst.started = true
+
+            inst
         }
 
         logger.debug("Match between {} has been started", match.players.joinToString { it.name })
@@ -317,7 +362,7 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
         })
     }
 
-    fun loseMatch(data: MatchData, loser: Avatar) {
+    fun loseMatch(data: MatchInstance, loser: Avatar) {
         val ref = data.ref(loser) ?: return
         val winner = data.match.other(ref) ?: return
 
@@ -325,27 +370,48 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
     }
 
     fun completeMatch(match: Match, winner: PlayerRef?) {
-        val data = synchronized(this) {
-            val data = matchData[match] ?: return
+        val inst = synchronized(this) {
+            val inst = matchInstances[match]
 
-            data.started = false
-            matchData.remove(match)
+            if (inst == null) {
+                if (winner == null) {
+                    // need to check parent match status, but do it outside the critical section
+                    return@synchronized null
+                }
 
-            data
+                logger.debug("Cannot complete match as match instance does not exist: {}", match)
+                return
+            }
+
+            inst.started = false
+            matchInstances.remove(match)
+
+            inst
         }
 
-        logger.debug("Match between {} completed with winner {}", match.players.joinToString { it.name }, winner?.name)
+        if (winner != null) {
+            logger.debug("Match {} completed with winner {}", match, winner)
+        } else {
+            logger.debug("Match {} completed as a draw", match)
+        }
 
-        data.tasks.forEach { it.cancel() }
-        data.tasks.clear()
+        if (inst == null) {
+            checkParentMatchStatus(match)
+            return
+        }
 
-        data.participants.forEach { pvp!!.disallow(it) }
+        inst.tasks.forEach { it.cancel() }
+        inst.tasks.clear()
+
+        inst.participants.forEach { pvp!!.disallow(it) }
 
         match.complete(winner)
 
         visualizer.launchUpdate(tournamentResult!!.tournament)
 
         if (isGameComplete(match)) {
+            logger.debug("Game is now completed")
+
             if (winner != null) {
                 this.data.setScore(winner, 1)
 
@@ -358,7 +424,7 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
             return
         }
 
-        data.participants.filterIsInstance<ServerPlayer>().forEach { player ->
+        inst.participants.filterIsInstance<ServerPlayer>().forEach { player ->
             if (winner?.uuid == player.uuid) {
                 WinSequence.playWinSound(player)
             } else {
@@ -385,13 +451,12 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
         }
 
         if (winner == null) {
-            match.winnerNext?.let { checkMatchStatus(it) }
-            match.loserNext?.let { checkMatchStatus(it) }
+            checkParentMatchStatus(match)
         }
 
         runAfter(5.seconds) {
-            data.npcs.mapNotNull { it.resolve() }.forEach { it.discard() }
-            data.npcs.clear()
+            inst.npcs.mapNotNull { it.resolve() }.forEach { it.discard() }
+            inst.npcs.clear()
 
             match.players.forEach { ref ->
                 val nextMatch = setupPlayerForNextMatch(ref)
@@ -405,6 +470,11 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
         }
     }
 
+    private fun checkParentMatchStatus(match: Match) {
+        match.winnerNext?.let { checkMatchStatus(it) }
+        match.loserNext?.let { checkMatchStatus(it) }
+    }
+
     private tailrec fun isGameComplete(match: Match): Boolean {
         // TODO respect swiss style tournament
         val next = match.winnerNext ?: return match.completed
@@ -413,16 +483,27 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
     }
 
     private fun checkMatchStatus(match: Match) {
+        logger.debug("Checking match status of {}", match)
+
         if (match.completed) {
+            logger.debug("Match {} is already complete in data model, completing instance...", match)
+
             // the match could have been completed by a draw in one of the child matches
             completeMatch(match, match.winner)
             return
         }
 
-        val data = synchronized(this) { matchData[match] } ?: return
+        val inst = synchronized(this) { matchInstances[match] }
 
-        if (data.participants.size >= 2 && !data.started) {
+        if (inst == null) {
+            logger.debug("Nothing to do as match has no instance currently: {}", match)
+            return
+        }
+
+        if (inst.participants.size >= 2 && !inst.started) {
             // if both players are present, start the match
+            logger.debug("Match has sufficient players now: {}; starting it...", match)
+
             startMatchWithCountdown(match)
         }
     }
