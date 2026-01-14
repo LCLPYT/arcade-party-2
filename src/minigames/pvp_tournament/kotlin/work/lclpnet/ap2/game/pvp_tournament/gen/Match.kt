@@ -140,4 +140,8 @@ class Match(
 
         return match
     }
+
+    override fun toString(): String {
+        return "Match(round=$round, players=${players.map { it.name }})"
+    }
 }
