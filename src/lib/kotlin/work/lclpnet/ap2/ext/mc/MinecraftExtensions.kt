@@ -3,14 +3,16 @@ package work.lclpnet.ap2.ext.mc
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Holder
 import net.minecraft.core.Position
+import net.minecraft.core.RegistryAccess
 import net.minecraft.core.particles.ParticleOptions
+import net.minecraft.resources.ResourceKey
 import net.minecraft.server.level.ServerLevel
-import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.Relative
 import net.minecraft.world.entity.ai.attributes.Attribute
 import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.enchantment.Enchantment
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.block.Block
 import work.lclpnet.ap2.impl.util.EntityUtil
@@ -81,3 +83,12 @@ fun Entity.teleportTo(other: Entity) {
 }
 
 fun ItemStack.unbreakable(): ItemStack = ItemHelper.unbreakable(this)
+
+fun ItemStack.enchant(
+    enchantment: ResourceKey<Enchantment>,
+    level: Int,
+    registryAccess: RegistryAccess,
+): ItemStack {
+    enchant(ItemHelper.getEnchantment(enchantment, registryAccess), level)
+    return this
+}
