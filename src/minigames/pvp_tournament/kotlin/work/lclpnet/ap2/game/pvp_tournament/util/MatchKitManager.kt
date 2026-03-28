@@ -2,9 +2,12 @@ package work.lclpnet.ap2.game.pvp_tournament.util
 
 import work.lclpnet.ap2.game.pvp_tournament.gen.Match
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef
+import work.lclpnet.gaco.ds.WeightedList
+import kotlin.random.Random
+import kotlin.random.asJavaRandom
 
 class MatchKitManager(
-    val kits: List<Kit>,
+    val kits: WeightedList<Kit>,
 ) {
     init {
         require(kits.isNotEmpty()) { "Kits must not be empty" }
@@ -43,9 +46,13 @@ class MatchKitManager(
 
         val minPlayCount = combinedPlayCount.minOf { (_, count) -> count }
 
-        return combinedPlayCount
+        val kitChoices = combinedPlayCount
             .filter { (_, count) -> count == minPlayCount }
             .map { (kit, _) -> kit }
-            .random()
+            .toSet()
+
+        return kits
+            .filter { kitChoices.contains(it) }
+            .getRandomElement(Random.asJavaRandom())!!
     }
 }

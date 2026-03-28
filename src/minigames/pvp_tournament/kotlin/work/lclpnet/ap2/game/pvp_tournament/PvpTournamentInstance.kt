@@ -6,15 +6,22 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.future.future
 import kotlinx.coroutines.joinAll
+import net.fabricmc.fabric.api.event.player.UseItemCallback
 import net.minecraft.ChatFormatting
+import net.minecraft.core.particles.ItemParticleOption
+import net.minecraft.core.particles.ParticleTypes
 import net.minecraft.network.chat.Component
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
+import net.minecraft.sounds.SoundEvents
+import net.minecraft.sounds.SoundSource
 import net.minecraft.world.InteractionHand
+import net.minecraft.world.InteractionResult
 import net.minecraft.world.entity.Avatar
 import net.minecraft.world.entity.EntityType
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.decoration.Mannequin
+import net.minecraft.world.item.Items
 import net.minecraft.world.level.GameType
 import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.map.MapBootstrap
@@ -28,11 +35,13 @@ import work.lclpnet.ap2.impl.game.WinSequence
 import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer
 import work.lclpnet.ap2.impl.game.data.Ordering
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef
+import work.lclpnet.ap2.impl.util.SoundHelper
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker
 import work.lclpnet.ap2.util.PvpBehavior
 import work.lclpnet.ap2.util.SubtitleCountdown
 import work.lclpnet.combatctl.api.CombatControl
 import work.lclpnet.gaco.core.api.EntityRef
+import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks
 import work.lclpnet.kibu.title.Title
 import work.lclpnet.lobby.game.map.GameMap
 import java.util.*
@@ -53,7 +62,7 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
     val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val data = IntScoreDataContainer(PlayerRef::create, Ordering.ASCENDING, "")
     val matchInstances = mutableMapOf<Match, MatchInstance>()
-    val kitManager = MatchKitManager(KITS_1V1)
+    val kitManager = MatchKitManager(getKits(gameHandle.server.registryAccess()))
     val visualizer = CanvasVisualizer(gameHandle, scope)
 
     val movementBlocker = SimpleMovementBlocker(gameHandle.scheduler).also {
@@ -101,7 +110,7 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
 
         val arenaPlacement = gameHandle.server.submit {
             setup.placeArenas(world, result.arenas.values)
-        } as CompletableFuture<Void?>
+        }
 
         playerSkins.joinAll()
 
@@ -154,6 +163,43 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
         }
 
         registerDebugCommands()
+
+        registerSoupListener()
+    }
+
+    private fun registerSoupListener() {
+        registerHook(PlayerInteractionHooks.USE_ITEM, UseItemCallback { player, level, hand ->
+            if (player !is ServerPlayer || !isParticipating(player)) {
+                return@UseItemCallback InteractionResult.PASS
+            }
+
+            val instance = matchInstanceOf(player) ?: return@UseItemCallback InteractionResult.PASS
+
+            val stack = player.getItemInHand(hand)
+
+            if (!instance.started || !stack.`is`(Items.MUSHROOM_STEW) || player.health >= player.maxHealth) {
+                return@UseItemCallback InteractionResult.PASS
+            }
+
+            player.heal(4f)
+            SoundHelper.playSoundAt(player, SoundEvents.GENERIC_EAT.value(), SoundSource.PLAYERS, 0.5f, 1f)
+
+            (level as? ServerLevel)?.sendParticles(
+                ItemParticleOption(ParticleTypes.ITEM, stack.copy()),
+                player.x,
+                player.y + 1,
+                player.z,
+                5,
+                0.1,
+                0.1,
+                0.1,
+                0.05
+            )
+
+            stack.shrink(1)
+
+            InteractionResult.SUCCESS_SERVER
+        })
     }
 
     private fun registerDebugCommands() {
