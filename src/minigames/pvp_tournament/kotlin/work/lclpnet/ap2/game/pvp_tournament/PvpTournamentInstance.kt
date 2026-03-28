@@ -21,6 +21,7 @@ import net.minecraft.world.entity.Avatar
 import net.minecraft.world.entity.EntityType
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.decoration.Mannequin
+import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.GameType
 import work.lclpnet.ap2.api.game.MiniGameHandle
@@ -42,6 +43,7 @@ import work.lclpnet.ap2.util.SubtitleCountdown
 import work.lclpnet.combatctl.api.CombatControl
 import work.lclpnet.gaco.core.api.EntityRef
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks
+import work.lclpnet.kibu.hook.util.PlayerUtils
 import work.lclpnet.kibu.title.Title
 import work.lclpnet.lobby.game.map.GameMap
 import java.util.*
@@ -122,6 +124,8 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
     override fun prepare() {
         visualizer.preventMovingOfFilledMaps()
 
+        registerHooks()
+
         playerRefs.forEach { setupPlayerForNextMatch(it) }
         players().forEach { movementBlocker.disableMovement(it) }
     }
@@ -163,43 +167,54 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
         }
 
         registerDebugCommands()
-
-        registerSoupListener()
     }
 
-    private fun registerSoupListener() {
-        registerHook(PlayerInteractionHooks.USE_ITEM, UseItemCallback { player, level, hand ->
+    private fun registerHooks() {
+        registerHook(PlayerInteractionHooks.USE_ITEM, UseItemCallback { player, _, hand ->
             if (player !is ServerPlayer || !isParticipating(player)) {
-                return@UseItemCallback InteractionResult.PASS
+                return@UseItemCallback InteractionResult.FAIL
             }
 
-            val instance = matchInstanceOf(player) ?: return@UseItemCallback InteractionResult.PASS
+            val instance = matchInstanceOf(player) ?: return@UseItemCallback InteractionResult.FAIL.also {
+                PlayerUtils.syncPlayerItems(player)
+            }
 
             val stack = player.getItemInHand(hand)
 
-            if (!instance.started || !stack.`is`(Items.MUSHROOM_STEW) || player.health >= player.maxHealth) {
-                return@UseItemCallback InteractionResult.PASS
+            if (!instance.started) {
+                PlayerUtils.syncPlayerItems(player)
+                return@UseItemCallback InteractionResult.FAIL
             }
 
-            player.heal(4f)
-            SoundHelper.playSoundAt(player, SoundEvents.GENERIC_EAT.value(), SoundSource.PLAYERS, 0.5f, 1f)
-
-            (level as? ServerLevel)?.sendParticles(
-                ItemParticleOption(ParticleTypes.ITEM, stack.copy()),
-                player.x,
-                player.y + 1,
-                player.z,
-                5,
-                0.1,
-                0.1,
-                0.1,
-                0.05
-            )
-
-            stack.shrink(1)
-
-            InteractionResult.SUCCESS_SERVER
+            if (stack.`is`(Items.MUSHROOM_STEW)) {
+                tryUseMushroomStew(player, stack)
+            } else {
+                InteractionResult.PASS
+            }
         })
+    }
+
+    private fun tryUseMushroomStew(player: ServerPlayer, stack: ItemStack): InteractionResult {
+        if (player.health >= player.maxHealth) return InteractionResult.PASS
+
+        player.heal(4f)
+        SoundHelper.playSoundAt(player, SoundEvents.GENERIC_EAT.value(), SoundSource.PLAYERS, 0.5f, 1f)
+
+        player.level().sendParticles(
+            ItemParticleOption(ParticleTypes.ITEM, stack.copy()),
+            player.x,
+            player.y + 1,
+            player.z,
+            5,
+            0.1,
+            0.1,
+            0.1,
+            0.05
+        )
+
+        stack.shrink(1)
+
+        return InteractionResult.SUCCESS_SERVER
     }
 
     private fun registerDebugCommands() {

@@ -110,11 +110,11 @@ fun getKits(registryAccess: RegistryAccess): WeightedList<Kit> {
                 })
             }
 
-            set(8, ItemStack(Items.POTION, 16).apply {
+            set(8, ItemStack(Items.POTION).apply {
                 set(DataComponents.POTION_CONTENTS, PotionContents(Potions.STRONG_HEALING))
             })
 
-            set(35, ItemStack(Items.TIPPED_ARROW).apply {
+            set(35, ItemStack(Items.TIPPED_ARROW, 16).apply {
                 set(DataComponents.POTION_CONTENTS, PotionContents(Potions.WEAKNESS))
                 set(DataComponents.POTION_DURATION_SCALE, 0.125F)
             })
