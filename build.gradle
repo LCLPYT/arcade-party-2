@@ -233,6 +233,7 @@ dependencies {
 
     // optional runtime dependencies (not required to play)
     modLocalRuntime("maven.modrinth:anti-xray:${project.anti_xray_version}")
+    modLocalRuntime("work.lclpnet.mods:simple-ac:${project.simple_ac_version}")
     localRuntime("com.moandjiezana.toml:toml4j:${project.toml_version}")
 
     // test dependencies
