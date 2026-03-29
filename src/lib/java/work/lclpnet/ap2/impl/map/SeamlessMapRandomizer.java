@@ -59,7 +59,7 @@ public class SeamlessMapRandomizer implements MapRandomizer {
 
         return Optional.of(CompletableFuture.supplyAsync(() -> {
             Identifier queueId = gameId.withSuffix("/map_queue");
-            var queuePersistence = JsonFileQueuePersistence.create(ApConstants.ID, queueId, Identifier.CODEC, logger);
+            var queuePersistence = JsonFileQueuePersistence.create(ApConstants.RUNTIME_CONFIG_ID, queueId, Identifier.CODEC, logger);
             var transfer = queuePersistence.restore();
 
             var queue = new SeamlessQueue<>(mapIds, random, margin, transfer);

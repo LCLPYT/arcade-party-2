@@ -89,8 +89,12 @@ public class ArcadePartyInstance implements GameInstance {
     private GameQueue createGameQueue(MiniGameManager gameManager, GameOptions options) {
         List<MiniGame> votedGames = getVotedGames(gameManager, options);
 
-        var gameQueuePersistence = JsonFileQueuePersistence.create(ApConstants.ID, identifier("game_queue"),
-                gameManager.getGameCodec(), logger);
+        var gameQueuePersistence = JsonFileQueuePersistence.create(
+                ApConstants.RUNTIME_CONFIG_ID,
+                identifier("game_queue"),
+                gameManager.getGameCodec(),
+                logger
+        );
 
         Set<MiniGame> miniGames = gameManager.getGames();
         int minQueueSize = max(1, min(miniGames.size(), 10));

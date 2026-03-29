@@ -13,6 +13,7 @@ public final class ApConstants {
             DEBUG = FabricLoader.getInstance().isDevelopmentEnvironment();
 
     public static final String ID = "ap2", LIB_ID = "ap2-lib";
+    public static final String RUNTIME_CONFIG_ID = DEVELOPMENT ? ID + "-dev" : ID;
 
     public static final Logger logger = LoggerFactory.getLogger(ID);
 
