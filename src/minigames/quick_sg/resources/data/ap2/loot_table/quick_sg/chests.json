@@ -35,7 +35,7 @@
         {
           "type": "minecraft:item",
           "name": "minecraft:wooden_spear",
-          "weight": 4
+          "weight": 1
         },
         {
           "type": "minecraft:item",
@@ -105,26 +105,6 @@
       "entries": [
         {
           "type": "minecraft:item",
-          "name": "minecraft:leather_helmet",
-          "weight": 10
-        },
-        {
-          "type": "minecraft:item",
-          "name": "minecraft:leather_chestplate",
-          "weight": 10
-        },
-        {
-          "type": "minecraft:item",
-          "name": "minecraft:leather_leggings",
-          "weight": 10
-        },
-        {
-          "type": "minecraft:item",
-          "name": "minecraft:leather_boots",
-          "weight": 10
-        },
-        {
-          "type": "minecraft:item",
           "name": "minecraft:copper_helmet",
           "weight": 9
         },
@@ -186,22 +166,22 @@
         {
           "type": "minecraft:item",
           "name": "minecraft:iron_helmet",
-          "weight": 5
+          "weight": 7
         },
         {
           "type": "minecraft:item",
           "name": "minecraft:iron_chestplate",
-          "weight": 5
+          "weight": 7
         },
         {
           "type": "minecraft:item",
           "name": "minecraft:iron_leggings",
-          "weight": 5
+          "weight": 7
         },
         {
           "type": "minecraft:item",
           "name": "minecraft:iron_boots",
-          "weight": 5
+          "weight": 7
         }
       ],
       "functions": [
@@ -217,7 +197,7 @@
           "conditions": [
             {
               "condition": "minecraft:random_chance",
-              "chance": 0.2
+              "chance": 0.28
             }
           ]
         }
