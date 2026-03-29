@@ -98,32 +98,6 @@ fun getKits(registryAccess: RegistryAccess): WeightedList<Kit> {
                 .enchant(Enchantments.FEATHER_FALLING, 4, registryAccess)
             )
         }, 0.5f)
-
-        add(Kit("spear").apply {
-            set(0, ItemStack(Items.DIAMOND_SPEAR).unbreakable())
-            set(1, ItemStack(Items.CROSSBOW).unbreakable())
-            set(2, ItemStack(Items.COBBLESTONE, 32))
-
-            (4..5).forEach {
-                set(it, ItemStack(Items.SPLASH_POTION).apply {
-                    set(DataComponents.POTION_CONTENTS, PotionContents(Potions.STRONG_HARMING))
-                })
-            }
-
-            set(8, ItemStack(Items.POTION).apply {
-                set(DataComponents.POTION_CONTENTS, PotionContents(Potions.STRONG_HEALING))
-            })
-
-            set(35, ItemStack(Items.TIPPED_ARROW, 16).apply {
-                set(DataComponents.POTION_CONTENTS, PotionContents(Potions.WEAKNESS))
-                set(DataComponents.POTION_DURATION_SCALE, 0.125F)
-            })
-
-            set(EquipmentSlot.HEAD, ItemStack(Items.DIAMOND_HELMET).unbreakable())
-            set(EquipmentSlot.CHEST, ItemStack(Items.NETHERITE_CHESTPLATE).unbreakable())
-            set(EquipmentSlot.LEGS, ItemStack(Items.DIAMOND_LEGGINGS).unbreakable())
-            set(EquipmentSlot.FEET, ItemStack(Items.DIAMOND_BOOTS).unbreakable())
-        }, 0.75f)
     }
 
     val commonWeight = 0.75f
