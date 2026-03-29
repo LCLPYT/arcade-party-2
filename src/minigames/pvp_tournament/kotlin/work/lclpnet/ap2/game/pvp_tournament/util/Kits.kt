@@ -126,8 +126,8 @@ fun getKits(registryAccess: RegistryAccess): WeightedList<Kit> {
         }, 0.75f)
     }
 
-    val commonWeight = 0.7f
-    val uncommonChance = 0.3f
+    val commonWeight = 0.75f
+    val uncommonChance = 0.25f
 
     return WeightedList<Kit>().apply {
         addAll(commonKits.normalized().scaleWeights(commonWeight))
