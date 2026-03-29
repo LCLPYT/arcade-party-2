@@ -15,15 +15,11 @@ import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.map.MapBootstrap
 import work.lclpnet.ap2.api.music.ConfiguredSong
 import work.lclpnet.ap2.api.music.SongWrapper
-import work.lclpnet.ap2.ext.interval
-import work.lclpnet.ap2.ext.players
+import work.lclpnet.ap2.ext.*
 import work.lclpnet.ap2.ext.mc.setBlock
 import work.lclpnet.ap2.ext.mc.setSelectedSlot
 import work.lclpnet.ap2.ext.mc.spawnParticles
 import work.lclpnet.ap2.ext.mc.teleport
-import work.lclpnet.ap2.ext.timeout
-import work.lclpnet.ap2.ext.translate
-import work.lclpnet.ap2.ext.withColor
 import work.lclpnet.ap2.game.dance_floor.cmd.SetSongCommand
 import work.lclpnet.ap2.game.dance_floor.cmd.SkipSongCommand
 import work.lclpnet.ap2.impl.game.EliminationGameInstance
@@ -49,9 +45,12 @@ import kotlin.random.asJavaRandom
 private val MIN_DELAY_TICKS = Ticks.seconds(6)
 private val MAX_DELAY_TICKS = Ticks.seconds(10)
 
-private const val INITIAL_BLOCK_DELAY_TICKS = 68
-private const val BLOCK_DELAY_TICKS_DECREASE_PER_MINUTE = 13
+private const val INITIAL_BLOCK_DELAY_TICKS = 66
+private const val BLOCK_DELAY_TICKS_DECREASE_PER_MINUTE = 18
 private const val TOTAL_MIN_BLOCK_DELAY_TICKS = 5
+private const val NEXT_ROUND_INITIAL_TICKS = 80
+private const val NEXT_ROUND_TICKS_DECREASE_PER_MINUTE = 40
+private const val NEXT_ROUND_MIN_TICKS = 35
 
 private const val PARTICLE_AMOUNT = 3
 
@@ -282,12 +281,18 @@ class DanceFloorInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(g
 
     fun removeBlocks(except: Block) {
         for (pos in floorShape()) {
-            if (world.getBlockState(pos)!!.`is`(except)) continue
+            if (world.getBlockState(pos).`is`(except)) continue
 
             world.setBlock(pos, Blocks.AIR)
         }
 
-        task = timeout(seconds = 4) {
+        val decreaseTicks = (totalDurationTicks * NEXT_ROUND_TICKS_DECREASE_PER_MINUTE / Ticks.minutes(1).toFloat())
+            .roundToInt()
+            .coerceAtLeast(0)
+
+        val nextRoundTicks = max(NEXT_ROUND_MIN_TICKS, NEXT_ROUND_INITIAL_TICKS - decreaseTicks)
+
+        task = timeout(ticks = nextRoundTicks) {
             SoundHelper.playSound(world, SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.NEUTRAL, 0.5f, 1f)
             checkEliminated()
         }
