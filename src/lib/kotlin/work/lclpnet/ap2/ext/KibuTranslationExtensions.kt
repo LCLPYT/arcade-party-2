@@ -1,4 +1,4 @@
-package work.lclpnet.ap2
+package work.lclpnet.ap2.ext
 
 import work.lclpnet.kibu.translate.text.TranslatedText
 

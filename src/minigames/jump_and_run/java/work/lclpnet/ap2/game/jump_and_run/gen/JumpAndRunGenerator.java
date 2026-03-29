@@ -46,7 +46,7 @@ public class JumpAndRunGenerator {
         this.targetMinutes = targetMinutes;
         this.random = random;
 
-        queuePersistence = JsonFileQueuePersistence.create(ApConstants.ID, gameInfo.identifier("module_queue"), Codec.STRING, logger);
+        queuePersistence = JsonFileQueuePersistence.create(ApConstants.RUNTIME_CONFIG_ID, gameInfo.identifier("module_queue"), Codec.STRING, logger);
     }
 
     public List<JumpModule> generate(JumpAndRunSetup.Parts parts) {

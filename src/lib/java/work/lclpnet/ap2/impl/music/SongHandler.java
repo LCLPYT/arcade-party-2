@@ -58,7 +58,7 @@ public class SongHandler {
 
     public SongHandler(MiniGameHandle handle, Random random) {
         this(handle.getSongManager(), handle.getTranslations(), random, handle.getLogger(),
-                JsonFileQueuePersistence.create(ApConstants.ID, handle.getGameInfo().identifier("song_queue"),
+                JsonFileQueuePersistence.create(ApConstants.RUNTIME_CONFIG_ID, handle.getGameInfo().identifier("song_queue"),
                         Identifier.CODEC, handle.getLogger()));
     }
 

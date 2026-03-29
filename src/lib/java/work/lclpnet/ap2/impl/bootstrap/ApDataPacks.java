@@ -38,7 +38,9 @@ public class ApDataPacks implements GameDataPacks {
 
     @Override
     public CompletableFuture<Void> downloadPacks(DataPackSink dataPackSink, Executor executor) {
-        ApBootstrap bootstrap = new ApBootstrap(configFactory, logger);
+        List<Runnable> cleanup = new ArrayList<>();
+
+        ApBootstrap bootstrap = new ApBootstrap(configFactory, logger, cleanup::add);
         Identifier dataPacksPath = Objects.requireNonNull(Identifier.fromNamespaceAndPath("datapacks", ""));
 
         List<AutoCloseable> resources = new ArrayList<>();
@@ -70,8 +72,16 @@ public class ApDataPacks implements GameDataPacks {
                     for (AutoCloseable resource : resources) {
                         try {
                             resource.close();
-                        } catch (Exception e) {
+                        } catch (Throwable e) {
                             logger.error("Failed to close resource {}", resource, e);
+                        }
+                    }
+
+                    for (Runnable action : cleanup) {
+                        try {
+                            action.run();
+                        } catch (Throwable e) {
+                            logger.error("Failed to cleanup", e);
                         }
                     }
                 });

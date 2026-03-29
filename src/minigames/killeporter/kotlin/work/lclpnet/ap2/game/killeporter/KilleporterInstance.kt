@@ -1,7 +1,6 @@
 package work.lclpnet.ap2.game.killeporter
 
 import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents
-import net.fabricmc.fabric.api.event.player.UseBlockCallback
 import net.fabricmc.fabric.api.event.player.UseItemCallback
 import net.minecraft.ChatFormatting
 import net.minecraft.core.BlockPos
@@ -17,13 +16,15 @@ import net.minecraft.world.damagesource.DamageTypes
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.level.Level
 import net.minecraft.world.level.block.Blocks
-import net.minecraft.world.level.block.ChestBlock
-import net.minecraft.world.level.block.DoubleBlockCombiner
 import net.minecraft.world.level.gamerules.GameRules
 import net.minecraft.world.level.material.Fluids
-import work.lclpnet.ap2.*
 import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.map.MapBootstrap
+import work.lclpnet.ap2.ext.allPlayers
+import work.lclpnet.ap2.ext.players
+import work.lclpnet.ap2.ext.mc.teleport
+import work.lclpnet.ap2.ext.timeout
+import work.lclpnet.ap2.ext.translate
 import work.lclpnet.ap2.impl.game.EliminationGameInstance
 import work.lclpnet.ap2.impl.game.kit.KitHandle
 import work.lclpnet.ap2.impl.game.kit.KitHandler

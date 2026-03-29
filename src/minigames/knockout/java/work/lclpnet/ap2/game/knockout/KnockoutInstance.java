@@ -17,6 +17,7 @@ import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 import work.lclpnet.ap2.api.actor.ActorSpawnedCallback;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
@@ -150,7 +151,7 @@ public class KnockoutInstance extends EliminationGameInstance {
     }
 
     @Override
-    public void participantRemoved(ServerPlayer player) {
+    public void participantRemoved(@NonNull ServerPlayer player) {
         getData().add(player, chargeDetail(player));
 
         if (gameHandle.getParticipants().count() == 1) {

@@ -19,6 +19,7 @@ plugins {
     id "io.freefair.lombok" version "8.11"
     id 'org.jetbrains.kotlin.jvm' version "2.2.10"
     id 'org.jetbrains.kotlin.plugin.lombok' version '2.2.10'
+    id 'org.jetbrains.kotlin.plugin.serialization' version '2.3.0'
 }
 
 Properties props = buildUtils.loadProperties("publish.properties")
@@ -202,6 +203,10 @@ dependencies {
     compileOnly("org.jetbrains:annotations:26.0.2")
     include(implementation("work.lclpnet:json-config4j:1.0.0"))
     include(implementation("org.apache.commons:commons-compress:1.26.2"))
+    include(implementation("io.ktor:ktor-client-core:$project.ktor_version"))
+    include(implementation("io.ktor:ktor-client-cio:$project.ktor_version"))
+    include(implementation("io.ktor:ktor-client-content-negotiation:$project.ktor_version"))
+    include(implementation("io.ktor:ktor-serialization-kotlinx-json:$project.ktor_version"))
 
     modImplementation("net.fabricmc.fabric-api:fabric-api:${project.fabric_version}")
     modImplementation("work.lclpnet.mods.kibu:kibu:${project.kibu_version}")
@@ -215,6 +220,7 @@ dependencies {
     modImplementation("work.lclpnet.mods:pal:${project.pal_version}")
     modImplementation("work.lclpnet.mods.gaco:gaco:${project.gaco_version}")
     modImplementation("work.lclpnet.mods.gaco:game-map-api:${project.game_map_api_version}")
+    modImplementation("eu.pb4:map-canvas-api:${project.map_canvas_api_version}")
 
     // runtime dependencies
     modRuntimeOnly("maven.modrinth:minecraft-sqlite-jdbc:3.49.1.0+2025-07-12")
@@ -227,6 +233,7 @@ dependencies {
 
     // optional runtime dependencies (not required to play)
     modLocalRuntime("maven.modrinth:anti-xray:${project.anti_xray_version}")
+    modLocalRuntime("work.lclpnet.mods:simple-ac:${project.simple_ac_version}")
     localRuntime("com.moandjiezana.toml:toml4j:${project.toml_version}")
 
     // test dependencies
