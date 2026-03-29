@@ -55,7 +55,7 @@ import java.util.*
 import java.util.concurrent.CompletableFuture
 import kotlin.time.Duration.Companion.seconds
 
-const val DEBUG_FILL_WITH_NPC = true
+const val DEBUG_FILL_WITH_NPC = false
 val SUDDEN_DEATH_DELAY = 40.seconds
 val MATCH_DRAW_DELAY = 100.seconds
 
