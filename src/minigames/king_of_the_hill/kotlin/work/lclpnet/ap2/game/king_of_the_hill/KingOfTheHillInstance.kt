@@ -15,9 +15,14 @@ import net.minecraft.world.item.Items
 import net.minecraft.world.item.enchantment.Enchantments
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.gamerules.GameRules
-import work.lclpnet.ap2.*
 import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.map.MapBootstrapFunction
+import work.lclpnet.ap2.ext.interval
+import work.lclpnet.ap2.ext.mc.playNotifySound
+import work.lclpnet.ap2.ext.players
+import work.lclpnet.ap2.ext.mc.setBlock
+import work.lclpnet.ap2.ext.setupSidebarScoreboard
+import work.lclpnet.ap2.ext.translate
 import work.lclpnet.ap2.impl.game.FFAGameInstance
 import work.lclpnet.ap2.impl.game.data.DataContainers
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef

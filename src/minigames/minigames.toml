@@ -121,3 +121,7 @@ type = [ "kotlin",]
 id = "quick_sg"
 type = [ "kotlin",]
 
+[[minigames]]
+id = "pvp_tournament"
+type = [ "kotlin",]
+

@@ -9,6 +9,10 @@ import net.minecraft.world.phys.Vec3;
 import org.joml.Vector3d;
 import org.joml.Vector3dc;
 import org.joml.Vector3f;
+import work.lclpnet.gaco.ds.BlockBox;
+import work.lclpnet.gaco.ds.Checkpoint;
+import work.lclpnet.gaco.math.AffineIntMatrix;
+import work.lclpnet.kibu.hook.util.PositionRotation;
 import work.lclpnet.kibu.util.math.Matrix3i;
 
 import java.util.Iterator;
@@ -181,5 +185,21 @@ public class MathUtil {
                 return vec;
             }
         };
+    }
+
+    public static PositionRotation transform(PositionRotation posRot, AffineIntMatrix mat4) {
+        double rad = Math.toRadians(posRot.getYaw());
+        Vec3 vec = mat4.transformVector(Math.sin(-rad), 0d, Math.cos(rad));
+        float transformedYaw = (float) Math.toDegrees(Math.atan2(-vec.x, vec.z));
+
+        Vec3 transformedPos = mat4.transform(posRot.x(), posRot.y(), posRot.z());
+
+        return new PositionRotation(
+                transformedPos.x(),
+                transformedPos.y(),
+                transformedPos.z(),
+                transformedYaw,
+                posRot.getPitch()
+        );
     }
 }

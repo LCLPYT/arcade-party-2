@@ -8,10 +8,10 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.BossEvent;
-import net.minecraft.world.damagesource.CombatEntry;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.EliminationController;
 import work.lclpnet.ap2.api.game.GameInfo;
@@ -22,7 +22,6 @@ import work.lclpnet.ap2.impl.game.data.EliminationDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.util.DeathMessages;
 import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedBossBar;
-import work.lclpnet.kibu.access.misc.DamageTrackerAccess;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.EntityHealthCallback;
 import work.lclpnet.kibu.translate.Translations;
@@ -32,7 +31,6 @@ import work.lclpnet.kibu.translate.text.TranslatedText;
 import work.lclpnet.lobby.game.api.WorldFacade;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 public abstract class EliminationGameInstance extends FFAGameInstance implements EliminationController {
@@ -47,7 +45,7 @@ public abstract class EliminationGameInstance extends FFAGameInstance implements
     }
 
     @Override
-    public void participantRemoved(ServerPlayer player) {
+    public void participantRemoved(@NonNull ServerPlayer player) {
         // make sure the player is tracked as eliminated
         data.add(player);
 
@@ -103,30 +101,12 @@ public abstract class EliminationGameInstance extends FFAGameInstance implements
         HookRegistrar hooks = gameHandle.getHooks();
 
         hooks.registerHook(EntityHealthCallback.HOOK, (entity, health) -> {
-            if (!(entity instanceof ServerPlayer player) || health > 0) return false;
+            if (!(entity instanceof ServerPlayer p)) return false;
 
-            // the player is dying
-            List<CombatEntry> recentDamage = DamageTrackerAccess.getRecentDamage(entity);
-
-            int size = recentDamage.size();
-
-            if (size == 0) {
-                onDeath(player, null);
-                eliminate(player);
-            } else {
-                CombatEntry damageRecord = recentDamage.get(size - 1);
-                DamageSource source = damageRecord.source();
-
-                // try to use death protector
-                if (((LivingEntityAccessor) player).invokeCheckTotemDeathProtection(source)) {
-                    return true;
-                }
-
+            return GameCommons.handleCustomDeath(p, health, (player, source) -> {
                 onDeath(player, source.getEntity());
                 eliminate(player, source);
-            }
-
-            return true;
+            });
         });
     }
 
