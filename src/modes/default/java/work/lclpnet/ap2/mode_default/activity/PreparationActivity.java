@@ -67,6 +67,7 @@ import work.lclpnet.kibu.access.entity.ServerPlayerAccess;
 import work.lclpnet.kibu.cmd.type.CommandRegistrar;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
+import work.lclpnet.kibu.hook.player.PlayerConnectionHooks;
 import work.lclpnet.kibu.inv.type.RestrictedInventory;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.RunningTask;
@@ -224,9 +225,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
         dynamicEntityManager = new DynamicEntityManager(world);
         dynamicEntityManager.init(scheduler, hooks);
 
-        if (ApConstants.DEVELOPMENT) {
-            giveDevelopmentItems(hooks);
-        }
+        giveDevelopmentItems(hooks);
 
         showLeaderboard();
         displayGameQueue();
@@ -717,21 +716,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
         MinecraftServer server = getServer();
 
         for (ServerPlayer player : PlayerLookup.all(server)) {
-            if (!Commands.LEVEL_GAMEMASTERS.check(server.getProfilePermissions(player.nameAndId()))) continue;
-
-            ItemStack gameSelector = new ItemStack(Items.TOTEM_OF_UNDYING);
-            gameSelector.set(DataComponents.CUSTOM_NAME, Component.literal("Select Game").withStyle(style -> style.withItalic(false).applyFormat(YELLOW)));
-
-            ItemStack mapSelector = new ItemStack(Items.HEART_OF_THE_SEA);
-            mapSelector.set(DataComponents.CUSTOM_NAME, Component.literal("Select Map").withStyle(style -> style.withItalic(false).applyFormat(YELLOW)));
-
-            ItemStack skip = new ItemStack(Items.EMERALD_BLOCK);
-            skip.set(DataComponents.CUSTOM_NAME, Component.literal("Skip Preparation").withStyle(style -> style.withItalic(false).applyFormat(GREEN)));
-
-            Inventory inventory = player.getInventory();
-            inventory.setItem(0, gameSelector);
-            inventory.setItem(1, skip);
-            inventory.setItem(8, mapSelector);
+            giveDevelopmentItems(player);
         }
 
         hooks.registerHook(PlayerInteractionHooks.USE_ITEM, (player, world, hand) -> {
@@ -755,6 +740,8 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
             return InteractionResult.SUCCESS_SERVER;
         });
 
+        hooks.registerHook(PlayerConnectionHooks.JOIN, this::giveDevelopmentItems);
+
         gameChooser.listen(hooks, (game, player) -> {
             forceGame(game);
             player.sendSystemMessage(Component.literal("Forcing mini-game \"%s\"".formatted(game.getId())));
@@ -765,6 +752,26 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
             args.miniGameArgs().mapFacade().forceMap(mapId);
             player.sendSystemMessage(Component.literal("Next map will be \"%s\"".formatted(mapId)));
         });
+    }
+
+    private void giveDevelopmentItems(ServerPlayer player) {
+        MinecraftServer server = getServer();
+
+        if (!Commands.LEVEL_GAMEMASTERS.check(server.getProfilePermissions(player.nameAndId()))) return;
+
+        ItemStack gameSelector = new ItemStack(Items.TOTEM_OF_UNDYING);
+        gameSelector.set(DataComponents.CUSTOM_NAME, Component.literal("Select Game").withStyle(style -> style.withItalic(false).applyFormat(YELLOW)));
+
+        ItemStack mapSelector = new ItemStack(Items.HEART_OF_THE_SEA);
+        mapSelector.set(DataComponents.CUSTOM_NAME, Component.literal("Select Map").withStyle(style -> style.withItalic(false).applyFormat(YELLOW)));
+
+        ItemStack skip = new ItemStack(Items.EMERALD_BLOCK);
+        skip.set(DataComponents.CUSTOM_NAME, Component.literal("Skip Preparation").withStyle(style -> style.withItalic(false).applyFormat(GREEN)));
+
+        Inventory inventory = player.getInventory();
+        inventory.setItem(0, gameSelector);
+        inventory.setItem(1, skip);
+        inventory.setItem(8, mapSelector);
     }
 
     private void openGamePicker(ServerPlayer player) {
