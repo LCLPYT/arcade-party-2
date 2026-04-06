@@ -96,6 +96,14 @@
   "ap2.status.preparation": "Preparing next minigame",
   "ap2.status.game_over": "Game Over",
   "ap2.playing_on": "Playing on %s",
+  "ap2.chat.wholesome.1": "Great game, everyone!",
+  "ap2.chat.wholesome.2": "It was an honor to play with you all. Thank you.",
+  "ap2.chat.wholesome.3": "Wishing you all the best.",
+  "ap2.chat.wholesome.4": "Good game! Best of luck to you all!",
+  "ap2.chat.wholesome.5": "Gee whiz! That was fun. Good playing!",
+  "ap2.chat.wholesome.6": "Well played. I salute you all.",
+  "ap2.chat.wholesome.7": "I am trying to be a nicer person. It is hard, but I am trying, guys.",
+  "ap2.chat.wholesome.8": "For glory and honor! Huzzah comrades!",
   "game.ap2.title": "ArcadeParty",
   "game.ap2.reached_checkpoint": "Checkpoint reached"
 }

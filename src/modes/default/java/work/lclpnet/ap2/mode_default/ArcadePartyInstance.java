@@ -24,6 +24,7 @@ import work.lclpnet.ap2.mode_default.cmd.ForceGameCommand;
 import work.lclpnet.ap2.mode_default.cmd.ScoreCommand;
 import work.lclpnet.ap2.mode_default.util.ApBaseArgs;
 import work.lclpnet.ap2.mode_default.util.ScoreManager;
+import work.lclpnet.ap2.mode_default.util.WholesomeChatManager;
 import work.lclpnet.ap2.util.TablistManager;
 import work.lclpnet.config.json.JsonConfigFactory;
 import work.lclpnet.gaco.ds.queue.JsonFileQueuePersistence;
@@ -120,6 +121,9 @@ public class ArcadePartyInstance implements GameInstance {
 
         HookStack hookStack = environment.getHookStack();
         initDynamicLanguages(hookStack, translations, server);
+
+        var wholesomeChatManager = new WholesomeChatManager(server, translations);
+        wholesomeChatManager.init(hookStack);
 
         ApMiniGameArgs container = new ApMiniGameArgs(server, logger, translations, hookStack,
                 commandStack, environment.getSchedulerStack(), result.worldFacade(),

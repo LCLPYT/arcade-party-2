@@ -127,6 +127,7 @@ modesConfig.modes.each { mode ->
         resources.srcDirs = ["src/modes/${mode.id}/resources"]
 
         java.srcDirs = ["src/modes/${mode.id}/java"]
+        kotlin.srcDirs = ["src/modes/${mode.id}/kotlin"]
 
         compileClasspath += sourceSets.lib.output
         runtimeClasspath += sourceSets.lib.output
