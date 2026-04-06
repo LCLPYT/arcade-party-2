@@ -38,11 +38,11 @@ class Kit(
     operator fun get(slot: EquipmentSlot): ItemStack = equipment[slot] ?: ItemStack.EMPTY
 
     fun equip(player: Avatar) {
-        player.setItemSlot(EquipmentSlot.OFFHAND, this[EquipmentSlot.OFFHAND])
-        player.setItemSlot(EquipmentSlot.HEAD, this[EquipmentSlot.HEAD])
-        player.setItemSlot(EquipmentSlot.CHEST, this[EquipmentSlot.CHEST])
-        player.setItemSlot(EquipmentSlot.LEGS, this[EquipmentSlot.LEGS])
-        player.setItemSlot(EquipmentSlot.FEET, this[EquipmentSlot.FEET])
+        player.setItemSlot(EquipmentSlot.OFFHAND, this[EquipmentSlot.OFFHAND].copy())
+        player.setItemSlot(EquipmentSlot.HEAD, this[EquipmentSlot.HEAD].copy())
+        player.setItemSlot(EquipmentSlot.CHEST, this[EquipmentSlot.CHEST].copy())
+        player.setItemSlot(EquipmentSlot.LEGS, this[EquipmentSlot.LEGS].copy())
+        player.setItemSlot(EquipmentSlot.FEET, this[EquipmentSlot.FEET].copy())
 
         if (player is ServerPlayer) {
             items.forEachIndexed { index, stack ->
