@@ -2,80 +2,105 @@ hash-format = "sha256"
 
 [[files]]
 file = "mods/anti-xray.pw.toml"
-hash = "0f02a94df6c8c9154c0e2073a19a7791c41d02356035f50a76eaded7a02592ef"
-metafile = true
-
-[[files]]
-file = "mods/arcade-party-2.pw.toml"
-hash = "70f836df5e6ee7d4f2c54da5c1bd92caa87fd23268155388cbd7f2cf604fa0ad"
+hash = "9d1afa5a89577bd21da0708c13d66f32224d5f7817451d9c41f5d9b76dcea9b6"
 metafile = true
 
 [[files]]
 file = "mods/cloth-config.pw.toml"
-hash = "df15648dd4d4e27dd0c45ab4e78277c45886b77a698b129f4ce2d2bc337f7044"
+hash = "a06ef129798265e0d7249426fb0ed5c506725b0460dc3dfdb975b8978480895e"
 metafile = true
 
 [[files]]
 file = "mods/combat-control.pw.toml"
-hash = "41ae43179e7cc6bca460569d4b453b7aa0defb12268c30ab80d335e8fbfa099a"
+hash = "b923bff1efc408f2951a3c1ef51d7d347f770c4a74379777b2ab576ecebf20e7"
 metafile = true
 
 [[files]]
 file = "mods/fabric-api.pw.toml"
-hash = "687d9f69912b725a879bf3b4da8fb3f63eead93e4ce3e719c2be67d56b70c0b5"
+hash = "45abf05e1cc90006aeb65e4e1bbe97da5a1984f547ea8028a077dae68af0ac11"
+metafile = true
+
+[[files]]
+file = "mods/fabric-language-kotlin.pw.toml"
+hash = "e49f549eecbe502a3da6d731d6e28783631b14b0bba7bba9780a1075e7926776"
 metafile = true
 
 [[files]]
 file = "mods/fantasy.pw.toml"
-hash = "fa5efdb92b2aad5d84b224bc6351dff7d4780561bd294e443fcb0bbe5e24c7eb"
+hash = "756811323fb2c400311b9c348c295f5112032eddab13ddf427bcb9ef96666923"
+metafile = true
+
+[[files]]
+file = "mods/gaco.pw.toml"
+hash = "2899a17eff8e414a43f2ebbfb7d86cd4c7854a70cddc56bed7f500865fd18236"
+metafile = true
+
+[[files]]
+file = "mods/game-map-utils.pw.toml"
+hash = "7777d0099c6a1c43c96da9cce80b41272ef4a3418a473297850b13167d76a44e"
+metafile = true
+
+[[files]]
+file = "mods/kibu-physics.pw.toml"
+hash = "296ad7c27c1e36f64708578d3a0adfa379aa19471b87e4f1e4b54423b91f249c"
 metafile = true
 
 [[files]]
 file = "mods/kibu-world-api.pw.toml"
-hash = "ea6a8543a21218f3a628ac61945163769cbe88ca9e35004c843f926eb1bd265a"
+hash = "5d55955a8c0a447098c3584218302ab5bc5c29a4dc8489424872c0d333057445"
 metafile = true
 
 [[files]]
 file = "mods/kibu.pw.toml"
-hash = "b8d33156201d3e9c5a456bd30cdb1f5e0dd5a9846899aed10ef996a9d5b313c8"
+hash = "6a3477f437c0c4a98527941ec0424357e422aa58120853c37b7b462afe9e9952"
 metafile = true
 
 [[files]]
 file = "mods/krypton.pw.toml"
-hash = "c4e45594c8d1ab3dacc3b49142f16fb253178dd31d97cc917bf4a4d54f21e081"
+hash = "8f6e0157b42ba668c0ba9aa7eff94b3b91a8f58bcd357e574d70a7b160d4337c"
 metafile = true
 
 [[files]]
 file = "mods/lithium.pw.toml"
-hash = "df9d69dc784ef61e99064407952d34c294f62fe1155b5260f825bd9a82e2f3a2"
+hash = "8c7aec9e376eb3f10da62109594e1ac6b7bc92da8e9c080f8f8f5a736051f339"
+metafile = true
+
+[[files]]
+file = "mods/map-canvas-api.pw.toml"
+hash = "d5b2467ddcf69da0953131d25189d59efdc38bbcf34701d45de6544086ee5bbf"
 metafile = true
 
 [[files]]
 file = "mods/mcserver-api-fabric.pw.toml"
-hash = "c88956fd641fdbbab2810cb92ccc8780f4f24af07afa371a32962bad2b97c826"
+hash = "3328b8aaaca3e123732f4930c4e360baba38b8a75111f1e21df9ae07dfaaa164"
 metafile = true
 
 [[files]]
 file = "mods/mg-lobby.pw.toml"
-hash = "ce2ae0e397226508711fd4742ce279354dba8ee85f769bcf0dc3f78bd055f4e8"
+hash = "44fe20f1a8d3886a28dbc341fc6f1520da829d5e087241942aed34208754eea2"
+metafile = true
+
+[[files]]
+file = "mods/minecraft-sqlite-jdbc.pw.toml"
+hash = "9fda89adbc0395cdfcbaef842fc95e553d87aebcab121a10c691f1e37cfbefa4"
 metafile = true
 
 [[files]]
 file = "mods/notica.pw.toml"
-hash = "06b97d07e092da01363d9afeb95496ac0ad5cb95b1839e16b8ce29061fe2a9ce"
+hash = "ed8c1eb27cec896bb8814b8abb0a868354cea44d9071541a0a3fb52f16e315a0"
 metafile = true
 
 [[files]]
 file = "mods/pal.pw.toml"
-hash = "539eb43184a464dc26d5288596d4375ed0b9143d180b5bb24f0dda45c02a1bba"
+hash = "4e1bcb00758f434749a0a41d38863bb6b0371c8e48ac4f4f641854a6619e3a7e"
 metafile = true
 
 [[files]]
 file = "mods/ruler.pw.toml"
-hash = "f49d17421205b1609414af751a27ba72476749c18f55948ba58e808e7b09f786"
+hash = "9ffa38b6b53d8479da6c5cc74b011d917380eab9a69f303a8b9b239ded9c069c"
 metafile = true
 
 [[files]]
-file = "mods/sqlite-jdbc.pw.toml"
-hash = "c1103579d21a2dae37a7379d7355a216a51b5721ddd585781b06e795c4249d0c"
+file = "mods/simple-ac.pw.toml"
+hash = "94cf9aed3a4b52412e9898dca2fc25360adcf64e097f6dc19232cda752367d58"
 metafile = true

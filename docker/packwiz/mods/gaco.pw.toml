@@ -1,0 +1,15 @@
+name = "gaco"
+filename = "gaco-0.16.0+1.21.11.jar"
+side = "both"
+
+[download]
+url = "https://github.com/LCLPYT/gaco/releases/download/0.16.0%2B1.21.11/gaco-0.16.0%2B1.21.11.jar"
+hash-format = "sha256"
+hash = "b89dc8e4e0371669324927bd800a201766ece96327b11e9a670288af87d341f2"
+
+[update]
+[update.github]
+branch = "1.21.11"
+regex = "^.+(?<!-api|-dev|-dev-preshadow|-sources)\\.jar$"
+slug = "LCLPYT/gaco"
+tag = "0.16.0+1.21.11"

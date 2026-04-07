@@ -1,13 +1,15 @@
-name = "Notica"
-filename = "notica-1.3.1+1.21.4.jar"
-side = "server"
+name = "notica"
+filename = "notica-1.6.0+1.21.11.jar"
+side = "both"
 
 [download]
-url = "https://cdn.modrinth.com/data/1y46lDNS/versions/M0nV5kfb/notica-1.3.1%2B1.21.4.jar"
-hash-format = "sha512"
-hash = "0a313c9e944692141b2bfcbeae214c8fedce2ee44baa8c574f2283fd21995a5d577f0551cb22aa0485c09a4cef531acfd63a7f91536d11cc54ba872ce8abf9dd"
+url = "https://github.com/LCLPYT/notica/releases/download/1.6.0%2B1.21.11/notica-1.6.0%2B1.21.11.jar"
+hash-format = "sha256"
+hash = "1b87f66c21b2c5d57b3963bacc2814eeb6f83ff07135f1f8bf16cd0444335a44"
 
 [update]
-[update.modrinth]
-mod-id = "1y46lDNS"
-version = "M0nV5kfb"
+[update.github]
+branch = "1.21.11"
+regex = "^.+(?<!-api|-dev|-dev-preshadow|-sources)\\.jar$"
+slug = "LCLPYT/notica"
+tag = "1.6.0+1.21.11"

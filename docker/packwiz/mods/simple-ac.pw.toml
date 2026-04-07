@@ -1,0 +1,15 @@
+name = "simple-ac"
+filename = "simple-ac-0.2.0+1.21.11.jar"
+side = "both"
+
+[download]
+url = "https://github.com/LCLPYT/simple-ac/releases/download/0.2.0%2B1.21.11/simple-ac-0.2.0%2B1.21.11.jar"
+hash-format = "sha256"
+hash = "1c0907e13d5f45585b85cf42207935cc647a1010b9ade150ab49663885259a94"
+
+[update]
+[update.github]
+branch = "1.21.11"
+regex = "^.+(?<!-api|-dev|-dev-preshadow|-sources)\\.jar$"
+slug = "LCLPYT/simple-ac"
+tag = "0.2.0+1.21.11"
