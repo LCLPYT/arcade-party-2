@@ -1,0 +1,15 @@
+name = "map-canvas-api"
+filename = "mapcanvas-0.8.0+26.1.jar"
+side = "both"
+
+[download]
+url = "https://github.com/Patbox/map-canvas-api/releases/download/0.8.0%2B26.1/mapcanvas-0.8.0%2B26.1.jar"
+hash-format = "sha256"
+hash = "63b7c33988411a6811674ceae16f045ef0431754be10911736811a6b5fa795c8"
+
+[update]
+[update.github]
+branch = "main"
+regex = "^.+(?<!-api|-dev|-dev-preshadow|-sources)\\.jar$"
+slug = "Patbox/map-canvas-api"
+tag = "0.8.0+26.1"
