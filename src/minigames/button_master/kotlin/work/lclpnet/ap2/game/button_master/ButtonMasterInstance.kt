@@ -31,10 +31,10 @@ import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.map.MapBootstrap
 import work.lclpnet.ap2.api.util.heads.PlayerHead
 import work.lclpnet.ap2.ext.allPlayers
-import work.lclpnet.ap2.ext.players
 import work.lclpnet.ap2.ext.mc.resetAttribute
 import work.lclpnet.ap2.ext.mc.setAttribute
 import work.lclpnet.ap2.ext.mc.teleport
+import work.lclpnet.ap2.ext.players
 import work.lclpnet.ap2.ext.translate
 import work.lclpnet.ap2.impl.game.EliminationGameInstance
 import work.lclpnet.ap2.impl.map.schema.SchemaHolder
@@ -230,6 +230,7 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
         val player = players().getParticipant(uuid).orElse(null) ?: return
 
         movementBlocker.enableMovement(player)
+        player.resetAttribute(Attributes.GRAVITY)
 
         task = gameHandle.scheduler.timeout(Ticks.seconds(5), Runnable {
             eliminate(player)
@@ -250,7 +251,10 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
 
         capsules?.teleportToCapsules(otherPlayers)
 
-        otherPlayers.forEach { movementBlocker.disableMovement(it) }
+        otherPlayers.forEach {
+            movementBlocker.disableMovement(it)
+            it.setAttribute(Attributes.GRAVITY, 0.0)
+        }
 
         val ejectTimer = commons().createTimer(
             translate("game.ap2.button_master.eject"),
@@ -305,6 +309,7 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
             gameHandle.worldFacade.teleport(player)
 
             player.resetAttribute(Attributes.JUMP_STRENGTH)
+            player.resetAttribute(Attributes.GRAVITY)
         }
 
         nextRound()
