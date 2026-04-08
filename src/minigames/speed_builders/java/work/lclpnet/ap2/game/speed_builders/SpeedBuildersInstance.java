@@ -143,6 +143,8 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
         Participants participants = gameHandle.getParticipants();
 
         if (participants.count() == 1) {
+            putScoreDetail(player, false);
+
             participants.stream().findAny().ifPresent(winner -> putScoreDetail(winner, true));
         }
 
