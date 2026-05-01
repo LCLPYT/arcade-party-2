@@ -200,55 +200,55 @@ dependencies {
     implementation(libs.fabric.api)
 
     // extra dependencies required for compilation
-    implementation("org.json:json:20231013")
-    compileOnly("org.jetbrains:annotations:26.0.2")
+    implementation(libs.json)
+    compileOnly(libs.jetbrains.annotations)
 
     def includeImpl = { dep ->
         implementation(dep)
         include(dep)
     }
 
-    includeImpl("work.lclpnet:json-config4j:1.0.0")
-    includeImpl("org.apache.commons:commons-compress:1.26.2")
-    includeImpl("io.ktor:ktor-client-core:$project.ktor_version")
-    includeImpl("io.ktor:ktor-client-cio:$project.ktor_version")
-    includeImpl("io.ktor:ktor-client-content-negotiation:$project.ktor_version")
-    includeImpl("io.ktor:ktor-serialization-kotlinx-json:$project.ktor_version")
+    includeImpl(libs.json.config4j)
+    includeImpl(libs.commons.compress)
+    includeImpl(libs.ktor.client.core)
+    includeImpl(libs.ktor.client.cio)
+    includeImpl(libs.ktor.client.content.negotiation)
+    includeImpl(libs.ktor.serialization.kotlinx.json)
 
-    implementation("work.lclpnet.mods.kibu:kibu:${project.kibu_version}")
-    implementation("work.lclpnet.mods.kibu:kibu-world-api:${project.kibu_world_api_version}")
-    implementation("work.lclpnet.mods.kibu:kibu-physics:$project.kibu_physics_version")
+    implementation(libs.kibu)
+    implementation(libs.kibu.world.api)
+    implementation(libs.kibu.physics)
     implementation(libs.fantasy)
-    implementation("work.lclpnet.mods:combat-control:${project.combat_control_version}")
-    implementation("work.lclpnet.mods:notica:${project.notica_version}")
-    implementation("work.lclpnet.mods:mg-lobby:${project.lobby_version}")
-    implementation("net.fabricmc:fabric-language-kotlin:${project.kotlin_version}")
-    implementation("work.lclpnet.mods:pal:${project.pal_version}")
-    implementation("work.lclpnet.mods.gaco:gaco:${project.gaco_version}")
-    implementation("work.lclpnet.mods.gaco:game-map-api:${project.game_map_api_version}")
-    implementation("eu.pb4:map-canvas-api:${project.map_canvas_api_version}")
+    implementation(libs.combat.control)
+    implementation(libs.notica)
+    implementation(libs.mg.lobby)
+    implementation(libs.fabric.language.kotlin)
+    implementation(libs.pal)
+    implementation(libs.gaco)
+    implementation(libs.game.map.api)
+    implementation(libs.map.canvas.api)
 
     // runtime dependencies
-    runtimeOnly("maven.modrinth:minecraft-sqlite-jdbc:3.49.1.0+2025-07-12")
+    runtimeOnly(libs.modrinth.sqlite.jdbc)
 
     // optional runtime dependencies (not explicitly required for compilation, but needed to play the game)
-    localRuntime("work.lclpnet.mods:ruler:${project.ruler_version}")
-    localRuntime("work.lclpnet.mcserver-api:mcserver-api-fabric:${project.mcserver_api_version}")
-    implementation("work.lclpnet:translations4j:${project.translations4j_version}")
-    implementation("work.lclpnet:translations4j:${project.translations4j_version}:network")
+    localRuntime(libs.ruler)
+    localRuntime(libs.mcserver.api)
+    implementation(libs.translations4j)
+    implementation(variantOf(libs.translations4j) { classifier('network') })
 
     // optional runtime dependencies (not required to play)
-    localRuntime("maven.modrinth:anti-xray:${project.anti_xray_version}")
-    localRuntime("work.lclpnet.mods:simple-ac:${project.simple_ac_version}")
-    localRuntime("com.moandjiezana.toml:toml4j:${project.toml_version}")
+    localRuntime(libs.modrinth.anti.xray)
+    localRuntime(libs.simple.ac)
+    localRuntime(libs.toml4j)
 
     // test dependencies
-    testImplementation("org.junit.jupiter:junit-jupiter-api:5.8.1")
-    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.8.1")
-    testImplementation("org.mockito:mockito-core:5.6.0")
-    testImplementation("org.junit.jupiter:junit-jupiter-params:5.8.1")
+    testImplementation(libs.junit.jupiter.api)
+    testRuntimeOnly(libs.junit.jupiter.engine)
+    testImplementation(libs.mockito.core)
+    testImplementation(libs.junit.jupiter.params)
     testImplementation(libs.fabric.loader.junit)
-    testImplementation("org.xerial:sqlite-jdbc:3.41.2.2")
+    testImplementation(libs.sqlite.jdbc)
 }
 
 /*********************************************************************************************************************\
