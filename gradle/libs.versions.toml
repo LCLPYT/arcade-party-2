@@ -8,6 +8,32 @@ java = "25"
 kotlin = "2.3.21"
 lombok = "9.4.0"
 fantasy = "0.8.0-beta.1+26.1.1"
+json = "20231013"
+jetbrains-annotations = "26.0.2"
+json-config4j = "1.0.0"
+commons-compress = "1.26.2"
+ktor = "3.3.3"
+kibu = "0.154.0+26.1"
+kibu-world-api = "0.10.0+26.1.2"
+kibu-physics = "0.2.0+26.1.2"
+mg-lobby = "0.78.0+26.1.2"
+combat-control = "1.11.0+26.1.2"
+notica = "2.0.0+26.1.2"
+fabric-language-kotlin = "1.13.11+kotlin.2.3.21"
+pal = "0.16.2+26.1.2"
+gaco = "0.16.0+26.1.2"
+game-map-api = "0.4.4+26.1.2"
+map-canvas-api = "0.8.0+26.1"
+modrinth-sqlite-jdbc = "3.49.1.0+2025-07-12"
+ruler = "0.4.0+26.1.2"
+mcserver-api = "0.9.1+26.1.2"
+translations4j = "2.11.0"
+modrinth-anti-xray = "fabric-1.4.16+26.1"
+simple-ac = "0.2.0+26.1.2"
+toml4j = "0.7.2"
+junit-jupiter = "5.8.1"
+mockito = "5.6.0"
+sqlite-jdbc = "3.41.2.2"
 
 [plugins]
 fabric-loom = { id = "net.fabricmc.fabric-loom", version.ref = "fabric-loom" }
@@ -25,3 +51,34 @@ fabric-api = { module = "net.fabricmc.fabric-api:fabric-api", version.ref = "fab
 fabric-loader = { module = "net.fabricmc:fabric-loader", version.ref = "fabric-loader" }
 fabric-loader-junit = { module = "net.fabricmc:fabric-loader-junit", version.ref = "fabric-loader" }
 fantasy = { module = "xyz.nucleoid:fantasy", version.ref = "fantasy" }
+json = { module = "org.json:json", version.ref = "json" }
+jetbrains-annotations = { module = "org.jetbrains:annotations", version.ref = "jetbrains-annotations" }
+json-config4j = { module = "work.lclpnet:json-config4j", version.ref = "json-config4j" }
+commons-compress = { module = "org.apache.commons:commons-compress", version.ref = "commons-compress" }
+ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
+ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
+ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
+ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
+kibu = { module = "work.lclpnet.mods.kibu:kibu", version.ref = "kibu" }
+kibu-world-api = { module = "work.lclpnet.mods.kibu:kibu-world-api", version.ref = "kibu-world-api" }
+kibu-physics = { module = "work.lclpnet.mods.kibu:kibu-physics", version.ref = "kibu-physics" }
+mg-lobby = { module = "work.lclpnet.mods:mg-lobby", version.ref = "mg-lobby" }
+combat-control = { module = "work.lclpnet.mods:combat-control", version.ref = "combat-control" }
+notica = { module = "work.lclpnet.mods:notica", version.ref = "notica" }
+fabric-language-kotlin = { module = "net.fabricmc:fabric-language-kotlin", version.ref = "fabric-language-kotlin" }
+pal = { module = "work.lclpnet.mods:pal", version.ref = "pal" }
+gaco = { module = "work.lclpnet.mods.gaco:gaco", version.ref = "gaco" }
+game-map-api = { module = "work.lclpnet.mods.gaco:game-map-api", version.ref = "game-map-api" }
+map-canvas-api = { module = "eu.pb4:map-canvas-api", version.ref = "map-canvas-api" }
+modrinth-sqlite-jdbc = { module = "maven.modrinth:minecraft-sqlite-jdbc", version.ref = "modrinth-sqlite-jdbc" }
+ruler = { module = "work.lclpnet.mods:ruler", version.ref = "ruler" }
+mcserver-api = { module = "work.lclpnet.mcserver-api:mcserver-api-fabric", version.ref = "mcserver-api" }
+translations4j = { module = "work.lclpnet:translations4j", version.ref = "translations4j" }
+modrinth-anti-xray = { module = "maven.modrinth:anti-xray", version.ref = "modrinth-anti-xray" }
+simple-ac = { module = "work.lclpnet.mods:simple-ac", version.ref = "simple-ac" }
+toml4j = { module = "com.moandjiezana.toml:toml4j", version.ref = "toml4j" }
+junit-jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit-jupiter" }
+junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit-jupiter" }
+junit-jupiter-params = { module = "org.junit.jupiter:junit-jupiter-params", version.ref = "junit-jupiter" }
+mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockito" }
+sqlite-jdbc = { module = "org.xerial:sqlite-jdbc", version.ref = "sqlite-jdbc" }
