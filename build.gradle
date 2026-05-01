@@ -1,5 +1,5 @@
 import com.electronwill.nightconfig.core.serde.annotations.SerdeSkipDeserializingIf
-import net.fabricmc.loom.task.RemapJarTask
+import org.apache.tools.ant.filters.ReplaceTokens
 import work.lclpnet.build.task.GithubDeploymentTask
 import work.lclpnet.kibu.config.ConfigManager
 
@@ -12,26 +12,27 @@ buildscript {
 }
 
 plugins {
-    id "java"
-    id "net.fabricmc.fabric-loom-remap" version "${loom_version}"
-    id "maven-publish"
-    id "gradle-build-utils" version "1.7.0"
-    id "io.freefair.lombok" version "8.11"
-    id 'org.jetbrains.kotlin.jvm' version "2.2.10"
-    id 'org.jetbrains.kotlin.plugin.lombok' version '2.2.10'
-    id 'org.jetbrains.kotlin.plugin.serialization' version '2.3.0'
+    alias(libs.plugins.java)
+    alias(libs.plugins.fabric.loom)
+    alias(libs.plugins.maven.publish)
+    alias(libs.plugins.gradle.build.utils)
+    alias(libs.plugins.lombok)
+    alias(libs.plugins.kotlin.jvm)
+    alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.kotlin.lombok)
 }
 
 Properties props = buildUtils.loadProperties("publish.properties")
 
 group = project.maven_group
-version = "${project.mod_version}+${project.minecraft_version}"
+version = "${project.mod_version}+${libs.versions.minecraft.get()}"
+
+def modId = project.mod_id
+def javaVersion = libs.versions.java.get().toInteger()
 
 base {
-    archivesName = project.archives_base_name
+    archivesName = modId
 }
-
-int javaVersion = Integer.parseInt(project.java_version)
 
 /*********************************************************************************************************************\
  * Repositories
@@ -194,46 +195,51 @@ afterEvaluate {
  * Dependencies
  \*********************************************************************************************************************/
 dependencies {
-    minecraft("com.mojang:minecraft:${project.minecraft_version}")
-    mappings(loom.officialMojangMappings())
-    modImplementation("net.fabricmc:fabric-loader:${project.loader_version}")
+    minecraft(libs.minecraft)
+    implementation(libs.fabric.loader)
+    implementation(libs.fabric.api)
 
     // extra dependencies required for compilation
     implementation("org.json:json:20231013")
     compileOnly("org.jetbrains:annotations:26.0.2")
-    include(implementation("work.lclpnet:json-config4j:1.0.0"))
-    include(implementation("org.apache.commons:commons-compress:1.26.2"))
-    include(implementation("io.ktor:ktor-client-core:$project.ktor_version"))
-    include(implementation("io.ktor:ktor-client-cio:$project.ktor_version"))
-    include(implementation("io.ktor:ktor-client-content-negotiation:$project.ktor_version"))
-    include(implementation("io.ktor:ktor-serialization-kotlinx-json:$project.ktor_version"))
 
-    modImplementation("net.fabricmc.fabric-api:fabric-api:${project.fabric_version}")
-    modImplementation("work.lclpnet.mods.kibu:kibu:${project.kibu_version}")
-    modImplementation("work.lclpnet.mods.kibu:kibu-world-api:${project.kibu_world_api_version}")
-    modImplementation("work.lclpnet.mods.kibu:kibu-physics:$project.kibu_physics_version")
-    modImplementation("xyz.nucleoid:fantasy:${project.fantasy_version}")
-    modImplementation("work.lclpnet.mods:combat-control:${project.combat_control_version}")
-    modImplementation("work.lclpnet.mods:notica:${project.notica_version}")
-    modImplementation("work.lclpnet.mods:mg-lobby:${project.lobby_version}")
-    modImplementation("net.fabricmc:fabric-language-kotlin:${project.kotlin_version}")
-    modImplementation("work.lclpnet.mods:pal:${project.pal_version}")
-    modImplementation("work.lclpnet.mods.gaco:gaco:${project.gaco_version}")
-    modImplementation("work.lclpnet.mods.gaco:game-map-api:${project.game_map_api_version}")
-    modImplementation("eu.pb4:map-canvas-api:${project.map_canvas_api_version}")
+    def includeImpl = { dep ->
+        implementation(dep)
+        include(dep)
+    }
+
+    includeImpl("work.lclpnet:json-config4j:1.0.0")
+    includeImpl("org.apache.commons:commons-compress:1.26.2")
+    includeImpl("io.ktor:ktor-client-core:$project.ktor_version")
+    includeImpl("io.ktor:ktor-client-cio:$project.ktor_version")
+    includeImpl("io.ktor:ktor-client-content-negotiation:$project.ktor_version")
+    includeImpl("io.ktor:ktor-serialization-kotlinx-json:$project.ktor_version")
+
+    implementation("work.lclpnet.mods.kibu:kibu:${project.kibu_version}")
+    implementation("work.lclpnet.mods.kibu:kibu-world-api:${project.kibu_world_api_version}")
+    implementation("work.lclpnet.mods.kibu:kibu-physics:$project.kibu_physics_version")
+    implementation(libs.fantasy)
+    implementation("work.lclpnet.mods:combat-control:${project.combat_control_version}")
+    implementation("work.lclpnet.mods:notica:${project.notica_version}")
+    implementation("work.lclpnet.mods:mg-lobby:${project.lobby_version}")
+    implementation("net.fabricmc:fabric-language-kotlin:${project.kotlin_version}")
+    implementation("work.lclpnet.mods:pal:${project.pal_version}")
+    implementation("work.lclpnet.mods.gaco:gaco:${project.gaco_version}")
+    implementation("work.lclpnet.mods.gaco:game-map-api:${project.game_map_api_version}")
+    implementation("eu.pb4:map-canvas-api:${project.map_canvas_api_version}")
 
     // runtime dependencies
-    modRuntimeOnly("maven.modrinth:minecraft-sqlite-jdbc:3.49.1.0+2025-07-12")
+    runtimeOnly("maven.modrinth:minecraft-sqlite-jdbc:3.49.1.0+2025-07-12")
 
     // optional runtime dependencies (not explicitly required for compilation, but needed to play the game)
-    modLocalRuntime("work.lclpnet.mods:ruler:${project.ruler_version}")
-    modLocalRuntime("work.lclpnet.mcserver-api:mcserver-api-fabric:${project.mcserver_api_version}")
+    localRuntime("work.lclpnet.mods:ruler:${project.ruler_version}")
+    localRuntime("work.lclpnet.mcserver-api:mcserver-api-fabric:${project.mcserver_api_version}")
     implementation("work.lclpnet:translations4j:${project.translations4j_version}")
     implementation("work.lclpnet:translations4j:${project.translations4j_version}:network")
 
     // optional runtime dependencies (not required to play)
-    modLocalRuntime("maven.modrinth:anti-xray:${project.anti_xray_version}")
-    modLocalRuntime("work.lclpnet.mods:simple-ac:${project.simple_ac_version}")
+    localRuntime("maven.modrinth:anti-xray:${project.anti_xray_version}")
+    localRuntime("work.lclpnet.mods:simple-ac:${project.simple_ac_version}")
     localRuntime("com.moandjiezana.toml:toml4j:${project.toml_version}")
 
     // test dependencies
@@ -241,7 +247,7 @@ dependencies {
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.8.1")
     testImplementation("org.mockito:mockito-core:5.6.0")
     testImplementation("org.junit.jupiter:junit-jupiter-params:5.8.1")
-    testImplementation("net.fabricmc:fabric-loader-junit:${project.loader_version}")
+    testImplementation(libs.fabric.loader.junit)
     testImplementation("org.xerial:sqlite-jdbc:3.41.2.2")
 }
 
@@ -281,7 +287,6 @@ tasks.withType(JavaCompile).configureEach {
 }
 
 java {
-    // Loom will automatically attach sourcesJar to a RemapSourcesJar task and to the "build" task
     withSourcesJar()
 
     sourceCompatibility = JavaVersion.toVersion(javaVersion)
@@ -294,16 +299,22 @@ kotlin {
 
 // resource expansion
 def configureResources(ProcessResources task) {
-    task.inputs.property "version", project.version
-    task.inputs.property "loader_version", project.loader_version
-    task.inputs.property "minecraft_compat", project.minecraft_compat
-    task.inputs.property "java_version", project.java_version
+    def tokens = [
+            "version": project.version.toString(),
+            "fantasy_version": libs.versions.fantasy.get(),
+            "loader_version": libs.versions.fabric.loader.get(),
+            "minecraft_compat": project.minecraft_compat,
+            "java_version": libs.versions.java.get()
+    ]
+
+    task.inputs.properties(tokens)
 
     task.filesMatching("fabric.mod.json") {
-        expand "version": project.version,
-                "loader_version": project.loader_version,
-                "minecraft_compat": project.minecraft_compat,
-                "java_version": project.java_version
+        expand(tokens)
+    }
+
+    task.filesMatching("*.mixins.json") {
+        filter(ReplaceTokens, beginToken: '${', endToken: '}', tokens: tokens)
     }
 }
 
@@ -318,49 +329,26 @@ def licenseJarTasks = [jar, sourcesJar]
 
 // add jar and remapJar tasks for extra source Sets
 Jar prevJarTask = null
-RemapJarTask prevRemapTask = null
 
 for (name in extraSourceSets) {
     // add extra jar task
-    def defaultJar = tasks.register("${name}Jar", Jar.class) {
+    def jar = tasks.register("${name}Jar", Jar.class) {
         from(sourceSets.named(name).get().output)
-        archiveClassifier.set("${name}-dev")
-
-        def buildDir = layout.buildDirectory.asFile.getOrElse(new File("build"))
-        destinationDirectory.set(new File(buildDir, "devlibs"))
+        archiveClassifier.set(name)
 
         description "Builds the standalone ${name} api jar."
         group 'build'
     }.get()
 
-    // add remap jar task
-    def remappedJar = tasks.register("remap${name.capitalize()}Jar", RemapJarTask.class) {
-        dependsOn defaultJar
-
-        description "Remaps the built ${name} jar to intermediary mappings."
-        group 'fabric'
-        archiveClassifier.set(name)
-        addNestedDependencies = false  // cannot add nested jars to non-mod jars produced by RemapJarTask
-
-        inputFile.convention(defaultJar.archiveFile)
-    }.get()
-
     if (prevJarTask != null) {
-        defaultJar.mustRunAfter(prevJarTask)
+        jar.mustRunAfter(prevJarTask)
     }
 
-    if (prevRemapTask != null) {
-        remappedJar.mustRunAfter(prevRemapTask)
-    }
+    prevJarTask = jar
 
-    prevJarTask = defaultJar
-    prevRemapTask = remappedJar
+    tasks.assemble.dependsOn(jar)
 
-    [defaultJar, remappedJar].each {
-        tasks.assemble.dependsOn(it)
-    }
-
-    licenseJarTasks.add(defaultJar)
+    licenseJarTasks.add(jar)
 }
 
 // rename LICENSE files
@@ -371,12 +359,20 @@ licenseJarTasks.each {
 }
 
 // add extra source set remapped artifacts to main jar output
-remapJar {
-    extraSourceSets.each {
-        def task = tasks.named("remap${it.capitalize()}Jar", RemapJarTask).get()
-        nestedJars.from(task.archiveFile)
+configurations {
+    nestedJars {
+        transitive = false
     }
 }
+
+dependencies {
+    extraSourceSets.each {
+        def task = tasks.named("${it}Jar", Jar).get()
+        // TODO need to add to nested jars configuration
+    }
+}
+
+loom.nestJars(tasks.named("jar"), configurations.nestedJars)
 
 /*********************************************************************************************************************\
  * Publishing
@@ -384,7 +380,7 @@ remapJar {
 def env = System.getenv()
 
 tasks.register("github", GithubDeploymentTask) {
-    dependsOn tasks.remapJar
+    dependsOn tasks.jar
 
     config {
         token = env.get("GITHUB_TOKEN")
@@ -392,11 +388,11 @@ tasks.register("github", GithubDeploymentTask) {
     }
 
     release {
-        title = "[$project.minecraft_version] $project.name $project.version"
+        title = "[${libs.versions.minecraft.get()}] $project.name $project.version"
         tag = project.version
     }
 
-    assets.add(tasks.remapJar.archiveFile.get())
+    assets.add(tasks.jar.archiveFile.get())
 }
 
 publishing {
@@ -406,7 +402,7 @@ publishing {
 
             from components.java
 
-            artifact remapLibJar
+            artifact libJar
 
             pom {
                 name = "Arcade Party 2"
