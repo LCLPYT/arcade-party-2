@@ -366,9 +366,8 @@ configurations {
 }
 
 dependencies {
-    extraSourceSets.each {
-        def task = tasks.named("${it}Jar", Jar).get()
-        // TODO need to add to nested jars configuration
+    extraSourceSets.each { name ->
+        nestedJars(files(tasks.named("${name}Jar", Jar)))
     }
 }
 
