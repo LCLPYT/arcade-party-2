@@ -42,7 +42,7 @@ public class CheckpointHelper {
         manager.whenCheckpointReached((player, checkpoint) -> {
             var msg = translations.translateText(player, "game.ap2.reached_checkpoint").formatted(ChatFormatting.GREEN);
 
-            player.displayClientMessage(msg, true);
+            player.sendOverlayMessage(msg);
             ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.RESPAWN_ANCHOR_SET_SPAWN, SoundSource.BLOCKS, 0.4f, 1f);
         });
     }

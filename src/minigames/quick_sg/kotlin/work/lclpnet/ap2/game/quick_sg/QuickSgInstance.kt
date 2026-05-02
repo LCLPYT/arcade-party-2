@@ -11,14 +11,14 @@ import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.storage.LevelData
 import net.minecraft.world.level.storage.loot.LootTable
 import work.lclpnet.ap2.api.game.MiniGameHandle
+import work.lclpnet.ap2.ext.mc.teleport
+import work.lclpnet.ap2.ext.players
 import work.lclpnet.ap2.ext.runEveryTick
+import work.lclpnet.ap2.ext.toTicks
 import work.lclpnet.ap2.impl.game.EliminationGameInstance
 import work.lclpnet.ap2.impl.map.schema.SchemaHolder
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker
 import work.lclpnet.ap2.impl.util.world.SpawnFinder
-import work.lclpnet.ap2.ext.players
-import work.lclpnet.ap2.ext.mc.teleport
-import work.lclpnet.ap2.ext.toTicks
 import work.lclpnet.ap2.util.PvpBehavior
 import work.lclpnet.ap2.util.loot.LazyLootContainerManager
 import work.lclpnet.ap2.util.loot.VanillaLootTableFiller
@@ -125,7 +125,7 @@ class QuickSgInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(game
     }
 
     private fun updateCompass(player: ServerPlayer) {
-        val server = world.server ?: return
+        val server = world.server
 
         if (!player.inventory.contains { it.`is`(Items.COMPASS) }) return
 

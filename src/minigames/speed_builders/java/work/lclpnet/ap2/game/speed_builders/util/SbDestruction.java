@@ -120,13 +120,13 @@ public class SbDestruction {
         double x = pos.x(), z = pos.z(), y = pos.y();
 
         ParticleHelper.spawnForceParticle(ParticleTypes.GUST, x, y, z, 300,
-                7, 7, 7, 0, PlayerLookup.world(world));
+                7, 7, 7, 0, PlayerLookup.level(world));
 
         ParticleHelper.spawnForceParticle(ParticleTypes.GUST_EMITTER_LARGE, x, y, z, 30,
-                10, 10, 10, 0, PlayerLookup.world(world));
+                10, 10, 10, 0, PlayerLookup.level(world));
 
         ParticleHelper.spawnForceParticle(ParticleTypes.CLOUD, x, y, z, 200,
-                1, 1, 1, 1, PlayerLookup.world(world));
+                1, 1, 1, 1, PlayerLookup.level(world));
 
         for (ServerPlayer player : PlayerLookup.around(world, pos, 32)) {
             Vec3 eyePos = player.getEyePosition();

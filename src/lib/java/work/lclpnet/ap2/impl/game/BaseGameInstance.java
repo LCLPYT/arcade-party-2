@@ -258,13 +258,13 @@ public abstract class BaseGameInstance implements MiniGameInstance {
         var msg = Component.literal(String.valueOf(countdownValue--)).withStyle(color, BOLD);
 
         for (ServerPlayer player : PlayerLookup.all(gameHandle.getServer())) {
-            player.displayClientMessage(msg, true);
+            player.sendOverlayMessage(msg);
         }
     }
 
     private void clearCountdown() {
         for (ServerPlayer player : PlayerLookup.all(gameHandle.getServer())) {
-            player.displayClientMessage(Component.empty(), true);
+            player.sendOverlayMessage(Component.empty());
         }
     }
 

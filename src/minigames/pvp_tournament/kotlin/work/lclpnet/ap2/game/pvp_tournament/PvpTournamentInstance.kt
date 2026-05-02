@@ -26,6 +26,7 @@ import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.decoration.Mannequin
 import net.minecraft.world.item.ItemStack
+import net.minecraft.world.item.ItemStackTemplate
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.GameType
 import work.lclpnet.ap2.api.game.MiniGameHandle
@@ -251,7 +252,7 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
         SoundHelper.playSoundAt(player, SoundEvents.GENERIC_EAT.value(), SoundSource.PLAYERS, 0.5f, 1f)
 
         player.level().sendParticles(
-            ItemParticleOption(ParticleTypes.ITEM, stack.copy()),
+            ItemParticleOption(ParticleTypes.ITEM, ItemStackTemplate.fromNonEmptyStack(stack)),
             player.x,
             player.y + 1,
             player.z,

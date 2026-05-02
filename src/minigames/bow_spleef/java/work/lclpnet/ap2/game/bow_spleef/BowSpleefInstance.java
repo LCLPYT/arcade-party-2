@@ -37,7 +37,7 @@ import work.lclpnet.kibu.hook.Hook;
 import work.lclpnet.kibu.hook.HookFactory;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.ProjectileHooks;
-import work.lclpnet.kibu.hook.world.BlockBreakParticleCallback;
+import work.lclpnet.kibu.hook.level.BlockBreakParticleCallback;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;

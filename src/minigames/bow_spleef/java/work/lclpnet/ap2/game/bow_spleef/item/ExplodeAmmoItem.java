@@ -54,7 +54,7 @@ public class ExplodeAmmoItem implements SpecialItem {
 
         hooks.registerHook(impactHook, (projectile, blockPos) -> {
             if (!(projectile.level() instanceof ServerLevel world)
-                    || !projectile.getTags().contains(TAG_EXPLOSIVE)) return;
+                    || !projectile.entityTags().contains(TAG_EXPLOSIVE)) return;
 
             var behaviour = new ExplosionDamageCalculator() {
 

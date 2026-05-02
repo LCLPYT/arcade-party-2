@@ -34,7 +34,7 @@ import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.ItemFramePutItemCallback;
 import work.lclpnet.kibu.hook.entity.ItemFrameRemoveItemCallback;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
-import work.lclpnet.kibu.hook.world.BlockModificationHooks;
+import work.lclpnet.kibu.hook.level.BlockModificationHooks;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 
 /**

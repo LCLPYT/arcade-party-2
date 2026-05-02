@@ -9,7 +9,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.Container;
-import net.minecraft.world.inventory.ClickType;
+import net.minecraft.world.inventory.ContainerInput;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.Nullable;
@@ -22,6 +22,9 @@ import java.util.Collection;
 import java.util.WeakHashMap;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
+
+import static java.lang.Math.ceil;
+import static java.lang.Math.clamp;
 
 public class OptionChooser<T> {
 
@@ -41,7 +44,7 @@ public class OptionChooser<T> {
     }
 
     public RestrictedInventory createInventory(Collection<T> items, Component title, Function<T, ItemStack> iconFactory) {
-        int rows = Math.max(1, Math.min(6, (int) Math.ceil(items.size() / 9d)));
+        int rows = clamp((int) ceil(items.size() / 9d), 1, 6);
 
         RestrictedInventory inv = new RestrictedInventory(rows, title);
 
@@ -69,12 +72,10 @@ public class OptionChooser<T> {
     }
 
     private void onModifyInventory(PlayerInventoryHooks.ClickEvent event, BiConsumer<T, ServerPlayer> action) {
-        if (event.action() != ClickType.PICKUP) return;
+        if (event.action() != ContainerInput.PICKUP) return;
 
         ServerPlayer player = event.player();
         MinecraftServer server = player.level().getServer();
-
-        if (server == null) return;
 
         if (!Commands.LEVEL_GAMEMASTERS.check(server.getProfilePermissions(player.nameAndId()))) return;
 

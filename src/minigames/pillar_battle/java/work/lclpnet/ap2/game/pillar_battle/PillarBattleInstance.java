@@ -10,7 +10,7 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.boss.enderdragon.EnderDragon;
 import net.minecraft.world.entity.boss.enderdragon.phases.EnderDragonPhase;
 import net.minecraft.world.level.border.WorldBorder;
-import net.minecraft.world.level.dimension.end.EndDragonFight;
+import net.minecraft.world.level.dimension.end.EnderDragonFight;
 import net.minecraft.world.level.gamerules.GameRules;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -119,7 +119,7 @@ public class PillarBattleInstance extends EliminationGameInstance implements Map
             config.disallow((entity, block) -> {
                 if (entity instanceof ServerPlayer player && outOfBounds(block)) {
                     var msg = translations.translateText(player, "game.ap2.pillar_battle.out_of_bounds").formatted(ChatFormatting.RED);
-                    player.displayClientMessage(msg, true);
+                    player.sendOverlayMessage((msg));
                     ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.NOTE_BLOCK_BASS.value(), SoundSource.BLOCKS, 0f, 0.5f);
                     return true;
                 }
@@ -160,13 +160,10 @@ public class PillarBattleInstance extends EliminationGameInstance implements Map
 
         BlockPos center = pillars.center();
 
-        hooks.registerHook(ServerEntityHooks.ENTITY_LOAD, (entity, world) -> {
+        hooks.registerHook(ServerEntityHooks.ENTITY_LOAD, (entity, _) -> {
             if (!(entity instanceof EnderDragon dragon)) return;
 
-            var data = new EndDragonFight.Data(false, false, false, false,
-                    Optional.of(dragon.getUUID()), Optional.of(center), Optional.of(List.of()));
-
-            EndDragonFight fight = new EndDragonFight(world, random.nextLong(), data, center);
+            EnderDragonFight fight = new EnderDragonFight(false, false, false, Optional.empty(), 0, Optional.of(dragon.getUUID()), Optional.of(center), List.of(), List.of());
             ((ApDragonFight) fight).ap2$setTemporary();
 
             dragon.setDragonFight(fight);
@@ -217,7 +214,7 @@ public class PillarBattleInstance extends EliminationGameInstance implements Map
                     WorldBorderUtil.init(player, realBorder);
 
                     if (System.currentTimeMillis() - warning.lastWarning < 62 * 50) {
-                        player.displayClientMessage(Component.empty(), true);
+                        player.sendOverlayMessage(Component.empty());
                     }
                 }
                 continue;
@@ -242,7 +239,7 @@ public class PillarBattleInstance extends EliminationGameInstance implements Map
             var msg = translations.translateText(player, "game.ap2.pillar_battle.border_warn")
                     .styled(style -> style.withColor(0xff0000).withBold(true));
 
-            player.displayClientMessage(msg, true);
+            player.sendOverlayMessage(msg);
             ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.NOTE_BLOCK_PLING.value(), SoundSource.HOSTILE, 0.3f, 0.5f);
         }
     }

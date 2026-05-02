@@ -36,7 +36,7 @@ import work.lclpnet.ap2.impl.util.ParticleHelper;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.kibu.access.VelocityModifier;
 import work.lclpnet.kibu.access.entity.ServerPlayerAccess;
-import work.lclpnet.kibu.behaviour.world.ServerWorldBehaviour;
+import work.lclpnet.kibu.behaviour.level.ServerLevelBehaviour;
 import work.lclpnet.kibu.hook.entity.ProjectileHooks;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
@@ -101,7 +101,7 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
         setupGameRules();
 
         ServerLevel world = getWorld();
-        ServerWorldBehaviour.setFluidTicksEnabled(world, false);
+        ServerLevelBehaviour.setFluidTicksEnabled(world, false);
 
         manager.eachIsland(SbIsland::teleport);
 

@@ -30,10 +30,10 @@ import work.lclpnet.kibu.access.entity.ServerPlayerAccess;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks;
+import work.lclpnet.kibu.hook.level.BlockModificationHooks;
 import work.lclpnet.kibu.hook.player.PlayerSpawnLocationCallback;
 import work.lclpnet.kibu.hook.util.PlayerUtils;
 import work.lclpnet.kibu.hook.util.PositionRotation;
-import work.lclpnet.kibu.hook.world.BlockModificationHooks;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.lobby.game.api.prot.ProtectionConfig;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
@@ -253,7 +253,7 @@ public class CCHooks {
                 .append(translations.translateText(player, "game.ap2.cozy_campfire.base_of", name))
                 .append("⚠").withStyle(style -> style.withColor(0xff0000));
 
-        player.displayClientMessage(msg, true);
+        player.sendOverlayMessage(msg);
         ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.BREEZE_LAND, SoundSource.PLAYERS, 0.5f, 1.2f);
     }
 

@@ -236,9 +236,9 @@ public class KnockoutInstance extends EliminationGameInstance {
     private void sendCharge(ServerPlayer player) {
         double charge = chargeOf(player);
 
-        player.displayClientMessage(formattedCharge(charge)
+        player.sendOverlayMessage(formattedCharge(charge)
                 .translateTo(gameHandle.getTranslations().getLanguage(player))
-                .copy().withStyle( charge > CRITICAL_THRESHOLD ? DARK_RED : WHITE), true);
+                .copy().withStyle( charge > CRITICAL_THRESHOLD ? DARK_RED : WHITE));
     }
 
     private void onImpact(ServerPlayer player, Iterable<BlockPos> collisions) {

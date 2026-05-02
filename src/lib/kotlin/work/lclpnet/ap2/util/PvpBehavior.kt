@@ -8,17 +8,10 @@ import net.minecraft.world.entity.projectile.Projectile
 import net.minecraft.world.item.context.UseOnContext
 import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.ext.configureProtection
-import work.lclpnet.kibu.hook.world.BlockModificationHooks
-import work.lclpnet.lobby.game.api.prot.scope.EntityBlockScope
-import work.lclpnet.lobby.game.api.prot.scope.EntityDamageSourceScope
-import work.lclpnet.lobby.game.api.prot.scope.PlayerEntityScope
-import work.lclpnet.lobby.game.api.prot.scope.PlayerGenericScope
-import work.lclpnet.lobby.game.api.prot.scope.PlayerIntBoolScope
-import work.lclpnet.lobby.game.api.prot.scope.PlayerItemEntityScope
-import work.lclpnet.lobby.game.api.prot.scope.PlayerItemStackScope
-import work.lclpnet.lobby.game.api.prot.scope.PlayerScope
+import work.lclpnet.kibu.hook.level.BlockModificationHooks
+import work.lclpnet.lobby.game.api.prot.scope.*
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes
-import java.util.UUID
+import java.util.*
 
 class PvpBehavior(
     val gameHandle: MiniGameHandle,

@@ -33,7 +33,7 @@ import work.lclpnet.ap2.impl.map.ServerThreadMapBootstrap;
 import work.lclpnet.ap2.impl.util.world.WorldBorderUtil;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
-import work.lclpnet.kibu.hook.world.BlockModificationHooks;
+import work.lclpnet.kibu.hook.level.BlockModificationHooks;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 import work.lclpnet.lobby.game.map.GameMap;
 import work.lclpnet.lobby.util.PlayerReset;
@@ -191,13 +191,13 @@ public class ManiacDiggerInstance extends FFAGameInstance implements MapBootstra
         var msg = gameHandle.getTranslations().translateText(player, "game.ap2.maniac_digger.wrong_tool")
                 .styled(style -> style.withColor(0xff0000));
 
-        player.displayClientMessage(msg, true);
+        player.sendOverlayMessage(msg);
 
         WorldBorderUtil.setWarning(player);
     }
 
     private void onCorrectTool(ServerPlayer player) {
-        player.displayClientMessage(Component.empty(), true);
+        player.sendOverlayMessage(Component.empty());
 
         WorldBorderUtil.resetWarningBlocks(player);
     }

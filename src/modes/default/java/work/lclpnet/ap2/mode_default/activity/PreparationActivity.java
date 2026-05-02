@@ -424,7 +424,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
         List<GameQueue.Entry> preview = args.gameQueue().preview();
 
         int reservedSpace = miniGame != null ? 2 : 1;
-        int amount = max(0, min(preview.size(), (int) floor(height / textHeight) - reservedSpace));
+        int amount = clamp((int) floor(height / textHeight) - reservedSpace, 0, preview.size());
         preview = preview.subList(0, amount);
 
         Collections.reverse(preview);
@@ -732,7 +732,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
                 openGamePicker(serverPlayer);
             } else if (stack.is(Items.EMERALD_BLOCK)) {
                 setSkip(true);
-                player.displayClientMessage(Component.literal("Skipped the preparation phase"), false);
+                player.sendSystemMessage(Component.literal("Skipped the preparation phase"));
             } else if (stack.is(Items.HEART_OF_THE_SEA)) {
                 openMapPicker(serverPlayer);
             }

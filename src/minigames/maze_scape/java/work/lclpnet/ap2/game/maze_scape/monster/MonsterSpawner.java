@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.ActivityData;
 import net.minecraft.world.entity.ai.goal.*;
 import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.world.entity.ai.navigation.GroundPathNavigation;
@@ -21,6 +22,7 @@ import org.slf4j.Logger;
 import work.lclpnet.ap2.core.mixin.MobAccessor;
 import work.lclpnet.ap2.core.mixin.PathNavigationAccessor;
 import work.lclpnet.ap2.core.type.*;
+import work.lclpnet.ap2.ext.mc.EntityExtensionsKt;
 import work.lclpnet.ap2.game.maze_scape.ai.AttackGoal;
 import work.lclpnet.ap2.game.maze_scape.ai.MoveToTargetGoal;
 import work.lclpnet.ap2.game.maze_scape.util.MSManager;
@@ -38,8 +40,7 @@ import java.util.Random;
 import java.util.UUID;
 import java.util.function.BiConsumer;
 
-import static java.lang.Math.max;
-import static java.lang.Math.min;
+import static java.lang.Math.clamp;
 import static net.minecraft.world.entity.ai.attributes.Attributes.*;
 
 public class MonsterSpawner {
@@ -72,8 +73,8 @@ public class MonsterSpawner {
 
         final int players = manager.participants().count();
 
-        int primaryMobs = max(1, min(primary.size(), players / 2));
-        int secondaryMobs = max(1, min(secondary.size(), players / 3));
+        int primaryMobs = clamp(players / 2, 1, primary.size());
+        int secondaryMobs = clamp(players / 3, 1, secondary.size());
 
         for (int i = 0; i < primaryMobs && !primary.isEmpty(); i++) {
             var factory = primary.remove(random.nextInt(primary.size()));
@@ -94,8 +95,8 @@ public class MonsterSpawner {
         EntityUtil.setAttribute(warden, ATTACK_DAMAGE, 10);
 
         var brain = warden.getBrain();
-        brain.addActivityAndRemoveMemoryWhenStopped(Activity.EMERGE, 5, ImmutableList.of(), MemoryModuleType.IS_EMERGING);
-        brain.addActivityAndRemoveMemoryWhenStopped(Activity.DIG, 5, ImmutableList.of(), MemoryModuleType.DIG_COOLDOWN);
+        EntityExtensionsKt.addActivity(brain, ActivityData.create(Activity.EMERGE, 5, ImmutableList.of(), MemoryModuleType.IS_EMERGING));
+        EntityExtensionsKt.addActivity(brain, ActivityData.create(Activity.DIG, 5, ImmutableList.of(), MemoryModuleType.DIG_COOLDOWN));
         brain.useDefaultActivity();
 
         world.addFreshEntity(warden);

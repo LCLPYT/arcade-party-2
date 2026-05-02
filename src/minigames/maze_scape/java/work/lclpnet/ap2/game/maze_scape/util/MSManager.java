@@ -10,6 +10,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.entity.ai.ActivityData;
 import net.minecraft.world.entity.ai.Brain;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.behavior.MeleeAttack;
@@ -32,6 +33,7 @@ import work.lclpnet.ap2.core.hook.*;
 import work.lclpnet.ap2.core.mixin.CreakingAiAccessor;
 import work.lclpnet.ap2.core.mixin.WardenAiAccessor;
 import work.lclpnet.ap2.core.type.ApEntity;
+import work.lclpnet.ap2.ext.mc.EntityExtensionsKt;
 import work.lclpnet.ap2.game.maze_scape.gen.Node;
 import work.lclpnet.ap2.game.maze_scape.monster.CreakingData;
 import work.lclpnet.ap2.game.maze_scape.monster.EndermanData;
@@ -47,7 +49,8 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import static java.lang.Math.*;
+import static java.lang.Math.clamp;
+import static java.lang.Math.floor;
 
 public class MSManager {
 
@@ -162,7 +165,7 @@ public class MSManager {
 
         // select elements randomly out of certain % of most distant elements
         double threshold = 0.3;
-        int thresholdIdx = max(0, min(nodes.size() - 1, (int) floor(nodes.size() * (threshold))));
+        int thresholdIdx = clamp((int) floor(nodes.size() * (threshold)), 0, nodes.size() - 1);
 
         var mostDistant = nodes.subList(0, thresholdIdx).stream()
                 .map(Node::oriented)
@@ -196,24 +199,24 @@ public class MSManager {
 
         var brain = brainSupplier.get();
 
-        // adjusted activities from WardenBrain::create
+        // adjusted activities from net.minecraft.world.entity.monster.warden.WardenAi#getActivities
         WardenAiAccessor.invokeInitCoreActivity(brain);  // don't add emerge and dig activities
         WardenAiAccessor.invokeInitIdleActivity(brain);
         WardenAiAccessor.invokeInitRoarActivity(brain);
         WardenAiAccessor.invokeInitInvestigateActivity(brain);
         WardenAiAccessor.invokeInitSniffingActivity(brain);
 
-        // custom fight activity
-        brain.addActivityAndRemoveMemoryWhenStopped(
+        // adjusted activity from net.minecraft.world.entity.monster.warden.WardenAi.initFightActivity
+        EntityExtensionsKt.addActivity(brain, ActivityData.create(
                 Activity.FIGHT,
                 10,
-                ImmutableList.of(
+                                       ImmutableList.of(
                         SetEntityLookTarget.create(entity -> isTargeting(warden, entity), (float)warden.getAttributeValue(Attributes.FOLLOW_RANGE)),
                         SetWalkTargetFromAttackTargetIfTargetOutOfReach.create(1.2F),
                         MeleeAttack.create(18)
                 ),
                 MemoryModuleType.ATTACK_TARGET
-        );
+        ));
 
         brain.setCoreActivities(ImmutableSet.of(Activity.CORE));
         brain.setDefaultActivity(Activity.IDLE);
@@ -231,7 +234,7 @@ public class MSManager {
         CreakingAiAccessor.invokeInitCoreActivity(brain);
 
         // custom fight activity
-        brain.addActivityAndRemoveMemoryWhenStopped(
+        EntityExtensionsKt.addActivity(brain, ActivityData.create(
                 Activity.FIGHT,
                 10,
                 ImmutableList.of(
@@ -239,7 +242,7 @@ public class MSManager {
                         MeleeAttack.create(Creaking::canMove, 40)
                 ),
                 MemoryModuleType.ATTACK_TARGET
-        );
+        ));
 
         brain.setCoreActivities(ImmutableSet.of(Activity.CORE));
         brain.setDefaultActivity(Activity.IDLE);

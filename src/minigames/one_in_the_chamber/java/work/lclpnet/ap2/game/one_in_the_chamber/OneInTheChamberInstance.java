@@ -14,6 +14,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.ItemStackTemplate;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.ChargedProjectiles;
 import net.minecraft.world.level.GameType;
@@ -183,7 +184,7 @@ public class OneInTheChamberInstance extends FFAGameInstance {
     private void giveCrossbowToPlayer(ServerPlayer player) {
         ItemStack stack = unbreakable(new ItemStack(Items.CROSSBOW));
 
-        stack.set(DataComponents.CHARGED_PROJECTILES, ChargedProjectiles.of(new ItemStack(Items.ARROW)));
+        stack.set(DataComponents.CHARGED_PROJECTILES, ChargedProjectiles.of(new ItemStackTemplate(Items.ARROW)));
 
         stack.set(DataComponents.CUSTOM_NAME, TextUtil.getVanillaName(stack)
                 .withStyle(style -> style.withItalic(false).applyFormat(GOLD)));
@@ -246,8 +247,8 @@ public class OneInTheChamberInstance extends FFAGameInstance {
     }
 
     private void onKillGained(ServerPlayer killer) {
-        killer.displayClientMessage(Component.literal("+1 ").append(TextUtil.getVanillaName(Items.ARROW))
-                .withStyle(GOLD), true);
+        killer.sendOverlayMessage(Component.literal("+1 ").append(TextUtil.getVanillaName(Items.ARROW))
+                .withStyle(GOLD));
 
         ServerPlayerAccess.playSoundToPlayer(killer, SoundEvents.CROSSBOW_QUICK_CHARGE_3.value(), SoundSource.PLAYERS, 1f, 1f);
 

@@ -61,7 +61,7 @@ public class HeavyWeightItem implements SpecialItem {
         });
 
         hooks.registerHook(ProjectileHitEntityCallback.HOOK, (projectile, hit) -> {
-            if (!projectile.getTags().contains(TAG_HEAVY_WEIGHT)
+            if (!projectile.entityTags().contains(TAG_HEAVY_WEIGHT)
                     || !(hit.getEntity() instanceof ServerPlayer player)
                     || heavyWeighted.contains(player.getUUID())) return;
 

@@ -17,7 +17,7 @@ import net.minecraft.world.level.block.state.BlockState;
 public class TextUtil {
 
     public static MutableComponent getVanillaName(Item item) {
-        return item.getName().copy();
+        return Component.translatable(item.getDescriptionId());
     }
 
     public static MutableComponent getVanillaName(ItemStack stack) {

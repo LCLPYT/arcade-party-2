@@ -30,7 +30,7 @@ import work.lclpnet.ap2.impl.util.TextUtil;
 import work.lclpnet.gaco.ds.BlockBox;
 import work.lclpnet.kibu.access.entity.ServerPlayerAccess;
 import work.lclpnet.kibu.hook.HookRegistrar;
-import work.lclpnet.kibu.hook.world.BlockModificationHooks;
+import work.lclpnet.kibu.hook.level.BlockModificationHooks;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 import work.lclpnet.lobby.game.map.GameMap;

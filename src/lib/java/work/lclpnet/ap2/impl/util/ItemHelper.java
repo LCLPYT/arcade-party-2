@@ -89,16 +89,14 @@ public class ItemHelper {
         return null;
     }
 
-    public static Optional<JukeboxSong> getJukeboxSong(Item musicDiscItem, HolderLookup.Provider registryLookup) {
+    public static Optional<JukeboxSong> getJukeboxSong(Item musicDiscItem) {
         var component = musicDiscItem.components().get(DataComponents.JUKEBOX_PLAYABLE);
 
         if (component == null) {
             return Optional.empty();
         }
 
-        return component.song()
-                .unwrap(registryLookup)
-                .map(Holder::value);
+        return Optional.of(component.song().value());
     }
 
     public static @NotNull Holder<Potion> getRandomPotion(Random random) {

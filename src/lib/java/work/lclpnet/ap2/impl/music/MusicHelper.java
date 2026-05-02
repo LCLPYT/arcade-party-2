@@ -8,10 +8,7 @@ import org.slf4j.Logger;
 import work.lclpnet.ap2.ApConstants;
 import work.lclpnet.ap2.api.music.*;
 import work.lclpnet.notica.Notica;
-import work.lclpnet.notica.api.PlaybackOptions;
-import work.lclpnet.notica.api.PlaybackVariant;
-import work.lclpnet.notica.api.SongHandle;
-import work.lclpnet.notica.api.StereoMode;
+import work.lclpnet.notica.api.*;
 import work.lclpnet.notica.api.data.LoopOverride;
 
 import java.util.Collection;
@@ -76,7 +73,7 @@ public class MusicHelper {
         float finalVolume = meta.volume().orElse(1f) * volume;
         StereoMode stereoMode = meta.stereoMode().orElse(StereoMode.SPATIAL);
 
-        var playbackOptions = new PlaybackOptions(finalVolume, PlaybackVariant.STREAMED, stereoMode, loop);
+        var playbackOptions = new PlaybackOptions(finalVolume, PlaybackVariant.STREAMED, stereoMode, loop, ChannelMode.STEREO);
 
         SongHandle handle = notica.playSong(song.checkedSong(), playbackOptions, startTick, players);
 

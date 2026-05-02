@@ -98,7 +98,7 @@ public class SoundChallenge implements Challenge {
         var msg = gameHandle.getTranslations().translateText("game.ap2.guess_it.again")
                 .formatted(DARK_GREEN, BOLD);
 
-        for (ServerPlayer player : PlayerLookup.world(world)) {
+        for (ServerPlayer player : PlayerLookup.level(world)) {
             Title.get(player).title(Component.empty(), msg.translateFor(player));
         }
 
@@ -114,7 +114,7 @@ public class SoundChallenge implements Challenge {
     }
 
     private void playSound() {
-        for (ServerPlayer player : PlayerLookup.world(world)) {
+        for (ServerPlayer player : PlayerLookup.level(world)) {
             ServerPlayerAccess.playSoundToPlayer(player, correct, SoundSource.MASTER, 1f, pitch);
         }
     }
@@ -122,7 +122,7 @@ public class SoundChallenge implements Challenge {
     private void stopSound() {
         var packet = new ClientboundStopSoundPacket(correct.location(), SoundSource.MASTER);
 
-        for (ServerPlayer player : PlayerLookup.world(world)) {
+        for (ServerPlayer player : PlayerLookup.level(world)) {
             player.connection.send(packet);
         }
     }

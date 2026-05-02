@@ -180,7 +180,7 @@ public class RedLightGreenLightInstance extends FFAGameInstance implements Runna
 
         ServerLevel world = getWorld();
 
-        for (ServerPlayer player : PlayerLookup.world(world)) {
+        for (ServerPlayer player : PlayerLookup.level(world)) {
             switch (status) {
                 case RED -> ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.BREEZE_SHOOT, SoundSource.NEUTRAL, 1f, 0.5f);
                 case YELLOW -> ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.NOTE_BLOCK_PLING.value(), SoundSource.PLAYERS, 1f, 0.5f);
@@ -282,7 +282,7 @@ public class RedLightGreenLightInstance extends FFAGameInstance implements Runna
                             styled(player.getScoreboardName(), YELLOW),
                             styled(END_TIME_SECONDS, YELLOW))
                     .formatted(GREEN)
-                    .sendTo(PlayerLookup.world(world));
+                    .sendTo(PlayerLookup.level(world));
 
             gameEnd = Ticks.seconds(END_TIME_SECONDS);
         }

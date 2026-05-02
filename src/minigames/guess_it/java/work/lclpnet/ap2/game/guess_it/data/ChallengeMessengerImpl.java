@@ -40,7 +40,7 @@ public class ChallengeMessengerImpl implements ChallengeMessenger {
 
         var msg = task.formatted(ChatFormatting.DARK_GREEN, BOLD);
 
-        for (ServerPlayer player : PlayerLookup.world(world)) {
+        for (ServerPlayer player : PlayerLookup.level(world)) {
             for (int i = 0; i < 20; i++) {
                 player.sendSystemMessage(Component.empty());
             }
@@ -59,7 +59,7 @@ public class ChallengeMessengerImpl implements ChallengeMessenger {
     }
 
     private void sendOptions(Component[] options) {
-        var players = PlayerLookup.world(world);
+        var players = PlayerLookup.level(world);
         char letter = 'A';
 
         for (Component option : options) {

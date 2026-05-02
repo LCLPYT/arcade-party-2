@@ -18,7 +18,7 @@ class VanillaLootTableFiller(val key: ResourceKey<LootTable>) : LootFiller {
         level: ServerLevel,
         container: Container
     ) {
-        val lootTable = level.server?.reloadableRegistries()?.getLootTable(key) ?: LootTable.EMPTY
+        val lootTable = level.server.reloadableRegistries().getLootTable(key)
 
         val builder = LootParams.Builder(level)
             .withParameter(LootContextParams.ORIGIN, Vec3.atCenterOf(pos))
