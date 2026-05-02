@@ -67,7 +67,7 @@ public class SpecialItems implements SpecialItemContext {
 
     private final MiniGameHandle gameHandle;
     private final GameMap map;
-    private final ServerLevel world;
+    private final ServerLevel level;
     private final Random random;
     private final SpecialItemPositions positions;
     private final SpecialItemRegistry registry;
@@ -79,14 +79,14 @@ public class SpecialItems implements SpecialItemContext {
     private @Setter @Getter int maxItems = 16;
     private @Setter @Getter boolean markGlowing = false;
 
-    public SpecialItems(MiniGameHandle gameHandle, GameMap map, ServerLevel world, Random random, SpecialItemPositions positions, SpecialItemRegistry registry) {
+    public SpecialItems(MiniGameHandle gameHandle, GameMap map, ServerLevel level, Random random, SpecialItemPositions positions, SpecialItemRegistry registry) {
         this.gameHandle = gameHandle;
         this.map = map;
-        this.world = world;
+        this.level = level;
         this.random = random;
         this.positions = positions;
         this.registry = registry;
-        this.scene = new SpecialItemScene(random, world);
+        this.scene = new SpecialItemScene(random, level);
     }
 
     public SpecialItemPositions positions() {
@@ -159,7 +159,7 @@ public class SpecialItems implements SpecialItemContext {
 
         if (inInventory) {
             Slot slot = player.containerMenu.getSlot(slotIdx);
-            stack = slot != null ? slot.getItem() : ItemStack.EMPTY;
+            stack = slot.getItem();
         } else {
             stack = player.getInventory().getItem(slotIdx);
         }
@@ -180,7 +180,7 @@ public class SpecialItems implements SpecialItemContext {
     private void dropSpecialItem(ServerPlayer player, SpecialItem item, ItemStack stack) {
         Vec3 pos = player.getEyePosition().subtract(0, 0.3, 0);
 
-        ItemStack dropStack = configureStack(item, item.usedItemStack(stack, world.registryAccess()));
+        ItemStack dropStack = configureStack(item, item.usedItemStack(stack, level.registryAccess()));
 
         SpecialItemObject obj = scene.spawnItem(pos, item, dropStack, gameHandle.getTranslations(), itemName(item));
         obj.setPickupDelay(40);
@@ -249,7 +249,7 @@ public class SpecialItems implements SpecialItemContext {
             List<Component> lore = IconMaker.wrapText(desc, 32);
             stack.set(DataComponents.LORE, new ItemLore(lore));
 
-            player.displayClientMessage(Component.literal("↓ ").withStyle(ChatFormatting.AQUA).append(desc), true);
+            player.sendOverlayMessage(Component.literal("↓ ").withStyle(ChatFormatting.AQUA).append(desc));
         });
 
         if (item.shouldTransferToInventory(player)) {
@@ -335,7 +335,7 @@ public class SpecialItems implements SpecialItemContext {
 
         CustomNbt.set(stack, NBT_CODEC, nbt);
 
-        stack.set(DataComponents.DAMAGE_RESISTANT, new DamageResistant(DamageTypeTags.IS_FIRE));
+        stack.set(DataComponents.DAMAGE_RESISTANT, new DamageResistant(level.registryAccess().getOrThrow(DamageTypeTags.IS_FIRE)));
         stack.set(DataComponents.RARITY, Rarity.UNCOMMON);
 
         return stack;
@@ -344,7 +344,7 @@ public class SpecialItems implements SpecialItemContext {
     public void spawnRandomItem() {
         if (scene.itemCount() >= maxItems) return;
 
-        WorldBorder worldBorder = world.getWorldBorder();
+        WorldBorder worldBorder = level.getWorldBorder();
         BlockPos blockPos;
         int i = 0;
 
@@ -362,10 +362,10 @@ public class SpecialItems implements SpecialItemContext {
 
         if (item == null) return;
 
-        world.sendParticles(ParticleTypes.END_ROD, pos.x, pos.y, pos.z, 20, 0.1, 0.1, 0.1, 0.1);
-        world.sendParticles(ParticleTypes.PORTAL, pos.x, pos.y, pos.z, 400, 0.15, 4, 0.15, 0.1);
+        level.sendParticles(ParticleTypes.END_ROD, pos.x, pos.y, pos.z, 20, 0.1, 0.1, 0.1, 0.1);
+        level.sendParticles(ParticleTypes.PORTAL, pos.x, pos.y, pos.z, 400, 0.15, 4, 0.15, 0.1);
 
-        ItemStack stack = configureStack(item, item.createItemStack(world.registryAccess()));
+        ItemStack stack = configureStack(item, item.createItemStack(level.registryAccess()));
 
         SpecialItemObject obj = scene.spawnItem(pos, item, stack, gameHandle.getTranslations(), itemName(item));
 
@@ -394,7 +394,7 @@ public class SpecialItems implements SpecialItemContext {
 
                 if (t == particle) {
                     particle = timer + ITEM_PARTICLE_MIN_TICKS + random.nextInt(ITEM_PARTICLE_MAX_TICKS - ITEM_PARTICLE_MIN_TICKS + 1);
-                    world.sendParticles(ParticleTypes.HAPPY_VILLAGER, obj.position.x, obj.position.y + 0.125, obj.position.z, 1, 0.35, 0.25, 0.35, 0.1);
+                    level.sendParticles(ParticleTypes.HAPPY_VILLAGER, obj.position.x, obj.position.y + 0.125, obj.position.z, 1, 0.35, 0.25, 0.35, 0.1);
                 }
 
                 if (t >= despawnTicks) {
@@ -428,7 +428,7 @@ public class SpecialItems implements SpecialItemContext {
     }
 
     public void syncWithWorldBorder() {
-        WorldBorder border = world.getWorldBorder();
+        WorldBorder border = level.getWorldBorder();
 
         gameHandle.getScheduler().interval(new Runnable() {
             double prevSize = Double.NaN, prevCenterX = Double.NaN, prevCenterZ = Double.NaN;

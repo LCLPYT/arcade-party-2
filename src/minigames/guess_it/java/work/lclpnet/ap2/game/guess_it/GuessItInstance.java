@@ -223,7 +223,7 @@ public class GuessItInstance extends FFAGameInstance implements MapBootstrap {
         challenge.init(challengeInit.init());
 
         // send preparation title
-        for (ServerPlayer player : PlayerLookup.world(world)) {
+        for (ServerPlayer player : PlayerLookup.level(world)) {
             Title.get(player).title(Component.empty(), prepareMsg.translateFor(player));
             ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.END_PORTAL_FRAME_FILL, SoundSource.NEUTRAL, 1f, 0.5f);
         }
@@ -252,7 +252,7 @@ public class GuessItInstance extends FFAGameInstance implements MapBootstrap {
         Translations translations = gameHandle.getTranslations();
         TaskScheduler scheduler = gameHandle.getScheduler();
 
-        var players = PlayerLookup.world(world);
+        var players = PlayerLookup.level(world);
 
         if (challenge.shouldPlayBeginSound()) {
             for (ServerPlayer player : players) {
@@ -338,7 +338,7 @@ public class GuessItInstance extends FFAGameInstance implements MapBootstrap {
 
             var msg = translations.translateText(player, "game.ap2.guess_it.gain_points", styled(points, YELLOW)).formatted(GREEN);
 
-            player.displayClientMessage(msg, true);
+            player.sendOverlayMessage(msg);
 
             if (points > 0) {
                 data.addScore(player, points);

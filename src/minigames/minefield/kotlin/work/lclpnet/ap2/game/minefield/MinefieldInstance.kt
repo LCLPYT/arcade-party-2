@@ -27,15 +27,10 @@ import org.json.JSONArray
 import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.map.MapBootstrapFunction
 import work.lclpnet.ap2.api.util.world.BlockPredicate
-import work.lclpnet.ap2.ext.allPlayers
-import work.lclpnet.ap2.ext.interval
-import work.lclpnet.ap2.ext.players
-import work.lclpnet.ap2.ext.readShape
+import work.lclpnet.ap2.ext.*
 import work.lclpnet.ap2.ext.mc.setBlock
 import work.lclpnet.ap2.ext.mc.setBlocks
 import work.lclpnet.ap2.ext.mc.teleport
-import work.lclpnet.ap2.ext.timeout
-import work.lclpnet.ap2.ext.translate
 import work.lclpnet.ap2.impl.game.FFAGameInstance
 import work.lclpnet.ap2.impl.game.data.OrderedDataContainer
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef
@@ -54,7 +49,7 @@ import work.lclpnet.gaco.ds.StructureMask
 import work.lclpnet.gaco.dynamic_entities.DynamicEntityManager
 import work.lclpnet.gaco.dynamic_entities.PlayerSpecificDynamicEntity
 import work.lclpnet.kibu.access.entity.ServerPlayerAccess
-import work.lclpnet.kibu.hook.world.PressurePlateCallback
+import work.lclpnet.kibu.hook.level.PressurePlateCallback
 import work.lclpnet.kibu.scheduler.Ticks
 import work.lclpnet.kibu.translate.bossbar.TranslatedBossBar
 import work.lclpnet.kibu.translate.text.FormatWrapper.styled
@@ -122,7 +117,6 @@ class MinefieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
             val start = MapUtil.readBlockPos(elem)
 
             scanner.scan(start).forEach {
-                @Suppress("KotlinConstantConditions")
                 debugVoxelShape?.setVoxelAt(it.x - minPos.x, it.y - minPos.y, it.z - minPos.z, true)
 
                 if (Random.nextFloat() > mineDensity) return@forEach
@@ -131,7 +125,6 @@ class MinefieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
             }
         }
 
-        @Suppress("KotlinConstantConditions")
         if (debugVoxelShape != null) {
             val boxes = debugVoxelShape.greedyMeshing().generateBoxes()
 

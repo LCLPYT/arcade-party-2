@@ -27,6 +27,7 @@ import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.MiniGameResults;
 import work.lclpnet.ap2.api.map.MapBootstrap;
 import work.lclpnet.ap2.api.util.model.ModelManager;
+import work.lclpnet.ap2.ext.mc.LevelExtensionsKt;
 import work.lclpnet.ap2.game.maze_scape.debug.DebugFrustumCommand;
 import work.lclpnet.ap2.game.maze_scape.debug.DebugPathCommand;
 import work.lclpnet.ap2.game.maze_scape.setup.MSDebugController;
@@ -73,7 +74,7 @@ public class MazeScapeInstance extends EliminationGameInstance implements MapBoo
 
     @Override
     public @NotNull CompletableFuture<Void> createWorldBootstrap(@NotNull ServerLevel world, @NotNull GameMap map) {
-        world.setDayTime(18_000);
+        LevelExtensionsKt.setDayTime(world, 18_000);
 
         ModelManager modelManager = ApResources.getInstance();
 

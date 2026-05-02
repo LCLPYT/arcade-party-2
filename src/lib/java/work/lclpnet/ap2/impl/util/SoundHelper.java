@@ -23,7 +23,7 @@ public class SoundHelper {
     }
 
     public static void playSound(ServerLevel world, SoundEvent sound, SoundSource category, float volume, float pitch) {
-        for (ServerPlayer player : PlayerLookup.world(world)) {
+        for (ServerPlayer player : PlayerLookup.level(world)) {
             ServerPlayerAccess.playSoundToPlayer(player, sound, category, volume, pitch);
         }
     }
@@ -71,7 +71,7 @@ public class SoundHelper {
      */
     public static float getPitch(int key) {
         float pitch = (float) Math.pow(2, (key - 12) / 12f);
-        return max(0.5f, Math.min(2.0f, pitch));
+        return Math.clamp(pitch, 0.5f, 2.0f);
     }
 
     private SoundHelper() {}

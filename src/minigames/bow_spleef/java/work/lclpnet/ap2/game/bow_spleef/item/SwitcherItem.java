@@ -48,7 +48,7 @@ public class SwitcherItem implements SpecialItem {
         });
 
         hooks.registerHook(ProjectileHitEntityCallback.HOOK, (projectile, hit) -> {
-            if (!projectile.getTags().contains(TAG_SWITCHER)
+            if (!projectile.entityTags().contains(TAG_SWITCHER)
                     || !(projectile.getOwner() instanceof ServerPlayer shooter)
                     || !(hit.getEntity() instanceof ServerPlayer victim)) return;
 

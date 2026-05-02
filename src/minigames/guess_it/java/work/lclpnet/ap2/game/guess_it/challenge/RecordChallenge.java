@@ -74,16 +74,16 @@ public class RecordChallenge implements Challenge {
         display.displayItem(new ItemStack(correct));
 
         RegistryAccess registryManager = world.registryAccess();
-        ItemHelper.getJukeboxSong(correct, registryManager).ifPresent(song -> {
+        ItemHelper.getJukeboxSong(correct).ifPresent(song -> {
             SoundEvent sound = song.soundEvent().value();
 
-            for (ServerPlayer player : PlayerLookup.world(world)) {
+            for (ServerPlayer player : PlayerLookup.level(world)) {
                 ServerPlayerAccess.playSoundToPlayer(player, sound, SoundSource.RECORDS, 0.5f, 1f);
             }
         });
 
         input.expectSelection(opts.stream()
-                .map(item -> ItemHelper.getJukeboxSong(item, registryManager)
+                .map(item -> ItemHelper.getJukeboxSong(item)
                         .map(JukeboxSong::description)
                         .orElse(null))
                 .filter(Objects::nonNull)
@@ -100,7 +100,7 @@ public class RecordChallenge implements Challenge {
 
     @Override
     public void evaluate(PlayerChoices choices, ChallengeResult result) {
-        Component answer = ItemHelper.getJukeboxSong(this.correct, world.registryAccess())
+        Component answer = ItemHelper.getJukeboxSong(this.correct)
                 .map(JukeboxSong::description)
                 .orElse(null);
 
@@ -110,11 +110,11 @@ public class RecordChallenge implements Challenge {
 
     @Override
     public void destroy() {
-        ItemHelper.getJukeboxSong(correct, world.registryAccess()).ifPresent(song -> {
+        ItemHelper.getJukeboxSong(correct).ifPresent(song -> {
             SoundEvent sound = song.soundEvent().value();
             ClientboundStopSoundPacket packet = new ClientboundStopSoundPacket(sound.location(), SoundSource.RECORDS);
 
-            for (ServerPlayer player : PlayerLookup.world(world)) {
+            for (ServerPlayer player : PlayerLookup.level(world)) {
                 player.connection.send(packet);
             }
         });

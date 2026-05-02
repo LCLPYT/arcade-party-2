@@ -1,23 +1,22 @@
 package work.lclpnet.ap2.game.guess_it.challenge;
 
-import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.GlobalPos;
 import net.minecraft.core.component.DataComponents;
-import net.minecraft.network.protocol.game.ClientboundSetTimePacket;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.LodestoneTracker;
-import net.minecraft.world.level.gamerules.GameRules;
 import net.minecraft.world.phys.Vec3;
 import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
+import work.lclpnet.ap2.ext.mc.LevelExtensionsKt;
 import work.lclpnet.ap2.game.guess_it.data.*;
 import work.lclpnet.ap2.game.guess_it.util.DynamicEntityModifier;
 import work.lclpnet.ap2.game.guess_it.util.MinecraftDayTime;
+import work.lclpnet.ap2.impl.util.TextUtil;
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.RunningTask;
@@ -74,7 +73,7 @@ public class DayTimeChallenge implements Challenge, SchedulerAction {
 
     @Override
     public void prepare() {
-        prevTime = (int) world.getDayTime();
+        prevTime = (int) world.getOverworldClockTime();
         correctTime = random.nextInt(24000);
 
         animateTime(prevTime, correctTime);
@@ -95,7 +94,7 @@ public class DayTimeChallenge implements Challenge, SchedulerAction {
                 Optional.of(new GlobalPos(world.dimension(), BlockPos.ZERO.north(10000))),
                 false));
 
-        stack.set(DataComponents.CUSTOM_NAME, Items.COMPASS.getName().copy()
+        stack.set(DataComponents.CUSTOM_NAME, TextUtil.getVanillaName(Items.COMPASS)
                 .withStyle(style -> style.withItalic(false)));
 
         stack.set(DataComponents.ENCHANTMENT_GLINT_OVERRIDE, false);
@@ -143,7 +142,7 @@ public class DayTimeChallenge implements Challenge, SchedulerAction {
 
     @Override
     public void destroy() {
-        world.setDayTime(prevTime);
+        LevelExtensionsKt.setDayTime(world, prevTime);
 
         if (animation != null) {
             animation.cancel();
@@ -166,13 +165,14 @@ public class DayTimeChallenge implements Challenge, SchedulerAction {
 
         int time = getInterpolatedTime(progress);
 
-        world.setDayTime(time);
+        LevelExtensionsKt.setDayTime(world, time);
 
-        var packet = new ClientboundSetTimePacket(world.getGameTime(), world.getDayTime(), world.getGameRules().get(GameRules.ADVANCE_TIME));
-
-        for (ServerPlayer player : PlayerLookup.world(world)) {
-            player.connection.send(packet);
-        }
+        // TODO still needed?
+//        var packet = new ClientboundSetTimePacket(world.getGameTime(), world.getOverworldClockTime(), world.getGameRules().get(GameRules.ADVANCE_TIME));
+//
+//        for (ServerPlayer player : PlayerLookup.level(world)) {
+//            player.connection.send(packet);
+//        }
 
         if (t >= ANIMATION_DURATION_TICKS) {
             info.cancel();

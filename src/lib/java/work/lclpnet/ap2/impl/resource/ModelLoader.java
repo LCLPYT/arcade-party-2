@@ -123,7 +123,7 @@ public class ModelLoader {
     }
 
     private void parseChild(Object3d root, CompoundTag nbt) {
-        String id = nbt.getStringOr("id", null);
+        String id = nbt.getString("id").orElse(null);
 
         Object3d obj = switch (id) {
             case "minecraft:block_display" -> {
@@ -141,14 +141,14 @@ public class ModelLoader {
 
         var transformation = Transformation.EXTENDED_CODEC.decode(NbtOps.INSTANCE, nbt.get("transformation"))
                 .result().map(Pair::getFirst)
-                .orElse(Transformation.identity());
+                .orElse(Transformation.IDENTITY);
 
-        obj.scale.set(transformation.getScale());
-        obj.position.set(transformation.getTranslation());
+        obj.scale.set(transformation.scale());
+        obj.position.set(transformation.translation());
 
         // rotation = leftRotation * rightRotation
-        Quaternionfc right = transformation.getRightRotation();
-        obj.rotation.set(transformation.getLeftRotation()).mul(right.x(), right.y(), right.z(), right.w());
+        Quaternionfc right = transformation.rightRotation();
+        obj.rotation.set(transformation.leftRotation()).mul(right.x(), right.y(), right.z(), right.w());
 
         root.addChild(obj);
     }

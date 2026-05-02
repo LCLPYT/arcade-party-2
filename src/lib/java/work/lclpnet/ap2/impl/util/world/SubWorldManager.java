@@ -13,14 +13,14 @@ import work.lclpnet.gaco.asset.AssetRepository;
 import work.lclpnet.gaco.asset.AssetRequestOptions;
 import work.lclpnet.gaco.asset.AssetUriResource;
 import work.lclpnet.kibu.hook.HookRegistrar;
-import work.lclpnet.kibu.world.KibuWorlds;
+import work.lclpnet.kibu.world.KibuLevels;
 import work.lclpnet.kibu.world.mixin.MinecraftServerAccessor;
 import work.lclpnet.lobby.game.impl.WorldContainer;
 import work.lclpnet.lobby.game.impl.WorldUnloader;
 import work.lclpnet.lobby.io.copy.WorldCopier;
 import work.lclpnet.map_api.GameMapApi;
 import work.lclpnet.map_api.data.WorldData;
-import xyz.nucleoid.fantasy.RuntimeWorldHandle;
+import xyz.nucleoid.fantasy.RuntimeLevelHandle;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -50,13 +50,13 @@ public class SubWorldManager {
 
     public CompletableFuture<ServerLevel> loadWorld(AssetPath path, Identifier id) {
         return CompletableFuture.runAsync(() -> obtainWorld(path, id)).thenCompose(nil -> server.submit(() -> {
-            RuntimeWorldHandle handle = KibuWorlds.getInstance().getWorldManager(server)
-                    .openPersistentWorld(id)
+            RuntimeLevelHandle handle = KibuLevels.getInstance().getWorldManager(server)
+                    .openPersistentLevel(id)
                     .orElseThrow(() -> new NoSuchElementException("Failed to load world"));
 
             container.trackHandle(handle);
 
-            return handle.asWorld();
+            return handle.asLevel();
         }));
     }
 

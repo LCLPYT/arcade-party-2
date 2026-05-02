@@ -19,6 +19,7 @@ import work.lclpnet.ap2.api.game.team.Team;
 import work.lclpnet.ap2.api.game.team.TeamKey;
 import work.lclpnet.ap2.api.game.team.TeamManager;
 import work.lclpnet.ap2.api.map.MapBootstrap;
+import work.lclpnet.ap2.ext.mc.LevelExtensionsKt;
 import work.lclpnet.ap2.game.cozy_campfire.setup.*;
 import work.lclpnet.ap2.impl.game.TeamEliminationGameInstance;
 import work.lclpnet.ap2.impl.util.TeamStorage;
@@ -195,16 +196,16 @@ public class CozyCampfireInstance extends TeamEliminationGameInstance implements
 
     private void randomizeWorldConditions(ServerLevel world) {
         if (random.nextFloat() <= DAY_TIME_CHANCE) {
-            world.setDayTime(6000);
+            LevelExtensionsKt.setDayTime(world, 6000);
         } else {
-            world.setDayTime(18000);
+            LevelExtensionsKt.setDayTime(world, 18000);
         }
 
         if (random.nextFloat() <= RAIN_CHANCE) {
             boolean thunder = random.nextFloat() <= (THUNDER_CHANCE / RAIN_CHANCE);  // conditional probability
-            world.setWeatherParameters(0, 1000, true, thunder);
+            LevelExtensionsKt.setWeatherParameters(world, 0, 1000, true, thunder);
         } else {
-            world.setWeatherParameters(1000, 0, false, false);
+            LevelExtensionsKt.setWeatherParameters(world, 1000, 0, false, false);
             world.setRainLevel(0);
         }
     }
@@ -306,7 +307,7 @@ public class CozyCampfireInstance extends TeamEliminationGameInstance implements
                 .formatted(ChatFormatting.GREEN);
 
         for (ServerPlayer player : team.getPlayers()) {
-            player.displayClientMessage(msg.translateFor(player), true);
+            player.sendOverlayMessage(msg.translateFor(player));
             ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.PLAYERS, 0.2f, 1.8f);
         }
     }

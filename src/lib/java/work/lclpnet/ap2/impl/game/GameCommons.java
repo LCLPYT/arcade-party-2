@@ -150,7 +150,7 @@ public class GameCommons {
 
             worldBorder.lerpSizeBetween(worldBorder.getSize(), config.minSize(), durationTicks, world.getGameTime());
 
-            for (ServerPlayer player : PlayerLookup.world(world)) {
+            for (ServerPlayer player : PlayerLookup.level(world)) {
                 ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.WITHER_DEATH, SoundSource.HOSTILE, 1, 0);
             }
         }, delayTicks);
@@ -296,7 +296,7 @@ public class GameCommons {
                         styled(data.getScore(player), ChatFormatting.AQUA))
                 .formatted(ChatFormatting.GREEN);
 
-        player.displayClientMessage(msg, true);
+        player.sendOverlayMessage(msg);
     }
 
     public Announcer announcer() {

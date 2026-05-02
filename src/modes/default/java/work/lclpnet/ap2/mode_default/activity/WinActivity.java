@@ -179,6 +179,6 @@ public class WinActivity extends ComponentActivity {
     }
 
     private Iterable<ServerPlayer> players() {
-        return world != null ? PlayerLookup.world(world) : List.of();
+        return world != null ? PlayerLookup.level(world) : List.of();
     }
 }

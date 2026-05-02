@@ -21,8 +21,9 @@ import net.minecraft.world.level.material.Fluids
 import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.map.MapBootstrap
 import work.lclpnet.ap2.ext.allPlayers
-import work.lclpnet.ap2.ext.players
+import work.lclpnet.ap2.ext.mc.setDayTime
 import work.lclpnet.ap2.ext.mc.teleport
+import work.lclpnet.ap2.ext.players
 import work.lclpnet.ap2.ext.timeout
 import work.lclpnet.ap2.ext.translate
 import work.lclpnet.ap2.impl.game.EliminationGameInstance
@@ -37,9 +38,9 @@ import work.lclpnet.ap2.util.loot.LootFiller
 import work.lclpnet.gaco.ds.WeightedList
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks
+import work.lclpnet.kibu.hook.level.BlockModificationHooks
 import work.lclpnet.kibu.hook.util.PlayerUtils
 import work.lclpnet.kibu.hook.util.PositionRotation
-import work.lclpnet.kibu.hook.world.BlockModificationHooks
 import work.lclpnet.kibu.scheduler.Ticks
 import work.lclpnet.kibu.translate.text.FormatWrapper
 import work.lclpnet.lobby.game.api.prot.scope.EntityDamageSourceScope
@@ -88,7 +89,7 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
             KilleporterLootFiller(loot),
         ).also { it.setup(gameHandle.hooks) }
 
-        world.dayTime = (13000 - TIME_TO_NIGHTFALL_DAYTIME_TICKS).toLong()
+        world.setDayTime(13000 - TIME_TO_NIGHTFALL_DAYTIME_TICKS)
 
         commons().gameRuleBuilder()
             .set(GameRules.FALL_DAMAGE, true)

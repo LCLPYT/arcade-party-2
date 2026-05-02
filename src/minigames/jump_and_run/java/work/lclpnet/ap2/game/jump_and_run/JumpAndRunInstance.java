@@ -28,6 +28,7 @@ import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.map.MapBootstrap;
 import work.lclpnet.ap2.core.hook.DripLeafTiltCallback;
+import work.lclpnet.ap2.ext.mc.LevelExtensionsKt;
 import work.lclpnet.ap2.game.jump_and_run.gen.JumpAndRun;
 import work.lclpnet.ap2.game.jump_and_run.gen.JumpAndRunSetup;
 import work.lclpnet.ap2.game.jump_and_run.gen.JumpModule;
@@ -109,7 +110,7 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
 
     @Override
     public @NotNull CompletableFuture<Void> createWorldBootstrap(@NotNull ServerLevel world, @NotNull GameMap map) {
-        world.setDayTime(4000);
+        LevelExtensionsKt.setDayTime(world, 4000);
 
         var setup = new JumpAndRunSetup(gameHandle, map, world, TARGET_MINUTES);
 
@@ -174,7 +175,7 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
         beginSegment();
 
         gameHandle.protect(config -> {
-            config.allow(ProtectionTypes.USE_BLOCK, (entity, pos) -> {
+            config.allow(ProtectionTypes.USE_BLOCK, (_, pos) -> {
                 BlockState state = jumpAndRun.world().getBlockState(pos);
                 return state.is(Blocks.SHULKER_BOX);
             });
@@ -285,7 +286,7 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
 
         Translations translations = gameHandle.getTranslations();
 
-        for (ServerPlayer player : PlayerLookup.world(world)) {
+        for (ServerPlayer player : PlayerLookup.level(world)) {
             ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.BELL_BLOCK, SoundSource.BLOCKS, 1f, 1.7f);
 
             var msg = translations.translateText(player, "game.ap2.jump_and_run.assistance")
@@ -395,7 +396,7 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
         ServerLevel world = jumpAndRun.world();
 
         gameHandle.getTranslations().translateText("game.ap2.jump_and_run.next_segment_wait").formatted(GRAY)
-                .sendTo(PlayerLookup.world(world));
+                .sendTo(PlayerLookup.level(world));
 
         SoundHelper.playSound(world, SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 0.5f, 2f);
 
@@ -443,7 +444,7 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
     }
 
     private void nextSegment() {
-        gameHandle.getTranslations().translateText("ap2.go").formatted(RED).acceptEach(PlayerLookup.world(jumpAndRun.world()), (player, text) -> {
+        gameHandle.getTranslations().translateText("ap2.go").formatted(RED).acceptEach(PlayerLookup.level(jumpAndRun.world()), (player, text) -> {
             Title.get(player).title(text, Component.empty(), 5, 20, 5);
             ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.CHICKEN_EGG, SoundSource.PLAYERS, 1, 0);
         });

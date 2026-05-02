@@ -3,6 +3,7 @@ package work.lclpnet.ap2.mode_default;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.ItemStackTemplate;
 import net.minecraft.world.item.Items;
 import org.json.JSONObject;
 import work.lclpnet.ap2.ApConstants;
@@ -38,7 +39,7 @@ public class ArcadePartyDefaultGame implements Game {
 
     @Override
     public GameConfig getConfig() {
-        return new MinecraftGameConfig(ApConstants.ID, new ItemStack(Items.GOLD_BLOCK));
+        return new MinecraftGameConfig(ApConstants.ID, new ItemStackTemplate(Items.GOLD_BLOCK));
     }
 
     @Override

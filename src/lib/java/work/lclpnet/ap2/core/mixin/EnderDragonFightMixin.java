@@ -1,7 +1,7 @@
 package work.lclpnet.ap2.core.mixin;
 
 import net.minecraft.core.BlockPos;
-import net.minecraft.world.level.dimension.end.EndDragonFight;
+import net.minecraft.world.level.dimension.end.EnderDragonFight;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -9,8 +9,8 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import work.lclpnet.ap2.core.type.ApDragonFight;
 
-@Mixin(EndDragonFight.class)
-public class EndDragonFightMixin implements ApDragonFight {
+@Mixin(EnderDragonFight.class)
+public class EnderDragonFightMixin implements ApDragonFight {
 
     @Unique
     private boolean temporary = false;
@@ -25,7 +25,7 @@ public class EndDragonFightMixin implements ApDragonFight {
             at = @At("HEAD"),
             cancellable = true
     )
-    public void ap2$generateEndPortal(boolean previouslyKilled, CallbackInfo ci) {
+    public void ap2$generateEndPortal(boolean activated, CallbackInfo ci) {
         if (temporary) {
             ci.cancel();
         }

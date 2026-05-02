@@ -11,7 +11,7 @@ import net.minecraft.world.level.block.DoubleBlockCombiner
 import work.lclpnet.ap2.api.base.Participants
 import work.lclpnet.kibu.hook.HookRegistrar
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks
-import work.lclpnet.kibu.hook.world.BlockModificationHooks
+import work.lclpnet.kibu.hook.level.BlockModificationHooks
 
 class LazyLootContainerManager(
     val participants: Participants,

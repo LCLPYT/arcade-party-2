@@ -259,7 +259,7 @@ public class MusicalMinecartInstance extends EliminationGameInstance implements 
                             .styled(s -> s.withColor(0xff0000).withBold(true)))
                     .append(" ⚠").withColor(0xffff00);
 
-            player.displayClientMessage(msg, true);
+            player.sendOverlayMessage(msg);
         }
 
         TaskScheduler scheduler = gameHandle.getScheduler();

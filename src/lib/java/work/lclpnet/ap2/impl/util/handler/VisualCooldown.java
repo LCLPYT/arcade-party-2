@@ -99,7 +99,7 @@ public class VisualCooldown implements Cooldown {
             onCooldownOver.accept(player);
         }
 
-        player.displayClientMessage(Component.empty(), true);
+        player.sendOverlayMessage(Component.empty());
         ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.NOTE_BLOCK_PLING.value(), SoundSource.PLAYERS, 0.2f, 2);
     }
 
@@ -143,7 +143,7 @@ public class VisualCooldown implements Cooldown {
             var msg = Component.literal("▌".repeat(boxes)).withStyle(ChatFormatting.GREEN)
                     .append(Component.literal("▌".repeat(10 - boxes)).withStyle(ChatFormatting.GRAY));
 
-            player.displayClientMessage(msg, true);
+            player.sendOverlayMessage(msg);
         }
     }
 }

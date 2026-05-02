@@ -24,13 +24,13 @@ public class ChunkPersistence {
     }
 
     public synchronized void markPersistent(int chunkX, int chunkZ) {
-        if (!chunks.add(asLong(chunkX, chunkZ))) return;
+        if (!chunks.add(pack(chunkX, chunkZ))) return;
 
         setForced(chunkX, chunkZ, true);
     }
 
     public synchronized void removePersistent(int chunkX, int chunkZ) {
-        if (!chunks.remove(asLong(chunkX, chunkZ))) return;
+        if (!chunks.remove(pack(chunkX, chunkZ))) return;
 
         setForced(chunkX, chunkZ, false);
     }

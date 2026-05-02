@@ -17,7 +17,7 @@
     "CreakingAiAccessor",
     "CreakingMixin",
     "DamageSourceMixin",
-    "EndDragonFightMixin",
+    "EnderDragonFightMixin",
     "EnderDragonMixin",
     "EnderManAccessor",
     "EntityMixin",
