@@ -1,12 +1,9 @@
 package work.lclpnet.ap2.core.mixin;
 
-import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
-import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import com.llamalad7.mixinextras.sugar.Local;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.entity.Entity;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
@@ -15,7 +12,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import work.lclpnet.ap2.core.hook.PlayerDeathMessageCallback;
-import work.lclpnet.ap2.core.hook.SpectatePlayerCallback;
 import work.lclpnet.ap2.core.type.ApServerPlayerEntity;
 
 @Mixin(ServerPlayer.class)
@@ -23,19 +19,6 @@ public class ServerPlayerMixin implements ApServerPlayerEntity {
 
     @Unique @Nullable
     private Component playerListName = null;
-
-    @WrapOperation(
-            method = "attack",
-            at = @At(
-                    value = "INVOKE",
-                    target = "Lnet/minecraft/server/level/ServerPlayer;setCamera(Lnet/minecraft/world/entity/Entity;)V"
-            )
-    )
-    private void ap2$onSpectate(ServerPlayer instance, Entity entity, Operation<Void> original) {
-        if (SpectatePlayerCallback.HOOK.invoker().onSpectate(instance, entity)) return;
-
-        original.call(instance, entity);
-    }
 
     @Override
     public void ap2$setPlayerListName(@Nullable Component name) {
@@ -60,7 +43,7 @@ public class ServerPlayerMixin implements ApServerPlayerEntity {
                     target = "Lnet/minecraft/network/protocol/game/ClientboundPlayerCombatKillPacket;<init>(ILnet/minecraft/network/chat/Component;)V"
             )
     )
-    private Component ap2$modifyDeathMessage(Component msg, @Local(argsOnly = true) DamageSource source) {
+    private Component ap2$modifyDeathMessage(Component msg, @Local(argsOnly = true, name = "source") DamageSource source) {
         var self = (ServerPlayer) (Object) this;
         return PlayerDeathMessageCallback.HOOK.invoker().modifyDeathMessage(self, source, msg);
     }

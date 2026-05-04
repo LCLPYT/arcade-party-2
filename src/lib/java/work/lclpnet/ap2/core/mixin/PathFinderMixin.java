@@ -24,7 +24,7 @@ public class PathFinderMixin {
             method = "reconstructPath",
             at = @At("RETURN")
     )
-    public void ap2$createPath(Node endNode, BlockPos target, boolean reachesTarget, CallbackInfoReturnable<Path> cir) {
+    public void ap2$createPath(Node closest, BlockPos target, boolean reached, CallbackInfoReturnable<Path> cir) {
         Path path = cir.getReturnValue();
         Mob entity = ((NodeEvaluatorAccessor) this.nodeEvaluator).getMob();
 

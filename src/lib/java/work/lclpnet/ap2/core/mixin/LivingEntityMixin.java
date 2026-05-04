@@ -28,7 +28,7 @@ public class LivingEntityMixin implements ApLivingEntity {
                     shift = At.Shift.AFTER
             )
     )
-    public void ap2$afterAttributesInitialized(EntityType<?> entityType, Level world, CallbackInfo ci) {
+    public void ap2$afterAttributesInitialized(EntityType<?> type, Level level, CallbackInfo ci) {
         var self = (LivingEntity) (Object) this;
 
         LivingEntityAttributeInitCallback.HOOK.invoker().onAttributesInitialized(self);

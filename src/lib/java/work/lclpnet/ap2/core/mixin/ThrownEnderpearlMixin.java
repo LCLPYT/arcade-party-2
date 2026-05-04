@@ -22,10 +22,10 @@ public class ThrownEnderpearlMixin {
             },
             cancellable = true
     )
-    public void ap2$onTeleport(HitResult hitResult, CallbackInfo ci, @Local Vec3 pos, @Local Entity owner) {
+    public void ap2$onTeleport(HitResult hitResult, CallbackInfo ci, @Local(name = "teleportPos") Vec3 teleportPos, @Local(name = "owner") Entity owner) {
         var self = (ThrownEnderpearl) (Object) this;
 
-        if (EnderPearlTeleportCallback.HOOK.invoker().onTeleport(owner, self, pos)) {
+        if (EnderPearlTeleportCallback.HOOK.invoker().onTeleport(owner, self, teleportPos)) {
             ci.cancel();
         }
     }

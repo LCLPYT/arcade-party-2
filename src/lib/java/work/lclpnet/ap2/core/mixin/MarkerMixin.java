@@ -32,7 +32,7 @@ public class MarkerMixin implements ApMarkerEntity {
             method = "addAdditionalSaveData",
             at = @At("HEAD")
     )
-    public void ap2$writeActorData(ValueOutput view, CallbackInfo ci) {
+    public void ap2$writeActorData(ValueOutput output, CallbackInfo ci) {
         if (actor == null) return;
 
         Marker self = (Marker) (Object) this;

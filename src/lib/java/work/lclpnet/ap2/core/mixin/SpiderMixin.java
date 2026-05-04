@@ -24,7 +24,7 @@ public class SpiderMixin implements ApSpider {
                     target = "Lnet/minecraft/world/entity/monster/spider/Spider;setClimbing(Z)V"
             )
     )
-    private boolean ap2$modifyClimbCondition(Spider instance, boolean climbing) {
+    private boolean ap2$modifyClimbCondition(Spider instance, boolean value) {
         return canClimb;
     }
 }

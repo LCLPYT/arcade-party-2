@@ -25,8 +25,8 @@ public class ProjectileMixin {
                     target = "Lnet/minecraft/world/entity/projectile/Projectile;spawnProjectile(Lnet/minecraft/world/entity/projectile/Projectile;Lnet/minecraft/server/level/ServerLevel;Lnet/minecraft/world/item/ItemStack;Ljava/util/function/Consumer;)Lnet/minecraft/world/entity/projectile/Projectile;"
             )
     )
-    private static Projectile ap2$modifyProjectile(Projectile projectile, @Local(argsOnly = true) LivingEntity shooter) {
-        ProjectileShootCallback.HOOK.invoker().onShoot(shooter, projectile);
+    private static Projectile ap2$modifyProjectile(Projectile projectile, @Local(argsOnly = true, name = "source") LivingEntity source) {
+        ProjectileShootCallback.HOOK.invoker().onShoot(source, projectile);
         return projectile;
     }
 
@@ -34,8 +34,8 @@ public class ProjectileMixin {
             method = "onHitEntity",
             at = @At("TAIL")
     )
-    public void ap2$onEntityHit(EntityHitResult entityHitResult, CallbackInfo ci) {
+    public void ap2$onEntityHit(EntityHitResult hitResult, CallbackInfo ci) {
         var self = (Projectile) (Object) this;
-        ProjectileHitEntityCallback.HOOK.invoker().onHitEntity(self, entityHitResult);
+        ProjectileHitEntityCallback.HOOK.invoker().onHitEntity(self, hitResult);
     }
 }

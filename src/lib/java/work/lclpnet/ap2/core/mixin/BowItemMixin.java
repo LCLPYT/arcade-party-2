@@ -20,7 +20,7 @@ public class BowItemMixin {
                     target = "Lnet/minecraft/world/level/Level;playSound(Lnet/minecraft/world/entity/Entity;DDDLnet/minecraft/sounds/SoundEvent;Lnet/minecraft/sounds/SoundSource;FF)V"
             )
     )
-    public void ap2$onShoot(ItemStack stack, Level world, LivingEntity user, int remainingUseTicks, CallbackInfoReturnable<Boolean> cir) {
-        RangedWeaponUsedCallback.HOOK.invoker().onShot(user, stack, remainingUseTicks);
+    public void ap2$onShoot(ItemStack itemStack, Level level, LivingEntity entity, int remainingTime, CallbackInfoReturnable<Boolean> cir) {
+        RangedWeaponUsedCallback.HOOK.invoker().onShot(entity, itemStack, remainingTime);
     }
 }

@@ -2,6 +2,7 @@ package work.lclpnet.ap2.core.mixin;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.Brain;
 import net.minecraft.world.entity.monster.creaking.Creaking;
 import org.spongepowered.asm.mixin.Mixin;
@@ -18,14 +19,14 @@ public class CreakingMixin {
             method = "makeBrain",
             at = @At(
                     value = "INVOKE",
-                    target = "Lnet/minecraft/world/entity/monster/creaking/CreakingAi;makeBrain(Lnet/minecraft/world/entity/monster/creaking/Creaking;Lnet/minecraft/world/entity/ai/Brain;)Lnet/minecraft/world/entity/ai/Brain;"
+                    target = "Lnet/minecraft/world/entity/ai/Brain$Provider;makeBrain(Lnet/minecraft/world/entity/LivingEntity;Lnet/minecraft/world/entity/ai/Brain$Packed;)Lnet/minecraft/world/entity/ai/Brain;"
             )
     )
-    private Brain<Creaking> ap2$createBrain(Creaking creaking, Brain<Creaking> brain, Operation<Brain<Creaking>> original) {
-        var self = (Creaking) (Object) this;
-        var override = BrainCreationCallback.Creaking.HOOK.invoker().createBrain(self, () -> brain);
+    private <E extends LivingEntity> Brain<Creaking> ap2$createBrain(Brain.Provider<E> instance, E body, Brain.Packed packed, Operation<Brain<Creaking>> original) {
+        var self = (Creaking) body;
+        var override = BrainCreationCallback.Creaking.HOOK.invoker().createBrain(self, () -> original.call(instance, body, packed));
 
-        return override != null ? override : original.call(creaking, brain);
+        return override != null ? override : original.call(instance, body, packed);
     }
 
     @Inject(

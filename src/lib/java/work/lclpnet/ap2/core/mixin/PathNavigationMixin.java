@@ -32,10 +32,10 @@ public class PathNavigationMixin {
                     target = "Lnet/minecraft/world/level/pathfinder/PathFinder;findPath(Lnet/minecraft/world/level/PathNavigationRegion;Lnet/minecraft/world/entity/Mob;Ljava/util/Set;FIF)Lnet/minecraft/world/level/pathfinder/Path;"
             )
     )
-    public @Nullable Path ap2$modifyPath(PathFinder instance, PathNavigationRegion world, Mob mob, Set<BlockPos> positions, float followRange, int distance, float rangeMultiplier, Operation<Path> original) {
-        Path path = original.call(instance, world, mob, positions, followRange, distance, rangeMultiplier);
+    public @Nullable Path ap2$modifyPath(PathFinder instance, PathNavigationRegion level, Mob entity, Set<BlockPos> targets, float maxPathLength, int reachRange, float maxVisitedNodesMultiplier, Operation<Path> original) {
+        Path path = original.call(instance, level, entity, targets, maxPathLength, reachRange, maxVisitedNodesMultiplier);
 
-        return EntityPathFindingCallback.HOOK.invoker().modifyPath(mob, path, positions,
-                (target) -> instance.findPath(world, mob, Set.of(target), followRange, distance, rangeMultiplier));
+        return EntityPathFindingCallback.HOOK.invoker().modifyPath(entity, path, targets,
+                (target) -> instance.findPath(level, entity, Set.of(target), maxPathLength, reachRange, maxVisitedNodesMultiplier));
     }
 }

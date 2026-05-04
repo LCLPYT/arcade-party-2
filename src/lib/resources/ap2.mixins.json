@@ -51,6 +51,7 @@
     "ServerCommonPacketListenerImplMixin",
     "ServerExplosionAccessor",
     "ServerExplosionMixin",
+    "ServerGamePacketListenerImplMixin",
     "ServerLevelMixin",
     "ServerPlayerMixin",
     "ShulkerAccessor",

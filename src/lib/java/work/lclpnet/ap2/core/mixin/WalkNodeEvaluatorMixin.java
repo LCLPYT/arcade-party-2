@@ -101,9 +101,9 @@ public class WalkNodeEvaluatorMixin implements ApLandPathNodeMaker {
                     target = "Lnet/minecraft/world/level/pathfinder/WalkNodeEvaluator;findAcceptedNode(IIIIDLnet/minecraft/core/Direction;Lnet/minecraft/world/level/pathfinder/PathType;)Lnet/minecraft/world/level/pathfinder/Node;"
             )
     )
-    public void ap2$storeFromPosition(Node[] successors, Node node, CallbackInfoReturnable<Integer> cir) {
+    public void ap2$storeFromPosition(Node[] neighbors, Node pos, CallbackInfoReturnable<Integer> cir) {
         if (customBlocked != null) {
-            from.set(node.x, node.y, node.z);
+            from.set(pos.x, pos.y, pos.z);
         }
     }
 
@@ -137,7 +137,7 @@ public class WalkNodeEvaluatorMixin implements ApLandPathNodeMaker {
             at = @At("RETURN"),
             cancellable = true
     )
-    public void ap2$modifyNodeValid(int x, int y, int z, int maxYStep, double lastFeetY, Direction direction, PathType nodeType, CallbackInfoReturnable<Node> cir) {
+    public void ap2$modifyNodeValid(int x, int y, int z, int jumpSize, double nodeHeight, Direction travelDirection, PathType blockPathTypeCurrent, CallbackInfoReturnable<Node> cir) {
         Node node = cir.getReturnValue();
 
         if (node == null) return;

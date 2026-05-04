@@ -50,7 +50,7 @@ public class ServerLevelMixin implements ActorManagerAccess {
                     shift = At.Shift.AFTER
             )
     )
-    public void ap2$tickActors(BooleanSupplier shouldKeepTicking, CallbackInfo ci) {
+    public void ap2$tickActors(BooleanSupplier haveTime, CallbackInfo ci) {
         actorManager.tick();
     }
 }

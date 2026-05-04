@@ -20,7 +20,7 @@ public class WebBlockMixin {
             at = @At("HEAD"),
             cancellable = true
     )
-    public void ap2$onCobwebCollision(BlockState state, Level world, BlockPos pos, Entity entity, InsideBlockEffectApplier handler, boolean bl, CallbackInfo ci) {
+    public void ap2$onCobwebCollision(BlockState state, Level level, BlockPos pos, Entity entity, InsideBlockEffectApplier effectApplier, boolean isPrecise, CallbackInfo ci) {
         if (CobwebSlowCallback.HOOK.invoker().cancelSlow(entity, pos)) {
             ci.cancel();
         }

@@ -23,7 +23,7 @@ public abstract class BigDripLeafBlockMixin {
             ),
             cancellable = true
     )
-    private void ap2$onDripLeafCollision(BlockState state, Level world, BlockPos pos, Entity entity, InsideBlockEffectApplier handler, boolean bl, CallbackInfo ci) {
+    private void ap2$onDripLeafCollision(BlockState state, Level level, BlockPos pos, Entity entity, InsideBlockEffectApplier effectApplier, boolean isPrecise, CallbackInfo ci) {
         if (DripLeafTiltCallback.HOOK.invoker().onTilt(entity, pos)) {
             ci.cancel();
         }
