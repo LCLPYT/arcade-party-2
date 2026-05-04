@@ -38,6 +38,10 @@ public interface MapFacade {
 
     AssetRepository getAssetRepository();
 
+    default CompletableFuture<Optional<Identifier>> findMapIdByPrefix(Identifier prefix) {
+        return getMapIds(prefix).thenApply(ids -> ids.stream().findFirst());
+    }
+
     default void openRandomMap(Identifier gameId, MapReady onReady) {
         openRandomMap(gameId, MapOptions.TEMPORARY, onReady);
     }
