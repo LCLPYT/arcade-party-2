@@ -32,9 +32,12 @@ def package_variant(game: str, variant: str, variant_dir: Path, saves_dir: Path)
     v_old_dir = variant_dir / V_OLD
     v_new_dir = variant_dir / V_NEW
 
+    with open(v_old_dir / "map.json") as f:
+        source_name = json.load(f).get("source", "world.tar.xz")
+
     v_new_dir.mkdir(parents=False, exist_ok=True)
 
-    archive = v_new_dir / "world.tar.xz"
+    archive = v_new_dir / source_name
     if archive.exists():
         archive.unlink()
 
@@ -46,9 +49,6 @@ def package_variant(game: str, variant: str, variant_dir: Path, saves_dir: Path)
         print(f"  ERROR {game}/{variant}: {result.stderr.decode().strip()}")
         archive.unlink(missing_ok=True)
         return
-
-    with open(v_old_dir / "map.json") as f:
-        source_name = json.load(f).get("source", "world.tar.xz")
 
     for item in v_old_dir.iterdir():
         if item.name == source_name:

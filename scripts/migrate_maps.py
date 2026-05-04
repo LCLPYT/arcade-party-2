@@ -19,11 +19,11 @@ V_OLD = "1.21.11"
 V_NEW = "26.1"
 
 
-def make_variants(path_value: str) -> dict:
-    return {
-        V_OLD: {"path": f"{path_value}/{V_OLD}", "depends": {"minecraft": f"<={V_OLD}"}},
-        V_NEW: {"path": f"{path_value}/{V_NEW}", "depends": {"minecraft": f">={V_NEW}"}},
-    }
+def make_variants(path_value: str) -> list:
+    return [
+        {"path": f"{path_value}/{V_OLD}", "depends": {"minecraft": f"<={V_OLD}"}},
+        {"path": f"{path_value}/{V_NEW}", "depends": {"minecraft": f">={V_NEW}"}},
+    ]
 
 
 def migrate_variant_folder(variant_dir: Path) -> None:

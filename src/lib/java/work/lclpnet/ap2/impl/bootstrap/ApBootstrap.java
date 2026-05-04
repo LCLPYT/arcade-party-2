@@ -1,5 +1,8 @@
 package work.lclpnet.ap2.impl.bootstrap;
 
+import net.fabricmc.loader.api.Version;
+import net.fabricmc.loader.api.VersionParsingException;
+import net.minecraft.SharedConstants;
 import net.minecraft.server.MinecraftServer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -37,6 +40,7 @@ import java.net.URI;
 import java.net.URL;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
@@ -76,7 +80,19 @@ public class ApBootstrap {
     }
 
     public MapManager createMapManager(AssetRepository assetRepo) {
-        var mapRepo = new AssetMapRepository(assetRepo, logger);
+        Version mcVersion;
+
+        try {
+            mcVersion = Version.parse(SharedConstants.getCurrentVersion().name());
+        } catch (VersionParsingException e) {
+            throw new RuntimeException(e);
+        }
+
+        Map<String, Version> versions = Map.of(
+                "minecraft", mcVersion
+        );
+
+        var mapRepo = new AssetMapRepository(assetRepo, versions, logger);
 
         var lookup = new RepositoryMapLookup(mapRepo);
 

@@ -77,7 +77,6 @@ import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.kibu.translate.text.TranslatedText;
 import work.lclpnet.lobby.game.api.MapOptions;
-import work.lclpnet.lobby.game.api.WorldFacade;
 import work.lclpnet.lobby.game.map.GameMap;
 import work.lclpnet.lobby.game.util.BossBarTimer;
 import work.lclpnet.lobby.game.util.ProtectorComponent;
@@ -163,13 +162,15 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
     }
 
     static CompletableFuture<SetupResult> setupMap(ApMiniGameArgs miniGameArgs) {
-        WorldFacade worldFacade = miniGameArgs.worldFacade();
-        Identifier mapId = ApConstants.identifier("preparation");
+        Identifier prefix = ApConstants.identifier("preparation");
 
-        return worldFacade.changeMap(mapId, MapOptions.REUSABLE)
-                .thenCompose(world -> miniGameArgs.mapFacade().getMap(mapId)
-                        .thenApply(map -> new SetupResult(world, map
-                                .orElseThrow(() -> new IllegalStateException("Map %s not found".formatted(mapId))))));
+        return miniGameArgs.mapFacade()
+                .findMapIdByPrefix(prefix)
+                .thenApply(mapId -> mapId.orElseThrow(() -> new IllegalStateException("No map found for prefix %s".formatted(prefix))))
+                .thenCompose(mapId -> miniGameArgs.worldFacade().changeMap(mapId, MapOptions.REUSABLE)
+                        .thenCompose(world -> miniGameArgs.mapFacade().getMap(mapId)
+                                .thenApply(map -> new SetupResult(world, map
+                                        .orElseThrow(() -> new IllegalStateException("Map %s not found".formatted(mapId)))))));
     }
 
     @Override
