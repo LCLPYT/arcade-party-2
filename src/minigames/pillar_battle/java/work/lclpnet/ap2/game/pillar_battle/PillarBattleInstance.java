@@ -165,6 +165,7 @@ public class PillarBattleInstance extends EliminationGameInstance implements Map
 
             EnderDragonFight fight = new EnderDragonFight(false, false, false, Optional.empty(), 0, Optional.of(dragon.getUUID()), Optional.of(center), List.of(), List.of());
             ((ApDragonFight) fight).ap2$setTemporary();
+            fight.init(getWorld(), random.nextLong(), pillars.center());
 
             dragon.setDragonFight(fight);
             dragon.setFightOrigin(center);
