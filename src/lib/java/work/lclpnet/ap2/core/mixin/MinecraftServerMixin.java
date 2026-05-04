@@ -19,7 +19,7 @@ public class MinecraftServerMixin {
             at = @At("RETURN"),
             cancellable = true
     )
-    private void ap2$offlineModePermissionLevel(NameAndId player, CallbackInfoReturnable<Integer> cir) {
+    private void ap2$offlineModePermissionLevel(NameAndId nameAndId, CallbackInfoReturnable<Integer> cir) {
         if (onlineMode) return;
 
         String property = System.getProperty("ap2.offline_all_operators", "false");

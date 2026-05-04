@@ -16,7 +16,7 @@ public class CopperGolemMixin {
             at = @At("HEAD"),
             cancellable = true
     )
-    public void ap2$turnIntoStatue(ServerLevel world, CallbackInfo ci) {
+    public void ap2$turnIntoStatue(ServerLevel level, CallbackInfo ci) {
         var self = (CopperGolem) (Object) this;
 
         if (CopperGolemTurnIntoStatueCallback.HOOK.invoker().onTurnIntoStatue(self)) {

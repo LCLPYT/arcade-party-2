@@ -20,8 +20,8 @@ public class ProjectileWeaponItemMixin {
             method = "createProjectile",
             at = @At("RETURN")
     )
-    private void ap2$createArrow(Level world, LivingEntity shooter, ItemStack weaponStack, ItemStack projectileStack, boolean critical, CallbackInfoReturnable<Projectile> cir,
-                                 @Local AbstractArrow projectile) {
-        ProjectileShootCallback.HOOK.invoker().onShoot(shooter, projectile);
+    private void ap2$createArrow(Level level, LivingEntity shooter, ItemStack weapon, ItemStack projectile, boolean isCrit, CallbackInfoReturnable<Projectile> cir,
+                                 @Local(name = "arrow") AbstractArrow arrow) {
+        ProjectileShootCallback.HOOK.invoker().onShoot(shooter, arrow);
     }
 }

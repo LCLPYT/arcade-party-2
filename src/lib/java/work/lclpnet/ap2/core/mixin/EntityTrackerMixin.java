@@ -16,7 +16,7 @@ public class EntityTrackerMixin {
 
     @Shadow
     @Final
-    Entity entity;
+    private Entity entity;
 
     @WrapOperation(
             method = "updatePlayer(Lnet/minecraft/server/level/ServerPlayer;)V",

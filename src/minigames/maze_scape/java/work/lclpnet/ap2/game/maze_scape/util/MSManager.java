@@ -200,11 +200,11 @@ public class MSManager {
         var brain = brainSupplier.get();
 
         // adjusted activities from net.minecraft.world.entity.monster.warden.WardenAi#getActivities
-        WardenAiAccessor.invokeInitCoreActivity(brain);  // don't add emerge and dig activities
-        WardenAiAccessor.invokeInitIdleActivity(brain);
-        WardenAiAccessor.invokeInitRoarActivity(brain);
-        WardenAiAccessor.invokeInitInvestigateActivity(brain);
-        WardenAiAccessor.invokeInitSniffingActivity(brain);
+        EntityExtensionsKt.addActivity(brain, WardenAiAccessor.invokeInitCoreActivity());  // don't add emerge and dig activities
+        EntityExtensionsKt.addActivity(brain, WardenAiAccessor.invokeInitIdleActivity());
+        EntityExtensionsKt.addActivity(brain, WardenAiAccessor.invokeInitRoarActivity());
+        EntityExtensionsKt.addActivity(brain, WardenAiAccessor.invokeInitInvestigateActivity());
+        EntityExtensionsKt.addActivity(brain, WardenAiAccessor.invokeInitSniffingActivity());
 
         // adjusted activity from net.minecraft.world.entity.monster.warden.WardenAi.initFightActivity
         EntityExtensionsKt.addActivity(brain, ActivityData.create(
@@ -230,8 +230,8 @@ public class MSManager {
 
         var brain = brainSupplier.get();
 
-        // adjusted activities from CreakingBrain::create
-        CreakingAiAccessor.invokeInitCoreActivity(brain);
+        // adjusted activities from CreakingAi::create
+        EntityExtensionsKt.addActivity(brain, CreakingAiAccessor.invokeInitCoreActivity());
 
         // custom fight activity
         EntityExtensionsKt.addActivity(brain, ActivityData.create(

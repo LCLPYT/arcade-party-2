@@ -17,11 +17,12 @@ public class DamageSourceMixin {
             at = @At(
                     value = "LOAD",
                     ordinal = 0
-            )
+            ),
+            name = "held"
     )
-    private ItemStack ap2$modifyWeaponStack(ItemStack stack, @Local(argsOnly = true) LivingEntity killed) {
+    private ItemStack ap2$modifyWeaponStack(ItemStack held, @Local(argsOnly = true, name = "victim") LivingEntity victim) {
         var self = (DamageSource) (Object) this;
 
-        return DeathMessageItemCallback.HOOK.invoker().modifyItem(self, killed, stack);
+        return DeathMessageItemCallback.HOOK.invoker().modifyItem(self, victim, held);
     }
 }
