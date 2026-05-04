@@ -73,7 +73,7 @@ class SubtitleCountdown(
         val msg = Component.literal((seconds--).toString()).withStyle(color, ChatFormatting.BOLD)
 
         for (player in PlayerLookup.all(server)) {
-            player.sendSystemMessage(msg)
+            player.sendOverlayMessage(msg)
         }
     }
 
