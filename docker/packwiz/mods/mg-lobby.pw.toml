@@ -1,15 +1,15 @@
 name = "mg-lobby"
-filename = "mg-lobby-0.78.0+1.21.11.jar"
+filename = "mg-lobby-0.80.0+26.1.2.jar"
 side = "both"
 
 [download]
-url = "https://github.com/LCLPYT/mg-lobby/releases/download/0.78.0%2B1.21.11/mg-lobby-0.78.0%2B1.21.11.jar"
+url = "https://github.com/LCLPYT/mg-lobby/releases/download/0.80.0%2B26.1.2/mg-lobby-0.80.0%2B26.1.2.jar"
 hash-format = "sha256"
-hash = "fe50c2543c1b64924dd59c19c3c633934812c232db22d03da2c9916de9f84fc9"
+hash = "46cb129511562506867f9726a3e107e2ba7263236454cda82d7270635a4e17db"
 
 [update]
 [update.github]
-branch = "1.21.11"
+branch = "26.1"
 regex = "^.+(?<!-api|-dev|-dev-preshadow|-sources)\\.jar$"
 slug = "LCLPYT/mg-lobby"
-tag = "0.78.0+1.21.11"
+tag = "0.80.0+26.1.2"

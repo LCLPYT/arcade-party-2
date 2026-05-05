@@ -16,9 +16,9 @@ ktor = "3.3.3"
 kibu = "0.154.0+26.1"
 kibu-world-api = "0.10.0+26.1.2"
 kibu-physics = "0.2.0+26.1.2"
-mg-lobby = "0.79.0+26.1.2"
-combat-control = "1.11.0+26.1.2"
-notica = "2.0.0+26.1.2"
+mg-lobby = "0.80.0+26.1.2"
+combat-control = "1.11.1+26.1.2"
+notica = "2.1.0+26.1.2"
 fabric-language-kotlin = "1.13.11+kotlin.2.3.21"
 pal = "0.16.2+26.1.2"
 gaco = "0.16.0+26.1.2"
@@ -59,6 +59,15 @@ ktor-client-core = { module = "io.ktor:ktor-client-core", version.ref = "ktor" }
 ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor" }
 ktor-client-content-negotiation = { module = "io.ktor:ktor-client-content-negotiation", version.ref = "ktor" }
 ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
+ktor-serialization-jvm = { module = "io.ktor:ktor-serialization-jvm", version.ref = "ktor" }
+ktor-utils-jvm = { module = "io.ktor:ktor-utils-jvm", version.ref = "ktor" }
+ktor-http-jvm = { module = "io.ktor:ktor-http-jvm", version.ref = "ktor" }
+ktor-client-cio-jvm = { module = "io.ktor:ktor-client-cio-jvm", version.ref = "ktor" }
+ktor-io-jvm = { module = "io.ktor:ktor-io-jvm", version.ref = "ktor" }
+ktor-network-jvm = { module = "io.ktor:ktor-network-jvm", version.ref = "ktor" }
+ktor-network-tls-jvm = { module = "io.ktor:ktor-network-tls-jvm", version.ref = "ktor" }
+ktor-events-jvm = { module = "io.ktor:ktor-events-jvm", version.ref = "ktor" }
+ktor-serialization-kotlinx-jvm = { module = "io.ktor:ktor-serialization-kotlinx-jvm", version.ref = "ktor" }
 kibu = { module = "work.lclpnet.mods.kibu:kibu", version.ref = "kibu" }
 kibu-world-api = { module = "work.lclpnet.mods.kibu:kibu-world-api", version.ref = "kibu-world-api" }
 kibu-physics = { module = "work.lclpnet.mods.kibu:kibu-physics", version.ref = "kibu-physics" }

@@ -3,7 +3,7 @@
 set -e
 
 # clean old files
-rm fabric-server-*
+rm -f fabric-server-* || true
 rm -rf mods/
 
 # copy files to /data mount if needed

@@ -215,6 +215,16 @@ dependencies {
     includeImpl(libs.ktor.client.content.negotiation)
     includeImpl(libs.ktor.serialization.kotlinx.json)
 
+    include(libs.ktor.utils.jvm)
+    include(libs.ktor.http.jvm)
+    include(libs.ktor.client.cio.jvm)
+    include(libs.ktor.io.jvm)
+    include(libs.ktor.serialization.jvm)
+    include(libs.ktor.network.jvm)
+    include(libs.ktor.network.tls.jvm)
+    include(libs.ktor.events.jvm)
+    include(libs.ktor.serialization.kotlinx.jvm)
+
     implementation(libs.kibu)
     implementation(libs.kibu.world.api)
     implementation(libs.kibu.physics)

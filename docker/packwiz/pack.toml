@@ -1,12 +1,12 @@
 name = "arcade-party-2"
 author = "LCLP"
-version = "0.2.0"
+version = "0.3.0"
 pack-format = "packwiz:1.1.0"
 
 [index]
 file = "index.toml"
 hash-format = "sha256"
-hash = "a1663e98f5cfd68ef136ede6e6078e8ff3efe4034065d157b6bb3931fb98e966"
+hash = "dfbbf0ef2d97be0336ddaf74c3279c2eca4477466d06f9d5227a24ac017f5d14"
 
 [versions]
 fabric = "0.19.2"
