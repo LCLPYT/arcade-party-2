@@ -36,3 +36,4 @@ run/
 logs/
 .env
 /.venv/
+.fabric/processedMods

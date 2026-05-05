@@ -1,6 +1,6 @@
-FROM eclipse-temurin:21-jdk-alpine AS builder
+FROM eclipse-temurin:25-jdk-alpine AS builder
 
-ARG mc_version=1.21.11
+ARG mc_version=26.1.2
 
 RUN apk add --no-cache --update curl go && \
     go install github.com/packwiz/packwiz@latest
@@ -35,7 +35,7 @@ RUN ./gradlew clean build --no-daemon \
     && rm build/libs/*-sources.jar
 
 # separate stage for runtime image
-FROM eclipse-temurin:21-jre-alpine
+FROM eclipse-temurin:25-jre-alpine
 
 RUN apk add --no-cache su-exec bash rsync
 

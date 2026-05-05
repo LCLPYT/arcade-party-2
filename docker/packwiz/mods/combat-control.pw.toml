@@ -1,15 +1,13 @@
-name = "combat-control"
-filename = "combat-control-1.11.0+1.21.11.jar"
+name = "Combat Control"
+filename = "combat-control-1.11.0+26.1.2.jar"
 side = "both"
 
 [download]
-url = "https://github.com/LCLPYT/combat-control/releases/download/1.11.0%2B1.21.11/combat-control-1.11.0%2B1.21.11.jar"
-hash-format = "sha256"
-hash = "dbd2bb6d8403d2e0af30503e761774e3f24de855a3d60ac47860f928f86bb627"
+url = "https://cdn.modrinth.com/data/WJyo6fB5/versions/pMO3Jzy4/combat-control-1.11.0%2B26.1.2.jar"
+hash-format = "sha512"
+hash = "9b44478ef7b84754b7afe0fb5cd8d6156b644deeb32872f54eff3cca36c458556fcc25ca94499750c7031e9a25d1920ea06525371b3af11428b22bd08282d7df"
 
 [update]
-[update.github]
-branch = "1.21.11"
-regex = "^.+(?<!-api|-dev|-dev-preshadow|-sources)\\.jar$"
-slug = "LCLPYT/combat-control"
-tag = "1.11.0+1.21.11"
+[update.modrinth]
+mod-id = "WJyo6fB5"
+version = "pMO3Jzy4"
