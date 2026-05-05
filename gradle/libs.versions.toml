@@ -32,7 +32,7 @@ modrinth-anti-xray = "fabric-1.4.16+26.1"
 simple-ac = "0.2.0+26.1.2"
 toml4j = "0.7.2"
 junit-jupiter = "5.8.1"
-mockito = "5.6.0"
+mockito = "5.23.0"
 sqlite-jdbc = "3.41.2.2"
 
 [plugins]
