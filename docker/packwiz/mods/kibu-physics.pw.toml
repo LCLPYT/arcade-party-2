@@ -1,15 +1,15 @@
 name = "kibu-physics"
-filename = "kibu-physics-0.2.0+1.21.11.jar"
+filename = "kibu-physics-0.2.0+26.1.2.jar"
 side = "both"
 
 [download]
-url = "https://github.com/LCLPYT/kibu-physics/releases/download/0.2.0%2B1.21.11/kibu-physics-0.2.0%2B1.21.11.jar"
+url = "https://github.com/LCLPYT/kibu-physics/releases/download/0.2.0%2B26.1.2/kibu-physics-0.2.0%2B26.1.2.jar"
 hash-format = "sha256"
-hash = "fefa57d46fa616b52c9374d907013bfad83f372c7fd48a4587eda1b1f45b3ab1"
+hash = "97a3fc3e33c1872afc600b154a8b979205b764a1063415d828f6713c3134f0c1"
 
 [update]
 [update.github]
-branch = "1.21.11"
+branch = "26.1"
 regex = "^.+(?<!-api|-dev|-dev-preshadow|-sources)\\.jar$"
 slug = "LCLPYT/kibu-physics"
-tag = "0.2.0+1.21.11"
+tag = "0.2.0+26.1.2"

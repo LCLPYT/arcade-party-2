@@ -2,27 +2,27 @@ hash-format = "sha256"
 
 [[files]]
 file = "mods/anti-xray.pw.toml"
-hash = "9d1afa5a89577bd21da0708c13d66f32224d5f7817451d9c41f5d9b76dcea9b6"
+hash = "1d07aae485a2a92527e66367b656e743ec6e84471296f2f93bee163de3eb5460"
 metafile = true
 
 [[files]]
 file = "mods/cloth-config.pw.toml"
-hash = "a06ef129798265e0d7249426fb0ed5c506725b0460dc3dfdb975b8978480895e"
+hash = "1b8f4603e81c48badce4a9321dea87bdeb9d3b5a2f0be566139d087afad73a47"
 metafile = true
 
 [[files]]
 file = "mods/combat-control.pw.toml"
-hash = "b923bff1efc408f2951a3c1ef51d7d347f770c4a74379777b2ab576ecebf20e7"
+hash = "da224548d981fe084fb7c219303c5470f032008d18cd329dba19bb6033ea005f"
 metafile = true
 
 [[files]]
 file = "mods/fabric-api.pw.toml"
-hash = "45abf05e1cc90006aeb65e4e1bbe97da5a1984f547ea8028a077dae68af0ac11"
+hash = "5adf60faf11b97a7979f398fd6c494f55603a384880db1bf9755f2495d0dc5a2"
 metafile = true
 
 [[files]]
 file = "mods/fabric-language-kotlin.pw.toml"
-hash = "e49f549eecbe502a3da6d731d6e28783631b14b0bba7bba9780a1075e7926776"
+hash = "337d97b990f76c91584b12600651ae7bd47a0824e45070b3d9330b0922149fc0"
 metafile = true
 
 [[files]]
@@ -32,37 +32,37 @@ metafile = true
 
 [[files]]
 file = "mods/gaco.pw.toml"
-hash = "2899a17eff8e414a43f2ebbfb7d86cd4c7854a70cddc56bed7f500865fd18236"
+hash = "b9f495d908074cfc6b38a24c0434f942f25e9eca9f324e713666d73149d87256"
 metafile = true
 
 [[files]]
 file = "mods/game-map-utils.pw.toml"
-hash = "7777d0099c6a1c43c96da9cce80b41272ef4a3418a473297850b13167d76a44e"
+hash = "86fffbc79f2696bc1f48020fabc4cad7ec78523a8cb96a3d2cee189febdcd1b1"
 metafile = true
 
 [[files]]
 file = "mods/kibu-physics.pw.toml"
-hash = "296ad7c27c1e36f64708578d3a0adfa379aa19471b87e4f1e4b54423b91f249c"
+hash = "87bcd2c876b2de5a97d161e3a62fe952b1dd9d53e814e2d0c2f04aa2c8c54907"
 metafile = true
 
 [[files]]
 file = "mods/kibu-world-api.pw.toml"
-hash = "5d55955a8c0a447098c3584218302ab5bc5c29a4dc8489424872c0d333057445"
+hash = "187f8995c9876662975f2e06d871b211bb5ea097356594e236915c90ee41cb46"
 metafile = true
 
 [[files]]
 file = "mods/kibu.pw.toml"
-hash = "6a3477f437c0c4a98527941ec0424357e422aa58120853c37b7b462afe9e9952"
+hash = "d1f3dd353f57e9ed2ea2ea3963ef106ea34b28f907d4eadb1b92adcabdf77aed"
 metafile = true
 
 [[files]]
 file = "mods/krypton.pw.toml"
-hash = "8f6e0157b42ba668c0ba9aa7eff94b3b91a8f58bcd357e574d70a7b160d4337c"
+hash = "d5060b22fa47d5d56e0f4617904731e9d397d1ba104320b7ec8e59f7ca0700a7"
 metafile = true
 
 [[files]]
 file = "mods/lithium.pw.toml"
-hash = "8c7aec9e376eb3f10da62109594e1ac6b7bc92da8e9c080f8f8f5a736051f339"
+hash = "ceed226223967ea3e7017aad327a069250c289c834766e1a3cd27c8d0ad52de1"
 metafile = true
 
 [[files]]
@@ -72,35 +72,35 @@ metafile = true
 
 [[files]]
 file = "mods/mcserver-api-fabric.pw.toml"
-hash = "3328b8aaaca3e123732f4930c4e360baba38b8a75111f1e21df9ae07dfaaa164"
+hash = "32176e65ebeefe2b184f1ec6d4c461b4685e21936384173d13f8ecefcd9f404a"
 metafile = true
 
 [[files]]
 file = "mods/mg-lobby.pw.toml"
-hash = "44fe20f1a8d3886a28dbc341fc6f1520da829d5e087241942aed34208754eea2"
+hash = "aecbbf813af43893054eb878cf719a5aaf9452f49229fc3ba079e6753e02a3d4"
 metafile = true
 
 [[files]]
 file = "mods/minecraft-sqlite-jdbc.pw.toml"
-hash = "9fda89adbc0395cdfcbaef842fc95e553d87aebcab121a10c691f1e37cfbefa4"
+hash = "4241a6ea410c1d2f70028d70814bb555dca4c79a6f8487ee95a151bdf3136dec"
 metafile = true
 
 [[files]]
 file = "mods/notica.pw.toml"
-hash = "ed8c1eb27cec896bb8814b8abb0a868354cea44d9071541a0a3fb52f16e315a0"
+hash = "6d984f4ad8ea826837ede50abd3e671328865d09f1ad530f6c8e19995be9f50b"
 metafile = true
 
 [[files]]
 file = "mods/pal.pw.toml"
-hash = "4e1bcb00758f434749a0a41d38863bb6b0371c8e48ac4f4f641854a6619e3a7e"
+hash = "b26726961e6d34c7025fac7aa668c857129282c2e73652954938e525685426c6"
 metafile = true
 
 [[files]]
 file = "mods/ruler.pw.toml"
-hash = "9ffa38b6b53d8479da6c5cc74b011d917380eab9a69f303a8b9b239ded9c069c"
+hash = "2b41c3dca471523df720e9fe69d88481e623e322187f39a8770fd39eebf74a40"
 metafile = true
 
 [[files]]
 file = "mods/simple-ac.pw.toml"
-hash = "94cf9aed3a4b52412e9898dca2fc25360adcf64e097f6dc19232cda752367d58"
+hash = "0f913b77860e2fe426f082481c0d9433244d31724e56ff1f41532414b57c78bd"
 metafile = true
