@@ -49,7 +49,7 @@ if [ "$(id -u)" = 0 ]; then
     chown -R ${runAsUser}:${runAsGroup} /data
   fi
 
-  exec su-exec ${runAsUser}:${runAsGroup} "$@"
+  exec gosu ${runAsUser}:${runAsGroup} "$@"
 else
   exec "$@"
 fi

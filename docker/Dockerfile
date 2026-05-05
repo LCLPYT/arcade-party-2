@@ -1,9 +1,10 @@
-FROM eclipse-temurin:25-jdk-alpine AS builder
+FROM eclipse-temurin:25-jdk-alpine-3.23 AS builder
 
 ARG mc_version=26.1.2
+ARG packwiz_commit=dfd8b68a4796c763e25bad50265ea1f1233e24f1
 
 RUN apk add --no-cache --update curl go && \
-    go install github.com/packwiz/packwiz@latest
+    go install github.com/packwiz/packwiz@${packwiz_commit}
 
 WORKDIR /deps
 
@@ -35,13 +36,15 @@ RUN ./gradlew clean build --no-daemon \
     && rm build/libs/*-sources.jar
 
 # separate stage for runtime image
-FROM eclipse-temurin:25-jre-alpine
+FROM eclipse-temurin:25-jre-noble
 
-RUN apk add --no-cache su-exec bash rsync
+RUN apt-get update && apt-get install -y --no-install-recommends gosu rsync && rm -rf /var/lib/apt/lists/*
 
 # user setup (1000:1000)
-RUN addgroup -g 1000 minecraft && \
-    adduser -Ss /bin/false -u 1000 -G minecraft -h /home/minecraft minecraft
+RUN userdel -r $(getent passwd 1000 | cut -d: -f1) 2>/dev/null || true && \
+    groupdel $(getent group 1000 | cut -d: -f1) 2>/dev/null || true && \
+    groupadd -g 1000 minecraft && \
+    useradd -s /bin/false -u 1000 -g minecraft -d /home/minecraft -m minecraft
 
 WORKDIR /template
 
@@ -58,6 +61,9 @@ WORKDIR "/data"
 
 EXPOSE 25565/tcp
 EXPOSE 24454/udp
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=120s --retries=3 \
+  CMD bash -c 'echo > /dev/tcp/localhost/25565' || exit 1
 
 STOPSIGNAL SIGTERM
 ENV UID=1000 GID=1000 LC_ALL=en_US.UTF-8

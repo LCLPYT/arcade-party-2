@@ -45,7 +45,6 @@ class MatchInstance(
     }
 
     fun ref(entity: Avatar): PlayerRef? = when (entity.uuid) {
-        null -> null
         match.leftPlayer?.uuid -> match.leftPlayer
         match.rightPlayer?.uuid -> match.rightPlayer
         else -> null
