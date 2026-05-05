@@ -31,11 +31,6 @@ hash = "b9f495d908074cfc6b38a24c0434f942f25e9eca9f324e713666d73149d87256"
 metafile = true
 
 [[files]]
-file = "mods/game-map-utils.pw.toml"
-hash = "86fffbc79f2696bc1f48020fabc4cad7ec78523a8cb96a3d2cee189febdcd1b1"
-metafile = true
-
-[[files]]
 file = "mods/kibu-physics.pw.toml"
 hash = "87bcd2c876b2de5a97d161e3a62fe952b1dd9d53e814e2d0c2f04aa2c8c54907"
 metafile = true
