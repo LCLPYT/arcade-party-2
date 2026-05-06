@@ -30,6 +30,11 @@ WORKDIR /project
 
 COPY gradle gradle
 COPY gradlew build.gradle gradle.properties settings.gradle LICENSE ./
+COPY src/lib/resources/ap2.accesswidener ./src/lib/resources/ap2.accesswidener
+
+RUN --mount=type=cache,target=/root/.gradle \
+    ./gradlew dependencies --no-daemon
+
 COPY src src
 
 RUN --mount=type=cache,target=/root/.gradle \
