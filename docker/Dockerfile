@@ -32,7 +32,8 @@ COPY gradle gradle
 COPY gradlew build.gradle gradle.properties settings.gradle LICENSE ./
 COPY src src
 
-RUN ./gradlew clean build --no-daemon \
+RUN --mount=type=cache,target=/root/.gradle \
+    ./gradlew build --no-daemon \
     && rm build/libs/*-sources.jar
 
 # separate stage for runtime image
