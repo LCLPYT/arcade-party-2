@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 FROM eclipse-temurin:25-jdk-alpine-3.23 AS builder
 
 ARG mc_version=26.1.2
