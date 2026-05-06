@@ -1,4 +1,4 @@
-name: docker-image.yml
+name: Docker build
 
 on: workflow_dispatch
 
@@ -44,6 +44,8 @@ jobs:
           file: docker/Dockerfile
           context: .
           push: true
+          cache-from: type=registry,ref=ghcr.io/${{ steps.repo_name.outputs.repo }}:buildcache
+          cache-to: type=registry,ref=ghcr.io/${{ steps.repo_name.outputs.repo }}:buildcache,mode=max
           tags: |
             ghcr.io/${{ steps.repo_name.outputs.repo }}:latest
             ghcr.io/${{ steps.repo_name.outputs.repo }}:${{ steps.get_version.outputs.mc_version }}-latest
