@@ -1,12 +1,6 @@
 import org.apache.tools.ant.filters.ReplaceTokens
 import work.lclpnet.build.task.GithubDeploymentTask
 
-buildscript {
-    dependencies {
-        classpath "work.lclpnet.mods.kibu:kibu-config-api:0.1.1"
-    }
-}
-
 plugins {
     alias(libs.plugins.java)
     alias(libs.plugins.fabric.loom) apply false
