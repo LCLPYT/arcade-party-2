@@ -3,7 +3,5 @@ plugins {
 }
 
 dependencies {
-    api(project(":lib"))
-
     testImplementation(libs.mockito.core)
 }
