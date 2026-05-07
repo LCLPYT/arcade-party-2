@@ -25,7 +25,7 @@
   "mixins": [
     "ap2.mixins.json"
   ],
-  "accessWidener": "ap2.accesswidener",
+  "accessWidener": "ap2-lib.accesswidener",
   "depends": {
     "fabricloader": ">=${loader_version}",
     "minecraft": "~${minecraft_compat}",

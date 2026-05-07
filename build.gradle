@@ -13,12 +13,12 @@ buildscript {
 
 plugins {
     alias(libs.plugins.java)
-    alias(libs.plugins.fabric.loom)
+    alias(libs.plugins.fabric.loom) apply false
     alias(libs.plugins.maven.publish)
     alias(libs.plugins.gradle.build.utils)
-    alias(libs.plugins.lombok)
+    alias(libs.plugins.lombok) apply false
     alias(libs.plugins.kotlin.jvm)
-    alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.kotlin.serialization) apply false
     alias(libs.plugins.kotlin.lombok)
 }
 
@@ -34,65 +34,78 @@ base {
     archivesName = modId
 }
 
-/*********************************************************************************************************************\
- * Repositories
- \*********************************************************************************************************************/
-repositories {
-    mavenCentral()
+allprojects {
+    apply(plugin: libs.plugins.fabric.loom.get().pluginId)
+    apply(plugin: libs.plugins.lombok.get().pluginId)
+    apply(plugin: libs.plugins.kotlin.serialization.get().pluginId)
 
-    maven {
-        url "https://repo.lclpnet.work/repository/internal"
-    }
+    repositories {
+        mavenCentral()
 
-    maven {
-        url "https://repo.lclpnet.work/repository/snapshots"
-    }
+        maven {
+            url "https://repo.lclpnet.work/repository/internal"
+        }
 
-    exclusiveContent {
-        forRepository {
-            maven {
-                name = "Modrinth"
-                url = "https://api.modrinth.com/maven"
+        maven {
+            url "https://repo.lclpnet.work/repository/snapshots"
+        }
+
+        exclusiveContent {
+            forRepository {
+                maven {
+                    name = "Modrinth"
+                    url = "https://api.modrinth.com/maven"
+                }
+            }
+            filter {
+                includeGroup "maven.modrinth"
             }
         }
-        filter {
-            includeGroup "maven.modrinth"
+
+        maven {
+            url = "https://maven.nucleoid.xyz/"
         }
-    }
-
-    maven {
-        url = "https://maven.nucleoid.xyz/"
-    }
-
-    maven {
-        url "https://maven.terraformersmc.com/releases/"
-    }
-
-    maven {
-        url "https://maven.shedaniel.me/"
-    }
 
 //    mavenLocal()
+    }
+
+    // common dependencies
+    dependencies {
+        minecraft(libs.minecraft)
+        implementation(libs.fabric.loader)
+        implementation(libs.fabric.api)
+
+        implementation(libs.kibu)
+        implementation(libs.kibu.world.api)
+        implementation(libs.kibu.physics)
+        implementation(libs.fantasy)
+        implementation(libs.combat.control)
+        implementation(libs.notica)
+        implementation(libs.mg.lobby)
+        implementation(libs.pal)
+        implementation(libs.gaco)
+        implementation(libs.game.map.api)
+        implementation(libs.map.canvas.api)
+
+        implementation(libs.json)
+        compileOnly(libs.jetbrains.annotations)
+        implementation(libs.ktor.serialization.kotlinx.json)
+    }
+}
+
+subprojects {
+    base {
+        archivesName = "${rootProject.base.archivesName.get()}-${project.name}"
+    }
+
+    group = rootProject.maven_group
+    version = rootProject.version
 }
 
 /*********************************************************************************************************************\
  * Source sets
  \*********************************************************************************************************************/
 sourceSets {
-    lib {
-        // contains commonly used utilities among minigames and variants
-    }
-
-    main {
-        compileClasspath += lib.output
-        runtimeClasspath += lib.output
-    }
-
-    test {
-        compileClasspath += lib.output
-        runtimeClasspath += lib.output
-    }
-
     genResources {
         compileClasspath += main.compileClasspath
         runtimeClasspath += main.runtimeClasspath
@@ -108,7 +121,7 @@ static <C> C loadToml(File file, C config) {
 }
 
 // extra source sets will have all dependencies of the main source set, as well as their own jar artifact
-def extraSourceSets = ['lib']
+def extraSourceSets = []
 
 // configure modes
 class Mode {
@@ -128,9 +141,6 @@ modesConfig.modes.each { mode ->
         resources.srcDirs = ["src/modes/${mode.id}/resources"]
 
         java.srcDirs = ["src/modes/${mode.id}/java"]
-
-        compileClasspath += sourceSets.lib.output
-        runtimeClasspath += sourceSets.lib.output
 
         sourceSets.main.runtimeClasspath += set.output
         sourceSets.test.compileClasspath += set.output
@@ -167,9 +177,6 @@ minigamesConfig.minigames.each { minigame ->
             set."$type".srcDirs = ["src/minigames/${minigame.id}/$type"]
         }
 
-        compileClasspath += sourceSets.lib.output
-        runtimeClasspath += sourceSets.lib.output
-
         sourceSets.main.runtimeClasspath += set.output
         sourceSets.genResources.runtimeClasspath += set.output
         sourceSets.test.compileClasspath += set.output
@@ -195,25 +202,21 @@ afterEvaluate {
  * Dependencies
  \*********************************************************************************************************************/
 dependencies {
-    minecraft(libs.minecraft)
-    implementation(libs.fabric.loader)
-    implementation(libs.fabric.api)
-
     // extra dependencies required for compilation
-    implementation(libs.json)
-    compileOnly(libs.jetbrains.annotations)
-
     def includeImpl = { dep ->
         implementation(dep)
         include(dep)
     }
+
+    // TODO temporary
+    implementation(project(":lib"))
 
     includeImpl(libs.json.config4j)
     includeImpl(libs.commons.compress)
     includeImpl(libs.ktor.client.core)
     includeImpl(libs.ktor.client.cio)
     includeImpl(libs.ktor.client.content.negotiation)
-    includeImpl(libs.ktor.serialization.kotlinx.json)
+    include(libs.ktor.serialization.kotlinx.json)
 
     include(libs.ktor.utils.jvm)
     include(libs.ktor.http.jvm)
@@ -225,18 +228,7 @@ dependencies {
     include(libs.ktor.events.jvm)
     include(libs.ktor.serialization.kotlinx.jvm)
 
-    implementation(libs.kibu)
-    implementation(libs.kibu.world.api)
-    implementation(libs.kibu.physics)
-    implementation(libs.fantasy)
-    implementation(libs.combat.control)
-    implementation(libs.notica)
-    implementation(libs.mg.lobby)
     implementation(libs.fabric.language.kotlin)
-    implementation(libs.pal)
-    implementation(libs.gaco)
-    implementation(libs.game.map.api)
-    implementation(libs.map.canvas.api)
 
     // runtime dependencies
     runtimeOnly(libs.modrinth.sqlite.jdbc)
@@ -245,7 +237,6 @@ dependencies {
     localRuntime(libs.ruler)
     localRuntime(libs.mcserver.api)
     implementation(libs.translations4j)
-    implementation(variantOf(libs.translations4j) { classifier('network') })
 
     // optional runtime dependencies (not required to play)
     localRuntime(libs.modrinth.anti.xray)
@@ -280,8 +271,6 @@ loom {
             source = sourceSets.genResources
         }
     }
-
-    accessWidenerPath = file("src/lib/resources/ap2.accesswidener")
 }
 
 test {
@@ -410,8 +399,6 @@ publishing {
             artifactId = project.base.archivesName.get()
 
             from components.java
-
-            artifact libJar
 
             pom {
                 name = "Arcade Party 2"

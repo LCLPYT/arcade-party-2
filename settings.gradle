@@ -14,3 +14,16 @@ pluginManagement {
 }
 
 rootProject.name = "arcade-party-2"
+
+include 'lib'
+project(':lib').projectDir = file("src/lib")
+
+def minigames = [
+        "aim_master",
+        "apocalypse_survival",
+]
+
+minigames.forEach {
+    include(it)
+    project(":$it").projectDir = file("src/minigames/$it")
+}
