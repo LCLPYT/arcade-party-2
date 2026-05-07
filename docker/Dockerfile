@@ -42,7 +42,6 @@ RUN --mount=type=cache,target=/root/.gradle \
 FROM eclipse-temurin:25-jre-noble
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    gosu \
     rsync \
     && rm -rf /var/lib/apt/lists/*
 
@@ -62,10 +61,10 @@ COPY --from=builder /packwiz/mods.mrpack .
 COPY --from=builder /project/src/main/resources/assets/ap2/icon_64px.png server/server-icon.png
 COPY --from=builder /project/build/libs/*.jar server/mods/
 
-VOLUME ["/data"]
-WORKDIR "/data"
-
 USER minecraft
+
+WORKDIR "/data"
+VOLUME ["/data"]
 
 EXPOSE 25565/tcp
 EXPOSE 24454/udp
@@ -74,9 +73,5 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=120s --retries=3 \
   CMD bash -c 'echo > /dev/tcp/localhost/25565' || exit 1
 
 STOPSIGNAL SIGTERM
-#ENV UID=1000 GID=1000 LC_ALL=en_US.UTF-8
 
-# run run wrapper script by default
 CMD ["/preset/server.sh"]
-#ENTRYPOINT ["/template/run-wrapper.sh"]
-#CMD ["/template/run.sh"]

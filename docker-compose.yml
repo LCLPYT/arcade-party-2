@@ -8,8 +8,10 @@ services:
       - "25565:25565"
       - "24454:24454/udp"  # voice chat (optional)
     environment:
-      EULA: true
+      EULA: "${EULA:-false}"  # needs to be specified by the user
       MAX_MEMORY: 6G
-    restart: unless-stopped
     volumes:
-      - ./run:/data
+      - data:/data
+
+volumes:
+  data:
