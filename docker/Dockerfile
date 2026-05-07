@@ -31,7 +31,10 @@ WORKDIR /project
 
 COPY gradle gradle
 COPY gradlew build.gradle gradle.properties settings.gradle LICENSE ./
-COPY src/lib/resources/ap2.accesswidener ./src/lib/resources/ap2.accesswidener
+COPY --parents src/lib/build.gradle.kts src/lib/src/main/resources/ap2-lib.accesswidener ./
+COPY --parents src/minigames/*/src/main/resources/*.accesswidener ./
+COPY --parents src/modes/*/build.gradle.kts ./
+COPY --parents src/minigames/*/build.gradle.kts ./
 
 RUN --mount=type=cache,target=/root/.gradle \
     ./gradlew dependencies --no-daemon
