@@ -14,3 +14,63 @@ pluginManagement {
 }
 
 rootProject.name = "arcade-party-2"
+
+include 'lib'
+project(':lib').projectDir = file("src/lib")
+
+def minigames = [
+        "aim_master",
+        "anvil_fall",
+        "apocalypse_survival",
+        "block_dissolve",
+        "bow_spleef",
+        "button_master",
+        "chicken_shooter",
+        "cozy_campfire",
+        "dance_floor",
+        "dragon_escape",
+        "eggventure",
+        "fine_tuning",
+        "glowing_bomb",
+        "guess_it",
+        "hot_potato",
+        "jump_and_run",
+        "killeporter",
+        "king_of_the_hill",
+        "knockout",
+        "maniac_digger",
+        "maze_scape",
+        "mimicry",
+        "minefield",
+        "mining_battle",
+        "mirror_hop",
+        "musical_minecart",
+        "one_in_the_chamber",
+        "paintball",
+        "panda_finder",
+        "pig_race",
+        "pillar_battle",
+        "pvp_tournament",
+        "quick_sg",
+        "red_light_green_light",
+        "snowball_fight",
+        "speed_builders",
+        "splashy_dropper",
+        "spleef",
+        "tnt_run",
+        "treasure_hunter",
+]
+
+minigames.forEach {
+    include(it)
+    project(":$it").projectDir = file("src/minigames/$it")
+}
+
+def modes = [
+        "default"
+]
+
+modes.forEach {
+    include(it)
+    project(":$it").projectDir = file("src/modes/$it")
+}
