@@ -130,84 +130,6 @@ static <C> C loadToml(File file, C config) {
     }
 }
 
-// extra source sets will have all dependencies of the main source set, as well as their own jar artifact
-def extraSourceSets = []
-
-// configure modes
-class Mode {
-    String id
-}
-
-class ModesConfig {
-    List<Mode> modes = []
-}
-
-def modesConfig = loadToml(file("src/modes/modes.toml"), new ModesConfig())
-
-modesConfig.modes.each { mode ->
-    extraSourceSets.add(mode.id)
-
-    sourceSets.register(mode.id) { set ->
-        resources.srcDirs = ["src/modes/${mode.id}/resources"]
-
-        java.srcDirs = ["src/modes/${mode.id}/java"]
-
-        sourceSets.main.runtimeClasspath += set.output
-        sourceSets.test.compileClasspath += set.output
-        sourceSets.test.runtimeClasspath += set.output
-    }
-}
-
-// configure minigames
-class Minigame {
-    String id
-
-    @SerdeSkipDeserializingIf([IS_MISSING])
-    List<String> type = ["java"]
-
-    @SerdeSkipDeserializingIf([IS_MISSING])
-    boolean enabled = true
-}
-
-class MinigamesConfig {
-    List<Minigame> minigames = []
-}
-
-def minigamesConfig = loadToml(file("src/minigames/minigames.toml"), new MinigamesConfig())
-
-minigamesConfig.minigames.each { minigame ->
-    if (!minigame.enabled) return
-
-    extraSourceSets.add(minigame.id)
-
-    sourceSets.register(minigame.id) {set ->
-        resources.srcDirs = ["src/minigames/${minigame.id}/resources"]
-
-        minigame.type.each { type ->
-            set."$type".srcDirs = ["src/minigames/${minigame.id}/$type"]
-        }
-
-        sourceSets.main.runtimeClasspath += set.output
-        sourceSets.genResources.runtimeClasspath += set.output
-        sourceSets.test.compileClasspath += set.output
-        sourceSets.test.runtimeClasspath += set.output
-    }
-}
-
-// extra source sets need to have the necessary dependencies (atm inherit all; maybe cleanup in the future)
-afterEvaluate {
-    configurations {
-        extraSourceSets.each {
-            named("${it}Implementation").get().extendsFrom(implementation)
-            named("${it}CompileOnly").get().extendsFrom(compileOnly)
-            named("${it}CompileClasspath").get().extendsFrom(modCompileClasspathMapped)
-            named("${it}RuntimeClasspath").get().extendsFrom(modRuntimeClasspathMapped)
-            named("${it}CompileClasspath").get().extendsFrom(minecraftNamedCompile)
-            named("${it}RuntimeClasspath").get().extendsFrom(minecraftNamedRuntime)
-        }
-    }
-}
-
 /*********************************************************************************************************************\
  * Dependencies
  \*********************************************************************************************************************/
@@ -218,16 +140,13 @@ dependencies {
         include(dep)
     }
 
-    // TODO temporary
-    implementation(project(":lib"))
-
-    includeImpl(libs.json.config4j)
+    include(libs.json.config4j)
     includeImpl(libs.commons.compress)
     includeImpl(libs.ktor.client.core)
     includeImpl(libs.ktor.client.cio)
     includeImpl(libs.ktor.client.content.negotiation)
-    include(libs.ktor.serialization.kotlinx.json)
 
+    // ship ktor libraries for runtime use; should ideally be moved to separate library mod in the future
     include(libs.ktor.utils.jvm)
     include(libs.ktor.http.jvm)
     include(libs.ktor.client.cio.jvm)
@@ -237,6 +156,7 @@ dependencies {
     include(libs.ktor.network.tls.jvm)
     include(libs.ktor.events.jvm)
     include(libs.ktor.serialization.kotlinx.jvm)
+    include(libs.ktor.serialization.kotlinx.json)
 
     implementation(libs.fabric.language.kotlin)
 
@@ -246,7 +166,6 @@ dependencies {
     // optional runtime dependencies (not explicitly required for compilation, but needed to play the game)
     localRuntime(libs.ruler)
     localRuntime(libs.mcserver.api)
-    implementation(libs.translations4j)
 
     // optional runtime dependencies (not required to play)
     localRuntime(libs.modrinth.anti.xray)
@@ -324,41 +243,18 @@ def configureResources(ProcessResources task) {
 
 configureResources(processResources)
 
-extraSourceSets.each { name ->
-    def task = tasks.named("process${name.capitalize()}Resources", ProcessResources).get()
-    configureResources(task)
-}
-
 def licenseJarTasks = [jar, sourcesJar]
-
-// add jar and remapJar tasks for extra source Sets
-Jar prevJarTask = null
-
-for (name in extraSourceSets) {
-    // add extra jar task
-    def jar = tasks.register("${name}Jar", Jar.class) {
-        from(sourceSets.named(name).get().output)
-        archiveClassifier.set(name)
-
-        description "Builds the standalone ${name} api jar."
-        group 'build'
-    }.get()
-
-    if (prevJarTask != null) {
-        jar.mustRunAfter(prevJarTask)
-    }
-
-    prevJarTask = jar
-
-    tasks.assemble.dependsOn(jar)
-
-    licenseJarTasks.add(jar)
-}
 
 // rename LICENSE files
 licenseJarTasks.each {
     it.from("LICENSE") {
         rename { "${it}_${project.base.archivesName.get()}" }
+    }
+}
+
+dependencies {
+    subprojects.each {
+        api(it)
     }
 }
 
@@ -370,8 +266,8 @@ configurations {
 }
 
 dependencies {
-    extraSourceSets.each { name ->
-        nestedJars(files(tasks.named("${name}Jar", Jar)))
+    subprojects.each {
+        nestedJars(project("${it.path}"))
     }
 }
 

@@ -16,8 +16,10 @@ loom {
 
 dependencies {
     implementation(libs.json.config4j)
-    implementation(libs.ktor.client.core)
+    api(libs.ktor.client.core)
     implementation(libs.ktor.client.cio)
     implementation(libs.ktor.client.content.negotiation)
     implementation(libs.translations4j)
+
+    testImplementation(libs.mockito.core)
 }
