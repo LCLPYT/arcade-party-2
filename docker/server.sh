@@ -7,24 +7,41 @@ FABRIC_VERSION="0.19.2"
 SERVER_DIR="."
 MODPACK_FILE="/preset/mods.mrpack"
 
-# TODO also needs to be done when MC_VERSION or FABRIC_VERSION changed
-if ! [ -f "$SERVER_DIR/fabric-server-launcher.jar" ]; then
+# (Re-)install fabric server when versions change or jar is missing
+VERSION_FILE="$SERVER_DIR/.fabric_install_version"
+CURRENT_VERSION="$MC_VERSION:$FABRIC_VERSION"
+
+if ! [ -f "$SERVER_DIR/fabric-server-launcher.jar" ] || \
+   ! [ -f "$VERSION_FILE" ] || \
+   [ "$(cat "$VERSION_FILE")" != "$CURRENT_VERSION" ]; then
+
   mrpack-install server fabric \
     --minecraft-version "$MC_VERSION" \
     --flavor-version "$FABRIC_VERSION" \
     --server-dir "$SERVER_DIR" \
     --server-file fabric-server-launcher.jar
+
+  echo "$CURRENT_VERSION" > "$VERSION_FILE"
 fi
 
-# TODO need a way to only do this when needed, e.g. when mods.mrpack checksum changed or if this wasn't executed yet
-# TODO also needs to clear the mods/ directory before
-mrpack-install "$MODPACK_FILE" --server-dir "$SERVER_DIR"
+# (Re-)install modpack when mods.mrpack checksum changes or first run
+MRPACK_CHECKSUM=$(sha256sum "$MODPACK_FILE" | cut -d' ' -f1)
+CHECKSUM_FILE="$SERVER_DIR/.mrpack_checksum"
 
-if [ "$EULA" = "true" ]; then
+if ! [ -f "$CHECKSUM_FILE" ] || [ "$(cat "$CHECKSUM_FILE")" != "$MRPACK_CHECKSUM" ]; then
+  rm -rf "$SERVER_DIR/mods/"
+
+  mrpack-install "$MODPACK_FILE" --server-dir "$SERVER_DIR"
+
+  echo "$MRPACK_CHECKSUM" > "$CHECKSUM_FILE"
+fi
+
+# Sync preset server files (server icon, built mod jars) into working dir
+rsync -a /preset/server/ "$SERVER_DIR/"
+
+if [ "${EULA:-}" = "true" ]; then
     echo "eula=true" > eula.txt
 fi
-
-# TODO sync contents from /preset/server into the current dir
 
 : "${MAX_MEMORY:=2G}"
 
