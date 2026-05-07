@@ -17,9 +17,6 @@ id = "treasure_hunter"
 id = "one_in_the_chamber"
 
 [[minigames]]
-id = "anvil_fall"
-
-[[minigames]]
 id = "panda_finder"
 
 [[minigames]]

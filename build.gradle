@@ -90,6 +90,16 @@ allprojects {
         implementation(libs.json)
         compileOnly(libs.jetbrains.annotations)
         implementation(libs.ktor.serialization.kotlinx.json)
+
+        testImplementation(libs.junit.jupiter.api)
+        testRuntimeOnly(libs.junit.jupiter.engine)
+        testImplementation(libs.junit.jupiter.params)
+        testImplementation(libs.fabric.loader.junit)
+    }
+
+    test {
+        useJUnitPlatform()
+        systemProperty("fabric.side", "server")
     }
 }
 
@@ -271,11 +281,6 @@ loom {
             source = sourceSets.genResources
         }
     }
-}
-
-test {
-    useJUnitPlatform()
-    systemProperty("fabric.side", "server")
 }
 
 /*********************************************************************************************************************\
