@@ -25,6 +25,9 @@ allprojects {
     apply(plugin: libs.plugins.fabric.loom.get().pluginId)
     apply(plugin: libs.plugins.lombok.get().pluginId)
 
+    group = rootProject.maven_group
+    version = rootProject.version
+
     repositories {
         mavenCentral()
 
@@ -130,9 +133,6 @@ subprojects {
     base {
         archivesName = "${rootProject.base.archivesName.get()}-${project.name}"
     }
-
-    group = rootProject.maven_group
-    version = rootProject.version
 }
 
 sourceSets {
