@@ -20,6 +20,7 @@ project(':lib').projectDir = file("src/lib")
 
 def minigames = [
         "aim_master",
+        "anvil_fall",
         "apocalypse_survival",
 ]
 
