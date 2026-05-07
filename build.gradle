@@ -1,9 +1,5 @@
-import com.electronwill.nightconfig.core.serde.annotations.SerdeSkipDeserializingIf
 import org.apache.tools.ant.filters.ReplaceTokens
 import work.lclpnet.build.task.GithubDeploymentTask
-import work.lclpnet.kibu.config.ConfigManager
-
-import static com.electronwill.nightconfig.core.serde.annotations.SerdeSkipDeserializingIf.SkipDeIf.IS_MISSING
 
 buildscript {
     dependencies {
@@ -17,9 +13,6 @@ plugins {
     alias(libs.plugins.maven.publish)
     alias(libs.plugins.gradle.build.utils)
     alias(libs.plugins.lombok) apply false
-    alias(libs.plugins.kotlin.jvm)
-    alias(libs.plugins.kotlin.serialization) apply false
-    alias(libs.plugins.kotlin.lombok)
 }
 
 Properties props = buildUtils.loadProperties("publish.properties")
@@ -37,7 +30,6 @@ base {
 allprojects {
     apply(plugin: libs.plugins.fabric.loom.get().pluginId)
     apply(plugin: libs.plugins.lombok.get().pluginId)
-    apply(plugin: libs.plugins.kotlin.serialization.get().pluginId)
 
     repositories {
         mavenCentral()
@@ -69,6 +61,10 @@ allprojects {
 //    mavenLocal()
     }
 
+    loom {
+        serverOnlyMinecraftJar()
+    }
+
     // common dependencies
     dependencies {
         minecraft(libs.minecraft)
@@ -89,17 +85,50 @@ allprojects {
 
         implementation(libs.json)
         compileOnly(libs.jetbrains.annotations)
-        implementation(libs.ktor.serialization.kotlinx.json)
 
         testImplementation(libs.junit.jupiter.api)
         testRuntimeOnly(libs.junit.jupiter.engine)
         testImplementation(libs.junit.jupiter.params)
         testImplementation(libs.fabric.loader.junit)
+
+        if (project.name != "lib") {
+            api(project(":lib"))
+        }
     }
 
     test {
         useJUnitPlatform()
         systemProperty("fabric.side", "server")
+    }
+
+    processResources {
+        def tokens = [
+                "version": project.version.toString(),
+                "loader_version": libs.versions.fabric.loader.get(),
+                "minecraft_compat": rootProject.minecraft_compat,
+                "java_version": libs.versions.java.get()
+        ]
+
+        inputs.properties(tokens)
+
+        filesMatching("fabric.mod.json") {
+            expand(tokens)
+        }
+
+        filesMatching("*.mixins.json") {
+            filter(ReplaceTokens, beginToken: '${', endToken: '}', tokens: tokens)
+        }
+    }
+
+    tasks.withType(JavaCompile).configureEach {
+        it.options.release.set(javaVersion)
+    }
+
+    java {
+        withSourcesJar()
+
+        sourceCompatibility = JavaVersion.toVersion(javaVersion)
+        targetCompatibility = JavaVersion.toVersion(javaVersion)
     }
 }
 
@@ -112,9 +141,6 @@ subprojects {
     version = rootProject.version
 }
 
-/*********************************************************************************************************************\
- * Source sets
- \*********************************************************************************************************************/
 sourceSets {
     genResources {
         compileClasspath += main.compileClasspath
@@ -122,17 +148,6 @@ sourceSets {
     }
 }
 
-static <C> C loadToml(File file, C config) {
-    try (def manager = new ConfigManager<>(file.toPath(), config)) {
-        manager.load()
-
-        return manager.config()
-    }
-}
-
-/*********************************************************************************************************************\
- * Dependencies
- \*********************************************************************************************************************/
 dependencies {
     // extra dependencies required for compilation
     def includeImpl = { dep ->
@@ -181,12 +196,7 @@ dependencies {
     testImplementation(libs.sqlite.jdbc)
 }
 
-/*********************************************************************************************************************\
- * General
- \*********************************************************************************************************************/
 loom {
-    serverOnlyMinecraftJar()
-
     runs {
         remove client
 
@@ -201,47 +211,6 @@ loom {
         }
     }
 }
-
-/*********************************************************************************************************************\
- * Tasks
- \*********************************************************************************************************************/
-tasks.withType(JavaCompile).configureEach {
-    it.options.release.set(javaVersion)
-}
-
-java {
-    withSourcesJar()
-
-    sourceCompatibility = JavaVersion.toVersion(javaVersion)
-    targetCompatibility = JavaVersion.toVersion(javaVersion)
-}
-
-kotlin {
-    jvmToolchain(javaVersion)
-}
-
-// resource expansion
-def configureResources(ProcessResources task) {
-    def tokens = [
-            "version": project.version.toString(),
-            "fantasy_version": libs.versions.fantasy.get(),
-            "loader_version": libs.versions.fabric.loader.get(),
-            "minecraft_compat": project.minecraft_compat,
-            "java_version": libs.versions.java.get()
-    ]
-
-    task.inputs.properties(tokens)
-
-    task.filesMatching("fabric.mod.json") {
-        expand(tokens)
-    }
-
-    task.filesMatching("*.mixins.json") {
-        filter(ReplaceTokens, beginToken: '${', endToken: '}', tokens: tokens)
-    }
-}
-
-configureResources(processResources)
 
 def licenseJarTasks = [jar, sourcesJar]
 
@@ -273,9 +242,6 @@ dependencies {
 
 loom.nestJars(tasks.named("jar"), configurations.nestedJars)
 
-/*********************************************************************************************************************\
- * Publishing
- \*********************************************************************************************************************/
 def env = System.getenv()
 
 tasks.register("github", GithubDeploymentTask) {

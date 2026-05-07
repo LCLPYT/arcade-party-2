@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.java)
     alias(libs.plugins.kotlin.jvm)
     alias(libs.plugins.kotlin.lombok)
+    alias(libs.plugins.kotlin.serialization)
 }
 
 val javaVersion = libs.versions.java.get().toInt()
@@ -19,6 +20,7 @@ dependencies {
     api(libs.ktor.client.core)
     implementation(libs.ktor.client.cio)
     implementation(libs.ktor.client.content.negotiation)
+    implementation(libs.ktor.serialization.kotlinx.json)
     implementation(libs.translations4j)
 
     testImplementation(libs.mockito.core)
