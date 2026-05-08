@@ -1,9 +1,11 @@
 package work.lclpnet.ap2.impl.util.bossbar;
 
+import lombok.Getter;
 import work.lclpnet.kibu.translate.bossbar.TranslatedBossBar;
 
 public class DynamicTranslatedBossBar {
 
+    @Getter
     private final TranslatedBossBar bossBar;
     private String translationKey;
     private Object[] arguments;
@@ -31,9 +33,5 @@ public class DynamicTranslatedBossBar {
 
     private void update() {
         bossBar.setTitle(translationKey, arguments);
-    }
-
-    public TranslatedBossBar getBossBar() {
-        return bossBar;
     }
 }
