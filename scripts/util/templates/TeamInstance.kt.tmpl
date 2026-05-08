@@ -1,0 +1,20 @@
+package ${package}
+
+import work.lclpnet.ap2.api.game.MiniGameHandle
+import work.lclpnet.ap2.impl.game.TeamGameInstance
+import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer
+
+class ${class_name}(gameHandle: MiniGameHandle) : TeamGameInstance(gameHandle) {
+
+    private val data = IntScoreDataContainer(this::createReference)
+
+    override fun getData() = data
+
+    override fun prepare() {
+
+    }
+
+    override fun go() {
+
+    }
+}

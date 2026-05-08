@@ -1,7 +1,14 @@
 from pathlib import Path
 
-from util.common import pascal_case
+from util.common import pascal_case, render_template
 from util.inputs import Inputs
+
+INSTANCE_TEMPLATES = {
+    "ffa": "FFAInstance.kt.tmpl",
+    "ffa_elimination": "FFAEliminationInstance.kt.tmpl",
+    "team": "TeamInstance.kt.tmpl",
+    "team_elimination": "TeamEliminationInstance.kt.tmpl",
+}
 
 
 def create_instance_class(code_dir: Path, inputs: Inputs):
@@ -11,107 +18,15 @@ def create_instance_class(code_dir: Path, inputs: Inputs):
 
     class_dir.mkdir(parents=True, exist_ok=True)
 
-    instance_file = class_dir / f"{instance_class_name}.kt"
-    package_java_path = package_path.replace('/', '.')
-
-    if inputs.game_type == "ffa":
-        content = get_ffa_instance_class(package_java_path, instance_class_name)
-    elif inputs.game_type == "ffa_elimination":
-        content = get_ffa_elimination_instance_class(package_java_path, instance_class_name)
-    elif inputs.game_type == "team":
-        content = get_team_instance_class(package_java_path, instance_class_name)
-    elif inputs.game_type == "team_elimination":
-        content = get_team_elimination_instance_class(package_java_path, instance_class_name)
-    else:
+    template_name = INSTANCE_TEMPLATES.get(inputs.game_type)
+    if template_name is None:
         print(f"Unknown game type {inputs.game_type}")
         return
 
-    with open(instance_file, "w") as f:
-        f.write(content)
+    content = render_template(
+        template_name,
+        package=package_path.replace('/', '.'),
+        class_name=instance_class_name,
+    )
 
-
-def get_ffa_instance_class(package: str, class_name: str) -> str:
-    return f"""package {package}
-
-import work.lclpnet.ap2.api.game.MiniGameHandle
-import work.lclpnet.ap2.impl.game.FFAGameInstance
-import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer
-import work.lclpnet.ap2.impl.game.data.type.PlayerRef
-
-class {class_name}(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle) {{
-
-    private val data = IntScoreDataContainer(PlayerRef::create)
-
-    override fun getData() = data
-
-    override fun prepare() {{
-
-    }}
-
-    override fun go() {{
-
-    }}
-}}
-"""
-
-
-def get_ffa_elimination_instance_class(package: str, class_name: str) -> str:
-    return f"""package {package}
-
-import work.lclpnet.ap2.api.game.MiniGameHandle
-import work.lclpnet.ap2.impl.game.EliminationGameInstance
-
-class {class_name}(gameHandle: MiniGameHandle) : EliminationGameInstance(gameHandle) {{
-
-    override fun prepare() {{
-
-    }}
-
-    override fun go() {{
-
-    }}
-}}
-"""
-
-
-def get_team_instance_class(package: str, class_name: str) -> str:
-    return f"""package {package}
-
-import work.lclpnet.ap2.api.game.MiniGameHandle
-import work.lclpnet.ap2.impl.game.TeamGameInstance
-import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer
-
-class {class_name}(gameHandle: MiniGameHandle) : TeamGameInstance(gameHandle) {{
-
-    private val data = IntScoreDataContainer(this::createReference)
-
-    override fun getData() = data
-
-    override fun prepare() {{
-
-    }}
-
-    override fun go() {{
-
-    }}
-}}
-"""
-
-
-def get_team_elimination_instance_class(package: str, class_name: str) -> str:
-    return f"""package {package}
-
-import work.lclpnet.ap2.api.game.MiniGameHandle
-import work.lclpnet.ap2.impl.game.TeamEliminationGameInstance
-
-class {class_name}(gameHandle: MiniGameHandle) : TeamEliminationGameInstance(gameHandle) {{
-
-    override fun prepare() {{
-
-    }}
-
-    override fun go() {{
-
-    }}
-}}
-"""
+    (class_dir / f"{instance_class_name}.kt").write_text(content)
