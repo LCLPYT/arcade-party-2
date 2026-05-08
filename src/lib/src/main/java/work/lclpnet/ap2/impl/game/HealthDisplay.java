@@ -38,7 +38,7 @@ public class HealthDisplay {
             update(player, health, objective);
         }
 
-        hooks.registerHook(EntityHealthCallback.HOOK, (entity, health) -> {
+        EntityHealthCallback.HOOK.registerWith(hooks, (entity, health) -> {
             float oldHealth = entity.getHealth();
 
             if (entity instanceof ServerPlayer player && gameHandle.getParticipants().isParticipating(player) && health < oldHealth) {
@@ -49,7 +49,7 @@ public class HealthDisplay {
             return false;
         });
 
-        hooks.registerHook(PlayerEliminatedCallback.HOOK, player -> {
+        PlayerEliminatedCallback.HOOK.registerWith(hooks, player -> {
             manager.setScore(player, objective, 0);
             manager.setNumberFormat(player, objective, BlankFormat.INSTANCE);
         });

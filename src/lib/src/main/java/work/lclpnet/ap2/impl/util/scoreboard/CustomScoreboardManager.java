@@ -43,19 +43,19 @@ public class CustomScoreboardManager {
     }
 
     public void init(HookRegistrar hookRegistrar) {
-        hookRegistrar.registerHook(LanguageChangedCallback.HOOK, (player, language, reason) -> {
+        LanguageChangedCallback.HOOK.registerWith(hookRegistrar, (player, language, reason) -> {
             for (var objective : virtualObjectives) {
                 objective.update(player);
             }
         });
 
-        hookRegistrar.registerHook(PlayerConnectionHooks.JOIN, player -> {
+        PlayerConnectionHooks.JOIN.registerWith(hookRegistrar, player -> {
             for (var objective : virtualObjectives) {
                 objective.add(player);
             }
         });
 
-        hookRegistrar.registerHook(PlayerConnectionHooks.QUIT, player -> {
+        PlayerConnectionHooks.QUIT.registerWith(hookRegistrar, player -> {
             PlayerTeam team = scoreboard.getPlayersTeam(player.getScoreboardName());
             if (team != null) leaveTeam(player, team);
         });

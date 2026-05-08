@@ -90,7 +90,7 @@ public class SbConfiguration {
     public void registerHooks() {
         HookRegistrar hooks = gameHandle.getHooks();
 
-        hooks.registerHook(PlayerInteractionHooks.ATTACK_BLOCK, (player, world, hand, pos, direction) -> {
+        PlayerInteractionHooks.ATTACK_BLOCK.registerWith(hooks, (player, world, hand, pos, direction) -> {
             if (player instanceof ServerPlayer serverPlayer && canModify(serverPlayer, pos) && world instanceof ServerLevel serverWorld) {
                 destroyBlockDelayed(serverWorld, pos, serverPlayer);
             }
@@ -98,7 +98,7 @@ public class SbConfiguration {
             return InteractionResult.PASS;
         });
 
-        hooks.registerHook(BlockModificationHooks.PLACE_FLUID, (world, pos, entity, fluid) -> {
+        BlockModificationHooks.PLACE_FLUID.registerWith(hooks, (world, pos, entity, fluid) -> {
             if (entity instanceof ServerPlayer player && canModify(player, pos)) {
                 placeFluid(world, player, pos, fluid);
                 manager.onEdit(player);
@@ -107,7 +107,7 @@ public class SbConfiguration {
             return true;
         });
 
-        hooks.registerHook(ItemFrameRemoveItemCallback.HOOK, (itemFrame, attacker) -> {
+        ItemFrameRemoveItemCallback.HOOK.registerWith(hooks, (itemFrame, attacker) -> {
             ItemStack stack = itemFrame.getItem();
 
             if (attacker instanceof ServerPlayer player && !stack.isEmpty() && canModify(player, itemFrame.blockPosition())) {
@@ -117,7 +117,7 @@ public class SbConfiguration {
             return false;  // do not cancel, so the item frame is destroyed etc.
         });
 
-        hooks.registerHook(PlayerInteractionHooks.USE_BLOCK, (player, world, hand, hitResult) -> {
+        PlayerInteractionHooks.USE_BLOCK.registerWith(hooks, (player, world, hand, hitResult) -> {
             BlockPos pos = hitResult.getBlockPos();
             BlockState state = world.getBlockState(pos);
 
@@ -132,7 +132,7 @@ public class SbConfiguration {
             return InteractionResult.PASS;
         });
 
-        hooks.registerHook(BlockModificationHooks.PLACE_BLOCK, (world, pos, entity, newState) -> {
+        BlockModificationHooks.PLACE_BLOCK.registerWith(hooks, (world, pos, entity, newState) -> {
             if (entity instanceof ServerPlayer player && canModify(player, pos)) {
                 manager.onEdit(player);
             }
@@ -140,7 +140,7 @@ public class SbConfiguration {
             return false;
         });
 
-        hooks.registerHook(BlockModificationHooks.USE_ITEM_ON_BLOCK, ctx -> {
+        BlockModificationHooks.USE_ITEM_ON_BLOCK.registerWith(hooks, ctx -> {
             Player player = ctx.getPlayer();
             BlockPos pos = ctx.getClickedPos();
 
@@ -164,14 +164,14 @@ public class SbConfiguration {
             return null;
         });
 
-        hooks.registerHook(ItemFramePutItemCallback.HOOK, (itemFrame, stack, player, hand) -> {
+        ItemFramePutItemCallback.HOOK.registerWith(hooks, (itemFrame, stack, player, hand) -> {
             if (player instanceof ServerPlayer serverPlayer && canModify(serverPlayer, itemFrame.blockPosition())) {
                 manager.onEdit(serverPlayer);
             }
             return false;
         });
 
-        hooks.registerHook(BlockModificationHooks.BREAK_BLOCK, (world, pos, entity) -> {
+        BlockModificationHooks.BREAK_BLOCK.registerWith(hooks, (world, pos, entity) -> {
             if (entity instanceof ServerPlayer player && canModify(player, pos)) {
                 BlockState state = world.getBlockState(pos);
                 giveSourceItem(player, state);

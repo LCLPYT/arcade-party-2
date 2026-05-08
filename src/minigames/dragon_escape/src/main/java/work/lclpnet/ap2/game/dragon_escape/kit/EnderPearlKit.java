@@ -47,7 +47,7 @@ public class EnderPearlKit extends SingleItemKit {
 
     @Override
     public void init(KitOptions options) {
-        handle.hooks().registerHook(ProjectileShootCallback.HOOK, (shooter, projectile) -> {
+        ProjectileShootCallback.HOOK.registerWith(handle.hooks(), (shooter, projectile) -> {
             if (shooter instanceof ServerPlayer player && projectile instanceof ThrownEnderpearl && handle.hasKitEquipped(player, this)) {
                 CustomNbt.set(projectile, ORIGIN_CODEC, player.position());
 
@@ -63,7 +63,7 @@ public class EnderPearlKit extends SingleItemKit {
             }
         });
 
-        handle.hooks().registerHook(EnderPearlTeleportCallback.HOOK, (owner, enderPearl, pos) -> {
+        EnderPearlTeleportCallback.HOOK.registerWith(handle.hooks(), (owner, enderPearl, pos) -> {
             if (owner instanceof ServerPlayer player && handle.hasKitEquipped(player, this)) {
                 TaskHandle refundTask = refundTasks.remove(enderPearl.getUUID());
 

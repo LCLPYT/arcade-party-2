@@ -190,16 +190,16 @@ public class PigRaceInstance extends FFAGameInstance implements MapBootstrap {
         CustomScoreboardManager scoreboardManager = gameHandle.getScoreboardManager();
 
         // prevent dismounting
-        hooks.registerHook(EntityDismountCallback.HOOK, (entity, vehicle) -> entity instanceof ServerPlayer);
+        EntityDismountCallback.HOOK.registerWith(hooks, (entity, vehicle) -> entity instanceof ServerPlayer);
 
         // prevent mounting other entities while on another vehicle
-        hooks.registerHook(EntityMountCallback.HOOK, (entity, vehicle, force) -> {
+        EntityMountCallback.HOOK.registerWith(hooks, (entity, vehicle, force) -> {
             Entity oldVehicle = entity.getVehicle();
             return entity instanceof ServerPlayer && oldVehicle != null && oldVehicle.isAlive();
         });
 
         // mount a new entity, after a player was teleported
-        hooks.registerHook(PlayerTeleportedCallback.HOOK, player -> {
+        PlayerTeleportedCallback.HOOK.registerWith(hooks, player -> {
             var pending = pendingEntities.remove(player.getUUID());
 
             if (pending == null) return;
@@ -217,7 +217,7 @@ public class PigRaceInstance extends FFAGameInstance implements MapBootstrap {
         });
 
         // remove entity when player quits
-        hooks.registerHook(ServerPlayConnectionHooks.DISCONNECT, (handler, server) -> {
+        ServerPlayConnectionHooks.DISCONNECT.registerWith(hooks, (handler, server) -> {
             Entity vehicle = handler.player.getVehicle();
 
             if (vehicle != null) {
@@ -268,7 +268,7 @@ public class PigRaceInstance extends FFAGameInstance implements MapBootstrap {
             participants.forEach(this::giveResetItem);
         }
 
-        hooks.registerHook(PlayerInventoryHooks.SWAP_HANDS, (player, slot) -> {
+        PlayerInventoryHooks.SWAP_HANDS.registerWith(hooks, (player, slot) -> {
             resetPlayerToCheckpoint(player);
             return true;
         });

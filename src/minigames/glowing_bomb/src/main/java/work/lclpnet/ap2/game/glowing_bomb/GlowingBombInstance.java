@@ -102,7 +102,7 @@ public class GlowingBombInstance extends EliminationGameInstance implements MapB
         HookRegistrar hooks = gameHandle.getHooks();
         Participants participants = gameHandle.getParticipants();
 
-        hooks.registerHook(PlayerInteractionHooks.USE_ITEM, (player, world, hand) -> {
+        PlayerInteractionHooks.USE_ITEM.registerWith(hooks, (player, world, hand) -> {
             if (!(player instanceof ServerPlayer serverPlayer) || !participants.isParticipating(serverPlayer)) {
                 return InteractionResult.PASS;
             }

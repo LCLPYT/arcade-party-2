@@ -55,7 +55,7 @@ public class DoubleJumpHandler {
     }
 
     public void init(HookRegistrar hooks) {
-        hooks.registerHook(PlayerToggleFlightCallback.HOOK, (player, fly) -> {
+        PlayerToggleFlightCallback.HOOK.registerWith(hooks, (player, fly) -> {
             if (!fly || player.isCreative()) {
                 return false;
             }

@@ -67,7 +67,7 @@ public class InkGrenadeItem implements SpecialItem {
 
     @Override
     public void registerHooks(HookRegistrar hooks, SpecialItemContext ctx) {
-        hooks.registerHook(DeathMessageItemCallback.HOOK, (source, killed, stack) -> ItemStack.EMPTY);
+        DeathMessageItemCallback.HOOK.registerWith(hooks, (source, killed, stack) -> ItemStack.EMPTY);
     }
 
     @Override

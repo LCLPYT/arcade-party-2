@@ -114,12 +114,12 @@ public class AimMasterInstance extends FFAGameInstance implements MapBootstrap {
 
         //hooks
         HookRegistrar hooks = gameHandle.getHooks();
-        hooks.registerHook(PlayerInventoryHooks.SLOT_CHANGE, (player, slot) -> {
+        PlayerInventoryHooks.SLOT_CHANGE.registerWith(hooks, (player, slot) -> {
             if (!(slot == 4)) PlayerInventoryAccess.setSelectedSlot(player, 4);
         });
 
-        hooks.registerHook(PlayerInteractionHooks.USE_ITEM, (player, world, hand) -> invokeRayCaster(player));
-        hooks.registerHook(PlayerSwingHandHook.HOOK, (player, hand) -> invokeRayCaster(player));
+        PlayerInteractionHooks.USE_ITEM.registerWith(hooks, (player, world, hand) -> invokeRayCaster(player));
+        PlayerSwingHandHook.HOOK.registerWith(hooks, (player, hand) -> invokeRayCaster(player));
     }
 
     private @NotNull InteractionResult invokeRayCaster(Player player) {

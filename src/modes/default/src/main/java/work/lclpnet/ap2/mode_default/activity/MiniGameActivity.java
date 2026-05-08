@@ -81,9 +81,9 @@ public class MiniGameActivity extends ComponentActivity {
         new RemakeCommand(handle, remake).register(commands);
 
         HookRegistrar hooks = component(BuiltinComponents.HOOKS).hooks();
-        hooks.registerHook(PlayerAdvancementPacketCallback.HOOK, (player, packet) -> true);
-        hooks.registerHook(PlayerRecipeNotificationCallback.HOOK, (player, recipeEntry, displayEntry) -> true);
-        hooks.registerHook(EntityUsePortalCallback.HOOK, (entity, portal, pos) -> true);
+        PlayerAdvancementPacketCallback.HOOK.registerWith(hooks, (player, packet) -> true);
+        PlayerRecipeNotificationCallback.HOOK.registerWith(hooks, (player, recipeEntry, displayEntry) -> true);
+        EntityUsePortalCallback.HOOK.registerWith(hooks, (entity, portal, pos) -> true);
 
         Scheduler scheduler = component(BuiltinComponents.SCHEDULER).scheduler();
         int maxDurationTicks = instance.getMaxDurationTicks();
@@ -108,8 +108,8 @@ public class MiniGameActivity extends ComponentActivity {
     }
 
     private void registerHooks(HookRegistrar registrar) {
-        registrar.registerHook(PlayerConnectionHooks.JOIN, this::onJoin);
-        registrar.registerHook(PlayerConnectionHooks.QUIT, this::onQuit);
+        PlayerConnectionHooks.JOIN.registerWith(registrar, this::onJoin);
+        PlayerConnectionHooks.QUIT.registerWith(registrar, this::onQuit);
     }
 
     private void onJoin(ServerPlayer player) {

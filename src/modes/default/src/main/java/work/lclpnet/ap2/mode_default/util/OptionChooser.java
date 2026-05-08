@@ -65,7 +65,7 @@ public class OptionChooser<T> {
     }
 
     public void listen(HookRegistrar hooks, BiConsumer<T, ServerPlayer> action) {
-        hooks.registerHook(PlayerInventoryHooks.MODIFY_INVENTORY, event -> {
+        PlayerInventoryHooks.MODIFY_INVENTORY.registerWith(hooks, event -> {
             this.onModifyInventory(event, action);
             return false;
         });

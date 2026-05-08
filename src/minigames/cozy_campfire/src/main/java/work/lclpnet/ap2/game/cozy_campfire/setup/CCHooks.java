@@ -119,9 +119,9 @@ public class CCHooks {
     }
 
     public void register(HookRegistrar hooks) {
-        hooks.registerHook(PlayerSpawnLocationCallback.HOOK, this::onSpawnLocation);
+        PlayerSpawnLocationCallback.HOOK.registerWith(hooks, this::onSpawnLocation);
 
-        hooks.registerHook(ServerLivingEntityHooks.ALLOW_DEATH, (entity, damageSource, damageAmount) -> {
+        ServerLivingEntityHooks.ALLOW_DEATH.registerWith(hooks, (entity, damageSource, damageAmount) -> {
             if (entity instanceof ServerPlayer player) {
                 onDeath(player);
             }
@@ -129,7 +129,7 @@ public class CCHooks {
             return true;
         });
 
-        hooks.registerHook(PlayerInteractionHooks.USE_ENTITY, (player, world, hand, entity, hitResult) -> {
+        PlayerInteractionHooks.USE_ENTITY.registerWith(hooks, (player, world, hand, entity, hitResult) -> {
             if (player instanceof ServerPlayer serverPlayer) {
                 onUseEntity(serverPlayer, hand, entity);
             }
@@ -137,7 +137,7 @@ public class CCHooks {
             return InteractionResult.FAIL;
         });
 
-        hooks.registerHook(ServerLivingEntityHooks.ALLOW_DAMAGE, (entity, source, amount) -> {
+        ServerLivingEntityHooks.ALLOW_DAMAGE.registerWith(hooks, (entity, source, amount) -> {
             if (source.is(DamageTypes.FREEZE) && amount < Float.MAX_VALUE && entity.level() instanceof ServerLevel world) {
                 entity.hurtServer(world, entity.damageSources().freeze(), Float.MAX_VALUE);
                 return false;
@@ -146,7 +146,7 @@ public class CCHooks {
             return true;
         });
 
-        hooks.registerHook(BlockModificationHooks.PLACE_BLOCK, (world, pos, entity, state)
+        BlockModificationHooks.PLACE_BLOCK.registerWith(hooks, (world, pos, entity, state)
                 -> !state.is(Blocks.LADDER));
     }
 

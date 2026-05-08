@@ -50,7 +50,7 @@ public class KitHandler {
     }
 
     public void init(HookRegistrar hooks) {
-        hooks.registerHook(PlayerInteractionHooks.USE_ITEM, (_player, world, hand) -> {
+        PlayerInteractionHooks.USE_ITEM.registerWith(hooks, (_player, world, hand) -> {
             if (!(_player instanceof ServerPlayer player) || !participants.isParticipating(player)) {
                 return InteractionResult.PASS;
             }

@@ -36,7 +36,6 @@ import work.lclpnet.ap2.util.SubtitleCountdown;
 import work.lclpnet.combatctl.impl.CombatStyles;
 import work.lclpnet.gaco.asset.AssetPath;
 import work.lclpnet.kibu.access.entity.ServerPlayerAccess;
-import work.lclpnet.kibu.hook.Hook;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.EntityHealthCallback;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
@@ -204,7 +203,7 @@ public abstract class BaseGameInstance implements MiniGameInstance {
     private void configureLocatorBar() {
         if (locatorBarEnabled) return;
 
-        gameHandle.getHooks().registerHook(PlayerWaypointCallback.HOOK, (player, waypoint)
+        PlayerWaypointCallback.HOOK.registerWith(gameHandle.getHooks(), (player, waypoint)
                 -> waypoint instanceof ServerPlayer);  // hide players from locator by default
 
         if (world != null) {
@@ -345,7 +344,7 @@ public abstract class BaseGameInstance implements MiniGameInstance {
         WorldFacade worldFacade = gameHandle.getWorldFacade();
         PlayerUtil playerUtil = gameHandle.getPlayerUtil();
 
-        hooks.registerHook(ServerLivingEntityHooks.ALLOW_DAMAGE, (entity, source, amount) -> {
+        ServerLivingEntityHooks.ALLOW_DAMAGE.registerWith(hooks, (entity, source, amount) -> {
             if (!source.is(DamageTypes.FELL_OUT_OF_WORLD) || !(entity instanceof ServerPlayer player)) return true;
 
             if (player.isSpectator()) {
@@ -356,9 +355,9 @@ public abstract class BaseGameInstance implements MiniGameInstance {
             return true;
         });
 
-        hooks.registerHook(PlayerSpawnLocationCallback.HOOK, data -> playerUtil.resetPlayer(data.getPlayer()));
+        PlayerSpawnLocationCallback.HOOK.registerWith(hooks, data -> playerUtil.resetPlayer(data.getPlayer()));
 
-        hooks.registerHook(PlayerInteractionHooks.USE_BLOCK, (player, world1, hand, hitResult) -> {
+        PlayerInteractionHooks.USE_BLOCK.registerWith(hooks, (player, world1, hand, hitResult) -> {
             if (player.isCreative() || mapProperties.getBoolean(ApMapProperties.ALLOW_BLOCK_INTERACTION, true)) {
                 return InteractionResult.PASS;
             }
@@ -402,7 +401,7 @@ public abstract class BaseGameInstance implements MiniGameInstance {
     protected final void useNoHealing() {
         HookRegistrar hooks = gameHandle.getHooks();
 
-        hooks.registerHook(EntityHealthCallback.HOOK, (entity, health)
+        EntityHealthCallback.HOOK.registerWith(hooks, (entity, health)
                 -> health > entity.getHealth());
     }
 
@@ -513,10 +512,6 @@ public abstract class BaseGameInstance implements MiniGameInstance {
         String mapPath = Objects.requireNonNull(map, "Map not loaded yet").getDescriptor().getMapPath();
 
         return AssetPath.of(mapPath, path);
-    }
-
-    protected final <T> void registerHook(Hook<T> hook, T listener) {
-        gameHandle.getHooks().registerHook(hook, listener);
     }
 
     protected final boolean isParticipating(ServerPlayer player) {

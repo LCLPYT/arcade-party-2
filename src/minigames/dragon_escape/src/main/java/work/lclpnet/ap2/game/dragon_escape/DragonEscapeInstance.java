@@ -198,7 +198,7 @@ public class DragonEscapeInstance extends FFAGameInstance {
                 new WindChargeKit(kitHandle)
         ));
 
-        gameHandle.getHooks().registerHook(PlayerInteractionHooks.USE_ITEM, (_player, world, hand) -> {
+        PlayerInteractionHooks.USE_ITEM.registerWith(gameHandle.getHooks(), (_player, world, hand) -> {
             if (!(_player instanceof ServerPlayer player)) return InteractionResult.PASS;
 
             ItemStack stack = player.getItemInHand(hand);
@@ -349,7 +349,7 @@ public class DragonEscapeInstance extends FFAGameInstance {
     }
 
     private void setupSmoothDeath() {
-        gameHandle.getHooks().registerHook(EntityHealthCallback.HOOK, (entity, health) -> {
+        EntityHealthCallback.HOOK.registerWith(gameHandle.getHooks(), (entity, health) -> {
             if (!(entity instanceof ServerPlayer player) || health > 0) return false;
 
             // the player is dying

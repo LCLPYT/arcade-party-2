@@ -360,7 +360,7 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
         HookRegistrar hooks = gameHandle.getHooks();
         Participants participants = gameHandle.getParticipants();
 
-        hooks.registerHook(SpectatePlayerCallback.HOOK, (spectator, target)
+        SpectatePlayerCallback.HOOK.registerWith(hooks, (spectator, target)
                 -> participants.isParticipating(spectator));
 
         gameHandle.protect(config -> {
@@ -372,7 +372,7 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
                     && (source.is(DamageTypes.ARROW) || source.is(DamageTypes.PLAYER_EXPLOSION)));
         });
 
-        hooks.registerHook(ServerLivingEntityHooks.ALLOW_DAMAGE, this::onDamage);
+        ServerLivingEntityHooks.ALLOW_DAMAGE.registerWith(hooks, this::onDamage);
     }
 
     private void respawnPlayer(ServerPlayer player) {

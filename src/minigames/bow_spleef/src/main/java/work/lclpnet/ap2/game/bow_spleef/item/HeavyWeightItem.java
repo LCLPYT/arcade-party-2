@@ -51,7 +51,7 @@ public class HeavyWeightItem implements SpecialItem {
 
     @Override
     public void registerHooks(HookRegistrar hooks, SpecialItemContext ctx) {
-        hooks.registerHook(ProjectileShootCallback.HOOK, (shooter, projectile) -> {
+        ProjectileShootCallback.HOOK.registerWith(hooks, (shooter, projectile) -> {
             if (!(shooter instanceof ServerPlayer player)
                     || !(projectile instanceof ThrownEgg)
                     || !ctx.hasSpecialItem(player, this)) return;
@@ -60,7 +60,7 @@ public class HeavyWeightItem implements SpecialItem {
             ctx.removeSpecialItem(player, this);
         });
 
-        hooks.registerHook(ProjectileHitEntityCallback.HOOK, (projectile, hit) -> {
+        ProjectileHitEntityCallback.HOOK.registerWith(hooks, (projectile, hit) -> {
             if (!projectile.entityTags().contains(TAG_HEAVY_WEIGHT)
                     || !(hit.getEntity() instanceof ServerPlayer player)
                     || heavyWeighted.contains(player.getUUID())) return;

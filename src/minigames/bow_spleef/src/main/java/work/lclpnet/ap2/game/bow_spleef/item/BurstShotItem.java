@@ -33,7 +33,7 @@ public class BurstShotItem implements SpecialItem {
 
     @Override
     public void registerHooks(HookRegistrar hooks, SpecialItemContext ctx) {
-        hooks.registerHook(RangedWeaponUsedCallback.HOOK, (entity, stack, remainingUseTicks) -> {
+        RangedWeaponUsedCallback.HOOK.registerWith(hooks, (entity, stack, remainingUseTicks) -> {
             if (!(entity instanceof ServerPlayer player)
                     || stack != player.getInventory().getItem(4)
                     || !(stack.getItem() instanceof BowItem bow)

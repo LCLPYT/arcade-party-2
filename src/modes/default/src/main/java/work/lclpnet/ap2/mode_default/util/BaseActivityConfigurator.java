@@ -34,10 +34,10 @@ public class BaseActivityConfigurator {
 
     public void configureHooks() {
         HookRegistrar hooks = activity.component(BuiltinComponents.HOOKS).hooks();
-        hooks.registerHook(PlayerConnectionHooks.JOIN, this::onJoin);
-        hooks.registerHook(PlayerAdvancementPacketCallback.HOOK, (player, packet) -> true);
-        hooks.registerHook(PlayerRecipeNotificationCallback.HOOK, (player, recipeEntry, displayEntry) -> true);
-        hooks.registerHook(PlayerWaypointCallback.HOOK, (player, waypoint) -> true);
+        PlayerConnectionHooks.JOIN.registerWith(hooks, this::onJoin);
+        PlayerAdvancementPacketCallback.HOOK.registerWith(hooks, (player, packet) -> true);
+        PlayerRecipeNotificationCallback.HOOK.registerWith(hooks, (player, recipeEntry, displayEntry) -> true);
+        PlayerWaypointCallback.HOOK.registerWith(hooks, (player, waypoint) -> true);
     }
 
     public void resetPlayers() {

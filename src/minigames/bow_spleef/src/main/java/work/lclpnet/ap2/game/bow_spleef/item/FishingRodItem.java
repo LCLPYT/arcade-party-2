@@ -30,7 +30,7 @@ public class FishingRodItem implements SpecialItem {
 
     @Override
     public void registerHooks(HookRegistrar hooks, SpecialItemContext ctx) {
-        hooks.registerHook(PlayerInventoryHooks.SLOT_CHANGE, (player, i) -> {
+        PlayerInventoryHooks.SLOT_CHANGE.registerWith(hooks, (player, i) -> {
             if (!ctx.hasSpecialItem(player, this)
                     || player.fishing == null
                     || player.fishing.isRemoved()

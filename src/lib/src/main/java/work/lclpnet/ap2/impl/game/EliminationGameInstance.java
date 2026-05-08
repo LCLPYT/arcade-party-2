@@ -100,7 +100,7 @@ public abstract class EliminationGameInstance extends FFAGameInstance implements
     protected final void useSmoothDeath() {
         HookRegistrar hooks = gameHandle.getHooks();
 
-        hooks.registerHook(EntityHealthCallback.HOOK, (entity, health) -> {
+        EntityHealthCallback.HOOK.registerWith(hooks, (entity, health) -> {
             if (!(entity instanceof ServerPlayer p)) return false;
 
             return GameCommons.handleCustomDeath(p, health, (player, source) -> {

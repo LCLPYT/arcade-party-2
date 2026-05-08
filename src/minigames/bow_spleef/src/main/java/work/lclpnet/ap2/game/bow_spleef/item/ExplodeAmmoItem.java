@@ -42,7 +42,7 @@ public class ExplodeAmmoItem implements SpecialItem {
 
     @Override
     public void registerHooks(HookRegistrar hooks, SpecialItemContext ctx) {
-        hooks.registerHook(ProjectileShootCallback.HOOK, (shooter, projectile) -> {
+        ProjectileShootCallback.HOOK.registerWith(hooks, (shooter, projectile) -> {
             if (!(shooter instanceof ServerPlayer player)
                     || !(projectile instanceof Arrow)
                     || !ctx.hasSpecialItem(player, this)) return;
@@ -52,7 +52,7 @@ public class ExplodeAmmoItem implements SpecialItem {
             player.level().playSound(null, player.getX(), player.getEyeY(), player.getZ(), SoundEvents.TNT_PRIMED, SoundSource.BLOCKS, 0.5f, 1.75f);
         });
 
-        hooks.registerHook(impactHook, (projectile, blockPos) -> {
+        impactHook.registerWith(hooks, (projectile, blockPos) -> {
             if (!(projectile.level() instanceof ServerLevel world)
                     || !projectile.entityTags().contains(TAG_EXPLOSIVE)) return;
 

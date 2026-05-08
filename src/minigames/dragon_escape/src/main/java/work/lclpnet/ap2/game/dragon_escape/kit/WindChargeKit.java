@@ -22,7 +22,7 @@ public class WindChargeKit extends SingleItemKit {
 
     @Override
     public void init(KitOptions options) {
-        handle.hooks().registerHook(ExplosionAffectedEntitiesCallback.HOOK, (explosion, affected) -> {
+        ExplosionAffectedEntitiesCallback.HOOK.registerWith(handle.hooks(), (explosion, affected) -> {
             if (explosion.getDirectSourceEntity() instanceof WindCharge) {
                 LivingEntity owner = explosion.getIndirectSourceEntity();
 

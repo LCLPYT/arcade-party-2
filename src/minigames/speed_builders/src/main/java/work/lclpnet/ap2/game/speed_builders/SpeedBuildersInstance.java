@@ -128,7 +128,7 @@ public class SpeedBuildersInstance extends EliminationGameInstance implements Ma
         config.configureProtection();
         config.registerHooks();
 
-        gameHandle.getHooks().registerHook(ProjectileHooks.HIT_BLOCK, this::onHitBlock);
+        ProjectileHooks.HIT_BLOCK.registerWith(gameHandle.getHooks(), this::onHitBlock);
 
         nextRound();
     }

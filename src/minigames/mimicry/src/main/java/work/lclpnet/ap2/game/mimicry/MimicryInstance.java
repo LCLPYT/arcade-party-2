@@ -101,8 +101,8 @@ public class MimicryInstance extends FFAGameInstance implements MapBootstrap {
 
         manager.eachParticipant((player, room) -> room.teleport(player, world));
 
-        gameHandle.getHooks().registerHook(ServerMessageHooks.ALLOW_CHAT_MESSAGE, (message, sender, params) -> false);
-        gameHandle.getHooks().registerHook(ServerMessageHooks.ALLOW_COMMAND_MESSAGE, (message, sender, params) -> false);
+        ServerMessageHooks.ALLOW_CHAT_MESSAGE.registerWith(gameHandle.getHooks(), (message, sender, params) -> false);
+        ServerMessageHooks.ALLOW_COMMAND_MESSAGE.registerWith(gameHandle.getHooks(), (message, sender, params) -> false);
     }
 
     @Override
@@ -111,7 +111,7 @@ public class MimicryInstance extends FFAGameInstance implements MapBootstrap {
 
         nextSequence();
 
-        gameHandle.getHooks().registerHook(PlayerInteractionHooks.USE_BLOCK, this::onUseBlock);
+        PlayerInteractionHooks.USE_BLOCK.registerWith(gameHandle.getHooks(), this::onUseBlock);
     }
 
     private InteractionResult onUseBlock(Player player, Level world, InteractionHand hand, BlockHitResult hitResult) {

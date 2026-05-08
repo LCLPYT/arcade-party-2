@@ -128,10 +128,10 @@ public class SpecialItems implements SpecialItemContext {
         HookRegistrar hooks = gameHandle.getHooks();
         TaskScheduler scheduler = gameHandle.getScheduler();
 
-        hooks.registerHook(PlayerInventoryHooks.DROP_ITEM, this::onDropItem);
-        hooks.registerHook(PlayerInteractionHooks.USE_ITEM, this::interact);
-        hooks.registerHook(PlayerInventoryHooks.SWAP_HANDS, this::swapHands);
-        hooks.registerHook(PlayerSwingHandHook.HOOK, this::onSwingHand);
+        PlayerInventoryHooks.DROP_ITEM.registerWith(hooks, this::onDropItem);
+        PlayerInteractionHooks.USE_ITEM.registerWith(hooks, this::interact);
+        PlayerInventoryHooks.SWAP_HANDS.registerWith(hooks, this::swapHands);
+        PlayerSwingHandHook.HOOK.registerWith(hooks, this::onSwingHand);
 
         for (SpecialItem item : registry.entries()) {
             item.registerHooks(hooks, this);

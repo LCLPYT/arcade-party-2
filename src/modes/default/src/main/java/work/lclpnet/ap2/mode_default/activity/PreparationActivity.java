@@ -720,7 +720,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
             giveDevelopmentItems(player);
         }
 
-        hooks.registerHook(PlayerInteractionHooks.USE_ITEM, (player, world, hand) -> {
+        PlayerInteractionHooks.USE_ITEM.registerWith(hooks, (player, world, hand) -> {
             if (!(player instanceof ServerPlayer serverPlayer)
                 || !Commands.LEVEL_GAMEMASTERS.check(server.getProfilePermissions(serverPlayer.nameAndId()))) {
 
@@ -741,7 +741,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
             return InteractionResult.SUCCESS_SERVER;
         });
 
-        hooks.registerHook(PlayerConnectionHooks.JOIN, this::giveDevelopmentItems);
+        PlayerConnectionHooks.JOIN.registerWith(hooks, this::giveDevelopmentItems);
 
         gameChooser.listen(hooks, (game, player) -> {
             forceGame(game);

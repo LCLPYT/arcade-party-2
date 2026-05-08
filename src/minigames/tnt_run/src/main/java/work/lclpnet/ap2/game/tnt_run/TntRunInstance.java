@@ -44,7 +44,7 @@ public class TntRunInstance extends EliminationGameInstance {
 
         HookRegistrar hooks = gameHandle.getHooks();
 
-        hooks.registerHook(BlockBreakParticleCallback.HOOK, (world, pos, state) -> true);
+        BlockBreakParticleCallback.HOOK.registerWith(hooks, (world, pos, state) -> true);
     }
 
     @Override

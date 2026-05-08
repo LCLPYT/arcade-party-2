@@ -23,13 +23,13 @@ class RLGLMovementDetector {
     private final Map<UUID, Vec3> fixed = new HashMap<>();
 
     public void init(HookRegistrar hooks) {
-        hooks.registerHook(PlayerMoveCallback.HOOK, (player, from, to) -> {
+        PlayerMoveCallback.HOOK.registerWith(hooks, (player, from, to) -> {
             onMove(player, to);
             return false;
         });
 
-        hooks.registerHook(PlayerConnectionHooks.QUIT, player -> fixed.remove(player.getUUID()));
-        hooks.registerHook(PlayerInputCallback.HOOK, this::onInput);
+        PlayerConnectionHooks.QUIT.registerWith(hooks, player -> fixed.remove(player.getUUID()));
+        PlayerInputCallback.HOOK.registerWith(hooks, this::onInput);
     }
 
     public void register(PlayerAction action) {

@@ -70,13 +70,13 @@ public class ApocalypseSurvivalInstance extends EliminationGameInstance {
         HookRegistrar hooks = gameHandle.getHooks();
 
 
-        hooks.registerHook(ProjectileHooks.HIT_BLOCK, (projectile, hit) -> {
+        ProjectileHooks.HIT_BLOCK.registerWith(hooks, (projectile, hit) -> {
             if (projectile instanceof AbstractArrow) {
                 projectile.discard();
             }
         });
 
-        hooks.registerHook(ServerEntityHooks.ENTITY_LOAD, (entity, relWorld) -> {
+        ServerEntityHooks.ENTITY_LOAD.registerWith(hooks, (entity, relWorld) -> {
             if (relWorld != world) return;
 
 
@@ -90,7 +90,7 @@ public class ApocalypseSurvivalInstance extends EliminationGameInstance {
             }
         });
 
-        hooks.registerHook(ServerEntityHooks.ENTITY_UNLOAD, (entity, relWorld) -> {
+        ServerEntityHooks.ENTITY_UNLOAD.registerWith(hooks, (entity, relWorld) -> {
             if (relWorld == world && entity instanceof Mob mob) {
                 targetManager.removeMob(mob);
             }

@@ -1,7 +1,7 @@
 package work.lclpnet.ap2.impl.util.movement;
 
-import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Input;
 import work.lclpnet.kibu.hook.HookListenerModule;
 import work.lclpnet.kibu.hook.HookRegistrar;
@@ -42,8 +42,8 @@ public class MovementListener implements HookListenerModule {
 
         registered = true;
 
-        registrar.registerHook(PlayerConnectionHooks.QUIT, blocker::enableMovement);
-        registrar.registerHook(PlayerMoveCallback.HOOK, this::onPlayerMove);
+        PlayerConnectionHooks.QUIT.registerWith(registrar, blocker::enableMovement);
+        PlayerMoveCallback.HOOK.registerWith(registrar, this::onPlayerMove);
     }
 
     private boolean onPlayerMove(ServerPlayer player, PositionRotation from, PositionRotation to) {

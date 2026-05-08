@@ -87,7 +87,7 @@ public class MiningBattleInstance extends FFAGameInstance implements MapBootstra
         HookRegistrar hooks = gameHandle.getHooks();
         Participants participants = gameHandle.getParticipants();
 
-        hooks.registerHook(BlockModificationHooks.BREAK_BLOCK, (world, pos, entity) -> {
+        BlockModificationHooks.BREAK_BLOCK.registerWith(hooks, (world, pos, entity) -> {
             if (!(entity instanceof ServerPlayer player) || !participants.isParticipating(player)
                 || winManager.isGameOver() || isOutsideMiningArea(pos)) return false;
 

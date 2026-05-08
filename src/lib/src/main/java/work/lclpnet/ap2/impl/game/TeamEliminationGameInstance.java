@@ -38,7 +38,7 @@ public abstract class TeamEliminationGameInstance extends TeamGameInstance {
     protected final void useSmoothDeath() {
         HookRegistrar hooks = gameHandle.getHooks();
 
-        hooks.registerHook(EntityHealthCallback.HOOK, (entity, health) -> {
+        EntityHealthCallback.HOOK.registerWith(hooks, (entity, health) -> {
             if (!(entity instanceof ServerPlayer player) || health > 0) return false;
 
             eliminate(player);

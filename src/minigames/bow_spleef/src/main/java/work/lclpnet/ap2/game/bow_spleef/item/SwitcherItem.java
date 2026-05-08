@@ -38,7 +38,7 @@ public class SwitcherItem implements SpecialItem {
 
     @Override
     public void registerHooks(HookRegistrar hooks, SpecialItemContext ctx) {
-        hooks.registerHook(ProjectileShootCallback.HOOK, (shooter, projectile) -> {
+        ProjectileShootCallback.HOOK.registerWith(hooks, (shooter, projectile) -> {
             if (!(shooter instanceof ServerPlayer player)
                     || !(projectile instanceof Snowball)
                     || !ctx.hasSpecialItem(player, this)) return;
@@ -47,7 +47,7 @@ public class SwitcherItem implements SpecialItem {
             ctx.removeSpecialItem(player, this);
         });
 
-        hooks.registerHook(ProjectileHitEntityCallback.HOOK, (projectile, hit) -> {
+        ProjectileHitEntityCallback.HOOK.registerWith(hooks, (projectile, hit) -> {
             if (!projectile.entityTags().contains(TAG_SWITCHER)
                     || !(projectile.getOwner() instanceof ServerPlayer shooter)
                     || !(hit.getEntity() instanceof ServerPlayer victim)) return;

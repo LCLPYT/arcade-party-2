@@ -93,13 +93,13 @@ public class MSManager {
     public void init(MiniGameHandle gameHandle) {
         var hooks = gameHandle.getHooks();
 
-        hooks.registerHook(LivingEntityAttributeInitCallback.HOOK, this::initAttributes);
-        hooks.registerHook(BrainCreationCallback.Warden.HOOK, this::createWardenBrain);
-        hooks.registerHook(BrainCreationCallback.Creaking.HOOK, this::createCreakingBrain);
-        hooks.registerHook(EntityPathFindingCallback.HOOK, this::modifyPathFinding);
-        hooks.registerHook(CobwebSlowCallback.HOOK, this::cancelCobwebSlow);
-        hooks.registerHook(EntityAfterMoveCallback.HOOK, this::afterMoveTick);
-        hooks.registerHook(CreakingLookedAtCheckCallback.HOOK, this::isCreakingBeingLookedAt);
+        LivingEntityAttributeInitCallback.HOOK.registerWith(hooks, this::initAttributes);
+        BrainCreationCallback.Warden.HOOK.registerWith(hooks, this::createWardenBrain);
+        BrainCreationCallback.Creaking.HOOK.registerWith(hooks, this::createCreakingBrain);
+        EntityPathFindingCallback.HOOK.registerWith(hooks, this::modifyPathFinding);
+        CobwebSlowCallback.HOOK.registerWith(hooks, this::cancelCobwebSlow);
+        EntityAfterMoveCallback.HOOK.registerWith(hooks, this::afterMoveTick);
+        CreakingLookedAtCheckCallback.HOOK.registerWith(hooks, this::isCreakingBeingLookedAt);
     }
 
     public void spawnMobs() {

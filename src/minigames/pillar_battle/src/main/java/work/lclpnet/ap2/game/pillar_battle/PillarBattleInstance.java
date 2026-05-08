@@ -141,7 +141,7 @@ public class PillarBattleInstance extends EliminationGameInstance implements Map
 
         var hooks = gameHandle.getHooks();
 
-        hooks.registerHook(ServerLivingEntityHooks.ALLOW_DAMAGE, (entity, source, amount) -> {
+        ServerLivingEntityHooks.ALLOW_DAMAGE.registerWith(hooks, (entity, source, amount) -> {
             if (entity instanceof ServerPlayer player && player.getFoodData().getFoodLevel() >= 20) {
                 player.getFoodData().addExhaustion(12);
                 player.getFoodData().setSaturation(0);
@@ -160,7 +160,7 @@ public class PillarBattleInstance extends EliminationGameInstance implements Map
 
         BlockPos center = pillars.center();
 
-        hooks.registerHook(ServerEntityHooks.ENTITY_LOAD, (entity, _) -> {
+        ServerEntityHooks.ENTITY_LOAD.registerWith(hooks, (entity, _) -> {
             if (!(entity instanceof EnderDragon dragon)) return;
 
             EnderDragonFight fight = new EnderDragonFight(false, false, false, Optional.empty(), 0, Optional.of(dragon.getUUID()), Optional.of(center), List.of(), List.of());

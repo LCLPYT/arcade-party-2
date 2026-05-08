@@ -70,7 +70,7 @@ public class TreasureHunterInstance extends FFAGameInstance {
         Translations translations = gameHandle.getTranslations();
         HookRegistrar hooks = gameHandle.getHooks();
 
-        hooks.registerHook(PlayerInteractionHooks.USE_BLOCK, (player, world, hand, hitResult) -> {
+        PlayerInteractionHooks.USE_BLOCK.registerWith(hooks, (player, world, hand, hitResult) -> {
             if (!(player instanceof ServerPlayer serverPlayer) || !participants.isParticipating(serverPlayer)
                 || !world.getBlockState(hitResult.getBlockPos()).is(Blocks.CHEST)) {
                 return InteractionResult.PASS;
@@ -94,7 +94,7 @@ public class TreasureHunterInstance extends FFAGameInstance {
             return InteractionResult.SUCCESS_SERVER;
         });
 
-        hooks.registerHook(PlayerInteractionHooks.BREAK_BLOCK, (world, player, pos, state, blockEntity) -> {
+        PlayerInteractionHooks.BREAK_BLOCK.registerWith(hooks, (world, player, pos, state, blockEntity) -> {
             if (!(player instanceof ServerPlayer serverPlayer) || !participants.isParticipating(serverPlayer)) {
                 return true;
             }
