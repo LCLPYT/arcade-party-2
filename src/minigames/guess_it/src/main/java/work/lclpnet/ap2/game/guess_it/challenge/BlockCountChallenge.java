@@ -139,7 +139,7 @@ public class BlockCountChallenge<S extends BlockShape & BlockShape.WithRadius & 
         }
 
         if (DEBUG_SHAPES) {
-            debugController.exclusive("shape", d -> {});
+            debugController.exclusive("shape", _ -> {});
         }
     }
 

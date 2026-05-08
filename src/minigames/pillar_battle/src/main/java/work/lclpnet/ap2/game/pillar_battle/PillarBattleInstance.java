@@ -141,7 +141,7 @@ public class PillarBattleInstance extends EliminationGameInstance implements Map
 
         var hooks = gameHandle.getHooks();
 
-        ServerLivingEntityHooks.ALLOW_DAMAGE.registerWith(hooks, (entity, source, amount) -> {
+        ServerLivingEntityHooks.ALLOW_DAMAGE.registerWith(hooks, (entity, _, _) -> {
             if (entity instanceof ServerPlayer player && player.getFoodData().getFoodLevel() >= 20) {
                 player.getFoodData().addExhaustion(12);
                 player.getFoodData().setSaturation(0);
@@ -202,7 +202,7 @@ public class PillarBattleInstance extends EliminationGameInstance implements Map
 
         for (ServerPlayer player : gameHandle.getParticipants()) {
             UUID uuid = player.getUUID();
-            Warning warning = warnings.computeIfAbsent(uuid, u -> new Warning());
+            Warning warning = warnings.computeIfAbsent(uuid, _ -> new Warning());
 
             double dx = totalRadius - Math.abs(cx + 0.5 - player.getX());
             double dz = totalRadius - Math.abs(cz + 0.5 - player.getZ());

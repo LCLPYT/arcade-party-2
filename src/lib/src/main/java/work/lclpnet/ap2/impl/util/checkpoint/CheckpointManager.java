@@ -41,7 +41,7 @@ public class CheckpointManager {
     }
 
     public Checkpoint getCheckpoint(ServerPlayer player) {
-        return playerCheckpoints.computeIfAbsent(player.getUUID(), uuid -> checkpoints.getFirst());
+        return playerCheckpoints.computeIfAbsent(player.getUUID(), _ -> checkpoints.getFirst());
     }
 
     public boolean grantCheckpoint(ServerPlayer player, int grant) {

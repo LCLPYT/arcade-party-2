@@ -205,7 +205,7 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
                 .then(this::resetPlayerToCheckpoint);
 
         // disable drip leaf tilt for players in goal
-        DripLeafTiltCallback.HOOK.registerWith(hooks, (entity, pos) -> entity instanceof ServerPlayer player
+        DripLeafTiltCallback.HOOK.registerWith(hooks, (entity, _) -> entity instanceof ServerPlayer player
                 && inGoal.contains(player.getUUID()));
     }
 
@@ -419,8 +419,8 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
             cancelPreviousTask();
             task = gameHandle.getScheduler().timeout(this::nextSegment, NEXT_PHASE_WAIT_TICKS);
 
-            waitFor = jumpAndRun.unloadPreviousModule().whenComplete((res, err) -> waitFor = null);
-        })).whenComplete((_res, err) -> {
+            waitFor = jumpAndRun.unloadPreviousModule().whenComplete((_, _) -> waitFor = null);
+        })).whenComplete((_, err) -> {
             if (err != null) {
                 gameHandle.getLogger().error("Failed to load module", err);
             }

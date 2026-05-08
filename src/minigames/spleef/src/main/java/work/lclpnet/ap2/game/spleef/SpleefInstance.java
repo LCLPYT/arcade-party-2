@@ -57,7 +57,7 @@ public class SpleefInstance extends EliminationGameInstance {
                 return state.is(Blocks.SNOW_BLOCK);
             });
 
-            config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, damageSource)
+            config.allow(ProtectionTypes.ALLOW_DAMAGE, (_, damageSource)
                     -> damageSource.is(DamageTypes.LAVA) || damageSource.is(DamageTypes.OUTSIDE_BORDER));
         });
 

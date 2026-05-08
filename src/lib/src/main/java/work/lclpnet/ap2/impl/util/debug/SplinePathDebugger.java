@@ -92,7 +92,7 @@ public class SplinePathDebugger {
     }
 
     public void renderLiveProgress(Supplier<Iterable<? extends Entity>> playerGetter, TaskScheduler scheduler) {
-        renderLiveProgress(playerGetter, scheduler, entity -> -1);
+        renderLiveProgress(playerGetter, scheduler, _ -> -1);
     }
 
     public void renderLiveProgress(Supplier<Iterable<? extends Entity>> entities, TaskScheduler scheduler,
@@ -140,7 +140,7 @@ public class SplinePathDebugger {
             markers.put(entity.getUUID(), new Marker(obj, new MutableInt(originalColor)));
         }
 
-        scheduler.interval(info -> {
+        scheduler.interval(_ -> {
             Set<UUID> removal = new HashSet<>(markers.keySet());
 
             for (Entity entity : entities.get()) {

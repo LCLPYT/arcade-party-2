@@ -89,7 +89,7 @@ public class MinecraftDayTime {
             if (secondStr != null) {
                 second = Integer.parseInt(secondStr, 10);
             }
-        } catch (NumberFormatException e) {
+        } catch (NumberFormatException _) {
             return Optional.empty();
         }
 

@@ -41,7 +41,7 @@ public class MusicHelper {
         loadable.load(cache, logger)
                 .thenAccept(config -> playSong(wrapper, config, volume, LoopOverride.DEFAULT,
                         config.info().meta().startTick().orElse(0), players, server))
-                .whenComplete((res, err) -> {
+                .whenComplete((_, err) -> {
                     if (err == null) return;
 
                     logger.error("Failed to load song {}", loadable.getId(), err);

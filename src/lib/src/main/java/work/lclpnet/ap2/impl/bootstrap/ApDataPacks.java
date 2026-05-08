@@ -64,7 +64,7 @@ public class ApDataPacks implements GameDataPacks {
 
                     fetchDataPacks(mapManager, maps, dataPackSink);
                 })
-                .whenComplete((nil, err) -> {
+                .whenComplete((_, err) -> {
                     if (err != null) {
                         logger.error("Failed to locate data packs");
                     }

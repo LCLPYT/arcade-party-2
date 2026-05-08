@@ -81,7 +81,7 @@ public enum DyeTeamKey implements TeamKey {
     public static @Nullable DyeTeamKey byId(String id) {
         try {
             return DyeTeamKey.valueOf(id.toUpperCase(Locale.ROOT));
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException _) {
             return null;
         }
     }

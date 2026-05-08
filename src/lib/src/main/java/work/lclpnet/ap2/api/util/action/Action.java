@@ -4,7 +4,7 @@ import work.lclpnet.kibu.hook.Registrable;
 
 public interface Action<T> {
 
-    Action<?> NOOP = action -> {};
+    Action<?> NOOP = _ -> {};
 
     void then(T action);
 

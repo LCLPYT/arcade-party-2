@@ -83,7 +83,7 @@ public class CozyCampfireInstance extends TeamEliminationGameInstance implements
 
         return setup.readBases(teamManager.getTeams())
                 .thenAccept(bases -> baseManager = new CCBaseManager(bases, teamManager))
-                .thenCompose(nil -> Objects.requireNonNull(world.getServer()).submit(() -> {
+                .thenCompose(_ -> Objects.requireNonNull(world.getServer()).submit(() -> {
                     setupGameRules(map, world);
                     randomizeWorldConditions(world);
                 }));

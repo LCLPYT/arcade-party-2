@@ -45,7 +45,7 @@ public class CombatIdleManager {
     public void enable(TaskScheduler scheduler, HookRegistrar hooks) {
         scheduler.interval(this::tick, 1);
 
-        ServerLivingEntityHooks.ALLOW_DAMAGE.registerWith(hooks, (entity, source, amount) -> {
+        ServerLivingEntityHooks.ALLOW_DAMAGE.registerWith(hooks, (_, source, _) -> {
             if (source.getEntity() instanceof ServerPlayer player) {
                 onAttack(player);
             }
@@ -72,7 +72,7 @@ public class CombatIdleManager {
         outOfCombat.keySet().removeIf(uuid -> !participants.isParticipating(uuid));
 
         for (ServerPlayer player : participants) {
-            int ticks = outOfCombat.computeInt(player.getUUID(), (uuid, t) -> t == null ? 1 : t + 1);
+            int ticks = outOfCombat.computeInt(player.getUUID(), (_, t) -> t == null ? 1 : t + 1);
 
             if (ticks == triggerTicks) {
                 onEnterIdle.invoker().act(player);

@@ -68,7 +68,7 @@ public class SplashyDropperInstance extends FFAGameInstance implements MapBootst
         movementBlocker.setModifySpeedAttribute(false);
 
         gameHandle.getPlayerUtil().setDefaultCombatStyle(CombatStyles.CLASSIC
-                .andThen(player -> player.setDisableOldBobbing(true), global -> {}));
+                .andThen(player -> player.setDisableOldBobbing(true), _ -> {}));
     }
 
     @Override

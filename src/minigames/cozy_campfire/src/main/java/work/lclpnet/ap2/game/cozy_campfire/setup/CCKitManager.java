@@ -56,7 +56,7 @@ public class CCKitManager {
         inventory.setItem(4, hoe);
 
         RegistryAccess registryManager = world.registryAccess();
-        var trimPattern = patterns.computeIfAbsent(player.getUUID(), uuid -> ItemHelper.getRandomTrimPattern(registryManager, random));
+        var trimPattern = patterns.computeIfAbsent(player.getUUID(), _ -> ItemHelper.getRandomTrimPattern(registryManager, random));
         var trimMaterialKey = teamManager.getTeam(player)
                 .map(team -> team.key().equals(CozyCampfireInstance.TEAM_RED) ? TrimMaterials.REDSTONE : TrimMaterials.LAPIS)
                 .orElse(TrimMaterials.IRON);

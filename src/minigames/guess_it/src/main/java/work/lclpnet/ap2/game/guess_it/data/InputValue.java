@@ -67,7 +67,7 @@ public class InputValue {
 
         try {
             f = Float.parseFloat(s);
-        } catch (NumberFormatException e) {
+        } catch (NumberFormatException _) {
             return Optional.empty();
         }
 
@@ -82,7 +82,7 @@ public class InputValue {
         try {
             int i = Integer.parseInt(s, 10);
             return Optional.of(String.valueOf(i));
-        } catch (NumberFormatException e) {
+        } catch (NumberFormatException _) {
             return Optional.empty();
         }
     }

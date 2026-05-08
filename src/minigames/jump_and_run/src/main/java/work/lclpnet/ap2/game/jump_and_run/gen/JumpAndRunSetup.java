@@ -48,7 +48,7 @@ public class JumpAndRunSetup {
         var jnr = new JumpAndRun(map, gameHandle.getSubWorldManager(), modules, schemaLoader, gameHandle.getServer(),
                 parts, generator);
 
-        return jnr.loadModule().thenApply(res -> jnr);
+        return jnr.loadModule().thenApply(_ -> jnr);
     }
 
     private CompletableFuture<Parts> readParts() {

@@ -61,7 +61,7 @@ public class SbSetup {
                 .thenApply(islands -> this.islandProtos = List.copyOf(islands))
                 .thenComposeAsync(islands -> loadModules(world, buildAreaDimensions(islands)))
                 .thenAccept(modules -> this.modules = List.copyOf(modules))
-                .thenComposeAsync(nil -> loadCenterIsland(map, world))
+                .thenComposeAsync(_ -> loadCenterIsland(map, world))
                 .thenAccept(centerIsland -> this.centerIsland = centerIsland);
     }
 

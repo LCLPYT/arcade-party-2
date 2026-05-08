@@ -43,7 +43,7 @@ public class TripleShotItem implements SpecialItem {
 
     @Override
     public void registerHooks(HookRegistrar hooks, SpecialItemContext ctx) {
-        RangedWeaponUsedCallback.HOOK.registerWith(hooks, (entity, stack, remainingUseTicks) -> {
+        RangedWeaponUsedCallback.HOOK.registerWith(hooks, (entity, stack, _) -> {
             if (!(entity instanceof ServerPlayer player)
                     || stack != player.getInventory().getItem(4)
                     || !ctx.hasSpecialItem(player, this)) return;

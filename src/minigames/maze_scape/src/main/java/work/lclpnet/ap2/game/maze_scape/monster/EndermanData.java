@@ -182,7 +182,7 @@ public class EndermanData implements MonsterData<EnderMan> {
 
             if (DEBUG_TARGET_FLEE_POS) {
                 DebugController parent = args.manager().debugController().parent();
-                parent.renderer().ifPresent(renderer -> parent.exclusive("target_flee_pos", c -> {
+                parent.renderer().ifPresent(renderer -> parent.exclusive("target_flee_pos", _ -> {
                     if (optPath.isEmpty()) return;
 
                     BlockPos pos = optPath.get().getTarget();
@@ -277,7 +277,7 @@ public class EndermanData implements MonsterData<EnderMan> {
         frozenTimer = 0;
 
         if (DEBUG_TARGET_FLEE_POS) {
-            args.manager().debugController().parent().exclusive("target_flee_pos", debugger -> {});
+            args.manager().debugController().parent().exclusive("target_flee_pos", _ -> {});
         }
 
         removeAttributeModifier(mob, MOVEMENT_SPEED, FLEE_BONUS_ID);

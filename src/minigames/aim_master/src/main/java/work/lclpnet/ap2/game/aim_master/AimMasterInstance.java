@@ -70,7 +70,7 @@ public class AimMasterInstance extends FFAGameInstance implements MapBootstrap {
     @Override
     public @NotNull CompletableFuture<Void> createWorldBootstrap(@NotNull ServerLevel world, @NotNull GameMap map) {
 
-        var generator = new StackedRoomGenerator<>(world, map, StackedRoomGenerator.Coordinates.RELATIVE, (pos, spawn, yaw, structure) -> new AimMasterDomain(spawn, yaw, world));
+        var generator = new StackedRoomGenerator<>(world, map, StackedRoomGenerator.Coordinates.RELATIVE, (_, spawn, yaw, _) -> new AimMasterDomain(spawn, yaw, world));
         var positionGenerator = new PositionGenerator(SPHERE_RADIUS, SPHERE_OFFSET, UPWARD_TILT, ELLIPSE_FACTOR, new BlockPos(0, 0, 0), CONE_FOV, TARGET_NUMBER, TARGET_MIN_DISTANCE);
         var blockOptions = new BlockOptions();
         var sequenceGenerator = new SequenceGenerator(positionGenerator, blockOptions, scoreGoal);
@@ -118,8 +118,8 @@ public class AimMasterInstance extends FFAGameInstance implements MapBootstrap {
             if (!(slot == 4)) PlayerInventoryAccess.setSelectedSlot(player, 4);
         });
 
-        PlayerInteractionHooks.USE_ITEM.registerWith(hooks, (player, world, hand) -> invokeRayCaster(player));
-        PlayerSwingHandHook.HOOK.registerWith(hooks, (player, hand) -> invokeRayCaster(player));
+        PlayerInteractionHooks.USE_ITEM.registerWith(hooks, (player, _, _) -> invokeRayCaster(player));
+        PlayerSwingHandHook.HOOK.registerWith(hooks, (player, _) -> invokeRayCaster(player));
     }
 
     private @NotNull InteractionResult invokeRayCaster(Player player) {

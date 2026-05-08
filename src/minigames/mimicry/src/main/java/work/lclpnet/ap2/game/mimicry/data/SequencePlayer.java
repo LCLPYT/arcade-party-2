@@ -46,7 +46,7 @@ public class SequencePlayer implements SchedulerAction {
                 info.cancel();
             }
 
-            manager.eachParticipant((player, room) -> room.resetActiveButton(world));
+            manager.eachParticipant((_, room) -> room.resetActiveButton(world));
 
             return;
         }

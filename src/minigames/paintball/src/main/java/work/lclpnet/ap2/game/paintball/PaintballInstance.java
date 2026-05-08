@@ -360,7 +360,7 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
         HookRegistrar hooks = gameHandle.getHooks();
         Participants participants = gameHandle.getParticipants();
 
-        SpectatePlayerCallback.HOOK.registerWith(hooks, (spectator, target)
+        SpectatePlayerCallback.HOOK.registerWith(hooks, (spectator, _)
                 -> participants.isParticipating(spectator));
 
         gameHandle.protect(config -> {

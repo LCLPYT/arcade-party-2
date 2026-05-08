@@ -1,10 +1,10 @@
 package work.lclpnet.ap2.game.maze_scape.setup;
 
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.core.BlockPos;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.BlockState;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.game.maze_scape.gen.Graph;
 import work.lclpnet.ap2.game.maze_scape.gen.GraphGenerator;
@@ -299,7 +299,7 @@ public class MSGenerator {
 
             try {
                 generatorThread.join(GENERATOR_MAX_DURATION_MS);
-            } catch (InterruptedException ignored) {} finally {
+            } catch (InterruptedException _) {} finally {
                 if (generatorThread.isAlive()) {
                     logger.error("Generator thread is taking too long. Interrupting it...");
                     generator.interrupt();
@@ -335,7 +335,7 @@ public class MSGenerator {
         for (int i = 0; i < GENERATOR_MAX_TRIES; i++) {
             domain.reset();
 
-            var res = generator.generateGraph(loaded.startPiece(), g -> domain.totalArea() < targetArea);
+            var res = generator.generateGraph(loaded.startPiece(), _ -> domain.totalArea() < targetArea);
             var type = res.type();
 
             if (type == INTERRUPTED) {

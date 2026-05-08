@@ -20,7 +20,7 @@ public class SimplePlayerBossBar implements PlayerBossBar {
 
     @Override
     public ServerBossEvent getBossBar(ServerPlayer player) {
-        return bossBars.computeIfAbsent(player.getUUID(), uuid -> factory.apply(player));
+        return bossBars.computeIfAbsent(player.getUUID(), _ -> factory.apply(player));
     }
 
     @Override

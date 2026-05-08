@@ -160,7 +160,7 @@ public class MonsterSpawner<S extends BlockShape & BlockShape.WithRadius> {
         GoalModifier.clear(goalSelector);
         GoalModifier.clear(mobAccess.getTargetSelector());
 
-        goalSelector.addGoal(1, new BreakDoorGoal(zombie, difficulty -> true));
+        goalSelector.addGoal(1, new BreakDoorGoal(zombie, _ -> true));
         goalSelector.addGoal(2, new ZombieAttackGoal(zombie, 1.4, false));
         goalSelector.addGoal(7, new RoamGoal(zombie, targetManager, 1.25));
         goalSelector.addGoal(8, new UnstuckGoal(zombie, random));
@@ -199,7 +199,7 @@ public class MonsterSpawner<S extends BlockShape & BlockShape.WithRadius> {
         GoalModifier.clear(goalSelector);
         GoalModifier.clear(mobAccess.getTargetSelector());
 
-        goalSelector.addGoal(1, new BreakDoorGoal(skeleton, difficulty -> true));
+        goalSelector.addGoal(1, new BreakDoorGoal(skeleton, _ -> true));
         goalSelector.addGoal(7, new RoamGoal(skeleton, targetManager, 1.25));
         goalSelector.addGoal(8, new UnstuckGoal(skeleton, random));
 

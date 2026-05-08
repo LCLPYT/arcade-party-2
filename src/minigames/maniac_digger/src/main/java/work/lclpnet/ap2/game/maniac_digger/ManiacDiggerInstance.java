@@ -116,10 +116,10 @@ public class ManiacDiggerInstance extends FFAGameInstance implements MapBootstra
 
         HookRegistrar hooks = gameHandle.getHooks();
 
-        BlockModificationHooks.BREAK_BLOCK.registerWith(hooks, (world, pos, entity) ->
+        BlockModificationHooks.BREAK_BLOCK.registerWith(hooks, (_, pos, entity) ->
                 !(entity instanceof ServerPlayer player) || !canBreak(player, pos));
 
-        PlayerInteractionHooks.ATTACK_BLOCK.registerWith(hooks, (player, world, hand, pos, direction) -> {
+        PlayerInteractionHooks.ATTACK_BLOCK.registerWith(hooks, (player, _, _, pos, _) -> {
             if (player instanceof ServerPlayer serverPlayer && canBreak(serverPlayer, pos)) {
                 onHitBlock(serverPlayer, pos);
             }

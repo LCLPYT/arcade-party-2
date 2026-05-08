@@ -27,7 +27,7 @@ public final class TeamStorage<T> {
     }
 
     public T get(Team team, Supplier<T> supplier) {
-        return get(team, t -> supplier.get());
+        return get(team, _ -> supplier.get());
     }
 
     public T get(Team team, Function<Team, T> factory) {
@@ -43,11 +43,11 @@ public final class TeamStorage<T> {
     }
 
     public static <T> TeamStorage<T> create(Supplier<T> supplier) {
-        return new TeamStorage<>(team -> supplier.get(), null);
+        return new TeamStorage<>(_ -> supplier.get(), null);
     }
 
     public static <T> TeamStorage<T> ofFixed(Map<Team, T> values) {
-        return new TeamStorage<>(team -> {
+        return new TeamStorage<>(_ -> {
             throw new UnsupportedOperationException("Default factory is undefined");
         }, values);
     }

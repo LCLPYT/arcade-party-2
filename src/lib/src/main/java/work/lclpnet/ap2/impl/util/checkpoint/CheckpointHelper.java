@@ -39,7 +39,7 @@ public class CheckpointHelper {
     private CheckpointHelper() {}
 
     public static void notifyWhenReached(CheckpointManager manager, Translations translations) {
-        manager.whenCheckpointReached((player, checkpoint) -> {
+        manager.whenCheckpointReached((player, _) -> {
             var msg = translations.translateText(player, "game.ap2.reached_checkpoint").formatted(ChatFormatting.GREEN);
 
             player.sendOverlayMessage(msg);
@@ -50,10 +50,10 @@ public class CheckpointHelper {
     public static Action<PlayerAction> setupResetItem(HookRegistrar hooks, BooleanSupplier disabled, Predicate<ServerPlayer> eligible) {
         var hook = PlayerAction.createHook();
 
-        PlayerInteractionHooks.USE_ITEM.registerWith(hooks, (player, world1, hand)
+        PlayerInteractionHooks.USE_ITEM.registerWith(hooks, (player, _, hand)
                 -> handleUse(disabled, eligible, player, hand, hook));
 
-        PlayerInteractionHooks.USE_BLOCK.registerWith(hooks, (player, world1, hand, hitResult)
+        PlayerInteractionHooks.USE_BLOCK.registerWith(hooks, (player, _, hand, _)
                 -> handleUse(disabled, eligible, player, hand, hook));
 
         return Action.create(hook);
@@ -78,7 +78,7 @@ public class CheckpointHelper {
     public static Action<PlayerAction> whenFallingIntoLava(HookRegistrar hooks, Predicate<ServerPlayer> predicate) {
         var hook = PlayerAction.createHook();
 
-        PlayerMoveCallback.HOOK.registerWith(hooks, (player, from, to) -> {
+        PlayerMoveCallback.HOOK.registerWith(hooks, (player, _, _) -> {
             if (!predicate.test(player)) return false;
 
             BlockState state = player.level().getBlockState(player.blockPosition());

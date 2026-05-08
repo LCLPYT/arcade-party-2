@@ -142,7 +142,7 @@ public class MusicalMinecartInstance extends EliminationGameInstance implements 
 
         HookRegistrar hooks = gameHandle.getHooks();
 
-        EntityMountCallback.HOOK.registerWith(hooks, (entity, vehicle, force) -> {
+        EntityMountCallback.HOOK.registerWith(hooks, (_, vehicle, _) -> {
             if (vehicle.isCurrentlyGlowing()) {
                 vehicle.setGlowingTag(false);
             }
@@ -150,7 +150,7 @@ public class MusicalMinecartInstance extends EliminationGameInstance implements 
             return false;
         });
 
-        EntityDismountCallback.HOOK.registerWith(hooks, (entity, vehicle) -> {
+        EntityDismountCallback.HOOK.registerWith(hooks, (_, vehicle) -> {
             if (minecartsGlowing && vehicle instanceof Minecart) {
                 vehicle.setGlowingTag(true);
             }

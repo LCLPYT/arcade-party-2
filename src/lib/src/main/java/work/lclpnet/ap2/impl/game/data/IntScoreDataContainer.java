@@ -63,7 +63,7 @@ public class IntScoreDataContainer<T, Ref extends SubjectRef> extends BaseDataCo
     }
 
     public synchronized int addScore(Ref ref, int add) {
-        return scoreMap.compute(ref, (r, score) -> (score != null ? score : 0) + add);
+        return scoreMap.compute(ref, (_, score) -> (score != null ? score : 0) + add);
     }
 
     @Override
@@ -72,7 +72,7 @@ public class IntScoreDataContainer<T, Ref extends SubjectRef> extends BaseDataCo
     }
 
     public synchronized @NotNull Integer getScore(Ref ref) {
-        return scoreMap.computeIfAbsent(ref, r -> 0);
+        return scoreMap.computeIfAbsent(ref, _ -> 0);
     }
 
     @Override

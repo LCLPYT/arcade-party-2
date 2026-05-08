@@ -42,7 +42,7 @@ class FineTuningSetup {
         return generator.generate(gameHandle.getParticipants())
                 .thenApply(StackedRoomGenerator.Result::rooms)
                 .thenAccept(this.rooms::putAll)
-                .thenCompose(nil -> world.getServer().submit(this::setupRooms))
+                .thenCompose(_ -> world.getServer().submit(this::setupRooms))
                 .exceptionally(throwable -> {
                     gameHandle.getLogger().error("Failed to create rooms", throwable);
                     return null;

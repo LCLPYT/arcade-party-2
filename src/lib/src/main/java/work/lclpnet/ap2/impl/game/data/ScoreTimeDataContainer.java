@@ -63,7 +63,7 @@ public class ScoreTimeDataContainer<T, Ref extends SubjectRef> extends BaseDataC
 
         synchronized (this) {
             Ref ref = refs.create(subject);
-            score = this.score.compute(ref, (_ref, prev) -> (prev != null ? prev : 0) + add);
+            score = this.score.compute(ref, (_, prev) -> (prev != null ? prev : 0) + add);
             modified(ref);
         }
 

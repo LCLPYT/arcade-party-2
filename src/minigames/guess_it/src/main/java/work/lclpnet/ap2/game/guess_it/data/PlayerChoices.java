@@ -36,7 +36,7 @@ public class PlayerChoices {
         try {
             int i = Integer.parseInt(c, 10);
             return OptionalInt.of(i);
-        } catch (NumberFormatException e) {
+        } catch (NumberFormatException _) {
             return OptionalInt.empty();
         }
     }
@@ -54,7 +54,7 @@ public class PlayerChoices {
         try {
             float f = format.parse(c).floatValue();
             return Optional.of(f);
-        } catch (ParseException e) {
+        } catch (ParseException _) {
             return Optional.empty();
         }
     }

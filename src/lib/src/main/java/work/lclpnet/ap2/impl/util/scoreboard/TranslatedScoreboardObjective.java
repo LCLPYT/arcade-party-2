@@ -83,7 +83,7 @@ public class TranslatedScoreboardObjective implements
 
         CustomObjective objective = getLocalizedObjective(language);
 
-        objectivePlayers.computeIfAbsent(objective, ignored -> new HashSet<>()).add(uuid);
+        objectivePlayers.computeIfAbsent(objective, _ -> new HashSet<>()).add(uuid);
 
         objective.add(player);
         objective.setDisplay(player, slot);
@@ -237,7 +237,7 @@ public class TranslatedScoreboardObjective implements
             return entries.getOrDefault(scoreHolder, defaultEntry);
         }
 
-        return entries.computeIfAbsent(scoreHolder, s -> {
+        return entries.computeIfAbsent(scoreHolder, _ -> {
             Component display = displayFunction.apply(scoreHolder);
             return defaultEntry.withDisplay(display);
         });

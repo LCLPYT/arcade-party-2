@@ -37,7 +37,7 @@ public class ScoreboardUtil {
         var objective = manager.createDynamicObjective("score", title::translateFor);
 
         objective.setSlot(DisplaySlot.SIDEBAR);
-        objective.setDefaultDisplay((player, holder) -> Component.literal(holder).withStyle(GREEN));
+        objective.setDefaultDisplay((_, holder) -> Component.literal(holder).withStyle(GREEN));
         objective.setDefaultNumberFormat(StyledFormat.PLAYER_LIST_DEFAULT);
 
         // separators at top and bottom

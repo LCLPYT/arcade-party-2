@@ -84,7 +84,7 @@ public class BowSpleefInstance extends EliminationGameInstance {
         });
 
         gameHandle.getPlayerUtil().setDefaultCombatStyle(CombatStyles.CLASSIC.andThen(playerConfig
-                -> playerConfig.setFishingRodPull(true), globalConfig -> {}));
+                -> playerConfig.setFishingRodPull(true), _ -> {}));
     }
 
     @Override
@@ -95,7 +95,7 @@ public class BowSpleefInstance extends EliminationGameInstance {
 
         HookRegistrar hooks = gameHandle.getHooks();
 
-        BlockBreakParticleCallback.HOOK.registerWith(hooks, (world, pos, state) -> true);
+        BlockBreakParticleCallback.HOOK.registerWith(hooks, (_, _, _) -> true);
 
         Hook<Impact> impactHook = HookFactory.createArrayBacked(Impact.class, callbacks -> (projectile, pos) -> {
             for (Impact callback : callbacks) {
@@ -116,7 +116,7 @@ public class BowSpleefInstance extends EliminationGameInstance {
         });
 
         // don't spawn chickens from thrown eggs
-        EntitySpawnCallback.HOOK.registerWith(hooks, (entity, world) -> entity instanceof Chicken);
+        EntitySpawnCallback.HOOK.registerWith(hooks, (entity, _) -> entity instanceof Chicken);
 
         commons().whenBelowCriticalHeight().then(this::eliminate);
 
@@ -145,7 +145,7 @@ public class BowSpleefInstance extends EliminationGameInstance {
     @Override
     protected void go() {
         gameHandle.protect(config -> {
-            config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, damageSource)
+            config.allow(ProtectionTypes.ALLOW_DAMAGE, (_, damageSource)
                     -> damageSource.is(DamageTypes.OUTSIDE_BORDER)
                     || (damageSource.is(DamageTypes.THROWN) && damageSource.getDirectEntity() instanceof FishingHook));
 

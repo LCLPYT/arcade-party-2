@@ -134,28 +134,28 @@ public class GuessItInstance extends FFAGameInstance implements MapBootstrap {
         setupScoreboard();
 
         // ignore daylight affection for undead mobs
-        AffectedByDaylightCallback.HOOK.registerWith(hooks, entity -> true);
+        AffectedByDaylightCallback.HOOK.registerWith(hooks, _ -> true);
 
         // prevent entity conversion, e.g. piglin -> zombified piglin
-        EntityConvertCallback.HOOK.registerWith(hooks, (entity, type) -> true);
+        EntityConvertCallback.HOOK.registerWith(hooks, (_, _) -> true);
 
         // prevent entity teleportation
-        EntityTeleportCallback.HOOK.registerWith(hooks, (entity, x, y, z) -> true);
+        EntityTeleportCallback.HOOK.registerWith(hooks, (_, _, _, _) -> true);
 
         // prevent entity targeting
-        EntityTargetCallback.HOOK.registerWith(hooks, (entity, target) -> true);
+        EntityTargetCallback.HOOK.registerWith(hooks, (_, _) -> true);
 
         // prevent mobs from applying effects to players
-        EntityStatusEffectCallback.HOOK.registerWith(hooks, (entity, effect, source) -> entity instanceof ServerPlayer && source != null);
+        EntityStatusEffectCallback.HOOK.registerWith(hooks, (entity, _, source) -> entity instanceof ServerPlayer && source != null);
 
         // prevent wither shooting skulls
-        WitherShootCallback.HOOK.registerWith(hooks, (wither, targetX, targetY, targetZ) -> true);
+        WitherShootCallback.HOOK.registerWith(hooks, (_, _, _, _) -> true);
 
         // prevent boss mobs from creating boss bars for players
-        EntityBossBarCallback.HOOK.registerWith(hooks, (entity, bossBar, player) -> true);
+        EntityBossBarCallback.HOOK.registerWith(hooks, (_, _, _) -> true);
 
         // prevent copper golems from turning into statues and leaving blocks
-        CopperGolemTurnIntoStatueCallback.HOOK.registerWith(hooks, copperGolem -> true);
+        CopperGolemTurnIntoStatueCallback.HOOK.registerWith(hooks, _ -> true);
 
         commons().teleportToRandomSpawns(random);
     }

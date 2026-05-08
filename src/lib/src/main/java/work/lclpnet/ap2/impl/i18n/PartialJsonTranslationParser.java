@@ -26,7 +26,7 @@ public class PartialJsonTranslationParser implements TranslationParser {
         var tok = new JSONTokener(input);
         var obj = new JSONObject(tok);
 
-        var lang = languages.computeIfAbsent(language, key -> new MutableLanguage());
+        var lang = languages.computeIfAbsent(language, _ -> new MutableLanguage());
 
         for (String key : obj.keySet()) {
             if (!translationKeyPredicate.test(key)) continue;

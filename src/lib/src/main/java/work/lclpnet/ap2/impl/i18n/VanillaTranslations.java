@@ -62,7 +62,7 @@ public class VanillaTranslations {
         // Those languages can be loaded on demand later
         try {
             downloadLanguageIndex();
-        } catch (IOException e) {
+        } catch (IOException _) {
             logger.error("Failed to download language index");
         }
     }

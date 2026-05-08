@@ -29,11 +29,11 @@ public class PlayerStorage<T> {
     }
 
     public T get(ServerPlayer player, Supplier<T> supplier) {
-        return get(player, p -> supplier.get());
+        return get(player, _ -> supplier.get());
     }
 
     public T get(ServerPlayer player, Function<ServerPlayer, T> factory) {
-        return storage.computeIfAbsent(player.getUUID(), u -> factory.apply(player));
+        return storage.computeIfAbsent(player.getUUID(), _ -> factory.apply(player));
     }
 
     public Optional<T> optional(ServerPlayer player) {
@@ -45,11 +45,11 @@ public class PlayerStorage<T> {
     }
 
     public static <T> PlayerStorage<T> create(Supplier<T> supplier) {
-        return new PlayerStorage<>(team -> supplier.get(), null);
+        return new PlayerStorage<>(_ -> supplier.get(), null);
     }
 
     public static <T> PlayerStorage<T> ofFixed(Map<ServerPlayer, T> values) {
-        return new PlayerStorage<>(team -> {
+        return new PlayerStorage<>(_ -> {
             throw new UnsupportedOperationException("Default factory is undefined");
         }, values);
     }

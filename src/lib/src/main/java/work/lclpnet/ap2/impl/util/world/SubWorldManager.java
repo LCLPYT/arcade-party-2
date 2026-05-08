@@ -49,7 +49,7 @@ public class SubWorldManager {
     }
 
     public CompletableFuture<ServerLevel> loadWorld(AssetPath path, Identifier id) {
-        return CompletableFuture.runAsync(() -> obtainWorld(path, id)).thenCompose(nil -> server.submit(() -> {
+        return CompletableFuture.runAsync(() -> obtainWorld(path, id)).thenCompose(_ -> server.submit(() -> {
             RuntimeLevelHandle handle = KibuLevels.getInstance().getWorldManager(server)
                     .openPersistentLevel(id)
                     .orElseThrow(() -> new NoSuchElementException("Failed to load world"));

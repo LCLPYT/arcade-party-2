@@ -129,7 +129,7 @@ public class StructureDomain implements GeneratorDomain<Connector3, StructurePie
     @Override
     public void placePiece(OrientedStructurePiece oriented) {
         placed.add(oriented);
-        pieceCount.compute(oriented.piece(), (_piece, count) -> count == null ? 1 : count + 1);
+        pieceCount.compute(oriented.piece(), (_, count) -> count == null ? 1 : count + 1);
         totalArea += area(oriented);
 
         processCluster(oriented);
@@ -138,7 +138,7 @@ public class StructureDomain implements GeneratorDomain<Connector3, StructurePie
     @Override
     public void removePiece(OrientedStructurePiece oriented) {
         placed.remove(oriented);
-        pieceCount.compute(oriented.piece(), (_piece, count) -> count == null ? null : count - 1);
+        pieceCount.compute(oriented.piece(), (_, count) -> count == null ? null : count - 1);
         totalArea -= area(oriented);
 
         Cluster cluster = oriented.cluster();

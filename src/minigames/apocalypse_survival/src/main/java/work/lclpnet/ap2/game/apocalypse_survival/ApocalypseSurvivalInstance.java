@@ -70,7 +70,7 @@ public class ApocalypseSurvivalInstance extends EliminationGameInstance {
         HookRegistrar hooks = gameHandle.getHooks();
 
 
-        ProjectileHooks.HIT_BLOCK.registerWith(hooks, (projectile, hit) -> {
+        ProjectileHooks.HIT_BLOCK.registerWith(hooks, (projectile, _) -> {
             if (projectile instanceof AbstractArrow) {
                 projectile.discard();
             }

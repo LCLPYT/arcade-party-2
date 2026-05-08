@@ -39,7 +39,7 @@ public class UniformTeamPartitioner implements TeamPartitioner {
             Team team = Objects.requireNonNull(queue.poll(), "Team is null");
 
             mapping.put(player, team);
-            playerCount.compute(team, (k, v) -> v == null ? 1 : v + 1);
+            playerCount.compute(team, (_, v) -> v == null ? 1 : v + 1);
 
             queue.offer(team);
         }

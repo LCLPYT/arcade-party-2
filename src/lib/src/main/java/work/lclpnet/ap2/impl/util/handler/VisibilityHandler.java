@@ -46,7 +46,7 @@ public class VisibilityHandler {
     }
 
     public void init(HookRegistrar hooks) {
-        PlayerInteractionHooks.USE_ITEM.registerWith(hooks, (player, world, hand) -> {
+        PlayerInteractionHooks.USE_ITEM.registerWith(hooks, (player, _, hand) -> {
             if (!(player instanceof ServerPlayer serverPlayer) || !participants.isParticipating(serverPlayer)) {
                 return InteractionResult.PASS;
             }

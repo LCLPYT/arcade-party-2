@@ -161,7 +161,7 @@ public class AssetSongManager implements SongManager {
 
     @Override
     public void cache(WeightedSong song, Identifier tag, String songName) {
-        cache.computeIfAbsent(tag, _tag -> new HashMap<>()).put(songName, song);
+        cache.computeIfAbsent(tag, _ -> new HashMap<>()).put(songName, song);
     }
 
     @Override

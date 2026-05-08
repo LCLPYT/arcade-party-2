@@ -48,7 +48,7 @@ public class LineGraphBuilder<N extends UndirectedGraphNode<N>, L extends Undire
                 // only one line for each undirected edge
                 int hash = node.hashCode() + neighbour.hashCode();
 
-                L line = lineIndex.computeIfAbsent(hash, _h -> lineProvider.apply(node, neighbour));
+                L line = lineIndex.computeIfAbsent(hash, _ -> lineProvider.apply(node, neighbour));
 
                 if (line == null) continue;
 
