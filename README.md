@@ -49,11 +49,13 @@ Volumes:
 If you intend to use bind mounts for volumes, you need to pay attention to the file ownership.
 
 Using Docker with "Rootful" / Non-Rootless (default), you need to make sure you run the container as your host user UID and GID.
-This can be achieved with the `-u "$(id -u):$(id -g)"` option for `docker run ...` or with the `user: <uid>:<gid>` option in `docker-compose.yml`.
-Otherwise, the container will create files owned by root on your host directory.
+If your host user also has UID 1000, you are good to go.
+If not, this can be achieved with the `-u "$(id -u):$(id -g)"` option for `docker run ...` or with the `user: <uid>:<gid>` option in `docker-compose.yml`.
+Otherwise, the container will create files owned by a different user on the host file system.
 
 Using Docker Rootless, you need to run as root in the container using `-u "0:0"` or `user: 0:0` in `docker-compose.yml`.
 This is because your host user is mapped to root inside the container.
+Otherwise files created by the container will be owned by one of your subuids, which may or may not be a problem, depending in your setup.
 
 Using Podman, you can make use of the `--userns=keep-id` option.
 For that, specify `-u "$(id -u):$(id -g)" --userns=keep-id` for `podman run ...` or specify these in `docker-compose.yml`.
