@@ -1,11 +1,8 @@
+import questionary
 import re
 from dataclasses import dataclass
-from typing import Literal
 
-import questionary
-import toml
-
-from util.common import TOML_FILE, validate_icon, load_authors
+from util.common import BASE_DIR, validate_icon, load_authors
 from util.map import MapOptions, read_map_options
 
 
@@ -16,8 +13,7 @@ class Inputs:
     game_desc: str
     author_key: str
     author: str
-    lang: Literal["java", "kotlin"]
-    game_type: Literal["ffa", "ffa_elimination", "team", "team_elimination"]
+    game_type: str
     can_be_finale: bool
     icon: str
     map: MapOptions | None
@@ -43,12 +39,6 @@ def read_inputs() -> Inputs | None:
 
     author = value_to_key[author_value]
 
-    lang = questionary.select(
-        "Select a programming language:",
-        choices=["kotlin", "java"],
-        default="kotlin"
-    ).ask()
-
     game_type = questionary.select(
         "Select game type:",
         choices=["ffa", "ffa_elimination", "team", "team_elimination"]
@@ -68,7 +58,6 @@ def read_inputs() -> Inputs | None:
 
     print("\nSummary:")
     print(f"  Game ID: {game_id}")
-    print(f"  Programming Language: {lang}")
     print(f"  Author: {author_value}")
     print(f"  Name: {game_name}")
     print(f"  Description: {game_desc}")
@@ -83,15 +72,12 @@ def read_inputs() -> Inputs | None:
         return None
 
     return Inputs(game_id=game_id, game_name=game_name, game_desc=game_desc, author_key=author, author=author_value,
-                  lang=lang, game_type=game_type, can_be_finale=can_be_finale, icon=icon_id, map=map_options)
+                  game_type=game_type, can_be_finale=can_be_finale, icon=icon_id, map=map_options)
 
 
 def validate_game_id(game_id: str) -> str | None:
     if not re.match(r"^[a-z_]+$", game_id):
         return "Only lowercase letters and underscores are allowed."
-    if TOML_FILE.exists():
-        data = toml.load(TOML_FILE)
-        for mg in data.get("minigames", []):
-            if mg.get("id") == game_id:
-                return f"A minigame with id '{game_id}' already exists."
+    if (BASE_DIR / game_id).exists():
+        return f"A minigame with id '{game_id}' already exists."
     return None

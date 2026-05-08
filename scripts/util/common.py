@@ -1,12 +1,11 @@
-import re
 import json
+import re
 from pathlib import Path
 
 DEVS = ["person.lclp", "person.bops"]
 
 BASE_DIR = Path("src/minigames")
-TOML_FILE = BASE_DIR / "minigames.toml"
-LIB_CONFIG_FILE = Path("src/lib/resources/configuration.json")
+LIB_CONFIG_FILE = Path("src/lib/src/main/resources/configuration.json")
 
 def pascal_case(name: str) -> str:
     return "".join(word.capitalize() for word in name.split("_"))
