@@ -1,16 +1,18 @@
 # syntax=docker/dockerfile:1
-FROM eclipse-temurin:25-jdk-alpine-3.23 AS builder
+FROM alpine:3.21 AS mrpack-downloader
+
+RUN apk add --no-cache curl
+
+WORKDIR /deps
+COPY docker/download_mrpack_install.sh ./
+RUN ./download_mrpack_install.sh
+
+FROM --platform=linux/amd64 eclipse-temurin:25-jdk-alpine-3.23 AS builder
 
 ARG packwiz_commit=dfd8b68a4796c763e25bad50265ea1f1233e24f1
 
-RUN apk add --no-cache --update curl go && \
+RUN apk add --no-cache --update go && \
     go install github.com/packwiz/packwiz@${packwiz_commit}
-
-WORKDIR /deps
-
-COPY docker/download_mrpack_install.sh ./
-
-RUN ./download_mrpack_install.sh
 
 WORKDIR /packwiz
 
@@ -30,7 +32,7 @@ COPY --parents src/modes/*/build.gradle.kts ./
 COPY --parents src/minigames/*/build.gradle.kts ./
 
 RUN --mount=type=cache,target=/root/.gradle \
-    ./gradlew dependencies --no-daemon
+    ./gradlew dependencies --no-daemon > /dev/null
 
 COPY src src
 
@@ -51,7 +53,7 @@ RUN userdel -r $(getent passwd 1000 | cut -d: -f1) 2>/dev/null || true && \
     groupadd -g 1000 minecraft && \
     useradd -s /bin/false -u 1000 -g minecraft -d /home/minecraft -m minecraft
 
-COPY --from=builder /deps/mrpack-install /usr/bin/mrpack-install
+COPY --from=mrpack-downloader /deps/mrpack-install /usr/bin/mrpack-install
 
 WORKDIR "/preset"
 
