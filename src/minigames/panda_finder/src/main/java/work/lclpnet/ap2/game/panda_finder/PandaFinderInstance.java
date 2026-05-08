@@ -23,7 +23,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.FireworkExplosion;
 import net.minecraft.world.item.component.Fireworks;
-import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.scores.DisplaySlot;
 import net.minecraft.world.scores.criteria.ObjectiveCriteria;
 import org.json.JSONObject;
@@ -88,13 +87,13 @@ public class PandaFinderInstance extends FFAGameInstance {
     protected void go() {
         HookRegistrar hooks = gameHandle.getHooks();
 
-        PlayerInteractionHooks.USE_ENTITY.registerWith(hooks, (player, _, hand, entity, hitResult) -> {
-            onUseEntity(player, hand, entity, hitResult);
+        PlayerInteractionHooks.USE_ENTITY.registerWith(hooks, (player, _, hand, entity, _) -> {
+            onUseEntity(player, hand, entity);
             return InteractionResult.PASS;
         });
 
-        PlayerInteractionHooks.ATTACK_ENTITY.registerWith(hooks, (player, _, hand, entity, hitResult) -> {
-            onUseEntity(player, hand, entity, hitResult);
+        PlayerInteractionHooks.ATTACK_ENTITY.registerWith(hooks, (player, _, hand, entity, _) -> {
+            onUseEntity(player, hand, entity);
             return InteractionResult.PASS;
         });
 
@@ -170,10 +169,9 @@ public class PandaFinderInstance extends FFAGameInstance {
         pandaManager.readImages(images);
     }
 
-    private void onUseEntity(Player player, InteractionHand hand, Entity entity, EntityHitResult hitResult) {
+    private void onUseEntity(Player player, InteractionHand hand, Entity entity) {
         if (!(entity instanceof Panda panda) || !(player instanceof ServerPlayer serverPlayer)
-            || player.hasEffect(MobEffects.BLINDNESS) || hand != InteractionHand.MAIN_HAND
-            || hitResult != null) return;
+            || player.hasEffect(MobEffects.BLINDNESS) || hand != InteractionHand.MAIN_HAND) return;
 
         if (spamManager.interact(serverPlayer)) {
             onCooldownReached(serverPlayer);
