@@ -108,11 +108,11 @@ public class DynamicLanguageManager {
     }
 
     private void incrementUserCount(String lang) {
-        languageUserCount.computeInt(lang, (key, count) -> count == null ? 1 : count + 1);
+        languageUserCount.computeInt(lang, (_, count) -> count == null ? 1 : count + 1);
     }
 
     private int decrementUserCount(String lang) {
-        return languageUserCount.computeInt(lang, (key, count) -> count == null || count <= 1 ? null : count - 1);
+        return languageUserCount.computeInt(lang, (_, count) -> count == null || count <= 1 ? null : count - 1);
     }
 
     private void loadLanguageIfNew(String lang) {

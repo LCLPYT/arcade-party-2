@@ -61,7 +61,7 @@ public record SongInfo(String license, @Nullable String file, SongInfo.Meta meta
         private static StereoMode parseStereoMode(String str) {
             try {
                 return StereoMode.valueOf(str.toUpperCase(Locale.ROOT));
-            } catch (IllegalArgumentException e) {
+            } catch (IllegalArgumentException _) {
                 return StereoMode.SPATIAL;
             }
         }

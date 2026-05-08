@@ -63,7 +63,7 @@ public class DoubleScoreDataContainer<T, Ref extends SubjectRef> extends BaseDat
     }
 
     public synchronized double addScore(Ref ref, double add) {
-        return scoreMap.computeDouble(ref, (r, score) -> (score != null ? score : 0) + add);
+        return scoreMap.computeDouble(ref, (_, score) -> (score != null ? score : 0) + add);
     }
 
     public double getScore(T subject) {
@@ -71,7 +71,7 @@ public class DoubleScoreDataContainer<T, Ref extends SubjectRef> extends BaseDat
     }
 
     public synchronized double getScore(Ref ref) {
-        return scoreMap.computeIfAbsent(ref, r -> 0.d);
+        return scoreMap.computeIfAbsent(ref, _ -> 0.d);
     }
 
     @Override

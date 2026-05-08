@@ -72,7 +72,7 @@ public class ApBootstrap {
 
         ConfigManager configManager = new ConfigManager(configPath, configFactory, logger);
 
-        return configManager.init(executor).thenApply(nil -> configManager);
+        return configManager.init(executor).thenApply(_ -> configManager);
     }
 
     public AssetRepository createMapAssetRepo(Ap2Config config, @Nullable AssetCache cache) {
@@ -123,7 +123,7 @@ public class ApBootstrap {
 
         try {
             url = uri.toURL();
-        } catch (MalformedURLException e) {
+        } catch (MalformedURLException _) {
             return repo;
         }
 

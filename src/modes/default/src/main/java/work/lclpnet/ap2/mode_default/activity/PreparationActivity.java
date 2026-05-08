@@ -720,7 +720,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
             giveDevelopmentItems(player);
         }
 
-        PlayerInteractionHooks.USE_ITEM.registerWith(hooks, (player, world, hand) -> {
+        PlayerInteractionHooks.USE_ITEM.registerWith(hooks, (player, _, hand) -> {
             if (!(player instanceof ServerPlayer serverPlayer)
                 || !Commands.LEVEL_GAMEMASTERS.check(server.getProfilePermissions(serverPlayer.nameAndId()))) {
 

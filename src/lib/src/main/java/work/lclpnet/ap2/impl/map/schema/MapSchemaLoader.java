@@ -60,7 +60,7 @@ public class MapSchemaLoader {
         try {
             var ctor = type.getConstructor();
             return ctor.newInstance();
-        } catch (ReflectiveOperationException e) {
+        } catch (ReflectiveOperationException _) {
             logger.error("Failed to make instance of {}", type.getName());
             return null;
         }

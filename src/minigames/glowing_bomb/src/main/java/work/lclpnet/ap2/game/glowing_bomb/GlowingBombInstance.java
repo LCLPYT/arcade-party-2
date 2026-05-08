@@ -102,7 +102,7 @@ public class GlowingBombInstance extends EliminationGameInstance implements MapB
         HookRegistrar hooks = gameHandle.getHooks();
         Participants participants = gameHandle.getParticipants();
 
-        PlayerInteractionHooks.USE_ITEM.registerWith(hooks, (player, world, hand) -> {
+        PlayerInteractionHooks.USE_ITEM.registerWith(hooks, (player, _, hand) -> {
             if (!(player instanceof ServerPlayer serverPlayer) || !participants.isParticipating(serverPlayer)) {
                 return InteractionResult.PASS;
             }
@@ -391,7 +391,7 @@ public class GlowingBombInstance extends EliminationGameInstance implements MapB
         if (!wasPassed && time < minFuseTicks()) return;
 
         // grant credits each tick
-        manager.bombHolder().ifPresent(player -> credits.computeInt(player.getUUID(), (uuid, count) -> {
+        manager.bombHolder().ifPresent(player -> credits.computeInt(player.getUUID(), (_, count) -> {
             if (count == null) count = 0;
 
             return count + CREDITS_PER_TICK;

@@ -43,7 +43,7 @@ public class CustomScoreboardManager {
     }
 
     public void init(HookRegistrar hookRegistrar) {
-        LanguageChangedCallback.HOOK.registerWith(hookRegistrar, (player, language, reason) -> {
+        LanguageChangedCallback.HOOK.registerWith(hookRegistrar, (player, _, _) -> {
             for (var objective : virtualObjectives) {
                 objective.update(player);
             }

@@ -220,7 +220,7 @@ public class EggventureInstance extends FFAGameInstance implements MapBootstrap 
 
         HookRegistrar hooks = gameHandle.getHooks();
 
-        PlayerInteractionHooks.USE_BLOCK.registerWith(hooks, (_player, _world, hand, hitResult) -> {
+        PlayerInteractionHooks.USE_BLOCK.registerWith(hooks, (_player, _, hand, hitResult) -> {
             BlockPos pos = hitResult.getBlockPos();
 
             if (_player instanceof ServerPlayer player

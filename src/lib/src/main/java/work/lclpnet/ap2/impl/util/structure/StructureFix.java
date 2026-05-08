@@ -101,7 +101,7 @@ public class StructureFix {
         try {
             JsonElement elem = JsonParser.parseString(json);
             text = ComponentSerialization.CODEC.parse(registries.createSerializationContext(JsonOps.INSTANCE), elem).getOrThrow(JsonParseException::new);
-        } catch (JsonParseException ignored) {
+        } catch (JsonParseException _) {
             return tag;
         }
 

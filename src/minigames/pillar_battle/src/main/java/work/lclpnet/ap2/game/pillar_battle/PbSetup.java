@@ -137,7 +137,7 @@ public class PbSetup {
         var spawns = assignment.spawns();
         var playerIds = assignment.playerIds();
 
-        CircleStructureGenerator.placeStructures(structs, world, offsetResult.offsets(), (i, struct, offset) -> {
+        CircleStructureGenerator.placeStructures(structs, world, offsetResult.offsets(), (i, _, offset) -> {
             BlockPos pillarSpawn = spawns.get(i);
             BlockPos pos = center.offset(offset.x(), -pillarSpawn.getY(), offset.z());
             BlockPos spawn = pos.offset(pillarSpawn);

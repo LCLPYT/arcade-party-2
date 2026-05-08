@@ -33,7 +33,7 @@ public class MovementTracker {
 
     @NotNull
     private Entry getEntry(ServerPlayer player) {
-        return entries.computeIfAbsent(player.getUUID(), uuid -> new Entry());
+        return entries.computeIfAbsent(player.getUUID(), _ -> new Entry());
     }
 
     private class Entry {

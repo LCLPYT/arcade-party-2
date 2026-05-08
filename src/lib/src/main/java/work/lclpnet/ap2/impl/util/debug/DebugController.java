@@ -69,7 +69,7 @@ public class DebugController {
     public void exclusive(String name, Consumer<DebugController> action) {
         if (namedObjects == null || scene == null || group == null) return;
 
-        var objects = namedObjects.computeIfAbsent(name, n -> new ArrayList<>());
+        var objects = namedObjects.computeIfAbsent(name, _ -> new ArrayList<>());
         objects.forEach(scene::remove);
 
         group.set(objects);

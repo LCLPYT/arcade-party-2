@@ -189,7 +189,7 @@ public class SongHandler {
             // Song "X"
             var text = RootText.create().append(Component.literal(name).withStyle(YELLOW));
 
-            return TranslatedText.create(s -> text, translations::getLanguage);
+            return TranslatedText.create(_ -> text, translations::getLanguage);
         }
 
         // Song "X" by "Y"

@@ -101,8 +101,8 @@ public class MimicryInstance extends FFAGameInstance implements MapBootstrap {
 
         manager.eachParticipant((player, room) -> room.teleport(player, world));
 
-        ServerMessageHooks.ALLOW_CHAT_MESSAGE.registerWith(gameHandle.getHooks(), (message, sender, params) -> false);
-        ServerMessageHooks.ALLOW_COMMAND_MESSAGE.registerWith(gameHandle.getHooks(), (message, sender, params) -> false);
+        ServerMessageHooks.ALLOW_CHAT_MESSAGE.registerWith(gameHandle.getHooks(), (_, _, _) -> false);
+        ServerMessageHooks.ALLOW_COMMAND_MESSAGE.registerWith(gameHandle.getHooks(), (_, _, _) -> false);
     }
 
     @Override

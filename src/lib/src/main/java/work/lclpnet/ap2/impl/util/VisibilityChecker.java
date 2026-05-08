@@ -96,7 +96,7 @@ public class VisibilityChecker {
     }
 
     public static boolean occluded(Vec3 from, Vec3 to, BlockGetter view) {
-        var hit = BlockGetter.traverseBlocks(from, to, null, (ctx, pos) -> {
+        var hit = BlockGetter.traverseBlocks(from, to, null, (_, pos) -> {
             BlockState state = view.getBlockState(pos);
 
             // ray should pass through non-opaque blocks
@@ -107,7 +107,7 @@ public class VisibilityChecker {
             VoxelShape shape = ClipContext.Block.VISUAL.get(state, view, pos, CollisionContext.empty());
 
             return view.clipWithInteractionOverride(from, to, pos, shape, state);
-        }, o -> {
+        }, _ -> {
             Vec3 dir = from.subtract(to);
             return BlockHitResult.miss(to, Direction.getApproximateNearest(dir.x, dir.y, dir.z), BlockPos.containing(to));
         });

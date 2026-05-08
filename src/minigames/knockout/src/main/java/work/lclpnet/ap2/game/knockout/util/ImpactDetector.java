@@ -127,12 +127,12 @@ public class ImpactDetector {
     }
 
     private @NotNull Entry entry(ServerPlayer player) {
-        return entries.computeIfAbsent(player.getUUID(), u -> new Entry());
+        return entries.computeIfAbsent(player.getUUID(), _ -> new Entry());
     }
 
     private Iterable<BlockPos> collisions(ServerPlayer player, AABB box) {
         // refer to CollisionView::getBlockCollisions
-        return () -> new BlockCollisions<>(player.level(), player, box, false, (pos, voxelShape) -> pos);
+        return () -> new BlockCollisions<>(player.level(), player, box, false, (pos, _) -> pos);
     }
 
     public @Nullable Vec3 getVelocity(ServerPlayer player) {

@@ -98,7 +98,7 @@ public class SnowballFightInstance extends EliminationGameInstance {
             return true;
         });
 
-        PlayerInteractionHooks.USE_ITEM.registerWith(hooks, (player, world, hand) -> {
+        PlayerInteractionHooks.USE_ITEM.registerWith(hooks, (player, _, hand) -> {
             ItemStack stack = player.getItemInHand(hand);
 
             if (stack.is(Items.SNOWBALL) && stack.getCount() == 1) {

@@ -203,7 +203,7 @@ public abstract class BaseGameInstance implements MiniGameInstance {
     private void configureLocatorBar() {
         if (locatorBarEnabled) return;
 
-        PlayerWaypointCallback.HOOK.registerWith(gameHandle.getHooks(), (player, waypoint)
+        PlayerWaypointCallback.HOOK.registerWith(gameHandle.getHooks(), (_, waypoint)
                 -> waypoint instanceof ServerPlayer);  // hide players from locator by default
 
         if (world != null) {
@@ -344,7 +344,7 @@ public abstract class BaseGameInstance implements MiniGameInstance {
         WorldFacade worldFacade = gameHandle.getWorldFacade();
         PlayerUtil playerUtil = gameHandle.getPlayerUtil();
 
-        ServerLivingEntityHooks.ALLOW_DAMAGE.registerWith(hooks, (entity, source, amount) -> {
+        ServerLivingEntityHooks.ALLOW_DAMAGE.registerWith(hooks, (entity, source, _) -> {
             if (!source.is(DamageTypes.FELL_OUT_OF_WORLD) || !(entity instanceof ServerPlayer player)) return true;
 
             if (player.isSpectator()) {
@@ -357,7 +357,7 @@ public abstract class BaseGameInstance implements MiniGameInstance {
 
         PlayerSpawnLocationCallback.HOOK.registerWith(hooks, data -> playerUtil.resetPlayer(data.getPlayer()));
 
-        PlayerInteractionHooks.USE_BLOCK.registerWith(hooks, (player, world1, hand, hitResult) -> {
+        PlayerInteractionHooks.USE_BLOCK.registerWith(hooks, (player, _, _, _) -> {
             if (player.isCreative() || mapProperties.getBoolean(ApMapProperties.ALLOW_BLOCK_INTERACTION, true)) {
                 return InteractionResult.PASS;
             }

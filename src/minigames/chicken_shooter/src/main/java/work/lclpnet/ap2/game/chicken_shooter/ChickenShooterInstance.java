@@ -105,7 +105,7 @@ public class ChickenShooterInstance extends FFAGameInstance implements Runnable 
         // hooks
         HookRegistrar hooks = gameHandle.getHooks();
 
-        ServerLivingEntityHooks.ALLOW_DAMAGE.registerWith(hooks, (entity, source, amount) -> {
+        ServerLivingEntityHooks.ALLOW_DAMAGE.registerWith(hooks, (entity, source, _) -> {
             if (!(source.getDirectEntity() instanceof Projectile projectile)
                     || !(entity instanceof Chicken chicken)) return false;
 
@@ -123,10 +123,10 @@ public class ChickenShooterInstance extends FFAGameInstance implements Runnable 
             return false;
         });
 
-        ProjectileHooks.HIT_BLOCK.registerWith(hooks, (projectile, hit) -> projectile.discard());
+        ProjectileHooks.HIT_BLOCK.registerWith(hooks, (projectile, _) -> projectile.discard());
 
         // projectiles can only hit chickens (will pass through players)
-        ProjectileCanHitCallback.HOOK.registerWith(hooks, (projectile, entity) -> entity instanceof Chicken);
+        ProjectileCanHitCallback.HOOK.registerWith(hooks, (_, entity) -> entity instanceof Chicken);
 
         // Setup Scoreboard
         CustomScoreboardManager scoreboardManager = gameHandle.getScoreboardManager();

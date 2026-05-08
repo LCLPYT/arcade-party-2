@@ -62,7 +62,7 @@ public class OptionValue {
 
         try {
             num = Integer.parseInt(input);
-        } catch (NumberFormatException e) {
+        } catch (NumberFormatException _) {
             return Optional.empty();
         }
 

@@ -46,7 +46,7 @@ public class DynamicTranslatedPlayerBossBar implements PlayerBossBar {
 
     public void init(HookRegistrar hooks) {
         PlayerConnectionHooks.QUIT.registerWith(hooks, this::remove);
-        LanguageChangedCallback.HOOK.registerWith(hooks, (player, language, reason) -> update(player));
+        LanguageChangedCallback.HOOK.registerWith(hooks, (player, _, _) -> update(player));
     }
 
     private ServerBossEvent createBossBar(ServerPlayer player) {
@@ -73,7 +73,7 @@ public class DynamicTranslatedPlayerBossBar implements PlayerBossBar {
 
     @NotNull
     private Entry getOrCreateEntry(ServerPlayer player) {
-        return entries.computeIfAbsent(player.getUUID(), uuid -> createEntry(player));
+        return entries.computeIfAbsent(player.getUUID(), _ -> createEntry(player));
     }
 
     @Nullable

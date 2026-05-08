@@ -239,7 +239,7 @@ public class BlockCountShapeManager<S extends BlockShape & BlockShape.WithHeight
         }
 
         if (shape instanceof Pyramid p) {
-            return (x, y, z) -> (y + p.center().y()) - p.origin().y();
+            return (_, y, _) -> (y + p.center().y()) - p.origin().y();
         }
 
         return this::chebyshevDist;

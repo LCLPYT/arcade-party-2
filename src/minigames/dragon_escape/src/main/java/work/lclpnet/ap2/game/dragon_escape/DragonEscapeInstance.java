@@ -198,7 +198,7 @@ public class DragonEscapeInstance extends FFAGameInstance {
                 new WindChargeKit(kitHandle)
         ));
 
-        PlayerInteractionHooks.USE_ITEM.registerWith(gameHandle.getHooks(), (_player, world, hand) -> {
+        PlayerInteractionHooks.USE_ITEM.registerWith(gameHandle.getHooks(), (_player, _, hand) -> {
             if (!(_player instanceof ServerPlayer player)) return InteractionResult.PASS;
 
             ItemStack stack = player.getItemInHand(hand);

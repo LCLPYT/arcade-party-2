@@ -14,7 +14,7 @@ public class SpamManager {
     private final Map<UUID, Record> records = new HashMap<>();
 
     public boolean interact(ServerPlayer player) {
-        Record record = records.computeIfAbsent(player.getUUID(), uuid -> new Record());
+        Record record = records.computeIfAbsent(player.getUUID(), _ -> new Record());
         return record.interact();
     }
 

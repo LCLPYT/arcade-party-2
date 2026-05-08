@@ -8,7 +8,7 @@ import java.util.concurrent.CompletableFuture;
 
 public interface MapBootstrap {
 
-    MapBootstrap NONE = (world, map) -> CompletableFuture.completedFuture(null);
+    MapBootstrap NONE = (_, _) -> CompletableFuture.completedFuture(null);
 
     @NotNull
     CompletableFuture<Void> createWorldBootstrap(@NotNull ServerLevel world, @NotNull GameMap map);

@@ -32,7 +32,7 @@ public class LeapKit extends SingleItemKit {
 
     @Override
     public void init(KitOptions options) {
-        PlayerInteractionHooks.USE_ITEM.registerWith(handle.hooks(), (_player, world, hand) -> {
+        PlayerInteractionHooks.USE_ITEM.registerWith(handle.hooks(), (_player, _, hand) -> {
             if (!(_player instanceof ServerPlayer player)) return InteractionResult.PASS;
 
             ItemStack stack = player.getItemInHand(hand);

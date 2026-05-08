@@ -64,7 +64,7 @@ public class CCHooks {
 
         config.allow(ProtectionTypes.PICKUP_ITEM, ProtectionTypes.SWAP_HAND_ITEMS, ProtectionTypes.PICKUP_PROJECTILE);
 
-        config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, damageSource) -> {
+        config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, _) -> {
             if (entity instanceof ServerPlayer player) {
                 return participants.isParticipating(player) && !baseManager.isInBase(player);
             }
@@ -78,7 +78,7 @@ public class CCHooks {
             return fuel.isFuel(player, pos);
         });
 
-        config.allow(ProtectionTypes.BLOCK_ITEM_DROP, (world, blockPos, itemStack) -> fuel.isFuel(itemStack));
+        config.allow(ProtectionTypes.BLOCK_ITEM_DROP, (_, _, itemStack) -> fuel.isFuel(itemStack));
 
         config.allow(ProtectionTypes.DROP_ITEM, (player, slot, inInventory) -> {
             if (inInventory || slot < 0 || slot > 8) return true;
@@ -112,16 +112,16 @@ public class CCHooks {
             return false;
         });
 
-        config.allow(ProtectionTypes.ENTITY_ITEM_DROP, (entity, itemEntity) -> fuel.isFuel(itemEntity.getItem()));
+        config.allow(ProtectionTypes.ENTITY_ITEM_DROP, (_, itemEntity) -> fuel.isFuel(itemEntity.getItem()));
 
-        config.allow(ProtectionTypes.USE_ITEM_ON_BLOCK, (player, obj) -> obj.getItemInHand().is(Items.LADDER));
-        config.allow(ProtectionTypes.PLACE_BLOCKS, (entity, blockPos) -> true);  // filter with hook in ::register
+        config.allow(ProtectionTypes.USE_ITEM_ON_BLOCK, (_, obj) -> obj.getItemInHand().is(Items.LADDER));
+        config.allow(ProtectionTypes.PLACE_BLOCKS, (_, _) -> true);  // filter with hook in ::register
     }
 
     public void register(HookRegistrar hooks) {
         PlayerSpawnLocationCallback.HOOK.registerWith(hooks, this::onSpawnLocation);
 
-        ServerLivingEntityHooks.ALLOW_DEATH.registerWith(hooks, (entity, damageSource, damageAmount) -> {
+        ServerLivingEntityHooks.ALLOW_DEATH.registerWith(hooks, (entity, _, _) -> {
             if (entity instanceof ServerPlayer player) {
                 onDeath(player);
             }
@@ -129,7 +129,7 @@ public class CCHooks {
             return true;
         });
 
-        PlayerInteractionHooks.USE_ENTITY.registerWith(hooks, (player, world, hand, entity, hitResult) -> {
+        PlayerInteractionHooks.USE_ENTITY.registerWith(hooks, (player, _, hand, entity, _) -> {
             if (player instanceof ServerPlayer serverPlayer) {
                 onUseEntity(serverPlayer, hand, entity);
             }
@@ -146,7 +146,7 @@ public class CCHooks {
             return true;
         });
 
-        BlockModificationHooks.PLACE_BLOCK.registerWith(hooks, (world, pos, entity, state)
+        BlockModificationHooks.PLACE_BLOCK.registerWith(hooks, (_, _, _, state)
                 -> !state.is(Blocks.LADDER));
     }
 

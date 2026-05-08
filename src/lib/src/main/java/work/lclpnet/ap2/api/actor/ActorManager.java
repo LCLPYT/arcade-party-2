@@ -121,7 +121,7 @@ public class ActorManager implements Tickable {
                 nbt -> NbtOps.INSTANCE.getMap(nbt)
                         .flatMap(mapLike -> TYPE_CODEC.decode(NbtOps.INSTANCE, mapLike))
                         .map(id -> new ActorInfo(id, nbt)),
-                actorInfo -> NbtOps.INSTANCE.getMap(actorInfo.nbt()).flatMap(mapLike -> TYPE_CODEC.encode(actorInfo.type(), NbtOps.INSTANCE, NbtOps.INSTANCE.mapBuilder())
+                actorInfo -> NbtOps.INSTANCE.getMap(actorInfo.nbt()).flatMap(_ -> TYPE_CODEC.encode(actorInfo.type(), NbtOps.INSTANCE, NbtOps.INSTANCE.mapBuilder())
                         .build(actorInfo.nbt())
                         .map(d -> (CompoundTag) d))
         );

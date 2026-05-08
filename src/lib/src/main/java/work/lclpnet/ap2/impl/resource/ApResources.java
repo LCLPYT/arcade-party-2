@@ -38,7 +38,7 @@ public class ApResources implements ModelManager {
 
             try (var in = res.open()) {
                 model = modelLoader.load(in);
-            } catch (IOException e) {
+            } catch (IOException _) {
                 logger.error("Failed to load model {} from data pack {}", id, res.sourcePackId());
                 continue;
             }

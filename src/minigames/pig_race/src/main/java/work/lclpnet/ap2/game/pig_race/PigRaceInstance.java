@@ -190,10 +190,10 @@ public class PigRaceInstance extends FFAGameInstance implements MapBootstrap {
         CustomScoreboardManager scoreboardManager = gameHandle.getScoreboardManager();
 
         // prevent dismounting
-        EntityDismountCallback.HOOK.registerWith(hooks, (entity, vehicle) -> entity instanceof ServerPlayer);
+        EntityDismountCallback.HOOK.registerWith(hooks, (entity, _) -> entity instanceof ServerPlayer);
 
         // prevent mounting other entities while on another vehicle
-        EntityMountCallback.HOOK.registerWith(hooks, (entity, vehicle, force) -> {
+        EntityMountCallback.HOOK.registerWith(hooks, (entity, _, _) -> {
             Entity oldVehicle = entity.getVehicle();
             return entity instanceof ServerPlayer && oldVehicle != null && oldVehicle.isAlive();
         });
@@ -217,7 +217,7 @@ public class PigRaceInstance extends FFAGameInstance implements MapBootstrap {
         });
 
         // remove entity when player quits
-        ServerPlayConnectionHooks.DISCONNECT.registerWith(hooks, (handler, server) -> {
+        ServerPlayConnectionHooks.DISCONNECT.registerWith(hooks, (handler, _) -> {
             Entity vehicle = handler.player.getVehicle();
 
             if (vehicle != null) {
@@ -231,7 +231,7 @@ public class PigRaceInstance extends FFAGameInstance implements MapBootstrap {
 
         try {
             return Variant.valueOf(variant.toUpperCase(Locale.ROOT));
-        } catch (IllegalArgumentException ignored) {
+        } catch (IllegalArgumentException _) {
             gameHandle.getLogger().error("Invalid variant \"{}\"", variant);
             return Variant.PIG;
         }
@@ -268,7 +268,7 @@ public class PigRaceInstance extends FFAGameInstance implements MapBootstrap {
             participants.forEach(this::giveResetItem);
         }
 
-        PlayerInventoryHooks.SWAP_HANDS.registerWith(hooks, (player, slot) -> {
+        PlayerInventoryHooks.SWAP_HANDS.registerWith(hooks, (player, _) -> {
             resetPlayerToCheckpoint(player);
             return true;
         });

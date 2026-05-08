@@ -202,7 +202,7 @@ public class KnockoutInstance extends EliminationGameInstance {
         }
 
         double finalIncrement = increment;
-        double power = charge.computeDouble(player.getUUID(), (uuid, old)
+        double power = charge.computeDouble(player.getUUID(), (_, old)
                 -> (old == null ? 0 : old) + finalIncrement);
 
         synchronized (this) {
@@ -265,7 +265,7 @@ public class KnockoutInstance extends EliminationGameInstance {
 
         for (BlockPos mutable : collisions) {
             BlockPos pos = mutable.immutable();
-            double destruction = blockDestruction.compute(pos, (p, prev) -> prev == null ? damage : prev + damage);
+            double destruction = blockDestruction.compute(pos, (_, prev) -> prev == null ? damage : prev + damage);
 
             if (destruction < 1.d) {
                 destroyStageManager.setDestroyStage(pos, (int) (destruction * 10));

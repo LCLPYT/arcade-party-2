@@ -44,7 +44,7 @@ public class DynamicScoreboardObjective implements
     @Setter
     private NumberFormat defaultNumberFormat = StyledFormat.SIDEBAR_DEFAULT;
     @Setter
-    private BiFunction<ServerPlayer, String, Component> defaultDisplay = (player, holder) -> Component.literal(holder);
+    private BiFunction<ServerPlayer, String, Component> defaultDisplay = (_, holder) -> Component.literal(holder);
 
     public DynamicScoreboardObjective(String name, ObjectiveCriteria.RenderType renderType,
                                       Function<ServerPlayer, Component> title, PlayerList playerManager) {
@@ -66,7 +66,7 @@ public class DynamicScoreboardObjective implements
     }
 
     private @NotNull CustomObjective getOrCreateObjective(ServerPlayer player) {
-        return objectives.computeIfAbsent(player.getUUID(), uuid -> createObjective(player));
+        return objectives.computeIfAbsent(player.getUUID(), _ -> createObjective(player));
     }
 
     @Override
@@ -130,7 +130,7 @@ public class DynamicScoreboardObjective implements
     @Override
     public void setDisplayName(String scoreHolder, @Nullable Component display) {
         DynamicEntry entry = getOrCreateEntry(scoreHolder);
-        entry.displayName = player -> display;
+        entry.displayName = _ -> display;
 
         entry.eachPlayerEntry(playerEntry -> playerEntry.display = display);
 
@@ -196,7 +196,7 @@ public class DynamicScoreboardObjective implements
 
     @Override
     public ScoreHandle createText(Component line, int position) {
-        return createText(p -> line, position);
+        return createText(_ -> line, position);
     }
 
     @Override
@@ -299,7 +299,7 @@ public class DynamicScoreboardObjective implements
         }
 
         private @NotNull DynamicPlayerEntry getOrCreatePlayerEntry(ServerPlayer player) {
-            return playerEntries.computeIfAbsent(player.getUUID(), uuid -> {
+            return playerEntries.computeIfAbsent(player.getUUID(), _ -> {
                 var wrapper = new DynamicPlayerEntry();
                 wrapper.display = displayName.apply(player);
                 wrapper.score = defaultScore;

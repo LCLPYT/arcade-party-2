@@ -427,7 +427,7 @@ public class PaintManager {
 
             if (key == null) continue;
 
-            count.computeInt(key, (_k, prev) -> prev + 1);
+            count.computeInt(key, (_, prev) -> prev + 1);
         }
 
         for (var entry : count.object2IntEntrySet()) {

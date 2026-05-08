@@ -90,7 +90,7 @@ public class SbItems {
                 }
             }
 
-            states.compute(state, (_state, prev) -> prev == null ? 1 : prev + 1);
+            states.compute(state, (_, prev) -> prev == null ? 1 : prev + 1);
         }
 
         states.forEach((state, count) -> {

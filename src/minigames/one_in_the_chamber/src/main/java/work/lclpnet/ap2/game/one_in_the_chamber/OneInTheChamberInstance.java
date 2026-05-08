@@ -115,12 +115,12 @@ public class OneInTheChamberInstance extends FFAGameInstance {
         PlayerInventoryHooks.MODIFY_INVENTORY.registerWith(hooks, event
                 -> !event.player().canUseGameMasterBlocks());
 
-        ProjectileHooks.HIT_BLOCK.registerWith(hooks, (projectile, hit)
+        ProjectileHooks.HIT_BLOCK.registerWith(hooks, (projectile, _)
                 -> projectile.discard());
 
         ServerLivingEntityHooks.ALLOW_DAMAGE.registerWith(hooks, this::onDamage);
 
-        SpectatePlayerCallback.HOOK.registerWith(hooks, (spectator, target) -> gameHandle.getParticipants().isParticipating(spectator));
+        SpectatePlayerCallback.HOOK.registerWith(hooks, (spectator, _) -> gameHandle.getParticipants().isParticipating(spectator));
 
         TaskScheduler scheduler = gameHandle.getScheduler();
 

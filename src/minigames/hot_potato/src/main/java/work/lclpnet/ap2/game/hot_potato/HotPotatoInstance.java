@@ -77,7 +77,7 @@ public class HotPotatoInstance extends EliminationGameInstance implements GameOv
 
         HookRegistrar hooks = gameHandle.getHooks();
 
-        PlayerInteractionHooks.ATTACK_ENTITY.registerWith(hooks, (player, world, hand, entity, hitResult) -> {
+        PlayerInteractionHooks.ATTACK_ENTITY.registerWith(hooks, (player, _, _, entity, _) -> {
             if (player instanceof ServerPlayer serverPlayer && entity instanceof ServerPlayer hitPlayer) {
                 tryPassPotato(serverPlayer, hitPlayer);
             }
@@ -85,7 +85,7 @@ public class HotPotatoInstance extends EliminationGameInstance implements GameOv
             return InteractionResult.PASS;
         });
 
-        PlayerInteractionHooks.USE_ENTITY.registerWith(hooks, (player, world, hand, entity, hitResult) -> {
+        PlayerInteractionHooks.USE_ENTITY.registerWith(hooks, (player, _, _, entity, _) -> {
             if (player instanceof ServerPlayer serverPlayer && entity instanceof ServerPlayer hitPlayer) {
                 tryPassPotato(serverPlayer, hitPlayer);
             }

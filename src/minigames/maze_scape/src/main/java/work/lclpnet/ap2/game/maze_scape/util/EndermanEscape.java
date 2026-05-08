@@ -91,7 +91,7 @@ public class EndermanEscape {
         }
 
         if (DEBUG_FLEE_POSITIONS) {
-            debugController.parent().renderer().ifPresent(renderer -> debugController.parent().exclusive("flee_positions", c -> paths.stream()
+            debugController.parent().renderer().ifPresent(renderer -> debugController.parent().exclusive("flee_positions", _ -> paths.stream()
                     .map(Path::getTarget)
                     .map(BlockPos::getBottomCenter)
                     .forEach(pos -> renderer.marker(pos, Blocks.MAGENTA_TERRACOTTA.defaultBlockState(), 0xd808db))));
