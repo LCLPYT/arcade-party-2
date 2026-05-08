@@ -133,6 +133,12 @@ subprojects {
     base {
         archivesName = "${rootProject.base.archivesName.get()}-${project.name}"
     }
+
+    afterEvaluate {
+        tasks.find { (it.name == "genSources") }?.setEnabled(false)
+        tasks.find { (it.name == "genSourcesWithCfr") }?.setEnabled(false)
+        tasks.find { (it.name == "genSourcesWithVineflower") }?.setEnabled(false)
+    }
 }
 
 sourceSets {
