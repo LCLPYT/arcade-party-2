@@ -7,6 +7,7 @@ WORKDIR /deps
 COPY docker/download_mrpack_install.sh ./
 RUN ./download_mrpack_install.sh
 
+# only build for amd64 since artifacts (jar + mods.mrpack) are platform independent
 FROM --platform=linux/amd64 eclipse-temurin:25-jdk-alpine-3.23 AS builder
 
 ARG packwiz_commit=dfd8b68a4796c763e25bad50265ea1f1233e24f1
