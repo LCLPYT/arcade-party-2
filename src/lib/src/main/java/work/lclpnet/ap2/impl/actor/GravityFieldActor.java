@@ -60,7 +60,7 @@ public class GravityFieldActor extends BaseActor {
             return false;
         };
 
-        hooks.registerHook(PlayerJumpCallback.HOOK, jumpCallback);
+        PlayerJumpCallback.HOOK.registerWith(hooks, jumpCallback);
     }
 
     @Override

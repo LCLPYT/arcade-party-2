@@ -36,7 +36,7 @@ public class InputManager implements InputInterface {
     }
 
     public void init(HookRegistrar hooks) {
-        hooks.registerHook(ServerMessageHooks.ALLOW_CHAT_MESSAGE, (message, sender, params) -> {
+        ServerMessageHooks.ALLOW_CHAT_MESSAGE.registerWith(hooks, (message, sender, params) -> {
             onChat(message, sender, params);
             return false;
         });

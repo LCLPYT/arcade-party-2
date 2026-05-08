@@ -94,13 +94,13 @@ public class PaintGunManager {
     public void init(HookRegistrar hooks) {
         MinecraftSpace.get(world).setCollisionEventsEnabled(true);
 
-        hooks.registerHook(ElementCollisionEvents.BLOCK_COLLISION, (element, terrainObject, manifoldId) -> {
+        ElementCollisionEvents.BLOCK_COLLISION.registerWith(hooks, (element, terrainObject, manifoldId) -> {
             if (element instanceof PaintballBullet bullet) {
                 onBulletHitTerrain(bullet);
             }
         });
 
-        hooks.registerHook(ElementCollisionEvents.ELEMENT_COLLISION, (first, second, manifoldId) -> {
+        ElementCollisionEvents.ELEMENT_COLLISION.registerWith(hooks, (first, second, manifoldId) -> {
             if (first instanceof PaintballBullet bullet && bulletCollision(bullet, second)) return;
             if (second instanceof PaintballBullet bullet && bulletCollision(bullet, first)) return;
 

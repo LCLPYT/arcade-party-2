@@ -186,7 +186,7 @@ public class SimpleTeamManager implements TeamManager {
 
     public void init(HookRegistrar hooks) {
         // move player back into the minecraft team, as they are automatically removed when quitting by the CustomScoreboardManager
-        hooks.registerHook(PlayerConnectionHooks.JOIN, player -> {
+        PlayerConnectionHooks.JOIN.registerWith(hooks, player -> {
             net.minecraft.world.scores.PlayerTeam mcTeam;
 
             synchronized (this) {
@@ -202,7 +202,7 @@ public class SimpleTeamManager implements TeamManager {
             }
         });
 
-        hooks.registerHook(PlayerDisplayNameCallback.HOOK, (player, name) -> {
+        PlayerDisplayNameCallback.HOOK.registerWith(hooks, (player, name) -> {
             Team team;
 
             synchronized (this) {

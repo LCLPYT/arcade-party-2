@@ -98,7 +98,7 @@ public class AnvilFallInstance extends EliminationGameInstance {
         setupBossBar();
         startAnvilSpawning();
 
-        gameHandle.getHooks().registerHook(PlayerMoveCallback.HOOK, this::onPlayerMove);
+        PlayerMoveCallback.HOOK.registerWith(gameHandle.getHooks(), this::onPlayerMove);
 
         for (ServerPlayer player : gameHandle.getParticipants()) {
             repelPlayer(player, player.position());

@@ -111,7 +111,7 @@ public class RedLightGreenLightInstance extends FFAGameInstance implements Runna
         movementDetector.register(this::onMovedWhileRed);
         movementDetector.init(hooks);
 
-        hooks.registerHook(PlayerMoveCallback.HOOK, (player, from, to) -> {
+        PlayerMoveCallback.HOOK.registerWith(hooks, (player, from, to) -> {
             onMove(player);
             return false;
         });

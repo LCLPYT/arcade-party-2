@@ -33,9 +33,9 @@ public class DynamicLanguageManager {
 
     public void init(HookRegistrar hooks, Iterable<ServerPlayer> allPlayers) {
         // register hooks
-        hooks.registerHook(PlayerConnectionHooks.JOIN, this::onJoin);
-        hooks.registerHook(PlayerConnectionHooks.QUIT, this::onQuit);
-        hooks.registerHook(LanguageChangedCallback.HOOK, this::onLanguageChanged);
+        PlayerConnectionHooks.JOIN.registerWith(hooks, this::onJoin);
+        PlayerConnectionHooks.QUIT.registerWith(hooks, this::onQuit);
+        LanguageChangedCallback.HOOK.registerWith(hooks, this::onLanguageChanged);
 
         // sync state with currently online players
         synchronized (this) {

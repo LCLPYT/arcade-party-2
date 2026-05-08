@@ -134,28 +134,28 @@ public class GuessItInstance extends FFAGameInstance implements MapBootstrap {
         setupScoreboard();
 
         // ignore daylight affection for undead mobs
-        hooks.registerHook(AffectedByDaylightCallback.HOOK, entity -> true);
+        AffectedByDaylightCallback.HOOK.registerWith(hooks, entity -> true);
 
         // prevent entity conversion, e.g. piglin -> zombified piglin
-        hooks.registerHook(EntityConvertCallback.HOOK, (entity, type) -> true);
+        EntityConvertCallback.HOOK.registerWith(hooks, (entity, type) -> true);
 
         // prevent entity teleportation
-        hooks.registerHook(EntityTeleportCallback.HOOK, (entity, x, y, z) -> true);
+        EntityTeleportCallback.HOOK.registerWith(hooks, (entity, x, y, z) -> true);
 
         // prevent entity targeting
-        hooks.registerHook(EntityTargetCallback.HOOK, (entity, target) -> true);
+        EntityTargetCallback.HOOK.registerWith(hooks, (entity, target) -> true);
 
         // prevent mobs from applying effects to players
-        hooks.registerHook(EntityStatusEffectCallback.HOOK, (entity, effect, source) -> entity instanceof ServerPlayer && source != null);
+        EntityStatusEffectCallback.HOOK.registerWith(hooks, (entity, effect, source) -> entity instanceof ServerPlayer && source != null);
 
         // prevent wither shooting skulls
-        hooks.registerHook(WitherShootCallback.HOOK, (wither, targetX, targetY, targetZ) -> true);
+        WitherShootCallback.HOOK.registerWith(hooks, (wither, targetX, targetY, targetZ) -> true);
 
         // prevent boss mobs from creating boss bars for players
-        hooks.registerHook(EntityBossBarCallback.HOOK, (entity, bossBar, player) -> true);
+        EntityBossBarCallback.HOOK.registerWith(hooks, (entity, bossBar, player) -> true);
 
         // prevent copper golems from turning into statues and leaving blocks
-        hooks.registerHook(CopperGolemTurnIntoStatueCallback.HOOK, copperGolem -> true);
+        CopperGolemTurnIntoStatueCallback.HOOK.registerWith(hooks, copperGolem -> true);
 
         commons().teleportToRandomSpawns(random);
     }

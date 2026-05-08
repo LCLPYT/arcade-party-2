@@ -112,15 +112,15 @@ public class OneInTheChamberInstance extends FFAGameInstance {
             movementBlocker.disableMovement(player);
         }
 
-        hooks.registerHook(PlayerInventoryHooks.MODIFY_INVENTORY, event
+        PlayerInventoryHooks.MODIFY_INVENTORY.registerWith(hooks, event
                 -> !event.player().canUseGameMasterBlocks());
 
-        hooks.registerHook(ProjectileHooks.HIT_BLOCK,(projectile, hit)
+        ProjectileHooks.HIT_BLOCK.registerWith(hooks, (projectile, hit)
                 -> projectile.discard());
 
-        hooks.registerHook(ServerLivingEntityHooks.ALLOW_DAMAGE, this::onDamage);
+        ServerLivingEntityHooks.ALLOW_DAMAGE.registerWith(hooks, this::onDamage);
 
-        hooks.registerHook(SpectatePlayerCallback.HOOK, (spectator, target) -> gameHandle.getParticipants().isParticipating(spectator));
+        SpectatePlayerCallback.HOOK.registerWith(hooks, (spectator, target) -> gameHandle.getParticipants().isParticipating(spectator));
 
         TaskScheduler scheduler = gameHandle.getScheduler();
 

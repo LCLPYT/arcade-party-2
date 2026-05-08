@@ -36,7 +36,7 @@ public class VisualCooldown implements Cooldown {
 
         initialized = true;
 
-        registrar.registerHook(PlayerConnectionHooks.QUIT, this::resetCooldown);
+        PlayerConnectionHooks.QUIT.registerWith(registrar, this::resetCooldown);
     }
 
     @Override

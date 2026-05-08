@@ -83,7 +83,7 @@ public class KnockoutInstance extends EliminationGameInstance {
 
         movementObserver.init(hooks, gameHandle.getServer());
 
-        hooks.registerHook(ActorSpawnedCallback.HOOK, actor -> {
+        ActorSpawnedCallback.HOOK.registerWith(hooks, actor -> {
             if (actor instanceof GravityFieldActor gravityField) {
                 gravityField.enable(movementObserver, gravityManipulator, gameHandle.getHooks());
             }
@@ -110,7 +110,7 @@ public class KnockoutInstance extends EliminationGameInstance {
         TaskScheduler scheduler = gameHandle.getScheduler();
         Participants participants = gameHandle.getParticipants();
 
-        hooks.registerHook(EntityDamageCallback.HOOK, (entity, source, damage) -> {
+        EntityDamageCallback.HOOK.registerWith(hooks, (entity, source, damage) -> {
             if (entity instanceof ServerPlayer player
                     && source.getEntity() instanceof ServerPlayer attacker
                     && player.hurtTime <= 0) {  // prevent duplicate damage during grace period

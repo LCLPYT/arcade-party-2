@@ -50,10 +50,10 @@ public class CheckpointHelper {
     public static Action<PlayerAction> setupResetItem(HookRegistrar hooks, BooleanSupplier disabled, Predicate<ServerPlayer> eligible) {
         var hook = PlayerAction.createHook();
 
-        hooks.registerHook(PlayerInteractionHooks.USE_ITEM, (player, world1, hand)
+        PlayerInteractionHooks.USE_ITEM.registerWith(hooks, (player, world1, hand)
                 -> handleUse(disabled, eligible, player, hand, hook));
 
-        hooks.registerHook(PlayerInteractionHooks.USE_BLOCK, (player, world1, hand, hitResult)
+        PlayerInteractionHooks.USE_BLOCK.registerWith(hooks, (player, world1, hand, hitResult)
                 -> handleUse(disabled, eligible, player, hand, hook));
 
         return Action.create(hook);
@@ -78,7 +78,7 @@ public class CheckpointHelper {
     public static Action<PlayerAction> whenFallingIntoLava(HookRegistrar hooks, Predicate<ServerPlayer> predicate) {
         var hook = PlayerAction.createHook();
 
-        hooks.registerHook(PlayerMoveCallback.HOOK, (player, from, to) -> {
+        PlayerMoveCallback.HOOK.registerWith(hooks, (player, from, to) -> {
             if (!predicate.test(player)) return false;
 
             BlockState state = player.level().getBlockState(player.blockPosition());

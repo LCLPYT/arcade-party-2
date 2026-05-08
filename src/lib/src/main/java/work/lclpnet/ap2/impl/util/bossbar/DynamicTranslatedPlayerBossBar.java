@@ -45,8 +45,8 @@ public class DynamicTranslatedPlayerBossBar implements PlayerBossBar {
     }
 
     public void init(HookRegistrar hooks) {
-        hooks.registerHook(PlayerConnectionHooks.QUIT, this::remove);
-        hooks.registerHook(LanguageChangedCallback.HOOK, (player, language, reason) -> update(player));
+        PlayerConnectionHooks.QUIT.registerWith(hooks, this::remove);
+        LanguageChangedCallback.HOOK.registerWith(hooks, (player, language, reason) -> update(player));
     }
 
     private ServerBossEvent createBossBar(ServerPlayer player) {

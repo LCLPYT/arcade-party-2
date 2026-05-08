@@ -95,7 +95,7 @@ public class BowSpleefInstance extends EliminationGameInstance {
 
         HookRegistrar hooks = gameHandle.getHooks();
 
-        hooks.registerHook(BlockBreakParticleCallback.HOOK, (world, pos, state) -> true);
+        BlockBreakParticleCallback.HOOK.registerWith(hooks, (world, pos, state) -> true);
 
         Hook<Impact> impactHook = HookFactory.createArrayBacked(Impact.class, callbacks -> (projectile, pos) -> {
             for (Impact callback : callbacks) {
@@ -103,20 +103,20 @@ public class BowSpleefInstance extends EliminationGameInstance {
             }
         });
 
-        hooks.registerHook(ProjectileHooks.HIT_BLOCK, (projectile, hit) -> {
+        ProjectileHooks.HIT_BLOCK.registerWith(hooks, (projectile, hit) -> {
             if (projectile instanceof Arrow) {
                 impactHook.invoker().onImpact(projectile, hit.getBlockPos());
             }
         });
 
-        hooks.registerHook(ProjectileHitEntityCallback.HOOK, (projectile, hit) -> {
+        ProjectileHitEntityCallback.HOOK.registerWith(hooks, (projectile, hit) -> {
             if (projectile instanceof Arrow) {
                 impactHook.invoker().onImpact(projectile, hit.getEntity().blockPosition().below());
             }
         });
 
         // don't spawn chickens from thrown eggs
-        hooks.registerHook(EntitySpawnCallback.HOOK, (entity, world) -> entity instanceof Chicken);
+        EntitySpawnCallback.HOOK.registerWith(hooks, (entity, world) -> entity instanceof Chicken);
 
         commons().whenBelowCriticalHeight().then(this::eliminate);
 

@@ -46,7 +46,7 @@ public class VisibilityHandler {
     }
 
     public void init(HookRegistrar hooks) {
-        hooks.registerHook(PlayerInteractionHooks.USE_ITEM, (player, world, hand) -> {
+        PlayerInteractionHooks.USE_ITEM.registerWith(hooks, (player, world, hand) -> {
             if (!(player instanceof ServerPlayer serverPlayer) || !participants.isParticipating(serverPlayer)) {
                 return InteractionResult.PASS;
             }
@@ -72,7 +72,7 @@ public class VisibilityHandler {
             return InteractionResult.FAIL;
         });
 
-        hooks.registerHook(ServerSendPacketCallback.HOOK, this::ensureRelativePlayerVisibility);
+        ServerSendPacketCallback.HOOK.registerWith(hooks, this::ensureRelativePlayerVisibility);
 
         participants.forEach(manager::updateVisibility);
     }

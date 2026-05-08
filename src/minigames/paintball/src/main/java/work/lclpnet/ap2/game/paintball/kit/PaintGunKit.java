@@ -32,7 +32,7 @@ public class PaintGunKit extends SingleItemKit {
 
     @Override
     public void init(KitOptions options) {
-        handle.hooks().registerHook(PlayerInteractionHooks.USE_ITEM, (_player, world, hand) -> {
+        PlayerInteractionHooks.USE_ITEM.registerWith(handle.hooks(), (_player, world, hand) -> {
             if (!(_player instanceof ServerPlayer player)) {
                 return InteractionResult.PASS;
             }

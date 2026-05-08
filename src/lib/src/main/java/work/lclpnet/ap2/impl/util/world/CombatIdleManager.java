@@ -45,7 +45,7 @@ public class CombatIdleManager {
     public void enable(TaskScheduler scheduler, HookRegistrar hooks) {
         scheduler.interval(this::tick, 1);
 
-        hooks.registerHook(ServerLivingEntityHooks.ALLOW_DAMAGE, (entity, source, amount) -> {
+        ServerLivingEntityHooks.ALLOW_DAMAGE.registerWith(hooks, (entity, source, amount) -> {
             if (source.getEntity() instanceof ServerPlayer player) {
                 onAttack(player);
             }

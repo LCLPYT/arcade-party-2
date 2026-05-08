@@ -89,7 +89,7 @@ public class SnowballFightInstance extends EliminationGameInstance {
                     && damageSource.getDirectEntity() instanceof Projectile && damageSource.getEntity() != entity);
         });
 
-        hooks.registerHook(ServerLivingEntityHooks.ALLOW_DAMAGE, (entity, source, amount) -> {
+        ServerLivingEntityHooks.ALLOW_DAMAGE.registerWith(hooks, (entity, source, amount) -> {
             if (source.getDirectEntity() instanceof Snowball && Math.abs(amount) < 1e-4f && entity.level() instanceof ServerLevel world) {
                 entity.hurtServer(world, source, SNOWBALL_DAMAGE);
                 return false;
@@ -98,7 +98,7 @@ public class SnowballFightInstance extends EliminationGameInstance {
             return true;
         });
 
-        hooks.registerHook(PlayerInteractionHooks.USE_ITEM, (player, world, hand) -> {
+        PlayerInteractionHooks.USE_ITEM.registerWith(hooks, (player, world, hand) -> {
             ItemStack stack = player.getItemInHand(hand);
 
             if (stack.is(Items.SNOWBALL) && stack.getCount() == 1) {

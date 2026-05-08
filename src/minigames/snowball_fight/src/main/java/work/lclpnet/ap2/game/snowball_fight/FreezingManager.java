@@ -68,13 +68,13 @@ public class FreezingManager {
 
         idleManager.enable(scheduler, hooks);
 
-        hooks.registerHook(FrozenTickChangeCallback.HOOK, (entity, ticks)
+        FrozenTickChangeCallback.HOOK.registerWith(hooks, (entity, ticks)
                 -> entity instanceof ServerPlayer player
                 && ticks <= player.getTicksFrozen()
                 && participants.isParticipating(player)
                 && tasks.containsKey(player.getUUID()));
 
-        hooks.registerHook(PowderedSnowSlowCallback.ADD, entity -> {
+        PowderedSnowSlowCallback.ADD.registerWith(hooks, entity -> {
             if (!(entity instanceof ServerPlayer player)
                     || !participants.isParticipating(player)
                     || !tasks.containsKey(player.getUUID())) return false;
@@ -89,7 +89,7 @@ public class FreezingManager {
             return false;
         });
 
-        hooks.registerHook(PowderedSnowSlowCallback.REMOVE, entity -> {
+        PowderedSnowSlowCallback.REMOVE.registerWith(hooks, entity -> {
             if (!(entity instanceof ServerPlayer player)
                     || !participants.isParticipating(player)
                     || !tasks.containsKey(player.getUUID())

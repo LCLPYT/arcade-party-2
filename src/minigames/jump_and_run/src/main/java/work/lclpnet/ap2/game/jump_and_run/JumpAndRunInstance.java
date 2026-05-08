@@ -205,7 +205,7 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
                 .then(this::resetPlayerToCheckpoint);
 
         // disable drip leaf tilt for players in goal
-        hooks.registerHook(DripLeafTiltCallback.HOOK, (entity, pos) -> entity instanceof ServerPlayer player
+        DripLeafTiltCallback.HOOK.registerWith(hooks, (entity, pos) -> entity instanceof ServerPlayer player
                 && inGoal.contains(player.getUUID()));
     }
 

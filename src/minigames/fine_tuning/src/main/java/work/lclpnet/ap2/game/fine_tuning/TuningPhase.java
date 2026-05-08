@@ -91,9 +91,9 @@ class TuningPhase {
         gameHandle.whenDone(this::unload);
 
         addNoteBlockHooks();
-        hooks.registerHook(PlayerInventoryHooks.MODIFY_INVENTORY, event -> !event.player().canUseGameMasterBlocks());
+        PlayerInventoryHooks.MODIFY_INVENTORY.registerWith(hooks, event -> !event.player().canUseGameMasterBlocks());
 
-        hooks.registerHook(PlayerInteractionHooks.USE_ITEM, (player, world, hand) -> {
+        PlayerInteractionHooks.USE_ITEM.registerWith(hooks, (player, world, hand) -> {
             if (onUseItem(player)) {
                 return InteractionResult.SUCCESS_SERVER;
             }
@@ -101,7 +101,7 @@ class TuningPhase {
             return InteractionResult.PASS;
         });
 
-        hooks.registerHook(PlayerInteractionHooks.ATTACK_BLOCK, (player, world, hand, pos, direction) -> {
+        PlayerInteractionHooks.ATTACK_BLOCK.registerWith(hooks, (player, world, hand, pos, direction) -> {
             onUseItem(player);
             return InteractionResult.PASS;
         });
@@ -118,7 +118,7 @@ class TuningPhase {
     private void addNoteBlockHooks() {
         Participants participants = gameHandle.getParticipants();
 
-        hooks.registerHook(PlayerInteractionHooks.USE_BLOCK, (_player, world, hand, hitResult) -> {
+        PlayerInteractionHooks.USE_BLOCK.registerWith(hooks, (_player, world, hand, hitResult) -> {
             if (!(_player instanceof ServerPlayer player)) {
                 return InteractionResult.FAIL;
             }
@@ -141,7 +141,7 @@ class TuningPhase {
             return cancel(player);
         });
 
-        hooks.registerHook(PlayerInteractionHooks.ATTACK_BLOCK, (_player, world, hand, pos, direction) -> {
+        PlayerInteractionHooks.ATTACK_BLOCK.registerWith(hooks, (_player, world, hand, pos, direction) -> {
             if (cannotInteract(_player) || !(_player instanceof ServerPlayer player)
                 || !participants.isParticipating(player)) return InteractionResult.FAIL;
 

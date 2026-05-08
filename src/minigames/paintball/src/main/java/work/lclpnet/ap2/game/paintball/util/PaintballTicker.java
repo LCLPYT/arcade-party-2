@@ -84,7 +84,7 @@ public class PaintballTicker {
         scheduler.interval(this::tick, 1);
 
         // needs to be registered after the PaintballInstance ALLOW_DAMAGE hook
-        hooks.registerHook(ServerLivingEntityHooks.ALLOW_DAMAGE, (entity, source, amount) -> {
+        ServerLivingEntityHooks.ALLOW_DAMAGE.registerWith(hooks, (entity, source, amount) -> {
             if (entity instanceof ServerPlayer player && participants.isParticipating(player)) {
                 entry(player).outOfCombatTicks = 0;
             }

@@ -220,7 +220,7 @@ public class EggventureInstance extends FFAGameInstance implements MapBootstrap 
 
         HookRegistrar hooks = gameHandle.getHooks();
 
-        hooks.registerHook(PlayerInteractionHooks.USE_BLOCK, (_player, _world, hand, hitResult) -> {
+        PlayerInteractionHooks.USE_BLOCK.registerWith(hooks, (_player, _world, hand, hitResult) -> {
             BlockPos pos = hitResult.getBlockPos();
 
             if (_player instanceof ServerPlayer player
@@ -233,7 +233,7 @@ public class EggventureInstance extends FFAGameInstance implements MapBootstrap 
             return InteractionResult.PASS;
         });
 
-        hooks.registerHook(PlayerSwingHandHook.HOOK, (player, hand) -> {
+        PlayerSwingHandHook.HOOK.registerWith(hooks, (player, hand) -> {
             if (hand != InteractionHand.MAIN_HAND || !gameHandle.getParticipants().isParticipating(player)) return;
 
             double range = player.getAttributeValue(Attributes.BLOCK_INTERACTION_RANGE);

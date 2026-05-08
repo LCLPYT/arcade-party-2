@@ -25,11 +25,11 @@ public class VanishManager {
     }
 
     public void init(HookRegistrar hooks) {
-        hooks.registerHook(PlayerListEntriesOnJoinCallback.HOOK, players -> players.stream()
+        PlayerListEntriesOnJoinCallback.HOOK.registerWith(hooks, players -> players.stream()
                 .filter(player -> !isVanished(player))
                 .toList());
 
-        hooks.registerHook(ServerMessageHooks.ALLOW_CHAT_MESSAGE, (message, sender, params) -> {
+        ServerMessageHooks.ALLOW_CHAT_MESSAGE.registerWith(hooks, (message, sender, params) -> {
             if (isVanished(sender)) {
                 for (ServerPlayer player : PlayerLookup.all(server)) {
                     player.connection.sendDisguisedChatMessage(message.decoratedContent(), params);
@@ -40,7 +40,7 @@ public class VanishManager {
             return true;
         });
 
-        hooks.registerHook(PlayerCanTrackCallback.HOOK, (player, entity) -> {
+        PlayerCanTrackCallback.HOOK.registerWith(hooks, (player, entity) -> {
             if (!(entity instanceof ServerPlayer subjectPlayer) || subjectPlayer == player) return true;
 
             return !isVanished(subjectPlayer);
