@@ -41,6 +41,7 @@ import work.lclpnet.lobby.util.RayCaster;
 
 import java.util.*;
 
+import static java.lang.Math.clamp;
 import static net.minecraft.ChatFormatting.*;
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
@@ -292,7 +293,7 @@ public class RedLightGreenLightInstance extends FFAGameInstance implements Runna
         timer = UNTIL_STOP_MIN_TICKS + random.nextInt(UNTIL_STOP_MAX_TICKS - UNTIL_STOP_MIN_TICKS + 1);
 
         int randomNextWarn = WARN_TIME_MIN_TICKS + random.nextInt(WARN_TIME_MAX_TICKS - WARN_TIME_MIN_TICKS + 1);
-        warn = Math.max(1, Math.min(timer - WARN_TIME_MIN_TICKS, randomNextWarn));
+        warn = clamp(randomNextWarn, 1, timer - WARN_TIME_MIN_TICKS);
 
         go = FROZEN_MIN_TICKS + random.nextInt(FROZEN_MAX_TICKS - FROZEN_MIN_TICKS + 1);
     }

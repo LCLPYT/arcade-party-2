@@ -42,8 +42,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ForkJoinPool;
 import java.util.stream.Collectors;
 
-import static java.lang.Math.max;
-import static java.lang.Math.min;
+import static java.lang.Math.clamp;
 import static work.lclpnet.ap2.ApConstants.identifier;
 
 public class ArcadePartyInstance implements GameInstance {
@@ -97,7 +96,7 @@ public class ArcadePartyInstance implements GameInstance {
         );
 
         Set<MiniGame> miniGames = gameManager.getGames();
-        int minQueueSize = max(1, min(miniGames.size(), 10));
+        int minQueueSize = clamp(miniGames.size(), 1, 10);
 
         return new VotedGameQueue(miniGames, votedGames, minQueueSize, gameQueuePersistence);
     }

@@ -79,8 +79,8 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 
+import static java.lang.Math.clamp;
 import static java.lang.Math.max;
-import static java.lang.Math.min;
 import static net.minecraft.ChatFormatting.*;
 import static work.lclpnet.ap2.impl.music.MusicHelper.ARCADE_PARTY_GAME_TAG;
 import static work.lclpnet.ap2.impl.util.ItemHelper.unbreakable;
@@ -323,7 +323,7 @@ public class PigRaceInstance extends FFAGameInstance implements MapBootstrap {
         double dist = max(0, maxDist - playerDist);
 
         double len = CATCHUP_MAX_DISTANCE - CATCHUP_MIN_DISTANCE;
-        double scale = max(0, min(1, ((dist - CATCHUP_MIN_DISTANCE) / len)));
+        double scale = clamp((dist - CATCHUP_MIN_DISTANCE) / len, 0, 1);
         double boost = MAX_CATCHUP_BOOST * scale;
 
         AttributeInstance instance = vehicle.getAttribute(Attributes.MOVEMENT_SPEED);

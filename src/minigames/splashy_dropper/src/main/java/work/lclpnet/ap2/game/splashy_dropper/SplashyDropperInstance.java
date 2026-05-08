@@ -187,7 +187,7 @@ public class SplashyDropperInstance extends FFAGameInstance implements MapBootst
         int count = removeWater(player.blockPosition());
         int score = (int) Math.round(Math.sqrt(count));
 
-        score = Math.max(0, Math.min(3, 4 - score));
+        score = Math.clamp(4 - score, 0, 3);
 
         commons().addScore(player, score, data);
 

@@ -7,8 +7,7 @@ import work.lclpnet.gaco.scene.animation.AnimationContext;
 
 import java.util.function.Consumer;
 
-import static java.lang.Math.max;
-import static java.lang.Math.min;
+import static java.lang.Math.clamp;
 
 class PickupAnimation implements Animatable {
 
@@ -36,7 +35,7 @@ class PickupAnimation implements Animatable {
 
         time += dt;
 
-        double t = max(0.d, min(1.d, time / DURATION_SECONDS));
+        double t = clamp(time / DURATION_SECONDS, 0.d, 1.d);
         t *= t;
 
         startPos.lerp(targetPos, t, object.position);
