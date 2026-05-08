@@ -72,13 +72,23 @@ public class PrefabKitLoader {
     }
 
     private List<String> findKitsFromJar(URL url) {
-        String jarPath = url.toString().substring(0, url.toString().indexOf("!"));
+        try {
+            URI uri = url.toURI();
 
-        try (FileSystem fs = FileSystems.newFileSystem(URI.create(jarPath), Collections.emptyMap())) {
-            Path pathInJar = fs.getPath("/kits");
+            // reuse the existing FileSystem if the classloader already opened this JAR
+            try {
+                Path pathInJar = Path.of(uri);
+                return readFlatKitIds(pathInJar);
+            } catch (FileSystemNotFoundException ignored) {}
 
-            return readFlatKitIds(pathInJar);
-        } catch (IOException e) {
+            // FileSystem not yet open - create it ourselves
+            String jarPath = url.toString().substring(0, url.toString().indexOf("!"));
+
+            try (FileSystem fs = FileSystems.newFileSystem(URI.create(jarPath), Collections.emptyMap())) {
+                Path pathInJar = fs.getPath("/kits");
+                return readFlatKitIds(pathInJar);
+            }
+        } catch (URISyntaxException | IOException e) {
             logger.error("Failed to find kits from jar: {}", url, e);
             return List.of();
         }
