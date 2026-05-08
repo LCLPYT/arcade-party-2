@@ -20,6 +20,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+import static java.lang.Math.clamp;
+
 public class GbBomb extends Object3d implements Animatable {
 
     private final Runnable onYielded;
@@ -194,7 +196,7 @@ public class GbBomb extends Object3d implements Animatable {
             rotation.setAngleAxis(rotationY, 0, 1, 0);
 
             double prevElevation = elevation;
-            elevation = Math.max(-HOVER_AMPLITUDE, Math.min(HOVER_AMPLITUDE, elevation + hoverDirection * HOVER_SPEED * dt));
+            elevation = clamp(elevation + hoverDirection * HOVER_SPEED * dt, -HOVER_AMPLITUDE, HOVER_AMPLITUDE);
 
             if (elevation <= -HOVER_AMPLITUDE || elevation >= HOVER_AMPLITUDE) {
                 hoverDirection *= -1;

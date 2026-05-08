@@ -14,7 +14,8 @@ import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.EntityHealthCallback;
 
-import static java.lang.Math.*;
+import static java.lang.Math.ceil;
+import static java.lang.Math.clamp;
 
 public class HealthDisplay {
 
@@ -63,7 +64,7 @@ public class HealthDisplay {
     }
 
     private Component healthText(float health) {
-        int hearts = max(0, min(20, (int) ceil(health)));
+        int hearts = clamp((int) ceil(health), 0, 20);
         boolean half = hearts % 2 == 1;
         hearts >>= 1;
 

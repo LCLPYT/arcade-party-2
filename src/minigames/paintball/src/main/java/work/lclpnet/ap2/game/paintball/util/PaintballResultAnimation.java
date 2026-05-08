@@ -22,7 +22,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
-import static java.lang.Math.max;
+import static java.lang.Math.clamp;
 import static java.lang.Math.min;
 
 public class PaintballResultAnimation implements TitleAnimation {
@@ -80,7 +80,7 @@ public class PaintballResultAnimation implements TitleAnimation {
     }
 
     private void playAnimationSound(double t) {
-        float progress = (float) max(0.d, min(1.d, t / DURATION_TICKS));
+        float progress = (float) clamp(t / DURATION_TICKS, 0.d, 1.d);
 
         final float minPitch = 0.5f, maxPitch = 1.6f;
         float pitch = minPitch + progress * (maxPitch - minPitch);
@@ -93,7 +93,7 @@ public class PaintballResultAnimation implements TitleAnimation {
     }
 
     private void updateTitle(double t) {
-        double progress = max(0.d, min(1.d, t / DURATION_TICKS));
+        double progress = clamp(t / DURATION_TICKS, 0.d, 1.d);
 
         double lerpedValue = maxPercent * progress;
 

@@ -8,8 +8,7 @@ import work.lclpnet.ap2.api.game.MiniGameHandle;
 
 import java.util.*;
 
-import static java.lang.Math.max;
-import static java.lang.Math.min;
+import static java.lang.Math.clamp;
 
 public class PRProgress {
 
@@ -71,7 +70,7 @@ public class PRProgress {
 
         double progress = path.getProgress(player);
 
-        return max(0, min(rounds, (round - 1) + progress)) / rounds;
+        return clamp(rounds, 0, (round - 1) + progress) / rounds;
     }
 
     public int getRound(ServerPlayer player) {

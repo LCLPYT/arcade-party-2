@@ -10,6 +10,8 @@ import work.lclpnet.kibu.access.entity.DisplayEntityAccess;
 
 import java.util.UUID;
 
+import static java.lang.Math.clamp;
+
 public class GbAnchor {
 
     private final UUID owner;
@@ -41,7 +43,7 @@ public class GbAnchor {
     }
 
     public void setCharges(int charges) {
-        this.charges = Math.max(0, Math.min(4, charges));
+        this.charges = clamp(charges, 0, 4);
 
         var display = display();
 

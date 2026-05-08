@@ -38,6 +38,8 @@ import work.lclpnet.lobby.game.util.BossBarTimer;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 
+import static java.lang.Math.clamp;
+
 public class MimicryInstance extends FFAGameInstance implements MapBootstrap {
 
     private static final int
@@ -219,7 +221,7 @@ public class MimicryInstance extends FFAGameInstance implements MapBootstrap {
     }
 
     private int calcReplaySeconds() {
-        return Math.max(REPLAY_MIN_SECONDS, Math.min(REPLAY_MAX_SECONDS, manager.sequenceLength() * REPLAY_SECONDS_PER_NOTE));
+        return clamp(manager.sequenceLength() * REPLAY_SECONDS_PER_NOTE, REPLAY_MIN_SECONDS, REPLAY_MAX_SECONDS);
     }
 
     private void onCompleted(ServerPlayer player) {

@@ -28,6 +28,7 @@ import work.lclpnet.lobby.game.map.GameMap;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
+import static java.lang.Math.clamp;
 import static java.lang.Math.min;
 import static work.lclpnet.ap2.game.maze_scape.gen.GraphGenerator.ResultType.FAILURE;
 import static work.lclpnet.ap2.game.maze_scape.gen.GraphGenerator.ResultType.INTERRUPTED;
@@ -78,7 +79,7 @@ public class MSGenerator {
 
         // chance to append a dead-end piece to an open connector instead of closing it
         Number deadEndChanceProp = map.requireProperty("dead-end-chance");
-        deadEndChance = Math.max(0, min(1, deadEndChanceProp.floatValue()));
+        deadEndChance = clamp(deadEndChanceProp.floatValue(), 0, 1);
 
         // this will determine the bounding box that the generated pieces must be generated in
         int maxChunkSize = getMaxChunkSize(map);

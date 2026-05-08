@@ -499,7 +499,7 @@ public class DragonEscapeInstance extends FFAGameInstance {
     private double getPlayerProgress(double progress) {
         double corrected = progress - playerStartProgress;
 
-        return max(0.d, min(1.d, corrected * path.getLength() / playerPathLength));
+        return clamp(corrected * path.getLength() / playerPathLength, 0.d, 1.d);
     }
 
     private synchronized void checkComplete() {

@@ -274,7 +274,7 @@ public class MusicalMinecartInstance extends EliminationGameInstance implements 
         double p = random.nextDouble();
         int decoys = (int) floor(log(p) / log(DECOY_CHANCE));
 
-        decoys = max(0, min(MAX_DECOYS, decoys));
+        decoys = clamp(decoys, 0, MAX_DECOYS);
 
         int count = gameHandle.getParticipants().count() - 1;
 

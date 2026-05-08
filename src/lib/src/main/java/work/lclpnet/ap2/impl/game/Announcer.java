@@ -15,6 +15,8 @@ import work.lclpnet.kibu.translate.text.TranslatedText;
 
 import java.util.function.Supplier;
 
+import static java.lang.Math.clamp;
+import static java.lang.Math.max;
 import static net.minecraft.ChatFormatting.AQUA;
 import static net.minecraft.ChatFormatting.DARK_GREEN;
 
@@ -59,15 +61,15 @@ public class Announcer {
     public Announcer withSound(@Nullable SoundEvent sound, SoundSource category, float volume, float pitch) {
         this.sound = sound;
         this.category = category == null ? SoundSource.NEUTRAL : category;
-        this.volume = Math.max(0f, volume);
-        this.pitch = Math.max(0.5f, Math.min(2f, pitch));
+        this.volume = max(0f, volume);
+        this.pitch = clamp(pitch, 0.5f, 2f);
         return this;
     }
 
     public Announcer withTimes(int fadeInTicks, int stayTicks, int fadeOutTicks) {
-        this.fadeInTicks = Math.max(0, fadeInTicks);
-        this.stayTicks = Math.max(0, stayTicks);
-        this.fadeOutTicks = Math.max(0, fadeOutTicks);
+        this.fadeInTicks = max(0, fadeInTicks);
+        this.stayTicks = max(0, stayTicks);
+        this.fadeOutTicks = max(0, fadeOutTicks);
         return this;
     }
 

@@ -6,8 +6,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Random;
 
-import static java.lang.Math.max;
-import static java.lang.Math.min;
+import static java.lang.Math.*;
 
 public class ColorUtil {
 
@@ -42,18 +41,18 @@ public class ColorUtil {
         float k;
 
         k = (5 + hueDiv) % 6;
-        final float r = value - value * saturation * max(0, min(min(k, 4 - k), 1));
+        final float r = value - value * saturation * clamp(k, 0, min(4 - k, 1));
 
         k = (3 + hueDiv) % 6;
-        final float g = value - value * saturation * max(0, min(min(k, 4 - k), 1));
+        final float g = value - value * saturation * clamp(k, 0, min(4 - k, 1));
 
         k = (1 + hueDiv) % 6;
-        final float b = value - value * saturation * max(0, min(min(k, 4 - k), 1));
+        final float b = value - value * saturation * clamp(k, 0, min(4 - k, 1));
 
         return getRgbPacked(
-                max(0, min(255, Math.round(255 * r))),
-                max(0, min(255, Math.round(255 * g))),
-                max(0, min(255, Math.round(255 * b)))
+                clamp(round(255 * r), 0, 255),
+                clamp(round(255 * g), 0, 255),
+                clamp(round(255 * b), 0, 255)
         );
     }
 
@@ -83,7 +82,7 @@ public class ColorUtil {
 
     public static int lerpRgb(int start, int end, float t) {
         // Clamp t between 0 and 1
-        t = Math.max(0, Math.min(1, t));
+        t = clamp(t, 0, 1);
 
         int r1 = red(start);
         int g1 = green(start);

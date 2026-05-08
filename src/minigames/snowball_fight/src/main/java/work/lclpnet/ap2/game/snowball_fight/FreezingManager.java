@@ -124,7 +124,7 @@ public class FreezingManager {
                 }
 
                 int t = time++;
-                double progress = max(0.0, min(1.0, t / (double) freezingTicks));
+                double progress = clamp(t / (double) freezingTicks, 0.0, 1.0);
                 int frozenTicks = (int) round(player.getTicksRequiredToFreeze() * progress);
 
                 player.setTicksFrozen(frozenTicks);

@@ -1,6 +1,7 @@
 package work.lclpnet.ap2.game.guess_it.data;
 
 import it.unimi.dsi.fastutil.Pair;
+import lombok.Getter;
 import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.kibu.translate.Translations;
@@ -12,6 +13,7 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.function.Function;
 
+import static java.lang.Math.clamp;
 import static net.minecraft.ChatFormatting.RED;
 import static net.minecraft.ChatFormatting.YELLOW;
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
@@ -20,6 +22,7 @@ import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 public class InputValue {
 
     private final List<InputRule> rules = new ArrayList<>();
+    @Getter
     private boolean once = false;
 
     public InputValue validate(InputParser validator, Function<String, TranslatedText> errorMessage) {
@@ -56,10 +59,6 @@ public class InputValue {
         return Pair.of(input, null);
     }
 
-    public boolean isOnce() {
-        return once;
-    }
-
     private static Optional<String> floatValue(String s, ServerPlayer player, Translations translations, int precision) {
         s = s.replace(',', '.');
 
@@ -71,7 +70,7 @@ public class InputValue {
             return Optional.empty();
         }
 
-        String fmt = "%." + Math.max(0, Math.min(7, precision)) + "f";
+        String fmt = "%." + clamp(precision, 0, 7) + "f";
         Locale locale = translations.getLocale(player);
         String str = String.format(locale, fmt, f);
 

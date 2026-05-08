@@ -20,8 +20,7 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.function.Predicate;
 
-import static java.lang.Math.max;
-import static java.lang.Math.min;
+import static java.lang.Math.*;
 
 public class DragonController {
 
@@ -94,7 +93,7 @@ public class DragonController {
         // convert speed in block per second to path percentage per tick
         double stepPerTick = speedBps / 20.d / path.getLength();
 
-        dragonProgress = max(0, min(1, dragonProgress + stepPerTick));
+        dragonProgress = clamp(dragonProgress + stepPerTick, 0, 1);
 
         setProgress(dragon, dragonProgress);
     }

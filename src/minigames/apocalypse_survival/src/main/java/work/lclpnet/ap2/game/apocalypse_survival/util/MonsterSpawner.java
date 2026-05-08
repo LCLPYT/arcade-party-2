@@ -30,6 +30,8 @@ import work.lclpnet.kibu.scheduler.Ticks;
 
 import java.util.Random;
 
+import static java.lang.Math.clamp;
+
 public class MonsterSpawner<S extends BlockShape & BlockShape.WithRadius> {
 
     private static final int
@@ -141,7 +143,7 @@ public class MonsterSpawner<S extends BlockShape & BlockShape.WithRadius> {
             float scale = random.nextFloat(0.75f, 1.8f);
             EntityUtil.setAttribute(zombie, Attributes.SCALE, scale);
 
-            baseSpeed *= Math.min(1.12, Math.max(0.75, 1 / Math.pow(scale, 1.15)));
+            baseSpeed *= clamp(1 / Math.pow(scale, 1.15), 0.75, 1.12);
         }
 
         if (zombie instanceof Drowned) {
@@ -185,7 +187,7 @@ public class MonsterSpawner<S extends BlockShape & BlockShape.WithRadius> {
             float scale = random.nextFloat(0.75f, 2.5f);
             EntityUtil.setAttribute(skeleton, Attributes.SCALE, scale);
 
-            double scaleSpeedFactor = Math.min(1.1, Math.max(0.6, 1 / Math.pow(scale, 1.15)));
+            double scaleSpeedFactor = clamp(1 / Math.pow(scale, 1.15), 0.6, 1.1);
             baseSpeed *= scaleSpeedFactor;
         }
 
@@ -268,7 +270,7 @@ public class MonsterSpawner<S extends BlockShape & BlockShape.WithRadius> {
             float scale = random.nextFloat(0.75f, 1.3f);
             EntityUtil.setAttribute(vindicator, Attributes.SCALE, scale);
 
-            baseSpeed *= Math.min(1.12, Math.max(0.75, 1 / Math.pow(scale, 1.15)));
+            baseSpeed *= clamp(1 / Math.pow(scale, 1.15), 0.75, 1.12);
         }
 
         EntityUtil.setAttribute(vindicator, Attributes.MOVEMENT_SPEED, baseSpeed);

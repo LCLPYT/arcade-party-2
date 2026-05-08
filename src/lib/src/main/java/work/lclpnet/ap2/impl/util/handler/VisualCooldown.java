@@ -19,6 +19,8 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.function.Consumer;
 
+import static java.lang.Math.clamp;
+
 public class VisualCooldown implements Cooldown {
 
     private final TaskScheduler scheduler;
@@ -132,7 +134,7 @@ public class VisualCooldown implements Cooldown {
 
             final int t = remain--;
 
-            float progress = Math.min(1, Math.max(0, 1 - t / ticks));
+            float progress = clamp(1 - t / ticks, 0, 1);
 
             int boxes = Math.round(progress * 10);
 
