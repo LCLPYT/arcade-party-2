@@ -1,12 +1,11 @@
 import json
+import questionary
 import re
 from dataclasses import dataclass
 from pathlib import Path
-
-import questionary
-
 from util.common import validate_icon, load_authors
 
+GAME_VERSION = "26.1"
 
 @dataclass
 class MapOptions:
@@ -88,28 +87,28 @@ def add_map(game_id: str, opts: MapOptions):
 
     create_map(opts, game_dir)
 
-    print(f"\n✅ Map created successfully. Copy a world to {game_dir / opts.id / "world"} to use it.")
+    print(f"\n✅ Map created successfully. Copy a world.tar.xz to {game_dir / opts.id / GAME_VERSION} to use it.")
 
 
 def create_map(opts: MapOptions, game_dir: Path):
-    map_dir = game_dir / opts.id
+    versioned_dir = game_dir / opts.id / GAME_VERSION
 
-    map_dir.mkdir(parents=True, exist_ok=True)
+    versioned_dir.mkdir(parents=True, exist_ok=True)
 
-    json_file = map_dir / "map.json"
+    json_file = versioned_dir / "map.json"
 
     if json_file.exists():
         return
 
     obj = {
         "source": "world",
-        "spawn": opts.spawn
+        "spawn": list(opts.spawn)
     }
 
     with open(json_file, 'w+') as f:
         json.dump(obj, f, indent=2)
 
-    world_dir = map_dir / "world"
+    world_dir = versioned_dir / "world"
     world_dir.mkdir(parents=True, exist_ok=True)
 
 
@@ -125,15 +124,21 @@ def add_to_index(opts: MapOptions, game_dir: Path):
         }
 
     for entry in index["maps"]:
-        if entry["path"] == opts.id:
+        variants = entry.get("variants", [])
+        if any(v.get("path", "").startswith(f"{opts.id}/") for v in variants):
             print(f"Map with path {opts.id} already exists, skipping...")
             return False
 
     index["maps"].append({
-        "path": opts.id,
         "name": opts.name,
+        "icon": f"minecraft:{opts.icon}",
         "authors": opts.authors,
-        "icon": f"minecraft:{opts.icon}"
+        "variants": [
+            {
+                "path": f"{opts.id}/{GAME_VERSION}",
+                "depends": {"minecraft": f">={GAME_VERSION}"}
+            }
+        ]
     })
 
     with open(index_file, 'w+') as f:
