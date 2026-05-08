@@ -1,11 +1,17 @@
 import json
 import re
 from pathlib import Path
+from string import Template
 
 DEVS = ["person.lclp", "person.bops"]
 
 BASE_DIR = Path("src/minigames")
 LIB_CONFIG_FILE = Path("src/lib/src/main/resources/configuration.json")
+TEMPLATES_DIR = Path(__file__).parent / "templates"
+
+
+def render_template(name: str, **kwargs) -> str:
+    return Template((TEMPLATES_DIR / name).read_text()).substitute(**kwargs)
 
 def pascal_case(name: str) -> str:
     return "".join(word.capitalize() for word in name.split("_"))

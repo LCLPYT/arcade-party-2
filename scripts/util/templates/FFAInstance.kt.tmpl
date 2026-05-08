@@ -1,0 +1,21 @@
+package ${package}
+
+import work.lclpnet.ap2.api.game.MiniGameHandle
+import work.lclpnet.ap2.impl.game.FFAGameInstance
+import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer
+import work.lclpnet.ap2.impl.game.data.type.PlayerRef
+
+class ${class_name}(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle) {
+
+    private val data = IntScoreDataContainer(PlayerRef::create)
+
+    override fun getData() = data
+
+    override fun prepare() {
+
+    }
+
+    override fun go() {
+
+    }
+}

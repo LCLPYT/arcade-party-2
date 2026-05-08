@@ -3,7 +3,7 @@ import re
 import time
 from pathlib import Path
 
-from util.common import pascal_case, BASE_DIR
+from util.common import pascal_case, BASE_DIR, render_template
 from util.inputs import Inputs, read_inputs
 from util.instance_class import create_instance_class
 from util.map import add_map
@@ -54,18 +54,7 @@ def create_mod_json(inputs: Inputs, resources_dir: Path):
 
 
 def create_build_gradle(game_dir: Path):
-    content = """plugins {
-    alias(libs.plugins.kotlin.jvm)
-}
-
-val javaVersion = libs.versions.java.get().toInt()
-
-kotlin {
-    jvmToolchain(javaVersion)
-}
-"""
-    with open(game_dir / "build.gradle.kts", "w") as f:
-        f.write(content)
+    (game_dir / "build.gradle.kts.tmpl").write_text(render_template("build.gradle.kts"))
 
 
 def update_settings_gradle(game_id: str):
