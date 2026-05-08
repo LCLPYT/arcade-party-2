@@ -23,9 +23,9 @@ class SessionStatsRecorder(val translations: Translations, val logger: Logger) {
     operator fun get(statsId: UUID) = records[statsId]
 
     fun init(hooks: HookRegistrar) {
-        hooks.registerHook(CustomClickActionCallback.HOOK, CustomClickActionCallback { player, id, payload ->
+        CustomClickActionCallback.HOOK.registerWith(hooks) { player, id, payload ->
             onCustomClickAction(player, id, payload)
-        })
+        }
     }
 
     private fun onCustomClickAction(player: ServerPlayer, id: Identifier, payload: Optional<Tag>) {

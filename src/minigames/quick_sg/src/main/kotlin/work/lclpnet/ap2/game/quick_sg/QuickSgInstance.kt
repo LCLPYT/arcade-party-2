@@ -1,6 +1,5 @@
 package work.lclpnet.ap2.game.quick_sg
 
-import net.fabricmc.fabric.api.event.player.UseBlockCallback
 import net.minecraft.core.registries.Registries
 import net.minecraft.network.protocol.game.ClientboundSetDefaultSpawnPositionPacket
 import net.minecraft.resources.ResourceKey
@@ -102,12 +101,12 @@ class QuickSgInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(game
     override fun go() {
         PvpBehavior(gameHandle, world).configure()
 
-        registerHook(PlayerInteractionHooks.USE_BLOCK, UseBlockCallback { player, _, _, _ ->
+        PlayerInteractionHooks.USE_BLOCK.registerWith(hooks) { player, _, _, _ ->
             when {
                 !mayLoot || player !is ServerPlayer || !isParticipating(player) -> InteractionResult.FAIL
                 else -> InteractionResult.PASS
             }
-        })
+        }
 
         players().forEach {
             movementBlocker.enableMovement(it)

@@ -523,6 +523,10 @@ public abstract class BaseGameInstance implements MiniGameInstance {
         return gameHandle.getParticipants().isParticipating(player);
     }
 
+    protected final HookRegistrar getHooks() {
+        return gameHandle.getHooks();
+    }
+
     protected abstract void prepare();
 
     protected abstract void go();

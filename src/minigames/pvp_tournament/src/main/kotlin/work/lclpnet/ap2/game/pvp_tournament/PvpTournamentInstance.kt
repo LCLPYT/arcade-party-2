@@ -6,7 +6,6 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.future.await
 import kotlinx.coroutines.future.future
 import kotlinx.coroutines.joinAll
-import net.fabricmc.fabric.api.event.player.UseItemCallback
 import net.minecraft.ChatFormatting
 import net.minecraft.core.particles.ItemParticleOption
 import net.minecraft.core.particles.ParticleTypes
@@ -221,12 +220,12 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
     }
 
     private fun registerHooks() {
-        registerHook(PlayerInteractionHooks.USE_ITEM, UseItemCallback { player, _, hand ->
+        PlayerInteractionHooks.USE_ITEM.registerWith(hooks) { player, _, hand ->
             if (player !is ServerPlayer || !isParticipating(player)) {
-                return@UseItemCallback InteractionResult.FAIL
+                return@registerWith InteractionResult.FAIL
             }
 
-            val instance = matchInstanceOf(player) ?: return@UseItemCallback InteractionResult.FAIL.also {
+            val instance = matchInstanceOf(player) ?: return@registerWith InteractionResult.FAIL.also {
                 PlayerUtils.syncPlayerItems(player)
             }
 
@@ -234,7 +233,7 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
 
             if (!instance.started) {
                 PlayerUtils.syncPlayerItems(player)
-                return@UseItemCallback InteractionResult.FAIL
+                return@registerWith InteractionResult.FAIL
             }
 
             if (stack.`is`(Items.MUSHROOM_STEW)) {
@@ -242,7 +241,7 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
             } else {
                 InteractionResult.PASS
             }
-        })
+        }
     }
 
     private fun tryUseMushroomStew(player: ServerPlayer, stack: ItemStack): InteractionResult {

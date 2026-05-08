@@ -1,6 +1,5 @@
 package work.lclpnet.ap2.util.loot
 
-import net.fabricmc.fabric.api.event.player.UseBlockCallback
 import net.minecraft.core.BlockPos
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
@@ -21,34 +20,25 @@ class LazyLootContainerManager(
     val filled = mutableSetOf<BlockPos>()
 
     fun setup(hooks: HookRegistrar) {
-        hooks.registerHook(
-            PlayerInteractionHooks.USE_BLOCK,
-            UseBlockCallback { player, level, _, result ->
-                if (player is ServerPlayer && participants.isParticipating(player) && this.level == level) {
-                    touch(result.blockPos)
-                }
-
-                InteractionResult.PASS;
+        PlayerInteractionHooks.USE_BLOCK.registerWith(hooks) { player, level, _, result ->
+            if (player is ServerPlayer && participants.isParticipating(player) && this.level == level) {
+                touch(result.blockPos)
             }
-        )
 
-        hooks.registerHook(
-            BlockModificationHooks.BLOCK_PLACED,
-            BlockModificationHooks.BlockModifiedHook { level, pos, entity ->
-                if (entity is ServerPlayer && participants.isParticipating(entity) && this.level == level) {
-                    onBlockPlaced(pos)
-                }
-            }
-        )
+            InteractionResult.PASS;
+        }
 
-        hooks.registerHook(
-            BlockModificationHooks.BLOCK_BROKEN,
-            BlockModificationHooks.BlockModifiedHook { level, pos, _ ->
-                if (this.level == level) {
-                    onBlockRemoved(pos)
-                }
+        BlockModificationHooks.BLOCK_PLACED.registerWith(hooks) { level, pos, entity ->
+            if (entity is ServerPlayer && participants.isParticipating(entity) && this.level == level) {
+                onBlockPlaced(pos)
             }
-        )
+        }
+
+        BlockModificationHooks.BLOCK_BROKEN.registerWith(hooks) { level, pos, _ ->
+            if (this.level == level) {
+                onBlockRemoved(pos)
+            }
+        }
     }
 
     fun touch(pos: BlockPos) {

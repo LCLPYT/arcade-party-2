@@ -1,6 +1,5 @@
 package work.lclpnet.ap2.game.button_master
 
-import net.fabricmc.fabric.api.event.player.UseBlockCallback
 import net.minecraft.ChatFormatting
 import net.minecraft.core.BlockPos
 import net.minecraft.core.component.DataComponents
@@ -11,7 +10,6 @@ import net.minecraft.server.level.ServerPlayer
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.sounds.SoundSource
 import net.minecraft.tags.BlockTags
-import net.minecraft.world.InteractionHand
 import net.minecraft.world.InteractionResult
 import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.ai.attributes.Attributes
@@ -22,7 +20,6 @@ import net.minecraft.world.item.Items
 import net.minecraft.world.item.equipment.trim.ArmorTrim
 import net.minecraft.world.item.equipment.trim.TrimMaterials
 import net.minecraft.world.item.equipment.trim.TrimPatterns
-import net.minecraft.world.level.Level
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.scores.Team
@@ -171,7 +168,7 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
     private fun setupTeam() {
         val scoreboardManager = gameHandle.getScoreboardManager()
         val team = scoreboardManager.createTeam("team")
-        team.setNameTagVisibility(Team.Visibility.NEVER)
+        team.nameTagVisibility = Team.Visibility.NEVER
         scoreboardManager.joinTeam(gameHandle.getParticipants(), team)
     }
 
@@ -182,17 +179,15 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
 
         nextRound()
 
-        gameHandle.hooks.registerHook(PlayerInteractionHooks.USE_BLOCK, UseBlockCallback { entity, world, hand, result ->
-            onUseBlock(entity, world, hand, result)
-        })
+        PlayerInteractionHooks.USE_BLOCK.registerWith(gameHandle.hooks) { entity, _, _, result ->
+            onUseBlock(entity, result)
+        }
 
         eliminateBelowCriticalHeight()
     }
 
     fun onUseBlock(
         entity: Player,
-        _world: Level,
-        hand: InteractionHand,
         result: BlockHitResult
     ): InteractionResult {
         if (entity !is ServerPlayer) {

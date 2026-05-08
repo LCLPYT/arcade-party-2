@@ -53,11 +53,11 @@ fun MiniGameHandle.configureProtection(action: MutableProtectionConfig.() -> Uni
 inline fun <reified T : LivingEntity> BaseGameInstance.onDeathOf(
     noinline action: (T, DamageSource) -> Unit
 ) {
-    getGameHandle().hooks.registerHook(EntityHealthCallback.HOOK, EntityHealthCallback { entity, health ->
+    EntityHealthCallback.HOOK.registerWith(gameHandle.hooks) { entity, health ->
         if (entity !is T) {
-            return@EntityHealthCallback false
+            return@registerWith false
         }
 
         GameCommons.handleCustomDeath(entity, health, action)
-    })
+    }
 }

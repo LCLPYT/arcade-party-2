@@ -19,8 +19,8 @@ import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.map.MapBootstrapFunction
 import work.lclpnet.ap2.ext.interval
 import work.lclpnet.ap2.ext.mc.playNotifySound
-import work.lclpnet.ap2.ext.players
 import work.lclpnet.ap2.ext.mc.setBlock
+import work.lclpnet.ap2.ext.players
 import work.lclpnet.ap2.ext.setupSidebarScoreboard
 import work.lclpnet.ap2.ext.translate
 import work.lclpnet.ap2.impl.game.FFAGameInstance
@@ -108,11 +108,11 @@ class KingOfTheHillInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
             }
         }
 
-        gameHandle.hooks.registerHook(PlayerInventoryHooks.SLOT_CHANGE, PlayerInventoryHooks.SlotChange { player, i ->
+        PlayerInventoryHooks.SLOT_CHANGE.registerWith(hooks) { player, i ->
             if (players().isParticipating(player) && i != 4) {
                 PlayerInventoryAccess.setSelectedSlot(player, 4)
             }
-        })
+        }
 
         useTaskTimer(DURATION_SECONDS).whenDone { winManager.complete() }
     }

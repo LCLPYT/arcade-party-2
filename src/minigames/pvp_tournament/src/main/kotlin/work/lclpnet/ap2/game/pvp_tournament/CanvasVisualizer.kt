@@ -6,15 +6,11 @@ import eu.pb4.mapcanvas.api.core.PlayerCanvas
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import work.lclpnet.ap2.api.game.MiniGameHandle
-import work.lclpnet.ap2.ext.allPlayers
-import work.lclpnet.ap2.ext.logger
-import work.lclpnet.ap2.ext.players
 import work.lclpnet.ap2.game.pvp_tournament.gen.SkinPlayerIcons
 import work.lclpnet.ap2.game.pvp_tournament.gen.Tournament
 import work.lclpnet.ap2.game.pvp_tournament.gen.TournamentVisualizer
@@ -119,20 +115,20 @@ class CanvasVisualizer(
     }
 
     fun preventMovingOfFilledMaps() {
-        gameHandle.hooks.registerHook(PlayerInventoryHooks.SWAP_HANDS, PlayerInventoryHooks.SwapHands { player, _ ->
+        PlayerInventoryHooks.SWAP_HANDS.registerWith(gameHandle.hooks) { player, _ ->
             player.offhandItem.`is`(Items.FILLED_MAP)
-        })
+        }
 
-        gameHandle.hooks.registerHook(PlayerInventoryHooks.MODIFY_INVENTORY, PlayerInventoryHooks.InventoryModify { event ->
+        PlayerInventoryHooks.MODIFY_INVENTORY.registerWith(gameHandle.hooks) { event ->
             val stack = event.clickedStack()
 
             stack != null && stack.`is`(Items.FILLED_MAP)
-        })
+        }
 
-        gameHandle.hooks.registerHook(PlayerInventoryHooks.DROP_ITEM, PlayerInventoryHooks.DropItem { player, i, _ ->
+        PlayerInventoryHooks.DROP_ITEM.registerWith(gameHandle.hooks) { player, i, _ ->
             val slot = player.inventory.getSlot(i)
 
             slot != null && slot.get().`is`(Items.FILLED_MAP)
-        })
+        }
     }
 }
