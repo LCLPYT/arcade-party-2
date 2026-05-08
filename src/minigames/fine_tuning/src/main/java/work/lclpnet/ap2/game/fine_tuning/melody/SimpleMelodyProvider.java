@@ -5,12 +5,28 @@ import net.minecraft.world.level.block.state.properties.NoteBlockInstrument;
 import java.util.Arrays;
 import java.util.Random;
 
+import static net.minecraft.world.level.block.state.properties.NoteBlockInstrument.*;
+
 public class SimpleMelodyProvider implements MelodyProvider {
 
     private final NoteBlockInstrument[] instruments = new NoteBlockInstrument[] {
-            NoteBlockInstrument.HARP, NoteBlockInstrument.GUITAR, NoteBlockInstrument.FLUTE, NoteBlockInstrument.BELL, NoteBlockInstrument.CHIME,
-            NoteBlockInstrument.XYLOPHONE, NoteBlockInstrument.COW_BELL, NoteBlockInstrument.IRON_XYLOPHONE, NoteBlockInstrument.COW_BELL,
-            NoteBlockInstrument.DIDGERIDOO, NoteBlockInstrument.BIT, NoteBlockInstrument.BANJO, NoteBlockInstrument.PLING
+            HARP,
+            GUITAR,
+            FLUTE,
+            BELL,
+            CHIME,
+            XYLOPHONE,
+            COW_BELL,
+            IRON_XYLOPHONE,
+            COW_BELL,
+            DIDGERIDOO,
+            BIT,
+            BANJO,
+            PLING,
+            TRUMPET,
+            TRUMPET_EXPOSED,
+            TRUMPET_OXIDIZED,
+            TRUMPET_WEATHERED
     };
     private final Random random;
     private final NotesProvider notesProvider;
