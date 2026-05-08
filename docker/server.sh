@@ -6,6 +6,7 @@ MC_VERSION="26.1.2"
 FABRIC_VERSION="0.19.2"
 SERVER_DIR="."
 MODPACK_FILE="/preset/mods.mrpack"
+ARTIFACT_NAME="arcade-party-2"
 
 # (Re-)install fabric server when versions change or jar is missing
 VERSION_FILE="$SERVER_DIR/.fabric_install_version"
@@ -37,6 +38,7 @@ if ! [ -f "$CHECKSUM_FILE" ] || [ "$(cat "$CHECKSUM_FILE")" != "$MRPACK_CHECKSUM
 fi
 
 # Sync preset server files (server icon, built mod jars) into working dir
+rm -f "$SERVER_DIR"/mods/*"${ARTIFACT_NAME}"*.jar
 rsync -a /preset/server/ "$SERVER_DIR/"
 
 if [ "${EULA:-}" = "true" ]; then
