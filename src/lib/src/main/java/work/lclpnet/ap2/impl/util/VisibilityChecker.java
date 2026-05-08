@@ -118,7 +118,7 @@ public class VisibilityChecker {
     public static Matrix4d viewProjectionMatrix(ServerPlayer player, double fovRadians, double screenAspectRatio, Matrix4d mat) {
         MinecraftServer server = player.level().getServer();
 
-        int viewDistance = clamp(player.requestedViewDistance(), 2, server.getPlayerList().getViewDistance());
+        int viewDistance = clamp(player.requestedViewDistance(), 2, max(2, server.getPlayerList().getViewDistance()));
 
         return viewProjectionMatrix(player.getX(), player.getEyeY(), player.getZ(), player.getYRot(), player.getXRot(),
                 viewDistance, fovRadians, screenAspectRatio, mat);

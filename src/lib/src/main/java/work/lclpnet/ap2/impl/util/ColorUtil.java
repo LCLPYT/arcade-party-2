@@ -41,13 +41,13 @@ public class ColorUtil {
         float k;
 
         k = (5 + hueDiv) % 6;
-        final float r = value - value * saturation * clamp(k, 0, min(4 - k, 1));
+        final float r = value - value * saturation * clamp(min(k, 4 - k), 0, 1);
 
         k = (3 + hueDiv) % 6;
-        final float g = value - value * saturation * clamp(k, 0, min(4 - k, 1));
+        final float g = value - value * saturation * clamp(min(k, 4 - k), 0, 1);
 
         k = (1 + hueDiv) % 6;
-        final float b = value - value * saturation * clamp(k, 0, min(4 - k, 1));
+        final float b = value - value * saturation * clamp(min(k, 4 - k), 0, 1);
 
         return getRgbPacked(
                 clamp(round(255 * r), 0, 255),
