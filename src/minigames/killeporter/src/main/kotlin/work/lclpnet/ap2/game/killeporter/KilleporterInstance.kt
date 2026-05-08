@@ -1,7 +1,5 @@
 package work.lclpnet.ap2.game.killeporter
 
-import net.fabricmc.fabric.api.entity.event.v1.ServerLivingEntityEvents
-import net.fabricmc.fabric.api.event.player.UseItemCallback
 import net.minecraft.ChatFormatting
 import net.minecraft.core.BlockPos
 import net.minecraft.core.component.DataComponents
@@ -108,17 +106,14 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
         useSmoothDeath()
         setupKits()
 
-        gameHandle.hooks.registerHook(
-            ServerLivingEntityHooks.ALLOW_DAMAGE,
-            ServerLivingEntityEvents.AllowDamage { entity, _, _ ->
-                if (entity is ServerPlayer && entity.foodData.foodLevel >= 20) {
-                    entity.foodData.addExhaustion(8f)
-                    entity.foodData.setSaturation(2f)
-                }
-
-                true
+        ServerLivingEntityHooks.ALLOW_DAMAGE.registerWith(hooks) { entity, _, _ ->
+            if (entity is ServerPlayer && entity.foodData.foodLevel >= 20) {
+                entity.foodData.addExhaustion(8f)
+                entity.foodData.setSaturation(2f)
             }
-        )
+
+            true
+        }
     }
 
     override fun afterInitialDelay() {
@@ -142,25 +137,20 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
             })
         }
 
-        gameHandle.hooks.registerHook(
-            BlockModificationHooks.PLACE_FLUID,
-            BlockModificationHooks.FluidTransferHook { _, pos, entity, fluid ->
+        BlockModificationHooks.PLACE_FLUID.registerWith(hooks) { _, pos, entity, fluid ->
             val minDistSq = 6.0 * 6.0
             entity is ServerPlayer && fluid.isSame(Fluids.LAVA) && players().any {
                 it != entity && it.distanceToSqr(pos.center) < minDistSq
             }
-        })
+        }
 
-        gameHandle.hooks.registerHook(
-            BlockModificationHooks.BREAK_BLOCK,
-            BlockModificationHooks.BlockModifyHook { world, pos, entity ->
-                if (entity is ServerPlayer && world.getBlockState(pos).`is`(Blocks.DECORATED_POT)) {
-                    lootContainerManager?.touch(pos)
-                }
-
-                false
+        BlockModificationHooks.BREAK_BLOCK.registerWith(hooks) { world, pos, entity ->
+            if (entity is ServerPlayer && world.getBlockState(pos).`is`(Blocks.DECORATED_POT)) {
+                lootContainerManager?.touch(pos)
             }
-        )
+
+            false
+        }
 
         switchTimeout()
 
@@ -221,24 +211,22 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
             it.withKitSelectorSlot(8)
         }
 
-        gameHandle.getHooks().registerHook(
-            PlayerInteractionHooks.USE_ITEM,
-            UseItemCallback { player: Player, _: Level, hand: InteractionHand ->
-                if (player !is ServerPlayer) return@UseItemCallback InteractionResult.PASS
+        PlayerInteractionHooks.USE_ITEM.registerWith(hooks) { player: Player, _: Level, hand: InteractionHand ->
+            if (player !is ServerPlayer) return@registerWith InteractionResult.PASS
 
-                val stack = player.getItemInHand(hand)
+            val stack = player.getItemInHand(hand)
 
-                if (itemUseAllowed || kitHandler!!.isKitSelector(stack)) {
-                    return@UseItemCallback InteractionResult.PASS
-                }
+            if (itemUseAllowed || kitHandler!!.isKitSelector(stack)) {
+                return@registerWith InteractionResult.PASS
+            }
 
-                if (stack.has(DataComponents.USE_COOLDOWN)) {
-                    player.cooldowns.addCooldown(stack, 0)
-                }
+            if (stack.has(DataComponents.USE_COOLDOWN)) {
+                player.cooldowns.addCooldown(stack, 0)
+            }
 
-                PlayerUtils.syncPlayerItems(player)
-                InteractionResult.FAIL
-            })
+            PlayerUtils.syncPlayerItems(player)
+            InteractionResult.FAIL
+        }
 
         kitHandler?.setup()
     }

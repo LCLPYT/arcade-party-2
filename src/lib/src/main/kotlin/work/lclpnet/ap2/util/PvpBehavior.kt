@@ -82,22 +82,16 @@ class PvpBehavior(
         }
 
         // track player made blocks
-        gameHandle.hooks.registerHook(
-            BlockModificationHooks.BLOCK_PLACED,
-            BlockModificationHooks.BlockModifiedHook { level, pos, entity ->
-                if (level == world && entity is ServerPlayer && gameHandle.participants.isParticipating(entity)) {
-                    playerMade.add(pos.immutable())
-                }
+        BlockModificationHooks.BLOCK_PLACED.registerWith(gameHandle.hooks) { level, pos, entity ->
+            if (level == world && entity is ServerPlayer && gameHandle.participants.isParticipating(entity)) {
+                playerMade.add(pos.immutable())
             }
-        )
+        }
 
         // only allow breaking player made blocks
-        gameHandle.hooks.registerHook(
-            BlockModificationHooks.BREAK_BLOCK,
-            BlockModificationHooks.BlockModifyHook { level, pos, entity ->
-                level != world || entity !is ServerPlayer || !gameHandle.participants.isParticipating(entity) || !playerMade.contains(pos)
-            }
-        )
+        BlockModificationHooks.BREAK_BLOCK.registerWith(gameHandle.hooks) { level, pos, entity ->
+            level != world || entity !is ServerPlayer || !gameHandle.participants.isParticipating(entity) || !playerMade.contains(pos)
+        }
     }
 
     fun disallow(entity: Entity) {

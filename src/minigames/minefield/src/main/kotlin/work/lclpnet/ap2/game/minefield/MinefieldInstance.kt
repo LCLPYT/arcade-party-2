@@ -182,13 +182,13 @@ class MinefieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
             }
         }
 
-        gameHandle.hooks.registerHook(PressurePlateCallback.HOOK, PressurePlateCallback { _, pos, entity ->
+        PressurePlateCallback.HOOK.registerWith(hooks) { _, pos, entity ->
             if (entity is ServerPlayer && players().isParticipating(entity)) {
                 onStepOnMine(entity, pos)
             }
 
-            return@PressurePlateCallback true
-        })
+            true
+        }
 
         gameHandle.protect {
             it.allow(ProtectionTypes.ALLOW_DAMAGE, EntityDamageSourceScope { entity, source ->
