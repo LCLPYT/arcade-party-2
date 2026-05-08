@@ -1,14 +1,16 @@
 import json
+import re
 import time
 from pathlib import Path
 
-import toml
-
-from util.common import pascal_case, TOML_FILE, BASE_DIR
+from util.common import pascal_case, BASE_DIR
 from util.inputs import Inputs, read_inputs
 from util.instance_class import create_instance_class
 from util.map import add_map
 from util.minigame_class import create_minigame_class
+
+SETTINGS_GRADLE = Path("settings.gradle")
+
 
 def write_translation_files(inputs: Inputs, resources_dir: Path):
     lang_json = {
@@ -17,7 +19,6 @@ def write_translation_files(inputs: Inputs, resources_dir: Path):
     }
 
     lang_dir = resources_dir / "lang"
-
     lang_dir.mkdir(parents=True, exist_ok=True)
 
     with open(lang_dir / "en_us.json", "w") as f:
@@ -25,6 +26,7 @@ def write_translation_files(inputs: Inputs, resources_dir: Path):
 
 
 def create_mod_json(inputs: Inputs, resources_dir: Path):
+    game_class = f"work.lclpnet.ap2.game.{inputs.game_id}.{pascal_case(inputs.game_id)}MiniGame"
     mod_json = {
         "schemaVersion": 1,
         "id": f"ap2-minigame-{inputs.game_id.replace('_', '-')}",
@@ -33,10 +35,11 @@ def create_mod_json(inputs: Inputs, resources_dir: Path):
         "license": "AGPL-3.0",
         "environment": "server",
         "entrypoints": {
-            "ap2:minigame": []
+            "ap2:minigame": [{"adapter": "kotlin", "value": game_class}]
         },
         "depends": {
-            "ap2-lib": "*"
+            "ap2-lib": "*",
+            "fabric-language-kotlin": "*"
         },
         "custom": {
             "timestamp": int(time.time()),
@@ -46,38 +49,41 @@ def create_mod_json(inputs: Inputs, resources_dir: Path):
         }
     }
 
-    # add minigame entry point, depending on the programming language
-    game_class = f"work.lclpnet.ap2.game.{inputs.game_id}.{pascal_case(inputs.game_id)}MiniGame"
-    if inputs.lang == "kotlin":
-        mod_json["entrypoints"]["ap2:minigame"].append({
-            "adapter": "kotlin",
-            "value": game_class
-        })
-        mod_json["depends"]["fabric-language-kotlin"] = ">=1.13.5+kotlin.2.2.10"
-    else:
-        mod_json["entrypoints"]["ap2:minigame"].append(game_class)
-        mod_json["depends"]["java"] = ">=21"
-
     with open(resources_dir / "fabric.mod.json", "w") as f:
         json.dump(mod_json, f, indent=2)
 
 
-def update_minigames_toml(inputs: Inputs):
-    if TOML_FILE.exists():
-        data = toml.load(TOML_FILE)
-    else:
-        data = {}
+def create_build_gradle(game_dir: Path):
+    content = """plugins {
+    alias(libs.plugins.kotlin.jvm)
+}
 
-    if "minigames" not in data:
-        data["minigames"] = []
+val javaVersion = libs.versions.java.get().toInt()
 
-    data["minigames"].append({
-        "id": inputs.game_id,
-        "type": [inputs.lang]
-    })
+kotlin {
+    jvmToolchain(javaVersion)
+}
+"""
+    with open(game_dir / "build.gradle.kts", "w") as f:
+        f.write(content)
 
-    with open(TOML_FILE, "w") as f:
-        toml.dump(data, f)
+
+def update_settings_gradle(game_id: str):
+    text = SETTINGS_GRADLE.read_text()
+
+    start_marker = "def minigames = ["
+    start_idx = text.index(start_marker) + len(start_marker)
+    end_idx = text.index("]", start_idx)
+
+    block = text[start_idx:end_idx]
+    existing = re.findall(r'"([^"]+)"', block)
+    existing.append(game_id)
+    existing.sort()
+
+    new_block = "\n" + "".join(f'        "{g}",\n' for g in existing)
+    new_text = text[:start_idx] + new_block + text[end_idx:]
+
+    SETTINGS_GRADLE.write_text(new_text)
 
 
 def main():
@@ -86,16 +92,16 @@ def main():
     if inputs is None:
         return
 
-    update_minigames_toml(inputs)
+    update_settings_gradle(inputs.game_id)
 
-    # Create directories
     game_dir = BASE_DIR / inputs.game_id
-    code_dir = game_dir / inputs.lang
-    resources_dir = game_dir / "resources"
+    code_dir = game_dir / "src/main/kotlin"
+    resources_dir = game_dir / "src/main/resources"
 
     code_dir.mkdir(parents=True, exist_ok=True)
     resources_dir.mkdir(parents=True, exist_ok=True)
 
+    create_build_gradle(game_dir)
     create_mod_json(inputs, resources_dir)
     write_translation_files(inputs, resources_dir)
 
