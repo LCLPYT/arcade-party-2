@@ -36,7 +36,8 @@
     "combat-control": "*",
     "fantasy": "*",
     "kibu-world-api": "*",
-    "map-canvas-api": "*"
+    "map-canvas-api": "*",
+    "game-map-api": "*"
   },
   "suggests": {
     "pal": "*",

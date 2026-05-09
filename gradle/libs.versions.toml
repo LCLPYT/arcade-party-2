@@ -62,6 +62,7 @@ ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx
 ktor-serialization-jvm = { module = "io.ktor:ktor-serialization-jvm", version.ref = "ktor" }
 ktor-utils-jvm = { module = "io.ktor:ktor-utils-jvm", version.ref = "ktor" }
 ktor-http-jvm = { module = "io.ktor:ktor-http-jvm", version.ref = "ktor" }
+ktor-http-cio-jvm = { module = "io.ktor:ktor-http-cio-jvm", version.ref = "ktor" }
 ktor-client-cio-jvm = { module = "io.ktor:ktor-client-cio-jvm", version.ref = "ktor" }
 ktor-io-jvm = { module = "io.ktor:ktor-io-jvm", version.ref = "ktor" }
 ktor-network-jvm = { module = "io.ktor:ktor-network-jvm", version.ref = "ktor" }

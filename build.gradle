@@ -155,6 +155,7 @@ dependencies {
         include(dep)
     }
 
+    include(libs.game.map.api)
     include(libs.json.config4j)
     includeImpl(libs.commons.compress)
     includeImpl(libs.ktor.client.core)
@@ -164,6 +165,7 @@ dependencies {
     // ship ktor libraries for runtime use; should ideally be moved to separate library mod in the future
     include(libs.ktor.utils.jvm)
     include(libs.ktor.http.jvm)
+    include(libs.ktor.http.cio.jvm)
     include(libs.ktor.client.cio.jvm)
     include(libs.ktor.io.jvm)
     include(libs.ktor.serialization.jvm)
