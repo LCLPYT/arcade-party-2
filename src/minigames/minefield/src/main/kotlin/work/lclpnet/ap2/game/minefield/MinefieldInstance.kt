@@ -56,7 +56,6 @@ import work.lclpnet.kibu.translate.text.FormatWrapper.styled
 import work.lclpnet.kibu.translate.text.LocalizedFormat
 import work.lclpnet.kibu.util.BlockStateUtils
 import work.lclpnet.kibu.util.math.Matrix3i
-import work.lclpnet.lobby.game.api.prot.scope.EntityDamageSourceScope
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes
 import work.lclpnet.lobby.game.map.GameMap
 import java.util.*
@@ -191,9 +190,9 @@ class MinefieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
         }
 
         gameHandle.protect {
-            it.allow(ProtectionTypes.ALLOW_DAMAGE, EntityDamageSourceScope { entity, source ->
+            ProtectionTypes.ALLOW_DAMAGE.allow(it) { entity, source ->
                 entity is ServerPlayer && players().isParticipating(entity) && source.`is`(DamageTypes.MAGIC)
-            })
+            }
         }
 
         val waterPoison = map.properties.optBoolean("water-poison", false)

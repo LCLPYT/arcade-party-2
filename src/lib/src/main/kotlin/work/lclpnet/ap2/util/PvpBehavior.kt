@@ -4,12 +4,9 @@ import net.minecraft.core.BlockPos
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.entity.Entity
-import net.minecraft.world.entity.projectile.Projectile
-import net.minecraft.world.item.context.UseOnContext
 import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.ext.configureProtection
 import work.lclpnet.kibu.hook.level.BlockModificationHooks
-import work.lclpnet.lobby.game.api.prot.scope.*
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes
 import java.util.*
 
@@ -26,26 +23,24 @@ class PvpBehavior(
                 entity.uuid !in disallowUuids
 
             // only for allowed players
-            allow(ProtectionTypes.ALLOW_DAMAGE, EntityDamageSourceScope { entity, _ ->
+            ProtectionTypes.ALLOW_DAMAGE.allow(this) { entity, _ ->
                 allowed(entity)
-            })
+            }
 
-            allow(ProtectionTypes.USE_ITEM_ON_BLOCK, PlayerGenericScope<UseOnContext> { player, _ ->
+            ProtectionTypes.USE_ITEM_ON_BLOCK.allow(this) { player, _ ->
                 allowed(player)
-            })
+            }
 
-            allow(
-                PlayerItemStackScope { player, _ ->
-                    allowed(player)
-                },
+            listOf(
                 ProtectionTypes.CONSUME_FOOD,
                 ProtectionTypes.CRAFT_ITEM,
-            )
+            ).forEach {
+                it.allow(this) { player, _ ->
+                    allowed(player)
+                }
+            }
 
-            allow(
-                EntityBlockScope { entity, _ ->
-                    allowed(entity)
-                },
+            listOf(
                 ProtectionTypes.USE_BLOCK,
                 ProtectionTypes.CHARGE_RESPAWN_ANCHOR,
                 ProtectionTypes.EAT_CAKE,
@@ -54,23 +49,27 @@ class PvpBehavior(
                 ProtectionTypes.BREAK_BLOCKS,
                 ProtectionTypes.PLACE_FLUID,
                 ProtectionTypes.PRIME_TNT,
-            )
+            ).forEach {
+                it.allow(this) { entity, _ ->
+                    allowed(entity)
+                }
+            }
 
-            allow(ProtectionTypes.DROP_ITEM, PlayerIntBoolScope { player, _, _ ->
+            ProtectionTypes.DROP_ITEM.allow(this) { player, _, _ ->
                 allowed(player)
-            })
+            }
 
-            allow(ProtectionTypes.HUNGER, PlayerScope { player ->
+            ProtectionTypes.HUNGER.allow(this) { player ->
                 allowed(player)
-            })
+            }
 
-            allow(ProtectionTypes.PICKUP_ITEM, PlayerItemEntityScope { player, _ ->
+            ProtectionTypes.PICKUP_ITEM.allow(this) { player, _ ->
                 allowed(player)
-            })
+            }
 
-            allow(ProtectionTypes.PICKUP_PROJECTILE, PlayerEntityScope<Projectile> { player, _ ->
+            ProtectionTypes.PICKUP_PROJECTILE.allow(this) { player, _ ->
                 allowed(player)
-            })
+            }
 
             // always allowed
             allow(ProtectionTypes.MODIFY_INVENTORY)

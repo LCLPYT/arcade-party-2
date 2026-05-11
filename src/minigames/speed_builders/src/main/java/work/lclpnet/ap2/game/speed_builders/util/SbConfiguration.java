@@ -12,6 +12,7 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.decoration.ItemFrame;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -36,6 +37,10 @@ import work.lclpnet.kibu.hook.entity.ItemFrameRemoveItemCallback;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.kibu.hook.level.BlockModificationHooks;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
+import work.lclpnet.lobby.game.impl.prot.scope.EntityBlockProtection;
+import work.lclpnet.lobby.game.impl.prot.scope.PlayerEntityProtection;
+
+import java.util.List;
 
 /**
  * Configure and handle custom block placement / destruction logic inside the build area of each player.
@@ -54,17 +59,32 @@ public class SbConfiguration {
 
     public void configureProtection() {
         gameHandle.protect(config -> {
-            config.allow((entity, pos) -> entity instanceof ServerPlayer player && canModify(player, pos),
-                    ProtectionTypes.PLACE_BLOCKS, ProtectionTypes.BREAK_BLOCKS, ProtectionTypes.USE_BLOCK,
-                    ProtectionTypes.PLACE_FLUID, ProtectionTypes.EAT_CAKE, ProtectionTypes.COMPOSTER,
-                    ProtectionTypes.CHARGE_RESPAWN_ANCHOR, ProtectionTypes.EXTINGUISH_CANDLE,
-                    ProtectionTypes.PICKUP_FLUID);
+            for (EntityBlockProtection type : List.of(
+                    ProtectionTypes.PLACE_BLOCKS,
+                    ProtectionTypes.BREAK_BLOCKS,
+                    ProtectionTypes.USE_BLOCK,
+                    ProtectionTypes.PLACE_FLUID,
+                    ProtectionTypes.EAT_CAKE,
+                    ProtectionTypes.COMPOSTER,
+                    ProtectionTypes.CHARGE_RESPAWN_ANCHOR,
+                    ProtectionTypes.EXTINGUISH_CANDLE,
+                    ProtectionTypes.PICKUP_FLUID
+            )) {
+                type.allow(config, (entity, pos) ->
+                        entity instanceof ServerPlayer player && canModify(player, pos));
+            }
 
-            config.allow((player, itemFrame) -> player instanceof ServerPlayer serverPlayer && canModify(serverPlayer, itemFrame.blockPosition()),
-                    ProtectionTypes.ITEM_FRAME_SET_ITEM, ProtectionTypes.ITEM_FRAME_ROTATE_ITEM,
-                    ProtectionTypes.ITEM_FRAME_REMOVE_ITEM);
+            for (PlayerEntityProtection<ItemFrame> type : List.of(
+                    ProtectionTypes.ITEM_FRAME_SET_ITEM,
+                    ProtectionTypes.ITEM_FRAME_ROTATE_ITEM,
+                    ProtectionTypes.ITEM_FRAME_REMOVE_ITEM
+            )) {
+                type.allow(config, (player, itemFrame) ->
+                        player instanceof ServerPlayer serverPlayer
+                                && canModify(serverPlayer, itemFrame.blockPosition()));
+            }
 
-            config.allow(ProtectionTypes.USE_ITEM_ON_BLOCK, (entity, ctx)
+            ProtectionTypes.USE_ITEM_ON_BLOCK.allow(config, (entity, ctx)
                     -> entity instanceof ServerPlayer player
                     && canModify(player, ctx.getClickedPos().above()));
 
@@ -202,7 +222,7 @@ public class SbConfiguration {
     private void playEmptyingSound(@Nullable Player player, LevelAccessor world, BlockPos pos, Fluid fluid) {
         Holder<Fluid> entry = BuiltInRegistries.FLUID.wrapAsHolder(fluid);
 
-        SoundEvent soundEvent = entry != null && entry.is(FluidTags.LAVA) ? SoundEvents.BUCKET_EMPTY_LAVA : SoundEvents.BUCKET_EMPTY;
+        SoundEvent soundEvent = entry.is(FluidTags.LAVA) ? SoundEvents.BUCKET_EMPTY_LAVA : SoundEvents.BUCKET_EMPTY;
         world.playSound(player, pos, soundEvent, SoundSource.BLOCKS, 1.0f, 1.0f);
         world.gameEvent(player, GameEvent.FLUID_PLACE, pos);
     }
