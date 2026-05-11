@@ -145,6 +145,14 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
             movementBlocker.enableMovement(it)
         }
 
+        if (tournamentResult!!.tournament.finale.completed) {
+            tournamentResult!!.tournament.finale.winner?.let {
+                data.setScore(it, 1)
+                winManager.complete()
+            }
+            return
+        }
+
         val matches = tournamentResult!!.tournament.matches
 
         val minRound = matches.minOf { it.round }
@@ -335,7 +343,7 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
 
             visualizer.add(player)
 
-            data.players += player.uuid
+            data.playerUuids += player.uuid
         } else {
             val npc = Mannequin(EntityType.MANNEQUIN, world)
             npc.uuid = ref.uuid
@@ -399,14 +407,17 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
 
         logger.debug("Scheduler match start: {}", match)
 
-        inst.participants.filterIsInstance<ServerPlayer>().forEach {
+
+        inst.players.forEach {
             inst.teleport(it)
 
             movementBlocker.disableMovement(it)
         }
 
-        SubtitleCountdown(server, gameHandle.scheduler).schedule(3.seconds) {
-            inst.participants.filterIsInstance<ServerPlayer>().forEach {
+        SubtitleCountdown(server, gameHandle.scheduler) {
+            inst.players
+        }.schedule(3.seconds) {
+            inst.players.forEach {
                 sendGo(it)
             }
 
@@ -535,7 +546,7 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
             return
         }
 
-        inst.participants.filterIsInstance<ServerPlayer>().forEach { player ->
+        inst.players.forEach { player ->
             if (winner?.uuid == player.uuid) {
                 WinSequence.playWinSound(player)
             } else {

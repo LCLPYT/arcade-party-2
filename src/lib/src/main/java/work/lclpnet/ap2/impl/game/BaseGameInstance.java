@@ -195,7 +195,11 @@ public abstract class BaseGameInstance implements MiniGameInstance {
 
         int initialDelay = getInitialDelay();
 
-        var countdown = new SubtitleCountdown(gameHandle.getServer(), gameHandle.getScheduler());
+        var countdown = new SubtitleCountdown(
+                gameHandle.getServer(),
+                gameHandle.getScheduler(),
+                () -> PlayerLookup.all(gameHandle.getServer())
+        );
 
         countdown.schedule(initialDelay, this::afterInitialDelay);
     }
