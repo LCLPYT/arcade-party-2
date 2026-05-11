@@ -64,7 +64,7 @@ public class CCHooks {
 
         config.allow(ProtectionTypes.PICKUP_ITEM, ProtectionTypes.SWAP_HAND_ITEMS, ProtectionTypes.PICKUP_PROJECTILE);
 
-        config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, _) -> {
+        ProtectionTypes.ALLOW_DAMAGE.allow(config, (entity, _) -> {
             if (entity instanceof ServerPlayer player) {
                 return participants.isParticipating(player) && !baseManager.isInBase(player);
             }
@@ -72,15 +72,15 @@ public class CCHooks {
             return entity instanceof Boat;  // allow damaging boats
         });
 
-        config.allow(ProtectionTypes.BREAK_BLOCKS, (entity, pos) -> {
+        ProtectionTypes.BREAK_BLOCKS.allow(config, (entity, pos) -> {
             if (!(entity instanceof ServerPlayer player)) return false;
 
             return fuel.isFuel(player, pos);
         });
 
-        config.allow(ProtectionTypes.BLOCK_ITEM_DROP, (_, _, itemStack) -> fuel.isFuel(itemStack));
+        ProtectionTypes.BLOCK_ITEM_DROP.allow(config, (_, _, itemStack) -> fuel.isFuel(itemStack));
 
-        config.allow(ProtectionTypes.DROP_ITEM, (player, slot, inInventory) -> {
+        ProtectionTypes.DROP_ITEM.allow(config, (player, slot, inInventory) -> {
             if (inInventory || slot < 0 || slot > 8) return true;
 
             // drop hot-bar item via the drop key while not in inventory
@@ -89,7 +89,7 @@ public class CCHooks {
             return fuel.isFuel(stack);
         });
 
-        config.allow(ProtectionTypes.MODIFY_INVENTORY, clickEvent -> {
+        ProtectionTypes.MODIFY_INVENTORY.allow(config, clickEvent -> {
             final int slot = clickEvent.slot();
 
             // disable armor interaction
@@ -106,16 +106,16 @@ public class CCHooks {
             return true;
         });
 
-        config.allow(ProtectionTypes.USE_BLOCK, (entity, pos) -> {
+        ProtectionTypes.USE_BLOCK.allow(config, (entity, pos) -> {
             onUseBlock(entity, pos);
 
             return false;
         });
 
-        config.allow(ProtectionTypes.ENTITY_ITEM_DROP, (_, itemEntity) -> fuel.isFuel(itemEntity.getItem()));
+        ProtectionTypes.ENTITY_ITEM_DROP.allow(config, (_, itemEntity) -> fuel.isFuel(itemEntity.getItem()));
 
-        config.allow(ProtectionTypes.USE_ITEM_ON_BLOCK, (_, obj) -> obj.getItemInHand().is(Items.LADDER));
-        config.allow(ProtectionTypes.PLACE_BLOCKS, (_, _) -> true);  // filter with hook in ::register
+        ProtectionTypes.USE_ITEM_ON_BLOCK.allow(config, (_, obj) -> obj.getItemInHand().is(Items.LADDER));
+        ProtectionTypes.PLACE_BLOCKS.allow(config, (_, _) -> true);  // filter with hook in ::register
     }
 
     public void register(HookRegistrar hooks) {

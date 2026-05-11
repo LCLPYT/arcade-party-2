@@ -88,9 +88,9 @@ public class SbConfiguration {
                     -> entity instanceof ServerPlayer player
                     && canModify(player, ctx.getClickedPos().above()));
 
-            config.allow(ProtectionTypes.MODIFY_INVENTORY);
+            ProtectionTypes.MODIFY_INVENTORY.allow(config);
 
-            config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, source) -> {
+            ProtectionTypes.ALLOW_DAMAGE.allow(config, (entity, source) -> {
                 if (entity instanceof ServerPlayer ||
                     !(source.getEntity() instanceof ServerPlayer player) ||
                     !canModify(player, entity.blockPosition())) return false;

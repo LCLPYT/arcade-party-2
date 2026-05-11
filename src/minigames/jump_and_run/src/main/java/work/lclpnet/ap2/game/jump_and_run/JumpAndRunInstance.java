@@ -175,12 +175,12 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
         beginSegment();
 
         gameHandle.protect(config -> {
-            config.allow(ProtectionTypes.USE_BLOCK, (_, pos) -> {
+            ProtectionTypes.USE_BLOCK.allow(config, (_, pos) -> {
                 BlockState state = jumpAndRun.world().getBlockState(pos);
                 return state.is(Blocks.SHULKER_BOX);
             });
 
-            config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, source) -> {
+            ProtectionTypes.ALLOW_DAMAGE.allow(config, (entity, source) -> {
                 if (entity instanceof ServerPlayer player
                         && gameHandle.getParticipants().isParticipating(player)
                         && (source.is(DamageTypes.IN_FIRE) || source.is(DamageTypes.LAVA)

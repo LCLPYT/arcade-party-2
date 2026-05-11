@@ -5,7 +5,6 @@ import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.entity.Entity
 import work.lclpnet.ap2.api.game.MiniGameHandle
-import work.lclpnet.ap2.ext.configureProtection
 import work.lclpnet.kibu.hook.level.BlockModificationHooks
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes
 import java.util.*
@@ -18,16 +17,16 @@ class PvpBehavior(
     val disallowUuids = mutableSetOf<UUID>()
 
     fun configure() {
-        gameHandle.configureProtection {
+        gameHandle.protect { config ->
             fun allowed(entity: Entity) =
                 entity.uuid !in disallowUuids
 
             // only for allowed players
-            ProtectionTypes.ALLOW_DAMAGE.allow(this) { entity, _ ->
+            ProtectionTypes.ALLOW_DAMAGE.allow(config) { entity, _ ->
                 allowed(entity)
             }
 
-            ProtectionTypes.USE_ITEM_ON_BLOCK.allow(this) { player, _ ->
+            ProtectionTypes.USE_ITEM_ON_BLOCK.allow(config) { player, _ ->
                 allowed(player)
             }
 
@@ -35,7 +34,7 @@ class PvpBehavior(
                 ProtectionTypes.CONSUME_FOOD,
                 ProtectionTypes.CRAFT_ITEM,
             ).forEach {
-                it.allow(this) { player, _ ->
+                it.allow(config) { player, _ ->
                     allowed(player)
                 }
             }
@@ -50,34 +49,34 @@ class PvpBehavior(
                 ProtectionTypes.PLACE_FLUID,
                 ProtectionTypes.PRIME_TNT,
             ).forEach {
-                it.allow(this) { entity, _ ->
+                it.allow(config) { entity, _ ->
                     allowed(entity)
                 }
             }
 
-            ProtectionTypes.DROP_ITEM.allow(this) { player, _, _ ->
+            ProtectionTypes.DROP_ITEM.allow(config) { player, _, _ ->
                 allowed(player)
             }
 
-            ProtectionTypes.HUNGER.allow(this) { player ->
+            ProtectionTypes.HUNGER.allow(config) { player ->
                 allowed(player)
             }
 
-            ProtectionTypes.PICKUP_ITEM.allow(this) { player, _ ->
+            ProtectionTypes.PICKUP_ITEM.allow(config) { player, _ ->
                 allowed(player)
             }
 
-            ProtectionTypes.PICKUP_PROJECTILE.allow(this) { player, _ ->
+            ProtectionTypes.PICKUP_PROJECTILE.allow(config) { player, _ ->
                 allowed(player)
             }
 
             // always allowed
-            allow(ProtectionTypes.MODIFY_INVENTORY)
-            allow(ProtectionTypes.SWAP_HAND_ITEMS)
+            ProtectionTypes.MODIFY_INVENTORY.allow(config)
+            ProtectionTypes.SWAP_HAND_ITEMS.allow(config)
 
             // generic
-            allow(ProtectionTypes.EXPLOSION)
-            allow(ProtectionTypes.ITEM_SCATTER)
+            ProtectionTypes.EXPLOSION.allow(config)
+            ProtectionTypes.ITEM_SCATTER.allow(config)
         }
 
         // track player made blocks

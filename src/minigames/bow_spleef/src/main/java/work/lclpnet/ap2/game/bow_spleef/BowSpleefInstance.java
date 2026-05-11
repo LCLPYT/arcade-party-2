@@ -145,11 +145,11 @@ public class BowSpleefInstance extends EliminationGameInstance {
     @Override
     protected void go() {
         gameHandle.protect(config -> {
-            config.allow(ProtectionTypes.ALLOW_DAMAGE, (_, damageSource)
+            ProtectionTypes.ALLOW_DAMAGE.allow(config, (_, damageSource)
                     -> damageSource.is(DamageTypes.OUTSIDE_BORDER)
                     || (damageSource.is(DamageTypes.THROWN) && damageSource.getDirectEntity() instanceof FishingHook));
 
-            config.allow(ProtectionTypes.EXPLOSION);
+            ProtectionTypes.EXPLOSION.allow(config);
         });
 
         HookRegistrar hooks = gameHandle.getHooks();

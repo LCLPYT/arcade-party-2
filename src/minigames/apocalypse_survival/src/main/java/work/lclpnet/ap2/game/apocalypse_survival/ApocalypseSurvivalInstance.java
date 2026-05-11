@@ -107,7 +107,8 @@ public class ApocalypseSurvivalInstance extends EliminationGameInstance {
     @Override
     protected void go() {
         gameHandle.protect(config -> {
-            config.allow(ProtectionTypes.ALLOW_DAMAGE, this::allowDamage);
+            ProtectionTypes.ALLOW_DAMAGE.allow(config, this::allowDamage);
+
             config.allow(ProtectionTypes.MOB_GRIEFING, ProtectionTypes.EXPLOSION);
         });
 

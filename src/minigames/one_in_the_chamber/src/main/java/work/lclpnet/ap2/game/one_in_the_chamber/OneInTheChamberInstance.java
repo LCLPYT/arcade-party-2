@@ -146,11 +146,11 @@ public class OneInTheChamberInstance extends FFAGameInstance {
     @Override
     protected void go() {
         gameHandle.protect(config -> {
-            config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, damageSource)
+            ProtectionTypes.ALLOW_DAMAGE.allow(config, (entity, damageSource)
                     -> entity instanceof ServerPlayer &&
                     (damageSource.is(DamageTypes.ARROW) || damageSource.is(DamageTypes.PLAYER_ATTACK)));
 
-            config.allow(ProtectionTypes.MOUNT);
+            ProtectionTypes.MOUNT.allow(config);
         });
 
         for (ServerPlayer player : gameHandle.getParticipants()) {
