@@ -31,7 +31,6 @@ import work.lclpnet.ap2.impl.util.ItemHelper
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess
 import work.lclpnet.kibu.hook.player.PlayerInventoryHooks
-import work.lclpnet.lobby.game.api.prot.scope.EntityDamageSourceScope
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes
 import work.lclpnet.lobby.game.map.GameMap
 import kotlin.random.Random
@@ -92,11 +91,11 @@ class KingOfTheHillInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
         }
 
         gameHandle.protect { config ->
-            config.allow(ProtectionTypes.ALLOW_DAMAGE, EntityDamageSourceScope {entity, source ->
+            ProtectionTypes.ALLOW_DAMAGE.allow(config) { entity, source ->
                 entity is ServerPlayer
                         && players().isParticipating(entity)
                         && (source.`is`(DamageTypes.PLAYER_ATTACK) || source.entity is Goat)
-            })
+            }
         }
 
         interval(20) { ->

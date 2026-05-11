@@ -34,7 +34,6 @@ import work.lclpnet.kibu.hook.player.PlayerMoveCallback
 import work.lclpnet.kibu.scheduler.Ticks
 import work.lclpnet.kibu.translate.bossbar.TranslatedBossBar
 import work.lclpnet.kibu.translate.text.FormatWrapper
-import work.lclpnet.lobby.game.api.prot.scope.EntityDamageSourceScope
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes
 import java.util.*
 
@@ -73,12 +72,12 @@ class AnvilFallInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(ga
 
     override fun go() {
         gameHandle.protect { config ->
-            config.allow(ProtectionTypes.ALLOW_DAMAGE, EntityDamageSourceScope { entity, damageSource ->
+            ProtectionTypes.ALLOW_DAMAGE.allow(config) { entity, damageSource ->
                 if (damageSource.`is`(DamageTypes.FALLING_ANVIL) && entity is ServerPlayer) {
                     onHitByAnvil(entity)
                 }
                 false
-            })
+            }
         }
 
         setupBossBar()
