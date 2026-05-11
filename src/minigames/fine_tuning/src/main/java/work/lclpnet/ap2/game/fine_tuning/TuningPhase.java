@@ -106,7 +106,7 @@ class TuningPhase {
             return InteractionResult.PASS;
         });
         
-        gameHandle.protect(config -> config.allow(ProtectionTypes.USE_BLOCK, (entity, pos) -> {
+        gameHandle.protect(config -> ProtectionTypes.USE_BLOCK.allow(config, (entity, pos) -> {
             BlockState state = entity.level().getBlockState(pos);
             return state.is(Blocks.NOTE_BLOCK) || state.is(BlockTags.ALL_SIGNS);
         }));

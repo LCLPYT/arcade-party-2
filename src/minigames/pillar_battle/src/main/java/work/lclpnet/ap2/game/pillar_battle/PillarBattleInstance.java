@@ -26,6 +26,7 @@ import work.lclpnet.kibu.hook.entity.ServerEntityHooks;
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
+import work.lclpnet.lobby.game.impl.prot.scope.EntityBlockProtection;
 import work.lclpnet.lobby.game.map.GameMap;
 
 import java.util.*;
@@ -116,16 +117,18 @@ public class PillarBattleInstance extends EliminationGameInstance implements Map
         gameHandle.protect(config -> {
             config.allowAll();
 
-            config.disallow((entity, block) -> {
-                if (entity instanceof ServerPlayer player && outOfBounds(block)) {
-                    var msg = translations.translateText(player, "game.ap2.pillar_battle.out_of_bounds").formatted(ChatFormatting.RED);
-                    player.sendOverlayMessage((msg));
-                    ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.NOTE_BLOCK_BASS.value(), SoundSource.BLOCKS, 0f, 0.5f);
-                    return true;
-                }
+            for (EntityBlockProtection type : List.of(ProtectionTypes.PLACE_BLOCKS, ProtectionTypes.PLACE_FLUID)) {
+                type.disallow(config, (entity, block) -> {
+                    if (entity instanceof ServerPlayer player && outOfBounds(block)) {
+                        var msg = translations.translateText(player, "game.ap2.pillar_battle.out_of_bounds").formatted(ChatFormatting.RED);
+                        player.sendOverlayMessage((msg));
+                        ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.NOTE_BLOCK_BASS.value(), SoundSource.BLOCKS, 0f, 0.5f);
+                        return true;
+                    }
 
-                return false;
-            }, ProtectionTypes.PLACE_BLOCKS, ProtectionTypes.PLACE_FLUID);
+                    return false;
+                });
+            }
         });
 
         for (ServerPlayer player : gameHandle.getParticipants()) {

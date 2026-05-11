@@ -364,9 +364,9 @@ public class PaintballInstance extends TeamGameInstance implements MapBootstrapF
                 -> participants.isParticipating(spectator));
 
         gameHandle.protect(config -> {
-            config.allow(ProtectionTypes.EXPLOSION);
+            ProtectionTypes.EXPLOSION.allow(config);
 
-            config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, source)
+            ProtectionTypes.ALLOW_DAMAGE.allow(config, (entity, source)
                     -> entity instanceof ServerPlayer player
                     && participants.isParticipating(player)
                     && (source.is(DamageTypes.ARROW) || source.is(DamageTypes.PLAYER_EXPLOSION)));

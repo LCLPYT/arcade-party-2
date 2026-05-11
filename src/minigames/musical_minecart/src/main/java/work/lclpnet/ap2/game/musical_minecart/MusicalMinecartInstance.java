@@ -123,7 +123,7 @@ public class MusicalMinecartInstance extends EliminationGameInstance implements 
 
         useRemainingPlayersDisplay();
 
-        gameHandle.protect(config -> config.allow(ProtectionTypes.MOUNT));
+        gameHandle.protect(ProtectionTypes.MOUNT::allow);
 
         CommandRegistrar commands = gameHandle.getCommands();
         new SetSongCommand(songs, this::skipSong).register(commands);

@@ -50,14 +50,14 @@ public class SpleefInstance extends EliminationGameInstance {
     @Override
     protected void go() {
         gameHandle.protect(config -> {
-            config.allow(ProtectionTypes.BREAK_BLOCKS, (entity, pos) -> {
+            ProtectionTypes.BREAK_BLOCKS.allow(config, (entity, pos) -> {
                 Level world = entity.level();
                 BlockState state = world.getBlockState(pos);
 
                 return state.is(Blocks.SNOW_BLOCK);
             });
 
-            config.allow(ProtectionTypes.ALLOW_DAMAGE, (_, damageSource)
+            ProtectionTypes.ALLOW_DAMAGE.allow(config, (_, damageSource)
                     -> damageSource.is(DamageTypes.LAVA) || damageSource.is(DamageTypes.OUTSIDE_BORDER));
         });
 
