@@ -1,6 +1,7 @@
 package work.lclpnet.ap2.game.pvp_tournament.util
 
 import net.minecraft.server.level.ServerLevel
+import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.entity.Avatar
 import net.minecraft.world.entity.decoration.Mannequin
 import work.lclpnet.ap2.api.base.Participants
@@ -20,18 +21,20 @@ class MatchInstance(
 ) {
     val tasks = mutableListOf<TaskHandle>()
     val npcs = mutableListOf<EntityRef<Mannequin>>()
-    val players = mutableListOf<UUID>()
+    val playerUuids = mutableListOf<UUID>()
     var started = false
 
-    val participants: List<Avatar>
-        get() =
-            match.players.mapNotNull { entity(it) }
+    val participants: List<Avatar> get() =
+        match.players.mapNotNull { entity(it) }
+
+    val players: List<ServerPlayer> get() =
+        participants.filterIsInstance<ServerPlayer>()
 
     fun entity(ref: PlayerRef): Avatar? {
         val player = allPlayers.getParticipant(ref.uuid).orElse(null)
 
         if (player != null) {
-            return if (player.uuid in players) { player } else null
+            return if (player.uuid in playerUuids) { player } else null
         }
 
         return npcs.find { it.uuid == ref.uuid }?.resolve()
