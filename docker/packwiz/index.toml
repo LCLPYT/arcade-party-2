@@ -7,12 +7,12 @@ metafile = true
 
 [[files]]
 file = "mods/combat-control.pw.toml"
-hash = "d94c10fa696f6abff9597554ddfa64eb589ab543933886f32f1fab745dfc876e"
+hash = "41338896fb7e02615556221161f67d8e15a28fe11761fb952f31027068d2a338"
 metafile = true
 
 [[files]]
 file = "mods/fabric-api.pw.toml"
-hash = "5adf60faf11b97a7979f398fd6c494f55603a384880db1bf9755f2495d0dc5a2"
+hash = "42eac2c5f04724698fef548d0eec80151572b147149b0760cbc4322fc3020328"
 metafile = true
 
 [[files]]
@@ -42,7 +42,7 @@ metafile = true
 
 [[files]]
 file = "mods/kibu.pw.toml"
-hash = "19a72531133ac1ce80f8fad45afd2e9f8da438be87f4da76813f6a4586c3c7c3"
+hash = "3ec128859062856d4303e1bb713ea19eae8e837e9d28b3c99cab67810b093360"
 metafile = true
 
 [[files]]
@@ -62,7 +62,7 @@ metafile = true
 
 [[files]]
 file = "mods/mcserver-api-fabric.pw.toml"
-hash = "32176e65ebeefe2b184f1ec6d4c461b4685e21936384173d13f8ecefcd9f404a"
+hash = "f6054dc93385e19920a189d7f32272083962b01a66569366a6cd6c18f3204197"
 metafile = true
 
 [[files]]
