@@ -73,7 +73,7 @@ public class SnowballFightInstance extends EliminationGameInstance {
         TaskScheduler scheduler = gameHandle.getScheduler();
 
         gameHandle.protect(config -> {
-            config.allow(ProtectionTypes.BREAK_BLOCKS, (entity, pos) -> {
+            ProtectionTypes.BREAK_BLOCKS.allow(config, (entity, pos) -> {
                 if (entity instanceof ServerPlayer player && participants.isParticipating(player) && !winManager.isGameOver()) {
                     onBreakBlock(player, pos);
                 }
@@ -81,7 +81,7 @@ public class SnowballFightInstance extends EliminationGameInstance {
                 return false;
             });
 
-            config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, damageSource)
+            ProtectionTypes.ALLOW_DAMAGE.allow(config, (entity, damageSource)
                     -> damageSource.is(DamageTypes.OUTSIDE_BORDER)
                     || damageSource.is(DamageTypes.FREEZE)
                     || entity instanceof ServerPlayer damaged

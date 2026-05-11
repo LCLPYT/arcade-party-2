@@ -8,14 +8,12 @@ import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.scores.DisplaySlot
 import org.slf4j.Logger
 import work.lclpnet.ap2.api.event.IntScoreEventSource
-import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.impl.game.BaseGameInstance
 import work.lclpnet.ap2.impl.game.FFAGameInstance
 import work.lclpnet.ap2.impl.game.GameCommons
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape
 import work.lclpnet.kibu.hook.entity.EntityHealthCallback
-import work.lclpnet.lobby.game.impl.prot.MutableProtectionConfig
 
 fun BaseGameInstance.players() =
     gameHandle.participants!!
@@ -43,12 +41,6 @@ fun FFAGameInstance.setupSidebarScoreboard(data: IntScoreEventSource<ServerPlaye
 
 fun BaseGameInstance.readShape(key: String): BlockShape =
     MapUtil.readShape(map, key)
-
-fun MiniGameHandle.configureProtection(action: MutableProtectionConfig.() -> Unit) {
-    protect {
-        action(it)
-    }
-}
 
 inline fun <reified T : LivingEntity> BaseGameInstance.onDeathOf(
     noinline action: (T, DamageSource) -> Unit

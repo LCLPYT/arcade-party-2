@@ -167,7 +167,7 @@ public class MazeScapeInstance extends EliminationGameInstance implements MapBoo
             scheduler.timeout(reveal::stop, MOB_REVEAL_TICKS);
         }, MOB_SPAWN_DELAY_TICKS);
 
-        gameHandle.protect(config -> config.allow(ProtectionTypes.ALLOW_DAMAGE, this::allowDamage));
+        gameHandle.protect(config -> ProtectionTypes.ALLOW_DAMAGE.allow(config, this::allowDamage));
     }
 
     @Override

@@ -56,8 +56,8 @@ public class BlockDissolveInstance extends EliminationGameInstance {
         useRemainingPlayersDisplay();
 
         gameHandle.protect(config -> {
-            config.allow(ProtectionTypes.MOUNT);
-            config.allow(ProtectionTypes.ALLOW_DAMAGE, (_, source) -> source.getDirectEntity() instanceof Projectile);
+            ProtectionTypes.MOUNT.allow(config);
+            ProtectionTypes.ALLOW_DAMAGE.allow(config, (_, source) -> source.getDirectEntity() instanceof Projectile);
         });
 
         Object physics = getMap().getProperty("block_physics");

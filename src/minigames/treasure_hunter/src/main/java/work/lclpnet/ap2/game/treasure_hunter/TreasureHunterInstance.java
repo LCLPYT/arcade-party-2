@@ -114,14 +114,14 @@ public class TreasureHunterInstance extends FFAGameInstance {
     @Override
     protected void go() {
         gameHandle.protect(config -> {
-            config.allow(ProtectionTypes.BREAK_BLOCKS, (entity, pos) -> {
+            ProtectionTypes.BREAK_BLOCKS.allow(config, (entity, pos) -> {
                 Level world = entity.level();
                 BlockState state = world.getBlockState(pos);
 
                 return materials.contains(state);
             });
 
-            config.allow(ProtectionTypes.PICKUP_ITEM, (player, item) -> {
+            ProtectionTypes.PICKUP_ITEM.allow(config, (player, item) -> {
                 if (player instanceof ServerPlayer serverPlayer && item.getItem().is(Items.SUNFLOWER)) {
                     item.discard();
                     giveCoin(serverPlayer);

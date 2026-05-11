@@ -154,7 +154,7 @@ public class ChickenShooterInstance extends FFAGameInstance implements Runnable 
 
     @Override
     protected void go() {
-        gameHandle.protect(config -> config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, damageSource)
+        gameHandle.protect(config -> ProtectionTypes.ALLOW_DAMAGE.allow(config, (entity, damageSource)
                 -> damageSource.getDirectEntity() instanceof Projectile && entity instanceof Chicken));
 
         Translations translations = gameHandle.getTranslations();
