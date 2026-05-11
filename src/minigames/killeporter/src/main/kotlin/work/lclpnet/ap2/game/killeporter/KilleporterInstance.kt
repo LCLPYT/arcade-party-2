@@ -41,7 +41,6 @@ import work.lclpnet.kibu.hook.util.PlayerUtils
 import work.lclpnet.kibu.hook.util.PositionRotation
 import work.lclpnet.kibu.scheduler.Ticks
 import work.lclpnet.kibu.translate.text.FormatWrapper
-import work.lclpnet.lobby.game.api.prot.scope.EntityDamageSourceScope
 import work.lclpnet.lobby.game.impl.prot.ProtectionTypes
 import work.lclpnet.lobby.game.map.GameMap
 import java.lang.Math.floorMod
@@ -129,12 +128,12 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
 
         gameHandle.protect { config ->
             config.allowAll()
-            config.disallow(ProtectionTypes.ALLOW_DAMAGE, EntityDamageSourceScope { entity, source ->
+            ProtectionTypes.ALLOW_DAMAGE.disallow(config) { entity, source ->
                 entity is ServerPlayer && source.entity is ServerPlayer
                         && !source.`is`(DamageTypes.PLAYER_EXPLOSION)
                         && !source.`is`(DamageTypes.INDIRECT_MAGIC)
                         && !source.`is`(DamageTypes.MAGIC)
-            })
+            }
         }
 
         BlockModificationHooks.PLACE_FLUID.registerWith(hooks) { _, pos, entity, fluid ->

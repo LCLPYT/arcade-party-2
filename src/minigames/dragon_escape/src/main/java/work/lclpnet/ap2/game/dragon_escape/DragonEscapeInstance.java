@@ -315,7 +315,7 @@ public class DragonEscapeInstance extends FFAGameInstance {
     @Override
     protected void go() {
         gameHandle.protect(config -> {
-            config.allow(ProtectionTypes.ALLOW_DAMAGE, (entity, source) -> {
+            ProtectionTypes.ALLOW_DAMAGE.allow(config, (entity, source) -> {
                 if (!(entity instanceof ServerPlayer player)
                         || !gameHandle.getParticipants().isParticipating(player)
                         || inGoal.contains(player.getUUID())
@@ -331,7 +331,7 @@ public class DragonEscapeInstance extends FFAGameInstance {
                 return !source.is(DamageTypes.FIREWORKS);
             });
 
-            config.allow(ProtectionTypes.EXPLOSION, arg -> arg.getDirectSourceEntity() instanceof WindCharge);
+            ProtectionTypes.EXPLOSION.allow(config, arg -> arg.getDirectSourceEntity() instanceof WindCharge);
         });
 
         kitHandler.disableKitChanger();

@@ -82,7 +82,7 @@ public class MiningBattleInstance extends FFAGameInstance implements MapBootstra
 
     @Override
     protected void go() {
-        gameHandle.protect(config -> config.allow(ProtectionTypes.BREAK_BLOCKS, (_, pos) -> canBeMined(pos)));
+        gameHandle.protect(config -> ProtectionTypes.BREAK_BLOCKS.allow(config, (_, pos) -> canBeMined(pos)));
 
         HookRegistrar hooks = gameHandle.getHooks();
         Participants participants = gameHandle.getParticipants();

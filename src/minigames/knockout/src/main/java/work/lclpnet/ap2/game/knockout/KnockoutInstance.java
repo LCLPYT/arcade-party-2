@@ -104,7 +104,7 @@ public class KnockoutInstance extends EliminationGameInstance {
 
     @Override
     protected void go() {
-        gameHandle.protect(config -> config.allow(ProtectionTypes.ALLOW_DAMAGE, this::canDamage));
+        gameHandle.protect(config -> ProtectionTypes.ALLOW_DAMAGE.allow(config, this::canDamage));
 
         HookRegistrar hooks = gameHandle.getHooks();
         TaskScheduler scheduler = gameHandle.getScheduler();
