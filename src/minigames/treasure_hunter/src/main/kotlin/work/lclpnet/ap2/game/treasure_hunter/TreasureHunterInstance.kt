@@ -65,8 +65,8 @@ class TreasureHunterInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameH
             ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.AMETHYST_BLOCK_RESONATE, SoundSource.BLOCKS, 1.2f, 1.8f)
             ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.CHEST_LOCKED, SoundSource.BLOCKS, 0.2f, 0.5f)
 
-            val scoreEntry = score.getEntry(player)
-                .map { it.toText(translations) }
+            val scoreEntry: Any = score.getEntry(player)
+                .map<Any> { it.toText(translations) }
                 .orElse(Component.literal("-"))
 
             val detail = translations.translateText("game.ap2.treasure_hunter.found_treasure", scoreEntry)
