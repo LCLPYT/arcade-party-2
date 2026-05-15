@@ -9,11 +9,15 @@
   "environment": "server",
   "entrypoints": {
     "ap2:minigame": [
-      "work.lclpnet.ap2.game.chicken_shooter.ChickenShooterMiniGame"
+      {
+        "adapter": "kotlin",
+        "value": "work.lclpnet.ap2.game.chicken_shooter.ChickenShooterMiniGame"
+      }
     ]
   },
   "depends": {
-    "ap2-lib": "*"
+    "ap2-lib": "*",
+    "fabric-language-kotlin": "*"
   },
   "custom": {
     "timestamp": 1713642900,
