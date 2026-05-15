@@ -134,7 +134,7 @@ class BlockDissolveInstance(gameHandle: MiniGameHandle) : EliminationGameInstanc
             dps++
         }
 
-        if (markedBlocks.isEmpty()) {
+        if (markedBlocks.isEmpty) {
             info.cancel()
             return
         }
