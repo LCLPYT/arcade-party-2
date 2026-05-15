@@ -9,11 +9,15 @@
   "environment": "server",
   "entrypoints": {
     "ap2:minigame": [
-      "work.lclpnet.ap2.game.panda_finder.PandaFinderMiniGame"
+      {
+        "adapter": "kotlin",
+        "value": "work.lclpnet.ap2.game.panda_finder.PandaFinderMiniGame"
+      }
     ]
   },
   "depends": {
-    "ap2-lib": "*"
+    "ap2-lib": "*",
+    "fabric-language-kotlin": "*"
   },
   "custom": {
     "timestamp": 1702932240,
