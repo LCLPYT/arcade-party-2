@@ -37,3 +37,6 @@ logs/
 .env
 /.venv/
 **/.fabric/processedMods
+
+**__pycache__/
+**/worktrees/

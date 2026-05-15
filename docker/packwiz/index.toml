@@ -66,8 +66,13 @@ hash = "f6054dc93385e19920a189d7f32272083962b01a66569366a6cd6c18f3204197"
 metafile = true
 
 [[files]]
+file = "mods/mg-api.pw.toml"
+hash = "9c61a1c772775e197e73750308fb4914717086b1fcd055296c6931cae3608805"
+metafile = true
+
+[[files]]
 file = "mods/mg-lobby.pw.toml"
-hash = "73a14ec3d11dd4d024c41e64698bbf8b313902a971ee4afa73a9a2937ddb26f9"
+hash = "4f9393a0611026cedcfd3f30ea4eb2f036274474fca7f9929b4303f05627c07e"
 metafile = true
 
 [[files]]
