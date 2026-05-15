@@ -22,10 +22,10 @@ import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.impl.game.EliminationGameInstance;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.gaco.ds.BlockBox;
+import work.lclpnet.game.impl.prot.ProtectionTypes;
 import work.lclpnet.kibu.access.entity.ServerPlayerAccess;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.RunningTask;
-import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 
 import java.util.Random;
 

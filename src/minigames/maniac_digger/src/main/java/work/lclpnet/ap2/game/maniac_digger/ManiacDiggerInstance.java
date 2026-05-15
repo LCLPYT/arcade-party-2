@@ -31,12 +31,12 @@ import work.lclpnet.ap2.impl.game.data.Ordering;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.map.ServerThreadMapBootstrap;
 import work.lclpnet.ap2.impl.util.world.WorldBorderUtil;
+import work.lclpnet.game.impl.prot.ProtectionTypes;
+import work.lclpnet.game.map.GameMap;
+import work.lclpnet.game.util.PlayerReset;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.kibu.hook.level.BlockModificationHooks;
-import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
-import work.lclpnet.lobby.game.map.GameMap;
-import work.lclpnet.lobby.util.PlayerReset;
 
 import java.util.*;
 

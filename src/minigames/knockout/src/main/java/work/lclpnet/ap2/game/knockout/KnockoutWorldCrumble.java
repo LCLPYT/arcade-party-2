@@ -9,10 +9,10 @@ import org.json.JSONObject;
 import work.lclpnet.ap2.game.knockout.util.DistanceIterator;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.gaco.math.Vec2i;
+import work.lclpnet.game.map.GameMap;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.RunningTask;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
-import work.lclpnet.lobby.game.map.GameMap;
 
 public class KnockoutWorldCrumble {
 

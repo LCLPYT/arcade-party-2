@@ -17,9 +17,9 @@ import work.lclpnet.ap2.util.world.BfsContextScanner
 import work.lclpnet.ap2.util.world.ScannerNode
 import work.lclpnet.gaco.ds.BlockBox
 import work.lclpnet.gaco.ds.StructureMask
+import work.lclpnet.game.map.GameMap
+import work.lclpnet.game.map.MapUtils
 import work.lclpnet.kibu.util.math.Matrix3i
-import work.lclpnet.lobby.game.map.GameMap
-import work.lclpnet.lobby.game.map.MapUtils
 import kotlin.math.max
 import kotlin.math.min
 

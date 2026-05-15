@@ -32,6 +32,7 @@ import work.lclpnet.ap2.impl.util.SoundHelper;
 import work.lclpnet.ap2.impl.util.handler.DoubleJumpHandler;
 import work.lclpnet.ap2.impl.util.handler.VisualCooldown;
 import work.lclpnet.combatctl.impl.CombatStyles;
+import work.lclpnet.game.impl.prot.ProtectionTypes;
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
 import work.lclpnet.kibu.hook.Hook;
 import work.lclpnet.kibu.hook.HookFactory;
@@ -40,7 +41,6 @@ import work.lclpnet.kibu.hook.entity.ProjectileHooks;
 import work.lclpnet.kibu.hook.level.BlockBreakParticleCallback;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.translate.Translations;
-import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 
 import java.util.Objects;
 import java.util.Random;

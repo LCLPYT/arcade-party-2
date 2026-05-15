@@ -34,6 +34,8 @@ import work.lclpnet.ap2.util.loot.LazyLootContainerManager
 import work.lclpnet.ap2.util.loot.LootEntry
 import work.lclpnet.ap2.util.loot.LootFiller
 import work.lclpnet.gaco.ds.WeightedList
+import work.lclpnet.game.impl.prot.ProtectionTypes
+import work.lclpnet.game.map.GameMap
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks
 import work.lclpnet.kibu.hook.level.BlockModificationHooks
@@ -41,8 +43,6 @@ import work.lclpnet.kibu.hook.util.PlayerUtils
 import work.lclpnet.kibu.hook.util.PositionRotation
 import work.lclpnet.kibu.scheduler.Ticks
 import work.lclpnet.kibu.translate.text.FormatWrapper
-import work.lclpnet.lobby.game.impl.prot.ProtectionTypes
-import work.lclpnet.lobby.game.map.GameMap
 import java.lang.Math.floorMod
 import java.util.concurrent.CompletableFuture
 import kotlin.random.Random

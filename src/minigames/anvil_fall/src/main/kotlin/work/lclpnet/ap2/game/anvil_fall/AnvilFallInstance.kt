@@ -27,6 +27,7 @@ import work.lclpnet.ap2.impl.util.handler.Visibility
 import work.lclpnet.ap2.impl.util.handler.VisibilityHandler
 import work.lclpnet.ap2.impl.util.handler.VisibilityManager
 import work.lclpnet.gaco.ds.BlockBox
+import work.lclpnet.game.impl.prot.ProtectionTypes
 import work.lclpnet.kibu.access.VelocityModifier
 import work.lclpnet.kibu.access.entity.FallingBlockAccess
 import work.lclpnet.kibu.access.entity.ServerPlayerAccess
@@ -34,7 +35,6 @@ import work.lclpnet.kibu.hook.player.PlayerMoveCallback
 import work.lclpnet.kibu.scheduler.Ticks
 import work.lclpnet.kibu.translate.bossbar.TranslatedBossBar
 import work.lclpnet.kibu.translate.text.FormatWrapper
-import work.lclpnet.lobby.game.impl.prot.ProtectionTypes
 import java.util.*
 
 const val DIRECT_ANVIL_CHANCE = 0.02

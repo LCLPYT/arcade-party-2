@@ -27,13 +27,13 @@ import work.lclpnet.ap2.impl.util.world.WalkableBlockPredicate;
 import work.lclpnet.gaco.ds.BVH;
 import work.lclpnet.gaco.ds.BlockBox;
 import work.lclpnet.gaco.ds.StructureMask;
+import work.lclpnet.game.map.GameMap;
 import work.lclpnet.kibu.schematic.FabricBlockStateAdapter;
 import work.lclpnet.kibu.schematic.FabricStructureWrapper;
 import work.lclpnet.kibu.schematic.api.SchematicReader;
 import work.lclpnet.kibu.schematic.vanilla.VanillaStructureFormat;
 import work.lclpnet.kibu.structure.BlockStructure;
 import work.lclpnet.kibu.world.mixin.MinecraftServerAccessor;
-import work.lclpnet.lobby.game.map.GameMap;
 
 import java.io.IOException;
 import java.nio.file.Files;

@@ -15,6 +15,7 @@ import work.lclpnet.ap2.impl.util.structure.StructureUtil;
 import work.lclpnet.ap2.impl.util.world.ResetBlockWorldModifier;
 import work.lclpnet.gaco.core.util.ThreadUtil;
 import work.lclpnet.gaco.math.AffineIntMatrix;
+import work.lclpnet.game.map.GameMap;
 import work.lclpnet.kibu.jnbt.CompoundTag;
 import work.lclpnet.kibu.mc.KibuBlockPos;
 import work.lclpnet.kibu.schematic.FabricStructureWrapper;
@@ -23,7 +24,6 @@ import work.lclpnet.kibu.util.BlockStateUtils;
 import work.lclpnet.kibu.util.RotationUtil;
 import work.lclpnet.kibu.util.StructureWriter;
 import work.lclpnet.kibu.util.math.Matrix3i;
-import work.lclpnet.lobby.game.map.GameMap;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;

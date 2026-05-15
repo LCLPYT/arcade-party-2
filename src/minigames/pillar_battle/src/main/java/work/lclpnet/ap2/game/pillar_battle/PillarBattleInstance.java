@@ -20,14 +20,14 @@ import work.lclpnet.ap2.core.type.ApDragonFight;
 import work.lclpnet.ap2.impl.game.EliminationGameInstance;
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker;
 import work.lclpnet.ap2.impl.util.world.WorldBorderUtil;
+import work.lclpnet.game.impl.prot.ProtectionTypes;
+import work.lclpnet.game.impl.prot.scope.EntityBlockProtection;
+import work.lclpnet.game.map.GameMap;
 import work.lclpnet.kibu.access.entity.ServerPlayerAccess;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.ServerEntityHooks;
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks;
 import work.lclpnet.kibu.translate.Translations;
-import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
-import work.lclpnet.lobby.game.impl.prot.scope.EntityBlockProtection;
-import work.lclpnet.lobby.game.map.GameMap;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;

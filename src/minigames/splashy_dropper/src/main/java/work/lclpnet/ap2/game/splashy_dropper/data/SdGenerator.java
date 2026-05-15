@@ -11,7 +11,7 @@ import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape;
 import work.lclpnet.gaco.ds.IndexedSet;
 import work.lclpnet.gaco.ds.WeightedList;
-import work.lclpnet.lobby.game.map.GameMap;
+import work.lclpnet.game.map.GameMap;
 
 import java.util.HashSet;
 import java.util.Random;

@@ -6,8 +6,8 @@ import net.minecraft.world.level.border.WorldBorder;
 import work.lclpnet.ap2.impl.game.GameCommons;
 import work.lclpnet.ap2.impl.util.debug.DebugController;
 import work.lclpnet.ap2.impl.util.math.MathUtil;
-import work.lclpnet.lobby.game.map.GameMap;
-import work.lclpnet.lobby.game.map.MapUtils;
+import work.lclpnet.game.map.GameMap;
+import work.lclpnet.game.map.MapUtils;
 
 import java.util.Random;
 

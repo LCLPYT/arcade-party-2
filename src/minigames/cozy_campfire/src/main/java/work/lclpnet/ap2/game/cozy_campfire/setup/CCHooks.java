@@ -26,6 +26,9 @@ import work.lclpnet.ap2.api.game.team.TeamSpawnAccess;
 import work.lclpnet.gaco.collisions.CollisionDetector;
 import work.lclpnet.gaco.collisions.movement.PlayerMovementObserver;
 import work.lclpnet.gaco.ds.Collider;
+import work.lclpnet.game.api.prot.ProtectionConfig;
+import work.lclpnet.game.impl.prot.ProtectionTypes;
+import work.lclpnet.game.util.PlayerReset;
 import work.lclpnet.kibu.access.entity.ServerPlayerAccess;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
@@ -35,9 +38,6 @@ import work.lclpnet.kibu.hook.player.PlayerSpawnLocationCallback;
 import work.lclpnet.kibu.hook.util.PlayerUtils;
 import work.lclpnet.kibu.hook.util.PositionRotation;
 import work.lclpnet.kibu.translate.Translations;
-import work.lclpnet.lobby.game.api.prot.ProtectionConfig;
-import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
-import work.lclpnet.lobby.util.PlayerReset;
 
 import static work.lclpnet.ap2.game.cozy_campfire.CozyCampfireInstance.MOVEMENT_SPEED;
 

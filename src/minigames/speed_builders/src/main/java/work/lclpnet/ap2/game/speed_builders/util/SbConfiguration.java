@@ -31,14 +31,14 @@ import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.level.redstone.NeighborUpdater;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
+import work.lclpnet.game.impl.prot.ProtectionTypes;
+import work.lclpnet.game.impl.prot.scope.EntityBlockProtection;
+import work.lclpnet.game.impl.prot.scope.PlayerEntityProtection;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.ItemFramePutItemCallback;
 import work.lclpnet.kibu.hook.entity.ItemFrameRemoveItemCallback;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.kibu.hook.level.BlockModificationHooks;
-import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
-import work.lclpnet.lobby.game.impl.prot.scope.EntityBlockProtection;
-import work.lclpnet.lobby.game.impl.prot.scope.PlayerEntityProtection;
 
 import java.util.List;
 

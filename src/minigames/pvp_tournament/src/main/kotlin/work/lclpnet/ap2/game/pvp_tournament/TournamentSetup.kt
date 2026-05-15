@@ -8,18 +8,14 @@ import net.minecraft.core.BlockPos
 import net.minecraft.server.level.ServerLevel
 import org.json.JSONObject
 import org.slf4j.Logger
-import work.lclpnet.ap2.game.pvp_tournament.gen.ByeTracker
-import work.lclpnet.ap2.game.pvp_tournament.gen.Match
-import work.lclpnet.ap2.game.pvp_tournament.gen.SingleEliminationTournamentBuilder
-import work.lclpnet.ap2.game.pvp_tournament.gen.SwissTournamentBuilder
-import work.lclpnet.ap2.game.pvp_tournament.gen.Tournament
+import work.lclpnet.ap2.game.pvp_tournament.gen.*
 import work.lclpnet.ap2.game.pvp_tournament.util.Arena
 import work.lclpnet.ap2.game.pvp_tournament.util.ArenaData
 import work.lclpnet.ap2.game.pvp_tournament.util.ArenaInstance
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef
 import work.lclpnet.ap2.impl.util.structure.StructureUtil
+import work.lclpnet.game.map.GameMap
 import work.lclpnet.kibu.structure.BlockStructure
-import work.lclpnet.lobby.game.map.GameMap
 import kotlin.math.max
 
 data class TournamentResult(

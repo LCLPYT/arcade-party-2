@@ -11,6 +11,7 @@ import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.world.CircleStructureGenerator;
 import work.lclpnet.gaco.ds.IndexedSet;
+import work.lclpnet.game.map.GameMap;
 import work.lclpnet.kibu.hook.util.PositionRotation;
 import work.lclpnet.kibu.mc.BlockStateAdapter;
 import work.lclpnet.kibu.schematic.FabricBlockStateAdapter;
@@ -18,7 +19,6 @@ import work.lclpnet.kibu.schematic.SchematicFormats;
 import work.lclpnet.kibu.schematic.api.SchematicReader;
 import work.lclpnet.kibu.structure.BlockStructure;
 import work.lclpnet.kibu.world.mixin.MinecraftServerAccessor;
-import work.lclpnet.lobby.game.map.GameMap;
 
 import java.io.IOException;
 import java.nio.file.Files;

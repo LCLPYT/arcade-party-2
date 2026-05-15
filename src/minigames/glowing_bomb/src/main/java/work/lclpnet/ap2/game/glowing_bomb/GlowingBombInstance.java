@@ -31,13 +31,13 @@ import work.lclpnet.ap2.impl.map.ServerThreadMapBootstrap;
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker;
 import work.lclpnet.gaco.scene.Scene;
 import work.lclpnet.gaco.scene.ServerWorldMountContext;
+import work.lclpnet.game.map.GameMap;
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.TaskHandle;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
-import work.lclpnet.lobby.game.map.GameMap;
 
 import java.util.Random;
 import java.util.UUID;

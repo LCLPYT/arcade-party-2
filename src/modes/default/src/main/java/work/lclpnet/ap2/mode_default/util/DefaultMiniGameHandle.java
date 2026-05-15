@@ -8,7 +8,6 @@ import net.minecraft.world.level.border.WorldBorder;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import work.lclpnet.activity.manager.ActivityManager;
 import work.lclpnet.activity.util.BossBarHandler;
 import work.lclpnet.ap2.api.base.GameQueue;
 import work.lclpnet.ap2.api.base.Participants;
@@ -34,17 +33,17 @@ import work.lclpnet.ap2.mode_default.activity.PreparationActivity;
 import work.lclpnet.ap2.util.AssetManager;
 import work.lclpnet.ap2.util.TablistManager;
 import work.lclpnet.gaco.asset.AssetRepository;
+import work.lclpnet.game.api.WorldFacade;
+import work.lclpnet.game.impl.WorldContainer;
+import work.lclpnet.game.impl.prot.BasicProtector;
+import work.lclpnet.game.impl.prot.MutableProtectionConfig;
+import work.lclpnet.game.util.ProtectorUtils;
 import work.lclpnet.kibu.cmd.type.CommandRegistrar;
 import work.lclpnet.kibu.hook.HookStack;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.kibu.scheduler.util.SchedulerStack;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.kibu.translate.bossbar.BossBarProvider;
-import work.lclpnet.lobby.game.api.WorldFacade;
-import work.lclpnet.lobby.game.impl.WorldContainer;
-import work.lclpnet.lobby.game.impl.prot.BasicProtector;
-import work.lclpnet.lobby.game.impl.prot.MutableProtectionConfig;
-import work.lclpnet.lobby.game.util.ProtectorUtils;
 import work.lclpnet.notica.Notica;
 import work.lclpnet.notica.api.SongHandle;
 
@@ -297,7 +296,7 @@ public class DefaultMiniGameHandle implements MiniGameHandle, WorldBorderManager
 
         if (remake.get()) {
             MiniGameActivity activity = new MiniGameActivity(game, args);
-            ActivityManager.getInstance().startActivity(activity);
+            args.activitySwitcher().switchTo(activity);
             return;
         }
 
@@ -307,7 +306,7 @@ public class DefaultMiniGameHandle implements MiniGameHandle, WorldBorderManager
         queue.updateHistory(game);
 
         PreparationActivity activity = new PreparationActivity(args);
-        ActivityManager.getInstance().startActivity(activity);
+        args.activitySwitcher().switchTo(activity);
     }
 
     private void adjustScores(MiniGameResults results) {

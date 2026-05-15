@@ -9,7 +9,7 @@ import net.minecraft.world.item.DyeColor
 import net.minecraft.world.level.block.Blocks
 import org.joml.Matrix4f
 import work.lclpnet.ap2.impl.map.MapUtil
-import work.lclpnet.lobby.game.map.GameMap
+import work.lclpnet.game.map.GameMap
 import work.lclpnet.pal.PalApi
 
 enum class Contraption { JUMP_PAD, BOOSTER_PLATE, ELEVATOR }

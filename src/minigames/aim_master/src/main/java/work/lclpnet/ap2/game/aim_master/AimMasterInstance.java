@@ -17,6 +17,7 @@ import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedPlayerBossBar;
 import work.lclpnet.ap2.impl.util.world.StackedRoomGenerator;
+import work.lclpnet.game.map.GameMap;
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
 import work.lclpnet.kibu.access.entity.ServerPlayerAccess;
 import work.lclpnet.kibu.hook.HookRegistrar;
@@ -26,7 +27,6 @@ import work.lclpnet.kibu.hook.player.PlayerSwingHandHook;
 import work.lclpnet.kibu.scheduler.api.RunningTask;
 import work.lclpnet.kibu.scheduler.api.SchedulerAction;
 import work.lclpnet.kibu.scheduler.api.TaskHandle;
-import work.lclpnet.lobby.game.map.GameMap;
 
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;

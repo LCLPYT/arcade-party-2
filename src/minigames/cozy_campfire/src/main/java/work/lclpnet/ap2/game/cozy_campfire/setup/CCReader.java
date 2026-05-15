@@ -11,11 +11,11 @@ import org.slf4j.Logger;
 import work.lclpnet.ap2.api.game.team.Team;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.gaco.ds.BlockBox;
+import work.lclpnet.game.map.GameMap;
 import work.lclpnet.kibu.schematic.FabricBlockStateAdapter;
 import work.lclpnet.kibu.schematic.SchematicFormats;
 import work.lclpnet.kibu.structure.BlockStructure;
 import work.lclpnet.kibu.world.mixin.MinecraftServerAccessor;
-import work.lclpnet.lobby.game.map.GameMap;
 
 import java.io.IOException;
 import java.nio.file.Files;

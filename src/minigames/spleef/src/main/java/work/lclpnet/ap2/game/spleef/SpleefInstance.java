@@ -20,10 +20,10 @@ import work.lclpnet.ap2.impl.game.EliminationGameInstance;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.SoundHelper;
 import work.lclpnet.gaco.ds.BlockBox;
+import work.lclpnet.game.impl.prot.ProtectionTypes;
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.translate.Translations;
-import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 
 import java.util.Objects;
 

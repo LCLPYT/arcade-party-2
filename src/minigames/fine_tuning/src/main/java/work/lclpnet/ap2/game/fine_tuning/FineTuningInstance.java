@@ -11,7 +11,7 @@ import work.lclpnet.ap2.impl.game.FFAGameInstance;
 import work.lclpnet.ap2.impl.game.data.DataContainers;
 import work.lclpnet.ap2.impl.game.data.IntDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
-import work.lclpnet.lobby.game.map.GameMap;
+import work.lclpnet.game.map.GameMap;
 
 import java.util.Map;
 import java.util.UUID;

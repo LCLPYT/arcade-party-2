@@ -16,9 +16,9 @@ import work.lclpnet.ap2.impl.util.world.block_shape.CylinderBlockShape;
 import work.lclpnet.gaco.ds.BlockBox;
 import work.lclpnet.gaco.math.SplinePath;
 import work.lclpnet.gaco.math.Vec2i;
+import work.lclpnet.game.map.GameMap;
+import work.lclpnet.game.map.MapUtils;
 import work.lclpnet.kibu.util.BlockStateUtils;
-import work.lclpnet.lobby.game.map.GameMap;
-import work.lclpnet.lobby.game.map.MapUtils;
 
 import java.util.*;
 

@@ -18,7 +18,7 @@ import work.lclpnet.ap2.impl.game.team.ApTeams;
 import work.lclpnet.ap2.impl.util.StreamUtil;
 import work.lclpnet.gaco.core.api.Partial;
 import work.lclpnet.gaco.ds.IndexedSet;
-import work.lclpnet.lobby.game.map.GameMap;
+import work.lclpnet.game.map.GameMap;
 
 import java.util.*;
 import java.util.stream.Stream;

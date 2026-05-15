@@ -29,12 +29,12 @@ import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedTeamBossBar;
 import work.lclpnet.gaco.collisions.ChunkedCollisionDetector;
 import work.lclpnet.gaco.collisions.CollisionDetector;
 import work.lclpnet.gaco.collisions.movement.PlayerMovementObserver;
+import work.lclpnet.game.map.GameMap;
+import work.lclpnet.game.util.PlayerReset;
 import work.lclpnet.kibu.access.entity.ServerPlayerAccess;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.kibu.translate.text.LocalizedFormat;
-import work.lclpnet.lobby.game.map.GameMap;
-import work.lclpnet.lobby.util.PlayerReset;
 
 import java.util.HashSet;
 import java.util.Objects;

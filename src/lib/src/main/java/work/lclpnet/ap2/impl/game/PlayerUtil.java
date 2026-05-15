@@ -18,10 +18,10 @@ import work.lclpnet.ap2.impl.util.effect.ApEffect;
 import work.lclpnet.combatctl.api.CombatControl;
 import work.lclpnet.combatctl.api.CombatStyle;
 import work.lclpnet.combatctl.impl.CombatStyles;
+import work.lclpnet.game.util.PlayerReset;
 import work.lclpnet.kibu.access.VelocityModifier;
 import work.lclpnet.kibu.hook.util.PlayerUtils;
 import work.lclpnet.kibu.scheduler.Ticks;
-import work.lclpnet.lobby.util.PlayerReset;
 
 import java.util.*;
 

@@ -26,12 +26,12 @@ import work.lclpnet.ap2.util.mojang.SkinFetcher;
 import work.lclpnet.config.json.JsonConfigFactory;
 import work.lclpnet.gaco.asset.*;
 import work.lclpnet.gaco.asset.cache.AssetCache;
-import work.lclpnet.lobby.game.api.GameEnvironment;
-import work.lclpnet.lobby.game.api.WorldFacade;
-import work.lclpnet.lobby.game.map.AssetMapRepository;
-import work.lclpnet.lobby.game.map.MapDescriptor;
-import work.lclpnet.lobby.game.map.MapManager;
-import work.lclpnet.lobby.game.map.RepositoryMapLookup;
+import work.lclpnet.game.api.GameEnvironment;
+import work.lclpnet.game.api.WorldFacade;
+import work.lclpnet.game.map.AssetMapRepository;
+import work.lclpnet.game.map.MapDescriptor;
+import work.lclpnet.game.map.MapManager;
+import work.lclpnet.game.map.RepositoryMapLookup;
 
 import java.io.IOException;
 import java.io.InputStream;

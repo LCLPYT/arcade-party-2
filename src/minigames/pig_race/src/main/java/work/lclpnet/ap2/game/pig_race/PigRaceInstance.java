@@ -63,6 +63,7 @@ import work.lclpnet.gaco.collisions.movement.TickMovementObserver;
 import work.lclpnet.gaco.ds.BlockBox;
 import work.lclpnet.gaco.ds.Checkpoint;
 import work.lclpnet.gaco.math.SplinePath;
+import work.lclpnet.game.map.GameMap;
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.ServerPlayConnectionHooks;
@@ -73,7 +74,6 @@ import work.lclpnet.kibu.hook.player.PlayerTeleportedCallback;
 import work.lclpnet.kibu.hook.util.PositionRotation;
 import work.lclpnet.kibu.title.Title;
 import work.lclpnet.kibu.translate.Translations;
-import work.lclpnet.lobby.game.map.GameMap;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;

@@ -26,7 +26,7 @@ import java.util.WeakHashMap;
 
 import static java.lang.Math.abs;
 import static net.minecraft.world.entity.ai.attributes.Attributes.GRAVITY;
-import static work.lclpnet.lobby.util.PlayerReset.setAttribute;
+import static work.lclpnet.ap2.impl.util.EntityUtil.setAttribute;
 
 public class GravityFieldActor extends BaseActor {
 

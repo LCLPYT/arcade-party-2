@@ -3,7 +3,6 @@ package work.lclpnet.ap2.mode_default;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.server.MinecraftServer;
 import org.slf4j.Logger;
-import work.lclpnet.activity.manager.ActivityManager;
 import work.lclpnet.ap2.ApConstants;
 import work.lclpnet.ap2.api.base.GameQueue;
 import work.lclpnet.ap2.api.base.MiniGameManager;
@@ -27,13 +26,13 @@ import work.lclpnet.ap2.mode_default.util.ScoreManager;
 import work.lclpnet.ap2.util.TablistManager;
 import work.lclpnet.config.json.JsonConfigFactory;
 import work.lclpnet.gaco.ds.queue.JsonFileQueuePersistence;
+import work.lclpnet.game.api.GameEnvironment;
+import work.lclpnet.game.api.GameInstance;
+import work.lclpnet.game.api.option.GameOptions;
+import work.lclpnet.game.api.option.VoteResult;
 import work.lclpnet.kibu.cmd.impl.CommandStack;
 import work.lclpnet.kibu.hook.HookStack;
 import work.lclpnet.kibu.translate.Translations;
-import work.lclpnet.lobby.game.api.GameEnvironment;
-import work.lclpnet.lobby.game.api.GameInstance;
-import work.lclpnet.lobby.game.api.option.GameOptions;
-import work.lclpnet.lobby.game.api.option.VoteResult;
 import work.lclpnet.translations.DefaultLanguageTranslator;
 
 import java.util.*;
@@ -131,12 +130,23 @@ public class ArcadePartyInstance implements GameInstance {
 
         var tablistManager = new TablistManager(translations, server);
 
-        var args = new ApBaseArgs(container, queue, playerManager, forceGameCommand, songCache, scoreManager,
-                environment.getFinisher(), sessionStats, tablistManager, result.assetManager());
+        var args = new ApBaseArgs(
+                container,
+                queue,
+                playerManager,
+                forceGameCommand,
+                songCache,
+                scoreManager,
+                environment.getFinisher(),
+                sessionStats,
+                tablistManager,
+                result.assetManager(),
+                environment::switchRootActivity
+        );
 
         PreparationActivity preparation = new PreparationActivity(args);
 
-        ActivityManager.getInstance().startActivity(preparation);
+        environment.switchRootActivity(preparation);
     }
 
     private List<MiniGame> getVotedGames(MiniGameManager gameManager, GameOptions options) {

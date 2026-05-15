@@ -4,7 +4,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.block.state.BlockState;
-import work.lclpnet.lobby.util.WorldModifier;
+import work.lclpnet.game.util.WorldModifier;
 
 import java.util.HashMap;
 import java.util.Map;

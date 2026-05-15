@@ -1,8 +1,8 @@
 package work.lclpnet.ap2.impl.game;
 
 import net.minecraft.server.level.ServerLevel;
-import work.lclpnet.lobby.game.api.MapOptions;
-import work.lclpnet.lobby.game.map.GameMap;
+import work.lclpnet.game.api.MapOptions;
+import work.lclpnet.game.map.GameMap;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiFunction;

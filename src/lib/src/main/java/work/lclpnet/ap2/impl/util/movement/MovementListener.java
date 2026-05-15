@@ -3,12 +3,12 @@ package work.lclpnet.ap2.impl.util.movement;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Input;
+import work.lclpnet.game.util.PlayerReset;
 import work.lclpnet.kibu.hook.HookListenerModule;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.player.PlayerConnectionHooks;
 import work.lclpnet.kibu.hook.player.PlayerMoveCallback;
 import work.lclpnet.kibu.hook.util.PositionRotation;
-import work.lclpnet.lobby.util.PlayerReset;
 
 public class MovementListener implements HookListenerModule {
 

@@ -23,14 +23,14 @@ import work.lclpnet.ap2.game.apocalypse_survival.util.MonsterSpawner;
 import work.lclpnet.ap2.game.apocalypse_survival.util.TargetManager;
 import work.lclpnet.ap2.impl.game.EliminationGameInstance;
 import work.lclpnet.ap2.impl.util.TimeHelper;
+import work.lclpnet.game.impl.prot.ProtectionTypes;
+import work.lclpnet.game.map.GameMap;
+import work.lclpnet.game.util.PlayerReset;
 import work.lclpnet.kibu.behaviour.entity.VexEntityBehaviour;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.ProjectileHooks;
 import work.lclpnet.kibu.hook.entity.ServerEntityHooks;
 import work.lclpnet.kibu.translate.Translations;
-import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
-import work.lclpnet.lobby.game.map.GameMap;
-import work.lclpnet.lobby.util.PlayerReset;
 
 import java.util.List;
 import java.util.Random;

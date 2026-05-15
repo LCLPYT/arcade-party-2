@@ -14,7 +14,7 @@ import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.impl.util.TextUtil;
-import work.lclpnet.lobby.util.RayCaster;
+import work.lclpnet.game.util.RayCaster;
 
 import java.util.Map;
 import java.util.Set;

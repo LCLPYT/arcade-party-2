@@ -51,14 +51,14 @@ import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.ap2.impl.util.world.ChunkPersistence;
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape;
 import work.lclpnet.gaco.math.SplinePath;
+import work.lclpnet.game.impl.prot.ProtectionTypes;
+import work.lclpnet.game.map.MapUtils;
 import work.lclpnet.kibu.access.misc.DamageTrackerAccess;
 import work.lclpnet.kibu.hook.entity.EntityHealthCallback;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.kibu.hook.util.OnGroundDetector;
 import work.lclpnet.kibu.hook.util.PlayerUtils;
 import work.lclpnet.kibu.translate.text.TranslatedText;
-import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
-import work.lclpnet.lobby.game.map.MapUtils;
 
 import java.util.*;
 import java.util.stream.Stream;

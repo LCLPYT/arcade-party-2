@@ -42,13 +42,13 @@ import work.lclpnet.ap2.impl.resource.ApResources;
 import work.lclpnet.ap2.impl.util.DeathMessages;
 import work.lclpnet.ap2.impl.util.math.MathUtil;
 import work.lclpnet.ap2.impl.util.world.ChunkPersistence;
+import work.lclpnet.game.impl.prot.ProtectionTypes;
+import work.lclpnet.game.map.GameMap;
+import work.lclpnet.game.map.MapUtils;
 import work.lclpnet.kibu.cmd.type.CommandRegistrar;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.kibu.util.math.Matrix3i;
-import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
-import work.lclpnet.lobby.game.map.GameMap;
-import work.lclpnet.lobby.game.map.MapUtils;
 
 import java.util.Random;
 import java.util.Set;

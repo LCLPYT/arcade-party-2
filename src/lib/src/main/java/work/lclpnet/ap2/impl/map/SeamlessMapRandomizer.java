@@ -7,8 +7,8 @@ import work.lclpnet.ap2.ApConstants;
 import work.lclpnet.ap2.api.map.MapRandomizer;
 import work.lclpnet.gaco.ds.queue.JsonFileQueuePersistence;
 import work.lclpnet.gaco.ds.queue.SeamlessQueue;
-import work.lclpnet.lobby.game.map.GameMap;
-import work.lclpnet.lobby.game.map.MapManager;
+import work.lclpnet.game.map.GameMap;
+import work.lclpnet.game.map.MapManager;
 
 import java.util.NoSuchElementException;
 import java.util.Optional;

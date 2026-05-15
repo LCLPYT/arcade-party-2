@@ -7,12 +7,11 @@ import work.lclpnet.ap2.api.data.DataManager;
 import work.lclpnet.ap2.api.map.MapFacade;
 import work.lclpnet.ap2.api.music.SongManager;
 import work.lclpnet.ap2.impl.game.PlayerUtil;
-import work.lclpnet.gaco.asset.AssetRepository;
+import work.lclpnet.game.api.WorldFacade;
 import work.lclpnet.kibu.cmd.impl.CommandStack;
 import work.lclpnet.kibu.hook.HookStack;
 import work.lclpnet.kibu.scheduler.util.SchedulerStack;
 import work.lclpnet.kibu.translate.Translations;
-import work.lclpnet.lobby.game.api.WorldFacade;
 
 /**
  * A container of objects required for starting a mini-game.

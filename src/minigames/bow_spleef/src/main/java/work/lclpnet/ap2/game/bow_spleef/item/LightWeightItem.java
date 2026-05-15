@@ -11,8 +11,8 @@ import work.lclpnet.ap2.impl.game.item.SpecialItemContext;
 import work.lclpnet.kibu.scheduler.Ticks;
 
 import static net.minecraft.world.entity.ai.attributes.Attributes.GRAVITY;
-import static work.lclpnet.lobby.util.PlayerReset.resetAttribute;
-import static work.lclpnet.lobby.util.PlayerReset.setAttribute;
+import static work.lclpnet.ap2.impl.util.EntityUtil.resetAttribute;
+import static work.lclpnet.ap2.impl.util.EntityUtil.setAttribute;
 
 public class LightWeightItem implements SpecialItem {
 

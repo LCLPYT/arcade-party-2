@@ -18,8 +18,8 @@ import work.lclpnet.gaco.ds.BlockBox;
 import work.lclpnet.gaco.ds.WeightedList;
 import work.lclpnet.gaco.math.AffineIntMatrix;
 import work.lclpnet.gaco.math.Vec2i;
+import work.lclpnet.game.map.GameMap;
 import work.lclpnet.kibu.structure.BlockStructure;
-import work.lclpnet.lobby.game.map.GameMap;
 
 import java.util.ArrayList;
 import java.util.Collections;

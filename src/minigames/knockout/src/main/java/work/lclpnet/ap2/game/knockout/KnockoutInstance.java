@@ -28,6 +28,7 @@ import work.lclpnet.ap2.impl.util.world.CombatIdleManager;
 import work.lclpnet.ap2.impl.util.world.DestroyStageManager;
 import work.lclpnet.gaco.collisions.ChunkedCollisionDetector;
 import work.lclpnet.gaco.collisions.movement.PlayerMovementObserver;
+import work.lclpnet.game.impl.prot.ProtectionTypes;
 import work.lclpnet.kibu.access.VelocityModifier;
 import work.lclpnet.kibu.access.entity.ServerPlayerAccess;
 import work.lclpnet.kibu.hook.HookRegistrar;
@@ -37,7 +38,6 @@ import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.kibu.translate.text.LocalizedFormat;
 import work.lclpnet.kibu.translate.text.RootText;
 import work.lclpnet.kibu.translate.text.TranslatedText;
-import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 
 import java.util.UUID;
 
