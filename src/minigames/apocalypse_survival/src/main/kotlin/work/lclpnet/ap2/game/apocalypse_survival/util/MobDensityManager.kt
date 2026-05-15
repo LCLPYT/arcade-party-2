@@ -114,7 +114,7 @@ class MobDensityManager(map: GameMap, private val random: Random) {
 
         if (newMobCount != minMobCount + 1) return
 
-        cellsWithLeast.remove(mobPos.cell)
+        cellsWithLeast.remove(mobPos.cell as Any)
 
         if (!cellsWithLeast.isEmpty()) return
 
