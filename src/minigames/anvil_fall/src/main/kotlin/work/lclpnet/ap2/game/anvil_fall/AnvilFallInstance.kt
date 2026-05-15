@@ -19,6 +19,7 @@ import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.scores.Team
 import work.lclpnet.ap2.api.game.MiniGameHandle
+import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.runEveryTick
 import work.lclpnet.ap2.impl.game.EliminationGameInstance
 import work.lclpnet.ap2.impl.map.MapUtil
@@ -73,7 +74,7 @@ class AnvilFallInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(ga
     override fun go() {
         gameHandle.protect { config ->
             ProtectionTypes.ALLOW_DAMAGE.allow(config) { entity, damageSource ->
-                if (damageSource.`is`(DamageTypes.FALLING_ANVIL) && entity is ServerPlayer) {
+                if (damageSource.isOf(DamageTypes.FALLING_ANVIL) && entity is ServerPlayer) {
                     onHitByAnvil(entity)
                 }
                 false

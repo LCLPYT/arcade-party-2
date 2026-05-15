@@ -3,6 +3,7 @@ package work.lclpnet.ap2.util.scene
 import net.minecraft.core.Vec3i
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.state.BlockState
+import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.gaco.scene.Object3d
 import work.lclpnet.gaco.scene.Scene
 import work.lclpnet.gaco.scene.`object`.BlockDisplayObject
@@ -34,7 +35,7 @@ class ApSceneRenderer(val scene: Scene) {
     }
 
     fun getMarkerState(state: BlockState): BlockState = when {
-        state.isAir || state.`is`(Blocks.BARRIER) || state.`is`(Blocks.STRUCTURE_VOID) -> {
+        state.isAir || state.isOf(Blocks.BARRIER) || state.isOf(Blocks.STRUCTURE_VOID) -> {
             Blocks.GLASS.defaultBlockState()
         }
         else -> state

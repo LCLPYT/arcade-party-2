@@ -18,6 +18,7 @@ import net.minecraft.world.level.gamerules.GameRules
 import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.map.MapBootstrapFunction
 import work.lclpnet.ap2.ext.interval
+import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.mc.playNotifySound
 import work.lclpnet.ap2.ext.mc.setBlock
 import work.lclpnet.ap2.ext.players
@@ -94,7 +95,7 @@ class KingOfTheHillInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
             ProtectionTypes.ALLOW_DAMAGE.allow(config) { entity, source ->
                 entity is ServerPlayer
                         && players().isParticipating(entity)
-                        && (source.`is`(DamageTypes.PLAYER_ATTACK) || source.entity is Goat)
+                        && (source.isOf(DamageTypes.PLAYER_ATTACK) || source.entity is Goat)
             }
         }
 

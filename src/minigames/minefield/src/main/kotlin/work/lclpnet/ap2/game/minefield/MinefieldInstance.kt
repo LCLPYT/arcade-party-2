@@ -28,6 +28,7 @@ import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.map.MapBootstrapFunction
 import work.lclpnet.ap2.api.util.world.BlockPredicate
 import work.lclpnet.ap2.ext.*
+import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.mc.setBlock
 import work.lclpnet.ap2.ext.mc.setBlocks
 import work.lclpnet.ap2.ext.mc.teleport
@@ -191,7 +192,7 @@ class MinefieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
 
         gameHandle.protect {
             ProtectionTypes.ALLOW_DAMAGE.allow(it) { entity, source ->
-                entity is ServerPlayer && players().isParticipating(entity) && source.`is`(DamageTypes.MAGIC)
+                entity is ServerPlayer && players().isParticipating(entity) && source.isOf(DamageTypes.MAGIC)
             }
         }
 

@@ -28,6 +28,7 @@ import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.map.MapBootstrap
 import work.lclpnet.ap2.api.util.heads.PlayerHead
 import work.lclpnet.ap2.ext.allPlayers
+import work.lclpnet.ap2.ext.mc.isIn
 import work.lclpnet.ap2.ext.mc.resetAttribute
 import work.lclpnet.ap2.ext.mc.setAttribute
 import work.lclpnet.ap2.ext.mc.teleport
@@ -196,7 +197,7 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
 
         val state = world.getBlockState(result.blockPos)
 
-        if (!state.`is`(BlockTags.BUTTONS))
+        if (!state.isIn(BlockTags.BUTTONS))
             return InteractionResult.PASS
 
         if (gameState == GameState.SEARCHING_BUTTON) {

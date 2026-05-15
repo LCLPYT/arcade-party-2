@@ -32,6 +32,7 @@ import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.map.MapBootstrap
 import work.lclpnet.ap2.core.mixin.MannequinAccessor
 import work.lclpnet.ap2.ext.*
+import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.mc.teleportTo
 import work.lclpnet.ap2.game.pvp_tournament.gen.Match
 import work.lclpnet.ap2.game.pvp_tournament.util.*
@@ -244,7 +245,7 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
                 return@registerWith InteractionResult.FAIL
             }
 
-            if (stack.`is`(Items.MUSHROOM_STEW)) {
+            if (stack.isOf(Items.MUSHROOM_STEW)) {
                 tryUseMushroomStew(player, stack)
             } else {
                 InteractionResult.PASS

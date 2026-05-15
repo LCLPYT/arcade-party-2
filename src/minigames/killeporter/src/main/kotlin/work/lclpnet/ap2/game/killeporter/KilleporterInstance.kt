@@ -19,6 +19,7 @@ import net.minecraft.world.level.material.Fluids
 import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.map.MapBootstrap
 import work.lclpnet.ap2.ext.allPlayers
+import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.mc.setDayTime
 import work.lclpnet.ap2.ext.mc.teleport
 import work.lclpnet.ap2.ext.players
@@ -130,9 +131,9 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
             config.allowAll()
             ProtectionTypes.ALLOW_DAMAGE.disallow(config) { entity, source ->
                 entity is ServerPlayer && source.entity is ServerPlayer
-                        && !source.`is`(DamageTypes.PLAYER_EXPLOSION)
-                        && !source.`is`(DamageTypes.INDIRECT_MAGIC)
-                        && !source.`is`(DamageTypes.MAGIC)
+                        && !source.isOf(DamageTypes.PLAYER_EXPLOSION)
+                        && !source.isOf(DamageTypes.INDIRECT_MAGIC)
+                        && !source.isOf(DamageTypes.MAGIC)
             }
         }
 
@@ -144,7 +145,7 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
         }
 
         BlockModificationHooks.BREAK_BLOCK.registerWith(hooks) { world, pos, entity ->
-            if (entity is ServerPlayer && world.getBlockState(pos).`is`(Blocks.DECORATED_POT)) {
+            if (entity is ServerPlayer && world.getBlockState(pos).isOf(Blocks.DECORATED_POT)) {
                 lootContainerManager?.touch(pos)
             }
 

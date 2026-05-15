@@ -11,6 +11,7 @@ import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import work.lclpnet.ap2.api.game.MiniGameHandle
+import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.game.pvp_tournament.gen.SkinPlayerIcons
 import work.lclpnet.ap2.game.pvp_tournament.gen.Tournament
 import work.lclpnet.ap2.game.pvp_tournament.gen.TournamentVisualizer
@@ -116,19 +117,19 @@ class CanvasVisualizer(
 
     fun preventMovingOfFilledMaps() {
         PlayerInventoryHooks.SWAP_HANDS.registerWith(gameHandle.hooks) { player, _ ->
-            player.offhandItem.`is`(Items.FILLED_MAP)
+            player.offhandItem.isOf(Items.FILLED_MAP)
         }
 
         PlayerInventoryHooks.MODIFY_INVENTORY.registerWith(gameHandle.hooks) { event ->
             val stack = event.clickedStack()
 
-            stack != null && stack.`is`(Items.FILLED_MAP)
+            stack != null && stack.isOf(Items.FILLED_MAP)
         }
 
         PlayerInventoryHooks.DROP_ITEM.registerWith(gameHandle.hooks) { player, i, _ ->
             val slot = player.inventory.getSlot(i)
 
-            slot != null && slot.get().`is`(Items.FILLED_MAP)
+            slot != null && slot.get().isOf(Items.FILLED_MAP)
         }
     }
 }
