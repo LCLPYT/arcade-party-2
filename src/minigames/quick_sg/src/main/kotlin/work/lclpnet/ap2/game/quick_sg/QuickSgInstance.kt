@@ -10,6 +10,7 @@ import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.storage.LevelData
 import net.minecraft.world.level.storage.loot.LootTable
 import work.lclpnet.ap2.api.game.MiniGameHandle
+import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.mc.teleport
 import work.lclpnet.ap2.ext.players
 import work.lclpnet.ap2.ext.runEveryTick
@@ -126,7 +127,7 @@ class QuickSgInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(game
     private fun updateCompass(player: ServerPlayer) {
         val server = world.server
 
-        if (!player.inventory.contains { it.`is`(Items.COMPASS) }) return
+        if (!player.inventory.contains { it.isOf(Items.COMPASS) }) return
 
         val closestEnemy = players()
             .filter { it != player }

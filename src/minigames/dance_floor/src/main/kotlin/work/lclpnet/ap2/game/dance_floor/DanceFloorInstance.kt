@@ -16,10 +16,7 @@ import work.lclpnet.ap2.api.map.MapBootstrap
 import work.lclpnet.ap2.api.music.ConfiguredSong
 import work.lclpnet.ap2.api.music.SongWrapper
 import work.lclpnet.ap2.ext.*
-import work.lclpnet.ap2.ext.mc.setBlock
-import work.lclpnet.ap2.ext.mc.setSelectedSlot
-import work.lclpnet.ap2.ext.mc.spawnParticles
-import work.lclpnet.ap2.ext.mc.teleport
+import work.lclpnet.ap2.ext.mc.*
 import work.lclpnet.ap2.game.dance_floor.cmd.SetSongCommand
 import work.lclpnet.ap2.game.dance_floor.cmd.SkipSongCommand
 import work.lclpnet.ap2.impl.game.EliminationGameInstance
@@ -281,7 +278,7 @@ class DanceFloorInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(g
 
     fun removeBlocks(except: Block) {
         for (pos in floorShape()) {
-            if (world.getBlockState(pos).`is`(except)) continue
+            if (world.getBlockState(pos).isOf(except)) continue
 
             world.setBlock(pos, Blocks.AIR)
         }
