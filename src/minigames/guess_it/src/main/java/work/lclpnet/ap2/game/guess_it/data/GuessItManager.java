@@ -10,7 +10,7 @@ import work.lclpnet.ap2.game.guess_it.util.GuessItDisplay;
 import work.lclpnet.ap2.impl.util.debug.DebugController;
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape;
 import work.lclpnet.gaco.ds.IndexedSet;
-import work.lclpnet.lobby.util.WorldModifier;
+import work.lclpnet.game.util.WorldModifier;
 
 import java.util.*;
 

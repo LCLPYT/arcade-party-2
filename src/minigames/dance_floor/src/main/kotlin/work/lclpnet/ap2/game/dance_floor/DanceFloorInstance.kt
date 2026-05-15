@@ -31,10 +31,10 @@ import work.lclpnet.ap2.impl.util.handler.Visibility
 import work.lclpnet.ap2.impl.util.handler.VisibilityHandler
 import work.lclpnet.ap2.impl.util.handler.VisibilityManager
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape
+import work.lclpnet.game.map.GameMap
 import work.lclpnet.kibu.hook.util.PositionRotation
 import work.lclpnet.kibu.scheduler.Ticks
 import work.lclpnet.kibu.scheduler.api.TaskHandle
-import work.lclpnet.lobby.game.map.GameMap
 import java.util.concurrent.CompletableFuture
 import kotlin.math.max
 import kotlin.math.round

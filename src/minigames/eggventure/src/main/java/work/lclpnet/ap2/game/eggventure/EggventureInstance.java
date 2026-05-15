@@ -52,12 +52,12 @@ import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape;
 import work.lclpnet.gaco.ds.BlockBox;
 import work.lclpnet.gaco.dynamic_entities.DynamicEntityManager;
+import work.lclpnet.game.map.GameMap;
 import work.lclpnet.kibu.access.entity.ServerPlayerAccess;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.kibu.hook.player.PlayerSwingHandHook;
 import work.lclpnet.kibu.scheduler.Ticks;
-import work.lclpnet.lobby.game.map.GameMap;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;

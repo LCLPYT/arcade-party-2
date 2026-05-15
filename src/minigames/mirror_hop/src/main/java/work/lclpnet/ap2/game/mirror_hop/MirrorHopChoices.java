@@ -10,7 +10,7 @@ import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.gaco.collisions.CollisionDetector;
 import work.lclpnet.gaco.ds.BlockBox;
 import work.lclpnet.gaco.ds.Collider;
-import work.lclpnet.lobby.game.map.GameMap;
+import work.lclpnet.game.map.GameMap;
 
 import java.util.List;
 import java.util.Random;

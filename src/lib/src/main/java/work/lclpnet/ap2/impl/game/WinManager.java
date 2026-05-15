@@ -14,10 +14,10 @@ import work.lclpnet.ap2.api.stats.StatsResult;
 import work.lclpnet.ap2.api.util.action.Action;
 import work.lclpnet.ap2.impl.game.data.CombinedDataContainer;
 import work.lclpnet.ap2.impl.game.data.SupremeDataContainer;
+import work.lclpnet.game.map.GameMap;
+import work.lclpnet.game.util.ProtectorUtils;
 import work.lclpnet.kibu.hook.Hook;
 import work.lclpnet.kibu.hook.HookFactory;
-import work.lclpnet.lobby.game.map.GameMap;
-import work.lclpnet.lobby.game.util.ProtectorUtils;
 
 import java.util.List;
 import java.util.Optional;

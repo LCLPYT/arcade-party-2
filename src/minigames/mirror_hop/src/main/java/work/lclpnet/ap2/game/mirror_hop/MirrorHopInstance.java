@@ -32,9 +32,9 @@ import work.lclpnet.gaco.collisions.ChunkedCollisionDetector;
 import work.lclpnet.gaco.collisions.CollisionDetector;
 import work.lclpnet.gaco.collisions.movement.PlayerMovementObserver;
 import work.lclpnet.gaco.ds.BlockBox;
+import work.lclpnet.game.map.GameMap;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.scheduler.Ticks;
-import work.lclpnet.lobby.game.map.GameMap;
 
 import java.util.List;
 import java.util.Random;

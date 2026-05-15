@@ -36,11 +36,11 @@ import work.lclpnet.ap2.impl.util.world.BfsWorldScanner;
 import work.lclpnet.ap2.impl.util.world.SimpleAdjacentBlocks;
 import work.lclpnet.combatctl.impl.CombatStyles;
 import work.lclpnet.gaco.collisions.util.GroundDetector;
+import work.lclpnet.game.map.GameMap;
 import work.lclpnet.kibu.access.entity.ServerPlayerAccess;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.util.PositionRotation;
 import work.lclpnet.kibu.translate.Translations;
-import work.lclpnet.lobby.game.map.GameMap;
 
 import java.util.ArrayList;
 import java.util.List;

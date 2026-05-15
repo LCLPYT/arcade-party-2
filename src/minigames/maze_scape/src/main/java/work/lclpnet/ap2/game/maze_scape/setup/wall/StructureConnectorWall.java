@@ -7,11 +7,11 @@ import net.minecraft.world.level.block.state.BlockState;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.game.maze_scape.setup.Connector3;
 import work.lclpnet.ap2.game.maze_scape.setup.OrientedStructurePiece;
+import work.lclpnet.game.util.WorldModifier;
 import work.lclpnet.kibu.schematic.FabricBlockStateAdapter;
 import work.lclpnet.kibu.structure.BlockStructure;
 import work.lclpnet.kibu.util.RotationUtil;
 import work.lclpnet.kibu.util.math.Matrix3i;
-import work.lclpnet.lobby.util.WorldModifier;
 
 import java.util.List;
 import java.util.Random;

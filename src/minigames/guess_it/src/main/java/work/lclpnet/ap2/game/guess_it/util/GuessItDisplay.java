@@ -8,8 +8,8 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.item.ItemStack;
 import org.joml.Matrix4f;
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape;
+import work.lclpnet.game.util.WorldModifier;
 import work.lclpnet.kibu.access.entity.DisplayEntityAccess;
-import work.lclpnet.lobby.util.WorldModifier;
 
 public class GuessItDisplay {
 

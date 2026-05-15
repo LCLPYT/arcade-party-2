@@ -15,9 +15,9 @@ import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.debug.DebugController;
 import work.lclpnet.gaco.ds.BlockBox;
 import work.lclpnet.gaco.ds.StructureMask;
+import work.lclpnet.game.map.GameMap;
+import work.lclpnet.game.map.MapUtils;
 import work.lclpnet.kibu.util.math.Matrix3i;
-import work.lclpnet.lobby.game.map.GameMap;
-import work.lclpnet.lobby.game.map.MapUtils;
 
 import java.util.*;
 

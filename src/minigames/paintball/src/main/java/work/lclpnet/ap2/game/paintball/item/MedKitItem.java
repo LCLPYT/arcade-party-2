@@ -15,7 +15,7 @@ import work.lclpnet.ap2.impl.game.item.SpecialItem;
 import work.lclpnet.ap2.impl.game.item.SpecialItemContext;
 import work.lclpnet.ap2.impl.util.ParticleHelper;
 import work.lclpnet.ap2.impl.util.SoundHelper;
-import work.lclpnet.lobby.util.PlayerReset;
+import work.lclpnet.game.util.PlayerReset;
 
 public class MedKitItem implements SpecialItem {
 

@@ -2,7 +2,7 @@ package work.lclpnet.ap2.api.map;
 
 import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.Nullable;
-import work.lclpnet.lobby.game.map.GameMap;
+import work.lclpnet.game.map.GameMap;
 
 import java.util.concurrent.CompletableFuture;
 

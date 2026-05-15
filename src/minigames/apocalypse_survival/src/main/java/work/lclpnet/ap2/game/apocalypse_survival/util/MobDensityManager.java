@@ -6,8 +6,8 @@ import net.minecraft.world.entity.ai.util.LandRandomPos;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.gaco.ds.IndexedSet;
-import work.lclpnet.lobby.game.map.GameMap;
-import work.lclpnet.lobby.game.map.MapUtils;
+import work.lclpnet.game.map.GameMap;
+import work.lclpnet.game.map.MapUtils;
 
 import java.util.*;
 

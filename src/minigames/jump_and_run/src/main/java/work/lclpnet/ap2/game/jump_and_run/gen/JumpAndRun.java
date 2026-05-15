@@ -13,8 +13,8 @@ import work.lclpnet.gaco.asset.AssetPath;
 import work.lclpnet.gaco.ds.BlockBox;
 import work.lclpnet.gaco.ds.Checkpoint;
 import work.lclpnet.gaco.math.BlockFace;
+import work.lclpnet.game.map.GameMap;
 import work.lclpnet.kibu.hook.util.PositionRotation;
-import work.lclpnet.lobby.game.map.GameMap;
 
 import java.util.ArrayList;
 import java.util.List;

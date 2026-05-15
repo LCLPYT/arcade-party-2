@@ -27,13 +27,13 @@ import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.world.StackedRoomGenerator;
 import work.lclpnet.gaco.ds.BlockBox;
 import work.lclpnet.gaco.math.AffineIntMatrix;
+import work.lclpnet.game.map.GameMap;
+import work.lclpnet.game.util.BossBarTimer;
 import work.lclpnet.kibu.hook.ServerMessageHooks;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.kibu.mc.KibuBlockPos;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.translate.Translations;
-import work.lclpnet.lobby.game.map.GameMap;
-import work.lclpnet.lobby.game.util.BossBarTimer;
 
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;

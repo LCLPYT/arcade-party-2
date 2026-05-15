@@ -63,15 +63,15 @@ import work.lclpnet.gaco.ds.BlockBox;
 import work.lclpnet.gaco.scene.Scene;
 import work.lclpnet.gaco.scene.ServerWorldMountContext;
 import work.lclpnet.gaco.scene.physics.EntityCollisionManager;
+import work.lclpnet.game.impl.prot.ProtectionTypes;
+import work.lclpnet.game.map.GameMap;
+import work.lclpnet.game.util.PlayerReset;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks;
 import work.lclpnet.kibu.physics.impl.bullet.collision.space.MinecraftSpace;
 import work.lclpnet.kibu.physics.impl.bullet.collision.space.cache.ChunkCache;
 import work.lclpnet.kibu.physics.impl.bullet.collision.space.generator.TerrainGenerator;
 import work.lclpnet.kibu.physics.impl.bullet.thread.PhysicsThread;
-import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
-import work.lclpnet.lobby.game.map.GameMap;
-import work.lclpnet.lobby.util.PlayerReset;
 
 import java.util.List;
 import java.util.Optional;

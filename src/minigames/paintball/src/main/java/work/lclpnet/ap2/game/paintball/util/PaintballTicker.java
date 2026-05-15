@@ -45,10 +45,10 @@ import java.util.UUID;
 
 import static java.lang.Math.max;
 import static java.lang.Math.random;
+import static work.lclpnet.ap2.impl.util.EntityUtil.resetAttribute;
+import static work.lclpnet.ap2.impl.util.EntityUtil.setAttribute;
 import static work.lclpnet.ap2.impl.util.SoundHelper.playSoundAt;
 import static work.lclpnet.kibu.access.VelocityModifier.setVelocity;
-import static work.lclpnet.lobby.util.PlayerReset.resetAttribute;
-import static work.lclpnet.lobby.util.PlayerReset.setAttribute;
 
 public class PaintballTicker {
 

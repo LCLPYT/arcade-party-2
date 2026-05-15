@@ -7,9 +7,9 @@ import org.slf4j.Logger;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.impl.map.schema.MapSchemaLoader;
 import work.lclpnet.ap2.impl.util.structure.StructureUtil;
+import work.lclpnet.game.map.GameMap;
 import work.lclpnet.kibu.structure.BlockStructure;
 import work.lclpnet.kibu.world.mixin.MinecraftServerAccessor;
-import work.lclpnet.lobby.game.map.GameMap;
 
 import java.io.IOException;
 import java.nio.file.Path;

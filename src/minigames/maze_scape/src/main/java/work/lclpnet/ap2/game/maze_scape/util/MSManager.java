@@ -42,8 +42,8 @@ import work.lclpnet.ap2.game.maze_scape.monster.MonsterSpawner;
 import work.lclpnet.ap2.game.maze_scape.setup.MSDebugController;
 import work.lclpnet.ap2.game.maze_scape.setup.OrientedStructurePiece;
 import work.lclpnet.ap2.impl.util.EntityUtil;
+import work.lclpnet.game.map.GameMap;
 import work.lclpnet.kibu.hook.util.PendingResult;
-import work.lclpnet.lobby.game.map.GameMap;
 
 import java.util.*;
 import java.util.function.Function;

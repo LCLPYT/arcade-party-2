@@ -48,6 +48,8 @@ import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape
 import work.lclpnet.gaco.ds.StructureMask
 import work.lclpnet.gaco.dynamic_entities.DynamicEntityManager
 import work.lclpnet.gaco.dynamic_entities.PlayerSpecificDynamicEntity
+import work.lclpnet.game.impl.prot.ProtectionTypes
+import work.lclpnet.game.map.GameMap
 import work.lclpnet.kibu.access.entity.ServerPlayerAccess
 import work.lclpnet.kibu.hook.level.PressurePlateCallback
 import work.lclpnet.kibu.scheduler.Ticks
@@ -56,8 +58,6 @@ import work.lclpnet.kibu.translate.text.FormatWrapper.styled
 import work.lclpnet.kibu.translate.text.LocalizedFormat
 import work.lclpnet.kibu.util.BlockStateUtils
 import work.lclpnet.kibu.util.math.Matrix3i
-import work.lclpnet.lobby.game.impl.prot.ProtectionTypes
-import work.lclpnet.lobby.game.map.GameMap
 import java.util.*
 import kotlin.math.max
 import kotlin.math.sqrt

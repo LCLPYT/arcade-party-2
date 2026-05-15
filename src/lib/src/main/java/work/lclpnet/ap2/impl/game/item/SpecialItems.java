@@ -36,6 +36,8 @@ import work.lclpnet.ap2.impl.util.debug.DebugController;
 import work.lclpnet.ap2.impl.util.world.WalkableBlockPredicate;
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape;
 import work.lclpnet.gaco.ds.WeightedList;
+import work.lclpnet.game.map.GameMap;
+import work.lclpnet.game.map.MapUtils;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.kibu.hook.player.PlayerInventoryHooks;
@@ -46,8 +48,6 @@ import work.lclpnet.kibu.scheduler.api.SchedulerAction;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.kibu.translate.text.TranslatedText;
-import work.lclpnet.lobby.game.map.GameMap;
-import work.lclpnet.lobby.game.map.MapUtils;
 
 import java.util.List;
 import java.util.Optional;

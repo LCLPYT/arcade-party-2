@@ -10,7 +10,7 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Vector3f;
-import work.lclpnet.lobby.util.RayCaster;
+import work.lclpnet.game.util.RayCaster;
 
 import static java.lang.Math.*;
 import static net.minecraft.world.level.block.HorizontalDirectionalBlock.FACING;

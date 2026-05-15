@@ -17,12 +17,12 @@ import work.lclpnet.ap2.game.guess_it.util.BlockCountShapeManager;
 import work.lclpnet.ap2.impl.util.debug.DebugController;
 import work.lclpnet.ap2.impl.util.math.shape.Shape;
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape;
+import work.lclpnet.game.util.WorldModifier;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.RunningTask;
 import work.lclpnet.kibu.scheduler.api.SchedulerAction;
 import work.lclpnet.kibu.scheduler.api.TaskHandle;
 import work.lclpnet.kibu.translate.Translations;
-import work.lclpnet.lobby.util.WorldModifier;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;

@@ -32,12 +32,12 @@ import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.ColorUtil;
 import work.lclpnet.ap2.impl.util.SoundHelper;
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker;
+import work.lclpnet.game.api.WorldFacade;
+import work.lclpnet.game.map.GameMap;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.kibu.title.Title;
 import work.lclpnet.kibu.translate.Translations;
-import work.lclpnet.lobby.game.api.WorldFacade;
-import work.lclpnet.lobby.game.map.GameMap;
 
 import java.util.Arrays;
 import java.util.HashSet;

@@ -29,10 +29,10 @@ import work.lclpnet.ap2.impl.game.data.type.PlayerRef
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.util.ItemHelper
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape
+import work.lclpnet.game.impl.prot.ProtectionTypes
+import work.lclpnet.game.map.GameMap
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess
 import work.lclpnet.kibu.hook.player.PlayerInventoryHooks
-import work.lclpnet.lobby.game.impl.prot.ProtectionTypes
-import work.lclpnet.lobby.game.map.GameMap
 import kotlin.random.Random
 import kotlin.random.asJavaRandom
 

@@ -18,13 +18,13 @@ import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.ap2.impl.util.world.SubWorldManager;
 import work.lclpnet.ap2.util.AssetManager;
 import work.lclpnet.ap2.util.TablistManager;
+import work.lclpnet.game.api.WorldFacade;
+import work.lclpnet.game.impl.prot.MutableProtectionConfig;
 import work.lclpnet.kibu.cmd.type.CommandRegistrar;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.kibu.translate.bossbar.BossBarProvider;
-import work.lclpnet.lobby.game.api.WorldFacade;
-import work.lclpnet.lobby.game.impl.prot.MutableProtectionConfig;
 
 import java.util.Optional;
 import java.util.UUID;

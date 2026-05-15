@@ -8,7 +8,7 @@ import work.lclpnet.ap2.mode_default.ApMiniGameArgs;
 import work.lclpnet.ap2.mode_default.cmd.ForceGameCommand;
 import work.lclpnet.ap2.util.AssetManager;
 import work.lclpnet.ap2.util.TablistManager;
-import work.lclpnet.lobby.game.api.GameFinisher;
+import work.lclpnet.game.api.GameFinisher;
 
 /**
  * A container for objects required for the arcade-party base game.
@@ -20,7 +20,15 @@ import work.lclpnet.lobby.game.api.GameFinisher;
  * of which state players are in.
  */
 public record ApBaseArgs(
-        ApMiniGameArgs miniGameArgs, GameQueue gameQueue, PlayerManager playerManager, ForceGameCommand forceGameCommand,
-        SongCache sharedSongCache, ScoreManager scoreManager, GameFinisher finisher, SessionStatsRecorder stats,
-        TablistManager tablistManager, AssetManager assetManager
+        ApMiniGameArgs miniGameArgs,
+        GameQueue gameQueue,
+        PlayerManager playerManager,
+        ForceGameCommand forceGameCommand,
+        SongCache sharedSongCache,
+        ScoreManager scoreManager,
+        GameFinisher finisher,
+        SessionStatsRecorder stats,
+        TablistManager tablistManager,
+        AssetManager assetManager,
+        ActivitySwitcher activitySwitcher
 ) {}

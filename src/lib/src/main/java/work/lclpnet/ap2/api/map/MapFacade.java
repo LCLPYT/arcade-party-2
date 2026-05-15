@@ -6,8 +6,8 @@ import net.minecraft.server.level.ServerLevel;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.game.MapReady;
 import work.lclpnet.gaco.asset.AssetRepository;
-import work.lclpnet.lobby.game.api.MapOptions;
-import work.lclpnet.lobby.game.map.GameMap;
+import work.lclpnet.game.api.MapOptions;
+import work.lclpnet.game.map.GameMap;
 
 import java.util.List;
 import java.util.Optional;

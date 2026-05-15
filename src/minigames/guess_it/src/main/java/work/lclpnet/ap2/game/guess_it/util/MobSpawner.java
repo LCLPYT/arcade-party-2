@@ -57,13 +57,13 @@ import work.lclpnet.ap2.core.mixin.ShulkerAccessor;
 import work.lclpnet.ap2.core.type.ApVariantHolder;
 import work.lclpnet.ap2.impl.util.world.SizedSpaceFinder;
 import work.lclpnet.gaco.ds.IndexedSet;
+import work.lclpnet.game.util.WorldModifier;
 import work.lclpnet.kibu.access.entity.GoatEntityAccess;
 import work.lclpnet.kibu.access.entity.HorseEntityAccess;
 import work.lclpnet.kibu.access.entity.LlamaEntityAccess;
 import work.lclpnet.kibu.access.entity.TropicalFishEntityAccess;
 import work.lclpnet.kibu.behaviour.entity.VexEntityBehaviour;
 import work.lclpnet.kibu.scheduler.Ticks;
-import work.lclpnet.lobby.util.WorldModifier;
 
 import java.util.Optional;
 import java.util.Random;

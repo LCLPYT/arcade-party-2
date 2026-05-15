@@ -34,6 +34,8 @@ import work.lclpnet.ap2.impl.game.Announcer;
 import work.lclpnet.ap2.impl.game.EliminationGameInstance;
 import work.lclpnet.ap2.impl.util.ParticleHelper;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
+import work.lclpnet.game.map.GameMap;
+import work.lclpnet.game.util.BossBarTimer;
 import work.lclpnet.kibu.access.VelocityModifier;
 import work.lclpnet.kibu.access.entity.ServerPlayerAccess;
 import work.lclpnet.kibu.behaviour.level.ServerLevelBehaviour;
@@ -43,8 +45,6 @@ import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.kibu.title.Title;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.kibu.translate.text.TranslatedText;
-import work.lclpnet.lobby.game.map.GameMap;
-import work.lclpnet.lobby.game.util.BossBarTimer;
 
 import java.util.Random;
 import java.util.UUID;

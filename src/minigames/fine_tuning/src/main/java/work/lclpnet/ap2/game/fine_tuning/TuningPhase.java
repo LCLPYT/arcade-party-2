@@ -33,6 +33,8 @@ import work.lclpnet.ap2.impl.util.ApRegistries;
 import work.lclpnet.ap2.impl.util.BookUtil;
 import work.lclpnet.ap2.impl.util.heads.PlayerHeads;
 import work.lclpnet.gaco.dynamic_entities.DynamicEntityManager;
+import work.lclpnet.game.impl.prot.ProtectionTypes;
+import work.lclpnet.game.util.BossBarTimer;
 import work.lclpnet.kibu.access.entity.ServerPlayerAccess;
 import work.lclpnet.kibu.hook.HookContainer;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
@@ -44,8 +46,6 @@ import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.kibu.title.Title;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.kibu.translate.bossbar.BossBarProvider;
-import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
-import work.lclpnet.lobby.game.util.BossBarTimer;
 
 import java.util.*;
 

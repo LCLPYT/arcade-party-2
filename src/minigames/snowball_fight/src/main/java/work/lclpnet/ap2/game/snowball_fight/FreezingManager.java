@@ -12,6 +12,7 @@ import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.core.hook.FrozenTickChangeCallback;
 import work.lclpnet.ap2.core.hook.PowderedSnowSlowCallback;
 import work.lclpnet.ap2.impl.util.world.CombatIdleManager;
+import work.lclpnet.game.util.PlayerReset;
 import work.lclpnet.kibu.access.entity.ServerPlayerAccess;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.scheduler.api.RunningTask;
@@ -19,7 +20,6 @@ import work.lclpnet.kibu.scheduler.api.SchedulerAction;
 import work.lclpnet.kibu.scheduler.api.TaskHandle;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.kibu.translate.Translations;
-import work.lclpnet.lobby.util.PlayerReset;
 
 import java.util.HashMap;
 import java.util.Map;

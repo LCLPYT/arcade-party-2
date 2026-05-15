@@ -22,13 +22,13 @@ import work.lclpnet.ap2.impl.game.data.EliminationDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.util.DeathMessages;
 import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedBossBar;
+import work.lclpnet.game.api.WorldFacade;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.EntityHealthCallback;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.kibu.translate.bossbar.TranslatedBossBar;
 import work.lclpnet.kibu.translate.text.FormatWrapper;
 import work.lclpnet.kibu.translate.text.TranslatedText;
-import work.lclpnet.lobby.game.api.WorldFacade;
 
 import java.util.HashSet;
 import java.util.Set;

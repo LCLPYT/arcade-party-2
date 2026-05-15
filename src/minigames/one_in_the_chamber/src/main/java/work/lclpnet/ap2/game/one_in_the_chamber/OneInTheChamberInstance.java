@@ -35,6 +35,7 @@ import work.lclpnet.ap2.impl.util.TextUtil;
 import work.lclpnet.ap2.impl.util.handler.VisualCooldown;
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
+import work.lclpnet.game.impl.prot.ProtectionTypes;
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
 import work.lclpnet.kibu.access.entity.ServerPlayerAccess;
 import work.lclpnet.kibu.hook.HookRegistrar;
@@ -43,7 +44,6 @@ import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks;
 import work.lclpnet.kibu.hook.player.PlayerInventoryHooks;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.kibu.translate.text.TranslatedText;
-import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 
 import java.util.Random;
 import java.util.Set;

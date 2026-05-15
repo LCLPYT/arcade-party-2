@@ -8,7 +8,7 @@ import net.minecraft.world.entity.monster.skeleton.AbstractSkeleton;
 import net.minecraft.world.entity.monster.skeleton.Skeleton;
 import net.minecraft.world.entity.monster.zombie.Zombie;
 import work.lclpnet.ap2.api.base.Participants;
-import work.lclpnet.lobby.game.map.GameMap;
+import work.lclpnet.game.map.GameMap;
 
 import java.util.Random;
 

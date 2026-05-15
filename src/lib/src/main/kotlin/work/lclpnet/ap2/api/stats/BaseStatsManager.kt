@@ -8,8 +8,8 @@ import work.lclpnet.ap2.api.game.data.GenericGameResult
 import work.lclpnet.ap2.api.game.data.SubjectRef
 import work.lclpnet.ap2.api.game.data.SubjectRefFactory
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef
-import work.lclpnet.lobby.game.map.GameMap
-import work.lclpnet.lobby.game.map.MapDescriptor
+import work.lclpnet.game.map.GameMap
+import work.lclpnet.game.map.MapDescriptor
 
 data class Stat<T>(val id: String, val default: T)
 

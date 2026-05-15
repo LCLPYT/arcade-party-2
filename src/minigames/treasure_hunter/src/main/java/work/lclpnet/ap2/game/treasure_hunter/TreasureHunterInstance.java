@@ -27,12 +27,12 @@ import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.ItemHelper;
 import work.lclpnet.gaco.ds.BlockBox;
+import work.lclpnet.game.impl.prot.ProtectionTypes;
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
 import work.lclpnet.kibu.access.entity.ServerPlayerAccess;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.kibu.translate.Translations;
-import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
 
 import java.util.*;
 

@@ -27,6 +27,9 @@ import work.lclpnet.ap2.impl.util.Fireworks;
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.gaco.ds.BlockBox;
+import work.lclpnet.game.map.GameMap;
+import work.lclpnet.game.map.MapUtils;
+import work.lclpnet.game.util.RayCaster;
 import work.lclpnet.kibu.access.entity.ServerPlayerAccess;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.player.PlayerMoveCallback;
@@ -35,9 +38,6 @@ import work.lclpnet.kibu.title.Title;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.kibu.translate.bossbar.TranslatedBossBar;
 import work.lclpnet.kibu.translate.text.LocalizedFormat;
-import work.lclpnet.lobby.game.map.GameMap;
-import work.lclpnet.lobby.game.map.MapUtils;
-import work.lclpnet.lobby.util.RayCaster;
 
 import java.util.*;
 

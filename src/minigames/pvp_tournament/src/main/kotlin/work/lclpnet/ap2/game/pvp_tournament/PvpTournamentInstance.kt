@@ -46,11 +46,11 @@ import work.lclpnet.ap2.util.PvpBehavior
 import work.lclpnet.ap2.util.SubtitleCountdown
 import work.lclpnet.combatctl.api.CombatControl
 import work.lclpnet.gaco.core.api.EntityRef
+import work.lclpnet.game.map.GameMap
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks
 import work.lclpnet.kibu.hook.util.PlayerUtils
 import work.lclpnet.kibu.title.Title
 import work.lclpnet.kibu.translate.text.TranslatedText
-import work.lclpnet.lobby.game.map.GameMap
 import java.util.*
 import java.util.concurrent.CompletableFuture
 import kotlin.time.Duration.Companion.seconds

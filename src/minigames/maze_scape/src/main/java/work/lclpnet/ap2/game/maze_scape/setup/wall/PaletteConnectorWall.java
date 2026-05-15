@@ -13,8 +13,8 @@ import work.lclpnet.ap2.game.maze_scape.util.NotWallPredicate;
 import work.lclpnet.ap2.game.maze_scape.util.PlanePredicate;
 import work.lclpnet.gaco.ds.BVH;
 import work.lclpnet.gaco.ds.BlockBox;
+import work.lclpnet.game.util.WorldModifier;
 import work.lclpnet.kibu.schematic.FabricStructureWrapper;
-import work.lclpnet.lobby.util.WorldModifier;
 
 import java.util.Random;
 

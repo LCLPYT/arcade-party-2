@@ -16,8 +16,8 @@ import work.lclpnet.ap2.impl.game.data.type.TeamRef;
 import work.lclpnet.ap2.impl.game.data.type.TeamRefResolver;
 import work.lclpnet.ap2.impl.game.team.SimpleTeamManager;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
+import work.lclpnet.game.map.MapUtils;
 import work.lclpnet.kibu.hook.util.PositionRotation;
-import work.lclpnet.lobby.game.map.MapUtils;
 
 import java.util.Collections;
 import java.util.Map;

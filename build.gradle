@@ -7,6 +7,9 @@ plugins {
     alias(libs.plugins.maven.publish)
     alias(libs.plugins.gradle.build.utils)
     alias(libs.plugins.lombok) apply false
+    alias(libs.plugins.kotlin.jvm) apply false
+    alias(libs.plugins.kotlin.serialization) apply false
+    alias(libs.plugins.kotlin.lombok) apply false
 }
 
 Properties props = buildUtils.loadProperties("publish.properties")
@@ -74,7 +77,7 @@ allprojects {
         implementation(libs.fantasy)
         implementation(libs.combat.control)
         implementation(libs.notica)
-        implementation(libs.mg.lobby)
+        implementation(libs.mg.api)
         implementation(libs.pal)
         implementation(libs.gaco)
         implementation(libs.game.map.api)
@@ -183,6 +186,7 @@ dependencies {
     // optional runtime dependencies (not explicitly required for compilation, but needed to play the game)
     localRuntime(libs.ruler)
     localRuntime(libs.mcserver.api)
+    localRuntime(libs.mg.lobby)
 
     // optional runtime dependencies (not required to play)
     localRuntime(libs.modrinth.anti.xray)

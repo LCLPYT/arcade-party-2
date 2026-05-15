@@ -49,6 +49,8 @@ import work.lclpnet.gaco.collisions.movement.PlayerMovementObserver;
 import work.lclpnet.gaco.ds.BlockBox;
 import work.lclpnet.gaco.ds.Checkpoint;
 import work.lclpnet.gaco.ds.PositionedBlockSet;
+import work.lclpnet.game.impl.prot.ProtectionTypes;
+import work.lclpnet.game.map.GameMap;
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess;
 import work.lclpnet.kibu.access.entity.ServerPlayerAccess;
 import work.lclpnet.kibu.hook.HookRegistrar;
@@ -57,8 +59,6 @@ import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.TaskHandle;
 import work.lclpnet.kibu.title.Title;
 import work.lclpnet.kibu.translate.Translations;
-import work.lclpnet.lobby.game.impl.prot.ProtectionTypes;
-import work.lclpnet.lobby.game.map.GameMap;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;

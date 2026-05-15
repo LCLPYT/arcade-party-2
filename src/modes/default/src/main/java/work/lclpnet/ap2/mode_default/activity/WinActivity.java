@@ -21,13 +21,13 @@ import work.lclpnet.ap2.impl.util.Fireworks;
 import work.lclpnet.ap2.mode_default.util.ApBaseArgs;
 import work.lclpnet.ap2.mode_default.util.BaseActivityConfigurator;
 import work.lclpnet.ap2.mode_default.util.ScoreManager;
+import work.lclpnet.game.map.GameMap;
+import work.lclpnet.game.map.MapUtils;
+import work.lclpnet.game.util.ProtectorComponent;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.scheduler.api.Scheduler;
 import work.lclpnet.kibu.title.Title;
 import work.lclpnet.kibu.translate.Translations;
-import work.lclpnet.lobby.game.map.GameMap;
-import work.lclpnet.lobby.game.map.MapUtils;
-import work.lclpnet.lobby.game.util.ProtectorComponent;
 
 import java.util.Collection;
 import java.util.List;

@@ -44,13 +44,13 @@ import work.lclpnet.ap2.impl.util.world.NotOccupiedBlockPredicate;
 import work.lclpnet.ap2.impl.util.world.SimpleAdjacentBlocks;
 import work.lclpnet.ap2.impl.util.world.SizedSpaceFinder;
 import work.lclpnet.gaco.ds.BlockBox;
+import work.lclpnet.game.map.GameMap;
 import work.lclpnet.kibu.access.entity.FireworkEntityAccess;
 import work.lclpnet.kibu.access.entity.ServerPlayerAccess;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.translate.Translations;
-import work.lclpnet.lobby.game.map.GameMap;
 
 import java.util.List;
 import java.util.Random;

@@ -28,7 +28,6 @@ import work.lclpnet.activity.ComponentActivity;
 import work.lclpnet.activity.component.ComponentBundle;
 import work.lclpnet.activity.component.builtin.BossBarComponent;
 import work.lclpnet.activity.component.builtin.BuiltinComponents;
-import work.lclpnet.activity.manager.ActivityManager;
 import work.lclpnet.ap2.ApConstants;
 import work.lclpnet.ap2.api.base.GameQueue;
 import work.lclpnet.ap2.api.base.PlayerManager;
@@ -63,6 +62,10 @@ import work.lclpnet.gaco.scene.MixedMountContext;
 import work.lclpnet.gaco.scene.Object3d;
 import work.lclpnet.gaco.scene.Scene;
 import work.lclpnet.gaco.scene.object.TranslatedTextDisplayObject;
+import work.lclpnet.game.api.MapOptions;
+import work.lclpnet.game.map.GameMap;
+import work.lclpnet.game.util.BossBarTimer;
+import work.lclpnet.game.util.ProtectorComponent;
 import work.lclpnet.kibu.access.entity.ServerPlayerAccess;
 import work.lclpnet.kibu.cmd.type.CommandRegistrar;
 import work.lclpnet.kibu.hook.HookRegistrar;
@@ -76,10 +79,6 @@ import work.lclpnet.kibu.scheduler.api.TaskHandle;
 import work.lclpnet.kibu.scheduler.api.TaskScheduler;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.kibu.translate.text.TranslatedText;
-import work.lclpnet.lobby.game.api.MapOptions;
-import work.lclpnet.lobby.game.map.GameMap;
-import work.lclpnet.lobby.game.util.BossBarTimer;
-import work.lclpnet.lobby.game.util.ProtectorComponent;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -556,7 +555,7 @@ public class PreparationActivity extends ComponentActivity implements Skippable,
         }
 
         try {
-            ActivityManager.getInstance().startActivity(activity);
+            args.activitySwitcher().switchTo(activity);
         } catch (Throwable t) {
             args.miniGameArgs().logger().error("Failed to switch activity", t);
         }

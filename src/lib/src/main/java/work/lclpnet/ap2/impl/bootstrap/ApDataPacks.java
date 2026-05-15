@@ -8,11 +8,11 @@ import work.lclpnet.config.json.JsonConfigFactory;
 import work.lclpnet.gaco.asset.AssetRepository;
 import work.lclpnet.gaco.asset.CommonAssets;
 import work.lclpnet.gaco.asset.cache.AssetCache;
-import work.lclpnet.lobby.game.api.data.DataPackSink;
-import work.lclpnet.lobby.game.api.data.GameDataPacks;
-import work.lclpnet.lobby.game.map.GameMap;
-import work.lclpnet.lobby.game.map.MapDescriptor;
-import work.lclpnet.lobby.game.map.MapManager;
+import work.lclpnet.game.api.data.DataPackSink;
+import work.lclpnet.game.api.data.GameDataPacks;
+import work.lclpnet.game.map.GameMap;
+import work.lclpnet.game.map.MapDescriptor;
+import work.lclpnet.game.map.MapManager;
 
 import java.io.IOException;
 import java.nio.file.Files;
