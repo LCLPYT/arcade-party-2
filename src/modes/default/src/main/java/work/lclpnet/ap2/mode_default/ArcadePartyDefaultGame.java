@@ -1,11 +1,11 @@
 package work.lclpnet.ap2.mode_default;
 
-import net.minecraft.ChatFormatting;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.ItemStackTemplate;
 import net.minecraft.world.item.Items;
 import org.json.JSONObject;
+import org.jspecify.annotations.NonNull;
 import work.lclpnet.ap2.ApConstants;
 import work.lclpnet.ap2.api.config.Ap2Config;
 import work.lclpnet.ap2.api.game.MiniGame;
@@ -22,13 +22,13 @@ import work.lclpnet.game.api.option.OptionVoting;
 import work.lclpnet.game.api.start.GameScope;
 import work.lclpnet.game.api.start.GameStatusManager;
 import work.lclpnet.game.impl.MinecraftGameConfig;
+import work.lclpnet.game.util.GameStartUtil;
 import work.lclpnet.kibu.translate.Translations;
 
 import java.nio.file.Path;
 import java.util.Set;
 
 import static net.minecraft.ChatFormatting.AQUA;
-import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
 public class ArcadePartyDefaultGame implements Game {
 
@@ -38,7 +38,7 @@ public class ArcadePartyDefaultGame implements Game {
     private final Path cacheDirectory = Path.of(".cache", ApConstants.ID);
 
     @Override
-    public GameConfig getConfig() {
+    public @NonNull GameConfig getConfig() {
         return new MinecraftGameConfig(ApConstants.ID, new ItemStackTemplate(Items.GOLD_BLOCK));
     }
 
@@ -50,24 +50,19 @@ public class ArcadePartyDefaultGame implements Game {
     }
 
     @Override
-    public GameFactory createFactory() {
+    public @NonNull GameFactory createFactory() {
         return new ArcadePartyFactory(CONFIG_FACTORY, ApConstants.logger);
     }
 
     @Override
-    public GameDataPacks getBootstrapDataPacks() {
+    public @NonNull GameDataPacks getBootstrapDataPacks() {
         return new ApDataPacks(cacheDirectory, CONFIG_FACTORY, ApConstants.logger);
     }
 
     @Override
-    public void configureStatusManager(GameStatusManager manager) {
-        Translations translations = manager.getContext().getTranslations();
-
-        var msg = translations.translateText("lobby.game.not_enough_players", styled(MIN_REQUIRED_PLAYERS, ChatFormatting.YELLOW))
-                .formatted(ChatFormatting.RED);
-
-        manager.setCannotStartMessage(msg::translateFor);
-        manager.setCannotStartBossBarValue(translations.translateText("lobby.game.waiting_for_players"));
+    public void configureStatusManager(@NonNull GameStatusManager manager) {
+        GameStartUtil.configureNotEnoughPlayersMessage(manager, MIN_REQUIRED_PLAYERS);
+        GameStartUtil.configureWaitingForPlayersBossBar(manager);
     }
 
     @Override
