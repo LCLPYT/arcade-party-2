@@ -47,7 +47,8 @@ public class MimicryInstance extends FFAGameInstance implements MapBootstrap {
             REPLAY_MIN_SECONDS = 8,
             REPLAY_SECONDS_PER_NOTE = 1,
             REPLAY_MAX_SECONDS = 30,
-            NEXT_ROUND_DELAY_SECONDS = 4;
+            NEXT_ROUND_DELAY_SECONDS = 4,
+            INITIAL_SEQUENCE_LENGTH = 3;
 
     private final IntDataContainer<ServerPlayer, PlayerRef> dataContainer = new IntScoreDataContainer<>(PlayerRef::create, Ordering.DESCENDING, "game.ap2.mimicry.completed");
     private PseudoElimination pseudoElimination;
@@ -111,6 +112,11 @@ public class MimicryInstance extends FFAGameInstance implements MapBootstrap {
     protected void go() {
         sequencePlayer = new SequencePlayer(manager, gameHandle.getScheduler(), getWorld());
 
+        // last sequence item is added by nextRound()
+        for (int i = 0; i < INITIAL_SEQUENCE_LENGTH - 1; i++) {
+            manager.extendSequence();
+        }
+
         nextSequence();
 
         PlayerInteractionHooks.USE_BLOCK.registerWith(gameHandle.getHooks(), this::onUseBlock);
@@ -170,7 +176,7 @@ public class MimicryInstance extends FFAGameInstance implements MapBootstrap {
         manager.reset();
         manager.extendSequence();
 
-        sequencePlayer.setPeriodTicks(12 - manager.sequenceLength() / 2);
+        sequencePlayer.setPeriodTicks(10 - manager.sequenceLength() / 2);
         sequencePlayer.play().whenComplete(this::beginReplay);
     }
 
