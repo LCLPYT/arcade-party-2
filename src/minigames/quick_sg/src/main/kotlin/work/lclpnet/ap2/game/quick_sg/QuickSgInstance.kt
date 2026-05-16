@@ -7,6 +7,8 @@ import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.InteractionResult
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.block.Blocks
+import net.minecraft.world.level.block.entity.BarrelBlockEntity
+import net.minecraft.world.level.block.entity.ChestBlockEntity
 import net.minecraft.world.level.storage.LevelData
 import net.minecraft.world.level.storage.loot.LootTable
 import work.lclpnet.ap2.api.game.MiniGameHandle
@@ -44,7 +46,6 @@ class QuickSgInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(game
         gameHandle.gameInfo.identifier("chests"),
     )
 
-    var lootContainerManager: LazyLootContainerManager? = null
     var mayLoot = false
 
     init {
@@ -53,11 +54,13 @@ class QuickSgInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(game
     }
 
     override fun prepare() {
-        lootContainerManager = LazyLootContainerManager(
+        LazyLootContainerManager(
             players(),
             world,
             VanillaLootTableFiller(lootTableKey),
-        ).also { it.setup(gameHandle.hooks) }
+        ) { _, container ->
+            container is ChestBlockEntity || container is BarrelBlockEntity
+        }.also { it.setup(gameHandle.hooks) }
 
         useRemainingPlayersDisplay()
         useSmoothDeath()
