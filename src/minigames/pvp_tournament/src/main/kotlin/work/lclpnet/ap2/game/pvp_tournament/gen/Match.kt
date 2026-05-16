@@ -28,18 +28,18 @@ class Match(
 
         completed = true
 
-        val winner = if (leftPlayer == winner || rightPlayer == winner) winner else null
+        val resolvedWinner = if (leftPlayer == winner || rightPlayer == winner) winner else null
 
-        this.winner = winner
+        this.winner = resolvedWinner
 
-        val loser = when (winner) {
+        val loser = when (resolvedWinner) {
             leftPlayer -> rightPlayer
             rightPlayer -> leftPlayer
             else -> null
         }
 
         winnerNext?.let {
-            it.acceptPlayerFromChildMatch(winner, this)
+            it.acceptPlayerFromChildMatch(resolvedWinner, this)
             it.propagateByeMatch()
         }
 

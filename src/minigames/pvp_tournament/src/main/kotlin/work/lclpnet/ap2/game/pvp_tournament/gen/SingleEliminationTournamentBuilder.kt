@@ -27,7 +27,7 @@ class SingleEliminationTournamentBuilder(
             current = round
         } while (current.size > 1)
 
-        return Tournament(matches, players.toSet()).simplified()
+        return Tournament(matches, players.toSet()).simplifyInPlace()
     }
 
     fun buildRound(matches: List<Match>): List<Match> {

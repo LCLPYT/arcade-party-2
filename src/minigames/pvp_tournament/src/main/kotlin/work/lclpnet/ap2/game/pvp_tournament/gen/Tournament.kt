@@ -1,6 +1,7 @@
 package work.lclpnet.ap2.game.pvp_tournament.gen
 
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef
+import java.util.*
 
 data class Tournament(
     val matches: Set<Match>,
@@ -8,7 +9,13 @@ data class Tournament(
 ) {
     val finale: Match get() = matches.first { it.isFinale() }
 
-    fun simplified(): Tournament {
+    /**
+     * Eliminates bye matches whose winner is already known.
+     *
+     * Mutates the contained [Match] objects in place (completes byes, rewires next/child pointers).
+     * Callers that need to preserve the original graph should call [deepCopy] first.
+     */
+    fun simplifyInPlace(): Tournament {
         val newMatches = matches.toMutableSet()
         val checkOptimize = newMatches.toMutableSet()
 
@@ -59,32 +66,22 @@ data class Tournament(
     }
 
     fun deepCopy(): Tournament {
-        val orderedMatches = matches.toList()
+        // children and next matches are wired below
+        val copies = IdentityHashMap<Match, Match>(matches.size)
 
-        val matchCopies = orderedMatches.map {
-            // children and next matches are set later
-            it.shallowCopy()
+        for (match in matches) {
+            copies[match] = match.shallowCopy()
         }
 
-        fun getCopy(match: Match?): Match? {
-            val index = orderedMatches.indexOf(match)
-
-            if (index == -1) return null
-
-            return matchCopies[index]
-        }
-
-        for (match in orderedMatches) {
-            val copy = getCopy(match) ?: continue
-
-            copy.leftChild = getCopy(match.leftChild)
-            copy.rightChild = getCopy(match.rightChild)
-            copy.winnerNext = getCopy(match.winnerNext)
-            copy.loserNext = getCopy(match.loserNext)
+        for ((match, copy) in copies) {
+            copy.leftChild = copies[match.leftChild]
+            copy.rightChild = copies[match.rightChild]
+            copy.winnerNext = copies[match.winnerNext]
+            copy.loserNext = copies[match.loserNext]
         }
 
         return Tournament(
-            matches = matchCopies.toSet(),
+            matches = copies.values.toSet(),
             players = players.toSet(),
         )
     }
