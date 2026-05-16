@@ -11,6 +11,7 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.BlockHitResult;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.map.MapBootstrap;
@@ -124,15 +125,16 @@ public class MimicryInstance extends FFAGameInstance implements MapBootstrap {
 
     private InteractionResult onUseBlock(Player player, Level world, InteractionHand hand, BlockHitResult hitResult) {
         if (winManager.isGameOver()
+                || hand != InteractionHand.MAIN_HAND
                 || !(player instanceof ServerPlayer serverPlayer)
                 || !gameHandle.getParticipants().isParticipating(serverPlayer)
                 || pseudoElimination.isEliminated(serverPlayer)) {
             return InteractionResult.PASS;
         }
 
-        BlockPos pos = hitResult.getBlockPos();
+        BlockPos pos = getEffectivelyClickedPos(world, hitResult);
 
-        if (!world.getBlockState(pos).is(BlockTags.BUTTONS)) {
+        if (pos == null) {
             return InteractionResult.PASS;
         }
 
@@ -148,6 +150,22 @@ public class MimicryInstance extends FFAGameInstance implements MapBootstrap {
         softEliminate(serverPlayer);
 
         return InteractionResult.FAIL;
+    }
+
+    private @Nullable BlockPos getEffectivelyClickedPos(Level world, BlockHitResult hitResult) {
+        BlockPos pos = hitResult.getBlockPos();
+
+        if (world.getBlockState(pos).is(BlockTags.BUTTONS)) {
+            return pos;
+        }
+
+        BlockPos rel = pos.relative(hitResult.getDirection());
+
+        if (world.getBlockState(rel).is(BlockTags.BUTTONS)) {
+            return rel;
+        }
+
+        return null;
     }
 
     private synchronized void nextSequence() {
