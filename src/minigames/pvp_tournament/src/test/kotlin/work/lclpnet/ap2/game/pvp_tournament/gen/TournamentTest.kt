@@ -1,11 +1,6 @@
 package work.lclpnet.ap2.game.pvp_tournament.gen
 
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertFalse
-import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.Assertions.assertNotSame
-import org.junit.jupiter.api.Assertions.assertNull
-import org.junit.jupiter.api.Assertions.assertSame
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef
 import java.util.*
@@ -27,7 +22,7 @@ class TournamentTest {
 
         leftChild.complete(null)
 
-        val simplified = tournament.simplified()
+        val simplified = tournament.simplifyInPlace()
 
         assertEquals(tournament.matches, simplified.matches)
         assertEquals(tournament.players, simplified.players)

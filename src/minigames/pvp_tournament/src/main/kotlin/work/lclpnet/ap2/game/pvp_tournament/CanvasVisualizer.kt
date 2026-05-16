@@ -106,9 +106,8 @@ class CanvasVisualizer(
     }
 
     fun launchUpdate(tournament: Tournament) {
-        // tournament is mutable, update is done on separate thread, therefore pass a copy
-        // assume this function is called from the server thread and only the server thread mutates tournament
-        val tournamentCopy = tournament.copy()
+        // matches are mutated by the server thread; deep-copy so the off-thread render sees a frozen graph
+        val tournamentCopy = tournament.deepCopy()
 
         scope.launch {
             updateCanvas(tournamentCopy)
