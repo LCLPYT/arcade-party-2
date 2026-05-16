@@ -1,15 +1,12 @@
 package work.lclpnet.ap2.game.pvp_tournament.gen
 
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef
-import java.awt.BasicStroke
-import java.awt.Color
-import java.awt.Graphics2D
-import java.awt.RenderingHints
+import java.awt.*
 import java.awt.geom.Ellipse2D
 import java.awt.geom.Line2D
 import java.awt.image.BufferedImage
 import java.io.ByteArrayOutputStream
-import java.util.Base64
+import java.util.*
 import javax.imageio.ImageIO
 import kotlin.math.max
 import kotlin.math.roundToInt
@@ -52,6 +49,10 @@ class TournamentVisualizer(
     private val dotRadius = 1.0 * scale
 
     suspend fun generateImage(tournament: Tournament): BufferedImage {
+        if (isSwiss(tournament)) {
+            return generateSwissImage(tournament)
+        }
+
         val (rootNode, width, height) = calculateLayout(tournament)
 
         val image = BufferedImage(width.toInt(), height.toInt(), BufferedImage.TYPE_INT_ARGB)
@@ -72,13 +73,17 @@ class TournamentVisualizer(
     }
 
     suspend fun generateSvg(tournament: Tournament): String {
+        if (isSwiss(tournament)) {
+            return generateSwissSvg(tournament)
+        }
+
         val (rootNode, width, height) = calculateLayout(tournament)
 
         val svg = StringBuilder()
         svg.append("""<svg width="$width" height="$height" xmlns="http://www.w3.org/2000/svg">""")
         svg.append("""
             <style>
-            text { font-family: sans-serif; font-size: ${3 * scale}px; dominant-baseline: middle; } 
+            text { font-family: sans-serif; font-size: ${3 * scale}px; dominant-baseline: middle; }
             image { image-rendering: pixelated; image-rendering: crisp-edges; }
             </style>
             """.trimIndent())
@@ -88,6 +93,15 @@ class TournamentVisualizer(
         svg.append("</svg>")
 
         return svg.toString()
+    }
+
+    private fun isSwiss(tournament: Tournament): Boolean {
+        if (tournament.matches.isEmpty()) return false
+
+        return tournament.matches.all {
+            it.leftChild == null && it.rightChild == null
+                    && it.winnerNext == null && it.loserNext == null
+        }
     }
 
     private data class LayoutResult(
@@ -295,5 +309,221 @@ class TournamentVisualizer(
                    y="${centerY - size / 2}"
                    width="$size" height="$size"
                    href="data:image/png;base64,$encoded"/>"""
+    }
+
+    private fun getImageSvg(image: BufferedImage, centerX: Double, centerY: Double, size: Double, opacity: Double): String {
+        val out = ByteArrayOutputStream()
+        ImageIO.write(image, "png", out)
+
+        val encoded = Base64.getEncoder().encodeToString(out.toByteArray())
+
+        return """<image x="${centerX - size / 2}"
+                   y="${centerY - size / 2}"
+                   width="$size" height="$size"
+                   opacity="$opacity"
+                   href="data:image/png;base64,$encoded"/>"""
+    }
+
+    private data class SwissLayout(
+        val currentRound: Int,
+        val totalRounds: Int,
+        val matches: List<Match>,
+        val byes: List<PlayerRef>,
+        val width: Double,
+        val height: Double,
+        val leftIconX: Double,
+        val centerX: Double,
+        val rightIconX: Double,
+        val headerY: Double,
+        val firstRowY: Double,
+        val rowHeight: Double,
+        val iconSize: Double,
+        val glyphFontSize: Double,
+        val headerFontSize: Double,
+    )
+
+    private fun computeSwissLayout(tournament: Tournament): SwissLayout {
+        val matches = tournament.matches
+        val totalRounds = matches.maxOf { it.round } + 1
+        val currentRound = matches.filter { !it.completed }
+            .minOfOrNull { it.round } ?: matches.maxOf { it.round }
+
+        val roundMatches = matches
+            .filter { it.round == currentRound }
+            .sortedBy { it.leftPlayer?.name ?: "" }
+
+        val matchPlayers = roundMatches.flatMap { it.players }.toSet()
+        val byes = (tournament.players - matchPlayers).sortedBy { it.name }
+
+        val iconSize = 8.0 * scale
+        val gap = 4.0 * scale
+        val glyphFontSize = 5.0 * scale
+        val headerFontSize = 5.0 * scale
+        val rowHeight = iconSize + 2.0 * scale
+
+        val rowWidth = iconSize + gap + glyphFontSize + gap + iconSize
+        val width = padding * 2 + rowWidth
+
+        val rows = roundMatches.size + byes.size
+        val headerY = padding + headerFontSize / 2
+        val firstRowY = padding + headerFontSize + padding + rowHeight / 2
+        val height = firstRowY + rows * rowHeight - rowHeight / 2 + padding
+
+        val leftIconX = padding + iconSize / 2
+        val centerX = padding + iconSize + gap + glyphFontSize / 2
+        val rightIconX = padding + iconSize + gap + glyphFontSize + gap + iconSize / 2
+
+        return SwissLayout(
+            currentRound = currentRound,
+            totalRounds = totalRounds,
+            matches = roundMatches,
+            byes = byes,
+            width = width,
+            height = height,
+            leftIconX = leftIconX,
+            centerX = centerX,
+            rightIconX = rightIconX,
+            headerY = headerY,
+            firstRowY = firstRowY,
+            rowHeight = rowHeight,
+            iconSize = iconSize,
+            glyphFontSize = glyphFontSize,
+            headerFontSize = headerFontSize,
+        )
+    }
+
+    private suspend fun generateSwissImage(tournament: Tournament): BufferedImage {
+        val layout = computeSwissLayout(tournament)
+
+        val image = BufferedImage(layout.width.toInt().coerceAtLeast(1), layout.height.toInt().coerceAtLeast(1), BufferedImage.TYPE_INT_ARGB)
+        val g = image.createGraphics()
+
+        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
+        g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR)
+        g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY)
+        g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON)
+
+        g.color = Color.BLACK
+        g.font = Font(Font.SANS_SERIF, Font.PLAIN, layout.headerFontSize.roundToInt())
+
+        val headerText = "Round ${layout.currentRound + 1} / ${layout.totalRounds}"
+        val headerMetrics = g.fontMetrics
+        val headerX = (layout.width - headerMetrics.stringWidth(headerText)) / 2
+        g.drawString(headerText, headerX.toFloat(), (layout.headerY + headerMetrics.ascent / 2.0 - 1).toFloat())
+
+        layout.matches.forEachIndexed { index, match ->
+            val y = layout.firstRowY + index * layout.rowHeight
+            renderSwissMatchRow(g, match, layout, y)
+        }
+
+        layout.byes.forEachIndexed { index, ref ->
+            val y = layout.firstRowY + (layout.matches.size + index) * layout.rowHeight
+            val icon = playerIcons.get(ref)
+            drawIcon(g, icon, layout.centerX, y, layout.iconSize, 1.0)
+        }
+
+        g.dispose()
+
+        return image
+    }
+
+    private suspend fun renderSwissMatchRow(g: Graphics2D, match: Match, layout: SwissLayout, y: Double) {
+        val left = match.leftPlayer
+        val right = match.rightPlayer
+        val completed = match.completed
+        val draw = match.completedAsDraw
+
+        val leftOpacity: Double = opacityFor(match, left, completed, draw)
+        val rightOpacity: Double = opacityFor(match, right, completed, draw)
+
+        if (left != null) {
+            drawIcon(g, playerIcons.get(left), layout.leftIconX, y, layout.iconSize, leftOpacity)
+        }
+
+        if (right != null) {
+            drawIcon(g, playerIcons.get(right), layout.rightIconX, y, layout.iconSize, rightOpacity)
+        }
+
+        g.color = Color.BLACK
+        g.font = Font(Font.SANS_SERIF, Font.PLAIN, layout.glyphFontSize.roundToInt())
+
+        val metrics = g.fontMetrics
+        val glyph = "x"
+        val glyphX = layout.centerX - metrics.stringWidth(glyph) / 2.0
+        val glyphY = y + metrics.ascent / 2.0 - 1
+        g.drawString(glyph, glyphX.toFloat(), glyphY.toFloat())
+    }
+
+    private fun opacityFor(match: Match, player: PlayerRef?, completed: Boolean, draw: Boolean): Double {
+        if (!completed) return 1.0
+        if (draw) return 0.35
+        return if (player == match.winner) 1.0 else 0.35
+    }
+
+    private fun drawIcon(g: Graphics2D, icon: BufferedImage, centerX: Double, centerY: Double, size: Double, opacity: Double) {
+        val previous = g.composite
+
+        if (opacity < 1.0) {
+            g.composite = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, opacity.toFloat())
+        }
+
+        val x = (centerX - size / 2).toInt()
+        val y = (centerY - size / 2).toInt()
+        g.drawImage(icon, x, y, size.toInt(), size.toInt(), null)
+
+        g.composite = previous
+    }
+
+    private suspend fun generateSwissSvg(tournament: Tournament): String {
+        val layout = computeSwissLayout(tournament)
+
+        val sb = StringBuilder()
+        sb.append("""<svg width="${layout.width}" height="${layout.height}" xmlns="http://www.w3.org/2000/svg">""")
+        sb.append("""
+            <style>
+            text { font-family: sans-serif; dominant-baseline: middle; text-anchor: middle; }
+            text.header { font-size: ${layout.headerFontSize}px; }
+            text.glyph { font-size: ${layout.glyphFontSize}px; }
+            image { image-rendering: pixelated; image-rendering: crisp-edges; }
+            </style>
+            """.trimIndent())
+
+        val headerText = "Round ${layout.currentRound + 1} / ${layout.totalRounds}"
+        sb.appendLine("""<text class="header" x="${layout.width / 2}" y="${layout.headerY}" fill="#000">$headerText</text>""")
+
+        layout.matches.forEachIndexed { index, match ->
+            val y = layout.firstRowY + index * layout.rowHeight
+            renderSwissMatchRowSvg(sb, match, layout, y)
+        }
+
+        layout.byes.forEachIndexed { index, ref ->
+            val y = layout.firstRowY + (layout.matches.size + index) * layout.rowHeight
+            val icon = playerIcons.get(ref)
+            sb.appendLine(getImageSvg(icon, layout.centerX, y, layout.iconSize, 1.0))
+        }
+
+        sb.append("</svg>")
+
+        return sb.toString()
+    }
+
+    private suspend fun renderSwissMatchRowSvg(sb: StringBuilder, match: Match, layout: SwissLayout, y: Double) {
+        val left = match.leftPlayer
+        val right = match.rightPlayer
+        val completed = match.completed
+        val draw = match.completedAsDraw
+
+        val leftOpacity = opacityFor(match, left, completed, draw)
+        val rightOpacity = opacityFor(match, right, completed, draw)
+
+        if (left != null) {
+            sb.appendLine(getImageSvg(playerIcons.get(left), layout.leftIconX, y, layout.iconSize, leftOpacity))
+        }
+
+        if (right != null) {
+            sb.appendLine(getImageSvg(playerIcons.get(right), layout.rightIconX, y, layout.iconSize, rightOpacity))
+        }
+
+        sb.appendLine("""<text class="glyph" x="${layout.centerX}" y="$y" fill="#000">x</text>""")
     }
 }

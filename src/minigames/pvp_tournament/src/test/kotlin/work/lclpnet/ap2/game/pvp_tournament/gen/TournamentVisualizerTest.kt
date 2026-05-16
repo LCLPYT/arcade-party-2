@@ -197,6 +197,17 @@ class TournamentVisualizerTest {
 
     private fun tournament(n: Int): Tournament {
         val builder = SingleEliminationTournamentBuilder(ByeTracker())
+
+        return builder.build(buildPlayers(n))
+    }
+
+    private fun swissTournament(n: Int, matchesPerPlayer: Int = 4): Tournament {
+        val builder = SwissTournamentBuilder(matchesPerPlayer)
+
+        return builder.build(buildPlayers(n))
+    }
+
+    private fun buildPlayers(n: Int): List<PlayerRef> {
         val players = mutableListOf<PlayerRef>()
         var char = 'A'
 
@@ -206,7 +217,45 @@ class TournamentVisualizerTest {
             players.add(player)
         }
 
-        return builder.build(players)
+        return players
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
+    fun swiss_base_n(n: Int) {
+        val tournament = swissTournament(n)
+
+        writeSvg(tournament, dir!!.resolve("swiss_base_$n.svg"))
+        writePng(tournament, dir!!.resolve("swiss_base_$n.png"))
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
+    fun swiss_partial_round0_n(n: Int) {
+        val tournament = swissTournament(n)
+
+        // complete every other match in round 0 to exercise the "completed" dimming
+        tournament.matches
+            .filter { it.round == 0 }
+            .filterIndexed { idx, _ -> idx % 2 == 0 }
+            .filter { it.players.size == 2 }
+            .forEach { it.complete(it.players.random()) }
+
+        writeSvg(tournament, dir!!.resolve("swiss_partial_round0_$n.svg"))
+        writePng(tournament, dir!!.resolve("swiss_partial_round0_$n.png"))
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
+    fun swiss_fully_completed_n(n: Int) {
+        val tournament = swissTournament(n)
+
+        tournament.matches
+            .filter { it.players.size == 2 }
+            .forEach { it.complete(it.players.random()) }
+
+        writeSvg(tournament, dir!!.resolve("swiss_done_$n.svg"))
+        writePng(tournament, dir!!.resolve("swiss_done_$n.png"))
     }
 
     fun nextPowerOfTwo(n: Int): Int {

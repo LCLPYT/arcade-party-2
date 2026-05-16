@@ -62,6 +62,8 @@ enum class TournamentVariant {
     SWISS_STYLE,
 }
 
+val TOURNAMENT_VARIANT: TournamentVariant = TournamentVariant.SWISS_STYLE
+
 class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle), MapBootstrap {
 
     val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -79,6 +81,7 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
 
     lateinit var pvp: PvpBehavior
     lateinit var tournamentResult: TournamentResult
+    var finalists: List<PlayerRef> = emptyList()
 
     private fun buildPlayerRefs(): List<PlayerRef> {
         val refs = players().map { PlayerRef.create(it) }
@@ -108,7 +111,7 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
             schematicBlocking(assetPath(path))
         }
 
-        val result = setup.setup(TournamentVariant.SINGLE_ELIMINATION)
+        val result = setup.setup(TOURNAMENT_VARIANT)
 
         tournamentResult = result
 
@@ -142,7 +145,8 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
             movementBlocker.enableMovement(it)
         }
 
-        if (tournamentResult.tournament.finale.completed) {
+        if (TOURNAMENT_VARIANT == TournamentVariant.SINGLE_ELIMINATION
+            && tournamentResult.tournament.finale.completed) {
             tournamentResult.tournament.finale.winner?.let {
                 data.setScore(it, 1)
                 winManager.complete()
@@ -504,7 +508,7 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
 
         finalizeMatchInstance(inst, match, winner)
 
-        if (isGameComplete(match)) {
+        if (isGameComplete()) {
             finishGame(match, winner)
             return
         }
@@ -532,15 +536,45 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
     private fun finishGame(match: Match, winner: PlayerRef?) {
         logger.debug("Game is now completed")
 
-        if (winner != null) {
-            data.setScore(winner, 1)
+        when (TOURNAMENT_VARIANT) {
+            TournamentVariant.SINGLE_ELIMINATION -> {
+                if (winner != null) {
+                    data.setScore(winner, 1)
 
-            match.other(winner)?.let {
-                setPlacementLostInMatch(it, match)
+                    match.other(winner)?.let {
+                        setPlacementLostInMatch(it, match)
+                    }
+                }
+
+                winManager.complete()
             }
+            TournamentVariant.SWISS_STYLE -> finishGameSwiss()
+        }
+    }
+
+    private fun finishGameSwiss() {
+        val tournament = tournamentResult.tournament
+        val maxPlacement = tournament.matches.maxOf { it.round } + 2
+
+        val winsByPlayer = tournament.players.associateWith { ref ->
+            tournament.matches.count { it.completed && it.winner == ref }
         }
 
-        winManager.complete()
+        winsByPlayer.forEach { (ref, wins) ->
+            data.setScore(ref, maxPlacement - wins)
+        }
+
+        val maxWins = winsByPlayer.values.max()
+        val topScorers = winsByPlayer.filter { it.value == maxWins }.keys.toList()
+
+        if (topScorers.size == 1) {
+            winManager.complete()
+            return
+        }
+
+        finalists = topScorers
+        logger.info("Swiss stalemate among finalists: {}", topScorers.map { it.name })
+        // TODO: FFA tiebreaker between finalists; complete winManager once resolved.
     }
 
     private fun announceMatchResult(inst: MatchInstance, winner: PlayerRef?) {
@@ -593,12 +627,8 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
         match.loserNext?.let { checkMatchStatus(it) }
     }
 
-    private tailrec fun isGameComplete(match: Match): Boolean {
-        // TODO respect swiss style tournament
-        val next = match.winnerNext ?: return match.completed
-
-        return isGameComplete(next)
-    }
+    private fun isGameComplete(): Boolean =
+        tournamentResult.tournament.matches.all { it.completed }
 
     private fun checkMatchStatus(match: Match) {
         logger.debug("Checking match status of {}", match)
@@ -627,6 +657,9 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
     }
 
     fun setPlacementLostInMatch(ref: PlayerRef, match: Match) {
+        // Swiss-style scoring is owned by finishGameSwiss; per-match placement does not apply
+        if (TOURNAMENT_VARIANT == TournamentVariant.SWISS_STYLE) return
+
         val maxPlacement = tournamentResult.tournament.matches.maxOf { it.round } + 2
 
         data.setScore(ref, maxPlacement - match.round)
