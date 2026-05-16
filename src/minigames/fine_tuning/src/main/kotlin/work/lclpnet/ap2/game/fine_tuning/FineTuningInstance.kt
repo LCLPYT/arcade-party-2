@@ -1,0 +1,59 @@
+package work.lclpnet.ap2.game.fine_tuning
+
+import net.minecraft.server.level.ServerLevel
+import net.minecraft.server.level.ServerPlayer
+import org.json.JSONArray
+import work.lclpnet.ap2.api.game.MiniGameHandle
+import work.lclpnet.ap2.api.game.data.DataContainer
+import work.lclpnet.ap2.api.map.MapBootstrap
+import work.lclpnet.ap2.impl.game.FFAGameInstance
+import work.lclpnet.ap2.impl.game.data.DataContainers
+import work.lclpnet.ap2.impl.game.data.IntDataContainer
+import work.lclpnet.ap2.impl.game.data.type.PlayerRef
+import work.lclpnet.game.map.GameMap
+import java.util.*
+import java.util.concurrent.CompletableFuture
+
+const val MELODY_COUNT = 2
+
+class FineTuningInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle), MapBootstrap {
+
+    private val data: IntDataContainer<ServerPlayer, PlayerRef> =
+        DataContainers.finaleCompatibleScoreContainer(gameHandle, PlayerRef::create)
+    private lateinit var setup: FineTuningSetup
+    private lateinit var tuningPhase: TuningPhase
+
+    init {
+        useSurvivalMode()
+    }
+
+    override fun getData(): DataContainer<ServerPlayer, PlayerRef> = data
+
+    override fun createWorldBootstrap(world: ServerLevel, gameMap: GameMap): CompletableFuture<Void> {
+        setup = FineTuningSetup(gameHandle, gameMap, world)
+        return setup.createRooms()
+    }
+
+    override fun prepare() {
+        val json: JSONArray = getMap().requireProperty("room-note-blocks")
+        val noteBlockLocations = FineTuningSetup.readNoteBlockLocations(json, gameHandle.logger)
+        setup.teleportParticipants(noteBlockLocations)
+
+        val rooms: Map<UUID, FineTuningRoom> = setup.rooms
+
+        tuningPhase = TuningPhase(gameHandle, rooms, data, ::startStagePhase, commons(), world)
+        tuningPhase.init()
+        tuningPhase.giveBooks()
+    }
+
+    override fun go() {
+        tuningPhase.beginListen()
+    }
+
+    private fun startStagePhase() {
+        tuningPhase.unload()
+
+        val stagePhase = StagePhase(gameHandle, tuningPhase.records, getMap(), world, winManager)
+        stagePhase.beginStage()
+    }
+}
