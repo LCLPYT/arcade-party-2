@@ -3,7 +3,7 @@ package work.lclpnet.ap2.game.maze_scape.gen;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
-import work.lclpnet.ap2.impl.util.ArrayUtil;
+import work.lclpnet.ap2.util.ArrayUtilKt;
 
 import java.util.*;
 import java.util.function.Predicate;
@@ -253,7 +253,7 @@ public class GraphGenerator<C, P extends Piece<C>, O extends OrientedPiece<C, P,
             order[i] = i;
         }
 
-        ArrayUtil.shuffle(order, random);
+        ArrayUtilKt.shuffle(order, random);
 
         return order;
     }
