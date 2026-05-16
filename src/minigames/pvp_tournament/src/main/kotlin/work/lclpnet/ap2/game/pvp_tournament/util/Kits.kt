@@ -3,10 +3,15 @@ package work.lclpnet.ap2.game.pvp_tournament.util
 import net.minecraft.core.RegistryAccess
 import net.minecraft.core.component.DataComponents
 import net.minecraft.world.entity.EquipmentSlot
+import net.minecraft.world.entity.EquipmentSlotGroup
+import net.minecraft.world.entity.ai.attributes.AttributeModifier
+import net.minecraft.world.entity.ai.attributes.Attributes
+import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.world.item.alchemy.PotionContents
 import net.minecraft.world.item.alchemy.Potions
+import net.minecraft.world.item.component.ItemAttributeModifiers
 import net.minecraft.world.item.enchantment.Enchantments
 import work.lclpnet.ap2.ext.mc.enchant
 import work.lclpnet.ap2.ext.mc.unbreakable
@@ -59,11 +64,21 @@ fun getKits(registryAccess: RegistryAccess): WeightedList<Kit> {
 
     val uncommonKits = WeightedList<Kit>().apply {
         add(Kit("trident").apply {
-            set(0, ItemStack(Items.TRIDENT)
-                .unbreakable()
-                .enchant(Enchantments.LOYALTY, 3, registryAccess)
-                .enchant(Enchantments.IMPALING, 3, registryAccess)
-            )
+            set(0, ItemStack(Items.TRIDENT).apply {
+                unbreakable()
+                enchant(Enchantments.LOYALTY, 3, registryAccess)
+
+                val modifiers = getOrDefault(
+                    DataComponents.ATTRIBUTE_MODIFIERS,
+                    ItemAttributeModifiers(listOf())
+                ).withModifierAdded(
+                    Attributes.ATTACK_DAMAGE,
+                    AttributeModifier(Item.BASE_ATTACK_DAMAGE_ID, 3.0, AttributeModifier.Operation.ADD_VALUE),
+                    EquipmentSlotGroup.MAINHAND
+                )
+
+                set(DataComponents.ATTRIBUTE_MODIFIERS, modifiers)
+            })
 
             set(1, ItemStack(Items.SPLASH_POTION).apply {
                 set(DataComponents.POTION_CONTENTS, PotionContents(Potions.STRONG_HEALING))
