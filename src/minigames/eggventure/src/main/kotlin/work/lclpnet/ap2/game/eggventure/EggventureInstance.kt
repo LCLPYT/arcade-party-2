@@ -1,0 +1,314 @@
+package work.lclpnet.ap2.game.eggventure
+
+import com.mojang.math.Transformation
+import com.mojang.serialization.Codec
+import com.mojang.serialization.MapCodec
+import net.minecraft.ChatFormatting
+import net.minecraft.core.BlockPos
+import net.minecraft.core.RegistryAccess
+import net.minecraft.core.particles.ParticleTypes
+import net.minecraft.network.chat.Component
+import net.minecraft.network.chat.numbers.StyledFormat
+import net.minecraft.server.level.ServerLevel
+import net.minecraft.server.level.ServerPlayer
+import net.minecraft.sounds.SoundEvents
+import net.minecraft.sounds.SoundSource
+import net.minecraft.world.InteractionHand
+import net.minecraft.world.InteractionResult
+import net.minecraft.world.entity.Display
+import net.minecraft.world.entity.EntityType
+import net.minecraft.world.entity.EquipmentSlot
+import net.minecraft.world.entity.ai.attributes.Attributes
+import net.minecraft.world.item.Items
+import net.minecraft.world.level.ClipContext
+import net.minecraft.world.level.block.Block
+import net.minecraft.world.level.block.Blocks
+import net.minecraft.world.level.block.SkullBlock
+import net.minecraft.world.level.block.entity.BlockEntityType
+import net.minecraft.world.phys.BlockHitResult
+import net.minecraft.world.phys.shapes.CollisionContext
+import net.minecraft.world.scores.DisplaySlot
+import net.minecraft.world.scores.criteria.ObjectiveCriteria
+import org.joml.Matrix4f
+import work.lclpnet.ap2.ApConstants
+import work.lclpnet.ap2.api.game.MiniGameHandle
+import work.lclpnet.ap2.api.game.data.DataContainer
+import work.lclpnet.ap2.api.map.MapBootstrap
+import work.lclpnet.ap2.api.util.heads.PlayerHead
+import work.lclpnet.ap2.ext.mc.isOf
+import work.lclpnet.ap2.impl.game.FFAGameInstance
+import work.lclpnet.ap2.impl.game.data.DataContainers
+import work.lclpnet.ap2.impl.game.data.type.PlayerRef
+import work.lclpnet.ap2.impl.map.MapUtil
+import work.lclpnet.ap2.impl.tags.PlayerHeadTags
+import work.lclpnet.ap2.impl.util.*
+import work.lclpnet.ap2.impl.util.checkpoint.CheckpointHelper
+import work.lclpnet.gaco.ds.BlockBox
+import work.lclpnet.gaco.dynamic_entities.DynamicEntityManager
+import work.lclpnet.game.map.GameMap
+import work.lclpnet.kibu.access.entity.ServerPlayerAccess
+import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks
+import work.lclpnet.kibu.hook.player.PlayerSwingHandHook
+import work.lclpnet.kibu.scheduler.Ticks
+import work.lclpnet.kibu.translate.text.FormatWrapper.styled
+import java.util.*
+import java.util.concurrent.CompletableFuture
+import kotlin.math.PI
+
+private const val DEBUG_EGG_POSITIONS = false
+private val NBT_CODEC: MapCodec<Boolean> = Codec.BOOL.fieldOf("easter_egg")
+
+fun eggVariants(registryManager: RegistryAccess): List<PlayerHead> {
+    val headEntries = registryManager
+        .lookupOrThrow(ApRegistries.PLAYER_HEAD)
+        .getTagOrEmpty(PlayerHeadTags.EASTER_EGGS)
+
+    return headEntries.map { it.value() }
+}
+
+class EggventureInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle), MapBootstrap {
+
+    private val data = DataContainers.finaleCompatibleScoreContainer(gameHandle, PlayerRef::create)
+    private val random = Random()
+    private val remainingPositions = HashSet<BlockPos>()
+
+    override fun getData(): DataContainer<ServerPlayer, PlayerRef> = data
+
+    override fun createWorldBootstrap(world: ServerLevel, map: GameMap): CompletableFuture<Void> {
+        val shape = MapUtil.readShape(map, "egg-area")
+        val positions = mutableListOf<BlockPos>()
+
+        for (pos in shape) {
+            if (isEasterEgg(world, pos)) {
+                positions.add(pos.immutable())
+            }
+        }
+
+        val minEggs: Int = map.requireProperty("min-eggs")
+        val maxEggs: Int = map.requireProperty("max-eggs")
+        val eggs = minEggs + random.nextInt(maxEggs - minEggs + 1)
+
+        val variants = eggVariants(world.registryAccess())
+
+        if (variants.isEmpty()) {
+            throw IllegalStateException("There are no egg variants defined")
+        }
+
+        if (ApConstants.DEBUG) {
+            gameHandle.logger.info("There are {} possible egg positions and {} should be placed", positions.size, eggs)
+        }
+
+        val debugController = commons(map, world).debugController()
+
+        repeat(eggs) {
+            if (positions.isEmpty()) return@repeat
+
+            val pos = positions.removeAt(random.nextInt(positions.size))
+
+            if (DEBUG_EGG_POSITIONS) {
+                debugController.renderer().ifPresent { renderer ->
+                    renderer.marker(pos.center, Blocks.GREEN_TERRACOTTA.defaultBlockState(), 0x00ff00)
+                }
+            }
+
+            val variant = variants[random.nextInt(variants.size)]
+            world.getBlockEntity(pos, BlockEntityType.SKULL).ifPresent { variant.apply(it) }
+            remainingPositions.add(pos)
+        }
+
+        for (pos in positions) {
+            world.setBlock(pos, Blocks.AIR.defaultBlockState(), Block.UPDATE_SUPPRESS_DROPS or Block.UPDATE_KNOWN_SHAPE)
+
+            if (DEBUG_EGG_POSITIONS) {
+                debugController.renderer().ifPresent { renderer ->
+                    renderer.marker(pos.center, Blocks.BLUE_TERRACOTTA.defaultBlockState(), 0x0000ff)
+                }
+            }
+        }
+
+        return CompletableFuture.completedFuture(null)
+    }
+
+    private fun isEasterEgg(world: ServerLevel, pos: BlockPos): Boolean {
+        val state = world.getBlockState(pos)
+
+        if (!state.isOf(Blocks.PLAYER_HEAD) && !state.isOf(Blocks.PLAYER_WALL_HEAD)) return false
+
+        val skull = world.getBlockEntity(pos, BlockEntityType.SKULL).orElse(null) ?: return false
+
+        return CustomNbt.get(skull.components(), NBT_CODEC).orElse(false) ?: false
+    }
+
+    override fun prepare() {
+        DebugEggsCommand(gameHandle.logger).register(gameHandle.commands)
+
+        val variants = eggVariants(world.registryAccess())
+
+        if (variants.isEmpty()) {
+            throw IllegalStateException("There are no egg variants defined")
+        }
+
+        for (player in gameHandle.participants) {
+            val variant = variants[random.nextInt(variants.size)]
+            player.setItemSlot(EquipmentSlot.HEAD, variant.createStack())
+
+            val color = ColorUtil.getRandomHsvColor(random)
+
+            player.setItemSlot(EquipmentSlot.CHEST, ItemHelper.getLeatherArmor(Items.LEATHER_CHESTPLATE, color))
+            player.setItemSlot(EquipmentSlot.LEGS, ItemHelper.getLeatherArmor(Items.LEATHER_LEGGINGS, color))
+            player.setItemSlot(EquipmentSlot.FEET, ItemHelper.getLeatherArmor(Items.LEATHER_BOOTS, color))
+        }
+
+        val scoreboardManager = gameHandle.scoreboardManager
+
+        val objective = scoreboardManager.createObjective(
+            "points", ObjectiveCriteria.DUMMY,
+            Component.literal("Points").withStyle(ChatFormatting.YELLOW, ChatFormatting.BOLD),
+            ObjectiveCriteria.RenderType.INTEGER,
+            StyledFormat.PLAYER_LIST_DEFAULT
+        )
+
+        useScoreboardStatsSync(data, objective)
+
+        scoreboardManager.setDisplay(DisplaySlot.LIST, objective)
+    }
+
+    override fun afterInitialDelay() {
+        val dynamicEntityManager = DynamicEntityManager(world)
+        val tutorial = EggventureTutorial(world, dynamicEntityManager, random, gameHandle.translations)
+
+        dynamicEntityManager.init(gameHandle.scheduler, gameHandle.hooks)
+        tutorial.start(gameHandle.scheduler, gameHandle.participants).thenRun { super.afterInitialDelay() }
+    }
+
+    override fun go() {
+        val gate: BlockBox = MapUtil.readBox(map.requireProperty("gate"))
+
+        for (pos in gate) {
+            world.setBlockAndUpdate(pos, Blocks.AIR.defaultBlockState())
+        }
+
+        val hooks = gameHandle.hooks
+
+        PlayerInteractionHooks.USE_BLOCK.registerWith(hooks) { player, _, hand, hitResult ->
+            val pos = hitResult.blockPos
+
+            if (player is ServerPlayer
+                    && gameHandle.participants.isParticipating(player)
+                    && hand == InteractionHand.MAIN_HAND
+                    && isEasterEgg(world, pos)) {
+                onFindEasterEgg(player, pos)
+            }
+
+            InteractionResult.PASS
+        }
+
+        PlayerSwingHandHook.HOOK.registerWith(hooks) { player, hand ->
+            if (hand != InteractionHand.MAIN_HAND || !gameHandle.participants.isParticipating(player)) return@registerWith
+
+            val range = player.getAttributeValue(Attributes.BLOCK_INTERACTION_RANGE)
+
+            val hit = RayCastUtil.raycast(
+                world, player.eyePosition, player.lookAngle, range,
+                ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, CollisionContext.empty()
+            ) { !it.isSpectator }
+
+            if (hit !is BlockHitResult) return@registerWith
+
+            val pos = hit.blockPos
+
+            if (isEasterEgg(world, pos)) {
+                onFindEasterEgg(player, pos)
+            }
+        }
+
+        val minDurationSeconds: Int = map.requireProperty("min-duration-seconds")
+        val maxDurationSeconds: Int = map.requireProperty("max-duration-seconds")
+        val durationSeconds = minDurationSeconds + random.nextInt(maxDurationSeconds - minDurationSeconds + 1)
+
+        val subject = gameHandle.translations.translateText(gameHandle.gameInfo.taskKey)
+
+        commons().createTimer(subject, durationSeconds).whenDone { completeAndShowRemaining() }
+
+        gameHandle.scheduler.interval(
+            20,
+            Ticks.seconds(10),
+            Runnable(::checkNearbyEggs)
+        )
+
+        CheckpointHelper.setupResetItem(hooks, { winManager.isGameOver }) {
+            gameHandle.participants.isParticipating(it)
+        }.then(::reset)
+
+        CheckpointHelper.giveResetItem(gameHandle.participants, world, gameHandle.translations, 4)
+    }
+
+    private fun reset(player: ServerPlayer) {
+        gameHandle.worldFacade.teleport(player)
+    }
+
+    private fun checkNearbyEggs() {
+        val checkDistSq = 20.0 * 20.0
+
+        for (player in gameHandle.participants) {
+            if (remainingPositions.any { pos ->
+                player.distanceToSqr(pos.x + 0.5, pos.y + 0.5, pos.z + 0.5) < checkDistSq
+            }) continue
+
+            gameHandle.translations.translateText("game.ap2.eggventure.no_eggs_nearby")
+                .formatted(ChatFormatting.RED)
+                .sendTo(player, true)
+        }
+    }
+
+    private fun completeAndShowRemaining() {
+        if (winManager.isGameOver) return
+
+        winManager.complete()
+
+        for (pos in remainingPositions) {
+            val state = world.getBlockState(pos)
+            val stack = ItemHelper.getStackWithData(world, pos)
+
+            if (!state.isOf(Blocks.PLAYER_HEAD)) {
+                gameHandle.logger.warn("Unexpected block: {}", state)
+                continue
+            }
+
+            val rotation = state.getValueOrElse(SkullBlock.ROTATION, 0)
+
+            val display = Display.ItemDisplay(EntityType.ITEM_DISPLAY, world)
+            display.itemStack = stack
+            display.setPos(pos.center)
+            display.setTransformation(Transformation(Matrix4f().rotateY((rotation / -8f * PI).toFloat())))
+            display.setGlowingTag(true)
+
+            world.addFreshEntity(display)
+        }
+
+        gameHandle.translations.translateText("game.ap2.eggventure.eggs_left", styled(remainingPositions.size, ChatFormatting.YELLOW))
+            .formatted(ChatFormatting.GREEN)
+            .sendTo(gameHandle.participants, true)
+    }
+
+    private fun onFindEasterEgg(player: ServerPlayer, pos: BlockPos) {
+        if (winManager.isGameOver) return
+
+        world.setBlock(pos, Blocks.AIR.defaultBlockState(), Block.UPDATE_SUPPRESS_DROPS or Block.UPDATE_KNOWN_SHAPE or Block.UPDATE_CLIENTS)
+
+        commons().addScore(player, 1, data)
+
+        val x = pos.x + 0.5
+        val y = pos.y.toDouble()
+        val z = pos.z + 0.5
+
+        world.playSound(null, x, y, z, SoundEvents.ALLAY_THROW, SoundSource.PLAYERS, 1f, 1f)
+        ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.ARROW_HIT_PLAYER, SoundSource.PLAYERS, 0.75f, 1.2f)
+
+        world.sendParticles(ParticleTypes.CRIMSON_SPORE, x, y, z, 75, 0.25, 0.25, 0.25, 0.0)
+        world.sendParticles(ParticleTypes.WARPED_SPORE, x, y, z, 75, 0.25, 0.25, 0.25, 0.0)
+        world.sendParticles(ParticleTypes.GLOW, x, y, z, 25, 0.5, 0.5, 0.5, 0.0)
+
+        remainingPositions.remove(pos)
+    }
+}
