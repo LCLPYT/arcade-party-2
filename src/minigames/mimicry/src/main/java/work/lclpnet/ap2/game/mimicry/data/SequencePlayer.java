@@ -31,7 +31,7 @@ public class SequencePlayer implements SchedulerAction {
     }
 
     public void setPeriodTicks(int periodTicks) {
-        this.periodTicks = Math.max(5, periodTicks);
+        this.periodTicks = Math.max(4, periodTicks);
     }
 
     @Override

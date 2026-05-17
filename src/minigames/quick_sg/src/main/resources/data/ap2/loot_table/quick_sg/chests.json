@@ -2,10 +2,7 @@
   "type": "minecraft:chest",
   "pools": [
     {
-      "rolls": {
-        "min": 0,
-        "max": 1
-      },
+      "rolls": 1,
       "entries": [
         {
           "type": "minecraft:item",
@@ -19,23 +16,8 @@
         },
         {
           "type": "minecraft:item",
-          "name": "minecraft:iron_sword",
-          "weight": 3
-        },
-        {
-          "type": "minecraft:item",
-          "name": "minecraft:stone_spear",
-          "weight": 2
-        },
-        {
-          "type": "minecraft:item",
           "name": "minecraft:copper_sword",
           "weight": 15
-        },
-        {
-          "type": "minecraft:item",
-          "name": "minecraft:wooden_spear",
-          "weight": 1
         },
         {
           "type": "minecraft:item",
@@ -48,16 +30,21 @@
           "function": "minecraft:enchant_with_levels",
           "levels": 1,
           "options": [
-            "minecraft:sharpness",
             "minecraft:knockback",
             "minecraft:fire_aspect"
           ],
           "conditions": [
             {
               "condition": "minecraft:random_chance",
-              "chance": 0.2
+              "chance": 0.25
             }
           ]
+        }
+      ],
+      "conditions": [
+        {
+          "condition": "minecraft:random_chance",
+          "chance": 0.8
         }
       ]
     },
@@ -78,14 +65,13 @@
           "function": "minecraft:enchant_with_levels",
           "levels": 1,
           "options": [
-            "minecraft:power",
             "minecraft:punch",
             "minecraft:flame"
           ],
           "conditions": [
             {
               "condition": "minecraft:random_chance",
-              "chance": 0.2
+              "chance": 0.23
             }
           ]
         }
@@ -93,80 +79,35 @@
       "conditions": [
         {
           "condition": "minecraft:random_chance",
-          "chance": 0.4
+          "chance": 0.3
         }
       ]
     },
     {
       "rolls": {
         "min": 0,
-        "max": 1
+        "max": 2
       },
       "entries": [
         {
           "type": "minecraft:item",
-          "name": "minecraft:copper_helmet",
-          "weight": 9
-        },
-        {
-          "type": "minecraft:item",
-          "name": "minecraft:copper_chestplate",
-          "weight": 9
-        },
-        {
-          "type": "minecraft:item",
-          "name": "minecraft:copper_leggings",
-          "weight": 9
-        },
-        {
-          "type": "minecraft:item",
-          "name": "minecraft:copper_boots",
-          "weight": 9
-        },
-        {
-          "type": "minecraft:item",
           "name": "minecraft:chainmail_chestplate",
-          "weight": 10
+          "weight": 5
         },
         {
           "type": "minecraft:item",
           "name": "minecraft:chainmail_helmet",
-          "weight": 10
+          "weight": 5
         },
         {
           "type": "minecraft:item",
           "name": "minecraft:chainmail_leggings",
-          "weight": 10
-        },
-        {
-          "type": "minecraft:item",
-          "name": "minecraft:chainmail_boots",
-          "weight": 10
-        },
-        {
-          "type": "minecraft:item",
-          "name": "minecraft:golden_helmet",
-          "weight": 9
-        },
-        {
-          "type": "minecraft:item",
-          "name": "minecraft:golden_chestplate",
-          "weight": 9
-        },
-        {
-          "type": "minecraft:item",
-          "name": "minecraft:golden_leggings",
-          "weight": 9
-        },
-        {
-          "type": "minecraft:item",
-          "name": "minecraft:golden_boots",
-          "weight": 9
+          "weight": 5
         },
         {
           "type": "minecraft:item",
           "name": "minecraft:iron_helmet",
-          "weight": 7
+          "weight": 5
         },
         {
           "type": "minecraft:item",
@@ -182,22 +123,39 @@
           "type": "minecraft:item",
           "name": "minecraft:iron_boots",
           "weight": 7
+        },
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:diamond_helmet",
+          "weight": 4
+        },
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:diamond_chestplate",
+          "weight": 5
+        },
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:diamond_leggings",
+          "weight": 4
+        },
+        {
+          "type": "minecraft:item",
+          "name": "minecraft:diamond_boots",
+          "weight": 5
         }
       ],
       "functions": [
         {
           "function": "minecraft:enchant_with_levels",
-          "levels": 1,
+          "levels": 12,
           "options": [
-            "minecraft:protection",
-            "minecraft:blast_protection",
-            "minecraft:projectile_protection"
+            "minecraft:protection"
           ],
-          "only_compatible": true,
           "conditions": [
             {
               "condition": "minecraft:random_chance",
-              "chance": 0.28
+              "chance": 0.42
             }
           ]
         }
@@ -205,7 +163,7 @@
     },
     {
       "rolls": {
-        "min": 1,
+        "min": 0,
         "max": 2
       },
       "entries": [
@@ -238,11 +196,6 @@
         },
         {
           "type": "minecraft:item",
-          "name": "minecraft:pumpkin_pie",
-          "weight": 3
-        },
-        {
-          "type": "minecraft:item",
           "name": "minecraft:golden_carrot",
           "weight": 3
         }
@@ -269,6 +222,12 @@
           "type": "minecraft:item",
           "name": "minecraft:snowball",
           "weight": 8
+        }
+      ],
+      "conditions": [
+        {
+          "condition": "minecraft:random_chance",
+          "chance": 0.8
         }
       ]
     },

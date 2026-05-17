@@ -16,6 +16,7 @@ class LazyLootContainerManager(
     val participants: Participants,
     val level: ServerLevel,
     val filler: LootFiller,
+    val containerPredicate: (pos: BlockPos, container: Container) -> Boolean = { _, _ -> true },
 ) {
     val filled = mutableSetOf<BlockPos>()
 
@@ -44,7 +45,9 @@ class LazyLootContainerManager(
     fun touch(pos: BlockPos) {
         val blockEntity = level.getBlockEntity(pos)
 
-        if (blockEntity !is Container || !filled.add(pos.immutable())) return
+        if (blockEntity !is Container
+            || !containerPredicate(pos, blockEntity)
+            || !filled.add(pos.immutable())) return
 
         // container not filled yet
         val state = level.getBlockState(pos)

@@ -60,7 +60,7 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
     var kitLoader: PrefabKitLoader? = null
     var itemUseAllowed = false
     val loot = WeightedList<LootEntry>()
-    var lootContainerManager: LazyLootContainerManager? = null
+    lateinit var lootContainerManager: LazyLootContainerManager
 
     init {
         useSurvivalMode()
@@ -146,7 +146,7 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
 
         BlockModificationHooks.BREAK_BLOCK.registerWith(hooks) { world, pos, entity ->
             if (entity is ServerPlayer && world.getBlockState(pos).isOf(Blocks.DECORATED_POT)) {
-                lootContainerManager?.touch(pos)
+                lootContainerManager.touch(pos)
             }
 
             false
@@ -157,7 +157,7 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
         gameHandle.scheduler.interval(20*60*3, 20*60*3, Runnable {
             SoundHelper.playSound(world, SoundEvents.CHEST_OPEN, SoundSource.BLOCKS, 0.8f, 0.5f)
             translate("game.ap2.killeporter.chest_refill").formatted(ChatFormatting.AQUA).sendTo(allPlayers())
-            lootContainerManager?.reset()
+            lootContainerManager.reset()
         })
 
         timeout(GAME_DURATION_TICKS) {
