@@ -10,7 +10,12 @@ val Duration.inWholeTicks: Long get() =
     inWholeMilliseconds / 50
 
 @JvmInline
-value class TickDuration(val ticks: Long)
+value class TickDuration(val ticks: Long) : Comparable<TickDuration> {
+    override fun compareTo(other: TickDuration): Int = (this.ticks - other.ticks).toInt()
+}
 
 val Int.ticks: TickDuration get() =
     TickDuration(this.toLong())
+
+val Long.ticks: TickDuration get() =
+    TickDuration(this)
