@@ -9,11 +9,15 @@
   "environment": "server",
   "entrypoints": {
     "ap2:minigame": [
-      "work.lclpnet.ap2.game.musical_minecart.MusicalMinecartMiniGame"
+      {
+        "adapter": "kotlin",
+        "value": "work.lclpnet.ap2.game.musical_minecart.MusicalMinecartMiniGame"
+      }
     ]
   },
   "depends": {
-    "ap2-lib": "*"
+    "ap2-lib": "*",
+    "fabric-language-kotlin": "*"
   },
   "custom": {
     "timestamp": 1711129020,
