@@ -30,9 +30,9 @@ import work.lclpnet.ap2.game.maze_scape.util.PitPathFindingPredicate;
 import work.lclpnet.ap2.game.maze_scape.util.RandomGenerator;
 import work.lclpnet.ap2.game.maze_scape.util.TrapdoorPathFindingPredicate;
 import work.lclpnet.ap2.impl.ai.BlockedPathFindingPredicate;
-import work.lclpnet.ap2.impl.util.EntityUtil;
 import work.lclpnet.ap2.impl.util.GoalModifier;
 import work.lclpnet.gaco.core.api.Partial;
+import work.lclpnet.kibu.access.entity.EntityUtil;
 
 import java.util.ArrayList;
 import java.util.List;

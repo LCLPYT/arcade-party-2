@@ -7,7 +7,7 @@ import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.ai.ActivityData
 import net.minecraft.world.entity.ai.Brain
 import net.minecraft.world.entity.ai.attributes.Attribute
-import work.lclpnet.ap2.impl.util.EntityUtil
+import work.lclpnet.kibu.access.entity.EntityUtil
 import work.lclpnet.kibu.hook.util.PositionRotation
 
 fun <T : LivingEntity> Brain<T>.addActivity(customFight: ActivityData<in T>) {

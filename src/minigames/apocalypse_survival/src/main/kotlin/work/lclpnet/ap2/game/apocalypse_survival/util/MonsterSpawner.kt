@@ -20,12 +20,12 @@ import work.lclpnet.ap2.core.mixin.MobAccessor
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.game.apocalypse_survival.goal.RoamGoal
 import work.lclpnet.ap2.game.apocalypse_survival.goal.UnstuckGoal
-import work.lclpnet.ap2.impl.util.EntityUtil
 import work.lclpnet.ap2.impl.util.GoalModifier
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape
 import work.lclpnet.gaco.ds.WeightedList
+import work.lclpnet.kibu.access.entity.EntityUtil
 import work.lclpnet.kibu.scheduler.Ticks
-import java.util.Random
+import java.util.*
 import kotlin.math.pow
 
 private const val PARTICLE_TICKS = 12

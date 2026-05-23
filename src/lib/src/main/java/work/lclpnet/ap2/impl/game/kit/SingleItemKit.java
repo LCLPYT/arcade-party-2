@@ -7,7 +7,7 @@ import net.minecraft.core.RegistryAccess;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import work.lclpnet.ap2.impl.util.CustomNbt;
+import work.lclpnet.kibu.access.misc.CustomNbt;
 
 import java.util.Optional;
 

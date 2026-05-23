@@ -28,7 +28,6 @@ import work.lclpnet.config.json.JsonConfigFactory;
 import work.lclpnet.gaco.ds.queue.JsonFileQueuePersistence;
 import work.lclpnet.game.api.GameEnvironment;
 import work.lclpnet.game.api.GameInstance;
-import work.lclpnet.game.api.option.GameOptions;
 import work.lclpnet.game.api.option.VoteResult;
 import work.lclpnet.kibu.cmd.impl.CommandStack;
 import work.lclpnet.kibu.hook.HookStack;
@@ -51,41 +50,44 @@ public class ArcadePartyInstance implements GameInstance {
     private final GameEnvironment environment;
     private final VanillaTranslations vanillaTranslations;
     private final JsonConfigFactory<Ap2Config> configFactory;
+    private final VoteResult<MiniGame> miniGameVoteResult;
     private final Logger logger;
 
     public ArcadePartyInstance(GameEnvironment environment, VanillaTranslations vanillaTranslations,
-                               JsonConfigFactory<Ap2Config> configFactory, Logger logger) {
+                               JsonConfigFactory<Ap2Config> configFactory, VoteResult<MiniGame> miniGameVoteResult,
+                               Logger logger) {
         this.environment = environment;
         this.vanillaTranslations = vanillaTranslations;
         this.configFactory = configFactory;
+        this.miniGameVoteResult = miniGameVoteResult;
         this.logger = logger;
     }
 
     @Override
-    public void start(GameOptions options) {
+    public void start() {
         ApBootstrap bootstrap = new ApBootstrap(configFactory, logger, environment::whenDone);
 
         bootstrap.loadConfig(ForkJoinPool.commonPool())
                 .thenCompose(configManager -> bootstrap.dispatch(configManager.getConfig(), environment, vanillaTranslations))
-                .thenCompose(res -> setupMode(res, options))
+                .thenCompose(this::setupMode)
                 .exceptionally(throwable -> {
                     logger.error("Failed to load ArcadeParty2", throwable);
                     return null;
                 });
     }
 
-    private CompletableFuture<Void> setupMode(ApBootstrap.Result result, GameOptions options) {
+    private CompletableFuture<Void> setupMode(ApBootstrap.Result result) {
         MiniGameManager gameManager = new FabricMiniGameManager(logger);
 
         return CompletableFuture.runAsync(() -> {
-            GameQueue queue = createGameQueue(gameManager, options);
+            GameQueue queue = createGameQueue(gameManager);
 
             environment.getServer().execute(() -> dispatchGameStart(result, gameManager, queue));
         });
     }
 
-    private GameQueue createGameQueue(MiniGameManager gameManager, GameOptions options) {
-        List<MiniGame> votedGames = getVotedGames(gameManager, options);
+    private GameQueue createGameQueue(MiniGameManager gameManager) {
+        List<MiniGame> votedGames = getVotedGames(gameManager);
 
         var gameQueuePersistence = JsonFileQueuePersistence.create(
                 ApConstants.RUNTIME_CONFIG_ID,
@@ -149,10 +151,8 @@ public class ArcadePartyInstance implements GameInstance {
         environment.switchRootActivity(preparation);
     }
 
-    private List<MiniGame> getVotedGames(MiniGameManager gameManager, GameOptions options) {
-        Map<MiniGame, Integer> voted = options.getVotingResults(ArcadePartyDefaultGame.VOTING_MINI_GAMES, MiniGame.class)
-                .map(VoteResult::asMap)
-                .orElse(Map.of());
+    private List<MiniGame> getVotedGames(MiniGameManager gameManager) {
+        Map<MiniGame, Integer> voted = miniGameVoteResult.asMap();
 
         Random random = new Random();
 

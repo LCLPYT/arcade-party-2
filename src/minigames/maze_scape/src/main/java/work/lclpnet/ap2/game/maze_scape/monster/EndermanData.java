@@ -33,8 +33,8 @@ import java.util.UUID;
 import static java.lang.Math.max;
 import static net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation.ADD_VALUE;
 import static net.minecraft.world.entity.ai.attributes.Attributes.MOVEMENT_SPEED;
-import static work.lclpnet.ap2.impl.util.EntityUtil.addAttributeModifier;
-import static work.lclpnet.ap2.impl.util.EntityUtil.removeAttributeModifier;
+import static work.lclpnet.kibu.access.entity.EntityUtil.addAttributeModifier;
+import static work.lclpnet.kibu.access.entity.EntityUtil.removeAttributeModifier;
 
 public class EndermanData implements MonsterData<EnderMan> {
 

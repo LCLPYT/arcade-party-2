@@ -11,7 +11,7 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import work.lclpnet.ap2.core.type.ApMarkerEntity;
-import work.lclpnet.ap2.impl.util.CustomNbt;
+import work.lclpnet.kibu.access.misc.CustomNbt;
 
 import java.util.LinkedHashSet;
 import java.util.Objects;

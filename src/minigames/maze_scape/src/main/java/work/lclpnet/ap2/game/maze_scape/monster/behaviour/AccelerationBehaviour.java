@@ -2,7 +2,7 @@ package work.lclpnet.ap2.game.maze_scape.monster.behaviour;
 
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Mob;
-import work.lclpnet.ap2.impl.util.EntityUtil;
+import work.lclpnet.kibu.access.entity.EntityUtil;
 
 import static net.minecraft.world.entity.ai.attributes.Attributes.MOVEMENT_SPEED;
 
