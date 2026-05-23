@@ -72,7 +72,7 @@ metafile = true
 
 [[files]]
 file = "mods/mg-lobby.pw.toml"
-hash = "fb676ad572cd1090ee6608ce67fd72ef49c9267a3cc6b7eee6b7e44af4a1b1bc"
+hash = "ec74b9c1fbfb945d0bb226e95ff63d82a701990a462fbc036c0bf509f05110a9"
 metafile = true
 
 [[files]]
