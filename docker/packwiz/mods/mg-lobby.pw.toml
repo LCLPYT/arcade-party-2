@@ -1,7 +1,7 @@
 name = "mg-lobby"
-filename = "mg-lobby-0.84.0+26.1.2.jar"
+filename = "mg-lobby-0.85.1+26.1.2.jar"
 
 [download]
-url = "https://github.com/LCLPYT/mg-lobby/releases/download/mg-lobby-0.84.0%2B26.1.2/mg-lobby-0.84.0+26.1.2.jar"
+url = "https://github.com/LCLPYT/mg-lobby/releases/download/mg-lobby-0.85.1%2B26.1.2/mg-lobby-0.85.1+26.1.2.jar"
 hash-format = "sha256"
-hash = "d4a52d0bbb916e36e72c9882167ab6bb1f88326f90393b83d902c72270985226"
+hash = "5b0d74f3605f64036afd76de4c49e025acb12bb1fbdfaa0ef0a3acd0dc9a5373"
