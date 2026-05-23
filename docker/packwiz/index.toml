@@ -42,7 +42,7 @@ metafile = true
 
 [[files]]
 file = "mods/kibu.pw.toml"
-hash = "3ec128859062856d4303e1bb713ea19eae8e837e9d28b3c99cab67810b093360"
+hash = "bad5a1c6a4fd67a5c8509fc09425a79ddf89c4b2b440c22ac1d133b2cc235282"
 metafile = true
 
 [[files]]
@@ -67,12 +67,12 @@ metafile = true
 
 [[files]]
 file = "mods/mg-api.pw.toml"
-hash = "9c61a1c772775e197e73750308fb4914717086b1fcd055296c6931cae3608805"
+hash = "6ac9cbc77cad4348611c42427952bebb5add3418a23b39c435ef1b5effa21686"
 metafile = true
 
 [[files]]
 file = "mods/mg-lobby.pw.toml"
-hash = "4f9393a0611026cedcfd3f30ea4eb2f036274474fca7f9929b4303f05627c07e"
+hash = "fb676ad572cd1090ee6608ce67fd72ef49c9267a3cc6b7eee6b7e44af4a1b1bc"
 metafile = true
 
 [[files]]

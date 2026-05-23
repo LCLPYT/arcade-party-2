@@ -29,8 +29,8 @@ import java.util.UUID;
 
 import static net.minecraft.world.entity.ai.attributes.Attributes.GRAVITY;
 import static net.minecraft.world.entity.ai.attributes.Attributes.MOVEMENT_SPEED;
-import static work.lclpnet.ap2.impl.util.EntityUtil.resetAttribute;
-import static work.lclpnet.ap2.impl.util.EntityUtil.setAttribute;
+import static work.lclpnet.kibu.access.entity.EntityUtil.resetAttribute;
+import static work.lclpnet.kibu.access.entity.EntityUtil.setAttribute;
 
 public class HeavyWeightItem implements SpecialItem {
 
