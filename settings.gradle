@@ -59,6 +59,7 @@ def minigames = [
         "spleef",
         "tnt_run",
         "treasure_hunter",
+        "weapon_swap",
 ]
 
 minigames.forEach {
