@@ -47,28 +47,28 @@ public class SpawnFinder {
                 (int) Math.floor(spawnPosition.z())
         );
 
-        return findSpawns(world, bounds, start);
+        return findSpawns(world, bounds, Set.of(start));
     }
 
-    public List<Vec3> findSpawns(ServerLevel world, BlockBox bounds, BlockPos start) {
+    public List<Vec3> findSpawns(ServerLevel world, BlockBox bounds, Set<BlockPos> starts) {
         BlockPredicate predicate = BlockPredicate.and(bounds::contains, new WalkableBlockPredicate(world));
         AdjacentBlocks adjacent = new SimpleAdjacentBlocks(predicate, 1, 4);
         WorldScanner scanner = new BfsWorldScanner(adjacent);
 
         if (DEBUG_SCANNER) {
-            debugScanner(scanner, start);
+            debugScanner(scanner, starts);
         }
 
         SizedSpaceFinder spaceFinder = SizedSpaceFinder.create(world, EntityType.PLAYER);
 
-        return spaceFinder.findSpaces(scanner.scan(start));
+        return spaceFinder.findSpaces(scanner.scan(starts));
     }
 
-    private void debugScanner(WorldScanner scanner, BlockPos start) {
+    private void debugScanner(WorldScanner scanner, Set<BlockPos> starts) {
         if (debugController == null) return;
 
         var positions = new ArrayList<BlockPos>();
-        var it = scanner.scan(start);
+        var it = scanner.scan(starts);
 
         while (it.hasNext()) {
             positions.add(it.next());
