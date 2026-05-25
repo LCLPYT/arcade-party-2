@@ -1,5 +1,6 @@
 package work.lclpnet.ap2.impl.game;
 
+import kotlin.Unit;
 import lombok.Getter;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.ChatFormatting;
@@ -198,6 +199,7 @@ public abstract class BaseGameInstance implements MiniGameInstance {
         var countdown = new SubtitleCountdown(
                 gameHandle.getServer(),
                 gameHandle.getScheduler(),
+                _ -> Unit.INSTANCE,
                 () -> PlayerLookup.all(gameHandle.getServer())
         );
 

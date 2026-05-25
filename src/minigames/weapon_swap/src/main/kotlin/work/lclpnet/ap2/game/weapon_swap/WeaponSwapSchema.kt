@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.game.quick_sg
+package work.lclpnet.ap2.game.weapon_swap
 
 import net.minecraft.core.BlockPos
 import work.lclpnet.ap2.ApConstants
@@ -9,10 +9,10 @@ import work.lclpnet.gaco.ds.BlockBox
 
 @MapSchema(
     namespace = ApConstants.ID,
-    id = "quick_sg",
-    name = "Quick SG"
+    id = "weapon_swap",
+    name = "Weapon Swap"
 )
-class QuickSgSchema : CommonMapSchema() {
+class WeaponSwapSchema : CommonMapSchema() {
 
     @Property(name = "Spawn scanner bounds")
     val scanBox: BlockBox? = null

@@ -12,15 +12,12 @@ import net.minecraft.world.level.gamerules.GameRules
 import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.stats.FFAStatsManager
 import work.lclpnet.ap2.api.stats.Stat
-import work.lclpnet.ap2.ext.allPlayers
+import work.lclpnet.ap2.ext.*
 import work.lclpnet.ap2.ext.mc.setSelectedSlot
 import work.lclpnet.ap2.ext.mc.teleport
-import work.lclpnet.ap2.ext.players
-import work.lclpnet.ap2.ext.runAfter
 import work.lclpnet.ap2.impl.game.EliminationGameInstance
-import work.lclpnet.ap2.impl.map.MapUtil
+import work.lclpnet.ap2.impl.map.schema.SchemaHolder
 import work.lclpnet.ap2.impl.util.ItemHelper.unbreakable
-import work.lclpnet.ap2.impl.util.SoundHelper
 import work.lclpnet.ap2.impl.util.world.SpawnFinder
 import work.lclpnet.ap2.util.SubtitleCountdown
 import work.lclpnet.game.impl.prot.ProtectionTypes
@@ -28,15 +25,15 @@ import work.lclpnet.kibu.access.entity.ServerPlayerAccess
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks
 import work.lclpnet.kibu.hook.player.PlayerInventoryHooks
 import java.util.*
+import kotlin.random.Random
 import kotlin.random.asJavaRandom
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
-import kotlin.random.Random as KRandom
 
-private const val MIN_SWAP_SECONDS = 4
-private const val MAX_SWAP_SECONDS = 7
 private const val TWO_WEAPONS_THRESHOLD = 8
 private const val SPAWN_SPACING_DEFAULT = 8.0
+private val MIN_SWAP_DELAY = 7.seconds
+private val MAX_SWAP_DELAY = 10.seconds
 private val DRAW_DELAY = 3.minutes
 private val WARN_BEFORE_END_DELAY = 30.seconds
 
@@ -46,12 +43,14 @@ private val KILLS = Stat("kills", 0)
 
 class WeaponSwapInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gameHandle) {
 
-    private val random = Random()
     private val stats: FFAStatsManager = FFAStatsManager(linkedSetOf(DAMAGE_DEALT, WEAPONS_RECEIVED, KILLS))
         .also { winManager.setStatsManager(it) }
     private val currentHolders = mutableSetOf<UUID>()
     private var previousHolders: Set<UUID> = emptySet()
-    private lateinit var subtitleCountdown: SubtitleCountdown
+    private val subtitleCountdown = SubtitleCountdown(gameHandle.server, gameHandle.scheduler, ::swapTimerTick) {
+        allPlayers()
+    }
+    private val schemaHolder: SchemaHolder<WeaponSwapSchema> = useSchema(WeaponSwapSchema::class.java)
 
     override fun prepare() {
         commons().gameRuleBuilder()
@@ -65,13 +64,7 @@ class WeaponSwapInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(g
 
         teleportPlayers()
 
-        subtitleCountdown = SubtitleCountdown(gameHandle.server, gameHandle.scheduler) {
-            allPlayers()
-        }
-
-        val hooks = gameHandle.hooks
-
-        PlayerInventoryHooks.MODIFY_INVENTORY.registerWith(hooks) { event ->
+        PlayerInventoryHooks.MODIFY_INVENTORY.registerWith(gameHandle.hooks) { event ->
             !event.player().canUseGameMasterBlocks()
         }
     }
@@ -97,10 +90,10 @@ class WeaponSwapInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(g
             true
         }
 
-        val subject = gameHandle.translations.translateText("game.ap2.weapon_swap.task")
-
         runAfter(DRAW_DELAY - WARN_BEFORE_END_DELAY) {
-            SoundHelper.playSound(world, SoundEvents.NOTE_BLOCK_PLING.value(), SoundSource.PLAYERS, 0.5f, 0.5f)
+            playSound(SoundEvents.NOTE_BLOCK_PLING.value(), SoundSource.PLAYERS, 0.5f, 0.5f)
+
+            val subject = gameHandle.translations.translateText("game.ap2.weapon_swap.end")
 
             commons().createTimer(subject, WARN_BEFORE_END_DELAY.inWholeSeconds.toInt()).whenDone {
                 winManager.complete()
@@ -119,20 +112,28 @@ class WeaponSwapInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(g
         player.inventory.clearContent()
     }
 
+    private fun swapTimerTick(seconds: Int) {
+        val pitch = 1f - (seconds - 1) * 0.05f
+
+        playSound(SoundEvents.NOTE_BLOCK_HARP.value(), SoundSource.AMBIENT, 0.5f, pitch)
+    }
+
     private fun teleportPlayers() {
-        val scanBox = MapUtil.readBox(map.requireProperty("scan-box"))
-        val scanStart = MapUtil.readBlockPos(map.requireProperty("scan-start"))
+        val schema = schemaHolder.get()
+
+        require(schema.scanStarts.isNotEmpty()) { "No spawn scan start is set" }
+        val scanBox = requireNotNull(schema.scanBox) { "Spawn scan box is not set" }
         val spacing = map.properties.optNumber("spawn-spacing", SPAWN_SPACING_DEFAULT).toDouble()
 
         val finder = SpawnFinder(spacing, commons().debugController())
-        val pool = finder.findSpawns(world, scanBox, scanStart)
-        val spawns = finder.generateSpacedSpawns(pool, players().count(), KRandom.asJavaRandom())
+        val pool = finder.findSpawns(world, scanBox, schema.scanStarts.toSet())
+        val spawns = finder.generateSpacedSpawns(pool, players().count(), Random.asJavaRandom())
 
         var i = 0
 
         for (player in players()) {
             val pos = spawns[i++]
-            val yaw = random.nextFloat() * 360f
+            val yaw = Random.nextFloat() * 360f
             player.teleport(pos, yaw)
         }
     }
@@ -141,17 +142,16 @@ class WeaponSwapInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(g
         if (winManager.isGameOver) return
 
         val remaining = players().getAsSet().toList()
-        if (remaining.size < 2) return
 
         val weaponCount = if (remaining.size >= TWO_WEAPONS_THRESHOLD) 2 else 1
 
         val eligible = remaining.filter { it.uuid !in previousHolders }
             .ifEmpty { remaining }
 
-        val holders = eligible.shuffled(random).take(weaponCount).toMutableList()
+        val holders = eligible.shuffled().take(weaponCount).toMutableList()
 
         if (holders.size < weaponCount) {
-            for (p in remaining.shuffled(random)) {
+            for (p in remaining.shuffled()) {
                 if (holders.size >= weaponCount) break
                 if (p !in holders) holders.add(p)
             }
@@ -159,9 +159,9 @@ class WeaponSwapInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(g
 
         setHolders(holders)
 
-        val cycleSeconds = MIN_SWAP_SECONDS + random.nextInt(MAX_SWAP_SECONDS - MIN_SWAP_SECONDS + 1)
+        val delay = (MIN_SWAP_DELAY..MAX_SWAP_DELAY).random()
 
-        subtitleCountdown.schedule(cycleSeconds * 20) {
+        subtitleCountdown.schedule(delay) {
             endCycle()
             startCycle()
         }
@@ -173,6 +173,7 @@ class WeaponSwapInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(g
                 removeWeaponFrom(it)
             }
         }
+
         currentHolders.clear()
 
         for (p in newHolders) {
@@ -181,17 +182,25 @@ class WeaponSwapInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(g
             stats.increment(p, WEAPONS_RECEIVED)
             ServerPlayerAccess.playSoundToPlayer(p, SoundEvents.NOTE_BLOCK_PLING.value(), SoundSource.PLAYERS, 1f, 1.5f)
         }
+
+        translate("game.ap2.weapon_swap.received")
+            .formatted(ChatFormatting.AQUA)
+            .sendTo(newHolders)
     }
 
     private fun endCycle() {
         previousHolders = currentHolders.toSet()
+
+        translate("game.ap2.weapon_swap.swap")
+            .formatted(ChatFormatting.GREEN)
+            .sendTo(allPlayers(), true)
     }
 
     private fun giveWeaponTo(player: ServerPlayer) {
         val stack = unbreakable(ItemStack(Items.WOODEN_SWORD))
 
         stack.set(
-            DataComponents.CUSTOM_NAME,
+            DataComponents.ITEM_NAME,
             gameHandle.translations.translateText(player, "game.ap2.weapon_swap.weapon")
                 .styled { it.withItalic(false).applyFormat(ChatFormatting.GOLD) }
         )
