@@ -6,8 +6,8 @@ import net.minecraft.resources.Identifier
 import net.minecraft.server.level.ServerPlayer
 import org.slf4j.Logger
 import work.lclpnet.ap2.ApConstants
-import work.lclpnet.ap2.core.hook.CustomClickActionCallback
 import work.lclpnet.kibu.hook.HookRegistrar
+import work.lclpnet.kibu.hook.network.CustomClickActionCallback
 import work.lclpnet.kibu.translate.Translations
 import java.util.*
 

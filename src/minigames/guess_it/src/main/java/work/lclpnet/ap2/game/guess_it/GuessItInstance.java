@@ -3,6 +3,7 @@ package work.lclpnet.ap2.game.guess_it;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.numbers.FixedFormat;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
@@ -19,7 +20,6 @@ import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.map.MapBootstrap;
 import work.lclpnet.ap2.core.hook.CopperGolemTurnIntoStatueCallback;
 import work.lclpnet.ap2.game.guess_it.data.*;
-import work.lclpnet.ap2.game.guess_it.util.AnswerCommand;
 import work.lclpnet.ap2.game.guess_it.util.DynamicEntityModifier;
 import work.lclpnet.ap2.game.guess_it.util.SetChallengeCommand;
 import work.lclpnet.ap2.game.guess_it.util.SkipChallengeCommand;
@@ -114,8 +114,10 @@ public class GuessItInstance extends FFAGameInstance implements MapBootstrap {
 
         rounds = MIN_ROUNDS + random.nextInt(MAX_ROUNDS - MIN_ROUNDS + 1);
 
-        messenger = new ChallengeMessengerImpl(world, gameHandle.getTranslations());
-        inputManager = new InputManager(choices, gameHandle.getTranslations(), participants, messenger);
+        Identifier answerId = gameHandle.getGameInfo().identifier("answer");
+
+        messenger = new ChallengeMessengerImpl(world, gameHandle.getTranslations(), answerId);
+        inputManager = new InputManager(choices, gameHandle.getTranslations(), participants, messenger, answerId);
         modifier = new ResetWorldModifier(world, hooks);
 
         var dynamicEntityManager = new DynamicEntityManager(world);
@@ -127,7 +129,6 @@ public class GuessItInstance extends FFAGameInstance implements MapBootstrap {
 
         CommandRegistrar commands = gameHandle.getCommands();
 
-        new AnswerCommand(participants, inputManager).register(commands);
         new SetChallengeCommand(manager, this::skip).register(commands);
         new SkipChallengeCommand(this::skip).register(commands);
 
