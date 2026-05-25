@@ -22,7 +22,7 @@ import java.nio.file.Files
 import kotlin.io.path.writeText
 import kotlin.math.max
 
-const val DEBUG_PROGRESSION = true
+const val DEBUG_PROGRESSION = false
 
 class CanvasVisualizer(
     val gameHandle: MiniGameHandle,
