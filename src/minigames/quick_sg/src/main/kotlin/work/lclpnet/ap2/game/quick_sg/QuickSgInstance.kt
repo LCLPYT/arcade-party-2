@@ -81,7 +81,7 @@ class QuickSgInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(game
         val spacing = map.properties.optNumber("spawn-spacing", 16.0).toDouble()
 
         val finder = SpawnFinder(spacing, commons().debugController())
-        val allSpawns = finder.findSpawns(world, schema.scanBox, schema.scanStart)
+        val allSpawns = finder.findSpawns(world, schema.scanBox, schema.scanStarts.toSet())
         val spacedSpawns = finder.generateSpacedSpawns(allSpawns, players().count(), Random.asJavaRandom())
 
         var i = 0

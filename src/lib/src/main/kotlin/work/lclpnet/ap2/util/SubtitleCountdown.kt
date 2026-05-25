@@ -4,7 +4,6 @@ import net.minecraft.ChatFormatting
 import net.minecraft.network.chat.Component
 import net.minecraft.server.MinecraftServer
 import net.minecraft.server.level.ServerPlayer
-import work.lclpnet.ap2.ext.TickDuration
 import work.lclpnet.ap2.ext.inWholeTicks
 import work.lclpnet.kibu.scheduler.api.RunningTask
 import work.lclpnet.kibu.scheduler.api.TaskHandle
@@ -15,6 +14,7 @@ import kotlin.time.Duration
 class SubtitleCountdown(
     val server: MinecraftServer,
     val scheduler: TaskScheduler,
+    private val timerAction: (Int) -> Unit = {},
     val players: () -> Collection<ServerPlayer>,
 ) {
     private var time = 0
@@ -23,10 +23,6 @@ class SubtitleCountdown(
 
     fun schedule(duration: Duration, onComplete: Runnable) {
         schedule(duration.inWholeTicks.toInt(), onComplete)
-    }
-
-    fun schedule(duration: TickDuration, onComplete: Runnable) {
-        schedule(duration.ticks.toInt(), onComplete)
     }
 
     @Synchronized
@@ -62,6 +58,7 @@ class SubtitleCountdown(
 
         if (seconds <= 0) {
             task.cancel()
+            return
         }
 
         val color = when (seconds) {
@@ -76,6 +73,8 @@ class SubtitleCountdown(
         for (player in players()) {
             player.sendOverlayMessage(msg)
         }
+
+        timerAction(seconds)
     }
 
     private fun clearCountdown() {

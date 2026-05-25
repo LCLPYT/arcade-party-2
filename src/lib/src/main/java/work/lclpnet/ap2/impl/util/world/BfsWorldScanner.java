@@ -15,12 +15,9 @@ public class BfsWorldScanner implements WorldScanner {
     }
 
     @Override
-    public Iterator<BlockPos> scan(BlockPos start) {
-        final List<BlockPos> queue = new ArrayList<>();
-        final Set<BlockPos> known = new HashSet<>();
-
-        queue.add(start);
-        known.add(start);
+    public Iterator<BlockPos> scan(Set<BlockPos> starts) {
+        final List<BlockPos> queue = new ArrayList<>(starts);
+        final Set<BlockPos> known = new HashSet<>(starts);
 
         return new Iterator<>() {
             @Override
