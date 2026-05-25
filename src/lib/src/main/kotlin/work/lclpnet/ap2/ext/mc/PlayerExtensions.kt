@@ -5,7 +5,6 @@ import net.minecraft.core.Position
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.sounds.SoundEvent
 import net.minecraft.sounds.SoundSource
-import net.minecraft.world.entity.Relative
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess
 import work.lclpnet.kibu.access.entity.ServerPlayerAccess
 import work.lclpnet.kibu.hook.util.PositionRotation
@@ -17,7 +16,7 @@ fun ServerPlayer.teleport(pos: BlockPos) = teleportTo(
     pos.x.toDouble() + 0.5,
     pos.y.toDouble(),
     pos.z + 0.5,
-    emptySet<Relative>(),
+    emptySet(),
     yRot,
     xRot,
     true
@@ -28,7 +27,7 @@ fun ServerPlayer.teleport(pos: Position) = teleportTo(
     pos.x(),
     pos.y(),
     pos.z(),
-    emptySet<Relative>(),
+    emptySet(),
     yRot,
     xRot,
     true
@@ -39,7 +38,7 @@ fun ServerPlayer.teleport(pos: Position, yaw: Float) = teleportTo(
     pos.x(),
     pos.y(),
     pos.z(),
-    emptySet<Relative>(),
+    emptySet(),
     yaw,
     xRot,
     true
@@ -50,7 +49,7 @@ fun ServerPlayer.teleport(pos: PositionRotation) = teleportTo(
     pos.x(),
     pos.y(),
     pos.z(),
-    emptySet<Relative>(),
+    emptySet(),
     pos.yaw,
     pos.pitch,
     true

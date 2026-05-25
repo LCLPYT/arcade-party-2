@@ -3,6 +3,8 @@ package work.lclpnet.ap2.ext
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup
 import net.minecraft.server.MinecraftServer
 import net.minecraft.server.level.ServerPlayer
+import net.minecraft.sounds.SoundEvent
+import net.minecraft.sounds.SoundSource
 import net.minecraft.world.damagesource.DamageSource
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.scores.DisplaySlot
@@ -12,6 +14,7 @@ import work.lclpnet.ap2.impl.game.BaseGameInstance
 import work.lclpnet.ap2.impl.game.FFAGameInstance
 import work.lclpnet.ap2.impl.game.GameCommons
 import work.lclpnet.ap2.impl.map.MapUtil
+import work.lclpnet.ap2.impl.util.SoundHelper
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape
 import work.lclpnet.kibu.hook.entity.EntityHealthCallback
 
@@ -53,3 +56,11 @@ inline fun <reified T : LivingEntity> BaseGameInstance.onDeathOf(
         GameCommons.handleCustomDeath(entity, health, action)
     }
 }
+
+fun BaseGameInstance.playSound(
+    sound: SoundEvent,
+    source: SoundSource,
+    volume: Float,
+    pitch: Float
+) =
+    SoundHelper.playSound(world, sound, source, volume, pitch)

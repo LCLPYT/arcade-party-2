@@ -1,21 +1,22 @@
 package work.lclpnet.ap2.ext
 
 import java.util.concurrent.TimeUnit
+import kotlin.random.Random
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
+
+val Int.ticks: Duration get() = (this * 50L).milliseconds
+val Long.ticks: Duration get() = (this * 50L).milliseconds
+
+val Duration.inTicks: Long get() = this.inWholeMilliseconds / 50L
+val Duration.inWholeTicks: Long get() = inTicks
 
 fun TimeUnit.toTicks(duration: Long) =
     this.toSeconds(duration) * 20
 
-val Duration.inWholeTicks: Long get() =
-    inWholeMilliseconds / 50
 
-@JvmInline
-value class TickDuration(val ticks: Long) : Comparable<TickDuration> {
-    override fun compareTo(other: TickDuration): Int = (this.ticks - other.ticks).toInt()
-}
+fun ClosedRange<Duration>.random(): Duration =
+    random(Random)
 
-val Int.ticks: TickDuration get() =
-    TickDuration(this.toLong())
-
-val Long.ticks: TickDuration get() =
-    TickDuration(this)
+fun ClosedRange<Duration>.random(random: Random): Duration =
+    random.nextLong(start.inWholeMilliseconds, endInclusive.inWholeMilliseconds + 1).milliseconds
