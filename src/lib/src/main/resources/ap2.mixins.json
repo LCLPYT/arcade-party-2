@@ -48,7 +48,6 @@
     "ProjectileWeaponItemMixin",
     "RabbitMixin",
     "ServerChunkCacheAccessor",
-    "ServerCommonPacketListenerImplMixin",
     "ServerExplosionAccessor",
     "ServerExplosionMixin",
     "ServerGamePacketListenerImplMixin",
