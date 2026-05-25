@@ -44,15 +44,13 @@ class ButtonPositions(
         }
 
         if (DEBUG_VALID_POSITIONS) {
-            debugValidPositions(validNodes)
+            debugValidPositions(validNodes.map { it.pos })
         }
 
         return validNodes.map { it.pos }
     }
 
-    private fun debugValidPositions(positions: List<ScannerNode>) {
-        val positions = positions.map { it.pos }
-
+    fun debugValidPositions(positions: List<BlockPos>) {
         val minPos = positions.first().mutable()
         val maxPos = positions.first().mutable()
 
@@ -75,8 +73,9 @@ class ButtonPositions(
             mask.setVoxelAt(pos.x - minPos.x, pos.y - minPos.y, pos.z - minPos.z, true)
         }
 
-        commons.debugController()
-            .visualizeStructureMask(mask, minPos, Matrix3i.IDENTITY, Blocks.GREEN_STAINED_GLASS.defaultBlockState())
+        commons.debugController().exclusive("positions") {
+            it.visualizeStructureMask(mask, minPos, Matrix3i.IDENTITY, Blocks.GREEN_STAINED_GLASS.defaultBlockState())
+        }
     }
 
     fun findPositionsBfs(list: MutableList<ScannerNode>) {
@@ -156,6 +155,17 @@ class ButtonPositions(
         return !checker.isBoxVisible(cameraPos, AABB.unitCubeFromLowerCorner(Vec3(pos)), pos.center)
     }
 
+    /**
+     * Needs to be applied once entities have loaded.
+     */
+    fun filterNoEntityCollision(list: MutableList<BlockPos>) {
+        list.retainAll {
+            val box = AABB.unitCubeFromLowerCorner(Vec3.atLowerCornerOf(it))
+
+            world.getEntities(null, box).isEmpty()
+        }
+    }
+
     fun canPlaceButtonAt(world: ServerLevel, pos: BlockPos): Boolean {
         return buttonStates(Blocks.OAK_BUTTON).any {
             it.canSurvive(world, pos)
@@ -165,6 +175,6 @@ class ButtonPositions(
 
 fun buttonStates(block: Block): List<BlockState> {
     return block.stateDefinition.possibleStates.filter {
-        it.getValue(ButtonBlock.POWERED) == false && it.getValue(ButtonBlock.FACE) != AttachFace.FLOOR
+        !it.getValue(ButtonBlock.POWERED) && it.getValue(ButtonBlock.FACE) != AttachFace.FLOOR
     }
 }

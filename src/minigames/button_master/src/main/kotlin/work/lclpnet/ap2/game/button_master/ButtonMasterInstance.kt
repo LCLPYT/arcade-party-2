@@ -53,6 +53,7 @@ import work.lclpnet.game.util.ResetWorldModifier
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks
 import work.lclpnet.kibu.scheduler.Ticks
 import work.lclpnet.kibu.scheduler.api.TaskHandle
+import work.lclpnet.kibu.structure.BlockStructure
 import work.lclpnet.kibu.translate.bossbar.TranslatedBossBar
 import work.lclpnet.kibu.translate.text.FormatWrapper.styled
 import java.util.*
@@ -94,28 +95,31 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
     var taskBar: TranslatedBossBar? = null
     var wallBlocks: ResetWorldModifier? = null
     var scene: Scene? = null
-    var dynamicEntityManager: DynamicEntityManager? = null
-    var capsules: ButtonMasterCapsules? = null
+    lateinit var dynamicEntityManager: DynamicEntityManager
+    lateinit var capsules: ButtonMasterCapsules
+    lateinit var buttonPositions: ButtonPositions
+    lateinit var capsuleSchematic: BlockStructure
 
     override fun createWorldBootstrap(world: ServerLevel, map: GameMap): CompletableFuture<Void> {
         wallBlocks = ResetWorldModifier(world, gameHandle.hooks)
 
         return schematic(assetPath("capsule.schem")).thenAccept {
-            capsules = ButtonMasterCapsules(world, schemaHolder.get(), it, commons())
+            capsuleSchematic = it
         }
     }
 
+
     override fun prepare() {
-        val dynamicEntityManager = DynamicEntityManager(world)
+        capsules = ButtonMasterCapsules(world, schemaHolder.get(), capsuleSchematic, commons())
+
+        dynamicEntityManager = DynamicEntityManager(world)
         dynamicEntityManager.init(gameHandle.scheduler, gameHandle.hooks)
 
-        this.dynamicEntityManager = dynamicEntityManager
+        buttonPositions = ButtonPositions(world, map, schemaHolder.get(), commons(), gameHandle)
 
-        val positions = ButtonPositions(world, map, schemaHolder.get(), commons(), gameHandle)
+        validPositions.addAll(buttonPositions.scanWorld())
 
-        validPositions.addAll(positions.scanWorld())
-
-        capsules?.setup()
+        capsules.setup()
         movementBlocker.init(gameHandle.hooks)
 
         setupTeam()
@@ -176,6 +180,12 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
 
 
     override fun go() {
+        buttonPositions.filterNoEntityCollision(validPositions)
+
+        if (DEBUG_VALID_POSITIONS) {
+            buttonPositions.debugValidPositions(validPositions)
+        }
+
         taskBar = useTaskDisplay()
 
         nextRound()
@@ -208,7 +218,7 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
         if (gameState != GameState.CHOOSE_EJECT || buttonMasterUuid != entity.uuid)
             return InteractionResult.PASS
 
-        val capsule = capsules?.buttons[result.blockPos] ?: return InteractionResult.PASS
+        val capsule = capsules.buttons[result.blockPos] ?: return InteractionResult.PASS
 
         eject(capsule)
 
@@ -218,11 +228,11 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
     private fun eject(capsule: BlockFace) {
         gameState = GameState.EJECTING
 
-        val spawn = capsules?.getCapsuleSpawn(capsule) ?: return
+        val spawn = capsules.getCapsuleSpawn(capsule)
 
         world.setBlockAndUpdate(BlockPos.containing(spawn).below(), Blocks.AIR.defaultBlockState())
 
-        val uuid = capsules?.players[capsule] ?: return
+        val uuid = capsules.players[capsule] ?: return
         val player = players().getParticipant(uuid).orElse(null) ?: return
 
         movementBlocker.enableMovement(player)
@@ -245,7 +255,7 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
 
         val otherPlayers = players().filter { it != player }
 
-        capsules?.teleportToCapsules(otherPlayers)
+        capsules.teleportToCapsules(otherPlayers)
 
         otherPlayers.forEach {
             movementBlocker.disableMovement(it)
@@ -271,7 +281,7 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
         val renderer = rendererFor(player)
 
         if (renderer != null) {
-            capsules?.displayCapsuleButtons(renderer)
+            capsules.displayCapsuleButtons(renderer)
         }
     }
 
@@ -315,7 +325,7 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
         gameState = GameState.SEARCHING_BUTTON
         taskBar?.isVisible = true
 
-        capsules?.removeExcessCapsules(players().count() - 1)
+        capsules.removeExcessCapsules(players().count() - 1)
 
         val lastPos = currentButtonPos
 
@@ -373,7 +383,7 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
     }
 
     fun rendererFor(player: ServerPlayer): ApSceneRenderer? {
-        val dynamicEntityManager = dynamicEntityManager ?: return null
+        val dynamicEntityManager = dynamicEntityManager
 
         val mountContext = PlayerMountContext(world, dynamicEntityManager, player.uuid)
 
