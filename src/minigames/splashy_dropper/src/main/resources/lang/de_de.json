@@ -1,5 +1,9 @@
 {
   "game.ap2.splashy_dropper": "Pfützenfall",
   "game.ap2.splashy_dropper.description": "Lande in verschieden großen Pfützen. Je nach Größe der Pfütze erhältst du Punkte. Nachdem jemand in einer Pfütze gelandet ist, verschwindet sie.",
-  "game.ap2.splashy_dropper.task": "Lande in Wasser"
+  "game.ap2.splashy_dropper.task": "Lande in Wasser",
+  "game.ap2.splashy_dropper.stat.hit_small": "Kleine Pfützen",
+  "game.ap2.splashy_dropper.stat.hit_medium": "Mittelgroße Pfützen",
+  "game.ap2.splashy_dropper.stat.hit_large": "Große Pfützen",
+  "game.ap2.splashy_dropper.stat.missed": "Verfehlt"
 }
