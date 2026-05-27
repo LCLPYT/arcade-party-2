@@ -18,6 +18,8 @@ import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.game.data.DataContainer
 import work.lclpnet.ap2.api.map.MapBootstrap
 import work.lclpnet.ap2.api.map.MapBootstrapFunction
+import work.lclpnet.ap2.api.stats.FFAStatsManager
+import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.ext.inWholeTicks
 import work.lclpnet.ap2.ext.mc.isIn
 import work.lclpnet.ap2.ext.mc.playNotifySound
@@ -45,9 +47,16 @@ import kotlin.time.Duration.Companion.seconds
 private val MIN_DURATION_SECONDS = 50.seconds
 private val MAX_DURATION_SECONDS = 75.seconds
 
+val HIT_SMALL = Stat("hit_small", 0)
+val HIT_MEDIUM = Stat("hit_medium", 0)
+val HIT_LARGE = Stat("hit_large", 0)
+val MISSED = Stat("missed", 0)
+
 class SplashyDropperInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle), MapBootstrapFunction {
 
     private val data = DataContainers.finaleCompatibleScoreContainer(gameHandle, PlayerRef::create)
+    private val stats = FFAStatsManager(linkedSetOf(HIT_SMALL, HIT_MEDIUM, HIT_LARGE, MISSED))
+        .also { winManager.setStatsManager(it) }
     private val random = Random()
     private val blocksBelow = ArrayList<BlockPos>()
     private val movementBlocker = SimpleMovementBlocker(gameHandle.rootScheduler).also {
@@ -168,6 +177,14 @@ class SplashyDropperInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameH
 
         commons().addScore(player, score, data)
 
+        val stat = when (score) {
+            3 -> HIT_SMALL
+            2 -> HIT_MEDIUM
+            1 -> HIT_LARGE
+            else -> null
+        }
+        stat?.let { stats.increment(player, it) }
+
         val pitch = when (score) {
             2 -> 1.6f
             3 -> 1.8f
@@ -182,6 +199,7 @@ class SplashyDropperInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameH
     }
 
     private fun onHitGround(player: ServerPlayer) {
+        stats.increment(player, MISSED)
         commons().teleportToRandomSpawn(player, random)
         gameHandle.scheduler.immediate(Runnable {
             player.playNotifySound(SoundEvents.ZOMBIE_ATTACK_IRON_DOOR, SoundSource.PLAYERS, 0.25f, 0.5f)

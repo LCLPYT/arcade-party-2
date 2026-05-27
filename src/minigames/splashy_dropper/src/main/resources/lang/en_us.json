@@ -1,5 +1,9 @@
 {
   "game.ap2.splashy_dropper": "Splashy Dropper",
   "game.ap2.splashy_dropper.description": "Drop into pools of water. You earn points depending on the size of the pool you land in. Pools disappear when someone lands in them.",
-  "game.ap2.splashy_dropper.task": "Land in water pools"
+  "game.ap2.splashy_dropper.task": "Land in water pools",
+  "game.ap2.splashy_dropper.stat.hit_small": "Small pools",
+  "game.ap2.splashy_dropper.stat.hit_medium": "Medium pools",
+  "game.ap2.splashy_dropper.stat.hit_large": "Large pools",
+  "game.ap2.splashy_dropper.stat.missed": "Misses"
 }
