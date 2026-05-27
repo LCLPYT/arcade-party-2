@@ -3,6 +3,7 @@ package work.lclpnet.ap2.game.panda_finder
 import it.unimi.dsi.fastutil.ints.IntList
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup
 import net.minecraft.ChatFormatting
+import net.minecraft.core.component.DataComponents
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.sounds.SoundSource
@@ -21,14 +22,16 @@ import net.minecraft.world.item.component.FireworkExplosion
 import net.minecraft.world.item.component.Fireworks
 import net.minecraft.world.scores.DisplaySlot
 import net.minecraft.world.scores.criteria.ObjectiveCriteria
-import net.minecraft.core.component.DataComponents
 import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.game.data.DataContainer
+import work.lclpnet.ap2.api.stats.FFAStatsManager
+import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.ext.runAfter
 import work.lclpnet.ap2.impl.game.FFAGameInstance
 import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef
 import work.lclpnet.ap2.impl.map.MapUtil
+import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedPlayerBossBar
 import work.lclpnet.ap2.impl.util.world.BfsWorldScanner
 import work.lclpnet.ap2.impl.util.world.NotOccupiedBlockPredicate
 import work.lclpnet.ap2.impl.util.world.SimpleAdjacentBlocks
@@ -38,10 +41,16 @@ import work.lclpnet.kibu.access.entity.ServerPlayerAccess
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks
 import work.lclpnet.kibu.scheduler.Ticks
 import work.lclpnet.kibu.translate.text.FormatWrapper
-import java.util.Random
+import java.util.*
 import kotlin.time.Duration.Companion.seconds
 
 const val WIN_SCORE = 3
+const val CLOSE_CALL_DISTANCE = 10.0
+
+val PANDAS_CLICKED = Stat("pandas_clicked", 0)
+val AVG_SPAWN_DISTANCE = Stat("avg_spawn_distance", 0f)
+val CLOSE_CALLS = Stat("close_calls", 0)
+val COOLDOWNS = Stat("cooldowns", 0)
 
 class PandaFinderInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle) {
 
@@ -49,7 +58,14 @@ class PandaFinderInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHand
     private val random = Random()
     private val spamManager = SpamManager()
     private lateinit var pandaManager: PandaManager
-    private lateinit var bossBar: work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedPlayerBossBar
+    private lateinit var bossBar: DynamicTranslatedPlayerBossBar
+    private val stats = FFAStatsManager(linkedSetOf(
+        PANDAS_CLICKED,
+        AVG_SPAWN_DISTANCE,
+        CLOSE_CALLS,
+        COOLDOWNS
+    )).also { winManager.setStatsManager(it) }
+    private var round = 0
 
     override fun getData(): DataContainer<ServerPlayer, PlayerRef> = data
 
@@ -97,7 +113,21 @@ class PandaFinderInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHand
     }
 
     private fun nextRound() {
+        val round = ++this.round
+
         pandaManager.next()
+
+        val pandaPositions = pandaManager.getSearchedPandaPositions()
+
+        if (pandaPositions.isNotEmpty()) {
+            for (participant in gameHandle.participants) {
+                val roundAvg = pandaPositions.map { participant.position().distanceTo(it) }.average().toFloat()
+
+                stats.modify(participant, AVG_SPAWN_DISTANCE) { oldAvg ->
+                    oldAvg + (roundAvg - oldAvg) / round
+                }
+            }
+        }
 
         val players = PlayerLookup.all(gameHandle.server)
         val translations = gameHandle.translations
@@ -156,12 +186,16 @@ class PandaFinderInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHand
             return
         }
 
+        stats.increment(player, PANDAS_CLICKED)
+
         if (!pandaManager.isSearchedPanda(entity)) return
 
         pandaFound(player, entity)
     }
 
     private fun onCooldownReached(player: ServerPlayer) {
+        stats.increment(player, COOLDOWNS)
+
         player.sendSystemMessage(gameHandle.translations.translateText(player, "game.ap2.panda_finder.cooldown")
             .formatted(ChatFormatting.RED))
 
@@ -170,7 +204,17 @@ class PandaFinderInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHand
     }
 
     private fun pandaFound(player: ServerPlayer, panda: Panda) {
+        val searchedPositions = pandaManager.getSearchedPandaPositions()
+
         pandaManager.setFound()
+
+        for (participant in gameHandle.participants) {
+            if (participant == player) continue
+
+            if (searchedPositions.any { pos -> participant.position().distanceTo(pos) <= CLOSE_CALL_DISTANCE }) {
+                stats.increment(participant, CLOSE_CALLS)
+            }
+        }
 
         data.addScore(player, 1)
         bossBar.setArgument(player, 0, FormatWrapper.styled(data.getScore(player), ChatFormatting.YELLOW))

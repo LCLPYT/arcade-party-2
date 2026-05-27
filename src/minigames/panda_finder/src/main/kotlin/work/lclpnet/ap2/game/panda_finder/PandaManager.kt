@@ -14,7 +14,7 @@ import net.minecraft.world.phys.Vec3
 import org.json.JSONObject
 import org.slf4j.Logger
 import work.lclpnet.ap2.api.base.Participants
-import java.util.Random
+import java.util.*
 
 private const val PANDA_COUNT = 100
 private const val SEARCHED_PANDA_COUNT = 5
@@ -138,6 +138,10 @@ class PandaManager(
 
         imagesByGene = result
     }
+
+    fun getSearchedPandaPositions(): List<Vec3> = pandas
+        .filter { isSearchedPanda(it) }
+        .map { it.position() }
 
     fun giveImageTo(player: ServerPlayer) {
         if (currentMapId == -1) {
