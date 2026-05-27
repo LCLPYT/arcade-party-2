@@ -38,9 +38,12 @@ import work.lclpnet.kibu.hook.entity.ProjectileHooks
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks
 import work.lclpnet.kibu.hook.player.PlayerInventoryHooks
 import java.util.*
+import kotlin.random.asKotlinRandom
 
 const val SCORE_LIMIT = 15
 const val RESPAWN_SPACING = 20.0
+
+enum class BowType { Bow, CrossBow }
 
 class OneInTheChamberInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle) {
 
@@ -51,6 +54,7 @@ class OneInTheChamberInstance(gameHandle: MiniGameHandle) : FFAGameInstance(game
         it.setModifySpeedAttribute(false)
     }
     private val respawnCooldown = VisualCooldown(gameHandle.scheduler)
+    private val bowType = BowType.entries.random(random.asKotlinRandom())
 
     init {
         useOldCombat()
@@ -106,7 +110,7 @@ class OneInTheChamberInstance(gameHandle: MiniGameHandle) : FFAGameInstance(game
         respawnCooldown.setOnCooldownOver { player ->
             val randomSpawn = respawn.getRandomSpawn()
             player.teleportTo(world, randomSpawn.x + 0.5, randomSpawn.y.toDouble(), randomSpawn.z + 0.5, setOf(), player.yRot, player.xRot, true)
-            giveCrossbowToPlayer(player)
+            giveBowToPlayer(player)
 
             player.abilities.flyingSpeed = 0f
             player.onUpdateAbilities()
@@ -129,7 +133,7 @@ class OneInTheChamberInstance(gameHandle: MiniGameHandle) : FFAGameInstance(game
         }
 
         for (player in gameHandle.participants) {
-            giveCrossbowToPlayer(player)
+            giveBowToPlayer(player)
             giveSwordToPlayer(player)
             movementBlocker.enableMovement(player)
         }
@@ -154,13 +158,27 @@ class OneInTheChamberInstance(gameHandle: MiniGameHandle) : FFAGameInstance(game
         respawnCooldown.setCooldown(player, 50)
     }
 
-    private fun giveCrossbowToPlayer(player: ServerPlayer) {
-        val stack = unbreakable(ItemStack(Items.CROSSBOW))
-        stack.set(DataComponents.CHARGED_PROJECTILES, ChargedProjectiles.of(ItemStackTemplate(Items.ARROW)))
+    private fun giveBowToPlayer(player: ServerPlayer) {
+        val stack = when (bowType) {
+            BowType.Bow -> ItemStack(Items.BOW)
+
+            BowType.CrossBow -> ItemStack(Items.CROSSBOW).also { stack ->
+                unbreakable(stack)
+
+                stack.set(DataComponents.CHARGED_PROJECTILES, ChargedProjectiles.of(ItemStackTemplate(Items.ARROW)))
+            }
+        }
+
+        unbreakable(stack)
+
         stack.set(DataComponents.CUSTOM_NAME, TextUtil.getVanillaName(stack)
-            .withStyle { style -> style.withItalic(false).applyFormat(ChatFormatting.GOLD) })
+            .withStyle { it.withItalic(false).applyFormat(ChatFormatting.GOLD) })
 
         player.inventory.setItem(1, stack)
+
+        if (bowType == BowType.Bow) {
+            player.inventory.setItem(8, ItemStack(Items.ARROW))
+        }
     }
 
     private fun giveSwordToPlayer(player: ServerPlayer) {
@@ -206,7 +224,7 @@ class OneInTheChamberInstance(gameHandle: MiniGameHandle) : FFAGameInstance(game
         val owner = projectile.owner as? ServerPlayer ?: return
 
         if (owner == player) {
-            giveCrossbowToPlayer(owner)
+            giveBowToPlayer(owner)
             return
         }
 
@@ -220,7 +238,7 @@ class OneInTheChamberInstance(gameHandle: MiniGameHandle) : FFAGameInstance(game
 
         ServerPlayerAccess.playSoundToPlayer(killer, SoundEvents.CROSSBOW_QUICK_CHARGE_3.value(), SoundSource.PLAYERS, 1f, 1f)
 
-        giveCrossbowToPlayer(killer)
+        giveBowToPlayer(killer)
         killer.health = 20f
         data.addScore(killer, 1)
 
