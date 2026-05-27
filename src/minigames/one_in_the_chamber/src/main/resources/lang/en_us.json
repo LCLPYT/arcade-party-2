@@ -1,5 +1,10 @@
 {
   "game.ap2.one_in_the_chamber": "One in the Chamber",
   "game.ap2.one_in_the_chamber.description": "Your crossbow one hits, but you only have one shot! Gain another by killing someone. First reaching %s kills wins!",
-  "game.ap2.one_in_the_chamber.task": "Reach %s kills"
+  "game.ap2.one_in_the_chamber.task": "Reach %s kills",
+  "game.ap2.one_in_the_chamber.stat.damage_dealt": "Damage dealt",
+  "game.ap2.one_in_the_chamber.stat.deaths": "Deaths",
+  "game.ap2.one_in_the_chamber.stat.arrows_shot": "Arrows shot",
+  "game.ap2.one_in_the_chamber.stat.arrows_hit": "Arrows hit",
+  "game.ap2.one_in_the_chamber.stat.killstreak": "Killstreak"
 }

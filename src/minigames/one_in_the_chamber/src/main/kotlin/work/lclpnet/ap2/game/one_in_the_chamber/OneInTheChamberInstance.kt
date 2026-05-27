@@ -22,6 +22,9 @@ import net.minecraft.world.scores.criteria.ObjectiveCriteria
 import org.json.JSONArray
 import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.game.data.DataContainer
+import work.lclpnet.ap2.api.stats.FFAStatsManager
+import work.lclpnet.ap2.api.stats.Stat
+import work.lclpnet.ap2.core.hook.ProjectileShootCallback
 import work.lclpnet.ap2.core.hook.SpectatePlayerCallback
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.impl.game.FFAGameInstance
@@ -43,6 +46,12 @@ import kotlin.random.asKotlinRandom
 const val SCORE_LIMIT = 15
 const val RESPAWN_SPACING = 20.0
 
+private val DAMAGE_DEALT = Stat("damage_dealt", 0f)
+private val DEATHS = Stat("deaths", 0)
+private val ARROWS_SHOT = Stat("arrows_shot", 0)
+private val ARROWS_HIT = Stat("arrows_hit", 0)
+private val KILLSTREAK = Stat("killstreak", 0)
+
 enum class BowType { Bow, CrossBow }
 
 class OneInTheChamberInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle) {
@@ -55,6 +64,15 @@ class OneInTheChamberInstance(gameHandle: MiniGameHandle) : FFAGameInstance(game
     }
     private val respawnCooldown = VisualCooldown(gameHandle.scheduler)
     private val bowType = BowType.entries.random(random.asKotlinRandom())
+    private val stats = FFAStatsManager(linkedSetOf(
+        DAMAGE_DEALT,
+        DEATHS,
+        ARROWS_SHOT,
+        ARROWS_HIT,
+        KILLSTREAK
+    ))
+        .also { winManager.setStatsManager(it) }
+    private val currentKillstreak = HashMap<UUID, Int>()
 
     init {
         useOldCombat()
@@ -99,6 +117,12 @@ class OneInTheChamberInstance(gameHandle: MiniGameHandle) : FFAGameInstance(game
             projectile.discard()
         }
 
+        ProjectileShootCallback.HOOK.registerWith(hooks) { shooter, _ ->
+            if (shooter is ServerPlayer && gameHandle.participants.isParticipating(shooter)) {
+                stats.increment(shooter, ARROWS_SHOT)
+            }
+        }
+
         ServerLivingEntityHooks.ALLOW_DAMAGE.registerWith(hooks, this::onDamage)
 
         SpectatePlayerCallback.HOOK.registerWith(hooks) { spectator, _ ->
@@ -140,6 +164,13 @@ class OneInTheChamberInstance(gameHandle: MiniGameHandle) : FFAGameInstance(game
     }
 
     private fun killPlayer(player: ServerPlayer, killer: ServerPlayer?, shot: Boolean) {
+        stats.increment(player, DEATHS)
+        currentKillstreak[player.uuid] = 0
+
+        if (killer != null && shot) {
+            stats.increment(player, ARROWS_HIT)
+        }
+
         val deathMessages = gameHandle.deathMessages
 
         val text = when {
@@ -205,12 +236,23 @@ class OneInTheChamberInstance(gameHandle: MiniGameHandle) : FFAGameInstance(game
             return false
         }
 
+        val attacker = source.entity as? ServerPlayer
+
+        if (attacker != null && attacker != entity) {
+            stats.modify(attacker, DAMAGE_DEALT) {
+                it + amount.coerceAtMost(entity.health)
+            }
+        }
+
         return true
     }
 
     private fun onLethalDamage(source: DamageSource, player: ServerPlayer) {
         val attacker = source.entity
         if (attacker is ServerPlayer && player != attacker) {
+            stats.modify(attacker, DAMAGE_DEALT) {
+                it + player.health
+            }
             killPlayer(player, attacker, false)
             onKillGained(attacker)
         } else {
@@ -228,6 +270,8 @@ class OneInTheChamberInstance(gameHandle: MiniGameHandle) : FFAGameInstance(game
             return
         }
 
+        stats.modify(owner, DAMAGE_DEALT) { it + player.health }
+
         killPlayer(player, owner, true)
         onKillGained(owner)
     }
@@ -237,6 +281,10 @@ class OneInTheChamberInstance(gameHandle: MiniGameHandle) : FFAGameInstance(game
             .withStyle(ChatFormatting.GOLD))
 
         ServerPlayerAccess.playSoundToPlayer(killer, SoundEvents.CROSSBOW_QUICK_CHARGE_3.value(), SoundSource.PLAYERS, 1f, 1f)
+
+        val streak = (currentKillstreak[killer.uuid] ?: 0) + 1
+        currentKillstreak[killer.uuid] = streak
+        stats.modify(killer, KILLSTREAK) { maxOf(it, streak) }
 
         giveBowToPlayer(killer)
         killer.health = 20f
