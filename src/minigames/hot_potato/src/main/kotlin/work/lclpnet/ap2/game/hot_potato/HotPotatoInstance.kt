@@ -19,6 +19,8 @@ import net.minecraft.world.level.GameType
 import net.minecraft.world.scores.PlayerTeam
 import work.lclpnet.ap2.api.game.GameOverListener
 import work.lclpnet.ap2.api.game.MiniGameHandle
+import work.lclpnet.ap2.api.stats.FFAStatsManager
+import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.ext.runAfter
 import work.lclpnet.ap2.impl.game.EliminationGameInstance
 import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedBossBar
@@ -35,6 +37,9 @@ import kotlin.time.Duration.Companion.seconds
 const val DURATION_SECONDS = 20
 val MARK_PERIOD_DURATION = 6.seconds
 
+val POTATO_ASSIGNED = Stat("potato_assigned", 0)
+val TIMES_PASSED = Stat("times_passed", 0)
+
 class HotPotatoInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gameHandle), GameOverListener {
 
     private val random = Random()
@@ -43,6 +48,8 @@ class HotPotatoInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(ga
     private lateinit var team: PlayerTeam
     private var task: TaskHandle? = null
     private var markTask: TaskHandle? = null
+    private val stats = FFAStatsManager(linkedSetOf(POTATO_ASSIGNED, TIMES_PASSED))
+        .also { winManager.setStatsManager(it) }
 
     override fun prepare() {
         winManager.addListener(this)
@@ -202,7 +209,9 @@ class HotPotatoInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(ga
     private fun markRandomPlayer(): Boolean {
         val randomPlayer = gameHandle.participants.getRandomParticipant(random)
         if (randomPlayer.isEmpty) return false
-        markPlayer(randomPlayer.get())
+        val player = randomPlayer.get()
+        markPlayer(player)
+        stats.increment(player, POTATO_ASSIGNED)
         return true
     }
 
@@ -251,6 +260,7 @@ class HotPotatoInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(ga
         if (player != markedPlayer) return
         if (!gameHandle.participants.isParticipating(target)) return
         markPlayer(target)
+        stats.increment(player, TIMES_PASSED)
     }
 }
 
