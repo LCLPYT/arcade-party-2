@@ -11,5 +11,9 @@
   "game.ap2.panda_finder.find.brown": "a brown",
   "game.ap2.panda_finder.find.weak": "a weak",
   "game.ap2.panda_finder.find.aggressive": "an aggressive",
-  "game.ap2.panda_finder.cooldown": "Do not guess pandas so often!"
+  "game.ap2.panda_finder.cooldown": "Do not guess pandas so often!",
+  "game.ap2.panda_finder.stat.pandas_clicked": "Pandas clicked",
+  "game.ap2.panda_finder.stat.avg_spawn_distance": "Avg. spawn distance",
+  "game.ap2.panda_finder.stat.close_calls": "Close calls",
+  "game.ap2.panda_finder.stat.cooldowns": "Cooldowns"
 }

@@ -11,5 +11,9 @@
   "game.ap2.panda_finder.find.brown": "braunen",
   "game.ap2.panda_finder.find.weak": "schwachen",
   "game.ap2.panda_finder.find.aggressive": "aggressiven",
-  "game.ap2.panda_finder.cooldown": "Rate nicht so viele Pandas!"
+  "game.ap2.panda_finder.cooldown": "Rate nicht so viel!",
+  "game.ap2.panda_finder.stat.pandas_clicked": "Pandas angeklickt",
+  "game.ap2.panda_finder.stat.avg_spawn_distance": "Durchschnittlicher Spawn-Abstand",
+  "game.ap2.panda_finder.stat.close_calls": "Fast gefunden",
+  "game.ap2.panda_finder.stat.cooldowns": "Abklingzeiten"
 }
