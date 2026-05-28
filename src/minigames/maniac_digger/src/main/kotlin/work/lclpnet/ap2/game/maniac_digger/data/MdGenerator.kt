@@ -79,8 +79,9 @@ class MdGenerator(
 
             val spawn = plan.spawn.add(x.toDouble(), y.toDouble(), z.toDouble())
             val bounds = plan.bounds.transform(AffineIntMatrix.makeTranslation(x, y, z))
+            val path = plan.path.translate(x.toDouble(), y.toDouble(), z.toDouble())
 
-            pipes.add(MdPipe(spawn, bounds))
+            pipes.add(MdPipe(spawn, bounds, path))
         }
 
         return pipes
@@ -103,6 +104,9 @@ class MdGenerator(
 
         var distance = 0
 
+        val waypoints = ArrayList<Vec3>()
+        waypoints.add(centerOf(initialChasm, maxY))
+
         for (y in maxY downTo 0) {
             pos.set(chasm.x(), y, chasm.z())
 
@@ -112,6 +116,9 @@ class MdGenerator(
                 if (adj != null) {
                     pos2.set(adj.x(), y, adj.z())
                     plan.placeHorizontal(pos, pos2)
+
+                    waypoints.add(centerOf(chasm, y))
+                    waypoints.add(centerOf(adj, y))
 
                     chasm = adj
                     distance = -1
@@ -123,10 +130,16 @@ class MdGenerator(
             distance++
         }
 
+        waypoints.add(centerOf(chasm, 0))
+        waypoints.reverse()
+        plan.path = MdPipePath(waypoints)
+
         clearSpawn(plan, initialChasm, maxY)
 
         return plan
     }
+
+    private fun centerOf(chasm: Vec2i, y: Int) = Vec3(chasm.x() + 1.5, y.toDouble(), chasm.z() + 1.5)
 
     private fun clearSpawn(plan: MdPipePlan, initialChasm: Vec2i, maxY: Int) {
         val pos = BlockPos.MutableBlockPos()

@@ -32,6 +32,7 @@ import work.lclpnet.game.map.GameMap
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks
 import work.lclpnet.kibu.hook.level.BlockModificationHooks
 import java.util.*
+import kotlin.math.roundToInt
 
 class ManiacDiggerInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle), MapBootstrapFunction {
 
@@ -170,7 +171,8 @@ class ManiacDiggerInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHan
         for (player in gameHandle.participants) {
             if (player.uuid == winnerUuid) continue
 
-            val distance = maxOf(0, player.blockY - winHeight - 1)
+            val pipe = pipes[player.uuid] ?: continue
+            val distance = maxOf(0, pipe.path.progressToGoal(player.position()).roundToInt())
             score.setScore(player, distance)
         }
     }
