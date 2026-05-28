@@ -92,6 +92,11 @@ class ManiacDiggerInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHan
     private fun renderGradingDebug() {
         commons().debugController().renderer().ifPresent { renderer ->
             for (pipe in pipes.values) {
+                val waypoints = pipe.path.waypoints
+                for (i in 0 until waypoints.size - 1) {
+                    renderer.line(waypoints[i], waypoints[i + 1], 0.1, Blocks.LIME_CONCRETE.defaultBlockState())
+                }
+
                 val seen = HashSet<BlockPos>()
 
                 for (box in pipe.interior) {

@@ -107,7 +107,7 @@ class MdGenerator(
         var distance = 0
 
         val waypoints = ArrayList<Vec3>()
-        waypoints.add(centerOf(initialChasm, maxY))
+        waypoints.add(centerOf(initialChasm, maxY.toDouble()))
 
         val interior = ArrayList<BlockBox>()
         var spanStartY = maxY - 1
@@ -122,8 +122,8 @@ class MdGenerator(
                     pos2.set(adj.x(), y, adj.z())
                     plan.placeHorizontal(pos, pos2)
 
-                    waypoints.add(centerOf(chasm, y))
-                    waypoints.add(centerOf(adj, y))
+                    waypoints.add(centerOf(chasm, y + 2.0))
+                    waypoints.add(centerOf(adj, y + 2.0))
 
                     interior.add(shaftInterior(chasm, y + 1, spanStartY))
                     interior.add(corridorInterior(chasm, adj, y))
@@ -141,7 +141,7 @@ class MdGenerator(
 
         interior.add(shaftInterior(chasm, 0, spanStartY))
 
-        waypoints.add(centerOf(chasm, 0))
+        waypoints.add(centerOf(chasm, 0.0))
         waypoints.reverse()
         plan.path = MdPipePath(waypoints)
         plan.interior = interior
@@ -151,7 +151,7 @@ class MdGenerator(
         return plan
     }
 
-    private fun centerOf(chasm: Vec2i, y: Int) = Vec3(chasm.x() + 1.5, y.toDouble(), chasm.z() + 1.5)
+    private fun centerOf(chasm: Vec2i, y: Double) = Vec3(chasm.x() + 2.0, y, chasm.z() + 2.0)
 
     private fun shaftInterior(chasm: Vec2i, yBottom: Int, yTop: Int) =
         BlockBox(chasm.x() + 1, yBottom, chasm.z() + 1, chasm.x() + 2, yTop, chasm.z() + 2)
