@@ -29,7 +29,9 @@ class SbManager(
     private val gameHandle: MiniGameHandle,
     private val world: ServerLevel,
     private val random: Random,
-    private val allPlayersCompleted: Runnable
+    private val fastMode: Boolean,
+    private val allPlayersCompleted: Runnable,
+    private val lastPlayerRemaining: Runnable
 ) {
     private val modules: List<SbModule> = Collections.unmodifiableList(modules)
     private val logger = gameHandle.logger
@@ -42,6 +44,7 @@ class SbManager(
     var team: PlayerTeam? = null
     private var successiveCompletion = 0
     private var round = 0
+    private var roundResolved = false
 
     fun eachIsland(action: (SbIsland, ServerPlayer) -> Unit) {
         val playerManager = gameHandle.server.playerList
@@ -187,9 +190,22 @@ class SbManager(
     }
 
     private fun checkOverallCompletion() {
-        if (completed.size < gameHandle.participants.count()) return
-        logger.debug("All players completed their buildings")
-        allPlayersCompleted.run()
+        if (roundResolved) return
+
+        val participantCount = gameHandle.participants.count()
+
+        if (completed.size >= participantCount) {
+            logger.debug("All players completed their buildings")
+            roundResolved = true
+            allPlayersCompleted.run()
+            return
+        }
+
+        if (fastMode && completed.size >= participantCount - 1) {
+            logger.debug("Only one builder remaining, eliminating instantly (fast mode)")
+            roundResolved = true
+            lastPlayerRemaining.run()
+        }
     }
 
     fun getIsland(player: ServerPlayer): SbIsland? = islands[player.uuid]
@@ -210,6 +226,7 @@ class SbManager(
         completed.clear()
         lastEdited.clear()
         edited.clear()
+        roundResolved = false
     }
 
     fun getBuildingDurationTicks(): Int {
