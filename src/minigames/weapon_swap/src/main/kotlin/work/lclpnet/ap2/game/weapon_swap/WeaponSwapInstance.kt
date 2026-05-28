@@ -5,6 +5,8 @@ import net.minecraft.core.component.DataComponents
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.sounds.SoundSource
+import net.minecraft.world.effect.MobEffectInstance
+import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
@@ -24,6 +26,7 @@ import work.lclpnet.game.impl.prot.ProtectionTypes
 import work.lclpnet.kibu.access.entity.ServerPlayerAccess
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks
 import work.lclpnet.kibu.hook.player.PlayerInventoryHooks
+import work.lclpnet.kibu.scheduler.Ticks
 import java.util.*
 import kotlin.random.Random
 import kotlin.random.asJavaRandom
@@ -61,6 +64,7 @@ class WeaponSwapInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(g
 
         useRemainingPlayersDisplay()
         useSmoothDeath()
+        disableTeleportEliminated()
 
         teleportPlayers()
 
@@ -158,6 +162,10 @@ class WeaponSwapInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(g
         }
 
         setHolders(holders)
+
+        for (player in remaining) {
+            player.addEffect(MobEffectInstance(MobEffects.GLOWING, Ticks.seconds(3), 1, false, false, false))
+        }
 
         val delay = (MIN_SWAP_DELAY..MAX_SWAP_DELAY).random()
 
