@@ -32,6 +32,9 @@ import work.lclpnet.game.map.GameMap
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks
 import work.lclpnet.kibu.hook.level.BlockModificationHooks
 import java.util.*
+import kotlin.math.roundToInt
+
+private const val DEBUG_GRADING = false
 
 class ManiacDiggerInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle), MapBootstrapFunction {
 
@@ -80,6 +83,33 @@ class ManiacDiggerInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHan
 
         data.clear()
         gradePlayers(null)
+
+        if (DEBUG_GRADING) {
+            renderGradingDebug()
+        }
+    }
+
+    private fun renderGradingDebug() {
+        commons().debugController().renderer().ifPresent { renderer ->
+            for (pipe in pipes.values) {
+                val waypoints = pipe.path.waypoints
+                for (i in 0 until waypoints.size - 1) {
+                    renderer.line(waypoints[i], waypoints[i + 1], 0.1, Blocks.LIME_CONCRETE.defaultBlockState())
+                }
+
+                val seen = HashSet<BlockPos>()
+
+                for (box in pipe.interior) {
+                    for (pos in box) {
+                        if (!seen.add(pos.immutable())) continue
+
+                        val center = pos.center
+                        val score = pipe.path.progressToGoal(center).roundToInt()
+                        renderer.text(center, Component.literal(score.toString()))
+                    }
+                }
+            }
+        }
     }
 
     override fun go() {
@@ -170,7 +200,8 @@ class ManiacDiggerInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHan
         for (player in gameHandle.participants) {
             if (player.uuid == winnerUuid) continue
 
-            val distance = maxOf(0, player.blockY - winHeight - 1)
+            val pipe = pipes[player.uuid] ?: continue
+            val distance = maxOf(0, pipe.path.progressToGoal(player.position()).roundToInt())
             score.setScore(player, distance)
         }
     }
