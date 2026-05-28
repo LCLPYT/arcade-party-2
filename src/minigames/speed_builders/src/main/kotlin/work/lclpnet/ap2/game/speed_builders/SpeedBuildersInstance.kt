@@ -19,6 +19,7 @@ import net.minecraft.world.scores.Team
 import work.lclpnet.ap2.api.base.Participants
 import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.map.MapBootstrap
+import work.lclpnet.ap2.ext.allPlayers
 import work.lclpnet.ap2.ext.mc.playNotifySound
 import work.lclpnet.ap2.ext.runAfter
 import work.lclpnet.ap2.ext.server
@@ -59,6 +60,7 @@ class SpeedBuildersInstance(gameHandle: MiniGameHandle) : EliminationGameInstanc
     private lateinit var aelosId: UUID
     private var timer: BossBarTimer? = null
     private var timerTransaction = 0
+    private var fastMode = false
 
     init {
         useSurvivalMode()
@@ -72,7 +74,7 @@ class SpeedBuildersInstance(gameHandle: MiniGameHandle) : EliminationGameInstanc
 
             aelosId = setup.getAelosId()
 
-            val fastMode = participants.count() >= FAST_MODE_MIN_PLAYERS
+            fastMode = participants.count() >= FAST_MODE_MIN_PLAYERS
 
             manager = SbManager(
                 islands,
@@ -108,6 +110,12 @@ class SpeedBuildersInstance(gameHandle: MiniGameHandle) : EliminationGameInstanc
             player.abilities.flying = true
             player.onUpdateAbilities()
             scoreboardManager.joinTeam(player, team)
+        }
+
+        if (fastMode) {
+            translate("game.ap2.speed_builders.fast_mode")
+                .formatted(ChatFormatting.GOLD)
+                .sendTo(allPlayers())
         }
 
         gameHandle.rootScheduler.interval(1) { ->
@@ -198,6 +206,10 @@ class SpeedBuildersInstance(gameHandle: MiniGameHandle) : EliminationGameInstanc
             return
         }
 
+        beginJudgement("game.ap2.speed_builders.time_up")
+    }
+
+    private fun beginJudgement(titleKey: String) {
         manager.resetSuccessiveCompletion()
 
         onLeaveBuildingPhase()
@@ -205,13 +217,13 @@ class SpeedBuildersInstance(gameHandle: MiniGameHandle) : EliminationGameInstanc
         val announcer: Announcer = commons().announcer()
 
         announcer.withTimes(5, 50, 0)
-            .announce("game.ap2.speed_builders.time_up", null)
+            .announce(titleKey, null)
 
 
         runAfter(2.seconds) {
             announcer.silent()
                 .withTimes(0, 35, 5)
-                .announce("game.ap2.speed_builders.time_up", "game.ap2.speed_builders.grade")
+                .announce(titleKey, "game.ap2.speed_builders.grade")
         }
 
         runAfter(JUDGE_DURATION) {
@@ -231,10 +243,7 @@ class SpeedBuildersInstance(gameHandle: MiniGameHandle) : EliminationGameInstanc
         timerTransaction++
         timer?.stop()
 
-        manager.resetSuccessiveCompletion()
-        onLeaveBuildingPhase()
-
-        announceJudgement()
+        beginJudgement("game.ap2.speed_builders.round_over")
     }
 
     private fun announceJudgementDone() {
