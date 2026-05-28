@@ -6,6 +6,8 @@
   "game.ap2.speed_builders.prepare_label": "Prepare to build",
   "game.ap2.speed_builders.label": "Copy the structure",
   "game.ap2.speed_builders.time_up": "Time is up!",
+  "game.ap2.speed_builders.round_over": "Round over!",
+  "game.ap2.speed_builders.fast_mode": "Quick mode is active: the last player who remains is eliminated immediately!",
   "game.ap2.speed_builders.grade": "Aelos will now judge...",
   "game.ap2.speed_builders.judgement": "Aelos has judged.",
   "game.ap2.speed_builders.impressed": "Aelos is impressed.",
