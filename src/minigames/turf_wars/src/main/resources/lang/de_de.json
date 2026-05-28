@@ -1,0 +1,6 @@
+{
+  "game.ap2.turf_wars": "Gebietsduell",
+  "game.ap2.turf_wars.description": "Zwei Teams versuchen die ganze Karte einzunehmen. Kills an Gegnern erweitern das eigene Gebiet. Baue deine Festung zwischen den Kämpfen.",
+  "game.ap2.turf_wars.build_time": "Bauzeit",
+  "game.ap2.turf_wars.fight": "Kampfzeit"
+}

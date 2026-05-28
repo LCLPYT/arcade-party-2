@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "id": "ap2-minigame-turf-wars",
+  "version": "${version}",
+  "authors": [
+    "LCLP"
+  ],
+  "license": "AGPL-3.0",
+  "environment": "server",
+  "entrypoints": {
+    "ap2:minigame": [
+      {
+        "adapter": "kotlin",
+        "value": "work.lclpnet.ap2.turf_wars.TurfWarsMiniGame"
+      }
+    ]
+  },
+  "depends": {
+    "ap2-lib": "*",
+    "fabric-language-kotlin": "*"
+  },
+  "custom": {
+    "timestamp": 1779646479,
+    "modmenu": {
+      "parent": "ap2-minigames"
+    }
+  }
+}
