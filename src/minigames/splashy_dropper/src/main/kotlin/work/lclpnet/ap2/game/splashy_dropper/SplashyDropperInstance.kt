@@ -20,7 +20,6 @@ import work.lclpnet.ap2.api.map.MapBootstrap
 import work.lclpnet.ap2.api.map.MapBootstrapFunction
 import work.lclpnet.ap2.api.stats.FFAStatsManager
 import work.lclpnet.ap2.api.stats.Stat
-import work.lclpnet.ap2.ext.inWholeTicks
 import work.lclpnet.ap2.ext.mc.isIn
 import work.lclpnet.ap2.ext.mc.playNotifySound
 import work.lclpnet.ap2.ext.random
@@ -44,8 +43,8 @@ import kotlin.math.roundToInt
 import kotlin.math.sqrt
 import kotlin.time.Duration.Companion.seconds
 
-private val MIN_DURATION_SECONDS = 50.seconds
-private val MAX_DURATION_SECONDS = 75.seconds
+private val MIN_DURATION = 50.seconds
+private val MAX_DURATION = 75.seconds
 
 val HIT_SMALL = Stat("hit_small", 0)
 val HIT_MEDIUM = Stat("hit_medium", 0)
@@ -105,8 +104,8 @@ class SplashyDropperInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameH
         val translations = gameHandle.translations
         val subject = translations.translateText(gameHandle.gameInfo.taskKey)
 
-        val duration = (MIN_DURATION_SECONDS..MAX_DURATION_SECONDS).random()
-        commons().createTimer(subject, duration.inWholeTicks.toInt()).whenDone(winManager::complete)
+        val duration = (MIN_DURATION..MAX_DURATION).random()
+        commons().createTimer(subject, duration.inWholeSeconds.toInt()).whenDone(winManager::complete)
 
         runEveryTick {
             tick()
