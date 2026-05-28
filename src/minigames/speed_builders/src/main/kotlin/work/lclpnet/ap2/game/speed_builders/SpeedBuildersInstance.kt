@@ -42,6 +42,7 @@ import java.util.concurrent.CompletableFuture
 import kotlin.time.Duration.Companion.seconds
 
 private const val LOOK_DURATION_SECONDS = 8
+private const val FAST_MODE_MIN_PLAYERS = 6
 private val JUDGE_DURATION = 5.seconds
 private val JUDGE_ANNOUNCEMENT_DELAY = 3.seconds
 private val DESTROY_DELAY_TICKS = Ticks.seconds(4)
@@ -70,7 +71,20 @@ class SpeedBuildersInstance(gameHandle: MiniGameHandle) : EliminationGameInstanc
             val islands = setup.createIslands(participants, world)
 
             aelosId = setup.getAelosId()
-            manager = SbManager(islands, setup.getModules(), gameHandle, world, random, this::allPlayersCompleted)
+
+            val fastMode = participants.count() >= FAST_MODE_MIN_PLAYERS
+
+            manager = SbManager(
+                islands,
+                setup.getModules(),
+                gameHandle,
+                world,
+                random,
+                fastMode,
+                this::allPlayersCompleted,
+                this::onLastPlayerRemaining
+            )
+
             destruction = SbDestruction(world, random, aelosId)
 
             world.gameRules.set(GameRules.BLOCK_DROPS, true, gameHandle.server)
@@ -211,6 +225,16 @@ class SpeedBuildersInstance(gameHandle: MiniGameHandle) : EliminationGameInstanc
         }
 
         manager.buildingPhase = false
+    }
+
+    private fun onLastPlayerRemaining() {
+        timerTransaction++
+        timer?.stop()
+
+        manager.resetSuccessiveCompletion()
+        onLeaveBuildingPhase()
+
+        announceJudgement()
     }
 
     private fun announceJudgementDone() {
