@@ -34,6 +34,8 @@ import work.lclpnet.kibu.hook.level.BlockModificationHooks
 import java.util.*
 import kotlin.math.roundToInt
 
+private const val DEBUG_GRADING = false
+
 class ManiacDiggerInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle), MapBootstrapFunction {
 
     private val reachedBottom = OrderedDataContainer(PlayerRef::create)
@@ -81,6 +83,28 @@ class ManiacDiggerInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHan
 
         data.clear()
         gradePlayers(null)
+
+        if (DEBUG_GRADING) {
+            renderGradingDebug()
+        }
+    }
+
+    private fun renderGradingDebug() {
+        commons().debugController().renderer().ifPresent { renderer ->
+            for (pipe in pipes.values) {
+                val seen = HashSet<BlockPos>()
+
+                for (box in pipe.interior) {
+                    for (pos in box) {
+                        if (!seen.add(pos.immutable())) continue
+
+                        val center = pos.center
+                        val score = pipe.path.progressToGoal(center).roundToInt()
+                        renderer.text(center, Component.literal(score.toString()))
+                    }
+                }
+            }
+        }
     }
 
     override fun go() {

@@ -7,8 +7,6 @@ import org.junit.jupiter.api.Test
 
 class MdPipePathTest {
 
-    // Mirrors the documented diagram: lower vertical shaft (length 5) -> horizontal
-    // corridor (length 5) -> upper vertical shaft (length 3). Ordered goal -> top.
     private val path = MdPipePath(listOf(
         Vec3(0.5, 0.0, 0.5),  // goal, bottom of lower shaft
         Vec3(0.5, 5.0, 0.5),  // top of lower shaft / start of corridor
