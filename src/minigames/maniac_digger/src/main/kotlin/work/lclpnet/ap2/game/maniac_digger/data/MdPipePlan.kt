@@ -26,6 +26,9 @@ class MdPipePlan(
     private val struct: FabricStructureWrapper
     private val tmpPos = BlockPos.MutableBlockPos()
 
+    var path: MdPipePath = MdPipePath(emptyList())
+    var interior: List<BlockBox> = emptyList()
+
     init {
         val structure = FabricStructureWrapper.createArrayStructure(dimensions.x, dimensions.y, dimensions.z, KibuBlockPos())
         struct = FabricStructureWrapper(structure)

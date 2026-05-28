@@ -78,9 +78,12 @@ class MdGenerator(
             val z = offset.z
 
             val spawn = plan.spawn.add(x.toDouble(), y.toDouble(), z.toDouble())
-            val bounds = plan.bounds.transform(AffineIntMatrix.makeTranslation(x, y, z))
+            val translation = AffineIntMatrix.makeTranslation(x, y, z)
+            val bounds = plan.bounds.transform(translation)
+            val path = plan.path.translate(x.toDouble(), y.toDouble(), z.toDouble())
+            val interior = plan.interior.map { it.transform(translation) }
 
-            pipes.add(MdPipe(spawn, bounds))
+            pipes.add(MdPipe(spawn, bounds, path, interior))
         }
 
         return pipes
@@ -103,6 +106,12 @@ class MdGenerator(
 
         var distance = 0
 
+        val waypoints = ArrayList<Vec3>()
+        waypoints.add(centerOf(initialChasm, maxY.toDouble()))
+
+        val interior = ArrayList<BlockBox>()
+        var spanStartY = maxY - 1
+
         for (y in maxY downTo 0) {
             pos.set(chasm.x(), y, chasm.z())
 
@@ -113,7 +122,14 @@ class MdGenerator(
                     pos2.set(adj.x(), y, adj.z())
                     plan.placeHorizontal(pos, pos2)
 
+                    waypoints.add(centerOf(chasm, y + 2.0))
+                    waypoints.add(centerOf(adj, y + 2.0))
+
+                    interior.add(shaftInterior(chasm, y + 1, spanStartY))
+                    interior.add(corridorInterior(chasm, adj, y))
+
                     chasm = adj
+                    spanStartY = y
                     distance = -1
                     pos.set(pos2)
                 }
@@ -123,10 +139,27 @@ class MdGenerator(
             distance++
         }
 
+        interior.add(shaftInterior(chasm, 0, spanStartY))
+
+        waypoints.add(centerOf(chasm, 0.0))
+        waypoints.reverse()
+        plan.path = MdPipePath(waypoints)
+        plan.interior = interior
+
         clearSpawn(plan, initialChasm, maxY)
 
         return plan
     }
+
+    private fun centerOf(chasm: Vec2i, y: Double) = Vec3(chasm.x() + 2.0, y, chasm.z() + 2.0)
+
+    private fun shaftInterior(chasm: Vec2i, yBottom: Int, yTop: Int) =
+        BlockBox(chasm.x() + 1, yBottom, chasm.z() + 1, chasm.x() + 2, yTop, chasm.z() + 2)
+
+    private fun corridorInterior(a: Vec2i, b: Vec2i, y: Int) = BlockBox(
+        minOf(a.x(), b.x()) + 1, y + 1, minOf(a.z(), b.z()) + 1,
+        maxOf(a.x(), b.x()) + 2, y + 2, maxOf(a.z(), b.z()) + 2
+    )
 
     private fun clearSpawn(plan: MdPipePlan, initialChasm: Vec2i, maxY: Int) {
         val pos = BlockPos.MutableBlockPos()
