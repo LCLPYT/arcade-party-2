@@ -20,7 +20,7 @@
     "fabric-language-kotlin": "*"
   },
   "custom": {
-    "timestamp": 1779646479,
+    "timestamp": 1779982561,
     "modmenu": {
       "parent": "ap2-minigames"
     }
