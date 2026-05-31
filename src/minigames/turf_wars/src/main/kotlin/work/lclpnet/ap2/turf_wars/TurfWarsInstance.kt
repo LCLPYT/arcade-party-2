@@ -403,6 +403,7 @@ class TurfWarsInstance(gameHandle: MiniGameHandle) : TeamEliminationGameInstance
         data.pitch = teamInfo.spawn.pitch
 
         arrowTasks[player.uuid]?.cancel()
+        arrowTasks.remove(player.uuid)
         giveItems(player)
     }
 
