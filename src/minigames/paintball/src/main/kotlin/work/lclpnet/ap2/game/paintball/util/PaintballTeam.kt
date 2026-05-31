@@ -5,7 +5,6 @@ import net.minecraft.world.phys.Vec3
 import org.json.JSONObject
 import work.lclpnet.ap2.api.base.Participants
 import work.lclpnet.ap2.api.game.team.DyeTeamKey
-import work.lclpnet.ap2.api.game.team.TeamKey
 import work.lclpnet.ap2.api.game.team.TeamKeyable
 import work.lclpnet.ap2.api.game.team.TeamManager
 import work.lclpnet.ap2.impl.map.MapUtil
@@ -20,7 +19,7 @@ data class PaintballTeam(
     private val teamKey: DyeTeamKey
 ) : TeamKeyable {
 
-    override fun key(): TeamKey = teamKey
+    override fun key(): DyeTeamKey = teamKey
 
     fun participants(teamManager: TeamManager, participants: Participants): Set<ServerPlayer> =
         teamManager.getTeam(this)
