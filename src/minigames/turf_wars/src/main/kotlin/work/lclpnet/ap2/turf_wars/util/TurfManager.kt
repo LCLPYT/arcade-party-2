@@ -10,6 +10,7 @@ import work.lclpnet.ap2.ext.mc.setBlocks
 import work.lclpnet.ap2.game.team.DyeBlockManager
 import work.lclpnet.ap2.game.team.getStainedGlassBlock
 import work.lclpnet.ap2.impl.util.debug.DebugController
+import work.lclpnet.ap2.turf_wars.DEBUG_TURF
 import work.lclpnet.gaco.ds.BlockBox
 
 fun validateTurf(turfs: List<BlockBox>) {
@@ -109,6 +110,8 @@ class TurfManager(
     }
 
     fun updateVisualizer() {
+        if (!DEBUG_TURF) return
+        
         debugController.exclusive("turf") { controller ->
             teams.forEachIndexed { index, teamKey ->
                 val box = turfs[index].bounds ?: return@forEachIndexed

@@ -17,6 +17,7 @@ import net.minecraft.world.item.Items
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.gamerules.GameRules
+import net.minecraft.world.phys.Vec3
 import net.minecraft.world.scores.Team.CollisionRule
 import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.game.team.DyeTeamKey
@@ -30,6 +31,7 @@ import work.lclpnet.ap2.turf_wars.Phase.*
 import work.lclpnet.ap2.turf_wars.util.TurfManager
 import work.lclpnet.ap2.turf_wars.util.TurfWarsTeamInfo
 import work.lclpnet.game.impl.prot.ProtectionTypes
+import work.lclpnet.kibu.access.VelocityModifier
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks
 import work.lclpnet.kibu.hook.entity.ProjectileHooks
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks
@@ -109,9 +111,7 @@ class TurfWarsInstance(gameHandle: MiniGameHandle) : TeamEliminationGameInstance
             world
         )
 
-        if (DEBUG_TURF) {
-            turfManager.updateVisualizer()
-        }
+        turfManager.updateVisualizer()
 
         for (info in teams) {
             val team = teamManager.getTeam(info).orElse(null) ?: continue
@@ -191,6 +191,12 @@ class TurfWarsInstance(gameHandle: MiniGameHandle) : TeamEliminationGameInstance
                 }
             }
         }
+
+        runEveryTick {
+            for (player in players()) {
+                repel(player)
+            }
+        }
     }
 
     private fun onKilled(victim: ServerPlayer, killer: ServerPlayer) {
@@ -206,6 +212,7 @@ class TurfWarsInstance(gameHandle: MiniGameHandle) : TeamEliminationGameInstance
         val victimTurf = turfManager.turfOf(victimTeam.key()) ?: return
 
         if (victimTurf.bounds == null) {
+            changePhase(Nothing)
             eliminate(victimTeam)
             return
         }
@@ -222,6 +229,29 @@ class TurfWarsInstance(gameHandle: MiniGameHandle) : TeamEliminationGameInstance
         }
 
         scheduleNewArrow(player)
+    }
+
+    fun repel(player: ServerPlayer) {
+        val ownTeam = teamManager.getTeam(player).orElse(null) ?: return
+        val ownTurf = turfManager.turfOf(ownTeam.key()) ?: return
+        val ownTurfBounds = ownTurf.bounds ?: return
+
+        for (team in teamManager.teams) {
+            if (team == ownTeam) continue
+
+            val turf = turfManager.turfOf(team.key()) ?: continue
+            val bounds = turf.bounds ?: continue
+
+            if (!bounds.contains(player.boundingBox.contract(1e-9, 0.0, 1e-9))) continue
+
+            // player intersects with opponent turf
+            val repelDir = Vec3(ownTurfBounds.min().subtract(bounds.min()))
+                .normalize()
+                .add(0.0, 0.5, 0.0)
+
+            VelocityModifier.setVelocity(player, repelDir)
+            player.playNotifySound(SoundEvents.ALLAY_HURT, SoundSource.PLAYERS, 0.5f, 2f)
+        }
     }
 
     private fun onUseItem(player: Player, hand: InteractionHand): InteractionResult {

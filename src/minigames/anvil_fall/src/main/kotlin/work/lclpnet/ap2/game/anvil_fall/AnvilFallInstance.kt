@@ -20,6 +20,7 @@ import net.minecraft.world.phys.Vec3
 import net.minecraft.world.scores.Team
 import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.ext.mc.isOf
+import work.lclpnet.ap2.ext.mc.playNotifySound
 import work.lclpnet.ap2.ext.runEveryTick
 import work.lclpnet.ap2.impl.game.EliminationGameInstance
 import work.lclpnet.ap2.impl.map.MapUtil
@@ -31,7 +32,6 @@ import work.lclpnet.gaco.ds.BlockBox
 import work.lclpnet.game.impl.prot.ProtectionTypes
 import work.lclpnet.kibu.access.VelocityModifier
 import work.lclpnet.kibu.access.entity.FallingBlockAccess
-import work.lclpnet.kibu.access.entity.ServerPlayerAccess
 import work.lclpnet.kibu.hook.player.PlayerMoveCallback
 import work.lclpnet.kibu.scheduler.Ticks
 import work.lclpnet.kibu.translate.bossbar.TranslatedBossBar
@@ -212,6 +212,6 @@ class AnvilFallInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(ga
 
         val vec = Vec3(center.x() - to.x(), 0.5, center.z() - to.z())
         VelocityModifier.setVelocity(player, vec.normalize().scale(0.5))
-        ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.ALLAY_HURT, SoundSource.PLAYERS, 0.5f, 2f)
+        player.playNotifySound(SoundEvents.ALLAY_HURT, SoundSource.PLAYERS, 0.5f, 2f)
     }
 }
