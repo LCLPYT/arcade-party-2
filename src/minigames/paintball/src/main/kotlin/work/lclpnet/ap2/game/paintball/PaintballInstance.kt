@@ -170,7 +170,7 @@ class PaintballInstance(gameHandle: MiniGameHandle) : TeamGameInstance(gameHandl
 
                 if (!state.isOf(paintable.blockFor(color))) continue
 
-                paintManager.replace(pos, state, paintable, team.key() as DyeTeamKey)
+                paintManager.replace(pos, state, paintable, team.key())
             }
         }
     }

@@ -42,7 +42,7 @@ import kotlin.time.Duration.Companion.seconds
 
 enum class Phase { Nothing, Build, Fight }
 
-const val DEBUG_TURF = true
+const val DEBUG_TURF = false
 const val INITIAL_BUILDING_BLOCKS = 32
 const val MAX_BUILDING_BLOCKS = 50
 const val MAX_ARROWS = 2
@@ -66,7 +66,7 @@ class TurfWarsInstance(gameHandle: MiniGameHandle) : TeamEliminationGameInstance
 
     fun setupTeams(): List<TurfWarsTeamInfo> {
         val team1Key = map.properties.optString("team1Color")?.let { DyeTeamKey.byId(it) } ?: DyeTeamKey.RED
-        val team2Key = map.properties.optString("team2Color")?.let { DyeTeamKey.byId(it) } ?: DyeTeamKey.BLUE
+        val team2Key = map.properties.optString("team2Color")?.let { DyeTeamKey.byId(it) } ?: DyeTeamKey.LIGHT_BLUE
 
         require(team1Key != team2Key) { "Team colors cannot be the same" }
 
@@ -105,7 +105,8 @@ class TurfWarsInstance(gameHandle: MiniGameHandle) : TeamEliminationGameInstance
         turfManager = TurfManager(
             teams.map { it.initialTurf },
             teams.map { it.key() },
-            commons().debugController()
+            commons().debugController(),
+            world
         )
 
         if (DEBUG_TURF) {
@@ -190,6 +191,26 @@ class TurfWarsInstance(gameHandle: MiniGameHandle) : TeamEliminationGameInstance
                 }
             }
         }
+    }
+
+    private fun onKilled(victim: ServerPlayer, killer: ServerPlayer) {
+        val victimTeam = teamManager.getTeam(victim).orElse(null) ?: return
+        val killerTeam = teamManager.getTeam(killer).orElse(null) ?: return
+
+        val key = killerTeam.key()
+
+        if (key !is DyeTeamKey) return
+
+        turfManager.growTurf(key)
+
+        val victimTurf = turfManager.turfOf(victimTeam.key()) ?: return
+
+        if (victimTurf.bounds == null) {
+            eliminate(victimTeam)
+            return
+        }
+
+        giveArrow(killer)
     }
 
     private fun giveItems(player: ServerPlayer) {
@@ -293,6 +314,8 @@ class TurfWarsInstance(gameHandle: MiniGameHandle) : TeamEliminationGameInstance
                 victim.hurtServer(world, source, victim.health)
                 return false
             }
+
+            onKilled(victim, attacker)
 
             return true
         }
