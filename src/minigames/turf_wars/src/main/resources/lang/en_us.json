@@ -1,6 +1,8 @@
 {
   "game.ap2.turf_wars": "Turf Wars",
   "game.ap2.turf_wars.description": "Two teams try to claim the whole map with their turf. Killing opponents expands a teams turf. Build a fort on your turf between fights. ",
-  "game.ap2.turf_wars.build_time": "Building Time",
-  "game.ap2.turf_wars.fight": "Combat Time"
+  "game.ap2.turf_wars.phase.build": "Building Time",
+  "game.ap2.turf_wars.phase.build.hint": "The build time hase begun. Fortify your turf against arrows! Blocks on lost turf will be deleted.",
+  "game.ap2.turf_wars.phase.fight": "Combat Time",
+  "game.ap2.turf_wars.phase.fight.title": "Fight!"
 }
