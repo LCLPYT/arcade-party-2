@@ -65,22 +65,27 @@ class TurfManager(
         return turfs[index]
     }
 
-    fun growTurf(team: DyeTeamKey) {
+    fun growTurf(team: DyeTeamKey, blocks: Int = 1) {
         val index = teamIndex(team) ?: return
         val oppositeIndex = (index + 1) % 2
 
         val ownTurf = turfs[index]
         val opponentTurf = turfs[oppositeIndex]
 
-        val ownBounds = ownTurf.bounds
-        val opponentBounds = opponentTurf.bounds
-
-        if (ownBounds == null || opponentBounds == null) return  // some turf is depleted, game over
-
         val direction = if (index == 0) team1Direction else team1Direction.opposite
 
-        ownTurf.bounds = ownBounds.grow(direction)
-        opponentTurf.bounds = opponentBounds.shrink(direction.opposite)
+        var changed = false
+
+        repeat(blocks) {
+            val ownBounds = ownTurf.bounds ?: return@repeat
+            val opponentBounds = opponentTurf.bounds ?: return@repeat
+
+            ownTurf.bounds = ownBounds.grow(direction)
+            opponentTurf.bounds = opponentBounds.shrink(direction.opposite)
+            changed = true
+        }
+
+        if (!changed) return
 
         removeOutsideBuiltBlocks(opponentTurf)
         replaceDyeBlocks(ownTurf, team)

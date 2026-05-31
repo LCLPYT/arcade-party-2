@@ -59,6 +59,8 @@ class TurfWarsInstance(gameHandle: MiniGameHandle) : TeamEliminationGameInstance
     lateinit var turfManager: TurfManager
     lateinit var teamInfos: Map<DyeTeamKey, TurfWarsTeamInfo>
     var phase: Phase = Nothing
+    var blocksPerKill: Int = 1
+    val turfAbsenceSeconds = mutableMapOf<DyeTeamKey, Int>()
 
     init {
         useOldCombat()
@@ -198,6 +200,56 @@ class TurfWarsInstance(gameHandle: MiniGameHandle) : TeamEliminationGameInstance
                 repel(player)
             }
         }
+
+        if (players().count() == 2) {
+            blocksPerKill = 2
+            runAfter(90.seconds) { blocksPerKill = 3 }
+        } else {
+            blocksPerKill = 1
+            runAfter(90.seconds) { blocksPerKill = 2 }
+            runAfter(150.seconds) { blocksPerKill = 3 }
+        }
+
+        runEvery(1.seconds) {
+            checkTurfCamping()
+        }
+    }
+
+    private fun checkTurfCamping() {
+        if (phase != Fight) {
+            turfAbsenceSeconds.clear()
+            return
+        }
+
+        for (team in teamManager.teams.toList()) {
+            val key = team.key()
+
+            if (key !is DyeTeamKey) continue
+
+            val bounds = turfManager.turfOf(key)?.bounds ?: continue
+            val base = teamInfos[key]?.baseBounds
+
+            val present = team.players.any { player ->
+                isParticipating(player)
+                        && bounds.contains(player.position())
+                        && (base == null || !base.contains(player.position()))
+            }
+
+            if (present) {
+                turfAbsenceSeconds[key] = 0
+                continue
+            }
+
+            val seconds = (turfAbsenceSeconds[key] ?: 0) + 1
+            turfAbsenceSeconds[key] = seconds
+
+            if (seconds >= 20) {
+                turfAbsenceSeconds.remove(key)
+                changePhase(Nothing)
+                eliminate(team)
+                return
+            }
+        }
     }
 
     private fun onKilled(victim: ServerPlayer, killer: ServerPlayer) {
@@ -208,7 +260,7 @@ class TurfWarsInstance(gameHandle: MiniGameHandle) : TeamEliminationGameInstance
 
         if (key !is DyeTeamKey) return
 
-        turfManager.growTurf(key)
+        turfManager.growTurf(key, blocksPerKill)
 
         val victimTurf = turfManager.turfOf(victimTeam.key()) ?: return
 
