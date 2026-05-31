@@ -4,5 +4,7 @@
   "game.ap2.turf_wars.phase.build": "Bauzeit",
   "game.ap2.turf_wars.phase.build.hint": "Die Bauzeit hat begonnen. Bebaue dein Gebiet zur Verteidigung gegen Pfeile. Gesetzte Blöcke auf verlorenem Gebiet gehen verloren.",
   "game.ap2.turf_wars.fight": "Kampfzeit",
-  "game.ap2.turf_wars.phase.fight.title": "Kämpfe!"
+  "game.ap2.turf_wars.phase.fight.title": "Kämpfe!",
+  "game.ap2.turf_wars.speed_up": "Tempo erhöht! Kills erweitern dein Gebiet jetzt um %s Blöcke.",
+  "game.ap2.turf_wars.camp_warning": "Zurück auf dein Gebiet! Dein Team wird in %s Sekunden eliminiert."
 }
