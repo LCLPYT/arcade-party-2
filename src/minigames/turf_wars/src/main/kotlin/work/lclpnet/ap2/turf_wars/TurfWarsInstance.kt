@@ -40,6 +40,7 @@ import work.lclpnet.kibu.hook.player.PlayerSpawnLocationCallback
 import work.lclpnet.kibu.scheduler.api.TaskHandle
 import work.lclpnet.kibu.title.Title
 import java.util.*
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
@@ -320,21 +321,35 @@ class TurfWarsInstance(gameHandle: MiniGameHandle) : TeamEliminationGameInstance
     }
 
     private fun scheduleNewArrow(player: ServerPlayer) {
-        if (player.inventory.countItem(Items.ARROW) >= MAX_ARROWS) return
+        if (player.inventory.countItem(Items.ARROW) >= maxArrows(player)) return
 
         if (arrowTasks[player.uuid] != null) return
-        
-        arrowTasks[player.uuid] = runAfter(ARROW_GAIN_DELAY) {
+
+        arrowTasks[player.uuid] = runAfter(arrowGainDelay(player)) {
             giveArrow(player)
             arrowTasks.remove(player.uuid)
             scheduleNewArrow(player)
         }
     }
 
+    private fun isOutnumbered(player: ServerPlayer): Boolean {
+        val team = teamManager.getTeam(player).orElse(null) ?: return false
+        val ownSize = team.playerCount
+        val maxSize = teamManager.teams.maxOfOrNull { it.playerCount } ?: return false
+
+        return ownSize < maxSize
+    }
+
+    private fun maxArrows(player: ServerPlayer): Int =
+        if (isOutnumbered(player)) 3 else MAX_ARROWS
+
+    private fun arrowGainDelay(player: ServerPlayer): Duration =
+        if (isOutnumbered(player)) 2.seconds else ARROW_GAIN_DELAY
+
     fun giveArrow(player: ServerPlayer) {
         val count = player.inventory.countItem(Items.ARROW)
 
-        if (count >= MAX_ARROWS) return
+        if (count >= maxArrows(player)) return
 
         val stack = ItemStack(Items.ARROW)
 
