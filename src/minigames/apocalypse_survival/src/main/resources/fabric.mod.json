@@ -15,6 +15,7 @@
       }
     ]
   },
+  "accessWidener": "ap2-apocalypse-survival.accesswidener",
   "depends": {
     "ap2-lib": "*",
     "fabric-language-kotlin": "*"
