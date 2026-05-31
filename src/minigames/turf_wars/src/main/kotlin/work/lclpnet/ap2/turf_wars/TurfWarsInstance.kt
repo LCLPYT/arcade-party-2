@@ -27,6 +27,7 @@ import work.lclpnet.ap2.ext.mc.*
 import work.lclpnet.ap2.game.team.getWoolBlock
 import work.lclpnet.ap2.impl.game.TeamEliminationGameInstance
 import work.lclpnet.ap2.impl.map.schema.SchemaHolder
+import work.lclpnet.ap2.impl.util.math.MathUtil
 import work.lclpnet.ap2.turf_wars.Phase.*
 import work.lclpnet.ap2.turf_wars.util.TurfManager
 import work.lclpnet.ap2.turf_wars.util.TurfWarsTeamInfo
@@ -242,7 +243,7 @@ class TurfWarsInstance(gameHandle: MiniGameHandle) : TeamEliminationGameInstance
             val turf = turfManager.turfOf(team.key()) ?: continue
             val bounds = turf.bounds ?: continue
 
-            if (!bounds.contains(player.boundingBox.contract(1e-9, 0.0, 1e-9))) continue
+            if (MathUtil.corners(player.boundingBox).none { bounds.contains(it) }) continue
 
             // player intersects with opponent turf
             val repelDir = Vec3(ownTurfBounds.min().subtract(bounds.min()))
