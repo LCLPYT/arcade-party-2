@@ -509,18 +509,19 @@ class TurfWarsInstance(gameHandle: MiniGameHandle) : TeamEliminationGameInstance
             duration = duration
         ).whenDone { changePhase(nextPhase) }
 
+        translate(when (phase) {
+            Build -> "game.ap2.turf_wars.phase.build"
+            Fight -> "game.ap2.turf_wars.phase.fight.title"
+        }).formatted(ChatFormatting.GREEN).acceptEach(players()) { player, text ->
+            Title.get(player).title(Component.empty(), text)
+        }
+
         when (phase) {
             Build -> {
                 playSound(SoundEvents.NOTE_BLOCK_PLING.value(), SoundSource.PLAYERS, 0.5f, 0.5f)
             }
             Fight -> {
                 playSound(SoundEvents.NOTE_BLOCK_PLING.value(), SoundSource.PLAYERS, 0.5f, 2f)
-
-                translate("game.ap2.turf_wars.phase.fight.title")
-                    .formatted(ChatFormatting.GREEN)
-                    .acceptEach(players()) { player, text ->
-                        Title.get(player).title(Component.empty(), text)
-                    }
             }
         }
     }
