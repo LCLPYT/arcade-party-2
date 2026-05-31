@@ -11,16 +11,19 @@ import net.minecraft.world.InteractionResult
 import net.minecraft.world.damagesource.DamageSource
 import net.minecraft.world.damagesource.DamageTypes
 import net.minecraft.world.entity.player.Player
+import net.minecraft.world.entity.projectile.Projectile
 import net.minecraft.world.entity.projectile.arrow.Arrow
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.gamerules.GameRules
+import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.scores.Team.CollisionRule
 import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.game.team.DyeTeamKey
+import work.lclpnet.ap2.api.game.team.Team
 import work.lclpnet.ap2.core.hook.ProjectileShootCallback
 import work.lclpnet.ap2.ext.*
 import work.lclpnet.ap2.ext.mc.*
@@ -50,10 +53,14 @@ const val DEBUG_TURF = false
 const val INITIAL_BUILDING_BLOCKS = 32
 const val MAX_BUILDING_BLOCKS = 50
 const val MAX_ARROWS = 2
+const val MAX_ARROWS_DEFICIT = 3
 const val CAMP_ELIMINATION_SECONDS = 20
 const val CAMP_WARNING_SECONDS = 10
 val BUILDING_BLOCK_GAIN_PERIOD = 5.seconds
 val ARROW_GAIN_DELAY = 2.seconds + 10.ticks
+val ARROW_GAIN_DEFICIT_DELAY = 2.seconds
+val TURF_INCREASE_PERIOD = 30.seconds
+val TURF_INITIAL_INCREASE_DELAY = 45.seconds
 
 class TurfWarsInstance(gameHandle: MiniGameHandle) : TeamEliminationGameInstance(gameHandle) {
 
@@ -168,8 +175,8 @@ class TurfWarsInstance(gameHandle: MiniGameHandle) : TeamEliminationGameInstance
             }
         }
 
-        ProjectileHooks.HIT_BLOCK.registerWith(hooks) { projectile, _ ->
-            projectile.discard()
+        ProjectileHooks.HIT_BLOCK.registerWith(hooks) { projectile, hitResult ->
+            onProjectileHitBlock(projectile, hitResult)
         }
 
         PlayerInteractionHooks.USE_ITEM.registerWith(hooks) { player, _, hand ->
@@ -184,16 +191,14 @@ class TurfWarsInstance(gameHandle: MiniGameHandle) : TeamEliminationGameInstance
             world.setBlocks(gate, Blocks.AIR)
         }
 
-        runAfter(5.seconds) {
-            runEvery(BUILDING_BLOCK_GAIN_PERIOD) {
-                for (player in players()) {
-                    val block = buildingBlock(player) ?: continue
+        deferEvery(BUILDING_BLOCK_GAIN_PERIOD) {
+            for (player in players()) {
+                val block = buildingBlock(player) ?: continue
 
-                    val total = player.inventory.countItem(block.asItem())
+                val total = player.inventory.countItem(block.asItem())
 
-                    if (total < MAX_BUILDING_BLOCKS) {
-                        player.inventory.add(ItemStack(block))
-                    }
+                if (total < MAX_BUILDING_BLOCKS) {
+                    player.inventory.add(ItemStack(block))
                 }
             }
         }
@@ -204,18 +209,40 @@ class TurfWarsInstance(gameHandle: MiniGameHandle) : TeamEliminationGameInstance
             }
         }
 
-        if (players().count() == 2) {
-            blocksPerKill = 2
-            runAfter(90.seconds) { advanceBlocksPerKill(3) }
-        } else {
-            blocksPerKill = 1
-            runAfter(90.seconds) { advanceBlocksPerKill(2) }
-            runAfter(150.seconds) { advanceBlocksPerKill(3) }
+        blocksPerKill = if (players().count() == 2) 2 else 1
+
+        deferEvery(period = TURF_INCREASE_PERIOD, after = TURF_INITIAL_INCREASE_DELAY) {
+            advanceBlocksPerKill(blocksPerKill + 1)
         }
 
-        runEvery(1.seconds) {
+        deferEvery(1.seconds) {
             checkTurfCamping()
         }
+    }
+
+    private fun onProjectileHitBlock(projectile: Projectile, hitResult: BlockHitResult) {
+        projectile.discard()
+
+        if (projectile !is Arrow) return
+
+        val player = projectile.owner
+
+        if (player !is ServerPlayer) return
+
+        val opponentTeam = opponentTeam(player) ?: return
+        val turf = turfManager.turfOf(opponentTeam.key()) ?: return
+
+        val pos = hitResult.blockPos
+
+        if (!turf.builtBlocks.contains(pos)) return
+
+        world.destroyBlock(pos, false)
+    }
+
+    private fun opponentTeam(player: ServerPlayer): Team? {
+        val ownTeam = teamManager.getTeam(player).orElse(null) ?: return null
+
+        return teamManager.teams.firstOrNull { it != ownTeam }
     }
 
     private fun advanceBlocksPerKill(blocks: Int) {
@@ -361,10 +388,10 @@ class TurfWarsInstance(gameHandle: MiniGameHandle) : TeamEliminationGameInstance
     }
 
     private fun maxArrows(player: ServerPlayer): Int =
-        if (isOutnumbered(player)) 3 else MAX_ARROWS
+        if (isOutnumbered(player)) MAX_ARROWS_DEFICIT else MAX_ARROWS
 
     private fun arrowGainDelay(player: ServerPlayer): Duration =
-        if (isOutnumbered(player)) 2.seconds else ARROW_GAIN_DELAY
+        if (isOutnumbered(player)) ARROW_GAIN_DEFICIT_DELAY else ARROW_GAIN_DELAY
 
     fun giveArrow(player: ServerPlayer) {
         val count = player.inventory.countItem(Items.ARROW)
@@ -413,11 +440,6 @@ class TurfWarsInstance(gameHandle: MiniGameHandle) : TeamEliminationGameInstance
         val attacker = source.entity
 
         if (attacker !is ServerPlayer || teamManager.areTeamMates(player, attacker)) return false
-
-        val team = teamManager.getTeam(player).orElse(null) ?: return false
-        val info = teamInfos[team.key()] ?: return false
-
-        if (info.baseBounds.contains(player.position())) return false
 
         return source.isOf(DamageTypes.ARROW)
     }
