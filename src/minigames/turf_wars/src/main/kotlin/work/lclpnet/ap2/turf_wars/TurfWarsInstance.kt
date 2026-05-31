@@ -50,6 +50,8 @@ const val DEBUG_TURF = false
 const val INITIAL_BUILDING_BLOCKS = 32
 const val MAX_BUILDING_BLOCKS = 50
 const val MAX_ARROWS = 2
+const val CAMP_ELIMINATION_SECONDS = 20
+const val CAMP_WARNING_SECONDS = 10
 val BUILDING_BLOCK_GAIN_PERIOD = 5.seconds
 val ARROW_GAIN_DELAY = 2.seconds + 10.ticks
 
@@ -204,16 +206,26 @@ class TurfWarsInstance(gameHandle: MiniGameHandle) : TeamEliminationGameInstance
 
         if (players().count() == 2) {
             blocksPerKill = 2
-            runAfter(90.seconds) { blocksPerKill = 3 }
+            runAfter(90.seconds) { advanceBlocksPerKill(3) }
         } else {
             blocksPerKill = 1
-            runAfter(90.seconds) { blocksPerKill = 2 }
-            runAfter(150.seconds) { blocksPerKill = 3 }
+            runAfter(90.seconds) { advanceBlocksPerKill(2) }
+            runAfter(150.seconds) { advanceBlocksPerKill(3) }
         }
 
         runEvery(1.seconds) {
             checkTurfCamping()
         }
+    }
+
+    private fun advanceBlocksPerKill(blocks: Int) {
+        blocksPerKill = blocks
+
+        translate("game.ap2.turf_wars.speed_up", blocks)
+            .formatted(ChatFormatting.GOLD)
+            .sendTo(players())
+
+        playSound(SoundEvents.NOTE_BLOCK_PLING.value(), SoundSource.PLAYERS, 0.5f, 1.5f)
     }
 
     private fun checkTurfCamping() {
@@ -244,11 +256,19 @@ class TurfWarsInstance(gameHandle: MiniGameHandle) : TeamEliminationGameInstance
             val seconds = (turfAbsenceSeconds[key] ?: 0) + 1
             turfAbsenceSeconds[key] = seconds
 
-            if (seconds >= 20) {
+            if (seconds >= CAMP_ELIMINATION_SECONDS) {
                 turfAbsenceSeconds.remove(key)
                 changePhase(Nothing)
                 eliminate(team)
                 return
+            }
+
+            val remaining = CAMP_ELIMINATION_SECONDS - seconds
+
+            if (remaining == CAMP_WARNING_SECONDS) {
+                translate("game.ap2.turf_wars.camp_warning", remaining)
+                    .formatted(ChatFormatting.RED)
+                    .sendTo(team.players)
             }
         }
     }
