@@ -7,7 +7,7 @@ metafile = true
 
 [[files]]
 file = "mods/combat-control.pw.toml"
-hash = "41338896fb7e02615556221161f67d8e15a28fe11761fb952f31027068d2a338"
+hash = "068e8ccd7c907e7c1a1426592d298da8496449b67a8d639600fec31e9887c2f2"
 metafile = true
 
 [[files]]
