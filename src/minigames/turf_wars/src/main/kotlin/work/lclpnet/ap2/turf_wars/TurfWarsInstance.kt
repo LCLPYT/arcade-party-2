@@ -65,6 +65,7 @@ const val MAX_ARROWS = 2
 const val MAX_ARROWS_DEFICIT = 3
 const val CAMP_ELIMINATION_SECONDS = 20
 const val CAMP_WARNING_SECONDS = 10
+const val STUCK_REPEL_TICKS = 20
 val BUILDING_BLOCK_GAIN_PERIOD = 5.seconds
 val ARROW_GAIN_DELAY = 2.seconds + 10.ticks
 val ARROW_GAIN_DEFICIT_DELAY = 2.seconds
@@ -87,6 +88,7 @@ class TurfWarsInstance(gameHandle: MiniGameHandle) : TeamEliminationGameInstance
     var phase: Phase = Nothing
     var blocksPerKill: Int = 1
     val turfAbsenceSeconds = mutableMapOf<DyeTeamKey, Int>()
+    val repelTicks = mutableMapOf<UUID, Int>()
 
     init {
         useOldCombat()
@@ -231,7 +233,19 @@ class TurfWarsInstance(gameHandle: MiniGameHandle) : TeamEliminationGameInstance
 
         runEveryTick {
             for (player in players()) {
-                repel(player)
+                if (!repel(player)) {
+                    repelTicks.remove(player.uuid)
+                    continue
+                }
+
+                val ticks = (repelTicks[player.uuid] ?: 0) + 1
+
+                if (ticks >= STUCK_REPEL_TICKS) {
+                    repelTicks.remove(player.uuid)
+                    teamInfoOf(player)?.let { player.teleport(it.spawn) }
+                } else {
+                    repelTicks[player.uuid] = ticks
+                }
             }
         }
 
@@ -385,12 +399,14 @@ class TurfWarsInstance(gameHandle: MiniGameHandle) : TeamEliminationGameInstance
         player.setItemSlot(EquipmentSlot.FEET, getLeatherArmor(Items.LEATHER_BOOTS, color).unbreakable())
     }
 
-    fun repel(player: ServerPlayer) {
-        val ownTeam = teamManager.getTeam(player).orElse(null) ?: return
-        val ownTurf = turfManager.turfOf(ownTeam.key()) ?: return
-        val ownTurfBounds = ownTurf.bounds ?: return
+    fun repel(player: ServerPlayer): Boolean {
+        val ownTeam = teamManager.getTeam(player).orElse(null) ?: return false
+        val ownTurf = turfManager.turfOf(ownTeam.key()) ?: return false
+        val ownTurfBounds = ownTurf.bounds ?: return false
 
         val mayEnterTurf = mayEnterEnemyTurf(player) && phase == Fight
+
+        var repelled = false
 
         for (team in teamManager.teams) {
             if (team == ownTeam) continue
@@ -400,6 +416,7 @@ class TurfWarsInstance(gameHandle: MiniGameHandle) : TeamEliminationGameInstance
 
             if (baseBounds != null && intersectsPlayer(player, baseBounds)) {
                 pushOut(player, ownTurfBounds, baseBounds)
+                repelled = true
                 continue
             }
 
@@ -411,7 +428,10 @@ class TurfWarsInstance(gameHandle: MiniGameHandle) : TeamEliminationGameInstance
             if (!intersectsPlayer(player, bounds)) continue
 
             pushOut(player, ownTurfBounds, bounds)
+            repelled = true
         }
+
+        return repelled
     }
 
     private fun intersectsPlayer(player: ServerPlayer, box: BlockBox): Boolean =
