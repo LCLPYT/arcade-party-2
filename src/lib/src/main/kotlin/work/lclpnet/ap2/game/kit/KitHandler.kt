@@ -193,6 +193,11 @@ class KitHandler(
         selectKitChanger()
     }
 
+    fun reequip(player: ServerPlayer) {
+        manager.getKit(player).unequip(player, manager.options)
+        manager.getKit(player).equip(player, manager.options)
+    }
+
     companion object {
 
         @JvmStatic

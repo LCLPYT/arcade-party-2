@@ -8,6 +8,7 @@ import net.minecraft.sounds.SoundEvents
 import net.minecraft.sounds.SoundSource
 import net.minecraft.world.damagesource.DamageSource
 import net.minecraft.world.damagesource.DamageTypes
+import net.minecraft.world.entity.EquipmentSlot
 import net.minecraft.world.entity.projectile.Projectile
 import net.minecraft.world.entity.projectile.arrow.Arrow
 import net.minecraft.world.item.ItemStack
@@ -30,6 +31,7 @@ import work.lclpnet.ap2.game.kit.hasKitEquipped
 import work.lclpnet.ap2.game.team.getWoolBlock
 import work.lclpnet.ap2.impl.game.TeamEliminationGameInstance
 import work.lclpnet.ap2.impl.map.schema.SchemaHolder
+import work.lclpnet.ap2.impl.util.ItemHelper.getLeatherArmor
 import work.lclpnet.ap2.impl.util.TimeHelper
 import work.lclpnet.ap2.impl.util.math.MathUtil
 import work.lclpnet.ap2.turf_wars.Phase.*
@@ -356,17 +358,28 @@ class TurfWarsInstance(gameHandle: MiniGameHandle) : TeamEliminationGameInstance
     }
 
     private fun giveItems(player: ServerPlayer) {
-        player.inventory.setItem(0, ItemStack(Items.BOW).unbreakable())
+        kitHandler.reequip(player)
+
         giveArrow(player)
 
         buildingBlock(player)?.let { block ->
-            player.inventory.setItem(1, ItemStack(block, INITIAL_BUILDING_BLOCKS))
+            player.inventory.add(ItemStack(block, INITIAL_BUILDING_BLOCKS))
         }
 
         scheduleNewArrow(player)
+
+        val team = teamManager.getTeam(player).orElse(null) ?: return
+        val color = team.key().color()
+
+        player.setItemSlot(EquipmentSlot.HEAD, getLeatherArmor(Items.LEATHER_HELMET, color).unbreakable())
+        player.setItemSlot(EquipmentSlot.CHEST, getLeatherArmor(Items.LEATHER_CHESTPLATE, color).unbreakable())
+        player.setItemSlot(EquipmentSlot.LEGS, getLeatherArmor(Items.LEATHER_LEGGINGS, color).unbreakable())
+        player.setItemSlot(EquipmentSlot.FEET, getLeatherArmor(Items.LEATHER_BOOTS, color).unbreakable())
     }
 
     fun repel(player: ServerPlayer) {
+        if (kitHandler.manager.hasKitEquipped<AssassinKit>(player) && phase == Fight) return
+
         val ownTeam = teamManager.getTeam(player).orElse(null) ?: return
         val ownTurf = turfManager.turfOf(ownTeam.key()) ?: return
         val ownTurfBounds = ownTurf.bounds ?: return

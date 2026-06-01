@@ -26,11 +26,22 @@ class AssassinKit(handle: KitHandle) : BaseKit(handle, "assassin") {
 
     override fun equip(player: ServerPlayer, options: KitOptions) {
         player.inventory.setItem(0, ItemStack(Items.IRON_SWORD).unbreakable())
+
+        val stack = player.inventory.getItem(1)
+
         player.inventory.setItem(1, ItemStack(Items.BOW).unbreakable())
+
+        if (!stack.isEmpty) {
+            player.inventory.setItem(2, stack)
+        }
     }
 
     override fun unequip(player: ServerPlayer, options: KitOptions) {
         player.inventory.setItem(0, ItemStack.EMPTY)
-        player.inventory.setItem(1, ItemStack.EMPTY)
+
+        val stack = player.inventory.getItem(2)
+
+        player.inventory.setItem(2, ItemStack.EMPTY)
+        player.inventory.setItem(1, stack)
     }
 }
