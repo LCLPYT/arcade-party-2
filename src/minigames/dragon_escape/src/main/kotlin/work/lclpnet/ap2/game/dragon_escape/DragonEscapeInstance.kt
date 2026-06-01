@@ -3,6 +3,7 @@ package work.lclpnet.ap2.game.dragon_escape
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup
 import net.minecraft.ChatFormatting
 import net.minecraft.core.BlockPos
+import net.minecraft.core.SectionPos
 import net.minecraft.core.component.DataComponents
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.numbers.FixedFormat
@@ -20,7 +21,7 @@ import net.minecraft.world.scores.criteria.ObjectiveCriteria
 import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.game.MiniGameResults
 import work.lclpnet.ap2.api.game.data.DataContainer
-import work.lclpnet.ap2.core.mixin.LivingEntityAccessor
+import work.lclpnet.ap2.core.mixin.entity.LivingEntityAccessor
 import work.lclpnet.ap2.game.dragon_escape.kit.EnderPearlKit
 import work.lclpnet.ap2.game.dragon_escape.kit.LeapKit
 import work.lclpnet.ap2.game.dragon_escape.kit.WindChargeKit
@@ -50,9 +51,9 @@ import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks
 import work.lclpnet.kibu.hook.util.OnGroundDetector
 import work.lclpnet.kibu.hook.util.PlayerUtils
 import work.lclpnet.kibu.translate.text.FormatWrapper.styled
-import net.minecraft.core.SectionPos
 import java.util.*
-import kotlin.math.*
+import kotlin.math.floor
+import kotlin.math.max
 
 private const val DEBUG_PATH = false
 private const val DEBUG_PROGRESS = false
