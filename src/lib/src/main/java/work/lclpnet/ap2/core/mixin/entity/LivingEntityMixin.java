@@ -1,5 +1,6 @@
 package work.lclpnet.ap2.core.mixin.entity;
 
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.Level;
@@ -10,6 +11,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+import work.lclpnet.ap2.core.hook.ArmorAbsorbDamageCallback;
 import work.lclpnet.ap2.core.hook.LivingEntityAttributeInitCallback;
 import work.lclpnet.ap2.core.hook.PowderedSnowSlowCallback;
 import work.lclpnet.ap2.core.type.ApLivingEntity;
@@ -80,5 +82,21 @@ public class LivingEntityMixin implements ApLivingEntity {
         if (PowderedSnowSlowCallback.REMOVE.invoker().shouldCancel(self)) {
             ci.cancel();
         }
+    }
+
+    @Inject(
+            method = "getDamageAfterArmorAbsorb",
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/world/entity/LivingEntity;hurtArmor(Lnet/minecraft/world/damagesource/DamageSource;F)V"
+            ),
+            cancellable = true
+    )
+    public void ap2$armorAbsorbDamage(DamageSource damageSource, float damage, CallbackInfoReturnable<Float> cir) {
+        var self = (LivingEntity) (Object) this;
+
+        if (ArmorAbsorbDamageCallback.HOOK.invoker().mayAbsorbDamage(self, damageSource, damage)) return;
+
+        cir.setReturnValue(damage);
     }
 }

@@ -22,6 +22,7 @@ import net.minecraft.world.scores.Team.CollisionRule
 import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.game.team.DyeTeamKey
 import work.lclpnet.ap2.api.game.team.Team
+import work.lclpnet.ap2.core.hook.ArmorAbsorbDamageCallback
 import work.lclpnet.ap2.core.hook.CanShootProjectileCallback
 import work.lclpnet.ap2.core.hook.ProjectileShootCallback
 import work.lclpnet.ap2.ext.*
@@ -39,8 +40,10 @@ import work.lclpnet.ap2.turf_wars.util.ArcherKit
 import work.lclpnet.ap2.turf_wars.util.AssassinKit
 import work.lclpnet.ap2.turf_wars.util.TurfManager
 import work.lclpnet.ap2.turf_wars.util.TurfWarsTeamInfo
+import work.lclpnet.combatctl.hook.SwordBlockDamageCallback
 import work.lclpnet.gaco.collisions.ChunkedCollisionDetector
 import work.lclpnet.gaco.collisions.movement.TickMovementObserver
+import work.lclpnet.gaco.ds.BlockBox
 import work.lclpnet.game.impl.prot.ProtectionTypes
 import work.lclpnet.kibu.access.VelocityModifier
 import work.lclpnet.kibu.hook.entity.ProjectileHooks
@@ -196,6 +199,14 @@ class TurfWarsInstance(gameHandle: MiniGameHandle) : TeamEliminationGameInstance
 
         CanShootProjectileCallback.HOOK.registerWith(hooks) { shooter, _, _ ->
             shooter is ServerPlayer && isParticipating(shooter) && phase == Fight
+        }
+
+        ArmorAbsorbDamageCallback.HOOK.registerWith(hooks) { _, _, _ ->
+            false
+        }
+
+        SwordBlockDamageCallback.HOOK.registerWith(hooks) { _, _, originalDamage, _, _ ->
+            originalDamage
         }
 
         for (player in players()) {
@@ -375,28 +386,44 @@ class TurfWarsInstance(gameHandle: MiniGameHandle) : TeamEliminationGameInstance
     }
 
     fun repel(player: ServerPlayer) {
-        if (kitHandler.manager.hasKitEquipped<AssassinKit>(player) && phase == Fight) return
-
         val ownTeam = teamManager.getTeam(player).orElse(null) ?: return
         val ownTurf = turfManager.turfOf(ownTeam.key()) ?: return
         val ownTurfBounds = ownTurf.bounds ?: return
 
+        val mayEnterTurf = mayEnterEnemyTurf(player) && phase == Fight
+
         for (team in teamManager.teams) {
             if (team == ownTeam) continue
+
+            // enemy base is always off-limits, regardless of kit
+            val baseBounds = teamInfos[team.key()]?.baseBounds
+
+            if (baseBounds != null && intersectsPlayer(player, baseBounds)) {
+                pushOut(player, ownTurfBounds, baseBounds)
+                continue
+            }
+
+            if (mayEnterTurf) continue
 
             val turf = turfManager.turfOf(team.key()) ?: continue
             val bounds = turf.bounds ?: continue
 
-            if (MathUtil.corners(player.boundingBox).none { bounds.contains(it) }) continue
+            if (!intersectsPlayer(player, bounds)) continue
 
-            // player intersects with opponent turf
-            val repelDir = Vec3(ownTurfBounds.min().subtract(bounds.min()))
-                .normalize()
-                .add(0.0, 0.5, 0.0)
-
-            VelocityModifier.setVelocity(player, repelDir)
-            player.playNotifySound(SoundEvents.ALLAY_HURT, SoundSource.PLAYERS, 0.5f, 2f)
+            pushOut(player, ownTurfBounds, bounds)
         }
+    }
+
+    private fun intersectsPlayer(player: ServerPlayer, box: BlockBox): Boolean =
+        MathUtil.corners(player.boundingBox).any { box.contains(it) }
+
+    private fun pushOut(player: ServerPlayer, ownTurfBounds: BlockBox, target: BlockBox) {
+        val repelDir = Vec3(ownTurfBounds.min().subtract(target.min()))
+            .normalize()
+            .add(0.0, 0.5, 0.0)
+
+        VelocityModifier.setVelocity(player, repelDir)
+        player.playNotifySound(SoundEvents.ALLAY_HURT, SoundSource.PLAYERS, 0.5f, 2f)
     }
 
     private fun scheduleNewArrow(player: ServerPlayer) {
@@ -508,6 +535,9 @@ class TurfWarsInstance(gameHandle: MiniGameHandle) : TeamEliminationGameInstance
 
         return true
     }
+
+    private fun mayEnterEnemyTurf(player: ServerPlayer): Boolean =
+        kitHandler.manager.hasKitEquipped<AssassinKit>(player)
 
     fun placeBlock(player: ServerPlayer, pos: BlockPos): Boolean {
         if (phase != Build || !isParticipating(player)) return false
