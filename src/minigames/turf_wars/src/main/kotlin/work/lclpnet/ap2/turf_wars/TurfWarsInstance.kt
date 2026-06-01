@@ -279,29 +279,26 @@ class TurfWarsInstance(gameHandle: MiniGameHandle) : TeamEliminationGameInstance
         val toEliminate = mutableListOf<Team>()
 
         for (team in teamManager.teams) {
-            val key = team.key()
+            val teamKey = team.key()
 
-            if (key !is DyeTeamKey) continue
+            if (teamKey !is DyeTeamKey) continue
 
-            val bounds = turfManager.turfOf(key)?.bounds ?: continue
-            val base = teamInfos[key]?.baseBounds
+            val base = teamInfos[teamKey]?.baseBounds ?: continue
 
-            val present = team.players.any { player ->
-                isParticipating(player)
-                        && bounds.contains(player.position())
-                        && (base == null || !base.contains(player.position()))
+            val anyOutOfBase = team.players.any { player ->
+                isParticipating(player) && !base.contains(player.position())
             }
 
-            if (present) {
-                turfAbsenceSeconds[key] = 0
+            if (anyOutOfBase) {
+                turfAbsenceSeconds[teamKey] = 0
                 continue
             }
 
-            val seconds = (turfAbsenceSeconds[key] ?: 0) + 1
-            turfAbsenceSeconds[key] = seconds
+            val seconds = (turfAbsenceSeconds[teamKey] ?: 0) + 1
+            turfAbsenceSeconds[teamKey] = seconds
 
             if (seconds >= CAMP_ELIMINATION_SECONDS) {
-                turfAbsenceSeconds.remove(key)
+                turfAbsenceSeconds.remove(teamKey)
 
                 toEliminate.add(team)
                 continue
