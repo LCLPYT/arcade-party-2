@@ -25,6 +25,7 @@ import work.lclpnet.ap2.core.mixin.entity.LivingEntityAccessor
 import work.lclpnet.ap2.game.dragon_escape.kit.EnderPearlKit
 import work.lclpnet.ap2.game.dragon_escape.kit.LeapKit
 import work.lclpnet.ap2.game.dragon_escape.kit.WindChargeKit
+import work.lclpnet.ap2.game.kit.KitHandler
 import work.lclpnet.ap2.impl.game.FFAGameInstance
 import work.lclpnet.ap2.impl.game.PseudoElimination
 import work.lclpnet.ap2.impl.game.data.CombinedDataContainer
@@ -32,7 +33,6 @@ import work.lclpnet.ap2.impl.game.data.DoubleScoreDataContainer
 import work.lclpnet.ap2.impl.game.data.OrderedDataContainer
 import work.lclpnet.ap2.impl.game.data.Ordering
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef
-import work.lclpnet.ap2.impl.game.kit.KitHandler
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.util.Fireworks
 import work.lclpnet.ap2.impl.util.TimeHelper

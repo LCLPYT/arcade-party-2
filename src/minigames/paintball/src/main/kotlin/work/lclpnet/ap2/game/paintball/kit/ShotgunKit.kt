@@ -4,9 +4,9 @@ import net.minecraft.core.RegistryAccess
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
+import work.lclpnet.ap2.game.kit.KitHandle
 import work.lclpnet.ap2.game.paintball.util.PaintGun
 import work.lclpnet.ap2.game.paintball.util.PaintGunManager
-import work.lclpnet.ap2.impl.game.kit.KitHandle
 import work.lclpnet.ap2.impl.util.ItemHelper
 
 const val SHOTGUN_ID = "shotgun"

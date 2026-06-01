@@ -7,5 +7,9 @@
   "game.ap2.turf_wars.phase.fight.title": "Kämpfe!",
   "game.ap2.turf_wars.speed_up": "Tempo erhöht! Kills erweitern dein Gebiet jetzt um %s Blöcke.",
   "game.ap2.turf_wars.camp_warning": "Zurück auf dein Gebiet! Ansonsten wird dein Team in %s Sekunden eliminiert.",
-  "game.ap2.turf_wars.eliminated_for_camping": "%s wurde eliminiert weil sie ihr Gebiet für %s nicht betreten haben."
+  "game.ap2.turf_wars.eliminated_for_camping": "%s wurde eliminiert weil sie ihr Gebiet für %s nicht betreten haben.",
+  "game.ap2.turf_wars.kit.archer": "Bogenschütze",
+  "game.ap2.turf_wars.kit.archer.description": "Geschossene Pfeile erledigen getroffene Gegner mit nur einem Schuss.",
+  "game.ap2.turf_wars.kit.assassin": "Attentäter",
+  "game.ap2.turf_wars.kit.assassin.description": "Attentäter können das gegnerische Gebiet betreten. Sie haben ein Eisenschwert als Hauptwaffe. Pfeile erledigen Gegner mit zwei Schüssen."
 }

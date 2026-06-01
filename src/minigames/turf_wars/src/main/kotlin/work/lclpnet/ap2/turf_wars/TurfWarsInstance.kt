@@ -25,14 +25,20 @@ import work.lclpnet.ap2.core.hook.CanShootProjectileCallback
 import work.lclpnet.ap2.core.hook.ProjectileShootCallback
 import work.lclpnet.ap2.ext.*
 import work.lclpnet.ap2.ext.mc.*
+import work.lclpnet.ap2.game.kit.KitHandler
+import work.lclpnet.ap2.game.kit.hasKitEquipped
 import work.lclpnet.ap2.game.team.getWoolBlock
 import work.lclpnet.ap2.impl.game.TeamEliminationGameInstance
 import work.lclpnet.ap2.impl.map.schema.SchemaHolder
 import work.lclpnet.ap2.impl.util.TimeHelper
 import work.lclpnet.ap2.impl.util.math.MathUtil
 import work.lclpnet.ap2.turf_wars.Phase.*
+import work.lclpnet.ap2.turf_wars.util.ArcherKit
+import work.lclpnet.ap2.turf_wars.util.AssassinKit
 import work.lclpnet.ap2.turf_wars.util.TurfManager
 import work.lclpnet.ap2.turf_wars.util.TurfWarsTeamInfo
+import work.lclpnet.gaco.collisions.ChunkedCollisionDetector
+import work.lclpnet.gaco.collisions.movement.TickMovementObserver
 import work.lclpnet.game.impl.prot.ProtectionTypes
 import work.lclpnet.kibu.access.VelocityModifier
 import work.lclpnet.kibu.hook.entity.ProjectileHooks
@@ -66,6 +72,13 @@ class TurfWarsInstance(gameHandle: MiniGameHandle) : TeamEliminationGameInstance
     val arrowTasks = mutableMapOf<UUID, TaskHandle>()
     lateinit var turfManager: TurfManager
     lateinit var teamInfos: Map<DyeTeamKey, TurfWarsTeamInfo>
+    lateinit var kitHandler: KitHandler
+    val movementObserver = TickMovementObserver(
+        ChunkedCollisionDetector(),
+        gameHandle.participants::isParticipating
+    ).also {
+        it.init(gameHandle.scheduler, gameHandle.hooks, gameHandle.server)
+    }
     var phase: Phase = Nothing
     var blocksPerKill: Int = 1
     val turfAbsenceSeconds = mutableMapOf<DyeTeamKey, Int>()
@@ -112,6 +125,8 @@ class TurfWarsInstance(gameHandle: MiniGameHandle) : TeamEliminationGameInstance
 
     override fun prepare() {
         val teams = setupTeams()
+
+        setupKits(teams)
 
         teamInfos = teams.associateBy { it.key() }
 
@@ -449,6 +464,7 @@ class TurfWarsInstance(gameHandle: MiniGameHandle) : TeamEliminationGameInstance
         if (attacker !is ServerPlayer || teamManager.areTeamMates(player, attacker)) return false
 
         return source.isOf(DamageTypes.ARROW)
+                || (source.isOf(DamageTypes.PLAYER_ATTACK) && kitHandler.manager.hasKitEquipped<AssassinKit>(attacker))
     }
 
     private fun onDamage(victim: ServerPlayer, source: DamageSource, amount: Float): Boolean {
@@ -456,19 +472,31 @@ class TurfWarsInstance(gameHandle: MiniGameHandle) : TeamEliminationGameInstance
 
         if (attacker !is ServerPlayer) return false
 
+        // damage constraints validated by allowDamage()
+
         if (source.isOf(DamageTypes.ARROW)) {
-            // ensure arrows are one-hit
-            if (victim.health > amount) {
-                victim.hurtServer(world, source, victim.health)
-                return false
+            if (kitHandler.manager.hasKitEquipped<ArcherKit>(attacker)) {
+                // ensure arrows are one-hit for archer kit
+                if (amount < victim.health) {
+                    victim.hurtServer(world, source, victim.health)
+                    return false
+                }
             }
 
-            onKilled(victim, attacker)
-
-            return true
+            if (kitHandler.manager.hasKitEquipped<AssassinKit>(attacker)) {
+                // ensure arrows are two-hit for assassin kit
+                if (amount < 10.0f) {
+                    victim.hurtServer(world, source, 10.0f)
+                    return false
+                }
+            }
         }
 
-        return false
+        if (amount >= victim.health) {
+            onKilled(victim, attacker)
+        }
+
+        return true
     }
 
     fun placeBlock(player: ServerPlayer, pos: BlockPos): Boolean {
@@ -537,5 +565,30 @@ class TurfWarsInstance(gameHandle: MiniGameHandle) : TeamEliminationGameInstance
         val team = teamManager.getTeam(player).orElse(null) ?: return null
 
         return teamInfos[team.key()]
+    }
+
+    fun setupKits(teamInfos: List<TurfWarsTeamInfo>) {
+        kitHandler = KitHandler.create(gameHandle, world) { handle ->
+            listOf(
+                ArcherKit(handle),
+                AssassinKit(handle)
+            )
+        }
+
+        kitHandler.setup()
+
+        for (info in teamInfos) {
+            movementObserver.whenEntering(info.baseBounds) { player ->
+                if (info.isMember(player, teamManager)) {
+                    kitHandler.enableKitChanger(player)
+                }
+            }
+
+            movementObserver.whenLeaving(info.baseBounds) { player ->
+                if (info.isMember(player, teamManager)) {
+                    kitHandler.disableKitChanger(player)
+                }
+            }
+        }
     }
 }

@@ -1,18 +1,17 @@
-package work.lclpnet.ap2.impl.game.kit;
+package work.lclpnet.ap2.game.kit
 
-import net.minecraft.core.RegistryAccess;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.item.ItemStack;
+import net.minecraft.core.RegistryAccess
+import net.minecraft.server.level.ServerPlayer
+import net.minecraft.world.item.ItemStack
 
-public interface Kit {
+interface Kit {
+    fun id(): String
 
-    String id();
+    fun createItemStack(manager: RegistryAccess): ItemStack
 
-    ItemStack createItemStack(RegistryAccess manager);
+    fun init(options: KitOptions) {}
 
-    default void init(KitOptions options) {}
+    fun equip(player: ServerPlayer, options: KitOptions) {}
 
-    default void equip(ServerPlayer player, KitOptions options) {}
-
-    default void unequip(ServerPlayer player, KitOptions options) {}
+    fun unequip(player: ServerPlayer, options: KitOptions) {}
 }

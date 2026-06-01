@@ -1,34 +1,23 @@
-package work.lclpnet.ap2.impl.game.kit;
+package work.lclpnet.ap2.game.kit
 
-import net.minecraft.server.level.ServerPlayer;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import net.minecraft.server.level.ServerPlayer
 
-public class ProxyKitReadView implements KitReadView {
+class ProxyKitReadView : KitReadView {
+    private var delegate: KitReadView? = null
 
-    private @Nullable KitReadView delegate = null;
-
-    public void inject(@Nullable KitReadView delegate) {
-        this.delegate = delegate;
+    fun inject(delegate: KitReadView) {
+        this.delegate = delegate
     }
 
-    @Override
-    public @NotNull Kit getKit(ServerPlayer player) {
-        return delegate().getKit(player);
+    override fun getKit(player: ServerPlayer): Kit {
+        return delegate().getKit(player)
     }
 
-    @Override
-    public boolean hasKitEquipped(ServerPlayer player, Kit kit) {
-        return delegate().hasKitEquipped(player, kit);
-    }
+    private fun delegate(): KitReadView {
+        val delegate = this.delegate
 
-    private @NotNull KitReadView delegate() {
-        KitReadView delegate = this.delegate;
+        requireNotNull(delegate) { "No delegate set" }
 
-        if (delegate == null) {
-            throw new IllegalArgumentException("No delegate set");
-        }
-
-        return delegate;
+        return delegate
     }
 }

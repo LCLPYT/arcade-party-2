@@ -1,14 +1,17 @@
-package work.lclpnet.ap2.impl.game.kit;
+package work.lclpnet.ap2.game.kit
 
-public record KitOptions(int mainItemSlot, int kitSelectorSlot) {
-
-    public static final KitOptions DEFAULT = new KitOptions(0, 4);
-
-    public KitOptions withKitSelectorSlot(int kitSelectorSlot) {
-        return new KitOptions(mainItemSlot, kitSelectorSlot);
+@JvmRecord
+data class KitOptions(val mainItemSlot: Int, val kitSelectorSlot: Int) {
+    fun withKitSelectorSlot(kitSelectorSlot: Int): KitOptions {
+        return KitOptions(mainItemSlot, kitSelectorSlot)
     }
 
-    public KitOptions withMainItemSlot(int mainItemSlot) {
-        return new KitOptions(mainItemSlot, kitSelectorSlot);
+    fun withMainItemSlot(mainItemSlot: Int): KitOptions {
+        return KitOptions(mainItemSlot, kitSelectorSlot)
+    }
+
+    companion object {
+        @JvmStatic
+        val DEFAULT: KitOptions = KitOptions(0, 4)
     }
 }

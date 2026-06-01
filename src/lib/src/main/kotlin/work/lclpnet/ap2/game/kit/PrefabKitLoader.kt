@@ -1,159 +1,148 @@
-package work.lclpnet.ap2.impl.game.kit;
+package work.lclpnet.ap2.game.kit
 
-import com.mojang.serialization.Dynamic;
-import net.minecraft.core.HolderLookup;
-import net.minecraft.nbt.*;
-import net.minecraft.resources.RegistryOps;
-import net.minecraft.world.item.ItemStack;
-import org.jetbrains.annotations.NotNull;
-import org.slf4j.Logger;
-import work.lclpnet.gaco.core.api.Partial;
+import com.mojang.serialization.Dynamic
+import net.minecraft.core.HolderLookup
+import net.minecraft.nbt.CompoundTag
+import net.minecraft.nbt.NbtAccounter
+import net.minecraft.nbt.NbtIo
+import net.minecraft.nbt.NbtOps
+import net.minecraft.resources.RegistryOps
+import net.minecraft.world.item.ItemStack
+import org.slf4j.Logger
+import work.lclpnet.gaco.core.api.Partial
+import java.io.DataInputStream
+import java.io.IOException
+import java.net.URI
+import java.net.URISyntaxException
+import java.net.URL
+import java.nio.file.*
+import java.util.concurrent.CompletableFuture
 
-import java.io.DataInputStream;
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.nio.file.*;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
+class PrefabKitLoader(private val registries: HolderLookup.Provider, private val logger: Logger) {
+    private val kits: MutableList<Partial<PrefabKit, KitHandle>> = mutableListOf()
 
-public class PrefabKitLoader {
-
-    private final HolderLookup.Provider registries;
-    private final Logger logger;
-    private final List<Partial<PrefabKit, KitHandle>> kits = new ArrayList<>();
-
-    public PrefabKitLoader(HolderLookup.Provider registries, Logger logger) {
-        this.registries = registries;
-        this.logger = logger;
-    }
-
-    public CompletableFuture<Void> loadHotbar(Object owner) {
-        return CompletableFuture.runAsync(() -> {
-            List<String> kitIds = findKits(owner.getClass()).stream().sorted().toList();
-
-            for (String id : kitIds) {
-                readHotbar(owner.getClass(), id);
+    fun loadHotbar(owner: Any): CompletableFuture<Void?> {
+        return CompletableFuture.runAsync {
+            val kitIds = findKits(owner.javaClass).stream().sorted().toList()
+            for (id in kitIds) {
+                readHotbar(owner.javaClass, id)
             }
-        });
+        }
     }
 
-    private List<String> findKits(Class<?> owner) {
-        URL url = owner.getResource("/kits");
+    private fun findKits(owner: Class<*>): MutableList<String> {
+        val url = owner.getResource("/kits") ?: return mutableListOf()
 
-        if (url == null) {
-            return List.of();
+        if (url.protocol == "jar") {
+            return findKitsFromJar(url)
         }
 
-        if (url.getProtocol().equals("jar")) {
-            return findKitsFromJar(url);
+        if (url.protocol == "file") {
+            return findKitsFromFs(url)
         }
 
-        if (url.getProtocol().equals("file")) {
-            return findKitsFromFs(url);
-        }
-
-        throw new IllegalStateException("Unsupported protocol: " + url.getProtocol());
+        throw IllegalStateException("Unsupported protocol: ${url.protocol}")
     }
 
-    private List<String> findKitsFromFs(URL url) {
+    private fun findKitsFromFs(url: URL): MutableList<String> {
         try {
-            Path path = Paths.get(url.toURI());
+            val path = Paths.get(url.toURI())
 
-            return readFlatKitIds(path);
-        } catch (URISyntaxException | IOException e) {
-            logger.error("Failed to find kits from file system: {}", url, e);
-            throw new RuntimeException(e);
+            return readFlatKitIds(path)
+        } catch (e: URISyntaxException) {
+            logger.error("Failed to find kits from file system: {}", url, e)
+            throw RuntimeException(e)
+        } catch (e: IOException) {
+            logger.error("Failed to find kits from file system: {}", url, e)
+            throw RuntimeException(e)
         }
     }
 
-    private List<String> findKitsFromJar(URL url) {
+    private fun findKitsFromJar(url: URL): MutableList<String> {
         try {
-            URI uri = url.toURI();
+            val uri = url.toURI()
 
             // reuse the existing FileSystem if the classloader already opened this JAR
             try {
-                Path pathInJar = Path.of(uri);
-                return readFlatKitIds(pathInJar);
-            } catch (FileSystemNotFoundException ignored) {}
+                val pathInJar = Path.of(uri)
+                return readFlatKitIds(pathInJar)
+            } catch (_: FileSystemNotFoundException) {}
 
             // FileSystem not yet open - create it ourselves
-            String jarPath = url.toString().substring(0, url.toString().indexOf("!"));
+            val jarPath = url.toString().substring(0, url.toString().indexOf("!"))
 
-            try (FileSystem fs = FileSystems.newFileSystem(URI.create(jarPath), Collections.emptyMap())) {
-                Path pathInJar = fs.getPath("/kits");
-                return readFlatKitIds(pathInJar);
+            FileSystems.newFileSystem(URI.create(jarPath), mutableMapOf<String, Any>()).use { fs ->
+                val pathInJar = fs.getPath("/kits")
+                return readFlatKitIds(pathInJar)
             }
-        } catch (URISyntaxException | IOException e) {
-            logger.error("Failed to find kits from jar: {}", url, e);
-            return List.of();
+        } catch (e: URISyntaxException) {
+            logger.error("Failed to find kits from jar: {}", url, e)
+            return mutableListOf()
+        } catch (e: IOException) {
+            logger.error("Failed to find kits from jar: {}", url, e)
+            return mutableListOf()
         }
     }
 
-    private @NotNull List<String> readFlatKitIds(Path path) throws IOException {
-        try (var stream = Files.list(path)) {
-            return stream.filter(p -> p.toString().endsWith(".nbt"))
-                    .filter(Files::isRegularFile)
-                    .map(p -> p.getFileName().toString())
-                    .map(s -> s.substring(0, s.length() - 4))
-                    .toList();
-        }
+    @Throws(IOException::class)
+    private fun readFlatKitIds(path: Path): MutableList<String> = Files.list(path).use { stream ->
+        stream.filter { p -> p.toString().endsWith(".nbt") }
+            .filter { path -> Files.isRegularFile(path) }
+            .map { p -> p.fileName.toString() }
+            .map { s -> s.substring(0, s.length - 4) }
+            .toList()
     }
 
-    private void readHotbar(Class<?> owner, String id) {
-        var items = readHotbarItems(owner, id);
+    private fun readHotbar(owner: Class<*>, id: String) {
+        val items = readHotbarItems(owner, id) ?: return
 
-        if (items.isEmpty()) return;
-
-        kits.add(handle -> new PrefabKit(handle, id, items.get()));
+        kits.add(Partial { handle -> PrefabKit(handle, id, items) })
     }
 
-    private Optional<List<ItemStack>> readHotbarItems(Class<?> owner, String id) {
-        String resource = "/kits/%s.nbt".formatted(id);
+    private fun readHotbarItems(owner: Class<*>, id: String): List<ItemStack>? {
+        val resource = "/kits/$id.nbt"
 
-        var in = owner.getResourceAsStream(resource);
+        val input = owner.getResourceAsStream(resource)
 
-        if (in == null) {
-            logger.error("No kit definition");
-            return Optional.empty();
+        if (input == null) {
+            logger.error("No kit definition")
+            return null
         }
 
-        CompoundTag nbt;
+        val nbt: CompoundTag
 
-        try (var dataIn = new DataInputStream(in)) {
-            nbt = NbtIo.read(dataIn, NbtAccounter.create(1024 * 1024 * 4));
-        } catch (IOException e) {
-            logger.error("Failed to read items from {}", resource, e);
-            return Optional.empty();
+        try {
+            DataInputStream(input).use { dataIn ->
+                nbt = NbtIo.read(dataIn, NbtAccounter.create((1024 * 1024 * 4).toLong()))
+            }
+        } catch (e: IOException) {
+            logger.error("Failed to read items from {}", resource, e)
+            return null
         }
 
-        ListTag list = nbt.getListOrEmpty("0");
+        val list = nbt.getListOrEmpty("0")
 
-        List<ItemStack> items = new ArrayList<>(9);
+        val items = mutableListOf<ItemStack>()
 
-        for (Tag element : list) {
-            if (!(element instanceof CompoundTag entry)) continue;
+        for (element in list) {
+            if (element !is CompoundTag) continue
 
-            var dynamic = new Dynamic<>(NbtOps.INSTANCE, entry);
+            val dynamic = Dynamic(NbtOps.INSTANCE, element)
 
-            ItemStack stack = ItemStack.OPTIONAL_CODEC
-                    .parse(RegistryOps.injectRegistryContext(dynamic, registries))
-                    .resultOrPartial(error -> logger.warn("Could not parse hotbar item: {}", error))
-                    .orElse(ItemStack.EMPTY);
+            val stack = ItemStack.OPTIONAL_CODEC
+                .parse(RegistryOps.injectRegistryContext(dynamic, registries))
+                .resultOrPartial { error -> logger.warn("Could not parse hotbar item: {}", error) }
+                .orElse(ItemStack.EMPTY) ?: ItemStack.EMPTY
 
-            items.add(stack);
+            items.add(stack)
         }
 
-        return Optional.of(items);
+        return items
     }
 
-    public List<PrefabKit> createKits(KitHandle handle) {
+    fun createKits(handle: KitHandle): List<PrefabKit> {
         return kits.stream()
-                .map(partial -> partial.with(handle))
-                .toList();
+            .map { partial -> partial.with(handle) }
+            .toList()
     }
 }

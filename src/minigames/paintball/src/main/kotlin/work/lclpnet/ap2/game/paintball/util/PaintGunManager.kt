@@ -24,9 +24,9 @@ import net.minecraft.world.phys.shapes.CollisionContext
 import work.lclpnet.ap2.api.base.Participants
 import work.lclpnet.ap2.api.game.team.DyeTeamKey
 import work.lclpnet.ap2.ext.mc.playNotifySound
+import work.lclpnet.ap2.game.kit.KitManager
+import work.lclpnet.ap2.game.kit.SingleItemKit
 import work.lclpnet.ap2.game.paintball.kit.PaintGunKit
-import work.lclpnet.ap2.impl.game.kit.KitManager
-import work.lclpnet.ap2.impl.game.kit.SingleItemKit
 import work.lclpnet.ap2.impl.util.RayCastUtil
 import work.lclpnet.ap2.impl.util.debug.DebugController
 import work.lclpnet.ap2.impl.util.math.MathUtil.applySpread
@@ -54,7 +54,7 @@ class PaintGunManager(
     private val scene: Scene,
     val paintManager: PaintManager,
     private val teams: PaintballTeams,
-    private val random: java.util.Random,
+    private val random: Random,
     private val participants: Participants,
     private val translations: Translations,
     private val debugController: DebugController,
@@ -167,7 +167,7 @@ class PaintGunManager(
         val owner = participants.getParticipant(bullet.owner).orElse(null) ?: return
         val team = teams.teamOf(owner).orElse(null) ?: return
 
-        val key: DyeTeamKey = team.key() as DyeTeamKey
+        val key: DyeTeamKey = team.key()
 
         val settings = bullet.settings
         val playerDeficit = teams.playerDeficit(team)
@@ -311,7 +311,7 @@ class PaintGunManager(
         val kitManager = this.kitManager ?: return Optional.empty()
 
         for (stack in player.inventory) {
-            val kit = SingleItemKit.get(stack, kitManager).orElse(null) as? PaintGunKit ?: continue
+            val kit = SingleItemKit.get(stack, kitManager) as? PaintGunKit ?: continue
 
             return Optional.of(Pair.of(kit.paintGun, stack))
         }

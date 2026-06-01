@@ -1,63 +1,52 @@
-package work.lclpnet.ap2.impl.game.kit;
+package work.lclpnet.ap2.game.kit
 
-import com.mojang.serialization.Codec;
-import com.mojang.serialization.MapCodec;
-import lombok.Getter;
-import net.minecraft.core.RegistryAccess;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ItemStack;
-import work.lclpnet.kibu.access.misc.CustomNbt;
+import com.mojang.serialization.Codec
+import com.mojang.serialization.MapCodec
+import net.minecraft.core.RegistryAccess
+import net.minecraft.server.level.ServerPlayer
+import net.minecraft.world.item.Item
+import net.minecraft.world.item.ItemStack
+import work.lclpnet.kibu.access.misc.CustomNbt
 
-import java.util.Optional;
+open class SingleItemKit protected constructor(
+    handle: KitHandle,
+    id: String,
+    val item: Item,
+    private val count: Int
+) : BaseKit(handle, id) {
+    override fun createItemStack(manager: RegistryAccess): ItemStack {
+        val stack = ItemStack(item)
 
-public class SingleItemKit extends BaseKit {
+        configureItemStack(stack)
 
-    private static final MapCodec<String> KIT_CODEC = Codec.STRING.fieldOf("ap2:kit");
-
-    @Getter
-    private final Item item;
-    private final int count;
-
-    protected SingleItemKit(KitHandle handle, String id, Item item, int count) {
-        super(handle, id);
-        this.item = item;
-        this.count = count;
+        return stack
     }
 
-    @Override
-    public ItemStack createItemStack(RegistryAccess manager) {
-        ItemStack stack = new ItemStack(item);
-
-        configureItemStack(stack);
-
-        return stack;
+    open fun configureItemStack(stack: ItemStack) {
+        CustomNbt.set(stack, KIT_CODEC, id)
     }
 
-    public void configureItemStack(ItemStack stack) {
-        CustomNbt.set(stack, KIT_CODEC, id);
+    override fun equip(player: ServerPlayer, options: KitOptions) {
+        val stack = handle.createItemStack(this, player)
+        stack.count = count
+
+        player.inventory.setItem(options.mainItemSlot, stack)
     }
 
-    @Override
-    public void equip(ServerPlayer player, KitOptions options) {
-        ItemStack stack = handle.createItemStack(this, player);
-        stack.setCount(count);
-
-        player.getInventory().setItem(options.mainItemSlot(), stack);
+    override fun unequip(player: ServerPlayer, options: KitOptions) {
+        player.inventory.removeItemNoUpdate(options.mainItemSlot)
     }
 
-    @Override
-    public void unequip(ServerPlayer player, KitOptions options) {
-        player.getInventory().removeItemNoUpdate(options.mainItemSlot());
-    }
+    companion object {
+        private val KIT_CODEC: MapCodec<String> = Codec.STRING.fieldOf("ap2:kit")
 
-    public static Optional<String> getId(ItemStack stack) {
-        return CustomNbt.get(stack, KIT_CODEC);
-    }
+        @JvmStatic
+        fun getId(stack: ItemStack): String? =
+            CustomNbt.get(stack, KIT_CODEC).orElse(null)
 
-    public static Optional<SingleItemKit> get(ItemStack stack, KitManager kitManager) {
-        return SingleItemKit.getId(stack)
-                .flatMap(kitManager::byId)
-                .map(k -> k instanceof SingleItemKit sik ? sik : null);
+        @JvmStatic
+        fun get(stack: ItemStack, kitManager: KitManager): SingleItemKit? = getId(stack)
+            ?.let { kitManager.byId(it) }
+            ?.let { it as? SingleItemKit }
     }
 }

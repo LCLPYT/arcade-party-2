@@ -1,7 +1,6 @@
 package work.lclpnet.ap2.game.dragon_escape.kit
 
 import net.minecraft.core.particles.ParticleTypes
-import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.sounds.SoundSource
@@ -10,9 +9,9 @@ import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import work.lclpnet.ap2.ext.mc.isOf
-import work.lclpnet.ap2.impl.game.kit.KitHandle
-import work.lclpnet.ap2.impl.game.kit.KitOptions
-import work.lclpnet.ap2.impl.game.kit.SingleItemKit
+import work.lclpnet.ap2.game.kit.KitHandle
+import work.lclpnet.ap2.game.kit.KitOptions
+import work.lclpnet.ap2.game.kit.SingleItemKit
 import work.lclpnet.kibu.access.VelocityModifier
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks
 import work.lclpnet.kibu.scheduler.Ticks
@@ -26,7 +25,7 @@ private const val LEAP_STRENGTH = 1.8
 class LeapKit(handle: KitHandle) : SingleItemKit(handle, ID, ITEM, USES) {
 
     override fun init(options: KitOptions) {
-        PlayerInteractionHooks.USE_ITEM.registerWith(handle.hooks()) { player, _, hand ->
+        PlayerInteractionHooks.USE_ITEM.registerWith(handle.hooks) { player, _, hand ->
             if (player !is ServerPlayer) return@registerWith InteractionResult.PASS
 
             val stack = player.getItemInHand(hand)
