@@ -6,5 +6,6 @@
   "game.ap2.turf_wars.fight": "Kampfzeit",
   "game.ap2.turf_wars.phase.fight.title": "Kämpfe!",
   "game.ap2.turf_wars.speed_up": "Tempo erhöht! Kills erweitern dein Gebiet jetzt um %s Blöcke.",
-  "game.ap2.turf_wars.camp_warning": "Zurück auf dein Gebiet! Dein Team wird in %s Sekunden eliminiert."
+  "game.ap2.turf_wars.camp_warning": "Zurück auf dein Gebiet! Ansonsten wird dein Team in %s Sekunden eliminiert.",
+  "game.ap2.turf_wars.eliminated_for_camping": "%s wurde eliminiert weil sie ihr Gebiet für %s nicht betreten haben."
 }
