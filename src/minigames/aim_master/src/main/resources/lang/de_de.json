@@ -1,5 +1,9 @@
 {
   "game.ap2.aim_master": "Zielprofi",
   "game.ap2.aim_master.task": "Erreiche %s Punkte",
-  "game.ap2.aim_master.description": "Klicke die richtigen Blöcke an und erreiche zuerst die vorgegebene Punktzahl!"
+  "game.ap2.aim_master.description": "Klicke die richtigen Blöcke an und erreiche zuerst die vorgegebene Punktzahl!",
+  "game.ap2.aim_master.stat.clicks": "Klicks",
+  "game.ap2.aim_master.stat.misses": "Fehler",
+  "game.ap2.aim_master.stat.accuracy": "Genauigkeit",
+  "game.ap2.aim_master.stat.streak": "Beste Serie"
 }
