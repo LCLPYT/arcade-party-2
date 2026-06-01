@@ -13,6 +13,7 @@ import net.minecraft.world.phys.BlockHitResult
 import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.game.data.DataContainer
 import work.lclpnet.ap2.api.map.MapBootstrap
+import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.ext.mc.isIn
 import work.lclpnet.ap2.ext.runAfter
 import work.lclpnet.ap2.ext.ticks
@@ -43,13 +44,19 @@ private const val REPLAY_MAX_SECONDS = 30
 private const val NEXT_ROUND_DELAY_SECONDS = 4
 private const val INITIAL_SEQUENCE_LENGTH = 3
 
+val DIRECT_BUTTON_CLICKS = Stat("direct_button_clicks", 0)
+val BLOCK_CLICKS = Stat("block_clicks", 0)
+val AVG_TIME_USAGE = Stat("avg_time_usage", 0f)
+val AVG_CLICK_TIME = Stat("avg_click_time", 0f)
+
 class MimicryInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle), MapBootstrap {
 
-    private val dataContainer = IntScoreDataContainer(
+    private val data = IntScoreDataContainer(
         PlayerRef::create,
         Ordering.DESCENDING,
         "game.ap2.mimicry.completed"
     )
+    private val stats = createStats(data, DIRECT_BUTTON_CLICKS, BLOCK_CLICKS, AVG_TIME_USAGE, AVG_CLICK_TIME)
     private lateinit var pseudoElimination: PseudoElimination
     private lateinit var manager: MimicryManager
     private lateinit var sequencePlayer: SequencePlayer
@@ -57,7 +64,7 @@ class MimicryInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle),
     private var timerTransaction = 0
     private var phase = Phase.IDLE
 
-    override fun getData(): DataContainer<ServerPlayer, PlayerRef> = dataContainer
+    override fun getData(): DataContainer<ServerPlayer, PlayerRef> = data
 
     override fun createWorldBootstrap(world: ServerLevel, map: GameMap): CompletableFuture<Void> {
         val buttons: BlockBox = MapUtil.readBox(map.requireProperty("button-box"))
@@ -78,7 +85,7 @@ class MimicryInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle),
                 val rooms = result.rooms()
                 val random = Random()
 
-                manager = MimicryManager(gameHandle, rooms, buttons, random, world, ::onCompleted)
+                manager = MimicryManager(gameHandle, rooms, buttons, random, world, stats, ::onCompleted)
             }
             .exceptionally { throwable ->
                 gameHandle.logger.error("Failed to create rooms", throwable)
@@ -118,9 +125,15 @@ class MimicryInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle),
             return InteractionResult.PASS
         }
 
-        val pos = getEffectivelyClickedPos(world, hitResult) ?: return InteractionResult.PASS
+        val clicked = getEffectivelyClickedPos(world, hitResult) ?: return InteractionResult.PASS
 
-        if (!manager.onInputButton(player, pos)) {
+        if (clicked.direct) {
+            stats.increment(player, DIRECT_BUTTON_CLICKS)
+        } else {
+            stats.increment(player, BLOCK_CLICKS)
+        }
+
+        if (!manager.onInputButton(player, clicked.pos)) {
             return InteractionResult.FAIL
         }
 
@@ -134,21 +147,23 @@ class MimicryInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle),
         return InteractionResult.FAIL
     }
 
-    private fun getEffectivelyClickedPos(world: Level, hitResult: BlockHitResult): BlockPos? {
+    private fun getEffectivelyClickedPos(world: Level, hitResult: BlockHitResult): ClickedButton? {
         val pos = hitResult.blockPos
 
         if (world.getBlockState(pos).isIn(BlockTags.BUTTONS)) {
-            return pos
+            return ClickedButton(pos, true)
         }
 
         val rel = pos.relative(hitResult.direction)
 
         if (world.getBlockState(rel).isIn(BlockTags.BUTTONS)) {
-            return rel
+            return ClickedButton(rel, false)
         }
 
         return null
     }
+
+    private class ClickedButton(val pos: BlockPos, val direct: Boolean)
 
     @Synchronized
     private fun nextSequence() {
@@ -195,7 +210,10 @@ class MimicryInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle),
         val translations = gameHandle.translations
         val subject = translations.translateText(gameHandle.gameInfo.taskKey)
 
-        val t = commons().createTimer(subject, calcReplaySeconds())
+        val replaySeconds = calcReplaySeconds()
+        manager.beginReplay(replaySeconds)
+
+        val t = commons().createTimer(subject, replaySeconds)
         timer = t
 
         val transaction = timerTransaction
@@ -235,7 +253,7 @@ class MimicryInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle),
         (manager.sequenceLength() * REPLAY_SECONDS_PER_NOTE).coerceIn(REPLAY_MIN_SECONDS, REPLAY_MAX_SECONDS)
 
     private fun onCompleted(player: ServerPlayer) {
-        commons().addScore(player, 1, dataContainer)
+        commons().addScore(player, 1, data)
         checkRoundComplete()
     }
 

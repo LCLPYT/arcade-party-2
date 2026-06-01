@@ -6,5 +6,9 @@
   "game.ap2.mimicry.repeat": "Nun wiederhole es",
   "game.ap2.mimicry.wrong_button": "Deine Reihenfolge ist leider falsch.",
   "game.ap2.mimicry.correct": "Deine Reihenfolge ist korrekt!",
-  "game.ap2.mimicry.completed": "%s Nachahmung(en)"
+  "game.ap2.mimicry.completed": "%s Nachahmung(en)",
+  "game.ap2.mimicry.stat.direct_button_clicks": "Knöpfe geklickt",
+  "game.ap2.mimicry.stat.block_clicks": "Blöcke geklickt",
+  "game.ap2.mimicry.stat.avg_time_usage": "Durchschn. Zeitnutzung",
+  "game.ap2.mimicry.stat.avg_click_time": "Durchschn. Klickzeit"
 }
