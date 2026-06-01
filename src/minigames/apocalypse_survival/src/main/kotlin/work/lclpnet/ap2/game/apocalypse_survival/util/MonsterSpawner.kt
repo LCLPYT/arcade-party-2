@@ -16,7 +16,7 @@ import net.minecraft.world.entity.monster.zombie.ZombifiedPiglin
 import net.minecraft.world.entity.projectile.ProjectileUtil
 import net.minecraft.world.item.Items
 import net.minecraft.world.phys.Vec3
-import work.lclpnet.ap2.core.mixin.MobAccessor
+import work.lclpnet.ap2.core.mixin.entity.MobAccessor
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.game.apocalypse_survival.goal.RoamGoal
 import work.lclpnet.ap2.game.apocalypse_survival.goal.UnstuckGoal

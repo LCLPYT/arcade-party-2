@@ -13,7 +13,7 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.ResolvableProfile;
 import net.minecraft.world.level.block.entity.SkullBlockEntity;
 import org.jetbrains.annotations.NotNull;
-import work.lclpnet.ap2.core.mixin.SkullBlockEntityAccessor;
+import work.lclpnet.ap2.core.mixin.block.SkullBlockEntityAccessor;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;

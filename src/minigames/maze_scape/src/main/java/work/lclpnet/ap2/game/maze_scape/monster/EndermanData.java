@@ -15,7 +15,7 @@ import net.minecraft.world.level.pathfinder.Path;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.ApConstants;
-import work.lclpnet.ap2.core.mixin.EnderManAccessor;
+import work.lclpnet.ap2.core.mixin.entity.EnderManAccessor;
 import work.lclpnet.ap2.game.maze_scape.monster.behaviour.AccelerationBehaviour;
 import work.lclpnet.ap2.game.maze_scape.monster.behaviour.UnstuckBehaviour;
 import work.lclpnet.ap2.game.maze_scape.monster.behaviour.ValidPositionBehaviour;
