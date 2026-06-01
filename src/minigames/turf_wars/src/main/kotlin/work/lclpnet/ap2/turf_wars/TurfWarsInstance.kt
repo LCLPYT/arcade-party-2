@@ -259,7 +259,9 @@ class TurfWarsInstance(gameHandle: MiniGameHandle) : TeamEliminationGameInstance
             return
         }
 
-        for (team in teamManager.teams.toList()) {
+        val toEliminate = mutableListOf<Team>()
+
+        for (team in teamManager.teams) {
             val key = team.key()
 
             if (key !is DyeTeamKey) continue
@@ -283,17 +285,9 @@ class TurfWarsInstance(gameHandle: MiniGameHandle) : TeamEliminationGameInstance
 
             if (seconds >= CAMP_ELIMINATION_SECONDS) {
                 turfAbsenceSeconds.remove(key)
-                changePhase(Nothing)
 
-                translate(
-                    "game.ap2.turf_wars.eliminated_for_camping",
-                    team.key().getDisplayName(gameHandle.translations),
-                    TimeHelper.formatTime(gameHandle.translations, CAMP_ELIMINATION_SECONDS)
-                ).formatted(ChatFormatting.GRAY)
-                    .sendTo(allPlayers())
-
-                eliminate(team)
-                return
+                toEliminate.add(team)
+                continue
             }
 
             val remaining = CAMP_ELIMINATION_SECONDS - seconds
@@ -308,6 +302,21 @@ class TurfWarsInstance(gameHandle: MiniGameHandle) : TeamEliminationGameInstance
                 }
             }
         }
+
+        if (toEliminate.isEmpty()) return
+
+        changePhase(Nothing)
+
+        for (team in toEliminate) {
+            translate(
+                "game.ap2.turf_wars.eliminated_for_camping",
+                team.key().getDisplayName(gameHandle.translations),
+                TimeHelper.formatTime(gameHandle.translations, CAMP_ELIMINATION_SECONDS)
+            ).formatted(ChatFormatting.GRAY)
+                .sendTo(allPlayers())
+        }
+
+        eliminateAll(toEliminate)
     }
 
     private fun onKilled(victim: ServerPlayer, killer: ServerPlayer) {
