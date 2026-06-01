@@ -190,8 +190,7 @@ class CCHooks(
     private fun onEnterBaseOf(player: ServerPlayer, team: Team) {
         if (teamManager.isTeamMember(player, team)) return
 
-        val name = translations.translateText(player, team.key().translationKey)
-            .styled { it.withColor(team.key().color()) }
+        val name = team.key().getDisplayName(translations)
 
         val msg = Component.literal("⚠")
             .append(translations.translateText(player, "game.ap2.cozy_campfire.base_of", name))

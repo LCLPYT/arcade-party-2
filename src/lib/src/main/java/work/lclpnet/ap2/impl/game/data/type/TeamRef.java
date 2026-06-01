@@ -25,8 +25,7 @@ public class TeamRef implements SubjectRef, TeamKeyable {
 
     @Override
     public Component getNameFor(ServerPlayer viewer) {
-        return translations.translateText(viewer, key.getTranslationKey())
-                .styled(style -> style.withColor(key.color()));
+        return key.getDisplayName(translations).translateFor(viewer);
     }
 
     @Override

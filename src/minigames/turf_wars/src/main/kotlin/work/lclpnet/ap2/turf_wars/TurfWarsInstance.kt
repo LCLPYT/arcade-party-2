@@ -28,6 +28,7 @@ import work.lclpnet.ap2.ext.mc.*
 import work.lclpnet.ap2.game.team.getWoolBlock
 import work.lclpnet.ap2.impl.game.TeamEliminationGameInstance
 import work.lclpnet.ap2.impl.map.schema.SchemaHolder
+import work.lclpnet.ap2.impl.util.TimeHelper
 import work.lclpnet.ap2.impl.util.math.MathUtil
 import work.lclpnet.ap2.turf_wars.Phase.*
 import work.lclpnet.ap2.turf_wars.util.TurfManager
@@ -283,6 +284,14 @@ class TurfWarsInstance(gameHandle: MiniGameHandle) : TeamEliminationGameInstance
             if (seconds >= CAMP_ELIMINATION_SECONDS) {
                 turfAbsenceSeconds.remove(key)
                 changePhase(Nothing)
+
+                translate(
+                    "game.ap2.turf_wars.eliminated_for_camping",
+                    team.key().getDisplayName(gameHandle.translations),
+                    TimeHelper.formatTime(gameHandle.translations, CAMP_ELIMINATION_SECONDS)
+                ).formatted(ChatFormatting.GRAY)
+                    .sendTo(allPlayers())
+
                 eliminate(team)
                 return
             }
@@ -293,6 +302,10 @@ class TurfWarsInstance(gameHandle: MiniGameHandle) : TeamEliminationGameInstance
                 translate("game.ap2.turf_wars.camp_warning", remaining)
                     .formatted(ChatFormatting.RED)
                     .sendTo(team.players)
+
+                for (player in team.players) {
+                    player.playNotifySound(SoundEvents.ZOMBIE_VILLAGER_CONVERTED, SoundSource.PLAYERS, 0.7f, 1f)
+                }
             }
         }
     }

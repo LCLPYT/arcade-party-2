@@ -6,5 +6,6 @@
   "game.ap2.turf_wars.phase.fight": "Combat Time",
   "game.ap2.turf_wars.phase.fight.title": "Fight!",
   "game.ap2.turf_wars.speed_up": "Speed up! Kills now expand your turf by %s blocks.",
-  "game.ap2.turf_wars.camp_warning": "Return to your turf! Your team will be eliminated in %s seconds."
+  "game.ap2.turf_wars.camp_warning": "Return to your turf! Otherwise, your team will be eliminated in %s seconds.",
+  "game.ap2.turf_wars.eliminated_for_camping": "%s was eliminated because they didn't enter their turf for %s."
 }
