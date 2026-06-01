@@ -119,6 +119,22 @@ class FineTuningRoom(val pos: BlockPos, private val spawn: BlockPos, private val
         return score
     }
 
+    fun correctNoteCount(reference: Melody): Int {
+        restoreMelody()
+        var correct = 0
+
+        for (i in notes.indices) {
+            val actual = notes[i]
+            val expected = reference.notes[i].ordinal
+
+            if (actual == expected) {
+                correct++
+            }
+        }
+
+        return correct
+    }
+
     fun isComplete(reference: Melody): Boolean {
         restoreMelody()
         val refNotes = reference.notes

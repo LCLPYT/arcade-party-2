@@ -18,5 +18,7 @@
   "game.ap2.fine_tuning.test": "Click to test",
   "game.ap2.fine_tuning.stat.pitch_changes": "Pitch changes",
   "game.ap2.fine_tuning.stat.probes": "Notes tested",
-  "game.ap2.fine_tuning.stat.replays": "Melody replays"
+  "game.ap2.fine_tuning.stat.replays": "Melody replays",
+  "game.ap2.fine_tuning.stat.melodies_completed": "Melodies completed",
+  "game.ap2.fine_tuning.stat.correct_notes": "Correct notes"
 }

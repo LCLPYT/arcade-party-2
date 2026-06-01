@@ -20,6 +20,8 @@ const val MELODY_COUNT = 2
 val PITCH_CHANGES = Stat("pitch_changes", 0)
 val PROBES = Stat("probes", 0)
 val REPLAYS = Stat("replays", 0)
+val MELODIES_COMPLETED = Stat("melodies_completed", 0)
+val CORRECT_NOTES = Stat("correct_notes", 0)
 
 class FineTuningInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle), MapBootstrap {
 

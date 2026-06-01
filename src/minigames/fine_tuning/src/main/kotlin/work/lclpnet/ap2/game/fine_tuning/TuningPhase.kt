@@ -5,6 +5,7 @@ import net.minecraft.ChatFormatting.*
 import net.minecraft.core.BlockPos
 import net.minecraft.core.component.DataComponents
 import net.minecraft.network.chat.Component
+import net.minecraft.server.MinecraftServer
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.sounds.SoundEvents
@@ -24,6 +25,7 @@ import work.lclpnet.ap2.api.stats.FFAStatsManager
 import work.lclpnet.ap2.api.util.heads.PlayerHead
 import work.lclpnet.ap2.ext.mc.isIn
 import work.lclpnet.ap2.ext.mc.isOf
+import work.lclpnet.ap2.ext.mc.playNotifySound
 import work.lclpnet.ap2.game.fine_tuning.melody.*
 import work.lclpnet.ap2.impl.game.GameCommons
 import work.lclpnet.ap2.impl.game.data.IntDataContainer
@@ -34,7 +36,6 @@ import work.lclpnet.ap2.impl.util.heads.PlayerHeads
 import work.lclpnet.gaco.dynamic_entities.DynamicEntityManager
 import work.lclpnet.game.impl.prot.ProtectionTypes
 import work.lclpnet.game.util.BossBarTimer
-import work.lclpnet.kibu.access.entity.ServerPlayerAccess
 import work.lclpnet.kibu.hook.HookContainer
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks
 import work.lclpnet.kibu.hook.player.PlayerInventoryHooks
@@ -161,8 +162,10 @@ class TuningPhase(
 
         if (!room.isComplete(melody)) return
 
+        stats.increment(player, MELODIES_COMPLETED)
+
         completed.add(player.uuid)
-        ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 0.5f, 1f)
+        player.playNotifySound(SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 0.5f, 1f)
         gameHandle.translations.translateText("game.ap2.fine_tuning.completed").formatted(GREEN).sendTo(player)
 
         if (completed.size < gameHandle.participants.count()) return
@@ -251,7 +254,7 @@ class TuningPhase(
         }
     }
 
-    private fun evaluateScores(server: net.minecraft.server.MinecraftServer) {
+    private fun evaluateScores(server: MinecraftServer) {
         val playerManager = server.playerList
         val baseMelody = baseMelody()
         var bestScore = Int.MIN_VALUE
@@ -263,7 +266,9 @@ class TuningPhase(
             val room = rooms[uuid] ?: continue
             val player = playerManager.getPlayer(uuid) ?: continue
             val score = room.calculateScore(baseMelody, melody)
+            val correct = room.correctNoteCount(melody)
 
+            stats.increment(player, CORRECT_NOTES, correct)
             data.addScore(player, score)
 
             if (score > bestScore) {
