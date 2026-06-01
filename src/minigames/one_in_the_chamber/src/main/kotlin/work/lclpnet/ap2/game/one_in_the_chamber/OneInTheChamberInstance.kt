@@ -22,7 +22,6 @@ import net.minecraft.world.scores.criteria.ObjectiveCriteria
 import org.json.JSONArray
 import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.game.data.DataContainer
-import work.lclpnet.ap2.api.stats.FFAStatsManager
 import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.core.hook.ProjectileShootCallback
 import work.lclpnet.ap2.core.hook.SpectatePlayerCallback
@@ -64,14 +63,7 @@ class OneInTheChamberInstance(gameHandle: MiniGameHandle) : FFAGameInstance(game
     }
     private val respawnCooldown = VisualCooldown(gameHandle.scheduler)
     private val bowType = BowType.entries.random(random.asKotlinRandom())
-    private val stats = FFAStatsManager(linkedSetOf(
-        DAMAGE_DEALT,
-        DEATHS,
-        ARROWS_SHOT,
-        ARROWS_HIT,
-        KILLSTREAK
-    ))
-        .also { winManager.setStatsManager(it) }
+    private val stats = createStats(data, DAMAGE_DEALT, DEATHS, ARROWS_SHOT, ARROWS_HIT, KILLSTREAK)
     private val currentKillstreak = HashMap<UUID, Int>()
 
     init {

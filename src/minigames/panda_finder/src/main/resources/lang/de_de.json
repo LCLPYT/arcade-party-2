@@ -15,5 +15,7 @@
   "game.ap2.panda_finder.stat.pandas_clicked": "Pandas angeklickt",
   "game.ap2.panda_finder.stat.avg_spawn_distance": "Durchschnittlicher Spawn-Abstand",
   "game.ap2.panda_finder.stat.close_calls": "Fast gefunden",
+  "game.ap2.panda_finder.stat.pandas_lost": "Pandas entgangen",
+  "game.ap2.panda_finder.stat.pandas_stolen": "Pandas gestohlen",
   "game.ap2.panda_finder.stat.cooldowns": "Abklingzeiten"
 }

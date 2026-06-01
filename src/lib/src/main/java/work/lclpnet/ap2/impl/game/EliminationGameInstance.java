@@ -16,6 +16,8 @@ import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.game.EliminationController;
 import work.lclpnet.ap2.api.game.GameInfo;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
+import work.lclpnet.ap2.api.stats.FFAStatsManager;
+import work.lclpnet.ap2.api.stats.Stat;
 import work.lclpnet.ap2.core.hook.PlayerEliminatedCallback;
 import work.lclpnet.ap2.core.mixin.entity.LivingEntityAccessor;
 import work.lclpnet.ap2.impl.game.data.EliminationDataContainer;
@@ -30,8 +32,11 @@ import work.lclpnet.kibu.translate.bossbar.TranslatedBossBar;
 import work.lclpnet.kibu.translate.text.FormatWrapper;
 import work.lclpnet.kibu.translate.text.TranslatedText;
 
+import java.util.Arrays;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public abstract class EliminationGameInstance extends FFAGameInstance implements EliminationController {
 
@@ -196,5 +201,14 @@ public abstract class EliminationGameInstance extends FFAGameInstance implements
 
     protected void onEliminated(ServerPlayer player) {
         PlayerEliminatedCallback.HOOK.invoker().onEliminated(player);
+    }
+
+    protected final FFAStatsManager createStats(Stat<?>... stats) {
+        var set = Arrays.stream(stats).collect(Collectors.toCollection(LinkedHashSet::new));
+        var manager = new FFAStatsManager(set);
+
+        winManager.setStatsManager(manager);
+
+        return manager;
     }
 }
