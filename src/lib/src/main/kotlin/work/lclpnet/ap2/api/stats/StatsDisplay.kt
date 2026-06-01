@@ -21,11 +21,12 @@ class StatsDisplay(val translations: Translations, val logger: Logger) {
         val body = mutableListOf<DialogBody>()
 
         if (stats !is FFAStatsResult) {
-            logger.warn("Stats summary not implemented for result type {} ({})", stats.type(), stats.javaClass.simpleName)
+            logger.warn("Stats summary not implemented for result type {} ({})", stats.type, stats.javaClass.simpleName)
             return
         }
 
-        val schema = stats.results.entries.firstOrNull()?.value ?: return
+        val view = stats.view
+        val schema = view.results.entries.firstOrNull()?.value ?: return
 
         val buttons = mutableListOf<ActionButton>()
 
@@ -48,10 +49,10 @@ class StatsDisplay(val translations: Translations, val logger: Logger) {
             ))
         }
 
-        for ((ref, rank) in stats.order) {
+        for ((ref, rank) in view.order) {
             if (ref == null) continue
 
-            val result = stats.results[ref] ?: continue
+            val result = view.results[ref] ?: continue
 
             val name = ref.getNameFor(player).let {
                 if (it.style.color == null) it.copy().withStyle(GREEN)

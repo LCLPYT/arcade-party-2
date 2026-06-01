@@ -2,6 +2,8 @@ package work.lclpnet.ap2.impl.game.data.type;
 
 import it.unimi.dsi.fastutil.objects.ObjectIntPair;
 import net.minecraft.server.level.ServerPlayer;
+import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.game.data.GenericGameResult;
 
@@ -30,22 +32,22 @@ public class FFAGameResult implements GenericGameResult<PlayerRef> {
     }
 
     @Override
-    public Set<PlayerRef> getWinningPlayers() {
+    public @NonNull Set<PlayerRef> getWinningPlayers() {
         return refs;
     }
 
     @Override
-    public Set<PlayerRef> getWinningSubjects() {
+    public @NonNull Set<PlayerRef> getWinningSubjects() {
         return refs;
     }
 
     @Override
-    public List<ObjectIntPair<PlayerRef>> getPlayerResults() {
+    public @NotNull List<@NotNull ObjectIntPair<@NotNull PlayerRef>> getPlayerResults() {
         return results;
     }
 
     @Override
-    public List<ObjectIntPair<PlayerRef>> getSubjectResults() {
+    public @NotNull List<@NotNull ObjectIntPair<PlayerRef>> getSubjectResults() {
         return results;
     }
 }

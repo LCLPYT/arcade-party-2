@@ -6,11 +6,14 @@ import net.minecraft.server.players.PlayerList;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.base.ParticipantListener;
+import work.lclpnet.ap2.api.event.IntScoreEventSource;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.WinManagerAccess;
 import work.lclpnet.ap2.api.game.WinManagerView;
 import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.game.team.*;
+import work.lclpnet.ap2.api.stats.Stat;
+import work.lclpnet.ap2.api.stats.TeamStatsManager;
 import work.lclpnet.ap2.impl.game.data.type.TeamGameResult;
 import work.lclpnet.ap2.impl.game.data.type.TeamRef;
 import work.lclpnet.ap2.impl.game.data.type.TeamRefResolver;
@@ -19,9 +22,11 @@ import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.game.map.MapUtils;
 import work.lclpnet.kibu.hook.util.PositionRotation;
 
-import java.util.Collections;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static work.lclpnet.ap2.api.stats.CommonStats.SCORE;
 
 public abstract class TeamGameInstance extends BaseGameInstance implements ParticipantListener,
         TeamEliminatedListener, TeamSpawnAccess, WinManagerView {
@@ -161,4 +166,35 @@ public abstract class TeamGameInstance extends BaseGameInstance implements Parti
     }
 
     protected abstract DataContainer<Team, TeamRef> getData();
+
+    public TeamStatsManager createStats(
+            List<Stat<?>> teamStats,
+            List<Stat<?>> playerStats
+    ) {
+        var teamSet = new LinkedHashSet<>(teamStats);
+        var playerSet = new LinkedHashSet<>(playerStats);
+
+        var manager = new TeamStatsManager(teamSet, playerSet, this::createReference);
+
+        winManager.setStatsManager(manager);
+
+        return manager;
+    }
+
+    public TeamStatsManager createStats(
+            IntScoreEventSource<Team> teamScore,
+            List<Stat<?>> teamStats,
+            List<Stat<?>> memberStats
+    ) {
+        var teamSet = Stream.concat(Stream.of(SCORE), teamStats.stream()).collect(Collectors.toCollection(LinkedHashSet::new));
+        var memberSet = new LinkedHashSet<>(memberStats);
+
+        var manager = new TeamStatsManager(teamSet, memberSet, this::createReference);
+
+        teamScore.register((team, score) -> manager.getTeams().set(team, SCORE, score));
+
+        winManager.setStatsManager(manager);
+
+        return manager;
+    }
 }
