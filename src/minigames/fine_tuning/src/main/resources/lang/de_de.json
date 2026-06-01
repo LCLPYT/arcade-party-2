@@ -15,5 +15,8 @@
   "game.ap2.fine_tuning.controls.note_down": "Note verringern",
   "game.ap2.fine_tuning.controls.test": "Note testen",
   "game.ap2.fine_tuning.completed": "Glückwunsch, du hast die Melodie geschafft!",
-  "game.ap2.fine_tuning.test": "Klicke zum Testen"
+  "game.ap2.fine_tuning.test": "Klicke zum Testen",
+  "game.ap2.fine_tuning.stat.pitch_changes": "Tonänderungen",
+  "game.ap2.fine_tuning.stat.probes": "Getestete Noten",
+  "game.ap2.fine_tuning.stat.replays": "Melodie-Wiederholungen"
 }
