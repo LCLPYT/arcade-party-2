@@ -12,9 +12,9 @@ import net.minecraft.world.item.Items
 import net.minecraft.world.phys.Vec3
 import work.lclpnet.ap2.core.hook.EnderPearlTeleportCallback
 import work.lclpnet.ap2.core.hook.ProjectileShootCallback
-import work.lclpnet.ap2.impl.game.kit.KitHandle
-import work.lclpnet.ap2.impl.game.kit.KitOptions
-import work.lclpnet.ap2.impl.game.kit.SingleItemKit
+import work.lclpnet.ap2.game.kit.KitHandle
+import work.lclpnet.ap2.game.kit.KitOptions
+import work.lclpnet.ap2.game.kit.SingleItemKit
 import work.lclpnet.gaco.math.SplinePath
 import work.lclpnet.kibu.access.entity.ServerPlayerAccess
 import work.lclpnet.kibu.access.misc.CustomNbt
@@ -36,13 +36,13 @@ class EnderPearlKit(
     private val refundTasks = HashMap<UUID, TaskHandle>()
 
     override fun init(options: KitOptions) {
-        ProjectileShootCallback.HOOK.registerWith(handle.hooks()) { shooter, projectile ->
+        ProjectileShootCallback.HOOK.registerWith(handle.hooks) { shooter, projectile ->
             if (shooter is ServerPlayer && projectile is ThrownEnderpearl && handle.hasKitEquipped(shooter, this)) {
                 CustomNbt.set(projectile, ORIGIN_CODEC, shooter.position())
 
                 val uuid = projectile.uuid
 
-                refundTasks[uuid] = handle.scheduler().timeout(REFUND_DELAY_TICKS) { ->
+                refundTasks[uuid] = handle.scheduler.timeout(REFUND_DELAY_TICKS) { ->
                     refundTasks.remove(uuid)
                     projectile.discard()
                     refund(shooter.connection, options)
@@ -50,7 +50,7 @@ class EnderPearlKit(
             }
         }
 
-        EnderPearlTeleportCallback.HOOK.registerWith(handle.hooks()) { owner, enderPearl, pos ->
+        EnderPearlTeleportCallback.HOOK.registerWith(handle.hooks) { owner, enderPearl, pos ->
             if (owner is ServerPlayer && handle.hasKitEquipped(owner, this)) {
                 val refundTask = refundTasks.remove(enderPearl.uuid)
                 refundTask?.cancel()
@@ -59,7 +59,7 @@ class EnderPearlKit(
 
                 enderPearl.discard()
 
-                handle.translations().translateText("game.ap2.dragon_escape.teleport_too_far")
+                handle.translations.translateText("game.ap2.dragon_escape.teleport_too_far")
                     .formatted(RED)
                     .sendTo(owner)
 

@@ -1,17 +1,8 @@
-package work.lclpnet.ap2.impl.game.kit;
+package work.lclpnet.ap2.game.kit
 
-public abstract class BaseKit implements Kit {
-
-    protected final KitHandle handle;
-    protected final String id;
-
-    protected BaseKit(KitHandle handle, String id) {
-        this.id = id;
-        this.handle = handle;
-    }
-
-    @Override
-    public String id() {
-        return id;
-    }
+abstract class BaseKit protected constructor(
+    protected val handle: KitHandle,
+    protected val id: String
+) : Kit {
+    override fun id(): String = id
 }

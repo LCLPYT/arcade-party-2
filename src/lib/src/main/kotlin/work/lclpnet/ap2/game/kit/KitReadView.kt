@@ -1,11 +1,13 @@
-package work.lclpnet.ap2.impl.game.kit;
+package work.lclpnet.ap2.game.kit
 
-import net.minecraft.server.level.ServerPlayer;
-import org.jetbrains.annotations.NotNull;
+import net.minecraft.server.level.ServerPlayer
 
-public interface KitReadView {
+interface KitReadView {
+    fun getKit(player: ServerPlayer): Kit
 
-    @NotNull Kit getKit(ServerPlayer player);
-
-    boolean hasKitEquipped(ServerPlayer player, Kit kit);
+    fun hasKitEquipped(player: ServerPlayer, kit: Kit): Boolean =
+        getKit(player) == kit
 }
+
+inline fun <reified T> KitReadView.hasKitEquipped(player: ServerPlayer): Boolean =
+    getKit(player) is T
