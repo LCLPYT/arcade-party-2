@@ -73,6 +73,12 @@ public abstract class FFAGameInstance extends BaseGameInstance implements Partic
         gameHandle.getParticipants().forEach(getData()::identityIfAbsent);
     }
 
+    /**
+     * Creates a {@link work.lclpnet.ap2.api.stats.StatsManager} that tracks the score given by the game int score data container and additional stats.
+     * @param data The int score data container. Automatically syncs the score stat.
+     * @param stats The additional stats to track. Must be updated by the game implementation.
+     * @return The {@link FFAStatsManager} to track stats.
+     */
     protected final FFAStatsManager createStats(IntScoreEventSource<ServerPlayer> data, Stat<?>... stats) {
         var set = Stream.concat(Stream.of(SCORE), Arrays.stream(stats)).collect(Collectors.toCollection(LinkedHashSet::new));
         var manager = new FFAStatsManager(set);
@@ -83,7 +89,6 @@ public abstract class FFAGameInstance extends BaseGameInstance implements Partic
 
         return manager;
     }
-
 
     @Override
     public WinManagerAccess getWinManagerAccess() {

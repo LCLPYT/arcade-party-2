@@ -15,5 +15,7 @@
   "game.ap2.panda_finder.stat.pandas_clicked": "Pandas clicked",
   "game.ap2.panda_finder.stat.avg_spawn_distance": "Avg. spawn distance",
   "game.ap2.panda_finder.stat.close_calls": "Close calls",
+  "game.ap2.panda_finder.stat.pandas_lost": "Pandas lost",
+  "game.ap2.panda_finder.stat.pandas_stolen": "Pandas stolen",
   "game.ap2.panda_finder.stat.cooldowns": "Cooldowns"
 }
