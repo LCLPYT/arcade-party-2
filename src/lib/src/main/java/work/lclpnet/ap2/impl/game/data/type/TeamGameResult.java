@@ -1,6 +1,8 @@
 package work.lclpnet.ap2.impl.game.data.type;
 
 import it.unimi.dsi.fastutil.objects.ObjectIntPair;
+import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.game.data.GenericGameResult;
 import work.lclpnet.ap2.api.game.data.SubjectRefResolver;
@@ -56,22 +58,22 @@ public class TeamGameResult implements GenericGameResult<TeamRef> {
     }
 
     @Override
-    public Set<PlayerRef> getWinningPlayers() {
+    public @NonNull Set<PlayerRef> getWinningPlayers() {
         return players;
     }
 
     @Override
-    public Set<TeamRef> getWinningSubjects() {
+    public @NonNull Set<TeamRef> getWinningSubjects() {
         return refs;
     }
 
     @Override
-    public List<ObjectIntPair<PlayerRef>> getPlayerResults() {
+    public @NotNull List<@NotNull ObjectIntPair<@NotNull PlayerRef>> getPlayerResults() {
         return playerResults;
     }
 
     @Override
-    public List<ObjectIntPair<TeamRef>> getSubjectResults() {
+    public @NotNull List<@NotNull ObjectIntPair<TeamRef>> getSubjectResults() {
         return subjectResults;
     }
 }

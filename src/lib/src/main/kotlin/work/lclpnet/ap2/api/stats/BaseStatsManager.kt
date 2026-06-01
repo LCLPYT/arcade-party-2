@@ -1,5 +1,6 @@
 package work.lclpnet.ap2.api.stats
 
+import it.unimi.dsi.fastutil.objects.ObjectIntPair
 import net.minecraft.resources.Identifier
 import work.lclpnet.ap2.api.game.GameInfo
 import work.lclpnet.ap2.api.game.data.GenericGameResult
@@ -30,10 +31,16 @@ class Stats(stats: StatSet) {
     }
 }
 
+class StatsView<Ref : SubjectRef>(
+    val stats: StatSet,
+    val order: List<ObjectIntPair<Ref>>,
+    val results: Map<Ref, Stats>,
+)
+
 interface StatsResult {
     val gameId: Identifier
     val mapId: MapDescriptor
-    fun type(): String
+    val type: String
 }
 
 interface StatsManager<Ref : SubjectRef> {
