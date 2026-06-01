@@ -18,5 +18,7 @@
   "game.ap2.fine_tuning.test": "Klicke zum Testen",
   "game.ap2.fine_tuning.stat.pitch_changes": "Tonänderungen",
   "game.ap2.fine_tuning.stat.probes": "Getestete Noten",
-  "game.ap2.fine_tuning.stat.replays": "Melodie-Wiederholungen"
+  "game.ap2.fine_tuning.stat.replays": "Melodie-Wiederholungen",
+  "game.ap2.fine_tuning.stat.melodies_completed": "Korrekte Melodien",
+  "game.ap2.fine_tuning.stat.correct_notes": "Korrekte Noten"
 }
