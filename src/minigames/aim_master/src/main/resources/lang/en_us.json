@@ -1,5 +1,9 @@
 {
   "game.ap2.aim_master": "Aim Master",
   "game.ap2.aim_master.task": "Reach %s points",
-  "game.ap2.aim_master.description": "Click on the correct blocks and be the first to reach the point goal!"
+  "game.ap2.aim_master.description": "Click on the correct blocks and be the first to reach the point goal!",
+  "game.ap2.aim_master.stat.clicks": "Clicks",
+  "game.ap2.aim_master.stat.misses": "Misses",
+  "game.ap2.aim_master.stat.accuracy": "Accuracy",
+  "game.ap2.aim_master.stat.streak": "Best streak"
 }
