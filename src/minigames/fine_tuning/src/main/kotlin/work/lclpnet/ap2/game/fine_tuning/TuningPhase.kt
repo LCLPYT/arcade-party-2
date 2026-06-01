@@ -20,6 +20,7 @@ import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.state.BlockState
 import work.lclpnet.ap2.ApConstants
 import work.lclpnet.ap2.api.game.MiniGameHandle
+import work.lclpnet.ap2.api.stats.FFAStatsManager
 import work.lclpnet.ap2.api.util.heads.PlayerHead
 import work.lclpnet.ap2.ext.mc.isIn
 import work.lclpnet.ap2.ext.mc.isOf
@@ -50,6 +51,7 @@ class TuningPhase(
     private val gameHandle: MiniGameHandle,
     private val rooms: Map<UUID, FineTuningRoom>,
     private val data: IntDataContainer<ServerPlayer, PlayerRef>,
+    private val stats: FFAStatsManager,
     private val onEnd: Runnable,
     private val commons: GameCommons,
     private val world: ServerLevel
@@ -124,7 +126,11 @@ class TuningPhase(
             val state: BlockState = world.getBlockState(pos)
 
             when {
-                state.isOf(Blocks.NOTE_BLOCK) -> rooms[player.uuid]?.playNoteBlock(player, pos)
+                state.isOf(Blocks.NOTE_BLOCK) -> {
+                    if (rooms[player.uuid]?.playNoteBlock(player, pos) == true) {
+                        stats.increment(player, PROBES)
+                    }
+                }
                 state.isIn(BlockTags.ALL_SIGNS) -> onUseSign(player, pos)
             }
 
@@ -148,7 +154,9 @@ class TuningPhase(
         val room = rooms[player.uuid] ?: return
         if (completed.contains(player.uuid)) return
 
-        room.useNoteBlock(player, pos, dynamicEntityManager)
+        if (!room.useNoteBlock(player, pos, dynamicEntityManager)) return
+
+        stats.increment(player, PITCH_CHANGES)
         markInteraction(player)
 
         if (!room.isComplete(melody)) return
@@ -373,6 +381,8 @@ class TuningPhase(
 
         val handle = replayMelody(player) { replaying.remove(uuid) } ?: return false
         replaying[uuid] = handle
+
+        stats.increment(player, REPLAYS)
 
         return true
     }
