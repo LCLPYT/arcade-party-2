@@ -27,7 +27,7 @@ class FineTuningInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandl
 
     private val data: IntDataContainer<ServerPlayer, PlayerRef> =
         DataContainers.finaleCompatibleScoreContainer(gameHandle, PlayerRef::create)
-    private val stats = createStats(data, PITCH_CHANGES, PROBES, REPLAYS)
+    private val stats = createStats(data, PITCH_CHANGES, PROBES, REPLAYS, MELODIES_COMPLETED, CORRECT_NOTES)
     private lateinit var setup: FineTuningSetup
     private lateinit var tuningPhase: TuningPhase
 
