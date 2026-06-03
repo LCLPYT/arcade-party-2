@@ -24,7 +24,6 @@ import net.minecraft.world.scores.DisplaySlot
 import net.minecraft.world.scores.criteria.ObjectiveCriteria
 import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.game.data.DataContainer
-import work.lclpnet.ap2.api.stats.FFAStatsManager
 import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.ext.runAfter
 import work.lclpnet.ap2.impl.game.FFAGameInstance
@@ -50,6 +49,8 @@ const val CLOSE_CALL_DISTANCE = 10.0
 val PANDAS_CLICKED = Stat("pandas_clicked", 0)
 val AVG_SPAWN_DISTANCE = Stat("avg_spawn_distance", 0f)
 val CLOSE_CALLS = Stat("close_calls", 0)
+val PANDAS_STOLEN = Stat("pandas_stolen", 0)
+val PANDAS_LOST = Stat("pandas_lost", 0)
 val COOLDOWNS = Stat("cooldowns", 0)
 
 class PandaFinderInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle) {
@@ -59,12 +60,7 @@ class PandaFinderInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHand
     private val spamManager = SpamManager()
     private lateinit var pandaManager: PandaManager
     private lateinit var bossBar: DynamicTranslatedPlayerBossBar
-    private val stats = FFAStatsManager(linkedSetOf(
-        PANDAS_CLICKED,
-        AVG_SPAWN_DISTANCE,
-        CLOSE_CALLS,
-        COOLDOWNS
-    )).also { winManager.setStatsManager(it) }
+    private val stats = createStats(data, PANDAS_CLICKED, AVG_SPAWN_DISTANCE, CLOSE_CALLS, PANDAS_STOLEN, PANDAS_LOST, COOLDOWNS)
     private var round = 0
 
     override fun getData(): DataContainer<ServerPlayer, PlayerRef> = data
@@ -208,13 +204,23 @@ class PandaFinderInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHand
 
         pandaManager.setFound()
 
+        val foundPos = panda.position()
+        var stolen = false
+
         for (participant in gameHandle.participants) {
             if (participant == player) continue
 
             if (searchedPositions.any { pos -> participant.position().distanceTo(pos) <= CLOSE_CALL_DISTANCE }) {
                 stats.increment(participant, CLOSE_CALLS)
             }
+
+            if (participant.position().distanceTo(foundPos) <= CLOSE_CALL_DISTANCE) {
+                stats.increment(participant, PANDAS_LOST)
+                stolen = true
+            }
         }
+
+        if (stolen) stats.increment(player, PANDAS_STOLEN)
 
         data.addScore(player, 1)
         bossBar.setArgument(player, 0, FormatWrapper.styled(data.getScore(player), ChatFormatting.YELLOW))

@@ -1,7 +1,9 @@
 package work.lclpnet.ap2.game.mimicry.data
 
 import it.unimi.dsi.fastutil.ints.IntArrayList
+import it.unimi.dsi.fastutil.objects.Object2DoubleOpenHashMap
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap
+import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap
 import net.minecraft.ChatFormatting
 import net.minecraft.core.BlockPos
 import net.minecraft.server.level.ServerLevel
@@ -9,11 +11,15 @@ import net.minecraft.server.level.ServerPlayer
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.sounds.SoundSource
 import work.lclpnet.ap2.api.game.MiniGameHandle
+import work.lclpnet.ap2.api.stats.FFAStatsManager
+import work.lclpnet.ap2.game.mimicry.AVG_CLICK_TIME
+import work.lclpnet.ap2.game.mimicry.AVG_TIME_USAGE
 import work.lclpnet.ap2.impl.util.SoundHelper
 import work.lclpnet.gaco.ds.BlockBox
 import work.lclpnet.kibu.access.entity.ServerPlayerAccess
 import work.lclpnet.kibu.scheduler.api.TaskHandle
 import java.util.*
+import kotlin.math.round
 
 class MimicryManager(
     private val gameHandle: MiniGameHandle,
@@ -21,6 +27,7 @@ class MimicryManager(
     private val buttons: BlockBox,
     private val random: Random,
     private val world: ServerLevel,
+    private val stats: FFAStatsManager,
     private val completeCallback: (ServerPlayer) -> Unit
 ) {
     private val sequence = IntArrayList()
@@ -28,6 +35,13 @@ class MimicryManager(
     private val buttonPitches = FloatArray(buttons.volume()) { i -> SoundHelper.getPitch(i % 25) }
     var replay = false
     private val deactivation = HashMap<UUID, TaskHandle>()
+    private var replayStartMillis = 0L
+    private var maxReplayMillis = 0L
+    private val lastClickMillis = Object2LongOpenHashMap<UUID>()
+    private val clickTimeSumMillis = Object2LongOpenHashMap<UUID>()
+    private val clickCount = Object2IntOpenHashMap<UUID>()
+    private val usageSum = Object2DoubleOpenHashMap<UUID>()
+    private val usageCount = Object2IntOpenHashMap<UUID>()
 
     fun eachParticipant(action: (ServerPlayer, MimicryRoom) -> Unit) {
         val participants = gameHandle.participants
@@ -50,6 +64,12 @@ class MimicryManager(
         }
 
         sequence.add(random.nextInt(buttonCount))
+    }
+
+    fun beginReplay(maxSeconds: Int) {
+        replayStartMillis = System.currentTimeMillis()
+        maxReplayMillis = maxSeconds * 1000L
+        lastClickMillis.clear()
     }
 
     fun sequenceLength() = sequence.size
@@ -81,6 +101,9 @@ class MimicryManager(
         val newOffset = offset + 1
         progress.put(uuid, newOffset)
 
+        val now = System.currentTimeMillis()
+        recordClickTime(player, uuid, now)
+
         val pitch = getButtonPitch(button)
         SoundHelper.playSound(player, SoundEvents.NOTE_BLOCK_BIT.value(), SoundSource.PLAYERS,
             pos.x.toDouble(), pos.y.toDouble(), pos.z.toDouble(), 0.5f, pitch)
@@ -88,10 +111,37 @@ class MimicryManager(
         activateButton(room, button, uuid)
 
         if (newOffset == sequence.size) {
+            recordTimeUsage(player, uuid, now)
             onCompleteSequence(player)
         }
 
         return false
+    }
+
+    private fun recordClickTime(player: ServerPlayer, uuid: UUID, now: Long) {
+        val last = if (lastClickMillis.containsKey(uuid)) lastClickMillis.getLong(uuid) else replayStartMillis
+
+        clickTimeSumMillis.addTo(uuid, now - last)
+        clickCount.addTo(uuid, 1)
+        lastClickMillis.put(uuid, now)
+
+        val avgMillis = clickTimeSumMillis.getLong(uuid).toDouble() / clickCount.getInt(uuid)
+        val seconds = round(avgMillis / 100.0).toFloat() / 10f
+
+        stats.set(player, AVG_CLICK_TIME, seconds)
+    }
+
+    private fun recordTimeUsage(player: ServerPlayer, uuid: UUID, now: Long) {
+        if (maxReplayMillis <= 0) return
+
+        val ratio = (now - replayStartMillis).toDouble() / maxReplayMillis
+        usageSum.addTo(uuid, ratio)
+        usageCount.addTo(uuid, 1)
+
+        val avgRatio = usageSum.getDouble(uuid) / usageCount.getInt(uuid)
+        val percent = round(avgRatio * 1000.0).toFloat() / 10f
+
+        stats.set(player, AVG_TIME_USAGE, percent)
     }
 
     private fun activateButton(room: MimicryRoom, button: Int, uuid: UUID) {

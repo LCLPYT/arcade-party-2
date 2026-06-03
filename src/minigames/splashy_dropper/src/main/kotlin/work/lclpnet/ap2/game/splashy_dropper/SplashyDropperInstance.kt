@@ -18,7 +18,6 @@ import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.game.data.DataContainer
 import work.lclpnet.ap2.api.map.MapBootstrap
 import work.lclpnet.ap2.api.map.MapBootstrapFunction
-import work.lclpnet.ap2.api.stats.FFAStatsManager
 import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.ext.mc.isIn
 import work.lclpnet.ap2.ext.mc.playNotifySound
@@ -54,8 +53,7 @@ val MISSED = Stat("missed", 0)
 class SplashyDropperInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle), MapBootstrapFunction {
 
     private val data = DataContainers.finaleCompatibleScoreContainer(gameHandle, PlayerRef::create)
-    private val stats = FFAStatsManager(linkedSetOf(HIT_SMALL, HIT_MEDIUM, HIT_LARGE, MISSED))
-        .also { winManager.setStatsManager(it) }
+    private val stats = createStats(data, HIT_SMALL, HIT_MEDIUM, HIT_LARGE, MISSED)
     private val random = Random()
     private val blocksBelow = ArrayList<BlockPos>()
     private val movementBlocker = SimpleMovementBlocker(gameHandle.rootScheduler).also {

@@ -5,6 +5,7 @@ import net.minecraft.ChatFormatting.*
 import net.minecraft.core.BlockPos
 import net.minecraft.core.component.DataComponents
 import net.minecraft.network.chat.Component
+import net.minecraft.server.MinecraftServer
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.sounds.SoundEvents
@@ -20,9 +21,11 @@ import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.state.BlockState
 import work.lclpnet.ap2.ApConstants
 import work.lclpnet.ap2.api.game.MiniGameHandle
+import work.lclpnet.ap2.api.stats.FFAStatsManager
 import work.lclpnet.ap2.api.util.heads.PlayerHead
 import work.lclpnet.ap2.ext.mc.isIn
 import work.lclpnet.ap2.ext.mc.isOf
+import work.lclpnet.ap2.ext.mc.playNotifySound
 import work.lclpnet.ap2.game.fine_tuning.melody.*
 import work.lclpnet.ap2.impl.game.GameCommons
 import work.lclpnet.ap2.impl.game.data.IntDataContainer
@@ -33,7 +36,6 @@ import work.lclpnet.ap2.impl.util.heads.PlayerHeads
 import work.lclpnet.gaco.dynamic_entities.DynamicEntityManager
 import work.lclpnet.game.impl.prot.ProtectionTypes
 import work.lclpnet.game.util.BossBarTimer
-import work.lclpnet.kibu.access.entity.ServerPlayerAccess
 import work.lclpnet.kibu.hook.HookContainer
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks
 import work.lclpnet.kibu.hook.player.PlayerInventoryHooks
@@ -50,6 +52,7 @@ class TuningPhase(
     private val gameHandle: MiniGameHandle,
     private val rooms: Map<UUID, FineTuningRoom>,
     private val data: IntDataContainer<ServerPlayer, PlayerRef>,
+    private val stats: FFAStatsManager,
     private val onEnd: Runnable,
     private val commons: GameCommons,
     private val world: ServerLevel
@@ -124,7 +127,11 @@ class TuningPhase(
             val state: BlockState = world.getBlockState(pos)
 
             when {
-                state.isOf(Blocks.NOTE_BLOCK) -> rooms[player.uuid]?.playNoteBlock(player, pos)
+                state.isOf(Blocks.NOTE_BLOCK) -> {
+                    if (rooms[player.uuid]?.playNoteBlock(player, pos) == true) {
+                        stats.increment(player, PROBES)
+                    }
+                }
                 state.isIn(BlockTags.ALL_SIGNS) -> onUseSign(player, pos)
             }
 
@@ -148,13 +155,17 @@ class TuningPhase(
         val room = rooms[player.uuid] ?: return
         if (completed.contains(player.uuid)) return
 
-        room.useNoteBlock(player, pos, dynamicEntityManager)
+        if (!room.useNoteBlock(player, pos, dynamicEntityManager)) return
+
+        stats.increment(player, PITCH_CHANGES)
         markInteraction(player)
 
         if (!room.isComplete(melody)) return
 
+        stats.increment(player, MELODIES_COMPLETED)
+
         completed.add(player.uuid)
-        ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 0.5f, 1f)
+        player.playNotifySound(SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 0.5f, 1f)
         gameHandle.translations.translateText("game.ap2.fine_tuning.completed").formatted(GREEN).sendTo(player)
 
         if (completed.size < gameHandle.participants.count()) return
@@ -243,7 +254,7 @@ class TuningPhase(
         }
     }
 
-    private fun evaluateScores(server: net.minecraft.server.MinecraftServer) {
+    private fun evaluateScores(server: MinecraftServer) {
         val playerManager = server.playerList
         val baseMelody = baseMelody()
         var bestScore = Int.MIN_VALUE
@@ -255,7 +266,9 @@ class TuningPhase(
             val room = rooms[uuid] ?: continue
             val player = playerManager.getPlayer(uuid) ?: continue
             val score = room.calculateScore(baseMelody, melody)
+            val correct = room.correctNoteCount(melody)
 
+            stats.increment(player, CORRECT_NOTES, correct)
             data.addScore(player, score)
 
             if (score > bestScore) {
@@ -373,6 +386,8 @@ class TuningPhase(
 
         val handle = replayMelody(player) { replaying.remove(uuid) } ?: return false
         replaying[uuid] = handle
+
+        stats.increment(player, REPLAYS)
 
         return true
     }

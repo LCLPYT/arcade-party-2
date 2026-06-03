@@ -19,6 +19,7 @@ import work.lclpnet.ap2.api.base.Participants
 import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.map.MapBootstrap
 import work.lclpnet.ap2.api.map.MapBootstrapFunction
+import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.ext.runAfter
 import work.lclpnet.ap2.ext.runEveryTick
 import work.lclpnet.ap2.ext.ticks
@@ -43,6 +44,11 @@ private const val INITIAL_CREDITS = BOMB_PASS_COST * 2
 private const val MINIMUM_BOMB_PASS_TICKS = 10
 private const val CREDITS_PER_TICK = 1
 
+val BOMB_ASSIGNED = Stat("bomb_assigned", 0)
+val BOMB_PASSED = Stat("bomb_passed", 0)
+val BOMB_EXPLODED = Stat("bomb_exploded", 0)
+val MAX_SAFE_STREAK = Stat("max_safe_streak", 0)
+
 class GlowingBombInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gameHandle), MapBootstrapFunction {
 
     private val random = Random()
@@ -50,6 +56,8 @@ class GlowingBombInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
         it.setModifySpeedAttribute(false)
     }
     private val credits = Object2IntOpenHashMap<UUID>()
+    private val safeStreak = Object2IntOpenHashMap<UUID>()
+    private val stats = createStats(BOMB_ASSIGNED, BOMB_PASSED, BOMB_EXPLODED, MAX_SAFE_STREAK)
     private val initialPlayerCount = gameHandle.participants.count()
     private lateinit var manager: GbManager
     private lateinit var scene: Scene
@@ -154,7 +162,10 @@ class GlowingBombInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
         wasPassed = false
         mayPass = true
 
-        manager.bombHolder().ifPresent(::onAcquiredBomb)
+        manager.bombHolder().ifPresent { player ->
+            stats.increment(player, BOMB_ASSIGNED)
+            onAcquiredBomb(player)
+        }
     }
 
     private fun randomFuseTicks(): Int {
@@ -224,6 +235,8 @@ class GlowingBombInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
 
         if (nextHolder == player) return
 
+        stats.increment(player, BOMB_PASSED)
+
         wasPassed = true
 
         val pos = manager.bombLocation() ?: return
@@ -235,7 +248,9 @@ class GlowingBombInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
 
     private fun bombTimerExpired() {
         mayPass = false
-        manager.bombHolder().ifPresent(::onPassedBomb)
+        val holder = manager.bombHolder()
+        holder.ifPresent(::onPassedBomb)
+        holder.ifPresent(::onBombExploded)
 
         val b = bomb!!
         val pos: Vector3d = b.worldTranslation()
@@ -247,6 +262,21 @@ class GlowingBombInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
 
         val anchor = manager.bombAnchor() ?: return checkForWinnerOrNext()
         b.yieldGlowStone(manager, anchor)
+    }
+
+    private fun onBombExploded(holder: ServerPlayer) {
+        stats.increment(holder, BOMB_EXPLODED)
+
+        val explodedUuid = holder.uuid
+        safeStreak.put(explodedUuid, 0)
+
+        for (player in gameHandle.participants) {
+            if (player.uuid == explodedUuid) continue
+
+            val streak = safeStreak.getInt(player.uuid) + 1
+            safeStreak.put(player.uuid, streak)
+            stats.set(player, MAX_SAFE_STREAK, maxOf(stats.get(player, MAX_SAFE_STREAK), streak))
+        }
     }
 
     private fun checkForWinnerOrNext() {
