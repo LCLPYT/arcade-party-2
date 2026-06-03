@@ -23,6 +23,10 @@ class Stats(stats: StatSet) {
 
     @Suppress("UNCHECKED_CAST")
     operator fun <T> get(stat: Stat<T>): T {
+        require(stats.containsKey(stat)) {
+            "Stat '${stat.id}' is not registered"
+        }
+
         return stats[stat] as T
     }
 
