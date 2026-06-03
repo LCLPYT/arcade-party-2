@@ -2,12 +2,10 @@ package work.lclpnet.ap2.api.stats
 
 import it.unimi.dsi.fastutil.objects.ObjectIntPair
 import net.minecraft.resources.Identifier
-import net.minecraft.server.level.ServerPlayer
 import work.lclpnet.ap2.api.game.GameInfo
 import work.lclpnet.ap2.api.game.data.GenericGameResult
 import work.lclpnet.ap2.api.game.data.SubjectRef
 import work.lclpnet.ap2.api.game.data.SubjectRefFactory
-import work.lclpnet.ap2.impl.game.data.type.PlayerRef
 import work.lclpnet.game.map.GameMap
 import work.lclpnet.game.map.MapDescriptor
 
@@ -33,10 +31,21 @@ class Stats(stats: StatSet) {
     }
 }
 
+class StatsView<Ref : SubjectRef>(
+    val stats: StatSet,
+    val order: List<ObjectIntPair<Ref>>,
+    val results: Map<Ref, Stats>,
+)
+
 interface StatsResult {
     val gameId: Identifier
     val mapId: MapDescriptor
-    fun type(): String
+    val type: String
+}
+
+interface StatsManager<Ref : SubjectRef> {
+    fun freeze()
+    fun getResult(gameInfo: GameInfo, map: GameMap, result: GenericGameResult<Ref>): StatsResult
 }
 
 open class BaseStatsManager<T, Ref : SubjectRef>(
@@ -47,14 +56,16 @@ open class BaseStatsManager<T, Ref : SubjectRef>(
     private var frozen = false
 
     @Synchronized
-    fun <U> modify(subject: T, stat: Stat<U>, action: (U) -> U): BaseStatsManager<T, Ref> {
-        if (frozen) return this
+    fun <U> modify(subject: T, stat: Stat<U>, action: (U) -> U): U {
+        if (frozen) return get(subject, stat)
 
         val stats = statsOf(subject)
 
-        stats[stat] = action(stats[stat])
+        val value = action(stats[stat])
 
-        return this
+        stats[stat] = value
+
+        return value
     }
 
     @Synchronized
@@ -66,8 +77,13 @@ open class BaseStatsManager<T, Ref : SubjectRef>(
         return this
     }
 
+    @Synchronized
+    fun <U> get(subject: T, stat: Stat<U>): U {
+        return statsOf(subject)[stat]
+    }
+
     @JvmOverloads
-    fun increment(subject: T, stat: Stat<Int>, amount: Int = 1): BaseStatsManager<T, Ref> =
+    fun increment(subject: T, stat: Stat<Int>, amount: Int = 1): Int =
         modify(subject, stat) { it + amount }
 
     private fun statsOf(subject: T): Stats {
@@ -81,27 +97,4 @@ open class BaseStatsManager<T, Ref : SubjectRef>(
     }
 
     fun getEntries() = entries.toMap()
-}
-
-interface StatsManager<Ref : SubjectRef> {
-    fun freeze()
-    fun getResult(gameInfo: GameInfo, map: GameMap, result: GenericGameResult<Ref>): StatsResult
-}
-
-class FFAStatsResult(
-    override val gameId: Identifier,
-    override val mapId: MapDescriptor,
-    val order: List<ObjectIntPair<PlayerRef>>,
-    val results: Map<PlayerRef, Stats>
-) : StatsResult {
-    override fun type() = "ffa"
-}
-
-class FFAStatsManager(stats: StatSet) : BaseStatsManager<ServerPlayer, PlayerRef>(stats, PlayerRef::create), StatsManager<PlayerRef> {
-
-    override fun getResult(gameInfo: GameInfo, map: GameMap, result: GenericGameResult<PlayerRef>): FFAStatsResult {
-        val results = getEntries()
-
-        return FFAStatsResult(gameInfo.id, map.descriptor, result.subjectResults, results)
-    }
 }

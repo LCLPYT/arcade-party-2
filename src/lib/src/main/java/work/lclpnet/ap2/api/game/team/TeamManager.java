@@ -18,7 +18,7 @@ public interface TeamManager {
 
     Optional<Team> getTeam(UUID uuid);
 
-    void partitionIntoTeams(Set<ServerPlayer> players, Set<TeamKey> teams);
+    void partitionIntoTeams(Set<ServerPlayer> players, Set<? extends TeamKey> teams);
 
     boolean isParticipating(TeamKey key);
 
@@ -42,7 +42,7 @@ public interface TeamManager {
         return getTeam(player.getUUID());
     }
 
-    default void partitionIntoTeams(Participants participants, Set<TeamKey> teams) {
+    default void partitionIntoTeams(Participants participants, Set<? extends TeamKey> teams) {
         partitionIntoTeams(participants.getAsSet(), teams);
     }
 

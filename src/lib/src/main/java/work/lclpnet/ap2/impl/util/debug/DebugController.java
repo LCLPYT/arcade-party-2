@@ -56,6 +56,14 @@ public class DebugController {
         visualizeBoxes(mask.greedyMeshing().generateBoxes(), pos, transformation, state);
     }
 
+    public void visualizeBoxes(List<BlockBox> boxes, BlockState state) {
+        if (renderer == null) return;
+
+        for (BlockBox box : boxes) {
+            renderer.box(box, state);
+        }
+    }
+
     public void visualizeBoxes(List<BlockBox> boxes, BlockPos pos, Matrix3i transformation, BlockState state) {
         if (renderer == null) return;
 
