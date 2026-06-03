@@ -28,7 +28,7 @@ import net.minecraft.world.scores.DisplaySlot
 import net.minecraft.world.scores.Team
 import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.game.data.DataContainer
-import work.lclpnet.ap2.api.stats.CommonStats.SCORE
+import work.lclpnet.ap2.api.stats.CommonStats.Score
 import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.core.type.ApVariantHolder
 import work.lclpnet.ap2.impl.game.FFAGameInstance
@@ -45,7 +45,7 @@ import work.lclpnet.kibu.hook.entity.ProjectileCanHitCallback
 import work.lclpnet.kibu.hook.entity.ProjectileHooks
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks
 import work.lclpnet.kibu.translate.Translations
-import java.util.Random
+import java.util.*
 
 private const val BABY_CHANCE = 0.15
 private const val TNT_CHANCE = 0.07
@@ -59,7 +59,7 @@ private val CHICKENS_EXPLODED = Stat("chickens_exploded", 0)
 class ChickenShooterInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle), Runnable {
 
     private val data = DataContainers.finaleCompatibleScoreContainer(gameHandle, PlayerRef::create)
-    private val stats = createStats(data, SCORE, BABY_CHICKENS, TNT_DETONATED, CHICKENS_EXPLODED)
+    private val stats = createStats(data, Score, BABY_CHICKENS, TNT_DETONATED, CHICKENS_EXPLODED)
     private val random = Random()
     private val chickenSet = mutableSetOf<Chicken>()
     private lateinit var chickenBox: BlockBox
