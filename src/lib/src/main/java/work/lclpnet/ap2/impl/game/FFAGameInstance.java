@@ -22,7 +22,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static work.lclpnet.ap2.api.stats.CommonStats.SCORE;
+import static work.lclpnet.ap2.api.stats.CommonStats.Score;
 
 public abstract class FFAGameInstance extends BaseGameInstance implements ParticipantListener, WinManagerView {
 
@@ -74,10 +74,10 @@ public abstract class FFAGameInstance extends BaseGameInstance implements Partic
     }
 
     protected final FFAStatsManager createStats(IntScoreEventSource<ServerPlayer> data, Stat<?>... stats) {
-        var set = Stream.concat(Stream.of(SCORE), Arrays.stream(stats)).collect(Collectors.toCollection(LinkedHashSet::new));
+        var set = Stream.concat(Stream.of(Score), Arrays.stream(stats)).collect(Collectors.toCollection(LinkedHashSet::new));
         var manager = new FFAStatsManager(set);
 
-        data.register((player, score) -> manager.set(player, SCORE, score));
+        data.register((player, score) -> manager.set(player, Score, score));
 
         winManager.setStatsManager(manager);
 

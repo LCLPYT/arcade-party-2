@@ -26,7 +26,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static work.lclpnet.ap2.api.stats.CommonStats.SCORE;
+import static work.lclpnet.ap2.api.stats.CommonStats.Score;
 
 public abstract class TeamGameInstance extends BaseGameInstance implements ParticipantListener,
         TeamEliminatedListener, TeamSpawnAccess, WinManagerView {
@@ -167,7 +167,7 @@ public abstract class TeamGameInstance extends BaseGameInstance implements Parti
 
     protected abstract DataContainer<Team, TeamRef> getData();
 
-    public TeamStatsManager createStats(
+    public @NotNull TeamStatsManager createStats(
             List<Stat<?>> teamStats,
             List<Stat<?>> playerStats
     ) {
@@ -181,17 +181,17 @@ public abstract class TeamGameInstance extends BaseGameInstance implements Parti
         return manager;
     }
 
-    public TeamStatsManager createStats(
+    public @NotNull TeamStatsManager createStats(
             IntScoreEventSource<Team> teamScore,
             List<Stat<?>> teamStats,
             List<Stat<?>> memberStats
     ) {
-        var teamSet = Stream.concat(Stream.of(SCORE), teamStats.stream()).collect(Collectors.toCollection(LinkedHashSet::new));
+        var teamSet = Stream.concat(Stream.of(Score), teamStats.stream()).collect(Collectors.toCollection(LinkedHashSet::new));
         var memberSet = new LinkedHashSet<>(memberStats);
 
         var manager = new TeamStatsManager(teamSet, memberSet, this::createReference);
 
-        teamScore.register((team, score) -> manager.getTeams().set(team, SCORE, score));
+        teamScore.register((team, score) -> manager.getTeams().set(team, Score, score));
 
         winManager.setStatsManager(manager);
 
