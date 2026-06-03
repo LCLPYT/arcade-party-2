@@ -45,11 +45,12 @@ import work.lclpnet.kibu.hook.entity.ProjectileHooks
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks
 import work.lclpnet.kibu.translate.Translations
 import java.util.*
+import kotlin.time.Duration.Companion.seconds
 
 private const val BABY_CHANCE = 0.15
 private const val TNT_CHANCE = 0.07
 private const val TNT_RADIUS = 7.5
-private const val DURATION_SECONDS = 50
+private val DURATION = 50.seconds
 
 private val BABY_CHICKENS = Stat("baby_chickens", 0)
 private val TNT_DETONATED = Stat("tnt_detonated", 0)
@@ -144,7 +145,7 @@ class ChickenShooterInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameH
         chickenSpawner()
 
         val subject = translations.translateText("game.ap2.chicken_shooter.task")
-        commons().createTimer(subject, DURATION_SECONDS).whenDone(winManager::complete)
+        commons().createTimer(subject, DURATION.inWholeSeconds.toInt()).whenDone(winManager::complete)
     }
 
     private fun chickenSpawner() {

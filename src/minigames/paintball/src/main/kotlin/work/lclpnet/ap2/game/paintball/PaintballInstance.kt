@@ -33,7 +33,6 @@ import work.lclpnet.ap2.core.hook.SpectatePlayerCallback
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.mc.resetAttribute
 import work.lclpnet.ap2.ext.mc.setAttribute
-import work.lclpnet.ap2.ext.random
 import work.lclpnet.ap2.game.kit.KitHandler
 import work.lclpnet.ap2.game.paintball.item.InkGrenadeItem
 import work.lclpnet.ap2.game.paintball.item.InkPackItem
@@ -76,8 +75,7 @@ import work.lclpnet.kibu.physics.impl.bullet.thread.PhysicsThread
 import java.util.*
 import kotlin.time.Duration.Companion.seconds
 
-private val MIN_DURATION = 120.seconds
-private val MAX_DURATION = 180.seconds
+private val DURATION = 150.seconds
 
 class PaintballInstance(gameHandle: MiniGameHandle) : TeamGameInstance(gameHandle), MapBootstrapFunction {
 
@@ -319,8 +317,7 @@ class PaintballInstance(gameHandle: MiniGameHandle) : TeamGameInstance(gameHandl
         paintGunManager.shootingEnabled = true
 
         val subject = gameHandle.translations.translateText(gameHandle.gameInfo.taskKey)
-        val duration = (MIN_DURATION..MAX_DURATION).random()
-        commons().createTimer(subject, duration.inWholeSeconds.toInt()).whenDone(::beginResults)
+        commons().createTimer(subject, DURATION.inWholeSeconds.toInt()).whenDone(::beginResults)
 
         started = true
 
