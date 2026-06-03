@@ -11,6 +11,7 @@ import net.minecraft.sounds.SoundSource
 import net.minecraft.util.Mth
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.level.gamerules.GameRules
+import net.minecraft.world.scores.Team.CollisionRule
 import work.lclpnet.ap2.api.base.Participants
 import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.game.team.DyeTeamKey
@@ -34,7 +35,7 @@ import work.lclpnet.kibu.access.entity.ServerPlayerAccess
 import work.lclpnet.kibu.hook.HookRegistrar
 import work.lclpnet.kibu.translate.text.FormatWrapper.styled
 import work.lclpnet.kibu.translate.text.LocalizedFormat
-import java.util.Random
+import java.util.*
 import java.util.concurrent.CompletableFuture
 import kotlin.math.roundToInt
 
@@ -87,7 +88,7 @@ class CozyCampfireInstance(gameHandle: MiniGameHandle) : TeamEliminationGameInst
         teamManager.minecraftTeams.forEach { team ->
             team.isAllowFriendlyFire = false
             team.setSeeFriendlyInvisibles(true)
-            team.collisionRule = net.minecraft.world.scores.Team.CollisionRule.PUSH_OTHER_TEAMS
+            team.collisionRule = CollisionRule.PUSH_OTHER_TEAMS
         }
 
         readMapFuelInfo()

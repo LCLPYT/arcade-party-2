@@ -29,3 +29,10 @@ fun BaseGameInstance.runEvery(
 
 fun BaseGameInstance.runEveryTick(action: RunningTask.() -> Unit) =
     runEvery(1.ticks, action = action)
+
+fun BaseGameInstance.deferEvery(
+    period: Duration,
+    after: Duration = period,
+    action: RunningTask.() -> Unit
+) =
+    runEvery(period = period, after = after, action = action)

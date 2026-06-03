@@ -27,7 +27,7 @@ import net.minecraft.world.item.Items
 import net.minecraft.world.level.GameType
 import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.map.MapBootstrap
-import work.lclpnet.ap2.core.mixin.MannequinAccessor
+import work.lclpnet.ap2.core.mixin.entity.MannequinAccessor
 import work.lclpnet.ap2.ext.*
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.mc.teleportTo

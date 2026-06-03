@@ -34,6 +34,7 @@ import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.mc.resetAttribute
 import work.lclpnet.ap2.ext.mc.setAttribute
 import work.lclpnet.ap2.ext.random
+import work.lclpnet.ap2.game.kit.KitHandler
 import work.lclpnet.ap2.game.paintball.item.InkGrenadeItem
 import work.lclpnet.ap2.game.paintball.item.InkPackItem
 import work.lclpnet.ap2.game.paintball.item.MedKitItem
@@ -47,7 +48,6 @@ import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer
 import work.lclpnet.ap2.impl.game.data.Ordering
 import work.lclpnet.ap2.impl.game.data.type.TeamRef
 import work.lclpnet.ap2.impl.game.item.SpecialItems
-import work.lclpnet.ap2.impl.game.kit.KitHandler
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.map.ServerThreadMapBootstrap
 import work.lclpnet.ap2.impl.util.ItemHelper.getLeatherArmor
@@ -90,7 +90,9 @@ class PaintballInstance(gameHandle: MiniGameHandle) : TeamGameInstance(gameHandl
     private val movementObserver = TickMovementObserver(
         ChunkedCollisionDetector(),
         gameHandle.participants::isParticipating
-    )
+    ).also {
+        it.init(gameHandle.scheduler, gameHandle.hooks, gameHandle.server)
+    }
     private val respawnCooldown = VisualCooldown(gameHandle.scheduler)
     private val vanishManager = VanishManager.setup(gameHandle)
 
@@ -170,7 +172,7 @@ class PaintballInstance(gameHandle: MiniGameHandle) : TeamGameInstance(gameHandl
 
                 if (!state.isOf(paintable.blockFor(color))) continue
 
-                paintManager.replace(pos, state, paintable, team.key() as DyeTeamKey)
+                paintManager.replace(pos, state, paintable, team.key())
             }
         }
     }
@@ -181,8 +183,6 @@ class PaintballInstance(gameHandle: MiniGameHandle) : TeamGameInstance(gameHandl
         for (team in teamManager.minecraftTeams) {
             team.setSeeFriendlyInvisibles(true)
         }
-
-        movementObserver.init(gameHandle.scheduler, gameHandle.hooks, gameHandle.server)
 
         teleportTeamsToSpawns()
         equipPlayers()

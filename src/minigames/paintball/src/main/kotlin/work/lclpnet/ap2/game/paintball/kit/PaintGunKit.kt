@@ -8,11 +8,11 @@ import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.component.UseCooldown
 import work.lclpnet.ap2.ApConstants
 import work.lclpnet.ap2.ext.mc.isOf
+import work.lclpnet.ap2.game.kit.KitHandle
+import work.lclpnet.ap2.game.kit.KitOptions
+import work.lclpnet.ap2.game.kit.SingleItemKit
 import work.lclpnet.ap2.game.paintball.util.PaintGun
 import work.lclpnet.ap2.game.paintball.util.PaintGunManager
-import work.lclpnet.ap2.impl.game.kit.KitHandle
-import work.lclpnet.ap2.impl.game.kit.KitOptions
-import work.lclpnet.ap2.impl.game.kit.SingleItemKit
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks
 import java.util.*
 
@@ -26,7 +26,7 @@ open class PaintGunKit(
 ) : SingleItemKit(handle, id, item, count) {
 
     override fun init(options: KitOptions) {
-        PlayerInteractionHooks.USE_ITEM.registerWith(handle.hooks()) { player, _, hand ->
+        PlayerInteractionHooks.USE_ITEM.registerWith(handle.hooks) { player, _, hand ->
             if (player !is ServerPlayer) return@registerWith InteractionResult.PASS
 
             val stack = player.getItemInHand(hand)

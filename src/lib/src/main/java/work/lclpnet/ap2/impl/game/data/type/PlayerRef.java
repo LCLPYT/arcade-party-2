@@ -53,7 +53,8 @@ public record PlayerRef(@NotNull UUID uuid, @NotNull String name) implements Sub
         return uuid.toString();
     }
 
-    public static PlayerRef create(ServerPlayer player) {
+    @NotNull
+    public static PlayerRef create(@NotNull ServerPlayer player) {
         return new PlayerRef(player.getUUID(), player.getScoreboardName());
     }
 

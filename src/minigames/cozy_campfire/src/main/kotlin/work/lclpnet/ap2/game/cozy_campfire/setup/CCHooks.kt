@@ -71,7 +71,7 @@ class CCHooks(
         ProtectionTypes.MODIFY_INVENTORY.allow(config) { clickEvent ->
             val slot = clickEvent.slot()
             if (slot in 5..8) return@allow false
-            if (clickEvent.isDropAction()) {
+            if (clickEvent.isDropAction) {
                 return@allow fuel.isFuel(PlayerUtils.getCursorStack(clickEvent.player()))
             }
             true
@@ -102,7 +102,7 @@ class CCHooks(
         }
 
         ServerLivingEntityHooks.ALLOW_DAMAGE.registerWith(hooks) { entity, source, amount ->
-            if (source.`is`(DamageTypes.FREEZE) && amount < Float.MAX_VALUE && entity.level() is ServerLevel) {
+            if (source.isOf(DamageTypes.FREEZE) && amount < Float.MAX_VALUE && entity.level() is ServerLevel) {
                 entity.hurtServer(entity.level() as ServerLevel, entity.damageSources().freeze(), Float.MAX_VALUE)
                 return@registerWith false
             }
@@ -190,8 +190,7 @@ class CCHooks(
     private fun onEnterBaseOf(player: ServerPlayer, team: Team) {
         if (teamManager.isTeamMember(player, team)) return
 
-        val name = translations.translateText(player, team.key().translationKey)
-            .styled { it.withColor(team.key().color()) }
+        val name = team.key().getDisplayName(translations)
 
         val msg = Component.literal("⚠")
             .append(translations.translateText(player, "game.ap2.cozy_campfire.base_of", name))

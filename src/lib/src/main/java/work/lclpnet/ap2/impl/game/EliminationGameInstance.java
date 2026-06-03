@@ -17,7 +17,7 @@ import work.lclpnet.ap2.api.game.EliminationController;
 import work.lclpnet.ap2.api.game.GameInfo;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.core.hook.PlayerEliminatedCallback;
-import work.lclpnet.ap2.core.mixin.LivingEntityAccessor;
+import work.lclpnet.ap2.core.mixin.entity.LivingEntityAccessor;
 import work.lclpnet.ap2.impl.game.data.EliminationDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.util.DeathMessages;

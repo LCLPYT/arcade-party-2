@@ -11,6 +11,8 @@ import net.minecraft.world.InteractionResult
 import net.minecraft.world.entity.player.Player
 import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.map.MapBootstrap
+import work.lclpnet.ap2.api.stats.FFAStatsManager
+import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.impl.game.FFAGameInstance
 import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef
@@ -25,7 +27,9 @@ import work.lclpnet.kibu.hook.player.PlayerSwingHandHook
 import work.lclpnet.kibu.scheduler.api.RunningTask
 import work.lclpnet.kibu.scheduler.api.SchedulerAction
 import work.lclpnet.kibu.translate.text.FormatWrapper.styled
+import java.util.*
 import java.util.concurrent.CompletableFuture
+import kotlin.math.round
 
 private const val MIN_SCORE = 18
 private const val MAX_SCORE = 28
@@ -37,10 +41,19 @@ private const val UPWARD_TILT = 0.55
 private const val ELLIPSE_FACTOR = 0.35
 private const val CONE_FOV = 35
 
+private val CLICKS = Stat("clicks", 0)
+private val MISSES = Stat("misses", 0)
+private val ACCURACY = Stat("accuracy", 0f)
+private val STREAK = Stat("streak", 0)
+
 class AimMasterInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle), MapBootstrap {
 
     private val data = IntScoreDataContainer(PlayerRef::create)
     val scoreGoal = (MIN_SCORE..MAX_SCORE).random()
+
+    private val stats = FFAStatsManager(linkedSetOf(CLICKS, MISSES, ACCURACY, STREAK))
+        .also { winManager.setStatsManager(it) }
+    private val currentStreak = HashMap<UUID, Int>()
 
     private lateinit var bossBar: DynamicTranslatedPlayerBossBar
     private lateinit var manager: AimMasterManager
@@ -116,10 +129,17 @@ class AimMasterInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
         val domain = manager.domains[player.uuid] ?: return InteractionResult.FAIL
         val serverPlayer = player as ServerPlayer
 
+        val clicks = stats.increment(serverPlayer, CLICKS)
+
         if (domain.rayCaster(serverPlayer, SPHERE_RADIUS)) {
             data.addScore(serverPlayer, 1)
             val newScore = data.getScore(serverPlayer)
             bossBar.getBossBar(serverPlayer).progress = newScore.toFloat() / scoreGoal
+
+            val streak = (currentStreak[player.uuid] ?: 0) + 1
+            currentStreak[player.uuid] = streak
+            stats.modify(serverPlayer, STREAK) { maxOf(it, streak) }
+            updateAccuracy(serverPlayer, newScore, clicks)
 
             val target = domain.currentTarget
             val serverWorld = serverPlayer.level()
@@ -135,8 +155,17 @@ class AimMasterInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
             return InteractionResult.FAIL
         }
 
+        currentStreak[player.uuid] = 0
+        stats.increment(serverPlayer, MISSES)
+        updateAccuracy(serverPlayer, data.getScore(serverPlayer), clicks)
+
         ServerPlayerAccess.playSoundToPlayer(serverPlayer, SoundEvents.NOTE_BLOCK_BASS.value(), SoundSource.PLAYERS, 0.3f, 0.2f)
         return InteractionResult.PASS
+    }
+
+    private fun updateAccuracy(player: ServerPlayer, hits: Int, clicks: Int) {
+        val accuracy = if (clicks == 0) 0f else round(hits * 1000f / clicks) / 10f
+        stats.set(player, ACCURACY, accuracy)
     }
 
     private fun win(winner: ServerPlayer) {

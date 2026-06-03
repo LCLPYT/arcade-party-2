@@ -58,7 +58,7 @@ public class SimpleTeamManager implements TeamManager {
     }
 
     @Override
-    public synchronized void partitionIntoTeams(Set<ServerPlayer> players, Set<TeamKey> keys) {
+    public synchronized void partitionIntoTeams(Set<ServerPlayer> players, Set<? extends TeamKey> keys) {
         synchronized (this) {
             reset();
 
