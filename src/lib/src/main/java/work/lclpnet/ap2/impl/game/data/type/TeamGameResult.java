@@ -1,22 +1,22 @@
 package work.lclpnet.ap2.impl.game.data.type;
 
 import it.unimi.dsi.fastutil.objects.ObjectIntPair;
+import net.minecraft.server.level.ServerPlayer;
+import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.api.game.data.GenericGameResult;
 import work.lclpnet.ap2.api.game.data.SubjectRefResolver;
 import work.lclpnet.ap2.api.game.team.Team;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class TeamGameResult implements GenericGameResult<TeamRef> {
 
     private final List<ObjectIntPair<PlayerRef>> playerResults;
     private final List<ObjectIntPair<TeamRef>> subjectResults;
+    private final Map<PlayerRef, TeamRef> playerTeams;
     private final Set<PlayerRef> players;
     private final Set<TeamRef> refs;
 
@@ -27,19 +27,26 @@ public class TeamGameResult implements GenericGameResult<TeamRef> {
                 .flatMap(Collection::stream)
                 .toList();
 
-        this.playerResults = this.subjectResults.stream()
-                .flatMap(teamRank -> {
-                    Team team = refResolver.resolve(teamRank.key());
+        List<ObjectIntPair<PlayerRef>> playerResults = new ArrayList<>();
+        Map<PlayerRef, TeamRef> playerTeams = new LinkedHashMap<>();
 
-                    if (team == null) {
-                        return Stream.empty();
-                    }
+        for (ObjectIntPair<TeamRef> teamRank : this.subjectResults) {
+            TeamRef teamRef = teamRank.key();
+            Team team = refResolver.resolve(teamRef);
 
-                    return team.getPlayers().stream()
-                            .map(PlayerRef::create)
-                            .map(ref -> ObjectIntPair.of(ref, teamRank.rightInt()));
-                })
-                .toList();
+            if (team == null) {
+                continue;
+            }
+
+            for (ServerPlayer player : team.getPlayers()) {
+                PlayerRef ref = PlayerRef.create(player);
+                playerResults.add(ObjectIntPair.of(ref, teamRank.rightInt()));
+                playerTeams.put(ref, teamRef);
+            }
+        }
+
+        this.playerResults = List.copyOf(playerResults);
+        this.playerTeams = Collections.unmodifiableMap(playerTeams);
 
         this.refs = byRank.isEmpty()
                 ? Set.of()
@@ -56,22 +63,26 @@ public class TeamGameResult implements GenericGameResult<TeamRef> {
     }
 
     @Override
-    public Set<PlayerRef> getWinningPlayers() {
+    public @NonNull Set<PlayerRef> getWinningPlayers() {
         return players;
     }
 
     @Override
-    public Set<TeamRef> getWinningSubjects() {
+    public @NonNull Set<TeamRef> getWinningSubjects() {
         return refs;
     }
 
     @Override
-    public List<ObjectIntPair<PlayerRef>> getPlayerResults() {
+    public @NotNull List<@NotNull ObjectIntPair<@NotNull PlayerRef>> getPlayerResults() {
         return playerResults;
     }
 
     @Override
-    public List<ObjectIntPair<TeamRef>> getSubjectResults() {
+    public @NotNull List<@NotNull ObjectIntPair<TeamRef>> getSubjectResults() {
         return subjectResults;
+    }
+
+    public @NotNull Map<@NotNull PlayerRef, @NotNull TeamRef> getPlayerTeams() {
+        return playerTeams;
     }
 }

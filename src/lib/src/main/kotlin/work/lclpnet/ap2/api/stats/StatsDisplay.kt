@@ -3,12 +3,13 @@ package work.lclpnet.ap2.api.stats
 import net.minecraft.ChatFormatting.*
 import net.minecraft.core.Holder
 import net.minecraft.network.chat.Component
+import net.minecraft.resources.Identifier
 import net.minecraft.server.dialog.*
-import net.minecraft.server.dialog.body.DialogBody
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.sounds.SoundSource
 import org.slf4j.Logger
+import work.lclpnet.ap2.api.game.data.SubjectRef
 import work.lclpnet.ap2.ext.component1
 import work.lclpnet.ap2.ext.component2
 import work.lclpnet.kibu.access.entity.ServerPlayerAccess
@@ -17,71 +18,130 @@ import java.util.*
 
 class StatsDisplay(val translations: Translations, val logger: Logger) {
 
+    private val playerWidth = 100
+    private val statWidth = 85
+    private val maxStatColumns = 4
+
     fun openSummary(player: ServerPlayer, stats: StatsResult) {
-        val body = mutableListOf<DialogBody>()
-
-        if (stats !is FFAStatsResult) {
-            logger.warn("Stats summary not implemented for result type {} ({})", stats.type(), stats.javaClass.simpleName)
-            return
+        when (stats) {
+            is FFAStatsResult -> openFfaSummary(player, stats)
+            is TeamStatsResult -> openTeamSummary(player, stats)
+            else -> logger.warn("Stats summary not implemented for result type {} ({})", stats.type, stats.javaClass.simpleName)
         }
+    }
 
-        val schema = stats.results.entries.firstOrNull()?.value ?: return
+    private fun openFfaSummary(player: ServerPlayer, stats: FFAStatsResult) {
+        val view = stats.view
+
+        if (view.results.isEmpty()) return
+
+        val columns = 1 + view.stats.size.coerceAtMost(maxStatColumns)
 
         val buttons = mutableListOf<ActionButton>()
 
-        val playerWidth = 100
-        val statWidth = 85
-        val maxStatColumns = 4
-        val columns = schema.entries().size.coerceAtMost(maxStatColumns) + 1
-
-        buttons.add(
-            ActionButton(
-            CommonButtonData(translations.translateText("ap2.view_stats.name").translateFor(player), playerWidth),
-            Optional.empty()
-        ))
-
-        for ((stat, _) in schema.entries().take(maxStatColumns)) {
-            buttons.add(
-                ActionButton(
-                CommonButtonData(Component.literal(labelOf(stats, stat, player)), statWidth),
-                Optional.empty()
-            ))
-        }
-
-        for ((ref, rank) in stats.order) {
-            if (ref == null) continue
-
-            val result = stats.results[ref] ?: continue
-
+        appendTable(
+            buttons, view, stats.gameId, player, columns,
+            nameHeader = translations.translateText("ap2.view_stats.name").translateFor(player),
+        ) { ref, rank ->
             val name = ref.getNameFor(player).let {
                 if (it.style.color == null) it.copy().withStyle(GREEN)
                 else it
             }
 
-            buttons.add(
-                ActionButton(
-                CommonButtonData(
-                    Component.literal("#$rank ")
-                        .withStyle(YELLOW)
-                        .append(name),
-                    playerWidth
-                ),
-                Optional.empty()
-            ))
+            Component.literal("#$rank ")
+                .withStyle(YELLOW)
+                .append(name)
+        }
 
-            for ((_, value) in result.entries().take(maxStatColumns)) {
-                buttons.add(
-                    ActionButton(
-                    CommonButtonData(Component.literal(value.toString()), statWidth),
-                    Optional.empty()
-                ))
+        showDialog(player, buttons, columns)
+    }
+
+    private fun openTeamSummary(player: ServerPlayer, stats: TeamStatsResult) {
+        val teamView = stats.teamView
+        val playerView = stats.playerView
+
+        val teamStatColumns = teamView.stats.size.coerceAtMost(maxStatColumns)
+        val playerStatColumns = playerView.stats.size.coerceAtMost(maxStatColumns)
+        val columns = 1 + maxOf(teamStatColumns, playerStatColumns)
+
+        val buttons = mutableListOf<ActionButton>()
+
+        appendTable(
+            buttons, teamView, stats.gameId, player, columns,
+            nameHeader = translations.translateText("ap2.view_stats.team").translateFor(player),
+        ) { ref, rank ->
+            Component.literal("#$rank ")
+                .withStyle(YELLOW)
+                .append(ref.getNameFor(player))
+        }
+
+        pad(buttons, columns, 0)
+
+        appendTable(
+            buttons, playerView, stats.gameId, player, columns,
+            nameHeader = translations.translateText("ap2.view_stats.name").translateFor(player),
+        ) { ref, _ ->
+            val name = ref.getNameFor(player)
+            val teamRef = stats.playerTeams[ref]
+
+            when {
+                teamRef != null -> name.copy().withStyle { it.withColor(teamRef.key().color()) }
+                name.style.color == null -> name.copy().withStyle(GREEN)
+                else -> name
             }
         }
 
+        showDialog(player, buttons, columns)
+    }
+
+    private fun <Ref : SubjectRef> appendTable(
+        buttons: MutableList<ActionButton>,
+        view: StatsView<Ref>,
+        gameId: Identifier,
+        player: ServerPlayer,
+        totalColumns: Int,
+        nameHeader: Component,
+        renderName: (ref: Ref, rank: Int) -> Component,
+    ) {
+        val statColumns = view.stats.toList().take(maxStatColumns)
+
+        buttons.add(actionButton(nameHeader, playerWidth))
+
+        for (stat in statColumns) {
+            buttons.add(actionButton(Component.literal(labelOf(gameId, stat, player)), statWidth))
+        }
+
+        pad(buttons, totalColumns, 1 + statColumns.size)
+
+        for ((ref, rank) in view.order) {
+            if (ref == null) continue
+
+            val result = view.results[ref] ?: continue
+
+            buttons.add(actionButton(renderName(ref, rank), playerWidth))
+
+            for (stat in statColumns) {
+                buttons.add(actionButton(Component.literal(result[stat].toString()), statWidth))
+            }
+
+            pad(buttons, totalColumns, 1 + statColumns.size)
+        }
+    }
+
+    private fun pad(buttons: MutableList<ActionButton>, totalColumns: Int, used: Int) {
+        repeat(totalColumns - used) {
+            buttons.add(actionButton(Component.empty(), statWidth))
+        }
+    }
+
+    private fun actionButton(label: Component, width: Int) =
+        ActionButton(CommonButtonData(label, width), Optional.empty())
+
+    private fun showDialog(player: ServerPlayer, buttons: List<ActionButton>, columns: Int) {
         val title = translations.translateText("ap2.stats").formatted(GOLD).translateFor(player)
 
         val commonData = CommonDialogData(
-            title, Optional.empty(), true, false, DialogAction.NONE, body, listOf()
+            title, Optional.empty(), true, false, DialogAction.NONE, listOf(), listOf()
         )
 
         val dialog = MultiActionDialog(
@@ -89,20 +149,22 @@ class StatsDisplay(val translations: Translations, val logger: Logger) {
             buttons,
             Optional.of(
                 ActionButton(
-                CommonButtonData(Component.translatable("gui.back"), 150),
-                Optional.empty()
-            )),
+                    CommonButtonData(Component.translatable("gui.back"), 150),
+                    Optional.empty()
+                )
+            ),
             columns
         )
 
         player.openDialog(Holder.direct(dialog))
     }
+
     private fun labelOf(
-        statsResult: FFAStatsResult,
+        gameId: Identifier,
         stat: Stat<*>,
         player: ServerPlayer
     ): String {
-        val gameKey = statsResult.gameId.toLanguageKey().replace('/', '.')
+        val gameKey = gameId.toLanguageKey().replace('/', '.')
         val gameStatKey = "game.$gameKey.stat.${stat.id}"
 
         val label = translations.translate(player, gameStatKey)
@@ -110,7 +172,7 @@ class StatsDisplay(val translations: Translations, val logger: Logger) {
         if (label != gameStatKey) return label
 
         // no translation for the stat under game namespace, try root namespace instead
-        val rootKey = "${statsResult.gameId.namespace}.stat.${stat.id}"
+        val rootKey = "${gameId.namespace}.stat.${stat.id}"
         val rootLabel = translations.translate(player, rootKey)
 
         return when (rootKey) {

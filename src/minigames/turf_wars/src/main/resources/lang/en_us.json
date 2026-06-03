@@ -11,5 +11,6 @@
   "game.ap2.turf_wars.kit.archer": "Archer",
   "game.ap2.turf_wars.kit.archer.description": "Arrows shot are one-hit.",
   "game.ap2.turf_wars.kit.assassin": "Assassin",
-  "game.ap2.turf_wars.kit.assassin.description": "Assassins can enter enemy turf and have an iron sword. Arrows are two-hit."
+  "game.ap2.turf_wars.kit.assassin.description": "Assassins can enter enemy turf and have an iron sword. Arrows are two-hit.",
+  "game.ap2.turf_wars.stat.turf_claimed": "Turf claimed"
 }

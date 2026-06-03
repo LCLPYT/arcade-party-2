@@ -22,6 +22,10 @@ import net.minecraft.world.scores.Team.CollisionRule
 import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.game.team.DyeTeamKey
 import work.lclpnet.ap2.api.game.team.Team
+import work.lclpnet.ap2.api.stats.CommonStats.Deaths
+import work.lclpnet.ap2.api.stats.CommonStats.KillDeathRatio
+import work.lclpnet.ap2.api.stats.CommonStats.Kills
+import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.core.hook.ArmorAbsorbDamageCallback
 import work.lclpnet.ap2.core.hook.CanShootProjectileCallback
 import work.lclpnet.ap2.core.hook.ProjectileShootCallback
@@ -51,6 +55,8 @@ import java.util.*
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
+val TurfClaimed = Stat("turf_claimed", 0)
+
 class TurfWarsInstance(gameHandle: MiniGameHandle) : TeamEliminationGameInstance(gameHandle) {
 
     val schemaHolder: SchemaHolder<TurfWarsSchema> = useSchema(TurfWarsSchema::class.java)
@@ -68,6 +74,10 @@ class TurfWarsInstance(gameHandle: MiniGameHandle) : TeamEliminationGameInstance
     var phase: Phase = Nothing
     var blocksPerKill: Int = 1
     val repelTicks = mutableMapOf<UUID, Int>()
+    val stats = createStats(
+        /* teamStats = */ listOf(Kills, Deaths, TurfClaimed),
+        /* playerStats = */ listOf(Kills, Deaths, KillDeathRatio, TurfClaimed)
+    )
 
     init {
         useOldCombat()
@@ -359,11 +369,34 @@ class TurfWarsInstance(gameHandle: MiniGameHandle) : TeamEliminationGameInstance
         val victimTeam = teamManager.getTeam(victim).orElse(null) ?: return
         val killerTeam = teamManager.getTeam(killer).orElse(null) ?: return
 
+        stats.players.increment(killer, Kills)
+        stats.teams.increment(killerTeam, Kills)
+
+        stats.players.increment(victim, Deaths)
+        stats.teams.increment(victimTeam, Deaths)
+
+        stats.players.set(
+            killer,
+            KillDeathRatio,
+            stats.players.get(killer, Kills).toFloat() /
+                    stats.players.get(killer, Deaths).coerceAtLeast(1)
+        )
+
+        stats.players.set(
+            victim,
+            KillDeathRatio,
+            stats.players.get(victim, Kills).toFloat() /
+                    stats.players.get(victim, Deaths).coerceAtLeast(1)
+        )
+
         val key = killerTeam.key()
 
         if (key !is DyeTeamKey) return
 
         turfManager.growTurf(key, blocksPerKill)
+
+        stats.players.increment(killer, TurfClaimed, blocksPerKill)
+        stats.teams.increment(killerTeam, TurfClaimed, blocksPerKill)
 
         val victimTurf = turfManager.turfOf(victimTeam.key()) ?: return
 
