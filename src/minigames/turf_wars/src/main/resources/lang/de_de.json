@@ -11,5 +11,6 @@
   "game.ap2.turf_wars.kit.archer": "Bogenschütze",
   "game.ap2.turf_wars.kit.archer.description": "Geschossene Pfeile erledigen getroffene Gegner mit nur einem Schuss.",
   "game.ap2.turf_wars.kit.assassin": "Attentäter",
-  "game.ap2.turf_wars.kit.assassin.description": "Attentäter können das gegnerische Gebiet betreten. Sie haben ein Eisenschwert als Hauptwaffe. Pfeile erledigen Gegner mit zwei Schüssen."
+  "game.ap2.turf_wars.kit.assassin.description": "Attentäter können das gegnerische Gebiet betreten. Sie haben ein Eisenschwert als Hauptwaffe. Pfeile erledigen Gegner mit zwei Schüssen.",
+  "game.ap2.turf_wars.stat.turf_claimed": "Erobert"
 }
