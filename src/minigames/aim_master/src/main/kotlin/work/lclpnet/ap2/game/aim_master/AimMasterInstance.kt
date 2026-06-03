@@ -11,7 +11,6 @@ import net.minecraft.world.InteractionResult
 import net.minecraft.world.entity.player.Player
 import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.map.MapBootstrap
-import work.lclpnet.ap2.api.stats.FFAStatsManager
 import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.impl.game.FFAGameInstance
 import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer
@@ -51,8 +50,7 @@ class AimMasterInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
     private val data = IntScoreDataContainer(PlayerRef::create)
     val scoreGoal = (MIN_SCORE..MAX_SCORE).random()
 
-    private val stats = FFAStatsManager(linkedSetOf(CLICKS, MISSES, ACCURACY, STREAK))
-        .also { winManager.setStatsManager(it) }
+    private val stats = createStats(data, CLICKS, MISSES, ACCURACY, STREAK)
     private val currentStreak = HashMap<UUID, Int>()
 
     private lateinit var bossBar: DynamicTranslatedPlayerBossBar

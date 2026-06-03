@@ -6,6 +6,7 @@ import org.json.JSONArray
 import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.game.data.DataContainer
 import work.lclpnet.ap2.api.map.MapBootstrap
+import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.impl.game.FFAGameInstance
 import work.lclpnet.ap2.impl.game.data.DataContainers
 import work.lclpnet.ap2.impl.game.data.IntDataContainer
@@ -16,10 +17,17 @@ import java.util.concurrent.CompletableFuture
 
 const val MELODY_COUNT = 2
 
+val PITCH_CHANGES = Stat("pitch_changes", 0)
+val PROBES = Stat("probes", 0)
+val REPLAYS = Stat("replays", 0)
+val MELODIES_COMPLETED = Stat("melodies_completed", 0)
+val CORRECT_NOTES = Stat("correct_notes", 0)
+
 class FineTuningInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle), MapBootstrap {
 
     private val data: IntDataContainer<ServerPlayer, PlayerRef> =
         DataContainers.finaleCompatibleScoreContainer(gameHandle, PlayerRef::create)
+    private val stats = createStats(data, PITCH_CHANGES, PROBES, REPLAYS)
     private lateinit var setup: FineTuningSetup
     private lateinit var tuningPhase: TuningPhase
 
@@ -41,7 +49,7 @@ class FineTuningInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandl
 
         val rooms: Map<UUID, FineTuningRoom> = setup.rooms
 
-        tuningPhase = TuningPhase(gameHandle, rooms, data, ::startStagePhase, commons(), world)
+        tuningPhase = TuningPhase(gameHandle, rooms, data, stats, ::startStagePhase, commons(), world)
         tuningPhase.init()
         tuningPhase.giveBooks()
     }

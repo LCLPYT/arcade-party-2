@@ -1,5 +1,6 @@
 package work.lclpnet.ap2.game.maniac_digger
 
+import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap
 import net.minecraft.core.BlockPos
 import net.minecraft.core.component.DataComponents
 import net.minecraft.network.chat.Component
@@ -14,6 +15,7 @@ import net.minecraft.world.level.block.StainedGlassBlock
 import net.minecraft.world.level.block.state.BlockState
 import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.map.MapBootstrapFunction
+import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.mc.setAttribute
 import work.lclpnet.ap2.ext.mc.unbreakable
@@ -31,10 +33,17 @@ import work.lclpnet.game.impl.prot.ProtectionTypes
 import work.lclpnet.game.map.GameMap
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks
 import work.lclpnet.kibu.hook.level.BlockModificationHooks
+import work.lclpnet.kibu.hook.player.PlayerInventoryHooks
 import java.util.*
 import kotlin.math.roundToInt
 
 private const val DEBUG_GRADING = false
+
+private val BLOCKS_BROKEN = Stat("blocks_broken", 0)
+private val TOOL_SWITCHES = Stat("tool_switches", 0)
+private val WRONG_TOOLS_SELECTED = Stat("wrong_tools_selected", 0)
+private val WRONG_TOOLS_USED = Stat("wrong_tools_used", 0)
+private val CORRECT_TOOL_STREAK = Stat("correct_tool_streak", 0)
 
 class ManiacDiggerInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle), MapBootstrapFunction {
 
@@ -43,6 +52,8 @@ class ManiacDiggerInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHan
     private val data = CombinedDataContainer(listOf(reachedBottom, score))
     private val pipes = HashMap<UUID, MdPipe>()
     private val wrongTool = HashSet<UUID>()
+    private val correctToolStreak = Object2IntOpenHashMap<UUID>()
+    private val stats = createStats(score, BLOCKS_BROKEN, TOOL_SWITCHES, WRONG_TOOLS_SELECTED, WRONG_TOOLS_USED, CORRECT_TOOL_STREAK)
     private var winHeight = 64
 
     init {
@@ -118,7 +129,12 @@ class ManiacDiggerInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHan
         }
 
         BlockModificationHooks.BREAK_BLOCK.registerWith(hooks) { _, pos, entity ->
-            entity !is ServerPlayer || !canBreak(entity, pos)
+            if (entity !is ServerPlayer || !canBreak(entity, pos)) {
+                return@registerWith true
+            }
+
+            onBreakBlock(entity, pos)
+            false
         }
 
         PlayerInteractionHooks.ATTACK_BLOCK.registerWith(hooks) { player, _, _, pos, _ ->
@@ -126,6 +142,18 @@ class ManiacDiggerInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHan
                 onHitBlock(player, pos)
             }
             InteractionResult.PASS
+        }
+
+        PlayerInventoryHooks.SLOT_CHANGE.registerWith(hooks) { player, slot ->
+            if (!gameHandle.participants.isParticipating(player) || winManager.isGameOver) {
+                return@registerWith
+            }
+
+            val stack = player.inventory.getItem(slot)
+
+            if (!stack.isEmpty) {
+                stats.increment(player, TOOL_SWITCHES)
+            }
         }
 
         runEveryTick {
@@ -184,11 +212,29 @@ class ManiacDiggerInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHan
     }
 
     private fun onWrongTool(player: ServerPlayer) {
+        stats.increment(player, WRONG_TOOLS_SELECTED)
+        correctToolStreak.removeInt(player.uuid)
+
         val msg = gameHandle.translations.translateText(player, "game.ap2.maniac_digger.wrong_tool")
             .styled { style -> style.withColor(0xff0000) }
 
         player.sendOverlayMessage(msg)
         WorldBorderUtil.setWarning(player)
+    }
+
+    private fun onBreakBlock(player: ServerPlayer, pos: BlockPos) {
+        stats.increment(player, BLOCKS_BROKEN)
+
+        val state = player.level().getBlockState(pos)
+        val stack = player.mainHandItem
+
+        if (isCorrectTool(state, stack)) {
+            val streak = correctToolStreak.addTo(player.uuid, 1) + 1
+            stats.set(player, CORRECT_TOOL_STREAK, maxOf(stats.get(player, CORRECT_TOOL_STREAK), streak))
+        } else {
+            stats.increment(player, WRONG_TOOLS_USED)
+            correctToolStreak.removeInt(player.uuid)
+        }
     }
 
     private fun onCorrectTool(player: ServerPlayer) {

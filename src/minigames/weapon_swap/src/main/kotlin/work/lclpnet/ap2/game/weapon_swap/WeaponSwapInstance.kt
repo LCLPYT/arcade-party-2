@@ -46,8 +46,7 @@ private val KILLS = Stat("kills", 0)
 
 class WeaponSwapInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gameHandle) {
 
-    private val stats: FFAStatsManager = FFAStatsManager(linkedSetOf(DAMAGE_DEALT, WEAPONS_RECEIVED, KILLS))
-        .also { winManager.setStatsManager(it) }
+    private val stats: FFAStatsManager = createStats(DAMAGE_DEALT, WEAPONS_RECEIVED, KILLS)
     private val currentHolders = mutableSetOf<UUID>()
     private var previousHolders: Set<UUID> = emptySet()
     private val subtitleCountdown = SubtitleCountdown(gameHandle.server, gameHandle.scheduler, ::swapTimerTick) {

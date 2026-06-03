@@ -34,6 +34,7 @@ import work.lclpnet.ap2.ApConstants
 import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.game.data.DataContainer
 import work.lclpnet.ap2.api.map.MapBootstrap
+import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.api.util.heads.PlayerHead
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.impl.game.FFAGameInstance
@@ -60,7 +61,11 @@ import java.util.concurrent.CompletableFuture
 import kotlin.math.PI
 
 private const val DEBUG_EGG_POSITIONS = false
+private const val STEAL_RANGE = 10.0
 private val NBT_CODEC: MapCodec<Boolean> = Codec.BOOL.fieldOf("easter_egg")
+
+private val EGGS_STOLEN = Stat("eggs_stolen", 0)
+private val EGGS_LOST = Stat("eggs_lost", 0)
 
 fun eggVariants(registryManager: RegistryAccess): List<PlayerHead> {
     val headEntries = registryManager
@@ -73,6 +78,7 @@ fun eggVariants(registryManager: RegistryAccess): List<PlayerHead> {
 class EggventureInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle), MapBootstrap {
 
     private val data = DataContainers.finaleCompatibleScoreContainer(gameHandle, PlayerRef::create)
+    private val stats = createStats(data, EGGS_STOLEN, EGGS_LOST)
     private val random = Random()
     private val remainingPositions = HashSet<BlockPos>()
 
@@ -301,6 +307,7 @@ class EggventureInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandl
         world.setBlock(pos, Blocks.AIR.defaultBlockState(), Block.UPDATE_SUPPRESS_DROPS or Block.UPDATE_KNOWN_SHAPE or Block.UPDATE_CLIENTS)
 
         commons().addScore(player, 1, data)
+        trackSteal(player)
 
         val x = pos.x + 0.5
         val y = pos.y.toDouble()
@@ -314,5 +321,19 @@ class EggventureInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandl
         world.sendParticles(ParticleTypes.GLOW, x, y, z, 25, 0.5, 0.5, 0.5, 0.0)
 
         remainingPositions.remove(pos)
+    }
+
+    private fun trackSteal(finder: ServerPlayer) {
+        val rangeSq = STEAL_RANGE * STEAL_RANGE
+        var stole = false
+
+        for (other in gameHandle.participants) {
+            if (other === finder || other.distanceToSqr(finder) > rangeSq) continue
+
+            stats.increment(other, EGGS_LOST)
+            stole = true
+        }
+
+        if (stole) stats.increment(finder, EGGS_STOLEN)
     }
 }

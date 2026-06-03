@@ -45,20 +45,22 @@ class FineTuningRoom(val pos: BlockPos, private val spawn: BlockPos, private val
         player.teleportTo(world, spawn.x + 0.5, spawn.y.toDouble(), spawn.z + 0.5, emptySet(), yaw, 0f, true)
     }
 
-    fun useNoteBlock(player: ServerPlayer, pos: BlockPos, manager: DynamicEntityManager) {
+    fun useNoteBlock(player: ServerPlayer, pos: BlockPos, manager: DynamicEntityManager): Boolean {
         val index = getNoteBlock(pos)
-        if (index == -1) return
+        if (index == -1) return false
 
         val transpose = if (player.isShiftKeyDown) -1 else 1
         setNote(index, notes[index] + transpose)
         playNote(player, index)
         removeDisplay(index, manager)
+        return true
     }
 
-    fun playNoteBlock(player: ServerPlayer, pos: BlockPos) {
+    fun playNoteBlock(player: ServerPlayer, pos: BlockPos): Boolean {
         val index = getNoteBlock(pos)
-        if (index == -1) return
+        if (index == -1) return false
         playNote(player, index)
+        return true
     }
 
     fun playNote(player: ServerPlayer, index: Int) {
@@ -115,6 +117,22 @@ class FineTuningRoom(val pos: BlockPos, private val spawn: BlockPos, private val
         }
 
         return score
+    }
+
+    fun correctNoteCount(reference: Melody): Int {
+        restoreMelody()
+        var correct = 0
+
+        for (i in notes.indices) {
+            val actual = notes[i]
+            val expected = reference.notes[i].ordinal
+
+            if (actual == expected) {
+                correct++
+            }
+        }
+
+        return correct
     }
 
     fun isComplete(reference: Melody): Boolean {
