@@ -30,8 +30,7 @@ import java.util.*
 import java.util.concurrent.CompletableFuture
 import kotlin.math.round
 
-private const val MIN_SCORE = 18
-private const val MAX_SCORE = 28
+private const val SCORE_GOAL = 24
 private const val TARGET_NUMBER = 6
 private const val TARGET_MIN_DISTANCE = 2
 private const val SPHERE_RADIUS = 15
@@ -48,7 +47,6 @@ private val STREAK = Stat("streak", 0)
 class AimMasterInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle), MapBootstrap {
 
     private val data = IntScoreDataContainer(PlayerRef::create)
-    val scoreGoal = (MIN_SCORE..MAX_SCORE).random()
 
     private val stats = createStats(data, CLICKS, MISSES, ACCURACY, STREAK)
     private val currentStreak = HashMap<UUID, Int>()
@@ -80,7 +78,7 @@ class AimMasterInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
         )
 
         val blockOptions = BlockOptions()
-        val sequenceGenerator = SequenceGenerator(positionGenerator, blockOptions, scoreGoal)
+        val sequenceGenerator = SequenceGenerator(positionGenerator, blockOptions, SCORE_GOAL)
 
         sequence = sequenceGenerator.sequence
 
@@ -98,7 +96,7 @@ class AimMasterInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
         for (player in gameHandle.participants) {
             manager.domains[player.uuid]?.teleport(player)
         }
-        bossBar = usePlayerDynamicTaskDisplay(styled(scoreGoal, ChatFormatting.YELLOW))
+        bossBar = usePlayerDynamicTaskDisplay(styled(SCORE_GOAL, ChatFormatting.YELLOW))
         bossBar.setPercent(0f)
     }
 
@@ -132,7 +130,7 @@ class AimMasterInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
         if (domain.rayCaster(serverPlayer, SPHERE_RADIUS)) {
             data.addScore(serverPlayer, 1)
             val newScore = data.getScore(serverPlayer)
-            bossBar.getBossBar(serverPlayer).progress = newScore.toFloat() / scoreGoal
+            bossBar.getBossBar(serverPlayer).progress = newScore.toFloat() / SCORE_GOAL
 
             val streak = (currentStreak[player.uuid] ?: 0) + 1
             currentStreak[player.uuid] = streak
@@ -147,7 +145,7 @@ class AimMasterInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
             }
             ServerPlayerAccess.playSoundToPlayer(serverPlayer, SoundEvents.ARROW_HIT_PLAYER, SoundSource.PLAYERS, 0.5f, 0.8f)
 
-            if (newScore >= scoreGoal) win(serverPlayer)
+            if (newScore >= SCORE_GOAL) win(serverPlayer)
             else manager.advancePlayer(serverPlayer)
 
             return InteractionResult.FAIL

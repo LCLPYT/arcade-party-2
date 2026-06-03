@@ -31,8 +31,9 @@ import work.lclpnet.game.map.GameMap
 import work.lclpnet.kibu.access.entity.ServerPlayerAccess
 import work.lclpnet.kibu.hook.level.BlockModificationHooks
 import java.util.*
+import kotlin.time.Duration.Companion.seconds
 
-private const val DURATION_SECONDS = 60
+val DURATION = 60.seconds
 
 class MiningBattleInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle), MapBootstrapFunction {
 
@@ -94,7 +95,7 @@ class MiningBattleInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHan
 
         val subject = gameHandle.translations.translateText(gameHandle.gameInfo.taskKey)
 
-        commons().createTimer(subject, DURATION_SECONDS).whenDone(winManager::complete)
+        commons().createTimer(subject, DURATION.inWholeSeconds.toInt()).whenDone(winManager::complete)
     }
 
     private fun onGainPoints(player: ServerPlayer, points: Int) {

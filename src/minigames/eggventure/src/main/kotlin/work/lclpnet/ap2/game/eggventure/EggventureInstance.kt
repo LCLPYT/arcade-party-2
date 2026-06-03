@@ -59,10 +59,14 @@ import work.lclpnet.kibu.translate.text.FormatWrapper.styled
 import java.util.*
 import java.util.concurrent.CompletableFuture
 import kotlin.math.PI
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 
 private const val DEBUG_EGG_POSITIONS = false
 private const val STEAL_RANGE = 10.0
 private val NBT_CODEC: MapCodec<Boolean> = Codec.BOOL.fieldOf("easter_egg")
+
+private val DURATION = 2.minutes + 20.seconds
 
 private val EGGS_STOLEN = Stat("eggs_stolen", 0)
 private val EGGS_LOST = Stat("eggs_lost", 0)
@@ -232,13 +236,9 @@ class EggventureInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandl
             }
         }
 
-        val minDurationSeconds: Int = map.requireProperty("min-duration-seconds")
-        val maxDurationSeconds: Int = map.requireProperty("max-duration-seconds")
-        val durationSeconds = minDurationSeconds + random.nextInt(maxDurationSeconds - minDurationSeconds + 1)
-
         val subject = gameHandle.translations.translateText(gameHandle.gameInfo.taskKey)
 
-        commons().createTimer(subject, durationSeconds).whenDone { completeAndShowRemaining() }
+        commons().createTimer(subject, DURATION.inWholeSeconds.toInt()).whenDone { completeAndShowRemaining() }
 
         gameHandle.scheduler.interval(
             20,

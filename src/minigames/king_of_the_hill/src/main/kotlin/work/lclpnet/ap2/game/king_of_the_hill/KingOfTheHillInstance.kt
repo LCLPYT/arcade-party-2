@@ -36,8 +36,10 @@ import work.lclpnet.kibu.access.entity.PlayerInventoryAccess
 import work.lclpnet.kibu.hook.player.PlayerInventoryHooks
 import kotlin.random.Random
 import kotlin.random.asJavaRandom
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 
-const val DURATION_SECONDS = 160
+val DURATION = 2.minutes + 40.seconds
 
 class KingOfTheHillInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle), MapBootstrapFunction {
     
@@ -114,6 +116,6 @@ class KingOfTheHillInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
             }
         }
 
-        useTaskTimer(DURATION_SECONDS).whenDone { winManager.complete() }
+        useTaskTimer(DURATION.inWholeSeconds.toInt()).whenDone { winManager.complete() }
     }
 }
