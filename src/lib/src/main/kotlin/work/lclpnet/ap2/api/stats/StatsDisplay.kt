@@ -37,7 +37,7 @@ class StatsDisplay(val translations: Translations, val logger: Logger) {
 
         val body = mutableListOf<DialogBody>()
 
-        appendSections(body, view, stats.gameId, player) { ref, _ ->
+        appendSections(body, view, stats.gameId, player, ranking = true) { ref, _ ->
             val name = ref.getNameFor(player)
             if (name.style.color == null) name.copy().withStyle(GREEN) else name
         }
@@ -54,7 +54,7 @@ class StatsDisplay(val translations: Translations, val logger: Logger) {
         if (teamView.results.isNotEmpty()) {
             body.add(categoryHeader(translations.translateText("ap2.view_stats.teams").translateFor(player)))
 
-            appendSections(body, teamView, stats.gameId, player) { ref, _ ->
+            appendSections(body, teamView, stats.gameId, player, ranking = true) { ref, _ ->
                 ref.getNameFor(player)
             }
         }
@@ -64,7 +64,7 @@ class StatsDisplay(val translations: Translations, val logger: Logger) {
 
             body.add(categoryHeader(translations.translateText("ap2.view_stats.players").translateFor(player)))
 
-            appendSections(body, playerView, stats.gameId, player) { ref, _ ->
+            appendSections(body, playerView, stats.gameId, player, ranking = false) { ref, _ ->
                 val name = ref.getNameFor(player)
                 val teamRef = stats.playerTeams[ref]
 
@@ -89,6 +89,7 @@ class StatsDisplay(val translations: Translations, val logger: Logger) {
         view: StatsView<Ref>,
         gameId: Identifier,
         player: ServerPlayer,
+        ranking: Boolean,
         renderName: (ref: Ref, position: Int) -> Component,
     ) {
         val ranks = HashMap<Ref, Int>()
@@ -97,9 +98,32 @@ class StatsDisplay(val translations: Translations, val logger: Logger) {
             if (ref != null) ranks[ref] = rank
         }
 
+        if (ranking) body.add(rankingSection(view, player, renderName))
+
         for (stat in view.stats) {
             body.add(statSection(view, stat, gameId, player, ranks, renderName))
         }
+    }
+
+    private fun <Ref : SubjectRef> rankingSection(
+        view: StatsView<Ref>,
+        player: ServerPlayer,
+        renderName: (ref: Ref, position: Int) -> Component,
+    ): PlainMessage {
+        val label = translations.translate(player, "ap2.view_stats.ranking")
+
+        val text = Component.empty()
+            .append(Component.literal(label).withStyle(GOLD, BOLD))
+
+        for ((ref, rank) in view.order) {
+            if (ref == null) continue
+
+            text.append(Component.literal("\n"))
+                .append(Component.literal("#$rank ").withStyle(YELLOW))
+                .append(renderName(ref, rank))
+        }
+
+        return PlainMessage(text, sectionWidth)
     }
 
     private fun <Ref : SubjectRef> statSection(

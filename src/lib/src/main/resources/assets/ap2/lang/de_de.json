@@ -93,6 +93,7 @@
   "ap2.view_stats.unavailable": "Diese Statistik kann leider nicht mehr angezeigt werden",
   "ap2.view_stats.players": "Spieler",
   "ap2.view_stats.teams": "Teams",
+  "ap2.view_stats.ranking": "Platzierung",
   "ap2.view_stats.no_content": "Es wurden keine Statistiken aufgenommen...",
   "ap2.stat.score": "Punkte",
   "ap2.stat.kills": "Kills",

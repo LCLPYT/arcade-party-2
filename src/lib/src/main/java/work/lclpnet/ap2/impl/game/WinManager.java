@@ -89,6 +89,7 @@ public class WinManager<T, Ref extends SubjectRef> {
             return CompletableFuture.completedFuture(Optional.empty());
         }
 
+        statsManager.fillDefaults(result);
         statsManager.freeze();
 
         StatsResult stats = statsManager.getResult(gameHandle.getGameInfo(), map.get(), result);
