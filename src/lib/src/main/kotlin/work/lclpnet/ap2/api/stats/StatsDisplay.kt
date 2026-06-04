@@ -52,7 +52,7 @@ class StatsDisplay(val translations: Translations, val logger: Logger) {
         val body = mutableListOf<DialogBody>()
 
         if (teamView.results.isNotEmpty()) {
-            body.add(categoryHeader(translations.translateText("ap2.view_stats.team").translateFor(player)))
+            body.add(categoryHeader(translations.translateText("ap2.view_stats.teams").translateFor(player)))
 
             appendSections(body, teamView, stats.gameId, player) { ref, _ ->
                 ref.getNameFor(player)
@@ -60,7 +60,9 @@ class StatsDisplay(val translations: Translations, val logger: Logger) {
         }
 
         if (playerView.results.isNotEmpty()) {
-            body.add(categoryHeader(translations.translateText("ap2.view_stats.name").translateFor(player)))
+            if (body.isNotEmpty()) body.add(separator())
+
+            body.add(categoryHeader(translations.translateText("ap2.view_stats.players").translateFor(player)))
 
             appendSections(body, playerView, stats.gameId, player) { ref, _ ->
                 val name = ref.getNameFor(player)
@@ -142,6 +144,11 @@ class StatsDisplay(val translations: Translations, val logger: Logger) {
 
     private fun categoryHeader(label: Component): PlainMessage =
         PlainMessage(label.copy().withStyle(AQUA, BOLD), sectionWidth)
+
+    private fun separator(): PlainMessage {
+        val line = Component.literal("=".repeat(26)).withStyle(DARK_GREEN, STRIKETHROUGH, BOLD)
+        return PlainMessage(line, sectionWidth)
+    }
 
     private fun showDialog(player: ServerPlayer, body: List<DialogBody>) {
         val title = translations.translateText("ap2.stats").formatted(GOLD).translateFor(player)
