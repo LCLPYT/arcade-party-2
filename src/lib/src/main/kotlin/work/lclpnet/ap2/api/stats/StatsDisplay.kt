@@ -128,7 +128,7 @@ class StatsDisplay(val translations: Translations, val logger: Logger) {
 
     private fun <Ref : SubjectRef> statSection(
         view: StatsView<Ref>,
-        stat: Stat<*>,
+        stat: Stat<out Any>,
         gameId: Identifier,
         player: ServerPlayer,
         ranks: Map<Ref, Int>,
@@ -145,13 +145,20 @@ class StatsDisplay(val translations: Translations, val logger: Logger) {
         ordered.forEachIndexed { index, (ref, result) ->
             val position = index + 1
 
+            val formattedValue = formatValue(result[stat], translations.getLocale(player))
+
             text.append(Component.literal("\n"))
                 .append(renderName(ref, position))
                 .append(Component.literal("  "))
-                .append(Component.literal(result[stat].toString()).withColor(positionColor(position)))
+                .append(Component.literal(formattedValue).withColor(positionColor(position)))
         }
 
         return PlainMessage(text, sectionWidth)
+    }
+
+    private fun formatValue(value: Any, locale: Locale): String = when (value) {
+        is Float, is Double -> String.format(locale, "%.2f", value)
+        else -> value.toString()
     }
 
     private fun sortKey(result: Stats, stat: Stat<*>): Double {
