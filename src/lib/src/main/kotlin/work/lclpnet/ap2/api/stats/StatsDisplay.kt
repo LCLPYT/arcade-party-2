@@ -5,6 +5,8 @@ import net.minecraft.core.Holder
 import net.minecraft.network.chat.Component
 import net.minecraft.resources.Identifier
 import net.minecraft.server.dialog.*
+import net.minecraft.server.dialog.body.DialogBody
+import net.minecraft.server.dialog.body.PlainMessage
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.sounds.SoundSource
@@ -18,9 +20,7 @@ import java.util.*
 
 class StatsDisplay(val translations: Translations, val logger: Logger) {
 
-    private val playerWidth = 100
-    private val statWidth = 85
-    private val maxStatColumns = 4
+    private val sectionWidth = 200
 
     fun openSummary(player: ServerPlayer, stats: StatsResult) {
         when (stats) {
@@ -35,126 +35,128 @@ class StatsDisplay(val translations: Translations, val logger: Logger) {
 
         if (view.results.isEmpty()) return
 
-        val columns = 1 + view.stats.size.coerceAtMost(maxStatColumns)
+        val body = mutableListOf<DialogBody>()
 
-        val buttons = mutableListOf<ActionButton>()
-
-        appendTable(
-            buttons, view, stats.gameId, player, columns,
-            nameHeader = translations.translateText("ap2.view_stats.name").translateFor(player),
-        ) { ref, rank ->
-            val name = ref.getNameFor(player).let {
-                if (it.style.color == null) it.copy().withStyle(GREEN)
-                else it
-            }
-
-            Component.literal("#$rank ")
-                .withStyle(YELLOW)
-                .append(name)
+        appendSections(body, view, stats.gameId, player) { ref, _ ->
+            val name = ref.getNameFor(player)
+            if (name.style.color == null) name.copy().withStyle(GREEN) else name
         }
 
-        showDialog(player, buttons, columns)
+        showDialog(player, body)
     }
 
     private fun openTeamSummary(player: ServerPlayer, stats: TeamStatsResult) {
         val teamView = stats.teamView
         val playerView = stats.playerView
 
-        val teamStatColumns = teamView.stats.size.coerceAtMost(maxStatColumns)
-        val playerStatColumns = playerView.stats.size.coerceAtMost(maxStatColumns)
-        val columns = 1 + maxOf(teamStatColumns, playerStatColumns)
+        val body = mutableListOf<DialogBody>()
 
-        val buttons = mutableListOf<ActionButton>()
+        if (teamView.results.isNotEmpty()) {
+            body.add(categoryHeader(translations.translateText("ap2.view_stats.team").translateFor(player)))
 
-        appendTable(
-            buttons, teamView, stats.gameId, player, columns,
-            nameHeader = translations.translateText("ap2.view_stats.team").translateFor(player),
-        ) { ref, rank ->
-            Component.literal("#$rank ")
-                .withStyle(YELLOW)
-                .append(ref.getNameFor(player))
-        }
-
-        pad(buttons, columns, 0)
-
-        appendTable(
-            buttons, playerView, stats.gameId, player, columns,
-            nameHeader = translations.translateText("ap2.view_stats.name").translateFor(player),
-        ) { ref, _ ->
-            val name = ref.getNameFor(player)
-            val teamRef = stats.playerTeams[ref]
-
-            when {
-                teamRef != null -> name.copy().withStyle { it.withColor(teamRef.key().color()) }
-                name.style.color == null -> name.copy().withStyle(GREEN)
-                else -> name
+            appendSections(body, teamView, stats.gameId, player) { ref, _ ->
+                ref.getNameFor(player)
             }
         }
 
-        showDialog(player, buttons, columns)
+        if (playerView.results.isNotEmpty()) {
+            body.add(categoryHeader(translations.translateText("ap2.view_stats.name").translateFor(player)))
+
+            appendSections(body, playerView, stats.gameId, player) { ref, _ ->
+                val name = ref.getNameFor(player)
+                val teamRef = stats.playerTeams[ref]
+
+                when {
+                    teamRef != null -> name.copy().withStyle { it.withColor(teamRef.key().color()) }
+                    name.style.color == null -> name.copy().withStyle(GREEN)
+                    else -> name
+                }
+            }
+        }
+
+        if (body.isEmpty()) {
+            val contents = translations.translateText(player, "ap2.view_stats.no_content")
+            body.add(PlainMessage(contents, sectionWidth))
+        }
+
+        showDialog(player, body)
     }
 
-    private fun <Ref : SubjectRef> appendTable(
-        buttons: MutableList<ActionButton>,
+    private fun <Ref : SubjectRef> appendSections(
+        body: MutableList<DialogBody>,
         view: StatsView<Ref>,
         gameId: Identifier,
         player: ServerPlayer,
-        totalColumns: Int,
-        nameHeader: Component,
-        renderName: (ref: Ref, rank: Int) -> Component,
+        renderName: (ref: Ref, position: Int) -> Component,
     ) {
-        val statColumns = view.stats.toList().take(maxStatColumns)
-
-        buttons.add(actionButton(nameHeader, playerWidth))
-
-        for (stat in statColumns) {
-            buttons.add(actionButton(Component.literal(labelOf(gameId, stat, player)), statWidth))
-        }
-
-        pad(buttons, totalColumns, 1 + statColumns.size)
+        val ranks = HashMap<Ref, Int>()
 
         for ((ref, rank) in view.order) {
-            if (ref == null) continue
+            if (ref != null) ranks[ref] = rank
+        }
 
-            val result = view.results[ref] ?: continue
-
-            buttons.add(actionButton(renderName(ref, rank), playerWidth))
-
-            for (stat in statColumns) {
-                buttons.add(actionButton(Component.literal(result[stat].toString()), statWidth))
-            }
-
-            pad(buttons, totalColumns, 1 + statColumns.size)
+        for (stat in view.stats) {
+            body.add(statSection(view, stat, gameId, player, ranks, renderName))
         }
     }
 
-    private fun pad(buttons: MutableList<ActionButton>, totalColumns: Int, used: Int) {
-        repeat(totalColumns - used) {
-            buttons.add(actionButton(Component.empty(), statWidth))
+    private fun <Ref : SubjectRef> statSection(
+        view: StatsView<Ref>,
+        stat: Stat<*>,
+        gameId: Identifier,
+        player: ServerPlayer,
+        ranks: Map<Ref, Int>,
+        renderName: (ref: Ref, position: Int) -> Component,
+    ): PlainMessage {
+        val ordered = view.results.entries.sortedWith(
+            compareByDescending<Map.Entry<Ref, Stats>> { sortKey(it.value, stat) }
+                .thenBy { ranks[it.key] ?: Int.MAX_VALUE }
+        )
+
+        val text = Component.empty()
+            .append(Component.literal(labelOf(gameId, stat, player)).withStyle(GOLD, BOLD))
+
+        ordered.forEachIndexed { index, (ref, result) ->
+            val position = index + 1
+
+            text.append(Component.literal("\n"))
+                .append(Component.literal("#$position ").withStyle(YELLOW))
+                .append(renderName(ref, position))
+                .append(Component.literal("  "))
+                .append(Component.literal(result[stat].toString()).withColor(positionColor(position)))
         }
+
+        return PlainMessage(text, sectionWidth)
     }
 
-    private fun actionButton(label: Component, width: Int) =
-        ActionButton(CommonButtonData(label, width), Optional.empty())
+    private fun sortKey(result: Stats, stat: Stat<*>): Double {
+        val value = (result[stat] as? Number)?.toDouble() ?: 0.0
+        return if (stat.higherIsBetter) value else -value
+    }
 
-    private fun showDialog(player: ServerPlayer, buttons: List<ActionButton>, columns: Int) {
+    private fun positionColor(position: Int) = when (position) {
+        1 -> 0xffaa00
+        2 -> 0xc0c0c0
+        3 -> 0xcd7f32
+        else -> 0xffffff
+    }
+
+    private fun categoryHeader(label: Component): PlainMessage =
+        PlainMessage(label.copy().withStyle(AQUA, BOLD), sectionWidth)
+
+    private fun showDialog(player: ServerPlayer, body: List<DialogBody>) {
         val title = translations.translateText("ap2.stats").formatted(GOLD).translateFor(player)
 
         val commonData = CommonDialogData(
-            title, Optional.empty(), true, false, DialogAction.NONE, listOf(), listOf()
+            title, Optional.empty(), true, false, DialogAction.CLOSE, body, listOf()
         )
 
-        val dialog = MultiActionDialog(
-            commonData,
-            buttons,
-            Optional.of(
-                ActionButton(
-                    CommonButtonData(Component.translatable("gui.back"), 150),
-                    Optional.empty()
-                )
-            ),
-            columns
+        val back = ActionButton(
+            CommonButtonData(Component.translatable("gui.back"), 200),
+            Optional.empty()
         )
+
+        val dialog = NoticeDialog(commonData, back)
 
         player.openDialog(Holder.direct(dialog))
     }

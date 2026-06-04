@@ -9,7 +9,7 @@ import work.lclpnet.ap2.api.game.data.SubjectRefFactory
 import work.lclpnet.game.map.GameMap
 import work.lclpnet.game.map.MapDescriptor
 
-data class Stat<T>(val id: String, val default: T)
+data class Stat<T>(val id: String, val default: T, val higherIsBetter: Boolean = true)
 
 typealias StatSet = Set<Stat<*>>
 
