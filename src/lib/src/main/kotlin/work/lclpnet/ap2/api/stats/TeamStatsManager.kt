@@ -21,6 +21,11 @@ class TeamStatsManager(
     val teams: BaseStatsManager<Team, TeamRef> = BaseStatsManager(teamStats, teamRefs)
     val players: BaseStatsManager<ServerPlayer, PlayerRef> = BaseStatsManager(playerStats, PlayerRef::create)
 
+    override fun fillDefaults(result: GenericGameResult<TeamRef>) {
+        teams.fillDefaults(result.subjectResults.mapNotNull { it.left() })
+        players.fillDefaults(result.playerResults.mapNotNull { it.left() })
+    }
+
     override fun freeze() {
         teams.freeze()
         players.freeze()

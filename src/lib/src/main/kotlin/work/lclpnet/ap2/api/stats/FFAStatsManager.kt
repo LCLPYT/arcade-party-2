@@ -10,6 +10,10 @@ import work.lclpnet.game.map.MapDescriptor
 
 class FFAStatsManager(stats: StatSet) : BaseStatsManager<ServerPlayer, PlayerRef>(stats, PlayerRef::create), StatsManager<PlayerRef> {
 
+    override fun fillDefaults(result: GenericGameResult<PlayerRef>) {
+        fillDefaults(result.playerResults.mapNotNull { it.left() })
+    }
+
     override fun getResult(gameInfo: GameInfo, map: GameMap, result: GenericGameResult<PlayerRef>): FFAStatsResult {
         val results: Map<PlayerRef, Stats> = getEntries()
         val statsView = StatsView(stats, result.playerResults, results)

@@ -48,6 +48,7 @@ interface StatsResult {
 }
 
 interface StatsManager<Ref : SubjectRef> {
+    fun fillDefaults(result: GenericGameResult<Ref>)
     fun freeze()
     fun getResult(gameInfo: GameInfo, map: GameMap, result: GenericGameResult<Ref>): StatsResult
 }
@@ -94,6 +95,15 @@ open class BaseStatsManager<T, Ref : SubjectRef>(
         val stats = entries.computeIfAbsent(refs.create(subject)) { Stats(this@BaseStatsManager.stats) }
 
         return stats
+    }
+
+    @Synchronized
+    fun fillDefaults(refs: Iterable<Ref>) {
+        if (frozen) return
+
+        for (ref in refs) {
+            entries.computeIfAbsent(ref) { Stats(stats) }
+        }
     }
 
     fun freeze() {
