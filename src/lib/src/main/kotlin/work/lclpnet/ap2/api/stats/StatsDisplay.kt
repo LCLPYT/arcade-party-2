@@ -120,7 +120,6 @@ class StatsDisplay(val translations: Translations, val logger: Logger) {
             val position = index + 1
 
             text.append(Component.literal("\n"))
-                .append(Component.literal("#$position ").withStyle(YELLOW))
                 .append(renderName(ref, position))
                 .append(Component.literal("  "))
                 .append(Component.literal(result[stat].toString()).withColor(positionColor(position)))
