@@ -11,7 +11,7 @@ import work.lclpnet.game.map.MapDescriptor
 
 data class Stat<T>(val id: String, val default: T, val higherIsBetter: Boolean = true)
 
-typealias StatSet = Set<Stat<*>>
+typealias StatSet = Set<Stat<out Any>>
 
 class Stats(stats: StatSet) {
 
