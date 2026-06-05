@@ -43,13 +43,18 @@ private val CLICKS = Stat("clicks", 0)
 private val MISSES = Stat("misses", 0)
 private val ACCURACY = Stat("accuracy", 0f)
 private val STREAK = Stat("streak", 0)
+private val AVG_ADVANCE_TIME = Stat("avg_advance_time", 0f)
 
 class AimMasterInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle), MapBootstrap {
 
     private val data = IntScoreDataContainer(PlayerRef::create)
 
-    private val stats = createStats(data, CLICKS, MISSES, ACCURACY, STREAK)
+    private val stats = createStats(data, CLICKS, MISSES, ACCURACY, STREAK, AVG_ADVANCE_TIME)
     private val currentStreak = HashMap<UUID, Int>()
+    private val lastAdvanceMillis = HashMap<UUID, Long>()
+    private val advanceTimeSumMillis = HashMap<UUID, Long>()
+    private val advanceCount = HashMap<UUID, Int>()
+    private var startMillis = 0L
 
     private lateinit var bossBar: DynamicTranslatedPlayerBossBar
     private lateinit var manager: AimMasterManager
@@ -117,6 +122,8 @@ class AimMasterInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
 
         PlayerInteractionHooks.USE_ITEM.registerWith(hooks) { player, _, _ -> invokeRayCaster(player) }
         PlayerSwingHandHook.HOOK.registerWith(hooks) { player, _ -> invokeRayCaster(player) }
+
+        startMillis = System.currentTimeMillis()
     }
 
     private fun invokeRayCaster(player: Player): InteractionResult {
@@ -136,6 +143,7 @@ class AimMasterInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
             currentStreak[player.uuid] = streak
             stats.modify(serverPlayer, STREAK) { maxOf(it, streak) }
             updateAccuracy(serverPlayer, newScore, clicks)
+            recordAdvanceTime(serverPlayer)
 
             val target = domain.currentTarget
             val serverWorld = serverPlayer.level()
@@ -162,6 +170,23 @@ class AimMasterInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
     private fun updateAccuracy(player: ServerPlayer, hits: Int, clicks: Int) {
         val accuracy = if (clicks == 0) 0f else round(hits * 1000f / clicks) / 10f
         stats.set(player, ACCURACY, accuracy)
+    }
+
+    private fun recordAdvanceTime(player: ServerPlayer) {
+        val uuid = player.uuid
+        val now = System.currentTimeMillis()
+        val last = lastAdvanceMillis[uuid] ?: startMillis
+
+        val sum = (advanceTimeSumMillis[uuid] ?: 0L) + (now - last)
+        val count = (advanceCount[uuid] ?: 0) + 1
+        advanceTimeSumMillis[uuid] = sum
+        advanceCount[uuid] = count
+        lastAdvanceMillis[uuid] = now
+
+        val avgMillis = sum.toDouble() / count
+        val seconds = round(avgMillis / 100.0).toFloat() / 10f
+
+        stats.set(player, AVG_ADVANCE_TIME, seconds)
     }
 
     private fun win(winner: ServerPlayer) {
