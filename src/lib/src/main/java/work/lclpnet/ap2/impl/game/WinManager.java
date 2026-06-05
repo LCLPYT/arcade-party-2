@@ -1,5 +1,7 @@
 package work.lclpnet.ap2.impl.game;
 
+import kotlin.time.Clock;
+import kotlin.time.Instant;
 import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.server.level.ServerPlayer;
@@ -9,11 +11,13 @@ import work.lclpnet.ap2.api.game.GameOverListener;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.MiniGameResults;
 import work.lclpnet.ap2.api.game.data.*;
+import work.lclpnet.ap2.api.stats.GameSummary;
 import work.lclpnet.ap2.api.stats.StatsManager;
 import work.lclpnet.ap2.api.stats.StatsResult;
 import work.lclpnet.ap2.api.util.action.Action;
 import work.lclpnet.ap2.impl.game.data.CombinedDataContainer;
 import work.lclpnet.ap2.impl.game.data.SupremeDataContainer;
+import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.game.map.GameMap;
 import work.lclpnet.game.util.ProtectorUtils;
 import work.lclpnet.kibu.hook.Hook;
@@ -92,7 +96,15 @@ public class WinManager<T, Ref extends SubjectRef> {
         statsManager.fillDefaults(result);
         statsManager.freeze();
 
-        StatsResult stats = statsManager.getResult(gameHandle.getGameInfo(), map.get(), result);
+        Instant end = Clock.System.INSTANCE.now();
+
+        var participants = gameHandle.getParticipants().stream()
+                .map(PlayerRef::create)
+                .collect(Collectors.toSet());
+
+        var summary = new GameSummary(gameHandle.getGameInfo(), map.get(), gameHandle.getStartTime(), end, participants);
+
+        StatsResult stats = statsManager.getResult(summary, result);
 
         return gameHandle.submitStats(stats)
                 .thenApply(Optional::of)

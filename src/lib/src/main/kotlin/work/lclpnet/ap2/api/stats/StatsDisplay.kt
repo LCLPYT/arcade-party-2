@@ -37,12 +37,22 @@ class StatsDisplay(val translations: Translations, val logger: Logger) {
 
         val body = mutableListOf<DialogBody>()
 
-        appendSections(body, view, stats.gameId, player, ranking = true) { ref, _ ->
+        appendGameSummary(player, stats, body)
+
+        appendSections(body, view, stats.summary.game.id, player, ranking = true) { ref, _ ->
             val name = ref.getNameFor(player)
             if (name.style.color == null) name.copy().withStyle(GREEN) else name
         }
 
         showDialog(player, body)
+    }
+
+    private fun appendGameSummary(
+        player: ServerPlayer,
+        stats: FFAStatsResult,
+        body: MutableList<DialogBody>
+    ) {
+
     }
 
     private fun openTeamSummary(player: ServerPlayer, stats: TeamStatsResult) {
@@ -54,7 +64,7 @@ class StatsDisplay(val translations: Translations, val logger: Logger) {
         if (teamView.results.isNotEmpty()) {
             body.add(categoryHeader(translations.translateText("ap2.view_stats.teams").translateFor(player)))
 
-            appendSections(body, teamView, stats.gameId, player, ranking = true) { ref, _ ->
+            appendSections(body, teamView, stats.summary.game.id, player, ranking = true) { ref, _ ->
                 ref.getNameFor(player)
             }
         }
@@ -64,7 +74,7 @@ class StatsDisplay(val translations: Translations, val logger: Logger) {
 
             body.add(categoryHeader(translations.translateText("ap2.view_stats.players").translateFor(player)))
 
-            appendSections(body, playerView, stats.gameId, player, ranking = false) { ref, _ ->
+            appendSections(body, playerView, stats.summary.game.id, player, ranking = false) { ref, _ ->
                 val name = ref.getNameFor(player)
                 val teamRef = stats.playerTeams[ref]
 
