@@ -66,7 +66,7 @@ private const val DEBUG_EGG_POSITIONS = false
 private const val STEAL_RANGE = 10.0
 private val NBT_CODEC: MapCodec<Boolean> = Codec.BOOL.fieldOf("easter_egg")
 
-private val DURATION = 2.minutes + 20.seconds
+private val DURATION = 1.minutes + 30.seconds
 
 private val EGGS_STOLEN = Stat("eggs_stolen", 0)
 private val EGGS_LOST = Stat("eggs_lost", 0)
