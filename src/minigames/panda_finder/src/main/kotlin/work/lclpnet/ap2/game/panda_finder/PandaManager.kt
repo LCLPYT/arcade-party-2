@@ -13,7 +13,7 @@ import net.minecraft.world.level.saveddata.maps.MapId
 import net.minecraft.world.phys.Vec3
 import org.json.JSONObject
 import org.slf4j.Logger
-import work.lclpnet.ap2.api.base.Participants
+import work.lclpnet.ap2.game.player.Participants
 import java.util.*
 
 private const val PANDA_COUNT = 100

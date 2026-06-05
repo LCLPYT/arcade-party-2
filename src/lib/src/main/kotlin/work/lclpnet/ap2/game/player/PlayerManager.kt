@@ -1,28 +1,26 @@
-package work.lclpnet.ap2.api.base;
+package work.lclpnet.ap2.game.player
 
-import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.level.ServerPlayer
 
-import java.util.Set;
+interface PlayerManager : Participants {
 
-public interface PlayerManager extends Participants {
+    fun offer(player: ServerPlayer): Boolean
 
-    boolean offer(ServerPlayer player);
+    fun startPreparation()
 
-    void startPreparation();
+    fun startMiniGame()
 
-    void startMiniGame();
+    fun enterFinale(finalists: Set<ServerPlayer>)
 
-    void enterFinale(Set<? extends ServerPlayer> finalists);
+    fun addPermanentSpectator(player: ServerPlayer)
 
-    void addPermanentSpectator(ServerPlayer player);
+    fun removePermanentSpectator(player: ServerPlayer)
 
-    void removePermanentSpectator(ServerPlayer player);
+    fun isPermanentSpectator(player: ServerPlayer): Boolean
 
-    boolean isPermanentSpectator(ServerPlayer player);
+    fun bind(listener: ParticipantListener?)
 
-    void bind(ParticipantListener listener);
+    fun leaveFinale()
 
-    void leaveFinale();
-
-    boolean isFinale();
+    val isFinale: Boolean
 }

@@ -5,7 +5,7 @@ import net.minecraft.core.Vec3i;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import work.lclpnet.ap2.api.base.Participants;
+import work.lclpnet.ap2.game.player.Participants;
 import work.lclpnet.ap2.impl.map.MapUtil;
 import work.lclpnet.ap2.impl.util.math.MathUtil;
 import work.lclpnet.ap2.impl.util.structure.StructureUtil;

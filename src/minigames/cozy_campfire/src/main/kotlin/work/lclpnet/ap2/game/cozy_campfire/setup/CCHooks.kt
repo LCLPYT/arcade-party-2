@@ -17,13 +17,13 @@ import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.phys.Vec3
-import work.lclpnet.ap2.api.base.Participants
 import work.lclpnet.ap2.api.game.team.Team
 import work.lclpnet.ap2.api.game.team.TeamManager
 import work.lclpnet.ap2.api.game.team.TeamSpawnAccess
 import work.lclpnet.ap2.ext.mc.isIn
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.game.cozy_campfire.MOVEMENT_SPEED
+import work.lclpnet.ap2.game.player.Participants
 import work.lclpnet.gaco.collisions.CollisionDetector
 import work.lclpnet.gaco.collisions.movement.PlayerMovementObserver
 import work.lclpnet.game.api.prot.ProtectionConfig

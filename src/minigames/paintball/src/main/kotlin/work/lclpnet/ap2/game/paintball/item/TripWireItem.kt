@@ -18,12 +18,12 @@ import net.minecraft.world.phys.EntityHitResult
 import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.phys.shapes.CollisionContext
-import work.lclpnet.ap2.api.base.Participants
 import work.lclpnet.ap2.api.game.team.Team
 import work.lclpnet.ap2.ext.mc.playNotifySound
 import work.lclpnet.ap2.game.paintball.util.PaintManager
 import work.lclpnet.ap2.game.paintball.util.PaintballTeam
 import work.lclpnet.ap2.game.paintball.util.PaintballTeams
+import work.lclpnet.ap2.game.player.Participants
 import work.lclpnet.ap2.impl.game.item.SpecialItem
 import work.lclpnet.ap2.impl.game.item.SpecialItemContext
 import work.lclpnet.ap2.impl.util.ParticleHelper.spawnParticleFor

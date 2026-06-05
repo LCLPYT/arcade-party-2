@@ -4,7 +4,7 @@ import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.server.level.ServerPlayer;
 import work.lclpnet.activity.ComponentActivity;
 import work.lclpnet.activity.component.builtin.BuiltinComponents;
-import work.lclpnet.ap2.api.base.PlayerManager;
+import work.lclpnet.ap2.game.player.PlayerManager;
 import work.lclpnet.ap2.impl.game.PlayerUtil;
 import work.lclpnet.game.util.ProtectorComponent;
 import work.lclpnet.game.util.ProtectorUtils;

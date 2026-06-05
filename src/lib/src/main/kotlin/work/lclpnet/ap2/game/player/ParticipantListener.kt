@@ -1,8 +1,7 @@
-package work.lclpnet.ap2.api.base;
+package work.lclpnet.ap2.game.player
 
-import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.level.ServerPlayer
 
-public interface ParticipantListener {
-
-    void participantRemoved(ServerPlayer player);
+interface ParticipantListener {
+    fun participantRemoved(player: ServerPlayer)
 }

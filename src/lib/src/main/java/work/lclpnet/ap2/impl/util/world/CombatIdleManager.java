@@ -3,7 +3,7 @@ package work.lclpnet.ap2.impl.util.world;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import net.minecraft.server.level.ServerPlayer;
-import work.lclpnet.ap2.api.base.Participants;
+import work.lclpnet.ap2.game.player.Participants;
 import work.lclpnet.gaco.collisions.util.PlayerAction;
 import work.lclpnet.kibu.hook.Hook;
 import work.lclpnet.kibu.hook.HookFactory;

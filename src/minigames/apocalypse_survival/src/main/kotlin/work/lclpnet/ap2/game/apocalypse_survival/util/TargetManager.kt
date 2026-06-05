@@ -7,9 +7,9 @@ import net.minecraft.world.entity.monster.illager.Vindicator
 import net.minecraft.world.entity.monster.skeleton.AbstractSkeleton
 import net.minecraft.world.entity.monster.skeleton.Skeleton
 import net.minecraft.world.entity.monster.zombie.Zombie
-import work.lclpnet.ap2.api.base.Participants
+import work.lclpnet.ap2.game.player.Participants
 import work.lclpnet.game.map.GameMap
-import java.util.Random
+import java.util.*
 
 class TargetManager(participants: Participants, map: GameMap, random: Random) {
 
