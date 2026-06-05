@@ -14,8 +14,10 @@ import org.slf4j.Logger
 import work.lclpnet.ap2.api.game.data.SubjectRef
 import work.lclpnet.ap2.ext.component1
 import work.lclpnet.ap2.ext.component2
+import work.lclpnet.ap2.impl.util.TimeHelper
 import work.lclpnet.kibu.access.entity.ServerPlayerAccess
 import work.lclpnet.kibu.translate.Translations
+import work.lclpnet.kibu.translate.text.FormatWrapper
 import java.util.*
 
 class StatsDisplay(val translations: Translations, val logger: Logger) {
@@ -37,7 +39,7 @@ class StatsDisplay(val translations: Translations, val logger: Logger) {
 
         val body = mutableListOf<DialogBody>()
 
-        appendGameSummary(player, stats, body)
+        appendGameSummary(player, stats.summary, body)
 
         appendSections(body, view, stats.summary.game.id, player, ranking = true) { ref, _ ->
             val name = ref.getNameFor(player)
@@ -49,10 +51,31 @@ class StatsDisplay(val translations: Translations, val logger: Logger) {
 
     private fun appendGameSummary(
         player: ServerPlayer,
-        stats: FFAStatsResult,
+        summary: GameSummary,
         body: MutableList<DialogBody>
     ) {
+        val title = translations.translateText(player, summary.game.titleKey)
+            .formatted(GOLD, BOLD)
 
+        val mapName = summary.map.getName(translations.getLanguage(player))
+        val mapLine = translations.translateText(
+            player,
+            "ap2.view_stats.map",
+            FormatWrapper.styled(mapName, AQUA)
+        ).formatted(GREEN)
+
+        val seconds = summary.duration.inWholeSeconds.toInt()
+        val durationTime = TimeHelper.formatTime(translations, seconds).formatted(YELLOW)
+        val durationLine = translations.translateText(player, "ap2.view_stats.duration", durationTime)
+            .formatted(GREEN)
+
+        val text = Component.empty()
+            .append(title)
+            .append(Component.literal("\n")).append(mapLine)
+            .append(Component.literal("\n")).append(durationLine)
+
+        body.add(PlainMessage(text, sectionWidth))
+        body.add(separator())
     }
 
     private fun openTeamSummary(player: ServerPlayer, stats: TeamStatsResult) {
@@ -61,20 +84,24 @@ class StatsDisplay(val translations: Translations, val logger: Logger) {
 
         val body = mutableListOf<DialogBody>()
 
-        if (teamView.results.isNotEmpty()) {
-            body.add(categoryHeader(translations.translateText("ap2.view_stats.teams").translateFor(player)))
+        appendGameSummary(player, stats.summary, body)
 
-            appendSections(body, teamView, stats.summary.game.id, player, ranking = true) { ref, _ ->
+        val statsBody = mutableListOf<DialogBody>()
+
+        if (teamView.results.isNotEmpty()) {
+            statsBody.add(categoryHeader(translations.translateText("ap2.view_stats.teams").translateFor(player)))
+
+            appendSections(statsBody, teamView, stats.summary.game.id, player, ranking = true) { ref, _ ->
                 ref.getNameFor(player)
             }
         }
 
         if (playerView.results.isNotEmpty()) {
-            if (body.isNotEmpty()) body.add(separator())
+            if (statsBody.isNotEmpty()) statsBody.add(separator())
 
-            body.add(categoryHeader(translations.translateText("ap2.view_stats.players").translateFor(player)))
+            statsBody.add(categoryHeader(translations.translateText("ap2.view_stats.players").translateFor(player)))
 
-            appendSections(body, playerView, stats.summary.game.id, player, ranking = false) { ref, _ ->
+            appendSections(statsBody, playerView, stats.summary.game.id, player, ranking = false) { ref, _ ->
                 val name = ref.getNameFor(player)
                 val teamRef = stats.playerTeams[ref]
 
@@ -86,10 +113,12 @@ class StatsDisplay(val translations: Translations, val logger: Logger) {
             }
         }
 
-        if (body.isEmpty()) {
+        if (statsBody.isEmpty()) {
             val contents = translations.translateText(player, "ap2.view_stats.no_content")
-            body.add(PlainMessage(contents, sectionWidth))
+            statsBody.add(PlainMessage(contents, sectionWidth))
         }
+
+        body.addAll(statsBody)
 
         showDialog(player, body)
     }
