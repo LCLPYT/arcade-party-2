@@ -3,15 +3,13 @@ package work.lclpnet.ap2.impl.game;
 import it.unimi.dsi.fastutil.objects.ObjectIntPair;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.network.chat.contents.objects.ObjectInfo;
-import net.minecraft.network.chat.contents.objects.PlayerSprite;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.item.component.ResolvableProfile;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.ApConstants;
 import work.lclpnet.ap2.api.game.data.DataEntry;
 import work.lclpnet.ap2.api.game.data.PlayerSubjectRefFactory;
 import work.lclpnet.ap2.api.game.data.SubjectRef;
+import work.lclpnet.ap2.util.FontService;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.kibu.translate.text.RootText;
 
@@ -21,20 +19,23 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 
+import static java.lang.Math.round;
 import static net.minecraft.ChatFormatting.*;
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
 public class ResultAnnouncement<Ref extends SubjectRef> {
 
     private final Translations translations;
+    private final FontService font;
     private final PlayerSubjectRefFactory<Ref> refs;
     private final List<ObjectIntPair<Ref>> order;
     private final Map<Ref, Integer> placement;
     private final HashMap<Ref, DataEntry<Ref>> entryByRef;
 
-    public ResultAnnouncement(Translations translations, PlayerSubjectRefFactory<Ref> refs,
+    public ResultAnnouncement(Translations translations, FontService font, PlayerSubjectRefFactory<Ref> refs,
                               List<ObjectIntPair<Ref>> order, Function<Ref, Optional<DataEntry<Ref>>> entryGetter) {
         this.translations = translations;
+        this.font = font;
         this.refs = refs;
 
         this.order = order;
@@ -65,7 +66,7 @@ public class ResultAnnouncement<Ref extends SubjectRef> {
         int sepLength = ApConstants.SEPARATOR.length();
         var sepSm = Component.literal("-".repeat(sepLength)).withStyle(DARK_GRAY, STRIKETHROUGH);
 
-        sendSeparatorWithText(player, resultsText, sepLength);
+        sendSeparatorWithText(player, resultsText);
 
         if (order.isEmpty()) {
             player.sendSystemMessage(translations.translateText(player, "ap2.no_results").formatted(GRAY));
@@ -75,7 +76,7 @@ public class ResultAnnouncement<Ref extends SubjectRef> {
         }
 
         if (actionText != null) {
-            sendSeparatorWithText(player, actionText, sepLength);
+            sendSeparatorWithText(player, actionText);
         } else {
             player.sendSystemMessage(sep);
         }
@@ -119,24 +120,30 @@ public class ResultAnnouncement<Ref extends SubjectRef> {
         }
     }
 
-    private void sendSeparatorWithText(ServerPlayer player, Component label, int sepLength) {
-        int len = label.getString().length() + 2;
+    private void sendSeparatorWithText(ServerPlayer player, Component label) {
+        // the full separator and its '=' padding are bold; center the bracketed label by pixel width,
+        // since the default Minecraft font is not monospaced (see FontService)
+        float target = font.width(ApConstants.SEPARATOR, true);
+        float eq = font.advance('=', true);
+        float brackets = font.advance('[', true) + font.advance(']', true);
+        float labelWidth = font.width(label) + brackets;
 
-        if (len - 1 >= sepLength) {
+        float side = (target - labelWidth) / 2f;
+
+        if (side < eq) {
             player.sendSystemMessage(label);
             return;
         }
 
-        int times = (sepLength - len) / 2;
-        String sepShort = "=".repeat(times);
+        int left = round(side / eq);
+        int right = Math.max(0, round((target - labelWidth - left * eq) / eq));
 
         var msg = Component.empty()
-                .append(Component.literal(sepShort).withStyle(DARK_GREEN, STRIKETHROUGH, BOLD))
+                .append(Component.literal("=".repeat(left)).withStyle(DARK_GREEN, STRIKETHROUGH, BOLD))
                 .append(Component.literal("[").withStyle(DARK_GREEN, BOLD))
                 .append(label)
                 .append(Component.literal("]").withStyle(DARK_GREEN, BOLD))
-                .append(Component.literal(sepShort + (sepLength - 2 * times - len > 0 ? "=" : ""))
-                        .withStyle(DARK_GREEN, STRIKETHROUGH, BOLD));
+                .append(Component.literal("=".repeat(right)).withStyle(DARK_GREEN, STRIKETHROUGH, BOLD));
 
         player.sendSystemMessage(msg);
     }

@@ -1,6 +1,7 @@
 package work.lclpnet.ap2.mode_default;
 
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
+import net.minecraft.SharedConstants;
 import net.minecraft.server.MinecraftServer;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.ApConstants;
@@ -23,12 +24,14 @@ import work.lclpnet.ap2.mode_default.cmd.ForceGameCommand;
 import work.lclpnet.ap2.mode_default.cmd.ScoreCommand;
 import work.lclpnet.ap2.mode_default.util.ApBaseArgs;
 import work.lclpnet.ap2.mode_default.util.ScoreManager;
+import work.lclpnet.ap2.util.FontService;
 import work.lclpnet.ap2.util.TablistManager;
 import work.lclpnet.config.json.JsonConfigFactory;
 import work.lclpnet.gaco.ds.queue.JsonFileQueuePersistence;
 import work.lclpnet.game.api.GameEnvironment;
 import work.lclpnet.game.api.GameInstance;
 import work.lclpnet.game.api.option.VoteResult;
+import work.lclpnet.kibu.assets.AssetManager;
 import work.lclpnet.kibu.cmd.impl.CommandStack;
 import work.lclpnet.kibu.hook.HookStack;
 import work.lclpnet.kibu.translate.Translations;
@@ -52,6 +55,7 @@ public class ArcadePartyInstance implements GameInstance {
     private final JsonConfigFactory<Ap2Config> configFactory;
     private final VoteResult<MiniGame> miniGameVoteResult;
     private final Logger logger;
+    private final FontService fontService;
 
     public ArcadePartyInstance(GameEnvironment environment, VanillaTranslations vanillaTranslations,
                                JsonConfigFactory<Ap2Config> configFactory, VoteResult<MiniGame> miniGameVoteResult,
@@ -61,6 +65,10 @@ public class ArcadePartyInstance implements GameInstance {
         this.configFactory = configFactory;
         this.miniGameVoteResult = miniGameVoteResult;
         this.logger = logger;
+
+        var assetManager = AssetManager.getShared(SharedConstants.getCurrentVersion().name());
+
+        this.fontService = new FontService(assetManager, logger);
     }
 
     @Override
@@ -68,7 +76,7 @@ public class ArcadePartyInstance implements GameInstance {
         ApBootstrap bootstrap = new ApBootstrap(configFactory, logger, environment::whenDone);
 
         bootstrap.loadConfig(ForkJoinPool.commonPool())
-                .thenCompose(configManager -> bootstrap.dispatch(configManager.getConfig(), environment, vanillaTranslations))
+                .thenCompose(configManager -> bootstrap.dispatch(configManager.getConfig(), environment, vanillaTranslations, fontService))
                 .thenCompose(this::setupMode)
                 .exceptionally(throwable -> {
                     logger.error("Failed to load ArcadeParty2", throwable);
@@ -123,7 +131,8 @@ public class ArcadePartyInstance implements GameInstance {
 
         ApMiniGameArgs container = new ApMiniGameArgs(server, logger, translations, hookStack,
                 commandStack, environment.getSchedulerStack(), result.worldFacade(),
-                result.mapFacade(), playerUtil, gameManager, result.songManager(), result.dataManager());
+                result.mapFacade(), playerUtil, gameManager, result.songManager(), result.dataManager(),
+                fontService);
 
         SongCache songCache = new MapSongCache();
 

@@ -218,7 +218,7 @@ public class WinSequence<T, Ref extends SubjectRef> {
     private void broadcastResults() {
         List<ObjectIntPair<Ref>> order = winners.getSubjectResults();
 
-        var announcement = new ResultAnnouncement<>(gameHandle.getTranslations(), refs, order, data::getEntry);
+        var announcement = new ResultAnnouncement<>(gameHandle.getTranslations(), gameHandle.getFontService(), refs, order, data::getEntry);
 
         var statsId = this.statsId.getNow(Optional.empty()).orElse(null);
 

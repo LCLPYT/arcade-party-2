@@ -7,6 +7,7 @@ import work.lclpnet.ap2.api.data.DataManager;
 import work.lclpnet.ap2.api.map.MapFacade;
 import work.lclpnet.ap2.api.music.SongManager;
 import work.lclpnet.ap2.impl.game.PlayerUtil;
+import work.lclpnet.ap2.util.FontService;
 import work.lclpnet.game.api.WorldFacade;
 import work.lclpnet.kibu.cmd.impl.CommandStack;
 import work.lclpnet.kibu.hook.HookStack;
@@ -23,5 +24,6 @@ import work.lclpnet.kibu.translate.Translations;
 public record ApMiniGameArgs(
         MinecraftServer server, Logger logger, Translations translations, HookStack hookStack,
         CommandStack commandStack, SchedulerStack schedulerStack, WorldFacade worldFacade, MapFacade mapFacade,
-        PlayerUtil playerUtil, MiniGameManager miniGames, SongManager songManager, DataManager dataManager
+        PlayerUtil playerUtil, MiniGameManager miniGames, SongManager songManager, DataManager dataManager,
+        FontService fontService
 ) {}
