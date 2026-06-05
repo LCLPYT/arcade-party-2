@@ -4,7 +4,6 @@
   "game.ap2.weapon_swap.end": "Game end",
   "game.ap2.weapon_swap.weapon": "Swap Sword",
   "game.ap2.weapon_swap.received": "You got the weapon! Attack others!",
-  "game.ap2.weapon_swap.stat.damage_dealt": "Damage dealt",
   "game.ap2.weapon_swap.stat.weapons_received": "Times armed",
   "game.ap2.weapon_swap.stat.kills": "Kills",
   "game.ap2.weapon_swap.swap": "Swap!"

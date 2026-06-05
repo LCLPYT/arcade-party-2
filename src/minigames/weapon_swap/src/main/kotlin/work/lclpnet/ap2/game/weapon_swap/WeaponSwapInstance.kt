@@ -12,6 +12,7 @@ import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.gamerules.GameRules
 import work.lclpnet.ap2.api.game.MiniGameHandle
+import work.lclpnet.ap2.api.stats.CommonStats.DamageDealt
 import work.lclpnet.ap2.api.stats.FFAStatsManager
 import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.ext.*
@@ -40,13 +41,12 @@ private val MAX_SWAP_DELAY = 10.seconds
 private val DRAW_DELAY = 3.minutes
 private val WARN_BEFORE_END_DELAY = 30.seconds
 
-private val DAMAGE_DEALT = Stat("damage_dealt", 0f)
 private val WEAPONS_RECEIVED = Stat("weapons_received", 0)
 private val KILLS = Stat("kills", 0)
 
 class WeaponSwapInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gameHandle) {
 
-    private val stats: FFAStatsManager = createStats(DAMAGE_DEALT, WEAPONS_RECEIVED, KILLS)
+    private val stats: FFAStatsManager = createStats(DamageDealt, WEAPONS_RECEIVED, KILLS)
     private val currentHolders = mutableSetOf<UUID>()
     private var previousHolders: Set<UUID> = emptySet()
     private val subtitleCountdown = SubtitleCountdown(gameHandle.server, gameHandle.scheduler, ::swapTimerTick) {
@@ -89,7 +89,7 @@ class WeaponSwapInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(g
             if (attacker.uuid !in currentHolders) return@registerWith false
 
             val applied = amount.coerceAtMost(victim.health)
-            stats.modify(attacker, DAMAGE_DEALT) { it + applied }
+            stats.modify(attacker, DamageDealt) { it + applied }
             true
         }
 

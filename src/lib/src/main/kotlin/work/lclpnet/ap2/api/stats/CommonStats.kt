@@ -12,4 +12,7 @@ object CommonStats {
 
     @JvmField
     val KillDeathRatio = Stat("kd", 0f)
+
+    @JvmField
+    val DamageDealt = Stat("damage_dealt", 0f)
 }
