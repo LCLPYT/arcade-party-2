@@ -1,6 +1,8 @@
 package work.lclpnet.ap2.impl.game;
 
 import it.unimi.dsi.fastutil.Pair;
+import kotlin.time.Clock;
+import kotlin.time.Instant;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.ChatFormatting;
 import net.minecraft.resources.Identifier;
@@ -38,19 +40,33 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static work.lclpnet.ap2.api.stats.CommonStats.TimeSurvived;
+
 public abstract class EliminationGameInstance extends FFAGameInstance implements EliminationController {
 
     private final EliminationDataContainer<ServerPlayer, PlayerRef> data = new EliminationDataContainer<>(PlayerRef::create);
     private DynamicTranslatedBossBar remainingDisplay = null;
     private boolean eliminatedMessages = true;
     private boolean teleportEliminated = true;
+    private @Nullable Instant survivalStart = null;
+    private @Nullable FFAStatsManager survivalStats = null;
 
     public EliminationGameInstance(MiniGameHandle gameHandle) {
         super(gameHandle);
     }
 
     @Override
+    protected void afterInitialDelay() {
+        survivalStart = Clock.System.INSTANCE.now();
+
+        super.afterInitialDelay();
+    }
+
+    @Override
     public void participantRemoved(@NonNull ServerPlayer player) {
+        // record survival time before super, which may end the game and freeze the stats
+        recordSurvivalTime(player);
+
         // make sure the player is tracked as eliminated
         data.add(player);
 
@@ -210,5 +226,32 @@ public abstract class EliminationGameInstance extends FFAGameInstance implements
         winManager.setStatsManager(manager);
 
         return manager;
+    }
+
+    /**
+     * Enables tracking of the time each player survives, in whole seconds.
+     * <p>
+     * The timer starts when the game begins (right before {@link #go()} is called) and stops for a player
+     * the moment they are eliminated. Players that are still alive when the game ends are credited with the
+     * full duration they survived.
+     *
+     * @param stats The stats manager that holds the given stat, as returned by {@link #createStats(Stat[])}.
+     */
+    protected final void trackSurvivalTime(FFAStatsManager stats) {
+        this.survivalStats = stats;
+
+        winManager.addListener(this::recordRemainingSurvivalTime);
+    }
+
+    private void recordRemainingSurvivalTime() {
+        gameHandle.getParticipants().forEach(this::recordSurvivalTime);
+    }
+
+    private void recordSurvivalTime(ServerPlayer player) {
+        if (survivalStats == null || survivalStart == null) return;
+
+        long elapsedMillis = Clock.System.INSTANCE.now().toEpochMilliseconds() - survivalStart.toEpochMilliseconds();
+
+        survivalStats.set(player, TimeSurvived, (int) (elapsedMillis / 1000L));
     }
 }

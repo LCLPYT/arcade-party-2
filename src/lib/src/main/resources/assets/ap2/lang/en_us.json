@@ -102,6 +102,8 @@
   "ap2.stat.deaths": "Deaths",
   "ap2.stat.kd": "K/D",
   "ap2.stat.damage_dealt": "Damage dealt",
+  "ap2.stat.distance_moved": "Distance moved",
+  "ap2.stat.time_survived": "Time survived",
   "ap2.status.preparation": "Preparing next minigame",
   "ap2.status.game_over": "Game Over",
   "ap2.playing_on": "Playing on %s",

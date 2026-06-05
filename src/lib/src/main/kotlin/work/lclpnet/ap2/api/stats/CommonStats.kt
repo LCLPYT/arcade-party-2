@@ -15,4 +15,10 @@ object CommonStats {
 
     @JvmField
     val DamageDealt = Stat("damage_dealt", 0f)
+
+    @JvmField
+    val DistanceMoved = Stat("distance_moved", 0f)
+
+    @JvmField
+    val TimeSurvived = Stat("time_survived", 0)
 }
