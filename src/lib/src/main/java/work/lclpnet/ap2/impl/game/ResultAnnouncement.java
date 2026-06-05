@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 
+import static java.lang.Math.floor;
 import static java.lang.Math.round;
 import static net.minecraft.ChatFormatting.*;
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
@@ -63,8 +64,11 @@ public class ResultAnnouncement<Ref extends SubjectRef> {
         var resultsText = Component.literal(results).withStyle(GREEN, BOLD);
 
         var sep = Component.literal(ApConstants.SEPARATOR).withStyle(DARK_GREEN, STRIKETHROUGH, BOLD);
-        int sepLength = ApConstants.SEPARATOR.length();
-        var sepSm = Component.literal("-".repeat(sepLength)).withStyle(DARK_GRAY, STRIKETHROUGH);
+
+        // match the secondary separator's pixel width to the bold primary separator, since the
+        // non-bold '-' glyphs are narrower than the bold '=' glyphs of the same character count
+        int smLength = (int) floor(font.width(ApConstants.SEPARATOR, true) / font.advance('-', false));
+        var sepSm = Component.literal("-".repeat(smLength)).withStyle(DARK_GRAY, STRIKETHROUGH);
 
         sendSeparatorWithText(player, resultsText);
 
