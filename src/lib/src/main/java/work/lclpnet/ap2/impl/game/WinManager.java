@@ -98,11 +98,15 @@ public class WinManager<T, Ref extends SubjectRef> {
 
         Instant end = Clock.System.INSTANCE.now();
 
-        var participants = gameHandle.getParticipants().stream()
-                .map(PlayerRef::create)
-                .collect(Collectors.toSet());
+        Set<PlayerRef> initialParticipants = gameHandle.getParticipants().getInitialParticipants();
 
-        var summary = new GameSummary(gameHandle.getGameInfo(), map.get(), gameHandle.getStartTime(), end, participants);
+        var summary = new GameSummary(
+                gameHandle.getGameInfo(),
+                map.get(),
+                gameHandle.getStartTime(),
+                end,
+                initialParticipants
+        );
 
         StatsResult stats = statsManager.getResult(summary, result);
 

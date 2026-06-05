@@ -5,6 +5,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import work.lclpnet.ap2.api.base.ParticipantListener;
 import work.lclpnet.ap2.api.base.PlayerManager;
+import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 
 import java.util.*;
 import java.util.concurrent.locks.Lock;
@@ -17,6 +18,7 @@ public class PlayerManagerImpl implements PlayerManager {
     private final MinecraftServer server;
     private final Set<UUID> participants = new HashSet<>();
     private final Set<UUID> permanentSpectators = new HashSet<>();
+    private final Set<PlayerRef> initial = new HashSet<>();
     private final ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
     private final Lock readLock = readWriteLock.readLock();
     private final Lock writeLock = readWriteLock.writeLock();
@@ -86,6 +88,25 @@ public class PlayerManagerImpl implements PlayerManager {
     public void startMiniGame() {
         setPreparation(false);
         reset();
+        setInitial();
+    }
+
+    private void setInitial() {
+        try {
+            writeLock.lock();
+
+            for (UUID uuid : participants) {
+                ServerPlayer player = server.getPlayerList().getPlayer(uuid);
+
+                if (player != null) {
+                    initial.add(PlayerRef.create(player));
+                } else {
+                    initial.add(PlayerRef.createForUuid(uuid));
+                }
+            }
+        } finally {
+            writeLock.unlock();
+        }
     }
 
     private void setPreparation(boolean prepare) {
@@ -101,6 +122,8 @@ public class PlayerManagerImpl implements PlayerManager {
     private void reset() {
         try {
             writeLock.lock();
+
+            initial.clear();
 
             if (finale) {
                 // remove finalists who left
@@ -215,5 +238,16 @@ public class PlayerManagerImpl implements PlayerManager {
     @Override
     public boolean isFinale() {
         return finale;
+    }
+
+    @Override
+    public Set<PlayerRef> getInitialParticipants() {
+        try {
+            readLock.lock();
+
+            return Set.copyOf(initial);
+        } finally {
+            readLock.unlock();
+        }
     }
 }
