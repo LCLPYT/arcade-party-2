@@ -2,6 +2,7 @@ package work.lclpnet.ap2.api.base;
 
 import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.NotNull;
+import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 
 import java.util.*;
 import java.util.stream.Stream;
@@ -12,6 +13,8 @@ public interface Participants extends Iterable<ServerPlayer> {
      * @return The currently participating players.
      */
     Set<ServerPlayer> getAsSet();
+
+    Set<PlayerRef> getInitialParticipants();
 
     void remove(ServerPlayer player);
 
