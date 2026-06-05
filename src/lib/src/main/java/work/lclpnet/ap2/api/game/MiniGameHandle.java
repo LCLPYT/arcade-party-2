@@ -18,6 +18,7 @@ import work.lclpnet.ap2.impl.util.DeathMessages;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.ap2.impl.util.world.SubWorldManager;
 import work.lclpnet.ap2.util.AssetManager;
+import work.lclpnet.ap2.util.FontService;
 import work.lclpnet.ap2.util.TablistManager;
 import work.lclpnet.game.api.WorldFacade;
 import work.lclpnet.game.impl.prot.MutableProtectionConfig;
@@ -93,6 +94,8 @@ public interface MiniGameHandle {
     TablistManager getTablistManager();
 
     AssetManager getAssetManager();
+
+    FontService getFontService();
 
     Instant getStartTime();
 

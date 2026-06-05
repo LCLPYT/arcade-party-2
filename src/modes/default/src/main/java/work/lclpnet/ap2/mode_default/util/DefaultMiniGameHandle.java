@@ -33,6 +33,7 @@ import work.lclpnet.ap2.mode_default.ApMiniGameArgs;
 import work.lclpnet.ap2.mode_default.activity.MiniGameActivity;
 import work.lclpnet.ap2.mode_default.activity.PreparationActivity;
 import work.lclpnet.ap2.util.AssetManager;
+import work.lclpnet.ap2.util.FontService;
 import work.lclpnet.ap2.util.TablistManager;
 import work.lclpnet.gaco.asset.AssetRepository;
 import work.lclpnet.game.api.WorldFacade;
@@ -255,6 +256,11 @@ public class DefaultMiniGameHandle implements MiniGameHandle, WorldBorderManager
     @Override
     public AssetManager getAssetManager() {
         return args.assetManager();
+    }
+
+    @Override
+    public FontService getFontService() {
+        return args.miniGameArgs().fontService();
     }
 
     @Override
