@@ -5,10 +5,10 @@ import net.minecraft.core.BlockPos
 import net.minecraft.server.level.ServerPlayer
 import org.json.JSONObject
 import org.slf4j.Logger
-import work.lclpnet.ap2.api.base.Participants
 import work.lclpnet.ap2.api.game.team.DyeTeamKey
 import work.lclpnet.ap2.api.game.team.TeamKey
 import work.lclpnet.ap2.api.game.team.TeamManager
+import work.lclpnet.ap2.game.player.Participants
 import work.lclpnet.ap2.impl.game.team.ApTeams
 import work.lclpnet.ap2.impl.util.StreamUtil
 import work.lclpnet.gaco.core.api.Partial

@@ -16,7 +16,6 @@ import net.minecraft.world.level.gamerules.GameRules
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.scores.PlayerTeam
 import net.minecraft.world.scores.Team
-import work.lclpnet.ap2.api.base.Participants
 import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.map.MapBootstrap
 import work.lclpnet.ap2.ext.allPlayers
@@ -24,6 +23,7 @@ import work.lclpnet.ap2.ext.mc.playNotifySound
 import work.lclpnet.ap2.ext.runAfter
 import work.lclpnet.ap2.ext.server
 import work.lclpnet.ap2.ext.translate
+import work.lclpnet.ap2.game.player.Participants
 import work.lclpnet.ap2.game.speed_builders.data.SbIsland
 import work.lclpnet.ap2.game.speed_builders.data.SbModule
 import work.lclpnet.ap2.game.speed_builders.util.*

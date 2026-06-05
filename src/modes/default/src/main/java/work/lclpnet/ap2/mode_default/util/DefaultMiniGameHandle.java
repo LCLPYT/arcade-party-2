@@ -1,5 +1,7 @@
 package work.lclpnet.ap2.mode_default.util;
 
+import kotlin.time.Clock;
+import kotlin.time.Instant;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
@@ -10,7 +12,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import work.lclpnet.activity.util.BossBarHandler;
 import work.lclpnet.ap2.api.base.GameQueue;
-import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.base.WorldBorderManager;
 import work.lclpnet.ap2.api.data.DataManager;
 import work.lclpnet.ap2.api.game.GameInfo;
@@ -23,6 +24,7 @@ import work.lclpnet.ap2.api.music.SongCache;
 import work.lclpnet.ap2.api.music.SongManager;
 import work.lclpnet.ap2.api.stats.StatsResult;
 import work.lclpnet.ap2.core.type.ApServerPlayerEntity;
+import work.lclpnet.ap2.game.player.Participants;
 import work.lclpnet.ap2.impl.game.PlayerUtil;
 import work.lclpnet.ap2.impl.util.DeathMessages;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
@@ -31,6 +33,7 @@ import work.lclpnet.ap2.mode_default.ApMiniGameArgs;
 import work.lclpnet.ap2.mode_default.activity.MiniGameActivity;
 import work.lclpnet.ap2.mode_default.activity.PreparationActivity;
 import work.lclpnet.ap2.util.AssetManager;
+import work.lclpnet.ap2.util.FontService;
 import work.lclpnet.ap2.util.TablistManager;
 import work.lclpnet.gaco.asset.AssetRepository;
 import work.lclpnet.game.api.WorldFacade;
@@ -71,6 +74,7 @@ public class DefaultMiniGameHandle implements MiniGameHandle, WorldBorderManager
     private volatile @Nullable SubWorldManager subWorldManager = null;
     private volatile @Nullable WorldContainer worldContainer = null;
     private @Nullable ServerLevel world = null;
+    private @Nullable Instant startTime = null;
 
     public DefaultMiniGameHandle(MiniGame game, ApBaseArgs args, BossBarProvider bossBarProvider,
                                  BossBarHandler bossBarHandler, CustomScoreboardManager scoreboardManager,
@@ -94,6 +98,12 @@ public class DefaultMiniGameHandle implements MiniGameHandle, WorldBorderManager
         rootScheduler = container.schedulerStack().current();
 
         container.schedulerStack().push();
+
+        setStartTime();
+    }
+
+    public void setStartTime() {
+        startTime = Clock.System.INSTANCE.now();
     }
 
     @Override
@@ -246,6 +256,16 @@ public class DefaultMiniGameHandle implements MiniGameHandle, WorldBorderManager
     @Override
     public AssetManager getAssetManager() {
         return args.assetManager();
+    }
+
+    @Override
+    public FontService getFontService() {
+        return args.miniGameArgs().fontService();
+    }
+
+    @Override
+    public @Nullable Instant getStartTime() {
+        return Objects.requireNonNull(startTime, "Start time not set");
     }
 
     @Override

@@ -1,10 +1,10 @@
 package work.lclpnet.ap2.api.game;
 
+import kotlin.time.Instant;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import org.slf4j.Logger;
 import work.lclpnet.activity.util.BossBarHandler;
-import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.api.base.WorldBorderManager;
 import work.lclpnet.ap2.api.data.DataManager;
 import work.lclpnet.ap2.api.game.team.TeamConfig;
@@ -12,11 +12,13 @@ import work.lclpnet.ap2.api.map.MapFacade;
 import work.lclpnet.ap2.api.music.SongCache;
 import work.lclpnet.ap2.api.music.SongManager;
 import work.lclpnet.ap2.api.stats.StatsResult;
+import work.lclpnet.ap2.game.player.Participants;
 import work.lclpnet.ap2.impl.game.PlayerUtil;
 import work.lclpnet.ap2.impl.util.DeathMessages;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.ap2.impl.util.world.SubWorldManager;
 import work.lclpnet.ap2.util.AssetManager;
+import work.lclpnet.ap2.util.FontService;
 import work.lclpnet.ap2.util.TablistManager;
 import work.lclpnet.game.api.WorldFacade;
 import work.lclpnet.game.impl.prot.MutableProtectionConfig;
@@ -92,6 +94,10 @@ public interface MiniGameHandle {
     TablistManager getTablistManager();
 
     AssetManager getAssetManager();
+
+    FontService getFontService();
+
+    Instant getStartTime();
 
     void resetGameScheduler();
 

@@ -11,10 +11,10 @@ import net.minecraft.world.entity.ai.memory.MemoryModuleType;
 import net.minecraft.world.entity.monster.EnderMan;
 import net.minecraft.world.entity.monster.creaking.Creaking;
 import net.minecraft.world.entity.monster.warden.Warden;
-import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.core.mixin.entity.EnderManAccessor;
 import work.lclpnet.ap2.game.maze_scape.monster.EndermanData;
 import work.lclpnet.ap2.game.maze_scape.monster.MonsterData;
+import work.lclpnet.ap2.game.player.Participants;
 
 import java.util.*;
 

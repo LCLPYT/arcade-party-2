@@ -22,6 +22,7 @@ import work.lclpnet.ap2.impl.map.MapFacadeImpl;
 import work.lclpnet.ap2.impl.map.SeamlessMapRandomizer;
 import work.lclpnet.ap2.impl.music.AssetSongManager;
 import work.lclpnet.ap2.util.AssetManager;
+import work.lclpnet.ap2.util.FontService;
 import work.lclpnet.ap2.util.mojang.SkinFetcher;
 import work.lclpnet.config.json.JsonConfigFactory;
 import work.lclpnet.gaco.asset.*;
@@ -151,7 +152,7 @@ public class ApBootstrap {
     }
 
     public CompletableFuture<Result> dispatch(Ap2Config config, GameEnvironment environment,
-                                              VanillaTranslations vanillaTranslations) {
+                                              VanillaTranslations vanillaTranslations, FontService fontService) {
 
         MinecraftServer server = environment.getServer();
 
@@ -186,12 +187,14 @@ public class ApBootstrap {
         var mapTask = loadAp2Maps(mapManager);
         var containerTask = loadContainer(dataManager);
         var vanillaTranslationsTask = runAsync(vanillaTranslations::init);
+        var fontServiceTask = runAsync(fontService::init);
         var assetManagerTask = supplyAsync(this::createAssetManagerBlocking);
 
         return supplyAsync(() -> {
             mapTask.join();
             containerTask.join();
             vanillaTranslationsTask.join();
+            fontServiceTask.join();
             var assetManager = assetManagerTask.join();
 
             return new Result(worldFacade, mapFacade, songManager, dataManager, assetManager);

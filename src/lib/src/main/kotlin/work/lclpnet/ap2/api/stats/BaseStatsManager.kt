@@ -1,17 +1,13 @@
 package work.lclpnet.ap2.api.stats
 
 import it.unimi.dsi.fastutil.objects.ObjectIntPair
-import net.minecraft.resources.Identifier
-import work.lclpnet.ap2.api.game.GameInfo
 import work.lclpnet.ap2.api.game.data.GenericGameResult
 import work.lclpnet.ap2.api.game.data.SubjectRef
 import work.lclpnet.ap2.api.game.data.SubjectRefFactory
-import work.lclpnet.game.map.GameMap
-import work.lclpnet.game.map.MapDescriptor
 
-data class Stat<T>(val id: String, val default: T)
+data class Stat<T>(val id: String, val default: T, val higherIsBetter: Boolean = true)
 
-typealias StatSet = Set<Stat<*>>
+typealias StatSet = Set<Stat<out Any>>
 
 class Stats(stats: StatSet) {
 
@@ -42,14 +38,14 @@ class StatsView<Ref : SubjectRef>(
 )
 
 interface StatsResult {
-    val gameId: Identifier
-    val mapId: MapDescriptor
+    val summary: GameSummary
     val type: String
 }
 
 interface StatsManager<Ref : SubjectRef> {
+    fun fillDefaults(result: GenericGameResult<Ref>)
     fun freeze()
-    fun getResult(gameInfo: GameInfo, map: GameMap, result: GenericGameResult<Ref>): StatsResult
+    fun getResult(summary: GameSummary, result: GenericGameResult<Ref>): StatsResult
 }
 
 open class BaseStatsManager<T, Ref : SubjectRef>(
@@ -94,6 +90,15 @@ open class BaseStatsManager<T, Ref : SubjectRef>(
         val stats = entries.computeIfAbsent(refs.create(subject)) { Stats(this@BaseStatsManager.stats) }
 
         return stats
+    }
+
+    @Synchronized
+    fun fillDefaults(refs: Iterable<Ref>) {
+        if (frozen) return
+
+        for (ref in refs) {
+            entries.computeIfAbsent(ref) { Stats(stats) }
+        }
     }
 
     fun freeze() {

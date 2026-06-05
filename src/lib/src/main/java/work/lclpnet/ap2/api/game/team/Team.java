@@ -1,7 +1,7 @@
 package work.lclpnet.ap2.api.game.team;
 
 import net.minecraft.server.level.ServerPlayer;
-import work.lclpnet.ap2.api.base.Participants;
+import work.lclpnet.ap2.game.player.Participants;
 
 import java.util.Set;
 import java.util.stream.Collectors;

@@ -4,8 +4,8 @@ import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.entity.Avatar
 import net.minecraft.world.entity.decoration.Mannequin
-import work.lclpnet.ap2.api.base.Participants
 import work.lclpnet.ap2.ext.mc.teleport
+import work.lclpnet.ap2.game.player.Participants
 import work.lclpnet.ap2.game.pvp_tournament.gen.Match
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef
 import work.lclpnet.gaco.core.api.EntityRef

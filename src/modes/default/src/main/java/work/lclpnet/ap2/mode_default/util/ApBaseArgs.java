@@ -1,9 +1,9 @@
 package work.lclpnet.ap2.mode_default.util;
 
 import work.lclpnet.ap2.api.base.GameQueue;
-import work.lclpnet.ap2.api.base.PlayerManager;
 import work.lclpnet.ap2.api.music.SongCache;
 import work.lclpnet.ap2.api.stats.SessionStatsRecorder;
+import work.lclpnet.ap2.game.player.PlayerManager;
 import work.lclpnet.ap2.mode_default.ApMiniGameArgs;
 import work.lclpnet.ap2.mode_default.cmd.ForceGameCommand;
 import work.lclpnet.ap2.util.AssetManager;

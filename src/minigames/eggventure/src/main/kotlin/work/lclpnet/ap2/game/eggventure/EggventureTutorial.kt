@@ -10,7 +10,7 @@ import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.phys.shapes.CollisionContext
-import work.lclpnet.ap2.api.base.Participants
+import work.lclpnet.ap2.game.player.Participants
 import work.lclpnet.ap2.impl.util.RayCastUtil
 import work.lclpnet.gaco.core.api.Resolvable
 import work.lclpnet.gaco.dynamic_entities.DynamicEntity

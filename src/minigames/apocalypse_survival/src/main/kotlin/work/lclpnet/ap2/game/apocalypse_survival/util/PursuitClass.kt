@@ -4,8 +4,8 @@ import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.Mob
-import work.lclpnet.ap2.api.base.Participants
-import java.util.UUID
+import work.lclpnet.ap2.game.player.Participants
+import java.util.*
 
 private const val INITIAL_FORCED_TARGET_SECONDS = 10
 

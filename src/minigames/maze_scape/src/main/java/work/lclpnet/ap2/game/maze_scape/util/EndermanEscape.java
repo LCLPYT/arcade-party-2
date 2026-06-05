@@ -8,12 +8,12 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.pathfinder.Path;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
-import work.lclpnet.ap2.api.base.Participants;
 import work.lclpnet.ap2.game.maze_scape.gen.Node;
 import work.lclpnet.ap2.game.maze_scape.setup.Connector3;
 import work.lclpnet.ap2.game.maze_scape.setup.MSDebugController;
 import work.lclpnet.ap2.game.maze_scape.setup.OrientedStructurePiece;
 import work.lclpnet.ap2.game.maze_scape.setup.StructurePiece;
+import work.lclpnet.ap2.game.player.Participants;
 import work.lclpnet.ap2.impl.util.VisibilityChecker;
 
 import java.util.*;
