@@ -21,12 +21,12 @@ import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.phys.shapes.CollisionContext
-import work.lclpnet.ap2.api.base.Participants
 import work.lclpnet.ap2.api.game.team.DyeTeamKey
 import work.lclpnet.ap2.ext.mc.playNotifySound
 import work.lclpnet.ap2.game.kit.KitManager
 import work.lclpnet.ap2.game.kit.SingleItemKit
 import work.lclpnet.ap2.game.paintball.kit.PaintGunKit
+import work.lclpnet.ap2.game.player.Participants
 import work.lclpnet.ap2.impl.util.RayCastUtil
 import work.lclpnet.ap2.impl.util.debug.DebugController
 import work.lclpnet.ap2.impl.util.math.MathUtil.applySpread
@@ -164,7 +164,7 @@ class PaintGunManager(
     }
 
     fun paintAt(bullet: PaintballBullet, x: Double, y: Double, z: Double, radius: Double, shouldCount: Boolean) {
-        val owner = participants.getParticipant(bullet.owner).orElse(null) ?: return
+        val owner = bullet.owner?.let { participants.getParticipant(it).orElse(null) } ?: return
         val team = teams.teamOf(owner).orElse(null) ?: return
 
         val key: DyeTeamKey = team.key()

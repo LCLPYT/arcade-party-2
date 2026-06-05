@@ -19,7 +19,6 @@ import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.gamerules.GameRules
-import work.lclpnet.ap2.api.base.Participants
 import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.game.data.DataContainer
 import work.lclpnet.ap2.api.game.team.DyeTeamKey
@@ -42,6 +41,7 @@ import work.lclpnet.ap2.game.paintball.kit.RifleKit
 import work.lclpnet.ap2.game.paintball.kit.ShotgunKit
 import work.lclpnet.ap2.game.paintball.kit.SniperKit
 import work.lclpnet.ap2.game.paintball.util.*
+import work.lclpnet.ap2.game.player.Participants
 import work.lclpnet.ap2.impl.game.TeamGameInstance
 import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer
 import work.lclpnet.ap2.impl.game.data.Ordering

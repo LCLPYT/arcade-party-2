@@ -9,7 +9,7 @@ import net.minecraft.world.entity.Display
 import net.minecraft.world.entity.EntityType
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.phys.Vec3
-import work.lclpnet.ap2.api.base.Participants
+import work.lclpnet.ap2.game.player.Participants
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.util.world.CircleStructureGenerator
 import work.lclpnet.game.map.GameMap

@@ -13,7 +13,7 @@ import net.minecraft.world.level.GameType;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import work.lclpnet.ap2.api.base.PlayerManager;
+import work.lclpnet.ap2.game.player.PlayerManager;
 import work.lclpnet.ap2.impl.util.effect.ApEffect;
 import work.lclpnet.combatctl.api.CombatControl;
 import work.lclpnet.combatctl.api.CombatStyle;

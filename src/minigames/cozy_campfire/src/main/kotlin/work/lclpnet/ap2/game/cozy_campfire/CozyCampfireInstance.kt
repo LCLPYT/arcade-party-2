@@ -12,7 +12,6 @@ import net.minecraft.util.Mth
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.level.gamerules.GameRules
 import net.minecraft.world.scores.Team.CollisionRule
-import work.lclpnet.ap2.api.base.Participants
 import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.game.team.DyeTeamKey
 import work.lclpnet.ap2.api.game.team.Team
@@ -22,6 +21,7 @@ import work.lclpnet.ap2.ext.mc.setDayTime
 import work.lclpnet.ap2.ext.mc.setWeatherParameters
 import work.lclpnet.ap2.ext.runEveryTick
 import work.lclpnet.ap2.game.cozy_campfire.setup.*
+import work.lclpnet.ap2.game.player.Participants
 import work.lclpnet.ap2.impl.game.TeamEliminationGameInstance
 import work.lclpnet.ap2.impl.util.TeamStorage
 import work.lclpnet.ap2.impl.util.TimeHelper

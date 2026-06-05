@@ -21,6 +21,7 @@ import work.lclpnet.ap2.impl.util.Fireworks;
 import work.lclpnet.ap2.mode_default.util.ApBaseArgs;
 import work.lclpnet.ap2.mode_default.util.BaseActivityConfigurator;
 import work.lclpnet.ap2.mode_default.util.ScoreManager;
+import work.lclpnet.ap2.util.FontService;
 import work.lclpnet.game.map.GameMap;
 import work.lclpnet.game.map.MapUtils;
 import work.lclpnet.game.util.ProtectorComponent;
@@ -50,6 +51,7 @@ public class WinActivity extends ComponentActivity {
     private final BaseActivityConfigurator activityConfigurator;
     private final Announcer announcer;
     private final Translations translations;
+    private final FontService font;
     private final Random random = new Random();
     private Scheduler scheduler;
     private ServerLevel world;
@@ -61,6 +63,7 @@ public class WinActivity extends ComponentActivity {
         this.args = args;
         this.activityConfigurator = new BaseActivityConfigurator(this, args);
         this.translations = args.miniGameArgs().translations();
+        this.font = args.miniGameArgs().fontService();
         this.announcer = new Announcer(translations, this::players);
     }
 
@@ -161,7 +164,7 @@ public class WinActivity extends ComponentActivity {
                 .flatMap(Collection::stream)
                 .toList();
 
-        var announcement = new ResultAnnouncement<>(translations, PlayerRef::create, order, scoreManager::getEntry);
+        var announcement = new ResultAnnouncement<>(translations, font, PlayerRef::create, order, scoreManager::getEntry);
 
         for (ServerPlayer player : players()) {
             announcement.sendTop(5, player);

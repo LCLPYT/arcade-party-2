@@ -18,7 +18,6 @@ import net.minecraft.world.entity.vehicle.minecart.Minecart
 import net.minecraft.world.phys.Vec3
 import org.json.JSONArray
 import work.lclpnet.ap2.ApConstants
-import work.lclpnet.ap2.api.base.Participants
 import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.map.MapBootstrap
 import work.lclpnet.ap2.api.music.ConfiguredSong
@@ -28,6 +27,7 @@ import work.lclpnet.ap2.ext.runEvery
 import work.lclpnet.ap2.ext.ticks
 import work.lclpnet.ap2.game.musical_minecart.cmd.SetSongCommand
 import work.lclpnet.ap2.game.musical_minecart.cmd.SkipSongCommand
+import work.lclpnet.ap2.game.player.Participants
 import work.lclpnet.ap2.impl.game.EliminationGameInstance
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.music.SongHandler

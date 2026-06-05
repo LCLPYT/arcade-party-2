@@ -22,11 +22,11 @@ import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.HitResult
 import net.minecraft.world.phys.shapes.CollisionContext
-import work.lclpnet.ap2.api.base.Participants
 import work.lclpnet.ap2.api.game.team.DyeTeamKey
 import work.lclpnet.ap2.ext.mc.playNotifySound
 import work.lclpnet.ap2.ext.mc.resetAttribute
 import work.lclpnet.ap2.ext.mc.setAttribute
+import work.lclpnet.ap2.game.player.Participants
 import work.lclpnet.ap2.impl.game.PlayerUtil
 import work.lclpnet.ap2.impl.util.RayCastUtil
 import work.lclpnet.ap2.impl.util.SoundHelper

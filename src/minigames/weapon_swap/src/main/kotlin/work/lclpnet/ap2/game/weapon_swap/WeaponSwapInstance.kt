@@ -144,7 +144,7 @@ class WeaponSwapInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(g
     private fun startCycle() {
         if (winManager.isGameOver) return
 
-        val remaining = players().getAsSet().toList()
+        val remaining = players().asSet.toList()
 
         val weaponCount = if (remaining.size >= TWO_WEAPONS_THRESHOLD) 2 else 1
 

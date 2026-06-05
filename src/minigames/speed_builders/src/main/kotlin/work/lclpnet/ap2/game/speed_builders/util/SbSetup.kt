@@ -10,8 +10,8 @@ import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 import org.slf4j.Logger
-import work.lclpnet.ap2.api.base.Participants
 import work.lclpnet.ap2.ext.mc.setAttribute
+import work.lclpnet.ap2.game.player.Participants
 import work.lclpnet.ap2.game.speed_builders.data.*
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.util.structure.StructureUtil

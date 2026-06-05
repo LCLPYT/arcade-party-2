@@ -6,8 +6,8 @@ import net.minecraft.server.level.ServerPlayer
 import net.minecraft.tags.ItemTags
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.Items
-import work.lclpnet.ap2.api.base.Participants
 import work.lclpnet.ap2.game.pillar_battle.item.*
+import work.lclpnet.ap2.game.player.Participants
 import work.lclpnet.ap2.impl.tags.ApItemTags
 import work.lclpnet.gaco.ds.IndexedSet
 import java.util.*
