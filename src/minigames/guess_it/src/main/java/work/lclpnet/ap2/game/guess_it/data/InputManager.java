@@ -10,7 +10,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import org.jetbrains.annotations.Nullable;
-import work.lclpnet.ap2.api.base.Participants;
+import work.lclpnet.ap2.game.player.Participants;
 import work.lclpnet.kibu.access.entity.ServerPlayerAccess;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.ServerMessageHooks;

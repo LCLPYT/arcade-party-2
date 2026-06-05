@@ -17,7 +17,7 @@ import net.minecraft.world.item.ItemCooldowns;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import org.jetbrains.annotations.NotNull;
-import work.lclpnet.ap2.api.base.Participants;
+import work.lclpnet.ap2.game.player.Participants;
 import work.lclpnet.kibu.access.entity.EntityAccess;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;

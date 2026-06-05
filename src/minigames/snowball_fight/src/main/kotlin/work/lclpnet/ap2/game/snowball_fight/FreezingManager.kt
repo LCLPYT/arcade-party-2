@@ -11,12 +11,12 @@ import net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation.ADD_
 import net.minecraft.world.entity.ai.attributes.Attributes.JUMP_STRENGTH
 import net.minecraft.world.entity.ai.attributes.Attributes.MOVEMENT_SPEED
 import work.lclpnet.ap2.ApConstants
-import work.lclpnet.ap2.api.base.Participants
 import work.lclpnet.ap2.core.hook.FrozenTickChangeCallback
 import work.lclpnet.ap2.core.hook.PowderedSnowSlowCallback
 import work.lclpnet.ap2.ext.mc.playNotifySound
 import work.lclpnet.ap2.ext.mc.resetAttribute
 import work.lclpnet.ap2.ext.mc.setAttribute
+import work.lclpnet.ap2.game.player.Participants
 import work.lclpnet.ap2.impl.util.world.CombatIdleManager
 import work.lclpnet.kibu.hook.HookRegistrar
 import work.lclpnet.kibu.scheduler.api.TaskHandle

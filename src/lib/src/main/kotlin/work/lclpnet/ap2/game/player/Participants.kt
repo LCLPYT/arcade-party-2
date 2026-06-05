@@ -1,56 +1,46 @@
-package work.lclpnet.ap2.api.base;
+package work.lclpnet.ap2.game.player
 
-import net.minecraft.server.level.ServerPlayer;
-import org.jetbrains.annotations.NotNull;
-import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
+import net.minecraft.server.level.ServerPlayer
+import work.lclpnet.ap2.impl.game.data.type.PlayerRef
+import java.util.*
+import java.util.stream.Stream
 
-import java.util.*;
-import java.util.stream.Stream;
-
-public interface Participants extends Iterable<ServerPlayer> {
-
+interface Participants : Iterable<ServerPlayer> {
     /**
      * @return The currently participating players.
      */
-    Set<ServerPlayer> getAsSet();
+    val asSet: Set<ServerPlayer>
 
-    Set<PlayerRef> getInitialParticipants();
+    val initialParticipants: Set<PlayerRef>
 
-    void remove(ServerPlayer player);
+    fun remove(player: ServerPlayer)
 
-    boolean isParticipating(UUID uuid);
+    fun isParticipating(uuid: UUID): Boolean
 
-    @NotNull
-    @Override
-    default Iterator<ServerPlayer> iterator() {
-        return getAsSet().iterator();
-    }
+    override fun iterator(): Iterator<ServerPlayer> = asSet.iterator()
 
-    default boolean isParticipating(ServerPlayer player) {
-        return isParticipating(player.getUUID());
-    }
+    fun isParticipating(player: ServerPlayer): Boolean =
+        isParticipating(player.getUUID())
 
-    default int count() {
-        return getAsSet().size();
-    }
+    fun count(): Int = asSet.size
 
-    default Optional<ServerPlayer> getRandomParticipant(Random random) {
-        int count = count();
+    fun getRandomParticipant(random: Random): Optional<ServerPlayer> {
+        val count = count()
 
         if (count <= 0) {
-            return Optional.empty();
+            return Optional.empty<ServerPlayer>()
         }
 
-        return stream().skip(random.nextInt(count)).findFirst();
+        return stream().skip(random.nextInt(count).toLong()).findFirst()
     }
 
-    default Optional<ServerPlayer> getParticipant(UUID uuid) {
+    fun getParticipant(uuid: UUID): Optional<ServerPlayer> {
         return stream()
-                .filter(player -> player.getUUID().equals(uuid))
-                .findAny();
+            .filter { player -> player.getUUID() == uuid }
+            .findAny()
     }
 
-    default Stream<ServerPlayer> stream() {
-        return getAsSet().stream();
+    fun stream(): Stream<ServerPlayer> {
+        return asSet.stream()
     }
 }

@@ -9,7 +9,7 @@ import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 import org.slf4j.Logger
-import work.lclpnet.ap2.api.base.Participants
+import work.lclpnet.ap2.game.player.Participants
 import work.lclpnet.ap2.impl.util.debug.DebugController
 import work.lclpnet.ap2.impl.util.debug.SplinePathDebugger
 import work.lclpnet.gaco.collisions.ChunkedCollisionDetector
