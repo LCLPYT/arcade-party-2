@@ -1,5 +1,6 @@
 package work.lclpnet.ap2.api.game;
 
+import kotlin.time.Instant;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import org.slf4j.Logger;
@@ -92,6 +93,8 @@ public interface MiniGameHandle {
     TablistManager getTablistManager();
 
     AssetManager getAssetManager();
+
+    Instant getStartTime();
 
     void resetGameScheduler();
 

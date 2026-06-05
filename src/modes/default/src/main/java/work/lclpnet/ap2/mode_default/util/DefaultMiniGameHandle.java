@@ -1,5 +1,7 @@
 package work.lclpnet.ap2.mode_default.util;
 
+import kotlin.time.Clock;
+import kotlin.time.Instant;
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
@@ -71,6 +73,7 @@ public class DefaultMiniGameHandle implements MiniGameHandle, WorldBorderManager
     private volatile @Nullable SubWorldManager subWorldManager = null;
     private volatile @Nullable WorldContainer worldContainer = null;
     private @Nullable ServerLevel world = null;
+    private @Nullable Instant startTime = null;
 
     public DefaultMiniGameHandle(MiniGame game, ApBaseArgs args, BossBarProvider bossBarProvider,
                                  BossBarHandler bossBarHandler, CustomScoreboardManager scoreboardManager,
@@ -94,6 +97,12 @@ public class DefaultMiniGameHandle implements MiniGameHandle, WorldBorderManager
         rootScheduler = container.schedulerStack().current();
 
         container.schedulerStack().push();
+
+        setStartTime();
+    }
+
+    public void setStartTime() {
+        startTime = Clock.System.INSTANCE.now();
     }
 
     @Override
@@ -246,6 +255,11 @@ public class DefaultMiniGameHandle implements MiniGameHandle, WorldBorderManager
     @Override
     public AssetManager getAssetManager() {
         return args.assetManager();
+    }
+
+    @Override
+    public @Nullable Instant getStartTime() {
+        return Objects.requireNonNull(startTime, "Start time not set");
     }
 
     @Override
