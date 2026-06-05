@@ -9,6 +9,7 @@ import net.minecraft.sounds.SoundSource
 import net.minecraft.tags.BlockTags
 import net.minecraft.world.InteractionHand
 import net.minecraft.world.InteractionResult
+import net.minecraft.world.damagesource.DamageSource
 import net.minecraft.world.damagesource.DamageTypes
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.player.Inventory
@@ -91,8 +92,8 @@ class CCHooks(
     fun register(hooks: HookRegistrar) {
         PlayerSpawnLocationCallback.HOOK.registerWith(hooks, ::onSpawnLocation)
 
-        ServerLivingEntityHooks.ALLOW_DEATH.registerWith(hooks) { entity, _, _ ->
-            if (entity is ServerPlayer) onDeath(entity)
+        ServerLivingEntityHooks.ALLOW_DEATH.registerWith(hooks) { entity, source, _ ->
+            if (entity is ServerPlayer) onDeath(entity, source)
             true
         }
 
@@ -106,6 +107,7 @@ class CCHooks(
                 entity.hurtServer(entity.level() as ServerLevel, entity.damageSources().freeze(), Float.MAX_VALUE)
                 return@registerWith false
             }
+            if (entity is ServerPlayer) trackDamage(entity, source, amount)
             true
         }
 
@@ -176,7 +178,7 @@ class CCHooks(
         PlayerReset.modifyWalkSpeed(player, MOVEMENT_SPEED)
     }
 
-    private fun onDeath(player: ServerPlayer) {
+    private fun onDeath(player: ServerPlayer, source: DamageSource) {
         val inventory: Inventory = player.inventory
         val fuel = args.fuel
 
@@ -185,6 +187,23 @@ class CCHooks(
             if (fuel.isFuel(stack)) continue
             inventory.removeItemNoUpdate(i)
         }
+
+        val killer = source.entity
+        if (killer is ServerPlayer && killer !== player && !teamManager.areTeamMates(killer, player)) {
+            args.stats.onKill(player, killer)
+        }
+    }
+
+    private fun trackDamage(victim: ServerPlayer, source: DamageSource, amount: Float) {
+        val attacker = source.entity as? ServerPlayer ?: return
+
+        if (attacker === victim || teamManager.areTeamMates(attacker, victim)) return
+        if (!participants.isParticipating(victim) || args.baseManager.isInBase(victim)) return
+
+        val applied = amount.coerceAtMost(victim.health)
+        if (applied <= 0f) return
+
+        args.stats.addDamage(attacker, applied)
     }
 
     private fun onEnterBaseOf(player: ServerPlayer, team: Team) {
@@ -209,6 +228,7 @@ class CCHooks(
         val fuel: CCFuel,
         val baseManager: CCBaseManager,
         val kitManager: CCKitManager,
-        val fuelListener: CCFuelListener
+        val fuelListener: CCFuelListener,
+        val stats: CCStats
     )
 }

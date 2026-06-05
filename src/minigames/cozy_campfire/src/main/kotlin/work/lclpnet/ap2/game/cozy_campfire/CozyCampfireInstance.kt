@@ -17,6 +17,10 @@ import work.lclpnet.ap2.api.game.team.DyeTeamKey
 import work.lclpnet.ap2.api.game.team.Team
 import work.lclpnet.ap2.api.game.team.TeamKey
 import work.lclpnet.ap2.api.map.MapBootstrap
+import work.lclpnet.ap2.api.stats.CommonStats.DamageDealt
+import work.lclpnet.ap2.api.stats.CommonStats.Deaths
+import work.lclpnet.ap2.api.stats.CommonStats.KillDeathRatio
+import work.lclpnet.ap2.api.stats.CommonStats.Kills
 import work.lclpnet.ap2.ext.mc.setDayTime
 import work.lclpnet.ap2.ext.mc.setWeatherParameters
 import work.lclpnet.ap2.ext.runEveryTick
@@ -54,6 +58,10 @@ class CozyCampfireInstance(gameHandle: MiniGameHandle) : TeamEliminationGameInst
     private val movementObserver = PlayerMovementObserver(collisionDetector, gameHandle.participants::isParticipating)
     private val campfireFuel = TeamStorage.create(::createCampfireFuel)
     private val toEliminate = mutableSetOf<Team>()
+    private val stats = CCStats(createStats(
+        /* teamStats = */ listOf(FuelAdded, Kills, Deaths, DamageDealt),
+        /* playerStats = */ listOf(FuelAdded, Kills, Deaths, KillDeathRatio, DamageDealt)
+    ), teamManager)
     private lateinit var hookSetup: CCHooks
     private lateinit var fuel: CCFuel
     private lateinit var bossBar: DynamicTranslatedTeamBossBar
@@ -107,7 +115,7 @@ class CozyCampfireInstance(gameHandle: MiniGameHandle) : TeamEliminationGameInst
         }
 
         val translations = gameHandle.translations
-        val args = CCHooks.Args(fuel, baseManager, kitManager, ::onAddFuel)
+        val args = CCHooks.Args(fuel, baseManager, kitManager, ::onAddFuel, stats)
 
         hookSetup = CCHooks(participants, teamManager, this, translations, args)
         hookSetup.register(gameHandle.hooks)
@@ -252,6 +260,8 @@ class CozyCampfireInstance(gameHandle: MiniGameHandle) : TeamEliminationGameInst
         world.sendParticles(ParticleTypes.LARGE_SMOKE, x, y, z, 7, 0.1, 0.1, 0.1, 0.0)
 
         if (value <= 0) return
+
+        stats.addFuel(player, team, value.toFloat() / fuelPerSecond)
 
         val campfire = campfireFuel.get(team)
         campfire.set(campfire.count + value)

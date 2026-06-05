@@ -22,6 +22,7 @@ import net.minecraft.world.scores.criteria.ObjectiveCriteria
 import org.json.JSONArray
 import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.game.data.DataContainer
+import work.lclpnet.ap2.api.stats.CommonStats.DamageDealt
 import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.core.hook.ProjectileShootCallback
 import work.lclpnet.ap2.core.hook.SpectatePlayerCallback
@@ -45,7 +46,6 @@ import kotlin.random.asKotlinRandom
 const val SCORE_LIMIT = 15
 const val RESPAWN_SPACING = 20.0
 
-private val DAMAGE_DEALT = Stat("damage_dealt", 0f)
 private val DEATHS = Stat("deaths", 0)
 private val ARROWS_SHOT = Stat("arrows_shot", 0)
 private val ARROWS_HIT = Stat("arrows_hit", 0)
@@ -63,7 +63,7 @@ class OneInTheChamberInstance(gameHandle: MiniGameHandle) : FFAGameInstance(game
     }
     private val respawnCooldown = VisualCooldown(gameHandle.scheduler)
     private val bowType = BowType.entries.random(random.asKotlinRandom())
-    private val stats = createStats(data, DAMAGE_DEALT, DEATHS, ARROWS_SHOT, ARROWS_HIT, KILLSTREAK)
+    private val stats = createStats(data, DamageDealt, DEATHS, ARROWS_SHOT, ARROWS_HIT, KILLSTREAK)
     private val currentKillstreak = HashMap<UUID, Int>()
 
     init {
@@ -231,7 +231,7 @@ class OneInTheChamberInstance(gameHandle: MiniGameHandle) : FFAGameInstance(game
         val attacker = source.entity as? ServerPlayer
 
         if (attacker != null && attacker != entity) {
-            stats.modify(attacker, DAMAGE_DEALT) {
+            stats.modify(attacker, DamageDealt) {
                 it + amount.coerceAtMost(entity.health)
             }
         }
@@ -242,7 +242,7 @@ class OneInTheChamberInstance(gameHandle: MiniGameHandle) : FFAGameInstance(game
     private fun onLethalDamage(source: DamageSource, player: ServerPlayer) {
         val attacker = source.entity
         if (attacker is ServerPlayer && player != attacker) {
-            stats.modify(attacker, DAMAGE_DEALT) {
+            stats.modify(attacker, DamageDealt) {
                 it + player.health
             }
             killPlayer(player, attacker, false)
@@ -262,7 +262,7 @@ class OneInTheChamberInstance(gameHandle: MiniGameHandle) : FFAGameInstance(game
             return
         }
 
-        stats.modify(owner, DAMAGE_DEALT) { it + player.health }
+        stats.modify(owner, DamageDealt) { it + player.health }
 
         killPlayer(player, owner, true)
         onKillGained(owner)

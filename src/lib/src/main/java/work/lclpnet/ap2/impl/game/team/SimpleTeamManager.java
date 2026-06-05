@@ -4,6 +4,7 @@ import lombok.Setter;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.players.PlayerList;
+import net.minecraft.world.scores.PlayerTeam;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.game.team.*;
@@ -22,7 +23,7 @@ public class SimpleTeamManager implements TeamManager {
     private final CustomScoreboardManager scoreboard;
     private final PlayerUtil playerUtil;
     private final Map<TeamKey, Team> teams = new HashMap<>();
-    private final Map<TeamKey, net.minecraft.world.scores.PlayerTeam> mcTeams = new HashMap<>();
+    private final Map<TeamKey, PlayerTeam> mcTeams = new HashMap<>();
     private final Map<UUID, Team> playerTeams = new HashMap<>();
     private final Set<TeamKey> eliminated = new HashSet<>();
     @Nullable
@@ -43,7 +44,7 @@ public class SimpleTeamManager implements TeamManager {
     }
 
     @Override
-    public Optional<net.minecraft.world.scores.PlayerTeam> getMinecraftTeam(TeamKey key) {
+    public Optional<PlayerTeam> getMinecraftTeam(TeamKey key) {
         return Optional.ofNullable(mcTeams.get(key));
     }
 
@@ -187,7 +188,7 @@ public class SimpleTeamManager implements TeamManager {
     public void init(HookRegistrar hooks) {
         // move player back into the minecraft team, as they are automatically removed when quitting by the CustomScoreboardManager
         PlayerConnectionHooks.JOIN.registerWith(hooks, player -> {
-            net.minecraft.world.scores.PlayerTeam mcTeam;
+            PlayerTeam mcTeam;
 
             synchronized (this) {
                 Team team = playerTeams.get(player.getUUID());

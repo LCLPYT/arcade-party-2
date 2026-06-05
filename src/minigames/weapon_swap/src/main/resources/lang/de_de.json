@@ -4,7 +4,6 @@
   "game.ap2.weapon_swap.end": "Spielende",
   "game.ap2.weapon_swap.weapon": "Flüchtiges Schwert",
   "game.ap2.weapon_swap.received": "Du hast die Waffe erhalten! Greife andere Spieler an!",
-  "game.ap2.weapon_swap.stat.damage_dealt": "Schaden verursacht",
   "game.ap2.weapon_swap.stat.weapons_received": "Waffen erhalten",
   "game.ap2.weapon_swap.stat.kills": "Kills",
   "game.ap2.weapon_swap.swap": "Wechsel!"
