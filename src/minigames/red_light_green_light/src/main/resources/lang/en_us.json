@@ -8,6 +8,8 @@
   "game.ap2.red_light_green_light.stop": "Stop!",
   "game.ap2.red_light_green_light.moved": "You moved! You were reset as a punishment.",
   "game.ap2.red_light_green_light.stat.resets": "Resets",
-  "game.ap2.red_light_green_light.stat.yellow_moving_time": "Movement on yellow (sec)",
-  "game.ap2.red_light_green_light.stat.closest_stop_time": "Closest stop (sec)"
+  "game.ap2.red_light_green_light.stat.yellow_moving_time": "Movement on yellow",
+  "game.ap2.red_light_green_light.stat.closest_stop_time": "Closest stop",
+  "game.ap2.red_light_green_light.stat.distance_reset": "Distance reset",
+  "game.ap2.red_light_green_light.stat.avg_yellow_time_usage": "Avg. yellow time usage"
 }

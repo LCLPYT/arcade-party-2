@@ -59,7 +59,7 @@ class RedLightGreenLightInstance(gameHandle: MiniGameHandle) : FFAGameInstance(g
     private val moved = HashSet<UUID>()
     private val trafficLights = ArrayList<TrafficLight>()
     private val movementDetector = RLGLMovementDetector()
-    private val stats = createStats(Resets, YellowMovingTime, ClosestStopTime)
+    private val stats = createStats(Resets, YellowMovingTime, ClosestStopTime, DistanceReset, AvgYellowTimeUsage)
     private val rlglStats = RedLightGreenLightStats(stats)
     private val lastMovingTick = HashMap<UUID, Int>()
     private val pendingStopTime = HashMap<UUID, Float>()
@@ -242,6 +242,10 @@ class RedLightGreenLightInstance(gameHandle: MiniGameHandle) : FFAGameInstance(g
             val ny = findSuitableY(world, pos)
             val nz = pos.z
 
+            val dx = nx - x
+            val dz = nz - z
+            rlglStats.recordResetDistance(player, sqrt(dx * dx + dz * dz))
+
             player.teleportTo(world, nx, ny, nz, emptySet(), player.yRot, player.xRot, true)
             player.playNotifySound(SoundEvents.ZOMBIE_ATTACK_WOODEN_DOOR, SoundSource.PLAYERS, 0.5f, 1f)
         } else {
@@ -324,6 +328,7 @@ class RedLightGreenLightInstance(gameHandle: MiniGameHandle) : FFAGameInstance(g
 
         if (relTime == 0) {
             captureClosestStops()
+            recordYellowUsage()
             setStatus(TrafficLight.Status.RED)
             return
         }
@@ -345,6 +350,13 @@ class RedLightGreenLightInstance(gameHandle: MiniGameHandle) : FFAGameInstance(g
             if (yellow) {
                 rlglStats.movedOnYellow(player)
             }
+        }
+    }
+
+    private fun recordYellowUsage() {
+        for (player in gameHandle.participants) {
+            if (inGoal.contains(player.uuid)) continue
+            rlglStats.endYellowPhase(player, warn)
         }
     }
 
