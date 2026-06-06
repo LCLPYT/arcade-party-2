@@ -14,8 +14,12 @@ import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.gamerules.GameRules
 import work.lclpnet.ap2.api.game.MiniGameHandle
+import work.lclpnet.ap2.api.stats.CommonStats.DistanceMoved
+import work.lclpnet.ap2.api.stats.CommonStats.Kills
+import work.lclpnet.ap2.api.stats.CommonStats.TimeSurvived
 import work.lclpnet.ap2.core.hook.ProjectileHitEntityCallback
 import work.lclpnet.ap2.ext.mc.isOf
+import work.lclpnet.ap2.ext.trackDistanceMoved
 import work.lclpnet.ap2.impl.game.EliminationGameInstance
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.util.world.KnockbackKillTracker
@@ -35,6 +39,7 @@ class BlockDissolveInstance(gameHandle: MiniGameHandle) : EliminationGameInstanc
 
     private val markedBlocks = LongArrayList()
     private val random = Random()
+    private val stats = createStats(TimeSurvived, Kills, DistanceMoved)
     private var nextSnowball = Ticks.seconds(3)
     private var tickOfSecond = 0
     private var extraDissolvedThisSecond = 0
@@ -71,6 +76,9 @@ class BlockDissolveInstance(gameHandle: MiniGameHandle) : EliminationGameInstanc
         }
 
         scanWorld()
+
+        trackSurvivalTime(stats)
+        trackDistanceMoved(stats)
     }
 
     override fun go() {
@@ -88,6 +96,10 @@ class BlockDissolveInstance(gameHandle: MiniGameHandle) : EliminationGameInstanc
         }
 
         commons().whenBelowCriticalHeight().then { player ->
+            killTracker.getLastAttacker(player)?.let { killer ->
+                stats.increment(killer, Kills)
+            }
+
             eliminate(player, killTracker.killMessage(player, gameHandle.deathMessages))
         }
 
