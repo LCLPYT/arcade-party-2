@@ -32,6 +32,7 @@ import work.lclpnet.game.impl.prot.ProtectionTypes
 import work.lclpnet.game.util.PlayerReset
 import work.lclpnet.kibu.access.entity.ServerPlayerAccess
 import work.lclpnet.kibu.hook.HookRegistrar
+import work.lclpnet.kibu.hook.entity.EntityDamageCallback
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks
 import work.lclpnet.kibu.hook.level.BlockModificationHooks
@@ -107,8 +108,12 @@ class CCHooks(
                 entity.hurtServer(entity.level() as ServerLevel, entity.damageSources().freeze(), Float.MAX_VALUE)
                 return@registerWith false
             }
-            if (entity is ServerPlayer) trackDamage(entity, source, amount)
             true
+        }
+
+        EntityDamageCallback.HOOK.registerWith(hooks) { entity, source, amount ->
+            if (entity is ServerPlayer) trackDamage(entity, source, amount)
+            false
         }
 
         BlockModificationHooks.PLACE_BLOCK.registerWith(hooks) { _, _, _, state -> !state.isOf(Blocks.LADDER) }
