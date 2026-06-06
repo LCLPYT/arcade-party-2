@@ -1,5 +1,6 @@
 {
   "game.ap2.pvp_tournament": "1v1 Turnier",
   "game.ap2.pvp_tournament.description": "Trete in einem 1-gegen-1 PvP-Turnier an!",
-  "game.ap2.pvp_tournament.won_match": "hat den Kampf gewonnen"
+  "game.ap2.pvp_tournament.won_match": "hat den Kampf gewonnen",
+  "game.ap2.pvp_tournament.sudden_death": "Plötzlicher Tod!"
 }
