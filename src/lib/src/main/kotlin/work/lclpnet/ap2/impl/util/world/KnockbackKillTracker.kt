@@ -27,13 +27,13 @@ class KnockbackKillTracker(
         entries[victim.uuid] = Entry(attacker.uuid, trackerTimeout.inWholeTicks.toInt())
     }
 
-    fun getKiller(victim: ServerPlayer): ServerPlayer? {
+    fun getLastAttacker(victim: ServerPlayer): ServerPlayer? {
         val entry = entries[victim.uuid] ?: return null
         return victim.level().server.playerList.getPlayer(entry.attacker)
     }
 
     fun killMessage(victim: ServerPlayer, deathMessages: DeathMessages): TranslatedText? {
-        val killer = getKiller(victim) ?: return null
+        val killer = getLastAttacker(victim) ?: return null
         return deathMessages.killedBy(victim, killer)
     }
 
