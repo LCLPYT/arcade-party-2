@@ -68,8 +68,8 @@ private val NBT_CODEC: MapCodec<Boolean> = Codec.BOOL.fieldOf("easter_egg")
 
 private val DURATION = 1.minutes + 30.seconds
 
-private val EGGS_STOLEN = Stat("eggs_stolen", 0)
-private val EGGS_LOST = Stat("eggs_lost", 0)
+private val EggsStolen = Stat("eggs_stolen", 0)
+private val EggsLost = Stat("eggs_lost", 0)
 
 fun eggVariants(registryManager: RegistryAccess): List<PlayerHead> {
     val headEntries = registryManager
@@ -82,7 +82,7 @@ fun eggVariants(registryManager: RegistryAccess): List<PlayerHead> {
 class EggventureInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle), MapBootstrap {
 
     private val data = DataContainers.finaleCompatibleScoreContainer(gameHandle, PlayerRef::create)
-    private val stats = createStats(data, EGGS_STOLEN, EGGS_LOST)
+    private val stats = createStats(data, EggsStolen, EggsLost)
     private val random = Random()
     private val remainingPositions = HashSet<BlockPos>()
 
@@ -330,10 +330,10 @@ class EggventureInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandl
         for (other in gameHandle.participants) {
             if (other === finder || other.distanceToSqr(finder) > rangeSq) continue
 
-            stats.increment(other, EGGS_LOST)
+            stats.increment(other, EggsLost)
             stole = true
         }
 
-        if (stole) stats.increment(finder, EGGS_STOLEN)
+        if (stole) stats.increment(finder, EggsStolen)
     }
 }

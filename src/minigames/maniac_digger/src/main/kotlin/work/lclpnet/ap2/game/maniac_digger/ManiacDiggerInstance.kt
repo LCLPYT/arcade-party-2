@@ -39,11 +39,11 @@ import kotlin.math.roundToInt
 
 private const val DEBUG_GRADING = false
 
-private val BLOCKS_BROKEN = Stat("blocks_broken", 0)
-private val TOOL_SWITCHES = Stat("tool_switches", 0)
-private val WRONG_TOOLS_SELECTED = Stat("wrong_tools_selected", 0)
-private val WRONG_TOOLS_USED = Stat("wrong_tools_used", 0)
-private val CORRECT_TOOL_STREAK = Stat("correct_tool_streak", 0)
+private val BlocksBroken = Stat("blocks_broken", 0)
+private val ToolSwitches = Stat("tool_switches", 0)
+private val WrongToolsSelected = Stat("wrong_tools_selected", 0)
+private val WrongToolsUsed = Stat("wrong_tools_used", 0)
+private val CorrectToolStreak = Stat("correct_tool_streak", 0)
 
 class ManiacDiggerInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle), MapBootstrapFunction {
 
@@ -53,7 +53,7 @@ class ManiacDiggerInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHan
     private val pipes = HashMap<UUID, MdPipe>()
     private val wrongTool = HashSet<UUID>()
     private val correctToolStreak = Object2IntOpenHashMap<UUID>()
-    private val stats = createStats(score, BLOCKS_BROKEN, TOOL_SWITCHES, WRONG_TOOLS_SELECTED, WRONG_TOOLS_USED, CORRECT_TOOL_STREAK)
+    private val stats = createStats(score, BlocksBroken, ToolSwitches, WrongToolsSelected, WrongToolsUsed, CorrectToolStreak)
     private var winHeight = 64
 
     init {
@@ -152,7 +152,7 @@ class ManiacDiggerInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHan
             val stack = player.inventory.getItem(slot)
 
             if (!stack.isEmpty) {
-                stats.increment(player, TOOL_SWITCHES)
+                stats.increment(player, ToolSwitches)
             }
         }
 
@@ -212,7 +212,7 @@ class ManiacDiggerInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHan
     }
 
     private fun onWrongTool(player: ServerPlayer) {
-        stats.increment(player, WRONG_TOOLS_SELECTED)
+        stats.increment(player, WrongToolsSelected)
         correctToolStreak.removeInt(player.uuid)
 
         val msg = gameHandle.translations.translateText(player, "game.ap2.maniac_digger.wrong_tool")
@@ -223,16 +223,16 @@ class ManiacDiggerInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHan
     }
 
     private fun onBreakBlock(player: ServerPlayer, pos: BlockPos) {
-        stats.increment(player, BLOCKS_BROKEN)
+        stats.increment(player, BlocksBroken)
 
         val state = player.level().getBlockState(pos)
         val stack = player.mainHandItem
 
         if (isCorrectTool(state, stack)) {
             val streak = correctToolStreak.addTo(player.uuid, 1) + 1
-            stats.set(player, CORRECT_TOOL_STREAK, maxOf(stats.get(player, CORRECT_TOOL_STREAK), streak))
+            stats.set(player, CorrectToolStreak, maxOf(stats.get(player, CorrectToolStreak), streak))
         } else {
-            stats.increment(player, WRONG_TOOLS_USED)
+            stats.increment(player, WrongToolsUsed)
             correctToolStreak.removeInt(player.uuid)
         }
     }

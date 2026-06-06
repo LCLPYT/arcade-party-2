@@ -43,15 +43,15 @@ import kotlin.time.Duration.Companion.seconds
 
 val DURATION = 60.seconds
 
-val HIT_SMALL = Stat("hit_small", 0)
-val HIT_MEDIUM = Stat("hit_medium", 0)
-val HIT_LARGE = Stat("hit_large", 0)
-val MISSED = Stat("missed", 0)
+val HitSmall = Stat("hit_small", 0)
+val HitMedium = Stat("hit_medium", 0)
+val HitLarge = Stat("hit_large", 0)
+val Missed = Stat("missed", 0)
 
 class SplashyDropperInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle), MapBootstrapFunction {
 
     private val data = DataContainers.finaleCompatibleScoreContainer(gameHandle, PlayerRef::create)
-    private val stats = createStats(data, HIT_SMALL, HIT_MEDIUM, HIT_LARGE, MISSED)
+    private val stats = createStats(data, HitSmall, HitMedium, HitLarge, Missed)
     private val random = Random()
     private val blocksBelow = ArrayList<BlockPos>()
     private val movementBlocker = SimpleMovementBlocker(gameHandle.rootScheduler).also {
@@ -172,9 +172,9 @@ class SplashyDropperInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameH
         commons().addScore(player, score, data)
 
         val stat = when (score) {
-            3 -> HIT_SMALL
-            2 -> HIT_MEDIUM
-            1 -> HIT_LARGE
+            3 -> HitSmall
+            2 -> HitMedium
+            1 -> HitLarge
             else -> null
         }
         stat?.let { stats.increment(player, it) }
@@ -193,7 +193,7 @@ class SplashyDropperInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameH
     }
 
     private fun onHitGround(player: ServerPlayer) {
-        stats.increment(player, MISSED)
+        stats.increment(player, Missed)
         commons().teleportToRandomSpawn(player, random)
         gameHandle.scheduler.immediate(Runnable {
             player.playNotifySound(SoundEvents.ZOMBIE_ATTACK_IRON_DOOR, SoundSource.PLAYERS, 0.25f, 0.5f)

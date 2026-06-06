@@ -45,10 +45,10 @@ private const val REPLAY_MAX_SECONDS = 30
 private const val NEXT_ROUND_DELAY_SECONDS = 4
 private const val INITIAL_SEQUENCE_LENGTH = 3
 
-val DIRECT_BUTTON_CLICKS = Stat("direct_button_clicks", 0)
-val BLOCK_CLICKS = Stat("block_clicks", 0)
-val AVG_TIME_USAGE = Stat("avg_time_usage", 0f, unit = StatUnits.Percent)
-val AVG_CLICK_TIME = Stat("avg_click_time", 0f, unit = StatUnits.Seconds)
+val DirectButtonClicks = Stat("direct_button_clicks", 0)
+val ButtonClicks = Stat("block_clicks", 0)
+val AvgTimeUsage = Stat("avg_time_usage", 0f, unit = StatUnits.Percent)
+val AvgClickTime = Stat("avg_click_time", 0f, unit = StatUnits.Seconds)
 
 class MimicryInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle), MapBootstrap {
 
@@ -57,7 +57,7 @@ class MimicryInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle),
         Ordering.DESCENDING,
         "game.ap2.mimicry.completed"
     )
-    private val stats = createStats(data, DIRECT_BUTTON_CLICKS, BLOCK_CLICKS, AVG_TIME_USAGE, AVG_CLICK_TIME)
+    private val stats = createStats(data, DirectButtonClicks, ButtonClicks, AvgTimeUsage, AvgClickTime)
     private lateinit var pseudoElimination: PseudoElimination
     private lateinit var manager: MimicryManager
     private lateinit var sequencePlayer: SequencePlayer
@@ -129,9 +129,9 @@ class MimicryInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle),
         val clicked = getEffectivelyClickedPos(world, hitResult) ?: return InteractionResult.PASS
 
         if (clicked.direct) {
-            stats.increment(player, DIRECT_BUTTON_CLICKS)
+            stats.increment(player, DirectButtonClicks)
         } else {
-            stats.increment(player, BLOCK_CLICKS)
+            stats.increment(player, ButtonClicks)
         }
 
         if (!manager.onInputButton(player, clicked.pos)) {

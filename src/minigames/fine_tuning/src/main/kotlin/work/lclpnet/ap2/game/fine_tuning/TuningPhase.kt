@@ -129,7 +129,7 @@ class TuningPhase(
             when {
                 state.isOf(Blocks.NOTE_BLOCK) -> {
                     if (rooms[player.uuid]?.playNoteBlock(player, pos) == true) {
-                        stats.increment(player, PROBES)
+                        stats.increment(player, Probes)
                     }
                 }
                 state.isIn(BlockTags.ALL_SIGNS) -> onUseSign(player, pos)
@@ -157,12 +157,12 @@ class TuningPhase(
 
         if (!room.useNoteBlock(player, pos, dynamicEntityManager)) return
 
-        stats.increment(player, PITCH_CHANGES)
+        stats.increment(player, PitchChanges)
         markInteraction(player)
 
         if (!room.isComplete(melody)) return
 
-        stats.increment(player, MELODIES_COMPLETED)
+        stats.increment(player, MelodiesCompleted)
 
         completed.add(player.uuid)
         player.playNotifySound(SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 0.5f, 1f)
@@ -268,7 +268,7 @@ class TuningPhase(
             val score = room.calculateScore(baseMelody, melody)
             val correct = room.correctNoteCount(melody)
 
-            stats.increment(player, CORRECT_NOTES, correct)
+            stats.increment(player, CorrectNotes, correct)
             data.addScore(player, score)
 
             if (score > bestScore) {
@@ -387,7 +387,7 @@ class TuningPhase(
         val handle = replayMelody(player) { replaying.remove(uuid) } ?: return false
         replaying[uuid] = handle
 
-        stats.increment(player, REPLAYS)
+        stats.increment(player, Replays)
 
         return true
     }

@@ -13,6 +13,7 @@ import net.minecraft.world.item.Items
 import net.minecraft.world.level.gamerules.GameRules
 import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.stats.CommonStats.DamageDealt
+import work.lclpnet.ap2.api.stats.CommonStats.Kills
 import work.lclpnet.ap2.api.stats.FFAStatsManager
 import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.ext.*
@@ -41,12 +42,11 @@ private val MAX_SWAP_DELAY = 10.seconds
 private val DRAW_DELAY = 3.minutes
 private val WARN_BEFORE_END_DELAY = 30.seconds
 
-private val WEAPONS_RECEIVED = Stat("weapons_received", 0)
-private val KILLS = Stat("kills", 0)
+private val WeaponsReceived = Stat("weapons_received", 0)
 
 class WeaponSwapInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gameHandle) {
 
-    private val stats: FFAStatsManager = createStats(DamageDealt, WEAPONS_RECEIVED, KILLS)
+    private val stats: FFAStatsManager = createStats(DamageDealt, WeaponsReceived, Kills)
     private val currentHolders = mutableSetOf<UUID>()
     private var previousHolders: Set<UUID> = emptySet()
     private val subtitleCountdown = SubtitleCountdown(gameHandle.server, gameHandle.scheduler, ::swapTimerTick) {
@@ -108,7 +108,7 @@ class WeaponSwapInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(g
 
     override fun onDeath(player: ServerPlayer, attacker: Entity?) {
         if (attacker is ServerPlayer && attacker !== player && attacker.uuid in currentHolders) {
-            stats.increment(attacker, KILLS)
+            stats.increment(attacker, Kills)
         }
 
         currentHolders.remove(player.uuid)
@@ -186,7 +186,7 @@ class WeaponSwapInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(g
         for (p in newHolders) {
             giveWeaponTo(p)
             currentHolders.add(p.uuid)
-            stats.increment(p, WEAPONS_RECEIVED)
+            stats.increment(p, WeaponsReceived)
             ServerPlayerAccess.playSoundToPlayer(p, SoundEvents.NOTE_BLOCK_PLING.value(), SoundSource.PLAYERS, 1f, 1.5f)
         }
 

@@ -24,4 +24,7 @@ object CommonStats {
 
     @JvmField
     val BlocksPlaced = Stat("blocks_placed", 0)
+
+    @JvmField
+    val BlocksBroken = Stat("blocks_broken", 0)
 }

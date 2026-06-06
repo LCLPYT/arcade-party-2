@@ -52,14 +52,14 @@ private const val TNT_CHANCE = 0.07
 private const val TNT_RADIUS = 7.5
 private val DURATION = 50.seconds
 
-private val BABY_CHICKENS = Stat("baby_chickens", 0)
-private val TNT_DETONATED = Stat("tnt_detonated", 0)
-private val CHICKENS_EXPLODED = Stat("chickens_exploded", 0)
+private val BabyChickens = Stat("baby_chickens", 0)
+private val TntDetonated = Stat("tnt_detonated", 0)
+private val ChickensExploded = Stat("chickens_exploded", 0)
 
 class ChickenShooterInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle), Runnable {
 
     private val data = DataContainers.finaleCompatibleScoreContainer(gameHandle, PlayerRef::create)
-    private val stats = createStats(data, BABY_CHICKENS, TNT_DETONATED, CHICKENS_EXPLODED)
+    private val stats = createStats(data, BabyChickens, TntDetonated, ChickensExploded)
     private val random = Random()
     private val chickenSet = mutableSetOf<Chicken>()
     private lateinit var chickenBox: BlockBox
@@ -206,12 +206,12 @@ class ChickenShooterInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameH
         chickenSet.remove(chicken)
 
         if (tnt != null) {
-            stats.increment(attacker, TNT_DETONATED)
+            stats.increment(attacker, TntDetonated)
             score += tntExplode(chicken, tnt, world, attacker, x, y, z)
         }
 
         if (chicken.isBaby) {
-            stats.increment(attacker, BABY_CHICKENS)
+            stats.increment(attacker, BabyChickens)
             score += 3
         } else {
             score += 1
@@ -241,7 +241,7 @@ class ChickenShooterInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameH
         }
 
         tnt.discard()
-        stats.increment(attacker, CHICKENS_EXPLODED, count)
+        stats.increment(attacker, ChickensExploded, count)
 
         return score
     }

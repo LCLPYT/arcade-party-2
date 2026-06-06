@@ -42,17 +42,17 @@ private const val UPWARD_TILT = 0.55
 private const val ELLIPSE_FACTOR = 0.35
 private const val CONE_FOV = 35
 
-private val CLICKS = Stat("clicks", 0)
-private val MISSES = Stat("misses", 0)
-private val ACCURACY = Stat("accuracy", 0f, unit = StatUnits.Percent)
-private val STREAK = Stat("streak", 0)
-private val AVG_ADVANCE_TIME = Stat("avg_advance_time", 0f, unit = StatUnits.Seconds)
+private val Clicks = Stat("clicks", 0)
+private val Misses = Stat("misses", 0)
+private val Accuracy = Stat("accuracy", 0f, unit = StatUnits.Percent)
+private val Streak = Stat("streak", 0)
+private val AvgAdvanceTime = Stat("avg_advance_time", 0f, unit = StatUnits.Seconds)
 
 class AimMasterInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle), MapBootstrap {
 
     private val data = IntScoreDataContainer(PlayerRef::create)
 
-    private val stats = createStats(data, CLICKS, MISSES, ACCURACY, STREAK, AVG_ADVANCE_TIME)
+    private val stats = createStats(data, Clicks, Misses, Accuracy, Streak, AvgAdvanceTime)
     private val currentStreak = HashMap<UUID, Int>()
     private val lastAdvanceMillis = HashMap<UUID, Long>()
     private val advanceTimeSumMillis = HashMap<UUID, Long>()
@@ -137,7 +137,7 @@ class AimMasterInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
         val domain = manager.domains[player.uuid] ?: return InteractionResult.FAIL
         val serverPlayer = player as ServerPlayer
 
-        val clicks = stats.increment(serverPlayer, CLICKS)
+        val clicks = stats.increment(serverPlayer, Clicks)
 
         if (domain.rayCaster(serverPlayer, SPHERE_RADIUS)) {
             data.addScore(serverPlayer, 1)
@@ -146,7 +146,7 @@ class AimMasterInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
 
             val streak = (currentStreak[player.uuid] ?: 0) + 1
             currentStreak[player.uuid] = streak
-            stats.modify(serverPlayer, STREAK) { maxOf(it, streak) }
+            stats.modify(serverPlayer, Streak) { maxOf(it, streak) }
             updateAccuracy(serverPlayer, newScore, clicks)
             recordAdvanceTime(serverPlayer)
 
@@ -165,7 +165,7 @@ class AimMasterInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
         }
 
         currentStreak[player.uuid] = 0
-        stats.increment(serverPlayer, MISSES)
+        stats.increment(serverPlayer, Misses)
         updateAccuracy(serverPlayer, data.getScore(serverPlayer), clicks)
 
         ServerPlayerAccess.playSoundToPlayer(serverPlayer, SoundEvents.NOTE_BLOCK_BASS.value(), SoundSource.PLAYERS, 0.3f, 0.2f)
@@ -174,7 +174,7 @@ class AimMasterInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
 
     private fun updateAccuracy(player: ServerPlayer, hits: Int, clicks: Int) {
         val accuracy = if (clicks == 0) 0f else hits.toFloat() / clicks
-        stats.set(player, ACCURACY, accuracy)
+        stats.set(player, Accuracy, accuracy)
     }
 
     private fun recordAdvanceTime(player: ServerPlayer) {
@@ -191,7 +191,7 @@ class AimMasterInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
         val avgMillis = sum.toDouble() / count
         val seconds = round(avgMillis / 100.0).toFloat() / 10f
 
-        stats.set(player, AVG_ADVANCE_TIME, seconds)
+        stats.set(player, AvgAdvanceTime, seconds)
     }
 
     private fun win(winner: ServerPlayer) {

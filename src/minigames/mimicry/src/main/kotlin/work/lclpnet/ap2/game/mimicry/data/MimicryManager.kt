@@ -12,8 +12,8 @@ import net.minecraft.sounds.SoundEvents
 import net.minecraft.sounds.SoundSource
 import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.stats.FFAStatsManager
-import work.lclpnet.ap2.game.mimicry.AVG_CLICK_TIME
-import work.lclpnet.ap2.game.mimicry.AVG_TIME_USAGE
+import work.lclpnet.ap2.game.mimicry.AvgClickTime
+import work.lclpnet.ap2.game.mimicry.AvgTimeUsage
 import work.lclpnet.ap2.impl.util.SoundHelper
 import work.lclpnet.gaco.ds.BlockBox
 import work.lclpnet.kibu.access.entity.ServerPlayerAccess
@@ -128,7 +128,7 @@ class MimicryManager(
         val avgMillis = clickTimeSumMillis.getLong(uuid).toDouble() / clickCount.getInt(uuid)
         val seconds = round(avgMillis / 100.0).toFloat() / 10f
 
-        stats.set(player, AVG_CLICK_TIME, seconds)
+        stats.set(player, AvgClickTime, seconds)
     }
 
     private fun recordTimeUsage(player: ServerPlayer, uuid: UUID, now: Long) {
@@ -140,7 +140,7 @@ class MimicryManager(
 
         val avgRatio = usageSum.getDouble(uuid) / usageCount.getInt(uuid)
 
-        stats.set(player, AVG_TIME_USAGE, avgRatio.toFloat())
+        stats.set(player, AvgTimeUsage, avgRatio.toFloat())
     }
 
     private fun activateButton(room: MimicryRoom, button: Int, uuid: UUID) {
