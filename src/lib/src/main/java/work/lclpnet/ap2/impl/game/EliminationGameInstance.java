@@ -12,6 +12,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.BossEvent;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jspecify.annotations.NonNull;
 import work.lclpnet.ap2.api.game.EliminationController;
@@ -128,7 +129,7 @@ public abstract class EliminationGameInstance extends FFAGameInstance implements
         });
     }
 
-    protected void onDeath(ServerPlayer player, @Nullable Entity attacker) {
+    protected void onDeath(@NotNull ServerPlayer player, @Nullable Entity attacker) {
         var accessor = (LivingEntityAccessor) player;
 
         ServerLevel world = getLevel();

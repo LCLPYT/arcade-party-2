@@ -7,6 +7,7 @@ import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.sounds.SoundSource
+import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.boss.enderdragon.EnderDragon
 import net.minecraft.world.entity.boss.enderdragon.phases.EnderDragonPhase
 import net.minecraft.world.level.block.Block
@@ -18,6 +19,7 @@ import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.map.MapBootstrap
 import work.lclpnet.ap2.api.stats.CommonStats.BlocksPlaced
 import work.lclpnet.ap2.api.stats.CommonStats.DistanceMoved
+import work.lclpnet.ap2.api.stats.CommonStats.Kills
 import work.lclpnet.ap2.api.stats.CommonStats.TimeSurvived
 import work.lclpnet.ap2.core.type.ApDragonFight
 import work.lclpnet.ap2.ext.*
@@ -26,6 +28,7 @@ import work.lclpnet.ap2.ext.mc.setBlocks
 import work.lclpnet.ap2.impl.game.EliminationGameInstance
 import work.lclpnet.ap2.impl.game.GameCommons
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker
+import work.lclpnet.ap2.impl.util.world.KnockbackKillTracker
 import work.lclpnet.ap2.impl.util.world.WorldBorderUtil
 import work.lclpnet.game.impl.prot.ProtectionTypes
 import work.lclpnet.game.map.GameMap
@@ -60,7 +63,10 @@ class PillarBattleInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
     private val warnings = HashMap<UUID, Warning>()
     private var borderShrinking = false
     private lateinit var border: WorldBorder
-    private val stats = createStats(TimeSurvived, DistanceMoved, BlocksPlaced)
+    private val stats = createStats(TimeSurvived, Kills, DistanceMoved, BlocksPlaced)
+    private val killTracker = KnockbackKillTracker(players()).also {
+        it.init(gameHandle.scheduler)
+    }
 
     init {
         useSurvivalMode()
@@ -149,7 +155,10 @@ class PillarBattleInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
         trackSurvivalTime(stats)
 
         commons().whenBelowCriticalHeight().then { player ->
-            player.hurtServer(player.level(), player.damageSources().fellOutOfWorld(), player.health)
+            val killer = killTracker.getLastAttacker(player)
+            val source = if (killer != null) player.damageSources().playerAttack(killer) else player.damageSources().fellOutOfWorld()
+
+            player.hurtServer(player.level(), source, player.health)
         }
 
         val randomizer = PbRandomizer(random, gameHandle.participants, level.registryAccess())
@@ -158,11 +167,16 @@ class PillarBattleInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
             randomizer.giveRandomItems()
         }
 
-        ServerLivingEntityHooks.ALLOW_DAMAGE.registerWith(hooks) { entity, _, _ ->
+        ServerLivingEntityHooks.ALLOW_DAMAGE.registerWith(hooks) { entity, source, _ ->
             if (entity is ServerPlayer && entity.foodData.foodLevel >= 20) {
                 entity.foodData.addExhaustion(12f)
                 entity.foodData.setSaturation(0f)
+
+                source.entity?.let { it as? ServerPlayer }?.let { attacker ->
+                    killTracker.onHit(entity, attacker)
+                }
             }
+
             true
         }
 
@@ -182,6 +196,14 @@ class PillarBattleInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
             runAfter(BORDER_SHRINK_DURATION + REMOVE_BLOCKS_AFTER_BORDER_DONE_DELAY) {
                 removeBlocks()
             }
+        }
+    }
+
+    override fun onDeath(player: ServerPlayer, attacker: Entity?) {
+        super.onDeath(player, attacker)
+
+        if (attacker is ServerPlayer) {
+            stats.increment(attacker, Kills)
         }
     }
 
