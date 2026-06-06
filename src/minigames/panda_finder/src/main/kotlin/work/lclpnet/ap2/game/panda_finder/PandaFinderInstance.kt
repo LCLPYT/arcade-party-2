@@ -46,12 +46,12 @@ import kotlin.time.Duration.Companion.seconds
 const val WIN_SCORE = 3
 const val CLOSE_CALL_DISTANCE = 10.0
 
-val PANDAS_CLICKED = Stat("pandas_clicked", 0)
-val AVG_SPAWN_DISTANCE = Stat("avg_spawn_distance", 0f)
-val CLOSE_CALLS = Stat("close_calls", 0)
-val PANDAS_STOLEN = Stat("pandas_stolen", 0)
-val PANDAS_LOST = Stat("pandas_lost", 0)
-val COOLDOWNS = Stat("cooldowns", 0)
+val PandasClicked = Stat("pandas_clicked", 0)
+val AvgSpawnDistance = Stat("avg_spawn_distance", 0f)
+val CloseCalls = Stat("close_calls", 0)
+val PandasStolen = Stat("pandas_stolen", 0)
+val PandasLost = Stat("pandas_lost", 0)
+val Cooldowns = Stat("cooldowns", 0)
 
 class PandaFinderInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle) {
 
@@ -60,7 +60,7 @@ class PandaFinderInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHand
     private val spamManager = SpamManager()
     private lateinit var pandaManager: PandaManager
     private lateinit var bossBar: DynamicTranslatedPlayerBossBar
-    private val stats = createStats(data, PANDAS_CLICKED, AVG_SPAWN_DISTANCE, CLOSE_CALLS, PANDAS_STOLEN, PANDAS_LOST, COOLDOWNS)
+    private val stats = createStats(data, PandasClicked, AvgSpawnDistance, CloseCalls, PandasStolen, PandasLost, Cooldowns)
     private var round = 0
 
     override fun getData(): DataContainer<ServerPlayer, PlayerRef> = data
@@ -119,7 +119,7 @@ class PandaFinderInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHand
             for (participant in gameHandle.participants) {
                 val roundAvg = pandaPositions.map { participant.position().distanceTo(it) }.average().toFloat()
 
-                stats.modify(participant, AVG_SPAWN_DISTANCE) { oldAvg ->
+                stats.modify(participant, AvgSpawnDistance) { oldAvg ->
                     oldAvg + (roundAvg - oldAvg) / round
                 }
             }
@@ -182,7 +182,7 @@ class PandaFinderInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHand
             return
         }
 
-        stats.increment(player, PANDAS_CLICKED)
+        stats.increment(player, PandasClicked)
 
         if (!pandaManager.isSearchedPanda(entity)) return
 
@@ -190,7 +190,7 @@ class PandaFinderInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHand
     }
 
     private fun onCooldownReached(player: ServerPlayer) {
-        stats.increment(player, COOLDOWNS)
+        stats.increment(player, Cooldowns)
 
         player.sendSystemMessage(gameHandle.translations.translateText(player, "game.ap2.panda_finder.cooldown")
             .formatted(ChatFormatting.RED))
@@ -211,16 +211,16 @@ class PandaFinderInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHand
             if (participant == player) continue
 
             if (searchedPositions.any { pos -> participant.position().distanceTo(pos) <= CLOSE_CALL_DISTANCE }) {
-                stats.increment(participant, CLOSE_CALLS)
+                stats.increment(participant, CloseCalls)
             }
 
             if (participant.position().distanceTo(foundPos) <= CLOSE_CALL_DISTANCE) {
-                stats.increment(participant, PANDAS_LOST)
+                stats.increment(participant, PandasLost)
                 stolen = true
             }
         }
 
-        if (stolen) stats.increment(player, PANDAS_STOLEN)
+        if (stolen) stats.increment(player, PandasStolen)
 
         data.addScore(player, 1)
         bossBar.setArgument(player, 0, FormatWrapper.styled(data.getScore(player), ChatFormatting.YELLOW))

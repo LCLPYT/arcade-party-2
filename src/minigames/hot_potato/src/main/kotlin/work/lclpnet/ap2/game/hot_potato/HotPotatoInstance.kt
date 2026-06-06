@@ -36,8 +36,8 @@ import kotlin.time.Duration.Companion.seconds
 const val DURATION_SECONDS = 20
 val MARK_PERIOD_DURATION = 6.seconds
 
-val POTATO_ASSIGNED = Stat("potato_assigned", 0)
-val TIMES_PASSED = Stat("times_passed", 0)
+val PotatoAssigned = Stat("potato_assigned", 0)
+val TimesPassed = Stat("times_passed", 0)
 
 class HotPotatoInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gameHandle), GameOverListener {
 
@@ -47,7 +47,7 @@ class HotPotatoInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(ga
     private lateinit var team: PlayerTeam
     private var task: TaskHandle? = null
     private var markTask: TaskHandle? = null
-    private val stats = createStats(POTATO_ASSIGNED, TIMES_PASSED)
+    private val stats = createStats(PotatoAssigned, TimesPassed)
 
     override fun prepare() {
         winManager.addListener(this)
@@ -209,7 +209,7 @@ class HotPotatoInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(ga
         if (randomPlayer.isEmpty) return false
         val player = randomPlayer.get()
         markPlayer(player)
-        stats.increment(player, POTATO_ASSIGNED)
+        stats.increment(player, PotatoAssigned)
         return true
     }
 
@@ -258,7 +258,7 @@ class HotPotatoInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(ga
         if (player != markedPlayer) return
         if (!gameHandle.participants.isParticipating(target)) return
         markPlayer(target)
-        stats.increment(player, TIMES_PASSED)
+        stats.increment(player, TimesPassed)
     }
 }
 

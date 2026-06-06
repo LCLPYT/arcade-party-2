@@ -17,17 +17,17 @@ import java.util.concurrent.CompletableFuture
 
 const val MELODY_COUNT = 2
 
-val PITCH_CHANGES = Stat("pitch_changes", 0)
-val PROBES = Stat("probes", 0)
-val REPLAYS = Stat("replays", 0)
-val MELODIES_COMPLETED = Stat("melodies_completed", 0)
-val CORRECT_NOTES = Stat("correct_notes", 0)
+val PitchChanges = Stat("pitch_changes", 0)
+val Probes = Stat("probes", 0)
+val Replays = Stat("replays", 0)
+val MelodiesCompleted = Stat("melodies_completed", 0)
+val CorrectNotes = Stat("correct_notes", 0)
 
 class FineTuningInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle), MapBootstrap {
 
     private val data: IntDataContainer<ServerPlayer, PlayerRef> =
         DataContainers.finaleCompatibleScoreContainer(gameHandle, PlayerRef::create)
-    private val stats = createStats(data, PITCH_CHANGES, PROBES, REPLAYS, MELODIES_COMPLETED, CORRECT_NOTES)
+    private val stats = createStats(data, PitchChanges, Probes, Replays, MelodiesCompleted, CorrectNotes)
     private lateinit var setup: FineTuningSetup
     private lateinit var tuningPhase: TuningPhase
 

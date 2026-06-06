@@ -45,12 +45,12 @@ private const val INITIAL_CREDITS = BOMB_PASS_COST * 2
 private const val MINIMUM_BOMB_PASS_TICKS = 10
 private const val CREDITS_PER_TICK = 1
 
-val BOMB_ASSIGNED = Stat("bomb_assigned", 0)
-val BOMB_PASSED = Stat("bomb_passed", 0)
-val BOMB_EXPLODED = Stat("bomb_exploded", 0)
-val MAX_SAFE_STREAK = Stat("max_safe_streak", 0)
-val BOMB_HOLD_TIME = Stat("bomb_hold_time", 0f, unit = StatUnits.Seconds)
-val MIN_FUSE_ON_PASS = Stat("min_fuse_on_pass", 0f, higherIsBetter = false, unit = StatUnits.Seconds)
+val BombAssigned = Stat("bomb_assigned", 0)
+val BombPasses = Stat("bomb_passed", 0)
+val BombExploded = Stat("bomb_exploded", 0)
+val MaxSafeStreak = Stat("max_safe_streak", 0)
+val BombHoldTime = Stat("bomb_hold_time", 0f, unit = StatUnits.Seconds)
+val MinFuseOnPass = Stat("min_fuse_on_pass", 0f, higherIsBetter = false, unit = StatUnits.Seconds)
 
 class GlowingBombInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gameHandle), MapBootstrapFunction {
 
@@ -61,7 +61,7 @@ class GlowingBombInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
     private val credits = Object2IntOpenHashMap<UUID>()
     private val safeStreak = Object2IntOpenHashMap<UUID>()
     private val holdTicks = Object2IntOpenHashMap<UUID>()
-    private val stats = createStats(BOMB_ASSIGNED, BOMB_PASSED, BOMB_EXPLODED, MAX_SAFE_STREAK, BOMB_HOLD_TIME, MIN_FUSE_ON_PASS)
+    private val stats = createStats(BombAssigned, BombPasses, BombExploded, MaxSafeStreak, BombHoldTime, MinFuseOnPass)
     private val initialPlayerCount = gameHandle.participants.count()
     private lateinit var manager: GbManager
     private lateinit var scene: Scene
@@ -123,7 +123,7 @@ class GlowingBombInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
         // init min fuse pass to max value for everyone
         val noPassFuse = maxFuseTicks() / 20f
         for (player in players()) {
-            stats.set(player, MIN_FUSE_ON_PASS, noPassFuse)
+            stats.set(player, MinFuseOnPass, noPassFuse)
         }
 
         spawnBomb()
@@ -173,7 +173,7 @@ class GlowingBombInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
         mayPass = true
 
         manager.bombHolder().ifPresent { player ->
-            stats.increment(player, BOMB_ASSIGNED)
+            stats.increment(player, BombAssigned)
             onAcquiredBomb(player)
         }
     }
@@ -247,11 +247,11 @@ class GlowingBombInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
 
         if (nextHolder == player) return
 
-        stats.increment(player, BOMB_PASSED)
+        stats.increment(player, BombPasses)
 
         val remainingFuse = (fuseTicks - time).coerceAtLeast(0) / 20f
-        if (remainingFuse < stats.get(player, MIN_FUSE_ON_PASS)) {
-            stats.set(player, MIN_FUSE_ON_PASS, remainingFuse)
+        if (remainingFuse < stats.get(player, MinFuseOnPass)) {
+            stats.set(player, MinFuseOnPass, remainingFuse)
         }
 
         wasPassed = true
@@ -282,7 +282,7 @@ class GlowingBombInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
     }
 
     private fun onBombExploded(holder: ServerPlayer) {
-        stats.increment(holder, BOMB_EXPLODED)
+        stats.increment(holder, BombExploded)
 
         val explodedUuid = holder.uuid
         safeStreak.put(explodedUuid, 0)
@@ -292,7 +292,7 @@ class GlowingBombInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
 
             val streak = safeStreak.getInt(player.uuid) + 1
             safeStreak.put(player.uuid, streak)
-            stats.set(player, MAX_SAFE_STREAK, maxOf(stats.get(player, MAX_SAFE_STREAK), streak))
+            stats.set(player, MaxSafeStreak, maxOf(stats.get(player, MaxSafeStreak), streak))
         }
     }
 
@@ -370,7 +370,7 @@ class GlowingBombInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
 
             // accumulate the total time the player has held a bomb
             holdTicks.addTo(uuid, 1)
-            stats.set(player, BOMB_HOLD_TIME, holdTicks.getInt(uuid) / 20f)
+            stats.set(player, BombHoldTime, holdTicks.getInt(uuid) / 20f)
 
             // don't grant credits if the bomb wasn't passed yet and couldn't have exploded yet because of the minimum fuse time
             if (wasPassed || time >= minFuseTicks()) {

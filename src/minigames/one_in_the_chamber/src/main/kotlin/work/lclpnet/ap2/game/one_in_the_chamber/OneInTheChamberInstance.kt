@@ -23,6 +23,7 @@ import org.json.JSONArray
 import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.game.data.DataContainer
 import work.lclpnet.ap2.api.stats.CommonStats.DamageDealt
+import work.lclpnet.ap2.api.stats.CommonStats.Deaths
 import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.core.hook.ProjectileShootCallback
 import work.lclpnet.ap2.core.hook.SpectatePlayerCallback
@@ -46,10 +47,9 @@ import kotlin.random.asKotlinRandom
 const val SCORE_LIMIT = 15
 const val RESPAWN_SPACING = 20.0
 
-private val DEATHS = Stat("deaths", 0)
-private val ARROWS_SHOT = Stat("arrows_shot", 0)
-private val ARROWS_HIT = Stat("arrows_hit", 0)
-private val KILLSTREAK = Stat("killstreak", 0)
+private val ArrowsShot = Stat("arrows_shot", 0)
+private val ArrowsHit = Stat("arrows_hit", 0)
+private val Killstreak = Stat("killstreak", 0)
 
 enum class BowType { Bow, CrossBow }
 
@@ -63,7 +63,7 @@ class OneInTheChamberInstance(gameHandle: MiniGameHandle) : FFAGameInstance(game
     }
     private val respawnCooldown = VisualCooldown(gameHandle.scheduler)
     private val bowType = BowType.entries.random(random.asKotlinRandom())
-    private val stats = createStats(data, DamageDealt, DEATHS, ARROWS_SHOT, ARROWS_HIT, KILLSTREAK)
+    private val stats = createStats(data, DamageDealt, Deaths, ArrowsShot, ArrowsHit, Killstreak)
     private val currentKillstreak = HashMap<UUID, Int>()
 
     init {
@@ -111,7 +111,7 @@ class OneInTheChamberInstance(gameHandle: MiniGameHandle) : FFAGameInstance(game
 
         ProjectileShootCallback.HOOK.registerWith(hooks) { shooter, _ ->
             if (shooter is ServerPlayer && gameHandle.participants.isParticipating(shooter)) {
-                stats.increment(shooter, ARROWS_SHOT)
+                stats.increment(shooter, ArrowsShot)
             }
         }
 
@@ -156,11 +156,11 @@ class OneInTheChamberInstance(gameHandle: MiniGameHandle) : FFAGameInstance(game
     }
 
     private fun killPlayer(player: ServerPlayer, killer: ServerPlayer?, shot: Boolean) {
-        stats.increment(player, DEATHS)
+        stats.increment(player, Deaths)
         currentKillstreak[player.uuid] = 0
 
         if (killer != null && shot) {
-            stats.increment(player, ARROWS_HIT)
+            stats.increment(player, ArrowsHit)
         }
 
         val deathMessages = gameHandle.deathMessages
@@ -276,7 +276,7 @@ class OneInTheChamberInstance(gameHandle: MiniGameHandle) : FFAGameInstance(game
 
         val streak = (currentKillstreak[killer.uuid] ?: 0) + 1
         currentKillstreak[killer.uuid] = streak
-        stats.modify(killer, KILLSTREAK) { maxOf(it, streak) }
+        stats.modify(killer, Killstreak) { maxOf(it, streak) }
 
         giveBowToPlayer(killer)
         killer.health = 20f
