@@ -26,6 +26,7 @@ import work.lclpnet.ap2.impl.util.world.SpawnFinder
 import work.lclpnet.ap2.util.SubtitleCountdown
 import work.lclpnet.game.impl.prot.ProtectionTypes
 import work.lclpnet.kibu.access.entity.ServerPlayerAccess
+import work.lclpnet.kibu.hook.entity.EntityDamageCallback
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks
 import work.lclpnet.kibu.hook.player.PlayerInventoryHooks
 import work.lclpnet.kibu.scheduler.Ticks
@@ -79,7 +80,7 @@ class WeaponSwapInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(g
             }
         }
 
-        ServerLivingEntityHooks.ALLOW_DAMAGE.registerWith(hooks) { entity, source, amount ->
+        ServerLivingEntityHooks.ALLOW_DAMAGE.registerWith(hooks) { entity, source, _ ->
             if (winManager.isGameOver) return@registerWith false
 
             val victim = entity as? ServerPlayer ?: return@registerWith false
@@ -88,9 +89,18 @@ class WeaponSwapInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(g
             if (attacker === victim) return@registerWith false
             if (attacker.uuid !in currentHolders) return@registerWith false
 
-            val applied = amount.coerceAtMost(victim.health)
-            stats.modify(attacker, DamageDealt) { it + applied }
             true
+        }
+
+        EntityDamageCallback.HOOK.registerWith(hooks) { entity, source, amount ->
+            val victim = entity as? ServerPlayer ?: return@registerWith false
+            val attacker = source.entity as? ServerPlayer ?: return@registerWith false
+
+            if (attacker !== victim) {
+                stats.modify(attacker, DamageDealt) { it + amount.coerceAtMost(victim.health) }
+            }
+
+            false
         }
 
         runAfter(DRAW_DELAY - WARN_BEFORE_END_DELAY) {
