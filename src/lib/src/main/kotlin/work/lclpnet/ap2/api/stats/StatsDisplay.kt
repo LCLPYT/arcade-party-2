@@ -184,20 +184,15 @@ class StatsDisplay(val translations: Translations, val logger: Logger) {
         ordered.forEachIndexed { index, (ref, result) ->
             val position = index + 1
 
-            val formattedValue = formatValue(result[stat], translations.getLocale(player))
+            val value = stat.unit.format(result[stat], player, translations)
 
             text.append(Component.literal("\n"))
                 .append(renderName(ref, position))
                 .append(Component.literal("  "))
-                .append(Component.literal(formattedValue).withColor(positionColor(position)))
+                .append(value.copy().withColor(positionColor(position)))
         }
 
         return PlainMessage(text, sectionWidth)
-    }
-
-    private fun formatValue(value: Any, locale: Locale): String = when (value) {
-        is Float, is Double -> String.format(locale, "%.2f", value)
-        else -> value.toString()
     }
 
     private fun sortKey(result: Stats, stat: Stat<*>): Double {

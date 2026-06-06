@@ -20,5 +20,5 @@ object CommonStats {
     val DistanceMoved = Stat("distance_moved", 0f)
 
     @JvmField
-    val TimeSurvived = Stat("time_survived", 0)
+    val TimeSurvived = Stat("time_survived", 0, unit = StatUnits.Seconds)
 }

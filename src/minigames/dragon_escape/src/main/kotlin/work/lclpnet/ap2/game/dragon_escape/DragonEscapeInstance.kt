@@ -405,7 +405,7 @@ class DragonEscapeInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHan
         if (!inGoal.add(player.uuid) || winManager.isGameOver) return
 
         val time = (milliTime() - startMs) / 1000.0
-        val duration = TimeHelper.formatTime(gameHandle.translations, time, "%02d", "%06.3f")
+        val duration = TimeHelper.formatTime(gameHandle.translations, time, "%02d", "%06.3f", "%.3f")
 
         completed.add(player, duration)
 
