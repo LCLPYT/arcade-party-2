@@ -174,13 +174,12 @@ class PillarBattleInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
         trackSurvivalTime(stats)
 
         commons().whenBelowCriticalHeight().then { player ->
-            val source = when (val killer = killTracker.getLastAttacker(player)) {
-                is ServerPlayer -> player.damageSources().playerAttack(killer)
-                is LivingEntity -> player.damageSources().mobAttack(killer)
-                else -> player.damageSources().fellOutOfWorld()
+            when (val killer = killTracker.getLastAttacker(player)) {
+                is ServerPlayer -> player.setLastHurtByPlayer(killer, 100)
+                is LivingEntity -> player.lastHurtByMob = killer
             }
 
-            player.hurtServer(player.level(), source, player.health)
+            player.hurtServer(player.level(), player.damageSources().fellOutOfWorld(), player.health)
         }
 
         val randomizer = PbRandomizer(random, gameHandle.participants, level.registryAccess())
