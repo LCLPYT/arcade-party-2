@@ -23,6 +23,7 @@ import work.lclpnet.ap2.impl.game.data.OrderedDataContainer
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.util.Fireworks
+import work.lclpnet.ap2.impl.util.movement.MovementListener
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager
 import work.lclpnet.gaco.ds.BlockBox
@@ -45,6 +46,7 @@ private const val WARN_TIME_MAX_TICKS = 70
 private const val FROZEN_MIN_TICKS = 60
 private const val FROZEN_MAX_TICKS = 105
 private const val END_TIME_SECONDS = 15
+private const val CLOSEST_STOP_SENTINEL = UNTIL_STOP_MAX_TICKS / 20f
 
 private data class Grade(val player: ServerPlayer, val distance: Double)
 
@@ -57,6 +59,11 @@ class RedLightGreenLightInstance(gameHandle: MiniGameHandle) : FFAGameInstance(g
     private val moved = HashSet<UUID>()
     private val trafficLights = ArrayList<TrafficLight>()
     private val movementDetector = RLGLMovementDetector()
+    private val stats = createStats(Resets, YellowMovingTime, ClosestStopTime)
+    private val rlglStats = RedLightGreenLightStats(stats)
+    private val lastMovingTick = HashMap<UUID, Int>()
+    private val pendingStopTime = HashMap<UUID, Float>()
+    private var gameTick = 0
     private lateinit var tracker: MovementTracker
     private lateinit var taskBar: TranslatedBossBar
     private lateinit var goal: BlockBox
@@ -104,6 +111,10 @@ class RedLightGreenLightInstance(gameHandle: MiniGameHandle) : FFAGameInstance(g
         PlayerMoveCallback.HOOK.registerWith(hooks) { player, _, _ ->
             onMove(player)
             false
+        }
+
+        for (player in gameHandle.participants) {
+            stats.set(player, ClosestStopTime, CLOSEST_STOP_SENTINEL)
         }
 
         openGate()
@@ -210,6 +221,8 @@ class RedLightGreenLightInstance(gameHandle: MiniGameHandle) : FFAGameInstance(g
             || inGoal.contains(player.uuid)
             || !moved.add(player.uuid)) return
 
+        rlglStats.reset(player)
+
         movementDetector.unfixPosition(player)
         punish(player)
     }
@@ -282,6 +295,8 @@ class RedLightGreenLightInstance(gameHandle: MiniGameHandle) : FFAGameInstance(g
     }
 
     fun tick() {
+        gameTick++
+
         if (gameEnd >= 0) {
             val ticksUntilEnd = gameEnd--
 
@@ -301,12 +316,14 @@ class RedLightGreenLightInstance(gameHandle: MiniGameHandle) : FFAGameInstance(g
         if (relTime < 0) {
             if (relTime == -go) {
                 scheduleNextStop()
+                commitClosestStops()
                 setStatus(TrafficLight.Status.GREEN)
             }
             return
         }
 
         if (relTime == 0) {
+            captureClosestStops()
             setStatus(TrafficLight.Status.RED)
             return
         }
@@ -314,6 +331,45 @@ class RedLightGreenLightInstance(gameHandle: MiniGameHandle) : FFAGameInstance(g
         if (relTime == warn) {
             setStatus(TrafficLight.Status.YELLOW)
         }
+
+        trackMovement(yellow = relTime <= warn)
+    }
+
+    private fun trackMovement(yellow: Boolean) {
+        for (player in gameHandle.participants) {
+            if (inGoal.contains(player.uuid)) continue
+            if (!MovementListener.isMovementInput(player.lastClientInput)) continue
+
+            lastMovingTick[player.uuid] = gameTick
+
+            if (yellow) {
+                rlglStats.movedOnYellow(player)
+            }
+        }
+    }
+
+    private fun captureClosestStops() {
+        pendingStopTime.clear()
+
+        for (player in gameHandle.participants) {
+            if (inGoal.contains(player.uuid)) continue
+
+            val last = lastMovingTick[player.uuid] ?: continue
+            pendingStopTime[player.uuid] = (gameTick - last) / 20f
+        }
+    }
+
+    private fun commitClosestStops() {
+        for ((uuid, seconds) in pendingStopTime) {
+            if (moved.contains(uuid)) continue
+
+            val player = gameHandle.server.playerList.getPlayer(uuid) ?: continue
+            if (!gameHandle.participants.isParticipating(player)) continue
+
+            rlglStats.recordStopTime(player, seconds)
+        }
+
+        pendingStopTime.clear()
     }
 
     private fun gradePlayers() {
