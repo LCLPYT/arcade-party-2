@@ -5,5 +5,6 @@
   "game.ap2.minefield.goal": "%s hat das Ziel erreicht. Das Spiel endet in %s Sekunden und du wirst dann je nach Distanz zum Ziel eingestuft.",
   "game.ap2.minefield.stepped_on_mine": "Du hast eine Mine ausgelöst",
   "game.ap2.minefield.personal_best": "Dein Rekord - %sm",
-  "game.ap2.minefield.new_personal_best": "Neuer persönlicher Rekord"
+  "game.ap2.minefield.new_personal_best": "Neuer persönlicher Rekord",
+  "game.ap2.minefield.stat.exploded": "Minen hochgejagt"
 }

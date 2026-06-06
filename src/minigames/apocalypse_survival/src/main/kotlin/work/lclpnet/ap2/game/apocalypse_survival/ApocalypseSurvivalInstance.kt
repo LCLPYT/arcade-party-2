@@ -28,7 +28,6 @@ import work.lclpnet.game.util.PlayerReset
 import work.lclpnet.kibu.behaviour.entity.VexEntityBehaviour
 import work.lclpnet.kibu.hook.entity.ProjectileHooks
 import work.lclpnet.kibu.hook.entity.ServerEntityHooks
-import work.lclpnet.kibu.hook.player.PlayerMoveCallback
 import java.util.*
 
 class ApocalypseSurvivalInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gameHandle) {
@@ -82,10 +81,7 @@ class ApocalypseSurvivalInstance(gameHandle: MiniGameHandle) : EliminationGameIn
             }
         }
 
-        PlayerMoveCallback.HOOK.registerWith(hooks) { player, from, to ->
-            trackDistanceMoved(stats, player, from, to)
-            false
-        }
+        trackDistanceMoved(stats)
 
         for (player in participants) {
             PlayerReset.setAttribute(player, Attributes.SAFE_FALL_DISTANCE, 5.0)

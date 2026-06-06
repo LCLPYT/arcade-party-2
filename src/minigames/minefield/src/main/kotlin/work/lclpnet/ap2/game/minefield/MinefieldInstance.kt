@@ -26,6 +26,8 @@ import org.joml.Matrix4f
 import org.json.JSONArray
 import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.map.MapBootstrapFunction
+import work.lclpnet.ap2.api.stats.CommonStats
+import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.api.util.world.BlockPredicate
 import work.lclpnet.ap2.ext.*
 import work.lclpnet.ap2.ext.mc.isOf
@@ -68,11 +70,14 @@ import kotlin.random.asJavaRandom
 const val END_TIME_SECONDS = 15
 const val DEBUG_PRESSURE_PLATE_POSITIONS = false
 
+val Exploded = Stat("exploded", 0, higherIsBetter = false)
+
 class MinefieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle), MapBootstrapFunction {
     
     private val data = OrderedDataContainer(PlayerRef::create)
 
     val inGoal = mutableSetOf<UUID>()
+    private val stats = createStats(Exploded, CommonStats.DistanceMoved)
     var gameEnd = -1
     var taskBar: TranslatedBossBar? = null
     var spawnShape: BlockShape? = null
@@ -182,6 +187,8 @@ class MinefieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
             }
         }
 
+        trackDistanceMoved(stats)
+
         PressurePlateCallback.HOOK.registerWith(hooks) { _, pos, entity ->
             if (entity is ServerPlayer && players().isParticipating(entity)) {
                 onStepOnMine(entity, pos)
@@ -253,7 +260,7 @@ class MinefieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
             }
     }
 
-    fun MinefieldInstance.onStepOnMine(player: ServerPlayer, pos: BlockPos) {
+    fun onStepOnMine(player: ServerPlayer, pos: BlockPos) {
         if (winManager.isGameOver || player.isSpectator || inGoal.contains(player.uuid)) return
 
         world.setBlock(pos, Blocks.AIR)
@@ -265,6 +272,8 @@ class MinefieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
         translate("game.ap2.minefield.stepped_on_mine").formatted(RED).sendTo(player, true)
 
         player.setGameMode(GameType.SPECTATOR)
+
+        stats.increment(player, Exploded)
 
         timeout(20) {
             player.teleport(spawnShape!!.randomPos(Random.asJavaRandom()), spawnYaw)
