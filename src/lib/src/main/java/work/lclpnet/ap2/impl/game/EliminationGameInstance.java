@@ -213,7 +213,7 @@ public abstract class EliminationGameInstance extends FFAGameInstance implements
         }
     }
 
-    protected void onEliminated(ServerPlayer player) {
+    protected void onEliminated(@NotNull ServerPlayer player) {
         PlayerEliminatedCallback.HOOK.invoker().onEliminated(player);
     }
 
