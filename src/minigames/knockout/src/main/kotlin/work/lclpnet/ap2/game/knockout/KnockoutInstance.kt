@@ -17,9 +17,13 @@ import net.minecraft.world.entity.Entity
 import net.minecraft.world.phys.Vec3
 import work.lclpnet.ap2.api.actor.ActorSpawnedCallback
 import work.lclpnet.ap2.api.game.MiniGameHandle
+import work.lclpnet.ap2.api.stats.CommonStats
+import work.lclpnet.ap2.api.stats.Stat
+import work.lclpnet.ap2.api.stats.StatUnits
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.runAfter
 import work.lclpnet.ap2.ext.runEvery
+import work.lclpnet.ap2.ext.trackDistanceMoved
 import work.lclpnet.ap2.game.knockout.util.ImpactDetector
 import work.lclpnet.ap2.impl.actor.GravityFieldActor
 import work.lclpnet.ap2.impl.game.EliminationGameInstance
@@ -50,6 +54,11 @@ private const val IMPACT_DESTRUCTION_MULTIPLIER = 0.35
 private const val IDLE_DAMAGE_MULTIPLIER = 3.0
 private val IDLE_GLOW_TICKS = Ticks.seconds(15)
 
+private val DamageDealt = Stat("damage_dealt", 0f, unit = StatUnits.Percent)
+private val DamageReceived = Stat("damage_received", 0f, higherIsBetter = false, unit = StatUnits.Percent)
+private val ImpactDamageDone = Stat("impact_damage_done", 0f)
+private val ImpactDamageCaused = Stat("impact_damage_caused", 0f)
+
 class KnockoutInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gameHandle) {
 
     private val charge = Object2DoubleOpenHashMap<UUID>()
@@ -60,6 +69,15 @@ class KnockoutInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gam
     private lateinit var impactDetector: ImpactDetector
     private lateinit var destroyStageManager: DestroyStageManager
     private lateinit var killTracker: KnockbackKillTracker
+    private val stats = createStats(
+        CommonStats.Kills,
+        CommonStats.DistanceMoved,
+        CommonStats.TimeSurvived,
+        DamageDealt,
+        DamageReceived,
+        ImpactDamageDone,
+        ImpactDamageCaused
+    )
 
     init {
         useOldCombat()
@@ -86,8 +104,16 @@ class KnockoutInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gam
 
     override fun prepare() {
         useRemainingPlayersDisplay()
+        trackSurvivalTime(stats)
+        trackDistanceMoved(stats)
 
         commons().whenBelowCriticalHeight().then { player ->
+            val killer = killTracker.getLastAttacker(player)
+
+            if (killer != null && killer != player) {
+                stats.increment(killer, CommonStats.Kills)
+            }
+
             eliminate(player, killTracker.killMessage(player, gameHandle.deathMessages))
         }
 
@@ -206,6 +232,9 @@ class KnockoutInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gam
 
         killTracker.onHit(player, attacker)
 
+        stats.modify(attacker, DamageDealt) { it + finalIncrement.toFloat() }
+        stats.modify(player, DamageReceived) { it + finalIncrement.toFloat() }
+
         var vec = player.position().subtract(attacker.position()).normalize()
         vec = Vec3(vec.x, 0.1, vec.z)
         vec = vec.scale(power)
@@ -253,6 +282,14 @@ class KnockoutInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gam
 
         val damage = sqrt(strength - IMPACT_STRENGTH_THRESHOLD) * IMPACT_DESTRUCTION_MULTIPLIER
         val world = level
+
+        stats.modify(player, ImpactDamageCaused) { it + damage.toFloat() }
+
+        killTracker.getLastAttacker(player)?.let { attacker ->
+            if (attacker != player) {
+                stats.modify(attacker, ImpactDamageDone) { it + damage.toFloat() }
+            }
+        }
 
         var anyBroke = false
 
