@@ -18,7 +18,10 @@ import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.state.BlockState
 import org.json.JSONArray
 import work.lclpnet.ap2.api.game.MiniGameHandle
-import work.lclpnet.ap2.api.stats.CommonStats
+import work.lclpnet.ap2.api.stats.CommonStats.BlocksBroken
+import work.lclpnet.ap2.api.stats.CommonStats.DistanceMoved
+import work.lclpnet.ap2.api.stats.CommonStats.Kills
+import work.lclpnet.ap2.api.stats.CommonStats.TimeSurvived
 import work.lclpnet.ap2.ext.*
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.mc.unbreakable
@@ -42,12 +45,7 @@ const val WORLD_BORDER_SHRINK_PER_SECOND = 1.0
 
 class SpleefInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gameHandle) {
 
-    private val stats = createStats(
-        CommonStats.TimeSurvived,
-        CommonStats.Kills,
-        CommonStats.BlocksBroken,
-        CommonStats.DistanceMoved,
-    )
+    private val stats = createStats(TimeSurvived, Kills, BlocksBroken, DistanceMoved)
     private lateinit var killTracker: FallKillTracker
     private lateinit var breakableBlocks: Set<Block>
     private lateinit var snowArea: BlockBox
@@ -114,7 +112,7 @@ class SpleefInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gameH
         BlockModificationHooks.BLOCK_BROKEN.registerWith(gameHandle.hooks) { _, pos, entity ->
             if (entity is ServerPlayer && gameHandle.participants.isParticipating(entity)) {
                 killTracker.onBlockBroken(pos, entity)
-                stats.increment(entity, CommonStats.BlocksBroken)
+                stats.increment(entity, BlocksBroken)
             }
         }
 

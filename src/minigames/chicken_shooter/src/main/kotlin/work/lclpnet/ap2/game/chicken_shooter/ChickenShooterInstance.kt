@@ -22,22 +22,29 @@ import net.minecraft.world.entity.projectile.Projectile
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.world.item.enchantment.Enchantments
+import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.entity.EntityTypeTest
 import net.minecraft.world.level.gamerules.GameRules
+import net.minecraft.world.phys.Vec3
 import net.minecraft.world.scores.DisplaySlot
 import net.minecraft.world.scores.Team
 import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.game.data.DataContainer
 import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.core.type.ApVariantHolder
+import work.lclpnet.ap2.ext.runEveryTick
+import work.lclpnet.ap2.game.teleportToRandomSpawns
 import work.lclpnet.ap2.impl.game.FFAGameInstance
 import work.lclpnet.ap2.impl.game.data.DataContainers
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.util.ItemHelper
 import work.lclpnet.ap2.impl.util.ItemHelper.unbreakable
-import work.lclpnet.gaco.ds.BlockBox
+import work.lclpnet.ap2.impl.util.world.BfsWorldScanner
+import work.lclpnet.ap2.impl.util.world.CardinalAdjacentBlocks
+import work.lclpnet.ap2.impl.util.world.SizedSpaceFinder
 import work.lclpnet.game.impl.prot.ProtectionTypes
+import work.lclpnet.game.map.MapUtils
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess
 import work.lclpnet.kibu.access.entity.ServerPlayerAccess
 import work.lclpnet.kibu.hook.entity.ProjectileCanHitCallback
@@ -47,22 +54,24 @@ import work.lclpnet.kibu.translate.Translations
 import java.util.*
 import kotlin.time.Duration.Companion.seconds
 
+private const val DEBUG_CHICKEN_SPAWNS = false
 private const val BABY_CHANCE = 0.15
 private const val TNT_CHANCE = 0.07
 private const val TNT_RADIUS = 7.5
+private const val MAX_CHICKEN_SPAWNS = 1000
 private val DURATION = 50.seconds
 
 private val BabyChickens = Stat("baby_chickens", 0)
 private val TntDetonated = Stat("tnt_detonated", 0)
 private val ChickensExploded = Stat("chickens_exploded", 0)
 
-class ChickenShooterInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle), Runnable {
+class ChickenShooterInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle) {
 
     private val data = DataContainers.finaleCompatibleScoreContainer(gameHandle, PlayerRef::create)
     private val stats = createStats(data, BabyChickens, TntDetonated, ChickensExploded)
     private val random = Random()
     private val chickenSet = mutableSetOf<Chicken>()
-    private lateinit var chickenBox: BlockBox
+    private lateinit var chickenSpawns: List<Vec3>
     private var despawnHeight = 0
     private var time = 0
     private var spawnInterval = 0
@@ -77,6 +86,9 @@ class ChickenShooterInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameH
             .set(GameRules.SHOW_ADVANCEMENT_MESSAGES, false)
 
         despawnHeight = map.requireProperty("despawn-height")
+
+        teleportPlayers()
+        findChickenSpawner()
 
         val hooks = gameHandle.hooks
 
@@ -125,6 +137,14 @@ class ChickenShooterInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameH
         }
     }
 
+    private fun teleportPlayers() {
+        val scanBox = map.properties.optJSONArray("spawn-scan-bounds")?.let { MapUtil.readBox(it) } ?: return
+        val scanStart = BlockPos.containing(MapUtils.getSpawnPosition(map))
+        val spacing = map.properties.optNumber("spawn-spacing", 8.0).toDouble()
+
+        teleportToRandomSpawns(scanBox, listOf(scanStart), spacing)
+    }
+
     override fun go() {
         gameHandle.protect { config ->
             ProtectionTypes.ALLOW_DAMAGE.allow(config) { entity, damageSource ->
@@ -142,26 +162,47 @@ class ChickenShooterInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameH
         }
 
         giveBowsToPlayers(translations)
-        chickenSpawner()
+
+        runEveryTick {
+            tick()
+        }
 
         val subject = translations.translateText("game.ap2.chicken_shooter.task")
         commons().createTimer(subject, DURATION.inWholeSeconds.toInt()).whenDone(winManager::complete)
     }
 
-    private fun chickenSpawner() {
-        chickenBox = MapUtil.readBox(map.requireProperty("spawn-bounds"))
-        gameHandle.scheduler.interval(this, 1)
+    private fun findChickenSpawner() {
+        val chickenBox = MapUtil.readBox(map.requireProperty("chicken-spawn-bounds"))
+        val chickenScanStart = MapUtil.readBlockPos(map.requireProperty("chicken-spawn-scan-start"))
+
+        val adjacentBlocks = CardinalAdjacentBlocks {
+            chickenBox.contains(it) && level.getBlockState(it).getCollisionShape(level, it).isEmpty
+        }
+
+        val scanner = BfsWorldScanner(adjacentBlocks).scan(chickenScanStart)
+        val finder = SizedSpaceFinder.create(level, EntityType.CHICKEN)
+        val spawns = finder.findSpaces(scanner)
+
+        chickenSpawns = spawns.shuffled().subList(0, MAX_CHICKEN_SPAWNS.coerceAtMost(spawns.size))
+
+        check(chickenSpawns.isNotEmpty()) {
+            "Couldn't find any chicken spawns"
+        }
+
+        if (DEBUG_CHICKEN_SPAWNS) {
+            commons().debugController().renderer().ifPresent { renderer ->
+                for (pos in chickenSpawns) {
+                    renderer.marker(pos, Blocks.GREEN_CONCRETE.defaultBlockState(), 0x00ff00)
+                }
+            }
+        }
     }
 
     @Suppress("UNCHECKED_CAST")
     private fun spawnChicken() {
-        val world = level
-        val randomPos = BlockPos.MutableBlockPos()
-        chickenBox.randomBlockPos(randomPos, random)
+        val chicken = Chicken(EntityType.CHICKEN, level)
 
-        val chicken = Chicken(EntityType.CHICKEN, world)
-
-        val variants = world.registryAccess().lookupOrThrow(Registries.CHICKEN_VARIANT).asHolderIdMap()
+        val variants = level.registryAccess().lookupOrThrow(Registries.CHICKEN_VARIANT).asHolderIdMap()
 
         if (variants.size() >= 1) {
             val variant = variants.byId(random.nextInt(variants.size()))
@@ -173,11 +214,11 @@ class ChickenShooterInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameH
         if (random.nextFloat() < BABY_CHANCE) {
             chicken.isBaby = true
         } else if (random.nextFloat() < TNT_CHANCE) {
-            spawnTNT(chicken, world)
+            spawnTNT(chicken, level)
         }
 
-        chicken.setPosRaw(randomPos.x + 0.5, randomPos.y.toDouble(), randomPos.z + 0.5)
-        world.addFreshEntity(chicken)
+        chicken.setPos(chickenSpawns.random())
+        level.addFreshEntity(chicken)
 
         chickenSet.add(chicken)
     }
@@ -263,7 +304,7 @@ class ChickenShooterInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameH
         }
     }
 
-    override fun run() {
+    fun tick() {
         if (time % spawnInterval == 0) {
             spawnChicken()
         }
