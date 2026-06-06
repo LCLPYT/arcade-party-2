@@ -14,8 +14,10 @@ import net.minecraft.world.entity.projectile.Projectile
 import net.minecraft.world.entity.projectile.arrow.AbstractArrow
 import net.minecraft.world.level.gamerules.GameRules
 import work.lclpnet.ap2.api.game.MiniGameHandle
+import work.lclpnet.ap2.api.stats.CommonStats
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.runEveryTick
+import work.lclpnet.ap2.ext.trackDistanceMoved
 import work.lclpnet.ap2.game.apocalypse_survival.util.AsSetup
 import work.lclpnet.ap2.game.apocalypse_survival.util.MonsterSpawner
 import work.lclpnet.ap2.game.apocalypse_survival.util.TargetManager
@@ -26,17 +28,20 @@ import work.lclpnet.game.util.PlayerReset
 import work.lclpnet.kibu.behaviour.entity.VexEntityBehaviour
 import work.lclpnet.kibu.hook.entity.ProjectileHooks
 import work.lclpnet.kibu.hook.entity.ServerEntityHooks
-import java.util.Random
+import work.lclpnet.kibu.hook.player.PlayerMoveCallback
+import java.util.*
 
 class ApocalypseSurvivalInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gameHandle) {
 
     private lateinit var spawners: List<MonsterSpawner>
     private lateinit var targetManager: TargetManager
     private var time = 0
+    private val stats = createStats(CommonStats.DistanceMoved, CommonStats.TimeSurvived)
 
     override fun prepare() {
         useTaskDisplay()
         useSmoothDeath()
+        trackSurvivalTime(stats)
 
         val participants = gameHandle.participants
         val random = Random()
@@ -75,6 +80,11 @@ class ApocalypseSurvivalInstance(gameHandle: MiniGameHandle) : EliminationGameIn
             if (relWorld == world && entity is Mob) {
                 targetManager.removeMob(entity)
             }
+        }
+
+        PlayerMoveCallback.HOOK.registerWith(hooks) { player, from, to ->
+            trackDistanceMoved(stats, player, from, to)
+            false
         }
 
         for (player in participants) {

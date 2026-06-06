@@ -4,5 +4,8 @@
   "game.ap2.button_master.task": "Finde den Knopf",
   "game.ap2.button_master.eject": "Rauswurf",
   "game.ap2.button_master.choose_capsule": "Öffne in den nächsten %s Sekunden eine Kapsel oder fliege selber raus!",
-  "game.ap2.button_master.revealed": "Der Knopf ist nun markiert um das Spiel zu beschleunigen"
+  "game.ap2.button_master.revealed": "Der Knopf ist nun markiert um das Spiel zu beschleunigen",
+  "game.ap2.button_master.stat.buttons_found": "Gefundene Knöpfe",
+  "game.ap2.button_master.stat.escapes": "Entkommen",
+  "game.ap2.button_master.stat.buttons_missed": "Verpasste Knöpfe"
 }

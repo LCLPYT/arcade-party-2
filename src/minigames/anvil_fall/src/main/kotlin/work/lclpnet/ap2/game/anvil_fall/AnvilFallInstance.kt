@@ -23,6 +23,7 @@ import work.lclpnet.ap2.api.stats.CommonStats
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.mc.playNotifySound
 import work.lclpnet.ap2.ext.runEveryTick
+import work.lclpnet.ap2.ext.trackDistanceMoved
 import work.lclpnet.ap2.impl.game.EliminationGameInstance
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedBossBar
@@ -34,12 +35,10 @@ import work.lclpnet.game.impl.prot.ProtectionTypes
 import work.lclpnet.kibu.access.VelocityModifier
 import work.lclpnet.kibu.access.entity.FallingBlockAccess
 import work.lclpnet.kibu.hook.player.PlayerMoveCallback
-import work.lclpnet.kibu.hook.util.PositionRotation
 import work.lclpnet.kibu.scheduler.Ticks
 import work.lclpnet.kibu.translate.bossbar.TranslatedBossBar
 import work.lclpnet.kibu.translate.text.FormatWrapper
 import java.util.*
-import kotlin.math.sqrt
 
 const val DIRECT_ANVIL_CHANCE = 0.02
 const val SPREAD_RADIUS = 8
@@ -91,7 +90,7 @@ class AnvilFallInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(ga
         startAnvilSpawning()
 
         PlayerMoveCallback.HOOK.registerWith(gameHandle.hooks) { player, from, to ->
-            trackDistance(player, from, to)
+            trackDistanceMoved(stats, player, from, to)
             repelPlayer(player, to)
             false
         }
@@ -208,15 +207,6 @@ class AnvilFallInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(ga
         FallingBlockAccess.setBlockState(anvil, state)
 
         world.addFreshEntity(anvil)
-    }
-
-    private fun trackDistance(player: ServerPlayer, from: PositionRotation, to: PositionRotation) {
-        if (!gameHandle.participants.isParticipating(player)) return
-
-        val dx = to.x() - from.x()
-        val dz = to.z() - from.z()
-
-        stats.modify(player, CommonStats.DistanceMoved) { it + sqrt(dx * dx + dz * dz).toFloat() }
     }
 
     private fun repelPlayer(player: ServerPlayer, to: Position) {
