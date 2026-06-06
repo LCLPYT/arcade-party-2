@@ -6,14 +6,20 @@ import net.minecraft.core.component.DataComponents
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.sounds.SoundSource
+import net.minecraft.world.damagesource.DamageSource
 import net.minecraft.world.damagesource.DamageTypes
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
+import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.Blocks
+import net.minecraft.world.level.block.state.BlockState
+import org.json.JSONArray
 import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.stats.CommonStats
 import work.lclpnet.ap2.ext.gainKill
+import work.lclpnet.ap2.ext.inWholeTicks
+import work.lclpnet.ap2.ext.logger
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.mc.unbreakable
 import work.lclpnet.ap2.ext.trackDistanceMoved
@@ -25,9 +31,10 @@ import work.lclpnet.game.impl.prot.ProtectionTypes
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess
 import work.lclpnet.kibu.hook.level.BlockModificationHooks
 import work.lclpnet.kibu.scheduler.Ticks
+import kotlin.time.Duration.Companion.seconds
 
 val WORLD_BORDER_DELAY = Ticks.seconds(40).toLong()
-val WORLD_BORDER_TIME = Ticks.seconds(30).toLong()
+const val WORLD_BORDER_SHRINK_PER_SECOND = 1.0
 
 class SpleefInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gameHandle) {
 
@@ -38,12 +45,17 @@ class SpleefInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gameH
         CommonStats.DistanceMoved,
     )
     private lateinit var killTracker: FallKillTracker
+    private lateinit var breakableBlocks: Set<Block>
+    private var frost = false
 
     init {
         useSurvivalMode()
     }
 
     override fun prepare() {
+        frost = map.properties.optBoolean("frost", false)
+        breakableBlocks = readBreakableBlocks()
+
         useSmoothDeath()
         useNoHealing()
         useRemainingPlayersDisplay()
@@ -52,14 +64,26 @@ class SpleefInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gameH
         trackDistanceMoved(stats)
     }
 
+    private fun readBreakableBlocks(): Set<Block> {
+        val blocksArray = map.properties.optJSONArray("breakable-blocks") ?: JSONArray()
+        val stateList = mutableListOf<BlockState>()
+        MapUtil.readBlockStates(blocksArray, stateList, logger)
+
+        if (stateList.isEmpty()) {
+            stateList.add(Blocks.SNOW_BLOCK.defaultBlockState())
+        }
+
+        return stateList.map { it.block }.toSet()
+    }
+
     override fun go() {
         gameHandle.protect { config ->
             ProtectionTypes.BREAK_BLOCKS.allow(config) { entity, pos ->
-                entity.level().getBlockState(pos).isOf(Blocks.SNOW_BLOCK)
+                breakableBlocks.contains(entity.level().getBlockState(pos).block)
             }
 
             ProtectionTypes.ALLOW_DAMAGE.allow(config) { _, damageSource ->
-                damageSource.isOf(DamageTypes.LAVA) || damageSource.isOf(DamageTypes.OUTSIDE_BORDER)
+                isDamageAllowed(damageSource)
             }
         }
 
@@ -68,20 +92,32 @@ class SpleefInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gameH
         killTracker = FallKillTracker(gameHandle.participants)
         killTracker.init(gameHandle.scheduler)
 
-        BlockModificationHooks.BREAK_BLOCK.registerWith(gameHandle.hooks) { _, pos, entity ->
+        BlockModificationHooks.BLOCK_BROKEN.registerWith(gameHandle.hooks) { _, pos, entity ->
             if (entity is ServerPlayer && gameHandle.participants.isParticipating(entity)) {
                 killTracker.onBlockBroken(pos, entity)
                 stats.increment(entity, CommonStats.BlocksBroken)
             }
-            false
         }
+
+        val worldBorderConfig = commons().readWorldBorderConfig()
+        val shrinkDurationSeconds = (worldBorderConfig.maxRadius / WORLD_BORDER_SHRINK_PER_SECOND).seconds
 
         commons().scheduleWorldBorderShrink(
             WORLD_BORDER_DELAY,
-            WORLD_BORDER_TIME,
+            shrinkDurationSeconds.inWholeTicks,
             Ticks.seconds(5).toLong()
         ).then(::removeBlocks)
+
+        commons().whenBelowCriticalHeight().then { player ->
+            val source = if (frost) player.damageSources().freeze() else player.damageSources().fellOutOfWorld()
+
+            player.hurtServer(level, source, player.health)
+        }
     }
+
+    private fun isDamageAllowed(damageSource: DamageSource): Boolean = damageSource.isOf(DamageTypes.LAVA)
+            || damageSource.isOf(DamageTypes.OUTSIDE_BORDER)
+            || (frost && damageSource.isOf(DamageTypes.FREEZE))
 
     override fun onDeath(player: ServerPlayer, attacker: Entity?) {
         super.onDeath(player, attacker)
@@ -105,8 +141,8 @@ class SpleefInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gameH
         val box = MapUtil.readBox(map.requireProperty("snow-area"))
 
         for (pos in BlockPos.betweenClosed(box.first(), box.second())) {
-            if (level.getBlockState(pos).isOf(Blocks.SNOW_BLOCK)) {
-                level.setBlockAndUpdate(pos, air)
+            if (breakableBlocks.contains(level.getBlockState(pos).block)) {
+                level.setBlock(pos, air, Block.UPDATE_CLIENTS or Block.UPDATE_SUPPRESS_DROPS)
             }
         }
 

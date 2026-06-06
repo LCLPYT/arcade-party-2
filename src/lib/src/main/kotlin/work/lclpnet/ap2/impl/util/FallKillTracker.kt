@@ -43,7 +43,7 @@ class FallKillTracker(
 
         for (player in participants) {
             // safely on the ground means the fall is over -> drop any latched killer
-            if (OnGroundDetector.isOnGroundServer(player) && !player.isInLava) {
+            if (OnGroundDetector.isOnGroundServer(player) && !player.isInLava && !player.isInPowderSnow) {
                 killers.remove(player.uuid)
                 continue
             }
