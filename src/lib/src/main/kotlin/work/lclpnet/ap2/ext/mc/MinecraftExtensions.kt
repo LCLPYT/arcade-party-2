@@ -16,9 +16,14 @@ import net.minecraft.world.level.Level
 import net.minecraft.world.level.block.Block
 import work.lclpnet.ap2.impl.util.ItemHelper
 
-fun Level.setBlock(pos: BlockPos, block: Block) = setBlockAndUpdate(
+fun Level.setBlock(
+    pos: BlockPos,
+    block: Block,
+    updateFlags: Int = Block.UPDATE_NEIGHBORS or Block.UPDATE_CLIENTS,
+) = setBlock(
     pos,
-    block.defaultBlockState()
+    block.defaultBlockState(),
+    updateFlags
 )
 
 fun <T : ParticleOptions> ServerLevel.spawnParticles(
@@ -41,9 +46,13 @@ fun <T : ParticleOptions> ServerLevel.spawnParticles(
     speed
 )
 
-fun ServerLevel.setBlocks(blocks: Iterable<BlockPos>, block: Block) {
+fun ServerLevel.setBlocks(
+    blocks: Iterable<BlockPos>,
+    block: Block,
+    updateFlags: Int = Block.UPDATE_NEIGHBORS or Block.UPDATE_CLIENTS,
+) {
     for (pos in blocks) {
-        setBlock(pos, block)
+        setBlock(pos, block, updateFlags)
     }
 }
 
