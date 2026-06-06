@@ -298,9 +298,7 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
 
         val renderer = rendererFor(player)
 
-        if (renderer != null) {
-            capsules.displayCapsuleButtons(renderer)
-        }
+        capsules.displayCapsuleButtons(renderer)
     }
 
     private fun eliminateButtonMaster() {
@@ -413,7 +411,7 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
         }
     }
 
-    override fun onEliminated(player: ServerPlayer?) {
+    override fun onEliminated(player: ServerPlayer) {
         super.onEliminated(player)
 
         if (winManager.isGameOver || gameState == GameState.SEARCHING_BUTTON) return
@@ -421,7 +419,7 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
         beginNextRound()
     }
 
-    fun rendererFor(player: ServerPlayer): ApSceneRenderer? {
+    fun rendererFor(player: ServerPlayer): ApSceneRenderer {
         val dynamicEntityManager = dynamicEntityManager
 
         val mountContext = PlayerMountContext(level, dynamicEntityManager, player.uuid)

@@ -3,6 +3,7 @@ package work.lclpnet.ap2.game.spleef
 import net.minecraft.ChatFormatting
 import net.minecraft.core.BlockPos
 import net.minecraft.core.component.DataComponents
+import net.minecraft.core.particles.ParticleTypes
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.sounds.SoundSource
@@ -17,19 +18,18 @@ import net.minecraft.world.level.block.state.BlockState
 import org.json.JSONArray
 import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.stats.CommonStats
-import work.lclpnet.ap2.ext.gainKill
-import work.lclpnet.ap2.ext.inWholeTicks
-import work.lclpnet.ap2.ext.logger
+import work.lclpnet.ap2.ext.*
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.mc.unbreakable
-import work.lclpnet.ap2.ext.trackDistanceMoved
 import work.lclpnet.ap2.impl.game.EliminationGameInstance
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.util.FallKillTracker
+import work.lclpnet.ap2.impl.util.ParticleHelper
 import work.lclpnet.ap2.impl.util.SoundHelper
 import work.lclpnet.game.impl.prot.ProtectionTypes
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess
 import work.lclpnet.kibu.hook.level.BlockModificationHooks
+import work.lclpnet.kibu.hook.util.OnGroundDetector
 import work.lclpnet.kibu.scheduler.Ticks
 import kotlin.time.Duration.Companion.seconds
 
@@ -79,7 +79,7 @@ class SpleefInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gameH
     override fun go() {
         gameHandle.protect { config ->
             ProtectionTypes.BREAK_BLOCKS.allow(config) { entity, pos ->
-                breakableBlocks.contains(entity.level().getBlockState(pos).block)
+                isBreakable(entity.level().getBlockState(pos))
             }
 
             ProtectionTypes.ALLOW_DAMAGE.allow(config) { _, damageSource ->
@@ -113,6 +113,33 @@ class SpleefInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gameH
 
             player.hurtServer(level, source, player.health)
         }
+        
+        runEveryTick {
+            checkValidPositions()
+        }
+    }
+
+    /**
+     * Checks that every player stays only on breakable blocks at all times.
+     */
+    fun checkValidPositions() {
+        if (winManager.isGameOver) return
+        
+        for (player in players()) {
+            if (!OnGroundDetector.isOnGroundServer(player) || player.isInLava || player.isInPowderSnow) continue
+
+            val box = player.boundingBox.setMinY(player.y - 0.02).setMaxY(player.y + 1e-5)
+
+            for (pos in BlockPos.betweenClosed(box)) {
+                val state = level.getBlockState(pos)
+
+                if (state.getCollisionShape(level, pos).isEmpty) continue
+
+                if (!isBreakable(state)) {
+                    eliminate(player)
+                }
+            }
+        }
     }
 
     private fun isDamageAllowed(damageSource: DamageSource): Boolean = damageSource.isOf(DamageTypes.LAVA)
@@ -136,18 +163,29 @@ class SpleefInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gameH
         killTracker.forget(player)
     }
 
+    override fun onEliminated(player: ServerPlayer) {
+        super.onEliminated(player)
+
+        SoundHelper.playSoundAt(player, SoundEvents.GENERIC_EXPLODE.value(), SoundSource.PLAYERS, 1f, 0f)
+        ParticleHelper.spawnParticleAt(player, ParticleTypes.LAVA, 100, 0.5, 0.5, 0.5, 0.2)
+    }
+
     private fun removeBlocks() {
         val air = Blocks.AIR.defaultBlockState()
         val box = MapUtil.readBox(map.requireProperty("snow-area"))
 
         for (pos in BlockPos.betweenClosed(box.first(), box.second())) {
-            if (breakableBlocks.contains(level.getBlockState(pos).block)) {
+            val state = level.getBlockState(pos)
+
+            if (isBreakable(state)) {
                 level.setBlock(pos, air, Block.UPDATE_CLIENTS or Block.UPDATE_SUPPRESS_DROPS)
             }
         }
 
-        SoundHelper.playSound(gameHandle.server, SoundEvents.WITHER_DEATH, SoundSource.AMBIENT, 0.8f, 1f)
+        playSound(SoundEvents.WITHER_DEATH, SoundSource.AMBIENT, 0.8f, 1f)
     }
+
+    private fun isBreakable(state: BlockState): Boolean = breakableBlocks.contains(state.block)
 
     private fun giveShovelsToPlayers() {
         val translations = gameHandle.translations
