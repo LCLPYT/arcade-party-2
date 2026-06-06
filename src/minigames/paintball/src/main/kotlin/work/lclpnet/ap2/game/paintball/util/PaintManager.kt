@@ -36,19 +36,25 @@ class PaintManager(
     private val dyeManager = DyeBlockManager(leve)
     private var frozen = false
 
+    /**
+     * Invoked for every block successfully painted by a player. The second argument indicates whether the block
+     * was repainted, meaning it previously belonged to a different (enemy) team.
+     */
+    var onPaint: ((player: ServerPlayer, repainted: Boolean) -> Unit)? = null
+
     init {
         dyeManager.init(teams.map { it.key() })
     }
 
     fun getPaintBulletState(team: DyeTeamKey): BlockState = team.getConcreteBlock().defaultBlockState()
 
-    fun replace(pos: BlockPos, target: DyeTeamKey): Boolean {
+    fun replace(pos: BlockPos, target: DyeTeamKey, painter: ServerPlayer? = null): Boolean {
         val current = leve.getBlockState(pos)
         val paintable = dyeManager.paintable(current.block) ?: return false
-        return replace(pos, current, paintable, target)
+        return replace(pos, current, paintable, target, painter)
     }
 
-    fun replace(pos: BlockPos, current: BlockState, paintable: Paintable, targetTeam: DyeTeamKey): Boolean {
+    fun replace(pos: BlockPos, current: BlockState, paintable: Paintable, targetTeam: DyeTeamKey, painter: ServerPlayer? = null): Boolean {
         if (frozen) return false
 
         if (teams.teamBaseAt(pos).map { it.key() != targetTeam }.orElse(false) ?: false) return false
@@ -58,6 +64,10 @@ class PaintManager(
         val prevTeam = getTeam(current.block)
         if (prevTeam != null) addCount(prevTeam, -1)
         addCount(targetTeam, 1)
+
+        if (painter != null) {
+            onPaint?.invoke(painter, prevTeam != null && prevTeam != targetTeam)
+        }
 
         return true
     }
@@ -120,7 +130,7 @@ class PaintManager(
         val access = explosion as ServerExplosionAccessor
 
         for (affectedPos in access.invokeCalculateExplodedPositions()) {
-            replace(affectedPos, team.key())
+            replace(affectedPos, team.key(), player)
         }
 
         access.invokeHurtEntities()

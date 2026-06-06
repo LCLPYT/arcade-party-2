@@ -20,7 +20,7 @@ import work.lclpnet.ap2.impl.util.SoundHelper
 private const val HEAL_PERCENT = 0.75f
 private const val ABSORPTION_AMOUNT = 2f
 
-class MedKitItem : SpecialItem {
+class MedKitItem(private val onUsed: (ServerPlayer) -> Unit) : SpecialItem {
 
     override fun id() = "med_kit"
 
@@ -43,5 +43,7 @@ class MedKitItem : SpecialItem {
 
         SoundHelper.playSoundAt(player, SoundEvents.EVOKER_CAST_SPELL, SoundSource.PLAYERS, 0.5f, 1f)
         ParticleHelper.spawnParticleAt(player, ParticleTypes.HEART, 50, 1.0, 1.0, 1.0, 0.0)
+
+        onUsed(player)
     }
 }

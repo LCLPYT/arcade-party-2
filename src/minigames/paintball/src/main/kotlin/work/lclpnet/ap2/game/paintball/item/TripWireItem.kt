@@ -47,7 +47,8 @@ class TripWireItem(
     private val participants: Participants,
     private val world: ServerLevel,
     private val teams: PaintballTeams,
-    private val paintManager: PaintManager
+    private val paintManager: PaintManager,
+    private val onUsed: (ServerPlayer) -> Unit
 ) : SpecialItem {
 
     private val tripwires = HashSet<Tripwire>()
@@ -88,6 +89,8 @@ class TripWireItem(
         }
 
         stack.consume(1, player)
+
+        onUsed(player)
 
         val length = opposingHit.location.subtract(pos).length()
 

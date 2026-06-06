@@ -18,5 +18,9 @@
   "game.ap2.paintball.item.ink_pack.desc": "Reloads the current ink gun completely",
   "game.ap2.paintball.item.tripwire": "Tripwire",
   "game.ap2.paintball.item.tripwire.desc": "Place on a wall to setup an explosive trap",
-  "game.ap2.paintball.item.tripwire.too_long": "There is no opposing wall nearby"
+  "game.ap2.paintball.item.tripwire.too_long": "There is no opposing wall nearby",
+  "game.ap2.paintball.stat.score": "Blocks painted",
+  "game.ap2.paintball.stat.total_blocks_painted": "Total blocks painted",
+  "game.ap2.paintball.stat.blocks_repainted": "Blocks repainted",
+  "game.ap2.paintball.stat.special_items_used": "Special items used"
 }

@@ -42,7 +42,8 @@ class InkGrenadeItem(
     private val paintGunManager: PaintGunManager,
     private val scene: Scene,
     private val random: Random,
-    private val teams: PaintballTeams
+    private val teams: PaintballTeams,
+    private val onUsed: (ServerPlayer) -> Unit
 ) : SpecialItem {
 
     private val bulletSettings = PaintGun.BulletSettings(
@@ -88,6 +89,8 @@ class InkGrenadeItem(
         playSound(world, SoundEvents.END_PORTAL_FRAME_FILL, SoundSource.PLAYERS, 0.8f, 1.2f)
 
         stack.consume(1, player)
+
+        onUsed(player)
     }
 
     private fun spawnObject(player: ServerPlayer) {

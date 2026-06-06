@@ -25,6 +25,10 @@ import work.lclpnet.ap2.api.game.team.DyeTeamKey
 import work.lclpnet.ap2.api.game.team.Team
 import work.lclpnet.ap2.api.map.MapBootstrap
 import work.lclpnet.ap2.api.map.MapBootstrapFunction
+import work.lclpnet.ap2.api.stats.CommonStats.DamageDealt
+import work.lclpnet.ap2.api.stats.CommonStats.Deaths
+import work.lclpnet.ap2.api.stats.CommonStats.KillDeathRatio
+import work.lclpnet.ap2.api.stats.CommonStats.Kills
 import work.lclpnet.ap2.api.util.world.AdjacentBlocks
 import work.lclpnet.ap2.api.util.world.BlockPredicate
 import work.lclpnet.ap2.api.util.world.WorldScanner
@@ -84,6 +88,11 @@ class PaintballInstance(gameHandle: MiniGameHandle) : TeamGameInstance(gameHandl
         Ordering.DESCENDING,
         "game.ap2.paintball.blocks_painted"
     )
+    private val stats = PaintballStats(createStats(
+        data,
+        /* teamStats = */ listOf(TotalBlocksPainted, BlocksRepainted, Kills, Deaths, DamageDealt, SpecialItemsUsed),
+        /* memberStats = */ listOf(TotalBlocksPainted, BlocksRepainted, Kills, Deaths, KillDeathRatio, DamageDealt, SpecialItemsUsed)
+    ), teamManager)
     private val random = Random()
     private val movementObserver = TickMovementObserver(
         ChunkedCollisionDetector(),
@@ -123,6 +132,7 @@ class PaintballInstance(gameHandle: MiniGameHandle) : TeamGameInstance(gameHandl
         val commons = commons(map, world)
 
         paintManager = PaintManager(world, teams, teamManager, data, bounds)
+        paintManager.onPaint = stats::blockPainted
         paintGunManager = PaintGunManager(
             world, scene, paintManager, teams, random, gameHandle.participants,
             gameHandle.translations, commons.debugController(), winManager::isGameOver
@@ -212,10 +222,10 @@ class PaintballInstance(gameHandle: MiniGameHandle) : TeamGameInstance(gameHandl
             validSpawn,
             commons(map, world).debugController()
         ) { r -> r.apply {
-            register(MedKitItem(), 0.25f)
-            register(InkGrenadeItem(paintGunManager, scene, random, teams), 0.5f)
-            register(InkPackItem(paintGunManager), 0.15f)
-            register(TripWireItem(gameHandle.translations, gameHandle.participants, world, teams, paintManager), 0.15f)
+            register(MedKitItem(stats::specialItemUsed), 0.25f)
+            register(InkGrenadeItem(paintGunManager, scene, random, teams, stats::specialItemUsed), 0.5f)
+            register(InkPackItem(paintGunManager, stats::specialItemUsed), 0.15f)
+            register(TripWireItem(gameHandle.translations, gameHandle.participants, world, teams, paintManager, stats::specialItemUsed), 0.15f)
         }}
 
         specialItems.isMarkGlowing = true
@@ -435,15 +445,34 @@ class PaintballInstance(gameHandle: MiniGameHandle) : TeamGameInstance(gameHandl
         }
 
         if ((player.health - amount) <= 0) {
+            trackDamage(player, source, player.health)
             onLethalDamage(source, player, amount)
             return false
         }
 
+        trackDamage(player, source, amount)
+
         return true
+    }
+
+    private fun trackDamage(victim: ServerPlayer, source: DamageSource, applied: Float) {
+        if (applied <= 0f) return
+
+        val attacker = source.entity as? ServerPlayer ?: return
+
+        if (attacker === victim || teamManager.areTeamMates(attacker, victim)) return
+
+        stats.damageDealt(attacker, applied)
     }
 
     private fun onLethalDamage(source: DamageSource, player: ServerPlayer, amount: Float) {
         player.combatTracker.recordDamage(source, amount)
+
+        val killer = source.entity as? ServerPlayer
+
+        if (killer != null && killer !== player && !teamManager.areTeamMates(killer, player)) {
+            stats.onKill(player, killer)
+        }
 
         gameHandle.deathMessages.getDeathMessage(player, source)
             .sendTo(PlayerLookup.all(gameHandle.server))

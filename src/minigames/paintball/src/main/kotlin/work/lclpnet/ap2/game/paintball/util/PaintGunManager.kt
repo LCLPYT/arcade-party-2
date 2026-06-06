@@ -182,7 +182,7 @@ class PaintGunManager(
 
             val inRange = dx * dx + dy * dy + dz * dz <= effectiveRadius * effectiveRadius
 
-            if (inRange && tryPaint(key, pos, x, y, z) && shouldCount) {
+            if (inRange && tryPaint(key, pos, x, y, z, owner) && shouldCount) {
                 bullet.onHit()
             }
         }
@@ -202,8 +202,8 @@ class PaintGunManager(
         }
     }
 
-    private fun tryPaint(teamKey: DyeTeamKey, blockPos: BlockPos, x: Double, y: Double, z: Double): Boolean {
-        if (!paintManager.replace(blockPos, teamKey)) return false
+    private fun tryPaint(teamKey: DyeTeamKey, blockPos: BlockPos, x: Double, y: Double, z: Double, painter: ServerPlayer): Boolean {
+        if (!paintManager.replace(blockPos, teamKey, painter)) return false
 
         world.sendParticles(DustParticleOptions(teamKey.color(), 0.5f), x, y, z, 10, 0.2, 0.2, 0.2, 0.1)
 
