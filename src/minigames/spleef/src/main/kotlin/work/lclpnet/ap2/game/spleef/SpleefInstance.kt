@@ -2,6 +2,7 @@ package work.lclpnet.ap2.game.spleef
 
 import net.minecraft.ChatFormatting
 import net.minecraft.core.BlockPos
+import net.minecraft.core.Vec3i
 import net.minecraft.core.component.DataComponents
 import net.minecraft.core.particles.ParticleTypes
 import net.minecraft.server.level.ServerPlayer
@@ -21,12 +22,15 @@ import work.lclpnet.ap2.api.stats.CommonStats
 import work.lclpnet.ap2.ext.*
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.mc.unbreakable
+import work.lclpnet.ap2.game.teleportToRandomSpawns
 import work.lclpnet.ap2.impl.game.EliminationGameInstance
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.util.FallKillTracker
 import work.lclpnet.ap2.impl.util.ParticleHelper
 import work.lclpnet.ap2.impl.util.SoundHelper
+import work.lclpnet.gaco.ds.BlockBox
 import work.lclpnet.game.impl.prot.ProtectionTypes
+import work.lclpnet.game.map.MapUtils
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess
 import work.lclpnet.kibu.hook.level.BlockModificationHooks
 import work.lclpnet.kibu.hook.util.OnGroundDetector
@@ -46,22 +50,17 @@ class SpleefInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gameH
     )
     private lateinit var killTracker: FallKillTracker
     private lateinit var breakableBlocks: Set<Block>
+    private lateinit var snowArea: BlockBox
     private var frost = false
 
     init {
         useSurvivalMode()
     }
 
-    override fun prepare() {
+    private fun readMapProps() {
         frost = map.properties.optBoolean("frost", false)
         breakableBlocks = readBreakableBlocks()
-
-        useSmoothDeath()
-        useNoHealing()
-        useRemainingPlayersDisplay()
-
-        trackSurvivalTime(stats)
-        trackDistanceMoved(stats)
+        snowArea = MapUtil.readBox(map.requireProperty("snow-area"))
     }
 
     private fun readBreakableBlocks(): Set<Block> {
@@ -74,6 +73,26 @@ class SpleefInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gameH
         }
 
         return stateList.map { it.block }.toSet()
+    }
+
+    override fun prepare() {
+        readMapProps()
+        teleportPlayers()
+
+        useSmoothDeath()
+        useNoHealing()
+        useRemainingPlayersDisplay()
+
+        trackSurvivalTime(stats)
+        trackDistanceMoved(stats)
+    }
+
+    private fun teleportPlayers() {
+        val scanBox = snowArea.translate(Vec3i(0, 1, 0))
+        val scanStart = BlockPos.containing(MapUtils.getSpawnPosition(map))
+        val spacing = map.properties.optNumber("spawn-spacing", 8.0).toDouble()
+
+        teleportToRandomSpawns(scanBox, listOf(scanStart), spacing)
     }
 
     override fun go() {
@@ -172,9 +191,8 @@ class SpleefInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gameH
 
     private fun removeBlocks() {
         val air = Blocks.AIR.defaultBlockState()
-        val box = MapUtil.readBox(map.requireProperty("snow-area"))
 
-        for (pos in BlockPos.betweenClosed(box.first(), box.second())) {
+        for (pos in BlockPos.betweenClosed(snowArea.first(), snowArea.second())) {
             val state = level.getBlockState(pos)
 
             if (isBreakable(state)) {

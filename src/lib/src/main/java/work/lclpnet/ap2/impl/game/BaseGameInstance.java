@@ -470,7 +470,7 @@ public abstract class BaseGameInstance implements MiniGameInstance {
      * If the {@link GameCommons} already need to be accessed during bootstrap, {@link #commons(GameMap, ServerLevel)} should be used instead.
      * @return The {@link GameCommons} singleton in scope of this game instance.
      */
-    protected final GameCommons commons() {
+    public final GameCommons commons() {
         return commons(getMap(), getLevel());
     }
 
