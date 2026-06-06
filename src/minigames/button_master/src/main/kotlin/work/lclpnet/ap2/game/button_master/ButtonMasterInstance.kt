@@ -26,14 +26,13 @@ import net.minecraft.world.scores.Team
 import work.lclpnet.ap2.*
 import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.map.MapBootstrap
+import work.lclpnet.ap2.api.stats.CommonStats
 import work.lclpnet.ap2.api.util.heads.PlayerHead
-import work.lclpnet.ap2.ext.allPlayers
+import work.lclpnet.ap2.ext.*
 import work.lclpnet.ap2.ext.mc.isIn
 import work.lclpnet.ap2.ext.mc.resetAttribute
 import work.lclpnet.ap2.ext.mc.setAttribute
 import work.lclpnet.ap2.ext.mc.teleport
-import work.lclpnet.ap2.ext.players
-import work.lclpnet.ap2.ext.translate
 import work.lclpnet.ap2.impl.game.EliminationGameInstance
 import work.lclpnet.ap2.impl.map.schema.SchemaHolder
 import work.lclpnet.ap2.impl.util.ApRegistries
@@ -51,6 +50,7 @@ import work.lclpnet.game.map.GameMap
 import work.lclpnet.game.util.BossBarTimer
 import work.lclpnet.game.util.ResetWorldModifier
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks
+import work.lclpnet.kibu.hook.player.PlayerMoveCallback
 import work.lclpnet.kibu.scheduler.Ticks
 import work.lclpnet.kibu.scheduler.api.TaskHandle
 import work.lclpnet.kibu.structure.BlockStructure
@@ -80,6 +80,11 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
 
     val schemaHolder: SchemaHolder<ButtonMasterSchema> = useSchema(ButtonMasterSchema::class.java)
     val validPositions = mutableListOf<BlockPos>()
+
+    private val stats = createStats(ButtonsFound, Escapes, CommonStats.DistanceMoved, ButtonsMissed)
+    private val bmStats = ButtonMasterStats(stats)
+    private lateinit var missDetector: ButtonMissDetector
+    private var escapesRecorded = false
 
     val movementBlocker = SimpleMovementBlocker(gameHandle.scheduler).also {
         it.setModifySpeedAttribute(false)
@@ -111,6 +116,7 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
 
     override fun prepare() {
         capsules = ButtonMasterCapsules(world, schemaHolder.get(), capsuleSchematic, commons())
+        missDetector = ButtonMissDetector(world, bmStats)
 
         dynamicEntityManager = DynamicEntityManager(world)
         dynamicEntityManager.init(gameHandle.scheduler, gameHandle.hooks)
@@ -194,6 +200,15 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
             onUseBlock(entity, result)
         }
 
+        PlayerMoveCallback.HOOK.registerWith(gameHandle.hooks) { player, from, to ->
+            trackDistanceMoved(stats, player, from, to)
+            false
+        }
+
+        runEvery(BUTTON_SIGHT_CHECK_INTERVAL.ticks) {
+            checkButtonVisibility()
+        }
+
         eliminateBelowCriticalHeight()
     }
 
@@ -244,6 +259,9 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
     }
 
     fun becomeButtonMaster(player: ServerPlayer) {
+        bmStats.buttonFound(player)
+        escapesRecorded = false
+
         buttonMasterUuid = player.uuid
         gameState = GameState.CHOOSE_EJECT
         taskBar?.isVisible = false
@@ -298,6 +316,8 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
 
 
     fun beginNextRound() {
+        recordEscapes()
+
         buttonMasterUuid = null
         ejectedPlayer = null
 
@@ -324,6 +344,8 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
     fun nextRound() {
         gameState = GameState.SEARCHING_BUTTON
         taskBar?.isVisible = true
+
+        missDetector.reset()
 
         capsules.removeExcessCapsules(players().count() - 1)
 
@@ -372,6 +394,23 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
         SoundHelper.playSound(world, SoundEvents.BELL_BLOCK, SoundSource.BLOCKS, 1f, 1.7f)
 
         translate("game.ap2.button_master.revealed").formatted(ChatFormatting.AQUA).sendTo(allPlayers())
+    }
+
+    private fun checkButtonVisibility() {
+        if (gameState != GameState.SEARCHING_BUTTON) return
+
+        val buttonPos = currentButtonPos ?: return
+
+        missDetector.update(buttonPos, players())
+    }
+
+    private fun recordEscapes() {
+        if (escapesRecorded) return
+        escapesRecorded = true
+
+        for (uuid in capsules.players.values) {
+            players().getParticipant(uuid).ifPresent(bmStats::escaped)
+        }
     }
 
     override fun onEliminated(player: ServerPlayer?) {
