@@ -129,6 +129,10 @@ public class GameCommons {
     }
 
     public Action<Runnable> scheduleWorldBorderShrink(long delayTicks, long durationTicks, long finalDelayTicks, Random random) {
+        return scheduleWorldBorderShrink(readWorldBorderConfig(), delayTicks, durationTicks, finalDelayTicks, random);
+    }
+
+    public Action<Runnable> scheduleWorldBorderShrink(WorldBorderConfig config, long delayTicks, long durationTicks, long finalDelayTicks, Random random) {
         TaskScheduler scheduler = gameHandle.getScheduler();
 
         var hook = HookFactory.createArrayBacked(Runnable.class, callbacks -> () -> {
@@ -137,27 +141,29 @@ public class GameCommons {
             }
         });
 
-        WorldBorderConfig config = readWorldBorderConfig();
-
-        scheduler.timeout(() -> {
-            WorldBorder worldBorder = setupWorldBorder(config);
-
-            if (config.randomCenter()) {
-                var randomizer = new WorldBorderRandomizer(map, debugController);
-
-                randomizer.randomizeCenter(worldBorder, config, random);
-            }
-
-            worldBorder.lerpSizeBetween(worldBorder.getSize(), config.minSize(), durationTicks, world.getGameTime());
-
-            for (ServerPlayer player : PlayerLookup.level(world)) {
-                ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.WITHER_DEATH, SoundSource.HOSTILE, 1, 0);
-            }
-        }, delayTicks);
+        scheduler.timeout(() -> startWorldBorderShrink(config, durationTicks, random), delayTicks);
 
         scheduler.timeout(() -> hook.invoker().run(), delayTicks + durationTicks + finalDelayTicks);
 
         return Action.create(hook);
+    }
+
+    public WorldBorder startWorldBorderShrink(WorldBorderConfig config, long durationTicks, Random random) {
+        WorldBorder worldBorder = setupWorldBorder(config);
+
+        if (config.randomCenter()) {
+            var randomizer = new WorldBorderRandomizer(map, debugController);
+
+            randomizer.randomizeCenter(worldBorder, config, random);
+        }
+
+        worldBorder.lerpSizeBetween(worldBorder.getSize(), config.minSize(), durationTicks, world.getGameTime());
+
+        for (ServerPlayer player : PlayerLookup.level(world)) {
+            ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.WITHER_DEATH, SoundSource.HOSTILE, 1, 0);
+        }
+
+        return worldBorder;
     }
 
     public WorldBorderConfig readWorldBorderConfig() {

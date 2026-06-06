@@ -9,6 +9,8 @@ import net.minecraft.sounds.SoundEvents
 import net.minecraft.sounds.SoundSource
 import net.minecraft.world.entity.boss.enderdragon.EnderDragon
 import net.minecraft.world.entity.boss.enderdragon.phases.EnderDragonPhase
+import net.minecraft.world.level.block.Block
+import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.border.WorldBorder
 import net.minecraft.world.level.dimension.end.EnderDragonFight
 import net.minecraft.world.level.gamerules.GameRules
@@ -19,7 +21,10 @@ import work.lclpnet.ap2.api.stats.CommonStats.DistanceMoved
 import work.lclpnet.ap2.api.stats.CommonStats.TimeSurvived
 import work.lclpnet.ap2.core.type.ApDragonFight
 import work.lclpnet.ap2.ext.*
+import work.lclpnet.ap2.ext.mc.rangeTo
+import work.lclpnet.ap2.ext.mc.setBlocks
 import work.lclpnet.ap2.impl.game.EliminationGameInstance
+import work.lclpnet.ap2.impl.game.GameCommons
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker
 import work.lclpnet.ap2.impl.util.world.WorldBorderUtil
 import work.lclpnet.game.impl.prot.ProtectionTypes
@@ -32,12 +37,18 @@ import work.lclpnet.kibu.hook.level.BlockModificationHooks
 import java.util.*
 import java.util.concurrent.CompletableFuture
 import kotlin.math.abs
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 
 const val RANDOM_ITEM_DELAY_TICKS = 70
 private const val BUILD_HEIGHT = 25
 private const val BUILD_OUTER_RADIUS = 10
 private const val BORDER_WARN_DISTANCE = 2.0
 private const val BORDER_WARN_DELAY_MS = 2000L
+private val BORDER_SHRINK_DELAY = 3.minutes
+private val BORDER_SHRINK_DURATION = 2.minutes
+private val REMOVE_BLOCKS_AFTER_BORDER_DONE_DELAY = 45.seconds
+private const val BORDER_MIN_SIZE = 3
 
 class PillarBattleInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gameHandle), MapBootstrap {
 
@@ -47,6 +58,7 @@ class PillarBattleInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
     }
     private var pillars: PbSetup.PlacementResult? = null
     private val warnings = HashMap<UUID, Warning>()
+    private var borderShrinking = false
     private lateinit var border: WorldBorder
     private val stats = createStats(TimeSurvived, DistanceMoved, BlocksPlaced)
 
@@ -156,7 +168,61 @@ class PillarBattleInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
 
         handleEnderDragonAi(hooks)
 
-        runEveryTick { warnWorldBorder() }
+        runEveryTick {
+            if (borderShrinking) {
+                cancel()
+            } else {
+                warnWorldBorder()
+            }
+        }
+
+        runAfter(BORDER_SHRINK_DELAY) {
+            startBorderShrink()
+
+            runAfter(BORDER_SHRINK_DURATION + REMOVE_BLOCKS_AFTER_BORDER_DONE_DELAY) {
+                removeBlocks()
+            }
+        }
+    }
+
+    private fun startBorderShrink() {
+        val pillars = pillars ?: return
+        borderShrinking = true
+
+        val center = pillars.center
+        val diameter = (pillars.radius + BUILD_OUTER_RADIUS) * 2 + 1
+
+        val config = GameCommons.WorldBorderConfig(
+            center.x, center.z,
+            diameter,
+            BORDER_MIN_SIZE,
+            false,
+            true
+        )
+
+        val worldBorder = commons().startWorldBorderShrink(config, BORDER_SHRINK_DURATION.inWholeTicks, random)
+
+        for (player in gameHandle.participants) {
+            WorldBorderUtil.init(player, worldBorder)
+        }
+
+        translate("game.ap2.pillar_battle.border_shrinking")
+            .formatted(ChatFormatting.RED)
+            .sendTo(players())
+    }
+
+    private fun removeBlocks() {
+        val pillars = pillars ?: return
+
+        val center = pillars.center.center
+        val radius = BORDER_MIN_SIZE / 2f + 2
+
+        val min = BlockPos.containing(center.x - radius, level.minY.toDouble(), center.z - radius)
+        val max = BlockPos.containing(center.x + radius, level.maxY.toDouble(), center.z + radius)
+
+        level.setBlocks(min..max, Blocks.AIR, updateFlags = Block.UPDATE_CLIENTS or Block.UPDATE_SUPPRESS_DROPS)
+
+        playSound(SoundEvents.WITHER_DEATH, SoundSource.AMBIENT, 0.8f, 1f)
     }
 
     private fun handleEnderDragonAi(hooks: HookRegistrar) {
