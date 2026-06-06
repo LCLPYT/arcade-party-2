@@ -75,19 +75,18 @@ val Exploded = Stat("exploded", 0, higherIsBetter = false)
 class MinefieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle), MapBootstrapFunction {
     
     private val data = OrderedDataContainer(PlayerRef::create)
-
-    val inGoal = mutableSetOf<UUID>()
     private val stats = createStats(Exploded, CommonStats.DistanceMoved)
+    val inGoal = mutableSetOf<UUID>()
+    val entries = mutableMapOf<UUID, Entry>()
+    lateinit var taskBar: TranslatedBossBar
+    lateinit var spawnShape: BlockShape
+    lateinit var goalShape: BlockShape
+    lateinit var dynamicEntityManager: DynamicEntityManager
+    lateinit var visibility: VisibilityHandler
     var gameEnd = -1
-    var taskBar: TranslatedBossBar? = null
-    var spawnShape: BlockShape? = null
-    var goalShape: BlockShape? = null
     var goalDistance: Double? = null
     var spawnYaw = 0f
-    val entries = mutableMapOf<UUID, Entry>()
-    var dynamicEntityManager: DynamicEntityManager? = null
-    var visibility: VisibilityHandler? = null
-    
+
     override fun getData() = data
 
     override fun bootstrapWorld(world: ServerLevel, map: GameMap) {
@@ -99,7 +98,7 @@ class MinefieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
         spawnShape = readShape("spawn-shape")
         goalShape = readShape("goal-shape")
         spawnYaw = MapUtil.readAngle(map.properties.optNumber("spawn-yaw", 0))
-        goalDistance = sqrt(goalShape!!.bounds().squaredDistanceTo(startAnchorPos))
+        goalDistance = sqrt(goalShape.bounds().squaredDistanceTo(startAnchorPos))
 
         val defaultPressurePlates = JSONArray()
         defaultPressurePlates.put(BlockStateUtils.stringify(Blocks.STONE_PRESSURE_PLATE.defaultBlockState()))
@@ -108,7 +107,9 @@ class MinefieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
         MapUtil.readBlockStates(pressurePlatesJson, pressurePlates, gameHandle.logger)
 
         val predicate = BlockPredicate.and({
-            scanShape.contains(it) && !spawnShape!!.contains(it) && !goalShape!!.contains(it)
+            scanShape.contains(it)
+                    && !spawnShape.contains(it)
+                    && !goalShape.contains(it)
                     && world.getBlockState(it).getCollisionShape(world, it, CollisionContext.empty()).isEmpty
         }, WalkableBlockPredicate(world))
 
@@ -147,7 +148,7 @@ class MinefieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
 
     override fun prepare() {
         for (player in players()) {
-            player.teleport(spawnShape!!.randomPos(Random.asJavaRandom()))
+            player.teleport(spawnShape.randomPos(Random.asJavaRandom()))
         }
 
         taskBar = useTaskDisplay()
@@ -155,7 +156,7 @@ class MinefieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
         setupTeam()
 
         dynamicEntityManager = DynamicEntityManager(world)
-        dynamicEntityManager!!.init(gameHandle.scheduler, gameHandle.hooks)
+        dynamicEntityManager.init(gameHandle.scheduler, gameHandle.hooks)
     }
 
     fun setupTeam() {
@@ -164,12 +165,12 @@ class MinefieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
         team.setCollisionRule(Team.CollisionRule.NEVER)
         scoreboardManager.joinTeam(gameHandle.getParticipants(), team)
 
-        val visibilityManager = VisibilityManager(team, Visibility.VISIBLE)
+        val visibilityManager = VisibilityManager(team, Visibility.PARTIALLY_VISIBLE)
         visibility = VisibilityHandler(visibilityManager, gameHandle.translations, gameHandle.participants)
 
-        visibility!!.init(gameHandle.getHooks())
+        visibility.init(gameHandle.getHooks())
 
-        visibility!!.giveItems()
+        visibility.giveItems()
     }
 
     override fun go() {
@@ -181,7 +182,7 @@ class MinefieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
 
                 entry(player).update(player)
 
-                if (goalShape!!.contains(player.position())) {
+                if (goalShape.contains(player.position())) {
                     onReachGoal(player)
                 }
             }
@@ -276,9 +277,9 @@ class MinefieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
         stats.increment(player, Exploded)
 
         timeout(20) {
-            player.teleport(spawnShape!!.randomPos(Random.asJavaRandom()), spawnYaw)
+            player.teleport(spawnShape.randomPos(Random.asJavaRandom()), spawnYaw)
             gameHandle.playerUtil.resetPlayer(player)
-            visibility!!.giveItem(player)
+            visibility.giveItem(player)
         }
     }
 
@@ -291,7 +292,7 @@ class MinefieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
 
         fun update(player: ServerPlayer) {
             val pos = player.position()
-            val dist = sqrt(goalShape!!.bounds().squaredDistanceTo(pos)).coerceAtMost(goalDistance!!)
+            val dist = sqrt(goalShape.bounds().squaredDistanceTo(pos)).coerceAtMost(goalDistance!!)
 
             if (dist >= this.bestDist) return
 
@@ -347,8 +348,8 @@ class MinefieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
             this.marker = PlayerSpecificDynamicEntity(marker, player.uuid)
             this.label = PlayerSpecificDynamicEntity(label, player.uuid)
 
-            dynamicEntityManager!!.add(this.marker)
-            dynamicEntityManager!!.add(this.label)
+            dynamicEntityManager.add(this.marker)
+            dynamicEntityManager.add(this.label)
         }
 
         fun done() {
@@ -359,12 +360,12 @@ class MinefieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
 
         fun removeMarker() {
             if (marker != null) {
-                dynamicEntityManager!!.remove(marker)
+                dynamicEntityManager.remove(marker)
                 marker = null
             }
 
             if (label != null) {
-                dynamicEntityManager!!.remove(label)
+                dynamicEntityManager.remove(label)
                 label = null
             }
         }
