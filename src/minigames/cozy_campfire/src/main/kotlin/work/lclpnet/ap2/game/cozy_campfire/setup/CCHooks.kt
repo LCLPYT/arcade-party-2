@@ -44,7 +44,7 @@ class CCHooks(
     private val teamManager: TeamManager,
     private val spawnAccess: TeamSpawnAccess,
     private val translations: Translations,
-    private val args: Args
+    private val args: Args,
 ) {
 
     fun configure(config: ProtectionConfig) {
@@ -188,9 +188,12 @@ class CCHooks(
             inventory.removeItemNoUpdate(i)
         }
 
+        args.stats.onDeath(player)
+
         val killer = source.entity
+
         if (killer is ServerPlayer && killer !== player && !teamManager.areTeamMates(killer, player)) {
-            args.stats.onKill(player, killer)
+            args.stats.onKillGained(killer)
         }
     }
 
@@ -198,9 +201,11 @@ class CCHooks(
         val attacker = source.entity as? ServerPlayer ?: return
 
         if (attacker === victim || teamManager.areTeamMates(attacker, victim)) return
+
         if (!participants.isParticipating(victim) || args.baseManager.isInBase(victim)) return
 
         val applied = amount.coerceAtMost(victim.health)
+        
         if (applied <= 0f) return
 
         args.stats.addDamage(attacker, applied)

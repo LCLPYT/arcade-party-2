@@ -14,6 +14,7 @@ import work.lclpnet.ap2.ext.gainKill
 import work.lclpnet.kibu.translate.Translations
 
 val FuelAdded = Stat("fuel_added", 0f, unit = StatUnits.Seconds)
+val FuelRemaining = Stat("fuel_remaining", 0f, unit = StatUnits.Seconds)
 
 class CCStats(
     private val stats: TeamStatsManager,
@@ -26,6 +27,10 @@ class CCStats(
         stats.teams.modify(team, FuelAdded) { it + seconds }
     }
 
+    fun setRemainingFuel(team: Team, seconds: Float) {
+        stats.teams.set(team, FuelRemaining, seconds)
+    }
+
     fun addDamage(attacker: ServerPlayer, amount: Float) {
         stats.players.modify(attacker, DamageDealt) { it + amount }
 
@@ -34,17 +39,21 @@ class CCStats(
         }
     }
 
-    fun onKill(victim: ServerPlayer, killer: ServerPlayer) {
-        val victimTeam = teamManager.getTeam(victim).orElse(null) ?: return
+    fun onKillGained(killer: ServerPlayer) {
         val killerTeam = teamManager.getTeam(killer).orElse(null) ?: return
 
         gainKill(killer, stats.players, translations)
         stats.teams.increment(killerTeam, Kills)
 
+        updateKillDeathRatio(killer)
+    }
+
+    fun onDeath(victim: ServerPlayer) {
+        val victimTeam = teamManager.getTeam(victim).orElse(null) ?: return
+
         stats.players.increment(victim, Deaths)
         stats.teams.increment(victimTeam, Deaths)
 
-        updateKillDeathRatio(killer)
         updateKillDeathRatio(victim)
     }
 
