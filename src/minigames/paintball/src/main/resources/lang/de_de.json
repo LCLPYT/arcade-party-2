@@ -18,5 +18,9 @@
   "game.ap2.paintball.item.ink_pack.desc": "Lädt die aktuelle Paintball-Waffe komplett voll",
   "game.ap2.paintball.item.tripwire": "Stolperdraht",
   "game.ap2.paintball.item.tripwire.desc": "Platziere eine explosive Falle an eine Wand",
-  "game.ap2.paintball.item.tripwire.too_long": "Es gibt keine gegenseitige Wand in der Nähe"
+  "game.ap2.paintball.item.tripwire.too_long": "Es gibt keine gegenseitige Wand in der Nähe",
+  "game.ap2.paintball.stat.score": "Blöcke gefärbt",
+  "game.ap2.paintball.stat.total_blocks_painted": "Blöcke gefärbt (gesamt)",
+  "game.ap2.paintball.stat.blocks_repainted": "Blöcke übermalt",
+  "game.ap2.paintball.stat.special_items_used": "Spezialgegenstände benutzt"
 }

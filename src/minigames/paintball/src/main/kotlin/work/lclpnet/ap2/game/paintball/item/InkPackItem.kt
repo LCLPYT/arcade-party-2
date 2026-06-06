@@ -8,7 +8,10 @@ import work.lclpnet.ap2.game.paintball.util.PaintGunManager
 import work.lclpnet.ap2.impl.game.item.SpecialItem
 import work.lclpnet.ap2.impl.game.item.SpecialItemContext
 
-class InkPackItem(private val paintGunManager: PaintGunManager) : SpecialItem {
+class InkPackItem(
+    private val paintGunManager: PaintGunManager,
+    private val onUsed: (ServerPlayer) -> Unit
+) : SpecialItem {
 
     override fun id() = "ink_pack"
 
@@ -18,5 +21,6 @@ class InkPackItem(private val paintGunManager: PaintGunManager) : SpecialItem {
 
     override fun onPickedUp(player: ServerPlayer, stack: ItemStack, ctx: SpecialItemContext) {
         paintGunManager.refillPaintGun(player)
+        onUsed(player)
     }
 }
