@@ -5,9 +5,11 @@ import net.minecraft.core.BlockPos
 import net.minecraft.core.component.DataComponents
 import net.minecraft.core.particles.ParticleTypes
 import net.minecraft.server.level.ServerLevel
+import net.minecraft.server.level.ServerPlayer
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.sounds.SoundSource
 import net.minecraft.world.damagesource.DamageTypes
+import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.animal.chicken.Chicken
 import net.minecraft.world.entity.projectile.FishingHook
 import net.minecraft.world.entity.projectile.Projectile
@@ -18,20 +20,28 @@ import net.minecraft.world.item.enchantment.Enchantments
 import net.minecraft.world.level.block.Blocks
 import org.json.JSONArray
 import work.lclpnet.ap2.api.game.MiniGameHandle
+import work.lclpnet.ap2.api.stats.CommonStats.BlocksBroken
+import work.lclpnet.ap2.api.stats.CommonStats.DistanceMoved
+import work.lclpnet.ap2.api.stats.CommonStats.Kills
+import work.lclpnet.ap2.api.stats.CommonStats.TimeSurvived
 import work.lclpnet.ap2.core.hook.EntitySpawnCallback
 import work.lclpnet.ap2.core.hook.ProjectileHitEntityCallback
+import work.lclpnet.ap2.ext.gainKill
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.playSound
+import work.lclpnet.ap2.ext.trackDistanceMoved
 import work.lclpnet.ap2.ext.translate
 import work.lclpnet.ap2.game.bow_spleef.item.*
 import work.lclpnet.ap2.impl.game.EliminationGameInstance
 import work.lclpnet.ap2.impl.game.item.SpecialItems
 import work.lclpnet.ap2.impl.map.MapUtil
+import work.lclpnet.ap2.impl.util.FallKillTracker
 import work.lclpnet.ap2.impl.util.ItemHelper
 import work.lclpnet.ap2.impl.util.ItemHelper.unbreakable
 import work.lclpnet.ap2.impl.util.handler.DoubleJumpHandler
 import work.lclpnet.ap2.impl.util.handler.VisualCooldown
 import work.lclpnet.combatctl.impl.CombatStyles
+import work.lclpnet.gaco.ds.BlockBox
 import work.lclpnet.game.impl.prot.ProtectionTypes
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess
 import work.lclpnet.kibu.hook.HookFactory
@@ -50,6 +60,13 @@ fun interface Impact {
 
 class BowSpleefInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gameHandle) {
 
+    private val stats = createStats(
+        TimeSurvived,
+        Kills,
+        BlocksBroken,
+        DistanceMoved,
+    )
+    private lateinit var killTracker: FallKillTracker
     private val doubleJumpHandler: DoubleJumpHandler
     private val heavyWeightItem = HeavyWeightItem()
     private val tripleJumpItem = TripleJumpItem()
@@ -77,7 +94,7 @@ class BowSpleefInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(ga
         }
 
         gameHandle.playerUtil.setDefaultCombatStyle(
-            CombatStyles.CLASSIC.andThen({ it.setFishingRodPull(true) }, {})
+            CombatStyles.CLASSIC.andThen({ it.isFishingRodPull = true }, {})
         )
     }
 
@@ -85,6 +102,11 @@ class BowSpleefInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(ga
         useSmoothDeath()
         useNoHealing()
         useRemainingPlayersDisplay()
+
+        trackSurvivalTime(stats)
+        trackDistanceMoved(stats)
+
+        killTracker = FallKillTracker(gameHandle.participants)
 
         val hooks = gameHandle.hooks
 
@@ -114,7 +136,9 @@ class BowSpleefInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(ga
             entity is Chicken
         }
 
-        commons().whenBelowCriticalHeight().then(this::eliminate)
+        commons().whenBelowCriticalHeight().then { player ->
+            player.hurtServer(level, player.damageSources().fellOutOfWorld(), player.health)
+        }
 
         specialItems = SpecialItems.create(
             gameHandle,
@@ -140,7 +164,14 @@ class BowSpleefInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(ga
 
         // register this callback after special item setup, to execute it last (updates spawn pos mesh)
         impactHook.register { projectile, pos ->
-            removeBlocks(pos, level)
+            val broken = removeBlocks(pos, level)
+
+            val shooter = projectile.owner as? ServerPlayer
+            if (broken > 0 && shooter != null && gameHandle.participants.isParticipating(shooter)) {
+                killTracker.onAreaBroken(BlockBox.ofRadius(pos, 1), shooter)
+                stats.increment(shooter, BlocksBroken, broken)
+            }
+
             projectile.discard()
         }
     }
@@ -159,6 +190,8 @@ class BowSpleefInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(ga
 
         doubleJumpHandler.init(hooks)
         doubleJumpHandler.enable(gameHandle.participants)
+
+        killTracker.init(gameHandle.scheduler)
 
         giveBowsToPlayers()
 
@@ -188,13 +221,36 @@ class BowSpleefInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(ga
         }
     }
 
-    private fun removeBlocks(pos: BlockPos, world: ServerLevel) {
+    override fun onDeath(player: ServerPlayer, attacker: Entity?) {
+        super.onDeath(player, attacker)
+
+        val killerId = killTracker.getKiller(player)
+
+        if (killerId != null) {
+            val killer = gameHandle.server.playerList.getPlayer(killerId)
+
+            if (killer != null && killer != player) {
+                gainKill(killer, stats)
+                player.setLastHurtByPlayer(killer, 100)
+            }
+        }
+
+        killTracker.forget(player)
+    }
+
+    private fun removeBlocks(pos: BlockPos, world: ServerLevel): Int {
         val x = pos.x
         val y = pos.y
         val z = pos.z
 
+        val air = Blocks.AIR.defaultBlockState()
+        var broken = 0
+
         for (p in BlockPos.betweenClosed(x - 1, y - 1, z - 1, x + 1, y + 1, z + 1)) {
-            world.setBlockAndUpdate(p, Blocks.AIR.defaultBlockState())
+            if (world.getBlockState(p).isAir) continue
+
+            world.setBlockAndUpdate(p, air)
+            broken++
         }
 
         val cx = x + 0.5
@@ -205,6 +261,8 @@ class BowSpleefInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(ga
         world.playSound(null, x.toDouble(), y.toDouble(), z.toDouble(), SoundEvents.DRAGON_FIREBALL_EXPLODE, SoundSource.AMBIENT, 0.12f, 0f)
 
         specialItems.positions().update()
+
+        return broken
     }
 
     private fun removeBlocksUnder() {
