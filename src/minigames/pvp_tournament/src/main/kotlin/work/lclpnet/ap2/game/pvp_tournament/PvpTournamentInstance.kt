@@ -30,6 +30,7 @@ import work.lclpnet.ap2.api.map.MapBootstrap
 import work.lclpnet.ap2.core.mixin.entity.MannequinAccessor
 import work.lclpnet.ap2.ext.*
 import work.lclpnet.ap2.ext.mc.isOf
+import work.lclpnet.ap2.ext.mc.playNotifySound
 import work.lclpnet.ap2.ext.mc.teleportTo
 import work.lclpnet.ap2.game.pvp_tournament.gen.Match
 import work.lclpnet.ap2.game.pvp_tournament.util.*
@@ -447,6 +448,13 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
 
     private fun scheduleSuddenDeath(match: Match, data: MatchInstance) {
         data.tasks.add(runAfter(SUDDEN_DEATH_DELAY) {
+            translate("game.ap2.pvp_tournament.sudden_death")
+                .formatted(ChatFormatting.RED)
+                .acceptEach(data.players) { player, msg ->
+                    Title.get(player).title(Component.empty(), msg, 10, 40, 10)
+                    player.playNotifySound(SoundEvents.NOTE_BLOCK_PLING.value(), SoundSource.PLAYERS, 0.5f, 0.5f)
+                }
+
             var damagePerSecond = 2f
             var timer = 0
 
