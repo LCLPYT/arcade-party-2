@@ -18,11 +18,10 @@ import work.lclpnet.ap2.api.stats.FFAStatsManager
 import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.ext.*
 import work.lclpnet.ap2.ext.mc.setSelectedSlot
-import work.lclpnet.ap2.ext.mc.teleport
+import work.lclpnet.ap2.game.teleportToRandomSpawns
 import work.lclpnet.ap2.impl.game.EliminationGameInstance
 import work.lclpnet.ap2.impl.map.schema.SchemaHolder
 import work.lclpnet.ap2.impl.util.ItemHelper.unbreakable
-import work.lclpnet.ap2.impl.util.world.SpawnFinder
 import work.lclpnet.ap2.util.SubtitleCountdown
 import work.lclpnet.game.impl.prot.ProtectionTypes
 import work.lclpnet.kibu.access.entity.ServerPlayerAccess
@@ -31,8 +30,6 @@ import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks
 import work.lclpnet.kibu.hook.player.PlayerInventoryHooks
 import work.lclpnet.kibu.scheduler.Ticks
 import java.util.*
-import kotlin.random.Random
-import kotlin.random.asJavaRandom
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 
@@ -133,22 +130,10 @@ class WeaponSwapInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(g
 
     private fun teleportPlayers() {
         val schema = schemaHolder.get()
-
-        require(schema.scanStarts.isNotEmpty()) { "No spawn scan start is set" }
         val scanBox = requireNotNull(schema.scanBox) { "Spawn scan box is not set" }
         val spacing = map.properties.optNumber("spawn-spacing", SPAWN_SPACING_DEFAULT).toDouble()
 
-        val finder = SpawnFinder(spacing, commons().debugController())
-        val pool = finder.findSpawns(level, scanBox, schema.scanStarts.toSet())
-        val spawns = finder.generateSpacedSpawns(pool, players().count(), Random.asJavaRandom())
-
-        var i = 0
-
-        for (player in players()) {
-            val pos = spawns[i++]
-            val yaw = Random.nextFloat() * 360f
-            player.teleport(pos, yaw)
-        }
+        teleportToRandomSpawns(scanBox, schema.scanStarts, spacing)
     }
 
     private fun startCycle() {
