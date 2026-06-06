@@ -38,7 +38,7 @@ private fun sniperGun() = PaintGun(
         deficitPaintBoost = 0.1f,
         split = PaintGun.BulletSplit(
             splitTicks = 0,
-            maxSplits = 12,
+            maxSplits = 14,
             splitPaintRadius = 1.48f,
             splitSubdivisions = 1
         )
