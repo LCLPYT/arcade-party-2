@@ -8,12 +8,18 @@ import work.lclpnet.ap2.api.stats.CommonStats.KillDeathRatio
 import work.lclpnet.ap2.api.stats.CommonStats.Kills
 import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.api.stats.TeamStatsManager
+import work.lclpnet.ap2.ext.gainKill
+import work.lclpnet.kibu.translate.Translations
 
 val TotalBlocksPainted = Stat("total_blocks_painted", 0)
 val BlocksRepainted = Stat("blocks_repainted", 0)
 val SpecialItemsUsed = Stat("special_items_used", 0)
 
-class PaintballStats(private val stats: TeamStatsManager, private val teamManager: TeamManager) {
+class PaintballStats(
+    private val stats: TeamStatsManager,
+    private val teamManager: TeamManager,
+    private val translations: Translations,
+) {
 
     fun blockPainted(player: ServerPlayer, repainted: Boolean) {
         stats.players.increment(player, TotalBlocksPainted)
@@ -40,7 +46,7 @@ class PaintballStats(private val stats: TeamStatsManager, private val teamManage
     }
 
     fun onKill(victim: ServerPlayer, killer: ServerPlayer) {
-        stats.players.increment(killer, Kills)
+        gainKill(killer, stats.players, translations)
         stats.players.increment(victim, Deaths)
         updatePlayerKd(killer)
         updatePlayerKd(victim)

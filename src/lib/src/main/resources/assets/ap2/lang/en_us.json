@@ -43,6 +43,7 @@
   "ap2.score.blocks_away": "%s blocks away",
   "ap2.gain_point": "+%s point (%s)",
   "ap2.gain_points": "+%s points (%s)",
+  "ap2.gain_kill": "+%s kill",
   "ap2.game.remaining": "%s players remaining",
   "ap2.game.remaining_single": "%s player remaining",
   "ap2.pvp.shot_by": "%s was shot by %s",

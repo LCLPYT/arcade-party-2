@@ -18,6 +18,7 @@ import work.lclpnet.ap2.api.stats.CommonStats.DistanceMoved
 import work.lclpnet.ap2.api.stats.CommonStats.Kills
 import work.lclpnet.ap2.api.stats.CommonStats.TimeSurvived
 import work.lclpnet.ap2.core.hook.ProjectileHitEntityCallback
+import work.lclpnet.ap2.ext.gainKill
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.trackDistanceMoved
 import work.lclpnet.ap2.impl.game.EliminationGameInstance
@@ -96,8 +97,8 @@ class BlockDissolveInstance(gameHandle: MiniGameHandle) : EliminationGameInstanc
         }
 
         commons().whenBelowCriticalHeight().then { player ->
-            killTracker.getLastAttacker(player)?.let { killer ->
-                stats.increment(killer, Kills)
+            killTracker.getLastAttacker(player)?.let { it as? ServerPlayer }?.let { killer ->
+                gainKill(killer, stats)
             }
 
             eliminate(player, killTracker.killMessage(player, gameHandle.deathMessages))

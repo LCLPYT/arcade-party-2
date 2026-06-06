@@ -1,11 +1,20 @@
 package work.lclpnet.ap2.ext
 
+import net.minecraft.ChatFormatting
 import net.minecraft.server.level.ServerPlayer
+import net.minecraft.sounds.SoundEvents
+import net.minecraft.sounds.SoundSource
+import work.lclpnet.ap2.api.stats.BaseStatsManager
 import work.lclpnet.ap2.api.stats.CommonStats
+import work.lclpnet.ap2.api.stats.CommonStats.Kills
 import work.lclpnet.ap2.api.stats.FFAStatsManager
+import work.lclpnet.ap2.ext.mc.playNotifySound
 import work.lclpnet.ap2.impl.game.BaseGameInstance
+import work.lclpnet.ap2.impl.game.data.type.PlayerRef
 import work.lclpnet.kibu.hook.player.PlayerMoveCallback
 import work.lclpnet.kibu.hook.util.PositionRotation
+import work.lclpnet.kibu.translate.Translations
+import work.lclpnet.kibu.translate.text.FormatWrapper
 import kotlin.math.sqrt
 
 /**
@@ -44,4 +53,18 @@ fun BaseGameInstance.updateDistanceMoved(
     val dz = to.z() - from.z()
 
     stats.modify(player, CommonStats.DistanceMoved) { it + sqrt(dx * dx + dz * dz).toFloat() }
+}
+
+fun BaseGameInstance.gainKill(player: ServerPlayer, stats: BaseStatsManager<ServerPlayer, PlayerRef>) {
+    gainKill(player, stats, gameHandle.translations)
+}
+
+fun gainKill(player: ServerPlayer, stats: BaseStatsManager<ServerPlayer, PlayerRef>, translations: Translations) {
+    stats.increment(player, Kills)
+
+    player.playNotifySound(SoundEvents.ARROW_HIT_PLAYER, SoundSource.BLOCKS, 0.7f, 1.55f)
+
+    translations.translateText("ap2.gain_kill", FormatWrapper.styled(1, ChatFormatting.YELLOW))
+        .formatted(ChatFormatting.GREEN)
+        .sendTo(player, true)
 }

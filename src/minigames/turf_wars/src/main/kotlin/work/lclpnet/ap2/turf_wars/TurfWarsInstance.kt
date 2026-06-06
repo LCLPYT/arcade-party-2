@@ -369,7 +369,7 @@ class TurfWarsInstance(gameHandle: MiniGameHandle) : TeamEliminationGameInstance
         val victimTeam = teamManager.getTeam(victim).orElse(null) ?: return
         val killerTeam = teamManager.getTeam(killer).orElse(null) ?: return
 
-        stats.players.increment(killer, Kills)
+        gainKill(killer, stats.players)
         stats.teams.increment(killerTeam, Kills)
 
         stats.players.increment(victim, Deaths)

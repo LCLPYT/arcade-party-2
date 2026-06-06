@@ -61,7 +61,7 @@ class CozyCampfireInstance(gameHandle: MiniGameHandle) : TeamEliminationGameInst
     private val stats = CCStats(createStats(
         /* teamStats = */ listOf(FuelAdded, Kills, Deaths, DamageDealt),
         /* playerStats = */ listOf(FuelAdded, Kills, Deaths, KillDeathRatio, DamageDealt)
-    ), teamManager)
+    ), teamManager, gameHandle.translations)
     private lateinit var hookSetup: CCHooks
     private lateinit var fuel: CCFuel
     private lateinit var bossBar: DynamicTranslatedTeamBossBar

@@ -20,6 +20,7 @@ import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.stats.CommonStats
 import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.api.stats.StatUnits
+import work.lclpnet.ap2.ext.gainKill
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.runAfter
 import work.lclpnet.ap2.ext.runEvery
@@ -108,10 +109,10 @@ class KnockoutInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gam
         trackDistanceMoved(stats)
 
         commons().whenBelowCriticalHeight().then { player ->
-            val killer = killTracker.getLastAttacker(player)
+            val killer = killTracker.getLastAttacker(player) as? ServerPlayer
 
             if (killer != null && killer != player) {
-                stats.increment(killer, CommonStats.Kills)
+                gainKill(killer, stats)
             }
 
             eliminate(player, killTracker.killMessage(player, gameHandle.deathMessages))
@@ -285,7 +286,7 @@ class KnockoutInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gam
 
         stats.modify(player, ImpactDamageCaused) { it + damage.toFloat() }
 
-        killTracker.getLastAttacker(player)?.let { attacker ->
+        killTracker.getLastAttacker(player)?.let { it as? ServerPlayer }?.let { attacker ->
             if (attacker != player) {
                 stats.modify(attacker, ImpactDamageDone) { it + damage.toFloat() }
             }
