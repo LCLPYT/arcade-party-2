@@ -19,6 +19,7 @@ import work.lclpnet.ap2.ext.mc.unbreakable
 import work.lclpnet.ap2.ext.trackDistanceMoved
 import work.lclpnet.ap2.impl.game.EliminationGameInstance
 import work.lclpnet.ap2.impl.map.MapUtil
+import work.lclpnet.ap2.impl.util.FallKillTracker
 import work.lclpnet.ap2.impl.util.SoundHelper
 import work.lclpnet.game.impl.prot.ProtectionTypes
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess
@@ -36,7 +37,7 @@ class SpleefInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gameH
         CommonStats.BlocksBroken,
         CommonStats.DistanceMoved,
     )
-    private lateinit var killTracker: SpleefKillTracker
+    private lateinit var killTracker: FallKillTracker
 
     init {
         useSurvivalMode()
@@ -64,7 +65,7 @@ class SpleefInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gameH
 
         giveShovelsToPlayers()
 
-        killTracker = SpleefKillTracker(gameHandle.participants)
+        killTracker = FallKillTracker(gameHandle.participants)
         killTracker.init(gameHandle.scheduler)
 
         BlockModificationHooks.BREAK_BLOCK.registerWith(gameHandle.hooks) { _, pos, entity ->
