@@ -8,6 +8,8 @@
   "game.ap2.red_light_green_light.stop": "Stopp!",
   "game.ap2.red_light_green_light.moved": "Du hast dich bewegt! Als Bestrafung wurdest du zurückgesetzt.",
   "game.ap2.red_light_green_light.stat.resets": "Fehler",
-  "game.ap2.red_light_green_light.stat.yellow_moving_time": "Bewegung bei Gelb (sek)",
-  "game.ap2.red_light_green_light.stat.closest_stop_time": "Knappster Stopp (sek)"
+  "game.ap2.red_light_green_light.stat.yellow_moving_time": "Bewegung bei Gelb",
+  "game.ap2.red_light_green_light.stat.closest_stop_time": "Knappster Stopp",
+  "game.ap2.red_light_green_light.stat.distance_reset": "Zurückgesetzte Distanz",
+  "game.ap2.red_light_green_light.stat.avg_yellow_time_usage": "Durchschn. Gelbphasen-Nutzung"
 }
