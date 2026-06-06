@@ -264,7 +264,7 @@ class MusicalMinecartInstance(gameHandle: MiniGameHandle) : EliminationGameInsta
         val total = count + decoys
         val pos = BlockPos.MutableBlockPos()
 
-        val world = world
+        val world = level
 
         for (i in 0 until total) {
             bounds.randomBlockPos(pos, random)
@@ -325,7 +325,7 @@ class MusicalMinecartInstance(gameHandle: MiniGameHandle) : EliminationGameInsta
     }
 
     private fun eliminatePlayers() {
-        val world = world
+        val world = level
         val participants: Participants = gameHandle.participants
 
         val toEliminate = HashSet<ServerPlayer>()
@@ -362,7 +362,7 @@ class MusicalMinecartInstance(gameHandle: MiniGameHandle) : EliminationGameInsta
         val box = particleBox ?: return
         if (songHandle == null) return
 
-        val world = world
+        val world = level
 
         repeat(PARTICLE_AMOUNT) {
             val pos: Vec3 = box.randomPos(random)

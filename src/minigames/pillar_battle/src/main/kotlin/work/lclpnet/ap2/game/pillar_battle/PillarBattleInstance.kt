@@ -76,7 +76,7 @@ class PillarBattleInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
 
         val pillars = pillars ?: return
         val spawns = pillars.spawns
-        val world = world
+        val world = level
 
         for (player in gameHandle.participants) {
             val spawn = spawns[player.uuid]
@@ -129,7 +129,7 @@ class PillarBattleInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
             player.hurtServer(player.level(), player.damageSources().fellOutOfWorld(), player.health)
         }
 
-        val randomizer = PbRandomizer(random, gameHandle.participants, world.registryAccess())
+        val randomizer = PbRandomizer(random, gameHandle.participants, level.registryAccess())
 
         runEvery(RANDOM_ITEM_DELAY_TICKS.ticks) {
             randomizer.giveRandomItems()
@@ -161,7 +161,7 @@ class PillarBattleInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
             )
             @Suppress("KotlinConstantConditions")
             (fight as ApDragonFight).`ap2$setTemporary`()
-            fight.init(world, random.nextLong(), pillars.center)
+            fight.init(level, random.nextLong(), pillars.center)
 
             entity.setDragonFight(fight)
             entity.fightOrigin = center
@@ -192,7 +192,7 @@ class PillarBattleInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
         val cz = center.z.toDouble()
         val totalRadius = pillars.radius + BUILD_OUTER_RADIUS + 0.5
 
-        val realBorder = world.worldBorder
+        val realBorder = level.worldBorder
 
         for (player in gameHandle.participants) {
             val warning = warnings.computeIfAbsent(player.uuid) { Warning() }

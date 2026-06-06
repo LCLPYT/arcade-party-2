@@ -83,7 +83,7 @@ class DanceFloorInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(g
 
         Hints(gameHandle).sendBeforeReady(this, Hints.Mod.NOTICA)
 
-        blockRandomizer = BlockRandomizer(floorShape(), world)
+        blockRandomizer = BlockRandomizer(floorShape(), level)
 
         preloadNextSong()
         setupTeam()
@@ -113,7 +113,7 @@ class DanceFloorInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(g
 
             repeat(PARTICLE_AMOUNT) {
                 val pos = particleShape.bounds().randomPos(Random.asJavaRandom())
-                world.spawnParticles(ParticleTypes.NOTE, pos, 10, 3.0, 2.0, 3.0, 1.0)
+                level.spawnParticles(ParticleTypes.NOTE, pos, 10, 3.0, 2.0, 3.0, 1.0)
             }
         }
 
@@ -258,7 +258,7 @@ class DanceFloorInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(g
             player.setSelectedSlot(4)
         }
 
-        SoundHelper.playSound(world, SoundEvents.IRON_GOLEM_HURT, SoundSource.HOSTILE, 0.9f, 0f)
+        SoundHelper.playSound(level, SoundEvents.IRON_GOLEM_HURT, SoundSource.HOSTILE, 0.9f, 0f)
 
         val decreaseTicks = (totalDurationTicks * BLOCK_DELAY_TICKS_DECREASE_PER_MINUTE / Ticks.minutes(1).toFloat())
             .roundToInt()
@@ -267,7 +267,7 @@ class DanceFloorInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(g
         val blockDelayTicks = max(TOTAL_MIN_BLOCK_DELAY_TICKS, INITIAL_BLOCK_DELAY_TICKS - decreaseTicks)
 
         task = timeout(blockDelayTicks) {
-            SoundHelper.playSound(world, SoundEvents.WITHER_BREAK_BLOCK, SoundSource.HOSTILE, 0.4f, 0.8f)
+            SoundHelper.playSound(level, SoundEvents.WITHER_BREAK_BLOCK, SoundSource.HOSTILE, 0.4f, 0.8f)
             removeBlocks(block)
         }
 
@@ -278,9 +278,9 @@ class DanceFloorInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(g
 
     fun removeBlocks(except: Block) {
         for (pos in floorShape()) {
-            if (world.getBlockState(pos).isOf(except)) continue
+            if (level.getBlockState(pos).isOf(except)) continue
 
-            world.setBlock(pos, Blocks.AIR)
+            level.setBlock(pos, Blocks.AIR)
         }
 
         val decreaseTicks = (totalDurationTicks * NEXT_ROUND_TICKS_DECREASE_PER_MINUTE / Ticks.minutes(1).toFloat())
@@ -290,7 +290,7 @@ class DanceFloorInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(g
         val nextRoundTicks = max(NEXT_ROUND_MIN_TICKS, NEXT_ROUND_INITIAL_TICKS - decreaseTicks)
 
         task = timeout(ticks = nextRoundTicks) {
-            SoundHelper.playSound(world, SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.NEUTRAL, 0.5f, 1f)
+            SoundHelper.playSound(level, SoundEvents.EXPERIENCE_ORB_PICKUP, SoundSource.NEUTRAL, 0.5f, 1f)
             checkEliminated()
         }
     }

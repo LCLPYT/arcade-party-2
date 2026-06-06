@@ -83,11 +83,11 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
     override fun prepare() {
         lootContainerManager = LazyLootContainerManager(
             players(),
-            world,
+            level,
             KilleporterLootFiller(loot),
         ).also { it.setup(gameHandle.hooks) }
 
-        world.setDayTime(13000 - TIME_TO_NIGHTFALL_DAYTIME_TICKS)
+        level.setDayTime(13000 - TIME_TO_NIGHTFALL_DAYTIME_TICKS)
 
         commons().gameRuleBuilder()
             .set(GameRules.FALL_DAMAGE, true)
@@ -155,7 +155,7 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
         switchTimeout()
 
         gameHandle.scheduler.interval(20*60*3, 20*60*3, Runnable {
-            SoundHelper.playSound(world, SoundEvents.CHEST_OPEN, SoundSource.BLOCKS, 0.8f, 0.5f)
+            SoundHelper.playSound(level, SoundEvents.CHEST_OPEN, SoundSource.BLOCKS, 0.8f, 0.5f)
             translate("game.ap2.killeporter.chest_refill").formatted(ChatFormatting.AQUA).sendTo(allPlayers())
             lootContainerManager.reset()
         })
@@ -205,7 +205,7 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
     }
 
     private fun setupKits() {
-        kitHandler = KitHandler.create(gameHandle, world) { kitHandle: KitHandle -> kitLoader!!.createKits(kitHandle) }
+        kitHandler = KitHandler.create(gameHandle, level) { kitHandle: KitHandle -> kitLoader!!.createKits(kitHandle) }
 
         kitHandler?.manager?.modifyOptions {
             it.withKitSelectorSlot(8)

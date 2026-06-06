@@ -5,6 +5,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.players.PlayerList;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
 import work.lclpnet.ap2.api.event.IntScoreEventSource;
 import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.WinManagerAccess;
@@ -58,7 +59,7 @@ public abstract class TeamGameInstance extends BaseGameInstance implements Parti
     }
 
     @Override
-    public void participantRemoved(ServerPlayer player) {
+    public void participantRemoved(@NonNull ServerPlayer player) {
         if (teamManager == null) return;
 
         Team team = teamManager.getTeam(player).orElse(null);
@@ -110,7 +111,7 @@ public abstract class TeamGameInstance extends BaseGameInstance implements Parti
     }
 
     protected void teleportTeamsToSpawns() {
-        ServerLevel world = getWorld();
+        ServerLevel world = getLevel();
 
         for (Team team : teamManager.getTeams()) {
             PositionRotation spawn = getSpawn(team);

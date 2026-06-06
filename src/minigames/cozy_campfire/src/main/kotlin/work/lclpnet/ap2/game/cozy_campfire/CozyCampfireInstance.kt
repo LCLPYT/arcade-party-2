@@ -101,12 +101,12 @@ class CozyCampfireInstance(gameHandle: MiniGameHandle) : TeamEliminationGameInst
 
         readMapFuelInfo()
 
-        fuel = CCFuel(world, baseManager)
+        fuel = CCFuel(level, baseManager)
         fuel.registerFuel(fuelPerSecond)
 
         teleportTeamsToSpawns()
 
-        val kitManager = CCKitManager(teamManager, world, random)
+        val kitManager = CCKitManager(teamManager, level, random)
         val participants: Participants = gameHandle.participants
 
         for (player in participants) {
@@ -130,7 +130,7 @@ class CozyCampfireInstance(gameHandle: MiniGameHandle) : TeamEliminationGameInst
     override fun go() {
         gameHandle.protect(hookSetup::configure)
         runEveryTick { tick() }
-        baseManager.openDoors(world)
+        baseManager.openDoors(level)
     }
 
     override fun teamEliminated(team: Team) {

@@ -116,7 +116,7 @@ class GlowingBombInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
 
         runEveryTick { tickCredits() }
 
-        scene = Scene(ServerWorldMountContext(world))
+        scene = Scene(ServerWorldMountContext(level))
         scene.animate(1, gameHandle.scheduler)
 
         // init min fuse pass to max value for everyone
@@ -160,8 +160,8 @@ class GlowingBombInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
 
         val x = pos.x(); val y = pos.y(); val z = pos.z()
 
-        world.playSound(null, x, y, z, SoundEvents.TRIDENT_RETURN, SoundSource.HOSTILE, 0.75f, 0.5f)
-        world.sendParticles(ParticleTypes.REVERSE_PORTAL, x, y, z, 15, 0.1, 0.1, 0.1, 0.2)
+        level.playSound(null, x, y, z, SoundEvents.TRIDENT_RETURN, SoundSource.HOSTILE, 0.75f, 0.5f)
+        level.sendParticles(ParticleTypes.REVERSE_PORTAL, x, y, z, 15, 0.1, 0.1, 0.1, 0.2)
 
         for (player in gameHandle.participants) {
             credits.put(player.uuid, INITIAL_CREDITS)
@@ -259,7 +259,7 @@ class GlowingBombInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
 
         val x = pos.x(); val y = pos.y(); val z = pos.z()
         bomb?.position?.set(x, y, z)
-        world.playSound(null, x, y, z, SoundEvents.BEEHIVE_ENTER, SoundSource.HOSTILE, 0.75f, 1.4f)
+        level.playSound(null, x, y, z, SoundEvents.BEEHIVE_ENTER, SoundSource.HOSTILE, 0.75f, 1.4f)
     }
 
     private fun bombTimerExpired() {
@@ -272,9 +272,9 @@ class GlowingBombInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
         val pos: Vector3d = b.worldTranslation()
         val x = pos.x(); val y = pos.y(); val z = pos.z()
 
-        world.playSound(null, x, y, z, SoundEvents.RESPAWN_ANCHOR_DEPLETE.value(), SoundSource.HOSTILE, 0.9f, 1.0f)
-        world.sendParticles(ColorParticleOption.create(ParticleTypes.FLASH, 0x8f509e), x, y, z, 1, 0.0, 0.0, 0.0, 1.0)
-        world.sendParticles(ParticleTypes.SMALL_FLAME, x, y, z, 20, 0.1, 0.1, 0.1, 0.1)
+        level.playSound(null, x, y, z, SoundEvents.RESPAWN_ANCHOR_DEPLETE.value(), SoundSource.HOSTILE, 0.9f, 1.0f)
+        level.sendParticles(ColorParticleOption.create(ParticleTypes.FLASH, 0x8f509e), x, y, z, 1, 0.0, 0.0, 0.0, 1.0)
+        level.sendParticles(ParticleTypes.SMALL_FLAME, x, y, z, 20, 0.1, 0.1, 0.1, 0.1)
 
         val anchor = manager.bombAnchor() ?: return checkForWinnerOrNext()
         b.yieldGlowStone(manager, anchor)
@@ -317,8 +317,8 @@ class GlowingBombInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
             val pos: Vector3d = b.worldTranslation()
             val x = pos.x(); val y = pos.y(); val z = pos.z()
 
-            world.playSound(null, x, y, z, SoundEvents.DECORATED_POT_INSERT, SoundSource.HOSTILE, 1f, 0f)
-            world.sendParticles(ParticleTypes.SMALL_FLAME, x, y, z, 20, 0.1, 0.1, 0.1, 0.1)
+            level.playSound(null, x, y, z, SoundEvents.DECORATED_POT_INSERT, SoundSource.HOSTILE, 1f, 0f)
+            level.sendParticles(ParticleTypes.SMALL_FLAME, x, y, z, 20, 0.1, 0.1, 0.1, 0.1)
 
             scene.remove(b)
             bomb = null
@@ -339,8 +339,8 @@ class GlowingBombInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
         val pos = anchor.pos
         val x = pos.x() + 0.5; val y = pos.y() + 0.5; val z = pos.z() + 0.5
 
-        world.sendParticles(ParticleTypes.EXPLOSION, x, y, z, 200, 1.0, 1.0, 1.0, 0.5)
-        world.playSound(null, x, y, z, SoundEvents.GENERIC_EXPLODE.value(), SoundSource.HOSTILE, 0.9f, 1.2f)
+        level.sendParticles(ParticleTypes.EXPLOSION, x, y, z, 200, 1.0, 1.0, 1.0, 0.5)
+        level.playSound(null, x, y, z, SoundEvents.GENERIC_EXPLODE.value(), SoundSource.HOSTILE, 0.9f, 1.2f)
 
         manager.removeAnchor(anchor)
 

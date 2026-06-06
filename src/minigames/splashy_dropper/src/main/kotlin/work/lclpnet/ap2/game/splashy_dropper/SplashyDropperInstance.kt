@@ -85,9 +85,9 @@ class SplashyDropperInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameH
 
         movementBlocker.init(hooks)
 
-        val adj = SimpleAdjacentBlocks({ pos -> world.getFluidState(pos).isIn(FluidTags.WATER) }, 0)
+        val adj = SimpleAdjacentBlocks({ pos -> level.getFluidState(pos).isIn(FluidTags.WATER) }, 0)
         worldScanner = BfsWorldScanner(adj)
-        groundDetector = GroundDetector(world, 0.35)
+        groundDetector = GroundDetector(level, 0.35)
 
         for (player in gameHandle.participants) {
             movementBlocker.disableMovement(player)
@@ -147,7 +147,7 @@ class SplashyDropperInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameH
         outer@ for (player in gameHandle.participants) {
             if (player.y >= minSpawnY - 1) continue
 
-            if (world.getFluidState(player.blockPosition()).isIn(FluidTags.WATER)) {
+            if (level.getFluidState(player.blockPosition()).isIn(FluidTags.WATER)) {
                 onLandInWater(player)
                 continue
             }
@@ -156,8 +156,8 @@ class SplashyDropperInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameH
             groundDetector.collectBlocksBelow(player, blocksBelow)
 
             for (pos in blocksBelow) {
-                val state = world.getBlockState(pos)
-                if (state.getCollisionShape(world, pos, CollisionContext.of(player)).isEmpty) continue
+                val state = level.getBlockState(pos)
+                if (state.getCollisionShape(level, pos, CollisionContext.of(player)).isEmpty) continue
 
                 onHitGround(player)
                 continue@outer
@@ -206,7 +206,7 @@ class SplashyDropperInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameH
         val air = Blocks.AIR.defaultBlockState()
 
         while (it.hasNext()) {
-            world.setBlockAndUpdate(it.next(), air)
+            level.setBlockAndUpdate(it.next(), air)
             count++
         }
 

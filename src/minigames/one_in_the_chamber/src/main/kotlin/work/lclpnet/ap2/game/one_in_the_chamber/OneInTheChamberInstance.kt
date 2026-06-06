@@ -97,7 +97,7 @@ class OneInTheChamberInstance(gameHandle: MiniGameHandle) : FFAGameInstance(game
 
         for (player in gameHandle.participants) {
             val pos = respawn.getRandomSpawn()
-            player.teleportTo(world, pos.x + 0.5, pos.y.toDouble(), pos.z + 0.5, setOf(), player.yRot, player.xRot, true)
+            player.teleportTo(level, pos.x + 0.5, pos.y.toDouble(), pos.z + 0.5, setOf(), player.yRot, player.xRot, true)
             movementBlocker.disableMovement(player)
         }
 
@@ -125,7 +125,7 @@ class OneInTheChamberInstance(gameHandle: MiniGameHandle) : FFAGameInstance(game
 
         respawnCooldown.setOnCooldownOver { player ->
             val randomSpawn = respawn.getRandomSpawn()
-            player.teleportTo(world, randomSpawn.x + 0.5, randomSpawn.y.toDouble(), randomSpawn.z + 0.5, setOf(), player.yRot, player.xRot, true)
+            player.teleportTo(level, randomSpawn.x + 0.5, randomSpawn.y.toDouble(), randomSpawn.z + 0.5, setOf(), player.yRot, player.xRot, true)
             giveBowToPlayer(player)
 
             player.abilities.flyingSpeed = 0f
@@ -173,7 +173,7 @@ class OneInTheChamberInstance(gameHandle: MiniGameHandle) : FFAGameInstance(game
 
         text.formatted(ChatFormatting.GRAY).sendTo(PlayerLookup.all(gameHandle.server))
 
-        world.playSound(null, player.blockPosition(), SoundEvents.PLAYER_DEATH, SoundSource.PLAYERS, 0.8f, 0.8f)
+        level.playSound(null, player.blockPosition(), SoundEvents.PLAYER_DEATH, SoundSource.PLAYERS, 0.8f, 0.8f)
 
         player.setGameMode(GameType.SPECTATOR)
         player.health = 20f

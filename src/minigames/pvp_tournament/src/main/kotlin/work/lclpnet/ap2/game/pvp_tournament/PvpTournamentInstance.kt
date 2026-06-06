@@ -133,7 +133,7 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
     }
 
     override fun go() {
-        pvp = PvpBehavior(gameHandle, world).also { it.configure() }
+        pvp = PvpBehavior(gameHandle, level).also { it.configure() }
 
         players().forEach {
             // disallow pvp behavior by default, enable when match is started
@@ -342,7 +342,7 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
 
             data.playerUuids += player.uuid
         } else {
-            val npc = Mannequin(EntityType.MANNEQUIN, world)
+            val npc = Mannequin(EntityType.MANNEQUIN, level)
             npc.uuid = ref.uuid
             npc.customName = Component.literal(ref.name)
             npc.isCustomNameVisible = true
@@ -352,7 +352,7 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
 
             data.teleport(npc)
 
-            world.addFreshEntity(npc)
+            level.addFreshEntity(npc)
 
             kit.equip(npc)
 
@@ -387,7 +387,7 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
         arena: ArenaInstance,
         kit: Kit
     ): MatchInstance = matchInstances.getOrCreate(match) {
-        MatchInstance(it, arena, kit, world, players())
+        MatchInstance(it, arena, kit, level, players())
     }
 
     fun matchInstanceOf(entity: Avatar) = matchInstances.findByParticipant(entity)
@@ -458,7 +458,7 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
                 }
 
                 data.participants.forEach {
-                    it.hurtServer(world, it.damageSources().magic(), damagePerSecond)
+                    it.hurtServer(level, it.damageSources().magic(), damagePerSecond)
                 }
 
                 if (++timer % 10 == 0) {

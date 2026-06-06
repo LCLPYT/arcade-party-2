@@ -251,7 +251,7 @@ class PaintballInstance(gameHandle: MiniGameHandle) : TeamGameInstance(gameHandl
     }
 
     private fun setupPlayerCollisions() {
-        val entityCollisions = EntityCollisionManager(world) { gameHandle.participants }
+        val entityCollisions = EntityCollisionManager(level) { gameHandle.participants }
         entityCollisions.init(gameHandle.rootScheduler)
 
         teams.forEach { pbt ->
@@ -268,7 +268,7 @@ class PaintballInstance(gameHandle: MiniGameHandle) : TeamGameInstance(gameHandl
     }
 
     private fun setupKits() {
-        kitHandler = KitHandler.create(gameHandle, world) { kitHandle ->
+        kitHandler = KitHandler.create(gameHandle, level) { kitHandle ->
             listOf(
                 RifleKit(kitHandle, paintGunManager),
                 ShotgunKit(kitHandle, paintGunManager),
@@ -332,7 +332,7 @@ class PaintballInstance(gameHandle: MiniGameHandle) : TeamGameInstance(gameHandl
         started = true
 
         val ticker = PaintballTicker(
-            world, gameHandle.participants, teams, paintManager,
+            level, gameHandle.participants, teams, paintManager,
             paintGunManager, vanishManager, commons().debugController()
         )
 
@@ -422,7 +422,7 @@ class PaintballInstance(gameHandle: MiniGameHandle) : TeamGameInstance(gameHandl
 
     private fun teleportToTeamSpawn(player: ServerPlayer, pbt: PaintballTeam) {
         val pos = pbt.spawn
-        player.teleportTo(world, pos.x(), pos.y(), pos.z(), emptySet(), pbt.yaw, 0f, true)
+        player.teleportTo(level, pos.x(), pos.y(), pos.z(), emptySet(), pbt.yaw, 0f, true)
     }
 
     private fun onDamage(entity: LivingEntity, source: DamageSource, amount: Float): Boolean {
@@ -477,7 +477,7 @@ class PaintballInstance(gameHandle: MiniGameHandle) : TeamGameInstance(gameHandl
         gameHandle.deathMessages.getDeathMessage(player, source)
             .sendTo(PlayerLookup.all(gameHandle.server))
 
-        world.playSound(null, player.blockPosition(), SoundEvents.PLAYER_DEATH, SoundSource.PLAYERS, 0.8f, 0.8f)
+        level.playSound(null, player.blockPosition(), SoundEvents.PLAYER_DEATH, SoundSource.PLAYERS, 0.8f, 0.8f)
 
         player.setGameMode(GameType.SPECTATOR)
         player.health = 20f

@@ -33,7 +33,7 @@ class TntRunInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gameH
     }
 
     override fun go() {
-        groundDetector = GroundDetector(world, BLOCK_MARGIN)
+        groundDetector = GroundDetector(level, BLOCK_MARGIN)
 
         commons().whenBelowCriticalHeight().then(this::eliminate)
 
@@ -55,7 +55,7 @@ class TntRunInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gameH
     }
 
     private fun tickRemoval() {
-        val world: ServerLevel = world
+        val world: ServerLevel = level
         val flags = Block.UPDATE_KNOWN_SHAPE or Block.UPDATE_CLIENTS or Block.UPDATE_SUPPRESS_DROPS
 
         val it = removal.object2IntEntrySet().iterator()
@@ -76,7 +76,7 @@ class TntRunInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gameH
     }
 
     private fun markForRemovalBelow() {
-        val world: ServerLevel = world
+        val world: ServerLevel = level
 
         for (pos in groundBlocks) {
             if (removal.containsKey(pos)) continue

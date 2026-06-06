@@ -94,7 +94,7 @@ class MimicryInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle),
     }
 
     override fun prepare() {
-        val world: ServerLevel = world
+        val world: ServerLevel = level
 
         pseudoElimination = PseudoElimination(gameHandle, world)
 
@@ -105,7 +105,7 @@ class MimicryInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle),
     }
 
     override fun go() {
-        sequencePlayer = SequencePlayer(manager, gameHandle.scheduler, world)
+        sequencePlayer = SequencePlayer(manager, gameHandle.scheduler, level)
 
         repeat(INITIAL_SEQUENCE_LENGTH - 1) {
             manager.extendSequence()

@@ -231,7 +231,7 @@ public abstract class BaseGameInstance implements MiniGameInstance {
 
         gameHandle.getTranslations().translateText("ap2.map.by", name, authors)
                 .formatted(GREEN, BOLD)
-                .sendTo(getWorld().players());
+                .sendTo(getLevel().players());
     }
 
     private void scheduleCountdown(int durationTicks) {
@@ -377,9 +377,9 @@ public abstract class BaseGameInstance implements MiniGameInstance {
         return PlayerUtil.getLoadingDelayTicks(players);
     }
 
-    public final ServerLevel getWorld() {
+    public final ServerLevel getLevel() {
         if (world == null) {
-            throw new IllegalStateException("World not loaded yet");
+            throw new IllegalStateException("Level not loaded yet");
         }
 
         return world;
@@ -471,7 +471,7 @@ public abstract class BaseGameInstance implements MiniGameInstance {
      * @return The {@link GameCommons} singleton in scope of this game instance.
      */
     protected final GameCommons commons() {
-        return commons(getMap(), getWorld());
+        return commons(getMap(), getLevel());
     }
 
     protected final GameCommons commons(GameMap map, ServerLevel world) {

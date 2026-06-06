@@ -99,7 +99,7 @@ class TurfWarsInstance(gameHandle: MiniGameHandle) : TeamEliminationGameInstance
             teams.map { it.initialTurf },
             teams.map { it.key() },
             commons().debugController(),
-            world
+            level
         )
 
         turfManager.updateVisualizer()
@@ -185,7 +185,7 @@ class TurfWarsInstance(gameHandle: MiniGameHandle) : TeamEliminationGameInstance
         }
 
         for (gate in schemaHolder.get().spawnGates) {
-            world.setBlocks(gate, Blocks.AIR)
+            level.setBlocks(gate, Blocks.AIR)
         }
 
         blocksPerKill = if (players().count() == 2) 2 else 1
@@ -257,7 +257,7 @@ class TurfWarsInstance(gameHandle: MiniGameHandle) : TeamEliminationGameInstance
     }
 
     fun setupKits(teamInfos: List<TurfWarsTeamInfo>) {
-        kitHandler = KitHandler.create(gameHandle, world) { handle ->
+        kitHandler = KitHandler.create(gameHandle, level) { handle ->
             listOf(
                 ArcherKit(handle),
                 AssassinKit(handle)
@@ -331,7 +331,7 @@ class TurfWarsInstance(gameHandle: MiniGameHandle) : TeamEliminationGameInstance
 
         if (!turf.builtBlocks.contains(pos)) return
 
-        world.destroyBlock(pos, false)
+        level.destroyBlock(pos, false)
     }
 
     private fun opponentTeam(player: ServerPlayer): Team? {
@@ -431,7 +431,7 @@ class TurfWarsInstance(gameHandle: MiniGameHandle) : TeamEliminationGameInstance
             if (kitHandler.manager.hasKitEquipped<ArcherKit>(attacker)) {
                 // ensure arrows are one-hit for archer kit
                 if (amount < victim.health) {
-                    victim.hurtServer(world, source, victim.health)
+                    victim.hurtServer(level, source, victim.health)
                     return false
                 }
             }
@@ -439,7 +439,7 @@ class TurfWarsInstance(gameHandle: MiniGameHandle) : TeamEliminationGameInstance
             if (kitHandler.manager.hasKitEquipped<AssassinKit>(attacker)) {
                 // ensure arrows are two-hit for assassin kit
                 if (amount < 10.0f) {
-                    victim.hurtServer(world, source, 10.0f)
+                    victim.hurtServer(level, source, 10.0f)
                     return false
                 }
             }
@@ -547,7 +547,7 @@ class TurfWarsInstance(gameHandle: MiniGameHandle) : TeamEliminationGameInstance
 
         if (turfManager.turfOf(team.key())?.builtBlocks?.contains(pos) != true) return false
 
-        val state = world.getBlockState(pos)
+        val state = level.getBlockState(pos)
         player.inventory.add(ItemStack(state.block))
 
         return true

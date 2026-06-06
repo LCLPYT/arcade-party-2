@@ -115,7 +115,7 @@ class MiningBattleInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHan
     }
 
     private fun giveItems() {
-        val efficiency = ItemHelper.getEnchantment(Enchantments.EFFICIENCY, world.registryAccess())
+        val efficiency = ItemHelper.getEnchantment(Enchantments.EFFICIENCY, level.registryAccess())
 
         for (player in gameHandle.participants) {
             val pickaxe = unbreakable(ItemStack(Items.DIAMOND_PICKAXE))
@@ -135,7 +135,7 @@ class MiningBattleInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHan
     private fun canBeMined(pos: BlockPos): Boolean {
         if (isOutsideMiningArea(pos)) return false
 
-        val state = world.getBlockState(pos)
+        val state = level.getBlockState(pos)
 
         return material.contains(state) || ore.isOre(state)
     }

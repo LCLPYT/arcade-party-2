@@ -21,7 +21,7 @@ import work.lclpnet.game.impl.prot.ProtectionTypes
 import work.lclpnet.kibu.access.entity.ServerPlayerAccess
 import work.lclpnet.kibu.scheduler.Ticks
 import work.lclpnet.kibu.scheduler.api.RunningTask
-import java.util.Random
+import java.util.*
 
 private const val SNOWBALL_SECONDS = 6
 private const val MAX_SNOWBALLS = 6
@@ -77,7 +77,7 @@ class BlockDissolveInstance(gameHandle: MiniGameHandle) : EliminationGameInstanc
 
     private fun scanWorld() {
         val bounds = MapUtil.readBox(map.requireProperty("bounds"))
-        val world = world
+        val world = level
 
         for (pos in bounds) {
             val state = world.getBlockState(pos)
@@ -171,7 +171,7 @@ class BlockDissolveInstance(gameHandle: MiniGameHandle) : EliminationGameInstanc
 
         val idx = random.nextInt(size)
         val pos = BlockPos.of(markedBlocks.removeLong(idx))
-        val world = world
+        val world = level
 
         var flags = Block.UPDATE_CLIENTS or Block.UPDATE_SUPPRESS_DROPS
         flags = flags or if (physics) Block.UPDATE_NEIGHBORS else Block.UPDATE_KNOWN_SHAPE

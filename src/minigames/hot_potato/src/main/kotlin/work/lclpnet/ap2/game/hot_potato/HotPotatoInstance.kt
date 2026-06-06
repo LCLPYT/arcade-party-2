@@ -181,8 +181,8 @@ class HotPotatoInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(ga
     private fun spawnParticles() {
         val player = markedPlayer?.takeIf { !it.hasDisconnected() } ?: return
         val x = player.x; val y = player.y; val z = player.z
-        world.sendParticles(ParticleTypes.LAVA, x, y, z, 1, 0.2, 0.0, 0.2, 0.0)
-        world.sendParticles(ParticleTypes.FLAME, x, y, z, 2, 0.2, 0.2, 0.2, 0.1)
+        level.sendParticles(ParticleTypes.LAVA, x, y, z, 1, 0.2, 0.0, 0.2, 0.0)
+        level.sendParticles(ParticleTypes.FLAME, x, y, z, 2, 0.2, 0.2, 0.2, 0.1)
     }
 
     private fun spawnFirework(explosion: FireworkExplosion, delay: Int) {
@@ -192,8 +192,8 @@ class HotPotatoInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(ga
         val rocket = ItemStack(Items.FIREWORK_ROCKET)
         rocket.set(DataComponents.FIREWORKS, Fireworks(1, listOf(explosion)))
 
-        val firework = FireworkRocketEntity(world, x, y + 3, z, rocket)
-        world.addFreshEntity(firework)
+        val firework = FireworkRocketEntity(level, x, y + 3, z, rocket)
+        level.addFreshEntity(firework)
 
         if (delay > 0) {
             gameHandle.rootScheduler.timeout(delay) { ->

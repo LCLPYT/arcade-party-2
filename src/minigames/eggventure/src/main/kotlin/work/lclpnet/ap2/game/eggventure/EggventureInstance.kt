@@ -156,7 +156,7 @@ class EggventureInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandl
     override fun prepare() {
         DebugEggsCommand(gameHandle.logger).register(gameHandle.commands)
 
-        val variants = eggVariants(world.registryAccess())
+        val variants = eggVariants(level.registryAccess())
 
         if (variants.isEmpty()) {
             throw IllegalStateException("There are no egg variants defined")
@@ -188,8 +188,8 @@ class EggventureInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandl
     }
 
     override fun afterInitialDelay() {
-        val dynamicEntityManager = DynamicEntityManager(world)
-        val tutorial = EggventureTutorial(world, dynamicEntityManager, random, gameHandle.translations)
+        val dynamicEntityManager = DynamicEntityManager(level)
+        val tutorial = EggventureTutorial(level, dynamicEntityManager, random, gameHandle.translations)
 
         dynamicEntityManager.init(gameHandle.scheduler, gameHandle.hooks)
         tutorial.start(gameHandle.scheduler, gameHandle.participants).thenRun { super.afterInitialDelay() }
@@ -199,7 +199,7 @@ class EggventureInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandl
         val gate: BlockBox = MapUtil.readBox(map.requireProperty("gate"))
 
         for (pos in gate) {
-            world.setBlockAndUpdate(pos, Blocks.AIR.defaultBlockState())
+            level.setBlockAndUpdate(pos, Blocks.AIR.defaultBlockState())
         }
 
         val hooks = gameHandle.hooks
@@ -210,7 +210,7 @@ class EggventureInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandl
             if (player is ServerPlayer
                     && gameHandle.participants.isParticipating(player)
                     && hand == InteractionHand.MAIN_HAND
-                    && isEasterEgg(world, pos)) {
+                    && isEasterEgg(level, pos)) {
                 onFindEasterEgg(player, pos)
             }
 
@@ -223,7 +223,7 @@ class EggventureInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandl
             val range = player.getAttributeValue(Attributes.BLOCK_INTERACTION_RANGE)
 
             val hit = RayCastUtil.raycast(
-                world, player.eyePosition, player.lookAngle, range,
+                level, player.eyePosition, player.lookAngle, range,
                 ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, CollisionContext.empty()
             ) { !it.isSpectator }
 
@@ -231,7 +231,7 @@ class EggventureInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandl
 
             val pos = hit.blockPos
 
-            if (isEasterEgg(world, pos)) {
+            if (isEasterEgg(level, pos)) {
                 onFindEasterEgg(player, pos)
             }
         }
@@ -250,7 +250,7 @@ class EggventureInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandl
             gameHandle.participants.isParticipating(it)
         }.then(::reset)
 
-        CheckpointHelper.giveResetItem(gameHandle.participants, world, gameHandle.translations, 4)
+        CheckpointHelper.giveResetItem(gameHandle.participants, level, gameHandle.translations, 4)
     }
 
     private fun reset(player: ServerPlayer) {
@@ -277,8 +277,8 @@ class EggventureInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandl
         winManager.complete()
 
         for (pos in remainingPositions) {
-            val state = world.getBlockState(pos)
-            val stack = ItemHelper.getStackWithData(world, pos)
+            val state = level.getBlockState(pos)
+            val stack = ItemHelper.getStackWithData(level, pos)
 
             if (!state.isOf(Blocks.PLAYER_HEAD)) {
                 gameHandle.logger.warn("Unexpected block: {}", state)
@@ -287,13 +287,13 @@ class EggventureInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandl
 
             val rotation = state.getValueOrElse(SkullBlock.ROTATION, 0)
 
-            val display = Display.ItemDisplay(EntityType.ITEM_DISPLAY, world)
+            val display = Display.ItemDisplay(EntityType.ITEM_DISPLAY, level)
             display.itemStack = stack
             display.setPos(pos.center)
             display.setTransformation(Transformation(Matrix4f().rotateY((rotation / -8f * PI).toFloat())))
             display.setGlowingTag(true)
 
-            world.addFreshEntity(display)
+            level.addFreshEntity(display)
         }
 
         gameHandle.translations.translateText("game.ap2.eggventure.eggs_left", styled(remainingPositions.size, ChatFormatting.YELLOW))
@@ -304,7 +304,7 @@ class EggventureInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandl
     private fun onFindEasterEgg(player: ServerPlayer, pos: BlockPos) {
         if (winManager.isGameOver) return
 
-        world.setBlock(pos, Blocks.AIR.defaultBlockState(), Block.UPDATE_SUPPRESS_DROPS or Block.UPDATE_KNOWN_SHAPE or Block.UPDATE_CLIENTS)
+        level.setBlock(pos, Blocks.AIR.defaultBlockState(), Block.UPDATE_SUPPRESS_DROPS or Block.UPDATE_KNOWN_SHAPE or Block.UPDATE_CLIENTS)
 
         commons().addScore(player, 1, data)
         trackSteal(player)
@@ -313,12 +313,12 @@ class EggventureInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandl
         val y = pos.y.toDouble()
         val z = pos.z + 0.5
 
-        world.playSound(null, x, y, z, SoundEvents.ALLAY_THROW, SoundSource.PLAYERS, 1f, 1f)
+        level.playSound(null, x, y, z, SoundEvents.ALLAY_THROW, SoundSource.PLAYERS, 1f, 1f)
         ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.ARROW_HIT_PLAYER, SoundSource.PLAYERS, 0.75f, 1.2f)
 
-        world.sendParticles(ParticleTypes.CRIMSON_SPORE, x, y, z, 75, 0.25, 0.25, 0.25, 0.0)
-        world.sendParticles(ParticleTypes.WARPED_SPORE, x, y, z, 75, 0.25, 0.25, 0.25, 0.0)
-        world.sendParticles(ParticleTypes.GLOW, x, y, z, 25, 0.5, 0.5, 0.5, 0.0)
+        level.sendParticles(ParticleTypes.CRIMSON_SPORE, x, y, z, 75, 0.25, 0.25, 0.25, 0.0)
+        level.sendParticles(ParticleTypes.WARPED_SPORE, x, y, z, 75, 0.25, 0.25, 0.25, 0.0)
+        level.sendParticles(ParticleTypes.GLOW, x, y, z, 25, 0.5, 0.5, 0.5, 0.0)
 
         remainingPositions.remove(pos)
     }

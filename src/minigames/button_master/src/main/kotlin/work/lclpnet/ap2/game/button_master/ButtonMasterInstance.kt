@@ -115,13 +115,13 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
 
 
     override fun prepare() {
-        capsules = ButtonMasterCapsules(world, schemaHolder.get(), capsuleSchematic, commons())
-        missDetector = ButtonMissDetector(world, bmStats)
+        capsules = ButtonMasterCapsules(level, schemaHolder.get(), capsuleSchematic, commons())
+        missDetector = ButtonMissDetector(level, bmStats)
 
-        dynamicEntityManager = DynamicEntityManager(world)
+        dynamicEntityManager = DynamicEntityManager(level)
         dynamicEntityManager.init(gameHandle.scheduler, gameHandle.hooks)
 
-        buttonPositions = ButtonPositions(world, map, schemaHolder.get(), commons(), gameHandle)
+        buttonPositions = ButtonPositions(level, map, schemaHolder.get(), commons(), gameHandle)
 
         validPositions.addAll(buttonPositions.scanWorld())
 
@@ -134,7 +134,7 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
     }
 
     private fun closeWall() {
-        val world = this.world
+        val world = this.level
         val wallBlocks = wallBlocks ?: return
         val wallState = Blocks.WHITE_STAINED_GLASS.defaultBlockState()
 
@@ -148,8 +148,8 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
     }
 
     private fun equipPlayers() {
-        val trimPatterns = world.registryAccess().lookupOrThrow(Registries.TRIM_PATTERN)
-        val trimMaterials = world.registryAccess().lookupOrThrow(Registries.TRIM_MATERIAL)
+        val trimPatterns = level.registryAccess().lookupOrThrow(Registries.TRIM_PATTERN)
+        val trimMaterials = level.registryAccess().lookupOrThrow(Registries.TRIM_MATERIAL)
 
         val silenceTrim = trimPatterns.getOrThrow(TrimPatterns.SILENCE)
         val wildTrim = trimPatterns.getOrThrow(TrimPatterns.WILD)
@@ -165,7 +165,7 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
         val boots = ItemStack(Items.NETHERITE_BOOTS)
         boots.set(DataComponents.TRIM, ArmorTrim(quartz, wildTrim))
 
-        val head = world.registryAccess().lookupOrThrow(ApRegistries.PLAYER_HEAD)
+        val head = level.registryAccess().lookupOrThrow(ApRegistries.PLAYER_HEAD)
             .getValueOrThrow(ASTRONAUT_HEAD).createStack()
 
         for (player in players()) {
@@ -220,7 +220,7 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
             return InteractionResult.PASS
         }
 
-        val state = world.getBlockState(result.blockPos)
+        val state = level.getBlockState(result.blockPos)
 
         if (!state.isIn(BlockTags.BUTTONS))
             return InteractionResult.PASS
@@ -245,7 +245,7 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
 
         val spawn = capsules.getCapsuleSpawn(capsule)
 
-        world.setBlockAndUpdate(BlockPos.containing(spawn).below(), Blocks.AIR.defaultBlockState())
+        level.setBlockAndUpdate(BlockPos.containing(spawn).below(), Blocks.AIR.defaultBlockState())
 
         val uuid = capsules.players[capsule] ?: return
         val player = players().getParticipant(uuid).orElse(null) ?: return
@@ -352,7 +352,7 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
         val lastPos = currentButtonPos
 
         if (lastPos != null) {
-            world.setBlockAndUpdate(lastPos, Blocks.AIR.defaultBlockState())
+            level.setBlockAndUpdate(lastPos, Blocks.AIR.defaultBlockState())
         }
 
         require(validPositions.isNotEmpty()) { "No valid position found" }
@@ -361,14 +361,14 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
 
         val buttonBlock = Blocks.BAMBOO_BUTTON
 
-        val states = buttonStates(buttonBlock).filter { it.canSurvive(world, pos) }
+        val states = buttonStates(buttonBlock).filter { it.canSurvive(level, pos) }
 
         require(states.isNotEmpty()) { "No valid button state found" }
 
         val state = states.random()
 
         currentButtonPos = pos
-        world.setBlockAndUpdate(pos, state)
+        level.setBlockAndUpdate(pos, state)
 
         if (DEBUG_BUTTON_POSITION) {
             currentButtonMarker?.detach()
@@ -387,11 +387,11 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
 
     private fun markButton() {
         val pos = currentButtonPos ?: return
-        val renderer = renderer(ServerWorldMountContext(world))
+        val renderer = renderer(ServerWorldMountContext(level))
 
-        renderer.markBlock(pos, world.getBlockState(pos), 0x00ff00)
+        renderer.markBlock(pos, level.getBlockState(pos), 0x00ff00)
 
-        SoundHelper.playSound(world, SoundEvents.BELL_BLOCK, SoundSource.BLOCKS, 1f, 1.7f)
+        SoundHelper.playSound(level, SoundEvents.BELL_BLOCK, SoundSource.BLOCKS, 1f, 1.7f)
 
         translate("game.ap2.button_master.revealed").formatted(ChatFormatting.AQUA).sendTo(allPlayers())
     }
@@ -424,7 +424,7 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
     fun rendererFor(player: ServerPlayer): ApSceneRenderer? {
         val dynamicEntityManager = dynamicEntityManager
 
-        val mountContext = PlayerMountContext(world, dynamicEntityManager, player.uuid)
+        val mountContext = PlayerMountContext(level, dynamicEntityManager, player.uuid)
 
         return renderer(mountContext)
     }

@@ -119,7 +119,7 @@ class BowSpleefInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(ga
         specialItems = SpecialItems.create(
             gameHandle,
             map,
-            world,
+            level,
             Random(),
             commons().debugController()
         ) { config -> config.apply {
@@ -140,7 +140,7 @@ class BowSpleefInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(ga
 
         // register this callback after special item setup, to execute it last (updates spawn pos mesh)
         impactHook.register { projectile, pos ->
-            removeBlocks(pos, world)
+            removeBlocks(pos, level)
             projectile.discard()
         }
     }
@@ -169,7 +169,7 @@ class BowSpleefInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(ga
     }
 
     private fun giveBowsToPlayers() {
-        val infinity = ItemHelper.getEnchantment(Enchantments.INFINITY, world.registryAccess())
+        val infinity = ItemHelper.getEnchantment(Enchantments.INFINITY, level.registryAccess())
 
         val bowName = translate("game.ap2.bow_spleef.bow")
             .styled { it.withItalic(false).applyFormat(ChatFormatting.GOLD) }
@@ -208,7 +208,7 @@ class BowSpleefInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(ga
     }
 
     private fun removeBlocksUnder() {
-        val world = world
+        val world = level
 
         val spawnJson: JSONArray = requireNotNull(map.getProperty("spawn")) { "Spawn not configured" }
         val spawn = MapUtil.readBlockPos(spawnJson)

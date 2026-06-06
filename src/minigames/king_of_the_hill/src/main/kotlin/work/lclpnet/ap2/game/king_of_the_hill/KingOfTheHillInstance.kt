@@ -73,11 +73,11 @@ class KingOfTheHillInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
         val readShape = MapUtil.readOptShape(map, "spawn-remove-shape")
 
         readShape?.forEach { pos ->
-            world.setBlock(pos, Blocks.AIR)
+            level.setBlock(pos, Blocks.AIR)
         }
 
         val name = translate("game.ap2.king_of_the_hill.knockback_stick").formatted(ChatFormatting.GOLD)
-        val knockback = ItemHelper.getEnchantment(Enchantments.KNOCKBACK, world.registryAccess())
+        val knockback = ItemHelper.getEnchantment(Enchantments.KNOCKBACK, level.registryAccess())
 
         for (player in players()) {
             val stack = ItemStack(Items.STICK)

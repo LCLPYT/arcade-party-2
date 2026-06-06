@@ -67,7 +67,7 @@ fun BaseGameInstance.playSound(
     volume: Float,
     pitch: Float
 ) =
-    SoundHelper.playSound(world, sound, source, volume, pitch)
+    SoundHelper.playSound(level, sound, source, volume, pitch)
 
 fun BaseGameInstance.createTimer(
     label: TranslatedText,

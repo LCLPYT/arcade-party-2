@@ -78,7 +78,7 @@ class RedLightGreenLightInstance(gameHandle: MiniGameHandle) : FFAGameInstance(g
         taskBar = useTaskDisplay()
 
         val map = map
-        val world = world
+        val world = level
 
         goal = MapUtil.readBox(map.requireProperty("goal"))
         tracker = MovementTracker(goal)
@@ -174,7 +174,7 @@ class RedLightGreenLightInstance(gameHandle: MiniGameHandle) : FFAGameInstance(g
             TrafficLight.Status.GREEN -> ChatFormatting.GREEN
         })
 
-        val world = world
+        val world = level
 
         for (player in PlayerLookup.level(world)) {
             when (status) {
@@ -188,7 +188,7 @@ class RedLightGreenLightInstance(gameHandle: MiniGameHandle) : FFAGameInstance(g
     }
 
     private fun setTrafficLightStatus(status: EnumSet<TrafficLight.Status>) {
-        val world = world
+        val world = level
 
         for (light in trafficLights) {
             light.set(status, world)
@@ -197,7 +197,7 @@ class RedLightGreenLightInstance(gameHandle: MiniGameHandle) : FFAGameInstance(g
 
     private fun openGate() {
         val gate = MapUtil.readBox(map.requireProperty("gate"))
-        val world = world
+        val world = level
         val air = Blocks.AIR.defaultBlockState()
 
         for (pos in gate) {
@@ -228,7 +228,7 @@ class RedLightGreenLightInstance(gameHandle: MiniGameHandle) : FFAGameInstance(g
     }
 
     private fun punish(player: ServerPlayer) {
-        val world = world
+        val world = level
 
         val x = player.x; val y = player.y; val z = player.z
         world.sendParticles(ParticleTypes.CRIT, x, y, z, 100, 0.1, 0.1, 0.1, 1.0)
@@ -266,7 +266,7 @@ class RedLightGreenLightInstance(gameHandle: MiniGameHandle) : FFAGameInstance(g
 
         data.add(player)
 
-        val world = world
+        val world = level
 
         Fireworks.spawnGoalFirework(player)
 

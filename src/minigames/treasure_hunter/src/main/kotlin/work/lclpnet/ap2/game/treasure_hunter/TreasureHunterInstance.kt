@@ -136,7 +136,7 @@ class TreasureHunterInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameH
     }
 
     private fun giveShovelsToPlayers() {
-        val efficiency = ItemHelper.getEnchantment(Enchantments.EFFICIENCY, world.registryAccess())
+        val efficiency = ItemHelper.getEnchantment(Enchantments.EFFICIENCY, level.registryAccess())
 
         for (player in gameHandle.participants) {
             val stack = unbreakable(ItemStack(Items.IRON_SHOVEL))
@@ -153,13 +153,13 @@ class TreasureHunterInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameH
         val chestAreaList = ArrayList<BlockPos>()
 
         for (block in box) {
-            val state = world.getBlockState(block)
+            val state = level.getBlockState(block)
             if (materials.contains(state)) {
                 chestAreaList.add(block.immutable())
             }
         }
 
         val chestPos = chestAreaList[random.nextInt(chestAreaList.size)]
-        world.setBlockAndUpdate(chestPos, Blocks.CHEST.defaultBlockState())
+        level.setBlockAndUpdate(chestPos, Blocks.CHEST.defaultBlockState())
     }
 }

@@ -56,7 +56,7 @@ class QuickSgInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(game
     override fun prepare() {
         LazyLootContainerManager(
             players(),
-            world,
+            level,
             VanillaLootTableFiller(lootTableKey),
         ) { _, container ->
             container is ChestBlockEntity || container is BarrelBlockEntity
@@ -81,7 +81,7 @@ class QuickSgInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(game
         val spacing = map.properties.optNumber("spawn-spacing", 16.0).toDouble()
 
         val finder = SpawnFinder(spacing, commons().debugController())
-        val allSpawns = finder.findSpawns(world, schema.scanBox, schema.scanStarts.toSet())
+        val allSpawns = finder.findSpawns(level, schema.scanBox, schema.scanStarts.toSet())
         val spacedSpawns = finder.generateSpacedSpawns(allSpawns, players().count(), Random.asJavaRandom())
 
         var i = 0
@@ -103,7 +103,7 @@ class QuickSgInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(game
     }
 
     override fun go() {
-        PvpBehavior(gameHandle, world).configure()
+        PvpBehavior(gameHandle, level).configure()
 
         PlayerInteractionHooks.USE_BLOCK.registerWith(hooks) { player, _, _, _ ->
             when {
@@ -128,7 +128,7 @@ class QuickSgInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(game
     }
 
     private fun updateCompass(player: ServerPlayer) {
-        val server = world.server
+        val server = level.server
 
         if (!player.inventory.contains { it.isOf(Items.COMPASS) }) return
 
@@ -138,7 +138,7 @@ class QuickSgInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(game
 
         player.connection.send(ClientboundSetDefaultSpawnPositionPacket(when {
             closestEnemy != null -> LevelData.RespawnData.of(
-                world.level.dimension(),
+                level.level.dimension(),
                 closestEnemy.blockPosition(),
                 0f,
                 0f

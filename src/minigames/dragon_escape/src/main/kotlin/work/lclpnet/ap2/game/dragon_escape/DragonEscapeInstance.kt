@@ -99,7 +99,7 @@ class DragonEscapeInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHan
     override fun prepare() {
         if (!readProps()) return
 
-        pseudoElimination = PseudoElimination(gameHandle, world)
+        pseudoElimination = PseudoElimination(gameHandle, level)
 
         markChunksPersistent()
         teleportPlayers()
@@ -151,7 +151,7 @@ class DragonEscapeInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHan
 
     private fun setupDragon() {
         dragonController = DragonController(
-            path, world, random,
+            path, level, random,
             { pos -> !goalShape.contains(pos) },
             { pseudoElimination.iterateParticipants().iterator() }
         )
@@ -168,7 +168,7 @@ class DragonEscapeInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHan
     }
 
     private fun setupKits(visibilityHandler: VisibilityHandler) {
-        kitHandler = KitHandler.create(gameHandle, world) { kitHandle ->
+        kitHandler = KitHandler.create(gameHandle, level) { kitHandle ->
             listOf(
                 LeapKit(kitHandle),
                 EnderPearlKit(kitHandle, path),
@@ -198,7 +198,7 @@ class DragonEscapeInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHan
     }
 
     private fun markChunksPersistent() {
-        val persistence = ChunkPersistence(world, gameHandle)
+        val persistence = ChunkPersistence(level, gameHandle)
         val samples = 1000
 
         for (i in 0 until samples) {
@@ -241,7 +241,7 @@ class DragonEscapeInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHan
         }
 
         val spawns = spawnPool.toMutableList()
-        val world = world
+        val world = level
         val yaw = MapUtils.getSpawnYaw(map)
 
         for (player in gameHandle.participants) {
@@ -441,7 +441,7 @@ class DragonEscapeInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHan
         val dir = path.sampleDirection(tracker.maxProgress).normalize()
 
         player.teleportTo(
-            world,
+            level,
             pos.x,
             pos.y,
             pos.z,

@@ -103,7 +103,7 @@ public class GuessItInstance extends FFAGameInstance implements MapBootstrap {
 
     @Override
     protected void prepare() {
-        ServerLevel world = getWorld();
+        ServerLevel world = getLevel();
         GameMap map = getMap();
         HookRegistrar hooks = gameHandle.getHooks();
         Participants participants = gameHandle.getParticipants();
@@ -215,7 +215,7 @@ public class GuessItInstance extends FFAGameInstance implements MapBootstrap {
         var challengeInit = manager.nextChallenge();
 
         challenge = challengeInit.challenge();
-        ServerLevel world = getWorld();
+        ServerLevel world = getLevel();
         Translations translations = gameHandle.getTranslations();
 
         var prepareMsg = translations.translateText("game.ap2.guess_it.prepare." + challenge.getPreparationKey())
@@ -249,7 +249,7 @@ public class GuessItInstance extends FFAGameInstance implements MapBootstrap {
     private synchronized void beginChallenge() {
         Objects.requireNonNull(challenge, "Challenge cannot be null");
 
-        ServerLevel world = getWorld();
+        ServerLevel world = getLevel();
         Translations translations = gameHandle.getTranslations();
         TaskScheduler scheduler = gameHandle.getScheduler();
 

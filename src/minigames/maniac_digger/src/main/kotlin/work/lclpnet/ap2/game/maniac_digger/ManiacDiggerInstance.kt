@@ -78,7 +78,7 @@ class ManiacDiggerInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHan
     }
 
     override fun prepare() {
-        val world = this.world
+        val world = this.level
 
         for (player in gameHandle.participants) {
             val pipe = pipes[player.uuid] ?: continue

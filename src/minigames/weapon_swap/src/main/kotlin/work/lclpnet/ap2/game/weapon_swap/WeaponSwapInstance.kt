@@ -129,7 +129,7 @@ class WeaponSwapInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(g
         val spacing = map.properties.optNumber("spawn-spacing", SPAWN_SPACING_DEFAULT).toDouble()
 
         val finder = SpawnFinder(spacing, commons().debugController())
-        val pool = finder.findSpawns(world, scanBox, schema.scanStarts.toSet())
+        val pool = finder.findSpawns(level, scanBox, schema.scanStarts.toSet())
         val spawns = finder.generateSpacedSpawns(pool, players().count(), Random.asJavaRandom())
 
         var i = 0

@@ -47,7 +47,7 @@ class ApocalypseSurvivalInstance(gameHandle: MiniGameHandle) : EliminationGameIn
 
         targetManager = TargetManager(participants, map, random)
 
-        val setup = AsSetup(map, world, random, targetManager)
+        val setup = AsSetup(map, level, random, targetManager)
         spawners = setup.readSpawners()
 
         commons().gameRuleBuilder()
@@ -64,7 +64,7 @@ class ApocalypseSurvivalInstance(gameHandle: MiniGameHandle) : EliminationGameIn
         }
 
         ServerEntityHooks.ENTITY_LOAD.registerWith(hooks) { entity, relWorld ->
-            if (relWorld != world) return@registerWith
+            if (relWorld != level) return@registerWith
 
             when (entity) {
                 is Zombie -> targetManager.addZombie(entity)
@@ -76,7 +76,7 @@ class ApocalypseSurvivalInstance(gameHandle: MiniGameHandle) : EliminationGameIn
         }
 
         ServerEntityHooks.ENTITY_UNLOAD.registerWith(hooks) { entity, relWorld ->
-            if (relWorld == world && entity is Mob) {
+            if (relWorld == level && entity is Mob) {
                 targetManager.removeMob(entity)
             }
         }

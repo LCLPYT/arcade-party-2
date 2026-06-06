@@ -133,7 +133,7 @@ class AnvilFallInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(ga
 
     private fun scanWorld() {
         val box = MapUtil.readBox(map.requireProperty("anvil-box"))
-        setup = AnvilFallSetup.scanWorld(world, box, random)
+        setup = AnvilFallSetup.scanWorld(level, box, random)
         playArea = MapUtil.readBox(map.requireProperty("play-area"))
         val spawn = MapUtil.readBlockPos(map.requireProperty("spawn"))
         center = Vec3(spawn.x + 0.5, 0.0, spawn.z + 0.5)
@@ -198,7 +198,7 @@ class AnvilFallInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(ga
         val randomDirection = directions[random.nextInt(directions.size)]
         val state = Blocks.ANVIL.defaultBlockState().setValue(AnvilBlock.FACING, randomDirection)
 
-        val anvil = FallingBlockEntity(EntityType.FALLING_BLOCK, world)
+        val anvil = FallingBlockEntity(EntityType.FALLING_BLOCK, level)
         anvil.setPosRaw(pos.x + 0.5, pos.y.toDouble(), pos.z + 0.5)
         anvil.isSilent = true
         anvil.time = 1
@@ -207,7 +207,7 @@ class AnvilFallInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(ga
         FallingBlockAccess.setDestroyedOnLanding(anvil, true)
         FallingBlockAccess.setBlockState(anvil, state)
 
-        world.addFreshEntity(anvil)
+        level.addFreshEntity(anvil)
     }
 
     private fun repelPlayer(player: ServerPlayer, to: Position) {
