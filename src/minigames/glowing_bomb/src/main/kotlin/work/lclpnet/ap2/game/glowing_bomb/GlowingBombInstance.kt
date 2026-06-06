@@ -19,6 +19,7 @@ import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.map.MapBootstrap
 import work.lclpnet.ap2.api.map.MapBootstrapFunction
 import work.lclpnet.ap2.api.stats.Stat
+import work.lclpnet.ap2.api.stats.StatUnits
 import work.lclpnet.ap2.ext.players
 import work.lclpnet.ap2.ext.runAfter
 import work.lclpnet.ap2.ext.runEveryTick
@@ -48,8 +49,8 @@ val BOMB_ASSIGNED = Stat("bomb_assigned", 0)
 val BOMB_PASSED = Stat("bomb_passed", 0)
 val BOMB_EXPLODED = Stat("bomb_exploded", 0)
 val MAX_SAFE_STREAK = Stat("max_safe_streak", 0)
-val BOMB_HOLD_TIME = Stat("bomb_hold_time", 0f)
-val MIN_FUSE_ON_PASS = Stat("min_fuse_on_pass", 0f, higherIsBetter = false)
+val BOMB_HOLD_TIME = Stat("bomb_hold_time", 0f, unit = StatUnits.Seconds)
+val MIN_FUSE_ON_PASS = Stat("min_fuse_on_pass", 0f, higherIsBetter = false, unit = StatUnits.Seconds)
 
 class GlowingBombInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gameHandle), MapBootstrapFunction {
 

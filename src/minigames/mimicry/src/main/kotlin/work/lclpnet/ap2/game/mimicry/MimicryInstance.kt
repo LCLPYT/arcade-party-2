@@ -14,6 +14,7 @@ import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.game.data.DataContainer
 import work.lclpnet.ap2.api.map.MapBootstrap
 import work.lclpnet.ap2.api.stats.Stat
+import work.lclpnet.ap2.api.stats.StatUnits
 import work.lclpnet.ap2.ext.mc.isIn
 import work.lclpnet.ap2.ext.runAfter
 import work.lclpnet.ap2.ext.ticks
@@ -46,8 +47,8 @@ private const val INITIAL_SEQUENCE_LENGTH = 3
 
 val DIRECT_BUTTON_CLICKS = Stat("direct_button_clicks", 0)
 val BLOCK_CLICKS = Stat("block_clicks", 0)
-val AVG_TIME_USAGE = Stat("avg_time_usage", 0f)
-val AVG_CLICK_TIME = Stat("avg_click_time", 0f)
+val AVG_TIME_USAGE = Stat("avg_time_usage", 0f, unit = StatUnits.Percent)
+val AVG_CLICK_TIME = Stat("avg_click_time", 0f, unit = StatUnits.Seconds)
 
 class MimicryInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle), MapBootstrap {
 

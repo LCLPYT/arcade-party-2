@@ -8,9 +8,10 @@ import work.lclpnet.ap2.api.stats.CommonStats.Deaths
 import work.lclpnet.ap2.api.stats.CommonStats.KillDeathRatio
 import work.lclpnet.ap2.api.stats.CommonStats.Kills
 import work.lclpnet.ap2.api.stats.Stat
+import work.lclpnet.ap2.api.stats.StatUnits
 import work.lclpnet.ap2.api.stats.TeamStatsManager
 
-val FuelAdded = Stat("fuel_added", 0f)
+val FuelAdded = Stat("fuel_added", 0f, unit = StatUnits.Seconds)
 
 class CCStats(private val stats: TeamStatsManager, private val teamManager: TeamManager) {
 

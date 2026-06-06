@@ -5,7 +5,12 @@ import work.lclpnet.ap2.api.game.data.GenericGameResult
 import work.lclpnet.ap2.api.game.data.SubjectRef
 import work.lclpnet.ap2.api.game.data.SubjectRefFactory
 
-data class Stat<T>(val id: String, val default: T, val higherIsBetter: Boolean = true)
+data class Stat<T>(
+    val id: String,
+    val default: T,
+    val higherIsBetter: Boolean = true,
+    val unit: StatUnit = StatUnits.Plain,
+)
 
 typealias StatSet = Set<Stat<out Any>>
 

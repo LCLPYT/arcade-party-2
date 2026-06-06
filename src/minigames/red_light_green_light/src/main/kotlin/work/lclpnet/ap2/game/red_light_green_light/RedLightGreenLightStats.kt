@@ -3,14 +3,14 @@ package work.lclpnet.ap2.game.red_light_green_light
 import net.minecraft.server.level.ServerPlayer
 import work.lclpnet.ap2.api.stats.FFAStatsManager
 import work.lclpnet.ap2.api.stats.Stat
+import work.lclpnet.ap2.api.stats.StatUnits
 import java.util.*
-import kotlin.math.roundToInt
 
 val Resets = Stat("resets", 0, higherIsBetter = false)
-val YellowMovingTime = Stat("yellow_moving_time", 0f)
-val ClosestStopTime = Stat("closest_stop_time", 0f, higherIsBetter = false)
+val YellowMovingTime = Stat("yellow_moving_time", 0f, unit = StatUnits.Seconds)
+val ClosestStopTime = Stat("closest_stop_time", 0f, higherIsBetter = false, unit = StatUnits.Seconds)
 val DistanceReset = Stat("distance_reset", 0f, higherIsBetter = false)
-val AvgYellowTimeUsage = Stat("avg_yellow_time_usage", 0f)
+val AvgYellowTimeUsage = Stat("avg_yellow_time_usage", 0f, unit = StatUnits.Percent)
 
 class RedLightGreenLightStats(private val stats: FFAStatsManager) {
 
@@ -43,8 +43,7 @@ class RedLightGreenLightStats(private val stats: FFAStatsManager) {
         yellowUsageSum[uuid] = sum
         yellowUsageCount[uuid] = count
 
-        val percent = (sum / count * 1000.0).roundToInt() / 10f
-        stats.set(player, AvgYellowTimeUsage, percent)
+        stats.set(player, AvgYellowTimeUsage, (sum / count).toFloat())
     }
 
     fun recordStopTime(player: ServerPlayer, seconds: Float) {

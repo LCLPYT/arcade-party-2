@@ -12,6 +12,7 @@ import net.minecraft.world.entity.player.Player
 import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.map.MapBootstrap
 import work.lclpnet.ap2.api.stats.Stat
+import work.lclpnet.ap2.api.stats.StatUnits
 import work.lclpnet.ap2.impl.game.FFAGameInstance
 import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef
@@ -41,9 +42,9 @@ private const val CONE_FOV = 35
 
 private val CLICKS = Stat("clicks", 0)
 private val MISSES = Stat("misses", 0)
-private val ACCURACY = Stat("accuracy", 0f)
+private val ACCURACY = Stat("accuracy", 0f, unit = StatUnits.Percent)
 private val STREAK = Stat("streak", 0)
-private val AVG_ADVANCE_TIME = Stat("avg_advance_time", 0f)
+private val AVG_ADVANCE_TIME = Stat("avg_advance_time", 0f, unit = StatUnits.Seconds)
 
 class AimMasterInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle), MapBootstrap {
 
@@ -168,7 +169,7 @@ class AimMasterInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
     }
 
     private fun updateAccuracy(player: ServerPlayer, hits: Int, clicks: Int) {
-        val accuracy = if (clicks == 0) 0f else round(hits * 1000f / clicks) / 10f
+        val accuracy = if (clicks == 0) 0f else hits.toFloat() / clicks
         stats.set(player, ACCURACY, accuracy)
     }
 

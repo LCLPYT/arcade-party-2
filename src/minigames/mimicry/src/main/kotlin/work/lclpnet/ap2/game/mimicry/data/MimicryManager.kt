@@ -139,9 +139,8 @@ class MimicryManager(
         usageCount.addTo(uuid, 1)
 
         val avgRatio = usageSum.getDouble(uuid) / usageCount.getInt(uuid)
-        val percent = round(avgRatio * 1000.0).toFloat() / 10f
 
-        stats.set(player, AVG_TIME_USAGE, percent)
+        stats.set(player, AVG_TIME_USAGE, avgRatio.toFloat())
     }
 
     private fun activateButton(room: MimicryRoom, button: Int, uuid: UUID) {

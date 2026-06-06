@@ -21,15 +21,32 @@ class TimeHelperTest {
     void doubleTime(double seconds, String expected) {
         var translations = new Translations(new TestTranslator());
 
-        assertEquals(expected, TimeHelper.formatTime(translations, seconds, "%02d", "%06.3f")
+        assertEquals(expected, TimeHelper.formatTime(translations, seconds, "%02d", "%06.3f", "%.3f")
                 .translateTo("en_us").getString());
     }
 
     private static Stream<Arguments> doubles() {
         return Stream.of(
-                of(5.5, "05.500"),
+                of(5.5, "5.500"),
                 of(16.332, "16.332"),
                 of(62.2, "01:02.200")
+        );
+    }
+
+    @MethodSource("simpleDoubles")
+    @ParameterizedTest
+    void simpleDoubleTime(double seconds, String expected) {
+        var translations = new Translations(new TestTranslator());
+
+        assertEquals(expected, TimeHelper.formatTime(translations, seconds)
+                .translateTo("en_us").getString());
+    }
+
+    private static Stream<Arguments> simpleDoubles() {
+        return Stream.of(
+                of(1.3, "1.3"),
+                of(0.0, "0.0"),
+                of(65.5, "01:05.5")
         );
     }
 
