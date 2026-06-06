@@ -19,13 +19,13 @@ import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.map.MapBootstrap
 import work.lclpnet.ap2.api.map.MapBootstrapFunction
 import work.lclpnet.ap2.api.stats.Stat
+import work.lclpnet.ap2.ext.players
 import work.lclpnet.ap2.ext.runAfter
 import work.lclpnet.ap2.ext.runEveryTick
 import work.lclpnet.ap2.ext.ticks
 import work.lclpnet.ap2.game.glowing_bomb.data.GbAnchor
 import work.lclpnet.ap2.game.glowing_bomb.data.GbBomb
 import work.lclpnet.ap2.game.glowing_bomb.data.GbManager
-import work.lclpnet.ap2.game.player.Participants
 import work.lclpnet.ap2.impl.game.EliminationGameInstance
 import work.lclpnet.ap2.impl.map.ServerThreadMapBootstrap
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker
@@ -48,6 +48,8 @@ val BOMB_ASSIGNED = Stat("bomb_assigned", 0)
 val BOMB_PASSED = Stat("bomb_passed", 0)
 val BOMB_EXPLODED = Stat("bomb_exploded", 0)
 val MAX_SAFE_STREAK = Stat("max_safe_streak", 0)
+val BOMB_HOLD_TIME = Stat("bomb_hold_time", 0f)
+val MIN_FUSE_ON_PASS = Stat("min_fuse_on_pass", 0f, higherIsBetter = false)
 
 class GlowingBombInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gameHandle), MapBootstrapFunction {
 
@@ -57,7 +59,8 @@ class GlowingBombInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
     }
     private val credits = Object2IntOpenHashMap<UUID>()
     private val safeStreak = Object2IntOpenHashMap<UUID>()
-    private val stats = createStats(BOMB_ASSIGNED, BOMB_PASSED, BOMB_EXPLODED, MAX_SAFE_STREAK)
+    private val holdTicks = Object2IntOpenHashMap<UUID>()
+    private val stats = createStats(BOMB_ASSIGNED, BOMB_PASSED, BOMB_EXPLODED, MAX_SAFE_STREAK, BOMB_HOLD_TIME, MIN_FUSE_ON_PASS)
     private val initialPlayerCount = gameHandle.participants.count()
     private lateinit var manager: GbManager
     private lateinit var scene: Scene
@@ -65,6 +68,7 @@ class GlowingBombInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
     private var mayPass = false
     private var wasPassed = false
     private var time = 0
+    private var fuseTicks = 0
     private var bombDelayedSpawn: TaskHandle? = null
 
     init {
@@ -93,11 +97,10 @@ class GlowingBombInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
 
     override fun go() {
         val hooks = gameHandle.hooks
-        val participants: Participants = gameHandle.participants
 
         PlayerInteractionHooks.USE_ITEM.registerWith(hooks) { player, _, hand ->
             val serverPlayer = player as? ServerPlayer ?: return@registerWith InteractionResult.PASS
-            if (!participants.isParticipating(serverPlayer)) return@registerWith InteractionResult.PASS
+            if (!players().isParticipating(serverPlayer)) return@registerWith InteractionResult.PASS
 
             val stack = serverPlayer.getItemInHand(hand)
 
@@ -115,6 +118,12 @@ class GlowingBombInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
 
         scene = Scene(ServerWorldMountContext(world))
         scene.animate(1, gameHandle.scheduler)
+
+        // init min fuse pass to max value for everyone
+        val noPassFuse = maxFuseTicks() / 20f
+        for (player in players()) {
+            stats.set(player, MIN_FUSE_ON_PASS, noPassFuse)
+        }
 
         spawnBomb()
     }
@@ -146,7 +155,7 @@ class GlowingBombInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
             scene.add(b)
         }
 
-        val fuseTicks = randomFuseTicks()
+        fuseTicks = randomFuseTicks()
         gameHandle.scheduler.timeout(fuseTicks) { -> bombTimerExpired() }
 
         val x = pos.x(); val y = pos.y(); val z = pos.z()
@@ -170,12 +179,14 @@ class GlowingBombInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
 
     private fun randomFuseTicks(): Int {
         val minFuse = minFuseTicks()
-        val maxFuse = when {
-            initialPlayerCount <= 5 -> Ticks.seconds(18)
-            initialPlayerCount <= 10 -> Ticks.seconds(14)  // avg 10s
-            else -> Ticks.seconds(12)  // avg 8.75s
-        }
+        val maxFuse = maxFuseTicks()
         return random.nextInt(minFuse, maxFuse + 1)
+    }
+
+    private fun maxFuseTicks(): Int = when {
+        initialPlayerCount <= 5 -> Ticks.seconds(18)
+        initialPlayerCount <= 10 -> Ticks.seconds(14)  // avg 10s
+        else -> Ticks.seconds(12)  // avg 8.75s
     }
 
     private fun minFuseTicks(): Int = when {
@@ -236,6 +247,11 @@ class GlowingBombInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
         if (nextHolder == player) return
 
         stats.increment(player, BOMB_PASSED)
+
+        val remainingFuse = (fuseTicks - time).coerceAtLeast(0) / 20f
+        if (remainingFuse < stats.get(player, MIN_FUSE_ON_PASS)) {
+            stats.set(player, MIN_FUSE_ON_PASS, remainingFuse)
+        }
 
         wasPassed = true
 
@@ -348,13 +364,17 @@ class GlowingBombInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
 
         time++
 
-        // don't grant credits if the bomb wasn't passed yet and couldn't have exploded yet because of the minimum fuse time
-        if (!wasPassed && time < minFuseTicks()) return
-
-        // grant credits each tick
         manager.bombHolder().ifPresent { player ->
             val uuid = player.uuid
-            credits.put(uuid, credits.getOrDefault(uuid, 0) + CREDITS_PER_TICK)
+
+            // accumulate the total time the player has held a bomb
+            holdTicks.addTo(uuid, 1)
+            stats.set(player, BOMB_HOLD_TIME, holdTicks.getInt(uuid) / 20f)
+
+            // don't grant credits if the bomb wasn't passed yet and couldn't have exploded yet because of the minimum fuse time
+            if (wasPassed || time >= minFuseTicks()) {
+                credits.put(uuid, credits.getOrDefault(uuid, 0) + CREDITS_PER_TICK)
+            }
         }
     }
 }

@@ -6,5 +6,7 @@
   "game.ap2.glowing_bomb.stat.bomb_assigned": "Bomben erhalten",
   "game.ap2.glowing_bomb.stat.bomb_passed": "Bomben weitergegeben",
   "game.ap2.glowing_bomb.stat.bomb_exploded": "Bomben explodiert",
-  "game.ap2.glowing_bomb.stat.max_safe_streak": "Serie"
+  "game.ap2.glowing_bomb.stat.max_safe_streak": "Serie",
+  "game.ap2.glowing_bomb.stat.bomb_hold_time": "Gesamte Haltezeit",
+  "game.ap2.glowing_bomb.stat.min_fuse_on_pass": "Knappste Weitergabe"
 }
