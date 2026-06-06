@@ -8,6 +8,8 @@ import net.minecraft.server.level.ServerPlayer
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.sounds.SoundSource
 import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.EntitySpawnReason
+import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.boss.enderdragon.EnderDragon
 import net.minecraft.world.entity.boss.enderdragon.phases.EnderDragonPhase
 import net.minecraft.world.level.block.Block
@@ -21,6 +23,7 @@ import work.lclpnet.ap2.api.stats.CommonStats.BlocksPlaced
 import work.lclpnet.ap2.api.stats.CommonStats.DistanceMoved
 import work.lclpnet.ap2.api.stats.CommonStats.Kills
 import work.lclpnet.ap2.api.stats.CommonStats.TimeSurvived
+import work.lclpnet.ap2.core.hook.EntitySpawnedByCallback
 import work.lclpnet.ap2.core.type.ApDragonFight
 import work.lclpnet.ap2.ext.*
 import work.lclpnet.ap2.ext.mc.rangeTo
@@ -67,6 +70,7 @@ class PillarBattleInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
     private val killTracker = KnockbackKillTracker(players()).also {
         it.init(gameHandle.scheduler)
     }
+    private val spawnedEntities = mutableMapOf<UUID, UUID>()  // entity -> player
 
     init {
         useSurvivalMode()
@@ -147,6 +151,12 @@ class PillarBattleInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
             }
         }
 
+        EntitySpawnedByCallback.HOOK.registerWith(hooks) { level, entity, _, user, reason ->
+            if (level == this.level && user is ServerPlayer && isParticipating(user) && reason == EntitySpawnReason.SPAWN_ITEM_USE) {
+                spawnedEntities[entity.uuid] = user.uuid
+            }
+        }
+
         for (player in gameHandle.participants) {
             movementBlocker.enableMovement(player)
         }
@@ -155,8 +165,11 @@ class PillarBattleInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
         trackSurvivalTime(stats)
 
         commons().whenBelowCriticalHeight().then { player ->
-            val killer = killTracker.getLastAttacker(player)
-            val source = if (killer != null) player.damageSources().playerAttack(killer) else player.damageSources().fellOutOfWorld()
+            val source = when (val killer = killTracker.getLastAttacker(player)) {
+                is ServerPlayer -> player.damageSources().playerAttack(killer)
+                is LivingEntity -> player.damageSources().mobAttack(killer)
+                else -> player.damageSources().fellOutOfWorld()
+            }
 
             player.hurtServer(player.level(), source, player.health)
         }
@@ -172,7 +185,7 @@ class PillarBattleInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
                 entity.foodData.addExhaustion(12f)
                 entity.foodData.setSaturation(0f)
 
-                source.entity?.let { it as? ServerPlayer }?.let { attacker ->
+                source.entity?.let { attacker ->
                     killTracker.onHit(entity, attacker)
                 }
             }
@@ -202,9 +215,28 @@ class PillarBattleInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
     override fun onDeath(player: ServerPlayer, attacker: Entity?) {
         super.onDeath(player, attacker)
 
-        if (attacker is ServerPlayer) {
-            stats.increment(attacker, Kills)
+        val directKiller = determineKiller(attacker)
+
+        val killer = when {
+            directKiller != null -> directKiller
+            else -> determineKiller(player.killCredit)
         }
+
+        if (killer is ServerPlayer) {
+            gainKill(killer, stats)
+        }
+    }
+
+    private fun determineKiller(attacker: Entity?): ServerPlayer? {
+        val killer = when (attacker) {
+            is ServerPlayer -> attacker
+            is Entity -> spawnedEntities[attacker.uuid]?.let {
+                server.playerList.getPlayer(it)
+            }
+            else -> null
+        }
+
+        return killer
     }
 
     private fun startBorderShrink() {

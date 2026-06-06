@@ -108,7 +108,7 @@ class WeaponSwapInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(g
 
     override fun onDeath(player: ServerPlayer, attacker: Entity?) {
         if (attacker is ServerPlayer && attacker !== player && attacker.uuid in currentHolders) {
-            stats.increment(attacker, Kills)
+            gainKill(attacker, stats)
         }
 
         currentHolders.remove(player.uuid)

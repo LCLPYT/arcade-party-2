@@ -39,6 +39,7 @@
     "entity.EnderManAccessor",
     "entity.EntityMixin",
     "entity.EntityTrackerMixin",
+    "entity.EntityTypeMixin",
     "entity.FoxMixin",
     "entity.FrogMixin",
     "entity.LivingEntityAccessor",

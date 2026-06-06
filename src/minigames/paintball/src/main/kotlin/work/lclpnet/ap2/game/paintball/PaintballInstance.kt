@@ -92,7 +92,7 @@ class PaintballInstance(gameHandle: MiniGameHandle) : TeamGameInstance(gameHandl
         data,
         /* teamStats = */ listOf(TotalBlocksPainted, BlocksRepainted, Kills, Deaths, DamageDealt, SpecialItemsUsed),
         /* memberStats = */ listOf(TotalBlocksPainted, BlocksRepainted, Kills, Deaths, KillDeathRatio, DamageDealt, SpecialItemsUsed)
-    ), teamManager)
+    ), teamManager, gameHandle.translations)
     private val random = Random()
     private val movementObserver = TickMovementObserver(
         ChunkedCollisionDetector(),

@@ -10,10 +10,16 @@ import work.lclpnet.ap2.api.stats.CommonStats.Kills
 import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.api.stats.StatUnits
 import work.lclpnet.ap2.api.stats.TeamStatsManager
+import work.lclpnet.ap2.ext.gainKill
+import work.lclpnet.kibu.translate.Translations
 
 val FuelAdded = Stat("fuel_added", 0f, unit = StatUnits.Seconds)
 
-class CCStats(private val stats: TeamStatsManager, private val teamManager: TeamManager) {
+class CCStats(
+    private val stats: TeamStatsManager,
+    private val teamManager: TeamManager,
+    private val translations: Translations
+) {
 
     fun addFuel(player: ServerPlayer, team: Team, seconds: Float) {
         stats.players.modify(player, FuelAdded) { it + seconds }
@@ -32,7 +38,7 @@ class CCStats(private val stats: TeamStatsManager, private val teamManager: Team
         val victimTeam = teamManager.getTeam(victim).orElse(null) ?: return
         val killerTeam = teamManager.getTeam(killer).orElse(null) ?: return
 
-        stats.players.increment(killer, Kills)
+        gainKill(killer, stats.players, translations)
         stats.teams.increment(killerTeam, Kills)
 
         stats.players.increment(victim, Deaths)

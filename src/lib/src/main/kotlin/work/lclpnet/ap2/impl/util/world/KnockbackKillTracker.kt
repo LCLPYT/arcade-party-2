@@ -1,6 +1,7 @@
 package work.lclpnet.ap2.impl.util.world
 
 import net.minecraft.server.level.ServerPlayer
+import net.minecraft.world.entity.Entity
 import work.lclpnet.ap2.ext.inWholeTicks
 import work.lclpnet.ap2.game.player.Participants
 import work.lclpnet.ap2.impl.util.DeathMessages
@@ -22,18 +23,24 @@ class KnockbackKillTracker(
         scheduler.interval(1) { -> tick() }
     }
 
-    fun onHit(victim: ServerPlayer, attacker: ServerPlayer) {
+    fun onHit(victim: ServerPlayer, attacker: Entity) {
         if (victim.uuid == attacker.uuid) return
         entries[victim.uuid] = Entry(attacker.uuid, trackerTimeout.inWholeTicks.toInt())
     }
 
-    fun getLastAttacker(victim: ServerPlayer): ServerPlayer? {
+    fun getLastAttacker(victim: ServerPlayer): Entity? {
         val entry = entries[victim.uuid] ?: return null
-        return victim.level().server.playerList.getPlayer(entry.attacker)
+
+        val player = victim.level().server.playerList.getPlayer(entry.attacker)
+
+        if (player != null) return player
+
+        return victim.level().getEntity(entry.attacker)
     }
 
     fun killMessage(victim: ServerPlayer, deathMessages: DeathMessages): TranslatedText? {
-        val killer = getLastAttacker(victim) ?: return null
+        val killer = getLastAttacker(victim) as? ServerPlayer ?: return null
+
         return deathMessages.killedBy(victim, killer)
     }
 
