@@ -90,6 +90,15 @@ public abstract class FFAGameInstance extends BaseGameInstance implements Partic
         return manager;
     }
 
+    protected final FFAStatsManager createStats(Stat<?>... stats) {
+        var set = Arrays.stream(stats).collect(Collectors.toCollection(LinkedHashSet::new));
+        var manager = new FFAStatsManager(set);
+
+        winManager.setStatsManager(manager);
+
+        return manager;
+    }
+
     @Override
     public WinManagerAccess getWinManagerAccess() {
         return new WinManagerAccessImpl<>(winManager, Optional::of, getData());

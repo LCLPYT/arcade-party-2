@@ -34,11 +34,8 @@ import work.lclpnet.kibu.translate.bossbar.TranslatedBossBar;
 import work.lclpnet.kibu.translate.text.FormatWrapper;
 import work.lclpnet.kibu.translate.text.TranslatedText;
 
-import java.util.Arrays;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import static work.lclpnet.ap2.api.stats.CommonStats.TimeSurvived;
 
@@ -217,15 +214,6 @@ public abstract class EliminationGameInstance extends FFAGameInstance implements
 
     protected void onEliminated(ServerPlayer player) {
         PlayerEliminatedCallback.HOOK.invoker().onEliminated(player);
-    }
-
-    protected final FFAStatsManager createStats(Stat<?>... stats) {
-        var set = Arrays.stream(stats).collect(Collectors.toCollection(LinkedHashSet::new));
-        var manager = new FFAStatsManager(set);
-
-        winManager.setStatsManager(manager);
-
-        return manager;
     }
 
     /**
