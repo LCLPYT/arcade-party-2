@@ -23,6 +23,7 @@ import work.lclpnet.ap2.api.stats.CommonStats.BlocksPlaced
 import work.lclpnet.ap2.api.stats.CommonStats.DistanceMoved
 import work.lclpnet.ap2.api.stats.CommonStats.Kills
 import work.lclpnet.ap2.api.stats.CommonStats.TimeSurvived
+import work.lclpnet.ap2.core.hook.EntityPushEntityCallback
 import work.lclpnet.ap2.core.hook.EntitySpawnedByCallback
 import work.lclpnet.ap2.core.type.ApDragonFight
 import work.lclpnet.ap2.ext.*
@@ -155,6 +156,14 @@ class PillarBattleInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
             if (level == this.level && user is ServerPlayer && isParticipating(user) && reason == EntitySpawnReason.SPAWN_ITEM_USE) {
                 spawnedEntities[entity.uuid] = user.uuid
             }
+        }
+
+        EntityPushEntityCallback.HOOK.registerWith(hooks) { pushed, pusher ->
+            if (pushed is ServerPlayer) {
+                killTracker.onHit(pushed, pusher)
+            }
+
+            true
         }
 
         for (player in gameHandle.participants) {
