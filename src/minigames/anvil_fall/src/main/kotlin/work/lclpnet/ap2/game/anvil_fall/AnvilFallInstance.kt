@@ -89,11 +89,12 @@ class AnvilFallInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(ga
         setupBossBar()
         startAnvilSpawning()
 
-        PlayerMoveCallback.HOOK.registerWith(gameHandle.hooks) { player, from, to ->
-            trackDistanceMoved(stats, player, from, to)
+        PlayerMoveCallback.HOOK.registerWith(gameHandle.hooks) { player, _, to ->
             repelPlayer(player, to)
             false
         }
+
+        trackDistanceMoved(stats)
 
         for (player in gameHandle.participants) {
             repelPlayer(player, player.position())

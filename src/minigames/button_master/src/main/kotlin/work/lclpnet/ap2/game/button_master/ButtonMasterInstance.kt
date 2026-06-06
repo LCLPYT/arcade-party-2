@@ -201,7 +201,7 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
         }
 
         PlayerMoveCallback.HOOK.registerWith(gameHandle.hooks) { player, from, to ->
-            trackDistanceMoved(stats, player, from, to)
+            updateDistanceMoved(stats, player, from, to)
             false
         }
 
