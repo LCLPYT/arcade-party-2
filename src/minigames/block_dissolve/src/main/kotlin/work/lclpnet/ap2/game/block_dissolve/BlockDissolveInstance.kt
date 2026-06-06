@@ -14,9 +14,11 @@ import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.gamerules.GameRules
 import work.lclpnet.ap2.api.game.MiniGameHandle
+import work.lclpnet.ap2.core.hook.ProjectileHitEntityCallback
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.impl.game.EliminationGameInstance
 import work.lclpnet.ap2.impl.map.MapUtil
+import work.lclpnet.ap2.impl.util.world.KnockbackKillTracker
 import work.lclpnet.game.impl.prot.ProtectionTypes
 import work.lclpnet.kibu.access.entity.ServerPlayerAccess
 import work.lclpnet.kibu.scheduler.Ticks
@@ -42,6 +44,7 @@ class BlockDissolveInstance(gameHandle: MiniGameHandle) : EliminationGameInstanc
     private var warningTimer = 0
     private var warning = false
     private var physics = false
+    private lateinit var killTracker: KnockbackKillTracker
 
     init {
         useOldCombat()
@@ -71,7 +74,23 @@ class BlockDissolveInstance(gameHandle: MiniGameHandle) : EliminationGameInstanc
     }
 
     override fun go() {
-        commons().whenBelowCriticalHeight().then(this::eliminate)
+        killTracker = KnockbackKillTracker(gameHandle.participants)
+        killTracker.init(gameHandle.scheduler)
+
+        ProjectileHitEntityCallback.HOOK.registerWith(gameHandle.hooks) { projectile, hit ->
+            val shooter = projectile.owner as? ServerPlayer ?: return@registerWith
+            val victim = hit.entity as? ServerPlayer ?: return@registerWith
+            val participants = gameHandle.participants
+
+            if (participants.isParticipating(victim) && participants.isParticipating(shooter)) {
+                killTracker.onHit(victim, shooter)
+            }
+        }
+
+        commons().whenBelowCriticalHeight().then { player ->
+            eliminate(player, killTracker.killMessage(player, gameHandle.deathMessages))
+        }
+
         startDissolve()
     }
 

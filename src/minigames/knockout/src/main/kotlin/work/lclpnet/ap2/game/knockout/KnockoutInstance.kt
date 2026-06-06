@@ -25,6 +25,7 @@ import work.lclpnet.ap2.impl.actor.GravityFieldActor
 import work.lclpnet.ap2.impl.game.EliminationGameInstance
 import work.lclpnet.ap2.impl.util.world.CombatIdleManager
 import work.lclpnet.ap2.impl.util.world.DestroyStageManager
+import work.lclpnet.ap2.impl.util.world.KnockbackKillTracker
 import work.lclpnet.gaco.collisions.ChunkedCollisionDetector
 import work.lclpnet.gaco.collisions.movement.PlayerMovementObserver
 import work.lclpnet.game.impl.prot.ProtectionTypes
@@ -58,6 +59,7 @@ class KnockoutInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gam
     private lateinit var crumble: KnockoutWorldCrumble
     private lateinit var impactDetector: ImpactDetector
     private lateinit var destroyStageManager: DestroyStageManager
+    private lateinit var killTracker: KnockbackKillTracker
 
     init {
         useOldCombat()
@@ -85,7 +87,9 @@ class KnockoutInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gam
     override fun prepare() {
         useRemainingPlayersDisplay()
 
-        commons().whenBelowCriticalHeight().then { player -> eliminate(player) }
+        commons().whenBelowCriticalHeight().then { player ->
+            eliminate(player, killTracker.killMessage(player, gameHandle.deathMessages))
+        }
 
         crumble = KnockoutWorldCrumble(level, map)
         crumble.init()
@@ -115,8 +119,10 @@ class KnockoutInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gam
         val debugController = commons().debugController()
         impactDetector = ImpactDetector(participants, debugController, 0.1)
         destroyStageManager = DestroyStageManager(level)
+        killTracker = KnockbackKillTracker(participants)
 
         impactDetector.enable(scheduler)
+        killTracker.init(scheduler)
         impactDetector.onImpact().register { player, collisions -> onImpact(player, collisions) }
         impactDetector.onMiss().register { player -> onMiss(player) }
 
@@ -197,6 +203,8 @@ class KnockoutInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gam
         synchronized(this) {
             hit.put(player.uuid, true)
         }
+
+        killTracker.onHit(player, attacker)
 
         var vec = player.position().subtract(attacker.position()).normalize()
         vec = Vec3(vec.x, 0.1, vec.z)
