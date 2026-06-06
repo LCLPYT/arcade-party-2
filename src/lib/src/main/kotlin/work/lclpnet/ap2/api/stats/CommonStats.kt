@@ -21,4 +21,7 @@ object CommonStats {
 
     @JvmField
     val TimeSurvived = Stat("time_survived", 0, unit = StatUnits.Seconds)
+
+    @JvmField
+    val BlocksPlaced = Stat("blocks_placed", 0)
 }

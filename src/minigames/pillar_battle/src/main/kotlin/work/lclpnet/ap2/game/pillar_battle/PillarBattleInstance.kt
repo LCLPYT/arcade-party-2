@@ -14,20 +14,21 @@ import net.minecraft.world.level.dimension.end.EnderDragonFight
 import net.minecraft.world.level.gamerules.GameRules
 import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.map.MapBootstrap
+import work.lclpnet.ap2.api.stats.CommonStats.BlocksPlaced
+import work.lclpnet.ap2.api.stats.CommonStats.DistanceMoved
+import work.lclpnet.ap2.api.stats.CommonStats.TimeSurvived
 import work.lclpnet.ap2.core.type.ApDragonFight
-import work.lclpnet.ap2.ext.runEvery
-import work.lclpnet.ap2.ext.runEveryTick
-import work.lclpnet.ap2.ext.ticks
+import work.lclpnet.ap2.ext.*
 import work.lclpnet.ap2.impl.game.EliminationGameInstance
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker
 import work.lclpnet.ap2.impl.util.world.WorldBorderUtil
 import work.lclpnet.game.impl.prot.ProtectionTypes
-import work.lclpnet.game.impl.prot.scope.EntityBlockProtection
 import work.lclpnet.game.map.GameMap
 import work.lclpnet.kibu.access.entity.ServerPlayerAccess
 import work.lclpnet.kibu.hook.HookRegistrar
 import work.lclpnet.kibu.hook.entity.ServerEntityHooks
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks
+import work.lclpnet.kibu.hook.level.BlockModificationHooks
 import java.util.*
 import java.util.concurrent.CompletableFuture
 import kotlin.math.abs
@@ -46,7 +47,8 @@ class PillarBattleInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
     }
     private var pillars: PbSetup.PlacementResult? = null
     private val warnings = HashMap<UUID, Warning>()
-    private var border: WorldBorder? = null
+    private lateinit var border: WorldBorder
+    private val stats = createStats(TimeSurvived, DistanceMoved, BlocksPlaced)
 
     init {
         useSurvivalMode()
@@ -98,7 +100,7 @@ class PillarBattleInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
         val radius = pillars.radius + BUILD_OUTER_RADIUS + 0.5
 
         border = WorldBorderUtil.createBorder(center.x + 0.5, center.z + 0.5, radius * 2)
-        border!!.warningBlocks = 0
+        border.warningBlocks = 0
     }
 
     override fun go() {
@@ -107,7 +109,7 @@ class PillarBattleInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
         gameHandle.protect { config ->
             config.allowAll()
 
-            for (type in listOf<EntityBlockProtection>(ProtectionTypes.PLACE_BLOCKS, ProtectionTypes.PLACE_FLUID)) {
+            for (type in listOf(ProtectionTypes.PLACE_BLOCKS, ProtectionTypes.PLACE_FLUID)) {
                 type.disallow(config) { entity, block ->
                     if (entity is ServerPlayer && outOfBounds(block)) {
                         val msg = translations.translateText(entity, "game.ap2.pillar_battle.out_of_bounds")
@@ -121,9 +123,18 @@ class PillarBattleInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
             }
         }
 
+        BlockModificationHooks.BLOCK_PLACED.registerWith(hooks) { _, _, entity ->
+            if (entity is ServerPlayer && players().isParticipating(entity)) {
+                stats.increment(entity, BlocksPlaced)
+            }
+        }
+
         for (player in gameHandle.participants) {
             movementBlocker.enableMovement(player)
         }
+
+        trackDistanceMoved(stats)
+        trackSurvivalTime(stats)
 
         commons().whenBelowCriticalHeight().then { player ->
             player.hurtServer(player.level(), player.damageSources().fellOutOfWorld(), player.health)
@@ -215,7 +226,7 @@ class PillarBattleInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
             if (warning.warned) continue
 
             warning.warned = true
-            border?.let { WorldBorderUtil.init(player, it) }
+            WorldBorderUtil.init(player, border)
 
             val timestamp = System.currentTimeMillis()
             if (timestamp - warning.lastWarning < BORDER_WARN_DELAY_MS) continue
