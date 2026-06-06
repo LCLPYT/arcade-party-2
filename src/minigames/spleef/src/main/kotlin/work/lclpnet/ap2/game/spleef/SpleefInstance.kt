@@ -59,8 +59,8 @@ class SpleefInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gameH
         val box = MapUtil.readBox(map.requireProperty("snow-area"))
 
         for (pos in BlockPos.betweenClosed(box.first(), box.second())) {
-            if (world.getBlockState(pos).isOf(Blocks.SNOW_BLOCK)) {
-                world.setBlockAndUpdate(pos, air)
+            if (level.getBlockState(pos).isOf(Blocks.SNOW_BLOCK)) {
+                level.setBlockAndUpdate(pos, air)
             }
         }
 

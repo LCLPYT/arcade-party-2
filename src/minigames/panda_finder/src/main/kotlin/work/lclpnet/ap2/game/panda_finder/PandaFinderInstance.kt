@@ -154,7 +154,7 @@ class PandaFinderInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHand
         val bounds = MapUtil.readBox(map.requireProperty("bounds"))
         val exclude = MapUtil.readBox(map.requireProperty("search-exclude"))
 
-        val world = world
+        val world = level
 
         val predicate = NotOccupiedBlockPredicate(world).and { pos ->
             bounds.contains(pos) && !exclude.contains(pos)
@@ -246,7 +246,7 @@ class PandaFinderInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHand
         val explosion = FireworkExplosion(FireworkExplosion.Shape.SMALL_BALL, IntList.of(0xff0000), IntList.of(), false, false)
         rocket.set(DataComponents.FIREWORKS, Fireworks(1, listOf(explosion)))
 
-        val world = world
+        val world = level
         val firework = FireworkRocketEntity(world, panda.x, panda.y, panda.z, rocket)
         world.addFreshEntity(firework)
         FireworkEntityAccess.explode(firework)

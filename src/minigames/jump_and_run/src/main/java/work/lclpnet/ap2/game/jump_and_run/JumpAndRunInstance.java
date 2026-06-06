@@ -210,7 +210,7 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
     }
 
     private void giveItemsToPlayers() {
-        CheckpointHelper.giveResetItem(gameHandle.getParticipants(), getWorld(), gameHandle.getTranslations(), 4);
+        CheckpointHelper.giveResetItem(gameHandle.getParticipants(), getLevel(), gameHandle.getTranslations(), 4);
 
         for (ServerPlayer player : gameHandle.getParticipants()) {
             PlayerInventoryAccess.setSelectedSlot(player, 4);

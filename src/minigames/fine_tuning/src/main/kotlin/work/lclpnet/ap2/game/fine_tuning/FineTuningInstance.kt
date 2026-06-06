@@ -49,7 +49,7 @@ class FineTuningInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandl
 
         val rooms: Map<UUID, FineTuningRoom> = setup.rooms
 
-        tuningPhase = TuningPhase(gameHandle, rooms, data, stats, ::startStagePhase, commons(), world)
+        tuningPhase = TuningPhase(gameHandle, rooms, data, stats, ::startStagePhase, commons(), level)
         tuningPhase.init()
         tuningPhase.giveBooks()
     }
@@ -61,7 +61,7 @@ class FineTuningInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandl
     private fun startStagePhase() {
         tuningPhase.unload()
 
-        val stagePhase = StagePhase(gameHandle, tuningPhase.records, getMap(), world, winManager)
+        val stagePhase = StagePhase(gameHandle, tuningPhase.records, getMap(), level, winManager)
         stagePhase.beginStage()
     }
 }

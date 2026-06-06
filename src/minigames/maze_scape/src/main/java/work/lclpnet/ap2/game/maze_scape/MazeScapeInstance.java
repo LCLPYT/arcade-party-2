@@ -132,7 +132,7 @@ public class MazeScapeInstance extends EliminationGameInstance implements MapBoo
         useNoHealing();
         useRemainingPlayersDisplay();
 
-        var persistence = new ChunkPersistence(getWorld(), gameHandle);
+        var persistence = new ChunkPersistence(getLevel(), gameHandle);
         int mapChunkRadius = MSGenerator.getMaxChunkSize(getMap());
 
         persistence.markQuadPersistent(-mapChunkRadius, -mapChunkRadius, mapChunkRadius, mapChunkRadius);
@@ -145,7 +145,7 @@ public class MazeScapeInstance extends EliminationGameInstance implements MapBoo
     protected void go() {
         if (MSLoader.DEBUG_PIECES) return;
 
-        ServerLevel world = getWorld();
+        ServerLevel world = getLevel();
         Participants participants = gameHandle.getParticipants();
 
         manager = new MSManager(world, getMap(), struct, participants, random,
@@ -200,7 +200,7 @@ public class MazeScapeInstance extends EliminationGameInstance implements MapBoo
         float yaw = MapUtils.getSpawnYaw(map);
         yaw = MathUtil.rotateYaw(yaw, transformation, new Vector3d());
 
-        ServerLevel world = getWorld();
+        ServerLevel world = getLevel();
 
         for (ServerPlayer player : gameHandle.getParticipants()) {
             player.teleportTo(world, spawn.x(), spawn.y(), spawn.z(), Set.of(), yaw, 0, true);
@@ -244,7 +244,7 @@ public class MazeScapeInstance extends EliminationGameInstance implements MapBoo
         int minY = Mth.floor(box.minY - delta);
         int maxY = Mth.floor(box.minY + delta);
 
-        ServerLevel world = getWorld();
+        ServerLevel world = getLevel();
         CollisionContext context = CollisionContext.of(player);
         AABB collisionBox = box.setMinY(box.minY - delta).setMaxY(box.minY + delta);
         VoxelShape boxShape = Shapes.create(collisionBox);

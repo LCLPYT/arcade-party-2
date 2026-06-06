@@ -107,7 +107,7 @@ class MirrorHopInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
 
         commons().whenBelowCriticalHeight().then(::playerFell)
 
-        removeGate(map, world)
+        removeGate(map, level)
     }
 
     private fun playerFell(player: ServerPlayer) {
@@ -125,14 +125,14 @@ class MirrorHopInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
         val solid = MapUtil.readBlockState(map.requireProperty("solid_material"))
 
         for (pos in ground) {
-            world.setBlockAndUpdate(pos, solid)
+            level.setBlockAndUpdate(pos, solid)
         }
 
         val center = ground.center
         val x = center.x; val y = center.y + 1; val z = center.z
 
-        world.playSound(null, x, y, z, SoundEvents.AMETHYST_BLOCK_RESONATE, SoundSource.BLOCKS, 0.3f, 1f)
-        world.sendParticles(ParticleTypes.EGG_CRACK, x, y, z, 10, 0.8, 0.5, 0.8, 0.1)
+        level.playSound(null, x, y, z, SoundEvents.AMETHYST_BLOCK_RESONATE, SoundSource.BLOCKS, 0.3f, 1f)
+        level.sendParticles(ParticleTypes.EGG_CRACK, x, y, z, 10, 0.8, 0.5, 0.8, 0.1)
     }
 
     private fun breakPlatform(platform: MirrorHopChoices.Platform) {
@@ -140,15 +140,15 @@ class MirrorHopInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
 
         val air = Blocks.AIR.defaultBlockState()
         for (pos in ground) {
-            world.setBlockAndUpdate(pos.below(), air)
+            level.setBlockAndUpdate(pos.below(), air)
         }
 
         val center = ground.center
         val x = center.x; val y = center.y; val z = center.z
 
-        world.playSound(null, x, y + 1, z, SoundEvents.WITHER_BREAK_BLOCK, SoundSource.BLOCKS, 0.3f, 0f)
+        level.playSound(null, x, y + 1, z, SoundEvents.WITHER_BREAK_BLOCK, SoundSource.BLOCKS, 0.3f, 0f)
 
         val particleEffect = BlockParticleOption(ParticleTypes.BLOCK, Blocks.WHITE_CONCRETE_POWDER.defaultBlockState())
-        world.sendParticles(particleEffect, x, y, z, 10, 0.8, 0.5, 0.8, 0.5)
+        level.sendParticles(particleEffect, x, y, z, 10, 0.8, 0.5, 0.8, 0.5)
     }
 }

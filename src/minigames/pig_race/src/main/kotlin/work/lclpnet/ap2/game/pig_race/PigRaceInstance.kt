@@ -325,7 +325,7 @@ class PigRaceInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle),
         val yaw = checkpoint.yaw()
 
         pendingEntities[player.uuid] = createPending(x, y, z, yaw)
-        player.teleportTo(world, x, y, z, emptySet(), yaw, checkpoint.pitch(), true)
+        player.teleportTo(level, x, y, z, emptySet(), yaw, checkpoint.pitch(), true)
 
         player.remainingFireTicks = 0
     }
@@ -340,7 +340,7 @@ class PigRaceInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle),
         checkpoints.addLast(goal)
 
         checkpointManager = CheckpointManager(checkpoints, commons().debugController())
-        checkpointManager.init(collisionDetector, movementObserver, world)
+        checkpointManager.init(collisionDetector, movementObserver, level)
 
         CheckpointHelper.notifyWhenReached(checkpointManager, gameHandle.translations)
 
@@ -395,7 +395,7 @@ class PigRaceInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle),
         val air = Blocks.AIR.defaultBlockState()
         for (bounds in schemaHolder.get().gates) {
             for (pos in bounds) {
-                world.setBlockAndUpdate(pos, air)
+                level.setBlockAndUpdate(pos, air)
             }
         }
     }
@@ -412,7 +412,7 @@ class PigRaceInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle),
             val z = pos.z + 0.5
 
             pendingEntities[player.uuid] = createPending(x, y, z, yaw)
-            player.teleportTo(world, x, y, z, emptySet(), yaw, 0f, true)
+            player.teleportTo(level, x, y, z, emptySet(), yaw, 0f, true)
 
             giveStick(player)
         }
@@ -448,7 +448,7 @@ class PigRaceInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle),
     private fun giveResetItem(player: ServerPlayer) {
         val translations = gameHandle.translations
 
-        val head: PlayerHead = world.registryAccess()
+        val head: PlayerHead = level.registryAccess()
             .lookupOrThrow(ApRegistries.PLAYER_HEAD)
             .getOptional(PlayerHeads.REDSTONE_BLOCK_REFRESH)
             .orElseThrow()

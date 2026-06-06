@@ -87,7 +87,7 @@ class KnockoutInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gam
 
         commons().whenBelowCriticalHeight().then { player -> eliminate(player) }
 
-        crumble = KnockoutWorldCrumble(world, map)
+        crumble = KnockoutWorldCrumble(level, map)
         crumble.init()
     }
 
@@ -114,7 +114,7 @@ class KnockoutInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gam
 
         val debugController = commons().debugController()
         impactDetector = ImpactDetector(participants, debugController, 0.1)
-        destroyStageManager = DestroyStageManager(world)
+        destroyStageManager = DestroyStageManager(level)
 
         impactDetector.enable(scheduler)
         impactDetector.onImpact().register { player, collisions -> onImpact(player, collisions) }
@@ -244,7 +244,7 @@ class KnockoutInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gam
         if (strength < IMPACT_STRENGTH_THRESHOLD) return
 
         val damage = sqrt(strength - IMPACT_STRENGTH_THRESHOLD) * IMPACT_DESTRUCTION_MULTIPLIER
-        val world = world
+        val world = level
 
         var anyBroke = false
 

@@ -110,7 +110,7 @@ class SnowballFightInstance(gameHandle: MiniGameHandle) : EliminationGameInstanc
 
     override fun eliminate(player: ServerPlayer, source: DamageSource?) {
         if (source != null) {
-            val world = world
+            val world = level
             world.playSound(null, player.blockPosition(), SoundEvents.PLAYER_DEATH, SoundSource.PLAYERS, 0.5f, 1f)
 
             val x = player.x
@@ -149,7 +149,7 @@ class SnowballFightInstance(gameHandle: MiniGameHandle) : EliminationGameInstanc
         val spacing = spacingValue?.toDouble() ?: 16.0
 
         val spawns = SpawnFinder(spacing, commons().debugController())
-        val available = spawns.findSpawns(world, map)
+        val available = spawns.findSpawns(level, map)
         val spacedSpawns = spawns.generateSpacedSpawns(available, players().count(), random)
 
         var i = 0
@@ -157,7 +157,7 @@ class SnowballFightInstance(gameHandle: MiniGameHandle) : EliminationGameInstanc
             val spawn = spacedSpawns[i++]
             val yaw = random.nextFloat(360f) - 180f
 
-            player.teleportTo(world, spawn.x(), spawn.y(), spawn.z(), emptySet(), yaw, 0f, true)
+            player.teleportTo(level, spawn.x(), spawn.y(), spawn.z(), emptySet(), yaw, 0f, true)
         }
     }
 

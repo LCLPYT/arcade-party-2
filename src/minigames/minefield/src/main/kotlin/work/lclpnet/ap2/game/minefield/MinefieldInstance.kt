@@ -155,7 +155,7 @@ class MinefieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
 
         setupTeam()
 
-        dynamicEntityManager = DynamicEntityManager(world)
+        dynamicEntityManager = DynamicEntityManager(level)
         dynamicEntityManager.init(gameHandle.scheduler, gameHandle.hooks)
     }
 
@@ -174,7 +174,7 @@ class MinefieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
     }
 
     override fun go() {
-        world.setBlocks(readShape("spawn-gate"), Blocks.AIR)
+        level.setBlocks(readShape("spawn-gate"), Blocks.AIR)
 
         interval(1) {
             for (player in players()) {
@@ -264,7 +264,7 @@ class MinefieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
     fun onStepOnMine(player: ServerPlayer, pos: BlockPos) {
         if (winManager.isGameOver || player.isSpectator || inGoal.contains(player.uuid)) return
 
-        world.setBlock(pos, Blocks.AIR)
+        level.setBlock(pos, Blocks.AIR)
         ParticleHelper.spawnParticleAt(player, ParticleTypes.EXPLOSION, 1, 0.0, 0.0, 0.0, 0.0)
         SoundHelper.playSoundAt(player, SoundEvents.GENERIC_EXPLODE.value(), SoundSource.HOSTILE, 0.5f, 1.2f)
 
@@ -327,13 +327,13 @@ class MinefieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
         }
 
         fun createMarker(player: ServerPlayer) {
-            val marker = Display.BlockDisplay(EntityType.BLOCK_DISPLAY, world)
+            val marker = Display.BlockDisplay(EntityType.BLOCK_DISPLAY, level)
             marker.setTransformation(Transformation(Matrix4f().scale(0.5f).translate(-0.5f, 0f, -0.5f)))
             marker.setGlowingTag(true)
             marker.glowColorOverride = DyeColor.LIME.textureDiffuseColor
             marker.blockState = Blocks.LIME_TERRACOTTA.defaultBlockState()
 
-            val label = Display.TextDisplay(EntityType.TEXT_DISPLAY, world)
+            val label = Display.TextDisplay(EntityType.TEXT_DISPLAY, level)
             label.setTransformation(Transformation(Matrix4f().scale(0.5f)))
             label.billboardConstraints = Display.BillboardConstraints.CENTER
             label.backgroundColor = 0

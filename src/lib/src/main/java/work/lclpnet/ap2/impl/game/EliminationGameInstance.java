@@ -131,7 +131,7 @@ public abstract class EliminationGameInstance extends FFAGameInstance implements
     protected void onDeath(ServerPlayer player, @Nullable Entity attacker) {
         var accessor = (LivingEntityAccessor) player;
 
-        ServerLevel world = getWorld();
+        ServerLevel world = getLevel();
         accessor.invokeDropEquipment(world);
         accessor.invokeDropExperience(world, attacker);
     }

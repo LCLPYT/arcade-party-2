@@ -70,7 +70,7 @@ class ChickenShooterInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameH
     override fun getData(): DataContainer<ServerPlayer, PlayerRef> = data
 
     override fun prepare() {
-        val world = world
+        val world = level
 
         commons().gameRuleBuilder()
             .set(GameRules.ENTITY_DROPS, false)
@@ -155,7 +155,7 @@ class ChickenShooterInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameH
 
     @Suppress("UNCHECKED_CAST")
     private fun spawnChicken() {
-        val world = world
+        val world = level
         val randomPos = BlockPos.MutableBlockPos()
         chickenBox.randomBlockPos(randomPos, random)
 
@@ -247,7 +247,7 @@ class ChickenShooterInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameH
     }
 
     private fun giveBowsToPlayers(translations: Translations) {
-        val infinity = ItemHelper.getEnchantment(Enchantments.INFINITY, world.registryAccess())
+        val infinity = ItemHelper.getEnchantment(Enchantments.INFINITY, level.registryAccess())
 
         for (player in gameHandle.participants) {
             val stack = unbreakable(ItemStack(Items.BOW))
@@ -270,7 +270,7 @@ class ChickenShooterInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameH
 
         time++
 
-        val world = world
+        val world = level
 
         chickenSet.removeIf { chicken ->
             val x = chicken.x + 0.5

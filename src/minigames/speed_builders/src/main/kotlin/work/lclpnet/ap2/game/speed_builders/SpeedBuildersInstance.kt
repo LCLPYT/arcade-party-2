@@ -96,7 +96,7 @@ class SpeedBuildersInstance(gameHandle: MiniGameHandle) : EliminationGameInstanc
     override fun prepare() {
         setupGameRules()
 
-        ServerLevelBehaviour.setFluidTicksEnabled(world, false)
+        ServerLevelBehaviour.setFluidTicksEnabled(level, false)
 
         manager.eachIsland(SbIsland::teleport)
 
@@ -302,7 +302,7 @@ class SpeedBuildersInstance(gameHandle: MiniGameHandle) : EliminationGameInstanc
             if (!charge.isAlive) {
                 task.cancel()
             } else {
-                ParticleHelper.spawnForceParticle(ParticleTypes.FIREWORK, charge.x, charge.y, charge.z, 50, 0.0, 0.0, 0.0, 0.25, world.players())
+                ParticleHelper.spawnForceParticle(ParticleTypes.FIREWORK, charge.x, charge.y, charge.z, 50, 0.0, 0.0, 0.0, 0.25, level.players())
             }
         }
 
@@ -337,7 +337,7 @@ class SpeedBuildersInstance(gameHandle: MiniGameHandle) : EliminationGameInstanc
             velocity = projectile.deltaMovement.normalize()
         } else {
             impactPos = islandToDestroy!!.getCenter()
-            val entity = getWorld().getEntity(aelosId)
+            val entity = getLevel().getEntity(aelosId)
 
             velocity = if (entity is Breeze) {
                 impactPos.subtract(getChargePos(entity)).normalize()
