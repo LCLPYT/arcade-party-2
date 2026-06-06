@@ -13,6 +13,7 @@ import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.map.MapBootstrap
 import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.api.stats.StatUnits
+import work.lclpnet.ap2.ext.inWholeTicks
 import work.lclpnet.ap2.impl.game.FFAGameInstance
 import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef
@@ -30,6 +31,7 @@ import work.lclpnet.kibu.translate.text.FormatWrapper.styled
 import java.util.*
 import java.util.concurrent.CompletableFuture
 import kotlin.math.round
+import kotlin.time.Duration.Companion.minutes
 
 private const val SCORE_GOAL = 24
 private const val TARGET_NUMBER = 6
@@ -62,6 +64,8 @@ class AimMasterInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
     private lateinit var sequence: AimMasterSequence
 
     override fun getData() = data
+
+    override fun getMaxDurationTicks(): Int = 2.minutes.inWholeTicks.toInt()
 
     override fun createWorldBootstrap(world: ServerLevel, map: GameMap): CompletableFuture<Void> {
         val generator = StackedRoomGenerator(
