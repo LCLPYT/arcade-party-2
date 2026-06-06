@@ -59,7 +59,7 @@ class CozyCampfireInstance(gameHandle: MiniGameHandle) : TeamEliminationGameInst
     private val campfireFuel = TeamStorage.create(::createCampfireFuel)
     private val toEliminate = mutableSetOf<Team>()
     private val stats = CCStats(createStats(
-        /* teamStats = */ listOf(FuelAdded, Kills, Deaths, DamageDealt),
+        /* teamStats = */ listOf(FuelAdded, FuelRemaining, Kills, Deaths, DamageDealt),
         /* playerStats = */ listOf(FuelAdded, Kills, Deaths, KillDeathRatio, DamageDealt)
     ), teamManager, gameHandle.translations)
     private lateinit var hookSetup: CCHooks
@@ -144,6 +144,8 @@ class CozyCampfireInstance(gameHandle: MiniGameHandle) : TeamEliminationGameInst
 
             val duration = TimeHelper.formatTime(translations, remainingSeconds)
             val detail = translations.translateText("game.ap2.cozy_campfire.remaining", duration)
+
+            stats.setRemainingFuel(lastTeam, remainingSeconds.toFloat())
 
             data.add(lastTeam, detail)
         }

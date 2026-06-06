@@ -7,5 +7,6 @@
   "game.ap2.cozy_campfire.fuel_added": "+ %s Sekunden",
   "game.ap2.cozy_campfire.survived": "%s überlebt",
   "game.ap2.cozy_campfire.remaining": "%s übrig",
-  "game.ap2.cozy_campfire.stat.fuel_added": "Brennstoff hinzugefügt"
+  "game.ap2.cozy_campfire.stat.fuel_added": "Brennstoff hinzugefügt",
+  "game.ap2.cozy_campfire.stat.fuel_remaining": "Brennstoff übrig"
 }
