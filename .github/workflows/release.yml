@@ -16,6 +16,8 @@ jobs:
     outputs:
       release_created: ${{ steps.release.outputs.release_created }}
       tag_name: ${{ steps.release.outputs.tag_name }}
+      body: ${{ steps.release.outputs.body }}
+      html_url: ${{ steps.release.outputs.html_url }}
     steps:
       - uses: googleapis/release-please-action@v4
         id: release
@@ -96,3 +98,39 @@ jobs:
             ghcr.io/${{ steps.repo_name.outputs.repo }}:latest
             ghcr.io/${{ steps.repo_name.outputs.repo }}:${{ steps.get_version.outputs.mc_version }}-latest
             ghcr.io/${{ steps.repo_name.outputs.repo }}:${{ steps.get_version.outputs.version }}
+
+  discord:
+    needs: release-please
+    if: needs.release-please.outputs.release_created == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send changelog to Discord
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          TAG_NAME: ${{ needs.release-please.outputs.tag_name }}
+          RELEASE_BODY: ${{ needs.release-please.outputs.body }}
+          RELEASE_URL: ${{ needs.release-please.outputs.html_url }}
+          REPO: ${{ github.repository }}
+        run: |
+          # Discord embed description limit is 4096 chars
+          description=$(printf '%s' "$RELEASE_BODY" | head -c 3900)
+          if [ "${#RELEASE_BODY}" -gt 3900 ]; then
+            description="${description}"$'\n\n'"…[full changelog](${RELEASE_URL})"
+          fi
+
+          payload=$(jq -n \
+            --arg title "🎉 ${REPO} ${TAG_NAME}" \
+            --arg description "$description" \
+            --arg url "$RELEASE_URL" \
+            '{
+              embeds: [{
+                title: $title,
+                url: $url,
+                description: $description,
+                color: 3066993
+              }]
+            }')
+
+          curl -fsS -X POST "$DISCORD_WEBHOOK" \
+            -H "Content-Type: application/json" \
+            -d "$payload"
