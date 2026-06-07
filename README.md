@@ -63,6 +63,21 @@ This will run as your UID/GID in the container while keeping the UID/GID mapping
 Alternatively you can also run as root user without the `userns=keep-id` option like with Docker Rootless; however this comes with the risk of running as root in the container.
 
 ## Developing
+### Migrating to a new Minecraft version
+When Minecraft updates and this project moves to a new default branch, update the following locations:
+
+| File                                   | Field                    | Example                  |
+|----------------------------------------|--------------------------|--------------------------|
+| `gradle/libs.versions.toml`            | `minecraft = "..."`      | `"26.1.2"` -> `"26.2.0"` |
+| `gradle.properties`                    | `minecraft_compat = ...` | `26.1` -> `26.2`         |
+| `.github/workflows/release-please.yml` | `branches:` trigger      | `"26.1"` -> `"26.2"`     |
+
+Also remember to upgrade the packwiz modpack for the docker image.
+```
+cd docker/packwiz
+packwiz migrate minecraft <version>
+```
+
 ### Create a new minigame
 You can use the Python TUI helper script to bootstrap a new minigame.
 Make sure to have the latest Python installed.
