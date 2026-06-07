@@ -66,11 +66,11 @@ Alternatively you can also run as root user without the `userns=keep-id` option 
 ### Migrating to a new Minecraft version
 When Minecraft updates and this project moves to a new default branch, update the following locations:
 
-| File                                   | Field                    | Example                  |
-|----------------------------------------|--------------------------|--------------------------|
-| `gradle/libs.versions.toml`            | `minecraft = "..."`      | `"26.1.2"` -> `"26.2.0"` |
-| `gradle.properties`                    | `minecraft_compat = ...` | `26.1` -> `26.2`         |
-| `.github/workflows/release-please.yml` | `branches:` trigger      | `"26.1"` -> `"26.2"`     |
+| File                            | Field                    | Example                  |
+|---------------------------------|--------------------------|--------------------------|
+| `gradle/libs.versions.toml`     | `minecraft = "..."`      | `"26.1.2"` -> `"26.2.0"` |
+| `gradle.properties`             | `minecraft_compat = ...` | `26.1` -> `26.2`         |
+| `.github/workflows/release.yml` | `branches:` trigger      | `"26.1"` -> `"26.2"`     |
 
 Also remember to upgrade the packwiz modpack for the docker image.
 ```

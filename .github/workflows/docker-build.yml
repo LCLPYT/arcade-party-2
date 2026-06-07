@@ -19,15 +19,6 @@ jobs:
         env:
           REPO: '${{ github.repository }}'
 
-      - name: Read Gradle versions
-        id: get_version
-        run: |
-          MOD_VERSION=$(grep '^mod_version=' gradle.properties | cut -d'=' -f2)
-          MC_VERSION=$(sed -n 's/^minecraft = "\(.*\)"/\1/p' gradle/libs.versions.toml | head -1)
-          VERSION="${MOD_VERSION}-${MC_VERSION}"
-          echo "mc_version=$MC_VERSION" >> $GITHUB_OUTPUT
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v4
         with:
@@ -48,6 +39,4 @@ jobs:
           cache-from: type=registry,ref=ghcr.io/${{ steps.repo_name.outputs.repo }}:buildcache
           cache-to: type=registry,ref=ghcr.io/${{ steps.repo_name.outputs.repo }}:buildcache,mode=max
           tags: |
-            ghcr.io/${{ steps.repo_name.outputs.repo }}:latest
-            ghcr.io/${{ steps.repo_name.outputs.repo }}:${{ steps.get_version.outputs.mc_version }}-latest
-            ghcr.io/${{ steps.repo_name.outputs.repo }}:${{ steps.get_version.outputs.version }}
+            ghcr.io/${{ steps.repo_name.outputs.repo }}:${{ github.sha }}
