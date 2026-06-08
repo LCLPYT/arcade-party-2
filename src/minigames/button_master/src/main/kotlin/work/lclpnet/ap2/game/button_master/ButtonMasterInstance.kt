@@ -33,7 +33,6 @@ import work.lclpnet.ap2.ext.mc.setAttribute
 import work.lclpnet.ap2.ext.mc.teleport
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.impl.game.EliminationGameInstance
-import work.lclpnet.ap2.impl.map.schema.SchemaHolder
 import work.lclpnet.ap2.impl.util.ApRegistries
 import work.lclpnet.ap2.impl.util.SoundHelper
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker
@@ -78,10 +77,10 @@ class ButtonMasterInstance(
     gameHandle: MiniGameHandle,
     level: ServerLevel,
     map: GameMap,
-    val capsuleSchematic: BlockStructure,
+    val mapSchema: ButtonMasterSchema,
+    capsuleSchematic: BlockStructure,
 ) : EliminationGameInstance(gameHandle, level, map) {
 
-    val schemaHolder: SchemaHolder<ButtonMasterSchema> = useSchema(ButtonMasterSchema::class.java)
     val validPositions = mutableListOf<BlockPos>()
 
     private val stats = createStats(ButtonsFound, Escapes, CommonStats.DistanceMoved, ButtonsMissed)
@@ -103,8 +102,8 @@ class ButtonMasterInstance(
     var wallBlocks: ResetWorldModifier = ResetWorldModifier(level, hooks)
     var scene: Scene? = null
     val dynamicEntityManager = DynamicEntityManager(level)
-    val capsules = ButtonMasterCapsules(level, schemaHolder.get(), capsuleSchematic, commons())
-    val buttonPositions = ButtonPositions(level, map, schemaHolder.get(), commons(), gameHandle)
+    val capsules = ButtonMasterCapsules(level, mapSchema, capsuleSchematic, commons())
+    val buttonPositions = ButtonPositions(level, map, mapSchema, commons(), gameHandle)
 
     override fun prepare() {
         dynamicEntityManager.init(gameHandle.scheduler, gameHandle.hooks)
@@ -123,7 +122,7 @@ class ButtonMasterInstance(
         val world = this.level
         val wallState = Blocks.WHITE_STAINED_GLASS.defaultBlockState()
 
-        for (box in schemaHolder.get().startWalls) {
+        for (box in mapSchema.startWalls) {
             for (pos in box) {
                 if (world.getBlockState(pos).isCollisionShapeFullBlock(world, pos)) continue
 
@@ -251,7 +250,7 @@ class ButtonMasterInstance(
         task?.cancel()
         scene?.clear()
 
-        player.teleport(schemaHolder.get().buttonMasterSpawn!!)
+        player.teleport(mapSchema.buttonMasterSpawn!!)
         player.setAttribute(Attributes.JUMP_STRENGTH, 0.0)
 
         val otherPlayers = players().filter { it != player }
@@ -359,7 +358,7 @@ class ButtonMasterInstance(
             }
         }
 
-        wallBlocks?.undo()
+        wallBlocks.undo()
 
         task = gameHandle.scheduler.timeout(BUTTON_REVEAL_SECONDS * 20, Runnable {
             markButton()

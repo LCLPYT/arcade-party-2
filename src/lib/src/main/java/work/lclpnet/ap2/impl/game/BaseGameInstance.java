@@ -23,8 +23,6 @@ import work.lclpnet.ap2.api.data.DataManager;
 import work.lclpnet.ap2.game.GameInfo;
 import work.lclpnet.ap2.game.MiniGameHandle;
 import work.lclpnet.ap2.game.MiniGameInstance;
-import work.lclpnet.ap2.impl.map.schema.MapSchemaLoader;
-import work.lclpnet.ap2.impl.map.schema.SchemaHolder;
 import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedPlayerBossBar;
 import work.lclpnet.ap2.impl.util.effect.ApEffect;
 import work.lclpnet.ap2.impl.util.effect.ApEffects;
@@ -48,7 +46,6 @@ import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.kibu.translate.bossbar.BossBarProvider;
 import work.lclpnet.kibu.translate.bossbar.TranslatedBossBar;
 import work.lclpnet.kibu.translate.text.TextTranslatable;
-import work.lclpnet.map_api.data.WorldData;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -70,7 +67,7 @@ public abstract class BaseGameInstance implements MiniGameInstance {
     @Getter
     protected final MiniGameHandle gameHandle;
     protected final ApMapProperties mapProperties = new ApMapProperties();
-    private final ServerLevel world;
+    private final ServerLevel level;
     private final GameMap map;
     @Nullable
     private volatile GameCommons commons = null;
@@ -78,11 +75,10 @@ public abstract class BaseGameInstance implements MiniGameInstance {
     private int countdownValue = 0;
     private final Set<ApEffect> activeEffects = new HashSet<>();
     private boolean locatorBarEnabled = false;
-    private @Nullable SchemaHolder<?> schemaHolder = null;
 
-    public BaseGameInstance(MiniGameHandle gameHandle, ServerLevel world, GameMap map) {
+    public BaseGameInstance(MiniGameHandle gameHandle, ServerLevel level, GameMap map) {
         this.gameHandle = gameHandle;
-        this.world = world;
+        this.level = level;
         this.map = map;
     }
 
@@ -96,31 +92,10 @@ public abstract class BaseGameInstance implements MiniGameInstance {
 
         registerDefaultHooks();
 
-        onMapReady(world, map);
+        onMapReady();
     }
 
-    // TODO: re-wire schema loading (awaitWorldData -> loadSchema) into the game's MiniGameFactory
-    private <T> void loadSchema(WorldData data, SchemaHolder<T> holder) {
-        MapSchemaLoader loader = new MapSchemaLoader(gameHandle.getLogger());
-
-        T instance;
-
-        try {
-            instance = loader.load(data, holder.getSchemaClass());
-        } catch (Throwable t) {
-            gameHandle.getLogger().error("Failed to load map schema", t);
-            return;
-        }
-
-        if (instance == null) {
-            gameHandle.getLogger().error("Failed to load schema type, look for any previous errors. Game may not function properly...");
-            return;
-        }
-
-        holder.set(instance);
-    }
-
-    protected void onMapReady(ServerLevel world, GameMap map) {
+    protected void onMapReady() {
         applyMapEffects();
         loadMapProperties();
         configureLocatorBar();
@@ -129,7 +104,7 @@ public abstract class BaseGameInstance implements MiniGameInstance {
 
         sendMapCredits();
 
-        gameHandle.getDeathMessages().replaceVanillaDeathMessages(world, gameHandle.getHooks());
+        gameHandle.getDeathMessages().replaceVanillaDeathMessages(level, gameHandle.getHooks());
 
         prepare();
 
@@ -151,8 +126,8 @@ public abstract class BaseGameInstance implements MiniGameInstance {
         PlayerWaypointCallback.HOOK.registerWith(gameHandle.getHooks(), (_, waypoint)
                 -> waypoint instanceof ServerPlayer);  // hide players from locator by default
 
-        if (world != null) {
-            world.getWaypointManager().breakAllConnections();
+        if (level != null) {
+            level.getWaypointManager().breakAllConnections();
         }
     }
 
@@ -317,7 +292,7 @@ public abstract class BaseGameInstance implements MiniGameInstance {
     }
 
     public final ServerLevel getLevel() {
-        return world;
+        return level;
     }
 
     public final GameMap getMap() {
@@ -415,14 +390,6 @@ public abstract class BaseGameInstance implements MiniGameInstance {
         }
 
         return commons;
-    }
-
-    protected final <T> SchemaHolder<T> useSchema(Class<T> schemaClass) {
-        SchemaHolder<T> holder = new SchemaHolder<>(schemaClass);
-
-        this.schemaHolder = holder;
-
-        return holder;
     }
 
     protected final boolean isParticipating(ServerPlayer player) {
