@@ -17,7 +17,6 @@ import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.border.WorldBorder
 import net.minecraft.world.level.dimension.end.EnderDragonFight
 import net.minecraft.world.level.gamerules.GameRules
-import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.map.MapBootstrap
 import work.lclpnet.ap2.api.stats.CommonStats.BlocksPlaced
 import work.lclpnet.ap2.api.stats.CommonStats.DistanceMoved
@@ -29,6 +28,7 @@ import work.lclpnet.ap2.core.type.ApDragonFight
 import work.lclpnet.ap2.ext.*
 import work.lclpnet.ap2.ext.mc.rangeTo
 import work.lclpnet.ap2.ext.mc.setBlocks
+import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.impl.game.EliminationGameInstance
 import work.lclpnet.ap2.impl.game.GameCommons
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker

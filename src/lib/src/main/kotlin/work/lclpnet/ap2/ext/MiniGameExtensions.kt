@@ -82,7 +82,7 @@ fun BaseGameInstance.createTimer(
         .withDurationTicks(duration.inWholeTicks.toInt())
         .build()
 
-    timer.addPlayers(PlayerLookup.all(gameHandle.getServer()))
+    timer.addPlayers(PlayerLookup.all(gameHandle.server))
     timer.start(gameHandle.bossBarProvider, gameHandle.scheduler)
 
     return timer

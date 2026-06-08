@@ -8,8 +8,8 @@ import net.minecraft.world.entity.Relative
 import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.phys.shapes.CollisionContext
-import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.ext.runEveryTick
+import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.impl.game.EliminationGameInstance
 import work.lclpnet.gaco.collisions.util.GroundDetector
 import work.lclpnet.kibu.hook.level.BlockBreakParticleCallback

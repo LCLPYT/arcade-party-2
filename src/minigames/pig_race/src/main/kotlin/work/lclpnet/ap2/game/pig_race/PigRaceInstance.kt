@@ -23,7 +23,6 @@ import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.scores.PlayerTeam
 import net.minecraft.world.scores.Team
-import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.game.data.DataContainer
 import work.lclpnet.ap2.api.map.MapBootstrap
 import work.lclpnet.ap2.api.music.WeightedSong
@@ -31,6 +30,7 @@ import work.lclpnet.ap2.api.util.heads.PlayerHead
 import work.lclpnet.ap2.ext.mc.isIn
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.runEveryTick
+import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.pig_race.util.PRProgress
 import work.lclpnet.ap2.game.pig_race.util.PRScoreboard
 import work.lclpnet.ap2.game.pig_race.util.createSegmentedPath

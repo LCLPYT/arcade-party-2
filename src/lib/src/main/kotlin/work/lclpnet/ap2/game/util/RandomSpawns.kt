@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.game
+package work.lclpnet.ap2.game.util
 
 import net.minecraft.core.BlockPos
 import net.minecraft.world.level.block.Blocks

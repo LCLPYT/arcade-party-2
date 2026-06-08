@@ -11,7 +11,7 @@ import org.slf4j.Logger;
 import work.lclpnet.activity.Activity;
 import work.lclpnet.ap2.ApConstants;
 import work.lclpnet.ap2.api.config.Ap2Config;
-import work.lclpnet.ap2.api.game.MiniGame;
+import work.lclpnet.ap2.game.MiniGame;
 import work.lclpnet.ap2.impl.base.FabricMiniGameManager;
 import work.lclpnet.ap2.impl.i18n.VanillaTranslations;
 import work.lclpnet.ap2.impl.util.IconMaker;

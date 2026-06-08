@@ -10,7 +10,6 @@ import net.minecraft.world.InteractionResult
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.level.Level
 import net.minecraft.world.phys.BlockHitResult
-import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.game.data.DataContainer
 import work.lclpnet.ap2.api.map.MapBootstrap
 import work.lclpnet.ap2.api.stats.Stat
@@ -18,6 +17,7 @@ import work.lclpnet.ap2.api.stats.StatUnits
 import work.lclpnet.ap2.ext.mc.isIn
 import work.lclpnet.ap2.ext.runAfter
 import work.lclpnet.ap2.ext.ticks
+import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.mimicry.data.MimicryManager
 import work.lclpnet.ap2.game.mimicry.data.SequencePlayer
 import work.lclpnet.ap2.impl.game.FFAGameInstance

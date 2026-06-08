@@ -1,8 +1,8 @@
 package work.lclpnet.ap2.impl.game.data;
 
-import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.SubjectRef;
 import work.lclpnet.ap2.api.game.data.SubjectRefFactory;
+import work.lclpnet.ap2.game.MiniGameHandle;
 
 public class DataContainers {
 

@@ -8,15 +8,13 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.border.WorldBorder;
 import org.jetbrains.annotations.Nullable;
+import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import work.lclpnet.activity.util.BossBarHandler;
 import work.lclpnet.ap2.api.base.GameQueue;
 import work.lclpnet.ap2.api.base.WorldBorderManager;
 import work.lclpnet.ap2.api.data.DataManager;
-import work.lclpnet.ap2.api.game.GameInfo;
-import work.lclpnet.ap2.api.game.MiniGame;
-import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.MiniGameResults;
 import work.lclpnet.ap2.api.game.team.TeamConfig;
 import work.lclpnet.ap2.api.map.MapFacade;
@@ -24,6 +22,9 @@ import work.lclpnet.ap2.api.music.SongCache;
 import work.lclpnet.ap2.api.music.SongManager;
 import work.lclpnet.ap2.api.stats.StatsResult;
 import work.lclpnet.ap2.core.type.ApServerPlayerEntity;
+import work.lclpnet.ap2.game.GameInfo;
+import work.lclpnet.ap2.game.MiniGame;
+import work.lclpnet.ap2.game.MiniGameHandle;
 import work.lclpnet.ap2.game.player.Participants;
 import work.lclpnet.ap2.impl.game.PlayerUtil;
 import work.lclpnet.ap2.impl.util.DeathMessages;
@@ -107,102 +108,102 @@ public class DefaultMiniGameHandle implements MiniGameHandle, WorldBorderManager
     }
 
     @Override
-    public MinecraftServer getServer() {
+    public @NonNull MinecraftServer getServer() {
         return args.miniGameArgs().server();
     }
 
     @Override
-    public GameInfo getGameInfo() {
+    public @NonNull GameInfo getGameInfo() {
         return game;
     }
 
     @Override
-    public Logger getLogger() {
+    public @NonNull Logger getLogger() {
         return logger;
     }
 
     @Override
-    public WorldFacade getWorldFacade() {
+    public @NonNull WorldFacade getWorldFacade() {
         return args.miniGameArgs().worldFacade();
     }
 
     @Override
-    public MapFacade getMapFacade() {
+    public @NonNull MapFacade getMapFacade() {
         return args.miniGameArgs().mapFacade();
     }
 
     @Override
-    public HookStack getHooks() {
+    public @NonNull HookStack getHooks() {
         return args.miniGameArgs().hookStack();
     }
 
     @Override
-    public CommandRegistrar getCommands() {
+    public @NonNull CommandRegistrar getCommands() {
         return args.miniGameArgs().commandStack();
     }
 
     @Override
-    public TaskScheduler getRootScheduler() {
+    public @NonNull TaskScheduler getRootScheduler() {
         return rootScheduler;
     }
 
     @Override
-    public SchedulerStack getScheduler() {
+    public @NonNull SchedulerStack getScheduler() {
         return args.miniGameArgs().schedulerStack();
     }
 
     @Override
-    public Translations getTranslations() {
+    public @NonNull Translations getTranslations() {
         return args.miniGameArgs().translations();
     }
 
     @Override
-    public Participants getParticipants() {
+    public @NonNull Participants getParticipants() {
         return args.playerManager();
     }
 
     @Override
-    public WorldBorderManager getWorldBorderManager() {
+    public @NonNull WorldBorderManager getWorldBorderManager() {
         return this;
     }
 
     @Override
-    public PlayerUtil getPlayerUtil() {
+    public @NonNull PlayerUtil getPlayerUtil() {
         return args.miniGameArgs().playerUtil();
     }
 
     @Override
-    public BossBarProvider getBossBarProvider() {
+    public @NonNull BossBarProvider getBossBarProvider() {
         return bossBarProvider;
     }
 
     @Override
-    public BossBarHandler getBossBarHandler() {
+    public @NonNull BossBarHandler getBossBarHandler() {
         return bossBarHandler;
     }
 
     @Override
-    public CustomScoreboardManager getScoreboardManager() {
+    public @NonNull CustomScoreboardManager getScoreboardManager() {
         return scoreboardManager;
     }
 
     @Override
-    public Optional<TeamConfig> getTeamConfig() {
-        return Optional.empty();
+    public @NonNull Optional<TeamConfig> getTeamConfig() {
+        return Optional.<TeamConfig>empty();
     }
 
     @Override
-    public SongManager getSongManager() {
+    public @NonNull SongManager getSongManager() {
         return args.miniGameArgs().songManager();
     }
 
     @Override
-    public SongCache getSharedSongCache() {
+    public @NonNull SongCache getSharedSongCache() {
         return args.sharedSongCache();
     }
 
     @Override
-    public DeathMessages getDeathMessages() {
+    public @NonNull DeathMessages getDeathMessages() {
         if (deathMessages != null) {
             return deathMessages;
         }
@@ -217,22 +218,26 @@ public class DefaultMiniGameHandle implements MiniGameHandle, WorldBorderManager
     }
 
     @Override
-    public DataManager getDataManager() {
+    public @NonNull DataManager getDataManager() {
         return args.miniGameArgs().dataManager();
     }
 
     @Override
-    public SubWorldManager getSubWorldManager() {
-        if (subWorldManager != null) {
-            return subWorldManager;
+    public @NonNull SubWorldManager getSubWorldManager() {
+        var currentSubWorldManager = subWorldManager;
+
+        if (currentSubWorldManager != null) {
+            return currentSubWorldManager;
         }
 
         WorldContainer container;
         SubWorldManager manager;
 
         synchronized (this) {
-            if (subWorldManager != null) {
-                return subWorldManager;
+            currentSubWorldManager = subWorldManager;
+
+            if (currentSubWorldManager != null) {
+                return currentSubWorldManager;
             }
 
             AssetRepository repo = getMapFacade().getAssetRepository();
@@ -245,27 +250,27 @@ public class DefaultMiniGameHandle implements MiniGameHandle, WorldBorderManager
         container.init();
         manager.init(getHooks());
 
-        return subWorldManager;
+        return manager;
     }
 
     @Override
-    public TablistManager getTablistManager() {
+    public @NonNull TablistManager getTablistManager() {
         return args.tablistManager();
     }
 
     @Override
-    public AssetManager getAssetManager() {
+    public @NonNull AssetManager getAssetManager() {
         return args.assetManager();
     }
 
     @Override
-    public FontService getFontService() {
+    public @NonNull FontService getFontService() {
         return args.miniGameArgs().fontService();
     }
 
     @Override
-    public @Nullable Instant getStartTime() {
-        return Objects.requireNonNull(startTime, "Start time not set");
+    public @NonNull Instant getStartTime() {
+        return Objects.<@Nullable Instant>requireNonNull(startTime, "Start time not set");
     }
 
     @Override
@@ -277,7 +282,7 @@ public class DefaultMiniGameHandle implements MiniGameHandle, WorldBorderManager
     }
 
     @Override
-    public synchronized void protect(Consumer<MutableProtectionConfig> action) {
+    public synchronized void protect(@NonNull Consumer<MutableProtectionConfig> action) {
         if (protector == null) {
             synchronized (this) {
                 if (protector == null) {
@@ -295,8 +300,8 @@ public class DefaultMiniGameHandle implements MiniGameHandle, WorldBorderManager
         protector.activate();
     }
 
-    public void whenDone(Runnable action) {
-        Objects.requireNonNull(action);
+    public void whenDone(@NonNull Runnable action) {
+        Objects.<Runnable>requireNonNull(action);
 
         if (whenDone == null) {
             synchronized (this) {
@@ -310,7 +315,7 @@ public class DefaultMiniGameHandle implements MiniGameHandle, WorldBorderManager
     }
 
     @Override
-    public synchronized void complete(MiniGameResults results) {
+    public synchronized void complete(@NonNull MiniGameResults results) {
         if (ended) return;
         ended = true;
 
@@ -397,7 +402,7 @@ public class DefaultMiniGameHandle implements MiniGameHandle, WorldBorderManager
 
     @Override
     public WorldBorder getWorldBorder() {
-        return Objects.requireNonNull(world, "World is not set yet").getWorldBorder();
+        return Objects.<@Nullable ServerLevel>requireNonNull(world, "World is not set yet").getWorldBorder();
     }
 
     @Override
@@ -411,14 +416,18 @@ public class DefaultMiniGameHandle implements MiniGameHandle, WorldBorderManager
     }
 
     @Override
-    public CompletableFuture<UUID> submitStats(StatsResult stats) {
-        if (statsId != null) {
-            return statsId;
+    public @NonNull CompletableFuture<UUID> submitStats(@NonNull StatsResult stats) {
+        var currentStatsId = statsId;
+
+        if (currentStatsId != null) {
+            return currentStatsId;
         }
 
         synchronized (this) {
-            if (statsId != null) {
-                return statsId;
+            currentStatsId = statsId;
+
+            if (currentStatsId != null) {
+                return currentStatsId;
             }
 
             // in the future, the stats id should be allocated by the stats backend

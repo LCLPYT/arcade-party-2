@@ -4,10 +4,10 @@ import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.players.PlayerList;
-import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.core.hook.PlayerCanTrackCallback;
 import work.lclpnet.ap2.core.hook.PlayerListEntriesOnJoinCallback;
 import work.lclpnet.ap2.core.mixin.ServerChunkCacheAccessor;
+import work.lclpnet.ap2.game.MiniGameHandle;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.ServerMessageHooks;
 

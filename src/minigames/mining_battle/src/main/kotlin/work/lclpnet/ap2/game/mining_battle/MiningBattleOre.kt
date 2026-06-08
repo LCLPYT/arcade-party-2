@@ -15,9 +15,9 @@ import net.minecraft.world.level.block.Blocks.*
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.gameevent.GameEvent
 import net.minecraft.world.phys.Vec3
-import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.core.mixin.ServerExplosionAccessor
 import work.lclpnet.ap2.ext.mc.isOf
+import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.impl.util.SoundHelper
 import work.lclpnet.ap2.impl.util.world.ExplosionUtil
 import work.lclpnet.gaco.ds.WeightedList

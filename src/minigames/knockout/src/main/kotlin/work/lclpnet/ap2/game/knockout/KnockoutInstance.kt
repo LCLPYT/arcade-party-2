@@ -16,7 +16,6 @@ import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.phys.Vec3
 import work.lclpnet.ap2.api.actor.ActorSpawnedCallback
-import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.stats.CommonStats
 import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.api.stats.StatUnits
@@ -25,6 +24,7 @@ import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.runAfter
 import work.lclpnet.ap2.ext.runEvery
 import work.lclpnet.ap2.ext.trackDistanceMoved
+import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.knockout.util.ImpactDetector
 import work.lclpnet.ap2.impl.actor.GravityFieldActor
 import work.lclpnet.ap2.impl.game.EliminationGameInstance

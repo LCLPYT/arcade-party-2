@@ -11,7 +11,7 @@ import net.minecraft.commands.arguments.IdentifierArgument;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import work.lclpnet.ap2.api.base.MiniGameManager;
-import work.lclpnet.ap2.api.game.MiniGame;
+import work.lclpnet.ap2.game.MiniGame;
 import work.lclpnet.ap2.mode_default.cmd.arg.MiniGameSuggestionProvider;
 import work.lclpnet.kibu.cmd.type.CommandRegistrar;
 import work.lclpnet.kibu.cmd.type.KibuCommand;

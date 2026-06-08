@@ -2,7 +2,7 @@ package work.lclpnet.ap2.game.pig_race.util
 
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap
 import net.minecraft.server.level.ServerPlayer
-import work.lclpnet.ap2.api.game.MiniGameHandle
+import work.lclpnet.ap2.game.MiniGameHandle
 import java.util.*
 
 class PRProgress(

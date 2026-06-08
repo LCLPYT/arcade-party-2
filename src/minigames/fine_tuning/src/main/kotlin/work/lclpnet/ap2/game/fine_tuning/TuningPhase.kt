@@ -20,12 +20,12 @@ import net.minecraft.world.item.Items
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.state.BlockState
 import work.lclpnet.ap2.ApConstants
-import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.stats.FFAStatsManager
 import work.lclpnet.ap2.api.util.heads.PlayerHead
 import work.lclpnet.ap2.ext.mc.isIn
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.mc.playNotifySound
+import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.fine_tuning.melody.*
 import work.lclpnet.ap2.impl.game.GameCommons
 import work.lclpnet.ap2.impl.game.data.IntDataContainer

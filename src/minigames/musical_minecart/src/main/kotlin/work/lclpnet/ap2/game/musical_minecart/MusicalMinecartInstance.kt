@@ -18,13 +18,13 @@ import net.minecraft.world.entity.vehicle.minecart.Minecart
 import net.minecraft.world.phys.Vec3
 import org.json.JSONArray
 import work.lclpnet.ap2.ApConstants
-import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.map.MapBootstrap
 import work.lclpnet.ap2.api.music.ConfiguredSong
 import work.lclpnet.ap2.core.type.ApVariantHolder
 import work.lclpnet.ap2.ext.runAfter
 import work.lclpnet.ap2.ext.runEvery
 import work.lclpnet.ap2.ext.ticks
+import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.musical_minecart.cmd.SetSongCommand
 import work.lclpnet.ap2.game.musical_minecart.cmd.SkipSongCommand
 import work.lclpnet.ap2.game.player.Participants
@@ -53,6 +53,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.math.floor
 import kotlin.math.ln
 import kotlin.math.max
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
 private const val DEBUG_INFINITE_SONGS = false
@@ -370,9 +371,8 @@ class MusicalMinecartInstance(gameHandle: MiniGameHandle) : EliminationGameInsta
         }
     }
 
-    override fun getMaxDurationTicks(): Int {
-        return if (DEBUG_INFINITE_SONGS) -1 else super.getMaxDurationTicks()
-    }
+    override val maxDuration: Duration
+        get() = if (DEBUG_INFINITE_SONGS) 0.seconds else super.maxDuration
 
     @Synchronized
     private fun skipSong() {
