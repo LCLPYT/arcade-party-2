@@ -4,7 +4,6 @@ import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import org.json.JSONArray
 import work.lclpnet.ap2.api.game.data.DataContainer
-import work.lclpnet.ap2.api.map.MapBootstrap
 import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.impl.game.FFAGameInstance
@@ -23,7 +22,7 @@ val Replays = Stat("replays", 0)
 val MelodiesCompleted = Stat("melodies_completed", 0)
 val CorrectNotes = Stat("correct_notes", 0)
 
-class FineTuningInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle), MapBootstrap {
+class FineTuningInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap) : FFAGameInstance(gameHandle, level, map) {
 
     private val data: IntDataContainer<ServerPlayer, PlayerRef> =
         DataContainers.finaleCompatibleScoreContainer(gameHandle, PlayerRef::create)
@@ -37,7 +36,9 @@ class FineTuningInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandl
 
     override fun getData(): DataContainer<ServerPlayer, PlayerRef> = data
 
-    override fun createWorldBootstrap(world: ServerLevel, gameMap: GameMap): CompletableFuture<Void> {
+    // TODO: migrate world bootstrap into a dedicated MiniGameFactory
+
+    fun createWorldBootstrap(world: ServerLevel, gameMap: GameMap): CompletableFuture<Void> {
         setup = FineTuningSetup(gameHandle, gameMap, world)
         return setup.createRooms()
     }

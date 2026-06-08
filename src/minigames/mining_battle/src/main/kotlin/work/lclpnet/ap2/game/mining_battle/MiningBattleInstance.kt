@@ -13,15 +13,12 @@ import net.minecraft.world.item.enchantment.Enchantments
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.gamerules.GameRules
 import work.lclpnet.ap2.api.game.data.DataContainer
-import work.lclpnet.ap2.api.map.MapBootstrap
-import work.lclpnet.ap2.api.map.MapBootstrapFunction
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.impl.game.FFAGameInstance
 import work.lclpnet.ap2.impl.game.data.DataContainers
 import work.lclpnet.ap2.impl.game.data.IntDataContainer
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef
 import work.lclpnet.ap2.impl.map.MapUtil
-import work.lclpnet.ap2.impl.map.ServerThreadMapBootstrap
 import work.lclpnet.ap2.impl.util.ItemHelper
 import work.lclpnet.ap2.impl.util.ItemHelper.unbreakable
 import work.lclpnet.ap2.impl.util.TextUtil
@@ -35,7 +32,7 @@ import kotlin.time.Duration.Companion.seconds
 
 val DURATION = 60.seconds
 
-class MiningBattleInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle), MapBootstrapFunction {
+class MiningBattleInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap) : FFAGameInstance(gameHandle, level, map) {
 
     private val data: IntDataContainer<ServerPlayer, PlayerRef> =
         DataContainers.finaleCompatibleScoreContainer(gameHandle, PlayerRef::create)
@@ -47,9 +44,10 @@ class MiningBattleInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHan
         useSurvivalMode()
     }
 
-    override fun getMapBootstrap(): MapBootstrap = ServerThreadMapBootstrap(this)
 
-    override fun bootstrapWorld(world: ServerLevel, map: GameMap) {
+    // TODO: migrate world bootstrap into a dedicated MiniGameFactory
+
+    fun bootstrapWorld(world: ServerLevel, map: GameMap) {
         val gameRules = world.gameRules
 
         gameRules.set(GameRules.BLOCK_DROPS, false, gameHandle.server)

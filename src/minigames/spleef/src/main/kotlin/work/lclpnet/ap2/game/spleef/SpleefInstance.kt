@@ -5,6 +5,7 @@ import net.minecraft.core.BlockPos
 import net.minecraft.core.Vec3i
 import net.minecraft.core.component.DataComponents
 import net.minecraft.core.particles.ParticleTypes
+import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.sounds.SoundSource
@@ -33,6 +34,7 @@ import work.lclpnet.ap2.impl.util.ParticleHelper
 import work.lclpnet.ap2.impl.util.SoundHelper
 import work.lclpnet.gaco.ds.BlockBox
 import work.lclpnet.game.impl.prot.ProtectionTypes
+import work.lclpnet.game.map.GameMap
 import work.lclpnet.game.map.MapUtils
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess
 import work.lclpnet.kibu.hook.level.BlockModificationHooks
@@ -43,7 +45,7 @@ import kotlin.time.Duration.Companion.seconds
 val WORLD_BORDER_DELAY = Ticks.seconds(40).toLong()
 const val WORLD_BORDER_SHRINK_PER_SECOND = 1.0
 
-class SpleefInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gameHandle) {
+class SpleefInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap) : EliminationGameInstance(gameHandle, level, map) {
 
     private val stats = createStats(TimeSurvived, Kills, BlocksBroken, DistanceMoved)
     private lateinit var killTracker: FallKillTracker

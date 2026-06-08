@@ -24,7 +24,6 @@ import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.scores.Team
 import work.lclpnet.ap2.*
-import work.lclpnet.ap2.api.map.MapBootstrap
 import work.lclpnet.ap2.api.stats.CommonStats
 import work.lclpnet.ap2.api.util.heads.PlayerHead
 import work.lclpnet.ap2.ext.*
@@ -76,7 +75,7 @@ enum class GameState {
     IDLE
 }
 
-class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gameHandle), MapBootstrap {
+class ButtonMasterInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap) : EliminationGameInstance(gameHandle, level, map) {
 
     val schemaHolder: SchemaHolder<ButtonMasterSchema> = useSchema(ButtonMasterSchema::class.java)
     val validPositions = mutableListOf<BlockPos>()
@@ -105,7 +104,9 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
     lateinit var buttonPositions: ButtonPositions
     lateinit var capsuleSchematic: BlockStructure
 
-    override fun createWorldBootstrap(world: ServerLevel, map: GameMap): CompletableFuture<Void> {
+    // TODO: migrate world bootstrap into a dedicated MiniGameFactory
+
+    fun createWorldBootstrap(world: ServerLevel, map: GameMap): CompletableFuture<Void> {
         wallBlocks = ResetWorldModifier(world, gameHandle.hooks)
 
         return schematic(assetPath("capsule.schem")).thenAccept {

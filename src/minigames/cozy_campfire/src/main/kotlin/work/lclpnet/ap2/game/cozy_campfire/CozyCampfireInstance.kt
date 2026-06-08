@@ -15,7 +15,6 @@ import net.minecraft.world.scores.Team.CollisionRule
 import work.lclpnet.ap2.api.game.team.DyeTeamKey
 import work.lclpnet.ap2.api.game.team.Team
 import work.lclpnet.ap2.api.game.team.TeamKey
-import work.lclpnet.ap2.api.map.MapBootstrap
 import work.lclpnet.ap2.api.stats.CommonStats.DamageDealt
 import work.lclpnet.ap2.api.stats.CommonStats.Deaths
 import work.lclpnet.ap2.api.stats.CommonStats.KillDeathRatio
@@ -51,7 +50,7 @@ val TEAM_RED: TeamKey = DyeTeamKey.RED
 val TEAM_BLUE: TeamKey = DyeTeamKey.BLUE
 const val MOVEMENT_SPEED = 0.15f
 
-class CozyCampfireInstance(gameHandle: MiniGameHandle) : TeamEliminationGameInstance(gameHandle), MapBootstrap {
+class CozyCampfireInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap) : TeamEliminationGameInstance(gameHandle, level, map) {
 
     private val random = Random()
     private val collisionDetector: CollisionDetector = ChunkedCollisionDetector()
@@ -79,7 +78,9 @@ class CozyCampfireInstance(gameHandle: MiniGameHandle) : TeamEliminationGameInst
         teamManager.setUseColorCodes(true)
     }
 
-    override fun createWorldBootstrap(world: ServerLevel, map: GameMap): CompletableFuture<Void> {
+    // TODO: migrate world bootstrap into a dedicated MiniGameFactory
+
+    fun createWorldBootstrap(world: ServerLevel, map: GameMap): CompletableFuture<Void> {
         teamManager.partitionIntoTeams(gameHandle.participants, setOf(TEAM_RED, TEAM_BLUE))
 
         val setup = CCReader(map, world, gameHandle.logger)

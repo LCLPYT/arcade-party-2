@@ -2,6 +2,7 @@ package work.lclpnet.ap2.impl.game;
 
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import org.jetbrains.annotations.Nullable;
 import work.lclpnet.ap2.api.game.team.Team;
@@ -14,6 +15,7 @@ import work.lclpnet.ap2.impl.game.data.EliminationDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.TeamRef;
 import work.lclpnet.ap2.impl.util.DeathMessages;
 import work.lclpnet.game.api.WorldFacade;
+import work.lclpnet.game.map.GameMap;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.EntityHealthCallback;
 import work.lclpnet.kibu.translate.Translations;
@@ -28,8 +30,8 @@ public abstract class TeamEliminationGameInstance extends TeamGameInstance {
 
     private final EliminationDataContainer<Team, TeamRef> data = new EliminationDataContainer<>(this::createReference);
 
-    public TeamEliminationGameInstance(MiniGameHandle gameHandle) {
-        super(gameHandle);
+    public TeamEliminationGameInstance(MiniGameHandle gameHandle, ServerLevel world, GameMap map) {
+        super(gameHandle, world, map);
     }
 
     /**

@@ -20,6 +20,7 @@ import work.lclpnet.ap2.impl.game.data.type.TeamRef;
 import work.lclpnet.ap2.impl.game.data.type.TeamRefResolver;
 import work.lclpnet.ap2.impl.game.team.SimpleTeamManager;
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
+import work.lclpnet.game.map.GameMap;
 import work.lclpnet.game.map.MapUtils;
 import work.lclpnet.kibu.hook.util.PositionRotation;
 
@@ -37,8 +38,8 @@ public abstract class TeamGameInstance extends BaseGameInstance implements Parti
     private volatile Map<String, PositionRotation> teamSpawns = null;
     protected final WinManager<Team, TeamRef> winManager;
 
-    public TeamGameInstance(MiniGameHandle gameHandle) {
-        super(gameHandle);
+    public TeamGameInstance(MiniGameHandle gameHandle, ServerLevel world, GameMap map) {
+        super(gameHandle, world, map);
 
         var data = new WinManager.Data<>(this::getData, getTeamManager()::getTeam, this::createReference, this::createReferenceFor,
                 dataContainer -> new TeamGameResult(dataContainer, getResolver()));

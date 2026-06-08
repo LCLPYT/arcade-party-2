@@ -27,6 +27,7 @@ import work.lclpnet.ap2.impl.util.movement.MovementListener
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager
 import work.lclpnet.gaco.ds.BlockBox
+import work.lclpnet.game.map.GameMap
 import work.lclpnet.game.map.MapUtils
 import work.lclpnet.game.util.RayCaster
 import work.lclpnet.kibu.hook.player.PlayerMoveCallback
@@ -50,7 +51,7 @@ private const val CLOSEST_STOP_SENTINEL = UNTIL_STOP_MAX_TICKS / 20f
 
 private data class Grade(val player: ServerPlayer, val distance: Double)
 
-class RedLightGreenLightInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle) {
+class RedLightGreenLightInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap) : FFAGameInstance(gameHandle, level, map) {
 
     private val movementBlocker = SimpleMovementBlocker(gameHandle.scheduler)
     private val data = OrderedDataContainer(PlayerRef::create)

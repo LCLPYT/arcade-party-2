@@ -4,6 +4,7 @@ import it.unimi.dsi.fastutil.ints.IntList
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup
 import net.minecraft.ChatFormatting
 import net.minecraft.core.component.DataComponents
+import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.sounds.SoundSource
@@ -35,6 +36,7 @@ import work.lclpnet.ap2.impl.util.world.BfsWorldScanner
 import work.lclpnet.ap2.impl.util.world.NotOccupiedBlockPredicate
 import work.lclpnet.ap2.impl.util.world.SimpleAdjacentBlocks
 import work.lclpnet.ap2.impl.util.world.SizedSpaceFinder
+import work.lclpnet.game.map.GameMap
 import work.lclpnet.kibu.access.entity.FireworkEntityAccess
 import work.lclpnet.kibu.access.entity.ServerPlayerAccess
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks
@@ -53,7 +55,7 @@ val PandasStolen = Stat("pandas_stolen", 0)
 val PandasLost = Stat("pandas_lost", 0)
 val Cooldowns = Stat("cooldowns", 0)
 
-class PandaFinderInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle) {
+class PandaFinderInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap) : FFAGameInstance(gameHandle, level, map) {
 
     private val data = IntScoreDataContainer(PlayerRef::create)
     private val random = Random()

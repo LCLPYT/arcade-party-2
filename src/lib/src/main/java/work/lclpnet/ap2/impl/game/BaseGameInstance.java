@@ -20,13 +20,9 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.ApConstants;
 import work.lclpnet.ap2.api.data.DataManager;
-import work.lclpnet.ap2.api.map.MapBootstrap;
-import work.lclpnet.ap2.api.map.MapBootstrapFunction;
-import work.lclpnet.ap2.api.map.MapFacade;
 import work.lclpnet.ap2.game.GameInfo;
 import work.lclpnet.ap2.game.MiniGameHandle;
 import work.lclpnet.ap2.game.MiniGameInstance;
-import work.lclpnet.ap2.impl.map.ServerThreadMapBootstrap;
 import work.lclpnet.ap2.impl.map.schema.MapSchemaLoader;
 import work.lclpnet.ap2.impl.map.schema.SchemaHolder;
 import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedPlayerBossBar;
@@ -56,7 +52,6 @@ import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.kibu.translate.bossbar.BossBarProvider;
 import work.lclpnet.kibu.translate.bossbar.TranslatedBossBar;
 import work.lclpnet.kibu.translate.text.TextTranslatable;
-import work.lclpnet.map_api.GameMapApi;
 import work.lclpnet.map_api.data.WorldData;
 
 import java.io.IOException;
@@ -83,10 +78,8 @@ public abstract class BaseGameInstance implements MiniGameInstance {
     @Getter
     protected final MiniGameHandle gameHandle;
     protected final ApMapProperties mapProperties = new ApMapProperties();
-    @Nullable
-    private ServerLevel world = null;
-    @Nullable
-    private GameMap map = null;
+    private final ServerLevel world;
+    private final GameMap map;
     @Nullable
     private volatile GameCommons commons = null;
     private int countdownTime = 0;
@@ -95,8 +88,10 @@ public abstract class BaseGameInstance implements MiniGameInstance {
     private boolean locatorBarEnabled = false;
     private @Nullable SchemaHolder<?> schemaHolder = null;
 
-    public BaseGameInstance(MiniGameHandle gameHandle) {
+    public BaseGameInstance(MiniGameHandle gameHandle, ServerLevel world, GameMap map) {
         this.gameHandle = gameHandle;
+        this.world = world;
+        this.map = map;
     }
 
     @Override
@@ -109,44 +104,10 @@ public abstract class BaseGameInstance implements MiniGameInstance {
 
         registerDefaultHooks();
 
-        openMap();
+        onMapReady(world, map);
     }
 
-    protected void openMap() {
-        MapFacade mapFacade = gameHandle.getMapFacade();
-        Identifier gameId = gameHandle.getGameInfo().getId();
-
-        MapBootstrap bootstrap = getMapBootstrap();
-
-        mapFacade.openRandomMap(gameId, new BootstrapMapOptions((world, map) -> {
-            this.world = world;
-            this.map = map;
-
-            gameHandle.setWorld(world);
-
-            var future = bootstrap.createWorldBootstrap(world, map);
-
-            var schemaHolder = this.schemaHolder;
-
-            if (schemaHolder != null) {
-                var dataFuture = GameMapApi.get(gameHandle.getServer()).getDataManager()
-                        .awaitWorldData(world.dimension())
-                        .whenComplete((worldData, err) -> {
-                            if (err != null) {
-                                gameHandle.getLogger().error("Failed to acquire map data", err);
-                                return;
-                            }
-
-                            loadSchema(worldData, schemaHolder);
-                        });
-
-                future.thenRun(dataFuture::join);
-            }
-
-            return future;
-        }), this::onMapReady);
-    }
-
+    // TODO: re-wire schema loading (awaitWorldData -> loadSchema) into the game's MiniGameFactory
     private <T> void loadSchema(WorldData data, SchemaHolder<T> holder) {
         MapSchemaLoader loader = new MapSchemaLoader(gameHandle.getLogger());
 
@@ -165,20 +126,6 @@ public abstract class BaseGameInstance implements MiniGameInstance {
         }
 
         holder.set(instance);
-    }
-
-    protected MapBootstrap getMapBootstrap() {
-        // if a child class implements the MapBootstrap interface directly
-        if (this instanceof MapBootstrap bootstrap) {
-            return bootstrap;
-        }
-
-        // if a child class implements the MapBootstrapFunction interface
-        if (this instanceof MapBootstrapFunction fun) {
-            return new ServerThreadMapBootstrap(fun);
-        }
-
-        return MapBootstrap.NONE;
     }
 
     protected void onMapReady(ServerLevel world, GameMap map) {
@@ -378,18 +325,10 @@ public abstract class BaseGameInstance implements MiniGameInstance {
     }
 
     public final ServerLevel getLevel() {
-        if (world == null) {
-            throw new IllegalStateException("Level not loaded yet");
-        }
-
         return world;
     }
 
     public final GameMap getMap() {
-        if (map == null) {
-            throw new IllegalStateException("Map not loaded yet");
-        }
-
         return map;
     }
 

@@ -16,6 +16,8 @@ class MapLevelGameFactory(val instanceFactory: MapLevelInstanceInit) : MiniGameF
 
             handle.mapFacade.openRandomMap(handle.gameInfo.id) { level, map ->
                 // executed on the server thread
+                handle.setWorld(level)
+
                 val instance = instanceFactory.createInstance(handle, level, map)
 
                 continuation.resume(instance)

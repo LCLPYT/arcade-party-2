@@ -24,7 +24,6 @@ import net.minecraft.world.phys.Vec3
 import net.minecraft.world.scores.PlayerTeam
 import net.minecraft.world.scores.Team
 import work.lclpnet.ap2.api.game.data.DataContainer
-import work.lclpnet.ap2.api.map.MapBootstrap
 import work.lclpnet.ap2.api.music.WeightedSong
 import work.lclpnet.ap2.api.util.heads.PlayerHead
 import work.lclpnet.ap2.ext.mc.isIn
@@ -81,7 +80,7 @@ private const val MAX_CATCHUP_BOOST = 0.4
 
 private enum class Variant { PIG, STRIDER }
 
-class PigRaceInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle), MapBootstrap {
+class PigRaceInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap) : FFAGameInstance(gameHandle, level, map) {
 
     private val winnerData = OrderedDataContainer(PlayerRef::create)
     private val distanceData = DoubleScoreDataContainer(
@@ -106,7 +105,9 @@ class PigRaceInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle),
 
     override fun getData(): DataContainer<ServerPlayer, PlayerRef> = combinedData
 
-    override fun createWorldBootstrap(world: ServerLevel, map: GameMap): CompletableFuture<Void> =
+    // TODO: migrate world bootstrap into a dedicated MiniGameFactory
+
+    fun createWorldBootstrap(world: ServerLevel, map: GameMap): CompletableFuture<Void> =
         gameHandle.songManager.getSongAndCache(ARCADE_PARTY_GAME_TAG, NEXT_ROUND_SONG_ID)
             .thenAccept { nextRoundSong = it.orElse(null) }
 

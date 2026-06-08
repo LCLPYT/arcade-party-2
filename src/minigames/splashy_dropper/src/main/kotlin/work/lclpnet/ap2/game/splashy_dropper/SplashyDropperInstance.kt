@@ -15,8 +15,6 @@ import net.minecraft.world.phys.shapes.CollisionContext
 import net.minecraft.world.scores.DisplaySlot
 import net.minecraft.world.scores.Team
 import work.lclpnet.ap2.api.game.data.DataContainer
-import work.lclpnet.ap2.api.map.MapBootstrap
-import work.lclpnet.ap2.api.map.MapBootstrapFunction
 import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.ext.mc.isIn
 import work.lclpnet.ap2.ext.mc.playNotifySound
@@ -26,7 +24,6 @@ import work.lclpnet.ap2.game.splashy_dropper.data.SdGenerator
 import work.lclpnet.ap2.impl.game.FFAGameInstance
 import work.lclpnet.ap2.impl.game.data.DataContainers
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef
-import work.lclpnet.ap2.impl.map.ServerThreadMapBootstrap
 import work.lclpnet.ap2.impl.util.handler.Visibility
 import work.lclpnet.ap2.impl.util.handler.VisibilityHandler
 import work.lclpnet.ap2.impl.util.handler.VisibilityManager
@@ -48,7 +45,7 @@ val HitMedium = Stat("hit_medium", 0)
 val HitLarge = Stat("hit_large", 0)
 val Missed = Stat("missed", 0)
 
-class SplashyDropperInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle), MapBootstrapFunction {
+class SplashyDropperInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap) : FFAGameInstance(gameHandle, level, map) {
 
     private val data = DataContainers.finaleCompatibleScoreContainer(gameHandle, PlayerRef::create)
     private val stats = createStats(data, HitSmall, HitMedium, HitLarge, Missed)
@@ -70,9 +67,10 @@ class SplashyDropperInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameH
 
     override fun getData(): DataContainer<ServerPlayer, PlayerRef> = data
 
-    override fun getMapBootstrap(): MapBootstrap = ServerThreadMapBootstrap(this)
 
-    override fun bootstrapWorld(world: ServerLevel, map: GameMap) {
+    // TODO: migrate world bootstrap into a dedicated MiniGameFactory
+
+    fun bootstrapWorld(world: ServerLevel, map: GameMap) {
         world.gameRules.set(GameRules.RANDOM_TICK_SPEED, 0, world.server)
         SdGenerator(world, map, random).generate()
     }

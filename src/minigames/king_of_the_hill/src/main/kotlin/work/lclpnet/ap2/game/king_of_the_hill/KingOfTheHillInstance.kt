@@ -15,7 +15,6 @@ import net.minecraft.world.item.Items
 import net.minecraft.world.item.enchantment.Enchantments
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.gamerules.GameRules
-import work.lclpnet.ap2.api.map.MapBootstrapFunction
 import work.lclpnet.ap2.ext.interval
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.mc.playNotifySound
@@ -41,7 +40,7 @@ import kotlin.time.Duration.Companion.seconds
 
 val DURATION = 2.minutes + 40.seconds
 
-class KingOfTheHillInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle), MapBootstrapFunction {
+class KingOfTheHillInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap) : FFAGameInstance(gameHandle, level, map) {
     
     private val data = DataContainers.finaleCompatibleScoreContainer(gameHandle, PlayerRef::create)
     var goalShape: BlockShape? = null
@@ -52,7 +51,9 @@ class KingOfTheHillInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
 
     override fun getData() = data!!
 
-    override fun bootstrapWorld(world: ServerLevel, map: GameMap) = createMarkers(world, map)
+    // TODO: migrate world bootstrap into a dedicated MiniGameFactory
+
+    fun bootstrapWorld(world: ServerLevel, map: GameMap) = createMarkers(world, map)
 
     override fun prepare() {
         commons().teleportToRandomSpawns(Random.asJavaRandom())

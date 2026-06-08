@@ -1,5 +1,6 @@
 package work.lclpnet.ap2.impl.game;
 
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.scores.Objective;
 import org.jetbrains.annotations.NotNull;
@@ -15,6 +16,7 @@ import work.lclpnet.ap2.game.player.ParticipantListener;
 import work.lclpnet.ap2.impl.game.data.type.FFAGameResult;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRefResolver;
+import work.lclpnet.game.map.GameMap;
 
 import java.util.Arrays;
 import java.util.LinkedHashSet;
@@ -29,8 +31,8 @@ public abstract class FFAGameInstance extends BaseGameInstance implements Partic
     protected final PlayerRefResolver resolver;
     protected final WinManager<ServerPlayer, PlayerRef> winManager;
 
-    public FFAGameInstance(MiniGameHandle gameHandle) {
-        super(gameHandle);
+    public FFAGameInstance(MiniGameHandle gameHandle, ServerLevel world, GameMap map) {
+        super(gameHandle, world, map);
 
         this.resolver = new PlayerRefResolver(gameHandle.getServer().getPlayerList());
 

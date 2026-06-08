@@ -11,7 +11,6 @@ import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.scores.Team
 import org.json.JSONObject
-import work.lclpnet.ap2.api.map.MapBootstrap
 import work.lclpnet.ap2.api.music.ConfiguredSong
 import work.lclpnet.ap2.api.music.SongWrapper
 import work.lclpnet.ap2.ext.*
@@ -51,7 +50,7 @@ private const val NEXT_ROUND_MIN_TICKS = 35
 
 private const val PARTICLE_AMOUNT = 3
 
-class DanceFloorInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gameHandle), MapBootstrap {
+class DanceFloorInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap) : EliminationGameInstance(gameHandle, level, map) {
 
     val songHandler = SongHandler(gameHandle, Random.asJavaRandom())
     val eliminate = mutableSetOf<ServerPlayer>()
@@ -73,7 +72,9 @@ class DanceFloorInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(g
         disableTeleportEliminated()
     }
 
-    override fun createWorldBootstrap(world: ServerLevel, map: GameMap): CompletableFuture<Void> {
+    // TODO: migrate world bootstrap into a dedicated MiniGameFactory
+
+    fun createWorldBootstrap(world: ServerLevel, map: GameMap): CompletableFuture<Void> {
         return songHandler.loadSongs(gameHandle.gameInfo.id)
     }
 

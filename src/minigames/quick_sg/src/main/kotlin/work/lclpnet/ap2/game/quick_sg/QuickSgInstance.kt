@@ -3,6 +3,7 @@ package work.lclpnet.ap2.game.quick_sg
 import net.minecraft.core.registries.Registries
 import net.minecraft.network.protocol.game.ClientboundSetDefaultSpawnPositionPacket
 import net.minecraft.resources.ResourceKey
+import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.InteractionResult
 import net.minecraft.world.item.Items
@@ -22,13 +23,14 @@ import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker
 import work.lclpnet.ap2.util.PvpBehavior
 import work.lclpnet.ap2.util.loot.LazyLootContainerManager
 import work.lclpnet.ap2.util.loot.VanillaLootTableFiller
+import work.lclpnet.game.map.GameMap
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks
 import java.util.concurrent.TimeUnit
 
 val WORLD_BORDER_DELAY = TimeUnit.MINUTES.toTicks(2)
 val WORLD_BORDER_TIME = TimeUnit.MINUTES.toTicks(2)
 
-class QuickSgInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gameHandle) {
+class QuickSgInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap) : EliminationGameInstance(gameHandle, level, map) {
 
     val schemaHolder: SchemaHolder<QuickSgSchema> = useSchema(QuickSgSchema::class.java)
 

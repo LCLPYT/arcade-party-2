@@ -28,6 +28,7 @@ import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.util.DeathMessages;
 import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedBossBar;
 import work.lclpnet.game.api.WorldFacade;
+import work.lclpnet.game.map.GameMap;
 import work.lclpnet.kibu.hook.HookRegistrar;
 import work.lclpnet.kibu.hook.entity.EntityHealthCallback;
 import work.lclpnet.kibu.translate.Translations;
@@ -49,8 +50,8 @@ public abstract class EliminationGameInstance extends FFAGameInstance implements
     private @Nullable Instant survivalStart = null;
     private @Nullable FFAStatsManager survivalStats = null;
 
-    public EliminationGameInstance(MiniGameHandle gameHandle) {
-        super(gameHandle);
+    public EliminationGameInstance(MiniGameHandle gameHandle, ServerLevel world, GameMap map) {
+        super(gameHandle, world, map);
     }
 
     @Override
