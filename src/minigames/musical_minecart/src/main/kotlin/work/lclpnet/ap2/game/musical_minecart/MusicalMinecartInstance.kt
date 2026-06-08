@@ -6,7 +6,6 @@ import net.minecraft.core.Holder
 import net.minecraft.core.particles.ParticleTypes
 import net.minecraft.core.registries.Registries
 import net.minecraft.network.chat.Component
-import net.minecraft.resources.Identifier
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.sounds.SoundEvents
@@ -17,7 +16,6 @@ import net.minecraft.world.entity.animal.frog.FrogVariant
 import net.minecraft.world.entity.vehicle.minecart.Minecart
 import net.minecraft.world.phys.Vec3
 import org.json.JSONArray
-import work.lclpnet.ap2.ApConstants
 import work.lclpnet.ap2.api.music.ConfiguredSong
 import work.lclpnet.ap2.core.type.ApVariantHolder
 import work.lclpnet.ap2.ext.runAfter
@@ -66,12 +64,14 @@ private const val PARTICLE_AMOUNT = 2
 private const val MAX_DECOYS = 4
 private const val DECOY_CHANCE = 0.15f
 
-private val MUSICAL_MINECART_TAG: Identifier = ApConstants.identifier("musical_minecart")
+class MusicalMinecartInstance(
+    gameHandle: MiniGameHandle,
+    level: ServerLevel,
+    map: GameMap,
+    private val random: Random,
+    private val songs: SongHandler,
+) : EliminationGameInstance(gameHandle, level, map) {
 
-class MusicalMinecartInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap) : EliminationGameInstance(gameHandle, level, map) {
-
-    private val random = Random()
-    private val songs = SongHandler(gameHandle, random)
     private val minecartEntities = HashSet<Minecart>()
     private val ready = AtomicBoolean(false)
     private var intermission = false
@@ -83,12 +83,6 @@ class MusicalMinecartInstance(gameHandle: MiniGameHandle, level: ServerLevel, ma
     private var pendingSong: CompletableFuture<ConfiguredSong>? = null
     private var eliminationDelayTicks = Ticks.seconds(9L)
     private var minecartsGlowing = false
-
-    // TODO: migrate world bootstrap into a dedicated MiniGameFactory
-
-    fun createWorldBootstrap(world: ServerLevel, map: GameMap): CompletableFuture<Void> {
-        return songs.loadSongs(MUSICAL_MINECART_TAG)
-    }
 
     override fun prepare() {
         bounds = MapUtil.readBox(map.requireProperty("bounds"))

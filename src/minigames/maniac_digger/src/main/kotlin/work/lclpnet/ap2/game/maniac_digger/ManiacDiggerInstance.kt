@@ -19,7 +19,6 @@ import work.lclpnet.ap2.ext.mc.setAttribute
 import work.lclpnet.ap2.ext.mc.unbreakable
 import work.lclpnet.ap2.ext.runEveryTick
 import work.lclpnet.ap2.game.MiniGameHandle
-import work.lclpnet.ap2.game.maniac_digger.data.MdGenerator
 import work.lclpnet.ap2.game.maniac_digger.data.MdPipe
 import work.lclpnet.ap2.impl.game.FFAGameInstance
 import work.lclpnet.ap2.impl.game.data.CombinedDataContainer
@@ -44,39 +43,26 @@ private val WrongToolsSelected = Stat("wrong_tools_selected", 0)
 private val WrongToolsUsed = Stat("wrong_tools_used", 0)
 private val CorrectToolStreak = Stat("correct_tool_streak", 0)
 
-class ManiacDiggerInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap) : FFAGameInstance(gameHandle, level, map) {
+class ManiacDiggerInstance(
+    gameHandle: MiniGameHandle,
+    level: ServerLevel,
+    map: GameMap,
+    private val winHeight: Int,
+    private val pipes: Map<UUID, MdPipe>,
+) : FFAGameInstance(gameHandle, level, map) {
 
     private val reachedBottom = OrderedDataContainer(PlayerRef::create)
     private val score = IntScoreDataContainer(PlayerRef::create, Ordering.ASCENDING, "ap2.score.blocks_away")
     private val data = CombinedDataContainer(listOf(reachedBottom, score))
-    private val pipes = HashMap<UUID, MdPipe>()
     private val wrongTool = HashSet<UUID>()
     private val correctToolStreak = Object2IntOpenHashMap<UUID>()
     private val stats = createStats(score, BlocksBroken, ToolSwitches, WrongToolsSelected, WrongToolsUsed, CorrectToolStreak)
-    private var winHeight = 64
 
     init {
         useSurvivalMode()
     }
 
     override fun getData() = data
-
-    // TODO: migrate world bootstrap into a dedicated MiniGameFactory
-
-    fun bootstrapWorld(world: ServerLevel, map: GameMap) {
-        val winHeight: Number = map.requireProperty("goal-height")
-        this.winHeight = winHeight.toInt()
-
-        val generator = MdGenerator(world, map, gameHandle.logger, Random())
-        val participants = gameHandle.participants
-        val pipes = generator.generate(participants.count())
-
-        var i = 0
-        for (player in participants) {
-            val pipe = pipes[i++]
-            this.pipes[player.uuid] = pipe
-        }
-    }
 
     override fun prepare() {
         val world = this.level

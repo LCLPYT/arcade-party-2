@@ -6,7 +6,6 @@ import net.minecraft.world.item.Items
 import work.lclpnet.ap2.ApConstants
 import work.lclpnet.ap2.api.game.GameStartContext
 import work.lclpnet.ap2.api.game.GameType
-import work.lclpnet.ap2.game.MapLevelGameFactory
 import work.lclpnet.ap2.game.MiniGame
 
 class KingOfTheHillMiniGame : MiniGame {
@@ -16,5 +15,5 @@ class KingOfTheHillMiniGame : MiniGame {
     override val type = GameType.FFA
     override val author = ApConstants.PERSON_LCLP
     override fun getIcon(manager: RegistryAccess) = ItemStack(Items.GOLD_BLOCK)
-    override fun createFactory() = MapLevelGameFactory(::KingOfTheHillInstance)
+    override fun createFactory() = KingOfTheHillFactory()
 }

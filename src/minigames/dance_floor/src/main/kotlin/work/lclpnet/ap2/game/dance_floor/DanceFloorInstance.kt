@@ -50,9 +50,13 @@ private const val NEXT_ROUND_MIN_TICKS = 35
 
 private const val PARTICLE_AMOUNT = 3
 
-class DanceFloorInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap) : EliminationGameInstance(gameHandle, level, map) {
+class DanceFloorInstance(
+    gameHandle: MiniGameHandle,
+    level: ServerLevel,
+    map: GameMap,
+    val songHandler: SongHandler,
+) : EliminationGameInstance(gameHandle, level, map) {
 
-    val songHandler = SongHandler(gameHandle, Random.asJavaRandom())
     val eliminate = mutableSetOf<ServerPlayer>()
     var loadingSong: CompletableFuture<ConfiguredSong>? = null
     var currentSong: SongWrapper? = null
@@ -70,12 +74,6 @@ class DanceFloorInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Ga
         useRemainingPlayersDisplay()
         useSurvivalMode()
         disableTeleportEliminated()
-    }
-
-    // TODO: migrate world bootstrap into a dedicated MiniGameFactory
-
-    fun createWorldBootstrap(world: ServerLevel, map: GameMap): CompletableFuture<Void> {
-        return songHandler.loadSongs(gameHandle.gameInfo.id)
     }
 
     override fun prepare() {
