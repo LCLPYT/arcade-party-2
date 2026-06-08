@@ -10,7 +10,7 @@ import work.lclpnet.ap2.api.util.world.BlockPredicate
 import work.lclpnet.ap2.game.MiniGameFactory
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.MiniGameInstance
-import work.lclpnet.ap2.game.openRandomMap
+import work.lclpnet.ap2.game.util.openRandomMap
 import work.lclpnet.ap2.impl.game.GameCommons
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.util.world.BfsWorldScanner
@@ -24,7 +24,7 @@ import kotlin.random.Random
 
 class MinefieldFactory : MiniGameFactory {
     override suspend fun createInstance(handle: MiniGameHandle): MiniGameInstance {
-        val (level, map) = openRandomMap(handle)
+        val (level, map) = handle.openRandomMap()
 
         val scanPositions = map.properties.getJSONArray("scan-positions")
         val mineDensity = map.properties.optNumber("mine-density", 0.55f).toFloat()

@@ -5,12 +5,12 @@ import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.MiniGameInstance
 import work.lclpnet.ap2.game.maniac_digger.data.MdGenerator
 import work.lclpnet.ap2.game.maniac_digger.data.MdPipe
-import work.lclpnet.ap2.game.openRandomMap
+import work.lclpnet.ap2.game.util.openRandomMap
 import java.util.*
 
 class ManiacDiggerFactory : MiniGameFactory {
     override suspend fun createInstance(handle: MiniGameHandle): MiniGameInstance {
-        val (level, map) = openRandomMap(handle)
+        val (level, map) = handle.openRandomMap()
 
         val winHeight = map.requireProperty<Number>("goal-height").toInt()
 

@@ -30,8 +30,8 @@ public abstract class TeamEliminationGameInstance extends TeamGameInstance {
 
     private final EliminationDataContainer<Team, TeamRef> data = new EliminationDataContainer<>(this::createReference);
 
-    public TeamEliminationGameInstance(MiniGameHandle gameHandle, ServerLevel world, GameMap map) {
-        super(gameHandle, world, map);
+    public TeamEliminationGameInstance(MiniGameHandle gameHandle, ServerLevel world, GameMap map, TeamManager teamManager) {
+        super(gameHandle, world, map,teamManager);
     }
 
     /**
