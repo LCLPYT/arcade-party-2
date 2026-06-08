@@ -15,6 +15,7 @@ import net.minecraft.world.scores.Team.CollisionRule
 import work.lclpnet.ap2.api.game.team.DyeTeamKey
 import work.lclpnet.ap2.api.game.team.Team
 import work.lclpnet.ap2.api.game.team.TeamKey
+import work.lclpnet.ap2.api.game.team.TeamManager
 import work.lclpnet.ap2.api.stats.CommonStats.DamageDealt
 import work.lclpnet.ap2.api.stats.CommonStats.Deaths
 import work.lclpnet.ap2.api.stats.CommonStats.KillDeathRatio
@@ -39,7 +40,6 @@ import work.lclpnet.kibu.hook.HookRegistrar
 import work.lclpnet.kibu.translate.text.FormatWrapper.styled
 import work.lclpnet.kibu.translate.text.LocalizedFormat
 import java.util.*
-import java.util.concurrent.CompletableFuture
 import kotlin.math.roundToInt
 
 private const val DAY_TIME_CHANCE = 0.55f
@@ -50,7 +50,13 @@ val TEAM_RED: TeamKey = DyeTeamKey.RED
 val TEAM_BLUE: TeamKey = DyeTeamKey.BLUE
 const val MOVEMENT_SPEED = 0.15f
 
-class CozyCampfireInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap) : TeamEliminationGameInstance(gameHandle, level, map) {
+class CozyCampfireInstance(
+    gameHandle: MiniGameHandle,
+    level: ServerLevel,
+    map: GameMap,
+    teamManager: TeamManager,
+    private val baseManager: CCBaseManager,
+) : TeamEliminationGameInstance(gameHandle, level, map, teamManager) {
 
     private val random = Random()
     private val collisionDetector: CollisionDetector = ChunkedCollisionDetector()
@@ -64,7 +70,6 @@ class CozyCampfireInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: 
     private lateinit var hookSetup: CCHooks
     private lateinit var fuel: CCFuel
     private lateinit var bossBar: DynamicTranslatedTeamBossBar
-    private lateinit var baseManager: CCBaseManager
     private var teamBias = 0.8f
     private var fuelPerSecond = 100
     private var startingFuelSeconds = 30
@@ -78,22 +83,10 @@ class CozyCampfireInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: 
         teamManager.setUseColorCodes(true)
     }
 
-    // TODO: migrate world bootstrap into a dedicated MiniGameFactory
-
-    fun createWorldBootstrap(world: ServerLevel, map: GameMap): CompletableFuture<Void> {
-        teamManager.partitionIntoTeams(gameHandle.participants, setOf(TEAM_RED, TEAM_BLUE))
-
-        val setup = CCReader(map, world, gameHandle.logger)
-
-        return setup.readBases(teamManager.teams)
-            .thenAccept { bases -> baseManager = CCBaseManager(bases, teamManager) }
-            .thenCompose { world.server.submit {
-                setupGameRules(map, world)
-                randomizeWorldConditions(world)
-            } }
-    }
-
     override fun prepare() {
+        setupGameRules()
+        randomizeWorldConditions()
+
         teamManager.minecraftTeams.forEach { team ->
             team.isAllowFriendlyFire = false
             team.setSeeFriendlyInvisibles(true)
@@ -175,26 +168,26 @@ class CozyCampfireInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: 
         startingFuel = fuelPerSecond * startingFuelSeconds
     }
 
-    private fun setupGameRules(map: GameMap, world: ServerLevel) {
-        commons(map, world).gameRuleBuilder()
+    private fun setupGameRules() {
+        commons(map, level).gameRuleBuilder()
             .set(GameRules.MAX_SNOW_ACCUMULATION_HEIGHT, 0)
             .set(GameRules.ADVANCE_WEATHER, false)
             .set(GameRules.ADVANCE_TIME, false)
     }
 
-    private fun randomizeWorldConditions(world: ServerLevel) {
+    private fun randomizeWorldConditions() {
         if (random.nextFloat() <= DAY_TIME_CHANCE) {
-            world.setDayTime(6000)
+            level.setDayTime(6000)
         } else {
-            world.setDayTime(18000)
+            level.setDayTime(18000)
         }
 
         if (random.nextFloat() <= RAIN_CHANCE) {
             val thunder = random.nextFloat() <= (THUNDER_CHANCE / RAIN_CHANCE)
-            world.setWeatherParameters(0, 1000, true, thunder)
+            level.setWeatherParameters(0, 1000, true, thunder)
         } else {
-            world.setWeatherParameters(1000, 0, raining = false, thundering = false)
-            world.setRainLevel(0f)
+            level.setWeatherParameters(1000, 0, raining = false, thundering = false)
+            level.setRainLevel(0f)
         }
     }
 

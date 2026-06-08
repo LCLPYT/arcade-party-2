@@ -2,7 +2,6 @@ package work.lclpnet.ap2.impl.game;
 
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.server.players.PlayerList;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jspecify.annotations.NonNull;
@@ -10,7 +9,10 @@ import work.lclpnet.ap2.api.event.IntScoreEventSource;
 import work.lclpnet.ap2.api.game.WinManagerAccess;
 import work.lclpnet.ap2.api.game.WinManagerView;
 import work.lclpnet.ap2.api.game.data.DataContainer;
-import work.lclpnet.ap2.api.game.team.*;
+import work.lclpnet.ap2.api.game.team.Team;
+import work.lclpnet.ap2.api.game.team.TeamEliminatedListener;
+import work.lclpnet.ap2.api.game.team.TeamManager;
+import work.lclpnet.ap2.api.game.team.TeamSpawnAccess;
 import work.lclpnet.ap2.api.stats.Stat;
 import work.lclpnet.ap2.api.stats.TeamStatsManager;
 import work.lclpnet.ap2.game.MiniGameHandle;
@@ -18,8 +20,6 @@ import work.lclpnet.ap2.game.player.ParticipantListener;
 import work.lclpnet.ap2.impl.game.data.type.TeamGameResult;
 import work.lclpnet.ap2.impl.game.data.type.TeamRef;
 import work.lclpnet.ap2.impl.game.data.type.TeamRefResolver;
-import work.lclpnet.ap2.impl.game.team.SimpleTeamManager;
-import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager;
 import work.lclpnet.game.map.GameMap;
 import work.lclpnet.game.map.MapUtils;
 import work.lclpnet.kibu.hook.util.PositionRotation;
@@ -33,18 +33,21 @@ import static work.lclpnet.ap2.api.stats.CommonStats.Score;
 public abstract class TeamGameInstance extends BaseGameInstance implements ParticipantListener,
         TeamEliminatedListener, TeamSpawnAccess, WinManagerView {
 
+    private final TeamManager teamManager;
     private volatile TeamRefResolver resolver = null;
-    private volatile SimpleTeamManager teamManager = null;
     private volatile Map<String, PositionRotation> teamSpawns = null;
     protected final WinManager<Team, TeamRef> winManager;
 
-    public TeamGameInstance(MiniGameHandle gameHandle, ServerLevel world, GameMap map) {
+    public TeamGameInstance(MiniGameHandle gameHandle, ServerLevel world, GameMap map, TeamManager teamManager) {
         super(gameHandle, world, map);
 
         var data = new WinManager.Data<>(this::getData, getTeamManager()::getTeam, this::createReference, this::createReferenceFor,
                 dataContainer -> new TeamGameResult(dataContainer, getResolver()));
 
         this.winManager = new WinManager<>(gameHandle, this::getMap, data);
+        this.teamManager = teamManager;
+
+        teamManager.bind(this);
     }
 
     @Override
@@ -78,22 +81,6 @@ public abstract class TeamGameInstance extends BaseGameInstance implements Parti
 
     @NotNull
     protected final TeamManager getTeamManager() {
-        if (teamManager != null) return teamManager;
-
-        synchronized (this) {
-            if (teamManager != null) return teamManager;
-
-            PlayerList playerManager = gameHandle.getServer().getPlayerList();
-            TeamConfig teamConfig = gameHandle.getTeamConfig().orElseGet(TeamConfig::defaultConfig);
-            CustomScoreboardManager scoreboardManager = gameHandle.getScoreboardManager();
-            PlayerUtil playerUtil = gameHandle.getPlayerUtil();
-
-            teamManager = new SimpleTeamManager(playerManager, teamConfig, scoreboardManager, playerUtil);
-        }
-
-        teamManager.init(gameHandle.getHooks());
-        teamManager.bind(this);
-
         return teamManager;
     }
 

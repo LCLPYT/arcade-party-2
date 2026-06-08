@@ -22,6 +22,7 @@ import net.minecraft.world.phys.Vec3
 import net.minecraft.world.scores.Team.CollisionRule
 import work.lclpnet.ap2.api.game.team.DyeTeamKey
 import work.lclpnet.ap2.api.game.team.Team
+import work.lclpnet.ap2.api.game.team.TeamManager
 import work.lclpnet.ap2.api.stats.CommonStats.Deaths
 import work.lclpnet.ap2.api.stats.CommonStats.KillDeathRatio
 import work.lclpnet.ap2.api.stats.CommonStats.Kills
@@ -59,7 +60,12 @@ import kotlin.time.Duration.Companion.seconds
 
 val TurfClaimed = Stat("turf_claimed", 0)
 
-class TurfWarsInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap) : TeamEliminationGameInstance(gameHandle, level, map) {
+class TurfWarsInstance(
+    gameHandle: MiniGameHandle,
+    level: ServerLevel,
+    map: GameMap,
+    teamManager: TeamManager,
+) : TeamEliminationGameInstance(gameHandle, level, map, teamManager) {
 
     val schemaHolder: SchemaHolder<TurfWarsSchema> = useSchema(TurfWarsSchema::class.java)
     val arrowEconomy = ArrowEconomy(gameHandle, teamManager)

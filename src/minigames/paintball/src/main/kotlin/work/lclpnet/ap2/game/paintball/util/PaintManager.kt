@@ -30,17 +30,16 @@ class PaintManager(
     private val leve: ServerLevel,
     private val teams: PaintballTeams,
     private val teamManager: TeamManager,
-    private val data: IntScoreDataContainer<Team, TeamRef>,
     private val bounds: BlockShape
 ) {
     private val dyeManager = DyeBlockManager(leve)
     private var frozen = false
-
+    lateinit var data: IntScoreDataContainer<Team, TeamRef>
     /**
      * Invoked for every block successfully painted by a player. The second argument indicates whether the block
      * was repainted, meaning it previously belonged to a different (enemy) team.
      */
-    var onPaint: ((player: ServerPlayer, repainted: Boolean) -> Unit)? = null
+    lateinit var onPaint: ((player: ServerPlayer, repainted: Boolean) -> Unit)
 
     init {
         dyeManager.init(teams.map { it.key() })
@@ -66,7 +65,7 @@ class PaintManager(
         addCount(targetTeam, 1)
 
         if (painter != null) {
-            onPaint?.invoke(painter, prevTeam != null && prevTeam != targetTeam)
+            onPaint.invoke(painter, prevTeam != null && prevTeam != targetTeam)
         }
 
         return true

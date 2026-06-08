@@ -8,14 +8,14 @@ import work.lclpnet.ap2.ApConstants
 import work.lclpnet.ap2.game.MiniGameFactory
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.MiniGameInstance
-import work.lclpnet.ap2.game.openRandomMap
+import work.lclpnet.ap2.game.util.openRandomMap
 import work.lclpnet.ap2.impl.game.GameCommons
 import work.lclpnet.ap2.impl.map.MapUtil
 import java.util.*
 
 class EggventureFactory : MiniGameFactory {
     override suspend fun createInstance(handle: MiniGameHandle): MiniGameInstance {
-        val (level, map) = openRandomMap(handle)
+        val (level, map) = handle.openRandomMap()
 
         val random = Random()
         val remainingPositions = HashSet<BlockPos>()

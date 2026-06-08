@@ -6,7 +6,6 @@ import net.minecraft.world.item.Items
 import work.lclpnet.ap2.ApConstants
 import work.lclpnet.ap2.api.game.GameStartContext
 import work.lclpnet.ap2.api.game.GameType
-import work.lclpnet.ap2.game.MapLevelGameFactory
 import work.lclpnet.ap2.game.MiniGame
 import work.lclpnet.ap2.game.MiniGameFactory
 
@@ -25,5 +24,5 @@ class CozyCampfireMiniGame : MiniGame {
         return count == 2 || count >= 4
     }
 
-    override fun createFactory(): MiniGameFactory = MapLevelGameFactory(::CozyCampfireInstance)
+    override fun createFactory(): MiniGameFactory = CozyCampfireFactory()
 }
