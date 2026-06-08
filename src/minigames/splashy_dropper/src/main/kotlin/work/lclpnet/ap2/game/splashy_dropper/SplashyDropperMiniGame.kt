@@ -6,7 +6,6 @@ import net.minecraft.world.item.Items
 import work.lclpnet.ap2.ApConstants
 import work.lclpnet.ap2.api.game.GameStartContext
 import work.lclpnet.ap2.api.game.GameType
-import work.lclpnet.ap2.game.MapLevelGameFactory
 import work.lclpnet.ap2.game.MiniGame
 import work.lclpnet.ap2.game.MiniGameFactory
 
@@ -17,5 +16,5 @@ class SplashyDropperMiniGame : MiniGame {
     override fun getIcon(manager: RegistryAccess): ItemStack = ItemStack(Items.WATER_BUCKET)
     override fun canBeFinale(context: GameStartContext): Boolean = true
     override fun canBePlayed(context: GameStartContext): Boolean = true
-    override fun createFactory(): MiniGameFactory = MapLevelGameFactory(::SplashyDropperInstance)
+    override fun createFactory(): MiniGameFactory = SplashyDropperFactory()
 }

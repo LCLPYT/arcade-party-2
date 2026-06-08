@@ -21,12 +21,16 @@ val Replays = Stat("replays", 0)
 val MelodiesCompleted = Stat("melodies_completed", 0)
 val CorrectNotes = Stat("correct_notes", 0)
 
-class FineTuningInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap) : FFAGameInstance(gameHandle, level, map) {
+class FineTuningInstance(
+    gameHandle: MiniGameHandle,
+    level: ServerLevel,
+    map: GameMap,
+    private val setup: FineTuningSetup,
+) : FFAGameInstance(gameHandle, level, map) {
 
     private val data: IntDataContainer<ServerPlayer, PlayerRef> =
         DataContainers.finaleCompatibleScoreContainer(gameHandle, PlayerRef::create)
     private val stats = createStats(data, PitchChanges, Probes, Replays, MelodiesCompleted, CorrectNotes)
-    private lateinit var setup: FineTuningSetup
     private lateinit var tuningPhase: TuningPhase
 
     init {
@@ -34,13 +38,6 @@ class FineTuningInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Ga
     }
 
     override fun getData(): DataContainer<ServerPlayer, PlayerRef> = data
-
-    // TODO: migrate world bootstrap into a dedicated MiniGameFactory
-
-    suspend fun createWorldBootstrap(world: ServerLevel, gameMap: GameMap) {
-        setup = FineTuningSetup(gameHandle, gameMap, world)
-        setup.createRooms()
-    }
 
     override fun prepare() {
         val json: JSONArray = getMap().requireProperty("room-note-blocks")

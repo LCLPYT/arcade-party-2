@@ -41,7 +41,6 @@ import work.lclpnet.kibu.hook.entity.ServerEntityHooks
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks
 import work.lclpnet.kibu.hook.level.BlockModificationHooks
 import java.util.*
-import java.util.concurrent.CompletableFuture
 import kotlin.math.abs
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
@@ -56,13 +55,17 @@ private val BORDER_SHRINK_DURATION = 2.minutes
 private val REMOVE_BLOCKS_AFTER_BORDER_DONE_DELAY = 45.seconds
 private const val BORDER_MIN_SIZE = 3
 
-class PillarBattleInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap) : EliminationGameInstance(gameHandle, level, map) {
+class PillarBattleInstance(
+    gameHandle: MiniGameHandle,
+    level: ServerLevel,
+    map: GameMap,
+    private val random: Random,
+    private val pillars: PbSetup.PlacementResult?,
+) : EliminationGameInstance(gameHandle, level, map) {
 
-    private val random = Random()
     private val movementBlocker = SimpleMovementBlocker(gameHandle.scheduler).also {
         it.setModifySpeedAttribute(false)
     }
-    private var pillars: PbSetup.PlacementResult? = null
     private val warnings = HashMap<UUID, Warning>()
     private var borderShrinking = false
     private lateinit var border: WorldBorder
@@ -77,12 +80,6 @@ class PillarBattleInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: 
         useOldCombat()
     }
 
-    // TODO: migrate world bootstrap into a dedicated MiniGameFactory
-
-    fun createWorldBootstrap(world: ServerLevel, map: GameMap): CompletableFuture<Void> {
-        val setup = PbSetup(world, map, gameHandle.logger)
-        return setup.load().thenRun { pillars = setup.placePillars(gameHandle.participants, random) }
-    }
 
     override fun prepare() {
         useRemainingPlayersDisplay()

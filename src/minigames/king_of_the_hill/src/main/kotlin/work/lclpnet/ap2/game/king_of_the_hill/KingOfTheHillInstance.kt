@@ -51,10 +51,6 @@ class KingOfTheHillInstance(gameHandle: MiniGameHandle, level: ServerLevel, map:
 
     override fun getData() = data!!
 
-    // TODO: migrate world bootstrap into a dedicated MiniGameFactory
-
-    fun bootstrapWorld(world: ServerLevel, map: GameMap) = createMarkers(world, map)
-
     override fun prepare() {
         commons().teleportToRandomSpawns(Random.asJavaRandom())
         goalShape = MapUtil.readShape(map, "goal-shape")

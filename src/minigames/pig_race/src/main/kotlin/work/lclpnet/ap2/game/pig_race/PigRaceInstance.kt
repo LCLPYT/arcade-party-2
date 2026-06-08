@@ -41,7 +41,6 @@ import work.lclpnet.ap2.impl.game.data.Ordering
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef
 import work.lclpnet.ap2.impl.map.schema.SchemaHolder
 import work.lclpnet.ap2.impl.music.MusicHelper
-import work.lclpnet.ap2.impl.music.MusicHelper.ARCADE_PARTY_GAME_TAG
 import work.lclpnet.ap2.impl.util.ApRegistries
 import work.lclpnet.ap2.impl.util.Fireworks
 import work.lclpnet.ap2.impl.util.ItemHelper.unbreakable
@@ -69,7 +68,6 @@ import work.lclpnet.kibu.hook.player.PlayerTeleportedCallback
 import work.lclpnet.kibu.title.Title
 import work.lclpnet.kibu.translate.text.FormatWrapper.styled
 import java.util.*
-import java.util.concurrent.CompletableFuture
 import kotlin.math.max
 
 const val NEXT_ROUND_SONG_ID = "ap_begin"
@@ -80,7 +78,12 @@ private const val MAX_CATCHUP_BOOST = 0.4
 
 private enum class Variant { PIG, STRIDER }
 
-class PigRaceInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap) : FFAGameInstance(gameHandle, level, map) {
+class PigRaceInstance(
+    gameHandle: MiniGameHandle,
+    level: ServerLevel,
+    map: GameMap,
+    private val nextRoundSong: WeightedSong?,
+) : FFAGameInstance(gameHandle, level, map) {
 
     private val winnerData = OrderedDataContainer(PlayerRef::create)
     private val distanceData = DoubleScoreDataContainer(
@@ -89,7 +92,6 @@ class PigRaceInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameM
         "ap2.score.blocks_away"
     )
     private val combinedData = CombinedDataContainer(listOf(winnerData, distanceData))
-
     private val random = Random()
     private val collisionDetector: CollisionDetector = ChunkedCollisionDetector()
     private val movementObserver = TickMovementObserver(collisionDetector, gameHandle.participants::isParticipating)
@@ -99,17 +101,10 @@ class PigRaceInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameM
     private lateinit var checkpointManager: CheckpointManager
     private lateinit var progress: PRProgress
     private lateinit var scoreboard: PRScoreboard
-    private var nextRoundSong: WeightedSong? = null
     private var variant = Variant.PIG
     private var speed = 1.0
 
     override fun getData(): DataContainer<ServerPlayer, PlayerRef> = combinedData
-
-    // TODO: migrate world bootstrap into a dedicated MiniGameFactory
-
-    fun createWorldBootstrap(world: ServerLevel, map: GameMap): CompletableFuture<Void> =
-        gameHandle.songManager.getSongAndCache(ARCADE_PARTY_GAME_TAG, NEXT_ROUND_SONG_ID)
-            .thenAccept { nextRoundSong = it.orElse(null) }
 
     override fun prepare() {
         variant = getVariant()
