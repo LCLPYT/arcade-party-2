@@ -31,7 +31,6 @@ import work.lclpnet.ap2.impl.util.effect.ApEffects;
 import work.lclpnet.ap2.impl.util.property.ApMapProperties;
 import work.lclpnet.ap2.util.SubtitleCountdown;
 import work.lclpnet.combatctl.impl.CombatStyles;
-import work.lclpnet.gaco.asset.AssetPath;
 import work.lclpnet.game.api.WorldFacade;
 import work.lclpnet.game.map.GameMap;
 import work.lclpnet.game.util.BossBarTimer;
@@ -44,9 +43,6 @@ import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks;
 import work.lclpnet.kibu.hook.player.PlayerSpawnLocationCallback;
 import work.lclpnet.kibu.hook.player.PlayerWaypointCallback;
 import work.lclpnet.kibu.scheduler.api.RunningTask;
-import work.lclpnet.kibu.schematic.FabricBlockStateAdapter;
-import work.lclpnet.kibu.schematic.SchematicFormats;
-import work.lclpnet.kibu.structure.BlockStructure;
 import work.lclpnet.kibu.title.Title;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.kibu.translate.bossbar.BossBarProvider;
@@ -54,12 +50,8 @@ import work.lclpnet.kibu.translate.bossbar.TranslatedBossBar;
 import work.lclpnet.kibu.translate.text.TextTranslatable;
 import work.lclpnet.map_api.data.WorldData;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.HashSet;
-import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 import static net.minecraft.ChatFormatting.*;
@@ -431,32 +423,6 @@ public abstract class BaseGameInstance implements MiniGameInstance {
         this.schemaHolder = holder;
 
         return holder;
-    }
-
-    public InputStream asset(AssetPath path) throws IOException {
-        return gameHandle.getMapFacade().getAssetRepository().getStream(path).resource();
-    }
-
-    public CompletableFuture<BlockStructure> schematic(AssetPath path) {
-        return CompletableFuture.supplyAsync(() -> {
-            try {
-                return schematicBlocking(path);
-            } catch (IOException e) {
-                throw new RuntimeException("Failed to load schematic", e);
-            }
-        });
-    }
-
-    public BlockStructure schematicBlocking(AssetPath path) throws IOException {
-        try (var in = asset(path)) {
-            return SchematicFormats.SPONGE_V2.reader().read(in, FabricBlockStateAdapter.getInstance());
-        }
-    }
-
-    public AssetPath assetPath(String path) {
-        String mapPath = Objects.requireNonNull(map, "Map not loaded yet").getDescriptor().getMapPath();
-
-        return AssetPath.of(mapPath, path);
     }
 
     protected final boolean isParticipating(ServerPlayer player) {

@@ -1,5 +1,6 @@
 package work.lclpnet.ap2.game.mimicry
 
+import kotlinx.coroutines.CancellationException
 import net.minecraft.ChatFormatting
 import net.minecraft.core.BlockPos
 import net.minecraft.server.level.ServerLevel
@@ -34,7 +35,6 @@ import work.lclpnet.kibu.hook.ServerMessageHooks
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks
 import work.lclpnet.kibu.mc.KibuBlockPos
 import java.util.*
-import java.util.concurrent.CompletableFuture
 import kotlin.time.Duration.Companion.seconds
 
 private const val PREPARE_TICKS = 50
@@ -68,7 +68,7 @@ class MimicryInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameM
 
     // TODO: migrate world bootstrap into a dedicated MiniGameFactory
 
-    fun createWorldBootstrap(world: ServerLevel, map: GameMap): CompletableFuture<Void> {
+    suspend fun createWorldBootstrap(world: ServerLevel, map: GameMap) {
         val buttons: BlockBox = MapUtil.readBox(map.requireProperty("button-box"))
 
         val generator = StackedRoomGenerator(world, map, StackedRoomGenerator.Coordinates.ABSOLUTE) { pos, spawn, yaw, structure ->
@@ -82,17 +82,17 @@ class MimicryInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameM
             work.lclpnet.ap2.game.mimicry.data.MimicryRoom(pos, spawn, yaw, roomButtons)
         }
 
-        return generator.generate(gameHandle.participants)
-            .thenAccept { result ->
-                val rooms = result.rooms()
-                val random = Random()
+        try {
+            val result = generator.generate(gameHandle.participants)
+            val rooms = result.rooms
+            val random = Random()
 
-                manager = MimicryManager(gameHandle, rooms, buttons, random, world, stats, ::onCompleted)
-            }
-            .exceptionally { throwable ->
-                gameHandle.logger.error("Failed to create rooms", throwable)
-                null
-            }
+            manager = MimicryManager(gameHandle, rooms, buttons, random, world, stats, ::onCompleted)
+        } catch (err: Throwable) {
+            if (err is CancellationException) throw err
+
+            gameHandle.logger.error("Failed to create rooms", err)
+        }
     }
 
     override fun prepare() {

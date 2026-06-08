@@ -9,7 +9,6 @@ import work.lclpnet.ap2.api.game.GameType
 import work.lclpnet.ap2.game.MapLevelGameFactory
 import work.lclpnet.ap2.game.MiniGame
 import work.lclpnet.ap2.game.MiniGameFactory
-import work.lclpnet.ap2.game.MiniGameHandle
 
 class TntRunMiniGame : MiniGame {
     override val id = ApConstants.identifier("tnt_run")
@@ -18,5 +17,5 @@ class TntRunMiniGame : MiniGame {
     override fun getIcon(manager: RegistryAccess): ItemStack = ItemStack(Items.TNT)
     override fun canBeFinale(context: GameStartContext): Boolean = true
     override fun canBePlayed(context: GameStartContext): Boolean = true
-    override fun createFactory(gameHandle: MiniGameHandle): MiniGameFactory = MapLevelGameFactory(::TntRunInstance)
+    override fun createFactory(): MiniGameFactory = MapLevelGameFactory(::TntRunInstance)
 }

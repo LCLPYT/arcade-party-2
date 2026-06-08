@@ -9,7 +9,6 @@ import work.lclpnet.ap2.api.game.GameType
 import work.lclpnet.ap2.game.MapLevelGameFactory
 import work.lclpnet.ap2.game.MiniGame
 import work.lclpnet.ap2.game.MiniGameFactory
-import work.lclpnet.ap2.game.MiniGameHandle
 
 class TurfWarsMiniGame : MiniGame {
     override val id = ApConstants.identifier("turf_wars")
@@ -18,5 +17,5 @@ class TurfWarsMiniGame : MiniGame {
     override fun getIcon(manager: RegistryAccess): ItemStack = ItemStack(Items.LIGHT_BLUE_TERRACOTTA)
     override fun canBeFinale(context: GameStartContext): Boolean = false
     override fun canBePlayed(context: GameStartContext): Boolean = context.participantCount == 2 || context.participantCount >= 4
-    override fun createFactory(gameHandle: MiniGameHandle): MiniGameFactory = MapLevelGameFactory(::TurfWarsInstance)
+    override fun createFactory(): MiniGameFactory = MapLevelGameFactory(::TurfWarsInstance)
 }

@@ -9,7 +9,6 @@ import work.lclpnet.ap2.api.game.GameType
 import work.lclpnet.ap2.game.MapLevelGameFactory
 import work.lclpnet.ap2.game.MiniGame
 import work.lclpnet.ap2.game.MiniGameFactory
-import work.lclpnet.ap2.game.MiniGameHandle
 
 class GlowingBombMiniGame : MiniGame {
     override val id = ApConstants.identifier("glowing_bomb")
@@ -21,5 +20,5 @@ class GlowingBombMiniGame : MiniGame {
     override fun canBePlayed(context: GameStartContext): Boolean =
         context.participantCount <= 12  // maps should support respawn anchor positioning of max 12 players
 
-    override fun createFactory(gameHandle: MiniGameHandle): MiniGameFactory = MapLevelGameFactory(::GlowingBombInstance)
+    override fun createFactory(): MiniGameFactory = MapLevelGameFactory(::GlowingBombInstance)
 }

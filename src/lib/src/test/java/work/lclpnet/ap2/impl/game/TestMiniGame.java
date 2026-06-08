@@ -10,7 +10,6 @@ import work.lclpnet.ap2.api.game.GameStartContext;
 import work.lclpnet.ap2.api.game.GameType;
 import work.lclpnet.ap2.game.MiniGame;
 import work.lclpnet.ap2.game.MiniGameFactory;
-import work.lclpnet.ap2.game.MiniGameHandle;
 
 public class TestMiniGame implements MiniGame {
 
@@ -45,7 +44,7 @@ public class TestMiniGame implements MiniGame {
     }
 
     @Override
-    public @NotNull MiniGameFactory createFactory(@NotNull MiniGameHandle gameHandle) {
+    public @NotNull MiniGameFactory createFactory() {
         throw new UnsupportedOperationException();
     }
 }

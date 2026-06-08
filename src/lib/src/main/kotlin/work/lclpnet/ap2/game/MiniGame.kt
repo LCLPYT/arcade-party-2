@@ -25,5 +25,5 @@ interface MiniGame : GameInfo {
      */
     fun canBePlayed(context: GameStartContext): Boolean
 
-    fun createFactory(gameHandle: MiniGameHandle): MiniGameFactory
+    fun createFactory(): MiniGameFactory
 }

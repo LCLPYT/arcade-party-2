@@ -9,7 +9,6 @@ import work.lclpnet.ap2.api.game.GameType
 import work.lclpnet.ap2.game.MapLevelGameFactory
 import work.lclpnet.ap2.game.MiniGame
 import work.lclpnet.ap2.game.MiniGameFactory
-import work.lclpnet.ap2.game.MiniGameHandle
 
 class KnockoutMiniGame : MiniGame {
     override val id = ApConstants.identifier("knockout")
@@ -18,5 +17,5 @@ class KnockoutMiniGame : MiniGame {
     override fun getIcon(manager: RegistryAccess): ItemStack = ItemStack(Items.STICK)
     override fun canBeFinale(context: GameStartContext): Boolean = true
     override fun canBePlayed(context: GameStartContext): Boolean = true
-    override fun createFactory(gameHandle: MiniGameHandle): MiniGameFactory = MapLevelGameFactory(::KnockoutInstance)
+    override fun createFactory(): MiniGameFactory = MapLevelGameFactory(::KnockoutInstance)
 }

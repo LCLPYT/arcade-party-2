@@ -9,7 +9,6 @@ import work.lclpnet.ap2.api.game.GameType
 import work.lclpnet.ap2.game.MapLevelGameFactory
 import work.lclpnet.ap2.game.MiniGame
 import work.lclpnet.ap2.game.MiniGameFactory
-import work.lclpnet.ap2.game.MiniGameHandle
 
 private const val DEBUG_PLAYER_CONSTRAINT = false
 
@@ -26,5 +25,5 @@ class CozyCampfireMiniGame : MiniGame {
         return count == 2 || count >= 4
     }
 
-    override fun createFactory(gameHandle: MiniGameHandle): MiniGameFactory = MapLevelGameFactory(::CozyCampfireInstance)
+    override fun createFactory(): MiniGameFactory = MapLevelGameFactory(::CozyCampfireInstance)
 }

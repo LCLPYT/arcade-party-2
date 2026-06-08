@@ -1,13 +1,11 @@
 package work.lclpnet.ap2.game.aim_master
 
-import kotlinx.coroutines.suspendCancellableCoroutine
 import net.minecraft.core.BlockPos
 import work.lclpnet.ap2.game.MiniGameFactory
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.MiniGameInstance
 import work.lclpnet.ap2.game.openRandomMap
 import work.lclpnet.ap2.impl.util.world.StackedRoomGenerator
-import kotlin.coroutines.resume
 
 const val TARGET_NUMBER = 6
 const val TARGET_MIN_DISTANCE = 2
@@ -45,12 +43,8 @@ class AimMasterFactory : MiniGameFactory {
 
         val sequence = sequenceGenerator.sequence
 
-        val manager: AimMasterManager = suspendCancellableCoroutine { continuation ->
-            generator.generate(handle.participants).whenComplete { result, err ->
-                if (err != null) continuation.cancel(err)
-                else continuation.resume(AimMasterManager(result.rooms(), sequence))
-            }
-        }
+        val result = generator.generate(handle.participants)
+        val manager = AimMasterManager(result.rooms, sequence)
 
         return AimMasterInstance(handle, level, map, sequence, manager)
     }

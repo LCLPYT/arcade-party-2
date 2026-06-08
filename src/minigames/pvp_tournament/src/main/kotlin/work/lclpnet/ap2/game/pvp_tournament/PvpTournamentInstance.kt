@@ -33,6 +33,8 @@ import work.lclpnet.ap2.ext.mc.teleportTo
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.pvp_tournament.gen.Match
 import work.lclpnet.ap2.game.pvp_tournament.util.*
+import work.lclpnet.ap2.game.util.assetPath
+import work.lclpnet.ap2.game.util.schematic
 import work.lclpnet.ap2.impl.game.FFAGameInstance
 import work.lclpnet.ap2.impl.game.WinSequence
 import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer
@@ -107,7 +109,7 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle, level: ServerLevel, map:
         val playerSkins = visualizer.preloadPlayerSkins()
 
         val setup = TournamentSetup(logger, map, playerRefs) { path ->
-            schematicBlocking(assetPath(path))
+            gameHandle.schematic(map.assetPath(path))
         }
 
         val result = setup.setup(TournamentVariant.SINGLE_ELIMINATION)

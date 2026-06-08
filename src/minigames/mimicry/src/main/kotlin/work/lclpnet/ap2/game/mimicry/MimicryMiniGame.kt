@@ -8,12 +8,11 @@ import work.lclpnet.ap2.api.game.GameStartContext
 import work.lclpnet.ap2.api.game.GameType
 import work.lclpnet.ap2.game.MapLevelGameFactory
 import work.lclpnet.ap2.game.MiniGame
-import work.lclpnet.ap2.game.MiniGameHandle
 
 class MimicryMiniGame : MiniGame {
     override fun canBeFinale(context: GameStartContext) = false
     override fun canBePlayed(context: GameStartContext) = true
-    override fun createFactory(gameHandle: MiniGameHandle) = MapLevelGameFactory(::MimicryInstance)
+    override fun createFactory() = MapLevelGameFactory(::MimicryInstance)
     override val id = ApConstants.identifier("mimicry")
     override val type = GameType.FFA
     override val author = ApConstants.PERSON_LCLP

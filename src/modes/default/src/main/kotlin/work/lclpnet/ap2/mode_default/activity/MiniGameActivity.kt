@@ -64,7 +64,7 @@ class MiniGameActivity(
         PlayerRecipeNotificationCallback.HOOK.registerWith(hooks) { _, _, _ -> true }
         EntityUsePortalCallback.HOOK.registerWith(hooks) { _, _, _ -> true }
 
-        val factory = miniGame.createFactory(handle)
+        val factory = miniGame.createFactory()
 
         scope.launch {
             val instance = try {
