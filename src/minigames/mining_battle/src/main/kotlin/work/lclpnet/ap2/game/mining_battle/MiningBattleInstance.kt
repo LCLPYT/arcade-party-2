@@ -11,14 +11,11 @@ import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.world.item.enchantment.Enchantments
 import net.minecraft.world.level.block.state.BlockState
-import net.minecraft.world.level.gamerules.GameRules
 import work.lclpnet.ap2.api.game.data.DataContainer
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.impl.game.FFAGameInstance
 import work.lclpnet.ap2.impl.game.data.DataContainers
-import work.lclpnet.ap2.impl.game.data.IntDataContainer
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef
-import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.util.ItemHelper
 import work.lclpnet.ap2.impl.util.ItemHelper.unbreakable
 import work.lclpnet.ap2.impl.util.TextUtil
@@ -27,46 +24,29 @@ import work.lclpnet.game.impl.prot.ProtectionTypes
 import work.lclpnet.game.map.GameMap
 import work.lclpnet.kibu.access.entity.ServerPlayerAccess
 import work.lclpnet.kibu.hook.level.BlockModificationHooks
-import java.util.*
 import kotlin.time.Duration.Companion.seconds
 
 val DURATION = 60.seconds
 
-class MiningBattleInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap) : FFAGameInstance(gameHandle, level, map) {
+class MiningBattleInstance(
+    gameHandle: MiniGameHandle,
+    level: ServerLevel,
+    map: GameMap,
+    private val ore: MiningBattleOre,
+    private val material: Set<BlockState>,
+    private val box: BlockBox,
+) : FFAGameInstance(gameHandle, level, map) {
 
-    private val data: IntDataContainer<ServerPlayer, PlayerRef> =
-        DataContainers.finaleCompatibleScoreContainer(gameHandle, PlayerRef::create)
-    private val ore = MiningBattleOre(Random(), gameHandle, ::onGainPoints, ::canBeMined)
-    private val material: MutableSet<BlockState> = HashSet()
-    private lateinit var box: BlockBox
+    private val data = DataContainers.finaleCompatibleScoreContainer(gameHandle, PlayerRef::create)
 
     init {
         useSurvivalMode()
     }
 
-
-    // TODO: migrate world bootstrap into a dedicated MiniGameFactory
-
-    fun bootstrapWorld(world: ServerLevel, map: GameMap) {
-        val gameRules = world.gameRules
-
-        gameRules.set(GameRules.BLOCK_DROPS, false, gameHandle.server)
-
-        placeOres(world, map)
-    }
-
-    private fun placeOres(world: ServerLevel, map: GameMap) {
-        ore.init()
-
-        box = MapUtil.readBox(map.requireProperty("mining-box"))
-
-        material.clear()
-        MapUtil.readBlockStates(map.requireProperty("material"), material, gameHandle.logger)
-
-        MiningBattleGenerator(ore, box, material).generateOre(world)
-    }
-
     override fun prepare() {
+        ore.scoreConsumer = ::onGainPoints
+        ore.valid = ::canBeMined
+
         giveItems()
     }
 

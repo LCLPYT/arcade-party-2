@@ -10,9 +10,6 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.BossEvent;
 import net.minecraft.world.level.gamerules.GameRules;
-import org.jetbrains.annotations.NotNull;
-import org.json.JSONArray;
-import org.json.JSONObject;
 import work.lclpnet.ap2.ApConstants;
 import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.core.hook.CopperGolemTurnIntoStatueCallback;
@@ -47,9 +44,9 @@ import work.lclpnet.kibu.title.Title;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.kibu.translate.text.TranslatedText;
 
-import java.nio.charset.StandardCharsets;
-import java.util.*;
-import java.util.concurrent.CompletableFuture;
+import java.util.Objects;
+import java.util.Random;
+import java.util.UUID;
 
 import static net.minecraft.ChatFormatting.*;
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
@@ -64,12 +61,12 @@ public class GuessItInstance extends FFAGameInstance {
     private final Random random = new Random();
     private final PlayerChoices choices;
     private final ChallengeResult result;
+    private final SoundSubtitles soundSubtitles;
+    private final IndexedSet<UUID> mannequinUuids;
     private ChallengeMessengerImpl messenger;
     private InputManager inputManager;
     private GuessItManager manager = null;
     private Challenge challenge = null;
-    private SoundSubtitles soundSubtitles = null;
-    private IndexedSet<UUID> mannequinUuids = null;
     private ResetWorldModifier modifier = null;
     private DynamicEntityModifier dynamicEntities = null;
     private ScoreHandle roundHandle = null;
@@ -80,8 +77,11 @@ public class GuessItInstance extends FFAGameInstance {
     private BossBarTimer timer;
     private int transaction = 0;
 
-    public GuessItInstance(MiniGameHandle gameHandle, ServerLevel world, GameMap map) {
+    public GuessItInstance(MiniGameHandle gameHandle, ServerLevel world, GameMap map, SoundSubtitles soundSubtitles, IndexedSet<UUID> mannequinUuids) {
         super(gameHandle, world, map);
+
+        this.soundSubtitles = soundSubtitles;
+        this.mannequinUuids = mannequinUuids;
 
         choices = new PlayerChoices(gameHandle.getTranslations());
         result = new ChallengeResult();
@@ -90,14 +90,6 @@ public class GuessItInstance extends FFAGameInstance {
     @Override
     protected DataContainer<ServerPlayer, PlayerRef> getData() {
         return data;
-    }
-
-        // TODO: migrate world bootstrap into a dedicated MiniGameFactory
-    public @NotNull CompletableFuture<Void> createWorldBootstrap(@NotNull ServerLevel world, @NotNull GameMap map) {
-        var soundSubtitlesFuture = SoundSubtitles.load().thenAccept(sub -> soundSubtitles = sub);
-        var mannequinUuidsFuture = loadMannequinUuids().thenAccept(ids -> mannequinUuids = new IndexedSet<>(ids));
-
-        return CompletableFuture.allOf(soundSubtitlesFuture, mannequinUuidsFuture);
     }
 
     @Override
@@ -392,38 +384,5 @@ public class GuessItInstance extends FFAGameInstance {
 
         round--;
         prepareNextChallenge();
-    }
-
-    private CompletableFuture<Set<UUID>> loadMannequinUuids() {
-        return CompletableFuture.supplyAsync(this::loadMannequinUuidsSync);
-    }
-
-    private Set<UUID> loadMannequinUuidsSync() {
-        var in = getClass().getResourceAsStream("/mannequin_players.json");
-
-        if (in == null) return Set.of();
-
-        try (in) {
-            String content = new String(in.readAllBytes(), StandardCharsets.UTF_8);
-            JSONObject json = new JSONObject(content);
-            JSONArray array = json.getJSONArray("uuids");
-
-            Set<UUID> uuids = new HashSet<>(array.length());
-
-            for (Object uuid : array) {
-                if (!(uuid instanceof String str)) continue;
-
-                try {
-                    uuids.add(UUID.fromString(str));
-                } catch (IllegalArgumentException e) {
-                    gameHandle.getLogger().error("Malformed uuid: {}", str, e);
-                }
-            }
-
-            return uuids;
-        } catch (Throwable t) {
-            gameHandle.getLogger().error("Failed to load mannequin player uuids", t);
-            return Set.of();
-        }
     }
 }
