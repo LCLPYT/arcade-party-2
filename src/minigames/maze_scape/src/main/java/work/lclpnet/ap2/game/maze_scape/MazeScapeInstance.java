@@ -23,7 +23,6 @@ import org.joml.Vector3d;
 import org.slf4j.Logger;
 import work.lclpnet.ap2.ApConstants;
 import work.lclpnet.ap2.api.game.MiniGameResults;
-import work.lclpnet.ap2.api.map.MapBootstrap;
 import work.lclpnet.ap2.api.util.model.ModelManager;
 import work.lclpnet.ap2.ext.mc.LevelExtensionsKt;
 import work.lclpnet.ap2.game.MiniGameHandle;
@@ -54,7 +53,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
-public class MazeScapeInstance extends EliminationGameInstance implements MapBootstrap {
+public class MazeScapeInstance extends EliminationGameInstance {
 
     private static final int
             MOB_SPAWN_DELAY_TICKS = Ticks.seconds(0),
@@ -68,11 +67,11 @@ public class MazeScapeInstance extends EliminationGameInstance implements MapBoo
     private @Nullable MSStruct struct = null;
     private @Nullable MSManager manager = null;
 
-    public MazeScapeInstance(MiniGameHandle gameHandle) {
-        super(gameHandle);
+    public MazeScapeInstance(MiniGameHandle gameHandle, ServerLevel world, GameMap map) {
+        super(gameHandle, world, map);
     }
 
-    @Override
+        // TODO: migrate world bootstrap into a dedicated MiniGameFactory
     public @NotNull CompletableFuture<Void> createWorldBootstrap(@NotNull ServerLevel world, @NotNull GameMap map) {
         LevelExtensionsKt.setDayTime(world, 18_000);
 

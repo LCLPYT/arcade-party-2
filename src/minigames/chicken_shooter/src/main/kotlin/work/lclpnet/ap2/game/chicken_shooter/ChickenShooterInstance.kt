@@ -44,6 +44,7 @@ import work.lclpnet.ap2.impl.util.world.BfsWorldScanner
 import work.lclpnet.ap2.impl.util.world.CardinalAdjacentBlocks
 import work.lclpnet.ap2.impl.util.world.SizedSpaceFinder
 import work.lclpnet.game.impl.prot.ProtectionTypes
+import work.lclpnet.game.map.GameMap
 import work.lclpnet.game.map.MapUtils
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess
 import work.lclpnet.kibu.access.entity.ServerPlayerAccess
@@ -65,7 +66,7 @@ private val BabyChickens = Stat("baby_chickens", 0)
 private val TntDetonated = Stat("tnt_detonated", 0)
 private val ChickensExploded = Stat("chickens_exploded", 0)
 
-class ChickenShooterInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle) {
+class ChickenShooterInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap) : FFAGameInstance(gameHandle, level, map) {
 
     private val data = DataContainers.finaleCompatibleScoreContainer(gameHandle, PlayerRef::create)
     private val stats = createStats(data, BabyChickens, TntDetonated, ChickensExploded)

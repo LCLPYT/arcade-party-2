@@ -32,7 +32,6 @@ import net.minecraft.world.scores.criteria.ObjectiveCriteria
 import org.joml.Matrix4f
 import work.lclpnet.ap2.ApConstants
 import work.lclpnet.ap2.api.game.data.DataContainer
-import work.lclpnet.ap2.api.map.MapBootstrap
 import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.api.util.heads.PlayerHead
 import work.lclpnet.ap2.ext.mc.isOf
@@ -79,7 +78,7 @@ fun eggVariants(registryManager: RegistryAccess): List<PlayerHead> {
     return headEntries.map { it.value() }
 }
 
-class EggventureInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle), MapBootstrap {
+class EggventureInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap) : FFAGameInstance(gameHandle, level, map) {
 
     private val data = DataContainers.finaleCompatibleScoreContainer(gameHandle, PlayerRef::create)
     private val stats = createStats(data, EggsStolen, EggsLost)
@@ -88,7 +87,9 @@ class EggventureInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandl
 
     override fun getData(): DataContainer<ServerPlayer, PlayerRef> = data
 
-    override fun createWorldBootstrap(world: ServerLevel, map: GameMap): CompletableFuture<Void> {
+    // TODO: migrate world bootstrap into a dedicated MiniGameFactory
+
+    fun createWorldBootstrap(world: ServerLevel, map: GameMap): CompletableFuture<Void> {
         val shape = MapUtil.readShape(map, "egg-area")
         val positions = mutableListOf<BlockPos>()
 

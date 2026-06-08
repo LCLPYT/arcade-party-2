@@ -13,7 +13,6 @@ import net.minecraft.world.item.Items
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.StainedGlassBlock
 import net.minecraft.world.level.block.state.BlockState
-import work.lclpnet.ap2.api.map.MapBootstrapFunction
 import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.mc.setAttribute
@@ -45,7 +44,7 @@ private val WrongToolsSelected = Stat("wrong_tools_selected", 0)
 private val WrongToolsUsed = Stat("wrong_tools_used", 0)
 private val CorrectToolStreak = Stat("correct_tool_streak", 0)
 
-class ManiacDiggerInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle), MapBootstrapFunction {
+class ManiacDiggerInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap) : FFAGameInstance(gameHandle, level, map) {
 
     private val reachedBottom = OrderedDataContainer(PlayerRef::create)
     private val score = IntScoreDataContainer(PlayerRef::create, Ordering.ASCENDING, "ap2.score.blocks_away")
@@ -62,7 +61,9 @@ class ManiacDiggerInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHan
 
     override fun getData() = data
 
-    override fun bootstrapWorld(world: ServerLevel, map: GameMap) {
+    // TODO: migrate world bootstrap into a dedicated MiniGameFactory
+
+    fun bootstrapWorld(world: ServerLevel, map: GameMap) {
         val winHeight: Number = map.requireProperty("goal-height")
         this.winHeight = winHeight.toInt()
 

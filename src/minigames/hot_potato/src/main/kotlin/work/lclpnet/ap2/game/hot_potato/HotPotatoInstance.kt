@@ -4,6 +4,7 @@ import it.unimi.dsi.fastutil.ints.IntList
 import net.minecraft.ChatFormatting
 import net.minecraft.core.component.DataComponents
 import net.minecraft.core.particles.ParticleTypes
+import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.util.Mth
 import net.minecraft.world.InteractionResult
@@ -23,6 +24,7 @@ import work.lclpnet.ap2.ext.runAfter
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.impl.game.EliminationGameInstance
 import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedBossBar
+import work.lclpnet.game.map.GameMap
 import work.lclpnet.kibu.access.entity.FireworkEntityAccess
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks
@@ -39,7 +41,7 @@ val MARK_PERIOD_DURATION = 6.seconds
 val PotatoAssigned = Stat("potato_assigned", 0)
 val TimesPassed = Stat("times_passed", 0)
 
-class HotPotatoInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gameHandle), GameOverListener {
+class HotPotatoInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap) : EliminationGameInstance(gameHandle, level, map), GameOverListener {
 
     private val random = Random()
     private lateinit var dynamicBossBar: DynamicTranslatedBossBar

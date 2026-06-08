@@ -6,9 +6,10 @@ import net.minecraft.world.item.Items
 import work.lclpnet.ap2.ApConstants
 import work.lclpnet.ap2.api.game.GameStartContext
 import work.lclpnet.ap2.api.game.GameType
+import work.lclpnet.ap2.game.MapLevelGameFactory
 import work.lclpnet.ap2.game.MiniGame
+import work.lclpnet.ap2.game.MiniGameFactory
 import work.lclpnet.ap2.game.MiniGameHandle
-import work.lclpnet.ap2.game.MiniGameInstance
 
 class PaintballMiniGame : MiniGame {
 
@@ -27,5 +28,5 @@ class PaintballMiniGame : MiniGame {
         return count == 2 || count >= 4
     }
 
-    override fun createInstance(gameHandle: MiniGameHandle): MiniGameInstance = PaintballInstance(gameHandle)
+    override fun createFactory(gameHandle: MiniGameHandle): MiniGameFactory = MapLevelGameFactory(::PaintballInstance)
 }

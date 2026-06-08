@@ -16,7 +16,6 @@ import net.minecraft.world.level.gamerules.GameRules
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.scores.PlayerTeam
 import net.minecraft.world.scores.Team
-import work.lclpnet.ap2.api.map.MapBootstrap
 import work.lclpnet.ap2.ext.allPlayers
 import work.lclpnet.ap2.ext.mc.playNotifySound
 import work.lclpnet.ap2.ext.runAfter
@@ -48,7 +47,7 @@ private val JUDGE_DURATION = 5.seconds
 private val JUDGE_ANNOUNCEMENT_DELAY = 3.seconds
 private val DESTROY_DELAY_TICKS = Ticks.seconds(4)
 
-class SpeedBuildersInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gameHandle), MapBootstrap {
+class SpeedBuildersInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap) : EliminationGameInstance(gameHandle, level, map) {
 
     private val random = Random()
     private val setup = SbSetup(random, gameHandle.logger)
@@ -67,7 +66,9 @@ class SpeedBuildersInstance(gameHandle: MiniGameHandle) : EliminationGameInstanc
         disableTeleportEliminated()
     }
 
-    override fun createWorldBootstrap(world: ServerLevel, map: GameMap): CompletableFuture<Void> {
+    // TODO: migrate world bootstrap into a dedicated MiniGameFactory
+
+    fun createWorldBootstrap(world: ServerLevel, map: GameMap): CompletableFuture<Void> {
         return setup.setup(map, world).thenRun {
             val participants: Participants = gameHandle.participants
             val islands = setup.createIslands(participants, world)

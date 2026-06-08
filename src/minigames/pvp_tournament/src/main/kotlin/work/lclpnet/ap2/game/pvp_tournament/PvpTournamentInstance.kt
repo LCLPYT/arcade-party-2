@@ -25,7 +25,6 @@ import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.ItemStackTemplate
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.GameType
-import work.lclpnet.ap2.api.map.MapBootstrap
 import work.lclpnet.ap2.core.mixin.entity.MannequinAccessor
 import work.lclpnet.ap2.ext.*
 import work.lclpnet.ap2.ext.mc.isOf
@@ -63,7 +62,7 @@ enum class TournamentVariant {
     SWISS_STYLE,
 }
 
-class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle), MapBootstrap {
+class PvpTournamentInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap) : FFAGameInstance(gameHandle, level, map) {
 
     val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val data = IntScoreDataContainer(PlayerRef::create, Ordering.ASCENDING, "")
@@ -99,7 +98,9 @@ class PvpTournamentInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHa
         gameHandle.whenDone { scope.cancel() }
     }
 
-    override fun createWorldBootstrap(
+    // TODO: migrate world bootstrap into a dedicated MiniGameFactory
+
+    fun createWorldBootstrap(
         world: ServerLevel,
         map: GameMap
     ): CompletableFuture<Void> = scope.future {

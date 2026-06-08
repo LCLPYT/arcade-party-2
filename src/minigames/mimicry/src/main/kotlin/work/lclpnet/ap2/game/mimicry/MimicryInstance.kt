@@ -11,7 +11,6 @@ import net.minecraft.world.entity.player.Player
 import net.minecraft.world.level.Level
 import net.minecraft.world.phys.BlockHitResult
 import work.lclpnet.ap2.api.game.data.DataContainer
-import work.lclpnet.ap2.api.map.MapBootstrap
 import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.api.stats.StatUnits
 import work.lclpnet.ap2.ext.mc.isIn
@@ -50,7 +49,7 @@ val ButtonClicks = Stat("block_clicks", 0)
 val AvgTimeUsage = Stat("avg_time_usage", 0f, unit = StatUnits.Percent)
 val AvgClickTime = Stat("avg_click_time", 0f, unit = StatUnits.Seconds)
 
-class MimicryInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle), MapBootstrap {
+class MimicryInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap) : FFAGameInstance(gameHandle, level, map) {
 
     private val data = IntScoreDataContainer(
         PlayerRef::create,
@@ -67,7 +66,9 @@ class MimicryInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle),
 
     override fun getData(): DataContainer<ServerPlayer, PlayerRef> = data
 
-    override fun createWorldBootstrap(world: ServerLevel, map: GameMap): CompletableFuture<Void> {
+    // TODO: migrate world bootstrap into a dedicated MiniGameFactory
+
+    fun createWorldBootstrap(world: ServerLevel, map: GameMap): CompletableFuture<Void> {
         val buttons: BlockBox = MapUtil.readBox(map.requireProperty("button-box"))
 
         val generator = StackedRoomGenerator(world, map, StackedRoomGenerator.Coordinates.ABSOLUTE) { pos, spawn, yaw, structure ->

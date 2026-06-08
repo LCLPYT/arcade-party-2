@@ -24,7 +24,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jspecify.annotations.NonNull;
 import work.lclpnet.ap2.api.game.data.DataContainer;
-import work.lclpnet.ap2.api.map.MapBootstrap;
 import work.lclpnet.ap2.core.hook.DripLeafTiltCallback;
 import work.lclpnet.ap2.ext.mc.LevelExtensionsKt;
 import work.lclpnet.ap2.game.MiniGameHandle;
@@ -67,7 +66,7 @@ import static java.lang.Math.*;
 import static net.minecraft.ChatFormatting.*;
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
-public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap {
+public class JumpAndRunInstance extends FFAGameInstance {
 
     private static final int
             ASSISTANCE_TICKS_BASE = Ticks.seconds(90),  // time after which assistance is provided
@@ -89,8 +88,8 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
     private @Nullable CompletableFuture<?> waitFor = null;
     private @Nullable TaskHandle task = null;
 
-    public JumpAndRunInstance(MiniGameHandle gameHandle) {
-        super(gameHandle);
+    public JumpAndRunInstance(MiniGameHandle gameHandle, ServerLevel world, GameMap map) {
+        super(gameHandle, world, map);
 
         movementObserver = new PlayerMovementObserver(collisionDetector, gameHandle.getParticipants()::isParticipating);
 
@@ -108,7 +107,7 @@ public class JumpAndRunInstance extends FFAGameInstance implements MapBootstrap 
         return data;
     }
 
-    @Override
+        // TODO: migrate world bootstrap into a dedicated MiniGameFactory
     public @NotNull CompletableFuture<Void> createWorldBootstrap(@NotNull ServerLevel world, @NotNull GameMap map) {
         LevelExtensionsKt.setDayTime(world, 4000);
 

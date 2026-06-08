@@ -8,6 +8,7 @@ import net.minecraft.core.component.DataComponents
 import net.minecraft.network.chat.Component
 import net.minecraft.network.chat.numbers.FixedFormat
 import net.minecraft.network.chat.numbers.StyledFormat
+import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.InteractionResult
 import net.minecraft.world.damagesource.DamageTypes
@@ -44,6 +45,7 @@ import work.lclpnet.ap2.impl.util.world.ChunkPersistence
 import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape
 import work.lclpnet.gaco.math.SplinePath
 import work.lclpnet.game.impl.prot.ProtectionTypes
+import work.lclpnet.game.map.GameMap
 import work.lclpnet.game.map.MapUtils
 import work.lclpnet.kibu.access.misc.DamageTrackerAccess
 import work.lclpnet.kibu.hook.entity.EntityHealthCallback
@@ -64,7 +66,7 @@ private class Tracker(var anchor: Vec3) {
     var maxProgress: Double = 0.0
 }
 
-class DragonEscapeInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle) {
+class DragonEscapeInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap) : FFAGameInstance(gameHandle, level, map) {
 
     private val completed = OrderedDataContainer(PlayerRef::create)
     private val score = DoubleScoreDataContainer(PlayerRef::create, Ordering.DESCENDING, "ap2.score.distance")

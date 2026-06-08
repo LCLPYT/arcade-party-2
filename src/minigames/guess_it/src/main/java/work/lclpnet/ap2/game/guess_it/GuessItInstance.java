@@ -15,7 +15,6 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import work.lclpnet.ap2.ApConstants;
 import work.lclpnet.ap2.api.game.data.DataContainer;
-import work.lclpnet.ap2.api.map.MapBootstrap;
 import work.lclpnet.ap2.core.hook.CopperGolemTurnIntoStatueCallback;
 import work.lclpnet.ap2.game.MiniGameHandle;
 import work.lclpnet.ap2.game.guess_it.data.*;
@@ -55,7 +54,7 @@ import java.util.concurrent.CompletableFuture;
 import static net.minecraft.ChatFormatting.*;
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
-public class GuessItInstance extends FFAGameInstance implements MapBootstrap {
+public class GuessItInstance extends FFAGameInstance {
 
     private static final int PREPARATION_TICKS = Ticks.seconds(3);
     private static final int DELAY_TICKS = Ticks.seconds(5);
@@ -81,8 +80,8 @@ public class GuessItInstance extends FFAGameInstance implements MapBootstrap {
     private BossBarTimer timer;
     private int transaction = 0;
 
-    public GuessItInstance(MiniGameHandle gameHandle) {
-        super(gameHandle);
+    public GuessItInstance(MiniGameHandle gameHandle, ServerLevel world, GameMap map) {
+        super(gameHandle, world, map);
 
         choices = new PlayerChoices(gameHandle.getTranslations());
         result = new ChallengeResult();
@@ -93,7 +92,7 @@ public class GuessItInstance extends FFAGameInstance implements MapBootstrap {
         return data;
     }
 
-    @Override
+        // TODO: migrate world bootstrap into a dedicated MiniGameFactory
     public @NotNull CompletableFuture<Void> createWorldBootstrap(@NotNull ServerLevel world, @NotNull GameMap map) {
         var soundSubtitlesFuture = SoundSubtitles.load().thenAccept(sub -> soundSubtitles = sub);
         var mannequinUuidsFuture = loadMannequinUuids().thenAccept(ids -> mannequinUuids = new IndexedSet<>(ids));

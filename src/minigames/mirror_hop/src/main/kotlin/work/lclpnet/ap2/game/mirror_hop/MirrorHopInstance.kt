@@ -36,7 +36,7 @@ private fun removeGate(map: GameMap, world: ServerLevel) {
     }
 }
 
-class MirrorHopInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle) {
+class MirrorHopInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap) : FFAGameInstance(gameHandle, level, map) {
 
     private val winnerData = OrderedDataContainer(PlayerRef::create)
     private val scoreData = IntScoreDataContainer(PlayerRef::create)

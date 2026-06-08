@@ -43,6 +43,7 @@ import work.lclpnet.ap2.impl.util.handler.VisualCooldown
 import work.lclpnet.combatctl.impl.CombatStyles
 import work.lclpnet.gaco.ds.BlockBox
 import work.lclpnet.game.impl.prot.ProtectionTypes
+import work.lclpnet.game.map.GameMap
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess
 import work.lclpnet.kibu.hook.HookFactory
 import work.lclpnet.kibu.hook.entity.ProjectileHooks
@@ -58,7 +59,7 @@ fun interface Impact {
     fun onImpact(projectile: Projectile, pos: BlockPos)
 }
 
-class BowSpleefInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gameHandle) {
+class BowSpleefInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap) : EliminationGameInstance(gameHandle, level, map) {
 
     private val stats = createStats(
         TimeSurvived,

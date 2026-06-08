@@ -15,8 +15,6 @@ import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.world.phys.Vec3
 import org.joml.Vector3d
-import work.lclpnet.ap2.api.map.MapBootstrap
-import work.lclpnet.ap2.api.map.MapBootstrapFunction
 import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.api.stats.StatUnits
 import work.lclpnet.ap2.ext.players
@@ -28,7 +26,6 @@ import work.lclpnet.ap2.game.glowing_bomb.data.GbAnchor
 import work.lclpnet.ap2.game.glowing_bomb.data.GbBomb
 import work.lclpnet.ap2.game.glowing_bomb.data.GbManager
 import work.lclpnet.ap2.impl.game.EliminationGameInstance
-import work.lclpnet.ap2.impl.map.ServerThreadMapBootstrap
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker
 import work.lclpnet.gaco.scene.Scene
 import work.lclpnet.gaco.scene.ServerWorldMountContext
@@ -52,7 +49,7 @@ val MaxSafeStreak = Stat("max_safe_streak", 0)
 val BombHoldTime = Stat("bomb_hold_time", 0f, unit = StatUnits.Seconds)
 val MinFuseOnPass = Stat("min_fuse_on_pass", 0f, higherIsBetter = false, unit = StatUnits.Seconds)
 
-class GlowingBombInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gameHandle), MapBootstrapFunction {
+class GlowingBombInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap) : EliminationGameInstance(gameHandle, level, map) {
 
     private val random = Random()
     private val movementBlocker = SimpleMovementBlocker(gameHandle.scheduler).also {
@@ -76,9 +73,10 @@ class GlowingBombInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
         disableTeleportEliminated()
     }
 
-    override fun getMapBootstrap(): MapBootstrap = ServerThreadMapBootstrap(this)
 
-    override fun bootstrapWorld(world: ServerLevel, map: GameMap) {
+    // TODO: migrate world bootstrap into a dedicated MiniGameFactory
+
+    fun bootstrapWorld(world: ServerLevel, map: GameMap) {
         manager = GbManager(world, map, random, gameHandle.participants, ::onAnchorFilled)
         manager.setupAnchors()
     }

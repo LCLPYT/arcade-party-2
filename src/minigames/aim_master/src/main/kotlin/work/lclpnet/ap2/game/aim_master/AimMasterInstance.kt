@@ -9,7 +9,6 @@ import net.minecraft.sounds.SoundEvents
 import net.minecraft.sounds.SoundSource
 import net.minecraft.world.InteractionResult
 import net.minecraft.world.entity.player.Player
-import work.lclpnet.ap2.api.map.MapBootstrap
 import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.api.stats.StatUnits
 import work.lclpnet.ap2.game.MiniGameHandle
@@ -48,7 +47,7 @@ private val Accuracy = Stat("accuracy", 0f, unit = StatUnits.Percent)
 private val Streak = Stat("streak", 0)
 private val AvgAdvanceTime = Stat("avg_advance_time", 0f, unit = StatUnits.Seconds)
 
-class AimMasterInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle), MapBootstrap {
+class AimMasterInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap) : FFAGameInstance(gameHandle, level, map) {
 
     private val data = IntScoreDataContainer(PlayerRef::create)
 
@@ -68,7 +67,9 @@ class AimMasterInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
     override val maxDuration: Duration
         get() = 2.minutes
 
-    override fun createWorldBootstrap(world: ServerLevel, map: GameMap): CompletableFuture<Void> {
+    // TODO: migrate world bootstrap into a dedicated MiniGameFactory
+
+    fun createWorldBootstrap(world: ServerLevel, map: GameMap): CompletableFuture<Void> {
         val generator = StackedRoomGenerator(
             world,
             map,

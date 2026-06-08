@@ -18,7 +18,6 @@ import net.minecraft.world.entity.vehicle.minecart.Minecart
 import net.minecraft.world.phys.Vec3
 import org.json.JSONArray
 import work.lclpnet.ap2.ApConstants
-import work.lclpnet.ap2.api.map.MapBootstrap
 import work.lclpnet.ap2.api.music.ConfiguredSong
 import work.lclpnet.ap2.core.type.ApVariantHolder
 import work.lclpnet.ap2.ext.runAfter
@@ -69,7 +68,7 @@ private const val DECOY_CHANCE = 0.15f
 
 private val MUSICAL_MINECART_TAG: Identifier = ApConstants.identifier("musical_minecart")
 
-class MusicalMinecartInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gameHandle), MapBootstrap {
+class MusicalMinecartInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap) : EliminationGameInstance(gameHandle, level, map) {
 
     private val random = Random()
     private val songs = SongHandler(gameHandle, random)
@@ -85,7 +84,9 @@ class MusicalMinecartInstance(gameHandle: MiniGameHandle) : EliminationGameInsta
     private var eliminationDelayTicks = Ticks.seconds(9L)
     private var minecartsGlowing = false
 
-    override fun createWorldBootstrap(world: ServerLevel, map: GameMap): CompletableFuture<Void> {
+    // TODO: migrate world bootstrap into a dedicated MiniGameFactory
+
+    fun createWorldBootstrap(world: ServerLevel, map: GameMap): CompletableFuture<Void> {
         return songs.loadSongs(MUSICAL_MINECART_TAG)
     }
 

@@ -24,7 +24,6 @@ import net.minecraft.world.phys.shapes.CollisionContext
 import net.minecraft.world.scores.Team
 import org.joml.Matrix4f
 import org.json.JSONArray
-import work.lclpnet.ap2.api.map.MapBootstrapFunction
 import work.lclpnet.ap2.api.stats.CommonStats
 import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.api.util.world.BlockPredicate
@@ -72,7 +71,7 @@ const val DEBUG_PRESSURE_PLATE_POSITIONS = false
 
 val Exploded = Stat("exploded", 0, higherIsBetter = false)
 
-class MinefieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle), MapBootstrapFunction {
+class MinefieldInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap) : FFAGameInstance(gameHandle, level, map) {
     
     private val data = OrderedDataContainer(PlayerRef::create)
     private val stats = createStats(Exploded, CommonStats.DistanceMoved)
@@ -89,7 +88,9 @@ class MinefieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
 
     override fun getData() = data
 
-    override fun bootstrapWorld(world: ServerLevel, map: GameMap) {
+    // TODO: migrate world bootstrap into a dedicated MiniGameFactory
+
+    fun bootstrapWorld(world: ServerLevel, map: GameMap) {
         val scanPositions = map.properties.getJSONArray("scan-positions")
         val mineDensity = map.properties.optNumber("mine-density", 0.55f).toFloat()
         val scanShape = readShape("scan-shape")

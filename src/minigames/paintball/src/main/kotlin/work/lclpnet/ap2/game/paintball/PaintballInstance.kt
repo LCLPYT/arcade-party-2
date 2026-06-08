@@ -22,8 +22,6 @@ import net.minecraft.world.level.gamerules.GameRules
 import work.lclpnet.ap2.api.game.data.DataContainer
 import work.lclpnet.ap2.api.game.team.DyeTeamKey
 import work.lclpnet.ap2.api.game.team.Team
-import work.lclpnet.ap2.api.map.MapBootstrap
-import work.lclpnet.ap2.api.map.MapBootstrapFunction
 import work.lclpnet.ap2.api.stats.CommonStats.DamageDealt
 import work.lclpnet.ap2.api.stats.CommonStats.Deaths
 import work.lclpnet.ap2.api.stats.CommonStats.KillDeathRatio
@@ -52,7 +50,6 @@ import work.lclpnet.ap2.impl.game.data.Ordering
 import work.lclpnet.ap2.impl.game.data.type.TeamRef
 import work.lclpnet.ap2.impl.game.item.SpecialItems
 import work.lclpnet.ap2.impl.map.MapUtil
-import work.lclpnet.ap2.impl.map.ServerThreadMapBootstrap
 import work.lclpnet.ap2.impl.util.ItemHelper.getLeatherArmor
 import work.lclpnet.ap2.impl.util.ItemHelper.unbreakable
 import work.lclpnet.ap2.impl.util.VanishManager
@@ -81,7 +78,7 @@ import kotlin.time.Duration.Companion.seconds
 
 private val DURATION = 150.seconds
 
-class PaintballInstance(gameHandle: MiniGameHandle) : TeamGameInstance(gameHandle), MapBootstrapFunction {
+class PaintballInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap) : TeamGameInstance(gameHandle, level, map) {
 
     private val data = IntScoreDataContainer(
         ::createReference,
@@ -119,9 +116,10 @@ class PaintballInstance(gameHandle: MiniGameHandle) : TeamGameInstance(gameHandl
 
     override fun getData(): DataContainer<Team, TeamRef> = data
 
-    override fun getMapBootstrap(): MapBootstrap = ServerThreadMapBootstrap(this)
 
-    override fun bootstrapWorld(world: ServerLevel, map: GameMap) {
+    // TODO: migrate world bootstrap into a dedicated MiniGameFactory
+
+    fun bootstrapWorld(world: ServerLevel, map: GameMap) {
         teams = PaintballTeams(teamManager, map, gameHandle.participants, random, gameHandle.logger)
         teams.setup()
 

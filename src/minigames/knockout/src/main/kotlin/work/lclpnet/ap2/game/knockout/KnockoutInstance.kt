@@ -34,6 +34,7 @@ import work.lclpnet.ap2.impl.util.world.KnockbackKillTracker
 import work.lclpnet.gaco.collisions.ChunkedCollisionDetector
 import work.lclpnet.gaco.collisions.movement.PlayerMovementObserver
 import work.lclpnet.game.impl.prot.ProtectionTypes
+import work.lclpnet.game.map.GameMap
 import work.lclpnet.kibu.access.VelocityModifier
 import work.lclpnet.kibu.access.entity.ServerPlayerAccess
 import work.lclpnet.kibu.hook.entity.EntityDamageCallback
@@ -60,7 +61,7 @@ private val DamageReceived = Stat("damage_received", 0f, higherIsBetter = false,
 private val ImpactDamageDone = Stat("impact_damage_done", 0f)
 private val ImpactDamageCaused = Stat("impact_damage_caused", 0f)
 
-class KnockoutInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gameHandle) {
+class KnockoutInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap) : EliminationGameInstance(gameHandle, level, map) {
 
     private val charge = Object2DoubleOpenHashMap<UUID>()
     private val hit = Object2BooleanOpenHashMap<UUID>()

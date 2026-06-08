@@ -17,7 +17,6 @@ import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.border.WorldBorder
 import net.minecraft.world.level.dimension.end.EnderDragonFight
 import net.minecraft.world.level.gamerules.GameRules
-import work.lclpnet.ap2.api.map.MapBootstrap
 import work.lclpnet.ap2.api.stats.CommonStats.BlocksPlaced
 import work.lclpnet.ap2.api.stats.CommonStats.DistanceMoved
 import work.lclpnet.ap2.api.stats.CommonStats.Kills
@@ -57,7 +56,7 @@ private val BORDER_SHRINK_DURATION = 2.minutes
 private val REMOVE_BLOCKS_AFTER_BORDER_DONE_DELAY = 45.seconds
 private const val BORDER_MIN_SIZE = 3
 
-class PillarBattleInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gameHandle), MapBootstrap {
+class PillarBattleInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap) : EliminationGameInstance(gameHandle, level, map) {
 
     private val random = Random()
     private val movementBlocker = SimpleMovementBlocker(gameHandle.scheduler).also {
@@ -78,7 +77,9 @@ class PillarBattleInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
         useOldCombat()
     }
 
-    override fun createWorldBootstrap(world: ServerLevel, map: GameMap): CompletableFuture<Void> {
+    // TODO: migrate world bootstrap into a dedicated MiniGameFactory
+
+    fun createWorldBootstrap(world: ServerLevel, map: GameMap): CompletableFuture<Void> {
         val setup = PbSetup(world, map, gameHandle.logger)
         return setup.load().thenRun { pillars = setup.placePillars(gameHandle.participants, random) }
     }

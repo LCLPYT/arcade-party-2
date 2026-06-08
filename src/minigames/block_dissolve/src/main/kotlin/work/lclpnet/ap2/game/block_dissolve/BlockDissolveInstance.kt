@@ -4,6 +4,7 @@ import it.unimi.dsi.fastutil.longs.LongArrayList
 import net.fabricmc.fabric.api.networking.v1.PlayerLookup
 import net.minecraft.core.BlockPos
 import net.minecraft.core.particles.ParticleTypes
+import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.sounds.SoundSource
@@ -25,6 +26,7 @@ import work.lclpnet.ap2.impl.game.EliminationGameInstance
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.util.world.KnockbackKillTracker
 import work.lclpnet.game.impl.prot.ProtectionTypes
+import work.lclpnet.game.map.GameMap
 import work.lclpnet.kibu.access.entity.ServerPlayerAccess
 import work.lclpnet.kibu.scheduler.Ticks
 import work.lclpnet.kibu.scheduler.api.RunningTask
@@ -36,7 +38,7 @@ private const val WARNING_DELAY_TICKS = 70
 private const val WARNING_PERIOD_TICKS = 5
 private const val WARNING_AMOUNT = 150
 
-class BlockDissolveInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gameHandle) {
+class BlockDissolveInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap) : EliminationGameInstance(gameHandle, level, map) {
 
     private val markedBlocks = LongArrayList()
     private val random = Random()

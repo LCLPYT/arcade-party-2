@@ -26,6 +26,7 @@ import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.impl.game.EliminationGameInstance
 import work.lclpnet.ap2.impl.util.world.SpawnFinder
 import work.lclpnet.game.impl.prot.ProtectionTypes
+import work.lclpnet.game.map.GameMap
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks
 import work.lclpnet.kibu.scheduler.Ticks
@@ -39,7 +40,7 @@ private val FREEZING_DURATION_TICKS = Ticks.seconds(5)
 private const val MAX_SNOWBALL_STACKS = 9
 private const val SNOWBALL_DAMAGE = 0.75f
 
-class SnowballFightInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gameHandle) {
+class SnowballFightInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap) : EliminationGameInstance(gameHandle, level, map) {
 
     init {
         useSurvivalMode()

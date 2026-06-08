@@ -1,5 +1,6 @@
 package work.lclpnet.ap2.game.apocalypse_survival
 
+import net.minecraft.server.level.ServerLevel
 import net.minecraft.world.damagesource.DamageSource
 import net.minecraft.world.damagesource.DamageTypes
 import net.minecraft.world.entity.Entity
@@ -24,13 +25,14 @@ import work.lclpnet.ap2.game.apocalypse_survival.util.TargetManager
 import work.lclpnet.ap2.impl.game.EliminationGameInstance
 import work.lclpnet.ap2.impl.util.TimeHelper
 import work.lclpnet.game.impl.prot.ProtectionTypes
+import work.lclpnet.game.map.GameMap
 import work.lclpnet.game.util.PlayerReset
 import work.lclpnet.kibu.behaviour.entity.VexEntityBehaviour
 import work.lclpnet.kibu.hook.entity.ProjectileHooks
 import work.lclpnet.kibu.hook.entity.ServerEntityHooks
 import java.util.*
 
-class ApocalypseSurvivalInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gameHandle) {
+class ApocalypseSurvivalInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap) : EliminationGameInstance(gameHandle, level, map) {
 
     private lateinit var spawners: List<MonsterSpawner>
     private lateinit var targetManager: TargetManager

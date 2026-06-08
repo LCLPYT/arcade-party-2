@@ -16,7 +16,6 @@ import net.minecraft.world.level.Level
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.gamerules.GameRules
 import net.minecraft.world.level.material.Fluids
-import work.lclpnet.ap2.api.map.MapBootstrap
 import work.lclpnet.ap2.ext.allPlayers
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.mc.setDayTime
@@ -54,7 +53,7 @@ val MAX_DURATION_TICKS = Ticks.seconds(32)
 val GAME_DURATION_TICKS = Ticks.minutes(6)
 const val TIME_TO_NIGHTFALL_DAYTIME_TICKS = 3600
 
-class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gameHandle), MapBootstrap {
+class KilleporterInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap) : EliminationGameInstance(gameHandle, level, map) {
 
     var kitHandler: KitHandler? = null
     var kitLoader: PrefabKitLoader? = null
@@ -66,7 +65,9 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
         useSurvivalMode()
     }
 
-    override fun createWorldBootstrap(world: ServerLevel, map: GameMap): CompletableFuture<Void> {
+    // TODO: migrate world bootstrap into a dedicated MiniGameFactory
+
+    fun createWorldBootstrap(world: ServerLevel, map: GameMap): CompletableFuture<Void> {
         kitLoader = PrefabKitLoader(world.registryAccess(), gameHandle.logger)
 
         val kitFuture = kitLoader!!.loadHotbar(this)
