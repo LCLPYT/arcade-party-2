@@ -9,19 +9,22 @@ fun interface MapLevelInstanceInit {
     fun createInstance(handle: MiniGameHandle, level: ServerLevel, map: GameMap): MiniGameInstance
 }
 
-class MapLevelGameFactory(val instanceFactory: MapLevelInstanceInit) : MiniGameFactory {
+suspend fun openRandomMap(handle: MiniGameHandle): Pair<ServerLevel, GameMap> {
+    return suspendCancellableCoroutine { continuation ->
+        handle.mapFacade.openRandomMap(handle.gameInfo.id) { level, map ->
+            // executed on the server thread
+            handle.setWorld(level)
+
+            continuation.resume(level to map)
+        }
+    }
+}
+
+open class MapLevelGameFactory(val instanceFactory: MapLevelInstanceInit) : MiniGameFactory {
 
     override suspend fun createInstance(handle: MiniGameHandle): MiniGameInstance {
-        return suspendCancellableCoroutine { continuation ->
+        val (level, map) = openRandomMap(handle)
 
-            handle.mapFacade.openRandomMap(handle.gameInfo.id) { level, map ->
-                // executed on the server thread
-                handle.setWorld(level)
-
-                val instance = instanceFactory.createInstance(handle, level, map)
-
-                continuation.resume(instance)
-            }
-        }
+        return instanceFactory.createInstance(handle, level, map)
     }
 }
