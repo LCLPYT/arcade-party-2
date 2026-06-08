@@ -17,14 +17,10 @@ import net.minecraft.world.phys.shapes.BooleanOp;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3d;
-import org.slf4j.Logger;
 import work.lclpnet.ap2.ApConstants;
 import work.lclpnet.ap2.api.game.MiniGameResults;
-import work.lclpnet.ap2.api.util.model.ModelManager;
-import work.lclpnet.ap2.ext.mc.LevelExtensionsKt;
 import work.lclpnet.ap2.game.MiniGameHandle;
 import work.lclpnet.ap2.game.maze_scape.debug.DebugFrustumCommand;
 import work.lclpnet.ap2.game.maze_scape.debug.DebugPathCommand;
@@ -51,7 +47,6 @@ import work.lclpnet.kibu.util.math.Matrix3i;
 
 import java.util.Random;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 
 public class MazeScapeInstance extends EliminationGameInstance {
 
@@ -63,42 +58,14 @@ public class MazeScapeInstance extends EliminationGameInstance {
     private static final String FELL_INTO_PIT = "game.ap2.maze_scape.fell_into_pit";
 
     private final Random random = new Random();
-    private MSDebugController debugController;
-    private @Nullable MSStruct struct = null;
+    private final @Nullable MSStruct struct;
+    private final MSDebugController debugController;
     private @Nullable MSManager manager = null;
 
-    public MazeScapeInstance(MiniGameHandle gameHandle, ServerLevel world, GameMap map) {
+    public MazeScapeInstance(MiniGameHandle gameHandle, ServerLevel world, GameMap map, @Nullable MSStruct struct, MSDebugController debugController) {
         super(gameHandle, world, map);
-    }
-
-        // TODO: migrate world bootstrap into a dedicated MiniGameFactory
-    public @NotNull CompletableFuture<Void> createWorldBootstrap(@NotNull ServerLevel world, @NotNull GameMap map) {
-        LevelExtensionsKt.setDayTime(world, 18_000);
-
-        ModelManager modelManager = ApResources.getInstance();
-
-        debugController = new MSDebugController(commons(map, world).debugController());
-
-        if (ApConstants.DEBUG) {
-            debugController.init(modelManager);
-        }
-
-        Logger logger = gameHandle.getLogger();
-        var setup = new MSLoader(world, map, logger);
-
-        return setup.load().thenCompose(res -> {
-            if (MSLoader.DEBUG_PIECES) {
-                struct = null;
-                return CompletableFuture.completedFuture(null);
-            }
-
-            long seed = new Random().nextLong();
-            var random = new Random(seed);
-
-            var generator = new MSGenerator(world, map, res, random, seed, logger, debugController);
-
-            return generator.startGenerator().thenAccept(optGraph -> struct = optGraph.orElse(null));
-        });
+        this.struct = struct;
+        this.debugController = debugController;
     }
 
     @Override

@@ -10,7 +10,6 @@ import work.lclpnet.ap2.api.game.GameStartContext;
 import work.lclpnet.ap2.api.game.GameType;
 import work.lclpnet.ap2.game.MiniGame;
 import work.lclpnet.ap2.game.MiniGameFactory;
-import work.lclpnet.ap2.game.util.MapLevelGameFactory;
 
 public class GuessItMiniGame implements MiniGame {
     @Override
@@ -45,6 +44,6 @@ public class GuessItMiniGame implements MiniGame {
 
     @Override
     public @NotNull MiniGameFactory createFactory() {
-        return new MapLevelGameFactory(GuessItInstance::new);
+        return new GuessItFactory();
     }
 }

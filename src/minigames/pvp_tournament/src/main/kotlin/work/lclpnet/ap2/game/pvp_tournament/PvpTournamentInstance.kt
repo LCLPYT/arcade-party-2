@@ -1,8 +1,7 @@
 package work.lclpnet.ap2.game.pvp_tournament
 
-import kotlinx.coroutines.*
-import kotlinx.coroutines.future.await
-import kotlinx.coroutines.future.future
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.cancel
 import net.minecraft.ChatFormatting
 import net.minecraft.core.particles.ItemParticleOption
 import net.minecraft.core.particles.ParticleTypes
@@ -33,8 +32,6 @@ import work.lclpnet.ap2.ext.mc.teleportTo
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.pvp_tournament.gen.Match
 import work.lclpnet.ap2.game.pvp_tournament.util.*
-import work.lclpnet.ap2.game.util.assetPath
-import work.lclpnet.ap2.game.util.schematic
 import work.lclpnet.ap2.impl.game.FFAGameInstance
 import work.lclpnet.ap2.impl.game.WinSequence
 import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer
@@ -51,8 +48,6 @@ import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks
 import work.lclpnet.kibu.hook.util.PlayerUtils
 import work.lclpnet.kibu.title.Title
 import work.lclpnet.kibu.translate.text.TranslatedText
-import java.util.*
-import java.util.concurrent.CompletableFuture
 import kotlin.time.Duration.Companion.seconds
 
 const val DEBUG_FILL_WITH_NPC = false
@@ -64,67 +59,34 @@ enum class TournamentVariant {
     SWISS_STYLE,
 }
 
-class PvpTournamentInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap) : FFAGameInstance(gameHandle, level, map) {
+class PvpTournamentInstance(
+    gameHandle: MiniGameHandle,
+    level: ServerLevel,
+    map: GameMap,
+    private val playerRefs: List<PlayerRef>,
+    private val visualizer: CanvasVisualizer,
+    private val scope: CoroutineScope,
+) : FFAGameInstance(gameHandle, level, map) {
 
-    val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val data = IntScoreDataContainer(PlayerRef::create, Ordering.ASCENDING, "")
     val matchInstances = MatchInstanceRegistry()
     val kitManager = MatchKitManager(getKits(gameHandle.server.registryAccess()))
-    val visualizer = CanvasVisualizer(gameHandle, scope)
 
     val movementBlocker = SimpleMovementBlocker(gameHandle.scheduler).also {
         it.setModifySpeedAttribute(false)
         it.init(gameHandle.hooks)
     }
 
-    val playerRefs = buildPlayerRefs()
 
     lateinit var pvp: PvpBehavior
     lateinit var tournamentResult: TournamentResult
 
-    private fun buildPlayerRefs(): List<PlayerRef> {
-        val refs = players().map { PlayerRef.create(it) }
-
-        if (!DEBUG_FILL_WITH_NPC) return refs
-
-        val targetPlayerCount = 12
-        val extraPlayers = (targetPlayerCount - refs.size).coerceAtLeast(0)
-
-        return refs + List(extraPlayers) { PlayerRef(UUID.randomUUID(), "NPC #${it + 1}") }
-    }
 
     override fun getData() = data
 
     init {
         useSurvivalMode()
         gameHandle.whenDone { scope.cancel() }
-    }
-
-    // TODO: migrate world bootstrap into a dedicated MiniGameFactory
-
-    fun createWorldBootstrap(
-        world: ServerLevel,
-        map: GameMap
-    ): CompletableFuture<Void> = scope.future {
-        val playerSkins = visualizer.preloadPlayerSkins()
-
-        val setup = TournamentSetup(logger, map, playerRefs) { path ->
-            gameHandle.schematic(map.assetPath(path))
-        }
-
-        val result = setup.setup(TournamentVariant.SINGLE_ELIMINATION)
-
-        tournamentResult = result
-
-        val arenaPlacement = gameHandle.server.submit {
-            setup.placeArenas(world, result.arenas.values)
-        }
-
-        playerSkins.joinAll()
-
-        visualizer.updateCanvas(result.tournament)
-
-        arenaPlacement.await()
     }
 
     override fun prepare() {

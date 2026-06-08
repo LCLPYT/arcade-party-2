@@ -20,15 +20,12 @@ import net.minecraft.world.scores.Objective;
 import net.minecraft.world.scores.PlayerTeam;
 import net.minecraft.world.scores.Team;
 import net.minecraft.world.scores.criteria.ObjectiveCriteria;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jspecify.annotations.NonNull;
 import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.core.hook.DripLeafTiltCallback;
-import work.lclpnet.ap2.ext.mc.LevelExtensionsKt;
 import work.lclpnet.ap2.game.MiniGameHandle;
 import work.lclpnet.ap2.game.jump_and_run.gen.JumpAndRun;
-import work.lclpnet.ap2.game.jump_and_run.gen.JumpAndRunSetup;
 import work.lclpnet.ap2.game.jump_and_run.gen.JumpModule;
 import work.lclpnet.ap2.game.player.Participants;
 import work.lclpnet.ap2.impl.game.FFAGameInstance;
@@ -73,14 +70,13 @@ public class JumpAndRunInstance extends FFAGameInstance {
             REACH_GOAL_REQUIRED = 3,
             NEXT_PHASE_WAIT_TICKS = Ticks.seconds(4);
 
-    private static final float
-            TARGET_MINUTES = 4.0f;  // target completion time of the jump and run (approximate)
+    public static final float TARGET_MINUTES = 4.0f;  // target completion time of the jump and run (approximate)
 
     private final IntScoreDataContainer<ServerPlayer, PlayerRef> data = new IntScoreDataContainer<>(PlayerRef::create);
     private final CollisionDetector collisionDetector = new ChunkedCollisionDetector();
     private final PlayerMovementObserver movementObserver;
     private final List<BlockPos> gateBlocks = new ArrayList<>();
-    private JumpAndRun jumpAndRun;
+    private final JumpAndRun jumpAndRun;
     private CheckpointManager checkpointManager;
     private DynamicTranslatedPlayerBossBar bossBar;
     private volatile boolean segmentActive = false;
@@ -88,8 +84,10 @@ public class JumpAndRunInstance extends FFAGameInstance {
     private @Nullable CompletableFuture<?> waitFor = null;
     private @Nullable TaskHandle task = null;
 
-    public JumpAndRunInstance(MiniGameHandle gameHandle, ServerLevel world, GameMap map) {
+    public JumpAndRunInstance(MiniGameHandle gameHandle, ServerLevel world, GameMap map, JumpAndRun jumpAndRun) {
         super(gameHandle, world, map);
+
+        this.jumpAndRun = jumpAndRun;
 
         movementObserver = new PlayerMovementObserver(collisionDetector, gameHandle.getParticipants()::isParticipating);
 
@@ -105,15 +103,6 @@ public class JumpAndRunInstance extends FFAGameInstance {
     @Override
     protected DataContainer<ServerPlayer, PlayerRef> getData() {
         return data;
-    }
-
-        // TODO: migrate world bootstrap into a dedicated MiniGameFactory
-    public @NotNull CompletableFuture<Void> createWorldBootstrap(@NotNull ServerLevel world, @NotNull GameMap map) {
-        LevelExtensionsKt.setDayTime(world, 4000);
-
-        var setup = new JumpAndRunSetup(gameHandle, map, world, TARGET_MINUTES);
-
-        return setup.setup().thenAccept(jumpAndRun -> this.jumpAndRun = jumpAndRun);
     }
 
     @Override

@@ -1,6 +1,5 @@
 package work.lclpnet.ap2.game.mimicry
 
-import kotlinx.coroutines.CancellationException
 import net.minecraft.ChatFormatting
 import net.minecraft.core.BlockPos
 import net.minecraft.server.level.ServerLevel
@@ -19,21 +18,19 @@ import work.lclpnet.ap2.ext.runAfter
 import work.lclpnet.ap2.ext.ticks
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.mimicry.data.MimicryManager
+import work.lclpnet.ap2.game.mimicry.data.MimicryRoom
 import work.lclpnet.ap2.game.mimicry.data.SequencePlayer
 import work.lclpnet.ap2.impl.game.FFAGameInstance
 import work.lclpnet.ap2.impl.game.PseudoElimination
 import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer
 import work.lclpnet.ap2.impl.game.data.Ordering
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef
-import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.util.world.StackedRoomGenerator
 import work.lclpnet.gaco.ds.BlockBox
-import work.lclpnet.gaco.math.AffineIntMatrix
 import work.lclpnet.game.map.GameMap
 import work.lclpnet.game.util.BossBarTimer
 import work.lclpnet.kibu.hook.ServerMessageHooks
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks
-import work.lclpnet.kibu.mc.KibuBlockPos
 import java.util.*
 import kotlin.time.Duration.Companion.seconds
 
@@ -49,7 +46,13 @@ val ButtonClicks = Stat("block_clicks", 0)
 val AvgTimeUsage = Stat("avg_time_usage", 0f, unit = StatUnits.Percent)
 val AvgClickTime = Stat("avg_click_time", 0f, unit = StatUnits.Seconds)
 
-class MimicryInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap) : FFAGameInstance(gameHandle, level, map) {
+class MimicryInstance(
+    gameHandle: MiniGameHandle,
+    level: ServerLevel,
+    map: GameMap,
+    result: StackedRoomGenerator.Result<MimicryRoom>,
+    buttons: BlockBox
+) : FFAGameInstance(gameHandle, level, map) {
 
     private val data = IntScoreDataContainer(
         PlayerRef::create,
@@ -58,42 +61,13 @@ class MimicryInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameM
     )
     private val stats = createStats(data, DirectButtonClicks, ButtonClicks, AvgTimeUsage, AvgClickTime)
     private lateinit var pseudoElimination: PseudoElimination
-    private lateinit var manager: MimicryManager
     private lateinit var sequencePlayer: SequencePlayer
+    private val manager = MimicryManager(gameHandle, result.rooms, buttons, Random(), level, stats, ::onCompleted)
     private var timer: BossBarTimer? = null
     private var timerTransaction = 0
     private var phase = Phase.IDLE
 
     override fun getData(): DataContainer<ServerPlayer, PlayerRef> = data
-
-    // TODO: migrate world bootstrap into a dedicated MiniGameFactory
-
-    suspend fun createWorldBootstrap(world: ServerLevel, map: GameMap) {
-        val buttons: BlockBox = MapUtil.readBox(map.requireProperty("button-box"))
-
-        val generator = StackedRoomGenerator(world, map, StackedRoomGenerator.Coordinates.ABSOLUTE) { pos, spawn, yaw, structure ->
-            val origin: KibuBlockPos = structure.origin
-
-            val roomButtons = buttons.transform(AffineIntMatrix.makeTranslation(
-                pos.x - origin.x,
-                pos.y - origin.y,
-                pos.z - origin.z))
-
-            work.lclpnet.ap2.game.mimicry.data.MimicryRoom(pos, spawn, yaw, roomButtons)
-        }
-
-        try {
-            val result = generator.generate(gameHandle.participants)
-            val rooms = result.rooms
-            val random = Random()
-
-            manager = MimicryManager(gameHandle, rooms, buttons, random, world, stats, ::onCompleted)
-        } catch (err: Throwable) {
-            if (err is CancellationException) throw err
-
-            gameHandle.logger.error("Failed to create rooms", err)
-        }
-    }
 
     override fun prepare() {
         val world: ServerLevel = level

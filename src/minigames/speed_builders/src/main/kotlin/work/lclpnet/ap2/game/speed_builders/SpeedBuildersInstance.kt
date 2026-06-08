@@ -38,19 +38,22 @@ import work.lclpnet.kibu.hook.entity.ProjectileHooks
 import work.lclpnet.kibu.scheduler.Ticks
 import work.lclpnet.kibu.title.Title
 import java.util.*
-import java.util.concurrent.CompletableFuture
 import kotlin.time.Duration.Companion.seconds
 
 private const val LOOK_DURATION_SECONDS = 8
-private const val FAST_MODE_MIN_PLAYERS = 6
+const val FAST_MODE_MIN_PLAYERS = 6
 private val JUDGE_DURATION = 5.seconds
 private val JUDGE_ANNOUNCEMENT_DELAY = 3.seconds
 private val DESTROY_DELAY_TICKS = Ticks.seconds(4)
 
-class SpeedBuildersInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap) : EliminationGameInstance(gameHandle, level, map) {
+class SpeedBuildersInstance(
+    gameHandle: MiniGameHandle,
+    level: ServerLevel,
+    map: GameMap,
+    val setup: SbSetup,
+    val islands: Map<UUID, SbIsland>,
+) : EliminationGameInstance(gameHandle, level, map) {
 
-    private val random = Random()
-    private val setup = SbSetup(random, gameHandle.logger)
     private val items = SbItems()
     private lateinit var destruction: SbDestruction
     private lateinit var manager: SbManager
@@ -59,42 +62,32 @@ class SpeedBuildersInstance(gameHandle: MiniGameHandle, level: ServerLevel, map:
     private lateinit var aelosId: UUID
     private var timer: BossBarTimer? = null
     private var timerTransaction = 0
-    private var fastMode = false
 
     init {
         useSurvivalMode()
         disableTeleportEliminated()
     }
 
-    // TODO: migrate world bootstrap into a dedicated MiniGameFactory
-
-    fun createWorldBootstrap(world: ServerLevel, map: GameMap): CompletableFuture<Void> {
-        return setup.setup(map, world).thenRun {
-            val participants: Participants = gameHandle.participants
-            val islands = setup.createIslands(participants, world)
-
-            aelosId = setup.getAelosId()
-
-            fastMode = participants.count() >= FAST_MODE_MIN_PLAYERS
-
-            manager = SbManager(
-                islands,
-                setup.getModules(),
-                gameHandle,
-                world,
-                random,
-                fastMode,
-                this::allPlayersCompleted,
-                this::onLastPlayerRemaining
-            )
-
-            destruction = SbDestruction(world, random, aelosId)
-
-            world.gameRules.set(GameRules.BLOCK_DROPS, true, gameHandle.server)
-        }
-    }
-
     override fun prepare() {
+        val aelosId = setup.getAelosId()
+
+        val fastMode = gameHandle.participants.count() >= FAST_MODE_MIN_PLAYERS
+        val random = Random()
+
+        manager = SbManager(
+            islands,
+            setup.getModules(),
+            gameHandle,
+            level,
+            random,
+            fastMode,
+            this::allPlayersCompleted,
+            this::onLastPlayerRemaining
+        )
+
+        destruction = SbDestruction(level, random, aelosId)
+        level.gameRules.set(GameRules.BLOCK_DROPS, true, server)
+
         setupGameRules()
 
         ServerLevelBehaviour.setFluidTicksEnabled(level, false)

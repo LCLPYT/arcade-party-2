@@ -60,8 +60,8 @@ class GlowingBombInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: G
     private val holdTicks = Object2IntOpenHashMap<UUID>()
     private val stats = createStats(BombAssigned, BombPasses, BombExploded, MaxSafeStreak, BombHoldTime, MinFuseOnPass)
     private val initialPlayerCount = gameHandle.participants.count()
-    private lateinit var manager: GbManager
-    private lateinit var scene: Scene
+    private val manager = GbManager(level, map, random, gameHandle.participants, ::onAnchorFilled)
+    private val scene = Scene(ServerWorldMountContext(level))
     private var bomb: GbBomb? = null
     private var mayPass = false
     private var wasPassed = false
@@ -73,15 +73,9 @@ class GlowingBombInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: G
         disableTeleportEliminated()
     }
 
-
-    // TODO: migrate world bootstrap into a dedicated MiniGameFactory
-
-    fun bootstrapWorld(world: ServerLevel, map: GameMap) {
-        manager = GbManager(world, map, random, gameHandle.participants, ::onAnchorFilled)
-        manager.setupAnchors()
-    }
-
     override fun prepare() {
+        manager.setupAnchors()
+
         val hooks = gameHandle.hooks
 
         movementBlocker.init(hooks)
@@ -115,7 +109,6 @@ class GlowingBombInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: G
 
         runEveryTick { tickCredits() }
 
-        scene = Scene(ServerWorldMountContext(level))
         scene.animate(1, gameHandle.scheduler)
 
         // init min fuse pass to max value for everyone
