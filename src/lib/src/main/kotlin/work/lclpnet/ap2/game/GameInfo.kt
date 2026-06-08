@@ -1,55 +1,56 @@
-package work.lclpnet.ap2.api.game;
+package work.lclpnet.ap2.game
 
-import net.minecraft.core.RegistryAccess;
-import net.minecraft.resources.Identifier;
-import net.minecraft.world.item.ItemStack;
-import org.jetbrains.annotations.NotNull;
+import net.minecraft.core.RegistryAccess
+import net.minecraft.resources.Identifier
+import net.minecraft.world.item.ItemStack
+import work.lclpnet.ap2.api.game.GameType
 
-public interface GameInfo {
+interface GameInfo {
 
     /**
-     * @return A unique {@link Identifier} for the game.
+     * @return A unique [Identifier] for the game.
      */
-    @NotNull Identifier getId();
+    val id: Identifier
 
     /**
      * @return The type of the game.
      */
-    @NotNull GameType getType();
+    val type: GameType
 
-    @NotNull String getAuthor();
+    val author: String
 
-    @NotNull ItemStack getIcon(@NotNull RegistryAccess manager);
+    fun getIcon(manager: RegistryAccess): ItemStack
 
-    default @NotNull String getTitleKey() {
-        Identifier id = getId();
+    val titleKey: String
+        get() {
+            val id = this.id
 
-        return "game.%s.%s".formatted(id.getNamespace(), id.getPath());
-    }
+            return "game.${id.namespace}.${id.path}"
+        }
 
-    default @NotNull String getDescriptionKey() {
-        Identifier id = getId();
+    val descriptionKey: String
+        get() {
+            val id = this.id
 
-        return "game.%s.%s.description".formatted(id.getNamespace(), id.getPath());
-    }
+            return "game.${id.namespace}.${id.path}.description"
+        }
 
-    default @NotNull Object[] getDescriptionArguments() {
-        return new Object[0];
-    }
+    val descriptionArguments: Array<Any>
+        get() = emptyArray()
 
-    default @NotNull String getTaskKey() {
-        Identifier id = getId();
+    val taskKey: String
+        get() {
+            val id = this.id
 
-        return "game.%s.%s.task".formatted(id.getNamespace(), id.getPath());
-    }
+            return "game.${id.namespace}.${id.path}.task"
+        }
 
-    default @NotNull Object[] getTaskArguments() {
-        return new Object[0];
-    }
+    val taskArguments: Array<Any>
+        get() = emptyArray()
 
-    default @NotNull Identifier identifier(@NotNull String subPath) {
-        Identifier gameId = getId();
+    fun identifier(subPath: String): Identifier {
+        val gameId = this.id
 
-        return Identifier.fromNamespaceAndPath(gameId.getNamespace(), gameId.getPath().concat("/").concat(subPath));
+        return Identifier.fromNamespaceAndPath(gameId.namespace, "${gameId.path}/$subPath")
     }
 }

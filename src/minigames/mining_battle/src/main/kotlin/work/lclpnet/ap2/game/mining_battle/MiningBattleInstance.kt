@@ -12,10 +12,10 @@ import net.minecraft.world.item.Items
 import net.minecraft.world.item.enchantment.Enchantments
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.gamerules.GameRules
-import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.game.data.DataContainer
 import work.lclpnet.ap2.api.map.MapBootstrap
 import work.lclpnet.ap2.api.map.MapBootstrapFunction
+import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.impl.game.FFAGameInstance
 import work.lclpnet.ap2.impl.game.data.DataContainers
 import work.lclpnet.ap2.impl.game.data.IntDataContainer

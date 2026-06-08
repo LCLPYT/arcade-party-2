@@ -14,7 +14,6 @@ import net.minecraft.world.level.gamerules.GameRules
 import net.minecraft.world.phys.shapes.CollisionContext
 import net.minecraft.world.scores.DisplaySlot
 import net.minecraft.world.scores.Team
-import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.game.data.DataContainer
 import work.lclpnet.ap2.api.map.MapBootstrap
 import work.lclpnet.ap2.api.map.MapBootstrapFunction
@@ -22,6 +21,7 @@ import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.ext.mc.isIn
 import work.lclpnet.ap2.ext.mc.playNotifySound
 import work.lclpnet.ap2.ext.runEveryTick
+import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.splashy_dropper.data.SdGenerator
 import work.lclpnet.ap2.impl.game.FFAGameInstance
 import work.lclpnet.ap2.impl.game.data.DataContainers

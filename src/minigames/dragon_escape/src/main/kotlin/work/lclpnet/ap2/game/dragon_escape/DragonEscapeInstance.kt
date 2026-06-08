@@ -18,10 +18,10 @@ import net.minecraft.world.phys.Vec3
 import net.minecraft.world.scores.DisplaySlot
 import net.minecraft.world.scores.Objective
 import net.minecraft.world.scores.criteria.ObjectiveCriteria
-import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.game.MiniGameResults
 import work.lclpnet.ap2.api.game.data.DataContainer
 import work.lclpnet.ap2.core.mixin.entity.LivingEntityAccessor
+import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.dragon_escape.kit.EnderPearlKit
 import work.lclpnet.ap2.game.dragon_escape.kit.LeapKit
 import work.lclpnet.ap2.game.dragon_escape.kit.WindChargeKit

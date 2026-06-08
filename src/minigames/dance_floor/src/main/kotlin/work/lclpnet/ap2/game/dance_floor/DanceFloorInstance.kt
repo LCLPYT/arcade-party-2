@@ -11,12 +11,12 @@ import net.minecraft.world.level.block.Block
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.scores.Team
 import org.json.JSONObject
-import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.map.MapBootstrap
 import work.lclpnet.ap2.api.music.ConfiguredSong
 import work.lclpnet.ap2.api.music.SongWrapper
 import work.lclpnet.ap2.ext.*
 import work.lclpnet.ap2.ext.mc.*
+import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.dance_floor.cmd.SetSongCommand
 import work.lclpnet.ap2.game.dance_floor.cmd.SkipSongCommand
 import work.lclpnet.ap2.impl.game.EliminationGameInstance
@@ -144,15 +144,15 @@ class DanceFloorInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(g
     }
 
     fun setupTeam() {
-        val scoreboardManager = gameHandle.getScoreboardManager()
+        val scoreboardManager = gameHandle.scoreboardManager
         val team = scoreboardManager.createTeam("team")
-        team.setCollisionRule(Team.CollisionRule.NEVER)
-        scoreboardManager.joinTeam(gameHandle.getParticipants(), team)
+        team.collisionRule = Team.CollisionRule.NEVER
+        scoreboardManager.joinTeam(players(), team)
 
         visibilityManager = VisibilityManager(team, Visibility.VISIBLE)
         val visibility = VisibilityHandler(visibilityManager, gameHandle.translations, gameHandle.participants)
 
-        visibility.init(gameHandle.getHooks())
+        visibility.init(hooks)
 
         visibility.giveItems()
     }

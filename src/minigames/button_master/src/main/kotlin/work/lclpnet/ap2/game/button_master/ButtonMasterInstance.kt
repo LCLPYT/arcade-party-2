@@ -24,7 +24,6 @@ import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.scores.Team
 import work.lclpnet.ap2.*
-import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.map.MapBootstrap
 import work.lclpnet.ap2.api.stats.CommonStats
 import work.lclpnet.ap2.api.util.heads.PlayerHead
@@ -33,6 +32,7 @@ import work.lclpnet.ap2.ext.mc.isIn
 import work.lclpnet.ap2.ext.mc.resetAttribute
 import work.lclpnet.ap2.ext.mc.setAttribute
 import work.lclpnet.ap2.ext.mc.teleport
+import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.impl.game.EliminationGameInstance
 import work.lclpnet.ap2.impl.map.schema.SchemaHolder
 import work.lclpnet.ap2.impl.util.ApRegistries
@@ -177,10 +177,10 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance
     }
 
     private fun setupTeam() {
-        val scoreboardManager = gameHandle.getScoreboardManager()
+        val scoreboardManager = gameHandle.scoreboardManager
         val team = scoreboardManager.createTeam("team")
         team.nameTagVisibility = Team.Visibility.NEVER
-        scoreboardManager.joinTeam(gameHandle.getParticipants(), team)
+        scoreboardManager.joinTeam(players(), team)
     }
 
 

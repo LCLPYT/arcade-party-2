@@ -15,7 +15,6 @@ import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.world.phys.Vec3
 import org.joml.Vector3d
-import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.map.MapBootstrap
 import work.lclpnet.ap2.api.map.MapBootstrapFunction
 import work.lclpnet.ap2.api.stats.Stat
@@ -24,6 +23,7 @@ import work.lclpnet.ap2.ext.players
 import work.lclpnet.ap2.ext.runAfter
 import work.lclpnet.ap2.ext.runEveryTick
 import work.lclpnet.ap2.ext.ticks
+import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.glowing_bomb.data.GbAnchor
 import work.lclpnet.ap2.game.glowing_bomb.data.GbBomb
 import work.lclpnet.ap2.game.glowing_bomb.data.GbManager

@@ -13,13 +13,13 @@ import net.minecraft.world.item.Items
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.StainedGlassBlock
 import net.minecraft.world.level.block.state.BlockState
-import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.map.MapBootstrapFunction
 import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.mc.setAttribute
 import work.lclpnet.ap2.ext.mc.unbreakable
 import work.lclpnet.ap2.ext.runEveryTick
+import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.maniac_digger.data.MdGenerator
 import work.lclpnet.ap2.game.maniac_digger.data.MdPipe
 import work.lclpnet.ap2.impl.game.FFAGameInstance

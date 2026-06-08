@@ -11,14 +11,14 @@ import net.minecraft.world.entity.Entity
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.gamerules.GameRules
-import work.lclpnet.ap2.api.game.MiniGameHandle
+import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.api.stats.CommonStats.DamageDealt
 import work.lclpnet.ap2.api.stats.CommonStats.Kills
 import work.lclpnet.ap2.api.stats.FFAStatsManager
 import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.ext.*
 import work.lclpnet.ap2.ext.mc.setSelectedSlot
-import work.lclpnet.ap2.game.teleportToRandomSpawns
+import work.lclpnet.ap2.game.util.teleportToRandomSpawns
 import work.lclpnet.ap2.impl.game.EliminationGameInstance
 import work.lclpnet.ap2.impl.map.schema.SchemaHolder
 import work.lclpnet.ap2.impl.util.ItemHelper.unbreakable

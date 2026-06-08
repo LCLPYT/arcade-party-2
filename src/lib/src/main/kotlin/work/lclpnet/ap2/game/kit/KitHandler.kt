@@ -13,9 +13,9 @@ import net.minecraft.world.InteractionResult
 import net.minecraft.world.entity.player.Player
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
-import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.mc.playNotifySound
+import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.player.Participants
 import work.lclpnet.ap2.impl.game.GameCommons
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess
@@ -213,7 +213,7 @@ class KitHandler(
 
             readView.inject(manager)
 
-            return KitHandler(manager, gameHandle.getParticipants(), handle)
+            return KitHandler(manager, gameHandle.participants, handle)
         }
     }
 }

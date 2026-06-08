@@ -1,9 +1,8 @@
-package work.lclpnet.ap2.api.game;
+package work.lclpnet.ap2.game
 
-import org.jetbrains.annotations.NotNull;
+import work.lclpnet.ap2.api.game.GameStartContext
 
-public interface MiniGame extends GameInfo {
-
+interface MiniGame : GameInfo {
     /**
      * Returns whether the game ca be a finale.
      * Games which can be a finale must always determine a winner.
@@ -12,7 +11,7 @@ public interface MiniGame extends GameInfo {
      * @param context The context, which holds information like finalist count.
      * @return Whether the game can be a finale.
      */
-    boolean canBeFinale(@NotNull GameStartContext context);
+    fun canBeFinale(context: GameStartContext): Boolean
 
     /**
      * Checks whether the game can be played right now.
@@ -24,7 +23,7 @@ public interface MiniGame extends GameInfo {
      * This way, most games can easily be played in development mode with only one client.
      * Remember that the ArcadeParty game mode still enforces player count requirements in production mode.
      */
-    boolean canBePlayed(@NotNull GameStartContext context);
+    fun canBePlayed(context: GameStartContext): Boolean
 
-    @NotNull MiniGameInstance createInstance(@NotNull MiniGameHandle gameHandle);
+    fun createInstance(gameHandle: MiniGameHandle): MiniGameInstance
 }

@@ -3,7 +3,7 @@ package work.lclpnet.ap2.turf_wars.util
 import net.minecraft.ChatFormatting
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.sounds.SoundSource
-import work.lclpnet.ap2.api.game.MiniGameHandle
+import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.api.game.team.DyeTeamKey
 import work.lclpnet.ap2.api.game.team.Team
 import work.lclpnet.ap2.api.game.team.TeamManager

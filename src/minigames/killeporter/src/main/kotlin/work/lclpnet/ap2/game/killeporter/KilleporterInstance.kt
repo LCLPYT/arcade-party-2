@@ -16,7 +16,6 @@ import net.minecraft.world.level.Level
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.gamerules.GameRules
 import net.minecraft.world.level.material.Fluids
-import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.map.MapBootstrap
 import work.lclpnet.ap2.ext.allPlayers
 import work.lclpnet.ap2.ext.mc.isOf
@@ -25,6 +24,7 @@ import work.lclpnet.ap2.ext.mc.teleport
 import work.lclpnet.ap2.ext.players
 import work.lclpnet.ap2.ext.timeout
 import work.lclpnet.ap2.ext.translate
+import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.kit.KitHandle
 import work.lclpnet.ap2.game.kit.KitHandler
 import work.lclpnet.ap2.game.kit.PrefabKitLoader

@@ -19,7 +19,6 @@ import net.minecraft.world.item.Items
 import net.minecraft.world.item.enchantment.Enchantments
 import net.minecraft.world.level.block.Blocks
 import org.json.JSONArray
-import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.stats.CommonStats.BlocksBroken
 import work.lclpnet.ap2.api.stats.CommonStats.DistanceMoved
 import work.lclpnet.ap2.api.stats.CommonStats.Kills
@@ -31,6 +30,7 @@ import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.playSound
 import work.lclpnet.ap2.ext.trackDistanceMoved
 import work.lclpnet.ap2.ext.translate
+import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.bow_spleef.item.*
 import work.lclpnet.ap2.impl.game.EliminationGameInstance
 import work.lclpnet.ap2.impl.game.item.SpecialItems

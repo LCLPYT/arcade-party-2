@@ -1,6 +1,6 @@
 package work.lclpnet.ap2.game.guess_it.challenge;
 
-import work.lclpnet.ap2.api.game.MiniGameHandle;
+import work.lclpnet.ap2.game.MiniGameHandle;
 import work.lclpnet.ap2.game.guess_it.data.*;
 import work.lclpnet.ap2.game.guess_it.math.Expression;
 import work.lclpnet.ap2.game.guess_it.math.Term;

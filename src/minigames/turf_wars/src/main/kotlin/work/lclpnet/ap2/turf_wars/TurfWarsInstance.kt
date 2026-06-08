@@ -19,7 +19,7 @@ import net.minecraft.world.level.gamerules.GameRules
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.scores.Team.CollisionRule
-import work.lclpnet.ap2.api.game.MiniGameHandle
+import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.api.game.team.DyeTeamKey
 import work.lclpnet.ap2.api.game.team.Team
 import work.lclpnet.ap2.api.stats.CommonStats.Deaths

@@ -24,7 +24,6 @@ import net.minecraft.world.phys.shapes.CollisionContext
 import net.minecraft.world.scores.Team
 import org.joml.Matrix4f
 import org.json.JSONArray
-import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.map.MapBootstrapFunction
 import work.lclpnet.ap2.api.stats.CommonStats
 import work.lclpnet.ap2.api.stats.Stat
@@ -34,6 +33,7 @@ import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.mc.setBlock
 import work.lclpnet.ap2.ext.mc.setBlocks
 import work.lclpnet.ap2.ext.mc.teleport
+import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.impl.game.FFAGameInstance
 import work.lclpnet.ap2.impl.game.data.OrderedDataContainer
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef
@@ -160,15 +160,15 @@ class MinefieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
     }
 
     fun setupTeam() {
-        val scoreboardManager = gameHandle.getScoreboardManager()
+        val scoreboardManager = gameHandle.scoreboardManager
         val team = scoreboardManager.createTeam("team")
-        team.setCollisionRule(Team.CollisionRule.NEVER)
-        scoreboardManager.joinTeam(gameHandle.getParticipants(), team)
+        team.collisionRule = Team.CollisionRule.NEVER
+        scoreboardManager.joinTeam(players(), team)
 
         val visibilityManager = VisibilityManager(team, Visibility.PARTIALLY_VISIBLE)
         visibility = VisibilityHandler(visibilityManager, gameHandle.translations, gameHandle.participants)
 
-        visibility.init(gameHandle.getHooks())
+        visibility.init(hooks)
 
         visibility.giveItems()
     }
@@ -227,7 +227,7 @@ class MinefieldInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
 
         Fireworks.spawnGoalFirework(player)
 
-        if (inGoal.size >= gameHandle.getParticipants().count()) {
+        if (inGoal.size >= players().count()) {
             winManager.complete()
             return
         }

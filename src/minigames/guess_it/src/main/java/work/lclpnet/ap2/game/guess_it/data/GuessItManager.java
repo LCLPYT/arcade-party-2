@@ -3,7 +3,7 @@ package work.lclpnet.ap2.game.guess_it.data;
 import net.minecraft.server.level.ServerLevel;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import work.lclpnet.ap2.api.game.MiniGameHandle;
+import work.lclpnet.ap2.game.MiniGameHandle;
 import work.lclpnet.ap2.game.guess_it.challenge.*;
 import work.lclpnet.ap2.game.guess_it.util.DynamicEntityModifier;
 import work.lclpnet.ap2.game.guess_it.util.GuessItDisplay;

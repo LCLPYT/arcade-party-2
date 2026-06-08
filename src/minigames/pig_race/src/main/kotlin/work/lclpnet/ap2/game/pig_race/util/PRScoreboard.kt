@@ -6,7 +6,7 @@ import net.minecraft.network.chat.numbers.BlankFormat
 import net.minecraft.network.chat.numbers.FixedFormat
 import net.minecraft.server.level.ServerPlayer
 import work.lclpnet.ap2.ApConstants
-import work.lclpnet.ap2.api.game.MiniGameHandle
+import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.impl.util.ScoreboardUtil
 import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedPlayerBossBar
 import work.lclpnet.ap2.impl.util.scoreboard.DynamicScoreHandle

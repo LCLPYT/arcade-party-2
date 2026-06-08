@@ -9,11 +9,10 @@ import net.minecraft.sounds.SoundEvents
 import net.minecraft.sounds.SoundSource
 import net.minecraft.world.InteractionResult
 import net.minecraft.world.entity.player.Player
-import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.map.MapBootstrap
 import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.api.stats.StatUnits
-import work.lclpnet.ap2.ext.inWholeTicks
+import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.impl.game.FFAGameInstance
 import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef
@@ -31,6 +30,7 @@ import work.lclpnet.kibu.translate.text.FormatWrapper.styled
 import java.util.*
 import java.util.concurrent.CompletableFuture
 import kotlin.math.round
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 
 private const val SCORE_GOAL = 24
@@ -65,7 +65,8 @@ class AimMasterInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
 
     override fun getData() = data
 
-    override fun getMaxDurationTicks(): Int = 2.minutes.inWholeTicks.toInt()
+    override val maxDuration: Duration
+        get() = 2.minutes
 
     override fun createWorldBootstrap(world: ServerLevel, map: GameMap): CompletableFuture<Void> {
         val generator = StackedRoomGenerator(

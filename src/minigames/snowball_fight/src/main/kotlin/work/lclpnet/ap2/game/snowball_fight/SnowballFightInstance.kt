@@ -18,11 +18,11 @@ import net.minecraft.world.entity.projectile.throwableitemprojectile.Snowball
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.block.Blocks
-import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.mc.setAttribute
 import work.lclpnet.ap2.ext.players
 import work.lclpnet.ap2.ext.translate
+import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.impl.game.EliminationGameInstance
 import work.lclpnet.ap2.impl.util.world.SpawnFinder
 import work.lclpnet.game.impl.prot.ProtectionTypes

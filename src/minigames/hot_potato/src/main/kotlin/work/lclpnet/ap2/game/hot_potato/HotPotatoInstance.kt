@@ -18,9 +18,9 @@ import net.minecraft.world.item.component.Fireworks
 import net.minecraft.world.level.GameType
 import net.minecraft.world.scores.PlayerTeam
 import work.lclpnet.ap2.api.game.GameOverListener
-import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.ext.runAfter
+import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.impl.game.EliminationGameInstance
 import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedBossBar
 import work.lclpnet.kibu.access.entity.FireworkEntityAccess
