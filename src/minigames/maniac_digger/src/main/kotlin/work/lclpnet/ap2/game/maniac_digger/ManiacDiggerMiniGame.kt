@@ -8,12 +8,11 @@ import work.lclpnet.ap2.api.game.GameStartContext
 import work.lclpnet.ap2.api.game.GameType
 import work.lclpnet.ap2.game.MapLevelGameFactory
 import work.lclpnet.ap2.game.MiniGame
-import work.lclpnet.ap2.game.MiniGameHandle
 
 class ManiacDiggerMiniGame : MiniGame {
     override fun canBeFinale(context: GameStartContext) = true
     override fun canBePlayed(context: GameStartContext) = context.participantCount <= 12
-    override fun createFactory(gameHandle: MiniGameHandle) = MapLevelGameFactory(::ManiacDiggerInstance)
+    override fun createFactory() = MapLevelGameFactory(::ManiacDiggerInstance)
     override val id = ApConstants.identifier("maniac_digger")
     override val type = GameType.FFA
     override val author = ApConstants.PERSON_LCLP

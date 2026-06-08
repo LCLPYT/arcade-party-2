@@ -8,7 +8,6 @@ import work.lclpnet.ap2.api.game.GameStartContext
 import work.lclpnet.ap2.api.game.GameType
 import work.lclpnet.ap2.game.MapLevelGameFactory
 import work.lclpnet.ap2.game.MiniGame
-import work.lclpnet.ap2.game.MiniGameHandle
 
 class QuickSgMiniGame : MiniGame {
     override fun canBeFinale(context: GameStartContext) = true
@@ -17,5 +16,5 @@ class QuickSgMiniGame : MiniGame {
     override val type = GameType.FFA
     override val author = ApConstants.PERSON_LCLP
     override fun getIcon(manager: RegistryAccess) = ItemStack(Items.IRON_SWORD)
-    override fun createFactory(gameHandle: MiniGameHandle) = MapLevelGameFactory(::QuickSgInstance)
+    override fun createFactory() = MapLevelGameFactory(::QuickSgInstance)
 }

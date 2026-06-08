@@ -56,7 +56,6 @@ import work.lclpnet.kibu.structure.BlockStructure
 import work.lclpnet.kibu.translate.bossbar.TranslatedBossBar
 import work.lclpnet.kibu.translate.text.FormatWrapper.styled
 import java.util.*
-import java.util.concurrent.CompletableFuture
 
 const val DEBUG_VALID_POSITIONS = false
 const val DEBUG_BUTTON_POSITION = false
@@ -75,20 +74,24 @@ enum class GameState {
     IDLE
 }
 
-class ButtonMasterInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap) : EliminationGameInstance(gameHandle, level, map) {
+class ButtonMasterInstance(
+    gameHandle: MiniGameHandle,
+    level: ServerLevel,
+    map: GameMap,
+    val capsuleSchematic: BlockStructure,
+) : EliminationGameInstance(gameHandle, level, map) {
 
     val schemaHolder: SchemaHolder<ButtonMasterSchema> = useSchema(ButtonMasterSchema::class.java)
     val validPositions = mutableListOf<BlockPos>()
 
     private val stats = createStats(ButtonsFound, Escapes, CommonStats.DistanceMoved, ButtonsMissed)
     private val bmStats = ButtonMasterStats(stats)
-    private lateinit var missDetector: ButtonMissDetector
+    private val missDetector = ButtonMissDetector(level, bmStats)
     private var escapesRecorded = false
 
     val movementBlocker = SimpleMovementBlocker(gameHandle.scheduler).also {
         it.setModifySpeedAttribute(false)
     }
-
     var currentButtonMarker: Object3d? = null
     var currentButtonPos: BlockPos? = null
     var gameState = GameState.IDLE
@@ -97,32 +100,14 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: 
     var ejectedPlayer: UUID? = null
     var task: TaskHandle? = null
     var taskBar: TranslatedBossBar? = null
-    var wallBlocks: ResetWorldModifier? = null
+    var wallBlocks: ResetWorldModifier = ResetWorldModifier(level, hooks)
     var scene: Scene? = null
-    lateinit var dynamicEntityManager: DynamicEntityManager
-    lateinit var capsules: ButtonMasterCapsules
-    lateinit var buttonPositions: ButtonPositions
-    lateinit var capsuleSchematic: BlockStructure
-
-    // TODO: migrate world bootstrap into a dedicated MiniGameFactory
-
-    fun createWorldBootstrap(world: ServerLevel, map: GameMap): CompletableFuture<Void> {
-        wallBlocks = ResetWorldModifier(world, gameHandle.hooks)
-
-        return schematic(assetPath("capsule.schem")).thenAccept {
-            capsuleSchematic = it
-        }
-    }
-
+    val dynamicEntityManager = DynamicEntityManager(level)
+    val capsules = ButtonMasterCapsules(level, schemaHolder.get(), capsuleSchematic, commons())
+    val buttonPositions = ButtonPositions(level, map, schemaHolder.get(), commons(), gameHandle)
 
     override fun prepare() {
-        capsules = ButtonMasterCapsules(level, schemaHolder.get(), capsuleSchematic, commons())
-        missDetector = ButtonMissDetector(level, bmStats)
-
-        dynamicEntityManager = DynamicEntityManager(level)
         dynamicEntityManager.init(gameHandle.scheduler, gameHandle.hooks)
-
-        buttonPositions = ButtonPositions(level, map, schemaHolder.get(), commons(), gameHandle)
 
         validPositions.addAll(buttonPositions.scanWorld())
 
@@ -136,7 +121,6 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: 
 
     private fun closeWall() {
         val world = this.level
-        val wallBlocks = wallBlocks ?: return
         val wallState = Blocks.WHITE_STAINED_GLASS.defaultBlockState()
 
         for (box in schemaHolder.get().startWalls) {
@@ -183,8 +167,6 @@ class ButtonMasterInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: 
         team.nameTagVisibility = Team.Visibility.NEVER
         scoreboardManager.joinTeam(players(), team)
     }
-
-
 
     override fun go() {
         buttonPositions.filterNoEntityCollision(validPositions)

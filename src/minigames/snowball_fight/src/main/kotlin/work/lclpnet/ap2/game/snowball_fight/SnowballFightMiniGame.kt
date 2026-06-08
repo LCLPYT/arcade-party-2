@@ -9,7 +9,6 @@ import work.lclpnet.ap2.api.game.GameType
 import work.lclpnet.ap2.game.MapLevelGameFactory
 import work.lclpnet.ap2.game.MiniGame
 import work.lclpnet.ap2.game.MiniGameFactory
-import work.lclpnet.ap2.game.MiniGameHandle
 
 class SnowballFightMiniGame : MiniGame {
     override val id = ApConstants.identifier("snowball_fight")
@@ -18,5 +17,5 @@ class SnowballFightMiniGame : MiniGame {
     override fun getIcon(manager: RegistryAccess): ItemStack = ItemStack(Items.SNOWBALL)
     override fun canBeFinale(context: GameStartContext): Boolean = true
     override fun canBePlayed(context: GameStartContext): Boolean = true
-    override fun createFactory(gameHandle: MiniGameHandle): MiniGameFactory = MapLevelGameFactory(::SnowballFightInstance)
+    override fun createFactory(): MiniGameFactory = MapLevelGameFactory(::SnowballFightInstance)
 }

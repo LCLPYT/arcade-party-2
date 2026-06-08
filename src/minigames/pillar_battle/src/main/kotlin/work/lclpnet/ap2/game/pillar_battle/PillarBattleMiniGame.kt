@@ -9,7 +9,6 @@ import work.lclpnet.ap2.api.game.GameType
 import work.lclpnet.ap2.game.MapLevelGameFactory
 import work.lclpnet.ap2.game.MiniGame
 import work.lclpnet.ap2.game.MiniGameFactory
-import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.kibu.translate.text.LocalizedFormat
 
 class PillarBattleMiniGame : MiniGame {
@@ -20,5 +19,5 @@ class PillarBattleMiniGame : MiniGame {
     override fun canBeFinale(context: GameStartContext): Boolean = true
     override fun canBePlayed(context: GameStartContext): Boolean = true
     override val descriptionArguments: Array<Any> = arrayOf(LocalizedFormat.format("%.1f", RANDOM_ITEM_DELAY_TICKS / 20f))
-    override fun createFactory(gameHandle: MiniGameHandle): MiniGameFactory = MapLevelGameFactory(::PillarBattleInstance)
+    override fun createFactory(): MiniGameFactory = MapLevelGameFactory(::PillarBattleInstance)
 }

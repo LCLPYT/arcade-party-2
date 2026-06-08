@@ -7,7 +7,6 @@ import work.lclpnet.ap2.ApConstants
 import work.lclpnet.ap2.api.game.GameStartContext
 import work.lclpnet.ap2.api.game.GameType
 import work.lclpnet.ap2.game.MiniGame
-import work.lclpnet.ap2.game.MiniGameHandle
 
 class AimMasterMiniGame : MiniGame {
     override val id = ApConstants.identifier("aim_master")
@@ -16,5 +15,5 @@ class AimMasterMiniGame : MiniGame {
     override fun getIcon(manager: RegistryAccess) = ItemStack(Items.TARGET)
     override fun canBeFinale(context: GameStartContext) = true
     override fun canBePlayed(context: GameStartContext) = true
-    override fun createFactory(gameHandle: MiniGameHandle) = AimMasterFactory()
+    override fun createFactory() = AimMasterFactory()
 }

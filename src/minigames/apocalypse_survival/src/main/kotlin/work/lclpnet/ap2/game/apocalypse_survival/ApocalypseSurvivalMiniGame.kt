@@ -8,7 +8,6 @@ import work.lclpnet.ap2.api.game.GameStartContext
 import work.lclpnet.ap2.api.game.GameType
 import work.lclpnet.ap2.game.MapLevelGameFactory
 import work.lclpnet.ap2.game.MiniGame
-import work.lclpnet.ap2.game.MiniGameHandle
 
 class ApocalypseSurvivalMiniGame : MiniGame {
     override val id = ApConstants.identifier("apocalypse_survival")
@@ -17,5 +16,5 @@ class ApocalypseSurvivalMiniGame : MiniGame {
     override fun getIcon(manager: RegistryAccess) = ItemStack(Items.ZOMBIE_HEAD)
     override fun canBeFinale(context: GameStartContext) = true
     override fun canBePlayed(context: GameStartContext) = true
-    override fun createFactory(gameHandle: MiniGameHandle) = MapLevelGameFactory(::ApocalypseSurvivalInstance)
+    override fun createFactory() = MapLevelGameFactory(::ApocalypseSurvivalInstance)
 }

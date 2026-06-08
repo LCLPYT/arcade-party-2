@@ -10,7 +10,6 @@ import work.lclpnet.ap2.api.game.GameType
 import work.lclpnet.ap2.game.MapLevelGameFactory
 import work.lclpnet.ap2.game.MiniGame
 import work.lclpnet.ap2.game.MiniGameFactory
-import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.kibu.translate.text.FormatWrapper
 
 class OneInTheChamberMiniGame : MiniGame {
@@ -20,7 +19,7 @@ class OneInTheChamberMiniGame : MiniGame {
     override fun getIcon(manager: RegistryAccess): ItemStack = ItemStack(Items.CROSSBOW)
     override fun canBeFinale(context: GameStartContext): Boolean = true
     override fun canBePlayed(context: GameStartContext): Boolean = true
-    override fun createFactory(gameHandle: MiniGameHandle): MiniGameFactory = MapLevelGameFactory(::OneInTheChamberInstance)
+    override fun createFactory(): MiniGameFactory = MapLevelGameFactory(::OneInTheChamberInstance)
     override val descriptionArguments: Array<Any> = arrayOf(SCORE_LIMIT)
     override val taskArguments: Array<Any> = arrayOf(
         FormatWrapper.styled(SCORE_LIMIT, ChatFormatting.YELLOW)

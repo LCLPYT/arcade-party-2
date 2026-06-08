@@ -8,7 +8,6 @@ import work.lclpnet.ap2.api.game.GameStartContext
 import work.lclpnet.ap2.api.game.GameType
 import work.lclpnet.ap2.game.MapLevelGameFactory
 import work.lclpnet.ap2.game.MiniGame
-import work.lclpnet.ap2.game.MiniGameHandle
 
 class AnvilFallMiniGame : MiniGame {
     override val id = ApConstants.identifier("anvil_fall")
@@ -17,5 +16,5 @@ class AnvilFallMiniGame : MiniGame {
     override fun getIcon(manager: RegistryAccess) = ItemStack(Items.ANVIL)
     override fun canBeFinale(context: GameStartContext) = true
     override fun canBePlayed(context: GameStartContext) = true
-    override fun createFactory(gameHandle: MiniGameHandle) = MapLevelGameFactory(::AnvilFallInstance)
+    override fun createFactory() = MapLevelGameFactory(::AnvilFallInstance)
 }

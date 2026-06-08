@@ -12,7 +12,6 @@ import work.lclpnet.ap2.impl.game.data.IntDataContainer
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef
 import work.lclpnet.game.map.GameMap
 import java.util.*
-import java.util.concurrent.CompletableFuture
 
 const val MELODY_COUNT = 2
 
@@ -38,9 +37,9 @@ class FineTuningInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Ga
 
     // TODO: migrate world bootstrap into a dedicated MiniGameFactory
 
-    fun createWorldBootstrap(world: ServerLevel, gameMap: GameMap): CompletableFuture<Void> {
+    suspend fun createWorldBootstrap(world: ServerLevel, gameMap: GameMap) {
         setup = FineTuningSetup(gameHandle, gameMap, world)
-        return setup.createRooms()
+        setup.createRooms()
     }
 
     override fun prepare() {
