@@ -61,7 +61,6 @@ class TreasureHunterInstance(gameHandle: MiniGameHandle, level: ServerLevel, map
 
         val participants = gameHandle.participants
         val translations = gameHandle.translations
-        val hooks = gameHandle.hooks
 
         PlayerInteractionHooks.USE_BLOCK.registerWith(hooks) { player, world, _, hitResult ->
             if (player !is ServerPlayer || !participants.isParticipating(player)
