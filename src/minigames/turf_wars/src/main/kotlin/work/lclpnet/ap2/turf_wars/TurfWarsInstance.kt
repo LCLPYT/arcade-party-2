@@ -37,7 +37,6 @@ import work.lclpnet.ap2.game.kit.KitHandler
 import work.lclpnet.ap2.game.kit.hasKitEquipped
 import work.lclpnet.ap2.game.team.getWoolBlock
 import work.lclpnet.ap2.impl.game.TeamEliminationGameInstance
-import work.lclpnet.ap2.impl.map.schema.SchemaHolder
 import work.lclpnet.ap2.impl.util.ItemHelper.getLeatherArmor
 import work.lclpnet.ap2.impl.util.TimeHelper
 import work.lclpnet.ap2.impl.util.math.MathUtil
@@ -65,9 +64,9 @@ class TurfWarsInstance(
     level: ServerLevel,
     map: GameMap,
     teamManager: TeamManager,
+    val mapSchema: TurfWarsSchema,
 ) : TeamEliminationGameInstance(gameHandle, level, map, teamManager) {
 
-    val schemaHolder: SchemaHolder<TurfWarsSchema> = useSchema(TurfWarsSchema::class.java)
     val arrowEconomy = ArrowEconomy(gameHandle, teamManager)
     lateinit var turfManager: TurfManager
     lateinit var teamInfos: Map<DyeTeamKey, TurfWarsTeamInfo>
@@ -192,7 +191,7 @@ class TurfWarsInstance(
             giveItems(player)
         }
 
-        for (gate in schemaHolder.get().spawnGates) {
+        for (gate in mapSchema.spawnGates) {
             level.setBlocks(gate, Blocks.AIR)
         }
 
@@ -237,19 +236,17 @@ class TurfWarsInstance(
 
         require(team1Key != team2Key) { "Team colors cannot be the same" }
 
-        val schema = schemaHolder.get()
-
         val team1Info = TurfWarsTeamInfo(
-            spawn = schema.team1Spawn!!,
-            baseBounds = schema.team1Base!!,
-            initialTurf = schema.team1Turf!!,
+            spawn = mapSchema.team1Spawn!!,
+            baseBounds = mapSchema.team1Base!!,
+            initialTurf = mapSchema.team1Turf!!,
             teamKey = team1Key
         )
 
         val team2Info = TurfWarsTeamInfo(
-            spawn = schema.team2Spawn!!,
-            baseBounds = schema.team2Base!!,
-            initialTurf = schema.team2Turf!!,
+            spawn = mapSchema.team2Spawn!!,
+            baseBounds = mapSchema.team2Base!!,
+            initialTurf = mapSchema.team2Turf!!,
             teamKey = team2Key
         )
 

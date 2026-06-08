@@ -21,7 +21,6 @@ import work.lclpnet.ap2.ext.mc.setSelectedSlot
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.util.teleportToRandomSpawns
 import work.lclpnet.ap2.impl.game.EliminationGameInstance
-import work.lclpnet.ap2.impl.map.schema.SchemaHolder
 import work.lclpnet.ap2.impl.util.ItemHelper.unbreakable
 import work.lclpnet.ap2.util.SubtitleCountdown
 import work.lclpnet.game.impl.prot.ProtectionTypes
@@ -44,7 +43,12 @@ private val WARN_BEFORE_END_DELAY = 30.seconds
 
 private val WeaponsReceived = Stat("weapons_received", 0)
 
-class WeaponSwapInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap) : EliminationGameInstance(gameHandle, level, map) {
+class WeaponSwapInstance(
+    gameHandle: MiniGameHandle,
+    level: ServerLevel,
+    map: GameMap,
+    val schema: WeaponSwapSchema,
+) : EliminationGameInstance(gameHandle, level, map) {
 
     private val stats: FFAStatsManager = createStats(DamageDealt, WeaponsReceived, Kills)
     private val currentHolders = mutableSetOf<UUID>()
@@ -52,7 +56,6 @@ class WeaponSwapInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Ga
     private val subtitleCountdown = SubtitleCountdown(gameHandle.server, gameHandle.scheduler, ::swapTimerTick) {
         allPlayers()
     }
-    private val schemaHolder: SchemaHolder<WeaponSwapSchema> = useSchema(WeaponSwapSchema::class.java)
 
     override fun prepare() {
         commons().gameRuleBuilder()
@@ -131,7 +134,6 @@ class WeaponSwapInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Ga
     }
 
     private fun teleportPlayers() {
-        val schema = schemaHolder.get()
         val scanBox = requireNotNull(schema.scanBox) { "Spawn scan box is not set" }
         val spacing = map.properties.optNumber("spawn-spacing", SPAWN_SPACING_DEFAULT).toDouble()
 

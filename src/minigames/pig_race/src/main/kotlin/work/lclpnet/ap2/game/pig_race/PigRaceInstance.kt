@@ -39,7 +39,6 @@ import work.lclpnet.ap2.impl.game.data.DoubleScoreDataContainer
 import work.lclpnet.ap2.impl.game.data.OrderedDataContainer
 import work.lclpnet.ap2.impl.game.data.Ordering
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef
-import work.lclpnet.ap2.impl.map.schema.SchemaHolder
 import work.lclpnet.ap2.impl.music.MusicHelper
 import work.lclpnet.ap2.impl.util.ApRegistries
 import work.lclpnet.ap2.impl.util.Fireworks
@@ -82,6 +81,7 @@ class PigRaceInstance(
     gameHandle: MiniGameHandle,
     level: ServerLevel,
     map: GameMap,
+    val mapSchema: PigRaceSchema,
     private val nextRoundSong: WeightedSong?,
 ) : FFAGameInstance(gameHandle, level, map) {
 
@@ -96,7 +96,6 @@ class PigRaceInstance(
     private val collisionDetector: CollisionDetector = ChunkedCollisionDetector()
     private val movementObserver = TickMovementObserver(collisionDetector, gameHandle.participants::isParticipating)
     private val pendingEntities = HashMap<UUID, PendingEntity<*>>()
-    private val schemaHolder: SchemaHolder<PigRaceSchema> = useSchema(PigRaceSchema::class.java)
 
     private lateinit var checkpointManager: CheckpointManager
     private lateinit var progress: PRProgress
@@ -120,9 +119,8 @@ class PigRaceInstance(
         visibility.init(gameHandle.hooks)
         initHooks(team, visibilityManager)
 
-        val schema = schemaHolder.get()
-        val spawnBounds = schema.spawnBounds!!
-        val goal = schema.goal!!
+        val spawnBounds = mapSchema.spawnBounds!!
+        val goal = mapSchema.goal!!
 
         teleportPlayers(spawnBounds)
         setupCheckpoints(spawnBounds, goal)
@@ -131,8 +129,8 @@ class PigRaceInstance(
 
         visibility.giveItems(0)
 
-        val progressMarkers = ArrayList(schema.progressMarkers)
-        val segmentedPath = createSegmentedPath(augmentPath(schema, rounds), progressMarkers, gameHandle.logger)
+        val progressMarkers = ArrayList(mapSchema.progressMarkers)
+        val segmentedPath = createSegmentedPath(augmentPath(mapSchema, rounds), progressMarkers, gameHandle.logger)
 
         segmentedPath.init(
             gameHandle.participants,
@@ -327,11 +325,9 @@ class PigRaceInstance(
     }
 
     private fun setupCheckpoints(spawnBounds: work.lclpnet.gaco.ds.BlockBox, goal: Checkpoint) {
-        val schema = schemaHolder.get()
+        val checkpoints = ArrayList(mapSchema.checkpoints)
 
-        val checkpoints = ArrayList(schema.checkpoints)
-
-        val spawn = schema.spawn
+        val spawn = mapSchema.spawn
         checkpoints.addFirst(Checkpoint(Vec3(spawn.x(), spawn.y(), spawn.z()), spawn.yaw, spawn.pitch, spawnBounds))
         checkpoints.addLast(goal)
 
@@ -389,7 +385,8 @@ class PigRaceInstance(
 
     private fun openGate() {
         val air = Blocks.AIR.defaultBlockState()
-        for (bounds in schemaHolder.get().gates) {
+
+        for (bounds in mapSchema.gates) {
             for (pos in bounds) {
                 level.setBlockAndUpdate(pos, air)
             }
@@ -397,8 +394,7 @@ class PigRaceInstance(
     }
 
     private fun teleportPlayers(bounds: work.lclpnet.gaco.ds.BlockBox) {
-        val schema = schemaHolder.get()
-        val spawn = schema.spawn
+        val spawn = mapSchema.spawn
         val yaw = spawn.yaw
 
         for (player in gameHandle.participants) {
