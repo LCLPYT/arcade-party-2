@@ -104,7 +104,6 @@ class DragonEscapeInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: 
         pseudoElimination = PseudoElimination(gameHandle, level)
 
         markChunksPersistent()
-        teleportPlayers()
         setupDragon()
         setupTrackers()
         blockMovement()
@@ -227,7 +226,7 @@ class DragonEscapeInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: 
         }, gameHandle.scheduler)
     }
 
-    private fun teleportPlayers() {
+    override fun teleportPlayers() {
         val shapeJson = map.properties.getJSONObject("spawn-shape")
         val spawnShape = MapUtil.readShape(shapeJson)
 

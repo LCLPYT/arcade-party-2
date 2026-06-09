@@ -52,7 +52,6 @@ class SnowballFightInstance(gameHandle: MiniGameHandle, level: ServerLevel, map:
         useNoHealing()
         useSmoothDeath()
         commons().displayHealth()
-        teleportPlayers()
     }
 
     override fun go() {
@@ -143,7 +142,7 @@ class SnowballFightInstance(gameHandle: MiniGameHandle, level: ServerLevel, map:
         }
     }
 
-    private fun teleportPlayers() {
+    override fun teleportPlayers() {
         val random = Random()
 
         val spacingValue = map.getProperty<Number?>("spawn-spacing")

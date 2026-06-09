@@ -28,7 +28,7 @@ fun BaseGameInstance.teleportToRandomSpawns(scanBox: BlockBox, scanStarts: Itera
     for (player in players()) {
         val pos = spawns[i++]
         val yaw = Random.nextFloat() * 360f
-        player.teleport(pos, yaw)
+        player.teleport(pos, yaw, level = level)
     }
 
     if (DEBUG_SPAWNS) {

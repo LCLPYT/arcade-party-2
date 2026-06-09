@@ -14,6 +14,7 @@ import net.minecraft.world.BossEvent;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.level.GameType;
+import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -31,6 +32,7 @@ import work.lclpnet.ap2.util.SubtitleCountdown;
 import work.lclpnet.combatctl.impl.CombatStyles;
 import work.lclpnet.game.api.WorldFacade;
 import work.lclpnet.game.map.GameMap;
+import work.lclpnet.game.map.MapUtils;
 import work.lclpnet.game.util.BossBarTimer;
 import work.lclpnet.game.util.ProtectorUtils;
 import work.lclpnet.kibu.access.entity.ServerPlayerAccess;
@@ -101,6 +103,7 @@ public abstract class BaseGameInstance implements MiniGameInstance {
         configureLocatorBar();
 
         resetPlayers();
+        teleportPlayers();
 
         sendMapCredits();
 
@@ -118,6 +121,15 @@ public abstract class BaseGameInstance implements MiniGameInstance {
         );
 
         countdown.schedule(initialDelay, this::afterInitialDelay);
+    }
+
+    protected void teleportPlayers() {
+        Vec3 spawn = MapUtils.getSpawnPosition(map);
+        float yaw = MapUtils.getSpawnYaw(map);
+
+        for (ServerPlayer player : PlayerLookup.all(gameHandle.getServer())) {
+            player.teleportTo(level, spawn.x(), spawn.y(), spawn.z(), Set.of(), yaw, 0, true);
+        }
     }
 
     private void configureLocatorBar() {

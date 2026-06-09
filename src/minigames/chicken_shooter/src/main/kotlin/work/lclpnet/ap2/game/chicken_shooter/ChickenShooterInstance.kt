@@ -88,7 +88,6 @@ class ChickenShooterInstance(gameHandle: MiniGameHandle, level: ServerLevel, map
 
         despawnHeight = map.requireProperty("despawn-height")
 
-        teleportPlayers()
         findChickenSpawner()
 
         val hooks = gameHandle.hooks
@@ -138,7 +137,7 @@ class ChickenShooterInstance(gameHandle: MiniGameHandle, level: ServerLevel, map
         }
     }
 
-    private fun teleportPlayers() {
+    override fun teleportPlayers() {
         val scanBox = map.properties.optJSONArray("spawn-scan-bounds")?.let { MapUtil.readBox(it) } ?: return
         val scanStart = BlockPos.containing(MapUtils.getSpawnPosition(map))
         val spacing = map.properties.optNumber("spawn-spacing", 8.0).toDouble()

@@ -2,6 +2,7 @@ package work.lclpnet.ap2.ext.mc
 
 import net.minecraft.core.BlockPos
 import net.minecraft.core.Position
+import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.sounds.SoundEvent
 import net.minecraft.sounds.SoundSource
@@ -33,8 +34,8 @@ fun ServerPlayer.teleport(pos: Position) = teleportTo(
     true
 )
 
-fun ServerPlayer.teleport(pos: Position, yaw: Float) = teleportTo(
-    level(),
+fun ServerPlayer.teleport(pos: Position, yaw: Float, level: ServerLevel = level()) = teleportTo(
+    level,
     pos.x(),
     pos.y(),
     pos.z(),
