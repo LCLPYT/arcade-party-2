@@ -133,7 +133,7 @@ class WeaponSwapInstance(
         playSound(SoundEvents.NOTE_BLOCK_HARP.value(), SoundSource.AMBIENT, 0.5f, pitch)
     }
 
-    private fun teleportPlayers() {
+    override fun teleportPlayers() {
         val scanBox = requireNotNull(schema.scanBox) { "Spawn scan box is not set" }
         val spacing = map.properties.optNumber("spawn-spacing", SPAWN_SPACING_DEFAULT).toDouble()
 

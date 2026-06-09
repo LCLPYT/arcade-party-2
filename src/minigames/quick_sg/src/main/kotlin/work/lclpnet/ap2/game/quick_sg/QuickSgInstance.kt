@@ -64,8 +64,6 @@ class QuickSgInstance(
         useRemainingPlayersDisplay()
         useSmoothDeath()
 
-        teleportPlayers()
-
         movementBlocker.init(gameHandle.hooks)
 
         players().forEach {
@@ -75,7 +73,7 @@ class QuickSgInstance(
         commons().hideNameTags()
     }
 
-    private fun teleportPlayers() {
+    override fun teleportPlayers() {
         val spacing = map.properties.optNumber("spawn-spacing", 16.0).toDouble()
 
         teleportToRandomSpawns(mapSchema.scanBox!!, mapSchema.scanStarts, spacing)

@@ -32,7 +32,6 @@ import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.util.FallKillTracker
 import work.lclpnet.ap2.impl.util.ParticleHelper
 import work.lclpnet.ap2.impl.util.SoundHelper
-import work.lclpnet.gaco.ds.BlockBox
 import work.lclpnet.game.impl.prot.ProtectionTypes
 import work.lclpnet.game.map.GameMap
 import work.lclpnet.game.map.MapUtils
@@ -48,19 +47,15 @@ const val WORLD_BORDER_SHRINK_PER_SECOND = 1.0
 class SpleefInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap) : EliminationGameInstance(gameHandle, level, map) {
 
     private val stats = createStats(TimeSurvived, Kills, BlocksBroken, DistanceMoved)
-    private lateinit var killTracker: FallKillTracker
-    private lateinit var breakableBlocks: Set<Block>
-    private lateinit var snowArea: BlockBox
-    private var frost = false
+    private val killTracker = FallKillTracker(gameHandle.participants).also {
+        it.init(gameHandle.scheduler)
+    }
+    private var breakableBlocks = readBreakableBlocks()
+    private var snowArea = MapUtil.readBox(map.requireProperty("snow-area"))
+    private var frost = map.properties.optBoolean("frost", false)
 
     init {
         useSurvivalMode()
-    }
-
-    private fun readMapProps() {
-        frost = map.properties.optBoolean("frost", false)
-        breakableBlocks = readBreakableBlocks()
-        snowArea = MapUtil.readBox(map.requireProperty("snow-area"))
     }
 
     private fun readBreakableBlocks(): Set<Block> {
@@ -76,9 +71,6 @@ class SpleefInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMa
     }
 
     override fun prepare() {
-        readMapProps()
-        teleportPlayers()
-
         useSmoothDeath()
         useNoHealing()
         useRemainingPlayersDisplay()
@@ -87,7 +79,7 @@ class SpleefInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMa
         trackDistanceMoved(stats)
     }
 
-    private fun teleportPlayers() {
+    override fun teleportPlayers() {
         val scanBox = snowArea.translate(Vec3i(0, 1, 0))
         val scanStart = BlockPos.containing(MapUtils.getSpawnPosition(map))
         val spacing = map.properties.optNumber("spawn-spacing", 8.0).toDouble()
@@ -107,9 +99,6 @@ class SpleefInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMa
         }
 
         giveShovelsToPlayers()
-
-        killTracker = FallKillTracker(gameHandle.participants)
-        killTracker.init(gameHandle.scheduler)
 
         BlockModificationHooks.BLOCK_BROKEN.registerWith(gameHandle.hooks) { _, pos, entity ->
             if (entity is ServerPlayer && gameHandle.participants.isParticipating(entity)) {

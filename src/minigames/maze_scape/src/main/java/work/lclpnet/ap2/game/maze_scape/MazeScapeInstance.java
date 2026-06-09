@@ -104,7 +104,6 @@ public class MazeScapeInstance extends EliminationGameInstance {
         persistence.markQuadPersistent(-mapChunkRadius, -mapChunkRadius, mapChunkRadius, mapChunkRadius);
 
         commons().displayHealth();
-        teleportPlayers();
     }
 
     @Override
@@ -149,7 +148,8 @@ public class MazeScapeInstance extends EliminationGameInstance {
         }
     }
 
-    private void teleportPlayers() {
+    @Override
+    protected void teleportPlayers() {
         if (struct == null) return;
 
         OrientedStructurePiece oriented = struct.graph().root().oriented();
