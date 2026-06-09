@@ -22,12 +22,12 @@ import work.lclpnet.ap2.ext.runAfter
 import work.lclpnet.ap2.ext.server
 import work.lclpnet.ap2.ext.translate
 import work.lclpnet.ap2.game.MiniGameHandle
+import work.lclpnet.ap2.game.base.EliminationGameInstance
 import work.lclpnet.ap2.game.player.Participants
 import work.lclpnet.ap2.game.speed_builders.data.SbIsland
 import work.lclpnet.ap2.game.speed_builders.data.SbModule
 import work.lclpnet.ap2.game.speed_builders.util.*
 import work.lclpnet.ap2.impl.game.Announcer
-import work.lclpnet.ap2.impl.game.EliminationGameInstance
 import work.lclpnet.ap2.impl.util.ParticleHelper
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager
 import work.lclpnet.game.map.GameMap

@@ -22,7 +22,7 @@ import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.apocalypse_survival.util.AsSetup
 import work.lclpnet.ap2.game.apocalypse_survival.util.MonsterSpawner
 import work.lclpnet.ap2.game.apocalypse_survival.util.TargetManager
-import work.lclpnet.ap2.impl.game.EliminationGameInstance
+import work.lclpnet.ap2.game.base.EliminationGameInstance
 import work.lclpnet.ap2.impl.util.TimeHelper
 import work.lclpnet.game.impl.prot.ProtectionTypes
 import work.lclpnet.game.map.GameMap
