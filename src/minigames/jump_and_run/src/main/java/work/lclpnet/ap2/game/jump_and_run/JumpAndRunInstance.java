@@ -89,9 +89,9 @@ public class JumpAndRunInstance extends FFAGameInstance {
 
         this.jumpAndRun = jumpAndRun;
 
-        movementObserver = new PlayerMovementObserver(collisionDetector, gameHandle.getParticipants()::isParticipating);
+        movementObserver = new PlayerMovementObserver(collisionDetector, getGameHandle().getParticipants()::isParticipating);
 
-        gameHandle.whenDone(() -> {
+        getGameHandle().whenDone(() -> {
             var future = waitFor;
 
             if (future != null) {
@@ -111,14 +111,14 @@ public class JumpAndRunInstance extends FFAGameInstance {
                 .set(GameRules.RANDOM_TICK_SPEED, 0)
                 .set(GameRules.ADVANCE_TIME, false);
 
-        movementObserver.init(gameHandle.getHooks(), gameHandle.getServer());
+        movementObserver.init(getGameHandle().getHooks(), getGameHandle().getServer());
 
         bossBar = usePlayerDynamicTaskDisplay(styled(0, YELLOW), styled(jumpAndRun.modules().size(), YELLOW));
         bossBar.setPercent(0);
 
         initModule();
 
-        CustomScoreboardManager scoreboardManager = gameHandle.getScoreboardManager();
+        CustomScoreboardManager scoreboardManager = getGameHandle().getScoreboardManager();
 
         initScoreBoard(scoreboardManager);
         initTeam(scoreboardManager);
@@ -126,7 +126,7 @@ public class JumpAndRunInstance extends FFAGameInstance {
         giveItemsToPlayers();
 
         jumpAndRun.setReloadModuleCallback(this::loadAndInitModule);
-        new SetModuleCommand(jumpAndRun, gameHandle.getLogger()).register(gameHandle.getCommands());
+        new SetModuleCommand(jumpAndRun, getGameHandle().getLogger()).register(getGameHandle().getCommands());
     }
 
     @Override
@@ -151,10 +151,10 @@ public class JumpAndRunInstance extends FFAGameInstance {
     private void initTeam(CustomScoreboardManager scoreboardManager) {
         PlayerTeam team = scoreboardManager.createTeam("team");
         team.setCollisionRule(Team.CollisionRule.NEVER);
-        scoreboardManager.joinTeam(gameHandle.getParticipants(), team);
+        scoreboardManager.joinTeam(getGameHandle().getParticipants(), team);
 
-        VisibilityHandler visibility = new VisibilityHandler(new VisibilityManager(team, Visibility.PARTIALLY_VISIBLE), gameHandle.getTranslations(), gameHandle.getParticipants());
-        visibility.init(gameHandle.getHooks());
+        VisibilityHandler visibility = new VisibilityHandler(new VisibilityManager(team, Visibility.PARTIALLY_VISIBLE), getGameHandle().getTranslations(), getGameHandle().getParticipants());
+        visibility.init(getGameHandle().getHooks());
         visibility.giveItems();
     }
 
@@ -162,7 +162,7 @@ public class JumpAndRunInstance extends FFAGameInstance {
     protected void go() {
         beginSegment();
 
-        gameHandle.protect(config -> {
+        getGameHandle().protect(config -> {
             ProtectionTypes.USE_BLOCK.allow(config, (_, pos) -> {
                 BlockState state = jumpAndRun.world().getBlockState(pos);
                 return state.is(Blocks.SHULKER_BOX);
@@ -170,7 +170,7 @@ public class JumpAndRunInstance extends FFAGameInstance {
 
             ProtectionTypes.ALLOW_DAMAGE.allow(config, (entity, source) -> {
                 if (entity instanceof ServerPlayer player
-                        && gameHandle.getParticipants().isParticipating(player)
+                        && getGameHandle().getParticipants().isParticipating(player)
                         && (source.is(DamageTypes.IN_FIRE) || source.is(DamageTypes.LAVA)
                         || source.is(DamageTypes.HOT_FLOOR) || source.is(DamageTypes.FELL_OUT_OF_WORLD))) {
 
@@ -180,8 +180,8 @@ public class JumpAndRunInstance extends FFAGameInstance {
             });
         });
 
-        Participants participants = gameHandle.getParticipants();
-        HookRegistrar hooks = gameHandle.getHooks();
+        Participants participants = getGameHandle().getParticipants();
+        HookRegistrar hooks = getGameHandle().getHooks();
 
         CheckpointHelper.setupResetItem(hooks, () -> winManager.isGameOver() || !segmentActive, participants::isParticipating)
                 .then(this::resetPlayerToCheckpoint);
@@ -198,9 +198,9 @@ public class JumpAndRunInstance extends FFAGameInstance {
     }
 
     private void giveItemsToPlayers() {
-        CheckpointHelper.giveResetItem(gameHandle.getParticipants(), getLevel(), gameHandle.getTranslations(), 4);
+        CheckpointHelper.giveResetItem(getGameHandle().getParticipants(), getLevel(), getGameHandle().getTranslations(), 4);
 
-        for (ServerPlayer player : gameHandle.getParticipants()) {
+        for (ServerPlayer player : getGameHandle().getParticipants()) {
             PlayerInventoryAccess.setSelectedSlot(player, 4);
         }
     }
@@ -258,7 +258,7 @@ public class JumpAndRunInstance extends FFAGameInstance {
 
         if (prevTask != null) task.cancel();
 
-        task = gameHandle.getScheduler().timeout(() -> placeAssistance(assistance), timeout);
+        task = getGameHandle().getScheduler().timeout(() -> placeAssistance(assistance), timeout);
     }
 
     private void placeAssistance(PositionedBlockSet assistance) {
@@ -272,7 +272,7 @@ public class JumpAndRunInstance extends FFAGameInstance {
                     5, 0.3, 0.3, 0.3, 0.1);
         });
 
-        Translations translations = gameHandle.getTranslations();
+        Translations translations = getGameHandle().getTranslations();
 
         for (ServerPlayer player : PlayerLookup.level(world)) {
             ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.BELL_BLOCK, SoundSource.BLOCKS, 1f, 1.7f);
@@ -300,7 +300,7 @@ public class JumpAndRunInstance extends FFAGameInstance {
         disableEffects();
         enableEffects(module.data().effects());
 
-        for (ServerPlayer player : PlayerLookup.all(gameHandle.getServer())) {
+        for (ServerPlayer player : PlayerLookup.all(getGameHandle().getServer())) {
             player.teleportTo(world, spawn.x(), spawn.y(), spawn.z(), Set.of(), spawn.getYaw(), spawn.getPitch(), true);
         }
 
@@ -314,14 +314,14 @@ public class JumpAndRunInstance extends FFAGameInstance {
         List<Checkpoint> checkpoints = jumpAndRun.checkpoints();
         checkpointManager = new CheckpointManager(checkpoints, commons().debugController());
         checkpointManager.init(collisionDetector, movementObserver, world);
-        CheckpointHelper.notifyWhenReached(checkpointManager, gameHandle.getTranslations());
+        CheckpointHelper.notifyWhenReached(checkpointManager, getGameHandle().getTranslations());
 
         movementObserver.whenEntering(jumpAndRun.endCheckpoint().bounds(), player -> {
             checkpointManager.grantCheckpoint(player, checkpoints.size() - 1);
             onReachedGoal(player, true);
         });
 
-        for (ServerPlayer player : gameHandle.getParticipants()) {
+        for (ServerPlayer player : getGameHandle().getParticipants()) {
             bossBar.setArgument(player, 0, styled(jumpAndRun.moduleIndex() + 1, YELLOW));
         }
 
@@ -339,7 +339,7 @@ public class JumpAndRunInstance extends FFAGameInstance {
 
         String key = reached ? "game.ap2.jump_and_run.completed_room" : "game.ap2.jump_and_run.last_not_completed";
 
-        player.sendSystemMessage(gameHandle.getTranslations().translateText(player, key, styled("#" + room, ChatFormatting.YELLOW))
+        player.sendSystemMessage(getGameHandle().getTranslations().translateText(player, key, styled("#" + room, ChatFormatting.YELLOW))
                 .formatted(ChatFormatting.GREEN));
 
         bossBar.setArgument(player, 0, styled(room, YELLOW));
@@ -351,7 +351,7 @@ public class JumpAndRunInstance extends FFAGameInstance {
         }
 
         if (!requiredAmountReachedGoal()) {
-            Participants participants = gameHandle.getParticipants();
+            Participants participants = getGameHandle().getParticipants();
             int notYetInGoal = participants.count() - inGoal.size();
 
             if (notYetInGoal == 1) {
@@ -383,7 +383,7 @@ public class JumpAndRunInstance extends FFAGameInstance {
 
         ServerLevel world = jumpAndRun.world();
 
-        gameHandle.getTranslations().translateText("game.ap2.jump_and_run.next_segment_wait").formatted(GRAY)
+        getGameHandle().getTranslations().translateText("game.ap2.jump_and_run.next_segment_wait").formatted(GRAY)
                 .sendTo(PlayerLookup.level(world));
 
         SoundHelper.playSound(world, SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 0.5f, 2f);
@@ -401,16 +401,16 @@ public class JumpAndRunInstance extends FFAGameInstance {
 
         cancelPreviousTask();
 
-        jumpAndRun.loadModule().thenRun(() -> gameHandle.getServer().execute(() -> {
+        jumpAndRun.loadModule().thenRun(() -> getGameHandle().getServer().execute(() -> {
             initModule();
 
             cancelPreviousTask();
-            task = gameHandle.getScheduler().timeout(this::nextSegment, NEXT_PHASE_WAIT_TICKS);
+            task = getGameHandle().getScheduler().timeout(this::nextSegment, NEXT_PHASE_WAIT_TICKS);
 
             waitFor = jumpAndRun.unloadPreviousModule().whenComplete((_, _) -> waitFor = null);
         })).whenComplete((_, err) -> {
             if (err != null) {
-                gameHandle.getLogger().error("Failed to load module", err);
+                getGameHandle().getLogger().error("Failed to load module", err);
             }
         });
     }
@@ -428,11 +428,11 @@ public class JumpAndRunInstance extends FFAGameInstance {
     }
 
     private int requiredAmount() {
-        return min(gameHandle.getParticipants().count(), REACH_GOAL_REQUIRED);
+        return min(getGameHandle().getParticipants().count(), REACH_GOAL_REQUIRED);
     }
 
     private void nextSegment() {
-        gameHandle.getTranslations().translateText("ap2.go").formatted(RED).acceptEach(PlayerLookup.level(jumpAndRun.world()), (player, text) -> {
+        getGameHandle().getTranslations().translateText("ap2.go").formatted(RED).acceptEach(PlayerLookup.level(jumpAndRun.world()), (player, text) -> {
             Title.get(player).title(text, Component.empty(), 5, 20, 5);
             ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.CHICKEN_EGG, SoundSource.PLAYERS, 1, 0);
         });

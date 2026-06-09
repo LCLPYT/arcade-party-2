@@ -331,7 +331,7 @@ class SpeedBuildersInstance(
             velocity = projectile.deltaMovement.normalize()
         } else {
             impactPos = islandToDestroy!!.getCenter()
-            val entity = getLevel().getEntity(aelosId)
+            val entity = level.getEntity(aelosId)
 
             velocity = if (entity is Breeze) {
                 impactPos.subtract(getChargePos(entity)).normalize()

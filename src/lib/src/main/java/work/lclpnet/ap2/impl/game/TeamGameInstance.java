@@ -16,6 +16,7 @@ import work.lclpnet.ap2.api.game.team.TeamSpawnAccess;
 import work.lclpnet.ap2.api.stats.Stat;
 import work.lclpnet.ap2.api.stats.TeamStatsManager;
 import work.lclpnet.ap2.game.MiniGameHandle;
+import work.lclpnet.ap2.game.base.MapGameInstance;
 import work.lclpnet.ap2.game.player.ParticipantListener;
 import work.lclpnet.ap2.impl.game.data.type.TeamGameResult;
 import work.lclpnet.ap2.impl.game.data.type.TeamRef;
@@ -69,7 +70,7 @@ public abstract class TeamGameInstance extends MapGameInstance implements Partic
         Team team = teamManager.getTeam(player).orElse(null);
 
         if (team == null || !teamManager.isParticipating(team)
-            || !team.getParticipatingPlayers(gameHandle.getParticipants()).isEmpty()) return;
+            || !team.getParticipatingPlayers(getGameHandle().getParticipants()).isEmpty()) return;
 
         teamManager.setTeamEliminated(team);
     }
@@ -99,13 +100,11 @@ public abstract class TeamGameInstance extends MapGameInstance implements Partic
     }
 
     protected void teleportTeamsToSpawns() {
-        ServerLevel world = getLevel();
-
         for (Team team : teamManager.getTeams()) {
             PositionRotation spawn = getSpawn(team);
 
             if (spawn == null) {
-                gameHandle.getLogger().error("No spawn configured for team {} in map {}", team.key().id(), getMap().getDescriptor().getIdentifier());
+                getGameHandle().getLogger().error("No spawn configured for team {} in map {}", team.key().id(), getMap().getDescriptor().getIdentifier());
                 continue;
             }
 
@@ -113,7 +112,7 @@ public abstract class TeamGameInstance extends MapGameInstance implements Partic
             float yaw = spawn.getYaw(), pitch = spawn.getPitch();
 
             for (ServerPlayer player : team.getPlayers()) {
-                player.teleportTo(world, x, y, z, Set.of(), yaw, pitch, true);
+                player.teleportTo(getLevel(), x, y, z, Set.of(), yaw, pitch, true);
             }
         }
     }
@@ -139,7 +138,7 @@ public abstract class TeamGameInstance extends MapGameInstance implements Partic
     }
 
     protected final TeamRef createReference(Team team) {
-        return new TeamRef(team.key(), gameHandle.getTranslations());
+        return new TeamRef(team.key(), getGameHandle().getTranslations());
     }
 
     @Nullable

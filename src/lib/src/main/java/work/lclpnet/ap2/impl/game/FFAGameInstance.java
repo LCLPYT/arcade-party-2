@@ -12,6 +12,7 @@ import work.lclpnet.ap2.api.stats.FFAStatsManager;
 import work.lclpnet.ap2.api.stats.Stat;
 import work.lclpnet.ap2.api.util.scoreboard.CustomScoreboardObjective;
 import work.lclpnet.ap2.game.MiniGameHandle;
+import work.lclpnet.ap2.game.base.MapGameInstance;
 import work.lclpnet.ap2.game.player.ParticipantListener;
 import work.lclpnet.ap2.impl.game.data.type.FFAGameResult;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
@@ -34,7 +35,7 @@ public abstract class FFAGameInstance extends MapGameInstance implements Partici
     public FFAGameInstance(MiniGameHandle gameHandle, ServerLevel world, GameMap map) {
         super(gameHandle, world, map);
 
-        this.resolver = new PlayerRefResolver(gameHandle.getServer().getPlayerList());
+        this.resolver = new PlayerRefResolver(getGameHandle().getServer().getPlayerList());
 
         var data = new WinManager.Data<>(this::getData, Optional::of, PlayerRef::create, PlayerRef::create, FFAGameResult::new);
 
@@ -60,19 +61,19 @@ public abstract class FFAGameInstance extends MapGameInstance implements Partici
     }
 
     public final void useScoreboardStatsSync(IntScoreEventSource<ServerPlayer> source, Objective objective) {
-        gameHandle.getScoreboardManager().sync(objective, source);
+        getGameHandle().getScoreboardManager().sync(objective, source);
 
         initScores();
     }
 
     public final void useScoreboardStatsSync(IntScoreEventSource<ServerPlayer> source, CustomScoreboardObjective objective) {
-        gameHandle.getScoreboardManager().sync(objective, source);
+        getGameHandle().getScoreboardManager().sync(objective, source);
 
         initScores();
     }
 
     protected final void initScores() {
-        gameHandle.getParticipants().forEach(getData()::identityIfAbsent);
+        getGameHandle().getParticipants().forEach(getData()::identityIfAbsent);
     }
 
     /**

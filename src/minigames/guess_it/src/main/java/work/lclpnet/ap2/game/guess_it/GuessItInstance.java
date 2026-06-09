@@ -83,7 +83,7 @@ public class GuessItInstance extends FFAGameInstance {
         this.soundSubtitles = soundSubtitles;
         this.mannequinUuids = mannequinUuids;
 
-        choices = new PlayerChoices(gameHandle.getTranslations());
+        choices = new PlayerChoices(getGameHandle().getTranslations());
         result = new ChallengeResult();
     }
 
@@ -94,10 +94,10 @@ public class GuessItInstance extends FFAGameInstance {
 
     @Override
     protected void prepare() {
-        ServerLevel world = getLevel();
+        ServerLevel level = getLevel();
         GameMap map = getMap();
-        HookRegistrar hooks = gameHandle.getHooks();
-        Participants participants = gameHandle.getParticipants();
+        HookRegistrar hooks = getGameHandle().getHooks();
+        Participants participants = getGameHandle().getParticipants();
         BlockShape blockShape = MapUtil.readArea(map);
 
         commons().gameRuleBuilder()
@@ -105,20 +105,20 @@ public class GuessItInstance extends FFAGameInstance {
 
         rounds = MIN_ROUNDS + random.nextInt(MAX_ROUNDS - MIN_ROUNDS + 1);
 
-        Identifier answerId = gameHandle.getGameInfo().identifier("answer");
+        Identifier answerId = getGameHandle().getGameInfo().identifier("answer");
 
-        messenger = new ChallengeMessengerImpl(world, gameHandle.getTranslations(), answerId);
-        inputManager = new InputManager(choices, gameHandle.getTranslations(), participants, messenger, answerId);
-        modifier = new ResetWorldModifier(world, hooks);
+        messenger = new ChallengeMessengerImpl(level, getGameHandle().getTranslations(), answerId);
+        inputManager = new InputManager(choices, getGameHandle().getTranslations(), participants, messenger, answerId);
+        modifier = new ResetWorldModifier(level, hooks);
 
-        var dynamicEntityManager = new DynamicEntityManager(world);
-        dynamicEntityManager.init(gameHandle.getRootScheduler(), hooks);
+        var dynamicEntityManager = new DynamicEntityManager(level);
+        dynamicEntityManager.init(getGameHandle().getRootScheduler(), hooks);
         dynamicEntities = new DynamicEntityModifier(dynamicEntityManager);
 
-        manager = new GuessItManager(gameHandle, world, random, blockShape, modifier, soundSubtitles,
+        manager = new GuessItManager(getGameHandle(), level, random, blockShape, modifier, soundSubtitles,
                 commons().debugController(), mannequinUuids, dynamicEntities);
 
-        CommandRegistrar commands = gameHandle.getCommands();
+        CommandRegistrar commands = getGameHandle().getCommands();
 
         new SetChallengeCommand(manager, this::skip).register(commands);
         new SkipChallengeCommand(this::skip).register(commands);
@@ -154,16 +154,16 @@ public class GuessItInstance extends FFAGameInstance {
 
     @Override
     protected void go() {
-        inputManager.init(gameHandle.getHooks());
+        inputManager.init(getGameHandle().getHooks());
 
         prepareNextChallenge();
     }
 
     private void setupScoreboard() {
-        CustomScoreboardManager scoreboardManager = gameHandle.getScoreboardManager();
-        Translations translations = gameHandle.getTranslations();
+        CustomScoreboardManager scoreboardManager = getGameHandle().getScoreboardManager();
+        Translations translations = getGameHandle().getTranslations();
 
-        var objective = ScoreboardUtil.setupSidebar(scoreboardManager, gameHandle.getGameInfo().getTitleKey());
+        var objective = ScoreboardUtil.setupSidebar(scoreboardManager, getGameHandle().getGameInfo().getTitleKey());
 
         // round display
         roundHandle = objective.createText(translations.translateText("game.ap2.guess_it.round").formatted(GREEN));
@@ -177,7 +177,7 @@ public class GuessItInstance extends FFAGameInstance {
         var separator = Component.literal(ApConstants.SCOREBOARD_SEPARATOR_SM).withStyle(DARK_GREEN, STRIKETHROUGH);
         objective.createText(separator);
 
-        for (ServerPlayer player : PlayerLookup.all(gameHandle.getServer())) {
+        for (ServerPlayer player : PlayerLookup.all(getGameHandle().getServer())) {
             objective.add(player);
         }
 
@@ -196,7 +196,7 @@ public class GuessItInstance extends FFAGameInstance {
             try {
                 challenge.destroy();
             } catch (Throwable t) {
-                gameHandle.getLogger().error("Failed to destroy {}, ignoring it", challenge.getClass().getSimpleName(), t);
+                getGameHandle().getLogger().error("Failed to destroy {}, ignoring it", challenge.getClass().getSimpleName(), t);
             }
         }
 
@@ -207,7 +207,7 @@ public class GuessItInstance extends FFAGameInstance {
 
         challenge = challengeInit.challenge();
         ServerLevel world = getLevel();
-        Translations translations = gameHandle.getTranslations();
+        Translations translations = getGameHandle().getTranslations();
 
         var prepareMsg = translations.translateText("game.ap2.guess_it.prepare." + challenge.getPreparationKey())
                 .formatted(DARK_GREEN, BOLD);
@@ -223,14 +223,14 @@ public class GuessItInstance extends FFAGameInstance {
         try {
             challenge.prepare();
         } catch (Throwable t) {
-            gameHandle.getLogger().error("Failed to prepare {}", challenge.getClass().getSimpleName(), t);
+            getGameHandle().getLogger().error("Failed to prepare {}", challenge.getClass().getSimpleName(), t);
             onChallengeError();
             return;
         }
 
         int expected = ++transaction;
 
-        currentTask = gameHandle.getScheduler().timeout(() -> {
+        currentTask = getGameHandle().getScheduler().timeout(() -> {
             if (transaction != expected) return;
 
             beginChallenge();
@@ -241,8 +241,8 @@ public class GuessItInstance extends FFAGameInstance {
         Objects.requireNonNull(challenge, "Challenge cannot be null");
 
         ServerLevel world = getLevel();
-        Translations translations = gameHandle.getTranslations();
-        TaskScheduler scheduler = gameHandle.getScheduler();
+        Translations translations = getGameHandle().getTranslations();
+        TaskScheduler scheduler = getGameHandle().getScheduler();
 
         var players = PlayerLookup.level(world);
 
@@ -257,7 +257,7 @@ public class GuessItInstance extends FFAGameInstance {
         try {
             challenge.begin(inputManager, messenger);
         } catch (Throwable t) {
-            gameHandle.getLogger().error("Failed to begin {}", challenge.getClass().getSimpleName(), t);
+            getGameHandle().getLogger().error("Failed to begin {}", challenge.getClass().getSimpleName(), t);
             onChallengeError();
             return;
         }
@@ -284,7 +284,7 @@ public class GuessItInstance extends FFAGameInstance {
             onTimerOver();
         });
 
-        timer.start(gameHandle.getBossBarProvider(), scheduler);
+        timer.start(getGameHandle().getBossBarProvider(), scheduler);
     }
 
     private void onChallengeError() {
@@ -313,7 +313,7 @@ public class GuessItInstance extends FFAGameInstance {
     private synchronized void evaluateChallenge() {
         Objects.requireNonNull(challenge, "Challenge cannot be null");
 
-        Translations translations = gameHandle.getTranslations();
+        Translations translations = getGameHandle().getTranslations();
 
         result.clear();
         challenge.evaluate(choices, result);
@@ -325,7 +325,7 @@ public class GuessItInstance extends FFAGameInstance {
             solutionMsg = translations.translateText("game.ap2.guess_it.solution", styled(correctAnswer, YELLOW));
         }
 
-        for (ServerPlayer player : gameHandle.getParticipants()) {
+        for (ServerPlayer player : getGameHandle().getParticipants()) {
             int points = result.getPointsGained(player);
 
             var msg = translations.translateText(player, "game.ap2.guess_it.gain_points", styled(points, YELLOW)).formatted(GREEN);
@@ -360,7 +360,7 @@ public class GuessItInstance extends FFAGameInstance {
 
         int expected = ++transaction;
 
-        currentTask = gameHandle.getScheduler().timeout(() -> {
+        currentTask = getGameHandle().getScheduler().timeout(() -> {
             if (transaction != expected) return;
 
             prepareNextChallenge();

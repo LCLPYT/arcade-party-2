@@ -9,7 +9,7 @@ import work.lclpnet.ap2.api.stats.CommonStats
 import work.lclpnet.ap2.api.stats.CommonStats.Kills
 import work.lclpnet.ap2.api.stats.FFAStatsManager
 import work.lclpnet.ap2.ext.mc.playNotifySound
-import work.lclpnet.ap2.impl.game.MapGameInstance
+import work.lclpnet.ap2.game.base.MapGameInstance
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef
 import work.lclpnet.kibu.hook.player.PlayerMoveCallback
 import work.lclpnet.kibu.hook.util.PositionRotation

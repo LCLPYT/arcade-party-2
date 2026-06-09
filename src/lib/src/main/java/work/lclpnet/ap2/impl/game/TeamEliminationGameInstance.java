@@ -38,7 +38,7 @@ public abstract class TeamEliminationGameInstance extends TeamGameInstance {
      * Instantly makes players who would have died spectators and reset them.
      */
     protected final void useSmoothDeath() {
-        HookRegistrar hooks = gameHandle.getHooks();
+        HookRegistrar hooks = getGameHandle().getHooks();
 
         EntityHealthCallback.HOOK.registerWith(hooks, (entity, health) -> {
             if (!(entity instanceof ServerPlayer player) || health > 0) return false;
@@ -50,11 +50,11 @@ public abstract class TeamEliminationGameInstance extends TeamGameInstance {
     }
 
     protected void eliminate(ServerPlayer player) {
-        Participants participants = gameHandle.getParticipants();
+        Participants participants = getGameHandle().getParticipants();
 
         if (participants.isParticipating(player)) {
-            DeathMessages deathMessages = gameHandle.getDeathMessages();
-            MinecraftServer server = gameHandle.getServer();
+            DeathMessages deathMessages = getGameHandle().getDeathMessages();
+            MinecraftServer server = getGameHandle().getServer();
 
             deathMessages.eliminated(player).sendTo(PlayerLookup.all(server));
 
@@ -66,8 +66,8 @@ public abstract class TeamEliminationGameInstance extends TeamGameInstance {
     }
 
     private void resetPlayer(ServerPlayer player) {
-        WorldFacade worldFacade = gameHandle.getWorldFacade();
-        PlayerUtil playerUtil = gameHandle.getPlayerUtil();
+        WorldFacade worldFacade = getGameHandle().getWorldFacade();
+        PlayerUtil playerUtil = getGameHandle().getPlayerUtil();
 
         playerUtil.resetPlayer(player);
         worldFacade.teleport(player);
@@ -77,7 +77,7 @@ public abstract class TeamEliminationGameInstance extends TeamGameInstance {
         TeamManager teamManager = getTeamManager();
 
         // eliminate all remaining team players first
-        Participants participants = gameHandle.getParticipants();
+        Participants participants = getGameHandle().getParticipants();
 
         for (ServerPlayer player : team.getPlayers()) {
             participants.remove(player);
@@ -88,8 +88,8 @@ public abstract class TeamEliminationGameInstance extends TeamGameInstance {
         // now actually eliminate the team
         if (!teamManager.isParticipating(team)) return;
 
-        DeathMessages deathMessages = gameHandle.getDeathMessages();
-        MinecraftServer server = gameHandle.getServer();
+        DeathMessages deathMessages = getGameHandle().getDeathMessages();
+        MinecraftServer server = getGameHandle().getServer();
 
         deathMessages.eliminated(team).sendTo(PlayerLookup.all(server));
 
@@ -102,7 +102,7 @@ public abstract class TeamEliminationGameInstance extends TeamGameInstance {
 
     protected void eliminateAll(Iterable<? extends Team> teams, @Nullable TranslatedText detail) {
         TeamManager teamManager = getTeamManager();
-        Translations translations = gameHandle.getTranslations();
+        Translations translations = getGameHandle().getTranslations();
 
         Set<Team> toEliminate = new HashSet<>();
 
@@ -114,7 +114,7 @@ public abstract class TeamEliminationGameInstance extends TeamGameInstance {
 
             translations.translateText("ap2.game.team_eliminated", displayName)
                     .formatted(GRAY)
-                    .sendTo(PlayerLookup.all(gameHandle.getServer()));
+                    .sendTo(PlayerLookup.all(getGameHandle().getServer()));
 
             toEliminate.add(team);
         }
@@ -122,7 +122,7 @@ public abstract class TeamEliminationGameInstance extends TeamGameInstance {
         // mark all teams as eliminated at the same moment
         data.addAll(toEliminate, detail);
 
-        Participants participants = gameHandle.getParticipants();
+        Participants participants = getGameHandle().getParticipants();
 
         // deliberately use teams instead of toEliminate, to make sure there are no participating members anymore
         for (Team team : teams) {
