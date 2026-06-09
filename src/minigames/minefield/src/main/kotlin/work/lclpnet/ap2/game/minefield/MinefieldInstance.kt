@@ -27,7 +27,7 @@ import work.lclpnet.ap2.ext.mc.setBlock
 import work.lclpnet.ap2.ext.mc.setBlocks
 import work.lclpnet.ap2.ext.mc.teleport
 import work.lclpnet.ap2.game.MiniGameHandle
-import work.lclpnet.ap2.impl.game.FFAGameInstance
+import work.lclpnet.ap2.game.base.FFAGameInstance
 import work.lclpnet.ap2.impl.game.data.OrderedDataContainer
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef
 import work.lclpnet.ap2.impl.util.Fireworks
@@ -68,7 +68,7 @@ class MinefieldInstance(
     val goalDistance: Double,
 ) : FFAGameInstance(gameHandle, level, map) {
 
-    private val data = OrderedDataContainer(PlayerRef::create)
+    override val data = OrderedDataContainer(PlayerRef::create)
     private val stats = createStats(Exploded, CommonStats.DistanceMoved)
     val inGoal = mutableSetOf<UUID>()
     val entries = mutableMapOf<UUID, Entry>()
@@ -76,8 +76,6 @@ class MinefieldInstance(
     lateinit var dynamicEntityManager: DynamicEntityManager
     lateinit var visibility: VisibilityHandler
     var gameEnd = -1
-
-    override fun getData() = data
 
     override fun prepare() {
         for (player in players()) {

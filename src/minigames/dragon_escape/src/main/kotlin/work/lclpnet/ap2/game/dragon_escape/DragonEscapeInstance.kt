@@ -20,14 +20,13 @@ import net.minecraft.world.scores.DisplaySlot
 import net.minecraft.world.scores.Objective
 import net.minecraft.world.scores.criteria.ObjectiveCriteria
 import work.lclpnet.ap2.api.game.MiniGameResults
-import work.lclpnet.ap2.api.game.data.DataContainer
 import work.lclpnet.ap2.core.mixin.entity.LivingEntityAccessor
 import work.lclpnet.ap2.game.MiniGameHandle
+import work.lclpnet.ap2.game.base.FFAGameInstance
 import work.lclpnet.ap2.game.dragon_escape.kit.EnderPearlKit
 import work.lclpnet.ap2.game.dragon_escape.kit.LeapKit
 import work.lclpnet.ap2.game.dragon_escape.kit.WindChargeKit
 import work.lclpnet.ap2.game.kit.KitHandler
-import work.lclpnet.ap2.impl.game.FFAGameInstance
 import work.lclpnet.ap2.impl.game.PseudoElimination
 import work.lclpnet.ap2.impl.game.data.CombinedDataContainer
 import work.lclpnet.ap2.impl.game.data.DoubleScoreDataContainer
@@ -70,14 +69,13 @@ class DragonEscapeInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: 
 
     private val completed = OrderedDataContainer(PlayerRef::create)
     private val score = DoubleScoreDataContainer(PlayerRef::create, Ordering.DESCENDING, "ap2.score.distance")
-    private val data = CombinedDataContainer(listOf(completed, score))
+    override val data = CombinedDataContainer(listOf(completed, score))
     private val random = Random()
     private val inGoal = HashSet<UUID>()
     private val trackers = HashMap<UUID, Tracker>()
     private val movementBlocker = SimpleMovementBlocker(gameHandle.scheduler).also {
         it.setModifySpeedAttribute(false)
     }
-
     private var startMs = 0L
     private lateinit var goalShape: BlockShape
     private lateinit var path: SplinePath
@@ -95,8 +93,6 @@ class DragonEscapeInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: 
     init {
         useOldCombat()
     }
-
-    override fun getData(): DataContainer<ServerPlayer, PlayerRef> = data
 
     override fun prepare() {
         if (!readProps()) return

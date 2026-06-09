@@ -11,7 +11,7 @@ import net.minecraft.world.entity.player.Player
 import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.api.stats.StatUnits
 import work.lclpnet.ap2.game.MiniGameHandle
-import work.lclpnet.ap2.impl.game.FFAGameInstance
+import work.lclpnet.ap2.game.base.FFAGameInstance
 import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef
 import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedPlayerBossBar
@@ -45,8 +45,7 @@ class AimMasterInstance(
     val manager: AimMasterManager,
 ) : FFAGameInstance(gameHandle, level, map) {
 
-    private val data = IntScoreDataContainer(PlayerRef::create)
-
+    override val data = IntScoreDataContainer(PlayerRef::create)
     private val stats = createStats(data, Clicks, Misses, Accuracy, Streak, AvgAdvanceTime)
     private val currentStreak = HashMap<UUID, Int>()
     private val lastAdvanceMillis = HashMap<UUID, Long>()
@@ -54,8 +53,6 @@ class AimMasterInstance(
     private val advanceCount = HashMap<UUID, Int>()
     private var startMillis = 0L
     private lateinit var bossBar: DynamicTranslatedPlayerBossBar
-
-    override fun getData() = data
 
     override val maxDuration: Duration
         get() = 2.minutes

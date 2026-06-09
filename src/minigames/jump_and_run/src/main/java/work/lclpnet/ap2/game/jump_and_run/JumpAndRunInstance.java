@@ -25,10 +25,10 @@ import org.jspecify.annotations.NonNull;
 import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.core.hook.DripLeafTiltCallback;
 import work.lclpnet.ap2.game.MiniGameHandle;
+import work.lclpnet.ap2.game.base.FFAGameInstance;
 import work.lclpnet.ap2.game.jump_and_run.gen.JumpAndRun;
 import work.lclpnet.ap2.game.jump_and_run.gen.JumpModule;
 import work.lclpnet.ap2.game.player.Participants;
-import work.lclpnet.ap2.impl.game.FFAGameInstance;
 import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.util.SoundHelper;
@@ -101,7 +101,7 @@ public class JumpAndRunInstance extends FFAGameInstance {
     }
 
     @Override
-    protected DataContainer<ServerPlayer, PlayerRef> getData() {
+    protected @NonNull DataContainer<ServerPlayer, PlayerRef> getData() {
         return data;
     }
 

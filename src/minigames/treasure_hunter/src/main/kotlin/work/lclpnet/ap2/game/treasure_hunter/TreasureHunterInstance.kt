@@ -15,11 +15,10 @@ import net.minecraft.world.level.Level
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.gamerules.GameRules
-import work.lclpnet.ap2.api.game.data.DataContainer
 import work.lclpnet.ap2.api.stats.CommonStats.BlocksBroken
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.game.MiniGameHandle
-import work.lclpnet.ap2.impl.game.FFAGameInstance
+import work.lclpnet.ap2.game.base.FFAGameInstance
 import work.lclpnet.ap2.impl.game.data.CombinedDataContainer
 import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer
 import work.lclpnet.ap2.impl.game.data.OrderedDataContainer
@@ -42,15 +41,13 @@ class TreasureHunterInstance(gameHandle: MiniGameHandle, level: ServerLevel, map
     private val random = Random()
     private val foundChest = OrderedDataContainer(PlayerRef::create)
     private val score = IntScoreDataContainer(PlayerRef::create)
-    private val data = CombinedDataContainer(listOf(foundChest, score))
+    override val data = CombinedDataContainer(listOf(foundChest, score))
     private val materials = HashSet<BlockState>()
     private val stats = createStats(score, BlocksBroken)
 
     init {
         useSurvivalMode()
     }
-
-    override fun getData(): DataContainer<ServerPlayer, PlayerRef> = data
 
     override fun prepare() {
         commons().gameRuleBuilder()
