@@ -23,17 +23,16 @@ import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.scores.PlayerTeam
 import net.minecraft.world.scores.Team
-import work.lclpnet.ap2.api.game.data.DataContainer
 import work.lclpnet.ap2.api.music.WeightedSong
 import work.lclpnet.ap2.api.util.heads.PlayerHead
 import work.lclpnet.ap2.ext.mc.isIn
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.runEveryTick
 import work.lclpnet.ap2.game.MiniGameHandle
+import work.lclpnet.ap2.game.base.FFAGameInstance
 import work.lclpnet.ap2.game.pig_race.util.PRProgress
 import work.lclpnet.ap2.game.pig_race.util.PRScoreboard
 import work.lclpnet.ap2.game.pig_race.util.createSegmentedPath
-import work.lclpnet.ap2.impl.game.FFAGameInstance
 import work.lclpnet.ap2.impl.game.data.CombinedDataContainer
 import work.lclpnet.ap2.impl.game.data.DoubleScoreDataContainer
 import work.lclpnet.ap2.impl.game.data.OrderedDataContainer
@@ -91,19 +90,16 @@ class PigRaceInstance(
         Ordering.ASCENDING,
         "ap2.score.blocks_away"
     )
-    private val combinedData = CombinedDataContainer(listOf(winnerData, distanceData))
+    override val data = CombinedDataContainer(listOf(winnerData, distanceData))
     private val random = Random()
     private val collisionDetector: CollisionDetector = ChunkedCollisionDetector()
     private val movementObserver = TickMovementObserver(collisionDetector, gameHandle.participants::isParticipating)
     private val pendingEntities = HashMap<UUID, PendingEntity<*>>()
-
     private lateinit var checkpointManager: CheckpointManager
     private lateinit var progress: PRProgress
     private lateinit var scoreboard: PRScoreboard
     private var variant = Variant.PIG
     private var speed = 1.0
-
-    override fun getData(): DataContainer<ServerPlayer, PlayerRef> = combinedData
 
     override fun prepare() {
         variant = getVariant()

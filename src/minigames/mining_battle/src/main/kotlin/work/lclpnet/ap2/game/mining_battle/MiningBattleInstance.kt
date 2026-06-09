@@ -11,10 +11,9 @@ import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
 import net.minecraft.world.item.enchantment.Enchantments
 import net.minecraft.world.level.block.state.BlockState
-import work.lclpnet.ap2.api.game.data.DataContainer
 import work.lclpnet.ap2.game.MiniGameHandle
-import work.lclpnet.ap2.impl.game.FFAGameInstance
-import work.lclpnet.ap2.impl.game.data.DataContainers
+import work.lclpnet.ap2.game.base.FFAGameInstance
+import work.lclpnet.ap2.game.util.finaleCompatibleScoreContainer
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef
 import work.lclpnet.ap2.impl.util.ItemHelper
 import work.lclpnet.ap2.impl.util.ItemHelper.unbreakable
@@ -37,7 +36,7 @@ class MiningBattleInstance(
     private val box: BlockBox,
 ) : FFAGameInstance(gameHandle, level, map) {
 
-    private val data = DataContainers.finaleCompatibleScoreContainer(gameHandle, PlayerRef::create)
+    override val data = finaleCompatibleScoreContainer(gameHandle, PlayerRef::create)
 
     init {
         useSurvivalMode()
@@ -117,6 +116,4 @@ class MiningBattleInstance(
 
         return material.contains(state) || ore.isOre(state)
     }
-
-    override fun getData(): DataContainer<ServerPlayer, PlayerRef> = data
 }

@@ -1,14 +1,11 @@
 package work.lclpnet.ap2.game.fine_tuning
 
 import net.minecraft.server.level.ServerLevel
-import net.minecraft.server.level.ServerPlayer
 import org.json.JSONArray
-import work.lclpnet.ap2.api.game.data.DataContainer
 import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.game.MiniGameHandle
-import work.lclpnet.ap2.impl.game.FFAGameInstance
-import work.lclpnet.ap2.impl.game.data.DataContainers
-import work.lclpnet.ap2.impl.game.data.IntDataContainer
+import work.lclpnet.ap2.game.base.FFAGameInstance
+import work.lclpnet.ap2.game.util.finaleCompatibleScoreContainer
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef
 import work.lclpnet.game.map.GameMap
 import java.util.*
@@ -28,16 +25,13 @@ class FineTuningInstance(
     private val setup: FineTuningSetup,
 ) : FFAGameInstance(gameHandle, level, map) {
 
-    private val data: IntDataContainer<ServerPlayer, PlayerRef> =
-        DataContainers.finaleCompatibleScoreContainer(gameHandle, PlayerRef::create)
+    override val data = finaleCompatibleScoreContainer(gameHandle, PlayerRef::create)
     private val stats = createStats(data, PitchChanges, Probes, Replays, MelodiesCompleted, CorrectNotes)
     private lateinit var tuningPhase: TuningPhase
 
     init {
         useSurvivalMode()
     }
-
-    override fun getData(): DataContainer<ServerPlayer, PlayerRef> = data
 
     override fun prepare() {
         val json: JSONArray = map.requireProperty("room-note-blocks")

@@ -28,14 +28,13 @@ import net.minecraft.world.level.gamerules.GameRules
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.scores.DisplaySlot
 import net.minecraft.world.scores.Team
-import work.lclpnet.ap2.api.game.data.DataContainer
 import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.core.type.ApVariantHolder
 import work.lclpnet.ap2.ext.runEveryTick
 import work.lclpnet.ap2.game.MiniGameHandle
+import work.lclpnet.ap2.game.base.FFAGameInstance
+import work.lclpnet.ap2.game.util.finaleCompatibleScoreContainer
 import work.lclpnet.ap2.game.util.teleportToRandomSpawns
-import work.lclpnet.ap2.impl.game.FFAGameInstance
-import work.lclpnet.ap2.impl.game.data.DataContainers
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.util.ItemHelper
@@ -68,7 +67,7 @@ private val ChickensExploded = Stat("chickens_exploded", 0)
 
 class ChickenShooterInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap) : FFAGameInstance(gameHandle, level, map) {
 
-    private val data = DataContainers.finaleCompatibleScoreContainer(gameHandle, PlayerRef::create)
+    override val data = finaleCompatibleScoreContainer(gameHandle, PlayerRef::create)
     private val stats = createStats(data, BabyChickens, TntDetonated, ChickensExploded)
     private val random = Random()
     private val chickenSet = mutableSetOf<Chicken>()
@@ -76,8 +75,6 @@ class ChickenShooterInstance(gameHandle: MiniGameHandle, level: ServerLevel, map
     private var despawnHeight = 0
     private var time = 0
     private var spawnInterval = 0
-
-    override fun getData(): DataContainer<ServerPlayer, PlayerRef> = data
 
     override fun prepare() {
         val world = level

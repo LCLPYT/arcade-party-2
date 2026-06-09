@@ -22,6 +22,7 @@ import work.lclpnet.ap2.core.hook.PlayerEliminatedCallback;
 import work.lclpnet.ap2.core.mixin.entity.LivingEntityAccessor;
 import work.lclpnet.ap2.game.GameInfo;
 import work.lclpnet.ap2.game.MiniGameHandle;
+import work.lclpnet.ap2.game.base.FFAGameInstance;
 import work.lclpnet.ap2.game.player.Participants;
 import work.lclpnet.ap2.impl.game.data.EliminationDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
@@ -79,7 +80,7 @@ public abstract class EliminationGameInstance extends FFAGameInstance implements
     }
 
     @Override
-    protected EliminationDataContainer<ServerPlayer, PlayerRef> getData() {
+    protected @NonNull EliminationDataContainer<ServerPlayer, PlayerRef> getData() {
         return data;
     }
 

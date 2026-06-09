@@ -30,9 +30,9 @@ import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.mc.playNotifySound
 import work.lclpnet.ap2.ext.mc.teleportTo
 import work.lclpnet.ap2.game.MiniGameHandle
+import work.lclpnet.ap2.game.base.FFAGameInstance
 import work.lclpnet.ap2.game.pvp_tournament.gen.Match
 import work.lclpnet.ap2.game.pvp_tournament.util.*
-import work.lclpnet.ap2.impl.game.FFAGameInstance
 import work.lclpnet.ap2.impl.game.WinSequence
 import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer
 import work.lclpnet.ap2.impl.game.data.Ordering
@@ -68,21 +68,15 @@ class PvpTournamentInstance(
     private val scope: CoroutineScope,
 ) : FFAGameInstance(gameHandle, level, map) {
 
-    private val data = IntScoreDataContainer(PlayerRef::create, Ordering.ASCENDING, "")
+    override val data = IntScoreDataContainer(PlayerRef::create, Ordering.ASCENDING, "")
     val matchInstances = MatchInstanceRegistry()
     val kitManager = MatchKitManager(getKits(gameHandle.server.registryAccess()))
-
     val movementBlocker = SimpleMovementBlocker(gameHandle.scheduler).also {
         it.setModifySpeedAttribute(false)
         it.init(gameHandle.hooks)
     }
-
-
     lateinit var pvp: PvpBehavior
     lateinit var tournamentResult: TournamentResult
-
-
-    override fun getData() = data
 
     init {
         useSurvivalMode()

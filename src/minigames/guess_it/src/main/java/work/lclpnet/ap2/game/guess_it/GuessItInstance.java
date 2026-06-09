@@ -10,16 +10,17 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.BossEvent;
 import net.minecraft.world.level.gamerules.GameRules;
+import org.jspecify.annotations.NonNull;
 import work.lclpnet.ap2.ApConstants;
 import work.lclpnet.ap2.api.game.data.DataContainer;
 import work.lclpnet.ap2.core.hook.CopperGolemTurnIntoStatueCallback;
 import work.lclpnet.ap2.game.MiniGameHandle;
+import work.lclpnet.ap2.game.base.FFAGameInstance;
 import work.lclpnet.ap2.game.guess_it.data.*;
 import work.lclpnet.ap2.game.guess_it.util.DynamicEntityModifier;
 import work.lclpnet.ap2.game.guess_it.util.SetChallengeCommand;
 import work.lclpnet.ap2.game.guess_it.util.SkipChallengeCommand;
 import work.lclpnet.ap2.game.player.Participants;
-import work.lclpnet.ap2.impl.game.FFAGameInstance;
 import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.map.MapUtil;
@@ -88,7 +89,7 @@ public class GuessItInstance extends FFAGameInstance {
     }
 
     @Override
-    protected DataContainer<ServerPlayer, PlayerRef> getData() {
+    protected @NonNull DataContainer<ServerPlayer, PlayerRef> getData() {
         return data;
     }
 

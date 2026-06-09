@@ -23,8 +23,8 @@ import work.lclpnet.ap2.ext.players
 import work.lclpnet.ap2.ext.setupSidebarScoreboard
 import work.lclpnet.ap2.ext.translate
 import work.lclpnet.ap2.game.MiniGameHandle
-import work.lclpnet.ap2.impl.game.FFAGameInstance
-import work.lclpnet.ap2.impl.game.data.DataContainers
+import work.lclpnet.ap2.game.base.FFAGameInstance
+import work.lclpnet.ap2.game.util.finaleCompatibleScoreContainer
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.util.ItemHelper
@@ -42,14 +42,12 @@ val DURATION = 2.minutes + 40.seconds
 
 class KingOfTheHillInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap) : FFAGameInstance(gameHandle, level, map) {
     
-    private val data = DataContainers.finaleCompatibleScoreContainer(gameHandle, PlayerRef::create)
+    override val data = finaleCompatibleScoreContainer(gameHandle, PlayerRef::create)
     var goalShape: BlockShape? = null
 
     init {
         useOldCombat()
     }
-
-    override fun getData() = data!!
 
     override fun prepare() {
         commons().teleportToRandomSpawns(Random.asJavaRandom())

@@ -10,9 +10,8 @@ import net.minecraft.world.effect.MobEffectInstance
 import net.minecraft.world.effect.MobEffects
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.scores.Team
-import work.lclpnet.ap2.api.game.data.DataContainer
 import work.lclpnet.ap2.game.MiniGameHandle
-import work.lclpnet.ap2.impl.game.FFAGameInstance
+import work.lclpnet.ap2.game.base.FFAGameInstance
 import work.lclpnet.ap2.impl.game.data.CombinedDataContainer
 import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer
 import work.lclpnet.ap2.impl.game.data.OrderedDataContainer
@@ -40,7 +39,7 @@ class MirrorHopInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Gam
 
     private val winnerData = OrderedDataContainer(PlayerRef::create)
     private val scoreData = IntScoreDataContainer(PlayerRef::create)
-    private val combinedData = CombinedDataContainer(listOf(winnerData, scoreData))
+    override val data = CombinedDataContainer(listOf(winnerData, scoreData))
     private val collisionDetector: CollisionDetector = ChunkedCollisionDetector()
     private val movementObserver = PlayerMovementObserver(
         collisionDetector,
@@ -51,8 +50,6 @@ class MirrorHopInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Gam
     private val movementBlocker: MovementBlocker = CooldownMovementBlocker(gameHandle.rootScheduler)
     private lateinit var choices: MirrorHopChoices
     private var progress = -1
-
-    override fun getData(): DataContainer<ServerPlayer, PlayerRef> = combinedData
 
     override fun prepare() {
         gameHandle.playerUtil.enableEffect(ApEffects.DARKNESS)
