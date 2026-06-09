@@ -64,7 +64,7 @@ import static work.lclpnet.ap2.impl.util.TranslationUtil.quote;
 /// - registers default hooks, e.g. for spectators, spawn location and map properties
 ///
 /// Note that this game instance is not bound be of a specific type, i.e. subclasses can be ob type FFA, TEAM etc.
-public abstract class BaseGameInstance implements MiniGameInstance {
+public abstract class MapGameInstance implements MiniGameInstance {
 
     @Getter
     protected final MiniGameHandle gameHandle;
@@ -78,7 +78,7 @@ public abstract class BaseGameInstance implements MiniGameInstance {
     private final Set<ApEffect> activeEffects = new HashSet<>();
     private boolean locatorBarEnabled = false;
 
-    public BaseGameInstance(MiniGameHandle gameHandle, ServerLevel level, GameMap map) {
+    public MapGameInstance(MiniGameHandle gameHandle, ServerLevel level, GameMap map) {
         this.gameHandle = gameHandle;
         this.level = level;
         this.map = map;

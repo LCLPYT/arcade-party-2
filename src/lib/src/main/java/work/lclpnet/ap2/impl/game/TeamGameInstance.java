@@ -30,7 +30,7 @@ import java.util.stream.Stream;
 
 import static work.lclpnet.ap2.api.stats.CommonStats.Score;
 
-public abstract class TeamGameInstance extends BaseGameInstance implements ParticipantListener,
+public abstract class TeamGameInstance extends MapGameInstance implements ParticipantListener,
         TeamEliminatedListener, TeamSpawnAccess, WinManagerView {
 
     private final TeamManager teamManager;
