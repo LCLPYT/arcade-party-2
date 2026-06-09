@@ -1,6 +1,6 @@
 package work.lclpnet.ap2.ext
 
-import work.lclpnet.ap2.impl.game.MapGameInstance
+import work.lclpnet.ap2.game.base.MapGameInstance
 import work.lclpnet.kibu.scheduler.api.RunningTask
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds

@@ -84,29 +84,29 @@ public abstract class EliminationGameInstance extends FFAGameInstance implements
     }
 
     protected final DynamicTranslatedBossBar useRemainingPlayersDisplay() {
-        GameInfo gameInfo = gameHandle.getGameInfo();
-        Translations translations = gameHandle.getTranslations();
+        GameInfo gameInfo = getGameHandle().getGameInfo();
+        Translations translations = getGameHandle().getTranslations();
         Identifier id = gameInfo.identifier("remaining");
 
         var title = remainingTitle();
 
         TranslatedBossBar bossBar = translations.translateBossBar(id, title.left(), title.right())
-                .with(gameHandle.getBossBarProvider())
+                .with(getGameHandle().getBossBarProvider())
                 .formatted(ChatFormatting.GREEN);
 
         remainingDisplay = new DynamicTranslatedBossBar(bossBar, title.left(), title.right());
 
         bossBar.setColor(BossEvent.BossBarColor.GREEN);
 
-        bossBar.addPlayers(PlayerLookup.all(gameHandle.getServer()));
+        bossBar.addPlayers(PlayerLookup.all(getGameHandle().getServer()));
 
-        gameHandle.getBossBarHandler().showOnJoin(bossBar);
+        getGameHandle().getBossBarHandler().showOnJoin(bossBar);
 
         return remainingDisplay;
     }
 
     private Pair<String, Object[]> remainingTitle() {
-        int remaining = gameHandle.getParticipants().count();
+        int remaining = getGameHandle().getParticipants().count();
 
         String key = remaining != 1 ? "ap2.game.remaining" : "ap2.game.remaining_single";
         Object[] args = new Object[] {FormatWrapper.styled(remaining, ChatFormatting.YELLOW)};
@@ -118,7 +118,7 @@ public abstract class EliminationGameInstance extends FFAGameInstance implements
      * Instantly makes players who would have died spectators and reset them.
      */
     protected final void useSmoothDeath() {
-        HookRegistrar hooks = gameHandle.getHooks();
+        HookRegistrar hooks = getGameHandle().getHooks();
 
         EntityHealthCallback.HOOK.registerWith(hooks, (entity, health) -> {
             if (!(entity instanceof ServerPlayer p)) return false;
@@ -133,9 +133,9 @@ public abstract class EliminationGameInstance extends FFAGameInstance implements
     protected void onDeath(@NotNull ServerPlayer player, @Nullable Entity attacker) {
         var accessor = (LivingEntityAccessor) player;
 
-        ServerLevel world = getLevel();
-        accessor.invokeDropEquipment(world);
-        accessor.invokeDropExperience(world, attacker);
+        ServerLevel level = getLevel();
+        accessor.invokeDropEquipment(level);
+        accessor.invokeDropExperience(level, attacker);
     }
 
     protected final void disableEliminationMessages() {
@@ -152,9 +152,9 @@ public abstract class EliminationGameInstance extends FFAGameInstance implements
 
     @Override
     public synchronized void eliminateAll(Iterable<? extends ServerPlayer> players) {
-        Participants participants = gameHandle.getParticipants();
-        DeathMessages deathMessages = gameHandle.getDeathMessages();
-        MinecraftServer server = gameHandle.getServer();
+        Participants participants = getGameHandle().getParticipants();
+        DeathMessages deathMessages = getGameHandle().getDeathMessages();
+        MinecraftServer server = getGameHandle().getServer();
 
         Set<ServerPlayer> toEliminate = new HashSet<>();
 
@@ -172,8 +172,8 @@ public abstract class EliminationGameInstance extends FFAGameInstance implements
         // mark all players as eliminated at the same moment
         data.addAll(toEliminate);
 
-        WorldFacade worldFacade = gameHandle.getWorldFacade();
-        PlayerUtil playerUtil = gameHandle.getPlayerUtil();
+        WorldFacade worldFacade = getGameHandle().getWorldFacade();
+        PlayerUtil playerUtil = getGameHandle().getPlayerUtil();
 
         for (ServerPlayer player : toEliminate) {
             participants.remove(player);
@@ -188,12 +188,12 @@ public abstract class EliminationGameInstance extends FFAGameInstance implements
 
     @Override
     public void eliminate(ServerPlayer player, @Nullable DamageSource source, @Nullable TranslatedText customMsg) {
-        Participants participants = gameHandle.getParticipants();
+        Participants participants = getGameHandle().getParticipants();
 
         if (participants.isParticipating(player)) {
             if (eliminatedMessages) {
-                DeathMessages deathMessages = gameHandle.getDeathMessages();
-                MinecraftServer server = gameHandle.getServer();
+                DeathMessages deathMessages = getGameHandle().getDeathMessages();
+                MinecraftServer server = getGameHandle().getServer();
 
                 var msg = customMsg != null ? customMsg : deathMessages.getDeathMessage(player, source);
 
@@ -204,8 +204,8 @@ public abstract class EliminationGameInstance extends FFAGameInstance implements
             onEliminated(player);
         }
 
-        WorldFacade worldFacade = gameHandle.getWorldFacade();
-        PlayerUtil playerUtil = gameHandle.getPlayerUtil();
+        WorldFacade worldFacade = getGameHandle().getWorldFacade();
+        PlayerUtil playerUtil = getGameHandle().getPlayerUtil();
 
         playerUtil.resetPlayer(player);
 
@@ -234,7 +234,7 @@ public abstract class EliminationGameInstance extends FFAGameInstance implements
     }
 
     private void recordRemainingSurvivalTime() {
-        gameHandle.getParticipants().forEach(this::recordSurvivalTime);
+        getGameHandle().getParticipants().forEach(this::recordSurvivalTime);
     }
 
     private void recordSurvivalTime(ServerPlayer player) {

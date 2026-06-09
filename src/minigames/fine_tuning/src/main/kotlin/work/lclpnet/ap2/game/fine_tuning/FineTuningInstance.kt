@@ -40,7 +40,7 @@ class FineTuningInstance(
     override fun getData(): DataContainer<ServerPlayer, PlayerRef> = data
 
     override fun prepare() {
-        val json: JSONArray = getMap().requireProperty("room-note-blocks")
+        val json: JSONArray = map.requireProperty("room-note-blocks")
         val noteBlockLocations = FineTuningSetup.readNoteBlockLocations(json, gameHandle.logger)
         setup.teleportParticipants(noteBlockLocations)
 
@@ -58,7 +58,7 @@ class FineTuningInstance(
     private fun startStagePhase() {
         tuningPhase.unload()
 
-        val stagePhase = StagePhase(gameHandle, tuningPhase.records, getMap(), level, winManager)
+        val stagePhase = StagePhase(gameHandle, tuningPhase.records, map, level, winManager)
         stagePhase.beginStage()
     }
 }

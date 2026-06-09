@@ -4,7 +4,7 @@ import net.minecraft.core.BlockPos
 import net.minecraft.world.level.block.Blocks
 import work.lclpnet.ap2.ext.mc.teleport
 import work.lclpnet.ap2.ext.players
-import work.lclpnet.ap2.impl.game.MapGameInstance
+import work.lclpnet.ap2.game.base.MapGameInstance
 import work.lclpnet.ap2.impl.util.world.SpawnFinder
 import work.lclpnet.gaco.ds.BlockBox
 import kotlin.random.Random

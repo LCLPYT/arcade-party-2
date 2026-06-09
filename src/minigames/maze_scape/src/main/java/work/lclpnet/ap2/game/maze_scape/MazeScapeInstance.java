@@ -71,7 +71,7 @@ public class MazeScapeInstance extends EliminationGameInstance {
     @Override
     protected void prepare() {
         if (MSLoader.DEBUG_PIECES) {
-            for (ServerPlayer player : gameHandle.getParticipants()) {
+            for (ServerPlayer player : getGameHandle().getParticipants()) {
                 Abilities abilities = player.getAbilities();
                 abilities.mayfly = true;
                 abilities.flying = true;
@@ -82,12 +82,12 @@ public class MazeScapeInstance extends EliminationGameInstance {
         }
 
         if (struct == null) {
-            gameHandle.getLogger().error("Failed to generate structure graph. Aborting the mini-game...");
-            gameHandle.complete(MiniGameResults.EMPTY);
+            getGameHandle().getLogger().error("Failed to generate structure graph. Aborting the mini-game...");
+            getGameHandle().complete(MiniGameResults.EMPTY);
             return;
         }
 
-        CommandRegistrar commandRegistrar = gameHandle.getCommands();
+        CommandRegistrar commandRegistrar = getGameHandle().getCommands();
 
         if (ApConstants.DEBUG) {
             new DebugPathCommand(struct, debugController).register(commandRegistrar);
@@ -98,7 +98,7 @@ public class MazeScapeInstance extends EliminationGameInstance {
         useNoHealing();
         useRemainingPlayersDisplay();
 
-        var persistence = new ChunkPersistence(getLevel(), gameHandle);
+        var persistence = new ChunkPersistence(getLevel(), getGameHandle());
         int mapChunkRadius = MSGenerator.getMaxChunkSize(getMap());
 
         persistence.markQuadPersistent(-mapChunkRadius, -mapChunkRadius, mapChunkRadius, mapChunkRadius);
@@ -111,14 +111,14 @@ public class MazeScapeInstance extends EliminationGameInstance {
         if (MSLoader.DEBUG_PIECES) return;
 
         ServerLevel world = getLevel();
-        Participants participants = gameHandle.getParticipants();
+        Participants participants = getGameHandle().getParticipants();
 
         manager = new MSManager(world, getMap(), struct, participants, random,
-                gameHandle.getLogger(), debugController);
+                getGameHandle().getLogger(), debugController);
 
-        manager.init(gameHandle);
+        manager.init(getGameHandle());
 
-        TaskScheduler scheduler = gameHandle.getScheduler();
+        TaskScheduler scheduler = getGameHandle().getScheduler();
         scheduler.interval(manager::updateMobs, MOB_UPDATE_DELAY_TICKS, MOB_SPAWN_DELAY_TICKS);
         scheduler.interval(manager::tick, 1);
         scheduler.interval(this::checkPits, 1);
@@ -127,12 +127,12 @@ public class MazeScapeInstance extends EliminationGameInstance {
             manager.spawnMobs();
 
             var reveal = new MonsterReveal(ApResources.getInstance(), manager.participants(), world, manager.monsters());
-            reveal.start(scheduler, gameHandle.getHooks());
+            reveal.start(scheduler, getGameHandle().getHooks());
 
             scheduler.timeout(reveal::stop, MOB_REVEAL_TICKS);
         }, MOB_SPAWN_DELAY_TICKS);
 
-        gameHandle.protect(config -> ProtectionTypes.ALLOW_DAMAGE.allow(config, this::allowDamage));
+        getGameHandle().protect(config -> ProtectionTypes.ALLOW_DAMAGE.allow(config, this::allowDamage));
     }
 
     @Override
@@ -168,7 +168,7 @@ public class MazeScapeInstance extends EliminationGameInstance {
 
         ServerLevel world = getLevel();
 
-        for (ServerPlayer player : gameHandle.getParticipants()) {
+        for (ServerPlayer player : getGameHandle().getParticipants()) {
             player.teleportTo(world, spawn.x(), spawn.y(), spawn.z(), Set.of(), yaw, 0, true);
         }
     }
@@ -178,7 +178,7 @@ public class MazeScapeInstance extends EliminationGameInstance {
     }
 
     private void checkPits() {
-        gameHandle.getParticipants().forEach(this::checkInPit);
+        getGameHandle().getParticipants().forEach(this::checkInPit);
     }
 
     private void checkInPit(ServerPlayer player) {
@@ -220,7 +220,7 @@ public class MazeScapeInstance extends EliminationGameInstance {
                 .noneMatch(pos -> collides(pos, world, context, collisionBox, boxShape))) return;
 
         // hit the ground within a pit
-        DeathMessages msg = gameHandle.getDeathMessages();
+        DeathMessages msg = getGameHandle().getDeathMessages();
 
         eliminate(player, msg.root(FELL_INTO_PIT, msg.wrap(player)));
     }
