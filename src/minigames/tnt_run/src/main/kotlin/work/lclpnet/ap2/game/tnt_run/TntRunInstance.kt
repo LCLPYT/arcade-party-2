@@ -10,7 +10,7 @@ import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.phys.shapes.CollisionContext
 import work.lclpnet.ap2.ext.runEveryTick
 import work.lclpnet.ap2.game.MiniGameHandle
-import work.lclpnet.ap2.impl.game.EliminationGameInstance
+import work.lclpnet.ap2.game.base.EliminationGameInstance
 import work.lclpnet.gaco.collisions.util.GroundDetector
 import work.lclpnet.game.map.GameMap
 import work.lclpnet.kibu.hook.level.BlockBreakParticleCallback

@@ -22,10 +22,10 @@ import work.lclpnet.ap2.ext.runAfter
 import work.lclpnet.ap2.ext.runEvery
 import work.lclpnet.ap2.ext.ticks
 import work.lclpnet.ap2.game.MiniGameHandle
+import work.lclpnet.ap2.game.base.EliminationGameInstance
 import work.lclpnet.ap2.game.musical_minecart.cmd.SetSongCommand
 import work.lclpnet.ap2.game.musical_minecart.cmd.SkipSongCommand
 import work.lclpnet.ap2.game.player.Participants
-import work.lclpnet.ap2.impl.game.EliminationGameInstance
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.music.SongHandler
 import work.lclpnet.ap2.impl.util.Hints

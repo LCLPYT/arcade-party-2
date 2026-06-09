@@ -22,7 +22,7 @@ import work.lclpnet.ap2.api.game.GameOverListener
 import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.ext.runAfter
 import work.lclpnet.ap2.game.MiniGameHandle
-import work.lclpnet.ap2.impl.game.EliminationGameInstance
+import work.lclpnet.ap2.game.base.EliminationGameInstance
 import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedBossBar
 import work.lclpnet.game.map.GameMap
 import work.lclpnet.kibu.access.entity.FireworkEntityAccess

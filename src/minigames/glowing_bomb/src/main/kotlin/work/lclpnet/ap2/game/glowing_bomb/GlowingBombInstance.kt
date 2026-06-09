@@ -22,10 +22,10 @@ import work.lclpnet.ap2.ext.runAfter
 import work.lclpnet.ap2.ext.runEveryTick
 import work.lclpnet.ap2.ext.ticks
 import work.lclpnet.ap2.game.MiniGameHandle
+import work.lclpnet.ap2.game.base.EliminationGameInstance
 import work.lclpnet.ap2.game.glowing_bomb.data.GbAnchor
 import work.lclpnet.ap2.game.glowing_bomb.data.GbBomb
 import work.lclpnet.ap2.game.glowing_bomb.data.GbManager
-import work.lclpnet.ap2.impl.game.EliminationGameInstance
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker
 import work.lclpnet.gaco.scene.Scene
 import work.lclpnet.gaco.scene.ServerWorldMountContext
