@@ -1,4 +1,4 @@
-package work.lclpnet.ap2.impl.game
+package work.lclpnet.ap2.game.base
 
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
@@ -10,13 +10,14 @@ import work.lclpnet.ap2.api.game.team.Team
 import work.lclpnet.ap2.api.game.team.TeamEliminatedListener
 import work.lclpnet.ap2.api.game.team.TeamManager
 import work.lclpnet.ap2.api.game.team.TeamSpawnAccess
-import work.lclpnet.ap2.api.stats.CommonStats.Score
+import work.lclpnet.ap2.api.stats.CommonStats
 import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.api.stats.TeamStatsManager
 import work.lclpnet.ap2.ext.logger
 import work.lclpnet.ap2.game.MiniGameHandle
-import work.lclpnet.ap2.game.base.MapGameInstance
 import work.lclpnet.ap2.game.player.ParticipantListener
+import work.lclpnet.ap2.impl.game.WinManager
+import work.lclpnet.ap2.impl.game.WinManagerAccessImpl
 import work.lclpnet.ap2.impl.game.data.type.TeamGameResult
 import work.lclpnet.ap2.impl.game.data.type.TeamRef
 import work.lclpnet.ap2.impl.game.data.type.TeamRefResolver
@@ -157,7 +158,7 @@ abstract class TeamGameInstance(
     ): TeamStatsManager {
         val manager = TeamStatsManager(
             buildSet {
-                add(Score)
+                add(CommonStats.Score)
                 addAll(teamStats)
             },
             memberStats.toSet()
@@ -166,7 +167,7 @@ abstract class TeamGameInstance(
         }
 
         teamScore.register { team, score ->
-            manager.teams.set(team, Score, score)
+            manager.teams.set(team, CommonStats.Score, score)
         }
 
         winManager.setStatsManager(manager)
