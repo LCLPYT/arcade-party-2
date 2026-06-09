@@ -26,7 +26,7 @@ import java.util.stream.Stream;
 
 import static work.lclpnet.ap2.api.stats.CommonStats.Score;
 
-public abstract class FFAGameInstance extends BaseGameInstance implements ParticipantListener, WinManagerView {
+public abstract class FFAGameInstance extends MapGameInstance implements ParticipantListener, WinManagerView {
 
     protected final PlayerRefResolver resolver;
     protected final WinManager<ServerPlayer, PlayerRef> winManager;

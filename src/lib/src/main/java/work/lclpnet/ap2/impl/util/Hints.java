@@ -9,7 +9,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import work.lclpnet.ap2.game.MiniGameHandle;
-import work.lclpnet.ap2.impl.game.BaseGameInstance;
+import work.lclpnet.ap2.impl.game.MapGameInstance;
 import work.lclpnet.kibu.access.entity.ServerPlayerAccess;
 import work.lclpnet.kibu.scheduler.Ticks;
 import work.lclpnet.kibu.translate.Translations;
@@ -60,7 +60,7 @@ public class Hints {
         }
     }
 
-    public void sendBeforeReady(BaseGameInstance gameInstance, Mod mod) {
+    public void sendBeforeReady(MapGameInstance gameInstance, Mod mod) {
         MiniGameHandle gameHandle = gameInstance.getGameHandle();
 
         gameHandle.getScheduler().timeout(() -> sendModHint(mod),
