@@ -1,188 +1,176 @@
-package work.lclpnet.ap2.impl.game;
+package work.lclpnet.ap2.impl.game
 
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import org.jspecify.annotations.NonNull;
-import work.lclpnet.ap2.api.event.IntScoreEventSource;
-import work.lclpnet.ap2.api.game.WinManagerAccess;
-import work.lclpnet.ap2.api.game.WinManagerView;
-import work.lclpnet.ap2.api.game.data.DataContainer;
-import work.lclpnet.ap2.api.game.team.Team;
-import work.lclpnet.ap2.api.game.team.TeamEliminatedListener;
-import work.lclpnet.ap2.api.game.team.TeamManager;
-import work.lclpnet.ap2.api.game.team.TeamSpawnAccess;
-import work.lclpnet.ap2.api.stats.Stat;
-import work.lclpnet.ap2.api.stats.TeamStatsManager;
-import work.lclpnet.ap2.game.MiniGameHandle;
-import work.lclpnet.ap2.game.base.MapGameInstance;
-import work.lclpnet.ap2.game.player.ParticipantListener;
-import work.lclpnet.ap2.impl.game.data.type.TeamGameResult;
-import work.lclpnet.ap2.impl.game.data.type.TeamRef;
-import work.lclpnet.ap2.impl.game.data.type.TeamRefResolver;
-import work.lclpnet.game.map.GameMap;
-import work.lclpnet.game.map.MapUtils;
-import work.lclpnet.kibu.hook.util.PositionRotation;
+import net.minecraft.server.level.ServerLevel
+import net.minecraft.server.level.ServerPlayer
+import work.lclpnet.ap2.api.event.IntScoreEventSource
+import work.lclpnet.ap2.api.game.WinManagerAccess
+import work.lclpnet.ap2.api.game.WinManagerView
+import work.lclpnet.ap2.api.game.data.DataContainer
+import work.lclpnet.ap2.api.game.team.Team
+import work.lclpnet.ap2.api.game.team.TeamEliminatedListener
+import work.lclpnet.ap2.api.game.team.TeamManager
+import work.lclpnet.ap2.api.game.team.TeamSpawnAccess
+import work.lclpnet.ap2.api.stats.CommonStats.Score
+import work.lclpnet.ap2.api.stats.Stat
+import work.lclpnet.ap2.api.stats.TeamStatsManager
+import work.lclpnet.ap2.ext.logger
+import work.lclpnet.ap2.game.MiniGameHandle
+import work.lclpnet.ap2.game.base.MapGameInstance
+import work.lclpnet.ap2.game.player.ParticipantListener
+import work.lclpnet.ap2.impl.game.data.type.TeamGameResult
+import work.lclpnet.ap2.impl.game.data.type.TeamRef
+import work.lclpnet.ap2.impl.game.data.type.TeamRefResolver
+import work.lclpnet.game.map.GameMap
+import work.lclpnet.game.map.MapUtils
+import work.lclpnet.kibu.hook.util.PositionRotation
+import java.util.*
+import kotlin.concurrent.Volatile
 
-import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+abstract class TeamGameInstance(
+    gameHandle: MiniGameHandle,
+    world: ServerLevel,
+    map: GameMap,
+    val teamManager: TeamManager
+) : MapGameInstance(gameHandle, world, map),
+    ParticipantListener,
+    TeamEliminatedListener,
+    TeamSpawnAccess,
+    WinManagerView {
 
-import static work.lclpnet.ap2.api.stats.CommonStats.Score;
+    protected val resolver = TeamRefResolver(teamManager)
+    protected val winManager: WinManager<Team, TeamRef>
+    @Volatile
+    private var teamSpawns: MutableMap<String, PositionRotation>? = null
 
-public abstract class TeamGameInstance extends MapGameInstance implements ParticipantListener,
-        TeamEliminatedListener, TeamSpawnAccess, WinManagerView {
+    init {
+        val data: WinManager.Data<Team, TeamRef> = WinManager.Data(
+            { data },
+            { player -> teamManager.getTeam(player) },
+            { team -> createReference(team) },
+            { player -> createReferenceFor(player) },
+            { dataContainer ->
+                TeamGameResult(dataContainer, resolver)
+            }
+        )
 
-    private final TeamManager teamManager;
-    private volatile TeamRefResolver resolver = null;
-    private volatile Map<String, PositionRotation> teamSpawns = null;
-    protected final WinManager<Team, TeamRef> winManager;
+        this.winManager = WinManager(gameHandle, this::map, data)
 
-    public TeamGameInstance(MiniGameHandle gameHandle, ServerLevel world, GameMap map, TeamManager teamManager) {
-        super(gameHandle, world, map);
-
-        var data = new WinManager.Data<>(this::getData, getTeamManager()::getTeam, this::createReference, this::createReferenceFor,
-                dataContainer -> new TeamGameResult(dataContainer, getResolver()));
-
-        this.winManager = new WinManager<>(gameHandle, this::getMap, data);
-        this.teamManager = teamManager;
-
-        teamManager.bind(this);
+        teamManager.bind(this)
     }
 
-    @Override
-    public void start() {
-        teamManager.getTeams().forEach(getData()::identityIfAbsent);
+    override val participantListener: ParticipantListener
+        get() = this
 
-        super.start();
+    override fun start() {
+        for (team in teamManager.getTeams()) {
+            data.identityIfAbsent(team)
+        }
+
+        super.start()
     }
 
-    @Override
-    public ParticipantListener getParticipantListener() {
-        return this;
-    }
-
-    @Override
-    public void participantRemoved(@NonNull ServerPlayer player) {
-        if (teamManager == null) return;
-
-        Team team = teamManager.getTeam(player).orElse(null);
+    override fun participantRemoved(player: ServerPlayer) {
+        val team = teamManager.getTeam(player).orElse(null)
 
         if (team == null || !teamManager.isParticipating(team)
-            || !team.getParticipatingPlayers(getGameHandle().getParticipants()).isEmpty()) return;
+            || !team.getParticipatingPlayers(gameHandle.participants).isEmpty()
+        ) return
 
-        teamManager.setTeamEliminated(team);
+        teamManager.setTeamEliminated(team)
     }
 
-    @Override
-    public void teamEliminated(Team team) {
-        winManager.checkForLastRemaining();
+    override fun teamEliminated(team: Team) {
+        winManager.checkForLastRemaining()
     }
 
-    @NotNull
-    protected final TeamManager getTeamManager() {
-        return teamManager;
-    }
-
-    @NotNull
-    protected final TeamRefResolver getResolver() {
-        if (resolver != null) return resolver;
-
-        synchronized (this) {
-            if (resolver != null) return resolver;
-
-            TeamManager teamManager = getTeamManager();
-            resolver = new TeamRefResolver(teamManager);
-        }
-
-        return resolver;
-    }
-
-    protected void teleportTeamsToSpawns() {
-        for (Team team : teamManager.getTeams()) {
-            PositionRotation spawn = getSpawn(team);
+    protected open fun teleportTeamsToSpawns() {
+        for (team in teamManager.getTeams()) {
+            val spawn = getSpawn(team)
 
             if (spawn == null) {
-                getGameHandle().getLogger().error("No spawn configured for team {} in map {}", team.key().id(), getMap().getDescriptor().getIdentifier());
-                continue;
+                logger.error("No spawn configured for team {} in map {}", team.key().id(), map.descriptor.identifier)
+                continue
             }
 
-            double x = spawn.x(), y = spawn.y(), z = spawn.z();
-            float yaw = spawn.getYaw(), pitch = spawn.getPitch();
-
-            for (ServerPlayer player : team.getPlayers()) {
-                player.teleportTo(getLevel(), x, y, z, Set.of(), yaw, pitch, true);
+            for (player in team.getPlayers()) {
+                player.teleportTo(level, spawn.x(), spawn.y(), spawn.z(), emptySet(), spawn.yaw, spawn.pitch, true)
             }
         }
     }
 
-    @Nullable
-    public final PositionRotation getSpawn(Team team) {
-        return getSpawns().get(team.key().id());
+    override fun getSpawn(team: Team): PositionRotation? {
+        return this.spawns[team.key().id()]
     }
 
-    private Map<String, PositionRotation> getSpawns() {
-        if (teamSpawns != null) {
-            return teamSpawns;
+    private val spawns: MutableMap<String, PositionRotation>
+        get() {
+            if (teamSpawns != null) {
+                return teamSpawns!!
+            }
+
+            synchronized(this) {
+                if (teamSpawns != null) return teamSpawns!!
+                val spawns = MapUtils.getNamedSpawnPositionsAndRotation(map)
+                teamSpawns = Collections.unmodifiableMap(spawns)
+            }
+
+            return teamSpawns!!
         }
 
-        synchronized (this) {
-            if (teamSpawns != null) return teamSpawns;
+    protected fun createReference(team: Team): TeamRef {
+        return TeamRef(team.key(), gameHandle.translations)
+    }
 
-            var spawns = MapUtils.getNamedSpawnPositionsAndRotation(getMap());
-            teamSpawns = Collections.unmodifiableMap(spawns);
+    protected fun createReferenceFor(player: ServerPlayer): TeamRef? {
+        val team = teamManager.getTeam(player)
+
+        return team.map { team ->
+            createReference(team)
+        }.orElse(null)
+    }
+
+    override fun getWinManagerAccess(): WinManagerAccess = WinManagerAccessImpl(
+        winManager,
+        { player -> teamManager.getTeam(player) },
+        this.data
+    )
+
+    protected abstract val data: DataContainer<Team, TeamRef>
+
+    fun createStats(
+        teamStats: Iterable<Stat<out Any>>,
+        playerStats: Iterable<Stat<out Any>>
+    ): TeamStatsManager {
+        val manager = TeamStatsManager(teamStats.toSet(), playerStats.toSet()) { team ->
+            this.createReference(team)
         }
 
-        return teamSpawns;
+        winManager.setStatsManager(manager)
+
+        return manager
     }
 
-    protected final TeamRef createReference(Team team) {
-        return new TeamRef(team.key(), getGameHandle().getTranslations());
-    }
+    fun createStats(
+        teamScore: IntScoreEventSource<Team>,
+        teamStats: Iterable<Stat<out Any>>,
+        memberStats: Iterable<Stat<out Any>>
+    ): TeamStatsManager {
+        val manager = TeamStatsManager(
+            buildSet {
+                add(Score)
+                addAll(teamStats)
+            },
+            memberStats.toSet()
+        ) { team ->
+            createReference(team)
+        }
 
-    @Nullable
-    protected final TeamRef createReferenceFor(ServerPlayer player) {
-        var team = teamManager.getTeam(player);
+        teamScore.register { team, score ->
+            manager.teams.set(team, Score, score)
+        }
 
-        return team.map(this::createReference).orElse(null);
-    }
+        winManager.setStatsManager(manager)
 
-    @Override
-    public WinManagerAccess getWinManagerAccess() {
-        return new WinManagerAccessImpl<>(winManager, getTeamManager()::getTeam, getData());
-    }
-
-    protected abstract DataContainer<Team, TeamRef> getData();
-
-    public @NotNull TeamStatsManager createStats(
-            List<Stat<?>> teamStats,
-            List<Stat<?>> playerStats
-    ) {
-        var teamSet = new LinkedHashSet<>(teamStats);
-        var playerSet = new LinkedHashSet<>(playerStats);
-
-        var manager = new TeamStatsManager(teamSet, playerSet, this::createReference);
-
-        winManager.setStatsManager(manager);
-
-        return manager;
-    }
-
-    public @NotNull TeamStatsManager createStats(
-            IntScoreEventSource<Team> teamScore,
-            List<Stat<?>> teamStats,
-            List<Stat<?>> memberStats
-    ) {
-        var teamSet = Stream.concat(Stream.of(Score), teamStats.stream()).collect(Collectors.toCollection(LinkedHashSet::new));
-        var memberSet = new LinkedHashSet<>(memberStats);
-
-        var manager = new TeamStatsManager(teamSet, memberSet, this::createReference);
-
-        teamScore.register((team, score) -> manager.getTeams().set(team, Score, score));
-
-        winManager.setStatsManager(manager);
-
-        return manager;
+        return manager
     }
 }

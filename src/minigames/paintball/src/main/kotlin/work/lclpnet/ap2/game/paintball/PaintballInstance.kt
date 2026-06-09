@@ -16,8 +16,6 @@ import net.minecraft.world.entity.ai.attributes.Attributes
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.GameType
 import net.minecraft.world.level.gamerules.GameRules
-import work.lclpnet.ap2.api.game.data.DataContainer
-import work.lclpnet.ap2.api.game.team.Team
 import work.lclpnet.ap2.api.game.team.TeamManager
 import work.lclpnet.ap2.api.stats.CommonStats.DamageDealt
 import work.lclpnet.ap2.api.stats.CommonStats.Deaths
@@ -44,7 +42,6 @@ import work.lclpnet.ap2.game.player.Participants
 import work.lclpnet.ap2.impl.game.TeamGameInstance
 import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer
 import work.lclpnet.ap2.impl.game.data.Ordering
-import work.lclpnet.ap2.impl.game.data.type.TeamRef
 import work.lclpnet.ap2.impl.game.item.SpecialItems
 import work.lclpnet.ap2.impl.util.ItemHelper.getLeatherArmor
 import work.lclpnet.ap2.impl.util.ItemHelper.unbreakable
@@ -78,7 +75,7 @@ class PaintballInstance(
     private val paintManager: PaintManager,
 ) : TeamGameInstance(gameHandle, level, map, teamManager) {
 
-    private val data = IntScoreDataContainer(
+    override val data = IntScoreDataContainer(
         ::createReference,
         Ordering.DESCENDING,
         "game.ap2.paintball.blocks_painted"
@@ -110,8 +107,6 @@ class PaintballInstance(
     init {
         teamManager.setUseColorCodes(true)
     }
-
-    override fun getData(): DataContainer<Team, TeamRef> = data
 
     override fun prepare() {
         teams.setup()
