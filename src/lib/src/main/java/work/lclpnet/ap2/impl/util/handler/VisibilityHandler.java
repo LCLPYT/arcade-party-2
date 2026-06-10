@@ -177,7 +177,7 @@ public class VisibilityHandler {
 
         // copy entries before the flags entry
         for (int j = 0; j < i; j++) {
-            newEntries.add(entries.get(i));
+            newEntries.add(entries.get(j));
         }
 
         // add a modified flags entry with the invisibility flag set
@@ -186,7 +186,7 @@ public class VisibilityHandler {
 
         // copy entries after the flags entry
         for (int j = i + 1; j < size; j++) {
-            newEntries.add(entries.get(i));
+            newEntries.add(entries.get(j));
         }
 
         return newEntries;
