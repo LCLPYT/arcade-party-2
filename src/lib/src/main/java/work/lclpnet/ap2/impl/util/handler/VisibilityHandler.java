@@ -20,6 +20,7 @@ import org.jetbrains.annotations.NotNull;
 import work.lclpnet.ap2.game.player.Participants;
 import work.lclpnet.kibu.access.entity.EntityAccess;
 import work.lclpnet.kibu.hook.HookRegistrar;
+import work.lclpnet.kibu.hook.entity.EntityTrackingHooks;
 import work.lclpnet.kibu.hook.entity.PlayerInteractionHooks;
 import work.lclpnet.kibu.hook.network.ServerSendPacketCallback;
 import work.lclpnet.kibu.hook.util.PendingResult;
@@ -73,6 +74,8 @@ public class VisibilityHandler {
         });
 
         ServerSendPacketCallback.HOOK.registerWith(hooks, this::ensureRelativePlayerVisibility);
+
+        EntityTrackingHooks.START_TRACKING.registerWith(hooks, manager::onStartTracking);
 
         participants.forEach(manager::updateVisibility);
     }
