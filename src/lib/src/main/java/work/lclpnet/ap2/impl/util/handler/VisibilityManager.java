@@ -54,6 +54,18 @@ public class VisibilityManager {
         makeVisibleFor(entity, player, visibility == Visibility.VISIBLE);
     }
 
+    public void onStartTracking(Entity entity, ServerPlayer player) {
+        // Only entities that belong to the visibility team are subject to per-player visibility.
+        // Skip the player itself and their own vehicle, those must stay visible to the player.
+        // This is needed because entities (e.g. vehicles) may be created after the initial visibility setup,
+        // at a point where no player tracks them yet, so their visibility has to be applied once tracking begins.
+        if (entity == player || entity.getTeam() != team || entity.hasIndirectPassenger(player)) {
+            return;
+        }
+
+        updateVisibilityOf(entity, player);
+    }
+
     private void applyVisibility(ServerPlayer player, Visibility visibility) {
         if (visibility == Visibility.VISIBLE) {
             makeOthersVisibleFor(player, true);
