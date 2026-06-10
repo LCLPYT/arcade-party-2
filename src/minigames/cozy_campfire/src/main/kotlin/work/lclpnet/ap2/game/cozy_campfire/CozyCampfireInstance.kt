@@ -22,6 +22,7 @@ import work.lclpnet.ap2.api.stats.CommonStats.KillDeathRatio
 import work.lclpnet.ap2.api.stats.CommonStats.Kills
 import work.lclpnet.ap2.ext.mc.setDayTime
 import work.lclpnet.ap2.ext.mc.setWeatherParameters
+import work.lclpnet.ap2.ext.players
 import work.lclpnet.ap2.ext.runEveryTick
 import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.base.TeamEliminationGameInstance
@@ -67,8 +68,15 @@ class CozyCampfireInstance(
         /* teamStats = */ listOf(FuelAdded, FuelRemaining, Kills, Deaths, DamageDealt),
         /* playerStats = */ listOf(FuelAdded, Kills, Deaths, KillDeathRatio, DamageDealt)
     ), teamManager, gameHandle.translations)
-    private lateinit var hookSetup: CCHooks
-    private lateinit var fuel: CCFuel
+    private val fuel = CCFuel(level, baseManager)
+    private val kitManager = CCKitManager(teamManager, level, random)
+    private val hookSetup = CCHooks(
+        players(),
+        teamManager,
+        this,
+        gameHandle.translations,
+        CCHooks.Args(fuel, baseManager, kitManager, ::onAddFuel, stats)
+    )
     private lateinit var bossBar: DynamicTranslatedTeamBossBar
     private var teamBias = 0.8f
     private var fuelPerSecond = 100
@@ -95,12 +103,10 @@ class CozyCampfireInstance(
 
         readMapFuelInfo()
 
-        fuel = CCFuel(level, baseManager)
         fuel.registerFuel(fuelPerSecond)
 
         teleportTeamsToSpawns()
 
-        val kitManager = CCKitManager(teamManager, level, random)
         val participants: Participants = gameHandle.participants
 
         for (player in participants) {
@@ -108,10 +114,6 @@ class CozyCampfireInstance(
             PlayerReset.modifyWalkSpeed(player, MOVEMENT_SPEED)
         }
 
-        val translations = gameHandle.translations
-        val args = CCHooks.Args(fuel, baseManager, kitManager, ::onAddFuel, stats)
-
-        hookSetup = CCHooks(participants, teamManager, this, translations, args)
         hookSetup.register(gameHandle.hooks)
 
         setupMovementObserver(hookSetup)

@@ -52,11 +52,11 @@ class AnvilFallInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Gam
 
     private val directions = arrayOf(Direction.NORTH, Direction.WEST, Direction.SOUTH, Direction.WEST)
     private val random = Random()
+    private val stats = createStats(CommonStats.DistanceMoved, CommonStats.TimeSurvived)
     private lateinit var amountDisplay: DynamicTranslatedBossBar
     private lateinit var setup: AnvilFallSetup
-    private var playArea: BlockBox? = null
     private lateinit var center: Vec3
-    private val stats = createStats(CommonStats.DistanceMoved, CommonStats.TimeSurvived)
+    private lateinit var playArea: BlockBox
 
     override fun prepare() {
         commons().gameRuleBuilder()
@@ -213,11 +213,10 @@ class AnvilFallInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Gam
     }
 
     private fun repelPlayer(player: ServerPlayer, to: Position) {
-        val area = playArea ?: return
         if (!gameHandle.participants.isParticipating(player)) return
 
         val boundingBox: AABB = player.boundingBox
-        if (area.contains(boundingBox.contract(1e-9, 0.0, 1e-9))) return
+        if (playArea.contains(boundingBox.contract(1e-9, 0.0, 1e-9))) return
 
         val vec = Vec3(center.x() - to.x(), 0.5, center.z() - to.z())
         VelocityModifier.setVelocity(player, vec.normalize().scale(0.5))

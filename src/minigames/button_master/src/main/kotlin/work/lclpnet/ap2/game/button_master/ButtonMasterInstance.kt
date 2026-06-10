@@ -86,11 +86,14 @@ class ButtonMasterInstance(
     private val stats = createStats(ButtonsFound, Escapes, CommonStats.DistanceMoved, ButtonsMissed)
     private val bmStats = ButtonMasterStats(stats)
     private val missDetector = ButtonMissDetector(level, bmStats)
-    private var escapesRecorded = false
-
     val movementBlocker = SimpleMovementBlocker(gameHandle.scheduler).also {
         it.setModifySpeedAttribute(false)
     }
+    val dynamicEntityManager = DynamicEntityManager(level)
+    val capsules = ButtonMasterCapsules(level, mapSchema, capsuleSchematic, commons())
+    val buttonPositions = ButtonPositions(level, map, mapSchema, commons(), gameHandle)
+
+    private var escapesRecorded = false
     var currentButtonMarker: Object3d? = null
     var currentButtonPos: BlockPos? = null
     var gameState = GameState.IDLE
@@ -101,9 +104,6 @@ class ButtonMasterInstance(
     var taskBar: TranslatedBossBar? = null
     var wallBlocks: ResetWorldModifier = ResetWorldModifier(level, hooks)
     var scene: Scene? = null
-    val dynamicEntityManager = DynamicEntityManager(level)
-    val capsules = ButtonMasterCapsules(level, mapSchema, capsuleSchematic, commons())
-    val buttonPositions = ButtonPositions(level, map, mapSchema, commons(), gameHandle)
 
     override fun prepare() {
         dynamicEntityManager.init(gameHandle.scheduler, gameHandle.hooks)
