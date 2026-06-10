@@ -17,7 +17,7 @@ import net.minecraft.world.level.block.state.properties.NoteBlockInstrument
 import net.minecraft.world.phys.Vec3
 import org.joml.Matrix4f
 import org.json.JSONArray
-import work.lclpnet.ap2.api.game.MiniGameHandle
+import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.fine_tuning.melody.FakeNoteBlockPlayer
 import work.lclpnet.ap2.game.fine_tuning.melody.Melody
 import work.lclpnet.ap2.game.fine_tuning.melody.Note

@@ -13,12 +13,11 @@ import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.scores.Team
 import org.json.JSONArray
-import work.lclpnet.ap2.api.game.MiniGameHandle
-import work.lclpnet.ap2.api.game.data.DataContainer
 import work.lclpnet.ap2.ext.mc.playNotifySound
 import work.lclpnet.ap2.ext.runEveryTick
 import work.lclpnet.ap2.ext.translate
-import work.lclpnet.ap2.impl.game.FFAGameInstance
+import work.lclpnet.ap2.game.MiniGameHandle
+import work.lclpnet.ap2.game.base.FFAGameInstance
 import work.lclpnet.ap2.impl.game.data.OrderedDataContainer
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef
 import work.lclpnet.ap2.impl.map.MapUtil
@@ -27,6 +26,7 @@ import work.lclpnet.ap2.impl.util.movement.MovementListener
 import work.lclpnet.ap2.impl.util.movement.SimpleMovementBlocker
 import work.lclpnet.ap2.impl.util.scoreboard.CustomScoreboardManager
 import work.lclpnet.gaco.ds.BlockBox
+import work.lclpnet.game.map.GameMap
 import work.lclpnet.game.map.MapUtils
 import work.lclpnet.game.util.RayCaster
 import work.lclpnet.kibu.hook.player.PlayerMoveCallback
@@ -50,10 +50,10 @@ private const val CLOSEST_STOP_SENTINEL = UNTIL_STOP_MAX_TICKS / 20f
 
 private data class Grade(val player: ServerPlayer, val distance: Double)
 
-class RedLightGreenLightInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle) {
+class RedLightGreenLightInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap) : FFAGameInstance(gameHandle, level, map) {
 
     private val movementBlocker = SimpleMovementBlocker(gameHandle.scheduler)
-    private val data = OrderedDataContainer(PlayerRef::create)
+    override val data = OrderedDataContainer(PlayerRef::create)
     private val random = Random()
     private val inGoal = HashSet<UUID>()
     private val moved = HashSet<UUID>()
@@ -71,8 +71,6 @@ class RedLightGreenLightInstance(gameHandle: MiniGameHandle) : FFAGameInstance(g
     private var warn = 0
     private var go = 0
     private var gameEnd = -1
-
-    override fun getData(): DataContainer<ServerPlayer, PlayerRef> = data
 
     override fun prepare() {
         taskBar = useTaskDisplay()

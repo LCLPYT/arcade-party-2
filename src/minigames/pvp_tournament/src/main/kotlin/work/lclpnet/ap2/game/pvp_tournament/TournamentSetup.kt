@@ -31,7 +31,7 @@ class TournamentSetup(
     val logger: Logger,
     val map: GameMap,
     val players: List<PlayerRef>,
-    val schematicLoader: (String) -> BlockStructure,
+    val schematicLoader: suspend (String) -> BlockStructure,
 ) {
     suspend fun setup(variant: TournamentVariant): TournamentResult {
         val arenaData = getArenaData()

@@ -10,8 +10,8 @@ import net.fabricmc.fabric.api.networking.v1.PlayerLookup
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.item.ItemStack
 import net.minecraft.world.item.Items
-import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.ext.mc.isOf
+import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.pvp_tournament.gen.SkinPlayerIcons
 import work.lclpnet.ap2.game.pvp_tournament.gen.Tournament
 import work.lclpnet.ap2.game.pvp_tournament.gen.TournamentVisualizer

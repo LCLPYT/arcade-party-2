@@ -15,9 +15,9 @@ import net.minecraft.world.level.block.Blocks.*
 import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.gameevent.GameEvent
 import net.minecraft.world.phys.Vec3
-import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.core.mixin.ServerExplosionAccessor
 import work.lclpnet.ap2.ext.mc.isOf
+import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.impl.util.SoundHelper
 import work.lclpnet.ap2.impl.util.world.ExplosionUtil
 import work.lclpnet.gaco.ds.WeightedList
@@ -28,11 +28,11 @@ import java.util.*
 class MiningBattleOre(
     private val random: Random,
     private val gameHandle: MiniGameHandle,
-    private val scoreConsumer: (ServerPlayer, Int) -> Unit,
-    private val valid: (BlockPos) -> Boolean
 ) {
     private val lookup = HashMap<Block, Ore>()
     private val ores = WeightedList<Ore>()
+    lateinit var scoreConsumer: (ServerPlayer, Int) -> Unit
+    lateinit var valid: (BlockPos) -> Boolean
 
     fun init() {
         registerOre(null, 0, 0.9f)
@@ -87,6 +87,7 @@ class MiningBattleOre(
         }
 
         val value = getValue(broken)
+
         if (value > 0) {
             scoreConsumer(player, value)
         }

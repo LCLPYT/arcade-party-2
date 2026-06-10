@@ -15,16 +15,8 @@ import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.entity.ai.attributes.Attributes
 import net.minecraft.world.item.Items
 import net.minecraft.world.level.GameType
-import net.minecraft.world.level.block.Block
-import net.minecraft.world.level.block.Blocks
-import net.minecraft.world.level.block.state.BlockState
 import net.minecraft.world.level.gamerules.GameRules
-import work.lclpnet.ap2.api.game.MiniGameHandle
-import work.lclpnet.ap2.api.game.data.DataContainer
-import work.lclpnet.ap2.api.game.team.DyeTeamKey
-import work.lclpnet.ap2.api.game.team.Team
-import work.lclpnet.ap2.api.map.MapBootstrap
-import work.lclpnet.ap2.api.map.MapBootstrapFunction
+import work.lclpnet.ap2.api.game.team.TeamManager
 import work.lclpnet.ap2.api.stats.CommonStats.DamageDealt
 import work.lclpnet.ap2.api.stats.CommonStats.Deaths
 import work.lclpnet.ap2.api.stats.CommonStats.KillDeathRatio
@@ -36,6 +28,8 @@ import work.lclpnet.ap2.core.hook.SpectatePlayerCallback
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.mc.resetAttribute
 import work.lclpnet.ap2.ext.mc.setAttribute
+import work.lclpnet.ap2.game.MiniGameHandle
+import work.lclpnet.ap2.game.base.TeamGameInstance
 import work.lclpnet.ap2.game.kit.KitHandler
 import work.lclpnet.ap2.game.paintball.item.InkGrenadeItem
 import work.lclpnet.ap2.game.paintball.item.InkPackItem
@@ -46,25 +40,18 @@ import work.lclpnet.ap2.game.paintball.kit.ShotgunKit
 import work.lclpnet.ap2.game.paintball.kit.SniperKit
 import work.lclpnet.ap2.game.paintball.util.*
 import work.lclpnet.ap2.game.player.Participants
-import work.lclpnet.ap2.impl.game.TeamGameInstance
 import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer
 import work.lclpnet.ap2.impl.game.data.Ordering
-import work.lclpnet.ap2.impl.game.data.type.TeamRef
 import work.lclpnet.ap2.impl.game.item.SpecialItems
-import work.lclpnet.ap2.impl.map.MapUtil
-import work.lclpnet.ap2.impl.map.ServerThreadMapBootstrap
 import work.lclpnet.ap2.impl.util.ItemHelper.getLeatherArmor
 import work.lclpnet.ap2.impl.util.ItemHelper.unbreakable
 import work.lclpnet.ap2.impl.util.VanishManager
 import work.lclpnet.ap2.impl.util.handler.VisualCooldown
 import work.lclpnet.ap2.impl.util.world.BfsWorldScanner
-import work.lclpnet.ap2.impl.util.world.ResetBlockWorldModifier
 import work.lclpnet.ap2.impl.util.world.SimpleAdjacentBlocks
 import work.lclpnet.ap2.impl.util.world.WalkableBlockPredicate
-import work.lclpnet.ap2.impl.util.world.block_shape.BlockShape
 import work.lclpnet.gaco.collisions.ChunkedCollisionDetector
 import work.lclpnet.gaco.collisions.movement.TickMovementObserver
-import work.lclpnet.gaco.core.util.ThreadUtil.submitOn
 import work.lclpnet.gaco.ds.BlockBox
 import work.lclpnet.gaco.scene.Scene
 import work.lclpnet.gaco.scene.ServerWorldMountContext
@@ -73,17 +60,22 @@ import work.lclpnet.game.impl.prot.ProtectionTypes
 import work.lclpnet.game.map.GameMap
 import work.lclpnet.kibu.hook.HookRegistrar
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks
-import work.lclpnet.kibu.physics.impl.bullet.collision.space.MinecraftSpace
-import work.lclpnet.kibu.physics.impl.bullet.collision.space.generator.TerrainGenerator
-import work.lclpnet.kibu.physics.impl.bullet.thread.PhysicsThread
 import java.util.*
 import kotlin.time.Duration.Companion.seconds
 
 private val DURATION = 150.seconds
 
-class PaintballInstance(gameHandle: MiniGameHandle) : TeamGameInstance(gameHandle), MapBootstrapFunction {
+class PaintballInstance(
+    gameHandle: MiniGameHandle,
+    level: ServerLevel,
+    map: GameMap,
+    teamManager: TeamManager,
+    private val random: Random,
+    private val teams: PaintballTeams,
+    private val paintManager: PaintManager,
+) : TeamGameInstance(gameHandle, level, map, teamManager) {
 
-    private val data = IntScoreDataContainer(
+    override val data = IntScoreDataContainer(
         ::createReference,
         Ordering.DESCENDING,
         "game.ap2.paintball.blocks_painted"
@@ -93,7 +85,6 @@ class PaintballInstance(gameHandle: MiniGameHandle) : TeamGameInstance(gameHandl
         /* teamStats = */ listOf(TotalBlocksPainted, BlocksRepainted, Kills, Deaths, DamageDealt, SpecialItemsUsed),
         /* memberStats = */ listOf(TotalBlocksPainted, BlocksRepainted, Kills, Deaths, KillDeathRatio, DamageDealt, SpecialItemsUsed)
     ), teamManager, gameHandle.translations)
-    private val random = Random()
     private val movementObserver = TickMovementObserver(
         ChunkedCollisionDetector(),
         gameHandle.participants::isParticipating
@@ -103,89 +94,41 @@ class PaintballInstance(gameHandle: MiniGameHandle) : TeamGameInstance(gameHandl
     private val respawnCooldown = VisualCooldown(gameHandle.scheduler)
     private val vanishManager = VanishManager.setup(gameHandle)
 
-    private lateinit var paintManager: PaintManager
     private lateinit var kitHandler: KitHandler
-    private lateinit var teams: PaintballTeams
-    private var baseWalls: ResetBlockWorldModifier? = null
-    private lateinit var paintGunManager: PaintGunManager
+    private val scene = Scene(ServerWorldMountContext(level))
+    private val paintGunManager = PaintGunManager(
+        level, scene, paintManager, teams, random, gameHandle.participants,
+        gameHandle.translations, commons().debugController(), winManager::isGameOver
+    )
     private lateinit var results: PaintballResults
     private var started = false
     private lateinit var specialItems: SpecialItems
-    private lateinit var scene: Scene
 
     init {
         teamManager.setUseColorCodes(true)
     }
 
-    override fun getData(): DataContainer<Team, TeamRef> = data
-
-    override fun getMapBootstrap(): MapBootstrap = ServerThreadMapBootstrap(this)
-
-    override fun bootstrapWorld(world: ServerLevel, map: GameMap) {
-        teams = PaintballTeams(teamManager, map, gameHandle.participants, random, gameHandle.logger)
+    override fun prepare() {
         teams.setup()
 
-        scene = Scene(ServerWorldMountContext(world))
         scene.animate(1, gameHandle.rootScheduler)
 
-        val bounds = MapUtil.readShape(map, "bounds")
-        val commons = commons(map, world)
-
-        paintManager = PaintManager(world, teams, teamManager, data, bounds)
+        paintManager.data = data
         paintManager.onPaint = stats::blockPainted
-        paintGunManager = PaintGunManager(
-            world, scene, paintManager, teams, random, gameHandle.participants,
-            gameHandle.translations, commons.debugController(), winManager::isGameOver
-        )
 
         paintGunManager.init(gameHandle.hooks)
 
-        replaceTemplateColors(world)
-        buildMapCollisions(world, bounds)
-        setupSpecialItems(world, map)
-        closeBases(world)
+        setupSpecialItems(level, map)
 
         paintManager.countBlocks()
 
         val resultSpot = resultSpotFromJson(map.properties.getJSONObject("result-spot"))
 
-        results = PaintballResults(gameHandle, commons.announcer(), world, resultSpot, data, winManager) {
+        results = PaintballResults(gameHandle, commons().announcer(), level, resultSpot, data, winManager) {
             teams.mapNotNull { teamManager.getTeam(it).orElse(null) }
                 .map { createReference(it) }
         }
-    }
 
-    private fun buildMapCollisions(world: ServerLevel, bounds: BlockShape) {
-        val space = MinecraftSpace.get(world)
-        space.isAutoLoadTerrain = false
-
-        for (pos in bounds) {
-            space.chunkCache.loadData(pos.immutable())
-        }
-
-        submitOn(PhysicsThread.get(world)) {
-            for (pos in bounds) {
-                TerrainGenerator.load(space, pos)
-            }
-        }.join()
-    }
-
-    private fun replaceTemplateColors(world: ServerLevel) {
-        for (team in teams) {
-            val color: DyeTeamKey = team.templateColor
-
-            for (pos in team.baseBounds) {
-                val state = world.getBlockState(pos)
-                val paintable = paintManager.paintable(state.block) ?: continue
-
-                if (!state.isOf(paintable.blockFor(color))) continue
-
-                paintManager.replace(pos, state, paintable, team.key())
-            }
-        }
-    }
-
-    override fun prepare() {
         teamManager.partitionIntoTeams(gameHandle.participants, teams.map { it.key() }.toHashSet())
 
         for (team in teamManager.minecraftTeams) {
@@ -316,7 +259,7 @@ class PaintballInstance(gameHandle: MiniGameHandle) : TeamGameInstance(gameHandl
     }
 
     override fun go() {
-        openBases()
+        teams.openBases()
 
         kitHandler.closeKitChanger()
         kitHandler.selectKitItem()
@@ -384,30 +327,6 @@ class PaintballInstance(gameHandle: MiniGameHandle) : TeamGameInstance(gameHandl
             player.onUpdateAbilities()
             player.setGameMode(gameHandle.playerUtil.defaultGameMode)
         })
-    }
-
-    private fun closeBases(world: ServerLevel) {
-        val flags = Block.UPDATE_CLIENTS or Block.UPDATE_SUPPRESS_DROPS or Block.UPDATE_KNOWN_SHAPE
-        val walls = ResetBlockWorldModifier(world, flags)
-        baseWalls = walls
-
-        for (team in teams) {
-            val bounds = team.baseBounds
-
-            for (pos in bounds) {
-                if (!bounds.isBorder(pos)) continue
-
-                val state: BlockState = world.getBlockState(pos)
-
-                if (!state.getCollisionShape(world, pos).isEmpty) continue
-
-                walls.setBlockState(pos, Blocks.BARRIER.defaultBlockState(), flags)
-            }
-        }
-    }
-
-    private fun openBases() {
-        baseWalls?.undo()
     }
 
     override fun teleportTeamsToSpawns() {

@@ -1,7 +1,6 @@
 package work.lclpnet.ap2.game.aim_master
 
 import net.minecraft.ChatFormatting
-import net.minecraft.core.BlockPos
 import net.minecraft.core.particles.ParticleTypes
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
@@ -9,16 +8,13 @@ import net.minecraft.sounds.SoundEvents
 import net.minecraft.sounds.SoundSource
 import net.minecraft.world.InteractionResult
 import net.minecraft.world.entity.player.Player
-import work.lclpnet.ap2.api.game.MiniGameHandle
-import work.lclpnet.ap2.api.map.MapBootstrap
 import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.api.stats.StatUnits
-import work.lclpnet.ap2.ext.inWholeTicks
-import work.lclpnet.ap2.impl.game.FFAGameInstance
+import work.lclpnet.ap2.ext.players
+import work.lclpnet.ap2.game.MiniGameHandle
+import work.lclpnet.ap2.game.base.FFAGameInstance
 import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef
-import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedPlayerBossBar
-import work.lclpnet.ap2.impl.util.world.StackedRoomGenerator
 import work.lclpnet.game.map.GameMap
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess
 import work.lclpnet.kibu.access.entity.ServerPlayerAccess
@@ -29,18 +25,11 @@ import work.lclpnet.kibu.scheduler.api.RunningTask
 import work.lclpnet.kibu.scheduler.api.SchedulerAction
 import work.lclpnet.kibu.translate.text.FormatWrapper.styled
 import java.util.*
-import java.util.concurrent.CompletableFuture
 import kotlin.math.round
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 
-private const val SCORE_GOAL = 24
-private const val TARGET_NUMBER = 6
-private const val TARGET_MIN_DISTANCE = 2
-private const val SPHERE_RADIUS = 15
-private const val SPHERE_OFFSET = 5
-private const val UPWARD_TILT = 0.55
-private const val ELLIPSE_FACTOR = 0.35
-private const val CONE_FOV = 35
+const val SCORE_GOAL = 24
 
 private val Clicks = Stat("clicks", 0)
 private val Misses = Stat("misses", 0)
@@ -48,79 +37,42 @@ private val Accuracy = Stat("accuracy", 0f, unit = StatUnits.Percent)
 private val Streak = Stat("streak", 0)
 private val AvgAdvanceTime = Stat("avg_advance_time", 0f, unit = StatUnits.Seconds)
 
-class AimMasterInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle), MapBootstrap {
+class AimMasterInstance(
+    gameHandle: MiniGameHandle,
+    level: ServerLevel,
+    map: GameMap,
+    val sequence: AimMasterSequence,
+    val manager: AimMasterManager,
+) : FFAGameInstance(gameHandle, level, map) {
 
-    private val data = IntScoreDataContainer(PlayerRef::create)
-
+    override val data = IntScoreDataContainer(PlayerRef::create)
     private val stats = createStats(data, Clicks, Misses, Accuracy, Streak, AvgAdvanceTime)
     private val currentStreak = HashMap<UUID, Int>()
     private val lastAdvanceMillis = HashMap<UUID, Long>()
     private val advanceTimeSumMillis = HashMap<UUID, Long>()
     private val advanceCount = HashMap<UUID, Int>()
     private var startMillis = 0L
-
-    private lateinit var bossBar: DynamicTranslatedPlayerBossBar
-    private lateinit var manager: AimMasterManager
-    private lateinit var sequence: AimMasterSequence
-
-    override fun getData() = data
-
-    override fun getMaxDurationTicks(): Int = 2.minutes.inWholeTicks.toInt()
-
-    override fun createWorldBootstrap(world: ServerLevel, map: GameMap): CompletableFuture<Void> {
-        val generator = StackedRoomGenerator(
-            world,
-            map,
-            StackedRoomGenerator.Coordinates.RELATIVE
-        ) { _, spawn, yaw, _ ->
-            AimMasterDomain(spawn, yaw, world)
-        }
-
-        val positionGenerator = PositionGenerator(
-            SPHERE_RADIUS,
-            SPHERE_OFFSET,
-            UPWARD_TILT,
-            ELLIPSE_FACTOR,
-            BlockPos(0, 0, 0),
-            CONE_FOV,
-            TARGET_NUMBER,
-            TARGET_MIN_DISTANCE
-        )
-
-        val blockOptions = BlockOptions()
-        val sequenceGenerator = SequenceGenerator(positionGenerator, blockOptions, SCORE_GOAL)
-
-        sequence = sequenceGenerator.sequence
-
-        return generator.generate(gameHandle.participants)
-            .thenAccept { result ->
-                manager = AimMasterManager(result.rooms(), sequence)
-            }
-            .exceptionally { throwable ->
-                gameHandle.logger.error("Failed to create domains", throwable)
-                null
-            }
+    private val bossBar = usePlayerDynamicTaskDisplay(styled(SCORE_GOAL, ChatFormatting.YELLOW)).also {
+        it.setPercent(0f)
     }
 
+    override val maxDuration: Duration
+        get() = 2.minutes
+
     override fun prepare() {
-        for (player in gameHandle.participants) {
+        for (player in players()) {
             manager.domains[player.uuid]?.teleport(player)
         }
-        bossBar = usePlayerDynamicTaskDisplay(styled(SCORE_GOAL, ChatFormatting.YELLOW))
-        bossBar.setPercent(0f)
     }
 
     override fun go() {
-        val sequenceItems = sequence.items
-
-        for (player in gameHandle.participants) {
+        for (player in players()) {
             val domain = manager.domains[player.uuid] ?: continue
             domain.teleport(player)
             PlayerInventoryAccess.setSelectedSlot(player, 4)
-            domain.setBlocks(sequenceItems.first(), player)
+            domain.setBlocks(sequence.items.first(), player)
         }
 
-        val hooks = gameHandle.hooks
         PlayerInventoryHooks.SLOT_CHANGE.registerWith(hooks) { player, slot ->
             if (slot != 4) PlayerInventoryAccess.setSelectedSlot(player, 4)
         }
@@ -132,44 +84,60 @@ class AimMasterInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle
     }
 
     private fun invokeRayCaster(player: Player): InteractionResult {
-        if (winManager.isGameOver) return InteractionResult.FAIL
+        if (winManager.isGameOver || player !is ServerPlayer) return InteractionResult.FAIL
 
         val domain = manager.domains[player.uuid] ?: return InteractionResult.FAIL
-        val serverPlayer = player as ServerPlayer
 
-        val clicks = stats.increment(serverPlayer, Clicks)
+        val clicks = stats.increment(player, Clicks)
 
-        if (domain.rayCaster(serverPlayer, SPHERE_RADIUS)) {
-            data.addScore(serverPlayer, 1)
-            val newScore = data.getScore(serverPlayer)
-            bossBar.getBossBar(serverPlayer).progress = newScore.toFloat() / SCORE_GOAL
-
-            val streak = (currentStreak[player.uuid] ?: 0) + 1
-            currentStreak[player.uuid] = streak
-            stats.modify(serverPlayer, Streak) { maxOf(it, streak) }
-            updateAccuracy(serverPlayer, newScore, clicks)
-            recordAdvanceTime(serverPlayer)
-
-            val target = domain.currentTarget
-            val serverWorld = serverPlayer.level()
-
-            if (target != null) {
-                serverWorld.sendParticles(ParticleTypes.ELECTRIC_SPARK, target.x.toDouble(), target.y.toDouble(), target.z.toDouble(), 12, 0.4, 0.4, 0.4, 0.01)
-            }
-            ServerPlayerAccess.playSoundToPlayer(serverPlayer, SoundEvents.ARROW_HIT_PLAYER, SoundSource.PLAYERS, 0.5f, 0.8f)
-
-            if (newScore >= SCORE_GOAL) win(serverPlayer)
-            else manager.advancePlayer(serverPlayer)
+        if (domain.rayCaster(player, SPHERE_RADIUS)) {
+            onHitCorrect(player, clicks, domain)
 
             return InteractionResult.FAIL
         }
 
         currentStreak[player.uuid] = 0
-        stats.increment(serverPlayer, Misses)
-        updateAccuracy(serverPlayer, data.getScore(serverPlayer), clicks)
+        stats.increment(player, Misses)
+        updateAccuracy(player, data.getScore(player), clicks)
 
-        ServerPlayerAccess.playSoundToPlayer(serverPlayer, SoundEvents.NOTE_BLOCK_BASS.value(), SoundSource.PLAYERS, 0.3f, 0.2f)
+        ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.NOTE_BLOCK_BASS.value(), SoundSource.PLAYERS, 0.3f, 0.2f)
         return InteractionResult.PASS
+    }
+
+    private fun onHitCorrect(
+        player: ServerPlayer,
+        clicks: Int,
+        domain: AimMasterDomain
+    ) {
+        data.addScore(player, 1)
+        val newScore = data.getScore(player)
+        bossBar.getBossBar(player).progress = newScore.toFloat() / SCORE_GOAL
+
+        val streak = (currentStreak[player.uuid] ?: 0) + 1
+        currentStreak[player.uuid] = streak
+        stats.modify(player, Streak) { maxOf(it, streak) }
+        updateAccuracy(player, newScore, clicks)
+        recordAdvanceTime(player)
+
+        val target = domain.currentTarget
+
+        if (target != null) {
+            level.sendParticles(
+                ParticleTypes.ELECTRIC_SPARK,
+                target.x.toDouble(),
+                target.y.toDouble(),
+                target.z.toDouble(),
+                12,
+                0.4,
+                0.4,
+                0.4,
+                0.01
+            )
+        }
+        ServerPlayerAccess.playSoundToPlayer(player, SoundEvents.ARROW_HIT_PLAYER, SoundSource.PLAYERS, 0.5f, 0.8f)
+
+        if (newScore >= SCORE_GOAL) win(player)
+        else manager.advancePlayer(player)
     }
 
     private fun updateAccuracy(player: ServerPlayer, hits: Int, clicks: Int) {

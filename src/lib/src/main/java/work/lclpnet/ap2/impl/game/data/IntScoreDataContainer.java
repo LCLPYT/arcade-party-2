@@ -135,7 +135,7 @@ public class IntScoreDataContainer<T, Ref extends SubjectRef> extends BaseDataCo
     }
 
     @Override
-    public void register(IntScoreEvent<T> listener) {
+    public void register(@NotNull IntScoreEvent<T> listener) {
         listeners.add(Objects.requireNonNull(listener));
     }
 

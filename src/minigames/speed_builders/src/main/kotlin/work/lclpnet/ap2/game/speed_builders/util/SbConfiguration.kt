@@ -26,9 +26,9 @@ import net.minecraft.world.level.material.FlowingFluid
 import net.minecraft.world.level.material.Fluid
 import net.minecraft.world.level.material.Fluids
 import net.minecraft.world.level.redstone.NeighborUpdater
-import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.ext.mc.isIn
 import work.lclpnet.ap2.ext.mc.isOf
+import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.game.impl.prot.ProtectionTypes
 import work.lclpnet.kibu.hook.entity.ItemFramePutItemCallback
 import work.lclpnet.kibu.hook.entity.ItemFrameRemoveItemCallback

@@ -28,14 +28,13 @@ import net.minecraft.world.level.gamerules.GameRules
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.scores.DisplaySlot
 import net.minecraft.world.scores.Team
-import work.lclpnet.ap2.api.game.MiniGameHandle
-import work.lclpnet.ap2.api.game.data.DataContainer
 import work.lclpnet.ap2.api.stats.Stat
 import work.lclpnet.ap2.core.type.ApVariantHolder
 import work.lclpnet.ap2.ext.runEveryTick
-import work.lclpnet.ap2.game.teleportToRandomSpawns
-import work.lclpnet.ap2.impl.game.FFAGameInstance
-import work.lclpnet.ap2.impl.game.data.DataContainers
+import work.lclpnet.ap2.game.MiniGameHandle
+import work.lclpnet.ap2.game.base.FFAGameInstance
+import work.lclpnet.ap2.game.util.finaleCompatibleScoreContainer
+import work.lclpnet.ap2.game.util.teleportToRandomSpawns
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.util.ItemHelper
@@ -44,6 +43,7 @@ import work.lclpnet.ap2.impl.util.world.BfsWorldScanner
 import work.lclpnet.ap2.impl.util.world.CardinalAdjacentBlocks
 import work.lclpnet.ap2.impl.util.world.SizedSpaceFinder
 import work.lclpnet.game.impl.prot.ProtectionTypes
+import work.lclpnet.game.map.GameMap
 import work.lclpnet.game.map.MapUtils
 import work.lclpnet.kibu.access.entity.PlayerInventoryAccess
 import work.lclpnet.kibu.access.entity.ServerPlayerAccess
@@ -65,9 +65,9 @@ private val BabyChickens = Stat("baby_chickens", 0)
 private val TntDetonated = Stat("tnt_detonated", 0)
 private val ChickensExploded = Stat("chickens_exploded", 0)
 
-class ChickenShooterInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle) {
+class ChickenShooterInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap) : FFAGameInstance(gameHandle, level, map) {
 
-    private val data = DataContainers.finaleCompatibleScoreContainer(gameHandle, PlayerRef::create)
+    override val data = finaleCompatibleScoreContainer(gameHandle, PlayerRef::create)
     private val stats = createStats(data, BabyChickens, TntDetonated, ChickensExploded)
     private val random = Random()
     private val chickenSet = mutableSetOf<Chicken>()
@@ -75,8 +75,6 @@ class ChickenShooterInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameH
     private var despawnHeight = 0
     private var time = 0
     private var spawnInterval = 0
-
-    override fun getData(): DataContainer<ServerPlayer, PlayerRef> = data
 
     override fun prepare() {
         val world = level
@@ -87,7 +85,6 @@ class ChickenShooterInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameH
 
         despawnHeight = map.requireProperty("despawn-height")
 
-        teleportPlayers()
         findChickenSpawner()
 
         val hooks = gameHandle.hooks
@@ -137,7 +134,7 @@ class ChickenShooterInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameH
         }
     }
 
-    private fun teleportPlayers() {
+    override fun teleportPlayers() {
         val scanBox = map.properties.optJSONArray("spawn-scan-bounds")?.let { MapUtil.readBox(it) } ?: return
         val scanStart = BlockPos.containing(MapUtils.getSpawnPosition(map))
         val spacing = map.properties.optNumber("spawn-spacing", 8.0).toDouble()

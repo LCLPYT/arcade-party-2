@@ -12,7 +12,7 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.alchemy.Potion;
 import net.minecraft.world.item.alchemy.PotionContents;
 import net.minecraft.world.item.alchemy.Potions;
-import work.lclpnet.ap2.api.game.MiniGameHandle;
+import work.lclpnet.ap2.game.MiniGameHandle;
 import work.lclpnet.ap2.game.guess_it.data.*;
 import work.lclpnet.ap2.game.guess_it.util.GuessItDisplay;
 import work.lclpnet.ap2.game.guess_it.util.OptionMaker;

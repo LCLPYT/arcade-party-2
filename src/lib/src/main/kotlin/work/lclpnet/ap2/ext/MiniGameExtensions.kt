@@ -11,8 +11,8 @@ import net.minecraft.world.entity.LivingEntity
 import net.minecraft.world.scores.DisplaySlot
 import org.slf4j.Logger
 import work.lclpnet.ap2.api.event.IntScoreEventSource
-import work.lclpnet.ap2.impl.game.BaseGameInstance
-import work.lclpnet.ap2.impl.game.FFAGameInstance
+import work.lclpnet.ap2.game.base.FFAGameInstance
+import work.lclpnet.ap2.game.base.MapGameInstance
 import work.lclpnet.ap2.impl.game.GameCommons
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.util.SoundHelper
@@ -22,19 +22,19 @@ import work.lclpnet.kibu.hook.entity.EntityHealthCallback
 import work.lclpnet.kibu.translate.text.TranslatedText
 import kotlin.time.Duration
 
-fun BaseGameInstance.players() =
-    gameHandle.participants!!
+fun MapGameInstance.players() =
+    gameHandle.participants
 
-fun BaseGameInstance.allPlayers() =
+fun MapGameInstance.allPlayers() =
     PlayerLookup.all(gameHandle.server)
 
-fun BaseGameInstance.translate(key: String, vararg args: Any) =
+fun MapGameInstance.translate(key: String, vararg args: Any) =
     gameHandle.translations.translateText(key, *args)!!
 
-val BaseGameInstance.logger: Logger
+val MapGameInstance.logger: Logger
     get() = gameHandle.logger
 
-val BaseGameInstance.server: MinecraftServer
+val MapGameInstance.server: MinecraftServer
     get() = gameHandle.server
 
 fun FFAGameInstance.setupSidebarScoreboard(data: IntScoreEventSource<ServerPlayer>) {
@@ -46,10 +46,10 @@ fun FFAGameInstance.setupSidebarScoreboard(data: IntScoreEventSource<ServerPlaye
     allPlayers().forEach(objective::add)
 }
 
-fun BaseGameInstance.readShape(key: String): BlockShape =
+fun MapGameInstance.readShape(key: String): BlockShape =
     MapUtil.readShape(map, key)
 
-inline fun <reified T : LivingEntity> BaseGameInstance.onDeathOf(
+inline fun <reified T : LivingEntity> MapGameInstance.onDeathOf(
     noinline action: (T, DamageSource) -> Unit
 ) {
     EntityHealthCallback.HOOK.registerWith(gameHandle.hooks) { entity, health ->
@@ -61,7 +61,7 @@ inline fun <reified T : LivingEntity> BaseGameInstance.onDeathOf(
     }
 }
 
-fun BaseGameInstance.playSound(
+fun MapGameInstance.playSound(
     sound: SoundEvent,
     source: SoundSource,
     volume: Float,
@@ -69,7 +69,7 @@ fun BaseGameInstance.playSound(
 ) =
     SoundHelper.playSound(level, sound, source, volume, pitch)
 
-fun BaseGameInstance.createTimer(
+fun MapGameInstance.createTimer(
     label: TranslatedText,
     duration: Duration,
     color: BossEvent.BossBarColor = BossEvent.BossBarColor.RED,
@@ -82,7 +82,7 @@ fun BaseGameInstance.createTimer(
         .withDurationTicks(duration.inWholeTicks.toInt())
         .build()
 
-    timer.addPlayers(PlayerLookup.all(gameHandle.getServer()))
+    timer.addPlayers(PlayerLookup.all(gameHandle.server))
     timer.start(gameHandle.bossBarProvider, gameHandle.scheduler)
 
     return timer

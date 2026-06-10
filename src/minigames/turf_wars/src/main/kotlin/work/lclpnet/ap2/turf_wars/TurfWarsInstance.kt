@@ -3,6 +3,7 @@ package work.lclpnet.ap2.turf_wars
 import net.minecraft.ChatFormatting
 import net.minecraft.core.BlockPos
 import net.minecraft.network.chat.Component
+import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.sounds.SoundSource
@@ -19,9 +20,9 @@ import net.minecraft.world.level.gamerules.GameRules
 import net.minecraft.world.phys.BlockHitResult
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.scores.Team.CollisionRule
-import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.game.team.DyeTeamKey
 import work.lclpnet.ap2.api.game.team.Team
+import work.lclpnet.ap2.api.game.team.TeamManager
 import work.lclpnet.ap2.api.stats.CommonStats.Deaths
 import work.lclpnet.ap2.api.stats.CommonStats.KillDeathRatio
 import work.lclpnet.ap2.api.stats.CommonStats.Kills
@@ -31,11 +32,11 @@ import work.lclpnet.ap2.core.hook.CanShootProjectileCallback
 import work.lclpnet.ap2.core.hook.ProjectileShootCallback
 import work.lclpnet.ap2.ext.*
 import work.lclpnet.ap2.ext.mc.*
+import work.lclpnet.ap2.game.MiniGameHandle
+import work.lclpnet.ap2.game.base.TeamEliminationGameInstance
 import work.lclpnet.ap2.game.kit.KitHandler
 import work.lclpnet.ap2.game.kit.hasKitEquipped
 import work.lclpnet.ap2.game.team.getWoolBlock
-import work.lclpnet.ap2.impl.game.TeamEliminationGameInstance
-import work.lclpnet.ap2.impl.map.schema.SchemaHolder
 import work.lclpnet.ap2.impl.util.ItemHelper.getLeatherArmor
 import work.lclpnet.ap2.impl.util.TimeHelper
 import work.lclpnet.ap2.impl.util.math.MathUtil
@@ -46,6 +47,7 @@ import work.lclpnet.gaco.collisions.ChunkedCollisionDetector
 import work.lclpnet.gaco.collisions.movement.TickMovementObserver
 import work.lclpnet.gaco.ds.BlockBox
 import work.lclpnet.game.impl.prot.ProtectionTypes
+import work.lclpnet.game.map.GameMap
 import work.lclpnet.kibu.access.VelocityModifier
 import work.lclpnet.kibu.hook.entity.ProjectileHooks
 import work.lclpnet.kibu.hook.entity.ServerLivingEntityHooks
@@ -57,9 +59,14 @@ import kotlin.time.Duration.Companion.seconds
 
 val TurfClaimed = Stat("turf_claimed", 0)
 
-class TurfWarsInstance(gameHandle: MiniGameHandle) : TeamEliminationGameInstance(gameHandle) {
+class TurfWarsInstance(
+    gameHandle: MiniGameHandle,
+    level: ServerLevel,
+    map: GameMap,
+    teamManager: TeamManager,
+    val mapSchema: TurfWarsSchema,
+) : TeamEliminationGameInstance(gameHandle, level, map, teamManager) {
 
-    val schemaHolder: SchemaHolder<TurfWarsSchema> = useSchema(TurfWarsSchema::class.java)
     val arrowEconomy = ArrowEconomy(gameHandle, teamManager)
     lateinit var turfManager: TurfManager
     lateinit var teamInfos: Map<DyeTeamKey, TurfWarsTeamInfo>
@@ -184,7 +191,7 @@ class TurfWarsInstance(gameHandle: MiniGameHandle) : TeamEliminationGameInstance
             giveItems(player)
         }
 
-        for (gate in schemaHolder.get().spawnGates) {
+        for (gate in mapSchema.spawnGates) {
             level.setBlocks(gate, Blocks.AIR)
         }
 
@@ -229,19 +236,17 @@ class TurfWarsInstance(gameHandle: MiniGameHandle) : TeamEliminationGameInstance
 
         require(team1Key != team2Key) { "Team colors cannot be the same" }
 
-        val schema = schemaHolder.get()
-
         val team1Info = TurfWarsTeamInfo(
-            spawn = schema.team1Spawn!!,
-            baseBounds = schema.team1Base!!,
-            initialTurf = schema.team1Turf!!,
+            spawn = mapSchema.team1Spawn!!,
+            baseBounds = mapSchema.team1Base!!,
+            initialTurf = mapSchema.team1Turf!!,
             teamKey = team1Key
         )
 
         val team2Info = TurfWarsTeamInfo(
-            spawn = schema.team2Spawn!!,
-            baseBounds = schema.team2Base!!,
-            initialTurf = schema.team2Turf!!,
+            spawn = mapSchema.team2Spawn!!,
+            baseBounds = mapSchema.team2Base!!,
+            initialTurf = mapSchema.team2Turf!!,
             teamKey = team2Key
         )
 

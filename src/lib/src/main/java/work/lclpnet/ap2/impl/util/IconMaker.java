@@ -8,7 +8,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.TooltipDisplay;
 import work.lclpnet.ap2.api.data.DataManager;
-import work.lclpnet.ap2.api.game.MiniGame;
+import work.lclpnet.ap2.game.MiniGame;
 import work.lclpnet.game.map.GameMap;
 import work.lclpnet.kibu.translate.Translations;
 

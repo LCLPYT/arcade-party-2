@@ -5,6 +5,7 @@ import net.minecraft.ChatFormatting
 import net.minecraft.core.Direction
 import net.minecraft.core.Position
 import net.minecraft.core.particles.ParticleTypes
+import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.sounds.SoundEvents
 import net.minecraft.sounds.SoundSource
@@ -18,13 +19,13 @@ import net.minecraft.world.level.gamerules.GameRules
 import net.minecraft.world.phys.AABB
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.scores.Team
-import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.api.stats.CommonStats
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.mc.playNotifySound
 import work.lclpnet.ap2.ext.runEveryTick
 import work.lclpnet.ap2.ext.trackDistanceMoved
-import work.lclpnet.ap2.impl.game.EliminationGameInstance
+import work.lclpnet.ap2.game.MiniGameHandle
+import work.lclpnet.ap2.game.base.EliminationGameInstance
 import work.lclpnet.ap2.impl.map.MapUtil
 import work.lclpnet.ap2.impl.util.bossbar.DynamicTranslatedBossBar
 import work.lclpnet.ap2.impl.util.handler.Visibility
@@ -32,6 +33,7 @@ import work.lclpnet.ap2.impl.util.handler.VisibilityHandler
 import work.lclpnet.ap2.impl.util.handler.VisibilityManager
 import work.lclpnet.gaco.ds.BlockBox
 import work.lclpnet.game.impl.prot.ProtectionTypes
+import work.lclpnet.game.map.GameMap
 import work.lclpnet.kibu.access.VelocityModifier
 import work.lclpnet.kibu.access.entity.FallingBlockAccess
 import work.lclpnet.kibu.hook.player.PlayerMoveCallback
@@ -46,15 +48,15 @@ const val INITIAL_DELAY = 5
 val INITIAL_DELAY_DECREASE_INTERVAL = Ticks.seconds(2)
 val INCREASE_INTERVAL = Ticks.seconds(8)
 
-class AnvilFallInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gameHandle) {
+class AnvilFallInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap) : EliminationGameInstance(gameHandle, level, map) {
 
     private val directions = arrayOf(Direction.NORTH, Direction.WEST, Direction.SOUTH, Direction.WEST)
     private val random = Random()
+    private val stats = createStats(CommonStats.DistanceMoved, CommonStats.TimeSurvived)
     private lateinit var amountDisplay: DynamicTranslatedBossBar
     private lateinit var setup: AnvilFallSetup
-    private var playArea: BlockBox? = null
     private lateinit var center: Vec3
-    private val stats = createStats(CommonStats.DistanceMoved, CommonStats.TimeSurvived)
+    private lateinit var playArea: BlockBox
 
     override fun prepare() {
         commons().gameRuleBuilder()
@@ -211,11 +213,10 @@ class AnvilFallInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(ga
     }
 
     private fun repelPlayer(player: ServerPlayer, to: Position) {
-        val area = playArea ?: return
         if (!gameHandle.participants.isParticipating(player)) return
 
         val boundingBox: AABB = player.boundingBox
-        if (area.contains(boundingBox.contract(1e-9, 0.0, 1e-9))) return
+        if (playArea.contains(boundingBox.contract(1e-9, 0.0, 1e-9))) return
 
         val vec = Vec3(center.x() - to.x(), 0.5, center.z() - to.z())
         VelocityModifier.setVelocity(player, vec.normalize().scale(0.5))

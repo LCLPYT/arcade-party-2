@@ -52,6 +52,7 @@ def minigames = [
         "pillar_battle",
         "pvp_tournament",
         "quick_sg",
+//        "rapid_runner",
         "red_light_green_light",
         "snowball_fight",
         "speed_builders",

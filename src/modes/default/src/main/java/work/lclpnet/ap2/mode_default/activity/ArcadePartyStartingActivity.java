@@ -6,7 +6,7 @@ import org.slf4j.Logger;
 import work.lclpnet.activity.ComponentActivity;
 import work.lclpnet.activity.component.ComponentBundle;
 import work.lclpnet.activity.component.builtin.BuiltinComponents;
-import work.lclpnet.ap2.api.game.MiniGame;
+import work.lclpnet.ap2.game.MiniGame;
 import work.lclpnet.game.api.start.GameStartArgs;
 import work.lclpnet.game.api.start.ItemReservationManager;
 import work.lclpnet.game.impl.Voting;

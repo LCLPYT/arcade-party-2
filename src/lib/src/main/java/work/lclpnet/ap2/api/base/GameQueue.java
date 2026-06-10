@@ -1,6 +1,6 @@
 package work.lclpnet.ap2.api.base;
 
-import work.lclpnet.ap2.api.game.MiniGame;
+import work.lclpnet.ap2.game.MiniGame;
 
 import java.util.List;
 import java.util.function.Predicate;

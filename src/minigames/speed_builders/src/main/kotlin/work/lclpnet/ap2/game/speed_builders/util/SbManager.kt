@@ -11,8 +11,8 @@ import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.player.Inventory
 import net.minecraft.world.item.Items
 import net.minecraft.world.scores.PlayerTeam
-import work.lclpnet.ap2.api.game.MiniGameHandle
 import work.lclpnet.ap2.ext.mc.isOf
+import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.ap2.game.speed_builders.data.SbIsland
 import work.lclpnet.ap2.game.speed_builders.data.SbModule
 import work.lclpnet.kibu.access.entity.ServerPlayerAccess

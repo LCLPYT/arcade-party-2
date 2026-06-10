@@ -16,8 +16,6 @@ import net.minecraft.world.level.Level
 import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.level.gamerules.GameRules
 import net.minecraft.world.level.material.Fluids
-import work.lclpnet.ap2.api.game.MiniGameHandle
-import work.lclpnet.ap2.api.map.MapBootstrap
 import work.lclpnet.ap2.ext.allPlayers
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.mc.setDayTime
@@ -25,12 +23,12 @@ import work.lclpnet.ap2.ext.mc.teleport
 import work.lclpnet.ap2.ext.players
 import work.lclpnet.ap2.ext.timeout
 import work.lclpnet.ap2.ext.translate
+import work.lclpnet.ap2.game.MiniGameHandle
+import work.lclpnet.ap2.game.base.EliminationGameInstance
 import work.lclpnet.ap2.game.kit.KitHandle
 import work.lclpnet.ap2.game.kit.KitHandler
 import work.lclpnet.ap2.game.kit.PrefabKitLoader
-import work.lclpnet.ap2.impl.game.EliminationGameInstance
 import work.lclpnet.ap2.impl.util.SoundHelper
-import work.lclpnet.ap2.util.loot.JsonLootLoader
 import work.lclpnet.ap2.util.loot.LazyLootContainerManager
 import work.lclpnet.ap2.util.loot.LootEntry
 import work.lclpnet.ap2.util.loot.LootFiller
@@ -45,7 +43,6 @@ import work.lclpnet.kibu.hook.util.PositionRotation
 import work.lclpnet.kibu.scheduler.Ticks
 import work.lclpnet.kibu.translate.text.FormatWrapper
 import java.lang.Math.floorMod
-import java.util.concurrent.CompletableFuture
 import kotlin.random.Random
 import kotlin.random.asJavaRandom
 
@@ -54,30 +51,20 @@ val MAX_DURATION_TICKS = Ticks.seconds(32)
 val GAME_DURATION_TICKS = Ticks.minutes(6)
 const val TIME_TO_NIGHTFALL_DAYTIME_TICKS = 3600
 
-class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(gameHandle), MapBootstrap {
+class KilleporterInstance(
+    gameHandle: MiniGameHandle,
+    level: ServerLevel,
+    map: GameMap,
+    private val kitLoader: PrefabKitLoader,
+    private val loot: WeightedList<LootEntry>,
+) : EliminationGameInstance(gameHandle, level, map) {
 
     var kitHandler: KitHandler? = null
-    var kitLoader: PrefabKitLoader? = null
     var itemUseAllowed = false
-    val loot = WeightedList<LootEntry>()
     lateinit var lootContainerManager: LazyLootContainerManager
 
     init {
         useSurvivalMode()
-    }
-
-    override fun createWorldBootstrap(world: ServerLevel, map: GameMap): CompletableFuture<Void> {
-        kitLoader = PrefabKitLoader(world.registryAccess(), gameHandle.logger)
-
-        val kitFuture = kitLoader!!.loadHotbar(this)
-
-        val lootFuture = CompletableFuture.runAsync {
-            JsonLootLoader(gameHandle.logger)
-                .fromResource(this::class.java)
-                ?.loadInto(loot)
-        }
-
-        return CompletableFuture.allOf(kitFuture, lootFuture)
     }
 
     override fun prepare() {
@@ -205,7 +192,7 @@ class KilleporterInstance(gameHandle: MiniGameHandle) : EliminationGameInstance(
     }
 
     private fun setupKits() {
-        kitHandler = KitHandler.create(gameHandle, level) { kitHandle: KitHandle -> kitLoader!!.createKits(kitHandle) }
+        kitHandler = KitHandler.create(gameHandle, level) { kitHandle: KitHandle -> kitLoader.createKits(kitHandle) }
 
         kitHandler?.manager?.modifyOptions {
             it.withKitSelectorSlot(8)

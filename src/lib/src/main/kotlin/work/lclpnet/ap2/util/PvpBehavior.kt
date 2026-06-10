@@ -4,7 +4,7 @@ import net.minecraft.core.BlockPos
 import net.minecraft.server.level.ServerLevel
 import net.minecraft.server.level.ServerPlayer
 import net.minecraft.world.entity.Entity
-import work.lclpnet.ap2.api.game.MiniGameHandle
+import work.lclpnet.ap2.game.MiniGameHandle
 import work.lclpnet.game.impl.prot.ProtectionTypes
 import work.lclpnet.kibu.hook.level.BlockModificationHooks
 import java.util.*

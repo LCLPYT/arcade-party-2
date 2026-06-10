@@ -10,20 +10,17 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.BossEvent;
 import net.minecraft.world.level.gamerules.GameRules;
-import org.jetbrains.annotations.NotNull;
-import org.json.JSONArray;
-import org.json.JSONObject;
+import org.jspecify.annotations.NonNull;
 import work.lclpnet.ap2.ApConstants;
-import work.lclpnet.ap2.api.game.MiniGameHandle;
 import work.lclpnet.ap2.api.game.data.DataContainer;
-import work.lclpnet.ap2.api.map.MapBootstrap;
 import work.lclpnet.ap2.core.hook.CopperGolemTurnIntoStatueCallback;
+import work.lclpnet.ap2.game.MiniGameHandle;
+import work.lclpnet.ap2.game.base.FFAGameInstance;
 import work.lclpnet.ap2.game.guess_it.data.*;
 import work.lclpnet.ap2.game.guess_it.util.DynamicEntityModifier;
 import work.lclpnet.ap2.game.guess_it.util.SetChallengeCommand;
 import work.lclpnet.ap2.game.guess_it.util.SkipChallengeCommand;
 import work.lclpnet.ap2.game.player.Participants;
-import work.lclpnet.ap2.impl.game.FFAGameInstance;
 import work.lclpnet.ap2.impl.game.data.IntScoreDataContainer;
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef;
 import work.lclpnet.ap2.impl.map.MapUtil;
@@ -48,14 +45,14 @@ import work.lclpnet.kibu.title.Title;
 import work.lclpnet.kibu.translate.Translations;
 import work.lclpnet.kibu.translate.text.TranslatedText;
 
-import java.nio.charset.StandardCharsets;
-import java.util.*;
-import java.util.concurrent.CompletableFuture;
+import java.util.Objects;
+import java.util.Random;
+import java.util.UUID;
 
 import static net.minecraft.ChatFormatting.*;
 import static work.lclpnet.kibu.translate.text.FormatWrapper.styled;
 
-public class GuessItInstance extends FFAGameInstance implements MapBootstrap {
+public class GuessItInstance extends FFAGameInstance {
 
     private static final int PREPARATION_TICKS = Ticks.seconds(3);
     private static final int DELAY_TICKS = Ticks.seconds(5);
@@ -65,12 +62,12 @@ public class GuessItInstance extends FFAGameInstance implements MapBootstrap {
     private final Random random = new Random();
     private final PlayerChoices choices;
     private final ChallengeResult result;
+    private final SoundSubtitles soundSubtitles;
+    private final IndexedSet<UUID> mannequinUuids;
     private ChallengeMessengerImpl messenger;
     private InputManager inputManager;
     private GuessItManager manager = null;
     private Challenge challenge = null;
-    private SoundSubtitles soundSubtitles = null;
-    private IndexedSet<UUID> mannequinUuids = null;
     private ResetWorldModifier modifier = null;
     private DynamicEntityModifier dynamicEntities = null;
     private ScoreHandle roundHandle = null;
@@ -81,32 +78,27 @@ public class GuessItInstance extends FFAGameInstance implements MapBootstrap {
     private BossBarTimer timer;
     private int transaction = 0;
 
-    public GuessItInstance(MiniGameHandle gameHandle) {
-        super(gameHandle);
+    public GuessItInstance(MiniGameHandle gameHandle, ServerLevel world, GameMap map, SoundSubtitles soundSubtitles, IndexedSet<UUID> mannequinUuids) {
+        super(gameHandle, world, map);
 
-        choices = new PlayerChoices(gameHandle.getTranslations());
+        this.soundSubtitles = soundSubtitles;
+        this.mannequinUuids = mannequinUuids;
+
+        choices = new PlayerChoices(getGameHandle().getTranslations());
         result = new ChallengeResult();
     }
 
     @Override
-    protected DataContainer<ServerPlayer, PlayerRef> getData() {
+    protected @NonNull DataContainer<ServerPlayer, PlayerRef> getData() {
         return data;
     }
 
     @Override
-    public @NotNull CompletableFuture<Void> createWorldBootstrap(@NotNull ServerLevel world, @NotNull GameMap map) {
-        var soundSubtitlesFuture = SoundSubtitles.load().thenAccept(sub -> soundSubtitles = sub);
-        var mannequinUuidsFuture = loadMannequinUuids().thenAccept(ids -> mannequinUuids = new IndexedSet<>(ids));
-
-        return CompletableFuture.allOf(soundSubtitlesFuture, mannequinUuidsFuture);
-    }
-
-    @Override
     protected void prepare() {
-        ServerLevel world = getLevel();
+        ServerLevel level = getLevel();
         GameMap map = getMap();
-        HookRegistrar hooks = gameHandle.getHooks();
-        Participants participants = gameHandle.getParticipants();
+        HookRegistrar hooks = getGameHandle().getHooks();
+        Participants participants = getGameHandle().getParticipants();
         BlockShape blockShape = MapUtil.readArea(map);
 
         commons().gameRuleBuilder()
@@ -114,20 +106,20 @@ public class GuessItInstance extends FFAGameInstance implements MapBootstrap {
 
         rounds = MIN_ROUNDS + random.nextInt(MAX_ROUNDS - MIN_ROUNDS + 1);
 
-        Identifier answerId = gameHandle.getGameInfo().identifier("answer");
+        Identifier answerId = getGameHandle().getGameInfo().identifier("answer");
 
-        messenger = new ChallengeMessengerImpl(world, gameHandle.getTranslations(), answerId);
-        inputManager = new InputManager(choices, gameHandle.getTranslations(), participants, messenger, answerId);
-        modifier = new ResetWorldModifier(world, hooks);
+        messenger = new ChallengeMessengerImpl(level, getGameHandle().getTranslations(), answerId);
+        inputManager = new InputManager(choices, getGameHandle().getTranslations(), participants, messenger, answerId);
+        modifier = new ResetWorldModifier(level, hooks);
 
-        var dynamicEntityManager = new DynamicEntityManager(world);
-        dynamicEntityManager.init(gameHandle.getRootScheduler(), hooks);
+        var dynamicEntityManager = new DynamicEntityManager(level);
+        dynamicEntityManager.init(getGameHandle().getRootScheduler(), hooks);
         dynamicEntities = new DynamicEntityModifier(dynamicEntityManager);
 
-        manager = new GuessItManager(gameHandle, world, random, blockShape, modifier, soundSubtitles,
+        manager = new GuessItManager(getGameHandle(), level, random, blockShape, modifier, soundSubtitles,
                 commons().debugController(), mannequinUuids, dynamicEntities);
 
-        CommandRegistrar commands = gameHandle.getCommands();
+        CommandRegistrar commands = getGameHandle().getCommands();
 
         new SetChallengeCommand(manager, this::skip).register(commands);
         new SkipChallengeCommand(this::skip).register(commands);
@@ -163,16 +155,16 @@ public class GuessItInstance extends FFAGameInstance implements MapBootstrap {
 
     @Override
     protected void go() {
-        inputManager.init(gameHandle.getHooks());
+        inputManager.init(getGameHandle().getHooks());
 
         prepareNextChallenge();
     }
 
     private void setupScoreboard() {
-        CustomScoreboardManager scoreboardManager = gameHandle.getScoreboardManager();
-        Translations translations = gameHandle.getTranslations();
+        CustomScoreboardManager scoreboardManager = getGameHandle().getScoreboardManager();
+        Translations translations = getGameHandle().getTranslations();
 
-        var objective = ScoreboardUtil.setupSidebar(scoreboardManager, gameHandle.getGameInfo().getTitleKey());
+        var objective = ScoreboardUtil.setupSidebar(scoreboardManager, getGameHandle().getGameInfo().getTitleKey());
 
         // round display
         roundHandle = objective.createText(translations.translateText("game.ap2.guess_it.round").formatted(GREEN));
@@ -186,7 +178,7 @@ public class GuessItInstance extends FFAGameInstance implements MapBootstrap {
         var separator = Component.literal(ApConstants.SCOREBOARD_SEPARATOR_SM).withStyle(DARK_GREEN, STRIKETHROUGH);
         objective.createText(separator);
 
-        for (ServerPlayer player : PlayerLookup.all(gameHandle.getServer())) {
+        for (ServerPlayer player : PlayerLookup.all(getGameHandle().getServer())) {
             objective.add(player);
         }
 
@@ -205,7 +197,7 @@ public class GuessItInstance extends FFAGameInstance implements MapBootstrap {
             try {
                 challenge.destroy();
             } catch (Throwable t) {
-                gameHandle.getLogger().error("Failed to destroy {}, ignoring it", challenge.getClass().getSimpleName(), t);
+                getGameHandle().getLogger().error("Failed to destroy {}, ignoring it", challenge.getClass().getSimpleName(), t);
             }
         }
 
@@ -216,7 +208,7 @@ public class GuessItInstance extends FFAGameInstance implements MapBootstrap {
 
         challenge = challengeInit.challenge();
         ServerLevel world = getLevel();
-        Translations translations = gameHandle.getTranslations();
+        Translations translations = getGameHandle().getTranslations();
 
         var prepareMsg = translations.translateText("game.ap2.guess_it.prepare." + challenge.getPreparationKey())
                 .formatted(DARK_GREEN, BOLD);
@@ -232,14 +224,14 @@ public class GuessItInstance extends FFAGameInstance implements MapBootstrap {
         try {
             challenge.prepare();
         } catch (Throwable t) {
-            gameHandle.getLogger().error("Failed to prepare {}", challenge.getClass().getSimpleName(), t);
+            getGameHandle().getLogger().error("Failed to prepare {}", challenge.getClass().getSimpleName(), t);
             onChallengeError();
             return;
         }
 
         int expected = ++transaction;
 
-        currentTask = gameHandle.getScheduler().timeout(() -> {
+        currentTask = getGameHandle().getScheduler().timeout(() -> {
             if (transaction != expected) return;
 
             beginChallenge();
@@ -250,8 +242,8 @@ public class GuessItInstance extends FFAGameInstance implements MapBootstrap {
         Objects.requireNonNull(challenge, "Challenge cannot be null");
 
         ServerLevel world = getLevel();
-        Translations translations = gameHandle.getTranslations();
-        TaskScheduler scheduler = gameHandle.getScheduler();
+        Translations translations = getGameHandle().getTranslations();
+        TaskScheduler scheduler = getGameHandle().getScheduler();
 
         var players = PlayerLookup.level(world);
 
@@ -266,7 +258,7 @@ public class GuessItInstance extends FFAGameInstance implements MapBootstrap {
         try {
             challenge.begin(inputManager, messenger);
         } catch (Throwable t) {
-            gameHandle.getLogger().error("Failed to begin {}", challenge.getClass().getSimpleName(), t);
+            getGameHandle().getLogger().error("Failed to begin {}", challenge.getClass().getSimpleName(), t);
             onChallengeError();
             return;
         }
@@ -293,7 +285,7 @@ public class GuessItInstance extends FFAGameInstance implements MapBootstrap {
             onTimerOver();
         });
 
-        timer.start(gameHandle.getBossBarProvider(), scheduler);
+        timer.start(getGameHandle().getBossBarProvider(), scheduler);
     }
 
     private void onChallengeError() {
@@ -322,7 +314,7 @@ public class GuessItInstance extends FFAGameInstance implements MapBootstrap {
     private synchronized void evaluateChallenge() {
         Objects.requireNonNull(challenge, "Challenge cannot be null");
 
-        Translations translations = gameHandle.getTranslations();
+        Translations translations = getGameHandle().getTranslations();
 
         result.clear();
         challenge.evaluate(choices, result);
@@ -334,7 +326,7 @@ public class GuessItInstance extends FFAGameInstance implements MapBootstrap {
             solutionMsg = translations.translateText("game.ap2.guess_it.solution", styled(correctAnswer, YELLOW));
         }
 
-        for (ServerPlayer player : gameHandle.getParticipants()) {
+        for (ServerPlayer player : getGameHandle().getParticipants()) {
             int points = result.getPointsGained(player);
 
             var msg = translations.translateText(player, "game.ap2.guess_it.gain_points", styled(points, YELLOW)).formatted(GREEN);
@@ -369,7 +361,7 @@ public class GuessItInstance extends FFAGameInstance implements MapBootstrap {
 
         int expected = ++transaction;
 
-        currentTask = gameHandle.getScheduler().timeout(() -> {
+        currentTask = getGameHandle().getScheduler().timeout(() -> {
             if (transaction != expected) return;
 
             prepareNextChallenge();
@@ -393,38 +385,5 @@ public class GuessItInstance extends FFAGameInstance implements MapBootstrap {
 
         round--;
         prepareNextChallenge();
-    }
-
-    private CompletableFuture<Set<UUID>> loadMannequinUuids() {
-        return CompletableFuture.supplyAsync(this::loadMannequinUuidsSync);
-    }
-
-    private Set<UUID> loadMannequinUuidsSync() {
-        var in = getClass().getResourceAsStream("/mannequin_players.json");
-
-        if (in == null) return Set.of();
-
-        try (in) {
-            String content = new String(in.readAllBytes(), StandardCharsets.UTF_8);
-            JSONObject json = new JSONObject(content);
-            JSONArray array = json.getJSONArray("uuids");
-
-            Set<UUID> uuids = new HashSet<>(array.length());
-
-            for (Object uuid : array) {
-                if (!(uuid instanceof String str)) continue;
-
-                try {
-                    uuids.add(UUID.fromString(str));
-                } catch (IllegalArgumentException e) {
-                    gameHandle.getLogger().error("Malformed uuid: {}", str, e);
-                }
-            }
-
-            return uuids;
-        } catch (Throwable t) {
-            gameHandle.getLogger().error("Failed to load mannequin player uuids", t);
-            return Set.of();
-        }
     }
 }

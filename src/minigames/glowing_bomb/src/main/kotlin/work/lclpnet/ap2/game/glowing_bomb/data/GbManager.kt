@@ -17,6 +17,8 @@ import work.lclpnet.kibu.access.entity.DisplayEntityAccess
 import java.util.*
 import kotlin.math.abs
 import kotlin.math.atan2
+import kotlin.math.cos
+import kotlin.math.sin
 
 class GbManager(
     private val world: ServerLevel,
@@ -46,9 +48,9 @@ class GbManager(
         for (player in participants) {
             val angle = angleStep * i++
             val pos = Vec3(
-                cx + Math.sin(angle) * radius,
+                cx + sin(angle) * radius,
                 cy.toDouble(),
-                cz + Math.cos(angle) * radius
+                cz + cos(angle) * radius
             )
 
             val display = Display.BlockDisplay(EntityType.BLOCK_DISPLAY, world)

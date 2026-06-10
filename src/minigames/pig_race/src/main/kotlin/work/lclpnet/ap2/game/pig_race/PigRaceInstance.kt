@@ -23,26 +23,22 @@ import net.minecraft.world.level.block.Blocks
 import net.minecraft.world.phys.Vec3
 import net.minecraft.world.scores.PlayerTeam
 import net.minecraft.world.scores.Team
-import work.lclpnet.ap2.api.game.MiniGameHandle
-import work.lclpnet.ap2.api.game.data.DataContainer
-import work.lclpnet.ap2.api.map.MapBootstrap
 import work.lclpnet.ap2.api.music.WeightedSong
 import work.lclpnet.ap2.api.util.heads.PlayerHead
 import work.lclpnet.ap2.ext.mc.isIn
 import work.lclpnet.ap2.ext.mc.isOf
 import work.lclpnet.ap2.ext.runEveryTick
+import work.lclpnet.ap2.game.MiniGameHandle
+import work.lclpnet.ap2.game.base.FFAGameInstance
 import work.lclpnet.ap2.game.pig_race.util.PRProgress
 import work.lclpnet.ap2.game.pig_race.util.PRScoreboard
 import work.lclpnet.ap2.game.pig_race.util.createSegmentedPath
-import work.lclpnet.ap2.impl.game.FFAGameInstance
 import work.lclpnet.ap2.impl.game.data.CombinedDataContainer
 import work.lclpnet.ap2.impl.game.data.DoubleScoreDataContainer
 import work.lclpnet.ap2.impl.game.data.OrderedDataContainer
 import work.lclpnet.ap2.impl.game.data.Ordering
 import work.lclpnet.ap2.impl.game.data.type.PlayerRef
-import work.lclpnet.ap2.impl.map.schema.SchemaHolder
 import work.lclpnet.ap2.impl.music.MusicHelper
-import work.lclpnet.ap2.impl.music.MusicHelper.ARCADE_PARTY_GAME_TAG
 import work.lclpnet.ap2.impl.util.ApRegistries
 import work.lclpnet.ap2.impl.util.Fireworks
 import work.lclpnet.ap2.impl.util.ItemHelper.unbreakable
@@ -70,7 +66,6 @@ import work.lclpnet.kibu.hook.player.PlayerTeleportedCallback
 import work.lclpnet.kibu.title.Title
 import work.lclpnet.kibu.translate.text.FormatWrapper.styled
 import java.util.*
-import java.util.concurrent.CompletableFuture
 import kotlin.math.max
 
 const val NEXT_ROUND_SONG_ID = "ap_begin"
@@ -81,7 +76,13 @@ private const val MAX_CATCHUP_BOOST = 0.4
 
 private enum class Variant { PIG, STRIDER }
 
-class PigRaceInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle), MapBootstrap {
+class PigRaceInstance(
+    gameHandle: MiniGameHandle,
+    level: ServerLevel,
+    map: GameMap,
+    val mapSchema: PigRaceSchema,
+    private val nextRoundSong: WeightedSong?,
+) : FFAGameInstance(gameHandle, level, map) {
 
     private val winnerData = OrderedDataContainer(PlayerRef::create)
     private val distanceData = DoubleScoreDataContainer(
@@ -89,26 +90,16 @@ class PigRaceInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle),
         Ordering.ASCENDING,
         "ap2.score.blocks_away"
     )
-    private val combinedData = CombinedDataContainer(listOf(winnerData, distanceData))
-
+    override val data = CombinedDataContainer(listOf(winnerData, distanceData))
     private val random = Random()
     private val collisionDetector: CollisionDetector = ChunkedCollisionDetector()
     private val movementObserver = TickMovementObserver(collisionDetector, gameHandle.participants::isParticipating)
     private val pendingEntities = HashMap<UUID, PendingEntity<*>>()
-    private val schemaHolder: SchemaHolder<PigRaceSchema> = useSchema(PigRaceSchema::class.java)
-
     private lateinit var checkpointManager: CheckpointManager
     private lateinit var progress: PRProgress
     private lateinit var scoreboard: PRScoreboard
-    private var nextRoundSong: WeightedSong? = null
     private var variant = Variant.PIG
     private var speed = 1.0
-
-    override fun getData(): DataContainer<ServerPlayer, PlayerRef> = combinedData
-
-    override fun createWorldBootstrap(world: ServerLevel, map: GameMap): CompletableFuture<Void> =
-        gameHandle.songManager.getSongAndCache(ARCADE_PARTY_GAME_TAG, NEXT_ROUND_SONG_ID)
-            .thenAccept { nextRoundSong = it.orElse(null) }
 
     override fun prepare() {
         variant = getVariant()
@@ -124,9 +115,8 @@ class PigRaceInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle),
         visibility.init(gameHandle.hooks)
         initHooks(team, visibilityManager)
 
-        val schema = schemaHolder.get()
-        val spawnBounds = schema.spawnBounds!!
-        val goal = schema.goal!!
+        val spawnBounds = mapSchema.spawnBounds!!
+        val goal = mapSchema.goal!!
 
         teleportPlayers(spawnBounds)
         setupCheckpoints(spawnBounds, goal)
@@ -135,8 +125,8 @@ class PigRaceInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle),
 
         visibility.giveItems(0)
 
-        val progressMarkers = ArrayList(schema.progressMarkers)
-        val segmentedPath = createSegmentedPath(augmentPath(schema, rounds), progressMarkers, gameHandle.logger)
+        val progressMarkers = ArrayList(mapSchema.progressMarkers)
+        val segmentedPath = createSegmentedPath(augmentPath(mapSchema, rounds), progressMarkers, gameHandle.logger)
 
         segmentedPath.init(
             gameHandle.participants,
@@ -331,11 +321,9 @@ class PigRaceInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle),
     }
 
     private fun setupCheckpoints(spawnBounds: work.lclpnet.gaco.ds.BlockBox, goal: Checkpoint) {
-        val schema = schemaHolder.get()
+        val checkpoints = ArrayList(mapSchema.checkpoints)
 
-        val checkpoints = ArrayList(schema.checkpoints)
-
-        val spawn = schema.spawn
+        val spawn = mapSchema.spawn
         checkpoints.addFirst(Checkpoint(Vec3(spawn.x(), spawn.y(), spawn.z()), spawn.yaw, spawn.pitch, spawnBounds))
         checkpoints.addLast(goal)
 
@@ -393,7 +381,8 @@ class PigRaceInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle),
 
     private fun openGate() {
         val air = Blocks.AIR.defaultBlockState()
-        for (bounds in schemaHolder.get().gates) {
+
+        for (bounds in mapSchema.gates) {
             for (pos in bounds) {
                 level.setBlockAndUpdate(pos, air)
             }
@@ -401,8 +390,7 @@ class PigRaceInstance(gameHandle: MiniGameHandle) : FFAGameInstance(gameHandle),
     }
 
     private fun teleportPlayers(bounds: work.lclpnet.gaco.ds.BlockBox) {
-        val schema = schemaHolder.get()
-        val spawn = schema.spawn
+        val spawn = mapSchema.spawn
         val yaw = spawn.yaw
 
         for (player in gameHandle.participants) {
