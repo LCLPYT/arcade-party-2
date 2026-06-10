@@ -16,6 +16,7 @@ import net.minecraft.world.entity.projectile.arrow.AbstractArrow
 import net.minecraft.world.level.gamerules.GameRules
 import work.lclpnet.ap2.api.stats.CommonStats
 import work.lclpnet.ap2.ext.mc.isOf
+import work.lclpnet.ap2.ext.players
 import work.lclpnet.ap2.ext.runEveryTick
 import work.lclpnet.ap2.ext.trackDistanceMoved
 import work.lclpnet.ap2.game.MiniGameHandle
@@ -34,20 +35,16 @@ import java.util.*
 
 class ApocalypseSurvivalInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: GameMap) : EliminationGameInstance(gameHandle, level, map) {
 
-    private lateinit var spawners: List<MonsterSpawner>
-    private lateinit var targetManager: TargetManager
-    private var time = 0
+    private val random = Random()
+    private val targetManager = TargetManager(players(), map, random)
     private val stats = createStats(CommonStats.DistanceMoved, CommonStats.TimeSurvived)
+    private lateinit var spawners: List<MonsterSpawner>
+    private var time = 0
 
     override fun prepare() {
         useTaskDisplay()
         useSmoothDeath()
         trackSurvivalTime(stats)
-
-        val participants = gameHandle.participants
-        val random = Random()
-
-        targetManager = TargetManager(participants, map, random)
 
         val setup = AsSetup(map, level, random, targetManager)
         spawners = setup.readSpawners()
@@ -85,7 +82,7 @@ class ApocalypseSurvivalInstance(gameHandle: MiniGameHandle, level: ServerLevel,
 
         trackDistanceMoved(stats)
 
-        for (player in participants) {
+        for (player in players()) {
             PlayerReset.setAttribute(player, Attributes.SAFE_FALL_DISTANCE, 5.0)
             PlayerReset.setAttribute(player, Attributes.FALL_DAMAGE_MULTIPLIER, 0.5)
         }

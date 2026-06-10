@@ -43,6 +43,7 @@ class BlockDissolveInstance(gameHandle: MiniGameHandle, level: ServerLevel, map:
     private val markedBlocks = LongArrayList()
     private val random = Random()
     private val stats = createStats(TimeSurvived, Kills, DistanceMoved)
+    private val killTracker = KnockbackKillTracker(gameHandle.participants)
     private var nextSnowball = Ticks.seconds(3)
     private var tickOfSecond = 0
     private var extraDissolvedThisSecond = 0
@@ -52,7 +53,6 @@ class BlockDissolveInstance(gameHandle: MiniGameHandle, level: ServerLevel, map:
     private var warningTimer = 0
     private var warning = false
     private var physics = false
-    private lateinit var killTracker: KnockbackKillTracker
 
     init {
         useOldCombat()
@@ -85,7 +85,6 @@ class BlockDissolveInstance(gameHandle: MiniGameHandle, level: ServerLevel, map:
     }
 
     override fun go() {
-        killTracker = KnockbackKillTracker(gameHandle.participants)
         killTracker.init(gameHandle.scheduler)
 
         ProjectileHitEntityCallback.HOOK.registerWith(gameHandle.hooks) { projectile, hit ->

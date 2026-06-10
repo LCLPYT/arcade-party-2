@@ -67,7 +67,7 @@ class BowSpleefInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Gam
         BlocksBroken,
         DistanceMoved,
     )
-    private lateinit var killTracker: FallKillTracker
+    private val killTracker = FallKillTracker(gameHandle.participants)
     private val doubleJumpHandler: DoubleJumpHandler
     private val heavyWeightItem = HeavyWeightItem()
     private val tripleJumpItem = TripleJumpItem()
@@ -106,8 +106,6 @@ class BowSpleefInstance(gameHandle: MiniGameHandle, level: ServerLevel, map: Gam
 
         trackSurvivalTime(stats)
         trackDistanceMoved(stats)
-
-        killTracker = FallKillTracker(gameHandle.participants)
 
         val hooks = gameHandle.hooks
 
